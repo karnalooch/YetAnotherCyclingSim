@@ -5,8 +5,12 @@ import math
 import unittest
 
 from cycling_physics import (
+    ALPINE_CORNERS,
+    ALPINE_JOURNEY,
+    ALPINE_WEATHER,
     STANDARD_GRAVITY_MPS2,
     Corner,
+    CornerProfile,
     corner_grip_usage,
     effective_friction_coefficient,
     maximum_corner_speed_mps,
@@ -17,6 +21,14 @@ def _corner(**overrides):
     values = dict(name="Hairpin", start_distance_m=1000.0, length_m=80.0, radius_m=30.0)
     values.update(overrides)
     return Corner(**values)
+
+
+def _corner_profile(corners=()):
+    return CornerProfile(
+        name="Profile",
+        total_length_m=300.0,
+        corners=corners,
+    )
 
 
 class TestCorner(unittest.TestCase):
@@ -168,6 +180,135 @@ class TestCornerGripUsage(unittest.TestCase):
             with self.subTest(grip=grip):
                 with self.assertRaises(ValueError):
                     corner_grip_usage(10.0, 30.0, 0.8, grip)
+
+
+class TestCornerProfile(unittest.TestCase):
+    def test_empty_profile_is_valid(self):
+        profile = CornerProfile(name="Empty", total_length_m=1000.0, corners=())
+        self.assertEqual(profile.corners, ())
+        self.assertEqual(profile.total_length_m, 1000.0)
+
+    def test_lookup_before_inside_and_after_corners(self):
+        first = Corner("First", start_distance_m=100.0, length_m=50.0, radius_m=30.0)
+        second = Corner("Second", start_distance_m=200.0, length_m=40.0, radius_m=30.0)
+        profile = _corner_profile(corners=(first, second))
+        self.assertIsNone(profile.corner_at_distance(50.0))
+        self.assertIs(profile.corner_at_distance(120.0), first)
+        self.assertIsNone(profile.corner_at_distance(160.0))
+        self.assertIs(profile.corner_at_distance(220.0), second)
+        self.assertIsNone(profile.corner_at_distance(250.0))
+
+    def test_exact_boundaries_start_inclusive_end_exclusive(self):
+        corner = Corner("C", start_distance_m=100.0, length_m=50.0, radius_m=30.0)
+        profile = _corner_profile(corners=(corner,))
+        self.assertIs(profile.corner_at_distance(100.0), corner)
+        self.assertIs(profile.corner_at_distance(149.0), corner)
+        self.assertIsNone(profile.corner_at_distance(150.0))
+
+    def test_total_length_returns_none(self):
+        corner = Corner("C", start_distance_m=100.0, length_m=50.0, radius_m=30.0)
+        profile = _corner_profile(corners=(corner,))
+        self.assertIsNone(profile.corner_at_distance(300.0))
+
+    def test_touching_corners_are_allowed(self):
+        first = Corner("First", start_distance_m=100.0, length_m=50.0, radius_m=30.0)
+        second = Corner("Second", start_distance_m=150.0, length_m=50.0, radius_m=30.0)
+        profile = _corner_profile(corners=(first, second))
+        self.assertIs(profile.corner_at_distance(100.0), first)
+        self.assertIs(profile.corner_at_distance(149.999), first)
+        self.assertIs(profile.corner_at_distance(150.0), second)
+
+    def test_list_instead_of_tuple_rejected(self):
+        corner = _corner()
+        with self.assertRaises(ValueError):
+            CornerProfile(name="Profile", total_length_m=300.0, corners=[corner])
+
+    def test_wrong_element_type_rejected(self):
+        with self.assertRaises(ValueError):
+            CornerProfile(name="Profile", total_length_m=300.0, corners=(_corner(), 7))
+
+    def test_unsorted_corners_rejected(self):
+        later = _corner(start_distance_m=200.0)
+        earlier = _corner(start_distance_m=100.0)
+        with self.assertRaises(ValueError):
+            CornerProfile(name="Profile", total_length_m=300.0, corners=(later, earlier))
+
+    def test_overlapping_corners_rejected(self):
+        first = _corner(start_distance_m=100.0, length_m=50.0)
+        overlapping = _corner(start_distance_m=140.0, length_m=50.0)
+        with self.assertRaises(ValueError):
+            CornerProfile(name="Profile", total_length_m=300.0, corners=(first, overlapping))
+
+    def test_corner_beyond_profile_rejected(self):
+        corner = _corner(start_distance_m=280.0, length_m=50.0)
+        with self.assertRaises(ValueError):
+            CornerProfile(name="Profile", total_length_m=300.0, corners=(corner,))
+
+    def test_invalid_profile_fields_rejected(self):
+        for name in ("", "   ", None, 7):
+            with self.subTest(name=name):
+                with self.assertRaises(ValueError):
+                    CornerProfile(name=name, total_length_m=300.0, corners=())
+        for length in (0.0, -1.0, math.nan, math.inf, True, "300.0", None):
+            with self.subTest(length=length):
+                with self.assertRaises(ValueError):
+                    CornerProfile(name="Profile", total_length_m=length, corners=())
+
+    def test_invalid_lookup_distance_rejected(self):
+        profile = _corner_profile(corners=(_corner(start_distance_m=100.0, length_m=50.0),))
+        for distance in (-1.0, 301.0, math.nan, math.inf, -math.inf, True, "120.0", None):
+            with self.subTest(distance=distance):
+                with self.assertRaises(ValueError):
+                    profile.corner_at_distance(distance)
+
+    def test_profile_is_immutable_and_uses_slots(self):
+        profile = _corner_profile()
+        with self.assertRaises(dataclasses.FrozenInstanceError):
+            profile.total_length_m = 400.0
+        self.assertFalse(hasattr(profile, "__dict__"))
+
+
+class TestAlpineCorners(unittest.TestCase):
+    EXPECTED = [
+        ("Village Bend", 650.0, 80.0, 55.0),
+        ("River Left", 1550.0, 110.0, 40.0),
+        ("Forest Entrance", 4050.0, 90.0, 32.0),
+        ("Climb Hairpin", 5350.0, 70.0, 18.0),
+        ("Shelf Right", 6650.0, 100.0, 30.0),
+        ("Valley Hairpin", 7550.0, 80.0, 22.0),
+        ("High Valley Sweep", 8150.0, 140.0, 48.0),
+        ("Lakeside Final Bend", 9250.0, 100.0, 35.0),
+    ]
+
+    def test_profile_name(self):
+        self.assertEqual(ALPINE_CORNERS.name, "Alpine Journey Corners")
+
+    def test_total_length_matches_route_and_weather(self):
+        self.assertEqual(ALPINE_CORNERS.total_length_m, 10000.0)
+        self.assertEqual(ALPINE_CORNERS.total_length_m, ALPINE_JOURNEY.total_length_m)
+        self.assertEqual(ALPINE_CORNERS.total_length_m, ALPINE_WEATHER.total_length_m)
+
+    def test_has_eight_expected_corners(self):
+        self.assertEqual(len(ALPINE_CORNERS.corners), 8)
+        for expected, corner in zip(self.EXPECTED, ALPINE_CORNERS.corners):
+            name, start, length, radius = expected
+            with self.subTest(name=name):
+                self.assertEqual(corner.name, name)
+                self.assertEqual(corner.start_distance_m, start)
+                self.assertEqual(corner.length_m, length)
+                self.assertEqual(corner.radius_m, radius)
+
+    def test_all_corners_fit_inside_the_route(self):
+        for corner in ALPINE_CORNERS.corners:
+            with self.subTest(name=corner.name):
+                self.assertGreaterEqual(corner.start_distance_m, 0.0)
+                self.assertLessEqual(corner.end_distance_m, ALPINE_CORNERS.total_length_m)
+
+    def test_midpoint_lookup_returns_expected_corners(self):
+        for corner in ALPINE_CORNERS.corners:
+            midpoint = corner.start_distance_m + 0.5 * corner.length_m
+            with self.subTest(name=corner.name):
+                self.assertIs(ALPINE_CORNERS.corner_at_distance(midpoint), corner)
 
 
 if __name__ == "__main__":

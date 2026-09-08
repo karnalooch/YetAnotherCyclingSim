@@ -2,6 +2,7 @@
 
 from .cornering import (
     Corner,
+    CornerProfile,
     corner_grip_usage,
     effective_friction_coefficient,
     maximum_corner_speed_mps,
@@ -20,7 +21,7 @@ from .model import (
     total_resistance_force_n,
 )
 from .route import RouteProfile, RouteSegment
-from .sample_routes import ALPINE_JOURNEY, ALPINE_WEATHER
+from .sample_routes import ALPINE_CORNERS, ALPINE_JOURNEY, ALPINE_WEATHER
 from .weather import WeatherKeyframe, WeatherProfile
 
 __all__ = [
@@ -35,7 +36,9 @@ __all__ = [
     "WeatherProfile",
     "ALPINE_JOURNEY",
     "ALPINE_WEATHER",
+    "ALPINE_CORNERS",
     "Corner",
+    "CornerProfile",
     "effective_friction_coefficient",
     "maximum_corner_speed_mps",
     "corner_grip_usage",

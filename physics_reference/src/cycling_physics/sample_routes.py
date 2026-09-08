@@ -5,10 +5,11 @@ records. The sample route is deterministic and contains no weather, GPX or
 UI logic.
 """
 
+from .cornering import Corner, CornerProfile
 from .route import RouteProfile, RouteSegment
 from .weather import WeatherKeyframe, WeatherProfile
 
-__all__ = ["ALPINE_JOURNEY", "ALPINE_WEATHER"]
+__all__ = ["ALPINE_JOURNEY", "ALPINE_WEATHER", "ALPINE_CORNERS"]
 
 ALPINE_JOURNEY = RouteProfile(
     name="Alpine Journey",
@@ -91,5 +92,20 @@ ALPINE_WEATHER = WeatherProfile(
             rolling_resistance_multiplier=1.00,
             grip_multiplier=1.00,
         ),
+    ),
+)
+
+ALPINE_CORNERS = CornerProfile(
+    name="Alpine Journey Corners",
+    total_length_m=10000.0,
+    corners=(
+        Corner("Village Bend", 650.0, 80.0, 55.0),
+        Corner("River Left", 1550.0, 110.0, 40.0),
+        Corner("Forest Entrance", 4050.0, 90.0, 32.0),
+        Corner("Climb Hairpin", 5350.0, 70.0, 18.0),
+        Corner("Shelf Right", 6650.0, 100.0, 30.0),
+        Corner("Valley Hairpin", 7550.0, 80.0, 22.0),
+        Corner("High Valley Sweep", 8150.0, 140.0, 48.0),
+        Corner("Lakeside Final Bend", 9250.0, 100.0, 35.0),
     ),
 )

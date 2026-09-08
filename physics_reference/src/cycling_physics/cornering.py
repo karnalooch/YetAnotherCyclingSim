@@ -10,10 +10,11 @@ import math
 from dataclasses import dataclass
 
 from .model import STANDARD_GRAVITY_MPS2
-from .validation import _clean_name, _non_negative, _positive, _positive_at_most_one
+from .validation import _clean_name, _finite, _non_negative, _positive, _positive_at_most_one
 
 __all__ = [
     "Corner",
+    "CornerProfile",
     "effective_friction_coefficient",
     "maximum_corner_speed_mps",
     "corner_grip_usage",
@@ -53,6 +54,85 @@ class Corner:
     def end_distance_m(self) -> float:
         """Distance of the corner end along the route in metres (m)."""
         return self.start_distance_m + self.length_m
+
+
+@dataclass(frozen=True, slots=True)
+class CornerProfile:
+    """An ordered set of corners placed along a route.
+
+    total_length_m is the length of the route in metres (m) and must be
+    greater than zero. Corners must be provided as a tuple and are sorted by
+    start distance: each corner lies on the closed-open interval
+    [start_distance_m, end_distance_m) and corners must not overlap,
+    although touching (end of one equal to the start of the next) is
+    allowed. No corner end may exceed total_length_m. The profile may be
+    empty.
+    """
+
+    name: str
+    """Corner profile name. Must be non-empty after stripping whitespace."""
+
+    total_length_m: float
+    """Route length covered by the profile in metres (m). Must be finite and greater than zero."""
+
+    corners: tuple[Corner, ...]
+    """Corners sorted by start distance. Must be a tuple; may be empty. Corners must not overlap and must fit inside the profile."""
+
+    def __post_init__(self):
+        object.__setattr__(self, "name", _clean_name(self.name, "name"))
+        object.__setattr__(self, "total_length_m", _positive(self.total_length_m, "total_length_m"))
+        if not isinstance(self.corners, tuple):
+            raise ValueError(
+                f"corners must be a tuple, got {type(self.corners).__name__}"
+            )
+        for index, corner in enumerate(self.corners):
+            if not isinstance(corner, Corner):
+                raise ValueError(
+                    f"corners[{index}] must be a Corner, got {type(corner).__name__}"
+                )
+            if corner.end_distance_m > self.total_length_m:
+                raise ValueError(
+                    f"corners[{index}] end distance ({corner.end_distance_m} m) "
+                    f"must not exceed the total profile length ({self.total_length_m} m)"
+                )
+        for index in range(1, len(self.corners)):
+            previous = self.corners[index - 1]
+            current = self.corners[index]
+            if current.start_distance_m < previous.start_distance_m:
+                raise ValueError(
+                    "corners must be ordered by ascending start distance; "
+                    f"got start {current.start_distance_m} m after "
+                    f"{previous.start_distance_m} m"
+                )
+            if current.start_distance_m < previous.end_distance_m:
+                raise ValueError(
+                    "corners must not overlap; "
+                    f"corners[{index - 1}] ends at {previous.end_distance_m} m "
+                    f"while corners[{index}] starts at {current.start_distance_m} m"
+                )
+
+    def corner_at_distance(self, distance_m: float) -> Corner | None:
+        """Return the Corner containing a distance, or None outside any corner.
+
+        distance_m is the position along the route in metres (m) and must be
+        finite and lie in the closed interval [0, total_length_m]. Each corner
+        covers the closed-open interval [start_distance_m, end_distance_m): its
+        exact start belongs to the corner, its exact end does not. A distance
+        of exactly total_length_m returns None, as does any distance between
+        corners.
+        """
+        distance = _finite(distance_m, "distance_m")
+        if distance < 0.0:
+            raise ValueError(f"distance_m must not be negative, got {distance}")
+        if distance > self.total_length_m:
+            raise ValueError(
+                f"distance_m must not exceed the total profile length "
+                f"({self.total_length_m} m), got {distance}"
+            )
+        for corner in self.corners:
+            if corner.start_distance_m <= distance < corner.end_distance_m:
+                return corner
+        return None
 
 
 def effective_friction_coefficient(
