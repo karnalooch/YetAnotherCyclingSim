@@ -66,6 +66,13 @@ $env:PYTHONPATH = "src"
 python examples/run_demo.py
 ```
 
+Przejazd przykładową trasą segmentową `ALPINE_JOURNEY` (10 km, „Alpine
+Journey") z planem mocy, aż do mety:
+
+```
+python examples/run_alpine_route.py
+```
+
 ## Obecny stan
 
 Model zawiera zdefiniowane **kontrakty danych**: niezmienne rekordy

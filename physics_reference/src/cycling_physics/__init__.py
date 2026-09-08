@@ -14,6 +14,7 @@ from .model import (
     total_resistance_force_n,
 )
 from .route import RouteProfile, RouteSegment
+from .sample_routes import ALPINE_JOURNEY
 
 __all__ = [
     "STANDARD_GRAVITY_MPS2",
@@ -23,6 +24,7 @@ __all__ = [
     "SimulationState",
     "RouteSegment",
     "RouteProfile",
+    "ALPINE_JOURNEY",
     "road_angle_rad",
     "gravitational_force_n",
     "rolling_resistance_force_n",
