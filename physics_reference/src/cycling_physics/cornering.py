@@ -18,6 +18,7 @@ __all__ = [
     "effective_friction_coefficient",
     "maximum_corner_speed_mps",
     "corner_grip_usage",
+    "classify_corner_grip_usage",
 ]
 
 
@@ -190,3 +191,19 @@ def corner_grip_usage(
     radius = _positive(radius_m, "radius_m")
     friction = effective_friction_coefficient(base_friction_coefficient, grip_multiplier)
     return speed * speed / (friction * STANDARD_GRAVITY_MPS2 * radius)
+
+
+def classify_corner_grip_usage(grip_usage: float) -> str:
+    """Classify a corner grip usage value into one of three statuses.
+
+    grip_usage is the dimensionless fraction of available grip used, as
+    returned by corner_grip_usage, and must be finite and non-negative. A
+    value below 0.85 returns "safe", a value from 0.85 to 1.0 inclusive
+    returns "near_limit" and a value above 1.0 returns "grip_exceeded".
+    """
+    usage = _non_negative(grip_usage, "grip_usage")
+    if usage < 0.85:
+        return "safe"
+    if usage <= 1.0:
+        return "near_limit"
+    return "grip_exceeded"

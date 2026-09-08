@@ -11,6 +11,7 @@ from cycling_physics import (
     STANDARD_GRAVITY_MPS2,
     Corner,
     CornerProfile,
+    classify_corner_grip_usage,
     corner_grip_usage,
     effective_friction_coefficient,
     maximum_corner_speed_mps,
@@ -309,6 +310,22 @@ class TestAlpineCorners(unittest.TestCase):
             midpoint = corner.start_distance_m + 0.5 * corner.length_m
             with self.subTest(name=corner.name):
                 self.assertIs(ALPINE_CORNERS.corner_at_distance(midpoint), corner)
+
+
+class TestClassifyCornerGripUsage(unittest.TestCase):
+    def test_exact_classification_boundaries(self):
+        self.assertEqual(classify_corner_grip_usage(0.0), "safe")
+        self.assertEqual(classify_corner_grip_usage(0.849999), "safe")
+        self.assertEqual(classify_corner_grip_usage(0.85), "near_limit")
+        self.assertEqual(classify_corner_grip_usage(1.0), "near_limit")
+        self.assertEqual(classify_corner_grip_usage(1.000001), "grip_exceeded")
+        self.assertEqual(classify_corner_grip_usage(2.0), "grip_exceeded")
+
+    def test_invalid_values_rejected(self):
+        for value in (-1.0, -0.001, math.nan, math.inf, -math.inf, True, "0.9", None):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    classify_corner_grip_usage(value)
 
 
 if __name__ == "__main__":

@@ -4,18 +4,26 @@ Rides the full 10 km ALPINE_JOURNEY at 20 Hz with the sample power plan and
 the ALPINE_WEATHER scripted profile. In every step the current route segment
 is resolved from the travelled distance and the Environment is taken from
 ALPINE_WEATHER.environment_at_distance. An entry line is printed whenever a
-new segment begins and a summary is printed at the finish. Uses only the
-public cycling_physics API.
+new segment begins and a summary is printed at the finish. Corner analysis
+records entry and maximum speed, the smallest grip-based speed limit and the
+maximum grip usage for each corner of ALPINE_CORNERS without modifying the
+simulation state. Uses only the public cycling_physics API.
 """
 
 from cycling_physics import (
+    ALPINE_CORNERS,
     ALPINE_JOURNEY,
     ALPINE_WEATHER,
     RiderInput,
     RiderParameters,
     SimulationState,
+    classify_corner_grip_usage,
+    corner_grip_usage,
+    maximum_corner_speed_mps,
     step_simulation,
 )
+
+BASE_FRICTION_COEFFICIENT = 0.8
 
 RIDER = RiderParameters(
     rider_mass_kg=75.0,
@@ -51,6 +59,7 @@ def segment_index_at(distance_m):
 def main():
     state = SimulationState(speed_mps=0.0, distance_m=0.0, elapsed_time_s=0.0)
     current_index = None
+    corner_records = [None] * len(ALPINE_CORNERS.corners)
 
     print(
         "segment            distance_m  grade_%  speed_kmh  time_s  "
@@ -78,6 +87,38 @@ def main():
             )
             current_index = index
 
+        corner = ALPINE_CORNERS.corner_at_distance(state.distance_m)
+        if corner is not None:
+            record_index = next(
+                i
+                for i, candidate in enumerate(ALPINE_CORNERS.corners)
+                if candidate is corner
+            )
+            record = corner_records[record_index]
+            speed_limit = maximum_corner_speed_mps(
+                corner.radius_m,
+                BASE_FRICTION_COEFFICIENT,
+                environment.grip_multiplier,
+            )
+            grip_usage = corner_grip_usage(
+                state.speed_mps,
+                corner.radius_m,
+                BASE_FRICTION_COEFFICIENT,
+                environment.grip_multiplier,
+            )
+            if record is None:
+                record = {
+                    "entry_speed_mps": state.speed_mps,
+                    "max_speed_mps": state.speed_mps,
+                    "min_limit_mps": speed_limit,
+                    "max_grip_usage": grip_usage,
+                }
+                corner_records[record_index] = record
+            else:
+                record["max_speed_mps"] = max(record["max_speed_mps"], state.speed_mps)
+                record["min_limit_mps"] = min(record["min_limit_mps"], speed_limit)
+                record["max_grip_usage"] = max(record["max_grip_usage"], grip_usage)
+
         power_w, cadence_rpm = POWER_PLAN[segment.name]
         rider_input = RiderInput(power_w=power_w, cadence_rpm=cadence_rpm)
         state = step_simulation(RIDER, environment, rider_input, state, DT_S)
@@ -96,6 +137,23 @@ def main():
     print(f"  final speed:       {state.speed_mps * 3.6:8.2f} km/h")
     print(f"  total ascent:      {ALPINE_JOURNEY.total_ascent_m:8.1f} m")
     print(f"  total descent:     {ALPINE_JOURNEY.total_descent_m:8.1f} m")
+
+    print()
+    print("Corner analysis")
+    print(
+        f"{'corner':<20s} {'entry_kmh':>9s} {'max_kmh':>8s} "
+        f"{'limit_kmh':>9s} {'grip_usage':>10s} {'status':>14s}"
+    )
+    for corner, record in zip(ALPINE_CORNERS.corners, corner_records):
+        status = classify_corner_grip_usage(record["max_grip_usage"])
+        print(
+            f"{corner.name:<20s} "
+            f"{record['entry_speed_mps'] * 3.6:9.2f} "
+            f"{record['max_speed_mps'] * 3.6:8.2f} "
+            f"{record['min_limit_mps'] * 3.6:9.2f} "
+            f"{record['max_grip_usage']:10.3f} "
+            f"{status:>14s}"
+        )
 
 
 if __name__ == "__main__":

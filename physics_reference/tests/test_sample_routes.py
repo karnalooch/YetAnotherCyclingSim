@@ -1,16 +1,23 @@
 """Tests for the sample Alpine Journey route and its ride plan."""
 
+import math
 import unittest
 
 from cycling_physics import (
+    ALPINE_CORNERS,
     ALPINE_JOURNEY,
     ALPINE_WEATHER,
     Environment,
     RiderInput,
     RiderParameters,
     SimulationState,
+    classify_corner_grip_usage,
+    corner_grip_usage,
+    maximum_corner_speed_mps,
     step_simulation,
 )
+
+BASE_FRICTION_COEFFICIENT = 0.8
 
 EXPECTED_NAMES = [
     "Village Start",
@@ -115,6 +122,60 @@ def ride_alpine_journey_with_weather():
     return state, ranges
 
 
+def ride_alpine_journey_with_analysis():
+    """Ride with weather and record corner grip analysis.
+
+    Returns the final state and one record per corner of ALPINE_CORNERS, in
+    profile order, with entry_speed_mps, max_speed_mps, min_limit_mps and
+    max_grip_usage. The analysis only observes the ride and never modifies
+    the simulation state.
+    """
+    state = SimulationState(speed_mps=0.0, distance_m=0.0, elapsed_time_s=0.0)
+    records = [None] * len(ALPINE_CORNERS.corners)
+    while state.distance_m < ALPINE_JOURNEY.total_length_m and state.elapsed_time_s < MAX_TIME_S:
+        segment = ALPINE_JOURNEY.segment_at_distance(state.distance_m)
+        environment = ALPINE_WEATHER.environment_at_distance(
+            state.distance_m,
+            segment.grade_decimal,
+        )
+        corner = ALPINE_CORNERS.corner_at_distance(state.distance_m)
+        if corner is not None:
+            index = next(
+                i
+                for i, candidate in enumerate(ALPINE_CORNERS.corners)
+                if candidate is corner
+            )
+            speed_limit = maximum_corner_speed_mps(
+                corner.radius_m,
+                BASE_FRICTION_COEFFICIENT,
+                environment.grip_multiplier,
+            )
+            grip_usage = corner_grip_usage(
+                state.speed_mps,
+                corner.radius_m,
+                BASE_FRICTION_COEFFICIENT,
+                environment.grip_multiplier,
+            )
+            record = records[index]
+            if record is None:
+                record = {
+                    "entry_speed_mps": state.speed_mps,
+                    "max_speed_mps": state.speed_mps,
+                    "min_limit_mps": speed_limit,
+                    "max_grip_usage": grip_usage,
+                }
+                records[index] = record
+            else:
+                record["max_speed_mps"] = max(record["max_speed_mps"], state.speed_mps)
+                record["min_limit_mps"] = min(record["min_limit_mps"], speed_limit)
+                record["max_grip_usage"] = max(record["max_grip_usage"], grip_usage)
+
+        power_w, cadence_rpm = POWER_PLAN[segment.name]
+        rider_input = RiderInput(power_w=power_w, cadence_rpm=cadence_rpm)
+        state = step_simulation(RIDER, environment, rider_input, state, DT_S)
+    return state, records
+
+
 class TestAlpineJourneyProfile(unittest.TestCase):
     def test_profile_name(self):
         self.assertEqual(ALPINE_JOURNEY.name, "Alpine Journey")
@@ -208,6 +269,41 @@ class TestAlpineJourneyWeatherRide(unittest.TestCase):
         first, _ = ride_alpine_journey_with_weather()
         second, _ = ride_alpine_journey_with_weather()
         self.assertEqual(first, second)
+
+
+class TestAlpineJourneyCornerAnalysis(unittest.TestCase):
+    def test_all_eight_corners_recorded_in_profile_order(self):
+        _, records = ride_alpine_journey_with_analysis()
+        self.assertEqual(len(records), 8)
+        for corner, record in zip(ALPINE_CORNERS.corners, records):
+            with self.subTest(name=corner.name):
+                self.assertIsNotNone(record)
+
+    def test_recorded_values_are_finite_and_non_negative(self):
+        _, records = ride_alpine_journey_with_analysis()
+        for record in records:
+            for field in ("entry_speed_mps", "max_speed_mps", "max_grip_usage"):
+                value = record[field]
+                self.assertTrue(math.isfinite(value))
+                self.assertGreaterEqual(value, 0.0)
+            self.assertTrue(math.isfinite(record["min_limit_mps"]))
+            self.assertGreaterEqual(record["min_limit_mps"], 0.0)
+
+    def test_each_corner_has_positive_speed_limit(self):
+        _, records = ride_alpine_journey_with_analysis()
+        for record in records:
+            self.assertGreater(record["min_limit_mps"], 0.0)
+
+    def test_status_matches_maximum_grip_usage(self):
+        _, records = ride_alpine_journey_with_analysis()
+        for record in records:
+            expected = classify_corner_grip_usage(record["max_grip_usage"])
+            self.assertIn(expected, ("safe", "near_limit", "grip_exceeded"))
+
+    def test_analysis_does_not_change_the_final_state(self):
+        analyzed_state, _ = ride_alpine_journey_with_analysis()
+        plain_state, _ = ride_alpine_journey_with_weather()
+        self.assertEqual(analyzed_state, plain_state)
 
 
 if __name__ == "__main__":

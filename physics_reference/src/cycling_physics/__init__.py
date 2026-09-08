@@ -3,6 +3,7 @@
 from .cornering import (
     Corner,
     CornerProfile,
+    classify_corner_grip_usage,
     corner_grip_usage,
     effective_friction_coefficient,
     maximum_corner_speed_mps,
@@ -42,6 +43,7 @@ __all__ = [
     "effective_friction_coefficient",
     "maximum_corner_speed_mps",
     "corner_grip_usage",
+    "classify_corner_grip_usage",
     "road_angle_rad",
     "gravitational_force_n",
     "rolling_resistance_force_n",
