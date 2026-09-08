@@ -29,6 +29,8 @@ __all__ = [
     "corner_phase_at_distance",
     "distance_to_corner_start_m",
     "summarize_corner_technique",
+    "CornerTechniqueAssessment",
+    "assess_corner_technique",
 ]
 
 CORNER_PHASE_OUTSIDE = "outside"
@@ -502,4 +504,148 @@ def summarize_corner_technique(
         apex_cadence_rpm=mean(phases[CORNER_PHASE_APEX]["cadence"]),
         exit_cadence_rpm=mean(phases[CORNER_PHASE_EXIT]["cadence"]),
         max_grip_usage=max_grip_usage,
+    )
+
+
+def _lower_is_better_factor(value: float, full_at: float, zero_at: float) -> float:
+    """Return a 0..1 factor where lower values score better."""
+    if value <= full_at:
+        return 1.0
+    if value >= zero_at:
+        return 0.0
+    return (zero_at - value) / (zero_at - full_at)
+
+
+def _higher_is_better_factor(value: float, zero_at: float, full_at: float) -> float:
+    """Return a 0..1 factor where higher values score better."""
+    if value <= zero_at:
+        return 0.0
+    if value >= full_at:
+        return 1.0
+    return (value - zero_at) / (full_at - zero_at)
+
+
+def _grip_factor(grip_usage: float) -> float:
+    """Return the grip factor in [0, 1] for a given grip usage."""
+    if grip_usage <= 0.85:
+        return 1.0
+    if grip_usage <= 1.0:
+        return 1.0 - (grip_usage - 0.85) / 0.15 * 0.5
+    if grip_usage < 1.25:
+        return 0.5 - (grip_usage - 1.0) / 0.25 * 0.5
+    return 0.0
+
+
+ASSESSMENT_RATINGS = ("excellent", "good", "needs_improvement", "poor")
+ASSESSMENT_FEEDBACKS = (
+    "good_technique",
+    "reduce_speed",
+    "release_earlier",
+    "stay_off_power_at_apex",
+    "accelerate_on_exit",
+)
+ASSESSMENT_GRIP_STATUSES = ("safe", "near_limit", "grip_exceeded")
+
+
+@dataclass(frozen=True, slots=True)
+class CornerTechniqueAssessment:
+    """Deterministic 0-100 corner technique assessment.
+
+    score lies in [0, 100]; rating and feedback are fixed text labels and
+    grip_status is one of the classify_corner_grip_usage results.
+    """
+
+    score: float
+    """Technique score in points (unitless), clamped to [0, 100]."""
+
+    rating: str
+    """Rating label: one of excellent, good, needs_improvement, poor."""
+
+    feedback: str
+    """Primary feedback label: one of the fixed feedback strings."""
+
+    grip_status: str
+    """Grip status from classify_corner_grip_usage."""
+
+    def __post_init__(self):
+        score = _finite(self.score, "score")
+        if not 0.0 <= score <= 100.0:
+            raise ValueError(f"score must be in the interval [0, 100], got {score}")
+        object.__setattr__(self, "score", score)
+        if self.rating not in ASSESSMENT_RATINGS:
+            raise ValueError(
+                f"rating must be one of {ASSESSMENT_RATINGS}, got {self.rating!r}"
+            )
+        if self.feedback not in ASSESSMENT_FEEDBACKS:
+            raise ValueError(
+                f"feedback must be one of {ASSESSMENT_FEEDBACKS}, got {self.feedback!r}"
+            )
+        if self.grip_status not in ASSESSMENT_GRIP_STATUSES:
+            raise ValueError(
+                f"grip_status must be one of {ASSESSMENT_GRIP_STATUSES}, got {self.grip_status!r}"
+            )
+
+
+def assess_corner_technique(summary: CornerTechniqueSummary) -> CornerTechniqueAssessment:
+    """Assess a CornerTechniqueSummary into a deterministic 0-100 score.
+
+    summary must be a CornerTechniqueSummary. The total of 100 points is
+    split into grip (40), entry power (15), entry cadence (5), apex power
+    (10), apex cadence (5), exit power (15) and exit cadence (10). Each
+    component uses the documented ratio thresholds through
+    lower_is_better/higher_is_better factors; the grip factor drops linearly
+    from 1.0 at usage 0.85 to 0.5 at usage 1.0 and to 0.0 at usage 1.25.
+    The final score is clamped to [0, 100] and not rounded. The rating and
+    feedback follow the documented deterministic rules; grip_status comes
+    from classify_corner_grip_usage(summary.max_grip_usage).
+    """
+    if not isinstance(summary, CornerTechniqueSummary):
+        raise ValueError(
+            f"summary must be a CornerTechniqueSummary, got {type(summary).__name__}"
+        )
+
+    grip_score = 40.0 * _grip_factor(summary.max_grip_usage)
+    entry_power_score = 15.0 * _lower_is_better_factor(summary.entry_power_ratio, 0.60, 1.00)
+    entry_cadence_score = 5.0 * _lower_is_better_factor(summary.entry_cadence_ratio, 0.85, 1.05)
+    apex_power_score = 10.0 * _lower_is_better_factor(summary.apex_power_ratio, 0.35, 0.85)
+    apex_cadence_score = 5.0 * _lower_is_better_factor(summary.apex_cadence_ratio, 0.70, 1.00)
+    exit_power_score = 15.0 * _higher_is_better_factor(summary.exit_power_ratio, 0.40, 0.90)
+    exit_cadence_score = 10.0 * _higher_is_better_factor(summary.exit_cadence_ratio, 0.50, 0.90)
+
+    raw_score = (
+        grip_score
+        + entry_power_score
+        + entry_cadence_score
+        + apex_power_score
+        + apex_cadence_score
+        + exit_power_score
+        + exit_cadence_score
+    )
+    score = max(0.0, min(100.0, raw_score))
+
+    if score >= 90.0:
+        rating = "excellent"
+    elif score >= 75.0:
+        rating = "good"
+    elif score >= 50.0:
+        rating = "needs_improvement"
+    else:
+        rating = "poor"
+
+    if summary.max_grip_usage > 1.0:
+        feedback = "reduce_speed"
+    elif summary.entry_power_ratio > 0.60 or summary.entry_cadence_ratio > 0.85:
+        feedback = "release_earlier"
+    elif summary.apex_power_ratio > 0.35 or summary.apex_cadence_ratio > 0.70:
+        feedback = "stay_off_power_at_apex"
+    elif summary.exit_power_ratio < 0.90 or summary.exit_cadence_ratio < 0.90:
+        feedback = "accelerate_on_exit"
+    else:
+        feedback = "good_technique"
+
+    return CornerTechniqueAssessment(
+        score=score,
+        rating=rating,
+        feedback=feedback,
+        grip_status=classify_corner_grip_usage(summary.max_grip_usage),
     )

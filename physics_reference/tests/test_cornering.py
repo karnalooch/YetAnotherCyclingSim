@@ -16,8 +16,10 @@ from cycling_physics import (
     CORNER_PHASE_OUTSIDE,
     Corner,
     CornerProfile,
+    CornerTechniqueAssessment,
     CornerTechniqueSample,
     CornerTechniqueSummary,
+    assess_corner_technique,
     classify_corner_grip_usage,
     corner_grip_usage,
     corner_phase_at_distance,
@@ -618,6 +620,168 @@ class TestCornerTechnique(unittest.TestCase):
         self.assertAlmostEqual(summary.entry_cadence_rpm, 75.0, places=12)
         self.assertAlmostEqual(summary.apex_cadence_rpm, 65.0, places=12)
         self.assertAlmostEqual(summary.exit_cadence_rpm, 92.0, places=12)
+
+
+class TestCornerTechniqueAssessment(unittest.TestCase):
+    def summary(self, **overrides):
+        values = dict(
+            approach_power_w=200.0,
+            entry_power_w=100.0,
+            apex_power_w=60.0,
+            exit_power_w=200.0,
+            approach_cadence_rpm=100.0,
+            entry_cadence_rpm=80.0,
+            apex_cadence_rpm=65.0,
+            exit_cadence_rpm=100.0,
+            max_grip_usage=0.8,
+        )
+        values.update(overrides)
+        return CornerTechniqueSummary(**values)
+
+    def test_assessment_field_validation(self):
+        base = dict(
+            score=80.0,
+            rating="good",
+            feedback="good_technique",
+            grip_status="safe",
+        )
+        for field in base:
+            bad = dict(base)
+            bad[field] = "wrong"
+            with self.assertRaises(ValueError):
+                CornerTechniqueAssessment(**bad)
+        for score in (math.nan, math.inf, -math.inf, True, "80.0", None, -0.001, 100.001):
+            with self.subTest(score=score):
+                with self.assertRaises(ValueError):
+                    CornerTechniqueAssessment(score=score, rating="good", feedback="good_technique", grip_status="safe")
+
+    def test_assessment_frozen_and_slots(self):
+        assessment = CornerTechniqueAssessment(80.0, "good", "good_technique", "safe")
+        with self.assertRaises(dataclasses.FrozenInstanceError):
+            assessment.score = 90.0
+        self.assertFalse(hasattr(assessment, "__dict__"))
+
+    def test_ideal_technique_scores_100(self):
+        assessment = assess_corner_technique(self.summary())
+        self.assertEqual(assessment.score, 100.0)
+        self.assertEqual(assessment.rating, "excellent")
+        self.assertEqual(assessment.feedback, "good_technique")
+        self.assertEqual(assessment.grip_status, "safe")
+
+    def test_each_component_lowers_score_by_its_weight(self):
+        cases = [
+            ("entry power", self.summary(entry_power_w=200.0), 85.0),
+            ("entry cadence", self.summary(entry_cadence_rpm=110.0), 95.0),
+            ("apex power", self.summary(apex_power_w=200.0), 90.0),
+            ("apex cadence", self.summary(apex_cadence_rpm=120.0), 95.0),
+            ("exit power", self.summary(exit_power_w=60.0), 85.0),
+            ("exit cadence", self.summary(exit_cadence_rpm=40.0), 90.0),
+            ("grip", self.summary(max_grip_usage=1.3), 60.0),
+        ]
+        for name, summary, expected in cases:
+            with self.subTest(component=name):
+                assessment = assess_corner_technique(summary)
+                self.assertAlmostEqual(assessment.score, expected, places=9)
+
+    def test_rating_boundaries(self):
+        cases = [
+            ("excellent", self.summary(max_grip_usage=0.925), 90.0),
+            ("good", self.summary(max_grip_usage=1.0625), 75.0),
+            ("needs_improvement", self.summary(
+                max_grip_usage=1.3,
+                entry_cadence_rpm=110.0,
+                apex_cadence_rpm=120.0,
+            ), 50.0),
+            ("poor", self.summary(
+                max_grip_usage=1.3,
+                entry_cadence_rpm=110.0,
+                apex_cadence_rpm=120.0,
+                exit_cadence_rpm=20.0,
+            ), 40.0),
+        ]
+        for expected_rating, summary, expected_score in cases:
+            with self.subTest(rating=expected_rating):
+                assessment = assess_corner_technique(summary)
+                self.assertAlmostEqual(assessment.score, expected_score, places=9)
+                self.assertEqual(assessment.rating, expected_rating)
+
+    def test_grip_factor_boundaries(self):
+        at_85 = assess_corner_technique(self.summary(max_grip_usage=0.85))
+        at_100 = assess_corner_technique(self.summary(max_grip_usage=1.0))
+        at_125 = assess_corner_technique(self.summary(max_grip_usage=1.25))
+        self.assertAlmostEqual(at_85.score, 100.0, places=9)
+        self.assertAlmostEqual(at_100.score, 80.0, places=9)
+        self.assertAlmostEqual(at_125.score, 60.0, places=9)
+
+    def test_feedback_priority_reduce_speed(self):
+        assessment = assess_corner_technique(self.summary(max_grip_usage=1.1))
+        self.assertEqual(assessment.feedback, "reduce_speed")
+        self.assertEqual(assessment.grip_status, "grip_exceeded")
+
+    def test_feedback_release_earlier(self):
+        by_power = assess_corner_technique(self.summary(entry_power_w=140.0))
+        self.assertEqual(by_power.feedback, "release_earlier")
+        by_cadence = assess_corner_technique(self.summary(entry_cadence_rpm=90.0))
+        self.assertEqual(by_cadence.feedback, "release_earlier")
+
+    def test_feedback_stay_off_power_at_apex(self):
+        by_power = assess_corner_technique(self.summary(apex_power_w=100.0))
+        self.assertEqual(by_power.feedback, "stay_off_power_at_apex")
+        by_cadence = assess_corner_technique(self.summary(apex_cadence_rpm=80.0))
+        self.assertEqual(by_cadence.feedback, "stay_off_power_at_apex")
+
+    def test_feedback_accelerate_on_exit(self):
+        by_power = assess_corner_technique(self.summary(exit_power_w=100.0))
+        self.assertEqual(by_power.feedback, "accelerate_on_exit")
+        by_cadence = assess_corner_technique(self.summary(exit_cadence_rpm=80.0))
+        self.assertEqual(by_cadence.feedback, "accelerate_on_exit")
+
+    def test_infinite_ratio_from_zero_baseline_does_not_raise(self):
+        summary = CornerTechniqueSummary(
+            approach_power_w=0.0,
+            entry_power_w=200.0,
+            apex_power_w=0.0,
+            exit_power_w=0.0,
+            approach_cadence_rpm=100.0,
+            entry_cadence_rpm=80.0,
+            apex_cadence_rpm=60.0,
+            exit_cadence_rpm=100.0,
+            max_grip_usage=0.8,
+        )
+        self.assertEqual(summary.entry_power_ratio, math.inf)
+        assessment = assess_corner_technique(summary)
+        self.assertTrue(math.isfinite(assessment.score))
+        self.assertGreaterEqual(assessment.score, 0.0)
+        self.assertLessEqual(assessment.score, 100.0)
+
+    def test_score_always_in_range(self):
+        for usage in (0.0, 0.5, 0.9, 1.0, 1.3, 5.0):
+            with self.subTest(usage=usage):
+                assessment = assess_corner_technique(self.summary(max_grip_usage=usage))
+                self.assertGreaterEqual(assessment.score, 0.0)
+                self.assertLessEqual(assessment.score, 100.0)
+
+    def test_wrong_summary_type_rejected(self):
+        for value in (None, "summary", 7):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    assess_corner_technique(value)
+
+    def test_example_assessment(self):
+        summary = self.summary(
+            approach_power_w=250.0,
+            entry_power_w=120.0,
+            apex_power_w=50.0,
+            exit_power_w=280.0,
+            approach_cadence_rpm=90.0,
+            entry_cadence_rpm=75.0,
+            apex_cadence_rpm=65.0,
+            exit_cadence_rpm=92.0,
+            max_grip_usage=0.8,
+        )
+        assessment = assess_corner_technique(summary)
+        self.assertGreaterEqual(assessment.score, 99.0)
+        self.assertEqual(assessment.rating, "excellent")
 
 
 if __name__ == "__main__":
