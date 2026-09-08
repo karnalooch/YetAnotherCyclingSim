@@ -84,3 +84,10 @@ __pycache__/
 build/
 dist/
 .pytest_cache/
+# Generated files from nested Unreal Engine projects
+**/.vs/
+**/Binaries/
+**/DerivedDataCache/
+**/Intermediate/
+**/Saved/
+*.slnx

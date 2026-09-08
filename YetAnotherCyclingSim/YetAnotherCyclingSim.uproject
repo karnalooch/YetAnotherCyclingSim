@@ -1,0 +1,22 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "{852292E9-446C-D71C-4C1C-94AEBE5DD5A7}",
+	"Category": "",
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "YetAnotherCyclingSim",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "ModelingToolsEditorMode",
+			"Enabled": true,
+			"TargetAllowList": [
+				"Editor"
+			]
+		}
+	]
+}
