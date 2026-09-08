@@ -9,7 +9,20 @@ Python before being ported to the Unreal Engine 5 C++ implementation.
 import math
 from dataclasses import dataclass
 
-__all__ = ["RiderParameters", "Environment", "RiderInput", "SimulationState"]
+STANDARD_GRAVITY_MPS2 = 9.80665
+"""Standard gravitational acceleration on Earth in metres per second squared (m/s^2)."""
+
+__all__ = [
+    "STANDARD_GRAVITY_MPS2",
+    "RiderParameters",
+    "Environment",
+    "RiderInput",
+    "SimulationState",
+    "road_angle_rad",
+    "gravitational_force_n",
+    "rolling_resistance_force_n",
+    "aerodynamic_force_n",
+]
 
 
 def _require_real_number(value, field_name):
@@ -88,6 +101,11 @@ class RiderParameters:
         )
         object.__setattr__(self, "drivetrain_efficiency", _efficiency(self.drivetrain_efficiency, "drivetrain_efficiency"))
 
+    @property
+    def total_mass_kg(self):
+        """Combined mass of the rider and the bicycle in kilograms (kg)."""
+        return self.rider_mass_kg + self.bike_mass_kg
+
 
 @dataclass(frozen=True, slots=True)
 class Environment:
@@ -150,3 +168,66 @@ class SimulationState:
         object.__setattr__(self, "speed_mps", _non_negative(self.speed_mps, "speed_mps"))
         object.__setattr__(self, "distance_m", _non_negative(self.distance_m, "distance_m"))
         object.__setattr__(self, "elapsed_time_s", _non_negative(self.elapsed_time_s, "elapsed_time_s"))
+
+
+def road_angle_rad(grade_decimal):
+    """Convert a road grade to the road angle in radians (rad).
+
+    grade_decimal is the road slope as a decimal fraction of rise over run
+    (unitless), e.g. 0.08 means an 8 % gradient. The returned angle is
+    arctan(grade_decimal): positive for ascents, negative for descents and
+    zero for a flat road.
+    """
+    grade = _finite(grade_decimal, "grade_decimal")
+    return math.atan(grade)
+
+
+def gravitational_force_n(rider, environment):
+    """Compute the gravitational force component along the road, in newtons (N).
+
+    rider must be a RiderParameters record and environment an Environment
+    record. The force uses the combined rider and bicycle mass and the road
+    angle derived from environment.grade_decimal. A positive value opposes
+    forward motion on an ascent, a negative value assists forward motion on
+    a descent and the value is zero on a flat road.
+    """
+    angle = road_angle_rad(environment.grade_decimal)
+    return rider.total_mass_kg * STANDARD_GRAVITY_MPS2 * math.sin(angle)
+
+
+def rolling_resistance_force_n(rider, environment):
+    """Compute the rolling resistance force, in newtons (N).
+
+    rider must be a RiderParameters record and environment an Environment
+    record. The force uses rider.rolling_resistance_coefficient, the
+    combined mass and the component of weight perpendicular to the road
+    (standard gravity times cos of the road angle). The result is always
+    non-negative and opposes forward motion.
+    """
+    angle = road_angle_rad(environment.grade_decimal)
+    normal_load = rider.total_mass_kg * STANDARD_GRAVITY_MPS2 * math.cos(angle)
+    return rider.rolling_resistance_coefficient * normal_load
+
+
+def aerodynamic_force_n(rider, environment, speed_mps):
+    """Compute the aerodynamic drag force, in newtons (N).
+
+    rider must be a RiderParameters record, environment an Environment
+    record and speed_mps the forward ground speed in metres per second
+    (m/s), which must be finite and non-negative. The relative air speed
+    along the direction of travel is speed_mps + environment.wind_speed_mps,
+    where a positive wind_speed_mps is a headwind and a negative value is a
+    tailwind. The signed drag force is
+    0.5 * rho * CdA * relative_air_speed * abs(relative_air_speed). A
+    positive result opposes forward motion; a negative result means that a
+    strong tailwind pushes the rider forward.
+    """
+    speed = _non_negative(speed_mps, "speed_mps")
+    relative_air_speed = speed + environment.wind_speed_mps
+    return (
+        0.5
+        * environment.air_density_kg_m3
+        * rider.cda_m2
+        * relative_air_speed
+        * abs(relative_air_speed)
+    )

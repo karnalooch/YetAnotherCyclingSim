@@ -5,10 +5,15 @@ import math
 import unittest
 
 from cycling_physics import (
+    STANDARD_GRAVITY_MPS2,
     Environment,
     RiderInput,
     RiderParameters,
     SimulationState,
+    aerodynamic_force_n,
+    gravitational_force_n,
+    road_angle_rad,
+    rolling_resistance_force_n,
 )
 
 
@@ -253,6 +258,102 @@ class TestRecordProperties(unittest.TestCase):
         for record in (rider, env, rider_input, state):
             with self.subTest(record=type(record).__name__):
                 self.assertFalse(hasattr(record, "__dict__"))
+
+
+class TestForces(unittest.TestCase):
+    def test_standard_gravity_constant(self):
+        self.assertEqual(STANDARD_GRAVITY_MPS2, 9.80665)
+
+    def test_total_mass_is_sum_of_rider_and_bike(self):
+        rider = _valid_rider()
+        self.assertEqual(rider.total_mass_kg, 75.0 + 8.5)
+
+    def test_road_angle_flat(self):
+        self.assertEqual(road_angle_rad(0.0), 0.0)
+
+    def test_road_angle_climb_and_descent(self):
+        self.assertEqual(road_angle_rad(0.1), math.atan(0.1))
+        self.assertEqual(road_angle_rad(-0.1), math.atan(-0.1))
+
+    def test_gravitational_force_on_flat_road_is_zero(self):
+        env = Environment(grade_decimal=0.0, wind_speed_mps=0.0, air_density_kg_m3=1.225)
+        self.assertEqual(gravitational_force_n(_valid_rider(), env), 0.0)
+
+    def test_gravitational_force_resists_motion_on_climb(self):
+        rider = _valid_rider()
+        env = Environment(grade_decimal=0.1, wind_speed_mps=0.0, air_density_kg_m3=1.225)
+        expected = rider.total_mass_kg * STANDARD_GRAVITY_MPS2 * math.sin(road_angle_rad(0.1))
+        force = gravitational_force_n(rider, env)
+        self.assertGreater(force, 0.0)
+        self.assertAlmostEqual(force, expected, places=9)
+
+    def test_gravitational_force_assists_motion_on_descent(self):
+        rider = _valid_rider()
+        env = Environment(grade_decimal=-0.1, wind_speed_mps=0.0, air_density_kg_m3=1.225)
+        expected = rider.total_mass_kg * STANDARD_GRAVITY_MPS2 * math.sin(road_angle_rad(-0.1))
+        force = gravitational_force_n(rider, env)
+        self.assertLess(force, 0.0)
+        self.assertAlmostEqual(force, expected, places=9)
+
+    def test_rolling_resistance_on_flat_road(self):
+        rider = _valid_rider()
+        env = Environment(grade_decimal=0.0, wind_speed_mps=0.0, air_density_kg_m3=1.225)
+        expected = rider.rolling_resistance_coefficient * rider.total_mass_kg * STANDARD_GRAVITY_MPS2
+        force = rolling_resistance_force_n(rider, env)
+        self.assertGreater(force, 0.0)
+        self.assertAlmostEqual(force, expected, places=9)
+
+    def test_rolling_resistance_is_non_negative_on_climb_and_descent(self):
+        for grade in (0.1, -0.1):
+            with self.subTest(grade=grade):
+                env = Environment(grade_decimal=grade, wind_speed_mps=0.0, air_density_kg_m3=1.225)
+                expected = (
+                    0.004
+                    * 83.5
+                    * STANDARD_GRAVITY_MPS2
+                    * math.cos(road_angle_rad(grade))
+                )
+                force = rolling_resistance_force_n(_valid_rider(), env)
+                self.assertGreaterEqual(force, 0.0)
+                self.assertAlmostEqual(force, expected, places=9)
+
+    def test_aerodynamic_force_reference_value_zero_wind(self):
+        rider = RiderParameters(75.0, 8.5, 0.32, 0.004, 0.97)
+        env = Environment(grade_decimal=0.0, wind_speed_mps=0.0, air_density_kg_m3=1.225)
+        force = aerodynamic_force_n(rider, env, 10.0)
+        self.assertAlmostEqual(force, 19.6, places=9)
+
+    def test_aerodynamic_force_zero_speed_and_zero_wind_is_zero(self):
+        force = aerodynamic_force_n(_valid_rider(), _valid_environment(), 0.0)
+        self.assertEqual(force, 0.0)
+
+    def test_aerodynamic_force_with_headwind(self):
+        env = Environment(grade_decimal=0.0, wind_speed_mps=5.0, air_density_kg_m3=1.225)
+        expected = 0.5 * 1.225 * 0.32 * (10.0 + 5.0) ** 2
+        force = aerodynamic_force_n(_valid_rider(), env, 10.0)
+        self.assertGreater(force, 19.6)
+        self.assertAlmostEqual(force, expected, places=9)
+
+    def test_aerodynamic_force_with_weak_tailwind(self):
+        env = Environment(grade_decimal=0.0, wind_speed_mps=-4.0, air_density_kg_m3=1.225)
+        expected = 0.5 * 1.225 * 0.32 * (10.0 - 4.0) ** 2
+        force = aerodynamic_force_n(_valid_rider(), env, 10.0)
+        self.assertGreater(force, 0.0)
+        self.assertAlmostEqual(force, expected, places=9)
+
+    def test_aerodynamic_force_with_strong_tailwind_is_negative(self):
+        env = Environment(grade_decimal=0.0, wind_speed_mps=-15.0, air_density_kg_m3=1.225)
+        relative = 10.0 - 15.0
+        expected = 0.5 * 1.225 * 0.32 * relative * abs(relative)
+        force = aerodynamic_force_n(_valid_rider(), env, 10.0)
+        self.assertLess(force, 0.0)
+        self.assertAlmostEqual(force, expected, places=9)
+
+    def test_aerodynamic_force_rejects_invalid_speed(self):
+        for speed in (-1.0, math.inf, -math.inf, math.nan, None):
+            with self.subTest(speed=speed):
+                with self.assertRaises(ValueError):
+                    aerodynamic_force_n(_valid_rider(), _valid_environment(), speed)
 
 
 if __name__ == "__main__":
