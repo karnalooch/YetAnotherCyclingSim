@@ -14,6 +14,7 @@ from cycling_physics import (
     gravitational_force_n,
     road_angle_rad,
     rolling_resistance_force_n,
+    total_resistance_force_n,
 )
 
 
@@ -354,6 +355,68 @@ class TestForces(unittest.TestCase):
             with self.subTest(speed=speed):
                 with self.assertRaises(ValueError):
                     aerodynamic_force_n(_valid_rider(), _valid_environment(), speed)
+
+
+class TestTotalResistanceForce(unittest.TestCase):
+    def _flat_environment(self, wind_speed_mps=0.0):
+        return Environment(
+            grade_decimal=0.0,
+            wind_speed_mps=wind_speed_mps,
+            air_density_kg_m3=1.225,
+        )
+
+    def test_flat_road_no_wind_equals_rolling_plus_aerodynamic(self):
+        rider = _valid_rider()
+        env = self._flat_environment()
+        expected = rolling_resistance_force_n(rider, env) + aerodynamic_force_n(rider, env, 10.0)
+        force = total_resistance_force_n(rider, env, 10.0)
+        self.assertGreater(force, 0.0)
+        self.assertAlmostEqual(force, expected, places=9)
+
+    def test_total_equals_sum_of_individually_computed_components(self):
+        rider = _valid_rider()
+        env = _valid_environment()
+        expected = (
+            gravitational_force_n(rider, env)
+            + rolling_resistance_force_n(rider, env)
+            + aerodynamic_force_n(rider, env, 10.0)
+        )
+        self.assertAlmostEqual(
+            total_resistance_force_n(rider, env, 10.0),
+            expected,
+            places=9,
+        )
+
+    def test_climb_has_greater_total_resistance_than_flat_road(self):
+        rider = _valid_rider()
+        flat = self._flat_environment()
+        climb = Environment(grade_decimal=0.1, wind_speed_mps=0.0, air_density_kg_m3=1.225)
+        flat_force = total_resistance_force_n(rider, flat, 10.0)
+        climb_force = total_resistance_force_n(rider, climb, 10.0)
+        self.assertGreater(climb_force, flat_force)
+
+    def test_steep_descent_can_give_negative_result(self):
+        rider = _valid_rider()
+        descent = Environment(grade_decimal=-0.15, wind_speed_mps=0.0, air_density_kg_m3=1.225)
+        force = total_resistance_force_n(rider, descent, 5.0)
+        self.assertLess(force, 0.0)
+
+    def test_strong_tailwind_reduces_total_resistance(self):
+        rider = _valid_rider()
+        calm = self._flat_environment(wind_speed_mps=0.0)
+        tailwind = self._flat_environment(wind_speed_mps=-20.0)
+        calm_force = total_resistance_force_n(rider, calm, 10.0)
+        tailwind_force = total_resistance_force_n(rider, tailwind, 10.0)
+        self.assertLess(tailwind_force, calm_force)
+        self.assertLess(tailwind_force, 0.0)
+
+    def test_invalid_speed_raises_value_error(self):
+        rider = _valid_rider()
+        env = _valid_environment()
+        for speed in (-1.0, math.inf, -math.inf, math.nan):
+            with self.subTest(speed=speed):
+                with self.assertRaises(ValueError):
+                    total_resistance_force_n(rider, env, speed)
 
 
 if __name__ == "__main__":

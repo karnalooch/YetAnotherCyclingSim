@@ -22,6 +22,7 @@ __all__ = [
     "gravitational_force_n",
     "rolling_resistance_force_n",
     "aerodynamic_force_n",
+    "total_resistance_force_n",
 ]
 
 
@@ -102,7 +103,7 @@ class RiderParameters:
         object.__setattr__(self, "drivetrain_efficiency", _efficiency(self.drivetrain_efficiency, "drivetrain_efficiency"))
 
     @property
-    def total_mass_kg(self):
+    def total_mass_kg(self) -> float:
         """Combined mass of the rider and the bicycle in kilograms (kg)."""
         return self.rider_mass_kg + self.bike_mass_kg
 
@@ -170,7 +171,7 @@ class SimulationState:
         object.__setattr__(self, "elapsed_time_s", _non_negative(self.elapsed_time_s, "elapsed_time_s"))
 
 
-def road_angle_rad(grade_decimal):
+def road_angle_rad(grade_decimal: float) -> float:
     """Convert a road grade to the road angle in radians (rad).
 
     grade_decimal is the road slope as a decimal fraction of rise over run
@@ -182,7 +183,7 @@ def road_angle_rad(grade_decimal):
     return math.atan(grade)
 
 
-def gravitational_force_n(rider, environment):
+def gravitational_force_n(rider: RiderParameters, environment: Environment) -> float:
     """Compute the gravitational force component along the road, in newtons (N).
 
     rider must be a RiderParameters record and environment an Environment
@@ -195,7 +196,7 @@ def gravitational_force_n(rider, environment):
     return rider.total_mass_kg * STANDARD_GRAVITY_MPS2 * math.sin(angle)
 
 
-def rolling_resistance_force_n(rider, environment):
+def rolling_resistance_force_n(rider: RiderParameters, environment: Environment) -> float:
     """Compute the rolling resistance force, in newtons (N).
 
     rider must be a RiderParameters record and environment an Environment
@@ -209,7 +210,11 @@ def rolling_resistance_force_n(rider, environment):
     return rider.rolling_resistance_coefficient * normal_load
 
 
-def aerodynamic_force_n(rider, environment, speed_mps):
+def aerodynamic_force_n(
+    rider: RiderParameters,
+    environment: Environment,
+    speed_mps: float,
+) -> float:
     """Compute the aerodynamic drag force, in newtons (N).
 
     rider must be a RiderParameters record, environment an Environment
@@ -230,4 +235,27 @@ def aerodynamic_force_n(rider, environment, speed_mps):
         * rider.cda_m2
         * relative_air_speed
         * abs(relative_air_speed)
+    )
+
+
+def total_resistance_force_n(
+    rider: RiderParameters,
+    environment: Environment,
+    speed_mps: float,
+) -> float:
+    """Compute the total resistive force along the road, in newtons (N).
+
+    rider must be a RiderParameters record, environment an Environment
+    record and speed_mps the forward ground speed in metres per second
+    (m/s), which must be finite and non-negative. The result is the sum of
+    the gravitational force, the rolling resistance force and the
+    aerodynamic drag force. A positive value opposes forward motion; a
+    negative value propels the rider forward, for example on a steep
+    descent or with a very strong tailwind. The result is never clamped to
+    zero.
+    """
+    return (
+        gravitational_force_n(rider, environment)
+        + rolling_resistance_force_n(rider, environment)
+        + aerodynamic_force_n(rider, environment, speed_mps)
     )

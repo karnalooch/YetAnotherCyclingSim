@@ -10,6 +10,7 @@ from .model import (
     gravitational_force_n,
     road_angle_rad,
     rolling_resistance_force_n,
+    total_resistance_force_n,
 )
 
 __all__ = [
@@ -22,4 +23,5 @@ __all__ = [
     "gravitational_force_n",
     "rolling_resistance_force_n",
     "aerodynamic_force_n",
+    "total_resistance_force_n",
 ]
