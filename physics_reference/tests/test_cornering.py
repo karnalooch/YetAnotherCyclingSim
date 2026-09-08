@@ -16,12 +16,15 @@ from cycling_physics import (
     CORNER_PHASE_OUTSIDE,
     Corner,
     CornerProfile,
+    CornerTechniqueSample,
+    CornerTechniqueSummary,
     classify_corner_grip_usage,
     corner_grip_usage,
     corner_phase_at_distance,
     distance_to_corner_start_m,
     effective_friction_coefficient,
     maximum_corner_speed_mps,
+    summarize_corner_technique,
 )
 
 
@@ -419,6 +422,202 @@ class TestCornerPhases(unittest.TestCase):
             with self.subTest(approach=approach):
                 with self.assertRaises(ValueError):
                     corner_phase_at_distance(corner, 950.0, approach)
+
+
+class TestCornerTechnique(unittest.TestCase):
+    def corner(self):
+        return Corner(name="Tech", start_distance_m=1000.0, length_m=100.0, radius_m=30.0)
+
+    def sample(self, distance_m, power_w, cadence_rpm, grip_usage=0.0):
+        return CornerTechniqueSample(
+            distance_m=distance_m,
+            power_w=power_w,
+            cadence_rpm=cadence_rpm,
+            grip_usage=grip_usage,
+        )
+
+    def example_samples(self):
+        return (
+            self.sample(500.0, 999.0, 99.0, 0.0),
+            self.sample(950.0, 250.0, 90.0, 0.2),
+            self.sample(1005.0, 110.0, 70.0, 0.4),
+            self.sample(1010.0, 130.0, 80.0, 0.5),
+            self.sample(1050.0, 50.0, 65.0, 0.8),
+            self.sample(1090.0, 280.0, 92.0, 0.7),
+            self.sample(1500.0, 888.0, 88.0, 0.0),
+        )
+
+    def test_sample_validation(self):
+        for kwargs in (
+            {"distance_m": -1.0},
+            {"power_w": -1.0},
+            {"cadence_rpm": -1.0},
+            {"grip_usage": -1.0},
+            {"distance_m": math.nan},
+            {"power_w": math.inf},
+            {"cadence_rpm": math.nan},
+            {"grip_usage": math.inf},
+            {"distance_m": True},
+            {"power_w": "1.0"},
+        ):
+            with self.subTest(kwargs=kwargs):
+                values = dict(distance_m=100.0, power_w=250.0, cadence_rpm=90.0, grip_usage=0.5)
+                values.update(kwargs)
+                with self.assertRaises(ValueError):
+                    CornerTechniqueSample(**values)
+
+    def test_summary_validation(self):
+        values = dict(
+            approach_power_w=250.0,
+            entry_power_w=120.0,
+            apex_power_w=50.0,
+            exit_power_w=280.0,
+            approach_cadence_rpm=90.0,
+            entry_cadence_rpm=75.0,
+            apex_cadence_rpm=65.0,
+            exit_cadence_rpm=92.0,
+            max_grip_usage=0.8,
+        )
+        for field in values:
+            for value in (-1.0, math.nan, math.inf, True, "1.0", None):
+                with self.subTest(field=field, value=value):
+                    bad = dict(values)
+                    bad[field] = value
+                    with self.assertRaises(ValueError):
+                        CornerTechniqueSummary(**bad)
+
+    def test_records_are_immutable_and_use_slots(self):
+        sample = self.sample(100.0, 1.0, 1.0, 0.0)
+        summary = CornerTechniqueSummary(
+            250.0, 120.0, 50.0, 280.0, 90.0, 75.0, 65.0, 92.0, 0.8
+        )
+        for record in (sample, summary):
+            with self.subTest(record=type(record).__name__):
+                field_name = "power_w" if isinstance(record, CornerTechniqueSample) else "approach_power_w"
+                with self.assertRaises(dataclasses.FrozenInstanceError):
+                    setattr(record, field_name, 0.0)
+                self.assertFalse(hasattr(record, "__dict__"))
+
+    def test_phase_averages_and_max_grip(self):
+        summary = summarize_corner_technique(self.corner(), self.example_samples())
+        self.assertAlmostEqual(summary.approach_power_w, 250.0, places=12)
+        self.assertAlmostEqual(summary.entry_power_w, 120.0, places=12)
+        self.assertAlmostEqual(summary.apex_power_w, 50.0, places=12)
+        self.assertAlmostEqual(summary.exit_power_w, 280.0, places=12)
+        self.assertAlmostEqual(summary.approach_cadence_rpm, 90.0, places=12)
+        self.assertAlmostEqual(summary.entry_cadence_rpm, 75.0, places=12)
+        self.assertAlmostEqual(summary.apex_cadence_rpm, 65.0, places=12)
+        self.assertAlmostEqual(summary.exit_cadence_rpm, 92.0, places=12)
+        self.assertAlmostEqual(summary.max_grip_usage, 0.8, places=12)
+
+    def test_power_and_cadence_ratios(self):
+        summary = summarize_corner_technique(self.corner(), self.example_samples())
+        self.assertAlmostEqual(summary.entry_power_ratio, 120.0 / 250.0, places=12)
+        self.assertAlmostEqual(summary.apex_power_ratio, 50.0 / 250.0, places=12)
+        self.assertAlmostEqual(summary.exit_power_ratio, 280.0 / 250.0, places=12)
+        self.assertAlmostEqual(summary.entry_cadence_ratio, 75.0 / 90.0, places=12)
+        self.assertAlmostEqual(summary.apex_cadence_ratio, 65.0 / 90.0, places=12)
+        self.assertAlmostEqual(summary.exit_cadence_ratio, 92.0 / 90.0, places=12)
+
+    def test_zero_baseline_ratio_rules(self):
+        zero_entry = CornerTechniqueSummary(
+            0.0, 0.0, 50.0, 280.0, 90.0, 75.0, 65.0, 92.0, 0.5
+        )
+        self.assertEqual(zero_entry.entry_power_ratio, 0.0)
+        self.assertEqual(zero_entry.apex_power_ratio, math.inf)
+        positive_entry = CornerTechniqueSummary(
+            0.0, 120.0, 50.0, 280.0, 90.0, 75.0, 65.0, 92.0, 0.5
+        )
+        self.assertEqual(positive_entry.entry_power_ratio, math.inf)
+
+    def test_zero_baseline_cadence_ratio_rules(self):
+        summary = CornerTechniqueSummary(
+            250.0, 120.0, 50.0, 280.0, 0.0, 0.0, 65.0, 92.0, 0.5
+        )
+        self.assertEqual(summary.entry_cadence_ratio, 0.0)
+        self.assertEqual(summary.apex_cadence_ratio, math.inf)
+
+    def test_outside_samples_are_ignored(self):
+        summary = summarize_corner_technique(self.corner(), self.example_samples())
+        self.assertAlmostEqual(summary.approach_power_w, 250.0, places=12)
+        self.assertAlmostEqual(summary.exit_power_w, 280.0, places=12)
+
+    def test_approach_grip_usage_does_not_influence_max(self):
+        samples = (
+            self.sample(950.0, 250.0, 90.0, grip_usage=5.0),
+            self.sample(1010.0, 120.0, 75.0, grip_usage=0.6),
+            self.sample(1050.0, 50.0, 65.0, grip_usage=0.8),
+            self.sample(1090.0, 280.0, 92.0, grip_usage=0.7),
+        )
+        summary = summarize_corner_technique(self.corner(), samples)
+        self.assertAlmostEqual(summary.max_grip_usage, 0.8, places=12)
+
+    def test_identical_distances_accepted(self):
+        samples = (
+            self.sample(950.0, 200.0, 90.0),
+            self.sample(950.0, 300.0, 90.0),
+            self.sample(1010.0, 120.0, 75.0),
+            self.sample(1050.0, 50.0, 65.0),
+            self.sample(1090.0, 280.0, 92.0),
+        )
+        summary = summarize_corner_technique(self.corner(), samples)
+        self.assertAlmostEqual(summary.approach_power_w, 250.0, places=12)
+
+    def test_descending_order_rejected(self):
+        samples = (
+            self.sample(1050.0, 50.0, 65.0),
+            self.sample(1010.0, 120.0, 75.0),
+            self.sample(950.0, 250.0, 90.0),
+            self.sample(1090.0, 280.0, 92.0),
+        )
+        with self.assertRaises(ValueError):
+            summarize_corner_technique(self.corner(), samples)
+
+    def test_list_instead_of_tuple_rejected(self):
+        with self.assertRaises(ValueError):
+            summarize_corner_technique(self.corner(), [self.sample(950.0, 250.0, 90.0)])
+
+    def test_wrong_sample_type_rejected(self):
+        with self.assertRaises(ValueError):
+            summarize_corner_technique(self.corner(), (self.sample(950.0, 250.0, 90.0), 7))
+
+    def test_empty_samples_rejected(self):
+        with self.assertRaises(ValueError):
+            summarize_corner_technique(self.corner(), ())
+
+    def test_wrong_corner_type_rejected(self):
+        with self.assertRaises(ValueError):
+            summarize_corner_technique(None, (self.sample(950.0, 250.0, 90.0),))
+
+    def test_missing_phase_names_error(self):
+        phase_samples = {
+            "approach": (self.sample(950.0, 250.0, 90.0),),
+            "entry": (self.sample(1010.0, 120.0, 75.0),),
+            "apex": (self.sample(1050.0, 50.0, 65.0),),
+            "exit": (self.sample(1090.0, 280.0, 92.0),),
+        }
+        for missing in ("approach", "entry", "apex", "exit"):
+            with self.subTest(missing=missing):
+                samples = tuple(
+                    sample
+                    for phase in phase_samples
+                    if phase != missing
+                    for sample in phase_samples[phase]
+                )
+                with self.assertRaises(ValueError) as context:
+                    summarize_corner_technique(self.corner(), samples)
+                self.assertIn(missing, str(context.exception))
+
+    def test_example_summary(self):
+        summary = summarize_corner_technique(self.corner(), self.example_samples())
+        self.assertAlmostEqual(summary.approach_power_w, 250.0, places=12)
+        self.assertAlmostEqual(summary.entry_power_w, 120.0, places=12)
+        self.assertAlmostEqual(summary.apex_power_w, 50.0, places=12)
+        self.assertAlmostEqual(summary.exit_power_w, 280.0, places=12)
+        self.assertAlmostEqual(summary.approach_cadence_rpm, 90.0, places=12)
+        self.assertAlmostEqual(summary.entry_cadence_rpm, 75.0, places=12)
+        self.assertAlmostEqual(summary.apex_cadence_rpm, 65.0, places=12)
+        self.assertAlmostEqual(summary.exit_cadence_rpm, 92.0, places=12)
 
 
 if __name__ == "__main__":

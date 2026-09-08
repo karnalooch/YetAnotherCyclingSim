@@ -20,12 +20,15 @@ __all__ = [
     "CORNER_PHASE_ENTRY",
     "CORNER_PHASE_APEX",
     "CORNER_PHASE_EXIT",
+    "CornerTechniqueSample",
+    "CornerTechniqueSummary",
     "effective_friction_coefficient",
     "maximum_corner_speed_mps",
     "corner_grip_usage",
     "classify_corner_grip_usage",
     "corner_phase_at_distance",
     "distance_to_corner_start_m",
+    "summarize_corner_technique",
 ]
 
 CORNER_PHASE_OUTSIDE = "outside"
@@ -295,3 +298,208 @@ def distance_to_corner_start_m(corner: Corner, distance_m: float) -> float:
     if distance < corner.start_distance_m:
         return corner.start_distance_m - distance
     return 0.0
+
+
+@dataclass(frozen=True, slots=True)
+class CornerTechniqueSample:
+    """One technique sample taken while approaching or riding a corner.
+
+    distance_m is the position along the route in metres (m); power_w is the
+    rider power in watts (W); cadence_rpm is the cadence in revolutions per
+    minute (rpm); grip_usage is the dimensionless grip usage from
+    corner_grip_usage. All fields must be finite and non-negative.
+    """
+
+    distance_m: float
+    """Sample position along the route in metres (m). Must be finite and non-negative."""
+
+    power_w: float
+    """Rider power in watts (W). Must be finite and non-negative."""
+
+    cadence_rpm: float
+    """Cadence in revolutions per minute (rpm). Must be finite and non-negative."""
+
+    grip_usage: float
+    """Dimensionless grip usage. Must be finite and non-negative."""
+
+    def __post_init__(self):
+        object.__setattr__(self, "distance_m", _non_negative(self.distance_m, "distance_m"))
+        object.__setattr__(self, "power_w", _non_negative(self.power_w, "power_w"))
+        object.__setattr__(self, "cadence_rpm", _non_negative(self.cadence_rpm, "cadence_rpm"))
+        object.__setattr__(self, "grip_usage", _non_negative(self.grip_usage, "grip_usage"))
+
+
+@dataclass(frozen=True, slots=True)
+class CornerTechniqueSummary:
+    """Summary of power and cadence behaviour across the corner phases.
+
+    The four phase averages use watts (W) for power and revolutions per
+    minute (rpm) for cadence; max_grip_usage is dimensionless. All stored
+    fields must be finite and non-negative. Derived ratio properties may
+    return math.inf when the corresponding approach baseline is zero and the
+    numerator is positive.
+    """
+
+    approach_power_w: float
+    """Mean power in the approach phase in watts (W)."""
+
+    entry_power_w: float
+    """Mean power in the entry phase in watts (W)."""
+
+    apex_power_w: float
+    """Mean power in the apex phase in watts (W)."""
+
+    exit_power_w: float
+    """Mean power in the exit phase in watts (W)."""
+
+    approach_cadence_rpm: float
+    """Mean cadence in the approach phase in revolutions per minute (rpm)."""
+
+    entry_cadence_rpm: float
+    """Mean cadence in the entry phase in revolutions per minute (rpm)."""
+
+    apex_cadence_rpm: float
+    """Mean cadence in the apex phase in revolutions per minute (rpm)."""
+
+    exit_cadence_rpm: float
+    """Mean cadence in the exit phase in revolutions per minute (rpm)."""
+
+    max_grip_usage: float
+    """Maximum dimensionless grip usage over the corner phases entry, apex and exit (approach is excluded)."""
+
+    def __post_init__(self):
+        for field_name in (
+            "approach_power_w",
+            "entry_power_w",
+            "apex_power_w",
+            "exit_power_w",
+            "approach_cadence_rpm",
+            "entry_cadence_rpm",
+            "apex_cadence_rpm",
+            "exit_cadence_rpm",
+            "max_grip_usage",
+        ):
+            object.__setattr__(
+                self,
+                field_name,
+                _non_negative(getattr(self, field_name), field_name),
+            )
+
+    @property
+    def entry_power_ratio(self) -> float:
+        """Entry power divided by approach power (unitless)."""
+        return _baseline_ratio(self.entry_power_w, self.approach_power_w)
+
+    @property
+    def apex_power_ratio(self) -> float:
+        """Apex power divided by approach power (unitless)."""
+        return _baseline_ratio(self.apex_power_w, self.approach_power_w)
+
+    @property
+    def exit_power_ratio(self) -> float:
+        """Exit power divided by approach power (unitless)."""
+        return _baseline_ratio(self.exit_power_w, self.approach_power_w)
+
+    @property
+    def entry_cadence_ratio(self) -> float:
+        """Entry cadence divided by approach cadence (unitless)."""
+        return _baseline_ratio(self.entry_cadence_rpm, self.approach_cadence_rpm)
+
+    @property
+    def apex_cadence_ratio(self) -> float:
+        """Apex cadence divided by approach cadence (unitless)."""
+        return _baseline_ratio(self.apex_cadence_rpm, self.approach_cadence_rpm)
+
+    @property
+    def exit_cadence_ratio(self) -> float:
+        """Exit cadence divided by approach cadence (unitless)."""
+        return _baseline_ratio(self.exit_cadence_rpm, self.approach_cadence_rpm)
+
+
+def _baseline_ratio(numerator: float, baseline: float) -> float:
+    """Return numerator / baseline, with defined zero-baseline behaviour."""
+    if baseline == 0.0:
+        if numerator == 0.0:
+            return 0.0
+        return math.inf
+    return numerator / baseline
+
+
+def summarize_corner_technique(
+    corner: Corner,
+    samples: tuple[CornerTechniqueSample, ...],
+    approach_length_m: float = 100.0,
+) -> CornerTechniqueSummary:
+    """Summarize technique samples over the four corner phases.
+
+    corner must be a Corner record and samples a non-empty tuple of
+    CornerTechniqueSample records ordered by non-decreasing distance_m;
+    approach_length_m is validated as in corner_phase_at_distance. Each
+    sample is assigned to a phase with corner_phase_at_distance; samples in
+    the outside phase are ignored. For every phase among approach, entry,
+    apex and exit the plain arithmetic mean of power and cadence is
+    computed. max_grip_usage is the maximum grip usage over the corner
+    phases only (entry, apex and exit); approach samples never influence
+    it. A missing phase raises ValueError naming the missing phase. The
+    input data is not modified.
+    """
+    if not isinstance(corner, Corner):
+        raise ValueError(
+            f"corner must be a Corner, got {type(corner).__name__}"
+        )
+    if not isinstance(samples, tuple):
+        raise ValueError(
+            f"samples must be a tuple, got {type(samples).__name__}"
+        )
+    if not samples:
+        raise ValueError("samples must contain at least one CornerTechniqueSample")
+    for index, sample in enumerate(samples):
+        if not isinstance(sample, CornerTechniqueSample):
+            raise ValueError(
+                f"samples[{index}] must be a CornerTechniqueSample, "
+                f"got {type(sample).__name__}"
+            )
+        if index > 0 and sample.distance_m < samples[index - 1].distance_m:
+            raise ValueError(
+                "samples must be ordered by non-decreasing distance_m; "
+                f"got {sample.distance_m} m after "
+                f"{samples[index - 1].distance_m} m"
+            )
+
+    phases = {
+        CORNER_PHASE_APPROACH: {"power": [], "cadence": []},
+        CORNER_PHASE_ENTRY: {"power": [], "cadence": []},
+        CORNER_PHASE_APEX: {"power": [], "cadence": []},
+        CORNER_PHASE_EXIT: {"power": [], "cadence": []},
+    }
+    corner_phases = {CORNER_PHASE_ENTRY, CORNER_PHASE_APEX, CORNER_PHASE_EXIT}
+    max_grip_usage = 0.0
+    for sample in samples:
+        phase = corner_phase_at_distance(corner, sample.distance_m, approach_length_m)
+        if phase == CORNER_PHASE_OUTSIDE:
+            continue
+        phases[phase]["power"].append(sample.power_w)
+        phases[phase]["cadence"].append(sample.cadence_rpm)
+        if phase in corner_phases:
+            max_grip_usage = max(max_grip_usage, sample.grip_usage)
+
+    def mean(values):
+        return sum(values) / len(values)
+
+    missing = [phase for phase in phases if not phases[phase]["power"]]
+    if missing:
+        raise ValueError(
+            f"missing samples for corner phase(s): {', '.join(missing)}"
+        )
+
+    return CornerTechniqueSummary(
+        approach_power_w=mean(phases[CORNER_PHASE_APPROACH]["power"]),
+        entry_power_w=mean(phases[CORNER_PHASE_ENTRY]["power"]),
+        apex_power_w=mean(phases[CORNER_PHASE_APEX]["power"]),
+        exit_power_w=mean(phases[CORNER_PHASE_EXIT]["power"]),
+        approach_cadence_rpm=mean(phases[CORNER_PHASE_APPROACH]["cadence"]),
+        entry_cadence_rpm=mean(phases[CORNER_PHASE_ENTRY]["cadence"]),
+        apex_cadence_rpm=mean(phases[CORNER_PHASE_APEX]["cadence"]),
+        exit_cadence_rpm=mean(phases[CORNER_PHASE_EXIT]["cadence"]),
+        max_grip_usage=max_grip_usage,
+    )
