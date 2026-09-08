@@ -32,8 +32,6 @@ class TestCompareCornerTechnique(unittest.TestCase):
     def setUpClass(cls):
         cls.baseline = compare.ride_and_assess(use_technique=False)
         cls.technique = compare.ride_and_assess(use_technique=True)
-        cls.baseline_again = compare.ride_and_assess(use_technique=False)
-        cls.technique_again = compare.ride_and_assess(use_technique=True)
 
     def test_both_rides_finish_the_route(self):
         self.assertGreaterEqual(self.baseline["distance_m"], ALPINE_JOURNEY.total_length_m)
@@ -60,15 +58,17 @@ class TestCompareCornerTechnique(unittest.TestCase):
         self.assertLess(low_count(self.technique), low_count(self.baseline))
 
     def test_both_plans_are_deterministic(self):
-        self.assertEqual(self.baseline["state"], self.baseline_again["state"])
-        self.assertEqual(self.technique["state"], self.technique_again["state"])
+        fresh_baseline = compare.ride_and_assess(use_technique=False)
+        fresh_technique = compare.ride_and_assess(use_technique=True)
+        self.assertEqual(self.baseline["state"], fresh_baseline["state"])
+        self.assertEqual(self.technique["state"], fresh_technique["state"])
         self.assertEqual(
             [a.score for a in self.baseline["assessments"]],
-            [a.score for a in self.baseline_again["assessments"]],
+            [a.score for a in fresh_baseline["assessments"]],
         )
         self.assertEqual(
             [a.score for a in self.technique["assessments"]],
-            [a.score for a in self.technique_again["assessments"]],
+            [a.score for a in fresh_technique["assessments"]],
         )
 
     def test_all_results_are_finite(self):

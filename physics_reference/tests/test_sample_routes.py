@@ -2,6 +2,8 @@
 
 import math
 import unittest
+from functools import lru_cache
+from types import MappingProxyType
 
 from cycling_physics import (
     ALPINE_CORNERS,
@@ -209,6 +211,31 @@ def ride_alpine_journey_with_analysis():
     return state, records
 
 
+@lru_cache(maxsize=None)
+def cached_weather_ride():
+    """Return a read-only cached weather ride result.
+
+    The identical deterministic ride is computed once and shared between test
+    classes. Tests only read the returned data; the ranges dict is protected
+    with a mapping proxy.
+    """
+    state, ranges = ride_alpine_journey_with_weather()
+    return state, MappingProxyType(dict(ranges))
+
+
+@lru_cache(maxsize=None)
+def cached_analysis_ride():
+    """Return a read-only cached corner analysis ride result.
+
+    The identical deterministic ride is computed once and shared between test
+    classes. Records are protected with mapping proxies so tests cannot
+    accidentally modify the shared data.
+    """
+    state, records = ride_alpine_journey_with_analysis()
+    protected = tuple(MappingProxyType(dict(record)) for record in records)
+    return state, protected
+
+
 class TestAlpineJourneyProfile(unittest.TestCase):
     def test_profile_name(self):
         self.assertEqual(ALPINE_JOURNEY.name, "Alpine Journey")
@@ -272,14 +299,17 @@ class TestAlpineJourneyRide(unittest.TestCase):
 
 
 class TestAlpineJourneyWeatherRide(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.state, cls.ranges = cached_weather_ride()
+
     def test_ride_uses_variable_weather(self):
-        state, ranges = ride_alpine_journey_with_weather()
-        self.assertGreaterEqual(state.distance_m, ALPINE_JOURNEY.total_length_m)
-        self.assertGreater(ranges["wetness_max"], 0.0)
-        self.assertLess(ranges["wetness_min"], ranges["wetness_max"])
-        self.assertLess(ranges["grip_min"], 1.0)
-        self.assertLess(ranges["wind_min"], 0.0)
-        self.assertGreater(ranges["wind_max"], 0.0)
+        self.assertGreaterEqual(self.state.distance_m, ALPINE_JOURNEY.total_length_m)
+        self.assertGreater(self.ranges["wetness_max"], 0.0)
+        self.assertLess(self.ranges["wetness_min"], self.ranges["wetness_max"])
+        self.assertLess(self.ranges["grip_min"], 1.0)
+        self.assertLess(self.ranges["wind_min"], 0.0)
+        self.assertGreater(self.ranges["wind_max"], 0.0)
 
     def test_wet_section_environment_differs_from_start(self):
         start = ALPINE_WEATHER.environment_at_distance(0.0, grade_decimal=0.0)
@@ -293,10 +323,9 @@ class TestAlpineJourneyWeatherRide(unittest.TestCase):
         )
 
     def test_route_with_weather_is_completed_between_20_and_30_minutes(self):
-        state, _ = ride_alpine_journey_with_weather()
-        self.assertGreaterEqual(state.distance_m, ALPINE_JOURNEY.total_length_m)
-        self.assertGreaterEqual(state.elapsed_time_s, 1200.0)
-        self.assertLessEqual(state.elapsed_time_s, 1800.0)
+        self.assertGreaterEqual(self.state.distance_m, ALPINE_JOURNEY.total_length_m)
+        self.assertGreaterEqual(self.state.elapsed_time_s, 1200.0)
+        self.assertLessEqual(self.state.elapsed_time_s, 1800.0)
 
     def test_run_with_weather_is_deterministic(self):
         first, _ = ride_alpine_journey_with_weather()
@@ -305,16 +334,19 @@ class TestAlpineJourneyWeatherRide(unittest.TestCase):
 
 
 class TestAlpineJourneyCornerAnalysis(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.analysis_state, cls.records = cached_analysis_ride()
+        cls.plain_state, _ = cached_weather_ride()
+
     def test_all_eight_corners_recorded_in_profile_order(self):
-        _, records = ride_alpine_journey_with_analysis()
-        self.assertEqual(len(records), 8)
-        for corner, record in zip(ALPINE_CORNERS.corners, records):
+        self.assertEqual(len(self.records), 8)
+        for corner, record in zip(ALPINE_CORNERS.corners, self.records):
             with self.subTest(name=corner.name):
                 self.assertIsNotNone(record)
 
     def test_recorded_values_are_finite_and_non_negative(self):
-        _, records = ride_alpine_journey_with_analysis()
-        for record in records:
+        for record in self.records:
             for field in ("entry_speed_mps", "max_speed_mps", "max_grip_usage"):
                 value = record[field]
                 self.assertTrue(math.isfinite(value))
@@ -323,35 +355,34 @@ class TestAlpineJourneyCornerAnalysis(unittest.TestCase):
             self.assertGreaterEqual(record["min_limit_mps"], 0.0)
 
     def test_each_corner_has_positive_speed_limit(self):
-        _, records = ride_alpine_journey_with_analysis()
-        for record in records:
+        for record in self.records:
             self.assertGreater(record["min_limit_mps"], 0.0)
 
     def test_status_matches_maximum_grip_usage(self):
-        _, records = ride_alpine_journey_with_analysis()
-        for record in records:
+        for record in self.records:
             expected = classify_corner_grip_usage(record["max_grip_usage"])
             self.assertIn(expected, ("safe", "near_limit", "grip_exceeded"))
 
     def test_analysis_does_not_change_the_final_state(self):
-        analyzed_state, _ = ride_alpine_journey_with_analysis()
-        plain_state, _ = ride_alpine_journey_with_weather()
-        self.assertEqual(analyzed_state, plain_state)
+        self.assertEqual(self.analysis_state, self.plain_state)
 
 
 class TestAlpineJourneyTechnique(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.analysis_state, cls.records = cached_analysis_ride()
+        cls.plain_state, _ = cached_weather_ride()
+
     def test_eight_summaries_and_assessments_in_profile_order(self):
-        _, records = ride_alpine_journey_with_analysis()
-        self.assertEqual(len(records), 8)
-        for corner, record in zip(ALPINE_CORNERS.corners, records):
+        self.assertEqual(len(self.records), 8)
+        for corner, record in zip(ALPINE_CORNERS.corners, self.records):
             with self.subTest(name=corner.name):
                 self.assertIsNotNone(record["summary"])
                 self.assertIsNotNone(record["assessment"])
 
     def test_every_corner_has_samples_in_all_four_phases(self):
-        _, records = ride_alpine_journey_with_analysis()
         phase_names = {"approach", "entry", "apex", "exit"}
-        for corner, record in zip(ALPINE_CORNERS.corners, records):
+        for corner, record in zip(ALPINE_CORNERS.corners, self.records):
             with self.subTest(name=corner.name):
                 seen = set()
                 for sample in record["samples"]:
@@ -364,8 +395,7 @@ class TestAlpineJourneyTechnique(unittest.TestCase):
                 self.assertGreaterEqual(seen, phase_names)
 
     def test_approach_grip_usage_is_always_zero(self):
-        _, records = ride_alpine_journey_with_analysis()
-        for corner, record in zip(ALPINE_CORNERS.corners, records):
+        for corner, record in zip(ALPINE_CORNERS.corners, self.records):
             for sample in record["samples"]:
                 phase = corner_phase_at_distance(
                     corner,
@@ -377,8 +407,7 @@ class TestAlpineJourneyTechnique(unittest.TestCase):
                         self.assertEqual(sample.grip_usage, 0.0)
 
     def test_scores_are_in_range(self):
-        _, records = ride_alpine_journey_with_analysis()
-        for record in records:
+        for record in self.records:
             score = record["assessment"].score
             self.assertGreaterEqual(score, 0.0)
             self.assertLessEqual(score, 100.0)
@@ -393,8 +422,7 @@ class TestAlpineJourneyTechnique(unittest.TestCase):
             "accelerate_on_exit",
         }
         allowed_grip = {"safe", "near_limit", "grip_exceeded"}
-        _, records = ride_alpine_journey_with_analysis()
-        for record in records:
+        for record in self.records:
             assessment = record["assessment"]
             self.assertIn(assessment.rating, allowed_ratings)
             self.assertIn(assessment.feedback, allowed_feedbacks)
@@ -410,13 +438,10 @@ class TestAlpineJourneyTechnique(unittest.TestCase):
         )
 
     def test_technique_analysis_does_not_change_final_state(self):
-        analyzed_state, _ = ride_alpine_journey_with_analysis()
-        plain_state, _ = ride_alpine_journey_with_weather()
-        self.assertEqual(analyzed_state, plain_state)
+        self.assertEqual(self.analysis_state, self.plain_state)
 
     def test_mean_score_is_finite_and_in_range(self):
-        _, records = ride_alpine_journey_with_analysis()
-        mean = sum(record["assessment"].score for record in records) / len(records)
+        mean = sum(record["assessment"].score for record in self.records) / len(self.records)
         self.assertTrue(math.isfinite(mean))
         self.assertGreaterEqual(mean, 0.0)
         self.assertLessEqual(mean, 100.0)
