@@ -10,7 +10,14 @@ import math
 from dataclasses import dataclass
 
 from .model import STANDARD_GRAVITY_MPS2
-from .validation import _clean_name, _finite, _non_negative, _positive, _positive_at_most_one
+from .validation import (
+    _clean_name,
+    _closed_unit_interval,
+    _finite,
+    _non_negative,
+    _positive,
+    _positive_at_most_one,
+)
 
 __all__ = [
     "Corner",
@@ -31,6 +38,9 @@ __all__ = [
     "summarize_corner_technique",
     "CornerTechniqueAssessment",
     "assess_corner_technique",
+    "CornerConsequence",
+    "corner_consequence_from_grip_usage",
+    "apply_corner_exit_speed_mps",
 ]
 
 CORNER_PHASE_OUTSIDE = "outside"
@@ -649,3 +659,108 @@ def assess_corner_technique(summary: CornerTechniqueSummary) -> CornerTechniqueA
         feedback=feedback,
         grip_status=classify_corner_grip_usage(summary.max_grip_usage),
     )
+
+
+CORNER_OUTCOMES = ("clean", "wide_line", "controlled_slip")
+CORNER_HUD_FEEDBACKS = ("clean_corner", "wider_slower_line", "rear_wheel_slip")
+
+
+@dataclass(frozen=True, slots=True)
+class CornerConsequence:
+    """Deterministic consequence of corner grip usage, without a crash.
+
+    outcome is one of clean, wide_line, controlled_slip. exit_speed_multiplier
+    scales the corner exit speed and lies in [0, 1]; line_deviation_ratio is
+    the normalized line deviation in [0, 1] where 0.0 is the ideal line and
+    1.0 uses the full available lane width (it is a normalized value, not a
+    metric). hud_feedback is one of the fixed HUD strings.
+    """
+
+    outcome: str
+    """Corner outcome: one of clean, wide_line, controlled_slip."""
+
+    exit_speed_multiplier: float
+    """Exit speed multiplier (unitless), in [0, 1]. Scales the speed leaving the corner."""
+
+    line_deviation_ratio: float
+    """Normalized line deviation (unitless), in [0, 1]: 0.0 ideal line, 1.0 full lane width."""
+
+    hud_feedback: str
+    """HUD feedback string: one of clean_corner, wider_slower_line, rear_wheel_slip."""
+
+    def __post_init__(self):
+        object.__setattr__(
+            self,
+            "exit_speed_multiplier",
+            _closed_unit_interval(self.exit_speed_multiplier, "exit_speed_multiplier"),
+        )
+        object.__setattr__(
+            self,
+            "line_deviation_ratio",
+            _closed_unit_interval(self.line_deviation_ratio, "line_deviation_ratio"),
+        )
+        if self.outcome not in CORNER_OUTCOMES:
+            raise ValueError(
+                f"outcome must be one of {CORNER_OUTCOMES}, got {self.outcome!r}"
+            )
+        if self.hud_feedback not in CORNER_HUD_FEEDBACKS:
+            raise ValueError(
+                f"hud_feedback must be one of {CORNER_HUD_FEEDBACKS}, "
+                f"got {self.hud_feedback!r}"
+            )
+
+
+def corner_consequence_from_grip_usage(grip_usage: float) -> CornerConsequence:
+    """Return the deterministic CornerConsequence for a grip usage value.
+
+    grip_usage is the dimensionless grip usage and must be finite and
+    non-negative. At or below 1.0 the corner is clean. Between 1.0 and 1.15
+    the outcome is wide_line with the exit speed multiplier and line
+    deviation interpolating linearly to 0.85 and 0.5. Above 1.15 the outcome
+    is controlled_slip; the exit speed multiplier interpolates from 0.85 to
+    0.60 and the line deviation from 0.5 to 1.0 as grip usage grows from 1.15
+    to 1.50, after which the values stay at 0.60 and 1.0. There is never a
+    crash.
+    """
+    usage = _non_negative(grip_usage, "grip_usage")
+    if usage <= 1.0:
+        return CornerConsequence(
+            outcome="clean",
+            exit_speed_multiplier=1.0,
+            line_deviation_ratio=0.0,
+            hud_feedback="clean_corner",
+        )
+    if usage <= 1.15:
+        progress = (usage - 1.0) / 0.15
+        return CornerConsequence(
+            outcome="wide_line",
+            exit_speed_multiplier=1.0 - progress * 0.15,
+            line_deviation_ratio=progress * 0.5,
+            hud_feedback="wider_slower_line",
+        )
+    progress = min(1.0, max(0.0, (usage - 1.15) / 0.35))
+    return CornerConsequence(
+        outcome="controlled_slip",
+        exit_speed_multiplier=0.85 - progress * 0.25,
+        line_deviation_ratio=0.5 + progress * 0.5,
+        hud_feedback="rear_wheel_slip",
+    )
+
+
+def apply_corner_exit_speed_mps(
+    speed_mps: float,
+    consequence: CornerConsequence,
+) -> float:
+    """Return the corner exit speed in metres per second (m/s).
+
+    speed_mps is the speed entering the corner application in m/s and must be
+    finite and non-negative; consequence must be a CornerConsequence. The
+    result is speed_mps * consequence.exit_speed_multiplier and is never
+    negative. No object is modified.
+    """
+    if not isinstance(consequence, CornerConsequence):
+        raise ValueError(
+            f"consequence must be a CornerConsequence, got {type(consequence).__name__}"
+        )
+    speed = _non_negative(speed_mps, "speed_mps")
+    return speed * consequence.exit_speed_multiplier

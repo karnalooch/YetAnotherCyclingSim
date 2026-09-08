@@ -15,12 +15,15 @@ from cycling_physics import (
     CORNER_PHASE_EXIT,
     CORNER_PHASE_OUTSIDE,
     Corner,
+    CornerConsequence,
     CornerProfile,
     CornerTechniqueAssessment,
     CornerTechniqueSample,
     CornerTechniqueSummary,
+    apply_corner_exit_speed_mps,
     assess_corner_technique,
     classify_corner_grip_usage,
+    corner_consequence_from_grip_usage,
     corner_grip_usage,
     corner_phase_at_distance,
     distance_to_corner_start_m,
@@ -782,6 +785,136 @@ class TestCornerTechniqueAssessment(unittest.TestCase):
         assessment = assess_corner_technique(summary)
         self.assertGreaterEqual(assessment.score, 99.0)
         self.assertEqual(assessment.rating, "excellent")
+
+
+class TestCornerConsequence(unittest.TestCase):
+    def _consequence(self, **overrides):
+        values = dict(
+            outcome="clean",
+            exit_speed_multiplier=1.0,
+            line_deviation_ratio=0.0,
+            hud_feedback="clean_corner",
+        )
+        values.update(overrides)
+        return CornerConsequence(**values)
+
+    def test_valid_consequence_accepted(self):
+        consequence = self._consequence()
+        self.assertEqual(consequence.outcome, "clean")
+        self.assertEqual(consequence.exit_speed_multiplier, 1.0)
+        self.assertEqual(consequence.line_deviation_ratio, 0.0)
+        self.assertEqual(consequence.hud_feedback, "clean_corner")
+
+    def test_field_validation(self):
+        for field in ("exit_speed_multiplier", "line_deviation_ratio"):
+            for value in (-0.1, 1.1, math.nan, math.inf, -math.inf, True, "1.0", None):
+                with self.subTest(field=field, value=value):
+                    with self.assertRaises(ValueError):
+                        self._consequence(**{field: value})
+        for outcome in ("", "crash", None, 5):
+            with self.subTest(outcome=outcome):
+                with self.assertRaises(ValueError):
+                    self._consequence(outcome=outcome)
+        for feedback in ("", "crash", None, 5):
+            with self.subTest(feedback=feedback):
+                with self.assertRaises(ValueError):
+                    self._consequence(hud_feedback=feedback)
+
+    def test_frozen_and_slots(self):
+        consequence = self._consequence()
+        with self.assertRaises(dataclasses.FrozenInstanceError):
+            consequence.exit_speed_multiplier = 0.5
+        self.assertFalse(hasattr(consequence, "__dict__"))
+
+    def test_exact_values_at_reference_usages(self):
+        cases = [
+            (0.0, "clean", 1.0, 0.0, "clean_corner"),
+            (0.85, "clean", 1.0, 0.0, "clean_corner"),
+            (1.0, "clean", 1.0, 0.0, "clean_corner"),
+            (1.075, "wide_line", 0.925, 0.25, "wider_slower_line"),
+            (1.15, "wide_line", 0.85, 0.5, "wider_slower_line"),
+            (1.325, "controlled_slip", 0.725, 0.75, "rear_wheel_slip"),
+            (1.50, "controlled_slip", 0.60, 1.0, "rear_wheel_slip"),
+            (2.0, "controlled_slip", 0.60, 1.0, "rear_wheel_slip"),
+        ]
+        for usage, outcome, multiplier, deviation, feedback in cases:
+            with self.subTest(usage=usage):
+                consequence = corner_consequence_from_grip_usage(usage)
+                self.assertEqual(consequence.outcome, outcome)
+                self.assertAlmostEqual(consequence.exit_speed_multiplier, multiplier, places=12)
+                self.assertAlmostEqual(consequence.line_deviation_ratio, deviation, places=12)
+                self.assertEqual(consequence.hud_feedback, feedback)
+
+    def test_continuity_at_one_and_1_15(self):
+        just_above_one = corner_consequence_from_grip_usage(1.0 + 1e-9)
+        self.assertEqual(just_above_one.outcome, "wide_line")
+        self.assertAlmostEqual(just_above_one.exit_speed_multiplier, 1.0, places=6)
+        self.assertAlmostEqual(just_above_one.line_deviation_ratio, 0.0, places=6)
+
+        at_115 = corner_consequence_from_grip_usage(1.15)
+        just_above_115 = corner_consequence_from_grip_usage(1.15 + 1e-9)
+        self.assertEqual(just_above_115.outcome, "controlled_slip")
+        self.assertAlmostEqual(
+            just_above_115.exit_speed_multiplier,
+            at_115.exit_speed_multiplier,
+            places=6,
+        )
+        self.assertAlmostEqual(
+            just_above_115.line_deviation_ratio,
+            at_115.line_deviation_ratio,
+            places=6,
+        )
+
+    def test_values_clamp_above_1_50(self):
+        for usage in (1.5, 2.0, 5.0):
+            with self.subTest(usage=usage):
+                consequence = corner_consequence_from_grip_usage(usage)
+                self.assertEqual(consequence.exit_speed_multiplier, 0.60)
+                self.assertEqual(consequence.line_deviation_ratio, 1.0)
+                self.assertEqual(consequence.outcome, "controlled_slip")
+                self.assertEqual(consequence.hud_feedback, "rear_wheel_slip")
+
+    def test_invalid_grip_usage_rejected(self):
+        for usage in (-1.0, -0.001, math.nan, math.inf, -math.inf, True, "1.0", None):
+            with self.subTest(usage=usage):
+                with self.assertRaises(ValueError):
+                    corner_consequence_from_grip_usage(usage)
+
+    def test_apply_exit_speed(self):
+        for multiplier in (1.0, 0.85, 0.60):
+            with self.subTest(multiplier=multiplier):
+                consequence = CornerConsequence(
+                    outcome="clean" if multiplier == 1.0 else "wide_line",
+                    exit_speed_multiplier=multiplier,
+                    line_deviation_ratio=0.0,
+                    hud_feedback="clean_corner" if multiplier == 1.0 else "wider_slower_line",
+                )
+                self.assertAlmostEqual(
+                    apply_corner_exit_speed_mps(10.0, consequence),
+                    10.0 * multiplier,
+                    places=12,
+                )
+
+    def test_apply_zero_speed_stays_zero(self):
+        consequence = corner_consequence_from_grip_usage(1.4)
+        self.assertEqual(apply_corner_exit_speed_mps(0.0, consequence), 0.0)
+
+    def test_apply_never_negative(self):
+        consequence = corner_consequence_from_grip_usage(2.0)
+        for speed in (0.0, 1.0, 25.0):
+            with self.subTest(speed=speed):
+                self.assertGreaterEqual(apply_corner_exit_speed_mps(speed, consequence), 0.0)
+
+    def test_apply_rejects_bad_inputs(self):
+        consequence = corner_consequence_from_grip_usage(1.0)
+        for value in (None, 5, "consequence"):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    apply_corner_exit_speed_mps(10.0, value)
+        for speed in (-1.0, math.nan, math.inf, -math.inf, True, "10.0", None):
+            with self.subTest(speed=speed):
+                with self.assertRaises(ValueError):
+                    apply_corner_exit_speed_mps(speed, consequence)
 
 
 if __name__ == "__main__":
