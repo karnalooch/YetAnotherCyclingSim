@@ -9,6 +9,13 @@ Python before being ported to the Unreal Engine 5 C++ implementation.
 import math
 from dataclasses import dataclass
 
+from .validation import (
+    _efficiency,
+    _finite,
+    _non_negative,
+    _positive,
+)
+
 STANDARD_GRAVITY_MPS2 = 9.80665
 """Standard gravitational acceleration on Earth in metres per second squared (m/s^2)."""
 
@@ -25,48 +32,6 @@ __all__ = [
     "total_resistance_force_n",
     "step_simulation",
 ]
-
-
-def _require_real_number(value, field_name):
-    """Return value as a float, rejecting non-real or non-numeric values."""
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise ValueError(
-            f"{field_name} must be a real number, got {value!r} "
-            f"of type {type(value).__name__}"
-        )
-    return float(value)
-
-
-def _finite(value, field_name):
-    """Return value as a finite float."""
-    result = _require_real_number(value, field_name)
-    if not math.isfinite(result):
-        raise ValueError(f"{field_name} must be a finite number, got {result}")
-    return result
-
-
-def _positive(value, field_name):
-    """Return a validated float strictly greater than zero."""
-    result = _finite(value, field_name)
-    if result <= 0.0:
-        raise ValueError(f"{field_name} must be greater than zero, got {result}")
-    return result
-
-
-def _non_negative(value, field_name):
-    """Return a validated float greater than or equal to zero."""
-    result = _finite(value, field_name)
-    if result < 0.0:
-        raise ValueError(f"{field_name} must not be negative, got {result}")
-    return result
-
-
-def _efficiency(value, field_name):
-    """Return a validated float inside the open-closed interval (0, 1]."""
-    result = _finite(value, field_name)
-    if not 0.0 < result <= 1.0:
-        raise ValueError(f"{field_name} must be in the interval (0, 1], got {result}")
-    return result
 
 
 @dataclass(frozen=True, slots=True)

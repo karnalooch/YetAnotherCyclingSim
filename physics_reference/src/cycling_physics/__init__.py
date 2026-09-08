@@ -13,6 +13,7 @@ from .model import (
     step_simulation,
     total_resistance_force_n,
 )
+from .route import RouteProfile, RouteSegment
 
 __all__ = [
     "STANDARD_GRAVITY_MPS2",
@@ -20,6 +21,8 @@ __all__ = [
     "Environment",
     "RiderInput",
     "SimulationState",
+    "RouteSegment",
+    "RouteProfile",
     "road_angle_rad",
     "gravitational_force_n",
     "rolling_resistance_force_n",
