@@ -14,6 +14,7 @@ from cycling_physics import (
     gravitational_force_n,
     road_angle_rad,
     rolling_resistance_force_n,
+    step_simulation,
     total_resistance_force_n,
 )
 
@@ -417,6 +418,143 @@ class TestTotalResistanceForce(unittest.TestCase):
             with self.subTest(speed=speed):
                 with self.assertRaises(ValueError):
                     total_resistance_force_n(rider, env, speed)
+
+
+class TestStepSimulation(unittest.TestCase):
+    def _flat_environment(self):
+        return Environment(grade_decimal=0.0, wind_speed_mps=0.0, air_density_kg_m3=1.225)
+
+    def _environment(self, grade_decimal):
+        return Environment(grade_decimal=grade_decimal, wind_speed_mps=0.0, air_density_kg_m3=1.225)
+
+    def _input(self, power_w):
+        return RiderInput(power_w=power_w, cadence_rpm=90.0)
+
+    def _state(self, speed_mps, distance_m=0.0, elapsed_time_s=0.0):
+        return SimulationState(
+            speed_mps=speed_mps,
+            distance_m=distance_m,
+            elapsed_time_s=elapsed_time_s,
+        )
+
+    def test_stopped_bike_on_flat_moves_with_positive_power(self):
+        result = step_simulation(
+            _valid_rider(),
+            self._flat_environment(),
+            self._input(250.0),
+            self._state(0.0),
+            1.0,
+        )
+        self.assertGreater(result.speed_mps, 0.0)
+        self.assertGreater(result.distance_m, 0.0)
+
+    def test_more_power_gives_more_speed_after_same_time(self):
+        low = step_simulation(
+            _valid_rider(),
+            self._flat_environment(),
+            self._input(100.0),
+            self._state(0.0),
+            5.0,
+        )
+        high = step_simulation(
+            _valid_rider(),
+            self._flat_environment(),
+            self._input(500.0),
+            self._state(0.0),
+            5.0,
+        )
+        self.assertGreater(high.speed_mps, low.speed_mps)
+
+    def test_no_power_on_flat_decelerates(self):
+        result = step_simulation(
+            _valid_rider(),
+            self._flat_environment(),
+            self._input(0.0),
+            self._state(10.0),
+            1.0,
+        )
+        self.assertLess(result.speed_mps, 10.0)
+        self.assertGreaterEqual(result.speed_mps, 0.0)
+
+    def test_no_power_on_descent_accelerates(self):
+        result = step_simulation(
+            _valid_rider(),
+            self._environment(-0.1),
+            self._input(0.0),
+            self._state(10.0),
+            1.0,
+        )
+        self.assertGreater(result.speed_mps, 10.0)
+
+    def test_climb_gives_less_speed_than_flat_with_same_power(self):
+        start = self._state(5.0)
+        flat = step_simulation(
+            _valid_rider(),
+            self._flat_environment(),
+            self._input(250.0),
+            start,
+            1.0,
+        )
+        climb = step_simulation(
+            _valid_rider(),
+            self._environment(0.1),
+            self._input(250.0),
+            start,
+            1.0,
+        )
+        self.assertLess(climb.speed_mps, flat.speed_mps)
+
+    def test_speed_is_never_negative(self):
+        cases = (
+            (_valid_rider(), self._flat_environment(), self._input(0.0), self._state(1.0), 20.0),
+            (_valid_rider(), self._environment(-0.2), self._input(0.0), self._state(0.0), 5.0),
+            (_valid_rider(), self._flat_environment(), self._input(0.0), self._state(0.0), 1.0),
+            (_valid_rider(), self._flat_environment(), self._input(250.0), self._state(0.0), 1.0),
+        )
+        for rider, env, rider_input, state, dt in cases:
+            with self.subTest(state=state):
+                result = step_simulation(rider, env, rider_input, state, dt)
+                self.assertGreaterEqual(result.speed_mps, 0.0)
+
+    def test_distance_and_time_increase(self):
+        start = self._state(10.0, distance_m=100.0, elapsed_time_s=50.0)
+        result = step_simulation(_valid_rider(), self._flat_environment(), self._input(0.0), start, 2.0)
+        self.assertGreater(result.distance_m, start.distance_m)
+        self.assertAlmostEqual(result.elapsed_time_s, start.elapsed_time_s + 2.0, places=12)
+
+    def test_input_state_is_not_mutated(self):
+        start = self._state(10.0, distance_m=100.0, elapsed_time_s=50.0)
+        step_simulation(_valid_rider(), self._flat_environment(), self._input(250.0), start, 1.0)
+        self.assertEqual(start, self._state(10.0, distance_m=100.0, elapsed_time_s=50.0))
+
+    def test_identical_inputs_give_identical_results(self):
+        args = (_valid_rider(), self._flat_environment(), self._input(250.0), self._state(5.0), 1.0)
+        first = step_simulation(*args)
+        second = step_simulation(*args)
+        self.assertEqual(first, second)
+
+    def test_invalid_dt_raises_value_error(self):
+        for dt in (0.0, -1.0, math.nan, math.inf, -math.inf, True, None):
+            with self.subTest(dt=dt):
+                with self.assertRaises(ValueError):
+                    step_simulation(
+                        _valid_rider(),
+                        self._flat_environment(),
+                        self._input(250.0),
+                        self._state(5.0),
+                        dt,
+                    )
+
+    def test_all_result_fields_are_finite(self):
+        result = step_simulation(
+            _valid_rider(),
+            self._environment(0.05),
+            self._input(250.0),
+            self._state(5.0),
+            1.0,
+        )
+        for field in dataclasses.fields(result):
+            self.assertTrue(math.isfinite(getattr(result, field.name)))
 
 
 if __name__ == "__main__":

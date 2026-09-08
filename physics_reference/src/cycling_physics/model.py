@@ -23,6 +23,7 @@ __all__ = [
     "rolling_resistance_force_n",
     "aerodynamic_force_n",
     "total_resistance_force_n",
+    "step_simulation",
 ]
 
 
@@ -259,3 +260,65 @@ def total_resistance_force_n(
         + rolling_resistance_force_n(rider, environment)
         + aerodynamic_force_n(rider, environment, speed_mps)
     )
+
+
+def step_simulation(
+    rider: RiderParameters,
+    environment: Environment,
+    rider_input: RiderInput,
+    state: SimulationState,
+    dt_s: float,
+) -> SimulationState:
+    """Advance the simulation by one deterministic step using an energy balance.
+
+    rider defines the rider and bicycle parameters, environment the
+    environmental conditions, rider_input the control input for the step,
+    state the current simulation state and dt_s the step duration in seconds
+    (s), which must be a finite number greater than zero.
+
+    The step uses an energy balance:
+    - initial_energy_j = 0.5 * m * v^2 (kinetic energy);
+    - drive_work_j = power_w * drivetrain_efficiency * dt_s.
+
+    A deterministic predictor first estimates the effect of the resistance
+    forces at the current speed, adds the drive energy to the predicted
+    speed, then recomputes the resistance force at the average of the
+    current and the predicted speed to estimate the resistance work over the
+    step. Positive resistance work removes energy; negative resistance work
+    (for example on a descent) adds energy. The final speed is derived from
+    the remaining energy and is never negative.
+
+    cadence_rpm is part of the rider input but does not yet affect the
+    equation of motion directly; no cadence-power dependency is assumed.
+
+    The input state is not modified; a new immutable SimulationState is
+    returned.
+    """
+    dt = _positive(dt_s, "dt_s")
+    total_mass = rider.total_mass_kg
+
+    current_speed = state.speed_mps
+    initial_energy_j = 0.5 * total_mass * current_speed ** 2
+    drive_work_j = rider_input.power_w * rider.drivetrain_efficiency * dt
+
+    resistance_force_n = total_resistance_force_n(rider, environment, current_speed)
+    external_acceleration_mps2 = -resistance_force_n / total_mass
+    external_predicted_speed_mps = max(0.0, current_speed + external_acceleration_mps2 * dt)
+    predicted_speed_mps = math.sqrt(
+        max(0.0, external_predicted_speed_mps ** 2 + 2.0 * drive_work_j / total_mass)
+    )
+    estimated_average_speed_mps = 0.5 * (current_speed + predicted_speed_mps)
+
+    average_resistance_force_n = total_resistance_force_n(rider, environment, estimated_average_speed_mps)
+    resistance_work_j = average_resistance_force_n * estimated_average_speed_mps * dt
+
+    final_energy_j = max(0.0, initial_energy_j + drive_work_j - resistance_work_j)
+    new_speed_mps = math.sqrt(2.0 * final_energy_j / total_mass)
+
+    distance_delta_m = 0.5 * (current_speed + new_speed_mps) * dt
+    new_state = SimulationState(
+        speed_mps=new_speed_mps,
+        distance_m=state.distance_m + distance_delta_m,
+        elapsed_time_s=state.elapsed_time_s + dt,
+    )
+    return new_state
