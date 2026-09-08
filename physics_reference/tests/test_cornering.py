@@ -9,10 +9,17 @@ from cycling_physics import (
     ALPINE_JOURNEY,
     ALPINE_WEATHER,
     STANDARD_GRAVITY_MPS2,
+    CORNER_PHASE_APEX,
+    CORNER_PHASE_APPROACH,
+    CORNER_PHASE_ENTRY,
+    CORNER_PHASE_EXIT,
+    CORNER_PHASE_OUTSIDE,
     Corner,
     CornerProfile,
     classify_corner_grip_usage,
     corner_grip_usage,
+    corner_phase_at_distance,
+    distance_to_corner_start_m,
     effective_friction_coefficient,
     maximum_corner_speed_mps,
 )
@@ -326,6 +333,92 @@ class TestClassifyCornerGripUsage(unittest.TestCase):
             with self.subTest(value=value):
                 with self.assertRaises(ValueError):
                     classify_corner_grip_usage(value)
+
+
+class TestCornerPhases(unittest.TestCase):
+    def corner(self):
+        return Corner(name="Phase", start_distance_m=1000.0, length_m=100.0, radius_m=30.0)
+
+    def test_exact_phase_boundaries(self):
+        corner = self.corner()
+        cases = [
+            (0.0, CORNER_PHASE_OUTSIDE),
+            (900.0, CORNER_PHASE_APPROACH),
+            (1000.0, CORNER_PHASE_ENTRY),
+            (1025.0, CORNER_PHASE_APEX),
+            (1075.0, CORNER_PHASE_EXIT),
+            (1100.0, CORNER_PHASE_OUTSIDE),
+        ]
+        for distance, expected in cases:
+            with self.subTest(distance=distance):
+                self.assertEqual(corner_phase_at_distance(corner, distance, 100.0), expected)
+
+    def test_just_before_each_phase_boundary(self):
+        corner = self.corner()
+        cases = [
+            (899.999, CORNER_PHASE_OUTSIDE),
+            (999.999, CORNER_PHASE_APPROACH),
+            (1024.999, CORNER_PHASE_ENTRY),
+            (1074.999, CORNER_PHASE_APEX),
+            (1099.999, CORNER_PHASE_EXIT),
+        ]
+        for distance, expected in cases:
+            with self.subTest(distance=distance):
+                self.assertEqual(corner_phase_at_distance(corner, distance, 100.0), expected)
+
+    def test_corner_start_before_approach_length(self):
+        corner = Corner(name="Early", start_distance_m=50.0, length_m=100.0, radius_m=30.0)
+        self.assertEqual(corner_phase_at_distance(corner, 0.0, 100.0), CORNER_PHASE_APPROACH)
+        self.assertEqual(corner_phase_at_distance(corner, 49.999, 100.0), CORNER_PHASE_APPROACH)
+        self.assertEqual(corner_phase_at_distance(corner, 50.0, 100.0), CORNER_PHASE_ENTRY)
+
+    def test_distance_zero_for_corner_starting_at_zero(self):
+        corner = Corner(name="Start", start_distance_m=0.0, length_m=100.0, radius_m=30.0)
+        self.assertEqual(corner_phase_at_distance(corner, 0.0), CORNER_PHASE_ENTRY)
+        self.assertEqual(corner_phase_at_distance(corner, 1.0), CORNER_PHASE_ENTRY)
+
+    def test_custom_approach_length(self):
+        corner = self.corner()
+        self.assertEqual(corner_phase_at_distance(corner, 850.0, 200.0), CORNER_PHASE_APPROACH)
+        self.assertEqual(corner_phase_at_distance(corner, 799.999, 200.0), CORNER_PHASE_OUTSIDE)
+        self.assertEqual(corner_phase_at_distance(corner, 899.999, 50.0), CORNER_PHASE_OUTSIDE)
+        self.assertEqual(corner_phase_at_distance(corner, 950.0, 50.0), CORNER_PHASE_APPROACH)
+
+    def test_exact_end_distance_returns_outside(self):
+        corner = self.corner()
+        self.assertEqual(corner_phase_at_distance(corner, 1100.0), CORNER_PHASE_OUTSIDE)
+
+    def test_distance_to_start_before_at_inside_after(self):
+        corner = self.corner()
+        self.assertEqual(distance_to_corner_start_m(corner, 800.0), 200.0)
+        self.assertEqual(distance_to_corner_start_m(corner, 1000.0), 0.0)
+        self.assertEqual(distance_to_corner_start_m(corner, 1050.0), 0.0)
+        self.assertEqual(distance_to_corner_start_m(corner, 1100.0), 0.0)
+        self.assertEqual(distance_to_corner_start_m(corner, 1200.0), 0.0)
+
+    def test_invalid_corner_type_rejected(self):
+        for value in (None, 5, "corner"):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    corner_phase_at_distance(value, 950.0)
+                with self.assertRaises(ValueError):
+                    distance_to_corner_start_m(value, 950.0)
+
+    def test_invalid_distances_rejected(self):
+        corner = self.corner()
+        for distance in (-1.0, math.nan, math.inf, -math.inf, True, "900.0", None):
+            with self.subTest(distance=distance):
+                with self.assertRaises(ValueError):
+                    corner_phase_at_distance(corner, distance)
+                with self.assertRaises(ValueError):
+                    distance_to_corner_start_m(corner, distance)
+
+    def test_invalid_approach_length_rejected(self):
+        corner = self.corner()
+        for approach in (0.0, -1.0, math.nan, math.inf, -math.inf, True, "100.0", None):
+            with self.subTest(approach=approach):
+                with self.assertRaises(ValueError):
+                    corner_phase_at_distance(corner, 950.0, approach)
 
 
 if __name__ == "__main__":

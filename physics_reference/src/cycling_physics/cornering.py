@@ -15,11 +15,33 @@ from .validation import _clean_name, _finite, _non_negative, _positive, _positiv
 __all__ = [
     "Corner",
     "CornerProfile",
+    "CORNER_PHASE_OUTSIDE",
+    "CORNER_PHASE_APPROACH",
+    "CORNER_PHASE_ENTRY",
+    "CORNER_PHASE_APEX",
+    "CORNER_PHASE_EXIT",
     "effective_friction_coefficient",
     "maximum_corner_speed_mps",
     "corner_grip_usage",
     "classify_corner_grip_usage",
+    "corner_phase_at_distance",
+    "distance_to_corner_start_m",
 ]
+
+CORNER_PHASE_OUTSIDE = "outside"
+"""Phase returned for distances outside any corner phase."""
+
+CORNER_PHASE_APPROACH = "approach"
+"""Phase covering the road just before the corner start."""
+
+CORNER_PHASE_ENTRY = "entry"
+"""Phase covering the first 25 % of the corner."""
+
+CORNER_PHASE_APEX = "apex"
+"""Phase covering the middle 50 % of the corner."""
+
+CORNER_PHASE_EXIT = "exit"
+"""Phase covering the last 25 % of the corner."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -207,3 +229,69 @@ def classify_corner_grip_usage(grip_usage: float) -> str:
     if usage <= 1.0:
         return "near_limit"
     return "grip_exceeded"
+
+
+def corner_phase_at_distance(
+    corner: Corner,
+    distance_m: float,
+    approach_length_m: float = 100.0,
+) -> str:
+    """Return the cornering phase for a distance along the route.
+
+    corner must be a Corner record, distance_m the position along the route
+    in metres (m), which must be finite and non-negative, and
+    approach_length_m the length of the approach zone in metres (m), which
+    must be finite and greater than zero.
+
+    The approach zone starts at
+    max(0.0, corner.start_distance_m - approach_length_m). The phases are:
+    - "approach": [approach_start, start);
+    - "entry": [start, start + 0.25 * length);
+    - "apex": [start + 0.25 * length, start + 0.75 * length);
+    - "exit": [start + 0.75 * length, end);
+    - "outside": every other valid distance.
+    The exact corner end distance returns "outside". The distance is never
+    rounded.
+    """
+    if not isinstance(corner, Corner):
+        raise ValueError(
+            f"corner must be a Corner, got {type(corner).__name__}"
+        )
+    distance = _non_negative(distance_m, "distance_m")
+    approach_length = _positive(approach_length_m, "approach_length_m")
+
+    start = corner.start_distance_m
+    length = corner.length_m
+    end = corner.end_distance_m
+    approach_start = max(0.0, start - approach_length)
+
+    if distance < start:
+        if distance >= approach_start:
+            return CORNER_PHASE_APPROACH
+        return CORNER_PHASE_OUTSIDE
+    if distance < start + 0.25 * length:
+        return CORNER_PHASE_ENTRY
+    if distance < start + 0.75 * length:
+        return CORNER_PHASE_APEX
+    if distance < end:
+        return CORNER_PHASE_EXIT
+    return CORNER_PHASE_OUTSIDE
+
+
+def distance_to_corner_start_m(corner: Corner, distance_m: float) -> float:
+    """Return the distance to the start of a corner in metres (m).
+
+    corner must be a Corner record and distance_m the position along the
+    route in metres (m), which must be finite and non-negative. Before the
+    corner the result is the positive distance to its start; exactly at the
+    start, inside the corner and after it the result is 0.0. This will later
+    feed HUD messages such as "corner in X m".
+    """
+    if not isinstance(corner, Corner):
+        raise ValueError(
+            f"corner must be a Corner, got {type(corner).__name__}"
+        )
+    distance = _non_negative(distance_m, "distance_m")
+    if distance < corner.start_distance_m:
+        return corner.start_distance_m - distance
+    return 0.0
