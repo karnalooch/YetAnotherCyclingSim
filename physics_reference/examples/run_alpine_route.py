@@ -1,13 +1,16 @@
-"""Demo ride along the sample Alpine Journey route.
+"""Demo ride along the sample Alpine Journey route with scripted weather.
 
-Rides the full 10 km ALPINE_JOURNEY at 20 Hz with the sample power plan,
-prints an entry line whenever a new segment begins and prints a summary at
-the finish. Uses only the public cycling_physics API.
+Rides the full 10 km ALPINE_JOURNEY at 20 Hz with the sample power plan and
+the ALPINE_WEATHER scripted profile. In every step the current route segment
+is resolved from the travelled distance and the Environment is taken from
+ALPINE_WEATHER.environment_at_distance. An entry line is printed whenever a
+new segment begins and a summary is printed at the finish. Uses only the
+public cycling_physics API.
 """
 
 from cycling_physics import (
     ALPINE_JOURNEY,
-    Environment,
+    ALPINE_WEATHER,
     RiderInput,
     RiderParameters,
     SimulationState,
@@ -22,7 +25,6 @@ RIDER = RiderParameters(
     drivetrain_efficiency=0.97,
 )
 
-AIR_DENSITY_KG_M3 = 1.225
 DT_S = 0.05
 MAX_TIME_S = 3600.0
 
@@ -51,7 +53,8 @@ def main():
     current_index = None
 
     print(
-        "segment            distance_m  grade_%  speed_kmh  time_s"
+        "segment            distance_m  grade_%  speed_kmh  time_s  "
+        "wind_mps  wetness  grip"
     )
 
     while (
@@ -59,22 +62,23 @@ def main():
         and state.elapsed_time_s < MAX_TIME_S
     ):
         index = segment_index_at(state.distance_m)
+        segment = ALPINE_JOURNEY.segments[index]
+        environment = ALPINE_WEATHER.environment_at_distance(
+            state.distance_m,
+            segment.grade_decimal,
+        )
         if index != current_index:
-            segment = ALPINE_JOURNEY.segments[index]
             print(
-                f"{segment.name:<18s} {state.distance_m:10.1f} "
-                f"{segment.grade_decimal * 100.0:8.2f} "
-                f"{state.speed_mps * 3.6:10.2f} {state.elapsed_time_s:7.1f}"
+                f"{segment.name:<18s} {state.distance_m:9.1f} "
+                f"{segment.grade_decimal * 100.0:7.2f} "
+                f"{state.speed_mps * 3.6:8.2f} {state.elapsed_time_s:7.1f} "
+                f"{environment.wind_speed_mps:8.2f} "
+                f"{environment.surface_wetness:7.2f} "
+                f"{environment.grip_multiplier:6.2f}"
             )
             current_index = index
 
-        segment = ALPINE_JOURNEY.segments[index]
         power_w, cadence_rpm = POWER_PLAN[segment.name]
-        environment = Environment(
-            grade_decimal=segment.grade_decimal,
-            wind_speed_mps=0.0,
-            air_density_kg_m3=AIR_DENSITY_KG_M3,
-        )
         rider_input = RiderInput(power_w=power_w, cadence_rpm=cadence_rpm)
         state = step_simulation(RIDER, environment, rider_input, state, DT_S)
 

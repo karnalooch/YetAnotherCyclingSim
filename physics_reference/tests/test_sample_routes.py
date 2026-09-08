@@ -4,6 +4,7 @@ import unittest
 
 from cycling_physics import (
     ALPINE_JOURNEY,
+    ALPINE_WEATHER,
     Environment,
     RiderInput,
     RiderParameters,
@@ -81,6 +82,39 @@ def ride_alpine_journey():
     return state
 
 
+def ride_alpine_journey_with_weather():
+    """Ride the full route with the sample power plan and ALPINE_WEATHER.
+
+    Returns the final state and the observed weather ranges during the ride.
+    """
+    state = SimulationState(speed_mps=0.0, distance_m=0.0, elapsed_time_s=0.0)
+    ranges = {
+        "wind_min": float("inf"),
+        "wind_max": float("-inf"),
+        "wetness_min": float("inf"),
+        "wetness_max": float("-inf"),
+        "grip_min": float("inf"),
+        "grip_max": float("-inf"),
+    }
+    while state.distance_m < ALPINE_JOURNEY.total_length_m and state.elapsed_time_s < MAX_TIME_S:
+        segment = ALPINE_JOURNEY.segment_at_distance(state.distance_m)
+        environment = ALPINE_WEATHER.environment_at_distance(
+            state.distance_m,
+            segment.grade_decimal,
+        )
+        power_w, cadence_rpm = POWER_PLAN[segment.name]
+        rider_input = RiderInput(power_w=power_w, cadence_rpm=cadence_rpm)
+        state = step_simulation(RIDER, environment, rider_input, state, DT_S)
+
+        ranges["wind_min"] = min(ranges["wind_min"], environment.wind_speed_mps)
+        ranges["wind_max"] = max(ranges["wind_max"], environment.wind_speed_mps)
+        ranges["wetness_min"] = min(ranges["wetness_min"], environment.surface_wetness)
+        ranges["wetness_max"] = max(ranges["wetness_max"], environment.surface_wetness)
+        ranges["grip_min"] = min(ranges["grip_min"], environment.grip_multiplier)
+        ranges["grip_max"] = max(ranges["grip_max"], environment.grip_multiplier)
+    return state, ranges
+
+
 class TestAlpineJourneyProfile(unittest.TestCase):
     def test_profile_name(self):
         self.assertEqual(ALPINE_JOURNEY.name, "Alpine Journey")
@@ -141,6 +175,39 @@ class TestAlpineJourneyRide(unittest.TestCase):
         self.assertGreaterEqual(state.distance_m, ALPINE_JOURNEY.total_length_m)
         self.assertGreaterEqual(state.elapsed_time_s, 1200.0)
         self.assertLessEqual(state.elapsed_time_s, 1800.0)
+
+
+class TestAlpineJourneyWeatherRide(unittest.TestCase):
+    def test_ride_uses_variable_weather(self):
+        state, ranges = ride_alpine_journey_with_weather()
+        self.assertGreaterEqual(state.distance_m, ALPINE_JOURNEY.total_length_m)
+        self.assertGreater(ranges["wetness_max"], 0.0)
+        self.assertLess(ranges["wetness_min"], ranges["wetness_max"])
+        self.assertLess(ranges["grip_min"], 1.0)
+        self.assertLess(ranges["wind_min"], 0.0)
+        self.assertGreater(ranges["wind_max"], 0.0)
+
+    def test_wet_section_environment_differs_from_start(self):
+        start = ALPINE_WEATHER.environment_at_distance(0.0, grade_decimal=0.0)
+        wet = ALPINE_WEATHER.environment_at_distance(4700.0, grade_decimal=0.0)
+        self.assertLess(start.surface_wetness, wet.surface_wetness)
+        self.assertGreater(start.grip_multiplier, wet.grip_multiplier)
+        self.assertNotEqual(start.wind_speed_mps, wet.wind_speed_mps)
+        self.assertNotEqual(
+            start.rolling_resistance_multiplier,
+            wet.rolling_resistance_multiplier,
+        )
+
+    def test_route_with_weather_is_completed_between_20_and_30_minutes(self):
+        state, _ = ride_alpine_journey_with_weather()
+        self.assertGreaterEqual(state.distance_m, ALPINE_JOURNEY.total_length_m)
+        self.assertGreaterEqual(state.elapsed_time_s, 1200.0)
+        self.assertLessEqual(state.elapsed_time_s, 1800.0)
+
+    def test_run_with_weather_is_deterministic(self):
+        first, _ = ride_alpine_journey_with_weather()
+        second, _ = ride_alpine_journey_with_weather()
+        self.assertEqual(first, second)
 
 
 if __name__ == "__main__":
