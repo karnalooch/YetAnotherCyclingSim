@@ -23,9 +23,9 @@ physics_reference/
   src/
     cycling_physics/
       __init__.py     pakiet Python
-      model.py        docelowe miejsce logiki fizycznej (na razie tylko opis)
+      model.py        kontrakty danych fizyki (bez równań ruchu)
   tests/
-    test_model.py     test sprawdzający, że moduł można zaimportować
+    test_model.py     testy kontraktów danych i walidacji
 ```
 
 ## Uruchamianie testów
@@ -45,5 +45,9 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 
 ## Obecny stan
 
-Model jest szkieletem. Równania ruchu nie zostały jeszcze zaimplementowane —
-najpierw powstaną w tym module, a następnie zostaną przeniesione do C++ w UE5.
+Model zawiera zdefiniowane **kontrakty danych**: niezmienne rekordy
+`RiderParameters`, `Environment`, `RiderInput` i `SimulationState` (dataclass
+ze `slots`), z walidacją wartości w momencie tworzenia i komunikatami
+`ValueError` dla błędnych danych. Równania ruchu nie zostały jeszcze
+zaimplementowane — najpierw powstaną w tym module, a następnie zostaną
+przeniesione do C++ w UE5.
