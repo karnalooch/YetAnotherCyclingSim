@@ -20,12 +20,14 @@ szybko testować logikę poza edytorem, bez uruchamiania silnika graficznego.
 physics_reference/
   pyproject.toml      metadane projektu
   README.md           ten plik
+  examples/
+    run_demo.py       przykładowy przejazd demonstracyjny
   src/
     cycling_physics/
       __init__.py     pakiet Python
-      model.py        kontrakty danych fizyki (bez równań ruchu)
+      model.py        kontrakty danych, siły i krok symulacji
   tests/
-    test_model.py     testy kontraktów danych i walidacji
+    test_model.py     testy kontraktów danych, sił i kroku symulacji
 ```
 
 ## Uruchamianie testów
@@ -43,11 +45,33 @@ Na systemach z powłoką POSIX odpowiednikiem jest:
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
+## Przykład uruchomienia
+
+Skrypt `examples/run_demo.py` symuluje 60-sekundowy przejazd z krokiem
+20 Hz przez cztery fazy (start na płaskim, podjazd, zjazd bez pedałowania,
+zjazd z mocą) i wypisuje stan co 5 sekund oraz podsumowanie.
+
+Z katalogu `physics_reference/`, w aktywnym środowisku z zainstalowanym
+pakietem:
+
+```
+python examples/run_demo.py
+```
+
+Jeśli pakiet nie jest zainstalowany (bez `pip install -e .`), wskaż katalog
+`src` zmienną `PYTHONPATH`, np. w PowerShell:
+
+```
+$env:PYTHONPATH = "src"
+python examples/run_demo.py
+```
+
 ## Obecny stan
 
 Model zawiera zdefiniowane **kontrakty danych**: niezmienne rekordy
 `RiderParameters`, `Environment`, `RiderInput` i `SimulationState` (dataclass
 ze `slots`), z walidacją wartości w momencie tworzenia i komunikatami
-`ValueError` dla błędnych danych. Równania ruchu nie zostały jeszcze
-zaimplementowane — najpierw powstaną w tym module, a następnie zostaną
-przeniesione do C++ w UE5.
+`ValueError` dla błędnych danych. Na ich podstawie zaimplementowano siły
+(grawitacja, opór toczenia, opór aerodynamiczny) oraz pojedynczy
+deterministyczny krok symulacji `step_simulation` metodą bilansu energii.
+Wyniki zostaną następnie przeniesione do C++ w UE5.
