@@ -42,14 +42,6 @@ def _non_negative(value, field_name):
     return result
 
 
-def _efficiency(value, field_name):
-    """Return a validated float inside the open-closed interval (0, 1]."""
-    result = _finite(value, field_name)
-    if not 0.0 < result <= 1.0:
-        raise ValueError(f"{field_name} must be in the interval (0, 1], got {result}")
-    return result
-
-
 def _clean_name(value, field_name):
     """Return value as a stripped non-empty string."""
     if not isinstance(value, str):
@@ -61,3 +53,19 @@ def _clean_name(value, field_name):
     if not cleaned:
         raise ValueError(f"{field_name} must not be empty after stripping whitespace")
     return cleaned
+
+
+def _closed_unit_interval(value, field_name):
+    """Return a validated float inside the closed interval [0, 1]."""
+    result = _finite(value, field_name)
+    if not 0.0 <= result <= 1.0:
+        raise ValueError(f"{field_name} must be in the interval [0, 1], got {result}")
+    return result
+
+
+def _positive_at_most_one(value, field_name):
+    """Return a validated float inside the open-closed interval (0, 1]."""
+    result = _finite(value, field_name)
+    if not 0.0 < result <= 1.0:
+        raise ValueError(f"{field_name} must be in the interval (0, 1], got {result}")
+    return result

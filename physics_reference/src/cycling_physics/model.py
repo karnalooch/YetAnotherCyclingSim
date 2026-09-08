@@ -10,10 +10,11 @@ import math
 from dataclasses import dataclass
 
 from .validation import (
-    _efficiency,
+    _closed_unit_interval,
     _finite,
     _non_negative,
     _positive,
+    _positive_at_most_one,
 )
 
 STANDARD_GRAVITY_MPS2 = 9.80665
@@ -66,7 +67,7 @@ class RiderParameters:
             "rolling_resistance_coefficient",
             _non_negative(self.rolling_resistance_coefficient, "rolling_resistance_coefficient"),
         )
-        object.__setattr__(self, "drivetrain_efficiency", _efficiency(self.drivetrain_efficiency, "drivetrain_efficiency"))
+        object.__setattr__(self, "drivetrain_efficiency", _positive_at_most_one(self.drivetrain_efficiency, "drivetrain_efficiency"))
 
     @property
     def total_mass_kg(self) -> float:
@@ -79,7 +80,11 @@ class Environment:
     """Environmental conditions along the route, in SI units.
 
     All fields are stored as floats and must be finite. Grade and wind may be
-    negative; air density must be greater than zero.
+    negative; air density must be greater than zero. The surface and grip
+    fields are dimensionless contract values: surface_wetness lies in
+    [0, 1], rolling_resistance_multiplier must be greater than zero and
+    grip_multiplier lies in (0, 1]. grip_multiplier is reserved for the
+    future cornering system and does not affect the current physics.
     """
 
     grade_decimal: float
@@ -91,10 +96,22 @@ class Environment:
     air_density_kg_m3: float
     """Air density in kilograms per cubic metre (kg/m^3). Must be greater than zero."""
 
+    surface_wetness: float = 0.0
+    """Road wetness (unitless): 0.0 is a completely dry road, 1.0 a completely wet road. Must be in the interval [0, 1]. It is a contract value and does not yet affect resistance by itself."""
+
+    rolling_resistance_multiplier: float = 1.0
+    """Dimensionless multiplier applied to the base rolling resistance coefficient Crr. Must be greater than zero."""
+
+    grip_multiplier: float = 1.0
+    """Dimensionless grip multiplier (unitless): 1.0 is base grip, smaller values mean limited grip. Must be in the interval (0, 1]. Reserved for the future cornering system; it does not affect the current physics."""
+
     def __post_init__(self):
         object.__setattr__(self, "grade_decimal", _finite(self.grade_decimal, "grade_decimal"))
         object.__setattr__(self, "wind_speed_mps", _finite(self.wind_speed_mps, "wind_speed_mps"))
         object.__setattr__(self, "air_density_kg_m3", _positive(self.air_density_kg_m3, "air_density_kg_m3"))
+        object.__setattr__(self, "surface_wetness", _closed_unit_interval(self.surface_wetness, "surface_wetness"))
+        object.__setattr__(self, "rolling_resistance_multiplier", _positive(self.rolling_resistance_multiplier, "rolling_resistance_multiplier"))
+        object.__setattr__(self, "grip_multiplier", _positive_at_most_one(self.grip_multiplier, "grip_multiplier"))
 
 
 @dataclass(frozen=True, slots=True)
@@ -166,14 +183,18 @@ def rolling_resistance_force_n(rider: RiderParameters, environment: Environment)
     """Compute the rolling resistance force, in newtons (N).
 
     rider must be a RiderParameters record and environment an Environment
-    record. The force uses rider.rolling_resistance_coefficient, the
-    combined mass and the component of weight perpendicular to the road
-    (standard gravity times cos of the road angle). The result is always
-    non-negative and opposes forward motion.
+    record. The force uses the effective rolling resistance coefficient,
+    which is rider.rolling_resistance_coefficient multiplied by
+    environment.rolling_resistance_multiplier, together with the combined
+    mass and the component of weight perpendicular to the road (standard
+    gravity times cos of the road angle). surface_wetness does not affect
+    this force on its own. The result is always non-negative and opposes
+    forward motion.
     """
     angle = road_angle_rad(environment.grade_decimal)
     normal_load = rider.total_mass_kg * STANDARD_GRAVITY_MPS2 * math.cos(angle)
-    return rider.rolling_resistance_coefficient * normal_load
+    effective_crr = rider.rolling_resistance_coefficient * environment.rolling_resistance_multiplier
+    return effective_crr * normal_load
 
 
 def aerodynamic_force_n(

@@ -557,5 +557,91 @@ class TestStepSimulation(unittest.TestCase):
             self.assertTrue(math.isfinite(getattr(result, field.name)))
 
 
+class TestEnvironmentSurfaceAndGrip(unittest.TestCase):
+    def _environment(self, **overrides):
+        values = dict(
+            grade_decimal=0.0,
+            wind_speed_mps=0.0,
+            air_density_kg_m3=1.225,
+            surface_wetness=0.0,
+            rolling_resistance_multiplier=1.0,
+            grip_multiplier=1.0,
+        )
+        values.update(overrides)
+        return Environment(**values)
+
+    def test_three_argument_environment_gets_defaults(self):
+        env = Environment(grade_decimal=0.0, wind_speed_mps=0.0, air_density_kg_m3=1.225)
+        self.assertEqual(env.surface_wetness, 0.0)
+        self.assertEqual(env.rolling_resistance_multiplier, 1.0)
+        self.assertEqual(env.grip_multiplier, 1.0)
+
+    def test_wetness_boundaries_allowed(self):
+        dry = self._environment(surface_wetness=0.0)
+        wet = self._environment(surface_wetness=1.0)
+        self.assertEqual(dry.surface_wetness, 0.0)
+        self.assertEqual(wet.surface_wetness, 1.0)
+
+    def test_wetness_out_of_range_rejected(self):
+        for wetness in (-0.001, 1.001, 2.0, -1.0):
+            with self.subTest(wetness=wetness):
+                with self.assertRaises(ValueError):
+                    self._environment(surface_wetness=wetness)
+
+    def test_rolling_resistance_multiplier_non_positive_rejected(self):
+        for multiplier in (0.0, -1.0, -0.5):
+            with self.subTest(multiplier=multiplier):
+                with self.assertRaises(ValueError):
+                    self._environment(rolling_resistance_multiplier=multiplier)
+
+    def test_grip_out_of_range_rejected(self):
+        for grip in (0.0, -1.0, 1.0001, 2.0):
+            with self.subTest(grip=grip):
+                with self.assertRaises(ValueError):
+                    self._environment(grip_multiplier=grip)
+
+    def test_non_numeric_surface_values_rejected(self):
+        for value in (math.nan, math.inf, -math.inf, True, False, "0.5", None):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    self._environment(surface_wetness=value)
+                with self.assertRaises(ValueError):
+                    self._environment(rolling_resistance_multiplier=value)
+                with self.assertRaises(ValueError):
+                    self._environment(grip_multiplier=value)
+
+    def test_multiplier_1_25_increases_rolling_resistance_by_25_percent(self):
+        rider = _valid_rider()
+        base = rolling_resistance_force_n(rider, self._environment())
+        scaled = rolling_resistance_force_n(
+            rider,
+            self._environment(rolling_resistance_multiplier=1.25),
+        )
+        self.assertAlmostEqual(scaled, base * 1.25, places=12)
+
+    def test_surface_wetness_alone_does_not_change_rolling_resistance(self):
+        rider = _valid_rider()
+        dry = rolling_resistance_force_n(rider, self._environment(surface_wetness=0.0))
+        wet = rolling_resistance_force_n(rider, self._environment(surface_wetness=1.0))
+        self.assertEqual(dry, wet)
+
+    def test_grip_multiplier_does_not_change_step_simulation(self):
+        base = self._environment(grip_multiplier=1.0)
+        limited = self._environment(grip_multiplier=0.5)
+        start = SimulationState(speed_mps=5.0, distance_m=0.0, elapsed_time_s=0.0)
+        rider = _valid_rider()
+        rider_input = RiderInput(power_w=250.0, cadence_rpm=90.0)
+
+        state = start
+        for _ in range(200):
+            state = step_simulation(rider, base, rider_input, state, 0.05)
+
+        other_state = start
+        for _ in range(200):
+            other_state = step_simulation(rider, limited, rider_input, other_state, 0.05)
+
+        self.assertEqual(state, other_state)
+
+
 if __name__ == "__main__":
     unittest.main()
