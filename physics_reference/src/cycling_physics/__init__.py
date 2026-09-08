@@ -1,5 +1,11 @@
 """Reference cycling physics package for the YetAnotherCyclingSim project."""
 
+from .cornering import (
+    Corner,
+    corner_grip_usage,
+    effective_friction_coefficient,
+    maximum_corner_speed_mps,
+)
 from .model import (
     STANDARD_GRAVITY_MPS2,
     Environment,
@@ -29,6 +35,10 @@ __all__ = [
     "WeatherProfile",
     "ALPINE_JOURNEY",
     "ALPINE_WEATHER",
+    "Corner",
+    "effective_friction_coefficient",
+    "maximum_corner_speed_mps",
+    "corner_grip_usage",
     "road_angle_rad",
     "gravitational_force_n",
     "rolling_resistance_force_n",
