@@ -63,6 +63,8 @@ YetAnotherCyclingSim.
 
 **Planowany czas:** tydzień 1–2
 
+**Status:** ukończony
+
 ## Cel
 
 Stworzyć testowalny model jazdy, zanim powstanie docelowa trasa i grafika.
@@ -82,12 +84,18 @@ Stworzyć testowalny model jazdy, zanim powstanie docelowa trasa i grafika.
 - [x] Dodanie testów dla podjazdu, płaskiego odcinka i zjazdu.
 - [x] Dodanie prostego rejestru wyników symulacji.
 
-**Uwaga:** Etap 1 został zrealizowany najpierw jako referencyjny pakiet
-Pythona w katalogu `physics_reference/` (kontrakty danych, siły, stały krok
-czasowy i testy jednostkowe). Obecnie przechodzi **258 testów automatycznych**.
-Prototypy Pythona dotyczące trasy, pogody i zakrętów nie oznaczają jednak
-ukończenia późniejszych etapów Unreal Engine — te etapy nadal wymagają
-implementacji i weryfikacji w UE5.
+**Uwaga:** Referencyjny pakiet Pythona w katalogu `physics_reference/`
+(kontrakty danych, siły, stały krok czasowy i testy jednostkowe) jest
+ukończony i przechodzi **258 testów automatycznych**. Port C++ do Unreal
+Engine jest ukończony: zawiera kontrakty danych, siły oporu,
+deterministyczny krok symulacji oraz testy dynamiki długookresowej.
+Budowa edytora UE 5.8 (Windows, Development) kończy się sukcesem,
+a wszystkie cztery testy automatyczne `CyclingPhysics` przechodzą.
+Etap 1 dostarcza czyste obliczenia ze stałym krokiem czasowym; akumulator
+czasu w trakcie gry, który uniezależnia rozgrywkę od zmiennego FPS,
+pozostaje częścią etapu 2. Prototypy Pythona dotyczące trasy, pogody
+i zakrętów nie oznaczają jednak ukończenia późniejszych etapów Unreal
+Engine — te etapy nadal wymagają implementacji i weryfikacji w UE5.
 
 ## Kryterium ukończenia
 
