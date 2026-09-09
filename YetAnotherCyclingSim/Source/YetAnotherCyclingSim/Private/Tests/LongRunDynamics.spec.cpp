@@ -185,6 +185,7 @@ bool FLongRunDynamicsTest::RunTest(const FString& Parameters)
 		FSimulationState State = MakeState(5.0);
 		bool Stopped = false;
 		int32 StopStep = -1;
+		double StopTimeS = 0.0;
 
 		for (int32 StepIndex = 0; StepIndex < Steps60sAt50ms; ++StepIndex)
 		{
@@ -205,6 +206,7 @@ bool FLongRunDynamicsTest::RunTest(const FString& Parameters)
 				if (StopStep < 0)
 				{
 					StopStep = StepIndex;
+					StopTimeS = Next.ElapsedTimeS;
 				}
 			}
 			else if (Stopped)
@@ -218,7 +220,7 @@ bool FLongRunDynamicsTest::RunTest(const FString& Parameters)
 
 		TestTrue(TEXT("bike stopped on the climb"), Stopped);
 		TestTrue(TEXT("final speed is zero"), State.SpeedMps == 0.0);
-		AddInfo(FString::Printf(TEXT("rider stopped at step %d (%.3f s)"), StopStep, StopStep * 0.05));
+		AddInfo(FString::Printf(TEXT("rider stopped at step %d (%.3f s)"), StopStep, StopTimeS));
 	}
 
 	// --- Accelerate from rest on a 6% descent for 30 seconds ---
