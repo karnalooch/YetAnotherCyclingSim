@@ -2,7 +2,7 @@
 
 #include "Misc/AutomationTest.h"
 #include "Math/UnrealMathUtility.h"
-#include "Math/NumericLimits.h"
+#include <limits>
 
 #include "Cycling/RiderParameters.h"
 #include "Cycling/Environment.h"
@@ -11,8 +11,8 @@
 
 namespace SimulationDataTest
 {
-	const double NaNValue = TNumericLimits<double>::NaN();
-	const double InfinityValue = TNumericLimits<double>::Infinity();
+	const double NaNValue = std::numeric_limits<double>::quiet_NaN();
+	const double InfinityValue = std::numeric_limits<double>::infinity();
 
 	void ExpectNearlyEqual(FAutomationTestBase& Test, double Actual, double Expected, double Tolerance = 1e-9)
 	{
