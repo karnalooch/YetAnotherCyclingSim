@@ -38,13 +38,17 @@ Zakresu nie zwiększamy bez aktualizacji dokumentu wymagań i roadmapy.
 - [x] Utworzenie prywatnego repozytorium GitHub.
 - [x] Dodanie `.gitignore` dla Unreal Engine.
 - [x] Utworzenie dokumentu wymagań.
-- [ ] Utworzenie roadmapy.
-- [ ] Konfiguracja Git LFS.
-- [ ] Utworzenie zasad pracy dla asystentów AI.
+- [x] Utworzenie roadmapy.
+- [x] Konfiguracja Git LFS.
+- [x] Utworzenie zasad pracy dla asystentów AI.
 - [ ] Utworzenie tablicy zadań.
-- [ ] Instalacja wymaganych narzędzi na komputerze domowym.
-- [ ] Utworzenie projektu Unreal Engine 5.
-- [ ] Uruchomienie pustego projektu na komputerze referencyjnym.
+- [x] Instalacja wymaganych narzędzi na komputerze domowym.
+- [x] Utworzenie projektu Unreal Engine 5.
+- [x] Uruchomienie pustego projektu na komputerze referencyjnym.
+
+**Notatka statusowa:** na komputerze referencyjnym udało się zbudować projekt
+UE 5.8 w trybie C++ (edytor, Windows) oraz uruchomić pusty projekt
+YetAnotherCyclingSim.
 
 ## Kryterium ukończenia
 
@@ -65,18 +69,25 @@ Stworzyć testowalny model jazdy, zanim powstanie docelowa trasa i grafika.
 
 ## Zadania
 
-- [ ] Zdefiniowanie jednostek wszystkich parametrów.
-- [ ] Zdefiniowanie danych wejściowych i wyjściowych silnika fizycznego.
-- [ ] Implementacja masy kolarza i roweru.
-- [ ] Implementacja mocy i kadencji testowej.
-- [ ] Implementacja grawitacji.
-- [ ] Implementacja oporu toczenia.
-- [ ] Implementacja oporu aerodynamicznego.
-- [ ] Implementacja wiatru.
-- [ ] Implementacja przyspieszania i toczenia.
-- [ ] Zastosowanie stałego kroku czasowego.
-- [ ] Dodanie testów dla podjazdu, płaskiego odcinka i zjazdu.
-- [ ] Dodanie prostego rejestru wyników symulacji.
+- [x] Zdefiniowanie jednostek wszystkich parametrów.
+- [x] Zdefiniowanie danych wejściowych i wyjściowych silnika fizycznego.
+- [x] Implementacja masy kolarza i roweru.
+- [x] Implementacja mocy i kadencji testowej.
+- [x] Implementacja grawitacji.
+- [x] Implementacja oporu toczenia.
+- [x] Implementacja oporu aerodynamicznego.
+- [x] Implementacja wiatru.
+- [x] Implementacja przyspieszania i toczenia.
+- [x] Zastosowanie stałego kroku czasowego.
+- [x] Dodanie testów dla podjazdu, płaskiego odcinka i zjazdu.
+- [x] Dodanie prostego rejestru wyników symulacji.
+
+**Uwaga:** Etap 1 został zrealizowany najpierw jako referencyjny pakiet
+Pythona w katalogu `physics_reference/` (kontrakty danych, siły, stały krok
+czasowy i testy jednostkowe). Obecnie przechodzi **258 testów automatycznych**.
+Prototypy Pythona dotyczące trasy, pogody i zakrętów nie oznaczają jednak
+ukończenia późniejszych etapów Unreal Engine — te etapy nadal wymagają
+implementacji i weryfikacji w UE5.
 
 ## Kryterium ukończenia
 
