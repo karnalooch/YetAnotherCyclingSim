@@ -15,7 +15,6 @@ namespace FixedStepRunnerTest
 	const double NaNValue = std::numeric_limits<double>::quiet_NaN();
 	const double InfinityValue = std::numeric_limits<double>::infinity();
 	const double Tolerance = 1e-9;
-	const double FixedStep = 0.05;
 
 	void ExpectNearlyEqual(FAutomationTestBase& Test, double Actual, double Expected, double ToleranceValue = Tolerance)
 	{
@@ -134,16 +133,54 @@ bool FFixedStepRunnerTest::RunTest(const FString& Parameters)
 
 	{
 		FFixedStepSimulationRunner Runner;
-		FSimulationState OutState = MakeValidRider();
-		double RemainingTime = 1.0;
-		int32 CompletedSteps = 5;
-		FString Error = TEXT("stale");
+
+		// Give the runner real state so "unchanged" is meaningful.
+		{
+			FSimulationState WarmupState;
+			double WarmupRemainingTime = 0.0;
+			int32 WarmupCompletedSteps = 0;
+			FString WarmupError;
+			Runner.TryAdvance(0.1, MakeValidRider(), MakeEnvironment(), MakeRiderInput(250.0), WarmupState, WarmupRemainingTime, WarmupCompletedSteps, WarmupError);
+		}
+
+		const FSimulationState PreState = Runner.GetState();
+		const double PreAccumulatedTimeS = Runner.GetAccumulatedTimeS();
+
+		constexpr double SentinelSpeedMps = 111.0;
+		constexpr double SentinelDistanceM = 222.0;
+		constexpr double SentinelElapsedTimeS = 333.0;
+		constexpr double SentinelRemainingTime = 444.0;
+		constexpr int32 SentinelCompletedSteps = 555;
 
 		for (double InvalidDelta : { -0.01, NaNValue, InfinityValue, -InfinityValue })
 		{
+			// Reset the sentinels before every call.
+			FSimulationState OutState;
+			OutState.SpeedMps = SentinelSpeedMps;
+			OutState.DistanceM = SentinelDistanceM;
+			OutState.ElapsedTimeS = SentinelElapsedTimeS;
+
+			double RemainingTime = SentinelRemainingTime;
+			int32 CompletedSteps = SentinelCompletedSteps;
+			FString Error = TEXT("stale");
+
 			TestFalse(TEXT("invalid frame delta fails"), Runner.TryAdvance(InvalidDelta, MakeValidRider(), MakeEnvironment(), MakeRiderInput(250.0), OutState, RemainingTime, CompletedSteps, Error));
-			TestTrue(TEXT("error message is set"), !Error.IsEmpty());
-			TestTrue(TEXT("completed steps is zero after failure"), CompletedSteps == 0);
+
+			// OutState sentinels and remaining time must not be published on failure.
+			ExpectNearlyEqual(*this, OutState.SpeedMps, SentinelSpeedMps);
+			ExpectNearlyEqual(*this, OutState.DistanceM, SentinelDistanceM);
+			ExpectNearlyEqual(*this, OutState.ElapsedTimeS, SentinelElapsedTimeS);
+			ExpectNearlyEqual(*this, RemainingTime, SentinelRemainingTime);
+
+			// A failure reports zero completed steps and a useful error.
+			TestTrue(TEXT("completed steps is zero after invalid frame delta"), CompletedSteps == 0);
+			TestTrue(TEXT("error message is set after invalid frame delta"), !Error.IsEmpty());
+
+			// Internal runner state and accumulator must be unchanged.
+			ExpectNearlyEqual(*this, Runner.GetState().SpeedMps, PreState.SpeedMps);
+			ExpectNearlyEqual(*this, Runner.GetState().DistanceM, PreState.DistanceM);
+			ExpectNearlyEqual(*this, Runner.GetState().ElapsedTimeS, PreState.ElapsedTimeS);
+			ExpectNearlyEqual(*this, Runner.GetAccumulatedTimeS(), PreAccumulatedTimeS);
 		}
 	}
 
@@ -179,33 +216,53 @@ bool FFixedStepRunnerTest::RunTest(const FString& Parameters)
 		const FEnvironment Environment = MakeEnvironment();
 		const FRiderInput Input = MakeRiderInput(250.0);
 
+		// Result captured from a single execution of one frame sequence.
+		struct FSequenceResult
+		{
+			FSimulationState FinalState;
+			double RemainingTimeS = 0.0;
+			int32 TotalCompletedSteps = 0;
+			bool bAllSucceeded = false;
+		};
+
+		// Runs a frame sequence once and captures the final state, remaining
+		// accumulated time, cumulative completed steps and success flag.
+		auto RunSequence = [&](const double* FrameDeltas, int32 FrameCount) -> FSequenceResult
+		{
+			FSequenceResult Result;
+			FFixedStepSimulationRunner Runner;
+
+			for (int32 FrameIndex = 0; FrameIndex < FrameCount; ++FrameIndex)
+			{
+				FSimulationState OutState;
+				double RemainingTime = 0.0;
+				int32 FrameCompletedSteps = 0;
+				FString Error;
+
+				if (!Runner.TryAdvance(FrameDeltas[FrameIndex], Rider, Environment, Input, OutState, RemainingTime, FrameCompletedSteps, Error))
+				{
+					return Result;
+				}
+
+				Result.FinalState = OutState;
+				Result.RemainingTimeS = RemainingTime;
+				Result.TotalCompletedSteps += FrameCompletedSteps;
+			}
+
+			Result.bAllSucceeded = true;
+			return Result;
+		};
+
 		// Sequence 1: 30 FPS - 30 frames each intended as 1/30 seconds.
 		// Mathematical intended total duration: 30 * (1/30) = 1.0 seconds.
 		// Binary floating-point representation does not represent 1/30 exactly,
 		// so the summed value will deviate from exactly 1.0 by an amount
 		// within FixedStepBoundaryToleranceS.
 		// Expected cumulative fixed steps: floor(1.0 / 0.05) = 20.
+		double Frames30FPS[30];
+		for (int32 i = 0; i < 30; ++i)
 		{
-			FFixedStepSimulationRunner Runner;
-			FSimulationState OutState;
-			double RemainingTime;
-			int32 FrameCompletedSteps;
-			FString Error;
-			int32 TotalCompletedSteps = 0;
-			bool bAllSucceeded = true;
-
-			for (int32 i = 0; i < 30; ++i)
-			{
-				if (!Runner.TryAdvance(1.0 / 30.0, Rider, Environment, Input, OutState, RemainingTime, FrameCompletedSteps, Error))
-				{
-					bAllSucceeded = false;
-					break;
-				}
-				TotalCompletedSteps += FrameCompletedSteps;
-			}
-
-			TestTrue(TEXT("30 FPS every frame succeeds"), bAllSucceeded);
-			TestEqual(TEXT("30 FPS cumulative steps equal 20"), TotalCompletedSteps, 20);
+			Frames30FPS[i] = 1.0 / 30.0;
 		}
 
 		// Sequence 2: 60 FPS - 60 frames each intended as 1/60 seconds.
@@ -214,27 +271,10 @@ bool FFixedStepRunnerTest::RunTest(const FString& Parameters)
 		// so the summed value will deviate from exactly 1.0 by an amount
 		// within FixedStepBoundaryToleranceS.
 		// Expected cumulative fixed steps: floor(1.0 / 0.05) = 20.
+		double Frames60FPS[60];
+		for (int32 i = 0; i < 60; ++i)
 		{
-			FFixedStepSimulationRunner Runner;
-			FSimulationState OutState;
-			double RemainingTime;
-			int32 FrameCompletedSteps;
-			FString Error;
-			int32 TotalCompletedSteps = 0;
-			bool bAllSucceeded = true;
-
-			for (int32 i = 0; i < 60; ++i)
-			{
-				if (!Runner.TryAdvance(1.0 / 60.0, Rider, Environment, Input, OutState, RemainingTime, FrameCompletedSteps, Error))
-				{
-					bAllSucceeded = false;
-					break;
-				}
-				TotalCompletedSteps += FrameCompletedSteps;
-			}
-
-			TestTrue(TEXT("60 FPS every frame succeeds"), bAllSucceeded);
-			TestEqual(TEXT("60 FPS cumulative steps equal 20"), TotalCompletedSteps, 20);
+			Frames60FPS[i] = 1.0 / 60.0;
 		}
 
 		// Sequence 3: Genuinely jittered frames - varying positive deltas.
@@ -244,120 +284,60 @@ bool FFixedStepRunnerTest::RunTest(const FString& Parameters)
 		// Individual frames are below and above the 0.05 fixed-step boundary,
 		// exercising accumulation across irregular boundaries.
 		// Expected cumulative fixed steps: floor(1.0 / 0.05) = 20.
-		// Per-frame breakdown:
-		//   0.04 -> acc=0.04, 0 steps
-		//   0.06 -> acc=0.10, 2 steps, rem=0.0
-		//   0.03 -> acc=0.03, 0 steps
-		//   0.07 -> acc=0.10, 2 steps, rem=0.0
-		// Per cycle: 4 steps. 5 cycles: 20 steps.
+		double JitteredFrames[20];
 		{
-			FFixedStepSimulationRunner Runner;
-			FSimulationState OutState;
-			double RemainingTime;
-			int32 FrameCompletedSteps;
-			FString Error;
-			int32 TotalCompletedSteps = 0;
-			bool bAllSucceeded = true;
-
 			const double JitteredPattern[] = { 0.04, 0.06, 0.03, 0.07 };
 			for (int32 Cycle = 0; Cycle < 5; ++Cycle)
 			{
-				for (double FrameDelta : JitteredPattern)
+				for (int32 PatternIndex = 0; PatternIndex < 4; ++PatternIndex)
 				{
-					if (!Runner.TryAdvance(FrameDelta, Rider, Environment, Input, OutState, RemainingTime, FrameCompletedSteps, Error))
-					{
-						bAllSucceeded = false;
-						break;
-					}
-					TotalCompletedSteps += FrameCompletedSteps;
-				}
-				if (!bAllSucceeded)
-				{
-					break;
+					JitteredFrames[Cycle * 4 + PatternIndex] = JitteredPattern[PatternIndex];
 				}
 			}
-
-			TestTrue(TEXT("jittered every frame succeeds"), bAllSucceeded);
-			TestEqual(TEXT("jittered cumulative steps equal 20"), TotalCompletedSteps, 20);
 		}
 
-		// Re-run all three sequences and capture final states for exact equality check.
-		FSimulationState State30FPS;
-		FSimulationState State60FPS;
-		FSimulationState StateJittered;
-		double RemainingTime30FPS = 0.0;
-		double RemainingTime60FPS = 0.0;
-		double RemainingTimeJittered = 0.0;
+		const FSequenceResult Result30FPS = RunSequence(Frames30FPS, 30);
+		const FSequenceResult Result60FPS = RunSequence(Frames60FPS, 60);
+		const FSequenceResult ResultJittered = RunSequence(JitteredFrames, 20);
 
-		{
-			FFixedStepSimulationRunner Runner;
-			FSimulationState OutState;
-			double RemainingTime;
-			int32 FrameCompletedSteps;
-			FString Error;
-			for (int32 i = 0; i < 30; ++i)
-			{
-				Runner.TryAdvance(1.0 / 30.0, Rider, Environment, Input, OutState, RemainingTime, FrameCompletedSteps, Error);
-			}
-			State30FPS = OutState;
-			RemainingTime30FPS = RemainingTime;
-		}
+		// Every sequence must complete every frame successfully.
+		TestTrue(TEXT("30 FPS every frame succeeds"), Result30FPS.bAllSucceeded);
+		TestTrue(TEXT("60 FPS every frame succeeds"), Result60FPS.bAllSucceeded);
+		TestTrue(TEXT("jittered every frame succeeds"), ResultJittered.bAllSucceeded);
 
-		{
-			FFixedStepSimulationRunner Runner;
-			FSimulationState OutState;
-			double RemainingTime;
-			int32 FrameCompletedSteps;
-			FString Error;
-			for (int32 i = 0; i < 60; ++i)
-			{
-				Runner.TryAdvance(1.0 / 60.0, Rider, Environment, Input, OutState, RemainingTime, FrameCompletedSteps, Error);
-			}
-			State60FPS = OutState;
-			RemainingTime60FPS = RemainingTime;
-		}
+		// Every sequence must complete exactly 20 fixed steps.
+		TestEqual(TEXT("30 FPS cumulative steps equal 20"), Result30FPS.TotalCompletedSteps, 20);
+		TestEqual(TEXT("60 FPS cumulative steps equal 20"), Result60FPS.TotalCompletedSteps, 20);
+		TestEqual(TEXT("jittered cumulative steps equal 20"), ResultJittered.TotalCompletedSteps, 20);
 
-		{
-			FFixedStepSimulationRunner Runner;
-			FSimulationState OutState;
-			double RemainingTime;
-			int32 FrameCompletedSteps;
-			FString Error;
-			const double JitteredPattern[] = { 0.04, 0.06, 0.03, 0.07 };
-			for (int32 Cycle = 0; Cycle < 5; ++Cycle)
-			{
-				for (double FrameDelta : JitteredPattern)
-				{
-					Runner.TryAdvance(FrameDelta, Rider, Environment, Input, OutState, RemainingTime, FrameCompletedSteps, Error);
-				}
-			}
-			StateJittered = OutState;
-			RemainingTimeJittered = RemainingTime;
-		}
+		// All cumulative step counts must be equal across sequences.
+		TestEqual(TEXT("30 FPS and 60 FPS cumulative steps equal"), Result30FPS.TotalCompletedSteps, Result60FPS.TotalCompletedSteps);
+		TestEqual(TEXT("30 FPS and jittered cumulative steps equal"), Result30FPS.TotalCompletedSteps, ResultJittered.TotalCompletedSteps);
+		TestEqual(TEXT("60 FPS and jittered cumulative steps equal"), Result60FPS.TotalCompletedSteps, ResultJittered.TotalCompletedSteps);
 
-		// Verify SpeedMps is exactly identical across all three final states
-		TestEqual(TEXT("30 FPS vs 60 FPS speed identical"), State30FPS.SpeedMps, State60FPS.SpeedMps);
-		TestEqual(TEXT("30 FPS vs jittered speed identical"), State30FPS.SpeedMps, StateJittered.SpeedMps);
+		// SpeedMps must be exactly identical across all three final states.
+		TestEqual(TEXT("30 FPS vs 60 FPS speed identical"), Result30FPS.FinalState.SpeedMps, Result60FPS.FinalState.SpeedMps);
+		TestEqual(TEXT("30 FPS vs jittered speed identical"), Result30FPS.FinalState.SpeedMps, ResultJittered.FinalState.SpeedMps);
 
-		// Verify DistanceM is exactly identical across all three final states
-		TestEqual(TEXT("30 FPS vs 60 FPS distance identical"), State30FPS.DistanceM, State60FPS.DistanceM);
-		TestEqual(TEXT("30 FPS vs jittered distance identical"), State30FPS.DistanceM, StateJittered.DistanceM);
+		// DistanceM must be exactly identical across all three final states.
+		TestEqual(TEXT("30 FPS vs 60 FPS distance identical"), Result30FPS.FinalState.DistanceM, Result60FPS.FinalState.DistanceM);
+		TestEqual(TEXT("30 FPS vs jittered distance identical"), Result30FPS.FinalState.DistanceM, ResultJittered.FinalState.DistanceM);
 
-		// Verify ElapsedTimeS is exactly identical across all three final states
-		TestEqual(TEXT("30 FPS vs 60 FPS time identical"), State30FPS.ElapsedTimeS, State60FPS.ElapsedTimeS);
-		TestEqual(TEXT("30 FPS vs jittered time identical"), State30FPS.ElapsedTimeS, StateJittered.ElapsedTimeS);
+		// ElapsedTimeS must be exactly identical across all three final states.
+		TestEqual(TEXT("30 FPS vs 60 FPS time identical"), Result30FPS.FinalState.ElapsedTimeS, Result60FPS.FinalState.ElapsedTimeS);
+		TestEqual(TEXT("30 FPS vs jittered time identical"), Result30FPS.FinalState.ElapsedTimeS, ResultJittered.FinalState.ElapsedTimeS);
 
-		// Verify remaining accumulated time in seconds (s) is approximately equal
+		// Remaining accumulated time in seconds (s) must be approximately equal
 		// across all three sequences. Use a very small tolerance justified by
 		// binary floating-point representation. The tolerance is much smaller
 		// than FixedStepBoundaryToleranceS (1e-12 s).
 		const double RemainingTimeToleranceS = 1e-15;
 		TestTrue(TEXT("30 FPS vs 60 FPS remaining time approximately equal"),
-			FMath::Abs(RemainingTime30FPS - RemainingTime60FPS) <= RemainingTimeToleranceS);
+			FMath::Abs(Result30FPS.RemainingTimeS - Result60FPS.RemainingTimeS) <= RemainingTimeToleranceS);
 		TestTrue(TEXT("30 FPS vs jittered remaining time approximately equal"),
-			FMath::Abs(RemainingTime30FPS - RemainingTimeJittered) <= RemainingTimeToleranceS);
+			FMath::Abs(Result30FPS.RemainingTimeS - ResultJittered.RemainingTimeS) <= RemainingTimeToleranceS);
 		TestTrue(TEXT("60 FPS vs jittered remaining time approximately equal"),
-			FMath::Abs(RemainingTime60FPS - RemainingTimeJittered) <= RemainingTimeToleranceS);
+			FMath::Abs(Result60FPS.RemainingTimeS - ResultJittered.RemainingTimeS) <= RemainingTimeToleranceS);
 	}
 
 	// --- State persists across multiple Advance calls ---
