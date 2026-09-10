@@ -140,7 +140,9 @@ bool FFixedStepRunnerTest::RunTest(const FString& Parameters)
 			double WarmupRemainingTime = 0.0;
 			int32 WarmupCompletedSteps = 0;
 			FString WarmupError;
-			Runner.TryAdvance(0.1, MakeValidRider(), MakeEnvironment(), MakeRiderInput(250.0), WarmupState, WarmupRemainingTime, WarmupCompletedSteps, WarmupError);
+			const bool bWarmupSucceeded = Runner.TryAdvance(0.1, MakeValidRider(), MakeEnvironment(), MakeRiderInput(250.0), WarmupState, WarmupRemainingTime, WarmupCompletedSteps, WarmupError);
+			TestTrue(TEXT("warmup before invalid frame-delta checks succeeds"), bWarmupSucceeded);
+			TestTrue(TEXT("warmup before invalid frame-delta checks completes two steps"), WarmupCompletedSteps == 2);
 		}
 
 		const FSimulationState PreState = Runner.GetState();
@@ -349,16 +351,25 @@ bool FFixedStepRunnerTest::RunTest(const FString& Parameters)
 		int32 CompletedSteps;
 		FString Error;
 
-		Runner.TryAdvance(0.1, MakeValidRider(), MakeEnvironment(), MakeRiderInput(250.0), OutState, RemainingTime, CompletedSteps, Error);
-		const double FirstSpeed = OutState.SpeedMps;
-		const double FirstDistance = OutState.DistanceM;
-		const double FirstTime = OutState.ElapsedTimeS;
+		const bool bFirstAdvance = Runner.TryAdvance(0.1, MakeValidRider(), MakeEnvironment(), MakeRiderInput(250.0), OutState, RemainingTime, CompletedSteps, Error);
+		TestTrue(TEXT("first advance in state-persists test succeeds"), bFirstAdvance);
 
-		Runner.TryAdvance(0.1, MakeValidRider(), MakeEnvironment(), MakeRiderInput(250.0), OutState, RemainingTime, CompletedSteps, Error);
+		if (bFirstAdvance)
+		{
+			const double FirstSpeed = OutState.SpeedMps;
+			const double FirstDistance = OutState.DistanceM;
+			const double FirstTime = OutState.ElapsedTimeS;
 
-		TestTrue(TEXT("speed increases after second step"), OutState.SpeedMps > FirstSpeed);
-		TestTrue(TEXT("distance increases after second step"), OutState.DistanceM > FirstDistance);
-		TestTrue(TEXT("time increases after second step"), OutState.ElapsedTimeS > FirstTime);
+			const bool bSecondAdvance = Runner.TryAdvance(0.1, MakeValidRider(), MakeEnvironment(), MakeRiderInput(250.0), OutState, RemainingTime, CompletedSteps, Error);
+			TestTrue(TEXT("second advance in state-persists test succeeds"), bSecondAdvance);
+
+			if (bSecondAdvance)
+			{
+				TestTrue(TEXT("speed increases after second step"), OutState.SpeedMps > FirstSpeed);
+				TestTrue(TEXT("distance increases after second step"), OutState.DistanceM > FirstDistance);
+				TestTrue(TEXT("time increases after second step"), OutState.ElapsedTimeS > FirstTime);
+			}
+		}
 	}
 
 	// --- Multiple steps in single frame ---
@@ -428,7 +439,9 @@ bool FFixedStepRunnerTest::RunTest(const FString& Parameters)
 		double TempRemaining;
 		int32 TempSteps;
 		FString TempError;
-		Runner.TryAdvance(0.1, MakeValidRider(), MakeEnvironment(), MakeRiderInput(250.0), TempOutState, TempRemaining, TempSteps, TempError);
+		const bool bSetupSucceeded = Runner.TryAdvance(0.1, MakeValidRider(), MakeEnvironment(), MakeRiderInput(250.0), TempOutState, TempRemaining, TempSteps, TempError);
+		TestTrue(TEXT("setup before invalid-rider sentinel checks succeeds"), bSetupSucceeded);
+		TestTrue(TEXT("setup before invalid-rider sentinel checks completes two steps"), TempSteps == 2);
 
 		const double PreSpeed = Runner.GetState().SpeedMps;
 		const double PreDistance = Runner.GetState().DistanceM;
