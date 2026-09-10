@@ -119,6 +119,28 @@ Examples:
 - `fix: prevent speed from becoming negative`
 - `chore: configure Unreal asset tracking`
 
+## Office and home workflow
+
+This project is developed on two machines: the office PC, which is suitable for documentation, Git operations, lightweight code, and Python tests, and the home PC, which builds Unreal Engine and runs the full validation cycle.
+
+The following rules apply to every task and do not weaken any earlier rule in this document:
+
+- At most two unmerged implementation branches may exist simultaneously.
+- Parallel implementation is allowed only within the current roadmap stage.
+- Tasks developed in parallel must be independent.
+- A parallel branch must not consume APIs, source files, assets, or behavior introduced only by another unmerged branch.
+- Every task still follows the existing one issue, one branch, review, commit, push, and pull request workflow.
+- Office work may receive a reviewed checkpoint commit and push when Unreal Engine is unavailable on the office PC.
+- Such work must be explicitly marked `Unreal validation pending`.
+- An implementation pull request that contains Unreal C++ code, Unreal assets, or Unreal integration changes must not be opened until the relevant Unreal project build and Unreal Automation Tests pass on the home PC.
+- Documentation-only pull requests and other changes that cannot affect the Unreal build do not require Unreal validation.
+- A pull request must never be merged without the product owner's explicit Polish command `scal`.
+- Test requirements must not be weakened after a failure; the cause must be diagnosed first.
+- Work from a future roadmap stage must not begin before the current stage completion criteria are met.
+- Unreal compilation, editor integration, asset validation, and performance validation remain home-PC responsibilities when the office PC lacks Unreal Engine.
+
+Documentation-only branches do not count toward the limit of two implementation branches.
+
 ## AI safety rules
 
 - Do not execute broad autonomous changes.

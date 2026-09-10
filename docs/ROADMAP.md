@@ -27,6 +27,25 @@ Przy braku wcześniejszego doświadczenia pełne MVP może wymagać więcej czas
 
 Zakresu nie zwiększamy bez aktualizacji dokumentu wymagań i roadmapy.
 
+## Równoległa praca biuro–dom
+
+Prace prowadzone są na dwóch komputerach: biurowym (dokumentacja, Git, lekki kod, testy Pythona, bez Unreal Engine) i domowym (build projektu UE, testy automatyzacji, walidacja wydajności).
+
+- Jednocześnie mogą istnieć co najwyżej dwie niescalone gałęzie implementacyjne.
+- Równoległa praca jest dozwolona wyłącznie w ramach bieżącego etapu roadmapy.
+- Zadania równoległe muszą być od siebie niezależne.
+- Gałąź równoległa nie może korzystać z API, plików źródłowych, assetów ani zachowań, które wprowadza dopiero inna niescalona gałąź.
+- Każde zadanie korzysta z jednego issue i jednej dedykowanej gałęzi: recenzja → commit → push → PR → jawne `scal`.
+- Checkpoint przygotowany na komputerze biurowym może zostać zacommitowany i wypchnięty po recenzji, ale raport musi jawnie oznaczać `Unreal validation pending`.
+- Pull Request zawierający kod C++ UE, assety UE albo zmiany integracyjne nie może zostać otwarty, dopóki odpowiedni build projektu UE i testy automatyzacji nie przejdą na komputerze domowym.
+- Pull Requesty zawierające wyłącznie dokumentację oraz inne zmiany niemające wpływu na build UE nie wymagają walidacji w Unreal Engine.
+- Pull Request nie może zostać scalony bez wyraźnej polskiej komendy `scal` od właściciela produktu.
+- Po niepowodzeniu walidacji nie wolno osłabiać wymagań ani testów; najpierw trzeba zdiagnozować przyczynę.
+- Prac z kolejnych etapów roadmapy nie rozpoczynamy przed spełnieniem kryteriów ukończenia obecnego etapu.
+- Kompilacja UE, integracja z edytorem, walidacja assetów i wydajności pozostają odpowiedzialnością komputera domowego, gdy na komputerze biurowym nie ma Unreal Engine.
+
+Gałęzie wyłącznie dokumentacyjne nie wliczają się do limitu dwóch gałęzi implementacyjnych.
+
 ---
 
 # Etap 0 — fundament projektu
