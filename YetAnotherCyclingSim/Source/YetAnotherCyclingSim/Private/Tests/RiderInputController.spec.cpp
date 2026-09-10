@@ -669,12 +669,18 @@ bool FRiderInputControllerTest::RunTest(const FString& Parameters)
 		TestTrue(TEXT("power inc ok"), bIncP);
 		const bool bDecP = Controller.TryDecreasePower(Error);
 		TestTrue(TEXT("power dec ok"), bDecP);
-		const bool bSetMaxP = Controller.TrySetPowerW(999.0, Error);  // clamp to max
+		const bool bSetMaxP = Controller.TrySetPowerW(9999.0, Error);  // value above 2000.0: clamps to max
 		TestTrue(TEXT("power set max ok"), bSetMaxP);
+		if (bSetMaxP)
+		{
+			TestEqual(TEXT("power clamped to exact max after set"), Controller.GetInput().PowerW, 2000.0);
+		}
 		const bool bSetMinP = Controller.TrySetPowerW(-999.0, Error); // clamp to min
 		TestTrue(TEXT("power set min ok"), bSetMinP);
-		Controller.TrySetPowerW(NaNValue, Error); // fails; cadence must stay unchanged
-
+		const bool bNaNSet = Controller.TrySetPowerW(NaNValue, Error);
+		TestFalse(TEXT("power set NaN rejected"), bNaNSet);
+		TestTrue(TEXT("power set NaN error non-empty"), !Error.IsEmpty());
+		// Immediately verify cadence is still exactly InitialCadence after the NaN rejection.
 		TestEqual(TEXT("cadence unchanged after power ops"), Controller.GetInput().CadenceRpm, InitialCadence);
 	}
 
@@ -693,8 +699,10 @@ bool FRiderInputControllerTest::RunTest(const FString& Parameters)
 		TestTrue(TEXT("cadence set max ok"), bSetMaxC);
 		const bool bSetMinC = Controller.TrySetCadenceRpm(-999.0, Error);
 		TestTrue(TEXT("cadence set min ok"), bSetMinC);
-		Controller.TrySetCadenceRpm(NaNValue, Error); // fails; power must stay unchanged
-
+		const bool bNaNSet = Controller.TrySetCadenceRpm(NaNValue, Error);
+		TestFalse(TEXT("cadence set NaN rejected"), bNaNSet);
+		TestTrue(TEXT("cadence set NaN error non-empty"), !Error.IsEmpty());
+		// Immediately verify power is still exactly InitialPower after the NaN rejection.
 		TestEqual(TEXT("power unchanged after cadence ops"), Controller.GetInput().PowerW, InitialPower);
 	}
 
@@ -705,7 +713,8 @@ bool FRiderInputControllerTest::RunTest(const FString& Parameters)
 		FString Error = TEXT("stale-error-from-previous-failure");
 
 		// Seed a failure so OutError becomes non-empty.
-		Controller.TrySetPowerW(NaNValue, Error);
+		const bool bSeedFailed = Controller.TrySetPowerW(NaNValue, Error);
+		TestFalse(TEXT("seed failure returns false"), bSeedFailed);
 		TestTrue(TEXT("stale error seeded"), !Error.IsEmpty());
 
 		// Successful operation must clear it.
