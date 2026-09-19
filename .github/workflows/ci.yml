@@ -20,7 +20,7 @@ jobs:
     name: Repository policy
     permissions:
       contents: read
-    uses: karnalooch/engineering-platform/.github/workflows/reusable-repo-policy.yml@a4c0f579aa10b495835dca3f78f84a79538392cf
+    uses: karnalooch/engineering-platform/.github/workflows/reusable-repo-policy.yml@d9bc67e2b17436e9df1319a6345d0ec388f407fb
     with:
       max_non_lfs_mib: 10
       required_lfs_extensions: ".uasset,.umap,.fbx,.blend,.wav,.flac,.mp3,.exr,.hdr,.tga"
@@ -30,7 +30,7 @@ jobs:
     name: Governance policy
     permissions:
       contents: read
-    uses: karnalooch/engineering-platform/.github/workflows/reusable-governance.yml@a4c0f579aa10b495835dca3f78f84a79538392cf
+    uses: karnalooch/engineering-platform/.github/workflows/reusable-governance.yml@d9bc67e2b17436e9df1319a6345d0ec388f407fb
     with:
       additional_high_risk_patterns: |
         *.uproject
@@ -52,7 +52,7 @@ jobs:
     permissions:
       contents: read
       security-events: write
-    uses: karnalooch/engineering-platform/.github/workflows/reusable-security.yml@a4c0f579aa10b495835dca3f78f84a79538392cf
+    uses: karnalooch/engineering-platform/.github/workflows/reusable-security.yml@d9bc67e2b17436e9df1319a6345d0ec388f407fb
     with:
       codeql_languages_json: '["python","c-cpp"]'
 
