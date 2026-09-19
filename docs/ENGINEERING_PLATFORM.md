@@ -17,13 +17,13 @@ web/mobile/backend monorepo while reusing common engineering controls.
 
 ## Active platform contract
 
-CyclingSim consumes engineering-platform **v0.2.0** from the immutable reviewed
+CyclingSim consumes engineering-platform **v0.3.1** from the immutable reviewed
 commit:
 
-`a4c0f579aa10b495835dca3f78f84a79538392cf`
+`d9bc67e2b17436e9df1319a6345d0ec388f407fb`
 
-The previous live-proven contract was **v0.1.0** at
-`b34fda2ef31bf62e00422f8531202e2cccc3bc73`.
+The previous live-proven CyclingSim contract was **v0.2.0** at
+`a4c0f579aa10b495835dca3f78f84a79538392cf`.
 
 Do not replace the active reference with `@main`, a moving major tag, or any
 other mutable ref.
@@ -100,8 +100,8 @@ repository-policy workflow rather than hard-coded into the shared platform.
 
 ## Rollout
 
-CyclingSim is the canary consumer for engineering-platform v0.2.0.
-4VELO must not adopt v0.2.0 until this canary PR has live-proven the complete
+CyclingSim is the canary consumer for engineering-platform v0.3.1.
+4VELO must not adopt v0.3.1 until this canary PR has live-proven the complete
 consumer CI and has been manually merged.
 
 Product-specific jobs stay in their application repositories.
@@ -113,8 +113,7 @@ Protect `main` with:
 - pull request required;
 - direct pushes blocked;
 - exact required check: `Aggregate CI gate`;
-- after v0.2.0 canary proof, also require the exact Governance Guard check as
-  defense in depth;
+- also require the exact Governance Guard check as defense in depth;
 - branch required to be up to date before merge;
 - conversations resolved;
 - force pushes blocked;
