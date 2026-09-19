@@ -20,7 +20,11 @@ jobs:
     name: Repository policy
     permissions:
       contents: read
-    uses: ./.github/workflows/reusable-repo-policy.yml
+    uses: karnalooch/engineering-platform/.github/workflows/reusable-repo-policy.yml@b34fda2ef31bf62e00422f8531202e2cccc3bc73
+    with:
+      max_non_lfs_mib: 10
+      required_lfs_extensions: ".uasset,.umap,.fbx,.blend,.wav,.flac,.mp3,.exr,.hdr,.tga"
+      forbidden_path_components: ".vs,Binaries,DerivedDataCache,Intermediate,Saved"
 
   python-reference:
     name: Python reference model
@@ -33,7 +37,9 @@ jobs:
     permissions:
       contents: read
       security-events: write
-    uses: ./.github/workflows/reusable-security.yml
+    uses: karnalooch/engineering-platform/.github/workflows/reusable-security.yml@b34fda2ef31bf62e00422f8531202e2cccc3bc73
+    with:
+      codeql_languages_json: '["python","c-cpp"]'
 
   aggregate:
     name: Aggregate CI gate
@@ -55,7 +61,10 @@ jobs:
         run: |
           set -euo pipefail
           failed=0
-          for entry in             "repo-policy=${REPO_POLICY_RESULT}"             "python-reference=${PYTHON_REFERENCE_RESULT}"             "security=${SECURITY_RESULT}"
+          for entry in \
+            "repo-policy=${REPO_POLICY_RESULT}" \
+            "python-reference=${PYTHON_REFERENCE_RESULT}" \
+            "security=${SECURITY_RESULT}"
           do
             name="${entry%%=*}"
             result="${entry#*=}"
