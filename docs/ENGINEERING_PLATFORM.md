@@ -44,8 +44,10 @@ The bootstrap requires:
    current proprietary distribution intent;
 6. CodeQL for Python and C/C++ using build-mode `none`;
 7. Trivy filesystem vulnerability, secret and misconfiguration scanning;
-8. a final aggregate job that fails unless every required workflow call reports
-   `success`.
+8. CycloneDX source SBOM generation on non-PR runs;
+9. a weekly OpenSSF Scorecard supply-chain posture audit;
+10. a final aggregate job that fails unless every required workflow call reports
+    `success`.
 
 The CodeQL `none` build is deliberately not presented as proof that the UE5
 project compiles. It is a hosted-runner static-analysis layer.
@@ -68,8 +70,9 @@ CyclingSim. After CyclingSim proves the platform contract, migrate the common
 parts of 4VELO incrementally; do not replace its working CI in one step.
 
 The platform repository should own common action pins, token-permission policy,
-dependency/license policy, Scorecard configuration and future safe auto-merge
-logic. Application-specific jobs remain in each application repository.
+dependency/license policy, Scorecard configuration, SBOM conventions and future
+safe auto-merge logic. Application-specific jobs remain in each application
+repository.
 
 ## Branch protection after bootstrap
 

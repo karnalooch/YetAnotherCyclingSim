@@ -9,7 +9,7 @@ on:
     - cron: '17 3 * * 0'
   workflow_dispatch:
 
-permissions: read-all
+permissions: {}
 
 concurrency:
   group: cyclingsim-ci-${{ github.workflow }}-${{ github.ref }}
@@ -18,14 +18,21 @@ concurrency:
 jobs:
   repo-policy:
     name: Repository policy
+    permissions:
+      contents: read
     uses: ./.github/workflows/reusable-repo-policy.yml
 
   python-reference:
     name: Python reference model
+    permissions:
+      contents: read
     uses: ./.github/workflows/reusable-python.yml
 
   security:
     name: Security baseline
+    permissions:
+      contents: read
+      security-events: write
     uses: ./.github/workflows/reusable-security.yml
 
   aggregate:
