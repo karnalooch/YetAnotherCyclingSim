@@ -1,0 +1,63 @@
+name: CyclingSim CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 3 * * 0'
+  workflow_dispatch:
+
+permissions: read-all
+
+concurrency:
+  group: cyclingsim-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  repo-policy:
+    name: Repository policy
+    uses: ./.github/workflows/reusable-repo-policy.yml
+
+  python-reference:
+    name: Python reference model
+    uses: ./.github/workflows/reusable-python.yml
+
+  security:
+    name: Security baseline
+    uses: ./.github/workflows/reusable-security.yml
+
+  aggregate:
+    name: Aggregate CI gate
+    if: ${{ always() }}
+    needs:
+      - repo-policy
+      - python-reference
+      - security
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions: {}
+    steps:
+      - name: Fail closed unless every required job passed
+        shell: bash
+        env:
+          REPO_POLICY_RESULT: ${{ needs.repo-policy.result }}
+          PYTHON_REFERENCE_RESULT: ${{ needs.python-reference.result }}
+          SECURITY_RESULT: ${{ needs.security.result }}
+        run: |
+          set -euo pipefail
+          failed=0
+          for entry in             "repo-policy=${REPO_POLICY_RESULT}"             "python-reference=${PYTHON_REFERENCE_RESULT}"             "security=${SECURITY_RESULT}"
+          do
+            name="${entry%%=*}"
+            result="${entry#*=}"
+            if [ "${result}" != "success" ]; then
+              echo "::error::${name}: expected success, got ${result}"
+              failed=1
+            fi
+          done
+          if [ "${failed}" -ne 0 ]; then
+            exit 1
+          fi
+          echo "aggregate: PASS"
