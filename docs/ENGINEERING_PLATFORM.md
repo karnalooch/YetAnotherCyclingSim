@@ -3,8 +3,7 @@
 ## Decision
 
 4VELO and YetAnotherCyclingSim stay in separate application repositories.
-They should share governance, CI/security policy and reusable automation through
-a dedicated repository:
+They share governance, CI/security policy and reusable automation through:
 
 ```text
 karnalooch/
@@ -13,28 +12,33 @@ karnalooch/
 └── engineering-platform
 ```
 
-This avoids coupling the Unreal Engine source/assets lifecycle to the 4VELO
-web/mobile/backend monorepo while still reusing the mature engineering controls
-developed for 4VELO.
+This keeps the Unreal Engine source/assets lifecycle independent from the 4VELO
+web/mobile/backend monorepo while reusing common engineering controls.
 
-## Bootstrap in this repository
+## Active platform contract
 
-Until the dedicated `engineering-platform` repository is available, the shared
-workflows are intentionally shaped as local reusable workflows:
+CyclingSim consumes the shared platform from the immutable reviewed commit:
 
-- `.github/workflows/reusable-repo-policy.yml`
-- `.github/workflows/reusable-python.yml`
-- `.github/workflows/reusable-security.yml`
+`b34fda2ef31bf62e00422f8531202e2cccc3bc73`
 
-The public entrypoint is `.github/workflows/ci.yml`, whose final required check
-is named exactly `Aggregate CI gate`.
+Do not replace that reference with `@main`.
 
-Moving these workflows to `engineering-platform` should therefore be a small
-caller change rather than another CI redesign.
+Shared workflows now come from `karnalooch/engineering-platform`:
+
+- reusable repository/LFS policy;
+- reusable security baseline;
+- reusable OpenSSF Scorecard.
+
+Application-specific checks remain local. In particular,
+`.github/workflows/reusable-python.yml` still owns the Python 3.14
+reference-model checks and no-op discovery protection.
+
+The public entrypoint remains `.github/workflows/ci.yml`, whose final required
+check is named exactly `Aggregate CI gate`.
 
 ## Fail-closed baseline
 
-The bootstrap requires:
+The baseline requires:
 
 1. repository hygiene and Git LFS policy;
 2. Python 3.14 reference-model tests with a minimum discovered test count;
@@ -45,9 +49,9 @@ The bootstrap requires:
 6. CodeQL for Python and C/C++ using build-mode `none`;
 7. Trivy filesystem vulnerability, secret and misconfiguration scanning;
 8. CycloneDX source SBOM generation on non-PR runs;
-9. a weekly OpenSSF Scorecard supply-chain posture audit;
-10. a final aggregate job that fails unless every required workflow call reports
-    `success`.
+9. OpenSSF Scorecard supply-chain posture audits;
+10. a final local aggregate job that fails unless every required dependency
+    reports `success`.
 
 The CodeQL `none` build is deliberately not presented as proof that the UE5
 project compiles. It is a hosted-runner static-analysis layer.
@@ -62,21 +66,20 @@ Binary source/game assets with known large/binary formats use Git LFS.
 Additionally, any tracked Git blob above 10 MiB must use Git LFS even when its
 extension is not on the standard asset list.
 
-## Next platform step
+These Unreal-specific values are passed as inputs to the generic platform
+repository-policy workflow rather than hard-coded into the shared platform.
 
-Create `karnalooch/engineering-platform`, move generic reusable workflows and
-policy documentation there, then consume an immutable/versioned reference from
-CyclingSim. After CyclingSim proves the platform contract, migrate the common
-parts of 4VELO incrementally; do not replace its working CI in one step.
+## Rollout
 
-The platform repository should own common action pins, token-permission policy,
-dependency/license policy, Scorecard configuration, SBOM conventions and future
-safe auto-merge logic. Application-specific jobs remain in each application
-repository.
+CyclingSim is the first consumer used to prove the cross-repository contract.
+After this migration is live-proven, common 4VELO controls may be migrated
+incrementally. Do not replace 4VELO's working CI in one step.
 
-## Branch protection after bootstrap
+Product-specific jobs stay in their application repositories.
 
-Once this PR is merged and the check exists on `main`, protect `main` with:
+## Branch protection
+
+Protect `main` with:
 
 - pull request required;
 - direct pushes blocked;
