@@ -20,4 +20,4 @@ jobs:
       actions: read
       security-events: write
       id-token: write
-    uses: karnalooch/engineering-platform/.github/workflows/reusable-scorecard.yml@b34fda2ef31bf62e00422f8531202e2cccc3bc73
+    uses: karnalooch/engineering-platform/.github/workflows/reusable-scorecard.yml@a4c0f579aa10b495835dca3f78f84a79538392cf

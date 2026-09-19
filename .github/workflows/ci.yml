@@ -20,11 +20,26 @@ jobs:
     name: Repository policy
     permissions:
       contents: read
-    uses: karnalooch/engineering-platform/.github/workflows/reusable-repo-policy.yml@b34fda2ef31bf62e00422f8531202e2cccc3bc73
+    uses: karnalooch/engineering-platform/.github/workflows/reusable-repo-policy.yml@a4c0f579aa10b495835dca3f78f84a79538392cf
     with:
       max_non_lfs_mib: 10
       required_lfs_extensions: ".uasset,.umap,.fbx,.blend,.wav,.flac,.mp3,.exr,.hdr,.tga"
       forbidden_path_components: ".vs,Binaries,DerivedDataCache,Intermediate,Saved"
+
+  governance:
+    name: Governance policy
+    permissions:
+      contents: read
+    uses: karnalooch/engineering-platform/.github/workflows/reusable-governance.yml@a4c0f579aa10b495835dca3f78f84a79538392cf
+    with:
+      additional_high_risk_patterns: |
+        *.uproject
+        **/*.uproject
+        *.uplugin
+        **/*.uplugin
+        Source/**/*.Build.cs
+        Source/**/*.Target.cs
+        Config/DefaultEngine.ini
 
   python-reference:
     name: Python reference model
@@ -37,7 +52,7 @@ jobs:
     permissions:
       contents: read
       security-events: write
-    uses: karnalooch/engineering-platform/.github/workflows/reusable-security.yml@b34fda2ef31bf62e00422f8531202e2cccc3bc73
+    uses: karnalooch/engineering-platform/.github/workflows/reusable-security.yml@a4c0f579aa10b495835dca3f78f84a79538392cf
     with:
       codeql_languages_json: '["python","c-cpp"]'
 
@@ -46,6 +61,7 @@ jobs:
     if: ${{ always() }}
     needs:
       - repo-policy
+      - governance
       - python-reference
       - security
     runs-on: ubuntu-latest
@@ -56,6 +72,7 @@ jobs:
         shell: bash
         env:
           REPO_POLICY_RESULT: ${{ needs.repo-policy.result }}
+          GOVERNANCE_RESULT: ${{ needs.governance.result }}
           PYTHON_REFERENCE_RESULT: ${{ needs.python-reference.result }}
           SECURITY_RESULT: ${{ needs.security.result }}
         run: |
@@ -63,6 +80,7 @@ jobs:
           failed=0
           for entry in \
             "repo-policy=${REPO_POLICY_RESULT}" \
+            "governance=${GOVERNANCE_RESULT}" \
             "python-reference=${PYTHON_REFERENCE_RESULT}" \
             "security=${SECURITY_RESULT}"
           do
