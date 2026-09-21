@@ -1,0 +1,38 @@
+name: Reusable Python checks
+
+on:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  python-reference:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14'
+
+      - name: Install lint tooling
+        run: python -m pip install --disable-pip-version-check ruff==0.16.8
+
+      - name: Lint correctness-critical Python rules
+        run: ruff check physics_reference scripts/ci --select E9,F63,F7,F82
+
+      - name: Verify CI helper formatting
+        run: ruff format --check scripts/ci
+
+      - name: Compile Python sources
+        run: python -m compileall -q physics_reference/src scripts/ci
+
+      - name: Run reference-model unit tests and prevent no-op discovery
+        run: python scripts/ci/run_python_tests.py

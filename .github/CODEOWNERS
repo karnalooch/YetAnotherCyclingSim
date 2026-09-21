@@ -1,0 +1,12 @@
+# Default ownership
+* @karnalooch
+
+# High-risk repository governance
+/.github/ @karnalooch
+/scripts/ci/ @karnalooch
+/SECURITY.md @karnalooch
+
+# Product-critical code and configuration
+/YetAnotherCyclingSim/Source/ @karnalooch
+/YetAnotherCyclingSim/Config/ @karnalooch
+/physics_reference/ @karnalooch
