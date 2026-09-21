@@ -91,3 +91,13 @@ dist/
 **/Intermediate/
 **/Saved/
 *.slnx
+
+# Unreal editor-generated user content
+YetAnotherCyclingSim/Content/Collections/
+YetAnotherCyclingSim/Content/Developers/
+
+# Wingman disposable test assets
+YetAnotherCyclingSim/Content/__WingmanProof/
+
+# Wingman local editor plugin
+YetAnotherCyclingSim/Plugins/Wingman/
