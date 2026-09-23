@@ -631,3 +631,122 @@ Przykładowe metryki:
 
 Ocena ma pomagać użytkownikowi zrozumieć skuteczność jazdy w grupie i rozwijać technikę, a nie ukrywać wynik za jednym losowym numerem.
 
+
+### Power Integrity — realna moc jest nadrzędna
+
+Moc dostarczana przez trenażer lub inne rzeczywiste źródło wejścia jest nadrzędnym źródłem osiągów zawodnika.
+
+Obowiązuje twarda zasada:
+
+**Real trainer power determines what the rider can physically do. Technical skill determines how efficiently the automatic riding system uses those watts in difficult situations.**
+
+Umiejętności techniczne nie mogą bezpośrednio modyfikować:
+
+- `PowerWatts`;
+- FTP;
+- masy zawodnika;
+- masy roweru;
+- grawitacji;
+- `Crr`;
+- bazowego `CdA`;
+- mocy dostarczanej przez trenażer;
+- innych podstawowych parametrów fizycznych w celu sztucznego zwiększenia osiągów.
+
+Niedopuszczalne są rozwiązania typu:
+
+`EffectivePower = TrainerPower * SkillBonus`
+
+albo inne ukryte mnożniki tworzące „wirtualne waty”.
+
+Dla identycznych parametrów fizycznych dwóch zawodników generujących tę samą moc na pustej, prostej drodze powinno uzyskać ten sam wynik niezależnie od `PackHandling`, `CorneringTechnique` lub innych cech technicznych.
+
+Skill może wpływać dopiero wtedy, gdy sytuacja wymaga decyzji lub wykonania technicznego.
+
+### Skill wpływa na straty, a nie tworzy energii
+
+Podstawową interpretacją cech technicznych jest ograniczanie niepotrzebnych strat, a nie zwiększanie dostępnej energii.
+
+Lepsza technika może zmniejszać między innymi:
+
+- energię utraconą przez niepotrzebne hamowanie;
+- liczbę mikroprzyspieszeń po źle zamkniętej luce;
+- czas spędzony poza optymalnym draftem;
+- liczbę przegapionych bezpiecznych okazji do wyprzedzania;
+- koszt energetyczny niestabilnego utrzymywania koła;
+- straty wynikające z zachowawczych reakcji w edge case'ach.
+
+Całkowita energia wynikająca z wejścia użytkownika pozostaje niezmieniona.
+
+System może raportować rozdzielenie energii na użyteczny napęd i straty sytuacyjne, ale nie może przypisywać skillom dodatkowej energii, której użytkownik faktycznie nie wygenerował.
+
+### Priorytet wysiłku użytkownika nad progresją
+
+Progres postaci jest zawsze drugorzędny wobec rzeczywistego wysiłku użytkownika.
+
+Zawodnik o wysokim skillu i niższej mocy może efektywniej korzystać z draftu, lepiej utrzymywać pozycję i tracić mniej energii, ale nie może automatycznie pokonać zawodnika generującego istotnie większą rzeczywistą moc, jeżeli sytuacja wymaga tej mocy.
+
+Jeżeli utrzymanie grupy lub wykonanie manewru fizycznie wymaga większej mocy niż użytkownik dostarcza, zawodnik powinien stracić koło, zwolnić lub nie ukończyć manewru niezależnie od poziomu skilla.
+
+### Skill Progression
+
+Rozwój umiejętności technicznych nie powinien opierać się na prostym grindzie kilometrów, czasu gry ani liczby przejazdów.
+
+Preferowany model progresji:
+
+- łatwe sytuacje znacznie poniżej aktualnego poziomu zawodnika dają minimalny lub zerowy progres;
+- największy progres pojawia się przy poprawnym wykonaniu sytuacji, w których `TechnicalDemand` jest blisko aktualnego `TechnicalCapacity`;
+- sytuacje znacznie przekraczające aktualne możliwości nie powinny przyznawać dużej nagrody tylko za samo ich wystąpienie;
+- powtarzanie jednego banalnego scenariusza nie może być efektywną metodą farmienia skilla;
+- progres powinien odzwierciedlać skuteczne zachowanie w realnych, zróżnicowanych sytuacjach.
+
+Przykładowo `PackHandling` może rozwijać się za:
+
+- stabilne utrzymywanie koła w trudnych warunkach;
+- skuteczne domykanie luk;
+- poprawne wykorzystanie krótkiego korytarza wyprzedzania;
+- płynne przejście przez kompresję grupy;
+- ograniczenie `WastedEnergy`;
+- stabilne zachowanie przy bocznym wietrze;
+- poprawne decyzje w edge case'ach.
+
+Dokładny model progresji wymaga osobnego balansu i walidacji telemetrycznej.
+
+### Balancing Requirements
+
+System skillów musi być projektowany jako mechanika łatwa do strojenia bez zmiany podstawowego kodu fizyki.
+
+Parametry wpływu skilla powinny być konfigurowalne i obejmować co najmniej:
+
+- ograniczony minimalny i maksymalny wpływ;
+- krzywe efektu;
+- diminishing returns;
+- progi `TechnicalDemand`;
+- progi `TechnicalCapacity`;
+- limity marginesów bezpieczeństwa;
+- limity wpływu na reakcję planera.
+
+Przejście z niskiego do średniego poziomu może być zauważalne, ale bardzo wysoki skill nie może tworzyć nieproporcjonalnej przewagi.
+
+Przykładowo progres z poziomu średniego do dobrego może następować relatywnie szybko, natomiast bardzo wysokie poziomy powinny wymagać wielu poprawnie wykonanych trudnych sytuacji.
+
+Przed wdrożeniem progresji należy przygotować deterministyczny balancing harness obejmujący dużą liczbę scenariuszy `TechnicalDemand × TechnicalCapacity`.
+
+Harness powinien sprawdzać między innymi:
+
+- wpływ skilla na `WastedEnergy`;
+- częstość utraty koła;
+- skuteczność domykania luk;
+- wykorzystanie krótkich passing corridors;
+- reakcję na kompresję grupy;
+- zachowanie przy różnej szerokości drogi;
+- zachowanie przy różnym crosswindzie;
+- brak naruszeń hard collision i innych invariants.
+
+Balans powinien być później korygowany na podstawie rzeczywistej telemetrii z jazd, a nie wyłącznie na podstawie intuicji projektowej.
+
+### Zasada końcowa
+
+**Hardware / real effort first, character progression second.**
+
+Wat z trenażera jest źródłem energii. Skill może poprawiać jakość wykorzystania tej energii, ale nigdy nie może jej tworzyć.
+

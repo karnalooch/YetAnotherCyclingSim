@@ -414,3 +414,16 @@ Założenia:
 - wysoka technika nie może łamać twardych ograniczeń geometrii, kolizji ani zasad Pack Dynamics;
 - przyszły `PackTechniqueScore` może raportować m.in. draft efficiency, wheel holding, gap closures, wasted energy i missed passing opportunities.
 
+### Skill balancing i progresja — wymagania po MVP
+
+Przed implementacją progresji Rider Technical Profile należy:
+
+- zagwarantować `Power Integrity`: skill nie może modyfikować `PowerWatts` ani tworzyć wirtualnych watów;
+- utrzymać priorytet rzeczywistej mocy i fizyki nad progresją postaci;
+- projektować skill jako redukcję strat i poprawę jakości decyzji automatycznego prowadzenia;
+- unikać prostego grindu kilometrów, czasu gry i banalnych powtarzalnych sytuacji;
+- premiować poprawne wykonanie scenariuszy o `TechnicalDemand` zbliżonym do `TechnicalCapacity`;
+- zastosować diminishing returns i twarde limity wpływu bardzo wysokiego skilla;
+- zbudować deterministyczny balancing harness dla scenariuszy `TechnicalDemand × TechnicalCapacity`;
+- stroić krzywe później na podstawie telemetrii rzeczywistych jazd.
+
