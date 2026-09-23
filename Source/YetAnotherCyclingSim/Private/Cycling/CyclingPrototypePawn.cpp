@@ -2,11 +2,19 @@
 
 #include "Cycling/CyclingPrototypePawn.h"
 
+#include "Camera/CameraComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/SplineComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "Engine/LocalPlayer.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/PlayerController.h"
+#include "InputAction.h"
+#include "InputActionValue.h"
+#include "InputMappingContext.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogCyclingPrototypePawn, Log, All);
 
@@ -32,6 +40,18 @@ ACyclingPrototypePawn::ACyclingPrototypePawn()
 	// the instance (Basic Cube from /Engine/BasicShapes/Cube).
 	BicycleMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	BicycleMesh->SetGenerateOverlapEvents(false);
+
+	// TEMPORARY Stage 2 validation camera (issue #47). Plain camera
+	// component with a fixed offset behind and above the root, so PIE has a
+	// usable view of the moving prototype. Not a chase camera, no spring
+	// arm, no smoothing; the Stage 6 architecture will replace this.
+	ValidationCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("ValidationCamera"));
+	ValidationCamera->SetupAttachment(Root);
+	// 1.5 m up (eye height) and 3.0 m behind the bicycle along its local
+	// -X axis. Yaw reset to camera-forward (+X).
+	ValidationCamera->SetRelativeLocation(FVector(-300.0, 0.0, 150.0));
+	ValidationCamera->SetRelativeRotation(FRotator::ZeroRotator);
+	ValidationCamera->bUsePawnControlRotation = false;
 }
 
 void ACyclingPrototypePawn::BeginPlay()
@@ -43,6 +63,24 @@ void ACyclingPrototypePawn::BeginPlay()
 
 void ACyclingPrototypePawn::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	// Remove the default mapping context we added on possess. Best effort:
+	// PlayerController / LocalPlayer / subsystem may already be gone during
+	// teardown (this should never throw, the helper logs and returns).
+	if (DefaultMappingContext)
+	{
+		if (APlayerController* PC = GetController<APlayerController>())
+		{
+			if (ULocalPlayer* LP = PC->GetLocalPlayer())
+			{
+				if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
+					ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LP))
+				{
+					Subsystem->RemoveMappingContext(DefaultMappingContext);
+				}
+			}
+		}
+	}
+
 	// Defensive: ensure Tick is disabled if the Pawn is removed mid-flight.
 	SetActorTickEnabled(false);
 	Super::EndPlay(EndPlayReason);
@@ -313,4 +351,184 @@ void ACyclingPrototypePawn::EnterErrorState(const FString& Message)
 	Lifecycle = ECyclingPrototypeLifecycle::Error;
 	SetActorTickEnabled(false);
 	UE_LOG(LogCyclingPrototypePawn, Warning, TEXT("Pawn '%s' Error: %s"), *GetName(), *Message);
+}
+
+// ===========================================================
+// Stage 2 Enhanced Input (issue #47).
+//
+// Bindings use ETriggerEvent::Started so that one key press performs
+// exactly one session mutation, regardless of how many render frames
+// elapse while the key is held down. There is no key-repeat logic;
+// holding a key must NOT advance power or cadence faster than tapping
+// it. The handlers below delegate directly to the existing
+// FCyclingSimulationSession step/increase/decrease API and never
+// duplicate input state.
+// ===========================================================
+
+void ACyclingPrototypePawn::RegisterDefaultMappingContext()
+{
+	if (!DefaultMappingContext)
+	{
+		// The Pawn instance has no mapping context assigned. This is a
+		// legitimate configuration (e.g. when input is driven from tests
+		// without a Mapping Context asset) and not an error. Stay quiet
+		// to keep test logs clean.
+		return;
+	}
+
+	APlayerController* PC = GetController<APlayerController>();
+	if (!PC)
+	{
+		return;
+	}
+
+	ULocalPlayer* LP = PC->GetLocalPlayer();
+	if (!LP)
+	{
+		return;
+	}
+
+	UEnhancedInputLocalPlayerSubsystem* Subsystem =
+		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LP);
+	if (!Subsystem)
+	{
+		UE_LOG(LogCyclingPrototypePawn, Warning,
+			TEXT("Pawn '%s' could not resolve UEnhancedInputLocalPlayerSubsystem on possess."),
+			*GetName());
+		return;
+	}
+
+	Subsystem->AddMappingContext(DefaultMappingContext, /*Priority=*/0);
+}
+
+void ACyclingPrototypePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	// Step 1: register the mapping context with the local player. Done
+	// here because SetupPlayerInputComponent is the canonical place
+	// where possession guarantees a PlayerController, a LocalPlayer and
+	// an Enhanced Input subsystem exist.
+	RegisterDefaultMappingContext();
+
+	// Step 2: bind actions to the existing one-shot handlers.
+	UEnhancedInputComponent* EIC = Cast<UEnhancedInputComponent>(PlayerInputComponent);
+	if (!EIC)
+	{
+		UE_LOG(LogCyclingPrototypePawn, Warning,
+			TEXT("Pawn '%s' PlayerInputComponent is not a UEnhancedInputComponent; no bindings registered."),
+			*GetName());
+		return;
+	}
+
+	// ETriggerEvent::Started fires once per key press, not per render
+	// frame. Holding a key does not multiply mutations; binding to
+	// Triggered would re-introduce frame-rate dependent power /
+	// cadence increments and contradict the one-event-one-step
+	// invariant.
+	if (PowerIncreaseAction)
+	{
+		EIC->BindAction(PowerIncreaseAction, ETriggerEvent::Started, this, &ACyclingPrototypePawn::HandlePowerIncrease);
+	}
+	if (PowerDecreaseAction)
+	{
+		EIC->BindAction(PowerDecreaseAction, ETriggerEvent::Started, this, &ACyclingPrototypePawn::HandlePowerDecrease);
+	}
+	if (CadenceIncreaseAction)
+	{
+		EIC->BindAction(CadenceIncreaseAction, ETriggerEvent::Started, this, &ACyclingPrototypePawn::HandleCadenceIncrease);
+	}
+	if (CadenceDecreaseAction)
+	{
+		EIC->BindAction(CadenceDecreaseAction, ETriggerEvent::Started, this, &ACyclingPrototypePawn::HandleCadenceDecrease);
+	}
+	if (StartRideAction)
+	{
+		EIC->BindAction(StartRideAction, ETriggerEvent::Started, this, &ACyclingPrototypePawn::HandleStartRide);
+	}
+	if (StopRideAction)
+	{
+		EIC->BindAction(StopRideAction, ETriggerEvent::Started, this, &ACyclingPrototypePawn::HandleStopRide);
+	}
+	if (RestartRideAction)
+	{
+		EIC->BindAction(RestartRideAction, ETriggerEvent::Started, this, &ACyclingPrototypePawn::HandleRestartRide);
+	}
+}
+
+namespace CyclingPrototypePawnInputInternal
+{
+	// Common delegate helper: try to apply a step operation on the
+	// session. Logs a single useful warning on failure and never mutates
+	// any state on failure (the session / controller is transactional).
+	template <typename StepOp>
+	void DispatchStep(
+		ACyclingPrototypePawn* Pawn,
+		const TCHAR* OpName,
+		StepOp Op)
+	{
+		if (!Pawn)
+		{
+			return;
+		}
+		FString Error;
+		if (!Op(Error))
+		{
+			UE_LOG(LogCyclingPrototypePawn, Warning,
+				TEXT("Pawn '%s' input '%s' rejected: %s"),
+				*Pawn->GetName(), OpName, *Error);
+		}
+	}
+}
+
+void ACyclingPrototypePawn::HandlePowerIncrease(const FInputActionValue& /*Value*/)
+{
+	CyclingPrototypePawnInputInternal::DispatchStep(this, TEXT("PowerIncrease"),
+		[this](FString& Err) { return Session.TryIncreasePower(Err); });
+}
+
+void ACyclingPrototypePawn::HandlePowerDecrease(const FInputActionValue& /*Value*/)
+{
+	CyclingPrototypePawnInputInternal::DispatchStep(this, TEXT("PowerDecrease"),
+		[this](FString& Err) { return Session.TryDecreasePower(Err); });
+}
+
+void ACyclingPrototypePawn::HandleCadenceIncrease(const FInputActionValue& /*Value*/)
+{
+	CyclingPrototypePawnInputInternal::DispatchStep(this, TEXT("CadenceIncrease"),
+		[this](FString& Err) { return Session.TryIncreaseCadence(Err); });
+}
+
+void ACyclingPrototypePawn::HandleCadenceDecrease(const FInputActionValue& /*Value*/)
+{
+	CyclingPrototypePawnInputInternal::DispatchStep(this, TEXT("CadenceDecrease"),
+		[this](FString& Err) { return Session.TryDecreaseCadence(Err); });
+}
+
+void ACyclingPrototypePawn::HandleStartRide(const FInputActionValue& /*Value*/)
+{
+	// Stage 2 contract: StartRide is only valid from Ready or Stopped.
+	// Ready/Stopped -> Running; Finished/Error/Uninitialized -> no-op.
+	// The existing StartRide implementation enforces this with a
+	// switch on Lifecycle. Calling it from Finished is intentionally a
+	// no-op so the user must press Restart to recover from overshoot.
+	const ECyclingPrototypeLifecycle Before = Lifecycle;
+	StartRide();
+	if (Before == ECyclingPrototypeLifecycle::Finished &&
+		Lifecycle == ECyclingPrototypeLifecycle::Finished)
+	{
+		UE_LOG(LogCyclingPrototypePawn, Log,
+			TEXT("Pawn '%s' StartRide ignored in Finished state; RestartRide is required."),
+			*GetName());
+	}
+}
+
+void ACyclingPrototypePawn::HandleStopRide(const FInputActionValue& /*Value*/)
+{
+	StopRide();
+}
+
+void ACyclingPrototypePawn::HandleRestartRide(const FInputActionValue& /*Value*/)
+{
+	RestartRide();
 }
