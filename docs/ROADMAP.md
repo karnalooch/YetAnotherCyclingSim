@@ -361,3 +361,12 @@ Kolejność orientacyjna:
 8. Drafting i fizyka grupy.
 9. Kolejne platformy treningowe.
 10. Inne systemy operacyjne.
+
+## Dokument kierunkowy po MVP
+
+Założenia dotyczące przyszłej sieci dróg, skalowania świata, dużej liczby kolarzy,
+wydajności oraz multiplayera opisuje
+[`PERFORMANCE_MULTIPLAYER_ARCHITECTURE.md`](PERFORMANCE_MULTIPLAYER_ARCHITECTURE.md).
+
+Dokument ten definiuje ograniczenia architektoniczne i edge case'y, ale nie przenosi
+multiplayera ani otwartego świata do bieżącego zakresu MVP.
