@@ -344,6 +344,36 @@ Jeżeli zawodnik ma większą docelową prędkość, ale z lewej i prawej strony
 
 W sytuacji konfliktu zawodnik jadący z przodu domyślnie utrzymuje linię, a odpowiedzialność za znalezienie bezpiecznego toru spoczywa na zawodniku wyprzedzającym. Zapobiega to wzajemnemu „uciekaniu” obu modeli na tę samą stronę.
 
+
+### No Static Wall i dostępność korytarza wyprzedzania
+
+Automatyczne pozycjonowanie nie może przypadkowo tworzyć trwałej „ściany” zawodników blokującej całą użyteczną szerokość drogi.
+
+Solver nie powinien układać zawodników w idealne, statyczne rzędy poprzeczne, jeżeli nie wynika to z geometrii drogi, warunków jazdy albo jawnej przyszłej logiki taktycznej. Preferowane jest naturalne, lekko przesunięte ustawienie zawodników, które ogranicza ryzyko powstania sztucznego pełnego przekroju blokującego drogę.
+
+Obowiązują następujące invariants:
+
+- `No Static Wall`: zwykły Pack Dynamics nie może utrzymywać przypadkowego pełnego blokowania całej użytecznej szerokości drogi;
+- jeżeli geometria drogi na to pozwala, normalne zachowanie grupy powinno zachować albo dynamicznie utworzyć co najmniej jeden fizycznie wiarygodny korytarz wyprzedzania;
+- `BOXED_IN` jest poprawnym stanem tylko wtedy, gdy lokalna geometria drogi i rzeczywista zajętość przestrzeni przez innych zawodników fizycznie uzasadniają brak przejazdu;
+- brak możliwości wyprzedzania nie może wynikać wyłącznie z przypadkowego ustawienia botów przez solver;
+- zwykły system avoidance nie może być używany do świadomego blokowania drogi.
+
+Jeżeli zawodnik generuje wyraźnie większą docelową prędkość i istnieje możliwość bezpiecznego przeorganizowania lokalnej grupy, system może użyć mechanizmu `Passing Opportunity Negotiation`.
+
+Mechanizm powinien:
+
+1. wykryć przyszły konflikt i brak bezpośredniej luki;
+2. wyszukać potencjalny korytarz wyprzedzania;
+3. zarezerwować korytarz na krótki czas;
+4. wykonać małe, płynne korekty pozycji kilku zawodników, jeżeli są bezpieczne;
+5. utrzymać decyzję przez czas commitment/hysteresis;
+6. zwolnić rezerwację po zakończeniu lub anulowaniu manewru.
+
+System nie może gwarantować wyprzedzenia. Na wąskiej drodze, przy barierach, w zakręcie lub przy rzeczywistym zagęszczeniu grupy zawodnik może pozostać `BOXED_IN`.
+
+Świadome taktyczne blokowanie drogi, jeżeli kiedykolwiek zostanie dodane, musi być osobną logiką AI/taktyki, a nie efektem ubocznym collision avoidance lub Pack Dynamics.
+
 ### Trajektoria i prezentacja manewru
 
 Automatyczna korekta boczna musi być realizowana jako ciągła trajektoria jazdy, a nie translacja modelu w bok.

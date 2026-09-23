@@ -374,6 +374,10 @@ Ten zakres jest planowany po stabilizacji single-player MVP.
 - System stosuje predykcyjne unikanie kolizji zamiast odpychania modeli po kontakcie.
 - Twarde obszary rowerów/kolarzy nie mogą się przenikać; większe miękkie strefy służą do wcześniejszego planowania.
 - Gdy wyprzedzenie nie jest możliwe, zawodnik pozostaje na kole zamiast przenikać przez model lub wykonywać sztuczny skok w bok.
+- Solver nie może przypadkowo tworzyć trwałej pełnej „ściany” zawodników blokującej całą użyteczną szerokość drogi (`No Static Wall`).
+- Gdy geometria na to pozwala, normalne zachowanie grupy powinno zachowywać lub dynamicznie tworzyć co najmniej jeden fizycznie wiarygodny korytarz wyprzedzania.
+- `BOXED_IN` jest poprawny wyłącznie wtedy, gdy rzeczywista geometria i occupancy fizycznie uzasadniają brak przejazdu.
+- W późniejszej iteracji `Passing Opportunity Negotiation` może krótkotrwale rezerwować lukę i koordynować małe korekty kilku riderów zamiast przesuwać jedną postać arbitralnie.
 - Rozpoczęty manewr ma commitment/hysteresis, aby wyeliminować bezcelowe myszkowanie lewo–prawo.
 - Automatyczna zmiana toru jest ciągłą trajektorią z ograniczeniami prędkości bocznej, przyspieszenia, jerk i krzywizny.
 - Animacja skrętu, yaw i pochylenie muszą wynikać z trajektorii, aby automatyczne prowadzenie było wizualnie wiarygodne.
@@ -389,6 +393,7 @@ Po wdrożeniu Pack Dynamics planowane są:
 - `HOLD_WHEEL`;
 - `BOXED_IN`;
 - `PASS_CORRIDOR_LEFT` / `PASS_CORRIDOR_RIGHT`;
+- stan `SEARCHING_FOR_GAP` podczas wyszukiwania bezpiecznej możliwości wyprzedzenia;
 - ostrzeżenia o zamykającej się luce;
 - strefy kompresji grupy;
 - sygnalizacja zwężeń i bocznego wiatru;
