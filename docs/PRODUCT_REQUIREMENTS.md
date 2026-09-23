@@ -345,32 +345,36 @@ Jeżeli zawodnik ma większą docelową prędkość, ale z lewej i prawej strony
 W sytuacji konfliktu zawodnik jadący z przodu domyślnie utrzymuje linię, a odpowiedzialność za znalezienie bezpiecznego toru spoczywa na zawodniku wyprzedzającym. Zapobiega to wzajemnemu „uciekaniu” obu modeli na tę samą stronę.
 
 
-### No Static Wall i dostępność korytarza wyprzedzania
+### No Static Wall, naturalne luki i brak „VIP lane”
 
 Automatyczne pozycjonowanie nie może przypadkowo tworzyć trwałej „ściany” zawodników blokującej całą użyteczną szerokość drogi.
 
-Solver nie powinien układać zawodników w idealne, statyczne rzędy poprzeczne, jeżeli nie wynika to z geometrii drogi, warunków jazdy albo jawnej przyszłej logiki taktycznej. Preferowane jest naturalne, lekko przesunięte ustawienie zawodników, które ogranicza ryzyko powstania sztucznego pełnego przekroju blokującego drogę.
+Jednocześnie system nie może sztucznie utrzymywać zawsze pustego pasa wyprzedzania ani rozsuwać peletonu tylko dlatego, że gracz chce jechać szybciej. Zwarta grupa, wachlarz przy bocznym wietrze, wąska droga albo realne zagęszczenie mogą czasowo zajmować praktycznie całą dostępną szerokość.
+
+Solver nie powinien układać zawodników w idealne, statyczne rzędy poprzeczne, jeżeli nie wynika to z geometrii drogi, warunków jazdy albo jawnej przyszłej logiki taktycznej. Preferowane jest naturalne, lekko przesunięte ustawienie, ale nie wolno wymuszać sztucznej luki.
 
 Obowiązują następujące invariants:
 
-- `No Static Wall`: zwykły Pack Dynamics nie może utrzymywać przypadkowego pełnego blokowania całej użytecznej szerokości drogi;
-- jeżeli geometria drogi na to pozwala, normalne zachowanie grupy powinno zachować albo dynamicznie utworzyć co najmniej jeden fizycznie wiarygodny korytarz wyprzedzania;
-- `BOXED_IN` jest poprawnym stanem tylko wtedy, gdy lokalna geometria drogi i rzeczywista zajętość przestrzeni przez innych zawodników fizycznie uzasadniają brak przejazdu;
-- brak możliwości wyprzedzania nie może wynikać wyłącznie z przypadkowego ustawienia botów przez solver;
-- zwykły system avoidance nie może być używany do świadomego blokowania drogi.
+- `No Static Wall`: Pack Dynamics nie może utrzymywać pełnego blokowania drogi wyłącznie jako artefaktu automatycznego pozycjonowania;
+- `No VIP Lane`: system nie może tworzyć gwarantowanego pustego korytarza tylko dla gracza ani zmuszać kilku zawodników do nienaturalnego ustępowania;
+- istniejący lub przewidywany korytarz wyprzedzania może zostać wykorzystany i krótkotrwale zarezerwowany, jeżeli wynika z naturalnej dynamiki grupy;
+- `BOXED_IN` jest poprawnym stanem wtedy, gdy geometria drogi i rzeczywista zajętość przestrzeni fizycznie uzasadniają brak przejazdu;
+- chwilowe zajęcie całej szerokości drogi może być prawidłowe, jeżeli wynika z prawdziwej sytuacji, np. zwężenia, zakrętu albo ustawienia w crosswindzie;
+- zwykły system avoidance nie może być używany do świadomego blokowania drogi ani do tworzenia uprzywilejowanej ścieżki dla jednego zawodnika.
 
-Jeżeli zawodnik generuje wyraźnie większą docelową prędkość i istnieje możliwość bezpiecznego przeorganizowania lokalnej grupy, system może użyć mechanizmu `Passing Opportunity Negotiation`.
+Jeżeli zawodnik generuje wyraźnie większą docelową prędkość, system może użyć mechanizmu `Passing Opportunity Negotiation`.
 
 Mechanizm powinien:
 
 1. wykryć przyszły konflikt i brak bezpośredniej luki;
-2. wyszukać potencjalny korytarz wyprzedzania;
-3. zarezerwować korytarz na krótki czas;
-4. wykonać małe, płynne korekty pozycji kilku zawodników, jeżeli są bezpieczne;
-5. utrzymać decyzję przez czas commitment/hysteresis;
-6. zwolnić rezerwację po zakończeniu lub anulowaniu manewru.
+2. wyszukać istniejącą lub przewidywaną naturalną możliwość wyprzedzenia;
+3. zarezerwować wykrytą lukę na krótki czas, aby kilku agentów nie próbowało wykorzystać jej jednocześnie;
+4. dopuścić jedynie małe korekty innych zawodników, które same w sobie są uzasadnione collision avoidance, stabilnością linii albo naturalną dynamiką grupy;
+5. nie tworzyć korytarza przez arbitralne rozpychanie kilku riderów;
+6. utrzymać decyzję przez czas commitment/hysteresis;
+7. zwolnić rezerwację po zakończeniu lub anulowaniu manewru.
 
-System nie może gwarantować wyprzedzenia. Na wąskiej drodze, przy barierach, w zakręcie lub przy rzeczywistym zagęszczeniu grupy zawodnik może pozostać `BOXED_IN`.
+System nie może gwarantować wyprzedzenia. Na wąskiej drodze, przy barierach, w zakręcie, w crosswindzie lub przy rzeczywistym zagęszczeniu grupy zawodnik może pozostać `BOXED_IN`.
 
 Świadome taktyczne blokowanie drogi, jeżeli kiedykolwiek zostanie dodane, musi być osobną logiką AI/taktyki, a nie efektem ubocznym collision avoidance lub Pack Dynamics.
 
@@ -400,6 +404,82 @@ Docelowy Pack Dynamics powinien obejmować:
 - później także wpływ bocznego wiatru, wachlarze i zaawansowaną dynamikę ucieczek.
 
 Logika fizyki podłużnej, interakcji grupy, planowania trajektorii bocznej oraz animacji/prezentacji powinna pozostać rozdzielona i testowalna.
+
+### Sąsiedztwo zgodne z topologią trasy
+
+Interakcje Pack Dynamics nie mogą być wyznaczane wyłącznie na podstawie odległości w światowym XYZ.
+
+Na serpentynie, moście, w tunelu, na trasie wielopoziomowej albo na różnych okrążeniach dwóch riderów może znajdować się blisko geometrycznie, ale daleko wzdłuż faktycznej trasy.
+
+Drafting, collision prediction, `BOXED_IN`, `GapReservation` i inne interakcje grupowe powinny wymagać zgodności topologicznej, np. zgodnego segmentu/korytarza trasy, sensownej różnicy `routeProgress` oraz — gdy będzie potrzebne — `lapIndex`.
+
+Fałszywa bliskość przestrzenna nie może tworzyć draftu ani kolizji między zawodnikami jadącymi po innych fragmentach trasy.
+
+### Hierarchia priorytetów planera
+
+W sytuacji konfliktu pomiędzy poprawnymi lokalnie celami obowiązuje deterministyczna hierarchia priorytetów:
+
+1. brak twardej kolizji;
+2. pozostanie w dozwolonej geometrii drogi;
+3. przyczepność i ograniczenia kinematyczne roweru;
+4. bezpieczne dokończenie już committed manewru albo kontrolowany abort;
+5. bezpieczeństwo i stabilność lokalnej grupy;
+6. intencja podłużna wynikająca z realnej mocy użytkownika;
+7. pozycja aerodynamiczna i drafting;
+8. komfort, estetyka i preferowana linia.
+
+Niższy priorytet nie może łamać wyższego. Korzystniejszy draft nie uzasadnia kolizji, a atrakcyjny passing corridor nie uzasadnia przekroczenia gripu na mokrym zakręcie.
+
+### Brak magazynowania niewykorzystanej energii
+
+Jeżeli automatyczne prowadzenie chwilowo ogranicza rzeczywistą prędkość, np. z powodu `BOXED_IN`, wygenerowana przez użytkownika moc nie może być magazynowana i później oddawana jako dodatkowy boost.
+
+Energia, która z powodu automatycznego hamowania lub ograniczenia ruchu nie została zamieniona na wzrost energii kinetycznej/potencjalnej zgodnie z modelem, powinna zostać rozliczona jako strata, np. `WastedEnergy`.
+
+Po otwarciu luki zawodnik przyspiesza wyłącznie na podstawie aktualnej realnej mocy i bieżącego stanu fizycznego.
+
+### Pack Dynamics Torture Harness
+
+Przed uznaniem Pack Dynamics za gotowy należy przygotować deterministyczny harness bez renderingu, który celowo próbuje złamać solver.
+
+Minimalne klasy scenariuszy:
+
+- dwóch riderów wybierających tę samą stronę uniku;
+- dwóch riderów konkurujących o tę samą lukę;
+- zamknięcie luki po rozpoczęciu manewru;
+- sytuacja idealnie symetryczna wymagająca stabilnego tie-breakera;
+- sztuczna pełna ściana na szerokiej drodze;
+- realne zwężenie z prawidłowym `BOXED_IN`;
+- crosswind/echelon zajmujący większość szerokości drogi;
+- szybka i chwilowa zmiana wiatru;
+- hairpin z próbą wyprzedzania;
+- mokry zakręt z geometrycznie dostępną, ale kinematycznie niebezpieczną luką;
+- szczyt podjazdu i nagłe rozciąganie grupy;
+- szybki zjazd wymagający dłuższego prediction horizon;
+- bardzo wolny podjazd;
+- zatrzymany zawodnik;
+- merge i split grup;
+- serpentyny, mosty, tunele i różne poziomy trasy;
+- różne `lapIndex`;
+- finisz, przy którym niepotrzebny `RETURN_TO_LINE` nie może pogorszyć wyniku;
+- chwilowy dropout mocy oraz nierealistyczny spike wejścia;
+- zniknięcie/spawn ridera w przyszłym multiplayerze;
+- recovery z już istniejącego overlapu bez „eksplozji” impulsowej.
+
+Każdy test powinien sprawdzać co najmniej:
+
+- `no hard overlap`;
+- `no teleport`;
+- `no road exit`;
+- `no impossible lateral acceleration`;
+- `no oscillation above threshold`;
+- `no persistent artificial deadlock`;
+- `no energy banking`;
+- `no false cross-route interaction`;
+- `no forced VIP lane`;
+- `same inputs + same initial state -> same result`.
+
+Prediction horizon i margines bezpieczeństwa powinny być zależne od prędkości i sytuacji. Rozwiązanie poprawne przy 8 km/h nie może być automatycznie uznane za poprawne przy 80 km/h.
 
 Implementacja Pack Dynamics nie rozpoczyna się przed ukończeniem odpowiedniego etapu po MVP.
 
@@ -482,6 +562,12 @@ Semantyka koloru powinna pozostać spójna w całej grze. Przykładowo:
 
 Dokładne kolory wymagają późniejszej walidacji dostępności i czytelności.
 
+Kolor nie może być jedynym nośnikiem znaczenia. Ważne stany powinny różnić się także kształtem, wzorem, animacją lub ikonografią.
+
+Jeżeli jednocześnie aktywnych jest kilka typów guidance, np. zakręt, `BOXED_IN`, crosswind i niski grip, `GuidanceComposer` powinien ustalić priorytet i ograniczyć liczbę równocześnie widocznych sygnałów. Droga nie może zamieniać się w nakładającą się „choinkę” oznaczeń.
+
+Czytelność należy walidować co najmniej dla różnych kamer, deszczu, jasnej i ciemnej nawierzchni oraz warunków ograniczonej widoczności.
+
 ### Poziomy asysty
 
 Zakres Road Guidance powinien zależeć od poziomu asysty.
@@ -530,13 +616,23 @@ Po MVP profil zawodnika może zostać rozszerzony o cechy techniczne wpływając
 
 Parametry fizyczne określają fizyczne możliwości zawodnika i roweru. Umiejętności techniczne nie mogą tworzyć sztucznych bonusów do prędkości, mocy ani przyczepności.
 
-Umiejętności techniczne wpływają na to, jak skutecznie automatyczne prowadzenie wykorzystuje istniejące możliwości fizyczne zawodnika.
+Należy rozdzielić trzy różne pojęcia:
 
-Przykładowe przyszłe cechy:
+- `PhysicalCapability` — realna moc, masa, `CdA`, `Crr` i inne fizyczne możliwości;
+- `PlayerTechnique` — umiejętności zależne od decyzji, które użytkownik rzeczywiście podejmuje, np. timing mocy/kadencji, reakcja na guidance i technika zakrętów;
+- `AutopilotProficiency` — parametry automatycznego prowadzenia, np. ostrożność planera, marginesy bezpieczeństwa i sposób wykorzystania luki.
 
-- `PackHandling`;
-- `CorneringTechnique`;
-- `BikeHandling`.
+`PlayerTechnique` może podlegać progresji tylko wtedy, gdy wynik jest rzeczywiście związany z zachowaniem użytkownika.
+
+`AutopilotProficiency` nie może rozwijać się automatycznie tylko dlatego, że autopilot sam wykonał udany manewr. W przeciwnym razie powstałaby pętla: lepszy autopilot → więcej sukcesów → jeszcze lepszy autopilot bez realnej nauki użytkownika.
+
+Przykładowe przyszłe cechy wymagające dalszego projektu:
+
+- `CorneringTechnique` — kandydat na `PlayerTechnique`;
+- `PackTiming` lub podobna cecha związana z realnym timingiem mocy użytkownika — kandydat na `PlayerTechnique`;
+- `PackHandling` i `BikeHandling` muszą zostać przed implementacją sklasyfikowane jako faktyczna technika użytkownika albo parametr `AutopilotProficiency`; nie wolno mieszać tych kategorii.
+
+W przyszłym trybie competitive multiplayer parametry `AutopilotProficiency` powinny być co najmniej rozważone do normalizacji, aby przewaga nie wynikała z tego, że system prowadzi rower lepiej za jednego gracza niż za drugiego.
 
 Dokładny zestaw cech i ich sposób prezentacji wymagają osobnego projektu po MVP.
 
@@ -690,6 +786,8 @@ Jeżeli utrzymanie grupy lub wykonanie manewru fizycznie wymaga większej mocy n
 ### Skill Progression
 
 Rozwój umiejętności technicznych nie powinien opierać się na prostym grindzie kilometrów, czasu gry ani liczby przejazdów.
+
+Progres nie może być przyznawany za zdarzenie, którego wynik został w całości wygenerowany przez automatyczne prowadzenie. System progresji musi potrafić wskazać, jaki kontrolowany przez użytkownika sygnał lub decyzja miały wpływ na oceniane zachowanie.
 
 Preferowany model progresji:
 

@@ -375,14 +375,18 @@ Ten zakres jest planowany po stabilizacji single-player MVP.
 - Twarde obszary rowerów/kolarzy nie mogą się przenikać; większe miękkie strefy służą do wcześniejszego planowania.
 - Gdy wyprzedzenie nie jest możliwe, zawodnik pozostaje na kole zamiast przenikać przez model lub wykonywać sztuczny skok w bok.
 - Solver nie może przypadkowo tworzyć trwałej pełnej „ściany” zawodników blokującej całą użyteczną szerokość drogi (`No Static Wall`).
-- Gdy geometria na to pozwala, normalne zachowanie grupy powinno zachowywać lub dynamicznie tworzyć co najmniej jeden fizycznie wiarygodny korytarz wyprzedzania.
-- `BOXED_IN` jest poprawny wyłącznie wtedy, gdy rzeczywista geometria i occupancy fizycznie uzasadniają brak przejazdu.
-- W późniejszej iteracji `Passing Opportunity Negotiation` może krótkotrwale rezerwować lukę i koordynować małe korekty kilku riderów zamiast przesuwać jedną postać arbitralnie.
+- Solver nie może tworzyć stałego pustego pasa ani „VIP lane”; może wykorzystywać i rezerwować naturalnie istniejące lub przewidywane luki.
+- `BOXED_IN` jest poprawny, gdy rzeczywista geometria i occupancy fizycznie uzasadniają brak przejazdu; chwilowe zajęcie całej szerokości drogi może być prawidłowe.
+- `Passing Opportunity Negotiation` może rezerwować naturalną lukę i dopuszczać tylko małe korekty innych riderów, które same są uzasadnione avoidance/stabilnością — nie może rozpychać peletonu dla gracza.
 - Rozpoczęty manewr ma commitment/hysteresis, aby wyeliminować bezcelowe myszkowanie lewo–prawo.
 - Automatyczna zmiana toru jest ciągłą trajektorią z ograniczeniami prędkości bocznej, przyspieszenia, jerk i krzywizny.
 - Animacja skrętu, yaw i pochylenie muszą wynikać z trajektorii, aby automatyczne prowadzenie było wizualnie wiarygodne.
 - Pierwszeństwo jest deterministyczne: jadący z przodu domyślnie utrzymuje linię, a wyprzedzający odpowiada za znalezienie bezpiecznej luki.
 - Docelowy subsystem obejmuje drafting, hold-wheel, anti-churn, overtaking, drop/bridge i pack cornering; crosswind/echelons oraz bardziej zaawansowana taktyka należą do późniejszych iteracji.
+- Sąsiedztwo Pack Dynamics musi respektować topologię trasy, a nie tylko odległość XYZ; serpentyny, mosty, tunele i różne okrążenia nie mogą generować fałszywego draftu/kolizji.
+- Planner stosuje twardą hierarchię: collision → road bounds → grip/kinematics → committed manoeuvre → pack safety → power intent → draft → comfort.
+- Moc niewykorzystana podczas automatycznego ograniczenia prędkości nie może być magazynowana jako późniejszy boost; trafia do rozliczenia strat, np. `WastedEnergy`.
+- Prediction horizon i safety margin muszą skalować się z prędkością i sytuacją.
 
 ### Road Guidance Overlay — rozwój po MVP
 
@@ -409,7 +413,9 @@ Założenia:
 
 - parametry fizyczne (np. masa, `CdA`, geometria postaci) zmieniają rzeczywiste możliwości fizyczne;
 - cechy techniczne nie dają magicznych bonusów do prędkości, mocy ani przyczepności;
-- `PackHandling`, `CorneringTechnique` i `BikeHandling` mogą wpływać na jakość decyzji automatycznego prowadzenia w edge case'ach;
+- należy rozdzielić `PhysicalCapability`, `PlayerTechnique` i `AutopilotProficiency`;
+- progres może dotyczyć wyłącznie zachowań, na które użytkownik faktycznie miał wpływ; sukces wykonany wyłącznie przez autopilot nie może sam zwiększać skilla;
+- `PackHandling` i `BikeHandling` przed implementacją muszą zostać sklasyfikowane jako rzeczywista technika użytkownika albo parametr autopilota, zamiast mieszać oba pojęcia;
 - wynik manewru powinien zależeć od relacji `TechnicalDemand` do `TechnicalCapacity`, a nie od losowego rzutu procentowego;
 - wysoka technika nie może łamać twardych ograniczeń geometrii, kolizji ani zasad Pack Dynamics;
 - przyszły `PackTechniqueScore` może raportować m.in. draft efficiency, wheel holding, gap closures, wasted energy i missed passing opportunities.
@@ -446,4 +452,24 @@ Do kryteriów ukończenia odpowiednich systemów należy dodać walidację, czy 
 - czy powinien zmienić moc lub kadencję.
 
 Mechanika bez realnego odpowiednika haptycznego/kinestetycznego nie jest kompletna, jeśli jej kluczowy stan pozostaje niewidoczny dla gracza.
+
+Przy kilku jednoczesnych sygnałach wymagany jest `GuidanceComposer`, który ustala priorytet i ogranicza wizualny clutter. Kolor nie może być jedynym nośnikiem znaczenia; wymagane są także różnice kształtu/wzoru/animacji oraz walidacja w różnych kamerach i warunkach pogodowo-oświetleniowych.
+
+### Pack Dynamics Torture Harness — wymagania przed implementacją produkcyjną
+
+Przed uznaniem Pack Dynamics za stabilny wymagany jest deterministyczny harness bez renderingu obejmujący ręczne edge case'y oraz masowo generowane warianty.
+
+Obowiązkowe invariants:
+- brak hard overlap;
+- brak teleportów;
+- brak wyjazdu poza dozwoloną drogę;
+- brak niemożliwego lateral acceleration;
+- brak trwałego reciprocal dance / oscillation;
+- brak sztucznego deadlocku;
+- brak energy banking;
+- brak fałszywych interakcji pomiędzy różnymi segmentami/poziomami trasy;
+- brak wymuszonego `VIP lane`;
+- identyczny stan i wejścia dają identyczny wynik.
+
+Harness musi zawierać co najmniej scenariusze: wspólna luka dla dwóch riderów, zamknięcie luki w trakcie passu, symetryczny deadlock, realne i sztuczne `BOXED_IN`, crosswind/echelon, hairpin, mokry zakręt, crest, szybki zjazd, wolny podjazd, stopped rider, merge/split grup, serpentyny/mosty/tunele, różne `lapIndex`, finish behavior oraz błędne/dropoutowe wejście mocy.
 
