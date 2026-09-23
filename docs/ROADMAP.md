@@ -106,14 +106,14 @@ Stworzyć testowalny model jazdy, zanim powstanie docelowa trasa i grafika.
 
 **Uwaga:** Referencyjny pakiet Pythona w katalogu `physics_reference/`
 (kontrakty danych, siły, stały krok czasowy i testy jednostkowe) jest
-ukończony i przechodzi **258 testów automatycznych**. Port C++ do Unreal
+ukończony i przechodzi **260 testów automatycznych**. Port C++ do Unreal
 Engine jest ukończony: zawiera kontrakty danych, siły oporu,
 deterministyczny krok symulacji oraz testy dynamiki długookresowej.
 Budowa edytora UE 5.8 (Windows, Development) kończy się sukcesem,
 a wszystkie cztery testy automatyczne `CyclingPhysics` przechodzą.
-Etap 1 dostarcza czyste obliczenia ze stałym krokiem czasowym; akumulator
-czasu w trakcie gry, który uniezależnia rozgrywkę od zmiennego FPS,
-pozostaje częścią etapu 2. Prototypy Pythona dotyczące trasy, pogody
+Etap 1 dostarcza czyste obliczenia ze stałym krokiem czasowym. Akumulator
+czasu w trakcie gry, który uniezależnia rozgrywkę od zmiennego FPS, został
+następnie zaimplementowany i przetestowany w ramach etapu 2. Prototypy Pythona dotyczące trasy, pogody
 i zakrętów nie oznaczają jednak ukończenia późniejszych etapów Unreal
 Engine — te etapy nadal wymagają implementacji i weryfikacji w UE5.
 
@@ -133,14 +133,14 @@ Połączyć wejście testowe, fizykę i ruch obiektu po prostej trasie.
 
 ## Zadania
 
-- [ ] Utworzenie podstawowej mapy testowej.
-- [ ] Utworzenie drogi opartej na spline.
-- [ ] Dodanie tymczasowego obiektu reprezentującego rower.
+- [x] Utworzenie podstawowej mapy testowej.
+- [x] Utworzenie drogi opartej na spline.
+- [x] Dodanie tymczasowego obiektu reprezentującego rower.
 - [ ] Poruszanie obiektu zgodnie z wynikiem silnika fizycznego.
 - [ ] Sterowanie mocą i kadencją z klawiatury.
 - [ ] Dodanie panelu diagnostycznego.
 - [ ] Dodanie zatrzymania i ponownego uruchomienia jazdy.
-- [ ] Dodanie stałego kroku fizyki niezależnego od FPS.
+- [x] Dodanie stałego kroku fizyki niezależnego od FPS.
 - [ ] Pomiar liczby FPS i czasu klatki.
 
 ## Kryterium ukończenia
