@@ -495,3 +495,12 @@ Po zapisaniu tych zasad spec Pack Dynamics v0.1 uznaje się za zamrożoną do cz
 
 Nowe pomysły dotyczące Pack Dynamics trafiają do backlogu, chyba że rozwiązują krytyczną lukę w istniejących invariants.
 
+## Dokument kierunkowy po MVP
+
+Założenia dotyczące przyszłej sieci dróg, skalowania świata, dużej liczby kolarzy,
+wydajności oraz multiplayera opisuje
+[`PERFORMANCE_MULTIPLAYER_ARCHITECTURE.md`](PERFORMANCE_MULTIPLAYER_ARCHITECTURE.md).
+
+Dokument ten definiuje ograniczenia architektoniczne i edge case'y, ale nie przenosi
+multiplayera ani otwartego świata do bieżącego zakresu MVP.
+
