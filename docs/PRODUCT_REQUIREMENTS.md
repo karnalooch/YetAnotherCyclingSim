@@ -302,3 +302,74 @@ MVP jest ukończone, gdy użytkownik może:
 Pełny zakres MVP jest bardzo ambitny dla jednej początkującej osoby i nie jest realistyczny do ukończenia w 2–3 miesiące bez istotnego ograniczenia jakości lub funkcji.
 
 Termin 2–3 miesięcy należy traktować jako termin pierwszego działającego kamienia milowego. Szczegółowy harmonogram zostanie przygotowany po rozbiciu MVP na wersje pośrednie.
+
+## 20. Pack Dynamics i automatyczne prowadzenie w grupie (po MVP)
+
+Pack Dynamics jest funkcją planowaną po ukończeniu stabilnego single-player MVP i nie rozszerza bieżącego zakresu MVP.
+
+### Sterowanie i intencja użytkownika
+
+Użytkownik nie ma fizycznej możliwości bezpośredniego sterowania rowerem w lewo ani w prawo. Podstawowym wejściem pozostają moc i kadencja. System interpretuje wynikającą z nich docelową prędkość i przyspieszenie jako sygnał intencji jazdy, natomiast samodzielnie wybiera bezpieczny tor w obrębie drogi.
+
+Gracz nie wybiera strony wyprzedzania, nie ustawia ręcznie pozycji w cieniu aerodynamicznym i nie wykonuje ręcznych korekt bocznych w peletonie.
+
+### Zasady pozycjonowania bocznego
+
+Zmiana pozycji bocznej nie może być arbitralnym przesunięciem modelu. Każdy manewr boczny musi mieć jawny powód, np.:
+
+- `FOLLOW_WHEEL`;
+- `OVERTAKE_LEFT`;
+- `OVERTAKE_RIGHT`;
+- `AVOID_COLLISION`;
+- `RETURN_TO_LINE`;
+- `CORNER_POSITION`;
+- `CROSSWIND_POSITION`.
+
+Przy braku uzasadnionego `LateralIntent` zawodnik powinien utrzymywać stabilną linię zamiast stale przemieszczać się w lewo i w prawo.
+
+System powinien stosować histerezę i czas zobowiązania do rozpoczętego manewru. Po wybraniu strony wyprzedzania nie wolno zmieniać decyzji co klatkę tylko dlatego, że chwilowo druga strona otrzymała nieznacznie lepszą ocenę. Zmiana planu jest dopuszczalna, gdy pojawi się realne zagrożenie lub wybrana luka przestanie być dostępna.
+
+### Unikanie kolizji i brak przenikania modeli
+
+Kolizjom należy zapobiegać predykcyjnie, zanim modele się zetkną. System powinien analizować względną prędkość, przewidywaną pozycję i czas do potencjalnego konfliktu.
+
+Każdy zawodnik powinien mieć:
+
+- mały, nieprzenikalny obszar fizyczny odpowiadający rzeczywistemu zajęciu miejsca przez rower i kolarza;
+- większą miękką strefę bezpieczeństwa używaną do planowania manewrów.
+
+Miękkie strefy mogą częściowo się nakładać w ciasnej grupie. Twarde obszary nie mogą się przenikać.
+
+Jeżeli zawodnik ma większą docelową prędkość, ale z lewej i prawej strony nie istnieje bezpieczna luka, system nie może teleportować go, odpychać innych modeli ani przepuszczać przez zawodnika z przodu. Powinien chwilowo utrzymać pozycję na kole i ograniczyć rzeczywistą prędkość do dostępnej przestrzeni, aż pojawi się bezpieczna możliwość wyprzedzenia.
+
+W sytuacji konfliktu zawodnik jadący z przodu domyślnie utrzymuje linię, a odpowiedzialność za znalezienie bezpiecznego toru spoczywa na zawodniku wyprzedzającym. Zapobiega to wzajemnemu „uciekaniu” obu modeli na tę samą stronę.
+
+### Trajektoria i prezentacja manewru
+
+Automatyczna korekta boczna musi być realizowana jako ciągła trajektoria jazdy, a nie translacja modelu w bok.
+
+Trajektoria powinna mieć ograniczenia dotyczące co najmniej:
+
+- prędkości bocznej;
+- przyspieszenia bocznego;
+- gwałtowności zmiany przyspieszenia;
+- krzywizny toru lub efektywnego kąta skrętu.
+
+Warstwa prezentacji musi pozostawać zgodna z wybraną trajektorią: zmiana toru powinna powodować odpowiedni yaw, wizualny skręt kierownicy i pochylenie roweru/kolarza. Gracz nie steruje tym bezpośrednio, ale manewr ma wyglądać jak rzeczywiste prowadzenie roweru.
+
+### Drafting i zachowanie grupy
+
+Docelowy Pack Dynamics powinien obejmować:
+
+- drafting oparty na zmianie efektywnego oporu aerodynamicznego, a nie sztucznym bonusie do prędkości;
+- automatyczne utrzymywanie koła;
+- stabilizację pozycji i ograniczenie niepotrzebnego „churnu” w peletonie;
+- automatyczne wyprzedzanie wynikające z różnicy docelowych prędkości;
+- utratę koła, powrót do grupy i domykanie luki;
+- zachowanie grupy w zakrętach;
+- później także wpływ bocznego wiatru, wachlarze i zaawansowaną dynamikę ucieczek.
+
+Logika fizyki podłużnej, interakcji grupy, planowania trajektorii bocznej oraz animacji/prezentacji powinna pozostać rozdzielona i testowalna.
+
+Implementacja Pack Dynamics nie rozpoczyna się przed ukończeniem odpowiedniego etapu po MVP.
+

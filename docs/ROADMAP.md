@@ -358,6 +358,23 @@ Kolejność orientacyjna:
 5. Treningi strukturalne.
 6. Ghost i porównywanie przejazdów.
 7. Multiplayer.
-8. Drafting i fizyka grupy.
+8. Pack Dynamics: drafting, automatyczne pozycjonowanie, wyprzedzanie i fizyka grupy.
 9. Kolejne platformy treningowe.
 10. Inne systemy operacyjne.
+
+### Pack Dynamics — założenia projektowe
+
+Ten zakres jest planowany po stabilizacji single-player MVP.
+
+- Gracz nie steruje bezpośrednio w lewo/prawo; moc i kadencja określają wysiłek i wynikającą z niego intencję prędkości.
+- Tor boczny jest wybierany automatycznie na podstawie geometrii drogi, zajętości przestrzeni, dostępnych luk, ryzyka kolizji, draftu i ograniczeń trajektorii.
+- Każda zmiana boczna musi mieć jawny `LateralIntent`; brak intencji oznacza utrzymanie stabilnej linii.
+- System stosuje predykcyjne unikanie kolizji zamiast odpychania modeli po kontakcie.
+- Twarde obszary rowerów/kolarzy nie mogą się przenikać; większe miękkie strefy służą do wcześniejszego planowania.
+- Gdy wyprzedzenie nie jest możliwe, zawodnik pozostaje na kole zamiast przenikać przez model lub wykonywać sztuczny skok w bok.
+- Rozpoczęty manewr ma commitment/hysteresis, aby wyeliminować bezcelowe myszkowanie lewo–prawo.
+- Automatyczna zmiana toru jest ciągłą trajektorią z ograniczeniami prędkości bocznej, przyspieszenia, jerk i krzywizny.
+- Animacja skrętu, yaw i pochylenie muszą wynikać z trajektorii, aby automatyczne prowadzenie było wizualnie wiarygodne.
+- Pierwszeństwo jest deterministyczne: jadący z przodu domyślnie utrzymuje linię, a wyprzedzający odpowiada za znalezienie bezpiecznej luki.
+- Docelowy subsystem obejmuje drafting, hold-wheel, anti-churn, overtaking, drop/bridge i pack cornering; crosswind/echelons oraz bardziej zaawansowana taktyka należą do późniejszych iteracji.
+
