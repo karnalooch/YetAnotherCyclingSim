@@ -203,7 +203,7 @@ bool FGoldenRideTest::RunTest(const FString& Parameters)
 		return false;
 	}
 
-	TestEqual(TEXT("Golden Ride produces four phase checkpoints"), Checkpoints.Num(), UE_ARRAY_COUNT(ApprovedCheckpoints));
+	TestEqual(TEXT("Golden Ride produces four phase checkpoints"), Checkpoints.Num(), static_cast<int32>(UE_ARRAY_COUNT(ApprovedCheckpoints)));
 
 	double MaxSpeedDrift = 0.0;
 	double MaxDistanceDrift = 0.0;
@@ -233,7 +233,7 @@ bool FGoldenRideTest::RunTest(const FString& Parameters)
 			SpeedDrift <= SpeedToleranceMps);
 		TestTrue(
 			FString::Printf(TEXT("phase '%s' distance matches Python reference within %.0e m"), Approved.Name, DistanceToleranceM),
-			DistanceDrift <= DistanceToleranceMps);
+			DistanceDrift <= DistanceToleranceM);
 		TestTrue(
 			FString::Printf(TEXT("phase '%s' elapsed time matches Python reference within %.0e s"), Approved.Name, TimeToleranceS),
 			TimeDrift <= TimeToleranceS);
