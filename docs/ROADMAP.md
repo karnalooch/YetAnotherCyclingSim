@@ -401,3 +401,16 @@ Po wdrożeniu Pack Dynamics planowane są:
 
 Każdy overlay korzysta z już obliczonego stanu fizyki, trasy lub Pack Dynamics i nie może wpływać zwrotnie na wynik symulacji.
 
+### Rider Technical Profile — rozwój po MVP
+
+Po ustabilizowaniu Pack Dynamics można dodać deterministyczny profil umiejętności technicznych zawodnika.
+
+Założenia:
+
+- parametry fizyczne (np. masa, `CdA`, geometria postaci) zmieniają rzeczywiste możliwości fizyczne;
+- cechy techniczne nie dają magicznych bonusów do prędkości, mocy ani przyczepności;
+- `PackHandling`, `CorneringTechnique` i `BikeHandling` mogą wpływać na jakość decyzji automatycznego prowadzenia w edge case'ach;
+- wynik manewru powinien zależeć od relacji `TechnicalDemand` do `TechnicalCapacity`, a nie od losowego rzutu procentowego;
+- wysoka technika nie może łamać twardych ograniczeń geometrii, kolizji ani zasad Pack Dynamics;
+- przyszły `PackTechniqueScore` może raportować m.in. draft efficiency, wheel holding, gap closures, wasted energy i missed passing opportunities.
+

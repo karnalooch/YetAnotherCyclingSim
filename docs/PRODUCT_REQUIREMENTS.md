@@ -522,3 +522,112 @@ Kolejność zależności powinna pozostać jednokierunkowa:
 
 Wyłączenie overlayu nie może zmieniać fizyki, toru jazdy ani zachowania automatycznego prowadzenia.
 
+## 22. Rider Technical Profile (po MVP)
+
+Po MVP profil zawodnika może zostać rozszerzony o cechy techniczne wpływające na jakość automatycznego prowadzenia, szczególnie w trudnych i granicznych sytuacjach.
+
+### Zasada projektowa
+
+Parametry fizyczne określają fizyczne możliwości zawodnika i roweru. Umiejętności techniczne nie mogą tworzyć sztucznych bonusów do prędkości, mocy ani przyczepności.
+
+Umiejętności techniczne wpływają na to, jak skutecznie automatyczne prowadzenie wykorzystuje istniejące możliwości fizyczne zawodnika.
+
+Przykładowe przyszłe cechy:
+
+- `PackHandling`;
+- `CorneringTechnique`;
+- `BikeHandling`.
+
+Dokładny zestaw cech i ich sposób prezentacji wymagają osobnego projektu po MVP.
+
+### Pack Handling
+
+`PackHandling` może wpływać między innymi na:
+
+- minimalny komfortowy odstęp od innych zawodników;
+- jakość utrzymywania koła;
+- szybkość i stabilność reakcji na otwierającą się lub zamykającą lukę;
+- skuteczność `Passing Opportunity Negotiation`;
+- zdolność do wykorzystania krótkotrwałego korytarza wyprzedzania;
+- wielkość marginesu bezpieczeństwa używanego przez planner;
+- płynność reakcji na kompresję i rozciąganie grupy;
+- skuteczność domykania małych luk;
+- stabilność pozycji przy bocznym wietrze;
+- ilość energii traconej przez niepotrzebne hamowanie i ponowne rozpędzanie.
+
+Wyższa wartość cechy nie może:
+
+- umożliwiać przenikania modeli;
+- zmniejszać twardego obszaru kolizji poniżej bezpiecznego minimum;
+- pozwalać na przejazd przez fizycznie niemożliwą lukę;
+- omijać ograniczeń geometrii drogi;
+- gwarantować powodzenia manewru;
+- łamać zasad `No Static Wall` ani innych invariants Pack Dynamics.
+
+### Technical Demand i Technical Capacity
+
+Trudne sytuacje mogą być opisywane przez poziom `TechnicalDemand`, zależny przykładowo od:
+
+- względnej prędkości zawodników;
+- gęstości grupy;
+- dostępnego prześwitu;
+- szerokości drogi;
+- krzywizny zakrętu;
+- bocznego wiatru;
+- tempa zmian lokalnej sytuacji.
+
+Profil zawodnika dostarcza odpowiadający poziom `TechnicalCapacity`.
+
+System powinien pozostawać deterministyczny dla tych samych wejść i nie opierać wyniku podstawowych manewrów na losowym rzucie procentowym.
+
+Przykładowa interpretacja:
+
+- `TechnicalDemand < TechnicalCapacity` — możliwy jest płynny i efektywny manewr;
+- `TechnicalDemand ≈ TechnicalCapacity` — system wybiera bardziej zachowawczy manewr z większym marginesem;
+- `TechnicalDemand > TechnicalCapacity` — możliwe jest przegapienie krótkiej luki, większe hamowanie, późniejsze domknięcie luki albo utrata koła.
+
+### Parametry fizyczne postaci
+
+Wzrost i masa mogą zostać użyte do określenia rzeczywistych parametrów fizycznych lub geometrii zawodnika.
+
+Masa wpływa poprzez model fizyczny.
+
+Wzrost może wpływać między innymi na:
+
+- geometryczny footprint zawodnika;
+- wysokość i proporcje modelu;
+- wymagany prześwit podczas wyprzedzania;
+- wielkość obszaru zajmowanego przez zawodnika;
+- parametry aerodynamiczne tylko wtedy, gdy zostanie zdefiniowany wiarygodny model zależności.
+
+Nie należy stosować prostych reguł typu „większy wzrost = gorsze aero”. `CdA` pozostaje osobnym parametrem fizycznym, który może być wyliczany lub proponowany przez preset, ale nie powinien wynikać z arbitralnego mnożnika RPG.
+
+### Edge cases
+
+Umiejętności techniczne mają największe znaczenie w sytuacjach granicznych, np.:
+
+- nagła kompresja grupy przed zakrętem;
+- krótko dostępna luka do wyprzedzania;
+- mała luka powstała po zakręcie;
+- gwałtowna zmiana ustawienia ridera przed użytkownikiem;
+- crosswind i walka o korzystniejszą pozycję;
+- ciasne, ale nadal fizycznie możliwe wyprzedzanie.
+
+W każdej z tych sytuacji wyższa technika powinna poprawiać jakość decyzji automatycznego prowadzenia, ale nie zmieniać twardych ograniczeń fizycznych.
+
+### Pack Technique Score
+
+Po MVP system może raportować jakość jazdy w grupie za pomocą `PackTechniqueScore`.
+
+Przykładowe metryki:
+
+- `DraftEfficiency`;
+- `WheelHolding`;
+- `GapClosureSuccess`;
+- `WastedEnergy`;
+- `MissedPassingOpportunities`;
+- czas spędzony poza korzystnym draftem;
+- liczba zbędnych mikrohamowań.
+
+Ocena ma pomagać użytkownikowi zrozumieć skuteczność jazdy w grupie i rozwijać technikę, a nie ukrywać wynik za jednym losowym numerem.
+
