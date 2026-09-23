@@ -19,5 +19,13 @@ public class YetAnotherCyclingSim : ModuleRules
 		// PrivateDependencyModuleNames.Add("OnlineSubsystem");
 
 		// To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
+
+		if (Target.Type == TargetType.Editor)
+		{
+			// Editor-only dependencies for the CyclingPrototypeMapSetupCommandlet,
+			// which is the project's safe editor automation workflow for the
+			// L_CyclingTest binary .umap asset.
+			PrivateDependencyModuleNames.AddRange(new string[] { "UnrealEd", "AssetRegistry" });
+		}
 	}
 }
