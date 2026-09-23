@@ -373,3 +373,122 @@ Logika fizyki podłużnej, interakcji grupy, planowania trajektorii bocznej oraz
 
 Implementacja Pack Dynamics nie rozpoczyna się przed ukończeniem odpowiedniego etapu po MVP.
 
+## 21. Road Guidance Overlay System
+
+YetAnotherCyclingSim może wyświetlać kontekstowe oznaczenia rysowane bezpośrednio na drodze, aby wyjaśniać graczowi decyzje automatycznego prowadzenia i sytuację na trasie.
+
+System nie powinien stale pokrywać drogi dużą liczbą znaczników. Oznaczenia mają pojawiać się tylko wtedy, gdy przekazują istotną informację potrzebną do podjęcia decyzji dotyczącej mocy lub zrozumienia zachowania automatycznego prowadzenia.
+
+### Zasada projektowa
+
+Road Guidance Overlay powinien przede wszystkim odpowiadać na pytanie:
+
+**„Dlaczego system właśnie tak prowadzi rower lub dlaczego moja moc nie przekłada się teraz bezpośrednio na większą prędkość?”**
+
+Oznaczenia nie służą do ręcznego sterowania lewo/prawo. Gracz nadal nie ma bezpośredniego wejścia kierunkowego.
+
+### Corner Guidance — zakres MVP
+
+Dla zakrętów system może wizualizować na drodze:
+
+- zalecany tor przejazdu;
+- strefę przygotowania i odpuszczenia mocy;
+- obszar apeksu;
+- strefę wyjścia i bezpiecznego powrotu do mocy;
+- ostrzeżenie o pogorszonej przyczepności;
+- ostrzeżenie o trudnym zakręcie po szybkim zjeździe;
+- ostrzeżenie o szczycie podjazdu lub innym punkcie wymagającym wcześniejszej reakcji.
+
+Oznaczenia powinny być zgodne z istniejącym systemem oceny techniki zakrętów i poziomem asysty.
+
+### Pack Guidance — po MVP
+
+Po wprowadzeniu Pack Dynamics system może dodatkowo wizualizować:
+
+- `DRAFT_POCKET` — obszar korzystnego aerodynamicznie ustawienia;
+- `HOLD_WHEEL` — sytuację, w której najlepszym zachowaniem jest utrzymanie koła;
+- `BOXED_IN` — brak bezpiecznej przestrzeni do wyprzedzania;
+- `PASS_CORRIDOR_LEFT` i `PASS_CORRIDOR_RIGHT` — wykryty i zarezerwowany bezpieczny korytarz wyprzedzania;
+- ostrzeżenie o przewidywanym konflikcie lub zamykającej się luce;
+- strefę kompresji grupy;
+- zwężenie drogi wymagające wcześniejszego ustawienia;
+- strefę silnego bocznego wiatru lub późniejszy korytarz ustawienia w wachlarzu.
+
+Korytarz wyprzedzania jest informacją o planie automatycznego prowadzenia, a nie poleceniem skrętu dla użytkownika.
+
+### Warstwa Hazard Guidance
+
+System może pokazywać na drodze krótkotrwałe ostrzeżenia dotyczące:
+
+- mokrej lub śliskiej nawierzchni;
+- lokalnego spadku przyczepności;
+- zwężenia;
+- ostrego zakrętu;
+- kompresji peletonu;
+- bocznego wiatru;
+- miejsca, w którym aktualna sytuacja może doprowadzić do utraty koła.
+
+### Spójność wizualna
+
+Oznaczenia powinny być subtelne i czytelne. Preferowane są:
+
+- spline-based overlays;
+- projected decals;
+- półprzezroczyste pasy;
+- lekkie strzałki;
+- delikatne pulsowanie;
+- krótkie animacje wejścia i zaniku.
+
+System nie powinien wyglądać jak neonowy tor wyścigowy ani zasłaniać świata 3D.
+
+Semantyka koloru powinna pozostać spójna w całej grze. Przykładowo:
+
+- neutralny jasny kolor — tor prowadzący;
+- żółty — przygotowanie lub uwaga;
+- pomarańczowy — istotne ostrzeżenie;
+- czerwony — brak miejsca lub wysokie ryzyko;
+- zielony — bezpieczny moment przyspieszenia;
+- niebieski — korzyść aerodynamiczna.
+
+Dokładne kolory wymagają późniejszej walidacji dostępności i czytelności.
+
+### Poziomy asysty
+
+Zakres Road Guidance powinien zależeć od poziomu asysty.
+
+Niski poziom:
+- minimalne oznaczenia;
+- podstawowe ostrzeżenia;
+- linia zakrętu tylko wtedy, gdy jest potrzebna.
+
+Średni poziom:
+- pełniejsze Corner Guidance;
+- podstawowe ostrzeżenia sytuacyjne.
+
+Wysoki poziom:
+- rozbudowane wskazówki zakrętowe;
+- po MVP również Pack Guidance i korytarze sytuacyjne.
+
+Tryb ekspercki lub immersyjny:
+- możliwość ograniczenia lub wyłączenia większości oznaczeń.
+
+### Pewność wskazania
+
+System może wizualnie odróżniać wskazania o wysokiej i niskiej pewności.
+
+Przykład:
+- ciągłe i wyraźne oznaczenie — stabilna rekomendacja;
+- krótkie, słabsze lub przerywane oznaczenie — sytuacja dynamiczna albo przewidywanie o niższej pewności.
+
+Nie wolno jednak generować pozornie precyzyjnego guidance, jeżeli system nie posiada wystarczających danych do wiarygodnej rekomendacji.
+
+### Rozdzielenie logiki i prezentacji
+
+Road Guidance Overlay jest warstwą prezentacji. Nie może być źródłem prawdy dla fizyki ani Pack Dynamics.
+
+Kolejność zależności powinna pozostać jednokierunkowa:
+
+`Physics / Route / Pack Dynamics → Guidance State → Road Overlay`
+
+Wyłączenie overlayu nie może zmieniać fizyki, toru jazdy ani zachowania automatycznego prowadzenia.
+

@@ -190,6 +190,8 @@ Wprowadzić autorską mechanikę oceniającą odpuszczenie i ponowne rozpoczęci
 - [ ] Analiza momentu zmniejszenia mocy.
 - [ ] Analiza momentu wznowienia pedałowania.
 - [ ] Automatyczny wybór toru przejazdu.
+- [ ] Wizualna linia przejazdu i strefy entry/apex/exit na drodze.
+- [ ] Kontekstowe ostrzeżenia o przyczepności i trudności zakrętu.
 - [ ] Poszerzenie toru po błędzie.
 - [ ] Utrata prędkości po błędzie.
 - [ ] Kontrolowany uślizg bez upadku.
@@ -377,4 +379,20 @@ Ten zakres jest planowany po stabilizacji single-player MVP.
 - Animacja skrętu, yaw i pochylenie muszą wynikać z trajektorii, aby automatyczne prowadzenie było wizualnie wiarygodne.
 - Pierwszeństwo jest deterministyczne: jadący z przodu domyślnie utrzymuje linię, a wyprzedzający odpowiada za znalezienie bezpiecznej luki.
 - Docelowy subsystem obejmuje drafting, hold-wheel, anti-churn, overtaking, drop/bridge i pack cornering; crosswind/echelons oraz bardziej zaawansowana taktyka należą do późniejszych iteracji.
+
+### Road Guidance Overlay — rozwój po MVP
+
+Road Guidance Overlay ma pozostać kontekstową warstwą informacyjną, a nie systemem sterowania.
+
+Po wdrożeniu Pack Dynamics planowane są:
+- `DRAFT_POCKET`;
+- `HOLD_WHEEL`;
+- `BOXED_IN`;
+- `PASS_CORRIDOR_LEFT` / `PASS_CORRIDOR_RIGHT`;
+- ostrzeżenia o zamykającej się luce;
+- strefy kompresji grupy;
+- sygnalizacja zwężeń i bocznego wiatru;
+- wizualizacja stopnia pewności guidance.
+
+Każdy overlay korzysta z już obliczonego stanu fizyki, trasy lub Pack Dynamics i nie może wpływać zwrotnie na wynik symulacji.
 
