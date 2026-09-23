@@ -1370,7 +1370,290 @@ until the roadmap reaches those stages.
 
 ---
 
-# 19. External technology references
+# 19. Architectural guardrails for reproducibility, observability and long-term maintainability
+
+These rules are intentionally broader than one Unreal subsystem. They exist to keep future debugging, performance work, data migrations and multiplayer development tractable without expanding the current MVP feature scope.
+
+## 19.1 Reproducibility and data evolution
+
+### Replayable simulation log
+
+The project should make it possible to reproduce a ride from domain inputs rather than from recorded presentation frames.
+
+A future replayable session record should conceptually contain:
+
+- initial rider/bike configuration;
+- route or road-network version;
+- physics model version;
+- weather seed/timeline when relevant;
+- ordered rider input samples with simulation timestamps/ticks;
+- session configuration and assists;
+- only the minimum additional authoritative events that cannot be reconstructed deterministically.
+
+This does **not** require a user-facing replay feature in the MVP.
+
+The immediate architectural goal is to avoid designs in which a bug can only be reproduced by visually recording the original run.
+
+Potential later uses include:
+
+- physics bug reproduction;
+- regression tests;
+- ghost rides;
+- corner analysis;
+- support diagnostics;
+- spectator/replay systems;
+- multiplayer dispute investigation.
+
+### Version all persistent domain contracts
+
+Persistent or externally exchanged data should not rely on an implicit "current" interpretation forever.
+
+Introduce explicit versions when the corresponding format exists, for example:
+
+- `PhysicsModelVersion`;
+- `SaveFormatVersion`;
+- `RoadNetworkVersion`;
+- `ReplayFormatVersion`;
+- future `NetworkProtocolVersion`.
+
+A recorded ride must not silently change meaning because CdA handling, cornering logic, road geometry or another domain rule changed in a later build.
+
+Migration behavior should be explicit:
+
+- migrate when safe and well-defined;
+- preserve the original version when historical interpretation matters;
+- reject clearly when compatibility is impossible;
+- never silently reinterpret incompatible identifiers or units.
+
+### Golden Ride regression harness
+
+Create a deterministic reference ride that feeds a known sequence of inputs through the cycling simulation.
+
+The scenario should eventually cover representative conditions such as:
+
+- steady flat riding;
+- acceleration;
+- climbing;
+- descending;
+- coasting;
+- wind;
+- selected cornering states when that subsystem exists;
+- wet-road behavior when that subsystem exists.
+
+The harness should compare outputs against approved reference values with documented tolerances.
+
+Useful checkpoints include:
+
+- distance;
+- velocity;
+- elapsed simulation time;
+- selected sector times;
+- important state transitions.
+
+The purpose is to detect unintended physics drift automatically.
+
+The Golden Ride belongs to simulation/testing architecture, not to rendering and not to a manually driven Unreal scene.
+
+---
+
+## 19.2 Observability and performance discipline
+
+### Built-in YACS performance telemetry
+
+Manual Unreal profiling remains necessary, but the project should also expose lightweight project-specific telemetry.
+
+A future diagnostic stream may record:
+
+- simulation step time;
+- game-thread frame time;
+- render-thread frame time;
+- GPU frame time where accessible;
+- total/visible/significant rider counts;
+- rider animation budget state;
+- active/streamed world-cell counts;
+- memory high-water marks;
+- streaming events;
+- current weather state;
+- quality/scalability state;
+- network RTT/loss/jitter in multiplayer builds.
+
+Telemetry must be cheap enough that a diagnostic build can capture an entire ride.
+
+The goal is to answer questions such as:
+
+> "At what point did rain + dense forest + 54 visible riders begin exceeding the frame budget?"
+
+rather than relying on memory or subjective impressions.
+
+### Track hitches, not only average FPS
+
+The 60 FPS target implies approximately 16.67 ms per frame, but average FPS alone is insufficient.
+
+A build that averages 60 FPS while producing periodic 100–200 ms stalls is not acceptable.
+
+Performance analysis should therefore track:
+
+- frame-time percentiles;
+- worst-frame spikes;
+- asset/streaming hitches;
+- shader/PSO-related stalls when relevant;
+- garbage collection or allocation spikes;
+- memory pressure and unexpected growth during a full-route run.
+
+A future performance contract should define an acceptable hitch budget from measurements on the reference PC.
+
+### Add an explicit memory/streaming budget
+
+A large future road network can be GPU-fast while still stuttering because too much content is loaded or streamed at once.
+
+World work should therefore eventually define measurable budgets for:
+
+- resident memory;
+- streaming look-ahead;
+- branch preloading;
+- texture/mesh residency;
+- HLOD transition cost;
+- worst-case junction memory.
+
+Do not solve streaming pop-in by indefinitely increasing the amount of permanently loaded content.
+
+### Make scalability data-driven and centralized
+
+Quality decisions should be expressed through a coherent YACS scalability policy rather than scattered one-off conditionals.
+
+A centralized quality/significance configuration should be able to coordinate:
+
+- foliage density;
+- foliage wind;
+- shadow distance/quality;
+- rider skeletal LOD;
+- animation frequency;
+- IK;
+- particles;
+- audio voice limits;
+- distant rider representation;
+- HLOD/detail ranges;
+- render resolution strategy.
+
+This ensures that "Low", "Medium", "High" and "Ultra" describe coherent performance envelopes instead of unrelated switches.
+
+---
+
+## 19.3 State boundaries and content validation
+
+### Make Simulation State and Presentation State explicit
+
+The existing simulation/presentation separation should become a named code-level boundary.
+
+Conceptually:
+
+```text
+authoritative simulation state
+          |
+          v
+ presentation target/state
+          |
+          v
+ interpolation / animation / camera / FX
+```
+
+Examples:
+
+- simulation may immediately set an authoritative lean target;
+- presentation may blend the visible rider toward that target;
+- authoritative road position may be corrected instantly;
+- visual reconciliation may smooth the correction along valid road topology.
+
+Presentation state must never become an input to authoritative cycling physics merely because it looks smoother.
+
+This distinction is important for:
+
+- frame-rate independence;
+- replay;
+- multiplayer reconciliation;
+- animation throttling;
+- camera smoothing;
+- future server/headless execution.
+
+### Add a world/content validation pipeline
+
+As route/world complexity grows, important geometric and semantic assumptions should be machine-checkable.
+
+Future validators should check appropriate subsets of:
+
+- continuous road/lane connections;
+- valid node/edge references;
+- unique/stable IDs where required;
+- legal lane direction/connectivity;
+- discontinuities in grade/elevation;
+- extreme curvature/radius values;
+- invalid zero-length segments;
+- impossible spawn/start/finish placement;
+- duplicate or disconnected graph pieces;
+- topology-sensitive save points;
+- missing performance metadata for expensive assets where the pipeline requires it.
+
+For the MVP spline, the validator can begin small and expand only when needed.
+
+The purpose is to prevent world-authoring errors from becoming hard-to-reproduce runtime bugs.
+
+### Define safe fallback rider representation
+
+A future remote cyclist must remain representable even when a cosmetic asset fails, loads late or is unsupported.
+
+Provide a known fallback:
+
+- default rider;
+- default bike;
+- safe materials;
+- bounded animation/render cost.
+
+Simulation/session identity must not depend on cosmetic asset availability.
+
+A missing jersey, helmet or bike mesh must never make a competitor disappear from race truth.
+
+---
+
+## 19.4 Runtime and server independence
+
+### Keep multiplayer domain independent from the final backend/runtime
+
+The future authoritative simulation should not conceptually require:
+
+- a rendered Unreal level;
+- skeletal meshes;
+- local audio;
+- player cameras;
+- cosmetic assets.
+
+The long-term target should allow the authoritative domain to run in a headless/server-oriented environment.
+
+A likely future deployment target is a headless Linux server, but the exact backend process, hosting model and transport must not be selected before multiplayer requirements and measurements justify them.
+
+Dependency direction should remain:
+
+```text
+cycling / road / session domain
+            |
+            +--> Unreal client presentation
+            |
+            +--> future authoritative server adapter
+```
+
+and not:
+
+```text
+Unreal visual Actor state
+            |
+            v
+     cycling domain truth
+```
+
+This preserves the option to scale simulation separately from graphics and makes automated server-side tests practical.
+
+---
+
+# 20. External technology references
 
 Official Unreal Engine 5.8 documentation:
 
@@ -1391,7 +1674,7 @@ The exact feature status of experimental/new engine systems must be re-verified 
 
 ---
 
-# 20. Summary of architectural decisions
+# 21. Summary of architectural decisions
 
 1. The MVP remains single-player and one route.
 2. The long-term world model is a road/lane graph, not a permanently linear spline.
@@ -1408,3 +1691,11 @@ The exact feature status of experimental/new engine systems must be re-verified 
 13. Poor-network tests, including packet loss, jitter and reordering, are part of future multiplayer acceptance rather than an afterthought.
 14. Performance degradation must sacrifice visual fidelity before simulation correctness.
 15. Edge cases in this document are architectural tests and future requirements, not permission to expand the current MVP.
+16. Sessions and persistent domain data should be reproducible and explicitly versioned rather than relying on implicit current behavior.
+17. A deterministic Golden Ride should guard against unintended physics drift.
+18. Performance acceptance includes hitches, memory/streaming behavior and project-specific telemetry, not only average FPS.
+19. Scalability should be centralized and data-driven across foliage, riders, shadows, FX, audio and resolution.
+20. Simulation State and Presentation State are explicit architectural boundaries; presentation smoothing never becomes physics truth.
+21. Road/world content should gain automated validation as complexity grows.
+22. Missing cosmetics/assets must fall back safely without removing riders from simulation/session truth.
+23. Future authoritative multiplayer domain logic should remain capable of headless/server execution and independent from Unreal presentation assets.
