@@ -437,7 +437,7 @@ bool FCyclingRuntimeTest::RunTest(const FString& Parameters)
 
 		// Drive enough time to overshoot 500 m with 200 W on flat ground.
 		// At 200 W / 75+8.5 kg / CdA 0.32 / flat / no wind the rider reaches
-		// about 9 m/s and crosses 500 m in ~55 s. Drive 80 s to be safe.
+		// about 9 m/s and crosses 500 m in ~63 s. Drive 80 s to be safe.
 		for (int32 i = 0; i < 160; ++i)
 		{
 			Pawn->Tick(0.5f);
