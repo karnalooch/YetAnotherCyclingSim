@@ -134,7 +134,8 @@ The following rules apply to every task and do not weaken any earlier rule in th
 - Such work must be explicitly marked `Unreal validation pending`.
 - An implementation pull request that contains Unreal C++ code, Unreal assets, or Unreal integration changes must not be opened until the relevant Unreal project build and Unreal Automation Tests pass on the home PC.
 - Documentation-only pull requests and other changes that cannot affect the Unreal build do not require Unreal validation.
-- A pull request must never be merged without the product owner's explicit Polish command `scal`.
+- The product owner granted standing merge authorization on 2026-09-23: a pull request may be merged automatically without a separate per-PR `scal` command when its scope is approved, all required validation is complete, all required CI/status gates are green, no unresolved review finding or known blocker remains, and the pull request is mergeable and not draft.
+- Standing merge authorization never waives required validation. Do not auto-merge when Unreal/home-PC validation is required but missing, any required gate is pending or failed, a review/blocker is unresolved, the pull request is draft/non-mergeable, or the product owner explicitly asks to hold the merge.
 - Test requirements must not be weakened after a failure; the cause must be diagnosed first.
 - Work from a future roadmap stage must not begin before the current stage completion criteria are met.
 - Unreal compilation, editor integration, asset validation, and performance validation remain home-PC responsibilities when the office PC lacks Unreal Engine.
