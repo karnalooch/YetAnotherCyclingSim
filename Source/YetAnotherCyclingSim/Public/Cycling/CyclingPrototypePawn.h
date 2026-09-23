@@ -11,6 +11,10 @@ class USceneComponent;
 class UStaticMeshComponent;
 class AActor;
 class USplineComponent;
+class UCameraComponent;
+class UInputAction;
+class UInputMappingContext;
+struct FInputActionValue;
 
 // Authoritative runtime lifecycle of the prototype Pawn.
 //
@@ -100,10 +104,52 @@ public:
 	TObjectPtr<UStaticMeshComponent> BicycleMesh;
 
 	// When true, BeginPlay calls StartRide automatically after a successful
-	// route validation and session configure. Slice A of Stage 2 keeps this
-	// enabled on the L_CyclingTest instance to prove the runtime path.
+	// route validation and session configure. Slice B of Stage 2 (interactive
+	// keyboard input) keeps this disabled on L_CyclingTest; the placed Pawn
+	// is possessed by Player 0 and waits for an explicit Start input.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cycling|Runtime")
 	bool bAutoStart = false;
+
+	// --- Stage 2 Enhanced Input (issue #47) ---
+
+	// Single default mapping context applied to Player 0 on possession.
+	// Contains the keyboard bindings: Up/Down (power), Left/Right (cadence),
+	// Space (Start), S (Stop), R (Restart). All step actions use the
+	// ETriggerEvent::Started trigger so that one key press performs exactly
+	// one session mutation, regardless of render-frame cadence.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cycling|Input")
+	TObjectPtr<UInputMappingContext> DefaultMappingContext;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cycling|Input")
+	TObjectPtr<UInputAction> PowerIncreaseAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cycling|Input")
+	TObjectPtr<UInputAction> PowerDecreaseAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cycling|Input")
+	TObjectPtr<UInputAction> CadenceIncreaseAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cycling|Input")
+	TObjectPtr<UInputAction> CadenceDecreaseAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cycling|Input")
+	TObjectPtr<UInputAction> StartRideAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cycling|Input")
+	TObjectPtr<UInputAction> StopRideAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cycling|Input")
+	TObjectPtr<UInputAction> RestartRideAction;
+
+	// --- Stage 2 validation camera (temporary) ---
+
+	// TEMPORARY Stage 2 validation camera. Plain UCameraComponent with a
+	// fixed offset behind and above the root, used only to give PIE a
+	// usable view of the moving prototype. To be replaced by the Stage 6
+	// camera architecture; do not extend this component with smoothing,
+	// spring arms, or chase logic.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Cycling|Components")
+	TObjectPtr<UCameraComponent> ValidationCamera;
 
 	// --- Lifecycle API ---
 
@@ -173,6 +219,36 @@ protected:
 	// APawn / AActor overrides.
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	// Stage 2 Enhanced Input binding (issue #47). One key press ->
+	// one session mutation. Bindings use ETriggerEvent::Started so that
+	// frame-rate independent input is preserved (a pressed key fires once).
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+public:
+
+	// --- Stage 2 Enhanced Input handlers (issue #47) ---
+	//
+	// Each handler delegates directly to the existing FCyclingSimulationSession
+	// API. They never compute their own power/cadence accumulator or
+	// duplicate input state. On error (e.g. unconfigured session, controller
+	// refused) they emit one useful log line and leave the session state
+	// untouched. The handlers are public so that focused automation tests
+	// can invoke them directly without an Enhanced Input subsystem.
+
+	// One-shot event handlers (bound with ETriggerEvent::Started).
+	void HandlePowerIncrease(const FInputActionValue& Value);
+	void HandlePowerDecrease(const FInputActionValue& Value);
+	void HandleCadenceIncrease(const FInputActionValue& Value);
+	void HandleCadenceDecrease(const FInputActionValue& Value);
+	void HandleStartRide(const FInputActionValue& Value);
+	void HandleStopRide(const FInputActionValue& Value);
+	void HandleRestartRide(const FInputActionValue& Value);
+
+	// Registers the default mapping context with the local player
+	// subsystem. Called once on possess. Logs and returns early when the
+	// LocalPlayer or subsystem cannot be resolved.
+	void RegisterDefaultMappingContext();
 
 public:
 	// Runtime Tick is intentionally public so that tests and any future
