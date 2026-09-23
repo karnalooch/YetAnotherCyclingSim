@@ -84,7 +84,7 @@ __pycache__/
 build/
 dist/
 .pytest_cache/
-# Generated files from nested Unreal Engine projects
+# Generated files from Unreal Engine projects
 **/.vs/
 **/Binaries/
 **/DerivedDataCache/
@@ -93,11 +93,11 @@ dist/
 *.slnx
 
 # Unreal editor-generated user content
-YetAnotherCyclingSim/Content/Collections/
-YetAnotherCyclingSim/Content/Developers/
+Content/Collections/
+Content/Developers/
 
 # Wingman disposable test assets
-YetAnotherCyclingSim/Content/__WingmanProof/
+Content/__WingmanProof/
 
 # Wingman local editor plugin
-YetAnotherCyclingSim/Plugins/Wingman/
+Plugins/Wingman/

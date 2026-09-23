@@ -7,6 +7,6 @@
 /SECURITY.md @karnalooch
 
 # Product-critical code and configuration
-/YetAnotherCyclingSim/Source/ @karnalooch
-/YetAnotherCyclingSim/Config/ @karnalooch
+/Source/ @karnalooch
+/Config/ @karnalooch
 /physics_reference/ @karnalooch
