@@ -750,3 +750,102 @@ Balans powinien być później korygowany na podstawie rzeczywistej telemetrii z
 
 Wat z trenażera jest źródłem energii. Skill może poprawiać jakość wykorzystania tej energii, ale nigdy nie może jej tworzyć.
 
+## 23. Feedback zastępczy dla brakujących bodźców fizycznych
+
+YetAnotherCyclingSim jest symulatorem jazdy na trenażerze, dlatego część bodźców dostępnych podczas prawdziwej jazdy nie jest fizycznie odczuwalna przez użytkownika.
+
+Gra musi świadomie kompensować ten brak przez dobrze przemyślany feedback wizualny i, tam gdzie ma to sens, dźwiękowy.
+
+### Zasada projektowa
+
+Jeżeli podczas prawdziwej jazdy kolarz otrzymałby ważną informację przez:
+
+- balans ciała i roweru;
+- nacisk na kierownicę;
+- zmianę siły bocznej;
+- kontakt i bliskość innych zawodników;
+- opór wynikający z ciasnej pozycji w grupie;
+- poczucie zamknięcia lub braku miejsca;
+- poślizg lub spadek przyczepności;
+- podmuch bocznego wiatru;
+- turbulencję;
+- zmianę wymaganej linii jazdy;
+- ryzyko utraty koła;
+
+a użytkownik na trenażerze nie może wiarygodnie otrzymać tego bodźca fizycznie, system powinien przekazać równoważną informację przez czytelny feedback prezentacyjny.
+
+### Wymagania
+
+Feedback zastępczy powinien:
+
+- pojawiać się tylko wtedy, gdy przekazuje istotną informację;
+- być jednoznaczny co do przyczyny;
+- pojawiać się wystarczająco wcześnie, aby użytkownik mógł zareagować mocą lub kadencją;
+- odróżniać ostrzeżenie od stabilnej rekomendacji;
+- być spójny między zakrętami, Pack Dynamics, pogodą i innymi systemami;
+- nie zasłaniać świata ani nie przeciążać ekranu;
+- unikać arcade'owego charakteru, jeżeli prostszy i bardziej naturalny sygnał wystarcza;
+- respektować poziom asysty i możliwość ograniczenia lub wyłączenia części wskazówek.
+
+### Przykłady zastosowania
+
+Przykładowe sytuacje wymagające wyraźnego feedbacku:
+
+- `BOXED_IN` — gracz widzi, że większa moc nie przekłada się chwilowo na wyprzedzanie z powodu braku miejsca;
+- `SEARCHING_FOR_GAP` — system informuje, że szuka bezpiecznego korytarza;
+- `PASS_CORRIDOR_LEFT` / `PASS_CORRIDOR_RIGHT` — wizualizacja planowanego automatycznego manewru;
+- `DRAFT_POCKET` i `HOLD_WHEEL` — informacja o korzystnym ustawieniu aerodynamicznym;
+- utrata korzystnego draftu — czytelne pokazanie, że zawodnik zaczyna tracić koło;
+- kompresja grupy — sygnał, że sytuacja wymaga ograniczenia mocy lub przygotowania na zmianę tempa;
+- crosswind — informacja o częściowej ekspozycji na wiatr i zmianie korzystnego ustawienia;
+- niski grip — ostrzeżenie o mniejszym marginesie przyczepności;
+- zakręt — linia, entry/apex/exit i moment bezpiecznego powrotu do mocy;
+- wysoki `TechnicalDemand` — subtelne wskazanie, że aktualna sytuacja jest technicznie wymagająca.
+
+### Feedback musi wyjaśniać zachowanie automatyki
+
+Jeżeli automatyczne prowadzenie:
+
+- ogranicza prędkość;
+- nie rozpoczyna wyprzedzania;
+- rezygnuje z luki;
+- zmienia planowany korytarz;
+- zwiększa margines bezpieczeństwa;
+- pozwala utracić koło;
+- wybiera zachowawczy tor;
+
+gracz powinien móc zrozumieć przyczynę bez zgadywania, że system działa losowo lub jest zepsuty.
+
+### Hierarchia feedbacku
+
+Preferowana kolejność przekazywania informacji:
+
+1. świat i animacja — zachowanie roweru, pochylenie, tor, ruch grupy;
+2. oznaczenie bezpośrednio na drodze lub w przestrzeni świata;
+3. dyskretny element HUD;
+4. krótki komunikat tekstowy tylko wtedy, gdy wcześniejsze warstwy nie są wystarczające.
+
+Celem jest maksymalne wykorzystanie naturalnej prezentacji świata, a nie zastępowanie wszystkiego komunikatami HUD.
+
+### Rozdzielenie odpowiedzialności
+
+Feedback jest prezentacją już istniejącego stanu symulacji.
+
+Zależność pozostaje jednokierunkowa:
+
+`Physics / Route / Pack Dynamics / Technical State → Feedback State → Visual / Audio Presentation`
+
+Warstwa feedbacku nie może zmieniać wyniku fizyki, decyzji Pack Dynamics ani wartości skilla.
+
+### Walidacja czytelności
+
+Każda ważna mechanika bez naturalnego fizycznego feedbacku powinna podczas implementacji otrzymać test UX odpowiadający na pytania:
+
+- czy gracz rozumie, co się właśnie wydarzyło;
+- czy rozumie, dlaczego system zachował się w ten sposób;
+- czy wie, czy powinien zmienić moc lub kadencję;
+- czy potrafi rozróżnić ograniczenie fizyczne od decyzji automatycznego prowadzenia;
+- czy feedback jest wystarczająco widoczny, ale nie przeszkadza w obserwowaniu świata.
+
+Mechanika nie powinna być uznana za ukończoną, jeżeli jej kluczowy stan jest niewidoczny dla gracza i nie ma realnego odpowiednika haptycznego lub kinestetycznego.
+

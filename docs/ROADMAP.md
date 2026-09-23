@@ -427,3 +427,23 @@ Przed implementacją progresji Rider Technical Profile należy:
 - zbudować deterministyczny balancing harness dla scenariuszy `TechnicalDemand × TechnicalCapacity`;
 - stroić krzywe później na podstawie telemetrii rzeczywistych jazd.
 
+### Feedback dla mechanik bez naturalnych bodźców fizycznych
+
+Przy implementacji zakrętów, Pack Dynamics, techniki i warunków środowiskowych należy jawnie identyfikować sytuacje, w których użytkownik trenażera nie otrzymuje bodźca obecnego podczas prawdziwej jazdy.
+
+Dla takich sytuacji wymagany jest odpowiedni feedback wizualny, a opcjonalnie także dźwiękowy.
+
+Priorytet prezentacji:
+1. zachowanie świata i animacji;
+2. oznaczenie na drodze lub w świecie;
+3. dyskretny HUD;
+4. tekst tylko jako ostateczne wsparcie.
+
+Do kryteriów ukończenia odpowiednich systemów należy dodać walidację, czy użytkownik rozumie:
+- co się wydarzyło;
+- dlaczego automat zachował się w dany sposób;
+- czy ograniczenie wynika z fizyki, geometrii, Pack Dynamics czy jego techniki;
+- czy powinien zmienić moc lub kadencję.
+
+Mechanika bez realnego odpowiednika haptycznego/kinestetycznego nie jest kompletna, jeśli jej kluczowy stan pozostaje niewidoczny dla gracza.
+
