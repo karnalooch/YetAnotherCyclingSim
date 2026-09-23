@@ -473,3 +473,25 @@ Obowiązkowe invariants:
 
 Harness musi zawierać co najmniej scenariusze: wspólna luka dla dwóch riderów, zamknięcie luki w trakcie passu, symetryczny deadlock, realne i sztuczne `BOXED_IN`, crosswind/echelon, hairpin, mokry zakręt, crest, szybki zjazd, wolny podjazd, stopped rider, merge/split grup, serpentyny/mosty/tunele, różne `lapIndex`, finish behavior oraz błędne/dropoutowe wejście mocy.
 
+### Pack Dynamics v0.1 — spec freeze
+
+Przed właściwą implementacją Pack Dynamics wymagane są następujące kontrakty:
+
+- jawna `RiderPackStateMachine`;
+- opisowy `PackPhaseModel`;
+- `RouteOccupancyModel`;
+- atomowy i deterministyczny `GapReservation`;
+- `InputIntegrity` dla danych trenażera;
+- debug/telemetry contract;
+- deterministic replay;
+- performance contract oparty na lokalnym neighborhood zamiast O(N²);
+- rozdzielenie `PlayerTechnique` i `AutopilotProficiency`;
+- competitive fairness policy;
+- przyszły network authority contract;
+- posture-aware occupancy;
+- walidacja bicycle-like/non-holonomic kinematics dla każdej trajektorii lateralnej.
+
+Po zapisaniu tych zasad spec Pack Dynamics v0.1 uznaje się za zamrożoną do czasu właściwego etapu po MVP.
+
+Nowe pomysły dotyczące Pack Dynamics trafiają do backlogu, chyba że rozwiązują krytyczną lukę w istniejących invariants.
+

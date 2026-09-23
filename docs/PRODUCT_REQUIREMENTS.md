@@ -947,3 +947,216 @@ Każda ważna mechanika bez naturalnego fizycznego feedbacku powinna podczas imp
 
 Mechanika nie powinna być uznana za ukończoną, jeżeli jej kluczowy stan jest niewidoczny dla gracza i nie ma realnego odpowiednika haptycznego lub kinestetycznego.
 
+## 24. Pack Dynamics v0.1 — kontrakty systemowe przed implementacją
+
+Przed rozpoczęciem implementacji Pack Dynamics należy utrwalić minimalne kontrakty systemowe, aby uniknąć późniejszej przebudowy architektury.
+
+### Rider Pack State Machine
+
+Każdy rider powinien znajdować się w jednym jawnie określonym stanie Pack Dynamics.
+
+Minimalny zestaw kandydatów:
+
+- `FREE_RIDE`;
+- `HOLD_WHEEL`;
+- `SEARCH_GAP`;
+- `RESERVE_GAP`;
+- `COMMIT_PASS`;
+- `ABORT_PASS`;
+- `RETURN_TO_LINE`;
+- `BRIDGING`;
+- `DROPPED`;
+- `EMERGENCY_AVOIDANCE`.
+
+Stan nie może być zastąpiony luźnym zbiorem niezależnych flag, które pozwalają systemowi jednocześnie próbować sprzecznych zachowań.
+
+Przejścia stanów powinny być deterministyczne, logowalne i możliwe do odtworzenia w replayu.
+
+### Pack Phase Model
+
+Grupa może być klasyfikowana opisowo jako:
+
+- `COMPACT`;
+- `CONVECTIVE`;
+- `STRETCHED`;
+- `FRAGMENTING`;
+- `BREAKAWAY`.
+
+Pack Phase nie powinien sztucznie sterować prędkością grupy. Ma opisywać stan emergentnie wynikający z fizyki i pozycjonowania, a następnie dostarczać kontekst dla guidance, AI, telemetrii i późniejszej analizy.
+
+### Route Occupancy Model
+
+Pack Dynamics nie może opierać się wyłącznie na centralnym spline trasy.
+
+Model drogi powinien docelowo udostępniać co najmniej:
+
+- `routeProgress`;
+- lokalną użyteczną szerokość;
+- lewą i prawą granicę jazdy;
+- bariery i no-go zones;
+- zwężenia;
+- mosty;
+- tunele;
+- informacje o wielopoziomowej geometrii;
+- identyfikator segmentu lub korytarza trasy;
+- przyszły `lapIndex`, jeśli trasa wymaga okrążeń.
+
+Planner powinien pytać Route Occupancy Model o dostępną przestrzeń zamiast zgadywać ją z samego renderowanego mesha.
+
+### Gap Reservation Contract
+
+`GapReservation` musi być jawnie zarządzanym zasobem.
+
+Każda rezerwacja powinna mieć co najmniej:
+
+- właściciela;
+- stabilny identyfikator luki;
+- moment utworzenia;
+- timeout;
+- typ manewru;
+- przyczynę anulowania;
+- minimalny wymagany clearance;
+- informację o committed manoeuvre.
+
+Jedna luka nie może zostać jednocześnie skutecznie przyznana kilku riderom.
+
+W przypadku konfliktu wymagany jest deterministyczny tie-breaker, a nie losowość zależna od kolejności iteracji.
+
+### Input Integrity
+
+Surowy sygnał z trenażera i wejście używane przez fizykę powinny być rozdzielone.
+
+System musi rozpoznawać co najmniej:
+
+- chwilowy dropout;
+- stale sample;
+- nierealistyczny spike;
+- opóźnienie próbki;
+- brak danych kadencji;
+- chwilowe zero;
+- reconnect urządzenia.
+
+Filtracja i walidacja wejścia nie może tworzyć dodatkowej energii ani fałszować długookresowej średniej mocy.
+
+Pack intent nie powinien wykonywać gwałtownych zmian na podstawie pojedynczej ewidentnie błędnej próbki urządzenia.
+
+### Debug i telemetry contract
+
+Każdy rider powinien w trybie diagnostycznym udostępniać co najmniej:
+
+- aktualny Pack State;
+- `LateralIntent`;
+- target wheel / target rider;
+- aktywną `GapReservation`;
+- `TimeToCollision`;
+- aktualny draft factor;
+- przyczynę auto-brakingu lub ograniczenia prędkości;
+- `WastedEnergy`;
+- `TechnicalDemand`;
+- aktywny priorytet planera;
+- route segment / route progress;
+- przyczynę rozpoczęcia, anulowania i zakończenia manewru.
+
+Bez tych danych Pack Dynamics nie powinien być uznany za system możliwy do wiarygodnego balansowania.
+
+### Deterministic Replay
+
+Każdy istotny incydent Pack Dynamics powinien dać się odtworzyć offline.
+
+Minimalny replay powinien pozwalać zapisać:
+
+- stan początkowy riderów;
+- parametry fizyczne;
+- historię wejścia użytkownika;
+- stan trasy i pogody;
+- identyfikatory segmentów;
+- seed, jeśli którykolwiek system korzysta z deterministycznej losowości;
+- decyzje i przejścia state machine.
+
+Ten sam replay powinien odtwarzać ten sam wynik solvera.
+
+Replay jest wymagany do regresji edge case'ów znalezionych podczas testów.
+
+### Performance Contract
+
+Pack Dynamics nie może opierać się na naiwnym porównywaniu każdego ridera z każdym riderem w każdym kroku symulacji.
+
+Wymagane są:
+
+- lokalny spatial/neighborhood index;
+- filtrowanie topologiczne;
+- ograniczony prediction set;
+- pomiar kosztu CPU;
+- konfigurowalny limit analizowanych sąsiadów, jeśli będzie potrzebny;
+- testy skalowania wraz ze wzrostem liczby riderów.
+
+Optymalizacja nie może zmieniać deterministycznego wyniku w sposób zależny od FPS.
+
+### Competitive Fairness
+
+W przyszłym competitive multiplayer należy oddzielić realną technikę użytkownika od jakości automatycznego prowadzenia.
+
+`AutopilotProficiency` nie powinno tworzyć ukrytej przewagi rankingowej tylko dlatego, że jedna postać otrzymuje lepsze decyzje planera niż druga.
+
+Przed wdrożeniem trybu rankingowego należy zdecydować, czy parametry autopilota:
+
+- są całkowicie znormalizowane;
+- są ograniczone do wspólnego zakresu;
+- albo działają tylko poza trybami competitive.
+
+Realna moc, fizyka i kontrolowane przez użytkownika decyzje powinny pozostać nadrzędne.
+
+### Network Authority — kierunek przyszłego multiplayera
+
+Chociaż multiplayer jest poza MVP, Pack Dynamics należy projektować tak, aby przyszły klient nie był jedynym źródłem prawdy dla:
+
+- dostępności luki;
+- draft factor;
+- pozycji grupowej;
+- wyniku collision avoidance;
+- statusu `BOXED_IN`;
+- finalnego toru manewru.
+
+Przyszła implementacja multiplayer powinna mieć autorytatywny model stanu oraz możliwość reconciliation przy opóźnieniach sieciowych.
+
+Ten zapis nie oznacza rozpoczęcia implementacji sieciowej przed właściwym etapem roadmapy.
+
+### Posture-aware occupancy
+
+Geometria zajmowana przez ridera i jego właściwości aerodynamiczne mogą zależeć od pozycji:
+
+- seated;
+- standing;
+- aero;
+- sprint.
+
+Zmiana pozycji może wpływać na:
+
+- `CdA`;
+- footprint;
+- wymagany clearance;
+- środek ciężkości;
+- stabilność trajektorii.
+
+System nie powinien zakładać, że rider sprintujący na stojąco zajmuje identyczną przestrzeń i ma identyczny profil aerodynamiczny jak podczas spokojnej jazdy seated.
+
+### Non-holonomic bicycle constraint
+
+Pack planner może najpierw wyznaczyć collision-free intent, ale każda proponowana trajektoria musi następnie przejść walidację ograniczeń bicycle-like kinematics.
+
+Rower nie może:
+
+- przemieszczać się bokiem bez odpowiedniej trajektorii;
+- zmieniać toru szybciej, niż pozwala na to prędkość, krzywizna i grip;
+- wykonywać lateral displacement niezgodnego ze steering/yaw/lean.
+
+Collision avoidance nie może być traktowany jak dowolny ruch agenta 2D.
+
+### Spec freeze v0.1
+
+Po przyjęciu powyższych kontraktów Pack Dynamics v0.1 należy traktować jako zamrożoną specyfikację architektoniczną do czasu właściwego etapu implementacji.
+
+Nowe pomysły mogą trafiać do backlogu, ale nie powinny rozszerzać v0.1 bez wyraźnej decyzji o zmianie zakresu.
+
+Celem freeze jest powrót do bieżącego MVP i uniknięcie nieskończonego projektowania systemu, który zgodnie z roadmapą jest planowany po MVP.
+
