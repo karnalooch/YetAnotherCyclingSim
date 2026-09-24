@@ -1,9 +1,9 @@
 # YetAnotherCyclingSim — performance, world streaming and future multiplayer architecture
 
-**Document version:** 0.1  
+**Document version:** 0.2  
 **Status:** Architecture notes / future constraints  
 **Engine baseline:** Unreal Engine 5.8  
-**Scope:** performance architecture for the current single-player project and design constraints that keep a future shared-world multiplayer possible  
+**Scope:** runtime performance, build/cook iteration, world streaming and design constraints that keep a future shared-world multiplayer possible  
 **Important:** this document does **not** move multiplayer, a multi-route island, real trainer connectivity, MassEntity, Iris, traffic, or crashes into the MVP.
 
 ## 1. Purpose
@@ -18,9 +18,11 @@ This document records the architectural decisions and edge cases discussed while
 - acceptable behavior on imperfect network connections;
 - a future Zwift-like region or island with a network of roads rather than a single fixed route.
 
-The central rule is:
+The central rules are:
 
 > **Simulation is the source of truth. Rendering, animation, audio and networking are representations of simulation state and must be allowed to run at different update rates.**
+
+> **Performance is an engineering contract, not a final optimization pass. Design for scalability early, measure continuously, and optimize only when evidence shows a bottleneck.**
 
 The current MVP remains a single 20–30 minute Alpine route and single-player experience. The architecture should avoid choices that would make a future road network or multiplayer unnecessarily expensive to add later.
 
@@ -69,6 +71,28 @@ Prefer:
 - instancing;
 - data-oriented storage for large future populations;
 - reduced update frequency for distant or visually insignificant objects.
+
+### 2.2.1 Core rider simulation must not depend on `AActor`
+
+The authoritative cycling model must operate on lightweight project-owned data such as rider input, rider state, environment and route context. Unreal `AActor`, `APawn`, transforms, skeletal meshes and animation state belong to integration/presentation layers.
+
+Required dependency direction:
+
+```text
+RiderInput + Route/Environment
+            |
+            v
+   cycling simulation state
+            |
+            v
+ presentation/integration adapter
+            |
+            +--> Actor/Pawn transform
+            +--> animation
+            +--> camera/audio/UI
+```
+
+This keeps the same physics usable for one rider, a centralized collection of riders, later batch processing and — only if profiling proves a need — a MassEntity/ECS-backed execution path. MassEntity is **not** an MVP dependency.
 
 ### 2.3 Road-space is more important than world-space
 
@@ -297,6 +321,36 @@ A performance test that passes in a bare valley but fails in:
 
 does not satisfy the project performance target.
 
+### 6.5 Material and shader-permutation contract
+
+Static switches are not free. A material feature that creates another shader permutation must have an explicit reason.
+
+Prefer scalar/vector runtime parameters for continuous quantities such as wetness, dirt intensity, wind strength or snow amount when a separate compiled permutation is not required for correctness or a measured performance benefit.
+
+Prefer a small, controlled set of master materials plus Material Instances over combinatorial families of near-duplicate master materials. Shader compile time and permutation count are part of the build budget.
+
+### 6.6 Virtual Texturing is a measured tool, not an open-world default
+
+Streaming Virtual Texturing and Runtime Virtual Texturing may be useful for large surfaces or residency problems, but they add their own sampling and system cost. Do not enable VT/RVT simply because the world is large. Introduce them only for a concrete measured problem and benchmark before/after.
+
+### 6.7 Alpine skyline / streaming proof
+
+A representative route traversal must validate visual continuity across the Alpine corridor:
+
+```text
+valley -> dense forest -> climb -> exposed high-mountain vista
+```
+
+Acceptance evidence should look for:
+
+- no visible world holes;
+- no disappearing mountain silhouettes;
+- acceptable HLOD/full-cell transitions;
+- acceptable pop-in;
+- no major streaming hitch attributable to arriving at content too late.
+
+World Partition is a streaming architecture, not an automatic cook-time or render-performance win. HLOD and streaming policy must be validated on the actual route.
+
 ---
 
 ## 7. Rider rendering and animation
@@ -372,6 +426,14 @@ This is a future optimization, not a current requirement.
 Avoid creating every rider as many independently rendered skeletal components unless profiling demonstrates that this is acceptable.
 
 For high rider counts, one merged or otherwise render-efficient body representation can be substantially more scalable than multiple clothing/body skeletal components per rider.
+
+### 7.5 Unified rider cost policy
+
+A project-level significance result should eventually feed separate policies for simulation update frequency where lower fidelity is explicitly safe, animation update frequency, IK and secondary motion, collision/physics detail, skeletal/render LOD and shadows, particles/audio, UI/nameplates and future network update/relevancy policy.
+
+The exact thresholds are **not** architecture constants. They must be determined from profiling and visual/gameplay tests. An illustrative policy may range from full-rate near riders to progressively cheaper distant riders and, at extreme distance, an aggregate/group representation.
+
+Do not collapse gameplay relevance, visual relevance and session relevance into one blind distance scalar. Shared significance inputs may be centralized while each subsystem keeps the rules needed for correctness.
 
 ---
 
@@ -1159,7 +1221,7 @@ Requirement:
 
 ---
 
-# 14. Performance contract
+# 14. Performance and build contract
 
 The project already has a primary target:
 
@@ -1172,6 +1234,10 @@ The project already has a primary target:
 At 60 FPS the total frame budget is about **16.67 ms**.
 
 Performance must be measured using representative builds and scenes, not estimated from editor appearance.
+
+The 16.67 ms total frame budget is the current hard frame target. Sub-budgets should initially be recorded as `BASELINE_REQUIRED` rather than invented before representative content exists.
+
+Runtime evidence should progressively record total frame time and hitches/percentiles, Game Thread, Render Thread, GPU, VRAM/RAM high-water marks where practical, streaming stalls, rider simulation cost, animation cost and shader/PSO misses or late work when relevant.
 
 ## 14.1 Current MVP benchmark scenes
 
@@ -1190,9 +1256,12 @@ At minimum:
 These are **post-MVP architecture benchmarks**, not current acceptance criteria:
 
 - 1 rider;
-- 20 visible riders;
+- 10 visible riders;
 - 50 visible riders;
-- 100 visible riders stress case.
+- 100 visible riders;
+- 300 visible riders stress case.
+
+The 300-rider tier is a scaling/profiling probe, not a promise that the MVP or first multiplayer release must render 300 fully detailed cyclists.
 
 Each tier should record:
 
@@ -1200,9 +1269,11 @@ Each tier should record:
 - render thread;
 - GPU frame time;
 - frame-time spikes;
+- rider simulation time;
 - animation cost;
 - draw calls;
-- memory;
+- audio/voice cost where relevant;
+- RAM/VRAM;
 - network cost when applicable.
 
 ## 14.3 Future network test profiles
@@ -1220,6 +1291,35 @@ Suggested future profiles:
 UE Network Emulation can simulate latency, loss, jitter, reordering and duplication.
 
 Epic's documentation explicitly recommends testing very harsh multiplayer conditions, including approximately 500 ms round-trip ping and 10% packet loss or higher, to reveal bugs that ideal local/LAN testing misses.
+
+## 14.4 Build/cook telemetry budget
+
+Build performance is tracked separately from runtime FPS. Representative proof/build reports should progressively record C++ compile time, UHT/build-tool time where separable, shader compilation, cook time, package/stage time, total build-to-runnable-artifact time, peak RAM during expensive work where practical, and packaged size.
+
+Developer iteration should prefer incremental work. A small C++ implementation change must not require a full clean cook/package merely to prove local correctness. Full clean build/cook/package remains an appropriate CI/release/proof gate when the roadmap requires it.
+
+Track the baseline first, then investigate unexplained growth as a regression.
+
+## 14.5 Build iteration and data-cache strategy
+
+Use Unreal build/cook acceleration as measured tools:
+
+- keep C++ headers small and follow IWYU/forward-declaration hygiene;
+- use Unreal Build Accelerator / normal UBT iterative mechanisms where supported;
+- keep Derived Data Cache local and healthy for normal iteration;
+- use Zen/shared cooked-data/DDC workflows only when multi-machine or CI operation justifies the complexity;
+- evaluate UE 5.8 incremental cooking when representative content makes it valuable;
+- evaluate multi-process cooking by benchmarking worker count against elapsed time **and** peak RAM.
+
+A future local cook benchmark should compare a small worker matrix such as 1/2/3/4 processes and retain the fastest stable configuration within memory limits.
+
+World Partition must not be documented as a guarantee of faster cooking. Cook performance is measured independently.
+
+## 14.6 PSO and first-use stutter proof
+
+When Stage 7/10 content is representative enough, add a packaged runtime proof for first-use shader/pipeline stutter. Record available PSO precache/validation signals such as missed, too-late and precached/hit work together with visible hitch evidence.
+
+Do not build elaborate PSO infrastructure while the material/content set is still too provisional to make the evidence useful.
 
 ---
 
@@ -1669,6 +1769,11 @@ Official Unreal Engine 5.8 documentation:
 - MassCrowd API: https://dev.epicgames.com/documentation/unreal-engine/API/Plugins/MassCrowd
 - Nanite Foliage: https://dev.epicgames.com/documentation/unreal-engine/nanite-foliage
 - UE 5.8 release notes: https://dev.epicgames.com/documentation/unreal-engine/unreal-engine-5-8-release-notes
+- Build configuration / UBT / UBA: https://dev.epicgames.com/documentation/unreal-engine/build-configuration-for-unreal-engine
+- Multi-process cooking: https://dev.epicgames.com/documentation/unreal-engine/using-multi-process-cooking-for-unreal-engine
+- PSO precaching: https://dev.epicgames.com/documentation/unreal-engine/pso-precaching-for-unreal-engine
+- Streaming Virtual Texturing: https://dev.epicgames.com/documentation/unreal-engine/streaming-virtual-texturing-in-unreal-engine
+- Material Instances: https://dev.epicgames.com/documentation/unreal-engine/instanced-materials-in-unreal-engine
 
 The exact feature status of experimental/new engine systems must be re-verified against the engine version used when implementation starts.
 
@@ -1699,3 +1804,10 @@ The exact feature status of experimental/new engine systems must be re-verified 
 21. Road/world content should gain automated validation as complexity grows.
 22. Missing cosmetics/assets must fall back safely without removing riders from simulation/session truth.
 23. Future authoritative multiplayer domain logic should remain capable of headless/server execution and independent from Unreal presentation assets.
+24. Core rider simulation must remain independent from `AActor` so one-rider logic can scale to centralized/batched execution without rewriting the physics model.
+25. Build time, shader time, cook time and package time are explicit engineering budgets alongside runtime CPU/GPU/memory budgets.
+26. Static material permutations, Virtual Texturing, World Partition and Nanite are measured tools, not automatic defaults or free performance.
+27. Alpine skyline/HLOD continuity and first-use PSO stutter require explicit route-level proofs before release.
+28. Crowd scaling is benchmarked at 1/10/50/100/300 riders after MVP; the 300-rider tier is a stress probe, not an MVP requirement.
+29. Shared/Zen DDC, incremental cooking and multi-process cooking are introduced only when measurements justify them and are benchmarked on the real workflow.
+30. Performance regressions are judged against recorded baselines; evidence may justify a deliberate cost increase, but unmeasured regressions are not acceptable.
