@@ -42,6 +42,25 @@ After editing:
 5. Report any unverified behavior.
 6. Suggest one logical commit message.
 
+### Problem reporting
+
+If any problem, failure, blocker, unexpected behavior, or incomplete validation occurs, describe it precisely in the status or final report. Do not reduce it to a vague statement such as "it failed", "UE hung", or "the test did not work".
+
+For every relevant problem, report:
+
+- what operation was being performed and the exact command, test, script, or workflow involved;
+- what was expected to happen;
+- what actually happened;
+- the exact error message, exit code, failing assertion, relevant log excerpt, or other evidence when available;
+- whether the problem is in product code, tests, build/tooling, CI, Unreal/editor/runtime environment, local machine setup, or still unknown;
+- the current diagnosis and the evidence supporting it;
+- every meaningful fix or workaround attempted and its result;
+- any files or configuration changed while investigating;
+- what remains unverified or blocked;
+- the smallest recommended next action to continue safely.
+
+Clearly distinguish a confirmed root cause from a hypothesis. Do not claim a blocker is resolved until the relevant build, test, runtime proof, or other required validation has actually passed.
+
 Never claim that code works without running an appropriate check.
 
 ## Code rules
