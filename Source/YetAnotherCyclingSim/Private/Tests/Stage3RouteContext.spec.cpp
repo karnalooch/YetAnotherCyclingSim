@@ -346,7 +346,8 @@ bool FStage3RouteContextMultiStepEnvironmentTest::RunTest(const FString& Paramet
 
 	FDistanceBasedSimulationStepContextProvider Provider;
 	FString Error;
-	TestTrue(TEXT("dynamic provider config succeeds"), ConfigureDynamicProvider(Provider, Error));
+	TestTrue(TEXT("dynamic provider config succeeds"),
+		ConfigureDynamicProvider(Provider, Error, true, false));
 
 	FCyclingSimulationSession BatchSession;
 	FCyclingSimulationSession SplitSession;
@@ -374,6 +375,19 @@ bool FStage3RouteContextMultiStepEnvironmentTest::RunTest(const FString& Paramet
 	TestEqual(TEXT("0.25 s catch-up executes five fixed steps"), BatchSteps, 5);
 	TestFalse(TEXT("environment-only provider does not stop batch"), bBatchStopped);
 	TestTrue(TEXT("batch crosses climb and descent section starts"), BatchState.DistanceM > 0.06);
+	TestEqual(TEXT("single catch-up batch emits start, both section markers and finish"),
+		BatchCrossings.Num(), 4);
+	if (BatchCrossings.Num() == 4)
+	{
+		TestEqual(TEXT("catch-up marker 0 is start"),
+			BatchCrossings[0].Id, FString(TEXT("start")));
+		TestEqual(TEXT("catch-up marker 1 proves flat-to-climb crossing"),
+			BatchCrossings[1].Id, FString(TEXT("sector-a")));
+		TestEqual(TEXT("catch-up marker 2 proves climb-to-descent crossing"),
+			BatchCrossings[2].Id, FString(TEXT("sector-b")));
+		TestEqual(TEXT("catch-up marker 3 is non-terminal finish observation"),
+			BatchCrossings[3].Id, FString(TEXT("finish")));
+	}
 
 	FSimulationState SplitState;
 	double SplitRemainingS = 0.0;
