@@ -55,9 +55,9 @@ enum class ECyclingPrototypeLifecycle : uint8
  *
  *  - validating and caching the route spline reference (BeginPlay);
  *  - configuring the session with the prototype fixture values;
- *  - forwarding per-render-frame DeltaSeconds to Session.TryAdvance while
- *    Running (Tick is the only render-frame bridge to the deterministic
- *    fixed-step runner);
+ *  - forwarding per-render-frame DeltaSeconds to Session.TryAdvanceWithContext
+ *    while Running (Tick is the only render-frame bridge to the deterministic
+ *    fixed-step runner and route context);
  *  - reading the authoritative FSimulationState and converting it to a
  *    spline transform in Unreal centimetres for presentation only;
  *  - enforcing the explicit lifecycle (Ready / Running / Stopped /

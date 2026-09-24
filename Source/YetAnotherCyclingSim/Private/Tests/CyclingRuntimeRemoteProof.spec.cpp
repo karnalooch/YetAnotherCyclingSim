@@ -1,9 +1,9 @@
 // Copyright YetAnotherCyclingSim. All Rights Reserved.
 //
 // RemoteProof: deterministic end-to-end exercise of the runtime layer
-// driving the cycling session directly through the existing
-// FCyclingSimulationSession API. This is the replacement for the manual
-// Stage 2 proof that required a human to drive the keyboard under PIE.
+// through ACyclingPrototypePawn and the existing FCyclingSimulationSession
+// fixed-step APIs. Stage 3D additionally proves that the Pawn uses the
+// Alpine route context for grade, markers and terminal finish.
 //
 // The test does NOT synthesise OS keyboard events. It calls the domain
 // methods directly so the physics oracle is independent of the human

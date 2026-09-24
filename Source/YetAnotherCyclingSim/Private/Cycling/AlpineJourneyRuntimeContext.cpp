@@ -143,9 +143,9 @@ namespace CyclingSimulation
 			return false;
 		}
 
-		GeometryProvider = MoveTemp(CandidateGeometryProvider);
-		BoundaryProvider = MoveTemp(CandidateBoundaryProvider);
-		Boundaries = MoveTemp(CandidateBoundaries);
+		GeometryProvider = CandidateGeometryProvider;
+		BoundaryProvider = CandidateBoundaryProvider;
+		Boundaries = CandidateBoundaries;
 		RouteLengthM = CandidateGeometry.GetTotalLengthM();
 		bIsConfigured = true;
 		return true;

@@ -585,9 +585,10 @@ bool FCyclingRuntimeTest::RunTest(const FString& Parameters)
 // render-frame cadences (~30 FPS, ~60 FPS, ~120 FPS) and a hitch sequence
 // with at least one frame requiring >1 fixed step.
 //
-// Uses the same prototype fixture values:
+// Uses the same prototype rider/input/base-environment fixture values:
 //   200 W, 90 rpm, 75 kg + 8.5 kg, CdA 0.32, Crr 0.004, eta 0.97,
-//   grade 0, no wind, sea-level air.
+//   no wind, sea-level air. Grade is resolved per fixed step from the
+//   deterministic Stage 3 Alpine geometry.
 // =====================================================================
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCyclingRuntimeFramePacingTest, "CyclingRuntime.FramePacing",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
