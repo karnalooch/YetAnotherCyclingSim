@@ -125,7 +125,8 @@ Dla ustalonych parametrów symulator oblicza powtarzalną prędkość i dystans,
 
 # Etap 2 — pierwszy grywalny prototyp UE5
 
-**Planowany czas:** tydzień 2–3
+**Planowany czas:** tydzień 2–3  
+**Status:** ukończony
 
 ## Cel
 
@@ -136,12 +137,15 @@ Połączyć wejście testowe, fizykę i ruch obiektu po prostej trasie.
 - [x] Utworzenie podstawowej mapy testowej.
 - [x] Utworzenie drogi opartej na spline.
 - [x] Dodanie tymczasowego obiektu reprezentującego rower.
-- [ ] Poruszanie obiektu zgodnie z wynikiem silnika fizycznego.
-- [ ] Sterowanie mocą i kadencją z klawiatury.
-- [ ] Dodanie panelu diagnostycznego.
-- [ ] Dodanie zatrzymania i ponownego uruchomienia jazdy.
+- [x] Poruszanie obiektu zgodnie z wynikiem silnika fizycznego.
+- [x] Sterowanie mocą i kadencją z klawiatury.
+- [x] Dodanie panelu diagnostycznego.
+- [x] Dodanie zatrzymania i ponownego uruchomienia jazdy.
 - [x] Dodanie stałego kroku fizyki niezależnego od FPS.
-- [ ] Pomiar liczby FPS i czasu klatki.
+- [x] Pomiar liczby FPS i czasu klatki.
+
+**Dowód ukończenia:** #44, #47, #48 oraz końcowy proof #49 / PR #59.  
+Stage 2 zakończył się zielonym buildem i Automation, realnym PIE proof, deterministycznym frame-pacing proof oraz bazowym pomiarem wydajności 1920×1080 na komputerze referencyjnym.
 
 ## Kryterium ukończenia
 
@@ -151,11 +155,24 @@ Użytkownik może przejechać prostą trasę, zmieniając moc i kadencję, a pr�
 
 # Etap 3 — trasa testowa i profil wysokości
 
-**Planowany czas:** tydzień 3–5
+**Planowany czas:** tydzień 3–5  
+**Status:** w toku — bieżący etap
 
 ## Cel
 
 Stworzyć pełny przebieg fikcyjnej trasy alpejskiej.
+
+## Plan wykonawczy
+
+Stage 3 jest realizowany kolejno:
+
+1. **3A — #53:** route context i granice rozwiązywane na poziomie każdego fixed-step.
+2. **3B — #64:** port profilu `ALPINE_JOURNEY` do czystego modelu domenowego Unreal.
+3. **3C — #65:** pełny ciągły spline 10 km oraz deterministyczne wyznaczanie nachylenia z geometrii.
+4. **3D — #66:** integracja runtime, start/sektory/meta i deterministyczne crossing events.
+5. **3E — #67:** minimalny teren oraz pełny start-to-finish proof Stage 3.
+
+Nie rozpoczynamy mechaniki techniki zakrętów ze Stage 4 przed zakończeniem 3E.
 
 ## Zadania
 
