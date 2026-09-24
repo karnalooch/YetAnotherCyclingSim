@@ -92,6 +92,11 @@ namespace Stage3RouteContextTests
 				0.02,
 				false));
 			Boundaries.Add(MakeBoundary(
+				TEXT("sector-b"),
+				ESimulationBoundaryKind::Sector,
+				0.06,
+				false));
+			Boundaries.Add(MakeBoundary(
 				TEXT("finish"),
 				ESimulationBoundaryKind::Finish,
 				0.08,
@@ -252,12 +257,30 @@ bool FStage3RouteContextProviderSemanticsTest::RunTest(const FString& Parameters
 
 	FSimulationState Pre;
 	FSimulationState Post;
+	Pre.DistanceM = 0.05;
+	Pre.ElapsedTimeS = 0.10;
+	Post.DistanceM = 0.06;
+	Post.ElapsedTimeS = 0.15;
+
+	TArray<FSimulationBoundaryCrossing> Crossings;
+	bool bStopAfterStep = false;
+	TestTrue(TEXT("exact climb-to-descent boundary observation succeeds"),
+		Provider.TryObserveCompletedStep(Pre, Post, Crossings, bStopAfterStep, Error));
+	TestEqual(TEXT("climb-to-descent boundary emits sector-b once"), Crossings.Num(), 1);
+	if (Crossings.Num() == 1)
+	{
+		TestEqual(TEXT("climb-to-descent crossing id"),
+			Crossings[0].Id, FString(TEXT("sector-b")));
+	}
+	TestFalse(TEXT("climb-to-descent sector is non-terminal"), bStopAfterStep);
+
+	Pre = FSimulationState();
+	Post = FSimulationState();
+	FSimulationState Post;
 	Pre.DistanceM = 0.0;
 	Post.DistanceM = 0.01;
 	Post.ElapsedTimeS = 0.05;
 
-	TArray<FSimulationBoundaryCrossing> Crossings;
-	bool bStopAfterStep = false;
 	TestTrue(TEXT("start boundary observation succeeds"),
 		Provider.TryObserveCompletedStep(Pre, Post, Crossings, bStopAfterStep, Error));
 	TestEqual(TEXT("first forward step emits start once"), Crossings.Num(), 1);
