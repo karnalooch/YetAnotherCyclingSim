@@ -169,7 +169,7 @@ int32 UCyclingStage3RouteVerifyCommandlet::Main(const FString& Params)
 		const FVector ExpectedLocalCm =
 			ExpectedSamples[Index].PositionM * MetresToCentimetres;
 
-		if (!IsFiniteVector(ActualLocalCm))
+		if (!CyclingStage3RouteVerifyInternal::IsFiniteVector(ActualLocalCm))
 		{
 			UE_LOG(LogCyclingStage3RouteVerify, Error,
 				TEXT("Spline point %d contains non-finite coordinates."), Index);
@@ -201,7 +201,8 @@ int32 UCyclingStage3RouteVerifyCommandlet::Main(const FString& Params)
 			Spline->GetTangentAtDistanceAlongSpline(
 				static_cast<float>(DistanceCm),
 				ESplineCoordinateSpace::Local);
-		if (!IsFiniteVector(Location) || !IsFiniteVector(Tangent)
+		if (!CyclingStage3RouteVerifyInternal::IsFiniteVector(Location)
+			|| !CyclingStage3RouteVerifyInternal::IsFiniteVector(Tangent)
 			|| Tangent.IsNearlyZero())
 		{
 			UE_LOG(LogCyclingStage3RouteVerify, Error,

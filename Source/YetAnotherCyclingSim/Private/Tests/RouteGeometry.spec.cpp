@@ -100,7 +100,7 @@ bool FStage3AlpineGeometryStructureTest::RunTest(const FString& Parameters)
 			SecondIndex < Samples.Num() - 1;
 			++SecondIndex)
 		{
-			if (SegmentsProperlyIntersect2D(
+			if (Stage3RouteGeometryTests::SegmentsProperlyIntersect2D(
 				Samples[FirstIndex].PositionM,
 				Samples[FirstIndex + 1].PositionM,
 				Samples[SecondIndex].PositionM,
