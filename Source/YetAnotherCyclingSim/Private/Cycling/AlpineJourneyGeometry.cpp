@@ -108,7 +108,7 @@ namespace CyclingSimulation
 
 		TArray<FRouteGeometrySample> Samples;
 		const int32 FullStepCount = static_cast<int32>(
-			FMath::FloorToDouble(Route.GetTotalLengthM() / AlpineGeometrySampleSpacingM));
+			std::floor(Route.GetTotalLengthM() / AlpineGeometrySampleSpacingM));
 		Samples.Reserve(FullStepCount + 2);
 
 		double DistanceM = 0.0;
