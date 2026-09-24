@@ -24,6 +24,7 @@ namespace CyclingSimulation
 	class YETANOTHERCYCLINGSIM_API FRouteSegment
 	{
 	public:
+		FRouteSegment() = default;
 		const FString& GetId() const { return Id; }
 		double GetStartDistanceM() const { return StartDistanceM; }
 		double GetEndDistanceM() const { return EndDistanceM; }
@@ -53,6 +54,7 @@ namespace CyclingSimulation
 	class YETANOTHERCYCLINGSIM_API FRouteProfile
 	{
 	public:
+		FRouteProfile() = default;
 		// Transactionally configures an ordered route profile.
 		//
 		// Requirements:
