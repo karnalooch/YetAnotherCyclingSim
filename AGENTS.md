@@ -119,6 +119,15 @@ Examples:
 - `fix: prevent speed from becoming negative`
 - `chore: configure Unreal asset tracking`
 
+### GitHub Markdown / CLI rules
+
+- For substantial multiline pull-request bodies, issue bodies, and comments, write the content to a UTF-8 Markdown file and use the CLI's `--body-file` option (or the equivalent file-backed API mechanism).
+- Do not pass long multiline Markdown through an inline `--body` argument.
+- Do not encode intended line breaks as literal `\\n` sequences.
+- Preserve real blank lines around headings, lists, tables, and code blocks so GitHub renders Markdown correctly.
+- After creating or editing a substantial PR, issue, or comment, verify the rendered GitHub Markdown before considering the operation complete.
+- Temporary Markdown body files are working files only and must not be committed.
+
 ## Office and home workflow
 
 This project is developed on two machines: the office PC, which is suitable for documentation, Git operations, lightweight code, and Python tests, and the home PC, which builds Unreal Engine and runs the full validation cycle.
