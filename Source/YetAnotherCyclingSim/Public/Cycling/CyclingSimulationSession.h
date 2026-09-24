@@ -117,6 +117,27 @@ namespace CyclingSimulation
 			int32& OutCompletedSteps,
 			FString& OutError);
 
+		// Stage 3 route-aware advance. The supplied provider is resolved for
+		// every fixed substep from the authoritative pre-step simulation state.
+		// This prevents route/environment physics from depending on render-frame
+		// batching when a catch-up frame executes multiple 0.05 s steps.
+		//
+		// Boundary crossings are returned in fixed-step order. If a crossing
+		// asks the runner to stop after that step, bOutStoppedAfterStep is true
+		// and any unprocessed accumulated frame time is preserved.
+		//
+		// On failure, session state/accumulator are unchanged, crossings are
+		// empty, bOutStoppedAfterStep is false and OutCompletedSteps is zero.
+		bool TryAdvanceWithContext(
+			double FrameDeltaS,
+			const ISimulationStepContextProvider& StepContextProvider,
+			FSimulationState& OutState,
+			double& OutRemainingTimeS,
+			int32& OutCompletedSteps,
+			TArray<FSimulationBoundaryCrossing>& OutBoundaryCrossings,
+			bool& bOutStoppedAfterStep,
+			FString& OutError);
+
 		// Sets the current power in watts (W). Delegates to the configured
 		// rider input controller. Returns false (with a useful error and
 		// without changing the current input) if the session is
