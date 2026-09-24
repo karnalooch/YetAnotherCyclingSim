@@ -30,6 +30,10 @@ namespace CyclingPrototypePawnInternal
 	// FString build cost negligible, fast enough that PIE feedback
 	// remains live.
 	constexpr float DiagnosticRefreshIntervalS = 0.25f;
+
+	// Grade is derived from deterministic Stage 3 geometry over a 40 m total
+	// window (20 m either side of authoritative pre-step DistanceM).
+	constexpr double Stage3GradeHalfWindowM = 20.0;
 }
 
 ACyclingPrototypePawn::ACyclingPrototypePawn()
@@ -182,11 +186,26 @@ bool ACyclingPrototypePawn::TryConfigurePrototypeSession(FString& OutError)
 	return Session.TryConfigure(Config, OutError);
 }
 
+bool ACyclingPrototypePawn::TryConfigurePrototypeRouteContext(FString& OutError)
+{
+	if (!Session.IsConfigured())
+	{
+		OutError = TEXT("session must be configured before route context");
+		return false;
+	}
+
+	return RouteContext.TryConfigure(
+		Session.GetConfig().Environment,
+		CyclingPrototypePawnInternal::Stage3GradeHalfWindowM,
+		OutError);
+}
+
 void ACyclingPrototypePawn::InitializeRide()
 {
 	LastError.Reset();
 	CachedSpline = nullptr;
 	CachedSplineLengthCm = 0.0;
+	BoundaryHistory.Reset();
 
 	USplineComponent* Spline = nullptr;
 	double LengthCm = 0.0;
@@ -203,6 +222,12 @@ void ACyclingPrototypePawn::InitializeRide()
 	if (!TryConfigurePrototypeSession(Error))
 	{
 		EnterErrorState(FString::Printf(TEXT("session configure failed: %s"), *Error));
+		return;
+	}
+
+	if (!TryConfigurePrototypeRouteContext(Error))
+	{
+		EnterErrorState(FString::Printf(TEXT("route context configure failed: %s"), *Error));
 		return;
 	}
 
@@ -274,6 +299,7 @@ void ACyclingPrototypePawn::RestartRide()
 
 	// Restart always resets the session, regardless of the prior state.
 	Session.Reset();
+	BoundaryHistory.Reset();
 
 	// Clear presentation-only transient state.
 	LastError.Reset();
@@ -302,41 +328,74 @@ void ACyclingPrototypePawn::Tick(float DeltaSeconds)
 	FSimulationState NewState;
 	double RemainingTimeS = 0.0;
 	int32 CompletedSteps = 0;
+	TArray<CyclingSimulation::FSimulationBoundaryCrossing> FrameCrossings;
+	bool bStoppedAfterStep = false;
 	FString Error;
 
-	if (!Session.TryAdvance(static_cast<double>(DeltaSeconds), NewState, RemainingTimeS, CompletedSteps, Error))
+	if (!Session.TryAdvanceWithContext(
+		static_cast<double>(DeltaSeconds),
+		RouteContext,
+		NewState,
+		RemainingTimeS,
+		CompletedSteps,
+		FrameCrossings,
+		bStoppedAfterStep,
+		Error))
 	{
 		// Session refused the frame: keep last valid authoritative state,
 		// keep last valid visible transform, transition to Error, disable
 		// Tick. Do NOT auto-reset.
-		EnterErrorState(FString::Printf(TEXT("TryAdvance failed: %s"), *Error));
+		EnterErrorState(FString::Printf(TEXT("TryAdvanceWithContext failed: %s"), *Error));
 		return;
+	}
+
+	BoundaryHistory.Append(FrameCrossings);
+	for (const CyclingSimulation::FSimulationBoundaryCrossing& Crossing : FrameCrossings)
+	{
+		UE_LOG(LogCyclingPrototypePawn, Log,
+			TEXT("Pawn '%s' route crossing '%s' kind=%d boundary=%.3f m step_end=%.3f m elapsed=%.3f s."),
+			*GetName(),
+			*Crossing.Id,
+			static_cast<int32>(Crossing.Kind),
+			Crossing.BoundaryDistanceM,
+			Crossing.PostStepState.DistanceM,
+			Crossing.PostStepState.ElapsedTimeS);
 	}
 
 	// Remember the latest fixed-step counter for the next overlay
 	// refresh. We only set it on success so that stale counter values
-	// are not surfaced when TryAdvance fails.
+	// are not surfaced when TryAdvanceWithContext fails.
 	LastCompletedSteps = CompletedSteps;
 
-	// Successful advance. Update presentation only from authoritative
-	// NewState.DistanceM. Check Finished condition (route end reached or
-	// exceeded).
-	if (CachedSplineLengthCm > 0.0 &&
-		NewState.DistanceM * CyclingPrototypePawnInternal::MetresToCentimetres >= CachedSplineLengthCm)
+	// Presentation is always derived from the authoritative state. The spline
+	// may clamp visually at its end, but it never decides route completion.
+	UpdatePresentationFromSession();
+
+	const CyclingSimulation::FSimulationBoundaryCrossing* FinishCrossing =
+		FrameCrossings.FindByPredicate(
+			[](const CyclingSimulation::FSimulationBoundaryCrossing& Crossing)
+			{
+				return Crossing.Kind == CyclingSimulation::ESimulationBoundaryKind::Finish;
+			});
+
+	if (bStoppedAfterStep || FinishCrossing != nullptr)
 	{
-		// Clamp the visible presentation to the spline end without
-		// rewriting the authoritative DistanceM (Stage 2 deliberately
-		// preserves a small fixed-step overshoot).
-		UpdatePresentationFromSession();
+		if (!bStoppedAfterStep || FinishCrossing == nullptr)
+		{
+			EnterErrorState(TEXT("route context terminal-stop contract mismatch"));
+			return;
+		}
+
 		Lifecycle = ECyclingPrototypeLifecycle::Finished;
 		SetActorTickEnabled(false);
 		UE_LOG(LogCyclingPrototypePawn, Log,
-			TEXT("Pawn '%s' reached Finished at authoritative distance %.6f m (route end %.2f m)."),
-			*GetName(), NewState.DistanceM, CachedSplineLengthCm / 100.0);
+			TEXT("Pawn '%s' reached deterministic Finish '%s' at authoritative distance %.6f m (boundary %.2f m)."),
+			*GetName(),
+			*FinishCrossing->Id,
+			NewState.DistanceM,
+			FinishCrossing->BoundaryDistanceM);
 		return;
 	}
-
-	UpdatePresentationFromSession();
 }
 
 void ACyclingPrototypePawn::UpdatePresentationFromSession()

@@ -424,23 +424,25 @@ bool FCyclingRuntimeTest::RunTest(const FString& Parameters)
 	}
 
 	// ===========================================================
-	// 12/13. Finished clamps presentation, does not rewrite authoritative
-	//         DistanceM (small fixed-step overshoot preserved).
+	// 12/13. Stage 3 deterministic Finish is emitted at the authoritative
+	//         Alpine route end (10 km), not from render-frame spline polling.
+	//         Presentation clamps to the spline end and Finished is sticky.
 	// ===========================================================
 	{
 		UWorld* World = CreateTransientWorld();
-		AActor* Route = SpawnStraightRouteActor(World, 50000.0f);
+		AActor* Route = SpawnStraightRouteActor(World, 1000000.0f); // 10 km presentation fixture
 		ACyclingPrototypePawn* Pawn = SpawnPrototypePawn(World, Route, /*bAutoStart=*/false);
 
 		Pawn->InitializeRide();
 		Pawn->StartRide();
 
-		// Drive enough time to overshoot 500 m with 200 W on flat ground.
-		// At 200 W / 75+8.5 kg / CdA 0.32 / flat / no wind the rider reaches
-		// about 9 m/s and crosses 500 m in ~63 s. Drive 80 s to be safe.
-		for (int32 i = 0; i < 160; ++i)
+		FString Error;
+		TestTrue(TEXT("finished: high proof power accepted"),
+			Pawn->GetMutableSession().TrySetPowerW(2000.0, Error));
+
+		for (int32 i = 0; i < 2000; ++i)
 		{
-			Pawn->Tick(0.5f);
+			Pawn->Tick(1.0f);
 			if (Pawn->GetLifecycle() == ECyclingPrototypeLifecycle::Finished)
 			{
 				break;
@@ -451,14 +453,17 @@ bool FCyclingRuntimeTest::RunTest(const FString& Parameters)
 			static_cast<int32>(Pawn->GetLifecycle()),
 			static_cast<int32>(ECyclingPrototypeLifecycle::Finished));
 		TestTrue(TEXT("finished: Tick is disabled"), !Pawn->IsActorTickEnabled());
-		TestTrue(TEXT("finished: authoritative distance >= 500 m"),
-			Pawn->GetAuthoritativeState().DistanceM >= 500.0);
-		TestTrue(TEXT("finished: authoritative distance can have small overshoot (<= 510 m)"),
-			Pawn->GetAuthoritativeState().DistanceM <= 510.0);
-		TestTrue(TEXT("finished: visible X is clamped to spline end (500 m -> 50000 cm)"),
-			FMath::IsNearlyEqual(Pawn->GetActorLocation().X, 50000.0f, 0.5f));
+		TestTrue(TEXT("finished: authoritative distance crossed 10 km"),
+			Pawn->GetAuthoritativeState().DistanceM >= 10000.0);
+		TestTrue(TEXT("finished: fixed-step overshoot stays small"),
+			Pawn->GetAuthoritativeState().DistanceM <= 10005.0);
+		TestTrue(TEXT("finished: visible X is clamped to 10 km spline end"),
+			FMath::IsNearlyEqual(Pawn->GetActorLocation().X, 1000000.0f, 1.0f));
+		TestTrue(TEXT("finished: boundary history contains terminal finish"),
+			Pawn->GetBoundaryHistory().Num() > 0
+			&& Pawn->GetBoundaryHistory().Last().Kind == CyclingSimulation::ESimulationBoundaryKind::Finish);
 
-		// No further advancement after Finished.
+		// No further advancement after Finished even if Tick is called directly.
 		const double DistanceBeforeIdle = Pawn->GetAuthoritativeState().DistanceM;
 		const FVector LocationBeforeIdle = Pawn->GetActorLocation();
 		Pawn->Tick(1.0f);
