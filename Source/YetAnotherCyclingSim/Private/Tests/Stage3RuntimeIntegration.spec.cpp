@@ -239,6 +239,29 @@ bool FStage3RuntimeMarkerContractTest::RunTest(const FString& Parameters)
 	}
 	TestFalse(TEXT("sector crossing is non-terminal"), bStopped);
 
+	// The production Stage 3D provider must carry the Stage 3C geometry-derived
+	// grade into the same fixed-step context used for lifecycle markers.
+	struct FGradeCase
+	{
+		double DistanceM;
+		double ExpectedGrade;
+	};
+	const FGradeCase GradeCases[] = {
+		{ 500.0, 0.005 },
+		{ 5450.0, 0.065 },
+		{ 7950.0, -0.030 },
+	};
+	for (const FGradeCase& Case : GradeCases)
+	{
+		FSimulationState GradeState;
+		GradeState.DistanceM = Case.DistanceM;
+		FEnvironment Environment;
+		TestTrue(TEXT("production route context resolves local grade"),
+			Provider.TryResolveEnvironment(GradeState, Environment, Error));
+		TestTrue(TEXT("production route context grade matches Alpine geometry"),
+			FMath::IsNearlyEqual(Environment.GradeDecimal, Case.ExpectedGrade, 1e-3));
+	}
+
 	Pre = Post;
 	Post.DistanceM = 4700.1;
 	Post.ElapsedTimeS = 10.10;
