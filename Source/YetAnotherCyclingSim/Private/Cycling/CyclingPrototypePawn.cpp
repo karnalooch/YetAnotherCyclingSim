@@ -8,6 +8,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Engine/Engine.h"
 #include "Engine/LocalPlayer.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
@@ -15,6 +16,7 @@
 #include "InputAction.h"
 #include "InputActionValue.h"
 #include "InputMappingContext.h"
+#include "TimerManager.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogCyclingPrototypePawn, Log, All);
 
@@ -22,6 +24,12 @@ namespace CyclingPrototypePawnInternal
 {
 	// Meters -> Unreal centimetres. Used only at the presentation boundary.
 	constexpr double MetresToCentimetres = 100.0;
+
+	// Stage 2 diagnostic overlay refresh interval (s). The Stage 2
+	// contract recommends 4 Hz (0.25 s). Slow enough to keep the
+	// FString build cost negligible, fast enough that PIE feedback
+	// remains live.
+	constexpr float DiagnosticRefreshIntervalS = 0.25f;
 }
 
 ACyclingPrototypePawn::ACyclingPrototypePawn()
@@ -59,6 +67,7 @@ void ACyclingPrototypePawn::BeginPlay()
 	Super::BeginPlay();
 
 	InitializeRide();
+	StartDiagnosticTimer();
 }
 
 void ACyclingPrototypePawn::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -83,6 +92,11 @@ void ACyclingPrototypePawn::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 	// Defensive: ensure Tick is disabled if the Pawn is removed mid-flight.
 	SetActorTickEnabled(false);
+
+	// Stop the presentation-only diagnostic timer and clear the on-screen
+	// message before destruction.
+	StopDiagnosticTimerAndClearMessage();
+
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -299,6 +313,11 @@ void ACyclingPrototypePawn::Tick(float DeltaSeconds)
 		return;
 	}
 
+	// Remember the latest fixed-step counter for the next overlay
+	// refresh. We only set it on success so that stale counter values
+	// are not surfaced when TryAdvance fails.
+	LastCompletedSteps = CompletedSteps;
+
 	// Successful advance. Update presentation only from authoritative
 	// NewState.DistanceM. Check Finished condition (route end reached or
 	// exceeded).
@@ -364,6 +383,162 @@ void ACyclingPrototypePawn::EnterErrorState(const FString& Message)
 // FCyclingSimulationSession step/increase/decrease API and never
 // duplicate input state.
 // ===========================================================
+
+FCyclingInputSnapshot ACyclingPrototypePawn::CaptureCurrentInputSnapshot() const
+{
+	return CyclingDiagnostics::CaptureInputSnapshot(
+		CyclingDiagnostics::MapLifecycle(static_cast<int32>(Lifecycle)),
+		Session.GetRiderInput().PowerW,
+		Session.GetRiderInput().CadenceRpm,
+		Session.GetSimulationState());
+}
+
+void ACyclingPrototypePawn::SetDiagnosticOverlayEnabled(bool bEnabled)
+{
+	bEnableDiagnosticOverlay = bEnabled;
+	if (!bEnabled)
+	{
+		StopDiagnosticTimerAndClearMessage();
+	}
+	else
+	{
+		StartDiagnosticTimer();
+		RefreshDiagnosticOverlay();
+	}
+}
+
+void ACyclingPrototypePawn::SetGuidedAcceptanceEnabled(bool bEnabled)
+{
+	bEnableGuidedAcceptance = bEnabled;
+	if (!bEnabled)
+	{
+		// Wipe the observer state so a later re-enable starts fresh.
+		GuidedAcceptance = FCyclingGuidedAcceptanceState();
+	}
+}
+
+void ACyclingPrototypePawn::StartDiagnosticTimer()
+{
+	if (!bEnableDiagnosticOverlay)
+	{
+		return;
+	}
+	if (UWorld* World = GetWorld())
+	{
+		// Avoid stacking duplicate timers if BeginPlay is invoked twice
+		// (e.g. via the editor's re-instance flow).
+		World->GetTimerManager().ClearTimer(DiagnosticTimerHandle);
+		World->GetTimerManager().SetTimer(
+			DiagnosticTimerHandle,
+			FTimerDelegate::CreateUObject(this, &ACyclingPrototypePawn::RefreshDiagnosticOverlay),
+			CyclingPrototypePawnInternal::DiagnosticRefreshIntervalS,
+			/*bLoop=*/true);
+	}
+}
+
+void ACyclingPrototypePawn::StopDiagnosticTimerAndClearMessage()
+{
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(DiagnosticTimerHandle);
+	}
+	ClearOverlayMessage();
+}
+
+void ACyclingPrototypePawn::ClearOverlayMessage()
+{
+	if (GEngine)
+	{
+		// A negative TimeToDisplay + stable key removes the entry.
+		// The key is a non-INDEX_NONE unique constant; per UE docs
+		// this is the mechanism that prevents duplicate message spam.
+		GEngine->RemoveOnScreenDebugMessage(static_cast<uint64>(YACS_DIAGNOSTIC_OVERLAY_KEY));
+	}
+}
+
+void ACyclingPrototypePawn::RefreshDiagnosticOverlay()
+{
+	if (!bEnableDiagnosticOverlay)
+	{
+		ClearOverlayMessage();
+		return;
+	}
+	if (!GEngine)
+	{
+		return;
+	}
+
+	const double PowerStep = Session.IsConfigured()
+		? Session.GetConfig().RiderInput.PowerStepW
+		: 10.0;
+	const double CadenceStep = Session.IsConfigured()
+		? Session.GetConfig().RiderInput.CadenceStepRpm
+		: 5.0;
+
+	const FCyclingInputSnapshot CurrentSnap = CaptureCurrentInputSnapshot();
+
+	// Stop-stability observer. While the Pawn is in Stopped we tick the
+	// observer so the overlay can surface PASS/FAIL after at least one
+	// full refresh interval. The observer is pure and never re-enables
+	// the simulation Tick.
+	if (Lifecycle == ECyclingPrototypeLifecycle::Stopped
+		|| Lifecycle == ECyclingPrototypeLifecycle::Error
+		|| Lifecycle == ECyclingPrototypeLifecycle::Finished)
+	{
+		// Already stopped; observer still receives ticks.
+	}
+	if (bEnableGuidedAcceptance)
+	{
+		GuidedAcceptance = CyclingDiagnostics::ObserveStopStability(
+			GuidedAcceptance, CurrentSnap);
+	}
+
+	// Always advance the guided acceptance observer when the lifecycle
+	// reaches Finished (not via a command, but via the runtime state
+	// itself). The observer otherwise only advances on user commands.
+	if (bEnableGuidedAcceptance
+		&& Lifecycle == ECyclingPrototypeLifecycle::Finished
+		&& GuidedAcceptance.CurrentStep != ECyclingGuidedAcceptanceStep::Finished)
+	{
+		FCyclingGuidedAcceptanceState Next = GuidedAcceptance;
+		Next.CurrentStep = ECyclingGuidedAcceptanceStep::Finished;
+		Next.StepStatus = TEXT("PASS");
+		Next.StepNote = TEXT("Route end reached");
+		GuidedAcceptance = Next;
+	}
+
+	const double RouteLengthM = CachedSplineLengthCm
+		/ CyclingPrototypePawnInternal::MetresToCentimetres;
+	const int32 CompletedStepsShown = (LastCompletedSteps < 0)
+		? 0 : LastCompletedSteps;
+
+	const FCyclingDiagnosticsSnapshot Snapshot =
+		CyclingDiagnostics::MakeSnapshot(
+			CyclingDiagnostics::MapLifecycle(static_cast<int32>(Lifecycle)),
+			CurrentSnap.PowerW,
+			CurrentSnap.CadenceRpm,
+			Session.GetSimulationState(),
+			CompletedStepsShown,
+			Session.GetAccumulatedTimeS(),
+			RouteLengthM,
+			LastError,
+			PowerStep,
+			CadenceStep,
+			LastInputFeedback);
+
+	const FString OverlayText = CyclingDiagnostics::FormatOverlay(
+		Snapshot, GuidedAcceptance, bEnableGuidedAcceptance);
+
+	// Single stable keyed message. TimeToDisplay slightly larger than
+	// the refresh interval so a single missed frame never produces a
+	// flicker. Key is the fixed non-INDEX_NONE YACS_DIAGNOSTIC_OVERLAY_KEY
+	// so this entry is replaced rather than appended.
+	GEngine->AddOnScreenDebugMessage(
+		static_cast<uint64>(YACS_DIAGNOSTIC_OVERLAY_KEY),
+		CyclingPrototypePawnInternal::DiagnosticRefreshIntervalS * 1.5f + 0.1f,
+		FColor::Yellow,
+		OverlayText);
+}
 
 void ACyclingPrototypePawn::RegisterDefaultMappingContext()
 {
@@ -458,50 +633,33 @@ void ACyclingPrototypePawn::SetupPlayerInputComponent(UInputComponent* PlayerInp
 
 namespace CyclingPrototypePawnInputInternal
 {
-	// Common delegate helper: try to apply a step operation on the
-	// session. Logs a single useful warning on failure and never mutates
-	// any state on failure (the session / controller is transactional).
-	template <typename StepOp>
-	void DispatchStep(
-		ACyclingPrototypePawn* Pawn,
-		const TCHAR* OpName,
-		StepOp Op)
-	{
-		if (!Pawn)
-		{
-			return;
-		}
-		FString Error;
-		if (!Op(Error))
-		{
-			UE_LOG(LogCyclingPrototypePawn, Warning,
-				TEXT("Pawn '%s' input '%s' rejected: %s"),
-				*Pawn->GetName(), OpName, *Error);
-		}
-	}
+	// Reserved for future input adapters that need a single-step
+	// logging fallback. The current Stage 2 prototype routes every
+	// command through ACyclingPrototypePawn::RecordCommandFeedback,
+	// which logs rejections through the session itself.
 }
 
 void ACyclingPrototypePawn::HandlePowerIncrease(const FInputActionValue& /*Value*/)
 {
-	CyclingPrototypePawnInputInternal::DispatchStep(this, TEXT("PowerIncrease"),
+	RecordCommandFeedback(ECyclingInputCommand::PowerIncrease,
 		[this](FString& Err) { return Session.TryIncreasePower(Err); });
 }
 
 void ACyclingPrototypePawn::HandlePowerDecrease(const FInputActionValue& /*Value*/)
 {
-	CyclingPrototypePawnInputInternal::DispatchStep(this, TEXT("PowerDecrease"),
+	RecordCommandFeedback(ECyclingInputCommand::PowerDecrease,
 		[this](FString& Err) { return Session.TryDecreasePower(Err); });
 }
 
 void ACyclingPrototypePawn::HandleCadenceIncrease(const FInputActionValue& /*Value*/)
 {
-	CyclingPrototypePawnInputInternal::DispatchStep(this, TEXT("CadenceIncrease"),
+	RecordCommandFeedback(ECyclingInputCommand::CadenceIncrease,
 		[this](FString& Err) { return Session.TryIncreaseCadence(Err); });
 }
 
 void ACyclingPrototypePawn::HandleCadenceDecrease(const FInputActionValue& /*Value*/)
 {
-	CyclingPrototypePawnInputInternal::DispatchStep(this, TEXT("CadenceDecrease"),
+	RecordCommandFeedback(ECyclingInputCommand::CadenceDecrease,
 		[this](FString& Err) { return Session.TryDecreaseCadence(Err); });
 }
 
@@ -512,23 +670,49 @@ void ACyclingPrototypePawn::HandleStartRide(const FInputActionValue& /*Value*/)
 	// The existing StartRide implementation enforces this with a
 	// switch on Lifecycle. Calling it from Finished is intentionally a
 	// no-op so the user must press Restart to recover from overshoot.
-	const ECyclingPrototypeLifecycle Before = Lifecycle;
-	StartRide();
-	if (Before == ECyclingPrototypeLifecycle::Finished &&
-		Lifecycle == ECyclingPrototypeLifecycle::Finished)
-	{
-		UE_LOG(LogCyclingPrototypePawn, Log,
-			TEXT("Pawn '%s' StartRide ignored in Finished state; RestartRide is required."),
-			*GetName());
-	}
+	//
+	// The actual StartRide call is performed inside the
+	// RecordCommandFeedback closure so the BEFORE/AFTER snapshot pair
+	// is captured around it. The closure returns true iff the
+	// lifecycle actually transitioned.
+	RecordCommandFeedback(ECyclingInputCommand::StartOrResume,
+		[this](FString& Err) -> bool
+		{
+			const ECyclingPrototypeLifecycle BeforeLifecycle = Lifecycle;
+			StartRide();
+			Err.Reset();
+			if (BeforeLifecycle == ECyclingPrototypeLifecycle::Finished
+				&& Lifecycle == ECyclingPrototypeLifecycle::Finished)
+			{
+				UE_LOG(LogCyclingPrototypePawn, Log,
+					TEXT("Pawn '%s' StartRide ignored in Finished state; RestartRide is required."),
+					*GetName());
+			}
+			return Lifecycle != BeforeLifecycle
+				&& Lifecycle == ECyclingPrototypeLifecycle::Running;
+		});
 }
 
 void ACyclingPrototypePawn::HandleStopRide(const FInputActionValue& /*Value*/)
 {
-	StopRide();
+	RecordCommandFeedback(ECyclingInputCommand::Stop,
+		[this](FString& Err) -> bool
+		{
+			const ECyclingPrototypeLifecycle Before = Lifecycle;
+			StopRide();
+			Err.Reset();
+			return Lifecycle != Before && Lifecycle == ECyclingPrototypeLifecycle::Stopped;
+		});
 }
 
 void ACyclingPrototypePawn::HandleRestartRide(const FInputActionValue& /*Value*/)
 {
-	RestartRide();
+	RecordCommandFeedback(ECyclingInputCommand::Restart,
+		[this](FString& Err) -> bool
+		{
+			const ECyclingPrototypeLifecycle Before = Lifecycle;
+			RestartRide();
+			Err.Reset();
+			return Lifecycle == ECyclingPrototypeLifecycle::Running;
+		});
 }
