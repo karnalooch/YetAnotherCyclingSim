@@ -558,8 +558,10 @@ bool FCyclingDiagnosticsPawnFinishedIgnoredTest::RunTest(const FString& Paramete
 	Pawn->InitializeRide();
 	Pawn->StartRide();
 
-	// Drive to Finished.
-	for (int32 i = 0; i < 200; ++i)
+	// Drive to Finished. Stage 3D uses the Alpine Journey context with
+	// finish at 10 000 m; at default rider speed (~9 m/s) ~2500 s of
+	// simulated time is needed, i.e. up to 5000 ticks at 0.5 s.
+	for (int32 i = 0; i < 5000; ++i)
 	{
 		Pawn->Tick(0.5f);
 		if (Pawn->GetLifecycle() == ECyclingPrototypeLifecycle::Finished)
