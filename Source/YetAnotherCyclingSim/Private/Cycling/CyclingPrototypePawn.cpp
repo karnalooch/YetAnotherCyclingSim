@@ -435,6 +435,58 @@ void ACyclingPrototypePawn::EnterErrorState(const FString& Message)
 	UE_LOG(LogCyclingPrototypePawn, Warning, TEXT("Pawn '%s' Error: %s"), *GetName(), *Message);
 }
 
+bool ACyclingPrototypePawn::TeleportForProofCapture(double DistanceM)
+{
+	if (!IsValid(CachedSpline))
+	{
+		UE_LOG(LogCyclingPrototypePawn, Warning,
+			TEXT("TeleportForProofCapture: no cached spline; refusing."));
+		return false;
+	}
+	if (!FMath::IsFinite(DistanceM))
+	{
+		UE_LOG(LogCyclingPrototypePawn, Warning,
+			TEXT("TeleportForProofCapture: non-finite DistanceM; refusing."));
+		return false;
+	}
+	if (CachedSplineLengthCm <= 0.0)
+	{
+		UE_LOG(LogCyclingPrototypePawn, Warning,
+			TEXT("TeleportForProofCapture: spline length non-positive; refusing."));
+		return false;
+	}
+
+	// Only authorised unit conversion: metres -> Unreal centimetres for the
+	// spline query. Authoritative state is never rewritten.
+	const double RawCm = DistanceM * CyclingPrototypePawnInternal::MetresToCentimetres;
+	const double DistanceCm = FMath::Clamp(RawCm, 0.0, CachedSplineLengthCm);
+
+	const FVector SplineLocation = CachedSpline->GetLocationAtDistanceAlongSpline(
+		static_cast<float>(DistanceCm), ESplineCoordinateSpace::World);
+	const FRotator SplineRotation = CachedSpline->GetRotationAtDistanceAlongSpline(
+		static_cast<float>(DistanceCm), ESplineCoordinateSpace::World);
+
+	SetActorLocationAndRotation(
+		SplineLocation,
+		SplineRotation,
+		/*bSweep=*/false,
+		/*OutSweepHitResult=*/nullptr,
+		ETeleportType::TeleportPhysics);
+
+	const double ActualDistanceM =
+		static_cast<double>(DistanceCm) / CyclingPrototypePawnInternal::MetresToCentimetres;
+
+	UE_LOG(LogCyclingPrototypePawn, Display,
+		TEXT("TeleportForProofCapture: requested=%.3f m actual=%.3f m spline_cm=%.3f session_distance_m=%.6f lifecycle=%d"),
+		DistanceM,
+		ActualDistanceM,
+		CachedSplineLengthCm,
+		Session.GetSimulationState().DistanceM,
+		static_cast<int32>(Lifecycle));
+
+	return true;
+}
+
 // ===========================================================
 // Stage 2 Enhanced Input (issue #47).
 //
