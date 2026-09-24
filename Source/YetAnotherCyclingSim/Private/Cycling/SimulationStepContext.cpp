@@ -19,7 +19,7 @@ namespace CyclingSimulation
 	{
 		OutError.Reset();
 
-		if (InEnvironmentSections.IsEmpty())
+		if (InEnvironmentSections.Num() == 0)
 		{
 			OutError = TEXT("environment sections must contain at least one section");
 			return false;
