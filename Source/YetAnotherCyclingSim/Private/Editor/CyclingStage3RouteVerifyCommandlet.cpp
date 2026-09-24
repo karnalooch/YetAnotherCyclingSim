@@ -4,6 +4,7 @@
 
 #include "Cycling/AlpineJourneyGeometry.h"
 #include "Cycling/CyclingPrototypePawn.h"
+#include "Cycling/Stage3PrototypeTerrainActor.h"
 
 #include "Components/SplineComponent.h"
 #include "Engine/World.h"
@@ -61,8 +62,10 @@ int32 UCyclingStage3RouteVerifyCommandlet::Main(const FString& Params)
 	AActor* RouteActor = nullptr;
 	USplineComponent* Spline = nullptr;
 	ACyclingPrototypePawn* Pawn = nullptr;
+	AStage3PrototypeTerrainActor* TerrainActor = nullptr;
 	int32 RouteActorCount = 0;
 	int32 PawnCount = 0;
+	int32 TerrainActorCount = 0;
 
 	for (AActor* Actor : MapWorld->GetCurrentLevel()->Actors)
 	{
@@ -76,6 +79,14 @@ int32 UCyclingStage3RouteVerifyCommandlet::Main(const FString& Params)
 		{
 			++PawnCount;
 			Pawn = CandidatePawn;
+			continue;
+		}
+
+		if (AStage3PrototypeTerrainActor* CandidateTerrain =
+			Cast<AStage3PrototypeTerrainActor>(Actor))
+		{
+			++TerrainActorCount;
+			TerrainActor = CandidateTerrain;
 			continue;
 		}
 
@@ -116,6 +127,19 @@ int32 UCyclingStage3RouteVerifyCommandlet::Main(const FString& Params)
 			TEXT("Pawn RouteActor does not reference the verified Stage 3 route actor."));
 		return 1;
 	}
+	if (TerrainActorCount != 1 || !IsValid(TerrainActor))
+	{
+		UE_LOG(LogCyclingStage3RouteVerify, Error,
+			TEXT("Expected one Stage 3 prototype terrain actor; found %d."),
+			TerrainActorCount);
+		return 1;
+	}
+	if (!TerrainActor->GetActorTransform().Equals(RouteActor->GetActorTransform(), 0.01))
+	{
+		UE_LOG(LogCyclingStage3RouteVerify, Error,
+			TEXT("Prototype terrain actor transform does not match route actor transform."));
+		return 1;
+	}
 
 	FRouteGeometryProfile ExpectedGeometry;
 	FString Error;
@@ -151,16 +175,7 @@ int32 UCyclingStage3RouteVerifyCommandlet::Main(const FString& Params)
 		return 1;
 	}
 
-	const int32 RepresentativeIndices[] = {
-		0,
-		65,
-		100,
-		535,
-		755,
-		925,
-		1000,
-	};
-	for (const int32 Index : RepresentativeIndices)
+	for (int32 Index = 0; Index < ActualPointCount; ++Index)
 	{
 		const FVector ActualLocalCm =
 			Spline->GetLocationAtSplinePoint(
@@ -187,6 +202,14 @@ int32 UCyclingStage3RouteVerifyCommandlet::Main(const FString& Params)
 				TEXT("Spline point %d is not Linear; exact geometry preservation is required."), Index);
 			return 1;
 		}
+	}
+
+	if (!TerrainActor->ValidateAgainstGeometry(ExpectedGeometry, Error))
+	{
+		UE_LOG(LogCyclingStage3RouteVerify, Error,
+			TEXT("Prototype terrain validation failed after reload: %s"),
+			*Error);
+		return 1;
 	}
 
 	for (double DistanceCm = 0.0;
@@ -217,6 +240,12 @@ int32 UCyclingStage3RouteVerifyCommandlet::Main(const FString& Params)
 		*RouteActor->GetName(),
 		ActualPointCount,
 		ActualLengthCm / MetresToCentimetres);
+	UE_LOG(LogCyclingStage3RouteVerify, Display,
+		TEXT("Stage 3 prototype world verified after reload: road=%d terrain=%d forest_props=%d mountain_props=%d."),
+		TerrainActor->GetRoadInstanceCount(),
+		TerrainActor->GetTerrainInstanceCount(),
+		TerrainActor->GetForestPropInstanceCount(),
+		TerrainActor->GetMountainPropInstanceCount());
 	UE_LOG(LogCyclingStage3RouteVerify, Display,
 		TEXT("CyclingStage3RouteVerifyCommandlet: PASS."));
 	return 0;

@@ -7,7 +7,7 @@
 #include "Commandlets/Commandlet.h"
 #include "CyclingStage3RouteVerifyCommandlet.generated.h"
 
-// Fresh-process verifier for the Stage 3C route asset.
+// Fresh-process verifier for the Stage 3 route + Stage 3E prototype world.
 // Run after CyclingStage3RouteSetup so save/reopen persistence is proved by
 // loading the binary map again in a separate editor commandlet process.
 UCLASS()

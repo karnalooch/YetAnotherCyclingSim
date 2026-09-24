@@ -269,6 +269,24 @@ public:
 	// "manual acceptance" block is omitted.
 	void SetGuidedAcceptanceEnabled(bool bEnabled);
 
+	// --- Stage 3E visual environment proof fixture ---
+
+	// Stage 3E Visual Environment Proof-only helper.
+	//
+	// Sets the Pawn's visible Actor transform to the spline pose at
+	// DistanceM WITHOUT mutating the authoritative Session state or the
+	// route event history. Clamps DistanceM to [0, CachedSplineLengthCm /
+	// 100.0]. This is a presentation-only fixture used exclusively by the
+	// CyclingRuntime.Stage3VisualEnvironmentProof automation test to take
+	// route-attributable screenshots; the next Tick (if enabled) will
+	// overwrite the visible transform with the authoritative pose.
+	//
+	// Returns true and emits a "TeleportForProofCapture" log line when a
+	// finite spline pose was sampled and the Actor transform was updated.
+	// Returns false (and leaves state untouched) when no spline is cached,
+	// the spline length is non-positive, or DistanceM is non-finite.
+	bool TeleportForProofCapture(double DistanceM);
+
 protected:
 	// APawn / AActor overrides.
 	virtual void BeginPlay() override;

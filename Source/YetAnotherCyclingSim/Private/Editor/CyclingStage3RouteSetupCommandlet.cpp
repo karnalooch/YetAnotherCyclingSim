@@ -4,6 +4,7 @@
 
 #include "Cycling/AlpineJourneyGeometry.h"
 #include "Cycling/CyclingPrototypePawn.h"
+#include "Cycling/Stage3PrototypeTerrainActor.h"
 
 #include "Components/SplineComponent.h"
 #include "Engine/World.h"
@@ -146,6 +147,53 @@ int32 UCyclingStage3RouteSetupCommandlet::Main(const FString& Params)
 	// instance data and the new points are dropped on save+reload.
 	Spline->SetOverrideConstructionScript(true);
 
+	AStage3PrototypeTerrainActor* TerrainActor = nullptr;
+	int32 TerrainActorCount = 0;
+	for (AActor* Actor : MapWorld->GetCurrentLevel()->Actors)
+	{
+		if (AStage3PrototypeTerrainActor* Candidate =
+			Cast<AStage3PrototypeTerrainActor>(Actor))
+		{
+			++TerrainActorCount;
+			TerrainActor = Candidate;
+		}
+	}
+
+	if (TerrainActorCount > 1)
+	{
+		UE_LOG(LogCyclingStage3RouteSetup, Error,
+			TEXT("Expected at most one Stage 3 prototype terrain actor; found %d."),
+			TerrainActorCount);
+		return 1;
+	}
+
+	if (!IsValid(TerrainActor))
+	{
+		FActorSpawnParameters SpawnParameters;
+		SpawnParameters.OverrideLevel = MapWorld->GetCurrentLevel();
+		SpawnParameters.Name = TEXT("Stage3PrototypeTerrain");
+		TerrainActor = MapWorld->SpawnActor<AStage3PrototypeTerrainActor>(
+			AStage3PrototypeTerrainActor::StaticClass(),
+			RouteActor->GetActorTransform(),
+			SpawnParameters);
+	}
+
+	if (!IsValid(TerrainActor))
+	{
+		UE_LOG(LogCyclingStage3RouteSetup, Error,
+			TEXT("Failed to create Stage 3 prototype terrain actor."));
+		return 1;
+	}
+
+	TerrainActor->SetActorTransform(RouteActor->GetActorTransform());
+	if (!TerrainActor->RebuildFromGeometry(Geometry, Error))
+	{
+		UE_LOG(LogCyclingStage3RouteSetup, Error,
+			TEXT("Failed to rebuild Stage 3 prototype terrain: %s"),
+			*Error);
+		return 1;
+	}
+
 	const double ExpectedLengthCm =
 		Geometry.GetTotalLengthM() * MetresToCentimetres;
 	const double ActualLengthCm =
@@ -183,6 +231,12 @@ int32 UCyclingStage3RouteSetupCommandlet::Main(const FString& Params)
 		*RouteActor->GetName(),
 		Spline->GetNumberOfSplinePoints(),
 		ActualLengthCm / MetresToCentimetres);
+	UE_LOG(LogCyclingStage3RouteSetup, Display,
+		TEXT("Stage 3 prototype world saved: road=%d terrain=%d forest_props=%d mountain_props=%d."),
+		TerrainActor->GetRoadInstanceCount(),
+		TerrainActor->GetTerrainInstanceCount(),
+		TerrainActor->GetForestPropInstanceCount(),
+		TerrainActor->GetMountainPropInstanceCount());
 	UE_LOG(LogCyclingStage3RouteSetup, Display,
 		TEXT("CyclingStage3RouteSetupCommandlet: done."));
 	return 0;

@@ -79,7 +79,9 @@ param(
     [switch] $SkipBuild,
     [switch] $SkipInsightsAnalysis,
     [switch] $SkipUestats,
-    [string] $InsightsPath
+    [string] $InsightsPath,
+    [string] $ExpectedBranch,
+    [string] $ExpectedHead
 )
 
 Set-StrictMode -Version Latest
@@ -92,9 +94,19 @@ if (-not $ArtifactRoot) { $ArtifactRoot = Join-Path -Path $RepoRoot -ChildPath '
 if (-not (Test-Path -LiteralPath $ArtifactRoot)) { New-Item -ItemType Directory -Path $ArtifactRoot -Force | Out-Null }
 $ArtifactRoot = (Resolve-Path -LiteralPath $ArtifactRoot).Path
 
-# Reuse the preflight helper to discover the UE install.
+# Reuse the preflight helper to discover the UE install. Resolve expected
+# branch/HEAD from the current worktree unless the caller pins them explicitly.
 $PreflightScript = Join-Path -Path $RepoRoot -ChildPath 'scripts/ue/Preflight-YacsProof.ps1'
-$Context = & $PreflightScript -RepoRoot $RepoRoot -ProjectPath $ProjectPath -ArtifactRoot $ArtifactRoot
+if (-not $ExpectedBranch) { $ExpectedBranch = (& git -C $RepoRoot branch --show-current).Trim() }
+if (-not $ExpectedHead) { $ExpectedHead = (& git -C $RepoRoot rev-parse HEAD).Trim() }
+$PreflightArgs = @{
+    RepoRoot = $RepoRoot
+    ProjectPath = $ProjectPath
+    ArtifactRoot = $ArtifactRoot
+    ExpectedBranch = $ExpectedBranch
+    ExpectedHead = $ExpectedHead
+}
+$Context = & $PreflightScript @PreflightArgs
 if ($LASTEXITCODE -ne 0) { throw "Preflight failed." }
 
 if (-not $InsightsPath) {
@@ -259,13 +271,13 @@ $PawnFound       = $EditorLogText -match 'BikePlaceholder' -or $EditorLogText -m
 # Their presence is the authoritative proof that the placed Pawn exists
 # and is being exercised through StartRide / StopRide / RestartRide.
 $PerformanceSnapshots = ([regex]::Matches($EditorLogText, "PerformanceProof snapshot '")).Count
-# The 'post_restart' snapshot has the canonical coasting numbers
-# (entry speed 4.590098 m/s, entry distance 15.567393 m, entry elapsed
-# 5.000000 s) which match the documentation's expected post-Restart
-# trajectory from zero. Confirming this line is present proves the
-# Pawn was actually instantiated in the loaded L_CyclingTest world.
-$CoastingPattern   = 'speed_mps=4\.590098'
-$CoastingObserved  = $EditorLogText -match $CoastingPattern
+# Stage 3 makes grade route-dependent, so a historical exact flat-ground
+# speed is no longer a valid launch oracle. Structural lifecycle snapshots
+# prove the placed Pawn was actually driven through Restart and the final
+# post-restart horizon without coupling the harness to one physics number.
+$PostRestartObserved = $EditorLogText -match "PerformanceProof snapshot 'post_restart':"
+$FinalSnapshotObserved = $EditorLogText -match "PerformanceProof snapshot 'final':"
+$CoastingObserved = [bool]($PostRestartObserved -and $FinalSnapshotObserved)
 
 # --- (4) Insights analysis on the produced .utrace ----------------------
 
@@ -475,7 +487,7 @@ $Reasons  = @()
 if (-not $LoadedExpected)   { $HardFail = $true; $Reasons += "editor log does not confirm L_CyclingTest was loaded (likely wrong map URL or template fallback)" }
 if ($LoadedTemplate)        { $HardFail = $true; $Reasons += "editor log shows OpenWorld template fallback - map URL was rejected" }
 if ($PerformanceSnapshots -lt 5) { $HardFail = $true; $Reasons += ("editor log shows only {0} PerformanceProof snapshots - expected at least 5 (warmup, normal, paused, resumed, post_restart, final)" -f $PerformanceSnapshots) }
-if (-not $CoastingObserved) { $HardFail = $true; $Reasons += "editor log does not contain the post-Restart coasting entry speed (4.590098 m/s) - Pawn was not driven" }
+if (-not $CoastingObserved) { $HardFail = $true; $Reasons += "editor log does not contain both post_restart and final PerformanceProof snapshots - Pawn was not fully driven" }
 if (-not $TraceExists)      { $HardFail = $true; $Reasons += ".utrace was not produced" }
 if ($TraceSize -lt 1024)    { $HardFail = $true; $Reasons += (".utrace is suspiciously small ({0} bytes)" -f $TraceSize) }
 if (-not $CsvExists)        { $HardFail = $true; $Reasons += "per-frame CSV was not produced" }

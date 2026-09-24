@@ -134,8 +134,20 @@ if (-not $SkipBuild) {
         -ArgumentList $BuildArgs -NoNewWindow -PassThru -RedirectStandardOutput $BuildLog `
         -WorkingDirectory (Join-Path -Path $Context.EngineRoot -ChildPath 'Engine/Build/BatchFiles')
     $BuildProc.WaitForExit()
-    if ($BuildProc.ExitCode -ne 0) {
-        throw "Editor build failed with exit code $($BuildProc.ExitCode); see $BuildLog"
+    $BuildExit = $BuildProc.ExitCode
+    # PowerShell 5.1 Start-Process -PassThru can return an empty/null
+    # ExitCode on successful UBT runs even after WaitForExit(). Treat the
+    # build as successful when the log explicitly reports Succeeded.
+    if ($null -eq $BuildExit) {
+        if (Test-Path -LiteralPath $BuildLog) {
+            $BuildText = Get-Content -LiteralPath $BuildLog -Raw -ErrorAction SilentlyContinue
+            if ($BuildText -and ($BuildText -match 'Result: Succeeded')) {
+                $BuildExit = 0
+            }
+        }
+    }
+    if ($BuildExit -ne 0) {
+        throw "Editor build failed with exit code $BuildExit; see $BuildLog"
     }
     Write-Host "Editor build OK." -ForegroundColor Green
 } else {
@@ -179,7 +191,14 @@ $UATProc = Start-Process -FilePath $Context.UnrealEditorCmdPath `
     -ArgumentList $EditorArgs -NoNewWindow -PassThru -RedirectStandardOutput $RunLog
 $UATProc.WaitForExit()
 
-Write-Host ("Editor exit code: {0}" -f $UATProc.ExitCode)
+# Defer the PowerShell 5.1 Start-Process -PassThru null-ExitCode
+# normalization to AFTER the tally block. Referencing $Failed/$Errors/
+# $Discovered here would race against their initialization in the tally
+# section and could wrongly classify an unknown exit as success before
+# the report has been parsed.
+$EditorExit = $UATProc.ExitCode
+
+Write-Host ("Editor raw exit code: {0}" -f $EditorExit)
 
 # --- (4) Tally ------------------------------------------------------------
 
@@ -191,6 +210,8 @@ $Passed = 0
 $Failed = 0
 $Skipped = 0
 $Errors = 0
+$SucceededWithWarnings = 0
+$WarningsTotal = 0
 
 # The RunUAT export writes index.json with the report metadata and a
 # per-test entry. We tolerate both "reportExportPath/index.json" and the
@@ -217,26 +238,61 @@ if ($IndexPath) {
         } else {
             $Tests = @()
         }
+        # The exporter splits the top-level counters between "succeeded"
+        # (zero warnings) and "succeededWithWarnings" (state=Success but
+        # warnings>0). The per-test entries are the source of truth: any
+        # test with state=Success counts as a pass regardless of warnings.
+        # We surface the warning breakdown separately instead of rolling
+        # warning-bearing successes into a "failed" bucket.
         foreach ($t in $Tests) {
             $Discovered += 1
             $state = "$($t.state)"
+            $warnCount = 0
+            if ($t.PSObject.Properties.Name -contains 'warnings' -and ($t.warnings -is [int] -or $t.warnings -is [int64])) {
+                $warnCount = [int] $t.warnings
+            }
+            $WarningsTotal += $warnCount
             switch -Regex ($state) {
-                '^Success|^Pass'    { $Passed   += 1 }
+                '^Success|^Pass'    {
+                    $Passed += 1
+                    if ($warnCount -gt 0) { $SucceededWithWarnings += 1 }
+                }
                 '^Fail'             { $Failed   += 1 }
                 '^Skip'             { $Skipped  += 1 }
                 default             { $Errors   += 1 }
             }
         }
-        # Some exporters write top-level succeeded/failed counters too.
-        if ($Index.PSObject.Properties.Name -contains 'succeeded' -and $Index.succeeded -is [int]) {
-            # Trust the explicit counters when present and reasonable.
-            $Passed = [int] $Index.succeeded
-        }
-        if ($Index.PSObject.Properties.Name -contains 'failed' -and $Index.failed -is [int]) {
-            $Failed = [int] $Index.failed
+        # Sanity-check the per-entry count against the explicit top-level
+        # counters when both are present. If a real mismatch appears we
+        # record it but keep the per-entry numbers as authoritative so
+        # the proof never weakens failure detection.
+        if ($Index.PSObject.Properties.Name -contains 'succeeded' -and $Index.succeeded -is [int] `
+            -and $Index.PSObject.Properties.Name -contains 'succeededWithWarnings' -and $Index.succeededWithWarnings -is [int]) {
+            $CounterTotal = ([int] $Index.succeeded) + ([int] $Index.succeededWithWarnings)
+            if ($CounterTotal -ne $Passed) {
+                Write-Warning ("index.json top-level succeeded+succeededWithWarnings={0} does not match per-entry Success count={1}; keeping per-entry numbers as authoritative." -f $CounterTotal, $Passed)
+            }
         }
     } catch {
         Write-Warning "Could not parse index.json: $_"
+    }
+}
+
+# --- PowerShell 5.1 Start-Process null-ExitCode fallback ------------------
+#
+# Only performed AFTER $Discovered/$Passed/$Failed/$Skipped/$Errors are
+# known. Treat the editor as successful when:
+#   - at least one test was actually discovered, AND
+#   - no failures and no per-entry errors.
+# Otherwise an unknown editor exit is conservatively treated as failure.
+if ($null -eq $EditorExit) {
+    if ($Discovered -gt 0 -and $Failed -eq 0 -and $Errors -eq 0) {
+        Write-Host "Editor ExitCode unavailable under Windows PowerShell; Automation report is green, treating exit as 0." -ForegroundColor Yellow
+        $EditorExit = 0
+    }
+    else {
+        Write-Host "Editor ExitCode unavailable and Automation report is not demonstrably green." -ForegroundColor Red
+        $EditorExit = 1
     }
 }
 
@@ -246,10 +302,12 @@ $Summary = [ordered]@{
     ProjectPath  = $ProjectPath
     Branch       = $Context.Branch
     Head         = $Context.Head
-    UatExitCode  = $UATProc.ExitCode
+    UatExitCode  = $EditorExit
     IndexPath    = $IndexPath
     Discovered   = $Discovered
     Passed       = $Passed
+    SucceededWithWarnings = $SucceededWithWarnings
+    WarningsTotal = $WarningsTotal
     Failed       = $Failed
     Skipped      = $Skipped
     Errors       = $Errors
@@ -265,9 +323,12 @@ $sb = New-Object System.Text.StringBuilder
 [void]$sb.AppendLine(("Branch       : {0}" -f $Summary.Branch))
 [void]$sb.AppendLine(("Head         : {0}" -f $Summary.Head))
 [void]$sb.AppendLine(("UAT exit     : {0}" -f $Summary.UatExitCode))
+
 [void]$sb.AppendLine(("Index path   : {0}" -f $Summary.IndexPath))
 [void]$sb.AppendLine(("Discovered   : {0}" -f $Summary.Discovered))
 [void]$sb.AppendLine(("Passed       : {0}" -f $Summary.Passed))
+[void]$sb.AppendLine(("  of which with warnings : {0}" -f $Summary.SucceededWithWarnings))
+[void]$sb.AppendLine(("Total warnings           : {0}" -f $Summary.WarningsTotal))
 [void]$sb.AppendLine(("Failed       : {0}" -f $Summary.Failed))
 [void]$sb.AppendLine(("Skipped      : {0}" -f $Summary.Skipped))
 [void]$sb.AppendLine(("Errors       : {0}" -f $Summary.Errors))
@@ -277,17 +338,17 @@ $sb.ToString() | Set-Content -LiteralPath (Join-Path -Path $ArtifactRoot -ChildP
 
 # --- Exit policy ----------------------------------------------------------
 
-if ($UATProc.ExitCode -ne 0 -or $Failed -gt 0 -or $Errors -gt 0) {
+if ($EditorExit -ne 0 -or $Failed -gt 0 -or $Errors -gt 0) {
     Write-Host ""
     Write-Host "PROOF FAILED." -ForegroundColor Red
-    Write-Host ("Discovered={0} Passed={1} Failed={2} Skipped={3} Errors={4} UATExitCode={5}" -f `
-        $Discovered, $Passed, $Failed, $Skipped, $Errors, $UATProc.ExitCode)
+    Write-Host ("Discovered={0} Passed={1} (withWarnings={2}) Failed={3} Skipped={4} Errors={5} UATExitCode={6}" -f `
+        $Discovered, $Passed, $SucceededWithWarnings, $Failed, $Skipped, $Errors, $EditorExit)
     Write-Host ("See {0} for full log." -f $RunLog)
     exit 1
 }
 
 Write-Host ""
 Write-Host "PROOF PASSED." -ForegroundColor Green
-Write-Host ("Discovered={0} Passed={1} Failed={2} Skipped={3} Errors={4}" -f `
-    $Discovered, $Passed, $Failed, $Skipped, $Errors)
+Write-Host ("Discovered={0} Passed={1} (withWarnings={2}) WarningsTotal={3} Failed={4} Skipped={5} Errors={6}" -f `
+    $Discovered, $Passed, $SucceededWithWarnings, $WarningsTotal, $Failed, $Skipped, $Errors)
 exit 0
