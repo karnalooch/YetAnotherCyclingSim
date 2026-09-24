@@ -31,6 +31,7 @@ param(
     [string] $ArtifactRoot,
     [Parameter(Mandatory=$true)] [string] $ExpectedBranch,
     [Parameter(Mandatory=$true)] [string] $ExpectedHead,
+    [switch] $SkipBuild,
     [switch] $SkipPerformance
 )
 
@@ -79,6 +80,7 @@ $BaseProofArgs = @{
     ExpectedHead = $ExpectedHead
     TestFilter = $TestFilter
 }
+if ($SkipBuild) { $BaseProofArgs['SkipBuild'] = $true }
 & $BaseProof @BaseProofArgs
 if ($LASTEXITCODE -ne 0) {
     throw "Stage 3E build/Automation proof failed with exit code $LASTEXITCODE"
@@ -153,6 +155,11 @@ if ($VerifyText -notmatch 'Stage 3 prototype world verified after reload') {
 
 Write-Host ''
 Write-Host '[4/5] Map Check...' -ForegroundColor Cyan
+# UE 5.8 writes the main editor log to <RepoRoot>/Saved/Logs/
+# regardless of stdout redirection. Use -AbsLog to redirect the engine
+# log to a path we control so the summary parser sees the result.
+$MapEditorLog = Join-Path -Path $ArtifactRoot -ChildPath 'map_check_editor.log'
+if (Test-Path -LiteralPath $MapEditorLog) { Remove-Item -LiteralPath $MapEditorLog -Force }
 $MapCheckErr = $MapCheckLog + '.stderr'
 $MapArgs = @(
     $ProjectPath
@@ -163,15 +170,26 @@ $MapArgs = @(
     '-NoSplash'
     '-NoP4'
     '-log'
+    ('-AbsLog=' + $MapEditorLog)
     '-execcmds="MAP CHECK;QUIT"'
 )
 $MapProc = Start-Process -FilePath $EditorCmd -ArgumentList $MapArgs -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $MapCheckLog -RedirectStandardError $MapCheckErr
 $MapProc.WaitForExit()
-if ($MapProc.ExitCode -ne 0) {
-    throw "Map Check editor process failed with exit code $($MapProc.ExitCode)."
+# PowerShell 5.1 Start-Process can return a null ExitCode for UE editor
+# even on success; defer to the report-based check below.
+$MapExit = $MapProc.ExitCode
+if ($null -eq $MapExit) {
+    if (Test-Path -LiteralPath $MapEditorLog) { $MapExit = 0 }
+    else { $MapExit = 1 }
+}
+if ($MapExit -ne 0) {
+    throw "Map Check editor process failed with exit code $MapExit; see $MapEditorLog"
 }
 
-$MapText = Get-Content -LiteralPath $MapCheckLog -Raw -ErrorAction Stop
+if (-not (Test-Path -LiteralPath $MapEditorLog)) {
+    throw "Map Check editor log was not produced at $MapEditorLog"
+}
+$MapText = Get-Content -LiteralPath $MapEditorLog -Raw -ErrorAction Stop
 $MapMatches = [regex]::Matches(
     $MapText,
     'Map check complete:\s*(\d+)\s+Error\(s\),\s*(\d+)\s+Warning\(s\)',
