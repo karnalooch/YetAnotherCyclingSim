@@ -10,6 +10,7 @@ namespace CyclingSimulation
 {
 	enum class ESimulationBoundaryKind : uint8
 	{
+		Start,
 		Sector,
 		Finish,
 	};
@@ -62,7 +63,10 @@ namespace CyclingSimulation
 
 		// Observes one successfully-computed fixed step and returns any route
 		// boundary crossings attributable to that step. Crossing semantics are:
-		// PreStepState.DistanceM < boundary <= PostStepState.DistanceM.
+		// - Start at 0 m: emitted on the first forward step whose pre-step
+		//   distance is exactly 0 m;
+		// - other boundaries: PreStepState.DistanceM < boundary <=
+		//   PostStepState.DistanceM.
 		//
 		// Setting bOutStopAfterStep asks the runner to commit this step and stop
 		// processing further fixed steps from the same frame batch. The runner
@@ -95,6 +99,7 @@ namespace CyclingSimulation
 		// - Id must be non-empty after trimming;
 		// - distances must be strictly increasing;
 		// - Ids must be unique;
+		// - Start boundaries are allowed only at exactly 0 m;
 		// - only Finish boundaries may request bStopAfterCrossing.
 		//
 		// Configuration is transactional. On failure the previous valid
