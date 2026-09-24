@@ -33,13 +33,29 @@ namespace Stage3PrototypeTerrainInternal
 	constexpr double MountainPropSpacingM = 250.0;
 	constexpr double MountainPropLateralM = 42.0;
 
+	bool IsFiniteVector(const FVector& Value)
+	{
+		return FMath::IsFinite(Value.X)
+			&& FMath::IsFinite(Value.Y)
+			&& FMath::IsFinite(Value.Z);
+	}
+
+	bool IsFiniteQuat(const FQuat& Value)
+	{
+		return FMath::IsFinite(Value.X)
+			&& FMath::IsFinite(Value.Y)
+			&& FMath::IsFinite(Value.Z)
+			&& FMath::IsFinite(Value.W);
+	}
+
 	bool IsFiniteTransform(const FTransform& Transform)
 	{
 		const FVector Location = Transform.GetLocation();
 		const FVector Scale = Transform.GetScale3D();
 		const FQuat Rotation = Transform.GetRotation();
-		return Location.IsFinite()
-			&& Scale.IsFinite()
+		return IsFiniteVector(Location)
+			&& IsFiniteVector(Scale)
+			&& IsFiniteQuat(Rotation)
 			&& Rotation.IsNormalized()
 			&& Scale.X > 0.0
 			&& Scale.Y > 0.0
@@ -117,6 +133,7 @@ AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 
 	SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("SceneRoot"));
 	SetRootComponent(SceneRoot);
+	SceneRoot->SetMobility(EComponentMobility::Static);
 
 	RoadTiles = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("RoadTiles"));
 	RoadTiles->SetupAttachment(SceneRoot);

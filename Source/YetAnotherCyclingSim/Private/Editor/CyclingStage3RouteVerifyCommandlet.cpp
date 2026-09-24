@@ -175,16 +175,7 @@ int32 UCyclingStage3RouteVerifyCommandlet::Main(const FString& Params)
 		return 1;
 	}
 
-	const int32 RepresentativeIndices[] = {
-		0,
-		65,
-		100,
-		535,
-		755,
-		925,
-		1000,
-	};
-	for (const int32 Index : RepresentativeIndices)
+	for (int32 Index = 0; Index < ActualPointCount; ++Index)
 	{
 		const FVector ActualLocalCm =
 			Spline->GetLocationAtSplinePoint(

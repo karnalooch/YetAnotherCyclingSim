@@ -46,10 +46,10 @@ bool FStage3PrototypeTerrainBuildTest::RunTest(const FString& Parameters)
 			Terrain->GetRoadInstanceCount(), 1000);
 		TestEqual(TEXT("terrain support uses 50 m tile stride"),
 			Terrain->GetTerrainInstanceCount(), 200);
-		TestTrue(TEXT("forest progression props exist"),
-			Terrain->GetForestPropInstanceCount() > 0);
-		TestTrue(TEXT("high-mountain progression props exist"),
-			Terrain->GetMountainPropInstanceCount() > 0);
+		TestEqual(TEXT("forest progression prop count remains deterministic"),
+			Terrain->GetForestPropInstanceCount(), 24);
+		TestEqual(TEXT("high-mountain progression prop count remains deterministic"),
+			Terrain->GetMountainPropInstanceCount(), 30);
 
 		const int32 RoadCountBefore =
 			Terrain->GetRoadInstanceCount();
