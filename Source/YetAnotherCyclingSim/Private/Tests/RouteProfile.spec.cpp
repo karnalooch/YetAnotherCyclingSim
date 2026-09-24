@@ -1,6 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS
 
 #include "Misc/AutomationTest.h"
+#include "Math/UnrealMathUtility.h"
 
 #include "Cycling/AlpineJourneyRoute.h"
 #include "Cycling/RouteProfile.h"
