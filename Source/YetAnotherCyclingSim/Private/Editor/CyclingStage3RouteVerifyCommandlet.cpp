@@ -7,6 +7,7 @@
 
 #include "Components/SplineComponent.h"
 #include "Engine/World.h"
+#include "GameFramework/Actor.h"
 #include "UObject/Package.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogCyclingStage3RouteVerify, Log, All);
