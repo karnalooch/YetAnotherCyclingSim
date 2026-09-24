@@ -82,6 +82,11 @@ namespace Stage3RouteContextTests
 		if (bIncludeBoundaries)
 		{
 			Boundaries.Add(MakeBoundary(
+				TEXT("start"),
+				ESimulationBoundaryKind::Start,
+				0.0,
+				false));
+			Boundaries.Add(MakeBoundary(
 				TEXT("sector-a"),
 				ESimulationBoundaryKind::Sector,
 				0.02,
@@ -105,6 +110,11 @@ namespace Stage3RouteContextTests
 		Sections.Add(MakeSection(0.0, MakeEnvironment(0.0)));
 
 		TArray<FSimulationBoundaryDefinition> Boundaries;
+		Boundaries.Add(MakeBoundary(
+			TEXT("start"),
+			ESimulationBoundaryKind::Start,
+			0.0,
+			false));
 		Boundaries.Add(MakeBoundary(
 			TEXT("sector-a"),
 			ESimulationBoundaryKind::Sector,
@@ -208,12 +218,30 @@ bool FStage3RouteContextProviderSemanticsTest::RunTest(const FString& Parameters
 
 	FSimulationState Pre;
 	FSimulationState Post;
-	Pre.DistanceM = 0.01;
-	Post.DistanceM = 0.02;
+	Pre.DistanceM = 0.0;
+	Post.DistanceM = 0.01;
 	Post.ElapsedTimeS = 0.05;
 
 	TArray<FSimulationBoundaryCrossing> Crossings;
 	bool bStopAfterStep = false;
+	TestTrue(TEXT("start boundary observation succeeds"),
+		Provider.TryObserveCompletedStep(Pre, Post, Crossings, bStopAfterStep, Error));
+	TestEqual(TEXT("first forward step emits start once"), Crossings.Num(), 1);
+	if (Crossings.Num() == 1)
+	{
+		TestEqual(TEXT("start crossing id"), Crossings[0].Id, FString(TEXT("start")));
+		TestEqual(TEXT("start crossing kind"),
+			static_cast<int32>(Crossings[0].Kind),
+			static_cast<int32>(ESimulationBoundaryKind::Start));
+	}
+	TestFalse(TEXT("start crossing is non-terminal"), bStopAfterStep);
+
+	Pre = FSimulationState();
+	Post = FSimulationState();
+	Pre.DistanceM = 0.01;
+	Post.DistanceM = 0.02;
+	Post.ElapsedTimeS = 0.05;
+
 	TestTrue(TEXT("exact sector crossing observation succeeds"),
 		Provider.TryObserveCompletedStep(Pre, Post, Crossings, bStopAfterStep, Error));
 	TestEqual(TEXT("exact sector boundary emits once"), Crossings.Num(), 1);
@@ -439,13 +467,15 @@ bool FStage3RouteContextBoundaryCatchUpTest::RunTest(const FString& Parameters)
 			bBatchStopped,
 			Error));
 	TestTrue(TEXT("catch-up frame stops on terminal finish"), bBatchStopped);
-	TestEqual(TEXT("catch-up frame emits sector then finish"), BatchCrossings.Num(), 2);
-	if (BatchCrossings.Num() == 2)
+	TestEqual(TEXT("catch-up frame emits start, sector, then finish"), BatchCrossings.Num(), 3);
+	if (BatchCrossings.Num() == 3)
 	{
-		TestEqual(TEXT("first catch-up event is sector"),
-			BatchCrossings[0].Id, FString(TEXT("sector-a")));
-		TestEqual(TEXT("second catch-up event is finish"),
-			BatchCrossings[1].Id, FString(TEXT("finish")));
+		TestEqual(TEXT("first catch-up event is start"),
+			BatchCrossings[0].Id, FString(TEXT("start")));
+		TestEqual(TEXT("second catch-up event is sector"),
+			BatchCrossings[1].Id, FString(TEXT("sector-a")));
+		TestEqual(TEXT("third catch-up event is finish"),
+			BatchCrossings[2].Id, FString(TEXT("finish")));
 	}
 	TestTrue(TEXT("terminal stop preserves unprocessed accumulated frame time"),
 		BatchRemainingS >= FFixedStepSimulationRunner::FixedStepDtS);
