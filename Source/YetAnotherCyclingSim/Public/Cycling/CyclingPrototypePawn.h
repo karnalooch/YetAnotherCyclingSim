@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "Engine/EngineTypes.h"
 #include "Cycling/CyclingSimulationSession.h"
+#include "Cycling/CyclingDiagnostics.h"
 #include "CyclingPrototypePawn.generated.h"
 
 class USceneComponent;
@@ -151,6 +153,25 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Cycling|Components")
 	TObjectPtr<UCameraComponent> ValidationCamera;
 
+	// --- Stage 2 diagnostic overlay (issue #48) ---
+
+	// When true, a 4 Hz presentation-only timer refreshes one stable
+	// keyed GEngine->AddOnScreenDebugMessage entry showing authoritative
+	// runtime/input diagnostics, the controls legend, the last input
+	// feedback and the guided manual-acceptance prompt. The overlay is
+	// intentionally a development/test harness and is not the final
+	// Stage 5 HUD. Setting this to false stops the timer and clears
+	// the on-screen message without affecting the simulation.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cycling|Diagnostics")
+	bool bEnableDiagnosticOverlay = true;
+
+	// When true, the overlay additionally drives a presentation-only
+	// 7-step guided manual-acceptance flow. The flow OBSERVES normal
+	// user input and never issues gameplay commands on behalf of the
+	// tester (issue #48 rule #9).
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cycling|Diagnostics")
+	bool bEnableGuidedAcceptance = true;
+
 	// --- Lifecycle API ---
 
 	// Validates the route spline and configures the session with the
@@ -214,6 +235,30 @@ public:
 	// Cached spline length in Unreal centimetres. Returned by this method
 	// only for tests/diagnostics. Returns 0.0 when no spline is cached.
 	double GetCachedSplineLengthCm() const { return CachedSplineLengthCm; }
+
+	// --- Stage 2 diagnostic overlay (issue #48) ---
+
+	// Read-only access to the latest authoritative input snapshot
+	// (presentation-only mirror). Tests use this to assert the
+	// before/after behaviour without driving the timer.
+	const FCyclingInputSnapshot& GetLastInputSnapshot() const { return LastInputSnapshot; }
+
+	// Read-only access to the latest presentation-only feedback record.
+	const FCyclingLastInputFeedback& GetLastInputFeedback() const { return LastInputFeedback; }
+
+	// Read-only access to the current guided-acceptance observer
+	// state.
+	const FCyclingGuidedAcceptanceState& GetGuidedAcceptanceState() const { return GuidedAcceptance; }
+
+	// Enables or disables the diagnostic overlay at runtime. When
+	// disabled, the timer is stopped and the on-screen message is
+	// cleared; the simulation is unaffected.
+	void SetDiagnosticOverlayEnabled(bool bEnabled);
+
+	// Enables or disables the guided-acceptance observer at runtime.
+	// When disabled, the overlay continues to refresh but the
+	// "manual acceptance" block is omitted.
+	void SetGuidedAcceptanceEnabled(bool bEnabled);
 
 protected:
 	// APawn / AActor overrides.
@@ -302,4 +347,102 @@ private:
 	// Last useful diagnostic error (empty when healthy).
 	UPROPERTY(Transient)
 	FString LastError;
+
+	// --- Stage 2 diagnostic overlay state (issue #48) ---
+
+	// 4 Hz presentation-only timer that refreshes the on-screen
+	// overlay message. Timer is started in BeginPlay and cleared in
+	// EndPlay. It does NOT call TryAdvance; it only reads
+	// already-computed state.
+	FTimerHandle DiagnosticTimerHandle;
+
+	// Latest fixed-step counter (set by Tick). Used by the overlay
+	// to display "FIXED STEPS N". -1 before the first Tick.
+	int32 LastCompletedSteps = -1;
+
+	// Latest presentation-only snapshot of authoritative
+	// simulation/input state. Used by the overlay to format the LAST
+	// INPUT block; never fed back into the simulation.
+	FCyclingInputSnapshot LastInputSnapshot;
+
+	// Latest presentation-only feedback record. Updated in the input
+	// handlers around the existing FCyclingSimulationSession calls.
+	FCyclingLastInputFeedback LastInputFeedback;
+
+	// Latest guided-acceptance observer state.
+	FCyclingGuidedAcceptanceState GuidedAcceptance;
+
+	// Captures the current authoritative input snapshot into a
+	// pure-data struct.
+	FCyclingInputSnapshot CaptureCurrentInputSnapshot() const;
+
+	// Captures BEFORE state, runs the existing command, captures
+	// AFTER state and stores the resulting feedback record in
+	// LastInputFeedback. Also advances GuidedAcceptance. The command
+	// closure must not mutate state outside Session.*.
+	template <typename CommandOpT>
+	void RecordCommandFeedback(ECyclingInputCommand Command, CommandOpT&& CommandOp)
+	{
+		const FCyclingInputSnapshot Before = CaptureCurrentInputSnapshot();
+		FString Error;
+		(void)CommandOp(Error); // execute the actual command; result is captured in Before/After deltas
+		const FCyclingInputSnapshot After = CaptureCurrentInputSnapshot();
+
+		// Build the presentation-only feedback record from the
+		// authoritative BEFORE/AFTER pair.
+		const double PowerStep = Session.IsConfigured()
+			? Session.GetConfig().RiderInput.PowerStepW
+			: 10.0;
+		const double CadenceStep = Session.IsConfigured()
+			? Session.GetConfig().RiderInput.CadenceStepRpm
+			: 5.0;
+
+		FCyclingLastInputFeedback Built = CyclingDiagnostics::BuildLastInputFeedback(
+			Command, Before, After, PowerStep, CadenceStep);
+		LastInputFeedback = Built;
+		// Keep the public LastInputSnapshot in sync with After so
+		// external observers can read the current authoritative
+		// mirror without driving the timer.
+		LastInputSnapshot = After;
+
+		// Whenever the runtime enters Stopped (or already is
+		// Stopped), capture the StopEntrySnapshot so the stability
+		// observer has a stable reference. Capturing inside the
+		// RecordCommandFeedback pipeline guarantees the snapshot
+		// represents the authoritative state at the moment of
+		// transition, even when the guided-acceptance observer
+		// state machine is disabled or the Pawn was already
+		// Stopped.
+		if (After.Lifecycle == ECyclingDiagnosticsLifecycle::Stopped
+			&& Before.Lifecycle == ECyclingDiagnosticsLifecycle::Running)
+		{
+			GuidedAcceptance.StopEntrySnapshot = After;
+			GuidedAcceptance.StopStabilityObservedTicks = 0;
+			GuidedAcceptance.bStopStable = false;
+			GuidedAcceptance.StopStabilityStatus.Reset();
+		}
+
+		// Advance the guided-acceptance observer (presentation-only).
+		if (bEnableGuidedAcceptance)
+		{
+			GuidedAcceptance = CyclingDiagnostics::AdvanceGuidedAcceptance(
+				GuidedAcceptance, Built, After, /*bEnableGuidedAcceptance=*/true);
+		}
+	}
+
+	// Timer callback. Reads authoritative state, formats the overlay
+	// and updates the stable keyed GEngine debug message. Never
+	// mutates the simulation.
+	void RefreshDiagnosticOverlay();
+
+	// Starts the diagnostic timer (no-op when bEnableDiagnosticOverlay
+	// is false).
+	void StartDiagnosticTimer();
+
+	// Stops the diagnostic timer and removes the stable keyed message.
+	void StopDiagnosticTimerAndClearMessage();
+
+	// Removes the keyed debug message from GEngine (no-op when
+	// GEngine is unavailable).
+	static void ClearOverlayMessage();
 };
