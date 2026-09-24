@@ -129,6 +129,40 @@ namespace Stage3RouteContextTests
 		return Provider.TryConfigure(Sections, Boundaries, OutError);
 	}
 
+	class FFailAfterBoundaryContextProvider final : public ISimulationStepContextProvider
+	{
+	public:
+		virtual bool TryResolveEnvironment(
+			const FSimulationState& PreStepState,
+			FEnvironment& OutEnvironment,
+			FString& OutError) const override
+		{
+			OutError.Reset();
+			if (PreStepState.DistanceM >= 0.02)
+			{
+				OutError = TEXT("intentional context failure after 0.02 m");
+				return false;
+			}
+			OutEnvironment = MakeEnvironment(0.0);
+			return true;
+		}
+
+		virtual bool TryObserveCompletedStep(
+			const FSimulationState& PreStepState,
+			const FSimulationState& PostStepState,
+			TArray<FSimulationBoundaryCrossing>& OutCrossings,
+			bool& bOutStopAfterStep,
+			FString& OutError) const override
+		{
+			(void)PreStepState;
+			(void)PostStepState;
+			OutError.Reset();
+			OutCrossings.Reset();
+			bOutStopAfterStep = false;
+			return true;
+		}
+	};
+
 	bool AdvanceSequence(
 		FCyclingSimulationSession& Session,
 		const ISimulationStepContextProvider& Provider,
@@ -606,6 +640,73 @@ bool FStage3RouteContextFramePacingTest::RunTest(const FString& Parameters)
 				JitterCrossings[Index].PostStepState.DistanceM);
 		}
 	}
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FStage3RouteContextTransactionalFailureTest,
+	"CyclingRouteContext.TransactionalFailure",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FStage3RouteContextTransactionalFailureTest::RunTest(const FString& Parameters)
+{
+	using namespace CyclingSimulation;
+	using namespace Stage3RouteContextTests;
+
+	FCyclingSimulationSession Session;
+	FString Error;
+	TestTrue(TEXT("session config succeeds"), Session.TryConfigure(MakeSessionConfig(), Error));
+
+	const FSimulationState BeforeState = Session.GetSimulationState();
+	const double BeforeAccumulatorS = Session.GetAccumulatedTimeS();
+
+	FFailAfterBoundaryContextProvider FailingProvider;
+	FSimulationState OutState;
+	OutState.SpeedMps = 999.0;
+	OutState.DistanceM = 999.0;
+	OutState.ElapsedTimeS = 999.0;
+	double RemainingS = 999.0;
+	int32 CompletedSteps = 999;
+	TArray<FSimulationBoundaryCrossing> Crossings;
+	FSimulationBoundaryCrossing SentinelCrossing;
+	SentinelCrossing.Id = TEXT("sentinel");
+	Crossings.Add(SentinelCrossing);
+	bool bStoppedAfterStep = true;
+
+	TestFalse(TEXT("context failure rejects the whole catch-up batch"),
+		Session.TryAdvanceWithContext(
+			0.25,
+			FailingProvider,
+			OutState,
+			RemainingS,
+			CompletedSteps,
+			Crossings,
+			bStoppedAfterStep,
+			Error));
+	TestTrue(TEXT("context failure reports exact useful error"),
+		Error.Contains(TEXT("intentional context failure")));
+	TestEqual(TEXT("failed batch reports zero completed steps"), CompletedSteps, 0);
+	TestEqual(TEXT("failed batch publishes no crossings"), Crossings.Num(), 0);
+	TestFalse(TEXT("failed batch does not report terminal stop"), bStoppedAfterStep);
+
+	TestEqual(TEXT("failed batch restores output speed snapshot"),
+		OutState.SpeedMps, BeforeState.SpeedMps);
+	TestEqual(TEXT("failed batch restores output distance snapshot"),
+		OutState.DistanceM, BeforeState.DistanceM);
+	TestEqual(TEXT("failed batch restores output elapsed snapshot"),
+		OutState.ElapsedTimeS, BeforeState.ElapsedTimeS);
+	TestEqual(TEXT("failed batch restores output accumulator snapshot"),
+		RemainingS, BeforeAccumulatorS);
+
+	TestEqual(TEXT("failed batch preserves internal speed"),
+		Session.GetSimulationState().SpeedMps, BeforeState.SpeedMps);
+	TestEqual(TEXT("failed batch preserves internal distance"),
+		Session.GetSimulationState().DistanceM, BeforeState.DistanceM);
+	TestEqual(TEXT("failed batch preserves internal elapsed"),
+		Session.GetSimulationState().ElapsedTimeS, BeforeState.ElapsedTimeS);
+	TestEqual(TEXT("failed batch preserves internal accumulator"),
+		Session.GetAccumulatedTimeS(), BeforeAccumulatorS);
 
 	return true;
 }
