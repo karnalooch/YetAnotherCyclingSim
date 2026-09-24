@@ -4,6 +4,7 @@
 #include "Components/SceneComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Math/RotationMatrix.h"
+#include "Materials/MaterialInterface.h"
 #include "UObject/ConstructorHelpers.h"
 
 namespace Stage3PrototypeTerrainInternal
@@ -153,6 +154,8 @@ AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 		TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
 	const ConstructorHelpers::FObjectFinder<UStaticMesh> ConeMesh(
 		TEXT("/Engine/BasicShapes/Cone.Cone"));
+	const ConstructorHelpers::FObjectFinder<UMaterialInterface> WorldGridMaterial(
+		TEXT("/Engine/EngineMaterials/WorldGridMaterial.WorldGridMaterial"));
 
 	if (CubeMesh.Succeeded())
 	{
@@ -166,6 +169,12 @@ AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 	if (ConeMesh.Succeeded())
 	{
 		MountainProps->SetStaticMesh(ConeMesh.Object);
+	}
+	if (WorldGridMaterial.Succeeded())
+	{
+		// Deliberately contrast the validation terrain against the road ribbon.
+		// Stage 7 will replace this engine material with production art.
+		TerrainTiles->SetMaterial(0, WorldGridMaterial.Object);
 	}
 
 	UHierarchicalInstancedStaticMeshComponent* Components[] = {
