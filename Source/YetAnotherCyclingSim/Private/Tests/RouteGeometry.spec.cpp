@@ -12,6 +12,25 @@ namespace Stage3RouteGeometryTests
 {
 	using namespace CyclingSimulation;
 
+	double Cross2D(const FVector& A, const FVector& B, const FVector& C)
+	{
+		return (B.X - A.X) * (C.Y - A.Y)
+			- (B.Y - A.Y) * (C.X - A.X);
+	}
+
+	bool SegmentsProperlyIntersect2D(
+		const FVector& A,
+		const FVector& B,
+		const FVector& C,
+		const FVector& D)
+	{
+		const double AB_C = Cross2D(A, B, C);
+		const double AB_D = Cross2D(A, B, D);
+		const double CD_A = Cross2D(C, D, A);
+		const double CD_B = Cross2D(C, D, B);
+		return AB_C * AB_D < 0.0 && CD_A * CD_B < 0.0;
+	}
+
 	FEnvironment MakeBaseEnvironment()
 	{
 		FEnvironment Environment;
@@ -73,6 +92,26 @@ bool FStage3AlpineGeometryStructureTest::RunTest(const FString& Parameters)
 	}
 	TestTrue(TEXT("route has substantial lateral geometry rather than a straight line"),
 		(MaxY - MinY) > 1000.0);
+
+	int32 SelfIntersectionCount = 0;
+	for (int32 FirstIndex = 0; FirstIndex < Samples.Num() - 1; ++FirstIndex)
+	{
+		for (int32 SecondIndex = FirstIndex + 3;
+			SecondIndex < Samples.Num() - 1;
+			++SecondIndex)
+		{
+			if (SegmentsProperlyIntersect2D(
+				Samples[FirstIndex].PositionM,
+				Samples[FirstIndex + 1].PositionM,
+				Samples[SecondIndex].PositionM,
+				Samples[SecondIndex + 1].PositionM))
+			{
+				++SelfIntersectionCount;
+			}
+		}
+	}
+	TestEqual(TEXT("prototype centerline has no unplanned XY self-crossings"),
+		SelfIntersectionCount, 0);
 
 	TArray<FAlpineCornerGeometryDefinition> Corners;
 	BuildAlpineCornerGeometryDefinitions(Corners);
