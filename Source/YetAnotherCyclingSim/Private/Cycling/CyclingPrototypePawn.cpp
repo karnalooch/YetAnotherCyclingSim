@@ -205,7 +205,6 @@ void ACyclingPrototypePawn::InitializeRide()
 	LastError.Reset();
 	CachedSpline = nullptr;
 	CachedSplineLengthCm = 0.0;
-	BoundaryHistory.Reset();
 
 	USplineComponent* Spline = nullptr;
 	double LengthCm = 0.0;
@@ -230,6 +229,11 @@ void ACyclingPrototypePawn::InitializeRide()
 		EnterErrorState(FString::Printf(TEXT("route context configure failed: %s"), *Error));
 		return;
 	}
+
+	// A successful initialization starts a fresh logical ride. Only clear
+	// prior route-event history after all transactional configuration gates
+	// have passed so a failed re-initialization keeps diagnostics intact.
+	BoundaryHistory.Reset();
 
 	// Snap presentation to spline distance 0 in Ready state.
 	UpdatePresentationFromSession();
