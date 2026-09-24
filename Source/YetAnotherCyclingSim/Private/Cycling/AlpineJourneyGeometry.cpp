@@ -68,7 +68,14 @@ namespace CyclingSimulation
 				const double EndM = Corner.CenterDistanceM + Corner.LengthM * 0.5;
 				if (DistanceM >= StartM && DistanceM <= EndM)
 				{
-					return Corner.DirectionSign / Corner.RadiusM;
+					// Smooth curvature envelope: zero at entry/exit and peak
+					// magnitude 1/RadiusM at the corner centre. This avoids
+					// tangent discontinuities and prevents long tight zones
+					// from turning through more than intended.
+					const double T = (DistanceM - StartM) / Corner.LengthM;
+					return Corner.DirectionSign
+						* (1.0 / Corner.RadiusM)
+						* FMath::Sin(PI * T);
 				}
 			}
 			return 0.0;
