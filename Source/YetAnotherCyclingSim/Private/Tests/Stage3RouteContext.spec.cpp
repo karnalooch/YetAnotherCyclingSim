@@ -276,7 +276,6 @@ bool FStage3RouteContextProviderSemanticsTest::RunTest(const FString& Parameters
 
 	Pre = FSimulationState();
 	Post = FSimulationState();
-	FSimulationState Post;
 	Pre.DistanceM = 0.0;
 	Post.DistanceM = 0.01;
 	Post.ElapsedTimeS = 0.05;
