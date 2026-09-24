@@ -1,6 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS
 
 #include "Misc/AutomationTest.h"
+#include "Math/NumericLimits.h"
 
 #include "Cycling/AlpineJourneyGeometry.h"
 #include "Cycling/AlpineJourneyRoute.h"
