@@ -255,22 +255,50 @@ Użytkownik może rozpocząć, ukończyć i podsumować całą sesję bez korzys
 
 **Planowany czas:** tydzień 7–9
 
+## Założenie animacji kolarza
+
+Mocap jest bazową warstwą naturalnego ruchu, a nie zbiorem gotowych animacji dla
+każdej sytuacji. Docelowa poza kolarza ma wynikać z parametrów jazdy przez
+warstwowanie animacji, `Control Rig`, IK i proceduralne offsety. Pozwala to
+obsłużyć zjazd, zakręty, zmianę chwytu lub geometrii roweru bez nagrywania
+osobnego mocapu dla każdego przypadku.
+
+Minimalny przepływ Stage 6:
+
+`base mocap / cadence animation -> additive cycling pose -> procedural Control Rig -> hand/foot IK -> final rider pose`.
+
 ## Zadania
 
 - [ ] Jeden model roweru.
 - [ ] Jeden model kolarza.
 - [ ] Dopasowanie kolarza do roweru.
+- [ ] Import szkieletu kolarza i przygotowanie retargetingu bazowego mocapu.
 - [ ] Animacja pedałowania zależna od kadencji.
 - [ ] Toczenie bez pedałowania.
-- [ ] Pochylenie w zakrętach.
+- [ ] Bazowe blendowane pozycje: neutral seated, aggressive/aero, descending tuck, standing/sprint i cornering.
+- [ ] Pochylenie roweru i ciała w zakrętach sterowane stanem fizyki zamiast sztywną animacją.
+- [ ] `Control Rig` / proceduralne offsety dla miednicy, kręgosłupa, głowy, barków i łokci.
+- [ ] IK dłoni do punktów chwytu kierownicy oraz IK stóp do pedałów, niezależne od bazowego mocapu.
+- [ ] Stabilizacja głowy i look-ahead po spline trasy, tak aby kolarz patrzył przez zakręt.
+- [ ] Rozdzielenie warstwy prezentacji od konkretnego mesha/szkieletu, aby model kolarza można było później podmienić bez przepisywania logiki jazdy.
 - [ ] Kamera za kolarzem.
 - [ ] Kamera z perspektywy kierownicy.
 - [ ] Przełączanie kamer podczas jazdy.
 - [ ] Stabilizacja kamer na nierównościach i zakrętach.
 
+## Parametry proceduralnej pozy
+
+Warstwa prezentacji może korzystać m.in. z: `Speed`, `Grade`,
+`CornerRadius` / `LateralAcceleration`, `Cadence`, `Braking`,
+`Technique` i `AeroLevel`. Wynikiem są wyłącznie parametry prezentacji,
+np. rotacje/przesunięcia `Pelvis`, `Spine`, `Head`, `Elbow`, `Knee`
+oraz cele IK `Hand` / `Foot`; system animacji nie może zmieniać wyniku fizyki.
+
 ## Kryterium ukończenia
 
 Ruch kolarza, roweru i kamer jest płynny i zgodny z parametrami jazdy.
+Zmiana kadencji, wejście w zakręt i przejście do zjazdu dają widoczną,
+ciągłą zmianę pozy bez utraty kontaktu dłoni z kierownicą i stóp z pedałami.
 
 ---
 
@@ -381,6 +409,38 @@ Kolejność orientacyjna:
 8. Pack Dynamics: drafting, automatyczne pozycjonowanie, wyprzedzanie i fizyka grupy.
 9. Kolejne platformy treningowe.
 10. Inne systemy operacyjne.
+
+### YACS Pose Lab / CyclingPoseController — narzędzie po MVP
+
+Po ustabilizowaniu podstawowej warstwy animacji ze Stage 6 można zbudować
+narzędzie deweloperskie minimalizujące ręczną pracę animatora.
+
+Założenia:
+
+- `CyclingPoseController` przyjmuje parametry jazdy, m.in. `Speed`, `Grade`,
+  `CornerRadius` / `LateralAcceleration`, `Cadence`, `Braking`,
+  `Technique` i `AeroLevel`;
+- wyjściem są kontrolowane offsety miednicy, kręgosłupa, głowy, łokci i kolan
+  oraz cele IK dla dłoni i stóp;
+- `YACS Pose Lab` udostępnia podgląd i strojenie pozy w edytorze z operacjami
+  `Save Pose`, `Mirror Pose` i `Export JSON`;
+- pozycje można przygotowywać na podstawie pojedynczych klatek referencyjnych
+  z nagrań rzeczywistych kolarzy, np. `Approach -> TurnIn -> Apex -> Exit`;
+- późniejsza iteracja może półautomatycznie wyciągać punkty ciała lub kąty
+  stawów z materiału referencyjnego, ale film jest źródłem biomechanicznej
+  referencji, a nie źródłem fizyki gry;
+- fizyka określa wymagany ruch roweru i wielkość pochylenia, a referencja
+  określa relacje ciała, np. counter-lean głowy, pracę łokci i pozycję
+  zewnętrznej nogi;
+- system musi wspierać co najmniej zjazd, zakręty, aero, hamowanie,
+  standing/sprint i późniejsze warianty zmęczenia;
+- lewa/prawa wersja symetrycznej pozy powinna być generowana przez mirror,
+  gdy nie wymaga osobnej biomechanicznej definicji;
+- celem jest ograniczenie ręcznego ustawiania kości i liczby wymaganych
+  nagrań mocap, nie zastąpienie walidacji wizualnej.
+
+Pose Lab pozostaje narzędziem deweloperskim po MVP; Stage 6 zawiera tylko
+minimalną warstwę runtime potrzebną do wiarygodnego single-player ridera.
 
 ### Pack Dynamics — założenia projektowe
 
