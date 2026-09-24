@@ -270,8 +270,11 @@ bool FCyclingInputLifecycleTest::RunTest(const FString& Parameters)
 		Pawn->InitializeRide();
 		Pawn->StartRide();
 
-		// Drive enough time to overshoot 500 m at 200 W on flat ground.
-		for (int32 i = 0; i < 200; ++i)
+		// Drive enough time to reach the deterministic Finish. Stage 3D
+		// uses the Alpine Journey context with finish at 10 000 m; at
+		// default rider speed (~9 m/s) ~2500 s is needed, i.e. up to
+		// 5000 ticks at 0.5 s.
+		for (int32 i = 0; i < 5000; ++i)
 		{
 			Pawn->Tick(0.5f);
 			if (Pawn->GetLifecycle() == ECyclingPrototypeLifecycle::Finished)

@@ -1,9 +1,9 @@
 // Copyright YetAnotherCyclingSim. All Rights Reserved.
 //
 // RemoteProof: deterministic end-to-end exercise of the runtime layer
-// driving the cycling session directly through the existing
-// FCyclingSimulationSession API. This is the replacement for the manual
-// Stage 2 proof that required a human to drive the keyboard under PIE.
+// through ACyclingPrototypePawn and the existing FCyclingSimulationSession
+// fixed-step APIs. Stage 3D additionally proves that the Pawn uses the
+// Alpine route context for grade, markers and terminal finish.
 //
 // The test does NOT synthesise OS keyboard events. It calls the domain
 // methods directly so the physics oracle is independent of the human
@@ -96,7 +96,7 @@ bool FCyclingRuntimeRemoteProofTest::RunTest(const FString& Parameters)
 	using namespace CyclingRuntimeRemoteProofTest;
 
 	UWorld* World = CreateTransientWorld();
-	AActor* Route = SpawnStraightRouteActor(World, 50000.0f); // 500 m
+	AActor* Route = SpawnStraightRouteActor(World, 1000000.0f); // 10 km Stage 3 route length
 	ACyclingPrototypePawn* Pawn = SpawnPrototypePawn(World, Route);
 	if (!Pawn)
 	{
@@ -221,30 +221,35 @@ bool FCyclingRuntimeRemoteProofTest::RunTest(const FString& Parameters)
 		FMath::IsNearlyEqual(Pawn->GetActorLocation().X, 0.0f, 0.01f));
 
 	// -------------------------------------------------------------------
-	// (9) Drive until route completion -> Finished.
-	//     500 m on flat ground at 200 W takes ~63 s of simulated time.
-	//     Drive up to 80 s in 0.5 s chunks.
+	// (9) Drive until the Stage 3 authoritative route completion -> Finished.
+	//     Use high proof power so the deterministic 10 km ride remains fast
+	//     enough for Automation while still exercising the real Alpine grade.
 	// -------------------------------------------------------------------
+	Expect(TEXT("step 9: high proof power accepted"),
+		Pawn->GetMutableSession().TrySetPowerW(2000.0, Error));
 	bool bReachedFinished = false;
-	for (int32 i = 0; i < 160; ++i)
+	for (int32 i = 0; i < 2000; ++i)
 	{
-		Pawn->Tick(0.5f);
+		Pawn->Tick(1.0f);
 		if (Pawn->GetLifecycle() == ECyclingPrototypeLifecycle::Finished)
 		{
 			bReachedFinished = true;
 			break;
 		}
 	}
-	Expect(TEXT("step 9: lifecycle reached Finished within 80 s"),
+	Expect(TEXT("step 9: lifecycle reached deterministic 10 km Finished"),
 		bReachedFinished);
 	Expect(TEXT("step 9: Tick disabled at Finished"),
 		!Pawn->IsActorTickEnabled());
-	Expect(TEXT("step 9: authoritative distance >= route length 500 m"),
-		Pawn->GetAuthoritativeState().DistanceM >= 500.0);
-	Expect(TEXT("step 9: authoritative distance has only a small overshoot (<= 510 m)"),
-		Pawn->GetAuthoritativeState().DistanceM <= 510.0);
-	Expect(TEXT("step 9: visible X is clamped to spline end (50000 cm)"),
-		FMath::IsNearlyEqual(Pawn->GetActorLocation().X, 50000.0f, 0.5f));
+	Expect(TEXT("step 9: authoritative distance crossed route end 10000 m"),
+		Pawn->GetAuthoritativeState().DistanceM >= 10000.0);
+	Expect(TEXT("step 9: authoritative distance has only a small fixed-step overshoot"),
+		Pawn->GetAuthoritativeState().DistanceM <= 10005.0);
+	Expect(TEXT("step 9: visible X is clamped to spline end (1000000 cm)"),
+		FMath::IsNearlyEqual(Pawn->GetActorLocation().X, 1000000.0f, 1.0f));
+	Expect(TEXT("step 9: final route event is Finish"),
+		Pawn->GetBoundaryHistory().Num() > 0
+		&& Pawn->GetBoundaryHistory().Last().Kind == CyclingSimulation::ESimulationBoundaryKind::Finish);
 
 	// -------------------------------------------------------------------
 	// (10) Finished is a sticky state: StartRide must NOT silently

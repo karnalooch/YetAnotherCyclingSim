@@ -6,6 +6,7 @@
 #include "GameFramework/Pawn.h"
 #include "Engine/EngineTypes.h"
 #include "Cycling/CyclingSimulationSession.h"
+#include "Cycling/AlpineJourneyRuntimeContext.h"
 #include "Cycling/CyclingDiagnostics.h"
 #include "CyclingPrototypePawn.generated.h"
 
@@ -47,16 +48,16 @@ enum class ECyclingPrototypeLifecycle : uint8
 };
 
 /**
- * Stage 2 runtime Pawn.
+ * Stage 3 runtime Pawn.
  *
  * The Pawn is the single Unreal-runtime owner of one FCyclingSimulationSession.
  * It is responsible for:
  *
  *  - validating and caching the route spline reference (BeginPlay);
  *  - configuring the session with the prototype fixture values;
- *  - forwarding per-render-frame DeltaSeconds to Session.TryAdvance while
- *    Running (Tick is the only render-frame bridge to the deterministic
- *    fixed-step runner);
+ *  - forwarding per-render-frame DeltaSeconds to Session.TryAdvanceWithContext
+ *    while Running (Tick is the only render-frame bridge to the deterministic
+ *    fixed-step runner and route context);
  *  - reading the authoritative FSimulationState and converting it to a
  *    spline transform in Unreal centimetres for presentation only;
  *  - enforcing the explicit lifecycle (Ready / Running / Stopped /
@@ -222,6 +223,14 @@ public:
 		return Session;
 	}
 
+	// Ordered fixed-step route boundary events emitted during the current ride.
+	// This is event history for diagnostics/presentation only; authoritative
+	// route progress remains Session.GetSimulationState().DistanceM.
+	const TArray<CyclingSimulation::FSimulationBoundaryCrossing>& GetBoundaryHistory() const
+	{
+		return BoundaryHistory;
+	}
+
 	// Mutable view of the deterministic cycling session owned by this Pawn.
 	// Exposed so tests and follow-up input adapters can call input-mutation
 	// operations (e.g. TrySetPowerW). Runtime presentation code does not
@@ -312,6 +321,10 @@ public:
 	// fixture. Returns true on success.
 	bool TryConfigurePrototypeSession(FString& OutError);
 
+	// Configures the Stage 3 Alpine geometry + marker context consumed by the
+	// fixed-step runner. The context is deterministic and rendering-independent.
+	bool TryConfigurePrototypeRouteContext(FString& OutError);
+
 	// Recomputes the visible Actor transform from authoritative
 	// Session.GetSimulationState().DistanceM. The presentation query clamps
 	// the spline distance to [0, CachedSplineLengthCm]; the authoritative
@@ -331,6 +344,14 @@ private:
 	// Deterministic cycling session owned by this Pawn. The Pawn forwards
 	// frame deltas and presentation queries to this object.
 	CyclingSimulation::FCyclingSimulationSession Session;
+
+	// Stage 3 route-aware fixed-step context. It derives grade from the
+	// deterministic Alpine geometry and emits start/sector/finish crossings.
+	CyclingSimulation::FAlpineJourneySimulationStepContextProvider RouteContext;
+
+	// Per-ride event history. Cleared by successful initialization/restart;
+	// pause/resume preserves it so already-crossed markers are not replayed.
+	TArray<CyclingSimulation::FSimulationBoundaryCrossing> BoundaryHistory;
 
 	// Cached spline reference. Set on a successful BeginPlay validation and
 	// never re-queried in Tick.
