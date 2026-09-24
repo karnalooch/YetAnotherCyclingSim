@@ -139,6 +139,13 @@ int32 UCyclingStage3RouteSetupCommandlet::Main(const FString& Params)
 	}
 	Spline->UpdateSpline();
 
+	// UE 5.8 persists spline overrides on BP SCS instances only when
+	// bSplineHasBeenEdited ("Override Construction Script") is true.
+	// AddSplinePoint/SetSplinePointType mutate the in-memory spline but
+	// never flip this flag, so GetComponentInstanceData() returns empty
+	// instance data and the new points are dropped on save+reload.
+	Spline->SetOverrideConstructionScript(true);
+
 	const double ExpectedLengthCm =
 		Geometry.GetTotalLengthM() * MetresToCentimetres;
 	const double ActualLengthCm =
