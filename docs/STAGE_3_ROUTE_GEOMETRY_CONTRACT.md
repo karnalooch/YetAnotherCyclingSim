@@ -30,7 +30,7 @@ For each integration interval:
 2. blend grade with smoothstep inside a 50 m half-window around each interior
    segment boundary;
 3. compute horizontal run from surface distance and rise/run grade;
-4. integrate XY heading through the active corner-curvature zone;
+4. integrate XY heading through a smooth sinusoidal curvature envelope whose peak curvature is `1 / RadiusM`;
 5. integrate Z from grade;
 6. emit a geometry sample whose 3D interval length matches the route-distance
    interval.
@@ -85,7 +85,7 @@ with the existing Alpine Journey corner reference:
 | High Valley Sweep | 8150 | 140 | 48 |
 | Lakeside Final Bend | 9250 | 100 | 35 |
 
-Signed curvature alternates to produce left/right geometry.
+Signed curvature alternates to produce left/right geometry. Curvature is zero at each zone entry/exit and reaches the listed radius only at the zone centre. Automated validation rejects unplanned XY centerline self-crossings.
 
 These are geometry inputs only. Stage 4 owns corner-technique scoring, grip,
 penalties, guidance and gameplay consequences.
