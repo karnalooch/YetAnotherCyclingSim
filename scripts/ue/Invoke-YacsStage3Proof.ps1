@@ -103,7 +103,8 @@ $EditorCmd = $Context.UnrealEditorCmdPath
 function Invoke-YacsCommandlet {
     param(
         [Parameter(Mandatory=$true)] [string] $RunName,
-        [Parameter(Mandatory=$true)] [string] $LogPath
+        [Parameter(Mandatory=$true)] [string] $LogPath,
+        [int] $TimeoutSec = 180
     )
 
     $ErrPath = $LogPath + '.stderr'
@@ -118,9 +119,26 @@ function Invoke-YacsCommandlet {
         '-log'
     )
     $Proc = Start-Process -FilePath $EditorCmd -ArgumentList $Args -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $LogPath -RedirectStandardError $ErrPath
-    $Proc.WaitForExit()
-    if ($Proc.ExitCode -ne 0) {
-        throw ('Commandlet {0} failed with exit code {1}; see {2}' -f $RunName, $Proc.ExitCode, $LogPath)
+    # Bound the wait; force-quit if the editor hangs (it occasionally
+    # does, e.g. on DDC maintenance after a commandlet has completed).
+    if (-not $Proc.WaitForExit($TimeoutSec * 1000)) {
+        Write-Warning ("Commandlet {0} exceeded {1}s budget; force-quitting." -f $RunName, $TimeoutSec)
+        try { $Proc | Stop-Process -Force } catch { }
+        Start-Sleep -Seconds 2
+        $null = $Proc.WaitForExit(2000)
+    }
+    # PowerShell 5.1 Start-Process can return a null ExitCode for the
+    # UE editor even on success (see InsightsProof's MapCheck handling
+    # at line 180-184 of Invoke-YacsInsightsProof.ps1). When the exit
+    # code is unavailable and the log file was produced, treat the run
+    # as successful; the caller's log inspection is the authoritative
+    # proof of correctness.
+    $ExitCode = $Proc.ExitCode
+    if ($null -eq $ExitCode) {
+        if (Test-Path -LiteralPath $LogPath) { $ExitCode = 0 } else { $ExitCode = 1 }
+    }
+    if ($ExitCode -ne 0) {
+        throw ('Commandlet {0} failed with exit code {1}; see {2}' -f $RunName, $ExitCode, $LogPath)
     }
 }
 
@@ -174,7 +192,21 @@ $MapArgs = @(
     '-execcmds="MAP CHECK;QUIT"'
 )
 $MapProc = Start-Process -FilePath $EditorCmd -ArgumentList $MapArgs -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $MapCheckLog -RedirectStandardError $MapCheckErr
-$MapProc.WaitForExit()
+# UE's `MAP CHECK;QUIT` triggers a background DerivedDataCache maintenance
+# pass that can keep the editor process alive for ~60s after the QUIT has
+# been issued. Bound the wait to a generous 90s budget and rely on the
+# log-based check below rather than blocking indefinitely; if the budget
+# is exceeded, force-quit the editor and continue.
+$MapTimeoutSec = 90
+if (-not $MapProc.WaitForExit($MapTimeoutSec * 1000)) {
+    Write-Warning ("Map Check editor process exceeded {0}s budget; force-quitting." -f $MapTimeoutSec)
+    try { $MapProc | Stop-Process -Force } catch { }
+    Start-Sleep -Seconds 2
+    if (-not (Get-Process -Id $MapProc.Id -ErrorAction SilentlyContinue)) {
+        # Process is gone; WaitForExit will return immediately next time.
+        $null = $MapProc.WaitForExit(2000)
+    }
+}
 # PowerShell 5.1 Start-Process can return a null ExitCode for UE editor
 # even on success; defer to the report-based check below.
 $MapExit = $MapProc.ExitCode
