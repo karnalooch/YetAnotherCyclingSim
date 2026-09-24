@@ -7,6 +7,7 @@
 
 #include "Components/SplineComponent.h"
 #include "Engine/World.h"
+#include "GameFramework/Actor.h"
 #include "FileHelpers.h"
 #include "UObject/Package.h"
 
