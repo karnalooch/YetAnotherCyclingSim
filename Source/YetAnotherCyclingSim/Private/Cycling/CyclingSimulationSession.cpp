@@ -78,6 +78,48 @@ namespace CyclingSimulation
 			OutError);
 	}
 
+	bool FCyclingSimulationSession::TryAdvanceWithContext(
+		double FrameDeltaS,
+		const ISimulationStepContextProvider& StepContextProvider,
+		FSimulationState& OutState,
+		double& OutRemainingTimeS,
+		int32& OutCompletedSteps,
+		TArray<FSimulationBoundaryCrossing>& OutBoundaryCrossings,
+		bool& bOutStoppedAfterStep,
+		FString& OutError)
+	{
+		OutError.Reset();
+		OutBoundaryCrossings.Reset();
+		bOutStoppedAfterStep = false;
+
+		if (!bIsConfigured)
+		{
+			OutCompletedSteps = 0;
+			OutState = Runner.GetState();
+			OutRemainingTimeS = Runner.GetAccumulatedTimeS();
+			OutError = FString::Printf(TEXT("session is not configured"));
+			return false;
+		}
+
+		const FSimulationState SnapshotState = Runner.GetState();
+		const double SnapshotAccumulatedTimeS = Runner.GetAccumulatedTimeS();
+
+		OutState = SnapshotState;
+		OutRemainingTimeS = SnapshotAccumulatedTimeS;
+
+		return Runner.TryAdvanceWithContext(
+			FrameDeltaS,
+			AcceptedConfig.Rider,
+			StepContextProvider,
+			InputController.GetInput(),
+			OutState,
+			OutRemainingTimeS,
+			OutCompletedSteps,
+			OutBoundaryCrossings,
+			bOutStoppedAfterStep,
+			OutError);
+	}
+
 	bool FCyclingSimulationSession::TrySetPowerW(double ValueW, FString& OutError)
 	{
 		if (!bIsConfigured)

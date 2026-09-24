@@ -5,6 +5,7 @@
 #include "Cycling/Environment.h"
 #include "Cycling/RiderInput.h"
 #include "Cycling/SimulationState.h"
+#include "Cycling/SimulationStepContext.h"
 
 namespace CyclingSimulation
 {
@@ -57,6 +58,31 @@ namespace CyclingSimulation
 			FSimulationState& OutState,
 			double& RemainingAccumulatedTimeS,
 			int32& CompletedSteps,
+			FString& OutError);
+
+		// Advances using a context provider that is resolved independently for
+		// every fixed simulation substep from that substep's authoritative
+		// pre-step state. This is the Stage 3 path for route-dependent grade,
+		// wetness, rolling resistance and deterministic route-boundary events.
+		//
+		// Boundary crossings are observed after each successful fixed step.
+		// If the provider requests stop-after-step (for example at a Finish
+		// boundary), the crossing step is committed and later fixed steps from
+		// the same frame batch are not executed. Any remaining accumulated time
+		// is preserved and reported; it is never silently discarded.
+		//
+		// On failure, runner state/accumulator stay unchanged, crossings are
+		// empty, bOutStoppedAfterStep is false and CompletedSteps is zero.
+		bool TryAdvanceWithContext(
+			double FrameDeltaS,
+			const FRiderParameters& Rider,
+			const ISimulationStepContextProvider& StepContextProvider,
+			const FRiderInput& RiderInput,
+			FSimulationState& OutState,
+			double& RemainingAccumulatedTimeS,
+			int32& CompletedSteps,
+			TArray<FSimulationBoundaryCrossing>& OutBoundaryCrossings,
+			bool& bOutStoppedAfterStep,
 			FString& OutError);
 
 		// Returns the current simulation state.
