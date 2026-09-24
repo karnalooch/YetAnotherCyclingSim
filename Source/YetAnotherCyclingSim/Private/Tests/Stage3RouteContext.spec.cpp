@@ -8,6 +8,8 @@
 
 namespace Stage3RouteContextTests
 {
+	using namespace CyclingSimulation;
+
 	FEnvironment MakeEnvironment(
 		double GradeDecimal,
 		double SurfaceWetness = 0.0,
