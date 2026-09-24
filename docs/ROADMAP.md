@@ -18,6 +18,9 @@
 8. Co tydzień przygotowujemy działającą wersję projektu.
 9. Płynność mierzymy regularnie na komputerze referencyjnym.
 10. Każdy ważny wzór fizyczny otrzymuje test automatyczny.
+11. Performance jest kontraktem inżynierskim, nie końcowym etapem „optymalizacji”.
+12. Projektujemy tanie ścieżki skalowania wcześnie, ale optymalizujemy dopiero na podstawie pomiarów.
+13. Regresje czasu klatki, pamięci, shaderów, builda lub cooka porównujemy z zapisanym baseline'em; nie oceniamy ich wyłącznie „na oko”.
 
 ## Realistyczne oczekiwania czasowe
 
@@ -185,10 +188,12 @@ Nie rozpoczynamy mechaniki techniki zakrętów ze Stage 4 przed zakończeniem 3E
 - [ ] Dodanie podstawowego terenu.
 - [ ] Sprawdzenie ciągłości drogi i braku gwałtownych zmian nachylenia.
 - [ ] Pierwszy pełny przejazd od startu do mety.
+- [ ] Zapisać Stage 3 baseline czasu lokalnego build/proof dla bieżącego małego projektu, bez wymuszania pełnego cooka przy każdej zmianie.
+- [ ] Potwierdzić granicę domenową: wynik symulacji trasy/jazdy nie zależy od `AActor`, renderingu ani transformu presentation jako źródła prawdy.
 
 ## Kryterium ukończenia
 
-Całą trasę można przejechać bez przerwania, błędu pozycji lub opuszczenia drogi.
+Całą trasę można przejechać bez przerwania, błędu pozycji lub opuszczenia drogi. Baseline build/proof jest zapisany, a domenowa symulacja pozostaje niezależna od presentation.
 
 ---
 
@@ -285,6 +290,9 @@ Minimalny przepływ Stage 6:
 - [ ] Kamera z perspektywy kierownicy.
 - [ ] Przełączanie kamer podczas jazdy.
 - [ ] Stabilizacja kamer na nierównościach i zakrętach.
+- [ ] Dodać interpolation presentation pomiędzy stanami fixed-step bez sprzężenia zwrotnego do fizyki.
+- [ ] Zmierzyć baseline kosztu jednego ridera: Animation Blueprint / Control Rig / IK / skeletal mesh na komputerze referencyjnym.
+- [ ] Utrzymać animation/presentation API tak, aby późniejsze ograniczenie update rate przez significance nie wymagało zmian w fizyce jazdy.
 
 ## Parametry proceduralnej pozy
 
@@ -319,6 +327,11 @@ ciągłą zmianę pozy bez utraty kontaktu dłoni z kierownicą i stóp z pedał
 - [ ] Kontrola gęstości obiektów.
 - [ ] Profile jakości grafiki.
 - [ ] Testy 1080p/60 FPS na RTX 2070 Super.
+- [ ] Zdefiniować i zmierzyć Wind/Animation LOD dla foliage; daleka roślinność nie może bez pomiaru ponosić kosztu pełnego WPO/wind.
+- [ ] Wykonać Alpine Skyline / Streaming Proof: dolina → las → podjazd → odsłonięte góry, z kontrolą HLOD, pop-in, dziur świata i hitchy streamingu.
+- [ ] Wprowadzić Material/Shader Permutation Contract: każdy nowy Static Switch wymagający dodatkowych permutacji musi mieć uzasadnienie; ciągłe stany pogody preferują parametry runtime, gdy to właściwe.
+- [ ] Zebrać baseline GPU, Game Thread, Render Thread, RAM/VRAM i hitchy dla reprezentatywnych scen.
+- [ ] Nanite, Virtual Texturing/RVT i inne cięższe technologie dobierać przez benchmark przed/po, nie jako domyślną regułę świata.
 
 ## Kryterium ukończenia
 
@@ -342,7 +355,7 @@ ciągłą zmianę pozy bez utraty kontaktu dłoni z kierownicą i stóp z pedał
 - [ ] Dźwięki opon i hamowania.
 - [ ] Wiatr zależny od prędkości i kierunku.
 - [ ] Dźwięki deszczu, lasu, zwierząt i miejscowości.
-- [ ] Testy wydajności podczas najcięższych warunków.
+- [ ] Testy wydajności podczas najcięższych warunków, w tym co najmniej dense foliage + deszcz + mokra droga + dynamiczne cienie na reprezentatywnym fragmencie.
 
 ## Kryterium ukończenia
 
@@ -384,6 +397,10 @@ Ukończona aktywność jest dostępna lokalnie i może zostać wyeksportowana ja
 - [ ] Test obu kamer.
 - [ ] Test zapisu i eksportu FIT.
 - [ ] Profilowanie CPU, GPU i pamięci.
+- [ ] Zebrać końcowy MVP baseline: Game Thread, Render Thread, GPU, RAM/VRAM, hitch percentiles/spikes i streaming stalls podczas pełnego przejazdu.
+- [ ] Zebrać baseline build pipeline: C++ compile, shader compile, cook, package/stage, total build time i rozmiar artefaktu tam, gdzie pomiar jest dostępny.
+- [ ] Wykonać packaged PSO/first-use stutter proof dla reprezentatywnego materiałowo pełnego przejazdu.
+- [ ] Porównać końcowe wyniki 1080p/60 z wcześniejszymi baseline'ami i wyjaśnić istotne regresje.
 - [ ] Usunięcie błędów blokujących.
 - [ ] Przygotowanie wersji Windows.
 - [ ] Instrukcja instalacji i uruchomienia.
@@ -409,6 +426,24 @@ Kolejność orientacyjna:
 8. Pack Dynamics: drafting, automatyczne pozycjonowanie, wyprzedzanie i fizyka grupy.
 9. Kolejne platformy treningowe.
 10. Inne systemy operacyjne.
+
+### Skalowanie riderów przed pełnym multiplayerem
+
+Zanim architektura zostanie uznana za gotową na duży peleton, wymagany jest `Crowd Scaling Spike` z pomiarami dla:
+
+- 1 rider;
+- 10 riderów;
+- 50 riderów;
+- 100 riderów;
+- 300 riderów jako stress probe.
+
+Dla każdego poziomu mierzymy co najmniej Game Thread, Render Thread, GPU, rider simulation time, animation cost, RAM/VRAM, hitching oraz później koszt sieci. 300 riderów nie jest wymaganiem MVP ani gwarantowanym targetem produktu — służy do znalezienia punktu załamania architektury.
+
+Po MVP należy wprowadzić centralny `RiderSignificance` / Unified Rider Cost Policy sterujący oddzielnymi budżetami dla simulation update rate, animacji, IK, collision/physics detail, render/shadows, audio/UI oraz przyszłej network relevancy. Dokładne progi ustalamy wyłącznie na podstawie profilowania.
+
+Jeżeli zwykła scentralizowana/batchowa reprezentacja stanów riderów przestanie skalować się wystarczająco dobrze, dopiero wtedy wykonujemy spike MassEntity/ECS. MassEntity nie jest wymaganiem MVP ani warunkiem rozpoczęcia multiplayera.
+
+W przyszłym multiplayerze network update/relevancy korzysta ze wspólnych danych significance, ale gameplay relevance, visual relevance i session relevance pozostają rozdzielone. Wybór Iris vs Replication Graph pozostaje odroczony do aktualnej wersji UE i pomiarów.
 
 ### YACS Pose Lab / CyclingPoseController — narzędzie po MVP
 
@@ -575,8 +610,7 @@ Nowe pomysły dotyczące Pack Dynamics trafiają do backlogu, chyba że rozwiąz
 
 ## Dokument kierunkowy po MVP
 
-Założenia dotyczące przyszłej sieci dróg, skalowania świata, dużej liczby kolarzy,
-wydajności oraz multiplayera opisuje
+Założenia dotyczące budżetów runtime/build, streamingu świata, przyszłej sieci dróg, skalowania dużej liczby kolarzy oraz multiplayera opisuje
 [`PERFORMANCE_MULTIPLAYER_ARCHITECTURE.md`](PERFORMANCE_MULTIPLAYER_ARCHITECTURE.md).
 
 Dokument ten definiuje ograniczenia architektoniczne i edge case'y, ale nie przenosi
