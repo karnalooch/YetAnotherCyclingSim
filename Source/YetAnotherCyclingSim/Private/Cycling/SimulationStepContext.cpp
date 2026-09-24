@@ -89,6 +89,13 @@ namespace CyclingSimulation
 					Index);
 				return false;
 			}
+			if (Boundary.Kind == ESimulationBoundaryKind::Start && Boundary.DistanceM != 0.0)
+			{
+				OutError = FString::Printf(
+					TEXT("Start boundary '%s' must be at exactly 0 m"),
+					*TrimmedId);
+				return false;
+			}
 			if (Boundary.bStopAfterCrossing && Boundary.Kind != ESimulationBoundaryKind::Finish)
 			{
 				OutError = FString::Printf(
@@ -194,8 +201,17 @@ namespace CyclingSimulation
 
 		for (const FSimulationBoundaryDefinition& Boundary : Boundaries)
 		{
-			if (PreStepState.DistanceM < Boundary.DistanceM
-				&& PostStepState.DistanceM >= Boundary.DistanceM)
+			const bool bStartCrossing =
+				Boundary.Kind == ESimulationBoundaryKind::Start
+				&& Boundary.DistanceM == 0.0
+				&& PreStepState.DistanceM == 0.0
+				&& PostStepState.DistanceM > 0.0;
+			const bool bForwardBoundaryCrossing =
+				Boundary.Kind != ESimulationBoundaryKind::Start
+				&& PreStepState.DistanceM < Boundary.DistanceM
+				&& PostStepState.DistanceM >= Boundary.DistanceM;
+
+			if (bStartCrossing || bForwardBoundaryCrossing)
 			{
 				FSimulationBoundaryCrossing Crossing;
 				Crossing.Id = Boundary.Id;
