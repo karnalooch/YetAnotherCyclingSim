@@ -351,9 +351,22 @@ Po wyborze konkretnych paczek tabela poniżej staje się rejestrem źródła pra
 
 | Asset / pack | Źródło | Licencja | Cena | Stage | Status | Uwagi |
 |---|---|---|---:|---|---|---|
-| — | — | — | — | — | do wyboru | — |
+| Sparse Grass (`sparse_grass`) | Poly Haven | CC0 | 0 zł | 3G | approved | meadow/valley ground; 2K bootstrap |
+| Forest Ground 03 (`forrest_ground_03`) | Poly Haven | CC0 | 0 zł | 3G | approved | pine-needle forest floor; 2K bootstrap |
+| Rocky Terrain (`rocky_terrain`) | Poly Haven | CC0 | 0 zł | 3G | approved | high-Alpine ground layer; 2K bootstrap |
+| Rock Face 01 (`rock_face_01`) | Poly Haven | CC0 | 0 zł | 3G | approved | roadside cliff candidate; performance validation pending |
+| Boulder 01 (`boulder_01`) | Poly Haven | CC0 | 0 zł | 3G | approved | sparse rock dressing; prefer instancing |
+| Mountainside (`mountainside`) | Poly Haven | CC0 | 0 zł | 3G | candidate | mid-ground mountain mass; compare against cheaper authored geometry |
+| Fir Tree 01 (`fir_tree_01`) | Poly Haven | CC0 | 0 zł | 3G | candidate | includes LODs; high source-polycount, must be profiled before forest scatter |
+| Grass Medium 01 (`grass_medium_01`) | Poly Haven | CC0 | 0 zł | 3G | candidate | controlled meadow ground cover; LOD/instancing validation pending |
 
 Statusy: `candidate`, `approved`, `acquired`, `imported`, `validated`, `rejected`.
+
+### Stage 3G — reproducible free-asset bootstrap
+
+Lista Stage 3G jest utrzymywana w `scripts/assets/stage3g_polyhaven.json`. Skrypt `scripts/assets/download_stage3g_assets.py` korzysta z publicznego API Poly Haven, pobiera domyślnie warianty 2K/FBX do lokalnego, ignorowanego katalogu `ExternalAssets/Stage3G/PolyHaven/`, weryfikuje rozmiar/MD5 z metadanych API i zapisuje lokalny `download-index.json`.
+
+Pobranie źródeł **nie oznacza akceptacji assetu do mapy**. Status `candidate` lub `approved` w ledgerze dotyczy doboru/licencji; status `validated` wymaga importu do UE, sprawdzenia LOD/Nanite/instancing i pomiaru kosztu na komputerze referencyjnym.
 
 ## 9. Definition of done dla asset passu MVP
 
