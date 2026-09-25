@@ -43,8 +43,9 @@ jobs:
     machine: true
     resource_class: << pipeline.parameters.ue_seed_resource_class >>
     working_directory: << pipeline.parameters.ue_seed_working_directory >>
-    retention:
-      caches: 1d
+    environment:
+      TEMP: 'D:\CircleCI\YACS-Runner\Temp'
+      TMP: 'D:\CircleCI\YACS-Runner\Temp'
     steps:
       - checkout
 
@@ -55,6 +56,14 @@ jobs:
             if ($env:CIRCLE_BRANCH -ne 'main') {
               throw "UE cache seed must run from main; actual branch is '$env:CIRCLE_BRANCH'."
             }
+            New-Item -ItemType Directory -Path $env:TEMP -Force | Out-Null
+            if (-not $env:TEMP.StartsWith('D:\', [System.StringComparison]::OrdinalIgnoreCase)) {
+              throw "Self-hosted UE seed TEMP must stay on D:, actual '$env:TEMP'."
+            }
+            if (-not $env:TMP.StartsWith('D:\', [System.StringComparison]::OrdinalIgnoreCase)) {
+              throw "Self-hosted UE seed TMP must stay on D:, actual '$env:TMP'."
+            }
+            Write-Host ("Self-hosted seed scratch: TEMP={0}; TMP={1}" -f $env:TEMP, $env:TMP)
 
       - run:
           name: Measure and package local UE 5.8
