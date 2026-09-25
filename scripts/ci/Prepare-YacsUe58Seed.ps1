@@ -3,11 +3,16 @@
     Measure and optionally package the local UE 5.8 Launcher install for CircleCI.
 
 .DESCRIPTION
-    Creates a conservative Win64/Editor archive from an existing UE 5.8 installation.
+    Creates a conservative Win64/Editor ZIP from an existing UE 5.8 installation.
     Generated/local-only directories and obvious sample/template payloads are excluded.
     Engine source, binaries, content, shaders and plugins are otherwise preserved.
 
     Default mode is measurement only. Use -CreateArchive after reviewing the manifest.
+
+    Archive creation stays on the output volume. A uniquely named .partial ZIP is
+    written first, reopened and fully decompressed for validation, and compared against
+    the complete expected input file set. Only a validated archive is renamed to the
+    final ue58-win64.zip name.
 #>
 [CmdletBinding()]
 param(
@@ -47,7 +52,7 @@ function Resolve-YacsEngineRoot {
 function Measure-TreeBytes {
     param([Parameter(Mandatory=$true)][string] $Path)
     if (-not (Test-Path -LiteralPath $Path)) { return [int64]0 }
-    $sum = (Get-ChildItem -LiteralPath $Path -File -Recurse -Force -ErrorAction SilentlyContinue |
+    $sum = (Get-ChildItem -LiteralPath $Path -File -Recurse -Force -ErrorAction Stop |
         Measure-Object -Property Length -Sum).Sum
     if ($null -eq $sum) { return [int64]0 }
     return [int64]$sum
@@ -56,6 +61,51 @@ function Measure-TreeBytes {
 function Convert-BytesToGiB {
     param([int64] $Bytes)
     return [math]::Round($Bytes / 1GB, 3)
+}
+
+function Get-IncludedFiles {
+    param(
+        [Parameter(Mandatory=$true)][string] $Root,
+        [Parameter(Mandatory=$true)][string[]] $ExcludedRelative
+    )
+
+    $rootPrefix = $Root.TrimEnd('\') + '\'
+    $excludedPrefixes = @(
+        foreach ($relative in $ExcludedRelative) {
+            (Join-Path $Root $relative).TrimEnd('\') + '\'
+        }
+    )
+
+    foreach ($item in Get-ChildItem -LiteralPath $Root -File -Recurse -Force -ErrorAction Stop) {
+        $isExcluded = $false
+        foreach ($prefix in $excludedPrefixes) {
+            if ($item.FullName.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+                $isExcluded = $true
+                break
+            }
+        }
+        if (-not $isExcluded) {
+            [pscustomobject]@{
+                FullName = $item.FullName
+                RelativePath = $item.FullName.Substring($rootPrefix.Length).Replace('\', '/')
+                Length = [int64]$item.Length
+            }
+        }
+    }
+}
+
+function Get-DriveFreeBytes {
+    param([Parameter(Mandatory=$true)][string] $Path)
+    $fullPath = [System.IO.Path]::GetFullPath($Path)
+    $root = [System.IO.Path]::GetPathRoot($fullPath)
+    if ([string]::IsNullOrWhiteSpace($root)) {
+        throw "Could not determine filesystem root for '$Path'."
+    }
+    $drive = [System.IO.DriveInfo]::new($root)
+    if (-not $drive.IsReady) {
+        throw "Output drive '$root' is not ready."
+    }
+    return [int64]$drive.AvailableFreeSpace
 }
 
 $EngineRoot = Resolve-YacsEngineRoot -Requested $EngineRoot
@@ -109,11 +159,11 @@ $includedBytes = [math]::Max([int64]0, $totalBytes - $excludedBytes)
 
 New-Item -ItemType Directory -Path $OutputRoot -Force | Out-Null
 $OutputRoot = (Resolve-Path -LiteralPath $OutputRoot).Path
-$archivePath = Join-Path $OutputRoot 'ue58-win64.tar.gz'
+$archivePath = Join-Path $OutputRoot 'ue58-win64.zip'
 $manifestPath = Join-Path $OutputRoot 'ue58-win64-manifest.json'
 
 $manifest = [ordered]@{
-    Schema = 1
+    Schema = 2
     TimestampUtc = (Get-Date).ToUniversalTime().ToString('o')
     EngineRoot = $EngineRoot
     EngineVersion = ('{0}.{1}.{2}' -f $version.MajorVersion, $version.MinorVersion, $version.PatchVersion)
@@ -132,6 +182,10 @@ $manifest = [ordered]@{
     ArchiveBytes = $null
     ArchiveGiB = $null
     ArchiveSha256 = $null
+    ArchiveIntegrityValidated = $false
+    ExpectedFileCount = $null
+    ArchivedFileCount = $null
+    ArchiveError = $null
 }
 
 if ($manifest.EstimatedIncludedGiB -gt $MaxIncludedGiB) {
@@ -140,25 +194,134 @@ if ($manifest.EstimatedIncludedGiB -gt $MaxIncludedGiB) {
 }
 
 if ($CreateArchive) {
-    if (Test-Path -LiteralPath $archivePath) { Remove-Item -LiteralPath $archivePath -Force }
-    $tar = (Get-Command tar.exe -ErrorAction Stop).Source
-    $engineParent = Split-Path -Parent $EngineRoot
-    $engineLeaf = Split-Path -Leaf $EngineRoot
-    $args = @('-czf', $archivePath)
-    foreach ($relative in $excludeRelative) {
-        $unixRelative = ($relative -replace '\\', '/')
-        $args += "--exclude=$engineLeaf/$unixRelative"
+    if (Test-Path -LiteralPath $archivePath) {
+        throw "Validated archive already exists: $archivePath. Remove it explicitly before rebuilding."
     }
-    $args += @('-C', $engineParent, $engineLeaf)
-    & $tar @args
-    if ($LASTEXITCODE -ne 0) { throw "tar.exe failed with exit code $LASTEXITCODE." }
 
-    $archive = Get-Item -LiteralPath $archivePath
-    $hash = Get-FileHash -LiteralPath $archivePath -Algorithm SHA256
-    $manifest.ArchiveCreated = $true
-    $manifest.ArchiveBytes = [int64]$archive.Length
-    $manifest.ArchiveGiB = Convert-BytesToGiB -Bytes $archive.Length
-    $manifest.ArchiveSha256 = $hash.Hash.ToLowerInvariant()
+    $minimumFreeBytes = [int64]($includedBytes + 2GB)
+    $freeBytes = Get-DriveFreeBytes -Path $OutputRoot
+    if ($freeBytes -lt $minimumFreeBytes) {
+        throw ("Not enough free space on the output drive. Free={0} GiB; safe minimum={1} GiB." -f (Convert-BytesToGiB $freeBytes), (Convert-BytesToGiB $minimumFreeBytes))
+    }
+
+    $partialPath = Join-Path $OutputRoot ("ue58-win64.partial.{0}.zip" -f [guid]::NewGuid().ToString('N'))
+    try {
+        Add-Type -AssemblyName System.IO.Compression
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+        $engineLeaf = Split-Path -Leaf $EngineRoot
+        $sourceFiles = @(Get-IncludedFiles -Root $EngineRoot -ExcludedRelative $excludeRelative)
+        $manifest.ExpectedFileCount = $sourceFiles.Count
+
+        $fileStream = [System.IO.File]::Open(
+            $partialPath,
+            [System.IO.FileMode]::CreateNew,
+            [System.IO.FileAccess]::ReadWrite,
+            [System.IO.FileShare]::None
+        )
+        try {
+            $zip = [System.IO.Compression.ZipArchive]::new(
+                $fileStream,
+                [System.IO.Compression.ZipArchiveMode]::Create,
+                $true
+            )
+            try {
+                foreach ($sourceFile in $sourceFiles) {
+                    $entryName = "$engineLeaf/$($sourceFile.RelativePath)"
+                    $entry = $zip.CreateEntry($entryName, [System.IO.Compression.CompressionLevel]::Optimal)
+                    $input = [System.IO.File]::OpenRead($sourceFile.FullName)
+                    try {
+                        $output = $entry.Open()
+                        try {
+                            $input.CopyTo($output, 1MB)
+                        } finally {
+                            $output.Dispose()
+                        }
+                    } finally {
+                        $input.Dispose()
+                    }
+                }
+            } finally {
+                $zip.Dispose()
+            }
+        } finally {
+            $fileStream.Dispose()
+        }
+
+        $expectedSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+        foreach ($sourceFile in $sourceFiles) {
+            [void]$expectedSet.Add("$engineLeaf/$($sourceFile.RelativePath)")
+        }
+
+        $readStream = [System.IO.File]::OpenRead($partialPath)
+        try {
+            $zipRead = [System.IO.Compression.ZipArchive]::new(
+                $readStream,
+                [System.IO.Compression.ZipArchiveMode]::Read,
+                $false
+            )
+            try {
+                $archiveSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+                foreach ($entry in $zipRead.Entries) {
+                    if ([string]::IsNullOrEmpty($entry.Name)) { continue }
+                    if (-not $archiveSet.Add($entry.FullName)) {
+                        throw "Duplicate archive entry: $($entry.FullName)"
+                    }
+
+                    $entryStream = $entry.Open()
+                    try {
+                        $entryStream.CopyTo([System.IO.Stream]::Null, 1MB)
+                    } finally {
+                        $entryStream.Dispose()
+                    }
+                }
+
+                $manifest.ArchivedFileCount = $archiveSet.Count
+                $missing = @(
+                    foreach ($expected in $expectedSet) {
+                        if (-not $archiveSet.Contains($expected)) { $expected }
+                    }
+                )
+                $unexpected = @(
+                    foreach ($actual in $archiveSet) {
+                        if (-not $expectedSet.Contains($actual)) { $actual }
+                    }
+                )
+                if ($missing.Count -gt 0 -or $unexpected.Count -gt 0) {
+                    $missingPreview = ($missing | Select-Object -First 10) -join ', '
+                    $unexpectedPreview = ($unexpected | Select-Object -First 10) -join ', '
+                    throw ("Archive file-set validation failed. missing={0} [{1}]; unexpected={2} [{3}]" -f $missing.Count, $missingPreview, $unexpected.Count, $unexpectedPreview)
+                }
+
+                foreach ($relative in $requiredFiles) {
+                    $requiredEntry = "$engineLeaf/$($relative.Replace('\', '/'))"
+                    if (-not $archiveSet.Contains($requiredEntry)) {
+                        throw "Required UE file missing from archive: $relative"
+                    }
+                }
+            } finally {
+                $zipRead.Dispose()
+            }
+        } finally {
+            $readStream.Dispose()
+        }
+
+        Move-Item -LiteralPath $partialPath -Destination $archivePath
+        $archive = Get-Item -LiteralPath $archivePath
+        $hash = Get-FileHash -LiteralPath $archivePath -Algorithm SHA256
+        $manifest.ArchiveCreated = $true
+        $manifest.ArchiveBytes = [int64]$archive.Length
+        $manifest.ArchiveGiB = Convert-BytesToGiB -Bytes $archive.Length
+        $manifest.ArchiveSha256 = $hash.Hash.ToLowerInvariant()
+        $manifest.ArchiveIntegrityValidated = $true
+    } catch {
+        $manifest.ArchiveError = $_.Exception.Message
+        if (Test-Path -LiteralPath $partialPath) {
+            Remove-Item -LiteralPath $partialPath -Force
+        }
+        $manifest | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $manifestPath -Encoding UTF8
+        throw
+    }
 }
 
 $manifest | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $manifestPath -Encoding UTF8
@@ -171,9 +334,12 @@ Write-Host ("Excluded GiB : {0}" -f $manifest.ExcludedGiB)
 Write-Host ("Included GiB : {0}" -f $manifest.EstimatedIncludedGiB)
 Write-Host ("Manifest     : {0}" -f $manifestPath)
 if ($CreateArchive) {
+    Write-Host ("Files        : {0}/{1}" -f $manifest.ArchivedFileCount, $manifest.ExpectedFileCount)
+    Write-Host ("Integrity    : {0}" -f $manifest.ArchiveIntegrityValidated)
     Write-Host ("Archive GiB  : {0}" -f $manifest.ArchiveGiB)
     Write-Host ("SHA256       : {0}" -f $manifest.ArchiveSha256)
     Write-Host ("Archive      : {0}" -f $archivePath)
+    Write-Host 'ARCHIVE PASS' -ForegroundColor Green
 } else {
     Write-Host 'Measurement only. Re-run with -CreateArchive after reviewing size.'
 }
