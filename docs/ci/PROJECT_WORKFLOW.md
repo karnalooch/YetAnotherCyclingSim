@@ -6,11 +6,12 @@ Target Project: **YACS — MVP**
 
 ## Purpose
 
-YACS copies the 4VELO board structure **1:1**, including its five Status
-columns. Repository automation relies only on the four lifecycle statuses it
-owns: `Backlog`, `In progress`, `In review` and `Done`. The fifth
-planning column is preserved exactly as configured in the 4VELO template and
-remains a human planning state.
+YACS copies the 4VELO board structure **1:1**, including the complete Status
+field. The current 4VELO template exposes six Status options:
+`Backlog`, `Ready`, `In progress`, `In review`, `Blocked`, `Done`.
+Repository automation relies only on `Backlog`, `In progress`,
+`In review` and `Done`; `Ready` and `Blocked` remain planning/manual
+states unless a later workflow explicitly owns them.
 
 The bootstrap workflow copies the existing personal GitHub Project
 `4VELO — Product & Takeover` as the structural template. GitHub Project copy
@@ -47,9 +48,10 @@ The Project is owned by the personal GitHub account. GitHub's built-in
 5. Verify the run reports the URL of `YACS — MVP`.
 
 The bootstrap is idempotent: if `YACS — MVP` already exists it reuses it,
-verifies that the copied Project still has exactly five Status columns and all
-four automated lifecycle statuses, verifies/creates the repository link and
-backfills all currently open YACS Issues to `Backlog`.
+reads the Status options from both the source 4VELO Project and the copied YACS
+Project, requires an exact match, verifies the four automated lifecycle statuses,
+verifies/creates the repository link and backfills all currently open YACS
+Issues to `Backlog`.
 
 Never commit, print or paste the token into Issues, PRs, logs or documentation.
 
@@ -77,8 +79,9 @@ bootstrap workflow itself fails if the secret is missing.
 
 After bootstrap:
 
-1. confirm the copied board has the same five Status columns as the 4VELO
-   template and includes `Backlog`, `In progress`, `In review`, `Done`;
+1. confirm the copied board has exactly the same Status options as the 4VELO
+   template; currently:
+   `Backlog`, `Ready`, `In progress`, `In review`, `Blocked`, `Done`;
 2. verify existing open YACS Issues appear in `Backlog`;
 3. move one groomed Issue to the copied manual planning column;
 4. open a Draft PR containing `Closes #<issue>` and confirm both items move to
