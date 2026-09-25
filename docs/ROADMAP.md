@@ -147,7 +147,11 @@ Połączyć wejście testowe, fizykę i ruch obiektu po prostej trasie.
 - [x] Dodanie stałego kroku fizyki niezależnego od FPS.
 - [x] Pomiar liczby FPS i czasu klatki.
 
-**Dowód ukończenia:** #44, #47, #48 oraz końcowy proof #49 / PR #59.  
+### Domknięte transze architektoniczne Stage 2
+
+- [x] **2.2.1 — #17:** `FCyclingSimulationSession` — czysty, testowalny C++ spinający `RiderInputController`, parametry kolarza/środowiska i `FixedStepRunner`; konfiguracja oraz operacje fallible są transakcyjne, reset i deterministyczny rerun są objęte Automation. Ta transza została wcześniej zaimplementowana i scalona, ale nie była jawnie zapisana w roadmapie.
+
+**Dowód ukończenia:** #17, #44, #47, #48 oraz końcowy proof #49 / PR #59.  
 Stage 2 zakończył się zielonym buildem i Automation, realnym PIE proof, deterministycznym frame-pacing proof oraz bazowym pomiarem wydajności 1920×1080 na komputerze referencyjnym.
 
 ## Kryterium ukończenia
@@ -159,41 +163,58 @@ Użytkownik może przejechać prostą trasę, zmieniając moc i kadencję, a pr�
 # Etap 3 — trasa testowa i profil wysokości
 
 **Planowany czas:** tydzień 3–5  
-**Status:** w toku — bieżący etap
+**Status:** rdzeń ukończony; 3G reference environment pass zaplanowany przed Stage 4
 
 ## Cel
 
-Stworzyć pełny przebieg fikcyjnej trasy alpejskiej.
+Stworzyć pełny przebieg fikcyjnej trasy alpejskiej i doprowadzić jej prototypową prezentację do uzgodnionego poziomu referencyjnego przed rozpoczęciem mechaniki zakrętów.
 
 ## Plan wykonawczy
 
 Stage 3 jest realizowany kolejno:
 
-1. **3A — #53:** route context i granice rozwiązywane na poziomie każdego fixed-step.
-2. **3B — #64:** port profilu `ALPINE_JOURNEY` do czystego modelu domenowego Unreal.
-3. **3C — #65:** pełny ciągły spline 10 km oraz deterministyczne wyznaczanie nachylenia z geometrii.
-4. **3D — #66:** integracja runtime, start/sektory/meta i deterministyczne crossing events.
-5. **3E — #67:** minimalny teren oraz pełny start-to-finish proof Stage 3.
+1. **3A — #53:** route context i granice rozwiązywane na poziomie każdego fixed-step — **ukończone / PR #70**.
+2. **3B — #64:** port profilu `ALPINE_JOURNEY` do czystego modelu domenowego Unreal — **ukończone / PR #71**.
+3. **3C — #65:** pełny ciągły spline 10 km oraz deterministyczne wyznaczanie nachylenia z geometrii — **ukończone / PR #74**.
+4. **3D — #66:** integracja runtime, start/sektory/meta i deterministyczne crossing events — **ukończone / PR #75**.
+5. **3E — #67:** minimalny teren oraz pełny start-to-finish proof Stage 3 — **ukończone / PR #78**.
+6. **3F — PR #79:** utrwalenie pełnego stanu mapy, materiałów drogi/terenu i wizualnego baseline'u — **ukończone**.
+7. **3G — #80:** Reference Environment Pass — dolina, warstwowe góry, kontrolowany las, atmosfera/oświetlenie i porównywalny BEFORE/AFTER proof — **do wykonania przed Stage 4**.
 
-Nie rozpoczynamy mechaniki techniki zakrętów ze Stage 4 przed zakończeniem 3E.
+Mechaniki techniki zakrętów ze Stage 4 nie rozpoczynamy przed zielonym proofem 3G.
 
-## Zadania
+## Zadania rdzenia Stage 3
 
-- [ ] Zaprojektowanie profilu 20–30-minutowej jazdy.
-- [ ] Utworzenie przebiegu od doliny do wysokich gór.
-- [ ] Dodanie podjazdów, zjazdów i wypłaszczeń.
-- [ ] Dodanie zakrętów o różnych promieniach.
-- [ ] Obliczanie nachylenia z geometrii trasy.
-- [ ] Utworzenie punktów startu, sektorów i mety.
-- [ ] Dodanie podstawowego terenu.
-- [ ] Sprawdzenie ciągłości drogi i braku gwałtownych zmian nachylenia.
-- [ ] Pierwszy pełny przejazd od startu do mety.
-- [ ] Zapisać Stage 3 baseline czasu lokalnego build/proof dla bieżącego małego projektu, bez wymuszania pełnego cooka przy każdej zmianie.
-- [ ] Potwierdzić granicę domenową: wynik symulacji trasy/jazdy nie zależy od `AActor`, renderingu ani transformu presentation jako źródła prawdy.
+- [x] Zaprojektowanie profilu 20–30-minutowej jazdy.
+- [x] Utworzenie przebiegu od doliny do wysokich gór.
+- [x] Dodanie podjazdów, zjazdów i wypłaszczeń.
+- [x] Dodanie zakrętów o różnych promieniach.
+- [x] Obliczanie nachylenia z geometrii trasy.
+- [x] Utworzenie punktów startu, sektorów i mety.
+- [x] Dodanie podstawowego terenu.
+- [x] Sprawdzenie ciągłości drogi i braku gwałtownych zmian nachylenia.
+- [x] Pierwszy pełny przejazd od startu do mety.
+- [x] Zapisać Stage 3 baseline czasu lokalnego build/proof dla bieżącego małego projektu, bez wymuszania pełnego cooka przy każdej zmianie.
+- [x] Potwierdzić granicę domenową: wynik symulacji trasy/jazdy nie zależy od `AActor`, renderingu ani transformu presentation jako źródła prawdy.
+
+**Dowód ukończenia rdzenia:** PR #70, #71, #74, #75 i #78. PR #78 raportuje 10 km trasy, zielony pełny proof, Map Check 0/0, save/reopen oraz reprezentatywny proof 1080p. PR #79 utrwala pełny stan mapy i materiałów Stage 3F na `main`.
+
+## 3G — Reference Environment Pass
+
+- [ ] Ukształtować spójną dolinę otaczającą drogę zamiast czytelnych jako osobne kafle podpór terenu.
+- [ ] Zbudować kilka planów gór z wyraźną głębią i atmospheric perspective.
+- [ ] Poprawić kontrolowaną, deterministyczną gęstość lasu w sektorze leśnym.
+- [ ] Uporządkować przejście materiałów/kolorystyki: meadow → forest → high Alpine.
+- [ ] Dodać wodę w dolinie, jeżeli poprawia uzgodnioną kompozycję bez tworzenia dużego nowego subsystemu.
+- [ ] Poprawić lighting / sky / fog przy zachowaniu czytelności drogi.
+- [ ] Wykonać porównywalny BEFORE/AFTER capture w 1200 m, 4900 m i 8000 m.
+- [ ] Potwierdzić build, Automation, Map Check, save/reopen, LFS/fresh-checkout i podstawowy 1080p performance sanity na komputerze referencyjnym.
 
 ## Kryterium ukończenia
 
-Całą trasę można przejechać bez przerwania, błędu pozycji lub opuszczenia drogi. Baseline build/proof jest zapisany, a domenowa symulacja pozostaje niezależna od presentation.
+Rdzeń Stage 3 jest ukończony: całą trasę można przejechać bez przerwania, błędu pozycji lub opuszczenia drogi; baseline build/proof jest zapisany, a domenowa symulacja pozostaje niezależna od presentation.
+
+**Warunek przejścia do Stage 4:** 3G / #80 ma zielony proof wizualny i techniczny, bez regresji kontraktów Stage 3.
 
 ---
 
