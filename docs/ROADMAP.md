@@ -83,7 +83,7 @@ Gałęzie wyłącznie dokumentacyjne nie wliczają się do limitu dwóch gałęz
 - [x] Utworzenie roadmapy.
 - [x] Konfiguracja Git LFS.
 - [x] Utworzenie zasad pracy dla asystentów AI.
-- [ ] GitHub Project `YACS — MVP` skopiowany 1:1 z pięciokolumnowego boardu 4VELO, z automatyzacją statusów `Backlog` / `In progress` / `In review` / `Done`; kod bootstrapu i synchronizacji przygotowany w #88, pozostało jednorazowe dodanie `PROJECTS_TOKEN` i uruchomienie workflow bootstrap.
+- [ ] GitHub Project `YACS — MVP` skopiowany 1:1 z boardu 4VELO; aktualny source ma statusy `Backlog` / `Ready` / `In progress` / `In review` / `Blocked` / `Done`, a automatyzacja repo steruje `Backlog` / `In progress` / `In review` / `Done`. Bootstrap #88 porównuje układ ze źródłem zamiast hardkodować liczbę kolumn; po poprawce trzeba ponownie uruchomić jednorazowy bootstrap.
 - [x] Instalacja wymaganych narzędzi na komputerze domowym.
 - [x] Utworzenie projektu Unreal Engine 5.
 - [x] Uruchomienie pustego projektu na komputerze referencyjnym.
