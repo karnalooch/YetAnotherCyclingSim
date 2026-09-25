@@ -34,6 +34,9 @@ jobs:
       - name: Compile Python sources
         run: python -m compileall -q physics_reference/src scripts/ci
 
+      - name: Run CircleCI Windows probe contract tests
+        run: python scripts/ci/test_circleci_windows_probe.py
+
       - name: Run branch hygiene unit tests
         run: python scripts/ci/test_cleanup_merged_branches.py
 
