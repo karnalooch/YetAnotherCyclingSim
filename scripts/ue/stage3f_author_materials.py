@@ -67,6 +67,8 @@ def _create_parent_material(name, base_rgb, roughness, edge_color=None):
     mat.set_editor_property("material_domain", unreal.MaterialDomain.MD_SURFACE)
     mat.set_editor_property("shading_model", unreal.MaterialShadingModel.MSM_DEFAULT_LIT)
     mat.set_editor_property("two_sided", False)
+    # Required for HierarchicalInstancedStaticMeshComponent usage
+    mat.set_editor_property("bUsedWithInstancedStaticMeshes", True)
 
     # Color parameter
     color_node = unreal.MaterialEditingLibrary.create_material_expression(
