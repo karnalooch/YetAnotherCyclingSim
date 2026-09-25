@@ -1,3 +1,4 @@
+# High-signal Slack routing for YACS
 name: Slack notifications
 
 on:
