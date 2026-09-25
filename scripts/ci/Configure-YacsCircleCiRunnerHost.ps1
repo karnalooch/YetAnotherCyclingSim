@@ -1,22 +1,20 @@
-#requires -RunAsAdministrator
 <#
 .SYNOPSIS
-Configure the YACS CircleCI machine-runner host so built-in workspace/cache steps use D: and can see gzip.
+Configure a foreground/manual YACS CircleCI machine runner without administrator rights.
 
 .DESCRIPTION
-This is a one-time host bootstrap. It:
-- keeps CircleCI runner working data on D:
-- keeps task-agent downloads on D:
-- exposes the existing Git for Windows gzip/tar binaries to the runner service through the machine PATH
-- restarts the CircleCI service so the runner/task-agent inherit the updated host environment
+Persists runner settings for the current Windows user and updates the current PowerShell
+process so a subsequently launched circleci-runner inherits:
+- Git for Windows gzip/tar on PATH
+- runner work directory on D:
+- task-agent directory on D:
 
-No UE seed payload is copied to C:. The only C: path referenced is the already-installed Git for Windows toolchain.
+No service installation or machine-level registry writes are required.
 #>
 
 [CmdletBinding()]
 param(
-    [string]$RunnerRoot = 'D:\CircleCI\YACS-Runner',
-    [switch]$NoRestart
+    [string]$RunnerRoot = 'D:\CircleCI\YACS-Runner'
 )
 
 Set-StrictMode -Version Latest
@@ -40,40 +38,34 @@ if (-not (Test-Path -LiteralPath $tarPath -PathType Leaf)) {
     throw "Git for Windows tar is missing: $tarPath"
 }
 
-$machinePath = [Environment]::GetEnvironmentVariable('Path', 'Machine')
-$entries = @($machinePath -split ';' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
-if (-not ($entries | Where-Object { $_.TrimEnd('\') -ieq $gitUsrBin.TrimEnd('\') })) {
-    [Environment]::SetEnvironmentVariable('Path', "$gitUsrBin;$machinePath", 'Machine')
-    Write-Host "Added Git for Windows usr\bin to machine PATH: $gitUsrBin"
+$userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+$userEntries = @($userPath -split ';' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+if (-not ($userEntries | Where-Object { $_.TrimEnd('\') -ieq $gitUsrBin.TrimEnd('\') })) {
+    $newUserPath = if ([string]::IsNullOrWhiteSpace($userPath)) { $gitUsrBin } else { "$gitUsrBin;$userPath" }
+    [Environment]::SetEnvironmentVariable('Path', $newUserPath, 'User')
+    Write-Host "Added Git for Windows usr\bin to USER PATH: $gitUsrBin"
 } else {
-    Write-Host "Machine PATH already contains Git for Windows usr\bin."
+    Write-Host "USER PATH already contains Git for Windows usr\bin."
 }
 
-[Environment]::SetEnvironmentVariable('CIRCLECI_RUNNER_WORK_DIR', $workDir, 'Machine')
-[Environment]::SetEnvironmentVariable('CIRCLECI_RUNNER_TASK_AGENT_DIRECTORY', $taskAgentDir, 'Machine')
+[Environment]::SetEnvironmentVariable('CIRCLECI_RUNNER_WORK_DIR', $workDir, 'User')
+[Environment]::SetEnvironmentVariable('CIRCLECI_RUNNER_TASK_AGENT_DIRECTORY', $taskAgentDir, 'User')
 
-Write-Host "CIRCLECI_RUNNER_WORK_DIR=$workDir"
-Write-Host "CIRCLECI_RUNNER_TASK_AGENT_DIRECTORY=$taskAgentDir"
-Write-Host "gzip=$gzipPath"
-Write-Host "tar=$tarPath"
+$env:PATH = "$gitUsrBin;$env:PATH"
+$env:CIRCLECI_RUNNER_WORK_DIR = $workDir
+$env:CIRCLECI_RUNNER_TASK_AGENT_DIRECTORY = $taskAgentDir
+$env:TEMP = $tempDir
+$env:TMP = $tempDir
 
-$services = @(Get-Service | Where-Object {
-    $_.Name -match 'circleci' -or $_.DisplayName -match 'circleci'
-})
+$gzipCommand = Get-Command gzip.exe -ErrorAction Stop
+$tarCommand = Get-Command tar.exe -ErrorAction Stop
 
-if ($services.Count -eq 0) {
-    throw 'No CircleCI Windows service was found. Restart the machine-runner process manually after this script.'
-}
-
-Write-Host ('CircleCI service(s): ' + (($services | ForEach-Object Name) -join ', '))
-
-if (-not $NoRestart) {
-    foreach ($service in $services) {
-        Write-Host "Restarting CircleCI service: $($service.Name)"
-        Restart-Service -Name $service.Name -Force
-        (Get-Service -Name $service.Name).WaitForStatus('Running', [TimeSpan]::FromSeconds(30))
-    }
-    Write-Host 'YACS CircleCI host bootstrap: PASS'
-} else {
-    Write-Host 'Host settings updated. Restart the CircleCI service before the next pipeline.'
-}
+Write-Host ''
+Write-Host 'YACS CircleCI foreground-runner bootstrap: PASS'
+Write-Host "  WORKDIR   = $env:CIRCLECI_RUNNER_WORK_DIR"
+Write-Host "  TASKAGENT = $env:CIRCLECI_RUNNER_TASK_AGENT_DIRECTORY"
+Write-Host "  TEMP      = $env:TEMP"
+Write-Host "  gzip      = $($gzipCommand.Source)"
+Write-Host "  tar       = $($tarCommand.Source)"
+Write-Host ''
+Write-Host 'IMPORTANT: launch/relaunch circleci-runner from THIS PowerShell window (or a new window after sign-in) before triggering the next pipeline.'
