@@ -19,7 +19,6 @@ REQUIRED_AUTOMATED_STATUSES = (
     "In review",
     "Done",
 )
-EXPECTED_STATUS_COUNT = 5
 SUPPORTED_PR_ACTIONS = {
     "opened",
     "reopened",
@@ -326,17 +325,21 @@ def status_names(project: dict[str, Any]) -> tuple[str, ...]:
     )
 
 
-def verify_status_contract(project: dict[str, Any]) -> tuple[str, ...]:
+def verify_status_contract(
+    project: dict[str, Any],
+    *,
+    expected_statuses: tuple[str, ...] | None = None,
+) -> tuple[str, ...]:
     names = status_names(project)
-    if len(names) != EXPECTED_STATUS_COUNT:
-        raise AutomationError(
-            f"copied Project must expose exactly {EXPECTED_STATUS_COUNT} Status "
-            f"columns; actual={names!r}"
-        )
     missing = [status for status in REQUIRED_AUTOMATED_STATUSES if status not in names]
     if missing:
         raise AutomationError(
-            "copied Project is missing automated Status options: " + ", ".join(missing)
+            "Project is missing automated Status options: " + ", ".join(missing)
+        )
+    if expected_statuses is not None and names != expected_statuses:
+        raise AutomationError(
+            "copied Project Status options differ from source template: "
+            f"source={expected_statuses!r}; target={names!r}"
         )
     return names
 
@@ -474,6 +477,12 @@ def bootstrap_project(
 
     source = choose_project(owner_data, source_title)
     assert source is not None
+    source_details = client.execute(
+        PROJECT_DETAILS_QUERY,
+        {"projectId": str(source["id"])},
+    )
+    source_project = project_node(source_details)
+    source_statuses = verify_status_contract(source_project)
     target = choose_project(owner_data, target_title, required=False)
 
     if target is None:
@@ -524,7 +533,10 @@ def bootstrap_project(
     else:
         print(f"project-bootstrap: repository already linked: {repository}")
 
-    copied_statuses = verify_status_contract(project)
+    copied_statuses = verify_status_contract(
+        project,
+        expected_statuses=source_statuses,
+    )
     print("project-bootstrap: copied Status columns -> " + " -> ".join(copied_statuses))
 
     field_id, backlog_option_id = status_option_id(project, "Backlog")
