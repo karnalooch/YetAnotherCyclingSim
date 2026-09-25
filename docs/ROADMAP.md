@@ -58,13 +58,13 @@ Gałęzie wyłącznie dokumentacyjne nie wliczają się do limitu dwóch gałęz
 
 ## Zadania
 
-- [x] Utworzenie prywatnego repozytorium GitHub.
+- [x] Utworzenie repozytorium GitHub (obecnie publicznego).
 - [x] Dodanie `.gitignore` dla Unreal Engine.
 - [x] Utworzenie dokumentu wymagań.
 - [x] Utworzenie roadmapy.
 - [x] Konfiguracja Git LFS.
 - [x] Utworzenie zasad pracy dla asystentów AI.
-- [ ] Utworzenie tablicy zadań.
+- [x] Backlog i status prac prowadzone w GitHub Issues; osobna tablica Projects nie jest wymagana dla MVP.
 - [x] Instalacja wymaganych narzędzi na komputerze domowym.
 - [x] Utworzenie projektu Unreal Engine 5.
 - [x] Uruchomienie pustego projektu na komputerze referencyjnym.
@@ -72,6 +72,12 @@ Gałęzie wyłącznie dokumentacyjne nie wliczają się do limitu dwóch gałęz
 **Notatka statusowa:** na komputerze referencyjnym udało się zbudować projekt
 UE 5.8 w trybie C++ (edytor, Windows) oraz uruchomić pusty projekt
 YetAnotherCyclingSim.
+
+**Jawny dług infrastrukturalny (nie blokuje bieżącego 3G):**
+
+- #22 — włączyć pozostałe ustawienia bezpieczeństwa GitHub i ochronę `main`; API nadal raportuje `main.protected = false`.
+- #24 — dodać prawdziwy Windows/Unreal Engine build + Automation CI; obecne hosted CI pozostaje warstwą governance/security/static analysis, nie dowodem kompilacji UE.
+- #23 — ekstrakcja wspólnego CI do `engineering-platform` jest ukończona i zamknięta.
 
 ## Kryterium ukończenia
 

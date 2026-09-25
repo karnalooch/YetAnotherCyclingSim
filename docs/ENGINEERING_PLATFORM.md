@@ -83,7 +83,8 @@ The baseline requires:
     reports `success`.
 
 The CodeQL `none` build is deliberately not presented as proof that the UE5
-project compiles. It is a hosted-runner static-analysis layer.
+project compiles. It is a hosted-runner static-analysis layer. A real Windows/Unreal
+build + Automation lane remains tracked in #24.
 
 ## Unreal-specific repository policy
 
@@ -107,6 +108,8 @@ consumer CI and has been manually merged.
 Product-specific jobs stay in their application repositories.
 
 ## Branch protection
+
+**Current status (2026-09-25): not yet enforced.** GitHub currently reports `main.protected = false`; the remaining repository-admin work is tracked in #22.
 
 Protect `main` with:
 
