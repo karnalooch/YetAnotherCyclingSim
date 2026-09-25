@@ -33,7 +33,7 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
 
     def test_seed_and_canary_share_explicit_cache_key(self):
         self.assertIn("ue_cache_key:", self.config)
-        self.assertIn('default: "yacs-ue58-win64-v2"', self.config)
+        self.assertIn('default: "yacs-ue58-win64-v3"', self.config)
         self.assertIn("save_cache:", self.config)
         self.assertIn("restore_cache:", self.config)
         self.assertGreaterEqual(
@@ -118,6 +118,30 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
             "implausibly small",
         ):
             self.assertIn(token, self.config)
+
+    def test_seed_save_cache_uses_absolute_d_drive_paths(self):
+        for token in (
+            "D:\\CircleCI\\YACS-Runner\\Workdir\\Saved\\RuntimeProof\\CI\\UE58Seed\\ue58-win64.zip",
+            "D:\\CircleCI\\YACS-Runner\\Workdir\\Saved\\RuntimeProof\\CI\\UE58Seed\\ue58-win64-manifest.json",
+        ):
+            self.assertIn(token, self.config)
+
+    def test_seed_workflow_verifies_restored_cache_on_hosted_windows(self):
+        for token in (
+            "ue-cache-verify:",
+            "Prepare portable D cache drive",
+            "CACHE RESTORE PASS",
+            "Restored UE cache SHA256 mismatch",
+            "requires:",
+            "- ue-cache-seed",
+        ):
+            self.assertIn(token, self.config)
+
+    def test_hosted_canary_restores_from_portable_d_cache_path(self):
+        self.assertIn(
+            "-SeedRoot 'D:\\CircleCI\\YACS-Runner\\Workdir\\Saved\\RuntimeProof\\CI\\UE58Seed'",
+            self.config,
+        )
 
     def test_restore_hash_is_powershell_version_independent(self):
         self.assertIn("[System.Security.Cryptography.SHA256]::Create()", self.restore)
