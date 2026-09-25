@@ -55,6 +55,7 @@ jobs:
       - run:
           name: Measure and package local UE 5.8
           shell: powershell.exe -ExecutionPolicy Bypass
+          no_output_timeout: 45m
           command: |
             powershell.exe -ExecutionPolicy Bypass -File scripts/ci/Prepare-YacsUe58Seed.ps1 -CreateArchive
 
