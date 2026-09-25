@@ -141,7 +141,9 @@ $excludeRelative = @(
     'Templates'
 )
 
+Write-Host ("Scanning UE 5.8 tree: {0}" -f $EngineRoot)
 $totalBytes = Measure-TreeBytes -Path $EngineRoot
+Write-Host ("UE tree scan complete: {0} GiB" -f (Convert-BytesToGiB -Bytes $totalBytes))
 $excluded = @()
 $excludedBytes = [int64]0
 foreach ($relative in $excludeRelative) {
@@ -210,8 +212,10 @@ if ($CreateArchive) {
         Add-Type -AssemblyName System.IO.Compression.FileSystem
 
         $engineLeaf = Split-Path -Leaf $EngineRoot
+        Write-Host 'Enumerating files for UE seed archive...'
         $sourceFiles = @(Get-IncludedFiles -Root $EngineRoot -ExcludedRelative $excludeRelative)
         $manifest.ExpectedFileCount = $sourceFiles.Count
+        Write-Host ("Archive input files: {0}" -f $sourceFiles.Count)
 
         $fileStream = [System.IO.File]::Open(
             $partialPath,
@@ -226,6 +230,8 @@ if ($CreateArchive) {
                 $true
             )
             try {
+                $packedCount = 0
+                $packProgress = [System.Diagnostics.Stopwatch]::StartNew()
                 foreach ($sourceFile in $sourceFiles) {
                     $entryName = "$engineLeaf/$($sourceFile.RelativePath)"
                     $entry = $zip.CreateEntry($entryName, [System.IO.Compression.CompressionLevel]::Optimal)
@@ -240,7 +246,15 @@ if ($CreateArchive) {
                     } finally {
                         $input.Dispose()
                     }
+
+                    $packedCount++
+                    if ($packProgress.Elapsed.TotalSeconds -ge 30) {
+                        $percent = [math]::Round(($packedCount / [double]$sourceFiles.Count) * 100, 1)
+                        Write-Host ("Packing UE seed: {0}/{1} files ({2}%)" -f $packedCount, $sourceFiles.Count, $percent)
+                        $packProgress.Restart()
+                    }
                 }
+                Write-Host ("Packing UE seed complete: {0}/{1} files" -f $packedCount, $sourceFiles.Count)
             } finally {
                 $zip.Dispose()
             }
@@ -262,6 +276,8 @@ if ($CreateArchive) {
             )
             try {
                 $archiveSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+                $validatedCount = 0
+                $validationProgress = [System.Diagnostics.Stopwatch]::StartNew()
                 foreach ($entry in $zipRead.Entries) {
                     if ([string]::IsNullOrEmpty($entry.Name)) { continue }
                     if (-not $archiveSet.Add($entry.FullName)) {
@@ -274,7 +290,14 @@ if ($CreateArchive) {
                     } finally {
                         $entryStream.Dispose()
                     }
+
+                    $validatedCount++
+                    if ($validationProgress.Elapsed.TotalSeconds -ge 30) {
+                        Write-Host ("Validating UE seed: {0} files read" -f $validatedCount)
+                        $validationProgress.Restart()
+                    }
                 }
+                Write-Host ("Validating UE seed complete: {0} files read" -f $validatedCount)
 
                 $manifest.ArchivedFileCount = $archiveSet.Count
                 $missing = @(
