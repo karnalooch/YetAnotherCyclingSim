@@ -104,3 +104,14 @@ Plugins/Wingman/
 
 # Downloaded source-asset cache (reproducible via scripts; do not commit wholesale)
 /ExternalAssets/
+
+# UE-MCP local/development state
+ue-mcp.local.yml
+.ue-mcp/
+tools/ue-mcp/node_modules/
+tools/ue-mcp/npm-debug.log*
+ue-mcp-audit.log
+
+# UE-MCP bridge is a reproducibly deployed local development plugin.
+# Do not vendor it into YACS during the Stage 3G spike.
+Plugins/UE_MCP_Bridge/

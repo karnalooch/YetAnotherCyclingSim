@@ -33,7 +33,24 @@ Zakresu nie zwiększamy bez aktualizacji dokumentu wymagań i roadmapy.
 
 ## Plan assetów
 
-Szczegółowa lista potrzebnych assetów, kolejność ich pozyskiwania, reguły licencyjne i Asset Ledger znajdują się w [`ASSET_PLAN.md`](ASSET_PLAN.md).
+Szczegółowa lista potrzebnych assetów, kolejność ich pozyskiwania oraz dwa rejestry — **Source Asset Ledger** i **Technical UE Asset Ledger** — znajdują się w [`ASSET_PLAN.md`](ASSET_PLAN.md). Technical UE assets (np. PCG Graph, Control Rig, IK Rig, Niagara, MetaSound) są pełnoprawnymi deliverables produkcyjnymi, mimo że nie są kupowanymi paczkami.
+
+## Plan narzędzi i pluginów Unreal Engine
+
+Pluginy i narzędzia UE włączamy etapami, dokładnie tak samo jak assety. Każdy plugin musi mieć konkretny cel, przypisany etap oraz własną walidację; nie aktywujemy dużych zestawów funkcji „na zapas”.
+
+Źródłem prawdy dla planu integracji jest [`UNREAL_TOOLING_PLUGIN_PLAN.md`](UNREAL_TOOLING_PLUGIN_PLAN.md).
+
+Najważniejsze bramki:
+
+| Etap | Tooling / plugin gate |
+|---|---|
+| **3G** | PCG, Editor Scripting Utilities, Geometry Script; PCG Geometry Script Interop tylko gdy potrzebny do konkretnego graphu; PCGToolset dopiero po zielonym MCP smoke |
+| **3G / #85** | db-lyon `ue-mcp` pozostaje warstwą orkiestracji/guards/flows; oficjalny UE 5.8 Unreal MCP / Toolset Registry może być wykorzystywany przez tę warstwę, ale nie uruchamiamy na początku dwóch niezależnych MCP serverów |
+| **6** | Control Rig + IK Rig + FullBodyIK; opcjonalnie Skeletal Mesh Editing Tools i Control Rig Modules po realnym zapotrzebowaniu |
+| **7** | opcjonalnie Scriptable Tools Editor Mode, jeśli własny panel/tryb worldgen przyspiesza pracę względem flows |
+| **8** | Niagara dla VFX oraz MetaSounds dla parametrycznego audio |
+| **opcjonalnie 3G/7** | Water + Landmass tylko jeśli jezioro/rzeka pozostają w art direction i uzasadniają koszt subsystemu |
 
 Assety wchodzą etapami, a nie jako osobny wielki art-pass:
 
@@ -205,6 +222,7 @@ Stage 3 jest realizowany kolejno:
 5. **3E — #67:** minimalny teren oraz pełny start-to-finish proof Stage 3 — **ukończone / PR #78**.
 6. **3F — PR #79:** utrwalenie pełnego stanu mapy, materiałów drogi/terenu i wizualnego baseline'u — **ukończone**.
 7. **3G — #80:** Reference Environment Pass — dolina, warstwowe góry, kontrolowany las, atmosfera/oświetlenie i porównywalny BEFORE/AFTER proof — **do wykonania przed Stage 4**.
+8. **3G-MCP — #85:** kontrolowany spike `db-lyon/ue-mcp` jako warstwa wykonawcza dla generowania świata; tylko inspekcja i transient proof przed dopuszczeniem trwałych zapisów — **w toku równolegle w ramach 3G**.
 
 Mechaniki techniki zakrętów ze Stage 4 nie rozpoczynamy przed zielonym proofem 3G.
 
@@ -235,6 +253,19 @@ Mechaniki techniki zakrętów ze Stage 4 nie rozpoczynamy przed zielonym proofem
 - [ ] Wykonać porównywalny BEFORE/AFTER capture w 1200 m, 4900 m i 8000 m.
 - [ ] Potwierdzić build, Automation, Map Check, save/reopen, LFS/fresh-checkout i podstawowy 1080p performance sanity na komputerze referencyjnym.
 
+### Tooling gate 3G
+
+- [ ] Włączyć natywny UE plugin **PCG** jako podstawowy system proceduralnego rozmieszczania vegetation/rocks/roadside dressing.
+- [ ] Włączyć **Editor Scripting Utilities** jako uzupełnienie istniejącego `PythonScriptPlugin` dla bezpiecznej automatyzacji edytora.
+- [ ] Włączyć **Geometry Script** dla generowania, analizy i modyfikacji geometrii pomocniczej; traktować jego API jako Beta i nie uzależniać od niego autorytatywnej fizyki/trasy.
+- [ ] Włączyć **PCG Geometry Script Interop** tylko wtedy, gdy pierwszy graph faktycznie potrzebuje przepływu PCG ↔ Dynamic/Static Mesh; nie jest warunkiem samego startu PCG.
+- [ ] Po zielonym #85 MCP smoke ocenić eksperymentalny **PCGToolset** UE 5.8 do tworzenia/modyfikacji PCG Graphów przez agenta.
+- [ ] **Water/Landmass** pozostawić wyłączone do decyzji, że jezioro/rzeka są częścią zaakceptowanej kompozycji 3G.
+- [ ] Pierwszy PCG proof ma być editor-time, deterministyczny i ograniczony do jednego sektora; runtime PCG nie jest wymaganiem MVP.
+- [ ] PCG może konsumować route spline/WorldSpec jako constraints, ale nie może stać się źródłem prawdy dla przebiegu trasy.
+- [ ] Zbudować i zarejestrować w Technical UE Asset Ledger pierwszy zestaw: `PCG_RouteExclusion`, `PCG_Valley`, `PCG_Forest`, `PCG_HighAlpine`; każdy przechodzi deterministic regenerate/proof zanim dostanie status `validated`.
+- [ ] Authoring assets PCG przechowywać poza `/Game/Generated/YACS/**`; katalog `Generated` jest wyłącznie dla odtwarzalnych outputów generatora.
+
 ### Asset gate 3G
 
 Na tym etapie wolno wprowadzić tylko assety potrzebne do uzyskania referencyjnego środowiska: bazowe landscape/ground materials, vegetation, rocks/cliffs oraz atmosferę. To nie jest jeszcze finalny art pass Stage 7. Zakup paczki jest uzasadniony wyłącznie wtedy, gdy natywne UE/darmowe zasoby nie pozwalają osiągnąć spójnego baseline'u. Szczegóły: [`ASSET_PLAN.md`](ASSET_PLAN.md).
@@ -242,6 +273,21 @@ Na tym etapie wolno wprowadzić tylko assety potrzebne do uzyskania referencyjne
 ## Kryterium ukończenia
 
 Rdzeń Stage 3 jest ukończony: całą trasę można przejechać bez przerwania, błędu pozycji lub opuszczenia drogi; baseline build/proof jest zapisany, a domenowa symulacja pozostaje niezależna od presentation.
+
+### 3G-MCP — kontrolowana warstwa world generation (#85)
+
+UE-MCP jest narzędziem deweloperskim dla Stage 3G i późniejszego Stage 7, a nie nowym źródłem prawdy dla trasy.
+
+- [ ] Przypiąć stabilne `db-lyon/ue-mcp` i uruchomić bridge na UE 5.8.2.
+- [ ] Zachować Stage 3 route profile / geometry / spline / fixed-step simulation jako warstwę autorytatywną.
+- [ ] Wprowadzić `WorldSpec` z deterministycznym seedem i jawnymi granicami biome/set-dressing.
+- [ ] Zacząć od read-only inspection oraz transient actor proof, którego nie da się zapisać do mapy.
+- [ ] Włączyć trwałe generowanie dopiero po zielonym bridge/build/Automation proof i po aktywowaniu generated-content guard.
+- [ ] Docelowe trwałe outputy world generation ograniczyć do `/Game/Generated/YACS/**`.
+- [ ] Nie wystawiać agentowi escape hatchy `execute_python` / `execute_command` w początkowym surface.
+- [ ] Reużyć istniejące BEFORE/AFTER proofy 1200 m / 4900 m / 8000 m.
+
+Szczegóły architektury i plan wdrożenia: [`UE_MCP_WORLD_GENERATION.md`](UE_MCP_WORLD_GENERATION.md).
 
 **Warunek przejścia do Stage 4:** 3G / #80 ma zielony proof wizualny i techniczny, bez regresji kontraktów Stage 3.
 
@@ -359,6 +405,16 @@ Warstwa prezentacji może korzystać m.in. z: `Speed`, `Grade`,
 np. rotacje/przesunięcia `Pelvis`, `Spine`, `Head`, `Elbow`, `Knee`
 oraz cele IK `Hand` / `Foot`; system animacji nie może zmieniać wyniku fizyki.
 
+### Tooling gate Stage 6
+
+- [ ] Włączyć **Control Rig** dla proceduralnej warstwy pozy kolarza.
+- [ ] Włączyć **IK Rig** dla retargetingu oraz definiowania goal/solver chain dla ridera.
+- [ ] Włączyć **FullBodyIK** dla wielu jednoczesnych celów dłonie/pedały/głowa/miednica i proceduralnych korekt całego ciała.
+- [ ] Ocenić **Skeletal Mesh Editing Tools** tylko jeśli naprawy skinning/rigging w UE realnie oszczędzają eksport do Blendera.
+- [ ] Ocenić **Control Rig Modules** dopiero po powstaniu pierwszego działającego minimalnego Control Riga; nie dodawać modułów przed pomiarem potrzeby.
+- [ ] Zmierzyć koszt Control Rig + IK/FBIK na komputerze referencyjnym i zachować możliwość LOD/update-rate reduction bez wpływu na fizykę.
+- [ ] Technical UE Asset Ledger musi objąć co najmniej `IK_Rider`, `RTG_CyclingMocap` i `CR_Cyclist`; status `validated` wymaga retarget proof oraz kontaktu dłoni/stóp w reprezentatywnych pozach.
+
 ### Asset gate Stage 6
 
 To pierwszy obowiązkowy asset pass postaci: wybieramy i walidujemy **jeden** model kolarza oraz **jeden** road bike. Rider obejmuje minimalny strój/kask i skeleton/rig nadający się do retargetingu; rower powinien mieć rozdzielone elementy wymagające animacji (co najmniej koła i korba/pedały). Model z Tripo/Meshy jest dopuszczalny po review topologii, skali, materiałów i riggingu. Nie budujemy jeszcze katalogu rowerów ani ubrań.
@@ -394,6 +450,13 @@ ciągłą zmianę pozy bez utraty kontaktu dłoni z kierownicą i stóp z pedał
 - [ ] Zebrać baseline GPU, Game Thread, Render Thread, RAM/VRAM i hitchy dla reprezentatywnych scen.
 - [ ] Nanite, Virtual Texturing/RVT i inne cięższe technologie dobierać przez benchmark przed/po, nie jako domyślną regułę świata.
 
+### Tooling gate Stage 7
+
+- [ ] Rozszerzać istniejące PCG graphs/flows zamiast ręcznie stawiać masowe environment dressing.
+- [ ] Rozważyć **Scriptable Tools Editor Mode** tylko wtedy, gdy własny panel/tryb typu „Generate YACS World” daje wyraźną przewagę nad nazwanymi MCP flows i zwykłymi Editor Utility workflows.
+- [ ] Nie dodawać ciężkich world-building frameworków, jeżeli natywne PCG + Geometry Script + nasze flows pokrywają potrzebę.
+- [ ] Każde nowe narzędzie świata musi respektować `/Game/Generated/YACS/**`, deterministyczny seed, route clearance i cleanup/regeneration contract.
+
 ### Asset gate Stage 7
 
 To główny produkcyjny art pass środowiska. W tym etapie dobieramy/uzupełniamy: vegetation, rocks/cliffs, road/roadside props, asphalt/decals, modularne alpine buildings, village props, landmarks oraz ograniczony zestaw pojazdów i przygotowanych scenek życia. Preferujemy spójność zestawu landscape + vegetation + rocks nad liczbę różnych paczek. Nie wdrażamy pełnego traffic systemu.
@@ -423,6 +486,14 @@ Każdy płatny lub zewnętrzny pack trafia do Asset Ledger w [`ASSET_PLAN.md`](A
 - [ ] Wiatr zależny od prędkości i kierunku.
 - [ ] Dźwięki deszczu, lasu, zwierząt i miejscowości.
 - [ ] Testy wydajności podczas najcięższych warunków, w tym co najmniej dense foliage + deszcz + mokra droga + dynamiczne cienie na reprezentatywnym fragmencie.
+
+### Tooling gate Stage 8
+
+- [ ] Włączyć/zweryfikować **Niagara** jako podstawowy system VFX dla deszczu, sprayu, wind/debris i subtelnych efektów atmosferycznych.
+- [ ] Włączyć/zweryfikować **MetaSounds** dla parametrycznego drivetrain/freehub/tyres/brakes/wind audio zależnego od stanu jazdy.
+- [ ] Nie włączać eksperymentalnego MetaSounds feature set bez konkretnej potrzeby; bazowy MetaSound ma pierwszeństwo.
+- [ ] Audio/VFX otrzymują parametry z gameplay/presentation, ale nie stają się źródłem prawdy dla fizyki.
+- [ ] Zarejestrować i zwalidować w Technical UE Asset Ledger co najmniej `NS_Rain`, `NS_WheelSpray`, `MS_Drivetrain` i `MS_Wind`, z proofem GPU/audio odpowiednim dla typu assetu.
 
 ### Asset gate Stage 8
 

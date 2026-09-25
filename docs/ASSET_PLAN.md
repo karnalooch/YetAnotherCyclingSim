@@ -7,12 +7,41 @@
 
 ## 1. Cel
 
-Ten dokument odpowiada na dwa pytania:
+Ten dokument odpowiada na cztery pytania:
 
-1. Jakich assetów potrzebuje YACS?
-2. W którym etapie roadmapy dany asset ma wejść do projektu?
+1. Jakich **source assets** potrzebuje YACS?
+2. Jakich **technical UE assets** musimy zbudować sami?
+3. W którym etapie roadmapy dany asset ma wejść do projektu?
+4. Jak go walidujemy, wersjonujemy i utrzymujemy?
 
 Assety mają wspierać jedną fikcyjną trasę alpejską 20–30 minut. MVP nie jest katalogiem rowerów, postaci ani regionów — priorytetem jest spójna wizualnie, wydajna i grywalna trasa.
+
+### 1.1 Dwa typy assetów
+
+**Source assets** to wejściowe zasoby artystyczne lub nagraniowe pozyskane z zewnątrz albo wygenerowane poza UE, np.:
+
+- vegetation meshes;
+- rocks/cliffs;
+- landscape textures;
+- rider/bike meshes;
+- mocap clips;
+- audio samples;
+- UI icons/fonts.
+
+**Technical UE assets** to produkcyjne zasoby tworzone i wersjonowane wewnątrz projektu Unreal, np.:
+
+- PCG Graphs / PCG Settings;
+- Material / Material Instance;
+- IK Rig / IK Retargeter;
+- Control Rig;
+- Niagara System / Emitter;
+- MetaSound Source / Patch;
+- Data Assets / Data Tables;
+- generated helper meshes;
+- Editor Utility assets;
+- World/Level assets i inne deterministyczne outputy generatora.
+
+Technical UE asset może być równie krytyczny produkcyjnie jak model 3D. Nie traktujemy go jako „narzędziowego śmiecia” tylko dlatego, że powstał wewnątrz Unreal Editor.
 
 ## 2. Kolejność pozyskiwania
 
@@ -53,17 +82,17 @@ Assety mają wspierać jedną fikcyjną trasę alpejską 20–30 minut. MVP nie 
 
 ## 3. Harmonogram assetów wg etapów
 
-| Etap | Co dokładamy | Poziom jakości | Zakup? |
+| Etap | Source assets | Technical UE assets | Poziom jakości / zakup |
 |---|---|---|---|
-| **3G — Reference Environment Pass** | landscape materials, trawa, podstawowy las, skały/klify, prosty zestaw meadow→forest→high Alpine, sky/fog/woda jeśli potrzebna | referencyjny baseline, nie final art | tylko gdy darmowe/natywne assety nie wystarczą |
-| **4 — zakręty** | debug/guidance decals i proste oznaczenia entry/apex/exit | funkcjonalne | nie planujemy paczki produkcyjnej |
-| **5 — HUD** | font, proste ikony/SVG: power, cadence, speed, grade, wind, weather, corner guidance | produkcyjne minimum | tylko jeśli brak dobrego darmowego/licencjonowanego zestawu |
-| **6 — kolarz i rower** | 1 rower, 1 rider, strój, kask, skeleton/rig, mocap/retargeting | produkcyjne dla MVP | wysoki priorytet |
-| **7 — świat** | pełny vegetation pass, rocks, roadside props, road decals, alpine buildings, village props, landmark props, kilka pojazdów i scenek życia | produkcyjne | główny etap zakupów środowiska |
-| **8 — pogoda i audio** | rain/spray VFX, wetness/puddles jeśli potrzebne, wind/leaf particles, drivetrain/freehub/tyres/brakes, rain/forest/village ambience | produkcyjne | selektywnie |
-| **9 — zapis/FIT** | brak nowych assetów wymaganych | — | nie |
-| **10 — stabilizacja MVP** | tylko brakujące assety blokujące spójność lub czytelność; polish istniejących | final MVP polish | zakupy wyjątkowo, po profilowaniu i review |
-| **Po MVP** | kolejne rowery, stroje, tłumy, traffic, zwierzęta, kolejne regiony | rozszerzenia | osobny budżet |
+| **3G — Reference Environment Pass** | landscape materials, grass, trees, rocks/cliffs, sky/fog inputs, water input jeśli potrzebny | PCG graphs/settings, material instances, biome/exclusion assets, generated helper geometry, proof worlds/data | referencyjny baseline; zakup tylko gdy darmowe/natywne zasoby nie wystarczą |
+| **4 — zakręty** | proste decals/markery guidance | debug/guidance material instances, ewentualne spline/decal helper assets | funkcjonalne; bez paczki produkcyjnej |
+| **5 — HUD** | font, ikony/SVG | UMG widget assets, style/data assets | produkcyjne minimum |
+| **6 — kolarz i rower** | 1 bike, 1 rider, strój, kask, mocap | IK Rig, IK Retargeter, Control Rig, Animation/Blend assets, rider/bike presentation data | produkcyjne dla MVP; wysoki priorytet |
+| **7 — świat** | pełny vegetation/rocks/roadside/buildings/vehicles pass | production PCG graphs, generator data assets, generated helper meshes, material instances, optional world-authoring utility assets | główny art pass |
+| **8 — pogoda i audio** | audio samples, VFX textures/noise jeśli potrzebne | Niagara systems/emitters, MetaSound sources/patches, wet-weather material instances | produkcyjne; zakupy selektywne |
+| **9 — zapis/FIT** | brak wymaganych source assets | ewentualne Data Assets/config assets dla profili eksportu | zwykle bez zakupów |
+| **10 — stabilizacja MVP** | wyłącznie braki blokujące spójność | finalizacja/cleanup technical assets, redirectors/dependencies, asset audit | final MVP polish |
+| **Po MVP** | kolejne rowery, stroje, tłumy, traffic, regiony | nowe PCG biomy, rigs, VFX/audio graphs, crowd/world systems | osobny budżet |
 
 ## 4. Lista assetów według kategorii
 
@@ -294,6 +323,87 @@ Dodatkowe HDRI, sky presets lub LUT-y kupujemy/dodajemy wyłącznie wtedy, gdy p
 
 **Wchodzi:** 3G i później polish w 7/8.
 
+### 4.13 Technical UE assets
+
+Ta kategoria obejmuje assety tworzone **wewnątrz Unreal Engine** lub generowane przez nasze tooling/flows. Nie wymagają zakupu, ale wymagają planu produkcyjnego tak samo jak source art.
+
+#### Stage 3G / world generation
+
+Planowane:
+
+- `PCG_Valley`;
+- `PCG_Forest`;
+- `PCG_HighAlpine`;
+- `PCG_Roadside`;
+- `PCG_RouteExclusion`;
+- biome/settings assets;
+- material instances dla meadow / forest / high-Alpine;
+- generated helper meshes tam, gdzie Geometry Script daje realną wartość;
+- WorldSpec-compatible data assets tylko jeśli tekstowy WorldSpec nie wystarcza runtime/editorowi.
+
+Zasady:
+
+- outputy generatora mają trafiać pod `/Game/Generated/YACS/**`;
+- source graphs/settings mają żyć w stabilnym, ręcznie wersjonowanym katalogu projektu, nie w `Generated`;
+- ten sam seed + input assets + generator version ma dawać równoważny wynik;
+- PCG graph jest kodem/konfiguracją produkcyjną i podlega review/proof.
+
+#### Stage 6 / rider
+
+Planowane:
+
+- `IK_Rider`;
+- `IK_MocapSource` jeśli źródłowy skeleton tego wymaga;
+- `RTG_CyclingMocap`;
+- `CR_Cyclist`;
+- Animation Blueprint / Blend Spaces / pose assets potrzebne do runtime;
+- jawne hand/foot/pelvis/head goal definitions;
+- rider presentation Data Asset, jeśli parametry proceduralnej pozy będą wymagały wersjonowanej konfiguracji.
+
+#### Stage 8 / VFX i audio
+
+Planowane:
+
+- `NS_Rain`;
+- `NS_WheelSpray`;
+- `NS_WindDebris`;
+- Niagara emitters wspólne dla systemów powyżej;
+- `MS_Drivetrain`;
+- `MS_Freehub`;
+- `MS_Tyres`;
+- `MS_Wind`;
+- MetaSound patches dla współdzielonej modulacji, jeśli faktycznie redukują duplikację;
+- wetness/material instances zależne od stanu pogody.
+
+#### Konwencja katalogów
+
+Docelowa struktura ma rozdzielać **authoring assets** od **generated outputs**:
+
+```text
+Content/YACS/
+├── WorldGen/
+│   ├── PCG/
+│   ├── Materials/
+│   ├── Data/
+│   └── Utilities/
+├── Rider/
+│   ├── IK/
+│   ├── Rig/
+│   ├── Animation/
+│   └── Data/
+├── Weather/
+│   ├── Niagara/
+│   ├── Materials/
+│   └── Data/
+└── Audio/
+    └── MetaSounds/
+
+Content/Generated/YACS/
+└── ... deterministic generator outputs only ...
+```
+
+Nie przenosimy wszystkiego natychmiast do tej struktury. Jest to kontrakt docelowy stosowany przy nowych technical assets; istniejących assetów nie przemieszczamy bez osobnego, bezpiecznego migration tasku.
+
 ## 5. Minimalny koszyk MVP
 
 Jeżeli trzeba będzie kupować paczki, preferowana kolejność to:
@@ -345,7 +455,7 @@ Każdy większy asset lub pack powinien przejść odpowiedni podzbiór kontroli:
 - licencja i możliwość dystrybucji w buildzie;
 - brak niepotrzebnych zależności od pluginów.
 
-## 8. Asset ledger
+## 8. Source asset ledger
 
 Po wyborze konkretnych paczek tabela poniżej staje się rejestrem źródła prawdy.
 
@@ -368,7 +478,29 @@ Lista Stage 3G jest utrzymywana w `scripts/assets/stage3g_polyhaven.json`. Skryp
 
 Pobranie źródeł **nie oznacza akceptacji assetu do mapy**. Status `candidate` lub `approved` w ledgerze dotyczy doboru/licencji; status `validated` wymaga importu do UE, sprawdzenia LOD/Nanite/instancing i pomiaru kosztu na komputerze referencyjnym.
 
-## 9. Definition of done dla asset passu MVP
+## 9. Technical UE asset ledger
+
+Technical assets zwykle nie mają osobnej ceny zakupu, ale mogą dziedziczyć ograniczenia/licencję swoich inputów. Każdy ma właściciela etapu, status, zależności i wymagany proof.
+
+| Technical UE asset | Typ | Stage | Status | Źródła wejściowe / zależności | Wymagany proof |
+|---|---|---|---|---|---|
+| `PCG_Valley` | PCG Graph | 3G | planned | WorldSpec + route constraints + approved meadow/rock assets | deterministic regenerate + 1200 m screenshot + perf sanity |
+| `PCG_Forest` | PCG Graph | 3G/7 | planned | WorldSpec + route exclusion + approved conifers/ground assets | deterministic regenerate + 4900 m screenshot + density/perf proof |
+| `PCG_HighAlpine` | PCG Graph | 3G/7 | planned | WorldSpec + rocks/scree/cliff assets | deterministic regenerate + 8000 m screenshot |
+| `PCG_RouteExclusion` | PCG helper/settings | 3G | planned | authoritative route spline | no generated instance violates route-clearance contract |
+| `IK_Rider` | IK Rig | 6 | planned | production rider skeleton | retarget chain validation |
+| `RTG_CyclingMocap` | IK Retargeter | 6 | planned | mocap source + rider IK rigs | representative cycling clip retarget proof |
+| `CR_Cyclist` | Control Rig | 6 | planned | rider skeleton + bike contact goals | hand/foot contact + tuck/corner/standing proof |
+| `NS_Rain` | Niagara System | 8 | planned | optional VFX textures/noise | visual + GPU proof |
+| `NS_WheelSpray` | Niagara System | 8 | planned | wheel/surface/wetness state | camera-visible spray + GPU proof |
+| `MS_Drivetrain` | MetaSound Source | 8 | planned | drivetrain source samples + cadence/power inputs | parameter continuity + audio sanity |
+| `MS_Wind` | MetaSound Source | 8 | planned | wind source samples/noise + speed/wind inputs | direction/speed response proof |
+
+Statusy technical assets: `planned`, `prototype`, `reviewed`, `validated`, `deprecated`, `removed`.
+
+Technical asset przechodzi do `validated` dopiero po wymaganym build/proofie na komputerze referencyjnym.
+
+## 10. Definition of done dla asset passu MVP
 
 Asset pass MVP jest ukończony, gdy:
 
@@ -380,4 +512,6 @@ Asset pass MVP jest ukończony, gdy:
 - assety nie łamią celu 1080p/60 FPS na RTX 2070 Super;
 - nie ma niewyjaśnionych problemów licencyjnych;
 - repo nie zawiera przypadkowego dumpu całych paczek marketplace;
-- końcowa lista użytych assetów jest zapisana w Asset Ledger.
+- końcowa lista użytych source assets jest zapisana w Source Asset Ledger;
+- krytyczne PCG/rig/IK/Niagara/MetaSound assets są zapisane w Technical UE Asset Ledger i mają status `validated`;
+- generated outputs można odtworzyć albo ich pochodzenie jest jawnie zapisane; nie ma ręcznie zmodyfikowanych „generated” assetów bez źródła prawdy.
