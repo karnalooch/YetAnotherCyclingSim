@@ -4,6 +4,18 @@ parameters:
   windows_probe:
     type: boolean
     default: false
+  ue_cache_seed:
+    type: boolean
+    default: false
+  ue_canary:
+    type: boolean
+    default: false
+  ue_seed_resource_class:
+    type: string
+    default: "karnalooch/yacs-ue58-seed"
+  ue_cache_key:
+    type: string
+    default: "yacs-ue58-win64-v1"
 
 jobs:
   windows-probe:
@@ -24,8 +36,84 @@ jobs:
           path: Saved/RuntimeProof/CI/CircleCI-Windows-Probe
           destination: circleci-windows-probe
 
+  ue-cache-seed:
+    machine: true
+    resource_class: << pipeline.parameters.ue_seed_resource_class >>
+    steps:
+      - checkout
+
+      - run:
+          name: Require trusted main branch seed
+          shell: powershell.exe -ExecutionPolicy Bypass
+          command: |
+            if ($env:CIRCLE_BRANCH -ne 'main') {
+              throw "UE cache seed must run from main; actual branch is '$env:CIRCLE_BRANCH'."
+            }
+
+      - run:
+          name: Measure and package local UE 5.8
+          shell: powershell.exe -ExecutionPolicy Bypass
+          command: |
+            powershell.exe -ExecutionPolicy Bypass -File scripts/ci/Prepare-YacsUe58Seed.ps1 -CreateArchive
+
+      - save_cache:
+          key: << pipeline.parameters.ue_cache_key >>
+          paths:
+            - Saved/RuntimeProof/CI/UE58Seed/ue58-win64.tar.gz
+            - Saved/RuntimeProof/CI/UE58Seed/ue58-win64-manifest.json
+
+      - store_artifacts:
+          path: Saved/RuntimeProof/CI/UE58Seed/ue58-win64-manifest.json
+          destination: ue58-seed-manifest.json
+
+  ue-hosted-canary:
+    resource_class: windows.medium
+    machine:
+      image: windows-server-2022-gui:current
+      shell: powershell.exe -ExecutionPolicy Bypass
+    steps:
+      - checkout
+
+      - run:
+          name: Require trusted main branch canary
+          shell: powershell.exe -ExecutionPolicy Bypass
+          command: |
+            if ($env:CIRCLE_BRANCH -ne 'main') {
+              throw "UE hosted canary must run from main; actual branch is '$env:CIRCLE_BRANCH'."
+            }
+
+      - restore_cache:
+          keys:
+            - << pipeline.parameters.ue_cache_key >>
+
+      - run:
+          name: Restore cached UE 5.8
+          shell: powershell.exe -ExecutionPolicy Bypass
+          command: |
+            powershell.exe -ExecutionPolicy Bypass -File scripts/ci/Restore-YacsUe58Seed.ps1
+
+      - run:
+          name: Build YACS Editor and run scoped Automation
+          shell: powershell.exe -ExecutionPolicy Bypass
+          command: |
+            pwsh ./scripts/ci/Invoke-YacsUnrealCi.ps1 -ExpectedHead $env:CIRCLE_SHA1
+
+      - store_artifacts:
+          path: Saved/RuntimeProof/CI/Unreal
+          destination: yacs-unreal-canary
+
 workflows:
   windows-ue-spike:
     when: << pipeline.parameters.windows_probe >>
     jobs:
       - windows-probe
+
+  windows-ue-cache-seed:
+    when: << pipeline.parameters.ue_cache_seed >>
+    jobs:
+      - ue-cache-seed
+
+  windows-ue-hosted-canary:
+    when: << pipeline.parameters.ue_canary >>
+    jobs:
+      - ue-hosted-canary
