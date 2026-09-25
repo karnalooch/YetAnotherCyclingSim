@@ -98,6 +98,19 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
         self.assertIn("postValidationHashFailure", self.packer)
         self.assertNotIn("$hash = Get-FileHash", self.packer)
 
+    def test_seed_persists_archive_outside_ephemeral_workdir(self):
+        for token in (
+            "Persistent\\UE58Seed",
+            "-OutputRoot $persistentSeedRoot",
+            "New-Item -ItemType HardLink",
+            "Staged persistent UE seed into CircleCI cache path via hardlink",
+        ):
+            self.assertIn(token, self.config)
+
+    def test_restore_hash_is_powershell_version_independent(self):
+        self.assertIn("[System.Security.Cryptography.SHA256]::Create()", self.restore)
+        self.assertNotIn("Get-FileHash", self.restore)
+
 
 if __name__ == "__main__":
     unittest.main()
