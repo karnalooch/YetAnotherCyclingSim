@@ -3,8 +3,9 @@
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
 #include "Components/SceneComponent.h"
 #include "Engine/StaticMesh.h"
-#include "Math/RotationMatrix.h"
+#include "Materials/Material.h"
 #include "Materials/MaterialInterface.h"
+#include "Math/RotationMatrix.h"
 #include "UObject/ConstructorHelpers.h"
 
 namespace Stage3PrototypeTerrainInternal
@@ -14,6 +15,23 @@ namespace Stage3PrototypeTerrainInternal
 	constexpr double RoadWidthM = 6.0;
 	constexpr double RoadThicknessM = 0.20;
 	constexpr double RoadOverlapM = 2.0;
+
+	// Stage 3F: edge-line presentation. A thin elongated rectangle is laid
+	// along each road tile at ±(RoadHalfWidthM - EdgeInsetM). The lines are
+	// generated from the *exact same* midpoint + orientation as the road
+	// tile so they stay aligned through turns and never expose tile seams.
+	constexpr double EdgeLineWidthM = 0.30;
+	constexpr double EdgeLineHeightM = 0.05;
+	constexpr double EdgeLineOverlapM = 2.0;
+	constexpr double RoadHalfWidthM = RoadWidthM * 0.5;
+	constexpr double EdgeInsetM = 0.10;
+	constexpr double EdgeLineLateralOffsetM =
+		RoadHalfWidthM - EdgeInsetM - (EdgeLineWidthM * 0.5);
+
+	// Lift the edge-line plane just above the road surface so its white
+	// pixels read instead of Z-fighting with the asphalt top.
+	constexpr double EdgeLineVerticalOffsetM =
+		EdgeLineHeightM * 0.5 + 0.02;
 
 	constexpr int32 TerrainStrideSamples = 5;
 	constexpr double TerrainThicknessM = 8.0;
@@ -128,6 +146,13 @@ namespace Stage3PrototypeTerrainInternal
 	}
 }
 
+const TCHAR* AStage3PrototypeTerrainActor::RoadAsphaltMaterialPath =
+	TEXT("/Game/Prototype/Environment/Stage3F/Materials/MI_Stage3F_Asphalt.MI_Stage3F_Asphalt");
+const TCHAR* AStage3PrototypeTerrainActor::RoadEdgeLineMaterialPath =
+	TEXT("/Game/Prototype/Environment/Stage3F/Materials/MI_Stage3F_Edge.MI_Stage3F_Edge");
+const TCHAR* AStage3PrototypeTerrainActor::TerrainMaterialPath =
+	TEXT("/Game/Prototype/Environment/Stage3F/Materials/MI_Stage3F_Terrain.MI_Stage3F_Terrain");
+
 AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -138,6 +163,9 @@ AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 
 	RoadTiles = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("RoadTiles"));
 	RoadTiles->SetupAttachment(SceneRoot);
+
+	RoadEdgeLines = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("RoadEdgeLines"));
+	RoadEdgeLines->SetupAttachment(SceneRoot);
 
 	TerrainTiles = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("TerrainTiles"));
 	TerrainTiles->SetupAttachment(SceneRoot);
@@ -154,12 +182,18 @@ AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 		TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
 	const ConstructorHelpers::FObjectFinder<UStaticMesh> ConeMesh(
 		TEXT("/Engine/BasicShapes/Cone.Cone"));
-	const ConstructorHelpers::FObjectFinder<UMaterialInterface> WorldGridMaterial(
-		TEXT("/Engine/EngineMaterials/WorldGridMaterial.WorldGridMaterial"));
+
+	const ConstructorHelpers::FObjectFinder<UMaterialInterface> RoadAsphaltMat(
+		RoadAsphaltMaterialPath);
+	const ConstructorHelpers::FObjectFinder<UMaterialInterface> RoadEdgeMat(
+		RoadEdgeLineMaterialPath);
+	const ConstructorHelpers::FObjectFinder<UMaterialInterface> TerrainMat(
+		TerrainMaterialPath);
 
 	if (CubeMesh.Succeeded())
 	{
 		RoadTiles->SetStaticMesh(CubeMesh.Object);
+		RoadEdgeLines->SetStaticMesh(CubeMesh.Object);
 		TerrainTiles->SetStaticMesh(CubeMesh.Object);
 	}
 	if (CylinderMesh.Succeeded())
@@ -170,15 +204,48 @@ AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 	{
 		MountainProps->SetStaticMesh(ConeMesh.Object);
 	}
-	if (WorldGridMaterial.Succeeded())
+
+	if (RoadAsphaltMat.Succeeded())
 	{
-		// Deliberately contrast the validation terrain against the road ribbon.
-		// Stage 7 will replace this engine material with production art.
-		TerrainTiles->SetMaterial(0, WorldGridMaterial.Object);
+		RoadTiles->SetMaterial(0, RoadAsphaltMat.Object);
+	}
+	else
+	{
+		// Fallback to the engine default surface material if the Stage 3F
+		// material is not authored yet. The setup commandlet will rebuild
+		// instances and the next save will re-bind the authored material.
+		RoadTiles->SetMaterial(0, UMaterial::GetDefaultMaterial(MD_Surface));
+	}
+
+	if (RoadEdgeMat.Succeeded())
+	{
+		RoadEdgeLines->SetMaterial(0, RoadEdgeMat.Object);
+	}
+	else
+	{
+		RoadEdgeLines->SetMaterial(0, UMaterial::GetDefaultMaterial(MD_Surface));
+	}
+
+	if (TerrainMat.Succeeded())
+	{
+		TerrainTiles->SetMaterial(0, TerrainMat.Object);
+	}
+	else
+	{
+		// Keep the previous behavioural baseline if the new terrain material
+		// is not yet available. This keeps the codebase graceful before
+		// the materials have been authored by the Python script.
+		const ConstructorHelpers::FObjectFinder<UMaterialInterface> WorldGrid(
+			TEXT("/Engine/EngineMaterials/WorldGridMaterial.WorldGridMaterial"));
+		if (WorldGrid.Succeeded())
+		{
+			TerrainTiles->SetMaterial(0, WorldGrid.Object);
+		}
 	}
 
 	UHierarchicalInstancedStaticMeshComponent* Components[] = {
 		RoadTiles,
+		RoadEdgeLines,
 		TerrainTiles,
 		ForestProps,
 		MountainProps,
@@ -207,7 +274,8 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 	if (!IsValid(RoadTiles->GetStaticMesh())
 		|| !IsValid(TerrainTiles->GetStaticMesh())
 		|| !IsValid(ForestProps->GetStaticMesh())
-		|| !IsValid(MountainProps->GetStaticMesh()))
+		|| !IsValid(MountainProps->GetStaticMesh())
+		|| !IsValid(RoadEdgeLines->GetStaticMesh()))
 	{
 		OutError = TEXT("prototype terrain engine basic-shape meshes are unavailable");
 		return false;
@@ -215,11 +283,13 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 
 	Modify();
 	RoadTiles->Modify();
+	RoadEdgeLines->Modify();
 	TerrainTiles->Modify();
 	ForestProps->Modify();
 	MountainProps->Modify();
 
 	RoadTiles->ClearInstances();
+	RoadEdgeLines->ClearInstances();
 	TerrainTiles->ClearInstances();
 	ForestProps->ClearInstances();
 	MountainProps->ClearInstances();
@@ -244,6 +314,40 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 			return false;
 		}
 		RoadTiles->AddInstance(RoadTransform, false);
+
+		// Stage 3F: place a thin white edge line on each side of the road
+		// along the same midpoint + orientation as the road tile.
+		for (const double Side : { -1.0, 1.0 })
+		{
+			const FRotator RoadRotation = RoadTransform.Rotator();
+			const FQuat RoadQuat = RoadRotation.Quaternion();
+			const FVector LocalY = RoadQuat.RotateVector(FVector(0.0, 1.0, 0.0));
+
+			FVector EdgeMidpointM =
+				0.5 * (Samples[Index].PositionM + Samples[Index + 1].PositionM);
+			EdgeMidpointM += LocalY * (Side * EdgeLineLateralOffsetM);
+			// Ride just above the road top (which sits at route Z = 0).
+			EdgeMidpointM.Z = EdgeLineHeightM * 0.5 + 0.02;
+
+			const FVector EdgeScale(
+				RoadTransform.GetScale3D().X,
+				EdgeLineWidthM,
+				EdgeLineHeightM);
+
+			const FTransform EdgeTransform(
+				RoadRotation,
+				EdgeMidpointM * MetresToCentimetres,
+				EdgeScale);
+
+			if (!IsFiniteTransform(EdgeTransform))
+			{
+				OutError = FString::Printf(
+					TEXT("prototype road edge line transform %d (side %.1f) is invalid"),
+					Index, Side);
+				return false;
+			}
+			RoadEdgeLines->AddInstance(EdgeTransform, false);
+		}
 	}
 
 	for (int32 StartIndex = 0;
@@ -379,6 +483,7 @@ bool AStage3PrototypeTerrainActor::ValidateAgainstGeometry(
 	const TArray<CyclingSimulation::FRouteGeometrySample>& Samples =
 		Geometry.GetSamples();
 	const int32 ExpectedRoadInstances = Samples.Num() - 1;
+	const int32 ExpectedEdgeLineInstances = ExpectedRoadInstances * 2;
 	const int32 ExpectedTerrainInstances =
 		FMath::DivideAndRoundUp(ExpectedRoadInstances, TerrainStrideSamples);
 
@@ -388,6 +493,14 @@ bool AStage3PrototypeTerrainActor::ValidateAgainstGeometry(
 			TEXT("prototype road instance count mismatch: actual=%d expected=%d"),
 			GetRoadInstanceCount(),
 			ExpectedRoadInstances);
+		return false;
+	}
+	if (GetRoadEdgeLineInstanceCount() != ExpectedEdgeLineInstances)
+	{
+		OutError = FString::Printf(
+			TEXT("prototype road edge line instance count mismatch: actual=%d expected=%d"),
+			GetRoadEdgeLineInstanceCount(),
+			ExpectedEdgeLineInstances);
 		return false;
 	}
 	if (GetTerrainInstanceCount() != ExpectedTerrainInstances)
@@ -452,4 +565,9 @@ int32 AStage3PrototypeTerrainActor::GetForestPropInstanceCount() const
 int32 AStage3PrototypeTerrainActor::GetMountainPropInstanceCount() const
 {
 	return IsValid(MountainProps) ? MountainProps->GetInstanceCount() : 0;
+}
+
+int32 AStage3PrototypeTerrainActor::GetRoadEdgeLineInstanceCount() const
+{
+	return IsValid(RoadEdgeLines) ? RoadEdgeLines->GetInstanceCount() : 0;
 }
