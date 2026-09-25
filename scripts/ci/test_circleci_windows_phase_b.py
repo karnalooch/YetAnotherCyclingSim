@@ -158,16 +158,16 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
         self.assertNotIn("sourceforge.net/projects/gnuwin32", seed_block)
         self.assertNotIn("gzip-1.3.12-1-bin.zip", seed_block)
 
-    def test_self_hosted_seed_requires_machine_runner_host_bootstrap(self):
+    def test_self_hosted_seed_validates_foreground_runner_environment(self):
         seed_start = self.config.index("  ue-cache-seed:")
         publish_start = self.config.index("  ue-cache-publish:")
         seed_block = self.config[seed_start:publish_start]
         for token in (
-            "Verify machine-runner host contract",
-            "CIRCLECI_RUNNER_WORK_DIR",
-            "CIRCLECI_RUNNER_TASK_AGENT_DIRECTORY",
-            "Configure-YacsCircleCiRunnerHost.ps1",
-            "D:\\CircleCI\\YACS-Runner\\TaskAgent",
+            "Verify foreground machine-runner host contract",
+            "D:\\CircleCI\\YACS-Runner\\Workdir",
+            "Get-Command gzip.exe",
+            "Get-Command tar.exe",
+            "Foreground machine-runner host contract: PASS",
         ):
             self.assertIn(token, seed_block)
         self.assertNotIn(

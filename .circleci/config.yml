@@ -66,35 +66,26 @@ jobs:
             Write-Host ("Self-hosted seed scratch: TEMP={0}; TMP={1}" -f $env:TEMP, $env:TMP)
 
       - run:
-          name: Verify machine-runner host contract
+          name: Verify foreground machine-runner host contract
           shell: powershell.exe -ExecutionPolicy Bypass
           command: |
             $ErrorActionPreference = 'Stop'
             $expectedWorkDir = 'D:\CircleCI\YACS-Runner\Workdir'
-            $expectedTaskAgentDir = 'D:\CircleCI\YACS-Runner\TaskAgent'
             $gitUsrBin = 'C:\Program Files\Git\usr\bin'
 
-            $machineWorkDir = [Environment]::GetEnvironmentVariable('CIRCLECI_RUNNER_WORK_DIR', 'Machine')
-            $machineTaskAgentDir = [Environment]::GetEnvironmentVariable('CIRCLECI_RUNNER_TASK_AGENT_DIRECTORY', 'Machine')
-            $machinePath = [Environment]::GetEnvironmentVariable('Path', 'Machine')
-
-            if ($machineWorkDir -ne $expectedWorkDir) {
-              throw "CircleCI host bootstrap required: machine CIRCLECI_RUNNER_WORK_DIR='$machineWorkDir', expected '$expectedWorkDir'. Run scripts/ci/Configure-YacsCircleCiRunnerHost.ps1 from an elevated PowerShell prompt, then restart the CircleCI service."
-            }
-            if ($machineTaskAgentDir -ne $expectedTaskAgentDir) {
-              throw "CircleCI host bootstrap required: machine CIRCLECI_RUNNER_TASK_AGENT_DIRECTORY='$machineTaskAgentDir', expected '$expectedTaskAgentDir'."
-            }
-
-            $machinePathEntries = @($machinePath -split ';' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
-            if (-not ($machinePathEntries | Where-Object { $_.TrimEnd('\') -ieq $gitUsrBin.TrimEnd('\') })) {
-              throw "CircleCI host bootstrap required: machine PATH does not contain '$gitUsrBin'."
+            $actualWorkingDirectory = [System.IO.Path]::GetFullPath((Get-Location).Path).TrimEnd('\')
+            if ($actualWorkingDirectory -ne $expectedWorkDir) {
+              throw "CircleCI runner working directory mismatch: '$actualWorkingDirectory', expected '$expectedWorkDir'. Relaunch the foreground runner after applying the YACS host bootstrap."
             }
 
             $gzipCommand = Get-Command gzip.exe -ErrorAction Stop
             $tarCommand = Get-Command tar.exe -ErrorAction Stop
-            Write-Host ("Machine-runner host contract: PASS")
-            Write-Host ("  working directory : {0}" -f $machineWorkDir)
-            Write-Host ("  task-agent dir    : {0}" -f $machineTaskAgentDir)
+            if ($gzipCommand.Source -ne (Join-Path $gitUsrBin 'gzip.exe')) {
+              throw ("Unexpected gzip resolved from runner PATH: {0}" -f $gzipCommand.Source)
+            }
+
+            Write-Host ("Foreground machine-runner host contract: PASS")
+            Write-Host ("  working directory : {0}" -f $actualWorkingDirectory)
             Write-Host ("  gzip              : {0}" -f $gzipCommand.Source)
             Write-Host ("  tar               : {0}" -f $tarCommand.Source)
 
