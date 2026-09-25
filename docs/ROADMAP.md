@@ -65,6 +65,7 @@ Prace prowadzone są na dwóch komputerach: biurowym (dokumentacja, Git, lekki k
 - Po niepowodzeniu walidacji nie wolno osłabiać wymagań ani testów; najpierw trzeba zdiagnozować przyczynę.
 - Prac z kolejnych etapów roadmapy nie rozpoczynamy przed spełnieniem kryteriów ukończenia obecnego etapu.
 - Kompilacja UE, integracja z edytorem, walidacja assetów i wydajności pozostają odpowiedzialnością komputera domowego, gdy na komputerze biurowym nie ma Unreal Engine.
+- Docelowo komputer domowy jest kontrolowanym self-hosted runnerem GitHub Actions dla zaufanych workflow UE. Do czasu ukończenia #24 obowiązuje ręczne uruchamianie proofów; podczas Phase 1 #24 dozwolony jest wyłącznie ręczny `workflow_dispatch`, bez triggera na dowolny `pull_request`.
 
 Gałęzie wyłącznie dokumentacyjne nie wliczają się do limitu dwóch gałęzi implementacyjnych.
 
@@ -94,7 +95,7 @@ YetAnotherCyclingSim.
 **Jawny dług infrastrukturalny (nie blokuje bieżącego 3G):**
 
 - #22 — włączyć pozostałe ustawienia bezpieczeństwa GitHub i ochronę `main`; API nadal raportuje `main.protected = false`.
-- #24 — dodać prawdziwy Windows/Unreal Engine build + Automation CI; obecne hosted CI pozostaje warstwą governance/security/static analysis, nie dowodem kompilacji UE.
+- #24 — wdrożyć prawdziwy Windows/Unreal Engine build + Automation na domowym self-hosted runnerze. **Teraz realizujemy Phase 1:** bezpieczny ręczny `workflow_dispatch` na dedykowanej etykiecie `yacs-ue58`, bez automatycznego uruchamiania kodu z PR-ów i bez wpinania joba do `Aggregate CI gate`. Stage 3G / #80 będzie pierwszym canary. Pełny plan: [`UNREAL_SELF_HOSTED_RUNNER_PLAN.md`](UNREAL_SELF_HOSTED_RUNNER_PLAN.md).
 - #23 — ekstrakcja wspólnego CI do `engineering-platform` jest ukończona i zamknięta.
 
 ## Kryterium ukończenia
@@ -243,6 +244,8 @@ Na tym etapie wolno wprowadzić tylko assety potrzebne do uzyskania referencyjne
 Rdzeń Stage 3 jest ukończony: całą trasę można przejechać bez przerwania, błędu pozycji lub opuszczenia drogi; baseline build/proof jest zapisany, a domenowa symulacja pozostaje niezależna od presentation.
 
 **Warunek przejścia do Stage 4:** 3G / #80 ma zielony proof wizualny i techniczny, bez regresji kontraktów Stage 3.
+
+**Canary infrastrukturalny:** Stage 3G jest pierwszym rzeczywistym workloadem dla Phase 1 #24. Jeżeli runner zostanie zarejestrowany przed finalnym proofem 3G, authoring/build/Automation/capture mogą zostać wykonane przez ręczny workflow na home PC. Nie zmienia to kryteriów 3G: wynik musi być przypięty do dokładnego SHA, artefakty `.uasset`/`.umap` muszą wejść przez Git LFS, a wizualny AFTER proof nadal podlega review.
 
 ---
 
