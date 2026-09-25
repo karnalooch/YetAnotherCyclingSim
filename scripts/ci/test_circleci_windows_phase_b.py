@@ -33,7 +33,7 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
 
     def test_seed_and_canary_share_explicit_cache_key(self):
         self.assertIn("ue_cache_key:", self.config)
-        self.assertIn('default: "yacs-ue58-win64-v3"', self.config)
+        self.assertIn('default: "yacs-ue58-win64-v4"', self.config)
         self.assertIn("save_cache:", self.config)
         self.assertIn("restore_cache:", self.config)
         self.assertGreaterEqual(
@@ -119,27 +119,53 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
         ):
             self.assertIn(token, self.config)
 
-    def test_seed_save_cache_uses_absolute_d_drive_paths(self):
+    def test_self_hosted_seed_uses_workspace_not_cache_publish(self):
+        seed_start = self.config.index("  ue-cache-seed:")
+        publish_start = self.config.index("  ue-cache-publish:")
+        seed_block = self.config[seed_start:publish_start]
+        self.assertIn("persist_to_workspace:", seed_block)
+        self.assertIn(
+            "root: 'D:\\CircleCI\\YACS-Runner\\Workdir\\Saved\\RuntimeProof\\CI\\UE58Seed'",
+            seed_block,
+        )
+        self.assertNotIn("save_cache:", seed_block)
+
+    def test_self_hosted_seed_keeps_temp_and_tmp_on_d(self):
+        seed_start = self.config.index("  ue-cache-seed:")
+        publish_start = self.config.index("  ue-cache-publish:")
+        seed_block = self.config[seed_start:publish_start]
         for token in (
-            "D:\\CircleCI\\YACS-Runner\\Workdir\\Saved\\RuntimeProof\\CI\\UE58Seed\\ue58-win64.zip",
-            "D:\\CircleCI\\YACS-Runner\\Workdir\\Saved\\RuntimeProof\\CI\\UE58Seed\\ue58-win64-manifest.json",
+            "TEMP: 'D:\\CircleCI\\YACS-Runner\\Temp'",
+            "TMP: 'D:\\CircleCI\\YACS-Runner\\Temp'",
+            "Self-hosted UE seed TEMP must stay on D:",
+            "Self-hosted UE seed TMP must stay on D:",
+        ):
+            self.assertIn(token, seed_block)
+
+    def test_hosted_job_publishes_workspace_to_cache(self):
+        for token in (
+            "ue-cache-publish:",
+            "attach_workspace:",
+            "WORKSPACE SEED PASS",
+            "Workspace UE seed SHA256 mismatch",
+            "save_cache:",
+            "C:\\YacsUe58Seed\\ue58-win64.zip",
         ):
             self.assertIn(token, self.config)
 
     def test_seed_workflow_verifies_restored_cache_on_hosted_windows(self):
         for token in (
             "ue-cache-verify:",
-            "Prepare portable D cache drive",
             "CACHE RESTORE PASS",
             "Restored UE cache SHA256 mismatch",
             "requires:",
-            "- ue-cache-seed",
+            "- ue-cache-publish",
         ):
             self.assertIn(token, self.config)
 
-    def test_hosted_canary_restores_from_portable_d_cache_path(self):
+    def test_hosted_canary_restores_from_hosted_cache_path(self):
         self.assertIn(
-            "-SeedRoot 'D:\\CircleCI\\YACS-Runner\\Workdir\\Saved\\RuntimeProof\\CI\\UE58Seed'",
+            "-SeedRoot 'C:\\YacsUe58Seed'",
             self.config,
         )
 

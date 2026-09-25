@@ -18,7 +18,7 @@ parameters:
     default: 'D:\CircleCI\YACS-Runner\Workdir'
   ue_cache_key:
     type: string
-    default: "yacs-ue58-win64-v3"
+    default: "yacs-ue58-win64-v4"
 
 jobs:
   windows-probe:
@@ -43,8 +43,9 @@ jobs:
     machine: true
     resource_class: << pipeline.parameters.ue_seed_resource_class >>
     working_directory: << pipeline.parameters.ue_seed_working_directory >>
-    retention:
-      caches: 1d
+    environment:
+      TEMP: 'D:\CircleCI\YACS-Runner\Temp'
+      TMP: 'D:\CircleCI\YACS-Runner\Temp'
     steps:
       - checkout
 
@@ -55,6 +56,14 @@ jobs:
             if ($env:CIRCLE_BRANCH -ne 'main') {
               throw "UE cache seed must run from main; actual branch is '$env:CIRCLE_BRANCH'."
             }
+            New-Item -ItemType Directory -Path $env:TEMP -Force | Out-Null
+            if (-not $env:TEMP.StartsWith('D:\', [System.StringComparison]::OrdinalIgnoreCase)) {
+              throw "Self-hosted UE seed TEMP must stay on D:, actual '$env:TEMP'."
+            }
+            if (-not $env:TMP.StartsWith('D:\', [System.StringComparison]::OrdinalIgnoreCase)) {
+              throw "Self-hosted UE seed TMP must stay on D:, actual '$env:TMP'."
+            }
+            Write-Host ("Self-hosted seed scratch: TEMP={0}; TMP={1}" -f $env:TEMP, $env:TMP)
 
       - run:
           name: Measure and package local UE 5.8
@@ -120,15 +129,75 @@ jobs:
             }
             Write-Host ("CircleCI cache staging verified: {0:N3} GiB at {1}" -f ($archiveBytes / 1GB), $cacheArchive)
 
-      - save_cache:
-          key: << pipeline.parameters.ue_cache_key >>
+      - persist_to_workspace:
+          root: 'D:\CircleCI\YACS-Runner\Workdir\Saved\RuntimeProof\CI\UE58Seed'
           paths:
-            - 'D:\CircleCI\YACS-Runner\Workdir\Saved\RuntimeProof\CI\UE58Seed\ue58-win64.zip'
-            - 'D:\CircleCI\YACS-Runner\Workdir\Saved\RuntimeProof\CI\UE58Seed\ue58-win64-manifest.json'
+            - ue58-win64.zip
+            - ue58-win64-manifest.json
 
       - store_artifacts:
           path: Saved/RuntimeProof/CI/UE58Seed/ue58-win64-manifest.json
           destination: ue58-seed-manifest.json
+
+  ue-cache-publish:
+    resource_class: windows.medium
+    machine:
+      image: windows-server-2022-gui:current
+      shell: powershell.exe -ExecutionPolicy Bypass
+    retention:
+      caches: 1d
+    steps:
+      - attach_workspace:
+          at: 'C:\YacsUe58Seed'
+
+      - run:
+          name: Verify workspace UE seed before cache publish
+          shell: powershell.exe -ExecutionPolicy Bypass
+          command: |
+            $ErrorActionPreference = 'Stop'
+            $seedRoot = 'C:\YacsUe58Seed'
+            $archive = Join-Path $seedRoot 'ue58-win64.zip'
+            $manifestPath = Join-Path $seedRoot 'ue58-win64-manifest.json'
+
+            if (-not (Test-Path -LiteralPath $archive -PathType Leaf)) {
+              throw "Workspace UE seed archive missing: $archive"
+            }
+            if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
+              throw "Workspace UE seed manifest missing: $manifestPath"
+            }
+
+            $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+            $archiveBytes = (Get-Item -LiteralPath $archive).Length
+            if ($archiveBytes -lt 1GB) {
+              throw ("Workspace UE seed archive is implausibly small: {0} bytes." -f $archiveBytes)
+            }
+            if ([int64]$manifest.ArchiveBytes -ne [int64]$archiveBytes) {
+              throw ("Workspace UE seed size mismatch: manifest={0}, actual={1}." -f $manifest.ArchiveBytes, $archiveBytes)
+            }
+            if (-not [bool]$manifest.ArchiveCreated -or -not [bool]$manifest.ArchiveIntegrityValidated) {
+              throw 'Workspace UE seed manifest is not integrity-validated.'
+            }
+
+            $sha256 = [System.Security.Cryptography.SHA256]::Create()
+            $stream = [System.IO.File]::OpenRead($archive)
+            try {
+              $hashBytes = $sha256.ComputeHash($stream)
+              $actualHash = ([System.BitConverter]::ToString($hashBytes)).Replace('-', '').ToLowerInvariant()
+            } finally {
+              $stream.Dispose()
+              $sha256.Dispose()
+            }
+            if ($actualHash -ne [string]$manifest.ArchiveSha256) {
+              throw 'Workspace UE seed SHA256 mismatch.'
+            }
+
+            Write-Host ("WORKSPACE SEED PASS: {0:N3} GiB, SHA256={1}" -f ($archiveBytes / 1GB), $actualHash)
+
+      - save_cache:
+          key: << pipeline.parameters.ue_cache_key >>
+          paths:
+            - 'C:\YacsUe58Seed\ue58-win64.zip'
+            - 'C:\YacsUe58Seed\ue58-win64-manifest.json'
 
   ue-cache-verify:
     resource_class: windows.medium
@@ -136,21 +205,6 @@ jobs:
       image: windows-server-2022-gui:current
       shell: powershell.exe -ExecutionPolicy Bypass
     steps:
-      - checkout
-
-      - run:
-          name: Prepare portable D cache drive
-          shell: powershell.exe -ExecutionPolicy Bypass
-          command: |
-            $ErrorActionPreference = 'Stop'
-            if (-not (Test-Path -LiteralPath 'D:\')) {
-              $backing = 'C:\YacsCircleCiCacheDrive'
-              New-Item -ItemType Directory -Path $backing -Force | Out-Null
-              subst D: $backing
-            }
-            New-Item -ItemType Directory -Path 'D:\CircleCI\YACS-Runner\Workdir' -Force | Out-Null
-            Write-Host ("Cache restore drive ready: {0}" -f ((Get-PSDrive D).Root))
-
       - restore_cache:
           keys:
             - << pipeline.parameters.ue_cache_key >>
@@ -160,7 +214,7 @@ jobs:
           shell: powershell.exe -ExecutionPolicy Bypass
           command: |
             $ErrorActionPreference = 'Stop'
-            $seedRoot = 'D:\CircleCI\YACS-Runner\Workdir\Saved\RuntimeProof\CI\UE58Seed'
+            $seedRoot = 'C:\YacsUe58Seed'
             $archive = Join-Path $seedRoot 'ue58-win64.zip'
             $manifestPath = Join-Path $seedRoot 'ue58-win64-manifest.json'
 
@@ -214,18 +268,6 @@ jobs:
               throw "UE hosted canary must run from main; actual branch is '$env:CIRCLE_BRANCH'."
             }
 
-      - run:
-          name: Prepare portable D cache drive
-          shell: powershell.exe -ExecutionPolicy Bypass
-          command: |
-            $ErrorActionPreference = 'Stop'
-            if (-not (Test-Path -LiteralPath 'D:\')) {
-              $backing = 'C:\YacsCircleCiCacheDrive'
-              New-Item -ItemType Directory -Path $backing -Force | Out-Null
-              subst D: $backing
-            }
-            New-Item -ItemType Directory -Path 'D:\CircleCI\YACS-Runner\Workdir' -Force | Out-Null
-
       - restore_cache:
           keys:
             - << pipeline.parameters.ue_cache_key >>
@@ -234,7 +276,7 @@ jobs:
           name: Restore cached UE 5.8
           shell: powershell.exe -ExecutionPolicy Bypass
           command: |
-            powershell.exe -ExecutionPolicy Bypass -File scripts/ci/Restore-YacsUe58Seed.ps1 -SeedRoot 'D:\CircleCI\YACS-Runner\Workdir\Saved\RuntimeProof\CI\UE58Seed'
+            powershell.exe -ExecutionPolicy Bypass -File scripts/ci/Restore-YacsUe58Seed.ps1 -SeedRoot 'C:\YacsUe58Seed'
 
       - run:
           name: Build YACS Editor and run scoped Automation
@@ -256,9 +298,12 @@ workflows:
     when: << pipeline.parameters.ue_cache_seed >>
     jobs:
       - ue-cache-seed
-      - ue-cache-verify:
+      - ue-cache-publish:
           requires:
             - ue-cache-seed
+      - ue-cache-verify:
+          requires:
+            - ue-cache-publish
 
   windows-ue-hosted-canary:
     when: << pipeline.parameters.ue_canary >>
