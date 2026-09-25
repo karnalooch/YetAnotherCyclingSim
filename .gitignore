@@ -101,3 +101,6 @@ Content/__WingmanProof/
 
 # Wingman local editor plugin
 Plugins/Wingman/
+
+# Downloaded source-asset cache (reproducible via scripts; do not commit wholesale)
+/ExternalAssets/
