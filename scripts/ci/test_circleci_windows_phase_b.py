@@ -142,19 +142,21 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
         ):
             self.assertIn(token, seed_block)
 
-    def test_self_hosted_seed_bootstraps_workspace_gzip_on_d(self):
+    def test_self_hosted_seed_uses_git_for_windows_workspace_tools(self):
         seed_start = self.config.index("  ue-cache-seed:")
         publish_start = self.config.index("  ue-cache-publish:")
         seed_block = self.config[seed_start:publish_start]
         for token in (
-            "D:\\CircleCI\\YACS-Runner\\Tools\\gzip-1.3.12-1\\bin",
-            "Ensure CircleCI workspace gzip prerequisite on D",
-            "gzip-1.3.12-1-bin.zip",
-            "598BFC7DE80C616DBBF8E53ACBF8358C91C6D3A3E0DDEC094C0E05C465D0661B",
+            "C:\\Program Files\\Git\\usr\\bin",
+            "Verify CircleCI workspace gzip prerequisite from Git for Windows",
+            "Git for Windows gzip prerequisite is missing",
+            "Git for Windows tar prerequisite is missing",
             "Get-Command gzip.exe",
             "Get-Command tar.exe",
         ):
             self.assertIn(token, seed_block)
+        self.assertNotIn("sourceforge.net/projects/gnuwin32", seed_block)
+        self.assertNotIn("gzip-1.3.12-1-bin.zip", seed_block)
 
     def test_hosted_job_publishes_workspace_to_cache(self):
         for token in (
