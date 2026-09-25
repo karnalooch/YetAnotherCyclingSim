@@ -1,0 +1,214 @@
+name: Manual Unreal proof
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Trusted UE workload"
+        required: true
+        default: canary
+        type: choice
+        options:
+          - canary
+          - stage3g-author
+          - stage3g-proof
+          - intentional-red
+      target_branch:
+        description: "Trusted same-repository branch"
+        required: true
+        default: main
+        type: choice
+        options:
+          - main
+          - feat/stage3g-reference-environment
+      expected_sha:
+        description: "Optional 40-char SHA; blank means resolve current branch HEAD"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: manual-unreal-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  trusted-unreal:
+    name: ${{ inputs.mode }} on yacs-ue58
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 90
+
+    steps:
+      - name: Require default-branch workflow definition
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ('${{ github.ref }}' -ne 'refs/heads/main') {
+            throw "Manual Unreal workflow must be dispatched from main; actual ref is '${{ github.ref }}'."
+          }
+
+      - name: Resolve and validate trusted target
+        id: trust
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_BRANCH: ${{ inputs.target_branch }}
+          MODE: ${{ inputs.mode }}
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $allowedBranches = @(
+            'main',
+            'feat/stage3g-reference-environment'
+          )
+          if ($env:TARGET_BRANCH -notin $allowedBranches) {
+            throw "Target branch '$env:TARGET_BRANCH' is not in the Phase 1 allowlist."
+          }
+          if ($env:MODE -in @('canary', 'intentional-red') -and $env:TARGET_BRANCH -ne 'main') {
+            throw "Mode '$env:MODE' must target main during Phase 1."
+          }
+          if ($env:MODE -in @('stage3g-author', 'stage3g-proof') -and $env:TARGET_BRANCH -ne 'feat/stage3g-reference-environment') {
+            throw "Mode '$env:MODE' must target feat/stage3g-reference-environment."
+          }
+          $encodedBranch = [Uri]::EscapeDataString($env:TARGET_BRANCH)
+          $headers = @{
+            Authorization = "Bearer $env:GH_TOKEN"
+            Accept = 'application/vnd.github+json'
+            'X-GitHub-Api-Version' = '2022-11-28'
+          }
+          $url = "https://api.github.com/repos/${{ github.repository }}/branches/$encodedBranch"
+          $branch = Invoke-RestMethod -Uri $url -Headers $headers -Method Get
+          $resolvedSha = [string]$branch.commit.sha
+          if ($resolvedSha -notmatch '^[0-9a-f]{40}$') {
+            throw "Resolved branch SHA is invalid: '$resolvedSha'."
+          }
+          if ($env:EXPECTED_SHA) {
+            if ($env:EXPECTED_SHA -notmatch '^[0-9a-f]{40}$') {
+              throw 'expected_sha must be a full 40-character lowercase SHA.'
+            }
+            if ($env:EXPECTED_SHA -ne $resolvedSha) {
+              throw "Branch '$env:TARGET_BRANCH' moved: resolved '$resolvedSha', expected '$env:EXPECTED_SHA'."
+            }
+          }
+          "sha=$resolvedSha" >> $env:GITHUB_OUTPUT
+          "branch=$env:TARGET_BRANCH" >> $env:GITHUB_OUTPUT
+          Write-Host "Trusted target: $env:TARGET_BRANCH @ $resolvedSha"
+          Write-Host "Mode: $env:MODE"
+
+      - name: Checkout exact trusted revision with LFS
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.trust.outputs.sha }}
+          fetch-depth: 0
+          lfs: true
+          clean: true
+          persist-credentials: false
+
+      - name: Verify checkout and record runner provenance
+        shell: pwsh
+        env:
+          TARGET_SHA: ${{ steps.trust.outputs.sha }}
+          TARGET_BRANCH: ${{ steps.trust.outputs.branch }}
+          MODE: ${{ inputs.mode }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $actual = (git rev-parse HEAD).Trim()
+          if ($actual -ne $env:TARGET_SHA) {
+            throw "checkout HEAD '$actual' != trusted target '$env:TARGET_SHA'."
+          }
+          if (git status --porcelain) {
+            throw 'Checkout is not clean before Unreal execution.'
+          }
+          git lfs fsck
+          $proofRoot = 'Saved/RuntimeProof/CI/Manual'
+          New-Item -ItemType Directory -Path $proofRoot -Force | Out-Null
+          $payload = [ordered]@{
+            TimestampUtc = (Get-Date).ToUniversalTime().ToString('o')
+            WorkflowRef = '${{ github.ref }}'
+            WorkflowSha = '${{ github.sha }}'
+            TargetBranch = $env:TARGET_BRANCH
+            TargetSha = $env:TARGET_SHA
+            Mode = $env:MODE
+            RunnerName = $env:RUNNER_NAME
+            RunnerOs = $env:RUNNER_OS
+            RunnerArch = $env:RUNNER_ARCH
+            Hostname = $env:COMPUTERNAME
+            PowerShell = $PSVersionTable.PSVersion.ToString()
+            Git = (git --version)
+            GitLfs = (git lfs version)
+          }
+          $payload | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath "$proofRoot/dispatch.json" -Encoding UTF8
+          $payload | Format-List | Out-String | Set-Content -LiteralPath "$proofRoot/runner_provenance.txt" -Encoding UTF8
+
+      - name: Canary - real editor build and scoped Automation
+        if: ${{ inputs.mode == 'canary' }}
+        shell: pwsh
+        env:
+          TARGET_SHA: ${{ steps.trust.outputs.sha }}
+        run: |
+          ./scripts/ci/Invoke-YacsUnrealCi.ps1 -ExpectedHead $env:TARGET_SHA
+
+      - name: Canary - intentional fail-closed zero-test proof
+        if: ${{ inputs.mode == 'intentional-red' }}
+        shell: pwsh
+        env:
+          TARGET_SHA: ${{ steps.trust.outputs.sha }}
+        run: |
+          ./scripts/ci/Invoke-YacsUnrealCi.ps1 -ExpectedHead $env:TARGET_SHA -TestFilter 'CyclingDefinitelyDoesNotExist'
+
+      - name: Stage 3G - author binary source state
+        if: ${{ inputs.mode == 'stage3g-author' }}
+        shell: pwsh
+        env:
+          TARGET_SHA: ${{ steps.trust.outputs.sha }}
+        run: |
+          ./scripts/ue/Invoke-YacsStage3GAuthoring.ps1 -ExpectedBranch HEAD -ExpectedHead $env:TARGET_SHA
+          git status --short | Set-Content -LiteralPath 'Saved/RuntimeProof/CI/Manual/stage3g_worktree_status.txt' -Encoding UTF8
+          git diff --name-only | Set-Content -LiteralPath 'Saved/RuntimeProof/CI/Manual/stage3g_changed_tracked_files.txt' -Encoding UTF8
+
+      - name: Stage 3G - final committed proof
+        if: ${{ inputs.mode == 'stage3g-proof' }}
+        shell: pwsh
+        env:
+          TARGET_SHA: ${{ steps.trust.outputs.sha }}
+        run: |
+          ./scripts/ue/Invoke-YacsStage3GProof.ps1 -ExpectedBranch HEAD -ExpectedHead $env:TARGET_SHA
+
+      - name: Upload Unreal proof artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: manual-unreal-${{ inputs.mode }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            Saved/RuntimeProof/**/*.json
+            Saved/RuntimeProof/**/*.txt
+            Saved/RuntimeProof/**/*.log
+            Saved/RuntimeProof/**/*.png
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Upload Stage 3G authored source assets
+        if: ${{ always() && inputs.mode == 'stage3g-author' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: stage3g-authored-source-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            Content/Prototype/Environment/Stage3G/**
+            Content/Prototype/Maps/L_CyclingTest.umap
+            Saved/RuntimeProof/CI/Manual/stage3g_worktree_status.txt
+            Saved/RuntimeProof/CI/Manual/stage3g_changed_tracked_files.txt
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Clean self-hosted workspace
+        if: ${{ always() }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git reset --hard
+          git clean -ffdx
+          if (git status --porcelain) {
+            throw 'Runner workspace is still dirty after cleanup.'
+          }
+          Write-Host 'Runner workspace cleanup: PASS'

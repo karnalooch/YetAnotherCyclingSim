@@ -5,8 +5,9 @@ Issue: #24
 ## Status
 
 This defines the runner contract before the lane is connected to Aggregate CI gate.
-The reusable workflow is intentionally dormant until a real runner is registered
-and a local/canary proof is green.
+The reusable workflow remains dormant for automatic CI. Phase 1 uses the manual
+trusted entrypoint documented in `UNREAL_RUNNER_PHASE1.md` until a real runner is
+registered and the normal + intentional-red canaries are proven.
 
 ## Required host
 
@@ -51,7 +52,7 @@ Pass requires:
 ## GitHub rollout
 
 1. Register a repository-scoped self-hosted runner with the labels above.
-2. Run a trusted canary using the exact reusable workflow.
+2. Use `Actions -> Manual Unreal proof` from `main` for the Phase 1 trusted canary.
 3. Prove one normal green run.
 4. Prove one intentional fail-closed canary; never weaken the test to make it green.
 5. Only then call .github/workflows/reusable-unreal.yml from .github/workflows/ci.yml.

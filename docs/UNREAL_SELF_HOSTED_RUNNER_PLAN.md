@@ -39,7 +39,7 @@ PC must never become an executor for arbitrary fork PR code.
 
 ## Phase 0 — contract preparation
 
-**Status:** prepared on branch `ci/unreal-runner-contract`.
+**Status:** merged to `main` via PR #87.
 
 Deliverables:
 
@@ -71,6 +71,8 @@ canary work have a reviewed contract to run.
   that makes auditing easier.
 
 ### 2. Add the manual GitHub workflow
+
+**Repository-side implementation:** `\.github/workflows/manual-unreal.yml` (Phase 1 delivery under #24). Operator instructions: [`UNREAL_RUNNER_PHASE1.md`](UNREAL_RUNNER_PHASE1.md).
 
 The Phase 1 entrypoint is a dedicated `workflow_dispatch` workflow on the
 default branch. It accepts or resolves a trusted target SHA and schedules only:
@@ -162,7 +164,7 @@ the repository in a broken state.
 Phase 1 is complete when all of the following are true:
 
 - [ ] repository-scoped runner registered and online with `yacs-ue58`;
-- [ ] manual `workflow_dispatch` exists on the default branch;
+- [ ] manual `workflow_dispatch` is merged to the default branch and visible in Actions;
 - [ ] exact-SHA checkout verification proven;
 - [ ] real UE build + Automation canary green;
 - [ ] Stage 3G authoring canary produces reviewable artifacts;
