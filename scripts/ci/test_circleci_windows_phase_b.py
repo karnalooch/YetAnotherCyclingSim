@@ -33,7 +33,7 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
 
     def test_seed_and_canary_share_explicit_cache_key(self):
         self.assertIn("ue_cache_key:", self.config)
-        self.assertIn('default: "yacs-ue58-win64-v1"', self.config)
+        self.assertIn('default: "yacs-ue58-win64-v2"', self.config)
         self.assertIn("save_cache:", self.config)
         self.assertIn("restore_cache:", self.config)
         self.assertGreaterEqual(
@@ -104,6 +104,18 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
             "-OutputRoot $persistentSeedRoot",
             "New-Item -ItemType HardLink",
             "Staged persistent UE seed into CircleCI cache path via hardlink",
+        ):
+            self.assertIn(token, self.config)
+
+    def test_seed_cache_path_is_drive_aligned_and_fails_closed(self):
+        for token in (
+            "ue_seed_working_directory:",
+            "D:\\CircleCI\\YACS-Runner\\Workdir",
+            "working_directory: << pipeline.parameters.ue_seed_working_directory >>",
+            "CIRCLE_WORKING_DIRECTORY",
+            "CircleCI working-directory mismatch",
+            "Staged UE cache size mismatch",
+            "implausibly small",
         ):
             self.assertIn(token, self.config)
 
