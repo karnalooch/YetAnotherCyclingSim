@@ -97,6 +97,9 @@ $CiSummary = [ordered]@{
     Passed = [int]$Summary.Passed
     Failed = [int]$Summary.Failed
     Errors = [int]$Summary.Errors
+    GithubRef = [string]$env:GITHUB_REF
+    GithubHeadRef = [string]$env:GITHUB_HEAD_REF
+    GithubBaseRef = [string]$env:GITHUB_BASE_REF
 }
 $CiSummaryPath = Join-Path -Path $ArtifactRoot -ChildPath 'unreal_ci_summary.json'
 $CiSummary | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $CiSummaryPath -Encoding UTF8

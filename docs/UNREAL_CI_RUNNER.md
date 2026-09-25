@@ -17,14 +17,11 @@ and a local/canary proof is green.
 - Enough disk/RAM for a clean Development Editor build and Automation.
 - No personal API keys, cloud credentials, browser profiles, SSH keys or unrelated secrets available to the runner account.
 
-Dedicated labels:
+Required custom label:
 
-    self-hosted
-    Windows
-    X64
     yacs-ue58
 
-The yacs-ue58 label must not be shared with unrelated public repositories.
+GitHub also applies its normal self-hosted label. The custom yacs-ue58 label is the workload gate and must be attached only to the intended Windows x64 UE 5.8 host; it must not be shared with unrelated public repositories.
 
 ## Trust policy
 

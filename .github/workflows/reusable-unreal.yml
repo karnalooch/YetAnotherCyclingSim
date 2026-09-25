@@ -12,7 +12,7 @@ concurrency:
 jobs:
   unreal:
     name: Unreal build and Automation
-    runs-on: [self-hosted, Windows, X64, yacs-ue58]
+    runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 45
     permissions:
       contents: read
@@ -39,7 +39,7 @@ jobs:
       - name: Build editor and run scoped Automation
         shell: pwsh
         run: |
-          ./scripts/ci/Invoke-YacsUnrealCi.ps1 -ExpectedHead '${{ github.sha }}' -ExpectedBranch 'HEAD'
+          ./scripts/ci/Invoke-YacsUnrealCi.ps1 -ExpectedHead '${{ github.sha }}'
 
       - name: Upload concise Unreal proof
         if: ${{ always() }}
