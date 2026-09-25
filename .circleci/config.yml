@@ -13,9 +13,12 @@ parameters:
   ue_seed_resource_class:
     type: string
     default: "karnalooch/yacs-ue58-seed"
+  ue_seed_working_directory:
+    type: string
+    default: 'D:\CircleCI\YACS-Runner\Workdir'
   ue_cache_key:
     type: string
-    default: "yacs-ue58-win64-v1"
+    default: "yacs-ue58-win64-v2"
 
 jobs:
   windows-probe:
@@ -39,6 +42,7 @@ jobs:
   ue-cache-seed:
     machine: true
     resource_class: << pipeline.parameters.ue_seed_resource_class >>
+    working_directory: << pipeline.parameters.ue_seed_working_directory >>
     retention:
       caches: 1d
     steps:
@@ -77,6 +81,44 @@ jobs:
             New-Item -ItemType HardLink -Path $cacheArchive -Target $persistentArchive | Out-Null
             Copy-Item -LiteralPath $persistentManifest -Destination $cacheManifest -Force
             Write-Host ("Staged persistent UE seed into CircleCI cache path via hardlink: {0}" -f $cacheArchive)
+
+      - run:
+          name: Verify cache staging path and payload
+          shell: powershell.exe -ExecutionPolicy Bypass
+          command: |
+            $ErrorActionPreference = 'Stop'
+            if (-not $env:CIRCLE_WORKING_DIRECTORY) {
+              throw 'CIRCLE_WORKING_DIRECTORY is not set.'
+            }
+
+            $actualWorkingDirectory = [System.IO.Path]::GetFullPath((Get-Location).Path).TrimEnd('\')
+            $circleWorkingDirectory = [System.IO.Path]::GetFullPath($env:CIRCLE_WORKING_DIRECTORY).TrimEnd('\')
+            if ($actualWorkingDirectory -ne $circleWorkingDirectory) {
+              throw ("CircleCI working-directory mismatch: shell='{0}', cache='{1}'." -f $actualWorkingDirectory, $circleWorkingDirectory)
+            }
+
+            $cacheSeedRoot = Join-Path $circleWorkingDirectory 'Saved\RuntimeProof\CI\UE58Seed'
+            $cacheArchive = Join-Path $cacheSeedRoot 'ue58-win64.zip'
+            $cacheManifest = Join-Path $cacheSeedRoot 'ue58-win64-manifest.json'
+            if (-not (Test-Path -LiteralPath $cacheArchive -PathType Leaf)) {
+              throw "Staged UE cache archive is missing: $cacheArchive"
+            }
+            if (-not (Test-Path -LiteralPath $cacheManifest -PathType Leaf)) {
+              throw "Staged UE cache manifest is missing: $cacheManifest"
+            }
+
+            $manifest = Get-Content -LiteralPath $cacheManifest -Raw | ConvertFrom-Json
+            $archiveBytes = (Get-Item -LiteralPath $cacheArchive).Length
+            if (-not [bool]$manifest.ArchiveCreated -or -not [bool]$manifest.ArchiveIntegrityValidated) {
+              throw 'Staged UE cache manifest is not integrity-validated.'
+            }
+            if ([int64]$manifest.ArchiveBytes -ne [int64]$archiveBytes) {
+              throw ("Staged UE cache size mismatch: manifest={0}, actual={1}." -f $manifest.ArchiveBytes, $archiveBytes)
+            }
+            if ($archiveBytes -lt 1GB) {
+              throw ("Staged UE cache archive is implausibly small: {0} bytes." -f $archiveBytes)
+            }
+            Write-Host ("CircleCI cache staging verified: {0:N3} GiB at {1}" -f ($archiveBytes / 1GB), $cacheArchive)
 
       - save_cache:
           key: << pipeline.parameters.ue_cache_key >>
