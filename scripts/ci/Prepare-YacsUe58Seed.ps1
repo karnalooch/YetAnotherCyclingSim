@@ -108,6 +108,20 @@ function Get-DriveFreeBytes {
     return [int64]$drive.AvailableFreeSpace
 }
 
+function Get-FileSha256Hex {
+    param([Parameter(Mandatory=$true)][string] $Path)
+
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    $stream = [System.IO.File]::OpenRead($Path)
+    try {
+        $hashBytes = $sha256.ComputeHash($stream)
+        return ([System.BitConverter]::ToString($hashBytes)).Replace('-', '').ToLowerInvariant()
+    } finally {
+        $stream.Dispose()
+        $sha256.Dispose()
+    }
+}
+
 $EngineRoot = Resolve-YacsEngineRoot -Requested $EngineRoot
 $buildVersionPath = Join-Path $EngineRoot 'Engine/Build/Build.version'
 if (-not (Test-Path -LiteralPath $buildVersionPath -PathType Leaf)) {
@@ -197,10 +211,56 @@ if ($manifest.EstimatedIncludedGiB -gt $MaxIncludedGiB) {
 
 if ($CreateArchive) {
     if (Test-Path -LiteralPath $archivePath) {
-        throw "Validated archive already exists: $archivePath. Remove it explicitly before rebuilding."
-    }
+        if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
+            throw "Existing final archive has no manifest proving prior validation: $archivePath"
+        }
 
-    $minimumFreeBytes = [int64]($includedBytes + 2GB)
+        $previousManifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+        $countsMatch = (
+            $null -ne $previousManifest.ExpectedFileCount -and
+            $null -ne $previousManifest.ArchivedFileCount -and
+            [int64]$previousManifest.ExpectedFileCount -gt 0 -and
+            [int64]$previousManifest.ExpectedFileCount -eq [int64]$previousManifest.ArchivedFileCount
+        )
+        $wasValidated = ($previousManifest.ArchiveIntegrityValidated -eq $true)
+        $postValidationHashFailure = (
+            $countsMatch -and
+            -not $wasValidated -and
+            -not [string]::IsNullOrWhiteSpace([string]$previousManifest.ArchiveError) -and
+            ([string]$previousManifest.ArchiveError -match 'Get-FileHash')
+        )
+
+        if ([string]$previousManifest.EngineVersion -ne [string]$manifest.EngineVersion) {
+            throw ("Existing archive manifest version {0} does not match current UE version {1}." -f $previousManifest.EngineVersion, $manifest.EngineVersion)
+        }
+        if (-not ($wasValidated -or $postValidationHashFailure)) {
+            throw "Existing final archive cannot be safely resumed because its manifest does not prove prior validation."
+        }
+
+        Write-Host ("Reusing validated UE seed archive without repacking: {0}" -f $archivePath)
+        if ($postValidationHashFailure) {
+            Write-Host 'Prior run completed full ZIP validation and failed only while invoking Get-FileHash; resuming at SHA256.'
+        }
+
+        $archive = Get-Item -LiteralPath $archivePath
+        $currentHash = Get-FileSha256Hex -Path $archivePath
+        if ($wasValidated -and -not [string]::IsNullOrWhiteSpace([string]$previousManifest.ArchiveSha256)) {
+            $previousHash = ([string]$previousManifest.ArchiveSha256).ToLowerInvariant()
+            if ($currentHash -ne $previousHash) {
+                throw ("Existing archive SHA256 mismatch. expected={0}; actual={1}" -f $previousHash, $currentHash)
+            }
+        }
+
+        $manifest.ArchiveCreated = $true
+        $manifest.ArchiveBytes = [int64]$archive.Length
+        $manifest.ArchiveGiB = Convert-BytesToGiB -Bytes $archive.Length
+        $manifest.ArchiveSha256 = $currentHash
+        $manifest.ArchiveIntegrityValidated = $true
+        $manifest.ExpectedFileCount = [int64]$previousManifest.ExpectedFileCount
+        $manifest.ArchivedFileCount = [int64]$previousManifest.ArchivedFileCount
+        $manifest.ArchiveError = $null
+    } else {
+        $minimumFreeBytes = [int64]($includedBytes + 2GB)
     $freeBytes = Get-DriveFreeBytes -Path $OutputRoot
     if ($freeBytes -lt $minimumFreeBytes) {
         throw ("Not enough free space on the output drive. Free={0} GiB; safe minimum={1} GiB." -f (Convert-BytesToGiB $freeBytes), (Convert-BytesToGiB $minimumFreeBytes))
@@ -331,11 +391,11 @@ if ($CreateArchive) {
 
         Move-Item -LiteralPath $partialPath -Destination $archivePath
         $archive = Get-Item -LiteralPath $archivePath
-        $hash = Get-FileHash -LiteralPath $archivePath -Algorithm SHA256
+        $hash = Get-FileSha256Hex -Path $archivePath
         $manifest.ArchiveCreated = $true
         $manifest.ArchiveBytes = [int64]$archive.Length
         $manifest.ArchiveGiB = Convert-BytesToGiB -Bytes $archive.Length
-        $manifest.ArchiveSha256 = $hash.Hash.ToLowerInvariant()
+        $manifest.ArchiveSha256 = $hash
         $manifest.ArchiveIntegrityValidated = $true
     } catch {
         $manifest.ArchiveError = $_.Exception.Message
@@ -344,6 +404,7 @@ if ($CreateArchive) {
         }
         $manifest | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $manifestPath -Encoding UTF8
         throw
+    }
     }
 }
 

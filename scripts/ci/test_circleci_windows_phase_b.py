@@ -90,6 +90,14 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
         self.assertNotIn("tar.exe", self.packer)
         self.assertNotIn("tar.exe", self.restore)
 
+    def test_seed_hash_is_powershell_version_independent_and_resumable(self):
+        self.assertIn("[System.Security.Cryptography.SHA256]::Create()", self.packer)
+        self.assertIn(
+            "Reusing validated UE seed archive without repacking", self.packer
+        )
+        self.assertIn("postValidationHashFailure", self.packer)
+        self.assertNotIn("$hash = Get-FileHash", self.packer)
+
 
 if __name__ == "__main__":
     unittest.main()
