@@ -1,0 +1,44 @@
+name: Bootstrap YACS Project board
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  bootstrap-project:
+    name: Copy 4VELO Project template
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+
+    steps:
+      - name: Require Projects token
+        shell: bash
+        env:
+          PROJECTS_TOKEN: ${{ secrets.PROJECTS_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${PROJECTS_TOKEN}" ]]; then
+            echo "::error::PROJECTS_TOKEN is required. Add a classic PAT with the project scope as a repository Actions secret."
+            exit 1
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14'
+
+      - name: Copy Project and backfill Issues
+        env:
+          GH_TOKEN: ${{ secrets.PROJECTS_TOKEN }}
+          PROJECT_OWNER: ${{ github.repository_owner }}
+          SOURCE_PROJECT_TITLE: 4VELO — Product & Takeover
+          PROJECT_TITLE: YACS — MVP
+        run: python scripts/ci/project_automation.py bootstrap

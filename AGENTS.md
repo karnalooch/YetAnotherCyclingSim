@@ -147,6 +147,31 @@ Examples:
 - After creating or editing a substantial PR, issue, or comment, verify the rendered GitHub Markdown before considering the operation complete.
 - Temporary Markdown body files are working files only and must not be committed.
 
+## Issue -> Project -> delivery
+
+GitHub Issue is the canonical work item and the GitHub Project **YACS — MVP**
+is the canonical planning view.
+
+The Project keeps the five-column Status layout copied from 4VELO. Automation
+owns `Backlog`, `In progress`, `In review` and `Done`; the copied fifth
+planning column remains a manual grooming/selection state.
+
+- Every repository-changing task uses one primary Issue unless the user already
+  identified the correct existing Issue.
+- New/reopened Issues are added automatically as `Backlog`.
+- Move an Issue to the copied manual planning column only after scope,
+  non-scope, acceptance criteria and required proof are clear.
+- Start implementation from the Issue on a dedicated branch.
+- A Draft PR must reference the Issue with `Closes #<issue>`; automation moves
+  the PR and linked Issue to `In progress`.
+- Ready-for-review/non-draft PRs move to `In review`.
+- Merge/Issue close moves completed items to `Done`.
+- A closed-unmerged PR must not be represented as completed work.
+- Project status is planning metadata only and never replaces required Unreal
+  validation, CI, review, LFS or proof.
+- Project automation setup and security are documented in
+  `docs/ci/PROJECT_WORKFLOW.md`.
+
 ## Office and home workflow
 
 This project is developed on two machines: the office PC, which is suitable for documentation, Git operations, lightweight code, and Python tests, and the home PC, which builds Unreal Engine and runs the full validation cycle.

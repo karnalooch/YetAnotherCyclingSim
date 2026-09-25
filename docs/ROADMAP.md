@@ -83,7 +83,7 @@ Gałęzie wyłącznie dokumentacyjne nie wliczają się do limitu dwóch gałęz
 - [x] Utworzenie roadmapy.
 - [x] Konfiguracja Git LFS.
 - [x] Utworzenie zasad pracy dla asystentów AI.
-- [x] Backlog i status prac prowadzone w GitHub Issues; osobna tablica Projects nie jest wymagana dla MVP.
+- [ ] GitHub Project `YACS — MVP` skopiowany 1:1 z pięciokolumnowego boardu 4VELO, z automatyzacją statusów `Backlog` / `In progress` / `In review` / `Done`; kod bootstrapu i synchronizacji przygotowany w #88, pozostało jednorazowe dodanie `PROJECTS_TOKEN` i uruchomienie workflow bootstrap.
 - [x] Instalacja wymaganych narzędzi na komputerze domowym.
 - [x] Utworzenie projektu Unreal Engine 5.
 - [x] Uruchomienie pustego projektu na komputerze referencyjnym.
