@@ -39,6 +39,8 @@ jobs:
   ue-cache-seed:
     machine: true
     resource_class: << pipeline.parameters.ue_seed_resource_class >>
+    retention:
+      caches: 1d
     steps:
       - checkout
 
