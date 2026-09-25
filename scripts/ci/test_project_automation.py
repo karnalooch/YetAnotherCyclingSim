@@ -93,12 +93,13 @@ class ProjectAutomationTests(unittest.TestCase):
         with self.assertRaisesRegex(pa.AutomationError, "more than 100"):
             pa.choose_project(data, "Any")
 
-    def test_status_contract_preserves_five_column_template(self):
+    def test_status_contract_preserves_source_template_exactly(self):
         expected = (
             "Backlog",
             "Ready",
             "In progress",
             "In review",
+            "Blocked",
             "Done",
         )
         project = {
@@ -116,7 +117,40 @@ class ProjectAutomationTests(unittest.TestCase):
                 ]
             }
         }
-        self.assertEqual(pa.verify_status_contract(project), expected)
+        self.assertEqual(
+            pa.verify_status_contract(project, expected_statuses=expected),
+            expected,
+        )
+
+    def test_status_contract_rejects_target_different_from_source(self):
+        source = (
+            "Backlog",
+            "Ready",
+            "In progress",
+            "In review",
+            "Blocked",
+            "Done",
+        )
+        project = {
+            "fields": {
+                "nodes": [
+                    {
+                        "__typename": "ProjectV2SingleSelectField",
+                        "id": "STATUS",
+                        "name": "Status",
+                        "options": [
+                            {"id": "1", "name": "Backlog"},
+                            {"id": "2", "name": "Ready"},
+                            {"id": "3", "name": "In progress"},
+                            {"id": "4", "name": "In review"},
+                            {"id": "5", "name": "Done"},
+                        ],
+                    }
+                ]
+            }
+        }
+        with self.assertRaisesRegex(pa.AutomationError, "differ from source"):
+            pa.verify_status_contract(project, expected_statuses=source)
 
     def test_status_contract_rejects_missing_automated_status(self):
         project = {
