@@ -12,6 +12,20 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+function Get-FileSha256Hex {
+    param([Parameter(Mandatory=$true)][string] $Path)
+
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    $stream = [System.IO.File]::OpenRead($Path)
+    try {
+        $hashBytes = $sha256.ComputeHash($stream)
+        return ([System.BitConverter]::ToString($hashBytes)).Replace('-', '').ToLowerInvariant()
+    } finally {
+        $stream.Dispose()
+        $sha256.Dispose()
+    }
+}
+
 $archivePath = Join-Path $SeedRoot 'ue58-win64.zip'
 $manifestPath = Join-Path $SeedRoot 'ue58-win64-manifest.json'
 if (-not (Test-Path -LiteralPath $archivePath -PathType Leaf)) {
@@ -32,7 +46,7 @@ if (-not [bool]$manifest.ArchiveCreated -or -not [bool]$manifest.ArchiveIntegrit
     throw 'UE cache manifest does not mark the archive as created and integrity-validated.'
 }
 
-$actualHash = (Get-FileHash -LiteralPath $archivePath -Algorithm SHA256).Hash.ToLowerInvariant()
+$actualHash = Get-FileSha256Hex -Path $archivePath
 if ($actualHash -ne [string]$manifest.ArchiveSha256) {
     throw 'UE cache archive SHA256 mismatch.'
 }
