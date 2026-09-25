@@ -152,9 +152,10 @@ Examples:
 GitHub Issue is the canonical work item and the GitHub Project **YACS — MVP**
 is the canonical planning view.
 
-The Project keeps the five-column Status layout copied from 4VELO. Automation
-owns `Backlog`, `In progress`, `In review` and `Done`; the copied fifth
-planning column remains a manual grooming/selection state.
+The Project keeps the Status layout copied from 4VELO exactly. The current
+template has `Backlog`, `Ready`, `In progress`, `In review`, `Blocked`,
+`Done`. Automation owns `Backlog`, `In progress`, `In review` and
+`Done`; `Ready` and `Blocked` remain planning/manual states.
 
 - Every repository-changing task uses one primary Issue unless the user already
   identified the correct existing Issue.
