@@ -21,6 +21,7 @@
 11. Performance jest kontraktem inżynierskim, nie końcowym etapem „optymalizacji”.
 12. Projektujemy tanie ścieżki skalowania wcześnie, ale optymalizujemy dopiero na podstawie pomiarów.
 13. Regresje czasu klatki, pamięci, shaderów, builda lub cooka porównujemy z zapisanym baseline'em; nie oceniamy ich wyłącznie „na oko”.
+14. Każdy zewnętrzny asset lub pakiet musi mieć przypisany etap, zastosowanie i status licencji zgodnie z [`ASSET_PLAN.md`](ASSET_PLAN.md).
 
 ## Realistyczne oczekiwania czasowe
 
@@ -29,6 +30,23 @@ Plan 12-tygodniowy jest wariantem ambitnym.
 Przy braku wcześniejszego doświadczenia pełne MVP może wymagać więcej czasu. Po 12 tygodniach priorytetem jest kompletna i grywalna jazda, nawet jeśli część grafiki, animacji, pogody lub eksportu FIT będzie wymagała dalszego dopracowania.
 
 Zakresu nie zwiększamy bez aktualizacji dokumentu wymagań i roadmapy.
+
+## Plan assetów
+
+Szczegółowa lista potrzebnych assetów, kolejność ich pozyskiwania, reguły licencyjne i Asset Ledger znajdują się w [`ASSET_PLAN.md`](ASSET_PLAN.md).
+
+Assety wchodzą etapami, a nie jako osobny wielki art-pass:
+
+| Etap | Asset gate |
+|---|---|
+| **3G** | landscape/ground baseline, vegetation, rocks/cliffs, atmosphere/sky/fog; bez obowiązku zakupu, jeśli natywne/darmowe zasoby wystarczą |
+| **4** | wyłącznie lekkie debug/guidance decals potrzebne do mechaniki zakrętów |
+| **5** | font i minimalny zestaw ikon HUD |
+| **6** | jeden produkcyjny rider + jeden road bike + strój/kask + rig/retargeting |
+| **7** | właściwy environment art pass: vegetation, rocks, road dressing, alpine buildings, roadside props, kilka pojazdów/scenek życia |
+| **8** | wet-weather VFX oraz cycling/nature audio |
+| **10** | asset freeze; wyłącznie polish i braki blokujące spójność/czytelność MVP |
+| **Po MVP** | tłumy, traffic, zwierzęta, wiele rowerów/ubrań i kolejne regiony |
 
 ## Równoległa praca biuro–dom
 
@@ -216,6 +234,10 @@ Mechaniki techniki zakrętów ze Stage 4 nie rozpoczynamy przed zielonym proofem
 - [ ] Wykonać porównywalny BEFORE/AFTER capture w 1200 m, 4900 m i 8000 m.
 - [ ] Potwierdzić build, Automation, Map Check, save/reopen, LFS/fresh-checkout i podstawowy 1080p performance sanity na komputerze referencyjnym.
 
+### Asset gate 3G
+
+Na tym etapie wolno wprowadzić tylko assety potrzebne do uzyskania referencyjnego środowiska: bazowe landscape/ground materials, vegetation, rocks/cliffs oraz atmosferę. To nie jest jeszcze finalny art pass Stage 7. Zakup paczki jest uzasadniony wyłącznie wtedy, gdy natywne UE/darmowe zasoby nie pozwalają osiągnąć spójnego baseline'u. Szczegóły: [`ASSET_PLAN.md`](ASSET_PLAN.md).
+
 ## Kryterium ukończenia
 
 Rdzeń Stage 3 jest ukończony: całą trasę można przejechać bez przerwania, błędu pozycji lub opuszczenia drogi; baseline build/proof jest zapisany, a domenowa symulacja pozostaje niezależna od presentation.
@@ -250,6 +272,10 @@ Wprowadzić autorską mechanikę oceniającą odpuszczenie i ponowne rozpoczęci
 - [ ] Regulowane poziomy asysty.
 - [ ] Testy powtarzalności wyników.
 
+### Asset gate Stage 4
+
+Nie planujemy zakupu produkcyjnej paczki graficznej. Dopuszczalne są proste decals/markery potrzebne do czytelnego pokazania entry/apex/exit, linii przejazdu, grip warning i debug guidance. Finalne road dressing i decals należą do Stage 7.
+
 ## Kryterium ukończenia
 
 Różne decyzje dotyczące mocy i kadencji dają widocznie różne, ale powtarzalne rezultaty przejazdu zakrętu.
@@ -276,6 +302,7 @@ Różne decyzje dotyczące mocy i kadencji dają widocznie różne, ale powtarza
 - [ ] Ocena przejazdu zakrętu.
 - [ ] Ekran mety i podsumowania.
 - [ ] Możliwość ograniczenia lub ukrycia HUD-u.
+- [ ] Dobrać produkcyjny font i minimalny zestaw ikon/SVG HUD zgodnie z `ASSET_PLAN.md`; nie kupować pełnego UI kitu bez uzasadnienia.
 
 ## Kryterium ukończenia
 
@@ -329,6 +356,10 @@ Warstwa prezentacji może korzystać m.in. z: `Speed`, `Grade`,
 np. rotacje/przesunięcia `Pelvis`, `Spine`, `Head`, `Elbow`, `Knee`
 oraz cele IK `Hand` / `Foot`; system animacji nie może zmieniać wyniku fizyki.
 
+### Asset gate Stage 6
+
+To pierwszy obowiązkowy asset pass postaci: wybieramy i walidujemy **jeden** model kolarza oraz **jeden** road bike. Rider obejmuje minimalny strój/kask i skeleton/rig nadający się do retargetingu; rower powinien mieć rozdzielone elementy wymagające animacji (co najmniej koła i korba/pedały). Model z Tripo/Meshy jest dopuszczalny po review topologii, skali, materiałów i riggingu. Nie budujemy jeszcze katalogu rowerów ani ubrań.
+
 ## Kryterium ukończenia
 
 Ruch kolarza, roweru i kamer jest płynny i zgodny z parametrami jazdy.
@@ -360,6 +391,12 @@ ciągłą zmianę pozy bez utraty kontaktu dłoni z kierownicą i stóp z pedał
 - [ ] Zebrać baseline GPU, Game Thread, Render Thread, RAM/VRAM i hitchy dla reprezentatywnych scen.
 - [ ] Nanite, Virtual Texturing/RVT i inne cięższe technologie dobierać przez benchmark przed/po, nie jako domyślną regułę świata.
 
+### Asset gate Stage 7
+
+To główny produkcyjny art pass środowiska. W tym etapie dobieramy/uzupełniamy: vegetation, rocks/cliffs, road/roadside props, asphalt/decals, modularne alpine buildings, village props, landmarks oraz ograniczony zestaw pojazdów i przygotowanych scenek życia. Preferujemy spójność zestawu landscape + vegetation + rocks nad liczbę różnych paczek. Nie wdrażamy pełnego traffic systemu.
+
+Każdy płatny lub zewnętrzny pack trafia do Asset Ledger w [`ASSET_PLAN.md`](ASSET_PLAN.md) wraz z licencją, kosztem, etapem i wynikiem podstawowej walidacji wydajności.
+
 ## Kryterium ukończenia
 
 Świat ma spójny alpejski charakter, a pełna trasa utrzymuje założony budżet wydajności.
@@ -383,6 +420,10 @@ ciągłą zmianę pozy bez utraty kontaktu dłoni z kierownicą i stóp z pedał
 - [ ] Wiatr zależny od prędkości i kierunku.
 - [ ] Dźwięki deszczu, lasu, zwierząt i miejscowości.
 - [ ] Testy wydajności podczas najcięższych warunków, w tym co najmniej dense foliage + deszcz + mokra droga + dynamiczne cienie na reprezentatywnym fragmencie.
+
+### Asset gate Stage 8
+
+Wprowadzamy wyłącznie efekty i dźwięki potrzebne do działającej pogody i wiarygodnego roweru: rain/spray, wetness/puddles gdy uzasadnione, subtelne wind/debris particles, drivetrain/freehub/tyres/brakes oraz ambience deszczu, lasu i miejscowości. Najpierw wykorzystujemy natywne systemy UE; duży zewnętrzny weather framework wymaga osobnego dowodu, że rozwiązuje konkretną lukę.
 
 ## Kryterium ukończenia
 
@@ -432,6 +473,8 @@ Ukończona aktywność jest dostępna lokalnie i może zostać wyeksportowana ja
 - [ ] Przygotowanie wersji Windows.
 - [ ] Instrukcja instalacji i uruchomienia.
 - [ ] Oznaczenie wydania `v0.1.0-mvp`.
+- [ ] Zamknąć Asset Ledger dla MVP: źródło/licencja/status wszystkich użytych zewnętrznych assetów i brak nieużywanych importów „na zapas”.
+- [ ] Asset freeze: nowe zakupy tylko wtedy, gdy rozwiązują konkretny blocker jakości/czytelności lub regresję, której nie można rozsądnie naprawić istniejącymi zasobami.
 
 ## Kryterium ukończenia
 
