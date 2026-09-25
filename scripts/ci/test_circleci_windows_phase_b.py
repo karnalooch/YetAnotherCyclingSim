@@ -158,6 +158,23 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
         self.assertNotIn("sourceforge.net/projects/gnuwin32", seed_block)
         self.assertNotIn("gzip-1.3.12-1-bin.zip", seed_block)
 
+    def test_self_hosted_seed_requires_machine_runner_host_bootstrap(self):
+        seed_start = self.config.index("  ue-cache-seed:")
+        publish_start = self.config.index("  ue-cache-publish:")
+        seed_block = self.config[seed_start:publish_start]
+        for token in (
+            "Verify machine-runner host contract",
+            "CIRCLECI_RUNNER_WORK_DIR",
+            "CIRCLECI_RUNNER_TASK_AGENT_DIRECTORY",
+            "Configure-YacsCircleCiRunnerHost.ps1",
+            "D:\\CircleCI\\YACS-Runner\\TaskAgent",
+        ):
+            self.assertIn(token, seed_block)
+        self.assertNotIn(
+            "PATH: 'C:\\Program Files\\Git\\usr\\bin",
+            seed_block,
+        )
+
     def test_hosted_job_publishes_workspace_to_cache(self):
         for token in (
             "ue-cache-publish:",

@@ -46,7 +46,6 @@ jobs:
     environment:
       TEMP: 'D:\CircleCI\YACS-Runner\Temp'
       TMP: 'D:\CircleCI\YACS-Runner\Temp'
-      PATH: 'C:\Program Files\Git\usr\bin;C:\Program Files\Git\cmd;C:\Program Files\PowerShell\7;C:\Windows\System32\WindowsPowerShell\v1.0;C:\Windows\System32;C:\Windows'
     steps:
       - checkout
 
@@ -65,6 +64,39 @@ jobs:
               throw "Self-hosted UE seed TMP must stay on D:, actual '$env:TMP'."
             }
             Write-Host ("Self-hosted seed scratch: TEMP={0}; TMP={1}" -f $env:TEMP, $env:TMP)
+
+      - run:
+          name: Verify machine-runner host contract
+          shell: powershell.exe -ExecutionPolicy Bypass
+          command: |
+            $ErrorActionPreference = 'Stop'
+            $expectedWorkDir = 'D:\CircleCI\YACS-Runner\Workdir'
+            $expectedTaskAgentDir = 'D:\CircleCI\YACS-Runner\TaskAgent'
+            $gitUsrBin = 'C:\Program Files\Git\usr\bin'
+
+            $machineWorkDir = [Environment]::GetEnvironmentVariable('CIRCLECI_RUNNER_WORK_DIR', 'Machine')
+            $machineTaskAgentDir = [Environment]::GetEnvironmentVariable('CIRCLECI_RUNNER_TASK_AGENT_DIRECTORY', 'Machine')
+            $machinePath = [Environment]::GetEnvironmentVariable('Path', 'Machine')
+
+            if ($machineWorkDir -ne $expectedWorkDir) {
+              throw "CircleCI host bootstrap required: machine CIRCLECI_RUNNER_WORK_DIR='$machineWorkDir', expected '$expectedWorkDir'. Run scripts/ci/Configure-YacsCircleCiRunnerHost.ps1 from an elevated PowerShell prompt, then restart the CircleCI service."
+            }
+            if ($machineTaskAgentDir -ne $expectedTaskAgentDir) {
+              throw "CircleCI host bootstrap required: machine CIRCLECI_RUNNER_TASK_AGENT_DIRECTORY='$machineTaskAgentDir', expected '$expectedTaskAgentDir'."
+            }
+
+            $machinePathEntries = @($machinePath -split ';' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+            if (-not ($machinePathEntries | Where-Object { $_.TrimEnd('\') -ieq $gitUsrBin.TrimEnd('\') })) {
+              throw "CircleCI host bootstrap required: machine PATH does not contain '$gitUsrBin'."
+            }
+
+            $gzipCommand = Get-Command gzip.exe -ErrorAction Stop
+            $tarCommand = Get-Command tar.exe -ErrorAction Stop
+            Write-Host ("Machine-runner host contract: PASS")
+            Write-Host ("  working directory : {0}" -f $machineWorkDir)
+            Write-Host ("  task-agent dir    : {0}" -f $machineTaskAgentDir)
+            Write-Host ("  gzip              : {0}" -f $gzipCommand.Source)
+            Write-Host ("  tar               : {0}" -f $tarCommand.Source)
 
       - run:
           name: Measure and package local UE 5.8

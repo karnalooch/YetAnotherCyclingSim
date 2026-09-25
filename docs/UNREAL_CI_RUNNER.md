@@ -24,6 +24,30 @@ Required custom label:
 
 GitHub also applies its normal self-hosted label. The custom yacs-ue58 label is the workload gate and must be attached only to the intended Windows x64 UE 5.8 host; it must not be shared with unrelated public repositories.
 
+
+## CircleCI machine-runner host bootstrap
+
+CircleCI built-in steps such as `persist_to_workspace` run inside the task-agent,
+not inside the PowerShell process spawned for a `run` step. Therefore job-level
+`PATH` changes are not enough to provide `gzip` to workspace handling.
+
+The runner host must be configured once from an elevated PowerShell prompt:
+
+    powershell.exe -ExecutionPolicy Bypass -File scripts/ci/Configure-YacsCircleCiRunnerHost.ps1
+
+The bootstrap keeps CircleCI working data on `D:`:
+
+- `CIRCLECI_RUNNER_WORK_DIR=D:\CircleCI\YACS-Runner\Workdir`
+- `CIRCLECI_RUNNER_TASK_AGENT_DIRECTORY=D:\CircleCI\YACS-Runner\TaskAgent`
+- `C:\Program Files\Git\usr\bin` is added to the machine PATH so the runner/task-agent
+  can use the already-installed Git for Windows `gzip.exe` and `tar.exe`.
+
+The script restarts the CircleCI Windows service by default. That restart is required:
+an already-running runner process does not inherit machine environment changes.
+
+The UE seed archive, persistent seed, job scratch, working directory, and task-agent
+downloads remain on `D:`. No UE payload is copied to `C:`.
+
 ## Trust policy
 
 The repository is public. Never execute untrusted fork PR code on this runner.
