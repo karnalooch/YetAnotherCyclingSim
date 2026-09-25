@@ -59,7 +59,7 @@ jobs:
       - save_cache:
           key: << pipeline.parameters.ue_cache_key >>
           paths:
-            - Saved/RuntimeProof/CI/UE58Seed/ue58-win64.tar.gz
+            - Saved/RuntimeProof/CI/UE58Seed/ue58-win64.zip
             - Saved/RuntimeProof/CI/UE58Seed/ue58-win64-manifest.json
 
       - store_artifacts:

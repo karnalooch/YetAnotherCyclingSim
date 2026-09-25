@@ -48,7 +48,7 @@ ue_cache_key = yacs-ue58-win64-v1
 The seed job is self-hosted. It runs on the home PC, packages the local UE 5.8
 installation, and saves only these cache payloads:
 
-- `Saved/RuntimeProof/CI/UE58Seed/ue58-win64.tar.gz`
+- `Saved/RuntimeProof/CI/UE58Seed/ue58-win64.zip`
 - `Saved/RuntimeProof/CI/UE58Seed/ue58-win64-manifest.json`
 
 The cache key is immutable. Bump the version suffix when intentionally replacing the
@@ -74,6 +74,11 @@ used by #24.
 ## UE seed package policy
 
 `Prepare-YacsUe58Seed.ps1` defaults to measurement-only mode.
+
+The package is created on the same filesystem volume as `OutputRoot`. On the reference
+home PC this keeps all large I/O on `D:`. The script does not use Windows `tar.exe`:
+a previous same-volume bsdtar run emitted `Can't add archive to itself` for an unrelated
+UE header and therefore was rejected as seed evidence.
 
 Run locally first:
 
@@ -102,6 +107,19 @@ Only after the measurement is acceptable:
 ```powershell
 pwsh ./scripts/ci/Prepare-YacsUe58Seed.ps1 -CreateArchive
 ```
+
+Archive creation is fail-closed:
+
+- writes a uniquely named `ue58-win64.partial.<guid>.zip` first;
+- never overwrites an existing validated `ue58-win64.zip`;
+- requires enough free space for the full uncompressed input plus 2 GiB safety;
+- reopens the ZIP and fully reads every entry to detect decompression/CRC failures;
+- compares the complete source file set with the archive file set;
+- verifies all required Unreal binaries are present;
+- computes SHA256 only after validation;
+- renames the partial file to `ue58-win64.zip` only after every check passes.
+
+A failed run deletes only its own `.partial` file and leaves the previous evidence intact.
 
 ## One-time CircleCI self-hosted seed runner
 
@@ -132,8 +150,10 @@ Before extraction, `Restore-YacsUe58Seed.ps1` requires enough free disk for:
 compressed archive + estimated extracted engine + 8 GiB safety
 ```
 
-The restore also verifies the archive SHA256 and UE 5.8 version. A cache miss, corrupt
-archive, version mismatch, or insufficient disk is a hard failure.
+The restore also verifies the archive SHA256, integrity flag, entry count, safe paths,
+and exact UE 5.8 version. It rejects absolute paths, drive-qualified entries and `..`
+path traversal before extraction. A cache miss, corrupt archive, version mismatch, or
+insufficient disk is a hard failure.
 
 ## Slack notifications
 
@@ -168,7 +188,7 @@ This keeps Slack credentials outside `.circleci/config.yml`.
 
 ## Phase B acceptance
 
-- [ ] measure local UE 5.8 package size;
+- [x] measure local UE 5.8 package size — 25.151 GiB estimated payload from UE 5.8.2;
 - [ ] package stays within the configured safety limit or exclusions are reviewed;
 - [ ] one self-hosted seed job saves the cache;
 - [ ] hosted canary restores UE successfully;
