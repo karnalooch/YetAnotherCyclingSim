@@ -68,6 +68,15 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
         ):
             self.assertIn(token, self.restore)
 
+    def test_seed_has_long_no_output_timeout_and_progress(self):
+        self.assertIn("no_output_timeout: 45m", self.config)
+        for token in (
+            "Scanning UE 5.8 tree",
+            "Packing UE seed:",
+            "Validating UE seed:",
+        ):
+            self.assertIn(token, self.packer)
+
     def test_seed_uses_partial_zip_and_full_integrity_validation(self):
         for token in (
             "ue58-win64.zip",
