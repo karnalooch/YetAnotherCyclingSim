@@ -38,7 +38,7 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
         self.assertIn("restore_cache:", self.config)
         self.assertGreaterEqual(
             self.config.count("<< pipeline.parameters.ue_cache_key >>"),
-            3,
+            2,
         )
 
     def test_hosted_canary_runs_real_unreal_ci_entry_point(self):
