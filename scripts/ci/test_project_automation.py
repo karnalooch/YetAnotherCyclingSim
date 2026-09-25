@@ -195,9 +195,7 @@ class ProjectAutomationTests(unittest.TestCase):
                 }
             }
         }
-        issues = pa.same_repo_closing_issues(
-            data, "karnalooch/YetAnotherCyclingSim"
-        )
+        issues = pa.same_repo_closing_issues(data, "karnalooch/YetAnotherCyclingSim")
         self.assertEqual([issue["number"] for issue in issues], [10])
 
     def test_closing_issue_pagination_fails_instead_of_partial_update(self):
