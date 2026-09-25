@@ -333,13 +333,10 @@ def verify_status_contract(project: dict[str, Any]) -> tuple[str, ...]:
             f"copied Project must expose exactly {EXPECTED_STATUS_COUNT} Status "
             f"columns; actual={names!r}"
         )
-    missing = [
-        status for status in REQUIRED_AUTOMATED_STATUSES if status not in names
-    ]
+    missing = [status for status in REQUIRED_AUTOMATED_STATUSES if status not in names]
     if missing:
         raise AutomationError(
-            "copied Project is missing automated Status options: "
-            + ", ".join(missing)
+            "copied Project is missing automated Status options: " + ", ".join(missing)
         )
     return names
 
@@ -528,10 +525,7 @@ def bootstrap_project(
         print(f"project-bootstrap: repository already linked: {repository}")
 
     copied_statuses = verify_status_contract(project)
-    print(
-        "project-bootstrap: copied Status columns -> "
-        + " -> ".join(copied_statuses)
-    )
+    print("project-bootstrap: copied Status columns -> " + " -> ".join(copied_statuses))
 
     field_id, backlog_option_id = status_option_id(project, "Backlog")
     open_issues = list_open_issues(client, repository=repository)
@@ -648,9 +642,7 @@ def main(argv: list[str] | None = None) -> int:
     args = list(sys.argv[1:] if argv is None else argv)
     try:
         if len(args) != 1 or args[0] not in {"bootstrap", "sync-event"}:
-            raise AutomationError(
-                "usage: project_automation.py {bootstrap|sync-event}"
-            )
+            raise AutomationError("usage: project_automation.py {bootstrap|sync-event}")
 
         token = require_env("GH_TOKEN")
         repository = require_env("GITHUB_REPOSITORY")
