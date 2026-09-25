@@ -62,9 +62,24 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
             "SHA256 mismatch",
             "Not enough free disk",
             "^5\\.8\\.",
-            "UnrealEditor-Cmd.exe",
+            "ArchiveIntegrityValidated",
+            "Unsafe archive entry path",
+            "Archive entry escapes destination root",
         ):
             self.assertIn(token, self.restore)
+
+    def test_seed_uses_partial_zip_and_full_integrity_validation(self):
+        for token in (
+            "ue58-win64.zip",
+            "ue58-win64.partial.",
+            "ZipArchiveMode]::Create",
+            "ZipArchiveMode]::Read",
+            "ArchiveIntegrityValidated",
+            "ARCHIVE PASS",
+        ):
+            self.assertIn(token, self.packer)
+        self.assertNotIn("tar.exe", self.packer)
+        self.assertNotIn("tar.exe", self.restore)
 
 
 if __name__ == "__main__":
