@@ -86,6 +86,28 @@ The CodeQL `none` build is deliberately not presented as proof that the UE5
 project compiles. It is a hosted-runner static-analysis layer. A real Windows/Unreal
 build + Automation lane remains tracked in #24.
 
+## Unreal self-hosted runner rollout
+
+The real Unreal lane is introduced in phases; the current target is **Phase 1**.
+The detailed operational and security plan lives in
+[`UNREAL_SELF_HOSTED_RUNNER_PLAN.md`](UNREAL_SELF_HOSTED_RUNNER_PLAN.md).
+
+Phase 1 deliberately does **not** join the normal PR gate:
+
+- home PC is registered as a repository-scoped self-hosted runner with the
+  dedicated `yacs-ue58` label;
+- execution is manual through `workflow_dispatch`;
+- no arbitrary `pull_request` event may schedule code on the home PC;
+- checkout/proof is pinned to an exact trusted SHA;
+- generated Stage 3G source assets are returned as workflow artifacts first;
+  the runner does not receive repository write credentials merely to commit them;
+- Stage 3G / #80 is the first canary workload;
+- only after green and intentional-red canaries do we consider trusted automatic
+  triggers and, later, inclusion in `Aggregate CI gate`.
+
+This staged rollout keeps the public repository from turning a personal Windows
+machine into a general-purpose executor for untrusted contributions.
+
 ## Unreal-specific repository policy
 
 Git, not generated Unreal state, is canonical. Generated IDE/UE paths such as
