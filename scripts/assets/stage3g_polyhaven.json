@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "provider": {
+    "name": "Poly Haven",
+    "api_base": "https://api.polyhaven.com",
+    "asset_license": "CC0-1.0",
+    "license_url": "https://polyhaven.com/license",
+    "api_terms_url": "https://github.com/Poly-Haven/Public-API/blob/main/ToS.md",
+    "api_credit": "Source assets are downloaded from Poly Haven via its public API.",
+    "user_agent": "YetAnotherCyclingSim-Stage3GAssetBootstrap/1.0 (+https://github.com/karnalooch/YetAnotherCyclingSim)"
+  },
+  "defaults": {
+    "resolution": "2k",
+    "model_format": "fbx"
+  },
+  "assets": [
+    {
+      "id": "sparse_grass",
+      "name": "Sparse Grass",
+      "kind": "texture",
+      "role": "valley meadow ground material",
+      "stage": "3G",
+      "enabled": true,
+      "maps": ["diffuse", "normal_dx", "roughness", "displacement"],
+      "web_url": "https://polyhaven.com/a/sparse_grass",
+      "notes": "Baseline meadow/valley ground. Use as a layer, not a full vegetation solution."
+    },
+    {
+      "id": "forrest_ground_03",
+      "name": "Forest Ground 03",
+      "kind": "texture",
+      "role": "forest floor material",
+      "stage": "3G",
+      "enabled": true,
+      "maps": ["diffuse", "normal_dx", "roughness", "displacement"],
+      "web_url": "https://polyhaven.com/a/forrest_ground_03",
+      "notes": "Pine-needle forest floor for the forest sector. Asset ID intentionally uses Poly Haven's 'forrest' spelling."
+    },
+    {
+      "id": "rocky_terrain",
+      "name": "Rocky Terrain",
+      "kind": "texture",
+      "role": "high-Alpine rocky ground material",
+      "stage": "3G",
+      "enabled": true,
+      "maps": ["diffuse", "normal_dx", "roughness", "displacement"],
+      "web_url": "https://polyhaven.com/a/rocky_terrain",
+      "notes": "Baseline high-Alpine terrain layer."
+    },
+    {
+      "id": "rock_face_01",
+      "name": "Rock Face 01",
+      "kind": "model",
+      "role": "roadside cliff / exposed rock face",
+      "stage": "3G",
+      "enabled": true,
+      "maps": ["diffuse", "normal_dx", "roughness"],
+      "web_url": "https://polyhaven.com/a/rock_face_01",
+      "notes": "Use sparingly for readable roadside cliff forms; benchmark before repeated placement."
+    },
+    {
+      "id": "boulder_01",
+      "name": "Boulder 01",
+      "kind": "model",
+      "role": "roadside boulder / sparse rock dressing",
+      "stage": "3G",
+      "enabled": true,
+      "maps": ["diffuse", "normal_dx", "roughness"],
+      "web_url": "https://polyhaven.com/a/boulder_01",
+      "notes": "Sparse near/mid-ground dressing; prefer instancing when repeated."
+    },
+    {
+      "id": "mountainside",
+      "name": "Mountainside",
+      "kind": "model",
+      "role": "mid-ground rocky mountain mass",
+      "stage": "3G",
+      "enabled": true,
+      "maps": ["diffuse", "normal_dx", "roughness"],
+      "web_url": "https://polyhaven.com/a/mountainside",
+      "notes": "Candidate for mid-ground mountain layering. Distant silhouettes may still use cheaper authored geometry."
+    },
+    {
+      "id": "fir_tree_01",
+      "name": "Fir Tree 01",
+      "kind": "model",
+      "role": "conifer forest baseline",
+      "stage": "3G",
+      "enabled": true,
+      "maps": ["diffuse", "normal_dx", "roughness", "alpha", "mask"],
+      "web_url": "https://polyhaven.com/a/fir_tree_01",
+      "notes": "Contains multiple fir variants and LODs. Never scatter full-detail geometry broadly without profiling."
+    },
+    {
+      "id": "grass_medium_01",
+      "name": "Grass Medium 01",
+      "kind": "model",
+      "role": "meadow ground-cover clump",
+      "stage": "3G",
+      "enabled": true,
+      "maps": ["diffuse", "normal_dx", "roughness", "alpha", "mask"],
+      "web_url": "https://polyhaven.com/a/grass_medium_01",
+      "notes": "Use controlled instancing and LODs; not intended for unbounded dense scatter."
+    }
+  ]
+}
