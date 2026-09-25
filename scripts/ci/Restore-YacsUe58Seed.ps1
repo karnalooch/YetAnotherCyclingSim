@@ -75,6 +75,9 @@ try {
                 throw ("Archive entry count mismatch: manifest={0}, zip={1}." -f $manifest.ArchivedFileCount, $fileEntries.Count)
             }
 
+            $validatedTargets = [System.Collections.Generic.Dictionary[string,string]]::new(
+                [System.StringComparer]::OrdinalIgnoreCase
+            )
             foreach ($entry in $fileEntries) {
                 $normalized = $entry.FullName.Replace('\', '/')
                 if (-not $normalized.StartsWith($expectedPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
@@ -93,7 +96,16 @@ try {
                 if (-not $targetPath.StartsWith($destinationParentFull, [System.StringComparison]::OrdinalIgnoreCase)) {
                     throw "Archive entry escapes destination root: $normalized"
                 }
+                if ($validatedTargets.ContainsKey($normalized)) {
+                    throw "Duplicate archive entry: $normalized"
+                }
+                $validatedTargets.Add($normalized, $targetPath)
+            }
 
+            $createdDestination = $true
+            foreach ($entry in $fileEntries) {
+                $normalized = $entry.FullName.Replace('\', '/')
+                $targetPath = $validatedTargets[$normalized]
                 $targetDirectory = Split-Path -Parent $targetPath
                 New-Item -ItemType Directory -Path $targetDirectory -Force | Out-Null
                 $input = $entry.Open()
@@ -112,7 +124,6 @@ try {
                 } finally {
                     $input.Dispose()
                 }
-                $createdDestination = $true
             }
         } finally {
             $zip.Dispose()
