@@ -20,7 +20,7 @@ class Phase1OneShotUnrealContractTests(unittest.TestCase):
     def test_one_shot_triggers_only_on_main_sentinel_push(self):
         self.assertIn("push:", self.workflow)
         self.assertIn("branches: [main]", self.workflow)
-        self.assertIn('.github/PHASE1_UNREAL_CANARY_ONE_SHOT', self.workflow)
+        self.assertIn(".github/PHASE1_UNREAL_CANARY_ONE_SHOT", self.workflow)
         self.assertNotIn("pull_request:", self.workflow)
         self.assertNotIn("schedule:", self.workflow)
 
