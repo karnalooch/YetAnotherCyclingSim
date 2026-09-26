@@ -15,6 +15,7 @@ on:
       - 'scripts/ue/Invoke-YacsStage3GR2PCGRouteExclusion.ps1'
       - 'scripts/ue/stage3g_author_pcg_route_exclusion.py'
       - 'scripts/ci/test_stage3g_r2_pcg_route_exclusion_contract.py'
+      - 'Content/YACS/WorldGen/PCG/PCG_RouteExclusion.uasset'
       - 'YetAnotherCyclingSim.uproject'
 
 permissions:
