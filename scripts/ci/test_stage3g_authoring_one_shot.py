@@ -7,7 +7,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW = ROOT / ".github" / "workflows" / "stage3g-authoring-one-shot.yml"
 SENTINEL = ROOT / ".github" / "STAGE3G_AUTHORING_ONE_SHOT"
-TARGET_SHA = "d8ce8f434d412f326477809a8f9fb0aa25498932"
+TARGET_SHA = "1591ba1cda79a2beee494854e2cd0050fef822df"
 
 
 class Stage3GAuthoringOneShotContractTests(unittest.TestCase):
