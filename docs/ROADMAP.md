@@ -334,7 +334,9 @@ Oddzielić autorytatywną fizyczną reprezentację drogi od renderowanego spline
 - [x] Zdefiniować validation invariants dla nieciągłości, patologicznych spike'ów grade/curvature/banking, nieprawidłowej szerokości i wartości niefinitych.
 - [x] Zachować możliwość przyszłego front/rear tyre state bez wymuszania pełnego modelu opon w MVP.
 
-**Dowód implementacyjny:** PR #165 wprowadza parity Python/C++ dla S/D, elevation, grade, curvature, width, metadata i look-ahead; PR #167 buduje profil bezpośrednio z autorytatywnej Stage 3 geometry; PR #168 rozszerza cross-slope o lewą/prawą połowę jezdni zależną od D, zachowuje Alpine baseline 0°/0° i jawnie pozostawia resolver `surface_id + wetness → grip` dla 4B/4C. Żaden z tych kroków nie używa renderowanego spline'a, road mesha, terrainu, PCG ani Actor transformów jako źródła fizyki.\n\n### Granica MVP / post-MVP
+**Dowód implementacyjny:** PR #165 wprowadza parity Python/C++ dla S/D, elevation, grade, curvature, width, metadata i look-ahead; PR #167 buduje profil bezpośrednio z autorytatywnej Stage 3 geometry; PR #168 rozszerza cross-slope o lewą/prawą połowę jezdni zależną od D, zachowuje Alpine baseline 0°/0° i jawnie pozostawia resolver `surface_id + wetness → grip` dla 4B/4C. Żaden z tych kroków nie używa renderowanego spline'a, road mesha, terrainu, PCG ani Actor transformów jako źródła fizyki.
+
+### Granica MVP / post-MVP
 
 **Przed MVP fizyka ma faktycznie wykorzystywać:** longitudinal grade, horizontal curvature, road width + lateral position/racing line, banking/cross-slope, surface/wetness w uproszczonym grip modelu, shared braking+cornering grip budget oraz look-ahead potrzebny do oceny techniki.
 
