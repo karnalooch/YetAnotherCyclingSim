@@ -8,6 +8,7 @@ from .corner_context import (
     CornerContextSettings,
     corner_context_at,
 )
+from .corner_grip_demand import CornerGripDemand, corner_grip_demand
 from .corner_limit import (
     CornerLateralLimit,
     corner_lateral_limit,
@@ -94,6 +95,8 @@ __all__ = [
     "CornerContext",
     "corner_context_at",
     "CornerLateralLimit",
+    "CornerGripDemand",
+    "corner_grip_demand",
     "corner_lateral_limit",
     "Corner",
     "CornerProfile",
