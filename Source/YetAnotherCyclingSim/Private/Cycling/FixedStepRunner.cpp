@@ -217,6 +217,8 @@ namespace CyclingSimulation
 		}
 
 		FSimulationState LocalState = State;
+		CyclingCornerTechniqueRuntime::FCornerTechniqueRuntimeState LocalTechniqueRuntimeState =
+			TechniqueRuntimeState;
 		double LocalAccumulator = TotalAccumulatedTime;
 		int32 LocalCompletedSteps = 0;
 		TArray<FSimulationBoundaryCrossing> LocalCrossings;
@@ -286,10 +288,11 @@ namespace CyclingSimulation
 			}
 
 			FSimulationState NextState = IntegratedState;
+			CyclingCornerConsequence::FCornerGeometryConsequence Consequence;
+			bool bHasConsequence = false;
 			if (bHasCornerBrakingResolution
 				&& BrakingResolution.bHasActiveLateralDemand)
 			{
-				CyclingCornerConsequence::FCornerGeometryConsequence Consequence;
 				FString ConsequenceError;
 				if (!CyclingCornerConsequence::TryResolveCornerGeometryConsequence(
 					BrakingResolution.CornerContext,
@@ -316,6 +319,27 @@ namespace CyclingSimulation
 					return false;
 				}
 				NextState = Application.State;
+				bHasConsequence = true;
+			}
+
+			if (bHasCornerBrakingResolution)
+			{
+				CyclingCornerTechniqueRuntime::FCornerTechniqueRuntimeState NextTechniqueRuntimeState;
+				FString TechniqueError;
+				if (!CyclingCornerTechniqueRuntime::TryObserveCornerTechniqueStep(
+					LocalTechniqueRuntimeState,
+					BrakingResolution.CornerContext,
+					RiderInput,
+					bHasConsequence ? &Consequence : nullptr,
+					NextState,
+					NextTechniqueRuntimeState,
+					TechniqueError))
+				{
+					OutError = TechniqueError;
+					CompletedSteps = 0;
+					return false;
+				}
+				LocalTechniqueRuntimeState = MoveTemp(NextTechniqueRuntimeState);
 			}
 
 			TArray<FSimulationBoundaryCrossing> StepCrossings;
@@ -353,6 +377,7 @@ namespace CyclingSimulation
 
 		State = LocalState;
 		AccumulatedTimeS = LocalAccumulator;
+		TechniqueRuntimeState = MoveTemp(LocalTechniqueRuntimeState);
 
 		OutState = State;
 		RemainingAccumulatedTimeS = AccumulatedTimeS;
