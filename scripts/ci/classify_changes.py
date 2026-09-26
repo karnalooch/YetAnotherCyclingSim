@@ -227,7 +227,7 @@ def full_static_classification() -> Classification:
     return Classification(
         python=True,
         cpp=True,
-        assets=True,
+        assets=False,
         ci=True,
         ue_code=False,
     )
