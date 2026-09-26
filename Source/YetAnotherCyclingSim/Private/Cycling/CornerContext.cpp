@@ -9,12 +9,12 @@ namespace CyclingCornerContext
 {
 	namespace
 	{
-		bool IsPositiveFinite(double Value)
+		bool IsCornerContextPositiveFinite(double Value)
 		{
 			return std::isfinite(Value) && Value > 0.0;
 		}
 
-		bool IsNonNegativeFinite(double Value)
+		bool IsCornerContextNonNegativeFinite(double Value)
 		{
 			return std::isfinite(Value) && Value >= 0.0;
 		}
@@ -147,22 +147,22 @@ namespace CyclingCornerContext
 			OutError = TEXT("corner context lateral position must be finite");
 			return false;
 		}
-		if (!IsPositiveFinite(Settings.MinAbsCurvaturePerM))
+		if (!IsCornerContextPositiveFinite(Settings.MinAbsCurvaturePerM))
 		{
 			OutError = TEXT("corner context minimum absolute curvature must be finite and greater than zero");
 			return false;
 		}
-		if (!IsPositiveFinite(Settings.ScanStepM))
+		if (!IsCornerContextPositiveFinite(Settings.ScanStepM))
 		{
 			OutError = TEXT("corner context scan step must be finite and greater than zero");
 			return false;
 		}
-		if (!IsNonNegativeFinite(Settings.LookAheadM))
+		if (!IsCornerContextNonNegativeFinite(Settings.LookAheadM))
 		{
 			OutError = TEXT("corner context look-ahead must be finite and non-negative");
 			return false;
 		}
-		if (!IsPositiveFinite(Settings.ApproachLengthM))
+		if (!IsCornerContextPositiveFinite(Settings.ApproachLengthM))
 		{
 			OutError = TEXT("corner context approach length must be finite and greater than zero");
 			return false;
