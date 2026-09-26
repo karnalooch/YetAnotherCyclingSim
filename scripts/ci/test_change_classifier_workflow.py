@@ -61,7 +61,10 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
         self.assertIn("reusable-stage3g-full.yml", self.ci)
         self.assertIn("- stage3g-full-validation", self.ci)
         self.assertIn('require_optional "stage3g-full-validation"', self.ci)
-        self.assertIn("github.event.pull_request.head.repo.full_name == github.repository", self.ci)
+        self.assertIn(
+            "github.event.pull_request.head.repo.full_name == github.repository",
+            self.ci,
+        )
 
     def test_reusable_unreal_lane_never_materializes_assets(self):
         self.assertIn('GIT_LFS_SKIP_SMUDGE: "1"', self.unreal)
