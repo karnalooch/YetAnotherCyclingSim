@@ -35,9 +35,9 @@ The reusable Unreal lane is intentionally source-only:
 
 The reusable lane is ready for source-only execution, but YACS self-hosted
 runner policy is still Phase 1 manual/trusted. Therefore `ue_code=true` is a
-routing signal, not yet an automatic Aggregate requirement. Automatic Unreal execution must use the proven trusted self-hosted runner
-Phase 2/3 path. The hosted CircleCI UE-seed/cache PoC was retired because the
-multi-gigabyte engine transport created disproportionate storage/network cost.
+routing signal, not yet an automatic Aggregate requirement. Automatic Unreal execution must use the proven trusted GitHub Actions
+self-hosted runner Phase 2/3 path. Heavy Unreal execution must never depend on
+shipping the Engine through hosted CI cache/workspace storage.
 
 When automatic Unreal execution is enabled, a C++ change must not download
 project textures, maps, FBX files, audio or other LFS payloads merely to prove

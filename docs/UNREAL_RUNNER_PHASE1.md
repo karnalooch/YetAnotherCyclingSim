@@ -103,7 +103,8 @@ The job should be picked up by `yacs-home-ue58`.
 Pass requires:
 
 - trusted branch resolution succeeds;
-- Git LFS checkout is clean;
+- code-only checkout keeps LFS payloads unmaterialized;
+- `Test-YacsCodeOnlyCheckout.ps1` passes;
 - UE 5.8.x is discovered;
 - `YetAnotherCyclingSimEditor Win64 Development` builds;
 - scoped Automation discovers tests and passes;
@@ -123,7 +124,9 @@ After runner canaries are proven, use:
 - mode: `stage3g-author`;
 - target: `feat/stage3g-reference-environment`.
 
-The workflow uploads the generated Stage 3G directory, map and authoring logs as artifacts. It deliberately does not push or commit anything.
+Stage3G modes intentionally use a full LFS checkout. The workflow uploads the
+generated Stage 3G directory, map and authoring logs as artifacts. It
+deliberately does not push or commit anything.
 
 After review, those binary source assets are committed through normal Git LFS rules on the Stage 3G branch.
 

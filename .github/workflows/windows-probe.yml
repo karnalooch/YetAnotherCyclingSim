@@ -1,0 +1,45 @@
+name: Windows host probe
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yacs-windows-probe-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    name: GitHub-hosted Windows baseline
+    runs-on: windows-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      GIT_LFS_SKIP_SMUDGE: "1"
+
+    steps:
+      - name: Checkout without LFS payloads
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+
+      - name: Probe hosted Windows toolchain
+        shell: pwsh
+        run: |
+          ./scripts/ci/Invoke-YacsWindowsProbe.ps1
+
+      - name: Upload concise probe evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-probe-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            Saved/RuntimeProof/CI/GitHub-Windows-Probe/**/*.json
+            Saved/RuntimeProof/CI/GitHub-Windows-Probe/**/*.txt
+          if-no-files-found: error
+          retention-days: 3

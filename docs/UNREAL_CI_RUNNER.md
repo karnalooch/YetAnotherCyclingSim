@@ -4,10 +4,11 @@ Issue: #24
 
 ## Status
 
-This defines the runner contract before the lane is connected to Aggregate CI gate.
-The reusable workflow remains dormant for automatic CI. Phase 1 uses the manual
-trusted entrypoint documented in `UNREAL_RUNNER_PHASE1.md` until a real runner is
-registered and the normal + intentional-red canaries are proven.
+This defines the GitHub Actions self-hosted runner contract before the Unreal
+lane is connected to Aggregate CI gate. GitHub is the single CI control plane.
+Phase 1 uses the manual trusted entrypoint documented in
+`UNREAL_RUNNER_PHASE1.md` until the normal + intentional-red canaries are
+proven.
 
 ## Required host
 
@@ -25,28 +26,30 @@ Required custom label:
 GitHub also applies its normal self-hosted label. The custom yacs-ue58 label is the workload gate and must be attached only to the intended Windows x64 UE 5.8 host; it must not be shared with unrelated public repositories.
 
 
-## CircleCI machine-runner host bootstrap
+## GitHub Actions execution model
 
-CircleCI no longer transports the UE installation through workspaces or caches.
-The machine runner uses the UE 5.8 installation already present on the host.
+YACS uses one CI control plane: GitHub Actions.
 
-The current YACS runner is operated as a foreground/manual machine runner, not a
-Windows service. It does not require administrator access.
+Lightweight checks run on GitHub-hosted runners:
 
-The working contract keeps runner scratch on `D:`:
+- path classification;
+- Python/reference tests;
+- repository/governance policy;
+- CodeQL and lightweight security;
+- LFS pointer validation;
+- optional manual Windows host probe.
 
-- `CIRCLECI_RUNNER_WORK_DIR=D:\CircleCI\YACS-Runner\Workdir`;
-- `CIRCLECI_RUNNER_TASK_AGENT_DIRECTORY=D:\CircleCI\YACS-Runner\TaskAgent`;
-- job `TEMP` and `TMP` stay under `D:\CircleCI\YACS-Runner\Temp`.
+Unreal workloads run on the repository-scoped self-hosted Windows runner with
+the custom label `yacs-ue58`. The Unreal Engine installation stays on the
+runner host and is never packaged into CI cache/workspace storage.
 
-The historical `Configure-YacsCircleCiRunnerHost.ps1` helper may still be used
-to establish those directories/environment values, but Git-for-Windows
-`gzip.exe`/`tar.exe` are no longer required for UE workspace persistence
-because UE payload persistence has been removed.
+For code-only canaries, project LFS payloads remain unmaterialized and
+`Test-YacsCodeOnlyCheckout.ps1` must pass before the Editor build starts.
+Asset-heavy workflows such as Stage3G author/proof and `asset-full` may perform
+an explicit full LFS checkout.
 
-When `ue_local_canary=true`, CircleCI checks out only project source/config and
-runs `Invoke-YacsUnrealCi.ps1` against the local UE installation. The workflow
-does not upload or download the engine.
+The runner is operated manually/trusted-only during Phase 1. No public PR code
+is allowed to execute on it automatically.
 
 ## Trust policy
 

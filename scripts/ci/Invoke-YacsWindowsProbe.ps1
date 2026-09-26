@@ -1,15 +1,16 @@
 <#
 .SYNOPSIS
-    Record the actual CircleCI Windows executor baseline for YACS.
+    Record the actual GitHub-hosted Windows executor baseline for YACS.
 
 .DESCRIPTION
-    This is intentionally a lightweight Phase A probe. It does not install or
-    build Unreal Engine. The result is evidence used to decide whether a later
-    UE 5.8 bootstrap is practical within the free CircleCI budget.
+    Lightweight diagnostic probe. It does not install or build Unreal Engine.
+    The result captures the hosted Windows toolchain and machine baseline so
+    YACS can make informed decisions about which jobs belong on GitHub-hosted
+    versus the repository-scoped yacs-ue58 self-hosted runner.
 #>
 [CmdletBinding()]
 param(
-    [string] $ArtifactRoot = (Join-Path -Path (Get-Location).Path -ChildPath 'Saved/RuntimeProof/CI/CircleCI-Windows-Probe')
+    [string] $ArtifactRoot = (Join-Path -Path (Get-Location).Path -ChildPath 'Saved/RuntimeProof/CI/GitHub-Windows-Probe')
 )
 
 Set-StrictMode -Version Latest
@@ -20,6 +21,7 @@ $ArtifactRoot = (Resolve-Path -LiteralPath $ArtifactRoot).Path
 
 function Get-CommandInfo {
     param([Parameter(Mandatory=$true)][string] $Name)
+
     $cmd = Get-Command $Name -ErrorAction SilentlyContinue | Select-Object -First 1
     if (-not $cmd) {
         return [ordered]@{
@@ -37,10 +39,13 @@ function Get-CommandInfo {
             'cmake' { $version = ((& cmake --version | Select-Object -First 1).Trim()) }
             'ninja' { $version = (& ninja --version).Trim() }
             default {
-                if ($cmd.Version) { $version = $cmd.Version.ToString() }
+                if ($cmd.Version) {
+                    $version = $cmd.Version.ToString()
+                }
             }
         }
-    } catch {
+    }
+    catch {
         $version = $null
     }
 
@@ -85,7 +90,8 @@ try {
         $gitLfs.Found = $true
         $gitLfs.Version = $lfsText
     }
-} catch { }
+}
+catch { }
 
 $ueCandidates = @(
     'D:\Epic Games\UE_5.8',
@@ -98,12 +104,13 @@ $ueRoots = @($ueCandidates | Where-Object { Test-Path -LiteralPath $_ })
 
 $payload = [ordered]@{
     TimestampUtc = (Get-Date).ToUniversalTime().ToString('o')
-    CircleCI = [ordered]@{
-        BuildNum = $env:CIRCLE_BUILD_NUM
-        WorkflowId = $env:CIRCLE_WORKFLOW_ID
-        Branch = $env:CIRCLE_BRANCH
-        Sha1 = $env:CIRCLE_SHA1
-        Job = $env:CIRCLE_JOB
+    GitHubActions = [ordered]@{
+        RunId = $env:GITHUB_RUN_ID
+        RunAttempt = $env:GITHUB_RUN_ATTEMPT
+        Workflow = $env:GITHUB_WORKFLOW
+        Ref = $env:GITHUB_REF
+        Sha = $env:GITHUB_SHA
+        Actor = $env:GITHUB_ACTOR
     }
     Host = [ordered]@{
         ComputerName = $env:COMPUTERNAME
@@ -133,7 +140,7 @@ $textPath = Join-Path $ArtifactRoot 'windows_probe.txt'
 $payload | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $jsonPath -Encoding UTF8
 $payload | Format-List | Out-String | Set-Content -LiteralPath $textPath -Encoding UTF8
 
-Write-Host '=== CircleCI Windows probe ==='
+Write-Host '=== GitHub Actions Windows probe ==='
 Write-Host ("OS              : {0}" -f $payload.Host.OsCaption)
 Write-Host ("CPU             : {0}" -f $payload.Host.Cpu)
 Write-Host ("Logical CPUs    : {0}" -f $payload.Host.LogicalProcessors)
@@ -150,8 +157,14 @@ Write-Host ("Visual Studio   : {0}" -f $(if ($payload.Tools.VisualStudio) { $pay
 Write-Host ("UE 5.8 detected : {0}" -f $payload.Unreal.Detected)
 Write-Host ("Artifact root   : {0}" -f $ArtifactRoot)
 
-if (-not $payload.Tools.Git.Found) { throw 'CircleCI Windows image is missing Git.' }
-if (-not $payload.Tools.GitLfs.Found) { throw 'CircleCI Windows image is missing Git LFS.' }
-if (-not $payload.Tools.VisualStudio) { throw 'CircleCI Windows image is missing Visual Studio C++ tools.' }
+if (-not $payload.Tools.Git.Found) {
+    throw 'GitHub-hosted Windows image is missing Git.'
+}
+if (-not $payload.Tools.GitLfs.Found) {
+    throw 'GitHub-hosted Windows image is missing Git LFS.'
+}
+if (-not $payload.Tools.VisualStudio) {
+    throw 'GitHub-hosted Windows image is missing Visual Studio C++ tools.'
+}
 
-Write-Host 'CIRCLECI WINDOWS PROBE PASSED.' -ForegroundColor Green
+Write-Host 'GITHUB WINDOWS PROBE PASSED.' -ForegroundColor Green
