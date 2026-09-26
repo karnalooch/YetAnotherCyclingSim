@@ -38,10 +38,12 @@ class AssetFullWorkflowContractTests(unittest.TestCase):
         self.assertNotIn('GIT_LFS_SKIP_SMUDGE: "1"', self.workflow)
 
     def test_modes_are_explicit_and_bounded(self):
-        for mode in ("map-smoke", "visual", "full"):
+        for mode in ("map-smoke", "visual", "package", "full"):
             self.assertIn(f"- {mode}", self.workflow)
         self.assertNotIn("- cook", self.workflow)
-        self.assertNotIn("- package", self.workflow)
+        self.assertIn("package_configuration", self.workflow)
+        self.assertIn("- Development", self.workflow)
+        self.assertIn("- Shipping", self.workflow)
 
     def test_map_smoke_uses_existing_stage3_proof(self):
         self.assertIn("Invoke-YacsStage3Proof.ps1", self.workflow)
@@ -53,6 +55,11 @@ class AssetFullWorkflowContractTests(unittest.TestCase):
             self.workflow,
         )
         self.assertIn("SkipBuild", self.workflow)
+
+    def test_package_mode_uses_dedicated_fail_closed_script(self):
+        self.assertIn("Invoke-YacsPackageProof.ps1", self.workflow)
+        self.assertIn("inputs.mode == 'package'", self.workflow)
+        self.assertIn("PACKAGE_CONFIGURATION", self.workflow)
 
     def test_full_lane_uploads_only_proof_artifacts(self):
         for extension in ("**/*.json", "**/*.txt", "**/*.log", "**/*.png"):
