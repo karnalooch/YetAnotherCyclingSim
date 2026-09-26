@@ -24,7 +24,9 @@ class Stage3GAuthoringOutputContractTests(unittest.TestCase):
         self.assertIn("YACS_STAGE3G_WORLD_PROOF", self.script)
         self.assertIn("stage3g_world_authoring_proof.txt", self.script)
         self.assertIn("Stage 3G world authoring proof: PASS.", self.script)
-        self.assertNotIn("Stage 3G world-authoring success marker missing.", self.script)
+        self.assertNotIn(
+            "Stage 3G world-authoring success marker missing.", self.script
+        )
 
     def test_unreal_process_still_fails_closed_on_nonzero_exit(self):
         self.assertIn("if ($ExitCode -ne 0)", self.script)
