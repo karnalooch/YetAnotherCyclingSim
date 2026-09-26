@@ -1,7 +1,13 @@
 """Reference cycling physics package for the YetAnotherCyclingSim project."""
 
 from .braking import BrakingForceDemand, braking_force_demand
-from .corner_braking import (\n    CornerBrakingStepResolution,\n    CornerBrakingStepResult,\n    resolve_corner_braking_step,\n    step_simulation_with_corner_braking,\n)\nfrom .corner_context import (
+from .corner_braking import (
+    CornerBrakingStepResolution,
+    CornerBrakingStepResult,
+    resolve_corner_braking_step,
+    step_simulation_with_corner_braking,
+)
+from .corner_context import (
     CORNER_DIRECTION_LEFT,
     CORNER_DIRECTION_RIGHT,
     CORNER_DIRECTION_STRAIGHT,
