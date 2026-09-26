@@ -28,6 +28,9 @@ class Stage3GAuthoringOneShotContractTests(unittest.TestCase):
         self.assertGreaterEqual(self.workflow.count("contents: read"), 2)
         self.assertNotIn("contents: write", self.workflow)
         self.assertNotIn("git push", self.workflow)
+        self.assertIn("Isolate self-hosted Git configuration", self.workflow)
+        self.assertIn("$env:GIT_CONFIG_GLOBAL = $isolated", self.workflow)
+        self.assertIn('"GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV', self.workflow)
 
     def test_target_is_exact_stage3g_sha_with_full_lfs(self):
         self.assertIn(TARGET_SHA, self.workflow)
