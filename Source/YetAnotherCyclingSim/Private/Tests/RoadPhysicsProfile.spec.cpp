@@ -243,6 +243,24 @@ bool FStage3HRoadPhysicsTransitionValidationTest::RunTest(const FString& Paramet
 		Profile.TryValidateTransitionRates(Failing, Error));
 	TestTrue(TEXT("transition error identifies grade"),
 		Error.Contains(TEXT("grade change rate")));
+
+	TArray<FRoadPhysicsSampleDefinition> AsymmetricSamples;
+	AsymmetricSamples.Add(MakeSample(0.0));
+	AsymmetricSamples.Add(MakeSample(10.0));
+	AsymmetricSamples[1].RightCrossSlopeAngleRad = 10.0 * Pi / 180.0;
+
+	FRoadPhysicsProfile AsymmetricProfile;
+	TestTrue(TEXT("asymmetric cross-slope profile config succeeds"),
+		AsymmetricProfile.TryConfigure(TEXT("cross slope transition"), AsymmetricSamples, Error));
+
+	FRoadPhysicsTransitionLimits CrossSlopeLimits;
+	CrossSlopeLimits.MaxAbsGradeChangePerM = 1.0;
+	CrossSlopeLimits.MaxAbsHorizontalCurvatureChangePerM2 = 1.0;
+	CrossSlopeLimits.MaxAbsCrossSlopeAngleChangeRadPerM = 0.01;
+	TestFalse(TEXT("excessive right cross-slope rate is rejected"),
+		AsymmetricProfile.TryValidateTransitionRates(CrossSlopeLimits, Error));
+	TestTrue(TEXT("transition error identifies right cross-slope"),
+		Error.Contains(TEXT("right cross-slope angle change rate")));
 	return true;
 }
 
