@@ -115,11 +115,19 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
             self.assertIn(token, canary_block)
 
     def test_circleci_checkouts_are_blobless_and_skip_lfs_smudge(self):
-        self.assertGreaterEqual(self.config.count("method: blobless"), 5)
+        self.assertGreaterEqual(self.config.count("method: blobless"), 4)
         self.assertGreaterEqual(
             self.config.count('GIT_LFS_SKIP_SMUDGE: "1"'),
             5,
         )
+
+    def test_hosted_canary_uses_full_git_checkout_without_lfs_payloads(self):
+        canary_start = self.config.index("  ue-hosted-canary:")
+        workflows_start = self.config.index("workflows:")
+        canary_block = self.config[canary_start:workflows_start]
+        self.assertIn("method: full", canary_block)
+        self.assertNotIn("method: blobless", canary_block)
+        self.assertIn('GIT_LFS_SKIP_SMUDGE: "1"', canary_block)
 
     def test_hosted_canary_enforces_code_only_lfs_pointers(self):
         canary_start = self.config.index("  ue-hosted-canary:")
