@@ -259,7 +259,7 @@ $SetupText = Get-Content -LiteralPath $SetupLog -Raw -ErrorAction Stop
 if ($SetupText -notmatch 'CyclingStage3RouteSetupCommandlet: done') {
     throw 'Stage 3 route/world setup completion marker missing.'
 }
-if ($SetupText -notmatch 'valley_ridges=32 forest_canopy=100 distant_mountains=28 water_tiles=26') {
+if ($SetupText -notmatch 'valley_ridges=32 forest_canopy=100 distant_mountains=28 rock_props=40 water_tiles=26') {
     throw 'Stage 3G deterministic instance-count marker missing.'
 }
 
