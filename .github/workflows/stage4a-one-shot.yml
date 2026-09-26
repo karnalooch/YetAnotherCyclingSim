@@ -29,25 +29,26 @@ jobs:
           "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
           "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
 
-      - name: Checkout exact trusted revision without LFS payloads
+      - name: Checkout exact trusted revision with full LFS
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        env:
-          GIT_LFS_SKIP_SMUDGE: "1"
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
-          lfs: false
+          lfs: true
           clean: true
           persist-credentials: false
 
-      - name: Verify exact SHA and code-only checkout
+      - name: Verify exact SHA and LFS integrity
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
           if ((git rev-parse HEAD).Trim() -ne '${{ github.sha }}') {
             throw 'Checkout does not match workflow SHA.'
           }
-          ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+          git lfs fsck
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Stage 4A full-LFS checkout failed git lfs fsck.'
+          }
           if (git status --porcelain) {
             throw 'Checkout is not clean before Unreal execution.'
           }
