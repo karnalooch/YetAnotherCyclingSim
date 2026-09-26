@@ -81,9 +81,7 @@ class GitHubApi:
                 message = exc.reason
             raise ApiError(exc.code, str(message)) from exc
         except URLError as exc:
-            raise OrchestratorError(
-                f"GitHub transport error: {exc.reason}"
-            ) from exc
+            raise OrchestratorError(f"GitHub transport error: {exc.reason}") from exc
 
         if not raw:
             return None
@@ -116,8 +114,7 @@ class GitHubApi:
         errors = result.get("errors")
         if errors:
             messages = "; ".join(
-                str(error.get("message", "unknown GraphQL error"))
-                for error in errors
+                str(error.get("message", "unknown GraphQL error")) for error in errors
             )
             raise OrchestratorError(f"GitHub GraphQL error: {messages}")
         data = result.get("data")
@@ -141,11 +138,7 @@ query($owner: String!, $name: String!, $number: Int!) {
 
 
 def normalized_lines(body: str | None) -> set[str]:
-    return {
-        line.strip().lower()
-        for line in (body or "").splitlines()
-        if line.strip()
-    }
+    return {line.strip().lower() for line in (body or "").splitlines() if line.strip()}
 
 
 def auto_merge_mode(body: str | None) -> str | None:
@@ -169,9 +162,7 @@ def latest_check_conclusions(
         try:
             run_id = int(raw_id)
         except (TypeError, ValueError) as exc:
-            raise OrchestratorError(
-                f"check run {name!r} has invalid id"
-            ) from exc
+            raise OrchestratorError(f"check run {name!r} has invalid id") from exc
         conclusion = run.get("conclusion")
         previous = latest.get(name)
         if previous is None or run_id > previous[0]:
@@ -186,11 +177,7 @@ def missing_required_checks(
     check_runs: Iterable[dict[str, Any]],
 ) -> list[str]:
     conclusions = latest_check_conclusions(check_runs)
-    return [
-        name
-        for name in REQUIRED_CHECKS
-        if conclusions.get(name) != "success"
-    ]
+    return [name for name in REQUIRED_CHECKS if conclusions.get(name) != "success"]
 
 
 def has_changes_requested(reviews: Iterable[dict[str, Any]]) -> bool:
@@ -205,10 +192,7 @@ def has_changes_requested(reviews: Iterable[dict[str, Any]]) -> bool:
         previous = latest.get(login)
         if previous is None or review_id > previous[0]:
             latest[login] = (review_id, state)
-    return any(
-        state == "CHANGES_REQUESTED"
-        for _review_id, state in latest.values()
-    )
+    return any(state == "CHANGES_REQUESTED" for _review_id, state in latest.values())
 
 
 def list_open_pull_requests(
@@ -273,9 +257,7 @@ def list_check_runs(
         raise OrchestratorError("check-runs response is not an object")
     total = int(payload.get("total_count", 0))
     if total > 100:
-        raise OrchestratorError(
-            f"{total} check runs found; refusing incomplete scan"
-        )
+        raise OrchestratorError(f"{total} check runs found; refusing incomplete scan")
     runs = payload.get("check_runs", [])
     if not isinstance(runs, list):
         raise OrchestratorError("check_runs is not a list")
@@ -303,13 +285,9 @@ def unresolved_review_threads(
         raise OrchestratorError(f"PR #{number} could not be resolved")
     threads = pull_request.get("reviewThreads", {})
     if threads.get("pageInfo", {}).get("hasNextPage"):
-        raise OrchestratorError(
-            f"PR #{number} has more than 100 review threads"
-        )
+        raise OrchestratorError(f"PR #{number} has more than 100 review threads")
     return sum(
-        1
-        for node in threads.get("nodes", [])
-        if not bool(node.get("isResolved"))
+        1 for node in threads.get("nodes", []) if not bool(node.get("isResolved"))
     )
 
 
@@ -330,9 +308,7 @@ def merged_parent_for_branch(
         },
     )
     if not isinstance(pulls, list):
-        raise OrchestratorError(
-            f"closed PR lookup for branch {branch!r} is not a list"
-        )
+        raise OrchestratorError(f"closed PR lookup for branch {branch!r} is not a list")
     merged = [
         pr
         for pr in pulls
@@ -362,9 +338,7 @@ def open_parent_by_head(
         if not ref:
             continue
         if ref in result:
-            raise OrchestratorError(
-                f"multiple open PRs use head branch {ref!r}"
-            )
+            raise OrchestratorError(f"multiple open PRs use head branch {ref!r}")
         result[ref] = pr
     return result
 
@@ -377,10 +351,8 @@ def validate_stack_acyclic(
         current = start_ref
         while current in open_parents:
             if current in seen:
-                cycle = seen[seen.index(current):] + [current]
-                raise OrchestratorError(
-                    "stack cycle detected: " + " -> ".join(cycle)
-                )
+                cycle = seen[seen.index(current) :] + [current]
+                raise OrchestratorError("stack cycle detected: " + " -> ".join(cycle))
             seen.append(current)
             parent_pr = open_parents[current]
             current = str(parent_pr.get("base", {}).get("ref", ""))
@@ -406,14 +378,11 @@ def update_branch(
         )
     except ApiError as exc:
         if exc.status == 422:
-            print(
-                f"pr-orchestrator: PR #{number} update-branch skipped: {exc}"
-            )
+            print(f"pr-orchestrator: PR #{number} update-branch skipped: {exc}")
             return "blocked"
         raise
     print(
-        f"pr-orchestrator: PR #{number} UPDATED from {label}; "
-        "waiting for fresh checks"
+        f"pr-orchestrator: PR #{number} UPDATED from {label}; waiting for fresh checks"
     )
     return "updated"
 
@@ -464,9 +433,7 @@ def evaluate_pull_request(
         if open_parent is not None:
             parent_number = int(open_parent["number"])
             if parent_number == number:
-                raise OrchestratorError(
-                    f"PR #{number} cannot use its own head as base"
-                )
+                raise OrchestratorError(f"PR #{number} cannot use its own head as base")
             if mergeable_state == "behind":
                 return update_branch(
                     api,
@@ -517,9 +484,7 @@ def evaluate_pull_request(
             label=default_branch,
         )
 
-    missing = missing_required_checks(
-        list_check_runs(api, repository, head_sha)
-    )
+    missing = missing_required_checks(list_check_runs(api, repository, head_sha))
     if missing:
         print_block(
             number,
@@ -566,9 +531,7 @@ def evaluate_pull_request(
             if isinstance(result, dict)
             else "merge rejected"
         )
-        raise OrchestratorError(
-            f"PR #{number} merge was rejected: {message}"
-        )
+        raise OrchestratorError(f"PR #{number} merge was rejected: {message}")
 
     print(f"pr-orchestrator: PR #{number} MERGED via squash")
     return "merged"
@@ -635,10 +598,7 @@ def main() -> int:
 
         api = GitHubApi(token)
         pulls = list_open_pull_requests(api, repository)
-        eligible = [
-            pr for pr in pulls
-            if auto_merge_mode(pr.get("body")) == "eligible"
-        ]
+        eligible = [pr for pr in pulls if auto_merge_mode(pr.get("body")) == "eligible"]
         print(
             f"pr-orchestrator: evaluating {len(eligible)} eligible "
             f"open PR(s) out of {len(pulls)}"
