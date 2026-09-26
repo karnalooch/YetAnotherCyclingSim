@@ -224,9 +224,29 @@ if ($EngineRoot) {
 
 # --- Machine / GPU --------------------------------------------------------
 
-$OsCaption = (Get-CimInstance Win32_OperatingSystem -ErrorAction SilentlyContinue).Caption
+$OsInfo = Get-CimInstance Win32_OperatingSystem -ErrorAction SilentlyContinue
+$ComputerSystem = Get-CimInstance Win32_ComputerSystem -ErrorAction SilentlyContinue
+$OsCaption = if ($OsInfo) { [string] $OsInfo.Caption } else { '' }
 $CpuName   = (Get-CimInstance Win32_Processor -ErrorAction SilentlyContinue).Name
-$TotalRam  = [int64] ((Get-CimInstance Win32_ComputerSystem -ErrorAction SilentlyContinue).TotalPhysicalMemory / 1GB)
+$TotalRamBytes = if ($ComputerSystem) { [double] $ComputerSystem.TotalPhysicalMemory } else { 0 }
+$TotalRam = [math]::Round(($TotalRamBytes / 1GB), 2)
+$FreePhysicalGb = if ($OsInfo) { [math]::Round(([double] $OsInfo.FreePhysicalMemory * 1KB / 1GB), 2) } else { 0 }
+$TotalVirtualGb = if ($OsInfo) { [math]::Round(([double] $OsInfo.TotalVirtualMemorySize * 1KB / 1GB), 2) } else { 0 }
+$FreeVirtualGb = if ($OsInfo) { [math]::Round(([double] $OsInfo.FreeVirtualMemory * 1KB / 1GB), 2) } else { 0 }
+$PageFiles = @()
+try {
+    $PageFiles = @(
+        Get-CimInstance Win32_PageFileUsage -ErrorAction Stop |
+            ForEach-Object {
+                [pscustomobject]@{
+                    Name = [string] $_.Name
+                    AllocatedBaseSizeMb = [int64] $_.AllocatedBaseSize
+                    CurrentUsageMb = [int64] $_.CurrentUsage
+                    PeakUsageMb = [int64] $_.PeakUsage
+                }
+            }
+    )
+} catch { }
 $Gpus      = @()
 try {
     $Gpus = Get-CimInstance Win32_VideoController -ErrorAction SilentlyContinue |
@@ -269,11 +289,15 @@ $Context = [ordered]@{
     UnrealEditorCmdPath = $UEditorPath
     UnrealEditorPath    = $UEditorGuiPath
     Machine             = [ordered]@{
-        Os           = $OsCaption
-        Cpu          = $CpuName
-        TotalRamGb   = $TotalRam
-        Gpus         = $Gpus
-        Cwd          = (Get-Location).Path
+        Os             = $OsCaption
+        Cpu            = $CpuName
+        TotalRamGb     = $TotalRam
+        FreeRamGb      = $FreePhysicalGb
+        TotalVirtualGb = $TotalVirtualGb
+        FreeVirtualGb  = $FreeVirtualGb
+        PageFiles      = $PageFiles
+        Gpus           = $Gpus
+        Cwd            = (Get-Location).Path
     }
     ArtifactRoot        = $ArtifactRoot
     PowerShellVersion   = $PSVersionTable.PSVersion.ToString()
@@ -301,6 +325,10 @@ $sb = New-Object System.Text.StringBuilder
 [void]$sb.AppendLine(("UnrealEditor-Cmd    : {0}" -f $Context.UnrealEditorCmdPath))
 [void]$sb.AppendLine(("UnrealEditor        : {0}" -f $Context.UnrealEditorPath))
 [void]$sb.AppendLine(("Machine             : {0} / {1} / {2} GB RAM" -f $Context.Machine.Os, $Context.Machine.Cpu, $Context.Machine.TotalRamGb))
+[void]$sb.AppendLine(("Memory headroom     : freeRAM={0} GB / virtualTotal={1} GB / virtualFree={2} GB" -f $Context.Machine.FreeRamGb, $Context.Machine.TotalVirtualGb, $Context.Machine.FreeVirtualGb))
+foreach ($pf in $Context.Machine.PageFiles) {
+    [void]$sb.AppendLine(("Page file           : {0} allocated={1} MB current={2} MB peak={3} MB" -f $pf.Name, $pf.AllocatedBaseSizeMb, $pf.CurrentUsageMb, $pf.PeakUsageMb))
+}
 foreach ($g in $Context.Machine.Gpus) {
     [void]$sb.AppendLine(("GPU                 : {0} ({1} MB, driver {2})" -f $g.Name, $g.AdapterRamMb, $g.DriverVersion))
 }
