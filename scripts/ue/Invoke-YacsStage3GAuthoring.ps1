@@ -109,21 +109,45 @@ Write-Host ("Stage 3G material authoring outputs: PASS ({0} assets)." -f $Expect
 
 Write-Host '[2/3] Authoring Stage 3G lighting / atmosphere...' -ForegroundColor Cyan
 $WorldScript = Join-Path -Path $RepoRoot -ChildPath 'scripts/ue/stage3g_author_world.py'
-Invoke-UEProcess -LogPath $WorldLog -Arguments @(
-    $ProjectPath
-    '-run=PythonScript'
-    ('-script="' + $WorldScript + '"')
-    '-Unattended'
-    '-NoPause'
-    '-NullRHI'
-    '-NoSplash'
-    '-NoP4'
-    '-log'
-)
-$WorldText = Get-Content -LiteralPath $WorldLog -Raw -ErrorAction Stop
-if ($WorldText -notmatch 'Stage3GWorld.*SUCCESS') {
-    throw 'Stage 3G world-authoring success marker missing.'
+$WorldProof = Join-Path -Path $ArtifactRoot -ChildPath 'stage3g_world_authoring_proof.txt'
+Remove-Item -LiteralPath $WorldProof -Force -ErrorAction SilentlyContinue
+$env:YACS_STAGE3G_WORLD_PROOF = $WorldProof
+try {
+    Invoke-UEProcess -LogPath $WorldLog -Arguments @(
+        $ProjectPath
+        '-run=PythonScript'
+        ('-script="' + $WorldScript + '"')
+        '-Unattended'
+        '-NoPause'
+        '-NullRHI'
+        '-NoSplash'
+        '-NoP4'
+        '-log'
+    )
 }
+finally {
+    Remove-Item Env:YACS_STAGE3G_WORLD_PROOF -ErrorAction SilentlyContinue
+}
+
+if (-not (Test-Path -LiteralPath $WorldProof -PathType Leaf)) {
+    throw 'Stage 3G world authoring proof file is missing.'
+}
+$WorldProofLines = @(Get-Content -LiteralPath $WorldProof -ErrorAction Stop)
+$ExpectedWorldProofLines = @(
+    'stage3g_world_authoring=success',
+    'sun_intensity=8.0',
+    'sky_intensity=0.75',
+    'fog_density=0.0065',
+    'fog_height_falloff=0.18',
+    'fog_max_opacity=0.55'
+)
+$MissingWorldProofLines = @(
+    $ExpectedWorldProofLines | Where-Object { $WorldProofLines -notcontains $_ }
+)
+if ($MissingWorldProofLines.Count -gt 0) {
+    throw ("Stage 3G world authoring proof is incomplete: {0}" -f ($MissingWorldProofLines -join ', '))
+}
+Write-Host 'Stage 3G world authoring proof: PASS.' -ForegroundColor Green
 
 Write-Host '[3/3] Rebuilding and saving Stage 3 reference environment...' -ForegroundColor Cyan
 Invoke-UEProcess -LogPath $SetupLog -Arguments @(
