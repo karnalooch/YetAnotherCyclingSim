@@ -32,7 +32,7 @@ Trasa powinna:
 - być fikcyjna, ale wiarygodna geograficznie;
 - być inspirowana krajobrazem alpejskim;
 - mieć pofałdowany profil z podjazdami i zjazdami;
-- zawierać zakręty o różnej trudności;
+- zawierać zakręty o różnej trudności, w tym możliwość banked i off-camber geometry;
 - prowadzić przez trzy główne strefy:
   1. zieloną dolinę i niewielką miejscowość;
   2. gęsty las;
@@ -72,6 +72,24 @@ Model powinien uwzględniać co najmniej:
 
 Obliczenia fizyczne nie mogą zależeć od liczby klatek obrazu.
 
+### 5.1 Road Physics Profile
+
+Fizyka drogi nie może być wyprowadzana z przypadkowej orientacji renderowanego mesha, terrain triangles ani PCG outputu. YACS utrzymuje kanoniczny, deterministyczny **Road Physics Profile** opisany w [`ROAD_PHYSICS_PROFILE.md`](ROAD_PHYSICS_PROFILE.md).
+
+Profil musi być zdolny opisać co najmniej:
+
+- dystans wzdłuż trasy i elevation;
+- longitudinal grade;
+- signed horizontal curvature / radius;
+- vertical curvature jako metadata pod przyszłe crest/compression effects;
+- road width i lateral rider position / racing line;
+- banking / cross-slope niezależnie od longitudinal grade;
+- surface type, wetness i roughness;
+- ciągłe transition regions dla curvature i bankingu;
+- deterministyczne look-ahead queries.
+
+MVP nie wymaga od razu pełnego modelu wszystkich powyższych efektów, ale reprezentacja trasy nie może blokować ich późniejszego dodania.
+
 Użytkownik otrzyma wartości domyślne i presety. Pełne parametry fizyczne będą dostępne w ustawieniach zaawansowanych.
 
 ## 6. Technika pokonywania zakrętów
@@ -90,7 +108,7 @@ Na wynik przejazdu zakrętu wpływają:
 - przyczepność;
 - wiatr.
 
-System automatycznie wyznacza tor przejazdu.
+System automatycznie wyznacza tor przejazdu w granicach fizycznej szerokości drogi. Zmiana lateral position może zmieniać efektywny promień, dystans, doświadczany banking/cross-slope i lokalny surface/grip.
 
 Błędna technika może powodować:
 
@@ -102,6 +120,8 @@ Błędna technika może powodować:
 - obniżenie oceny techniki.
 
 Upadki nie należą do MVP. Zostaną rozważone w późniejszej wersji.
+
+MVP cornering powinien korzystać z uproszczonego, wspólnego friction budget (friction circle/ellipse) zamiast niezależnych limitów "maksymalnego hamowania" i "maksymalnego skrętu". Szczegółowy front/rear tyre model, pełny load transfer, Magic Formula/Pacejka, vertical-curvature normal-load effects, roughness losses, lateral crosswind dynamics oraz weave/wobble pozostają poza MVP, ale bieżący kontrakt danych nie może uniemożliwiać ich późniejszego dodania.
 
 ## 7. System asyst
 

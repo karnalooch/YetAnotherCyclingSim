@@ -1,0 +1,284 @@
+# YACS — Road Physics Profile
+
+**Status:** architectural contract  
+**Scope:** Stage 3H, consumed by Stage 4 cornering and future advanced physics  
+**Rule:** rendering, terrain and PCG are presentation/world-generation layers, not the authoritative source of road physics
+
+## 1. Purpose
+
+The Road Physics Profile is the canonical physics-facing representation of the rideable road.
+
+Its purpose is to let World/Assets/PCG and Physics evolve independently while consuming the same route definition. Physics must not infer authoritative grade, curvature, banking or surface state from arbitrary mesh triangles, render transforms, terrain normals or PCG output.
+
+The intended dependency flow is:
+
+```text
+Route authoring / procedural route definition
+                 |
+                 v
+        Road Physics Profile
+          /             \
+         v               v
+Physics/gameplay      UE geometry/world
+                         |
+                         v
+                    PCG/presentation
+```
+
+## 2. Route-local coordinate system
+
+Every rideable point must be addressable in route-local coordinates:
+
+- `S` — longitudinal distance along the authoritative route;
+- `D` — signed lateral displacement from the route reference line.
+
+The sign convention for `D` must be defined once and used consistently across route queries, physics, guidance, replay and telemetry.
+
+Physics must be able to query the rider's current `S` and `D`, not only world-space XYZ.
+
+## 3. Minimum profile contract
+
+For a relevant route position, the profile must be capable of exposing:
+
+| Property | Purpose | MVP use |
+|---|---|---|
+| `S` / route progress | deterministic progress and queries | yes |
+| elevation | route vertical profile | yes |
+| longitudinal grade | gravity along the route | yes |
+| signed horizontal curvature | corner direction and lateral demand | yes |
+| effective radius | human-readable/debug corner context | yes |
+| vertical curvature | crest/compression metadata | represented now, advanced effect post-MVP |
+| road width | available riding envelope | yes |
+| lateral position `D` | racing-line / path selection | yes |
+| banking / cross-slope | banked and off-camber behaviour | yes |
+| surface type | asphalt/paint/gravel/future types | simplified MVP grip |
+| wetness | weather-dependent grip input | simplified MVP grip |
+| roughness | future vibration/energy-loss input | represented now, post-MVP effect |
+
+The profile may expose additional derived fields, but derived values must not replace the canonical route quantities.
+
+## 4. Horizontal curvature
+
+Corner physics must consume continuous curvature rather than only a discrete `radius` label.
+
+A generated road must not transition directly from zero curvature to a tight radius in one simulation sample. Curvature must change through a transition region.
+
+A clothoid-like implementation is allowed but not mandated. The contract requires continuity and bounded rates of change, not one specific mathematical primitive.
+
+## 5. Vertical curvature
+
+Longitudinal grade alone is insufficient to describe vertical road geometry.
+
+The profile must retain vertical curvature so future physics can model normal-load changes over:
+
+- crests;
+- compressions;
+- short rollers;
+- fast transitions between climb and descent.
+
+MVP is not required to apply these normal-load effects yet.
+
+## 6. Banking and cross-slope
+
+Banking is independent from longitudinal grade and must be queried separately.
+
+The same representation must support:
+
+- intentionally banked corners;
+- flat corners;
+- ordinary drainage crossfall/crown;
+- off-camber corners.
+
+Bank angle must not appear or disappear discontinuously. Authoring/generation must provide transition regions.
+
+## 7. Racing line and lateral position
+
+The rider is not constrained to an infinitely thin centerline.
+
+Changing `D` can change:
+
+- effective corner radius;
+- travelled path length;
+- experienced cross-slope/banking;
+- local surface beneath the tyres;
+- remaining road margin.
+
+The MVP may use controlled/automatic line selection instead of free steering, but that line selection must operate in the same route-local coordinate system.
+
+## 8. Grip budget
+
+Braking and cornering must not receive independent full-grip budgets.
+
+Stage 4 MVP should use a simplified shared friction budget, initially representable as a friction circle or friction ellipse.
+
+Using more available grip for braking reduces the amount available for lateral cornering force, and vice versa.
+
+The MVP model may remain intentionally simple. The architecture must not assume one permanent scalar grip state shared identically by both wheels.
+
+## 9. Surface and wetness
+
+Grip must not permanently be represented as one global coefficient for the whole route.
+
+The profile must permit surface-dependent and wetness-dependent inputs.
+
+MVP may resolve them to a simplified effective grip coefficient. Later versions may distinguish, for example:
+
+- dry/wet asphalt;
+- painted markings;
+- gravel/shoulder;
+- standing water;
+- other hazards.
+
+## 10. Front/rear tyre extensibility
+
+MVP does not require a detailed two-tyre contact model.
+
+The architecture must still allow future front/rear state to diverge, including:
+
+- normal load;
+- longitudinal force;
+- lateral force;
+- slip;
+- camber response;
+- tyre pressure influence;
+- load sensitivity;
+- self-aligning torque.
+
+Detailed measured tyre models and Magic Formula/Pacejka are post-MVP.
+
+## 11. Rider anticipation / look-ahead
+
+Route context must be queryable ahead of the current `S`.
+
+This enables technique scoring to evaluate preparation for a corner, not only state at the apex.
+
+MVP technique evaluation should be able to consider:
+
+- entry speed;
+- power reduction timing;
+- braking-equivalent grip demand where applicable;
+- release timing;
+- line choice;
+- apex behaviour;
+- power application on exit.
+
+Look-ahead queries must be deterministic.
+
+## 12. Crosswind extensibility
+
+The environment model must remain extensible beyond headwind/tailwind drag.
+
+Post-MVP physics may add:
+
+- lateral aerodynamic force;
+- yaw-dependent aero effects;
+- roll/steering moments.
+
+These are not Stage 3H implementation requirements.
+
+## 13. Roughness extensibility
+
+Road roughness must be representable as metadata.
+
+No detailed vibration or roughness-energy-loss model is required for MVP.
+
+Future uses may include:
+
+- additional energy loss;
+- rider/bike vibration;
+- camera feedback;
+- audio;
+- handling modifiers.
+
+## 14. MVP boundary
+
+Before the physics side of MVP is considered complete, YACS should use:
+
+- longitudinal grade;
+- signed horizontal curvature;
+- road width and lateral rider position;
+- banking/cross-slope;
+- continuous curvature/banking transitions;
+- surface + wetness through a simplified grip model;
+- shared braking/cornering grip budget;
+- deterministic look-ahead sufficient for technique evaluation.
+
+Explicitly post-MVP physical effects:
+
+- detailed front/rear tyre dynamics;
+- detailed load transfer;
+- Magic Formula/Pacejka or equivalent advanced tyre model;
+- vertical-curvature normal-load effects;
+- roughness vibration/energy-loss physics;
+- lateral crosswind force and steering/roll moments;
+- weave/wobble simulation;
+- crash/fall simulation.
+
+The post-MVP list does not mean those inputs may be discarded from the route/environment contracts.
+
+## 15. Validation invariants
+
+Generated or authored profiles must reject or flag at least:
+
+- NaN/infinite values;
+- zero/negative or otherwise invalid road width;
+- pathological grade spikes caused by sampling noise;
+- discontinuous or unbounded curvature changes;
+- discontinuous banking changes;
+- route-local coordinate inconsistencies;
+- invalid surface identifiers/state;
+- out-of-range wetness values.
+
+Thresholds belong to explicit configuration/specification, not hidden rendering code.
+
+## 16. World/Physics separation
+
+World and Physics are separate workstreams.
+
+### World lane
+
+Owns:
+
+- terrain;
+- road mesh presentation;
+- PCG;
+- vegetation;
+- rocks;
+- materials;
+- atmosphere;
+- visual polish.
+
+### Physics lane
+
+Owns:
+
+- synthetic Road Physics Profile fixtures;
+- grade;
+- curvature;
+- banking;
+- racing line;
+- grip budget;
+- technique/consequences;
+- deterministic route queries.
+
+### Integration lane
+
+Proves that the authoritative route definition feeds both world presentation and physics consistently.
+
+A visual road may not silently disagree with the physical road profile.
+
+## 17. CI expectations
+
+A physics-only change should not require full asset checkout.
+
+A regular asset-only change should not trigger unrelated C++/physics work unless its path classification requires it.
+
+For trusted `ue_code=true` changes, PR #163 makes the code-only reusable Unreal build + Automation lane part of the fail-closed Aggregate CI gate.
+
+Heavy map/asset/cook/package proof remains a separate explicit lane.
+
+## 18. Evolution rule
+
+Future physics features should consume or extend this contract.
+
+If a new feature requires replacing the Road Physics Profile with an unrelated route representation instead of extending it, that should be treated as an architectural regression and reviewed explicitly.

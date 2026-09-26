@@ -71,7 +71,7 @@ Assety wchodzą etapami, a nie jako osobny wielki art-pass:
 Prace prowadzone są na dwóch komputerach: biurowym (dokumentacja, Git, lekki kod, testy Pythona, bez Unreal Engine) i domowym (build projektu UE, testy automatyzacji, walidacja wydajności).
 
 - Jednocześnie mogą istnieć co najwyżej dwie niescalone gałęzie implementacyjne.
-- Równoległa praca jest dozwolona wyłącznie w ramach bieżącego etapu roadmapy.
+- Równoległa praca jest dozwolona w ramach bieżącego etapu oraz jawnie oznaczonych niezależnych workstreamów, jeżeli mają wspólny formalny kontrakt danych, osobne bramki CI i nie wymagają niescalonych zmian z drugiego workstreamu.
 - Zadania równoległe muszą być od siebie niezależne.
 - Gałąź równoległa nie może korzystać z API, plików źródłowych, assetów ani zachowań, które wprowadza dopiero inna niescalona gałąź.
 - Każde zadanie korzysta z jednego issue i jednej dedykowanej gałęzi: recenzja → commit → push → PR → automatyczne scalenie po spełnieniu wymaganych bramek i walidacji.
@@ -81,7 +81,7 @@ Prace prowadzone są na dwóch komputerach: biurowym (dokumentacja, Git, lekki k
 - Od 2026-09-23 obowiązuje stała zgoda właściciela produktu na automatyczne scalanie: PR może zostać scalony bez osobnej komendy `scal`, jeżeli zakres jest zatwierdzony, wszystkie wymagane walidacje i bramki CI są zielone, nie ma nierozwiązanych uwag ani blockerów, a PR jest mergeable i nie jest draftem.
 - Stała zgoda na merge nie omija walidacji: nie wolno automatycznie scalać przy brakującym wymaganym proofie UE/home-PC, oczekującej lub czerwonej bramce, nierozwiązanym review/blockerze, konflikcie/drafcie ani gdy właściciel jawnie każe wstrzymać merge.
 - Po niepowodzeniu walidacji nie wolno osłabiać wymagań ani testów; najpierw trzeba zdiagnozować przyczynę.
-- Prac z kolejnych etapów roadmapy nie rozpoczynamy przed spełnieniem kryteriów ukończenia obecnego etapu.
+- Prac z kolejnych etapów roadmapy nie rozpoczynamy przed spełnieniem kryteriów ukończenia obecnego etapu, **chyba że roadmapa jawnie oznacza dany zakres jako równoległy workstream**. Taki wyjątek nie znosi końcowego integration gate ani Definition of Done wcześniejszego etapu.
 - Kompilacja UE, integracja z edytorem, walidacja assetów i wydajności pozostają odpowiedzialnością komputera domowego, gdy na komputerze biurowym nie ma Unreal Engine.
 - Docelowo komputer domowy jest kontrolowanym self-hosted runnerem GitHub Actions dla zaufanych workflow UE. Do czasu ukończenia #24 obowiązuje ręczne uruchamianie proofów; podczas Phase 1 #24 dozwolony jest wyłącznie ręczny `workflow_dispatch`, bez triggera na dowolny `pull_request`.
 
@@ -113,7 +113,7 @@ YetAnotherCyclingSim.
 **Jawny dług infrastrukturalny (nie blokuje bieżącego 3G):**
 
 - #22 — włączyć pozostałe ustawienia bezpieczeństwa GitHub i ochronę `main`; API nadal raportuje `main.protected = false`.
-- #24 — realny Windows/Unreal Engine runner działa na `yacs-home-ue58`; exact-SHA build, Automation, intentional-red, cleanup oraz Stage 3G full-validation canary zostały udowodnione. **Issue pozostaje otwarte**, bo generic trusted C++ UE lane nie jest jeszcze obowiązkową częścią `Aggregate CI gate`, a Phase 2/3 wymagają dalszego hardeningu i #22. Pełny plan: [`UNREAL_SELF_HOSTED_RUNNER_PLAN.md`](UNREAL_SELF_HOSTED_RUNNER_PLAN.md).
+- #24 — realny Windows/Unreal Engine runner działa na `yacs-home-ue58`; exact-SHA build, Automation, intentional-red, cleanup oraz Stage 3G full-validation canary zostały udowodnione. Od PR #163 generic trusted C++/UE lane jest automatycznie wymagany przez `Aggregate CI gate` dla `ue_code=true`. **Issue pozostaje otwarte wyłącznie dla dalszego Phase 2/3 hardeningu, autostartu/reboot proofu i zależności od #22.** Pełny plan: [`UNREAL_SELF_HOSTED_RUNNER_PLAN.md`](UNREAL_SELF_HOSTED_RUNNER_PLAN.md).
   - **Odroczony milestone operacyjny — dopiero przed Phase 2:** zastąpić ręczne uruchamianie `run.cmd` kontrolowanym autostartem runnera przez Windows Task Scheduler pod dedykowanym kontem runnera. Nie blokuje Phase 1 ani Stage 3G. Przed włączeniem trusted automatic UE execution wymagany jest reboot proof: restart hosta → runner sam wraca online → odbiera testowy job → build/Automation oraz co najmniej jeden workload wymagający interaktywnej sesji/GPU nadal przechodzą. Klasyczna usługa Windows nie jest domyślną ścieżką dla workloadów visual/GPU; można ją rozważyć wyłącznie po osobnym proofie kompatybilności.
 - #23 — ekstrakcja wspólnego CI do `engineering-platform` jest ukończona i zamknięta.
 
@@ -207,7 +207,7 @@ Użytkownik może przejechać prostą trasę, zmieniając moc i kadencję, a pr�
 # Etap 3 — trasa testowa i profil wysokości
 
 **Planowany czas:** tydzień 3–5  
-**Status:** rdzeń 3A–3F ukończony; 3G technicznie udowodnione, ale **wizualny/asset acceptance ponownie otwarty**; Stage 4A ukończone, 4B+ wstrzymane do domknięcia #80
+**Status:** rdzeń 3A–3F ukończony; 3G technicznie udowodnione, ale **wizualny/asset acceptance ponownie otwarty**; 3H Road Physics Profile jest obowiązkowym kontraktem przed dalszym corneringiem; Stage 4A ukończone
 
 ## Cel
 
@@ -225,8 +225,9 @@ Stage 3 jest realizowany kolejno:
 6. **3F — PR #79:** utrwalenie pełnego stanu mapy, materiałów drogi/terenu i wizualnego baseline'u — **ukończone**.
 7. **3G — #80:** Reference Environment Pass — **techniczny authoring/final-proof pipeline jest ukończony przez PR #155, ale acceptance wizualny i progressive asset gate nie zostały spełnione; #80 wraca jako aktywny etap**.
 8. **3G-MCP — #85:** kontrolowany spike `db-lyon/ue-mcp` pozostaje częścią 3G tooling/worldgen; nie wolno traktować go jako substytutu PCG ani jako powodu do pominięcia source assetów.
+9. **3H — Road Physics Profile & Route Geometry Contract:** formalny kontrakt fizycznej drogi, niezależny od renderowanego mesha/PCG; wymagany przed 4B.
 
-**Korekta po audycie 26.09.2026:** Stage 4A zostało zrealizowane przed wykryciem luki acceptance. Zachowujemy ten scalony, czysty model domenowy, ale **nie rozpoczynamy 4B ani kolejnych funkcjonalnych etapów**, dopóki #80 nie spełni własnych kryteriów wizualnych i asset gate.
+**Korekta po audycie 26.09.2026:** Stage 4A zostało zrealizowane przed wykryciem luki acceptance i pozostaje ważnym, scalonym modelem domenowym. Od teraz Stage 3 ma dwa jawnie rozdzielone workstreamy: **World/3G** (assets, PCG, environment) oraz **Physics/3H → 4B/4C** (kontrakt drogi i czysta mechanika zakrętów). Mogą być rozwijane równolegle, ponieważ są spięte formalnym `Road Physics Profile` i osobnymi bramkami CI. **Końcowy in-world integration/acceptance 4D/4E nie może zostać uznany za ukończony, dopóki 3G i 3H nie są zielone.**
 
 ## Zadania rdzenia Stage 3
 
@@ -307,16 +308,62 @@ UE-MCP jest narzędziem deweloperskim dla Stage 3G i późniejszego Stage 7, a n
 
 Szczegóły architektury i plan wdrożenia: [`UE_MCP_WORLD_GENERATION.md`](UE_MCP_WORLD_GENERATION.md).
 
-**Warunek przejścia do dalszego Stage 4:** **NIESPEŁNIONY wizualnie.** PR #155 spełnił część techniczną: build ✅, Automation 53/53 ✅, Map Check 0/0 ✅, LFS/fresh-checkout ✅, trzy canonical captures ✅, cleanup ✅. Capture'y potwierdziły jednak, że environment nadal nie spełnia własnych kryteriów #80. Stage 4A pozostaje ważnym, już scalonym wyjątkiem; **4B+ czeka na zamknięcie #80 po visual/asset review.**
+**Warunek końcowej integracji Stage 4:** **NIESPEŁNIONY wizualnie.** PR #155 spełnił część techniczną: build ✅, Automation 53/53 ✅, Map Check 0/0 ✅, LFS/fresh-checkout ✅, trzy canonical captures ✅, cleanup ✅. Capture'y potwierdziły jednak, że environment nadal nie spełnia własnych kryteriów #80. **Nie blokuje to czystego workstreamu Physics po ukończeniu 3H:** 4B/4C mogą rozwijać route context, banking, grip i technique na syntetycznych profilach/testach. **4D/4E oraz finalny full-route in-world acceptance wymagają zielonych 3G i 3H.**
 
 **Canary infrastrukturalny:** Stage 3G jest pierwszym rzeczywistym workloadem dla Phase 1 #24. Jeżeli runner zostanie zarejestrowany przed finalnym proofem 3G, authoring/build/Automation/capture mogą zostać wykonane przez ręczny workflow na home PC. Nie zmienia to kryteriów 3G: wynik musi być przypięty do dokładnego SHA, artefakty `.uasset`/`.umap` muszą wejść przez Git LFS, a wizualny AFTER proof nadal podlega review.
+
+## 3H — Road Physics Profile & Route Geometry Contract
+
+**Status:** wymagany przed rozpoczęciem 4B. Dokument źródłowy: [`ROAD_PHYSICS_PROFILE.md`](ROAD_PHYSICS_PROFILE.md).
+
+### Cel
+
+Oddzielić autorytatywną fizyczną reprezentację drogi od renderowanego spline'a, mesha, terenu i PCG. Route/world authoring i fizyka mają konsumować ten sam jawny kontrakt, zamiast wyprowadzać fizykę z przypadkowych normalnych trójkątów lub wizualnej geometrii.
+
+### Minimalny kontrakt Stage 3H
+
+- [ ] Zdefiniować route-local coordinates: dystans wzdłuż trasy `S` i pozycję boczną `D`.
+- [ ] Zdefiniować elevation oraz longitudinal grade jako autorytatywne dane trasy.
+- [ ] Zdefiniować signed horizontal curvature / radius i kierunek zakrętu.
+- [ ] Zdefiniować vertical curvature jako metadata potrzebne pod przyszłe efekty nacisku na crest/compression.
+- [ ] Zdefiniować road width i dopuszczalny lateral envelope dla racing line.
+- [ ] Zdefiniować banking / cross-slope niezależnie od longitudinal grade.
+- [ ] Wymagać ciągłych przejść krzywizny i bankingu; konkretny algorytm (np. clothoid-like) nie jest częścią kontraktu.
+- [ ] Zdefiniować surface type, wetness i roughness jako metadata drogi.
+- [ ] Zapewnić deterministyczne look-ahead queries dla corner anticipation / technique evaluation.
+- [ ] Zdefiniować validation invariants dla nieciągłości, patologicznych spike'ów grade/curvature/banking, nieprawidłowej szerokości i wartości niefinitych.
+- [ ] Zachować możliwość przyszłego front/rear tyre state bez wymuszania pełnego modelu opon w MVP.
+
+### Granica MVP / post-MVP
+
+**Przed MVP fizyka ma faktycznie wykorzystywać:** longitudinal grade, horizontal curvature, road width + lateral position/racing line, banking/cross-slope, surface/wetness w uproszczonym grip modelu, shared braking+cornering grip budget oraz look-ahead potrzebny do oceny techniki.
+
+**Reprezentujemy teraz, ale zaawansowany wpływ fizyczny odkładamy po MVP:** vertical-curvature load effects, roughness energy loss/vibration, szczegółowy front/rear load transfer, szczegółowy tyre model / Magic Formula, lateral crosswind force i steering/roll moments, weave/wobble oraz crash/fall simulation.
+
+### Równoległe workstreamy
+
+Po zatwierdzeniu 3H obowiązuje podział:
+
+- **World lane:** 3G / assets / PCG / terrain / environment / visual polish.
+- **Physics lane:** synthetic Road Physics Profiles → 4B route corner context → 4C technique/consequences.
+- **Integration lane:** 4D guidance i 4E full-route proof dopiero po zielonych wymaganych bramkach obu lane'ów.
+
+Zmiana tylko w fizyce nie może wymagać pełnego pobrania assetów; zmiana tylko w assetach nie może wymuszać przebudowy fizyki bez powodu. Dla `ue_code=true` obowiązkowy jest code-only reusable Unreal lane z PR #163, a asset/full pozostaje osobnym ciężkim proofem.
+
+### Kryterium ukończenia
+
+- kanoniczny `Road Physics Profile` jest udokumentowany i wersjonowany;
+- route-local coordinate convention i jednostki są jednoznaczne;
+- MVP/post-MVP boundary jest zapisana;
+- Stage 4B może konsumować kontrakt bez zależności od PCG lub finalnych assetów;
+- future physics może rozszerzać kontrakt bez zastępowania go inną reprezentacją drogi.
 
 ---
 
 # Etap 4 — technika pokonywania zakrętów
 
 **Planowany czas:** tydzień 5–7  
-**Status:** Stage 4A / #156 ukończone przez PR #157; **4B+ wstrzymane do domknięcia Stage 3G / #80**
+**Status:** Stage 4A / #156 ukończone przez PR #157; **4B/4C odblokowują się po ukończeniu 3H i mogą iść równolegle z 3G; 4D/4E wymagają wspólnego integration gate**
 
 ## Cel
 
@@ -325,25 +372,27 @@ Wprowadzić autorską mechanikę oceniającą odpuszczenie i ponowne rozpoczęci
 ## Plan wykonawczy
 
 1. **4A — #156:** czysty C++ cornering domain contract z parity do Python reference model — **ukończone / PR #157**.
-2. **4B:** route corner context — krzywizna/promień, corner-ahead, entry/apex/exit i limity gripu per fixed-step.
-3. **4C:** technique + consequences — spięcie mocy/kadencji z wide-line, utratą prędkości i controlled slip; bez upadków w MVP.
-4. **4D:** guidance + assists — linia przejazdu, markery entry/apex/exit, grip warning i poziomy asysty jako presentation-only.
-5. **4E:** deterministyczny full-route corner proof dla reprezentatywnych zakrętów oraz suchej/mokrej nawierzchni.
+2. **4B:** route corner context z `Road Physics Profile` — signed curvature/radius, banking/cross-slope, road width, lateral position, corner-ahead/look-ahead, entry/apex/exit i limity gripu per fixed-step.
+3. **4C:** technique + consequences — shared braking+cornering grip budget (uproszczony friction circle/ellipse), spięcie mocy/kadencji z racing line, utratą prędkości i controlled slip; bez upadków w MVP.
+4. **4D:** guidance + assists — linia przejazdu, markery entry/apex/exit, grip warning i poziomy asysty jako presentation-only; wymaga wspólnego integration gate z World lane.
+5. **4E:** deterministyczny full-route corner proof dla reprezentatywnych flat/banked/off-camber zakrętów oraz suchej/mokrej nawierzchni.
 
 ## Zadania
 
-- [ ] Obliczanie krzywizny drogi.
+- [ ] Obliczanie signed curvature drogi i efektywnego promienia toru przejazdu.
 - [ ] Określenie strefy wejścia, apeksu i wyjścia.
 - [ ] Obliczanie zalecanej prędkości.
 - [ ] Analiza momentu zmniejszenia mocy.
 - [ ] Analiza momentu wznowienia pedałowania.
-- [ ] Automatyczny wybór toru przejazdu.
+- [ ] Automatyczny wybór toru przejazdu z jawną pozycją boczną na drodze (`D`) i wykorzystaniem dostępnej szerokości.
 - [ ] Wizualna linia przejazdu i strefy entry/apex/exit na drodze.
 - [ ] Kontekstowe ostrzeżenia o przyczepności i trudności zakrętu.
 - [ ] Poszerzenie toru po błędzie.
 - [ ] Utrata prędkości po błędzie.
 - [ ] Kontrolowany uślizg bez upadku.
-- [ ] Wpływ mokrej nawierzchni.
+- [ ] Wpływ bankingu / off-camber oraz mokrej nawierzchni.
+- [ ] Wspólny budżet przyczepności dla hamowania i corneringu; brak niezależnego "100% gripu" dla obu osi sił jednocześnie.
+- [ ] Deterministyczny look-ahead do oceny przygotowania przed zakrętem.
 - [ ] Ocena każdego zakrętu.
 - [ ] Regulowane poziomy asysty.
 - [ ] Testy powtarzalności wyników.
