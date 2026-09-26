@@ -129,11 +129,21 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
         self.assertIn("Test-YacsCodeOnlyCheckout.ps1", canary_block)
         for token in (
             "git lfs ls-files --name-only",
+            "git cat-file blob",
+            "git lfs pointer --check --stdin",
             "git lfs pointer --check",
+            "Committed Git blob is not a valid LFS pointer",
+            "CODE-ONLY LFS LAZY",
             "Code-only checkout materialized Git LFS payload",
             "CODE-ONLY CHECKOUT PASS",
+            "lazyMissing",
+            "materialized=0",
         ):
             self.assertIn(token, self.code_only)
+        self.assertNotIn(
+            "Tracked Git LFS path is missing from checkout",
+            self.code_only,
+        )
 
     def test_unreal_proof_emits_phase_telemetry(self):
         for token in (
