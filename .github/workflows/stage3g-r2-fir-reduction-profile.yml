@@ -1,17 +1,7 @@
 name: Stage 3G R2 Fir reduction profile
 
 on:
-  push:
-    branches:
-      - feat/stage3g-pcg-forest-r2
-    paths:
-      - '.github/workflows/stage3g-r2-fir-reduction-profile.yml'
-      - 'scripts/assets/stage3g_polyhaven.json'
-      - 'scripts/assets/download_stage3g_assets.py'
-      - 'scripts/ue/Invoke-YacsStage3GR2FirReductionProfile.ps1'
-      - 'scripts/ue/stage3g_profile_fir_reduction.py'
-      - 'scripts/ci/test_stage3g_r2_fir_reduction_contract.py'
-      - 'YetAnotherCyclingSim.uproject'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -22,7 +12,7 @@ concurrency:
 
 jobs:
   profile-reduction:
-    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.ref == 'refs/heads/feat/stage3g-pcg-forest-r2' }}
+    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' }}
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 120
     steps:

@@ -487,7 +487,8 @@ Po wyborze konkretnych paczek tabela poniżej staje się rejestrem źródła pra
 | Boulder 01 (`boulder_01`) | Poly Haven | CC0 | 0 zł | 3G | imported | canonical `SM_Stage3G_Boulder` plus textures are in repo and used by Stage 3G; final validation still requires visual/perf proof |
 | Mountainside (`mountainside`) | Poly Haven | CC0 | 0 zł | 3G | candidate | mid-ground mountain mass; compare against cheaper authored geometry |
 | Fir Tree 01 (`fir_tree_01`) | Poly Haven | CC0 | 0 zł | 3G | candidate | retained as a hero/sparse conifer candidate; broad-scatter reduction in PR #162 is blocked by whole-FBX A/B/C import memory pressure on the trusted runner, so it is not the R2 mass-forest mesh |
-| Fir Sapling (`fir_sapling`) | Poly Haven | CC0 | 0 zł | 3G | candidate | R2 lightweight mass-scatter fallback added in PR #162; trusted UE mesh/LOD/bounds profile must pass before persistent import or PCG use |
+| Fir Sapling (`fir_sapling`) | Poly Haven | CC0 | 0 zł | 3G | candidate | lightweight young-tree / understory candidate; useful as forest variation, not the primary tall-canopy mesh |
+| Fir Sapling Medium (`fir_sapling_medium`) | Poly Haven | CC0 | 0 zł | 3G | candidate | primary R2 mass-scatter fallback in PR #162; published with LODs, trusted UE mesh/LOD/bounds profile must pass before persistent import or PCG use |
 | Grass Medium 01 (`grass_medium_01`) | Poly Haven | CC0 | 0 zł | 3G | candidate | controlled meadow ground cover; LOD/instancing validation pending |
 
 Statusy: `candidate`, `approved`, `acquired`, `imported`, `validated`, `rejected`.
@@ -506,7 +507,7 @@ PR #155 udowodnił authoring/CI/proof harness, ale nie przesunął source asset�
 - [x] `Forest Ground 03` -> `imported`; [ ] -> `validated` w forest;
 - [x] `Rocky Terrain` -> `imported`; [ ] -> `validated` w high Alpine;
 - [x] `Boulder 01` -> `imported` jako rzeczywisty rock dressing; [ ] co najmniej jeden z `Rock Face 01` / `Boulder 01` -> `validated`;
-- [ ] wybrać i sprofilować realny conifer asset; `Fir Tree 01` pozostaje kandydatem hero, a `Fir Sapling` jest profilowany jako lżejszy R2 mass-scatter fallback;
+- [ ] wybrać i sprofilować realny conifer asset; `Fir Tree 01` pozostaje kandydatem hero, `Fir Sapling` kandydatem understory, a `Fir Sapling Medium` jest profilowany jako główny lżejszy R2 mass-scatter fallback;
 - [ ] pierwszy `PCG_RouteExclusion` -> `validated`;
 - [ ] minimum jeden produkcyjnie użyteczny graph scatterujący approved/validated assets -> `validated`;
 - [ ] capture 1200/4900/8000 m pokazuje faktyczne assety i rozróżnialne biomy;

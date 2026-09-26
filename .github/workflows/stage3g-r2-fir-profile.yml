@@ -62,14 +62,14 @@ jobs:
             throw 'Stage 3G R2 profiling checkout is dirty before profiling.'
           }
 
-      - name: Profile fir_sapling fallback in UE 5.8
+      - name: Profile fir_sapling_medium fallback in UE 5.8
         shell: pwsh
         run: |
           ./scripts/ue/Invoke-YacsStage3GR2FirProfile.ps1 `
-            -AssetId 'fir_sapling' `
+            -AssetId 'fir_sapling_medium' `
             -ExpectedBranch HEAD `
             -ExpectedHead '${{ github.sha }}' `
-            -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR2/FirSaplingProfile'
+            -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR2/FirSaplingMediumProfile'
 
       - name: Upload R2 fir profile
         if: ${{ always() }}
@@ -77,9 +77,9 @@ jobs:
         with:
           name: stage3g-r2-conifer-profile-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            Saved/RuntimeProof/CI/Stage3GR2/FirSaplingProfile/**/*.json
-            Saved/RuntimeProof/CI/Stage3GR2/FirSaplingProfile/**/*.txt
-            Saved/RuntimeProof/CI/Stage3GR2/FirSaplingProfile/**/*.log
+            Saved/RuntimeProof/CI/Stage3GR2/FirSaplingMediumProfile/**/*.json
+            Saved/RuntimeProof/CI/Stage3GR2/FirSaplingMediumProfile/**/*.txt
+            Saved/RuntimeProof/CI/Stage3GR2/FirSaplingMediumProfile/**/*.log
           if-no-files-found: error
           retention-days: 7
 

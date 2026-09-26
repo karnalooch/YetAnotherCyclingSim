@@ -142,6 +142,23 @@
       "notes": "Fallback candidate selected after fir_tree_01 reduction profiling exposed excessive whole-FBX import memory pressure. Must pass trusted UE mesh/LOD/bounds profiling before any persistent import or PCG scatter."
     },
     {
+      "id": "fir_sapling_medium",
+      "name": "Fir Sapling Medium",
+      "kind": "model",
+      "role": "R2 primary mid/tall conifer mass-scatter candidate",
+      "stage": "3G",
+      "enabled": true,
+      "maps": [
+        "diffuse",
+        "normal_dx",
+        "roughness",
+        "alpha",
+        "mask"
+      ],
+      "web_url": "https://polyhaven.com/a/fir_sapling_medium",
+      "notes": "Primary R2 forest fallback candidate: materially lighter than fir_tree_01 and published with LODs. Must pass trusted UE source profiling and persistent-import/performance proof before PCG scatter."
+    },
+    {
       "id": "grass_medium_01",
       "name": "Grass Medium 01",
       "kind": "model",
