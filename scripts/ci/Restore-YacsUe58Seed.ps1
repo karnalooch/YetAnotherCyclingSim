@@ -13,13 +13,33 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 function Get-FileSha256Hex {
-    param([Parameter(Mandatory=$true)][string] $Path)
+    param(
+        [Parameter(Mandatory=$true)][string] $Path,
+        [int] $ProgressSeconds = 30
+    )
 
+    $file = Get-Item -LiteralPath $Path
+    $totalBytes = [int64]$file.Length
     $sha256 = [System.Security.Cryptography.SHA256]::Create()
     $stream = [System.IO.File]::OpenRead($Path)
+    $buffer = New-Object byte[] (8MB)
+    $processed = [int64]0
+    $progress = [System.Diagnostics.Stopwatch]::StartNew()
+
     try {
-        $hashBytes = $sha256.ComputeHash($stream)
-        return ([System.BitConverter]::ToString($hashBytes)).Replace('-', '').ToLowerInvariant()
+        while (($read = $stream.Read($buffer, 0, $buffer.Length)) -gt 0) {
+            [void]$sha256.TransformBlock($buffer, 0, $read, $buffer, 0)
+            $processed += $read
+
+            if ($progress.Elapsed.TotalSeconds -ge $ProgressSeconds) {
+                Write-Host ("Hashing cached UE seed: {0:N3}/{1:N3} GiB ({2:N1}%)" -f ($processed / 1GB), ($totalBytes / 1GB), (($processed / [double]$totalBytes) * 100))
+                $progress.Restart()
+            }
+        }
+
+        [void]$sha256.TransformFinalBlock([byte[]]::new(0), 0, 0)
+        Write-Host ("Hashing cached UE seed complete: {0:N3} GiB" -f ($processed / 1GB))
+        return ([System.BitConverter]::ToString($sha256.Hash)).Replace('-', '').ToLowerInvariant()
     } finally {
         $stream.Dispose()
         $sha256.Dispose()
@@ -117,6 +137,8 @@ try {
             }
 
             $createdDestination = $true
+            $extractedCount = 0
+            $extractProgress = [System.Diagnostics.Stopwatch]::StartNew()
             foreach ($entry in $fileEntries) {
                 $normalized = $entry.FullName.Replace('\', '/')
                 $targetPath = $validatedTargets[$normalized]
@@ -138,7 +160,14 @@ try {
                 } finally {
                     $input.Dispose()
                 }
+
+                $extractedCount++
+                if ($extractProgress.Elapsed.TotalSeconds -ge 30) {
+                    Write-Host ("Restoring UE seed: {0}/{1} files ({2:N1}%)" -f $extractedCount, $fileEntries.Count, (($extractedCount / [double]$fileEntries.Count) * 100))
+                    $extractProgress.Restart()
+                }
             }
+            Write-Host ("Restoring UE seed complete: {0}/{1} files" -f $extractedCount, $fileEntries.Count)
         } finally {
             $zip.Dispose()
         }
