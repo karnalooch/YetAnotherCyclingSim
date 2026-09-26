@@ -214,7 +214,7 @@ def classify_paths(paths: Iterable[str]) -> Classification:
 
 def git_changed_paths(base: str, head: str) -> list[str]:
     completed = subprocess.run(
-        ["git", "diff", "--name-only", "--diff-filter=ACMRT", base, head],
+        ["git", "diff", "--name-only", "--diff-filter=ACMRTD", base, head],
         check=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
