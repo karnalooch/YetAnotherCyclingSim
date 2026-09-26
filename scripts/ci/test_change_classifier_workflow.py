@@ -36,7 +36,7 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
             "needs.changes.outputs.ci == 'true'",
             self.ci,
         )
-        self.assertIn('codeql_languages_json: \'["python"]\'', self.ci)
+        self.assertIn("codeql_languages_json: '[\"python\"]'", self.ci)
 
     def test_cpp_security_and_unreal_are_path_gated(self):
         self.assertIn(
@@ -44,7 +44,7 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
             "needs.changes.outputs.ue_code == 'true'",
             self.ci,
         )
-        self.assertIn('codeql_languages_json: \'["c-cpp"]\'', self.ci)
+        self.assertIn("codeql_languages_json: '[\"c-cpp\"]'", self.ci)
         self.assertIn("name: Code-only Unreal canary", self.ci)
         self.assertIn("needs.changes.outputs.ue_code == 'true'", self.ci)
 
@@ -71,14 +71,14 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
         ):
             self.assertIn(f"- {lane}", self.ci)
         self.assertIn("require_optional", self.ci)
-        self.assertIn('expected skipped', self.ci)
+        self.assertIn("expected skipped", self.ci)
 
     def test_docs_only_has_no_forced_runtime_lane(self):
         self.assertNotIn("needs.changes.outputs.docs_only == 'true'", self.ci)
 
     def test_static_schedule_does_not_force_unreal_or_assets(self):
         self.assertIn("--all-static", self.ci)
-        self.assertIn("--base \"ALL_STATIC\"", self.ci)
+        self.assertIn('--base "ALL_STATIC"', self.ci)
 
 
 if __name__ == "__main__":
