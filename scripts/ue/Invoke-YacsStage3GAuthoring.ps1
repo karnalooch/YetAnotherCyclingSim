@@ -84,10 +84,28 @@ Invoke-UEProcess -LogPath $MaterialLog -Arguments @(
     '-log'
 )
 
-$MaterialText = Get-Content -LiteralPath $MaterialLog -Raw -ErrorAction Stop
-if ($MaterialText -notmatch 'SUCCESS: authored 5 Stage 3G material pairs') {
-    throw 'Stage 3G material success marker missing.'
+$ExpectedMaterialAssets = @(
+    'M_Stage3G_Grass.uasset',
+    'MI_Stage3G_Grass.uasset',
+    'M_Stage3G_Forest.uasset',
+    'MI_Stage3G_Forest.uasset',
+    'M_Stage3G_Rock.uasset',
+    'MI_Stage3G_Rock.uasset',
+    'M_Stage3G_DistantRock.uasset',
+    'MI_Stage3G_DistantRock.uasset',
+    'M_Stage3G_Water.uasset',
+    'MI_Stage3G_Water.uasset'
+)
+$MaterialDir = Join-Path -Path $RepoRoot -ChildPath 'Content/Prototype/Environment/Stage3G/Materials'
+$MissingMaterialAssets = @(
+    $ExpectedMaterialAssets | Where-Object {
+        -not (Test-Path -LiteralPath (Join-Path -Path $MaterialDir -ChildPath $_) -PathType Leaf)
+    }
+)
+if ($MissingMaterialAssets.Count -gt 0) {
+    throw ("Stage 3G material authoring did not produce expected assets: {0}" -f ($MissingMaterialAssets -join ', '))
 }
+Write-Host ("Stage 3G material authoring outputs: PASS ({0} assets)." -f $ExpectedMaterialAssets.Count) -ForegroundColor Green
 
 Write-Host '[2/3] Authoring Stage 3G lighting / atmosphere...' -ForegroundColor Cyan
 $WorldScript = Join-Path -Path $RepoRoot -ChildPath 'scripts/ue/stage3g_author_world.py'
