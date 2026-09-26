@@ -2,6 +2,7 @@
 
 #include "Cycling/CyclingForces.h"
 #include "Cycling/PhysicsValidation.h"
+#include "Math/UnrealMathUtility.h"
 
 #include <cmath>
 
