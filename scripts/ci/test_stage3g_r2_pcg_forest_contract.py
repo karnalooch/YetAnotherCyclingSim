@@ -49,13 +49,18 @@ class Stage3GR2PCGForestContractTests(unittest.TestCase):
         self.assertIn("vegetation_density: 0.72", worldspec)
         self.assertIn("route_clearance_m: 4.0", worldspec)
 
-    def test_graph_is_fail_closed_until_optimized_fir_exists(self):
+    def test_graph_uses_stock_spawner_with_validated_mass_forest_mesh(self):
         author = AUTHOR.read_text(encoding="utf-8")
         self.assertIn('ASSET_NAME = "PCG_Forest"', author)
         self.assertIn("Stage3GForestCandidatesSettings", author)
         self.assertIn("Stage3GRouteExclusionSettings", author)
-        self.assertIn('"pending_optimized_fir"', author)
-        self.assertNotIn("PCGStaticMeshSpawnerSettings", author)
+        self.assertIn("PCGStaticMeshSpawnerSettings", author)
+        self.assertIn("PCGMeshSelectorWeighted", author)
+        self.assertIn("PCGMeshSelectorWeightedEntry", author)
+        self.assertIn("SM_Stage3G_FirSaplingMedium", author)
+        self.assertIn('"validated_mass_forest_asset"', author)
+        self.assertIn('"aggressive"', author)
+        self.assertIn('"spawner_weight"', author)
 
 
 if __name__ == "__main__":

@@ -102,8 +102,17 @@ if ([math]::Abs([double]$Proof.forest_density - 0.72) -gt 1e-9) {
 if ([math]::Abs([double]$Proof.route_clearance_m - 4.0) -gt 1e-9) {
     throw "Unexpected PCG_Forest route clearance: $($Proof.route_clearance_m)"
 }
-if ($Proof.spawner_status -ne 'pending_optimized_fir') {
+if ($Proof.spawner_status -ne 'validated_mass_forest_asset') {
     throw "Unexpected PCG_Forest spawner status: $($Proof.spawner_status)"
+}
+if ($Proof.spawner_mesh -ne '/Game/Prototype/Environment/Stage3G/Imported/Meshes/SM_Stage3G_FirSaplingMedium') {
+    throw "Unexpected PCG_Forest spawner mesh: $($Proof.spawner_mesh)"
+}
+if ($Proof.forest_lod_profile -ne 'aggressive') {
+    throw "Unexpected PCG_Forest LOD profile: $($Proof.forest_lod_profile)"
+}
+if ([int]$Proof.spawner_weight -ne 100) {
+    throw "Unexpected PCG_Forest spawner weight: $($Proof.spawner_weight)"
 }
 if (-not (Test-Path -LiteralPath $AssetDiskPath -PathType Leaf)) {
     throw "Authored PCG_Forest asset is missing: $AssetRelativePath"

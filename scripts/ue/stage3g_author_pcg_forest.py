@@ -1,8 +1,8 @@
 """Author the Stage 3G R2 PCG_Forest prototype from WorldSpec intent.
 
-The R2 prototype intentionally stops after deterministic candidate generation
-and route exclusion. The Static Mesh Spawner is added only after the optimized
-Fir Tree derivative passes the UE reduction gate.
+R2 now completes the stock-PCG chain: deterministic candidate generation,
+route exclusion, then a stock Static Mesh Spawner backed by the measured and
+authored Fir Sapling Medium variant-B aggressive LOD asset.
 
 Required environment variables:
   YACS_STAGE3G_WORLDSPEC                  absolute WorldSpec path
@@ -25,6 +25,11 @@ import unreal
 PACKAGE = "/Game/YACS/WorldGen/PCG"
 ASSET_NAME = "PCG_Forest"
 ASSET_PATH = PACKAGE + "/" + ASSET_NAME
+FOREST_MESH_PATH = (
+    "/Game/Prototype/Environment/Stage3G/Imported/Meshes/"
+    "SM_Stage3G_FirSaplingMedium"
+)
+FOREST_LOD_PROFILE = "aggressive"
 
 
 def fail(message: str) -> None:
@@ -146,16 +151,45 @@ def main() -> None:
     if not graph or not isinstance(graph, unreal.PCGGraph):
         fail("failed to create {}".format(ASSET_PATH))
 
+    forest_mesh = unreal.EditorAssetLibrary.load_asset(FOREST_MESH_PATH)
+    if not forest_mesh or not isinstance(forest_mesh, unreal.StaticMesh):
+        fail(
+            "validated R2 forest mesh is missing: {}".format(
+                FOREST_MESH_PATH
+            )
+        )
+
     candidate_node, candidate_settings = graph.add_node_of_type(
         unreal.Stage3GForestCandidatesSettings
     )
     route_node, route_settings = graph.add_node_of_type(
         unreal.Stage3GRouteExclusionSettings
     )
+    spawner_node, spawner_settings = graph.add_node_of_type(
+        unreal.PCGStaticMeshSpawnerSettings
+    )
     if not candidate_node or not candidate_settings:
         fail("failed to add YACS Forest Candidates node")
     if not route_node or not route_settings:
         fail("failed to add YACS Route Exclusion node")
+    if not spawner_node or not spawner_settings:
+        fail("failed to add stock PCG Static Mesh Spawner node")
+
+    spawner_settings.set_mesh_selector_type(unreal.PCGMeshSelectorWeighted)
+    selector = spawner_settings.get_editor_property(
+        "mesh_selector_parameters"
+    )
+    if not selector or not isinstance(selector, unreal.PCGMeshSelectorWeighted):
+        fail("PCG Static Mesh Spawner did not expose weighted mesh selector")
+
+    entry = unreal.PCGMeshSelectorWeightedEntry()
+    descriptor = entry.get_editor_property("descriptor")
+    descriptor.set_editor_property("static_mesh", forest_mesh)
+    descriptor.set_editor_property("can_ever_affect_navigation", False)
+    descriptor.set_editor_property("generate_overlap_events", False)
+    entry.set_editor_property("descriptor", descriptor)
+    entry.set_editor_property("weight", 100)
+    selector.set_editor_property("mesh_entries", [entry])
 
     candidate_settings.set_editor_property(
         "start_distance_m", float(spec["forest_start_m"])
@@ -173,8 +207,9 @@ def main() -> None:
         "protected_half_width_m", float(spec["route_clearance_m"])
     )
 
-    candidate_node.set_node_position(-420, 0)
-    route_node.set_node_position(-100, 0)
+    candidate_node.set_node_position(-540, 0)
+    route_node.set_node_position(-220, 0)
+    spawner_node.set_node_position(100, 0)
 
     output_node = graph.get_editor_property("output_node")
     if not output_node:
@@ -183,6 +218,8 @@ def main() -> None:
     candidate_output = first_pin_label(candidate_node, "output_pins")
     route_input = first_pin_label(route_node, "input_pins")
     route_output = first_pin_label(route_node, "output_pins")
+    spawner_input = first_pin_label(spawner_node, "input_pins")
+    spawner_output = first_pin_label(spawner_node, "output_pins")
     graph_output = first_pin_label(output_node, "input_pins")
 
     if not graph.add_edge(
@@ -195,10 +232,17 @@ def main() -> None:
     if not graph.add_edge(
         route_node,
         route_output,
+        spawner_node,
+        spawner_input,
+    ):
+        fail("failed to connect route exclusion to static mesh spawner")
+    if not graph.add_edge(
+        spawner_node,
+        spawner_output,
         output_node,
         graph_output,
     ):
-        fail("failed to connect route exclusion to graph output")
+        fail("failed to connect static mesh spawner to graph output")
 
     graph.set_editor_property(
         "description",
@@ -206,7 +250,8 @@ def main() -> None:
             "Stage 3G R2 deterministic Alpine forest prototype. "
             "WorldSpec drives biome range/density/seed; canonical route geometry "
             "drives placement; the 4 m route corridor is fail-closed. "
-            "Spawner intentionally pending optimized Fir Tree acceptance."
+            "Stock PCG Static Mesh Spawner uses the measured aggressive-LOD "
+            "Fir Sapling Medium variant-B mass-forest asset."
         ),
     )
     graph.set_editor_property("expose_to_library", True)
@@ -237,17 +282,52 @@ def main() -> None:
             unreal.Stage3GRouteExclusionSettings,
         )
     ]
-    if len(candidates) != 1 or len(exclusions) != 1:
+    spawners = [
+        node
+        for node in nodes
+        if isinstance(
+            node.get_settings(),
+            unreal.PCGStaticMeshSpawnerSettings,
+        )
+    ]
+    if len(candidates) != 1 or len(exclusions) != 1 or len(spawners) != 1:
         fail(
-            "PCG_Forest reload expected one candidate and one exclusion node; "
-            "found candidates={} exclusions={}".format(
+            "PCG_Forest reload expected candidate/exclusion/spawner = 1/1/1; "
+            "found {}/{}/{}".format(
                 len(candidates),
                 len(exclusions),
+                len(spawners),
             )
         )
 
     saved_candidates = candidates[0].get_settings()
     saved_exclusion = exclusions[0].get_settings()
+    saved_spawner = spawners[0].get_settings()
+    saved_selector = saved_spawner.get_editor_property(
+        "mesh_selector_parameters"
+    )
+    if not saved_selector or not isinstance(
+        saved_selector,
+        unreal.PCGMeshSelectorWeighted,
+    ):
+        fail("reloaded PCG_Forest lost weighted mesh selector")
+    saved_entries = list(
+        saved_selector.get_editor_property("mesh_entries") or []
+    )
+    if len(saved_entries) != 1:
+        fail(
+            "reloaded PCG_Forest expected one weighted mesh entry; found {}".format(
+                len(saved_entries)
+            )
+        )
+    saved_descriptor = saved_entries[0].get_editor_property("descriptor")
+    saved_mesh = saved_descriptor.get_editor_property("static_mesh")
+    if not saved_mesh or saved_mesh.get_path_name() != FOREST_MESH_PATH:
+        fail(
+            "reloaded PCG_Forest mesh mismatch: {}".format(
+                saved_mesh.get_path_name() if saved_mesh else "<none>"
+            )
+        )
     proof = {
         "stage3g_r2_pcg_forest_graph": "success",
         "asset_path": ASSET_PATH,
@@ -282,7 +362,14 @@ def main() -> None:
             saved_exclusion.get_editor_property("protected_half_width_m")
         ),
         "graph_custom_node_count": len(candidates) + len(exclusions),
-        "spawner_status": "pending_optimized_fir",
+        "graph_spawner_node_count": len(spawners),
+        "spawner_status": "validated_mass_forest_asset",
+        "spawner_mesh": FOREST_MESH_PATH,
+        "spawner_selector": "PCGMeshSelectorWeighted",
+        "spawner_weight": int(
+            saved_entries[0].get_editor_property("weight")
+        ),
+        "forest_lod_profile": FOREST_LOD_PROFILE,
         "route_truth": "FRouteGeometryProfile",
     }
 
