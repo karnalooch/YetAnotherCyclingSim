@@ -12,8 +12,8 @@ grow their own competing path-regex policy.
 | --- | --- |
 | docs-only | Repository policy, Governance, Aggregate |
 | Python | Python reference tests, security baseline, CodeQL Python |
-| C++ | security baseline, CodeQL C++, code-only Unreal canary |
-| Build.cs / Target.cs / .uproject / .uplugin / critical Config | security baseline, CodeQL C++, code-only Unreal canary |
+| C++ | security baseline, CodeQL C++; classifier also emits `ue_code=true` |
+| Build.cs / Target.cs / .uproject / .uplugin / critical Config | security baseline, CodeQL C++; classifier also emits `ue_code=true` |
 | CI/tooling | CI contract tests plus security baseline; UE canary only when Unreal-facing tooling changed |
 | asset-only | Repository policy, Governance, lightweight asset validation |
 | code + assets | union of the relevant code lanes and asset validation |
@@ -33,9 +33,15 @@ The reusable Unreal lane is intentionally source-only:
 - `Test-YacsCodeOnlyCheckout.ps1` requires tracked LFS assets to remain pointer files;
 - only after that guard passes may the Editor build and scoped Automation run.
 
-A C++ change therefore does not download project textures, maps, FBX files,
-audio or other LFS payloads merely to prove that source code compiles and the
-code-centric Automation suites pass.
+The reusable lane is ready for source-only execution, but YACS self-hosted
+runner policy is still Phase 1 manual/trusted. Therefore `ue_code=true` is a
+routing signal, not yet an automatic Aggregate requirement. Automatic Unreal
+execution must use the proven trusted runner Phase 2/3 path or the hosted
+CircleCI path once that PoC is accepted.
+
+When automatic Unreal execution is enabled, a C++ change must not download
+project textures, maps, FBX files, audio or other LFS payloads merely to prove
+that source code compiles and the code-centric Automation suites pass.
 
 ## Lightweight asset validation
 
