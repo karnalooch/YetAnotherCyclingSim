@@ -258,7 +258,7 @@ jobs:
       GIT_LFS_SKIP_SMUDGE: "1"
     steps:
       - checkout:
-          method: blobless
+          method: full
 
       - run:
           name: Enforce code-only checkout
