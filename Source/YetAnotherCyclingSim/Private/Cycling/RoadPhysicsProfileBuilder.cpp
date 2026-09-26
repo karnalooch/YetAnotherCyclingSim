@@ -8,7 +8,7 @@ namespace CyclingRoadPhysics
 {
 	namespace
 	{
-		bool IsPositiveFinite(double Value)
+		bool IsBuilderPositiveFinite(double Value)
 		{
 			return std::isfinite(Value) && Value > 0.0;
 		}
@@ -24,7 +24,7 @@ namespace CyclingRoadPhysics
 			FString& OutError)
 		{
 			const double TotalLengthM = Geometry.GetTotalLengthM();
-			if (!IsPositiveFinite(TotalLengthM))
+			if (!IsBuilderPositiveFinite(TotalLengthM))
 			{
 				OutError = TEXT("route geometry total length must be finite and greater than zero");
 				return false;
@@ -71,7 +71,7 @@ namespace CyclingRoadPhysics
 			// respective chord midpoints. Their route-distance separation is
 			// half of the full three-point window.
 			OutTangentSeparationM = 0.5 * (EndM - StartM);
-			if (!IsPositiveFinite(OutTangentSeparationM))
+			if (!IsBuilderPositiveFinite(OutTangentSeparationM))
 			{
 				OutError = TEXT("curvature tangent separation must be finite and greater than zero");
 				return false;
@@ -118,9 +118,9 @@ namespace CyclingRoadPhysics
 			const double ABHorizontalM = std::sqrt(ABX * ABX + ABY * ABY);
 			const double BCHorizontalM = std::sqrt(BCX * BCX + BCY * BCY);
 			const double ACHorizontalM = std::sqrt(ACX * ACX + ACY * ACY);
-			if (!IsPositiveFinite(ABHorizontalM)
-				|| !IsPositiveFinite(BCHorizontalM)
-				|| !IsPositiveFinite(ACHorizontalM))
+			if (!IsBuilderPositiveFinite(ABHorizontalM)
+				|| !IsBuilderPositiveFinite(BCHorizontalM)
+				|| !IsBuilderPositiveFinite(ACHorizontalM))
 			{
 				OutError = TEXT("curvature query encountered a degenerate horizontal chord");
 				return false;
@@ -132,7 +132,7 @@ namespace CyclingRoadPhysics
 			const double SignedCross2D = ABX * ACY - ABY * ACX;
 			const double CircumferenceDenominator =
 				ABHorizontalM * BCHorizontalM * ACHorizontalM;
-			if (!IsPositiveFinite(CircumferenceDenominator))
+			if (!IsBuilderPositiveFinite(CircumferenceDenominator))
 			{
 				OutError = TEXT("horizontal curvature denominator is invalid");
 				return false;
@@ -174,12 +174,12 @@ namespace CyclingRoadPhysics
 			OutError = TEXT("road physics builder requires configured route geometry");
 			return false;
 		}
-		if (!IsPositiveFinite(Settings.GradeHalfWindowM))
+		if (!IsBuilderPositiveFinite(Settings.GradeHalfWindowM))
 		{
 			OutError = TEXT("road physics grade half-window must be finite and greater than zero");
 			return false;
 		}
-		if (!IsPositiveFinite(Settings.CurvatureHalfWindowM))
+		if (!IsBuilderPositiveFinite(Settings.CurvatureHalfWindowM))
 		{
 			OutError = TEXT("road physics curvature half-window must be finite and greater than zero");
 			return false;
