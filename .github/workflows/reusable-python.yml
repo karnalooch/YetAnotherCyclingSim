@@ -68,6 +68,14 @@ jobs:
           }
           if ($failed) { exit 1 }
 
+      - name: Execute code-only LFS guard smoke
+        shell: pwsh
+        env:
+          GIT_LFS_SKIP_SMUDGE: "1"
+        run: |
+          ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+
+
       - name: Run branch hygiene unit tests
         run: python scripts/ci/test_cleanup_merged_branches.py
 
