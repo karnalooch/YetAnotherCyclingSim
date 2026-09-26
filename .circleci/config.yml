@@ -116,6 +116,7 @@ jobs:
               'Proof/build_editor.log',
               'Proof/automation_run.log',
               'Proof/summary.txt',
+              'failure_context.txt',
               'unreal_ci_summary.json'
             )) {
               $path = Join-Path $root $relative
