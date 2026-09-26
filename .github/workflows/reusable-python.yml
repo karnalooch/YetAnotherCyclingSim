@@ -16,6 +16,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          lfs: false
 
       - name: Set up Python 3.14
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -46,7 +47,8 @@ jobs:
           $failed = $false
           foreach ($script in @(
             'scripts/ci/Prepare-YacsUe58Seed.ps1',
-            'scripts/ci/Restore-YacsUe58Seed.ps1'
+            'scripts/ci/Restore-YacsUe58Seed.ps1',
+            'scripts/ci/Test-YacsCodeOnlyCheckout.ps1'
           )) {
             $tokens = $null
             $errors = $null

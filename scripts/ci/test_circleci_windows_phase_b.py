@@ -9,6 +9,7 @@ CONFIG = ROOT / ".circleci" / "config.yml"
 PACKER = ROOT / "scripts" / "ci" / "Prepare-YacsUe58Seed.ps1"
 RESTORE = ROOT / "scripts" / "ci" / "Restore-YacsUe58Seed.ps1"
 VALIDATOR = ROOT / "scripts" / "ci" / "Test-YacsUe58SeedPayload.ps1"
+CODE_ONLY = ROOT / "scripts" / "ci" / "Test-YacsCodeOnlyCheckout.ps1"
 PREFLIGHT = ROOT / "scripts" / "ue" / "Preflight-YacsProof.ps1"
 
 
@@ -19,6 +20,7 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
         cls.packer = PACKER.read_text(encoding="utf-8")
         cls.restore = RESTORE.read_text(encoding="utf-8")
         cls.validator = VALIDATOR.read_text(encoding="utf-8")
+        cls.code_only = CODE_ONLY.read_text(encoding="utf-8")
         cls.preflight = PREFLIGHT.read_text(encoding="utf-8")
 
     def test_expensive_phase_b_paths_are_disabled_by_default(self):
@@ -57,6 +59,33 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
         canary_block = self.config[canary_start:workflows_start]
         self.assertIn("name: Build YACS Editor and run scoped Automation", canary_block)
         self.assertIn("no_output_timeout: 45m", canary_block)
+
+    def test_circleci_checkouts_are_blobless_and_skip_lfs_smudge(self):
+        self.assertGreaterEqual(self.config.count("method: blobless"), 5)
+        self.assertGreaterEqual(
+            self.config.count('GIT_LFS_SKIP_SMUDGE: "1"'),
+            5,
+        )
+
+    def test_hosted_canary_enforces_code_only_lfs_pointers(self):
+        canary_start = self.config.index("  ue-hosted-canary:")
+        workflows_start = self.config.index("workflows:")
+        canary_block = self.config[canary_start:workflows_start]
+        self.assertIn("name: Enforce code-only checkout", canary_block)
+        self.assertIn("Test-YacsCodeOnlyCheckout.ps1", canary_block)
+        for token in (
+            "git lfs ls-files --name-only",
+            "git lfs pointer --check",
+            "Code-only checkout materialized Git LFS payload",
+            "CODE-ONLY CHECKOUT PASS",
+        ):
+            self.assertIn(token, self.code_only)
+
+    def test_expensive_circleci_jobs_are_main_only(self):
+        self.assertGreaterEqual(
+            self.config.count('filters: pipeline.git.branch == "main"'),
+            4,
+        )
 
     def test_seed_keeps_engine_plugins_and_source_by_default(self):
         for forbidden_exclusion in (

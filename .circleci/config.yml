@@ -26,8 +26,11 @@ jobs:
     machine:
       image: windows-server-2022-gui:current
       shell: powershell.exe -ExecutionPolicy Bypass
+    environment:
+      GIT_LFS_SKIP_SMUDGE: "1"
     steps:
-      - checkout
+      - checkout:
+          method: blobless
 
       - run:
           name: Probe Windows executor for YACS
@@ -44,10 +47,12 @@ jobs:
     resource_class: << pipeline.parameters.ue_seed_resource_class >>
     working_directory: << pipeline.parameters.ue_seed_working_directory >>
     environment:
+      GIT_LFS_SKIP_SMUDGE: "1"
       TEMP: 'D:\CircleCI\YACS-Runner\Temp'
       TMP: 'D:\CircleCI\YACS-Runner\Temp'
     steps:
-      - checkout
+      - checkout:
+          method: blobless
 
       - run:
           name: Require trusted main branch seed
@@ -197,10 +202,13 @@ jobs:
     machine:
       image: windows-server-2022-gui:current
       shell: powershell.exe -ExecutionPolicy Bypass
+    environment:
+      GIT_LFS_SKIP_SMUDGE: "1"
     retention:
       caches: 1d
     steps:
-      - checkout
+      - checkout:
+          method: blobless
 
       - attach_workspace:
           at: 'C:\YacsUe58Seed'
@@ -223,8 +231,11 @@ jobs:
     machine:
       image: windows-server-2022-gui:current
       shell: powershell.exe -ExecutionPolicy Bypass
+    environment:
+      GIT_LFS_SKIP_SMUDGE: "1"
     steps:
-      - checkout
+      - checkout:
+          method: blobless
 
       - restore_cache:
           keys:
@@ -242,8 +253,18 @@ jobs:
     machine:
       image: windows-server-2022-gui:current
       shell: powershell.exe -ExecutionPolicy Bypass
+    # Code-only canary: keep project/source-media LFS payloads unmaterialized.
+    environment:
+      GIT_LFS_SKIP_SMUDGE: "1"
     steps:
-      - checkout
+      - checkout:
+          method: blobless
+
+      - run:
+          name: Enforce code-only checkout
+          shell: powershell.exe -ExecutionPolicy Bypass
+          command: |
+            powershell.exe -ExecutionPolicy Bypass -File scripts/ci/Test-YacsCodeOnlyCheckout.ps1
 
       - run:
           name: Require trusted main branch canary
@@ -284,15 +305,19 @@ workflows:
   windows-ue-cache-seed:
     when: << pipeline.parameters.ue_cache_seed >>
     jobs:
-      - ue-cache-seed
+      - ue-cache-seed:
+          filters: pipeline.git.branch == "main"
       - ue-cache-publish:
           requires:
             - ue-cache-seed
+          filters: pipeline.git.branch == "main"
       - ue-cache-verify:
           requires:
             - ue-cache-publish
+          filters: pipeline.git.branch == "main"
 
   windows-ue-hosted-canary:
     when: << pipeline.parameters.ue_canary >>
     jobs:
-      - ue-hosted-canary
+      - ue-hosted-canary:
+          filters: pipeline.git.branch == "main"
