@@ -92,6 +92,66 @@ if (-not (Test-Path -LiteralPath $ArtifactRoot)) {
     New-Item -ItemType Directory -Path $ArtifactRoot -Force | Out-Null
 }
 $ArtifactRoot = (Resolve-Path -LiteralPath $ArtifactRoot).Path
+$PhaseStatusPath = Join-Path -Path $ArtifactRoot -ChildPath 'phase_status.json'
+
+function Write-YacsPhaseStatus {
+    param(
+        [Parameter(Mandatory=$true)] [string] $Phase,
+        [Parameter(Mandatory=$true)] [string] $Status,
+        [string] $Detail = ''
+    )
+
+    $Payload = [ordered]@{
+        TimestampUtc = (Get-Date).ToUniversalTime().ToString('o')
+        Phase = $Phase
+        Status = $Status
+        Detail = $Detail
+    }
+    $Payload | ConvertTo-Json -Depth 3 |
+        Set-Content -LiteralPath $PhaseStatusPath -Encoding UTF8
+    Write-Host ("YACS PHASE: {0} -> {1}{2}" -f $Phase, $Status, $(if ($Detail) { " ($Detail)" } else { '' }))
+}
+
+function Wait-YacsProcessWithHeartbeat {
+    param(
+        [Parameter(Mandatory=$true)] [System.Diagnostics.Process] $Process,
+        [Parameter(Mandatory=$true)] [string] $Label,
+        [Parameter(Mandatory=$true)] [string] $LogPath,
+        [int] $HeartbeatSeconds = 30
+    )
+
+    $Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+    $NextHeartbeat = [double]$HeartbeatSeconds
+
+    while (-not $Process.HasExited) {
+        Start-Sleep -Seconds 2
+        if ($Stopwatch.Elapsed.TotalSeconds -lt $NextHeartbeat) {
+            continue
+        }
+
+        $LogBytes = 0
+        if (Test-Path -LiteralPath $LogPath -PathType Leaf) {
+            try {
+                $LogBytes = (Get-Item -LiteralPath $LogPath -ErrorAction Stop).Length
+            } catch { }
+        }
+
+        Write-Host ("YACS HEARTBEAT [{0}] elapsed={1:N1}m logBytes={2}" -f $Label, $Stopwatch.Elapsed.TotalMinutes, $LogBytes)
+        if ($LogBytes -gt 0) {
+            Get-Content -LiteralPath $LogPath -Tail 5 -ErrorAction SilentlyContinue |
+                ForEach-Object { Write-Host ("YACS LOGTAIL [{0}] {1}" -f $Label, $_) }
+        }
+        $NextHeartbeat += $HeartbeatSeconds
+    }
+
+    $Process.WaitForExit()
+    $Stopwatch.Stop()
+    Write-Host ("YACS PROCESS EXIT [{0}] elapsed={1:N1}m exitCode={2}" -f $Label, $Stopwatch.Elapsed.TotalMinutes, $Process.ExitCode)
+    if (Test-Path -LiteralPath $LogPath -PathType Leaf) {
+        Get-Content -LiteralPath $LogPath -Tail 10 -ErrorAction SilentlyContinue |
+            ForEach-Object { Write-Host ("YACS LOGTAIL [{0}] {1}" -f $Label, $_) }
+    }
+}
 
 Write-Host ("=== Invoke-YacsProof === RepoRoot={0}" -f $RepoRoot)
 Write-Host ("ArtifactRoot={0}" -f $ArtifactRoot)
@@ -100,6 +160,7 @@ Write-Host ("ArtifactRoot={0}" -f $ArtifactRoot)
 
 Write-Host ""
 Write-Host "[1/4] Running preflight..." -ForegroundColor Cyan
+Write-YacsPhaseStatus -Phase 'preflight' -Status 'running'
 $PreflightArgs = @{
     RepoRoot        = $RepoRoot
     ProjectPath     = $ProjectPath
@@ -109,8 +170,10 @@ $PreflightArgs = @{
 }
 $Context = & $PreflightScript @PreflightArgs
 if ($LASTEXITCODE -ne 0) {
+    Write-YacsPhaseStatus -Phase 'preflight' -Status 'failed' -Detail ("exit={0}" -f $LASTEXITCODE)
     throw "Preflight failed with exit code $LASTEXITCODE"
 }
+Write-YacsPhaseStatus -Phase 'preflight' -Status 'passed'
 Write-Host "Preflight OK." -ForegroundColor Green
 
 # --- (2) Build ------------------------------------------------------------
@@ -118,6 +181,7 @@ Write-Host "Preflight OK." -ForegroundColor Green
 if (-not $SkipBuild) {
     Write-Host ""
     Write-Host "[2/4] Building YetAnotherCyclingSimEditor (Development)..." -ForegroundColor Cyan
+    Write-YacsPhaseStatus -Phase 'build' -Status 'running'
     $BuildLog = Join-Path -Path $ArtifactRoot -ChildPath 'build_editor.log'
     # Use UnrealBuildTool directly. The editor target name matches the
     # uproject module name "YetAnotherCyclingSim" with the "Editor"
@@ -133,7 +197,7 @@ if (-not $SkipBuild) {
     $BuildProc = Start-Process -FilePath (Join-Path -Path $Context.EngineRoot -ChildPath 'Engine/Build/BatchFiles/Build.bat') `
         -ArgumentList $BuildArgs -NoNewWindow -PassThru -RedirectStandardOutput $BuildLog `
         -WorkingDirectory (Join-Path -Path $Context.EngineRoot -ChildPath 'Engine/Build/BatchFiles')
-    $BuildProc.WaitForExit()
+    Wait-YacsProcessWithHeartbeat -Process $BuildProc -Label 'build' -LogPath $BuildLog
     $BuildExit = $BuildProc.ExitCode
     # PowerShell 5.1 Start-Process -PassThru can return an empty/null
     # ExitCode on successful UBT runs even after WaitForExit(). Treat the
@@ -147,11 +211,14 @@ if (-not $SkipBuild) {
         }
     }
     if ($BuildExit -ne 0) {
+        Write-YacsPhaseStatus -Phase 'build' -Status 'failed' -Detail ("exit={0}" -f $BuildExit)
         throw "Editor build failed with exit code $BuildExit; see $BuildLog"
     }
+    Write-YacsPhaseStatus -Phase 'build' -Status 'passed'
     Write-Host "Editor build OK." -ForegroundColor Green
 } else {
     Write-Host ""
+    Write-YacsPhaseStatus -Phase 'build' -Status 'skipped'
     Write-Host "[2/4] Skipping editor build (-SkipBuild)." -ForegroundColor Yellow
 }
 
@@ -159,6 +226,7 @@ if (-not $SkipBuild) {
 
 Write-Host ""
 Write-Host "[3/4] Running Automation tests..." -ForegroundColor Cyan
+Write-YacsPhaseStatus -Phase 'automation' -Status 'running'
 
 $RunLog = Join-Path -Path $ArtifactRoot -ChildPath 'automation_run.log'
 $ReportJson = Join-Path -Path $ArtifactRoot -ChildPath 'index.json'
@@ -189,7 +257,7 @@ $EditorArgs = @(
 )
 $UATProc = Start-Process -FilePath $Context.UnrealEditorCmdPath `
     -ArgumentList $EditorArgs -NoNewWindow -PassThru -RedirectStandardOutput $RunLog
-$UATProc.WaitForExit()
+Wait-YacsProcessWithHeartbeat -Process $UATProc -Label 'automation' -LogPath $RunLog
 
 # Defer the PowerShell 5.1 Start-Process -PassThru null-ExitCode
 # normalization to AFTER the tally block. Referencing $Failed/$Errors/
@@ -204,6 +272,7 @@ Write-Host ("Editor raw exit code: {0}" -f $EditorExit)
 
 Write-Host ""
 Write-Host "[4/4] Tallying results..." -ForegroundColor Cyan
+Write-YacsPhaseStatus -Phase 'tally' -Status 'running' -Detail ("editorExit={0}" -f $EditorExit)
 
 $Discovered = 0
 $Passed = 0
@@ -339,6 +408,7 @@ $sb.ToString() | Set-Content -LiteralPath (Join-Path -Path $ArtifactRoot -ChildP
 # --- Exit policy ----------------------------------------------------------
 
 if ($EditorExit -ne 0 -or $Failed -gt 0 -or $Errors -gt 0) {
+    Write-YacsPhaseStatus -Phase 'tally' -Status 'failed' -Detail ("discovered={0};passed={1};failed={2};errors={3};editorExit={4}" -f $Discovered, $Passed, $Failed, $Errors, $EditorExit)
     Write-Host ""
     Write-Host "PROOF FAILED." -ForegroundColor Red
     Write-Host ("Discovered={0} Passed={1} (withWarnings={2}) Failed={3} Skipped={4} Errors={5} UATExitCode={6}" -f `
@@ -347,6 +417,7 @@ if ($EditorExit -ne 0 -or $Failed -gt 0 -or $Errors -gt 0) {
     exit 1
 }
 
+Write-YacsPhaseStatus -Phase 'tally' -Status 'passed' -Detail ("discovered={0};passed={1};failed={2};errors={3};editorExit={4}" -f $Discovered, $Passed, $Failed, $Errors, $EditorExit)
 Write-Host ""
 Write-Host "PROOF PASSED." -ForegroundColor Green
 Write-Host ("Discovered={0} Passed={1} (withWarnings={2}) WarningsTotal={3} Failed={4} Skipped={5} Errors={6}" -f `
