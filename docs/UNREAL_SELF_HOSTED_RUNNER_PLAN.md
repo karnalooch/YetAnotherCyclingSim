@@ -177,6 +177,36 @@ Phase 1 is complete when all of the following are true:
 
 **Do not start until Phase 1 is proven.**
 
+### Phase 2 readiness gate — unattended runner startup
+
+Before any trusted automatic UE trigger is enabled, make the home runner operationally
+independent from an open PowerShell window.
+
+Target setup:
+
+- run the GitHub runner from Windows Task Scheduler rather than relying on manual
+  `run.cmd`;
+- use a dedicated local Windows account for the runner when practical;
+- start at boot/logon with the runner rooted on `D:\actions-runner-yacs`;
+- keep the repository-scoped `yacs-ue58` label and existing trust restrictions;
+- do not make a classic Windows service the default for visual/GPU workloads
+  unless a separate proof demonstrates that the required UE workload is compatible
+  with that execution mode.
+
+Required reboot proof before Phase 2 is considered ready:
+
+1. restart the Windows host;
+2. do not manually start `run.cmd`;
+3. confirm the runner returns online automatically;
+4. run a trusted diagnostic/canary job;
+5. confirm Editor build and Automation remain green;
+6. confirm at least one interactive-session/GPU-sensitive proof used by YACS
+   (for example a visual capture workload) still works;
+7. confirm workspace cleanup and runner recovery after failure.
+
+Phase 1 manual execution and Stage 3G do **not** wait for this milestone. This becomes
+mandatory only when GitHub is expected to schedule trusted UE jobs automatically.
+
 Possible next step:
 
 - automatically run the UE lane only for trusted same-repository branches;
