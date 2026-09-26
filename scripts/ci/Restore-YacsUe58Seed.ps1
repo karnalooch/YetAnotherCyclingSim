@@ -89,7 +89,12 @@ Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 $destinationParent = Split-Path -Parent $DestinationRoot
-New-Item -ItemType Directory -Path $destinationParent -Force | Out-Null
+if ([string]::IsNullOrWhiteSpace($destinationParent)) {
+    throw "Destination root has no valid parent: $DestinationRoot"
+}
+if (-not (Test-Path -LiteralPath $destinationParent -PathType Container)) {
+    [System.IO.Directory]::CreateDirectory($destinationParent) | Out-Null
+}
 $destinationParentFull = [System.IO.Path]::GetFullPath($destinationParent).TrimEnd('\') + '\'
 $engineLeaf = Split-Path -Leaf $DestinationRoot
 $expectedPrefix = "$engineLeaf/"
