@@ -47,7 +47,7 @@ namespace Stage3HRoadPhysicsTests
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FStage3HRoadPhysicsInterpolationTest,
-	"CyclingRoadPhysics.ProfileInterpolation",
+	"CyclingPhysics.RoadPhysics.ProfileInterpolation",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
 bool FStage3HRoadPhysicsInterpolationTest::RunTest(const FString& Parameters)
@@ -104,7 +104,7 @@ bool FStage3HRoadPhysicsInterpolationTest::RunTest(const FString& Parameters)
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FStage3HRoadPhysicsLateralAndLookAheadTest,
-	"CyclingRoadPhysics.LateralAndLookAhead",
+	"CyclingPhysics.RoadPhysics.LateralAndLookAhead",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
 bool FStage3HRoadPhysicsLateralAndLookAheadTest::RunTest(const FString& Parameters)
@@ -143,7 +143,7 @@ bool FStage3HRoadPhysicsLateralAndLookAheadTest::RunTest(const FString& Paramete
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FStage3HRoadPhysicsTransitionValidationTest,
-	"CyclingRoadPhysics.TransitionValidation",
+	"CyclingPhysics.RoadPhysics.TransitionValidation",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
 bool FStage3HRoadPhysicsTransitionValidationTest::RunTest(const FString& Parameters)
@@ -185,7 +185,7 @@ bool FStage3HRoadPhysicsTransitionValidationTest::RunTest(const FString& Paramet
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FStage3HRoadPhysicsValidationTest,
-	"CyclingRoadPhysics.Validation",
+	"CyclingPhysics.RoadPhysics.Validation",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
 bool FStage3HRoadPhysicsValidationTest::RunTest(const FString& Parameters)
