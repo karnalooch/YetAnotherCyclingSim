@@ -4,4 +4,4 @@ restore_required=true
 runner=yacs-ue58
 normal_canary=true
 intentional_red=true
-attempt=2
+attempt=3
