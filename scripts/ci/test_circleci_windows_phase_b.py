@@ -32,11 +32,19 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
             self.assertIn(parameter, self.config)
 
         def parameter_block(name: str) -> str:
-            start = self.config.index(f"  {name}:")
-            next_parameter = self.config.find("\n  ", start + 3)
-            if next_parameter == -1:
-                next_parameter = len(self.config)
-            return self.config[start:next_parameter]
+            lines = self.config.splitlines()
+            header = f"  {name}:"
+            start = lines.index(header)
+            block = [lines[start]]
+            for line in lines[start + 1 :]:
+                if (
+                    line.startswith("  ")
+                    and not line.startswith("    ")
+                    and line.endswith(":")
+                ):
+                    break
+                block.append(line)
+            return "\n".join(block)
 
         self.assertIn("default: false", parameter_block("windows_probe"))
         self.assertIn("default: false", parameter_block("ue_cache_seed"))
