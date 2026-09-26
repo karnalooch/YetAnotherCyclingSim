@@ -1,5 +1,6 @@
 """Reference cycling physics package for the YetAnotherCyclingSim project."""
 
+from .braking import BrakingForceDemand, braking_force_demand
 from .corner_context import (
     CORNER_DIRECTION_LEFT,
     CORNER_DIRECTION_RIGHT,
@@ -67,6 +68,8 @@ from .weather import WeatherKeyframe, WeatherProfile
 
 __all__ = [
     "STANDARD_GRAVITY_MPS2",
+    "BrakingForceDemand",
+    "braking_force_demand",
     "RiderParameters",
     "Environment",
     "RiderInput",
