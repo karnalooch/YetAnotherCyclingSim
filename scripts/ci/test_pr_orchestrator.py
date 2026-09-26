@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
+
 from unittest.mock import patch
 
 import pr_orchestrator as po
@@ -328,6 +330,39 @@ class OrderingTests(unittest.TestCase):
             for call in evaluate.call_args_list
         ]
         self.assertEqual(numbers, [10, 30, 20])
+
+
+class WorkflowContractTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        root = Path(__file__).resolve().parents[2]
+        cls.workflow = (
+            root / ".github" / "workflows" / "pr-orchestrator.yml"
+        ).read_text(encoding="utf-8")
+        cls.ci = (
+            root / ".github" / "workflows" / "ci.yml"
+        ).read_text(encoding="utf-8")
+
+    def test_orchestrator_runs_only_trusted_default_branch_tooling(self):
+        self.assertIn("pull_request_target:", self.workflow)
+        self.assertIn('workflows: ["CyclingSim CI"]', self.workflow)
+        self.assertIn(
+            "ref: ${{ github.event.repository.default_branch }}",
+            self.workflow,
+        )
+        self.assertIn("persist-credentials: false", self.workflow)
+        self.assertNotIn("secrets.", self.workflow)
+
+    def test_orchestrator_has_minimal_required_write_permissions(self):
+        self.assertIn("contents: write", self.workflow)
+        self.assertIn("pull-requests: write", self.workflow)
+        self.assertIn("checks: read", self.workflow)
+        self.assertNotIn("issues: write", self.workflow)
+
+    def test_stacked_prs_receive_normal_ci(self):
+        self.assertIn("  pull_request:", self.ci)
+        self.assertNotIn("pull_request:\n    branches: [main]", self.ci)
+        self.assertIn("name: Aggregate CI gate", self.ci)
 
 
 if __name__ == "__main__":
