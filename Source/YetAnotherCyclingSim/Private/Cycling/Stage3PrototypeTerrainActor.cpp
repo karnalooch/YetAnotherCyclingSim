@@ -7,6 +7,7 @@
 #include "Materials/MaterialInterface.h"
 #include "Math/RotationMatrix.h"
 #include "UObject/ConstructorHelpers.h"
+#include "UObject/UObjectGlobals.h"
 
 namespace Stage3PrototypeTerrainInternal
 {
@@ -51,6 +52,28 @@ namespace Stage3PrototypeTerrainInternal
 	constexpr double MountainPropLastExclusiveM = 10000.0;
 	constexpr double MountainPropSpacingM = 250.0;
 	constexpr double MountainPropLateralM = 42.0;
+
+	// Stage 3G: low-cost, deterministic reference-environment layers.
+	constexpr double ValleyRidgeFirstM = 300.0;
+	constexpr double ValleyRidgeLastExclusiveM = 3700.0;
+	constexpr double ValleyRidgeSpacingM = 220.0;
+	constexpr double ValleyRidgeBaseLateralM = 120.0;
+
+	constexpr double ForestCanopyFirstM = 3750.0;
+	constexpr double ForestCanopyLastExclusiveM = 6250.0;
+	constexpr double ForestCanopySpacingM = 100.0;
+
+	constexpr double WaterFirstM = 600.0;
+	constexpr double WaterLastExclusiveM = 3200.0;
+	constexpr double WaterSpacingM = 100.0;
+	constexpr double WaterLateralM = 55.0;
+	constexpr double WaterWidthM = 30.0;
+	constexpr double WaterThicknessM = 0.18;
+	constexpr double WaterVerticalOffsetM = -1.4;
+
+	constexpr double DistantMountainFirstM = 6500.0;
+	constexpr double DistantMountainLastExclusiveM = 10000.0;
+	constexpr double DistantMountainSpacingM = 500.0;
 
 	bool IsFiniteVector(const FVector& Value)
 	{
@@ -152,6 +175,16 @@ const TCHAR* AStage3PrototypeTerrainActor::RoadEdgeLineMaterialPath =
 	TEXT("/Game/Prototype/Environment/Stage3F/Materials/MI_Stage3F_Edge.MI_Stage3F_Edge");
 const TCHAR* AStage3PrototypeTerrainActor::TerrainMaterialPath =
 	TEXT("/Game/Prototype/Environment/Stage3F/Materials/MI_Stage3F_Terrain.MI_Stage3F_Terrain");
+const TCHAR* AStage3PrototypeTerrainActor::Stage3GGrassMaterialPath =
+	TEXT("/Game/Prototype/Environment/Stage3G/Materials/MI_Stage3G_Grass.MI_Stage3G_Grass");
+const TCHAR* AStage3PrototypeTerrainActor::Stage3GForestMaterialPath =
+	TEXT("/Game/Prototype/Environment/Stage3G/Materials/MI_Stage3G_Forest.MI_Stage3G_Forest");
+const TCHAR* AStage3PrototypeTerrainActor::Stage3GRockMaterialPath =
+	TEXT("/Game/Prototype/Environment/Stage3G/Materials/MI_Stage3G_Rock.MI_Stage3G_Rock");
+const TCHAR* AStage3PrototypeTerrainActor::Stage3GDistantRockMaterialPath =
+	TEXT("/Game/Prototype/Environment/Stage3G/Materials/MI_Stage3G_DistantRock.MI_Stage3G_DistantRock");
+const TCHAR* AStage3PrototypeTerrainActor::Stage3GWaterMaterialPath =
+	TEXT("/Game/Prototype/Environment/Stage3G/Materials/MI_Stage3G_Water.MI_Stage3G_Water");
 
 AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 {
@@ -176,6 +209,18 @@ AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 	MountainProps = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("MountainProps"));
 	MountainProps->SetupAttachment(SceneRoot);
 
+	ValleyRidgeProps = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("ValleyRidgeProps"));
+	ValleyRidgeProps->SetupAttachment(SceneRoot);
+
+	ForestCanopyProps = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("ForestCanopyProps"));
+	ForestCanopyProps->SetupAttachment(SceneRoot);
+
+	DistantMountainProps = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("DistantMountainProps"));
+	DistantMountainProps->SetupAttachment(SceneRoot);
+
+	WaterTiles = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("WaterTiles"));
+	WaterTiles->SetupAttachment(SceneRoot);
+
 	const ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMesh(
 		TEXT("/Engine/BasicShapes/Cube.Cube"));
 	const ConstructorHelpers::FObjectFinder<UStaticMesh> CylinderMesh(
@@ -195,6 +240,7 @@ AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 		RoadTiles->SetStaticMesh(CubeMesh.Object);
 		RoadEdgeLines->SetStaticMesh(CubeMesh.Object);
 		TerrainTiles->SetStaticMesh(CubeMesh.Object);
+		WaterTiles->SetStaticMesh(CubeMesh.Object);
 	}
 	if (CylinderMesh.Succeeded())
 	{
@@ -203,6 +249,9 @@ AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 	if (ConeMesh.Succeeded())
 	{
 		MountainProps->SetStaticMesh(ConeMesh.Object);
+		ValleyRidgeProps->SetStaticMesh(ConeMesh.Object);
+		ForestCanopyProps->SetStaticMesh(ConeMesh.Object);
+		DistantMountainProps->SetStaticMesh(ConeMesh.Object);
 	}
 
 	if (RoadAsphaltMat.Succeeded())
@@ -243,12 +292,36 @@ AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 		}
 	}
 
+	UMaterialInterface* TerrainFallback = TerrainTiles->GetMaterial(0);
+	auto ApplyOptionalStage3GMaterial =
+		[TerrainFallback](UHierarchicalInstancedStaticMeshComponent* Component, const TCHAR* Path)
+		{
+			if (UMaterialInterface* Material = LoadObject<UMaterialInterface>(nullptr, Path))
+			{
+				Component->SetMaterial(0, Material);
+			}
+			else if (IsValid(TerrainFallback))
+			{
+				Component->SetMaterial(0, TerrainFallback);
+			}
+		};
+
+	ApplyOptionalStage3GMaterial(ValleyRidgeProps, Stage3GGrassMaterialPath);
+	ApplyOptionalStage3GMaterial(ForestCanopyProps, Stage3GForestMaterialPath);
+	ApplyOptionalStage3GMaterial(MountainProps, Stage3GRockMaterialPath);
+	ApplyOptionalStage3GMaterial(DistantMountainProps, Stage3GDistantRockMaterialPath);
+	ApplyOptionalStage3GMaterial(WaterTiles, Stage3GWaterMaterialPath);
+
 	UHierarchicalInstancedStaticMeshComponent* Components[] = {
 		RoadTiles,
 		RoadEdgeLines,
 		TerrainTiles,
 		ForestProps,
 		MountainProps,
+		ValleyRidgeProps,
+		ForestCanopyProps,
+		DistantMountainProps,
+		WaterTiles,
 	};
 	for (UHierarchicalInstancedStaticMeshComponent* Component : Components)
 	{
@@ -275,7 +348,11 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 		|| !IsValid(TerrainTiles->GetStaticMesh())
 		|| !IsValid(ForestProps->GetStaticMesh())
 		|| !IsValid(MountainProps->GetStaticMesh())
-		|| !IsValid(RoadEdgeLines->GetStaticMesh()))
+		|| !IsValid(RoadEdgeLines->GetStaticMesh())
+		|| !IsValid(ValleyRidgeProps->GetStaticMesh())
+		|| !IsValid(ForestCanopyProps->GetStaticMesh())
+		|| !IsValid(DistantMountainProps->GetStaticMesh())
+		|| !IsValid(WaterTiles->GetStaticMesh()))
 	{
 		OutError = TEXT("prototype terrain engine basic-shape meshes are unavailable");
 		return false;
@@ -287,12 +364,20 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 	TerrainTiles->Modify();
 	ForestProps->Modify();
 	MountainProps->Modify();
+	ValleyRidgeProps->Modify();
+	ForestCanopyProps->Modify();
+	DistantMountainProps->Modify();
+	WaterTiles->Modify();
 
 	RoadTiles->ClearInstances();
 	RoadEdgeLines->ClearInstances();
 	TerrainTiles->ClearInstances();
 	ForestProps->ClearInstances();
 	MountainProps->ClearInstances();
+	ValleyRidgeProps->ClearInstances();
+	ForestCanopyProps->ClearInstances();
+	DistantMountainProps->ClearInstances();
+	WaterTiles->ClearInstances();
 
 	const TArray<CyclingSimulation::FRouteGeometrySample>& Samples =
 		Geometry.GetSamples();
@@ -387,6 +472,132 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 		TerrainTiles->AddInstance(TerrainTransform, false);
 	}
 
+	// Stage 3G valley silhouette: broad overlapping cone ridges sit beyond the
+	// road-support tiles. They are deliberately presentation-only and sampled
+	// from route geometry, so rebuilds are deterministic and physics never reads
+	// their transforms.
+	for (double DistanceM = ValleyRidgeFirstM;
+		DistanceM < ValleyRidgeLastExclusiveM;
+		DistanceM += ValleyRidgeSpacingM)
+	{
+		FVector RoutePositionM;
+		FVector Right;
+		if (!TryResolveHorizontalRight(Geometry, DistanceM, RoutePositionM, Right, OutError))
+		{
+			return false;
+		}
+
+		for (const double Side : { -1.0, 1.0 })
+		{
+			const double Phase = DistanceM * 0.004 + Side * 0.7;
+			const double HeightM = 78.0 + 22.0 * FMath::Abs(FMath::Sin(Phase));
+			const double RadiusScaleM = 150.0 + 35.0 * FMath::Abs(FMath::Cos(Phase * 0.8));
+			const double LateralM = ValleyRidgeBaseLateralM
+				+ 18.0 * FMath::Sin(DistanceM * 0.006 + Side);
+
+			FVector PositionM = RoutePositionM + Right * (Side * LateralM);
+			PositionM.Z += HeightM * 0.5 - 3.0;
+
+			const FTransform RidgeTransform(
+				FRotator(0.0, FMath::Fmod(DistanceM * 0.071 + Side * 31.0, 360.0), 0.0),
+				PositionM * MetresToCentimetres,
+				FVector(RadiusScaleM, RadiusScaleM, HeightM));
+			if (!IsFiniteTransform(RidgeTransform))
+			{
+				OutError = TEXT("Stage 3G valley ridge transform is invalid");
+				return false;
+			}
+			ValleyRidgeProps->AddInstance(RidgeTransform, false);
+		}
+	}
+
+	// Stage 3G watercourse: a low-cost opaque ribbon offset from the road in the
+	// lower valley. It follows route elevation intentionally (stream, not lake),
+	// which avoids introducing a separate terrain/water simulation subsystem.
+	for (double DistanceM = WaterFirstM;
+		DistanceM < WaterLastExclusiveM;
+		DistanceM += WaterSpacingM)
+	{
+		const double EndDistanceM = FMath::Min(
+			DistanceM + WaterSpacingM,
+			WaterLastExclusiveM);
+		const double MidDistanceM = 0.5 * (DistanceM + EndDistanceM);
+
+		FVector StartM;
+		FVector EndM;
+		FVector MidRoutePositionM;
+		FVector Right;
+		if (!Geometry.TrySamplePosition(DistanceM, StartM, OutError)
+			|| !Geometry.TrySamplePosition(EndDistanceM, EndM, OutError)
+			|| !TryResolveHorizontalRight(
+				Geometry,
+				MidDistanceM,
+				MidRoutePositionM,
+				Right,
+				OutError))
+		{
+			return false;
+		}
+
+		StartM += Right * WaterLateralM;
+		EndM += Right * WaterLateralM;
+		const FTransform WaterTransform = MakeAlignedBoxTransform(
+			StartM,
+			EndM,
+			WaterWidthM,
+			WaterThicknessM,
+			2.0,
+			WaterVerticalOffsetM);
+		if (!IsFiniteTransform(WaterTransform))
+		{
+			OutError = TEXT("Stage 3G water tile transform is invalid");
+			return false;
+		}
+		WaterTiles->AddInstance(WaterTransform, false);
+	}
+
+	// Stage 3G canopy layer. Existing ForestProps remain sparse trunk markers;
+	// these overlapping cone crowns make the 3.75-6.25 km sector read as a
+	// forest from the rider camera without importing production foliage yet.
+	const double ForestCanopyLateralsM[] = { 18.0, 36.0 };
+	for (double DistanceM = ForestCanopyFirstM;
+		DistanceM < ForestCanopyLastExclusiveM;
+		DistanceM += ForestCanopySpacingM)
+	{
+		FVector RoutePositionM;
+		FVector Right;
+		if (!TryResolveHorizontalRight(Geometry, DistanceM, RoutePositionM, Right, OutError))
+		{
+			return false;
+		}
+
+		for (const double Side : { -1.0, 1.0 })
+		{
+			for (const double BaseLateralM : ForestCanopyLateralsM)
+			{
+				const double Phase = DistanceM * 0.013 + BaseLateralM * 0.17 + Side;
+				const double HeightM = 13.0 + 6.0 * FMath::Abs(FMath::Sin(Phase));
+				const double RadiusScaleM = 5.0 + 2.0 * FMath::Abs(FMath::Cos(Phase));
+				const double LateralM = BaseLateralM
+					+ 2.5 * FMath::Sin(DistanceM * 0.021 + Side * BaseLateralM);
+
+				FVector PositionM = RoutePositionM + Right * (Side * LateralM);
+				PositionM.Z += HeightM * 0.5 - 0.1;
+
+				const FTransform CanopyTransform(
+					FRotator(0.0, FMath::Fmod(DistanceM * 0.11 + BaseLateralM * 7.0, 360.0), 0.0),
+					PositionM * MetresToCentimetres,
+					FVector(RadiusScaleM, RadiusScaleM, HeightM));
+				if (!IsFiniteTransform(CanopyTransform))
+				{
+					OutError = TEXT("Stage 3G forest canopy transform is invalid");
+					return false;
+				}
+				ForestCanopyProps->AddInstance(CanopyTransform, false);
+			}
+		}
+	}
+
 	for (double DistanceM = ForestPropFirstM;
 		DistanceM < ForestPropLastExclusiveM;
 		DistanceM += ForestPropSpacingM)
@@ -463,6 +674,51 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 		}
 	}
 
+	// Stage 3G distant skyline: two depth layers per side. Larger, desaturated
+	// peaks create atmospheric depth while the original MountainProps remain the
+	// near-road high-Alpine markers.
+	const double DistantMountainLateralsM[] = { 220.0, 480.0 };
+	for (double DistanceM = DistantMountainFirstM;
+		DistanceM < DistantMountainLastExclusiveM;
+		DistanceM += DistantMountainSpacingM)
+	{
+		FVector RoutePositionM;
+		FVector Right;
+		if (!TryResolveHorizontalRight(Geometry, DistanceM, RoutePositionM, Right, OutError))
+		{
+			return false;
+		}
+
+		for (const double Side : { -1.0, 1.0 })
+		{
+			for (int32 Layer = 0; Layer < 2; ++Layer)
+			{
+				const double LateralM = DistantMountainLateralsM[Layer];
+				const double Phase = DistanceM * 0.003 + Layer * 1.7 + Side;
+				const double HeightM =
+					(Layer == 0 ? 180.0 : 320.0)
+					+ (Layer == 0 ? 45.0 : 70.0) * FMath::Abs(FMath::Sin(Phase));
+				const double RadiusScaleM =
+					(Layer == 0 ? 135.0 : 220.0)
+					+ 35.0 * FMath::Abs(FMath::Cos(Phase * 0.7));
+
+				FVector PositionM = RoutePositionM + Right * (Side * LateralM);
+				PositionM.Z += HeightM * 0.42 - (Layer == 0 ? 12.0 : 28.0);
+
+				const FTransform DistantPeakTransform(
+					FRotator(0.0, FMath::Fmod(DistanceM * 0.049 + Layer * 53.0, 360.0), 0.0),
+					PositionM * MetresToCentimetres,
+					FVector(RadiusScaleM, RadiusScaleM, HeightM));
+				if (!IsFiniteTransform(DistantPeakTransform))
+				{
+					OutError = TEXT("Stage 3G distant mountain transform is invalid");
+					return false;
+				}
+				DistantMountainProps->AddInstance(DistantPeakTransform, false);
+			}
+		}
+	}
+
 	MarkPackageDirty();
 	return ValidateAgainstGeometry(Geometry, OutError);
 }
@@ -514,6 +770,14 @@ bool AStage3PrototypeTerrainActor::ValidateAgainstGeometry(
 	if (GetForestPropInstanceCount() <= 0 || GetMountainPropInstanceCount() <= 0)
 	{
 		OutError = TEXT("prototype world progression props are missing");
+		return false;
+	}
+	if (GetValleyRidgeInstanceCount() <= 0
+		|| GetForestCanopyInstanceCount() <= 0
+		|| GetDistantMountainInstanceCount() <= 0
+		|| GetWaterTileInstanceCount() <= 0)
+	{
+		OutError = TEXT("Stage 3G reference-environment layers are missing");
 		return false;
 	}
 
@@ -570,4 +834,24 @@ int32 AStage3PrototypeTerrainActor::GetMountainPropInstanceCount() const
 int32 AStage3PrototypeTerrainActor::GetRoadEdgeLineInstanceCount() const
 {
 	return IsValid(RoadEdgeLines) ? RoadEdgeLines->GetInstanceCount() : 0;
+}
+
+int32 AStage3PrototypeTerrainActor::GetValleyRidgeInstanceCount() const
+{
+	return IsValid(ValleyRidgeProps) ? ValleyRidgeProps->GetInstanceCount() : 0;
+}
+
+int32 AStage3PrototypeTerrainActor::GetForestCanopyInstanceCount() const
+{
+	return IsValid(ForestCanopyProps) ? ForestCanopyProps->GetInstanceCount() : 0;
+}
+
+int32 AStage3PrototypeTerrainActor::GetDistantMountainInstanceCount() const
+{
+	return IsValid(DistantMountainProps) ? DistantMountainProps->GetInstanceCount() : 0;
+}
+
+int32 AStage3PrototypeTerrainActor::GetWaterTileInstanceCount() const
+{
+	return IsValid(WaterTiles) ? WaterTiles->GetInstanceCount() : 0;
 }

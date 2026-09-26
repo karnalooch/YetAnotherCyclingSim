@@ -50,6 +50,14 @@ bool FStage3PrototypeTerrainBuildTest::RunTest(const FString& Parameters)
 			Terrain->GetForestPropInstanceCount(), 24);
 		TestEqual(TEXT("high-mountain progression prop count remains deterministic"),
 			Terrain->GetMountainPropInstanceCount(), 30);
+		TestEqual(TEXT("Stage 3G valley ridge count remains deterministic"),
+			Terrain->GetValleyRidgeInstanceCount(), 32);
+		TestEqual(TEXT("Stage 3G forest canopy count remains deterministic"),
+			Terrain->GetForestCanopyInstanceCount(), 100);
+		TestEqual(TEXT("Stage 3G distant mountain count remains deterministic"),
+			Terrain->GetDistantMountainInstanceCount(), 28);
+		TestEqual(TEXT("Stage 3G water tile count remains deterministic"),
+			Terrain->GetWaterTileInstanceCount(), 26);
 
 		const int32 RoadCountBefore =
 			Terrain->GetRoadInstanceCount();
@@ -59,6 +67,14 @@ bool FStage3PrototypeTerrainBuildTest::RunTest(const FString& Parameters)
 			Terrain->GetForestPropInstanceCount();
 		const int32 MountainCountBefore =
 			Terrain->GetMountainPropInstanceCount();
+		const int32 ValleyRidgeCountBefore =
+			Terrain->GetValleyRidgeInstanceCount();
+		const int32 ForestCanopyCountBefore =
+			Terrain->GetForestCanopyInstanceCount();
+		const int32 DistantMountainCountBefore =
+			Terrain->GetDistantMountainInstanceCount();
+		const int32 WaterTileCountBefore =
+			Terrain->GetWaterTileInstanceCount();
 
 		TestTrue(TEXT("idempotent rebuild succeeds"),
 			Terrain->RebuildFromGeometry(Geometry, Error));
@@ -70,6 +86,14 @@ bool FStage3PrototypeTerrainBuildTest::RunTest(const FString& Parameters)
 			Terrain->GetForestPropInstanceCount(), ForestCountBefore);
 		TestEqual(TEXT("idempotent mountain prop count unchanged"),
 			Terrain->GetMountainPropInstanceCount(), MountainCountBefore);
+		TestEqual(TEXT("idempotent valley ridge count unchanged"),
+			Terrain->GetValleyRidgeInstanceCount(), ValleyRidgeCountBefore);
+		TestEqual(TEXT("idempotent forest canopy count unchanged"),
+			Terrain->GetForestCanopyInstanceCount(), ForestCanopyCountBefore);
+		TestEqual(TEXT("idempotent distant mountain count unchanged"),
+			Terrain->GetDistantMountainInstanceCount(), DistantMountainCountBefore);
+		TestEqual(TEXT("idempotent water tile count unchanged"),
+			Terrain->GetWaterTileInstanceCount(), WaterTileCountBefore);
 	}
 
 	World->DestroyWorld(false);
