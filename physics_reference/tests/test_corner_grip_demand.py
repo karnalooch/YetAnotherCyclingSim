@@ -184,6 +184,20 @@ class TestCornerGripDemand(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "bank support"):
             corner_grip_demand(ctx, wrong_bank, 10.0, 0.0)
 
+    def test_approach_context_is_not_physical_lateral_usage(self):
+        ctx = context()
+        ctx = CornerContext(
+            **{
+                field: getattr(ctx, field)
+                for field in ctx.__dataclass_fields__
+                if field != "phase"
+            },
+            phase="approach",
+        )
+        limit = limit_for(ctx)
+        with self.assertRaisesRegex(ValueError, "entry/apex/exit"):
+            corner_grip_demand(ctx, limit, 10.0, 0.2)
+
     def test_invalid_speed_and_brake_rejected(self):
         ctx = context()
         limit = limit_for(ctx)
