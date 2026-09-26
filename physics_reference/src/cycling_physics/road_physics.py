@@ -7,6 +7,8 @@ It represents the physical road in route-local coordinates:
 - D: lateral displacement from the route reference line.
 
 Continuous numeric fields are linearly interpolated between ordered samples.
+Cross-slope uses route-local D: negative D queries the left half, positive D
+queries the right half, and D=0 uses the average of both half-road angles.
 Surface identifiers use left-closed/right-open semantics: the surface from the
 sample at the beginning of an interval applies until the next exact sample.
 """
@@ -42,7 +44,8 @@ class RoadPhysicsSample:
     horizontal_curvature_per_m: float
     vertical_curvature_per_m: float
     road_width_m: float
-    bank_angle_rad: float
+    left_cross_slope_angle_rad: float
+    right_cross_slope_angle_rad: float
     surface_id: str
     wetness: float = 0.0
     roughness: float = 0.0
@@ -62,12 +65,16 @@ class RoadPhysicsSample:
             _finite(self.vertical_curvature_per_m, "vertical_curvature_per_m"),
         )
         object.__setattr__(self, "road_width_m", _positive(self.road_width_m, "road_width_m"))
-        bank = _finite(self.bank_angle_rad, "bank_angle_rad")
-        if not -0.5 * math.pi < bank < 0.5 * math.pi:
-            raise ValueError(
-                f"bank_angle_rad must be strictly between -pi/2 and pi/2, got {bank}"
-            )
-        object.__setattr__(self, "bank_angle_rad", bank)
+        for field_name in (
+            "left_cross_slope_angle_rad",
+            "right_cross_slope_angle_rad",
+        ):
+            angle = _finite(getattr(self, field_name), field_name)
+            if not -0.5 * math.pi < angle < 0.5 * math.pi:
+                raise ValueError(
+                    f"{field_name} must be strictly between -pi/2 and pi/2, got {angle}"
+                )
+            object.__setattr__(self, field_name, angle)
         object.__setattr__(self, "surface_id", _clean_name(self.surface_id, "surface_id"))
         object.__setattr__(self, "wetness", _closed_unit_interval(self.wetness, "wetness"))
         object.__setattr__(self, "roughness", _non_negative(self.roughness, "roughness"))
@@ -84,7 +91,9 @@ class RoadPhysicsState:
     horizontal_curvature_per_m: float
     vertical_curvature_per_m: float
     road_width_m: float
-    bank_angle_rad: float
+    left_cross_slope_angle_rad: float
+    right_cross_slope_angle_rad: float
+    cross_slope_angle_rad: float
     surface_id: str
     wetness: float
     roughness: float
@@ -108,7 +117,7 @@ class RoadPhysicsTransitionLimits:
 
     max_abs_grade_change_per_m: float
     max_abs_horizontal_curvature_change_per_m2: float
-    max_abs_bank_angle_change_rad_per_m: float
+    max_abs_cross_slope_angle_change_rad_per_m: float
 
     def __post_init__(self):
         object.__setattr__(
@@ -126,10 +135,10 @@ class RoadPhysicsTransitionLimits:
         )
         object.__setattr__(
             self,
-            "max_abs_bank_angle_change_rad_per_m",
+            "max_abs_cross_slope_angle_change_rad_per_m",
             _positive(
-                self.max_abs_bank_angle_change_rad_per_m,
-                "max_abs_bank_angle_change_rad_per_m",
+                self.max_abs_cross_slope_angle_change_rad_per_m,
+                "max_abs_cross_slope_angle_change_rad_per_m",
             ),
         )
 
@@ -231,6 +240,21 @@ class RoadPhysicsProfile:
                 f"[-{half_width}, {half_width}] at distance {distance}"
             )
 
+        left_cross_slope = lerp(
+            left.left_cross_slope_angle_rad,
+            right.left_cross_slope_angle_rad,
+        )
+        right_cross_slope = lerp(
+            left.right_cross_slope_angle_rad,
+            right.right_cross_slope_angle_rad,
+        )
+        if lateral < 0.0:
+            cross_slope = left_cross_slope
+        elif lateral > 0.0:
+            cross_slope = right_cross_slope
+        else:
+            cross_slope = 0.5 * (left_cross_slope + right_cross_slope)
+
         return RoadPhysicsState(
             distance_m=distance,
             lateral_position_m=lateral,
@@ -245,7 +269,9 @@ class RoadPhysicsProfile:
                 right.vertical_curvature_per_m,
             ),
             road_width_m=width,
-            bank_angle_rad=lerp(left.bank_angle_rad, right.bank_angle_rad),
+            left_cross_slope_angle_rad=left_cross_slope,
+            right_cross_slope_angle_rad=right_cross_slope,
+            cross_slope_angle_rad=cross_slope,
             surface_id=left.surface_id,
             wetness=lerp(left.wetness, right.wetness),
             roughness=lerp(left.roughness, right.roughness),
@@ -306,9 +332,24 @@ class RoadPhysicsProfile:
                     f"samples {index - 1} and {index}: {curvature_rate}"
                 )
 
-            bank_rate = abs(current.bank_angle_rad - previous.bank_angle_rad) / delta_s
-            if bank_rate > limits.max_abs_bank_angle_change_rad_per_m:
-                raise ValueError(
-                    f"bank angle change rate exceeds limit between samples "
-                    f"{index - 1} and {index}: {bank_rate}"
-                )
+            for side, previous_angle, current_angle in (
+                (
+                    "left",
+                    previous.left_cross_slope_angle_rad,
+                    current.left_cross_slope_angle_rad,
+                ),
+                (
+                    "right",
+                    previous.right_cross_slope_angle_rad,
+                    current.right_cross_slope_angle_rad,
+                ),
+            ):
+                cross_slope_rate = abs(current_angle - previous_angle) / delta_s
+                if (
+                    cross_slope_rate
+                    > limits.max_abs_cross_slope_angle_change_rad_per_m
+                ):
+                    raise ValueError(
+                        f"{side} cross-slope angle change rate exceeds limit between "
+                        f"samples {index - 1} and {index}: {cross_slope_rate}"
+                    )
