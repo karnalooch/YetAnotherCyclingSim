@@ -14,6 +14,11 @@ from .corner_consequence import (
     CornerGeometryConsequence,
     resolve_corner_geometry_consequence,
 )
+from .corner_technique_runtime import (
+    CompletedRouteCornerTechniqueScore,
+    CornerTechniqueRuntimeState,
+    observe_corner_technique_step,
+)
 from .corner_technique import (
     RouteCornerTechniqueObservation,
     RouteCornerTechniqueScore,
@@ -128,6 +133,9 @@ __all__ = [
     "RouteCornerTechniqueScore",
     "summarize_route_corner_technique",
     "score_route_corner_technique",
+    "CompletedRouteCornerTechniqueScore",
+    "CornerTechniqueRuntimeState",
+    "observe_corner_technique_step",
     "CORNER_DIRECTION_STRAIGHT",
     "CORNER_DIRECTION_LEFT",
     "CORNER_DIRECTION_RIGHT",
