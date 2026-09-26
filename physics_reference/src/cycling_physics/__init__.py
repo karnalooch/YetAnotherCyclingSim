@@ -1,5 +1,13 @@
 """Reference cycling physics package for the YetAnotherCyclingSim project."""
 
+from .corner_context import (
+    CORNER_DIRECTION_LEFT,
+    CORNER_DIRECTION_RIGHT,
+    CORNER_DIRECTION_STRAIGHT,
+    CornerContext,
+    CornerContextSettings,
+    corner_context_at,
+)
 from .cornering import (
     CORNER_PHASE_APEX,
     CORNER_PHASE_APPROACH,
@@ -63,6 +71,12 @@ __all__ = [
     "ALPINE_JOURNEY",
     "ALPINE_WEATHER",
     "ALPINE_CORNERS",
+    "CORNER_DIRECTION_STRAIGHT",
+    "CORNER_DIRECTION_LEFT",
+    "CORNER_DIRECTION_RIGHT",
+    "CornerContextSettings",
+    "CornerContext",
+    "corner_context_at",
     "Corner",
     "CornerProfile",
     "CORNER_PHASE_OUTSIDE",
