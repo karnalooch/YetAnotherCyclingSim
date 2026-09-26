@@ -143,8 +143,9 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
             self.assertIn(token, self.proof)
 
     def test_preflight_discovers_local_reference_ue(self):
-        self.assertIn("'D:\\Epic Games\\UE_5.8'", self.preflight)
+        self.assertIn("'D:\\Epic Games'", self.preflight)
         self.assertIn("'D:\\UE_5.8'", self.preflight)
+        self.assertIn("Get-ChildItem -LiteralPath $d -Directory", self.preflight)
 
     def test_probe_remains_small_and_hosted(self):
         probe_start = self.config.index("  windows-probe:")
