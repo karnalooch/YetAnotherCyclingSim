@@ -6,8 +6,9 @@
 //
 // Power/cadence are stored as non-negative double precision values.
 // BrakeRatio is a normalized braking command in [0, 1]. A default-constructed
-// record has every field set to zero, which is valid. Stage 4C-B1 establishes
-// the control contract; fixed-step braking force is integrated separately.
+// record has every field set to zero, which is valid. The legacy simulation
+// APIs preserve pre-braking behavior; Stage 4C-B3c consumes BrakeRatio through
+// the explicit corner-braking fixed-step orchestration path.
 struct YETANOTHERCYCLINGSIM_API FRiderInput
 {
 	// Mechanical power delivered by the rider to the drivetrain in watts (W).
@@ -19,8 +20,8 @@ struct YETANOTHERCYCLINGSIM_API FRiderInput
 	double CadenceRpm = 0.0;
 
 	// Normalized braking command. 0.0 means released, 1.0 means full
-	// requested braking. Stage 4C-B1 does not yet apply this command to the
-	// fixed-step equation of motion.
+	// requested braking. Stage 4C-B3c resolves this command into tyre-limited
+	// force when the corner-braking fixed-step path is selected.
 	double BrakeRatio = 0.0;
 
 	// Returns true when all fields satisfy the validation rules.
