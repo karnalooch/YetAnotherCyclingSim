@@ -35,15 +35,31 @@ try {
     )
 
     $materialized = [System.Collections.Generic.List[string]]::new()
+    $pointerOnly = 0
+    $lazyMissing = 0
+
     foreach ($path in $lfsPaths) {
+        # The committed Git blob is the source of truth. A blobless clone may
+        # legitimately leave the working-tree path absent until it is needed,
+        # but HEAD:path must still be a valid Git LFS pointer.
+        & git cat-file blob "HEAD:$path" | & git lfs pointer --check --stdin *> $null
+        if ($LASTEXITCODE -ne 0) {
+            throw "Committed Git blob is not a valid LFS pointer: $path"
+        }
+
         if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
-            throw "Tracked Git LFS path is missing from checkout: $path"
+            $lazyMissing += 1
+            Write-Host ("CODE-ONLY LFS LAZY: {0}" -f $path)
+            continue
         }
 
         & git lfs pointer --check "--file=$path" *> $null
-        if ($LASTEXITCODE -ne 0) {
-            [void]$materialized.Add($path)
+        if ($LASTEXITCODE -eq 0) {
+            $pointerOnly += 1
+            continue
         }
+
+        [void]$materialized.Add($path)
     }
 
     if ($materialized.Count -gt 0) {
@@ -56,8 +72,10 @@ try {
     }
 
     Write-Host (
-        "CODE-ONLY CHECKOUT PASS: {0} Git LFS path(s) remain pointer-only." -f
-        $lfsPaths.Count
+        "CODE-ONLY CHECKOUT PASS: tracked={0}; pointerOnly={1}; lazyMissing={2}; materialized=0." -f
+        $lfsPaths.Count,
+        $pointerOnly,
+        $lazyMissing
     ) -ForegroundColor Green
 } finally {
     Pop-Location
