@@ -56,7 +56,8 @@ canary work have a reviewed contract to run.
 
 ## Phase 1 — manual trusted runner
 
-**Do now.**
+**Current status:** generic runner/build/fail-closed canary proven; Stage 3G authoring
+and final proof remain.
 
 ### 1. Prepare the home PC
 
@@ -105,6 +106,25 @@ Pass criteria:
 - zero-test discovery fails closed;
 - proof summary is uploaded as an Actions artifact;
 - workspace is clean after the run.
+
+### Proven generic runner baseline — 2026-09-26
+
+Canonical proof:
+
+- workflow run: `36240146312`;
+- exact main SHA: `9826b0f82d2a895a0a5d6fbf358aac162e199aa5`;
+- runner: `yacs-home-ue58`, label `yacs-ue58`;
+- runner root: `D:\actions-runner-yacs`;
+- Unreal Engine: `5.8.2`;
+- normal code-only canary: **13 discovered / 13 passed / 0 failed / 0 errors**;
+- intentional-red: expected failure with **0 discovered tests**, verified fail-closed;
+- concise proof artifact uploaded successfully;
+- workspace cleanup passed.
+
+The final successful proof used the resource-conservative self-hosted UBT profile
+(UBA disabled, two parallel actions) after an earlier run exposed Windows commit/pagefile
+pressure. The temporary one-shot workflow and sentinel are retired after this proof.
+Permanent diagnostics continue through `Manual Unreal proof`.
 
 ### 4. Canary B — Stage 3G authoring
 
@@ -163,15 +183,15 @@ the repository in a broken state.
 
 Phase 1 is complete when all of the following are true:
 
-- [ ] repository-scoped runner registered and online with `yacs-ue58`;
-- [ ] manual `workflow_dispatch` is merged to the default branch and visible in Actions;
-- [ ] exact-SHA checkout verification proven;
-- [ ] real UE build + Automation canary green;
+- [x] repository-scoped runner registered and online with `yacs-ue58`;
+- [x] manual `workflow_dispatch` is merged to the default branch and visible in Actions;
+- [x] exact-SHA checkout verification proven;
+- [x] real UE build + Automation canary green;
 - [ ] Stage 3G authoring canary produces reviewable artifacts;
 - [ ] Stage 3G final proof green on an exact committed SHA;
-- [ ] intentional-red canary fails as expected;
-- [ ] no repository write credential was needed by the runner;
-- [ ] workspace cleanup verified after success and failure.
+- [x] intentional-red canary fails as expected;
+- [x] no repository write credential was needed by the runner;
+- [x] workspace cleanup verified after success and failure.
 
 ## Phase 2 — trusted automatic execution
 
