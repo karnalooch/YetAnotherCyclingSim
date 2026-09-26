@@ -265,6 +265,12 @@ bool FStage4CCornerGripDemandValidationTest::RunTest(const FString& Parameters)
 			Demand,
 			Error));
 
+	FCornerContext Approach = Context;
+	Approach.Phase = CyclingCornering::ECornerPhase::Approach;
+	TestFalse(TEXT("approach look-ahead is not current lateral demand"),
+		TryCalculateCornerGripDemand(
+			Approach, Limit, 10.0, 0.2, Demand, Error));
+
 	CyclingCornerLimit::FCornerLateralLimit WrongSurface = Limit;
 	WrongSurface.SurfaceId = TEXT("paint");
 	TestFalse(TEXT("surface mismatch rejected"),
