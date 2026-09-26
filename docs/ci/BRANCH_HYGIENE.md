@@ -7,13 +7,17 @@ The cleanup is intentionally conservative. A branch is eligible only when:
 
 - it is not the default branch;
 - it has no open same-repository pull request;
-- GitHub history contains a merged same-repository pull request for that branch;
-- and either:
-  - the current branch tip exactly matches a merged PR head (covers squash
-    merges), or
-  - the current branch tip is already contained in `main`.
+- it is not the base of an open pull request;
+- and one of these proofs holds:
+  - the current branch tip exactly matches a merged PR head (covers squash merges);
+  - the current branch tip is already contained in `main` and the branch has a
+    merged PR history;
+  - a closed-unmerged same-repository PR contains the exact marker
+    `<!-- yacs-branch-hygiene:delete-head-safe -->` and the current branch tip
+    still exactly matches that PR head SHA.
 
-A branch that was reused and contains newer work is preserved.
+The explicit marker is intended for superseded/abandoned PRs. If the branch was
+reused and its tip changed after the PR closed, it is preserved.
 
 The workflow runs after pushes to `main`, which includes normal PR merges, and
 can also be run manually in dry-run mode.
