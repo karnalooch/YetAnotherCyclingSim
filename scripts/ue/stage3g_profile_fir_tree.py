@@ -1,6 +1,6 @@
-"""Profile the curated Stage 3G R2 Fir Tree 01 source asset in Unreal.
+"""Profile a curated Stage 3G R2 conifer source asset in Unreal.
 
-The source cache remains outside Git. This script imports every selected Fir Tree
+The source cache remains outside Git. This script imports every selected conifer
 FBX into a transient editor-only path with save=False, records mesh/LOD/material/
 Nanite/bounds metrics, and writes a JSON proof for R2 asset selection.
 
@@ -22,8 +22,8 @@ from typing import Any
 import unreal
 
 
-ASSET_ID = "fir_tree_01"
-PROFILE_ROOT = "/Game/Transient/YACS/Stage3GR2Profile/FirTree"
+ASSET_ID = os.environ.get("YACS_STAGE3G_PROFILE_ASSET_ID", "fir_tree_01").strip()
+PROFILE_ROOT = "/Game/Transient/YACS/Stage3GR2Profile/Conifer"
 
 
 def log(message: str) -> None:
@@ -194,7 +194,7 @@ def main() -> None:
     ]
     rows.sort(key=lambda row: str(row.get("relative_path", "")))
     if not rows:
-        fail("download index contains no fir_tree_01 FBX geometry")
+        fail("download index contains no {} FBX geometry".format(ASSET_ID))
 
     meshes: list[dict[str, Any]] = []
     sources: list[dict[str, Any]] = []
@@ -211,7 +211,7 @@ def main() -> None:
         meshes.extend(import_source(source, index))
 
     if not meshes:
-        fail("Fir Tree profile contains no imported meshes")
+        fail("{} profile contains no imported meshes".format(ASSET_ID))
 
     ranked = sorted(
         meshes,
@@ -261,7 +261,8 @@ def main() -> None:
         )
 
     log(
-        "SUCCESS: profiled {} FBX sources / {} meshes; lightest LOD0={} tris".format(
+        "SUCCESS: {} profiled {} FBX sources / {} meshes; lightest LOD0={} tris".format(
+            ASSET_ID,
             len(sources),
             len(meshes),
             ranked[0]["lods"][0]["triangles"],

@@ -1,0 +1,40 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+import unittest
+
+
+ROOT = Path(__file__).resolve().parents[2]
+MANIFEST = ROOT / "scripts" / "assets" / "stage3g_polyhaven.json"
+PROFILE = ROOT / "scripts" / "ue" / "stage3g_profile_fir_tree.py"
+WRAPPER = ROOT / "scripts" / "ue" / "Invoke-YacsStage3GR2FirProfile.ps1"
+WORKFLOW = ROOT / ".github" / "workflows" / "stage3g-r2-fir-profile.yml"
+
+
+class Stage3GR2ConiferFallbackContractTests(unittest.TestCase):
+    def test_fir_sapling_is_curated_but_not_preapproved(self):
+        payload = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        asset = next(item for item in payload["assets"] if item["id"] == "fir_sapling")
+        self.assertEqual(asset["stage"], "3G")
+        self.assertTrue(asset["enabled"])
+        self.assertIn("fallback", asset["role"].lower())
+        self.assertIn("profil", asset["notes"].lower())
+
+    def test_profiler_is_asset_parameterized(self):
+        profile = PROFILE.read_text(encoding="utf-8")
+        wrapper = WRAPPER.read_text(encoding="utf-8")
+        self.assertIn("YACS_STAGE3G_PROFILE_ASSET_ID", profile)
+        self.assertIn("$AssetId = 'fir_tree_01'", wrapper)
+        self.assertIn("YACS_STAGE3G_PROFILE_ASSET_ID", wrapper)
+        self.assertIn("$Profile.asset_id -ne $AssetId", wrapper)
+
+    def test_trusted_runner_profiles_fallback_before_scatter(self):
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn("fir_sapling", workflow)
+        self.assertIn("yacs-ue58", workflow)
+        self.assertIn("FirSaplingProfile", workflow)
+
+
+if __name__ == "__main__":
+    unittest.main()

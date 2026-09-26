@@ -7,6 +7,7 @@ param(
     [string] $RepoRoot = (Resolve-Path -LiteralPath (Join-Path -Path $PSScriptRoot -ChildPath '../..')).Path,
     [string] $ProjectPath,
     [string] $ArtifactRoot,
+    [string] $AssetId = 'fir_tree_01',
     [Parameter(Mandatory=$true)] [string] $ExpectedHead,
     [string] $ExpectedBranch = 'HEAD',
     [int] $TimeoutSec = 1200
@@ -44,13 +45,13 @@ if ($LASTEXITCODE -ne 0) {
 $DownloadScript = Join-Path -Path $RepoRoot -ChildPath 'scripts/assets/download_stage3g_assets.py'
 $ProfileScript = Join-Path -Path $RepoRoot -ChildPath 'scripts/ue/stage3g_profile_fir_tree.py'
 $AssetCache = Join-Path -Path $RepoRoot -ChildPath 'ExternalAssets/Stage3G/PolyHaven'
-$ProfileJson = Join-Path -Path $ArtifactRoot -ChildPath 'fir_tree_01_profile.json'
-$ProfileLog = Join-Path -Path $ArtifactRoot -ChildPath 'fir_tree_01_profile.log'
+$ProfileJson = Join-Path -Path $ArtifactRoot -ChildPath ($AssetId + '_profile.json')
+$ProfileLog = Join-Path -Path $ArtifactRoot -ChildPath ($AssetId + '_profile.log')
 
-Write-Host '[1/2] Downloading curated fir_tree_01 source set...' -ForegroundColor Cyan
-& python $DownloadScript --destination $AssetCache --asset fir_tree_01 --max-total-mib 3072
+Write-Host ("[1/2] Downloading curated {0} source set..." -f $AssetId) -ForegroundColor Cyan
+& python $DownloadScript --destination $AssetCache --asset $AssetId --max-total-mib 3072
 if ($LASTEXITCODE -ne 0) {
-    throw 'Fir Tree 01 source download failed.'
+    throw ("Conifer source download failed: {0}" -f $AssetId)
 }
 
 $IndexPath = Join-Path -Path $AssetCache -ChildPath 'download-index.json'
@@ -58,15 +59,85 @@ if (-not (Test-Path -LiteralPath $IndexPath -PathType Leaf)) {
     throw 'Fir Tree 01 download index is missing.'
 }
 $Index = Get-Content -LiteralPath $IndexPath -Raw -ErrorAction Stop | ConvertFrom-Json
-$FirRows = @($Index.files | Where-Object { $_.asset_id -eq 'fir_tree_01' })
-$FirGeometry = @($FirRows | Where-Object { $null -eq $_.map_type -and $_.relative_path -match '(?i)\.fbx$' })
-if ($FirGeometry.Count -le 0) {
-    throw 'Fir Tree 01 download index contains no FBX geometry.'
+$ConiferRows = @($Index.files | Where-Object { $_.asset_id -eq $AssetId })
+$ConiferGeometry = @($ConiferRows | Where-Object { $null -eq $_.map_type -and $_.relative_path -match '(?i)\.fbx
+try {
+    $Arguments = @(
+        $ProjectPath
+        '-run=PythonScript'
+        ('-script="' + $ProfileScript + '"')
+        '-Unattended'
+        '-NoPause'
+        '-NullRHI'
+        '-NoSplash'
+        '-NoP4'
+        '-log'
+    )
+    $ErrPath = $ProfileLog + '.stderr'
+    $Proc = Start-Process -FilePath $Context.UnrealEditorCmdPath -ArgumentList $Arguments -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $ProfileLog -RedirectStandardError $ErrPath
+    if (-not $Proc.WaitForExit($TimeoutSec * 1000)) {
+        try { $Proc | Stop-Process -Force } catch { }
+        throw "Fir Tree 01 profiling timed out; see $ProfileLog"
+    }
+    if ($Proc.ExitCode -ne 0) {
+        throw "Fir Tree 01 profiling failed with exit code $($Proc.ExitCode); see $ProfileLog"
+    }
+}
+finally {
+    Remove-Item Env:YACS_STAGE3G_ASSET_CACHE -ErrorAction SilentlyContinue
+    Remove-Item Env:YACS_STAGE3G_FIR_PROFILE -ErrorAction SilentlyContinue
+    Remove-Item Env:YACS_STAGE3G_PROFILE_ASSET_ID -ErrorAction SilentlyContinue
 }
 
-Write-Host '[2/2] Profiling Fir Tree 01 meshes in Unreal...' -ForegroundColor Cyan
+if (-not (Test-Path -LiteralPath $ProfileJson -PathType Leaf)) {
+    throw 'Fir Tree 01 profiling proof JSON is missing.'
+}
+$Profile = Get-Content -LiteralPath $ProfileJson -Raw -ErrorAction Stop | ConvertFrom-Json
+if ($Profile.stage3g_r2_fir_profile -ne 'success') {
+    throw ("Conifer profiling did not report success: {0}" -f $AssetId)
+}
+if ($Profile.asset_id -ne $AssetId) {
+    throw ("Conifer profile asset mismatch: expected {0}, got {1}" -f $AssetId, $Profile.asset_id)
+}
+if ([int]$Profile.source_fbx_count -le 0 -or [int]$Profile.mesh_count -le 0) {
+    throw ("Conifer profiling returned no source FBX or mesh records: {0}" -f $AssetId)
+}
+$TotalTriangles = 0
+foreach ($Mesh in @($Profile.meshes)) {
+    if (@($Mesh.lods).Count -le 0) {
+        throw "Profiled mesh '$($Mesh.mesh_name)' has no LOD records."
+    }
+    $TotalTriangles += [int]$Mesh.lods[0].triangles
+}
+if ($TotalTriangles -le 0) {
+    throw ("Conifer profiling returned zero total LOD0 triangles: {0}" -f $AssetId)
+}
+
+Push-Location -LiteralPath $RepoRoot
+try {
+    $Dirty = @(git status --porcelain=v1 --untracked-files=all)
+}
+finally {
+    Pop-Location
+}
+if ($Dirty.Count -gt 0) {
+    throw ("Fir Tree profiling mutated repository source paths: {0}" -f ($Dirty -join '; '))
+}
+
+Write-Host ("CONIFER PROFILE OK: asset={0} sources={1} meshes={2} total_lod0_triangles={3}" -f $AssetId, $Profile.source_fbx_count, $Profile.mesh_count, $TotalTriangles) -ForegroundColor Green
+foreach ($Candidate in @($Profile.ranking_by_lod0_triangles | Select-Object -First 8)) {
+    Write-Host ("  candidate={0} lod0={1} lods={2} height_cm={3:N1}" -f $Candidate.mesh_name, $Candidate.lod0_triangles, $Candidate.lod_count, $Candidate.height_cm) -ForegroundColor DarkGreen
+}
+exit 0
+ })
+if ($ConiferGeometry.Count -le 0) {
+    throw ("Conifer download index contains no FBX geometry: {0}" -f $AssetId)
+}
+
+Write-Host ("[2/2] Profiling {0} meshes in Unreal..." -f $AssetId) -ForegroundColor Cyan
 $env:YACS_STAGE3G_ASSET_CACHE = $AssetCache
 $env:YACS_STAGE3G_FIR_PROFILE = $ProfileJson
+$env:YACS_STAGE3G_PROFILE_ASSET_ID = $AssetId
 try {
     $Arguments = @(
         $ProjectPath

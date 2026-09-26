@@ -21,7 +21,12 @@
       "role": "valley meadow ground material",
       "stage": "3G",
       "enabled": true,
-      "maps": ["diffuse", "normal_dx", "roughness", "displacement"],
+      "maps": [
+        "diffuse",
+        "normal_dx",
+        "roughness",
+        "displacement"
+      ],
       "web_url": "https://polyhaven.com/a/sparse_grass",
       "notes": "Baseline meadow/valley ground. Use as a layer, not a full vegetation solution."
     },
@@ -32,7 +37,12 @@
       "role": "forest floor material",
       "stage": "3G",
       "enabled": true,
-      "maps": ["diffuse", "normal_dx", "roughness", "displacement"],
+      "maps": [
+        "diffuse",
+        "normal_dx",
+        "roughness",
+        "displacement"
+      ],
       "web_url": "https://polyhaven.com/a/forrest_ground_03",
       "notes": "Pine-needle forest floor for the forest sector. Asset ID intentionally uses Poly Haven's 'forrest' spelling."
     },
@@ -43,7 +53,12 @@
       "role": "high-Alpine rocky ground material",
       "stage": "3G",
       "enabled": true,
-      "maps": ["diffuse", "normal_dx", "roughness", "displacement"],
+      "maps": [
+        "diffuse",
+        "normal_dx",
+        "roughness",
+        "displacement"
+      ],
       "web_url": "https://polyhaven.com/a/rocky_terrain",
       "notes": "Baseline high-Alpine terrain layer."
     },
@@ -54,7 +69,11 @@
       "role": "roadside cliff / exposed rock face",
       "stage": "3G",
       "enabled": true,
-      "maps": ["diffuse", "normal_dx", "roughness"],
+      "maps": [
+        "diffuse",
+        "normal_dx",
+        "roughness"
+      ],
       "web_url": "https://polyhaven.com/a/rock_face_01",
       "notes": "Use sparingly for readable roadside cliff forms; benchmark before repeated placement."
     },
@@ -65,7 +84,11 @@
       "role": "roadside boulder / sparse rock dressing",
       "stage": "3G",
       "enabled": true,
-      "maps": ["diffuse", "normal_dx", "roughness"],
+      "maps": [
+        "diffuse",
+        "normal_dx",
+        "roughness"
+      ],
       "web_url": "https://polyhaven.com/a/boulder_01",
       "notes": "Sparse near/mid-ground dressing; prefer instancing when repeated."
     },
@@ -76,7 +99,11 @@
       "role": "mid-ground rocky mountain mass",
       "stage": "3G",
       "enabled": true,
-      "maps": ["diffuse", "normal_dx", "roughness"],
+      "maps": [
+        "diffuse",
+        "normal_dx",
+        "roughness"
+      ],
       "web_url": "https://polyhaven.com/a/mountainside",
       "notes": "Candidate for mid-ground mountain layering. Distant silhouettes may still use cheaper authored geometry."
     },
@@ -87,9 +114,32 @@
       "role": "conifer forest baseline",
       "stage": "3G",
       "enabled": true,
-      "maps": ["diffuse", "normal_dx", "roughness", "alpha", "mask"],
+      "maps": [
+        "diffuse",
+        "normal_dx",
+        "roughness",
+        "alpha",
+        "mask"
+      ],
       "web_url": "https://polyhaven.com/a/fir_tree_01",
-      "notes": "Contains multiple fir variants and LODs. Never scatter full-detail geometry broadly without profiling."
+      "notes": "Hero / sparse near-ground conifer candidate for R2. The 2K FBX imports all A/B/C variants and exceeded the trusted runner's practical memory budget during broad-scatter LOD reduction; do not use it as the mass-forest mesh without a later source-isolation proof."
+    },
+    {
+      "id": "fir_sapling",
+      "name": "Fir Sapling",
+      "kind": "model",
+      "role": "R2 lightweight conifer fallback / forest mass-scatter candidate",
+      "stage": "3G",
+      "enabled": true,
+      "maps": [
+        "diffuse",
+        "normal_dx",
+        "roughness",
+        "alpha",
+        "mask"
+      ],
+      "web_url": "https://polyhaven.com/a/fir_sapling",
+      "notes": "Fallback candidate selected after fir_tree_01 reduction profiling exposed excessive whole-FBX import memory pressure. Must pass trusted UE mesh/LOD/bounds profiling before any persistent import or PCG scatter."
     },
     {
       "id": "grass_medium_01",
@@ -98,7 +148,13 @@
       "role": "meadow ground-cover clump",
       "stage": "3G",
       "enabled": true,
-      "maps": ["diffuse", "normal_dx", "roughness", "alpha", "mask"],
+      "maps": [
+        "diffuse",
+        "normal_dx",
+        "roughness",
+        "alpha",
+        "mask"
+      ],
       "web_url": "https://polyhaven.com/a/grass_medium_01",
       "notes": "Use controlled instancing and LODs; not intended for unbounded dense scatter."
     }

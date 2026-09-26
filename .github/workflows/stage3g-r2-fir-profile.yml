@@ -1,4 +1,4 @@
-name: Stage 3G R2 Fir Tree profile
+name: Stage 3G R2 Conifer profile
 
 on:
   push:
@@ -62,23 +62,24 @@ jobs:
             throw 'Stage 3G R2 profiling checkout is dirty before profiling.'
           }
 
-      - name: Profile fir_tree_01 in UE 5.8
+      - name: Profile fir_sapling fallback in UE 5.8
         shell: pwsh
         run: |
           ./scripts/ue/Invoke-YacsStage3GR2FirProfile.ps1 `
+            -AssetId 'fir_sapling' `
             -ExpectedBranch HEAD `
             -ExpectedHead '${{ github.sha }}' `
-            -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR2/FirProfile'
+            -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR2/FirSaplingProfile'
 
       - name: Upload R2 fir profile
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: stage3g-r2-fir-profile-${{ github.run_id }}-${{ github.run_attempt }}
+          name: stage3g-r2-conifer-profile-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            Saved/RuntimeProof/CI/Stage3GR2/FirProfile/**/*.json
-            Saved/RuntimeProof/CI/Stage3GR2/FirProfile/**/*.txt
-            Saved/RuntimeProof/CI/Stage3GR2/FirProfile/**/*.log
+            Saved/RuntimeProof/CI/Stage3GR2/FirSaplingProfile/**/*.json
+            Saved/RuntimeProof/CI/Stage3GR2/FirSaplingProfile/**/*.txt
+            Saved/RuntimeProof/CI/Stage3GR2/FirSaplingProfile/**/*.log
           if-no-files-found: error
           retention-days: 7
 
@@ -92,4 +93,4 @@ jobs:
           if (git status --porcelain) {
             throw 'Stage 3G R2 profiling workspace is still dirty after cleanup.'
           }
-          Write-Host 'Stage 3G R2 fir profile cleanup: PASS'
+          Write-Host 'Stage 3G R2 conifer profile cleanup: PASS'
