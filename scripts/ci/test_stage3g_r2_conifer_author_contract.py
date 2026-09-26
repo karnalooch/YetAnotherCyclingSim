@@ -27,6 +27,9 @@ class Stage3GR2ConiferAuthorContractTests(unittest.TestCase):
 
     def test_full_editor_mode_is_required_for_mesh_reduction(self):
         wrapper = WRAPPER.read_text(encoding="utf-8")
+        self.assertIn("Invoke-YacsUnrealCi.ps1", wrapper)
+        self.assertIn("CyclingStage3World", wrapper)
+        self.assertIn("pre-authoring build/Automation canary failed", wrapper)
         self.assertIn("-ExecutePythonScript=", wrapper)
         self.assertNotIn("-run=PythonScript", wrapper)
         self.assertIn("-ddc=noshared", wrapper)

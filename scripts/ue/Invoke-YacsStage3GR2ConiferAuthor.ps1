@@ -28,6 +28,16 @@ if (-not [System.IO.Path]::IsPathRooted($ArtifactRoot)) {
 New-Item -ItemType Directory -Path $ArtifactRoot -Force | Out-Null
 $ArtifactRoot = (Resolve-Path -LiteralPath $ArtifactRoot).Path
 
+# The trusted runner is deliberately cleaned after every job. Build the exact
+# revision before editor authoring so Unreal does not fall back to on-demand
+# project/platform discovery when Binaries/Intermediate are absent.
+$CiEntry = Join-Path -Path $RepoRoot -ChildPath 'scripts/ci/Invoke-YacsUnrealCi.ps1'
+$CanaryRoot = Join-Path -Path $ArtifactRoot -ChildPath 'Canary'
+& $CiEntry -RepoRoot $RepoRoot -ProjectPath $ProjectPath -ArtifactRoot $CanaryRoot -ExpectedBranch $ExpectedBranch -ExpectedHead $ExpectedHead -TestFilter 'CyclingStage3World'
+if ($LASTEXITCODE -ne 0) {
+    throw 'Stage 3G R2 conifer pre-authoring build/Automation canary failed.'
+}
+
 $Preflight = Join-Path -Path $RepoRoot -ChildPath 'scripts/ue/Preflight-YacsProof.ps1'
 $Context = & $Preflight -RepoRoot $RepoRoot -ProjectPath $ProjectPath -ArtifactRoot $ArtifactRoot -ExpectedBranch $ExpectedBranch -ExpectedHead $ExpectedHead
 if ($LASTEXITCODE -ne 0) { throw 'Stage 3G R2 conifer authoring preflight failed.' }
