@@ -31,6 +31,7 @@
 //   - environment air density in kilograms per cubic metre (kg/m^3);
 //   - power in watts (W);
 //   - cadence in revolutions per minute (rpm);
+//   - brake ratio as a normalized [0, 1] command;
 //   - simulation speed in metres per second (m/s);
 //   - simulation distance in metres (m);
 //   - time in seconds (s).
@@ -148,6 +149,11 @@ namespace CyclingSimulation
 		// Delegates to the configured rider input controller. Returns
 		// false (with a useful error) if the session is unconfigured.
 		bool TrySetCadenceRpm(double ValueRpm, FString& OutError);
+
+		// Sets normalized braking command through the rider input controller.
+		// Finite values are clamped to [0, 1]. Stage 4C-B1 exposes the command
+		// but the fixed-step braking force is integrated in the follow-up.
+		bool TrySetBrakeRatio(double Value, FString& OutError);
 
 		// Increases the current power by the configured PowerStepW,
 		// clamping at MaxPowerW. Returns false (with a useful error) if the
