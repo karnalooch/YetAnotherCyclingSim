@@ -118,7 +118,10 @@ class Environment:
 class RiderInput:
     """Rider control input for one simulation step.
 
-    Both fields are stored as floats and must be finite and non-negative.
+    Power and cadence are finite and non-negative. brake_ratio is a normalized
+    rider braking command in [0, 1]. Stage 4C-B1 establishes the input
+    contract only; step_simulation intentionally ignores brake_ratio until
+    the follow-up fixed-step braking force integration.
     """
 
     power_w: float
@@ -127,9 +130,13 @@ class RiderInput:
     cadence_rpm: float
     """Pedalling cadence in revolutions per minute (rpm). Must not be negative; zero is allowed."""
 
+    brake_ratio: float = 0.0
+    """Normalized braking command: 0.0 released, 1.0 full requested braking. Must be in [0, 1]."""
+
     def __post_init__(self):
         object.__setattr__(self, "power_w", _non_negative(self.power_w, "power_w"))
         object.__setattr__(self, "cadence_rpm", _non_negative(self.cadence_rpm, "cadence_rpm"))
+        object.__setattr__(self, "brake_ratio", _closed_unit_interval(self.brake_ratio, "brake_ratio"))
 
 
 @dataclass(frozen=True, slots=True)
@@ -276,6 +283,9 @@ def step_simulation(
 
     cadence_rpm is part of the rider input but does not yet affect the
     equation of motion directly; no cadence-power dependency is assumed.
+    brake_ratio is validated by RiderInput but Stage 4C-B1 deliberately does
+    not apply braking force yet; zero remains the default for exact regression
+    parity while the fixed-step braking integration is developed separately.
 
     The input state is not modified; a new immutable SimulationState is
     returned.
