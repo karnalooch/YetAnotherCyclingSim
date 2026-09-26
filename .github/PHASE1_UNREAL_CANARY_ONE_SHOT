@@ -1,0 +1,6 @@
+mode=phase1-unreal-validation
+scope=single-main-push
+restore_required=true
+runner=yacs-ue58
+normal_canary=true
+intentional_red=true

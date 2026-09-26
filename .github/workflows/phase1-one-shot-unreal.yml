@@ -1,0 +1,137 @@
+name: Phase 1 one-shot Unreal validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/PHASE1_UNREAL_CANARY_ONE_SHOT"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yacs-phase1-one-shot-unreal-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Green + intentional-red on yacs-ue58
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    env:
+      GIT_LFS_SKIP_SMUDGE: "1"
+
+    steps:
+      - name: Require trusted main one-shot
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ('${{ github.ref }}' -ne 'refs/heads/main') {
+            throw "Phase 1 one-shot must run on main; actual ref is '${{ github.ref }}'."
+          }
+
+      - name: Checkout exact main revision without LFS payloads
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          lfs: false
+          clean: true
+          persist-credentials: false
+
+      - name: Verify one-shot sentinel and code-only checkout
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $actual = (git rev-parse HEAD).Trim()
+          if ($actual -ne '${{ github.sha }}') {
+            throw "checkout HEAD '$actual' != workflow SHA '${{ github.sha }}'."
+          }
+
+          $sentinel = '.github/PHASE1_UNREAL_CANARY_ONE_SHOT'
+          if (-not (Test-Path -LiteralPath $sentinel -PathType Leaf)) {
+            throw 'One-shot sentinel is missing.'
+          }
+          $text = Get-Content -LiteralPath $sentinel -Raw
+          foreach ($token in @(
+            'scope=single-main-push',
+            'restore_required=true',
+            'runner=yacs-ue58'
+          )) {
+            if ($text -notmatch [regex]::Escape($token)) {
+              throw "One-shot sentinel missing required token: $token"
+            }
+          }
+
+          ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+
+      - name: Normal green Unreal canary
+        shell: pwsh
+        env:
+          TARGET_SHA: ${{ github.sha }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ci/Invoke-YacsUnrealCi.ps1             -ExpectedHead $env:TARGET_SHA             -ArtifactRoot 'Saved/RuntimeProof/CI/Phase1/Green'
+
+      - name: Intentional-red must fail closed without rebuilding
+        shell: pwsh
+        env:
+          TARGET_SHA: ${{ github.sha }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = 'Saved/RuntimeProof/CI/Phase1/IntentionalRed'
+
+          & pwsh -NoProfile -File ./scripts/ci/Invoke-YacsUnrealCi.ps1             -ExpectedHead $env:TARGET_SHA             -ArtifactRoot $root             -TestFilter 'CyclingDefinitelyDoesNotExist'             -SkipBuild
+          $exit = $LASTEXITCODE
+
+          if ($exit -eq 0) {
+            throw 'Intentional-red proof unexpectedly passed.'
+          }
+
+          $summaryPath = Join-Path $root 'Proof/summary.json'
+          if (-not (Test-Path -LiteralPath $summaryPath -PathType Leaf)) {
+            throw "Intentional-red summary missing: $summaryPath"
+          }
+          $summary = Get-Content -LiteralPath $summaryPath -Raw | ConvertFrom-Json
+          if ([int]$summary.Discovered -ne 0) {
+            throw "Intentional-red expected zero discovered tests; got $($summary.Discovered)."
+          }
+
+          $verified = [ordered]@{
+            TimestampUtc = (Get-Date).ToUniversalTime().ToString('o')
+            ExpectedFailureExitCode = $exit
+            Discovered = [int]$summary.Discovered
+            Head = $env:TARGET_SHA
+            Result = 'fail-closed-verified'
+          }
+          $verified | ConvertTo-Json -Depth 3 |
+            Set-Content -LiteralPath (Join-Path $root 'intentional_red_verified.json') -Encoding UTF8
+
+          Write-Host "INTENTIONAL-RED VERIFIED: exit=$exit discovered=0" -ForegroundColor Green
+
+      - name: Upload Phase 1 proof
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: phase1-unreal-proof-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            Saved/RuntimeProof/CI/Phase1/**/*.json
+            Saved/RuntimeProof/CI/Phase1/**/*.txt
+            Saved/RuntimeProof/CI/Phase1/**/*.log
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Clean self-hosted workspace
+        if: ${{ always() }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git reset --hard
+          git clean -ffdx
+          if (git status --porcelain) {
+            throw 'Phase 1 runner workspace is still dirty after cleanup.'
+          }
+          Write-Host 'Phase 1 workspace cleanup: PASS'
