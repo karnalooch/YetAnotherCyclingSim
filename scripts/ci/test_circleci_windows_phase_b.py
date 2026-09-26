@@ -9,6 +9,7 @@ CONFIG = ROOT / ".circleci" / "config.yml"
 PACKER = ROOT / "scripts" / "ci" / "Prepare-YacsUe58Seed.ps1"
 RESTORE = ROOT / "scripts" / "ci" / "Restore-YacsUe58Seed.ps1"
 VALIDATOR = ROOT / "scripts" / "ci" / "Test-YacsUe58SeedPayload.ps1"
+PREFLIGHT = ROOT / "scripts" / "ue" / "Preflight-YacsProof.ps1"
 
 
 class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
@@ -18,6 +19,7 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
         cls.packer = PACKER.read_text(encoding="utf-8")
         cls.restore = RESTORE.read_text(encoding="utf-8")
         cls.validator = VALIDATOR.read_text(encoding="utf-8")
+        cls.preflight = PREFLIGHT.read_text(encoding="utf-8")
 
     def test_expensive_phase_b_paths_are_disabled_by_default(self):
         for parameter in ("ue_cache_seed:", "ue_canary:"):
@@ -219,6 +221,18 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
         self.assertIn(
             "-SeedRoot 'C:\\YacsUe58Seed'",
             self.config,
+        )
+
+    def test_hosted_preflight_accepts_direct_restored_engine_root(self):
+        self.assertIn("'C:\\UE_5.8'", self.preflight)
+        direct_check = "Test-Path -LiteralPath $directUat -PathType Leaf"
+        child_scan = "Get-ChildItem -LiteralPath $d -Directory"
+        self.assertIn(direct_check, self.preflight)
+        self.assertIn(
+            "$EngineRoot = (Resolve-Path -LiteralPath $d).Path", self.preflight
+        )
+        self.assertLess(
+            self.preflight.index(direct_check), self.preflight.index(child_scan)
         )
 
     def test_restore_hash_is_powershell_version_independent(self):

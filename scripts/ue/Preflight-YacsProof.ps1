@@ -179,6 +179,17 @@ $SearchDirs = @(
 $EngineRoot = $null
 foreach ($d in $SearchDirs) {
     if (-not (Test-Path -LiteralPath $d)) { continue }
+
+    # SearchDirs may contain either a parent directory (for example
+    # C:\Program Files\Epic Games) or an engine root itself (the hosted
+    # CircleCI restore target is C:\UE_5.8). Accept a direct engine root
+    # before enumerating child UE_* directories.
+    $directUat = Join-Path -Path $d -ChildPath 'Engine/Build/BatchFiles/RunUAT.bat'
+    if (Test-Path -LiteralPath $directUat -PathType Leaf) {
+        $EngineRoot = (Resolve-Path -LiteralPath $d).Path
+        break
+    }
+
     $candidates = Get-ChildItem -LiteralPath $d -Directory -ErrorAction SilentlyContinue |
         Where-Object { $_.Name -match '^(UE_[0-9]+\.[0-9]+|UE_[0-9]+|UnrealEngine)$' }
     foreach ($c in $candidates) {
