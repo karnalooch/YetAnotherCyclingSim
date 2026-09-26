@@ -48,7 +48,8 @@ jobs:
           foreach ($script in @(
             'scripts/ci/Prepare-YacsUe58Seed.ps1',
             'scripts/ci/Restore-YacsUe58Seed.ps1',
-            'scripts/ci/Test-YacsCodeOnlyCheckout.ps1'
+            'scripts/ci/Test-YacsCodeOnlyCheckout.ps1',
+            'scripts/ue/Invoke-YacsPackageProof.ps1'
           )) {
             $tokens = $null
             $errors = $null
@@ -83,6 +84,9 @@ jobs:
 
       - name: Run asset/full workflow contract tests
         run: python scripts/ci/test_asset_full_workflow.py
+
+      - name: Run package proof contract tests
+        run: python scripts/ci/test_package_proof_contract.py
 
       - name: Run Project automation unit tests
         run: python scripts/ci/test_project_automation.py
