@@ -30,6 +30,9 @@ if (-not $ArtifactRoot) {
     $ArtifactRoot = Join-Path -Path $RepoRoot -ChildPath 'Saved/RuntimeProof/Issue80/Stage3G/Authoring'
 }
 New-Item -ItemType Directory -Path $ArtifactRoot -Force | Out-Null
+# Unreal Python commandlets do not guarantee the repository as their process cwd.
+# Canonicalize the proof root before passing any paths through the environment.
+$ArtifactRoot = (Resolve-Path -LiteralPath $ArtifactRoot).Path
 
 $Preflight = Join-Path -Path $RepoRoot -ChildPath 'scripts/ue/Preflight-YacsProof.ps1'
 $Context = & $Preflight -RepoRoot $RepoRoot -ProjectPath $ProjectPath -ArtifactRoot $ArtifactRoot -ExpectedBranch $ExpectedBranch -ExpectedHead $ExpectedHead
