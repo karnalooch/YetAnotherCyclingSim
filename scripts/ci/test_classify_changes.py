@@ -15,6 +15,7 @@ class ChangeClassifierTests(unittest.TestCase):
         self.assertFalse(result.assets)
         self.assertFalse(result.ue_code)
         self.assertFalse(result.security_base)
+        self.assertFalse(result.asset_full)
 
     def test_python_change_routes_python_security_only(self):
         result = cc.classify_paths(["physics_reference/src/cycling_physics/model.py"])
@@ -64,6 +65,23 @@ class ChangeClassifierTests(unittest.TestCase):
         self.assertFalse(result.python)
         self.assertFalse(result.ue_code)
         self.assertFalse(result.security_base)
+        self.assertTrue(result.asset_full)
+
+    def test_regular_asset_does_not_force_full_unreal(self):
+        result = cc.classify_paths(["Content/Prototype/Routes/BP_StraightTestRoute.uasset"])
+        self.assertTrue(result.assets)
+        self.assertTrue(result.asset_only)
+        self.assertFalse(result.asset_full)
+
+    def test_stage3g_source_and_tooling_force_full_validation(self):
+        for path in (
+            "Source/YetAnotherCyclingSim/Private/Cycling/Stage3PrototypeTerrainActor.cpp",
+            "scripts/ue/Invoke-YacsStage3GAuthoring.ps1",
+            "worldgen/specs/stage3g_alpine_reference.worldspec.yml",
+            ".github/workflows/reusable-stage3g-full.yml",
+        ):
+            with self.subTest(path=path):
+                self.assertTrue(cc.classify_paths([path]).asset_full)
 
     def test_code_plus_assets_routes_both(self):
         result = cc.classify_paths(
@@ -122,6 +140,7 @@ class ChangeClassifierTests(unittest.TestCase):
         self.assertFalse(result.assets)
         self.assertTrue(result.ci)
         self.assertFalse(result.ue_code)
+        self.assertFalse(result.asset_full)
 
 
 if __name__ == "__main__":
