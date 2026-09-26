@@ -19,6 +19,20 @@ class Stage3GR2FirReductionContractTests(unittest.TestCase):
         self.assertIn("library.set_lods(mesh, options)", source)
         self.assertIn('"reduction_backend": reduction_backend', source)
 
+    def test_multi_variant_source_is_isolated_before_reduction(self):
+        source = SCRIPT.read_text(encoding="utf-8")
+        self.assertIn('staging = "{}/Import".format(profile_root)', source)
+        self.assertIn(
+            "unreal.EditorAssetLibrary.duplicate_asset(",
+            source,
+        )
+        self.assertIn(
+            "unreal.EditorAssetLibrary.delete_directory(staging)",
+            source,
+        )
+        self.assertIn("unreal.collect_garbage()", source)
+        self.assertIn("isolated Fir Tree C mesh", source)
+
     def test_fallback_does_not_change_profile_definitions(self):
         source = SCRIPT.read_text(encoding="utf-8")
         self.assertIn('"conservative": [', source)
