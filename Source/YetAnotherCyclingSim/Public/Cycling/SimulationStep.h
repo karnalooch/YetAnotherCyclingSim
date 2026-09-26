@@ -30,4 +30,21 @@ namespace CyclingSimulation
 		double DtS,
 		FSimulationState& OutState,
 		FString& OutError);
+
+	// Stage 4C-B3b explicit-force variant. BrakeForceN is a non-negative
+	// longitudinal tyre force resolved by the braking domain. It is added to
+	// ordinary resistance in both predictor and work estimation.
+	//
+	// RiderInput.BrakeRatio is not converted to force here; this low-level
+	// integrator cannot invent tyre/brake parameters. TryStepSimulation
+	// delegates here with exactly 0 N for backwards-compatible physics.
+	YETANOTHERCYCLINGSIM_API bool TryStepSimulationWithBrakeForce(
+		const FRiderParameters& Rider,
+		const FEnvironment& Environment,
+		const FRiderInput& RiderInput,
+		const FSimulationState& State,
+		double DtS,
+		double BrakeForceN,
+		FSimulationState& OutState,
+		FString& OutError);
 }
