@@ -157,6 +157,20 @@ namespace CyclingSimulation
 			bool& bOutStoppedAfterStep,
 			FString& OutError);
 
+		// Completed route-corner technique scores collected by the authoritative
+		// Stage 4C fixed-step path. Presentation/HUD policy is intentionally
+		// outside the session.
+		const TArray<CyclingCornerTechniqueRuntime::FCompletedRouteCornerTechniqueScore>&
+			GetCompletedCornerTechniqueScores() const
+		{
+			return Runner.GetCompletedCornerTechniqueScores();
+		}
+
+		int32 GetSkippedCornerTechniqueEpisodeCount() const
+		{
+			return Runner.GetSkippedCornerTechniqueEpisodeCount();
+		}
+
 		// Sets the current power in watts (W). Delegates to the configured
 		// rider input controller. Returns false (with a useful error and
 		// without changing the current input) if the session is
