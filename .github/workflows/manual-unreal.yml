@@ -96,7 +96,26 @@ jobs:
           Write-Host "Trusted target: $env:TARGET_BRANCH @ $resolvedSha"
           Write-Host "Mode: $env:MODE"
 
-      - name: Checkout exact trusted revision with LFS
+      - name: Checkout exact trusted revision without LFS payloads
+        if: ${{ inputs.mode == 'canary' || inputs.mode == 'intentional-red' }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        env:
+          GIT_LFS_SKIP_SMUDGE: "1"
+        with:
+          ref: ${{ steps.trust.outputs.sha }}
+          fetch-depth: 0
+          lfs: false
+          clean: true
+          persist-credentials: false
+
+      - name: Enforce code-only checkout
+        if: ${{ inputs.mode == 'canary' || inputs.mode == 'intentional-red' }}
+        shell: pwsh
+        run: |
+          ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+
+      - name: Checkout exact trusted revision with full LFS
+        if: ${{ inputs.mode == 'stage3g-author' || inputs.mode == 'stage3g-proof' }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ steps.trust.outputs.sha }}
@@ -120,7 +139,18 @@ jobs:
           if (git status --porcelain) {
             throw 'Checkout is not clean before Unreal execution.'
           }
-          git lfs fsck
+
+          if ($env:MODE -in @('stage3g-author', 'stage3g-proof')) {
+            git lfs fsck
+            if ($LASTEXITCODE -ne 0) {
+              throw 'Full-LFS checkout failed git lfs fsck.'
+            }
+            $checkoutMode = 'full-lfs'
+          }
+          else {
+            $checkoutMode = 'code-only'
+          }
+
           $proofRoot = 'Saved/RuntimeProof/CI/Manual'
           New-Item -ItemType Directory -Path $proofRoot -Force | Out-Null
           $payload = [ordered]@{
@@ -130,6 +160,7 @@ jobs:
             TargetBranch = $env:TARGET_BRANCH
             TargetSha = $env:TARGET_SHA
             Mode = $env:MODE
+            CheckoutMode = $checkoutMode
             RunnerName = $env:RUNNER_NAME
             RunnerOs = $env:RUNNER_OS
             RunnerArch = $env:RUNNER_ARCH
