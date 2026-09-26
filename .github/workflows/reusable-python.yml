@@ -81,6 +81,9 @@ jobs:
       - name: Run change-classifier workflow contract tests
         run: python scripts/ci/test_change_classifier_workflow.py
 
+      - name: Run asset/full workflow contract tests
+        run: python scripts/ci/test_asset_full_workflow.py
+
       - name: Run Project automation unit tests
         run: python scripts/ci/test_project_automation.py
 
