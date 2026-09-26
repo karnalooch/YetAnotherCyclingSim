@@ -29,7 +29,9 @@ class Stage3GAuthoringOutputContractTests(unittest.TestCase):
         )
 
     def test_artifact_root_is_canonicalized_before_world_proof(self):
-        repo_anchor = "$ArtifactRoot = Join-Path -Path $RepoRoot -ChildPath $ArtifactRoot"
+        repo_anchor = (
+            "$ArtifactRoot = Join-Path -Path $RepoRoot -ChildPath $ArtifactRoot"
+        )
         canonicalize = "$ArtifactRoot = (Resolve-Path -LiteralPath $ArtifactRoot).Path"
         world_proof = "$WorldProof = Join-Path -Path $ArtifactRoot"
         self.assertIn(repo_anchor, self.script)
