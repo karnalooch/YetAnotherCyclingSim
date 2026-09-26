@@ -2,6 +2,8 @@
 
 #include "Cycling/SimulationStep.h"
 #include "Cycling/CornerBrakingStep.h"
+#include "Cycling/CornerConsequence.h"
+#include "Cycling/CornerConsequenceApplication.h"
 #include "Cycling/PhysicsValidation.h"
 #include "Math/NumericLimits.h"
 
@@ -98,7 +100,6 @@ namespace CyclingSimulation
 			nullptr,
 			nullptr,
 			0.0,
-			0.0,
 			OutState,
 			RemainingAccumulatedTimeS,
 			CompletedSteps,
@@ -116,7 +117,6 @@ namespace CyclingSimulation
 		const CyclingCornerContext::FCornerContextSettings& CornerSettings,
 		const CyclingSurfaceGrip::FSurfaceGripPolicy& GripPolicy,
 		double BaseFrictionCoefficient,
-		double LateralPositionM,
 		FSimulationState& OutState,
 		double& RemainingAccumulatedTimeS,
 		int32& CompletedSteps,
@@ -133,7 +133,6 @@ namespace CyclingSimulation
 			&CornerSettings,
 			&GripPolicy,
 			BaseFrictionCoefficient,
-			LateralPositionM,
 			OutState,
 			RemainingAccumulatedTimeS,
 			CompletedSteps,
@@ -151,7 +150,6 @@ namespace CyclingSimulation
 		const CyclingCornerContext::FCornerContextSettings* CornerSettings,
 		const CyclingSurfaceGrip::FSurfaceGripPolicy* GripPolicy,
 		double BaseFrictionCoefficient,
-		double LateralPositionM,
 		FSimulationState& OutState,
 		double& RemainingAccumulatedTimeS,
 		int32& CompletedSteps,
@@ -238,6 +236,8 @@ namespace CyclingSimulation
 			}
 
 			double BrakeForceN = 0.0;
+			CyclingCornerBraking::FCornerBrakingStepResolution BrakingResolution;
+			bool bHasCornerBrakingResolution = false;
 			if (RoadProfile != nullptr)
 			{
 				if (CornerSettings == nullptr || GripPolicy == nullptr)
@@ -247,14 +247,13 @@ namespace CyclingSimulation
 					return false;
 				}
 
-				CyclingCornerBraking::FCornerBrakingStepResolution BrakingResolution;
 				FString BrakingError;
 				if (!CyclingCornerBraking::TryResolveCornerBrakingStep(
 					*RoadProfile,
 					*CornerSettings,
 					*GripPolicy,
 					BaseFrictionCoefficient,
-					LateralPositionM,
+					LocalState.LateralPositionM,
 					Rider,
 					RiderInput,
 					LocalState,
@@ -266,9 +265,10 @@ namespace CyclingSimulation
 					return false;
 				}
 				BrakeForceN = BrakingResolution.BrakingForceDemand.AppliedBrakeForceN;
+				bHasCornerBrakingResolution = true;
 			}
 
-			FSimulationState NextState;
+			FSimulationState IntegratedState;
 			FString StepError;
 			if (!TryStepSimulationWithBrakeForce(
 				Rider,
@@ -277,12 +277,45 @@ namespace CyclingSimulation
 				LocalState,
 				FixedStepDtS,
 				BrakeForceN,
-				NextState,
+				IntegratedState,
 				StepError))
 			{
 				OutError = StepError;
 				CompletedSteps = 0;
 				return false;
+			}
+
+			FSimulationState NextState = IntegratedState;
+			if (bHasCornerBrakingResolution
+				&& BrakingResolution.bHasActiveLateralDemand)
+			{
+				CyclingCornerConsequence::FCornerGeometryConsequence Consequence;
+				FString ConsequenceError;
+				if (!CyclingCornerConsequence::TryResolveCornerGeometryConsequence(
+					BrakingResolution.CornerContext,
+					BrakingResolution.GripDemand,
+					Consequence,
+					ConsequenceError))
+				{
+					OutError = ConsequenceError;
+					CompletedSteps = 0;
+					return false;
+				}
+
+				CyclingCornerApplication::FCornerConsequenceApplication Application;
+				if (!CyclingCornerApplication::TryApplyCornerGeometryConsequence(
+					LocalState,
+					IntegratedState,
+					BrakingResolution.CornerContext,
+					Consequence,
+					Application,
+					ConsequenceError))
+				{
+					OutError = ConsequenceError;
+					CompletedSteps = 0;
+					return false;
+				}
+				NextState = Application.State;
 			}
 
 			TArray<FSimulationBoundaryCrossing> StepCrossings;
