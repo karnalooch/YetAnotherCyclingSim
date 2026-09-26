@@ -15,6 +15,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .braking import BrakingForceDemand, braking_force_demand
+from .corner_consequence import (
+    CornerGeometryConsequence,
+    resolve_corner_geometry_consequence,
+)
+from .corner_consequence_application import apply_corner_geometry_consequence
 from .corner_context import CornerContext, CornerContextSettings, corner_context_at
 from .corner_grip_demand import CornerGripDemand, corner_grip_demand
 from .corner_limit import CornerLateralLimit, corner_lateral_limit
@@ -66,10 +71,11 @@ class CornerBrakingStepResolution:
 
 @dataclass(frozen=True, slots=True)
 class CornerBrakingStepResult:
-    """Simulation state plus the B3c resolution that produced it."""
+    """Simulation state plus the B3c/C3 resolution that produced it."""
 
     state: SimulationState
     resolution: CornerBrakingStepResolution
+    consequence: CornerGeometryConsequence | None
 
 
 def resolve_corner_braking_step(
@@ -77,7 +83,6 @@ def resolve_corner_braking_step(
     corner_settings: CornerContextSettings,
     grip_policy: SurfaceGripPolicy,
     base_friction_coefficient: float,
-    lateral_position_m: float,
     rider: RiderParameters,
     rider_input: RiderInput,
     state: SimulationState,
@@ -120,11 +125,14 @@ def resolve_corner_braking_step(
             f"state must be SimulationState, got {type(state).__name__}"
         )
 
-    current_road = road_profile.state_at(state.distance_m, lateral_position_m)
+    current_road = road_profile.state_at(
+        state.distance_m,
+        state.lateral_position_m,
+    )
     context = corner_context_at(
         road_profile,
         state.distance_m,
-        lateral_position_m,
+        state.lateral_position_m,
         corner_settings,
     )
 
@@ -178,7 +186,6 @@ def step_simulation_with_corner_braking(
     corner_settings: CornerContextSettings,
     grip_policy: SurfaceGripPolicy,
     base_friction_coefficient: float,
-    lateral_position_m: float,
     rider: RiderParameters,
     environment: Environment,
     rider_input: RiderInput,
@@ -192,12 +199,11 @@ def step_simulation_with_corner_braking(
         corner_settings,
         grip_policy,
         base_friction_coefficient,
-        lateral_position_m,
         rider,
         rider_input,
         state,
     )
-    next_state = step_simulation_with_brake_force(
+    integrated_state = step_simulation_with_brake_force(
         rider,
         environment,
         rider_input,
@@ -205,7 +211,24 @@ def step_simulation_with_corner_braking(
         dt_s,
         resolution.braking_force_demand.applied_brake_force_n,
     )
+
+    consequence = None
+    next_state = integrated_state
+    if resolution.grip_demand is not None:
+        consequence = resolve_corner_geometry_consequence(
+            resolution.corner_context,
+            resolution.grip_demand,
+        )
+        application = apply_corner_geometry_consequence(
+            state,
+            integrated_state,
+            resolution.corner_context,
+            consequence,
+        )
+        next_state = application.state
+
     return CornerBrakingStepResult(
         state=next_state,
         resolution=resolution,
+        consequence=consequence,
     )
