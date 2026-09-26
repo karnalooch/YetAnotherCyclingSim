@@ -42,6 +42,11 @@
     Skip the Development Editor build step (assume an existing build is
     already up to date).
 
+.PARAMETER ConservativeBuild
+    Write an ephemeral project-local UBT BuildConfiguration.xml under
+    Saved/UnrealBuildTool that disables UBA and limits compilation to two
+    parallel actions. Intended for resource-constrained self-hosted CI only.
+
 .PARAMETER TestFilter
     Override the default test filter. The default matches the Stage 2
     suites and the frame-pacing test.
