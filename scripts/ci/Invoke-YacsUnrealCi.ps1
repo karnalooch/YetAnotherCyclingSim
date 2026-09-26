@@ -157,6 +157,7 @@ try {
         ExpectedBranch = $ExpectedBranch
         ExpectedHead = $ExpectedHead
         TestFilter = $TestFilter
+        ConservativeBuild = $true
     }
     if ($SkipBuild) {
         $ProofArgs['SkipBuild'] = $true
@@ -197,6 +198,7 @@ try {
         )
         TestFilter = $TestFilter
         SkipBuild = [bool]$SkipBuild
+        ConservativeBuild = $true
         Discovered = [int]$Summary.Discovered
         Passed = [int]$Summary.Passed
         Failed = [int]$Summary.Failed
