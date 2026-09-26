@@ -177,6 +177,23 @@ Stage 4C-B3c is the orchestration layer: for every authoritative fixed substep i
 
 A look-ahead corner is not the current tyre contact patch. During `Approach`, the corner context may intentionally describe future curvature/surface metadata for guidance, while longitudinal braking still uses the current `S/D` road state under the tyres. Actual lateral grip usage starts only in `Entry`, `Apex` and `Exit`. Current grade, cross-slope, surface and wetness therefore remain the source for longitudinal tyre capacity until the rider physically reaches the corner.
 
+Stage 4C-C1 derives the first physical consequence from the same route-local geometry instead of adding grip-usage thresholds. When active-corner lateral demand exceeds 1, the minimum radius required to remain at the lateral acceleration limit is:
+
+```text
+minimum_required_radius = effective_radius * lateral_usage
+required_outward_shift  = max(0, minimum_required_radius - effective_radius)
+```
+
+For a right turn the outside of the road is toward `-D` and consumes `left_margin`; for a left turn it is toward `+D` and consumes `right_margin`. Because the Stage 4B radius convention is `effective_signed_radius = signed_centerline_radius - D`, an outward shift increases effective radius one-for-one.
+
+If the required shift fits inside the available outside margin, the consequence is a wider line with no artificial speed penalty. If it does not fit, the line consumes the full available margin and the remaining excess becomes controlled slip. The minimum speed reduction needed to fit the widest feasible radius is:
+
+```text
+exit_speed_multiplier = sqrt(maximum_feasible_radius / minimum_required_radius)
+```
+
+This Stage 4C-C1 resolver never produces a crash. It also does not mutate authoritative lateral position yet; it exposes the deterministic target line/speed consequence for the next orchestration step.
+
 Aerodynamic drag, gravity and rolling resistance remain ordinary external/resistance forces and must not be misclassified as tyre-braking grip usage.
 
 The kernel is stateless rather than one permanent global grip scalar. MVP may evaluate it for a simplified whole-bike model; later front/rear tyre state can evaluate the same contract independently with different capacities and demands.
