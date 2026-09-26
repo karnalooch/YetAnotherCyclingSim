@@ -31,6 +31,11 @@ from .cornering import (
     maximum_corner_speed_mps,
     summarize_corner_technique,
 )
+from .grip_policy import (
+    ResolvedSurfaceGrip,
+    SurfaceGripPolicy,
+    SurfaceGripRule,
+)
 from .model import (
     STANDARD_GRAVITY_MPS2,
     Environment,
@@ -51,7 +56,7 @@ from .road_physics import (
     RoadPhysicsState,
     RoadPhysicsTransitionLimits,
 )
-from .sample_routes import ALPINE_CORNERS, ALPINE_JOURNEY, ALPINE_WEATHER
+from .sample_routes import ALPINE_CORNERS, ALPINE_JOURNEY, ALPINE_SURFACE_GRIP_POLICY, ALPINE_WEATHER
 from .weather import WeatherKeyframe, WeatherProfile
 
 __all__ = [
@@ -68,8 +73,12 @@ __all__ = [
     "RoadPhysicsProfile",
     "WeatherKeyframe",
     "WeatherProfile",
+    "SurfaceGripRule",
+    "ResolvedSurfaceGrip",
+    "SurfaceGripPolicy",
     "ALPINE_JOURNEY",
     "ALPINE_WEATHER",
+    "ALPINE_SURFACE_GRIP_POLICY",
     "ALPINE_CORNERS",
     "CORNER_DIRECTION_STRAIGHT",
     "CORNER_DIRECTION_LEFT",
