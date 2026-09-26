@@ -1,146 +1,29 @@
 version: 2.1
 
+# YACS CI migrated to GitHub Actions.
+#
+# This file is intentionally a zero-workload tombstone while the CircleCI
+# project remains connected externally. The only workflow is disabled by
+# default and performs no checkout, cache, workspace, artifact or UE work.
+#
+# After the project is disconnected in CircleCI, this file can be deleted.
 parameters:
-  windows_probe:
+  retired_noop:
     type: boolean
     default: false
-  ue_local_canary:
-    type: boolean
-    default: false
-  ue_runner_resource_class:
-    type: string
-    default: "karnalooch/yacs-ue58-seed"
-  ue_runner_working_directory:
-    type: string
-    default: 'D:\CircleCI\YACS-Runner\Workdir'
 
 jobs:
-  windows-probe:
-    resource_class: windows.medium
-    machine:
-      image: windows-server-2022-gui:current
-      shell: powershell.exe -ExecutionPolicy Bypass
-    environment:
-      GIT_LFS_SKIP_SMUDGE: "1"
+  retired:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
     steps:
-      - checkout:
-          method: blobless
-
       - run:
-          name: Probe Windows executor for YACS
-          shell: powershell.exe -ExecutionPolicy Bypass
-          command: |
-            powershell.exe -ExecutionPolicy Bypass -File scripts/ci/Invoke-CircleCiWindowsProbe.ps1
-
-      - store_artifacts:
-          path: Saved/RuntimeProof/CI/CircleCI-Windows-Probe
-          destination: circleci-windows-probe
-
-  ue-local-canary:
-    machine: true
-    resource_class: << pipeline.parameters.ue_runner_resource_class >>
-    working_directory: << pipeline.parameters.ue_runner_working_directory >>
-    environment:
-      GIT_LFS_SKIP_SMUDGE: "1"
-      TEMP: 'D:\CircleCI\YACS-Runner\Temp'
-      TMP: 'D:\CircleCI\YACS-Runner\Temp'
-    steps:
-      - checkout:
-          method: blobless
-
-      - run:
-          name: Require trusted main branch and local UE host
-          shell: powershell.exe -ExecutionPolicy Bypass
-          command: |
-            $ErrorActionPreference = 'Stop'
-
-            if ($env:CIRCLE_BRANCH -ne 'main') {
-              throw "UE local canary must run from main; actual branch is '$env:CIRCLE_BRANCH'."
-            }
-
-            $expectedWorkDir = 'D:\CircleCI\YACS-Runner\Workdir'
-            $actualWorkDir = [System.IO.Path]::GetFullPath((Get-Location).Path).TrimEnd('\')
-            if ($actualWorkDir -ne $expectedWorkDir) {
-              throw "CircleCI runner working directory mismatch: '$actualWorkDir', expected '$expectedWorkDir'."
-            }
-
-            New-Item -ItemType Directory -Path $env:TEMP -Force | Out-Null
-            if (-not $env:TEMP.StartsWith('D:\', [System.StringComparison]::OrdinalIgnoreCase)) {
-              throw "Self-hosted UE TEMP must stay on D:, actual '$env:TEMP'."
-            }
-            if (-not $env:TMP.StartsWith('D:\', [System.StringComparison]::OrdinalIgnoreCase)) {
-              throw "Self-hosted UE TMP must stay on D:, actual '$env:TMP'."
-            }
-
-            $pwsh = Get-Command pwsh -ErrorAction Stop
-            $git = Get-Command git -ErrorAction Stop
-            & git lfs version | Out-Null
-            if ($LASTEXITCODE -ne 0) {
-              throw 'Git LFS is required for the code-only checkout guard.'
-            }
-
-            Write-Host 'Local UE runner host contract: PASS'
-            Write-Host ("  working directory : {0}" -f $actualWorkDir)
-            Write-Host ("  pwsh              : {0}" -f $pwsh.Source)
-            Write-Host ("  git               : {0}" -f $git.Source)
-
-      - run:
-          name: Enforce code-only checkout
-          shell: powershell.exe -ExecutionPolicy Bypass
-          command: |
-            powershell.exe -ExecutionPolicy Bypass -File scripts/ci/Test-YacsCodeOnlyCheckout.ps1
-
-      - run:
-          name: Build YACS Editor and run scoped Automation with local UE
-          shell: powershell.exe -ExecutionPolicy Bypass
-          no_output_timeout: 45m
-          command: |
-            pwsh ./scripts/ci/Invoke-YacsUnrealCi.ps1 -ExpectedHead $env:CIRCLE_SHA1
-
-      - run:
-          name: Print local UE final diagnostics
-          shell: powershell.exe -ExecutionPolicy Bypass
-          when: always
-          command: |
-            $root = 'Saved/RuntimeProof/CI/Unreal'
-            $phase = Join-Path $root 'Proof/phase_status.json'
-            if (Test-Path -LiteralPath $phase -PathType Leaf) {
-              Write-Host '=== YACS final phase status ==='
-              Get-Content -LiteralPath $phase -Raw
-            }
-            else {
-              Write-Host 'YACS final phase status is missing.'
-            }
-
-            foreach ($relative in @(
-              'Proof/build_editor.log',
-              'Proof/automation_run.log',
-              'Proof/summary.txt',
-              'failure_context.txt',
-              'unreal_ci_summary.json'
-            )) {
-              $path = Join-Path $root $relative
-              if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
-                Write-Host ("DIAGNOSTIC MISSING: {0}" -f $relative)
-                continue
-              }
-
-              Write-Host ("=== DIAGNOSTIC TAIL: {0} ===" -f $relative)
-              Get-Content -LiteralPath $path -Tail 40 -ErrorAction SilentlyContinue
-            }
-
-      - store_artifacts:
-          path: Saved/RuntimeProof/CI/Unreal
-          destination: yacs-unreal-local-canary
+          name: YACS CI moved to GitHub Actions
+          command: echo "YACS CI is retired on CircleCI; use GitHub Actions."
 
 workflows:
-  windows-ue-spike:
-    when: << pipeline.parameters.windows_probe >>
+  retired:
+    when: << pipeline.parameters.retired_noop >>
     jobs:
-      - windows-probe
-
-  windows-ue-local-canary:
-    when: << pipeline.parameters.ue_local_canary >>
-    jobs:
-      - ue-local-canary:
-          filters: pipeline.git.branch == "main"
+      - retired
