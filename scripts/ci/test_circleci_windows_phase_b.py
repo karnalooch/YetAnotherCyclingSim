@@ -22,6 +22,9 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
         cls.validator = VALIDATOR.read_text(encoding="utf-8")
         cls.code_only = CODE_ONLY.read_text(encoding="utf-8")
         cls.preflight = PREFLIGHT.read_text(encoding="utf-8")
+        cls.proof = (ROOT / "scripts" / "ue" / "Invoke-YacsProof.ps1").read_text(
+            encoding="utf-8"
+        )
 
     def test_expensive_phase_b_paths_are_disabled_by_default(self):
         for parameter in ("ue_cache_seed:", "ue_canary:"):
@@ -60,6 +63,22 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
         self.assertIn("name: Build YACS Editor and run scoped Automation", canary_block)
         self.assertIn("no_output_timeout: 45m", canary_block)
 
+    def test_hosted_canary_always_prints_final_diagnostics(self):
+        canary_start = self.config.index("  ue-hosted-canary:")
+        workflows_start = self.config.index("workflows:")
+        canary_block = self.config[canary_start:workflows_start]
+        for token in (
+            "name: Print hosted UE final diagnostics",
+            "when: always",
+            "Proof/phase_status.json",
+            "Proof/build_editor.log",
+            "Proof/automation_run.log",
+            "Proof/summary.txt",
+            "unreal_ci_summary.json",
+            "-Tail 40",
+        ):
+            self.assertIn(token, canary_block)
+
     def test_circleci_checkouts_are_blobless_and_skip_lfs_smudge(self):
         self.assertGreaterEqual(self.config.count("method: blobless"), 5)
         self.assertGreaterEqual(
@@ -80,6 +99,37 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
             "CODE-ONLY CHECKOUT PASS",
         ):
             self.assertIn(token, self.code_only)
+
+    def test_unreal_proof_emits_phase_telemetry(self):
+        for token in (
+            "phase_status.json",
+            "Write-YacsPhaseStatus",
+            "YACS PHASE:",
+            "-Phase 'preflight' -Status 'running'",
+            "-Phase 'build' -Status 'running'",
+            "-Phase 'automation' -Status 'running'",
+            "-Phase 'tally' -Status 'running'",
+        ):
+            self.assertIn(token, self.proof)
+
+    def test_long_unreal_processes_emit_heartbeats_and_log_tails(self):
+        for token in (
+            "Wait-YacsProcessWithHeartbeat",
+            "HeartbeatSeconds = 30",
+            "YACS HEARTBEAT",
+            "YACS LOGTAIL",
+            "Get-Content -LiteralPath $LogPath -Tail 5",
+            "Get-Content -LiteralPath $LogPath -Tail 10",
+        ):
+            self.assertIn(token, self.proof)
+        self.assertIn(
+            "Wait-YacsProcessWithHeartbeat -Process $BuildProc",
+            self.proof,
+        )
+        self.assertIn(
+            "Wait-YacsProcessWithHeartbeat -Process $UATProc",
+            self.proof,
+        )
 
     def test_expensive_circleci_jobs_are_main_only(self):
         self.assertGreaterEqual(

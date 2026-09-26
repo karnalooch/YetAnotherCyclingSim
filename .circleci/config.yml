@@ -292,6 +292,37 @@ jobs:
           command: |
             pwsh ./scripts/ci/Invoke-YacsUnrealCi.ps1 -ExpectedHead $env:CIRCLE_SHA1
 
+      - run:
+          name: Print hosted UE final diagnostics
+          shell: powershell.exe -ExecutionPolicy Bypass
+          when: always
+          command: |
+            $root = 'Saved/RuntimeProof/CI/Unreal'
+            $phase = Join-Path $root 'Proof/phase_status.json'
+            if (Test-Path -LiteralPath $phase -PathType Leaf) {
+              Write-Host '=== YACS final phase status ==='
+              Get-Content -LiteralPath $phase -Raw
+            }
+            else {
+              Write-Host 'YACS final phase status is missing.'
+            }
+
+            foreach ($relative in @(
+              'Proof/build_editor.log',
+              'Proof/automation_run.log',
+              'Proof/summary.txt',
+              'unreal_ci_summary.json'
+            )) {
+              $path = Join-Path $root $relative
+              if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+                Write-Host ("DIAGNOSTIC MISSING: {0}" -f $relative)
+                continue
+              }
+
+              Write-Host ("=== DIAGNOSTIC TAIL: {0} ===" -f $relative)
+              Get-Content -LiteralPath $path -Tail 40 -ErrorAction SilentlyContinue
+            }
+
       - store_artifacts:
           path: Saved/RuntimeProof/CI/Unreal
           destination: yacs-unreal-canary
