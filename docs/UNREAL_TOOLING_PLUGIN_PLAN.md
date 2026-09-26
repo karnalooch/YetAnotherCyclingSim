@@ -2,7 +2,8 @@
 
 **Status:** active production plan  
 **Applies to:** UE 5.8.2 MVP roadmap  
-**Rule:** no plugin is enabled “just in case”.
+**Rule:** no plugin is enabled “just in case”.  
+**Current recovery gate (26.09.2026):** Stage 3G visual/asset acceptance is open; PCG + the minimum supporting editor tooling are the next unmet tooling deliverables and are **not deferred to Stage 7**.
 
 ## 1. Purpose
 
@@ -37,7 +38,7 @@ Any change to the explicit plugin list is an integration change and requires an 
 
 | Stage | Tool / plugin | Priority | Why YACS needs it | Activation policy |
 |---|---|---:|---|---|
-| **3G** | **PCG** | MUST | deterministic vegetation, rocks, biome/set dressing and roadside generation | enable after #85 Phase A smoke setup is ready; first proof on one sector |
+| **3G** | **PCG** | MUST | deterministic vegetation, rocks, biome/set dressing and roadside generation | **active recovery gate**; enable after #85 Phase A smoke setup is ready; first proof on one sector |
 | **3G** | **Editor Scripting Utilities** | MUST | safer/simpler editor automation APIs complementing PythonScriptPlugin | enable with first PCG integration |
 | **3G** | **Geometry Script** | SHOULD | generate/analyze/edit helper geometry, mesh processing and custom world-authoring tools | enable with PCG integration; do not make route physics depend on it |
 | **3G** | **PCG Geometry Script Interop** | CONDITIONAL | PCG ↔ Dynamic/Static Mesh operations and mesh sampling when a graph actually requires them | enable only on demonstrated graph need |
@@ -51,7 +52,7 @@ Any change to the explicit plugin list is an integration change and requires an 
 | **7** | **Scriptable Tools Editor Mode** | OPTIONAL | custom “Generate YACS World” editor mode/UI if flows become cumbersome | add only if it clearly beats MCP flows/Editor Utility workflows |
 | **8** | **Niagara** | MUST | rain, wheel spray, debris/leaves and atmospheric VFX | enable/verify when weather implementation begins |
 | **8** | **MetaSounds** | SHOULD | parameter-driven drivetrain/freehub/tyres/brakes/wind audio | enable/verify when production audio starts |
-| **3G+ dev tooling** | **db-lyon ue-mcp** | MUST for current workflow | single orchestration layer for Kilo: flows, guards, rollback, editor actions and proof | pinned release; upgrade only after review |
+| **3G+ dev tooling** | **db-lyon ue-mcp** | MUST for planned worldgen workflow | single orchestration layer for Kilo: flows, guards, rollback, editor actions and proof | #85 remains part of Stage 3G recovery; pinned release; upgrade only after review |
 | **3G+ dev tooling** | **UE ModelContextProtocol / Toolset Registry** | SELECTIVE/EXPERIMENTAL | official UE 5.8 AI-callable toolsets such as PCGToolset | consume selectively through the chosen orchestration path, not as a second uncontrolled server |
 
 ## 4. Stage 3G world-generation stack
@@ -101,6 +102,8 @@ PCG must not redefine:
 - cornering physics.
 
 ### First PCG proof
+
+This proof is part of the reopened Stage 3G acceptance. A green build or capture harness without real imported/scattered assets does not satisfy it.
 
 The first proof is deliberately small:
 
