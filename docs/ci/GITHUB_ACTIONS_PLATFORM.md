@@ -76,17 +76,25 @@ manual Unreal execution remains available through `manual-unreal.yml`.
 
 ## Promotion to automatic Unreal gating
 
-During Phase 1, Unreal execution is manual and is not part of Aggregate CI.
+The repository now has **one narrow automatic Unreal path**: canonical high-risk
+Stage 3G asset changes can set `asset_full=true` and run trusted same-repository
+full validation on `yacs-home-ue58` as part of the Aggregate dependency graph.
+This was proven by PR #155.
 
-Before enabling automatic Unreal gating:
+That does **not** mean generic C++ Unreal validation is automatically required for
+every PR. The manual entrypoint remains available and the generic lane is still
+being promoted under #24.
+
+Before enabling generic automatic Unreal gating:
 
 1. [x] prove a normal green canary;
 2. [x] prove the intentional-red canary fails closed;
-3. [ ] finish Stage 3G authoring/final proof under the Phase 1 trust model;
-4. [ ] complete unattended Task Scheduler + reboot recovery proof before Phase 2;
-5. [ ] document runner outage/break-glass behavior;
-6. [ ] restrict automatic execution to trusted same-repository revisions;
-7. [ ] add the Unreal lane to Aggregate CI only after the runner is considered
+3. [x] prove Stage 3G authoring/final-proof mechanics under the trusted runner model — PR #155 / run `36258791131`;
+4. [ ] complete reopened #80 source-asset/PCG visual acceptance using the proven full-validation lane;
+5. [ ] complete unattended Task Scheduler + reboot recovery proof before broad Phase 2 execution;
+6. [ ] document runner outage/break-glass behavior;
+7. [x] restrict the existing automatic Stage 3G path to trusted same-repository revisions;
+8. [ ] add the generic Unreal C++ lane to Aggregate CI only after the runner is considered
    operationally reliable and #22 branch protection is verified.
 
 ## CircleCI retirement
