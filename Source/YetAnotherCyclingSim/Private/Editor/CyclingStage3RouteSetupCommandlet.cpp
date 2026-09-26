@@ -232,7 +232,7 @@ int32 UCyclingStage3RouteSetupCommandlet::Main(const FString& Params)
 		Spline->GetNumberOfSplinePoints(),
 		ActualLengthCm / MetresToCentimetres);
 	UE_LOG(LogCyclingStage3RouteSetup, Display,
-		TEXT("Stage 3 prototype world saved: road=%d terrain=%d forest_props=%d mountain_props=%d valley_ridges=%d forest_canopy=%d distant_mountains=%d water_tiles=%d."),
+		TEXT("Stage 3 prototype world saved: road=%d terrain=%d forest_props=%d mountain_props=%d valley_ridges=%d forest_canopy=%d distant_mountains=%d rock_props=%d water_tiles=%d."),
 		TerrainActor->GetRoadInstanceCount(),
 		TerrainActor->GetTerrainInstanceCount(),
 		TerrainActor->GetForestPropInstanceCount(),
@@ -240,6 +240,7 @@ int32 UCyclingStage3RouteSetupCommandlet::Main(const FString& Params)
 		TerrainActor->GetValleyRidgeInstanceCount(),
 		TerrainActor->GetForestCanopyInstanceCount(),
 		TerrainActor->GetDistantMountainInstanceCount(),
+		TerrainActor->GetRockPropInstanceCount(),
 		TerrainActor->GetWaterTileInstanceCount());
 	UE_LOG(LogCyclingStage3RouteSetup, Display,
 		TEXT("CyclingStage3RouteSetupCommandlet: done."));
