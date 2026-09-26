@@ -72,8 +72,8 @@ class TestCornerContext(unittest.TestCase):
             "right",
             (sample(0.0, 0.02), sample(200.0, 0.02)),
         )
-        center = corner_context_at(profile, 50.0, 0.0, self.settings())
-        inside = corner_context_at(profile, 50.0, 2.0, self.settings())
+        center = corner_context_at(profile, 25.0, 0.0, self.settings())
+        inside = corner_context_at(profile, 25.0, 2.0, self.settings())
 
         self.assertEqual(center.direction, CORNER_DIRECTION_RIGHT)
         self.assertAlmostEqual(center.centerline_radius_m, 50.0)
