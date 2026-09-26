@@ -68,8 +68,7 @@ class ChangeClassifierTests(unittest.TestCase):
         self.assertTrue(result.asset_full)
 
     def test_regular_asset_does_not_force_full_unreal(self):
-        result = cc.classify_paths(["Content/Prototype/Routes/BP_StraightTestRoute.uasset"])
-        self.assertTrue(result.assets)
+        result = cc.classify_paths(\n            ["Content/Prototype/Routes/BP_StraightTestRoute.uasset"]\n        )\n        self.assertTrue(result.assets)
         self.assertTrue(result.asset_only)
         self.assertFalse(result.asset_full)
 
