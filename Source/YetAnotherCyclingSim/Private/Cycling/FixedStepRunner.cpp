@@ -1,6 +1,7 @@
 #include "Cycling/FixedStepRunner.h"
 
 #include "Cycling/SimulationStep.h"
+#include "Cycling/CornerBrakingStep.h"
 #include "Cycling/PhysicsValidation.h"
 #include "Math/NumericLimits.h"
 
