@@ -9,6 +9,7 @@ CONFIG = ROOT / ".circleci" / "config.yml"
 CODE_ONLY = ROOT / "scripts" / "ci" / "Test-YacsCodeOnlyCheckout.ps1"
 PREFLIGHT = ROOT / "scripts" / "ue" / "Preflight-YacsProof.ps1"
 PROOF = ROOT / "scripts" / "ue" / "Invoke-YacsProof.ps1"
+UNREAL_CI = ROOT / "scripts" / "ci" / "Invoke-YacsUnrealCi.ps1"
 
 
 class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
@@ -18,6 +19,7 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
         cls.code_only = CODE_ONLY.read_text(encoding="utf-8")
         cls.preflight = PREFLIGHT.read_text(encoding="utf-8")
         cls.proof = PROOF.read_text(encoding="utf-8")
+        cls.unreal_ci = UNREAL_CI.read_text(encoding="utf-8")
 
     def test_expensive_circleci_paths_are_opt_in(self):
         for parameter in ("windows_probe:", "ue_local_canary:"):
@@ -114,10 +116,26 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
             "Proof/build_editor.log",
             "Proof/automation_run.log",
             "Proof/summary.txt",
+            "failure_context.txt",
             "unreal_ci_summary.json",
             "-Tail 40",
         ):
             self.assertIn(token, local_block)
+
+    def test_unreal_ci_writes_failure_context_and_rethrows(self):
+        for token in (
+            "Write-YacsUnrealFailureContext",
+            "failure_context.txt",
+            "Preflight/preflight.txt",
+            "Proof/phase_status.json",
+            "Proof/build_editor.log",
+            "Proof/automation_run.log",
+            "Proof/summary.txt",
+            "Proof/AutomationReport/index.json",
+            "artifact inventory",
+            "throw $OriginalError",
+        ):
+            self.assertIn(token, self.unreal_ci)
 
     def test_code_only_guard_accepts_lazy_lfs_but_rejects_payloads(self):
         for token in (
