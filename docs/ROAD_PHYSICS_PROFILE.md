@@ -136,7 +136,9 @@ Stage 3H therefore carries deterministic road metadata rather than embedding one
 
 The Alpine Journey static baseline is `surface_id = asphalt`, `wetness = 0`, `roughness = 0`. Dynamic weather is composed later and is not baked into the authoritative geometry builder.
 
-Stage 4B/4C owns the deterministic resolver that turns `surface_id + wetness` into the simplified MVP grip model and shared braking/cornering budget. Stage 3H deliberately does **not** invent friction coefficients, a detailed tyre model or roughness energy-loss physics.
+Stage 4B owns a deterministic `SurfaceGripPolicy` that turns `surface_id + wetness` into a relative `grip_multiplier`. The policy is explicit configuration: every surface provides a dry and fully-wet multiplier, and normalized wetness linearly interpolates between them. Unknown surfaces fail closed. The tyre/base friction coefficient remains a separate caller-owned input, so this layer still does **not** invent absolute friction coefficients or a detailed tyre model.
+
+For the Alpine Journey asphalt baseline, the existing scripted weather data already defines a consistent relationship: dry asphalt is `1.00`, fully-wet asphalt is `0.75`, and all intermediate weather keyframes lie exactly on the same linear interpolation. Stage 4B reuses that existing contract instead of introducing new numbers. Stage 4C later consumes the resolved multiplier in the shared braking/cornering grip budget.
 
 Later versions may distinguish, for example:
 
