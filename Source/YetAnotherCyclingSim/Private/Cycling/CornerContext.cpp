@@ -181,8 +181,25 @@ namespace CyclingCornerContext
 		const double Threshold = Settings.MinAbsCurvaturePerM;
 		const double StepM = Settings.ScanStepM;
 		const double RouteEndM = Profile.GetTotalLengthM();
-		bool bFoundCorner = IsCornerState(Current, Threshold);
-		double CornerStartM = DistanceM;
+		// Anchor detection probes to a global route-origin scan grid. Starting
+		// probes from the current S would make the same physical corner drift
+		// by each fixed substep (for example 100.00 -> 100.05 m), which is not
+		// a stable runtime episode identity.
+		const double GridIndex = std::floor(DistanceM / StepM);
+		const double FloorProbeM =
+			FMath::Min(RouteEndM, GridIndex * StepM);
+		FRoadPhysicsState FloorProbe;
+		if (!Profile.TryGetStateAt(
+			FloorProbeM,
+			LateralPositionM,
+			FloorProbe,
+			OutError))
+		{
+			return false;
+		}
+
+		bool bFoundCorner = IsCornerState(FloorProbe, Threshold);
+		double CornerStartM = FloorProbeM;
 
 		if (bFoundCorner)
 		{
@@ -213,14 +230,22 @@ namespace CyclingCornerContext
 		{
 			const double MaxDistanceM =
 				FMath::Min(RouteEndM, DistanceM + Settings.LookAheadM);
-			double ProbeM = DistanceM;
-			while (ProbeM < MaxDistanceM)
+			int64 ProbeIndex = static_cast<int64>(GridIndex) + 1;
+			while (true)
 			{
-				const double NextProbeM =
-					FMath::Min(MaxDistanceM, ProbeM + StepM);
+				double ProbeM = static_cast<double>(ProbeIndex) * StepM;
+				if (ProbeM > RouteEndM)
+				{
+					ProbeM = RouteEndM;
+				}
+				if (ProbeM > MaxDistanceM)
+				{
+					break;
+				}
+
 				FRoadPhysicsState Probe;
 				if (!Profile.TryGetStateAt(
-					NextProbeM,
+					ProbeM,
 					LateralPositionM,
 					Probe,
 					OutError))
@@ -230,14 +255,14 @@ namespace CyclingCornerContext
 				if (IsCornerState(Probe, Threshold))
 				{
 					bFoundCorner = true;
-					CornerStartM = NextProbeM;
+					CornerStartM = ProbeM;
 					break;
 				}
-				if (NextProbeM == ProbeM)
+				if (ProbeM == RouteEndM)
 				{
 					break;
 				}
-				ProbeM = NextProbeM;
+				++ProbeIndex;
 			}
 		}
 
