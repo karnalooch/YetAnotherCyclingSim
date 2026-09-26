@@ -40,6 +40,7 @@ class Stage3GAuthoringOneShotContractTests(unittest.TestCase):
         self.assertIn("git lfs checkout", self.workflow)
         self.assertIn("git lfs fsck", self.workflow)
         self.assertIn("version https://git-lfs.github.com/spec/v1", self.workflow)
+        self.assertIn("Stage 3G Git LFS checkout left pointer files", self.workflow)
         self.assertIn("persist-credentials: false", self.workflow)
 
     def test_runs_only_stage3g_authoring_and_uploads_binary_source(self):
