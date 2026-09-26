@@ -1,0 +1,90 @@
+name: Stage 3G R1 final exact-SHA proof
+
+on:
+  push:
+    branches:
+      - proof/stage3g-r1-41308225
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stage3g-r1-final-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  exact-proof:
+    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.ref == 'refs/heads/proof/stage3g-r1-41308225' }}
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 120
+    steps:
+      - name: Isolate self-hosted Git configuration
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'yacs-global.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          $env:GIT_CONFIG_GLOBAL = $isolated
+          $env:GIT_CONFIG_NOSYSTEM = '1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+
+      - name: Checkout exact Stage 3G R1 candidate with full LFS
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 41308225a6b332b744cdc7b786f8a9bf0d8433a3
+          fetch-depth: 0
+          lfs: true
+          clean: true
+          persist-credentials: false
+
+      - name: Verify exact SHA and LFS integrity
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $target = '41308225a6b332b744cdc7b786f8a9bf0d8433a3'
+          if ((git rev-parse HEAD).Trim() -ne $target) {
+            throw "Checkout does not match Stage 3G R1 target $target."
+          }
+          git lfs install --local
+          if ($LASTEXITCODE -ne 0) { throw 'git lfs install failed.' }
+          git lfs checkout
+          if ($LASTEXITCODE -ne 0) { throw 'git lfs checkout failed.' }
+          git lfs fsck
+          if ($LASTEXITCODE -ne 0) { throw 'git lfs fsck failed.' }
+          if (git status --porcelain) {
+            throw 'Stage 3G R1 exact-SHA checkout is dirty.'
+          }
+
+      - name: Build and run Stage 3G final proof
+        shell: pwsh
+        run: |
+          ./scripts/ue/Invoke-YacsStage3GProof.ps1 `
+            -ExpectedBranch HEAD `
+            -ExpectedHead '41308225a6b332b744cdc7b786f8a9bf0d8433a3' `
+            -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR1Final'
+
+      - name: Upload final Stage 3G R1 proof
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: stage3g-r1-final-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            Saved/RuntimeProof/CI/Stage3GR1Final/**/*.json
+            Saved/RuntimeProof/CI/Stage3GR1Final/**/*.txt
+            Saved/RuntimeProof/CI/Stage3GR1Final/**/*.log
+            Saved/RuntimeProof/CI/Stage3GR1Final/**/*.png
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Clean self-hosted workspace
+        if: ${{ always() }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git reset --hard
+          git clean -ffdx
+          if (git status --porcelain) {
+            throw 'Stage 3G R1 final proof workspace is dirty after cleanup.'
+          }
+          Write-Host 'Stage 3G R1 final proof cleanup: PASS'
