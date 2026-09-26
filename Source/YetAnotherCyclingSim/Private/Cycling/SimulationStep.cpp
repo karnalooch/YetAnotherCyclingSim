@@ -16,6 +16,27 @@ namespace CyclingSimulation
 		FSimulationState& OutState,
 		FString& OutError)
 	{
+		return TryStepSimulationWithBrakeForce(
+			Rider,
+			Environment,
+			RiderInput,
+			State,
+			DtS,
+			0.0,
+			OutState,
+			OutError);
+	}
+
+	bool TryStepSimulationWithBrakeForce(
+		const FRiderParameters& Rider,
+		const FEnvironment& Environment,
+		const FRiderInput& RiderInput,
+		const FSimulationState& State,
+		double DtS,
+		double BrakeForceN,
+		FSimulationState& OutState,
+		FString& OutError)
+	{
 		// Snapshot the input before touching the output so that State and
 		// OutState may safely alias the same object.
 		const FSimulationState InputState = State;
@@ -25,7 +46,8 @@ namespace CyclingSimulation
 		OutState = FSimulationState();
 		OutError.Reset();
 
-		// Validate in a fixed order; use InputState only.
+		// Preserve the established validation order, then validate the new
+		// explicit brake-force input.
 		if (!Rider.Validate(OutError))
 		{
 			return false;
@@ -42,8 +64,13 @@ namespace CyclingSimulation
 		{
 			return false;
 		}
+
 		using namespace CyclingPhysicsValidation;
 		if (!CheckPositive(DtS, TEXT("dt_s"), OutError))
+		{
+			return false;
+		}
+		if (!CheckNonNegative(BrakeForceN, TEXT("brake_force_n"), OutError))
 		{
 			return false;
 		}
@@ -51,36 +78,72 @@ namespace CyclingSimulation
 		const double TotalMassKg = Rider.GetTotalMassKg();
 		const double CurrentSpeedMps = InputState.SpeedMps;
 
-		const double InitialEnergyJ = 0.5 * TotalMassKg * CurrentSpeedMps * CurrentSpeedMps;
-		const double DriveWorkJ = RiderInput.PowerW * Rider.DrivetrainEfficiency * DtS;
+		const double InitialEnergyJ =
+			0.5 * TotalMassKg * CurrentSpeedMps * CurrentSpeedMps;
+		const double DriveWorkJ =
+			RiderInput.PowerW * Rider.DrivetrainEfficiency * DtS;
 
 		double ResistanceForceN = 0.0;
-		if (!CyclingForces::TryCalculateTotalResistanceForceN(Rider, Environment, CurrentSpeedMps, ResistanceForceN, OutError))
+		if (!CyclingForces::TryCalculateTotalResistanceForceN(
+			Rider,
+			Environment,
+			CurrentSpeedMps,
+			ResistanceForceN,
+			OutError))
 		{
 			return false;
 		}
 
-		const double ExternalAccelerationMps2 = -ResistanceForceN / TotalMassKg;
-		const double ExternalPredictedSpeedMps = std::fmax(0.0, CurrentSpeedMps + ExternalAccelerationMps2 * DtS);
-		const double PredictedSpeedMps = std::sqrt(std::fmax(0.0, ExternalPredictedSpeedMps * ExternalPredictedSpeedMps + 2.0 * DriveWorkJ / TotalMassKg));
-		const double EstimatedAverageSpeedMps = 0.5 * (CurrentSpeedMps + PredictedSpeedMps);
+		const double CombinedResistanceForceN =
+			ResistanceForceN + BrakeForceN;
+		const double ExternalAccelerationMps2 =
+			-CombinedResistanceForceN / TotalMassKg;
+		const double ExternalPredictedSpeedMps =
+			std::fmax(
+				0.0,
+				CurrentSpeedMps + ExternalAccelerationMps2 * DtS);
+		const double PredictedSpeedMps =
+			std::sqrt(
+				std::fmax(
+					0.0,
+					ExternalPredictedSpeedMps * ExternalPredictedSpeedMps
+						+ 2.0 * DriveWorkJ / TotalMassKg));
+		const double EstimatedAverageSpeedMps =
+			0.5 * (CurrentSpeedMps + PredictedSpeedMps);
 
 		double AverageResistanceForceN = 0.0;
-		if (!CyclingForces::TryCalculateTotalResistanceForceN(Rider, Environment, EstimatedAverageSpeedMps, AverageResistanceForceN, OutError))
+		if (!CyclingForces::TryCalculateTotalResistanceForceN(
+			Rider,
+			Environment,
+			EstimatedAverageSpeedMps,
+			AverageResistanceForceN,
+			OutError))
 		{
 			return false;
 		}
 
-		const double ResistanceWorkJ = AverageResistanceForceN * EstimatedAverageSpeedMps * DtS;
-		const double FinalEnergyJ = std::fmax(0.0, InitialEnergyJ + DriveWorkJ - ResistanceWorkJ);
-		const double NewSpeedMps = std::sqrt(2.0 * FinalEnergyJ / TotalMassKg);
+		const double CombinedAverageResistanceForceN =
+			AverageResistanceForceN + BrakeForceN;
+		const double ResistanceWorkJ =
+			CombinedAverageResistanceForceN
+				* EstimatedAverageSpeedMps
+				* DtS;
+		const double FinalEnergyJ =
+			std::fmax(
+				0.0,
+				InitialEnergyJ + DriveWorkJ - ResistanceWorkJ);
+		const double NewSpeedMps =
+			std::sqrt(2.0 * FinalEnergyJ / TotalMassKg);
 
-		const double DistanceDeltaM = 0.5 * (CurrentSpeedMps + NewSpeedMps) * DtS;
+		const double DistanceDeltaM =
+			0.5 * (CurrentSpeedMps + NewSpeedMps) * DtS;
 
 		FSimulationState CandidateState;
 		CandidateState.SpeedMps = NewSpeedMps;
-		CandidateState.DistanceM = InputState.DistanceM + DistanceDeltaM;
-		CandidateState.ElapsedTimeS = InputState.ElapsedTimeS + DtS;
+		CandidateState.DistanceM =
+			InputState.DistanceM + DistanceDeltaM;
+		CandidateState.ElapsedTimeS =
+			InputState.ElapsedTimeS + DtS;
 
 		if (!CandidateState.Validate(OutError))
 		{
