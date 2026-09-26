@@ -64,6 +64,16 @@ jobs:
             -ExpectedHead '41308225a6b332b744cdc7b786f8a9bf0d8433a3' `
             -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR1Final'
 
+      - name: Run 1080p performance sanity
+        shell: pwsh
+        run: |
+          ./scripts/ue/Invoke-YacsInsightsProof.ps1 `
+            -ExpectedBranch HEAD `
+            -ExpectedHead '41308225a6b332b744cdc7b786f8a9bf0d8433a3' `
+            -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR1Performance' `
+            -SkipBuild `
+            -SkipInsightsAnalysis
+
       - name: Upload final Stage 3G R1 proof
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -74,6 +84,13 @@ jobs:
             Saved/RuntimeProof/CI/Stage3GR1Final/**/*.txt
             Saved/RuntimeProof/CI/Stage3GR1Final/**/*.log
             Saved/RuntimeProof/CI/Stage3GR1Final/**/*.png
+            Saved/RuntimeProof/CI/Stage3GR1Performance/**/*.json
+            Saved/RuntimeProof/CI/Stage3GR1Performance/**/*.txt
+            Saved/RuntimeProof/CI/Stage3GR1Performance/**/*.log
+            Saved/RuntimeProof/CI/Stage3GR1Performance/**/*.csv
+            Saved/RuntimeProof/CI/Stage3GR1Performance/**/*.png
+            Saved/RuntimeProof/CI/Stage3GR1Performance/**/*.utrace
+            Saved/RuntimeProof/CI/Stage3GR1Performance/**/*.uestats
           if-no-files-found: error
           retention-days: 7
 
