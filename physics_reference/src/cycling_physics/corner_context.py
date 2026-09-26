@@ -118,7 +118,7 @@ def _radius_context(curvature: float, lateral: float) -> tuple[str, float, float
 
     signed_centerline_radius = 1.0 / curvature
     effective_signed_radius = signed_centerline_radius - lateral
-    if not math.isfinite(effective_signed_radius) or abs(effective_signed_radius) <= 1e-12:
+    if not math.isfinite(effective_signed_radius) or effective_signed_radius == 0.0:
         raise ValueError(
             "lateral_position_m collapses the effective corner radius at the queried curvature"
         )
