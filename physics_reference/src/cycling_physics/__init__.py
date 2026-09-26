@@ -35,6 +35,7 @@ from .cornering import (
     maximum_corner_speed_mps,
     summarize_corner_technique,
 )
+from .grip_budget import SharedGripBudget, shared_grip_budget
 from .grip_policy import (
     ResolvedSurfaceGrip,
     SurfaceGripPolicy,
@@ -80,6 +81,8 @@ __all__ = [
     "SurfaceGripRule",
     "ResolvedSurfaceGrip",
     "SurfaceGripPolicy",
+    "SharedGripBudget",
+    "shared_grip_budget",
     "ALPINE_JOURNEY",
     "ALPINE_WEATHER",
     "ALPINE_SURFACE_GRIP_POLICY",
