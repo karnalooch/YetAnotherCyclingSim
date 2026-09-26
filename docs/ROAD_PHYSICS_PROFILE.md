@@ -126,11 +126,29 @@ The MVP may use controlled/automatic line selection instead of free steering, bu
 
 Braking and cornering must not receive independent full-grip budgets.
 
-Stage 4 MVP should use a simplified shared friction budget, initially representable as a friction circle or friction ellipse.
+Stage 4C-A uses the simplest explicit MVP form: a **unit friction circle** operating on normalized absolute tyre-force usage:
 
-Using more available grip for braking reduces the amount available for lateral cornering force, and vice versa.
+```text
+longitudinal_usage = |Fx demand| / longitudinal capacity
+lateral_usage      = |Fy demand| / lateral capacity
 
-The MVP model may remain intentionally simple. The architecture must not assume one permanent scalar grip state shared identically by both wheels.
+combined_usage = sqrt(longitudinal_usage^2 + lateral_usage^2)
+```
+
+`combined_usage <= 1` is inside the shared budget; `combined_usage > 1` exceeds it. Inputs are not clamped, so over-demand remains observable.
+
+The kernel also exposes how much normalized axis capacity remains while the other axis is consuming grip:
+
+```text
+remaining_lateral_capacity      = sqrt(max(0, 1 - longitudinal_usage^2))
+remaining_longitudinal_capacity = sqrt(max(0, 1 - lateral_usage^2))
+```
+
+This makes the core invariant explicit: two demands that are each individually below 100% can still exceed the shared budget when combined.
+
+Stage 4C-A deliberately does **not** invent braking controls, brake-force split, a tyre coefficient, a safety factor or consequence thresholds. Stage 4C-B maps actual fixed-step longitudinal demand and the Stage 4B lateral demand into these normalized values.
+
+The kernel is stateless rather than one permanent global grip scalar. MVP may evaluate it for a simplified whole-bike model; later front/rear tyre state can evaluate the same contract independently with different capacities and demands.
 
 ## 9. Surface and wetness
 
