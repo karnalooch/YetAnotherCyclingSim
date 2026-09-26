@@ -54,6 +54,7 @@ from .model import (
     road_angle_rad,
     rolling_resistance_force_n,
     step_simulation,
+    step_simulation_with_brake_force,
     total_resistance_force_n,
 )
 from .route import RouteProfile, RouteSegment
@@ -128,4 +129,5 @@ __all__ = [
     "aerodynamic_force_n",
     "total_resistance_force_n",
     "step_simulation",
+    "step_simulation_with_brake_force",
 ]
