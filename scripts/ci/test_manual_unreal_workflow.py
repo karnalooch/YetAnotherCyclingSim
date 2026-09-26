@@ -25,6 +25,19 @@ class ManualUnrealWorkflowContractTests(unittest.TestCase):
         self.assertIn("contents: read", self.workflow)
         self.assertNotIn("contents: write", self.workflow)
 
+    def test_target_branch_is_derived_from_mode(self):
+        self.assertNotIn("target_branch:", self.workflow)
+        self.assertNotIn("inputs.target_branch", self.workflow)
+        for token in (
+            "'canary' { 'main' }",
+            "'intentional-red' { 'main' }",
+            "'stage3g-author' { 'feat/stage3g-reference-environment' }",
+            "'stage3g-proof' { 'feat/stage3g-reference-environment' }",
+            "Unsupported manual Unreal mode",
+            "Derived target branch",
+        ):
+            self.assertIn(token, self.workflow)
+
     def test_canary_modes_are_code_only(self):
         self.assertIn(
             "inputs.mode == 'canary' || inputs.mode == 'intentional-red'",
