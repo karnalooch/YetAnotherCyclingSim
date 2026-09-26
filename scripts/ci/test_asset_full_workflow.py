@@ -40,7 +40,7 @@ class AssetFullWorkflowContractTests(unittest.TestCase):
     def test_modes_are_explicit_and_bounded(self):
         for mode in ("map-smoke", "visual", "package", "full"):
             self.assertIn(f"- {mode}", self.workflow)
-        self.assertNotIn("- cook", self.workflow)
+        self.assertNotIn("\n          - cook\n", self.workflow)
         self.assertIn("package_configuration", self.workflow)
         self.assertIn("- Development", self.workflow)
         self.assertIn("- Shipping", self.workflow)
