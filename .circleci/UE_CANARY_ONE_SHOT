@@ -1,0 +1,4 @@
+mode=hosted-ue-canary
+scope=single-main-push
+restore_required=true
+reason=telemetry-root-cause-run

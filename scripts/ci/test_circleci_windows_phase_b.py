@@ -11,6 +11,7 @@ RESTORE = ROOT / "scripts" / "ci" / "Restore-YacsUe58Seed.ps1"
 VALIDATOR = ROOT / "scripts" / "ci" / "Test-YacsUe58SeedPayload.ps1"
 CODE_ONLY = ROOT / "scripts" / "ci" / "Test-YacsCodeOnlyCheckout.ps1"
 PREFLIGHT = ROOT / "scripts" / "ue" / "Preflight-YacsProof.ps1"
+ONE_SHOT = ROOT / ".circleci" / "UE_CANARY_ONE_SHOT"
 
 
 class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
@@ -27,9 +28,43 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
         )
 
     def test_expensive_phase_b_paths_are_disabled_by_default(self):
-        for parameter in ("ue_cache_seed:", "ue_canary:"):
+        for parameter in ("windows_probe:", "ue_cache_seed:", "ue_canary:"):
             self.assertIn(parameter, self.config)
-        self.assertGreaterEqual(self.config.count("default: false"), 3)
+
+        def parameter_block(name: str) -> str:
+            lines = self.config.splitlines()
+            header = f"  {name}:"
+            start = lines.index(header)
+            block = [lines[start]]
+            for line in lines[start + 1 :]:
+                if (
+                    line.startswith("  ")
+                    and not line.startswith("    ")
+                    and line.endswith(":")
+                ):
+                    break
+                block.append(line)
+            return "\n".join(block)
+
+        self.assertIn("default: false", parameter_block("windows_probe"))
+        self.assertIn("default: false", parameter_block("ue_cache_seed"))
+
+        canary = parameter_block("ue_canary")
+        if "default: false" in canary:
+            self.assertFalse(
+                ONE_SHOT.exists(),
+                "one-shot sentinel must be removed when ue_canary is disabled",
+            )
+            return
+
+        self.assertIn("default: true", canary)
+        self.assertTrue(
+            ONE_SHOT.is_file(),
+            "ue_canary=true is allowed only with the audited one-shot sentinel",
+        )
+        sentinel = ONE_SHOT.read_text(encoding="utf-8")
+        self.assertIn("scope=single-main-push", sentinel)
+        self.assertIn("restore_required=true", sentinel)
 
     def test_seed_uses_self_hosted_resource_class(self):
         self.assertIn("ue_seed_resource_class:", self.config)
