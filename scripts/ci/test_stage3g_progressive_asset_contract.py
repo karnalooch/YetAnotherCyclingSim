@@ -21,8 +21,8 @@ class Stage3GProgressiveAssetContractTests(unittest.TestCase):
 
     def test_required_editor_plugins_are_explicit(self):
         for plugin in ("PCG", "EditorScriptingUtilities", "GeometryScripting"):
-            self.assertIn(f'\"Name\": \"{plugin}\"', self.project)
-        self.assertNotIn('\"Name\": \"PCGGeometryScriptInterop\"', self.project)
+            self.assertIn(f'"Name": "{plugin}"', self.project)
+        self.assertNotIn('"Name": "PCGGeometryScriptInterop"', self.project)
 
     def test_authoring_downloads_only_r1_curated_assets(self):
         for asset_id in (
@@ -38,13 +38,13 @@ class Stage3GProgressiveAssetContractTests(unittest.TestCase):
     def test_import_proof_is_fail_closed(self):
         self.assertIn("stage3g_asset_import_proof.json", self.authoring)
         self.assertIn("imported_count -ne 13", self.authoring)
-        self.assertIn("Stage 3G source-asset import proof is incomplete.", self.authoring)
+        self.assertIn(
+            "Stage 3G source-asset import proof is incomplete.", self.authoring
+        )
         self.assertIn("SM_Stage3G_Boulder.uasset", self.authoring)
 
     def test_importer_uses_project_owned_canonical_paths(self):
-        self.assertIn(
-            "/Game/Prototype/Environment/Stage3G/Imported", self.importer
-        )
+        self.assertIn("/Game/Prototype/Environment/Stage3G/Imported", self.importer)
         for name in (
             "T_Stage3G_Meadow_BaseColor",
             "T_Stage3G_ForestGround_BaseColor",
