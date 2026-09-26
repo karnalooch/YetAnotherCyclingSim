@@ -384,12 +384,15 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 	}
 	if (!IsValid(RoadTiles->GetStaticMesh())
 		|| !IsValid(TerrainTiles->GetStaticMesh())
+		|| !IsValid(ForestTerrainTiles->GetStaticMesh())
+		|| !IsValid(HighAlpineTerrainTiles->GetStaticMesh())
 		|| !IsValid(ForestProps->GetStaticMesh())
 		|| !IsValid(MountainProps->GetStaticMesh())
 		|| !IsValid(RoadEdgeLines->GetStaticMesh())
 		|| !IsValid(ValleyRidgeProps->GetStaticMesh())
 		|| !IsValid(ForestCanopyProps->GetStaticMesh())
 		|| !IsValid(DistantMountainProps->GetStaticMesh())
+		|| !IsValid(RockProps->GetStaticMesh())
 		|| !IsValid(WaterTiles->GetStaticMesh()))
 	{
 		OutError = TEXT("prototype terrain engine basic-shape meshes are unavailable");
@@ -400,21 +403,27 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 	RoadTiles->Modify();
 	RoadEdgeLines->Modify();
 	TerrainTiles->Modify();
+	ForestTerrainTiles->Modify();
+	HighAlpineTerrainTiles->Modify();
 	ForestProps->Modify();
 	MountainProps->Modify();
 	ValleyRidgeProps->Modify();
 	ForestCanopyProps->Modify();
 	DistantMountainProps->Modify();
+	RockProps->Modify();
 	WaterTiles->Modify();
 
 	RoadTiles->ClearInstances();
 	RoadEdgeLines->ClearInstances();
 	TerrainTiles->ClearInstances();
+	ForestTerrainTiles->ClearInstances();
+	HighAlpineTerrainTiles->ClearInstances();
 	ForestProps->ClearInstances();
 	MountainProps->ClearInstances();
 	ValleyRidgeProps->ClearInstances();
 	ForestCanopyProps->ClearInstances();
 	DistantMountainProps->ClearInstances();
+	RockProps->ClearInstances();
 	WaterTiles->ClearInstances();
 
 	const TArray<CyclingSimulation::FRouteGeometrySample>& Samples =
@@ -507,7 +516,16 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 				StartIndex);
 			return false;
 		}
-		TerrainTiles->AddInstance(TerrainTransform, false);
+		UHierarchicalInstancedStaticMeshComponent* TargetTerrain = TerrainTiles;
+		if (MidDistanceM >= MountainStartM)
+		{
+			TargetTerrain = HighAlpineTerrainTiles;
+		}
+		else if (MidDistanceM >= ForestStartM)
+		{
+			TargetTerrain = ForestTerrainTiles;
+		}
+		TargetTerrain->AddInstance(TerrainTransform, false);
 	}
 
 	// Stage 3G valley silhouette: broad overlapping cone ridges sit beyond the
@@ -712,6 +730,61 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 		}
 	}
 
+	// Stage 3G R1 real rock dressing. The imported boulder mesh is scaled
+	// from its actual bounds to a deterministic target diameter so source-unit
+	// differences cannot silently create kilometre-sized or microscopic rocks.
+	const FVector RockMeshSizeCm = RockProps->GetStaticMesh()->GetBounds().BoxExtent * 2.0;
+	const double RockMeshMaxDimensionCm = FMath::Max3(
+		static_cast<double>(RockMeshSizeCm.X),
+		static_cast<double>(RockMeshSizeCm.Y),
+		static_cast<double>(RockMeshSizeCm.Z));
+	if (!FMath::IsFinite(RockMeshMaxDimensionCm) || RockMeshMaxDimensionCm <= UE_SMALL_NUMBER)
+	{
+		OutError = TEXT("Stage 3G rock mesh bounds are invalid");
+		return false;
+	}
+
+	for (double DistanceM = RockPropFirstM;
+		DistanceM < RockPropLastExclusiveM;
+		DistanceM += RockPropSpacingM)
+	{
+		FVector RoutePositionM;
+		FVector Right;
+		if (!TryResolveHorizontalRight(Geometry, DistanceM, RoutePositionM, Right, OutError))
+		{
+			return false;
+		}
+
+		for (const double Side : { -1.0, 1.0 })
+		{
+			const double Phase = DistanceM * 0.017 + Side * 0.9;
+			const double TargetDiameterM =
+				1.8 + 1.2 * FMath::Abs(FMath::Sin(Phase));
+			const double LateralM =
+				RockPropBaseLateralM
+				+ 6.0 * FMath::Abs(FMath::Cos(DistanceM * 0.009 + Side));
+			const double UniformScale =
+				(TargetDiameterM * MetresToCentimetres) / RockMeshMaxDimensionCm;
+
+			FVector PositionM = RoutePositionM + Right * (Side * LateralM);
+			PositionM.Z += TargetDiameterM * 0.35;
+
+			const FTransform RockTransform(
+				FRotator(
+					0.0,
+					FMath::Fmod(DistanceM * 0.137 + Side * 71.0, 360.0),
+					0.0),
+				PositionM * MetresToCentimetres,
+				FVector(UniformScale));
+			if (!IsFiniteTransform(RockTransform))
+			{
+				OutError = TEXT("Stage 3G rock dressing transform is invalid");
+				return false;
+			}
+			RockProps->AddInstance(RockTransform, false);
+		}
+	}
+
 	// Stage 3G distant skyline: two depth layers per side. Larger, desaturated
 	// peaks create atmospheric depth while the original MountainProps remain the
 	// near-road high-Alpine markers.
@@ -813,6 +886,7 @@ bool AStage3PrototypeTerrainActor::ValidateAgainstGeometry(
 	if (GetValleyRidgeInstanceCount() <= 0
 		|| GetForestCanopyInstanceCount() <= 0
 		|| GetDistantMountainInstanceCount() <= 0
+		|| GetRockPropInstanceCount() <= 0
 		|| GetWaterTileInstanceCount() <= 0)
 	{
 		OutError = TEXT("Stage 3G reference-environment layers are missing");
@@ -856,7 +930,10 @@ int32 AStage3PrototypeTerrainActor::GetRoadInstanceCount() const
 
 int32 AStage3PrototypeTerrainActor::GetTerrainInstanceCount() const
 {
-	return IsValid(TerrainTiles) ? TerrainTiles->GetInstanceCount() : 0;
+	int32 Count = IsValid(TerrainTiles) ? TerrainTiles->GetInstanceCount() : 0;
+	Count += IsValid(ForestTerrainTiles) ? ForestTerrainTiles->GetInstanceCount() : 0;
+	Count += IsValid(HighAlpineTerrainTiles) ? HighAlpineTerrainTiles->GetInstanceCount() : 0;
+	return Count;
 }
 
 int32 AStage3PrototypeTerrainActor::GetForestPropInstanceCount() const
@@ -887,6 +964,11 @@ int32 AStage3PrototypeTerrainActor::GetForestCanopyInstanceCount() const
 int32 AStage3PrototypeTerrainActor::GetDistantMountainInstanceCount() const
 {
 	return IsValid(DistantMountainProps) ? DistantMountainProps->GetInstanceCount() : 0;
+}
+
+int32 AStage3PrototypeTerrainActor::GetRockPropInstanceCount() const
+{
+	return IsValid(RockProps) ? RockProps->GetInstanceCount() : 0;
 }
 
 int32 AStage3PrototypeTerrainActor::GetWaterTileInstanceCount() const
