@@ -140,6 +140,16 @@ namespace CyclingSimulation
 		return InputController.TrySetCadenceRpm(ValueRpm, OutError);
 	}
 
+	bool FCyclingSimulationSession::TrySetBrakeRatio(double Value, FString& OutError)
+	{
+		if (!bIsConfigured)
+		{
+			OutError = FString::Printf(TEXT("session is not configured"));
+			return false;
+		}
+		return InputController.TrySetBrakeRatio(Value, OutError);
+	}
+
 	bool FCyclingSimulationSession::TryIncreasePower(FString& OutError)
 	{
 		if (!bIsConfigured)
