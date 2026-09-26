@@ -110,6 +110,11 @@ Branch cleanup is stack-aware: a merged parent branch is preserved while any
 open PR still uses it as a base, preventing cleanup from racing the restack
 operation.
 
+The orchestrator is event-driven and also reconciles every 15 minutes. This
+periodic pass is deliberate: transient GitHub mergeability states, delayed
+check propagation, or a missed event must not leave an otherwise healthy stack
+stuck forever. Cyclic stacks fail closed instead of waiting indefinitely.
+
 ## Verification
 
 After bootstrap:
