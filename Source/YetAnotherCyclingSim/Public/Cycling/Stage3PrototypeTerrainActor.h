@@ -47,6 +47,7 @@ public:
 	int32 GetValleyRidgeInstanceCount() const;
 	int32 GetForestCanopyInstanceCount() const;
 	int32 GetDistantMountainInstanceCount() const;
+	int32 GetRockPropInstanceCount() const;
 	int32 GetWaterTileInstanceCount() const;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stage3|PrototypeWorld")
@@ -57,6 +58,12 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stage3|PrototypeWorld")
 	TObjectPtr<UHierarchicalInstancedStaticMeshComponent> TerrainTiles;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stage3|ReferenceEnvironment")
+	TObjectPtr<UHierarchicalInstancedStaticMeshComponent> ForestTerrainTiles;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stage3|ReferenceEnvironment")
+	TObjectPtr<UHierarchicalInstancedStaticMeshComponent> HighAlpineTerrainTiles;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stage3|PrototypeWorld")
 	TObjectPtr<UHierarchicalInstancedStaticMeshComponent> ForestProps;
@@ -77,6 +84,9 @@ public:
 	TObjectPtr<UHierarchicalInstancedStaticMeshComponent> DistantMountainProps;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stage3|ReferenceEnvironment")
+	TObjectPtr<UHierarchicalInstancedStaticMeshComponent> RockProps;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stage3|ReferenceEnvironment")
 	TObjectPtr<UHierarchicalInstancedStaticMeshComponent> WaterTiles;
 
 	// Stage 3F presentation paths. Assigned via ConstructorHelpers so the
@@ -94,7 +104,9 @@ public:
 	// before the binary .uasset generation step.
 	static const TCHAR* Stage3GGrassMaterialPath;
 	static const TCHAR* Stage3GForestMaterialPath;
+	static const TCHAR* Stage3GFoliageMaterialPath;
 	static const TCHAR* Stage3GRockMaterialPath;
 	static const TCHAR* Stage3GDistantRockMaterialPath;
 	static const TCHAR* Stage3GWaterMaterialPath;
+	static const TCHAR* Stage3GBoulderMeshPath;
 };
