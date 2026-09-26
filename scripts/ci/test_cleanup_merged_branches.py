@@ -12,6 +12,7 @@ class BranchDecisionTests(unittest.TestCase):
             branch_sha="MAIN",
             default_branch="main",
             open_branch_names=set(),
+            open_base_branch_names=set(),
             merged_head_shas={"MAIN"},
             tip_is_in_default=True,
         )
@@ -24,11 +25,36 @@ class BranchDecisionTests(unittest.TestCase):
             branch_sha="NEW",
             default_branch="main",
             open_branch_names={"feat/live"},
+            open_base_branch_names=set(),
             merged_head_shas={"OLD"},
             tip_is_in_default=False,
         )
         self.assertFalse(delete)
         self.assertEqual(reason, "open pull request")
+
+    def test_branch_used_as_open_pr_base_is_preserved(self):
+        delete, reason = cb.should_delete(
+            branch_name="feat/parent",
+            branch_sha="PRHEAD",
+            default_branch="main",
+            open_branch_names=set(),
+            open_base_branch_names={"feat/parent"},
+            merged_head_shas={"PRHEAD"},
+            tip_is_in_default=False,
+        )
+        self.assertFalse(delete)
+        self.assertEqual(reason, "base of open pull request")
+
+    def test_open_base_branches_collects_stack_bases(self):
+        pulls = [
+            {"base": {"ref": "main"}},
+            {"base": {"ref": "feat/parent"}},
+            {"base": {"ref": "feat/parent"}},
+        ]
+        self.assertEqual(
+            cb.open_base_branches(pulls),
+            {"main", "feat/parent"},
+        )
 
     def test_branch_without_merged_pr_is_preserved(self):
         delete, reason = cb.should_delete(
@@ -36,6 +62,7 @@ class BranchDecisionTests(unittest.TestCase):
             branch_sha="NEW",
             default_branch="main",
             open_branch_names=set(),
+            open_base_branch_names=set(),
             merged_head_shas=set(),
             tip_is_in_default=False,
         )
@@ -48,6 +75,7 @@ class BranchDecisionTests(unittest.TestCase):
             branch_sha="PRHEAD",
             default_branch="main",
             open_branch_names=set(),
+            open_base_branch_names=set(),
             merged_head_shas={"PRHEAD"},
             tip_is_in_default=False,
         )
@@ -60,6 +88,7 @@ class BranchDecisionTests(unittest.TestCase):
             branch_sha="OLD_MAIN",
             default_branch="main",
             open_branch_names=set(),
+            open_base_branch_names=set(),
             merged_head_shas={"ORIGINAL_PR_HEAD"},
             tip_is_in_default=True,
         )
@@ -72,6 +101,7 @@ class BranchDecisionTests(unittest.TestCase):
             branch_sha="NEW_WORK",
             default_branch="main",
             open_branch_names=set(),
+            open_base_branch_names=set(),
             merged_head_shas={"OLD_PR_HEAD"},
             tip_is_in_default=False,
         )
