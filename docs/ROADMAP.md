@@ -381,10 +381,11 @@ Wprowadzić autorską mechanikę oceniającą odpuszczenie i ponowne rozpoczęci
 6. **4C-B1 — #173:** jawny `brake_ratio ∈ [0,1]` w rider input/controller/session; default `0` i brak wpływu na równanie ruchu do czasu 4C-B2.
 7. **4C-B2:** demand bridge per fixed-step: `brake_ratio -> longitudinal_usage`, a `speed² / effective_radius / lateral_acceleration_limit -> lateral_usage`; oba trafiają do 4C-A. Bez wpływu hamulca na prędkość.
 8. **4C-B3a:** tyre-limited brake-force resolver: `μ_eff · static normal load`, ograniczony remaining longitudinal capacity z 4C-A; bez arbitralnego max-brake constant.
-9. **4C-B3b:** zastosowanie wyliczonej siły hamowania w fixed-step energy/force integration z exact zero-brake regression.
-10. **4C-C:** technique + consequences — scoring, timing mocy/kadencji, utrata prędkości, wide line i controlled slip; bez upadków w MVP.
-11. **4D:** guidance + assists — linia przejazdu, markery entry/apex/exit, grip warning i poziomy asysty jako presentation-only; wymaga wspólnego integration gate z World lane.
-12. **4E:** deterministyczny full-route corner proof dla reprezentatywnych flat/banked/off-camber zakrętów oraz suchej/mokrej nawierzchni.
+9. **4C-B3b:** explicit brake-force fixed-step integrator: siła hamowania trafia do predictor + work/energy balance, a legacy step deleguje z `0 N` dla exact regression parity.
+10. **4C-B3c:** fixed-step orchestration: per substep wyliczyć corner context → lateral limit → shared demand → brake force i przekazać ją do integratora, bez zależności od render-frame batching.
+11. **4C-C:** technique + consequences — scoring, timing mocy/kadencji, utrata prędkości, wide line i controlled slip; bez upadków w MVP.
+12. **4D:** guidance + assists — linia przejazdu, markery entry/apex/exit, grip warning i poziomy asysty jako presentation-only; wymaga wspólnego integration gate z World lane.
+13. **4E:** deterministyczny full-route corner proof dla reprezentatywnych flat/banked/off-camber zakrętów oraz suchej/mokrej nawierzchni.
 
 ## Zadania
 
