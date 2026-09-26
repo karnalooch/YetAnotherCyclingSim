@@ -308,6 +308,19 @@ class RootLifecycleTests(unittest.TestCase):
         get_pr.assert_not_called()
 
 
+class StackCycleTests(unittest.TestCase):
+    def test_stack_cycle_fails_closed(self):
+        a = pr_payload(number=1, base="b", head="a")
+        b = pr_payload(number=2, base="a", head="b")
+        with self.assertRaisesRegex(po.OrchestratorError, "stack cycle detected"):
+            po.validate_stack_acyclic({"a": a, "b": b})
+
+    def test_linear_stack_is_accepted(self):
+        a = pr_payload(number=1, base="main", head="a")
+        b = pr_payload(number=2, base="a", head="b")
+        po.validate_stack_acyclic({"a": a, "b": b})
+
+
 class OrderingTests(unittest.TestCase):
     @patch.object(po, "evaluate_pull_request", return_value="blocked")
     def test_roots_are_evaluated_before_children(self, evaluate):
@@ -352,6 +365,11 @@ class WorkflowContractTests(unittest.TestCase):
         )
         self.assertIn("persist-credentials: false", self.workflow)
         self.assertNotIn("secrets.", self.workflow)
+
+    def test_orchestrator_has_periodic_reconciliation(self):
+        self.assertIn("schedule:", self.workflow)
+        self.assertIn("7,22,37,52 * * * *", self.workflow)
+        self.assertIn("cancel-in-progress: false", self.workflow)
 
     def test_orchestrator_has_minimal_required_write_permissions(self):
         self.assertIn("contents: write", self.workflow)
