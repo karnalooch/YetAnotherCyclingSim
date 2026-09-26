@@ -6,12 +6,18 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW = ROOT / ".github" / "workflows" / "reusable-stage3g-full.yml"
+PREFLIGHT = ROOT / "scripts" / "ue" / "Preflight-YacsProof.ps1"
+BASE_PROOF = ROOT / "scripts" / "ue" / "Invoke-YacsProof.ps1"
+STAGE3G_PROOF = ROOT / "scripts" / "ue" / "Invoke-YacsStage3GProof.ps1"
 
 
 class ReusableStage3GFullWorkflowContractTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.workflow = WORKFLOW.read_text(encoding="utf-8")
+        cls.preflight = PREFLIGHT.read_text(encoding="utf-8")
+        cls.base_proof = BASE_PROOF.read_text(encoding="utf-8")
+        cls.stage3g_proof = STAGE3G_PROOF.read_text(encoding="utf-8")
 
     def test_lane_is_reusable_and_self_hosted(self):
         self.assertIn("workflow_call:", self.workflow)
@@ -35,6 +41,22 @@ class ReusableStage3GFullWorkflowContractTests(unittest.TestCase):
         self.assertIn("Invoke-YacsStage3GAuthoring.ps1", self.workflow)
         self.assertIn("Invoke-YacsStage3GProof.ps1", self.workflow)
         self.assertIn("-SkipBuild", self.workflow)
+
+    def test_ephemeral_stage3g_dirty_allowlist_is_narrow_and_propagated(self):
+        self.assertIn("AdditionalAllowedDirtyPaths", self.preflight)
+        self.assertIn("AdditionalAllowedDirtyPaths", self.base_proof)
+        self.assertGreaterEqual(
+            self.stage3g_proof.count("AdditionalAllowedDirtyPaths"),
+            2,
+        )
+        self.assertIn(
+            "Content/Prototype/Environment/Stage3G/",
+            self.stage3g_proof,
+        )
+        self.assertNotIn(
+            "AdditionalAllowedDirtyPaths = @('Content/')",
+            self.stage3g_proof,
+        )
 
     def test_lane_uploads_only_proof_and_always_cleans(self):
         for extension in ("**/*.json", "**/*.txt", "**/*.log", "**/*.png"):
