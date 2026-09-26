@@ -7,9 +7,7 @@ import classify_changes as cc
 
 class ChangeClassifierTests(unittest.TestCase):
     def test_docs_only_is_lightweight(self):
-        result = cc.classify_paths(
-            ["README.md", "docs/ci/PROJECT_WORKFLOW.md"]
-        )
+        result = cc.classify_paths(["README.md", "docs/ci/PROJECT_WORKFLOW.md"])
         self.assertTrue(result.docs_only)
         self.assertTrue(result.docs)
         self.assertFalse(result.python)
@@ -19,9 +17,7 @@ class ChangeClassifierTests(unittest.TestCase):
         self.assertFalse(result.security_base)
 
     def test_python_change_routes_python_security_only(self):
-        result = cc.classify_paths(
-            ["physics_reference/src/cycling_physics/model.py"]
-        )
+        result = cc.classify_paths(["physics_reference/src/cycling_physics/model.py"])
         self.assertTrue(result.python)
         self.assertTrue(result.security_base)
         self.assertFalse(result.cpp)
@@ -93,9 +89,7 @@ class ChangeClassifierTests(unittest.TestCase):
         self.assertFalse(result.ue_code)
 
     def test_reusable_unreal_workflow_routes_unreal(self):
-        result = cc.classify_paths(
-            [".github/workflows/reusable-unreal.yml"]
-        )
+        result = cc.classify_paths([".github/workflows/reusable-unreal.yml"])
         self.assertTrue(result.ci)
         self.assertTrue(result.ue_code)
 
