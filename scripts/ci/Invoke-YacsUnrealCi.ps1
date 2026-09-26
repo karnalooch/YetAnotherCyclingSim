@@ -17,7 +17,8 @@ param(
     [string] $ArtifactRoot,
     [Parameter(Mandatory=$true)] [string] $ExpectedHead,
     [string] $ExpectedBranch,
-    [string] $TestFilter = 'CyclingSession+CyclingPhysics+CyclingInput'
+    [string] $TestFilter = 'CyclingSession+CyclingPhysics+CyclingInput',
+    [switch] $SkipBuild
 )
 
 Set-StrictMode -Version Latest
@@ -157,6 +158,10 @@ try {
         ExpectedHead = $ExpectedHead
         TestFilter = $TestFilter
     }
+    if ($SkipBuild) {
+        $ProofArgs['SkipBuild'] = $true
+    }
+
     & $Proof @ProofArgs
     if ($LASTEXITCODE -ne 0) {
         throw "Unreal build/Automation proof failed with exit code $LASTEXITCODE."
@@ -191,6 +196,7 @@ try {
             $Context.EngineVersion.PatchVersion
         )
         TestFilter = $TestFilter
+        SkipBuild = [bool]$SkipBuild
         Discovered = [int]$Summary.Discovered
         Passed = [int]$Summary.Passed
         Failed = [int]$Summary.Failed
