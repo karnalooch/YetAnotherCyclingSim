@@ -8,7 +8,9 @@ namespace CyclingRoadPhysics
 {
 	// Authoritative route-local road sample at distance S.
 	//
-	// Curvatures use inverse metres (1/m). BankAngleRad uses radians.
+	// Curvatures use inverse metres (1/m). Cross-slope angles use radians.
+	// Positive cross-slope rises toward +D (the rider's right). Left/right
+	// half-road angles allow flat, planar-banked, crowned and off-camber roads.
 	// Wetness is normalized to [0, 1]. Roughness is a non-negative
 	// dimensionless metadata value whose detailed physical effect is post-MVP.
 	struct YETANOTHERCYCLINGSIM_API FRoadPhysicsSampleDefinition
@@ -19,7 +21,8 @@ namespace CyclingRoadPhysics
 		double HorizontalCurvaturePerM = 0.0;
 		double VerticalCurvaturePerM = 0.0;
 		double RoadWidthM = 0.0;
-		double BankAngleRad = 0.0;
+		double LeftCrossSlopeAngleRad = 0.0;
+		double RightCrossSlopeAngleRad = 0.0;
 		FString SurfaceId;
 		double Wetness = 0.0;
 		double Roughness = 0.0;
@@ -34,7 +37,8 @@ namespace CyclingRoadPhysics
 		double GetHorizontalCurvaturePerM() const { return HorizontalCurvaturePerM; }
 		double GetVerticalCurvaturePerM() const { return VerticalCurvaturePerM; }
 		double GetRoadWidthM() const { return RoadWidthM; }
-		double GetBankAngleRad() const { return BankAngleRad; }
+		double GetLeftCrossSlopeAngleRad() const { return LeftCrossSlopeAngleRad; }
+		double GetRightCrossSlopeAngleRad() const { return RightCrossSlopeAngleRad; }
 		const FString& GetSurfaceId() const { return SurfaceId; }
 		double GetWetness() const { return Wetness; }
 		double GetRoughness() const { return Roughness; }
@@ -48,7 +52,8 @@ namespace CyclingRoadPhysics
 		double HorizontalCurvaturePerM = 0.0;
 		double VerticalCurvaturePerM = 0.0;
 		double RoadWidthM = 0.0;
-		double BankAngleRad = 0.0;
+		double LeftCrossSlopeAngleRad = 0.0;
+		double RightCrossSlopeAngleRad = 0.0;
 		FString SurfaceId;
 		double Wetness = 0.0;
 		double Roughness = 0.0;
@@ -64,7 +69,9 @@ namespace CyclingRoadPhysics
 		double HorizontalCurvaturePerM = 0.0;
 		double VerticalCurvaturePerM = 0.0;
 		double RoadWidthM = 0.0;
-		double BankAngleRad = 0.0;
+		double LeftCrossSlopeAngleRad = 0.0;
+		double RightCrossSlopeAngleRad = 0.0;
+		double CrossSlopeAngleRad = 0.0;
 		FString SurfaceId;
 		double Wetness = 0.0;
 		double Roughness = 0.0;
@@ -81,13 +88,15 @@ namespace CyclingRoadPhysics
 	{
 		double MaxAbsGradeChangePerM = 0.0;
 		double MaxAbsHorizontalCurvatureChangePerM2 = 0.0;
-		double MaxAbsBankAngleChangeRadPerM = 0.0;
+		double MaxAbsCrossSlopeAngleChangeRadPerM = 0.0;
 	};
 
 	// Rendering-independent canonical physical road profile.
 	//
 	// Samples are ordered by S (route distance). Numeric fields interpolate
-	// linearly. Surface ids use left-closed/right-open interval semantics.
+	// linearly. Left/right cross-slope interpolate along S; TryGetStateAt then
+	// resolves the locally experienced cross-slope from D. Surface ids use
+	// left-closed/right-open interval semantics.
 	class YETANOTHERCYCLINGSIM_API FRoadPhysicsProfile
 	{
 	public:
@@ -103,7 +112,7 @@ namespace CyclingRoadPhysics
 		// - strictly increasing finite S;
 		// - all numeric fields finite;
 		// - road width > 0;
-		// - bank angle strictly inside (-pi/2, pi/2);
+		// - left/right cross-slope angles strictly inside (-pi/2, pi/2);
 		// - non-empty trimmed SurfaceId;
 		// - Wetness in [0, 1];
 		// - Roughness >= 0.

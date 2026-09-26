@@ -87,12 +87,15 @@ namespace CyclingRoadPhysics
 					Index);
 				return false;
 			}
-			if (!IsFinite(Definition.BankAngleRad)
-				|| Definition.BankAngleRad <= -HalfPi
-				|| Definition.BankAngleRad >= HalfPi)
+			if (!IsFinite(Definition.LeftCrossSlopeAngleRad)
+				|| Definition.LeftCrossSlopeAngleRad <= -HalfPi
+				|| Definition.LeftCrossSlopeAngleRad >= HalfPi
+				|| !IsFinite(Definition.RightCrossSlopeAngleRad)
+				|| Definition.RightCrossSlopeAngleRad <= -HalfPi
+				|| Definition.RightCrossSlopeAngleRad >= HalfPi)
 			{
 				OutError = FString::Printf(
-					TEXT("road sample %d bank angle must be finite and strictly inside (-pi/2, pi/2)"),
+					TEXT("road sample %d left/right cross-slope angles must be finite and strictly inside (-pi/2, pi/2)"),
 					Index);
 				return false;
 			}
@@ -127,7 +130,8 @@ namespace CyclingRoadPhysics
 			Sample.HorizontalCurvaturePerM = Definition.HorizontalCurvaturePerM;
 			Sample.VerticalCurvaturePerM = Definition.VerticalCurvaturePerM;
 			Sample.RoadWidthM = Definition.RoadWidthM;
-			Sample.BankAngleRad = Definition.BankAngleRad;
+			Sample.LeftCrossSlopeAngleRad = Definition.LeftCrossSlopeAngleRad;
+			Sample.RightCrossSlopeAngleRad = Definition.RightCrossSlopeAngleRad;
 			Sample.SurfaceId = TrimmedSurfaceId;
 			Sample.Wetness = Definition.Wetness;
 			Sample.Roughness = Definition.Roughness;
@@ -241,10 +245,27 @@ namespace CyclingRoadPhysics
 			Right->GetVerticalCurvaturePerM(),
 			Alpha);
 		OutState.RoadWidthM = RoadWidthM;
-		OutState.BankAngleRad = Lerp(
-			Left->GetBankAngleRad(),
-			Right->GetBankAngleRad(),
+		OutState.LeftCrossSlopeAngleRad = Lerp(
+			Left->GetLeftCrossSlopeAngleRad(),
+			Right->GetLeftCrossSlopeAngleRad(),
 			Alpha);
+		OutState.RightCrossSlopeAngleRad = Lerp(
+			Left->GetRightCrossSlopeAngleRad(),
+			Right->GetRightCrossSlopeAngleRad(),
+			Alpha);
+		if (LateralPositionM < 0.0)
+		{
+			OutState.CrossSlopeAngleRad = OutState.LeftCrossSlopeAngleRad;
+		}
+		else if (LateralPositionM > 0.0)
+		{
+			OutState.CrossSlopeAngleRad = OutState.RightCrossSlopeAngleRad;
+		}
+		else
+		{
+			OutState.CrossSlopeAngleRad =
+				0.5 * (OutState.LeftCrossSlopeAngleRad + OutState.RightCrossSlopeAngleRad);
+		}
 		OutState.SurfaceId = Left->GetSurfaceId();
 		OutState.Wetness = Lerp(Left->GetWetness(), Right->GetWetness(), Alpha);
 		OutState.Roughness = Lerp(Left->GetRoughness(), Right->GetRoughness(), Alpha);
@@ -301,7 +322,7 @@ namespace CyclingRoadPhysics
 		}
 		if (!IsPositiveFinite(Limits.MaxAbsGradeChangePerM)
 			|| !IsPositiveFinite(Limits.MaxAbsHorizontalCurvatureChangePerM2)
-			|| !IsPositiveFinite(Limits.MaxAbsBankAngleChangeRadPerM))
+			|| !IsPositiveFinite(Limits.MaxAbsCrossSlopeAngleChangeRadPerM))
 		{
 			OutError = TEXT("all road transition limits must be finite and greater than zero");
 			return false;
@@ -336,12 +357,27 @@ namespace CyclingRoadPhysics
 				return false;
 			}
 
-			const double BankRate =
-				std::abs(Current.GetBankAngleRad() - Previous.GetBankAngleRad()) / DeltaSM;
-			if (BankRate > Limits.MaxAbsBankAngleChangeRadPerM)
+			const double LeftCrossSlopeRate =
+				std::abs(
+					Current.GetLeftCrossSlopeAngleRad()
+					- Previous.GetLeftCrossSlopeAngleRad()) / DeltaSM;
+			if (LeftCrossSlopeRate > Limits.MaxAbsCrossSlopeAngleChangeRadPerM)
 			{
 				OutError = FString::Printf(
-					TEXT("bank angle change rate exceeds limit between road samples %d and %d"),
+					TEXT("left cross-slope angle change rate exceeds limit between road samples %d and %d"),
+					Index - 1,
+					Index);
+				return false;
+			}
+
+			const double RightCrossSlopeRate =
+				std::abs(
+					Current.GetRightCrossSlopeAngleRad()
+					- Previous.GetRightCrossSlopeAngleRad()) / DeltaSM;
+			if (RightCrossSlopeRate > Limits.MaxAbsCrossSlopeAngleChangeRadPerM)
+			{
+				OutError = FString::Printf(
+					TEXT("right cross-slope angle change rate exceeds limit between road samples %d and %d"),
 					Index - 1,
 					Index);
 				return false;

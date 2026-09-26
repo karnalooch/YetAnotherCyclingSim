@@ -207,7 +207,7 @@ Użytkownik może przejechać prostą trasę, zmieniając moc i kadencję, a pr�
 # Etap 3 — trasa testowa i profil wysokości
 
 **Planowany czas:** tydzień 3–5  
-**Status:** rdzeń 3A–3F ukończony; 3G technicznie udowodnione, ale **wizualny/asset acceptance ponownie otwarty**; 3H Road Physics Profile jest obowiązkowym kontraktem przed dalszym corneringiem; Stage 4A ukończone
+**Status:** rdzeń 3A–3F ukończony; 3G technicznie udowodnione, ale **wizualny/asset acceptance ponownie otwarty**; 3H Road Physics Profile ukończone przez PR #165, #167 i #168; Stage 4A ukończone, 4B/4C odblokowane
 
 ## Cel
 
@@ -225,7 +225,7 @@ Stage 3 jest realizowany kolejno:
 6. **3F — PR #79:** utrwalenie pełnego stanu mapy, materiałów drogi/terenu i wizualnego baseline'u — **ukończone**.
 7. **3G — #80:** Reference Environment Pass — **techniczny authoring/final-proof pipeline jest ukończony przez PR #155, ale acceptance wizualny i progressive asset gate nie zostały spełnione; #80 wraca jako aktywny etap**.
 8. **3G-MCP — #85:** kontrolowany spike `db-lyon/ue-mcp` pozostaje częścią 3G tooling/worldgen; nie wolno traktować go jako substytutu PCG ani jako powodu do pominięcia source assetów.
-9. **3H — Road Physics Profile & Route Geometry Contract:** formalny kontrakt fizycznej drogi, niezależny od renderowanego mesha/PCG; wymagany przed 4B.
+9. **3H — Road Physics Profile & Route Geometry Contract:** formalny kontrakt fizycznej drogi, niezależny od renderowanego mesha/PCG — **ukończone przez PR #165, #167 i #168**.
 
 **Korekta po audycie 26.09.2026:** Stage 4A zostało zrealizowane przed wykryciem luki acceptance i pozostaje ważnym, scalonym modelem domenowym. Od teraz Stage 3 ma dwa jawnie rozdzielone workstreamy: **World/3G** (assets, PCG, environment) oraz **Physics/3H → 4B/4C** (kontrakt drogi i czysta mechanika zakrętów). Mogą być rozwijane równolegle, ponieważ są spięte formalnym `Road Physics Profile` i osobnymi bramkami CI. **Końcowy in-world integration/acceptance 4D/4E nie może zostać uznany za ukończony, dopóki 3G i 3H nie są zielone.**
 
@@ -314,7 +314,7 @@ Szczegóły architektury i plan wdrożenia: [`UE_MCP_WORLD_GENERATION.md`](UE_MC
 
 ## 3H — Road Physics Profile & Route Geometry Contract
 
-**Status:** wymagany przed rozpoczęciem 4B. Dokument źródłowy: [`ROAD_PHYSICS_PROFILE.md`](ROAD_PHYSICS_PROFILE.md).
+**Status:** **ukończone** przez PR #165 (kanoniczny profil), #167 (Stage 3 geometry → physics) i #168 (lateral cross-slope + granica surface/grip metadata). 4B/4C są odblokowane. Dokument źródłowy: [`ROAD_PHYSICS_PROFILE.md`](ROAD_PHYSICS_PROFILE.md).
 
 ### Cel
 
@@ -322,17 +322,19 @@ Oddzielić autorytatywną fizyczną reprezentację drogi od renderowanego spline
 
 ### Minimalny kontrakt Stage 3H
 
-- [ ] Zdefiniować route-local coordinates: dystans wzdłuż trasy `S` i pozycję boczną `D`.
-- [ ] Zdefiniować elevation oraz longitudinal grade jako autorytatywne dane trasy.
-- [ ] Zdefiniować signed horizontal curvature / radius i kierunek zakrętu.
-- [ ] Zdefiniować vertical curvature jako metadata potrzebne pod przyszłe efekty nacisku na crest/compression.
-- [ ] Zdefiniować road width i dopuszczalny lateral envelope dla racing line.
-- [ ] Zdefiniować banking / cross-slope niezależnie od longitudinal grade.
-- [ ] Wymagać ciągłych przejść krzywizny i bankingu; konkretny algorytm (np. clothoid-like) nie jest częścią kontraktu.
-- [ ] Zdefiniować surface type, wetness i roughness jako metadata drogi.
-- [ ] Zapewnić deterministyczne look-ahead queries dla corner anticipation / technique evaluation.
-- [ ] Zdefiniować validation invariants dla nieciągłości, patologicznych spike'ów grade/curvature/banking, nieprawidłowej szerokości i wartości niefinitych.
-- [ ] Zachować możliwość przyszłego front/rear tyre state bez wymuszania pełnego modelu opon w MVP.
+- [x] Zdefiniować route-local coordinates: dystans wzdłuż trasy `S` i pozycję boczną `D`.
+- [x] Zdefiniować elevation oraz longitudinal grade jako autorytatywne dane trasy.
+- [x] Zdefiniować signed horizontal curvature / radius i kierunek zakrętu.
+- [x] Zdefiniować vertical curvature jako metadata potrzebne pod przyszłe efekty nacisku na crest/compression.
+- [x] Zdefiniować road width i dopuszczalny lateral envelope dla racing line.
+- [x] Zdefiniować banking / cross-slope niezależnie od longitudinal grade.
+- [x] Wymagać ciągłych przejść krzywizny i bankingu; konkretny algorytm (np. clothoid-like) nie jest częścią kontraktu.
+- [x] Zdefiniować surface type, wetness i roughness jako metadata drogi.
+- [x] Zapewnić deterministyczne look-ahead queries dla corner anticipation / technique evaluation.
+- [x] Zdefiniować validation invariants dla nieciągłości, patologicznych spike'ów grade/curvature/banking, nieprawidłowej szerokości i wartości niefinitych.
+- [x] Zachować możliwość przyszłego front/rear tyre state bez wymuszania pełnego modelu opon w MVP.
+
+**Dowód implementacyjny:** PR #165 wprowadza parity Python/C++ dla S/D, elevation, grade, curvature, width, metadata i look-ahead; PR #167 buduje profil bezpośrednio z autorytatywnej Stage 3 geometry; PR #168 rozszerza cross-slope o lewą/prawą połowę jezdni zależną od D, zachowuje Alpine baseline 0°/0° i jawnie pozostawia resolver `surface_id + wetness → grip` dla 4B/4C. Żaden z tych kroków nie używa renderowanego spline'a, road mesha, terrainu, PCG ani Actor transformów jako źródła fizyki.
 
 ### Granica MVP / post-MVP
 
@@ -363,7 +365,7 @@ Zmiana tylko w fizyce nie może wymagać pełnego pobrania assetów; zmiana tylk
 # Etap 4 — technika pokonywania zakrętów
 
 **Planowany czas:** tydzień 5–7  
-**Status:** Stage 4A / #156 ukończone przez PR #157; **4B/4C odblokowują się po ukończeniu 3H i mogą iść równolegle z 3G; 4D/4E wymagają wspólnego integration gate**
+**Status:** Stage 4A / #156 ukończone przez PR #157; **3H ukończone, więc 4B/4C są odblokowane i mogą iść równolegle z 3G; 4D/4E wymagają wspólnego integration gate**
 
 ## Cel
 

@@ -23,7 +23,8 @@ namespace CyclingRoadPhysics
 		Settings.CurvatureHalfWindowM =
 			AlpineJourneyRoadPhysicsCurvatureHalfWindowM;
 		Settings.RoadWidthM = AlpineJourneyRoadWidthM;
-		Settings.BankAngleRad = 0.0;
+		Settings.LeftCrossSlopeAngleRad = 0.0;
+		Settings.RightCrossSlopeAngleRad = 0.0;
 		Settings.SurfaceId = TEXT("asphalt");
 		Settings.Wetness = 0.0;
 		Settings.Roughness = 0.0;

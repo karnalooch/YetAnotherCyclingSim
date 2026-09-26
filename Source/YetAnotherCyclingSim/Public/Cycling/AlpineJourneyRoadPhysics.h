@@ -15,8 +15,8 @@ namespace CyclingRoadPhysics
 
 	// Builds the static physical-road baseline for the 10 km Alpine Journey.
 	//
-	// Stage 3H-B deliberately keeps:
-	// - bank angle at 0 (banking authoring comes next);
+	// Stage 3H-C deliberately keeps:
+	// - left/right cross-slope at 0 (authoritative Stage 3 geometry has no bank/crown authoring yet);
 	// - surface = asphalt;
 	// - baseline wetness = 0 (dynamic weather is composed later);
 	// - roughness = 0 (advanced roughness physics is post-MVP).

@@ -80,16 +80,25 @@ MVP is not required to apply these normal-load effects yet.
 
 ## 6. Banking and cross-slope
 
-Banking is independent from longitudinal grade and must be queried separately.
+Banking is independent from longitudinal grade and is queried from the same route-local `S/D` coordinate system as the rest of the physical road.
 
-The same representation must support:
+Each canonical sample stores two half-road values:
 
-- intentionally banked corners;
-- flat corners;
-- ordinary drainage crossfall/crown;
-- off-camber corners.
+- `left_cross_slope_angle_rad` for `D < 0`;
+- `right_cross_slope_angle_rad` for `D > 0`.
 
-Bank angle must not appear or disappear discontinuously. Authoring/generation must provide transition regions.
+Positive cross-slope rises toward `+D` (the rider's right). At `D = 0` the query returns the deterministic average of the left/right half-road values. Both half-road values interpolate continuously along `S`.
+
+This representation supports without consulting rendered geometry:
+
+- flat road: left = 0, right = 0;
+- planar bank: left = right = the same signed angle;
+- ordinary crown/crossfall: left/right may have different or opposite signed angles;
+- off-camber corners: Stage 4 interprets local cross-slope together with signed horizontal curvature.
+
+Both left and right cross-slope angles must remain finite, strictly inside `(-pi/2, pi/2)`, and must not appear or disappear discontinuously. Authoring/generation provides transition regions and validates their rate of change explicitly.
+
+The current Alpine Journey baseline is intentionally `0° / 0°`. Stage 3 route geometry does not yet carry authored banking/crown values, so Stage 3H does not invent them.
 
 ## 7. Racing line and lateral position
 
@@ -119,9 +128,17 @@ The MVP model may remain intentionally simple. The architecture must not assume 
 
 Grip must not permanently be represented as one global coefficient for the whole route.
 
-The profile must permit surface-dependent and wetness-dependent inputs.
+Stage 3H therefore carries deterministic road metadata rather than embedding one friction policy:
 
-MVP may resolve them to a simplified effective grip coefficient. Later versions may distinguish, for example:
+- `surface_id` identifies the physical surface state for the route interval;
+- `wetness` is a normalized `[0, 1]` surface input;
+- `roughness` remains a non-negative metadata input whose detailed physical effect is post-MVP.
+
+The Alpine Journey static baseline is `surface_id = asphalt`, `wetness = 0`, `roughness = 0`. Dynamic weather is composed later and is not baked into the authoritative geometry builder.
+
+Stage 4B/4C owns the deterministic resolver that turns `surface_id + wetness` into the simplified MVP grip model and shared braking/cornering budget. Stage 3H deliberately does **not** invent friction coefficients, a detailed tyre model or roughness energy-loss physics.
+
+Later versions may distinguish, for example:
 
 - dry/wet asphalt;
 - painted markings;
