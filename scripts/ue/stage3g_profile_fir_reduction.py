@@ -73,14 +73,19 @@ def source_path(cache_root: Path, row: dict[str, Any]) -> Path:
 
 
 def import_variant_c(source: Path, profile_name: str) -> unreal.StaticMesh:
-    destination = "{}/{}".format(PROFILE_ROOT, profile_name)
-    if not unreal.EditorAssetLibrary.does_directory_exist(destination):
-        if not unreal.EditorAssetLibrary.make_directory(destination):
-            fail("failed to create transient directory {}".format(destination))
+    profile_root = "{}/{}".format(PROFILE_ROOT, profile_name)
+    staging = "{}/Import".format(profile_root)
+    isolated = "{}/Selected".format(profile_root)
+    isolated_asset = "{}/{}".format(isolated, SOURCE_MESH_NAME)
+
+    for directory in (staging, isolated):
+        if not unreal.EditorAssetLibrary.does_directory_exist(directory):
+            if not unreal.EditorAssetLibrary.make_directory(directory):
+                fail("failed to create transient directory {}".format(directory))
 
     task = unreal.AssetImportTask()
     task.set_editor_property("filename", str(source))
-    task.set_editor_property("destination_path", destination)
+    task.set_editor_property("destination_path", staging)
     task.set_editor_property("automated", True)
     task.set_editor_property("replace_existing", True)
     task.set_editor_property("save", False)
@@ -96,34 +101,72 @@ def import_variant_c(source: Path, profile_name: str) -> unreal.StaticMesh:
     task.set_editor_property("options", options)
 
     unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
-    paths = [str(path) for path in (task.get_editor_property("imported_object_paths") or [])]
+    paths = [
+        str(path)
+        for path in (task.get_editor_property("imported_object_paths") or [])
+    ]
     if not paths:
         fail("Unreal imported no objects from {}".format(source))
 
-    candidates: list[unreal.StaticMesh] = []
-    for path in sorted(paths):
-        asset = unreal.EditorAssetLibrary.load_asset(path)
-        if (
-            asset
-            and isinstance(asset, unreal.StaticMesh)
-            and asset.get_name().lower() == SOURCE_MESH_NAME.lower()
-        ):
-            candidates.append(asset)
+    selected_path: str | None = None
+    static_mesh_names: list[str] = []
+    for imported_path in sorted(paths):
+        asset = unreal.EditorAssetLibrary.load_asset(imported_path)
+        if not asset or not isinstance(asset, unreal.StaticMesh):
+            continue
+        static_mesh_names.append(asset.get_name())
+        if asset.get_name().lower() == SOURCE_MESH_NAME.lower():
+            if selected_path is not None:
+                fail("multiple {} meshes were imported".format(SOURCE_MESH_NAME))
+            selected_path = imported_path
 
-    if len(candidates) != 1:
-        names = []
-        for path in sorted(paths):
-            asset = unreal.EditorAssetLibrary.load_asset(path)
-            if asset and isinstance(asset, unreal.StaticMesh):
-                names.append(asset.get_name())
+    asset = None
+    if selected_path is None:
         fail(
-            "expected exactly one {} mesh, found {}; imported static meshes: {}".format(
+            "expected {} in imported static meshes: {}".format(
                 SOURCE_MESH_NAME,
-                len(candidates),
-                ", ".join(names),
+                ", ".join(static_mesh_names),
             )
         )
-    return candidates[0]
+
+    # The Poly Haven FBX contains A/B/C variants. Keeping all three imported
+    # objects alive while reducing C makes UE's async StaticMesh compiler budget
+    # several GiB for geometry that R2 will never scatter. Duplicate only C into
+    # a clean transient package, then delete the whole staging import before
+    # asking the mesh reducer to build LODs.
+    duplicated = unreal.EditorAssetLibrary.duplicate_asset(
+        selected_path,
+        isolated_asset,
+    )
+    if not duplicated or not isinstance(duplicated, unreal.StaticMesh):
+        fail(
+            "failed to isolate {} from multi-variant FBX import".format(
+                SOURCE_MESH_NAME
+            )
+        )
+
+    selected_path = None
+    paths = []
+    static_mesh_names = []
+    if not unreal.EditorAssetLibrary.delete_directory(staging):
+        fail("failed to remove heavy FBX staging directory {}".format(staging))
+
+    # UE 5.8 exposes an immediate module-level GC entry point. Purge references
+    # to the discarded A/B source meshes before LOD reduction so the reducer is
+    # budgeted against the selected ~505k-triangle C mesh only.
+    unreal.collect_garbage()
+
+    reloaded = unreal.EditorAssetLibrary.load_asset(isolated_asset)
+    if not reloaded or not isinstance(reloaded, unreal.StaticMesh):
+        fail("isolated Fir Tree C mesh cannot be reloaded after staging cleanup")
+
+    log(
+        "isolated {} at {} before LOD reduction".format(
+            SOURCE_MESH_NAME,
+            isolated_asset,
+        )
+    )
+    return reloaded
 
 
 def reduction_options(settings: list[tuple[float, float]]) -> Any:
