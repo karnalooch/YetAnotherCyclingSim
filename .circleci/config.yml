@@ -267,6 +267,7 @@ jobs:
       - run:
           name: Build YACS Editor and run scoped Automation
           shell: powershell.exe -ExecutionPolicy Bypass
+          no_output_timeout: 45m
           command: |
             pwsh ./scripts/ci/Invoke-YacsUnrealCi.ps1 -ExpectedHead $env:CIRCLE_SHA1
 
