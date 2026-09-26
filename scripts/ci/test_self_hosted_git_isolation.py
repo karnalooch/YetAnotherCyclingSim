@@ -6,7 +6,6 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 WORKFLOWS = (
-    ROOT / ".github" / "workflows" / "phase1-one-shot-unreal.yml",
     ROOT / ".github" / "workflows" / "manual-unreal.yml",
     ROOT / ".github" / "workflows" / "asset-full.yml",
     ROOT / ".github" / "workflows" / "reusable-unreal.yml",

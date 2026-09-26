@@ -7,8 +7,9 @@ Issue: #24
 This defines the GitHub Actions self-hosted runner contract before the Unreal
 lane is connected to Aggregate CI gate. GitHub is the single CI control plane.
 Phase 1 uses the manual trusted entrypoint documented in
-`UNREAL_RUNNER_PHASE1.md` until the normal + intentional-red canaries are
-proven.
+`UNREAL_RUNNER_PHASE1.md`. The generic normal + intentional-red runner
+canaries are proven; Stage 3G authoring/final proof remains before Phase 1 is
+complete.
 
 ## Required host
 
@@ -78,13 +79,25 @@ Pass requires:
 
 ## GitHub rollout
 
-1. Register a repository-scoped self-hosted runner with the labels above.
-2. Use `Actions -> Manual Unreal proof` from `main` for the Phase 1 trusted canary.
-3. Prove one normal green run.
-4. Prove one intentional fail-closed canary; never weaken the test to make it green.
-5. Only then call .github/workflows/reusable-unreal.yml from .github/workflows/ci.yml.
-6. Add the Unreal job to Aggregate CI gate and require exact success.
-7. Reconfirm branch protection after #22 is completed.
+Completed generic runner baseline:
+
+1. [x] Register repository-scoped `yacs-home-ue58` with label `yacs-ue58`.
+2. [x] Prove exact-SHA code-only checkout on the real home runner.
+3. [x] Prove a normal green UE build + Automation run.
+4. [x] Prove intentional zero-discovery fails closed.
+5. [x] Prove artifact upload and unconditional workspace cleanup.
+
+Canonical proof: workflow run `36240146312`, SHA
+`9826b0f82d2a895a0a5d6fbf358aac162e199aa5`, UE `5.8.2`, normal canary
+`13/13` passed.
+
+Next:
+
+6. [ ] Run Stage 3G authoring against `feat/stage3g-reference-environment`.
+7. [ ] Commit/review authored LFS assets and run the final Stage 3G proof.
+8. [ ] Complete Phase 2 readiness, including unattended Task Scheduler reboot proof.
+9. [ ] Only then consider calling the reusable Unreal lane automatically from normal trusted CI.
+10. [ ] Add Unreal to Aggregate CI only in Phase 3 and reconfirm #22 branch protection first.
 
 ## Workspace hygiene
 

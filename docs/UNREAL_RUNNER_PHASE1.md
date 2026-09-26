@@ -5,6 +5,25 @@ Issue: #24
 This is the operator guide for the first real Unreal Engine GitHub Actions runner.
 Phase 1 is intentionally manual and trusted-only.
 
+## Proven baseline — 2026-09-26
+
+The generic runner/build/fail-closed contract is proven on the real home runner:
+
+- runner: `yacs-home-ue58` / label `yacs-ue58`;
+- runner root: `D:\actions-runner-yacs`;
+- workflow run: `36240146312`;
+- exact main SHA: `9826b0f82d2a895a0a5d6fbf358aac162e199aa5`;
+- UE: `5.8.2`;
+- normal code-only canary: **13 discovered / 13 passed / 0 failed / 0 errors**;
+- intentional-red: expected non-zero failure with **0 discovered tests**, verified fail-closed;
+- proof artifact upload: green;
+- workspace cleanup: green.
+
+The temporary one-shot workflow used to obtain this baseline was retired after
+the proof. The durable Phase 1 entrypoint remains `Manual Unreal proof`.
+
+The remaining Phase 1 product-facing work is Stage 3G authoring and final proof.
+
 ## What lands in Phase 1
 
 After merge, GitHub Actions exposes:
@@ -41,8 +60,8 @@ Choose:
 Use a dedicated folder, for example:
 
 ```powershell
-mkdir C:\actions-runner-yacs
-cd C:\actions-runner-yacs
+mkdir D:\actions-runner-yacs
+cd D:\actions-runner-yacs
 ```
 
 Then use the download/extract commands GitHub shows on that page. GitHub also shows a short-lived registration command similar to:
@@ -88,7 +107,10 @@ Current UE discovery already supports the home/reference installation pattern, i
 
 ## First canary
 
-With `run.cmd` waiting for work:
+**Status: proven** by workflow run `36240146312` on SHA
+`9826b0f82d2a895a0a5d6fbf358aac162e199aa5`.
+
+For future diagnostic reruns, with `run.cmd` waiting for work:
 
 1. open **Actions -> Manual Unreal proof**;
 2. click **Run workflow**;
