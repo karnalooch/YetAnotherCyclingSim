@@ -15,15 +15,9 @@ WORKFLOW = ROOT / ".github" / "workflows" / "stage3g-r2-fir-profile.yml"
 class Stage3GR2ConiferFallbackContractTests(unittest.TestCase):
     def test_fir_sapling_is_curated_but_not_preapproved(self):
         payload = json.loads(MANIFEST.read_text(encoding="utf-8"))
-        small = next(
-            item
-            for item in payload["assets"]
-            if item["id"] == "fir_sapling"
-        )
+        small = next(item for item in payload["assets"] if item["id"] == "fir_sapling")
         medium = next(
-            item
-            for item in payload["assets"]
-            if item["id"] == "fir_sapling_medium"
+            item for item in payload["assets"] if item["id"] == "fir_sapling_medium"
         )
         self.assertEqual(small["stage"], "3G")
         self.assertEqual(medium["stage"], "3G")
