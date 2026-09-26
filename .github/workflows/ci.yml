@@ -15,6 +15,69 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  changes:
+    name: Classify changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      docs: ${{ steps.classify.outputs.docs }}
+      python: ${{ steps.classify.outputs.python }}
+      cpp: ${{ steps.classify.outputs.cpp }}
+      assets: ${{ steps.classify.outputs.assets }}
+      ci: ${{ steps.classify.outputs.ci }}
+      ue_code: ${{ steps.classify.outputs.ue_code }}
+      unknown: ${{ steps.classify.outputs.unknown }}
+      docs_only: ${{ steps.classify.outputs.docs_only }}
+      asset_only: ${{ steps.classify.outputs.asset_only }}
+      security_base: ${{ steps.classify.outputs.security_base }}
+      base_sha: ${{ steps.classify.outputs.base_sha }}
+      head_sha: ${{ steps.classify.outputs.head_sha }}
+    steps:
+      - name: Checkout repository without LFS payloads
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          lfs: false
+          persist-credentials: false
+
+      - name: Classify changed paths
+        id: classify
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || '' }}
+          PUSH_BEFORE_SHA: ${{ github.event.before || '' }}
+          CURRENT_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          if [[ "${EVENT_NAME}" == "pull_request" ]]; then
+            python scripts/ci/classify_changes.py \
+              --base "${PR_BASE_SHA}" \
+              --head "${PR_HEAD_SHA}" \
+              --github-output "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          if [[ "${EVENT_NAME}" == "push" ]] &&
+             [[ -n "${PUSH_BEFORE_SHA}" ]] &&
+             [[ "${PUSH_BEFORE_SHA}" != "0000000000000000000000000000000000000000" ]]; then
+            python scripts/ci/classify_changes.py \
+              --base "${PUSH_BEFORE_SHA}" \
+              --head "${CURRENT_SHA}" \
+              --github-output "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          python scripts/ci/classify_changes.py \
+            --all-static \
+            --base "ALL_STATIC" \
+            --head "${CURRENT_SHA}" \
+            --github-output "${GITHUB_OUTPUT}"
+
   repo-policy:
     name: Repository policy
     permissions:
@@ -42,55 +105,176 @@ jobs:
 
   python-reference:
     name: Python reference model
+    needs: changes
+    if: ${{ needs.changes.outputs.python == 'true' || needs.changes.outputs.ci == 'true' }}
     permissions:
       contents: read
     uses: ./.github/workflows/reusable-python.yml
 
-  security:
+  security-base:
     name: Security baseline
+    needs: changes
+    if: ${{ needs.changes.outputs.security_base == 'true' }}
     permissions:
       contents: read
       security-events: write
     uses: karnalooch/engineering-platform/.github/workflows/reusable-security.yml@d9bc67e2b17436e9df1319a6345d0ec388f407fb
     with:
-      codeql_languages_json: '["python","c-cpp"]'
+      enable_codeql: false
+      enable_dependency_review: true
+      enable_trivy: true
+      enable_sbom: true
+
+  security-python:
+    name: CodeQL Python
+    needs: changes
+    if: ${{ needs.changes.outputs.python == 'true' }}
+    permissions:
+      contents: read
+      security-events: write
+    uses: karnalooch/engineering-platform/.github/workflows/reusable-security.yml@d9bc67e2b17436e9df1319a6345d0ec388f407fb
+    with:
+      enable_dependency_review: false
+      enable_codeql: true
+      codeql_languages_json: '["python"]'
+      enable_trivy: false
+      enable_sbom: false
+
+  security-cpp:
+    name: CodeQL C++
+    needs: changes
+    if: ${{ needs.changes.outputs.cpp == 'true' || needs.changes.outputs.ue_code == 'true' }}
+    permissions:
+      contents: read
+      security-events: write
+    uses: karnalooch/engineering-platform/.github/workflows/reusable-security.yml@d9bc67e2b17436e9df1319a6345d0ec388f407fb
+    with:
+      enable_dependency_review: false
+      enable_codeql: true
+      codeql_languages_json: '["c-cpp"]'
+      enable_trivy: false
+      enable_sbom: false
+
+  asset-validation:
+    name: Lightweight asset validation
+    needs: changes
+    if: ${{ needs.changes.outputs.assets == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    env:
+      GIT_LFS_SKIP_SMUDGE: "1"
+    steps:
+      - name: Checkout repository without LFS payloads
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          lfs: false
+          persist-credentials: false
+
+      - name: Validate changed asset metadata and LFS pointers
+        shell: bash
+        env:
+          BASE_SHA: ${{ needs.changes.outputs.base_sha }}
+          HEAD_SHA: ${{ needs.changes.outputs.head_sha }}
+        run: |
+          set -euo pipefail
+          python scripts/ci/validate_changed_assets.py \
+            --base "${BASE_SHA}" \
+            --head "${HEAD_SHA}"
+
+  unreal-code:
+    name: Code-only Unreal canary
+    needs: changes
+    if: ${{ needs.changes.outputs.ue_code == 'true' }}
+    permissions:
+      contents: read
+    uses: ./.github/workflows/reusable-unreal.yml
 
   aggregate:
     name: Aggregate CI gate
     if: ${{ always() }}
     needs:
+      - changes
       - repo-policy
       - governance
       - python-reference
-      - security
+      - security-base
+      - security-python
+      - security-cpp
+      - asset-validation
+      - unreal-code
     runs-on: ubuntu-latest
     timeout-minutes: 2
     permissions: {}
     steps:
-      - name: Fail closed unless every required job passed
+      - name: Fail closed unless required lanes passed
         shell: bash
         env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
           REPO_POLICY_RESULT: ${{ needs.repo-policy.result }}
           GOVERNANCE_RESULT: ${{ needs.governance.result }}
           PYTHON_REFERENCE_RESULT: ${{ needs.python-reference.result }}
-          SECURITY_RESULT: ${{ needs.security.result }}
+          SECURITY_BASE_RESULT: ${{ needs.security-base.result }}
+          SECURITY_PYTHON_RESULT: ${{ needs.security-python.result }}
+          SECURITY_CPP_RESULT: ${{ needs.security-cpp.result }}
+          ASSET_VALIDATION_RESULT: ${{ needs.asset-validation.result }}
+          UNREAL_CODE_RESULT: ${{ needs.unreal-code.result }}
+          CLASS_PYTHON: ${{ needs.changes.outputs.python }}
+          CLASS_CPP: ${{ needs.changes.outputs.cpp }}
+          CLASS_ASSETS: ${{ needs.changes.outputs.assets }}
+          CLASS_CI: ${{ needs.changes.outputs.ci }}
+          CLASS_UE_CODE: ${{ needs.changes.outputs.ue_code }}
+          CLASS_SECURITY_BASE: ${{ needs.changes.outputs.security_base }}
         run: |
           set -euo pipefail
           failed=0
-          for entry in \
-            "repo-policy=${REPO_POLICY_RESULT}" \
-            "governance=${GOVERNANCE_RESULT}" \
-            "python-reference=${PYTHON_REFERENCE_RESULT}" \
-            "security=${SECURITY_RESULT}"
-          do
-            name="${entry%%=*}"
-            result="${entry#*=}"
-            if [ "${result}" != "success" ]; then
+
+          require_success() {
+            local name="$1"
+            local result="$2"
+            if [[ "${result}" != "success" ]]; then
               echo "::error::${name}: expected success, got ${result}"
               failed=1
             fi
-          done
-          if [ "${failed}" -ne 0 ]; then
+          }
+
+          require_optional() {
+            local name="$1"
+            local expected="$2"
+            local result="$3"
+            if [[ "${expected}" == "true" ]]; then
+              require_success "${name}" "${result}"
+            elif [[ "${result}" != "skipped" ]]; then
+              echo "::error::${name}: expected skipped, got ${result}"
+              failed=1
+            fi
+          }
+
+          require_success "changes" "${CHANGES_RESULT}"
+          require_success "repo-policy" "${REPO_POLICY_RESULT}"
+          require_success "governance" "${GOVERNANCE_RESULT}"
+
+          python_expected=false
+          if [[ "${CLASS_PYTHON}" == "true" || "${CLASS_CI}" == "true" ]]; then
+            python_expected=true
+          fi
+
+          cpp_security_expected=false
+          if [[ "${CLASS_CPP}" == "true" || "${CLASS_UE_CODE}" == "true" ]]; then
+            cpp_security_expected=true
+          fi
+
+          require_optional "python-reference" "${python_expected}" "${PYTHON_REFERENCE_RESULT}"
+          require_optional "security-base" "${CLASS_SECURITY_BASE}" "${SECURITY_BASE_RESULT}"
+          require_optional "security-python" "${CLASS_PYTHON}" "${SECURITY_PYTHON_RESULT}"
+          require_optional "security-cpp" "${cpp_security_expected}" "${SECURITY_CPP_RESULT}"
+          require_optional "asset-validation" "${CLASS_ASSETS}" "${ASSET_VALIDATION_RESULT}"
+          require_optional "unreal-code" "${CLASS_UE_CODE}" "${UNREAL_CODE_RESULT}"
+
+          if [[ "${failed}" -ne 0 ]]; then
             exit 1
           fi
+
           echo "aggregate: PASS"
