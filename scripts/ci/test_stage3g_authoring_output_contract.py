@@ -29,10 +29,13 @@ class Stage3GAuthoringOutputContractTests(unittest.TestCase):
         )
 
     def test_artifact_root_is_canonicalized_before_world_proof(self):
+        repo_anchor = "$ArtifactRoot = Join-Path -Path $RepoRoot -ChildPath $ArtifactRoot"
         canonicalize = "$ArtifactRoot = (Resolve-Path -LiteralPath $ArtifactRoot).Path"
         world_proof = "$WorldProof = Join-Path -Path $ArtifactRoot"
+        self.assertIn(repo_anchor, self.script)
         self.assertIn(canonicalize, self.script)
         self.assertIn(world_proof, self.script)
+        self.assertLess(self.script.index(repo_anchor), self.script.index(canonicalize))
         self.assertLess(self.script.index(canonicalize), self.script.index(world_proof))
 
     def test_unreal_process_still_fails_closed_on_nonzero_exit(self):
