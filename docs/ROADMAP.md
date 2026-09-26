@@ -365,7 +365,7 @@ Zmiana tylko w fizyce nie może wymagać pełnego pobrania assetów; zmiana tylk
 # Etap 4 — technika pokonywania zakrętów
 
 **Planowany czas:** tydzień 5–7  
-**Status:** Stage 4A ukończone przez PR #157; **4B-A/#169, 4B-B/#170 i 4B-C/#171 ukończone; 4C-A + 4C-B1/B2/B3a/B3b/B3c scalone przez PR #177; 4C-C1 geometryczne konsekwencje w realizacji jako #178; 4D/4E wymagają wspólnego integration gate z World lane**
+**Status:** Stage 4A ukończone przez PR #157; **4B-A/#169, 4B-B/#170 i 4B-C/#171 ukończone; 4C-A + 4C-B1/B2/B3a/B3b/B3c scalone przez PR #177; 4C-C1 geometryczne konsekwencje są w PR #179; 4C-C2 route-derived scoring mocy/kadencji jest realizowany jako #180; 4D/4E wymagają wspólnego integration gate z World lane**
 
 ## Cel
 
@@ -383,25 +383,27 @@ Wprowadzić autorską mechanikę oceniającą odpuszczenie i ponowne rozpoczęci
 8. **4C-B3a — #173 / PR #177:** tyre-limited brake-force resolver: `μ_eff · static normal load`, ograniczony remaining longitudinal capacity z 4C-A; bez arbitralnego max-brake constant.
 9. **4C-B3b — #173 / PR #177:** explicit brake-force fixed-step integrator: siła hamowania trafia do predictor + work/energy balance, a legacy step deleguje z `0 N` dla exact regression parity.
 10. **4C-B3c — #173 / PR #177:** fixed-step orchestration: każdy substep pobiera bieżący Road Physics Profile, rozdziela look-ahead `Approach` od realnego lateral demand w `Entry/Apex/Exit`, rozwiązuje shared grip + brake force i dopiero wtedy wywołuje integrator; render-frame batching nie może zmieniać wyniku.
-11. **4C-C:** technique + consequences — scoring, timing mocy/kadencji, utrata prędkości, wide line i controlled slip; bez upadków w MVP.
-12. **4D:** guidance + assists — linia przejazdu, markery entry/apex/exit, grip warning i poziomy asysty jako presentation-only; wymaga wspólnego integration gate z World lane.
-14. **4E:** deterministyczny full-route corner proof dla reprezentatywnych flat/banked/off-camber zakrętów oraz suchej/mokrej nawierzchni.
+11. **4C-C1 — #178 / PR #179:** geometry-derived consequences — `CornerContext + CornerGripDemand -> clean / wide line / controlled slip`, target `D` i minimalny target speed bez arbitralnych progów grip usage; bez upadków w MVP.
+12. **4C-C2 — #180:** route-derived technique score — realne fazy `Approach/Entry/Apex/Exit`, ciągłe release/recovery score dla mocy i kadencji oraz fizyczne line/speed retention z C1; osiem jawnych równoważnych składników, bez ukrytych wag i progów ratingowych.
+13. **4C-C3:** authoritative consequence application — deterministycznie zastosować target `D`/speed w fixed-step state i spiąć runtime collection/score bez sprzężenia z presentation.
+14. **4D:** guidance + assists — linia przejazdu, markery entry/apex/exit, grip warning i poziomy asysty jako presentation-only; wymaga wspólnego integration gate z World lane.
+15. **4E:** deterministyczny full-route corner proof dla reprezentatywnych flat/banked/off-camber zakrętów oraz suchej/mokrej nawierzchni.
 
 ## Zadania
 
 - [x] Obliczanie signed curvature drogi i efektywnego promienia toru przejazdu — PR #169.
 - [x] Określenie strefy wejścia, apeksu i wyjścia — PR #169.
 - [ ] Obliczanie zalecanej prędkości.
-- [ ] Analiza momentu zmniejszenia mocy.
-- [ ] Analiza momentu wznowienia pedałowania.
+- [x] Analiza momentu zmniejszenia mocy na poziomie realnych faz route-derived — 4C-C2/#180; dokładniejszy sub-phase timing może zostać dopracowany po MVP.
+- [x] Analiza wznowienia mocy/kadencji w `Exit` względem jawnego baseline `Approach` — 4C-C2/#180.
 - [ ] Automatyczny wybór toru przejazdu z jawną pozycją boczną na drodze (`D`) i wykorzystaniem dostępnej szerokości.
 - [ ] Wizualna linia przejazdu i strefy entry/apex/exit na drodze.
 - [ ] Kontekstowe ostrzeżenia o przyczepności i trudności zakrętu.
-- [ ] Poszerzenie toru po błędzie.
-- [ ] Utrata prędkości po błędzie.
-- [ ] Kontrolowany uślizg bez upadku.
+- [x] Deterministyczne wyliczenie poszerzenia toru po błędzie — 4C-C1/#178/PR #179; zastosowanie target `D` w stanie runtime pozostaje 4C-C3.
+- [x] Deterministyczne wyliczenie minimalnej utraty prędkości po błędzie — 4C-C1/#178/PR #179; mutacja authoritative speed pozostaje 4C-C3.
+- [x] Model controlled slip bez upadku i bez arbitralnych progów — 4C-C1/#178/PR #179; runtime application pozostaje 4C-C3.
 - [x] Wpływ bankingu / off-camber oraz mokrej nawierzchni na czysty limit lateralny — 4B-B/4B-C; shared braking budget pozostaje 4C.
-- [ ] Wspólny budżet przyczepności end-to-end dla hamowania i corneringu; 4C-A dostarcza wspólny friction-circle kernel, 4C-B podpina realny longitudinal/lateral demand.
+- [x] Wspólny budżet przyczepności end-to-end dla hamowania i corneringu — 4C-A + 4C-B1/B2/B3a/B3b/B3c scalone przez PR #177.
 - [x] Deterministyczny look-ahead do oceny przygotowania przed zakrętem — PR #169.
 - [ ] Ocena każdego zakrętu.
 - [ ] Regulowane poziomy asysty.
