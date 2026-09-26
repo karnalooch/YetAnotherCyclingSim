@@ -51,6 +51,13 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
         self.assertIn("Invoke-YacsUnrealCi.ps1", self.config)
         self.assertIn("-ExpectedHead $env:CIRCLE_SHA1", self.config)
 
+    def test_hosted_canary_allows_silent_unreal_build_and_automation(self):
+        canary_start = self.config.index("  ue-hosted-canary:")
+        workflows_start = self.config.index("workflows:")
+        canary_block = self.config[canary_start:workflows_start]
+        self.assertIn("name: Build YACS Editor and run scoped Automation", canary_block)
+        self.assertIn("no_output_timeout: 45m", canary_block)
+
     def test_seed_keeps_engine_plugins_and_source_by_default(self):
         for forbidden_exclusion in (
             "Engine\\Plugins",
