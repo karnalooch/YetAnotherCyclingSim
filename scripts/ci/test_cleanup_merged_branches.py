@@ -140,6 +140,60 @@ class BranchDecisionTests(unittest.TestCase):
             {"feat/local": {"A"}},
         )
 
+    def test_explicit_delete_marker_collects_closed_unmerged_heads(self):
+        pulls = [
+            {
+                "merged_at": None,
+                "body": cb.EXPLICIT_DELETE_MARKER,
+                "head": {
+                    "ref": "fix/superseded",
+                    "sha": "OLD",
+                    "repo": {"full_name": "owner/repo"},
+                },
+            },
+            {
+                "merged_at": "2026-09-25T00:00:00Z",
+                "body": cb.EXPLICIT_DELETE_MARKER,
+                "head": {
+                    "ref": "fix/merged",
+                    "sha": "MERGED",
+                    "repo": {"full_name": "owner/repo"},
+                },
+            },
+        ]
+        self.assertEqual(
+            cb.explicit_delete_heads(pulls, "owner/repo"),
+            {"fix/superseded": {"OLD"}},
+        )
+
+    def test_explicit_marker_deletes_only_matching_current_tip(self):
+        delete, reason = cb.should_delete(
+            branch_name="fix/superseded",
+            branch_sha="OLD",
+            default_branch="main",
+            open_branch_names=set(),
+            open_base_branch_names=set(),
+            merged_head_shas=set(),
+            tip_is_in_default=False,
+            explicit_delete_head_shas={"OLD"},
+        )
+        self.assertTrue(delete)
+        self.assertIn("explicitly marked safe", reason)
+
+    def test_explicit_marker_does_not_delete_reused_branch(self):
+        delete, reason = cb.should_delete(
+            branch_name="fix/superseded",
+            branch_sha="NEW_WORK",
+            default_branch="main",
+            open_branch_names=set(),
+            open_base_branch_names=set(),
+            merged_head_shas=set(),
+            tip_is_in_default=False,
+            explicit_delete_head_shas={"OLD"},
+        )
+        self.assertFalse(delete)
+        self.assertIn("no merged pull request", reason)
+
     def test_open_heads_ignore_forks(self):
         pulls = [
             {
