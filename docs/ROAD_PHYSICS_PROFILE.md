@@ -146,7 +146,11 @@ remaining_longitudinal_capacity = sqrt(max(0, 1 - lateral_usage^2))
 
 This makes the core invariant explicit: two demands that are each individually below 100% can still exceed the shared budget when combined.
 
-Stage 4C-A deliberately does **not** invent braking controls, brake-force split, a tyre coefficient, a safety factor or consequence thresholds. Stage 4C-B maps actual fixed-step longitudinal demand and the Stage 4B lateral demand into these normalized values.
+Stage 4C-A deliberately does **not** invent braking controls, brake-force split, a tyre coefficient, a safety factor or consequence thresholds.
+
+Stage 4C-B1 adds the explicit control-side contract `brake_ratio ∈ [0, 1]`: `0` means released and `1` means full requested braking. The default is `0` and, during B1, the value is validated/plumbed through rider input, controller and session but intentionally does not alter the equation of motion. This preserves exact pre-braking physics while the force model is reviewed separately.
+
+Stage 4C-B2 maps the explicit brake command to real fixed-step longitudinal tyre demand and combines it with Stage 4B lateral demand through the 4C-A budget. Aerodynamic drag, gravity and rolling resistance are external/resistance forces and must not be misclassified as tyre-braking grip usage.
 
 The kernel is stateless rather than one permanent global grip scalar. MVP may evaluate it for a simplified whole-bike model; later front/rear tyre state can evaluate the same contract independently with different capacities and demands.
 
