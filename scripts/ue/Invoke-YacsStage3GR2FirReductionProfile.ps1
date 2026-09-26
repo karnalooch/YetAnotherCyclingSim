@@ -108,6 +108,18 @@ try {
         throw "Fir Tree reduction profiling timed out; see $ProfileLog"
     }
     if ($Proc.ExitCode -ne 0) {
+        Write-Host ''
+        Write-Host '===== FIR TREE REDUCTION UE LOG TAIL =====' -ForegroundColor Red
+        if (Test-Path -LiteralPath $ProfileLog -PathType Leaf) {
+            Get-Content -LiteralPath $ProfileLog -Tail 180 -ErrorAction SilentlyContinue |
+                ForEach-Object { Write-Host $_ }
+        }
+        if (Test-Path -LiteralPath $ErrPath -PathType Leaf) {
+            Write-Host ''
+            Write-Host '===== FIR TREE REDUCTION STDERR TAIL =====' -ForegroundColor Red
+            Get-Content -LiteralPath $ErrPath -Tail 80 -ErrorAction SilentlyContinue |
+                ForEach-Object { Write-Host $_ }
+        }
         throw "Fir Tree reduction profiling failed with exit code $($Proc.ExitCode); see $ProfileLog"
     }
 }
