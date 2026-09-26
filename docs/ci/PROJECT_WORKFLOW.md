@@ -75,6 +75,41 @@ Before `PROJECTS_TOKEN` is configured the event workflow exits successfully
 with a warning so the setup PR can be merged without a secret. The manual
 bootstrap workflow itself fails if the secret is missing.
 
+
+## Pull request orchestration
+
+YACS uses a separate fail-closed PR orchestrator for merge process control.
+Risk and code correctness remain owned by Governance, Security and the
+`Aggregate CI gate`; the orchestrator does not duplicate those policy lists.
+
+For a low-risk PR that may be merged automatically, add this exact line to the
+PR body:
+
+`Auto-merge: eligible`
+
+For a high-risk or intentionally human-controlled PR, use:
+
+`Auto-merge: manual`
+
+`manual` always wins if both markers are present.
+
+Stacked PRs are inferred from GitHub branch relations rather than extra
+metadata. If PR B targets the head branch of open PR A, B is treated as A's
+child. The orchestrator keeps B current with A but will not merge B while A is
+open. After A merges, B is retargeted to `main`, must receive fresh CI on its
+current head, and is considered for merge only after the new
+`Aggregate CI gate` is green.
+
+The orchestrator also refuses automatic merge when a PR is a draft, comes from
+a fork or non-owner author, has unresolved review threads, has a current
+`CHANGES_REQUESTED` review, is behind its base, lacks a green Aggregate gate,
+or GitHub does not report a clean merge state. A behind branch is updated first
+and then waits for fresh checks.
+
+Branch cleanup is stack-aware: a merged parent branch is preserved while any
+open PR still uses it as a base, preventing cleanup from racing the restack
+operation.
+
 ## Verification
 
 After bootstrap:
