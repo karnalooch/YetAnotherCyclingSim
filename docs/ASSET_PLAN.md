@@ -480,13 +480,13 @@ Po wyborze konkretnych paczek tabela poniżej staje się rejestrem źródła pra
 
 | Asset / pack | Źródło | Licencja | Cena | Stage | Status | Uwagi |
 |---|---|---|---:|---|---|---|
-| Sparse Grass (`sparse_grass`) | Poly Haven | CC0 | 0 zł | 3G | approved | meadow/valley ground; 2K bootstrap |
-| Forest Ground 03 (`forrest_ground_03`) | Poly Haven | CC0 | 0 zł | 3G | approved | pine-needle forest floor; 2K bootstrap |
-| Rocky Terrain (`rocky_terrain`) | Poly Haven | CC0 | 0 zł | 3G | approved | high-Alpine ground layer; 2K bootstrap |
+| Sparse Grass (`sparse_grass`) | Poly Haven | CC0 | 0 zł | 3G | imported | meadow/valley ground; 2K source imported to project-owned Stage 3G textures; validation still requires in-sector proof |
+| Forest Ground 03 (`forrest_ground_03`) | Poly Haven | CC0 | 0 zł | 3G | imported | pine-needle forest floor; 2K source imported to project-owned Stage 3G textures; validation pending forest proof |
+| Rocky Terrain (`rocky_terrain`) | Poly Haven | CC0 | 0 zł | 3G | imported | high-Alpine ground layer; 2K source imported to project-owned Stage 3G textures; validation pending 8000 m proof |
 | Rock Face 01 (`rock_face_01`) | Poly Haven | CC0 | 0 zł | 3G | approved | roadside cliff candidate; performance validation pending |
-| Boulder 01 (`boulder_01`) | Poly Haven | CC0 | 0 zł | 3G | approved | sparse rock dressing; prefer instancing |
+| Boulder 01 (`boulder_01`) | Poly Haven | CC0 | 0 zł | 3G | imported | canonical `SM_Stage3G_Boulder` plus textures are in repo and used by Stage 3G; final validation still requires visual/perf proof |
 | Mountainside (`mountainside`) | Poly Haven | CC0 | 0 zł | 3G | candidate | mid-ground mountain mass; compare against cheaper authored geometry |
-| Fir Tree 01 (`fir_tree_01`) | Poly Haven | CC0 | 0 zł | 3G | candidate | includes LODs; high source-polycount, must be profiled before forest scatter |
+| Fir Tree 01 (`fir_tree_01`) | Poly Haven | CC0 | 0 zł | 3G | candidate | R2 profiling active in PR #162; source variants are very heavy and the optimized persisted derivative is not yet accepted/imported |
 | Grass Medium 01 (`grass_medium_01`) | Poly Haven | CC0 | 0 zł | 3G | candidate | controlled meadow ground cover; LOD/instancing validation pending |
 
 Statusy: `candidate`, `approved`, `acquired`, `imported`, `validated`, `rejected`.
@@ -501,10 +501,10 @@ Pobranie źródeł **nie oznacza akceptacji assetu do mapy**. Status `candidate`
 
 PR #155 udowodnił authoring/CI/proof harness, ale nie przesunął source assetów przez pełny lifecycle. Dlatego Stage 3G pozostaje otwarty do czasu wykonania co najmniej:
 
-- [ ] `Sparse Grass` -> `validated` w valley/meadow;
-- [ ] `Forest Ground 03` -> `validated` w forest;
-- [ ] `Rocky Terrain` -> `validated` w high Alpine;
-- [ ] co najmniej jeden z `Rock Face 01` / `Boulder 01` -> `validated` jako rzeczywisty rock dressing;
+- [x] `Sparse Grass` -> `imported`; [ ] -> `validated` w valley/meadow;
+- [x] `Forest Ground 03` -> `imported`; [ ] -> `validated` w forest;
+- [x] `Rocky Terrain` -> `imported`; [ ] -> `validated` w high Alpine;
+- [x] `Boulder 01` -> `imported` jako rzeczywisty rock dressing; [ ] co najmniej jeden z `Rock Face 01` / `Boulder 01` -> `validated`;
 - [ ] wybrać i sprofilować realny conifer asset; `Fir Tree 01` może przejść do `approved` dopiero po pomiarze LOD/instancing;
 - [ ] pierwszy `PCG_RouteExclusion` -> `validated`;
 - [ ] minimum jeden produkcyjnie użyteczny graph scatterujący approved/validated assets -> `validated`;
@@ -522,7 +522,7 @@ Technical assets zwykle nie mają osobnej ceny zakupu, ale mogą dziedziczyć og
 | `PCG_Valley` | PCG Graph | 3G | planned | WorldSpec + route constraints + approved meadow/rock assets | deterministic regenerate + 1200 m screenshot + perf sanity |
 | `PCG_Forest` | PCG Graph | 3G/7 | planned | WorldSpec + route exclusion + approved conifers/ground assets | deterministic regenerate + 4900 m screenshot + density/perf proof |
 | `PCG_HighAlpine` | PCG Graph | 3G/7 | planned | WorldSpec + rocks/scree/cliff assets | deterministic regenerate + 8000 m screenshot |
-| `PCG_RouteExclusion` | PCG helper/settings | 3G | planned | authoritative route spline | no generated instance violates route-clearance contract |
+| `PCG_RouteExclusion` | PCG helper/settings | 3G | prototype | authoritative `FRouteGeometryProfile` + tested Stage 3G route-clearance contract | PR #162 authoring/proof must show deterministic reload and no generated instance violates route-clearance contract before `validated` |
 | `IK_Rider` | IK Rig | 6 | planned | production rider skeleton | retarget chain validation |
 | `RTG_CyclingMocap` | IK Retargeter | 6 | planned | mocap source + rider IK rigs | representative cycling clip retarget proof |
 | `CR_Cyclist` | Control Rig | 6 | planned | rider skeleton + bike contact goals | hand/foot contact + tuck/corner/standing proof |
