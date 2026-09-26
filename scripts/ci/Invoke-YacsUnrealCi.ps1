@@ -31,6 +31,72 @@ if (-not $ArtifactRoot) {
 New-Item -ItemType Directory -Path $ArtifactRoot -Force | Out-Null
 $ArtifactRoot = (Resolve-Path -LiteralPath $ArtifactRoot).Path
 
+
+function Write-YacsUnrealFailureContext {
+    param(
+        [Parameter(Mandatory=$true)] [string] $Reason
+    )
+
+    $FailureContextPath = Join-Path -Path $ArtifactRoot -ChildPath 'failure_context.txt'
+    $Lines = [System.Collections.Generic.List[string]]::new()
+    [void]$Lines.Add('=== YACS Unreal CI failure context ===')
+    [void]$Lines.Add(('TimestampUtc : {0}' -f (Get-Date).ToUniversalTime().ToString('o')))
+    [void]$Lines.Add(('Reason       : {0}' -f $Reason))
+    [void]$Lines.Add('')
+
+    $Candidates = @(
+        [pscustomobject]@{ Label = 'preflight'; Path = (Join-Path $ArtifactRoot 'Preflight/preflight.txt'); Tail = 120 },
+        [pscustomobject]@{ Label = 'build_editor'; Path = (Join-Path $ArtifactRoot 'Proof/build_editor.log'); Tail = 160 },
+        [pscustomobject]@{ Label = 'automation_run'; Path = (Join-Path $ArtifactRoot 'Proof/automation_run.log'); Tail = 160 },
+        [pscustomobject]@{ Label = 'proof_summary'; Path = (Join-Path $ArtifactRoot 'Proof/summary.txt'); Tail = 120 },
+        [pscustomobject]@{ Label = 'automation_index'; Path = (Join-Path $ArtifactRoot 'Proof/AutomationReport/index.json'); Tail = 120 }
+    )
+
+    foreach ($Candidate in $Candidates) {
+        [void]$Lines.Add(('--- {0}: {1} ---' -f $Candidate.Label, $Candidate.Path))
+        if (-not (Test-Path -LiteralPath $Candidate.Path -PathType Leaf)) {
+            [void]$Lines.Add('<missing>')
+            [void]$Lines.Add('')
+            continue
+        }
+
+        try {
+            $TailLines = @(Get-Content -LiteralPath $Candidate.Path -Tail $Candidate.Tail -ErrorAction Stop)
+            foreach ($Line in $TailLines) {
+                [void]$Lines.Add([string]$Line)
+            }
+        }
+        catch {
+            [void]$Lines.Add(('<read failed: {0}>' -f $_.Exception.Message))
+        }
+        [void]$Lines.Add('')
+    }
+
+    [void]$Lines.Add('--- artifact inventory ---')
+    try {
+        $Files = @(Get-ChildItem -LiteralPath $ArtifactRoot -Recurse -File -ErrorAction Stop | Sort-Object FullName)
+        if ($Files.Count -eq 0) {
+            [void]$Lines.Add('<no files>')
+        }
+        foreach ($File in $Files) {
+            $Relative = $File.FullName.Substring($ArtifactRoot.Length).TrimStart('\', '/')
+            [void]$Lines.Add(('{0} ({1} bytes)' -f $Relative, $File.Length))
+        }
+    }
+    catch {
+        [void]$Lines.Add(('<inventory failed: {0}>' -f $_.Exception.Message))
+    }
+
+    $Lines | Set-Content -LiteralPath $FailureContextPath -Encoding UTF8
+
+    Write-Host ''
+    Write-Host '===== YACS UNREAL CI FAILURE CONTEXT =====' -ForegroundColor Red
+    foreach ($Line in $Lines) {
+        Write-Host $Line
+    }
+    Write-Host ('Failure context saved: {0}' -f $FailureContextPath) -ForegroundColor Yellow
+}
+
 Push-Location -LiteralPath $RepoRoot
 try {
     $ActualBranch = (& git rev-parse --abbrev-ref HEAD).Trim()
@@ -53,9 +119,15 @@ $PreflightArgs = @{
     ExpectedBranch = $ExpectedBranch
     ExpectedHead = $ExpectedHead
 }
-$Context = & $Preflight @PreflightArgs
-if ($LASTEXITCODE -ne 0) {
-    throw "Unreal CI preflight failed with exit code $LASTEXITCODE."
+try {
+    $Context = & $Preflight @PreflightArgs
+    if ($LASTEXITCODE -ne 0) {
+        throw "Unreal CI preflight failed with exit code $LASTEXITCODE."
+    }
+}
+catch {
+    Write-YacsUnrealFailureContext -Reason ('Preflight failed: {0}' -f $_.Exception.Message)
+    throw
 }
 
 if (-not $Context.EngineVersion) { throw 'Unreal CI preflight did not resolve an engine version.' }
@@ -73,17 +145,28 @@ $ProofArgs = @{
     ExpectedHead = $ExpectedHead
     TestFilter = $TestFilter
 }
-& $Proof @ProofArgs
-if ($LASTEXITCODE -ne 0) {
-    throw "Unreal build/Automation proof failed with exit code $LASTEXITCODE."
-}
+try {
+    & $Proof @ProofArgs
+    if ($LASTEXITCODE -ne 0) {
+        throw "Unreal build/Automation proof failed with exit code $LASTEXITCODE."
+    }
 
-$SummaryPath = Join-Path -Path $ProofRoot -ChildPath 'summary.json'
-if (-not (Test-Path -LiteralPath $SummaryPath)) { throw "Unreal CI summary missing: $SummaryPath" }
-$Summary = Get-Content -LiteralPath $SummaryPath -Raw -ErrorAction Stop | ConvertFrom-Json
-if ([int]$Summary.Discovered -le 0) { throw 'Unreal CI requested suites but discovered zero tests.' }
-if ([int]$Summary.Failed -ne 0 -or [int]$Summary.Errors -ne 0) {
-    throw ("Unreal CI summary is not green: failed={0}, errors={1}." -f $Summary.Failed, $Summary.Errors)
+    $SummaryPath = Join-Path -Path $ProofRoot -ChildPath 'summary.json'
+    if (-not (Test-Path -LiteralPath $SummaryPath)) {
+        throw "Unreal CI summary missing: $SummaryPath"
+    }
+
+    $Summary = Get-Content -LiteralPath $SummaryPath -Raw -ErrorAction Stop | ConvertFrom-Json
+    if ([int]$Summary.Discovered -le 0) {
+        throw 'Unreal CI requested suites but discovered zero tests.'
+    }
+    if ([int]$Summary.Failed -ne 0 -or [int]$Summary.Errors -ne 0) {
+        throw ("Unreal CI summary is not green: failed={0}, errors={1}." -f $Summary.Failed, $Summary.Errors)
+    }
+}
+catch {
+    Write-YacsUnrealFailureContext -Reason ('Build/Automation failed: {0}' -f $_.Exception.Message)
+    throw
 }
 
 $CiSummary = [ordered]@{
