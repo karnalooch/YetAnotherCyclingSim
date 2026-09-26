@@ -10,6 +10,10 @@ WORKFLOWS = (
     ROOT / ".github" / "workflows" / "asset-full.yml",
     ROOT / ".github" / "workflows" / "reusable-unreal.yml",
 )
+CODE_ONLY_WORKFLOWS = (
+    ROOT / ".github" / "workflows" / "manual-unreal.yml",
+    ROOT / ".github" / "workflows" / "reusable-unreal.yml",
+)
 
 
 class SelfHostedGitIsolationTests(unittest.TestCase):
@@ -36,6 +40,19 @@ class SelfHostedGitIsolationTests(unittest.TestCase):
                 )
                 self.assertIn('"GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV', text)
                 self.assertIn("git config --global --list --show-origin", text)
+
+    def test_code_only_workflows_normalize_persistent_lfs_before_checkout(self):
+        for path in CODE_ONLY_WORKFLOWS:
+            text = path.read_text(encoding="utf-8")
+            with self.subTest(workflow=path.name):
+                normalize = text.index(
+                    "Normalize stale LFS payloads before code-only checkout"
+                )
+                self.assertIn("git lfs ls-files --name-only", text)
+                self.assertIn("Remove-Item -LiteralPath $path -Force", text)
+                self.assertIn("lfs: false", text)
+                checkout = text.index("without LFS payloads")
+                self.assertLess(normalize, checkout)
 
 
 if __name__ == "__main__":
