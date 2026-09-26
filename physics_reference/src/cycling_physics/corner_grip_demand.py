@@ -20,6 +20,11 @@ import math
 from dataclasses import dataclass
 
 from .corner_context import CornerContext
+from .cornering import (
+    CORNER_PHASE_APEX,
+    CORNER_PHASE_ENTRY,
+    CORNER_PHASE_EXIT,
+)
 from .corner_limit import CornerLateralLimit
 from .grip_budget import SharedGripBudget, shared_grip_budget
 from .validation import _closed_unit_interval, _non_negative
@@ -55,6 +60,14 @@ def corner_grip_demand(
         )
     if not context.has_corner:
         raise ValueError("corner grip demand requires a context with a corner")
+    if context.phase not in (
+        CORNER_PHASE_ENTRY,
+        CORNER_PHASE_APEX,
+        CORNER_PHASE_EXIT,
+    ):
+        raise ValueError(
+            "physical corner grip demand requires current entry/apex/exit phase"
+        )
     if not math.isfinite(context.effective_radius_m) or context.effective_radius_m <= 0.0:
         raise ValueError(
             "context effective_radius_m must be finite and greater than zero"
