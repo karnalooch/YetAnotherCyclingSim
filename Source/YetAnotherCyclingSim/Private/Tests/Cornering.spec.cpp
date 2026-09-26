@@ -241,8 +241,8 @@ bool FStage4ATechniqueParityTest::RunTest(const FString& Parameters)
 		Assessment.Rating == ECornerTechniqueRating::Excellent);
 	TestTrue(TEXT("reference technique score is at least 99"),
 		Assessment.Score >= 99.0 && Assessment.Score <= 100.0);
-	TestTrue(TEXT("reference technique feedback is good"),
-		Assessment.Feedback == ECornerTechniqueFeedback::GoodTechnique);
+	TestTrue(TEXT("reference technique feedback matches Python apex cadence rule"),
+		Assessment.Feedback == ECornerTechniqueFeedback::StayOffPowerAtApex);
 	TestTrue(TEXT("reference grip status is safe"),
 		Assessment.GripStatus == ECornerGripStatus::Safe);
 
