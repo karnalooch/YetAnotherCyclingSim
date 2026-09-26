@@ -79,6 +79,130 @@ function Invoke-Stage3GEditor {
     if ($Code -ne 0) { throw "Unreal process failed with exit code $Code; see $LogPath" }
 }
 
+function Invoke-Stage3GMapCheck {
+    param(
+        [Parameter(Mandatory=$true)] [string] $StdoutPath,
+        [Parameter(Mandatory=$true)] [string] $EditorLogPath,
+        [int] $TimeoutSec = 120,
+        [int] $ExitGraceSec = 10
+    )
+
+    $ErrPath = $StdoutPath + '.stderr'
+    Remove-Item -LiteralPath $StdoutPath, $ErrPath, $EditorLogPath -Force -ErrorAction SilentlyContinue
+
+    $Arguments = @(
+        $ProjectPath,
+        '/Game/Prototype/Maps/L_CyclingTest',
+        '-Unattended', '-NoPause', '-NullRHI', '-NoSplash', '-NoP4', '-log',
+        ('-AbsLog=' + $EditorLogPath),
+        '-execcmds="MAP CHECK;QUIT"'
+    )
+
+    $SummaryPattern = 'Map check complete:\s*(\d+)\s+Error\(s\),\s*(\d+)\s+Warning\(s\)'
+    $Proc = Start-Process -FilePath $EditorCmd -ArgumentList $Arguments -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $StdoutPath -RedirectStandardError $ErrPath
+    $Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+    $NextHeartbeatSec = 15
+    $SummaryMatch = $null
+
+    while ($Stopwatch.Elapsed.TotalSeconds -lt $TimeoutSec) {
+        if (Test-Path -LiteralPath $EditorLogPath -PathType Leaf) {
+            $MapText = Get-Content -LiteralPath $EditorLogPath -Raw -ErrorAction SilentlyContinue
+            if ($MapText) {
+                $Matches = [regex]::Matches($MapText, $SummaryPattern, 'IgnoreCase')
+                if ($Matches.Count -gt 0) {
+                    $SummaryMatch = $Matches[$Matches.Count - 1]
+                    break
+                }
+            }
+        }
+
+        if ($Proc.HasExited) {
+            break
+        }
+
+        if ($Stopwatch.Elapsed.TotalSeconds -ge $NextHeartbeatSec) {
+            $LogBytes = if (Test-Path -LiteralPath $EditorLogPath -PathType Leaf) {
+                (Get-Item -LiteralPath $EditorLogPath).Length
+            } else { 0 }
+            Write-Host ("YACS MAP CHECK heartbeat elapsed={0:N1}s logBytes={1}" -f $Stopwatch.Elapsed.TotalSeconds, $LogBytes)
+            if ($LogBytes -gt 0) {
+                Get-Content -LiteralPath $EditorLogPath -Tail 5 -ErrorAction SilentlyContinue |
+                    ForEach-Object { Write-Host ("YACS MAP CHECK logtail {0}" -f $_) }
+            }
+            $NextHeartbeatSec += 15
+        }
+
+        Start-Sleep -Milliseconds 500
+    }
+
+    # One final read closes the race where the editor writes the summary just
+    # before exiting or exactly as the timeout boundary is reached.
+    if (-not $SummaryMatch -and (Test-Path -LiteralPath $EditorLogPath -PathType Leaf)) {
+        $MapText = Get-Content -LiteralPath $EditorLogPath -Raw -ErrorAction SilentlyContinue
+        if ($MapText) {
+            $Matches = [regex]::Matches($MapText, $SummaryPattern, 'IgnoreCase')
+            if ($Matches.Count -gt 0) {
+                $SummaryMatch = $Matches[$Matches.Count - 1]
+            }
+        }
+    }
+
+    if (-not $SummaryMatch) {
+        if (-not $Proc.HasExited) {
+            try { $Proc | Stop-Process -Force } catch { }
+            try { $Proc.WaitForExit() } catch { }
+        }
+        $Stopwatch.Stop()
+        throw "Map Check did not emit a completion summary within $TimeoutSec seconds; see $EditorLogPath and $StdoutPath"
+    }
+
+    $MapErrors = [int]$SummaryMatch.Groups[1].Value
+    $MapWarnings = [int]$SummaryMatch.Groups[2].Value
+    Write-Host ("YACS MAP CHECK summary observed: errors={0} warnings={1}" -f $MapErrors, $MapWarnings)
+
+    $ForcedExitAfterSummary = $false
+    if (-not $Proc.HasExited) {
+        Write-Host ("YACS MAP CHECK waiting up to {0}s for editor shutdown after summary..." -f $ExitGraceSec)
+        if (-not $Proc.WaitForExit($ExitGraceSec * 1000)) {
+            $ForcedExitAfterSummary = $true
+            Write-Host 'YACS MAP CHECK editor did not exit after the completed check; terminating only after the proof marker was persisted.' -ForegroundColor Yellow
+            try { $Proc | Stop-Process -Force } catch { }
+            try { $Proc.WaitForExit() } catch { }
+        }
+    }
+
+    if (-not $ForcedExitAfterSummary) {
+        $Code = $Proc.ExitCode
+        if ($null -eq $Code) { $Code = 0 }
+        if ($Code -ne 0) {
+            throw "Map Check editor exited with code $Code after writing its completion summary; see $EditorLogPath"
+        }
+    }
+
+    $Stopwatch.Stop()
+    $ProcessEvidence = [ordered]@{
+        TimestampUtc = (Get-Date).ToUniversalTime().ToString('o')
+        SummaryObserved = $true
+        Errors = $MapErrors
+        Warnings = $MapWarnings
+        ForcedExitAfterSummary = $ForcedExitAfterSummary
+        ElapsedSeconds = [math]::Round($Stopwatch.Elapsed.TotalSeconds, 2)
+        TimeoutSeconds = $TimeoutSec
+        ExitGraceSeconds = $ExitGraceSec
+        EditorLog = $EditorLogPath
+        StdoutLog = $StdoutPath
+    }
+    $ProcessEvidence |
+        ConvertTo-Json -Depth 3 |
+        Set-Content -LiteralPath (Join-Path $ArtifactRoot 'map_check_process.json') -Encoding UTF8
+
+    return [pscustomobject]@{
+        Errors = $MapErrors
+        Warnings = $MapWarnings
+        ForcedExitAfterSummary = $ForcedExitAfterSummary
+    }
+}
+
 # 2. Fresh-process persisted-world verification.
 $VerifyLog = Join-Path $ArtifactRoot 'route_world_verify.log'
 Invoke-Stage3GEditor -LogPath $VerifyLog -Arguments @(
@@ -94,24 +218,15 @@ if ($VerifyText -notmatch 'Stage 3 prototype world verified after reload') {
     throw 'Fresh-process Stage 3G world persistence marker missing.'
 }
 
-# 3. Map Check. Use the engine log because stdout does not reliably contain
-# the final Map Check summary under UE 5.8.
+# 3. Map Check. UE 5.8 may persist the final Map Check result but keep the
+# headless editor alive. Treat the persisted summary as the proof boundary:
+# no summary is always a hard failure; after a summary, allow a short clean
+# shutdown grace period before terminating the otherwise-idle editor.
 $MapStdout = Join-Path $ArtifactRoot 'map_check.stdout.log'
 $MapEditorLog = Join-Path $ArtifactRoot 'map_check.editor.log'
-Invoke-Stage3GEditor -LogPath $MapStdout -TimeoutSec 120 -Arguments @(
-    $ProjectPath,
-    '/Game/Prototype/Maps/L_CyclingTest',
-    '-Unattended', '-NoPause', '-NullRHI', '-NoSplash', '-NoP4', '-log',
-    ('-AbsLog=' + $MapEditorLog),
-    '-execcmds="MAP CHECK;QUIT"'
-)
-if (-not (Test-Path -LiteralPath $MapEditorLog)) { throw 'Map Check engine log missing.' }
-$MapText = Get-Content -LiteralPath $MapEditorLog -Raw
-$Matches = [regex]::Matches($MapText, 'Map check complete:\s*(\d+)\s+Error\(s\),\s*(\d+)\s+Warning\(s\)', 'IgnoreCase')
-if ($Matches.Count -eq 0) { throw 'Map Check summary missing.' }
-$Last = $Matches[$Matches.Count - 1]
-$MapErrors = [int]$Last.Groups[1].Value
-$MapWarnings = [int]$Last.Groups[2].Value
+$MapResult = Invoke-Stage3GMapCheck -StdoutPath $MapStdout -EditorLogPath $MapEditorLog -TimeoutSec 120 -ExitGraceSec 10
+$MapErrors = [int]$MapResult.Errors
+$MapWarnings = [int]$MapResult.Warnings
 if ($MapErrors -ne 0) { throw "Map Check failed: $MapErrors error(s), $MapWarnings warning(s)." }
 
 # 4. Git LFS integrity. Stage 3G map/material binary sources must never fall
