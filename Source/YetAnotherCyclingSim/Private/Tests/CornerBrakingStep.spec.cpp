@@ -204,6 +204,10 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 bool FStage4CCornerBrakingApproachSurfaceTest::RunTest(const FString& Parameters)
 {
 	using namespace Stage4CCornerBrakingTests;
+	using namespace CyclingCornerBraking;
+	using namespace CyclingRoadPhysics;
+	using namespace CyclingSimulation;
+	using namespace CyclingSurfaceGrip;
 
 	FRoadPhysicsProfile Profile;
 	FSurfaceGripPolicy GripPolicy;
@@ -267,6 +271,10 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 bool FStage4CCornerBrakingActiveCornerTest::RunTest(const FString& Parameters)
 {
 	using namespace Stage4CCornerBrakingTests;
+	using namespace CyclingCornerBraking;
+	using namespace CyclingRoadPhysics;
+	using namespace CyclingSimulation;
+	using namespace CyclingSurfaceGrip;
 
 	FRoadPhysicsProfile Profile;
 	FSurfaceGripPolicy GripPolicy;
@@ -313,6 +321,10 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 bool FStage4CCornerBrakingZeroBrakeParityTest::RunTest(const FString& Parameters)
 {
 	using namespace Stage4CCornerBrakingTests;
+	using namespace CyclingCornerBraking;
+	using namespace CyclingRoadPhysics;
+	using namespace CyclingSimulation;
+	using namespace CyclingSurfaceGrip;
 
 	FRoadPhysicsProfile Profile;
 	FSurfaceGripPolicy GripPolicy;
@@ -386,6 +398,10 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 bool FStage4CCornerBrakingFrameBatchingTest::RunTest(const FString& Parameters)
 {
 	using namespace Stage4CCornerBrakingTests;
+	using namespace CyclingCornerBraking;
+	using namespace CyclingRoadPhysics;
+	using namespace CyclingSimulation;
+	using namespace CyclingSurfaceGrip;
 
 	TArray<double> Frames30;
 	for (int32 Index = 0; Index < 90; ++Index)
