@@ -20,7 +20,7 @@ namespace Stage3HRoadPhysicsTests
 		double HorizontalCurvaturePerM = 0.0,
 		double VerticalCurvaturePerM = 0.0,
 		double RoadWidthM = 6.0,
-		double BankAngleRad = 0.0,
+		double CrossSlopeAngleRad = 0.0,
 		const TCHAR* SurfaceId = TEXT("asphalt"),
 		double Wetness = 0.0,
 		double Roughness = 0.0)
@@ -32,7 +32,8 @@ namespace Stage3HRoadPhysicsTests
 		Sample.HorizontalCurvaturePerM = HorizontalCurvaturePerM;
 		Sample.VerticalCurvaturePerM = VerticalCurvaturePerM;
 		Sample.RoadWidthM = RoadWidthM;
-		Sample.BankAngleRad = BankAngleRad;
+		Sample.LeftCrossSlopeAngleRad = CrossSlopeAngleRad;
+		Sample.RightCrossSlopeAngleRad = CrossSlopeAngleRad;
 		Sample.SurfaceId = SurfaceId;
 		Sample.Wetness = Wetness;
 		Sample.Roughness = Roughness;
@@ -89,7 +90,7 @@ bool FStage3HRoadPhysicsInterpolationTest::RunTest(const FString& Parameters)
 		NearlyEqual(State.VerticalCurvaturePerM, 0.0005));
 	TestTrue(TEXT("road width interpolates"), NearlyEqual(State.RoadWidthM, 7.0));
 	TestTrue(TEXT("bank interpolates"),
-		NearlyEqual(State.BankAngleRad, 4.0 * Pi / 180.0));
+		NearlyEqual(State.CrossSlopeAngleRad, 4.0 * Pi / 180.0));
 	TestTrue(TEXT("wetness interpolates"), NearlyEqual(State.Wetness, 0.2));
 	TestTrue(TEXT("roughness interpolates"), NearlyEqual(State.Roughness, 0.1));
 	TestEqual(TEXT("surface is left-interval value"), State.SurfaceId, FString(TEXT("asphalt")));
@@ -99,6 +100,68 @@ bool FStage3HRoadPhysicsInterpolationTest::RunTest(const FString& Parameters)
 	TestTrue(TEXT("exact next sample resolves"),
 		Profile.TryGetStateAt(100.0, 0.0, State, Error));
 	TestEqual(TEXT("exact sample switches surface"), State.SurfaceId, FString(TEXT("paint")));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FStage3HRoadPhysicsCrossSlopeTest,
+	"CyclingPhysics.RoadPhysics.CrossSlope",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FStage3HRoadPhysicsCrossSlopeTest::RunTest(const FString& Parameters)
+{
+	using namespace CyclingRoadPhysics;
+	using namespace Stage3HRoadPhysicsTests;
+
+	TArray<FRoadPhysicsSampleDefinition> PlanarSamples;
+	PlanarSamples.Add(MakeSample(0.0));
+	PlanarSamples.Add(MakeSample(100.0));
+	for (FRoadPhysicsSampleDefinition& Sample : PlanarSamples)
+	{
+		Sample.LeftCrossSlopeAngleRad = 6.0 * Pi / 180.0;
+		Sample.RightCrossSlopeAngleRad = 6.0 * Pi / 180.0;
+	}
+
+	FRoadPhysicsProfile PlanarProfile;
+	FString Error;
+	TestTrue(TEXT("planar bank config succeeds"),
+		PlanarProfile.TryConfigure(TEXT("banked"), PlanarSamples, Error));
+
+	FRoadPhysicsState State;
+	TestTrue(TEXT("left half resolves planar bank"),
+		PlanarProfile.TryGetStateAt(50.0, -2.0, State, Error));
+	TestTrue(TEXT("left planar bank uses same cross-slope"),
+		NearlyEqual(State.CrossSlopeAngleRad, 6.0 * Pi / 180.0));
+	TestTrue(TEXT("right half resolves planar bank"),
+		PlanarProfile.TryGetStateAt(50.0, 2.0, State, Error));
+	TestTrue(TEXT("right planar bank uses same cross-slope"),
+		NearlyEqual(State.CrossSlopeAngleRad, 6.0 * Pi / 180.0));
+
+	TArray<FRoadPhysicsSampleDefinition> CrownSamples;
+	CrownSamples.Add(MakeSample(0.0));
+	CrownSamples.Add(MakeSample(100.0));
+	for (FRoadPhysicsSampleDefinition& Sample : CrownSamples)
+	{
+		Sample.LeftCrossSlopeAngleRad = 2.0 * Pi / 180.0;
+		Sample.RightCrossSlopeAngleRad = -2.0 * Pi / 180.0;
+	}
+
+	FRoadPhysicsProfile CrownProfile;
+	TestTrue(TEXT("crowned road config succeeds"),
+		CrownProfile.TryConfigure(TEXT("crowned"), CrownSamples, Error));
+	TestTrue(TEXT("crown left half resolves"),
+		CrownProfile.TryGetStateAt(50.0, -1.0, State, Error));
+	TestTrue(TEXT("crown left side rises toward centre"),
+		NearlyEqual(State.CrossSlopeAngleRad, 2.0 * Pi / 180.0));
+	TestTrue(TEXT("crown right half resolves"),
+		CrownProfile.TryGetStateAt(50.0, 1.0, State, Error));
+	TestTrue(TEXT("crown right side falls from centre"),
+		NearlyEqual(State.CrossSlopeAngleRad, -2.0 * Pi / 180.0));
+	TestTrue(TEXT("crown centre resolves deterministically"),
+		CrownProfile.TryGetStateAt(50.0, 0.0, State, Error));
+	TestTrue(TEXT("symmetric crown centre averages to flat"),
+		NearlyEqual(State.CrossSlopeAngleRad, 0.0));
+
 	return true;
 }
 
@@ -170,7 +233,7 @@ bool FStage3HRoadPhysicsTransitionValidationTest::RunTest(const FString& Paramet
 	FRoadPhysicsTransitionLimits Passing;
 	Passing.MaxAbsGradeChangePerM = 0.011;
 	Passing.MaxAbsHorizontalCurvatureChangePerM2 = 0.0021;
-	Passing.MaxAbsBankAngleChangeRadPerM = 0.018;
+	Passing.MaxAbsCrossSlopeAngleChangeRadPerM = 0.018;
 	TestTrue(TEXT("explicit transition limits pass"),
 		Profile.TryValidateTransitionRates(Passing, Error));
 
@@ -216,10 +279,10 @@ bool FStage3HRoadPhysicsValidationTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("failed reconfigure preserves previous profile"),
 		Profile.GetName(), PreservedName);
 
-	TArray<FRoadPhysicsSampleDefinition> InvalidBank = Valid;
-	InvalidBank[1].BankAngleRad = 0.5 * Pi;
-	TestFalse(TEXT("pi/2 bank rejected"),
-		Profile.TryConfigure(TEXT("invalid bank"), InvalidBank, Error));
+	TArray<FRoadPhysicsSampleDefinition> InvalidCrossSlope = Valid;
+	InvalidCrossSlope[1].LeftCrossSlopeAngleRad = 0.5 * Pi;
+	TestFalse(TEXT("pi/2 cross-slope rejected"),
+		Profile.TryConfigure(TEXT("invalid cross-slope"), InvalidCrossSlope, Error));
 
 	TArray<FRoadPhysicsSampleDefinition> InvalidWetness = Valid;
 	InvalidWetness[1].Wetness = 1.01;
