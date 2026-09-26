@@ -58,24 +58,27 @@ required LFS extensions.
 Full binary validation is deliberately separate from normal PR CI. The current
 trusted entrypoint is `.github/workflows/asset-full.yml`.
 
-Phase 1 exposes three manual modes on `main` only:
+Phase 1 exposes four manual modes on `main` only:
 
 - `map-smoke` — full LFS checkout, Editor build + Stage 3 Automation,
   deterministic save/reload verification and Map Check, with rendered
   performance intentionally skipped;
 - `visual` — full LFS checkout and rendered Stage 3 visual-environment proof;
-- `full` — Stage 3 build/Automation/persistence/Map Check/performance followed
-  by the rendered visual proof.
+- `package` — explicit Win64 `BuildCookRun` for
+  `/Game/Prototype/Maps/L_CyclingTest`, covering build + cook + stage +
+  pak/archive and validating the archived executable/content containers;
+- `full` — Stage 3 build/Automation/persistence/Map Check/performance,
+  rendered visual proof, and Win64 package proof.
 
 The workflow resolves an exact trusted `main` SHA before checkout, uses the
 repository-scoped `yacs-ue58` self-hosted runner, requests read-only repository
 permissions, runs `git lfs fsck`, uploads only concise proof artifacts and
 always cleans the workspace.
 
-There is intentionally no schedule, PR trigger, cook option or package option
-yet. Nightly automation belongs to the trusted runner Phase 2/3 rollout. Cook
-and package modes should be added only after dedicated fail-closed scripts and
-acceptance criteria exist.
+There is intentionally no schedule or PR trigger yet. Nightly automation
+belongs to the trusted runner Phase 2/3 rollout. Packaging is manual and
+fail-closed; the package mode performs the cook as part of BuildCookRun rather
+than maintaining a second, partially overlapping cook-only implementation.
 
 The normal Aggregate gate must never start a full asset/cook/package workload
 only because a documentation, Python, C++ or small asset change was pushed.

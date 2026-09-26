@@ -11,7 +11,16 @@ on:
         options:
           - map-smoke
           - visual
+          - package
           - full
+      package_configuration:
+        description: "Package configuration used by package/full modes"
+        required: true
+        default: Development
+        type: choice
+        options:
+          - Development
+          - Shipping
       expected_sha:
         description: "Optional exact main SHA; blank resolves current main HEAD"
         required: false
@@ -28,7 +37,7 @@ jobs:
   asset-full:
     name: ${{ inputs.mode }} on yacs-ue58
     runs-on: [self-hosted, yacs-ue58]
-    timeout-minutes: 120
+    timeout-minutes: 180
     permissions:
       contents: read
 
@@ -161,6 +170,20 @@ jobs:
             $visualArgs['SkipBuild'] = $true
           }
           ./scripts/ue/Invoke-YacsStage3VisualEnvironmentProof.ps1 @visualArgs
+
+      - name: Package proof - cook, stage and archive Win64 build
+        if: ${{ inputs.mode == 'package' || inputs.mode == 'full' }}
+        shell: pwsh
+        env:
+          TARGET_SHA: ${{ steps.trust.outputs.sha }}
+          PACKAGE_CONFIGURATION: ${{ inputs.package_configuration }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ue/Invoke-YacsPackageProof.ps1 `
+            -ExpectedBranch HEAD `
+            -ExpectedHead $env:TARGET_SHA `
+            -Configuration $env:PACKAGE_CONFIGURATION `
+            -ArtifactRoot 'Saved/RuntimeProof/CI/AssetFull/Package'
 
       - name: Upload concise asset/full proof
         if: ${{ always() }}
