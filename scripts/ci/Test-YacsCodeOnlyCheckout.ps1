@@ -24,14 +24,15 @@ try {
         throw 'Git LFS is required to verify the code-only checkout contract.'
     }
 
-    $lfsPaths = @(
-        & git lfs ls-files --name-only |
-            ForEach-Object { $_.Trim() } |
-            Where-Object { $_ }
-    )
+    $lfsOutput = @(& git lfs ls-files --name-only)
     if ($LASTEXITCODE -ne 0) {
         throw 'Could not enumerate Git LFS tracked paths.'
     }
+    $lfsPaths = @(
+        $lfsOutput |
+            ForEach-Object { $_.Trim() } |
+            Where-Object { $_ }
+    )
 
     $materialized = [System.Collections.Generic.List[string]]::new()
     foreach ($path in $lfsPaths) {
@@ -47,9 +48,11 @@ try {
 
     if ($materialized.Count -gt 0) {
         throw (
-            "Code-only checkout materialized Git LFS payload(s): {0}. " +
-            "Keep GIT_LFS_SKIP_SMUDGE=1 and pull assets only in an explicit asset lane."
-        ) -f ($materialized -join ', ')
+            (
+                "Code-only checkout materialized Git LFS payload(s): {0}. " +
+                "Keep GIT_LFS_SKIP_SMUDGE=1 and pull assets only in an explicit asset lane."
+            ) -f ($materialized -join ', ')
+        )
     }
 
     Write-Host (
