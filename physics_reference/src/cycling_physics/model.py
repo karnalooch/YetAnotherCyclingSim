@@ -143,9 +143,11 @@ class RiderInput:
 
 @dataclass(frozen=True, slots=True)
 class SimulationState:
-    """Simulation output state, in SI units.
+    """Simulation output state, in SI units and route-local coordinates.
 
-    All fields are stored as floats and must be finite and non-negative.
+    Forward speed, route distance and elapsed time are finite and
+    non-negative. lateral_position_m is the signed route-local D coordinate:
+    negative is toward -D, positive toward +D.
     """
 
     speed_mps: float
@@ -157,10 +159,18 @@ class SimulationState:
     elapsed_time_s: float
     """Elapsed simulation time in seconds (s). Must not be negative; zero is allowed."""
 
+    lateral_position_m: float = 0.0
+    """Signed route-local lateral position D in metres (m). Must be finite."""
+
     def __post_init__(self):
         object.__setattr__(self, "speed_mps", _non_negative(self.speed_mps, "speed_mps"))
         object.__setattr__(self, "distance_m", _non_negative(self.distance_m, "distance_m"))
         object.__setattr__(self, "elapsed_time_s", _non_negative(self.elapsed_time_s, "elapsed_time_s"))
+        object.__setattr__(
+            self,
+            "lateral_position_m",
+            _finite(self.lateral_position_m, "lateral_position_m"),
+        )
 
 
 def road_angle_rad(grade_decimal: float) -> float:
@@ -356,4 +366,5 @@ def step_simulation_with_brake_force(
         speed_mps=new_speed_mps,
         distance_m=state.distance_m + distance_delta_m,
         elapsed_time_s=state.elapsed_time_s + dt,
+        lateral_position_m=state.lateral_position_m,
     )
