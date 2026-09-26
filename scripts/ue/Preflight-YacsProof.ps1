@@ -179,8 +179,150 @@ $SearchDirs = @(
 $EngineRoot = $null
 foreach ($d in $SearchDirs) {
     if (-not (Test-Path -LiteralPath $d)) { continue }
+
+    # SearchDirs may contain either a parent directory (for example
+    # C:\Program Files\Epic Games) or an engine root itself (the hosted
+    # CircleCI restore target is C:\UE_5.8). Accept a direct engine root
+    # before enumerating child UE_* directories.
+    $directUat = Join-Path -Path $d -ChildPath 'Engine/Build/BatchFiles/RunUAT.bat'
+    if (Test-Path -LiteralPath $directUat -PathType Leaf) {
+        $EngineRoot = (Resolve-Path -LiteralPath $d).Path
+        break
+    }
+
     $candidates = Get-ChildItem -LiteralPath $d -Directory -ErrorAction SilentlyContinue |
-        Where-Object { $_.Name -match '^(UE_[0-9]+\.[0-9]+|UE_[0-9]+|UnrealEngine)$' }
+        Where-Object { $_.Name -match '^(UE_[0-9]+\.[0-9]+|UE_[0-9]+|UnrealEngine)
+
+$EngineVersion = $null
+$UATPath = $null
+$UEditorPath = $null
+if ($EngineRoot) {
+    $EngineVersion = Read-EngineVersion -EngineRoot $EngineRoot
+    $UATPath = Resolve-CommandPath -Command 'RunUAT.bat' `
+        -SearchDirs @(
+            (Join-Path -Path $EngineRoot -ChildPath 'Engine/Build/BatchFiles'),
+            (Join-Path -Path $EngineRoot -ChildPath 'Engine/Build/BatchFiles/Windows')
+        )
+    $UEditorPath = Resolve-CommandPath -Command 'UnrealEditor-Cmd.exe' `
+        -SearchDirs @(
+            (Join-Path -Path $EngineRoot -ChildPath 'Engine/Binaries/Win64')
+        )
+    $UEditorGuiPath = Resolve-CommandPath -Command 'UnrealEditor.exe' `
+        -SearchDirs @(
+            (Join-Path -Path $EngineRoot -ChildPath 'Engine/Binaries/Win64')
+        )
+}
+
+# --- Machine / GPU --------------------------------------------------------
+
+$OsCaption = (Get-CimInstance Win32_OperatingSystem -ErrorAction SilentlyContinue).Caption
+$CpuName   = (Get-CimInstance Win32_Processor -ErrorAction SilentlyContinue).Name
+$TotalRam  = [int64] ((Get-CimInstance Win32_ComputerSystem -ErrorAction SilentlyContinue).TotalPhysicalMemory / 1GB)
+$Gpus      = @()
+try {
+    $Gpus = Get-CimInstance Win32_VideoController -ErrorAction SilentlyContinue |
+        Select-Object -Property Name, DriverVersion, AdapterRAM |
+        ForEach-Object { [pscustomobject]@{
+            Name          = $_.Name
+            DriverVersion = $_.DriverVersion
+            AdapterRamMb  = [int64] ($_.AdapterRAM / 1MB)
+        } }
+} catch { }
+
+# --- Context --------------------------------------------------------------
+
+$Context = [ordered]@{
+    TimestampUtc        = (Get-Date).ToUniversalTime().ToString('o')
+    RepoRoot            = $RepoRoot
+    ProjectPath         = $ProjectPath
+    Branch              = $Branch
+    Head                = $Head
+    ExpectedBranch      = $ExpectedBranch
+    ExpectedHead        = $ExpectedHead
+    BranchMatches       = ($Branch -eq $ExpectedBranch)
+    HeadMatches         = ($Head   -eq $ExpectedHead)
+    DirtyPaths          = $DirtyPaths
+    UntrackedPaths      = $UntrackedPaths
+    DisallowedDirty     = $Disallowed
+    AllowedDirtyPaths   = $AllowedDirtyPaths
+    EngineRoot          = $EngineRoot
+    EngineVersion       = if ($EngineVersion) {
+        [ordered]@{
+            MajorVersion         = $EngineVersion.MajorVersion
+            MinorVersion         = $EngineVersion.MinorVersion
+            PatchVersion         = $EngineVersion.PatchVersion
+            Changelist           = $EngineVersion.Changelist
+            CompatibleChangelist = $EngineVersion.CompatibleChangelist
+            BranchName           = $EngineVersion.BranchName
+        }
+    } else { $null }
+    UATPath             = $UATPath
+    UnrealEditorCmdPath = $UEditorPath
+    UnrealEditorPath    = $UEditorGuiPath
+    Machine             = [ordered]@{
+        Os           = $OsCaption
+        Cpu          = $CpuName
+        TotalRamGb   = $TotalRam
+        Gpus         = $Gpus
+        Cwd          = (Get-Location).Path
+    }
+    ArtifactRoot        = $ArtifactRoot
+    PowerShellVersion   = $PSVersionTable.PSVersion.ToString()
+}
+
+$Context | ConvertTo-Json -Depth 6 |
+    Set-Content -LiteralPath (Join-Path -Path $ArtifactRoot -ChildPath 'preflight.json') -Encoding UTF8
+
+# Human-readable text companion.
+$sb = New-Object System.Text.StringBuilder
+[void]$sb.AppendLine("=== YetAnotherCyclingSim preflight ===")
+[void]$sb.AppendLine(("TimestampUtc        : {0}" -f $Context.TimestampUtc))
+[void]$sb.AppendLine(("RepoRoot            : {0}" -f $Context.RepoRoot))
+[void]$sb.AppendLine(("ProjectPath         : {0}" -f $Context.ProjectPath))
+[void]$sb.AppendLine(("Branch              : {0} (expected {1}; match={2})" -f $Context.Branch, $Context.ExpectedBranch, $Context.BranchMatches))
+[void]$sb.AppendLine(("Head                : {0} (expected {1}; match={2})" -f $Context.Head, $Context.ExpectedHead, $Context.HeadMatches))
+[void]$sb.AppendLine(("EngineRoot          : {0}" -f $Context.EngineRoot))
+[void]$sb.AppendLine(("UE Version          : {0}.{1}.{2}-{3} ({4})" -f `
+    $Context.EngineVersion.MajorVersion,
+    $Context.EngineVersion.MinorVersion,
+    $Context.EngineVersion.PatchVersion,
+    $Context.EngineVersion.Changelist,
+    $Context.EngineVersion.BranchName))
+[void]$sb.AppendLine(("UAT path            : {0}" -f $Context.UATPath))
+[void]$sb.AppendLine(("UnrealEditor-Cmd    : {0}" -f $Context.UnrealEditorCmdPath))
+[void]$sb.AppendLine(("UnrealEditor        : {0}" -f $Context.UnrealEditorPath))
+[void]$sb.AppendLine(("Machine             : {0} / {1} / {2} GB RAM" -f $Context.Machine.Os, $Context.Machine.Cpu, $Context.Machine.TotalRamGb))
+foreach ($g in $Context.Machine.Gpus) {
+    [void]$sb.AppendLine(("GPU                 : {0} ({1} MB, driver {2})" -f $g.Name, $g.AdapterRamMb, $g.DriverVersion))
+}
+[void]$sb.AppendLine(("ArtifactRoot        : {0}" -f $Context.ArtifactRoot))
+[void]$sb.AppendLine("Disallowed dirty/untracked paths:")
+if ($Disallowed.Count -eq 0) { [void]$sb.AppendLine("  (none)") }
+else { foreach ($p in $Disallowed) { [void]$sb.AppendLine(("  - {0}" -f $p)) } }
+$sb.ToString() | Set-Content -LiteralPath (Join-Path -Path $ArtifactRoot -ChildPath 'preflight.txt') -Encoding UTF8
+
+# --- Exit policy ----------------------------------------------------------
+
+$HardFail = $false
+$Reasons  = @()
+if (-not $Context.BranchMatches) { $HardFail = $true; $Reasons += "branch '$Branch' != expected '$ExpectedBranch'" }
+if (-not $Context.HeadMatches)   { $HardFail = $true; $Reasons += "head '$Head' != expected '$ExpectedHead'" }
+if ($Disallowed.Count -gt 0)     { $HardFail = $true; $Reasons += "disallowed dirty/untracked paths: $($Disallowed -join ', ')" }
+if (-not $EngineRoot)            { $HardFail = $true; $Reasons += "Unreal Engine installation not discovered in known locations" }
+if (-not $UATPath)               { $HardFail = $true; $Reasons += "RunUAT.bat not found under EngineRoot" }
+if (-not $UEditorPath)           { $HardFail = $true; $Reasons += "UnrealEditor-Cmd.exe not found under EngineRoot" }
+
+if ($HardFail) {
+    Write-Host "Preflight FAILED:" -ForegroundColor Red
+    foreach ($r in $Reasons) { Write-Host ("  - {0}" -f $r) -ForegroundColor Red }
+    Write-Host ("See {0} for full context." -f (Join-Path -Path $ArtifactRoot -ChildPath 'preflight.txt'))
+    exit 2
+}
+
+Write-Host "Preflight OK." -ForegroundColor Green
+Write-Host ("  ArtifactRoot: {0}" -f $ArtifactRoot)
+return $Context
+ }
     foreach ($c in $candidates) {
         $candidate = $c.FullName
         if (Test-Path -LiteralPath (Join-Path -Path $candidate -ChildPath 'Engine/Build/BatchFiles/RunUAT.bat')) {
