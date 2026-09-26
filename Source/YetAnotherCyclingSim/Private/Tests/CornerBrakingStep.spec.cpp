@@ -134,6 +134,47 @@ namespace Stage4CCornerBrakingTests
 		return Settings;
 	}
 
+	class FFailAfterDistanceContextProvider final
+		: public ISimulationStepContextProvider
+	{
+	public:
+		explicit FFailAfterDistanceContextProvider(double InFailAtDistanceM)
+			: FailAtDistanceM(InFailAtDistanceM)
+		{
+		}
+
+		virtual bool TryResolveEnvironment(
+			const FSimulationState& PreStepState,
+			FEnvironment& OutEnvironment,
+			FString& OutError) const override
+		{
+			if (PreStepState.DistanceM >= FailAtDistanceM)
+			{
+				OutError = TEXT("intentional context failure after technique observations");
+				return false;
+			}
+			OutEnvironment = MakeEnvironment();
+			OutError.Reset();
+			return true;
+		}
+
+		virtual bool TryObserveCompletedStep(
+			const FSimulationState& PreStepState,
+			const FSimulationState& PostStepState,
+			TArray<FSimulationBoundaryCrossing>& OutCrossings,
+			bool& bOutStopAfterStep,
+			FString& OutError) const override
+		{
+			OutCrossings.Reset();
+			bOutStopAfterStep = false;
+			OutError.Reset();
+			return true;
+		}
+
+	private:
+		double FailAtDistanceM = 0.0;
+	};
+
 	bool BuildStaticContext(
 		FDistanceBasedSimulationStepContextProvider& OutContext,
 		FString& OutError)
@@ -153,6 +194,8 @@ namespace Stage4CCornerBrakingTests
 		bool bSucceeded = false;
 		FSimulationState State;
 		int32 TotalSteps = 0;
+		TArray<CyclingCornerTechniqueRuntime::FCompletedRouteCornerTechniqueScore> CompletedTechniqueScores;
+		int32 SkippedTechniqueEpisodes = 0;
 		FString Error;
 	};
 
@@ -207,6 +250,64 @@ namespace Stage4CCornerBrakingTests
 
 		Result.bSucceeded = true;
 		Result.State = Runner.GetState();
+		Result.CompletedTechniqueScores = Runner.GetCompletedCornerTechniqueScores();
+		Result.SkippedTechniqueEpisodes = Runner.GetSkippedCornerTechniqueEpisodeCount();
+		return Result;
+	}
+
+	FSequenceResult RunTechniqueSequence(const TArray<double>& FrameDeltas)
+	{
+		FSequenceResult Result;
+		FRoadPhysicsProfile Profile;
+		FSurfaceGripPolicy GripPolicy;
+		FDistanceBasedSimulationStepContextProvider Context;
+		FString Error;
+		if (!BuildApproachProfile(Profile, Error)
+			|| !BuildGripPolicy(GripPolicy, Error)
+			|| !BuildStaticContext(Context, Error))
+		{
+			Result.Error = Error;
+			return Result;
+		}
+
+		FFixedStepSimulationRunner Runner;
+		const FRiderParameters Rider = MakeRider();
+		const FRiderInput Input = MakeInput(0.0, 1500.0);
+		const FCornerContextSettings CornerSettings = MakeCornerSettings();
+
+		for (const double Delta : FrameDeltas)
+		{
+			FSimulationState State;
+			double RemainingTimeS = 0.0;
+			int32 CompletedSteps = 0;
+			TArray<FSimulationBoundaryCrossing> Crossings;
+			bool bStoppedAfterStep = false;
+			if (!Runner.TryAdvanceWithCornerBraking(
+				Delta,
+				Rider,
+				Context,
+				Input,
+				Profile,
+				CornerSettings,
+				GripPolicy,
+				0.8,
+				State,
+				RemainingTimeS,
+				CompletedSteps,
+				Crossings,
+				bStoppedAfterStep,
+				Error))
+			{
+				Result.Error = Error;
+				return Result;
+			}
+			Result.TotalSteps += CompletedSteps;
+		}
+
+		Result.bSucceeded = true;
+		Result.State = Runner.GetState();
+		Result.CompletedTechniqueScores = Runner.GetCompletedCornerTechniqueScores();
+		Result.SkippedTechniqueEpisodes = Runner.GetSkippedCornerTechniqueEpisodeCount();
 		return Result;
 	}
 
@@ -261,6 +362,8 @@ namespace Stage4CCornerBrakingTests
 
 		Result.bSucceeded = true;
 		Result.State = Runner.GetState();
+		Result.CompletedTechniqueScores = Runner.GetCompletedCornerTechniqueScores();
+		Result.SkippedTechniqueEpisodes = Runner.GetSkippedCornerTechniqueEpisodeCount();
 		return Result;
 	}
 }
@@ -586,6 +689,172 @@ bool FStage4CConsequenceRuntimeBatchingTest::RunTest(const FString& Parameters)
 		Result30.State.LateralPositionM, Result60.State.LateralPositionM);
 	TestEqual(TEXT("tight 30/jitter D exact parity"),
 		Result30.State.LateralPositionM, ResultJittered.State.LateralPositionM);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FStage4CTechniqueRuntimeFrameBatchingTest,
+	"CyclingCornering.Technique.Runtime.FixedStepFrameBatchingDeterminism",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FStage4CTechniqueRuntimeFrameBatchingTest::RunTest(const FString& Parameters)
+{
+	using namespace Stage4CCornerBrakingTests;
+
+	TArray<double> Frames30;
+	for (int32 Index = 0; Index < 900; ++Index)
+	{
+		Frames30.Add(1.0 / 30.0);
+	}
+
+	TArray<double> Frames60;
+	for (int32 Index = 0; Index < 1800; ++Index)
+	{
+		Frames60.Add(1.0 / 60.0);
+	}
+
+	TArray<double> Jittered;
+	for (int32 Index = 0; Index < 300; ++Index)
+	{
+		Jittered.Add(0.011);
+		Jittered.Add(0.027);
+		Jittered.Add(0.019);
+		Jittered.Add(0.043);
+	}
+
+	const FSequenceResult Result30 = RunTechniqueSequence(Frames30);
+	const FSequenceResult Result60 = RunTechniqueSequence(Frames60);
+	const FSequenceResult ResultJittered = RunTechniqueSequence(Jittered);
+
+	TestTrue(TEXT("technique 30 FPS sequence succeeds"), Result30.bSucceeded);
+	TestTrue(TEXT("technique 60 FPS sequence succeeds"), Result60.bSucceeded);
+	TestTrue(TEXT("technique jittered sequence succeeds"), ResultJittered.bSucceeded);
+	if (!Result30.bSucceeded || !Result60.bSucceeded || !ResultJittered.bSucceeded)
+	{
+		AddError(FString::Printf(
+			TEXT("technique sequence error(s): 30='%s' 60='%s' jitter='%s'"),
+			*Result30.Error,
+			*Result60.Error,
+			*ResultJittered.Error));
+		return false;
+	}
+
+	TestEqual(TEXT("30 FPS executes 600 fixed steps"), Result30.TotalSteps, 600);
+	TestEqual(TEXT("technique 30/60 step count parity"), Result30.TotalSteps, Result60.TotalSteps);
+	TestEqual(TEXT("technique 30/jitter step count parity"), Result30.TotalSteps, ResultJittered.TotalSteps);
+	TestEqual(TEXT("one corner score completes at 30 FPS"), Result30.CompletedTechniqueScores.Num(), 1);
+	TestEqual(TEXT("one corner score completes at 60 FPS"), Result60.CompletedTechniqueScores.Num(), 1);
+	TestEqual(TEXT("one corner score completes under jitter"), ResultJittered.CompletedTechniqueScores.Num(), 1);
+	TestEqual(TEXT("no 30 FPS episode skipped"), Result30.SkippedTechniqueEpisodes, 0);
+	TestEqual(TEXT("no 60 FPS episode skipped"), Result60.SkippedTechniqueEpisodes, 0);
+	TestEqual(TEXT("no jitter episode skipped"), ResultJittered.SkippedTechniqueEpisodes, 0);
+
+	if (Result30.CompletedTechniqueScores.Num() == 1
+		&& Result60.CompletedTechniqueScores.Num() == 1
+		&& ResultJittered.CompletedTechniqueScores.Num() == 1)
+	{
+		const auto& Score30 = Result30.CompletedTechniqueScores[0];
+		const auto& Score60 = Result60.CompletedTechniqueScores[0];
+		const auto& ScoreJitter = ResultJittered.CompletedTechniqueScores[0];
+
+		TestEqual(TEXT("corner start exact 30/60 parity"),
+			Score30.CornerStartM, Score60.CornerStartM);
+		TestEqual(TEXT("corner start exact 30/jitter parity"),
+			Score30.CornerStartM, ScoreJitter.CornerStartM);
+		TestEqual(TEXT("corner end exact 30/60 parity"),
+			Score30.CornerEndM, Score60.CornerEndM);
+		TestEqual(TEXT("corner end exact 30/jitter parity"),
+			Score30.CornerEndM, ScoreJitter.CornerEndM);
+		TestEqual(TEXT("overall score exact 30/60 parity"),
+			Score30.Score.Score, Score60.Score.Score);
+		TestEqual(TEXT("overall score exact 30/jitter parity"),
+			Score30.Score.Score, ScoreJitter.Score.Score);
+		TestEqual(TEXT("line score exact 30/60 parity"),
+			Score30.Score.LineRetentionScore, Score60.Score.LineRetentionScore);
+		TestEqual(TEXT("speed score exact 30/jitter parity"),
+			Score30.Score.SpeedRetentionScore, ScoreJitter.Score.SpeedRetentionScore);
+	}
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FStage4CTechniqueRuntimeTransactionalRollbackTest,
+	"CyclingCornering.Technique.Runtime.TransactionalRollback",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FStage4CTechniqueRuntimeTransactionalRollbackTest::RunTest(const FString& Parameters)
+{
+	using namespace Stage4CCornerBrakingTests;
+	using namespace CyclingRoadPhysics;
+	using namespace CyclingSimulation;
+	using namespace CyclingSurfaceGrip;
+
+	FRoadPhysicsProfile Profile;
+	FSurfaceGripPolicy GripPolicy;
+	FString Error;
+	TestTrue(TEXT("approach profile configures"), BuildApproachProfile(Profile, Error));
+	TestTrue(TEXT("grip policy configures"), BuildGripPolicy(GripPolicy, Error));
+
+	// Approach begins at 50 m for the 100 m corner start. Failing at 95 m
+	// guarantees many Approach observations have already been staged locally
+	// inside this same multi-substep batch before the intentional failure.
+	FFailAfterDistanceContextProvider FailingContext(95.0);
+	FFixedStepSimulationRunner Runner;
+
+	FSimulationState OutState;
+	OutState.SpeedMps = 777.0;
+	OutState.DistanceM = 888.0;
+	OutState.ElapsedTimeS = 999.0;
+	OutState.LateralPositionM = 3.0;
+	double RemainingTimeS = 123.0;
+	int32 CompletedSteps = 456;
+	TArray<FSimulationBoundaryCrossing> Crossings;
+	bool bStoppedAfterStep = true;
+
+	TestFalse(
+		TEXT("intentional later substep failure rejects the whole batch"),
+		Runner.TryAdvanceWithCornerBraking(
+			30.0,
+			MakeRider(),
+			FailingContext,
+			MakeInput(0.0, 1500.0),
+			Profile,
+			MakeCornerSettings(),
+			GripPolicy,
+			0.8,
+			OutState,
+			RemainingTimeS,
+			CompletedSteps,
+			Crossings,
+			bStoppedAfterStep,
+			Error));
+
+	TestTrue(TEXT("intentional error propagated"),
+		Error.Contains(TEXT("intentional context failure")));
+	TestEqual(TEXT("failure reports zero completed steps"), CompletedSteps, 0);
+	TestEqual(TEXT("failure returns no crossings"), Crossings.Num(), 0);
+	TestFalse(TEXT("failure clears stop flag"), bStoppedAfterStep);
+
+	// Output sentinels and authoritative runner state are not partially
+	// published/committed.
+	TestEqual(TEXT("output speed sentinel preserved"), OutState.SpeedMps, 777.0);
+	TestEqual(TEXT("output distance sentinel preserved"), OutState.DistanceM, 888.0);
+	TestEqual(TEXT("output time sentinel preserved"), OutState.ElapsedTimeS, 999.0);
+	TestEqual(TEXT("output D sentinel preserved"), OutState.LateralPositionM, 3.0);
+	TestEqual(TEXT("remaining-time sentinel preserved"), RemainingTimeS, 123.0);
+	TestEqual(TEXT("runner speed rolls back"), Runner.GetState().SpeedMps, 0.0);
+	TestEqual(TEXT("runner distance rolls back"), Runner.GetState().DistanceM, 0.0);
+	TestEqual(TEXT("runner time rolls back"), Runner.GetState().ElapsedTimeS, 0.0);
+	TestEqual(TEXT("runner D rolls back"), Runner.GetState().LateralPositionM, 0.0);
+	TestEqual(TEXT("runner accumulator rolls back"), Runner.GetAccumulatedTimeS(), 0.0);
+
+	// Most importantly, staged technique observations from 50..95 m were local
+	// to the failed batch and cannot leak into persistent score state.
+	TestEqual(TEXT("no score leaked from failed batch"),
+		Runner.GetCompletedCornerTechniqueScores().Num(), 0);
+	TestEqual(TEXT("no skipped episode leaked from failed batch"),
+		Runner.GetSkippedCornerTechniqueEpisodeCount(), 0);
 	return true;
 }
 
