@@ -58,6 +58,19 @@ class ReusableStage3GFullWorkflowContractTests(unittest.TestCase):
             self.stage3g_proof,
         )
 
+
+    def test_stage3g_map_check_is_completion_aware_and_fail_closed(self):
+        self.assertIn("function Invoke-Stage3GMapCheck", self.stage3g_proof)
+        self.assertIn("Map Check did not emit a completion summary", self.stage3g_proof)
+        self.assertIn("YACS MAP CHECK summary observed", self.stage3g_proof)
+        self.assertIn("ForcedExitAfterSummary", self.stage3g_proof)
+        self.assertIn("map_check_process.json", self.stage3g_proof)
+        self.assertIn("-ExitGraceSec 10", self.stage3g_proof)
+        self.assertNotIn(
+            "Invoke-Stage3GEditor -LogPath $MapStdout -TimeoutSec 120",
+            self.stage3g_proof,
+        )
+
     def test_lane_uploads_only_proof_and_always_cleans(self):
         for extension in ("**/*.json", "**/*.txt", "**/*.log", "**/*.png"):
             self.assertIn(extension, self.workflow)
