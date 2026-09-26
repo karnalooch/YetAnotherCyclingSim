@@ -85,6 +85,31 @@ namespace CyclingSimulation
 			bool& bOutStoppedAfterStep,
 			FString& OutError);
 
+		// Stage 4C-B3c route-physics path. For every authoritative 0.05 s
+		// substep this resolves current Road Physics Profile state, corner
+		// context, lateral grip demand and tyre-limited braking force before
+		// integrating forward motion. The resolution therefore cannot depend
+		// on render-frame batching.
+		//
+		// LateralPositionM uses route-local metres (D). BaseFrictionCoefficient
+		// is the caller-owned dry tyre/road coefficient and must be positive.
+		bool TryAdvanceWithCornerBraking(
+			double FrameDeltaS,
+			const FRiderParameters& Rider,
+			const ISimulationStepContextProvider& StepContextProvider,
+			const FRiderInput& RiderInput,
+			const CyclingRoadPhysics::FRoadPhysicsProfile& RoadProfile,
+			const CyclingCornerContext::FCornerContextSettings& CornerSettings,
+			const CyclingSurfaceGrip::FSurfaceGripPolicy& GripPolicy,
+			double BaseFrictionCoefficient,
+			double LateralPositionM,
+			FSimulationState& OutState,
+			double& RemainingAccumulatedTimeS,
+			int32& CompletedSteps,
+			TArray<FSimulationBoundaryCrossing>& OutBoundaryCrossings,
+			bool& bOutStoppedAfterStep,
+			FString& OutError);
+
 		// Returns the current simulation state.
 		const FSimulationState& GetState() const { return State; }
 
