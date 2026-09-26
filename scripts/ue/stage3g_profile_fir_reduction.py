@@ -2,8 +2,11 @@
 
 This is a measurement gate, not persistent asset authoring. The selected
 fir_tree_01_c_LOD0 mesh is imported into transient editor paths, several LOD
-chains are generated with UE 5.8 Static Mesh Editor Subsystem, and actual
-triangle/vertex counts are written to JSON.
+chains are generated with the UE 5.8 Static Mesh Editor Subsystem when it is
+available. UnrealEditor-Cmd Python commandlets may not instantiate that editor
+subsystem, so the script deliberately falls back to EditorStaticMeshLibrary
+from Editor Scripting Utilities. Actual triangle/vertex counts are written to
+JSON regardless of backend.
 
 Required environment variables:
   YACS_STAGE3G_ASSET_CACHE       absolute source cache containing download-index.json
@@ -137,6 +140,30 @@ def reduction_options(settings: list[tuple[float, float]]) -> Any:
     return options
 
 
+def set_lods(
+    mesh: unreal.StaticMesh,
+    settings: list[tuple[float, float]],
+) -> tuple[int, str]:
+    options = reduction_options(settings)
+
+    subsystem = unreal.get_editor_subsystem(unreal.StaticMeshEditorSubsystem)
+    if subsystem:
+        return int(subsystem.set_lods(mesh, options)), "StaticMeshEditorSubsystem"
+
+    library = getattr(unreal, "EditorStaticMeshLibrary", None)
+    if library is None:
+        fail(
+            "StaticMeshEditorSubsystem is unavailable and "
+            "EditorStaticMeshLibrary fallback is unavailable"
+        )
+
+    log(
+        "StaticMeshEditorSubsystem unavailable in commandlet; "
+        "using EditorStaticMeshLibrary.set_lods fallback"
+    )
+    return int(library.set_lods(mesh, options)), "EditorStaticMeshLibrary"
+
+
 def lod_metrics(mesh: unreal.StaticMesh) -> list[dict[str, Any]]:
     count = int(mesh.get_num_lods())
     if count <= 0:
@@ -218,13 +245,11 @@ def main() -> None:
         )
 
     source = source_path(cache_root, rows[0])
-    subsystem = unreal.get_editor_subsystem(unreal.StaticMeshEditorSubsystem)
-    if not subsystem:
-        fail("StaticMeshEditorSubsystem is unavailable")
 
     results: dict[str, Any] = {}
     source_lod0_triangles: int | None = None
     source_lod0_vertices: int | None = None
+    reduction_backend: str | None = None
 
     try:
         for profile_name, settings in PROFILES.items():
@@ -247,11 +272,23 @@ def main() -> None:
             ):
                 fail("source mesh metrics changed between reduction profiles")
 
-            generated_count = int(
-                subsystem.set_lods(mesh, reduction_options(settings))
-            )
+            generated_count, backend = set_lods(mesh, settings)
+            if reduction_backend is None:
+                reduction_backend = backend
+            elif backend != reduction_backend:
+                fail(
+                    "LOD reduction backend changed between profiles: {} -> {}".format(
+                        reduction_backend,
+                        backend,
+                    )
+                )
             if generated_count < 0:
-                fail("{} LOD reduction returned {}".format(profile_name, generated_count))
+                fail(
+                    "{} LOD reduction returned {}".format(
+                        profile_name,
+                        generated_count,
+                    )
+                )
 
             after = lod_metrics(mesh)
             validate_monotonic(profile_name, after)
@@ -296,6 +333,7 @@ def main() -> None:
             "source_md5": rows[0].get("md5"),
             "source_lod0_triangles": source_lod0_triangles,
             "source_lod0_vertices": source_lod0_vertices,
+            "reduction_backend": reduction_backend,
             "profiles": results,
         }
 
