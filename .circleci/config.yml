@@ -200,51 +200,17 @@ jobs:
     retention:
       caches: 1d
     steps:
+      - checkout
+
       - attach_workspace:
           at: 'C:\YacsUe58Seed'
 
       - run:
           name: Verify workspace UE seed before cache publish
           shell: powershell.exe -ExecutionPolicy Bypass
+          no_output_timeout: 45m
           command: |
-            $ErrorActionPreference = 'Stop'
-            $seedRoot = 'C:\YacsUe58Seed'
-            $archive = Join-Path $seedRoot 'ue58-win64.zip'
-            $manifestPath = Join-Path $seedRoot 'ue58-win64-manifest.json'
-
-            if (-not (Test-Path -LiteralPath $archive -PathType Leaf)) {
-              throw "Workspace UE seed archive missing: $archive"
-            }
-            if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
-              throw "Workspace UE seed manifest missing: $manifestPath"
-            }
-
-            $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
-            $archiveBytes = (Get-Item -LiteralPath $archive).Length
-            if ($archiveBytes -lt 1GB) {
-              throw ("Workspace UE seed archive is implausibly small: {0} bytes." -f $archiveBytes)
-            }
-            if ([int64]$manifest.ArchiveBytes -ne [int64]$archiveBytes) {
-              throw ("Workspace UE seed size mismatch: manifest={0}, actual={1}." -f $manifest.ArchiveBytes, $archiveBytes)
-            }
-            if (-not [bool]$manifest.ArchiveCreated -or -not [bool]$manifest.ArchiveIntegrityValidated) {
-              throw 'Workspace UE seed manifest is not integrity-validated.'
-            }
-
-            $sha256 = [System.Security.Cryptography.SHA256]::Create()
-            $stream = [System.IO.File]::OpenRead($archive)
-            try {
-              $hashBytes = $sha256.ComputeHash($stream)
-              $actualHash = ([System.BitConverter]::ToString($hashBytes)).Replace('-', '').ToLowerInvariant()
-            } finally {
-              $stream.Dispose()
-              $sha256.Dispose()
-            }
-            if ($actualHash -ne [string]$manifest.ArchiveSha256) {
-              throw 'Workspace UE seed SHA256 mismatch.'
-            }
-
-            Write-Host ("WORKSPACE SEED PASS: {0:N3} GiB, SHA256={1}" -f ($archiveBytes / 1GB), $actualHash)
+            powershell.exe -ExecutionPolicy Bypass -File scripts/ci/Test-YacsUe58SeedPayload.ps1 -SeedRoot 'C:\YacsUe58Seed' -SuccessLabel 'WORKSPACE SEED PASS'
 
       - save_cache:
           key: << pipeline.parameters.ue_cache_key >>
@@ -258,6 +224,8 @@ jobs:
       image: windows-server-2022-gui:current
       shell: powershell.exe -ExecutionPolicy Bypass
     steps:
+      - checkout
+
       - restore_cache:
           keys:
             - << pipeline.parameters.ue_cache_key >>
@@ -265,45 +233,9 @@ jobs:
       - run:
           name: Verify restored UE cache payload
           shell: powershell.exe -ExecutionPolicy Bypass
+          no_output_timeout: 45m
           command: |
-            $ErrorActionPreference = 'Stop'
-            $seedRoot = 'C:\YacsUe58Seed'
-            $archive = Join-Path $seedRoot 'ue58-win64.zip'
-            $manifestPath = Join-Path $seedRoot 'ue58-win64-manifest.json'
-
-            if (-not (Test-Path -LiteralPath $archive -PathType Leaf)) {
-              throw "Restored UE cache archive missing: $archive"
-            }
-            if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
-              throw "Restored UE cache manifest missing: $manifestPath"
-            }
-
-            $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
-            $archiveBytes = (Get-Item -LiteralPath $archive).Length
-            if ($archiveBytes -lt 1GB) {
-              throw ("Restored UE cache archive is implausibly small: {0} bytes." -f $archiveBytes)
-            }
-            if ([int64]$manifest.ArchiveBytes -ne [int64]$archiveBytes) {
-              throw ("Restored UE cache size mismatch: manifest={0}, actual={1}." -f $manifest.ArchiveBytes, $archiveBytes)
-            }
-            if (-not [bool]$manifest.ArchiveCreated -or -not [bool]$manifest.ArchiveIntegrityValidated) {
-              throw 'Restored UE cache manifest is not integrity-validated.'
-            }
-
-            $sha256 = [System.Security.Cryptography.SHA256]::Create()
-            $stream = [System.IO.File]::OpenRead($archive)
-            try {
-              $hashBytes = $sha256.ComputeHash($stream)
-              $actualHash = ([System.BitConverter]::ToString($hashBytes)).Replace('-', '').ToLowerInvariant()
-            } finally {
-              $stream.Dispose()
-              $sha256.Dispose()
-            }
-            if ($actualHash -ne [string]$manifest.ArchiveSha256) {
-              throw 'Restored UE cache SHA256 mismatch.'
-            }
-
-            Write-Host ("CACHE RESTORE PASS: {0:N3} GiB, SHA256={1}" -f ($archiveBytes / 1GB), $actualHash)
+            powershell.exe -ExecutionPolicy Bypass -File scripts/ci/Test-YacsUe58SeedPayload.ps1 -SeedRoot 'C:\YacsUe58Seed' -SuccessLabel 'CACHE RESTORE PASS'
 
   ue-hosted-canary:
     resource_class: windows.medium
@@ -328,6 +260,7 @@ jobs:
       - run:
           name: Restore cached UE 5.8
           shell: powershell.exe -ExecutionPolicy Bypass
+          no_output_timeout: 45m
           command: |
             powershell.exe -ExecutionPolicy Bypass -File scripts/ci/Restore-YacsUe58Seed.ps1 -SeedRoot 'C:\YacsUe58Seed'
 
