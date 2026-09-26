@@ -49,6 +49,7 @@ jobs:
             'scripts/ci/Prepare-YacsUe58Seed.ps1',
             'scripts/ci/Restore-YacsUe58Seed.ps1',
             'scripts/ci/Test-YacsCodeOnlyCheckout.ps1',
+            'scripts/ci/Invoke-YacsUnrealCi.ps1',
             'scripts/ue/Invoke-YacsPackageProof.ps1'
           )) {
             $tokens = $null
