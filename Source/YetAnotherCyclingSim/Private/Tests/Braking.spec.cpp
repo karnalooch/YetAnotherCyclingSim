@@ -6,6 +6,7 @@
 #include "Cycling/Braking.h"
 #include "Cycling/CyclingForces.h"
 
+#include <cmath>
 #include <limits>
 
 namespace Stage4CBrakingTests
