@@ -45,8 +45,8 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
             self.ci,
         )
         self.assertIn("codeql_languages_json: '[\"c-cpp\"]'", self.ci)
-        self.assertIn("name: Code-only Unreal canary", self.ci)
-        self.assertIn("needs.changes.outputs.ue_code == 'true'", self.ci)
+        self.assertNotIn("name: Code-only Unreal canary", self.ci)
+        self.assertIn("needs.changes.outputs.ue_code", self.ci)
 
     def test_asset_lane_is_lightweight_and_pointer_only(self):
         self.assertIn("name: Lightweight asset validation", self.ci)
@@ -67,7 +67,6 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
             "security-python",
             "security-cpp",
             "asset-validation",
-            "unreal-code",
         ):
             self.assertIn(f"- {lane}", self.ci)
         self.assertIn("require_optional", self.ci)
