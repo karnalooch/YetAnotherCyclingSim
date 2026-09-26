@@ -22,8 +22,18 @@ jobs:
       contents: read
     env:
       GIT_LFS_SKIP_SMUDGE: "1"
+      GIT_CONFIG_GLOBAL: ${{ runner.temp }}\yacs-global.gitconfig
+      GIT_CONFIG_NOSYSTEM: "1"
 
     steps:
+      - name: Isolate self-hosted Git configuration
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-Content -LiteralPath $env:GIT_CONFIG_GLOBAL -Value '' -Encoding ascii
+          Write-Host "Using isolated Git config: $env:GIT_CONFIG_GLOBAL"
+          git config --global --list --show-origin
+
       - name: Require trusted main one-shot
         shell: pwsh
         run: |
