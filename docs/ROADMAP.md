@@ -206,7 +206,7 @@ Użytkownik może przejechać prostą trasę, zmieniając moc i kadencję, a pr�
 # Etap 3 — trasa testowa i profil wysokości
 
 **Planowany czas:** tydzień 3–5  
-**Status:** rdzeń ukończony; 3G reference environment pass zaplanowany przed Stage 4
+**Status:** ukończony; Stage 4 aktywny
 
 ## Cel
 
@@ -222,8 +222,8 @@ Stage 3 jest realizowany kolejno:
 4. **3D — #66:** integracja runtime, start/sektory/meta i deterministyczne crossing events — **ukończone / PR #75**.
 5. **3E — #67:** minimalny teren oraz pełny start-to-finish proof Stage 3 — **ukończone / PR #78**.
 6. **3F — PR #79:** utrwalenie pełnego stanu mapy, materiałów drogi/terenu i wizualnego baseline'u — **ukończone**.
-7. **3G — #80:** Reference Environment Pass — dolina, warstwowe góry, kontrolowany las, atmosfera/oświetlenie i porównywalny BEFORE/AFTER proof — **do wykonania przed Stage 4**.
-8. **3G-MCP — #85:** kontrolowany spike `db-lyon/ue-mcp` jako warstwa wykonawcza dla generowania świata; tylko inspekcja i transient proof przed dopuszczeniem trwałych zapisów — **w toku równolegle w ramach 3G**.
+7. **3G — #80:** Reference Environment Pass — dolina, warstwowe góry, kontrolowany las, atmosfera/oświetlenie i porównywalny BEFORE/AFTER proof — **ukończone / PR #155**.
+8. **3G-MCP — #85:** kontrolowany spike `db-lyon/ue-mcp` jako warstwa wykonawcza dla generowania świata — **odroczony do Stage 7; nie blokuje Stage 4**.
 
 Mechaniki techniki zakrętów ze Stage 4 nie rozpoczynamy przed zielonym proofem 3G.
 
@@ -290,7 +290,7 @@ UE-MCP jest narzędziem deweloperskim dla Stage 3G i późniejszego Stage 7, a n
 
 Szczegóły architektury i plan wdrożenia: [`UE_MCP_WORLD_GENERATION.md`](UE_MCP_WORLD_GENERATION.md).
 
-**Warunek przejścia do Stage 4:** 3G / #80 ma zielony proof wizualny i techniczny, bez regresji kontraktów Stage 3.
+**Warunek przejścia do Stage 4:** spełniony przez PR #155. Finalny trusted self-hosted proof: build ✅, Automation 53/53 ✅, Map Check 0/0 ✅, LFS/fresh-checkout ✅, trzy porównywalne visual captures ✅, cleanup ✅.
 
 **Canary infrastrukturalny:** Stage 3G jest pierwszym rzeczywistym workloadem dla Phase 1 #24. Jeżeli runner zostanie zarejestrowany przed finalnym proofem 3G, authoring/build/Automation/capture mogą zostać wykonane przez ręczny workflow na home PC. Nie zmienia to kryteriów 3G: wynik musi być przypięty do dokładnego SHA, artefakty `.uasset`/`.umap` muszą wejść przez Git LFS, a wizualny AFTER proof nadal podlega review.
 
@@ -298,11 +298,20 @@ Szczegóły architektury i plan wdrożenia: [`UE_MCP_WORLD_GENERATION.md`](UE_MC
 
 # Etap 4 — technika pokonywania zakrętów
 
-**Planowany czas:** tydzień 5–7
+**Planowany czas:** tydzień 5–7  
+**Status:** w toku — Stage 4A / #156
 
 ## Cel
 
 Wprowadzić autorską mechanikę oceniającą odpuszczenie i ponowne rozpoczęcie pedałowania.
+
+## Plan wykonawczy
+
+1. **4A — #156:** czysty C++ cornering domain contract z parity do Python reference model — **w toku**.
+2. **4B:** route corner context — krzywizna/promień, corner-ahead, entry/apex/exit i limity gripu per fixed-step.
+3. **4C:** technique + consequences — spięcie mocy/kadencji z wide-line, utratą prędkości i controlled slip; bez upadków w MVP.
+4. **4D:** guidance + assists — linia przejazdu, markery entry/apex/exit, grip warning i poziomy asysty jako presentation-only.
+5. **4E:** deterministyczny full-route corner proof dla reprezentatywnych zakrętów oraz suchej/mokrej nawierzchni.
 
 ## Zadania
 
