@@ -7,6 +7,8 @@ then saves the map. This is editor authoring only; runtime simulation never
 reads these actors.
 """
 
+import os
+from pathlib import Path
 import sys
 import traceback
 import unreal
@@ -81,6 +83,19 @@ def main():
 
         if not unreal.EditorLoadingAndSavingUtils.save_map(world, MAP_PATH):
             raise RuntimeError("failed to save {}".format(MAP_PATH))
+
+        proof_path = os.environ.get("YACS_STAGE3G_WORLD_PROOF")
+        if not proof_path:
+            raise RuntimeError("YACS_STAGE3G_WORLD_PROOF is not set")
+        Path(proof_path).write_text(
+            "stage3g_world_authoring=success\n"
+            "sun_intensity=8.0\n"
+            "sky_intensity=0.75\n"
+            "fog_density=0.0065\n"
+            "fog_height_falloff=0.18\n"
+            "fog_max_opacity=0.55\n",
+            encoding="utf-8",
+        )
 
         log(
             "SUCCESS: sun=8.0 sky=0.75 fog_density=0.0065 "
