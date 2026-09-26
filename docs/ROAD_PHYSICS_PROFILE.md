@@ -194,6 +194,22 @@ exit_speed_multiplier = sqrt(maximum_feasible_radius / minimum_required_radius)
 
 This Stage 4C-C1 resolver never produces a crash. It also does not mutate authoritative lateral position yet; it exposes the deterministic target line/speed consequence for the next orchestration step.
 
+Stage 4C-C2 scores rider technique from the real route-derived corner phases rather than the Stage 4A placeholder corner definition. `Approach` is the rider-effort baseline. For both power and cadence, `Entry` and `Apex` continuously reward released effort, while `Exit` continuously rewards recovery toward the approach baseline:
+
+```text
+release_score  = 100 * (1 - clamp(phase_effort / approach_effort, 0, 1))
+recovery_score = 100 * clamp(exit_effort / approach_effort, 0, 1)
+```
+
+C1 contributes two additional physical-quality components without a separate gameplay threshold:
+
+```text
+line_retention_score  = 100 * (1 - line_deviation_ratio)
+speed_retention_score = 100 * exit_speed_multiplier
+```
+
+The Stage 4C-C2 total is the arithmetic mean of exactly eight explicit components: Entry/Apex/Exit for power, Entry/Apex/Exit for cadence, line retention and speed retention. There are no hidden weights, no rating cutoffs and no reuse of the Stage 4A `0.60/0.85/...` score thresholds in the authoritative Stage 4C path. A positive `Approach` power and cadence baseline is required; otherwise scoring fails closed rather than inventing a reference effort. The score does not mutate physics state and produces no HUD/presentation policy; those remain later orchestration/Stage 4D responsibilities.
+
 Aerodynamic drag, gravity and rolling resistance remain ordinary external/resistance forces and must not be misclassified as tyre-braking grip usage.
 
 The kernel is stateless rather than one permanent global grip scalar. MVP may evaluate it for a simplified whole-bike model; later front/rear tyre state can evaluate the same contract independently with different capacities and demands.
