@@ -36,6 +36,46 @@ jobs:
           Write-Host "Using isolated Git config: $isolated"
           git config --global --list --show-origin
 
+      - name: Normalize stale LFS payloads before code-only checkout
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          # Self-hosted Actions workspaces persist between jobs. A preceding
+          # full-LFS asset job can therefore leave materialized payloads in
+          # otherwise-clean tracked paths. actions/checkout with lfs:false
+          # prevents new smudging but does not necessarily rewrite unchanged
+          # working-tree files back to pointer form.
+          & git rev-parse --is-inside-work-tree *> $null
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host 'No existing Git worktree to normalize; fresh checkout will create one.'
+            exit 0
+          }
+
+          & git lfs version | Out-Null
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Git LFS is required to normalize the persistent self-hosted workspace.'
+          }
+
+          $lfsOutput = @(& git lfs ls-files --name-only)
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Could not enumerate Git LFS tracked paths before code-only checkout.'
+          }
+
+          $removed = 0
+          foreach ($rawPath in $lfsOutput) {
+            $path = $rawPath.Trim()
+            if (-not $path) {
+              continue
+            }
+            if (Test-Path -LiteralPath $path -PathType Leaf) {
+              Remove-Item -LiteralPath $path -Force
+              $removed += 1
+            }
+          }
+
+          Write-Host "Removed $removed stale/pointer LFS working-tree files before code-only checkout; checkout will restore committed pointer blobs with smudging disabled."
+
       - name: Checkout exact caller revision without LFS payloads
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
