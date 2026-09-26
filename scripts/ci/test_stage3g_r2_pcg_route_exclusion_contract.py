@@ -31,9 +31,7 @@ CPP = (
     / "Stage3GRouteExclusionSettings.cpp"
 )
 AUTHOR = ROOT / "scripts" / "ue" / "stage3g_author_pcg_route_exclusion.py"
-WRAPPER = (
-    ROOT / "scripts" / "ue" / "Invoke-YacsStage3GR2PCGRouteExclusion.ps1"
-)
+WRAPPER = ROOT / "scripts" / "ue" / "Invoke-YacsStage3GR2PCGRouteExclusion.ps1"
 
 
 class Stage3GR2PCGRouteExclusionContractTests(unittest.TestCase):
@@ -45,9 +43,7 @@ class Stage3GR2PCGRouteExclusionContractTests(unittest.TestCase):
 
         target = TARGET.read_text(encoding="utf-8")
         build = BUILD.read_text(encoding="utf-8")
-        self.assertIn(
-            'ExtraModuleNames.Add("YetAnotherCyclingSimEditor")', target
-        )
+        self.assertIn('ExtraModuleNames.Add("YetAnotherCyclingSimEditor")', target)
         self.assertIn('"PCG"', build)
         self.assertIn('"YetAnotherCyclingSim"', build)
 
