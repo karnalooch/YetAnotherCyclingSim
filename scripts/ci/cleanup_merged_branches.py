@@ -162,12 +162,25 @@ def open_heads(
     }
 
 
+def open_base_branches(pulls: list[dict[str, Any]]) -> set[str]:
+    result: set[str] = set()
+    for pr in pulls:
+        base = pr.get("base")
+        if not isinstance(base, dict):
+            continue
+        ref = str(base.get("ref", ""))
+        if ref:
+            result.add(ref)
+    return result
+
+
 def should_delete(
     *,
     branch_name: str,
     branch_sha: str,
     default_branch: str,
     open_branch_names: set[str],
+    open_base_branch_names: set[str],
     merged_head_shas: set[str],
     tip_is_in_default: bool,
 ) -> tuple[bool, str]:
@@ -175,6 +188,8 @@ def should_delete(
         return False, "default branch"
     if branch_name in open_branch_names:
         return False, "open pull request"
+    if branch_name in open_base_branch_names:
+        return False, "base of open pull request"
     if not merged_head_shas:
         return False, "no merged pull request proves this branch is stale"
     if branch_sha in merged_head_shas:
@@ -218,6 +233,7 @@ def run_cleanup(
     open_prs = api.pulls("open")
     closed_prs = api.pulls("closed")
     open_branch_names = open_heads(open_prs, api.repository)
+    open_base_branch_names = open_base_branches(open_prs)
     merged = merged_heads(closed_prs, api.repository)
 
     deleted: list[str] = []
@@ -246,6 +262,7 @@ def run_cleanup(
             branch_sha=sha,
             default_branch=default_branch,
             open_branch_names=open_branch_names,
+            open_base_branch_names=open_base_branch_names,
             merged_head_shas=merged_shas,
             tip_is_in_default=contained,
         )
