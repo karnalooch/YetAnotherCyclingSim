@@ -210,6 +210,27 @@ speed_retention_score = 100 * exit_speed_multiplier
 
 The Stage 4C-C2 total is the arithmetic mean of exactly eight explicit components: Entry/Apex/Exit for power, Entry/Apex/Exit for cadence, line retention and speed retention. There are no hidden weights, no rating cutoffs and no reuse of the Stage 4A `0.60/0.85/...` score thresholds in the authoritative Stage 4C path. A positive `Approach` power and cadence baseline is required; otherwise scoring fails closed rather than inventing a reference effort. The score does not mutate physics state and produces no HUD/presentation policy; those remain later orchestration/Stage 4D responsibilities.
 
+
+Stage 4C-C3 makes route-local lateral position authoritative instead of keeping it as a fixed runner argument. `SimulationState` carries signed `lateral_position_m / LateralPositionM` (route-local `D`), defaulting to `0` for legacy centerline callers. Ordinary longitudinal integration preserves `D` exactly; only the consequence layer may change it.
+
+C1 consequence application happens after the ordinary force/braking integrator inside the same fixed substep. Clean and wide-line outcomes preserve the integrated speed and longitudinal distance exactly. Only `controlled_slip` may project speed downward:
+
+```text
+applied_speed = min(integrated_speed, target_speed)
+```
+
+When that projection removes speed, the authoritative longitudinal step distance is recomputed with the same trapezoidal convention as the base integrator, so route-boundary detection sees the projected physical state rather than a stale pre-projection distance.
+
+The route-local line consequence is continuous rather than a one-step teleport. The current `D` moves toward the C1 target over the remaining physical corner distance:
+
+```text
+remaining_transition = max(corner_end - pre_step_S, longitudinal_step)
+alpha = clamp(longitudinal_step / remaining_transition, 0, 1)
+next_D = current_D + alpha * (target_D - current_D)
+```
+
+Zero forward progress therefore produces zero lateral progress. The target and every projected `D` must remain inside the current road margins. This is the deterministic MVP route-line projection; detailed steering, front/rear slip dynamics and crash/fall simulation remain post-MVP.
+
 Aerodynamic drag, gravity and rolling resistance remain ordinary external/resistance forces and must not be misclassified as tyre-braking grip usage.
 
 The kernel is stateless rather than one permanent global grip scalar. MVP may evaluate it for a simplified whole-bike model; later front/rear tyre state can evaluate the same contract independently with different capacities and demands.
