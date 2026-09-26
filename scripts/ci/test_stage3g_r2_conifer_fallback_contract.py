@@ -16,7 +16,9 @@ class Stage3GR2ConiferFallbackContractTests(unittest.TestCase):
     def test_fir_sapling_is_curated_but_not_preapproved(self):
         payload = json.loads(MANIFEST.read_text(encoding="utf-8"))
         small = next(
-            item for item in payload["assets"] if item["id"] == "fir_sapling"
+            item
+            for item in payload["assets"]
+            if item["id"] == "fir_sapling"
         )
         medium = next(
             item
