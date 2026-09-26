@@ -365,7 +365,7 @@ Zmiana tylko w fizyce nie może wymagać pełnego pobrania assetów; zmiana tylk
 # Etap 4 — technika pokonywania zakrętów
 
 **Planowany czas:** tydzień 5–7  
-**Status:** Stage 4A ukończone przez PR #157; **4B-A/#169, 4B-B/#170 i 4B-C/#171 ukończone; 4C-A shared grip budget jest w PR #172; 4C-B1 explicit brake input (#173) w realizacji; 4D/4E wymagają wspólnego integration gate z World lane**
+**Status:** Stage 4A ukończone przez PR #157; **4B-A/#169, 4B-B/#170 i 4B-C/#171 ukończone; 4C-A + 4C-B1/B2/B3a/B3b/B3c są skonsolidowane w PR #177 i przechodzą finalną walidację; 4C-C pozostaje następne; 4D/4E wymagają wspólnego integration gate z World lane**
 
 ## Cel
 
@@ -377,12 +377,12 @@ Wprowadzić autorską mechanikę oceniającą odpuszczenie i ponowne rozpoczęci
 2. **4B-A — PR #169:** route corner context z `Road Physics Profile` — signed curvature/radius, road width, lateral position, corner-ahead/look-ahead, entry/apex/exit — **ukończone**.
 3. **4B-B — PR #170:** jawna `SurfaceGripPolicy` — `surface_id + wetness -> grip_multiplier`, bez ukrytych współczynników; Alpine asphalt zachowuje parity z istniejącym `ALPINE_WEATHER` — **ukończone**.
 4. **4B-C — PR #171:** banking/off-camber + czysty fizyczny limit lateralny per fixed-step; brak arbitralnego safety factor i brak shared braking budget — **ukończone**.
-5. **4C-A — PR #172:** czysty shared grip kernel jako unit friction circle: znormalizowane żądanie longitudinal + lateral trafia do jednego budżetu; bez ukrytego braking modelu i bez consequence policy.
-6. **4C-B1 — #173:** jawny `brake_ratio ∈ [0,1]` w rider input/controller/session; default `0` i brak wpływu na równanie ruchu do czasu 4C-B2.
-7. **4C-B2:** demand bridge per fixed-step: `brake_ratio -> longitudinal_usage`, a `speed² / effective_radius / lateral_acceleration_limit -> lateral_usage`; oba trafiają do 4C-A. Bez wpływu hamulca na prędkość.
-8. **4C-B3a:** tyre-limited brake-force resolver: `μ_eff · static normal load`, ograniczony remaining longitudinal capacity z 4C-A; bez arbitralnego max-brake constant.
-9. **4C-B3b:** explicit brake-force fixed-step integrator: siła hamowania trafia do predictor + work/energy balance, a legacy step deleguje z `0 N` dla exact regression parity.
-10. **4C-B3c:** fixed-step orchestration: per substep wyliczyć corner context → lateral limit → shared demand → brake force i przekazać ją do integratora, bez zależności od render-frame batching.
+5. **4C-A — #173 / PR #177:** czysty shared grip kernel jako unit friction circle: znormalizowane żądanie longitudinal + lateral trafia do jednego budżetu; bez ukrytego braking modelu i bez consequence policy.
+6. **4C-B1 — #173 / PR #177:** jawny `brake_ratio ∈ [0,1]` w rider input/controller/session; default `0`, legacy path zachowuje exact regression parity.
+7. **4C-B2 — #173 / PR #177:** demand bridge per fixed-step: `brake_ratio -> longitudinal_usage`, a aktywne cornering `speed² / effective_radius / lateral_acceleration_limit -> lateral_usage`; oba trafiają do 4C-A.
+8. **4C-B3a — #173 / PR #177:** tyre-limited brake-force resolver: `μ_eff · static normal load`, ograniczony remaining longitudinal capacity z 4C-A; bez arbitralnego max-brake constant.
+9. **4C-B3b — #173 / PR #177:** explicit brake-force fixed-step integrator: siła hamowania trafia do predictor + work/energy balance, a legacy step deleguje z `0 N` dla exact regression parity.
+10. **4C-B3c — #173 / PR #177:** fixed-step orchestration: każdy substep pobiera bieżący Road Physics Profile, rozdziela look-ahead `Approach` od realnego lateral demand w `Entry/Apex/Exit`, rozwiązuje shared grip + brake force i dopiero wtedy wywołuje integrator; render-frame batching nie może zmieniać wyniku.
 11. **4C-C:** technique + consequences — scoring, timing mocy/kadencji, utrata prędkości, wide line i controlled slip; bez upadków w MVP.
 12. **4D:** guidance + assists — linia przejazdu, markery entry/apex/exit, grip warning i poziomy asysty jako presentation-only; wymaga wspólnego integration gate z World lane.
 13. **4E:** deterministyczny full-route corner proof dla reprezentatywnych flat/banked/off-camber zakrętów oraz suchej/mokrej nawierzchni.
