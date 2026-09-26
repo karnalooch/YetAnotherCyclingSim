@@ -171,7 +171,11 @@ applied_brake_force = applied_longitudinal_usage * longitudinal_force_capacity
 
 The rider's requested shared budget remains visible even when the no-slip applied force is capped. Dynamic load transfer, front/rear brake split, ABS, wheel lock and tyre relaxation remain outside the MVP resolver.
 
-Stage 4C-B3b separately applies the resolved braking force to forward fixed-step motion. Zero brake must remain exact regression parity with the pre-braking simulation. Aerodynamic drag, gravity and rolling resistance are external/resistance forces and must not be misclassified as tyre-braking grip usage.
+Stage 4C-B3b applies the resolved braking force as an explicit non-negative opposing force in the fixed-step energy model. The force is included in both the deterministic predictor and the average-speed work estimate. The legacy simulation-step API delegates to the explicit-force integrator with exactly `0 N`, and zero-brake results must remain exact regression parity with the pre-braking simulation.
+
+Stage 4C-B3c is the orchestration layer: for every authoritative fixed substep it resolves corner context, lateral capacity, shared demand and tyre-limited braking force before calling the explicit-force integrator. This must happen at fixed-step granularity so render-frame batching cannot change braking/cornering results.
+
+Aerodynamic drag, gravity and rolling resistance remain ordinary external/resistance forces and must not be misclassified as tyre-braking grip usage.
 
 The kernel is stateless rather than one permanent global grip scalar. MVP may evaluate it for a simplified whole-bike model; later front/rear tyre state can evaluate the same contract independently with different capacities and demands.
 
