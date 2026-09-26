@@ -35,21 +35,23 @@ jobs:
       - name: Compile Python sources
         run: python -m compileall -q physics_reference/src scripts/ci
 
-      - name: Run CircleCI Windows probe contract tests
-        run: python scripts/ci/test_circleci_windows_probe.py
+      - name: Run GitHub Actions platform contract tests
+        run: python scripts/ci/test_ci_platform_contract.py
 
-      - name: Run CircleCI Windows Phase B contract tests
-        run: python scripts/ci/test_circleci_windows_phase_b.py
+      - name: Run GitHub Windows probe workflow contract tests
+        run: python scripts/ci/test_windows_probe_workflow.py
 
-      - name: Parse CircleCI Windows PowerShell helpers
+      - name: Run manual Unreal workflow contract tests
+        run: python scripts/ci/test_manual_unreal_workflow.py
+
+      - name: Parse active CI PowerShell helpers
         shell: pwsh
         run: |
           $failed = $false
           foreach ($script in @(
-            'scripts/ci/Prepare-YacsUe58Seed.ps1',
-            'scripts/ci/Restore-YacsUe58Seed.ps1',
             'scripts/ci/Test-YacsCodeOnlyCheckout.ps1',
             'scripts/ci/Invoke-YacsUnrealCi.ps1',
+            'scripts/ci/Invoke-YacsWindowsProbe.ps1',
             'scripts/ue/Invoke-YacsPackageProof.ps1',
             'scripts/ue/Invoke-YacsProof.ps1'
           )) {
