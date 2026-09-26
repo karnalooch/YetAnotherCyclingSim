@@ -1,0 +1,87 @@
+name: Stage 4A trusted one-shot proof
+
+on:
+  push:
+    branches:
+      - feat/stage4a-cornering-domain
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stage4a-one-shot-${{ github.repository }}
+  cancel-in-progress: true
+
+jobs:
+  stage4a-proof:
+    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.ref == 'refs/heads/feat/stage4a-cornering-domain' }}
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 45
+    steps:
+      - name: Isolate self-hosted Git configuration
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'yacs-global.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          $env:GIT_CONFIG_GLOBAL = $isolated
+          $env:GIT_CONFIG_NOSYSTEM = '1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+
+      - name: Checkout exact trusted revision without LFS payloads
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        env:
+          GIT_LFS_SKIP_SMUDGE: "1"
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          lfs: false
+          clean: true
+          persist-credentials: false
+
+      - name: Verify exact SHA and code-only checkout
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ((git rev-parse HEAD).Trim() -ne '${{ github.sha }}') {
+            throw 'Checkout does not match workflow SHA.'
+          }
+          ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+          if (git status --porcelain) {
+            throw 'Checkout is not clean before Unreal execution.'
+          }
+
+      - name: Build editor and run Stage 1-4A domain Automation
+        shell: pwsh
+        run: |
+          ./scripts/ue/Invoke-YacsProof.ps1 `
+            -ExpectedBranch HEAD `
+            -ExpectedHead '${{ github.sha }}' `
+            -ConservativeBuild `
+            -ArtifactRoot 'Saved/RuntimeProof/CI/Stage4A' `
+            -TestFilter 'CyclingPhysics+CyclingSession+CyclingInput+CyclingRuntime+CyclingDiagnostics+CyclingRouteContext+CyclingRouteProfile+CyclingRouteGeometry+CyclingStage3Runtime+CyclingStage3FullRoute+CyclingCornering'
+
+      - name: Upload Stage 4A proof
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: stage4a-proof-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            Saved/RuntimeProof/CI/Stage4A/**/*.json
+            Saved/RuntimeProof/CI/Stage4A/**/*.txt
+            Saved/RuntimeProof/CI/Stage4A/**/*.log
+          if-no-files-found: warn
+          retention-days: 3
+
+      - name: Clean self-hosted workspace
+        if: ${{ always() }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git reset --hard
+          git clean -ffdx
+          if (git status --porcelain) {
+            throw 'Stage 4A one-shot workspace is still dirty after cleanup.'
+          }
+          Write-Host 'Stage 4A one-shot cleanup: PASS'
