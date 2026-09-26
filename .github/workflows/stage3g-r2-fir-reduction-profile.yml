@@ -10,6 +10,7 @@ on:
       - 'scripts/assets/download_stage3g_assets.py'
       - 'scripts/ue/Invoke-YacsStage3GR2FirReductionProfile.ps1'
       - 'scripts/ue/stage3g_profile_fir_reduction.py'
+      - 'scripts/ci/test_stage3g_r2_fir_reduction_contract.py'
       - 'YetAnotherCyclingSim.uproject'
 
 permissions:
