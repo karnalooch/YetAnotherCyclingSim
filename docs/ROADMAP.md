@@ -270,6 +270,20 @@ Stage 3 jest realizowany kolejno:
 - [ ] Zbudować i zarejestrować w Technical UE Asset Ledger pierwszy zestaw: `PCG_RouteExclusion`, `PCG_Valley`, `PCG_Forest`, `PCG_HighAlpine`; `PCG_RouteExclusion` jest już `prototype` w #162, pozostałe są `planned`; każdy przechodzi deterministic regenerate/proof zanim dostanie status `validated`.
 - [ ] Authoring assets PCG przechowywać poza `/Game/Generated/YACS/**`; katalog `Generated` jest wyłącznie dla odtwarzalnych outputów generatora.
 
+### 3G-R5 — worldgen tooling research / adoption gate
+
+Kandydaci z researchu są jawnie śledzeni, ale **nie stają się dependency tylko dlatego, że istnieją**. Najpierw stock UE PCG musi przejść realny `PCG_RouteExclusion -> PCG_Forest` proof. Dopiero potem mierzymy, czy zewnętrzne narzędzie usuwa konkretny koszt lub brak funkcji.
+
+- [ ] **PCGEx / PCGExtendedToolkit** — zrobić mały spike po pierwszym zielonym stock-PCG forest proofie. Ocenić route-distance filtering, spatial queries, asset staging i path/cluster tooling. Adoptować tylko wtedy, gdy realnie usuwa własny kod lub upraszcza grafy; w przeciwnym razie pozostaje poza MVP.
+- [ ] **EssentialUE5PCG** — używać jako **reference implementation**, nie dependency. Przejrzeć wzorce spline -> forest/rocks/path, dynamic-mesh authoring i projection; kopiować wyłącznie potrzebne wzorce zgodnie z licencją.
+- [ ] **PCG Biome Core** — traktować jako **reference architecture / optional experiment** dla data-driven biome definitions, asset sets, filters, exclusions, blending i priority. Nie włączać eksperymentalnego pluginu do MVP bez konkretnej luki w naszym WorldSpec/PCG.
+- [ ] **Analog Strike** — reference pipeline dla deterministycznego offline generation -> UE import/authoring -> capture/proof. Nie dodawać jako dependency.
+- [ ] **RoadForge** — odłożyć do Stage 7 / post-MVP jako reference dla spline -> procedural road presentation, shoulders/markings/roadside dressing; nie może przejąć ownershipu trasy.
+- [ ] **GeoTerrain** — odłożyć do Stage 7 / post-MVP jako research dla DEM/OSM, real-world terrain, altitude/slope materials i foliage avoidance; nie instalować do fikcyjnej 10 km trasy MVP bez potrzeby.
+- [ ] **Heightmap Level Generator** — R&D only dla erosion/heightmap/mask ideas; nie używać jego własnej sieci dróg jako źródła YACS route truth.
+
+**Adoption rule:** każdy kandydat musi skończyć jako `reference`, `rejected`, `optional`, `adopted-editor-only` albo `adopted-runtime`, z krótkim uzasadnieniem i wpływem na build/perf/licencję. Brak decyzji nie może zniknąć z roadmapy.
+
 ### Asset gate 3G
 
 Na tym etapie **muszą realnie wejść do projektu** minimalne assety potrzebne do uzyskania referencyjnego środowiska: bazowe landscape/ground materials, vegetation, rocks/cliffs oraz atmosfera. Sam wpis `candidate` / `approved` w ledgerze ani samo pobranie źródeł nie spełniają gate'u.
