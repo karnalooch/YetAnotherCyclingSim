@@ -22,6 +22,7 @@
 12. Projektujemy tanie ścieżki skalowania wcześnie, ale optymalizujemy dopiero na podstawie pomiarów.
 13. Regresje czasu klatki, pamięci, shaderów, builda lub cooka porównujemy z zapisanym baseline'em; nie oceniamy ich wyłącznie „na oko”.
 14. Każdy zewnętrzny asset lub pakiet musi mieć przypisany etap, zastosowanie i status licencji zgodnie z [`ASSET_PLAN.md`](ASSET_PLAN.md).
+15. **Asset gate jest częścią Definition of Done etapu.** Minimalnych assetów przypisanych do wcześniejszego etapu nie wolno odkładać do późniejszego „art passu” tylko dlatego, że kod i CI są zielone. Etap może mieć ukończony rdzeń techniczny, ale pozostaje otwarty wizualnie, dopóki jego wymagane source/technical assets nie zostaną zaimportowane, zwalidowane i pokazane w wymaganym proofie.
 
 ## Realistyczne oczekiwania czasowe
 
@@ -100,7 +101,7 @@ Gałęzie wyłącznie dokumentacyjne nie wliczają się do limitu dwóch gałęz
 - [x] Utworzenie roadmapy.
 - [x] Konfiguracja Git LFS.
 - [x] Utworzenie zasad pracy dla asystentów AI.
-- [ ] GitHub Project `YACS — MVP` skopiowany 1:1 z boardu 4VELO; aktualny source ma statusy `Backlog` / `Ready` / `In progress` / `In review` / `Blocked` / `Done`, a automatyzacja repo steruje `Backlog` / `In progress` / `In review` / `Done`. Bootstrap #88 porównuje układ ze źródłem zamiast hardkodować liczbę kolumn; po poprawce trzeba ponownie uruchomić jednorazowy bootstrap.
+- [x] GitHub Project `YACS — MVP` / workflow automation — #88 ukończone; bootstrap porównuje układ ze źródłem zamiast hardkodować liczbę kolumn.
 - [x] Instalacja wymaganych narzędzi na komputerze domowym.
 - [x] Utworzenie projektu Unreal Engine 5.
 - [x] Uruchomienie pustego projektu na komputerze referencyjnym.
@@ -112,7 +113,7 @@ YetAnotherCyclingSim.
 **Jawny dług infrastrukturalny (nie blokuje bieżącego 3G):**
 
 - #22 — włączyć pozostałe ustawienia bezpieczeństwa GitHub i ochronę `main`; API nadal raportuje `main.protected = false`.
-- #24 — wdrożyć prawdziwy Windows/Unreal Engine build + Automation na domowym self-hosted runnerze. **Teraz realizujemy Phase 1:** bezpieczny ręczny `workflow_dispatch` na dedykowanej etykiecie `yacs-ue58`, bez automatycznego uruchamiania kodu z PR-ów i bez wpinania joba do `Aggregate CI gate`. Stage 3G / #80 będzie pierwszym canary. Pełny plan: [`UNREAL_SELF_HOSTED_RUNNER_PLAN.md`](UNREAL_SELF_HOSTED_RUNNER_PLAN.md).
+- #24 — realny Windows/Unreal Engine runner działa na `yacs-home-ue58`; exact-SHA build, Automation, intentional-red, cleanup oraz Stage 3G full-validation canary zostały udowodnione. **Issue pozostaje otwarte**, bo generic trusted C++ UE lane nie jest jeszcze obowiązkową częścią `Aggregate CI gate`, a Phase 2/3 wymagają dalszego hardeningu i #22. Pełny plan: [`UNREAL_SELF_HOSTED_RUNNER_PLAN.md`](UNREAL_SELF_HOSTED_RUNNER_PLAN.md).
   - **Odroczony milestone operacyjny — dopiero przed Phase 2:** zastąpić ręczne uruchamianie `run.cmd` kontrolowanym autostartem runnera przez Windows Task Scheduler pod dedykowanym kontem runnera. Nie blokuje Phase 1 ani Stage 3G. Przed włączeniem trusted automatic UE execution wymagany jest reboot proof: restart hosta → runner sam wraca online → odbiera testowy job → build/Automation oraz co najmniej jeden workload wymagający interaktywnej sesji/GPU nadal przechodzą. Klasyczna usługa Windows nie jest domyślną ścieżką dla workloadów visual/GPU; można ją rozważyć wyłącznie po osobnym proofie kompatybilności.
 - #23 — ekstrakcja wspólnego CI do `engineering-platform` jest ukończona i zamknięta.
 
@@ -206,7 +207,7 @@ Użytkownik może przejechać prostą trasę, zmieniając moc i kadencję, a pr�
 # Etap 3 — trasa testowa i profil wysokości
 
 **Planowany czas:** tydzień 3–5  
-**Status:** ukończony; Stage 4 aktywny
+**Status:** rdzeń 3A–3F ukończony; 3G technicznie udowodnione, ale **wizualny/asset acceptance ponownie otwarty**; Stage 4A ukończone, 4B+ wstrzymane do domknięcia #80
 
 ## Cel
 
@@ -222,10 +223,10 @@ Stage 3 jest realizowany kolejno:
 4. **3D — #66:** integracja runtime, start/sektory/meta i deterministyczne crossing events — **ukończone / PR #75**.
 5. **3E — #67:** minimalny teren oraz pełny start-to-finish proof Stage 3 — **ukończone / PR #78**.
 6. **3F — PR #79:** utrwalenie pełnego stanu mapy, materiałów drogi/terenu i wizualnego baseline'u — **ukończone**.
-7. **3G — #80:** Reference Environment Pass — dolina, warstwowe góry, kontrolowany las, atmosfera/oświetlenie i porównywalny BEFORE/AFTER proof — **ukończone / PR #155**.
-8. **3G-MCP — #85:** kontrolowany spike `db-lyon/ue-mcp` jako warstwa wykonawcza dla generowania świata — **odroczony do Stage 7; nie blokuje Stage 4**.
+7. **3G — #80:** Reference Environment Pass — **techniczny authoring/final-proof pipeline jest ukończony przez PR #155, ale acceptance wizualny i progressive asset gate nie zostały spełnione; #80 wraca jako aktywny etap**.
+8. **3G-MCP — #85:** kontrolowany spike `db-lyon/ue-mcp` pozostaje częścią 3G tooling/worldgen; nie wolno traktować go jako substytutu PCG ani jako powodu do pominięcia source assetów.
 
-Mechaniki techniki zakrętów ze Stage 4 nie rozpoczynamy przed zielonym proofem 3G.
+**Korekta po audycie 26.09.2026:** Stage 4A zostało zrealizowane przed wykryciem luki acceptance. Zachowujemy ten scalony, czysty model domenowy, ale **nie rozpoczynamy 4B ani kolejnych funkcjonalnych etapów**, dopóki #80 nie spełni własnych kryteriów wizualnych i asset gate.
 
 ## Zadania rdzenia Stage 3
 
@@ -244,6 +245,8 @@ Mechaniki techniki zakrętów ze Stage 4 nie rozpoczynamy przed zielonym proofem
 **Dowód ukończenia rdzenia:** PR #70, #71, #74, #75 i #78. PR #78 raportuje 10 km trasy, zielony pełny proof, Map Check 0/0, save/reopen oraz reprezentatywny proof 1080p. PR #79 utrwala pełny stan mapy i materiałów Stage 3F na `main`.
 
 ## 3G — Reference Environment Pass
+
+> **Status po audycie:** PR #155 udowodnił deterministyczny authoring, build/Automation, persistence, Map Check, LFS, capture harness i cleanup. To był wymagany proof techniczny, ale **nie dowód spełnienia poniższych kryteriów artystycznych**. Finalne capture'y nadal używają głównie prototypowych brył zastępczych, dlatego kryteria pozostają otwarte.
 
 - [ ] Ukształtować spójną dolinę otaczającą drogę zamiast czytelnych jako osobne kafle podpór terenu.
 - [ ] Zbudować kilka planów gór z wyraźną głębią i atmospheric perspective.
@@ -269,11 +272,25 @@ Mechaniki techniki zakrętów ze Stage 4 nie rozpoczynamy przed zielonym proofem
 
 ### Asset gate 3G
 
-Na tym etapie wolno wprowadzić tylko assety potrzebne do uzyskania referencyjnego środowiska: bazowe landscape/ground materials, vegetation, rocks/cliffs oraz atmosferę. To nie jest jeszcze finalny art pass Stage 7. Zakup paczki jest uzasadniony wyłącznie wtedy, gdy natywne UE/darmowe zasoby nie pozwalają osiągnąć spójnego baseline'u. Szczegóły: [`ASSET_PLAN.md`](ASSET_PLAN.md).
+Na tym etapie **muszą realnie wejść do projektu** minimalne assety potrzebne do uzyskania referencyjnego środowiska: bazowe landscape/ground materials, vegetation, rocks/cliffs oraz atmosfera. Sam wpis `candidate` / `approved` w ledgerze ani samo pobranie źródeł nie spełniają gate'u.
+
+Minimalny przebieg:
+1. pobrać i zweryfikować wybrany zestaw CC0 z `scripts/assets/stage3g_polyhaven.json`;
+2. zaimportować wyłącznie potrzebne elementy do UE i zapisać source/provenance;
+3. zwalidować materiały, LOD/Nanite/instancing oraz koszt na komputerze referencyjnym;
+4. użyć zatwierdzonych assetów w deterministycznym environment authoringu/PCG;
+5. przejść route-clearance + regenerate proof;
+6. pokazać wynik w capture'ach 1200 m / 4900 m / 8000 m i dopiero wtedy nadać status `validated`.
+
+Pierwsza kolejność: `Sparse Grass`, `Forest Ground 03`, `Rocky Terrain`, `Rock Face 01`, `Boulder 01`; `Fir Tree 01`, `Grass Medium 01` i `Mountainside` wchodzą po pomiarze kosztu i przydatności.
+
+To nadal **nie jest finalny art pass Stage 7**: Stage 3G ma usunąć wygląd greybox/placeholder i ustanowić wiarygodny baseline dolina → las → high Alpine. Stage 7 rozwija ten baseline o produkcyjne road dressing, budynki, landmarki, życie i pełny polish. Zakup paczki jest uzasadniony wyłącznie wtedy, gdy natywne UE/darmowe zasoby nie pozwalają osiągnąć spójnego baseline'u. Szczegóły: [`ASSET_PLAN.md`](ASSET_PLAN.md).
 
 ## Kryterium ukończenia
 
-Rdzeń Stage 3 jest ukończony: całą trasę można przejechać bez przerwania, błędu pozycji lub opuszczenia drogi; baseline build/proof jest zapisany, a domenowa symulacja pozostaje niezależna od presentation.
+**Rdzeń 3A–3F jest ukończony:** całą trasę można przejechać bez przerwania, błędu pozycji lub opuszczenia drogi; baseline build/proof jest zapisany, a domenowa symulacja pozostaje niezależna od presentation.
+
+**Stage 3 jako całość pozostaje otwarty do czasu domknięcia 3G:** valley / forest / high-Alpine muszą być wizualnie rozróżnialne przy ride speed, wymagane minimalne assety muszą mieć udowodnione użycie i walidację, a trzy canonical captures muszą pokazywać spójny environment baseline zamiast greyboxowych zastępników.
 
 ### 3G-MCP — kontrolowana warstwa world generation (#85)
 
@@ -290,7 +307,7 @@ UE-MCP jest narzędziem deweloperskim dla Stage 3G i późniejszego Stage 7, a n
 
 Szczegóły architektury i plan wdrożenia: [`UE_MCP_WORLD_GENERATION.md`](UE_MCP_WORLD_GENERATION.md).
 
-**Warunek przejścia do Stage 4:** spełniony przez PR #155. Finalny trusted self-hosted proof: build ✅, Automation 53/53 ✅, Map Check 0/0 ✅, LFS/fresh-checkout ✅, trzy porównywalne visual captures ✅, cleanup ✅.
+**Warunek przejścia do dalszego Stage 4:** **NIESPEŁNIONY wizualnie.** PR #155 spełnił część techniczną: build ✅, Automation 53/53 ✅, Map Check 0/0 ✅, LFS/fresh-checkout ✅, trzy canonical captures ✅, cleanup ✅. Capture'y potwierdziły jednak, że environment nadal nie spełnia własnych kryteriów #80. Stage 4A pozostaje ważnym, już scalonym wyjątkiem; **4B+ czeka na zamknięcie #80 po visual/asset review.**
 
 **Canary infrastrukturalny:** Stage 3G jest pierwszym rzeczywistym workloadem dla Phase 1 #24. Jeżeli runner zostanie zarejestrowany przed finalnym proofem 3G, authoring/build/Automation/capture mogą zostać wykonane przez ręczny workflow na home PC. Nie zmienia to kryteriów 3G: wynik musi być przypięty do dokładnego SHA, artefakty `.uasset`/`.umap` muszą wejść przez Git LFS, a wizualny AFTER proof nadal podlega review.
 
@@ -299,7 +316,7 @@ Szczegóły architektury i plan wdrożenia: [`UE_MCP_WORLD_GENERATION.md`](UE_MC
 # Etap 4 — technika pokonywania zakrętów
 
 **Planowany czas:** tydzień 5–7  
-**Status:** w toku — Stage 4A / #156
+**Status:** Stage 4A / #156 ukończone przez PR #157; **4B+ wstrzymane do domknięcia Stage 3G / #80**
 
 ## Cel
 
@@ -307,7 +324,7 @@ Wprowadzić autorską mechanikę oceniającą odpuszczenie i ponowne rozpoczęci
 
 ## Plan wykonawczy
 
-1. **4A — #156:** czysty C++ cornering domain contract z parity do Python reference model — **w toku**.
+1. **4A — #156:** czysty C++ cornering domain contract z parity do Python reference model — **ukończone / PR #157**.
 2. **4B:** route corner context — krzywizna/promień, corner-ahead, entry/apex/exit i limity gripu per fixed-step.
 3. **4C:** technique + consequences — spięcie mocy/kadencji z wide-line, utratą prędkości i controlled slip; bez upadków w MVP.
 4. **4D:** guidance + assists — linia przejazdu, markery entry/apex/exit, grip warning i poziomy asysty jako presentation-only.

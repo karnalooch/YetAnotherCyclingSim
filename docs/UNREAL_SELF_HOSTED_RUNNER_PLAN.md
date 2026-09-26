@@ -3,7 +3,7 @@
 **Issue:** #24  
 **First canary:** #80 / Stage 3G Reference Environment Pass  
 **Host:** home/reference Windows PC with Unreal Engine 5.8.x  
-**Current target:** Phase 1 — manual trusted execution
+**Current target:** Phase 1 proof complete; Stage 3G asset/visual recovery active; Phase 2 operational readiness pending
 
 ## Why now
 
@@ -56,8 +56,10 @@ canary work have a reviewed contract to run.
 
 ## Phase 1 — manual trusted runner
 
-**Current status:** generic runner/build/fail-closed canary proven; Stage 3G authoring
-and final proof remain.
+**Current status:** generic runner/build/fail-closed canary proven; Stage 3G
+authoring/final-proof mechanics proven by PR #155 / run `36258791131`.
+Stage 3G product acceptance remains open because the required progressive
+source-asset/PCG visual baseline was not delivered.
 
 ### 1. Prepare the home PC
 
@@ -187,15 +189,19 @@ Phase 1 is complete when all of the following are true:
 - [x] manual `workflow_dispatch` is merged to the default branch and visible in Actions;
 - [x] exact-SHA checkout verification proven;
 - [x] real UE build + Automation canary green;
-- [ ] Stage 3G authoring canary produces reviewable artifacts;
-- [ ] Stage 3G final proof green on an exact committed SHA;
+- [x] Stage 3G authoring/final-validation canary proven on the trusted runner — PR #155 / run `36258791131`;
+- [x] Stage 3G final proof green on an exact committed SHA, including Automation/Map Check/LFS/captures/cleanup;
+- [ ] reopened #80 rerun after real source assets + PCG/environment baseline are integrated and visually accepted;
 - [x] intentional-red canary fails as expected;
 - [x] no repository write credential was needed by the runner;
 - [x] workspace cleanup verified after success and failure.
 
 ## Phase 2 — trusted automatic execution
 
-**Do not start until Phase 1 is proven.**
+**Phase 1 technical proof is complete.** Phase 2 still requires the operational
+readiness gate below. The narrow trusted Stage 3G `asset_full` lane already
+demonstrates same-repository automatic execution; do not generalize that trust
+surface to arbitrary C++/PR workloads until the remaining safeguards are met.
 
 ### Phase 2 readiness gate — unattended runner startup
 

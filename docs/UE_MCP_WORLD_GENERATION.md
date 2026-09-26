@@ -1,6 +1,6 @@
 # YACS UE-MCP world-generation architecture
 
-**Status:** Stage 3G spike approved  
+**Status:** Stage 3G visual/asset recovery active; spike approved and still required before persistent MCP-driven worldgen  
 **Tracking:** #85  
 **Initial upstream:** `db-lyon/ue-mcp`  
 **Reviewed pin:** `v1.3.9`  
@@ -62,6 +62,8 @@ Persistent world-generation output will eventually be restricted to:
 Existing authored/prototype content outside that root is input/reference, not an autonomous write target.
 
 The Stage 3G spike is stricter: it starts with inspection and transient verification only. Persistent writes are intentionally not enabled yet.
+
+**Recovery note (26.09.2026):** the Stage 3G CI/authoring harness was proven by PR #155, but the real progressive source-asset + PCG baseline was not delivered. #85 therefore remains Stage 3G work rather than being deferred to the final Stage 7 art pass.
 
 ## 3. Why UE-MCP
 

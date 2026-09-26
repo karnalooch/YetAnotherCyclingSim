@@ -43,6 +43,25 @@ Assety mają wspierać jedną fikcyjną trasę alpejską 20–30 minut. MVP nie 
 
 Technical UE asset może być równie krytyczny produkcyjnie jak model 3D. Nie traktujemy go jako „narzędziowego śmiecia” tylko dlatego, że powstał wewnątrz Unreal Editor.
 
+### 1.2 Kontrakt progresywnego wdrażania assetów
+
+Assety w YACS **nie są odkładane do jednego końcowego art passu**. Każdy etap ma własny minimalny asset gate i ten gate jest częścią Definition of Done etapu.
+
+Obowiązuje sekwencja:
+
+`candidate -> approved -> acquired -> imported -> validated`
+
+gdzie:
+- `candidate` oznacza wyłącznie potencjalnie pasujący zasób;
+- `approved` oznacza zaakceptowane źródło/licencję i konkretne zastosowanie;
+- `acquired` oznacza pobranie/pozyskanie źródła z zapisaną provenance;
+- `imported` oznacza kontrolowany import potrzebnej części do projektu, bez dumpowania całej paczki;
+- `validated` oznacza użycie w docelowym etapie oraz odpowiedni proof wizualny/techniczny/wydajnościowy.
+
+**Nie wolno zamknąć etapu tylko dlatego, że kod, build lub CI są zielone, jeśli jego wymagane assety nadal są jedynie `candidate` / `approved`.** Późniejszy Stage 7 rozwija środowisko produkcyjnie, ale nie przejmuje zaległego minimum ze Stage 3G, Stage 5 ani Stage 6.
+
+Dla technical UE assets analogicznie: `planned` nie spełnia asset gate'u. Wymagany element musi przejść przez `prototype` / `reviewed` do `validated` w etapie, do którego został przypisany.
+
 ## 2. Kolejność pozyskiwania
 
 ### Priorytet A — potrzebne przed lub w trakcie budowy MVP
@@ -84,7 +103,7 @@ Technical UE asset może być równie krytyczny produkcyjnie jak model 3D. Nie t
 
 | Etap | Source assets | Technical UE assets | Poziom jakości / zakup |
 |---|---|---|---|
-| **3G — Reference Environment Pass** | landscape materials, grass, trees, rocks/cliffs, sky/fog inputs, water input jeśli potrzebny | PCG graphs/settings, material instances, biome/exclusion assets, generated helper geometry, proof worlds/data | referencyjny baseline; zakup tylko gdy darmowe/natywne zasoby nie wystarczą |
+| **3G — Reference Environment Pass** | landscape materials, grass, trees, rocks/cliffs, sky/fog inputs, water input jeśli potrzebny | PCG graphs/settings, material instances, biome/exclusion assets, generated helper geometry, proof worlds/data | **obowiązkowy referencyjny baseline przed dalszym Stage 4**; zakup tylko gdy darmowe/natywne zasoby nie wystarczą |
 | **4 — zakręty** | proste decals/markery guidance | debug/guidance material instances, ewentualne spline/decal helper assets | funkcjonalne; bez paczki produkcyjnej |
 | **5 — HUD** | font, ikony/SVG | UMG widget assets, style/data assets | produkcyjne minimum |
 | **6 — kolarz i rower** | 1 bike, 1 rider, strój, kask, mocap | IK Rig, IK Retargeter, Control Rig, Animation/Blend assets, rider/bike presentation data | produkcyjne dla MVP; wysoki priorytet |
@@ -476,7 +495,23 @@ Statusy: `candidate`, `approved`, `acquired`, `imported`, `validated`, `rejected
 
 Lista Stage 3G jest utrzymywana w `scripts/assets/stage3g_polyhaven.json`. Skrypt `scripts/assets/download_stage3g_assets.py` korzysta z publicznego API Poly Haven, pobiera domyślnie warianty 2K/FBX do lokalnego, ignorowanego katalogu `ExternalAssets/Stage3G/PolyHaven/`, weryfikuje rozmiar/MD5 z metadanych API i zapisuje lokalny `download-index.json`.
 
-Pobranie źródeł **nie oznacza akceptacji assetu do mapy**. Status `candidate` lub `approved` w ledgerze dotyczy doboru/licencji; status `validated` wymaga importu do UE, sprawdzenia LOD/Nanite/instancing i pomiaru kosztu na komputerze referencyjnym.
+Pobranie źródeł **nie oznacza akceptacji assetu do mapy**. Status `candidate` lub `approved` w ledgerze dotyczy doboru/licencji; status `validated` wymaga importu do UE, użycia w odpowiadającym mu sektorze, sprawdzenia LOD/Nanite/instancing i pomiaru kosztu na komputerze referencyjnym.
+
+### Stage 3G — recovery checklist po audycie 26.09.2026
+
+PR #155 udowodnił authoring/CI/proof harness, ale nie przesunął source assetów przez pełny lifecycle. Dlatego Stage 3G pozostaje otwarty do czasu wykonania co najmniej:
+
+- [ ] `Sparse Grass` -> `validated` w valley/meadow;
+- [ ] `Forest Ground 03` -> `validated` w forest;
+- [ ] `Rocky Terrain` -> `validated` w high Alpine;
+- [ ] co najmniej jeden z `Rock Face 01` / `Boulder 01` -> `validated` jako rzeczywisty rock dressing;
+- [ ] wybrać i sprofilować realny conifer asset; `Fir Tree 01` może przejść do `approved` dopiero po pomiarze LOD/instancing;
+- [ ] pierwszy `PCG_RouteExclusion` -> `validated`;
+- [ ] minimum jeden produkcyjnie użyteczny graph scatterujący approved/validated assets -> `validated`;
+- [ ] capture 1200/4900/8000 m pokazuje faktyczne assety i rozróżnialne biomy;
+- [ ] 1080p sanity nie wykazuje nieakceptowalnej regresji na komputerze referencyjnym.
+
+Dopiero wtedy minimalny environment asset baseline przechodzi z 3G do Stage 7 jako **punkt startowy do rozwijania**, a nie jako niewykonana zaległość.
 
 ## 9. Technical UE asset ledger
 

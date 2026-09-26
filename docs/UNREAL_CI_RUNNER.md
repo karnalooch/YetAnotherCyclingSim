@@ -4,12 +4,15 @@ Issue: #24
 
 ## Status
 
-This defines the GitHub Actions self-hosted runner contract before the Unreal
-lane is connected to Aggregate CI gate. GitHub is the single CI control plane.
-Phase 1 uses the manual trusted entrypoint documented in
-`UNREAL_RUNNER_PHASE1.md`. The generic normal + intentional-red runner
-canaries are proven; Stage 3G authoring/final proof remains before Phase 1 is
-complete.
+This defines the GitHub Actions self-hosted runner contract while generic Unreal
+code validation is still being promoted toward a required Aggregate CI gate.
+GitHub is the single CI control plane.
+
+The generic normal + intentional-red runner canaries are proven. The Stage 3G
+authoring/final-proof **mechanism** is also proven: PR #155 / workflow run
+`36258791131` completed exact trusted full-LFS authoring/final validation,
+Automation, Map Check, visual capture and cleanup. This infrastructure proof does
+not by itself satisfy the reopened Stage 3G visual/asset acceptance in #80.
 
 ## Required host
 
@@ -49,8 +52,11 @@ For code-only canaries, project LFS payloads remain unmaterialized and
 Asset-heavy workflows such as Stage3G author/proof and `asset-full` may perform
 an explicit full LFS checkout.
 
-The runner is operated manually/trusted-only during Phase 1. No public PR code
-is allowed to execute on it automatically.
+The runner remains restricted to trusted repository-controlled execution. No
+public/fork PR code is allowed to execute on it. Canonical high-risk Stage 3G
+asset changes may use the repository's trusted automatic `asset_full` path;
+generic C++ PRs still require a separate exact-SHA Unreal proof until #24 Phase 3
+is complete.
 
 ## Trust policy
 
@@ -93,11 +99,11 @@ Canonical proof: workflow run `36240146312`, SHA
 
 Next:
 
-6. [ ] Run Stage 3G authoring against `feat/stage3g-reference-environment`.
-7. [ ] Commit/review authored LFS assets and run the final Stage 3G proof.
+6. [x] Prove Stage 3G authoring/final-proof mechanics on the trusted runner — PR #155 / run `36258791131`.
+7. [ ] Reuse that proven lane for the reopened #80 asset/PCG visual recovery and require the same exact-SHA/LFS/visual evidence.
 8. [ ] Complete Phase 2 readiness, including unattended Task Scheduler reboot proof.
-9. [ ] Only then consider calling the reusable Unreal lane automatically from normal trusted CI.
-10. [ ] Add Unreal to Aggregate CI only in Phase 3 and reconfirm #22 branch protection first.
+9. [ ] Promote the reusable generic C++ Unreal lane to automatic trusted execution.
+10. [ ] Add generic Unreal C++ validation to Aggregate CI only in Phase 3 and reconfirm #22 branch protection first.
 
 ## Workspace hygiene
 

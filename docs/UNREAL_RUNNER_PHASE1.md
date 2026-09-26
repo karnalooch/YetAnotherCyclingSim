@@ -22,7 +22,10 @@ The generic runner/build/fail-closed contract is proven on the real home runner:
 The temporary one-shot workflow used to obtain this baseline was retired after
 the proof. The durable Phase 1 entrypoint remains `Manual Unreal proof`.
 
-The remaining Phase 1 product-facing work is Stage 3G authoring and final proof.
+Stage 3G authoring/final-proof mechanics are now proven by PR #155 / workflow
+run `36258791131`. The reopened #80 still requires real source-asset import,
+PCG/environment integration and visual acceptance; that is product work using the
+proven runner contract, not a missing runner capability.
 
 ## What lands in Phase 1
 
@@ -141,7 +144,11 @@ That run is expected to finish **red** because its Automation filter is delibera
 
 ## Stage 3G authoring
 
-After runner canaries are proven, use:
+**Runner capability: proven.** PR #155 demonstrated this path. For the reopened
+#80 visual/asset recovery, reuse the same mode/contract rather than inventing a
+new authoring path.
+
+For manual diagnostics or controlled authoring, use:
 
 - mode: `stage3g-author`;
 - target: `feat/stage3g-reference-environment`.
@@ -153,6 +160,11 @@ deliberately does not push or commit anything.
 After review, those binary source assets are committed through normal Git LFS rules on the Stage 3G branch.
 
 ## Stage 3G final proof
+
+**Proof mechanism: proven** by workflow run `36258791131`. A green technical
+proof does not waive visual review: after real Stage 3G assets/PCG outputs are
+committed, run the final proof again against that exact SHA and review the three
+canonical captures against #80 acceptance criteria.
 
 Once authored assets are committed and the branch has its final SHA:
 
