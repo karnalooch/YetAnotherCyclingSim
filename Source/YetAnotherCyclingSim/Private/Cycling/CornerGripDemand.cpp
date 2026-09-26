@@ -22,6 +22,13 @@ namespace CyclingCornerGrip
 			OutError = TEXT("corner grip demand requires a context with a corner");
 			return false;
 		}
+		if (Context.Phase != CyclingCornering::ECornerPhase::Entry
+			&& Context.Phase != CyclingCornering::ECornerPhase::Apex
+			&& Context.Phase != CyclingCornering::ECornerPhase::Exit)
+		{
+			OutError = TEXT("physical corner grip demand requires current entry/apex/exit phase");
+			return false;
+		}
 		if (!std::isfinite(Context.EffectiveRadiusM) || Context.EffectiveRadiusM <= 0.0)
 		{
 			OutError = TEXT("corner context effective radius must be finite and greater than zero");
