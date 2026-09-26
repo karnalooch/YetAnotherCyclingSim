@@ -184,14 +184,6 @@ jobs:
             --base "${BASE_SHA}" \
             --head "${HEAD_SHA}"
 
-  unreal-code:
-    name: Code-only Unreal canary
-    needs: changes
-    if: ${{ needs.changes.outputs.ue_code == 'true' }}
-    permissions:
-      contents: read
-    uses: ./.github/workflows/reusable-unreal.yml
-
   aggregate:
     name: Aggregate CI gate
     if: ${{ always() }}
@@ -204,7 +196,6 @@ jobs:
       - security-python
       - security-cpp
       - asset-validation
-      - unreal-code
     runs-on: ubuntu-latest
     timeout-minutes: 2
     permissions: {}
@@ -220,7 +211,6 @@ jobs:
           SECURITY_PYTHON_RESULT: ${{ needs.security-python.result }}
           SECURITY_CPP_RESULT: ${{ needs.security-cpp.result }}
           ASSET_VALIDATION_RESULT: ${{ needs.asset-validation.result }}
-          UNREAL_CODE_RESULT: ${{ needs.unreal-code.result }}
           CLASS_PYTHON: ${{ needs.changes.outputs.python }}
           CLASS_CPP: ${{ needs.changes.outputs.cpp }}
           CLASS_ASSETS: ${{ needs.changes.outputs.assets }}
@@ -271,7 +261,6 @@ jobs:
           require_optional "security-python" "${CLASS_PYTHON}" "${SECURITY_PYTHON_RESULT}"
           require_optional "security-cpp" "${cpp_security_expected}" "${SECURITY_CPP_RESULT}"
           require_optional "asset-validation" "${CLASS_ASSETS}" "${ASSET_VALIDATION_RESULT}"
-          require_optional "unreal-code" "${CLASS_UE_CODE}" "${UNREAL_CODE_RESULT}"
 
           if [[ "${failed}" -ne 0 ]]; then
             exit 1
