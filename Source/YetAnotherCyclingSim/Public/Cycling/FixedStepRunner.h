@@ -117,6 +117,23 @@ namespace CyclingSimulation
 		double GetAccumulatedTimeS() const { return AccumulatedTimeS; }
 
 	private:
+		bool TryAdvanceInternal(
+			double FrameDeltaS,
+			const FRiderParameters& Rider,
+			const ISimulationStepContextProvider& StepContextProvider,
+			const FRiderInput& RiderInput,
+			const CyclingRoadPhysics::FRoadPhysicsProfile* RoadProfile,
+			const CyclingCornerContext::FCornerContextSettings* CornerSettings,
+			const CyclingSurfaceGrip::FSurfaceGripPolicy* GripPolicy,
+			double BaseFrictionCoefficient,
+			double LateralPositionM,
+			FSimulationState& OutState,
+			double& RemainingAccumulatedTimeS,
+			int32& CompletedSteps,
+			TArray<FSimulationBoundaryCrossing>& OutBoundaryCrossings,
+			bool& bOutStoppedAfterStep,
+			FString& OutError);
+
 		FSimulationState State;
 		double AccumulatedTimeS = 0.0;
 	};
