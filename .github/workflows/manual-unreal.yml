@@ -39,7 +39,19 @@ jobs:
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 90
 
+    env:
+      GIT_CONFIG_GLOBAL: ${{ runner.temp }}\yacs-global.gitconfig
+      GIT_CONFIG_NOSYSTEM: "1"
+
     steps:
+      - name: Isolate self-hosted Git configuration
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-Content -LiteralPath $env:GIT_CONFIG_GLOBAL -Value '' -Encoding ascii
+          Write-Host "Using isolated Git config: $env:GIT_CONFIG_GLOBAL"
+          git config --global --list --show-origin
+
       - name: Require default-branch workflow definition
         shell: pwsh
         run: |
