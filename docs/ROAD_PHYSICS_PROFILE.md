@@ -98,6 +98,14 @@ This representation supports without consulting rendered geometry:
 
 Both left and right cross-slope angles must remain finite, strictly inside `(-pi/2, pi/2)`, and must not appear or disappear discontinuously. Authoring/generation provides transition regions and validates their rate of change explicitly.
 
+Stage 4B-C interprets bank support from the existing sign conventions without adding another road representation. Positive curvature turns toward `+D` (right), while positive cross-slope rises toward `+D`; therefore the signed support angle used by the pure-lateral corner model is:
+
+```text
+bank_support_angle = -sign(horizontal_curvature) * local_cross_slope
+```
+
+A positive support angle is banked in favour of the turn; a negative value is off-camber/adverse. The pure-lateral limit uses the resolved surface grip and effective racing-line radius. It deliberately does not consume braking demand yet; the shared longitudinal+lateral friction budget remains Stage 4C. No arbitrary recommended-speed margin is embedded in the physics limit.
+
 The current Alpine Journey baseline is intentionally `0° / 0°`. Stage 3 route geometry does not yet carry authored banking/crown values, so Stage 3H does not invent them.
 
 ## 7. Racing line and lateral position

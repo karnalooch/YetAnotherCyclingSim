@@ -8,6 +8,10 @@ from .corner_context import (
     CornerContextSettings,
     corner_context_at,
 )
+from .corner_limit import (
+    CornerLateralLimit,
+    corner_lateral_limit,
+)
 from .cornering import (
     CORNER_PHASE_APEX,
     CORNER_PHASE_APPROACH,
@@ -86,6 +90,8 @@ __all__ = [
     "CornerContextSettings",
     "CornerContext",
     "corner_context_at",
+    "CornerLateralLimit",
+    "corner_lateral_limit",
     "Corner",
     "CornerProfile",
     "CORNER_PHASE_OUTSIDE",
