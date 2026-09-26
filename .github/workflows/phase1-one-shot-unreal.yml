@@ -126,6 +126,10 @@ jobs:
             Set-Content -LiteralPath (Join-Path $root 'intentional_red_verified.json') -Encoding UTF8
 
           Write-Host "INTENTIONAL-RED VERIFIED: exit=$exit discovered=0" -ForegroundColor Green
+          # GitHub's pwsh wrapper propagates a stale native-process LASTEXITCODE
+          # at step teardown. All expected-failure assertions above have passed,
+          # so terminate this validation step explicitly as success.
+          exit 0
 
       - name: Upload Phase 1 proof
         if: ${{ always() }}

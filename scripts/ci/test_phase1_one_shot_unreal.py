@@ -45,6 +45,7 @@ class Phase1OneShotUnrealContractTests(unittest.TestCase):
             "expected zero discovered tests",
             "intentional_red_verified.json",
             "fail-closed-verified",
+            "exit 0",
         ):
             self.assertIn(token, self.workflow)
 
