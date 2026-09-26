@@ -15,7 +15,7 @@ grow their own competing path-regex policy.
 | C++ | security baseline, CodeQL C++; classifier also emits `ue_code=true` |
 | Build.cs / Target.cs / .uproject / .uplugin / critical Config | security baseline, CodeQL C++; classifier also emits `ue_code=true` |
 | CI/tooling | CI contract tests plus security baseline; UE canary only when Unreal-facing tooling changed |
-| asset-only | Repository policy, Governance, lightweight asset validation |
+| asset-only | Repository policy, Governance, lightweight asset validation; Stage 3G/high-risk assets additionally require full validation |
 | code + assets | union of the relevant code lanes and asset validation |
 | unknown path | Repository policy, Governance, security baseline; classifier exposes `unknown=true` |
 | schedule/manual static run | Python + C++ static/security + CI contracts, but no asset payload and no UE canary |
@@ -33,11 +33,7 @@ The reusable Unreal lane is intentionally source-only:
 - `Test-YacsCodeOnlyCheckout.ps1` requires tracked LFS assets to remain pointer files;
 - only after that guard passes may the Editor build and scoped Automation run.
 
-The reusable lane is ready for source-only execution, but YACS self-hosted
-runner policy is still Phase 1 manual/trusted. Therefore `ue_code=true` is a
-routing signal, not yet an automatic Aggregate requirement. Automatic Unreal execution must use the proven trusted GitHub Actions
-self-hosted runner Phase 2/3 path. Heavy Unreal execution must never depend on
-shipping the Engine through hosted CI cache/workspace storage.
+The reusable code-only lane remains a routing building block. Heavy Unreal execution uses the proven repository-scoped `yacs-ue58` self-hosted runner and must never depend on shipping the Engine through hosted CI cache/workspace storage.
 
 When automatic Unreal execution is enabled, a C++ change must not download
 project textures, maps, FBX files, audio or other LFS payloads merely to prove
@@ -53,9 +49,25 @@ are handled without requiring the removed payload.
 Repository policy remains the global guard for maximum non-LFS blob size and
 required LFS extensions.
 
-## Full asset / release lane
+## Full asset / release lanes
 
-Full binary validation is deliberately separate from normal PR CI. The current
+High-risk Stage 3G changes now participate in normal PR CI through
+`.github/workflows/reusable-stage3g-full.yml`. The classifier emits
+`asset_full=true` only for the canonical Stage 3G environment, map, terrain
+runtime, authoring/proof tooling and world-generation specification. Ordinary
+asset changes still use only lightweight pointer validation.
+
+The automatic Stage 3G lane runs only for same-repository PRs or trusted main
+pushes. Fork PRs never receive self-hosted runner access; if such a PR requires
+`asset_full=true`, the Aggregate gate fails closed because the heavy lane is
+skipped.
+
+The lane materializes full LFS, runs the deterministic Stage 3G authoring pass,
+then the final non-mutating proof (Automation, fresh-load persistence, Map
+Check, LFS integrity and canonical visual captures), uploads concise proof
+artifacts and unconditionally cleans the runner workspace.
+
+Release-oriented binary validation remains deliberately separate. The manual
 trusted entrypoint is `.github/workflows/asset-full.yml`.
 
 Phase 1 exposes four manual modes on `main` only:
@@ -75,10 +87,7 @@ repository-scoped `yacs-ue58` self-hosted runner, requests read-only repository
 permissions, runs `git lfs fsck`, uploads only concise proof artifacts and
 always cleans the workspace.
 
-There is intentionally no schedule or PR trigger yet. Nightly automation
-belongs to the trusted runner Phase 2/3 rollout. Packaging is manual and
-fail-closed; the package mode performs the cook as part of BuildCookRun rather
-than maintaining a second, partially overlapping cook-only implementation.
+Packaging remains manual and fail-closed; the package mode performs the cook as part of BuildCookRun rather than maintaining a second, partially overlapping cook-only implementation. A future nightly may reuse the trusted heavy lane, but package/full release proof is not part of ordinary PR validation.
 
 The normal Aggregate gate must never start a full asset/cook/package workload
 only because a documentation, Python, C++ or small asset change was pushed.
