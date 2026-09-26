@@ -25,5 +25,9 @@ bool FSimulationState::Validate(FString& OutError) const
 	{
 		return false;
 	}
+	if (!CheckFinite(LateralPositionM, TEXT("lateral_position_m"), OutError))
+	{
+		return false;
+	}
 	return true;
 }
