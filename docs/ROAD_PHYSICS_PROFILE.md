@@ -173,7 +173,9 @@ The rider's requested shared budget remains visible even when the no-slip applie
 
 Stage 4C-B3b applies the resolved braking force as an explicit non-negative opposing force in the fixed-step energy model. The force is included in both the deterministic predictor and the average-speed work estimate. The legacy simulation-step API delegates to the explicit-force integrator with exactly `0 N`, and zero-brake results must remain exact regression parity with the pre-braking simulation.
 
-Stage 4C-B3c is the orchestration layer: for every authoritative fixed substep it resolves corner context, lateral capacity, shared demand and tyre-limited braking force before calling the explicit-force integrator. This must happen at fixed-step granularity so render-frame batching cannot change braking/cornering results.
+Stage 4C-B3c is the orchestration layer: for every authoritative fixed substep it resolves current Road Physics Profile state, corner context, lateral capacity, shared demand and tyre-limited braking force before calling the explicit-force integrator. This happens inside the fixed-step runner, so render-frame batching cannot change braking/cornering results.
+
+A look-ahead corner is not the current tyre contact patch. During `Approach`, the corner context may intentionally describe future curvature/surface metadata for guidance, while longitudinal braking still uses the current `S/D` road state under the tyres. Actual lateral grip usage starts only in `Entry`, `Apex` and `Exit`. Current grade, cross-slope, surface and wetness therefore remain the source for longitudinal tyre capacity until the rider physically reaches the corner.
 
 Aerodynamic drag, gravity and rolling resistance remain ordinary external/resistance forces and must not be misclassified as tyre-braking grip usage.
 
