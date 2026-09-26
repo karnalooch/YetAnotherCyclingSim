@@ -75,9 +75,7 @@ def pr_payload(
 class MarkerTests(unittest.TestCase):
     def test_manual_marker_wins(self):
         self.assertEqual(
-            po.auto_merge_mode(
-                "Auto-merge: eligible\nAuto-merge: manual"
-            ),
+            po.auto_merge_mode("Auto-merge: eligible\nAuto-merge: manual"),
             "manual",
         )
 
@@ -259,9 +257,7 @@ class RootLifecycleTests(unittest.TestCase):
         )
 
         self.assertEqual(result, "merged")
-        self.assertTrue(
-            any(path.endswith("/merge") for _m, path, _p, _q in api.calls)
-        )
+        self.assertTrue(any(path.endswith("/merge") for _m, path, _p, _q in api.calls))
 
     @patch.object(po, "list_check_runs", return_value=[])
     @patch.object(po, "get_pull_request")
@@ -284,15 +280,11 @@ class RootLifecycleTests(unittest.TestCase):
         )
 
         self.assertEqual(result, "blocked")
-        self.assertFalse(
-            any(path.endswith("/merge") for _m, path, _p, _q in api.calls)
-        )
+        self.assertFalse(any(path.endswith("/merge") for _m, path, _p, _q in api.calls))
 
     @patch.object(po, "get_pull_request")
     def test_manual_marker_never_enters_merge_flow(self, get_pr):
-        root = pr_payload(
-            body="Auto-merge: eligible\nAuto-merge: manual"
-        )
+        root = pr_payload(body="Auto-merge: eligible\nAuto-merge: manual")
         api = FakeApi()
 
         result = po.evaluate_pull_request(
@@ -339,8 +331,7 @@ class OrderingTests(unittest.TestCase):
 
         self.assertEqual(exit_code, 0)
         numbers = [
-            call.kwargs["pr_summary"]["number"]
-            for call in evaluate.call_args_list
+            call.kwargs["pr_summary"]["number"] for call in evaluate.call_args_list
         ]
         self.assertEqual(numbers, [10, 30, 20])
 
@@ -352,9 +343,7 @@ class WorkflowContractTests(unittest.TestCase):
         cls.workflow = (
             root / ".github" / "workflows" / "pr-orchestrator.yml"
         ).read_text(encoding="utf-8")
-        cls.ci = (
-            root / ".github" / "workflows" / "ci.yml"
-        ).read_text(encoding="utf-8")
+        cls.ci = (root / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
 
     def test_orchestrator_runs_only_trusted_default_branch_tooling(self):
         self.assertIn("pull_request_target:", self.workflow)
