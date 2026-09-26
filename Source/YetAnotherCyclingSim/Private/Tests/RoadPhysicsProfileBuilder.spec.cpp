@@ -69,8 +69,12 @@ bool FStage3HRoadPhysicsAlpineBuilderTest::RunTest(const FString& Parameters)
 			NearlyEqual(State.GradeDecimal, ExpectedGrade));
 		TestTrue(TEXT("road width uses explicit Alpine physical baseline"),
 			NearlyEqual(State.RoadWidthM, AlpineJourneyRoadWidthM));
-		TestTrue(TEXT("Stage 3H-B banking baseline is flat"),
-			NearlyEqual(State.BankAngleRad, 0.0));
+		TestTrue(TEXT("Stage 3H-C Alpine left cross-slope baseline is flat"),
+			NearlyEqual(State.LeftCrossSlopeAngleRad, 0.0));
+		TestTrue(TEXT("Stage 3H-C Alpine right cross-slope baseline is flat"),
+			NearlyEqual(State.RightCrossSlopeAngleRad, 0.0));
+		TestTrue(TEXT("Stage 3H-C local cross-slope baseline is flat"),
+			NearlyEqual(State.CrossSlopeAngleRad, 0.0));
 		TestEqual(TEXT("Stage 3H-B surface baseline is asphalt"),
 			State.SurfaceId, FString(TEXT("asphalt")));
 		TestTrue(TEXT("dynamic weather is not baked into route baseline"),
