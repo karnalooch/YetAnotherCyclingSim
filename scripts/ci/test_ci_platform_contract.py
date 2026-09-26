@@ -5,10 +5,11 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[2]
-CIRCLECI = ROOT / ".circleci" / "config.yml"
+CIRCLECI_DIR = ROOT / ".circleci"
 GITHUB_WORKFLOWS = ROOT / ".github" / "workflows"
 
 LEGACY_CIRCLECI_PATHS = (
+    ".circleci/config.yml",
     "docs/ci/CIRCLECI_WINDOWS_UE_PHASE_B.md",
     "docs/ci/CIRCLECI_WINDOWS_UE_SPIKE.md",
     "scripts/ci/Configure-YacsCircleCiRunnerHost.ps1",
@@ -22,31 +23,11 @@ LEGACY_CIRCLECI_PATHS = (
 
 
 class CiPlatformContractTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.circleci = CIRCLECI.read_text(encoding="utf-8")
-
-    def test_circleci_is_zero_workload_tombstone(self):
-        self.assertIn("YACS CI migrated to GitHub Actions", self.circleci)
-        self.assertIn("retired_noop:", self.circleci)
-        self.assertIn("default: false", self.circleci)
-        self.assertIn("when: << pipeline.parameters.retired_noop >>", self.circleci)
-
-    def test_circleci_tombstone_has_no_project_or_storage_work(self):
-        for forbidden in (
-            "checkout:",
-            "machine:",
-            "windows.",
-            "persist_to_workspace:",
-            "attach_workspace:",
-            "save_cache:",
-            "restore_cache:",
-            "store_artifacts:",
-            "UE58Seed",
-            "Unreal",
-            "git lfs",
-        ):
-            self.assertNotIn(forbidden, self.circleci)
+    def test_circleci_is_fully_removed(self):
+        self.assertFalse(
+            CIRCLECI_DIR.exists(),
+            "CircleCI was disconnected; .circleci must not exist",
+        )
 
     def test_legacy_circleci_helpers_are_removed(self):
         for relative in LEGACY_CIRCLECI_PATHS:
