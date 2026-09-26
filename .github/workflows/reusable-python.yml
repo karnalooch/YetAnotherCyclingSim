@@ -47,6 +47,9 @@ jobs:
       - name: Run self-hosted Git isolation contract tests
         run: python scripts/ci/test_self_hosted_git_isolation.py
 
+      - name: Run Stage 3G authoring one-shot contract tests
+        run: python scripts/ci/test_stage3g_authoring_one_shot.py
+
       - name: Run Unreal CI build profile contract tests
         run: python scripts/ci/test_unreal_ci_build_profile.py
 
