@@ -72,6 +72,15 @@ jobs:
       - name: Run PR orchestrator unit tests
         run: python scripts/ci/test_pr_orchestrator.py
 
+      - name: Run change classifier unit tests
+        run: python scripts/ci/test_classify_changes.py
+
+      - name: Run asset validation unit tests
+        run: python scripts/ci/test_validate_changed_assets.py
+
+      - name: Run change-classifier workflow contract tests
+        run: python scripts/ci/test_change_classifier_workflow.py
+
       - name: Run Project automation unit tests
         run: python scripts/ci/test_project_automation.py
 
