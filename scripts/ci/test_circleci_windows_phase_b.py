@@ -223,14 +223,17 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
             self.config,
         )
 
-
     def test_hosted_preflight_accepts_direct_restored_engine_root(self):
         self.assertIn("'C:\\UE_5.8'", self.preflight)
         direct_check = "Test-Path -LiteralPath $directUat -PathType Leaf"
         child_scan = "Get-ChildItem -LiteralPath $d -Directory"
         self.assertIn(direct_check, self.preflight)
-        self.assertIn("$EngineRoot = (Resolve-Path -LiteralPath $d).Path", self.preflight)
-        self.assertLess(self.preflight.index(direct_check), self.preflight.index(child_scan))
+        self.assertIn(
+            "$EngineRoot = (Resolve-Path -LiteralPath $d).Path", self.preflight
+        )
+        self.assertLess(
+            self.preflight.index(direct_check), self.preflight.index(child_scan)
+        )
 
     def test_restore_hash_is_powershell_version_independent(self):
         self.assertIn("[System.Security.Cryptography.SHA256]::Create()", self.restore)
