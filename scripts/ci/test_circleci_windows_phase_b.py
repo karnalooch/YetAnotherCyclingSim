@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[2]
 CONFIG = ROOT / ".circleci" / "config.yml"
 PACKER = ROOT / "scripts" / "ci" / "Prepare-YacsUe58Seed.ps1"
 RESTORE = ROOT / "scripts" / "ci" / "Restore-YacsUe58Seed.ps1"
+VALIDATOR = ROOT / "scripts" / "ci" / "Test-YacsUe58SeedPayload.ps1"
 
 
 class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
@@ -16,6 +17,7 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
         cls.config = CONFIG.read_text(encoding="utf-8")
         cls.packer = PACKER.read_text(encoding="utf-8")
         cls.restore = RESTORE.read_text(encoding="utf-8")
+        cls.validator = VALIDATOR.read_text(encoding="utf-8")
 
     def test_expensive_phase_b_paths_are_disabled_by_default(self):
         for parameter in ("ue_cache_seed:", "ue_canary:"):
@@ -179,22 +181,39 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
         for token in (
             "ue-cache-publish:",
             "attach_workspace:",
+            "Test-YacsUe58SeedPayload.ps1",
             "WORKSPACE SEED PASS",
-            "Workspace UE seed SHA256 mismatch",
             "save_cache:",
             "C:\\YacsUe58Seed\\ue58-win64.zip",
+            "no_output_timeout: 45m",
         ):
             self.assertIn(token, self.config)
 
     def test_seed_workflow_verifies_restored_cache_on_hosted_windows(self):
         for token in (
             "ue-cache-verify:",
+            "Test-YacsUe58SeedPayload.ps1",
             "CACHE RESTORE PASS",
-            "Restored UE cache SHA256 mismatch",
             "requires:",
             "- ue-cache-publish",
         ):
             self.assertIn(token, self.config)
+
+    def test_large_seed_hashing_emits_progress(self):
+        for token in (
+            "Hashing UE seed:",
+            "Hashing UE seed complete:",
+            "TransformBlock",
+            "UE seed SHA256 mismatch",
+        ):
+            self.assertIn(token, self.validator)
+        for token in (
+            "Hashing cached UE seed:",
+            "Hashing cached UE seed complete:",
+            "Restoring UE seed:",
+            "Restoring UE seed complete:",
+        ):
+            self.assertIn(token, self.restore)
 
     def test_hosted_canary_restores_from_hosted_cache_path(self):
         self.assertIn(
