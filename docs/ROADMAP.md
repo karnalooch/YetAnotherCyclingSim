@@ -259,15 +259,15 @@ Stage 3 jest realizowany kolejno:
 
 ### Tooling gate 3G
 
-- [ ] Włączyć natywny UE plugin **PCG** jako podstawowy system proceduralnego rozmieszczania vegetation/rocks/roadside dressing.
-- [ ] Włączyć **Editor Scripting Utilities** jako uzupełnienie istniejącego `PythonScriptPlugin` dla bezpiecznej automatyzacji edytora.
-- [ ] Włączyć **Geometry Script** dla generowania, analizy i modyfikacji geometrii pomocniczej; traktować jego API jako Beta i nie uzależniać od niego autorytatywnej fizyki/trasy.
+- [x] Włączyć natywny UE plugin **PCG** jako podstawowy system proceduralnego rozmieszczania vegetation/rocks/roadside dressing. Plugin jest jawnie włączony w `.uproject`; produkcyjny graph/proof pozostaje częścią 3G-R2.
+- [x] Włączyć **Editor Scripting Utilities** jako uzupełnienie istniejącego `PythonScriptPlugin` dla bezpiecznej automatyzacji edytora. Plugin jest jawnie włączony w `.uproject`.
+- [x] Włączyć **Geometry Script** dla generowania, analizy i modyfikacji geometrii pomocniczej; plugin jest jawnie włączony w `.uproject`, pozostaje narzędziem pomocniczym i nie jest źródłem prawdy dla trasy.
 - [ ] Włączyć **PCG Geometry Script Interop** tylko wtedy, gdy pierwszy graph faktycznie potrzebuje przepływu PCG ↔ Dynamic/Static Mesh; nie jest warunkiem samego startu PCG.
 - [ ] Po zielonym #85 MCP smoke ocenić eksperymentalny **PCGToolset** UE 5.8 do tworzenia/modyfikacji PCG Graphów przez agenta.
 - [ ] **Water/Landmass** pozostawić wyłączone do decyzji, że jezioro/rzeka są częścią zaakceptowanej kompozycji 3G.
 - [ ] Pierwszy PCG proof ma być editor-time, deterministyczny i ograniczony do jednego sektora; runtime PCG nie jest wymaganiem MVP.
 - [ ] PCG może konsumować route spline/WorldSpec jako constraints, ale nie może stać się źródłem prawdy dla przebiegu trasy.
-- [ ] Zbudować i zarejestrować w Technical UE Asset Ledger pierwszy zestaw: `PCG_RouteExclusion`, `PCG_Valley`, `PCG_Forest`, `PCG_HighAlpine`; każdy przechodzi deterministic regenerate/proof zanim dostanie status `validated`.
+- [ ] Zbudować i zarejestrować w Technical UE Asset Ledger pierwszy zestaw: `PCG_RouteExclusion`, `PCG_Valley`, `PCG_Forest`, `PCG_HighAlpine`; `PCG_RouteExclusion` jest już `prototype` w #162, pozostałe są `planned`; każdy przechodzi deterministic regenerate/proof zanim dostanie status `validated`.
 - [ ] Authoring assets PCG przechowywać poza `/Game/Generated/YACS/**`; katalog `Generated` jest wyłącznie dla odtwarzalnych outputów generatora.
 
 ### Asset gate 3G
