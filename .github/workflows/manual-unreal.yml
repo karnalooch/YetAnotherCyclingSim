@@ -13,14 +13,6 @@ on:
           - stage3g-author
           - stage3g-proof
           - intentional-red
-      target_branch:
-        description: "Trusted same-repository branch"
-        required: true
-        default: main
-        type: choice
-        options:
-          - main
-          - feat/stage3g-reference-environment
       expected_sha:
         description: "Optional 40-char SHA; blank means resolve current branch HEAD"
         required: false
@@ -69,25 +61,27 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          TARGET_BRANCH: ${{ inputs.target_branch }}
           MODE: ${{ inputs.mode }}
           EXPECTED_SHA: ${{ inputs.expected_sha }}
         run: |
           $ErrorActionPreference = 'Stop'
+          $targetBranch = switch ($env:MODE) {
+            'canary' { 'main' }
+            'intentional-red' { 'main' }
+            'stage3g-author' { 'feat/stage3g-reference-environment' }
+            'stage3g-proof' { 'feat/stage3g-reference-environment' }
+            default { throw "Unsupported manual Unreal mode '$env:MODE'." }
+          }
+
           $allowedBranches = @(
             'main',
             'feat/stage3g-reference-environment'
           )
-          if ($env:TARGET_BRANCH -notin $allowedBranches) {
-            throw "Target branch '$env:TARGET_BRANCH' is not in the Phase 1 allowlist."
+          if ($targetBranch -notin $allowedBranches) {
+            throw "Derived target branch '$targetBranch' is not in the Phase 1 allowlist."
           }
-          if ($env:MODE -in @('canary', 'intentional-red') -and $env:TARGET_BRANCH -ne 'main') {
-            throw "Mode '$env:MODE' must target main during Phase 1."
-          }
-          if ($env:MODE -in @('stage3g-author', 'stage3g-proof') -and $env:TARGET_BRANCH -ne 'feat/stage3g-reference-environment') {
-            throw "Mode '$env:MODE' must target feat/stage3g-reference-environment."
-          }
-          $encodedBranch = [Uri]::EscapeDataString($env:TARGET_BRANCH)
+
+          $encodedBranch = [Uri]::EscapeDataString($targetBranch)
           $headers = @{
             Authorization = "Bearer $env:GH_TOKEN"
             Accept = 'application/vnd.github+json'
@@ -104,12 +98,12 @@ jobs:
               throw 'expected_sha must be a full 40-character lowercase SHA.'
             }
             if ($env:EXPECTED_SHA -ne $resolvedSha) {
-              throw "Branch '$env:TARGET_BRANCH' moved: resolved '$resolvedSha', expected '$env:EXPECTED_SHA'."
+              throw "Branch '$targetBranch' moved: resolved '$resolvedSha', expected '$env:EXPECTED_SHA'."
             }
           }
           "sha=$resolvedSha" >> $env:GITHUB_OUTPUT
-          "branch=$env:TARGET_BRANCH" >> $env:GITHUB_OUTPUT
-          Write-Host "Trusted target: $env:TARGET_BRANCH @ $resolvedSha"
+          "branch=$targetBranch" >> $env:GITHUB_OUTPUT
+          Write-Host "Trusted target: $targetBranch @ $resolvedSha"
           Write-Host "Mode: $env:MODE"
 
       - name: Checkout exact trusted revision without LFS payloads
