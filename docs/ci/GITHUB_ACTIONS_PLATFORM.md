@@ -60,18 +60,34 @@ The design is private-repository ready:
 - artifacts are limited to concise logs, JSON, text and screenshots unless an
   explicit asset-authoring workflow requires source assets.
 
+## Proven self-hosted baseline
+
+On 2026-09-26 the repository-scoped `yacs-home-ue58` runner completed the
+combined normal + fail-closed proof on workflow run `36240146312`, exact SHA
+`9826b0f82d2a895a0a5d6fbf358aac162e199aa5`.
+
+The normal canary built UE 5.8.2 and passed all **13/13** scoped Automation tests.
+The controlled nonexistent-filter run discovered zero tests and was verified as
+an expected fail-closed result. Artifact upload and unconditional workspace cleanup
+also passed.
+
+The one-shot workflow used only to obtain this baseline is retired. Permanent
+manual Unreal execution remains available through `manual-unreal.yml`.
+
 ## Promotion to automatic Unreal gating
 
 During Phase 1, Unreal execution is manual and is not part of Aggregate CI.
 
 Before enabling automatic Unreal gating:
 
-1. prove a normal green canary;
-2. prove the intentional-red canary fails closed;
-3. document runner outage/break-glass behavior;
-4. restrict automatic execution to trusted same-repository revisions;
-5. add the Unreal lane to Aggregate CI only after the runner is considered
-   operationally reliable.
+1. [x] prove a normal green canary;
+2. [x] prove the intentional-red canary fails closed;
+3. [ ] finish Stage 3G authoring/final proof under the Phase 1 trust model;
+4. [ ] complete unattended Task Scheduler + reboot recovery proof before Phase 2;
+5. [ ] document runner outage/break-glass behavior;
+6. [ ] restrict automatic execution to trusted same-repository revisions;
+7. [ ] add the Unreal lane to Aggregate CI only after the runner is considered
+   operationally reliable and #22 branch protection is verified.
 
 ## CircleCI retirement
 
