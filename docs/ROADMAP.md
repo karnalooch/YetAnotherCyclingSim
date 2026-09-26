@@ -365,7 +365,7 @@ Zmiana tylko w fizyce nie może wymagać pełnego pobrania assetów; zmiana tylk
 # Etap 4 — technika pokonywania zakrętów
 
 **Planowany czas:** tydzień 5–7  
-**Status:** Stage 4A / #156 ukończone przez PR #157; **3H ukończone, więc 4B/4C są odblokowane i mogą iść równolegle z 3G; 4D/4E wymagają wspólnego integration gate**
+**Status:** Stage 4A ukończone przez PR #157; **4B-A route corner context ukończone przez PR #169; 4B-B surface/wetness grip policy w realizacji; 4D/4E wymagają wspólnego integration gate z World lane**
 
 ## Cel
 
@@ -374,15 +374,17 @@ Wprowadzić autorską mechanikę oceniającą odpuszczenie i ponowne rozpoczęci
 ## Plan wykonawczy
 
 1. **4A — #156:** czysty C++ cornering domain contract z parity do Python reference model — **ukończone / PR #157**.
-2. **4B:** route corner context z `Road Physics Profile` — signed curvature/radius, banking/cross-slope, road width, lateral position, corner-ahead/look-ahead, entry/apex/exit i limity gripu per fixed-step.
-3. **4C:** technique + consequences — shared braking+cornering grip budget (uproszczony friction circle/ellipse), spięcie mocy/kadencji z racing line, utratą prędkości i controlled slip; bez upadków w MVP.
-4. **4D:** guidance + assists — linia przejazdu, markery entry/apex/exit, grip warning i poziomy asysty jako presentation-only; wymaga wspólnego integration gate z World lane.
-5. **4E:** deterministyczny full-route corner proof dla reprezentatywnych flat/banked/off-camber zakrętów oraz suchej/mokrej nawierzchni.
+2. **4B-A — PR #169:** route corner context z `Road Physics Profile` — signed curvature/radius, road width, lateral position, corner-ahead/look-ahead, entry/apex/exit — **ukończone**.
+3. **4B-B:** jawna `SurfaceGripPolicy` — `surface_id + wetness -> grip_multiplier`, bez ukrytych współczynników; Alpine asphalt zachowuje parity z istniejącym `ALPINE_WEATHER`.
+4. **4B-C:** banking/off-camber + efektywny limit corneringu i zalecana prędkość per fixed-step, nadal bez shared braking budget.
+5. **4C:** technique + consequences — shared braking+cornering grip budget (uproszczony friction circle/ellipse), spięcie mocy/kadencji z racing line, utratą prędkości i controlled slip; bez upadków w MVP.
+6. **4D:** guidance + assists — linia przejazdu, markery entry/apex/exit, grip warning i poziomy asysty jako presentation-only; wymaga wspólnego integration gate z World lane.
+7. **4E:** deterministyczny full-route corner proof dla reprezentatywnych flat/banked/off-camber zakrętów oraz suchej/mokrej nawierzchni.
 
 ## Zadania
 
-- [ ] Obliczanie signed curvature drogi i efektywnego promienia toru przejazdu.
-- [ ] Określenie strefy wejścia, apeksu i wyjścia.
+- [x] Obliczanie signed curvature drogi i efektywnego promienia toru przejazdu — PR #169.
+- [x] Określenie strefy wejścia, apeksu i wyjścia — PR #169.
 - [ ] Obliczanie zalecanej prędkości.
 - [ ] Analiza momentu zmniejszenia mocy.
 - [ ] Analiza momentu wznowienia pedałowania.
@@ -394,7 +396,7 @@ Wprowadzić autorską mechanikę oceniającą odpuszczenie i ponowne rozpoczęci
 - [ ] Kontrolowany uślizg bez upadku.
 - [ ] Wpływ bankingu / off-camber oraz mokrej nawierzchni.
 - [ ] Wspólny budżet przyczepności dla hamowania i corneringu; brak niezależnego "100% gripu" dla obu osi sił jednocześnie.
-- [ ] Deterministyczny look-ahead do oceny przygotowania przed zakrętem.
+- [x] Deterministyczny look-ahead do oceny przygotowania przed zakrętem — PR #169.
 - [ ] Ocena każdego zakrętu.
 - [ ] Regulowane poziomy asysty.
 - [ ] Testy powtarzalności wyników.
