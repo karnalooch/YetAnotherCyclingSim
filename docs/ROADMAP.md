@@ -377,7 +377,7 @@ Wprowadzić autorską mechanikę oceniającą odpuszczenie i ponowne rozpoczęci
 2. **4B-A — PR #169:** route corner context z `Road Physics Profile` — signed curvature/radius, road width, lateral position, corner-ahead/look-ahead, entry/apex/exit — **ukończone**.
 3. **4B-B — PR #170:** jawna `SurfaceGripPolicy` — `surface_id + wetness -> grip_multiplier`, bez ukrytych współczynników; Alpine asphalt zachowuje parity z istniejącym `ALPINE_WEATHER` — **ukończone**.
 4. **4B-C — PR #171:** banking/off-camber + czysty fizyczny limit lateralny per fixed-step; brak arbitralnego safety factor i brak shared braking budget — **ukończone**.
-5. **4C-A:** czysty shared grip kernel jako unit friction circle: znormalizowane żądanie longitudinal + lateral trafia do jednego budżetu; bez ukrytego braking modelu i bez consequence policy.
+5. **4C-A — PR #172:** czysty shared grip kernel jako unit friction circle: znormalizowane żądanie longitudinal + lateral trafia do jednego budżetu; bez ukrytego braking modelu i bez consequence policy.
 6. **4C-B:** mapowanie realnego fixed-step longitudinal demand (hamowanie/deceleracja) oraz lateral demand z 4B-C do wspólnego budżetu.
 7. **4C-C:** technique + consequences — scoring, timing mocy/kadencji, utrata prędkości, wide line i controlled slip; bez upadków w MVP.
 8. **4D:** guidance + assists — linia przejazdu, markery entry/apex/exit, grip warning i poziomy asysty jako presentation-only; wymaga wspólnego integration gate z World lane.
