@@ -115,8 +115,12 @@ def create_texture_sample(mat, texture, x, y, coordinate):
     )
     sample.set_editor_property("texture", texture)
     if coordinate is not None:
+        # UE's Python bridge can expose the TextureSample Coordinates pin
+        # without a stable display-name mapping. An empty input name is the
+        # documented way to connect to the expression's first input, which for
+        # UMaterialExpressionTextureSample is Coordinates.
         if not unreal.MaterialEditingLibrary.connect_material_expressions(
-            coordinate, "", sample, "Coordinates"
+            coordinate, "", sample, ""
         ):
             raise RuntimeError("failed to connect Stage 3G texture coordinates")
     return sample
