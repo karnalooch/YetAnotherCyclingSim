@@ -37,6 +37,12 @@ from .model import (
     total_resistance_force_n,
 )
 from .route import RouteProfile, RouteSegment
+from .road_physics import (
+    RoadPhysicsProfile,
+    RoadPhysicsSample,
+    RoadPhysicsState,
+    RoadPhysicsTransitionLimits,
+)
 from .sample_routes import ALPINE_CORNERS, ALPINE_JOURNEY, ALPINE_WEATHER
 from .weather import WeatherKeyframe, WeatherProfile
 
@@ -48,6 +54,10 @@ __all__ = [
     "SimulationState",
     "RouteSegment",
     "RouteProfile",
+    "RoadPhysicsSample",
+    "RoadPhysicsState",
+    "RoadPhysicsTransitionLimits",
+    "RoadPhysicsProfile",
     "WeatherKeyframe",
     "WeatherProfile",
     "ALPINE_JOURNEY",
