@@ -125,7 +125,7 @@ class ChangeClassifierTests(unittest.TestCase):
         result = cc.full_static_classification()
         self.assertTrue(result.python)
         self.assertTrue(result.cpp)
-        self.assertTrue(result.assets)
+        self.assertFalse(result.assets)
         self.assertTrue(result.ci)
         self.assertFalse(result.ue_code)
 
