@@ -1,28 +1,54 @@
-"""
-Stage 3G reference-environment material authoring. Idempotent.
+"""Stage 3G material authoring backed by the imported R1 source assets.
 
-Creates low-cost opaque materials under:
-/Game/Prototype/Environment/Stage3G/Materials
+The Stage 3G R1 importer creates stable project-owned texture paths first.
+This script then authors deterministic material pairs at the long-lived
+Stage 3G material paths consumed by AStage3PrototypeTerrainActor.
 
-The source actor falls back to the Stage 3F terrain material when these assets
-have not been authored yet, so the C++ branch can build before this script is
-run. The generated .uasset files must be committed through Git LFS after the
-home-PC proof.
+Foliage remains an explicit placeholder in R1. Real conifer import/alpha/LOD
+validation is a separate Stage 3G recovery tranche rather than being hidden in
+this ground/rock slice.
 """
 
 import sys
 import traceback
+
 import unreal
 
-PACKAGE = "/Game/Prototype/Environment/Stage3G/Materials"
 
-MATERIALS = [
-    ("Grass", (0.22, 0.36, 0.17), 0.95),
-    ("Forest", (0.055, 0.16, 0.07), 0.96),
-    ("Rock", (0.30, 0.31, 0.30), 0.92),
-    ("DistantRock", (0.32, 0.39, 0.43), 0.96),
-    ("Water", (0.035, 0.22, 0.30), 0.28),
-]
+PACKAGE = "/Game/Prototype/Environment/Stage3G/Materials"
+IMPORTED = "/Game/Prototype/Environment/Stage3G/Imported/Textures"
+
+TEXTURED = {
+    "Grass": {
+        "diffuse": IMPORTED + "/T_Stage3G_Meadow_BaseColor",
+        "normal": IMPORTED + "/T_Stage3G_Meadow_Normal",
+        "roughness": IMPORTED + "/T_Stage3G_Meadow_Roughness",
+        "tiling": 20.0,
+    },
+    "Forest": {
+        "diffuse": IMPORTED + "/T_Stage3G_ForestGround_BaseColor",
+        "normal": IMPORTED + "/T_Stage3G_ForestGround_Normal",
+        "roughness": IMPORTED + "/T_Stage3G_ForestGround_Roughness",
+        "tiling": 20.0,
+    },
+    "Rock": {
+        "diffuse": IMPORTED + "/T_Stage3G_Boulder_BaseColor",
+        "normal": IMPORTED + "/T_Stage3G_Boulder_Normal",
+        "roughness": IMPORTED + "/T_Stage3G_Boulder_Roughness",
+        "tiling": 3.0,
+    },
+    "DistantRock": {
+        "diffuse": IMPORTED + "/T_Stage3G_HighAlpine_BaseColor",
+        "normal": IMPORTED + "/T_Stage3G_HighAlpine_Normal",
+        "roughness": IMPORTED + "/T_Stage3G_HighAlpine_Roughness",
+        "tiling": 18.0,
+    },
+}
+
+SOLID = {
+    "Foliage": ((0.045, 0.13, 0.055), 0.96),
+    "Water": ((0.035, 0.22, 0.30), 0.28),
+}
 
 
 def log(message):
@@ -31,12 +57,14 @@ def log(message):
 
 def ensure_dir():
     if not unreal.EditorAssetLibrary.does_directory_exist(PACKAGE):
-        unreal.EditorAssetLibrary.make_directory(PACKAGE)
+        if not unreal.EditorAssetLibrary.make_directory(PACKAGE):
+            raise RuntimeError("failed to create {}".format(PACKAGE))
 
 
 def delete_if_exists(path):
     if unreal.EditorAssetLibrary.does_asset_exist(path):
-        unreal.EditorAssetLibrary.delete_asset(path)
+        if not unreal.EditorAssetLibrary.delete_asset(path):
+            raise RuntimeError("failed to delete {}".format(path))
 
 
 def save(asset):
@@ -45,47 +73,23 @@ def save(asset):
         raise RuntimeError("failed to save {}".format(path))
 
 
-def create_parent(name, rgb, roughness):
-    asset_tools = unreal.AssetToolsHelpers.get_asset_tools()
-    parent_name = "M_Stage3G_{}".format(name)
-    parent_path = "{}/{}".format(PACKAGE, parent_name)
-    delete_if_exists(parent_path)
+def load_required(path):
+    asset = unreal.EditorAssetLibrary.load_asset(path)
+    if not asset:
+        raise RuntimeError("required Stage 3G imported asset is missing: {}".format(path))
+    return asset
 
-    mat = asset_tools.create_asset(
-        parent_name, PACKAGE, unreal.Material, unreal.MaterialFactoryNew())
-    if not mat:
-        raise RuntimeError("failed to create {}".format(parent_name))
 
+def configure_material_base(mat):
     mat.set_editor_property("material_domain", unreal.MaterialDomain.MD_SURFACE)
     mat.set_editor_property(
-        "shading_model", unreal.MaterialShadingModel.MSM_DEFAULT_LIT)
+        "shading_model", unreal.MaterialShadingModel.MSM_DEFAULT_LIT
+    )
     mat.set_editor_property("two_sided", False)
     mat.set_editor_property("bUsedWithInstancedStaticMeshes", True)
 
-    color = unreal.MaterialEditingLibrary.create_material_expression(
-        mat, unreal.MaterialExpressionVectorParameter, -300, 0)
-    color.set_editor_property("parameter_name", "Color")
-    color.set_editor_property(
-        "default_value",
-        unreal.LinearColor(float(rgb[0]), float(rgb[1]), float(rgb[2]), 1.0))
-    color.set_editor_property("group", "Stage3G")
 
-    rough = unreal.MaterialEditingLibrary.create_material_expression(
-        mat, unreal.MaterialExpressionScalarParameter, -300, 160)
-    rough.set_editor_property("parameter_name", "Roughness")
-    rough.set_editor_property("default_value", float(roughness))
-    rough.set_editor_property("group", "Stage3G")
-
-    unreal.MaterialEditingLibrary.connect_material_property(
-        color, "", unreal.MaterialProperty.MP_BASE_COLOR)
-    unreal.MaterialEditingLibrary.connect_material_property(
-        rough, "", unreal.MaterialProperty.MP_ROUGHNESS)
-    unreal.MaterialEditingLibrary.recompile_material(mat)
-    save(mat)
-    return mat
-
-
-def create_instance(name, parent, rgb, roughness):
+def create_instance(name, parent):
     asset_tools = unreal.AssetToolsHelpers.get_asset_tools()
     instance_name = "MI_Stage3G_{}".format(name)
     instance_path = "{}/{}".format(PACKAGE, instance_name)
@@ -95,36 +99,138 @@ def create_instance(name, parent, rgb, roughness):
         instance_name,
         PACKAGE,
         unreal.MaterialInstanceConstant,
-        unreal.MaterialInstanceConstantFactoryNew())
+        unreal.MaterialInstanceConstantFactoryNew(),
+    )
     if not mi:
         raise RuntimeError("failed to create {}".format(instance_name))
 
     unreal.MaterialEditingLibrary.set_material_instance_parent(mi, parent)
-    unreal.MaterialEditingLibrary.set_material_instance_vector_parameter_value(
-        mi,
-        "Color",
-        unreal.LinearColor(float(rgb[0]), float(rgb[1]), float(rgb[2]), 1.0))
-    unreal.MaterialEditingLibrary.set_material_instance_scalar_parameter_value(
-        mi, "Roughness", float(roughness))
     unreal.MaterialEditingLibrary.update_material_instance(mi)
     save(mi)
+
+
+def create_texture_sample(mat, texture, x, y, coordinate):
+    sample = unreal.MaterialEditingLibrary.create_material_expression(
+        mat, unreal.MaterialExpressionTextureSample, x, y
+    )
+    sample.set_editor_property("texture", texture)
+    if coordinate is not None:
+        if not unreal.MaterialEditingLibrary.connect_material_expressions(
+            coordinate, "", sample, "Coordinates"
+        ):
+            raise RuntimeError("failed to connect Stage 3G texture coordinates")
+    return sample
+
+
+def create_textured_parent(name, spec):
+    asset_tools = unreal.AssetToolsHelpers.get_asset_tools()
+    parent_name = "M_Stage3G_{}".format(name)
+    parent_path = "{}/{}".format(PACKAGE, parent_name)
+    delete_if_exists(parent_path)
+
+    mat = asset_tools.create_asset(
+        parent_name, PACKAGE, unreal.Material, unreal.MaterialFactoryNew()
+    )
+    if not mat:
+        raise RuntimeError("failed to create {}".format(parent_name))
+    configure_material_base(mat)
+
+    diffuse = load_required(spec["diffuse"])
+    normal = load_required(spec["normal"])
+    roughness = load_required(spec["roughness"])
+
+    coordinate = unreal.MaterialEditingLibrary.create_material_expression(
+        mat, unreal.MaterialExpressionTextureCoordinate, -700, 80
+    )
+    coordinate.set_editor_property("u_tiling", float(spec["tiling"]))
+    coordinate.set_editor_property("v_tiling", float(spec["tiling"]))
+
+    diffuse_sample = create_texture_sample(mat, diffuse, -450, -120, coordinate)
+    normal_sample = create_texture_sample(mat, normal, -450, 60, coordinate)
+    roughness_sample = create_texture_sample(mat, roughness, -450, 240, coordinate)
+
+    if not unreal.MaterialEditingLibrary.connect_material_property(
+        diffuse_sample, "RGB", unreal.MaterialProperty.MP_BASE_COLOR
+    ):
+        raise RuntimeError("failed to connect {} base color".format(name))
+    if not unreal.MaterialEditingLibrary.connect_material_property(
+        normal_sample, "RGB", unreal.MaterialProperty.MP_NORMAL
+    ):
+        raise RuntimeError("failed to connect {} normal".format(name))
+    if not unreal.MaterialEditingLibrary.connect_material_property(
+        roughness_sample, "R", unreal.MaterialProperty.MP_ROUGHNESS
+    ):
+        raise RuntimeError("failed to connect {} roughness".format(name))
+
+    unreal.MaterialEditingLibrary.recompile_material(mat)
+    save(mat)
+    return mat
+
+
+def create_solid_parent(name, rgb, roughness):
+    asset_tools = unreal.AssetToolsHelpers.get_asset_tools()
+    parent_name = "M_Stage3G_{}".format(name)
+    parent_path = "{}/{}".format(PACKAGE, parent_name)
+    delete_if_exists(parent_path)
+
+    mat = asset_tools.create_asset(
+        parent_name, PACKAGE, unreal.Material, unreal.MaterialFactoryNew()
+    )
+    if not mat:
+        raise RuntimeError("failed to create {}".format(parent_name))
+    configure_material_base(mat)
+
+    color = unreal.MaterialEditingLibrary.create_material_expression(
+        mat, unreal.MaterialExpressionVectorParameter, -300, 0
+    )
+    color.set_editor_property("parameter_name", "Color")
+    color.set_editor_property(
+        "default_value",
+        unreal.LinearColor(float(rgb[0]), float(rgb[1]), float(rgb[2]), 1.0),
+    )
+    color.set_editor_property("group", "Stage3G")
+
+    rough = unreal.MaterialEditingLibrary.create_material_expression(
+        mat, unreal.MaterialExpressionScalarParameter, -300, 160
+    )
+    rough.set_editor_property("parameter_name", "Roughness")
+    rough.set_editor_property("default_value", float(roughness))
+    rough.set_editor_property("group", "Stage3G")
+
+    unreal.MaterialEditingLibrary.connect_material_property(
+        color, "", unreal.MaterialProperty.MP_BASE_COLOR
+    )
+    unreal.MaterialEditingLibrary.connect_material_property(
+        rough, "", unreal.MaterialProperty.MP_ROUGHNESS
+    )
+    unreal.MaterialEditingLibrary.recompile_material(mat)
+    save(mat)
+    return mat
 
 
 def main():
     try:
         ensure_dir()
 
-        # Delete instances before their parents so rerunning the authoring pass
-        # cannot leave a parent asset referenced by an old material instance.
-        for name, _, _ in MATERIALS:
+        names = list(TEXTURED.keys()) + list(SOLID.keys())
+        for name in names:
             delete_if_exists("{}/MI_Stage3G_{}".format(PACKAGE, name))
-        for name, _, _ in MATERIALS:
+        for name in names:
             delete_if_exists("{}/M_Stage3G_{}".format(PACKAGE, name))
 
-        for name, rgb, roughness in MATERIALS:
-            parent = create_parent(name, rgb, roughness)
-            create_instance(name, parent, rgb, roughness)
-        log("SUCCESS: authored {} Stage 3G material pairs".format(len(MATERIALS)))
+        for name, spec in TEXTURED.items():
+            parent = create_textured_parent(name, spec)
+            create_instance(name, parent)
+
+        for name, (rgb, roughness) in SOLID.items():
+            parent = create_solid_parent(name, rgb, roughness)
+            create_instance(name, parent)
+
+        log(
+            "SUCCESS: authored {} textured + {} solid Stage 3G material pairs".format(
+                len(TEXTURED), len(SOLID)
+            )
+        )
     except Exception as exc:
         unreal.log_error("[Stage3G] FAILURE: {}".format(exc))
         unreal.log_error(traceback.format_exc())
