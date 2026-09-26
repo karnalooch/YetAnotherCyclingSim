@@ -4,9 +4,9 @@
 The cleanup is deliberately conservative:
 - default branch is never deleted;
 - a branch with an open same-repository PR is never deleted;
-- a branch is considered only if it has at least one merged same-repository PR;
-- exact merged PR heads are safe to delete (covers squash merges);
-- otherwise the current branch tip must already be contained in the default branch;
+- merged PR heads are safe to delete when the current tip matches or is contained in default;
+- a closed-unmerged PR branch is deletable only with an explicit delete-head marker;
+- the explicit marker only applies when the current branch tip still matches that PR head;
 - reused branches with newer/unmerged work are preserved.
 """
 
@@ -23,6 +23,7 @@ from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 API_ROOT = "https://api.github.com"
+EXPLICIT_DELETE_MARKER = "<!-- yacs-branch-hygiene:delete-head-safe -->"
 
 
 class CleanupError(RuntimeError):
@@ -162,6 +163,24 @@ def open_heads(
     }
 
 
+def explicit_delete_heads(
+    pulls: list[dict[str, Any]],
+    repository: str,
+) -> dict[str, set[str]]:
+    result: dict[str, set[str]] = defaultdict(set)
+    for pr in pulls:
+        if pr.get("merged_at") or not same_repository_head(pr, repository):
+            continue
+        body = str(pr.get("body") or "")
+        if EXPLICIT_DELETE_MARKER not in body:
+            continue
+        head = pr["head"]
+        sha = head.get("sha")
+        if sha:
+            result[str(head["ref"])].add(str(sha))
+    return dict(result)
+
+
 def open_base_branches(pulls: list[dict[str, Any]]) -> set[str]:
     result: set[str] = set()
     for pr in pulls:
@@ -183,6 +202,7 @@ def should_delete(
     open_base_branch_names: set[str],
     merged_head_shas: set[str],
     tip_is_in_default: bool,
+    explicit_delete_head_shas: set[str] | None = None,
 ) -> tuple[bool, str]:
     if branch_name == default_branch:
         return False, "default branch"
@@ -190,6 +210,8 @@ def should_delete(
         return False, "open pull request"
     if branch_name in open_base_branch_names:
         return False, "base of open pull request"
+    if branch_sha in (explicit_delete_head_shas or set()):
+        return True, "current tip explicitly marked safe to delete by closed PR"
     if not merged_head_shas:
         return False, "no merged pull request proves this branch is stale"
     if branch_sha in merged_head_shas:
@@ -235,6 +257,7 @@ def run_cleanup(
     open_branch_names = open_heads(open_prs, api.repository)
     open_base_branch_names = open_base_branches(open_prs)
     merged = merged_heads(closed_prs, api.repository)
+    explicit_delete = explicit_delete_heads(closed_prs, api.repository)
 
     deleted: list[str] = []
     kept: list[str] = []
@@ -265,6 +288,7 @@ def run_cleanup(
             open_base_branch_names=open_base_branch_names,
             merged_head_shas=merged_shas,
             tip_is_in_default=contained,
+            explicit_delete_head_shas=explicit_delete.get(branch_name, set()),
         )
 
         if not delete:
