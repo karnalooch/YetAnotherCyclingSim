@@ -1,7 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS
 
 #include "Misc/AutomationTest.h"
-
+#include "Math/UnrealMathUtility.h"\n
 #include "Cycling/CornerBrakingStep.h"
 #include "Cycling/FixedStepRunner.h"
 #include "Cycling/SimulationStepContext.h"
