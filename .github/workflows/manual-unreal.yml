@@ -106,6 +106,42 @@ jobs:
           Write-Host "Trusted target: $targetBranch @ $resolvedSha"
           Write-Host "Mode: $env:MODE"
 
+      - name: Normalize stale LFS payloads before code-only checkout
+        if: ${{ inputs.mode == 'canary' || inputs.mode == 'intentional-red' }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          & git rev-parse --is-inside-work-tree *> $null
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host 'No existing Git worktree to normalize; fresh checkout will create one.'
+            exit 0
+          }
+
+          & git lfs version | Out-Null
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Git LFS is required to normalize the persistent self-hosted workspace.'
+          }
+
+          $lfsOutput = @(& git lfs ls-files --name-only)
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Could not enumerate Git LFS tracked paths before code-only checkout.'
+          }
+
+          $removed = 0
+          foreach ($rawPath in $lfsOutput) {
+            $path = $rawPath.Trim()
+            if (-not $path) {
+              continue
+            }
+            if (Test-Path -LiteralPath $path -PathType Leaf) {
+              Remove-Item -LiteralPath $path -Force
+              $removed += 1
+            }
+          }
+
+          Write-Host "Removed $removed LFS working-tree files before code-only checkout; committed pointer blobs will be restored with smudging disabled."
+
       - name: Checkout exact trusted revision without LFS payloads
         if: ${{ inputs.mode == 'canary' || inputs.mode == 'intentional-red' }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

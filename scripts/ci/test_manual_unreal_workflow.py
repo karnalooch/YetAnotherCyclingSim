@@ -50,6 +50,24 @@ class ManualUnrealWorkflowContractTests(unittest.TestCase):
         self.assertIn("lfs: false", self.workflow)
         self.assertIn("Test-YacsCodeOnlyCheckout.ps1", self.workflow)
 
+    def test_code_only_modes_normalize_persistent_lfs_before_checkout(self):
+        normalize = self.workflow.index(
+            "Normalize stale LFS payloads before code-only checkout"
+        )
+        checkout = self.workflow.index(
+            "Checkout exact trusted revision without LFS payloads"
+        )
+        guard = self.workflow.index("Test-YacsCodeOnlyCheckout.ps1")
+        self.assertLess(normalize, checkout)
+        self.assertLess(checkout, guard)
+        self.assertIn(
+            "inputs.mode == 'canary' || inputs.mode == 'intentional-red'",
+            self.workflow,
+        )
+        self.assertIn("git lfs ls-files --name-only", self.workflow)
+        self.assertIn("Remove-Item -LiteralPath $path -Force", self.workflow)
+        self.assertNotIn("git lfs pull", self.workflow)
+
     def test_stage3g_modes_use_full_lfs(self):
         self.assertIn(
             "inputs.mode == 'stage3g-author' || inputs.mode == 'stage3g-proof'",
