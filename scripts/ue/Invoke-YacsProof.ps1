@@ -70,6 +70,7 @@ param(
     [string] $ProjectPath,
     [string] $ArtifactRoot,
     [switch] $SkipBuild,
+    [switch] $ConservativeBuild,
     [string] $TestFilter = 'CyclingPhysics+CyclingSession+CyclingInput+CyclingRuntime+CyclingDiagnostics',
     [string] $ExpectedBranch = 'test/stage2-integration-performance-proof',
     [string] $ExpectedHead   = 'a47d6e54ce2f4d72d774bcecc7c971b674b2ee53'
@@ -177,6 +178,23 @@ Write-YacsPhaseStatus -Phase 'preflight' -Status 'passed'
 Write-Host "Preflight OK." -ForegroundColor Green
 
 # --- (2) Build ------------------------------------------------------------
+
+if ($ConservativeBuild) {
+    $UbtConfigDir = Join-Path -Path $RepoRoot -ChildPath 'Saved/UnrealBuildTool'
+    New-Item -ItemType Directory -Path $UbtConfigDir -Force | Out-Null
+    $UbtConfigPath = Join-Path -Path $UbtConfigDir -ChildPath 'BuildConfiguration.xml'
+    @'
+<?xml version="1.0" encoding="utf-8" ?>
+<Configuration xmlns="https://www.unrealengine.com/BuildConfiguration">
+  <BuildConfiguration>
+    <bAllowUBAExecutor>false</bAllowUBAExecutor>
+    <bAllowUBALocalExecutor>false</bAllowUBALocalExecutor>
+    <MaxParallelActions>2</MaxParallelActions>
+  </BuildConfiguration>
+</Configuration>
+'@ | Set-Content -LiteralPath $UbtConfigPath -Encoding UTF8
+    Write-Host ("CI conservative UBT profile: UBA disabled; MaxParallelActions=2; config={0}" -f $UbtConfigPath) -ForegroundColor Yellow
+}
 
 if (-not $SkipBuild) {
     Write-Host ""
