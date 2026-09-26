@@ -380,10 +380,11 @@ Wprowadzić autorską mechanikę oceniającą odpuszczenie i ponowne rozpoczęci
 5. **4C-A — PR #172:** czysty shared grip kernel jako unit friction circle: znormalizowane żądanie longitudinal + lateral trafia do jednego budżetu; bez ukrytego braking modelu i bez consequence policy.
 6. **4C-B1 — #173:** jawny `brake_ratio ∈ [0,1]` w rider input/controller/session; default `0` i brak wpływu na równanie ruchu do czasu 4C-B2.
 7. **4C-B2:** demand bridge per fixed-step: `brake_ratio -> longitudinal_usage`, a `speed² / effective_radius / lateral_acceleration_limit -> lateral_usage`; oba trafiają do 4C-A. Bez wpływu hamulca na prędkość.
-8. **4C-B3:** rzeczywista siła hamowania w fixed-step, z zachowaniem zero-brake regression; aero/grawitacja/rolling resistance nie mogą udawać tyre braking demand.
-9. **4C-C:** technique + consequences — scoring, timing mocy/kadencji, utrata prędkości, wide line i controlled slip; bez upadków w MVP.
-10. **4D:** guidance + assists — linia przejazdu, markery entry/apex/exit, grip warning i poziomy asysty jako presentation-only; wymaga wspólnego integration gate z World lane.
-11. **4E:** deterministyczny full-route corner proof dla reprezentatywnych flat/banked/off-camber zakrętów oraz suchej/mokrej nawierzchni.
+8. **4C-B3a:** tyre-limited brake-force resolver: `μ_eff · static normal load`, ograniczony remaining longitudinal capacity z 4C-A; bez arbitralnego max-brake constant.
+9. **4C-B3b:** zastosowanie wyliczonej siły hamowania w fixed-step energy/force integration z exact zero-brake regression.
+10. **4C-C:** technique + consequences — scoring, timing mocy/kadencji, utrata prędkości, wide line i controlled slip; bez upadków w MVP.
+11. **4D:** guidance + assists — linia przejazdu, markery entry/apex/exit, grip warning i poziomy asysty jako presentation-only; wymaga wspólnego integration gate z World lane.
+12. **4E:** deterministyczny full-route corner proof dla reprezentatywnych flat/banked/off-camber zakrętów oraz suchej/mokrej nawierzchni.
 
 ## Zadania
 
