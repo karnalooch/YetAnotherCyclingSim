@@ -8,11 +8,32 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 PROJECT = ROOT / "YetAnotherCyclingSim.uproject"
 TARGET = ROOT / "Source" / "YetAnotherCyclingSimEditor.Target.cs"
-BUILD = ROOT / "Source" / "YetAnotherCyclingSimEditor" / "YetAnotherCyclingSimEditor.Build.cs"
-HEADER = ROOT / "Source" / "YetAnotherCyclingSimEditor" / "Public" / "PCG" / "Stage3GRouteExclusionSettings.h"
-CPP = ROOT / "Source" / "YetAnotherCyclingSimEditor" / "Private" / "PCG" / "Stage3GRouteExclusionSettings.cpp"
+BUILD = (
+    ROOT
+    / "Source"
+    / "YetAnotherCyclingSimEditor"
+    / "YetAnotherCyclingSimEditor.Build.cs"
+)
+HEADER = (
+    ROOT
+    / "Source"
+    / "YetAnotherCyclingSimEditor"
+    / "Public"
+    / "PCG"
+    / "Stage3GRouteExclusionSettings.h"
+)
+CPP = (
+    ROOT
+    / "Source"
+    / "YetAnotherCyclingSimEditor"
+    / "Private"
+    / "PCG"
+    / "Stage3GRouteExclusionSettings.cpp"
+)
 AUTHOR = ROOT / "scripts" / "ue" / "stage3g_author_pcg_route_exclusion.py"
-WRAPPER = ROOT / "scripts" / "ue" / "Invoke-YacsStage3GR2PCGRouteExclusion.ps1"
+WRAPPER = (
+    ROOT / "scripts" / "ue" / "Invoke-YacsStage3GR2PCGRouteExclusion.ps1"
+)
 
 
 class Stage3GR2PCGRouteExclusionContractTests(unittest.TestCase):
@@ -24,7 +45,9 @@ class Stage3GR2PCGRouteExclusionContractTests(unittest.TestCase):
 
         target = TARGET.read_text(encoding="utf-8")
         build = BUILD.read_text(encoding="utf-8")
-        self.assertIn('ExtraModuleNames.Add("YetAnotherCyclingSimEditor")', target)
+        self.assertIn(
+            'ExtraModuleNames.Add("YetAnotherCyclingSimEditor")', target
+        )
         self.assertIn('"PCG"', build)
         self.assertIn('"YetAnotherCyclingSim"', build)
 
@@ -35,7 +58,12 @@ class Stage3GR2PCGRouteExclusionContractTests(unittest.TestCase):
         self.assertIn("TryBuildAlpineJourneyRouteGeometry", cpp)
         self.assertIn("TryEvaluateRouteExclusion", cpp)
         self.assertIn("InPoint.Transform.GetLocation() / 100.0", cpp)
-        for forbidden in ("RoadTiles", "Landscape", "ActorLocation", "GetActorTransform"):
+        for forbidden in (
+            "RoadTiles",
+            "Landscape",
+            "ActorLocation",
+            "GetActorTransform",
+        ):
             self.assertNotIn(forbidden, cpp)
 
     def test_authoring_asset_path_and_proof_are_fixed(self):
