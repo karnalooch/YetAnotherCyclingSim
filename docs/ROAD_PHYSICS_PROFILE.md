@@ -150,7 +150,17 @@ Stage 4C-A deliberately does **not** invent braking controls, brake-force split,
 
 Stage 4C-B1 adds the explicit control-side contract `brake_ratio ∈ [0, 1]`: `0` means released and `1` means full requested braking. The default is `0` and, during B1, the value is validated/plumbed through rider input, controller and session but intentionally does not alter the equation of motion. This preserves exact pre-braking physics while the force model is reviewed separately.
 
-Stage 4C-B2 maps the explicit brake command to real fixed-step longitudinal tyre demand and combines it with Stage 4B lateral demand through the 4C-A budget. Aerodynamic drag, gravity and rolling resistance are external/resistance forces and must not be misclassified as tyre-braking grip usage.
+Stage 4C-B2 is the deterministic demand bridge. The explicit normalized brake command is the longitudinal usage request, while lateral usage is derived from the actual fixed-step speed and Stage 4B-C corner limit:
+
+```text
+lateral_acceleration_demand = speed^2 / effective_radius
+lateral_usage = lateral_acceleration_demand / lateral_acceleration_limit
+longitudinal_usage = brake_ratio
+```
+
+These values feed the 4C-A shared circle. This makes shared-grip accounting available without inventing a brake-force constant.
+
+Stage 4C-B3 separately applies real braking force to forward motion. Zero brake must remain exact regression parity with the pre-braking simulation. Aerodynamic drag, gravity and rolling resistance are external/resistance forces and must not be misclassified as tyre-braking grip usage.
 
 The kernel is stateless rather than one permanent global grip scalar. MVP may evaluate it for a simplified whole-bike model; later front/rear tyre state can evaluate the same contract independently with different capacities and demands.
 
