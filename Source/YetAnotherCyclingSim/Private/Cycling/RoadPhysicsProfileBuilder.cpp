@@ -233,7 +233,8 @@ namespace CyclingRoadPhysics
 			Definition.HorizontalCurvaturePerM = HorizontalCurvaturePerM;
 			Definition.VerticalCurvaturePerM = VerticalCurvaturePerM;
 			Definition.RoadWidthM = Settings.RoadWidthM;
-			Definition.BankAngleRad = Settings.BankAngleRad;
+			Definition.LeftCrossSlopeAngleRad = Settings.LeftCrossSlopeAngleRad;
+			Definition.RightCrossSlopeAngleRad = Settings.RightCrossSlopeAngleRad;
 			Definition.SurfaceId = Settings.SurfaceId;
 			Definition.Wetness = Settings.Wetness;
 			Definition.Roughness = Settings.Roughness;
