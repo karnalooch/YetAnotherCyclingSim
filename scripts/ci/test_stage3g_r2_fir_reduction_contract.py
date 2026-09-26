@@ -39,6 +39,14 @@ class Stage3GR2FirReductionContractTests(unittest.TestCase):
         self.assertIn("YACS_STAGE3G_REDUCTION_SOURCE_MESH", source)
         self.assertIn("import_selected_variant", source)
 
+    def test_reduction_uses_isolated_zen_ddc(self):
+        wrapper = (
+            ROOT / "scripts" / "ue" / "Invoke-YacsStage3GR2FirReductionProfile.ps1"
+        ).read_text(encoding="utf-8")
+        self.assertIn("-ddc=noshared", wrapper)
+        self.assertIn("-ZenDataPath=", wrapper)
+        self.assertIn("$ZenDataPath", wrapper)
+
     def test_fallback_does_not_change_profile_definitions(self):
         source = SCRIPT.read_text(encoding="utf-8")
         self.assertIn('"conservative": [', source)

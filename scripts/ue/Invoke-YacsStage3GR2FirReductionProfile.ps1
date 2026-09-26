@@ -65,6 +65,8 @@ $ReductionScript = Join-Path -Path $RepoRoot -ChildPath 'scripts/ue/stage3g_prof
 $AssetCache = Join-Path -Path $RepoRoot -ChildPath 'ExternalAssets/Stage3G/PolyHaven'
 $ProofJson = Join-Path -Path $ArtifactRoot -ChildPath ($AssetId + '_reduction_profile.json')
 $ProfileLog = Join-Path -Path $ArtifactRoot -ChildPath ($AssetId + '_reduction_profile.log')
+$ZenDataPath = Join-Path -Path $ArtifactRoot -ChildPath 'ZenData'
+New-Item -ItemType Directory -Path $ZenDataPath -Force | Out-Null
 
 Write-Host ("[1/2] Downloading curated {0} source..." -f $AssetId) -ForegroundColor Cyan
 $DownloadArgs = @(
@@ -100,6 +102,8 @@ try {
         '-Unattended'
         '-NoPause'
         '-NullRHI'
+        '-ddc=noshared'
+        ('-ZenDataPath="' + $ZenDataPath + '"')
         '-NoSplash'
         '-NoP4'
         '-log'
