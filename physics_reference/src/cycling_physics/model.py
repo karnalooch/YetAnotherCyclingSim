@@ -120,9 +120,10 @@ class RiderInput:
     """Rider control input for one simulation step.
 
     Power and cadence are finite and non-negative. brake_ratio is a normalized
-    rider braking command in [0, 1]. Stage 4C-B1 establishes the input
-    contract only; step_simulation intentionally ignores brake_ratio until
-    the follow-up fixed-step braking force integration.
+    rider braking command in [0, 1]. The legacy step_simulation entry point
+    preserves pre-braking behavior; Stage 4C-B3c resolves brake_ratio through
+    step_simulation_with_corner_braking before calling the explicit-force
+    integrator.
     """
 
     power_w: float
