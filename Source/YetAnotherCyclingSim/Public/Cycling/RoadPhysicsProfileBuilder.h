@@ -17,7 +17,8 @@ namespace CyclingRoadPhysics
 		double GradeHalfWindowM = 0.0;
 		double CurvatureHalfWindowM = 0.0;
 		double RoadWidthM = 0.0;
-		double BankAngleRad = 0.0;
+		double LeftCrossSlopeAngleRad = 0.0;
+		double RightCrossSlopeAngleRad = 0.0;
 		FString SurfaceId;
 		double Wetness = 0.0;
 		double Roughness = 0.0;
@@ -35,7 +36,7 @@ namespace CyclingRoadPhysics
 	//
 	// Supplied explicitly by route metadata/settings:
 	// - road width;
-	// - banking / cross-slope;
+	// - left/right banking / cross-slope;
 	// - surface id;
 	// - baseline wetness;
 	// - roughness.
