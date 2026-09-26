@@ -149,12 +149,18 @@ jobs:
           TARGET_SHA: ${{ steps.trust.outputs.sha }}
         run: |
           $ErrorActionPreference = 'Stop'
+          $visualArgs = @{
+            ExpectedBranch = 'HEAD'
+            ExpectedHead = $env:TARGET_SHA
+            ArtifactRoot = 'Saved/RuntimeProof/CI/AssetFull/Visual'
+          }
           if ('${{ inputs.mode }}' -eq 'visual') {
-            ./scripts/ue/Invoke-YacsStage3VisualEnvironmentProof.ps1               -ExpectedBranch HEAD               -ExpectedHead $env:TARGET_SHA               -ArtifactRoot 'Saved/RuntimeProof/CI/AssetFull/Visual'               -SkipBuild:$false
+            $visualArgs['SkipBuild'] = $false
           }
           else {
-            ./scripts/ue/Invoke-YacsStage3VisualEnvironmentProof.ps1               -ExpectedBranch HEAD               -ExpectedHead $env:TARGET_SHA               -ArtifactRoot 'Saved/RuntimeProof/CI/AssetFull/Visual'               -SkipBuild
+            $visualArgs['SkipBuild'] = $true
           }
+          ./scripts/ue/Invoke-YacsStage3VisualEnvironmentProof.ps1 @visualArgs
 
       - name: Upload concise asset/full proof
         if: ${{ always() }}
