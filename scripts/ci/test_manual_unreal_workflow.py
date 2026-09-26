@@ -30,7 +30,9 @@ class ManualUnrealWorkflowContractTests(unittest.TestCase):
             "inputs.mode == 'canary' || inputs.mode == 'intentional-red'",
             self.workflow,
         )
-        self.assertIn("Checkout exact trusted revision without LFS payloads", self.workflow)
+        self.assertIn(
+            "Checkout exact trusted revision without LFS payloads", self.workflow
+        )
         self.assertIn('GIT_LFS_SKIP_SMUDGE: "1"', self.workflow)
         self.assertIn("lfs: false", self.workflow)
         self.assertIn("Test-YacsCodeOnlyCheckout.ps1", self.workflow)
