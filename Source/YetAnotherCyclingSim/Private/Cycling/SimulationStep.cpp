@@ -144,6 +144,7 @@ namespace CyclingSimulation
 			InputState.DistanceM + DistanceDeltaM;
 		CandidateState.ElapsedTimeS =
 			InputState.ElapsedTimeS + DtS;
+		CandidateState.LateralPositionM = InputState.LateralPositionM;
 
 		if (!CandidateState.Validate(OutError))
 		{
