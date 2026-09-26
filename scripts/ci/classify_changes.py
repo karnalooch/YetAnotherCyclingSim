@@ -275,7 +275,9 @@ def main(argv: list[str] | None = None) -> int:
             head = args.head or "PATHS_FILE"
         else:
             if not args.base or not args.head:
-                raise SystemExit("--base and --head are required unless --all-static/--paths-file is used")
+                raise SystemExit(
+                    "--base and --head are required unless --all-static/--paths-file is used"
+                )
             base = args.base
             head = args.head
             paths = git_changed_paths(base, head)
