@@ -53,6 +53,11 @@ namespace Stage3PrototypeTerrainInternal
 	constexpr double MountainPropSpacingM = 250.0;
 	constexpr double MountainPropLateralM = 42.0;
 
+	constexpr double RockPropFirstM = 6350.0;
+	constexpr double RockPropLastExclusiveM = 9950.0;
+	constexpr double RockPropSpacingM = 180.0;
+	constexpr double RockPropBaseLateralM = 15.0;
+
 	// Stage 3G: low-cost, deterministic reference-environment layers.
 	constexpr double ValleyRidgeFirstM = 300.0;
 	constexpr double ValleyRidgeLastExclusiveM = 3700.0;
@@ -179,12 +184,16 @@ const TCHAR* AStage3PrototypeTerrainActor::Stage3GGrassMaterialPath =
 	TEXT("/Game/Prototype/Environment/Stage3G/Materials/MI_Stage3G_Grass.MI_Stage3G_Grass");
 const TCHAR* AStage3PrototypeTerrainActor::Stage3GForestMaterialPath =
 	TEXT("/Game/Prototype/Environment/Stage3G/Materials/MI_Stage3G_Forest.MI_Stage3G_Forest");
+const TCHAR* AStage3PrototypeTerrainActor::Stage3GFoliageMaterialPath =
+	TEXT("/Game/Prototype/Environment/Stage3G/Materials/MI_Stage3G_Foliage.MI_Stage3G_Foliage");
 const TCHAR* AStage3PrototypeTerrainActor::Stage3GRockMaterialPath =
 	TEXT("/Game/Prototype/Environment/Stage3G/Materials/MI_Stage3G_Rock.MI_Stage3G_Rock");
 const TCHAR* AStage3PrototypeTerrainActor::Stage3GDistantRockMaterialPath =
 	TEXT("/Game/Prototype/Environment/Stage3G/Materials/MI_Stage3G_DistantRock.MI_Stage3G_DistantRock");
 const TCHAR* AStage3PrototypeTerrainActor::Stage3GWaterMaterialPath =
 	TEXT("/Game/Prototype/Environment/Stage3G/Materials/MI_Stage3G_Water.MI_Stage3G_Water");
+const TCHAR* AStage3PrototypeTerrainActor::Stage3GBoulderMeshPath =
+	TEXT("/Game/Prototype/Environment/Stage3G/Imported/Meshes/SM_Stage3G_Boulder.SM_Stage3G_Boulder");
 
 AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 {
@@ -203,6 +212,12 @@ AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 	TerrainTiles = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("TerrainTiles"));
 	TerrainTiles->SetupAttachment(SceneRoot);
 
+	ForestTerrainTiles = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("ForestTerrainTiles"));
+	ForestTerrainTiles->SetupAttachment(SceneRoot);
+
+	HighAlpineTerrainTiles = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("HighAlpineTerrainTiles"));
+	HighAlpineTerrainTiles->SetupAttachment(SceneRoot);
+
 	ForestProps = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("ForestProps"));
 	ForestProps->SetupAttachment(SceneRoot);
 
@@ -217,6 +232,9 @@ AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 
 	DistantMountainProps = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("DistantMountainProps"));
 	DistantMountainProps->SetupAttachment(SceneRoot);
+
+	RockProps = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("RockProps"));
+	RockProps->SetupAttachment(SceneRoot);
 
 	WaterTiles = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("WaterTiles"));
 	WaterTiles->SetupAttachment(SceneRoot);
@@ -240,6 +258,9 @@ AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 		RoadTiles->SetStaticMesh(CubeMesh.Object);
 		RoadEdgeLines->SetStaticMesh(CubeMesh.Object);
 		TerrainTiles->SetStaticMesh(CubeMesh.Object);
+		ForestTerrainTiles->SetStaticMesh(CubeMesh.Object);
+		HighAlpineTerrainTiles->SetStaticMesh(CubeMesh.Object);
+		RockProps->SetStaticMesh(CubeMesh.Object);
 		WaterTiles->SetStaticMesh(CubeMesh.Object);
 	}
 	if (CylinderMesh.Succeeded())
@@ -278,6 +299,8 @@ AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 	if (TerrainMat.Succeeded())
 	{
 		TerrainTiles->SetMaterial(0, TerrainMat.Object);
+		ForestTerrainTiles->SetMaterial(0, TerrainMat.Object);
+		HighAlpineTerrainTiles->SetMaterial(0, TerrainMat.Object);
 	}
 	else
 	{
@@ -289,7 +312,14 @@ AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 		if (WorldGrid.Succeeded())
 		{
 			TerrainTiles->SetMaterial(0, WorldGrid.Object);
+			ForestTerrainTiles->SetMaterial(0, WorldGrid.Object);
+			HighAlpineTerrainTiles->SetMaterial(0, WorldGrid.Object);
 		}
+	}
+
+	if (UStaticMesh* BoulderMesh = LoadObject<UStaticMesh>(nullptr, Stage3GBoulderMeshPath))
+	{
+		RockProps->SetStaticMesh(BoulderMesh);
 	}
 
 	UMaterialInterface* TerrainFallback = TerrainTiles->GetMaterial(0);
@@ -306,9 +336,14 @@ AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 			}
 		};
 
+	ApplyOptionalStage3GMaterial(TerrainTiles, Stage3GGrassMaterialPath);
+	ApplyOptionalStage3GMaterial(ForestTerrainTiles, Stage3GForestMaterialPath);
+	ApplyOptionalStage3GMaterial(HighAlpineTerrainTiles, Stage3GDistantRockMaterialPath);
 	ApplyOptionalStage3GMaterial(ValleyRidgeProps, Stage3GGrassMaterialPath);
-	ApplyOptionalStage3GMaterial(ForestCanopyProps, Stage3GForestMaterialPath);
+	ApplyOptionalStage3GMaterial(ForestProps, Stage3GFoliageMaterialPath);
+	ApplyOptionalStage3GMaterial(ForestCanopyProps, Stage3GFoliageMaterialPath);
 	ApplyOptionalStage3GMaterial(MountainProps, Stage3GRockMaterialPath);
+	ApplyOptionalStage3GMaterial(RockProps, Stage3GRockMaterialPath);
 	ApplyOptionalStage3GMaterial(DistantMountainProps, Stage3GDistantRockMaterialPath);
 	ApplyOptionalStage3GMaterial(WaterTiles, Stage3GWaterMaterialPath);
 
@@ -316,11 +351,14 @@ AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 		RoadTiles,
 		RoadEdgeLines,
 		TerrainTiles,
+		ForestTerrainTiles,
+		HighAlpineTerrainTiles,
 		ForestProps,
 		MountainProps,
 		ValleyRidgeProps,
 		ForestCanopyProps,
 		DistantMountainProps,
+		RockProps,
 		WaterTiles,
 	};
 	for (UHierarchicalInstancedStaticMeshComponent* Component : Components)
