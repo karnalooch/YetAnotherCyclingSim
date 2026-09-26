@@ -10,6 +10,7 @@ PACKER = ROOT / "scripts" / "ci" / "Prepare-YacsUe58Seed.ps1"
 RESTORE = ROOT / "scripts" / "ci" / "Restore-YacsUe58Seed.ps1"
 VALIDATOR = ROOT / "scripts" / "ci" / "Test-YacsUe58SeedPayload.ps1"
 CODE_ONLY = ROOT / "scripts" / "ci" / "Test-YacsCodeOnlyCheckout.ps1"
+UNREAL_CI = ROOT / "scripts" / "ci" / "Invoke-YacsUnrealCi.ps1"
 PREFLIGHT = ROOT / "scripts" / "ue" / "Preflight-YacsProof.ps1"
 
 
@@ -21,6 +22,7 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
         cls.restore = RESTORE.read_text(encoding="utf-8")
         cls.validator = VALIDATOR.read_text(encoding="utf-8")
         cls.code_only = CODE_ONLY.read_text(encoding="utf-8")
+        cls.unreal_ci = UNREAL_CI.read_text(encoding="utf-8")
         cls.preflight = PREFLIGHT.read_text(encoding="utf-8")
 
     def test_expensive_phase_b_paths_are_disabled_by_default(self):
@@ -52,6 +54,25 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
         self.assertIn("resource_class: windows.medium", self.config)
         self.assertIn("Invoke-YacsUnrealCi.ps1", self.config)
         self.assertIn("-ExpectedHead $env:CIRCLE_SHA1", self.config)
+
+    def test_hosted_unreal_failure_dumps_actionable_log_context(self):
+        for token in (
+            "Write-YacsUnrealFailureContext",
+            "failure_context.txt",
+            "Proof/build_editor.log",
+            "Proof/automation_run.log",
+            "Proof/summary.txt",
+            "Get-Content -LiteralPath $Candidate.Path -Tail",
+            "artifact inventory",
+            "YACS UNREAL CI FAILURE CONTEXT",
+            "catch {",
+        ):
+            self.assertIn(token, self.unreal_ci)
+
+        self.assertIn(
+            "path: Saved/RuntimeProof/CI/Unreal",
+            self.config,
+        )
 
     def test_hosted_canary_allows_silent_unreal_build_and_automation(self):
         canary_start = self.config.index("  ue-hosted-canary:")
