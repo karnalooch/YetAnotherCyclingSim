@@ -1,7 +1,7 @@
-"""Profile transient LOD reduction chains for the Stage 3G R2 Fir Tree 01 source.
+"""Profile transient LOD reduction chains for a Stage 3G R2 conifer source.
 
 This is a measurement gate, not persistent asset authoring. The selected
-fir_tree_01_c_LOD0 mesh is imported into transient editor paths, several LOD
+source mesh is imported into transient editor paths, several LOD
 chains are generated with the UE 5.8 Static Mesh Editor Subsystem when it is
 available. UnrealEditor-Cmd Python commandlets may not instantiate that editor
 subsystem, so the script deliberately falls back to EditorStaticMeshLibrary
@@ -25,8 +25,10 @@ from typing import Any
 import unreal
 
 
-ASSET_ID = "fir_tree_01"
-SOURCE_MESH_NAME = "fir_tree_01_c_LOD0"
+ASSET_ID = os.environ.get("YACS_STAGE3G_REDUCTION_ASSET_ID", "fir_tree_01").strip()
+SOURCE_MESH_NAME = os.environ.get(
+    "YACS_STAGE3G_REDUCTION_SOURCE_MESH", "fir_tree_01_c_LOD0"
+).strip()
 PROFILE_ROOT = "/Game/Transient/YACS/Stage3GR2ReductionProfile"
 
 PROFILES: dict[str, list[tuple[float, float]]] = {
@@ -72,7 +74,7 @@ def source_path(cache_root: Path, row: dict[str, Any]) -> Path:
     return path
 
 
-def import_variant_c(source: Path, profile_name: str) -> unreal.StaticMesh:
+def import_selected_variant(source: Path, profile_name: str) -> unreal.StaticMesh:
     profile_root = "{}/{}".format(PROFILE_ROOT, profile_name)
     staging = "{}/Import".format(profile_root)
     isolated = "{}/Selected".format(profile_root)
@@ -158,7 +160,7 @@ def import_variant_c(source: Path, profile_name: str) -> unreal.StaticMesh:
 
     reloaded = unreal.EditorAssetLibrary.load_asset(isolated_asset)
     if not reloaded or not isinstance(reloaded, unreal.StaticMesh):
-        fail("isolated Fir Tree C mesh cannot be reloaded after staging cleanup")
+        fail("isolated selected mesh cannot be reloaded after staging cleanup")
 
     log(
         "isolated {} at {} before LOD reduction".format(
@@ -282,8 +284,9 @@ def main() -> None:
     rows.sort(key=lambda row: str(row.get("relative_path", "")))
     if len(rows) != 1:
         fail(
-            "expected exactly one fir_tree_01 FBX source, found {}".format(
-                len(rows)
+            "expected exactly one {} FBX source, found {}".format(
+                ASSET_ID,
+                len(rows),
             )
         )
 
@@ -296,7 +299,7 @@ def main() -> None:
 
     try:
         for profile_name, settings in PROFILES.items():
-            mesh = import_variant_c(source, profile_name)
+            mesh = import_selected_variant(source, profile_name)
             before = lod_metrics(mesh)
             if len(before) != 1:
                 fail(

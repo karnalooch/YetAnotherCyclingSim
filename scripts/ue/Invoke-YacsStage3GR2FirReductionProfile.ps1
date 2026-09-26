@@ -7,6 +7,8 @@ param(
     [string] $RepoRoot = (Resolve-Path -LiteralPath (Join-Path -Path $PSScriptRoot -ChildPath '../..')).Path,
     [string] $ProjectPath,
     [string] $ArtifactRoot,
+    [string] $AssetId = 'fir_tree_01',
+    [string] $SourceMeshName = 'fir_tree_01_c_LOD0',
     [Parameter(Mandatory=$true)] [string] $ExpectedHead,
     [string] $ExpectedBranch = 'HEAD',
     [int] $TimeoutSec = 2400
@@ -61,22 +63,22 @@ if ($LASTEXITCODE -ne 0) {
 $DownloadScript = Join-Path -Path $RepoRoot -ChildPath 'scripts/assets/download_stage3g_assets.py'
 $ReductionScript = Join-Path -Path $RepoRoot -ChildPath 'scripts/ue/stage3g_profile_fir_reduction.py'
 $AssetCache = Join-Path -Path $RepoRoot -ChildPath 'ExternalAssets/Stage3G/PolyHaven'
-$ProofJson = Join-Path -Path $ArtifactRoot -ChildPath 'fir_tree_01_reduction_profile.json'
-$ProfileLog = Join-Path -Path $ArtifactRoot -ChildPath 'fir_tree_01_reduction_profile.log'
+$ProofJson = Join-Path -Path $ArtifactRoot -ChildPath ($AssetId + '_reduction_profile.json')
+$ProfileLog = Join-Path -Path $ArtifactRoot -ChildPath ($AssetId + '_reduction_profile.log')
 
-Write-Host '[1/2] Downloading curated Fir Tree 01 source...' -ForegroundColor Cyan
+Write-Host ("[1/2] Downloading curated {0} source..." -f $AssetId) -ForegroundColor Cyan
 $DownloadArgs = @(
     $DownloadScript,
     '--destination',
     $AssetCache,
     '--asset',
-    'fir_tree_01',
+    $AssetId,
     '--max-total-mib',
     '3072'
 )
 & python @DownloadArgs
 if ($LASTEXITCODE -ne 0) {
-    throw 'Fir Tree 01 source download failed.'
+    throw ("Conifer source download failed: {0}" -f $AssetId)
 }
 
 $IndexPath = Join-Path -Path $AssetCache -ChildPath 'download-index.json'
@@ -88,6 +90,8 @@ Write-Host '[2/2] Generating and measuring transient LOD chains in UE 5.8...' -F
 Remove-Item -LiteralPath $ProofJson -Force -ErrorAction SilentlyContinue
 $env:YACS_STAGE3G_ASSET_CACHE = $AssetCache
 $env:YACS_STAGE3G_FIR_REDUCTION = $ProofJson
+$env:YACS_STAGE3G_REDUCTION_ASSET_ID = $AssetId
+$env:YACS_STAGE3G_REDUCTION_SOURCE_MESH = $SourceMeshName
 try {
     $Arguments = @(
         $ProjectPath
@@ -126,6 +130,8 @@ try {
 finally {
     Remove-Item Env:YACS_STAGE3G_ASSET_CACHE -ErrorAction SilentlyContinue
     Remove-Item Env:YACS_STAGE3G_FIR_REDUCTION -ErrorAction SilentlyContinue
+    Remove-Item Env:YACS_STAGE3G_REDUCTION_ASSET_ID -ErrorAction SilentlyContinue
+    Remove-Item Env:YACS_STAGE3G_REDUCTION_SOURCE_MESH -ErrorAction SilentlyContinue
 }
 
 if (-not (Test-Path -LiteralPath $ProofJson -PathType Leaf)) {
@@ -134,10 +140,13 @@ if (-not (Test-Path -LiteralPath $ProofJson -PathType Leaf)) {
 $Proof = Get-Content -LiteralPath $ProofJson -Raw -ErrorAction Stop | ConvertFrom-Json
 
 if ($Proof.stage3g_r2_fir_reduction_profile -ne 'success') {
-    throw 'Fir Tree reduction profile did not report success.'
+    throw ("Conifer reduction profile did not report success: {0}" -f $AssetId)
 }
-if ($Proof.source_mesh -ne 'fir_tree_01_c_LOD0') {
-    throw "Unexpected selected Fir Tree source mesh: $($Proof.source_mesh)"
+if ($Proof.asset_id -ne $AssetId) {
+    throw ("Conifer reduction asset mismatch: expected {0}, got {1}" -f $AssetId, $Proof.asset_id)
+}
+if ($Proof.source_mesh -ne $SourceMeshName) {
+    throw ("Unexpected selected source mesh: expected {0}, got {1}" -f $SourceMeshName, $Proof.source_mesh)
 }
 
 $ExpectedProfiles = @('conservative', 'balanced', 'aggressive')
@@ -180,5 +189,5 @@ foreach ($ProfileName in $ExpectedProfiles) {
     Write-Host ("{0}: {1}" -f $ProfileName, ($Summary -join ', ')) -ForegroundColor Green
 }
 
-Write-Host 'FIR TREE REDUCTION PROFILE OK.' -ForegroundColor Green
+Write-Host ("CONIFER REDUCTION PROFILE OK: asset={0} source={1}" -f $AssetId, $SourceMeshName) -ForegroundColor Green
 exit 0

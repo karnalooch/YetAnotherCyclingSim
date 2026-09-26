@@ -31,7 +31,13 @@ class Stage3GR2FirReductionContractTests(unittest.TestCase):
             source,
         )
         self.assertIn("unreal.collect_garbage()", source)
-        self.assertIn("isolated Fir Tree C mesh", source)
+        self.assertIn("isolated selected mesh", source)
+
+    def test_reduction_target_is_parameterized(self):
+        source = SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("YACS_STAGE3G_REDUCTION_ASSET_ID", source)
+        self.assertIn("YACS_STAGE3G_REDUCTION_SOURCE_MESH", source)
+        self.assertIn("import_selected_variant", source)
 
     def test_fallback_does_not_change_profile_definitions(self):
         source = SCRIPT.read_text(encoding="utf-8")
