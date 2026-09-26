@@ -56,6 +56,8 @@ bool FStage3PrototypeTerrainBuildTest::RunTest(const FString& Parameters)
 			Terrain->GetForestCanopyInstanceCount(), 100);
 		TestEqual(TEXT("Stage 3G distant mountain count remains deterministic"),
 			Terrain->GetDistantMountainInstanceCount(), 28);
+		TestEqual(TEXT("Stage 3G real rock dressing count remains deterministic"),
+			Terrain->GetRockPropInstanceCount(), 40);
 		TestEqual(TEXT("Stage 3G water tile count remains deterministic"),
 			Terrain->GetWaterTileInstanceCount(), 26);
 
@@ -73,6 +75,8 @@ bool FStage3PrototypeTerrainBuildTest::RunTest(const FString& Parameters)
 			Terrain->GetForestCanopyInstanceCount();
 		const int32 DistantMountainCountBefore =
 			Terrain->GetDistantMountainInstanceCount();
+		const int32 RockPropCountBefore =
+			Terrain->GetRockPropInstanceCount();
 		const int32 WaterTileCountBefore =
 			Terrain->GetWaterTileInstanceCount();
 
@@ -92,6 +96,8 @@ bool FStage3PrototypeTerrainBuildTest::RunTest(const FString& Parameters)
 			Terrain->GetForestCanopyInstanceCount(), ForestCanopyCountBefore);
 		TestEqual(TEXT("idempotent distant mountain count unchanged"),
 			Terrain->GetDistantMountainInstanceCount(), DistantMountainCountBefore);
+		TestEqual(TEXT("idempotent rock dressing count unchanged"),
+			Terrain->GetRockPropInstanceCount(), RockPropCountBefore);
 		TestEqual(TEXT("idempotent water tile count unchanged"),
 			Terrain->GetWaterTileInstanceCount(), WaterTileCountBefore);
 	}

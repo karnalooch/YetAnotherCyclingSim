@@ -53,6 +53,10 @@ class ReusableStage3GFullWorkflowContractTests(unittest.TestCase):
             "Content/Prototype/Environment/Stage3G/",
             self.stage3g_proof,
         )
+        self.assertIn(
+            "Content/Prototype/Maps/L_CyclingTest.umap",
+            self.stage3g_proof,
+        )
         self.assertNotIn(
             "AdditionalAllowedDirtyPaths = @('Content/')",
             self.stage3g_proof,
