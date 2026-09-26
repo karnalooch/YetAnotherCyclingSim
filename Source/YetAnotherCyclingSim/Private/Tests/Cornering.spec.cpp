@@ -6,6 +6,7 @@
 #include "Cycling/Cornering.h"
 #include "Cycling/CyclingForces.h"
 
+#include <cmath>
 #include <limits>
 
 namespace Stage4ACorneringTests
@@ -419,10 +420,11 @@ bool FStage4AValidationTest::RunTest(const FString& Parameters)
 		TryCalculateMaximumCornerSpeedMps(25.0, 0.8, 0.0, Value, Error));
 	TestFalse(TEXT("grip multiplier above one rejected"),
 		TryCalculateMaximumCornerSpeedMps(25.0, 0.8, 1.01, Value, Error));
+	FCornerConsequence Consequence;
 	TestFalse(TEXT("NaN usage rejected"),
 		TryCalculateCornerConsequence(
 			std::numeric_limits<double>::quiet_NaN(),
-			*new FCornerConsequence(),
+			Consequence,
 			Error));
 
 	FCorner DefaultCorner;
