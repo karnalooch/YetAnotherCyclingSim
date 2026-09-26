@@ -4,9 +4,9 @@
 
 GitHub Actions is the single active CI control plane for YACS.
 
-CircleCI is retired. While the external CircleCI project remains connected, the
-checked-in `.circleci/config.yml` is only a zero-workload tombstone so pushes do
-not spend compute or persist storage.
+CircleCI is fully retired and disconnected. The repository contains no
+`.circleci` configuration and no active CircleCI helpers, caches, workspaces or
+runner bootstrap path.
 
 ## Workload split
 
@@ -75,5 +75,6 @@ Before enabling automatic Unreal gating:
 
 ## CircleCI retirement
 
-After the CircleCI project is disconnected in its UI, delete
-`.circleci/config.yml`. No production CI logic should be reintroduced there.
+CircleCI has been disconnected and its repository configuration removed.
+No production CI logic should be reintroduced there without an explicit
+architecture decision.
