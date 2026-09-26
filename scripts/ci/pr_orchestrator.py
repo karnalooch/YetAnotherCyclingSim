@@ -369,6 +369,23 @@ def open_parent_by_head(
     return result
 
 
+def validate_stack_acyclic(
+    open_parents: dict[str, dict[str, Any]],
+) -> None:
+    for start_ref in sorted(open_parents):
+        seen: list[str] = []
+        current = start_ref
+        while current in open_parents:
+            if current in seen:
+                cycle = seen[seen.index(current):] + [current]
+                raise OrchestratorError(
+                    "stack cycle detected: " + " -> ".join(cycle)
+                )
+            seen.append(current)
+            parent_pr = open_parents[current]
+            current = str(parent_pr.get("base", {}).get("ref", ""))
+
+
 def print_block(number: int, reason: str) -> None:
     print(f"pr-orchestrator: PR #{number} BLOCKED: {reason}")
 
@@ -567,6 +584,7 @@ def evaluate_eligible_pull_requests(
 ) -> int:
     pulls = list(pull_requests)
     open_parents = open_parent_by_head(pulls, repository=repository)
+    validate_stack_acyclic(open_parents)
     had_errors = False
 
     # Parents before children: a PR based on main gets a chance to merge before
