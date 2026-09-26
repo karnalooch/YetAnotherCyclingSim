@@ -4,6 +4,7 @@
 #include "Math/UnrealMathUtility.h"
 
 #include "Cycling/CornerBrakingStep.h"
+#include "Cycling/CyclingSimulationSession.h"
 #include "Cycling/FixedStepRunner.h"
 #include "Cycling/SimulationStepContext.h"
 
@@ -450,6 +451,73 @@ bool FStage4CCornerBrakingFrameBatchingTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("30/jitter distance exact parity"), Result30.State.DistanceM, ResultJittered.State.DistanceM);
 	TestEqual(TEXT("30/60 time exact parity"), Result30.State.ElapsedTimeS, Result60.State.ElapsedTimeS);
 	TestEqual(TEXT("30/jitter time exact parity"), Result30.State.ElapsedTimeS, ResultJittered.State.ElapsedTimeS);
+	return true;
+}
+
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FStage4CCornerBrakingSessionPathTest,
+	"CyclingCornering.Braking.Orchestration.SessionConsumesBrakeInput",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FStage4CCornerBrakingSessionPathTest::RunTest(const FString& Parameters)
+{
+	using namespace Stage4CCornerBrakingTests;
+	using namespace CyclingRoadPhysics;
+	using namespace CyclingSimulation;
+	using namespace CyclingSurfaceGrip;
+
+	FRoadPhysicsProfile Profile;
+	FSurfaceGripPolicy GripPolicy;
+	FDistanceBasedSimulationStepContextProvider Context;
+	FString Error;
+	TestTrue(TEXT("straight profile configures"), BuildStraightProfile(0.0, Profile, Error));
+	TestTrue(TEXT("grip policy configures"), BuildGripPolicy(GripPolicy, Error));
+	TestTrue(TEXT("static context configures"), BuildStaticContext(Context, Error));
+
+	FCyclingSimulationSessionConfig Config;
+	Config.Rider = MakeRider();
+	Config.Environment = MakeEnvironment();
+	Config.RiderInput.InitialPowerW = 300.0;
+	Config.RiderInput.InitialCadenceRpm = 90.0;
+
+	FCyclingSimulationSession Released;
+	FCyclingSimulationSession Braking;
+	TestTrue(TEXT("released session configures"), Released.TryConfigure(Config, Error));
+	TestTrue(TEXT("braking session configures"), Braking.TryConfigure(Config, Error));
+	TestTrue(TEXT("session brake command accepted"), Braking.TrySetBrakeRatio(0.5, Error));
+	TestEqual(TEXT("session owns brake command"), Braking.GetRiderInput().BrakeRatio, 0.5);
+
+	auto Advance = [&](FCyclingSimulationSession& Session, FSimulationState& OutState)
+	{
+		double RemainingTimeS = 0.0;
+		int32 CompletedSteps = 0;
+		TArray<FSimulationBoundaryCrossing> Crossings;
+		bool bStoppedAfterStep = false;
+		return Session.TryAdvanceWithCornerBraking(
+			0.25,
+			Context,
+			Profile,
+			MakeCornerSettings(),
+			GripPolicy,
+			0.8,
+			0.0,
+			OutState,
+			RemainingTimeS,
+			CompletedSteps,
+			Crossings,
+			bStoppedAfterStep,
+			Error);
+	};
+
+	FSimulationState ReleasedState;
+	FSimulationState BrakingState;
+	TestTrue(TEXT("released session advances"), Advance(Released, ReleasedState));
+	TestTrue(TEXT("braking session advances"), Advance(Braking, BrakingState));
+	TestTrue(
+		TEXT("session brake input reduces speed through B3c path"),
+		BrakingState.SpeedMps < ReleasedState.SpeedMps);
+	TestEqual(TEXT("fixed-step elapsed time parity"), BrakingState.ElapsedTimeS, ReleasedState.ElapsedTimeS);
 	return true;
 }
 
