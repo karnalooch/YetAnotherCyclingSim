@@ -50,6 +50,9 @@ jobs:
       - name: Run self-hosted Git isolation contract tests
         run: python scripts/ci/test_self_hosted_git_isolation.py
 
+      - name: Run Unreal CI build profile contract tests
+        run: python scripts/ci/test_unreal_ci_build_profile.py
+
       - name: Parse active CI PowerShell helpers
         shell: pwsh
         run: |
