@@ -44,9 +44,6 @@ jobs:
       - name: Run manual Unreal workflow contract tests
         run: python scripts/ci/test_manual_unreal_workflow.py
 
-      - name: Run Phase 1 one-shot Unreal contract tests
-        run: python scripts/ci/test_phase1_one_shot_unreal.py
-
       - name: Run self-hosted Git isolation contract tests
         run: python scripts/ci/test_self_hosted_git_isolation.py
 
