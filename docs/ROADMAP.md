@@ -96,6 +96,7 @@ YetAnotherCyclingSim.
 
 - #22 — włączyć pozostałe ustawienia bezpieczeństwa GitHub i ochronę `main`; API nadal raportuje `main.protected = false`.
 - #24 — wdrożyć prawdziwy Windows/Unreal Engine build + Automation na domowym self-hosted runnerze. **Teraz realizujemy Phase 1:** bezpieczny ręczny `workflow_dispatch` na dedykowanej etykiecie `yacs-ue58`, bez automatycznego uruchamiania kodu z PR-ów i bez wpinania joba do `Aggregate CI gate`. Stage 3G / #80 będzie pierwszym canary. Pełny plan: [`UNREAL_SELF_HOSTED_RUNNER_PLAN.md`](UNREAL_SELF_HOSTED_RUNNER_PLAN.md).
+  - **Odroczony milestone operacyjny — dopiero przed Phase 2:** zastąpić ręczne uruchamianie `run.cmd` kontrolowanym autostartem runnera przez Windows Task Scheduler pod dedykowanym kontem runnera. Nie blokuje Phase 1 ani Stage 3G. Przed włączeniem trusted automatic UE execution wymagany jest reboot proof: restart hosta → runner sam wraca online → odbiera testowy job → build/Automation oraz co najmniej jeden workload wymagający interaktywnej sesji/GPU nadal przechodzą. Klasyczna usługa Windows nie jest domyślną ścieżką dla workloadów visual/GPU; można ją rozważyć wyłącznie po osobnym proofie kompatybilności.
 - #23 — ekstrakcja wspólnego CI do `engineering-platform` jest ukończona i zamknięta.
 
 ## Kryterium ukończenia
