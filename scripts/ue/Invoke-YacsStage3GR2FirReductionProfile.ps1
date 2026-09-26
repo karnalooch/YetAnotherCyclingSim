@@ -97,8 +97,7 @@ $env:YACS_STAGE3G_REDUCTION_SOURCE_MESH = $SourceMeshName
 try {
     $Arguments = @(
         $ProjectPath
-        '-run=PythonScript'
-        ('-script="' + $ReductionScript + '"')
+        ('-ExecutePythonScript="' + $ReductionScript + '"')
         '-Unattended'
         '-NoPause'
         '-NullRHI'
