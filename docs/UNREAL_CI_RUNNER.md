@@ -27,31 +27,26 @@ GitHub also applies its normal self-hosted label. The custom yacs-ue58 label is 
 
 ## CircleCI machine-runner host bootstrap
 
-CircleCI built-in steps such as `persist_to_workspace` run inside the task-agent,
-not inside the PowerShell process spawned for a `run` step. Therefore job-level
-`PATH` changes are not enough to provide `gzip` to workspace handling.
+CircleCI no longer transports the UE installation through workspaces or caches.
+The machine runner uses the UE 5.8 installation already present on the host.
 
 The current YACS runner is operated as a foreground/manual machine runner, not a
 Windows service. It does not require administrator access.
 
-Before launching the runner, configure the current user/process environment:
+The working contract keeps runner scratch on `D:`:
 
-    powershell.exe -ExecutionPolicy Bypass -File scripts/ci/Configure-YacsCircleCiRunnerHost.ps1
+- `CIRCLECI_RUNNER_WORK_DIR=D:\CircleCI\YACS-Runner\Workdir`;
+- `CIRCLECI_RUNNER_TASK_AGENT_DIRECTORY=D:\CircleCI\YACS-Runner\TaskAgent`;
+- job `TEMP` and `TMP` stay under `D:\CircleCI\YACS-Runner\Temp`.
 
-The bootstrap keeps CircleCI working data on `D:`:
+The historical `Configure-YacsCircleCiRunnerHost.ps1` helper may still be used
+to establish those directories/environment values, but Git-for-Windows
+`gzip.exe`/`tar.exe` are no longer required for UE workspace persistence
+because UE payload persistence has been removed.
 
-- `CIRCLECI_RUNNER_WORK_DIR=D:\CircleCI\YACS-Runner\Workdir`
-- `CIRCLECI_RUNNER_TASK_AGENT_DIRECTORY=D:\CircleCI\YACS-Runner\TaskAgent`
-- `C:\Program Files\Git\usr\bin` is added to the current user's PATH so a newly
-  launched runner/task-agent can use the already-installed Git for Windows
-  `gzip.exe` and `tar.exe`.
-
-After running the bootstrap, launch/relaunch `circleci-runner` from that PowerShell
-window (or from a fresh shell that inherits the user environment) before starting a
-pipeline. No Windows service restart is expected.
-
-The UE seed archive, persistent seed, job scratch, working directory, and task-agent
-downloads remain on `D:`. No UE payload is copied to `C:`.
+When `ue_local_canary=true`, CircleCI checks out only project source/config and
+runs `Invoke-YacsUnrealCi.ps1` against the local UE installation. The workflow
+does not upload or download the engine.
 
 ## Trust policy
 
