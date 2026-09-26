@@ -21,6 +21,10 @@ from .corner_technique import (
     score_route_corner_technique,
     summarize_route_corner_technique,
 )
+from .corner_consequence_application import (
+    CornerConsequenceApplication,
+    apply_corner_geometry_consequence,
+)
 from .corner_context import (
     CORNER_DIRECTION_LEFT,
     CORNER_DIRECTION_RIGHT,
@@ -117,6 +121,8 @@ __all__ = [
     "CORNER_GEOMETRY_OUTCOME_CONTROLLED_SLIP",
     "CornerGeometryConsequence",
     "resolve_corner_geometry_consequence",
+    "CornerConsequenceApplication",
+    "apply_corner_geometry_consequence",
     "RouteCornerTechniqueObservation",
     "RouteCornerTechniqueSummary",
     "RouteCornerTechniqueScore",
