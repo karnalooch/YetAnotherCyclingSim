@@ -68,11 +68,13 @@ param(
         'scripts/ue/Invoke-YacsProof.ps1',
         'scripts/ue/Invoke-YacsInsightsProof.ps1',
         'scripts/ue/README.md'
-    )
+    ),
+    [string[]] $AdditionalAllowedDirtyPaths = @()
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+$EffectiveAllowedDirtyPaths = @($AllowedDirtyPaths) + @($AdditionalAllowedDirtyPaths)
 
 function Resolve-CommandPath {
     param([string] $Command, [string[]] $SearchDirs)
@@ -159,7 +161,7 @@ if ($UntrackedOutput) {
 $Disallowed = @()
 foreach ($p in ($DirtyPaths + $UntrackedPaths)) {
     $Match = $false
-    foreach ($allow in $AllowedDirtyPaths) {
+    foreach ($allow in $EffectiveAllowedDirtyPaths) {
         if ($p -eq $allow) { $Match = $true; break }
         if ($allow.EndsWith('/') -and $p.StartsWith($allow)) { $Match = $true; break }
     }
@@ -273,7 +275,7 @@ $Context = [ordered]@{
     DirtyPaths          = $DirtyPaths
     UntrackedPaths      = $UntrackedPaths
     DisallowedDirty     = $Disallowed
-    AllowedDirtyPaths   = $AllowedDirtyPaths
+    AllowedDirtyPaths   = $EffectiveAllowedDirtyPaths
     EngineRoot          = $EngineRoot
     EngineVersion       = if ($EngineVersion) {
         [ordered]@{

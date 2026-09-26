@@ -1,0 +1,59 @@
+schema_version: 1
+id: stage3g_alpine_reference
+
+route:
+  map: /Game/Prototype/Maps/L_CyclingTest
+  length_m: 10000
+  authoritative_progress: FSimulationState::DistanceM
+  geometry_owner: FRouteGeometryProfile
+  persisted_spline_role: presentation_only
+
+generation:
+  seed: 42017
+  persistent_root: /Game/Generated/YACS/Stage3G
+  mode: transient_spike
+  allow_persistent_writes: false
+
+protected_content:
+  - /Game/Prototype/Maps/L_CyclingTest
+  - /Game/Prototype/Routes
+  - /Game/Core
+  - Source/YetAnotherCyclingSim/Private/Cycling
+  - Source/YetAnotherCyclingSim/Public/Cycling
+
+biomes:
+  - id: valley_meadow
+    start_m: 0
+    end_m: 3700
+    intent:
+      terrain: broad_valley
+      vegetation_density: 0.25
+      rocks_density: 0.10
+
+  - id: alpine_forest
+    start_m: 3700
+    end_m: 6200
+    intent:
+      terrain: enclosed_valley
+      vegetation_density: 0.72
+      rocks_density: 0.20
+
+  - id: high_alpine
+    start_m: 6200
+    end_m: 10000
+    intent:
+      terrain: exposed_high_alpine
+      vegetation_density: 0.05
+      rocks_density: 0.65
+
+proof:
+  capture_distances_m: [1200, 4900, 8000]
+  resolution: { width: 1920, height: 1080 }
+
+constraints:
+  route_clearance_m: 4.0
+  keep_road_readable: true
+  no_route_geometry_mutation: true
+  no_physics_mutation: true
+  no_stage4_cornering: true
+  no_stage7_final_art_scope: true

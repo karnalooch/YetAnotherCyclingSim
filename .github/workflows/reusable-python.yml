@@ -47,8 +47,8 @@ jobs:
       - name: Run self-hosted Git isolation contract tests
         run: python scripts/ci/test_self_hosted_git_isolation.py
 
-      - name: Run Stage 3G authoring one-shot contract tests
-        run: python scripts/ci/test_stage3g_authoring_one_shot.py
+      - name: Run reusable Stage 3G full-validation contract tests
+        run: python scripts/ci/test_reusable_stage3g_full_workflow.py
 
       - name: Run Unreal CI build profile contract tests
         run: python scripts/ci/test_unreal_ci_build_profile.py
@@ -62,7 +62,10 @@ jobs:
             'scripts/ci/Invoke-YacsUnrealCi.ps1',
             'scripts/ci/Invoke-YacsWindowsProbe.ps1',
             'scripts/ue/Invoke-YacsPackageProof.ps1',
-            'scripts/ue/Invoke-YacsProof.ps1'
+            'scripts/ue/Invoke-YacsProof.ps1',
+            'scripts/ue/Preflight-YacsProof.ps1',
+            'scripts/ue/Invoke-YacsStage3GAuthoring.ps1',
+            'scripts/ue/Invoke-YacsStage3GProof.ps1'
           )) {
             $tokens = $null
             $errors = $null

@@ -26,6 +26,7 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
             "ue_code:",
             "docs_only:",
             "asset_only:",
+            "asset_full:",
             "security_base:",
         ):
             self.assertIn(output, self.ci)
@@ -54,6 +55,17 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
         self.assertIn('GIT_LFS_SKIP_SMUDGE: "1"', self.ci)
         self.assertIn("lfs: false", self.ci)
 
+    def test_stage3g_full_lane_is_path_gated_and_aggregate_required(self):
+        self.assertIn("name: Stage 3G full validation", self.ci)
+        self.assertIn("needs.changes.outputs.asset_full == 'true'", self.ci)
+        self.assertIn("reusable-stage3g-full.yml", self.ci)
+        self.assertIn("- stage3g-full-validation", self.ci)
+        self.assertIn('require_optional "stage3g-full-validation"', self.ci)
+        self.assertIn(
+            "github.event.pull_request.head.repo.full_name == github.repository",
+            self.ci,
+        )
+
     def test_reusable_unreal_lane_never_materializes_assets(self):
         self.assertIn('GIT_LFS_SKIP_SMUDGE: "1"', self.unreal)
         self.assertIn("lfs: false", self.unreal)
@@ -67,6 +79,7 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
             "security-python",
             "security-cpp",
             "asset-validation",
+            "stage3g-full-validation",
         ):
             self.assertIn(f"- {lane}", self.ci)
         self.assertIn("require_optional", self.ci)

@@ -31,6 +31,7 @@ jobs:
       unknown: ${{ steps.classify.outputs.unknown }}
       docs_only: ${{ steps.classify.outputs.docs_only }}
       asset_only: ${{ steps.classify.outputs.asset_only }}
+      asset_full: ${{ steps.classify.outputs.asset_full }}
       security_base: ${{ steps.classify.outputs.security_base }}
       base_sha: ${{ steps.classify.outputs.base_sha }}
       head_sha: ${{ steps.classify.outputs.head_sha }}
@@ -184,6 +185,16 @@ jobs:
             --base "${BASE_SHA}" \
             --head "${HEAD_SHA}"
 
+  stage3g-full-validation:
+    name: Stage 3G full validation
+    needs: changes
+    if: ${{ needs.changes.outputs.asset_full == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    permissions:
+      contents: read
+    uses: ./.github/workflows/reusable-stage3g-full.yml
+    with:
+      target_sha: ${{ needs.changes.outputs.head_sha }}
+
   aggregate:
     name: Aggregate CI gate
     if: ${{ always() }}
@@ -196,6 +207,7 @@ jobs:
       - security-python
       - security-cpp
       - asset-validation
+      - stage3g-full-validation
     runs-on: ubuntu-latest
     timeout-minutes: 2
     permissions: {}
@@ -211,12 +223,14 @@ jobs:
           SECURITY_PYTHON_RESULT: ${{ needs.security-python.result }}
           SECURITY_CPP_RESULT: ${{ needs.security-cpp.result }}
           ASSET_VALIDATION_RESULT: ${{ needs.asset-validation.result }}
+          STAGE3G_FULL_RESULT: ${{ needs.stage3g-full-validation.result }}
           CLASS_PYTHON: ${{ needs.changes.outputs.python }}
           CLASS_CPP: ${{ needs.changes.outputs.cpp }}
           CLASS_ASSETS: ${{ needs.changes.outputs.assets }}
           CLASS_CI: ${{ needs.changes.outputs.ci }}
           CLASS_UE_CODE: ${{ needs.changes.outputs.ue_code }}
           CLASS_SECURITY_BASE: ${{ needs.changes.outputs.security_base }}
+          CLASS_ASSET_FULL: ${{ needs.changes.outputs.asset_full }}
         run: |
           set -euo pipefail
           failed=0
@@ -261,6 +275,7 @@ jobs:
           require_optional "security-python" "${CLASS_PYTHON}" "${SECURITY_PYTHON_RESULT}"
           require_optional "security-cpp" "${cpp_security_expected}" "${SECURITY_CPP_RESULT}"
           require_optional "asset-validation" "${CLASS_ASSETS}" "${ASSET_VALIDATION_RESULT}"
+          require_optional "stage3g-full-validation" "${CLASS_ASSET_FULL}" "${STAGE3G_FULL_RESULT}"
 
           if [[ "${failed}" -ne 0 ]]; then
             exit 1

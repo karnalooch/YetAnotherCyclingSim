@@ -1,0 +1,119 @@
+ue-mcp:
+  version: 1
+  contentRoots:
+    - /Game/Prototype/
+    - /Game/Generated/YACS/
+  context:
+    strategy: lean
+  nativeTools:
+    enabled: false
+  disable:
+    - animation
+    - audio
+    - blueprint
+    - chooser
+    - conversation
+    - dataflow
+    - demo
+    - epic
+    - fab
+    - feedback
+    - foliage
+    - gameplay
+    - gas
+    - landscape
+    - material
+    - networking
+    - niagara
+    - pcg
+    - plugins
+    - project
+    - reflection
+    - statetree
+    - widget
+
+guards:
+  yacs_stage3g_spike:
+    description: Deny persistent Unreal mutations during the Stage 3G UE-MCP connection spike.
+    scope: mutations
+    order: 10
+    before:
+      class_path: tools/ue-mcp/guards/YacsStage3GGuard
+
+flows:
+  yacs_stage3g_inspect:
+    description: Inspect Stage 3 route-related editor state without persistent mutation.
+    steps:
+      1:
+        task: level.get_current
+      2:
+        task: level.get_outliner
+        options:
+          nameFilter: Stage3
+          world: editor
+          limit: 100
+      3:
+        task: level.get_outliner
+        options:
+          nameFilter: Route
+          world: editor
+          limit: 100
+      4:
+        task: asset.list
+        options:
+          directory: /Game/Prototype/Routes
+          recursive: true
+          limit: 100
+      5:
+        task: asset.list
+        options:
+          directory: /Game/Prototype/Environment
+          recursive: true
+          limit: 200
+
+  yacs_stage3g_transient_smoke:
+    description: Prove controlled editor mutation with transient actors that cannot be saved into the level.
+    rollback_on_failure: true
+    steps:
+      1:
+        task: level.get_current
+      2:
+        task: level.destroy_transient_actor
+        ignore_failure: true
+        options:
+          all: true
+          world: editor
+      3:
+        task: level.spawn_transient_actor
+        options:
+          actorClass: PointLight
+          label: YACS_MCP_TRANSIENT_MARKER_A
+          location: { x: 0, y: 0, z: 500 }
+          initialize: construction
+          world: editor
+      4:
+        task: level.spawn_transient_actor
+        options:
+          actorClass: PointLight
+          label: YACS_MCP_TRANSIENT_MARKER_B
+          location: { x: 1000, y: 500, z: 700 }
+          initialize: construction
+          world: editor
+      5:
+        task: level.list_transient_actors
+        options:
+          world: editor
+          limit: 100
+      6:
+        task: editor.capture_scene_png
+        options:
+          outputPath: Saved/RuntimeProof/Issue85/mcp_transient_smoke.png
+          world: editor
+          width: 1280
+          height: 720
+          fullyLoadTextures: true
+      7:
+        task: level.destroy_transient_actor
+        options:
+          all: true
+          world: editor

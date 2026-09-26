@@ -67,6 +67,7 @@ class Classification:
     unknown: bool = False
     docs_only: bool = False
     asset_only: bool = False
+    asset_full: bool = False
 
     @property
     def security_base(self) -> bool:
@@ -108,6 +109,29 @@ def _is_asset(path: str) -> bool:
     if path.startswith("Content/") or path.startswith("SourceArt/"):
         return True
     return pure.suffix.lower() in ASSET_EXTENSIONS
+
+
+def _is_asset_full(path: str) -> bool:
+    if path.startswith("Content/Prototype/Environment/Stage3G/"):
+        return True
+    if path == "Content/Prototype/Maps/L_CyclingTest.umap":
+        return True
+    if path in {
+        "Source/YetAnotherCyclingSim/Private/Cycling/Stage3PrototypeTerrainActor.cpp",
+        "Source/YetAnotherCyclingSim/Public/Cycling/Stage3PrototypeTerrainActor.h",
+        "Source/YetAnotherCyclingSim/Private/Editor/CyclingStage3RouteSetupCommandlet.cpp",
+        "Source/YetAnotherCyclingSim/Private/Tests/Stage3PrototypeTerrain.spec.cpp",
+        "scripts/ue/Invoke-YacsStage3GAuthoring.ps1",
+        "scripts/ue/Invoke-YacsStage3GProof.ps1",
+        "scripts/ue/Invoke-YacsStage3GVisualCapture.ps1",
+        "scripts/ue/stage3g_author_materials.py",
+        "scripts/ue/stage3g_author_world.py",
+        "tools/ue-mcp/guards/YacsStage3GGuard.js",
+        "ue-mcp.yml",
+        ".github/workflows/reusable-stage3g-full.yml",
+    }:
+        return True
+    return path.startswith("worldgen/specs/stage3g_")
 
 
 def _is_ci(path: str) -> bool:
@@ -159,6 +183,7 @@ def classify_paths(paths: Iterable[str]) -> Classification:
     ci = False
     ue_code = False
     unknown = False
+    asset_full = False
 
     for path in normalized:
         matched = False
@@ -174,6 +199,9 @@ def classify_paths(paths: Iterable[str]) -> Classification:
             matched = True
         if _is_asset(path):
             assets = True
+            matched = True
+        if _is_asset_full(path):
+            asset_full = True
             matched = True
         if _is_ci(path):
             ci = True
@@ -209,6 +237,7 @@ def classify_paths(paths: Iterable[str]) -> Classification:
         unknown=unknown,
         docs_only=docs_only,
         asset_only=asset_only,
+        asset_full=asset_full,
     )
 
 
@@ -230,6 +259,7 @@ def full_static_classification() -> Classification:
         assets=False,
         ci=True,
         ue_code=False,
+        asset_full=False,
     )
 
 

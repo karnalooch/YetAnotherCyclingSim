@@ -141,3 +141,41 @@ the requested map.
 Package binaries stay under `Saved/RuntimeProof/CI/Package/Archive` and are not
 intended for routine artifact upload. The trusted manual asset/full workflow
 uploads only concise logs and summaries, then cleans the self-hosted workspace.
+
+
+## Stage 3G reference-environment pass (#80)
+
+Stage 3G keeps route/simulation truth unchanged and adds deterministic
+presentation layers (valley ridges, forest canopy, distant mountain depth and
+a valley watercourse), low-cost authored materials, and a restrained daylight /
+SkyAtmosphere / Exponential Height Fog authoring baseline.
+
+On the home PC, first author the binary map/material state on the dedicated
+branch:
+
+```powershell
+$head = (git rev-parse HEAD).Trim()
+pwsh ./scripts/ue/Invoke-YacsStage3GAuthoring.ps1 \
+  -ExpectedBranch feat/stage3g-reference-environment \
+  -ExpectedHead $head
+```
+
+Review the generated map/material diff and commit the generated Stage 3G
+`.uasset` files plus `L_CyclingTest.umap` through Git LFS. Then run the final
+non-mutating proof against that exact committed HEAD:
+
+```powershell
+$head = (git rev-parse HEAD).Trim()
+pwsh ./scripts/ue/Invoke-YacsStage3GProof.ps1 \
+  -ExpectedBranch feat/stage3g-reference-environment \
+  -ExpectedHead $head
+```
+
+The authoring pass creates Stage 3G material `.uasset` files and regenerates
+`L_CyclingTest.umap`. Those binary source assets belong in Git LFS. The
+visual wrapper reuses the proven 1200 m / 4900 m / 8000 m capture points so the
+AFTER images remain directly comparable with the Stage 3F baseline.
+
+Do not open or merge the Stage 3G implementation PR until the real editor build,
+Automation, authoring, fresh-load/map proof and rendered comparison have passed
+on the home PC.

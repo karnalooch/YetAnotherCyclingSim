@@ -78,7 +78,8 @@ param(
     [switch] $ConservativeBuild,
     [string] $TestFilter = 'CyclingPhysics+CyclingSession+CyclingInput+CyclingRuntime+CyclingDiagnostics',
     [string] $ExpectedBranch = 'test/stage2-integration-performance-proof',
-    [string] $ExpectedHead   = 'a47d6e54ce2f4d72d774bcecc7c971b674b2ee53'
+    [string] $ExpectedHead   = 'a47d6e54ce2f4d72d774bcecc7c971b674b2ee53',
+    [string[]] $AdditionalAllowedDirtyPaths = @()
 )
 
 Set-StrictMode -Version Latest
@@ -173,6 +174,7 @@ $PreflightArgs = @{
     ArtifactRoot    = $ArtifactRoot
     ExpectedBranch  = $ExpectedBranch
     ExpectedHead    = $ExpectedHead
+    AdditionalAllowedDirtyPaths = $AdditionalAllowedDirtyPaths
 }
 $Context = & $PreflightScript @PreflightArgs
 if ($LASTEXITCODE -ne 0) {

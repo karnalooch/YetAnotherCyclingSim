@@ -8,13 +8,14 @@
 class UHierarchicalInstancedStaticMeshComponent;
 class USceneComponent;
 
-// Minimal Stage 3E world presentation.
+// Deterministic Stage 3 prototype-world presentation.
 //
 // This actor intentionally uses only engine basic-shape meshes and deterministic
-// route geometry. It is a validation scaffold, not Stage 7 art. One actor owns
-// an instanced road ribbon, broad terrain support tiles, sparse silhouette
-// props, and (Stage 3F) a thin rail of white edge-line meshes along the
-// road that make the valley -> forest -> high-mountain progression readable.
+// route geometry. It remains a validation/presentation scaffold rather than
+// final Stage 7 art. Stage 3F established the road/material baseline; Stage 3G
+// adds a reference-environment pass with valley ridges, denser forest canopy,
+// layered distant mountains and a valley watercourse while keeping simulation
+// truth completely outside presentation.
 //
 // Runtime physics never reads this actor. The geometry profile remains the
 // source of route shape/grade truth and the spline remains presentation only.
@@ -43,6 +44,10 @@ public:
 	int32 GetForestPropInstanceCount() const;
 	int32 GetMountainPropInstanceCount() const;
 	int32 GetRoadEdgeLineInstanceCount() const;
+	int32 GetValleyRidgeInstanceCount() const;
+	int32 GetForestCanopyInstanceCount() const;
+	int32 GetDistantMountainInstanceCount() const;
+	int32 GetWaterTileInstanceCount() const;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stage3|PrototypeWorld")
 	TObjectPtr<USceneComponent> SceneRoot;
@@ -62,6 +67,18 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stage3|PrototypeWorld")
 	TObjectPtr<UHierarchicalInstancedStaticMeshComponent> RoadEdgeLines;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stage3|ReferenceEnvironment")
+	TObjectPtr<UHierarchicalInstancedStaticMeshComponent> ValleyRidgeProps;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stage3|ReferenceEnvironment")
+	TObjectPtr<UHierarchicalInstancedStaticMeshComponent> ForestCanopyProps;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stage3|ReferenceEnvironment")
+	TObjectPtr<UHierarchicalInstancedStaticMeshComponent> DistantMountainProps;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stage3|ReferenceEnvironment")
+	TObjectPtr<UHierarchicalInstancedStaticMeshComponent> WaterTiles;
+
 	// Stage 3F presentation paths. Assigned via ConstructorHelpers so the
 	// material references survive rebuild / fresh checkout. The Python
 	// authoring script (scripts/ue/stage3f_author_materials.py) is
@@ -70,4 +87,14 @@ public:
 	static const TCHAR* RoadAsphaltMaterialPath;
 	static const TCHAR* RoadEdgeLineMaterialPath;
 	static const TCHAR* TerrainMaterialPath;
+
+	// Stage 3G optional presentation materials. The actor deliberately falls
+	// back to the Stage 3F terrain material until these assets are authored by
+	// scripts/ue/stage3g_author_materials.py, so source builds remain valid
+	// before the binary .uasset generation step.
+	static const TCHAR* Stage3GGrassMaterialPath;
+	static const TCHAR* Stage3GForestMaterialPath;
+	static const TCHAR* Stage3GRockMaterialPath;
+	static const TCHAR* Stage3GDistantRockMaterialPath;
+	static const TCHAR* Stage3GWaterMaterialPath;
 };
