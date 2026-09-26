@@ -160,7 +160,18 @@ longitudinal_usage = brake_ratio
 
 These values feed the 4C-A shared circle. This makes shared-grip accounting available without inventing a brake-force constant.
 
-Stage 4C-B3 separately applies real braking force to forward motion. Zero brake must remain exact regression parity with the pre-braking simulation. Aerodynamic drag, gravity and rolling resistance are external/resistance forces and must not be misclassified as tyre-braking grip usage.
+Stage 4C-B3a resolves the no-slip braking force without a hardware-specific maximum-brake constant. The standalone longitudinal capacity is derived from the caller-owned effective tyre-road friction and the static gravity-normal component of the tilted road surface:
+
+```text
+normal_load_static = mass * g * cos(longitudinal_road_angle) * cos(cross_slope)
+longitudinal_force_capacity = mu_effective * normal_load_static
+applied_longitudinal_usage = min(brake_ratio, remaining_longitudinal_capacity)
+applied_brake_force = applied_longitudinal_usage * longitudinal_force_capacity
+```
+
+The rider's requested shared budget remains visible even when the no-slip applied force is capped. Dynamic load transfer, front/rear brake split, ABS, wheel lock and tyre relaxation remain outside the MVP resolver.
+
+Stage 4C-B3b separately applies the resolved braking force to forward fixed-step motion. Zero brake must remain exact regression parity with the pre-braking simulation. Aerodynamic drag, gravity and rolling resistance are external/resistance forces and must not be misclassified as tyre-braking grip usage.
 
 The kernel is stateless rather than one permanent global grip scalar. MVP may evaluate it for a simplified whole-bike model; later front/rear tyre state can evaluate the same contract independently with different capacities and demands.
 
