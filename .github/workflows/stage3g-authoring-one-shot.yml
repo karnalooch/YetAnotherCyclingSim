@@ -41,7 +41,7 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          TARGET_SHA: 1591ba1cda79a2beee494854e2cd0050fef822df
+          TARGET_SHA: 35ed1300d698763eecc19ddf17fe89dbdcddceb1
         run: |
           $ErrorActionPreference = 'Stop'
           if ('${{ github.ref }}' -ne 'refs/heads/main') {
@@ -63,7 +63,7 @@ jobs:
       - name: Checkout pinned Stage 3G revision with full LFS
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: 1591ba1cda79a2beee494854e2cd0050fef822df
+          ref: 35ed1300d698763eecc19ddf17fe89dbdcddceb1
           fetch-depth: 0
           lfs: true
           clean: true
@@ -72,7 +72,7 @@ jobs:
       - name: Verify full-LFS checkout provenance
         shell: pwsh
         env:
-          TARGET_SHA: 1591ba1cda79a2beee494854e2cd0050fef822df
+          TARGET_SHA: 35ed1300d698763eecc19ddf17fe89dbdcddceb1
         run: |
           $ErrorActionPreference = 'Stop'
           $actual = (git rev-parse HEAD).Trim()
@@ -138,7 +138,7 @@ jobs:
       - name: Author Stage 3G binary source state
         shell: pwsh
         env:
-          TARGET_SHA: 1591ba1cda79a2beee494854e2cd0050fef822df
+          TARGET_SHA: 35ed1300d698763eecc19ddf17fe89dbdcddceb1
         run: |
           $ErrorActionPreference = 'Stop'
           $args = @{
