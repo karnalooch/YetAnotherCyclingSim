@@ -19,7 +19,19 @@ jobs:
     env:
       GIT_LFS_SKIP_SMUDGE: "1"
 
+    env:
+      GIT_CONFIG_GLOBAL: ${{ runner.temp }}\yacs-global.gitconfig
+      GIT_CONFIG_NOSYSTEM: "1"
+
     steps:
+      - name: Isolate self-hosted Git configuration
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-Content -LiteralPath $env:GIT_CONFIG_GLOBAL -Value '' -Encoding ascii
+          Write-Host "Using isolated Git config: $env:GIT_CONFIG_GLOBAL"
+          git config --global --list --show-origin
+
       - name: Checkout exact caller revision without LFS payloads
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
