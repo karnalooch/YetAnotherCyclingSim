@@ -365,7 +365,7 @@ Zmiana tylko w fizyce nie może wymagać pełnego pobrania assetów; zmiana tylk
 # Etap 4 — technika pokonywania zakrętów
 
 **Planowany czas:** tydzień 5–7  
-**Status:** Stage 4A ukończone przez PR #157; **4B-A ukończone przez PR #169; 4B-B SurfaceGripPolicy ukończone przez PR #170; 4B-C banking/off-camber lateral limit w realizacji; 4D/4E wymagają wspólnego integration gate z World lane**
+**Status:** Stage 4A ukończone przez PR #157; **4B-A ukończone przez PR #169; 4B-B ukończone przez PR #170; 4B-C jest w PR #171 i czeka na self-hosted UE gate; 4C-A shared grip budget w realizacji; 4D/4E wymagają wspólnego integration gate z World lane**
 
 ## Cel
 
@@ -376,10 +376,12 @@ Wprowadzić autorską mechanikę oceniającą odpuszczenie i ponowne rozpoczęci
 1. **4A — #156:** czysty C++ cornering domain contract z parity do Python reference model — **ukończone / PR #157**.
 2. **4B-A — PR #169:** route corner context z `Road Physics Profile` — signed curvature/radius, road width, lateral position, corner-ahead/look-ahead, entry/apex/exit — **ukończone**.
 3. **4B-B — PR #170:** jawna `SurfaceGripPolicy` — `surface_id + wetness -> grip_multiplier`, bez ukrytych współczynników; Alpine asphalt zachowuje parity z istniejącym `ALPINE_WEATHER` — **ukończone**.
-4. **4B-C:** banking/off-camber + czysty fizyczny limit lateralny per fixed-step; brak arbitralnego safety factor i brak shared braking budget. Guidance może później wyznaczyć niższy target.
-5. **4C:** technique + consequences — shared braking+cornering grip budget (uproszczony friction circle/ellipse), spięcie mocy/kadencji z racing line, utratą prędkości i controlled slip; bez upadków w MVP.
-6. **4D:** guidance + assists — linia przejazdu, markery entry/apex/exit, grip warning i poziomy asysty jako presentation-only; wymaga wspólnego integration gate z World lane.
-7. **4E:** deterministyczny full-route corner proof dla reprezentatywnych flat/banked/off-camber zakrętów oraz suchej/mokrej nawierzchni.
+4. **4B-C — PR #171:** banking/off-camber + czysty fizyczny limit lateralny per fixed-step; brak arbitralnego safety factor i brak shared braking budget. Guidance może później wyznaczyć niższy target.
+5. **4C-A:** czysty shared grip kernel jako unit friction circle: znormalizowane żądanie longitudinal + lateral trafia do jednego budżetu; bez ukrytego braking modelu i bez consequence policy.
+6. **4C-B:** mapowanie realnego fixed-step longitudinal demand (hamowanie/deceleracja) oraz lateral demand z 4B-C do wspólnego budżetu.
+7. **4C-C:** technique + consequences — scoring, timing mocy/kadencji, utrata prędkości, wide line i controlled slip; bez upadków w MVP.
+8. **4D:** guidance + assists — linia przejazdu, markery entry/apex/exit, grip warning i poziomy asysty jako presentation-only; wymaga wspólnego integration gate z World lane.
+9. **4E:** deterministyczny full-route corner proof dla reprezentatywnych flat/banked/off-camber zakrętów oraz suchej/mokrej nawierzchni.
 
 ## Zadania
 
@@ -395,7 +397,7 @@ Wprowadzić autorską mechanikę oceniającą odpuszczenie i ponowne rozpoczęci
 - [ ] Utrata prędkości po błędzie.
 - [ ] Kontrolowany uślizg bez upadku.
 - [x] Wpływ bankingu / off-camber oraz mokrej nawierzchni na czysty limit lateralny — 4B-B/4B-C; shared braking budget pozostaje 4C.
-- [ ] Wspólny budżet przyczepności dla hamowania i corneringu; brak niezależnego "100% gripu" dla obu osi sił jednocześnie.
+- [ ] Wspólny budżet przyczepności end-to-end dla hamowania i corneringu; 4C-A dostarcza wspólny friction-circle kernel, 4C-B podpina realny longitudinal/lateral demand.
 - [x] Deterministyczny look-ahead do oceny przygotowania przed zakrętem — PR #169.
 - [ ] Ocena każdego zakrętu.
 - [ ] Regulowane poziomy asysty.
