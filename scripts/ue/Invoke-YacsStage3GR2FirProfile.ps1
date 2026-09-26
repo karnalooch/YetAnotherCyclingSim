@@ -60,7 +60,15 @@ if (-not (Test-Path -LiteralPath $IndexPath -PathType Leaf)) {
 }
 $Index = Get-Content -LiteralPath $IndexPath -Raw -ErrorAction Stop | ConvertFrom-Json
 $ConiferRows = @($Index.files | Where-Object { $_.asset_id -eq $AssetId })
-$ConiferGeometry = @($ConiferRows | Where-Object { $null -eq $_.map_type -and $_.relative_path -match '(?i)\.fbx
+$ConiferGeometry = @($ConiferRows | Where-Object { $null -eq $_.map_type -and $_.relative_path -match '(?i)\.fbx$' })
+if ($ConiferGeometry.Count -le 0) {
+    throw ("Conifer download index contains no FBX geometry: {0}" -f $AssetId)
+}
+
+Write-Host ("[2/2] Profiling {0} meshes in Unreal..." -f $AssetId) -ForegroundColor Cyan
+$env:YACS_STAGE3G_ASSET_CACHE = $AssetCache
+$env:YACS_STAGE3G_FIR_PROFILE = $ProfileJson
+$env:YACS_STAGE3G_PROFILE_ASSET_ID = $AssetId
 try {
     $Arguments = @(
         $ProjectPath
@@ -128,74 +136,4 @@ Write-Host ("CONIFER PROFILE OK: asset={0} sources={1} meshes={2} total_lod0_tri
 foreach ($Candidate in @($Profile.ranking_by_lod0_triangles | Select-Object -First 8)) {
     Write-Host ("  candidate={0} lod0={1} lods={2} height_cm={3:N1}" -f $Candidate.mesh_name, $Candidate.lod0_triangles, $Candidate.lod_count, $Candidate.height_cm) -ForegroundColor DarkGreen
 }
-exit 0
- })
-if ($ConiferGeometry.Count -le 0) {
-    throw ("Conifer download index contains no FBX geometry: {0}" -f $AssetId)
-}
-
-Write-Host ("[2/2] Profiling {0} meshes in Unreal..." -f $AssetId) -ForegroundColor Cyan
-$env:YACS_STAGE3G_ASSET_CACHE = $AssetCache
-$env:YACS_STAGE3G_FIR_PROFILE = $ProfileJson
-$env:YACS_STAGE3G_PROFILE_ASSET_ID = $AssetId
-try {
-    $Arguments = @(
-        $ProjectPath
-        '-run=PythonScript'
-        ('-script="' + $ProfileScript + '"')
-        '-Unattended'
-        '-NoPause'
-        '-NullRHI'
-        '-NoSplash'
-        '-NoP4'
-        '-log'
-    )
-    $ErrPath = $ProfileLog + '.stderr'
-    $Proc = Start-Process -FilePath $Context.UnrealEditorCmdPath -ArgumentList $Arguments -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $ProfileLog -RedirectStandardError $ErrPath
-    if (-not $Proc.WaitForExit($TimeoutSec * 1000)) {
-        try { $Proc | Stop-Process -Force } catch { }
-        throw "Fir Tree 01 profiling timed out; see $ProfileLog"
-    }
-    if ($Proc.ExitCode -ne 0) {
-        throw "Fir Tree 01 profiling failed with exit code $($Proc.ExitCode); see $ProfileLog"
-    }
-}
-finally {
-    Remove-Item Env:YACS_STAGE3G_ASSET_CACHE -ErrorAction SilentlyContinue
-    Remove-Item Env:YACS_STAGE3G_FIR_PROFILE -ErrorAction SilentlyContinue
-}
-
-if (-not (Test-Path -LiteralPath $ProfileJson -PathType Leaf)) {
-    throw 'Fir Tree 01 profiling proof JSON is missing.'
-}
-$Profile = Get-Content -LiteralPath $ProfileJson -Raw -ErrorAction Stop | ConvertFrom-Json
-if ($Profile.stage3g_r2_fir_profile -ne 'success') {
-    throw 'Fir Tree 01 profiling did not report success.'
-}
-if ([int]$Profile.source_fbx_count -le 0 -or [int]$Profile.mesh_count -le 0) {
-    throw 'Fir Tree 01 profiling returned no source FBX or mesh records.'
-}
-$TotalTriangles = 0
-foreach ($Mesh in @($Profile.meshes)) {
-    if (@($Mesh.lods).Count -le 0) {
-        throw "Profiled mesh '$($Mesh.mesh_name)' has no LOD records."
-    }
-    $TotalTriangles += [int]$Mesh.lods[0].triangles
-}
-if ($TotalTriangles -le 0) {
-    throw 'Fir Tree 01 profiling returned zero total LOD0 triangles.'
-}
-
-Push-Location -LiteralPath $RepoRoot
-try {
-    $Dirty = @(git status --porcelain=v1 --untracked-files=all)
-}
-finally {
-    Pop-Location
-}
-if ($Dirty.Count -gt 0) {
-    throw ("Fir Tree profiling mutated repository source paths: {0}" -f ($Dirty -join '; '))
-}
-
-Write-Host ("FIR TREE PROFILE OK: sources={0} meshes={1} total_lod0_triangles={2}" -f $Profile.source_fbx_count, $Profile.mesh_count, $TotalTriangles) -ForegroundColor Green
 exit 0
