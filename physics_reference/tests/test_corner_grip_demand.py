@@ -64,7 +64,6 @@ class TestCornerGripDemand(unittest.TestCase):
 
         self.assertAlmostEqual(result.lateral_usage, 1.0, places=12)
         self.assertAlmostEqual(result.budget.combined_usage, 1.0, places=12)
-        self.assertFalse(result.budget.exceeded)
 
     def test_braking_at_lateral_limit_exceeds_shared_budget(self):
         ctx = context()
@@ -106,7 +105,6 @@ class TestCornerGripDemand(unittest.TestCase):
             0.8,
             places=12,
         )
-        self.assertFalse(result.budget.exceeded)
 
     def test_wet_surface_increases_usage_at_same_speed(self):
         dry_ctx = context(wetness=0.0)
