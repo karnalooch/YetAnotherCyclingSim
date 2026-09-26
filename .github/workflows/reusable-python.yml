@@ -63,6 +63,7 @@ jobs:
             'scripts/ci/Invoke-YacsWindowsProbe.ps1',
             'scripts/ue/Invoke-YacsPackageProof.ps1',
             'scripts/ue/Invoke-YacsProof.ps1',
+            'scripts/ue/Preflight-YacsProof.ps1',
             'scripts/ue/Invoke-YacsStage3GAuthoring.ps1',
             'scripts/ue/Invoke-YacsStage3GProof.ps1'
           )) {
