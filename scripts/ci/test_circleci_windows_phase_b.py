@@ -63,6 +63,22 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
         self.assertIn("name: Build YACS Editor and run scoped Automation", canary_block)
         self.assertIn("no_output_timeout: 45m", canary_block)
 
+    def test_hosted_canary_always_prints_final_diagnostics(self):
+        canary_start = self.config.index("  ue-hosted-canary:")
+        workflows_start = self.config.index("workflows:")
+        canary_block = self.config[canary_start:workflows_start]
+        for token in (
+            "name: Print hosted UE final diagnostics",
+            "when: always",
+            "Proof/phase_status.json",
+            "Proof/build_editor.log",
+            "Proof/automation_run.log",
+            "Proof/summary.txt",
+            "unreal_ci_summary.json",
+            "-Tail 40",
+        ):
+            self.assertIn(token, canary_block)
+
     def test_circleci_checkouts_are_blobless_and_skip_lfs_smudge(self):
         self.assertGreaterEqual(self.config.count("method: blobless"), 5)
         self.assertGreaterEqual(
