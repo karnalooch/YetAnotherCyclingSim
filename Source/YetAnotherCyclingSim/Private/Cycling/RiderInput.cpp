@@ -21,5 +21,9 @@ bool FRiderInput::Validate(FString& OutError) const
 	{
 		return false;
 	}
+	if (!CheckClosedUnitInterval(BrakeRatio, TEXT("brake_ratio"), OutError))
+	{
+		return false;
+	}
 	return true;
 }

@@ -1,6 +1,7 @@
 #include "Cycling/FixedStepRunner.h"
 
 #include "Cycling/SimulationStep.h"
+#include "Cycling/CornerBrakingStep.h"
 #include "Cycling/PhysicsValidation.h"
 #include "Math/NumericLimits.h"
 
@@ -88,6 +89,76 @@ namespace CyclingSimulation
 		bool& bOutStoppedAfterStep,
 		FString& OutError)
 	{
+		return TryAdvanceInternal(
+			FrameDeltaS,
+			Rider,
+			StepContextProvider,
+			RiderInput,
+			nullptr,
+			nullptr,
+			nullptr,
+			0.0,
+			0.0,
+			OutState,
+			RemainingAccumulatedTimeS,
+			CompletedSteps,
+			OutBoundaryCrossings,
+			bOutStoppedAfterStep,
+			OutError);
+	}
+
+	bool FFixedStepSimulationRunner::TryAdvanceWithCornerBraking(
+		double FrameDeltaS,
+		const FRiderParameters& Rider,
+		const ISimulationStepContextProvider& StepContextProvider,
+		const FRiderInput& RiderInput,
+		const CyclingRoadPhysics::FRoadPhysicsProfile& RoadProfile,
+		const CyclingCornerContext::FCornerContextSettings& CornerSettings,
+		const CyclingSurfaceGrip::FSurfaceGripPolicy& GripPolicy,
+		double BaseFrictionCoefficient,
+		double LateralPositionM,
+		FSimulationState& OutState,
+		double& RemainingAccumulatedTimeS,
+		int32& CompletedSteps,
+		TArray<FSimulationBoundaryCrossing>& OutBoundaryCrossings,
+		bool& bOutStoppedAfterStep,
+		FString& OutError)
+	{
+		return TryAdvanceInternal(
+			FrameDeltaS,
+			Rider,
+			StepContextProvider,
+			RiderInput,
+			&RoadProfile,
+			&CornerSettings,
+			&GripPolicy,
+			BaseFrictionCoefficient,
+			LateralPositionM,
+			OutState,
+			RemainingAccumulatedTimeS,
+			CompletedSteps,
+			OutBoundaryCrossings,
+			bOutStoppedAfterStep,
+			OutError);
+	}
+
+	bool FFixedStepSimulationRunner::TryAdvanceInternal(
+		double FrameDeltaS,
+		const FRiderParameters& Rider,
+		const ISimulationStepContextProvider& StepContextProvider,
+		const FRiderInput& RiderInput,
+		const CyclingRoadPhysics::FRoadPhysicsProfile* RoadProfile,
+		const CyclingCornerContext::FCornerContextSettings* CornerSettings,
+		const CyclingSurfaceGrip::FSurfaceGripPolicy* GripPolicy,
+		double BaseFrictionCoefficient,
+		double LateralPositionM,
+		FSimulationState& OutState,
+		double& RemainingAccumulatedTimeS,
+		int32& CompletedSteps,
+		TArray<FSimulationBoundaryCrossing>& OutBoundaryCrossings,
+		bool& bOutStoppedAfterStep,
+		FString& OutError)
+	{
 		using namespace CyclingPhysicsValidation;
 
 		OutError.Reset();
@@ -166,9 +237,48 @@ namespace CyclingSimulation
 				return false;
 			}
 
+			double BrakeForceN = 0.0;
+			if (RoadProfile != nullptr)
+			{
+				if (CornerSettings == nullptr || GripPolicy == nullptr)
+				{
+					OutError = TEXT("corner braking runner configuration is incomplete");
+					CompletedSteps = 0;
+					return false;
+				}
+
+				CyclingCornerBraking::FCornerBrakingStepResolution BrakingResolution;
+				FString BrakingError;
+				if (!CyclingCornerBraking::TryResolveCornerBrakingStep(
+					*RoadProfile,
+					*CornerSettings,
+					*GripPolicy,
+					BaseFrictionCoefficient,
+					LateralPositionM,
+					Rider,
+					RiderInput,
+					LocalState,
+					BrakingResolution,
+					BrakingError))
+				{
+					OutError = BrakingError;
+					CompletedSteps = 0;
+					return false;
+				}
+				BrakeForceN = BrakingResolution.BrakingForceDemand.AppliedBrakeForceN;
+			}
+
 			FSimulationState NextState;
 			FString StepError;
-			if (!TryStepSimulation(Rider, StepEnvironment, RiderInput, LocalState, FixedStepDtS, NextState, StepError))
+			if (!TryStepSimulationWithBrakeForce(
+				Rider,
+				StepEnvironment,
+				RiderInput,
+				LocalState,
+				FixedStepDtS,
+				BrakeForceN,
+				NextState,
+				StepError))
 			{
 				OutError = StepError;
 				CompletedSteps = 0;

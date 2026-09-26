@@ -762,6 +762,51 @@ bool FCyclingSimulationSessionTest::RunTest(const FString& Parameters)
 		TestTrue(TEXT("successful TryAdvance clears stale error"), Error.IsEmpty());
 	}
 
+	// --- Stage 4C-B1: session braking command delegates, clamps and resets. ---
+
+	{
+		FCyclingSimulationSession Session;
+		FString Error;
+		TestFalse(TEXT("unconfigured session rejects brake command"),
+			Session.TrySetBrakeRatio(0.5, Error));
+		TestTrue(TEXT("unconfigured brake command reports useful error"), !Error.IsEmpty());
+
+		TestTrue(TEXT("configure for brake command succeeds"),
+			Session.TryConfigure(MakeValidSessionConfig(), Error));
+		TestEqual(TEXT("configured session starts with brakes released"),
+			Session.GetRiderInput().BrakeRatio, 0.0);
+
+		TestTrue(TEXT("session brake command succeeds"),
+			Session.TrySetBrakeRatio(0.4, Error));
+		TestEqual(TEXT("session publishes brake ratio"),
+			Session.GetRiderInput().BrakeRatio, 0.4);
+
+		TestTrue(TEXT("session brake above one clamps"),
+			Session.TrySetBrakeRatio(2.0, Error));
+		TestEqual(TEXT("session brake clamps to one"),
+			Session.GetRiderInput().BrakeRatio, 1.0);
+
+		Session.Reset();
+		TestEqual(TEXT("session reset releases braking"),
+			Session.GetRiderInput().BrakeRatio, 0.0);
+	}
+
+	{
+		FCyclingSimulationSession Session;
+		FString Error;
+		TestTrue(TEXT("configure before failed brake-preservation case"),
+			Session.TryConfigure(MakeValidSessionConfig(), Error));
+		TestTrue(TEXT("set brake before failed reconfigure"),
+			Session.TrySetBrakeRatio(0.65, Error));
+
+		FCyclingSimulationSessionConfig Invalid = MakeValidSessionConfig();
+		Invalid.Environment.AirDensityKgM3 = 0.0;
+		TestFalse(TEXT("invalid reconfigure rejected"),
+			Session.TryConfigure(Invalid, Error));
+		TestEqual(TEXT("failed reconfigure preserves brake ratio"),
+			Session.GetRiderInput().BrakeRatio, 0.65);
+	}
+
 	return true;
 }
 

@@ -31,6 +31,7 @@
 //   - environment air density in kilograms per cubic metre (kg/m^3);
 //   - power in watts (W);
 //   - cadence in revolutions per minute (rpm);
+//   - brake ratio as a normalized [0, 1] command;
 //   - simulation speed in metres per second (m/s);
 //   - simulation distance in metres (m);
 //   - time in seconds (s).
@@ -138,6 +139,25 @@ namespace CyclingSimulation
 			bool& bOutStoppedAfterStep,
 			FString& OutError);
 
+		// Stage 4C-B3c route-physics advance. The session keeps ownership of
+		// rider/input state while the fixed-step runner resolves current road
+		// grip, active corner lateral demand and braking force independently for
+		// every 0.05 s substep.
+		bool TryAdvanceWithCornerBraking(
+			double FrameDeltaS,
+			const ISimulationStepContextProvider& StepContextProvider,
+			const CyclingRoadPhysics::FRoadPhysicsProfile& RoadProfile,
+			const CyclingCornerContext::FCornerContextSettings& CornerSettings,
+			const CyclingSurfaceGrip::FSurfaceGripPolicy& GripPolicy,
+			double BaseFrictionCoefficient,
+			double LateralPositionM,
+			FSimulationState& OutState,
+			double& OutRemainingTimeS,
+			int32& OutCompletedSteps,
+			TArray<FSimulationBoundaryCrossing>& OutBoundaryCrossings,
+			bool& bOutStoppedAfterStep,
+			FString& OutError);
+
 		// Sets the current power in watts (W). Delegates to the configured
 		// rider input controller. Returns false (with a useful error and
 		// without changing the current input) if the session is
@@ -148,6 +168,12 @@ namespace CyclingSimulation
 		// Delegates to the configured rider input controller. Returns
 		// false (with a useful error) if the session is unconfigured.
 		bool TrySetCadenceRpm(double ValueRpm, FString& OutError);
+
+		// Sets normalized braking command through the rider input controller.
+		// Finite values are clamped to [0, 1]. The legacy advance paths preserve
+		// their pre-braking behavior; TryAdvanceWithCornerBraking resolves and
+		// applies the command inside each authoritative fixed substep.
+		bool TrySetBrakeRatio(double Value, FString& OutError);
 
 		// Increases the current power by the configured PowerStepW,
 		// clamping at MaxPowerW. Returns false (with a useful error) if the

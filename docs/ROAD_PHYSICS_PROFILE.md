@@ -126,11 +126,60 @@ The MVP may use controlled/automatic line selection instead of free steering, bu
 
 Braking and cornering must not receive independent full-grip budgets.
 
-Stage 4 MVP should use a simplified shared friction budget, initially representable as a friction circle or friction ellipse.
+Stage 4C-A uses the simplest explicit MVP form: a **unit friction circle** operating on normalized absolute tyre-force usage:
 
-Using more available grip for braking reduces the amount available for lateral cornering force, and vice versa.
+```text
+longitudinal_usage = |Fx demand| / longitudinal capacity
+lateral_usage      = |Fy demand| / lateral capacity
 
-The MVP model may remain intentionally simple. The architecture must not assume one permanent scalar grip state shared identically by both wheels.
+combined_usage = sqrt(longitudinal_usage^2 + lateral_usage^2)
+```
+
+`combined_usage <= 1` is inside the shared budget; `combined_usage > 1` exceeds it. Inputs are not clamped, so over-demand remains observable.
+
+The kernel also exposes how much normalized axis capacity remains while the other axis is consuming grip:
+
+```text
+remaining_lateral_capacity      = sqrt(max(0, 1 - longitudinal_usage^2))
+remaining_longitudinal_capacity = sqrt(max(0, 1 - lateral_usage^2))
+```
+
+This makes the core invariant explicit: two demands that are each individually below 100% can still exceed the shared budget when combined.
+
+Stage 4C-A deliberately does **not** invent braking controls, brake-force split, a tyre coefficient, a safety factor or consequence thresholds.
+
+Stage 4C-B1 adds the explicit control-side contract `brake_ratio ∈ [0, 1]`: `0` means released and `1` means full requested braking. The default is `0` and, during B1, the value is validated/plumbed through rider input, controller and session but intentionally does not alter the equation of motion. This preserves exact pre-braking physics while the force model is reviewed separately.
+
+Stage 4C-B2 is the deterministic demand bridge. The explicit normalized brake command is the longitudinal usage request, while lateral usage is derived from the actual fixed-step speed and Stage 4B-C corner limit:
+
+```text
+lateral_acceleration_demand = speed^2 / effective_radius
+lateral_usage = lateral_acceleration_demand / lateral_acceleration_limit
+longitudinal_usage = brake_ratio
+```
+
+These values feed the 4C-A shared circle. This makes shared-grip accounting available without inventing a brake-force constant.
+
+Stage 4C-B3a resolves the no-slip braking force without a hardware-specific maximum-brake constant. The standalone longitudinal capacity is derived from the caller-owned effective tyre-road friction and the static gravity-normal component of the tilted road surface:
+
+```text
+normal_load_static = mass * g * cos(longitudinal_road_angle) * cos(cross_slope)
+longitudinal_force_capacity = mu_effective * normal_load_static
+applied_longitudinal_usage = min(brake_ratio, remaining_longitudinal_capacity)
+applied_brake_force = applied_longitudinal_usage * longitudinal_force_capacity
+```
+
+The rider's requested shared budget remains visible even when the no-slip applied force is capped. Dynamic load transfer, front/rear brake split, ABS, wheel lock and tyre relaxation remain outside the MVP resolver.
+
+Stage 4C-B3b applies the resolved braking force as an explicit non-negative opposing force in the fixed-step energy model. The force is included in both the deterministic predictor and the average-speed work estimate. The legacy simulation-step API delegates to the explicit-force integrator with exactly `0 N`, and zero-brake results must remain exact regression parity with the pre-braking simulation.
+
+Stage 4C-B3c is the orchestration layer: for every authoritative fixed substep it resolves current Road Physics Profile state, corner context, lateral capacity, shared demand and tyre-limited braking force before calling the explicit-force integrator. This happens inside the fixed-step runner, so render-frame batching cannot change braking/cornering results.
+
+A look-ahead corner is not the current tyre contact patch. During `Approach`, the corner context may intentionally describe future curvature/surface metadata for guidance, while longitudinal braking still uses the current `S/D` road state under the tyres. Actual lateral grip usage starts only in `Entry`, `Apex` and `Exit`. Current grade, cross-slope, surface and wetness therefore remain the source for longitudinal tyre capacity until the rider physically reaches the corner.
+
+Aerodynamic drag, gravity and rolling resistance remain ordinary external/resistance forces and must not be misclassified as tyre-braking grip usage.
+
+The kernel is stateless rather than one permanent global grip scalar. MVP may evaluate it for a simplified whole-bike model; later front/rear tyre state can evaluate the same contract independently with different capacities and demands.
 
 ## 9. Surface and wetness
 

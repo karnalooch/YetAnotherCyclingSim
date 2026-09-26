@@ -81,6 +81,53 @@ class TestValidData(unittest.TestCase):
         self.assertEqual(rider.rider_mass_kg, 75.0)
 
 
+class TestRiderBrakeInput(unittest.TestCase):
+    def test_brake_ratio_defaults_to_released(self):
+        rider_input = RiderInput(power_w=250.0, cadence_rpm=90.0)
+        self.assertEqual(rider_input.brake_ratio, 0.0)
+        self.assertIsInstance(rider_input.brake_ratio, float)
+
+    def test_brake_ratio_accepts_closed_unit_interval(self):
+        for value in (0.0, 0.25, 1.0):
+            with self.subTest(value=value):
+                rider_input = RiderInput(
+                    power_w=250.0,
+                    cadence_rpm=90.0,
+                    brake_ratio=value,
+                )
+                self.assertEqual(rider_input.brake_ratio, value)
+
+    def test_brake_ratio_rejects_out_of_range_nonfinite_and_non_numeric(self):
+        for value in (-0.01, 1.01, math.nan, math.inf, -math.inf, True, None):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    RiderInput(
+                        power_w=250.0,
+                        cadence_rpm=90.0,
+                        brake_ratio=value,
+                    )
+
+    def test_brake_ratio_is_contract_only_in_stage4c_b1(self):
+        rider = _valid_rider()
+        env = _valid_environment()
+        state = SimulationState(speed_mps=10.0, distance_m=0.0, elapsed_time_s=0.0)
+        released = step_simulation(
+            rider,
+            env,
+            RiderInput(power_w=0.0, cadence_rpm=90.0, brake_ratio=0.0),
+            state,
+            0.05,
+        )
+        requested = step_simulation(
+            rider,
+            env,
+            RiderInput(power_w=0.0, cadence_rpm=90.0, brake_ratio=1.0),
+            state,
+            0.05,
+        )
+        self.assertEqual(requested, released)
+
+
 class TestBoundaryValues(unittest.TestCase):
     def test_zero_allowed_for_non_negative_fields(self):
         rider = RiderParameters(75.0, 8.5, 0.32, 0.0, 1.0)

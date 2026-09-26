@@ -66,6 +66,7 @@ FRiderInputController::FRiderInputController()
 	// to the configured initial values.
 	Current.PowerW = Config.InitialPowerW;
 	Current.CadenceRpm = Config.InitialCadenceRpm;
+	Current.BrakeRatio = 0.0;
 }
 
 bool FRiderInputController::TryConfigure(const FRiderInputControllerConfig& InConfig, FString& OutError)
@@ -127,6 +128,7 @@ bool FRiderInputController::TryConfigure(const FRiderInputControllerConfig& InCo
 	Config = InConfig;
 	Current.PowerW = InConfig.InitialPowerW;
 	Current.CadenceRpm = InConfig.InitialCadenceRpm;
+	Current.BrakeRatio = 0.0;
 	return true;
 }
 
@@ -176,6 +178,19 @@ bool FRiderInputController::TrySetCadenceRpm(double ValueRpm, FString& OutError)
 	return true;
 }
 
+bool FRiderInputController::TrySetBrakeRatio(double Value, FString& OutError)
+{
+	OutError.Reset();
+	if (!FMath::IsFinite(Value))
+	{
+		OutError = FString::Printf(TEXT("brake_ratio must be a finite number"));
+		return false;
+	}
+
+	Current.BrakeRatio = FMath::Clamp(Value, 0.0, 1.0);
+	return true;
+}
+
 bool FRiderInputController::TryIncreasePower(FString& OutError)
 {
 	OutError.Reset();
@@ -208,4 +223,5 @@ void FRiderInputController::Reset()
 {
 	Current.PowerW = Config.InitialPowerW;
 	Current.CadenceRpm = Config.InitialCadenceRpm;
+	Current.BrakeRatio = 0.0;
 }

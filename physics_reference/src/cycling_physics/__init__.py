@@ -1,5 +1,12 @@
 """Reference cycling physics package for the YetAnotherCyclingSim project."""
 
+from .braking import BrakingForceDemand, braking_force_demand
+from .corner_braking import (
+    CornerBrakingStepResolution,
+    CornerBrakingStepResult,
+    resolve_corner_braking_step,
+    step_simulation_with_corner_braking,
+)
 from .corner_context import (
     CORNER_DIRECTION_LEFT,
     CORNER_DIRECTION_RIGHT,
@@ -8,6 +15,7 @@ from .corner_context import (
     CornerContextSettings,
     corner_context_at,
 )
+from .corner_grip_demand import CornerGripDemand, corner_grip_demand
 from .corner_limit import (
     CornerLateralLimit,
     corner_lateral_limit,
@@ -35,6 +43,7 @@ from .cornering import (
     maximum_corner_speed_mps,
     summarize_corner_technique,
 )
+from .grip_budget import SharedGripBudget, shared_grip_budget
 from .grip_policy import (
     ResolvedSurfaceGrip,
     SurfaceGripPolicy,
@@ -51,6 +60,7 @@ from .model import (
     road_angle_rad,
     rolling_resistance_force_n,
     step_simulation,
+    step_simulation_with_brake_force,
     total_resistance_force_n,
 )
 from .route import RouteProfile, RouteSegment
@@ -65,6 +75,8 @@ from .weather import WeatherKeyframe, WeatherProfile
 
 __all__ = [
     "STANDARD_GRAVITY_MPS2",
+    "BrakingForceDemand",
+    "braking_force_demand",
     "RiderParameters",
     "Environment",
     "RiderInput",
@@ -80,6 +92,8 @@ __all__ = [
     "SurfaceGripRule",
     "ResolvedSurfaceGrip",
     "SurfaceGripPolicy",
+    "SharedGripBudget",
+    "shared_grip_budget",
     "ALPINE_JOURNEY",
     "ALPINE_WEATHER",
     "ALPINE_SURFACE_GRIP_POLICY",
@@ -91,6 +105,8 @@ __all__ = [
     "CornerContext",
     "corner_context_at",
     "CornerLateralLimit",
+    "CornerGripDemand",
+    "corner_grip_demand",
     "corner_lateral_limit",
     "Corner",
     "CornerProfile",
@@ -119,4 +135,5 @@ __all__ = [
     "aerodynamic_force_n",
     "total_resistance_force_n",
     "step_simulation",
+    "step_simulation_with_brake_force",
 ]

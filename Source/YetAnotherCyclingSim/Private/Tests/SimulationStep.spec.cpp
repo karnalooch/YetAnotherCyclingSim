@@ -44,11 +44,12 @@ namespace SimulationStepTest
 		return Environment;
 	}
 
-	FRiderInput MakeRiderInput(double PowerW, double CadenceRpm = 90.0)
+	FRiderInput MakeRiderInput(double PowerW, double CadenceRpm = 90.0, double BrakeRatio = 0.0)
 	{
 		FRiderInput Input;
 		Input.PowerW = PowerW;
 		Input.CadenceRpm = CadenceRpm;
+		Input.BrakeRatio = BrakeRatio;
 		return Input;
 	}
 
@@ -272,6 +273,57 @@ bool FSimulationStepTest::RunTest(const FString& Parameters)
 		ExpectNearlyEqual(*this, OutState.DistanceM, 0.0);
 		ExpectNearlyEqual(*this, OutState.ElapsedTimeS, 0.0);
 		TestTrue(TEXT("overflow error names the calculated field"), Error.Contains(TEXT("distance_m")));
+	}
+
+	// --- Stage 4C-B1 brake input contract / no-force regression. ---
+
+	{
+		FSimulationState OutState;
+		FString Error;
+		TestFalse(TEXT("brake ratio above one is rejected"),
+			TryStepSimulation(
+				MakeValidRider(),
+				MakeEnvironment(),
+				MakeRiderInput(0.0, 90.0, 1.01),
+				MakeState(10.0),
+				0.05,
+				OutState,
+				Error));
+		TestTrue(TEXT("invalid brake error names brake_ratio"), Error.Contains(TEXT("brake_ratio")));
+	}
+
+	{
+		const FRiderParameters Rider = MakeValidRider();
+		const FEnvironment Environment = MakeEnvironment();
+		const FSimulationState Start = MakeState(10.0);
+
+		FSimulationState Released;
+		FSimulationState Requested;
+		FString Error;
+		TestTrue(TEXT("released-brake step succeeds"),
+			TryStepSimulation(
+				Rider,
+				Environment,
+				MakeRiderInput(0.0, 90.0, 0.0),
+				Start,
+				0.05,
+				Released,
+				Error));
+		TestTrue(TEXT("full brake command validates during B1"),
+			TryStepSimulation(
+				Rider,
+				Environment,
+				MakeRiderInput(0.0, 90.0, 1.0),
+				Start,
+				0.05,
+				Requested,
+				Error));
+		TestEqual(TEXT("B1 brake command does not yet alter speed"),
+			Requested.SpeedMps, Released.SpeedMps);
+		TestEqual(TEXT("B1 brake command does not yet alter distance"),
+			Requested.DistanceM, Released.DistanceM);
+		TestEqual(TEXT("B1 brake command does not yet alter time"),
+			Requested.ElapsedTimeS, Released.ElapsedTimeS);
 	}
 
 	return true;
