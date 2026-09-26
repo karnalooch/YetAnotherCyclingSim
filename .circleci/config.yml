@@ -9,7 +9,7 @@ parameters:
     default: false
   ue_canary:
     type: boolean
-    default: false
+    default: true
   ue_seed_resource_class:
     type: string
     default: "karnalooch/yacs-ue58-seed"
