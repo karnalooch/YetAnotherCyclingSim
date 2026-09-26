@@ -73,7 +73,16 @@ def validate_changed_assets(base: str, head: str) -> tuple[list[str], list[str]]
     for path in assets:
         file_path = Path(path)
         if not file_path.is_file():
-            problems.append(f"{path}: changed asset is missing from checkout")
+            exists_at_head = subprocess.run(
+                ["git", "cat-file", "-e", f"{head}:{path}"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+            ).returncode == 0
+            if not exists_at_head:
+                print(f"  DELETE {path}")
+                continue
+            problems.append(f"{path}: changed asset exists at head but is missing from checkout")
             continue
 
         problems.extend(
