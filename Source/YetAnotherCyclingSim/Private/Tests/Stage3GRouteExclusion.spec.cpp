@@ -5,6 +5,7 @@
 #include "Cycling/Stage3GRouteExclusion.h"
 
 #include <cmath>
+#include <limits>
 
 namespace Stage3GRouteExclusionTests
 {
