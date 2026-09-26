@@ -22,9 +22,7 @@ CPP = (
     / "Stage3GForestCandidatesSettings.cpp"
 )
 AUTHOR = ROOT / "scripts" / "ue" / "stage3g_author_pcg_forest.py"
-WORLDSPEC = (
-    ROOT / "worldgen" / "specs" / "stage3g_alpine_reference.worldspec.yml"
-)
+WORLDSPEC = ROOT / "worldgen" / "specs" / "stage3g_alpine_reference.worldspec.yml"
 
 
 class Stage3GR2PCGForestContractTests(unittest.TestCase):
