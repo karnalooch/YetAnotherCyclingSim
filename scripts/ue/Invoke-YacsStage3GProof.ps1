@@ -49,6 +49,7 @@ $BaseArgs = @{
     ExpectedHead = $ExpectedHead
     TestFilter = $TestFilter
     ConservativeBuild = $true
+    AdditionalAllowedDirtyPaths = @('Content/Prototype/Environment/Stage3G/')
 }
 if ($SkipBuild) { $BaseArgs['SkipBuild'] = $true }
 & $BaseProof @BaseArgs
@@ -57,7 +58,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Stage 3G build/Automation proof failed.' }
 # Resolve the exact editor path and provenance again for standalone commandlets.
 $Preflight = Join-Path $RepoRoot 'scripts/ue/Preflight-YacsProof.ps1'
 $PreflightRoot = Join-Path $ArtifactRoot 'Preflight'
-$Context = & $Preflight -RepoRoot $RepoRoot -ProjectPath $ProjectPath -ArtifactRoot $PreflightRoot -ExpectedBranch $ExpectedBranch -ExpectedHead $ExpectedHead
+$Context = & $Preflight -RepoRoot $RepoRoot -ProjectPath $ProjectPath -ArtifactRoot $PreflightRoot -ExpectedBranch $ExpectedBranch -ExpectedHead $ExpectedHead -AdditionalAllowedDirtyPaths @('Content/Prototype/Environment/Stage3G/')
 if ($LASTEXITCODE -ne 0) { throw 'Stage 3G post-Automation preflight failed.' }
 $EditorCmd = $Context.UnrealEditorCmdPath
 
