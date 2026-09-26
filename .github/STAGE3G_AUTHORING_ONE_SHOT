@@ -4,3 +4,5 @@ restore_required=true
 runner=yacs-ue58
 target_branch=feat/stage3g-reference-environment
 target_sha=da99c0327ff023881ec7a379adf43eda9ca25829
+attempt=2
+reason=repo-local-lfs-materialization
