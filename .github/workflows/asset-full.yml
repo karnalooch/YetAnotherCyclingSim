@@ -1,0 +1,182 @@
+name: Asset full Unreal proof
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Trusted heavy asset/runtime proof"
+        required: true
+        default: map-smoke
+        type: choice
+        options:
+          - map-smoke
+          - visual
+          - full
+      expected_sha:
+        description: "Optional exact main SHA; blank resolves current main HEAD"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yacs-asset-full-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  asset-full:
+    name: ${{ inputs.mode }} on yacs-ue58
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 120
+    permissions:
+      contents: read
+
+    steps:
+      - name: Require trusted default-branch workflow definition
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ('${{ github.ref }}' -ne 'refs/heads/main') {
+            throw "Asset/full workflow must be dispatched from main; actual ref is '${{ github.ref }}'."
+          }
+
+      - name: Resolve exact trusted main revision
+        id: trust
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $headers = @{
+            Authorization = "Bearer $env:GH_TOKEN"
+            Accept = 'application/vnd.github+json'
+            'X-GitHub-Api-Version' = '2022-11-28'
+          }
+          $url = "https://api.github.com/repos/${{ github.repository }}/branches/main"
+          $main = Invoke-RestMethod -Uri $url -Headers $headers -Method Get
+          $resolvedSha = [string]$main.commit.sha
+
+          if ($resolvedSha -notmatch '^[0-9a-f]{40}$') {
+            throw "Resolved main SHA is invalid: '$resolvedSha'."
+          }
+
+          if ($env:EXPECTED_SHA) {
+            if ($env:EXPECTED_SHA -notmatch '^[0-9a-f]{40}$') {
+              throw 'expected_sha must be a full 40-character lowercase SHA.'
+            }
+            if ($env:EXPECTED_SHA -ne $resolvedSha) {
+              throw "main moved: resolved '$resolvedSha', expected '$env:EXPECTED_SHA'."
+            }
+          }
+
+          "sha=$resolvedSha" >> $env:GITHUB_OUTPUT
+          Write-Host "Trusted main target: $resolvedSha"
+
+      - name: Checkout exact trusted revision with full LFS
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.trust.outputs.sha }}
+          fetch-depth: 0
+          lfs: true
+          clean: true
+          persist-credentials: false
+
+      - name: Verify asset checkout and runner provenance
+        shell: pwsh
+        env:
+          TARGET_SHA: ${{ steps.trust.outputs.sha }}
+          MODE: ${{ inputs.mode }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $actual = (git rev-parse HEAD).Trim()
+          if ($actual -ne $env:TARGET_SHA) {
+            throw "checkout HEAD '$actual' != trusted target '$env:TARGET_SHA'."
+          }
+          if (git status --porcelain) {
+            throw 'Checkout is not clean before asset/full execution.'
+          }
+
+          git lfs fsck
+          if ($LASTEXITCODE -ne 0) {
+            throw 'git lfs fsck failed.'
+          }
+
+          $proofRoot = 'Saved/RuntimeProof/CI/AssetFull'
+          New-Item -ItemType Directory -Path $proofRoot -Force | Out-Null
+
+          $payload = [ordered]@{
+            TimestampUtc = (Get-Date).ToUniversalTime().ToString('o')
+            WorkflowRef = '${{ github.ref }}'
+            WorkflowSha = '${{ github.sha }}'
+            TargetBranch = 'main'
+            TargetSha = $env:TARGET_SHA
+            Mode = $env:MODE
+            RunnerName = $env:RUNNER_NAME
+            RunnerOs = $env:RUNNER_OS
+            RunnerArch = $env:RUNNER_ARCH
+            Hostname = $env:COMPUTERNAME
+            PowerShell = $PSVersionTable.PSVersion.ToString()
+            Git = (git --version)
+            GitLfs = (git lfs version)
+          }
+          $payload | ConvertTo-Json -Depth 4 |
+            Set-Content -LiteralPath "$proofRoot/dispatch.json" -Encoding UTF8
+
+      - name: Map smoke - build, Automation, persistence and Map Check
+        if: ${{ inputs.mode == 'map-smoke' || inputs.mode == 'full' }}
+        shell: pwsh
+        env:
+          TARGET_SHA: ${{ steps.trust.outputs.sha }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $args = @{
+            ExpectedBranch = 'HEAD'
+            ExpectedHead = $env:TARGET_SHA
+            ArtifactRoot = 'Saved/RuntimeProof/CI/AssetFull/Stage3'
+          }
+          if ('${{ inputs.mode }}' -eq 'map-smoke') {
+            $args['SkipPerformance'] = $true
+          }
+          ./scripts/ue/Invoke-YacsStage3Proof.ps1 @args
+
+      - name: Visual asset proof
+        if: ${{ inputs.mode == 'visual' || inputs.mode == 'full' }}
+        shell: pwsh
+        env:
+          TARGET_SHA: ${{ steps.trust.outputs.sha }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ('${{ inputs.mode }}' -eq 'visual') {
+            ./scripts/ue/Invoke-YacsStage3VisualEnvironmentProof.ps1               -ExpectedBranch HEAD               -ExpectedHead $env:TARGET_SHA               -ArtifactRoot 'Saved/RuntimeProof/CI/AssetFull/Visual'               -SkipBuild:$false
+          }
+          else {
+            ./scripts/ue/Invoke-YacsStage3VisualEnvironmentProof.ps1               -ExpectedBranch HEAD               -ExpectedHead $env:TARGET_SHA               -ArtifactRoot 'Saved/RuntimeProof/CI/AssetFull/Visual'               -SkipBuild
+          }
+
+      - name: Upload concise asset/full proof
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: asset-full-${{ inputs.mode }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            Saved/RuntimeProof/CI/AssetFull/**/*.json
+            Saved/RuntimeProof/CI/AssetFull/**/*.txt
+            Saved/RuntimeProof/CI/AssetFull/**/*.log
+            Saved/RuntimeProof/CI/AssetFull/**/*.png
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Clean self-hosted workspace
+        if: ${{ always() }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git reset --hard
+          git clean -ffdx
+          if (git status --porcelain) {
+            throw 'Runner workspace is still dirty after asset/full cleanup.'
+          }
+          Write-Host 'Asset/full workspace cleanup: PASS'
