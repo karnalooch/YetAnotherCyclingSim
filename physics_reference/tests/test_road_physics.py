@@ -198,6 +198,26 @@ class TestRoadPhysicsProfile(unittest.TestCase):
                 )
             )
 
+        asymmetric = RoadPhysicsProfile(
+            "cross slope transition",
+            (
+                sample(0.0, left_cross_slope=0.0, right_cross_slope=0.0),
+                sample(
+                    10.0,
+                    left_cross_slope=0.0,
+                    right_cross_slope=math.radians(10.0),
+                ),
+            ),
+        )
+        with self.assertRaisesRegex(ValueError, "right cross-slope angle change rate"):
+            asymmetric.validate_transition_rates(
+                RoadPhysicsTransitionLimits(
+                    max_abs_grade_change_per_m=1.0,
+                    max_abs_horizontal_curvature_change_per_m2=1.0,
+                    max_abs_cross_slope_angle_change_rad_per_m=0.01,
+                )
+            )
+
     def test_profile_rejects_invalid_distance_domain(self):
         with self.assertRaisesRegex(ValueError, "exactly 0.0"):
             RoadPhysicsProfile("bad", (sample(1.0), sample(2.0)))
