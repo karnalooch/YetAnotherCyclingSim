@@ -1,0 +1,95 @@
+name: Stage 3G R2 Fir Tree profile
+
+on:
+  push:
+    branches:
+      - feat/stage3g-pcg-forest-r2
+    paths:
+      - '.github/workflows/stage3g-r2-fir-profile.yml'
+      - 'scripts/assets/stage3g_polyhaven.json'
+      - 'scripts/assets/download_stage3g_assets.py'
+      - 'scripts/ue/Invoke-YacsStage3GR2FirProfile.ps1'
+      - 'scripts/ue/stage3g_profile_fir_tree.py'
+      - 'YetAnotherCyclingSim.uproject'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stage3g-r2-fir-profile-${{ github.repository }}
+  cancel-in-progress: true
+
+jobs:
+  profile:
+    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.ref == 'refs/heads/feat/stage3g-pcg-forest-r2' }}
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 120
+    steps:
+      - name: Isolate self-hosted Git configuration
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'yacs-global.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          $env:GIT_CONFIG_GLOBAL = $isolated
+          $env:GIT_CONFIG_NOSYSTEM = '1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+
+      - name: Checkout exact trusted R2 profile revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          lfs: true
+          clean: true
+          persist-credentials: false
+
+      - name: Materialize and verify LFS
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ((git rev-parse HEAD).Trim() -ne '${{ github.sha }}') {
+            throw 'Stage 3G R2 profiling checkout is not exact SHA.'
+          }
+          git lfs install --local
+          if ($LASTEXITCODE -ne 0) { throw 'git lfs install failed.' }
+          git lfs checkout
+          if ($LASTEXITCODE -ne 0) { throw 'git lfs checkout failed.' }
+          git lfs fsck
+          if ($LASTEXITCODE -ne 0) { throw 'git lfs fsck failed.' }
+          if (git status --porcelain) {
+            throw 'Stage 3G R2 profiling checkout is dirty before profiling.'
+          }
+
+      - name: Profile fir_tree_01 in UE 5.8
+        shell: pwsh
+        run: |
+          ./scripts/ue/Invoke-YacsStage3GR2FirProfile.ps1 `
+            -ExpectedBranch HEAD `
+            -ExpectedHead '${{ github.sha }}' `
+            -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR2/FirProfile'
+
+      - name: Upload R2 fir profile
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: stage3g-r2-fir-profile-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            Saved/RuntimeProof/CI/Stage3GR2/FirProfile/**/*.json
+            Saved/RuntimeProof/CI/Stage3GR2/FirProfile/**/*.txt
+            Saved/RuntimeProof/CI/Stage3GR2/FirProfile/**/*.log
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Clean self-hosted workspace
+        if: ${{ always() }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git reset --hard
+          git clean -ffdx
+          if (git status --porcelain) {
+            throw 'Stage 3G R2 profiling workspace is still dirty after cleanup.'
+          }
+          Write-Host 'Stage 3G R2 fir profile cleanup: PASS'
