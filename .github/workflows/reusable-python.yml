@@ -49,6 +49,7 @@ jobs:
             'scripts/ci/Prepare-YacsUe58Seed.ps1',
             'scripts/ci/Restore-YacsUe58Seed.ps1',
             'scripts/ci/Test-YacsCodeOnlyCheckout.ps1',
+            'scripts/ci/Invoke-YacsUnrealCi.ps1',
             'scripts/ue/Invoke-YacsPackageProof.ps1',
             'scripts/ue/Invoke-YacsProof.ps1'
           )) {
@@ -74,7 +75,6 @@ jobs:
           GIT_LFS_SKIP_SMUDGE: "1"
         run: |
           ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
-
 
       - name: Run branch hygiene unit tests
         run: python scripts/ci/test_cleanup_merged_branches.py
