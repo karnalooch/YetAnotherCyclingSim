@@ -253,6 +253,7 @@ jobs:
     machine:
       image: windows-server-2022-gui:current
       shell: powershell.exe -ExecutionPolicy Bypass
+    # Code-only canary: keep project/source-media LFS payloads unmaterialized.
     environment:
       GIT_LFS_SKIP_SMUDGE: "1"
     steps:
