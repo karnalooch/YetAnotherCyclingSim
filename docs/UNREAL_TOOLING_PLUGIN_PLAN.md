@@ -38,9 +38,9 @@ Any change to the explicit plugin list is an integration change and requires an 
 
 | Stage | Tool / plugin | Priority | Why YACS needs it | Activation policy |
 |---|---|---:|---|---|
-| **3G** | **PCG** | MUST | deterministic vegetation, rocks, biome/set dressing and roadside generation | **active recovery gate**; enable after #85 Phase A smoke setup is ready; first proof on one sector |
-| **3G** | **Editor Scripting Utilities** | MUST | safer/simpler editor automation APIs complementing PythonScriptPlugin | enable with first PCG integration |
-| **3G** | **Geometry Script** | SHOULD | generate/analyze/edit helper geometry, mesh processing and custom world-authoring tools | enable with PCG integration; do not make route physics depend on it |
+| **3G** | **PCG** | MUST | deterministic vegetation, rocks, biome/set dressing and roadside generation | **enabled in `.uproject`**; active recovery gate is now the first real graph/sector proof (`PCG_RouteExclusion` → `PCG_Forest`) |
+| **3G** | **Editor Scripting Utilities** | MUST | safer/simpler editor automation APIs complementing PythonScriptPlugin | **enabled in `.uproject`**; used as supporting editor tooling, acceptance follows the Stage 3G PCG proof |
+| **3G** | **Geometry Script** | SHOULD | generate/analyze/edit helper geometry, mesh processing and custom world-authoring tools | **enabled in `.uproject`**; use only where it removes measured authoring friction and never as route/physics truth |
 | **3G** | **PCG Geometry Script Interop** | CONDITIONAL | PCG ↔ Dynamic/Static Mesh operations and mesh sampling when a graph actually requires them | enable only on demonstrated graph need |
 | **3G** | **PCGToolset** | EXPERIMENT | agent-driven creation/modification of PCG Graphs through UE 5.8 Toolset Registry | only after MCP smoke; keep behind YACS guard/flow surface |
 | **3G/7** | **Water + Landmass** | OPTIONAL | lake/river/terrain shaping if water survives art-direction review | leave disabled until composition decision |
