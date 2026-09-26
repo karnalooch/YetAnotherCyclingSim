@@ -113,7 +113,7 @@ def _is_asset(path: str) -> bool:
 def _is_ci(path: str) -> bool:
     if path.startswith(".github/") or path.startswith(".circleci/"):
         return True
-    if path.startswith("scripts/ci/"):
+    if path.startswith("scripts/ci/") or path.startswith("scripts/ue/"):
         return True
     if path in CI_EXACT:
         return True
