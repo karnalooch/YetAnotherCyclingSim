@@ -19,13 +19,23 @@ class SelfHostedGitIsolationTests(unittest.TestCase):
             text = path.read_text(encoding="utf-8")
             with self.subTest(workflow=path.name):
                 self.assertIn("runs-on: [self-hosted, yacs-ue58]", text)
-                self.assertIn("GIT_CONFIG_GLOBAL:", text)
-                self.assertIn('GIT_CONFIG_NOSYSTEM: "1"', text)
+                self.assertNotIn("${{ runner.temp }}", text)
                 self.assertIn("Isolate self-hosted Git configuration", text)
                 self.assertIn(
-                    "Set-Content -LiteralPath $env:GIT_CONFIG_GLOBAL -Value '' -Encoding ascii",
+                    "$isolated = Join-Path $env:RUNNER_TEMP 'yacs-global.gitconfig'",
                     text,
                 )
+                self.assertIn(
+                    "Set-Content -LiteralPath $isolated -Value '' -Encoding ascii",
+                    text,
+                )
+                self.assertIn("$env:GIT_CONFIG_GLOBAL = $isolated", text)
+                self.assertIn("$env:GIT_CONFIG_NOSYSTEM = '1'", text)
+                self.assertIn(
+                    '"GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV',
+                    text,
+                )
+                self.assertIn('"GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV', text)
                 self.assertIn("git config --global --list --show-origin", text)
 
 
