@@ -4,21 +4,15 @@ parameters:
   windows_probe:
     type: boolean
     default: false
-  ue_cache_seed:
+  ue_local_canary:
     type: boolean
     default: false
-  ue_canary:
-    type: boolean
-    default: false
-  ue_seed_resource_class:
+  ue_runner_resource_class:
     type: string
     default: "karnalooch/yacs-ue58-seed"
-  ue_seed_working_directory:
+  ue_runner_working_directory:
     type: string
     default: 'D:\CircleCI\YACS-Runner\Workdir'
-  ue_cache_key:
-    type: string
-    default: "yacs-ue58-win64-v4"
 
 jobs:
   windows-probe:
@@ -42,10 +36,10 @@ jobs:
           path: Saved/RuntimeProof/CI/CircleCI-Windows-Probe
           destination: circleci-windows-probe
 
-  ue-cache-seed:
+  ue-local-canary:
     machine: true
-    resource_class: << pipeline.parameters.ue_seed_resource_class >>
-    working_directory: << pipeline.parameters.ue_seed_working_directory >>
+    resource_class: << pipeline.parameters.ue_runner_resource_class >>
+    working_directory: << pipeline.parameters.ue_runner_working_directory >>
     environment:
       GIT_LFS_SKIP_SMUDGE: "1"
       TEMP: 'D:\CircleCI\YACS-Runner\Temp'
@@ -55,210 +49,40 @@ jobs:
           method: blobless
 
       - run:
-          name: Require trusted main branch seed
+          name: Require trusted main branch and local UE host
           shell: powershell.exe -ExecutionPolicy Bypass
           command: |
+            $ErrorActionPreference = 'Stop'
+
             if ($env:CIRCLE_BRANCH -ne 'main') {
-              throw "UE cache seed must run from main; actual branch is '$env:CIRCLE_BRANCH'."
+              throw "UE local canary must run from main; actual branch is '$env:CIRCLE_BRANCH'."
             }
+
+            $expectedWorkDir = 'D:\CircleCI\YACS-Runner\Workdir'
+            $actualWorkDir = [System.IO.Path]::GetFullPath((Get-Location).Path).TrimEnd('\')
+            if ($actualWorkDir -ne $expectedWorkDir) {
+              throw "CircleCI runner working directory mismatch: '$actualWorkDir', expected '$expectedWorkDir'."
+            }
+
             New-Item -ItemType Directory -Path $env:TEMP -Force | Out-Null
             if (-not $env:TEMP.StartsWith('D:\', [System.StringComparison]::OrdinalIgnoreCase)) {
-              throw "Self-hosted UE seed TEMP must stay on D:, actual '$env:TEMP'."
+              throw "Self-hosted UE TEMP must stay on D:, actual '$env:TEMP'."
             }
             if (-not $env:TMP.StartsWith('D:\', [System.StringComparison]::OrdinalIgnoreCase)) {
-              throw "Self-hosted UE seed TMP must stay on D:, actual '$env:TMP'."
-            }
-            Write-Host ("Self-hosted seed scratch: TEMP={0}; TMP={1}" -f $env:TEMP, $env:TMP)
-
-      - run:
-          name: Verify foreground machine-runner host contract
-          shell: powershell.exe -ExecutionPolicy Bypass
-          command: |
-            $ErrorActionPreference = 'Stop'
-            $expectedWorkDir = 'D:\CircleCI\YACS-Runner\Workdir'
-            $gitUsrBin = 'C:\Program Files\Git\usr\bin'
-
-            $actualWorkingDirectory = [System.IO.Path]::GetFullPath((Get-Location).Path).TrimEnd('\')
-            if ($actualWorkingDirectory -ne $expectedWorkDir) {
-              throw "CircleCI runner working directory mismatch: '$actualWorkingDirectory', expected '$expectedWorkDir'. Relaunch the foreground runner after applying the YACS host bootstrap."
+              throw "Self-hosted UE TMP must stay on D:, actual '$env:TMP'."
             }
 
-            $gzipCommand = Get-Command gzip.exe -ErrorAction Stop
-            $tarCommand = Get-Command tar.exe -ErrorAction Stop
-            if ($gzipCommand.Source -ne (Join-Path $gitUsrBin 'gzip.exe')) {
-              throw ("Unexpected gzip resolved from runner PATH: {0}" -f $gzipCommand.Source)
-            }
-
-            Write-Host ("Foreground machine-runner host contract: PASS")
-            Write-Host ("  working directory : {0}" -f $actualWorkingDirectory)
-            Write-Host ("  gzip              : {0}" -f $gzipCommand.Source)
-            Write-Host ("  tar               : {0}" -f $tarCommand.Source)
-
-      - run:
-          name: Measure and package local UE 5.8
-          shell: powershell.exe -ExecutionPolicy Bypass
-          no_output_timeout: 45m
-          command: |
-            $workdir = (Get-Location).Path
-            $runnerRoot = Split-Path -Parent $workdir
-            $persistentSeedRoot = Join-Path $runnerRoot 'Persistent\UE58Seed'
-            $cacheSeedRoot = Join-Path $workdir 'Saved\RuntimeProof\CI\UE58Seed'
-
-            Write-Host ("Persistent UE seed root: {0}" -f $persistentSeedRoot)
-            powershell.exe -ExecutionPolicy Bypass -File scripts/ci/Prepare-YacsUe58Seed.ps1 -OutputRoot $persistentSeedRoot -CreateArchive
-
-            New-Item -ItemType Directory -Path $cacheSeedRoot -Force | Out-Null
-            $persistentArchive = Join-Path $persistentSeedRoot 'ue58-win64.zip'
-            $persistentManifest = Join-Path $persistentSeedRoot 'ue58-win64-manifest.json'
-            $cacheArchive = Join-Path $cacheSeedRoot 'ue58-win64.zip'
-            $cacheManifest = Join-Path $cacheSeedRoot 'ue58-win64-manifest.json'
-
-            if (Test-Path -LiteralPath $cacheArchive) {
-              Remove-Item -LiteralPath $cacheArchive -Force
-            }
-            New-Item -ItemType HardLink -Path $cacheArchive -Target $persistentArchive | Out-Null
-            Copy-Item -LiteralPath $persistentManifest -Destination $cacheManifest -Force
-            Write-Host ("Staged persistent UE seed into CircleCI cache path via hardlink: {0}" -f $cacheArchive)
-
-      - run:
-          name: Verify cache staging path and payload
-          shell: powershell.exe -ExecutionPolicy Bypass
-          command: |
-            $ErrorActionPreference = 'Stop'
-            if (-not $env:CIRCLE_WORKING_DIRECTORY) {
-              throw 'CIRCLE_WORKING_DIRECTORY is not set.'
-            }
-
-            $actualWorkingDirectory = [System.IO.Path]::GetFullPath((Get-Location).Path).TrimEnd('\')
-            $circleWorkingDirectory = [System.IO.Path]::GetFullPath($env:CIRCLE_WORKING_DIRECTORY).TrimEnd('\')
-            if ($actualWorkingDirectory -ne $circleWorkingDirectory) {
-              throw ("CircleCI working-directory mismatch: shell='{0}', cache='{1}'." -f $actualWorkingDirectory, $circleWorkingDirectory)
-            }
-
-            $cacheSeedRoot = Join-Path $circleWorkingDirectory 'Saved\RuntimeProof\CI\UE58Seed'
-            $cacheArchive = Join-Path $cacheSeedRoot 'ue58-win64.zip'
-            $cacheManifest = Join-Path $cacheSeedRoot 'ue58-win64-manifest.json'
-            if (-not (Test-Path -LiteralPath $cacheArchive -PathType Leaf)) {
-              throw "Staged UE cache archive is missing: $cacheArchive"
-            }
-            if (-not (Test-Path -LiteralPath $cacheManifest -PathType Leaf)) {
-              throw "Staged UE cache manifest is missing: $cacheManifest"
-            }
-
-            $manifest = Get-Content -LiteralPath $cacheManifest -Raw | ConvertFrom-Json
-            $archiveBytes = (Get-Item -LiteralPath $cacheArchive).Length
-            if (-not [bool]$manifest.ArchiveCreated -or -not [bool]$manifest.ArchiveIntegrityValidated) {
-              throw 'Staged UE cache manifest is not integrity-validated.'
-            }
-            if ([int64]$manifest.ArchiveBytes -ne [int64]$archiveBytes) {
-              throw ("Staged UE cache size mismatch: manifest={0}, actual={1}." -f $manifest.ArchiveBytes, $archiveBytes)
-            }
-            if ($archiveBytes -lt 1GB) {
-              throw ("Staged UE cache archive is implausibly small: {0} bytes." -f $archiveBytes)
-            }
-            Write-Host ("CircleCI cache staging verified: {0:N3} GiB at {1}" -f ($archiveBytes / 1GB), $cacheArchive)
-
-      - run:
-          name: Verify CircleCI workspace gzip prerequisite from Git for Windows
-          shell: powershell.exe -ExecutionPolicy Bypass
-          command: |
-            $ErrorActionPreference = 'Stop'
-            $gitUsrBin = 'C:\Program Files\Git\usr\bin'
-            $gzipPath = Join-Path $gitUsrBin 'gzip.exe'
-            $tarPath = Join-Path $gitUsrBin 'tar.exe'
-
-            if (-not (Test-Path -LiteralPath $gzipPath -PathType Leaf)) {
-              throw "Git for Windows gzip prerequisite is missing: $gzipPath"
-            }
-            if (-not (Test-Path -LiteralPath $tarPath -PathType Leaf)) {
-              throw "Git for Windows tar prerequisite is missing: $tarPath"
-            }
-
-            $gzipCommand = Get-Command gzip.exe -ErrorAction Stop
-            $tarCommand = Get-Command tar.exe -ErrorAction Stop
-            if ($gzipCommand.Source -ne $gzipPath) {
-              throw ("Unexpected gzip resolved from PATH: {0}" -f $gzipCommand.Source)
-            }
-
-            Write-Host ("gzip prerequisite: {0}" -f $gzipCommand.Source)
-            Write-Host ("tar prerequisite : {0}" -f $tarCommand.Source)
-            & $gzipCommand.Source --version | Select-Object -First 1
+            $pwsh = Get-Command pwsh -ErrorAction Stop
+            $git = Get-Command git -ErrorAction Stop
+            & git lfs version | Out-Null
             if ($LASTEXITCODE -ne 0) {
-              throw 'gzip prerequisite version probe failed.'
+              throw 'Git LFS is required for the code-only checkout guard.'
             }
 
-      - persist_to_workspace:
-          root: 'D:\CircleCI\YACS-Runner\Workdir\Saved\RuntimeProof\CI\UE58Seed'
-          paths:
-            - ue58-win64.zip
-            - ue58-win64-manifest.json
-
-      - store_artifacts:
-          path: Saved/RuntimeProof/CI/UE58Seed/ue58-win64-manifest.json
-          destination: ue58-seed-manifest.json
-
-  ue-cache-publish:
-    resource_class: windows.medium
-    machine:
-      image: windows-server-2022-gui:current
-      shell: powershell.exe -ExecutionPolicy Bypass
-    environment:
-      GIT_LFS_SKIP_SMUDGE: "1"
-    retention:
-      caches: 1d
-    steps:
-      - checkout:
-          method: blobless
-
-      - attach_workspace:
-          at: 'C:\YacsUe58Seed'
-
-      - run:
-          name: Verify workspace UE seed before cache publish
-          shell: powershell.exe -ExecutionPolicy Bypass
-          no_output_timeout: 45m
-          command: |
-            powershell.exe -ExecutionPolicy Bypass -File scripts/ci/Test-YacsUe58SeedPayload.ps1 -SeedRoot 'C:\YacsUe58Seed' -SuccessLabel 'WORKSPACE SEED PASS'
-
-      - save_cache:
-          key: << pipeline.parameters.ue_cache_key >>
-          paths:
-            - 'C:\YacsUe58Seed\ue58-win64.zip'
-            - 'C:\YacsUe58Seed\ue58-win64-manifest.json'
-
-  ue-cache-verify:
-    resource_class: windows.medium
-    machine:
-      image: windows-server-2022-gui:current
-      shell: powershell.exe -ExecutionPolicy Bypass
-    environment:
-      GIT_LFS_SKIP_SMUDGE: "1"
-    steps:
-      - checkout:
-          method: blobless
-
-      - restore_cache:
-          keys:
-            - << pipeline.parameters.ue_cache_key >>
-
-      - run:
-          name: Verify restored UE cache payload
-          shell: powershell.exe -ExecutionPolicy Bypass
-          no_output_timeout: 45m
-          command: |
-            powershell.exe -ExecutionPolicy Bypass -File scripts/ci/Test-YacsUe58SeedPayload.ps1 -SeedRoot 'C:\YacsUe58Seed' -SuccessLabel 'CACHE RESTORE PASS'
-
-  ue-hosted-canary:
-    resource_class: windows.medium
-    machine:
-      image: windows-server-2022-gui:current
-      shell: powershell.exe -ExecutionPolicy Bypass
-    # Code-only canary: keep project/source-media LFS payloads unmaterialized.
-    environment:
-      GIT_LFS_SKIP_SMUDGE: "1"
-    steps:
-      - checkout:
-          method: blobless
+            Write-Host 'Local UE runner host contract: PASS'
+            Write-Host ("  working directory : {0}" -f $actualWorkDir)
+            Write-Host ("  pwsh              : {0}" -f $pwsh.Source)
+            Write-Host ("  git               : {0}" -f $git.Source)
 
       - run:
           name: Enforce code-only checkout
@@ -267,33 +91,14 @@ jobs:
             powershell.exe -ExecutionPolicy Bypass -File scripts/ci/Test-YacsCodeOnlyCheckout.ps1
 
       - run:
-          name: Require trusted main branch canary
-          shell: powershell.exe -ExecutionPolicy Bypass
-          command: |
-            if ($env:CIRCLE_BRANCH -ne 'main') {
-              throw "UE hosted canary must run from main; actual branch is '$env:CIRCLE_BRANCH'."
-            }
-
-      - restore_cache:
-          keys:
-            - << pipeline.parameters.ue_cache_key >>
-
-      - run:
-          name: Restore cached UE 5.8
-          shell: powershell.exe -ExecutionPolicy Bypass
-          no_output_timeout: 45m
-          command: |
-            powershell.exe -ExecutionPolicy Bypass -File scripts/ci/Restore-YacsUe58Seed.ps1 -SeedRoot 'C:\YacsUe58Seed'
-
-      - run:
-          name: Build YACS Editor and run scoped Automation
+          name: Build YACS Editor and run scoped Automation with local UE
           shell: powershell.exe -ExecutionPolicy Bypass
           no_output_timeout: 45m
           command: |
             pwsh ./scripts/ci/Invoke-YacsUnrealCi.ps1 -ExpectedHead $env:CIRCLE_SHA1
 
       - run:
-          name: Print hosted UE final diagnostics
+          name: Print local UE final diagnostics
           shell: powershell.exe -ExecutionPolicy Bypass
           when: always
           command: |
@@ -325,7 +130,7 @@ jobs:
 
       - store_artifacts:
           path: Saved/RuntimeProof/CI/Unreal
-          destination: yacs-unreal-canary
+          destination: yacs-unreal-local-canary
 
 workflows:
   windows-ue-spike:
@@ -333,22 +138,8 @@ workflows:
     jobs:
       - windows-probe
 
-  windows-ue-cache-seed:
-    when: << pipeline.parameters.ue_cache_seed >>
+  windows-ue-local-canary:
+    when: << pipeline.parameters.ue_local_canary >>
     jobs:
-      - ue-cache-seed:
-          filters: pipeline.git.branch == "main"
-      - ue-cache-publish:
-          requires:
-            - ue-cache-seed
-          filters: pipeline.git.branch == "main"
-      - ue-cache-verify:
-          requires:
-            - ue-cache-publish
-          filters: pipeline.git.branch == "main"
-
-  windows-ue-hosted-canary:
-    when: << pipeline.parameters.ue_canary >>
-    jobs:
-      - ue-hosted-canary:
+      - ue-local-canary:
           filters: pipeline.git.branch == "main"
