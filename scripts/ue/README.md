@@ -52,6 +52,7 @@ working tree and requires no commit.
 | `Preflight-YacsProof.ps1` | Standalone deterministic environment check. Dot-sourced by `Invoke-YacsProof.ps1`. Exits 2 on hard failure. |
 | `Invoke-YacsProof.ps1` | Top-level orchestrator. The single command the owner runs. Exits 1 on any genuine proof failure. |
 | `Invoke-YacsInsightsProof.ps1` | Issue #49 performance proof. Drives a rendered PIE pass at 1920x1080, captures `yacs_performance.utrace` (Insights), `yacs_performance.uestats` (`stat startfile`/`stat stopfile`), runs headless Insights analysis to TSV, and lets the surrounding `CyclingRuntime.RemoteProof` Automation test request a viewport screenshot. |
+| `Invoke-YacsPackageProof.ps1` | Fail-closed Win64 BuildCookRun proof. Explicitly cooks `/Game/Prototype/Maps/L_CyclingTest`, stages/paks/archives the build, then requires the YACS executable and a cooked PAK or IoStore container set. |
 | `README.md` | This file. |
 
 ## Issue #49 performance proof
@@ -117,3 +118,26 @@ Any other dirty or untracked path causes the preflight to fail with exit
 code 2 and the proof is aborted before the build runs. This is the
 mechanism that protects the pre-existing tracked diff from being
 overwritten.
+
+
+## Win64 package proof
+
+The package proof is intentionally separate from normal code CI:
+
+```powershell
+pwsh ./scripts/ue/Invoke-YacsPackageProof.ps1 `
+  -ExpectedBranch HEAD `
+  -ExpectedHead (git rev-parse HEAD).Trim() `
+  -Configuration Development
+```
+
+It runs `RunUAT.bat BuildCookRun` with an explicit
+`/Game/Prototype/Maps/L_CyclingTest` map and covers build, cook, stage, pak and
+archive. A zero UAT exit code alone is not enough: the proof also requires a
+packaged `YetAnotherCyclingSim.exe`, at least one cooked PAK or IoStore
+(`.utoc` + `.ucas`) container set, a non-empty archive, and log evidence for
+the requested map.
+
+Package binaries stay under `Saved/RuntimeProof/CI/Package/Archive` and are not
+intended for routine artifact upload. The trusted manual asset/full workflow
+uploads only concise logs and summaries, then cleans the self-hosted workspace.
