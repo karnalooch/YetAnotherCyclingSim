@@ -39,10 +39,10 @@ namespace Stage4CCornerBrakingTests
 		return Environment;
 	}
 
-	FRiderInput MakeInput(double BrakeRatio)
+	FRiderInput MakeInput(double BrakeRatio, double PowerW = 300.0)
 	{
 		FRiderInput Input;
-		Input.PowerW = 300.0;
+		Input.PowerW = PowerW;
 		Input.CadenceRpm = 90.0;
 		Input.BrakeRatio = BrakeRatio;
 		return Input;
@@ -88,6 +88,21 @@ namespace Stage4CCornerBrakingTests
 		Samples.Add(MakeSample(170.0, 0.0, TEXT("asphalt"), 0.0));
 		Samples.Add(MakeSample(250.0, 0.0, TEXT("asphalt"), 0.0));
 		return OutProfile.TryConfigure(TEXT("Stage 4C approach"), Samples, OutError);
+	}
+
+	bool BuildTightWetCornerProfile(
+		FRoadPhysicsProfile& OutProfile,
+		FString& OutError)
+	{
+		TArray<FRoadPhysicsSampleDefinition> Samples;
+		Samples.Add(MakeSample(0.0, 0.05, TEXT("paint"), 1.0));
+		Samples.Add(MakeSample(200.0, 0.05, TEXT("paint"), 1.0));
+		Samples.Add(MakeSample(210.0, 0.0, TEXT("asphalt"), 0.0));
+		Samples.Add(MakeSample(300.0, 0.0, TEXT("asphalt"), 0.0));
+		return OutProfile.TryConfigure(
+			TEXT("Stage 4C tight wet corner"),
+			Samples,
+			OutError);
 	}
 
 	bool BuildGripPolicy(FSurfaceGripPolicy& OutPolicy, FString& OutError)
@@ -141,6 +156,60 @@ namespace Stage4CCornerBrakingTests
 		FString Error;
 	};
 
+	FSequenceResult RunTightCornerSequence(const TArray<double>& FrameDeltas)
+	{
+		FSequenceResult Result;
+		FRoadPhysicsProfile Profile;
+		FSurfaceGripPolicy GripPolicy;
+		FDistanceBasedSimulationStepContextProvider Context;
+		FString Error;
+		if (!BuildTightWetCornerProfile(Profile, Error)
+			|| !BuildGripPolicy(GripPolicy, Error)
+			|| !BuildStaticContext(Context, Error))
+		{
+			Result.Error = Error;
+			return Result;
+		}
+
+		FFixedStepSimulationRunner Runner;
+		const FRiderParameters Rider = MakeRider();
+		const FRiderInput Input = MakeInput(0.0, 1500.0);
+		const FCornerContextSettings CornerSettings = MakeCornerSettings();
+
+		for (const double Delta : FrameDeltas)
+		{
+			FSimulationState State;
+			double RemainingTimeS = 0.0;
+			int32 CompletedSteps = 0;
+			TArray<FSimulationBoundaryCrossing> Crossings;
+			bool bStoppedAfterStep = false;
+			if (!Runner.TryAdvanceWithCornerBraking(
+				Delta,
+				Rider,
+				Context,
+				Input,
+				Profile,
+				CornerSettings,
+				GripPolicy,
+				0.8,
+				State,
+				RemainingTimeS,
+				CompletedSteps,
+				Crossings,
+				bStoppedAfterStep,
+				Error))
+			{
+				Result.Error = Error;
+				return Result;
+			}
+			Result.TotalSteps += CompletedSteps;
+		}
+
+		Result.bSucceeded = true;
+		Result.State = Runner.GetState();
+		return Result;
+	}
+
 	FSequenceResult RunSequence(const TArray<double>& FrameDeltas)
 	{
 		FSequenceResult Result;
@@ -177,7 +246,6 @@ namespace Stage4CCornerBrakingTests
 				CornerSettings,
 				GripPolicy,
 				0.8,
-				0.0,
 				State,
 				RemainingTimeS,
 				CompletedSteps,
@@ -375,7 +443,6 @@ bool FStage4CCornerBrakingZeroBrakeParityTest::RunTest(const FString& Parameters
 			MakeCornerSettings(),
 			GripPolicy,
 			0.8,
-			0.0,
 			OrchestratedState,
 			OrchestratedRemaining,
 			OrchestratedSteps,
@@ -456,6 +523,73 @@ bool FStage4CCornerBrakingFrameBatchingTest::RunTest(const FString& Parameters)
 
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FStage4CConsequenceRuntimeBatchingTest,
+	"CyclingCornering.ConsequenceApplication.RuntimeFrameBatchingDeterminism",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FStage4CConsequenceRuntimeBatchingTest::RunTest(const FString& Parameters)
+{
+	using namespace Stage4CCornerBrakingTests;
+
+	TArray<double> Frames30;
+	for (int32 Index = 0; Index < 300; ++Index)
+	{
+		Frames30.Add(1.0 / 30.0);
+	}
+
+	TArray<double> Frames60;
+	for (int32 Index = 0; Index < 600; ++Index)
+	{
+		Frames60.Add(1.0 / 60.0);
+	}
+
+	TArray<double> Jittered;
+	for (int32 Index = 0; Index < 100; ++Index)
+	{
+		Jittered.Add(0.011);
+		Jittered.Add(0.027);
+		Jittered.Add(0.019);
+		Jittered.Add(0.043);
+	}
+
+	const FSequenceResult Result30 = RunTightCornerSequence(Frames30);
+	const FSequenceResult Result60 = RunTightCornerSequence(Frames60);
+	const FSequenceResult ResultJittered = RunTightCornerSequence(Jittered);
+
+	TestTrue(TEXT("tight 30 FPS sequence succeeds"), Result30.bSucceeded);
+	TestTrue(TEXT("tight 60 FPS sequence succeeds"), Result60.bSucceeded);
+	TestTrue(TEXT("tight jittered sequence succeeds"), ResultJittered.bSucceeded);
+	if (!Result30.bSucceeded || !Result60.bSucceeded || !ResultJittered.bSucceeded)
+	{
+		AddError(FString::Printf(
+			TEXT("tight sequence error(s): 30='%s' 60='%s' jitter='%s'"),
+			*Result30.Error,
+			*Result60.Error,
+			*ResultJittered.Error));
+		return false;
+	}
+
+	TestEqual(TEXT("tight 30 FPS executes 200 fixed steps"), Result30.TotalSteps, 200);
+	TestEqual(TEXT("tight 30/60 step count parity"), Result30.TotalSteps, Result60.TotalSteps);
+	TestEqual(TEXT("tight 30/jitter step count parity"), Result30.TotalSteps, ResultJittered.TotalSteps);
+	TestTrue(TEXT("runtime consequence changes authoritative D"),
+		Result30.State.LateralPositionM != 0.0);
+	TestEqual(TEXT("tight 30/60 speed exact parity"),
+		Result30.State.SpeedMps, Result60.State.SpeedMps);
+	TestEqual(TEXT("tight 30/jitter speed exact parity"),
+		Result30.State.SpeedMps, ResultJittered.State.SpeedMps);
+	TestEqual(TEXT("tight 30/60 distance exact parity"),
+		Result30.State.DistanceM, Result60.State.DistanceM);
+	TestEqual(TEXT("tight 30/jitter distance exact parity"),
+		Result30.State.DistanceM, ResultJittered.State.DistanceM);
+	TestEqual(TEXT("tight 30/60 D exact parity"),
+		Result30.State.LateralPositionM, Result60.State.LateralPositionM);
+	TestEqual(TEXT("tight 30/jitter D exact parity"),
+		Result30.State.LateralPositionM, ResultJittered.State.LateralPositionM);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FStage4CCornerBrakingSessionPathTest,
 	"CyclingCornering.Braking.Orchestration.SessionConsumesBrakeInput",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
@@ -501,7 +635,6 @@ bool FStage4CCornerBrakingSessionPathTest::RunTest(const FString& Parameters)
 			MakeCornerSettings(),
 			GripPolicy,
 			0.8,
-			0.0,
 			OutState,
 			RemainingTimeS,
 			CompletedSteps,

@@ -94,8 +94,9 @@ namespace CyclingSimulation
 		// integrating forward motion. The resolution therefore cannot depend
 		// on render-frame batching.
 		//
-		// LateralPositionM uses route-local metres (D). BaseFrictionCoefficient
-		// is the caller-owned dry tyre/road coefficient and must be positive.
+		// Route-local lateral position D is read from the authoritative
+		// FSimulationState for every substep. BaseFrictionCoefficient is the
+		// caller-owned dry tyre/road coefficient and must be positive.
 		bool TryAdvanceWithCornerBraking(
 			double FrameDeltaS,
 			const FRiderParameters& Rider,
@@ -105,7 +106,6 @@ namespace CyclingSimulation
 			const CyclingCornerContext::FCornerContextSettings& CornerSettings,
 			const CyclingSurfaceGrip::FSurfaceGripPolicy& GripPolicy,
 			double BaseFrictionCoefficient,
-			double LateralPositionM,
 			FSimulationState& OutState,
 			double& RemainingAccumulatedTimeS,
 			int32& CompletedSteps,
@@ -129,7 +129,6 @@ namespace CyclingSimulation
 			const CyclingCornerContext::FCornerContextSettings* CornerSettings,
 			const CyclingSurfaceGrip::FSurfaceGripPolicy* GripPolicy,
 			double BaseFrictionCoefficient,
-			double LateralPositionM,
 			FSimulationState& OutState,
 			double& RemainingAccumulatedTimeS,
 			int32& CompletedSteps,

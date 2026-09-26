@@ -150,7 +150,6 @@ namespace CyclingSimulation
 			const CyclingCornerContext::FCornerContextSettings& CornerSettings,
 			const CyclingSurfaceGrip::FSurfaceGripPolicy& GripPolicy,
 			double BaseFrictionCoefficient,
-			double LateralPositionM,
 			FSimulationState& OutState,
 			double& OutRemainingTimeS,
 			int32& OutCompletedSteps,

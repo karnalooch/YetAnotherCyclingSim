@@ -102,6 +102,18 @@ def approach_profile():
     )
 
 
+def tight_wet_corner_profile():
+    return RoadPhysicsProfile(
+        "tight wet corner",
+        (
+            sample(0.0, curvature=0.05, surface="paint", wetness=1.0),
+            sample(200.0, curvature=0.05, surface="paint", wetness=1.0),
+            sample(210.0, surface="asphalt", wetness=0.0),
+            sample(300.0, surface="asphalt", wetness=0.0),
+        ),
+    )
+
+
 class TestCornerBrakingStep(unittest.TestCase):
     def test_approach_keeps_lateral_budget_free_and_uses_current_surface(self):
         result = resolve_corner_braking_step(
@@ -109,7 +121,6 @@ class TestCornerBrakingStep(unittest.TestCase):
             settings(),
             policy(),
             0.8,
-            0.0,
             rider(),
             RiderInput(power_w=0.0, cadence_rpm=90.0, brake_ratio=0.8),
             SimulationState(speed_mps=15.0, distance_m=70.0, elapsed_time_s=0.0),
@@ -134,7 +145,6 @@ class TestCornerBrakingStep(unittest.TestCase):
             settings(),
             policy(),
             0.8,
-            0.0,
             rider(),
             RiderInput(power_w=0.0, cadence_rpm=90.0, brake_ratio=0.8),
             SimulationState(speed_mps=17.0, distance_m=120.0, elapsed_time_s=0.0),
@@ -160,7 +170,6 @@ class TestCornerBrakingStep(unittest.TestCase):
             settings(),
             policy(),
             0.8,
-            0.0,
             rider(),
             input_,
             state,
@@ -170,7 +179,6 @@ class TestCornerBrakingStep(unittest.TestCase):
             settings(),
             policy(),
             0.8,
-            0.0,
             rider(),
             input_,
             state,
@@ -193,7 +201,6 @@ class TestCornerBrakingStep(unittest.TestCase):
             settings(),
             policy(),
             0.8,
-            0.0,
             r,
             env,
             input_,
@@ -206,6 +213,65 @@ class TestCornerBrakingStep(unittest.TestCase):
             0.0,
         )
         self.assertEqual(orchestrated.state, legacy)
+
+    def test_authoritative_d_and_consequence_are_frame_batching_deterministic(self):
+        profile = tight_wet_corner_profile()
+        r = rider()
+        env = environment()
+        input_ = RiderInput(
+            power_w=1500.0,
+            cadence_rpm=100.0,
+            brake_ratio=0.0,
+        )
+
+        def run(frame_deltas):
+            state = SimulationState(
+                speed_mps=0.0,
+                distance_m=0.0,
+                elapsed_time_s=0.0,
+            )
+            accumulator = 0.0
+            steps = 0
+            saw_non_clean_consequence = False
+            for delta in frame_deltas:
+                accumulator += delta
+                while accumulator + 1e-12 >= 0.05:
+                    result = step_simulation_with_corner_braking(
+                        profile,
+                        settings(),
+                        policy(),
+                        0.8,
+                        r,
+                        env,
+                        input_,
+                        state,
+                        0.05,
+                    )
+                    state = result.state
+                    if (
+                        result.consequence is not None
+                        and result.consequence.line_deviation_ratio > 0.0
+                    ):
+                        saw_non_clean_consequence = True
+                    accumulator -= 0.05
+                    if accumulator < 0.0 and accumulator > -1e-12:
+                        accumulator = 0.0
+                    steps += 1
+            return state, steps, saw_non_clean_consequence
+
+        at_30_fps = run([1.0 / 30.0] * 300)
+        at_60_fps = run([1.0 / 60.0] * 600)
+        jittered = run([0.011, 0.027, 0.019, 0.043] * 100)
+
+        self.assertEqual(at_30_fps[1], 200)
+        self.assertEqual(at_30_fps[1], at_60_fps[1])
+        self.assertEqual(at_30_fps[1], jittered[1])
+        self.assertTrue(at_30_fps[2])
+        self.assertTrue(at_60_fps[2])
+        self.assertTrue(jittered[2])
+        self.assertNotEqual(at_30_fps[0].lateral_position_m, 0.0)
+        self.assertEqual(at_30_fps[0], at_60_fps[0])
+        self.assertEqual(at_30_fps[0], jittered[0])
 
     def test_fixed_step_result_is_identical_across_render_frame_batching(self):
         profile = straight_profile()
@@ -229,7 +295,6 @@ class TestCornerBrakingStep(unittest.TestCase):
                         settings(),
                         policy(),
                         0.8,
-                        0.0,
                         r,
                         env,
                         input_,

@@ -365,7 +365,7 @@ Zmiana tylko w fizyce nie może wymagać pełnego pobrania assetów; zmiana tylk
 # Etap 4 — technika pokonywania zakrętów
 
 **Planowany czas:** tydzień 5–7  
-**Status:** Stage 4A ukończone przez PR #157; **4B-A/#169, 4B-B/#170 i 4B-C/#171 ukończone; 4C-A + 4C-B1/B2/B3a/B3b/B3c scalone przez PR #177; 4C-C1 geometryczne konsekwencje są w PR #179; 4C-C2 route-derived scoring mocy/kadencji jest realizowany jako #180; 4D/4E wymagają wspólnego integration gate z World lane**
+**Status:** Stage 4A ukończone przez PR #157; **4B-A/#169, 4B-B/#170 i 4B-C/#171 ukończone; 4C-A + 4C-B1/B2/B3a/B3b/B3c scalone przez PR #177; 4C-C1 scalone przez PR #179; 4C-C2 scalone przez PR #181; 4C-C3 authoritative consequence application/runtime collection jest w realizacji jako #182; 4D/4E wymagają wspólnego integration gate z World lane**
 
 ## Cel
 
@@ -384,8 +384,8 @@ Wprowadzić autorską mechanikę oceniającą odpuszczenie i ponowne rozpoczęci
 9. **4C-B3b — #173 / PR #177:** explicit brake-force fixed-step integrator: siła hamowania trafia do predictor + work/energy balance, a legacy step deleguje z `0 N` dla exact regression parity.
 10. **4C-B3c — #173 / PR #177:** fixed-step orchestration: każdy substep pobiera bieżący Road Physics Profile, rozdziela look-ahead `Approach` od realnego lateral demand w `Entry/Apex/Exit`, rozwiązuje shared grip + brake force i dopiero wtedy wywołuje integrator; render-frame batching nie może zmieniać wyniku.
 11. **4C-C1 — #178 / PR #179:** geometry-derived consequences — `CornerContext + CornerGripDemand -> clean / wide line / controlled slip`, target `D` i minimalny target speed bez arbitralnych progów grip usage; bez upadków w MVP.
-12. **4C-C2 — #180:** route-derived technique score — realne fazy `Approach/Entry/Apex/Exit`, ciągłe release/recovery score dla mocy i kadencji oraz fizyczne line/speed retention z C1; osiem jawnych równoważnych składników, bez ukrytych wag i progów ratingowych.
-13. **4C-C3:** authoritative consequence application — deterministycznie zastosować target `D`/speed w fixed-step state i spiąć runtime collection/score bez sprzężenia z presentation.
+12. **4C-C2 — #180 / PR #181:** route-derived technique score — realne fazy `Approach/Entry/Apex/Exit`, ciągłe release/recovery score dla mocy i kadencji oraz fizyczne line/speed retention z C1; osiem jawnych równoważnych składników, bez ukrytych wag i progów ratingowych — **ukończone**.
+13. **4C-C3 — #182:** authoritative consequence application + runtime scoring — signed route-local `D` staje się częścią authoritative `SimulationState`; C1 target line jest osiągany deterministycznie po dystansie zakrętu bez teleportu, a `controlled_slip` może tylko odebrać prędkość/energię. Następnie runtime zbiera route-derived observation episode i finalizuje C2 score bez sprzężenia z presentation.
 14. **4D:** guidance + assists — linia przejazdu, markery entry/apex/exit, grip warning i poziomy asysty jako presentation-only; wymaga wspólnego integration gate z World lane.
 15. **4E:** deterministyczny full-route corner proof dla reprezentatywnych flat/banked/off-camber zakrętów oraz suchej/mokrej nawierzchni.
 
