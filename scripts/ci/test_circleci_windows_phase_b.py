@@ -235,6 +235,20 @@ class CircleCiWindowsPhaseBContractTests(unittest.TestCase):
             self.preflight.index(direct_check), self.preflight.index(child_scan)
         )
 
+    def test_restore_handles_drive_root_destination_parent(self):
+        self.assertIn(
+            "if (-not (Test-Path -LiteralPath $destinationParent -PathType Container))",
+            self.restore,
+        )
+        self.assertIn(
+            "[System.IO.Directory]::CreateDirectory($destinationParent)",
+            self.restore,
+        )
+        self.assertNotIn(
+            "New-Item -ItemType Directory -Path $destinationParent -Force",
+            self.restore,
+        )
+
     def test_restore_hash_is_powershell_version_independent(self):
         self.assertIn("[System.Security.Cryptography.SHA256]::Create()", self.restore)
         self.assertNotIn("Get-FileHash", self.restore)
