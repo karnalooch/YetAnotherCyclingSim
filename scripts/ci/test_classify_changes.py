@@ -75,6 +75,14 @@ class ChangeClassifierTests(unittest.TestCase):
         self.assertTrue(result.asset_only)
         self.assertFalse(result.asset_full)
 
+    def test_yacs_worldgen_pcg_asset_forces_full_validation(self):
+        result = cc.classify_paths(
+            ["Content/YACS/WorldGen/PCG/PCG_Valley.uasset"]
+        )
+        self.assertTrue(result.assets)
+        self.assertTrue(result.asset_only)
+        self.assertTrue(result.asset_full)
+
     def test_stage3g_source_and_tooling_force_full_validation(self):
         for path in (
             "Source/YetAnotherCyclingSim/Private/Cycling/Stage3PrototypeTerrainActor.cpp",
