@@ -69,17 +69,24 @@ def sha_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 def download_artifact(artifact_id: int) -> zipfile.ZipFile:
-    req = urllib.request.Request(
-        f"https://api.github.com/repos/{REPO}/actions/artifacts/{artifact_id}/zip",
-        headers={
-            "Authorization": f"Bearer {TOKEN}",
-            "Accept": "application/vnd.github+json",
-            "X-GitHub-Api-Version": "2022-11-28",
-            "User-Agent": "yacs-visual-history-finalizer",
-        },
+    env = dict(os.environ)
+    env["GH_TOKEN"] = TOKEN
+    proc = subprocess.run(
+        [
+            "gh",
+            "api",
+            "-H",
+            "Accept: application/vnd.github+json",
+            "-H",
+            "X-GitHub-Api-Version: 2022-11-28",
+            f"/repos/{REPO}/actions/artifacts/{artifact_id}/zip",
+        ],
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=env,
     )
-    with urllib.request.urlopen(req, timeout=120) as response:
-        return zipfile.ZipFile(io.BytesIO(response.read()))
+    return zipfile.ZipFile(io.BytesIO(proc.stdout))
 
 def load_verified(zf: zipfile.ZipFile, filename: str, expected_sha: str) -> Image.Image:
     matches = [n for n in zf.namelist() if n == filename or n.endswith("/" + filename)]
