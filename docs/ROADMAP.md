@@ -54,6 +54,8 @@ Dla większej zmiany wizualnej zapisujemy:
 
 Visual History nie zastępuje testów technicznych. Jest dodatkowym acceptance gate dla zmian, których sukces zależy od renderowanego wyniku.
 
+**Automatyzacja:** #193 — generator evidence pack ma tworzyć trzy tryptyki `BEFORE | NOW | AFTER`, HUD, SHA-256/manifest i trwały binary upload dla większych zmian wizualnych. Do czasu automatyzacji dopuszczalny jest ręczny pack, ale provenance i decyzja wizualna są obowiązkowe.
+
 ## Plan narzędzi i pluginów Unreal Engine
 
 Pluginy i narzędzia UE włączamy etapami, dokładnie tak samo jak assety. Każdy plugin musi mieć konkretny cel, przypisany etap oraz własną walidację; nie aktywujemy dużych zestawów funkcji „na zapas”.
