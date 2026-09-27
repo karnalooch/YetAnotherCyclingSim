@@ -10,6 +10,8 @@ on:
       - 'scripts/ue/Invoke-YacsStage3GSourceAssetAudit.ps1'
       - 'scripts/ci/test_stage3g_source_asset_audit_contract.py'
       - 'scripts/ue/stage3g_import_source_assets.py'
+      - 'scripts/ue/Invoke-YacsStage3GAuthoring.ps1'
+      - 'scripts/ue/Invoke-YacsStage3GBoulderLodAuthor.ps1'
       - 'scripts/ue/stage3g_author_boulder_lods.py'
       - 'Content/Prototype/Environment/Stage3G/Imported/Meshes/SM_Stage3G_Boulder.uasset'
   workflow_dispatch:

@@ -66,8 +66,7 @@ $env:YACS_STAGE3G_BOULDER_LOD_PROOF = $ProofPath
 try {
     $EditorArgs = @(
         $ProjectPath,
-        '-run=PythonScript',
-        ('-script="' + $ScriptPath + '"'),
+        ('-ExecutePythonScript="' + $ScriptPath + '"'),
         '-Unattended',
         '-NoPause',
         '-NullRHI',

@@ -5,6 +5,12 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 AUDIT = ROOT / "scripts" / "ue" / "stage3g_source_asset_audit.py"
 HARNESS = ROOT / "scripts" / "ue" / "Invoke-YacsStage3GSourceAssetAudit.ps1"
 WORKFLOW = ROOT / ".github" / "workflows" / "stage3g-source-asset-audit.yml"
+BOULDER_AUTHOR_HARNESS = (
+    ROOT / "scripts" / "ue" / "Invoke-YacsStage3GBoulderLodAuthor.ps1"
+)
+STAGE3G_AUTHORING_HARNESS = (
+    ROOT / "scripts" / "ue" / "Invoke-YacsStage3GAuthoring.ps1"
+)
 
 
 class Stage3GSourceAssetAuditContract(unittest.TestCase):
@@ -46,6 +52,19 @@ class Stage3GSourceAssetAuditContract(unittest.TestCase):
         self.assertIn("BOULDER_LOD_POLICY", importer)
         self.assertIn("StaticMeshEditorSubsystem", importer)
         self.assertIn("set_lods", importer)
+
+    def test_boulder_lod_authoring_uses_editor_context(self):
+        author = BOULDER_AUTHOR_HARNESS.read_text(encoding="utf-8")
+        self.assertIn("-ExecutePythonScript", author)
+        self.assertNotIn("-run=PythonScript", author)
+
+        stage3g = STAGE3G_AUTHORING_HARNESS.read_text(encoding="utf-8")
+        import_block = stage3g.split(
+            "[2/5] Importing canonical Stage 3G R1 assets", 1
+        )[1].split("[3/5] Authoring Stage 3G texture-backed materials", 1)[0]
+        self.assertIn("$ImportScript", import_block)
+        self.assertIn("-ExecutePythonScript", import_block)
+        self.assertNotIn("-run=PythonScript", import_block)
 
     def test_harness_is_exact_sha_full_lfs_and_non_mutating(self):
         text = HARNESS.read_text(encoding="utf-8")
