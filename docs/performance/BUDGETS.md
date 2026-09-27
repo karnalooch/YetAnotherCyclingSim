@@ -38,6 +38,24 @@ v1.0 adds provisional development warnings:
 
 These warning values are deliberately provisional. They must not be silently tightened or relaxed to make a pull request pass.
 
+## Stage 3G R5 measurement policy
+
+R5 keeps the same hard product target and uses the existing warnings as the headroom target.
+
+Additional R5 rules:
+
+- **base-rendered performance is authoritative** for acceptance;
+- Frame Generation displayed/generated FPS is recorded separately and cannot make a failing base-rendered result pass;
+- average FPS and **1% low** are required trend metrics, but do not replace Frame/GPU percentile gates;
+- hitches and VRAM become required R5 evidence when instrumentation is available, even though final locked thresholds remain a later framework responsibility;
+- Native/TSR is retained as a vendor-neutral comparison baseline;
+- DLSS/FSR/XeSS results must use the same scenario, resolution, preset and exact-SHA provenance when compared;
+- dynamic-resolution runs must record actual screen percentage / internal resolution behavior;
+- visual artifacts can reject a faster result;
+- a threshold may move only through an explicit reviewed budget change, never as part of an optimization PR whose result missed the existing gate.
+
+R5 optimization goal: preserve enough margin that representative Frame/GPU p95 remains around or below the **14 ms development warning** where practical. This is a headroom target, not a new hidden hard gate.
+
 ## Baseline deltas
 
 Every framework version should prefer comparison against an accepted exact-SHA baseline.
@@ -82,4 +100,7 @@ Do not:
 - change a threshold after a regression merely to restore green CI;
 - compare results from different resolutions/hardware as if they were one baseline;
 - use editor-only numbers as the final Stage 10 packaged-build acceptance;
-- hide a hot Draw/Game/RHI domain behind an acceptable GPU number.
+- hide a hot Draw/Game/RHI domain behind an acceptable GPU number;
+- report Frame Generation output FPS as if it were real rendered FPS;
+- compare upscalers at different uncontrolled scene states, seeds or presets;
+- accept an upscaler solely because average FPS increased while 1% low, hitches or image stability regressed.
