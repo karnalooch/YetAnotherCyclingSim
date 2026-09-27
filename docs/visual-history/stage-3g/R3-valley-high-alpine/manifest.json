@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "visual_history_id": "VH-3G-R3-001",
+  "title": "Stage 3G R3 — valley + high-Alpine PCG and real biome massing",
+  "roadmap": {
+    "stage": "Stage 3G",
+    "version": "R3",
+    "slice": "Valley + High-Alpine PCG",
+    "title": "Complete deterministic valley/high-Alpine presentation while preserving R2 forest",
+    "issue_number": 187
+  },
+  "timestamps": {
+    "created_at": "2026-09-27",
+    "visual_accepted_at": null,
+    "merged_at": null
+  },
+  "status": {
+    "technical_status": "WORKING",
+    "visual_status": "IN_REVIEW"
+  },
+  "git": {
+    "branch": "feat/stage3g-pcg-biomes-r3",
+    "baseline_commit_sha": "fd77094ffe0c8f29c3bd9949ba22079fc73fc1c5",
+    "source_commit_sha": "07e0803bad809e87473ed3a461fdecf55e75ec76",
+    "source_commit_short": "07e0803b",
+    "accepted_commit_sha": null,
+    "merge_commit_sha": null
+  },
+  "pull_request": {
+    "number": 192,
+    "title": "feat(stage3g): add R3 deterministic valley + high-Alpine PCG",
+    "status": "DRAFT"
+  },
+  "ci": {
+    "workflow_name": "CyclingSim CI",
+    "workflow_run_id": null,
+    "workflow_run_number": null,
+    "proof_artifact_name": null,
+    "automation_status": "IN_PROGRESS",
+    "automation_summary": "Current real-biome-massing revision is under committed-SHA validation. Earlier run #408 was technically green but visually rejected because the new PCG graph assets were not yet consumed by the rendered reference world.",
+    "fresh_load_status": null,
+    "map_check_errors": null,
+    "map_check_warnings": null,
+    "lfs_fsck_status": null,
+    "visual_capture_status": "PENDING"
+  },
+  "worldgen": {
+    "generation_seed": 42017,
+    "route_clearance_m": 4,
+    "graphs_used": [
+      "PCG_Valley",
+      "PCG_RouteExclusion",
+      "PCG_Forest",
+      "PCG_HighAlpine"
+    ],
+    "biomes_affected": [
+      "valley_meadow",
+      "forest",
+      "high_alpine"
+    ],
+    "distance_ranges_m": [
+      {
+        "biome": "valley_meadow",
+        "start_m": 0,
+        "end_m": 3700
+      },
+      {
+        "biome": "forest",
+        "start_m": 3700,
+        "end_m": 6200
+      },
+      {
+        "biome": "high_alpine",
+        "start_m": 6200,
+        "end_m": 10000
+      }
+    ],
+    "density_values": {
+      "valley_rocks": 0.1,
+      "forest": 0.72,
+      "high_alpine_rocks": 0.65
+    },
+    "simulation_truth_source": "FRouteGeometryProfile"
+  },
+  "assets": {
+    "validated_assets_used": [
+      "SM_Stage3G_Boulder",
+      "SM_Stage3G_FirSaplingMedium"
+    ],
+    "meshes_added": [],
+    "meshes_replaced": [
+      "valley/high-Alpine Engine Cone massing -> bounds-aware SM_Stage3G_Boulder instances"
+    ],
+    "materials_added": [],
+    "materials_replaced": [],
+    "placeholder_assets_removed": [
+      "Engine Cone valley ridge presentation",
+      "Engine Cone near-Alpine massing",
+      "Engine Cone distant mountain massing"
+    ]
+  },
+  "visual_review": {
+    "visual_change_detected": null,
+    "technical_acceptance": null,
+    "visual_acceptance": null,
+    "reviewer_summary": "Pending final committed-SHA captures for the real-biome-massing revision.",
+    "rejection_reason": null,
+    "next_step": "Require visibly changed 1200 m and 8000 m captures while preserving the accepted 4900 m forest, then compose BEFORE/NOW/AFTER triptychs."
+  },
+  "prior_checkpoint": {
+    "source_commit_sha": "0148f894e9036dfe6b7c1d7176922e65e7024a65",
+    "workflow_run_id": 36302003337,
+    "workflow_run_number": 408,
+    "technical_result": "PASS",
+    "visual_result": "VISUAL_REJECTED",
+    "reason": "PCG_Valley and PCG_HighAlpine were persisted and technically valid, but the reference map/capture path did not visibly consume the new graph output; R2 and R3 images were effectively the same scene."
+  },
+  "captures": [
+    {
+      "capture_id": "01-valley-1200m",
+      "label": "Valley",
+      "distance_m": 1200,
+      "camera_name": "Stage3G-Valley-1200m",
+      "resolution": "1920x1080",
+      "before": {
+        "commit_sha": "fd77094ffe0c8f29c3bd9949ba22079fc73fc1c5",
+        "image": "R2 CI artifact baseline",
+        "sha256": null,
+        "status": "VISUAL_ACCEPTED"
+      },
+      "now": {
+        "commit_sha": "07e0803bad809e87473ed3a461fdecf55e75ec76",
+        "image": null,
+        "sha256": null,
+        "status": "PENDING_CAPTURE"
+      },
+      "after": {
+        "commit_sha": null,
+        "image": null,
+        "sha256": null,
+        "status": "PENDING"
+      },
+      "triptych_image": null,
+      "pixel_diff": null
+    },
+    {
+      "capture_id": "02-forest-4900m",
+      "label": "Forest",
+      "distance_m": 4900,
+      "camera_name": "Stage3G-Forest-4900m",
+      "resolution": "1920x1080",
+      "before": {
+        "commit_sha": "fd77094ffe0c8f29c3bd9949ba22079fc73fc1c5",
+        "image": "R2 CI artifact baseline",
+        "sha256": null,
+        "status": "VISUAL_ACCEPTED"
+      },
+      "now": {
+        "commit_sha": "07e0803bad809e87473ed3a461fdecf55e75ec76",
+        "image": null,
+        "sha256": null,
+        "status": "PENDING_CAPTURE"
+      },
+      "after": {
+        "commit_sha": null,
+        "image": null,
+        "sha256": null,
+        "status": "PENDING"
+      },
+      "triptych_image": null,
+      "pixel_diff": null
+    },
+    {
+      "capture_id": "03-high-alpine-8000m",
+      "label": "High Alpine",
+      "distance_m": 8000,
+      "camera_name": "Stage3G-HighAlpine-8000m",
+      "resolution": "1920x1080",
+      "before": {
+        "commit_sha": "fd77094ffe0c8f29c3bd9949ba22079fc73fc1c5",
+        "image": "R2 CI artifact baseline",
+        "sha256": null,
+        "status": "VISUAL_ACCEPTED"
+      },
+      "now": {
+        "commit_sha": "07e0803bad809e87473ed3a461fdecf55e75ec76",
+        "image": null,
+        "sha256": null,
+        "status": "PENDING_CAPTURE"
+      },
+      "after": {
+        "commit_sha": null,
+        "image": null,
+        "sha256": null,
+        "status": "PENDING"
+      },
+      "triptych_image": null,
+      "pixel_diff": null
+    }
+  ]
+}
