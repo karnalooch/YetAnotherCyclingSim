@@ -194,6 +194,8 @@ const TCHAR* AStage3PrototypeTerrainActor::Stage3GWaterMaterialPath =
 	TEXT("/Game/Prototype/Environment/Stage3G/Materials/MI_Stage3G_Water.MI_Stage3G_Water");
 const TCHAR* AStage3PrototypeTerrainActor::Stage3GBoulderMeshPath =
 	TEXT("/Game/Prototype/Environment/Stage3G/Imported/Meshes/SM_Stage3G_Boulder.SM_Stage3G_Boulder");
+const TCHAR* AStage3PrototypeTerrainActor::Stage3GConiferMeshPath =
+	TEXT("/Game/Prototype/Environment/Stage3G/Imported/Meshes/SM_Stage3G_FirSaplingMedium.SM_Stage3G_FirSaplingMedium");
 
 AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 {
@@ -321,6 +323,11 @@ AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 	{
 		RockProps->SetStaticMesh(BoulderMesh);
 	}
+	if (UStaticMesh* ConiferMesh = LoadObject<UStaticMesh>(nullptr, Stage3GConiferMeshPath))
+	{
+		ForestProps->SetStaticMesh(ConiferMesh);
+		ForestCanopyProps->SetStaticMesh(ConiferMesh);
+	}
 
 	UMaterialInterface* TerrainFallback = TerrainTiles->GetMaterial(0);
 	auto ApplyOptionalStage3GMaterial =
@@ -395,7 +402,14 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 		|| !IsValid(RockProps->GetStaticMesh())
 		|| !IsValid(WaterTiles->GetStaticMesh()))
 	{
-		OutError = TEXT("prototype terrain engine basic-shape meshes are unavailable");
+		OutError = TEXT("prototype terrain engine/basic presentation meshes are unavailable");
+		return false;
+	}
+
+	if (ForestProps->GetStaticMesh()->GetPathName() != Stage3GConiferMeshPath
+		|| ForestCanopyProps->GetStaticMesh()->GetPathName() != Stage3GConiferMeshPath)
+	{
+		OutError = TEXT("Stage 3G forest presentation requires the validated Fir Sapling Medium mesh");
 		return false;
 	}
 
@@ -612,9 +626,19 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 		WaterTiles->AddInstance(WaterTransform, false);
 	}
 
-	// Stage 3G canopy layer. Existing ForestProps remain sparse trunk markers;
-	// these overlapping cone crowns make the 3.75-6.25 km sector read as a
-	// forest from the rider camera without importing production foliage yet.
+	// Stage 3G R2 real conifer layer. The same validated mass-forest mesh that
+	// backs PCG_Forest replaces the old Engine Cone/Cylinder placeholders in
+	// the persisted reference map. Scale is derived from actual mesh bounds so
+	// source-unit differences cannot create giant or microscopic trees.
+	const FVector ConiferMeshSizeCm =
+		ForestCanopyProps->GetStaticMesh()->GetBounds().BoxExtent * 2.0;
+	const double ConiferMeshHeightCm = static_cast<double>(ConiferMeshSizeCm.Z);
+	if (!FMath::IsFinite(ConiferMeshHeightCm) || ConiferMeshHeightCm <= UE_SMALL_NUMBER)
+	{
+		OutError = TEXT("Stage 3G conifer mesh bounds are invalid");
+		return false;
+	}
+
 	const double ForestCanopyLateralsM[] = { 18.0, 36.0 };
 	for (double DistanceM = ForestCanopyFirstM;
 		DistanceM < ForestCanopyLastExclusiveM;
@@ -633,17 +657,18 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 			{
 				const double Phase = DistanceM * 0.013 + BaseLateralM * 0.17 + Side;
 				const double HeightM = 13.0 + 6.0 * FMath::Abs(FMath::Sin(Phase));
-				const double RadiusScaleM = 5.0 + 2.0 * FMath::Abs(FMath::Cos(Phase));
 				const double LateralM = BaseLateralM
 					+ 2.5 * FMath::Sin(DistanceM * 0.021 + Side * BaseLateralM);
 
 				FVector PositionM = RoutePositionM + Right * (Side * LateralM);
 				PositionM.Z += HeightM * 0.5 - 0.1;
 
+				const double UniformScale =
+					(HeightM * MetresToCentimetres) / ConiferMeshHeightCm;
 				const FTransform CanopyTransform(
 					FRotator(0.0, FMath::Fmod(DistanceM * 0.11 + BaseLateralM * 7.0, 360.0), 0.0),
 					PositionM * MetresToCentimetres,
-					FVector(RadiusScaleM, RadiusScaleM, HeightM));
+					FVector(UniformScale));
 				if (!IsFiniteTransform(CanopyTransform))
 				{
 					OutError = TEXT("Stage 3G forest canopy transform is invalid");
@@ -678,10 +703,15 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 				12.0 + 2.0 * FMath::Abs(FMath::Sin(DistanceM * 0.011));
 			PositionM.Z += HeightM * 0.5 - 0.2;
 
+			const double UniformScale =
+				(HeightM * MetresToCentimetres) / ConiferMeshHeightCm;
 			const FTransform TreeTransform(
-				FRotator::ZeroRotator,
+				FRotator(
+					0.0,
+					FMath::Fmod(DistanceM * 0.083 + Side * 43.0, 360.0),
+					0.0),
 				PositionM * MetresToCentimetres,
-				FVector(0.8, 0.8, HeightM));
+				FVector(UniformScale));
 			if (!IsFiniteTransform(TreeTransform))
 			{
 				OutError = TEXT("prototype forest prop transform is invalid");

@@ -9,6 +9,14 @@ AUTHORING = ROOT / "scripts" / "ue" / "Invoke-YacsStage3GAuthoring.ps1"
 IMPORTER = ROOT / "scripts" / "ue" / "stage3g_import_source_assets.py"
 MATERIALS = ROOT / "scripts" / "ue" / "stage3g_author_materials.py"
 PROJECT = ROOT / "YetAnotherCyclingSim.uproject"
+TERRAIN_ACTOR = (
+    ROOT
+    / "Source"
+    / "YetAnotherCyclingSim"
+    / "Private"
+    / "Cycling"
+    / "Stage3PrototypeTerrainActor.cpp"
+)
 
 
 class Stage3GProgressiveAssetContractTests(unittest.TestCase):
@@ -18,6 +26,7 @@ class Stage3GProgressiveAssetContractTests(unittest.TestCase):
         cls.importer = IMPORTER.read_text(encoding="utf-8")
         cls.materials = MATERIALS.read_text(encoding="utf-8")
         cls.project = PROJECT.read_text(encoding="utf-8")
+        cls.terrain_actor = TERRAIN_ACTOR.read_text(encoding="utf-8")
 
     def test_required_editor_plugins_are_explicit(self):
         for plugin in ("PCG", "EditorScriptingUtilities", "GeometryScripting"):
@@ -69,6 +78,12 @@ class Stage3GProgressiveAssetContractTests(unittest.TestCase):
 
     def test_real_rock_layer_is_part_of_deterministic_authoring_contract(self):
         self.assertIn("rock_props=40", self.authoring)
+
+    def test_reference_map_uses_validated_conifer_instead_of_forest_placeholders(self):
+        self.assertIn("SM_Stage3G_FirSaplingMedium.SM_Stage3G_FirSaplingMedium", self.terrain_actor)
+        self.assertIn("ForestProps->SetStaticMesh(ConiferMesh)", self.terrain_actor)
+        self.assertIn("ForestCanopyProps->SetStaticMesh(ConiferMesh)", self.terrain_actor)
+        self.assertIn("ConiferMeshHeightCm", self.terrain_actor)
 
 
 if __name__ == "__main__":

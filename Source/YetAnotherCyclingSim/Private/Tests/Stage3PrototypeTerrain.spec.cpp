@@ -5,6 +5,8 @@
 #include "Cycling/AlpineJourneyGeometry.h"
 #include "Cycling/Stage3PrototypeTerrainActor.h"
 
+#include "Components/HierarchicalInstancedStaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
@@ -54,6 +56,22 @@ bool FStage3PrototypeTerrainBuildTest::RunTest(const FString& Parameters)
 			Terrain->GetValleyRidgeInstanceCount(), 32);
 		TestEqual(TEXT("Stage 3G forest canopy count remains deterministic"),
 			Terrain->GetForestCanopyInstanceCount(), 100);
+		TestNotNull(TEXT("Stage 3G forest props use a real mesh"),
+			Terrain->ForestProps->GetStaticMesh());
+		TestNotNull(TEXT("Stage 3G forest canopy uses a real mesh"),
+			Terrain->ForestCanopyProps->GetStaticMesh());
+		if (Terrain->ForestProps->GetStaticMesh()
+			&& Terrain->ForestCanopyProps->GetStaticMesh())
+		{
+			TestEqual(
+				TEXT("Stage 3G forest props use the validated conifer"),
+				Terrain->ForestProps->GetStaticMesh()->GetPathName(),
+				FString(AStage3PrototypeTerrainActor::Stage3GConiferMeshPath));
+			TestEqual(
+				TEXT("Stage 3G forest canopy uses the validated conifer"),
+				Terrain->ForestCanopyProps->GetStaticMesh()->GetPathName(),
+				FString(AStage3PrototypeTerrainActor::Stage3GConiferMeshPath));
+		}
 		TestEqual(TEXT("Stage 3G distant mountain count remains deterministic"),
 			Terrain->GetDistantMountainInstanceCount(), 28);
 		TestEqual(TEXT("Stage 3G real rock dressing count remains deterministic"),

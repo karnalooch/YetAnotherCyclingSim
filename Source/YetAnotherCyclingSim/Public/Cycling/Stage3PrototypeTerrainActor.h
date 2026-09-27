@@ -13,9 +13,10 @@ class USceneComponent;
 // This actor remains a deterministic validation/presentation scaffold rather
 // than final Stage 7 art. Stage 3F established the road/material baseline;
 // Stage 3G progressively replaces placeholder presentation with validated
-// project-owned assets. R1 adds texture-backed biome ground and imported rock
-// dressing while forest/mountain silhouettes remain explicit placeholders for
-// later Stage 3G recovery tranches. Simulation truth stays outside presentation.
+// project-owned assets. R1 added texture-backed biome ground and imported rock
+// dressing. R2 replaces the forest silhouette with the validated mass-forest
+// conifer while valley/high-Alpine massing remains presentation scaffolding.
+// Simulation truth stays outside presentation.
 //
 // Runtime physics never reads this actor. The geometry profile remains the
 // source of route shape/grade truth and the spline remains presentation only.
@@ -109,4 +110,5 @@ public:
 	static const TCHAR* Stage3GDistantRockMaterialPath;
 	static const TCHAR* Stage3GWaterMaterialPath;
 	static const TCHAR* Stage3GBoulderMeshPath;
+	static const TCHAR* Stage3GConiferMeshPath;
 };
