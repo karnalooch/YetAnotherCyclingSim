@@ -78,9 +78,7 @@ class ChangeClassifierTests(unittest.TestCase):
         self.assertFalse(result.asset_full)
 
     def test_yacs_worldgen_pcg_asset_forces_full_validation(self):
-        result = cc.classify_paths(
-            ["Content/YACS/WorldGen/PCG/PCG_Valley.uasset"]
-        )
+        result = cc.classify_paths(["Content/YACS/WorldGen/PCG/PCG_Valley.uasset"])
         self.assertTrue(result.assets)
         self.assertTrue(result.asset_only)
         self.assertTrue(result.asset_full)
