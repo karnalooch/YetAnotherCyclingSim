@@ -1,9 +1,9 @@
 # YACS UE-MCP world-generation architecture
 
-**Status:** Stage 3G visual/asset recovery active; native/editor-scripted persistent PCG work is already in flight in Draft PR #162, while persistent **agent-driven MCP** worldgen still requires its own guarded proof before adoption  
-**Tracking:** #85  
-**Initial upstream:** `db-lyon/ue-mcp`  
-**Reviewed pin:** `v1.3.9`  
+**Status:** Stage 3G visual/asset recovery active; native/editor-scripted persistent PCG work is already in flight in Draft PR #162, while persistent **agent-driven MCP** worldgen still requires its own guarded proof before adoption
+**Tracking:** #85
+**Initial upstream:** `db-lyon/ue-mcp`
+**Reviewed pin:** `v1.3.9`
 **Unreal target:** UE 5.8.2 on the home/reference PC
 
 ## 1. Purpose

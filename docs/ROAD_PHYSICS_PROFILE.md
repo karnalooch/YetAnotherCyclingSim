@@ -1,7 +1,7 @@
 # YACS — Road Physics Profile
 
-**Status:** architectural contract  
-**Scope:** Stage 3H, consumed by Stage 4 cornering and future advanced physics  
+**Status:** architectural contract
+**Scope:** Stage 3H, consumed by Stage 4 cornering and future advanced physics
 **Rule:** rendering, terrain and PCG are presentation/world-generation layers, not the authoritative source of road physics
 
 ## 1. Purpose

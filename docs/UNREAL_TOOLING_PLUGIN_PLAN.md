@@ -1,8 +1,8 @@
 # YetAnotherCyclingSim — Unreal tooling & plugin plan
 
-**Status:** active production plan  
-**Applies to:** UE 5.8.2 MVP roadmap  
-**Rule:** no plugin is enabled “just in case”.  
+**Status:** active production plan
+**Applies to:** UE 5.8.2 MVP roadmap
+**Rule:** no plugin is enabled “just in case”.
 **Current recovery gate (27.09.2026):** Stage 3G visual/asset acceptance is open. Draft PR #162 has authored/persisted the first real `PCG_RouteExclusion` + `PCG_Forest` baseline on its branch, but final committed-SHA UE/full-validation/visual/performance acceptance is still pending; these assets are therefore **in-flight, not validated mainline deliverables**. Stage 4C is complete, while Stage 5/6 entry remains locked behind the documented World + Physics integration gate.
 
 ## 1. Purpose
@@ -60,6 +60,26 @@ Any change to the explicit plugin list is an integration change and requires an 
 | **3G+ dev tooling** | **db-lyon ue-mcp** | MUST for planned worldgen workflow | single orchestration layer for Kilo: flows, guards, rollback, editor actions and proof | #85 remains part of Stage 3G recovery; pinned release; upgrade only after review |
 | **3G+ dev tooling** | **UE ModelContextProtocol / Toolset Registry** | SELECTIVE/EXPERIMENTAL | official UE 5.8 AI-callable toolsets such as PCGToolset | consume selectively through the chosen orchestration path, not as a second uncontrolled server |
 
+### Researched worldgen candidates
+
+These are tracked candidates, **not current dependencies**:
+
+| Tool / project | Planned role | Earliest decision point | Current status |
+|---|---|---|---|
+| **PCGEx / PCGExtendedToolkit** | advanced PCG spatial/filter/path/asset-staging helpers | after first green stock `PCG_Forest` proof | `spike` |
+| **EssentialUE5PCG** | reference patterns for spline-driven forest/rocks/path and dynamic-mesh authoring | Stage 3G implementation | `reference` |
+| **PCG Biome Core** | reference architecture for data-driven biome definitions, asset sets, filters, exclusions and blending | Stage 3G-R5 / Stage 7 | `reference/optional-experiment` |
+| **Analog Strike** | reference for deterministic offline generation -> UE import/authoring -> capture pipeline | Stage 3G-R5 / Stage 7 | `reference` |
+| **RoadForge** | spline-to-road presentation, markings, shoulders and roadside dressing patterns | Stage 7 / post-MVP | `reference-later` |
+| **GeoTerrain** | DEM/OSM terrain, slope/altitude materials and foliage-avoidance research | Stage 7 / post-MVP route import | `research-later` |
+| **Heightmap Level Generator** | erosion/heightmap/mask R&D only | optional post-MVP terrain experiments | `r&d-only` |
+
+Adoption policy:
+- stock UE PCG + WorldSpec remains the default until a measured gap exists;
+- a candidate is adopted only when it removes a concrete implementation/performance/authoring problem;
+- editor-only adoption is preferred over runtime dependency for the MVP;
+- any adopted third-party tool requires license/provenance review, pinned version, build proof and removal/rollback path;
+- reference projects may inform patterns without entering the dependency graph.
 ## 4. Stage 3G world-generation stack
 
 Target:

@@ -1,9 +1,9 @@
 # YetAnotherCyclingSim — roadmapa
 
-**Wersja:** 0.1  
-**Status:** Draft  
-**Tryb pracy:** 11–20 godzin tygodniowo  
-**Cel krótkoterminowy:** grywalna wersja od startu do mety  
+**Wersja:** 0.1
+**Status:** Draft
+**Tryb pracy:** 11–20 godzin tygodniowo
+**Cel krótkoterminowy:** grywalna wersja od startu do mety
 **Cel docelowy:** pełne MVP opisane w PRODUCT_REQUIREMENTS.md
 
 ## Zasady pracy
@@ -173,7 +173,7 @@ Dla ustalonych parametrów symulator oblicza powtarzalną prędkość i dystans,
 
 # Etap 2 — pierwszy grywalny prototyp UE5
 
-**Planowany czas:** tydzień 2–3  
+**Planowany czas:** tydzień 2–3
 **Status:** ukończony
 
 ## Cel
@@ -196,7 +196,7 @@ Połączyć wejście testowe, fizykę i ruch obiektu po prostej trasie.
 
 - [x] **2.2.1 — #17:** `FCyclingSimulationSession` — czysty, testowalny C++ spinający `RiderInputController`, parametry kolarza/środowiska i `FixedStepRunner`; konfiguracja oraz operacje fallible są transakcyjne, reset i deterministyczny rerun są objęte Automation. Ta transza została wcześniej zaimplementowana i scalona, ale nie była jawnie zapisana w roadmapie.
 
-**Dowód ukończenia:** #17, #44, #47, #48 oraz końcowy proof #49 / PR #59.  
+**Dowód ukończenia:** #17, #44, #47, #48 oraz końcowy proof #49 / PR #59.
 Stage 2 zakończył się zielonym buildem i Automation, realnym PIE proof, deterministycznym frame-pacing proof oraz bazowym pomiarem wydajności 1920×1080 na komputerze referencyjnym.
 
 ## Kryterium ukończenia
@@ -207,7 +207,7 @@ Użytkownik może przejechać prostą trasę, zmieniając moc i kadencję, a pr�
 
 # Etap 3 — trasa testowa i profil wysokości
 
-**Planowany czas:** tydzień 3–5  
+**Planowany czas:** tydzień 3–5
 **Status:** rdzeń 3A–3F ukończony; 3G technicznie udowodnione, ale **wizualny/asset acceptance ponownie otwarty**; 3H Road Physics Profile ukończone przez PR #165, #167 i #168; Stage 4A ukończone, 4B/4C odblokowane
 
 ## Cel
@@ -261,16 +261,30 @@ Stage 3 jest realizowany kolejno:
 
 ### Tooling gate 3G
 
-- [ ] Włączyć natywny UE plugin **PCG** jako podstawowy system proceduralnego rozmieszczania vegetation/rocks/roadside dressing.
-- [ ] Włączyć **Editor Scripting Utilities** jako uzupełnienie istniejącego `PythonScriptPlugin` dla bezpiecznej automatyzacji edytora.
-- [ ] Włączyć **Geometry Script** dla generowania, analizy i modyfikacji geometrii pomocniczej; traktować jego API jako Beta i nie uzależniać od niego autorytatywnej fizyki/trasy.
+- [x] Włączyć natywny UE plugin **PCG** jako podstawowy system proceduralnego rozmieszczania vegetation/rocks/roadside dressing. Plugin jest jawnie włączony w `.uproject`; produkcyjny graph/proof pozostaje częścią 3G-R2.
+- [x] Włączyć **Editor Scripting Utilities** jako uzupełnienie istniejącego `PythonScriptPlugin` dla bezpiecznej automatyzacji edytora. Plugin jest jawnie włączony w `.uproject`.
+- [x] Włączyć **Geometry Script** dla generowania, analizy i modyfikacji geometrii pomocniczej; plugin jest jawnie włączony w `.uproject`, pozostaje narzędziem pomocniczym i nie jest źródłem prawdy dla trasy.
 - [ ] Włączyć **PCG Geometry Script Interop** tylko wtedy, gdy pierwszy graph faktycznie potrzebuje przepływu PCG ↔ Dynamic/Static Mesh; nie jest warunkiem samego startu PCG.
 - [ ] Po zielonym #85 MCP smoke ocenić eksperymentalny **PCGToolset** UE 5.8 do tworzenia/modyfikacji PCG Graphów przez agenta.
 - [ ] **Water/Landmass** pozostawić wyłączone do decyzji, że jezioro/rzeka są częścią zaakceptowanej kompozycji 3G.
 - [ ] Pierwszy PCG proof ma być editor-time, deterministyczny i ograniczony do jednego sektora; runtime PCG nie jest wymaganiem MVP.
 - [ ] PCG może konsumować route spline/WorldSpec jako constraints, ale nie może stać się źródłem prawdy dla przebiegu trasy.
-- [ ] Zbudować i zarejestrować w Technical UE Asset Ledger pierwszy zestaw: `PCG_RouteExclusion`, `PCG_Valley`, `PCG_Forest`, `PCG_HighAlpine`; każdy przechodzi deterministic regenerate/proof zanim dostanie status `validated`.
+- [ ] Zbudować i zarejestrować w Technical UE Asset Ledger pierwszy zestaw: `PCG_RouteExclusion`, `PCG_Valley`, `PCG_Forest`, `PCG_HighAlpine`; `PCG_RouteExclusion` jest już `prototype` w #162, pozostałe są `planned`; każdy przechodzi deterministic regenerate/proof zanim dostanie status `validated`.
 - [ ] Authoring assets PCG przechowywać poza `/Game/Generated/YACS/**`; katalog `Generated` jest wyłącznie dla odtwarzalnych outputów generatora.
+
+### 3G-R5 — worldgen tooling research / adoption gate
+
+Kandydaci z researchu są jawnie śledzeni, ale **nie stają się dependency tylko dlatego, że istnieją**. Najpierw stock UE PCG musi przejść realny `PCG_RouteExclusion -> PCG_Forest` proof. Dopiero potem mierzymy, czy zewnętrzne narzędzie usuwa konkretny koszt lub brak funkcji.
+
+- [ ] **PCGEx / PCGExtendedToolkit** — zrobić mały spike po pierwszym zielonym stock-PCG forest proofie. Ocenić route-distance filtering, spatial queries, asset staging i path/cluster tooling. Adoptować tylko wtedy, gdy realnie usuwa własny kod lub upraszcza grafy; w przeciwnym razie pozostaje poza MVP.
+- [ ] **EssentialUE5PCG** — używać jako **reference implementation**, nie dependency. Przejrzeć wzorce spline -> forest/rocks/path, dynamic-mesh authoring i projection; kopiować wyłącznie potrzebne wzorce zgodnie z licencją.
+- [ ] **PCG Biome Core** — traktować jako **reference architecture / optional experiment** dla data-driven biome definitions, asset sets, filters, exclusions, blending i priority. Nie włączać eksperymentalnego pluginu do MVP bez konkretnej luki w naszym WorldSpec/PCG.
+- [ ] **Analog Strike** — reference pipeline dla deterministycznego offline generation -> UE import/authoring -> capture/proof. Nie dodawać jako dependency.
+- [ ] **RoadForge** — odłożyć do Stage 7 / post-MVP jako reference dla spline -> procedural road presentation, shoulders/markings/roadside dressing; nie może przejąć ownershipu trasy.
+- [ ] **GeoTerrain** — odłożyć do Stage 7 / post-MVP jako research dla DEM/OSM, real-world terrain, altitude/slope materials i foliage avoidance; nie instalować do fikcyjnej 10 km trasy MVP bez potrzeby.
+- [ ] **Heightmap Level Generator** — R&D only dla erosion/heightmap/mask ideas; nie używać jego własnej sieci dróg jako źródła YACS route truth.
+
+**Adoption rule:** każdy kandydat musi skończyć jako `reference`, `rejected`, `optional`, `adopted-editor-only` albo `adopted-runtime`, z krótkim uzasadnieniem i wpływem na build/perf/licencję. Brak decyzji nie może zniknąć z roadmapy.
 
 ### Asset gate 3G
 
@@ -365,7 +379,7 @@ Zmiana tylko w fizyce nie może wymagać pełnego pobrania assetów; zmiana tylk
 
 # Etap 4 — technika pokonywania zakrętów
 
-**Planowany czas:** tydzień 5–7  
+**Planowany czas:** tydzień 5–7
 **Status:** Stage 4A ukończone przez PR #157; **4B-A/#169, 4B-B/#170 i 4B-C/#171 ukończone; 4C-A + 4C-B1/B2/B3a/B3b/B3c scalone przez PR #177; 4C-C1 scalone przez PR #179; 4C-C2 scalone przez PR #181; 4C-C3a scalone przez PR #183; 4C-C3b scalone przez PR #184; Stage 4C ukończone; 4D/4E wymagają wspólnego integration gate z World lane**
 
 ## Cel
@@ -464,7 +478,7 @@ Użytkownik może rozpocząć, ukończyć i podsumować całą sesję bez korzys
 
 # Etap 6 — kamery, kolarz i rower
 
-**Planowany czas:** tydzień 7–9  
+**Planowany czas:** tydzień 7–9
 **Status:** planowany; implementacja pozostaje zablokowana do przejścia wspólnego World + Physics integration gate przed Stage 5/6. Poniższy preflight jest przygotowaniem zakresu, nie zgodą na wcześniejsze rozpoczęcie Stage 6.
 
 ## Założenie animacji kolarza

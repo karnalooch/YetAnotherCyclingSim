@@ -8,43 +8,38 @@
 			"Name": "YetAnotherCyclingSim",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "YetAnotherCyclingSimEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
 		{
 			"Name": "ModelingToolsEditorMode",
 			"Enabled": true,
-			"TargetAllowList": [
-				"Editor"
-			]
+			"TargetAllowList": ["Editor"]
 		},
 		{
 			"Name": "PythonScriptPlugin",
 			"Enabled": true,
-			"TargetAllowList": [
-				"Editor"
-			]
+			"TargetAllowList": ["Editor"]
 		},
 		{
 			"Name": "PCG",
 			"Enabled": true,
-			"TargetAllowList": [
-				"Editor"
-			]
+			"TargetAllowList": ["Editor"]
 		},
 		{
 			"Name": "EditorScriptingUtilities",
 			"Enabled": true,
-			"TargetAllowList": [
-				"Editor"
-			]
+			"TargetAllowList": ["Editor"]
 		},
 		{
 			"Name": "GeometryScripting",
 			"Enabled": true,
-			"TargetAllowList": [
-				"Editor"
-			]
+			"TargetAllowList": ["Editor"]
 		}
 	]
 }

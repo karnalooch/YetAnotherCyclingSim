@@ -1,0 +1,196 @@
+name: Stage 3G R2 persist forest assets
+
+on:
+  push:
+    branches:
+      - feat/stage3g-pcg-forest-r2
+    paths:
+      - '.github/workflows/stage3g-r2-persist-forest-assets.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: stage3g-r2-persist-forest-assets-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  persist-forest-assets:
+    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.ref == 'refs/heads/feat/stage3g-pcg-forest-r2' }}
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 180
+    steps:
+      - name: Isolate self-hosted Git configuration
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'yacs-global.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          $env:GIT_CONFIG_GLOBAL = $isolated
+          $env:GIT_CONFIG_NOSYSTEM = '1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+
+      - name: Checkout exact trusted R2 revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          lfs: true
+          clean: true
+          persist-credentials: true
+
+      - name: Verify source checkout and LFS
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ((git rev-parse HEAD).Trim() -ne '${{ github.sha }}') {
+            throw 'Stage 3G R2 persistence checkout is not exact SHA.'
+          }
+          git lfs install --local
+          if ($LASTEXITCODE -ne 0) { throw 'git lfs install failed.' }
+          git lfs checkout
+          if ($LASTEXITCODE -ne 0) { throw 'git lfs checkout failed.' }
+          git lfs fsck
+          if ($LASTEXITCODE -ne 0) { throw 'git lfs fsck failed.' }
+          if (git status --porcelain) {
+            throw 'Stage 3G R2 persistence checkout is dirty.'
+          }
+          git config --local user.name 'github-actions[bot]'
+          git config --local user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Run authoring contract tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python -m unittest scripts.ci.test_stage3g_r2_conifer_author_contract
+          if ($LASTEXITCODE -ne 0) { throw 'Conifer author contract failed.' }
+          python -m unittest scripts.ci.test_stage3g_r2_pcg_route_exclusion_contract
+          if ($LASTEXITCODE -ne 0) { throw 'Route-exclusion contract failed.' }
+          python -m unittest scripts.ci.test_stage3g_r2_pcg_forest_contract
+          if ($LASTEXITCODE -ne 0) { throw 'PCG forest contract failed.' }
+
+      - name: Author and persist optimized conifer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $head = (git rev-parse HEAD).Trim()
+          ./scripts/ue/Invoke-YacsStage3GR2ConiferAuthor.ps1 -ExpectedBranch HEAD -ExpectedHead $head -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR2/Persist/Conifer'
+          if ($LASTEXITCODE -ne 0) { throw 'Conifer authoring failed.' }
+
+          git add -- 'Content/Prototype/Environment/Stage3G/Imported/Meshes/SM_Stage3G_FirSaplingMedium.uasset'
+          git add -- 'Content/Prototype/Environment/Stage3G/Imported/Textures/T_Stage3G_Fir*.uasset'
+          git add -- 'Content/Prototype/Environment/Stage3G/Materials/M*_Stage3G_Fir*.uasset'
+
+          $staged = @(git diff --cached --name-only)
+          $unexpected = @($staged | Where-Object {
+            $_ -ne 'Content/Prototype/Environment/Stage3G/Imported/Meshes/SM_Stage3G_FirSaplingMedium.uasset' -and
+            -not $_.StartsWith('Content/Prototype/Environment/Stage3G/Imported/Textures/T_Stage3G_Fir') -and
+            -not $_.StartsWith('Content/Prototype/Environment/Stage3G/Materials/M_Stage3G_Fir') -and
+            -not $_.StartsWith('Content/Prototype/Environment/Stage3G/Materials/MI_Stage3G_Fir')
+          })
+          if ($unexpected.Count -gt 0) {
+            throw ("Unexpected conifer paths staged: {0}" -f ($unexpected -join ', '))
+          }
+          if ($staged.Count -eq 0) { throw 'Conifer authoring produced no staged asset changes.' }
+
+          git commit -m 'feat(stage3g): persist optimized mass-forest conifer'
+          if ($LASTEXITCODE -ne 0) { throw 'Conifer persistence commit failed.' }
+          git push origin HEAD:feat/stage3g-pcg-forest-r2
+          if ($LASTEXITCODE -ne 0) { throw 'Conifer persistence push failed.' }
+          "CONIFER_PERSIST_HEAD=$((git rev-parse HEAD).Trim())" >> $env:GITHUB_ENV
+
+      - name: Author and persist PCG route exclusion
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if (git status --porcelain) { throw 'Workspace is dirty before PCG route-exclusion authoring.' }
+          $head = (git rev-parse HEAD).Trim()
+          ./scripts/ue/Invoke-YacsStage3GR2PCGRouteExclusion.ps1 -ExpectedBranch HEAD -ExpectedHead $head -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR2/Persist/RouteExclusion'
+          if ($LASTEXITCODE -ne 0) { throw 'PCG route-exclusion authoring failed.' }
+
+          git add -- 'Content/YACS/WorldGen/PCG/PCG_RouteExclusion.uasset'
+          $staged = @(git diff --cached --name-only)
+          if (($staged.Count -ne 1) -or ($staged[0] -ne 'Content/YACS/WorldGen/PCG/PCG_RouteExclusion.uasset')) {
+            throw ("Unexpected route-exclusion staged paths: {0}" -f ($staged -join ', '))
+          }
+
+          git commit -m 'feat(stage3g): persist PCG route exclusion'
+          if ($LASTEXITCODE -ne 0) { throw 'Route-exclusion persistence commit failed.' }
+          git push origin HEAD:feat/stage3g-pcg-forest-r2
+          if ($LASTEXITCODE -ne 0) { throw 'Route-exclusion persistence push failed.' }
+          "ROUTE_EXCLUSION_PERSIST_HEAD=$((git rev-parse HEAD).Trim())" >> $env:GITHUB_ENV
+
+      - name: Author and persist PCG forest graph
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if (git status --porcelain) { throw 'Workspace is dirty before PCG forest authoring.' }
+          $head = (git rev-parse HEAD).Trim()
+          ./scripts/ue/Invoke-YacsStage3GR2PCGForest.ps1 -ExpectedBranch HEAD -ExpectedHead $head -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR2/Persist/Forest'
+          if ($LASTEXITCODE -ne 0) { throw 'PCG forest authoring failed.' }
+
+          git add -- 'Content/YACS/WorldGen/PCG/PCG_Forest.uasset'
+          $staged = @(git diff --cached --name-only)
+          if (($staged.Count -ne 1) -or ($staged[0] -ne 'Content/YACS/WorldGen/PCG/PCG_Forest.uasset')) {
+            throw ("Unexpected PCG forest staged paths: {0}" -f ($staged -join ', '))
+          }
+
+          git commit -m 'feat(stage3g): persist deterministic PCG forest graph'
+          if ($LASTEXITCODE -ne 0) { throw 'PCG forest persistence commit failed.' }
+          git push origin HEAD:feat/stage3g-pcg-forest-r2
+          if ($LASTEXITCODE -ne 0) { throw 'PCG forest persistence push failed.' }
+          "PCG_FOREST_PERSIST_HEAD=$((git rev-parse HEAD).Trim())" >> $env:GITHUB_ENV
+
+      - name: Verify persisted LFS pointers and clean tree
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $required = @(
+            'Content/Prototype/Environment/Stage3G/Imported/Meshes/SM_Stage3G_FirSaplingMedium.uasset',
+            'Content/YACS/WorldGen/PCG/PCG_RouteExclusion.uasset',
+            'Content/YACS/WorldGen/PCG/PCG_Forest.uasset'
+          )
+          foreach ($path in $required) {
+            $pointer = (git show "HEAD:$path") -join "`n"
+            if ($pointer -notmatch '^version https://git-lfs.github.com/spec/v1') {
+              throw "Persisted Unreal asset is not represented by Git LFS: $path"
+            }
+          }
+          git lfs fsck
+          if ($LASTEXITCODE -ne 0) { throw 'Final git lfs fsck failed.' }
+          if (git status --porcelain) {
+            throw 'Stage 3G R2 persistence finished with a dirty workspace.'
+          }
+
+          $manifest = @(
+            "source_sha=${{ github.sha }}",
+            "conifer_head=$env:CONIFER_PERSIST_HEAD",
+            "route_exclusion_head=$env:ROUTE_EXCLUSION_PERSIST_HEAD",
+            "pcg_forest_head=$env:PCG_FOREST_PERSIST_HEAD"
+          )
+          $manifest | Set-Content -LiteralPath 'Saved/RuntimeProof/CI/Stage3GR2/Persist/persisted_heads.txt' -Encoding UTF8
+
+      - name: Upload persistence proof
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: stage3g-r2-persist-forest-assets-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            Saved/RuntimeProof/CI/Stage3GR2/Persist/**/*.json
+            Saved/RuntimeProof/CI/Stage3GR2/Persist/**/*.txt
+            Saved/RuntimeProof/CI/Stage3GR2/Persist/**/*.log
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Clean self-hosted workspace
+        if: ${{ always() }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git reset --hard
+          git clean -ffdx
+          if (git status --porcelain) {
+            throw 'Stage 3G R2 persistence workspace is dirty after cleanup.'
+          }
+          Write-Host 'Stage 3G R2 persistence cleanup: PASS'
