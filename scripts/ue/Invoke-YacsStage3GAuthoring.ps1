@@ -163,19 +163,7 @@ if ($MissingImportedAssets.Count -gt 0) {
 }
 Write-Host ("Stage 3G R1 source asset import: PASS ({0} assets)." -f $ExpectedImportedAssets.Count) -ForegroundColor Green
 
-Write-Host '[3/5] Authoring Stage 3G texture-backed materials...' -ForegroundColor Cyan
-Invoke-UEProcess -LogPath $MaterialLog -Arguments @(
-    $ProjectPath
-    '-run=PythonScript'
-    ('-script="' + $PythonScript + '"')
-    '-Unattended'
-    '-NoPause'
-    '-NullRHI'
-    '-NoSplash'
-    '-NoP4'
-    '-log'
-)
-
+$MaterialDir = Join-Path -Path $RepoRoot -ChildPath 'Content/Prototype/Environment/Stage3G/Materials'
 $ExpectedMaterialAssets = @(
     'M_Stage3G_Grass.uasset',
     'MI_Stage3G_Grass.uasset',
@@ -190,7 +178,34 @@ $ExpectedMaterialAssets = @(
     'M_Stage3G_Water.uasset',
     'MI_Stage3G_Water.uasset'
 )
-$MaterialDir = Join-Path -Path $RepoRoot -ChildPath 'Content/Prototype/Environment/Stage3G/Materials'
+
+# These files are deterministic Stage 3G authoring outputs. UE 5.8 can
+# occasionally retain Asset Registry metadata for an existing generated package
+# while failing to load that package, which makes EditorAssetSubsystem.delete_asset
+# fail before regeneration starts. Remove only the known outputs on disk before
+# launching the fresh commandlet; the checks below fail closed unless all 12 are
+# recreated successfully.
+foreach ($AssetName in $ExpectedMaterialAssets) {
+    $AssetPath = Join-Path -Path $MaterialDir -ChildPath $AssetName
+    $AssetStem = [System.IO.Path]::ChangeExtension($AssetPath, $null)
+    foreach ($Candidate in @($AssetPath, ($AssetStem + '.uexp'), ($AssetStem + '.ubulk'))) {
+        Remove-Item -LiteralPath $Candidate -Force -ErrorAction SilentlyContinue
+    }
+}
+
+Write-Host '[3/5] Authoring Stage 3G texture-backed materials...' -ForegroundColor Cyan
+Invoke-UEProcess -LogPath $MaterialLog -Arguments @(
+    $ProjectPath
+    '-run=PythonScript'
+    ('-script="' + $PythonScript + '"')
+    '-Unattended'
+    '-NoPause'
+    '-NullRHI'
+    '-NoSplash'
+    '-NoP4'
+    '-log'
+)
+
 $MissingMaterialAssets = @(
     $ExpectedMaterialAssets | Where-Object {
         -not (Test-Path -LiteralPath (Join-Path -Path $MaterialDir -ChildPath $_) -PathType Leaf)
