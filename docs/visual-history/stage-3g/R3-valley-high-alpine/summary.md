@@ -1,115 +1,77 @@
 # VH-3G-R3-001 — Stage 3G / R3 — Valley + High-Alpine PCG
 
-## Goal
+## Final state
 
-Complete the valley and high-Alpine presentation using deterministic route-aware worldgen, remove obvious Engine Cone biome massing, preserve the accepted R2 forest sector and prove the result visually at stable route cameras.
+- Technical status: **MERGED**
+- Visual status: **VISUAL_ACCEPTED**
+- Issue: **#187 — CLOSED**
+- PR: **#192 — MERGED**
+- Merge commit: `02ff23f0a24228432ae9c34eb65aa4cb3694ae1d`
+- Merged-main proof: **CyclingSim CI #421 / 36308910299 — GREEN**
 
-## Roadmap
+R3 is complete as the accepted valley/high-Alpine biome and massing baseline. It is not the final Stage 7 environment-art pass, and it does not close the remaining Stage 3G terrain, road, atmosphere or explicit environment-performance gates.
 
-- Stage: **Stage 3G**
-- Version: **R3**
-- Issue: **#187**
-- PR: **#192 — draft**
+## Provenance chain
 
-## Baseline — BEFORE
+| State | Revision | Proof | Decision |
+|---|---|---|---|
+| **BEFORE** | R2 merged baseline `fd77094…` | CI #398 / `36299298530` | `VISUAL_ACCEPTED` |
+| **NOW** | R3 visual revision `58c89674…` | CI #417 / `36305204327` | `VISUAL_ACCEPTED` |
+| final sync | `d7dd75a8…` | CI #420 / `36308404800` | exact-SHA technical PASS |
+| **AFTER** | merged `main` `02ff23f0…` | CI #421 / `36308910299` | `MERGED + VISUAL_ACCEPTED` |
 
-- Accepted baseline: Stage 3G R2
-- Merge commit: `fd77094ffe0c8f29c3bd9949ba22079fc73fc1c5`
-- Visual status: `VISUAL_ACCEPTED`
+## Why Visual History mattered
 
-## Current — NOW
+The rejected R3 checkpoints remain part of the history:
 
-- Branch: `feat/stage3g-pcg-biomes-r3`
-- Current visual-integration SHA: `58c89674656ddec1bce9473547d366f6798dcfb5`
-- Technical status: `CI_GREEN`
-- Visual status: `VISUAL_ACCEPTED`
+- **#408 / `0148f894`** — technical PASS, visual reject: persisted PCG graphs were not visibly consumed by the reference scene.
+- **#412 / `07e0803b`** — technical PASS, visual reject: real massing appeared but was oversized and floating.
+- **#415 / `7de2cc46`** — technical PASS, visual reject: scale improved, but distant high-Alpine massing still lacked terrain support.
+- **#417 / `58c89674`** — technical PASS and visual acceptance: massing became grounded on supported presentation terrain.
 
-## Important rejected checkpoint
+This is the intended separation between technical and visual acceptance.
 
-Commit `0148f894e9036dfe6b7c1d7176922e65e7024a65` passed CyclingSim CI **#408 / 36302003337** including the full Stage 3G proof.
+## Final merged-main proof
 
-It was **not visually accepted**.
-
-Reason: `PCG_Valley` and `PCG_HighAlpine` were persisted and technically correct, but the rendered reference map did not visibly consume them. The 1200 m and 8000 m captures remained effectively the R2 scene.
-
-This checkpoint is intentionally preserved in Visual History because it demonstrates why technical and visual acceptance are separate gates.
-
-## Current visual-integration change
-
-The active R3 revision replaces the remaining valley/high-Alpine Engine Cone massing with bounds-aware instances of the validated `SM_Stage3G_Boulder` while keeping deterministic instance counts and the R2 forest baseline intact.
-
-## Technical proof
+CI #421 ran against exact merged SHA `02ff23f0a24228432ae9c34eb65aa4cb3694ae1d`.
 
 - Unreal build + scoped Automation: **PASS**
+- Automation report: **70 / 70 passed**, 0 failed, 0 errors
 - Stage 3G full validation: **PASS**
 - Fresh Load: **PASS**
 - Map Check: **0 errors / 0 warnings**
-- LFS fsck: **PASS**
+- Git LFS fsck: **PASS**
 - Visual Capture: **PASS**
-- Aggregate CI gate: **PASS**
-- CI run: **#417 / 36305204327**
-- Proof artifact: `stage3g-full-validation-36305204327-1`
-- Ground-support contract: **PASS**
+- Capture resolution: **1920×1080**
+- Required distances: **1200 / 4900 / 8000 m**
+- Proof artifact: `stage3g-full-validation-36308910299-1`
 
-## Visual iteration history
+The artifact proves successful 1080p capture and the Stage 3G functional/visual contract. It does **not** contain a dedicated environment FPS/GPU budget result, so the separate performance-sanity gate remains open where the asset plan requires it.
 
-- **#408 / 0148f894** — technical PASS, visual reject: PCG graph output was not visibly consumed.
-- **#412 / 07e0803b** — technical PASS, visual reject: real massing visible but oversized/floating.
-- **#415 / 7de2cc46** — technical PASS, visual reject: scale bounded, but distant massing still lacked terrain support.
-- **#417 / 58c89674** — technical PASS, **visual accepted NOW**: massing is grounded on supported presentation terrain.
+## Final captures
 
-## World-generation inputs
+| Capture | BEFORE SHA-256 | NOW SHA-256 | AFTER SHA-256 |
+|---|---|---|---|
+| Valley 1200 m | `de391fb72074…` | `169ff6fff360…` | `5cefb738c8e0…` |
+| Forest 4900 m | `c1b1b6a3109e…` | `56233de89d86…` | `867144551a0c…` |
+| High Alpine 8000 m | `d1491bbfd506…` | `189e3f63fabb…` | `7dc5dfd18409…` |
 
-- Seed: `42017`
-- Route clearance: `4.0 m`
-- Graphs: `PCG_Valley`, `PCG_RouteExclusion`, `PCG_Forest`, `PCG_HighAlpine`
-- Valley: `0–3700 m`, rock density `0.10`
-- Forest: `3700–6200 m`, density `0.72`
-- High Alpine: `6200–10000 m`, rock density `0.65`
-- Route truth: `FRouteGeometryProfile`
+The full source hashes and artifact provenance are recorded in `capture-hashes.json` and `manifest.json`.
 
-## Asset delta
+## Durable final triptychs
 
-- `SM_Stage3G_Boulder` — validated real mesh for valley/high-Alpine massing and rock dressing.
-- `SM_Stage3G_FirSaplingMedium` — retained accepted forest asset.
-- Targeted placeholders removed from visible biome massing: Engine Cone valley ridge / near-Alpine / distant mountain presentation.
+The repository-retained final `BEFORE | NOW | AFTER` evidence is:
 
-## Visual acceptance criteria
+- `captures/01_valley_1200m_triptych.jpg` — SHA-256 `eb3127aa0ab31af9c20197c4f1ea7776f84e38dbabf1db9979ac5ab6151721a0` — 164622 bytes
+- `captures/02_forest_4900m_triptych.jpg` — SHA-256 `be8d00a92f46fd4d9fd5135d89710fe003761fd98caff40a81e3a54525c8fce7` — 164139 bytes
+- `captures/03_high_alpine_8000m_triptych.jpg` — SHA-256 `84f3f2830b1cb19d0da9afb24dfd8f440323f63854d0e7a5aafc16bd30a23ea0` — 211285 bytes
 
-### 1200 m — Valley
-
-**VISUAL_ACCEPTED for R3 baseline.** Real boulder massing is grounded, kept away from the road and reads as valley-side landform dressing rather than floating geometry.
-
-### 4900 m — Forest
-
-**VISUAL_ACCEPTED / preserved baseline.** The R2 conifer forest and road-clearance readability remain intact.
-
-### 8000 m — High Alpine
-
-**VISUAL_ACCEPTED for R3 baseline.** Real rocks are grounded on widened high-Alpine presentation terrain, remain outside the road corridor and no longer float above the horizon.
-
-This is still a Stage 3G reference baseline, not final Stage 7 environment art: the road, broad terrain forms, atmosphere and overall scene composition remain intentionally open for later polish.
-
-## AFTER
-
-`PENDING — awaiting visual acceptance`
-
-No current NOW capture may be promoted to AFTER until the committed-SHA proof and human visual review both pass.
+Each final triptych is 1920×576 and contains genuine R2, accepted R3 pre-merge and merged-main R3 captures. AFTER is no longer a placeholder.
 
 ## Decision
 
 - Technical acceptance: **YES**
-- Visual acceptance: **YES — NOW accepted**
-- Visual change detected: **YES**
-- Rejection reason: **none for 58c89674**
-- Next step: sync #192 with current `main`, run one final exact-SHA proof, merge, then capture merged `main` as AFTER and close VH-3G-R3-001.
-
-## Durable triptych evidence
-
-The R3 pre-merge Visual History triptychs are retained in the repository under `captures/`. They were deterministically materialized from the canonical R2 CI #398 and R3 CI #417 proof artifacts after verifying the source PNG SHA-256 values recorded in the manifest.
-
-- `captures/01_valley_1200m_triptych.jpg` — SHA-256 `c00630dcd6335b8cbb5a13cb9c0d8b6b54a7573ac2e25d344fe7b40297a6ada5` — 73040 bytes
-- `captures/02_forest_4900m_triptych.jpg` — SHA-256 `621449067618a96687b51e38ef8495d7a49030a7fe6c8f92621d7a9f3d54adc9` — 75619 bytes
-- `captures/03_high_alpine_8000m_triptych.jpg` — SHA-256 `f8ddd03b30c0eeec6d97665ca44d4f3bf6922787a943226aa7f3e0d399e8b33f` — 93154 bytes
-
-`AFTER` intentionally remains **PENDING** until #192 is merged and a merged-main exact-SHA proof/capture exists.
+- Visual acceptance: **YES**
+- Merge acceptance: **YES**
+- Visual History entry: **CLOSED**
+- Remaining work: continue the broader Stage 3G reference-environment gates without reopening R3 unless a regression is discovered.

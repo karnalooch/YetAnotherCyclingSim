@@ -268,7 +268,7 @@ Stage 3 jest realizowany kolejno:
 
 ## 3G — Reference Environment Pass
 
-> **Status 27.09.2026:** R2 / PR #162 jest MERGED jako `fd77094…` i stanowi zaakceptowany forest baseline. Aktywna transza **R3 / #187 / Draft PR #192** ma zapisane `PCG_Valley` + `PCG_HighAlpine` oraz realne boulder massing. Po trzech jawnie zachowanych odrzuconych iteracjach bieżący NOW `58c89674…` / CI #417 przeszedł build, Automation, full Stage 3G proof i **Visual History acceptance** dla 1200/4900/8000 m. R3 pozostaje otwarte wyłącznie do synchronizacji z aktualnym `main`, finalnego exact-SHA CI, merge i zarejestrowania merged-main `AFTER`.
+> **Status 27.09.2026:** R2 / PR #162 jest MERGED jako `fd77094…` i stanowi zaakceptowany forest baseline. **R3 / #187 / PR #192 jest MERGED** jako `02ff23f0…`: NOW `58c89674…` przeszedł Visual History acceptance w CI #417, zsynchronizowany SHA `d7dd75a8…` przeszedł finalny pre-merge CI #420, a merged `main` `02ff23f0…` przeszedł pełny Stage 3G proof w CI #421. Finalne `BEFORE | NOW | AFTER` dla 1200/4900/8000 m są trwale zapisane. **R3 jest zamknięte; Stage 3G jako całość pozostaje otwarte** dla niżej wymienionych prac terrain/road/atmosphere oraz jawnego environment performance sanity.
 
 - [ ] Ukształtować spójną dolinę otaczającą drogę zamiast czytelnych jako osobne kafle podpór terenu.
 - [ ] Zbudować kilka planów gór z wyraźną głębią i atmospheric perspective.
@@ -285,9 +285,9 @@ Stage 3 jest realizowany kolejno:
 |---|---|---|---|
 | `VH-3G-R1-001` | R1 — real Alpine ground + rocks | historical accepted baseline | PR #160 / `91c1150…` |
 | `VH-3G-R2-001` | R2 — deterministic PCG forest | **VISUAL_ACCEPTED / MERGED** | PR #162 / `fd77094…` / CI #398 |
-| `VH-3G-R3-001` | R3 — valley + high-Alpine PCG/massing | **NOW VISUAL_ACCEPTED · AFTER PENDING** | #187 / Draft PR #192 / CI #417 |
+| `VH-3G-R3-001` | R3 — valley + high-Alpine PCG/massing | **VISUAL_ACCEPTED / MERGED** | #187 / PR #192 / `02ff23f0…` / CI #421 |
 
-R3 zachowuje wszystkie odrzucone checkpointy (#408 brak widocznej integracji, #412 oversized/floating massing, #415 brak podłoża dla distant massing). Bieżący NOW `58c89674…` / CI #417 jest **VISUAL_ACCEPTED** jako R3 biome/massing baseline. `AFTER` pozostaje PENDING do merge i merged-main proofu.
+R3 zachowuje wszystkie odrzucone checkpointy (#408 brak widocznej integracji, #412 oversized/floating massing, #415 brak podłoża dla distant massing). NOW `58c89674…` / CI #417 został zaakceptowany wizualnie, a finalny AFTER pochodzi z merged `main` `02ff23f0…` / CI #421. Ten wpis Visual History jest zamknięty; dalszy polish świata należy do pozostałych gate'ów Stage 3G i późniejszego Stage 7.
 
 ### Tooling gate 3G
 

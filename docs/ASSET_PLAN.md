@@ -490,11 +490,11 @@ Po wyborze konkretnych paczek tabela poniżej staje się rejestrem źródła pra
 
 | Asset / pack | Źródło | Licencja | Cena | Stage | Status | Uwagi |
 |---|---|---|---:|---|---|---|
-| Sparse Grass (`sparse_grass`) | Poly Haven | CC0 | 0 zł | 3G | imported | meadow/valley ground; 2K source imported to project-owned Stage 3G textures; validation still requires in-sector proof |
-| Forest Ground 03 (`forrest_ground_03`) | Poly Haven | CC0 | 0 zł | 3G | imported | pine-needle forest floor; 2K source imported to project-owned Stage 3G textures; validation pending forest proof |
-| Rocky Terrain (`rocky_terrain`) | Poly Haven | CC0 | 0 zł | 3G | imported | high-Alpine ground layer; 2K source imported to project-owned Stage 3G textures; validation pending 8000 m proof |
+| Sparse Grass (`sparse_grass`) | Poly Haven | CC0 | 0 zł | 3G | imported | meadow/valley ground; merged-main 1200 m visual proof accepted in PR #192 / CI #421; LOD/instancing/performance-cost proof remains before `validated` |
+| Forest Ground 03 (`forrest_ground_03`) | Poly Haven | CC0 | 0 zł | 3G | imported | pine-needle forest floor; 4900 m visual proof and final three-biome Visual History are accepted; source-asset LOD/performance validation remains before `validated` |
+| Rocky Terrain (`rocky_terrain`) | Poly Haven | CC0 | 0 zł | 3G | imported | high-Alpine ground layer; merged-main 8000 m visual proof accepted in PR #192 / CI #421; LOD/performance-cost proof remains before `validated` |
 | Rock Face 01 (`rock_face_01`) | Poly Haven | CC0 | 0 zł | 3G | approved | roadside cliff candidate; performance validation pending |
-| Boulder 01 (`boulder_01`) | Poly Haven | CC0 | 0 zł | 3G | imported | canonical `SM_Stage3G_Boulder` plus textures are in repo and used by Stage 3G; final validation still requires visual/perf proof |
+| Boulder 01 (`boulder_01`) | Poly Haven | CC0 | 0 zł | 3G | imported | canonical `SM_Stage3G_Boulder` is used by accepted R3 valley/high-Alpine massing; merged-main visual proof passed, explicit LOD/instancing/performance sanity remains before `validated` |
 | Mountainside (`mountainside`) | Poly Haven | CC0 | 0 zł | 3G | candidate | mid-ground mountain mass; compare against cheaper authored geometry |
 | Fir Tree 01 (`fir_tree_01`) | Poly Haven | CC0 | 0 zł | 3G | candidate | retained as a hero/sparse conifer candidate; broad-scatter reduction in PR #162 is blocked by whole-FBX A/B/C import memory pressure on the trusted runner, so it is not the R2 mass-forest mesh |
 | Fir Sapling (`fir_sapling`) | Poly Haven | CC0 | 0 zł | 3G | candidate | lightweight young-tree / understory candidate; useful as forest variation, not the primary tall-canopy mesh |
@@ -513,16 +513,16 @@ Pobranie źródeł **nie oznacza akceptacji assetu do mapy**. Status `candidate`
 
 PR #155 udowodnił authoring/CI/proof harness, ale nie przesunął source assetów przez pełny lifecycle. Dlatego Stage 3G pozostaje otwarty do czasu wykonania co najmniej:
 
-- [x] `Sparse Grass` -> `imported`; [ ] -> `validated` w valley/meadow po finalnym 1200 m Visual History acceptance;
-- [x] `Forest Ground 03` -> `imported`; [x] zaakceptowany forest-ground proof w R2; pełny 3-biome visual gate pozostaje otwarty;
-- [x] `Rocky Terrain` -> `imported`; [ ] -> `validated` w high Alpine po finalnym 8000 m Visual History acceptance;
-- [x] `Boulder 01` -> `imported` i używany jako rzeczywisty rock dressing; [ ] finalne `validated` dla valley/high-Alpine massing po R3 Visual History acceptance;
+- [x] `Sparse Grass` -> `imported` i 1200 m Visual History acceptance zaliczone; [ ] -> `validated` po LOD/instancing/performance-cost proof;
+- [x] `Forest Ground 03` -> `imported`; [x] forest-ground proof + pełny 3-biome Visual History gate zaakceptowane; [ ] source-asset LOD/performance validation przed `validated`;
+- [x] `Rocky Terrain` -> `imported` i 8000 m Visual History acceptance zaliczone; [ ] -> `validated` po LOD/performance-cost proof;
+- [x] `Boulder 01` -> `imported`, używany w R3 i visual acceptance zaliczone; [ ] finalne `validated` po explicit LOD/instancing/environment-performance sanity;
 - [x] `Fir Sapling Medium` -> `validated` jako R2 mass-scatter conifer: PR #162 / CI #398 / 4900 m visual proof;
 - [x] `PCG_RouteExclusion` -> `validated` po R2 deterministic reload + route-clearance + committed-SHA proof;
 - [x] `PCG_Forest` -> `validated` jako pierwszy produkcyjnie użyteczny graph scatterujący zatwierdzony realny asset;
-- [ ] `PCG_Valley` + `PCG_HighAlpine` -> `validated` po R3 1200/8000 m Visual History acceptance;
-- [ ] capture 1200/4900/8000 m pokazuje faktyczne assety i rozróżnialne biomy jako zaakceptowany tryptyk `BEFORE | NOW | AFTER`;
-- [ ] 1080p sanity nie wykazuje nieakceptowalnej regresji na komputerze referencyjnym.
+- [x] `PCG_Valley` + `PCG_HighAlpine` -> persisted/reloaded, PR #192 MERGED, 1200/8000 m Visual History + merged-main CI #421 zaliczone; [ ] -> `validated` po explicit environment performance sanity;
+- [x] capture 1200/4900/8000 m pokazuje faktyczne assety i rozróżnialne biomy jako zaakceptowany, trwały tryptyk `BEFORE | NOW | AFTER` z merged-main AFTER;
+- [x] merged-main visual capture 1920x1080 + Fresh Load + Map Check 0/0 zaliczone; [ ] osobny environment performance sanity / budżet 1080p/60 FPS pozostaje wymagany.
 
 Dopiero wtedy minimalny environment asset baseline przechodzi z 3G do Stage 7 jako **punkt startowy do rozwijania**, a nie jako niewykonana zaległość.
 
@@ -532,9 +532,9 @@ Technical assets zwykle nie mają osobnej ceny zakupu, ale mogą dziedziczyć og
 
 | Technical UE asset | Typ | Stage | Status | Źródła wejściowe / zależności | Wymagany proof |
 |---|---|---|---|---|---|
-| `PCG_Valley` | PCG Graph | 3G | reviewed | WorldSpec + `FRouteGeometryProfile` + route exclusion + validated Boulder 01 | persisted/reloaded on R3 branch; `validated` requires 1200 m Visual History acceptance + perf sanity |
+| `PCG_Valley` | PCG Graph | 3G | reviewed | WorldSpec + `FRouteGeometryProfile` + route exclusion + Boulder 01 | PR #192 merged; persisted/reloaded, 1200 m Visual History and merged-main CI #421 passed; explicit environment perf sanity remains before `validated` |
 | `PCG_Forest` | PCG Graph | 3G/7 | validated | WorldSpec + validated route exclusion + Fir Sapling Medium / forest-ground assets | PR #162 / CI #398: deterministic reload, route exclusion, real Static Mesh Spawner, 4900 m visual proof, full Stage 3G validation |
-| `PCG_HighAlpine` | PCG Graph | 3G/7 | reviewed | WorldSpec + `FRouteGeometryProfile` + route exclusion + validated Boulder 01 / high-Alpine materials | persisted/reloaded on R3 branch; `validated` requires 8000 m Visual History acceptance + perf sanity |
+| `PCG_HighAlpine` | PCG Graph | 3G/7 | reviewed | WorldSpec + `FRouteGeometryProfile` + route exclusion + Boulder 01 / high-Alpine materials | PR #192 merged; persisted/reloaded, 8000 m Visual History and merged-main CI #421 passed; explicit environment perf sanity remains before `validated` |
 | `PCG_RouteExclusion` | PCG helper/settings | 3G | validated | authoritative `FRouteGeometryProfile` + tested Stage 3G route-clearance contract | PR #162 / CI #398 deterministic reload + protected 4 m route corridor + full Stage 3G proof |
 | `IK_Rider` | IK Rig | 6 | planned | production rider skeleton | retarget chain validation |
 | `RTG_CyclingMocap` | IK Retargeter | 6 | planned | mocap source + rider IK rigs | representative cycling clip retarget proof |
@@ -546,7 +546,7 @@ Technical assets zwykle nie mają osobnej ceny zakupu, ale mogą dziedziczyć og
 
 Statusy technical assets: `planned`, `prototype`, `reviewed`, `validated`, `deprecated`, `removed`.
 
-Tabela opisuje stan zaakceptowany dla bieżącej linii dokumentacji/main oraz jawnie oznaczone aktywne review. R2 / PR #162 jest scalone i daje status `validated` dla `PCG_RouteExclusion` oraz `PCG_Forest`. `PCG_Valley` i `PCG_HighAlpine` są `reviewed` na aktywnym R3 / PR #192 i nie przechodzą do `validated`, dopóki 1200 m i 8000 m nie zaliczą Visual History acceptance.
+Tabela opisuje stan zaakceptowany dla bieżącej linii dokumentacji/main oraz jawnie oznaczone aktywne review. R2 / PR #162 jest scalone i daje status `validated` dla `PCG_RouteExclusion` oraz `PCG_Forest`. R3 / PR #192 jest scalone, a `PCG_Valley` i `PCG_HighAlpine` zaliczyły 1200/8000 m Visual History oraz merged-main CI #421; pozostają `reviewed` wyłącznie do czasu osobnego environment performance sanity wymaganego przez ledger.
 
 Technical asset przechodzi do `validated` dopiero po wymaganym build/proofie na komputerze referencyjnym.
 

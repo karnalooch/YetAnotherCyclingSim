@@ -12,10 +12,11 @@
   "timestamps": {
     "created_at": "2026-09-27",
     "visual_accepted_at": "2026-09-27",
-    "merged_at": null
+    "merged_at": "2026-09-27T09:17:42Z",
+    "merged_main_proof_at": "2026-09-27T09:23:19Z"
   },
   "status": {
-    "technical_status": "CI_GREEN",
+    "technical_status": "MERGED",
     "visual_status": "VISUAL_ACCEPTED"
   },
   "git": {
@@ -23,21 +24,21 @@
     "baseline_commit_sha": "fd77094ffe0c8f29c3bd9949ba22079fc73fc1c5",
     "source_commit_sha": "58c89674656ddec1bce9473547d366f6798dcfb5",
     "source_commit_short": "58c89674",
-    "accepted_commit_sha": "58c89674656ddec1bce9473547d366f6798dcfb5",
-    "merge_commit_sha": null
+    "accepted_commit_sha": "02ff23f0a24228432ae9c34eb65aa4cb3694ae1d",
+    "merge_commit_sha": "02ff23f0a24228432ae9c34eb65aa4cb3694ae1d"
   },
   "pull_request": {
     "number": 192,
     "title": "feat(stage3g): add R3 deterministic valley + high-Alpine PCG",
-    "status": "DRAFT"
+    "status": "MERGED"
   },
   "ci": {
     "workflow_name": "CyclingSim CI",
-    "workflow_run_id": 36305204327,
-    "workflow_run_number": 417,
-    "proof_artifact_name": "stage3g-full-validation-36305204327-1",
+    "workflow_run_id": 36308910299,
+    "workflow_run_number": 421,
+    "proof_artifact_name": "stage3g-full-validation-36308910299-1",
     "automation_status": "PASS",
-    "automation_summary": "Exact-SHA Unreal build/Automation, footprint-support contract, Stage 3G full validation and proof passed on 58c89674.",
+    "automation_summary": "Merged-main exact-SHA Unreal build/Automation and Stage 3G full validation passed on 02ff23f0; 70/70 Automation tests passed, Fresh Load passed, Map Check 0/0, LFS fsck passed and visual capture passed.",
     "fresh_load_status": "PASS",
     "map_check_errors": 0,
     "map_check_warnings": 0,
@@ -105,7 +106,7 @@
     "visual_acceptance": true,
     "reviewer_summary": "R3 grounded baseline accepted: 1200 m valley and 8000 m high-Alpine visibly use real boulder massing without floating formations; 4900 m preserves the accepted R2 conifer forest. This is an R3 biome/massing baseline, not final environment art.",
     "rejection_reason": null,
-    "next_step": "Merge only after syncing current main and one final exact-SHA CI run. AFTER remains pending until the merged-main capture is recorded."
+    "next_step": "R3 is merged and its merged-main AFTER is recorded. Continue the remaining Stage 3G terrain/road/atmosphere and explicit environment-performance gates; this R3 biome/massing baseline is not final Stage 7 environment art."
   },
   "captures": [
     {
@@ -127,17 +128,17 @@
         "status": "VISUAL_ACCEPTED"
       },
       "after": {
-        "commit_sha": null,
-        "image": null,
-        "sha256": null,
-        "status": "PENDING"
+        "commit_sha": "02ff23f0a24228432ae9c34eb65aa4cb3694ae1d",
+        "image": "CI artifact: FinalProof/Visual/01_meadow_valley_1200m_AFTER.png",
+        "sha256": "5cefb738c8e051d4603fe6cbcc13d7400ed80b9f95732897edf1a949456d90bd",
+        "status": "VISUAL_ACCEPTED"
       },
       "triptych_image": "captures/01_valley_1200m_triptych.jpg",
       "pixel_diff": null,
-      "triptych_sha256": "c00630dcd6335b8cbb5a13cb9c0d8b6b54a7573ac2e25d344fe7b40297a6ada5",
+      "triptych_sha256": "eb3127aa0ab31af9c20197c4f1ea7776f84e38dbabf1db9979ac5ab6151721a0",
       "triptych_storage_status": "DURABLY_STORED",
-      "triptych_expected_path": "captures/01_valley_1200m_triptych.jpg",
-      "triptych_resolution": "1920x576"
+      "triptych_resolution": "1920x576",
+      "triptych_size_bytes": 164622
     },
     {
       "capture_id": "02-forest-4900m",
@@ -158,17 +159,17 @@
         "status": "VISUAL_ACCEPTED"
       },
       "after": {
-        "commit_sha": null,
-        "image": null,
-        "sha256": null,
-        "status": "PENDING"
+        "commit_sha": "02ff23f0a24228432ae9c34eb65aa4cb3694ae1d",
+        "image": "CI artifact: FinalProof/Visual/02_forest_sector_4900m_AFTER.png",
+        "sha256": "867144551a0cbdf5f0ac6a2847f04b43a6bf476e877c7a5aac56f3a4a1b96ba8",
+        "status": "VISUAL_ACCEPTED"
       },
       "triptych_image": "captures/02_forest_4900m_triptych.jpg",
       "pixel_diff": null,
-      "triptych_sha256": "621449067618a96687b51e38ef8495d7a49030a7fe6c8f92621d7a9f3d54adc9",
+      "triptych_sha256": "be8d00a92f46fd4d9fd5135d89710fe003761fd98caff40a81e3a54525c8fce7",
       "triptych_storage_status": "DURABLY_STORED",
-      "triptych_expected_path": "captures/02_forest_4900m_triptych.jpg",
-      "triptych_resolution": "1920x576"
+      "triptych_resolution": "1920x576",
+      "triptych_size_bytes": 164139
     },
     {
       "capture_id": "03-high-alpine-8000m",
@@ -189,17 +190,17 @@
         "status": "VISUAL_ACCEPTED"
       },
       "after": {
-        "commit_sha": null,
-        "image": null,
-        "sha256": null,
-        "status": "PENDING"
+        "commit_sha": "02ff23f0a24228432ae9c34eb65aa4cb3694ae1d",
+        "image": "CI artifact: FinalProof/Visual/03_high_valley_mountains_8000m_AFTER.png",
+        "sha256": "7dc5dfd184092dab5852c45fea255b67523e10774c12597acd6aeeebb0a60d76",
+        "status": "VISUAL_ACCEPTED"
       },
       "triptych_image": "captures/03_high_alpine_8000m_triptych.jpg",
       "pixel_diff": null,
-      "triptych_sha256": "f8ddd03b30c0eeec6d97665ca44d4f3bf6922787a943226aa7f3e0d399e8b33f",
+      "triptych_sha256": "84f3f2830b1cb19d0da9afb24dfd8f440323f63854d0e7a5aafc16bd30a23ea0",
       "triptych_storage_status": "DURABLY_STORED",
-      "triptych_expected_path": "captures/03_high_alpine_8000m_triptych.jpg",
-      "triptych_resolution": "1920x576"
+      "triptych_resolution": "1920x576",
+      "triptych_size_bytes": 211285
     }
   ],
   "attempts": [
@@ -241,6 +242,27 @@
     "triptych_status": "DURABLY_STORED",
     "source_before_artifact": "stage3g-full-validation-36299298530-1",
     "source_now_artifact": "stage3g-full-validation-36305204327-1",
-    "after_status": "PENDING_MERGED_MAIN_PROOF"
+    "after_status": "DURABLY_STORED_IN_FINAL_TRIPTYCH",
+    "source_after_artifact": "stage3g-full-validation-36308910299-1"
+  },
+  "pre_merge_acceptance": {
+    "visual_accepted_commit_sha": "58c89674656ddec1bce9473547d366f6798dcfb5",
+    "visual_accepted_workflow_run_id": 36305204327,
+    "visual_accepted_workflow_run_number": 417,
+    "synced_commit_sha": "d7dd75a80c2da7fde41b617a4eb5899c676a17fc",
+    "synced_workflow_run_id": 36308404800,
+    "synced_workflow_run_number": 420
+  },
+  "merge_proof": {
+    "merge_commit_sha": "02ff23f0a24228432ae9c34eb65aa4cb3694ae1d",
+    "workflow_run_id": 36308910299,
+    "workflow_run_number": 421,
+    "proof_artifact_name": "stage3g-full-validation-36308910299-1",
+    "resolution": "1920x1080",
+    "automation_tests": "70/70 passed",
+    "fresh_load": "PASS",
+    "map_check": "0 errors / 0 warnings",
+    "git_lfs_fsck": "PASS",
+    "visual_capture": "PASS"
   }
 }
