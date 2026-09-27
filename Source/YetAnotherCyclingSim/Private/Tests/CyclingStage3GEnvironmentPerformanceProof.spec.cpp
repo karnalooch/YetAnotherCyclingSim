@@ -17,7 +17,7 @@
 #include "Misc/FileHelper.h"
 #include "HAL/PlatformMisc.h"
 #include "HAL/PlatformTime.h"
-#include "Engine/Engine.h"
+#include "Engine/Engine.h"\n#include "EngineGlobals.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "Tests/AutomationCommon.h"
@@ -163,7 +163,11 @@ public:
 		const double RHIMs = FPlatformTime::ToMilliseconds(GRHIThreadTime);
 
 		double FrameAvgMs = 0.0;
-		double GpuMs = 0.0;
+		// GetAverageUnitTimes may report 0 for GPU in an unattended editor
+		// viewport even when D3D12 timing is available. GGPUFrameTime is the
+		// engine's last-rendered-frame GPU duration in platform cycles and is
+		// also used by GameViewportClient when reasoning about frame rate.
+		double GpuMs = FPlatformTime::ToMilliseconds(GGPUFrameTime);
 		double RenderAvgMs = 0.0;
 		double RhiAvgMs = 0.0;
 		if (GEngine)
@@ -173,7 +177,11 @@ public:
 			if (Averages.Num() >= 5)
 			{
 				FrameAvgMs = static_cast<double>(Averages[0]);
-				GpuMs = static_cast<double>(Averages[2]);
+				const double AveragedGpuMs = static_cast<double>(Averages[2]);
+				if (GpuMs <= 0.01 && AveragedGpuMs > 0.01)
+				{
+					GpuMs = AveragedGpuMs;
+				}
 				RenderAvgMs = static_cast<double>(Averages[3]);
 				RhiAvgMs = static_cast<double>(Averages[4]);
 			}
