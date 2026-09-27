@@ -109,6 +109,59 @@ namespace Stage3PrototypeTerrainInternal
 			&& Scale.Z > 0.0;
 	}
 
+	bool TryMakeGroundedMeshTransform(
+		UStaticMesh* Mesh,
+		const FVector& GroundPositionM,
+		const FVector& TargetSizeM,
+		const FRotator& Rotation,
+		FTransform& OutTransform,
+		FString& OutError)
+	{
+		if (!IsValid(Mesh)
+			|| !IsFiniteVector(GroundPositionM)
+			|| !IsFiniteVector(TargetSizeM)
+			|| TargetSizeM.X <= 0.0
+			|| TargetSizeM.Y <= 0.0
+			|| TargetSizeM.Z <= 0.0)
+		{
+			OutError = TEXT("Stage 3G grounded mesh transform inputs are invalid");
+			return false;
+		}
+
+		const FBoxSphereBounds Bounds = Mesh->GetBounds();
+		const FVector MeshSizeCm = Bounds.BoxExtent * 2.0;
+		if (!IsFiniteVector(MeshSizeCm)
+			|| MeshSizeCm.X <= UE_SMALL_NUMBER
+			|| MeshSizeCm.Y <= UE_SMALL_NUMBER
+			|| MeshSizeCm.Z <= UE_SMALL_NUMBER)
+		{
+			OutError = TEXT("Stage 3G grounded mesh bounds are invalid");
+			return false;
+		}
+
+		const FVector Scale(
+			(TargetSizeM.X * MetresToCentimetres) / MeshSizeCm.X,
+			(TargetSizeM.Y * MetresToCentimetres) / MeshSizeCm.Y,
+			(TargetSizeM.Z * MetresToCentimetres) / MeshSizeCm.Z);
+		const double MeshMinZCm =
+			static_cast<double>(Bounds.Origin.Z - Bounds.BoxExtent.Z);
+
+		FVector PositionM = GroundPositionM;
+		PositionM.Z -=
+			(MeshMinZCm * Scale.Z) / MetresToCentimetres;
+
+		OutTransform = FTransform(
+			Rotation,
+			PositionM * MetresToCentimetres,
+			Scale);
+		if (!IsFiniteTransform(OutTransform))
+		{
+			OutError = TEXT("Stage 3G grounded mesh transform is invalid");
+			return false;
+		}
+		return true;
+	}
+
 	FTransform MakeAlignedBoxTransform(
 		const FVector& StartM,
 		const FVector& EndM,
@@ -321,6 +374,12 @@ AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 
 	if (UStaticMesh* BoulderMesh = LoadObject<UStaticMesh>(nullptr, Stage3GBoulderMeshPath))
 	{
+		// R3 reuses the validated project-owned boulder mesh for valley and
+		// high-Alpine massing so the persisted reference map no longer falls
+		// back to Engine Cone silhouettes outside the forest sector.
+		ValleyRidgeProps->SetStaticMesh(BoulderMesh);
+		MountainProps->SetStaticMesh(BoulderMesh);
+		DistantMountainProps->SetStaticMesh(BoulderMesh);
 		RockProps->SetStaticMesh(BoulderMesh);
 	}
 	if (UStaticMesh* ConiferMesh = LoadObject<UStaticMesh>(nullptr, Stage3GConiferMeshPath))
@@ -412,6 +471,14 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 		|| ForestCanopyProps->GetStaticMesh()->GetPathName() != Stage3GConiferMeshPath)
 	{
 		OutError = TEXT("Stage 3G forest presentation requires the validated Fir Sapling Medium mesh");
+		return false;
+	}
+	if (ValleyRidgeProps->GetStaticMesh()->GetPathName() != Stage3GBoulderMeshPath
+		|| MountainProps->GetStaticMesh()->GetPathName() != Stage3GBoulderMeshPath
+		|| DistantMountainProps->GetStaticMesh()->GetPathName() != Stage3GBoulderMeshPath
+		|| RockProps->GetStaticMesh()->GetPathName() != Stage3GBoulderMeshPath)
+	{
+		OutError = TEXT("Stage 3G valley/high-Alpine presentation requires the validated Boulder 01 mesh");
 		return false;
 	}
 
