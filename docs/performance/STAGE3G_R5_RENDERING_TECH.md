@@ -50,6 +50,23 @@ The R4 numbers are a **measurement baseline, not a target to game**. Do not opti
 
 ## Work packages
 
+### R5.0 — Engine and vendor-plugin preflight
+
+Do not change the active R4 engine/plugin surface merely to prepare R5.
+
+At R5 start:
+
+- pin the exact Unreal Engine 5.8.x patch used for the rendering-tech pass;
+- prefer the latest validated 5.8.x hotfix supported by all required plugins; **UE 5.8.3 is the current candidate baseline** and must still pass project smoke/build proof before adoption;
+- record exact DLSS/FSR/XeSS plugin versions and supported engine patch;
+- verify plugin license/distribution requirements;
+- verify runtime capability-query APIs before designing settings UI;
+- integrate one vendor backend at a time;
+- keep a known-good Native/TSR fallback branch/path;
+- never let a vendor plugin become a dependency of authoritative simulation/world data.
+
+Plugin marketing/version numbers are implementation metadata, not architectural truth. The compatibility matrix records the exact tested versions for each accepted backend.
+
 ### R5.1 — Performance History + deterministic benchmark
 
 Create a repeatable 60–90 second route benchmark with:
@@ -174,6 +191,8 @@ Initial rollout order:
 3. FSR Super Resolution;
 4. XeSS Super Resolution.
 
+Native-resolution AA modes such as **DLAA** or vendor-native-AA equivalents may be evaluated as quality options, but they do not replace the Native/TSR performance baseline.
+
 Each backend receives the same deterministic benchmark and visual-artifact review.
 
 ### R5.7 — Temporal image-quality validation
@@ -238,7 +257,7 @@ Rules:
 - report both **base rendered FPS** and **displayed/generated FPS**;
 - never use generated FPS as the R5 hard acceptance metric.
 
-On the RTX 2070 SUPER reference PC, DLSS Frame Generation is not a required capability. The reference machine remains valid because R5 acceptance is based on real rendered frames.
+On the RTX 2070 SUPER reference PC, DLSS Frame Generation is not supported and therefore is not a required capability. Other FG paths are optional experiments only when their runtime support query says they are available. The reference machine remains valid because R5 acceptance is based on real rendered frames.
 
 ### R5.11 — Auto graphics policy
 
@@ -256,6 +275,19 @@ On the RTX 2070 SUPER reference PC, DLSS Frame Generation is not a required capa
 
 Do not implement:
 `if NVIDIA => DLSS Performance`.
+
+### R5.12 — Frame pacing, cap and display behavior
+
+A 60 FPS cap is a presentation policy, not an optimization result.
+
+Validation order:
+1. measure uncapped or controlled benchmark headroom;
+2. identify Frame/Game/Draw/GPU bottlenecks and hitches;
+3. only then validate a 60 FPS cap, VSync and VRR behavior;
+4. verify frame pacing on the reference display path;
+5. record whether the cap masks remaining headroom or hitch spikes.
+
+Shipping may use a stable cap/presentation policy, but benchmark evidence must preserve enough uncapped/headroom data to show whether the renderer is actually healthy.
 
 ## Compatibility matrix
 
