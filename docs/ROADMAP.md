@@ -248,7 +248,7 @@ Stage 3 jest realizowany kolejno:
 
 ## 3G — Reference Environment Pass
 
-> **Status po audycie:** PR #155 udowodnił deterministyczny authoring, build/Automation, persistence, Map Check, LFS, capture harness i cleanup. To był wymagany proof techniczny, ale **nie dowód spełnienia poniższych kryteriów artystycznych**. Finalne capture'y nadal używają głównie prototypowych brył zastępczych, dlatego kryteria pozostają otwarte.
+> **Status po audycie:** PR #155 udowodnił deterministyczny authoring, build/Automation, persistence, Map Check, LFS, capture harness i cleanup. To był wymagany proof techniczny, ale **nie dowód spełnienia poniższych kryteriów artystycznych**. Draft PR #162 jest bieżącą transzą R2: ma realny conifer oraz zapisane na swojej gałęzi `PCG_RouteExclusion` i `PCG_Forest`, ale finalny committed-SHA UE/full-validation/fresh-load/visual/performance proof nadal jest wymagany przed merge i przed oznaczeniem tych assetów jako `validated`.
 
 - [ ] Ukształtować spójną dolinę otaczającą drogę zamiast czytelnych jako osobne kafle podpór terenu.
 - [ ] Zbudować kilka planów gór z wyraźną głębią i atmospheric perspective.
@@ -296,7 +296,7 @@ To nadal **nie jest finalny art pass Stage 7**: Stage 3G ma usunąć wygląd gre
 
 ### 3G-MCP — kontrolowana warstwa world generation (#85)
 
-UE-MCP jest narzędziem deweloperskim dla Stage 3G i późniejszego Stage 7, a nie nowym źródłem prawdy dla trasy.
+UE-MCP jest narzędziem deweloperskim dla Stage 3G i późniejszego Stage 7, a nie nowym źródłem prawdy dla trasy. **Nie jest też jedyną dozwoloną ścieżką authoringu PCG**: deterministyczne, projektowe workflow C++/Python/editor mogą tworzyć te same technical assets, o ile respektują route authority, guards, proof i cleanup. #85 jest bramką dla trwałych mutacji wykonywanych przez surface agenta/MCP, nie blokadą dla całego PCG.
 
 - [ ] Przypiąć stabilne `db-lyon/ue-mcp` i uruchomić bridge na UE 5.8.2.
 - [ ] Zachować Stage 3 route profile / geometry / spline / fixed-step simulation jako warstwę autorytatywną.
