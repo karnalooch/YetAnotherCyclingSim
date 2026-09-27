@@ -3,7 +3,7 @@
 **Status:** active production plan
 **Applies to:** UE 5.8.2 MVP roadmap
 **Rule:** no plugin is enabled “just in case”.
-**Current recovery gate (27.09.2026):** Stage 3G visual/asset acceptance is open. Draft PR #162 has authored/persisted the first real `PCG_RouteExclusion` + `PCG_Forest` baseline on its branch, but final committed-SHA UE/full-validation/visual/performance acceptance is still pending; these assets are therefore **in-flight, not validated mainline deliverables**. Stage 4C is complete, while Stage 5/6 entry remains locked behind the documented World + Physics integration gate.
+**Current recovery gate (28.09.2026):** the core Stage 3G PCG assets (`PCG_RouteExclusion`, `PCG_Forest`, `PCG_Valley`, `PCG_HighAlpine`) are validated mainline deliverables, and PR #200 merged the route-aware presentation surface. Post-merge human review rejected R4 as the required visual closeout, so Stage 3G now enters **R4.1 Alpine Visual Recovery** before R5. The recovery keeps native PCG and route/physics separation, and runs a bounded UE Landscape vs deterministic Geometry Script/tiled-terrain vertical-slice comparison before choosing the macro-terrain presentation path.
 
 ## 1. Purpose
 
@@ -38,9 +38,9 @@ Any change to the explicit plugin list is an integration change and requires an 
 
 | Stage | Tool / plugin | Priority | Why YACS needs it | Activation policy |
 |---|---|---:|---|---|
-| **3G** | **PCG** | MUST | deterministic vegetation, rocks, biome/set dressing and roadside generation | active recovery gate; Draft #162 already enables it on the R2 branch and persists first PCG authoring assets; mainline validation/merge still pending |
-| **3G** | **Editor Scripting Utilities** | MUST | safer/simpler editor automation APIs complementing PythonScriptPlugin | enabled on Draft #162 branch with the first PCG integration; accepted only after R2 proof/merge |
-| **3G** | **Geometry Script** | SHOULD | generate/analyze/edit helper geometry, mesh processing and custom world-authoring tools | enabled on Draft #162 branch; keep route physics independent and require actual use before treating it as a necessary production dependency |
+| **3G** | **PCG** | MUST | deterministic vegetation, rocks, biome/set dressing and roadside generation | validated mainline foundation; R4.1 extends composition/roadside usage without changing route ownership |
+| **3G** | **Editor Scripting Utilities** | MUST | safer/simpler editor automation APIs complementing PythonScriptPlugin | active authoring dependency for deterministic editor-time world generation and proof workflows |
+| **3G/R4.1** | **Geometry Script** | SHOULD | generate/analyze/edit helper geometry, mesh processing and custom world-authoring tools | R4.1 uses it in a bounded continuous/tiled-terrain vertical-slice comparison; keep route physics independent and persist only reproducible results |
 | **3G** | **PCG Geometry Script Interop** | CONDITIONAL | PCG ↔ Dynamic/Static Mesh operations and mesh sampling when a graph actually requires them | enable only on demonstrated graph need |
 | **3G** | **PCGToolset** | EXPERIMENT | agent-driven creation/modification of PCG Graphs through UE 5.8 Toolset Registry | only after MCP smoke; keep behind YACS guard/flow surface |
 | **3G/7** | **Water + Landmass** | OPTIONAL | lake/river/terrain shaping if water survives art-direction review | leave disabled until composition decision |
