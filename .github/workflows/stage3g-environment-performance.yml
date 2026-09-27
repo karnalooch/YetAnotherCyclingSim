@@ -16,7 +16,7 @@ permissions:
 
 concurrency:
   group: stage3g-environment-performance-${{ github.repository }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   performance:
