@@ -117,3 +117,37 @@ TINITALY citation:
 
 This downloader does **not** modify the Stage 3 map, route geometry, road physics,
 PCG graphs or Unreal assets.
+
+
+### Preparing the Passo Giau heightmap
+
+After the source GeoTIFF exists, prepare the R4.1 Unreal import candidates:
+
+```powershell
+py -m pip install numpy==2.2.6 Pillow==11.3.0 rasterio==1.4.3
+py scripts/assets/prepare_passo_giau_heightmap.py
+```
+
+The default prepared output is written to the ignored directory:
+
+```text
+ExternalAssets/Terrain/PassoGiau/Prepared/
+```
+
+Outputs include:
+
+- native-resolution unsigned 16-bit PNG;
+- 1009x1009 Unreal Landscape candidate PNG;
+- matching little-endian `.r16`;
+- grayscale hillshade preview;
+- `terrain-report.json` with source bounds, elevation distribution and
+  recommended Unreal XY/Z transform values.
+
+The 1009x1009 candidate is intentionally **resampled** to a standard Landscape
+vertex resolution. It does not create terrain detail beyond the original 10 m
+TINITALY source.
+
+The GitHub Actions workflow
+`.github/workflows/passo-giau-r4-1-terrain-spike.yml` performs the full remote
+download + preparation and publishes the prepared files as the
+`passo-giau-r4-1-terrain-spike` artifact.
