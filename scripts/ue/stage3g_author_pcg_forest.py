@@ -321,13 +321,16 @@ def main() -> None:
         )
     saved_descriptor = saved_entries[0].get_editor_property("descriptor")
     saved_mesh = saved_descriptor.get_editor_property("static_mesh")
-    if (
-        not saved_mesh
-        or saved_mesh.get_path_name() != FOREST_MESH_OBJECT_PATH
-    ):
+    saved_mesh_path = (
+        unreal.EditorAssetLibrary.get_path_name_for_loaded_asset(saved_mesh)
+        if saved_mesh
+        else ""
+    )
+    if not saved_mesh or saved_mesh_path != FOREST_MESH_OBJECT_PATH:
         fail(
-            "reloaded PCG_Forest mesh mismatch: {}".format(
-                saved_mesh.get_path_name() if saved_mesh else "<none>"
+            "reloaded PCG_Forest mesh mismatch: actual={!r} expected={!r}".format(
+                saved_mesh_path or "<none>",
+                FOREST_MESH_OBJECT_PATH,
             )
         )
     proof = {
