@@ -25,7 +25,7 @@ class Stage3GEnvironmentPerformanceContract(unittest.TestCase):
         self.assertIn("4900.0", text)
         self.assertIn("8000.0", text)
         self.assertIn("FApp::GetDeltaTime()", text)
-        self.assertIn("GetAverageUnitTimes", text)
+        self.assertIn("GetAverageUnitTimes", text)\n        self.assertIn("GGPUFrameTime", text)\n        self.assertIn("EngineGlobals.h", text)
         self.assertIn("YACS_STAGE3G_PERF_CSV", text)
 
     def test_workflow_is_trusted_self_hosted_and_publishes_failure_evidence(self):
