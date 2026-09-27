@@ -76,7 +76,8 @@ Prace prowadzone są na dwóch komputerach: biurowym (dokumentacja, Git, lekki k
 - Gałąź równoległa nie może korzystać z API, plików źródłowych, assetów ani zachowań, które wprowadza dopiero inna niescalona gałąź.
 - Każde zadanie korzysta z jednego issue i jednej dedykowanej gałęzi: recenzja → commit → push → PR → automatyczne scalenie po spełnieniu wymaganych bramek i walidacji.
 - Checkpoint przygotowany na komputerze biurowym może zostać zacommitowany i wypchnięty po recenzji, ale raport musi jawnie oznaczać `Unreal validation pending`.
-- Pull Request zawierający kod C++ UE, assety UE albo zmiany integracyjne nie może zostać otwarty, dopóki odpowiedni build projektu UE i testy automatyzacji nie przejdą na komputerze domowym.
+- **Draft PR** z kodem C++ UE, assetami UE lub zmianami integracyjnymi może zostać otwarty przed pełnym proofem domowym, jeśli służy review, CI albo checkpointowi; musi pozostać draftem i jawnie wymieniać brakujące walidacje.
+- Taki PR nie może zostać oznaczony jako ready-for-review ani scalony, dopóki wymagany build UE, Automation i stage-specific asset/runtime proof nie przejdą na komputerze domowym lub zaufanym runnerze UE.
 - Pull Requesty zawierające wyłącznie dokumentację oraz inne zmiany niemające wpływu na build UE nie wymagają walidacji w Unreal Engine.
 - Od 2026-09-23 obowiązuje stała zgoda właściciela produktu na automatyczne scalanie: PR może zostać scalony bez osobnej komendy `scal`, jeżeli zakres jest zatwierdzony, wszystkie wymagane walidacje i bramki CI są zielone, nie ma nierozwiązanych uwag ani blockerów, a PR jest mergeable i nie jest draftem.
 - Stała zgoda na merge nie omija walidacji: nie wolno automatycznie scalać przy brakującym wymaganym proofie UE/home-PC, oczekującej lub czerwonej bramce, nierozwiązanym review/blockerze, konflikcie/drafcie ani gdy właściciel jawnie każe wstrzymać merge.
@@ -463,7 +464,8 @@ Użytkownik może rozpocząć, ukończyć i podsumować całą sesję bez korzys
 
 # Etap 6 — kamery, kolarz i rower
 
-**Planowany czas:** tydzień 7–9
+**Planowany czas:** tydzień 7–9  
+**Status:** planowany; implementacja pozostaje zablokowana do przejścia wspólnego World + Physics integration gate przed Stage 5/6. Poniższy preflight jest przygotowaniem zakresu, nie zgodą na wcześniejsze rozpoczęcie Stage 6.
 
 ## Założenie animacji kolarza
 
@@ -475,7 +477,23 @@ osobnego mocapu dla każdego przypadku.
 
 Minimalny przepływ Stage 6:
 
-`base mocap / cadence animation -> additive cycling pose -> procedural Control Rig -> hand/foot IK -> final rider pose`.
+`cycling mocap / base animation -> IK Rig + IK Retargeter -> cadence/posture layer -> Control Rig procedural offsets -> FullBodyIK contact solve -> head/look-ahead additive -> final rider pose`.
+
+Rower jest źródłem transformów kontaktowych: co najmniej `LeftHandGrip`, `RightHandGrip`, `LeftPedal` i `RightPedal`. Obrót korby/pedałów wynika z kadencji, a stan fizyki dostarcza m.in. lean, braking, grade i corner context. Warstwa prezentacji może te dane konsumować, ale nie może modyfikować fizyki.
+
+## Stage 6 risk-reduction preflight
+
+Zanim wybierzemy finalnego ridera i rozpoczniemy pełny art/animation pass:
+
+- potraktować **Game Animation Sample 5.8** wyłącznie jako aktualny reference project dla retargetingu, Control Rig, additive Look-At i debugowania animacji; nie migrować całego frameworka ani jego locomotion stacku do YACS;
+- na placeholder riderze udowodnić retarget jednego reprezentatywnego cycling clipu oraz cztery jednoczesne kontakty FBIK: dwie dłonie na gripach i dwie stopy na pedałach;
+- udowodnić cadence-driven crank/pedals oraz zmianę pozycji bez utraty kontaktów;
+- udowodnić physics-driven lean/corner posture z istniejącego stanu Stage 4, bez odtwarzania fizyki w Animation Blueprint;
+- udowodnić additive head stabilization/look-ahead po trasie;
+- przygotować powtarzalny authoring/proof flow przez istniejącą kontrolowaną warstwę `ue-mcp` tam, gdzie jej powierzchnia narzędziowa jest już zwalidowana; brakujące operacje nie uzasadniają automatycznie nowego frameworka;
+- kamera MVP startuje od zwykłego `CameraComponent` / `SpringArm` / `PlayerCameraManager`. Experimental **Gameplay Cameras** i zewnętrzny **GameplayCameraToolset** mogą otrzymać osobny, mały spike tylko wtedy, gdy zwykła ścieżka ujawni konkretny problem z dampingiem, collision, blendingiem lub authoringiem.
+
+Preflight ma zmniejszyć ryzyko Stage 6. Nie jest osobnym etapem i nie rozszerza MVP.
 
 ## Zadania
 
@@ -484,11 +502,12 @@ Minimalny przepływ Stage 6:
 - [ ] Dopasowanie kolarza do roweru.
 - [ ] Import szkieletu kolarza i przygotowanie retargetingu bazowego mocapu.
 - [ ] Animacja pedałowania zależna od kadencji.
+- [ ] Obrót korby i pedałów jako jawne źródło transformów celu dla foot IK; nie wypiekać kontaktu stóp wyłącznie w klipie animacji.
 - [ ] Toczenie bez pedałowania.
 - [ ] Bazowe blendowane pozycje: neutral seated, aggressive/aero, descending tuck, standing/sprint i cornering.
 - [ ] Pochylenie roweru i ciała w zakrętach sterowane stanem fizyki zamiast sztywną animacją.
 - [ ] `Control Rig` / proceduralne offsety dla miednicy, kręgosłupa, głowy, barków i łokci.
-- [ ] IK dłoni do punktów chwytu kierownicy oraz IK stóp do pedałów, niezależne od bazowego mocapu.
+- [ ] FBIK/IK utrzymujące cztery jawne cele kontaktowe: lewa/prawa dłoń → grip, lewa/prawa stopa → pedał, niezależnie od bazowego mocapu i bieżącej pozycji.
 - [ ] Stabilizacja głowy i look-ahead po spline trasy, tak aby kolarz patrzył przez zakręt.
 - [ ] Rozdzielenie warstwy prezentacji od konkretnego mesha/szkieletu, aby model kolarza można było później podmienić bez przepisywania logiki jazdy.
 - [ ] Kamera za kolarzem.
@@ -512,6 +531,9 @@ oraz cele IK `Hand` / `Foot`; system animacji nie może zmieniać wyniku fizyki.
 - [ ] Włączyć **Control Rig** dla proceduralnej warstwy pozy kolarza.
 - [ ] Włączyć **IK Rig** dla retargetingu oraz definiowania goal/solver chain dla ridera.
 - [ ] Włączyć **FullBodyIK** dla wielu jednoczesnych celów dłonie/pedały/głowa/miednica i proceduralnych korekt całego ciała.
+- [ ] Użyć **Game Animation Sample 5.8** jako reference/sample do wzorców retargetingu, additive Look-At i debugowania; nie dodawać go jako runtime/framework dependency YACS.
+- [ ] Zbudować powtarzalny Stage 6 authoring/proof flow przez kontrolowaną powierzchnię `ue-mcp` tylko dla operacji, które przechodzą istniejące guards/build/proof; nowe AI toolsety są CONDITIONAL, nie domyślne.
+- [ ] Zachować klasyczny stos kamer MVP (`CameraComponent` / `SpringArm` / `PlayerCameraManager`); **Gameplay Cameras** pozostają Experimental i nie są zależnością MVP bez osobnego comparative spike.
 - [ ] Ocenić **Skeletal Mesh Editing Tools** tylko jeśli naprawy skinning/rigging w UE realnie oszczędzają eksport do Blendera.
 - [ ] Ocenić **Control Rig Modules** dopiero po powstaniu pierwszego działającego minimalnego Control Riga; nie dodawać modułów przed pomiarem potrzeby.
 - [ ] Zmierzyć koszt Control Rig + IK/FBIK na komputerze referencyjnym i zachować możliwość LOD/update-rate reduction bez wpływu na fizykę.
@@ -555,6 +577,8 @@ ciągłą zmianę pozy bez utraty kontaktu dłoni z kierownicą i stóp z pedał
 ### Tooling gate Stage 7
 
 - [ ] Rozszerzać istniejące PCG graphs/flows zamiast ręcznie stawiać masowe environment dressing.
+- [ ] Traktować **PCG Biome Core / Sample** jako reference architecture dla data-driven biome composition (valley / forest / high Alpine), a nie jako automatyczną zależność produkcyjną; plugin jest Experimental i wymaga własnego proofu, jeśli miałby wejść do projektu.
+- [ ] Wykonać ograniczony **PCGEx** spike tylko wtedy, gdy vanilla PCG ujawni konkretny koszt złożoności, np. route-exclusion/spatial queries albo kontrolę forest density. Przyjąć dependency wyłącznie po porównaniu graph complexity, determinism, build/upgrade risk i performance z rozwiązaniem natywnym.
 - [ ] Rozważyć **Scriptable Tools Editor Mode** tylko wtedy, gdy własny panel/tryb typu „Generate YACS World” daje wyraźną przewagę nad nazwanymi MCP flows i zwykłymi Editor Utility workflows.
 - [ ] Nie dodawać ciężkich world-building frameworków, jeżeli natywne PCG + Geometry Script + nasze flows pokrywają potrzebę.
 - [ ] Każde nowe narzędzie świata musi respektować `/Game/Generated/YACS/**`, deterministyczny seed, route clearance i cleanup/regeneration contract.
@@ -592,7 +616,9 @@ Każdy płatny lub zewnętrzny pack trafia do Asset Ledger w [`ASSET_PLAN.md`](A
 ### Tooling gate Stage 8
 
 - [ ] Włączyć/zweryfikować **Niagara** jako podstawowy system VFX dla deszczu, sprayu, wind/debris i subtelnych efektów atmosferycznych.
-- [ ] Włączyć/zweryfikować **MetaSounds** dla parametrycznego drivetrain/freehub/tyres/brakes/wind audio zależnego od stanu jazdy.
+- [ ] Deszcz i wheel spray budować jako **lokalne efekty wokół ridera/kamery**, skalowane jakościowo i profilowane; stan pogody może być globalny, ale MVP nie symuluje cząstek deszczu na całej trasie.
+- [ ] Wetness ma być wspólnym gameplay/presentation state: fizyka konsumuje autorytatywną wartość wetness/grip, a materiały/Niagara/audio wyłącznie ją prezentują.
+- [ ] Włączyć/zweryfikować **MetaSounds** dla parametrycznego drivetrain/freehub/tyres/brakes/wind audio zależnego od stanu jazdy; preferować mały zestaw źródeł + parametry `speed/cadence/power/coasting/braking/surface/wetness/wind` zamiast eksplozji wariantów sampli.
 - [ ] Nie włączać eksperymentalnego MetaSounds feature set bez konkretnej potrzeby; bazowy MetaSound ma pierwszeństwo.
 - [ ] Audio/VFX otrzymują parametry z gameplay/presentation, ale nie stają się źródłem prawdy dla fizyki.
 - [ ] Zarejestrować i zwalidować w Technical UE Asset Ledger co najmniej `NS_Rain`, `NS_WheelSpray`, `MS_Drivetrain` i `MS_Wind`, z proofem GPU/audio odpowiednim dla typu assetu.
