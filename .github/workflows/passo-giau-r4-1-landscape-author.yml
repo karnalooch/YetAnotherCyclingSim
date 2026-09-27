@@ -26,7 +26,8 @@ jobs:
   author:
     if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.ref == 'refs/heads/feat/stage3g-r4-1-passo-giau-landscape-spike' }}
     runs-on: [self-hosted, yacs-ue58]
-    timeout-minutes: 60
+    # Single authoritative R4.1B authoring lane; restart on the latest exact SHA.
+    timeout-minutes: 90
     env:
       GIT_LFS_SKIP_SMUDGE: '1'
 
