@@ -21,8 +21,8 @@ Complete the valley and high-Alpine presentation using deterministic route-aware
 
 - Branch: `feat/stage3g-pcg-biomes-r3`
 - Current visual-integration SHA: `07e0803bad809e87473ed3a461fdecf55e75ec76`
-- Technical status: `WORKING`
-- Visual status: `IN_REVIEW`
+- Technical status: `CI_GREEN`
+- Visual status: `VISUAL_REJECTED`
 
 ## Important rejected checkpoint
 
@@ -38,15 +38,17 @@ This checkpoint is intentionally preserved in Visual History because it demonstr
 
 The active R3 revision replaces the remaining valley/high-Alpine Engine Cone massing with bounds-aware instances of the validated `SM_Stage3G_Boulder` while keeping deterministic instance counts and the R2 forest baseline intact.
 
-## Technical proof required
+## Technical proof
 
-- Unreal build + scoped Automation: pending for current SHA
-- Stage 3G full validation: pending for current SHA
-- Fresh Load: pending
-- Map Check: pending
-- LFS fsck: pending
-- Visual Capture: pending
-- CI run: pending
+- Unreal build + scoped Automation: **PASS**
+- Stage 3G full validation: **PASS**
+- Fresh Load: **PASS**
+- Map Check: **0 errors / 0 warnings**
+- LFS fsck: **PASS**
+- Visual Capture: **PASS**
+- Aggregate CI gate: **PASS**
+- CI run: **#412 / 36302963634**
+- Proof artifact: `stage3g-full-validation-36302963634-1`
 
 ## World-generation inputs
 
@@ -68,15 +70,15 @@ The active R3 revision replaces the remaining valley/high-Alpine Engine Cone mas
 
 ### 1200 m — Valley
 
-Must visibly depart from the R2 cone-based valley presentation and read as a more organic valley/meadow scene.
+**VISUAL_REJECTED.** The scene visibly changes, but the boulder-derived valley masses are oversized and read as giant rock walls rather than believable valley landforms.
 
 ### 4900 m — Forest
 
-Must preserve the accepted R2 conifer forest and road-clearance readability.
+The accepted R2 conifer forest remains recognizable and the road corridor remains readable. This capture is not the reason for rejection.
 
 ### 8000 m — High Alpine
 
-Must visibly replace cone-like mountain massing with real rock geometry and improve the high-Alpine read.
+**VISUAL_REJECTED.** Real rock geometry is visible, but the current massing is far too large and includes floating/overhanging formations around the road. The technical replacement succeeded; the composition and grounding did not.
 
 ## AFTER
 
@@ -86,7 +88,8 @@ No current NOW capture may be promoted to AFTER until the committed-SHA proof an
 
 ## Decision
 
-- Technical acceptance: **PENDING**
-- Visual acceptance: **PENDING**
-- Visual change detected: **PENDING**
-- Next step: finish current committed-SHA proof, compare against R2, compose repository triptychs, then decide acceptance.
+- Technical acceptance: **YES**
+- Visual acceptance: **NO**
+- Visual change detected: **YES**
+- Rejection reason: oversized / floating valley and high-Alpine boulder massing.
+- Next step: reduce target massing scale, improve grounding and road sightline, rerun exact-SHA captures, then update the same Visual History entry. Automation of the durable triptych evidence pack is tracked in **#193**.
