@@ -60,7 +60,7 @@ if (-not $EditorCmd -or -not (Test-Path -LiteralPath $EditorCmd -PathType Leaf))
     throw 'UnrealEditor-Cmd.exe is unavailable.'
 }
 
-Write-Host '[1/3] Verifying full-LFS repository state...' -ForegroundColor Cyan
+Write-Host '[1/4] Verifying full-LFS repository state...' -ForegroundColor Cyan
 & git -C $RepoRoot lfs fsck
 if ($LASTEXITCODE -ne 0) { throw 'git lfs fsck failed.' }
 
@@ -82,7 +82,24 @@ if ($Missing.Count -gt 0) {
     throw ("Required persisted Stage 3G assets are missing: {0}" -f ($Missing -join ', '))
 }
 
-Write-Host '[2/3] Running non-mutating Unreal asset audit...' -ForegroundColor Cyan
+Write-Host '[2/4] Building YetAnotherCyclingSimEditor Development...' -ForegroundColor Cyan
+$BuildLog = Join-Path $ArtifactRoot 'build_editor.log'
+$BuildBat = Join-Path $Context.EngineRoot 'Engine/Build/BatchFiles/Build.bat'
+$BuildArgs = @(
+    $ProjectPath,
+    'YetAnotherCyclingSimEditor',
+    'Win64',
+    'Development',
+    '-WaitMutex',
+    '-FromMsBuild'
+)
+$BuildProc = Start-Process -FilePath $BuildBat -ArgumentList $BuildArgs -NoNewWindow -PassThru -RedirectStandardOutput $BuildLog -WorkingDirectory (Split-Path $BuildBat -Parent)
+$BuildProc.WaitForExit()
+if ($BuildProc.ExitCode -ne 0) {
+    throw "Editor build failed with exit code $($BuildProc.ExitCode). See $BuildLog"
+}
+
+Write-Host '[3/4] Running non-mutating Unreal asset audit...' -ForegroundColor Cyan
 $env:YACS_STAGE3G_SOURCE_ASSET_AUDIT_PROOF = $ProofPath
 try {
     $EditorArgs = @(
@@ -133,7 +150,7 @@ if (-not $Proof.families) {
     throw 'Source-asset audit proof contains no family results.'
 }
 
-Write-Host '[3/3] Audit result' -ForegroundColor Cyan
+Write-Host '[4/4] Audit result' -ForegroundColor Cyan
 foreach ($Name in @('sparse_grass','forrest_ground_03','rocky_terrain','boulder_01')) {
     $Family = $Proof.families.$Name
     if ($null -eq $Family) { throw "Audit proof is missing family $Name" }
