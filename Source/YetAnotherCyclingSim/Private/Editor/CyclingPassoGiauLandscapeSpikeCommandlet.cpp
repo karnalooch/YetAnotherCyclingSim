@@ -303,6 +303,11 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		(static_cast<double>(EncodedMax) / static_cast<double>(MAX_uint16)) *
 			SourceElevationRangeM;
 
+	const double SampledElevationMinM =
+		(LocationZCm + ((static_cast<double>(EncodedMin) - 32768.0) / 128.0) * ZScale) / 100.0;
+	const double SampledElevationMaxM =
+		(LocationZCm + ((static_cast<double>(EncodedMax) - 32768.0) / 128.0) * ZScale) / 100.0;
+
 	const FString ProofJson = FString::Printf(
 		TEXT("{\n")
 		TEXT("  \"schema_version\": 1,\n")
