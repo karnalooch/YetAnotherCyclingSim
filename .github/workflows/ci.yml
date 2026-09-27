@@ -245,6 +245,15 @@ jobs:
           set -euo pipefail
           failed=0
 
+          require_bool() {
+            local name="$1"
+            local value="$2"
+            if [[ "${value}" != "true" && "${value}" != "false" ]]; then
+              echo "::error::${name}: expected literal true/false classifier output, got '${value}'"
+              failed=1
+            fi
+          }
+
           require_success() {
             local name="$1"
             local result="$2"
@@ -269,6 +278,14 @@ jobs:
           require_success "changes" "${CHANGES_RESULT}"
           require_success "repo-policy" "${REPO_POLICY_RESULT}"
           require_success "governance" "${GOVERNANCE_RESULT}"
+
+          require_bool "class-python" "${CLASS_PYTHON}"
+          require_bool "class-cpp" "${CLASS_CPP}"
+          require_bool "class-assets" "${CLASS_ASSETS}"
+          require_bool "class-ci" "${CLASS_CI}"
+          require_bool "class-ue-code" "${CLASS_UE_CODE}"
+          require_bool "class-security-base" "${CLASS_SECURITY_BASE}"
+          require_bool "class-asset-full" "${CLASS_ASSET_FULL}"
 
           python_expected=false
           if [[ "${CLASS_PYTHON}" == "true" || "${CLASS_CI}" == "true" ]]; then
