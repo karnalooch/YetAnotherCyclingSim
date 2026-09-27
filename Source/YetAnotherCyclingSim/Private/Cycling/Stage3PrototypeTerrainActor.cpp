@@ -632,10 +632,15 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 	// backs PCG_Forest replaces the old Engine Cone/Cylinder placeholders in
 	// the persisted reference map. Scale is derived from actual mesh bounds so
 	// source-unit differences cannot create giant or microscopic trees.
-	const FVector ConiferMeshSizeCm =
-		ForestCanopyProps->GetStaticMesh()->GetBounds().BoxExtent * 2.0;
-	const double ConiferMeshHeightCm = static_cast<double>(ConiferMeshSizeCm.Z);
-	if (!FMath::IsFinite(ConiferMeshHeightCm) || ConiferMeshHeightCm <= UE_SMALL_NUMBER)
+	const FBoxSphereBounds ConiferBounds =
+		ForestCanopyProps->GetStaticMesh()->GetBounds();
+	const double ConiferMeshHeightCm =
+		static_cast<double>(ConiferBounds.BoxExtent.Z) * 2.0;
+	const double ConiferMeshMinZCm =
+		static_cast<double>(ConiferBounds.Origin.Z - ConiferBounds.BoxExtent.Z);
+	if (!FMath::IsFinite(ConiferMeshHeightCm)
+		|| !FMath::IsFinite(ConiferMeshMinZCm)
+		|| ConiferMeshHeightCm <= UE_SMALL_NUMBER)
 	{
 		OutError = TEXT("Stage 3G conifer mesh bounds are invalid");
 		return false;
@@ -662,11 +667,12 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 				const double LateralM = BaseLateralM
 					+ 2.5 * FMath::Sin(DistanceM * 0.021 + Side * BaseLateralM);
 
-				FVector PositionM = RoutePositionM + Right * (Side * LateralM);
-				PositionM.Z += HeightM * 0.5 - 0.1;
-
 				const double UniformScale =
 					(HeightM * MetresToCentimetres) / ConiferMeshHeightCm;
+				FVector PositionM = RoutePositionM + Right * (Side * LateralM);
+				PositionM.Z -=
+					(ConiferMeshMinZCm * UniformScale) / MetresToCentimetres;
+				PositionM.Z -= 0.1;
 				const FTransform CanopyTransform(
 					FRotator(0.0, FMath::Fmod(DistanceM * 0.11 + BaseLateralM * 7.0, 360.0), 0.0),
 					PositionM * MetresToCentimetres,
@@ -703,10 +709,11 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 				RoutePositionM + Right * (Side * ForestPropLateralM);
 			const double HeightM =
 				12.0 + 2.0 * FMath::Abs(FMath::Sin(DistanceM * 0.011));
-			PositionM.Z += HeightM * 0.5 - 0.2;
-
 			const double UniformScale =
 				(HeightM * MetresToCentimetres) / ConiferMeshHeightCm;
+			PositionM.Z -=
+				(ConiferMeshMinZCm * UniformScale) / MetresToCentimetres;
+			PositionM.Z -= 0.2;
 			const FTransform TreeTransform(
 				FRotator(
 					0.0,
