@@ -1,0 +1,21 @@
+name: Cancel stale Passo Giau R4.1B authoring
+
+on:
+  push:
+    branches:
+      - feat/stage3g-r4-1-passo-giau-landscape-spike
+    paths:
+      - '.github/workflows/cancel-stale-passo-giau-r4-1.yml'
+
+permissions: {}
+
+concurrency:
+  group: stage3g-r4-1-passo-giau-landscape-author-${{ github.repository }}
+  cancel-in-progress: true
+
+jobs:
+  cancel-stale:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release stale authoring concurrency slot
+        run: echo "Stale Stage 3G R4.1B authoring run superseded."
