@@ -14,7 +14,6 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-import re
 import sys
 import traceback
 from typing import Any
@@ -76,13 +75,10 @@ def parse_worldspec(path: Path) -> dict[str, Any]:
                     forest_start = float(stripped.split(":", 1)[1].strip())
                 elif stripped.startswith("end_m:"):
                     forest_end = float(stripped.split(":", 1)[1].strip())
-                elif stripped.startswith("intent:"):
-                    match = re.search(
-                        r"vegetation_density:\s*([0-9]+(?:\.[0-9]+)?)",
-                        stripped,
+                elif stripped.startswith("vegetation_density:"):
+                    forest_density = float(
+                        stripped.split(":", 1)[1].strip()
                     )
-                    if match:
-                        forest_density = float(match.group(1))
             continue
 
         if section == "constraints" and stripped.startswith(
