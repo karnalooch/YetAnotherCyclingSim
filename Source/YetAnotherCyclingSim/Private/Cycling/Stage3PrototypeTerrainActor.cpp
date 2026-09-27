@@ -36,9 +36,9 @@ namespace Stage3PrototypeTerrainInternal
 
 	constexpr int32 TerrainStrideSamples = 5;
 	constexpr double TerrainThicknessM = 8.0;
-	constexpr double ValleyTerrainWidthM = 160.0;
+	constexpr double ValleyTerrainWidthM = 220.0;
 	constexpr double ForestTerrainWidthM = 120.0;
-	constexpr double MountainTerrainWidthM = 90.0;
+	constexpr double MountainTerrainWidthM = 440.0;
 
 	constexpr double ForestStartM = 3700.0;
 	constexpr double MountainStartM = 6200.0;
@@ -51,7 +51,7 @@ namespace Stage3PrototypeTerrainInternal
 	constexpr double MountainPropFirstM = 6300.0;
 	constexpr double MountainPropLastExclusiveM = 10000.0;
 	constexpr double MountainPropSpacingM = 250.0;
-	constexpr double MountainPropLateralM = 55.0;
+	constexpr double MountainPropLateralM = 45.0;
 
 	constexpr double RockPropFirstM = 6350.0;
 	constexpr double RockPropLastExclusiveM = 9950.0;
@@ -62,7 +62,7 @@ namespace Stage3PrototypeTerrainInternal
 	constexpr double ValleyRidgeFirstM = 300.0;
 	constexpr double ValleyRidgeLastExclusiveM = 3700.0;
 	constexpr double ValleyRidgeSpacingM = 220.0;
-	constexpr double ValleyRidgeBaseLateralM = 150.0;
+	constexpr double ValleyRidgeBaseLateralM = 75.0;
 
 	constexpr double ForestCanopyFirstM = 3750.0;
 	constexpr double ForestCanopyLastExclusiveM = 6250.0;
@@ -107,6 +107,22 @@ namespace Stage3PrototypeTerrainInternal
 			&& Scale.X > 0.0
 			&& Scale.Y > 0.0
 			&& Scale.Z > 0.0;
+	}
+
+	bool HasTerrainFootprintSupport(
+		double LateralM,
+		const FVector& TargetSizeM,
+		double TerrainWidthM)
+	{
+		const double HalfFootprintM =
+			0.5 * FMath::Max(
+				static_cast<double>(TargetSizeM.X),
+				static_cast<double>(TargetSizeM.Y));
+		return FMath::IsFinite(LateralM)
+			&& FMath::IsFinite(TerrainWidthM)
+			&& TerrainWidthM > 0.0
+			&& FMath::Abs(LateralM) + HalfFootprintM
+				<= TerrainWidthM * 0.5 + UE_KINDA_SMALL_NUMBER;
 	}
 
 	bool TryMakeGroundedMeshTransform(
@@ -630,11 +646,21 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 		{
 			const double Phase = DistanceM * 0.004 + Side * 0.7;
 			const double LateralM = ValleyRidgeBaseLateralM
-				+ 18.0 * FMath::Sin(DistanceM * 0.006 + Side);
+				+ 12.0 * FMath::Sin(DistanceM * 0.006 + Side);
 			const FVector TargetSizeM(
 				32.0 + 12.0 * FMath::Abs(FMath::Cos(Phase * 0.8)),
 				24.0 + 10.0 * FMath::Abs(FMath::Sin(Phase * 1.3)),
 				16.0 + 8.0 * FMath::Abs(FMath::Sin(Phase)));
+			if (!HasTerrainFootprintSupport(
+				LateralM,
+				TargetSizeM,
+				ValleyTerrainWidthM))
+			{
+				OutError = FString::Printf(
+					TEXT("Stage 3G valley massing footprint exceeds terrain support at %.3f m"),
+					DistanceM);
+				return false;
+			}
 
 			FVector GroundPositionM =
 				RoutePositionM + Right * (Side * LateralM);
@@ -832,6 +858,16 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 				10.0 + 7.0 * FMath::Abs(FMath::Cos(DistanceM * 0.009 + Side)),
 				8.0 + 5.0 * FMath::Abs(FMath::Sin(Phase * 1.4)),
 				9.0 + 7.0 * FMath::Abs(FMath::Sin(Phase)));
+			if (!HasTerrainFootprintSupport(
+				MountainPropLateralM,
+				TargetSizeM,
+				MountainTerrainWidthM))
+			{
+				OutError = FString::Printf(
+					TEXT("Stage 3G near-Alpine massing footprint exceeds terrain support at %.3f m"),
+					DistanceM);
+				return false;
+			}
 
 			FVector GroundPositionM =
 				RoutePositionM + Right * (Side * MountainPropLateralM);
@@ -917,7 +953,7 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 	// Stage 3G distant skyline: two depth layers per side. Larger, desaturated
 	// peaks create atmospheric depth while the original MountainProps remain the
 	// near-road high-Alpine markers.
-	const double DistantMountainLateralsM[] = { 220.0, 480.0 };
+	const double DistantMountainLateralsM[] = { 95.0, 150.0 };
 	for (double DistanceM = DistantMountainFirstM;
 		DistanceM < DistantMountainLastExclusiveM;
 		DistanceM += DistantMountainSpacingM)
@@ -942,6 +978,17 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 						+ (Layer == 0 ? 15.0 : 22.0) * FMath::Abs(FMath::Sin(Phase * 0.9)),
 					(Layer == 0 ? 35.0 : 58.0)
 						+ (Layer == 0 ? 16.0 : 22.0) * FMath::Abs(FMath::Sin(Phase)));
+				if (!HasTerrainFootprintSupport(
+					LateralM,
+					TargetSizeM,
+					MountainTerrainWidthM))
+				{
+					OutError = FString::Printf(
+						TEXT("Stage 3G distant massing footprint exceeds terrain support at %.3f m layer %d"),
+						DistanceM,
+						Layer);
+					return false;
+				}
 
 				FVector GroundPositionM =
 					RoutePositionM + Right * (Side * LateralM);
