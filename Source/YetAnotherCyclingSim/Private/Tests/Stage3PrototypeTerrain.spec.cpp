@@ -97,6 +97,59 @@ bool FStage3PrototypeTerrainBuildTest::RunTest(const FString& Parameters)
 					Component->GetStaticMesh()->GetPathName(),
 					FString(AStage3PrototypeTerrainActor::Stage3GBoulderMeshPath));
 			}
+
+			auto TestMaxWorldDimension =
+				[this](
+					const TCHAR* Label,
+					const UHierarchicalInstancedStaticMeshComponent* Component,
+					double MaxDimensionM)
+				{
+					const FVector MeshSizeCm =
+						Component->GetStaticMesh()->GetBounds().BoxExtent * 2.0;
+					for (int32 InstanceIndex = 0;
+						InstanceIndex < Component->GetInstanceCount();
+						++InstanceIndex)
+					{
+						FTransform Transform;
+						if (!Component->GetInstanceTransform(
+							InstanceIndex,
+							Transform,
+							false))
+						{
+							AddError(FString::Printf(
+								TEXT("%s instance %d transform is unavailable"),
+								Label,
+								InstanceIndex));
+							continue;
+						}
+
+						const FVector Scale = Transform.GetScale3D().GetAbs();
+						const FVector WorldSizeCm(
+							MeshSizeCm.X * Scale.X,
+							MeshSizeCm.Y * Scale.Y,
+							MeshSizeCm.Z * Scale.Z);
+						const double ActualMaxDimensionM =
+							FMath::Max3(
+								static_cast<double>(WorldSizeCm.X),
+								static_cast<double>(WorldSizeCm.Y),
+								static_cast<double>(WorldSizeCm.Z))
+							/ 100.0;
+
+						TestTrue(
+							FString::Printf(
+								TEXT("%s instance %d max dimension %.3f m <= %.3f m"),
+								Label,
+								InstanceIndex,
+								ActualMaxDimensionM,
+								MaxDimensionM),
+							ActualMaxDimensionM <= MaxDimensionM + UE_KINDA_SMALL_NUMBER);
+					}
+				};
+
+			TestMaxWorldDimension(TEXT("valley ridge"), Terrain->ValleyRidgeProps, 45.0);
+			TestMaxWorldDimension(TEXT("near-Alpine massing"), Terrain->MountainProps, 18.0);
+			TestMaxWorldDimension(TEXT("distant mountain"), Terrain->DistantMountainProps, 120.0);
+			TestMaxWorldDimension(TEXT("rock dressing"), Terrain->RockProps, 4.0);
 		}
 		TestEqual(TEXT("Stage 3G distant mountain count remains deterministic"),
 			Terrain->GetDistantMountainInstanceCount(), 28);
