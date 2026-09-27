@@ -89,6 +89,13 @@ jobs:
         run: |
           $bootstrap = Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup/scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
           & $bootstrap -Workspace $env:GITHUB_WORKSPACE
+
+          $stage3gWorktree = Join-Path $env:GITHUB_WORKSPACE '_stage3g-full-worktree'
+          if (Test-Path -LiteralPath $stage3gWorktree) {
+            Write-Host "Releasing stale Unreal locks inside persistent Stage 3G worktree: $stage3gWorktree"
+            & $bootstrap -Workspace $stage3gWorktree
+          }
+
           Remove-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup') -Recurse -Force
 
       - name: Checkout exact trusted revision with full LFS
