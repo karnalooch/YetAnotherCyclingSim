@@ -34,7 +34,8 @@ class Stage3GEnvironmentPerformanceContract(unittest.TestCase):
     def test_workflow_is_trusted_self_hosted_and_publishes_failure_evidence(self):
         text = WORKFLOW.read_text(encoding="utf-8")
         self.assertIn("runs-on: [self-hosted, yacs-ue58]", text)
-        self.assertIn("perf/stage3g-environment-gate", text)\n        self.assertIn("cancel-in-progress: true", text)
+        self.assertIn("perf/stage3g-environment-gate", text)
+        self.assertIn("cancel-in-progress: true", text)
         self.assertIn("Invoke-YacsStage3GEnvironmentPerformance.ps1", text)
         self.assertIn("if: $" + "{{ always() }}", text)
         self.assertIn("stage3g-environment-performance-", text)
