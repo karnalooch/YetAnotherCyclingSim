@@ -145,6 +145,23 @@ This distinction prevents a future island from requiring a complete rewrite of s
 
 ---
 
+## 2.3 Canonical performance framework lifecycle
+
+The executable performance policy is tracked as the **YACS Performance Framework**:
+- [`performance/PERFORMANCE_FRAMEWORK.md`](performance/PERFORMANCE_FRAMEWORK.md) defines the cross-stage capability lifecycle;
+- [`performance/BUDGETS.md`](performance/BUDGETS.md) defines hard acceptance, development warnings and the rules for changing budgets.
+
+The framework evolves with actual product pressure rather than as a speculative platform:
+
+- **v1.0 / Stage 3G:** reusable Frame/Game/Draw/RHI/GPU timing and environment A/B diagnosis;
+- **v1.1 / Stage 5:** reusable scenarios and Visual History performance deltas;
+- **v2.0 / Stage 6:** rider, animation, Control Rig, IK and camera budgets;
+- **v2.1 / Stage 7:** RAM/VRAM, hitch, streaming, HLOD and full-world traversal evidence;
+- **v3.0 / Stage 8:** weather, shadow, WPO, material and VFX worst-case evidence;
+- **v4.0 / Stage 10:** packaged full-route release gate including PSO/first-use and final frozen budgets.
+
+The framework belongs to YACS until a second real project demonstrates that a piece is genuinely reusable. Do not move YACS-specific timing, route scenarios or reference-hardware policy into `engineering-platform` prematurely.
+
 ## 3. Recommended future road model
 
 ### 3.1 Canonical project model
