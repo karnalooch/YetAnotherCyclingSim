@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "visual_history_id": "VH-3G-R3-001",
+  "title": "Stage 3G R3 — valley + high-Alpine PCG and real biome massing",
+  "roadmap": {
+    "stage": "Stage 3G",
+    "version": "R3",
+    "slice": "Valley + High-Alpine PCG",
+    "title": "Complete deterministic valley/high-Alpine presentation while preserving R2 forest",
+    "issue_number": 187
+  },
+  "timestamps": {
+    "created_at": "2026-09-27",
+    "visual_accepted_at": null,
+    "merged_at": null
+  },
+  "status": {
+    "technical_status": "CI_GREEN",
+    "visual_status": "VISUAL_REJECTED"
+  },
+  "git": {
+    "branch": "feat/stage3g-pcg-biomes-r3",
+    "baseline_commit_sha": "fd77094ffe0c8f29c3bd9949ba22079fc73fc1c5",
+    "source_commit_sha": "07e0803bad809e87473ed3a461fdecf55e75ec76",
+    "source_commit_short": "07e0803b",
+    "accepted_commit_sha": null,
+    "merge_commit_sha": null
+  },
+  "pull_request": {
+    "number": 192,
+    "title": "feat(stage3g): add R3 deterministic valley + high-Alpine PCG",
+    "status": "DRAFT"
+  },
+  "ci": {
+    "workflow_name": "CyclingSim CI",
+    "workflow_run_id": 36302963634,
+    "workflow_run_number": 412,
+    "proof_artifact_name": "stage3g-full-validation-36302963634-1",
+    "automation_status": "PASS",
+    "automation_summary": "Exact-SHA Unreal build/Automation, Stage 3G full validation and Aggregate CI gate passed on 07e0803b.",
+    "fresh_load_status": "PASS",
+    "map_check_errors": 0,
+    "map_check_warnings": 0,
+    "lfs_fsck_status": "PASS",
+    "visual_capture_status": "PASS"
+  },
+  "worldgen": {
+    "generation_seed": 42017,
+    "route_clearance_m": 4,
+    "graphs_used": [
+      "PCG_Valley",
+      "PCG_RouteExclusion",
+      "PCG_Forest",
+      "PCG_HighAlpine"
+    ],
+    "biomes_affected": [
+      "valley_meadow",
+      "forest",
+      "high_alpine"
+    ],
+    "distance_ranges_m": [
+      {
+        "biome": "valley_meadow",
+        "start_m": 0,
+        "end_m": 3700
+      },
+      {
+        "biome": "forest",
+        "start_m": 3700,
+        "end_m": 6200
+      },
+      {
+        "biome": "high_alpine",
+        "start_m": 6200,
+        "end_m": 10000
+      }
+    ],
+    "density_values": {
+      "valley_rocks": 0.1,
+      "forest": 0.72,
+      "high_alpine_rocks": 0.65
+    },
+    "simulation_truth_source": "FRouteGeometryProfile"
+  },
+  "assets": {
+    "validated_assets_used": [
+      "SM_Stage3G_Boulder",
+      "SM_Stage3G_FirSaplingMedium"
+    ],
+    "meshes_added": [],
+    "meshes_replaced": [
+      "valley/high-Alpine Engine Cone massing -> bounds-aware SM_Stage3G_Boulder instances"
+    ],
+    "materials_added": [],
+    "materials_replaced": [],
+    "placeholder_assets_removed": [
+      "Engine Cone valley ridge presentation",
+      "Engine Cone near-Alpine massing",
+      "Engine Cone distant mountain massing"
+    ]
+  },
+  "visual_review": {
+    "visual_change_detected": true,
+    "technical_acceptance": true,
+    "visual_acceptance": false,
+    "reviewer_summary": "R3 now visibly departs from R2, but the current bounds-aware boulder massing is not acceptable: valley masses are oversized and the 8000 m sector contains enormous/floating rock forms over or beside the road.",
+    "rejection_reason": "Visible change is real but composition/scale/grounding are wrong. Technical green does not satisfy the visual milestone.",
+    "next_step": "Reduce and ground valley/high-Alpine rock massing, preserve road sightline/clearance and rerun exact-SHA Visual History captures."
+  },
+  "prior_checkpoint": {
+    "source_commit_sha": "0148f894e9036dfe6b7c1d7176922e65e7024a65",
+    "workflow_run_id": 36302003337,
+    "workflow_run_number": 408,
+    "technical_result": "PASS",
+    "visual_result": "VISUAL_REJECTED",
+    "reason": "PCG_Valley and PCG_HighAlpine were persisted and technically valid, but the reference map/capture path did not visibly consume the new graph output; R2 and R3 images were effectively the same scene."
+  },
+  "captures": [
+    {
+      "capture_id": "01-valley-1200m",
+      "label": "Valley",
+      "distance_m": 1200,
+      "camera_name": "Stage3G-Valley-1200m",
+      "resolution": "1920x1080",
+      "before": {
+        "commit_sha": "fd77094ffe0c8f29c3bd9949ba22079fc73fc1c5",
+        "image": "R2 CI artifact baseline",
+        "sha256": "de391fb72074f2ad74d1ce8f7e2f7a2520f1581107ce40fa2f1c36503fae7abb",
+        "status": "VISUAL_ACCEPTED"
+      },
+      "now": {
+        "commit_sha": "07e0803bad809e87473ed3a461fdecf55e75ec76",
+        "image": "CI artifact: FinalProof/Visual/01_meadow_valley_1200m_AFTER.png",
+        "sha256": "3b6f64d644d68f00bc5dada09b0fdd1199e7c36da1b76e1da178191620ceaaa0",
+        "status": "VISUAL_REJECTED"
+      },
+      "after": {
+        "commit_sha": null,
+        "image": null,
+        "sha256": null,
+        "status": "PENDING"
+      },
+      "triptych_image": null,
+      "pixel_diff": null,
+      "triptych_sha256": "8a35adc8ac287dcd9ed581ce21d00810bae9533ff3ac221b2f783a0925162c81",
+      "triptych_storage_status": "GENERATED_LOCALLY_PENDING_DURABLE_BINARY_UPLOAD"
+    },
+    {
+      "capture_id": "02-forest-4900m",
+      "label": "Forest",
+      "distance_m": 4900,
+      "camera_name": "Stage3G-Forest-4900m",
+      "resolution": "1920x1080",
+      "before": {
+        "commit_sha": "fd77094ffe0c8f29c3bd9949ba22079fc73fc1c5",
+        "image": "R2 CI artifact baseline",
+        "sha256": "c1b1b6a3109eca4e4e9d355e9bdf4165b83f452fd9560ee2e4fef48165d33725",
+        "status": "VISUAL_ACCEPTED"
+      },
+      "now": {
+        "commit_sha": "07e0803bad809e87473ed3a461fdecf55e75ec76",
+        "image": "CI artifact: FinalProof/Visual/02_forest_sector_4900m_AFTER.png",
+        "sha256": "b763628a30352dce4edd87be3e21f848a61b94587b2b07acac26bef1c5a8387f",
+        "status": "VISUAL_REJECTED"
+      },
+      "after": {
+        "commit_sha": null,
+        "image": null,
+        "sha256": null,
+        "status": "PENDING"
+      },
+      "triptych_image": null,
+      "pixel_diff": null,
+      "triptych_sha256": "c7866e3eff387abb07caf42d5ccff9dc2cce26240eaea4ce50256013f8b6e0ec",
+      "triptych_storage_status": "GENERATED_LOCALLY_PENDING_DURABLE_BINARY_UPLOAD"
+    },
+    {
+      "capture_id": "03-high-alpine-8000m",
+      "label": "High Alpine",
+      "distance_m": 8000,
+      "camera_name": "Stage3G-HighAlpine-8000m",
+      "resolution": "1920x1080",
+      "before": {
+        "commit_sha": "fd77094ffe0c8f29c3bd9949ba22079fc73fc1c5",
+        "image": "R2 CI artifact baseline",
+        "sha256": "d1491bbfd506d345897b220eec83f53167090e57e35f14ce38f9a961ef64cea3",
+        "status": "VISUAL_ACCEPTED"
+      },
+      "now": {
+        "commit_sha": "07e0803bad809e87473ed3a461fdecf55e75ec76",
+        "image": "CI artifact: FinalProof/Visual/03_high_valley_mountains_8000m_AFTER.png",
+        "sha256": "4b92b2c98f2e59d7d33a4e33ae7f5eeab540a1072730d2163f3f43f92cdf9112",
+        "status": "VISUAL_REJECTED"
+      },
+      "after": {
+        "commit_sha": null,
+        "image": null,
+        "sha256": null,
+        "status": "PENDING"
+      },
+      "triptych_image": null,
+      "pixel_diff": null,
+      "triptych_sha256": "5f77ccec834778d805e5ef71a18ecec5cd7f13686c922ab707e9cd26216818c4",
+      "triptych_storage_status": "GENERATED_LOCALLY_PENDING_DURABLE_BINARY_UPLOAD"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "visual_history_id": "VH-3G-R3-001",
+  "generated_from": {
+    "before": "R2 CI #398 / stage3g-full-validation-36299298530-1",
+    "now": "R3 CI #412 / stage3g-full-validation-36302963634-1",
+    "after": "PENDING"
+  },
+  "captures": [
+    {
+      "capture_id": "01-valley-1200m",
+      "before_sha256": "de391fb72074f2ad74d1ce8f7e2f7a2520f1581107ce40fa2f1c36503fae7abb",
+      "now_sha256": "3b6f64d644d68f00bc5dada09b0fdd1199e7c36da1b76e1da178191620ceaaa0",
+      "triptych_sha256": "8a35adc8ac287dcd9ed581ce21d00810bae9533ff3ac221b2f783a0925162c81"
+    },
+    {
+      "capture_id": "02-forest-4900m",
+      "before_sha256": "c1b1b6a3109eca4e4e9d355e9bdf4165b83f452fd9560ee2e4fef48165d33725",
+      "now_sha256": "b763628a30352dce4edd87be3e21f848a61b94587b2b07acac26bef1c5a8387f",
+      "triptych_sha256": "c7866e3eff387abb07caf42d5ccff9dc2cce26240eaea4ce50256013f8b6e0ec"
+    },
+    {
+      "capture_id": "03-high-alpine-8000m",
+      "before_sha256": "d1491bbfd506d345897b220eec83f53167090e57e35f14ce38f9a961ef64cea3",
+      "now_sha256": "4b92b2c98f2e59d7d33a4e33ae7f5eeab540a1072730d2163f3f43f92cdf9112",
+      "triptych_sha256": "5f77ccec834778d805e5ef71a18ecec5cd7f13686c922ab707e9cd26216818c4"
+    }
+  ],
+  "note": "Triptych binaries were generated during review. Durable repository binary upload is pending automation; hashes make later upload verifiable."
+}
