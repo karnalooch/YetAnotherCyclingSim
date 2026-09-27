@@ -51,7 +51,7 @@ namespace Stage3PrototypeTerrainInternal
 	constexpr double MountainPropFirstM = 6300.0;
 	constexpr double MountainPropLastExclusiveM = 10000.0;
 	constexpr double MountainPropSpacingM = 250.0;
-	constexpr double MountainPropLateralM = 42.0;
+	constexpr double MountainPropLateralM = 55.0;
 
 	constexpr double RockPropFirstM = 6350.0;
 	constexpr double RockPropLastExclusiveM = 9950.0;
@@ -62,7 +62,7 @@ namespace Stage3PrototypeTerrainInternal
 	constexpr double ValleyRidgeFirstM = 300.0;
 	constexpr double ValleyRidgeLastExclusiveM = 3700.0;
 	constexpr double ValleyRidgeSpacingM = 220.0;
-	constexpr double ValleyRidgeBaseLateralM = 120.0;
+	constexpr double ValleyRidgeBaseLateralM = 150.0;
 
 	constexpr double ForestCanopyFirstM = 3750.0;
 	constexpr double ForestCanopyLastExclusiveM = 6250.0;
@@ -632,9 +632,9 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 			const double LateralM = ValleyRidgeBaseLateralM
 				+ 18.0 * FMath::Sin(DistanceM * 0.006 + Side);
 			const FVector TargetSizeM(
-				110.0 + 30.0 * FMath::Abs(FMath::Cos(Phase * 0.8)),
-				80.0 + 25.0 * FMath::Abs(FMath::Sin(Phase * 1.3)),
-				48.0 + 20.0 * FMath::Abs(FMath::Sin(Phase)));
+				32.0 + 12.0 * FMath::Abs(FMath::Cos(Phase * 0.8)),
+				24.0 + 10.0 * FMath::Abs(FMath::Sin(Phase * 1.3)),
+				16.0 + 8.0 * FMath::Abs(FMath::Sin(Phase)));
 
 			FVector GroundPositionM =
 				RoutePositionM + Right * (Side * LateralM);
@@ -829,9 +829,9 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 		{
 			const double Phase = DistanceM * 0.007 + Side * 0.6;
 			const FVector TargetSizeM(
-				22.0 + 10.0 * FMath::Abs(FMath::Cos(DistanceM * 0.009 + Side)),
-				18.0 + 8.0 * FMath::Abs(FMath::Sin(Phase * 1.4)),
-				28.0 + 12.0 * FMath::Abs(FMath::Sin(Phase)));
+				10.0 + 7.0 * FMath::Abs(FMath::Cos(DistanceM * 0.009 + Side)),
+				8.0 + 5.0 * FMath::Abs(FMath::Sin(Phase * 1.4)),
+				9.0 + 7.0 * FMath::Abs(FMath::Sin(Phase)));
 
 			FVector GroundPositionM =
 				RoutePositionM + Right * (Side * MountainPropLateralM);
@@ -936,17 +936,17 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 				const double LateralM = DistantMountainLateralsM[Layer];
 				const double Phase = DistanceM * 0.003 + Layer * 1.7 + Side;
 				const FVector TargetSizeM(
-					(Layer == 0 ? 150.0 : 260.0)
-						+ (Layer == 0 ? 45.0 : 70.0) * FMath::Abs(FMath::Cos(Phase * 0.7)),
-					(Layer == 0 ? 110.0 : 190.0)
-						+ (Layer == 0 ? 35.0 : 55.0) * FMath::Abs(FMath::Sin(Phase * 0.9)),
-					(Layer == 0 ? 140.0 : 240.0)
-						+ (Layer == 0 ? 50.0 : 80.0) * FMath::Abs(FMath::Sin(Phase)));
+					(Layer == 0 ? 55.0 : 85.0)
+						+ (Layer == 0 ? 20.0 : 30.0) * FMath::Abs(FMath::Cos(Phase * 0.7)),
+					(Layer == 0 ? 40.0 : 62.0)
+						+ (Layer == 0 ? 15.0 : 22.0) * FMath::Abs(FMath::Sin(Phase * 0.9)),
+					(Layer == 0 ? 35.0 : 58.0)
+						+ (Layer == 0 ? 16.0 : 22.0) * FMath::Abs(FMath::Sin(Phase)));
 
 				FVector GroundPositionM =
 					RoutePositionM + Right * (Side * LateralM);
 				GroundPositionM.Z -=
-					Layer == 0 ? 8.0 : 18.0;
+					Layer == 0 ? 2.0 : 6.0;
 
 				FTransform DistantPeakTransform;
 				if (!TryMakeGroundedMeshTransform(
