@@ -38,9 +38,9 @@ Any change to the explicit plugin list is an integration change and requires an 
 
 | Stage | Tool / plugin | Priority | Why YACS needs it | Activation policy |
 |---|---|---:|---|---|
-| **3G** | **PCG** | MUST | deterministic vegetation, rocks, biome/set dressing and roadside generation | **active recovery gate**; enable after #85 Phase A smoke setup is ready; first proof on one sector |
-| **3G** | **Editor Scripting Utilities** | MUST | safer/simpler editor automation APIs complementing PythonScriptPlugin | enable with first PCG integration |
-| **3G** | **Geometry Script** | SHOULD | generate/analyze/edit helper geometry, mesh processing and custom world-authoring tools | enable with PCG integration; do not make route physics depend on it |
+| **3G** | **PCG** | MUST | deterministic vegetation, rocks, biome/set dressing and roadside generation | active recovery gate; Draft #162 already enables it on the R2 branch and persists first PCG authoring assets; mainline validation/merge still pending |
+| **3G** | **Editor Scripting Utilities** | MUST | safer/simpler editor automation APIs complementing PythonScriptPlugin | enabled on Draft #162 branch with the first PCG integration; accepted only after R2 proof/merge |
+| **3G** | **Geometry Script** | SHOULD | generate/analyze/edit helper geometry, mesh processing and custom world-authoring tools | enabled on Draft #162 branch; keep route physics independent and require actual use before treating it as a necessary production dependency |
 | **3G** | **PCG Geometry Script Interop** | CONDITIONAL | PCG ↔ Dynamic/Static Mesh operations and mesh sampling when a graph actually requires them | enable only on demonstrated graph need |
 | **3G** | **PCGToolset** | EXPERIMENT | agent-driven creation/modification of PCG Graphs through UE 5.8 Toolset Registry | only after MCP smoke; keep behind YACS guard/flow surface |
 | **3G/7** | **Water + Landmass** | OPTIONAL | lake/river/terrain shaping if water survives art-direction review | leave disabled until composition decision |
