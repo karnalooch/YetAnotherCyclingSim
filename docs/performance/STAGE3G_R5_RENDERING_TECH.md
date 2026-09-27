@@ -35,6 +35,18 @@ Do not start R5 implementation until the R4 agent publishes a closeout report co
 
 The R4 numbers are a **measurement baseline, not a target to game**. Do not optimize R4 before capturing the accepted closeout state.
 
+## R5 execution cadence
+
+R5 follows the same stage-level validation lifecycle as R4:
+
+1. **Draft iteration:** change one rendering/world variable at a time and use lightweight/static/code-only checks appropriate to the change. Do not launch the full map/world proof after every experiment.
+2. **Accepted candidate:** once a rendering result is visually accepted, freeze the exact SHA and run the deterministic R5 performance benchmark plus Performance History evidence.
+3. **Stage closeout:** when the complete R5 slice is ready, mark the integration PR Ready for review and run the full Unreal/Automation/full-LFS/map/world acceptance proof once for the final exact head.
+
+A performance result belongs to an exact tree. Any material renderer/world change after acceptance requires a new performance checkpoint. A final full proof on the unchanged accepted tree does not by itself require repeating the benchmark.
+
+See [`../CI_VALIDATION_TIERS.md`](../CI_VALIDATION_TIERS.md).
+
 ## R5 principles
 
 1. Measure first; change one major variable at a time.
