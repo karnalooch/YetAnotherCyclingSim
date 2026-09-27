@@ -74,11 +74,30 @@ class ReusableStage3GFullWorkflowContractTests(unittest.TestCase):
             self.stage3g_proof,
         )
 
+    def test_lane_uses_per_run_isolated_worktree(self):
+        self.assertIn(
+            "STAGE3G_WORKTREE_DIR: _stage3g-full-${{ github.run_id }}-${{ github.run_attempt }}",
+            self.workflow,
+        )
+        self.assertIn(
+            "STAGE3G_BOOTSTRAP_DIR: _bootstrap-cleanup-${{ github.run_id }}-${{ github.run_attempt }}",
+            self.workflow,
+        )
+        self.assertIn("path: ${{ env.STAGE3G_WORKTREE_DIR }}", self.workflow)
+        self.assertIn("path: ${{ env.STAGE3G_BOOTSTRAP_DIR }}", self.workflow)
+        self.assertNotIn("path: _stage3g-full-worktree", self.workflow)
+        self.assertIn("Release-YacsUnrealWorkspaceLocks.ps1", self.workflow)
+
     def test_lane_uploads_only_proof_and_always_cleans(self):
-        self.assertIn("path: _stage3g-full-worktree", self.workflow)
         self.assertGreaterEqual(
-            self.workflow.count("working-directory: _stage3g-full-worktree"),
-            5,
+            self.workflow.count(
+                "working-directory: ${{ env.STAGE3G_WORKTREE_DIR }}"
+            ),
+            3,
+        )
+        self.assertIn(
+            "${{ env.STAGE3G_WORKTREE_DIR }}/Saved/RuntimeProof/CI/Stage3GFull/",
+            self.workflow,
         )
         for extension in ("**/*.json", "**/*.txt", "**/*.log", "**/*.png"):
             self.assertIn(extension, self.workflow)
@@ -87,6 +106,7 @@ class ReusableStage3GFullWorkflowContractTests(unittest.TestCase):
         self.assertIn("if: ${{ always() }}", self.workflow)
         self.assertIn("git reset --hard", self.workflow)
         self.assertIn("git clean -ffdx", self.workflow)
+        self.assertIn("Remove-Item -LiteralPath $worktree -Recurse -Force", self.workflow)
 
 
 if __name__ == "__main__":
