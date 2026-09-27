@@ -85,6 +85,28 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
             self.ci,
         )
 
+    def test_stage3g_full_lane_uses_draft_as_iteration_mode(self):
+        self.assertIn(
+            "types: [opened, reopened, synchronize, ready_for_review, converted_to_draft]",
+            self.ci,
+        )
+        self.assertIn("github.event.pull_request.draft == false", self.ci)
+        self.assertIn("PR_DRAFT: ${{ github.event.pull_request.draft || false }}", self.ci)
+        self.assertIn("stage3g_full_expected=false", self.ci)
+        self.assertIn('if [[ "${EVENT_NAME}" != "pull_request" || "${PR_DRAFT}" == "false" ]]; then', self.ci)
+        self.assertIn(
+            'require_optional "stage3g-full-validation" "${stage3g_full_expected}"',
+            self.ci,
+        )
+
+    def test_ready_for_review_retriggers_exact_head_validation(self):
+        self.assertIn("ready_for_review", self.ci)
+        self.assertIn("needs.changes.outputs.head_sha", self.ci)
+        self.assertIn(
+            "target_sha: ${{ needs.changes.outputs.head_sha }}",
+            self.ci,
+        )
+
     def test_reusable_unreal_lane_never_materializes_assets(self):
         self.assertIn('GIT_LFS_SKIP_SMUDGE: "1"', self.unreal)
         self.assertIn("lfs: false", self.unreal)
