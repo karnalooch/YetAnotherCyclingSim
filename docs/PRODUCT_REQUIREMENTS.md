@@ -266,7 +266,7 @@ Późniejsze wersje mogą obsługiwać inne systemy, dlatego logika fizyczna i f
 
 ## 16. Organizacja projektu
 
-- Prywatne repozytorium GitHub.
+- Publiczne repozytorium GitHub; duże assety binarne pozostają śledzone przez Git LFS.
 - Git LFS dla dużych plików binarnych.
 - Kod i nazwy techniczne w języku angielskim.
 - Dokumentacja projektu w języku polskim.
