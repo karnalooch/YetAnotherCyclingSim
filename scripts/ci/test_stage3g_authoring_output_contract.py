@@ -40,6 +40,18 @@ class Stage3GAuthoringOutputContractTests(unittest.TestCase):
         self.assertLess(self.script.index(repo_anchor), self.script.index(canonicalize))
         self.assertLess(self.script.index(canonicalize), self.script.index(world_proof))
 
+    def test_target_density_v2_forest_bounds_are_consistent(self):
+        self.assertIn(
+            "$ForestTotalCount -lt 1700 -or $ForestTotalCount -gt 2300",
+            self.script,
+        )
+        self.assertIn("outside [1700, 2300]", self.script)
+        self.assertNotIn(
+            "$ForestTotalCount -lt 800 -or $ForestTotalCount -gt 1300",
+            self.script,
+        )
+        self.assertNotIn("outside [800, 1300]", self.script)
+
     def test_unreal_process_still_fails_closed_on_nonzero_exit(self):
         self.assertIn("if ($ExitCode -ne 0)", self.script)
         self.assertIn("Unreal process failed with exit code $ExitCode", self.script)

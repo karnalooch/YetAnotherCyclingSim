@@ -54,7 +54,7 @@ Replace the forest placeholder silhouette with a validated real conifer and esta
 
 The 4900 m capture visibly contains the validated conifer and retains a clear road corridor. This state is the accepted BEFORE baseline for R3.
 
-R2 predates the repository Visual History convention. Its genuine source captures are retained in the CI proof artifact; this backfill deliberately does not fabricate repository triptychs after the fact.
+R2 predates the repository Visual History convention. Its genuine R1/R2 source captures were recovered from the original CI proof artifacts and are now retained as repository triptychs under `captures/`, with SHA-256 values recorded in the manifest. The AFTER panel explicitly reuses the accepted R2 render because the merge introduced no visual delta.
 
 ## Decision
 

@@ -12,6 +12,7 @@ Required environment variables:
 from __future__ import annotations
 
 import json
+import math
 import os
 from pathlib import Path
 import sys
@@ -32,6 +33,14 @@ FOREST_MESH_OBJECT_PATH = (
     FOREST_MESH_PATH + ".SM_Stage3G_FirSaplingMedium"
 )
 FOREST_LOD_PROFILE = "aggressive"
+FOREST_LAYER_PROFILE = "target_density_v2"
+PRIMARY_STATION_SPACING_M = 20.0
+PRIMARY_POINTS_PER_SIDE = 4
+PRIMARY_MIN_LATERAL_M = 10.0
+PRIMARY_MAX_LATERAL_M = 36.0
+PRIMARY_MIN_SCALE = 0.95
+PRIMARY_MAX_SCALE = 1.35
+LAYER_PROFILE_VERSION = 2
 
 
 def fail(message: str) -> None:
@@ -200,6 +209,27 @@ def main() -> None:
         "density", float(spec["forest_density"])
     )
     candidate_settings.set_editor_property(
+        "station_spacing_m", PRIMARY_STATION_SPACING_M
+    )
+    candidate_settings.set_editor_property(
+        "points_per_side_per_station", PRIMARY_POINTS_PER_SIDE
+    )
+    candidate_settings.set_editor_property(
+        "min_lateral_offset_m", PRIMARY_MIN_LATERAL_M
+    )
+    candidate_settings.set_editor_property(
+        "max_lateral_offset_m", PRIMARY_MAX_LATERAL_M
+    )
+    candidate_settings.set_editor_property(
+        "min_uniform_scale", PRIMARY_MIN_SCALE
+    )
+    candidate_settings.set_editor_property(
+        "max_uniform_scale", PRIMARY_MAX_SCALE
+    )
+    candidate_settings.set_editor_property(
+        "layer_profile_version", LAYER_PROFILE_VERSION
+    )
+    candidate_settings.set_editor_property(
         "generation_seed", int(spec["seed"])
     )
     route_settings.set_editor_property(
@@ -246,11 +276,13 @@ def main() -> None:
     graph.set_editor_property(
         "description",
         unreal.Text(
-            "Stage 3G R2 deterministic Alpine forest prototype. "
-            "WorldSpec drives biome range/density/seed; canonical route geometry "
+            "Stage 3G target-density Alpine forest. "
+            "WorldSpec drives biome range/base density/seed; canonical route geometry "
             "drives placement; the 4 m route corridor is fail-closed. "
-            "Stock PCG Static Mesh Spawner uses the measured aggressive-LOD "
-            "Fir Sapling Medium variant-B mass-forest asset."
+            "The versioned v2 candidate profile generates primary mass trees, "
+            "background forest and understory saplings. Stock PCG Static Mesh "
+            "Spawner uses the measured aggressive-LOD Fir Sapling Medium "
+            "variant-B mass-forest asset."
         ),
     )
     graph.set_editor_property("expose_to_library", True)
@@ -333,8 +365,20 @@ def main() -> None:
                 FOREST_MESH_OBJECT_PATH,
             )
         )
+    forest_span_m = float(
+        saved_candidates.get_editor_property("end_distance_m")
+        - saved_candidates.get_editor_property("start_distance_m")
+    )
+    saved_density = float(saved_candidates.get_editor_property("density"))
+    configured_expected_candidate_mean = (
+        math.ceil(forest_span_m / 20.0) * 4 * 2 * saved_density
+        + math.ceil(forest_span_m / 26.0) * 4 * 2 * min(1.0, saved_density * 0.95)
+        + math.ceil(forest_span_m / 16.0) * 3 * 2 * min(1.0, saved_density * 0.68)
+    )
+
     proof = {
         "stage3g_r2_pcg_forest_graph": "success",
+        "configured_expected_candidate_mean": configured_expected_candidate_mean,
         "asset_path": ASSET_PATH,
         "worldspec_path": str(Path(worldspec_value).resolve()),
         "forest_start_m": float(
@@ -363,6 +407,42 @@ def main() -> None:
         "max_lateral_offset_m": float(
             saved_candidates.get_editor_property("max_lateral_offset_m")
         ),
+        "min_uniform_scale": float(
+            saved_candidates.get_editor_property("min_uniform_scale")
+        ),
+        "max_uniform_scale": float(
+            saved_candidates.get_editor_property("max_uniform_scale")
+        ),
+        "layer_profile_version": int(
+            saved_candidates.get_editor_property("layer_profile_version")
+        ),
+        "forest_layer_profile": FOREST_LAYER_PROFILE,
+        "layer_contract": {
+            "primary": {
+                "station_spacing_m": 20.0,
+                "points_per_side": 4,
+                "density_multiplier": 1.0,
+                "lateral_m": [10.0, 36.0],
+                "scale": [0.95, 1.35],
+                "seed_offset": 0,
+            },
+            "background": {
+                "station_spacing_m": 26.0,
+                "points_per_side": 4,
+                "density_multiplier": 0.95,
+                "lateral_m": [30.0, 62.0],
+                "scale": [0.85, 1.20],
+                "seed_offset": 101,
+            },
+            "understory": {
+                "station_spacing_m": 16.0,
+                "points_per_side": 3,
+                "density_multiplier": 0.68,
+                "lateral_m": [12.0, 50.0],
+                "scale": [0.40, 0.70],
+                "seed_offset": 211,
+            },
+        },
         "route_clearance_m": float(
             saved_exclusion.get_editor_property("protected_half_width_m")
         ),

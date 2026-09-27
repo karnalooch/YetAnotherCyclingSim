@@ -72,17 +72,38 @@ jobs:
             throw "Unsupported caller event for Stage 3G full validation: $env:EVENT_NAME"
           }
 
+      - name: Bootstrap cleanup helper outside persistent worktree
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        env:
+          GIT_LFS_SKIP_SMUDGE: "1"
+        with:
+          path: _bootstrap-cleanup
+          ref: ${{ inputs.target_sha }}
+          fetch-depth: 1
+          lfs: false
+          clean: true
+          persist-credentials: false
+
+      - name: Release stale Unreal workspace locks
+        shell: pwsh
+        run: |
+          $bootstrap = Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup/scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
+          & $bootstrap -Workspace $env:GITHUB_WORKSPACE
+          Remove-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup') -Recurse -Force
+
       - name: Checkout exact trusted revision with full LFS
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          path: _stage3g-full-worktree
           ref: ${{ inputs.target_sha }}
-          fetch-depth: 0
+          fetch-depth: 20
           lfs: true
           clean: true
           persist-credentials: false
 
       - name: Verify full-LFS checkout provenance
         shell: pwsh
+        working-directory: _stage3g-full-worktree
         env:
           TARGET_SHA: ${{ inputs.target_sha }}
         run: |
@@ -148,6 +169,7 @@ jobs:
 
       - name: Author deterministic Stage 3G environment
         shell: pwsh
+        working-directory: _stage3g-full-worktree
         env:
           TARGET_SHA: ${{ inputs.target_sha }}
         run: |
@@ -159,6 +181,7 @@ jobs:
 
       - name: Run non-mutating Stage 3G final proof
         shell: pwsh
+        working-directory: _stage3g-full-worktree
         env:
           TARGET_SHA: ${{ inputs.target_sha }}
         run: |
@@ -172,12 +195,19 @@ jobs:
       - name: Record ephemeral source mutations
         if: ${{ always() }}
         shell: pwsh
+        working-directory: _stage3g-full-worktree
         run: |
           $ErrorActionPreference = 'Stop'
           $proofRoot = 'Saved/RuntimeProof/CI/Stage3GFull'
           New-Item -ItemType Directory -Path $proofRoot -Force | Out-Null
-          git status --short | Set-Content -LiteralPath "$proofRoot/worktree_status.txt" -Encoding UTF8
-          git diff --name-only | Set-Content -LiteralPath "$proofRoot/changed_tracked_files.txt" -Encoding UTF8
+          if (Test-Path -LiteralPath '.git') {
+            git status --short | Set-Content -LiteralPath "$proofRoot/worktree_status.txt" -Encoding UTF8
+            git diff --name-only | Set-Content -LiteralPath "$proofRoot/changed_tracked_files.txt" -Encoding UTF8
+          }
+          else {
+            'checkout not reached; no git worktree was available' | Set-Content -LiteralPath "$proofRoot/worktree_status.txt" -Encoding UTF8
+            '' | Set-Content -LiteralPath "$proofRoot/changed_tracked_files.txt" -Encoding UTF8
+          }
 
       - name: Upload Stage 3G validation proof
         if: ${{ always() }}
@@ -185,21 +215,29 @@ jobs:
         with:
           name: stage3g-full-validation-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            Saved/RuntimeProof/CI/Stage3GFull/**/*.json
-            Saved/RuntimeProof/CI/Stage3GFull/**/*.txt
-            Saved/RuntimeProof/CI/Stage3GFull/**/*.log
-            Saved/RuntimeProof/CI/Stage3GFull/**/*.png
+            _stage3g-full-worktree/Saved/RuntimeProof/CI/Stage3GFull/**/*.json
+            _stage3g-full-worktree/Saved/RuntimeProof/CI/Stage3GFull/**/*.txt
+            _stage3g-full-worktree/Saved/RuntimeProof/CI/Stage3GFull/**/*.log
+            _stage3g-full-worktree/Saved/RuntimeProof/CI/Stage3GFull/**/*.png
           if-no-files-found: error
           retention-days: 7
 
-      - name: Clean self-hosted workspace
+      - name: Clean isolated Stage 3G worktree
         if: ${{ always() }}
         shell: pwsh
+        working-directory: _stage3g-full-worktree
         run: |
           $ErrorActionPreference = 'Stop'
-          git reset --hard
-          git clean -ffdx
-          if (git status --porcelain) {
-            throw 'Stage 3G full-validation workspace is still dirty after cleanup.'
+          if (Test-Path -LiteralPath '.git') {
+            git reset --hard
+            if ($LASTEXITCODE -ne 0) { throw 'Stage 3G cleanup git reset failed.' }
+            git clean -ffdx -e Saved/Logs/YetAnotherCyclingSim.log
+            if ($LASTEXITCODE -ne 0) { throw 'Stage 3G cleanup git clean failed.' }
+            if (git status --porcelain) {
+              throw 'Stage 3G full-validation isolated worktree is still dirty after cleanup.'
+            }
+            Write-Host 'Stage 3G full-validation cleanup: PASS'
           }
-          Write-Host 'Stage 3G full-validation cleanup: PASS'
+          else {
+            Write-Host 'Stage 3G isolated worktree cleanup: no checkout worktree to clean.'
+          }

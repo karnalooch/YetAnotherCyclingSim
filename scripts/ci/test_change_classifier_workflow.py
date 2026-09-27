@@ -118,18 +118,23 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
         self.assertNotIn("lfs: true", self.unreal)
         self.assertIn("Test-YacsCodeOnlyCheckout.ps1", self.unreal)
 
-    def test_reusable_unreal_normalizes_persistent_lfs_before_checkout(self):
-        normalize = self.unreal.index(
-            "Normalize stale LFS payloads before code-only checkout"
+    def test_reusable_unreal_uses_isolated_code_only_worktree(self):
+        bootstrap = self.unreal.index(
+            "Bootstrap cleanup helper outside persistent worktree"
         )
         checkout = self.unreal.index(
             "Checkout exact caller revision without LFS payloads"
         )
         guard = self.unreal.index("Enforce code-only checkout")
-        self.assertLess(normalize, checkout)
+        self.assertLess(bootstrap, checkout)
         self.assertLess(checkout, guard)
-        self.assertIn("git lfs ls-files --name-only", self.unreal)
-        self.assertIn("Remove-Item -LiteralPath $path -Force", self.unreal)
+        self.assertIn("path: _unreal-worktree", self.unreal)
+        self.assertIn("working-directory: _unreal-worktree", self.unreal)
+        self.assertIn("clean: true", self.unreal)
+        self.assertNotIn(
+            "Normalize stale LFS payloads before code-only checkout",
+            self.unreal,
+        )
         self.assertNotIn("git lfs pull", self.unreal)
 
     def test_aggregate_knows_every_optional_lane(self):

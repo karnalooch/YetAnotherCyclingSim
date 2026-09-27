@@ -64,7 +64,7 @@ docs/visual-history/
         └── captures/
 ```
 
-Image directories may initially be absent while a milestone is in progress. Once a visual milestone is accepted, its required evidence images must be retained in the history entry or in a repository-approved durable evidence store referenced by the manifest.
+Image directories may initially be absent while a milestone is in progress. Once a visual milestone is accepted, its required evidence images must be retained directly in this repository under the Visual History entry. CI artifacts are transient transport/evidence only and never satisfy durable Visual History storage by themselves.
 
 ## Visual History ID
 
@@ -230,7 +230,8 @@ A material visual milestone is not complete until:
 
 - the implementation passes its normal technical gates;
 - the Visual History manifest is complete;
-- the required stable capture points exist;
+- the required stable capture points exist as repository-retained image files under the Visual History entry;
+- every repository-retained image has a SHA-256 recorded in the manifest or capture-hashes file;
 - BEFORE/NOW/AFTER provenance is unambiguous;
 - technical and visual decisions are recorded independently;
 - the accepted state is linked to its PR/merge commit;
@@ -264,6 +265,9 @@ The long-term preferred workflow is:
 4. compose deterministic triptych PNGs with HUD metadata;
 5. compute hashes and optional pixel-diff metrics;
 6. write/update the manifest and summary;
-7. require human visual acceptance before promoting NOW to AFTER.
+7. copy the canonical captures/triptychs into the matching `docs/visual-history/.../captures/` directory and record SHA-256 hashes;
+8. require human visual acceptance before promoting NOW to AFTER.
+
+A workflow artifact may be used to move capture bytes between CI and review, but accepted Visual History is incomplete until the selected evidence is committed to the repository.
 
 Automation may prepare the evidence. It must not decide visual quality on behalf of the reviewer.

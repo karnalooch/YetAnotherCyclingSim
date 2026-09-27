@@ -75,6 +75,11 @@ class ReusableStage3GFullWorkflowContractTests(unittest.TestCase):
         )
 
     def test_lane_uploads_only_proof_and_always_cleans(self):
+        self.assertIn("path: _stage3g-full-worktree", self.workflow)
+        self.assertGreaterEqual(
+            self.workflow.count("working-directory: _stage3g-full-worktree"),
+            5,
+        )
         for extension in ("**/*.json", "**/*.txt", "**/*.log", "**/*.png"):
             self.assertIn(extension, self.workflow)
         self.assertNotIn("Content/**/*.uasset", self.workflow)
