@@ -57,9 +57,9 @@ bool FStage3PrototypeTerrainBuildTest::RunTest(const FString& Parameters)
 		TestEqual(TEXT("Stage 3G forest canopy count remains deterministic"),
 			Terrain->GetForestCanopyInstanceCount(), 100);
 		TestNotNull(TEXT("Stage 3G forest props use a real mesh"),
-			Terrain->ForestProps->GetStaticMesh());
+			Terrain->ForestProps->GetStaticMesh().Get());
 		TestNotNull(TEXT("Stage 3G forest canopy uses a real mesh"),
-			Terrain->ForestCanopyProps->GetStaticMesh());
+			Terrain->ForestCanopyProps->GetStaticMesh().Get());
 		if (Terrain->ForestProps->GetStaticMesh()
 			&& Terrain->ForestCanopyProps->GetStaticMesh())
 		{
