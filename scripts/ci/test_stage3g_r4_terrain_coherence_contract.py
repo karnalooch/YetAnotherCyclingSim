@@ -110,6 +110,10 @@ class Stage3GR4TerrainCoherenceContract(unittest.TestCase):
         self.assertIn("Unexpected tracked mutations", harness)
 
         self.assertIn("runs-on: [self-hosted, yacs-ue58]", workflow)
+        self.assertIn("Bootstrap cleanup helper outside persistent worktree", workflow)
+        self.assertIn("Release-YacsUnrealWorkspaceLocks.ps1", workflow)
+        self.assertIn("path: _stage3g-r4-author-worktree", workflow)
+        self.assertIn("working-directory: _stage3g-r4-author-worktree", workflow)
         self.assertIn("ref: $" + "{{ github.sha }}", workflow)
         self.assertIn("lfs: true", workflow)
         self.assertIn("persist-credentials: true", workflow)
