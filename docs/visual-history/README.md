@@ -203,6 +203,22 @@ PENDING
 Awaiting visual acceptance
 ```
 
+## Optional performance evidence
+
+When the same exact SHA has a YACS Performance Framework proof, a Visual History entry may include a compact **BEFORE / NOW performance delta** next to the visual evidence.
+
+Recommended fields:
+- Frame p95;
+- Game p95 when relevant;
+- Draw p95;
+- RHI p95 when relevant;
+- GPU p95;
+- absolute delta in milliseconds;
+- limiting timing domain;
+- performance proof/run identifier.
+
+This performance block is contextual evidence only. Visual History automation must not convert timing improvements into a visual-acceptance decision.
+
 ## Definition of Done
 
 A material visual milestone is not complete until:
