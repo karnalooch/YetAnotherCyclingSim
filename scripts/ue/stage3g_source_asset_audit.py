@@ -153,10 +153,34 @@ def audit_texture(path: str, role: str) -> dict[str, Any]:
     }
 
 
-def material_texture_paths(material_path: str) -> list[str]:
+def material_texture_references(material_path: str) -> dict[str, list[str]]:
     material = load_required(material_path, unreal.MaterialInterface)
-    used = unreal.MaterialEditingLibrary.get_material_used_textures(material)
-    return sorted({path_name(texture).split(".")[0] for texture in used if texture})
+
+    # get_material_used_textures can be empty in headless/NullRHI editor runs.
+    # Keep it as supplementary evidence, but use the Asset Registry's on-disk
+    # package dependencies as the authoritative persisted-reference contract.
+    runtime_used = unreal.MaterialEditingLibrary.get_material_used_textures(material)
+    runtime_paths = sorted(
+        {path_name(texture).split(".")[0] for texture in runtime_used if texture}
+    )
+
+    registry = unreal.AssetRegistryHelpers.get_asset_registry()
+    options = unreal.AssetRegistryDependencyOptions(
+        include_soft_package_references=True,
+        include_hard_package_references=True,
+        include_game_package_references=True,
+        include_editor_only_package_references=True,
+        include_searchable_names=False,
+        include_soft_management_references=False,
+        include_hard_management_references=False,
+    )
+    dependencies = registry.get_dependencies(unreal.Name(material_path), options) or []
+    package_paths = sorted({str(dependency) for dependency in dependencies})
+
+    return {
+        "runtime_used_textures": runtime_paths,
+        "on_disk_package_dependencies": package_paths,
+    }
 
 
 def graph_uses_mesh(graph_path: str, mesh_object_path: str) -> dict[str, Any]:
@@ -253,8 +277,9 @@ def main() -> None:
             for role, path in spec["textures"].items()
         }
         expected_paths = sorted(spec["textures"].values())
-        used_paths = material_texture_paths(spec["material"])
-        material_uses_all = all(path in used_paths for path in expected_paths)
+        material_refs = material_texture_references(spec["material"])
+        dependency_paths = material_refs["on_disk_package_dependencies"]
+        material_uses_all = all(path in dependency_paths for path in expected_paths)
 
         family_failures: list[str] = []
         family_failures.extend(
@@ -268,7 +293,8 @@ def main() -> None:
         family: dict[str, Any] = {
             "source_id": source_id,
             "material": spec["material"],
-            "material_used_textures": used_paths,
+            "material_runtime_used_textures": material_refs["runtime_used_textures"],
+            "material_on_disk_dependencies": dependency_paths,
             "material_uses_all_expected_textures": material_uses_all,
             "textures": textures,
             "pass": not family_failures,
