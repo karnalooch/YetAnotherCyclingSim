@@ -132,10 +132,11 @@
         "sha256": null,
         "status": "PENDING"
       },
-      "triptych_image": "captures/01_valley_1200m_triptych.jpg",
+      "triptych_image": null,
       "pixel_diff": null,
       "triptych_sha256": "946efdc3fc6db50cdfeb5329ad8e7dd678c1a25b6c997e040e17b8f9b8b7fe08",
-      "triptych_storage_status": "REPOSITORY_BINARY"
+      "triptych_storage_status": "GENERATED_PENDING_DURABLE_UPLOAD",
+      "triptych_expected_path": "captures/01_valley_1200m_triptych.jpg"
     },
     {
       "capture_id": "02-forest-4900m",
@@ -161,10 +162,11 @@
         "sha256": null,
         "status": "PENDING"
       },
-      "triptych_image": "captures/02_forest_4900m_triptych.jpg",
+      "triptych_image": null,
       "pixel_diff": null,
       "triptych_sha256": "9497e84c39f4b8a6fff7044ba0822e759767e6a0f4980b36fa7b048a30a787eb",
-      "triptych_storage_status": "REPOSITORY_BINARY"
+      "triptych_storage_status": "GENERATED_PENDING_DURABLE_UPLOAD",
+      "triptych_expected_path": "captures/02_forest_4900m_triptych.jpg"
     },
     {
       "capture_id": "03-high-alpine-8000m",
@@ -190,10 +192,11 @@
         "sha256": null,
         "status": "PENDING"
       },
-      "triptych_image": "captures/03_high_alpine_8000m_triptych.jpg",
+      "triptych_image": null,
       "pixel_diff": null,
       "triptych_sha256": "ce2b4cd4c1aa555ac3f6904e97fb5b0ce440832ea77db7b7141ab7661c4be144",
-      "triptych_storage_status": "REPOSITORY_BINARY"
+      "triptych_storage_status": "GENERATED_PENDING_DURABLE_UPLOAD",
+      "triptych_expected_path": "captures/03_high_alpine_8000m_triptych.jpg"
     }
   ],
   "attempts": [
