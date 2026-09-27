@@ -1,0 +1,85 @@
+name: Passo Giau R4.1 terrain spike
+
+on:
+  push:
+    branches:
+      - feat/stage3g-r4-1-passo-giau-heightmap-pipeline
+    paths:
+      - scripts/assets/download_passo_giau_dem.py
+      - scripts/assets/prepare_passo_giau_heightmap.py
+      - .github/workflows/passo-giau-r4-1-terrain-spike.yml
+  workflow_dispatch:
+    inputs:
+      landscape_size:
+        description: Unreal Landscape vertex resolution
+        required: false
+        default: '1009'
+        type: choice
+        options:
+          - '505'
+          - '1009'
+          - '2017'
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: Download and prepare Passo Giau terrain
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          lfs: false
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+
+      - name: Install terrain preparation dependencies
+        run: |
+          python -m pip install --disable-pip-version-check \
+            numpy==2.2.6 \
+            Pillow==11.3.0 \
+            rasterio==1.4.3
+
+      - name: Compile terrain scripts
+        run: |
+          python -m py_compile \
+            scripts/assets/download_passo_giau_dem.py \
+            scripts/assets/prepare_passo_giau_heightmap.py
+
+      - name: Download official TINITALY Passo Giau source
+        run: python scripts/assets/download_passo_giau_dem.py
+
+      - name: Prepare UE heightmap and preview
+        env:
+          LANDSCAPE_SIZE: ${{ inputs.landscape_size || '1009' }}
+        run: |
+          python scripts/assets/prepare_passo_giau_heightmap.py \
+            --landscape-size "${LANDSCAPE_SIZE}"
+
+      - name: Show terrain report
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat ExternalAssets/Terrain/PassoGiau/Prepared/terrain-report.json
+          echo
+          ls -lh ExternalAssets/Terrain/PassoGiau/Prepared/
+
+      - name: Upload R4.1 terrain spike artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: passo-giau-r4-1-terrain-spike
+          path: |
+            ExternalAssets/Terrain/PassoGiau/TINITALY_1_1/download-index.json
+            ExternalAssets/Terrain/PassoGiau/TINITALY_1_1/SOURCE_AND_LICENSE.txt
+            ExternalAssets/Terrain/PassoGiau/Prepared/
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 6
