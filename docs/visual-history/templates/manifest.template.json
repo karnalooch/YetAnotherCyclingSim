@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "visual_history_id": "VH-STAGE-VERSION-001",
+  "title": "Milestone title",
+  "roadmap": {
+    "stage": "Stage X",
+    "version": "RX",
+    "slice": "roadmap slice or issue",
+    "title": "Roadmap title",
+    "issue_number": null
+  },
+  "timestamps": {
+    "created_at": null,
+    "visual_accepted_at": null,
+    "merged_at": null
+  },
+  "status": {
+    "technical_status": "WORKING",
+    "visual_status": "NOT_REVIEWED"
+  },
+  "git": {
+    "branch": null,
+    "baseline_commit_sha": null,
+    "source_commit_sha": null,
+    "source_commit_short": null,
+    "accepted_commit_sha": null,
+    "merge_commit_sha": null
+  },
+  "pull_request": {
+    "number": null,
+    "title": null,
+    "status": null
+  },
+  "ci": {
+    "workflow_name": null,
+    "workflow_run_id": null,
+    "workflow_run_number": null,
+    "proof_artifact_name": null,
+    "automation_status": null,
+    "automation_summary": null,
+    "fresh_load_status": null,
+    "map_check_errors": null,
+    "map_check_warnings": null,
+    "lfs_fsck_status": null,
+    "visual_capture_status": null
+  },
+  "worldgen": {
+    "generation_seed": null,
+    "route_clearance_m": null,
+    "graphs_used": [],
+    "biomes_affected": [],
+    "distance_ranges_m": [],
+    "density_values": {},
+    "simulation_truth_source": null
+  },
+  "assets": {
+    "validated_assets_used": [],
+    "meshes_added": [],
+    "meshes_replaced": [],
+    "materials_added": [],
+    "materials_replaced": [],
+    "placeholder_assets_removed": []
+  },
+  "visual_review": {
+    "visual_change_detected": null,
+    "technical_acceptance": null,
+    "visual_acceptance": null,
+    "reviewer_summary": null,
+    "rejection_reason": null,
+    "next_step": null
+  },
+  "captures": [
+    {
+      "capture_id": "01-valley-1200m",
+      "label": "Valley",
+      "distance_m": 1200,
+      "camera_name": "Stage3G-Valley-1200m",
+      "resolution": "1920x1080",
+      "before": {
+        "commit_sha": null,
+        "image": null,
+        "sha256": null,
+        "status": null
+      },
+      "now": {
+        "commit_sha": null,
+        "image": null,
+        "sha256": null,
+        "status": null
+      },
+      "after": {
+        "commit_sha": null,
+        "image": null,
+        "sha256": null,
+        "status": "PENDING"
+      },
+      "triptych_image": null,
+      "pixel_diff": null
+    }
+  ]
+}
