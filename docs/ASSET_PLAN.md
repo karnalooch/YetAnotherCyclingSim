@@ -484,6 +484,23 @@ Każdy większy asset lub pack powinien przejść odpowiedni podzbiór kontroli:
 - licencja i możliwość dystrybucji w buildzie;
 - brak niepotrzebnych zależności od pluginów.
 
+### Performance gate for mass-repeated assets
+
+For assets expected to appear many times in the rendered world (for example mass foliage, repeated rocks, later dense rider populations), static mesh complexity alone is not an acceptance criterion.
+
+Use the lifecycle and evidence rules from [`performance/PERFORMANCE_FRAMEWORK.md`](performance/PERFORMANCE_FRAMEWORK.md):
+
+```text
+SOURCE_FOUND
+  -> LICENSE_OK
+  -> STATIC_AUDIT_OK
+  -> LOD_PROFILED
+  -> MICROBENCH_OK
+  -> WORLD_ACCEPTED
+```
+
+The gate may consider LOD behavior, materials/sections, masked overdraw, shadows, instancing/component pressure and measured Frame/Game/Draw/RHI/GPU cost on the reference scenario. A low triangle count does not override a measured performance regression, and a high LOD0 count is not an automatic rejection when measured world cost remains acceptable.
+
 ## 8. Source asset ledger
 
 Po wyborze konkretnych paczek tabela poniżej staje się rejestrem źródła prawdy.

@@ -76,6 +76,14 @@ It does **not** by itself mark individual source assets such as `Sparse Grass`,
 asset lifecycle still requires the explicit per-asset LOD/Nanite/instancing checks defined
 in `ASSET_PLAN.md`.
 
+## Performance Framework handoff
+
+This document remains the historical Stage 3G environment proof. Cross-stage performance policy now lives in:
+- [`performance/PERFORMANCE_FRAMEWORK.md`](performance/PERFORMANCE_FRAMEWORK.md);
+- [`performance/BUDGETS.md`](performance/BUDGETS.md).
+
+The current CSV already records Frame, Game, Draw, RHI and GPU timing. Performance Framework **v1.0** must expose percentile summaries for all five domains and use the forest 4900 m sector as the first controlled A/B diagnostic client without invalidating this accepted historical proof.
+
 ## Next performance work
 
 Later Stage 7 / MVP gates still include:

@@ -56,6 +56,21 @@ Visual History nie zastępuje testów technicznych. Jest dodatkowym acceptance g
 
 **Automatyzacja:** #193 — generator evidence pack ma tworzyć trzy tryptyki `BEFORE | NOW | AFTER`, HUD, SHA-256/manifest i trwały binary upload dla większych zmian wizualnych. Do czasu automatyzacji dopuszczalny jest ręczny pack, ale provenance i decyzja wizualna są obowiązkowe.
 
+## YACS Performance Framework
+
+Performance ma własny **cross-stage lifecycle**, ale nie jest osobnym etapem produktu. Źródłem prawdy jest [`performance/PERFORMANCE_FRAMEWORK.md`](performance/PERFORMANCE_FRAMEWORK.md), a budżety i zasady ich zmiany są w [`performance/BUDGETS.md`](performance/BUDGETS.md).
+
+| Framework | Powiązany etap | Zakres |
+|---|---|---|
+| **v1.0 — Frame Budget Core** | **3G / teraz** | Frame/Game/Draw/RHI/GPU p50/p95/p99/max, baseline delta, limiting-domain classification, forest A/B diagnostics. |
+| **v1.1 — Scenario + Visual Delta** | **5** | reusable named scenarios, performance delta w Visual History, regresje HUD/session. |
+| **v2.0 — Rider / Animation Budget** | **6** | rider, skeletal LOD, animacja, Control Rig, IK, kamery, significance/update-rate evidence. |
+| **v2.1 — World Scale + Streaming** | **7** | RAM/VRAM, hitch percentiles, streaming/HLOD, traversal, visible-instance/LOD distribution. |
+| **v3.0 — Weather / Effects** | **8** | deszcz, wet road, fog, shadows, WPO, VFX i worst-case weather proof. |
+| **v4.0 — MVP Release Gate** | **10** | packaged full-route proof, final budgets, PSO/first-use stutter, streaming i finalny baseline. |
+
+Zasada wersjonowania: kolejnej wersji frameworka nie implementujemy „na zapas”. Wchodzi dopiero wtedy, gdy odpowiadający etap tworzy realny nowy koszt do zmierzenia. Stage 3G forest jest pierwszym klientem v1.0.
+
 ## Plan narzędzi i pluginów Unreal Engine
 
 Pluginy i narzędzia UE włączamy etapami, dokładnie tak samo jak assety. Każdy plugin musi mieć konkretny cel, przypisany etap oraz własną walidację; nie aktywujemy dużych zestawów funkcji „na zapas”.
