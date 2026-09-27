@@ -197,6 +197,50 @@ bool FStage4BCornerContextLookAheadTest::RunTest(const FString& Parameters)
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FStage4BCornerContextStableIntervalTest,
+	"CyclingCornering.Context.StableRouteAnchoredInterval",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FStage4BCornerContextStableIntervalTest::RunTest(const FString& Parameters)
+{
+	using namespace Stage4BCornerContextTests;
+	using namespace CyclingCornerContext;
+	using namespace CyclingRoadPhysics;
+
+	TArray<FRoadPhysicsSampleDefinition> Samples;
+	Samples.Add(MakeSample(0.0, 0.0));
+	Samples.Add(MakeSample(100.0, 0.0));
+	Samples.Add(MakeSample(110.0, 0.02));
+	Samples.Add(MakeSample(170.0, 0.02));
+	Samples.Add(MakeSample(180.0, 0.0));
+	Samples.Add(MakeSample(250.0, 0.0));
+
+	FRoadPhysicsProfile Profile;
+	FString Error;
+	TestTrue(TEXT("stable interval profile configures"),
+		BuildProfile(Samples, Profile, Error));
+
+	for (const double DistanceM : { 70.0, 70.05, 79.99, 115.0, 115.05, 119.99 })
+	{
+		FCornerContext Context;
+		TestTrue(TEXT("stable interval context resolves"),
+			TryBuildCornerContext(
+				Profile,
+				DistanceM,
+				0.0,
+				Settings(),
+				Context,
+				Error));
+		TestTrue(TEXT("stable interval finds corner"), Context.bHasCorner);
+		TestTrue(TEXT("corner start stays globally anchored"),
+			NearlyEqual(Context.CornerStartM, 110.0));
+		TestTrue(TEXT("corner end stays globally anchored"),
+			NearlyEqual(Context.CornerEndM, 180.0));
+	}
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FStage4BCornerContextPolicyAndValidationTest,
 	"CyclingCornering.Context.PolicyAndValidation",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)

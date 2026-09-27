@@ -231,6 +231,22 @@ next_D = current_D + alpha * (target_D - current_D)
 
 Zero forward progress therefore produces zero lateral progress. The target and every projected `D` must remain inside the current road margins. This is the deterministic MVP route-line projection; detailed steering, front/rear slip dynamics and crash/fall simulation remain post-MVP.
 
+
+Stage 4C-C3b completes the runtime technique path. The fixed-step runner owns a transactional corner-episode accumulator alongside authoritative simulation state. Every successfully staged substep records the rider's actual power/cadence against the route-derived `Approach / Entry / Apex / Exit` phase. Active C1 consequences are reduced conservatively across the episode:
+
+```text
+episode_line_deviation = max(step_line_deviation)
+episode_speed_retention = min(step_exit_speed_multiplier)
+```
+
+When authoritative post-step `S` reaches the detected corner end, a complete episode is finalized through the Stage 4C-C2 score. An episode missing any of the four phases, or lacking a positive Approach power/cadence baseline, is counted explicitly as skipped rather than inventing data or failing the physics simulation. Invalid/inconsistent domain input still fails closed.
+
+The episode state follows the same transactional semantics as the fixed-step state and accumulator: a later failing substep rolls back all observations and any score staged earlier in the same render-frame batch.
+
+Corner detection boundaries are evaluated on a `scan_step_m` grid anchored globally at route origin `S=0`. The previous query-relative scan could make the same physical corner drift from e.g. `100.00 m` to `100.05 m` as the rider advanced, which is unsuitable as a runtime episode identity. Global anchoring makes `corner_start_m / corner_end_m` stable across 0.05 s substeps while preserving explicit scan quantization.
+
+The authoritative runtime proof requires identical completed corner interval and score under 30 FPS, 60 FPS and jittered render-frame batching.
+
 Aerodynamic drag, gravity and rolling resistance remain ordinary external/resistance forces and must not be misclassified as tyre-braking grip usage.
 
 The kernel is stateless rather than one permanent global grip scalar. MVP may evaluate it for a simplified whole-bike model; later front/rear tyre state can evaluate the same contract independently with different capacities and demands.

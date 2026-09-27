@@ -114,6 +114,35 @@ class TestCornerContext(unittest.TestCase):
         self.assertAlmostEqual(context.cross_slope_angle_rad, math.radians(4.0))
         self.assertAlmostEqual(context.wetness, 0.5)
 
+    def test_corner_interval_is_stable_across_substep_query_positions(self):
+        profile = RoadPhysicsProfile(
+            "stable interval",
+            (
+                sample(0.0, 0.0),
+                sample(100.0, 0.0),
+                sample(110.0, 0.02),
+                sample(170.0, 0.02),
+                sample(180.0, 0.0),
+                sample(250.0, 0.0),
+            ),
+        )
+
+        approach = [
+            corner_context_at(profile, distance, 0.0, self.settings())
+            for distance in (70.0, 70.05, 79.99)
+        ]
+        active = [
+            corner_context_at(profile, distance, 0.0, self.settings())
+            for distance in (115.0, 115.05, 119.99)
+        ]
+
+        for context in approach + active:
+            self.assertTrue(context.has_corner)
+            self.assertEqual(context.corner_start_m, 110.0)
+            self.assertEqual(context.corner_end_m, 180.0)
+
+        self.assertTrue(all(c.phase == CORNER_PHASE_APPROACH for c in approach))
+
     def test_surface_metadata_passes_through_without_resolving_grip(self):
         profile = RoadPhysicsProfile(
             "surface",

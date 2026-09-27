@@ -138,8 +138,9 @@ def corner_context_at(
     """Return deterministic route-derived corner context at S/D.
 
     The scan detects a contiguous region whose absolute horizontal curvature
-    meets the caller-provided threshold. Boundaries are quantized to scan_step_m
-    by design; this is deterministic and keeps authoring tolerances explicit.
+    meets the caller-provided threshold. Boundaries are quantized to a
+    scan_step_m grid anchored at route origin S=0. This makes a physical
+    corner's detected start/end stable as the rider advances by substeps.
 
     No friction coefficient or tyre/grip policy is resolved here. Surface,
     wetness and roughness are passed through for the next Stage 4B/4C layer.
@@ -161,8 +162,19 @@ def corner_context_at(
     step = settings.scan_step_m
     route_end = profile.total_length_m
 
-    found = _is_corner(current, threshold)
-    corner_start = distance
+    # Stage 4C runtime episodes require the same physical corner to keep the
+    # same interval while S advances by fixed substeps. Anchor all detection
+    # probes to the route origin rather than to the current query distance.
+    #
+    # The grid-defined corner state at S is the state of the floor grid point.
+    # A transition inside a grid cell therefore becomes active at the next
+    # global scan point, which is deterministic and independent of frame/substep
+    # query positions.
+    grid_index = math.floor(distance / step)
+    floor_probe = min(route_end, grid_index * step)
+    floor_state = profile.state_at(floor_probe, lateral)
+    found = _is_corner(floor_state, threshold)
+    corner_start = floor_probe
 
     if found:
         while corner_start > 0.0:
@@ -175,17 +187,23 @@ def corner_context_at(
                 break
     else:
         max_distance = min(route_end, distance + settings.look_ahead_m)
-        probe = distance
-        while probe < max_distance:
-            next_probe = min(max_distance, probe + step)
-            probe_state = profile.state_at(next_probe, lateral)
+        probe_index = grid_index + 1
+        while True:
+            probe = probe_index * step
+            if probe > route_end:
+                probe = route_end
+            if probe > max_distance:
+                break
+
+            probe_state = profile.state_at(probe, lateral)
             if _is_corner(probe_state, threshold):
                 found = True
-                corner_start = next_probe
+                corner_start = probe
                 break
-            if next_probe == probe:
+
+            if probe == route_end:
                 break
-            probe = next_probe
+            probe_index += 1
 
     if not found:
         left_margin = lateral - current.left_edge_m
