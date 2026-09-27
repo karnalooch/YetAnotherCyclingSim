@@ -28,10 +28,35 @@ jobs:
       - name: Install deterministic image dependency
         run: python -m pip install --disable-pip-version-check pillow==11.3.0
 
+      - name: Download pinned source artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for spec in \
+            "10925330926:before.zip" \
+            "10926354963:now.zip" \
+            "10927694053:after.zip"
+          do
+            artifact_id="${spec%%:*}"
+            filename="${spec#*:}"
+            curl --fail --silent --show-error --location \
+              --header "Authorization: Bearer ${GH_TOKEN}" \
+              --header "Accept: application/vnd.github+json" \
+              --header "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/actions/artifacts/${artifact_id}/zip" \
+              --output "${RUNNER_TEMP}/${filename}"
+            unzip -t "${RUNNER_TEMP}/${filename}" >/dev/null
+          done
+
       - name: Build final BEFORE NOW AFTER evidence
         env:
           GH_TOKEN: ${{ github.token }}
           YACS_REPO: ${{ github.repository }}
+          YACS_ARTIFACT_10925330926: ${{ runner.temp }}/before.zip
+          YACS_ARTIFACT_10926354963: ${{ runner.temp }}/now.zip
+          YACS_ARTIFACT_10927694053: ${{ runner.temp }}/after.zip
         run: python scripts/ci/finalize_visual_history_r3_after.py
 
       - name: Commit final merged-main evidence
