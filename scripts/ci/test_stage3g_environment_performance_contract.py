@@ -17,7 +17,8 @@ class Stage3GEnvironmentPerformanceContract(unittest.TestCase):
         self.assertIn("[double] $AllowedOverBudgetRatio = 0.05", text)
         self.assertIn("$OverBudgetRatio -le $AllowedOverBudgetRatio", text)
         self.assertIn("RTX\\s*2070.*SUPER", text)
-        self.assertIn("$Proc.ExitCode -ne 0", text)\n        self.assertIn("exit 1", text)
+        self.assertIn("$Proc.ExitCode -ne 0", text)
+        self.assertIn("exit 1", text)
 
     def test_sampler_covers_all_visual_history_sectors(self):
         text = CPP.read_text(encoding="utf-8")
@@ -25,7 +26,9 @@ class Stage3GEnvironmentPerformanceContract(unittest.TestCase):
         self.assertIn("4900.0", text)
         self.assertIn("8000.0", text)
         self.assertIn("FApp::GetDeltaTime()", text)
-        self.assertIn("GetAverageUnitTimes", text)\n        self.assertIn("GGPUFrameTime", text)\n        self.assertIn("EngineGlobals.h", text)
+        self.assertIn("GetAverageUnitTimes", text)
+        self.assertIn("GGPUFrameTime", text)
+        self.assertIn("EngineGlobals.h", text)
         self.assertIn("YACS_STAGE3G_PERF_CSV", text)
 
     def test_workflow_is_trusted_self_hosted_and_publishes_failure_evidence(self):
