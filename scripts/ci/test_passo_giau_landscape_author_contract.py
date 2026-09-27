@@ -38,14 +38,19 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
             read("scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1"),
         )
 
-    def test_map_prep_duplicates_then_cleans_only_spike(self) -> None:
+    def test_map_prep_creates_blank_isolated_spike_without_canonical_load(self) -> None:
         script = read("scripts/ue/stage3g_prepare_passo_giau_landscape_map.py")
-        self.assertIn('SOURCE_MAP = "/Game/Prototype/Maps/L_CyclingTest"', script)
         self.assertIn(
             'SPIKE_MAP = "/Game/Prototype/Maps/L_PassoGiauTerrainSpike"',
             script,
         )
-        self.assertIn("duplicate_asset(SOURCE_MAP, SPIKE_MAP)", script)
+        self.assertIn(
+            "level_subsystem.new_level(SPIKE_MAP, is_partitioned_world=False)",
+            script,
+        )
+        self.assertNotIn("duplicate_asset", script)
+        self.assertNotIn("/Game/Prototype/Maps/L_CyclingTest", script)
+        self.assertIn('"canonical_map_loaded": False', script)
         self.assertIn('"canonical_map_mutated": False', script)
 
     def test_wrapper_fails_closed_on_canonical_map_and_mutations(self) -> None:
@@ -76,6 +81,9 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
     def test_workflow_runs_only_on_ue58_and_commits_only_spike_map(self) -> None:
         workflow = read(".github/workflows/passo-giau-r4-1-landscape-author.yml")
         self.assertIn("runs-on: [self-hosted, yacs-ue58]", workflow)
+        self.assertIn("lfs: false", workflow)
+        self.assertNotIn("git lfs checkout", workflow)
+        self.assertNotIn("git lfs fsck", workflow)
         self.assertIn("permissions:\n  contents: write", workflow)
         self.assertIn(
             "$asset = 'Content/Prototype/Maps/L_PassoGiauTerrainSpike.umap'",
