@@ -60,6 +60,7 @@ class Stage3GR2PCGForestContractTests(unittest.TestCase):
         self.assertIn("PCGMeshSelectorWeightedEntry", author)
         self.assertIn("SM_Stage3G_FirSaplingMedium", author)
         self.assertIn("FOREST_MESH_OBJECT_PATH", author)
+        self.assertIn("get_path_name_for_loaded_asset", author)
         self.assertIn('"validated_mass_forest_asset"', author)
         self.assertIn('"aggressive"', author)
         self.assertIn('"spawner_weight"', author)
