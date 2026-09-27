@@ -62,3 +62,58 @@ Before a downloaded model becomes part of Stage 3G, validate on the home PC:
 7. visual fit with the Stage 3G reference target.
 
 The manifest is the reproducible source list. The downloader writes a local `download-index.json` with exact source URLs, MD5 values and local paths for each resolved run.
+
+
+## Passo Giau terrain bootstrap — Stage 3G R4.1
+
+R4.1 can evaluate a real Alpine macro-terrain source without making external
+terrain authoritative for route physics. The bootstrap uses the official
+**TINITALY 1.1** bare-earth DTM from INGV:
+
+- native grid: 10 m;
+- format: GeoTIFF via WCS;
+- CRS: EPSG:32632 (WGS84 / UTM zone 32N);
+- license: CC BY 4.0;
+- default AOI: 8 x 8 km centred on Passo Giau.
+
+From the repository root:
+
+```powershell
+# Inspect the exact WCS request without writing files
+py scripts/assets/download_passo_giau_dem.py --dry-run
+
+# Download/cache the default 8 x 8 km / 10 m source GeoTIFF
+py scripts/assets/download_passo_giau_dem.py
+
+# Replace an existing cached source
+py scripts/assets/download_passo_giau_dem.py --force
+```
+
+Downloads go to:
+
+```text
+ExternalAssets/Terrain/PassoGiau/TINITALY_1_1/
+```
+
+The downloader writes:
+
+- the GeoTIFF source;
+- `download-index.json` with the exact WCS request, AOI, checksum and provenance;
+- `SOURCE_AND_LICENSE.txt` with attribution/citation requirements.
+
+`ExternalAssets/` is already gitignored. Do not commit the raw DEM wholesale.
+A later R4.1 authoring task may derive a bounded Unreal-friendly heightfield or
+terrain mesh and validate that result independently.
+
+The downloader deliberately rejects requests below the native 10 m resolution:
+asking the WCS for a denser output grid would only upsample the source data.
+
+TINITALY citation:
+
+> Tarquini S., I. Isola, M. Favalli, A. Battistini, G. Dotta (2023).
+> TINITALY, a digital elevation model of Italy with a 10 meters cell size
+> (Version 1.1). Istituto Nazionale di Geofisica e Vulcanologia (INGV).
+> https://doi.org/10.13127/tinitaly/1.1
+
+This downloader does **not** modify the Stage 3 map, route geometry, road physics,
+PCG graphs or Unreal assets.
