@@ -91,9 +91,14 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
             self.ci,
         )
         self.assertIn("github.event.pull_request.draft == false", self.ci)
-        self.assertIn("PR_DRAFT: ${{ github.event.pull_request.draft || false }}", self.ci)
+        self.assertIn(
+            "PR_DRAFT: ${{ github.event.pull_request.draft || false }}", self.ci
+        )
         self.assertIn("stage3g_full_expected=false", self.ci)
-        self.assertIn('if [[ "${EVENT_NAME}" != "pull_request" || "${PR_DRAFT}" == "false" ]]; then', self.ci)
+        self.assertIn(
+            'if [[ "${EVENT_NAME}" != "pull_request" || "${PR_DRAFT}" == "false" ]]; then',
+            self.ci,
+        )
         self.assertIn(
             'require_optional "stage3g-full-validation" "${stage3g_full_expected}"',
             self.ci,
