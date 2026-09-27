@@ -611,10 +611,10 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 		TargetTerrain->AddInstance(TerrainTransform, false);
 	}
 
-	// Stage 3G valley silhouette: broad overlapping cone ridges sit beyond the
-	// road-support tiles. They are deliberately presentation-only and sampled
-	// from route geometry, so rebuilds are deterministic and physics never reads
-	// their transforms.
+	// Stage 3G R3 valley silhouette: broad, bounds-aware instances of the
+	// validated Boulder 01 mesh replace the former Engine Cone placeholders.
+	// The grass material keeps the meadow read while the real mesh supplies an
+	// irregular landform silhouette. Physics never reads these transforms.
 	for (double DistanceM = ValleyRidgeFirstM;
 		DistanceM < ValleyRidgeLastExclusiveM;
 		DistanceM += ValleyRidgeSpacingM)
@@ -629,21 +629,33 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 		for (const double Side : { -1.0, 1.0 })
 		{
 			const double Phase = DistanceM * 0.004 + Side * 0.7;
-			const double HeightM = 78.0 + 22.0 * FMath::Abs(FMath::Sin(Phase));
-			const double RadiusScaleM = 150.0 + 35.0 * FMath::Abs(FMath::Cos(Phase * 0.8));
 			const double LateralM = ValleyRidgeBaseLateralM
 				+ 18.0 * FMath::Sin(DistanceM * 0.006 + Side);
+			const FVector TargetSizeM(
+				110.0 + 30.0 * FMath::Abs(FMath::Cos(Phase * 0.8)),
+				80.0 + 25.0 * FMath::Abs(FMath::Sin(Phase * 1.3)),
+				48.0 + 20.0 * FMath::Abs(FMath::Sin(Phase)));
 
-			FVector PositionM = RoutePositionM + Right * (Side * LateralM);
-			PositionM.Z += HeightM * 0.5 - 3.0;
+			FVector GroundPositionM =
+				RoutePositionM + Right * (Side * LateralM);
+			GroundPositionM.Z -= RoadThicknessM;
 
-			const FTransform RidgeTransform(
-				FRotator(0.0, FMath::Fmod(DistanceM * 0.071 + Side * 31.0, 360.0), 0.0),
-				PositionM * MetresToCentimetres,
-				FVector(RadiusScaleM, RadiusScaleM, HeightM));
-			if (!IsFiniteTransform(RidgeTransform))
+			FTransform RidgeTransform;
+			if (!TryMakeGroundedMeshTransform(
+				ValleyRidgeProps->GetStaticMesh(),
+				GroundPositionM,
+				TargetSizeM,
+				FRotator(
+					0.0,
+					FMath::Fmod(DistanceM * 0.071 + Side * 31.0, 360.0),
+					0.0),
+				RidgeTransform,
+				OutError))
 			{
-				OutError = TEXT("Stage 3G valley ridge transform is invalid");
+				OutError = FString::Printf(
+					TEXT("Stage 3G valley ridge transform is invalid at %.3f m: %s"),
+					DistanceM,
+					*OutError);
 				return false;
 			}
 			ValleyRidgeProps->AddInstance(RidgeTransform, false);
@@ -815,21 +827,32 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 
 		for (const double Side : { -1.0, 1.0 })
 		{
-			FVector PositionM =
-				RoutePositionM + Right * (Side * MountainPropLateralM);
-			const double HeightM =
-				24.0 + 10.0 * FMath::Abs(FMath::Sin(DistanceM * 0.007));
-			const double RadiusScaleM =
-				10.0 + 4.0 * FMath::Abs(FMath::Cos(DistanceM * 0.009));
-			PositionM.Z += HeightM * 0.5 - 0.2;
+			const double Phase = DistanceM * 0.007 + Side * 0.6;
+			const FVector TargetSizeM(
+				22.0 + 10.0 * FMath::Abs(FMath::Cos(DistanceM * 0.009 + Side)),
+				18.0 + 8.0 * FMath::Abs(FMath::Sin(Phase * 1.4)),
+				28.0 + 12.0 * FMath::Abs(FMath::Sin(Phase)));
 
-			const FTransform PeakTransform(
-				FRotator::ZeroRotator,
-				PositionM * MetresToCentimetres,
-				FVector(RadiusScaleM, RadiusScaleM, HeightM));
-			if (!IsFiniteTransform(PeakTransform))
+			FVector GroundPositionM =
+				RoutePositionM + Right * (Side * MountainPropLateralM);
+			GroundPositionM.Z -= RoadThicknessM;
+
+			FTransform PeakTransform;
+			if (!TryMakeGroundedMeshTransform(
+				MountainProps->GetStaticMesh(),
+				GroundPositionM,
+				TargetSizeM,
+				FRotator(
+					0.0,
+					FMath::Fmod(DistanceM * 0.083 + Side * 47.0, 360.0),
+					0.0),
+				PeakTransform,
+				OutError))
 			{
-				OutError = TEXT("prototype mountain prop transform is invalid");
+				OutError = FString::Printf(
+					TEXT("Stage 3G high-Alpine massing transform is invalid at %.3f m: %s"),
+					DistanceM,
+					*OutError);
 				return false;
 			}
 			MountainProps->AddInstance(PeakTransform, false);
@@ -912,23 +935,37 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 			{
 				const double LateralM = DistantMountainLateralsM[Layer];
 				const double Phase = DistanceM * 0.003 + Layer * 1.7 + Side;
-				const double HeightM =
-					(Layer == 0 ? 180.0 : 320.0)
-					+ (Layer == 0 ? 45.0 : 70.0) * FMath::Abs(FMath::Sin(Phase));
-				const double RadiusScaleM =
-					(Layer == 0 ? 135.0 : 220.0)
-					+ 35.0 * FMath::Abs(FMath::Cos(Phase * 0.7));
+				const FVector TargetSizeM(
+					(Layer == 0 ? 150.0 : 260.0)
+						+ (Layer == 0 ? 45.0 : 70.0) * FMath::Abs(FMath::Cos(Phase * 0.7)),
+					(Layer == 0 ? 110.0 : 190.0)
+						+ (Layer == 0 ? 35.0 : 55.0) * FMath::Abs(FMath::Sin(Phase * 0.9)),
+					(Layer == 0 ? 140.0 : 240.0)
+						+ (Layer == 0 ? 50.0 : 80.0) * FMath::Abs(FMath::Sin(Phase)));
 
-				FVector PositionM = RoutePositionM + Right * (Side * LateralM);
-				PositionM.Z += HeightM * 0.42 - (Layer == 0 ? 12.0 : 28.0);
+				FVector GroundPositionM =
+					RoutePositionM + Right * (Side * LateralM);
+				GroundPositionM.Z -=
+					Layer == 0 ? 8.0 : 18.0;
 
-				const FTransform DistantPeakTransform(
-					FRotator(0.0, FMath::Fmod(DistanceM * 0.049 + Layer * 53.0, 360.0), 0.0),
-					PositionM * MetresToCentimetres,
-					FVector(RadiusScaleM, RadiusScaleM, HeightM));
-				if (!IsFiniteTransform(DistantPeakTransform))
+				FTransform DistantPeakTransform;
+				if (!TryMakeGroundedMeshTransform(
+					DistantMountainProps->GetStaticMesh(),
+					GroundPositionM,
+					TargetSizeM,
+					FRotator(
+						0.0,
+						FMath::Fmod(
+							DistanceM * 0.049 + Layer * 53.0 + Side * 17.0,
+							360.0),
+						0.0),
+					DistantPeakTransform,
+					OutError))
 				{
-					OutError = TEXT("Stage 3G distant mountain transform is invalid");
+					OutError = FString::Printf(
+						TEXT("Stage 3G distant mountain transform is invalid at %.3f m: %s"),
+						DistanceM,
+						*OutError);
 					return false;
 				}
 				DistantMountainProps->AddInstance(DistantPeakTransform, false);
