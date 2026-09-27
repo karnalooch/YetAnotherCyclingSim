@@ -205,6 +205,8 @@ Awaiting visual acceptance
 
 ## Optional performance evidence
 
+The durable performance source of truth is [`../performance-history/README.md`](../performance-history/README.md). Visual History may cross-link a Performance History record for the same exact SHA.
+
 When the same exact SHA has a YACS Performance Framework proof, a Visual History entry may include a compact **BEFORE / NOW performance delta** next to the visual evidence.
 
 Recommended fields:
@@ -215,7 +217,10 @@ Recommended fields:
 - GPU p95;
 - absolute delta in milliseconds;
 - limiting timing domain;
-- performance proof/run identifier.
+- performance proof/run identifier;
+- Performance History ID when one exists;
+- FPS average / 1% low when relevant to R5;
+- hitch or VRAM delta when the visual change materially affects them.
 
 This performance block is contextual evidence only. Visual History automation must not convert timing improvements into a visual-acceptance decision.
 
@@ -232,6 +237,8 @@ A material visual milestone is not complete until:
 - rejected visual attempts remain traceable rather than being overwritten.
 
 For Stage 3G, required primary captures are 1200 m, 4900 m and 8000 m.
+
+For the R4 -> R5 handoff, the accepted R4 visual closeout must be cross-linkable to the pre-optimization Performance History baseline. R5 renderer experiments must not silently replace the accepted R4 visual baseline.
 
 ## When Visual History is required
 
