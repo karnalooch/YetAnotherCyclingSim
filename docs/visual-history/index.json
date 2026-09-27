@@ -54,14 +54,14 @@
       "version": "R3",
       "title": "Valley + High-Alpine PCG and real biome massing",
       "path": "stage-3g/R3-valley-high-alpine",
-      "technical_status": "CI_GREEN",
+      "technical_status": "MERGED",
       "visual_status": "VISUAL_ACCEPTED",
       "baseline_commit_sha": "fd77094ffe0c8f29c3bd9949ba22079fc73fc1c5",
       "source_commit_sha": "58c89674656ddec1bce9473547d366f6798dcfb5",
-      "merge_commit_sha": null,
+      "merge_commit_sha": "02ff23f0a24228432ae9c34eb65aa4cb3694ae1d",
       "pr_number": 192,
-      "workflow_run_id": 36305204327,
-      "workflow_run_number": 417
+      "workflow_run_id": 36308910299,
+      "workflow_run_number": 421
     }
   ]
 }

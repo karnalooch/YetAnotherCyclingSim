@@ -12,10 +12,11 @@
   "timestamps": {
     "created_at": "2026-09-27",
     "visual_accepted_at": "2026-09-27",
-    "merged_at": null
+    "merged_at": "2026-09-27T09:17:42Z",
+    "merged_main_proof_at": "2026-09-27T09:23:19Z"
   },
   "status": {
-    "technical_status": "CI_GREEN",
+    "technical_status": "MERGED",
     "visual_status": "VISUAL_ACCEPTED"
   },
   "git": {
@@ -23,21 +24,21 @@
     "baseline_commit_sha": "fd77094ffe0c8f29c3bd9949ba22079fc73fc1c5",
     "source_commit_sha": "58c89674656ddec1bce9473547d366f6798dcfb5",
     "source_commit_short": "58c89674",
-    "accepted_commit_sha": "58c89674656ddec1bce9473547d366f6798dcfb5",
-    "merge_commit_sha": null
+    "accepted_commit_sha": "02ff23f0a24228432ae9c34eb65aa4cb3694ae1d",
+    "merge_commit_sha": "02ff23f0a24228432ae9c34eb65aa4cb3694ae1d"
   },
   "pull_request": {
     "number": 192,
     "title": "feat(stage3g): add R3 deterministic valley + high-Alpine PCG",
-    "status": "DRAFT"
+    "status": "MERGED"
   },
   "ci": {
     "workflow_name": "CyclingSim CI",
-    "workflow_run_id": 36305204327,
-    "workflow_run_number": 417,
-    "proof_artifact_name": "stage3g-full-validation-36305204327-1",
+    "workflow_run_id": 36308910299,
+    "workflow_run_number": 421,
+    "proof_artifact_name": "stage3g-full-validation-36308910299-1",
     "automation_status": "PASS",
-    "automation_summary": "Exact-SHA Unreal build/Automation, footprint-support contract, Stage 3G full validation and proof passed on 58c89674.",
+    "automation_summary": "Merged-main exact-SHA Unreal build/Automation and Stage 3G full validation passed on 02ff23f0; 70/70 Automation tests passed, Fresh Load passed, Map Check 0/0, LFS fsck passed and visual capture passed.",
     "fresh_load_status": "PASS",
     "map_check_errors": 0,
     "map_check_warnings": 0,
@@ -105,7 +106,7 @@
     "visual_acceptance": true,
     "reviewer_summary": "R3 grounded baseline accepted: 1200 m valley and 8000 m high-Alpine visibly use real boulder massing without floating formations; 4900 m preserves the accepted R2 conifer forest. This is an R3 biome/massing baseline, not final environment art.",
     "rejection_reason": null,
-    "next_step": "Merge only after syncing current main and one final exact-SHA CI run. AFTER remains pending until the merged-main capture is recorded."
+    "next_step": "R3 is merged and its merged-main AFTER is recorded. Continue the remaining Stage 3G terrain/road/atmosphere and explicit environment-performance gates; this R3 biome/massing baseline is not final Stage 7 environment art."
   },
   "captures": [
     {
@@ -241,6 +242,27 @@
     "triptych_status": "DURABLY_STORED",
     "source_before_artifact": "stage3g-full-validation-36299298530-1",
     "source_now_artifact": "stage3g-full-validation-36305204327-1",
-    "after_status": "PENDING_MERGED_MAIN_PROOF"
+    "after_status": "DURABLY_STORED_IN_FINAL_TRIPTYCH",
+    "source_after_artifact": "stage3g-full-validation-36308910299-1"
+  },
+  "pre_merge_acceptance": {
+    "visual_accepted_commit_sha": "58c89674656ddec1bce9473547d366f6798dcfb5",
+    "visual_accepted_workflow_run_id": 36305204327,
+    "visual_accepted_workflow_run_number": 417,
+    "synced_commit_sha": "d7dd75a80c2da7fde41b617a4eb5899c676a17fc",
+    "synced_workflow_run_id": 36308404800,
+    "synced_workflow_run_number": 420
+  },
+  "merge_proof": {
+    "merge_commit_sha": "02ff23f0a24228432ae9c34eb65aa4cb3694ae1d",
+    "workflow_run_id": 36308910299,
+    "workflow_run_number": 421,
+    "proof_artifact_name": "stage3g-full-validation-36308910299-1",
+    "resolution": "1920x1080",
+    "automation_tests": "70/70 passed",
+    "fresh_load": "PASS",
+    "map_check": "0 errors / 0 warnings",
+    "git_lfs_fsck": "PASS",
+    "visual_capture": "PASS"
   }
 }
