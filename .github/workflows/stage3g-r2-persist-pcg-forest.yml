@@ -92,8 +92,26 @@ jobs:
 
           git commit -m 'feat(stage3g): persist deterministic PCG forest graph'
           if ($LASTEXITCODE -ne 0) { throw 'PCG forest persistence commit failed.' }
-          git push origin HEAD:feat/stage3g-pcg-forest-r2
-          if ($LASTEXITCODE -ne 0) { throw 'PCG forest persistence push failed.' }
+
+          $pushed = $false
+          for ($attempt = 1; $attempt -le 3; $attempt++) {
+            git fetch origin feat/stage3g-pcg-forest-r2
+            if ($LASTEXITCODE -ne 0) { throw 'PCG forest persistence fetch failed.' }
+            git rebase origin/feat/stage3g-pcg-forest-r2
+            if ($LASTEXITCODE -ne 0) {
+              git rebase --abort 2>$null
+              throw 'PCG forest persistence rebase failed.'
+            }
+            git push origin HEAD:feat/stage3g-pcg-forest-r2
+            if ($LASTEXITCODE -eq 0) {
+              $pushed = $true
+              break
+            }
+            if ($attempt -lt 3) {
+              Write-Host "PCG forest push raced with branch update; retrying."
+            }
+          }
+          if (-not $pushed) { throw 'PCG forest persistence push failed after 3 attempts.' }
 
           $pointer = (git show 'HEAD:Content/YACS/WorldGen/PCG/PCG_Forest.uasset') -join "`n"
           if ($pointer -notmatch '^version https://git-lfs.github.com/spec/v1') {
