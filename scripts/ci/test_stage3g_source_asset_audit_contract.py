@@ -40,6 +40,11 @@ class Stage3GSourceAssetAuditContract(unittest.TestCase):
         self.assertIn("PCGStaticMeshSpawnerSettings", text)
         self.assertIn("missing_pcg_static_mesh_spawner_usage", text)
 
+        importer = (ROOT / "scripts" / "ue" / "stage3g_import_source_assets.py").read_text(encoding="utf-8")
+        self.assertIn("BOULDER_LOD_POLICY", importer)
+        self.assertIn("StaticMeshEditorSubsystem", importer)
+        self.assertIn("set_lods", importer)
+
     def test_harness_is_exact_sha_full_lfs_and_non_mutating(self):
         text = HARNESS.read_text(encoding="utf-8")
         self.assertIn("ExpectedHead", text)
@@ -58,6 +63,9 @@ class Stage3GSourceAssetAuditContract(unittest.TestCase):
         self.assertIn("ref: $" + "{{ github.sha }}", text)
         self.assertIn("cancel-in-progress: true", text)
         self.assertIn("Invoke-YacsStage3GSourceAssetAudit.ps1", text)
+        self.assertIn("SM_Stage3G_Boulder.uasset", text)
+        self.assertIn("Invoke-YacsStage3GEnvironmentPerformance.ps1", text)
+        self.assertIn("-SkipBuild", text)
         self.assertIn("if: $" + "{{ always() }}", text)
         self.assertIn("stage3g-source-asset-audit-", text)
         self.assertIn("retention-days: 14", text)
