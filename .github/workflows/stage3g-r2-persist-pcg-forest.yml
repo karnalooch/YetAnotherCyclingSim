@@ -6,6 +6,8 @@ on:
       - feat/stage3g-pcg-forest-r2
     paths:
       - '.github/workflows/stage3g-r2-persist-pcg-forest.yml'
+      - 'scripts/ue/stage3g_author_pcg_forest.py'
+      - 'scripts/ci/test_stage3g_r2_pcg_forest_contract.py'
 
 permissions:
   contents: write
