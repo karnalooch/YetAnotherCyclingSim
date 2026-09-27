@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import tempfile
 import unittest
+from pathlib import Path
 
 import classify_changes as cc
 
@@ -151,6 +153,32 @@ class ChangeClassifierTests(unittest.TestCase):
         self.assertTrue(result.ci)
         self.assertFalse(result.ue_code)
         self.assertFalse(result.asset_full)
+
+    def test_main_emits_github_outputs_for_worldgen_pcg(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            paths_file = root / "paths.txt"
+            output_file = root / "github-output.txt"
+            paths_file.write_text(
+                "Content/YACS/WorldGen/PCG/PCG_Valley.uasset\n",
+                encoding="utf-8",
+            )
+
+            result = cc.main(
+                [
+                    "--paths-file",
+                    str(paths_file),
+                    "--github-output",
+                    str(output_file),
+                ]
+            )
+
+            self.assertEqual(result, 0)
+            emitted = output_file.read_text(encoding="utf-8")
+            self.assertIn("assets=true\n", emitted)
+            self.assertIn("asset_full=true\n", emitted)
+            self.assertIn("base_sha=PATHS_FILE\n", emitted)
+            self.assertIn("head_sha=PATHS_FILE\n", emitted)
 
 
 if __name__ == "__main__":
