@@ -20,9 +20,9 @@ Complete the valley and high-Alpine presentation using deterministic route-aware
 ## Current — NOW
 
 - Branch: `feat/stage3g-pcg-biomes-r3`
-- Current visual-integration SHA: `07e0803bad809e87473ed3a461fdecf55e75ec76`
+- Current visual-integration SHA: `58c89674656ddec1bce9473547d366f6798dcfb5`
 - Technical status: `CI_GREEN`
-- Visual status: `VISUAL_REJECTED`
+- Visual status: `VISUAL_ACCEPTED`
 
 ## Important rejected checkpoint
 
@@ -47,8 +47,16 @@ The active R3 revision replaces the remaining valley/high-Alpine Engine Cone mas
 - LFS fsck: **PASS**
 - Visual Capture: **PASS**
 - Aggregate CI gate: **PASS**
-- CI run: **#412 / 36302963634**
-- Proof artifact: `stage3g-full-validation-36302963634-1`
+- CI run: **#417 / 36305204327**
+- Proof artifact: `stage3g-full-validation-36305204327-1`
+- Ground-support contract: **PASS**
+
+## Visual iteration history
+
+- **#408 / 0148f894** — technical PASS, visual reject: PCG graph output was not visibly consumed.
+- **#412 / 07e0803b** — technical PASS, visual reject: real massing visible but oversized/floating.
+- **#415 / 7de2cc46** — technical PASS, visual reject: scale bounded, but distant massing still lacked terrain support.
+- **#417 / 58c89674** — technical PASS, **visual accepted NOW**: massing is grounded on supported presentation terrain.
 
 ## World-generation inputs
 
@@ -70,15 +78,17 @@ The active R3 revision replaces the remaining valley/high-Alpine Engine Cone mas
 
 ### 1200 m — Valley
 
-**VISUAL_REJECTED.** The scene visibly changes, but the boulder-derived valley masses are oversized and read as giant rock walls rather than believable valley landforms.
+**VISUAL_ACCEPTED for R3 baseline.** Real boulder massing is grounded, kept away from the road and reads as valley-side landform dressing rather than floating geometry.
 
 ### 4900 m — Forest
 
-The accepted R2 conifer forest remains recognizable and the road corridor remains readable. This capture is not the reason for rejection.
+**VISUAL_ACCEPTED / preserved baseline.** The R2 conifer forest and road-clearance readability remain intact.
 
 ### 8000 m — High Alpine
 
-**VISUAL_REJECTED.** Real rock geometry is visible, but the current massing is far too large and includes floating/overhanging formations around the road. The technical replacement succeeded; the composition and grounding did not.
+**VISUAL_ACCEPTED for R3 baseline.** Real rocks are grounded on widened high-Alpine presentation terrain, remain outside the road corridor and no longer float above the horizon.
+
+This is still a Stage 3G reference baseline, not final Stage 7 environment art: the road, broad terrain forms, atmosphere and overall scene composition remain intentionally open for later polish.
 
 ## AFTER
 
@@ -89,7 +99,17 @@ No current NOW capture may be promoted to AFTER until the committed-SHA proof an
 ## Decision
 
 - Technical acceptance: **YES**
-- Visual acceptance: **NO**
+- Visual acceptance: **YES — NOW accepted**
 - Visual change detected: **YES**
-- Rejection reason: oversized / floating valley and high-Alpine boulder massing.
-- Next step: reduce target massing scale, improve grounding and road sightline, rerun exact-SHA captures, then update the same Visual History entry. Automation of the durable triptych evidence pack is tracked in **#193**.
+- Rejection reason: **none for 58c89674**
+- Next step: sync #192 with current `main`, run one final exact-SHA proof, merge, then capture merged `main` as AFTER and close VH-3G-R3-001.
+
+## Durable triptych evidence
+
+The R3 pre-merge Visual History triptychs are retained in the repository under `captures/`. They were deterministically materialized from the canonical R2 CI #398 and R3 CI #417 proof artifacts after verifying the source PNG SHA-256 values recorded in the manifest.
+
+- `captures/01_valley_1200m_triptych.jpg` — SHA-256 `c00630dcd6335b8cbb5a13cb9c0d8b6b54a7573ac2e25d344fe7b40297a6ada5` — 73040 bytes
+- `captures/02_forest_4900m_triptych.jpg` — SHA-256 `621449067618a96687b51e38ef8495d7a49030a7fe6c8f92621d7a9f3d54adc9` — 75619 bytes
+- `captures/03_high_alpine_8000m_triptych.jpg` — SHA-256 `f8ddd03b30c0eeec6d97665ca44d4f3bf6922787a943226aa7f3e0d399e8b33f` — 93154 bytes
+
+`AFTER` intentionally remains **PENDING** until #192 is merged and a merged-main exact-SHA proof/capture exists.
