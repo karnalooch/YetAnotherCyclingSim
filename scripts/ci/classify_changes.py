@@ -320,3 +320,18 @@ def main(argv: list[str] | None = None) -> int:
         **asdict(classification),
         "security_base": classification.security_base,
     }
+    print(json.dumps(payload, indent=2, sort_keys=True))
+
+    output_path = args.github_output or os.environ.get("GITHUB_OUTPUT")
+    if output_path:
+        emit_github_output(
+            classification,
+            output_path=output_path,
+            base=base,
+            head=head,
+        )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
