@@ -114,6 +114,8 @@ def _is_asset(path: str) -> bool:
 def _is_asset_full(path: str) -> bool:
     if path.startswith("Content/Prototype/Environment/Stage3G/"):
         return True
+    if path.startswith("Content/YACS/WorldGen/PCG/"):
+        return True
     if path == "Content/Prototype/Maps/L_CyclingTest.umap":
         return True
     if path in {
@@ -318,18 +320,3 @@ def main(argv: list[str] | None = None) -> int:
         **asdict(classification),
         "security_base": classification.security_base,
     }
-    print(json.dumps(payload, indent=2, sort_keys=True))
-
-    output_path = args.github_output or os.environ.get("GITHUB_OUTPUT")
-    if output_path:
-        emit_github_output(
-            classification,
-            output_path=output_path,
-            base=base,
-            head=head,
-        )
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
