@@ -4,7 +4,14 @@ import unittest
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 HARNESS = ROOT / "scripts" / "ue" / "Invoke-YacsStage3GEnvironmentPerformance.ps1"
 WORKFLOW = ROOT / ".github" / "workflows" / "stage3g-environment-performance.yml"
-CPP = ROOT / "Source" / "YetAnotherCyclingSim" / "Private" / "Tests" / "CyclingStage3GEnvironmentPerformanceProof.spec.cpp"
+CPP = (
+    ROOT
+    / "Source"
+    / "YetAnotherCyclingSim"
+    / "Private"
+    / "Tests"
+    / "CyclingStage3GEnvironmentPerformanceProof.spec.cpp"
+)
 
 
 class Stage3GEnvironmentPerformanceContract(unittest.TestCase):
