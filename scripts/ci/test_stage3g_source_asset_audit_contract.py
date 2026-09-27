@@ -40,7 +40,9 @@ class Stage3GSourceAssetAuditContract(unittest.TestCase):
         self.assertIn("PCGStaticMeshSpawnerSettings", text)
         self.assertIn("missing_pcg_static_mesh_spawner_usage", text)
 
-        importer = (ROOT / "scripts" / "ue" / "stage3g_import_source_assets.py").read_text(encoding="utf-8")
+        importer = (
+            ROOT / "scripts" / "ue" / "stage3g_import_source_assets.py"
+        ).read_text(encoding="utf-8")
         self.assertIn("BOULDER_LOD_POLICY", importer)
         self.assertIn("StaticMeshEditorSubsystem", importer)
         self.assertIn("set_lods", importer)
