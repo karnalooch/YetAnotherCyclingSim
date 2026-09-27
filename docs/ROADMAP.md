@@ -69,6 +69,8 @@ Performance ma własny **cross-stage lifecycle**, ale nie jest osobnym etapem pr
 | **v3.0 — Weather / Effects** | **8** | deszcz, wet road, fog, shadows, WPO, VFX i worst-case weather proof. |
 | **v4.0 — MVP Release Gate** | **10** | packaged full-route proof, final budgets, PSO/first-use stutter, streaming i finalny baseline. |
 
+**Stage 3G revision R5** jest konkretnym performance/rendering-tech pass-em wewnątrz **Performance Framework v1.0**; nie należy go mylić z produktowym **Stage 5**, który uruchamia framework v1.1. Szczegółowy zakres R5 jest w [`performance/STAGE3G_R5_RENDERING_TECH.md`](performance/STAGE3G_R5_RENDERING_TECH.md), a trwały format dowodów w [`performance-history/README.md`](performance-history/README.md).
+
 Zasada wersjonowania: kolejnej wersji frameworka nie implementujemy „na zapas”. Wchodzi dopiero wtedy, gdy odpowiadający etap tworzy realny nowy koszt do zmierzenia. Stage 3G forest jest pierwszym klientem v1.0.
 
 ## Plan narzędzi i pluginów Unreal Engine
@@ -301,6 +303,7 @@ Stage 3 jest realizowany kolejno:
 | `VH-3G-R1-001` | R1 — real Alpine ground + rocks | historical accepted baseline | PR #160 / `91c1150…` |
 | `VH-3G-R2-001` | R2 — deterministic PCG forest | **VISUAL_ACCEPTED / MERGED** | PR #162 / `fd77094…` / CI #398 |
 | `VH-3G-R3-001` | R3 — valley + high-Alpine PCG/massing | **VISUAL_ACCEPTED / MERGED** | #187 / PR #192 / `02ff23f0…` / CI #421 |
+| `VH-3G-R4-001` | R4 — forest / terrain / road visual-world closeout | **IN PROGRESS** | final closeout report + 1200/4900/8000 m evidence pending |
 
 R3 zachowuje wszystkie odrzucone checkpointy (#408 brak widocznej integracji, #412 oversized/floating massing, #415 brak podłoża dla distant massing). NOW `58c89674…` / CI #417 został zaakceptowany wizualnie, a finalny AFTER pochodzi z merged `main` `02ff23f0…` / CI #421. Ten wpis Visual History jest zamknięty; dalszy polish świata należy do pozostałych gate'ów Stage 3G i późniejszego Stage 7.\n\n**Performance baseline 3G:** PR #197 / run #13 ustanawia trwały reference-PC sanity baseline dla obecnego accepted environment. Najcięższy z trzech punktów to forest 4900 m: frame p95 **11.443 ms**, GPU p95 **10.641 ms**, średnio **94.52 FPS** przy 1920×1080. To zamyka aggregate environment-performance gate, ale nie zastępuje przyszłego per-asset LOD/Nanite/instancing ani Stage 7 full-route RAM/VRAM/hitch/streaming proof.
 
@@ -317,7 +320,55 @@ R3 zachowuje wszystkie odrzucone checkpointy (#408 brak widocznej integracji, #4
 - [x] Domknąć pierwszy zestaw Technical UE Asset Ledger: `PCG_RouteExclusion`, `PCG_Forest`, `PCG_Valley` i `PCG_HighAlpine` = `validated`; Valley/HighAlpine mają R3 Visual History + merged-main proof oraz osobny 1080p/60 performance gate PR #197 / run #13.
 - [ ] Authoring assets PCG przechowywać poza `/Game/Generated/YACS/**`; katalog `Generated` jest wyłącznie dla odtwarzalnych outputów generatora.
 
-### 3G-R5 — worldgen tooling research / adoption gate
+### 3G-R4 — forest / terrain / road visual-world closeout
+
+R4 pozostaje bieżącym visual/world milestone i **nie dostaje scope creep z R5**. Agent kończy las, teren, dopasowanie świata do drogi/trasy oraz wymagany visual proof. Dopiero po ukończeniu pracy publikuje raport zamykający.
+
+Wymagany R4 closeout report:
+- exact HEAD/commit i branch;
+- co wizualnie zmieniono;
+- stan lasu / terenu / drogi;
+- screenshoty **1200 m / 4900 m / 8000 m**;
+- average FPS + **1% low**;
+- Frame / Game / Draw / GPU timing;
+- VRAM high-water mark, jeśli dostępny;
+- hitch count / hitch evidence;
+- stan CI/proof;
+- znane problemy i regresje.
+
+R4 closeout jest **baseline'em przed optymalizacją**. Nie wolno poprawiać liczb kosztem zmiany zaakceptowanego stanu bez zachowania dokładnego pre-optimization evidence.
+
+### 3G-R5 — Smooth Frame / Rendering Tech
+
+R5 zaczyna się dopiero po R4 closeout. Celem jest stabilny frametime i brak hitchy na referencyjnym **1920×1080 / 60 FPS / RTX 2070 SUPER**, a nie maksymalizacja average FPS.
+
+Źródła prawdy:
+- [`performance/STAGE3G_R5_RENDERING_TECH.md`](performance/STAGE3G_R5_RENDERING_TECH.md);
+- [`performance/PERFORMANCE_FRAMEWORK.md`](performance/PERFORMANCE_FRAMEWORK.md);
+- [`performance/BUDGETS.md`](performance/BUDGETS.md);
+- [`performance-history/README.md`](performance-history/README.md).
+
+Zakres R5:
+- [ ] ustanowić Performance History i deterministyczny 60–90 s benchmark;
+- [ ] zachować R4 exact-SHA pre-optimization baseline;
+- [ ] wdrożyć/zwalidować interpolation presentation nad fixed-step physics bez zmiany simulation truth;
+- [ ] zmierzyć Lumen Medium jako opcję jakości/wydajności;
+- [ ] stroić foliage WPO/wind/shadow distance i VSM invalidation;
+- [ ] zmierzyć Nanite distance/foliage policy, bez uzależniania MVP od eksperymentalnych funkcji;
+- [ ] zbadać PCG hierarchical/runtime generation budgets i bounded per-frame generation;
+- [ ] zbadać World Partition/HLOD + preload przed riderem + unload za riderem;
+- [ ] objąć PSO/first-use stutter measured proofem;
+- [ ] utrzymać **Native + TSR** jako vendor-neutral baseline;
+- [ ] dodać capability-gated **DLSS / FSR / XeSS Super Resolution** przez jedną warstwę projektu;
+- [ ] walidować motion vectors, WPO foliage, spokes, rider, thin geometry, translucency i ghosting dla temporalnych backendów;
+- [ ] integrować **Reflex / Anti-Lag 2 / XeLL** tylko tam, gdzie są wspierane i uzasadnione;
+- [ ] zmierzyć dynamic resolution dopiero po statycznych baseline'ach;
+- [ ] zrobić Frame Generation jako osobny późny spike; SR i FG pozostają logicznie rozdzielone;
+- [ ] utrzymywać jawną compatibility matrix dla SR + FG + low-latency;
+- [ ] `Auto` ma bazować na runtime capabilities + hardware benchmark + user override, nie na prostym vendor switchu;
+- [ ] generated/displayed FPS nigdy nie zastępuje base-rendered FPS w hard acceptance.
+
+### 3G-R6 — worldgen tooling research / adoption gate
 
 Kandydaci z researchu są jawnie śledzeni, ale **nie stają się dependency tylko dlatego, że istnieją**. Najpierw stock UE PCG musi przejść realny `PCG_RouteExclusion -> PCG_Forest` proof. Dopiero potem mierzymy, czy zewnętrzne narzędzie usuwa konkretny koszt lub brak funkcji.
 

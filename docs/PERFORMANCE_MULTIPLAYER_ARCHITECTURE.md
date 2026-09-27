@@ -160,6 +160,8 @@ The framework evolves with actual product pressure rather than as a speculative 
 - **v3.0 / Stage 8:** weather, shadow, WPO, material and VFX worst-case evidence;
 - **v4.0 / Stage 10:** packaged full-route release gate including PSO/first-use and final frozen budgets.
 
+Stage 3G revision **R5 — Smooth Frame / Rendering Tech** is the first concrete rendering-tech specialization of v1.0. Its implementation plan is [`performance/STAGE3G_R5_RENDERING_TECH.md`](performance/STAGE3G_R5_RENDERING_TECH.md). R5 keeps simulation authoritative and treats presentation interpolation, upscalers, low-latency backends, dynamic resolution and Frame Generation as replaceable presentation systems.
+
 The framework belongs to YACS until a second real project demonstrates that a piece is genuinely reusable. Do not move YACS-specific timing, route scenarios or reference-hardware policy into `engineering-platform` prematurely.
 
 ## 3. Recommended future road model
@@ -1251,6 +1253,8 @@ The project already has a primary target:
 At 60 FPS the total frame budget is about **16.67 ms**.
 
 Performance must be measured using representative builds and scenes, not estimated from editor appearance.
+
+For Stage 3G R5, vendor rendering technologies are optional presentation backends. Native/TSR remains the vendor-neutral baseline; DLSS/FSR/XeSS Super Resolution, low-latency integrations and later Frame Generation must preserve the same authoritative simulation and be evaluated against exact-SHA Performance History evidence. Generated/displayed FPS is never substituted for base-rendered FPS in hard acceptance.
 
 The 16.67 ms total frame budget is the current hard frame target. Sub-budgets should initially be recorded as `BASELINE_REQUIRED` rather than invented before representative content exists.
 

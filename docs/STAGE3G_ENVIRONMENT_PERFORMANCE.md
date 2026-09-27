@@ -86,6 +86,10 @@ The current CSV already records Frame, Game, Draw, RHI and GPU timing. Performan
 
 ## Next performance work
 
+Stage 3G revision **R5 — Smooth Frame / Rendering Tech** now pulls forward a bounded, evidence-driven performance pass using this accepted proof plus the final R4 closeout as baselines. R5 is defined in [`performance/STAGE3G_R5_RENDERING_TECH.md`](performance/STAGE3G_R5_RENDERING_TECH.md) and records durable evidence through [`performance-history/README.md`](performance-history/README.md).
+
+This historical R3 proof remains immutable evidence: R5 must compare against it or the accepted R4 closeout rather than rewriting these results.
+
 Later Stage 7 / MVP gates still include:
 
 - full-route Game / Render / GPU baselines;

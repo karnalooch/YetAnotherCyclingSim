@@ -23,7 +23,7 @@ The framework does not replace visual acceptance. A change can be faster and vis
 
 | Version | Roadmap integration | Primary scope | New evidence |
 |---|---|---|---|
-| **v1.0 — Frame Budget Core** | **Stage 3G / now** | Generalize the existing environment sampler and analyzer. Forest is the first client. | p50/p95/p99/max for Frame, Game, Draw, RHI, GPU; exact-SHA JSON/CSV; limiting-domain classification; baseline delta; forest A/B diagnostics. |
+| **v1.0 — Frame Budget Core** | **Stage 3G / now, including 3G-R5** | Generalize the existing environment sampler and analyzer. Forest is the first client; R5 adds deterministic rendering-tech comparisons without inventing a new framework version. | p50/p95/p99/max for Frame, Game, Draw, RHI, GPU; exact-SHA JSON/CSV; limiting-domain classification; baseline delta; forest A/B diagnostics; R5 Performance History. |
 | **v1.1 — Scenario + Visual Delta** | **Stage 5** | Add reusable named scenarios around session/HUD flow without turning UI into a performance subsystem. | Scenario manifests, BEFORE/NOW timing deltas, Visual History performance summary, regression warning annotations. |
 | **v2.0 — Rider / Animation Budget** | **Stage 6** | Measure rider mesh, animation, Control Rig, IK and cameras. | animation/game-thread timing, rider significance inputs, skeletal LOD/update-rate evidence, near/medium/far rider scenarios. |
 | **v2.1 — World Scale + Streaming** | **Stage 7** | Measure production environment density and traversal rather than only fixed viewpoints. | RAM/VRAM, streaming/HLOD transition evidence, hitch percentiles, visible-instance/LOD distribution, long corridor traversal. |
@@ -31,6 +31,28 @@ The framework does not replace visual acceptance. A change can be faster and vis
 | **v4.0 — MVP Release Gate** | **Stage 10** | Final packaged-build, full-route acceptance on reference hardware. | start-to-finish run, packaged build, RAM/VRAM peaks, hitch/streaming evidence, PSO/first-use stutter proof, final regression baseline. |
 
 Versions are capability milestones, not independent product stages. They are implemented only when the corresponding roadmap stage creates a real measurement need.
+
+**Naming note:** `3G-R5` is a revision inside product Stage 3G. It is not the same thing as product **Stage 5**, which remains the trigger for Performance Framework v1.1.
+
+## Stage 3G R5 specialization
+
+The concrete Stage 3G R5 plan lives in [`STAGE3G_R5_RENDERING_TECH.md`](STAGE3G_R5_RENDERING_TECH.md).
+
+R5 uses v1.0 rather than creating a speculative new framework version. It adds these concrete clients of the existing framework:
+
+- deterministic 60–90 second route benchmark;
+- durable **Performance History** records;
+- average FPS + 1% low alongside percentile timing;
+- RAM/VRAM and hitch evidence where available;
+- exact-SHA Native/TSR/DLSS/FSR/XeSS comparisons;
+- temporal artifact review tied to the same exact SHA;
+- capability-gated low-latency backend evidence;
+- dynamic-resolution experiment records;
+- Frame Generation records that always keep base-rendered FPS separate from generated/displayed FPS.
+
+Performance History format is defined in [`../performance-history/README.md`](../performance-history/README.md).
+
+R5 may pull forward limited measurement capability that later becomes mandatory in v2.1/v4.0 (for example VRAM, hitches or first-use stutter), but doing so does not move the full Stage 7 or Stage 10 acceptance gates earlier.
 
 ## v1.0 contract
 
@@ -94,6 +116,23 @@ A high-poly asset may be acceptable if its measured world cost satisfies the pro
 
 The source-asset ledger remains owned by `docs/ASSET_PLAN.md`. This framework defines only the performance evidence attached to that lifecycle.
 
+## Performance History integration
+
+Performance History is the durable machine- and human-readable record of exact-SHA performance evidence. It complements, rather than replaces, Visual History.
+
+For each accepted R5 experiment, prefer a record containing:
+- scenario identity and deterministic seed;
+- hardware/driver/engine identity;
+- resolution, preset, screen percentage and backend selection;
+- FPS average and 1% low;
+- Frame/Game/Draw/RHI/GPU percentile summary;
+- hitch and RAM/VRAM evidence when available;
+- baseline deltas;
+- known visual artifacts;
+- accept/reject/defer decision.
+
+Frame Generation results must report base-rendered FPS separately from displayed/generated FPS. Hard acceptance is based on the real rendered path.
+
 ## Visual History integration
 
 For material visual changes, Visual History remains the visual source of truth.
@@ -124,6 +163,11 @@ Preferred layout as capabilities are introduced:
 docs/performance/
   PERFORMANCE_FRAMEWORK.md
   BUDGETS.md
+  STAGE3G_R5_RENDERING_TECH.md
+
+docs/performance-history/
+  README.md
+  ... exact-SHA stage/slice records ...
 
 Source/YetAnotherCyclingSim/Private/Tests/
   ... reusable sampler + scenario proofs ...
