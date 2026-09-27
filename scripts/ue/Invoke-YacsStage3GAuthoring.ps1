@@ -116,8 +116,7 @@ $env:YACS_STAGE3G_IMPORT_PROOF = $ImportProof
 try {
     Invoke-UEProcess -LogPath $ImportLog -Arguments @(
         $ProjectPath
-        '-run=PythonScript'
-        ('-script="' + $ImportScript + '"')
+        ('-ExecutePythonScript="' + $ImportScript + '"')
         '-Unattended'
         '-NoPause'
         '-NullRHI'
