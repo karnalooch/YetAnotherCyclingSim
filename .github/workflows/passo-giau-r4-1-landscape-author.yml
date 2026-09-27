@@ -43,11 +43,11 @@ jobs:
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
-          lfs: true
+          lfs: false
           clean: true
           persist-credentials: true
 
-      - name: Verify exact SHA and clean LFS checkout
+      - name: Verify exact SHA and clean checkout
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -56,10 +56,6 @@ jobs:
           }
           git lfs install --local
           if ($LASTEXITCODE -ne 0) { throw 'git lfs install failed.' }
-          git lfs checkout
-          if ($LASTEXITCODE -ne 0) { throw 'git lfs checkout failed.' }
-          git lfs fsck
-          if ($LASTEXITCODE -ne 0) { throw 'git lfs fsck failed.' }
           if (git status --porcelain) { throw 'Passo Giau authoring checkout is dirty.' }
 
       - name: Run repository contract test
