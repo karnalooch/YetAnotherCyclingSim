@@ -15,8 +15,8 @@
     "merged_at": null
   },
   "status": {
-    "technical_status": "WORKING",
-    "visual_status": "IN_REVIEW"
+    "technical_status": "CI_GREEN",
+    "visual_status": "VISUAL_REJECTED"
   },
   "git": {
     "branch": "feat/stage3g-pcg-biomes-r3",
@@ -33,16 +33,16 @@
   },
   "ci": {
     "workflow_name": "CyclingSim CI",
-    "workflow_run_id": null,
-    "workflow_run_number": null,
-    "proof_artifact_name": null,
-    "automation_status": "IN_PROGRESS",
-    "automation_summary": "Current real-biome-massing revision is under committed-SHA validation. Earlier run #408 was technically green but visually rejected because the new PCG graph assets were not yet consumed by the rendered reference world.",
-    "fresh_load_status": null,
-    "map_check_errors": null,
-    "map_check_warnings": null,
-    "lfs_fsck_status": null,
-    "visual_capture_status": "PENDING"
+    "workflow_run_id": 36302963634,
+    "workflow_run_number": 412,
+    "proof_artifact_name": "stage3g-full-validation-36302963634-1",
+    "automation_status": "PASS",
+    "automation_summary": "Exact-SHA Unreal build/Automation, Stage 3G full validation and Aggregate CI gate passed on 07e0803b.",
+    "fresh_load_status": "PASS",
+    "map_check_errors": 0,
+    "map_check_warnings": 0,
+    "lfs_fsck_status": "PASS",
+    "visual_capture_status": "PASS"
   },
   "worldgen": {
     "generation_seed": 42017,
@@ -100,12 +100,12 @@
     ]
   },
   "visual_review": {
-    "visual_change_detected": null,
-    "technical_acceptance": null,
-    "visual_acceptance": null,
-    "reviewer_summary": "Pending final committed-SHA captures for the real-biome-massing revision.",
-    "rejection_reason": null,
-    "next_step": "Require visibly changed 1200 m and 8000 m captures while preserving the accepted 4900 m forest, then compose BEFORE/NOW/AFTER triptychs."
+    "visual_change_detected": true,
+    "technical_acceptance": true,
+    "visual_acceptance": false,
+    "reviewer_summary": "R3 now visibly departs from R2, but the current bounds-aware boulder massing is not acceptable: valley masses are oversized and the 8000 m sector contains enormous/floating rock forms over or beside the road.",
+    "rejection_reason": "Visible change is real but composition/scale/grounding are wrong. Technical green does not satisfy the visual milestone.",
+    "next_step": "Reduce and ground valley/high-Alpine rock massing, preserve road sightline/clearance and rerun exact-SHA Visual History captures."
   },
   "prior_checkpoint": {
     "source_commit_sha": "0148f894e9036dfe6b7c1d7176922e65e7024a65",
@@ -125,14 +125,14 @@
       "before": {
         "commit_sha": "fd77094ffe0c8f29c3bd9949ba22079fc73fc1c5",
         "image": "R2 CI artifact baseline",
-        "sha256": null,
+        "sha256": "de391fb72074f2ad74d1ce8f7e2f7a2520f1581107ce40fa2f1c36503fae7abb",
         "status": "VISUAL_ACCEPTED"
       },
       "now": {
         "commit_sha": "07e0803bad809e87473ed3a461fdecf55e75ec76",
-        "image": null,
-        "sha256": null,
-        "status": "PENDING_CAPTURE"
+        "image": "CI artifact: FinalProof/Visual/01_meadow_valley_1200m_AFTER.png",
+        "sha256": "3b6f64d644d68f00bc5dada09b0fdd1199e7c36da1b76e1da178191620ceaaa0",
+        "status": "VISUAL_REJECTED"
       },
       "after": {
         "commit_sha": null,
@@ -141,7 +141,9 @@
         "status": "PENDING"
       },
       "triptych_image": null,
-      "pixel_diff": null
+      "pixel_diff": null,
+      "triptych_sha256": "8a35adc8ac287dcd9ed581ce21d00810bae9533ff3ac221b2f783a0925162c81",
+      "triptych_storage_status": "GENERATED_LOCALLY_PENDING_DURABLE_BINARY_UPLOAD"
     },
     {
       "capture_id": "02-forest-4900m",
@@ -152,14 +154,14 @@
       "before": {
         "commit_sha": "fd77094ffe0c8f29c3bd9949ba22079fc73fc1c5",
         "image": "R2 CI artifact baseline",
-        "sha256": null,
+        "sha256": "c1b1b6a3109eca4e4e9d355e9bdf4165b83f452fd9560ee2e4fef48165d33725",
         "status": "VISUAL_ACCEPTED"
       },
       "now": {
         "commit_sha": "07e0803bad809e87473ed3a461fdecf55e75ec76",
-        "image": null,
-        "sha256": null,
-        "status": "PENDING_CAPTURE"
+        "image": "CI artifact: FinalProof/Visual/02_forest_sector_4900m_AFTER.png",
+        "sha256": "b763628a30352dce4edd87be3e21f848a61b94587b2b07acac26bef1c5a8387f",
+        "status": "VISUAL_REJECTED"
       },
       "after": {
         "commit_sha": null,
@@ -168,7 +170,9 @@
         "status": "PENDING"
       },
       "triptych_image": null,
-      "pixel_diff": null
+      "pixel_diff": null,
+      "triptych_sha256": "c7866e3eff387abb07caf42d5ccff9dc2cce26240eaea4ce50256013f8b6e0ec",
+      "triptych_storage_status": "GENERATED_LOCALLY_PENDING_DURABLE_BINARY_UPLOAD"
     },
     {
       "capture_id": "03-high-alpine-8000m",
@@ -179,14 +183,14 @@
       "before": {
         "commit_sha": "fd77094ffe0c8f29c3bd9949ba22079fc73fc1c5",
         "image": "R2 CI artifact baseline",
-        "sha256": null,
+        "sha256": "d1491bbfd506d345897b220eec83f53167090e57e35f14ce38f9a961ef64cea3",
         "status": "VISUAL_ACCEPTED"
       },
       "now": {
         "commit_sha": "07e0803bad809e87473ed3a461fdecf55e75ec76",
-        "image": null,
-        "sha256": null,
-        "status": "PENDING_CAPTURE"
+        "image": "CI artifact: FinalProof/Visual/03_high_valley_mountains_8000m_AFTER.png",
+        "sha256": "4b92b2c98f2e59d7d33a4e33ae7f5eeab540a1072730d2163f3f43f92cdf9112",
+        "status": "VISUAL_REJECTED"
       },
       "after": {
         "commit_sha": null,
@@ -195,7 +199,9 @@
         "status": "PENDING"
       },
       "triptych_image": null,
-      "pixel_diff": null
+      "pixel_diff": null,
+      "triptych_sha256": "5f77ccec834778d805e5ef71a18ecec5cd7f13686c922ab707e9cd26216818c4",
+      "triptych_storage_status": "GENERATED_LOCALLY_PENDING_DURABLE_BINARY_UPLOAD"
     }
   ]
 }
