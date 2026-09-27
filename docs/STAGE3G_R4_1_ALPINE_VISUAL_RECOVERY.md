@@ -423,6 +423,65 @@ Requirements:
 
 Preferred approach is hybrid: real-world terrain data may provide strong macro forms, while YACS keeps its own fictional road, route physics, PCG biomes, materials, roadside dressing and art direction.
 
+## Current implementation status — Passo Giau terrain source (2026-09-28)
+
+The R4.1 macro-terrain recovery now has a proven remote source/preparation path.
+
+### Merged repository work
+
+- PR #211 — `feat(assets): add Passo Giau DEM bootstrap` — **MERGED** as `7db3a63e11b83c3d33f86f80e1d6687c05b8ea78`.
+- PR #212 — `feat(terrain): prepare Passo Giau R4.1 heightmap pipeline` — **MERGED** as `a98162fd590c5d3dc597a5c625d70e9860bb46c7`.
+- downloader: `scripts/assets/download_passo_giau_dem.py`;
+- preparation pipeline: `scripts/assets/prepare_passo_giau_heightmap.py`;
+- remote integration workflow: `.github/workflows/passo-giau-r4-1-terrain-spike.yml`.
+
+### Proven remote source
+
+Provider: **TINITALY 1.1 / INGV**  
+License: **CC BY 4.0**  
+AOI: approximately **8 x 8 km around Passo Giau**  
+Source grid: **800 x 800 at 10 m**  
+Source DEM SHA-256:
+
+`9a58a8aca8b1856507b4ca3e656f8c975518cbd89bd273036ef2483c148db610`
+
+Remote download/preparation run: **GitHub Actions #36357523138 — PASS**.
+
+Observed terrain range:
+
+- minimum: **1171.353 m**;
+- maximum: **2713.832 m**;
+- relief: **1542.479 m**;
+- mean elevation: **1993.256 m**.
+
+Prepared Unreal candidate:
+
+- **1009 x 1009** 16-bit heightmap;
+- matching little-endian `.r16`;
+- native-resolution 16-bit PNG;
+- hillshade preview;
+- `terrain-report.json`;
+- recommended XY scale: **793.651 cm/vertex**;
+- recommended Z Scale: **301.265**.
+
+The successful remote evidence is retained as GitHub Actions artifact
+`passo-giau-r4-1-terrain-spike`.
+
+This evidence proves the external terrain source and preparation path only. It
+does **not** constitute Unreal visual acceptance.
+
+### Active next step
+
+Issue #213 — **R4.1B — import Passo Giau DEM into isolated Unreal Landscape spike**.
+
+The first UE integration must use a separate map such as
+`/Game/Prototype/Maps/L_PassoGiauTerrainSpike`. It must not mutate
+`/Game/Prototype/Maps/L_CyclingTest`, route truth or physics.
+
+The Landscape spike is path A of the documented R4.1 terrain A/B. Geometry
+Script / generated tiled terrain remains path B until a rendered vertical slice
+is reviewed.
+
 ## 19. Definition of Done
 
 R4.1 is complete only when:

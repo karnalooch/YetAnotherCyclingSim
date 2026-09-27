@@ -93,6 +93,8 @@ Pełny kontrakt: [`STAGE3G_R4_1_ALPINE_VISUAL_RECOVERY.md`](STAGE3G_R4_1_ALPINE_
 
 **Entry do R5:** dopiero po human visual acceptance 1200/4900/8000, Visual History `AFTER`, exact-SHA performance gate i finalnym Stage 3G closeout proof.
 
+**Aktualny R4.1 checkpoint (28.09.2026):** Passo Giau / TINITALY source bootstrap i UE-heightmap preparation są już na `main` (PR #211/#212), remote preparation proof jest GREEN, a Issue #213 prowadzi izolowany Unreal Landscape spike. Dane źródłowe pozostają poza repo; provenance, parametry i evidence są zapisane w [`visual-history/stage-3g/R4-1-passo-giau-terrain-spike/summary.md`](visual-history/stage-3g/R4-1-passo-giau-terrain-spike/summary.md).
+
 Zasada wersjonowania: kolejnej wersji frameworka nie implementujemy „na zapas”. Wchodzi dopiero wtedy, gdy odpowiadający etap tworzy realny nowy koszt do zmierzenia. Stage 3G forest jest pierwszym klientem v1.0.
 
 ## Plan narzędzi i pluginów Unreal Engine
