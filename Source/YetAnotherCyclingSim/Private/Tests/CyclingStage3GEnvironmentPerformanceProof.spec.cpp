@@ -18,11 +18,11 @@
 #include "HAL/PlatformMisc.h"
 #include "HAL/PlatformTime.h"
 #include "Engine/Engine.h"
-#include "EngineGlobals.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "Tests/AutomationCommon.h"
 #include "RenderTimer.h"
+#include "GPUProfiler.h"
 
 #include "Cycling/CyclingPrototypePawn.h"
 
@@ -164,13 +164,26 @@ public:
 		const double RHIMs = FPlatformTime::ToMilliseconds(GRHIThreadTime);
 
 		double FrameAvgMs = 0.0;
-		// GetAverageUnitTimes may report 0 for GPU in an unattended editor
-		// viewport even when D3D12 timing is available. GGPUFrameTime is the
-		// engine's last-rendered-frame GPU duration in platform cycles and is
-		// also used by GameViewportClient when reasoning about frame rate.
-		double GpuMs = FPlatformTime::ToMilliseconds(GGPUFrameTime);
+		double GpuMs = 0.0;
 		double RenderAvgMs = 0.0;
 		double RhiAvgMs = 0.0;
+
+		// UE 5.8 exposes GPU frame timing through FRHIGPUFrameTimeHistory.
+		// Drain the history each sample and keep the newest positive value.
+		// The returned cycles use the platform time frequency, so the 64-bit
+		// conversion is authoritative for milliseconds.
+		static FRHIGPUFrameTimeHistory::FState GPUFrameTimeState;
+		uint64 GPUFrameTimeCycles64 = 0;
+		while (GPUFrameTimeState.PopFrameCycles(GPUFrameTimeCycles64)
+			!= FRHIGPUFrameTimeHistory::EResult::Empty)
+		{
+			if (GPUFrameTimeCycles64 > 0)
+			{
+				GpuMs = FPlatformTime::ToMilliseconds64(GPUFrameTimeCycles64);
+			}
+		}
+
+		// Keep the existing unit averages as supplementary/fallback evidence.
 		if (GEngine)
 		{
 			TArray<float> Averages;
