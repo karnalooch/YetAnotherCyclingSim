@@ -26,6 +26,9 @@ class Stage3GSourceAssetAuditContract(unittest.TestCase):
         self.assertIn("non_power_of_two_source", text)
         self.assertIn("normal_map_compression_missing", text)
         self.assertIn("get_material_used_textures", text)
+        self.assertIn("AssetRegistryHelpers.get_asset_registry", text)
+        self.assertIn("get_dependencies", text)
+        self.assertIn("on_disk_package_dependencies", text)
 
     def test_boulder_requires_lod_or_nanite_and_pcg_usage(self):
         text = AUDIT.read_text(encoding="utf-8")
