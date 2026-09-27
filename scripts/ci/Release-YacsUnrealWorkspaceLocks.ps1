@@ -275,7 +275,15 @@ if ($Remaining.Count -gt 0) {
     throw ("Workspace-scoped Unreal process tree remained alive: {0}" -f ($Description -join ', '))
 }
 
-$LockedLog = Join-Path $Workspace 'Saved/Logs/YetAnotherCyclingSim.log'
+# The reusable Stage 3G proof keeps its checkout in a persistent child
+# directory. A cancelled Unreal process can therefore leave the default UE log
+# locked below that child even when the outer workspace log is clear.
+$LockedLogCandidates = @(
+    (Join-Path $Workspace 'Saved/Logs/YetAnotherCyclingSim.log'),
+    (Join-Path $Workspace '_stage3g-full-worktree/Saved/Logs/YetAnotherCyclingSim.log')
+) | Select-Object -Unique
+
+foreach ($LockedLog in $LockedLogCandidates) {
 if (Test-Path -LiteralPath $LockedLog -PathType Leaf) {
     $Attempts = [Math]::Max(1, $LogReleaseTimeoutSec * 4)
     $LastDeleteError = $null
@@ -382,6 +390,8 @@ if (Test-Path -LiteralPath $LockedLog -PathType Leaf) {
             }
         }
     }
+}
+
 }
 
 Write-Host ("Workspace lock cleanup: PASS ({0} stale Unreal process candidate(s))." -f $Stale.Count)
