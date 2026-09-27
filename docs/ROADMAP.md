@@ -23,6 +23,7 @@
 13. Regresje czasu klatki, pamięci, shaderów, builda lub cooka porównujemy z zapisanym baseline'em; nie oceniamy ich wyłącznie „na oko”.
 14. Każdy zewnętrzny asset lub pakiet musi mieć przypisany etap, zastosowanie i status licencji zgodnie z [`ASSET_PLAN.md`](ASSET_PLAN.md).
 15. **Asset gate jest częścią Definition of Done etapu.** Minimalnych assetów przypisanych do wcześniejszego etapu nie wolno odkładać do późniejszego „art passu” tylko dlatego, że kod i CI są zielone. Etap może mieć ukończony rdzeń techniczny, ale pozostaje otwarty wizualnie, dopóki jego wymagane source/technical assets nie zostaną zaimportowane, zwalidowane i pokazane w wymaganym proofie.
+16. **Visual History jest obowiązkową bramką dla większych zmian wizualnych.** Zmiana może mieć zielony build/CI i jednocześnie zostać odrzucona wizualnie. Dla zmian wymagających oceny obrazu zapisujemy osobno status techniczny i wizualny oraz porównanie `BEFORE | NOW | AFTER` zgodnie z [`visual-history/README.md`](visual-history/README.md). `AFTER` powstaje dopiero po akceptacji; nie wolno kopiować do niego niezaakceptowanego `NOW`.
 
 ## Realistyczne oczekiwania czasowe
 
@@ -35,6 +36,25 @@ Zakresu nie zwiększamy bez aktualizacji dokumentu wymagań i roadmapy.
 ## Plan assetów
 
 Szczegółowa lista potrzebnych assetów, kolejność ich pozyskiwania oraz dwa rejestry — **Source Asset Ledger** i **Technical UE Asset Ledger** — znajdują się w [`ASSET_PLAN.md`](ASSET_PLAN.md). Technical UE assets (np. PCG Graph, Control Rig, IK Rig, Niagara, MetaSound) są pełnoprawnymi deliverables produkcyjnymi, mimo że nie są kupowanymi paczkami.
+
+## Visual History
+
+Źródłem prawdy dla porównywalnych dowodów wizualnych jest [`visual-history/`](visual-history/README.md).
+
+Dla większej zmiany wizualnej zapisujemy:
+
+- punkt roadmapy / wersję;
+- baseline `BEFORE` z ostatniego zaakceptowanego stanu;
+- bieżący `NOW` z dokładnym SHA/PR/CI;
+- `AFTER` dopiero po akceptacji;
+- trzy stabilne capture points dla Stage 3G: **1200 m / 4900 m / 8000 m**;
+- użyte assety, PCG graphy, seed, route clearance i inne wejścia wpływające na obraz;
+- osobny `technical_status` i `visual_status`;
+- powód odrzucenia oraz następny krok, jeżeli technicznie zielona zmiana nie daje oczekiwanego efektu wizualnego.
+
+Visual History nie zastępuje testów technicznych. Jest dodatkowym acceptance gate dla zmian, których sukces zależy od renderowanego wyniku.
+
+**Automatyzacja:** #193 — generator evidence pack ma tworzyć trzy tryptyki `BEFORE | NOW | AFTER`, HUD, SHA-256/manifest i trwały binary upload dla większych zmian wizualnych. Do czasu automatyzacji dopuszczalny jest ręczny pack, ale provenance i decyzja wizualna są obowiązkowe.
 
 ## Plan narzędzi i pluginów Unreal Engine
 
@@ -248,7 +268,7 @@ Stage 3 jest realizowany kolejno:
 
 ## 3G — Reference Environment Pass
 
-> **Status po audycie:** PR #155 udowodnił deterministyczny authoring, build/Automation, persistence, Map Check, LFS, capture harness i cleanup. To był wymagany proof techniczny, ale **nie dowód spełnienia poniższych kryteriów artystycznych**. Draft PR #162 jest bieżącą transzą R2: ma realny conifer oraz zapisane na swojej gałęzi `PCG_RouteExclusion` i `PCG_Forest`, ale finalny committed-SHA UE/full-validation/fresh-load/visual/performance proof nadal jest wymagany przed merge i przed oznaczeniem tych assetów jako `validated`.
+> **Status 27.09.2026:** R2 / PR #162 jest MERGED jako `fd77094…` i stanowi zaakceptowany forest baseline. Aktywna transza **R3 / #187 / Draft PR #192** ma zapisane `PCG_Valley` + `PCG_HighAlpine` oraz realne boulder massing. Po trzech jawnie zachowanych odrzuconych iteracjach bieżący NOW `58c89674…` / CI #417 przeszedł build, Automation, full Stage 3G proof i **Visual History acceptance** dla 1200/4900/8000 m. R3 pozostaje otwarte wyłącznie do synchronizacji z aktualnym `main`, finalnego exact-SHA CI, merge i zarejestrowania merged-main `AFTER`.
 
 - [ ] Ukształtować spójną dolinę otaczającą drogę zamiast czytelnych jako osobne kafle podpór terenu.
 - [ ] Zbudować kilka planów gór z wyraźną głębią i atmospheric perspective.
@@ -256,8 +276,18 @@ Stage 3 jest realizowany kolejno:
 - [ ] Uporządkować przejście materiałów/kolorystyki: meadow → forest → high Alpine.
 - [ ] Dodać wodę w dolinie, jeżeli poprawia uzgodnioną kompozycję bez tworzenia dużego nowego subsystemu.
 - [ ] Poprawić lighting / sky / fog przy zachowaniu czytelności drogi.
-- [ ] Wykonać porównywalny BEFORE/AFTER capture w 1200 m, 4900 m i 8000 m.
+- [ ] Wykonać i zarejestrować w **Visual History** porównywalny tryptyk `BEFORE | NOW | AFTER` dla 1200 m, 4900 m i 8000 m; `AFTER` dopiero po akceptacji wizualnej.
 - [ ] Potwierdzić build, Automation, Map Check, save/reopen, LFS/fresh-checkout i podstawowy 1080p performance sanity na komputerze referencyjnym.
+
+### Visual History gate 3G
+
+| Visual History | Roadmap slice | Status | Baseline / proof |
+|---|---|---|---|
+| `VH-3G-R1-001` | R1 — real Alpine ground + rocks | historical accepted baseline | PR #160 / `91c1150…` |
+| `VH-3G-R2-001` | R2 — deterministic PCG forest | **VISUAL_ACCEPTED / MERGED** | PR #162 / `fd77094…` / CI #398 |
+| `VH-3G-R3-001` | R3 — valley + high-Alpine PCG/massing | **NOW VISUAL_ACCEPTED · AFTER PENDING** | #187 / Draft PR #192 / CI #417 |
+
+R3 zachowuje wszystkie odrzucone checkpointy (#408 brak widocznej integracji, #412 oversized/floating massing, #415 brak podłoża dla distant massing). Bieżący NOW `58c89674…` / CI #417 jest **VISUAL_ACCEPTED** jako R3 biome/massing baseline. `AFTER` pozostaje PENDING do merge i merged-main proofu.
 
 ### Tooling gate 3G
 
@@ -267,9 +297,9 @@ Stage 3 jest realizowany kolejno:
 - [ ] Włączyć **PCG Geometry Script Interop** tylko wtedy, gdy pierwszy graph faktycznie potrzebuje przepływu PCG ↔ Dynamic/Static Mesh; nie jest warunkiem samego startu PCG.
 - [ ] Po zielonym #85 MCP smoke ocenić eksperymentalny **PCGToolset** UE 5.8 do tworzenia/modyfikacji PCG Graphów przez agenta.
 - [ ] **Water/Landmass** pozostawić wyłączone do decyzji, że jezioro/rzeka są częścią zaakceptowanej kompozycji 3G.
-- [ ] Pierwszy PCG proof ma być editor-time, deterministyczny i ograniczony do jednego sektora; runtime PCG nie jest wymaganiem MVP.
-- [ ] PCG może konsumować route spline/WorldSpec jako constraints, ale nie może stać się źródłem prawdy dla przebiegu trasy.
-- [ ] Zbudować i zarejestrować w Technical UE Asset Ledger pierwszy zestaw: `PCG_RouteExclusion`, `PCG_Valley`, `PCG_Forest`, `PCG_HighAlpine`; `PCG_RouteExclusion` jest już `prototype` w #162, pozostałe są `planned`; każdy przechodzi deterministic regenerate/proof zanim dostanie status `validated`.
+- [x] Pierwszy stock-PCG proof jest editor-time i deterministyczny: R2 / PR #162 utrwalił `PCG_RouteExclusion -> PCG_Forest` na zaakceptowanym committed-SHA proofie; runtime PCG nie jest wymaganiem MVP.
+- [x] PCG konsumuje WorldSpec i canonical route geometry jako constraints, ale nie jest źródłem prawdy dla przebiegu trasy; `FRouteGeometryProfile` pozostaje authoritative.
+- [ ] Domknąć pierwszy zestaw Technical UE Asset Ledger: `PCG_RouteExclusion` = `validated`, `PCG_Forest` = `validated` po R2/#162; `PCG_Valley` i `PCG_HighAlpine` = `reviewed` w R3/#192 i przechodzą do `validated` dopiero po 1200/8000 m Visual History acceptance.
 - [ ] Authoring assets PCG przechowywać poza `/Game/Generated/YACS/**`; katalog `Generated` jest wyłącznie dla odtwarzalnych outputów generatora.
 
 ### 3G-R5 — worldgen tooling research / adoption gate
@@ -901,4 +931,3 @@ Założenia dotyczące budżetów runtime/build, streamingu świata, przyszłej 
 
 Dokument ten definiuje ograniczenia architektoniczne i edge case'y, ale nie przenosi
 multiplayera ani otwartego świata do bieżącego zakresu MVP.
-

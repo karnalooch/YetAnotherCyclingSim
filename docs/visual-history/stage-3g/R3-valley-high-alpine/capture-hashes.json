@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "visual_history_id": "VH-3G-R3-001",
+  "accepted_now": {
+    "commit_sha": "58c89674656ddec1bce9473547d366f6798dcfb5",
+    "workflow_run_id": 36305204327,
+    "workflow_run_number": 417,
+    "proof_artifact_name": "stage3g-full-validation-36305204327-1"
+  },
+  "captures": [
+    {
+      "capture_id": "01-valley-1200m",
+      "before_sha256": "de391fb72074f2ad74d1ce8f7e2f7a2520f1581107ce40fa2f1c36503fae7abb",
+      "now_sha256": "169ff6fff360994cb0fe3eba078f611f0c380d7c9b416ef1782c304927280258",
+      "triptych_sha256": "c00630dcd6335b8cbb5a13cb9c0d8b6b54a7573ac2e25d344fe7b40297a6ada5",
+      "triptych_image": "captures/01_valley_1200m_triptych.jpg"
+    },
+    {
+      "capture_id": "02-forest-4900m",
+      "before_sha256": "c1b1b6a3109eca4e4e9d355e9bdf4165b83f452fd9560ee2e4fef48165d33725",
+      "now_sha256": "56233de89d8629524b9d85cc7b2ecd367a43887d8dfc42f2921018c44d326a2c",
+      "triptych_sha256": "621449067618a96687b51e38ef8495d7a49030a7fe6c8f92621d7a9f3d54adc9",
+      "triptych_image": "captures/02_forest_4900m_triptych.jpg"
+    },
+    {
+      "capture_id": "03-high-alpine-8000m",
+      "before_sha256": "d1491bbfd506d345897b220eec83f53167090e57e35f14ce38f9a961ef64cea3",
+      "now_sha256": "189e3f63fabbbaa85b96d9cadc918e19af1dc8f69c80d9cba6fba4638126b317",
+      "triptych_sha256": "f8ddd03b30c0eeec6d97665ca44d4f3bf6922787a943226aa7f3e0d399e8b33f",
+      "triptych_image": "captures/03_high_alpine_8000m_triptych.jpg"
+    }
+  ],
+  "note": "BEFORE is the R2 accepted baseline. NOW is the R3 visual-accepted pre-merge revision. Repository-retained triptychs embed both; AFTER remains pending until merged-main proof."
+}
