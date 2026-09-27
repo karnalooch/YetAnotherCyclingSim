@@ -90,6 +90,7 @@ jobs:
           $bootstrap = Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup/scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
           & $bootstrap -Workspace $env:GITHUB_WORKSPACE
 
+          # UE can leave its default log locked inside the persistent child checkout.
           $stage3gWorktree = Join-Path $env:GITHUB_WORKSPACE '_stage3g-full-worktree'
           if (Test-Path -LiteralPath $stage3gWorktree) {
             Write-Host "Releasing stale Unreal locks inside persistent Stage 3G worktree: $stage3gWorktree"
