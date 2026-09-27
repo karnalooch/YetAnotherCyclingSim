@@ -90,9 +90,7 @@ class ReusableStage3GFullWorkflowContractTests(unittest.TestCase):
 
     def test_lane_uploads_only_proof_and_always_cleans(self):
         self.assertGreaterEqual(
-            self.workflow.count(
-                "working-directory: ${{ env.STAGE3G_WORKTREE_DIR }}"
-            ),
+            self.workflow.count("working-directory: ${{ env.STAGE3G_WORKTREE_DIR }}"),
             3,
         )
         self.assertIn(
@@ -106,7 +104,9 @@ class ReusableStage3GFullWorkflowContractTests(unittest.TestCase):
         self.assertIn("if: ${{ always() }}", self.workflow)
         self.assertIn("git reset --hard", self.workflow)
         self.assertIn("git clean -ffdx", self.workflow)
-        self.assertIn("Remove-Item -LiteralPath $worktree -Recurse -Force", self.workflow)
+        self.assertIn(
+            "Remove-Item -LiteralPath $worktree -Recurse -Force", self.workflow
+        )
 
 
 if __name__ == "__main__":
