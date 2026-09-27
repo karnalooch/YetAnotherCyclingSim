@@ -46,7 +46,7 @@ CI #421 ran against exact merged SHA `02ff23f0a24228432ae9c34eb65aa4cb3694ae1d`.
 - Required distances: **1200 / 4900 / 8000 m**
 - Proof artifact: `stage3g-full-validation-36308910299-1`
 
-The artifact proves successful 1080p capture and the Stage 3G functional/visual contract. It does **not** contain a dedicated environment FPS/GPU budget result, so the separate performance-sanity gate remains open where the asset plan requires it.
+The artifact proves successful 1080p capture and the Stage 3G functional/visual contract. It did **not** itself contain a dedicated environment FPS/GPU budget result. That separate gate is now closed by PR #197 / exact implementation SHA `a59d1f3d…` / Stage 3G environment performance run #13.
 
 ## Final captures
 
@@ -74,4 +74,31 @@ Each final triptych is 1920×576 and contains genuine R2, accepted R3 pre-merge 
 - Visual acceptance: **YES**
 - Merge acceptance: **YES**
 - Visual History entry: **CLOSED**
-- Remaining work: continue the broader Stage 3G reference-environment gates without reopening R3 unless a regression is discovered.
+- Remaining work: continue the broader Stage 3G terrain/road/atmosphere and per-source-asset lifecycle gates without reopening R3 unless a regression is discovered.
+
+
+## Post-merge Stage 3G environment performance proof
+
+R3's merged visual baseline was subsequently exercised by the dedicated reference-PC
+environment performance gate introduced in PR #197.
+
+- exact performance implementation SHA: `a59d1f3def60a7099c25ff15747f91c512fb71db`
+- Stage 3G environment performance: **run #13 / 36319841165 — PASS**
+- ordinary CyclingSim CI for the same implementation SHA: **#434 / 36319843770 — PASS**
+- resolution: **1920×1080**
+- reference GPU: **RTX 2070 Super**
+- target: **60 FPS / 16.6667 ms p95**
+- over-budget frame allowance: **<= 5%**
+- missing GPU timing: **fail-closed**
+
+| Sector | Frame p95 | GPU p95 | Average FPS | Frame samples > 16.67 ms |
+|---|---:|---:|---:|---:|
+| Valley 1200 m | **9.032 ms** | **8.063 ms** | **124.06** | **0.00%** |
+| Forest 4900 m | **11.443 ms** | **10.641 ms** | **94.52** | **0.00%** |
+| High Alpine 8000 m | **9.476 ms** | **7.281 ms** | **128.54** | **0.00%** |
+
+The performance gate therefore validates the aggregate R3 environment baseline for the
+Technical UE Asset Ledger entries `PCG_Valley` and `PCG_HighAlpine`. It does not waive
+per-source-asset LOD/Nanite/instancing requirements.
+
+Durable proof summary: `docs/STAGE3G_ENVIRONMENT_PERFORMANCE.md`.

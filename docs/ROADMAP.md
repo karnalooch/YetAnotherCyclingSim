@@ -268,7 +268,7 @@ Stage 3 jest realizowany kolejno:
 
 ## 3G — Reference Environment Pass
 
-> **Status 27.09.2026:** R2 / PR #162 jest MERGED jako `fd77094…` i stanowi zaakceptowany forest baseline. **R3 / #187 / PR #192 jest MERGED** jako `02ff23f0…`: NOW `58c89674…` przeszedł Visual History acceptance w CI #417, zsynchronizowany SHA `d7dd75a8…` przeszedł finalny pre-merge CI #420, a merged `main` `02ff23f0…` przeszedł pełny Stage 3G proof w CI #421. Finalne `BEFORE | NOW | AFTER` dla 1200/4900/8000 m są trwale zapisane. **R3 jest zamknięte; Stage 3G jako całość pozostaje otwarte** dla niżej wymienionych prac terrain/road/atmosphere oraz jawnego environment performance sanity.
+> **Status 27.09.2026:** R2 / PR #162 jest MERGED jako `fd77094…`; R3 / #187 / PR #192 jest MERGED jako `02ff23f0…` z zamkniętym Visual History `VH-3G-R3-001`. Formalny **Stage 3G environment-performance gate** również przeszedł: PR #197 / exact implementation SHA `a59d1f3d…` / run #13 mierzył realne 1920×1080 na RTX 2070 Super i uzyskał frame/GPU p95 odpowiednio **9.032/8.063 ms (valley), 11.443/10.641 ms (forest), 9.476/7.281 ms (high Alpine)** przy budżecie 16.667 ms i 0% próbek frame over-budget. `PCG_Valley` i `PCG_HighAlpine` spełniają więc Technical UE Asset Ledger jako `validated`. **Stage 3G jako całość nadal pozostaje otwarte** dla poniższych prac terrain/road/atmosphere oraz niedomkniętych per-source-asset LOD/instancing gate'ów.
 
 - [ ] Ukształtować spójną dolinę otaczającą drogę zamiast czytelnych jako osobne kafle podpór terenu.
 - [ ] Zbudować kilka planów gór z wyraźną głębią i atmospheric perspective.
@@ -276,8 +276,8 @@ Stage 3 jest realizowany kolejno:
 - [ ] Uporządkować przejście materiałów/kolorystyki: meadow → forest → high Alpine.
 - [ ] Dodać wodę w dolinie, jeżeli poprawia uzgodnioną kompozycję bez tworzenia dużego nowego subsystemu.
 - [ ] Poprawić lighting / sky / fog przy zachowaniu czytelności drogi.
-- [ ] Wykonać i zarejestrować w **Visual History** porównywalny tryptyk `BEFORE | NOW | AFTER` dla 1200 m, 4900 m i 8000 m; `AFTER` dopiero po akceptacji wizualnej.
-- [ ] Potwierdzić build, Automation, Map Check, save/reopen, LFS/fresh-checkout i podstawowy 1080p performance sanity na komputerze referencyjnym.
+- [x] Wykonać i zarejestrować w **Visual History** porównywalny tryptyk `BEFORE | NOW | AFTER` dla 1200 m, 4900 m i 8000 m; finalny merged-main AFTER jest zapisany w `VH-3G-R3-001`.
+- [x] Potwierdzić build, Automation, Map Check, save/reopen, LFS/fresh-checkout i podstawowy 1080p/60 performance sanity na komputerze referencyjnym. Proof: PR #197 / run #13 / `docs/STAGE3G_ENVIRONMENT_PERFORMANCE.md`.
 
 ### Visual History gate 3G
 
@@ -287,7 +287,7 @@ Stage 3 jest realizowany kolejno:
 | `VH-3G-R2-001` | R2 — deterministic PCG forest | **VISUAL_ACCEPTED / MERGED** | PR #162 / `fd77094…` / CI #398 |
 | `VH-3G-R3-001` | R3 — valley + high-Alpine PCG/massing | **VISUAL_ACCEPTED / MERGED** | #187 / PR #192 / `02ff23f0…` / CI #421 |
 
-R3 zachowuje wszystkie odrzucone checkpointy (#408 brak widocznej integracji, #412 oversized/floating massing, #415 brak podłoża dla distant massing). NOW `58c89674…` / CI #417 został zaakceptowany wizualnie, a finalny AFTER pochodzi z merged `main` `02ff23f0…` / CI #421. Ten wpis Visual History jest zamknięty; dalszy polish świata należy do pozostałych gate'ów Stage 3G i późniejszego Stage 7.
+R3 zachowuje wszystkie odrzucone checkpointy (#408 brak widocznej integracji, #412 oversized/floating massing, #415 brak podłoża dla distant massing). NOW `58c89674…` / CI #417 został zaakceptowany wizualnie, a finalny AFTER pochodzi z merged `main` `02ff23f0…` / CI #421. Ten wpis Visual History jest zamknięty; dalszy polish świata należy do pozostałych gate'ów Stage 3G i późniejszego Stage 7.\n\n**Performance baseline 3G:** PR #197 / run #13 ustanawia trwały reference-PC sanity baseline dla obecnego accepted environment. Najcięższy z trzech punktów to forest 4900 m: frame p95 **11.443 ms**, GPU p95 **10.641 ms**, średnio **94.52 FPS** przy 1920×1080. To zamyka aggregate environment-performance gate, ale nie zastępuje przyszłego per-asset LOD/Nanite/instancing ani Stage 7 full-route RAM/VRAM/hitch/streaming proof.
 
 ### Tooling gate 3G
 
@@ -299,7 +299,7 @@ R3 zachowuje wszystkie odrzucone checkpointy (#408 brak widocznej integracji, #4
 - [ ] **Water/Landmass** pozostawić wyłączone do decyzji, że jezioro/rzeka są częścią zaakceptowanej kompozycji 3G.
 - [x] Pierwszy stock-PCG proof jest editor-time i deterministyczny: R2 / PR #162 utrwalił `PCG_RouteExclusion -> PCG_Forest` na zaakceptowanym committed-SHA proofie; runtime PCG nie jest wymaganiem MVP.
 - [x] PCG konsumuje WorldSpec i canonical route geometry jako constraints, ale nie jest źródłem prawdy dla przebiegu trasy; `FRouteGeometryProfile` pozostaje authoritative.
-- [ ] Domknąć pierwszy zestaw Technical UE Asset Ledger: `PCG_RouteExclusion` = `validated`, `PCG_Forest` = `validated` po R2/#162; `PCG_Valley` i `PCG_HighAlpine` = `reviewed` w R3/#192 i przechodzą do `validated` dopiero po 1200/8000 m Visual History acceptance.
+- [x] Domknąć pierwszy zestaw Technical UE Asset Ledger: `PCG_RouteExclusion`, `PCG_Forest`, `PCG_Valley` i `PCG_HighAlpine` = `validated`; Valley/HighAlpine mają R3 Visual History + merged-main proof oraz osobny 1080p/60 performance gate PR #197 / run #13.
 - [ ] Authoring assets PCG przechowywać poza `/Game/Generated/YACS/**`; katalog `Generated` jest wyłącznie dla odtwarzalnych outputów generatora.
 
 ### 3G-R5 — worldgen tooling research / adoption gate
