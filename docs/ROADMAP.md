@@ -83,6 +83,16 @@ Performance ma własny **cross-stage lifecycle**, ale nie jest osobnym etapem pr
 
 **Stage 3G revision R5** jest konkretnym performance/rendering-tech pass-em wewnątrz **Performance Framework v1.0**; nie należy go mylić z produktowym **Stage 5**, który uruchamia framework v1.1. Szczegółowy zakres R5 jest w [`performance/STAGE3G_R5_RENDERING_TECH.md`](performance/STAGE3G_R5_RENDERING_TECH.md), a trwały format dowodów w [`performance-history/README.md`](performance-history/README.md).
 
+### Stage 3G R4.1 — Alpine Visual Recovery
+
+Post-merge review R4 wykazał rozjazd między poprawnym technicznie route-aware grounding a oczekiwanym poziomem wizualnym. PR #200 pozostaje ważnym technicznym krokiem, ale **nie jest zaakceptowanym visual closeoutem Stage 3G**. R5 pozostaje zablokowane do czasu zamknięcia R4.1.
+
+R4.1 używa jednego golden vertical slice przy 1200 m do ustalenia języka świata przed propagacją na pełną trasę. Zakres obejmuje makro/meso terrain, spójny terrain-material foundation, cliffs/rocks/scree, warstwowy forest, minimalny roadside kit oraz deterministyczny atmosphere/lighting pass. Physics/route authority pozostaje bez zmian.
+
+Pełny kontrakt: [`STAGE3G_R4_1_ALPINE_VISUAL_RECOVERY.md`](STAGE3G_R4_1_ALPINE_VISUAL_RECOVERY.md).
+
+**Entry do R5:** dopiero po human visual acceptance 1200/4900/8000, Visual History `AFTER`, exact-SHA performance gate i finalnym Stage 3G closeout proof.
+
 Zasada wersjonowania: kolejnej wersji frameworka nie implementujemy „na zapas”. Wchodzi dopiero wtedy, gdy odpowiadający etap tworzy realny nowy koszt do zmierzenia. Stage 3G forest jest pierwszym klientem v1.0.
 
 ## Plan narzędzi i pluginów Unreal Engine
