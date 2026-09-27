@@ -1,6 +1,7 @@
 #include "PCG/Stage3GBiomeCandidatesSettings.h"
 
 #include "Cycling/AlpineJourneyGeometry.h"
+#include "Cycling/Stage3GRouteExclusion.h"
 #include "Data/PCGBasePointData.h"
 #include "PCGContext.h"
 #include "PCGPin.h"
@@ -244,8 +245,25 @@ bool FStage3GBiomeCandidatesElement::ExecuteInternal(FPCGContext* Context) const
 					BandMinM + BandWidthM);
 				const double LateralOffsetM = Random.FRandRange(BandMinM, BandMaxM);
 
-				const FVector CandidateM =
+				FVector CandidateM =
 					RoutePositionM + Lateral * (SideSign * LateralOffsetM);
+				CyclingStage3G::FRoutePresentationSurfaceResult Surface;
+				FString SurfaceError;
+				if (!CyclingStage3G::TryEvaluateRoutePresentationSurface(
+						SampleDistanceM,
+						SideSign * LateralOffsetM,
+						Surface,
+						SurfaceError))
+				{
+					UE_LOG(
+						LogTemp,
+						Error,
+						TEXT("YACS Biome Candidates: presentation surface failed: %s"),
+						*SurfaceError);
+					Context->OutputData.bCancelExecution = true;
+					return true;
+				}
+				CandidateM.Z += Surface.SurfaceRiseM;
 				const double UniformScale = Random.FRandRange(
 					Settings->MinUniformScale,
 					Settings->MaxUniformScale);

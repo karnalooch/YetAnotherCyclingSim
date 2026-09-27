@@ -118,6 +118,54 @@ bool FStage3GRouteExclusionPolylineTest::RunTest(const FString& Parameters)
 	return true;
 }
 
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FStage3GPresentationSurfaceTest,
+	"CyclingStage3World.RouteExclusion.PresentationSurface",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FStage3GPresentationSurfaceTest::RunTest(const FString& Parameters)
+{
+	using namespace CyclingStage3G;
+
+	FString Error;
+	FRoutePresentationSurfaceResult Result;
+
+	TestTrue(TEXT("valley road corridor resolves"),
+		TryEvaluateRoutePresentationSurface(1200.0, 8.0, Result, Error));
+	TestTrue(TEXT("road corridor stays flat"),
+		FMath::IsNearlyZero(Result.SurfaceRiseM));
+	TestTrue(TEXT("valley profile exposes expected support width"),
+		FMath::IsNearlyEqual(Result.TerrainHalfWidthM, 110.0));
+
+	TestTrue(TEXT("valley outer support resolves"),
+		TryEvaluateRoutePresentationSurface(1200.0, 110.0, Result, Error));
+	TestTrue(TEXT("valley reaches 10 m rise"),
+		FMath::IsNearlyEqual(Result.SurfaceRiseM, 10.0));
+
+	FRoutePresentationSurfaceResult Left;
+	FRoutePresentationSurfaceResult Right;
+	TestTrue(TEXT("forest left resolves"),
+		TryEvaluateRoutePresentationSurface(4900.0, -36.0, Left, Error));
+	TestTrue(TEXT("forest right resolves"),
+		TryEvaluateRoutePresentationSurface(4900.0, 36.0, Right, Error));
+	TestTrue(TEXT("surface profile is symmetric"),
+		FMath::IsNearlyEqual(Left.SurfaceRiseM, Right.SurfaceRiseM));
+	TestTrue(TEXT("forest support is narrower than valley"),
+		FMath::IsNearlyEqual(Left.TerrainHalfWidthM, 60.0));
+
+	TestTrue(TEXT("high Alpine outer support resolves"),
+		TryEvaluateRoutePresentationSurface(8000.0, 220.0, Result, Error));
+	TestTrue(TEXT("high Alpine reaches 28 m rise"),
+		FMath::IsNearlyEqual(Result.SurfaceRiseM, 28.0));
+
+	const double Nan = std::numeric_limits<double>::quiet_NaN();
+	TestFalse(TEXT("non-finite surface lateral rejected"),
+		TryEvaluateRoutePresentationSurface(1200.0, Nan, Result, Error));
+	return true;
+}
+
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FStage3GRouteExclusionValidationTest,
 	"CyclingStage3World.RouteExclusion.Validation",

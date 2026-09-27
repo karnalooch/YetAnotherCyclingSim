@@ -46,6 +46,30 @@ namespace CyclingStage3G
 		}
 	}
 
+	constexpr double PresentationCorridorHalfWidthM = 8.0;
+	constexpr double ValleyEndM = 3700.0;
+	constexpr double ForestEndM = 6200.0;
+
+	struct FPresentationSurfaceProfile
+	{
+		double TerrainHalfWidthM = 0.0;
+		double MaxRiseM = 0.0;
+	};
+
+	FPresentationSurfaceProfile ResolvePresentationSurfaceProfile(double RouteDistanceM)
+	{
+		if (RouteDistanceM < ValleyEndM)
+		{
+			return {110.0, 10.0};
+		}
+		if (RouteDistanceM < ForestEndM)
+		{
+			return {60.0, 8.0};
+		}
+		return {220.0, 28.0};
+	}
+
+
 	bool TryEvaluateRouteExclusion(
 		const CyclingSimulation::FRouteGeometryProfile& RouteGeometry,
 		const FVector& CandidatePositionM,
@@ -108,6 +132,59 @@ namespace CyclingStage3G
 		OutResult.ClearanceFromProtectedCorridorM =
 			MinDistanceM - ProtectedHalfWidthM;
 		OutResult.bExcluded = MinDistanceM <= ProtectedHalfWidthM;
+		return true;
+	}
+
+	bool TryEvaluateRoutePresentationSurface(
+		double RouteDistanceM,
+		double SignedLateralOffsetM,
+		FRoutePresentationSurfaceResult& OutResult,
+		FString& OutError)
+	{
+		OutResult = FRoutePresentationSurfaceResult{};
+		OutError.Reset();
+
+		if (!std::isfinite(RouteDistanceM) || RouteDistanceM < 0.0)
+		{
+			OutError = TEXT("presentation surface route distance must be finite and non-negative");
+			return false;
+		}
+		if (!std::isfinite(SignedLateralOffsetM))
+		{
+			OutError = TEXT("presentation surface lateral offset must be finite");
+			return false;
+		}
+
+		const FPresentationSurfaceProfile Profile =
+			ResolvePresentationSurfaceProfile(RouteDistanceM);
+		if (Profile.TerrainHalfWidthM <= PresentationCorridorHalfWidthM
+			|| Profile.MaxRiseM < 0.0)
+		{
+			OutError = TEXT("presentation surface profile is invalid");
+			return false;
+		}
+
+		const double LateralM = FMath::Abs(SignedLateralOffsetM);
+		const double ClampedLateralM = FMath::Min(
+			LateralM,
+			Profile.TerrainHalfWidthM);
+		double SurfaceRiseM = 0.0;
+		if (ClampedLateralM > PresentationCorridorHalfWidthM)
+		{
+			const double Alpha = FMath::Clamp(
+				(ClampedLateralM - PresentationCorridorHalfWidthM)
+					/ (Profile.TerrainHalfWidthM - PresentationCorridorHalfWidthM),
+				0.0,
+				1.0);
+			const double SmoothAlpha =
+				Alpha * Alpha * (3.0 - 2.0 * Alpha);
+			SurfaceRiseM = Profile.MaxRiseM * SmoothAlpha;
+		}
+
+		OutResult.CorridorHalfWidthM = PresentationCorridorHalfWidthM;
+		OutResult.TerrainHalfWidthM = Profile.TerrainHalfWidthM;
+		OutResult.MaxRiseM = Profile.MaxRiseM;
+		OutResult.SurfaceRiseM = SurfaceRiseM;
 		return true;
 	}
 }
