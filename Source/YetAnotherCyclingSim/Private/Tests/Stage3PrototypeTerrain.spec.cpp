@@ -46,8 +46,8 @@ bool FStage3PrototypeTerrainBuildTest::RunTest(const FString& Parameters)
 
 		TestEqual(TEXT("one road tile per 10 m geometry interval"),
 			Terrain->GetRoadInstanceCount(), 1000);
-		TestEqual(TEXT("terrain support uses 50 m tile stride"),
-			Terrain->GetTerrainInstanceCount(), 200);
+		TestEqual(TEXT("terrain support uses seven route-aware bands per 50 m slice"),
+			Terrain->GetTerrainInstanceCount(), 1400);
 		TestTrue(TEXT("target-density understory is materially populated"),
 			Terrain->GetForestPropInstanceCount() >= 100);
 		TestEqual(TEXT("high-mountain progression prop count remains deterministic"),

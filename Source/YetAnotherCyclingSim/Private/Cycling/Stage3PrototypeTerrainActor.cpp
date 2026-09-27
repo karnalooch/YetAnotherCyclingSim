@@ -37,7 +37,10 @@ namespace Stage3PrototypeTerrainInternal
 		EdgeLineHeightM * 0.5 + 0.02;
 
 	constexpr int32 TerrainStrideSamples = 5;
+	constexpr int32 TerrainShoulderBandsPerSide = 3;
+	constexpr int32 TerrainBandsPerSlice = 1 + TerrainShoulderBandsPerSide * 2;
 	constexpr double TerrainThicknessM = 8.0;
+	constexpr double RoadGroundCorridorHalfWidthM = 8.0;
 	constexpr double ValleyTerrainWidthM = 220.0;
 	constexpr double ForestTerrainWidthM = 120.0;
 	constexpr double MountainTerrainWidthM = 440.0;
@@ -100,6 +103,157 @@ namespace Stage3PrototypeTerrainInternal
 			&& Scale.X > 0.0
 			&& Scale.Y > 0.0
 			&& Scale.Z > 0.0;
+	}
+
+
+	bool TryResolveHorizontalRight(
+		const CyclingSimulation::FRouteGeometryProfile& Geometry,
+		double DistanceM,
+		FVector& OutPositionM,
+		FVector& OutRight,
+		FString& OutError);
+
+	bool TryResolvePresentationSurfaceRise(
+		double RouteDistanceM,
+		double SignedLateralOffsetM,
+		double& OutSurfaceRiseM,
+		FString& OutError)
+	{
+		CyclingStage3G::FRoutePresentationSurfaceResult Surface;
+		if (!CyclingStage3G::TryEvaluateRoutePresentationSurface(
+			RouteDistanceM,
+			SignedLateralOffsetM,
+			Surface,
+			OutError))
+		{
+			return false;
+		}
+		OutSurfaceRiseM = Surface.SurfaceRiseM;
+		return true;
+	}
+
+	bool TryMakeTerrainShoulderTransform(
+		const CyclingSimulation::FRouteGeometryProfile& Geometry,
+		double StartDistanceM,
+		double EndDistanceM,
+		double SignedInnerLateralM,
+		double SignedOuterLateralM,
+		double ThicknessM,
+		double AddedLengthM,
+		FTransform& OutTransform,
+		FString& OutError)
+	{
+		const double MidDistanceM = 0.5 * (StartDistanceM + EndDistanceM);
+
+		FVector StartM;
+		FVector EndM;
+		FVector MidRoutePositionM;
+		FVector Right;
+		if (!Geometry.TrySamplePosition(StartDistanceM, StartM, OutError)
+			|| !Geometry.TrySamplePosition(EndDistanceM, EndM, OutError)
+			|| !TryResolveHorizontalRight(
+				Geometry,
+				MidDistanceM,
+				MidRoutePositionM,
+				Right,
+				OutError))
+		{
+			return false;
+		}
+
+		double InnerRiseM = 0.0;
+		double OuterRiseM = 0.0;
+		if (!TryResolvePresentationSurfaceRise(
+				MidDistanceM,
+				SignedInnerLateralM,
+				InnerRiseM,
+				OutError)
+			|| !TryResolvePresentationSurfaceRise(
+				MidDistanceM,
+				SignedOuterLateralM,
+				OuterRiseM,
+				OutError))
+		{
+			return false;
+		}
+
+		FVector Forward = EndM - StartM;
+		if (!Forward.Normalize())
+		{
+			OutError = TEXT("Stage 3G terrain shoulder route tangent is degenerate");
+			return false;
+		}
+
+		FVector BaseUp = FVector::CrossProduct(Forward, Right);
+		if (!BaseUp.Normalize())
+		{
+			OutError = TEXT("Stage 3G terrain shoulder up vector is degenerate");
+			return false;
+		}
+		if (BaseUp.Z < 0.0)
+		{
+			BaseUp *= -1.0;
+		}
+
+		const double AcrossDistanceM =
+			SignedOuterLateralM - SignedInnerLateralM;
+		if (!FMath::IsFinite(AcrossDistanceM)
+			|| FMath::Abs(AcrossDistanceM) <= UE_SMALL_NUMBER)
+		{
+			OutError = TEXT("Stage 3G terrain shoulder lateral band is invalid");
+			return false;
+		}
+
+		const double RiseDeltaM = OuterRiseM - InnerRiseM;
+		FVector AcrossTangent =
+			Right + BaseUp * (RiseDeltaM / AcrossDistanceM);
+		if (!AcrossTangent.Normalize())
+		{
+			OutError = TEXT("Stage 3G terrain shoulder across tangent is degenerate");
+			return false;
+		}
+
+		FVector SurfaceNormal = FVector::CrossProduct(Forward, AcrossTangent);
+		if (!SurfaceNormal.Normalize())
+		{
+			OutError = TEXT("Stage 3G terrain shoulder normal is degenerate");
+			return false;
+		}
+		if (SurfaceNormal.Z < 0.0)
+		{
+			SurfaceNormal *= -1.0;
+		}
+
+		const double SignedMidLateralM =
+			0.5 * (SignedInnerLateralM + SignedOuterLateralM);
+		FVector SurfaceMidpointM =
+			0.5 * (StartM + EndM)
+			+ Right * SignedMidLateralM;
+		SurfaceMidpointM.Z +=
+			0.5 * (InnerRiseM + OuterRiseM) - RoadThicknessM;
+
+		const double LengthM = (EndM - StartM).Size();
+		const double SurfaceWidthM = std::sqrt(
+			AcrossDistanceM * AcrossDistanceM
+			+ RiseDeltaM * RiseDeltaM);
+		const FRotator Rotation =
+			FRotationMatrix::MakeFromXZ(Forward, SurfaceNormal).Rotator();
+
+		FVector BoxMidpointM =
+			SurfaceMidpointM - SurfaceNormal * (ThicknessM * 0.5);
+		OutTransform = FTransform(
+			Rotation,
+			BoxMidpointM * MetresToCentimetres,
+			FVector(
+				LengthM + AddedLengthM,
+				SurfaceWidthM,
+				ThicknessM));
+		if (!IsFiniteTransform(OutTransform))
+		{
+			OutError = TEXT("Stage 3G terrain shoulder transform is invalid");
+			return false;
+		}
+		return true;
 	}
 
 	bool HasTerrainFootprintSupport(
@@ -581,43 +735,105 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 		const int32 EndIndex = FMath::Min(
 			StartIndex + TerrainStrideSamples,
 			Samples.Num() - 1);
-		const double MidDistanceM =
-			0.5 * (Samples[StartIndex].DistanceM + Samples[EndIndex].DistanceM);
+		const double StartDistanceM = Samples[StartIndex].DistanceM;
+		const double EndDistanceM = Samples[EndIndex].DistanceM;
+		const double MidDistanceM = 0.5 * (StartDistanceM + EndDistanceM);
 
 		double WidthM = ValleyTerrainWidthM;
-		if (MidDistanceM >= MountainStartM)
-		{
-			WidthM = MountainTerrainWidthM;
-		}
-		else if (MidDistanceM >= ForestStartM)
-		{
-			WidthM = ForestTerrainWidthM;
-		}
-
-		const FTransform TerrainTransform = MakeAlignedBoxTransform(
-			Samples[StartIndex].PositionM,
-			Samples[EndIndex].PositionM,
-			WidthM,
-			TerrainThicknessM,
-			5.0,
-			-(TerrainThicknessM * 0.5 + RoadThicknessM));
-		if (!IsFiniteTransform(TerrainTransform))
-		{
-			OutError = FString::Printf(
-				TEXT("prototype terrain transform beginning at sample %d is invalid"),
-				StartIndex);
-			return false;
-		}
 		UHierarchicalInstancedStaticMeshComponent* TargetTerrain = TerrainTiles;
 		if (MidDistanceM >= MountainStartM)
 		{
+			WidthM = MountainTerrainWidthM;
 			TargetTerrain = HighAlpineTerrainTiles;
 		}
 		else if (MidDistanceM >= ForestStartM)
 		{
+			WidthM = ForestTerrainWidthM;
 			TargetTerrain = ForestTerrainTiles;
 		}
-		TargetTerrain->AddInstance(TerrainTransform, false);
+
+		CyclingStage3G::FRoutePresentationSurfaceResult SurfaceProfile;
+		if (!CyclingStage3G::TryEvaluateRoutePresentationSurface(
+				MidDistanceM,
+				0.0,
+				SurfaceProfile,
+				OutError))
+		{
+			return false;
+		}
+		const double TerrainHalfWidthM = WidthM * 0.5;
+		if (!FMath::IsNearlyEqual(
+				SurfaceProfile.TerrainHalfWidthM,
+				TerrainHalfWidthM,
+				1e-6)
+			|| !FMath::IsNearlyEqual(
+				SurfaceProfile.CorridorHalfWidthM,
+				RoadGroundCorridorHalfWidthM,
+				1e-6))
+		{
+			OutError = FString::Printf(
+				TEXT("Stage 3G terrain/profile width contract mismatch at %.3f m"),
+				MidDistanceM);
+			return false;
+		}
+
+		const FTransform CentreTransform = MakeAlignedBoxTransform(
+			Samples[StartIndex].PositionM,
+			Samples[EndIndex].PositionM,
+			RoadGroundCorridorHalfWidthM * 2.0,
+			TerrainThicknessM,
+			5.0,
+			-(TerrainThicknessM * 0.5 + RoadThicknessM));
+		if (!IsFiniteTransform(CentreTransform))
+		{
+			OutError = FString::Printf(
+				TEXT("Stage 3G centre terrain transform beginning at sample %d is invalid"),
+				StartIndex);
+			return false;
+		}
+		TargetTerrain->AddInstance(CentreTransform, false);
+
+		const double ShoulderWidthM =
+			(TerrainHalfWidthM - RoadGroundCorridorHalfWidthM)
+			/ static_cast<double>(TerrainShoulderBandsPerSide);
+		for (const double Side : { -1.0, 1.0 })
+		{
+			for (int32 BandIndex = 0;
+				BandIndex < TerrainShoulderBandsPerSide;
+				++BandIndex)
+			{
+				const double InnerAbsM =
+					RoadGroundCorridorHalfWidthM
+					+ ShoulderWidthM * static_cast<double>(BandIndex);
+				const double OuterAbsM =
+					RoadGroundCorridorHalfWidthM
+					+ ShoulderWidthM * static_cast<double>(BandIndex + 1);
+				const double SignedInnerM = Side * InnerAbsM;
+				const double SignedOuterM = Side * OuterAbsM;
+
+				FTransform ShoulderTransform;
+				if (!TryMakeTerrainShoulderTransform(
+						Geometry,
+						StartDistanceM,
+						EndDistanceM,
+						SignedInnerM,
+						SignedOuterM,
+						TerrainThicknessM,
+						5.0,
+						ShoulderTransform,
+						OutError))
+				{
+					OutError = FString::Printf(
+						TEXT("Stage 3G shoulder terrain transform beginning at sample %d side %.0f band %d failed: %s"),
+						StartIndex,
+						Side,
+						BandIndex,
+						*OutError);
+					return false;
+				}
+				TargetTerrain->AddInstance(ShoulderTransform, false);
+			}
+		}
 	}
 
 	// Stage 3G R3 valley silhouette: broad, bounds-aware instances of the
@@ -655,9 +871,18 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 				return false;
 			}
 
+			double SurfaceRiseM = 0.0;
+			if (!TryResolvePresentationSurfaceRise(
+					DistanceM,
+					Side * LateralM,
+					SurfaceRiseM,
+					OutError))
+			{
+				return false;
+			}
 			FVector GroundPositionM =
 				RoutePositionM + Right * (Side * LateralM);
-			GroundPositionM.Z -= RoadThicknessM;
+			GroundPositionM.Z += SurfaceRiseM - RoadThicknessM;
 
 			FTransform RidgeTransform;
 			if (!TryMakeGroundedMeshTransform(
@@ -769,6 +994,16 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 		}
 
 		FVector PositionM = Candidate.PositionM;
+		double SurfaceRiseM = 0.0;
+		if (!TryResolvePresentationSurfaceRise(
+				Candidate.RouteDistanceM,
+				Candidate.SignedLateralOffsetM,
+				SurfaceRiseM,
+				OutError))
+		{
+			return false;
+		}
+		PositionM.Z += SurfaceRiseM;
 		PositionM.Z -=
 			(ConiferMeshMinZCm * Candidate.UniformScale)
 			/ MetresToCentimetres;
@@ -845,9 +1080,18 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 				return false;
 			}
 
+			double SurfaceRiseM = 0.0;
+			if (!TryResolvePresentationSurfaceRise(
+					DistanceM,
+					Side * MountainPropLateralM,
+					SurfaceRiseM,
+					OutError))
+			{
+				return false;
+			}
 			FVector GroundPositionM =
 				RoutePositionM + Right * (Side * MountainPropLateralM);
-			GroundPositionM.Z -= RoadThicknessM;
+			GroundPositionM.Z += SurfaceRiseM - RoadThicknessM;
 
 			FTransform PeakTransform;
 			if (!TryMakeGroundedMeshTransform(
@@ -907,8 +1151,17 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 			const double UniformScale =
 				(TargetDiameterM * MetresToCentimetres) / RockMeshMaxDimensionCm;
 
+			double SurfaceRiseM = 0.0;
+			if (!TryResolvePresentationSurfaceRise(
+					DistanceM,
+					Side * LateralM,
+					SurfaceRiseM,
+					OutError))
+			{
+				return false;
+			}
 			FVector PositionM = RoutePositionM + Right * (Side * LateralM);
-			PositionM.Z += TargetDiameterM * 0.35;
+			PositionM.Z += SurfaceRiseM + TargetDiameterM * 0.35;
 
 			const FTransform RockTransform(
 				FRotator(
@@ -966,8 +1219,18 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 					return false;
 				}
 
+				double SurfaceRiseM = 0.0;
+				if (!TryResolvePresentationSurfaceRise(
+						DistanceM,
+						Side * LateralM,
+						SurfaceRiseM,
+						OutError))
+				{
+					return false;
+				}
 				FVector GroundPositionM =
 					RoutePositionM + Right * (Side * LateralM);
+				GroundPositionM.Z += SurfaceRiseM;
 				GroundPositionM.Z -=
 					Layer == 0 ? 2.0 : 6.0;
 
@@ -1017,8 +1280,10 @@ bool AStage3PrototypeTerrainActor::ValidateAgainstGeometry(
 		Geometry.GetSamples();
 	const int32 ExpectedRoadInstances = Samples.Num() - 1;
 	const int32 ExpectedEdgeLineInstances = ExpectedRoadInstances * 2;
-	const int32 ExpectedTerrainInstances =
+	const int32 ExpectedTerrainSlices =
 		FMath::DivideAndRoundUp(ExpectedRoadInstances, TerrainStrideSamples);
+	const int32 ExpectedTerrainInstances =
+		ExpectedTerrainSlices * TerrainBandsPerSlice;
 
 	if (GetRoadInstanceCount() != ExpectedRoadInstances)
 	{

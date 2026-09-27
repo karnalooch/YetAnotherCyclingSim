@@ -69,14 +69,29 @@
       "version": "R3",
       "title": "Representative forest target-density baseline",
       "path": "stage-3g/R3-forest-target-density",
-      "technical_status": "WORKING",
-      "visual_status": "IN_REVIEW",
+      "technical_status": "MERGED",
+      "visual_status": "MERGED_RECORD_NEEDS_ACCEPTANCE_BACKFILL",
       "baseline_commit_sha": "02ff23f0a24228432ae9c34eb65aa4cb3694ae1d",
-      "source_commit_sha": "94adc3dd19574dfb023fafcdc98b1983b82e2361",
-      "merge_commit_sha": null,
+      "source_commit_sha": "2b12cdd3b3aa9abba04d2f65c08cf22f665f1761",
+      "merge_commit_sha": "88e417e6ab828a290c335cb7bbaa684f3027a4ce",
       "pr_number": 202,
       "workflow_run_id": 36341840827,
       "workflow_run_number": 510
+    },
+    {
+      "visual_history_id": "VH-3G-R4-001",
+      "stage": "Stage 3G",
+      "version": "R4",
+      "title": "Route-aware terrain / road / forest coherence",
+      "path": "stage-3g/R4-route-terrain-coherence",
+      "technical_status": "CANDIDATE_PERSISTED",
+      "visual_status": "NOT_REVIEWED",
+      "baseline_commit_sha": "88e417e6ab828a290c335cb7bbaa684f3027a4ce",
+      "source_commit_sha": "fc0f22a2588c9ccb97ec5e469bbe911748e2e413",
+      "merge_commit_sha": null,
+      "pr_number": 200,
+      "workflow_run_id": 36348289844,
+      "workflow_run_number": 5
     }
   ]
 }

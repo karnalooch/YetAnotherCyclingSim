@@ -2,6 +2,7 @@
 
 #include "Cycling/AlpineJourneyGeometry.h"
 #include "Cycling/Stage3GForestLayout.h"
+#include "Cycling/Stage3GRouteExclusion.h"
 #include "Data/PCGBasePointData.h"
 #include "PCGContext.h"
 #include "PCGPin.h"
@@ -139,9 +140,24 @@ bool FStage3GForestCandidatesElement::ExecuteInternal(FPCGContext* Context) cons
 	{
 		const CyclingStage3G::FStage3GForestCandidate& Candidate =
 			Candidates[Index];
+		CyclingStage3G::FRoutePresentationSurfaceResult Surface;
+		if (!CyclingStage3G::TryEvaluateRoutePresentationSurface(
+				Candidate.RouteDistanceM,
+				Candidate.SignedLateralOffsetM,
+				Surface,
+				Error))
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("YACS Forest Candidates: presentation surface failed: %s"),
+				*Error);
+			Context->OutputData.bCancelExecution = true;
+			return true;
+		}
+		FVector PositionM = Candidate.PositionM;
+		PositionM.Z += Surface.SurfaceRiseM;
 		TransformRange[Index] = FTransform(
 			FRotator(0.0, Candidate.YawDeg, 0.0),
-			Candidate.PositionM * MetresToCentimetres,
+			PositionM * MetresToCentimetres,
 			FVector(Candidate.UniformScale));
 		SeedRange[Index] = Candidate.Seed;
 	}
