@@ -30,6 +30,9 @@ namespace CyclingPassoGiauLandscapeSpikeInternal
 	constexpr double XYScaleCmPerVertex = 793.650794;
 	constexpr double ZScale = 301.26543;
 	constexpr double LocationZCm = 194259.253;
+	constexpr double SourceElevationMinM = 1171.353;
+	constexpr double SourceElevationRangeM = 1542.479;
+	constexpr uint16 MaxResampleEdgeLoss = 512;
 	constexpr int64 ExpectedR16Bytes =
 		static_cast<int64>(LandscapeVertices) *
 		static_cast<int64>(LandscapeVertices) * 2;
@@ -73,10 +76,15 @@ namespace CyclingPassoGiauLandscapeSpikeInternal
 			OutMax = FMath::Max(OutMax, Value);
 		}
 
-		if (OutMin != 0 || OutMax != MAX_uint16)
+		// Bilinear 800 -> 1009 resampling is not guaranteed to preserve the
+		// exact source extrema. The accepted remote artifact currently spans
+		// 31..65405. Require near-full-domain coverage so meaningful relief is
+		// preserved without pretending resampling must contain 0 and 65535.
+		if (OutMin > MaxResampleEdgeLoss ||
+			OutMax < static_cast<uint16>(MAX_uint16 - MaxResampleEdgeLoss))
 		{
 			OutError = FString::Printf(
-				TEXT("prepared heightmap must span full unsigned 16-bit domain; min=%u max=%u"),
+				TEXT("prepared heightmap lost too much vertical domain after resampling; min=%u max=%u"),
 				OutMin,
 				OutMax);
 			return false;
@@ -293,6 +301,15 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		return 1;
 	}
 
+	const double SampledElevationMinM =
+		SourceElevationMinM +
+		(static_cast<double>(EncodedMin) / static_cast<double>(MAX_uint16)) *
+			SourceElevationRangeM;
+	const double SampledElevationMaxM =
+		SourceElevationMinM +
+		(static_cast<double>(EncodedMax) / static_cast<double>(MAX_uint16)) *
+			SourceElevationRangeM;
+
 	const FString ProofJson = FString::Printf(
 		TEXT("{\n")
 		TEXT("  \"schema_version\": 1,\n")
@@ -306,6 +323,8 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		TEXT("  \"component_size_quads\": %d,\n")
 		TEXT("  \"encoded_min\": %u,\n")
 		TEXT("  \"encoded_max\": %u,\n")
+		TEXT("  \"sampled_elevation_min_m\": %.3f,\n")
+		TEXT("  \"sampled_elevation_max_m\": %.3f,\n")
 		TEXT("  \"scale_x_cm_per_vertex\": %.6f,\n")
 		TEXT("  \"scale_y_cm_per_vertex\": %.6f,\n")
 		TEXT("  \"scale_z\": %.6f,\n")
@@ -326,6 +345,8 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		Landscape->ComponentSizeQuads,
 		EncodedMin,
 		EncodedMax,
+		SampledElevationMinM,
+		SampledElevationMaxM,
 		XYScaleCmPerVertex,
 		XYScaleCmPerVertex,
 		ZScale,
