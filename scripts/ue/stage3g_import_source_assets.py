@@ -54,6 +54,13 @@ MODEL_SPECS = {
     "boulder_01": "SM_Stage3G_Boulder",
 }
 
+BOULDER_LOD_POLICY = (
+    (1.00, 1.00),
+    (0.50, 0.50),
+    (0.20, 0.25),
+    (0.08, 0.10),
+)
+
 
 def log(message: str) -> None:
     unreal.log("[Stage3GImport] {}".format(message))
@@ -209,6 +216,58 @@ def import_texture(
     }
 
 
+def apply_boulder_lod_policy(mesh: unreal.StaticMesh) -> dict[str, Any]:
+    subsystem = unreal.get_editor_subsystem(unreal.StaticMeshEditorSubsystem)
+    if not subsystem:
+        fail("StaticMeshEditorSubsystem is unavailable")
+
+    options = unreal.StaticMeshReductionOptions()
+    options.set_editor_property("auto_compute_lod_screen_size", False)
+
+    reduction_settings = []
+    for percent_triangles, screen_size in BOULDER_LOD_POLICY:
+        settings = unreal.StaticMeshReductionSettings()
+        settings.set_editor_property("percent_triangles", percent_triangles)
+        settings.set_editor_property("screen_size", screen_size)
+        reduction_settings.append(settings)
+    options.set_editor_property("reduction_settings", reduction_settings)
+
+    generated = int(subsystem.set_lods(mesh, options))
+    if generated != len(BOULDER_LOD_POLICY):
+        fail(
+            "boulder LOD generation returned {} LODs; expected {}".format(
+                generated, len(BOULDER_LOD_POLICY)
+            )
+        )
+
+    if not unreal.EditorAssetLibrary.save_loaded_asset(
+        mesh, only_if_is_dirty=False
+    ):
+        fail("failed to save boulder after LOD generation")
+
+    lod_count = int(mesh.get_num_lods())
+    triangles = [int(mesh.get_num_triangles(i)) for i in range(lod_count)]
+    if lod_count != len(BOULDER_LOD_POLICY):
+        fail("saved boulder has unexpected LOD count {}".format(lod_count))
+    if not all(
+        triangles[index] > triangles[index + 1]
+        for index in range(len(triangles) - 1)
+    ):
+        fail("boulder LOD triangle counts are not strictly decreasing: {}".format(triangles))
+
+    return {
+        "lod_count": lod_count,
+        "triangles_by_lod": triangles,
+        "policy": [
+            {
+                "percent_triangles": percent,
+                "screen_size": screen,
+            }
+            for percent, screen in BOULDER_LOD_POLICY
+        ],
+    }
+
+
 def import_static_mesh(
     cache_root: Path,
     row: dict[str, Any],
@@ -219,6 +278,7 @@ def import_static_mesh(
     imported_path = find_import_of_class(imported, unreal.StaticMesh)
     canonical = canonical_asset_path(MESH_ROOT, canonical_name)
     mesh = rename_to_canonical(imported_path, canonical)
+    lod_proof = apply_boulder_lod_policy(mesh)
     return {
         "asset_id": row["asset_id"],
         "map_type": None,
@@ -226,6 +286,7 @@ def import_static_mesh(
         "source_md5": row.get("md5"),
         "destination": canonical,
         "class": mesh.get_class().get_name(),
+        "lod_proof": lod_proof,
     }
 
 
