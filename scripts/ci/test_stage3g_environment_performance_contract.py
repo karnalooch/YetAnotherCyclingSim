@@ -17,7 +17,7 @@ class Stage3GEnvironmentPerformanceContract(unittest.TestCase):
         self.assertIn("[double] $AllowedOverBudgetRatio = 0.05", text)
         self.assertIn("$OverBudgetRatio -le $AllowedOverBudgetRatio", text)
         self.assertIn("RTX\\s*2070.*SUPER", text)
-        self.assertIn("exit 1", text)
+        self.assertIn("$Proc.ExitCode -ne 0", text)\n        self.assertIn("exit 1", text)
 
     def test_sampler_covers_all_visual_history_sectors(self):
         text = CPP.read_text(encoding="utf-8")
