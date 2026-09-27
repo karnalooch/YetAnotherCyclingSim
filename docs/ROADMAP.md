@@ -56,6 +56,18 @@ Visual History nie zastępuje testów technicznych. Jest dodatkowym acceptance g
 
 **Automatyzacja:** #193 — generator evidence pack ma tworzyć trzy tryptyki `BEFORE | NOW | AFTER`, HUD, SHA-256/manifest i trwały binary upload dla większych zmian wizualnych. Do czasu automatyzacji dopuszczalny jest ręczny pack, ale provenance i decyzja wizualna są obowiązkowe.
 
+## Stage-level world validation cadence
+
+Od Stage 3G R4 obowiązuje jawny model walidacji świata: **szybka iteracja, osobny performance checkpoint po akceptacji wizualnej i jeden ciężki full proof przy zamknięciu etapu**.
+
+- **Iteration / Draft:** dodawanie trawy, wody, skał, materiałów, lighting/fog, biome dressing i innych zmian world-art uruchamia lekkie/static/contract/LFS checks. Zmiany C++/UE tooling nadal dostają code-only Unreal build.
+- **Visual acceptance checkpoint:** kiedy właściciel produktu akceptuje wygląd kandydata, zamrażamy dokładny SHA, zapisujemy porównywalne 1200/4900/8000 m w Visual History i uruchamiamy performance gate dla tego exact SHA.
+- **Stage closeout / Ready for review:** dopiero przy zamknięciu Stage uruchamiamy pełny Unreal/Automation/full-LFS/Map Check/save-reopen/Stage 3G proof. Ten exact-head full proof jest obowiązkowym merge gate.
+- Jeżeli po zaakceptowanym performance checkpoint nastąpi materialna zmiana wizualna/runtime, performance acceptance traci ważność i musi zostać wykonany ponownie.
+- Jeżeli full proof zamyka dokładnie ten sam tree, który już przeszedł zaakceptowany performance checkpoint, nie powtarzamy performance tylko dlatego, że uruchomiono full proof.
+
+Źródłem prawdy dla szczegółowej mechaniki CI jest [`CI_VALIDATION_TIERS.md`](CI_VALIDATION_TIERS.md).
+
 ## YACS Performance Framework
 
 Performance ma własny **cross-stage lifecycle**, ale nie jest osobnym etapem produktu. Źródłem prawdy jest [`performance/PERFORMANCE_FRAMEWORK.md`](performance/PERFORMANCE_FRAMEWORK.md), a budżety i zasady ich zmiany są w [`performance/BUDGETS.md`](performance/BUDGETS.md).

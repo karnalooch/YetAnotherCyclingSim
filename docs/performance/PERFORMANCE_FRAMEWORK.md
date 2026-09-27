@@ -19,6 +19,21 @@ The framework provides one reusable path for:
 
 The framework does not replace visual acceptance. A change can be faster and visually rejected, or visually better and performance-rejected.
 
+## Measurement cadence
+
+Performance is continuous as a contract, but **heavy measurement is milestone-driven rather than commit-driven** for world-art iteration.
+
+During a Draft world-stage PR, vegetation/water/material/lighting/terrain-dressing changes use lightweight validation. The expensive performance benchmark is run when a visual candidate has been accepted by the owner and its exact SHA is frozen as a performance checkpoint.
+
+After that checkpoint:
+
+- optimization must preserve the accepted visual intent unless a new visual decision is recorded;
+- any material visual/runtime change invalidates the checkpoint;
+- Stage closeout runs the full Unreal/asset/world proof;
+- if the closeout tree is unchanged from the accepted performance tree, performance is not rerun solely because the full proof ran.
+
+This cadence is defined operationally in [`../CI_VALIDATION_TIERS.md`](../CI_VALIDATION_TIERS.md).
+
 ## Version roadmap
 
 | Version | Roadmap integration | Primary scope | New evidence |
