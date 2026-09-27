@@ -1,6 +1,6 @@
 # YACS UE-MCP world-generation architecture
 
-**Status:** Stage 3G visual/asset recovery active; spike approved and still required before persistent MCP-driven worldgen  
+**Status:** Stage 3G visual/asset recovery active; native/editor-scripted persistent PCG work is already in flight in Draft PR #162, while persistent **agent-driven MCP** worldgen still requires its own guarded proof before adoption  
 **Tracking:** #85  
 **Initial upstream:** `db-lyon/ue-mcp`  
 **Reviewed pin:** `v1.3.9`  
@@ -63,11 +63,13 @@ Existing authored/prototype content outside that root is input/reference, not an
 
 The Stage 3G spike is stricter: it starts with inspection and transient verification only. Persistent writes are intentionally not enabled yet.
 
-**Recovery note (26.09.2026):** the Stage 3G CI/authoring harness was proven by PR #155, but the real progressive source-asset + PCG baseline was not delivered. #85 therefore remains Stage 3G work rather than being deferred to the final Stage 7 art pass.
+**Recovery note (27.09.2026):** PR #155 proved the Stage 3G CI/authoring harness. Draft PR #162 now contains the first real conifer baseline plus persisted `PCG_RouteExclusion` and `PCG_Forest` authoring assets, but its final committed-SHA UE/full-validation/visual/performance acceptance is still pending. This progress was achieved through explicit project authoring workflows and does **not** mean persistent MCP-driven generation is already approved. #85 remains the controlled agent-orchestration track, not a prerequisite that blocks all native/editor-scripted PCG work.
 
 ## 3. Why UE-MCP
 
 The selected upstream already provides the Unreal Editor bridge, MCP categories for world authoring, YAML flows, retries/rollback, git snapshots, configurable guards and context strategies. We reuse those capabilities rather than creating a second editor automation framework.
+
+UE-MCP is an **optional controlled execution/orchestration surface**, not the only legal way to author PCG. Deterministic project-owned C++/Python/editor workflows may create and validate the same technical assets when they are easier to test and review. The invariant is shared: route authority, deterministic inputs, generated-content boundaries, proof and rollback remain the same regardless of which editor automation surface performs the mutation.
 
 ## 4. Dependency policy
 
@@ -166,6 +168,8 @@ No persistent world generation is enabled in Phase A.
 
 ### Phase B — generated-content sandbox
 
+This phase applies to **persistent mutations performed through the MCP/agent surface**. It does not forbid separately reviewed deterministic editor scripts/workflows such as the in-flight #162 PCG authoring path.
+
 After Phase A is green:
 
 1. add a generated-content write guard for `/Game/Generated/YACS/**`;
@@ -224,4 +228,4 @@ For routine world generation, prefer named YACS flows over free-form chains of l
 
 ## 12. Non-goals
 
-This integration does not change physics ownership, Stage 3 route geometry ownership, begin Stage 4 mechanics, turn 3G into final Stage 7 art, authorize broad autonomous writes, authorize arbitrary Python/console execution or require a backend service.
+This integration does not change physics ownership, Stage 3 route geometry ownership, begin Stage 4 mechanics, turn 3G into final Stage 7 art, authorize broad autonomous writes, authorize arbitrary Python/console execution, require a backend service, or monopolize world authoring by forcing all PCG creation through MCP.
