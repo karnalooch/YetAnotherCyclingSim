@@ -390,6 +390,19 @@ Wprowadzić autorską mechanikę oceniającą odpuszczenie i ponowne rozpoczęci
 15. **4D:** guidance + assists — linia przejazdu, markery entry/apex/exit, grip warning i poziomy asysty jako presentation-only; wymaga wspólnego integration gate z World lane.
 16. **4E:** deterministyczny full-route corner proof dla reprezentatywnych flat/banked/off-camber zakrętów oraz suchej/mokrej nawierzchni.
 
+## World + Physics execution lock — do wejścia w Stage 5
+
+Od 27.09.2026 mapa/World i fizyka Stage 4 są prowadzone jako jeden wspólny front wykonawczy. Nie uznajemy Stage 4 za domknięte na podstawie samego zielonego rdzenia fizyki: końcowy integration gate wymaga jednocześnie zielonego World/3G i Physics/4D/4E.
+
+Obowiązująca kolejność domknięcia:
+
+1. **World/3G:** zamknąć Reference Environment Pass, w tym deterministyczny PCG forest, route exclusion, progressive asset gate, visual/performance proof 1200/4900/8000 m oraz committed-SHA asset/full acceptance.
+2. **4D — guidance + assists:** recommended speed, jawny target line / auto line selection w granicach Road Physics Profile, presentation-only entry/apex/exit guidance, grip warning i regulowane poziomy asysty. Guidance i assists nie mogą zmieniać autorytatywnej fizyki poza jawnymi, testowalnymi wejściami polityki asysty.
+3. **4E — full-route corner proof:** deterministyczny start-to-finish proof obejmujący reprezentatywne flat/banked/off-camber zakręty, suchą/mokrą nawierzchnię, 30/60 FPS/jitter parity, route bounds, brak teleportów oraz spójny corner score/consequence telemetry.
+4. **Stage 5 entry gate:** dopiero po zielonym 3G + 4D + 4E rozpoczynamy właściwy HUD/session flow. Stage 5 konsumuje gotowe dane cornering/guidance/session, ale nie redefiniuje fizyki ani geometrii świata.
+
+Przez ten okres raportowanie projektu prowadzi się wspólnie jako **World + Physics**, żeby nie zgubić zależności pomiędzy mapą, widocznym guidance, route geometry i autorytatywną fizyką.
+
 ## Zadania
 
 - [x] Obliczanie signed curvature drogi i efektywnego promienia toru przejazdu — PR #169.
