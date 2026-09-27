@@ -41,7 +41,7 @@ class Stage3GSourceAssetAuditContract(unittest.TestCase):
         text = HARNESS.read_text(encoding="utf-8")
         self.assertIn("ExpectedHead", text)
         self.assertIn("git -C $RepoRoot lfs fsck", text)
-        self.assertIn("-run=PythonScript", text)
+        self.assertIn("Build.bat", text)\n        self.assertIn("YetAnotherCyclingSimEditor", text)\n        self.assertIn("-run=PythonScript", text)
         self.assertIn("-NullRHI", text)
         self.assertIn("audit-only / no asset mutation", text)
         self.assertIn("exit 1", text)
