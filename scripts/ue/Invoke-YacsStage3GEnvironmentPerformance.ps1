@@ -109,6 +109,7 @@ function Get-Percentile {
 $ExpectedSectors = [ordered]@{ valley = 1200.0; forest = 4900.0; high_alpine = 8000.0 }
 $Results = @()
 $Reasons = @()
+if ($Proc.ExitCode -ne 0) { $Reasons += "UnrealEditor exited with code $($Proc.ExitCode)." }
 
 foreach ($Entry in $ExpectedSectors.GetEnumerator()) {
     $Sector = [string]$Entry.Key
