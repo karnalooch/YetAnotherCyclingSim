@@ -56,3 +56,30 @@ Tiering changes *when* expensive proof runs, not *whether* it is required.
 A draft PR cannot merge. A ready PR with `asset_full=true` cannot satisfy the aggregate gate unless the exact-head Stage 3G full proof succeeds. If more commits are pushed after review readiness, the exact-head heavy proof is required again.
 
 Code-only Unreal validation remains independent from the Stage 3G full-LFS lane so C++ correctness can still fail fast without materializing the world asset set.
+
+## World-stage operating model
+
+For Stage 3G R4/R5 world-art work, one long-lived **Draft stage integration PR** is the normal iteration surface.
+
+The lifecycle is:
+
+1. **Iteration — lightweight**
+   - add or tune vegetation, water, rocks, terrain dressing, materials, lighting, fog and similar world elements;
+   - run static/contract/policy/LFS-pointer checks;
+   - keep code-only Unreal validation for C++/UE tooling changes;
+   - do not run the full map/world proof after every art commit.
+
+2. **Owner visual acceptance — performance checkpoint**
+   - when the owner accepts the candidate look, freeze that candidate SHA;
+   - capture the stable 1200 / 4900 / 8000 m views and record Visual History NOW;
+   - run the stage performance budget on that exact SHA;
+   - if performance fails, optimize the accepted visual candidate rather than silently changing art direction.
+
+3. **Stage closeout — full proof**
+   - only when the stage is ready to close, mark the stage integration PR Ready for review;
+   - run the exact-head full Unreal/Automation/full-LFS/Map Check/save-reopen/Stage 3G proof;
+   - require the full proof before merge.
+
+If the final full proof runs on the same tree that already passed the accepted performance checkpoint, performance does not need to be repeated merely because the full proof ran. A material visual/runtime change after the accepted performance checkpoint invalidates that checkpoint and requires a new one.
+
+The intent is to make **world iteration cheap and stage acceptance strict**.
