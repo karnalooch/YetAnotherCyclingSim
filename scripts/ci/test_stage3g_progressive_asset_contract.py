@@ -80,9 +80,14 @@ class Stage3GProgressiveAssetContractTests(unittest.TestCase):
         self.assertIn("rock_props=40", self.authoring)
 
     def test_reference_map_uses_validated_conifer_instead_of_forest_placeholders(self):
-        self.assertIn("SM_Stage3G_FirSaplingMedium.SM_Stage3G_FirSaplingMedium", self.terrain_actor)
+        self.assertIn(
+            "SM_Stage3G_FirSaplingMedium.SM_Stage3G_FirSaplingMedium",
+            self.terrain_actor,
+        )
         self.assertIn("ForestProps->SetStaticMesh(ConiferMesh)", self.terrain_actor)
-        self.assertIn("ForestCanopyProps->SetStaticMesh(ConiferMesh)", self.terrain_actor)
+        self.assertIn(
+            "ForestCanopyProps->SetStaticMesh(ConiferMesh)", self.terrain_actor
+        )
         self.assertIn("ConiferMeshHeightCm", self.terrain_actor)
         self.assertIn("ConiferMeshMinZCm", self.terrain_actor)
         self.assertNotIn(
