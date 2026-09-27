@@ -1,9 +1,11 @@
 """Create a clean isolated map package for the Passo Giau Landscape spike.
 
-UE's Python API is deliberately used only for safe level/package duplication and
-cleanup. Landscape creation itself is handled by the project C++ commandlet
-because spawning a Landscape through Python is not a reliable UE 5.8 authoring
-path.
+The map is created as a brand-new non-partitioned blank level through UE 5.8's
+LevelEditorSubsystem. This intentionally avoids loading or duplicating
+L_CyclingTest, so the authoring workflow does not need unrelated Git LFS
+payloads and the canonical cycling map stays outside the mutation path.
+
+Landscape creation itself is handled by the project C++ commandlet.
 """
 
 from __future__ import annotations
@@ -17,7 +19,6 @@ import traceback
 import unreal
 
 
-SOURCE_MAP = "/Game/Prototype/Maps/L_CyclingTest"
 SPIKE_MAP = "/Game/Prototype/Maps/L_PassoGiauTerrainSpike"
 
 
@@ -30,29 +31,33 @@ def main() -> None:
     if not proof_value:
         fail("YACS_PASSO_GIAU_MAP_PREP_PROOF is not set")
 
-    if not unreal.EditorAssetLibrary.does_asset_exist(SOURCE_MAP):
-        fail(f"source map missing: {SOURCE_MAP}")
-
     if unreal.EditorAssetLibrary.does_asset_exist(SPIKE_MAP):
         if not unreal.EditorAssetLibrary.delete_asset(SPIKE_MAP):
             fail(f"failed to delete stale spike map: {SPIKE_MAP}")
 
-    duplicated = unreal.EditorAssetLibrary.duplicate_asset(SOURCE_MAP, SPIKE_MAP)
-    if not duplicated:
-        fail(f"failed to duplicate {SOURCE_MAP} -> {SPIKE_MAP}")
+    level_subsystem = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
+    if not level_subsystem:
+        fail("LevelEditorSubsystem is unavailable")
 
-    world = unreal.EditorLoadingAndSavingUtils.load_map(SPIKE_MAP)
+    if not level_subsystem.new_level(SPIKE_MAP, is_partitioned_world=False):
+        fail(f"failed to create blank isolated spike map: {SPIKE_MAP}")
+
+    editor_subsystem = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem)
+    world = editor_subsystem.get_editor_world()
     if not world:
-        fail(f"failed to load isolated spike map: {SPIKE_MAP}")
+        fail("new isolated spike map did not expose an editor world")
 
     actor_subsystem = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
-    destroyed = []
-    for actor in list(actor_subsystem.get_all_level_actors()):
-        if isinstance(actor, unreal.WorldSettings):
-            continue
-        destroyed.append(str(actor.get_name()))
-        if not actor_subsystem.destroy_actor(actor):
-            fail(f"failed to destroy inherited actor: {actor.get_name()}")
+    inherited_actors = [
+        actor
+        for actor in actor_subsystem.get_all_level_actors()
+        if not isinstance(actor, unreal.WorldSettings)
+    ]
+    if inherited_actors:
+        fail(
+            "new blank spike map unexpectedly contains non-WorldSettings actors: "
+            + ", ".join(str(actor.get_name()) for actor in inherited_actors)
+        )
 
     if not unreal.EditorLoadingAndSavingUtils.save_map(world, SPIKE_MAP):
         fail(f"failed to save clean isolated spike map: {SPIKE_MAP}")
@@ -60,10 +65,11 @@ def main() -> None:
     proof = {
         "schema_version": 1,
         "passo_giau_map_prep": "PASS",
-        "source_map": SOURCE_MAP,
+        "creation_method": "LevelEditorSubsystem.new_level",
         "spike_map": SPIKE_MAP,
-        "destroyed_inherited_actor_count": len(destroyed),
-        "destroyed_inherited_actors": destroyed,
+        "is_partitioned_world": False,
+        "non_world_settings_actor_count": 0,
+        "canonical_map_loaded": False,
         "canonical_map_mutated": False,
         "presentation_only": True,
     }
@@ -73,10 +79,7 @@ def main() -> None:
         json.dumps(proof, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
-    unreal.log(
-        "[PassoGiauMapPrep] PASS: isolated map created; "
-        f"destroyed_inherited_actor_count={len(destroyed)}"
-    )
+    unreal.log("[PassoGiauMapPrep] PASS: blank isolated non-partitioned map created")
 
 
 try:
