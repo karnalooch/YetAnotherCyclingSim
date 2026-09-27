@@ -898,3 +898,36 @@ Obowiązkowe invariants:
 - brak energy banking;
 - brak fałszywych interakcji pomiędzy różnymi segmentami/poziomami trasy;
 - brak wymuszonego `VIP lane`;
+- identyczny stan i wejścia dają identyczny wynik.
+
+Harness musi zawierać co najmniej scenariusze: wspólna luka dla dwóch riderów, zamknięcie luki w trakcie passu, symetryczny deadlock, realne i sztuczne `BOXED_IN`, crosswind/echelon, hairpin, mokry zakręt, crest, szybki zjazd, wolny podjazd, stopped rider, merge/split grup, serpentyny/mosty/tunele, różne `lapIndex`, finish behavior oraz błędne/dropoutowe wejście mocy.
+
+### Pack Dynamics v0.1 — spec freeze
+
+Przed właściwą implementacją Pack Dynamics wymagane są następujące kontrakty:
+
+- jawna `RiderPackStateMachine`;
+- opisowy `PackPhaseModel`;
+- `RouteOccupancyModel`;
+- atomowy i deterministyczny `GapReservation`;
+- `InputIntegrity` dla danych trenażera;
+- debug/telemetry contract;
+- deterministic replay;
+- performance contract oparty na lokalnym neighborhood zamiast O(N²);
+- rozdzielenie `PlayerTechnique` i `AutopilotProficiency`;
+- competitive fairness policy;
+- przyszły network authority contract;
+- posture-aware occupancy;
+- walidacja bicycle-like/non-holonomic kinematics dla każdej trajektorii lateralnej.
+
+Po zapisaniu tych zasad spec Pack Dynamics v0.1 uznaje się za zamrożoną do czasu właściwego etapu po MVP.
+
+Nowe pomysły dotyczące Pack Dynamics trafiają do backlogu, chyba że rozwiązują krytyczną lukę w istniejących invariants.
+
+## Dokument kierunkowy po MVP
+
+Założenia dotyczące budżetów runtime/build, streamingu świata, przyszłej sieci dróg, skalowania dużej liczby kolarzy oraz multiplayera opisuje
+[`PERFORMANCE_MULTIPLAYER_ARCHITECTURE.md`](PERFORMANCE_MULTIPLAYER_ARCHITECTURE.md).
+
+Dokument ten definiuje ograniczenia architektoniczne i edge case'y, ale nie przenosi
+multiplayera ani otwartego świata do bieżącego zakresu MVP.
