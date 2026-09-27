@@ -71,7 +71,7 @@ jobs:
       - name: Author and render isolated Passo Giau Landscape
         shell: pwsh
         run: |
-          ./scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1 -ExpectedBranch 'feat/stage3g-r4-1-passo-giau-landscape-spike' -ExpectedHead '${{ github.sha }}' -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR4_1/PassoGiauLandscape'
+          ./scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1 -ExpectedBranch 'HEAD' -ExpectedHead '${{ github.sha }}' -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR4_1/PassoGiauLandscape'
           if ($LASTEXITCODE -ne 0) { throw 'Passo Giau Landscape authoring failed.' }
 
       - name: Commit only isolated spike map
