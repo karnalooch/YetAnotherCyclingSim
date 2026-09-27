@@ -103,3 +103,13 @@ No current NOW capture may be promoted to AFTER until the committed-SHA proof an
 - Visual change detected: **YES**
 - Rejection reason: **none for 58c89674**
 - Next step: sync #192 with current `main`, run one final exact-SHA proof, merge, then capture merged `main` as AFTER and close VH-3G-R3-001.
+
+## Durable triptych evidence
+
+The R3 pre-merge Visual History triptychs are retained in the repository under `captures/`. They were deterministically materialized from the canonical R2 CI #398 and R3 CI #417 proof artifacts after verifying the source PNG SHA-256 values recorded in the manifest.
+
+- `captures/01_valley_1200m_triptych.jpg` — SHA-256 `c00630dcd6335b8cbb5a13cb9c0d8b6b54a7573ac2e25d344fe7b40297a6ada5` — 73040 bytes
+- `captures/02_forest_4900m_triptych.jpg` — SHA-256 `621449067618a96687b51e38ef8495d7a49030a7fe6c8f92621d7a9f3d54adc9` — 75619 bytes
+- `captures/03_high_alpine_8000m_triptych.jpg` — SHA-256 `f8ddd03b30c0eeec6d97665ca44d4f3bf6922787a943226aa7f3e0d399e8b33f` — 93154 bytes
+
+`AFTER` intentionally remains **PENDING** until #192 is merged and a merged-main exact-SHA proof/capture exists.

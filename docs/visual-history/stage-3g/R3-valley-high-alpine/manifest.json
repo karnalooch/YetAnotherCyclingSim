@@ -132,11 +132,12 @@
         "sha256": null,
         "status": "PENDING"
       },
-      "triptych_image": null,
+      "triptych_image": "captures/01_valley_1200m_triptych.jpg",
       "pixel_diff": null,
-      "triptych_sha256": "946efdc3fc6db50cdfeb5329ad8e7dd678c1a25b6c997e040e17b8f9b8b7fe08",
-      "triptych_storage_status": "GENERATED_PENDING_DURABLE_UPLOAD",
-      "triptych_expected_path": "captures/01_valley_1200m_triptych.jpg"
+      "triptych_sha256": "c00630dcd6335b8cbb5a13cb9c0d8b6b54a7573ac2e25d344fe7b40297a6ada5",
+      "triptych_storage_status": "DURABLY_STORED",
+      "triptych_expected_path": "captures/01_valley_1200m_triptych.jpg",
+      "triptych_resolution": "1920x576"
     },
     {
       "capture_id": "02-forest-4900m",
@@ -162,11 +163,12 @@
         "sha256": null,
         "status": "PENDING"
       },
-      "triptych_image": null,
+      "triptych_image": "captures/02_forest_4900m_triptych.jpg",
       "pixel_diff": null,
-      "triptych_sha256": "9497e84c39f4b8a6fff7044ba0822e759767e6a0f4980b36fa7b048a30a787eb",
-      "triptych_storage_status": "GENERATED_PENDING_DURABLE_UPLOAD",
-      "triptych_expected_path": "captures/02_forest_4900m_triptych.jpg"
+      "triptych_sha256": "621449067618a96687b51e38ef8495d7a49030a7fe6c8f92621d7a9f3d54adc9",
+      "triptych_storage_status": "DURABLY_STORED",
+      "triptych_expected_path": "captures/02_forest_4900m_triptych.jpg",
+      "triptych_resolution": "1920x576"
     },
     {
       "capture_id": "03-high-alpine-8000m",
@@ -192,11 +194,12 @@
         "sha256": null,
         "status": "PENDING"
       },
-      "triptych_image": null,
+      "triptych_image": "captures/03_high_alpine_8000m_triptych.jpg",
       "pixel_diff": null,
-      "triptych_sha256": "ce2b4cd4c1aa555ac3f6904e97fb5b0ce440832ea77db7b7141ab7661c4be144",
-      "triptych_storage_status": "GENERATED_PENDING_DURABLE_UPLOAD",
-      "triptych_expected_path": "captures/03_high_alpine_8000m_triptych.jpg"
+      "triptych_sha256": "f8ddd03b30c0eeec6d97665ca44d4f3bf6922787a943226aa7f3e0d399e8b33f",
+      "triptych_storage_status": "DURABLY_STORED",
+      "triptych_expected_path": "captures/03_high_alpine_8000m_triptych.jpg",
+      "triptych_resolution": "1920x576"
     }
   ],
   "attempts": [
@@ -232,5 +235,12 @@
       "visual_result": "VISUAL_ACCEPTED",
       "reason": "Massing footprint is supported by presentation terrain; valley/high-Alpine reads are grounded and road/forest baselines remain clear."
     }
-  ]
+  ],
+  "evidence_storage": {
+    "triptych_mode": "REPOSITORY_RETAINED_JPEG",
+    "triptych_status": "DURABLY_STORED",
+    "source_before_artifact": "stage3g-full-validation-36299298530-1",
+    "source_now_artifact": "stage3g-full-validation-36305204327-1",
+    "after_status": "PENDING_MERGED_MAIN_PROOF"
+  }
 }
