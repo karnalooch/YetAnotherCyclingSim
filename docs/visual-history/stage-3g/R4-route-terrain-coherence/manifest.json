@@ -15,14 +15,14 @@
     "merged_at": null
   },
   "status": {
-    "technical_status": "WORKING",
+    "technical_status": "CANDIDATE_PERSISTED",
     "visual_status": "NOT_REVIEWED"
   },
   "git": {
     "branch": "feat/stage3g-r4-route-terrain-coherence",
-    "baseline_commit_sha": "02ff23f0a24228432ae9c34eb65aa4cb3694ae1d",
-    "source_commit_sha": "f5e4c823d7bbc3ae30f138db78d3519fbfe946eb",
-    "source_commit_short": "f5e4c823",
+    "baseline_commit_sha": "88e417e6ab828a290c335cb7bbaa684f3027a4ce",
+    "source_commit_sha": "fc0f22a2588c9ccb97ec5e469bbe911748e2e413",
+    "source_commit_short": "fc0f22a2",
     "accepted_commit_sha": null,
     "merge_commit_sha": null
   },
@@ -33,12 +33,12 @@
   },
   "ci": {
     "workflow_name": "Stage 3G R4 terrain coherence authoring",
-    "workflow_run_id": 36326068660,
-    "workflow_run_number": 1,
-    "proof_artifact_name": "stage3g-r4-terrain-coherence-author-36326068660-1",
-    "automation_status": "PASS_FOR_AUTHORING_SHA",
-    "automation_summary": "Trusted R4 authoring succeeded on implementation SHA 10268c9f and persisted L_CyclingTest.umap as bot commit f5e4c823. Full PR CI, visual capture and performance acceptance remain pending.",
-    "fresh_load_status": "PENDING",
+    "workflow_run_id": 36348289844,
+    "workflow_run_number": 5,
+    "proof_artifact_name": "stage3g-r4-terrain-coherence-author-36348289844-1",
+    "automation_status": "PASS_FOR_PERSISTED_MAP_SHA",
+    "automation_summary": "Post-#202 route-aware forest/terrain integration authored successfully from 9928491e and persisted L_CyclingTest.umap as fc0f22a2. Lightweight PR CI #527 on 9928491e was green; exact-SHA full proof, visual capture and performance closeout remain pending on the next human-authored candidate HEAD.",
+    "fresh_load_status": "PENDING_EXACT_SHA_CLOSEOUT",
     "map_check_errors": null,
     "map_check_warnings": null,
     "lfs_fsck_status": "PASS_DURING_AUTHORING",
@@ -59,17 +59,28 @@
       "high_alpine"
     ],
     "distance_ranges_m": [
-      {"biome": "valley_meadow", "start_m": 0, "end_m": 3700},
-      {"biome": "alpine_forest", "start_m": 3700, "end_m": 6200},
-      {"biome": "high_alpine", "start_m": 6200, "end_m": 10000}
+      {
+        "biome": "valley_meadow",
+        "start_m": 0,
+        "end_m": 3700
+      },
+      {
+        "biome": "alpine_forest",
+        "start_m": 3700,
+        "end_m": 6200
+      },
+      {
+        "biome": "high_alpine",
+        "start_m": 6200,
+        "end_m": 10000
+      }
     ],
     "density_values": {},
     "simulation_truth_source": "FRouteGeometryProfile"
   },
   "assets": {
     "validated_assets_used": [
-      "SM_Stage3G_Boulder",
-      "SM_Stage3G_FirSaplingMedium"
+      "SM_Stage3G_FirSaplingMedium — validated aggressive LOD profile"
     ],
     "meshes_added": [],
     "meshes_replaced": [],
@@ -77,6 +88,9 @@
     "materials_replaced": [],
     "placeholder_assets_removed": [
       "single flat full-width terrain support per 50 m slice"
+    ],
+    "additional_assets_with_open_per_asset_validation": [
+      "SM_Stage3G_Boulder — R3 visual + aggregate performance accepted; explicit per-asset LOD/instancing validation still open"
     ]
   },
   "visual_review": {
@@ -85,7 +99,7 @@
     "visual_acceptance": null,
     "reviewer_summary": null,
     "rejection_reason": null,
-    "next_step": "Merge/accept #202 representative forest first, rebase R4 onto that accepted baseline, then capture exact-SHA 1200/4900/8000 m NOW and run 1080p/60 regression."
+    "next_step": "Run ordinary CI from a human-authored HEAD, freeze the exact candidate, run full Stage 3G proof + 1200/4900/8000 captures + unchanged performance gate, then request human visual acceptance before R5."
   },
   "captures": [
     {
@@ -100,8 +114,18 @@
         "sha256": "5cefb738c8e051d4603fe6cbcc13d7400ed80b9f95732897edf1a949456d90bd",
         "status": "VISUAL_ACCEPTED"
       },
-      "now": {"commit_sha": null, "image": null, "sha256": null, "status": "PENDING"},
-      "after": {"commit_sha": null, "image": null, "sha256": null, "status": "PENDING"},
+      "now": {
+        "commit_sha": null,
+        "image": null,
+        "sha256": null,
+        "status": "PENDING"
+      },
+      "after": {
+        "commit_sha": null,
+        "image": null,
+        "sha256": null,
+        "status": "PENDING"
+      },
       "triptych_image": null,
       "pixel_diff": null
     },
@@ -117,8 +141,18 @@
         "sha256": "867144551a0cbdf5f0ac6a2847f04b43a6bf476e877c7a5aac56f3a4a1b96ba8",
         "status": "VISUAL_ACCEPTED"
       },
-      "now": {"commit_sha": null, "image": null, "sha256": null, "status": "PENDING"},
-      "after": {"commit_sha": null, "image": null, "sha256": null, "status": "PENDING"},
+      "now": {
+        "commit_sha": null,
+        "image": null,
+        "sha256": null,
+        "status": "PENDING"
+      },
+      "after": {
+        "commit_sha": null,
+        "image": null,
+        "sha256": null,
+        "status": "PENDING"
+      },
       "triptych_image": null,
       "pixel_diff": null
     },
@@ -134,10 +168,26 @@
         "sha256": "7dc5dfd184092dab5852c45fea255b67523e10774c12597acd6aeeebb0a60d76",
         "status": "VISUAL_ACCEPTED"
       },
-      "now": {"commit_sha": null, "image": null, "sha256": null, "status": "PENDING"},
-      "after": {"commit_sha": null, "image": null, "sha256": null, "status": "PENDING"},
+      "now": {
+        "commit_sha": null,
+        "image": null,
+        "sha256": null,
+        "status": "PENDING"
+      },
+      "after": {
+        "commit_sha": null,
+        "image": null,
+        "sha256": null,
+        "status": "PENDING"
+      },
       "triptych_image": null,
       "pixel_diff": null
     }
-  ]
+  ],
+  "map_lfs": {
+    "prior_oid_sha256": "017766cf088477f0d810bee4a3c320b05c18c931aff1901e0443fbaa1d40798b",
+    "prior_size_bytes": 3716048,
+    "persisted_oid_sha256": "c4794f4dc182c3151dad0beb6193bc208339474a61fbdf337a139b529d81c095",
+    "persisted_size_bytes": 3879249
+  }
 }
