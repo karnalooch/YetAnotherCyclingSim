@@ -33,6 +33,10 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("XYScaleCmPerVertex = 793.650794", cpp)
         self.assertIn("ZScale = 301.26543", cpp)
         self.assertIn("LocationZCm = 194259.253", cpp)
+        self.assertEqual(cpp.count("const double SampledElevationMinM ="), 1)
+        self.assertEqual(cpp.count("const double SampledElevationMaxM ="), 1)
+        self.assertIn("(static_cast<double>(EncodedMin) - 32768.0) / 128.0", cpp)
+        self.assertIn("(static_cast<double>(EncodedMax) - 32768.0) / 128.0", cpp)
         self.assertIn(
             "encoded height-domain proof",
             read("scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1"),

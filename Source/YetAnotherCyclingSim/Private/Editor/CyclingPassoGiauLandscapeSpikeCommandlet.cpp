@@ -29,8 +29,6 @@ namespace CyclingPassoGiauLandscapeSpikeInternal
 	constexpr double XYScaleCmPerVertex = 793.650794;
 	constexpr double ZScale = 301.26543;
 	constexpr double LocationZCm = 194259.253;
-	constexpr double SourceElevationMinM = 1171.353;
-	constexpr double SourceElevationRangeM = 1542.479;
 	constexpr uint16 MaxResampleEdgeLoss = 512;
 	constexpr int64 ExpectedR16Bytes =
 		static_cast<int64>(LandscapeVertices) *
@@ -294,15 +292,8 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		return 1;
 	}
 
-	const double SampledElevationMinM =
-		SourceElevationMinM +
-		(static_cast<double>(EncodedMin) / static_cast<double>(MAX_uint16)) *
-			SourceElevationRangeM;
-	const double SampledElevationMaxM =
-		SourceElevationMinM +
-		(static_cast<double>(EncodedMax) / static_cast<double>(MAX_uint16)) *
-			SourceElevationRangeM;
-
+	// UE Landscape stores height around 32768 at 1/128 local Z units.
+	// Report the elevation represented by the persisted Landscape transform.
 	const double SampledElevationMinM =
 		(LocationZCm + ((static_cast<double>(EncodedMin) - 32768.0) / 128.0) * ZScale) / 100.0;
 	const double SampledElevationMaxM =
