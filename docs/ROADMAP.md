@@ -268,7 +268,7 @@ Stage 3 jest realizowany kolejno:
 
 ## 3G — Reference Environment Pass
 
-> **Status 27.09.2026:** PR #155 udowodnił deterministyczny authoring/proof harness. **R2 / PR #162 jest już MERGED** jako `fd77094…`: committed-SHA CI, full Stage 3G validation, Fresh Load, Map Check 0/0, LFS i realny 4900 m conifer proof przeszły, dlatego `PCG_RouteExclusion` i `PCG_Forest` oraz mass-forest conifer mają zaakceptowany baseline. Aktywną transzą jest **R3 / #187 / Draft PR #192**: `PCG_Valley` i `PCG_HighAlpine` zostały deterministycznie zapisane i zreloadowane, ale pierwszy zielony technicznie proof nie zmienił faktycznie obrazu sceny, więc został **wizualnie odrzucony**. Bieżąca rewizja R3 integruje realne boulder massing z mapą i pozostaje otwarta do committed-SHA proofu + Visual History acceptance.
+> **Status 27.09.2026:** R2 / PR #162 jest MERGED jako `fd77094…` i stanowi zaakceptowany forest baseline. Aktywna transza **R3 / #187 / Draft PR #192** ma zapisane `PCG_Valley` + `PCG_HighAlpine` oraz realne boulder massing. Po trzech jawnie zachowanych odrzuconych iteracjach bieżący NOW `58c89674…` / CI #417 przeszedł build, Automation, full Stage 3G proof i **Visual History acceptance** dla 1200/4900/8000 m. R3 pozostaje otwarte wyłącznie do synchronizacji z aktualnym `main`, finalnego exact-SHA CI, merge i zarejestrowania merged-main `AFTER`.
 
 - [ ] Ukształtować spójną dolinę otaczającą drogę zamiast czytelnych jako osobne kafle podpór terenu.
 - [ ] Zbudować kilka planów gór z wyraźną głębią i atmospheric perspective.
@@ -285,9 +285,9 @@ Stage 3 jest realizowany kolejno:
 |---|---|---|---|
 | `VH-3G-R1-001` | R1 — real Alpine ground + rocks | historical accepted baseline | PR #160 / `91c1150…` |
 | `VH-3G-R2-001` | R2 — deterministic PCG forest | **VISUAL_ACCEPTED / MERGED** | PR #162 / `fd77094…` / CI #398 |
-| `VH-3G-R3-001` | R3 — valley + high-Alpine PCG/massing | **IN_REVIEW** | #187 / Draft PR #192 |
+| `VH-3G-R3-001` | R3 — valley + high-Alpine PCG/massing | **NOW VISUAL_ACCEPTED · AFTER PENDING** | #187 / Draft PR #192 / CI #417 |
 
-R3 ma jawnie zachowany odrzucony checkpoint: CI #408 było technicznie zielone, ale 1200/8000 m pozostały praktycznie sceną R2. Taki stan **nie spełnia visual acceptance** i nie może zostać oznaczony jako `AFTER`.
+R3 zachowuje wszystkie odrzucone checkpointy (#408 brak widocznej integracji, #412 oversized/floating massing, #415 brak podłoża dla distant massing). Bieżący NOW `58c89674…` / CI #417 jest **VISUAL_ACCEPTED** jako R3 biome/massing baseline. `AFTER` pozostaje PENDING do merge i merged-main proofu.
 
 ### Tooling gate 3G
 
@@ -898,36 +898,3 @@ Obowiązkowe invariants:
 - brak energy banking;
 - brak fałszywych interakcji pomiędzy różnymi segmentami/poziomami trasy;
 - brak wymuszonego `VIP lane`;
-- identyczny stan i wejścia dają identyczny wynik.
-
-Harness musi zawierać co najmniej scenariusze: wspólna luka dla dwóch riderów, zamknięcie luki w trakcie passu, symetryczny deadlock, realne i sztuczne `BOXED_IN`, crosswind/echelon, hairpin, mokry zakręt, crest, szybki zjazd, wolny podjazd, stopped rider, merge/split grup, serpentyny/mosty/tunele, różne `lapIndex`, finish behavior oraz błędne/dropoutowe wejście mocy.
-
-### Pack Dynamics v0.1 — spec freeze
-
-Przed właściwą implementacją Pack Dynamics wymagane są następujące kontrakty:
-
-- jawna `RiderPackStateMachine`;
-- opisowy `PackPhaseModel`;
-- `RouteOccupancyModel`;
-- atomowy i deterministyczny `GapReservation`;
-- `InputIntegrity` dla danych trenażera;
-- debug/telemetry contract;
-- deterministic replay;
-- performance contract oparty na lokalnym neighborhood zamiast O(N²);
-- rozdzielenie `PlayerTechnique` i `AutopilotProficiency`;
-- competitive fairness policy;
-- przyszły network authority contract;
-- posture-aware occupancy;
-- walidacja bicycle-like/non-holonomic kinematics dla każdej trajektorii lateralnej.
-
-Po zapisaniu tych zasad spec Pack Dynamics v0.1 uznaje się za zamrożoną do czasu właściwego etapu po MVP.
-
-Nowe pomysły dotyczące Pack Dynamics trafiają do backlogu, chyba że rozwiązują krytyczną lukę w istniejących invariants.
-
-## Dokument kierunkowy po MVP
-
-Założenia dotyczące budżetów runtime/build, streamingu świata, przyszłej sieci dróg, skalowania dużej liczby kolarzy oraz multiplayera opisuje
-[`PERFORMANCE_MULTIPLAYER_ARCHITECTURE.md`](PERFORMANCE_MULTIPLAYER_ARCHITECTURE.md).
-
-Dokument ten definiuje ograniczenia architektoniczne i edge case'y, ale nie przenosi
-multiplayera ani otwartego świata do bieżącego zakresu MVP.
