@@ -27,6 +27,8 @@ jobs:
     if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.ref == 'refs/heads/feat/stage3g-r4-1-passo-giau-landscape-spike' }}
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 60
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
 
     steps:
       - name: Isolate self-hosted Git configuration
@@ -38,11 +40,11 @@ jobs:
           "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
           "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
 
-      - name: Checkout exact trusted revision with LFS
+      - name: Checkout exact trusted revision without LFS payloads
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
-          fetch-depth: 0
+          fetch-depth: 1
           lfs: false
           clean: false
           persist-credentials: true
