@@ -3,6 +3,10 @@
 #include "Containers/UnrealString.h"
 #include "Cycling/RiderParameters.h"
 #include "Cycling/Environment.h"
+#include "Cycling/CornerContext.h"
+#include "Cycling/CornerTechniqueRuntime.h"
+#include "Cycling/RoadPhysicsProfile.h"
+#include "Cycling/SurfaceGripPolicy.h"
 #include "Cycling/RiderInput.h"
 #include "Cycling/SimulationState.h"
 #include "Cycling/SimulationStepContext.h"
@@ -85,14 +89,71 @@ namespace CyclingSimulation
 			bool& bOutStoppedAfterStep,
 			FString& OutError);
 
+		// Stage 4C-B3c route-physics path. For every authoritative 0.05 s
+		// substep this resolves current Road Physics Profile state, corner
+		// context, lateral grip demand and tyre-limited braking force before
+		// integrating forward motion. The resolution therefore cannot depend
+		// on render-frame batching.
+		//
+		// Route-local lateral position D is read from the authoritative
+		// FSimulationState for every substep. BaseFrictionCoefficient is the
+		// caller-owned dry tyre/road coefficient and must be positive.
+		bool TryAdvanceWithCornerBraking(
+			double FrameDeltaS,
+			const FRiderParameters& Rider,
+			const ISimulationStepContextProvider& StepContextProvider,
+			const FRiderInput& RiderInput,
+			const CyclingRoadPhysics::FRoadPhysicsProfile& RoadProfile,
+			const CyclingCornerContext::FCornerContextSettings& CornerSettings,
+			const CyclingSurfaceGrip::FSurfaceGripPolicy& GripPolicy,
+			double BaseFrictionCoefficient,
+			FSimulationState& OutState,
+			double& RemainingAccumulatedTimeS,
+			int32& CompletedSteps,
+			TArray<FSimulationBoundaryCrossing>& OutBoundaryCrossings,
+			bool& bOutStoppedAfterStep,
+			FString& OutError);
+
 		// Returns the current simulation state.
 		const FSimulationState& GetState() const { return State; }
 
 		// Returns the accumulated unprocessed frame time in seconds (s).
 		double GetAccumulatedTimeS() const { return AccumulatedTimeS; }
 
+		// Completed deterministic route-corner technique scores in route order.
+		const TArray<CyclingCornerTechniqueRuntime::FCompletedRouteCornerTechniqueScore>&
+			GetCompletedCornerTechniqueScores() const
+		{
+			return TechniqueRuntimeState.CompletedScores;
+		}
+
+		// Number of completed corner episodes intentionally skipped because the
+		// runtime did not observe all four phases or Approach baseline was zero.
+		int32 GetSkippedCornerTechniqueEpisodeCount() const
+		{
+			return TechniqueRuntimeState.SkippedEpisodeCount;
+		}
+
+
 	private:
+		bool TryAdvanceInternal(
+			double FrameDeltaS,
+			const FRiderParameters& Rider,
+			const ISimulationStepContextProvider& StepContextProvider,
+			const FRiderInput& RiderInput,
+			const CyclingRoadPhysics::FRoadPhysicsProfile* RoadProfile,
+			const CyclingCornerContext::FCornerContextSettings* CornerSettings,
+			const CyclingSurfaceGrip::FSurfaceGripPolicy* GripPolicy,
+			double BaseFrictionCoefficient,
+			FSimulationState& OutState,
+			double& RemainingAccumulatedTimeS,
+			int32& CompletedSteps,
+			TArray<FSimulationBoundaryCrossing>& OutBoundaryCrossings,
+			bool& bOutStoppedAfterStep,
+			FString& OutError);
+
 		FSimulationState State;
 		double AccumulatedTimeS = 0.0;
+		CyclingCornerTechniqueRuntime::FCornerTechniqueRuntimeState TechniqueRuntimeState;
 	};
 }

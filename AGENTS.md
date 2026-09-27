@@ -186,7 +186,8 @@ The following rules apply to every task and do not weaken any earlier rule in th
 - Every task still follows the existing one issue, one branch, review, commit, push, and pull request workflow.
 - Office work may receive a reviewed checkpoint commit and push when Unreal Engine is unavailable on the office PC.
 - Such work must be explicitly marked `Unreal validation pending`.
-- An implementation pull request that contains Unreal C++ code, Unreal assets, or Unreal integration changes must not be opened until the relevant Unreal project build and Unreal Automation Tests pass on the home PC.
+- A **Draft** implementation pull request may be opened before home-PC Unreal validation when it is useful for review, CI orchestration or checkpointing. It must remain draft and explicitly state which Unreal/build/asset proofs are still pending.
+- An implementation pull request that contains Unreal C++ code, Unreal assets, or Unreal integration changes must not be marked ready for review or merged until the relevant Unreal project build, required Unreal Automation Tests and any stage-specific asset/runtime proof pass on the home/reference PC or trusted UE runner.
 - Documentation-only pull requests and other changes that cannot affect the Unreal build do not require Unreal validation.
 - The product owner granted standing merge authorization on 2026-09-23: a pull request may be merged automatically without a separate per-PR `scal` command when its scope is approved, all required validation is complete, all required CI/status gates are green, no unresolved review finding or known blocker remains, and the pull request is mergeable and not draft.
 - Standing merge authorization never waives required validation. Do not auto-merge when Unreal/home-PC validation is required but missing, any required gate is pending or failed, a review/blocker is unresolved, the pull request is draft/non-mergeable, or the product owner explicitly asks to hold the merge.

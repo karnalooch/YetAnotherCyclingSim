@@ -7,9 +7,10 @@ UI logic.
 
 from .cornering import Corner, CornerProfile
 from .route import RouteProfile, RouteSegment
+from .grip_policy import SurfaceGripPolicy, SurfaceGripRule
 from .weather import WeatherKeyframe, WeatherProfile
 
-__all__ = ["ALPINE_JOURNEY", "ALPINE_WEATHER", "ALPINE_CORNERS"]
+__all__ = ["ALPINE_JOURNEY", "ALPINE_WEATHER", "ALPINE_CORNERS", "ALPINE_SURFACE_GRIP_POLICY"]
 
 ALPINE_JOURNEY = RouteProfile(
     name="Alpine Journey",
@@ -91,6 +92,17 @@ ALPINE_WEATHER = WeatherProfile(
             surface_wetness=0.0,
             rolling_resistance_multiplier=1.00,
             grip_multiplier=1.00,
+        ),
+    ),
+)
+
+ALPINE_SURFACE_GRIP_POLICY = SurfaceGripPolicy(
+    name="Alpine Journey Surface Grip",
+    rules=(
+        SurfaceGripRule(
+            surface_id="asphalt",
+            dry_grip_multiplier=1.0,
+            fully_wet_grip_multiplier=0.75,
         ),
     ),
 )

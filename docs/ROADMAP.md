@@ -1,9 +1,9 @@
 # YetAnotherCyclingSim — roadmapa
 
-**Wersja:** 0.1  
-**Status:** Draft  
-**Tryb pracy:** 11–20 godzin tygodniowo  
-**Cel krótkoterminowy:** grywalna wersja od startu do mety  
+**Wersja:** 0.1
+**Status:** Draft
+**Tryb pracy:** 11–20 godzin tygodniowo
+**Cel krótkoterminowy:** grywalna wersja od startu do mety
 **Cel docelowy:** pełne MVP opisane w PRODUCT_REQUIREMENTS.md
 
 ## Zasady pracy
@@ -71,17 +71,18 @@ Assety wchodzą etapami, a nie jako osobny wielki art-pass:
 Prace prowadzone są na dwóch komputerach: biurowym (dokumentacja, Git, lekki kod, testy Pythona, bez Unreal Engine) i domowym (build projektu UE, testy automatyzacji, walidacja wydajności).
 
 - Jednocześnie mogą istnieć co najwyżej dwie niescalone gałęzie implementacyjne.
-- Równoległa praca jest dozwolona wyłącznie w ramach bieżącego etapu roadmapy.
+- Równoległa praca jest dozwolona w ramach bieżącego etapu oraz jawnie oznaczonych niezależnych workstreamów, jeżeli mają wspólny formalny kontrakt danych, osobne bramki CI i nie wymagają niescalonych zmian z drugiego workstreamu.
 - Zadania równoległe muszą być od siebie niezależne.
 - Gałąź równoległa nie może korzystać z API, plików źródłowych, assetów ani zachowań, które wprowadza dopiero inna niescalona gałąź.
 - Każde zadanie korzysta z jednego issue i jednej dedykowanej gałęzi: recenzja → commit → push → PR → automatyczne scalenie po spełnieniu wymaganych bramek i walidacji.
 - Checkpoint przygotowany na komputerze biurowym może zostać zacommitowany i wypchnięty po recenzji, ale raport musi jawnie oznaczać `Unreal validation pending`.
-- Pull Request zawierający kod C++ UE, assety UE albo zmiany integracyjne nie może zostać otwarty, dopóki odpowiedni build projektu UE i testy automatyzacji nie przejdą na komputerze domowym.
+- **Draft PR** z kodem C++ UE, assetami UE lub zmianami integracyjnymi może zostać otwarty przed pełnym proofem domowym, jeśli służy review, CI albo checkpointowi; musi pozostać draftem i jawnie wymieniać brakujące walidacje.
+- Taki PR nie może zostać oznaczony jako ready-for-review ani scalony, dopóki wymagany build UE, Automation i stage-specific asset/runtime proof nie przejdą na komputerze domowym lub zaufanym runnerze UE.
 - Pull Requesty zawierające wyłącznie dokumentację oraz inne zmiany niemające wpływu na build UE nie wymagają walidacji w Unreal Engine.
 - Od 2026-09-23 obowiązuje stała zgoda właściciela produktu na automatyczne scalanie: PR może zostać scalony bez osobnej komendy `scal`, jeżeli zakres jest zatwierdzony, wszystkie wymagane walidacje i bramki CI są zielone, nie ma nierozwiązanych uwag ani blockerów, a PR jest mergeable i nie jest draftem.
 - Stała zgoda na merge nie omija walidacji: nie wolno automatycznie scalać przy brakującym wymaganym proofie UE/home-PC, oczekującej lub czerwonej bramce, nierozwiązanym review/blockerze, konflikcie/drafcie ani gdy właściciel jawnie każe wstrzymać merge.
 - Po niepowodzeniu walidacji nie wolno osłabiać wymagań ani testów; najpierw trzeba zdiagnozować przyczynę.
-- Prac z kolejnych etapów roadmapy nie rozpoczynamy przed spełnieniem kryteriów ukończenia obecnego etapu.
+- Prac z kolejnych etapów roadmapy nie rozpoczynamy przed spełnieniem kryteriów ukończenia obecnego etapu, **chyba że roadmapa jawnie oznacza dany zakres jako równoległy workstream**. Taki wyjątek nie znosi końcowego integration gate ani Definition of Done wcześniejszego etapu.
 - Kompilacja UE, integracja z edytorem, walidacja assetów i wydajności pozostają odpowiedzialnością komputera domowego, gdy na komputerze biurowym nie ma Unreal Engine.
 - Docelowo komputer domowy jest kontrolowanym self-hosted runnerem GitHub Actions dla zaufanych workflow UE. Do czasu ukończenia #24 obowiązuje ręczne uruchamianie proofów; podczas Phase 1 #24 dozwolony jest wyłącznie ręczny `workflow_dispatch`, bez triggera na dowolny `pull_request`.
 
@@ -113,7 +114,7 @@ YetAnotherCyclingSim.
 **Jawny dług infrastrukturalny (nie blokuje bieżącego 3G):**
 
 - #22 — włączyć pozostałe ustawienia bezpieczeństwa GitHub i ochronę `main`; API nadal raportuje `main.protected = false`.
-- #24 — realny Windows/Unreal Engine runner działa na `yacs-home-ue58`; exact-SHA build, Automation, intentional-red, cleanup oraz Stage 3G full-validation canary zostały udowodnione. **Issue pozostaje otwarte**, bo generic trusted C++ UE lane nie jest jeszcze obowiązkową częścią `Aggregate CI gate`, a Phase 2/3 wymagają dalszego hardeningu i #22. Pełny plan: [`UNREAL_SELF_HOSTED_RUNNER_PLAN.md`](UNREAL_SELF_HOSTED_RUNNER_PLAN.md).
+- #24 — realny Windows/Unreal Engine runner działa na `yacs-home-ue58`; exact-SHA build, Automation, intentional-red, cleanup oraz Stage 3G full-validation canary zostały udowodnione. Od PR #163 generic trusted C++/UE lane jest automatycznie wymagany przez `Aggregate CI gate` dla `ue_code=true`. **Issue pozostaje otwarte wyłącznie dla dalszego Phase 2/3 hardeningu, autostartu/reboot proofu i zależności od #22.** Pełny plan: [`UNREAL_SELF_HOSTED_RUNNER_PLAN.md`](UNREAL_SELF_HOSTED_RUNNER_PLAN.md).
   - **Odroczony milestone operacyjny — dopiero przed Phase 2:** zastąpić ręczne uruchamianie `run.cmd` kontrolowanym autostartem runnera przez Windows Task Scheduler pod dedykowanym kontem runnera. Nie blokuje Phase 1 ani Stage 3G. Przed włączeniem trusted automatic UE execution wymagany jest reboot proof: restart hosta → runner sam wraca online → odbiera testowy job → build/Automation oraz co najmniej jeden workload wymagający interaktywnej sesji/GPU nadal przechodzą. Klasyczna usługa Windows nie jest domyślną ścieżką dla workloadów visual/GPU; można ją rozważyć wyłącznie po osobnym proofie kompatybilności.
 - #23 — ekstrakcja wspólnego CI do `engineering-platform` jest ukończona i zamknięta.
 
@@ -172,7 +173,7 @@ Dla ustalonych parametrów symulator oblicza powtarzalną prędkość i dystans,
 
 # Etap 2 — pierwszy grywalny prototyp UE5
 
-**Planowany czas:** tydzień 2–3  
+**Planowany czas:** tydzień 2–3
 **Status:** ukończony
 
 ## Cel
@@ -195,7 +196,7 @@ Połączyć wejście testowe, fizykę i ruch obiektu po prostej trasie.
 
 - [x] **2.2.1 — #17:** `FCyclingSimulationSession` — czysty, testowalny C++ spinający `RiderInputController`, parametry kolarza/środowiska i `FixedStepRunner`; konfiguracja oraz operacje fallible są transakcyjne, reset i deterministyczny rerun są objęte Automation. Ta transza została wcześniej zaimplementowana i scalona, ale nie była jawnie zapisana w roadmapie.
 
-**Dowód ukończenia:** #17, #44, #47, #48 oraz końcowy proof #49 / PR #59.  
+**Dowód ukończenia:** #17, #44, #47, #48 oraz końcowy proof #49 / PR #59.
 Stage 2 zakończył się zielonym buildem i Automation, realnym PIE proof, deterministycznym frame-pacing proof oraz bazowym pomiarem wydajności 1920×1080 na komputerze referencyjnym.
 
 ## Kryterium ukończenia
@@ -206,8 +207,8 @@ Użytkownik może przejechać prostą trasę, zmieniając moc i kadencję, a pr�
 
 # Etap 3 — trasa testowa i profil wysokości
 
-**Planowany czas:** tydzień 3–5  
-**Status:** rdzeń 3A–3F ukończony; 3G technicznie udowodnione, ale **wizualny/asset acceptance ponownie otwarty**; Stage 4A ukończone, 4B+ wstrzymane do domknięcia #80
+**Planowany czas:** tydzień 3–5
+**Status:** rdzeń 3A–3F ukończony; 3G technicznie udowodnione, ale **wizualny/asset acceptance ponownie otwarty**; 3H Road Physics Profile ukończone przez PR #165, #167 i #168; Stage 4A ukończone, 4B/4C odblokowane
 
 ## Cel
 
@@ -225,8 +226,9 @@ Stage 3 jest realizowany kolejno:
 6. **3F — PR #79:** utrwalenie pełnego stanu mapy, materiałów drogi/terenu i wizualnego baseline'u — **ukończone**.
 7. **3G — #80:** Reference Environment Pass — **techniczny authoring/final-proof pipeline jest ukończony przez PR #155, ale acceptance wizualny i progressive asset gate nie zostały spełnione; #80 wraca jako aktywny etap**.
 8. **3G-MCP — #85:** kontrolowany spike `db-lyon/ue-mcp` pozostaje częścią 3G tooling/worldgen; nie wolno traktować go jako substytutu PCG ani jako powodu do pominięcia source assetów.
+9. **3H — Road Physics Profile & Route Geometry Contract:** formalny kontrakt fizycznej drogi, niezależny od renderowanego mesha/PCG — **ukończone przez PR #165, #167 i #168**.
 
-**Korekta po audycie 26.09.2026:** Stage 4A zostało zrealizowane przed wykryciem luki acceptance. Zachowujemy ten scalony, czysty model domenowy, ale **nie rozpoczynamy 4B ani kolejnych funkcjonalnych etapów**, dopóki #80 nie spełni własnych kryteriów wizualnych i asset gate.
+**Korekta po audycie 26.09.2026:** Stage 4A zostało zrealizowane przed wykryciem luki acceptance i pozostaje ważnym, scalonym modelem domenowym. Od teraz Stage 3 ma dwa jawnie rozdzielone workstreamy: **World/3G** (assets, PCG, environment) oraz **Physics/3H → 4B/4C** (kontrakt drogi i czysta mechanika zakrętów). Mogą być rozwijane równolegle, ponieważ są spięte formalnym `Road Physics Profile` i osobnymi bramkami CI. **Końcowy in-world integration/acceptance 4D/4E nie może zostać uznany za ukończony, dopóki 3G i 3H nie są zielone.**
 
 ## Zadania rdzenia Stage 3
 
@@ -246,7 +248,7 @@ Stage 3 jest realizowany kolejno:
 
 ## 3G — Reference Environment Pass
 
-> **Status po audycie:** PR #155 udowodnił deterministyczny authoring, build/Automation, persistence, Map Check, LFS, capture harness i cleanup. To był wymagany proof techniczny, ale **nie dowód spełnienia poniższych kryteriów artystycznych**. Finalne capture'y nadal używają głównie prototypowych brył zastępczych, dlatego kryteria pozostają otwarte.
+> **Status po audycie:** PR #155 udowodnił deterministyczny authoring, build/Automation, persistence, Map Check, LFS, capture harness i cleanup. To był wymagany proof techniczny, ale **nie dowód spełnienia poniższych kryteriów artystycznych**. Draft PR #162 jest bieżącą transzą R2: ma realny conifer oraz zapisane na swojej gałęzi `PCG_RouteExclusion` i `PCG_Forest`, ale finalny committed-SHA UE/full-validation/fresh-load/visual/performance proof nadal jest wymagany przed merge i przed oznaczeniem tych assetów jako `validated`.
 
 - [ ] Ukształtować spójną dolinę otaczającą drogę zamiast czytelnych jako osobne kafle podpór terenu.
 - [ ] Zbudować kilka planów gór z wyraźną głębią i atmospheric perspective.
@@ -308,7 +310,7 @@ To nadal **nie jest finalny art pass Stage 7**: Stage 3G ma usunąć wygląd gre
 
 ### 3G-MCP — kontrolowana warstwa world generation (#85)
 
-UE-MCP jest narzędziem deweloperskim dla Stage 3G i późniejszego Stage 7, a nie nowym źródłem prawdy dla trasy.
+UE-MCP jest narzędziem deweloperskim dla Stage 3G i późniejszego Stage 7, a nie nowym źródłem prawdy dla trasy. **Nie jest też jedyną dozwoloną ścieżką authoringu PCG**: deterministyczne, projektowe workflow C++/Python/editor mogą tworzyć te same technical assets, o ile respektują route authority, guards, proof i cleanup. #85 jest bramką dla trwałych mutacji wykonywanych przez surface agenta/MCP, nie blokadą dla całego PCG.
 
 - [ ] Przypiąć stabilne `db-lyon/ue-mcp` i uruchomić bridge na UE 5.8.2.
 - [ ] Zachować Stage 3 route profile / geometry / spline / fixed-step simulation jako warstwę autorytatywną.
@@ -321,16 +323,64 @@ UE-MCP jest narzędziem deweloperskim dla Stage 3G i późniejszego Stage 7, a n
 
 Szczegóły architektury i plan wdrożenia: [`UE_MCP_WORLD_GENERATION.md`](UE_MCP_WORLD_GENERATION.md).
 
-**Warunek przejścia do dalszego Stage 4:** **NIESPEŁNIONY wizualnie.** PR #155 spełnił część techniczną: build ✅, Automation 53/53 ✅, Map Check 0/0 ✅, LFS/fresh-checkout ✅, trzy canonical captures ✅, cleanup ✅. Capture'y potwierdziły jednak, że environment nadal nie spełnia własnych kryteriów #80. Stage 4A pozostaje ważnym, już scalonym wyjątkiem; **4B+ czeka na zamknięcie #80 po visual/asset review.**
+**Warunek końcowej integracji Stage 4:** **NIESPEŁNIONY wizualnie.** PR #155 spełnił część techniczną: build ✅, Automation 53/53 ✅, Map Check 0/0 ✅, LFS/fresh-checkout ✅, trzy canonical captures ✅, cleanup ✅. Capture'y potwierdziły jednak, że environment nadal nie spełnia własnych kryteriów #80. **Nie blokuje to czystego workstreamu Physics po ukończeniu 3H:** 4B/4C mogą rozwijać route context, banking, grip i technique na syntetycznych profilach/testach. **4D/4E oraz finalny full-route in-world acceptance wymagają zielonych 3G i 3H.**
 
 **Canary infrastrukturalny:** Stage 3G jest pierwszym rzeczywistym workloadem dla Phase 1 #24. Jeżeli runner zostanie zarejestrowany przed finalnym proofem 3G, authoring/build/Automation/capture mogą zostać wykonane przez ręczny workflow na home PC. Nie zmienia to kryteriów 3G: wynik musi być przypięty do dokładnego SHA, artefakty `.uasset`/`.umap` muszą wejść przez Git LFS, a wizualny AFTER proof nadal podlega review.
+
+## 3H — Road Physics Profile & Route Geometry Contract
+
+**Status:** **ukończone** przez PR #165 (kanoniczny profil), #167 (Stage 3 geometry → physics) i #168 (lateral cross-slope + granica surface/grip metadata). 4B/4C są odblokowane. Dokument źródłowy: [`ROAD_PHYSICS_PROFILE.md`](ROAD_PHYSICS_PROFILE.md).
+
+### Cel
+
+Oddzielić autorytatywną fizyczną reprezentację drogi od renderowanego spline'a, mesha, terenu i PCG. Route/world authoring i fizyka mają konsumować ten sam jawny kontrakt, zamiast wyprowadzać fizykę z przypadkowych normalnych trójkątów lub wizualnej geometrii.
+
+### Minimalny kontrakt Stage 3H
+
+- [x] Zdefiniować route-local coordinates: dystans wzdłuż trasy `S` i pozycję boczną `D`.
+- [x] Zdefiniować elevation oraz longitudinal grade jako autorytatywne dane trasy.
+- [x] Zdefiniować signed horizontal curvature / radius i kierunek zakrętu.
+- [x] Zdefiniować vertical curvature jako metadata potrzebne pod przyszłe efekty nacisku na crest/compression.
+- [x] Zdefiniować road width i dopuszczalny lateral envelope dla racing line.
+- [x] Zdefiniować banking / cross-slope niezależnie od longitudinal grade.
+- [x] Wymagać ciągłych przejść krzywizny i bankingu; konkretny algorytm (np. clothoid-like) nie jest częścią kontraktu.
+- [x] Zdefiniować surface type, wetness i roughness jako metadata drogi.
+- [x] Zapewnić deterministyczne look-ahead queries dla corner anticipation / technique evaluation.
+- [x] Zdefiniować validation invariants dla nieciągłości, patologicznych spike'ów grade/curvature/banking, nieprawidłowej szerokości i wartości niefinitych.
+- [x] Zachować możliwość przyszłego front/rear tyre state bez wymuszania pełnego modelu opon w MVP.
+
+**Dowód implementacyjny:** PR #165 wprowadza parity Python/C++ dla S/D, elevation, grade, curvature, width, metadata i look-ahead; PR #167 buduje profil bezpośrednio z autorytatywnej Stage 3 geometry; PR #168 rozszerza cross-slope o lewą/prawą połowę jezdni zależną od D, zachowuje Alpine baseline 0°/0° i jawnie pozostawia resolver `surface_id + wetness → grip` dla 4B/4C. Żaden z tych kroków nie używa renderowanego spline'a, road mesha, terrainu, PCG ani Actor transformów jako źródła fizyki.
+
+### Granica MVP / post-MVP
+
+**Przed MVP fizyka ma faktycznie wykorzystywać:** longitudinal grade, horizontal curvature, road width + lateral position/racing line, banking/cross-slope, surface/wetness w uproszczonym grip modelu, shared braking+cornering grip budget oraz look-ahead potrzebny do oceny techniki.
+
+**Reprezentujemy teraz, ale zaawansowany wpływ fizyczny odkładamy po MVP:** vertical-curvature load effects, roughness energy loss/vibration, szczegółowy front/rear load transfer, szczegółowy tyre model / Magic Formula, lateral crosswind force i steering/roll moments, weave/wobble oraz crash/fall simulation.
+
+### Równoległe workstreamy
+
+Po zatwierdzeniu 3H obowiązuje podział:
+
+- **World lane:** 3G / assets / PCG / terrain / environment / visual polish.
+- **Physics lane:** synthetic Road Physics Profiles → 4B route corner context → 4C technique/consequences.
+- **Integration lane:** 4D guidance i 4E full-route proof dopiero po zielonych wymaganych bramkach obu lane'ów.
+
+Zmiana tylko w fizyce nie może wymagać pełnego pobrania assetów; zmiana tylko w assetach nie może wymuszać przebudowy fizyki bez powodu. Dla `ue_code=true` obowiązkowy jest code-only reusable Unreal lane z PR #163, a asset/full pozostaje osobnym ciężkim proofem.
+
+### Kryterium ukończenia
+
+- kanoniczny `Road Physics Profile` jest udokumentowany i wersjonowany;
+- route-local coordinate convention i jednostki są jednoznaczne;
+- MVP/post-MVP boundary jest zapisana;
+- Stage 4B może konsumować kontrakt bez zależności od PCG lub finalnych assetów;
+- future physics może rozszerzać kontrakt bez zastępowania go inną reprezentacją drogi.
 
 ---
 
 # Etap 4 — technika pokonywania zakrętów
 
-**Planowany czas:** tydzień 5–7  
-**Status:** Stage 4A / #156 ukończone przez PR #157; **4B+ wstrzymane do domknięcia Stage 3G / #80**
+**Planowany czas:** tydzień 5–7
+**Status:** Stage 4A ukończone przez PR #157; **4B-A/#169, 4B-B/#170 i 4B-C/#171 ukończone; 4C-A + 4C-B1/B2/B3a/B3b/B3c scalone przez PR #177; 4C-C1 scalone przez PR #179; 4C-C2 scalone przez PR #181; 4C-C3a scalone przez PR #183; 4C-C3b scalone przez PR #184; Stage 4C ukończone; 4D/4E wymagają wspólnego integration gate z World lane**
 
 ## Cel
 
@@ -339,28 +389,54 @@ Wprowadzić autorską mechanikę oceniającą odpuszczenie i ponowne rozpoczęci
 ## Plan wykonawczy
 
 1. **4A — #156:** czysty C++ cornering domain contract z parity do Python reference model — **ukończone / PR #157**.
-2. **4B:** route corner context — krzywizna/promień, corner-ahead, entry/apex/exit i limity gripu per fixed-step.
-3. **4C:** technique + consequences — spięcie mocy/kadencji z wide-line, utratą prędkości i controlled slip; bez upadków w MVP.
-4. **4D:** guidance + assists — linia przejazdu, markery entry/apex/exit, grip warning i poziomy asysty jako presentation-only.
-5. **4E:** deterministyczny full-route corner proof dla reprezentatywnych zakrętów oraz suchej/mokrej nawierzchni.
+2. **4B-A — PR #169:** route corner context z `Road Physics Profile` — signed curvature/radius, road width, lateral position, corner-ahead/look-ahead, entry/apex/exit — **ukończone**.
+3. **4B-B — PR #170:** jawna `SurfaceGripPolicy` — `surface_id + wetness -> grip_multiplier`, bez ukrytych współczynników; Alpine asphalt zachowuje parity z istniejącym `ALPINE_WEATHER` — **ukończone**.
+4. **4B-C — PR #171:** banking/off-camber + czysty fizyczny limit lateralny per fixed-step; brak arbitralnego safety factor i brak shared braking budget — **ukończone**.
+5. **4C-A — #173 / PR #177:** czysty shared grip kernel jako unit friction circle: znormalizowane żądanie longitudinal + lateral trafia do jednego budżetu; bez ukrytego braking modelu i bez consequence policy.
+6. **4C-B1 — #173 / PR #177:** jawny `brake_ratio ∈ [0,1]` w rider input/controller/session; default `0`, legacy path zachowuje exact regression parity.
+7. **4C-B2 — #173 / PR #177:** demand bridge per fixed-step: `brake_ratio -> longitudinal_usage`, a aktywne cornering `speed² / effective_radius / lateral_acceleration_limit -> lateral_usage`; oba trafiają do 4C-A.
+8. **4C-B3a — #173 / PR #177:** tyre-limited brake-force resolver: `μ_eff · static normal load`, ograniczony remaining longitudinal capacity z 4C-A; bez arbitralnego max-brake constant.
+9. **4C-B3b — #173 / PR #177:** explicit brake-force fixed-step integrator: siła hamowania trafia do predictor + work/energy balance, a legacy step deleguje z `0 N` dla exact regression parity.
+10. **4C-B3c — #173 / PR #177:** fixed-step orchestration: każdy substep pobiera bieżący Road Physics Profile, rozdziela look-ahead `Approach` od realnego lateral demand w `Entry/Apex/Exit`, rozwiązuje shared grip + brake force i dopiero wtedy wywołuje integrator; render-frame batching nie może zmieniać wyniku.
+11. **4C-C1 — #178 / PR #179:** geometry-derived consequences — `CornerContext + CornerGripDemand -> clean / wide line / controlled slip`, target `D` i minimalny target speed bez arbitralnych progów grip usage; bez upadków w MVP.
+12. **4C-C2 — #180 / PR #181:** route-derived technique score — realne fazy `Approach/Entry/Apex/Exit`, ciągłe release/recovery score dla mocy i kadencji oraz fizyczne line/speed retention z C1; osiem jawnych równoważnych składników, bez ukrytych wag i progów ratingowych — **ukończone**.
+13. **4C-C3a — #182 / PR #183:** authoritative consequence application — signed route-local `D` jest częścią authoritative `SimulationState`; C1 target line jest osiągany deterministycznie po dystansie zakrętu bez teleportu, a `controlled_slip` może tylko odebrać prędkość/energię — **ukończone**.
+14. **4C-C3b — #182 / PR #184:** runtime corner scoring — fixed-step runner transakcyjnie zbiera route-derived `Approach/Entry/Apex/Exit`, agreguje najgorszy line/speed consequence i finalizuje C2 score po wyjściu z zakrętu. Corner interval jest stabilizowany na globalnej siatce `scan_step_m` zakotwiczonej w `S=0`, a 30/60 FPS/jitter daje identyczny score — **ukończone**.
+15. **4D:** guidance + assists — linia przejazdu, markery entry/apex/exit, grip warning i poziomy asysty jako presentation-only; wymaga wspólnego integration gate z World lane.
+16. **4E:** deterministyczny full-route corner proof dla reprezentatywnych flat/banked/off-camber zakrętów oraz suchej/mokrej nawierzchni.
+
+## World + Physics execution lock — do wejścia w Stage 5
+
+Od 27.09.2026 mapa/World i fizyka Stage 4 są prowadzone jako jeden wspólny front wykonawczy. Nie uznajemy Stage 4 za domknięte na podstawie samego zielonego rdzenia fizyki: końcowy integration gate wymaga jednocześnie zielonego World/3G i Physics/4D/4E.
+
+Obowiązująca kolejność domknięcia:
+
+1. **World/3G:** zamknąć Reference Environment Pass, w tym deterministyczny PCG forest, route exclusion, progressive asset gate, visual/performance proof 1200/4900/8000 m oraz committed-SHA asset/full acceptance.
+2. **4D — guidance + assists:** recommended speed, jawny target line / auto line selection w granicach Road Physics Profile, presentation-only entry/apex/exit guidance, grip warning i regulowane poziomy asysty. Guidance i assists nie mogą zmieniać autorytatywnej fizyki poza jawnymi, testowalnymi wejściami polityki asysty.
+3. **4E — full-route corner proof:** deterministyczny start-to-finish proof obejmujący reprezentatywne flat/banked/off-camber zakręty, suchą/mokrą nawierzchnię, 30/60 FPS/jitter parity, route bounds, brak teleportów oraz spójny corner score/consequence telemetry.
+4. **Stage 5 entry gate:** dopiero po zielonym 3G + 4D + 4E rozpoczynamy właściwy HUD/session flow. Stage 5 konsumuje gotowe dane cornering/guidance/session, ale nie redefiniuje fizyki ani geometrii świata.
+
+Przez ten okres raportowanie projektu prowadzi się wspólnie jako **World + Physics**, żeby nie zgubić zależności pomiędzy mapą, widocznym guidance, route geometry i autorytatywną fizyką.
 
 ## Zadania
 
-- [ ] Obliczanie krzywizny drogi.
-- [ ] Określenie strefy wejścia, apeksu i wyjścia.
+- [x] Obliczanie signed curvature drogi i efektywnego promienia toru przejazdu — PR #169.
+- [x] Określenie strefy wejścia, apeksu i wyjścia — PR #169.
 - [ ] Obliczanie zalecanej prędkości.
-- [ ] Analiza momentu zmniejszenia mocy.
-- [ ] Analiza momentu wznowienia pedałowania.
-- [ ] Automatyczny wybór toru przejazdu.
+- [x] Analiza momentu zmniejszenia mocy na poziomie realnych faz route-derived — 4C-C2/#180; dokładniejszy sub-phase timing może zostać dopracowany po MVP.
+- [x] Analiza wznowienia mocy/kadencji w `Exit` względem jawnego baseline `Approach` — 4C-C2/#180.
+- [ ] Automatyczny wybór toru przejazdu z jawną pozycją boczną na drodze (`D`) i wykorzystaniem dostępnej szerokości.
 - [ ] Wizualna linia przejazdu i strefy entry/apex/exit na drodze.
 - [ ] Kontekstowe ostrzeżenia o przyczepności i trudności zakrętu.
-- [ ] Poszerzenie toru po błędzie.
-- [ ] Utrata prędkości po błędzie.
-- [ ] Kontrolowany uślizg bez upadku.
-- [ ] Wpływ mokrej nawierzchni.
-- [ ] Ocena każdego zakrętu.
+- [x] Deterministyczne wyliczenie i zastosowanie poszerzenia toru po błędzie — 4C-C1/#178/PR #179 + authoritative `D` application PR #183.
+- [x] Deterministyczne wyliczenie i zastosowanie minimalnej utraty prędkości po błędzie — 4C-C1/#178/PR #179 + controlled-slip speed projection PR #183.
+- [x] Model controlled slip bez upadku i bez arbitralnych progów — 4C-C1/#178/PR #179; authoritative runtime application scalone przez PR #183.
+- [x] Wpływ bankingu / off-camber oraz mokrej nawierzchni na czysty limit lateralny — 4B-B/4B-C; shared braking budget pozostaje 4C.
+- [x] Wspólny budżet przyczepności end-to-end dla hamowania i corneringu — 4C-A + 4C-B1/B2/B3a/B3b/B3c scalone przez PR #177.
+- [x] Deterministyczny look-ahead do oceny przygotowania przed zakrętem — PR #169.
+- [x] Ocena każdego kompletnego zakrętu z realnych fixed-step faz route-derived; niepełne epizody są jawnie liczone jako skipped — 4C-C3b/#182.
 - [ ] Regulowane poziomy asysty.
-- [ ] Testy powtarzalności wyników.
+- [x] Testy powtarzalności wyniku fizyki i score przy 30 FPS / 60 FPS / jitter oraz rollback całego epizodu po błędzie batcha — 4C-C3b/#182.
 
 ### Asset gate Stage 4
 
@@ -403,6 +479,7 @@ Użytkownik może rozpocząć, ukończyć i podsumować całą sesję bez korzys
 # Etap 6 — kamery, kolarz i rower
 
 **Planowany czas:** tydzień 7–9
+**Status:** planowany; implementacja pozostaje zablokowana do przejścia wspólnego World + Physics integration gate przed Stage 5/6. Poniższy preflight jest przygotowaniem zakresu, nie zgodą na wcześniejsze rozpoczęcie Stage 6.
 
 ## Założenie animacji kolarza
 
@@ -414,7 +491,23 @@ osobnego mocapu dla każdego przypadku.
 
 Minimalny przepływ Stage 6:
 
-`base mocap / cadence animation -> additive cycling pose -> procedural Control Rig -> hand/foot IK -> final rider pose`.
+`cycling mocap / base animation -> IK Rig + IK Retargeter -> cadence/posture layer -> Control Rig procedural offsets -> FullBodyIK contact solve -> head/look-ahead additive -> final rider pose`.
+
+Rower jest źródłem transformów kontaktowych: co najmniej `LeftHandGrip`, `RightHandGrip`, `LeftPedal` i `RightPedal`. Obrót korby/pedałów wynika z kadencji, a stan fizyki dostarcza m.in. lean, braking, grade i corner context. Warstwa prezentacji może te dane konsumować, ale nie może modyfikować fizyki.
+
+## Stage 6 risk-reduction preflight
+
+Zanim wybierzemy finalnego ridera i rozpoczniemy pełny art/animation pass:
+
+- potraktować **Game Animation Sample 5.8** wyłącznie jako aktualny reference project dla retargetingu, Control Rig, additive Look-At i debugowania animacji; nie migrować całego frameworka ani jego locomotion stacku do YACS;
+- na placeholder riderze udowodnić retarget jednego reprezentatywnego cycling clipu oraz cztery jednoczesne kontakty FBIK: dwie dłonie na gripach i dwie stopy na pedałach;
+- udowodnić cadence-driven crank/pedals oraz zmianę pozycji bez utraty kontaktów;
+- udowodnić physics-driven lean/corner posture z istniejącego stanu Stage 4, bez odtwarzania fizyki w Animation Blueprint;
+- udowodnić additive head stabilization/look-ahead po trasie;
+- przygotować powtarzalny authoring/proof flow przez istniejącą kontrolowaną warstwę `ue-mcp` tam, gdzie jej powierzchnia narzędziowa jest już zwalidowana; brakujące operacje nie uzasadniają automatycznie nowego frameworka;
+- kamera MVP startuje od zwykłego `CameraComponent` / `SpringArm` / `PlayerCameraManager`. Experimental **Gameplay Cameras** i zewnętrzny **GameplayCameraToolset** mogą otrzymać osobny, mały spike tylko wtedy, gdy zwykła ścieżka ujawni konkretny problem z dampingiem, collision, blendingiem lub authoringiem.
+
+Preflight ma zmniejszyć ryzyko Stage 6. Nie jest osobnym etapem i nie rozszerza MVP.
 
 ## Zadania
 
@@ -423,11 +516,12 @@ Minimalny przepływ Stage 6:
 - [ ] Dopasowanie kolarza do roweru.
 - [ ] Import szkieletu kolarza i przygotowanie retargetingu bazowego mocapu.
 - [ ] Animacja pedałowania zależna od kadencji.
+- [ ] Obrót korby i pedałów jako jawne źródło transformów celu dla foot IK; nie wypiekać kontaktu stóp wyłącznie w klipie animacji.
 - [ ] Toczenie bez pedałowania.
 - [ ] Bazowe blendowane pozycje: neutral seated, aggressive/aero, descending tuck, standing/sprint i cornering.
 - [ ] Pochylenie roweru i ciała w zakrętach sterowane stanem fizyki zamiast sztywną animacją.
 - [ ] `Control Rig` / proceduralne offsety dla miednicy, kręgosłupa, głowy, barków i łokci.
-- [ ] IK dłoni do punktów chwytu kierownicy oraz IK stóp do pedałów, niezależne od bazowego mocapu.
+- [ ] FBIK/IK utrzymujące cztery jawne cele kontaktowe: lewa/prawa dłoń → grip, lewa/prawa stopa → pedał, niezależnie od bazowego mocapu i bieżącej pozycji.
 - [ ] Stabilizacja głowy i look-ahead po spline trasy, tak aby kolarz patrzył przez zakręt.
 - [ ] Rozdzielenie warstwy prezentacji od konkretnego mesha/szkieletu, aby model kolarza można było później podmienić bez przepisywania logiki jazdy.
 - [ ] Kamera za kolarzem.
@@ -451,6 +545,9 @@ oraz cele IK `Hand` / `Foot`; system animacji nie może zmieniać wyniku fizyki.
 - [ ] Włączyć **Control Rig** dla proceduralnej warstwy pozy kolarza.
 - [ ] Włączyć **IK Rig** dla retargetingu oraz definiowania goal/solver chain dla ridera.
 - [ ] Włączyć **FullBodyIK** dla wielu jednoczesnych celów dłonie/pedały/głowa/miednica i proceduralnych korekt całego ciała.
+- [ ] Użyć **Game Animation Sample 5.8** jako reference/sample do wzorców retargetingu, additive Look-At i debugowania; nie dodawać go jako runtime/framework dependency YACS.
+- [ ] Zbudować powtarzalny Stage 6 authoring/proof flow przez kontrolowaną powierzchnię `ue-mcp` tylko dla operacji, które przechodzą istniejące guards/build/proof; nowe AI toolsety są CONDITIONAL, nie domyślne.
+- [ ] Zachować klasyczny stos kamer MVP (`CameraComponent` / `SpringArm` / `PlayerCameraManager`); **Gameplay Cameras** pozostają Experimental i nie są zależnością MVP bez osobnego comparative spike.
 - [ ] Ocenić **Skeletal Mesh Editing Tools** tylko jeśli naprawy skinning/rigging w UE realnie oszczędzają eksport do Blendera.
 - [ ] Ocenić **Control Rig Modules** dopiero po powstaniu pierwszego działającego minimalnego Control Riga; nie dodawać modułów przed pomiarem potrzeby.
 - [ ] Zmierzyć koszt Control Rig + IK/FBIK na komputerze referencyjnym i zachować możliwość LOD/update-rate reduction bez wpływu na fizykę.
@@ -494,6 +591,8 @@ ciągłą zmianę pozy bez utraty kontaktu dłoni z kierownicą i stóp z pedał
 ### Tooling gate Stage 7
 
 - [ ] Rozszerzać istniejące PCG graphs/flows zamiast ręcznie stawiać masowe environment dressing.
+- [ ] Traktować **PCG Biome Core / Sample** jako reference architecture dla data-driven biome composition (valley / forest / high Alpine), a nie jako automatyczną zależność produkcyjną; plugin jest Experimental i wymaga własnego proofu, jeśli miałby wejść do projektu.
+- [ ] Wykonać ograniczony **PCGEx** spike tylko wtedy, gdy vanilla PCG ujawni konkretny koszt złożoności, np. route-exclusion/spatial queries albo kontrolę forest density. Przyjąć dependency wyłącznie po porównaniu graph complexity, determinism, build/upgrade risk i performance z rozwiązaniem natywnym.
 - [ ] Rozważyć **Scriptable Tools Editor Mode** tylko wtedy, gdy własny panel/tryb typu „Generate YACS World” daje wyraźną przewagę nad nazwanymi MCP flows i zwykłymi Editor Utility workflows.
 - [ ] Nie dodawać ciężkich world-building frameworków, jeżeli natywne PCG + Geometry Script + nasze flows pokrywają potrzebę.
 - [ ] Każde nowe narzędzie świata musi respektować `/Game/Generated/YACS/**`, deterministyczny seed, route clearance i cleanup/regeneration contract.
@@ -531,7 +630,9 @@ Każdy płatny lub zewnętrzny pack trafia do Asset Ledger w [`ASSET_PLAN.md`](A
 ### Tooling gate Stage 8
 
 - [ ] Włączyć/zweryfikować **Niagara** jako podstawowy system VFX dla deszczu, sprayu, wind/debris i subtelnych efektów atmosferycznych.
-- [ ] Włączyć/zweryfikować **MetaSounds** dla parametrycznego drivetrain/freehub/tyres/brakes/wind audio zależnego od stanu jazdy.
+- [ ] Deszcz i wheel spray budować jako **lokalne efekty wokół ridera/kamery**, skalowane jakościowo i profilowane; stan pogody może być globalny, ale MVP nie symuluje cząstek deszczu na całej trasie.
+- [ ] Wetness ma być wspólnym gameplay/presentation state: fizyka konsumuje autorytatywną wartość wetness/grip, a materiały/Niagara/audio wyłącznie ją prezentują.
+- [ ] Włączyć/zweryfikować **MetaSounds** dla parametrycznego drivetrain/freehub/tyres/brakes/wind audio zależnego od stanu jazdy; preferować mały zestaw źródeł + parametry `speed/cadence/power/coasting/braking/surface/wetness/wind` zamiast eksplozji wariantów sampli.
 - [ ] Nie włączać eksperymentalnego MetaSounds feature set bez konkretnej potrzeby; bazowy MetaSound ma pierwszeństwo.
 - [ ] Audio/VFX otrzymują parametry z gameplay/presentation, ale nie stają się źródłem prawdy dla fizyki.
 - [ ] Zarejestrować i zwalidować w Technical UE Asset Ledger co najmniej `NS_Rain`, `NS_WheelSpray`, `MS_Drivetrain` i `MS_Wind`, z proofem GPU/audio odpowiednim dla typu assetu.

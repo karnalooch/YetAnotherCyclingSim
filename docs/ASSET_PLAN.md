@@ -205,11 +205,15 @@ MVP potrzebuje jednej dopracowanej postaci:
 Animacja:
 
 - istniejący cycling mocap jako warstwa bazowa;
+- IK Rig + IK Retargeter dla jawnego source → rider pipeline;
 - proceduralne pozycje: seated, aero, descending tuck, standing/sprint, cornering;
 - Control Rig;
-- hand IK;
-- foot/pedal IK;
-- look-ahead / head stabilization.
+- FullBodyIK z czterema stabilnymi celami kontaktowymi: lewa/prawa dłoń na gripach i lewa/prawa stopa na pedałach;
+- look-ahead / head stabilization jako warstwa additive/presentation;
+- cadence-driven crank/pedals dostarczające transformy celu foot IK;
+- physics-driven lean/corner pose konsumujące stan Stage 4 bez sprzężenia zwrotnego do fizyki.
+
+**Game Animation Sample 5.8** jest wyłącznie reference project do wzorców retargetingu/Control Rig/Look-At/debugowania; nie jest source assetem YACS i nie importujemy całego frameworka locomotion.
 
 **Wchodzi:** Stage 6.
 
@@ -228,7 +232,7 @@ MVP potrzebuje jednego road bike'a z możliwie rozdzielonymi elementami:
 - brake components;
 - saddle.
 
-Preferujemy model, w którym koła, korba i elementy wymagające animacji nie są zespawane w jeden mesh.
+Preferujemy model, w którym koła, korba i elementy wymagające animacji nie są zespawane w jeden mesh. Rower musi dać się przygotować z czterema stabilnymi punktami kontaktowymi/sockets dla dłoni i stóp oraz z jednoznaczną osią/pozycją korby i pedałów potrzebną do cadence-driven contact solve.
 
 Model może pochodzić z marketplace'u albo z pipeline'u Tripo/Meshy, jeżeli przejdzie review geometrii, topologii, skali i materiałów.
 
@@ -285,7 +289,7 @@ Potrzebne:
 - dust/pollen/insects jako subtelne dodatki;
 - skid/brake FX tylko jeśli mechanika faktycznie tego używa.
 
-Najpierw używamy natywnych systemów UE (SkyAtmosphere, Volumetric Clouds, Niagara itd.). Nie kupujemy dużego weather frameworka przed udowodnieniem konkretnej luki.
+Najpierw używamy natywnych systemów UE (SkyAtmosphere, Volumetric Clouds, Niagara itd.). Nie kupujemy dużego weather frameworka przed udowodnieniem konkretnej luki. Dla MVP deszcz/spray są projektowane jako lokalne efekty wokół ridera/kamery i kół; globalny stan pogody nie oznacza globalnej symulacji cząstek na całej trasie.
 
 **Wchodzi:** Stage 8; część atmosfery już w 3G.
 
@@ -376,8 +380,11 @@ Planowane:
 - `RTG_CyclingMocap`;
 - `CR_Cyclist`;
 - Animation Blueprint / Blend Spaces / pose assets potrzebne do runtime;
-- jawne hand/foot/pelvis/head goal definitions;
+- jawne `LeftHandGrip`, `RightHandGrip`, `LeftPedal`, `RightPedal` goal/socket definitions oraz pelvis/head goals tam, gdzie potrzebne;
+- cadence/crank presentation data potrzebne do deterministycznego wyliczenia pozycji pedałów;
 - rider presentation Data Asset, jeśli parametry proceduralnej pozy będą wymagały wersjonowanej konfiguracji.
+
+Reference/sample projekty i spike'owe pluginy (np. Game Animation Sample, Gameplay Cameras/GameplayCameraToolset) **nie trafiają do Technical UE Asset Ledger**, dopóki nie staną się rzeczywistą, zatwierdzoną zależnością produkcyjną.
 
 #### Stage 8 / VFX i audio
 
@@ -392,7 +399,8 @@ Planowane:
 - `MS_Tyres`;
 - `MS_Wind`;
 - MetaSound patches dla współdzielonej modulacji, jeśli faktycznie redukują duplikację;
-- wetness/material instances zależne od stanu pogody.
+- wetness/material instances zależne od stanu pogody;
+- jawne scalability/intensity data dla lokalnego rain/spray envelope, jeśli nie wystarczą parametry systemu Niagara.
 
 #### Konwencja katalogów
 
@@ -527,13 +535,15 @@ Technical assets zwykle nie mają osobnej ceny zakupu, ale mogą dziedziczyć og
 | `PCG_RouteExclusion` | PCG helper/settings | 3G | prototype | authoritative `FRouteGeometryProfile` + tested Stage 3G route-clearance contract | PR #162 authoring/proof must show deterministic reload and no generated instance violates route-clearance contract before `validated` |
 | `IK_Rider` | IK Rig | 6 | planned | production rider skeleton | retarget chain validation |
 | `RTG_CyclingMocap` | IK Retargeter | 6 | planned | mocap source + rider IK rigs | representative cycling clip retarget proof |
-| `CR_Cyclist` | Control Rig | 6 | planned | rider skeleton + bike contact goals | hand/foot contact + tuck/corner/standing proof |
-| `NS_Rain` | Niagara System | 8 | planned | optional VFX textures/noise | visual + GPU proof |
+| `CR_Cyclist` | Control Rig | 6 | planned | rider skeleton + four bike contact goals + physics presentation inputs | four-point contact + cadence transition + tuck/corner/standing + head look-ahead proof |
+| `NS_Rain` | Niagara System | 8 | planned | optional VFX textures/noise + weather intensity | localized rider/camera envelope + visual + GPU proof |
 | `NS_WheelSpray` | Niagara System | 8 | planned | wheel/surface/wetness state | camera-visible spray + GPU proof |
 | `MS_Drivetrain` | MetaSound Source | 8 | planned | drivetrain source samples + cadence/power inputs | parameter continuity + audio sanity |
 | `MS_Wind` | MetaSound Source | 8 | planned | wind source samples/noise + speed/wind inputs | direction/speed response proof |
 
 Statusy technical assets: `planned`, `prototype`, `reviewed`, `validated`, `deprecated`, `removed`.
+
+Tabela opisuje stan zaakceptowany dla bieżącej linii dokumentacji/main. Draft PR #162 ma na swojej gałęzi realne `PCG_RouteExclusion` i `PCG_Forest`, ale dopóki nie przejdą finalnego committed-SHA/full-validation/visual/performance proofu i merge, nie podnosimy ich tutaj do `validated`.
 
 Technical asset przechodzi do `validated` dopiero po wymaganym build/proofie na komputerze referencyjnym.
 

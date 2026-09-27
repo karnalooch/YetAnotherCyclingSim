@@ -800,6 +800,38 @@ bool FRiderInputControllerTest::RunTest(const FString& Parameters)
 		}
 	}
 
+	// --- Stage 4C-B1: normalized braking command contract. ---
+
+	{
+		FRiderInputController Controller;
+		FString Error;
+		TestEqual(TEXT("default brake ratio is released"), Controller.GetInput().BrakeRatio, 0.0);
+
+		TestTrue(TEXT("set brake 0.4 succeeds"), Controller.TrySetBrakeRatio(0.4, Error));
+		TestEqual(TEXT("brake ratio becomes 0.4"), Controller.GetInput().BrakeRatio, 0.4);
+
+		TestTrue(TEXT("brake above one clamps"), Controller.TrySetBrakeRatio(2.0, Error));
+		TestEqual(TEXT("brake ratio clamps to one"), Controller.GetInput().BrakeRatio, 1.0);
+
+		TestTrue(TEXT("brake below zero clamps"), Controller.TrySetBrakeRatio(-1.0, Error));
+		TestEqual(TEXT("brake ratio clamps to zero"), Controller.GetInput().BrakeRatio, 0.0);
+
+		TestTrue(TEXT("set brake before non-finite test succeeds"), Controller.TrySetBrakeRatio(0.6, Error));
+		TestFalse(TEXT("NaN brake ratio rejected"), Controller.TrySetBrakeRatio(NaNValue, Error));
+		TestEqual(TEXT("NaN brake ratio preserves prior value"), Controller.GetInput().BrakeRatio, 0.6);
+
+		Controller.Reset();
+		TestEqual(TEXT("reset releases braking"), Controller.GetInput().BrakeRatio, 0.0);
+	}
+
+	{
+		FRiderInputController Controller;
+		FString Error;
+		TestTrue(TEXT("set brake before successful configure"), Controller.TrySetBrakeRatio(0.7, Error));
+		TestTrue(TEXT("valid configure succeeds"), Controller.TryConfigure(MakeDefaultConfig(), Error));
+		TestEqual(TEXT("successful configure releases braking"), Controller.GetInput().BrakeRatio, 0.0);
+	}
+
 	return true;
 }
 

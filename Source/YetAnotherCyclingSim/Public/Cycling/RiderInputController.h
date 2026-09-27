@@ -47,10 +47,10 @@ struct YETANOTHERCYCLINGSIM_API FRiderInputControllerConfig
 
 // Deterministic, rendering-independent rider input controller.
 //
-// The controller owns a current rider input (power in watts (W) and
-// cadence in revolutions per minute (rpm)) and a configuration that
-// defines the inclusive operating range and adjustment step for each
-// field.
+// The controller owns a current rider input (power in watts (W), cadence in
+// revolutions per minute (rpm), and normalized brake ratio). Configuration
+// defines the power/cadence ranges; braking always uses the fixed normalized
+// [0, 1] contract and resets to released (0.0).
 //
 // A default-constructed controller starts in a valid state using the
 // default configuration. The controller has no direct dependency on
@@ -82,6 +82,10 @@ public:
 	// failure, OutError receives a useful message.
 	bool TrySetCadenceRpm(double ValueRpm, FString& OutError);
 
+	// Sets normalized braking command. Finite values are clamped to [0, 1].
+	// Non-finite values are rejected without changing the current input.
+	bool TrySetBrakeRatio(double Value, FString& OutError);
+
 	// Increases the current power by the configured PowerStepW, clamping
 	// at MaxPowerW. The addition is performed with a saturating
 	// comparison that avoids intermediate floating-point overflow.
@@ -100,8 +104,8 @@ public:
 	// clamping at MinCadenceRpm. Saturating comparison avoids overflow.
 	bool TryDecreaseCadence(FString& OutError);
 
-	// Restores the current input to the configured initial power and
-	// cadence values.
+	// Restores configured initial power/cadence and releases braking
+	// (BrakeRatio = 0.0).
 	void Reset();
 
 	// Returns the current rider input as the physics data contract.

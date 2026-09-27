@@ -46,8 +46,27 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
             self.ci,
         )
         self.assertIn("codeql_languages_json: '[\"c-cpp\"]'", self.ci)
-        self.assertNotIn("name: Code-only Unreal canary", self.ci)
-        self.assertIn("needs.changes.outputs.ue_code", self.ci)
+
+    def test_unreal_code_lane_is_path_gated_and_trusted(self):
+        self.assertIn("  unreal-code:\n", self.ci)
+        self.assertIn("name: Unreal code build and Automation", self.ci)
+        self.assertIn("needs.changes.outputs.ue_code == 'true'", self.ci)
+        self.assertIn(
+            "github.event.pull_request.head.repo.full_name == github.repository",
+            self.ci,
+        )
+        self.assertIn("uses: ./.github/workflows/reusable-unreal.yml", self.ci)
+
+    def test_unreal_code_lane_is_fail_closed_in_aggregate(self):
+        self.assertIn("- unreal-code", self.ci)
+        self.assertIn(
+            "UNREAL_CODE_RESULT: ${{ needs.unreal-code.result }}",
+            self.ci,
+        )
+        self.assertIn(
+            'require_optional "unreal-code" "${CLASS_UE_CODE}" "${UNREAL_CODE_RESULT}"',
+            self.ci,
+        )
 
     def test_asset_lane_is_lightweight_and_pointer_only(self):
         self.assertIn("name: Lightweight asset validation", self.ci)
@@ -72,12 +91,27 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
         self.assertNotIn("lfs: true", self.unreal)
         self.assertIn("Test-YacsCodeOnlyCheckout.ps1", self.unreal)
 
+    def test_reusable_unreal_normalizes_persistent_lfs_before_checkout(self):
+        normalize = self.unreal.index(
+            "Normalize stale LFS payloads before code-only checkout"
+        )
+        checkout = self.unreal.index(
+            "Checkout exact caller revision without LFS payloads"
+        )
+        guard = self.unreal.index("Enforce code-only checkout")
+        self.assertLess(normalize, checkout)
+        self.assertLess(checkout, guard)
+        self.assertIn("git lfs ls-files --name-only", self.unreal)
+        self.assertIn("Remove-Item -LiteralPath $path -Force", self.unreal)
+        self.assertNotIn("git lfs pull", self.unreal)
+
     def test_aggregate_knows_every_optional_lane(self):
         for lane in (
             "python-reference",
             "security-base",
             "security-python",
             "security-cpp",
+            "unreal-code",
             "asset-validation",
             "stage3g-full-validation",
         ):

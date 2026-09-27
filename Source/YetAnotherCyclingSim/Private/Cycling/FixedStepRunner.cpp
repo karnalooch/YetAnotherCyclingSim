@@ -1,6 +1,9 @@
 #include "Cycling/FixedStepRunner.h"
 
 #include "Cycling/SimulationStep.h"
+#include "Cycling/CornerBrakingStep.h"
+#include "Cycling/CornerConsequence.h"
+#include "Cycling/CornerConsequenceApplication.h"
 #include "Cycling/PhysicsValidation.h"
 #include "Math/NumericLimits.h"
 
@@ -88,6 +91,72 @@ namespace CyclingSimulation
 		bool& bOutStoppedAfterStep,
 		FString& OutError)
 	{
+		return TryAdvanceInternal(
+			FrameDeltaS,
+			Rider,
+			StepContextProvider,
+			RiderInput,
+			nullptr,
+			nullptr,
+			nullptr,
+			0.0,
+			OutState,
+			RemainingAccumulatedTimeS,
+			CompletedSteps,
+			OutBoundaryCrossings,
+			bOutStoppedAfterStep,
+			OutError);
+	}
+
+	bool FFixedStepSimulationRunner::TryAdvanceWithCornerBraking(
+		double FrameDeltaS,
+		const FRiderParameters& Rider,
+		const ISimulationStepContextProvider& StepContextProvider,
+		const FRiderInput& RiderInput,
+		const CyclingRoadPhysics::FRoadPhysicsProfile& RoadProfile,
+		const CyclingCornerContext::FCornerContextSettings& CornerSettings,
+		const CyclingSurfaceGrip::FSurfaceGripPolicy& GripPolicy,
+		double BaseFrictionCoefficient,
+		FSimulationState& OutState,
+		double& RemainingAccumulatedTimeS,
+		int32& CompletedSteps,
+		TArray<FSimulationBoundaryCrossing>& OutBoundaryCrossings,
+		bool& bOutStoppedAfterStep,
+		FString& OutError)
+	{
+		return TryAdvanceInternal(
+			FrameDeltaS,
+			Rider,
+			StepContextProvider,
+			RiderInput,
+			&RoadProfile,
+			&CornerSettings,
+			&GripPolicy,
+			BaseFrictionCoefficient,
+			OutState,
+			RemainingAccumulatedTimeS,
+			CompletedSteps,
+			OutBoundaryCrossings,
+			bOutStoppedAfterStep,
+			OutError);
+	}
+
+	bool FFixedStepSimulationRunner::TryAdvanceInternal(
+		double FrameDeltaS,
+		const FRiderParameters& Rider,
+		const ISimulationStepContextProvider& StepContextProvider,
+		const FRiderInput& RiderInput,
+		const CyclingRoadPhysics::FRoadPhysicsProfile* RoadProfile,
+		const CyclingCornerContext::FCornerContextSettings* CornerSettings,
+		const CyclingSurfaceGrip::FSurfaceGripPolicy* GripPolicy,
+		double BaseFrictionCoefficient,
+		FSimulationState& OutState,
+		double& RemainingAccumulatedTimeS,
+		int32& CompletedSteps,
+		TArray<FSimulationBoundaryCrossing>& OutBoundaryCrossings,
+		bool& bOutStoppedAfterStep,
+		FString& OutError)
+	{
 		using namespace CyclingPhysicsValidation;
 
 		OutError.Reset();
@@ -148,6 +217,8 @@ namespace CyclingSimulation
 		}
 
 		FSimulationState LocalState = State;
+		CyclingCornerTechniqueRuntime::FCornerTechniqueRuntimeState LocalTechniqueRuntimeState =
+			TechniqueRuntimeState;
 		double LocalAccumulator = TotalAccumulatedTime;
 		int32 LocalCompletedSteps = 0;
 		TArray<FSimulationBoundaryCrossing> LocalCrossings;
@@ -166,13 +237,109 @@ namespace CyclingSimulation
 				return false;
 			}
 
-			FSimulationState NextState;
+			double BrakeForceN = 0.0;
+			CyclingCornerBraking::FCornerBrakingStepResolution BrakingResolution;
+			bool bHasCornerBrakingResolution = false;
+			if (RoadProfile != nullptr)
+			{
+				if (CornerSettings == nullptr || GripPolicy == nullptr)
+				{
+					OutError = TEXT("corner braking runner configuration is incomplete");
+					CompletedSteps = 0;
+					return false;
+				}
+
+				FString BrakingError;
+				if (!CyclingCornerBraking::TryResolveCornerBrakingStep(
+					*RoadProfile,
+					*CornerSettings,
+					*GripPolicy,
+					BaseFrictionCoefficient,
+					LocalState.LateralPositionM,
+					Rider,
+					RiderInput,
+					LocalState,
+					BrakingResolution,
+					BrakingError))
+				{
+					OutError = BrakingError;
+					CompletedSteps = 0;
+					return false;
+				}
+				BrakeForceN = BrakingResolution.BrakingForceDemand.AppliedBrakeForceN;
+				bHasCornerBrakingResolution = true;
+			}
+
+			FSimulationState IntegratedState;
 			FString StepError;
-			if (!TryStepSimulation(Rider, StepEnvironment, RiderInput, LocalState, FixedStepDtS, NextState, StepError))
+			if (!TryStepSimulationWithBrakeForce(
+				Rider,
+				StepEnvironment,
+				RiderInput,
+				LocalState,
+				FixedStepDtS,
+				BrakeForceN,
+				IntegratedState,
+				StepError))
 			{
 				OutError = StepError;
 				CompletedSteps = 0;
 				return false;
+			}
+
+			FSimulationState NextState = IntegratedState;
+			CyclingCornerConsequence::FCornerGeometryConsequence Consequence;
+			bool bHasConsequence = false;
+			if (bHasCornerBrakingResolution
+				&& BrakingResolution.bHasActiveLateralDemand)
+			{
+				FString ConsequenceError;
+				if (!CyclingCornerConsequence::TryResolveCornerGeometryConsequence(
+					BrakingResolution.CornerContext,
+					BrakingResolution.GripDemand,
+					Consequence,
+					ConsequenceError))
+				{
+					OutError = ConsequenceError;
+					CompletedSteps = 0;
+					return false;
+				}
+
+				CyclingCornerApplication::FCornerConsequenceApplication Application;
+				if (!CyclingCornerApplication::TryApplyCornerGeometryConsequence(
+					LocalState,
+					IntegratedState,
+					BrakingResolution.CornerContext,
+					Consequence,
+					Application,
+					ConsequenceError))
+				{
+					OutError = ConsequenceError;
+					CompletedSteps = 0;
+					return false;
+				}
+				NextState = Application.State;
+				bHasConsequence = true;
+			}
+
+			if (bHasCornerBrakingResolution)
+			{
+				CyclingCornerTechniqueRuntime::FCornerTechniqueRuntimeState NextTechniqueRuntimeState;
+				FString TechniqueError;
+				if (!CyclingCornerTechniqueRuntime::TryObserveCornerTechniqueStep(
+					LocalTechniqueRuntimeState,
+					BrakingResolution.CornerContext,
+					RiderInput,
+					bHasConsequence ? &Consequence : nullptr,
+					NextState,
+					NextTechniqueRuntimeState,
+					TechniqueError))
+				{
+					OutError = TechniqueError;
+					CompletedSteps = 0;
+					return false;
+				}
+				LocalTechniqueRuntimeState = MoveTemp(NextTechniqueRuntimeState);
 			}
 
 			TArray<FSimulationBoundaryCrossing> StepCrossings;
@@ -210,6 +377,7 @@ namespace CyclingSimulation
 
 		State = LocalState;
 		AccumulatedTimeS = LocalAccumulator;
+		TechniqueRuntimeState = MoveTemp(LocalTechniqueRuntimeState);
 
 		OutState = State;
 		RemainingAccumulatedTimeS = AccumulatedTimeS;

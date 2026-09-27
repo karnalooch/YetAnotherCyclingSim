@@ -32,6 +32,7 @@ __all__ = [
     "aerodynamic_force_n",
     "total_resistance_force_n",
     "step_simulation",
+    "step_simulation_with_brake_force",
 ]
 
 
@@ -118,7 +119,11 @@ class Environment:
 class RiderInput:
     """Rider control input for one simulation step.
 
-    Both fields are stored as floats and must be finite and non-negative.
+    Power and cadence are finite and non-negative. brake_ratio is a normalized
+    rider braking command in [0, 1]. The legacy step_simulation entry point
+    preserves pre-braking behavior; Stage 4C-B3c resolves brake_ratio through
+    step_simulation_with_corner_braking before calling the explicit-force
+    integrator.
     """
 
     power_w: float
@@ -127,16 +132,22 @@ class RiderInput:
     cadence_rpm: float
     """Pedalling cadence in revolutions per minute (rpm). Must not be negative; zero is allowed."""
 
+    brake_ratio: float = 0.0
+    """Normalized braking command: 0.0 released, 1.0 full requested braking. Must be in [0, 1]."""
+
     def __post_init__(self):
         object.__setattr__(self, "power_w", _non_negative(self.power_w, "power_w"))
         object.__setattr__(self, "cadence_rpm", _non_negative(self.cadence_rpm, "cadence_rpm"))
+        object.__setattr__(self, "brake_ratio", _closed_unit_interval(self.brake_ratio, "brake_ratio"))
 
 
 @dataclass(frozen=True, slots=True)
 class SimulationState:
-    """Simulation output state, in SI units.
+    """Simulation output state, in SI units and route-local coordinates.
 
-    All fields are stored as floats and must be finite and non-negative.
+    Forward speed, route distance and elapsed time are finite and
+    non-negative. lateral_position_m is the signed route-local D coordinate:
+    negative is toward -D, positive toward +D.
     """
 
     speed_mps: float
@@ -148,10 +159,18 @@ class SimulationState:
     elapsed_time_s: float
     """Elapsed simulation time in seconds (s). Must not be negative; zero is allowed."""
 
+    lateral_position_m: float = 0.0
+    """Signed route-local lateral position D in metres (m). Must be finite."""
+
     def __post_init__(self):
         object.__setattr__(self, "speed_mps", _non_negative(self.speed_mps, "speed_mps"))
         object.__setattr__(self, "distance_m", _non_negative(self.distance_m, "distance_m"))
         object.__setattr__(self, "elapsed_time_s", _non_negative(self.elapsed_time_s, "elapsed_time_s"))
+        object.__setattr__(
+            self,
+            "lateral_position_m",
+            _finite(self.lateral_position_m, "lateral_position_m"),
+        )
 
 
 def road_angle_rad(grade_decimal: float) -> float:
@@ -255,56 +274,97 @@ def step_simulation(
     state: SimulationState,
     dt_s: float,
 ) -> SimulationState:
-    """Advance the simulation by one deterministic step using an energy balance.
+    """Advance one deterministic step with no explicit braking force.
 
-    rider defines the rider and bicycle parameters, environment the
-    environmental conditions, rider_input the control input for the step,
-    state the current simulation state and dt_s the step duration in seconds
-    (s), which must be a finite number greater than zero.
+    This remains the backwards-compatible simulation entry point. Stage
+    4C-B3b routes it through step_simulation_with_brake_force with exactly
+    0 N of braking force, preserving the pre-braking model.
+    """
+    return step_simulation_with_brake_force(
+        rider,
+        environment,
+        rider_input,
+        state,
+        dt_s,
+        brake_force_n=0.0,
+    )
 
-    The step uses an energy balance:
-    - initial_energy_j = 0.5 * m * v^2 (kinetic energy);
-    - drive_work_j = power_w * drivetrain_efficiency * dt_s.
 
-    A deterministic predictor first estimates the effect of the resistance
-    forces at the current speed, adds the drive energy to the predicted
-    speed, then recomputes the resistance force at the average of the
-    current and the predicted speed to estimate the resistance work over the
-    step. Positive resistance work removes energy; negative resistance work
-    (for example on a descent) adds energy. The final speed is derived from
-    the remaining energy and is never negative.
+def step_simulation_with_brake_force(
+    rider: RiderParameters,
+    environment: Environment,
+    rider_input: RiderInput,
+    state: SimulationState,
+    dt_s: float,
+    brake_force_n: float,
+) -> SimulationState:
+    """Advance one deterministic step with an explicit opposing brake force.
 
-    cadence_rpm is part of the rider input but does not yet affect the
-    equation of motion directly; no cadence-power dependency is assumed.
+    brake_force_n is a non-negative longitudinal tyre force in newtons (N)
+    resolved by the Stage 4C braking layer. It is added to the ordinary
+    resistance force both in the deterministic predictor and in the final
+    work estimate.
 
-    The input state is not modified; a new immutable SimulationState is
-    returned.
+    rider_input.brake_ratio is deliberately not converted to force here. The
+    force resolver owns that mapping so this low-level integrator cannot
+    invent tyre or brake parameters.
+
+    Passing exactly 0 N is the compatibility path used by step_simulation.
     """
     dt = _positive(dt_s, "dt_s")
+    brake_force = _non_negative(brake_force_n, "brake_force_n")
     total_mass = rider.total_mass_kg
 
     current_speed = state.speed_mps
     initial_energy_j = 0.5 * total_mass * current_speed ** 2
     drive_work_j = rider_input.power_w * rider.drivetrain_efficiency * dt
 
-    resistance_force_n = total_resistance_force_n(rider, environment, current_speed)
-    external_acceleration_mps2 = -resistance_force_n / total_mass
-    external_predicted_speed_mps = max(0.0, current_speed + external_acceleration_mps2 * dt)
-    predicted_speed_mps = math.sqrt(
-        max(0.0, external_predicted_speed_mps ** 2 + 2.0 * drive_work_j / total_mass)
+    resistance_force_n = total_resistance_force_n(
+        rider,
+        environment,
+        current_speed,
     )
-    estimated_average_speed_mps = 0.5 * (current_speed + predicted_speed_mps)
+    combined_resistance_force_n = resistance_force_n + brake_force
+    external_acceleration_mps2 = -combined_resistance_force_n / total_mass
+    external_predicted_speed_mps = max(
+        0.0,
+        current_speed + external_acceleration_mps2 * dt,
+    )
+    predicted_speed_mps = math.sqrt(
+        max(
+            0.0,
+            external_predicted_speed_mps ** 2
+            + 2.0 * drive_work_j / total_mass,
+        )
+    )
+    estimated_average_speed_mps = 0.5 * (
+        current_speed + predicted_speed_mps
+    )
 
-    average_resistance_force_n = total_resistance_force_n(rider, environment, estimated_average_speed_mps)
-    resistance_work_j = average_resistance_force_n * estimated_average_speed_mps * dt
+    average_resistance_force_n = total_resistance_force_n(
+        rider,
+        environment,
+        estimated_average_speed_mps,
+    )
+    combined_average_resistance_force_n = (
+        average_resistance_force_n + brake_force
+    )
+    resistance_work_j = (
+        combined_average_resistance_force_n
+        * estimated_average_speed_mps
+        * dt
+    )
 
-    final_energy_j = max(0.0, initial_energy_j + drive_work_j - resistance_work_j)
+    final_energy_j = max(
+        0.0,
+        initial_energy_j + drive_work_j - resistance_work_j,
+    )
     new_speed_mps = math.sqrt(2.0 * final_energy_j / total_mass)
 
     distance_delta_m = 0.5 * (current_speed + new_speed_mps) * dt
-    new_state = SimulationState(
+    return SimulationState(
         speed_mps=new_speed_mps,
         distance_m=state.distance_m + distance_delta_m,
         elapsed_time_s=state.elapsed_time_s + dt,
+        lateral_position_m=state.lateral_position_m,
     )
-    return new_state
