@@ -84,6 +84,14 @@ class Stage3GProgressiveAssetContractTests(unittest.TestCase):
         self.assertIn("ForestProps->SetStaticMesh(ConiferMesh)", self.terrain_actor)
         self.assertIn("ForestCanopyProps->SetStaticMesh(ConiferMesh)", self.terrain_actor)
         self.assertIn("ConiferMeshHeightCm", self.terrain_actor)
+        self.assertNotIn(
+            "ApplyOptionalStage3GMaterial(ForestProps, Stage3GFoliageMaterialPath)",
+            self.terrain_actor,
+        )
+        self.assertNotIn(
+            "ApplyOptionalStage3GMaterial(ForestCanopyProps, Stage3GFoliageMaterialPath)",
+            self.terrain_actor,
+        )
 
 
 if __name__ == "__main__":

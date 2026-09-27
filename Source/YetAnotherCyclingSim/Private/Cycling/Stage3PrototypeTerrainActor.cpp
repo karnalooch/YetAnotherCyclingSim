@@ -347,8 +347,10 @@ AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 	ApplyOptionalStage3GMaterial(ForestTerrainTiles, Stage3GForestMaterialPath);
 	ApplyOptionalStage3GMaterial(HighAlpineTerrainTiles, Stage3GDistantRockMaterialPath);
 	ApplyOptionalStage3GMaterial(ValleyRidgeProps, Stage3GGrassMaterialPath);
-	ApplyOptionalStage3GMaterial(ForestProps, Stage3GFoliageMaterialPath);
-	ApplyOptionalStage3GMaterial(ForestCanopyProps, Stage3GFoliageMaterialPath);
+	// ForestProps / ForestCanopyProps intentionally keep the validated conifer's
+	// authored branch + masked-twig material slots. Overriding slot 0 with the
+	// legacy generic foliage material would turn the real mesh back into a
+	// presentation placeholder in the 4900 m acceptance capture.
 	ApplyOptionalStage3GMaterial(MountainProps, Stage3GRockMaterialPath);
 	ApplyOptionalStage3GMaterial(RockProps, Stage3GRockMaterialPath);
 	ApplyOptionalStage3GMaterial(DistantMountainProps, Stage3GDistantRockMaterialPath);
