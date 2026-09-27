@@ -18,19 +18,25 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
             "CyclingPassoGiauLandscapeSpikeCommandlet.cpp"
         )
         self.assertIn(
-            '/Game/Prototype/Maps/L_PassoGiauTerrainSpike',
+            "/Game/Prototype/Maps/L_PassoGiauTerrainSpike",
             cpp,
         )
         self.assertNotIn("/Game/Prototype/Maps/L_CyclingTest", cpp)
         self.assertIn("LandscapeVertices = 1009", cpp)
         self.assertIn("NumSubsections = 2", cpp)
         self.assertIn("SubsectionSizeQuads = 63", cpp)
-        self.assertIn("ExpectedComponentCount = ExpectedComponentGrid * ExpectedComponentGrid", cpp)
+        self.assertIn(
+            "ExpectedComponentCount = ExpectedComponentGrid * ExpectedComponentGrid",
+            cpp,
+        )
         self.assertIn("ExpectedComponentGrid = 8", cpp)
         self.assertIn("XYScaleCmPerVertex = 793.650794", cpp)
         self.assertIn("ZScale = 301.26543", cpp)
         self.assertIn("LocationZCm = 194259.253", cpp)
-        self.assertIn("encoded height-domain proof", read("scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1"))
+        self.assertIn(
+            "encoded height-domain proof",
+            read("scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1"),
+        )
 
     def test_map_prep_duplicates_then_cleans_only_spike(self) -> None:
         script = read("scripts/ue/stage3g_prepare_passo_giau_landscape_map.py")
