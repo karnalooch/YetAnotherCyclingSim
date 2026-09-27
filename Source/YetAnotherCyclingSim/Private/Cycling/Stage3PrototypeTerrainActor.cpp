@@ -36,9 +36,9 @@ namespace Stage3PrototypeTerrainInternal
 
 	constexpr int32 TerrainStrideSamples = 5;
 	constexpr double TerrainThicknessM = 8.0;
-	constexpr double ValleyTerrainWidthM = 160.0;
+	constexpr double ValleyTerrainWidthM = 220.0;
 	constexpr double ForestTerrainWidthM = 120.0;
-	constexpr double MountainTerrainWidthM = 90.0;
+	constexpr double MountainTerrainWidthM = 440.0;
 
 	constexpr double ForestStartM = 3700.0;
 	constexpr double MountainStartM = 6200.0;
@@ -51,7 +51,7 @@ namespace Stage3PrototypeTerrainInternal
 	constexpr double MountainPropFirstM = 6300.0;
 	constexpr double MountainPropLastExclusiveM = 10000.0;
 	constexpr double MountainPropSpacingM = 250.0;
-	constexpr double MountainPropLateralM = 42.0;
+	constexpr double MountainPropLateralM = 45.0;
 
 	constexpr double RockPropFirstM = 6350.0;
 	constexpr double RockPropLastExclusiveM = 9950.0;
@@ -62,7 +62,7 @@ namespace Stage3PrototypeTerrainInternal
 	constexpr double ValleyRidgeFirstM = 300.0;
 	constexpr double ValleyRidgeLastExclusiveM = 3700.0;
 	constexpr double ValleyRidgeSpacingM = 220.0;
-	constexpr double ValleyRidgeBaseLateralM = 120.0;
+	constexpr double ValleyRidgeBaseLateralM = 75.0;
 
 	constexpr double ForestCanopyFirstM = 3750.0;
 	constexpr double ForestCanopyLastExclusiveM = 6250.0;
@@ -107,6 +107,75 @@ namespace Stage3PrototypeTerrainInternal
 			&& Scale.X > 0.0
 			&& Scale.Y > 0.0
 			&& Scale.Z > 0.0;
+	}
+
+	bool HasTerrainFootprintSupport(
+		double LateralM,
+		const FVector& TargetSizeM,
+		double TerrainWidthM)
+	{
+		const double HalfFootprintM =
+			0.5 * FMath::Max(
+				static_cast<double>(TargetSizeM.X),
+				static_cast<double>(TargetSizeM.Y));
+		return FMath::IsFinite(LateralM)
+			&& FMath::IsFinite(TerrainWidthM)
+			&& TerrainWidthM > 0.0
+			&& FMath::Abs(LateralM) + HalfFootprintM
+				<= TerrainWidthM * 0.5 + UE_KINDA_SMALL_NUMBER;
+	}
+
+	bool TryMakeGroundedMeshTransform(
+		UStaticMesh* Mesh,
+		const FVector& GroundPositionM,
+		const FVector& TargetSizeM,
+		const FRotator& Rotation,
+		FTransform& OutTransform,
+		FString& OutError)
+	{
+		if (!IsValid(Mesh)
+			|| !IsFiniteVector(GroundPositionM)
+			|| !IsFiniteVector(TargetSizeM)
+			|| TargetSizeM.X <= 0.0
+			|| TargetSizeM.Y <= 0.0
+			|| TargetSizeM.Z <= 0.0)
+		{
+			OutError = TEXT("Stage 3G grounded mesh transform inputs are invalid");
+			return false;
+		}
+
+		const FBoxSphereBounds Bounds = Mesh->GetBounds();
+		const FVector MeshSizeCm = Bounds.BoxExtent * 2.0;
+		if (!IsFiniteVector(MeshSizeCm)
+			|| MeshSizeCm.X <= UE_SMALL_NUMBER
+			|| MeshSizeCm.Y <= UE_SMALL_NUMBER
+			|| MeshSizeCm.Z <= UE_SMALL_NUMBER)
+		{
+			OutError = TEXT("Stage 3G grounded mesh bounds are invalid");
+			return false;
+		}
+
+		const FVector Scale(
+			(TargetSizeM.X * MetresToCentimetres) / MeshSizeCm.X,
+			(TargetSizeM.Y * MetresToCentimetres) / MeshSizeCm.Y,
+			(TargetSizeM.Z * MetresToCentimetres) / MeshSizeCm.Z);
+		const double MeshMinZCm =
+			static_cast<double>(Bounds.Origin.Z - Bounds.BoxExtent.Z);
+
+		FVector PositionM = GroundPositionM;
+		PositionM.Z -=
+			(MeshMinZCm * Scale.Z) / MetresToCentimetres;
+
+		OutTransform = FTransform(
+			Rotation,
+			PositionM * MetresToCentimetres,
+			Scale);
+		if (!IsFiniteTransform(OutTransform))
+		{
+			OutError = TEXT("Stage 3G grounded mesh transform is invalid");
+			return false;
+		}
+		return true;
 	}
 
 	FTransform MakeAlignedBoxTransform(
@@ -321,6 +390,12 @@ AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 
 	if (UStaticMesh* BoulderMesh = LoadObject<UStaticMesh>(nullptr, Stage3GBoulderMeshPath))
 	{
+		// R3 reuses the validated project-owned boulder mesh for valley and
+		// high-Alpine massing so the persisted reference map no longer falls
+		// back to Engine Cone silhouettes outside the forest sector.
+		ValleyRidgeProps->SetStaticMesh(BoulderMesh);
+		MountainProps->SetStaticMesh(BoulderMesh);
+		DistantMountainProps->SetStaticMesh(BoulderMesh);
 		RockProps->SetStaticMesh(BoulderMesh);
 	}
 	if (UStaticMesh* ConiferMesh = LoadObject<UStaticMesh>(nullptr, Stage3GConiferMeshPath))
@@ -412,6 +487,14 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 		|| ForestCanopyProps->GetStaticMesh()->GetPathName() != Stage3GConiferMeshPath)
 	{
 		OutError = TEXT("Stage 3G forest presentation requires the validated Fir Sapling Medium mesh");
+		return false;
+	}
+	if (ValleyRidgeProps->GetStaticMesh()->GetPathName() != Stage3GBoulderMeshPath
+		|| MountainProps->GetStaticMesh()->GetPathName() != Stage3GBoulderMeshPath
+		|| DistantMountainProps->GetStaticMesh()->GetPathName() != Stage3GBoulderMeshPath
+		|| RockProps->GetStaticMesh()->GetPathName() != Stage3GBoulderMeshPath)
+	{
+		OutError = TEXT("Stage 3G valley/high-Alpine presentation requires the validated Boulder 01 mesh");
 		return false;
 	}
 
@@ -544,10 +627,10 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 		TargetTerrain->AddInstance(TerrainTransform, false);
 	}
 
-	// Stage 3G valley silhouette: broad overlapping cone ridges sit beyond the
-	// road-support tiles. They are deliberately presentation-only and sampled
-	// from route geometry, so rebuilds are deterministic and physics never reads
-	// their transforms.
+	// Stage 3G R3 valley silhouette: broad, bounds-aware instances of the
+	// validated Boulder 01 mesh replace the former Engine Cone placeholders.
+	// The grass material keeps the meadow read while the real mesh supplies an
+	// irregular landform silhouette. Physics never reads these transforms.
 	for (double DistanceM = ValleyRidgeFirstM;
 		DistanceM < ValleyRidgeLastExclusiveM;
 		DistanceM += ValleyRidgeSpacingM)
@@ -562,21 +645,43 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 		for (const double Side : { -1.0, 1.0 })
 		{
 			const double Phase = DistanceM * 0.004 + Side * 0.7;
-			const double HeightM = 78.0 + 22.0 * FMath::Abs(FMath::Sin(Phase));
-			const double RadiusScaleM = 150.0 + 35.0 * FMath::Abs(FMath::Cos(Phase * 0.8));
 			const double LateralM = ValleyRidgeBaseLateralM
-				+ 18.0 * FMath::Sin(DistanceM * 0.006 + Side);
-
-			FVector PositionM = RoutePositionM + Right * (Side * LateralM);
-			PositionM.Z += HeightM * 0.5 - 3.0;
-
-			const FTransform RidgeTransform(
-				FRotator(0.0, FMath::Fmod(DistanceM * 0.071 + Side * 31.0, 360.0), 0.0),
-				PositionM * MetresToCentimetres,
-				FVector(RadiusScaleM, RadiusScaleM, HeightM));
-			if (!IsFiniteTransform(RidgeTransform))
+				+ 12.0 * FMath::Sin(DistanceM * 0.006 + Side);
+			const FVector TargetSizeM(
+				32.0 + 12.0 * FMath::Abs(FMath::Cos(Phase * 0.8)),
+				24.0 + 10.0 * FMath::Abs(FMath::Sin(Phase * 1.3)),
+				16.0 + 8.0 * FMath::Abs(FMath::Sin(Phase)));
+			if (!HasTerrainFootprintSupport(
+				LateralM,
+				TargetSizeM,
+				ValleyTerrainWidthM))
 			{
-				OutError = TEXT("Stage 3G valley ridge transform is invalid");
+				OutError = FString::Printf(
+					TEXT("Stage 3G valley massing footprint exceeds terrain support at %.3f m"),
+					DistanceM);
+				return false;
+			}
+
+			FVector GroundPositionM =
+				RoutePositionM + Right * (Side * LateralM);
+			GroundPositionM.Z -= RoadThicknessM;
+
+			FTransform RidgeTransform;
+			if (!TryMakeGroundedMeshTransform(
+				ValleyRidgeProps->GetStaticMesh(),
+				GroundPositionM,
+				TargetSizeM,
+				FRotator(
+					0.0,
+					FMath::Fmod(DistanceM * 0.071 + Side * 31.0, 360.0),
+					0.0),
+				RidgeTransform,
+				OutError))
+			{
+				OutError = FString::Printf(
+					TEXT("Stage 3G valley ridge transform is invalid at %.3f m: %s"),
+					DistanceM,
+					*OutError);
 				return false;
 			}
 			ValleyRidgeProps->AddInstance(RidgeTransform, false);
@@ -748,21 +853,42 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 
 		for (const double Side : { -1.0, 1.0 })
 		{
-			FVector PositionM =
-				RoutePositionM + Right * (Side * MountainPropLateralM);
-			const double HeightM =
-				24.0 + 10.0 * FMath::Abs(FMath::Sin(DistanceM * 0.007));
-			const double RadiusScaleM =
-				10.0 + 4.0 * FMath::Abs(FMath::Cos(DistanceM * 0.009));
-			PositionM.Z += HeightM * 0.5 - 0.2;
-
-			const FTransform PeakTransform(
-				FRotator::ZeroRotator,
-				PositionM * MetresToCentimetres,
-				FVector(RadiusScaleM, RadiusScaleM, HeightM));
-			if (!IsFiniteTransform(PeakTransform))
+			const double Phase = DistanceM * 0.007 + Side * 0.6;
+			const FVector TargetSizeM(
+				10.0 + 7.0 * FMath::Abs(FMath::Cos(DistanceM * 0.009 + Side)),
+				8.0 + 5.0 * FMath::Abs(FMath::Sin(Phase * 1.4)),
+				9.0 + 7.0 * FMath::Abs(FMath::Sin(Phase)));
+			if (!HasTerrainFootprintSupport(
+				MountainPropLateralM,
+				TargetSizeM,
+				MountainTerrainWidthM))
 			{
-				OutError = TEXT("prototype mountain prop transform is invalid");
+				OutError = FString::Printf(
+					TEXT("Stage 3G near-Alpine massing footprint exceeds terrain support at %.3f m"),
+					DistanceM);
+				return false;
+			}
+
+			FVector GroundPositionM =
+				RoutePositionM + Right * (Side * MountainPropLateralM);
+			GroundPositionM.Z -= RoadThicknessM;
+
+			FTransform PeakTransform;
+			if (!TryMakeGroundedMeshTransform(
+				MountainProps->GetStaticMesh(),
+				GroundPositionM,
+				TargetSizeM,
+				FRotator(
+					0.0,
+					FMath::Fmod(DistanceM * 0.083 + Side * 47.0, 360.0),
+					0.0),
+				PeakTransform,
+				OutError))
+			{
+				OutError = FString::Printf(
+					TEXT("Stage 3G high-Alpine massing transform is invalid at %.3f m: %s"),
+					DistanceM,
+					*OutError);
 				return false;
 			}
 			MountainProps->AddInstance(PeakTransform, false);
@@ -827,7 +953,7 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 	// Stage 3G distant skyline: two depth layers per side. Larger, desaturated
 	// peaks create atmospheric depth while the original MountainProps remain the
 	// near-road high-Alpine markers.
-	const double DistantMountainLateralsM[] = { 220.0, 480.0 };
+	const double DistantMountainLateralsM[] = { 95.0, 150.0 };
 	for (double DistanceM = DistantMountainFirstM;
 		DistanceM < DistantMountainLastExclusiveM;
 		DistanceM += DistantMountainSpacingM)
@@ -845,23 +971,48 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 			{
 				const double LateralM = DistantMountainLateralsM[Layer];
 				const double Phase = DistanceM * 0.003 + Layer * 1.7 + Side;
-				const double HeightM =
-					(Layer == 0 ? 180.0 : 320.0)
-					+ (Layer == 0 ? 45.0 : 70.0) * FMath::Abs(FMath::Sin(Phase));
-				const double RadiusScaleM =
-					(Layer == 0 ? 135.0 : 220.0)
-					+ 35.0 * FMath::Abs(FMath::Cos(Phase * 0.7));
-
-				FVector PositionM = RoutePositionM + Right * (Side * LateralM);
-				PositionM.Z += HeightM * 0.42 - (Layer == 0 ? 12.0 : 28.0);
-
-				const FTransform DistantPeakTransform(
-					FRotator(0.0, FMath::Fmod(DistanceM * 0.049 + Layer * 53.0, 360.0), 0.0),
-					PositionM * MetresToCentimetres,
-					FVector(RadiusScaleM, RadiusScaleM, HeightM));
-				if (!IsFiniteTransform(DistantPeakTransform))
+				const FVector TargetSizeM(
+					(Layer == 0 ? 55.0 : 85.0)
+						+ (Layer == 0 ? 20.0 : 30.0) * FMath::Abs(FMath::Cos(Phase * 0.7)),
+					(Layer == 0 ? 40.0 : 62.0)
+						+ (Layer == 0 ? 15.0 : 22.0) * FMath::Abs(FMath::Sin(Phase * 0.9)),
+					(Layer == 0 ? 35.0 : 58.0)
+						+ (Layer == 0 ? 16.0 : 22.0) * FMath::Abs(FMath::Sin(Phase)));
+				if (!HasTerrainFootprintSupport(
+					LateralM,
+					TargetSizeM,
+					MountainTerrainWidthM))
 				{
-					OutError = TEXT("Stage 3G distant mountain transform is invalid");
+					OutError = FString::Printf(
+						TEXT("Stage 3G distant massing footprint exceeds terrain support at %.3f m layer %d"),
+						DistanceM,
+						Layer);
+					return false;
+				}
+
+				FVector GroundPositionM =
+					RoutePositionM + Right * (Side * LateralM);
+				GroundPositionM.Z -=
+					Layer == 0 ? 2.0 : 6.0;
+
+				FTransform DistantPeakTransform;
+				if (!TryMakeGroundedMeshTransform(
+					DistantMountainProps->GetStaticMesh(),
+					GroundPositionM,
+					TargetSizeM,
+					FRotator(
+						0.0,
+						FMath::Fmod(
+							DistanceM * 0.049 + Layer * 53.0 + Side * 17.0,
+							360.0),
+						0.0),
+					DistantPeakTransform,
+					OutError))
+				{
+					OutError = FString::Printf(
+						TEXT("Stage 3G distant mountain transform is invalid at %.3f m: %s"),
+						DistanceM,
+						*OutError);
 					return false;
 				}
 				DistantMountainProps->AddInstance(DistantPeakTransform, false);

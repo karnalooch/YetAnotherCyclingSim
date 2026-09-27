@@ -15,8 +15,9 @@ class USceneComponent;
 // Stage 3G progressively replaces placeholder presentation with validated
 // project-owned assets. R1 added texture-backed biome ground and imported rock
 // dressing. R2 replaces the forest silhouette with the validated mass-forest
-// conifer while valley/high-Alpine massing remains presentation scaffolding.
-// Simulation truth stays outside presentation.
+// conifer. R3 replaces valley/high-Alpine Engine Cone massing with bounds-aware
+// instances of the validated project-owned boulder mesh while the overall world
+// remains an MVP presentation scaffold. Simulation truth stays outside presentation.
 //
 // Runtime physics never reads this actor. The geometry profile remains the
 // source of route shape/grade truth and the spline remains presentation only.

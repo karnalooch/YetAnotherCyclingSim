@@ -114,6 +114,8 @@ def _is_asset(path: str) -> bool:
 def _is_asset_full(path: str) -> bool:
     if path.startswith("Content/Prototype/Environment/Stage3G/"):
         return True
+    if path.startswith("Content/YACS/WorldGen/PCG/"):
+        return True
     if path == "Content/Prototype/Maps/L_CyclingTest.umap":
         return True
     if path in {
