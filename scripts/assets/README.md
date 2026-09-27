@@ -148,6 +148,6 @@ vertex resolution. It does not create terrain detail beyond the original 10 m
 TINITALY source.
 
 The GitHub Actions workflow
-`.github/workflows/passo-giau-r4-1-terrain-spike.yml` performs the full remote
+`.github/workflows/passo-giau-r4-1-terrain-spike.yml` is intentionally treated as a manual-merge governance change and performs the full remote
 download + preparation and publishes the prepared files as the
 `passo-giau-r4-1-terrain-spike` artifact.
