@@ -7,7 +7,7 @@ Make the road, terrain support and biome dressing read as one coherent landscape
 ## Current engineering state
 
 - Issue: #199
-- PR: #200 (Draft at this checkpoint)
+- PR: #200 — **MERGED**
 - accepted target-density forest dependency: PR #202 — **MERGED** as `88e417e6ab828a290c335cb7bbaa684f3027a4ce`
 - post-#202 R4 integration commit: `55f222ff96a286f15f0259dfc74e50deba646036`
 - self-hosted workspace hardening: `bd2d5e58f141e3084edaaf07eb0fb9ed1f5edd53`
@@ -50,9 +50,11 @@ Representative forest dependency merged through #202 / `88e417e6…`.
 
 ## NOW
 
-**TECHNICAL CANDIDATE PERSISTED — VISUAL CAPTURE PENDING.**
+**TECHNICALLY MERGED — POST-MERGE VISUAL REVIEW REJECTED AS STAGE 3G CLOSEOUT.**
 
-The post-#202 map is persisted at `fc0f22a2…`. The next human-authored HEAD must run ordinary PR CI, then exact-SHA Stage 3G proof/capture/performance evidence is produced from that frozen candidate.
+PR #200 merged as `e1653227ff33005be70c979e3c6f038efbf57c0e`. The route-aware support and PCG grounding remain valid technical work. Human review of the resulting current world found that the scene still reads as a greybox/flat support world rather than a convincing Alpine reference environment: insufficient macro terrain, weak skyline/mountain mass, sparse local dressing, prototype road/shoulder treatment and insufficient atmospheric depth.
+
+This is not a request to revert R4. It creates a bounded **R4.1 Alpine Visual Recovery** follow-up.
 
 Canonical review points remain:
 - 1200 m — valley / road-ground coherence;
@@ -61,14 +63,14 @@ Canonical review points remain:
 
 ## AFTER
 
-**PENDING — human visual acceptance is not automated.**
+**NOT ACCEPTED.** R4 has no accepted `AFTER` visual baseline. The next accepted `AFTER` must come from R4.1, not from copying the technically merged R4 state.
 
-## Remaining gates
+## Follow-up / R4.1 gate
 
-- ordinary PR / Aggregate CI on a human-authored head after the bot-authored map commit;
-- exact-SHA Stage 3G full proof / Fresh Load / Map Check / LFS;
-- 1920×1080 Visual History captures at 1200 / 4900 / 8000 m;
-- unchanged 60 FPS environment performance gate;
-- forest sector must remain below the representative-forest 14 ms frame/GPU p95 budget;
-- R4 closeout report must also record average FPS, 1% low, Frame/Game/Draw/GPU, VRAM if available and hitch evidence;
-- only after visual acceptance is R4 eligible to close and become the immutable pre-optimization baseline for R5.
+- preserve PR #200 as the technical route-grounding milestone;
+- execute [`../../../STAGE3G_R4_1_ALPINE_VISUAL_RECOVERY.md`](../../../STAGE3G_R4_1_ALPINE_VISUAL_RECOVERY.md);
+- first accept a 300–500 m / 1200 m golden terrain vertical slice;
+- then propagate the accepted language to 1200 / 4900 / 8000 m and the full corridor;
+- freeze the human-accepted exact SHA and produce Visual History `AFTER`;
+- rerun unchanged performance and final Stage 3G closeout proof on that tree;
+- only the accepted R4.1 tree may become the immutable pre-optimization baseline for R5.

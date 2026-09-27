@@ -12,11 +12,11 @@
   "timestamps": {
     "created_at": "2026-09-27",
     "visual_accepted_at": null,
-    "merged_at": null
+    "merged_at": "2026-09-27"
   },
   "status": {
-    "technical_status": "CANDIDATE_PERSISTED",
-    "visual_status": "NOT_REVIEWED"
+    "technical_status": "MERGED",
+    "visual_status": "VISUAL_REJECTED_POST_MERGE_REVIEW"
   },
   "git": {
     "branch": "feat/stage3g-r4-route-terrain-coherence",
@@ -24,12 +24,12 @@
     "source_commit_sha": "fc0f22a2588c9ccb97ec5e469bbe911748e2e413",
     "source_commit_short": "fc0f22a2",
     "accepted_commit_sha": null,
-    "merge_commit_sha": null
+    "merge_commit_sha": "e1653227ff33005be70c979e3c6f038efbf57c0e"
   },
   "pull_request": {
     "number": 200,
     "title": "feat(stage3g): make terrain and PCG route-aware",
-    "status": "DRAFT"
+    "status": "MERGED"
   },
   "ci": {
     "workflow_name": "Stage 3G R4 terrain coherence authoring",
@@ -94,12 +94,12 @@
     ]
   },
   "visual_review": {
-    "visual_change_detected": null,
-    "technical_acceptance": null,
-    "visual_acceptance": null,
-    "reviewer_summary": null,
-    "rejection_reason": null,
-    "next_step": "Run ordinary CI from a human-authored HEAD, freeze the exact candidate, run full Stage 3G proof + 1200/4900/8000 captures + unchanged performance gate, then request human visual acceptance before R5."
+    "visual_change_detected": true,
+    "technical_acceptance": true,
+    "visual_acceptance": false,
+    "reviewer_summary": "R4 route-aware grounding is technically useful, but the current rendered world is not an acceptable Stage 3G visual closeout.",
+    "rejection_reason": "Current world still reads as a greybox/flat support scene: insufficient macro/meso Alpine terrain, weak mountain skyline, prototype road/shoulders, sparse geological/vegetation dressing and insufficient atmospheric depth.",
+    "next_step": "Execute Stage 3G R4.1 Alpine Visual Recovery. Accept a 1200 m golden vertical slice first, then propagate to 4900/8000 and the full corridor; only the human-accepted exact SHA may become the R5 baseline."
   },
   "captures": [
     {

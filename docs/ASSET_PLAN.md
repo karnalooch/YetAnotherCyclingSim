@@ -106,6 +106,7 @@ Jeżeli akceptacja assetu lub technical UE assetu zależy od tego, **jak faktycz
 | Etap | Source assets | Technical UE assets | Poziom jakości / zakup |
 |---|---|---|---|
 | **3G — Reference Environment Pass** | landscape materials, grass, trees, rocks/cliffs, sky/fog inputs, water input jeśli potrzebny | PCG graphs/settings, material instances, biome/exclusion assets, generated helper geometry, proof worlds/data | **obowiązkowy referencyjny baseline przed dalszym Stage 4**; zakup tylko gdy darmowe/natywne zasoby nie wystarczą |
+| **3G R4.1 — Alpine Visual Recovery** | reuse existing Poly Haven ground/vegetation/rock set; prioritize Rock Face 01, controlled grass/understory, optional isolated hero fir and mountain-mass source | continuous/tiled terrain presentation path, terrain material foundation, `PCG_Roadside`, slope/biome masks, optional scenic/view exclusion data, deterministic atmosphere preset | **required visual recovery before R5**; no broad marketplace purchase; real DEM/heightmap allowed only as a licensed bounded macro-terrain input after A/B proof |
 | **4 — zakręty** | proste decals/markery guidance | debug/guidance material instances, ewentualne spline/decal helper assets | funkcjonalne; bez paczki produkcyjnej |
 | **5 — HUD** | font, ikony/SVG | UMG widget assets, style/data assets | produkcyjne minimum |
 | **6 — kolarz i rower** | 1 bike, 1 rider, strój, kask, mocap | IK Rig, IK Retargeter, Control Rig, Animation/Blend assets, rider/bike presentation data | produkcyjne dla MVP; wysoki priorytet |
@@ -510,13 +511,13 @@ Po wyborze konkretnych paczek tabela poniżej staje się rejestrem źródła pra
 | Sparse Grass (`sparse_grass`) | Poly Haven | CC0 | 0 zł | 3G | imported | meadow/valley ground; merged-main 1200 m visual proof accepted in PR #192 / CI #421 and aggregate Stage 3G environment performance passed in PR #197 / run #13; per-asset LOD/instancing/cost proof remains before `validated` |
 | Forest Ground 03 (`forrest_ground_03`) | Poly Haven | CC0 | 0 zł | 3G | imported | pine-needle forest floor; 4900 m visual proof and final three-biome Visual History are accepted; aggregate Stage 3G environment performance passed in PR #197 / run #13, but source-asset LOD/instancing validation remains before `validated` |
 | Rocky Terrain (`rocky_terrain`) | Poly Haven | CC0 | 0 zł | 3G | imported | high-Alpine ground layer; merged-main 8000 m visual proof accepted in PR #192 / CI #421 and aggregate Stage 3G environment performance passed in PR #197 / run #13; per-asset LOD/cost proof remains before `validated` |
-| Rock Face 01 (`rock_face_01`) | Poly Haven | CC0 | 0 zł | 3G | approved | roadside cliff candidate; performance validation pending |
+| Rock Face 01 (`rock_face_01`) | Poly Haven | CC0 | 0 zł | 3G/R4.1 | approved | **R4.1 highest next import/validation priority** for road cuts, cliff faces and high-Alpine meso terrain; slope/composition driven placement; performance validation pending |
 | Boulder 01 (`boulder_01`) | Poly Haven | CC0 | 0 zł | 3G | imported | canonical `SM_Stage3G_Boulder` is used by accepted R3 valley/high-Alpine massing; merged-main visual proof and aggregate Stage 3G environment performance passed; explicit per-asset LOD/instancing proof remains before `validated` |
 | Mountainside (`mountainside`) | Poly Haven | CC0 | 0 zł | 3G | candidate | mid-ground mountain mass; compare against cheaper authored geometry |
 | Fir Tree 01 (`fir_tree_01`) | Poly Haven | CC0 | 0 zł | 3G | candidate | retained as a hero/sparse conifer candidate; broad-scatter reduction in PR #162 is blocked by whole-FBX A/B/C import memory pressure on the trusted runner, so it is not the R2 mass-forest mesh |
 | Fir Sapling (`fir_sapling`) | Poly Haven | CC0 | 0 zł | 3G | candidate | lightweight young-tree / understory candidate; useful as forest variation, not the primary tall-canopy mesh |
 | Fir Sapling Medium (`fir_sapling_medium`) | Poly Haven | CC0 | 0 zł | 3G | validated | R2 mass-scatter conifer; persisted as `SM_Stage3G_FirSaplingMedium`, used by `PCG_Forest` and reference-map forest layers; PR #162 / CI #398 / 4900 m visual proof accepted |
-| Grass Medium 01 (`grass_medium_01`) | Poly Haven | CC0 | 0 zł | 3G | candidate | controlled meadow ground cover; LOD/instancing validation pending |
+| Grass Medium 01 (`grass_medium_01`) | Poly Haven | CC0 | 0 zł | 3G/R4.1 | candidate | R4.1 foreground/roadside meadow clusters; controlled instancing, density and cull policy required; LOD/instancing validation pending |
 
 Statusy: `candidate`, `approved`, `acquired`, `imported`, `validated`, `rejected`.
 
