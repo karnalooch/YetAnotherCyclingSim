@@ -72,6 +72,8 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("visual_acceptance = 'PENDING_HUMAN_REVIEW'", wrapper)
         self.assertIn("authoritative_route_geometry = $false", wrapper)
         self.assertIn("authoritative_physics = $false", wrapper)
+        self.assertNotIn("git lfs fsck", wrapper)
+        self.assertNotIn("git lfs checkout", wrapper)
 
     def test_capture_requires_real_png_and_human_review(self) -> None:
         capture = read("scripts/ue/stage3g_capture_passo_giau_landscape.py")

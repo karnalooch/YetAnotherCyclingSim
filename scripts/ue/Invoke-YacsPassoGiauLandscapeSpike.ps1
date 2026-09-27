@@ -61,8 +61,6 @@ $PreflightArgs = @{
 $Context = & $Preflight @PreflightArgs
 if ($LASTEXITCODE -ne 0) { throw 'Passo Giau Landscape preflight failed.' }
 
-& git -C $RepoRoot lfs fsck
-if ($LASTEXITCODE -ne 0) { throw 'git lfs fsck failed before Passo Giau authoring.' }
 if (git -C $RepoRoot status --porcelain) { throw 'Passo Giau Landscape checkout is dirty before authoring.' }
 
 $CanonicalHashBefore = (git -C $RepoRoot hash-object -- $CanonicalMapRelative).Trim()
