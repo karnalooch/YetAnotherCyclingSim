@@ -69,24 +69,14 @@ def sha_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 def download_artifact(artifact_id: int) -> zipfile.ZipFile:
-    env = dict(os.environ)
-    env["GH_TOKEN"] = TOKEN
-    proc = subprocess.run(
-        [
-            "gh",
-            "api",
-            "-H",
-            "Accept: application/vnd.github+json",
-            "-H",
-            "X-GitHub-Api-Version: 2022-11-28",
-            f"/repos/{REPO}/actions/artifacts/{artifact_id}/zip",
-        ],
-        check=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=env,
-    )
-    return zipfile.ZipFile(io.BytesIO(proc.stdout))
+    env_name = f"YACS_ARTIFACT_{artifact_id}"
+    value = os.environ.get(env_name)
+    if not value:
+        raise RuntimeError(f"{env_name} is not set")
+    path = Path(value)
+    if not path.is_file():
+        raise RuntimeError(f"{env_name} does not point to a file: {path}")
+    return zipfile.ZipFile(path)
 
 def load_verified(zf: zipfile.ZipFile, filename: str, expected_sha: str) -> Image.Image:
     matches = [n for n in zf.namelist() if n == filename or n.endswith("/" + filename)]
