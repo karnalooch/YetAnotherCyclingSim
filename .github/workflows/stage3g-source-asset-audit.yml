@@ -9,6 +9,9 @@ on:
       - 'scripts/ue/stage3g_source_asset_audit.py'
       - 'scripts/ue/Invoke-YacsStage3GSourceAssetAudit.ps1'
       - 'scripts/ci/test_stage3g_source_asset_audit_contract.py'
+      - 'scripts/ue/stage3g_import_source_assets.py'
+      - 'scripts/ue/stage3g_author_boulder_lods.py'
+      - 'Content/Prototype/Environment/Stage3G/Imported/Meshes/SM_Stage3G_Boulder.uasset'
   workflow_dispatch:
 
 permissions:
@@ -59,6 +62,12 @@ jobs:
         run: |
           ./scripts/ue/Invoke-YacsStage3GSourceAssetAudit.ps1 -ExpectedBranch HEAD -ExpectedHead '${{ github.sha }}' -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GSourceAssetAudit'
           if ($LASTEXITCODE -ne 0) { throw 'Stage 3G source-asset lifecycle audit failed.' }
+
+      - name: Run 1080p60 environment regression after source audit
+        shell: pwsh
+        run: |
+          ./scripts/ue/Invoke-YacsStage3GEnvironmentPerformance.ps1 -ExpectedBranch HEAD -ExpectedHead '${{ github.sha }}' -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GSourceAssetAudit/EnvironmentPerformance' -SkipBuild
+          if ($LASTEXITCODE -ne 0) { throw 'Stage 3G performance regression after source-asset validation failed.' }
 
       - name: Upload source-asset audit evidence
         if: ${{ always() }}
