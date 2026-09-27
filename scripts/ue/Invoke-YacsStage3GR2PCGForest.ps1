@@ -47,6 +47,7 @@ $AuthorScript = Join-Path -Path $RepoRoot -ChildPath 'scripts/ue/stage3g_author_
 $WorldSpec = Join-Path -Path $RepoRoot -ChildPath 'worldgen/specs/stage3g_alpine_reference.worldspec.yml'
 $ProofJson = Join-Path -Path $ArtifactRoot -ChildPath 'pcg_forest_graph_proof.json'
 $AuthorLog = Join-Path -Path $ArtifactRoot -ChildPath 'pcg_forest_authoring.log'
+$EditorLog = $AuthorLog + '.editor.log'
 $ErrLog = $AuthorLog + '.stderr'
 $AssetRelativePath = 'Content/YACS/WorldGen/PCG/PCG_Forest.uasset'
 $AssetDiskPath = Join-Path -Path $RepoRoot -ChildPath $AssetRelativePath
@@ -65,6 +66,7 @@ try {
         '-NoSplash'
         '-NoP4'
         '-log'
+        ('-AbsLog=' + $EditorLog)
     )
     $Proc = Start-Process -FilePath $Context.UnrealEditorCmdPath -ArgumentList $Arguments -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $AuthorLog -RedirectStandardError $ErrLog
     if (-not $Proc.WaitForExit($TimeoutSec * 1000)) {
@@ -96,7 +98,7 @@ if ([int]$Proof.generation_seed -ne 42017) {
 if ([math]::Abs([double]$Proof.forest_start_m - 3700.0) -gt 1e-9 -or [math]::Abs([double]$Proof.forest_end_m - 6200.0) -gt 1e-9) {
     throw 'Unexpected PCG_Forest biome range.'
 }
-if ([math]::Abs([double]$Proof.forest_density - 0.72) -gt 1e-9) {
+if ([math]::Abs([double]$Proof.forest_density - 0.84) -gt 1e-9) {
     throw "Unexpected PCG_Forest density: $($Proof.forest_density)"
 }
 if ([math]::Abs([double]$Proof.route_clearance_m - 4.0) -gt 1e-9) {
@@ -110,6 +112,25 @@ if ($Proof.spawner_mesh -ne '/Game/Prototype/Environment/Stage3G/Imported/Meshes
 }
 if ($Proof.forest_lod_profile -ne 'aggressive') {
     throw "Unexpected PCG_Forest LOD profile: $($Proof.forest_lod_profile)"
+}
+if ($Proof.forest_layer_profile -ne 'target_density_v2') {
+    throw "Unexpected PCG_Forest layer profile: $($Proof.forest_layer_profile)"
+}
+if ([int]$Proof.layer_profile_version -ne 2) {
+    throw "Unexpected PCG_Forest layer profile version: $($Proof.layer_profile_version)"
+}
+$ExpectedMean = [double]$Proof.configured_expected_candidate_mean
+if ($ExpectedMean -lt 1850.0 -or $ExpectedMean -gt 2150.0) {
+    throw ("PCG_Forest target-density expected candidate mean {0:F2} is outside [1850, 2150]." -f $ExpectedMean)
+}
+if ([math]::Abs([double]$Proof.station_spacing_m - 20.0) -gt 1e-9 -or [int]$Proof.points_per_side_per_station -ne 4) {
+    throw 'Unexpected PCG_Forest primary-layer station profile.'
+}
+if ([math]::Abs([double]$Proof.min_lateral_offset_m - 10.0) -gt 1e-9 -or [math]::Abs([double]$Proof.max_lateral_offset_m - 36.0) -gt 1e-9) {
+    throw 'Unexpected PCG_Forest primary-layer lateral profile.'
+}
+if ([math]::Abs([double]$Proof.min_uniform_scale - 0.95) -gt 1e-9 -or [math]::Abs([double]$Proof.max_uniform_scale - 1.35) -gt 1e-9) {
+    throw 'Unexpected PCG_Forest primary-layer scale profile.'
 }
 if ([int]$Proof.spawner_weight -ne 100) {
     throw "Unexpected PCG_Forest spawner weight: $($Proof.spawner_weight)"

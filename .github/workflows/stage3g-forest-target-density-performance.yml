@@ -1,0 +1,107 @@
+name: Stage 3G forest target-density performance
+
+on:
+  workflow_dispatch:
+  # Keeping this workflow file in push.paths provides an intentional exact-SHA
+  # retrigger after github-actions[bot] persists LFS assets (bot pushes do not
+  # recursively start new Actions workflows).
+  push:
+    branches:
+      - feat/stage3g-forest-target-density
+    paths:
+      - '.github/workflows/stage3g-forest-target-density-performance.yml'
+      - 'Content/YACS/WorldGen/PCG/PCG_Forest.uasset'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stage3g-forest-target-density-performance-${{ github.repository }}
+  cancel-in-progress: true
+
+jobs:
+  performance:
+    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' }}
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 60
+    steps:
+      - name: Bootstrap cleanup helper outside persistent worktree
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        env:
+          GIT_LFS_SKIP_SMUDGE: "1"
+        with:
+          path: _bootstrap-cleanup
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          lfs: false
+          clean: true
+          persist-credentials: false
+
+      - name: Release stale Unreal workspace locks
+        shell: pwsh
+        run: |
+          $bootstrap = Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup/scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
+          & $bootstrap -Workspace $env:GITHUB_WORKSPACE
+          Remove-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup') -Recurse -Force
+      - name: Checkout exact target-density revision in isolated perf worktree
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: _perf-worktree
+          ref: ${{ github.sha }}
+          fetch-depth: 20
+          lfs: true
+          clean: false
+          persist-credentials: false
+
+      - name: Verify exact SHA and LFS
+        shell: pwsh
+        working-directory: _perf-worktree
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ((git rev-parse HEAD).Trim() -ne '${{ github.sha }}') { throw 'Forest performance checkout is not exact SHA.' }
+          git lfs install --local
+          if ($LASTEXITCODE -ne 0) { throw 'git lfs install failed.' }
+          git lfs checkout
+          if ($LASTEXITCODE -ne 0) { throw 'git lfs checkout failed.' }
+          git lfs fsck
+          if ($LASTEXITCODE -ne 0) { throw 'git lfs fsck failed.' }
+          if (git status --porcelain) { throw 'Forest performance checkout is dirty.' }
+
+      - name: Validate target-density performance contract
+        shell: pwsh
+        working-directory: _perf-worktree
+        run: |
+          python -m unittest scripts.ci.test_stage3g_forest_target_density_contract
+          if ($LASTEXITCODE -ne 0) { throw 'Forest target-density performance contract failed.' }
+
+      - name: Run target-density forest performance gate
+        shell: pwsh
+        working-directory: _perf-worktree
+        run: |
+          ./scripts/ue/Invoke-YacsStage3GForestTargetDensity.ps1 -ExpectedBranch HEAD -ExpectedHead '${{ github.sha }}' -ArtifactRoot 'Saved/RuntimeProof/CI/ForestTargetDensity/Performance' -ForestP95BudgetMs 14.0
+          if ($LASTEXITCODE -ne 0) { throw 'Forest target-density performance gate failed.' }
+
+      - name: Upload target-density performance evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: stage3g-forest-target-density-performance-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            _perf-worktree/Saved/RuntimeProof/CI/ForestTargetDensity/Performance/**
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Clean isolated performance worktree
+        if: ${{ always() }}
+        shell: pwsh
+        working-directory: _perf-worktree
+        run: |
+          if (Test-Path -LiteralPath '.git') {
+            git reset --hard
+            if ($LASTEXITCODE -ne 0) { throw 'Performance worktree cleanup git reset failed.' }
+            git clean -ffdx -e Saved/Logs/YetAnotherCyclingSim.log
+            if ($LASTEXITCODE -ne 0) { throw 'Performance worktree cleanup git clean failed.' }
+          }
+          else {
+            Write-Host 'Performance worktree cleanup: no checkout worktree to clean.'
+          }

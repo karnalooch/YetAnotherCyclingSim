@@ -92,8 +92,8 @@
     "next_step": "Use this merged state as the BEFORE baseline for Stage 3G R3 valley/high-Alpine work."
   },
   "evidence_storage": {
-    "mode": "CI_ARTIFACT_BACKFILL",
-    "note": "R2 predates repository Visual History image retention. Genuine 1200/4900/8000 PNGs are preserved in the Stage 3G CI artifact; dedicated repo triptychs are not retroactively fabricated.",
+    "mode": "REPOSITORY_BACKFILL",
+    "note": "Genuine R1/R2 CI captures were backfilled into repository-retained triptychs. The AFTER panel reuses the accepted R2 render because the merge introduced no visual delta.",
     "artifact_name": "stage3g-full-validation-36299298530-1"
   },
   "captures": [
@@ -121,8 +121,9 @@
         "sha256": null,
         "status": "MERGED_BASELINE"
       },
-      "triptych_image": null,
-      "pixel_diff": null
+      "triptych_image": "captures/01_valley_1200m_triptych.jpg",
+      "pixel_diff": null,
+      "triptych_sha256": "9e4a3cf0637098ad7fd52aaa805b358c045126c9897813945b65861995b5f1fd"
     },
     {
       "capture_id": "02-forest-4900m",
@@ -148,8 +149,9 @@
         "sha256": null,
         "status": "MERGED_BASELINE"
       },
-      "triptych_image": null,
-      "pixel_diff": null
+      "triptych_image": "captures/02_forest_4900m_triptych.jpg",
+      "pixel_diff": null,
+      "triptych_sha256": "ea089a3d9131223b7b9bd906a6ce2ba285f930cf6aeb9216032147f8a2d49db9"
     },
     {
       "capture_id": "03-high-alpine-8000m",
@@ -175,8 +177,9 @@
         "sha256": null,
         "status": "MERGED_BASELINE"
       },
-      "triptych_image": null,
-      "pixel_diff": null
+      "triptych_image": "captures/03_high_alpine_8000m_triptych.jpg",
+      "pixel_diff": null,
+      "triptych_sha256": "d3ea07d2b29ba14908d8f09913ed1f846f64b651c35201318fdd7cdc83050c36"
     }
   ]
 }

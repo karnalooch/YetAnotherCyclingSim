@@ -48,14 +48,21 @@ bool FStage3PrototypeTerrainBuildTest::RunTest(const FString& Parameters)
 			Terrain->GetRoadInstanceCount(), 1000);
 		TestEqual(TEXT("terrain support uses 50 m tile stride"),
 			Terrain->GetTerrainInstanceCount(), 200);
-		TestEqual(TEXT("forest progression prop count remains deterministic"),
-			Terrain->GetForestPropInstanceCount(), 24);
+		TestTrue(TEXT("target-density understory is materially populated"),
+			Terrain->GetForestPropInstanceCount() >= 100);
 		TestEqual(TEXT("high-mountain progression prop count remains deterministic"),
 			Terrain->GetMountainPropInstanceCount(), 30);
 		TestEqual(TEXT("Stage 3G valley ridge count remains deterministic"),
 			Terrain->GetValleyRidgeInstanceCount(), 32);
-		TestEqual(TEXT("Stage 3G forest canopy count remains deterministic"),
-			Terrain->GetForestCanopyInstanceCount(), 100);
+		TestTrue(TEXT("target-density primary/background forest is materially populated"),
+			Terrain->GetForestCanopyInstanceCount() >= 600);
+		const int32 TargetDensityForestCount =
+			Terrain->GetForestPropInstanceCount()
+			+ Terrain->GetForestCanopyInstanceCount();
+		TestTrue(TEXT("target-density persisted forest count >= 1700"),
+			TargetDensityForestCount >= 1700);
+		TestTrue(TEXT("target-density persisted forest count <= 2300"),
+			TargetDensityForestCount <= 2300);
 		TestNotNull(TEXT("Stage 3G forest props use a real mesh"),
 			Terrain->ForestProps->GetStaticMesh().Get());
 		TestNotNull(TEXT("Stage 3G forest canopy uses a real mesh"),

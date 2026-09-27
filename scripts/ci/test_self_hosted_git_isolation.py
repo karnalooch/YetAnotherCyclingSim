@@ -10,10 +10,8 @@ WORKFLOWS = (
     ROOT / ".github" / "workflows" / "asset-full.yml",
     ROOT / ".github" / "workflows" / "reusable-unreal.yml",
 )
-CODE_ONLY_WORKFLOWS = (
-    ROOT / ".github" / "workflows" / "manual-unreal.yml",
-    ROOT / ".github" / "workflows" / "reusable-unreal.yml",
-)
+PERSISTENT_CODE_ONLY_WORKFLOWS = (ROOT / ".github" / "workflows" / "manual-unreal.yml",)
+ISOLATED_CODE_ONLY_WORKFLOWS = (ROOT / ".github" / "workflows" / "reusable-unreal.yml",)
 
 
 class SelfHostedGitIsolationTests(unittest.TestCase):
@@ -41,8 +39,8 @@ class SelfHostedGitIsolationTests(unittest.TestCase):
                 self.assertIn('"GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV', text)
                 self.assertIn("git config --global --list --show-origin", text)
 
-    def test_code_only_workflows_normalize_persistent_lfs_before_checkout(self):
-        for path in CODE_ONLY_WORKFLOWS:
+    def test_persistent_code_only_workflows_normalize_lfs_before_checkout(self):
+        for path in PERSISTENT_CODE_ONLY_WORKFLOWS:
             text = path.read_text(encoding="utf-8")
             with self.subTest(workflow=path.name):
                 normalize = text.index(
@@ -53,6 +51,19 @@ class SelfHostedGitIsolationTests(unittest.TestCase):
                 self.assertIn("lfs: false", text)
                 checkout = text.index("without LFS payloads")
                 self.assertLess(normalize, checkout)
+
+    def test_reusable_code_only_workflows_use_isolated_worktree(self):
+        for path in ISOLATED_CODE_ONLY_WORKFLOWS:
+            text = path.read_text(encoding="utf-8")
+            with self.subTest(workflow=path.name):
+                self.assertIn("path: _unreal-worktree", text)
+                self.assertIn("working-directory: _unreal-worktree", text)
+                self.assertIn("lfs: false", text)
+                self.assertIn("clean: true", text)
+                self.assertNotIn(
+                    "Normalize stale LFS payloads before code-only checkout",
+                    text,
+                )
 
 
 if __name__ == "__main__":

@@ -75,7 +75,11 @@ function Invoke-Stage3GEditor {
         [int] $TimeoutSec = 180
     )
     $ErrPath = $LogPath + '.stderr'
-    $Proc = Start-Process -FilePath $EditorCmd -ArgumentList $Arguments -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $LogPath -RedirectStandardError $ErrPath
+    $EffectiveArguments = @($Arguments)
+    if (-not @($EffectiveArguments | Where-Object { $_ -like '-AbsLog=*' }).Count) {
+        $EffectiveArguments += ('-AbsLog=' + ($LogPath + '.editor.log'))
+    }
+    $Proc = Start-Process -FilePath $EditorCmd -ArgumentList $EffectiveArguments -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $LogPath -RedirectStandardError $ErrPath
     if (-not $Proc.WaitForExit($TimeoutSec * 1000)) {
         try { $Proc | Stop-Process -Force } catch { }
         throw "Unreal process timed out; see $LogPath"

@@ -24,28 +24,33 @@ public:
 	double EndDistanceM = 6200.0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="YACS|Stage3G", meta=(ClampMin="1.0", Units="m", PCG_Overridable))
-	double StationSpacingM = 40.0;
+	double StationSpacingM = 20.0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="YACS|Stage3G", meta=(ClampMin="0.0", ClampMax="1.0", PCG_Overridable))
-	double Density = 0.72;
+	double Density = 0.84;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="YACS|Stage3G", meta=(ClampMin="1", ClampMax="8", PCG_Overridable))
-	int32 PointsPerSidePerStation = 3;
+	int32 PointsPerSidePerStation = 4;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="YACS|Stage3G", meta=(ClampMin="4.01", Units="m", PCG_Overridable))
-	double MinLateralOffsetM = 8.0;
+	double MinLateralOffsetM = 10.0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="YACS|Stage3G", meta=(ClampMin="4.02", Units="m", PCG_Overridable))
-	double MaxLateralOffsetM = 55.0;
+	double MaxLateralOffsetM = 36.0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="YACS|Stage3G", meta=(ClampMin="0.1", PCG_Overridable))
-	double MinUniformScale = 0.82;
+	double MinUniformScale = 0.95;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="YACS|Stage3G", meta=(ClampMin="0.1", PCG_Overridable))
-	double MaxUniformScale = 1.12;
+	double MaxUniformScale = 1.35;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="YACS|Stage3G", meta=(PCG_Overridable))
 	int32 GenerationSeed = 42017;
+
+	// Versioned presentation algorithm. v2 keeps the three deterministic strata
+	// while increasing canopy mass after the v1 visual-density rejection.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="YACS|Stage3G", meta=(ClampMin="2", ClampMax="2", PCG_Overridable))
+	int32 LayerProfileVersion = 2;
 
 	virtual bool UseSeed() const override { return true; }
 

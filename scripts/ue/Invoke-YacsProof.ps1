@@ -254,6 +254,7 @@ Write-Host "[3/4] Running Automation tests..." -ForegroundColor Cyan
 Write-YacsPhaseStatus -Phase 'automation' -Status 'running'
 
 $RunLog = Join-Path -Path $ArtifactRoot -ChildPath 'automation_run.log'
+$EditorLog = Join-Path -Path $ArtifactRoot -ChildPath 'automation_editor.log'
 $ReportJson = Join-Path -Path $ArtifactRoot -ChildPath 'index.json'
 $ReportExportPath = Join-Path -Path $ArtifactRoot -ChildPath 'AutomationReport'
 
@@ -272,6 +273,7 @@ $EditorArgs = @(
     '-NullRHI'
     '-NoSplash'
     '-log'
+    ('-AbsLog=' + $EditorLog)
     '-ReportExportPath=' + $ReportExportPath
     # The execcmds value contains spaces; Windows CommandLineToArgvW
     # would otherwise split "-execcmds=Automation RunTests A+B;Quit" into

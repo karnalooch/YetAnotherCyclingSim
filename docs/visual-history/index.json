@@ -62,6 +62,21 @@
       "pr_number": 192,
       "workflow_run_id": 36308910299,
       "workflow_run_number": 421
+    },
+    {
+      "visual_history_id": "VH-3G-R3-002",
+      "stage": "Stage 3G",
+      "version": "R3",
+      "title": "Representative forest target-density baseline",
+      "path": "stage-3g/R3-forest-target-density",
+      "technical_status": "WORKING",
+      "visual_status": "IN_REVIEW",
+      "baseline_commit_sha": "02ff23f0a24228432ae9c34eb65aa4cb3694ae1d",
+      "source_commit_sha": "94adc3dd19574dfb023fafcdc98b1983b82e2361",
+      "merge_commit_sha": null,
+      "pr_number": 202,
+      "workflow_run_id": 36341840827,
+      "workflow_run_number": 510
     }
   ]
 }

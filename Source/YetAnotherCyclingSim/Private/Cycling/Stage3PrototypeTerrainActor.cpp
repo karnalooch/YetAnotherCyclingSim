@@ -1,4 +1,6 @@
 #include "Cycling/Stage3PrototypeTerrainActor.h"
+#include "Cycling/Stage3GForestLayout.h"
+#include "Cycling/Stage3GRouteExclusion.h"
 
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
 #include "Components/SceneComponent.h"
@@ -43,11 +45,6 @@ namespace Stage3PrototypeTerrainInternal
 	constexpr double ForestStartM = 3700.0;
 	constexpr double MountainStartM = 6200.0;
 
-	constexpr double ForestPropFirstM = 3800.0;
-	constexpr double ForestPropLastExclusiveM = 6200.0;
-	constexpr double ForestPropSpacingM = 200.0;
-	constexpr double ForestPropLateralM = 28.0;
-
 	constexpr double MountainPropFirstM = 6300.0;
 	constexpr double MountainPropLastExclusiveM = 10000.0;
 	constexpr double MountainPropSpacingM = 250.0;
@@ -63,10 +60,6 @@ namespace Stage3PrototypeTerrainInternal
 	constexpr double ValleyRidgeLastExclusiveM = 3700.0;
 	constexpr double ValleyRidgeSpacingM = 220.0;
 	constexpr double ValleyRidgeBaseLateralM = 75.0;
-
-	constexpr double ForestCanopyFirstM = 3750.0;
-	constexpr double ForestCanopyLastExclusiveM = 6250.0;
-	constexpr double ForestCanopySpacingM = 100.0;
 
 	constexpr double WaterFirstM = 600.0;
 	constexpr double WaterLastExclusiveM = 3200.0;
@@ -733,107 +726,90 @@ bool AStage3PrototypeTerrainActor::RebuildFromGeometry(
 		WaterTiles->AddInstance(WaterTransform, false);
 	}
 
-	// Stage 3G R2 real conifer layer. The same validated mass-forest mesh that
-	// backs PCG_Forest replaces the old Engine Cone/Cylinder placeholders in
-	// the persisted reference map. Scale is derived from actual mesh bounds so
-	// source-unit differences cannot create giant or microscopic trees.
+	// Stage 3G target-density forest. PCG_Forest and the persisted reference
+	// map consume the same shared candidate layout, so performance proof measures
+	// the same representative forest that worldgen describes.
 	const FBoxSphereBounds ConiferBounds =
 		ForestCanopyProps->GetStaticMesh()->GetBounds();
-	const double ConiferMeshHeightCm =
-		static_cast<double>(ConiferBounds.BoxExtent.Z) * 2.0;
 	const double ConiferMeshMinZCm =
-		static_cast<double>(ConiferBounds.Origin.Z - ConiferBounds.BoxExtent.Z);
-	if (!FMath::IsFinite(ConiferMeshHeightCm)
-		|| !FMath::IsFinite(ConiferMeshMinZCm)
-		|| ConiferMeshHeightCm <= UE_SMALL_NUMBER)
+		static_cast<double>(
+			ConiferBounds.Origin.Z - ConiferBounds.BoxExtent.Z);
+
+	CyclingStage3G::FStage3GForestLayoutConfig ForestConfig =
+		CyclingStage3G::MakeTargetDensityForestConfig();
+	TArray<CyclingStage3G::FStage3GForestCandidate> ForestCandidates;
+	CyclingStage3G::FStage3GForestLayoutStats ForestStats;
+	if (!CyclingStage3G::TryGenerateForestLayout(
+			Geometry,
+			ForestConfig,
+			ForestCandidates,
+			ForestStats,
+			OutError))
 	{
-		OutError = TEXT("Stage 3G conifer mesh bounds are invalid");
 		return false;
 	}
 
-	const double ForestCanopyLateralsM[] = { 18.0, 36.0 };
-	for (double DistanceM = ForestCanopyFirstM;
-		DistanceM < ForestCanopyLastExclusiveM;
-		DistanceM += ForestCanopySpacingM)
+	int32 PersistedForestInstances = 0;
+	for (const CyclingStage3G::FStage3GForestCandidate& Candidate
+		: ForestCandidates)
 	{
-		FVector RoutePositionM;
-		FVector Right;
-		if (!TryResolveHorizontalRight(Geometry, DistanceM, RoutePositionM, Right, OutError))
-		{
-			return false;
-		}
-
-		for (const double Side : { -1.0, 1.0 })
-		{
-			for (const double BaseLateralM : ForestCanopyLateralsM)
-			{
-				const double Phase = DistanceM * 0.013 + BaseLateralM * 0.17 + Side;
-				const double HeightM = 13.0 + 6.0 * FMath::Abs(FMath::Sin(Phase));
-				const double LateralM = BaseLateralM
-					+ 2.5 * FMath::Sin(DistanceM * 0.021 + Side * BaseLateralM);
-
-				const double UniformScale =
-					(HeightM * MetresToCentimetres) / ConiferMeshHeightCm;
-				FVector PositionM = RoutePositionM + Right * (Side * LateralM);
-				PositionM.Z -=
-					(ConiferMeshMinZCm * UniformScale) / MetresToCentimetres;
-				PositionM.Z -= 0.1;
-				const FTransform CanopyTransform(
-					FRotator(0.0, FMath::Fmod(DistanceM * 0.11 + BaseLateralM * 7.0, 360.0), 0.0),
-					PositionM * MetresToCentimetres,
-					FVector(UniformScale));
-				if (!IsFiniteTransform(CanopyTransform))
-				{
-					OutError = TEXT("Stage 3G forest canopy transform is invalid");
-					return false;
-				}
-				ForestCanopyProps->AddInstance(CanopyTransform, false);
-			}
-		}
-	}
-
-	for (double DistanceM = ForestPropFirstM;
-		DistanceM < ForestPropLastExclusiveM;
-		DistanceM += ForestPropSpacingM)
-	{
-		FVector RoutePositionM;
-		FVector Right;
-		if (!TryResolveHorizontalRight(
+		CyclingStage3G::FRouteExclusionResult Exclusion;
+		if (!CyclingStage3G::TryEvaluateRouteExclusion(
 				Geometry,
-				DistanceM,
-				RoutePositionM,
-				Right,
+				Candidate.PositionM,
+				ForestConfig.ProtectedRouteHalfWidthM,
+				Exclusion,
 				OutError))
 		{
 			return false;
 		}
-
-		for (const double Side : { -1.0, 1.0 })
+		if (Exclusion.bExcluded)
 		{
-			FVector PositionM =
-				RoutePositionM + Right * (Side * ForestPropLateralM);
-			const double HeightM =
-				12.0 + 2.0 * FMath::Abs(FMath::Sin(DistanceM * 0.011));
-			const double UniformScale =
-				(HeightM * MetresToCentimetres) / ConiferMeshHeightCm;
-			PositionM.Z -=
-				(ConiferMeshMinZCm * UniformScale) / MetresToCentimetres;
-			PositionM.Z -= 0.2;
-			const FTransform TreeTransform(
-				FRotator(
-					0.0,
-					FMath::Fmod(DistanceM * 0.083 + Side * 43.0, 360.0),
-					0.0),
-				PositionM * MetresToCentimetres,
-				FVector(UniformScale));
-			if (!IsFiniteTransform(TreeTransform))
-			{
-				OutError = TEXT("prototype forest prop transform is invalid");
-				return false;
-			}
-			ForestProps->AddInstance(TreeTransform, false);
+			continue;
 		}
+
+		FVector PositionM = Candidate.PositionM;
+		PositionM.Z -=
+			(ConiferMeshMinZCm * Candidate.UniformScale)
+			/ MetresToCentimetres;
+		PositionM.Z -= 0.1;
+
+		const FTransform TreeTransform(
+			FRotator(0.0, Candidate.YawDeg, 0.0),
+			PositionM * MetresToCentimetres,
+			FVector(Candidate.UniformScale));
+		if (!IsFiniteTransform(TreeTransform))
+		{
+			OutError = FString::Printf(
+				TEXT("Stage 3G target-density forest transform is invalid at %.3f m"),
+				Candidate.RouteDistanceM);
+			return false;
+		}
+
+		UHierarchicalInstancedStaticMeshComponent* TargetComponent =
+			Candidate.Layer == CyclingStage3G::EStage3GForestLayer::Understory
+				? ForestProps.Get()
+				: ForestCanopyProps.Get();
+		TargetComponent->AddInstance(TreeTransform, false);
+		++PersistedForestInstances;
 	}
+
+	if (PersistedForestInstances < 1700 || PersistedForestInstances > 2300)
+	{
+		OutError = FString::Printf(
+			TEXT("Stage 3G persisted target-density forest count %d is outside [1700, 2300]"),
+			PersistedForestInstances);
+		return false;
+	}
+
+	UE_LOG(LogTemp, Display,
+		TEXT("Stage 3G target-density forest: candidates=%d persisted=%d primary=%d background=%d understory=%d expected_mean=%.2f."),
+		ForestStats.GeneratedCount,
+		PersistedForestInstances,
+		ForestStats.PrimaryCount,
+		ForestStats.BackgroundCount,
+		ForestStats.UnderstoryCount,
+		ForestStats.ExpectedCandidateMean);
 
 	for (double DistanceM = MountainPropFirstM;
 		DistanceM < MountainPropLastExclusiveM;
@@ -1071,6 +1047,15 @@ bool AStage3PrototypeTerrainActor::ValidateAgainstGeometry(
 	if (GetForestPropInstanceCount() <= 0 || GetMountainPropInstanceCount() <= 0)
 	{
 		OutError = TEXT("prototype world progression props are missing");
+		return false;
+	}
+	const int32 TargetDensityForestCount =
+		GetForestPropInstanceCount() + GetForestCanopyInstanceCount();
+	if (TargetDensityForestCount < 1700 || TargetDensityForestCount > 2300)
+	{
+		OutError = FString::Printf(
+			TEXT("Stage 3G target-density forest count mismatch: %d outside [1700, 2300]"),
+			TargetDensityForestCount);
 		return false;
 	}
 	if (GetValleyRidgeInstanceCount() <= 0

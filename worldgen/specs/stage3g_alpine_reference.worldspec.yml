@@ -35,7 +35,7 @@ biomes:
     end_m: 6200
     intent:
       terrain: enclosed_valley
-      vegetation_density: 0.72
+      vegetation_density: 0.84
       rocks_density: 0.20
 
   - id: high_alpine

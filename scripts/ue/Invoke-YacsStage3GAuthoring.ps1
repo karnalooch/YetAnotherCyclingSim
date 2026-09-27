@@ -70,7 +70,11 @@ function Invoke-UEProcess {
         [Parameter(Mandatory=$true)] [string] $LogPath
     )
     $ErrPath = $LogPath + '.stderr'
-    $Proc = Start-Process -FilePath $EditorCmd -ArgumentList $Arguments -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $LogPath -RedirectStandardError $ErrPath
+    $EffectiveArguments = @($Arguments)
+    if (-not @($EffectiveArguments | Where-Object { $_ -like '-AbsLog=*' }).Count) {
+        $EffectiveArguments += ('-AbsLog=' + ($LogPath + '.editor.log'))
+    }
+    $Proc = Start-Process -FilePath $EditorCmd -ArgumentList $EffectiveArguments -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $LogPath -RedirectStandardError $ErrPath
     if (-not $Proc.WaitForExit($TimeoutSec * 1000)) {
         try { $Proc | Stop-Process -Force } catch { }
         throw "Unreal process timed out; see $LogPath"
@@ -273,8 +277,20 @@ $SetupText = Get-Content -LiteralPath $SetupLog -Raw -ErrorAction Stop
 if ($SetupText -notmatch 'CyclingStage3RouteSetupCommandlet: done') {
     throw 'Stage 3 route/world setup completion marker missing.'
 }
-if ($SetupText -notmatch 'valley_ridges=32 forest_canopy=100 distant_mountains=28 rock_props=40 water_tiles=26') {
-    throw 'Stage 3G deterministic instance-count marker missing.'
+if ($SetupText -notmatch 'forest_props=(\d+)') {
+    throw 'Stage 3G forest_props instance-count marker missing.'
+}
+$ForestPropsCount = [int]$Matches[1]
+if ($SetupText -notmatch 'forest_canopy=(\d+)') {
+    throw 'Stage 3G forest_canopy instance-count marker missing.'
+}
+$ForestCanopyCount = [int]$Matches[1]
+$ForestTotalCount = $ForestPropsCount + $ForestCanopyCount
+if ($ForestTotalCount -lt 1700 -or $ForestTotalCount -gt 2300) {
+    throw "Stage 3G target-density forest count $ForestTotalCount is outside [1700, 2300]."
+}
+if ($SetupText -notmatch 'valley_ridges=32 forest_canopy=\d+ distant_mountains=28 rock_props=40 water_tiles=26') {
+    throw 'Stage 3G deterministic non-forest instance-count marker missing.'
 }
 
 # Fail closed on source-tree mutations. The authoring pass may only create the

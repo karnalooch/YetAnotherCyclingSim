@@ -36,61 +36,40 @@ jobs:
           Write-Host "Using isolated Git config: $isolated"
           git config --global --list --show-origin
 
-      - name: Normalize stale LFS payloads before code-only checkout
+      - name: Bootstrap cleanup helper outside persistent worktree
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: _bootstrap-cleanup
+          fetch-depth: 1
+          lfs: false
+          clean: true
+          persist-credentials: false
+
+      - name: Release stale Unreal workspace locks
         shell: pwsh
         run: |
-          $ErrorActionPreference = 'Stop'
-
-          # Self-hosted Actions workspaces persist between jobs. A preceding
-          # full-LFS asset job can therefore leave materialized payloads in
-          # otherwise-clean tracked paths. actions/checkout with lfs:false
-          # prevents new smudging but does not necessarily rewrite unchanged
-          # working-tree files back to pointer form.
-          & git rev-parse --is-inside-work-tree *> $null
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host 'No existing Git worktree to normalize; fresh checkout will create one.'
-            exit 0
-          }
-
-          & git lfs version | Out-Null
-          if ($LASTEXITCODE -ne 0) {
-            throw 'Git LFS is required to normalize the persistent self-hosted workspace.'
-          }
-
-          $lfsOutput = @(& git lfs ls-files --name-only)
-          if ($LASTEXITCODE -ne 0) {
-            throw 'Could not enumerate Git LFS tracked paths before code-only checkout.'
-          }
-
-          $removed = 0
-          foreach ($rawPath in $lfsOutput) {
-            $path = $rawPath.Trim()
-            if (-not $path) {
-              continue
-            }
-            if (Test-Path -LiteralPath $path -PathType Leaf) {
-              Remove-Item -LiteralPath $path -Force
-              $removed += 1
-            }
-          }
-
-          Write-Host "Removed $removed stale/pointer LFS working-tree files before code-only checkout; checkout will restore committed pointer blobs with smudging disabled."
+          $bootstrap = Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup/scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
+          & $bootstrap -Workspace $env:GITHUB_WORKSPACE
+          Remove-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup') -Recurse -Force
 
       - name: Checkout exact caller revision without LFS payloads
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
+          path: _unreal-worktree
+          fetch-depth: 20
           lfs: false
           clean: true
           persist-credentials: false
 
       - name: Enforce code-only checkout
         shell: pwsh
+        working-directory: _unreal-worktree
         run: |
           ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
 
       - name: Verify runner provenance
         shell: pwsh
+        working-directory: _unreal-worktree
         run: |
           $ErrorActionPreference = 'Stop'
           $actual = (git rev-parse HEAD).Trim()
@@ -101,6 +80,7 @@ jobs:
 
       - name: Build editor and run scoped Automation
         shell: pwsh
+        working-directory: _unreal-worktree
         run: |
           ./scripts/ci/Invoke-YacsUnrealCi.ps1 -ExpectedHead '${{ github.sha }}'
 
@@ -110,15 +90,23 @@ jobs:
         with:
           name: unreal-ci-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            Saved/RuntimeProof/CI/Unreal/**/*.json
-            Saved/RuntimeProof/CI/Unreal/**/*.txt
-            Saved/RuntimeProof/CI/Unreal/**/*.log
+            _unreal-worktree/Saved/RuntimeProof/CI/Unreal/**/*.json
+            _unreal-worktree/Saved/RuntimeProof/CI/Unreal/**/*.txt
+            _unreal-worktree/Saved/RuntimeProof/CI/Unreal/**/*.log
           if-no-files-found: warn
           retention-days: 7
 
-      - name: Clean workspace
+      - name: Clean isolated Unreal worktree
         if: ${{ always() }}
         shell: pwsh
+        working-directory: _unreal-worktree
         run: |
-          git reset --hard
-          git clean -ffdx
+          if (Test-Path -LiteralPath '.git') {
+            git reset --hard
+            if ($LASTEXITCODE -ne 0) { throw 'Unreal worktree cleanup git reset failed.' }
+            git clean -ffdx -e Saved/Logs/YetAnotherCyclingSim.log
+            if ($LASTEXITCODE -ne 0) { throw 'Unreal worktree cleanup git clean failed.' }
+          }
+          else {
+            Write-Host 'Unreal worktree cleanup: no checkout worktree to clean.'
+          }
