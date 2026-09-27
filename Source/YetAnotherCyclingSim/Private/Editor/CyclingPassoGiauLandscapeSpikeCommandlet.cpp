@@ -13,7 +13,6 @@
 #include "Misc/Paths.h"
 #include "FileHelpers.h"
 #include "UObject/Package.h"
-#include "UObject/UnrealType.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogCyclingPassoGiauLandscapeSpike, Log, All);
 
@@ -198,7 +197,6 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 	}
 
 	Landscape->SetActorLabel(TEXT("Passo Giau DEM Landscape"));
-	Landscape->bCanHaveLayersContent = false;
 	Landscape->LandscapeMaterial = nullptr;
 	Landscape->SetActorTransform(
 		FTransform(
@@ -240,11 +238,6 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 
 	Landscape->RegisterAllComponents();
 
-	FPropertyChangedEvent MaterialPropertyChangedEvent(
-		FindFPropertyChecked<FProperty>(
-			Landscape->GetClass(),
-			GET_MEMBER_NAME_CHECKED(ALandscapeProxy, LandscapeMaterial)));
-	Landscape->PostEditChangeProperty(MaterialPropertyChangedEvent);
 	Landscape->PostEditChange();
 
 	TArray<ULandscapeComponent*> Components;
