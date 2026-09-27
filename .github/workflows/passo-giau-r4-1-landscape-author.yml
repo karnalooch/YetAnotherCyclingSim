@@ -67,6 +67,12 @@ jobs:
             throw 'Passo Giau authoring checkout has non-ignored mutations.'
           }
 
+      - name: Enforce code-only checkout
+        shell: pwsh
+        run: |
+          ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Passo Giau code-only checkout contract failed.' }
+
       - name: Run repository contract test
         shell: pwsh
         run: |
