@@ -8,9 +8,7 @@ WORKFLOW = ROOT / ".github" / "workflows" / "stage3g-source-asset-audit.yml"
 BOULDER_AUTHOR_HARNESS = (
     ROOT / "scripts" / "ue" / "Invoke-YacsStage3GBoulderLodAuthor.ps1"
 )
-STAGE3G_AUTHORING_HARNESS = (
-    ROOT / "scripts" / "ue" / "Invoke-YacsStage3GAuthoring.ps1"
-)
+STAGE3G_AUTHORING_HARNESS = ROOT / "scripts" / "ue" / "Invoke-YacsStage3GAuthoring.ps1"
 
 
 class Stage3GSourceAssetAuditContract(unittest.TestCase):
@@ -59,9 +57,9 @@ class Stage3GSourceAssetAuditContract(unittest.TestCase):
         self.assertNotIn("-run=PythonScript", author)
 
         stage3g = STAGE3G_AUTHORING_HARNESS.read_text(encoding="utf-8")
-        import_block = stage3g.split(
-            "[2/5] Importing canonical Stage 3G R1 assets", 1
-        )[1].split("[3/5] Authoring Stage 3G texture-backed materials", 1)[0]
+        import_block = stage3g.split("[2/5] Importing canonical Stage 3G R1 assets", 1)[
+            1
+        ].split("[3/5] Authoring Stage 3G texture-backed materials", 1)[0]
         self.assertIn("$ImportScript", import_block)
         self.assertIn("-ExecutePythonScript", import_block)
         self.assertNotIn("-run=PythonScript", import_block)
