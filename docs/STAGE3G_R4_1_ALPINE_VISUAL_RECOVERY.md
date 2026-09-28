@@ -666,23 +666,154 @@ part of the earlier failure.
 Steep cliff faces still show visible heightfield stepping/ribbing in perspective.
 That remaining limitation should not be hidden by blur or by pretending 16-bit
 precision is the cause. The data uses nearly the full uint16 domain and the
-measured vertical quantization step is only about **2.36 cm**. The remaining
-steep-face artifact is therefore treated as a Landscape/heightfield representation
-and source-resolution constraint until disproven.
+measured vertical quantization step is only about **2.36 cm**.
 
-Decision for R4.1:
+### Priority source discovery — `DTM_2m_Cortina` (2026-09-28)
 
-- keep the Veneto Landscape candidate as the **macro-terrain path A** under
-  evaluation;
-- do not propagate it across the canonical route yet;
-- do not unblock R5;
-- use R4.1C material work and especially R4.1D `Rock Face 01` / cliff / scree
-  geometry to replace or mask inspectable steep heightfield faces rather than
-  destructively smoothing the DEM;
-- require a route-level 1200 m golden slice before final human visual acceptance.
+The terrain-source decision changed after new official-source research.
 
-Issue #213 / PR #215 remain open until the bounded Landscape path is reviewed
-and its exploratory scaffolding/evidence is cleaned into a maintainable form.
+Regione del Veneto commissioned a dedicated aerial photogrammetry + LiDAR survey
+covering Cortina d'Ampezzo and the neighboring municipalities **Colle Santa
+Lucia, Borca di Cadore, Selva di Cadore and San Vito di Cadore**. The official
+procurement specifies **4 LiDAR points/m²** and production of both DSM and DTM
+products.
+
+Official source:
+https://bur.regione.veneto.it/BurvServices/Pubblica/DettaglioDgr.aspx?id=426837
+
+The Veneto geoportal currently exposes a layer named **`DTM_2m_Cortina`**.
+That layer is now the priority candidate for a source-resolution A/B over the
+Passo Giau / SP638 AOI.
+
+Geoportal:
+https://idt2.regione.veneto.it/idt/webgis/viewer?webgisId=246
+
+The existing harmonized regional DTM remains the proven baseline and is
+officially published with **5 m cells**:
+https://idt2.regione.veneto.it/nuovo-dtm-derivato-da-dati-lidar/
+
+This matters because the current 4033 x 4033 Landscape over ~8 km has about
+**1.984 m/vertex**, but the existing source still contains measured terrain only
+at 5 m spacing. A verified 2 m DTM would make the source sampling scale closely
+match the UE Landscape vertex spacing instead of merely interpolating a coarser
+surface.
+
+For reference:
+
+- current 2017 candidate: `8000 / 2016 ~= 3.968 m/vertex`;
+- target 4033 candidate: `8000 / 4032 ~= 1.984 m/vertex`;
+- Epic explicitly lists **4033 x 4033** as a recommended Landscape size.
+
+Epic reference:
+https://dev.epicgames.com/documentation/unreal-engine/landscape-technical-guide-in-unreal-engine
+
+### Geospatial pipeline decision
+
+**QGIS/GDAL becomes the master preprocessing layer for YACS world data.**
+
+The intended pipeline is now:
+
+`official DEM -> QGIS/GDAL Float working raster -> one CRS/resample step -> final Float DEM -> UInt16/R16 transport -> Unreal Landscape`
+
+Rules:
+
+- keep the source DEM immutable;
+- keep elevation in Float32/Float64 through crop/reprojection/resampling;
+- use one metric CRS for terrain, SP638, orthophoto and future world masks;
+- prefer **EPSG:7795 / RDN2008 Zone 12 (E-N)** as the working candidate when
+  consistent with downloaded source metadata;
+- do not render QGIS imagery and reuse it as height data;
+- perform at most one deliberate reprojection/resample;
+- test `cubic` and `cubicspline` for elevation rather than chaining arbitrary
+  resize operations;
+- convert to UInt16 only at the Unreal transport boundary;
+- choose elevation min/max deliberately with documented headroom;
+- preserve SP638 XY independently from the raster grid.
+
+GDAL supports explicit target resolution and resampling algorithms:
+https://gdal.org/en/stable/programs/gdalwarp.html
+
+GDAL UInt16 range mapping:
+https://gdal.org/en/stable/programs/gdal_translate.html
+
+For the 8 km / 4033 target:
+
+`XY Scale ~= 198.412698 cm`
+
+For an encoded vertical range `R` metres:
+
+`Z Scale = R * 100 / 512`
+
+per Epic's Landscape height-domain contract.
+
+### P0 next experiment — 5 m vs real 2 m
+
+Do **not** continue adding terrain art, runtime smoothing or local replacement
+skins until this source-resolution experiment is complete.
+
+Build two otherwise identical neutral Landscape proofs:
+
+1. **Baseline A**
+   - current harmonized Veneto 5 m DTM;
+   - 4033 x 4033;
+   - same AOI;
+   - same UE import path;
+   - same forced LOD / lighting-only camera.
+
+2. **Candidate B**
+   - verified `DTM_2m_Cortina`;
+   - same physical AOI;
+   - QGIS/GDAL deterministic preprocessing;
+   - 4033 x 4033;
+   - ~1.984 m/vertex;
+   - same UE import path and camera.
+
+No production material, foliage, rocks, cliff meshes, procedural noise,
+road cut/fill or runtime terrain-skin replacement is allowed in this A/B.
+
+Interpretation:
+
+- if B removes or dramatically reduces the Minecraft-like faceting, the
+  horizontal resolution of the source is confirmed as the dominant problem and
+  the 2 m DTM becomes the macro-terrain candidate;
+- if B looks materially the same, investigate Landscape triangulation, LOD and
+  importer behavior before resuming art work.
+
+The current 16-bit path remains unlikely to be the root cause because the
+measured vertical quantization is already centimetric.
+
+### Status of the R4.1B.3 local terrain-skin experiment
+
+The R4.1B.3 world-aligned rider-close terrain-skin path reached technical green:
+
+- deterministic kernel tests passed;
+- UE 5.8 Geometry Script capability passed;
+- real SP638 topology proof passed;
+- 4K terrain-skin render completed.
+
+However, **technical green did not produce an acceptable rider-camera terrain**.
+The terrain-skin path is therefore retained as diagnostic/prototyping evidence,
+not promoted as the production terrain solution.
+
+This is a useful negative result: Unreal-side runtime/local smoothing should not
+become the default repair for a source-resolution problem that can be solved
+upstream in GIS.
+
+### Revised decision for R4.1
+
+- **pause further broad 5 m terrain art propagation**;
+- verify/download the official `DTM_2m_Cortina` AOI first;
+- record source metadata, CRS, datum, license and true cell spacing;
+- build deterministic QGIS/GDAL 2 m -> 4033 preparation;
+- render the exact-camera 5 m vs 2 m neutral A/B;
+- keep SP638 road truth and physics unchanged;
+- keep the 5 m result as reproducible baseline evidence;
+- do not unblock R5 until the winning terrain source passes human visual review;
+- only after source resolution is settled resume road cut/fill, cliffs, scree,
+  materials and PCG dressing.
+
+Issue #213 / PR #215 history remains valid evidence of the 5 m baseline. The
+new 2 m A/B is the priority source-selection gate before final R4.1 propagation.
 
 ## 19. Terrain research / visual-debug SSOT
 
