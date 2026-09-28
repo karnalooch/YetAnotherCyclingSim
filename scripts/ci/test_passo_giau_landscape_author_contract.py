@@ -262,7 +262,6 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("live_mase_dependency", downloader)
         self.assertNotIn("sim.mase.gov.it", downloader)
 
-
     def test_editor_build_links_landscape_import_modules(self) -> None:
         build = read("Source/YetAnotherCyclingSim/YetAnotherCyclingSim.Build.cs")
         self.assertIn('"Landscape"', build)
