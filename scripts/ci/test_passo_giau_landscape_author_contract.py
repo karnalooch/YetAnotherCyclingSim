@@ -61,6 +61,9 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         wrapper = read("scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1")
         self.assertIn("$CanonicalHashBefore", wrapper)
         self.assertIn("$CanonicalHashAfter", wrapper)
+        self.assertIn("$SpikeMapPath = Join-Path $RepoRoot $SpikeMapRelative", wrapper)
+        self.assertIn("Remove-Item -LiteralPath $SpikeMapPath -Force", wrapper)
+        self.assertIn("Failed to remove the existing isolated Passo Giau spike map", wrapper)
         self.assertIn(
             "L_CyclingTest changed during isolated Passo Giau authoring",
             wrapper,
