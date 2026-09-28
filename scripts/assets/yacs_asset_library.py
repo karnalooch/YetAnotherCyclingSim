@@ -460,8 +460,6 @@ def build_download_plan(
     plan: list[PlannedDownload] = []
 
     for selection in selections:
-        if selection.source != "discovery":
-            continue
         slot = by_slot[selection.slot]
         payload = provider_file_payloads.get(selection.provider_asset_id)
         if payload is None:
@@ -608,8 +606,6 @@ def main() -> int:
     provider_file_payloads: dict[str, Any] = {}
     if args.download:
         for selection in selections:
-            if selection.source != "discovery":
-                continue
             asset_id = selection.provider_asset_id
             provider_file_payloads[asset_id] = http_json(
                 f"{api_base}/files/{asset_id}",
