@@ -145,6 +145,25 @@ class Cortina2mProbeTests(unittest.TestCase):
         self.assertEqual("$.result[1]", matches[0]["path"])
         self.assertEqual("DTM_2m_clip", matches[0]["item"]["name"])
 
+    def test_query_url_preserves_existing_query(self) -> None:
+        url = probe.query_url(
+            "https://example.test/ows?",
+            {"service": "WCS", "request": "GetCapabilities"},
+        )
+        self.assertIn("?&service=WCS", url)
+        self.assertIn("request=GetCapabilities", url)
+
+    def test_wcs_endpoint_candidates_include_described_and_workspace(self) -> None:
+        candidates = probe.wcs_endpoint_candidates(
+            [{"owsURL": "https://example.test/geoserver/ows?"}]
+        )
+        self.assertIn(probe.WCS_ENDPOINT, candidates)
+        self.assertIn("https://example.test/geoserver/ows?", candidates)
+        self.assertIn(
+            "https://idt2-geoserver.regione.veneto.it/geoserver/rv/wcs",
+            candidates,
+        )
+
     def test_ambiguous_wms_matches_remain_visible_to_fail_closed_caller(self) -> None:
         duplicate = WMS_XML.replace(
             b"</Layer>\n    </Layer>",
