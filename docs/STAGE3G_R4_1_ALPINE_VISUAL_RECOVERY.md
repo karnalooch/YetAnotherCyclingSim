@@ -665,6 +665,75 @@ For R4.1B, this playbook is the visual-debug SSOT. No terrain smoothing,
 material camouflage, Nanite change or full-route propagation should bypass its
 diagnostic order.
 
+## R4.1B.2 — bounded SP638 hairpin corridor spike (2026-09-28)
+
+The first persisted-SP638 cyclist-height proof was technically valid but visually
+rejected. R4.1B.2 therefore stops broad world propagation and tests one bounded
+hairpin before any material/asset dressing.
+
+### Research-backed implementation contract
+
+The spike follows four external signals:
+
+- Epic Landscape Splines: spline-driven Landscape deformation supports smooth
+  raise/lower cut-fill with side falloff:
+  https://dev.epicgames.com/documentation/unreal-engine/landscape-splines-in-unreal-engine
+- Epic Landscape Patch: if spline cut-fill is insufficient, a later bounded
+  patch/edit-layer implementation can procedurally change the heightmap and bake
+  the result without runtime cost:
+  https://dev.epicgames.com/documentation/unreal-engine/landscape-patch-system
+- RoadBuilder uses separate road/ground geometry and exposes a boundary spline
+  for PCG, reinforcing the project decision to separate road presentation from
+  macro Landscape responsibility:
+  https://github.com/fullike/RoadBuilder
+- A community report shows Landscape spline roads can still clip on uneven terrain
+  even with Raise/Lower enabled. This is not an authority, but it is a useful
+  failure-mode warning: the proof remains rider-camera visual evidence, not an
+  assumption that the tool must work:
+  https://www.reddit.com/r/unrealengine/comments/1lag5w5/
+
+### Fast proof scope
+
+The R4.1B.2 proof deliberately reuses the already-persisted
+`L_PassoGiauTerrainSpike.umap`. It does **not** redownload the 33 Veneto DTM
+tiles and does **not** rebuild the 8 km x 8 km Landscape.
+
+The proof:
+
+1. materializes only the persisted LFS map;
+2. finds the official SP638 spline and selects the maximum-curvature hairpin;
+3. crops the working spline to approximately 700 m;
+4. hides the old full-road debug spline meshes;
+5. applies transient `LandscapeProxy.editor_apply_spline(...)` deformation with
+   bounded raise/lower and side falloff;
+6. renders a neutral 6 m road plus a 10 m shoulder/roadbed proof surface;
+7. replaces the checkerboard Landscape material with a neutral diagnostic material;
+8. captures a deterministic 3840 x 2160 cyclist-height PNG;
+9. does not save the transient Landscape deformation back into the map.
+
+This keeps iteration cost bounded to LFS map materialization + incremental editor
+build + one Unreal capture.
+
+### Acceptance gate
+
+The candidate passes only if the rider-height PNG shows all of the following:
+
+- the hairpin reads immediately as a mountain road;
+- no obvious road/terrain clipping;
+- no floating road slab;
+- cut/fill transition is smoother than the rejected R4.1B.1 proof;
+- the immediate road corridor no longer exposes the previous Minecraft-like
+  heightfield failure as the dominant foreground read;
+- the road remains presentation-only and does not alter
+  `FRouteGeometryProfile` or Road Physics Profile truth.
+
+A technically green run can still be recorded as `VISUAL_FAIL`.
+
+If this spike passes visually, the next implementation promotes the method into
+persistent bounded road-cut/corridor authoring. If it fails, the experiment is
+kept in the journal and the next spike moves to Landscape Patch / generated
+ground-mesh treatment rather than increasing global Landscape resolution.
+
 ## 20. Definition of Done
 
 R4.1 is complete only when:
