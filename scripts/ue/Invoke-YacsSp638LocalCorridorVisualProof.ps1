@@ -135,6 +135,12 @@ if ([double]$Proof.source_geometry_analysis.half_window_m -lt 5.0) {
 if ([bool]$Proof.source_geometry_analysis.canonical_centerline_xy_modified -ne $false) {
     throw 'SP638 visual proof modified canonical centerline XY.'
 }
+if ([string]$Proof.proof_viewmode -ne 'lightingonly') {
+    throw "SP638 visual proof must use material-independent Lighting Only mode, got '$($Proof.proof_viewmode)'."
+}
+if ($null -ne $Proof.neutral_landscape_material) {
+    throw 'SP638 visual proof unexpectedly applied a Landscape material override.'
+}
 
 $CaptureLogText = Get-Content -LiteralPath $CaptureLog -Raw -ErrorAction Stop
 if ($CaptureExitCode -notin @(0,1)) {
