@@ -174,6 +174,11 @@ if ($Proof.forest.mass_conifer.provider_asset_id -ne 'fir_sapling_medium') { thr
 if ($Proof.forest.mass_conifer.lifecycle_status -ne 'approved') { throw 'Forest proof used a non-approved asset.' }
 if ([bool]$Proof.forest.pcg_contract.graphs_loaded -ne $true) { throw 'Forest proof did not validate existing PCG graphs.' }
 if ($Proof.forest.pcg_contract.forest_graph -ne '/Game/YACS/WorldGen/PCG/PCG_Forest') { throw 'Forest proof used an unexpected PCG graph.' }
+if ($Proof.forest.backend -ne 'pcg_patch_adapter_v1') { throw 'Forest proof did not execute the real PCG patch backend.' }
+if ($Proof.forest.pcg_contract.execution_backend -ne 'pcg_patch_adapter_v1') { throw 'Forest proof execution backend is not pcg_patch_adapter_v1.' }
+if ($Proof.forest.pcg_contract.generic_candidate_node -ne 'YACSPatchCandidates') { throw 'Forest proof did not use the generic YACS Patch Candidates node.' }
+if ([bool]$Proof.forest.pcg_contract.generated -ne $true) { throw 'Forest PCG component did not report generated=true.' }
+if ([int]$Proof.forest.pcg_contract.instanced_mesh_instances -ne [int]$Proof.forest.tree_count) { throw 'Forest PCG instance count does not match preset tree count.' }
 if ([bool]$Proof.landscape_cut_fill.saved_to_map -ne $false) { throw 'Roadside house proof unexpectedly claims persistent Landscape mutation.' }
 if ([int]$Proof.proof_mesh.road_segments -lt 50 -or [int]$Proof.proof_mesh.shoulder_segments -lt 50) { throw 'Roadside house proof mesh is unexpectedly sparse.' }
 
