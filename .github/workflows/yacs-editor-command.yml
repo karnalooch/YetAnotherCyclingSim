@@ -26,7 +26,7 @@ jobs:
       (github.event_name == 'push' &&
        github.actor == github.repository_owner) ||
       (github.event_name == 'issue_comment' &&
-       github.event.issue.number == 227 &&
+       github.event.issue.number == 228 &&
        github.event.comment.user.login == github.repository_owner &&
        github.event.comment.body == '/yacs-editor smoke-cube')
     runs-on: [self-hosted, yacs-ue58]
