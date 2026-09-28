@@ -68,6 +68,9 @@ _started_at = 0.0
 _output_path: Path | None = None
 _proof_path: Path | None = None
 _camera = None
+_pcg_volume = None
+_pcg_component = None
+_pcg_ready = False
 _proof_data: dict[str, object] = {}
 
 
@@ -110,9 +113,74 @@ def _finish(success: bool, error: str = "") -> None:
     unreal.EditorPythonScripting.set_keep_python_script_alive(False)
 
 
+def _schedule_screenshot() -> None:
+    global _task, _started_at
+    if _camera is None or _output_path is None:
+        _finish(False, "camera/output is unavailable for screenshot scheduling")
+        return
+    _task = unreal.AutomationLibrary.take_high_res_screenshot(
+        res_x=CAPTURE_RES_X,
+        res_y=CAPTURE_RES_Y,
+        filename=str(_output_path),
+        camera=_camera,
+        mask_enabled=False,
+        capture_hdr=False,
+        comparison_tolerance=unreal.ComparisonTolerance.LOW,
+        comparison_notes=(
+            "YACS World Authoring Library: SP638 house + real PCG alpine grove proof"
+        ),
+        delay=3.0,
+        force_game_view=True,
+    )
+    if not _task or not _task.is_valid_task():
+        _finish(False, "AutomationLibrary returned an invalid screenshot task")
+        return
+    _started_at = time.monotonic()
+    unreal.log("[PassoGiauRoadsideHouse] PCG generation complete; screenshot scheduled")
+
+
 def _tick(_delta_time: float) -> None:
+    global _pcg_ready
+
+    if not _pcg_ready:
+        if _pcg_component is None or _pcg_volume is None:
+            _finish(False, "PCG patch backend was not initialized")
+            return
+
+        try:
+            generating = bool(_pcg_component.is_generating())
+        except Exception:
+            generating = False
+        try:
+            generated = bool(_pcg_component.get_editor_property("generated"))
+        except Exception:
+            generated = not generating
+
+        if generating or not generated:
+            if time.monotonic() - _started_at > 90.0:
+                _finish(False, "PCG patch generation timed out after 90 seconds")
+            return
+
+        actual_instances = yacs_scene_composer.count_pcg_instances(_pcg_volume)
+        expected_instances = int(_proof_data["forest"]["tree_count"])
+        _proof_data["forest"]["pcg_contract"]["generated"] = True
+        _proof_data["forest"]["pcg_contract"][
+            "instanced_mesh_instances"
+        ] = actual_instances
+        if actual_instances != expected_instances:
+            _finish(
+                False,
+                "PCG patch instance count mismatch: "
+                f"expected={expected_instances} actual={actual_instances}",
+            )
+            return
+
+        _pcg_ready = True
+        _schedule_screenshot()
+        return
+
     if _task is None:
-        _finish(False, "screenshot task was not initialized")
+        _finish(False, "screenshot task was not initialized after PCG generation")
         return
     if _task.is_task_done():
         if (
@@ -542,7 +610,7 @@ def _spawn_alpine_house(
 
 def main() -> None:
     global _task, _tick_handle, _started_at, _output_path, _proof_path, _camera
-    global _proof_data
+    global _pcg_volume, _pcg_component, _pcg_ready, _proof_data
 
     output_value = os.environ.get("YACS_PASSO_GIAU_HOUSE_CAPTURE_PNG", "")
     proof_value = os.environ.get("YACS_PASSO_GIAU_HOUSE_CAPTURE_PROOF", "")
@@ -714,13 +782,15 @@ def main() -> None:
         float(house_location[1]) + outward_y * 1100.0 + tangent_y * 180.0,
         float(road_anchor[2]),
     )
-    forest = yacs_scene_composer.spawn_transient_forest_patch(
-        preset=grove_preset,
-        selection_plan=selection_plan,
-        actor_subsystem=actor_subsystem,
-        center_cm=forest_center,
-        world_yaw_deg=float(house["yaw_deg"]),
-        label_prefix="YACS_ALPINE_GROVE",
+    forest, _pcg_volume, _pcg_component = (
+        yacs_scene_composer.begin_pcg_forest_patch(
+            preset=grove_preset,
+            selection_plan=selection_plan,
+            actor_subsystem=actor_subsystem,
+            center_cm=forest_center,
+            world_yaw_deg=float(house["yaw_deg"]),
+            label_prefix="YACS_ALPINE_GROVE_PCG",
+        )
     )
 
     camera_distance_cm = max(0.0, local_focus_cm - CAMERA_BACK_CM)
@@ -869,21 +939,7 @@ def main() -> None:
     }
 
     unreal.EditorPythonScripting.set_keep_python_script_alive(True)
-    _task = unreal.AutomationLibrary.take_high_res_screenshot(
-        res_x=CAPTURE_RES_X,
-        res_y=CAPTURE_RES_Y,
-        filename=str(_output_path),
-        camera=_camera,
-        mask_enabled=False,
-        capture_hdr=False,
-        comparison_tolerance=unreal.ComparisonTolerance.LOW,
-        comparison_notes="YACS World Authoring Library: SP638 house + alpine grove proof",
-        delay=3.0,
-        force_game_view=True,
-    )
-    if not _task or not _task.is_valid_task():
-        raise RuntimeError("AutomationLibrary returned an invalid screenshot task")
-
+    _pcg_ready = False
     _started_at = time.monotonic()
     _tick_handle = unreal.register_slate_post_tick_callback(_tick)
     unreal.log(
