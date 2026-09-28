@@ -226,21 +226,76 @@ class LocalGroundCorridorTests(unittest.TestCase):
                 point.role: point.lateral_m for point in station_profile
             }
             self.assertAlmostEqual(
-                current_by_role["right_shoulder"],
-                original_by_role["right_shoulder"],
-            )
-            self.assertAlmostEqual(
                 current_by_role["right_road_edge"],
                 original_by_role["right_road_edge"],
             )
 
-        minimum_inside_tie = min(
-            profile[-1].lateral_m for profile in adaptive
+        minimum_inside_shoulder = min(
+            next(
+                point.lateral_m
+                for point in station_profile
+                if point.role == "right_shoulder"
+            )
+            for station_profile in adaptive
         )
-        self.assertGreater(minimum_inside_tie, 4.0)
+        minimum_inside_tie = min(profile[-1].lateral_m for profile in adaptive)
+        self.assertGreaterEqual(minimum_inside_shoulder, 3.25)
+        self.assertLess(minimum_inside_shoulder, 4.0)
+        self.assertGreater(minimum_inside_tie, minimum_inside_shoulder)
         self.assertLess(minimum_inside_tie, radius)
         for triangle in mesh.triangles:
             self.assertGreater(triangle_normal(mesh, triangle).z, 0.0)
+
+    def test_adaptive_offset_handles_sub_four_metre_real_apex_class(self) -> None:
+        radius = 3.55
+        angles = tuple(index * math.radians(5.0) for index in range(44))
+        centerline = tuple(
+            Vec3(
+                radius * math.sin(angle),
+                radius * (1.0 - math.cos(angle)),
+                index * 0.01,
+            )
+            for index, angle in enumerate(angles)
+        )
+
+        adaptive = make_curvature_adaptive_profiles(centerline, self.profile)
+        mesh = build_corridor_mesh(centerline, adaptive)
+
+        for station_profile in adaptive:
+            by_role = {point.role: point.lateral_m for point in station_profile}
+            self.assertAlmostEqual(by_role["right_road_edge"], 3.0)
+            self.assertGreaterEqual(by_role["right_shoulder"], 3.25)
+            self.assertGreater(by_role["right_earthwork"], by_role["right_shoulder"])
+            self.assertGreater(by_role["downhill_tie"], by_role["right_earthwork"])
+
+        self.assertLess(
+            min(
+                next(
+                    point.lateral_m
+                    for point in station_profile
+                    if point.role == "right_shoulder"
+                )
+                for station_profile in adaptive
+            ),
+            4.0,
+        )
+        for triangle in mesh.triangles:
+            self.assertGreater(triangle_normal(mesh, triangle).z, 0.0)
+
+    def test_adaptive_offset_fails_when_minimum_spans_do_not_fit(self) -> None:
+        radius = 3.40
+        angles = tuple(index * math.radians(5.0) for index in range(20))
+        centerline = tuple(
+            Vec3(
+                radius * math.sin(angle),
+                radius * (1.0 - math.cos(angle)),
+                0.0,
+            )
+            for index, angle in enumerate(angles)
+        )
+
+        with self.assertRaisesRegex(ValueError, "cannot preserve"):
+            make_curvature_adaptive_profiles(centerline, self.profile)
 
     def test_adaptive_profiles_and_mesh_hash_are_deterministic(self) -> None:
         radius = 8.0

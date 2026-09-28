@@ -40,14 +40,19 @@ CURVATURE_SAMPLE_STEP_CM = 2500.0
 CURVATURE_HALF_WINDOW_CM = 2500.0
 END_MARGIN_CM = 10000.0
 
-INSIDE_CLEARANCE_FRACTION = 0.65
-MINIMUM_EARTHWORK_SPAN_M = 0.15
+INSIDE_CLEARANCE_FRACTION = 0.75
+MINIMUM_SHOULDER_SPAN_M = 0.25
+MINIMUM_EARTHWORK_SPAN_M = 0.10
 TAPER_PER_STATION = 0.12
 PROTECTED_ROLES = frozenset(
     {
-        "left_shoulder",
         "left_road_edge",
         "right_road_edge",
+    }
+)
+SHOULDER_ROLES = frozenset(
+    {
+        "left_shoulder",
         "right_shoulder",
     }
 )
@@ -197,8 +202,25 @@ def _profile_diagnostics(
                         f"{authored} -> {point.lateral_m}"
                     )
 
+    shoulder_widths = []
+    for profile in profiles:
+        by_role = {point.role: point.lateral_m for point in profile}
+        shoulder_widths.extend(
+            (
+                abs(by_role["left_shoulder"]) - abs(by_role["left_road_edge"]),
+                abs(by_role["right_shoulder"]) - abs(by_role["right_road_edge"]),
+            )
+        )
+    minimum_actual_shoulder_width_m = min(shoulder_widths)
+    if minimum_actual_shoulder_width_m < MINIMUM_SHOULDER_SPAN_M - 1e-9:
+        raise RuntimeError(
+            "adaptive profile pinched shoulder below minimum: "
+            f"{minimum_actual_shoulder_width_m:.6f} m"
+        )
+
     return {
         "inside_clearance_fraction": INSIDE_CLEARANCE_FRACTION,
+        "minimum_shoulder_span_m": MINIMUM_SHOULDER_SPAN_M,
         "minimum_earthwork_span_m": MINIMUM_EARTHWORK_SPAN_M,
         "taper_per_station": TAPER_PER_STATION,
         "clipped_station_count": clipped_station_count,
@@ -210,7 +232,9 @@ def _profile_diagnostics(
             min(abs(profile[0].lateral_m) for profile in profiles),
             min(profile[-1].lateral_m for profile in profiles),
         ],
+        "minimum_actual_shoulder_width_m": minimum_actual_shoulder_width_m,
         "protected_roles": sorted(PROTECTED_ROLES),
+        "shoulder_roles": sorted(SHOULDER_ROLES),
     }
 
 
@@ -239,7 +263,9 @@ def main() -> None:
         centerline,
         TOPOLOGY_PROFILE,
         protected_roles=PROTECTED_ROLES,
+        shoulder_roles=SHOULDER_ROLES,
         clearance_fraction=INSIDE_CLEARANCE_FRACTION,
+        minimum_shoulder_span_m=MINIMUM_SHOULDER_SPAN_M,
         minimum_earthwork_span_m=MINIMUM_EARTHWORK_SPAN_M,
         taper_per_station=TAPER_PER_STATION,
     )

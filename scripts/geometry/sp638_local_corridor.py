@@ -20,9 +20,13 @@ from typing import Sequence
 _EPSILON = 1e-9
 _DEFAULT_PROTECTED_ROLES = frozenset(
     {
-        "left_shoulder",
         "left_road_edge",
         "right_road_edge",
+    }
+)
+_DEFAULT_SHOULDER_ROLES = frozenset(
+    {
+        "left_shoulder",
         "right_shoulder",
     }
 )
@@ -195,7 +199,25 @@ def _side_extents(
     return core_extent, outer_extent
 
 
-def _taper_scales(raw_scales: Sequence[float], max_delta_per_station: float) -> tuple[float, ...]:
+def _side_shoulder_extent(
+    profile: Sequence[CrossSectionPoint],
+    shoulder_roles: frozenset[str],
+    *,
+    positive_side: bool,
+) -> float | None:
+    candidates = [
+        abs(point.lateral_m)
+        for point in profile
+        if point.role in shoulder_roles
+        and (point.lateral_m > 0.0 if positive_side else point.lateral_m < 0.0)
+    ]
+    return max(candidates) if candidates else None
+
+
+def _taper_scales(
+    raw_scales: Sequence[float],
+    max_delta_per_station: float,
+) -> tuple[float, ...]:
     """Conservatively spread contractions so neighboring rows change gradually."""
 
     if max_delta_per_station <= 0.0:
@@ -218,6 +240,9 @@ def _contract_profile_side(
     positive_side: bool,
     scale: float,
     protected_roles: frozenset[str],
+    shoulder_roles: frozenset[str],
+    minimum_shoulder_span_m: float,
+    minimum_earthwork_span_m: float,
 ) -> tuple[CrossSectionPoint, ...]:
     core_extent, outer_extent = _side_extents(
         profile,
@@ -228,10 +253,37 @@ def _contract_profile_side(
         return tuple(profile)
 
     contracted_outer_extent = core_extent + (outer_extent - core_extent) * scale
-    span = outer_extent - core_extent
+    shoulder_extent = _side_shoulder_extent(
+        profile,
+        shoulder_roles,
+        positive_side=positive_side,
+    )
+    if shoulder_extent is None or shoulder_extent <= core_extent + _EPSILON:
+        shoulder_extent = core_extent
+
+    minimum_shoulder_extent = core_extent + minimum_shoulder_span_m
+    maximum_shoulder_extent = contracted_outer_extent - minimum_earthwork_span_m
+    if maximum_shoulder_extent < minimum_shoulder_extent - _EPSILON:
+        side = "positive" if positive_side else "negative"
+        raise ValueError(
+            f"contracted {side} corridor leaves no room for minimum shoulder "
+            f"{minimum_shoulder_span_m:.3f} m plus earthwork "
+            f"{minimum_earthwork_span_m:.3f} m"
+        )
+
+    contracted_shoulder_extent = min(shoulder_extent, maximum_shoulder_extent)
+    contracted_shoulder_extent = max(
+        contracted_shoulder_extent,
+        minimum_shoulder_extent,
+    )
+    inner_span = max(_EPSILON, shoulder_extent - core_extent)
+    outer_span = max(_EPSILON, outer_extent - shoulder_extent)
+
     result: list[CrossSectionPoint] = []
     for point in profile:
-        on_side = point.lateral_m > 0.0 if positive_side else point.lateral_m < 0.0
+        on_side = (
+            point.lateral_m > 0.0 if positive_side else point.lateral_m < 0.0
+        )
         extent = abs(point.lateral_m)
         if (
             not on_side
@@ -241,13 +293,25 @@ def _contract_profile_side(
             result.append(point)
             continue
 
-        normalized = (extent - core_extent) / span
-        new_extent = core_extent + normalized * (
-            contracted_outer_extent - core_extent
-        )
-        new_lateral = new_extent if positive_side else -new_extent
+        if point.role in shoulder_roles:
+            new_extent = contracted_shoulder_extent
+        elif extent < shoulder_extent:
+            normalized = (extent - core_extent) / inner_span
+            new_extent = core_extent + normalized * (
+                contracted_shoulder_extent - core_extent
+            )
+        else:
+            normalized = (extent - shoulder_extent) / outer_span
+            new_extent = contracted_shoulder_extent + normalized * (
+                contracted_outer_extent - contracted_shoulder_extent
+            )
+
         result.append(
-            CrossSectionPoint(new_lateral, point.vertical_m, point.role)
+            CrossSectionPoint(
+                new_extent if positive_side else -new_extent,
+                point.vertical_m,
+                point.role,
+            )
         )
     return tuple(result)
 
@@ -257,22 +321,23 @@ def make_curvature_adaptive_profiles(
     profile: Sequence[CrossSectionPoint],
     *,
     protected_roles: frozenset[str] = _DEFAULT_PROTECTED_ROLES,
-    clearance_fraction: float = 0.65,
-    minimum_earthwork_span_m: float = 0.15,
+    shoulder_roles: frozenset[str] = _DEFAULT_SHOULDER_ROLES,
+    clearance_fraction: float = 0.75,
+    minimum_shoulder_span_m: float = 0.25,
+    minimum_earthwork_span_m: float = 0.10,
     taper_per_station: float = 0.12,
 ) -> tuple[tuple[CrossSectionPoint, ...], ...]:
-    """Contract only inside-bend earthwork before a swept offset can fold.
+    """Contract inside-bend shoulder/earthwork before a swept offset can fold.
 
-    Road edges and shoulder points are protected. Points farther from the
-    centerline may move toward the protected shoulder on the inside of a tight
-    bend. The target retains only clearance_fraction of the space between the
-    protected shoulder and the local curvature radius; the remaining clearance
-    is kept as a deterministic safety margin. Contraction is tapered across
-    neighboring samples for a visually smooth transition.
+    Road edges stay fixed. The inside shoulder may narrow only where its authored
+    offset would cross the local curvature radius, and it retains a bounded
+    minimum width. Earthwork remains outside that shoulder. The target outer
+    extent consumes only clearance_fraction of the radial clearance beyond the
+    protected road edge, leaving the rest as a singularity margin.
 
-    If the bend is too tight to preserve the protected road/shoulder plus
-    minimum_earthwork_span_m, this function fails closed rather than shrinking
-    the rideable road presentation.
+    Contraction is tapered across neighboring samples. If the road edge plus the
+    minimum shoulder and earthwork spans cannot fit, the function fails closed
+    instead of pinching the rideable road.
     """
 
     if len(centerline) < 2:
@@ -280,6 +345,8 @@ def make_curvature_adaptive_profiles(
     _validate_profile(profile, 0)
     if not 0.0 < clearance_fraction < 1.0:
         raise ValueError("clearance_fraction must be between 0 and 1")
+    if minimum_shoulder_span_m <= 0.0:
+        raise ValueError("minimum_shoulder_span_m must be positive")
     if minimum_earthwork_span_m <= 0.0:
         raise ValueError("minimum_earthwork_span_m must be positive")
     if taper_per_station <= 0.0 or taper_per_station > 1.0:
@@ -307,18 +374,31 @@ def make_curvature_adaptive_profiles(
             continue
 
         local_radius = 1.0 / abs(curvature)
-        minimum_outer_extent = core_extent + minimum_earthwork_span_m
-        if local_radius <= minimum_outer_extent + _EPSILON:
+        if local_radius <= core_extent + _EPSILON:
             side = "positive" if positive_inside else "negative"
             raise ValueError(
-                f"centerline station {index} radius {local_radius:.3f} m on the "
-                f"{side} inside side leaves no safe earthwork span beyond the "
-                f"{core_extent:.3f} m protected corridor"
+                f"centerline station {index} radius {local_radius:.3f} m "
+                f"reaches the {core_extent:.3f} m protected {side} road edge"
             )
 
         safe_outer_extent = core_extent + clearance_fraction * (
             local_radius - core_extent
         )
+        minimum_outer_extent = (
+            core_extent
+            + minimum_shoulder_span_m
+            + minimum_earthwork_span_m
+        )
+        if safe_outer_extent < minimum_outer_extent - _EPSILON:
+            side = "positive" if positive_inside else "negative"
+            raise ValueError(
+                f"centerline station {index} safe outer extent "
+                f"{safe_outer_extent:.3f} m on the {side} inside side cannot "
+                f"preserve {minimum_shoulder_span_m:.3f} m shoulder plus "
+                f"{minimum_earthwork_span_m:.3f} m earthwork beyond the "
+                f"{core_extent:.3f} m protected road edge"
+            )
+
         if safe_outer_extent >= outer_extent:
             continue
 
@@ -342,6 +422,9 @@ def make_curvature_adaptive_profiles(
                 positive_side=False,
                 scale=left_scale,
                 protected_roles=protected_roles,
+                shoulder_roles=shoulder_roles,
+                minimum_shoulder_span_m=minimum_shoulder_span_m,
+                minimum_earthwork_span_m=minimum_earthwork_span_m,
             )
         if right_scale < 1.0 - _EPSILON:
             station_profile = _contract_profile_side(
@@ -349,10 +432,15 @@ def make_curvature_adaptive_profiles(
                 positive_side=True,
                 scale=right_scale,
                 protected_roles=protected_roles,
+                shoulder_roles=shoulder_roles,
+                minimum_shoulder_span_m=minimum_shoulder_span_m,
+                minimum_earthwork_span_m=minimum_earthwork_span_m,
             )
         profiles.append(station_profile)
 
-    return tuple(profiles)
+    result = tuple(profiles)
+    _validate_inputs(centerline, result)
+    return result
 
 
 def build_corridor_mesh(
