@@ -9,6 +9,7 @@ param(
     [string] $ArtifactRoot,
     [Parameter(Mandatory=$true)] [string] $ExpectedBranch,
     [Parameter(Mandatory=$true)] [string] $ExpectedHead,
+    [switch] $IncludeRoad,
     [int] $TimeoutSec = 900
 )
 
@@ -33,6 +34,14 @@ $MapPrepScript = Join-Path $RepoRoot 'scripts/ue/stage3g_prepare_passo_giau_land
 $CaptureScript = Join-Path $RepoRoot 'scripts/ue/stage3g_capture_passo_giau_landscape.py'
 $DownloadScript = Join-Path $RepoRoot 'scripts/assets/download_passo_giau_veneto_lidar.py'
 $PrepareScript = Join-Path $RepoRoot 'scripts/assets/prepare_passo_giau_veneto_lidar.py'
+$RoadDownloadScript = Join-Path $RepoRoot 'scripts/assets/download_passo_giau_road_network.py'
+$RoadPrepareScript = Join-Path $RepoRoot 'scripts/assets/prepare_passo_giau_road.py'
+$RoadSourceRoot = Join-Path $RepoRoot 'ExternalAssets/Terrain/PassoGiau/RoadNetwork'
+$RoadPreparedRoot = Join-Path $RepoRoot 'ExternalAssets/Terrain/PassoGiau/PreparedRoad'
+$RoadDownloadReport = Join-Path $RoadSourceRoot 'road-download-report.json'
+$RoadPreparationReport = Join-Path $RoadPreparedRoot 'road-preparation-report.json'
+$RoadJson = Join-Path $RoadPreparedRoot 'passo_giau_sp638_ue_centerline.json'
+$RoadOverlay = Join-Path $RoadPreparedRoot 'passo_giau_sp638_hillshade_overlay.png'
 
 $BuildLog = Join-Path $ArtifactRoot 'build_editor.log'
 $MapPrepLog = Join-Path $ArtifactRoot 'map_prep.log'
@@ -94,12 +103,20 @@ try {
     & python -m venv $VenvRoot
     if ($LASTEXITCODE -ne 0) { throw 'Failed to create terrain preparation virtualenv.' }
     $VenvPython = Join-Path $VenvRoot 'Scripts/python.exe'
-    & $VenvPython -m pip install --disable-pip-version-check 'numpy==2.2.6' 'Pillow==11.3.0' 'rasterio==1.4.3'
+    $PythonPackages = @('numpy==2.2.6','Pillow==11.3.0','rasterio==1.4.3')
+    if ($IncludeRoad) { $PythonPackages += 'shapely==2.1.1' }
+    & $VenvPython -m pip install --disable-pip-version-check @PythonPackages
     if ($LASTEXITCODE -ne 0) { throw 'Failed to install terrain preparation dependencies.' }
     & $VenvPython $DownloadScript
     if ($LASTEXITCODE -ne 0) { throw 'Official Veneto Passo Giau LiDAR DTM download failed.' }
     & $VenvPython $PrepareScript
     if ($LASTEXITCODE -ne 0) { throw 'Veneto Passo Giau LiDAR heightmap preparation failed.' }
+    if ($IncludeRoad) {
+        & $VenvPython $RoadDownloadScript
+        if ($LASTEXITCODE -ne 0) { throw 'Official Veneto Passo Giau road download failed.' }
+        & $VenvPython $RoadPrepareScript
+        if ($LASTEXITCODE -ne 0) { throw 'Passo Giau SP638 road preparation failed.' }
+    }
 }
 finally {
     if (Test-Path -LiteralPath $VenvRoot) { Remove-Item -LiteralPath $VenvRoot -Recurse -Force -ErrorAction SilentlyContinue }
@@ -122,6 +139,26 @@ if ([int]$Terrain.tile_count -lt 1 -or [double]$Terrain.target_aoi.native_cell_m
 $ExpectedElevationMinM = [double]$Terrain.elevation_m.minimum
 $ExpectedElevationMaxM = [double]$Terrain.elevation_m.maximum
 
+$RoadDownload = $null
+$RoadPreparation = $null
+if ($IncludeRoad) {
+    foreach ($RoadPath in @($RoadDownloadReport,$RoadPreparationReport,$RoadJson,$RoadOverlay)) {
+        if (-not (Test-Path -LiteralPath $RoadPath -PathType Leaf)) {
+            throw "Prepared SP638 road evidence is missing: $RoadPath"
+        }
+    }
+    $RoadDownload = Get-Content -LiteralPath $RoadDownloadReport -Raw | ConvertFrom-Json
+    $RoadPreparation = Get-Content -LiteralPath $RoadPreparationReport -Raw | ConvertFrom-Json
+    if ($RoadDownload.road.route_id -ne '000000027157') { throw 'Road source report does not identify canonical SP638 route id.' }
+    if ($RoadPreparation.route_id -ne '000000027157') { throw 'Road preparation report does not identify canonical SP638 route id.' }
+    if ([int]$RoadPreparation.spline_control_point_count -lt 50 -or [int]$RoadPreparation.spline_control_point_count -gt 1000) {
+        throw 'SP638 spline control count is outside the bounded authoring contract.'
+    }
+    if ([double]$RoadPreparation.centerline_length_m -lt 10000.0 -or [double]$RoadPreparation.centerline_length_m -gt 25000.0) {
+        throw 'SP638 centerline length is outside the expected Passo Giau AOI range.'
+    }
+}
+
 Write-Host '[3/7] Creating isolated spike map...' -ForegroundColor Cyan
 $env:YACS_PASSO_GIAU_MAP_PREP_PROOF = $MapPrepProof
 try {
@@ -137,7 +174,9 @@ $MapPrep = Get-Content -LiteralPath $MapPrepProof -Raw | ConvertFrom-Json
 if ($MapPrep.passo_giau_map_prep -ne 'PASS' -or $MapPrep.canonical_map_mutated -ne $false) { throw 'Passo Giau isolated map preparation proof is invalid.' }
 
 Write-Host '[4/7] Importing 4033x4033 Landscape with C++ commandlet...' -ForegroundColor Cyan
-$ImportArgs = @($ProjectPath,'-run=CyclingPassoGiauLandscapeSpike',('-Heightmap="' + $HeightmapR16 + '"'),('-Proof="' + $ImportProof + '"'),('-ScaleZ=' + $ScaleZ.ToString([System.Globalization.CultureInfo]::InvariantCulture)),('-LocationZCm=' + $LocationZCm.ToString([System.Globalization.CultureInfo]::InvariantCulture)),'-Unattended','-NoPause','-NullRHI','-NoSplash','-NoP4','-log',('-AbsLog=' + $ImportLog))
+$ImportArgs = @($ProjectPath,'-run=CyclingPassoGiauLandscapeSpike',('-Heightmap="' + $HeightmapR16 + '"'),('-Proof="' + $ImportProof + '"'),('-ScaleZ=' + $ScaleZ.ToString([System.Globalization.CultureInfo]::InvariantCulture)),('-LocationZCm=' + $LocationZCm.ToString([System.Globalization.CultureInfo]::InvariantCulture)))
+if ($IncludeRoad) { $ImportArgs += ('-RoadJson="' + $RoadJson + '"') }
+$ImportArgs += @('-Unattended','-NoPause','-NullRHI','-NoSplash','-NoP4','-log',('-AbsLog=' + $ImportLog))
 $Proc = Start-Process -FilePath $Context.UnrealEditorCmdPath -ArgumentList $ImportArgs -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $ImportLog -RedirectStandardError $ImportErr
 if (-not $Proc.WaitForExit($TimeoutSec * 1000)) { try { $Proc | Stop-Process -Force } catch { }; throw 'Passo Giau Landscape import commandlet timed out.' }
 $ImportExitCode = $Proc.ExitCode
@@ -148,6 +187,14 @@ if ([int]$Import.component_count -ne 1024 -or [int]$Import.num_subsections -ne 2
 if ([int]$Import.encoded_min -gt 512 -or [int]$Import.encoded_max -lt 65023) { throw 'Passo Giau encoded height-domain proof is invalid.' }
 if ([math]::Abs([double]$Import.sampled_elevation_min_m - $ExpectedElevationMinM) -gt 10.0 -or [math]::Abs([double]$Import.sampled_elevation_max_m - $ExpectedElevationMaxM) -gt 10.0) { throw 'Passo Giau sampled elevation range drifted too far from the Veneto LiDAR-derived source DEM.' }
 if ([math]::Abs([double]$Import.scale_z - $ScaleZ) -gt 0.001 -or [math]::Abs([double]$Import.location_z_cm - $LocationZCm) -gt 0.01) { throw 'Passo Giau import proof did not preserve the Veneto vertical transform.' }
+if ($IncludeRoad) {
+    if ([bool]$Import.road_imported -ne $true) { throw 'Passo Giau import proof did not persist the requested SP638 road.' }
+    if ([int]$Import.road_control_points -ne [int]$RoadPreparation.spline_control_point_count) { throw 'SP638 commandlet control-point count differs from prepared road evidence.' }
+    if ([int]$Import.road_spline_mesh_segments -ne ([int]$Import.road_control_points - 1)) { throw 'SP638 spline-mesh segment count is invalid.' }
+    if ([math]::Abs([double]$Import.road_width_cm - 600.0) -gt 0.01) { throw 'SP638 proof road width drifted from the bounded 6 m visual contract.' }
+} elseif ([bool]$Import.road_imported -eq $true) {
+    throw 'Base Landscape authoring unexpectedly imported a road without -IncludeRoad.'
+}
 
 $ImportLogText = Get-Content -LiteralPath $ImportLog -Raw -ErrorAction Stop
 if ($ImportExitCode -notin @(0, 1)) {
@@ -230,6 +277,22 @@ if ($Unexpected.Count -gt 0) { throw ("Unexpected tracked mutations: {0}" -f ($U
 if ($TrackedChanges -notcontains $SpikeMapRelative) { throw 'Passo Giau authoring produced no isolated spike-map mutation.' }
 
 Write-Host '[7/7] Writing consolidated evidence...' -ForegroundColor Cyan
+$RoadEvidence = $null
+if ($IncludeRoad) {
+    $RoadEvidence = [ordered]@{
+        download_report = $RoadDownload
+        preparation_report = $RoadPreparation
+        ue_centerline_json = $RoadJson
+        hillshade_overlay = $RoadOverlay
+        imported_control_points = [int]$Import.road_control_points
+        imported_spline_mesh_segments = [int]$Import.road_spline_mesh_segments
+        visual_acceptance = 'PENDING_HUMAN_REVIEW'
+        presentation_only = $true
+        authoritative_route_geometry = $false
+        authoritative_physics = $false
+    }
+}
+
 $Final = [ordered]@{
     schema_version = 1
     passo_giau_r4_1b_landscape_spike = 'PASS'
@@ -247,6 +310,7 @@ $Final = [ordered]@{
     canonical_map = $CanonicalMapRelative
     canonical_map_hash_before = $CanonicalHashBefore
     canonical_map_hash_after = $CanonicalHashAfter
+    road = $RoadEvidence
     import = $Import
     import_process_exit_code = [int]$ImportExitCode
     capture = $Capture
@@ -260,6 +324,9 @@ $Final = [ordered]@{
 }
 $Final | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $FinalProof -Encoding UTF8
 
+if ($IncludeRoad) {
+    Write-Host ("SP638 road proof: {0} controls / {1} spline meshes." -f $Import.road_control_points,$Import.road_spline_mesh_segments) -ForegroundColor Green
+}
 Write-Host 'Passo Giau R4.1B isolated Landscape spike: PASS.' -ForegroundColor Green
 Write-Host ("Only tracked mutation: {0}" -f $SpikeMapRelative)
 Write-Host ("Rendered proof: {0}" -f $CapturePng)
