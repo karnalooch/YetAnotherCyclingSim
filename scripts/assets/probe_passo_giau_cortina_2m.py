@@ -355,10 +355,29 @@ def parse_csw_records(root: ET.Element) -> dict[str, Any]:
     return summary
 
 
+def csw_filter_constraint(term: str) -> str:
+    escaped = (
+        term.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
+        .replace("'", "&apos;")
+    )
+    return (
+        '<ogc:Filter xmlns:ogc="http://www.opengis.net/ogc" '
+        'xmlns:csw="http://www.opengis.net/cat/csw/2.0.2">'
+        '<ogc:PropertyIsLike wildCard="%" singleChar="_" escapeChar="\\">'
+        '<ogc:PropertyName>csw:AnyText</ogc:PropertyName>'
+        f'<ogc:Literal>%{escaped}%</ogc:Literal>'
+        '</ogc:PropertyIsLike>'
+        '</ogc:Filter>'
+    )
+
+
 def discover_csw_metadata() -> dict[str, Any]:
     queries: list[dict[str, Any]] = []
     for term in ("DTM_2m_Cortina", "DTM_2m_clip", "Cortina DTM"):
-        constraint = f"AnyText LIKE '%{term}%'"
+        constraint = csw_filter_constraint(term)
         url = query_url(
             CSW_ENDPOINT,
             {
@@ -369,7 +388,7 @@ def discover_csw_metadata() -> dict[str, Any]:
                 "typeNames": "csw:Record",
                 "elementSetName": "full",
                 "outputSchema": "http://www.opengis.net/cat/csw/2.0.2",
-                "constraintLanguage": "CQL_TEXT",
+                "constraintLanguage": "FILTER",
                 "constraint_language_version": "1.1.0",
                 "constraint": constraint,
                 "maxRecords": "50",
