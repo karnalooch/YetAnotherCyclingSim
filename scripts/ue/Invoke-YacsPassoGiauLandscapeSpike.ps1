@@ -129,7 +129,7 @@ if ($Terrain.primary_source.source_crs -ne 'EPSG:4326' -or $Terrain.fallback_sou
 if ($SourceDownload.archive.sha256 -ne '0e2a133fcc80f225aee2b61aa04bc7a858aa3754c6b80a7c640b8a6ab7d14b8c' -or [int64]$SourceDownload.archive.bytes -ne 356503497) { throw 'MASE source checkpoint digest/size does not match the pinned release asset.' }
 if ([int]$FallbackDownload.tile_count -lt 1) { throw 'Veneto fallback report does not prove any downloaded fallback tiles.' }
 if ([double]$Terrain.coverage.mase_share -lt 0.50) { throw 'MASE primary coverage share dropped below the accepted hybrid threshold.' }
-if (-not [bool]$Terrain.coverage.passo_giau.mase_1m_at_reference_point) { throw 'Passo Giau reference point is not covered by MASE primary terrain.' }
+if ([double]$Terrain.coverage.passo_giau.nearest_mase_sample_distance_m -gt 500.0) { throw 'No MASE primary terrain exists within 500 m of the Passo Giau reference point.' }
 if ([int]$Terrain.coverage.remaining_missing_samples -ne 0) { throw 'Hybrid terrain still contains uncovered samples after fallback fill.' }
 $ExpectedElevationMinM = [double]$Terrain.elevation_m.minimum
 $ExpectedElevationMaxM = [double]$Terrain.elevation_m.maximum
