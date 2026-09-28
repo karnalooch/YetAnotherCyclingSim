@@ -28,6 +28,14 @@ class RemoteEditorCommandContractTests(unittest.TestCase):
         self.assertIn("github.actor == github.repository_owner", text)
         self.assertNotIn("pull_request_target", text)
 
+    def test_lfs_materialization_fails_closed_on_pointers(self) -> None:
+        text = WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn("git lfs install --local", text)
+        self.assertIn("git lfs pull", text)
+        self.assertIn("git lfs fsck", text)
+        self.assertIn("git lfs pointer --check", text)
+        self.assertIn("stillPointers", text)
+
     def test_wrapper_accepts_only_named_command(self) -> None:
         text = WRAPPER.read_text(encoding="utf-8")
         self.assertIn("[ValidateSet('smoke-cube')]", text)
