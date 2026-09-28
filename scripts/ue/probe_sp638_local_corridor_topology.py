@@ -30,12 +30,15 @@ from scripts.geometry.sp638_local_corridor import (  # noqa: E402
     build_corridor_mesh,
     corridor_mesh_hash,
     make_curvature_adaptive_profiles,
+    minimum_sampled_radius_xy,
 )
 
 
 SPIKE_MAP = "/Game/Prototype/Maps/L_PassoGiauTerrainSpike"
 SLICE_HALF_LENGTH_CM = 35000.0
 SAMPLE_STEP_CM = 200.0
+SOURCE_GEOMETRY_HALF_WINDOW_M = 6.0
+SOURCE_GEOMETRY_HALF_WINDOW_STATIONS = 3
 CURVATURE_SAMPLE_STEP_CM = 2500.0
 CURVATURE_HALF_WINDOW_CM = 2500.0
 END_MARGIN_CM = 10000.0
@@ -258,7 +261,14 @@ def main() -> None:
     end_cm = min(full_length_cm, focus_cm + SLICE_HALF_LENGTH_CM)
 
     centerline = _sample_centerline_m(spline, start_cm, end_cm)
-    minimum_radius_m = _minimum_sampled_radius_m(centerline)
+    raw_adjacent_minimum_radius_m = minimum_sampled_radius_xy(
+        centerline,
+        half_window_stations=1,
+    )
+    source_scale_minimum_radius_m = minimum_sampled_radius_xy(
+        centerline,
+        half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
+    )
     profiles = make_curvature_adaptive_profiles(
         centerline,
         TOPOLOGY_PROFILE,
@@ -268,13 +278,20 @@ def main() -> None:
         minimum_shoulder_span_m=MINIMUM_SHOULDER_SPAN_M,
         minimum_earthwork_span_m=MINIMUM_EARTHWORK_SPAN_M,
         taper_per_station=TAPER_PER_STATION,
+        curvature_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
     )
     profile_diagnostics = _profile_diagnostics(profiles)
-    mesh = build_corridor_mesh(centerline, profiles)
+    mesh = build_corridor_mesh(
+        centerline,
+        profiles,
+        tangent_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
+    )
 
     unreal.log(
         "[YacsSp638CorridorTopology] adaptive profile: "
-        f"min_radius_m={minimum_radius_m} "
+        f"raw_adjacent_min_radius_m={raw_adjacent_minimum_radius_m} "
+        f"source_scale_min_radius_m={source_scale_minimum_radius_m} "
+        f"analysis_half_window_m={SOURCE_GEOMETRY_HALF_WINDOW_M} "
         f"clipped_stations={profile_diagnostics['clipped_station_count']} "
         f"minimum_actual_outer_extent_m="
         f"{profile_diagnostics['minimum_actual_outer_extent_m']}"
@@ -349,12 +366,29 @@ def main() -> None:
         "slice_start_m": round(start_cm / 100.0, 3),
         "slice_end_m": round(end_cm / 100.0, 3),
         "sample_step_m": SAMPLE_STEP_CM / 100.0,
+        "source_geometry_analysis": {
+            "half_window_m": SOURCE_GEOMETRY_HALF_WINDOW_M,
+            "half_window_stations": SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
+            "raw_adjacent_minimum_radius_m": (
+                round(raw_adjacent_minimum_radius_m, 3)
+                if raw_adjacent_minimum_radius_m is not None
+                else None
+            ),
+            "source_scale_minimum_radius_m": (
+                round(source_scale_minimum_radius_m, 3)
+                if source_scale_minimum_radius_m is not None
+                else None
+            ),
+            "canonical_centerline_xy_modified": False,
+        },
         "station_count": mesh.station_count,
         "cross_section_point_count": mesh.cross_section_point_count,
         "vertex_count": len(mesh.vertices),
         "triangle_count": len(mesh.triangles),
         "minimum_sampled_centerline_radius_m": (
-            round(minimum_radius_m, 3) if minimum_radius_m is not None else None
+            round(source_scale_minimum_radius_m, 3)
+            if source_scale_minimum_radius_m is not None
+            else None
         ),
         "adaptive_inside_offset": profile_diagnostics,
         "corridor_mesh_sha256": corridor_mesh_hash(mesh),
@@ -371,7 +405,9 @@ def main() -> None:
             "no_degenerate_triangles": True,
             "stable_role_topology": True,
             "adaptive_inside_earthwork": True,
-            "protected_road_shoulder_offsets_preserved": True,
+            "protected_road_edge_offsets_preserved": True,
+            "minimum_shoulder_width_preserved": True,
+            "source_scale_curvature_estimation": True,
             "real_sp638_hairpin": True,
             "dynamic_mesh_counts_match_kernel": True,
         },
@@ -386,7 +422,8 @@ def main() -> None:
         f"triangles={len(mesh.triangles)} "
         f"ue_vertices={unreal_vertex_count} "
         f"ue_triangles={unreal_triangle_count} "
-        f"min_radius_m={minimum_radius_m} "
+        f"raw_adjacent_min_radius_m={raw_adjacent_minimum_radius_m} "
+        f"source_scale_min_radius_m={source_scale_minimum_radius_m} "
         f"hash={payload['corridor_mesh_sha256']}"
     )
 
