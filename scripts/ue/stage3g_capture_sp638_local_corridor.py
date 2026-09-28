@@ -35,6 +35,11 @@ from scripts.geometry.sp638_local_corridor import (  # noqa: E402
     make_curvature_adaptive_profiles,
     minimum_sampled_radius_xy,
 )
+from scripts.geometry.local_terrain_skin import (  # noqa: E402
+    build_terrain_skin_mesh,
+    smooth_height_grid,
+    terrain_skin_hash,
+)
 
 
 SPIKE_MAP = "/Game/Prototype/Maps/L_PassoGiauTerrainSpike"
@@ -54,6 +59,19 @@ END_MARGIN_CM = 10000.0
 LANDSCAPE_SPLINE_WIDTH_CM = 520.0
 LANDSCAPE_SPLINE_FALLOFF_CM = 1600.0
 LANDSCAPE_SPLINE_SUBDIVISIONS = 240
+
+# Rider-close terrain is a bounded presentation skin sampled from the already
+# deformed Landscape. World-aligned sampling avoids hairpin offset singularities.
+TERRAIN_SKIN_HALF_EXTENT_CM = 25000.0
+TERRAIN_SKIN_GRID_STEP_CM = 400.0
+TERRAIN_SKIN_TRACE_HALF_SPAN_CM = 250000.0
+TERRAIN_SKIN_LIFT_M = 0.02
+TERRAIN_SKIN_SMOOTHING_ITERATIONS = 3
+TERRAIN_SKIN_SMOOTHING_BLEND = 0.45
+TERRAIN_SKIN_CURVATURE_THRESHOLD_M = 0.04
+TERRAIN_SKIN_MAX_STEP_ADJUSTMENT_M = 0.30
+TERRAIN_SKIN_MAX_TOTAL_ADJUSTMENT_M = 0.90
+TERRAIN_SKIN_PINNED_BORDER_CELLS = 2
 
 INSIDE_CLEARANCE_FRACTION = 0.75
 MINIMUM_SHOULDER_SPAN_M = 0.25
@@ -387,6 +405,114 @@ def _shoulder_surface_profiles(
     return tuple(result)
 
 
+def _sample_local_terrain_skin(
+    world: unreal.World,
+    road_actor: unreal.Actor,
+    center_world: unreal.Vector,
+):
+    """Sample the transient Landscape into a bounded world-aligned local skin."""
+
+    span_count = int(round((2.0 * TERRAIN_SKIN_HALF_EXTENT_CM) / TERRAIN_SKIN_GRID_STEP_CM))
+    if span_count < 4:
+        raise RuntimeError("terrain skin grid is unexpectedly small")
+
+    min_x_cm = float(center_world.x) - TERRAIN_SKIN_HALF_EXTENT_CM
+    max_y_cm = float(center_world.y) + TERRAIN_SKIN_HALF_EXTENT_CM
+    x_coordinates_cm = [
+        min_x_cm + index * TERRAIN_SKIN_GRID_STEP_CM
+        for index in range(span_count + 1)
+    ]
+    y_coordinates_cm = [
+        max_y_cm - index * TERRAIN_SKIN_GRID_STEP_CM
+        for index in range(span_count + 1)
+    ]
+
+    trace_top_z = float(center_world.z) + TERRAIN_SKIN_TRACE_HALF_SPAN_CM
+    trace_bottom_z = float(center_world.z) - TERRAIN_SKIN_TRACE_HALF_SPAN_CM
+    raw_heights_m: list[tuple[float, ...]] = []
+    misses: list[tuple[int, int]] = []
+
+    for row_index, y_cm in enumerate(y_coordinates_cm):
+        row: list[float] = []
+        for column_index, x_cm in enumerate(x_coordinates_cm):
+            hit = unreal.SystemLibrary.line_trace_single(
+                world,
+                unreal.Vector(x_cm, y_cm, trace_top_z),
+                unreal.Vector(x_cm, y_cm, trace_bottom_z),
+                unreal.TraceTypeQuery.TRACE_TYPE_QUERY1,
+                True,
+                [road_actor],
+                unreal.DrawDebugTrace.NONE,
+                True,
+            )
+            if hit is None:
+                misses.append((row_index, column_index))
+                row.append(float("nan"))
+                continue
+            row.append(float(hit.impact_point.z) / 100.0)
+        raw_heights_m.append(tuple(row))
+
+    if misses:
+        preview = ", ".join(f"{row}:{column}" for row, column in misses[:8])
+        raise RuntimeError(
+            "terrain skin Landscape sampling missed "
+            f"{len(misses)} grid points; first={preview}"
+        )
+
+    smoothed_heights_m, metrics = smooth_height_grid(
+        tuple(raw_heights_m),
+        iterations=TERRAIN_SKIN_SMOOTHING_ITERATIONS,
+        blend=TERRAIN_SKIN_SMOOTHING_BLEND,
+        curvature_threshold_m=TERRAIN_SKIN_CURVATURE_THRESHOLD_M,
+        max_step_adjustment_m=TERRAIN_SKIN_MAX_STEP_ADJUSTMENT_M,
+        max_total_adjustment_m=TERRAIN_SKIN_MAX_TOTAL_ADJUSTMENT_M,
+        pinned_border_cells=TERRAIN_SKIN_PINNED_BORDER_CELLS,
+    )
+
+    x_coordinates_m = tuple(value / 100.0 for value in x_coordinates_cm)
+    y_coordinates_m = tuple(value / 100.0 for value in y_coordinates_cm)
+    origin_x_m = x_coordinates_m[0]
+    origin_y_m = y_coordinates_m[0]
+    origin_z_m = min(min(row) for row in smoothed_heights_m)
+
+    mesh = build_terrain_skin_mesh(
+        x_coordinates_m,
+        y_coordinates_m,
+        smoothed_heights_m,
+        origin_x_m=origin_x_m,
+        origin_y_m=origin_y_m,
+        origin_z_m=origin_z_m,
+        lift_m=TERRAIN_SKIN_LIFT_M,
+    )
+    origin_world = unreal.Vector(
+        origin_x_m * 100.0,
+        origin_y_m * 100.0,
+        origin_z_m * 100.0,
+    )
+    diagnostics = {
+        "world_aligned": True,
+        "half_extent_m": TERRAIN_SKIN_HALF_EXTENT_CM / 100.0,
+        "grid_step_m": TERRAIN_SKIN_GRID_STEP_CM / 100.0,
+        "row_count": mesh.row_count,
+        "column_count": mesh.column_count,
+        "sample_count": mesh.row_count * mesh.column_count,
+        "smoothing_iterations": TERRAIN_SKIN_SMOOTHING_ITERATIONS,
+        "smoothing_blend": TERRAIN_SKIN_SMOOTHING_BLEND,
+        "curvature_threshold_m": TERRAIN_SKIN_CURVATURE_THRESHOLD_M,
+        "max_step_adjustment_m": TERRAIN_SKIN_MAX_STEP_ADJUSTMENT_M,
+        "max_total_adjustment_m": TERRAIN_SKIN_MAX_TOTAL_ADJUSTMENT_M,
+        "pinned_border_cells": TERRAIN_SKIN_PINNED_BORDER_CELLS,
+        "max_abs_adjustment_m": metrics.max_abs_adjustment_m,
+        "rms_adjustment_m": metrics.rms_adjustment_m,
+        "max_abs_laplacian_before_m": metrics.max_abs_laplacian_before_m,
+        "max_abs_laplacian_after_m": metrics.max_abs_laplacian_after_m,
+        "mesh_sha256": terrain_skin_hash(mesh),
+        "source": "transient Landscape collision after broad spline cut/fill",
+        "canonical_road_xy_modified": False,
+    }
+    return mesh, origin_world, diagnostics
+
+
 def _make_material(
     world: unreal.World,
     parent: unreal.MaterialInterface,
@@ -600,13 +726,30 @@ def main() -> None:
         edit_layer_name=edit_layer_name,
     )
 
+    terrain_skin_center_world = kernel_world[len(kernel_world) // 2]
+    (
+        terrain_skin_mesh,
+        terrain_skin_origin_world,
+        terrain_skin_diagnostics,
+    ) = _sample_local_terrain_skin(
+        world,
+        road_actor,
+        terrain_skin_center_world,
+    )
+
     basic_material = unreal.load_asset(
         "/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"
     )
+    terrain_skin_material = None
     earth_material = None
     shoulder_material = None
     road_material = None
     if basic_material is not None:
+        terrain_skin_material = _make_material(
+            world,
+            basic_material,
+            unreal.LinearColor(0.34, 0.33, 0.29, 1.0),
+        )
         earth_material = _make_material(
             world,
             basic_material,
@@ -624,6 +767,19 @@ def main() -> None:
         )
 
     actor_subsystem = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+    terrain_skin_counts = _spawn_dynamic_mesh(
+        actor_subsystem,
+        terrain_skin_origin_world,
+        terrain_skin_mesh,
+        "SP638_LocalTerrainSkin",
+        terrain_skin_material,
+    )
+
+    # The local terrain skin now owns the rider-close ground in this proof.
+    # Hide the macro heightfield only after sampling it; no persisted map change.
+    for component in landscape_components:
+        component.set_visibility(False, True)
+
     origin_world = kernel_world[0]
     earth_counts = _spawn_dynamic_mesh(
         actor_subsystem,
@@ -673,10 +829,10 @@ def main() -> None:
         world,
         "r.RayTracing.Geometry.Landscape.LODBias -1",
     )
-    # Use the same material-independent geometry diagnostic as the canonical
-    # Landscape proof. This prevents an unsupported transient Landscape
-    # material from falling back to the editor world-grid checkerboard.
-    unreal.SystemLibrary.execute_console_command(world, "viewmode lightingonly")
+    # Render the DynamicMesh-owned rider-close terrain in ordinary lit mode.
+    # The Landscape is hidden after sampling, so the editor checker fallback
+    # cannot masquerade as terrain geometry.
+    unreal.SystemLibrary.execute_console_command(world, "viewmode lit")
     unreal.SystemLibrary.execute_console_command(world, "r.AntiAliasingMethod 1")
     unreal.SystemLibrary.execute_console_command(
         world,
@@ -739,7 +895,7 @@ def main() -> None:
     camera_component.set_editor_property("field_of_view", 76.0)
 
     _proof_data = {
-        "capture_strategy": "r4.1b.3-continuous-dynamicmesh-neutral-geometry",
+        "capture_strategy": "r4.1b.3-world-aligned-terrain-skin-plus-corridor",
         "source_full_road_length_m": round(full_length_cm / 100.0, 3),
         "source_control_points": original_control_count,
         "selected_hairpin_distance_m": round(focus_cm / 100.0, 3),
@@ -773,6 +929,7 @@ def main() -> None:
         "local_geometry": {
             "continuous_dynamic_mesh_surfaces": True,
             "box_strip_roadbed": False,
+            "terrain_skin": terrain_skin_counts,
             "earthwork": earth_counts,
             "left_shoulder": left_shoulder_counts,
             "right_shoulder": right_shoulder_counts,
@@ -795,9 +952,13 @@ def main() -> None:
             "veneto_source_spacing_m": 5.0,
             "landscape_vertex_spacing_is_source_resolution": False,
         },
+        "local_terrain_skin": {
+            **terrain_skin_diagnostics,
+            "landscape_hidden_after_sampling": True,
+        },
         "landscape_component_count": len(landscape_components),
         "forced_landscape_lod": 0,
-        "proof_viewmode": "lightingonly",
+        "proof_viewmode": "lit",
         "neutral_landscape_material": None,
         "camera_location_cm": [
             float(camera_location.x),
