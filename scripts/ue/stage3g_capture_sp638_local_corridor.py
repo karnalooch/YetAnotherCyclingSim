@@ -33,6 +33,7 @@ from scripts.geometry.sp638_local_corridor import (  # noqa: E402
     corridor_mesh_hash,
     make_constant_profiles,
     make_curvature_adaptive_profiles,
+    minimum_sampled_radius_xy,
 )
 
 
@@ -43,6 +44,8 @@ PROOF_AA_QUALITY = 6
 
 SLICE_HALF_LENGTH_CM = 35000.0
 KERNEL_SAMPLE_STEP_CM = 200.0
+SOURCE_GEOMETRY_HALF_WINDOW_M = 6.0
+SOURCE_GEOMETRY_HALF_WINDOW_STATIONS = 3
 LANDSCAPE_SPLINE_POINT_STEP_CM = 1000.0
 CURVATURE_SAMPLE_STEP_CM = 2500.0
 CURVATURE_HALF_WINDOW_CM = 2500.0
@@ -522,7 +525,14 @@ def main() -> None:
         KERNEL_SAMPLE_STEP_CM,
     )
     centerline = _to_local_centerline_m(kernel_world)
-    minimum_radius_m = _minimum_sampled_radius_m(centerline)
+    raw_adjacent_minimum_radius_m = minimum_sampled_radius_xy(
+        centerline,
+        half_window_stations=1,
+    )
+    source_scale_minimum_radius_m = minimum_sampled_radius_xy(
+        centerline,
+        half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
+    )
 
     adaptive_profiles = make_curvature_adaptive_profiles(
         centerline,
@@ -533,19 +543,27 @@ def main() -> None:
         minimum_shoulder_span_m=MINIMUM_SHOULDER_SPAN_M,
         minimum_earthwork_span_m=MINIMUM_EARTHWORK_SPAN_M,
         taper_per_station=TAPER_PER_STATION,
+        curvature_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
     )
-    earthwork_mesh = build_corridor_mesh(centerline, adaptive_profiles)
+    earthwork_mesh = build_corridor_mesh(
+        centerline,
+        adaptive_profiles,
+        tangent_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
+    )
     road_mesh = build_corridor_mesh(
         centerline,
         make_constant_profiles(len(centerline), ROAD_PROFILE),
+        tangent_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
     )
     left_shoulder_mesh = build_corridor_mesh(
         centerline,
         _shoulder_surface_profiles(adaptive_profiles, left=True),
+        tangent_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
     )
     right_shoulder_mesh = build_corridor_mesh(
         centerline,
         _shoulder_surface_profiles(adaptive_profiles, left=False),
+        tangent_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
     )
     profile_diagnostics = _profile_diagnostics(adaptive_profiles)
 
@@ -731,8 +749,25 @@ def main() -> None:
         "slice_end_m": round(end_cm / 100.0, 3),
         "kernel_sample_step_m": KERNEL_SAMPLE_STEP_CM / 100.0,
         "station_count": earthwork_mesh.station_count,
+        "source_geometry_analysis": {
+            "half_window_m": SOURCE_GEOMETRY_HALF_WINDOW_M,
+            "half_window_stations": SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
+            "raw_adjacent_minimum_radius_m": (
+                round(raw_adjacent_minimum_radius_m, 3)
+                if raw_adjacent_minimum_radius_m is not None
+                else None
+            ),
+            "source_scale_minimum_radius_m": (
+                round(source_scale_minimum_radius_m, 3)
+                if source_scale_minimum_radius_m is not None
+                else None
+            ),
+            "canonical_centerline_xy_modified": False,
+        },
         "minimum_sampled_centerline_radius_m": (
-            round(minimum_radius_m, 3) if minimum_radius_m is not None else None
+            round(source_scale_minimum_radius_m, 3)
+            if source_scale_minimum_radius_m is not None
+            else None
         ),
         "corridor_mesh_sha256": corridor_mesh_hash(earthwork_mesh),
         "adaptive_inside_offset": profile_diagnostics,
@@ -797,7 +832,9 @@ def main() -> None:
     unreal.log(
         "[YacsSp638LocalCorridorVisual] screenshot scheduled: "
         f"stations={earthwork_mesh.station_count} "
-        f"min_radius_m={minimum_radius_m} "
+        f"raw_adjacent_min_radius_m={raw_adjacent_minimum_radius_m} "
+        f"source_scale_min_radius_m={source_scale_minimum_radius_m} "
+        f"analysis_half_window_m={SOURCE_GEOMETRY_HALF_WINDOW_M} "
         f"clipped={profile_diagnostics['clipped_station_count']} "
         f"hash={corridor_mesh_hash(earthwork_mesh)}"
     )
