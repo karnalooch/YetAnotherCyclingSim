@@ -1,9 +1,9 @@
 name: Passo Giau R4.1 road authoring proof
 
 on:
-  push:
+  pull_request:
     branches:
-      - feat/stage3g-r4-1-passo-giau-road-alignment
+      - feat/stage3g-r4-1-passo-giau-landscape-spike
     paths:
       - '.github/workflows/passo-giau-r4-1-road-author.yml'
       - 'Source/YetAnotherCyclingSim/YetAnotherCyclingSim.Build.cs'
@@ -16,7 +16,7 @@ on:
       - 'scripts/assets/prepare_passo_giau_road.py'
       - 'scripts/ue/stage3g_prepare_passo_giau_landscape_map.py'
       - 'scripts/ue/stage3g_capture_passo_giau_landscape.py'
-  workflow_dispatch:
+      - 'scripts/ue/stage3g_capture_passo_giau_road.py'
 
 permissions:
   contents: write
@@ -27,7 +27,7 @@ concurrency:
 
 jobs:
   author:
-    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.ref == 'refs/heads/feat/stage3g-r4-1-passo-giau-road-alignment' }}
+    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.head_ref == 'feat/stage3g-r4-1-passo-giau-road-alignment' }}
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 90
     env:
@@ -52,7 +52,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: _passo-giau-road-worktree
-          ref: ${{ github.sha }}
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 1
           lfs: false
           clean: true
@@ -63,7 +63,7 @@ jobs:
         working-directory: _passo-giau-road-worktree
         run: |
           $ErrorActionPreference = 'Stop'
-          if ((git rev-parse HEAD).Trim() -ne '${{ github.sha }}') {
+          if ((git rev-parse HEAD).Trim() -ne '${{ github.event.pull_request.head.sha }}') {
             throw 'Passo Giau road checkout is not exact SHA.'
           }
           git reset --hard HEAD
@@ -94,7 +94,7 @@ jobs:
         shell: pwsh
         working-directory: _passo-giau-road-worktree
         run: |
-          ./scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1 -ExpectedBranch 'HEAD' -ExpectedHead '${{ github.sha }}' -IncludeRoad -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR4_1/PassoGiauRoad'
+          ./scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1 -ExpectedBranch 'HEAD' -ExpectedHead '${{ github.event.pull_request.head.sha }}' -IncludeRoad -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR4_1/PassoGiauRoad'
           if ($LASTEXITCODE -ne 0) { throw 'Passo Giau road authoring failed.' }
 
       - name: Commit only isolated spike map
