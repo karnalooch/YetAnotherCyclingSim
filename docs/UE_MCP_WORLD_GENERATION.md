@@ -298,3 +298,19 @@ that places a bounded generated-content test object and returns a visual capture
 That proof must first demonstrate that the runner execution mode supports the
 required interactive/GPU editor session; headless success alone is not visual
 acceptance.
+
+
+## 13. Remote GitHub runner transport
+
+Issue #85 also owns the controlled chat-to-runner transport spike documented in
+[`YACS_REMOTE_EDITOR_AGENT.md`](YACS_REMOTE_EDITOR_AGENT.md).
+
+The transport does **not** expose UE-MCP to the network. GitHub Actions remains
+the only remote control plane; the trusted `yacs-ue58` host executes
+repository-owned allowlisted commands locally. The initial `smoke-cube` proof
+uses `UnrealEditor-Cmd.exe` + a fixed Python script rather than a free-form MCP
+escape hatch.
+
+This transport is complementary to the existing MCP architecture: once the
+transport itself is proven, later named commands may call guarded YACS MCP flows
+on localhost, but only after their own write-boundary and proof gates are green.
