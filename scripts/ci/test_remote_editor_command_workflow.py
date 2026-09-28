@@ -18,9 +18,7 @@ class RemoteEditorCommandContractTests(unittest.TestCase):
         self.assertIn(
             "github.event.comment.user.login == github.repository_owner", text
         )
-        self.assertIn(
-            "github.event.comment.body == '/yacs-editor smoke-cube'", text
-        )
+        self.assertIn("github.event.comment.body == '/yacs-editor smoke-cube'", text)
         self.assertIn("runs-on: [self-hosted, yacs-ue58]", text)
         self.assertIn("contents: read", text)
         self.assertIn("persist-credentials: false", text)
