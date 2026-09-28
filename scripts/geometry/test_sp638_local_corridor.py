@@ -328,17 +328,14 @@ class LocalGroundCorridorTests(unittest.TestCase):
         self.assertLess(raw_radius, 3.0)
         self.assertGreater(source_scale_radius, 8.0)
 
+        original_centerline = tuple(centerline_tuple)
         adaptive = make_curvature_adaptive_profiles(
             centerline_tuple,
             self.profile,
             curvature_half_window_stations=3,
         )
-        mesh = build_corridor_mesh(
-            centerline_tuple,
-            adaptive,
-            tangent_half_window_stations=3,
-        )
 
+        self.assertEqual(centerline_tuple, original_centerline)
         original_by_role = {point.role: point.lateral_m for point in self.profile}
         for station_profile in adaptive:
             by_role = {point.role: point.lateral_m for point in station_profile}
@@ -350,8 +347,15 @@ class LocalGroundCorridorTests(unittest.TestCase):
                 by_role["right_road_edge"],
                 original_by_role["right_road_edge"],
             )
-        for triangle in mesh.triangles:
-            self.assertGreater(triangle_normal(mesh, triangle).z, 0.0)
+
+        # Source-scale curvature filtering is not permission to heal a genuinely
+        # invalid canonical centerline. Mesh topology validation stays strict.
+        with self.assertRaisesRegex(ValueError, "inverted or folded"):
+            build_corridor_mesh(
+                centerline_tuple,
+                adaptive,
+                tangent_half_window_stations=3,
+            )
 
     def test_adaptive_profiles_and_mesh_hash_are_deterministic(self) -> None:
         radius = 8.0
