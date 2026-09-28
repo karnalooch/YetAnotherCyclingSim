@@ -52,14 +52,19 @@ LANDSCAPE_SPLINE_WIDTH_CM = 520.0
 LANDSCAPE_SPLINE_FALLOFF_CM = 1600.0
 LANDSCAPE_SPLINE_SUBDIVISIONS = 240
 
-INSIDE_CLEARANCE_FRACTION = 0.65
-MINIMUM_EARTHWORK_SPAN_M = 0.15
+INSIDE_CLEARANCE_FRACTION = 0.75
+MINIMUM_SHOULDER_SPAN_M = 0.25
+MINIMUM_EARTHWORK_SPAN_M = 0.10
 TAPER_PER_STATION = 0.12
 PROTECTED_ROLES = frozenset(
     {
-        "left_shoulder",
         "left_road_edge",
         "right_road_edge",
+    }
+)
+SHOULDER_ROLES = frozenset(
+    {
+        "left_shoulder",
         "right_shoulder",
     }
 )
@@ -79,15 +84,6 @@ ROAD_PROFILE = (
     CrossSectionPoint(-3.0, 0.06, "left_road_surface"),
     CrossSectionPoint(3.0, 0.06, "right_road_surface"),
 )
-LEFT_SHOULDER_PROFILE = (
-    CrossSectionPoint(-4.0, 0.18, "left_shoulder_outer_surface"),
-    CrossSectionPoint(-3.0, 0.03, "left_shoulder_inner_surface"),
-)
-RIGHT_SHOULDER_PROFILE = (
-    CrossSectionPoint(3.0, 0.03, "right_shoulder_inner_surface"),
-    CrossSectionPoint(4.0, -0.07, "right_shoulder_outer_surface"),
-)
-
 EYE_HEIGHT_CM = 160.0
 CAMERA_BACK_CM = 3500.0
 LOOK_AHEAD_CM = 6500.0
@@ -311,8 +307,25 @@ def _profile_diagnostics(
                         f"{authored} -> {point.lateral_m}"
                     )
 
+    shoulder_widths = []
+    for profile in profiles:
+        by_role = {point.role: point.lateral_m for point in profile}
+        shoulder_widths.extend(
+            (
+                abs(by_role["left_shoulder"]) - abs(by_role["left_road_edge"]),
+                abs(by_role["right_shoulder"]) - abs(by_role["right_road_edge"]),
+            )
+        )
+    minimum_actual_shoulder_width_m = min(shoulder_widths)
+    if minimum_actual_shoulder_width_m < MINIMUM_SHOULDER_SPAN_M - 1e-9:
+        raise RuntimeError(
+            "adaptive profile pinched shoulder below minimum: "
+            f"{minimum_actual_shoulder_width_m:.6f} m"
+        )
+
     return {
         "inside_clearance_fraction": INSIDE_CLEARANCE_FRACTION,
+        "minimum_shoulder_span_m": MINIMUM_SHOULDER_SPAN_M,
         "minimum_earthwork_span_m": MINIMUM_EARTHWORK_SPAN_M,
         "taper_per_station": TAPER_PER_STATION,
         "clipped_station_count": clipped_station_count,
@@ -320,8 +333,55 @@ def _profile_diagnostics(
             min(abs(profile[0].lateral_m) for profile in profiles),
             min(profile[-1].lateral_m for profile in profiles),
         ],
+        "minimum_actual_shoulder_width_m": minimum_actual_shoulder_width_m,
         "protected_roles": sorted(PROTECTED_ROLES),
+        "shoulder_roles": sorted(SHOULDER_ROLES),
     }
+
+
+def _shoulder_surface_profiles(
+    profiles: tuple[tuple[CrossSectionPoint, ...], ...],
+    *,
+    left: bool,
+) -> tuple[tuple[CrossSectionPoint, ...], ...]:
+    result: list[tuple[CrossSectionPoint, ...]] = []
+    for profile in profiles:
+        by_role = {point.role: point for point in profile}
+        if left:
+            shoulder = by_role["left_shoulder"]
+            road_edge = by_role["left_road_edge"]
+            result.append(
+                (
+                    CrossSectionPoint(
+                        shoulder.lateral_m,
+                        shoulder.vertical_m + 0.03,
+                        "left_shoulder_outer_surface",
+                    ),
+                    CrossSectionPoint(
+                        road_edge.lateral_m,
+                        road_edge.vertical_m + 0.03,
+                        "left_shoulder_inner_surface",
+                    ),
+                )
+            )
+        else:
+            road_edge = by_role["right_road_edge"]
+            shoulder = by_role["right_shoulder"]
+            result.append(
+                (
+                    CrossSectionPoint(
+                        road_edge.lateral_m,
+                        road_edge.vertical_m + 0.03,
+                        "right_shoulder_inner_surface",
+                    ),
+                    CrossSectionPoint(
+                        shoulder.lateral_m,
+                        shoulder.vertical_m + 0.03,
+                        "right_shoulder_outer_surface",
+                    ),
+                )
+            )
+    return tuple(result)
 
 
 def _make_material(
@@ -468,7 +528,9 @@ def main() -> None:
         centerline,
         EARTHWORK_PROFILE,
         protected_roles=PROTECTED_ROLES,
+        shoulder_roles=SHOULDER_ROLES,
         clearance_fraction=INSIDE_CLEARANCE_FRACTION,
+        minimum_shoulder_span_m=MINIMUM_SHOULDER_SPAN_M,
         minimum_earthwork_span_m=MINIMUM_EARTHWORK_SPAN_M,
         taper_per_station=TAPER_PER_STATION,
     )
@@ -479,11 +541,11 @@ def main() -> None:
     )
     left_shoulder_mesh = build_corridor_mesh(
         centerline,
-        make_constant_profiles(len(centerline), LEFT_SHOULDER_PROFILE),
+        _shoulder_surface_profiles(adaptive_profiles, left=True),
     )
     right_shoulder_mesh = build_corridor_mesh(
         centerline,
-        make_constant_profiles(len(centerline), RIGHT_SHOULDER_PROFILE),
+        _shoulder_surface_profiles(adaptive_profiles, left=False),
     )
     profile_diagnostics = _profile_diagnostics(adaptive_profiles)
 
