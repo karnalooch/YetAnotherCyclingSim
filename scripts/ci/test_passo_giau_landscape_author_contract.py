@@ -111,13 +111,20 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("capture proof PNG byte count", wrapper)
         self.assertIn("Fatal error|Unhandled Exception|Critical error", wrapper)
         self.assertIn("code_only_lfs_asset_registry_exit_tolerance_used", wrapper)
-        self.assertIn("download_passo_giau_veneto_lidar.py", wrapper)
-        self.assertIn("prepare_passo_giau_veneto_lidar.py", wrapper)
-        self.assertIn("PreparedVenetoLidar5m", wrapper)
+        self.assertIn("download_passo_giau_mase_pst.py", wrapper)
+        self.assertIn("prepare_passo_giau_mase_pst.py", wrapper)
+        self.assertIn("PreparedMasePstLidar1x1", wrapper)
         self.assertIn("('-ScaleZ=' + $ScaleZ.ToString", wrapper)
         self.assertIn("('-LocationZCm=' + $LocationZCm.ToString", wrapper)
         self.assertIn("native_cell_m", wrapper)
-        self.assertIn("IODL 2.0", wrapper)
+        self.assertIn("EPSG:4326", wrapper)
+        self.assertIn("EPSG:32632", wrapper)
+        self.assertIn("sampled_unique_elevation_count", wrapper)
+        self.assertIn(
+            "0e2a133fcc80f225aee2b61aa04bc7a858aa3754c6b80a7c640b8a6ab7d14b8c",
+            wrapper,
+        )
+        self.assertIn("CC BY 4.0", wrapper)
 
     def test_capture_requires_real_png_and_human_review(self) -> None:
         capture = read("scripts/ue/stage3g_capture_passo_giau_landscape.py")
@@ -156,9 +163,9 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("runs-on: [self-hosted, yacs-ue58]", workflow)
         self.assertIn("lfs: false", workflow)
         self.assertIn("'scripts/assets/prepare_passo_giau_heightmap.py'", workflow)
-        self.assertIn("'scripts/assets/download_passo_giau_veneto_lidar.py'", workflow)
-        self.assertIn("'scripts/assets/prepare_passo_giau_veneto_lidar.py'", workflow)
-        self.assertIn("PreparedVenetoLidar5m/terrain-report.json", workflow)
+        self.assertIn("'scripts/assets/download_passo_giau_mase_pst.py'", workflow)
+        self.assertIn("'scripts/assets/prepare_passo_giau_mase_pst.py'", workflow)
+        self.assertIn("PreparedMasePstLidar1x1/terrain-report.json", workflow)
         self.assertNotIn("git lfs checkout", workflow)
         self.assertIn("path: _passo-giau-worktree", workflow)
         self.assertIn("working-directory: _passo-giau-worktree", workflow)
@@ -176,10 +183,10 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("git diff --cached --name-only", workflow)
         self.assertNotIn("git add -A", workflow)
 
-    def test_active_veneto_preparation_reports_numeric_and_seam_diagnostics(
+    def test_active_mase_pst_preparation_reports_numeric_and_seam_diagnostics(
         self,
     ) -> None:
-        prepare = read("scripts/assets/prepare_passo_giau_veneto_lidar.py")
+        prepare = read("scripts/assets/prepare_passo_giau_mase_pst.py")
         self.assertIn("def r16_roundtrip_diagnostics(", prepare)
         self.assertIn("def seam_diagnostics(", prepare)
         self.assertIn("def slope_diagnostics(", prepare)
@@ -193,6 +200,11 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn('"scanlines": scanline_diagnostics(', prepare)
         self.assertIn('"landscape_diagnostics": landscape_diagnostics(', prepare)
         self.assertIn("LANDSCAPE_SIZE = 4033", prepare)
+        self.assertIn('SOURCE_CRS = "EPSG:4326"', prepare)
+        self.assertIn('TARGET_CRS = "EPSG:32632"', prepare)
+        self.assertIn("TARGET_NATIVE_RESOLUTION_M = 1.0", prepare)
+        self.assertIn("TARGET_NATIVE_SIZE = 8000", prepare)
+        self.assertIn("sampled_unique_elevation_count", prepare)
         self.assertIn("resampling=Resampling.cubic", prepare)
         self.assertIn('"landscape_resampling": "cubic"', prepare)
 
@@ -211,6 +223,25 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn('"r16_roundtrip_error_m"', prepare)
         self.assertIn('"subsection_63_quads": seam_stats(63)', prepare)
         self.assertIn('"component_126_quads": seam_stats(126)', prepare)
+
+    def test_mase_release_source_is_pinned_and_does_not_depend_on_live_mase(self) -> None:
+        downloader = read("scripts/assets/download_passo_giau_mase_pst.py")
+        self.assertIn(
+            'RELEASE_TAG = "data-mase-pst-passo-giau-dtm-2026-09-28"',
+            downloader,
+        )
+        self.assertIn("ARCHIVE_BYTES = 356_503_497", downloader)
+        self.assertIn(
+            'ARCHIVE_SHA256 = "0e2a133fcc80f225aee2b61aa04bc7a858aa3754c6b80a7c640b8a6ab7d14b8c"',
+            downloader,
+        )
+        self.assertIn("EXPECTED_TILE_COUNT = 89", downloader)
+        self.assertIn('SOURCE_CRS = "EPSG:4326"', downloader)
+        self.assertIn("SOURCE_PIXEL_SIZE_DEG = 0.00001", downloader)
+        self.assertIn("immutable_source_checkpoint", downloader)
+        self.assertIn("live_mase_dependency", downloader)
+        self.assertNotIn("sim.mase.gov.it", downloader)
+
 
     def test_editor_build_links_landscape_import_modules(self) -> None:
         build = read("Source/YetAnotherCyclingSim/YetAnotherCyclingSim.Build.cs")
