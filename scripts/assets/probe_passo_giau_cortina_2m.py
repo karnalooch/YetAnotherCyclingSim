@@ -26,7 +26,7 @@ from typing import Any, Iterable
 
 WMS_ENDPOINT = "https://idt2-geoserver.regione.veneto.it/geoserver/wms"
 WCS_ENDPOINT = "https://idt2-geoserver.regione.veneto.it/geoserver/wcs"
-VIEWER_URL = "https://idt2.regione.veneto.it/idt/webgis/viewer?webgisId=86"
+VIEWER_URL = "https://idt2.regione.veneto.it/idt/webgis/viewer?webgisId=246"
 DOWNLOAD_PAGE = "https://idt2.regione.veneto.it/idt/downloader/download"
 GENERIC_LAYERS_ENDPOINT = "https://idt2.regione.veneto.it/idt/download/layerDownload/getDownloadableLayersWithPermission"
 CSW_ENDPOINT = "https://idt2.regione.veneto.it/geoportal/csw"
@@ -788,6 +788,67 @@ def fetch_coverage_description(
     return url, description, proven_resolution
 
 
+def direct_coverage_ids(wms_name: str | None) -> list[str]:
+    """Return deterministic aliases worth probing even when WCS hides coverage."""
+    values = [
+        wms_name or "",
+        (wms_name or "").split(":", 1)[-1],
+        PREFERRED_WMS_LAYER,
+        PREFERRED_WMS_LAYER.split(":", 1)[-1],
+        TARGET_LAYER_LABEL,
+    ]
+    result: list[str] = []
+    for value in values:
+        cleaned = value.strip()
+        if cleaned and cleaned not in result:
+            result.append(cleaned)
+    return result
+
+
+def probe_direct_wcs_descriptions(
+    wms_name: str | None,
+    endpoints: list[str],
+) -> dict[str, Any]:
+    """Try DescribeCoverage directly when GetCapabilities omits the WMS-backed store.
+
+    Veneto's WMS DescribeLayer explicitly advertises the Cortina layer as WCS
+    backed. GeoServer can still accept DescribeCoverage for a known coverage
+    even when a capabilities document omits it, so this is a legitimate
+    fail-closed transport probe rather than a WMS-image workaround.
+    """
+    attempts: list[dict[str, Any]] = []
+    proven: list[dict[str, Any]] = []
+    coverage_ids = direct_coverage_ids(wms_name)
+    for endpoint in endpoints:
+        for version in WCS_VERSIONS:
+            for coverage_id in coverage_ids:
+                attempt: dict[str, Any] = {
+                    "endpoint": endpoint,
+                    "version": version,
+                    "coverage_id": coverage_id,
+                }
+                try:
+                    url, description, resolution = fetch_coverage_description(
+                        endpoint,
+                        version,
+                        coverage_id,
+                    )
+                    attempt["describe_coverage_url"] = url
+                    attempt["description"] = description
+                    attempt["proven_native_resolution_m"] = resolution
+                    attempt["status"] = "PROVEN"
+                    proven.append(dict(attempt))
+                except Exception as exc:
+                    attempt["status"] = "FAILED"
+                    attempt["error"] = str(exc)
+                attempts.append(attempt)
+    return {
+        "coverage_ids": coverage_ids,
+        "attempts": attempts,
+        "proven": proven,
+    }
+
+
 def main() -> int:
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     report: dict[str, Any] = {
@@ -828,23 +889,49 @@ def main() -> int:
         discovery = discover_wcs_coverage(layer.get("name"), endpoints)
         report["wcs"] = discovery
         found = discovery.get("found", [])
-        if len(found) != 1:
+        if len(found) > 1:
             raise RuntimeError(
-                "expected exactly one WCS coverage matching Cortina 2 m "
-                f"across {len(endpoints)} endpoint(s), found {len(found)}"
+                "expected at most one advertised WCS coverage matching Cortina "
+                f"2 m across {len(endpoints)} endpoint(s), found {len(found)}"
             )
 
-        selected = found[0]
-        coverage = selected["coverage"]
-        coverage_id = str(coverage.get("identifier") or "").strip()
-        if not coverage_id:
-            raise RuntimeError("matched WCS coverage has no identifier")
+        if len(found) == 1:
+            selected = found[0]
+            coverage = selected["coverage"]
+            coverage_id = str(coverage.get("identifier") or "").strip()
+            if not coverage_id:
+                raise RuntimeError("matched WCS coverage has no identifier")
 
-        describe_url, description, resolution = fetch_coverage_description(
-            str(selected["endpoint"]),
-            str(selected["version"]),
-            coverage_id,
-        )
+            describe_url, description, resolution = fetch_coverage_description(
+                str(selected["endpoint"]),
+                str(selected["version"]),
+                coverage_id,
+            )
+            report["wcs"]["selection_mode"] = "advertised_capabilities"
+        else:
+            direct = probe_direct_wcs_descriptions(layer.get("name"), endpoints)
+            report["wcs"]["direct_describe"] = direct
+            proven = direct.get("proven", [])
+            if not proven:
+                raise RuntimeError(
+                    "WCS capabilities omit Cortina 2 m and direct "
+                    "DescribeCoverage did not prove a 2 m raw coverage"
+                )
+            chosen = proven[0]
+            coverage_id = str(chosen["coverage_id"])
+            describe_url = str(chosen["describe_coverage_url"])
+            description = chosen["description"]
+            resolution = chosen["proven_native_resolution_m"]
+            selected = {
+                "endpoint": chosen["endpoint"],
+                "version": chosen["version"],
+                "coverage": {
+                    "identifier": coverage_id,
+                    "title": TARGET_LAYER_LABEL,
+                },
+            }
+            report["wcs"]["selection_mode"] = "direct_describe_fallback"
+
         report["wcs"]["selected"] = selected
         report["wcs"]["describe_coverage_url"] = describe_url
         report["wcs"]["description"] = description
@@ -869,7 +956,7 @@ def main() -> int:
         print(
             "[cortina-2m] layer="
             f"{report['wms']['layer'].get('name')} "
-            f"coverage={report['wcs']['coverage'].get('identifier')} "
+            f"coverage={report['wcs']['selected']['coverage'].get('identifier')} "
             f"resolution={report['proven_native_resolution_m']}"
         )
     return exit_code
