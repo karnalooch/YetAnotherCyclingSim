@@ -74,14 +74,35 @@ def _xy_length(vector: Vec3) -> float:
     return math.hypot(vector.x, vector.y)
 
 
-def _horizontal_tangent(centerline: Sequence[Vec3], index: int) -> Vec3:
-    if index == 0:
-        delta = centerline[1] - centerline[0]
-    elif index == len(centerline) - 1:
-        delta = centerline[-1] - centerline[-2]
-    else:
-        delta = centerline[index + 1] - centerline[index - 1]
+def _validate_half_window_stations(value: int, name: str) -> None:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        raise ValueError(f"{name} must be a positive integer")
 
+
+def _horizontal_tangent(
+    centerline: Sequence[Vec3],
+    index: int,
+    half_window_stations: int = 1,
+) -> Vec3:
+    """Return a horizontal frame tangent without moving canonical centerline XY.
+
+    A wider station window is useful when the sampled centerline is denser than
+    the positional accuracy of its source. Only the orientation estimate is
+    filtered; mesh stations remain at their original coordinates.
+    """
+
+    _validate_half_window_stations(
+        half_window_stations,
+        "tangent_half_window_stations",
+    )
+    left = max(0, index - half_window_stations)
+    right = min(len(centerline) - 1, index + half_window_stations)
+    if left == right:
+        raise ValueError(
+            f"centerline station {index} has no tangent estimation window"
+        )
+
+    delta = centerline[right] - centerline[left]
     length = _xy_length(delta)
     if length <= _EPSILON:
         raise ValueError(
@@ -90,20 +111,37 @@ def _horizontal_tangent(centerline: Sequence[Vec3], index: int) -> Vec3:
     return Vec3(delta.x / length, delta.y / length, 0.0)
 
 
-def _signed_curvature_xy(centerline: Sequence[Vec3], index: int) -> float:
-    """Return discrete signed horizontal curvature in 1/metre.
+def _signed_curvature_xy(
+    centerline: Sequence[Vec3],
+    index: int,
+    half_window_stations: int = 1,
+) -> float:
+    """Return source-scale signed horizontal curvature in 1/metre.
 
-    Positive curvature means the positive-lateral side of the existing corridor
-    frame is the inside of the bend; negative curvature means the negative side.
-    End stations are treated as straight because no three-point estimate exists.
+    Positive curvature means the positive-lateral side of the corridor frame is
+    the inside of the bend; negative curvature means the negative side.
+
+    The points used for the curvature estimate may be farther apart than the
+    mesh stations. This deliberately avoids treating a dense resample as if it
+    contained higher-frequency positional truth than the source geometry.
+    Canonical centerline coordinates are never modified.
     """
 
-    if index <= 0 or index >= len(centerline) - 1:
+    _validate_half_window_stations(
+        half_window_stations,
+        "curvature_half_window_stations",
+    )
+    window = min(
+        half_window_stations,
+        index,
+        len(centerline) - 1 - index,
+    )
+    if window < 1:
         return 0.0
 
-    a = centerline[index - 1]
+    a = centerline[index - window]
     b = centerline[index]
-    c = centerline[index + 1]
+    c = centerline[index + window]
     ab_x = b.x - a.x
     ab_y = b.y - a.y
     bc_x = c.x - b.x
@@ -119,6 +157,28 @@ def _signed_curvature_xy(centerline: Sequence[Vec3], index: int) -> float:
 
     cross2 = ab_x * bc_y - ab_y * bc_x
     return 2.0 * cross2 / (ab * bc * ca)
+
+
+def minimum_sampled_radius_xy(
+    centerline: Sequence[Vec3],
+    half_window_stations: int = 1,
+) -> float | None:
+    """Return the minimum finite XY radius seen at the requested analysis scale."""
+
+    _validate_half_window_stations(
+        half_window_stations,
+        "curvature_half_window_stations",
+    )
+    radii: list[float] = []
+    for index in range(1, len(centerline) - 1):
+        curvature = _signed_curvature_xy(
+            centerline,
+            index,
+            half_window_stations,
+        )
+        if abs(curvature) > _EPSILON:
+            radii.append(1.0 / abs(curvature))
+    return min(radii) if radii else None
 
 
 def _validate_profile(profile: Sequence[CrossSectionPoint], station_index: int) -> None:
@@ -326,6 +386,7 @@ def make_curvature_adaptive_profiles(
     minimum_shoulder_span_m: float = 0.25,
     minimum_earthwork_span_m: float = 0.10,
     taper_per_station: float = 0.12,
+    curvature_half_window_stations: int = 1,
 ) -> tuple[tuple[CrossSectionPoint, ...], ...]:
     """Contract inside-bend shoulder/earthwork before a swept offset can fold.
 
@@ -351,6 +412,10 @@ def make_curvature_adaptive_profiles(
         raise ValueError("minimum_earthwork_span_m must be positive")
     if taper_per_station <= 0.0 or taper_per_station > 1.0:
         raise ValueError("taper_per_station must be in (0, 1]")
+    _validate_half_window_stations(
+        curvature_half_window_stations,
+        "curvature_half_window_stations",
+    )
 
     left_core, left_outer = _side_extents(
         profile, protected_roles, positive_side=False
@@ -363,7 +428,11 @@ def make_curvature_adaptive_profiles(
     raw_right = [1.0] * len(centerline)
 
     for index in range(1, len(centerline) - 1):
-        curvature = _signed_curvature_xy(centerline, index)
+        curvature = _signed_curvature_xy(
+            centerline,
+            index,
+            curvature_half_window_stations,
+        )
         if abs(curvature) <= _EPSILON:
             continue
 
@@ -446,14 +515,28 @@ def make_curvature_adaptive_profiles(
 def build_corridor_mesh(
     centerline: Sequence[Vec3],
     profiles: Sequence[Sequence[CrossSectionPoint]],
+    *,
+    tangent_half_window_stations: int = 1,
 ) -> CorridorMesh:
-    """Sweep asymmetric cross-sections along a presentation-only centerline."""
+    """Sweep asymmetric cross-sections along a presentation-only centerline.
+
+    A wider tangent window changes only the local cross-section frame. It never
+    moves or resamples the canonical centerline stations.
+    """
 
     _validate_inputs(centerline, profiles)
+    _validate_half_window_stations(
+        tangent_half_window_stations,
+        "tangent_half_window_stations",
+    )
 
     vertices: list[Vec3] = []
     for station_index, center in enumerate(centerline):
-        tangent = _horizontal_tangent(centerline, station_index)
+        tangent = _horizontal_tangent(
+            centerline,
+            station_index,
+            tangent_half_window_stations,
+        )
         right = Vec3(-tangent.y, tangent.x, 0.0)
         for section_point in profiles[station_index]:
             vertices.append(
