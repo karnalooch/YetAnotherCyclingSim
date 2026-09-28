@@ -482,7 +482,30 @@ The Landscape spike is path A of the documented R4.1 terrain A/B. Geometry
 Script / generated tiled terrain remains path B until a rendered vertical slice
 is reviewed.
 
-## 19. Definition of Done
+## 19. Terrain research / visual-debug SSOT
+
+The current Passo Giau Landscape spike now has a dedicated research and
+troubleshooting playbook:
+
+`docs/STAGE3G_R4_1_TERRAIN_RESEARCH.md`
+
+It captures:
+
+- Epic UE 5.8 Landscape topology and height-precision references;
+- official import APIs to use as an oracle against the custom R16 reader;
+- a neutral-material geometry-proof requirement;
+- source/R16 quantization and round-trip diagnostics;
+- 63/126-quad subsection/component seam probes;
+- guidance against blind Gaussian-blur "fixes";
+- Gaea / World Machine terrain-export references;
+- a rule that Nanite is not a geometry-quality repair;
+- the ordered diagnostic ladder for the current Passo Giau visual artifact.
+
+For R4.1B, this playbook is the visual-debug SSOT. No terrain smoothing,
+material camouflage, Nanite change or full-route propagation should bypass its
+diagnostic order.
+
+## 20. Definition of Done
 
 R4.1 is complete only when:
 
