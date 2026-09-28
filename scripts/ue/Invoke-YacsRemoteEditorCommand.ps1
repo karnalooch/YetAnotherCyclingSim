@@ -100,6 +100,11 @@ switch ($Command) {
         }
 
         if ($ExitCode -ne 0) {
+            if (Test-Path -LiteralPath $UnrealLogPath -PathType Leaf) {
+                Write-Host '===== Unreal remote editor log tail =====' -ForegroundColor Yellow
+                Get-Content -LiteralPath $UnrealLogPath -Tail 220 | ForEach-Object { Write-Host $_ }
+                Write-Host '===== End Unreal remote editor log tail =====' -ForegroundColor Yellow
+            }
             throw "Unreal remote editor command exited with code $ExitCode. See $UnrealLogPath."
         }
     }
