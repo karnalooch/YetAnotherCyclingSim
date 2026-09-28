@@ -162,17 +162,39 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("git diff --cached --name-only", workflow)
         self.assertNotIn("git add -A", workflow)
 
-    def test_preparation_reports_numeric_and_seam_diagnostics(self) -> None:
+    def test_active_veneto_preparation_reports_numeric_and_seam_diagnostics(self) -> None:
+        prepare = read("scripts/assets/prepare_passo_giau_veneto_lidar.py")
+        self.assertIn("def r16_roundtrip_diagnostics(", prepare)
+        self.assertIn("def seam_diagnostics(", prepare)
+        self.assertIn("def slope_diagnostics(", prepare)
+        self.assertIn("def scanline_diagnostics(", prepare)
+        self.assertIn("def landscape_diagnostics(", prepare)
+        self.assertIn('"vertical_quantization_step_m"', prepare)
+        self.assertIn('"r16_roundtrip_error_m"', prepare)
+        self.assertIn('"subsection_63_quads": seam_diagnostics(', prepare)
+        self.assertIn('"component_126_quads": seam_diagnostics(', prepare)
+        self.assertIn('"slope_degrees": slope_diagnostics(', prepare)
+        self.assertIn('"scanlines": scanline_diagnostics(', prepare)
+        self.assertIn('"landscape_diagnostics": landscape_diagnostics(', prepare)
+        self.assertIn("LANDSCAPE_SIZE = 4033", prepare)
+        self.assertIn("resampling=Resampling.cubic", prepare)
+        self.assertIn('"landscape_resampling": "cubic"', prepare)
+
+        wrapper = read("scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1")
+        self.assertIn("$Diagnostics = $Terrain.landscape_diagnostics", wrapper)
+        self.assertIn("$Diagnostics.r16_roundtrip_error_m", wrapper)
+        self.assertIn("$Diagnostics.seams.subsection_63_quads", wrapper)
+        self.assertIn("$Diagnostics.seams.component_126_quads", wrapper)
+        self.assertIn("R16 round-trip error exceeds half-step", wrapper)
+        self.assertIn("prepared slope diagnostics", wrapper)
+        self.assertIn("deterministic center scanline diagnostics", wrapper)
+
+    def test_generic_preparer_keeps_reference_diagnostic_contract(self) -> None:
         prepare = read("scripts/assets/prepare_passo_giau_heightmap.py")
         self.assertIn("def terrain_diagnostics(", prepare)
-        self.assertIn('"vertical_quantization_step_m"', prepare)
         self.assertIn('"r16_roundtrip_error_m"', prepare)
         self.assertIn('"subsection_63_quads": seam_stats(63)', prepare)
         self.assertIn('"component_126_quads": seam_stats(126)', prepare)
-        self.assertIn('"diagnostics": terrain_diagnostics(', prepare)
-        self.assertIn("DEFAULT_LANDSCAPE_SIZE = 4033", prepare)
-        self.assertIn("resampling=Resampling.cubic", prepare)
-        self.assertIn('"landscape_resampling": "cubic"', prepare)
 
     def test_editor_build_links_landscape_module(self) -> None:
         build = read("Source/YetAnotherCyclingSim/YetAnotherCyclingSim.Build.cs")
