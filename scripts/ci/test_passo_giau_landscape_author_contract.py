@@ -78,7 +78,9 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("CyclingPassoGiauLandscapeSpikeCommandlet: done", wrapper)
         self.assertIn("$CaptureExitCode -notin @(0, 1)", wrapper)
         self.assertIn(r"\[PassoGiauCapture\] PASS:", wrapper)
-        self.assertIn("$CaptureStdout = Join-Path $ArtifactRoot 'capture.stdout.log'", wrapper)
+        self.assertIn(
+            "$CaptureStdout = Join-Path $ArtifactRoot 'capture.stdout.log'", wrapper
+        )
         self.assertIn("-RedirectStandardOutput $CaptureStdout", wrapper)
         self.assertIn("capture proof LOD stabilization is invalid", wrapper)
         self.assertIn("geometry proof sun unexpectedly casts shadows", wrapper)
@@ -115,6 +117,8 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("path: _passo-giau-worktree", workflow)
         self.assertIn("working-directory: _passo-giau-worktree", workflow)
         self.assertIn("./scripts/ci/Test-YacsCodeOnlyCheckout.ps1", workflow)
+        self.assertIn("git checkout-index -f -- $spikeAsset", workflow)
+        self.assertIn("Passo Giau spike map is still materialized", workflow)
         self.assertNotIn("git lfs fsck", workflow)
         self.assertIn("permissions:\n  contents: write", workflow)
         self.assertIn(

@@ -65,6 +65,21 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'non-ignored workspace cleanup failed.' }
           git lfs install --local
           if ($LASTEXITCODE -ne 0) { throw 'git lfs install failed.' }
+
+          # A successful authoring run leaves the generated LFS asset
+          # materialized in this reused self-hosted worktree. If the next
+          # revision points at the same LFS object, checkout can legitimately
+          # leave those payload bytes in place. Force only this generated
+          # asset back through the index with smudge disabled before the
+          # fail-closed code-only guard.
+          $spikeAsset = 'Content/Prototype/Maps/L_PassoGiauTerrainSpike.umap'
+          if (Test-Path -LiteralPath $spikeAsset -PathType Leaf) {
+            git checkout-index -f -- $spikeAsset
+            if ($LASTEXITCODE -ne 0) { throw 'failed to restore Passo Giau LFS pointer from the index.' }
+            git lfs pointer --check "--file=$spikeAsset" *> $null
+            if ($LASTEXITCODE -ne 0) { throw 'Passo Giau spike map is still materialized before code-only validation.' }
+          }
+
           if (git status --porcelain --untracked-files=all) {
             throw 'Passo Giau authoring checkout has non-ignored mutations.'
           }
