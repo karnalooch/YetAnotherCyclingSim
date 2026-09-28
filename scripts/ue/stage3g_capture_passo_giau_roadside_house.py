@@ -75,12 +75,52 @@ _proof_data: dict[str, object] = {}
 
 
 def _finish(success: bool, error: str = "") -> None:
-    global _tick_handle
+    global _tick_handle, _pcg_volume
     if _tick_handle is not None:
         unreal.unregister_slate_post_tick_callback(_tick_handle)
         _tick_handle = None
 
+    cleanup_error = ""
+    if _pcg_volume is not None:
+        try:
+            actor_subsystem = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+            if not actor_subsystem.destroy_actor(_pcg_volume):
+                cleanup_error = "failed to destroy transient PCGVolume"
+        except Exception as exc:
+            cleanup_error = "failed to destroy transient PCGVolume: {}".format(exc)
+        _pcg_volume = None
+
+    temporary_graph_path = ""
+    forest_proof = _proof_data.get("forest")
+    if isinstance(forest_proof, dict):
+        temporary_graph_path = str(forest_proof.get("temporary_graph_path", ""))
+    if temporary_graph_path:
+        try:
+            if unreal.EditorAssetLibrary.does_asset_exist(temporary_graph_path):
+                if not unreal.EditorAssetLibrary.delete_asset(temporary_graph_path):
+                    cleanup_error = cleanup_error or (
+                        "failed to delete temporary PCG graph {}".format(
+                            temporary_graph_path
+                        )
+                    )
+            if unreal.EditorAssetLibrary.does_asset_exist(temporary_graph_path):
+                cleanup_error = cleanup_error or (
+                    "temporary PCG graph still exists after cleanup: {}".format(
+                        temporary_graph_path
+                    )
+                )
+        except Exception as exc:
+            cleanup_error = cleanup_error or (
+                "temporary PCG graph cleanup failed: {}".format(exc)
+            )
+
+    if cleanup_error:
+        success = False
+        error = cleanup_error
+
     if success and _output_path is not None and _proof_path is not None:
+        if isinstance(forest_proof, dict):
+            forest_proof["pcg_contract"]["temporary_graph_cleaned"] = True
         proof = {
             "schema_version": 1,
             "passo_giau_roadside_house_capture": "PASS",
