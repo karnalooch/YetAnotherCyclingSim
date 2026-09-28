@@ -449,7 +449,8 @@ def _sample_local_terrain_skin(
                 misses.append((row_index, column_index))
                 row.append(float("nan"))
                 continue
-            impact_point = hit.get_editor_property("impact_point")\n            row.append(float(impact_point.z) / 100.0)
+            impact_point = hit.get_editor_property("impact_point")
+            row.append(float(impact_point.z) / 100.0)
         raw_heights_m.append(tuple(row))
 
     if misses:
