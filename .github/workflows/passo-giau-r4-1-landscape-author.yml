@@ -31,6 +31,10 @@ jobs:
     env:
       GIT_LFS_SKIP_SMUDGE: '1'
 
+    defaults:
+      run:
+        working-directory: _passo-giau-worktree
+
     steps:
       - name: Isolate self-hosted Git configuration
         shell: pwsh
@@ -44,10 +48,11 @@ jobs:
       - name: Checkout exact trusted revision without LFS payloads
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          path: _passo-giau-worktree
           ref: ${{ github.sha }}
           fetch-depth: 1
           lfs: false
-          clean: false
+          clean: true
           persist-credentials: true
 
       - name: Verify exact SHA and clean checkout
@@ -111,9 +116,9 @@ jobs:
         with:
           name: passo-giau-r4-1b-landscape-author-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            Saved/RuntimeProof/CI/Stage3GR4_1/PassoGiauLandscape/**
-            ExternalAssets/Terrain/PassoGiau/Prepared/terrain-report.json
-            ExternalAssets/Terrain/PassoGiau/Prepared/passo_giau_hillshade.png
+            _passo-giau-worktree/Saved/RuntimeProof/CI/Stage3GR4_1/PassoGiauLandscape/**
+            _passo-giau-worktree/ExternalAssets/Terrain/PassoGiau/Prepared/terrain-report.json
+            _passo-giau-worktree/ExternalAssets/Terrain/PassoGiau/Prepared/passo_giau_hillshade.png
           if-no-files-found: warn
           retention-days: 14
 
