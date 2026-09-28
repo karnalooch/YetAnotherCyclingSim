@@ -98,9 +98,10 @@ evidence while fast-failing a disabled endpoint.
 The source contract proves:
 
 - the official Olympic portfolio describes the 2021 DTM/DSM/CHM as
-  **resampled to 2 m** and links **WebGIS 86**;
-- the viewer's initial anonymous HTML is only a client shell and is therefore
-  not used as the source-of-truth test for the dynamic layer list;
+  **resampled to 2 m**;
+- the official Olympic viewer is tracked separately as **WebGIS 86**; its
+  initial anonymous HTML is only a client shell, so neither the dynamic layer
+  list nor the portfolio-to-viewer navigation is inferred from that raw HTML;
 - the WMS source identity and Passo Giau geographic coverage;
 - the derivative family `DTM_2m_clip_hillshade`,
   `DTM_2m_slope_recl_clip` and `DTM_2m_aspect_recl_clip` exists over the
