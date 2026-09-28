@@ -46,6 +46,17 @@ WCS_CAPS_XML = b"""<?xml version="1.0" encoding="UTF-8"?>
 </wcs:Capabilities>
 """
 
+WCS10_CAPS_XML = b"""<?xml version="1.0" encoding="UTF-8"?>
+<WCS_Capabilities xmlns="http://www.opengis.net/wcs" version="1.0.0">
+  <ContentMetadata>
+    <CoverageOfferingBrief>
+      <name>rv:DTM_2m_clip</name>
+      <label>DTM_2m_clip</label>
+    </CoverageOfferingBrief>
+  </ContentMetadata>
+</WCS_Capabilities>
+"""
+
 DESCRIBE_XML = b"""<?xml version="1.0" encoding="UTF-8"?>
 <wcs:CoverageDescriptions xmlns:wcs="http://www.opengis.net/wcs/2.0"
  xmlns:gml="http://www.opengis.net/gml/3.2">
@@ -90,6 +101,17 @@ class Cortina2mProbeTests(unittest.TestCase):
         )
         self.assertEqual(
             [{"identifier": "rv__dtm_2m_cortina", "title": "DTM_2m_Cortina"}],
+            matches,
+        )
+
+    def test_wcs10_coverage_parser_supports_legacy_shape(self) -> None:
+        root = probe.parse_xml(WCS10_CAPS_XML, "test WCS 1.0")
+        matches = probe.wcs_coverage_candidates(
+            root,
+            wms_name="rv:DTM_2m_clip",
+        )
+        self.assertEqual(
+            [{"identifier": "rv:DTM_2m_clip", "title": "DTM_2m_clip"}],
             matches,
         )
 
@@ -162,6 +184,15 @@ class Cortina2mProbeTests(unittest.TestCase):
         self.assertIn(
             "https://idt2-geoserver.regione.veneto.it/geoserver/rv/wcs",
             candidates,
+        )
+
+    def test_legacy_describe_layer_endpoint_is_normalized_to_https(self) -> None:
+        endpoint = probe.normalize_service_endpoint(
+            "http://idt2-geoserver.regione.veneto.it:80/geoserver/wcs?"
+        )
+        self.assertEqual(
+            "https://idt2-geoserver.regione.veneto.it/geoserver/wcs",
+            endpoint,
         )
 
     def test_ambiguous_wms_matches_remain_visible_to_fail_closed_caller(self) -> None:
