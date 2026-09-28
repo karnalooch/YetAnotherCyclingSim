@@ -117,13 +117,27 @@ Write-Host '[4/7] Importing 1009x1009 Landscape with C++ commandlet...' -Foregro
 $ImportArgs = @($ProjectPath,'-run=CyclingPassoGiauLandscapeSpike',('-Heightmap="' + $HeightmapR16 + '"'),('-Proof="' + $ImportProof + '"'),'-Unattended','-NoPause','-NullRHI','-NoSplash','-NoP4','-log',('-AbsLog=' + $ImportLog))
 $Proc = Start-Process -FilePath $Context.UnrealEditorCmdPath -ArgumentList $ImportArgs -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $ImportLog -RedirectStandardError $ImportErr
 if (-not $Proc.WaitForExit($TimeoutSec * 1000)) { try { $Proc | Stop-Process -Force } catch { }; throw 'Passo Giau Landscape import commandlet timed out.' }
-if ($Proc.ExitCode -ne 0) { throw "Passo Giau Landscape import failed with exit code $($Proc.ExitCode)." }
-if (-not (Test-Path -LiteralPath $ImportProof -PathType Leaf)) { throw 'Passo Giau Landscape import proof is missing.' }
+$ImportExitCode = $Proc.ExitCode
+if (-not (Test-Path -LiteralPath $ImportProof -PathType Leaf)) { throw "Passo Giau Landscape import proof is missing (exit=$ImportExitCode)." }
 $Import = Get-Content -LiteralPath $ImportProof -Raw | ConvertFrom-Json
-if ($Import.passo_giau_landscape_import -ne 'PASS') { throw 'Passo Giau Landscape import proof did not report PASS.' }
+if ($Import.passo_giau_landscape_import -ne 'PASS') { throw "Passo Giau Landscape import proof did not report PASS (exit=$ImportExitCode)." }
 if ([int]$Import.component_count -ne 64 -or [int]$Import.num_subsections -ne 2 -or [int]$Import.subsection_size_quads -ne 63) { throw 'Passo Giau Landscape topology proof is invalid.' }
 if ([int]$Import.encoded_min -gt 512 -or [int]$Import.encoded_max -lt 65023) { throw 'Passo Giau encoded height-domain proof is invalid.' }
 if ([math]::Abs([double]$Import.sampled_elevation_min_m - 1171.353) -gt 10.0 -or [math]::Abs([double]$Import.sampled_elevation_max_m - 2713.832) -gt 10.0) { throw 'Passo Giau sampled elevation range drifted too far from the source DEM.' }
+
+$ImportLogText = Get-Content -LiteralPath $ImportLog -Raw -ErrorAction Stop
+if ($ImportExitCode -notin @(0, 1)) {
+    throw "Passo Giau Landscape import returned unexpected exit code $ImportExitCode."
+}
+if ($ImportLogText -match '(?i)Fatal error|Unhandled Exception|Critical error') {
+    throw 'Passo Giau Landscape import log contains a crash/fatal marker.'
+}
+if ($ImportLogText -notmatch 'CyclingPassoGiauLandscapeSpikeCommandlet: done\.') {
+    throw 'Passo Giau Landscape import log is missing the commandlet completion marker.'
+}
+if ($ImportExitCode -eq 1) {
+    Write-Warning 'UE returned exit 1 after a proven-successful Passo Giau commandlet because code-only LFS pointer assets generated unrelated Asset Registry errors.'
+}
 
 Write-Host '[5/7] Rendering deterministic visual proof...' -ForegroundColor Cyan
 $UEditor = $Context.UnrealEditorPath
@@ -134,17 +148,31 @@ try {
     $CaptureArgs = @($ProjectPath,('-ExecutePythonScript="' + $CaptureScript + '"'),'-Unattended','-NoPause','-NoSplash','-NoP4','-windowed','-ResX=1920','-ResY=1080','-NoVSync','-FixedSeed','-ScriptErrorsAreFatal','-log','-stdout',('-AbsLog=' + $CaptureLog))
     $Proc = Start-Process -FilePath $UEditor -ArgumentList $CaptureArgs -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $CaptureLog -RedirectStandardError $CaptureErr
     if (-not $Proc.WaitForExit(180000)) { try { $Proc | Stop-Process -Force } catch { }; throw 'Passo Giau visual capture timed out.' }
-    if ($Proc.ExitCode -ne 0) { throw "Passo Giau visual capture failed with exit code $($Proc.ExitCode)." }
+    $CaptureExitCode = $Proc.ExitCode
 }
 finally {
     Remove-Item Env:YACS_PASSO_GIAU_CAPTURE_PNG -ErrorAction SilentlyContinue
     Remove-Item Env:YACS_PASSO_GIAU_CAPTURE_PROOF -ErrorAction SilentlyContinue
 }
-if (-not (Test-Path -LiteralPath $CapturePng -PathType Leaf)) { throw 'Passo Giau rendered PNG is missing.' }
+if (-not (Test-Path -LiteralPath $CapturePng -PathType Leaf)) { throw "Passo Giau rendered PNG is missing (exit=$CaptureExitCode)." }
 if ((Get-Item -LiteralPath $CapturePng).Length -lt 100000) { throw 'Passo Giau rendered PNG is unexpectedly small.' }
-if (-not (Test-Path -LiteralPath $CaptureProof -PathType Leaf)) { throw 'Passo Giau capture proof is missing.' }
+if (-not (Test-Path -LiteralPath $CaptureProof -PathType Leaf)) { throw "Passo Giau capture proof is missing (exit=$CaptureExitCode)." }
 $Capture = Get-Content -LiteralPath $CaptureProof -Raw | ConvertFrom-Json
-if ($Capture.passo_giau_landscape_capture -ne 'PASS') { throw 'Passo Giau visual capture proof did not report PASS.' }
+if ($Capture.passo_giau_landscape_capture -ne 'PASS') { throw "Passo Giau visual capture proof did not report PASS (exit=$CaptureExitCode)." }
+
+$CaptureLogText = Get-Content -LiteralPath $CaptureLog -Raw -ErrorAction Stop
+if ($CaptureExitCode -notin @(0, 1)) {
+    throw "Passo Giau visual capture returned unexpected exit code $CaptureExitCode."
+}
+if ($CaptureLogText -match '(?i)Fatal error|Unhandled Exception|Critical error') {
+    throw 'Passo Giau visual capture log contains a crash/fatal marker.'
+}
+if ($CaptureLogText -notmatch '\[PassoGiauCapture\] PASS:') {
+    throw 'Passo Giau visual capture log is missing the explicit PASS marker.'
+}
+if ($CaptureExitCode -eq 1) {
+    Write-Warning 'UE returned exit 1 after a proven-successful Passo Giau capture because code-only LFS pointer assets generated unrelated Asset Registry errors.'
+}
 
 Write-Host '[6/7] Enforcing canonical-map and mutation guards...' -ForegroundColor Cyan
 $CanonicalHashAfter = (git -C $RepoRoot hash-object -- $CanonicalMapRelative).Trim()
@@ -182,7 +210,10 @@ $Final = [ordered]@{
     canonical_map_hash_before = $CanonicalHashBefore
     canonical_map_hash_after = $CanonicalHashAfter
     import = $Import
+    import_process_exit_code = [int]$ImportExitCode
     capture = $Capture
+    capture_process_exit_code = [int]$CaptureExitCode
+    code_only_lfs_asset_registry_exit_tolerance_used = ([int]$ImportExitCode -eq 1 -or [int]$CaptureExitCode -eq 1)
     tracked_mutations = @($TrackedChanges)
     visual_acceptance = 'PENDING_HUMAN_REVIEW'
     presentation_only = $true

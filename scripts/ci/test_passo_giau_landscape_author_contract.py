@@ -74,6 +74,12 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("authoritative_physics = $false", wrapper)
         self.assertNotIn("git lfs fsck", wrapper)
         self.assertNotIn("git lfs checkout", wrapper)
+        self.assertIn("$ImportExitCode -notin @(0, 1)", wrapper)
+        self.assertIn("CyclingPassoGiauLandscapeSpikeCommandlet: done", wrapper)
+        self.assertIn("$CaptureExitCode -notin @(0, 1)", wrapper)
+        self.assertIn(r"\\[PassoGiauCapture\\] PASS:", wrapper)
+        self.assertIn("Fatal error|Unhandled Exception|Critical error", wrapper)
+        self.assertIn("code_only_lfs_asset_registry_exit_tolerance_used", wrapper)
 
     def test_capture_requires_real_png_and_human_review(self) -> None:
         capture = read("scripts/ue/stage3g_capture_passo_giau_landscape.py")
