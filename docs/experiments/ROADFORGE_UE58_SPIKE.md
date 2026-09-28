@@ -1,7 +1,7 @@
 # RoadForge -> UE 5.8 compile spike
 
 **Issue:** #218  
-**Status:** ACCEPTED as a compile donor; minimal donor extraction is under proof  
+**Status:** ACCEPTED — minimal RoadForge mesh donor proven on UE 5.8; SP638 visual adapter remains a separate gate  
 **Branch:** `spike/r4-1f-roadforge-ue58`  
 **Upstream:** `YuuhenR/roadforge-osm-ue5-procedural-city@781cb046483cc1887e80085aacf0fb2951f4746d`  
 **License:** MIT
@@ -93,16 +93,34 @@ The Automation log also reported SDK validation warnings for platforms not used 
 
 ### Attempt 3 — minimize the retained donor surface
 
-**State:** PENDING
+**State:** PASSED / FINAL DONOR ACCEPTED
+
+**Exact code SHA:** `4033b1d3b03341ee4c7261b587dd215d5adce01d`  
+**CI:** CyclingSim CI #659 / run `36419651952` — **SUCCESS**
 
 **Change:** remove OSM ingestion/generator and PCG source from the vendored module; remove HTTP/Json/XmlParser/DesktopPlatform/PCG dependencies; retain only module bootstrap + `RoadForgeMeshUtils` + `ProceduralMeshComponent`.
 
-**Reason:** YACS already owns route truth and only needs road presentation geometry. The spike should prove the smallest useful legal donor, not carry a procedural-city subsystem into the simulator.
+**Reason:** YACS already owns route truth and only needs road presentation geometry. The spike proves the smallest useful legal donor instead of carrying a procedural-city subsystem into the simulator.
 
-**Expected:** the minimized donor compiles on the same UE 5.8 lane and preserves all existing YACS Automation behavior.
+**Final proof:**
+
+- trusted UE 5.8 editor build: **PASS**;
+- build log: `Result: Succeeded`;
+- build execution: **136.01 s**;
+- scoped Automation: **26 discovered / 26 passed / 0 failed / 0 errors**;
+- editor/test exit code: **0**;
+- Aggregate CI: **PASS**;
+- Governance: **PASS**;
+- Dependency Review: **PASS**;
+- Trivy filesystem: **PASS**;
+- CodeQL C++: **PASS**.
+
+**Final retained donor:** module bootstrap, MIT license/provenance and `RoadForgeMeshUtils` primitives only. The OSM/city/PCG layer is intentionally not retained.
+
+**Decision:** RoadForge is **ACCEPTED as a geometry donor**, not as a complete procedural-city plugin. The next implementation must adapt YACS's authoritative SP638 spline/route presentation into these mesh primitives without moving route truth or physics into RoadForge.
 
 ### Exit
 
-- **ACCEPTED**: minimized donor passes real UE 5.8 build + Automation + Aggregate CI. Next task is a bounded SP638 spline-to-RoadForge adapter / visual proof.
+- **ACCEPTED — MET**: minimized donor passed real UE 5.8 build + Automation + Aggregate CI at `4033b1d3b03341ee4c7261b587dd215d5adce01d`. Next task is a bounded SP638 spline-to-RoadForge adapter / visual proof.
 - **REJECTED**: the useful geometry donor requires broad rewrites or unsafe coupling disproportionate to its value.
 - **BLOCKED**: infrastructure prevents a trustworthy result; keep the evidence and do not claim compatibility.
