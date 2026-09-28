@@ -51,11 +51,18 @@ def _validate_grid(heights: Sequence[Sequence[float]]) -> tuple[int, int]:
     return len(heights), columns
 
 
-def _max_abs_laplacian(heights: Sequence[Sequence[float]]) -> float:
+def _max_abs_laplacian(
+    heights: Sequence[Sequence[float]],
+    *,
+    excluded_border_cells: int = 1,
+) -> float:
     rows, columns = _validate_grid(heights)
+    border = max(1, excluded_border_cells)
+    if rows <= 2 * border or columns <= 2 * border:
+        raise ValueError("terrain skin grid is too small for curvature metrics")
     maximum = 0.0
-    for row in range(1, rows - 1):
-        for column in range(1, columns - 1):
+    for row in range(border, rows - border):
+        for column in range(border, columns - border):
             center = heights[row][column]
             average = (
                 heights[row - 1][column]
@@ -101,7 +108,10 @@ def smooth_height_grid(
 
     original = tuple(tuple(float(value) for value in row) for row in heights)
     current = [list(row) for row in original]
-    before = _max_abs_laplacian(original)
+    before = _max_abs_laplacian(
+        original,
+        excluded_border_cells=pinned_border_cells,
+    )
 
     for _ in range(iterations):
         previous = [row[:] for row in current]
@@ -140,7 +150,10 @@ def smooth_height_grid(
     rms = math.sqrt(
         sum(value * value for value in adjustments) / len(adjustments)
     )
-    after = _max_abs_laplacian(result)
+    after = _max_abs_laplacian(
+        result,
+        excluded_border_cells=pinned_border_cells,
+    )
     return result, TerrainSkinSmoothingMetrics(
         max_abs_adjustment_m=max_abs,
         rms_adjustment_m=rms,
