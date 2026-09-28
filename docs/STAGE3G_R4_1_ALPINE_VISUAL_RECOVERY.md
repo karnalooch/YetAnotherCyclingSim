@@ -825,6 +825,24 @@ The implementation must preserve per-sample elevation and allow one side to be a
 cut while the other side is a fill. Dense sampling is required at the
 maximum-curvature hairpin.
 
+### Hairpin adaptive-offset rule
+
+For the bounded maximum-curvature hairpin, **road-edge and shoulder offsets are
+protected**. Only earthwork points outside the shoulder may contract on the
+inside of a bend.
+
+The deterministic spike uses signed sampled XY curvature to derive the local
+radius and caps the inside earthwork extent to **0.86 x local radius**. The
+contraction is tapered across neighboring stations to avoid an abrupt width
+step. If a bend would leave less than **0.25 m** of earthwork outside the
+protected shoulder, the proof fails closed rather than shrinking or pinching the
+road/shoulder presentation.
+
+These values are bounded R4.1B.3 geometry defaults, not route/physics truth.
+Cross-section role order remains stable while outer earthwork lateral offsets
+may vary per station. The deterministic mesh hash covers the resulting actual
+vertices and triangle ordering.
+
 ### Geometry reject conditions
 
 Reject or rework the local-mesh candidate if the neutral proof shows:

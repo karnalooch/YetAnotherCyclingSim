@@ -11,6 +11,7 @@ from scripts.geometry.sp638_local_corridor import (
     build_corridor_mesh,
     corridor_mesh_hash,
     make_constant_profiles,
+    make_curvature_adaptive_profiles,
     triangle_normal,
 )
 
@@ -125,18 +126,25 @@ class LocalGroundCorridorTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "strictly ordered"):
             build_corridor_mesh(centerline, (self.profile, tuple(bad)))
 
-    def test_rejects_lateral_offsets_that_change_between_stations(self) -> None:
+    def test_allows_lateral_earthwork_offsets_to_change_between_stations(self) -> None:
         centerline = (Vec3(0.0, 0.0, 0.0), Vec3(10.0, 0.0, 0.0))
         shifted = tuple(
             CrossSectionPoint(
-                point.lateral_m + (0.1 if index == 1 else 0.0),
+                point.lateral_m - (0.5 if point.role == "uphill_tie" else 0.0),
                 point.vertical_m,
                 point.role,
             )
-            for index, point in enumerate(self.profile)
+            for point in self.profile
         )
-        with self.assertRaisesRegex(ValueError, "lateral offsets must stay stable"):
-            build_corridor_mesh(centerline, (self.profile, shifted))
+        mesh = build_corridor_mesh(centerline, (self.profile, shifted))
+        self.assertEqual(mesh.station_count, 2)
+
+    def test_rejects_role_order_that_changes_between_stations(self) -> None:
+        centerline = (Vec3(0.0, 0.0, 0.0), Vec3(10.0, 0.0, 0.0))
+        changed = list(self.profile)
+        changed[0] = CrossSectionPoint(-8.0, 3.0, "different_role")
+        with self.assertRaisesRegex(ValueError, "roles/order must stay stable"):
+            build_corridor_mesh(centerline, (self.profile, tuple(changed)))
 
     def test_rejects_centerline_with_no_horizontal_tangent(self) -> None:
         centerline = (Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 1.0))
@@ -145,6 +153,75 @@ class LocalGroundCorridorTests(unittest.TestCase):
                 centerline,
                 make_constant_profiles(len(centerline), self.profile),
             )
+
+    def test_adaptive_inside_offset_preserves_road_and_prevents_hairpin_fold(self) -> None:
+        radius = 7.0
+        angles = tuple(index * math.radians(8.0) for index in range(24))
+        centerline = tuple(
+            Vec3(
+                radius * math.sin(angle),
+                radius * (1.0 - math.cos(angle)),
+                index * 0.03,
+            )
+            for index, angle in enumerate(angles)
+        )
+
+        with self.assertRaisesRegex(ValueError, "inverted or folded"):
+            build_corridor_mesh(
+                centerline,
+                make_constant_profiles(len(centerline), self.profile),
+            )
+
+        adaptive = make_curvature_adaptive_profiles(centerline, self.profile)
+        mesh = build_corridor_mesh(centerline, adaptive)
+        self.assertEqual(mesh.station_count, len(centerline))
+
+        original_by_role = {point.role: point.lateral_m for point in self.profile}
+        for station_profile in adaptive:
+            current_by_role = {
+                point.role: point.lateral_m for point in station_profile
+            }
+            for role in (
+                "left_shoulder",
+                "left_road_edge",
+                "right_road_edge",
+                "right_shoulder",
+            ):
+                self.assertAlmostEqual(
+                    current_by_role[role],
+                    original_by_role[role],
+                )
+
+        self.assertLess(
+            min(profile[-1].lateral_m for profile in adaptive),
+            self.profile[-1].lateral_m,
+        )
+        self.assertTrue(
+            all(
+                math.isclose(profile[0].lateral_m, self.profile[0].lateral_m)
+                for profile in adaptive
+            )
+        )
+        for triangle in mesh.triangles:
+            self.assertGreater(triangle_normal(mesh, triangle).z, 0.0)
+
+    def test_adaptive_profiles_and_mesh_hash_are_deterministic(self) -> None:
+        radius = 8.0
+        centerline = tuple(
+            Vec3(
+                radius * math.sin(index * 0.1),
+                radius * (1.0 - math.cos(index * 0.1)),
+                index * 0.02,
+            )
+            for index in range(18)
+        )
+        first_profiles = make_curvature_adaptive_profiles(centerline, self.profile)
+        second_profiles = make_curvature_adaptive_profiles(centerline, self.profile)
+        self.assertEqual(first_profiles, second_profiles)
+        self.assertEqual(
+            corridor_mesh_hash(build_corridor_mesh(centerline, first_profiles)),
+            corridor_mesh_hash(build_corridor_mesh(centerline, second_profiles)),
+        )
 
 
 if __name__ == "__main__":

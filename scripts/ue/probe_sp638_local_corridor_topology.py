@@ -1,8 +1,9 @@
 """Read-only topology proof for the R4.1B.3 local SP638 earthwork corridor.
 
 Loads the persisted Passo Giau spike map, selects the exact maximum-curvature
-hairpin used by R4.1B.2, samples it densely, and runs the pure-Python corridor
-kernel against that real presentation spline. Nothing is saved or mutated.
+hairpin used by R4.1B.2, samples it densely, contracts only inside-bend
+earthwork when required, and copies the resulting pure-Python corridor into a
+transient UE Dynamic Mesh. Nothing is saved or mutated.
 
 Units in the Unreal-facing portion are centimetres; the kernel uses metres.
 """
@@ -28,7 +29,7 @@ from scripts.geometry.sp638_local_corridor import (  # noqa: E402
     Vec3,
     build_corridor_mesh,
     corridor_mesh_hash,
-    make_constant_profiles,
+    make_curvature_adaptive_profiles,
 )
 
 
@@ -39,9 +40,18 @@ CURVATURE_SAMPLE_STEP_CM = 2500.0
 CURVATURE_HALF_WINDOW_CM = 2500.0
 END_MARGIN_CM = 10000.0
 
-# Topology-only section. The final per-station Z values will be derived from
-# Landscape tie-in samples; these fixed values exist only to prove that the
-# planned lateral corridor width survives the real hairpin without folding.
+CURVATURE_SAFETY_FRACTION = 0.86
+MINIMUM_EARTHWORK_SPAN_M = 0.25
+TAPER_PER_STATION = 0.12
+PROTECTED_ROLES = frozenset(
+    {
+        "left_shoulder",
+        "left_road_edge",
+        "right_road_edge",
+        "right_shoulder",
+    }
+)
+
 TOPOLOGY_PROFILE = (
     CrossSectionPoint(-10.0, 2.5, "left_tie"),
     CrossSectionPoint(-7.0, 1.2, "left_earthwork"),
@@ -148,7 +158,6 @@ def _circumradius_xy(a: Vec3, b: Vec3, c: Vec3) -> float | None:
     )
     if min(ab, bc, ca) <= 1e-9 or cross2 <= 1e-9:
         return None
-    # triangle area = cross2 / 2; R = abc / (4A)
     return (ab * bc * ca) / (2.0 * cross2)
 
 
@@ -166,6 +175,43 @@ def _minimum_sampled_radius_m(centerline: tuple[Vec3, ...]) -> float | None:
         is not None
     ]
     return min(radii) if radii else None
+
+
+def _profile_diagnostics(
+    profiles: tuple[tuple[CrossSectionPoint, ...], ...],
+) -> dict[str, object]:
+    authored_by_role = {point.role: point.lateral_m for point in TOPOLOGY_PROFILE}
+    clipped_station_count = 0
+    for profile in profiles:
+        if any(
+            abs(point.lateral_m - authored_by_role[point.role]) > 1e-9
+            for point in profile
+        ):
+            clipped_station_count += 1
+        for point in profile:
+            if point.role in PROTECTED_ROLES:
+                authored = authored_by_role[point.role]
+                if abs(point.lateral_m - authored) > 1e-9:
+                    raise RuntimeError(
+                        f"adaptive profile moved protected role {point.role}: "
+                        f"{authored} -> {point.lateral_m}"
+                    )
+
+    return {
+        "safety_fraction": CURVATURE_SAFETY_FRACTION,
+        "minimum_earthwork_span_m": MINIMUM_EARTHWORK_SPAN_M,
+        "taper_per_station": TAPER_PER_STATION,
+        "clipped_station_count": clipped_station_count,
+        "authored_lateral_extent_m": [
+            TOPOLOGY_PROFILE[0].lateral_m,
+            TOPOLOGY_PROFILE[-1].lateral_m,
+        ],
+        "minimum_actual_outer_extent_m": [
+            min(abs(profile[0].lateral_m) for profile in profiles),
+            min(profile[-1].lateral_m for profile in profiles),
+        ],
+        "protected_roles": sorted(PROTECTED_ROLES),
+    }
 
 
 def main() -> None:
@@ -188,11 +234,25 @@ def main() -> None:
     end_cm = min(full_length_cm, focus_cm + SLICE_HALF_LENGTH_CM)
 
     centerline = _sample_centerline_m(spline, start_cm, end_cm)
-    mesh = build_corridor_mesh(
-        centerline,
-        make_constant_profiles(len(centerline), TOPOLOGY_PROFILE),
-    )
     minimum_radius_m = _minimum_sampled_radius_m(centerline)
+    profiles = make_curvature_adaptive_profiles(
+        centerline,
+        TOPOLOGY_PROFILE,
+        protected_roles=PROTECTED_ROLES,
+        safety_fraction=CURVATURE_SAFETY_FRACTION,
+        minimum_earthwork_span_m=MINIMUM_EARTHWORK_SPAN_M,
+        taper_per_station=TAPER_PER_STATION,
+    )
+    profile_diagnostics = _profile_diagnostics(profiles)
+    mesh = build_corridor_mesh(centerline, profiles)
+
+    unreal.log(
+        "[YacsSp638CorridorTopology] adaptive profile: "
+        f"min_radius_m={minimum_radius_m} "
+        f"clipped_stations={profile_diagnostics['clipped_station_count']} "
+        f"minimum_actual_outer_extent_m="
+        f"{profile_diagnostics['minimum_actual_outer_extent_m']}"
+    )
 
     actor_subsystem = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
     mesh_actor = actor_subsystem.spawn_actor_from_class(
@@ -249,7 +309,7 @@ def main() -> None:
         )
 
     payload = {
-        "schema_version": 1,
+        "schema_version": 2,
         "sp638_local_corridor_topology": "PASS",
         "map": SPIKE_MAP,
         "presentation_only": True,
@@ -267,13 +327,10 @@ def main() -> None:
         "cross_section_point_count": mesh.cross_section_point_count,
         "vertex_count": len(mesh.vertices),
         "triangle_count": len(mesh.triangles),
-        "lateral_extent_m": [
-            TOPOLOGY_PROFILE[0].lateral_m,
-            TOPOLOGY_PROFILE[-1].lateral_m,
-        ],
         "minimum_sampled_centerline_radius_m": (
             round(minimum_radius_m, 3) if minimum_radius_m is not None else None
         ),
+        "adaptive_inside_offset": profile_diagnostics,
         "corridor_mesh_sha256": corridor_mesh_hash(mesh),
         "unreal_dynamic_mesh": {
             "actor_class": "DynamicMeshActor",
@@ -286,7 +343,9 @@ def main() -> None:
         "validation": {
             "positive_winding": True,
             "no_degenerate_triangles": True,
-            "stable_lateral_topology": True,
+            "stable_role_topology": True,
+            "adaptive_inside_earthwork": True,
+            "protected_road_shoulder_offsets_preserved": True,
             "real_sp638_hairpin": True,
             "dynamic_mesh_counts_match_kernel": True,
         },

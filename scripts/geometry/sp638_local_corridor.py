@@ -18,6 +18,14 @@ from typing import Sequence
 
 
 _EPSILON = 1e-9
+_DEFAULT_PROTECTED_ROLES = frozenset(
+    {
+        "left_shoulder",
+        "left_road_edge",
+        "right_road_edge",
+        "right_shoulder",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -78,6 +86,37 @@ def _horizontal_tangent(centerline: Sequence[Vec3], index: int) -> Vec3:
     return Vec3(delta.x / length, delta.y / length, 0.0)
 
 
+def _signed_curvature_xy(centerline: Sequence[Vec3], index: int) -> float:
+    """Return discrete signed horizontal curvature in 1/metre.
+
+    Positive curvature means the positive-lateral side of the existing corridor
+    frame is the inside of the bend; negative curvature means the negative side.
+    End stations are treated as straight because no three-point estimate exists.
+    """
+
+    if index <= 0 or index >= len(centerline) - 1:
+        return 0.0
+
+    a = centerline[index - 1]
+    b = centerline[index]
+    c = centerline[index + 1]
+    ab_x = b.x - a.x
+    ab_y = b.y - a.y
+    bc_x = c.x - b.x
+    bc_y = c.y - b.y
+    ca_x = a.x - c.x
+    ca_y = a.y - c.y
+
+    ab = math.hypot(ab_x, ab_y)
+    bc = math.hypot(bc_x, bc_y)
+    ca = math.hypot(ca_x, ca_y)
+    if min(ab, bc, ca) <= _EPSILON:
+        return 0.0
+
+    cross2 = ab_x * bc_y - ab_y * bc_x
+    return 2.0 * cross2 / (ab * bc * ca)
+
+
 def _validate_profile(profile: Sequence[CrossSectionPoint], station_index: int) -> None:
     if len(profile) < 2:
         raise ValueError(
@@ -90,6 +129,11 @@ def _validate_profile(profile: Sequence[CrossSectionPoint], station_index: int) 
             raise ValueError(
                 f"cross-section station {station_index} point {point_index} "
                 "contains a non-finite coordinate"
+            )
+        if not point.role:
+            raise ValueError(
+                f"cross-section station {station_index} point {point_index} "
+                "has an empty role"
             )
         if point_index > 0 and point.lateral_m <= previous:
             raise ValueError(
@@ -118,14 +162,193 @@ def _validate_inputs(
         if len(profiles[index]) != point_count:
             raise ValueError("all cross-sections must have the same point count")
 
-    reference_offsets = tuple(point.lateral_m for point in profiles[0])
+    reference_roles = tuple(point.role for point in profiles[0])
     for index, profile in enumerate(profiles[1:], start=1):
-        offsets = tuple(point.lateral_m for point in profile)
-        if offsets != reference_offsets:
+        roles = tuple(point.role for point in profile)
+        if roles != reference_roles:
             raise ValueError(
-                "cross-section lateral offsets must stay stable across stations; "
+                "cross-section roles/order must stay stable across stations; "
                 f"station {index} differs"
             )
+
+
+def _side_extents(
+    profile: Sequence[CrossSectionPoint],
+    protected_roles: frozenset[str],
+    *,
+    positive_side: bool,
+) -> tuple[float, float]:
+    if positive_side:
+        signed = [point for point in profile if point.lateral_m > 0.0]
+    else:
+        signed = [point for point in profile if point.lateral_m < 0.0]
+    if not signed:
+        return 0.0, 0.0
+
+    outer_extent = max(abs(point.lateral_m) for point in signed)
+    protected = [
+        abs(point.lateral_m)
+        for point in signed
+        if point.role in protected_roles
+    ]
+    core_extent = max(protected) if protected else 0.0
+    return core_extent, outer_extent
+
+
+def _taper_scales(raw_scales: Sequence[float], max_delta_per_station: float) -> tuple[float, ...]:
+    """Conservatively spread contractions so neighboring rows change gradually."""
+
+    if max_delta_per_station <= 0.0:
+        raise ValueError("max_delta_per_station must be positive")
+
+    result: list[float] = []
+    for index in range(len(raw_scales)):
+        envelope = min(
+            raw_scales[source]
+            + max_delta_per_station * abs(index - source)
+            for source in range(len(raw_scales))
+        )
+        result.append(min(1.0, max(0.0, envelope)))
+    return tuple(result)
+
+
+def _contract_profile_side(
+    profile: Sequence[CrossSectionPoint],
+    *,
+    positive_side: bool,
+    scale: float,
+    protected_roles: frozenset[str],
+) -> tuple[CrossSectionPoint, ...]:
+    core_extent, outer_extent = _side_extents(
+        profile,
+        protected_roles,
+        positive_side=positive_side,
+    )
+    if outer_extent <= core_extent + _EPSILON or scale >= 1.0 - _EPSILON:
+        return tuple(profile)
+
+    contracted_outer_extent = core_extent + (outer_extent - core_extent) * scale
+    span = outer_extent - core_extent
+    result: list[CrossSectionPoint] = []
+    for point in profile:
+        on_side = point.lateral_m > 0.0 if positive_side else point.lateral_m < 0.0
+        extent = abs(point.lateral_m)
+        if (
+            not on_side
+            or point.role in protected_roles
+            or extent <= core_extent + _EPSILON
+        ):
+            result.append(point)
+            continue
+
+        normalized = (extent - core_extent) / span
+        new_extent = core_extent + normalized * (
+            contracted_outer_extent - core_extent
+        )
+        new_lateral = new_extent if positive_side else -new_extent
+        result.append(
+            CrossSectionPoint(new_lateral, point.vertical_m, point.role)
+        )
+    return tuple(result)
+
+
+def make_curvature_adaptive_profiles(
+    centerline: Sequence[Vec3],
+    profile: Sequence[CrossSectionPoint],
+    *,
+    protected_roles: frozenset[str] = _DEFAULT_PROTECTED_ROLES,
+    safety_fraction: float = 0.86,
+    minimum_earthwork_span_m: float = 0.25,
+    taper_per_station: float = 0.12,
+) -> tuple[tuple[CrossSectionPoint, ...], ...]:
+    """Contract only inside-bend earthwork before a swept offset can fold.
+
+    Road edges and shoulder points are protected. Points farther from the
+    centerline may move toward the protected shoulder on the inside of a tight
+    bend. The target outer extent is bounded by safety_fraction * radius and
+    the contraction is tapered across neighboring samples for a deterministic,
+    visually smooth transition.
+
+    If the bend is too tight to preserve the protected road/shoulder plus
+    minimum_earthwork_span_m, this function fails closed rather than shrinking
+    the rideable road presentation.
+    """
+
+    if len(centerline) < 2:
+        raise ValueError("centerline needs at least 2 stations")
+    _validate_profile(profile, 0)
+    if not 0.0 < safety_fraction < 1.0:
+        raise ValueError("safety_fraction must be between 0 and 1")
+    if minimum_earthwork_span_m <= 0.0:
+        raise ValueError("minimum_earthwork_span_m must be positive")
+    if taper_per_station <= 0.0 or taper_per_station > 1.0:
+        raise ValueError("taper_per_station must be in (0, 1]")
+
+    left_core, left_outer = _side_extents(
+        profile, protected_roles, positive_side=False
+    )
+    right_core, right_outer = _side_extents(
+        profile, protected_roles, positive_side=True
+    )
+
+    raw_left = [1.0] * len(centerline)
+    raw_right = [1.0] * len(centerline)
+
+    for index in range(1, len(centerline) - 1):
+        curvature = _signed_curvature_xy(centerline, index)
+        if abs(curvature) <= _EPSILON:
+            continue
+
+        positive_inside = curvature > 0.0
+        core_extent = right_core if positive_inside else left_core
+        outer_extent = right_outer if positive_inside else left_outer
+        if outer_extent <= core_extent + _EPSILON:
+            continue
+
+        safe_outer_extent = safety_fraction / abs(curvature)
+        minimum_outer_extent = core_extent + minimum_earthwork_span_m
+        if safe_outer_extent < minimum_outer_extent - _EPSILON:
+            side = "positive" if positive_inside else "negative"
+            raise ValueError(
+                f"centerline station {index} curvature leaves only "
+                f"{safe_outer_extent:.3f} m on the {side} inside side; "
+                f"protected corridor requires at least {minimum_outer_extent:.3f} m"
+            )
+
+        if safe_outer_extent >= outer_extent:
+            continue
+
+        scale = (safe_outer_extent - core_extent) / (
+            outer_extent - core_extent
+        )
+        if positive_inside:
+            raw_right[index] = scale
+        else:
+            raw_left[index] = scale
+
+    left_scales = _taper_scales(raw_left, taper_per_station)
+    right_scales = _taper_scales(raw_right, taper_per_station)
+
+    profiles: list[tuple[CrossSectionPoint, ...]] = []
+    for left_scale, right_scale in zip(left_scales, right_scales):
+        station_profile = tuple(profile)
+        if left_scale < 1.0 - _EPSILON:
+            station_profile = _contract_profile_side(
+                station_profile,
+                positive_side=False,
+                scale=left_scale,
+                protected_roles=protected_roles,
+            )
+        if right_scale < 1.0 - _EPSILON:
+            station_profile = _contract_profile_side(
+                station_profile,
+                positive_side=True,
+                scale=right_scale,
+                protected_roles=protected_roles,
+            )
+        profiles.append(station_profile)
+
+    return tuple(profiles)
 
 
 def build_corridor_mesh(
