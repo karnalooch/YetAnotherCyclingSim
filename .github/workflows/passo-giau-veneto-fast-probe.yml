@@ -107,3 +107,26 @@ jobs:
                   for hit in re.findall(r".{0,350}(?:url|controller|download|service|base|idt).{0,900}", body, flags=re.I | re.S)[:80]:
                       print("CONFIG_HIT", re.sub(r"\s+", " ", hit)[:1500])
           PY
+
+      - name: Inspect one official Giau LiDAR tile response
+        shell: bash
+        run: |
+          python - <<'PY'
+          import urllib.request
+          url = "https://idt2.regione.veneto.it/idt/download/layerDownload/downloadDtmLidar5?dataDtmLidarId=273"
+          req = urllib.request.Request(
+              url,
+              headers={
+                  "User-Agent": "YetAnotherCyclingSim-VenetoTileProbe/1.0 (+https://github.com/karnalooch/YetAnotherCyclingSim)",
+                  "Accept": "*/*",
+              },
+          )
+          with urllib.request.urlopen(req, timeout=30) as response:
+              print("STATUS", getattr(response, "status", 200))
+              print("FINAL_URL", response.url)
+              for key, value in response.headers.items():
+                  print("HEADER", key, value)
+              prefix = response.read(128)
+              print("PREFIX_HEX", prefix.hex())
+              print("PREFIX_ASCII", repr(prefix))
+          PY
