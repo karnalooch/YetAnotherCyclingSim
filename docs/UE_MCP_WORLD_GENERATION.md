@@ -229,3 +229,72 @@ For routine world generation, prefer named YACS flows over free-form chains of l
 ## 12. Non-goals
 
 This integration does not change physics ownership, Stage 3 route geometry ownership, begin Stage 4 mechanics, turn 3G into final Stage 7 art, authorize broad autonomous writes, authorize arbitrary Python/console execution, require a backend service, or monopolize world authoring by forcing all PCG creation through MCP.
+
+
+## 13. GitHub remote editor command bridge spike
+
+Issue #85 also owns a narrow remote-control transport for trusted editor work.
+
+The transport is deliberately separated from the agent-facing MCP surface:
+
+```text
+ChatGPT / repository owner
+        |
+        | exact allowlisted command
+        v
+GitHub Issue #85 comment
+        |
+        v
+GitHub Actions workflow from trusted repository revision
+        |
+        v
+[self-hosted, yacs-ue58]
+        |
+        v
+Invoke-YacsRemoteEditorCommand.ps1
+        |
+        v
+fixed repository-owned Unreal Python script
+        |
+        v
+UnrealEditor-Cmd.exe
+        |
+        v
+proof JSON + Unreal log artifact
+```
+
+The initial command is only:
+
+```text
+/yacs-editor smoke-cube
+```
+
+Its behavior is intentionally non-persistent:
+
+- only the repository owner may trigger it;
+- only Issue #85 is accepted;
+- the workflow compares the full comment body to the exact command;
+- comment text is never interpolated into PowerShell, Python or Unreal arguments;
+- the PowerShell wrapper exposes a fixed `ValidateSet` and no arbitrary shell escape;
+- the Unreal script spawns `YACS_REMOTE_SMOKE_CUBE` with `transient=true`;
+- the script destroys the actor before exit;
+- no level is saved and no persistent asset is created;
+- the worktree must be clean before and after execution;
+- proof is returned through short-lived GitHub Actions artifacts;
+- repository permissions remain read-only.
+
+The branch spike also contains a branch-only owner push canary so the bridge can be
+proven on the trusted home runner before the issue-comment entry point exists on
+`main`. That canary is not a general push trigger and must not be broadened to
+pull requests or forks.
+
+This transport does **not** enable persistent MCP world generation. After the
+smoke proof is green, new remote operations must be added as separately reviewed
+named commands. Persistent editor mutations still require the Phase B
+`/Game/Generated/YACS/**` sandbox, rollback/proof rules and an explicit issue.
+
+The intended next proof after `smoke-cube` is an interactive-session command
+that places a bounded generated-content test object and returns a visual capture.
+That proof must first demonstrate that the runner execution mode supports the
+required interactive/GPU editor session; headless success alone is not visual
+acceptance.
