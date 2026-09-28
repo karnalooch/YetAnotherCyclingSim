@@ -11,7 +11,6 @@ on:
       - scripts/ue/Invoke-YacsRemoteEditorCommand.ps1
       - scripts/ue/remote_editor_smoke.py
       - scripts/ci/test_remote_editor_command_workflow.py
-      - docs/UE_MCP_WORLD_GENERATION.md
 
 permissions:
   contents: read
@@ -27,7 +26,7 @@ jobs:
       (github.event_name == 'push' &&
        github.actor == github.repository_owner) ||
       (github.event_name == 'issue_comment' &&
-       github.event.issue.number == 85 &&
+       github.event.issue.number == 227 &&
        github.event.comment.user.login == github.repository_owner &&
        github.event.comment.body == '/yacs-editor smoke-cube')
     runs-on: [self-hosted, yacs-ue58]
