@@ -10,6 +10,7 @@ on:
       - 'Source/YetAnotherCyclingSim/Public/Cycling/CyclingPassoGiauLandscapeSpikeCommandlet.h'
       - 'Source/YetAnotherCyclingSim/Private/Editor/CyclingPassoGiauLandscapeSpikeCommandlet.cpp'
       - 'scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1'
+      - 'scripts/assets/prepare_passo_giau_heightmap.py'
       - 'scripts/ue/stage3g_prepare_passo_giau_landscape_map.py'
       - 'scripts/ue/stage3g_capture_passo_giau_landscape.py'
       - 'scripts/ci/test_passo_giau_landscape_author_contract.py'
