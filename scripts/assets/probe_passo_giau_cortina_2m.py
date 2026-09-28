@@ -27,6 +27,7 @@ WMS_ENDPOINT = "https://idt2-geoserver.regione.veneto.it/geoserver/wms"
 WCS_ENDPOINT = "https://idt2-geoserver.regione.veneto.it/geoserver/wcs"
 VIEWER_URL = "https://idt2.regione.veneto.it/idt/webgis/viewer?webgisId=86"
 TARGET_LAYER_LABEL = "DTM_2m_Cortina"
+PREFERRED_WMS_LAYER = "rv:DTM_2m_clip"
 PASSO_GIAU_WGS84 = (12.05321, 46.48284)
 EXPECTED_RESOLUTION_M = 2.0
 RESOLUTION_TOLERANCE_M = 0.25
@@ -177,7 +178,10 @@ def geographic_bbox(layer: ET.Element) -> dict[str, float] | None:
 
 def flatten_wms_layers(root: ET.Element) -> list[dict[str, Any]]:
     layers: list[dict[str, Any]] = []
-    target = normalized(TARGET_LAYER_LABEL)
+    targets = {
+        normalized(TARGET_LAYER_LABEL),
+        normalized(PREFERRED_WMS_LAYER),
+    }
     for element in root.iter():
         if local_name(element.tag) != "Layer":
             continue
@@ -185,7 +189,7 @@ def flatten_wms_layers(root: ET.Element) -> list[dict[str, Any]]:
         title = child_text(element, "Title")
         if not name and not title:
             continue
-        if target not in {normalized(name), normalized(title)}:
+        if not targets.intersection({normalized(name), normalized(title)}):
             continue
         crs_values = [
             child.text.strip()
@@ -328,7 +332,8 @@ def fetch_wms_layer() -> tuple[str, dict[str, Any]]:
     if len(matches) != 1:
         candidates = wms_discovery_candidates(root)
         raise RuntimeError(
-            "expected exactly one WMS DTM_2m_Cortina layer, "
+            "expected exactly one raw Cortina 2 m WMS source "
+            f"({TARGET_LAYER_LABEL} alias or {PREFERRED_WMS_LAYER}), "
             f"found {len(matches)}; discovery candidates={candidates}"
         )
     layer = matches[0]
@@ -385,6 +390,7 @@ def main() -> int:
         "recorded_at_utc": datetime.now(timezone.utc).isoformat(),
         "provider": "Regione del Veneto",
         "target_dataset_label": TARGET_LAYER_LABEL,
+        "preferred_raw_wms_layer": PREFERRED_WMS_LAYER,
         "passo_giau_wgs84": {
             "lon": PASSO_GIAU_WGS84[0],
             "lat": PASSO_GIAU_WGS84[1],
