@@ -1,0 +1,162 @@
+name: Passo Giau source A-B - TINITALY vs Veneto LiDAR
+
+on:
+  push:
+    branches:
+      - feat/stage3g-r4-1-passo-giau-landscape-spike
+    paths:
+      - 'scripts/assets/download_passo_giau_veneto_lidar.py'
+      - 'scripts/assets/prepare_passo_giau_veneto_lidar.py'
+      - '.github/workflows/passo-giau-veneto-source-ab.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    name: Compare 10 m TINITALY with 5 m Veneto LiDAR
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout exact revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          lfs: false
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+
+      - name: Install terrain dependencies
+        run: |
+          python -m pip install --disable-pip-version-check \
+            numpy==2.2.6 \
+            Pillow==11.3.0 \
+            rasterio==1.4.3
+
+      - name: Compile terrain scripts
+        run: |
+          python -m py_compile \
+            scripts/assets/download_passo_giau_dem.py \
+            scripts/assets/prepare_passo_giau_heightmap.py \
+            scripts/assets/download_passo_giau_veneto_lidar.py \
+            scripts/assets/prepare_passo_giau_veneto_lidar.py
+
+      - name: Prepare TINITALY 10 m baseline
+        run: |
+          python scripts/assets/download_passo_giau_dem.py
+          python scripts/assets/prepare_passo_giau_heightmap.py \
+            --landscape-size 4033 \
+            --output-dir ExternalAssets/Terrain/PassoGiau/PreparedTINITALY4033
+
+      - name: Download official Veneto LiDAR 5 m tiles
+        run: python scripts/assets/download_passo_giau_veneto_lidar.py
+
+      - name: Mosaic and prepare Veneto LiDAR 5 m candidate
+        run: python scripts/assets/prepare_passo_giau_veneto_lidar.py
+
+      - name: Build source A-B visual and evidence
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import shutil
+          from pathlib import Path
+          from PIL import Image, ImageDraw
+
+          root = Path("ExternalAssets/Terrain/PassoGiau")
+          tin_dir = root / "PreparedTINITALY4033"
+          ven_dir = root / "PreparedVenetoLidar5m"
+          out = Path("Saved/RuntimeProof/CI/Stage3GR4_1/VenetoSourceAB")
+          out.mkdir(parents=True, exist_ok=True)
+
+          tin_report = json.loads((tin_dir / "terrain-report.json").read_text(encoding="utf-8"))
+          ven_report = json.loads((ven_dir / "terrain-report.json").read_text(encoding="utf-8"))
+
+          tin = Image.open(tin_dir / "passo_giau_hillshade.png").convert("L")
+          ven = Image.open(ven_dir / "passo_giau_veneto_lidar_5m_hillshade.png").convert("L")
+          target = (1600, 1600)
+          tin = tin.resize(target, Image.Resampling.BICUBIC)
+          ven = ven.resize(target, Image.Resampling.BICUBIC)
+
+          label_h = 70
+          canvas = Image.new("L", (target[0] * 2, target[1] + label_h), 255)
+          canvas.paste(tin, (0, label_h))
+          canvas.paste(ven, (target[0], label_h))
+          draw = ImageDraw.Draw(canvas)
+          draw.text((24, 24), "A: TINITALY 10 m (preview scaled to 1600)", fill=0)
+          draw.text((target[0] + 24, 24), "B: Veneto LiDAR-derived DTM 5 m (native 1600)", fill=0)
+          canvas.save(out / "terrain_source_ab_hillshade.png")
+
+          comparison = {
+              "schema_version": 1,
+              "a": {
+                  "provider": "TINITALY 1.1 / INGV",
+                  "nominal_resolution_m": 10,
+                  "source_grid": [
+                      tin_report["source"]["width_px"],
+                      tin_report["source"]["height_px"],
+                  ],
+                  "elevation_m": tin_report["elevation_m"],
+                  "diagnostics": tin_report["diagnostics"],
+              },
+              "b": {
+                  "provider": "Regione del Veneto",
+                  "dataset": "LiDAR-derived DTM 5 m",
+                  "nominal_resolution_m": 5,
+                  "source_grid": ven_report["target_aoi"]["native_grid"],
+                  "tile_count": ven_report["tile_count"],
+                  "elevation_m": ven_report["elevation_m"],
+                  "native_diagnostics": ven_report["native_diagnostics"],
+                  "landscape_diagnostics": ven_report["landscape_diagnostics"],
+              },
+              "comparison_contract": {
+                  "same_physical_aoi_m": [8000, 8000],
+                  "same_hillshade_azimuth_deg": 315,
+                  "same_hillshade_altitude_deg": 45,
+                  "same_ue_landscape_vertices": [4033, 4033],
+                  "presentation_only": True,
+              },
+          }
+          (out / "terrain_source_ab.json").write_text(
+              json.dumps(comparison, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+
+          shutil.copy2(tin_dir / "terrain-report.json", out / "tinitaly-terrain-report.json")
+          shutil.copy2(ven_dir / "terrain-report.json", out / "veneto-lidar-terrain-report.json")
+          shutil.copy2(
+              root / "Veneto_Lidar5m" / "veneto-lidar-download-report.json",
+              out / "veneto-lidar-download-report.json",
+          )
+          shutil.copy2(
+              ven_dir / "passo_giau_veneto_lidar_5m_hillshade.png",
+              out / "veneto-lidar-native-hillshade.png",
+          )
+          shutil.copy2(
+              tin_dir / "passo_giau_hillshade.png",
+              out / "tinitaly-native-hillshade.png",
+          )
+          print(json.dumps(comparison, indent=2, sort_keys=True))
+          PY
+
+      - name: Show prepared outputs
+        run: |
+          ls -lh Saved/RuntimeProof/CI/Stage3GR4_1/VenetoSourceAB/
+          ls -lh ExternalAssets/Terrain/PassoGiau/PreparedVenetoLidar5m/
+
+      - name: Upload source A-B evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: passo-giau-source-ab-${{ github.run_id }}
+          path: |
+            Saved/RuntimeProof/CI/Stage3GR4_1/VenetoSourceAB/**
+            ExternalAssets/Terrain/PassoGiau/PreparedVenetoLidar5m/passo_giau_veneto_lidar_ue_landscape_4033.r16
+            ExternalAssets/Terrain/PassoGiau/PreparedVenetoLidar5m/passo_giau_veneto_lidar_ue_landscape_4033_u16.png
+          if-no-files-found: error
+          retention-days: 14
