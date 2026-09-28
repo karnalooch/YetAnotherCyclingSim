@@ -57,7 +57,7 @@ jobs:
           python-version: '3.14'
 
       - name: Run deterministic local corridor geometry tests
-        run: python -m unittest scripts.geometry.test_sp638_local_corridor
+        run: python -m unittest scripts.geometry.test_sp638_local_corridor scripts.geometry.test_local_terrain_skin
 
       - name: Syntax-check rider-close Unreal visual proof
         run: python -m py_compile scripts/ue/stage3g_capture_sp638_local_corridor.py
