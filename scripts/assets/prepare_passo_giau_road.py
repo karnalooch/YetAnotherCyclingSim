@@ -2,8 +2,9 @@
 """Prepare the official SP638 centerline for the Passo Giau terrain spike.
 
 This produces a deterministic road centerline, samples presentation elevation
-from the same Veneto 5 m DTM used by the Landscape, converts points to the
-isolated map's local Unreal coordinates, and renders a GIS alignment proof.
+from the same active MASE-primary hybrid metric terrain grid used by the
+Landscape, converts points to the isolated map's local Unreal coordinates, and
+renders a GIS alignment proof.
 
 The output is presentation-only. It does not replace YACS route/physics truth.
 """
@@ -46,7 +47,7 @@ def road_root() -> Path:
 
 
 def terrain_root() -> Path:
-    return source_root() / "PreparedVenetoLidar5m"
+    return source_root() / "PreparedMasePstLidar1x1"
 
 
 def output_root() -> Path:
@@ -222,8 +223,8 @@ def moving_average(values: np.ndarray, window: int) -> np.ndarray:
 def main() -> int:
     try:
         source_path = road_root() / "passo_giau_sp638_source.geojson"
-        terrain_path = terrain_root() / "passo_giau_veneto_lidar_5m_8km_epsg32632.tif"
-        hillshade_path = terrain_root() / "passo_giau_veneto_lidar_5m_hillshade.png"
+        terrain_path = terrain_root() / "passo_giau_mase_pst_hybrid_1m_8km_epsg32632.tif"
+        hillshade_path = terrain_root() / "passo_giau_mase_pst_hybrid_2m_preview_hillshade.png"
         download_report_path = road_root() / "road-download-report.json"
         for path in (source_path, terrain_path, hillshade_path, download_report_path):
             if not path.is_file():

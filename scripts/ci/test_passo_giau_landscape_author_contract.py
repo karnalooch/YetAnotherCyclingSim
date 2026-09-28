@@ -257,6 +257,18 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("prepared slope diagnostics", wrapper)
         self.assertIn("deterministic center scanline diagnostics", wrapper)
 
+    def test_road_preparer_samples_active_mase_hybrid_terrain(self) -> None:
+        prepare = read("scripts/assets/prepare_passo_giau_road.py")
+        self.assertIn('return source_root() / "PreparedMasePstLidar1x1"', prepare)
+        self.assertIn(
+            '"passo_giau_mase_pst_hybrid_1m_8km_epsg32632.tif"', prepare
+        )
+        self.assertIn(
+            '"passo_giau_mase_pst_hybrid_2m_preview_hillshade.png"', prepare
+        )
+        self.assertNotIn("PreparedVenetoLidar5m", prepare)
+        self.assertNotIn("passo_giau_veneto_lidar_5m_8km_epsg32632.tif", prepare)
+
     def test_generic_preparer_keeps_reference_diagnostic_contract(self) -> None:
         prepare = read("scripts/assets/prepare_passo_giau_heightmap.py")
         self.assertIn("def terrain_diagnostics(", prepare)
