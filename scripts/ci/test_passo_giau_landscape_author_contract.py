@@ -88,6 +88,8 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("res_y=1080", capture)
         self.assertIn("is_task_done()", capture)
         self.assertIn("set_keep_python_script_alive(True)", capture)
+        self.assertIn("get_component_by_class(unreal.CameraComponent)", capture)
+        self.assertNotIn("get_camera_component()", capture)
         self.assertIn('"visual_acceptance": "PENDING_HUMAN_REVIEW"', capture)
 
     def test_workflow_runs_only_on_ue58_and_commits_only_spike_map(self) -> None:

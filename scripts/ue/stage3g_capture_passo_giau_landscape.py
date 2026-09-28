@@ -160,7 +160,10 @@ def main() -> None:
         transient=True,
     )
     _camera.set_actor_label("PassoGiau_ProofCamera")
-    _camera.get_camera_component().set_editor_property("field_of_view", 74.0)
+    camera_component = _camera.get_component_by_class(unreal.CameraComponent)
+    if camera_component is None:
+        raise RuntimeError("spawned CameraActor has no CameraComponent")
+    camera_component.set_editor_property("field_of_view", 74.0)
 
     unreal.EditorPythonScripting.set_keep_python_script_alive(True)
     _task = unreal.AutomationLibrary.take_high_res_screenshot(
