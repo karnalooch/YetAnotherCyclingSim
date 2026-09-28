@@ -39,6 +39,7 @@ def _finish(success: bool, error: str = "") -> None:
             "forced_landscape_lod": 0,
             "ray_tracing_landscape_lod_bias": -1,
             "proof_sun_cast_shadows": False,
+            "proof_material": "/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial",
             "camera_location_cm": [
                 float(_camera.get_actor_location().x),
                 float(_camera.get_actor_location().y),
@@ -126,9 +127,18 @@ def main() -> None:
     )
     if not landscape_components:
         raise RuntimeError("imported Landscape has no LandscapeComponent instances")
+    proof_material_path = "/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial"
+    proof_material = unreal.load_asset(proof_material_path)
+    if proof_material is None:
+        raise RuntimeError(f"failed to load neutral proof material: {proof_material_path}")
+
     for component in landscape_components:
         component.set_forced_lod(0)
         component.set_lod_bias(0)
+        # Override the editor's WorldGrid-style fallback only for this in-memory
+        # proof session. The spike map was already persisted by the import step
+        # and is not saved again after capture.
+        component.set_material(0, proof_material)
     _landscape_component_count = len(landscape_components)
     unreal.SystemLibrary.execute_console_command(
         world,
