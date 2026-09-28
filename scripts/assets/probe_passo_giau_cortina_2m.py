@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 import sys
 import urllib.parse
 import urllib.request
@@ -26,6 +27,7 @@ from typing import Any, Iterable
 WMS_ENDPOINT = "https://idt2-geoserver.regione.veneto.it/geoserver/wms"
 WCS_ENDPOINT = "https://idt2-geoserver.regione.veneto.it/geoserver/wcs"
 VIEWER_URL = "https://idt2.regione.veneto.it/idt/webgis/viewer?webgisId=86"
+DOWNLOAD_PAGE = "https://idt2.regione.veneto.it/idt/downloader/download"
 TARGET_LAYER_LABEL = "DTM_2m_Cortina"
 PREFERRED_WMS_LAYER = "rv:DTM_2m_clip"
 PASSO_GIAU_WGS84 = (12.05321, 46.48284)
@@ -73,6 +75,54 @@ def request_bytes(url: str, *, timeout: int = 60) -> bytes:
                 f"response exceeded {MAX_RESPONSE_BYTES} bytes: {url}"
             )
         return payload
+
+
+def discover_download_portal() -> dict[str, Any]:
+    payload = request_bytes(DOWNLOAD_PAGE)
+    page = payload.decode("utf-8", errors="replace")
+    script_sources = re.findall(
+        r"""<script[^>]+src=["']([^"']+)["']""",
+        page,
+        flags=re.IGNORECASE,
+    )
+    terms = ("cortina", "dtm_2m", "dtm2m", "downloaddtm", "lidar")
+    hits: list[dict[str, Any]] = []
+    for raw_src in script_sources[:80]:
+        url = urllib.parse.urljoin(DOWNLOAD_PAGE, raw_src)
+        try:
+            body = request_bytes(url).decode("utf-8", errors="replace")
+        except Exception as exc:
+            hits.append({"url": url, "fetch_error": str(exc)})
+            continue
+        lower = body.lower()
+        matching_terms = [term for term in terms if term in lower]
+        if not matching_terms:
+            continue
+        snippets: list[str] = []
+        for term in matching_terms:
+            offset = 0
+            while len(snippets) < 20:
+                index = lower.find(term, offset)
+                if index < 0:
+                    break
+                start = max(0, index - 500)
+                end = min(len(body), index + len(term) + 1200)
+                snippet = body[start:end]
+                if snippet not in snippets:
+                    snippets.append(snippet)
+                offset = index + len(term)
+        hits.append(
+            {
+                "url": url,
+                "matching_terms": matching_terms,
+                "snippets": snippets,
+            }
+        )
+    return {
+        "url": DOWNLOAD_PAGE,
+        "script_count": len(script_sources),
+        "interesting_scripts": hits,
+    }
 
 
 def discover_viewer_context() -> dict[str, Any]:
@@ -424,6 +474,7 @@ def main() -> int:
 
     try:
         report["viewer"] = discover_viewer_context()
+        report["download_portal"] = discover_download_portal()
         wms_url, layer = fetch_wms_layer()
         report["wms"] = {
             "get_capabilities_url": wms_url,
