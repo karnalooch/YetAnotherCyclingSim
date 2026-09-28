@@ -25,6 +25,7 @@ from typing import Any, Iterable
 
 WMS_ENDPOINT = "https://idt2-geoserver.regione.veneto.it/geoserver/wms"
 WCS_ENDPOINT = "https://idt2-geoserver.regione.veneto.it/geoserver/wcs"
+VIEWER_URL = "https://idt2.regione.veneto.it/idt/webgis/viewer?webgisId=86"
 TARGET_LAYER_LABEL = "DTM_2m_Cortina"
 PASSO_GIAU_WGS84 = (12.05321, 46.48284)
 EXPECTED_RESOLUTION_M = 2.0
@@ -71,6 +72,54 @@ def request_bytes(url: str, *, timeout: int = 60) -> bytes:
                 f"response exceeded {MAX_RESPONSE_BYTES} bytes: {url}"
             )
         return payload
+
+
+def discover_viewer_context() -> dict[str, Any]:
+    payload = request_bytes(VIEWER_URL)
+    page = payload.decode("utf-8", errors="replace")
+    lower = page.lower()
+    needle = TARGET_LAYER_LABEL.lower()
+    index = lower.find(needle)
+    if index < 0:
+        return {
+            "url": VIEWER_URL,
+            "contains_target_label": False,
+            "bytes": len(payload),
+            "snippet": None,
+        }
+    start = max(0, index - 1200)
+    end = min(len(page), index + len(TARGET_LAYER_LABEL) + 1800)
+    return {
+        "url": VIEWER_URL,
+        "contains_target_label": True,
+        "bytes": len(payload),
+        "snippet": page[start:end],
+    }
+
+
+def wms_discovery_candidates(root: ET.Element) -> list[dict[str, Any]]:
+    candidates: list[dict[str, Any]] = []
+    for element in root.iter():
+        if local_name(element.tag) != "Layer":
+            continue
+        name = child_text(element, "Name")
+        title = child_text(element, "Title")
+        haystack = normalized(f"{name or ''} {title or ''}")
+        score = sum(token in haystack for token in ("dtm", "2m", "cortina"))
+        if score < 2:
+            continue
+        candidates.append(
+            {
+                "name": name,
+                "title": title,
+                "score": score,
+                "geographic_bbox_wgs84": geographic_bbox(element),
+            }
+        )
+    return sorted(
+        candidates,
+        key=lambda item: (-int(item["score"]), str(item.get("name") or "")),
+    )[:80]
 
 
 def parse_xml(payload: bytes, label: str) -> ET.Element:
@@ -277,9 +326,10 @@ def fetch_wms_layer() -> tuple[str, dict[str, Any]]:
     root = parse_xml(request_bytes(url), "WMS GetCapabilities")
     matches = flatten_wms_layers(root)
     if len(matches) != 1:
+        candidates = wms_discovery_candidates(root)
         raise RuntimeError(
             "expected exactly one WMS DTM_2m_Cortina layer, "
-            f"found {len(matches)}: {matches}"
+            f"found {len(matches)}; discovery candidates={candidates}"
         )
     layer = matches[0]
     lon, lat = PASSO_GIAU_WGS84
@@ -350,6 +400,7 @@ def main() -> int:
     }
 
     try:
+        report["viewer"] = discover_viewer_context()
         wms_url, layer = fetch_wms_layer()
         report["wms"] = {
             "get_capabilities_url": wms_url,
