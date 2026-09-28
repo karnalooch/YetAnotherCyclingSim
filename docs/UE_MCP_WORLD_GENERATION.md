@@ -302,7 +302,7 @@ acceptance.
 
 ## 13. Remote GitHub runner transport
 
-Issue #227, under the broader #85 architecture track, owns the controlled chat-to-runner transport spike documented in
+Issue #228, under the broader #85 architecture track, owns the controlled chat-to-runner transport spike documented in
 [`YACS_REMOTE_EDITOR_AGENT.md`](YACS_REMOTE_EDITOR_AGENT.md).
 
 The transport does **not** expose UE-MCP to the network. GitHub Actions remains
