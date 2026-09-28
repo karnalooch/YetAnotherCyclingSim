@@ -82,6 +82,9 @@ class YacsPcgPatchContractTest(unittest.TestCase):
         self.assertIn("pcg_patch_adapter_v1", wrapper)
         self.assertIn("instanced_mesh_instances", wrapper)
         self.assertIn("generic_candidate_node", wrapper)
+        self.assertIn("temporary_graph_cleaned", wrapper)
+        self.assertIn("--untracked-files=all", wrapper)
+        self.assertIn("delete_asset(temporary_graph_path)", capture)
 
         workflow = read(
             ".github/workflows/passo-giau-r4-1-roadside-house.yml"
