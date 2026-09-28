@@ -28,6 +28,7 @@ TARGET_BOUNDS = (730406.587, 5148246.775, 738406.587, 5156246.775)
 ROAD_ROUTE_ID = "000000027157"
 ROAD_NAME = "SP 638 DEL PASSO GIAU (BL)"
 SAMPLE_SPACING_M = 10.0
+SOURCE_COVERAGE_SAMPLE_INTERVAL_M = 1.0
 ROAD_SURFACE_OFFSET_CM = 15.0
 Z_SMOOTH_WINDOW = 5
 MAX_JOIN_GAP_M = 1.0
@@ -224,9 +225,16 @@ def main() -> int:
     try:
         source_path = road_root() / "passo_giau_sp638_source.geojson"
         terrain_path = terrain_root() / "passo_giau_mase_pst_hybrid_1m_8km_epsg32632.tif"
+        coverage_path = terrain_root() / "passo_giau_mase_pst_primary_coverage_1m.tif"
         hillshade_path = terrain_root() / "passo_giau_mase_pst_hybrid_2m_preview_hillshade.png"
         download_report_path = road_root() / "road-download-report.json"
-        for path in (source_path, terrain_path, hillshade_path, download_report_path):
+        for path in (
+            source_path,
+            terrain_path,
+            coverage_path,
+            hillshade_path,
+            download_report_path,
+        ):
             if not path.is_file():
                 raise RuntimeError(f"missing required input: {path}")
 
@@ -244,6 +252,60 @@ def main() -> int:
         ordered = order_features(features)
         centerline = concatenate_centerline(ordered)
         length_m = float(centerline.length)
+
+        coverage_edges = np.arange(
+            0.0,
+            length_m,
+            SOURCE_COVERAGE_SAMPLE_INTERVAL_M,
+            dtype=np.float64,
+        )
+        if coverage_edges.size == 0 or coverage_edges[-1] < length_m:
+            coverage_edges = np.append(coverage_edges, length_m)
+        coverage_segment_lengths = np.diff(coverage_edges)
+        coverage_midpoints = coverage_edges[:-1] + coverage_segment_lengths * 0.5
+        coverage_xy = [
+            (
+                centerline.interpolate(float(distance)).x,
+                centerline.interpolate(float(distance)).y,
+            )
+            for distance in coverage_midpoints
+        ]
+        with rasterio.open(coverage_path) as coverage_dataset:
+            if str(coverage_dataset.crs) != TARGET_CRS:
+                raise RuntimeError(
+                    "coverage mask CRS mismatch: "
+                    f"actual={coverage_dataset.crs} expected={TARGET_CRS}"
+                )
+            if (
+                abs(abs(float(coverage_dataset.transform.a)) - 1.0) > 1e-9
+                or abs(abs(float(coverage_dataset.transform.e)) - 1.0) > 1e-9
+            ):
+                raise RuntimeError("coverage mask is not the expected 1 m grid")
+            coverage_values = np.array(
+                [
+                    int(sample[0])
+                    for sample in coverage_dataset.sample(coverage_xy)
+                ],
+                dtype=np.uint8,
+            )
+        if not np.all(np.isin(coverage_values, (0, 1))):
+            raise RuntimeError("coverage mask contains values outside {0,1}")
+        mase_segments = coverage_values == 1
+        mase_primary_length_m = float(
+            coverage_segment_lengths[mase_segments].sum()
+        )
+        veneto_fallback_length_m = float(
+            coverage_segment_lengths[~mase_segments].sum()
+        )
+        classified_length_m = mase_primary_length_m + veneto_fallback_length_m
+        if abs(classified_length_m - length_m) > 0.001:
+            raise RuntimeError(
+                "terrain source classification length mismatch: "
+                f"classified={classified_length_m:.3f} "
+                f"centerline={length_m:.3f}"
+            )
+        mase_primary_share = mase_primary_length_m / length_m
+        veneto_fallback_share = veneto_fallback_length_m / length_m
 
         distances = np.arange(0.0, length_m, SAMPLE_SPACING_M, dtype=np.float64)
         if distances.size == 0 or distances[-1] < length_m:
@@ -448,6 +510,19 @@ def main() -> int:
                 "p95_abs": round(float(np.percentile(np.abs(grade_pct), 95)), 3),
                 "max_abs": round(float(np.max(np.abs(grade_pct))), 3),
             },
+            "terrain_source_coverage": {
+                "classification_mask": coverage_path.name,
+                "mask_resolution_m": 1.0,
+                "sampling_interval_m": SOURCE_COVERAGE_SAMPLE_INTERVAL_M,
+                "classified_segment_count": int(coverage_segment_lengths.size),
+                "classified_length_m": round(classified_length_m, 3),
+                "mase_primary_length_m": round(mase_primary_length_m, 3),
+                "mase_primary_share": round(mase_primary_share, 9),
+                "veneto_fallback_length_m": round(
+                    veneto_fallback_length_m, 3
+                ),
+                "veneto_fallback_share": round(veneto_fallback_share, 9),
+            },
             "outputs": {
                 "centerline_geojson": centerline_geojson_path.name,
                 "ue_centerline_json": road_json_path.name,
@@ -482,6 +557,13 @@ def main() -> int:
             "  grade |p95| / max: "
             f"{np.percentile(np.abs(grade_pct), 95):.1f}% / "
             f"{np.max(np.abs(grade_pct)):.1f}%"
+        )
+        print(
+            "  terrain source: "
+            f"MASE={mase_primary_length_m / 1000.0:.3f} km "
+            f"({mase_primary_share * 100.0:.2f}%), "
+            f"Veneto fallback={veneto_fallback_length_m / 1000.0:.3f} km "
+            f"({veneto_fallback_share * 100.0:.2f}%)"
         )
         print(f"[ok] {overlay_path}")
         print(f"[ok] {road_json_path}")
