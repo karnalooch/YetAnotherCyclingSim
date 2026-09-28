@@ -143,6 +143,88 @@ single-valued Landscape heightfield. The 4033 grid is a presentation resample
 to about 1.98 m/vertex; it does **not** create new measured detail beyond the
 native 5 m source.
 
+### Production trap: Landscape grid density is not source-data resolution
+
+**Do not confuse the 4033x4033 Unreal Landscape grid with a 2 m measured DEM.**
+
+For the current 8 km extent:
+
+- 4033 Landscape vertices imply about **1.98 m/vertex** in Unreal;
+- the authoritative Veneto DTM still contains measured terrain information at
+  **5 m source spacing**;
+- vertices introduced by resampling between native samples are interpolated;
+- the denser Unreal grid improves editability, spline/patch shaping and
+  representation of authored local changes, but it does **not** create new
+  surveyed geological detail.
+
+Consequences:
+
+- never describe the active source as a "2 m DEM";
+- never justify a full terrain restart solely because the UE grid is denser
+  than the source;
+- evaluate source sufficiency from visible macro-form errors that remain after
+  the road-corridor and environment-art passes, not from vertex count alone;
+- Nanite/LOD changes cannot manufacture source detail that was never measured.
+
+This is a permanent production guardrail for R4.1 and later terrain work.
+
+### Adopted terrain-detail hierarchy
+
+The current production model is deliberately layered:
+
+1. **Veneto 5 m DTM = macro terrain truth**
+   - mountain massing;
+   - ridges, valleys, passes and broad slope shape;
+   - full 8 km x 8 km baseline.
+
+2. **SP638 GIS spline + Landscape Splines/Patches = road-corridor engineering**
+   - road bench;
+   - uphill cut;
+   - downhill fill/embankment;
+   - shoulder transitions, drainage-scale shaping and hairpin cleanup.
+
+3. **Static/Nanite meshes = non-heightfield geology**
+   - vertical cliffs;
+   - overhangs;
+   - rock faces and retaining structures;
+   - shapes that cannot be represented correctly by a single-valued Landscape
+     heightfield.
+
+4. **PCG/material dressing = near-field natural detail**
+   - rocks and boulders;
+   - scree;
+   - grass, shrubs and trees;
+   - slope/elevation/road-distance-driven distribution.
+
+The base DEM is therefore not expected to be a finished cyclist-height scene.
+A raw heightfield is the macro foundation, not the final environment.
+
+### Higher-resolution source escalation rule
+
+Do **not** replace the full Veneto 5 m baseline pre-emptively.
+
+Consider a higher-resolution source (for example a local 1 m DTM/LiDAR patch)
+only when all of the following are true:
+
+1. the SP638 cut/fill corridor has been authored;
+2. necessary cliff/rock geometry has been added;
+3. material + scree/rock/vegetation dressing has been evaluated from
+   cyclist-height cameras;
+4. a specific bounded area still has a demonstrably wrong **macro shape**
+   traceable to missing source data rather than missing environment art.
+
+If that happens, prefer a **bounded local patch/replacement/mesh solution**
+for the affected corridor or cliff instead of rebuilding the entire 8 km
+Landscape.
+
+This yields the production rule:
+
+`good 5 m macro DTM + high-quality authored road corridor + local geological detail`
+
+is preferred over
+
+`globally denser DEM + untreated road corridor`.
+
 ### Required next diagnostic only if R4.1D cannot cover the residual cleanly
 
 1. capture a representative steep-face crop with wireframe/component boundaries;
