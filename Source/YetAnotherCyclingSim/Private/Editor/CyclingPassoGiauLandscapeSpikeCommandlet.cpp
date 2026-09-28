@@ -13,6 +13,7 @@
 #include "Landscape.h"
 #include "LandscapeComponent.h"
 #include "LandscapeInfo.h"
+#include "LandscapeImportHelper.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Parse.h"
 #include "Misc/Paths.h"
@@ -96,6 +97,71 @@ namespace CyclingPassoGiauLandscapeSpikeInternal
 				OutMin,
 				OutMax);
 			return false;
+		}
+
+		return true;
+	}
+
+	bool VerifyUnrealImportReaderParity(
+		const FString& Path,
+		const TArray<uint16>& ExpectedHeightData,
+		FString& OutError)
+	{
+		FLandscapeImportDescriptor ImportDescriptor;
+		FText DescriptorMessage;
+		const ELandscapeImportResult DescriptorResult =
+			FLandscapeImportHelper::GetHeightmapImportDescriptor(
+				Path,
+				true,
+				false,
+				ImportDescriptor,
+				DescriptorMessage);
+		if (DescriptorResult == ELandscapeImportResult::Error)
+		{
+			OutError = FString::Printf(
+				TEXT("Unreal native heightmap descriptor rejected R16 '%s': %s"),
+				*Path,
+				*DescriptorMessage.ToString());
+			return false;
+		}
+
+		TArray<uint16> UnrealHeightData;
+		FText DataMessage;
+		const ELandscapeImportResult DataResult =
+			FLandscapeImportHelper::GetHeightmapImportData(
+				ImportDescriptor,
+				0,
+				UnrealHeightData,
+				DataMessage);
+		if (DataResult == ELandscapeImportResult::Error)
+		{
+			OutError = FString::Printf(
+				TEXT("Unreal native heightmap reader rejected R16 '%s': %s"),
+				*Path,
+				*DataMessage.ToString());
+			return false;
+		}
+
+		if (UnrealHeightData.Num() != ExpectedHeightData.Num())
+		{
+			OutError = FString::Printf(
+				TEXT("Unreal native R16 reader sample count mismatch: actual=%d expected=%d"),
+				UnrealHeightData.Num(),
+				ExpectedHeightData.Num());
+			return false;
+		}
+
+		for (int32 Index = 0; Index < ExpectedHeightData.Num(); ++Index)
+		{
+			if (UnrealHeightData[Index] != ExpectedHeightData[Index])
+			{
+				OutError = FString::Printf(
+					TEXT("Unreal native R16 reader parity mismatch at sample %d: unreal=%u manual=%u"),
+					Index,
+					UnrealHeightData[Index],
+					ExpectedHeightData[Index]);
+				return false;
+			}
 		}
 
 		return true;
@@ -427,6 +493,15 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		return 1;
 	}
 
+	if (!VerifyUnrealImportReaderParity(HeightmapPath, HeightData, Error))
+	{
+		UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error, TEXT("%s"), *Error);
+		return 1;
+	}
+	UE_LOG(LogCyclingPassoGiauLandscapeSpike, Display,
+		TEXT("Unreal native R16 import-reader parity: PASS (%d samples)."),
+		HeightData.Num());
+
 	UPackage* MapPackage = LoadPackage(nullptr, SpikeMapPackagePath, LOAD_None);
 	if (!MapPackage)
 	{
@@ -603,6 +678,7 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		TEXT("  \"num_subsections\": %d,\n")
 		TEXT("  \"subsection_size_quads\": %d,\n")
 		TEXT("  \"component_size_quads\": %d,\n")
+		TEXT("  \"unreal_native_import_reader_parity\": \"PASS\",\n")
 		TEXT("  \"encoded_min\": %u,\n")
 		TEXT("  \"encoded_max\": %u,\n")
 		TEXT("  \"sampled_elevation_min_m\": %.3f,\n")
