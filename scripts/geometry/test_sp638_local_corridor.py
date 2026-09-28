@@ -265,8 +265,8 @@ class LocalGroundCorridorTests(unittest.TestCase):
             by_role = {point.role: point.lateral_m for point in station_profile}
             self.assertAlmostEqual(by_role["right_road_edge"], 3.0)
             self.assertGreaterEqual(by_role["right_shoulder"], 3.25)
-            self.assertGreater(by_role["right_earthwork"], by_role["right_shoulder"])
-            self.assertGreater(by_role["downhill_tie"], by_role["right_earthwork"])
+            self.assertGreater(by_role["embankment"], by_role["right_shoulder"])
+            self.assertGreater(by_role["downhill_tie"], by_role["embankment"])
 
         self.assertLess(
             min(
