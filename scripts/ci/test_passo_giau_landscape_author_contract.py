@@ -244,7 +244,9 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn('"subsection_63_quads": seam_stats(63)', prepare)
         self.assertIn('"component_126_quads": seam_stats(126)', prepare)
 
-    def test_mase_release_source_is_pinned_and_does_not_depend_on_live_mase(self) -> None:
+    def test_mase_release_source_is_pinned_and_does_not_depend_on_live_mase(
+        self,
+    ) -> None:
         downloader = read("scripts/assets/download_passo_giau_mase_pst.py")
         self.assertIn(
             'RELEASE_TAG = "data-mase-pst-passo-giau-dtm-2026-09-28"',
