@@ -326,6 +326,22 @@ def main() -> None:
     )
     _replace_with_slice(spline, slice_points)
 
+    edit_layer_names: list[str] = []
+    if hasattr(landscape, "get_edit_layers"):
+        for edit_layer in landscape.get_edit_layers():
+            if edit_layer is None:
+                continue
+            if hasattr(edit_layer, "get_name_bp"):
+                name = str(edit_layer.get_name_bp())
+                if name and name != "None":
+                    edit_layer_names.append(name)
+    # Landscapes created by the R4.1 commandlet use UE's default initial
+    # edit layer unless an explicit named layer has been authored.
+    edit_layer_name = edit_layer_names[0] if edit_layer_names else "Layer"
+    unreal.log(
+        "[PassoGiauHairpinCorridor] applying cut/fill to edit layer "
+        f"{edit_layer_name!r}; discovered={edit_layer_names}"
+    )
     landscape.editor_apply_spline(
         spline,
         start_width=LANDSCAPE_SPLINE_WIDTH_CM,
@@ -338,14 +354,17 @@ def main() -> None:
         raise_heights=True,
         lower_heights=True,
         paint_layer=None,
-        edit_layer_name="None",
+        edit_layer_name=edit_layer_name,
     )
 
     neutral_landscape_material = unreal.load_asset(
         "/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial"
     )
     if neutral_landscape_material is not None:
-        landscape.editor_set_landscape_material(neutral_landscape_material)
+        landscape.set_editor_property(
+            "landscape_material",
+            neutral_landscape_material,
+        )
 
     actor_subsystem = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
     cube_mesh = unreal.load_asset("/Engine/BasicShapes/Cube.Cube")
@@ -498,6 +517,8 @@ def main() -> None:
         "slice_control_points": len(slice_points),
         "landscape_cut_fill": {
             "api": "LandscapeProxy.editor_apply_spline",
+            "edit_layer_name": edit_layer_name,
+            "discovered_edit_layer_names": edit_layer_names,
             "width_cm": LANDSCAPE_SPLINE_WIDTH_CM,
             "side_falloff_cm": LANDSCAPE_SPLINE_FALLOFF_CM,
             "subdivisions": LANDSCAPE_SPLINE_SUBDIVISIONS,
