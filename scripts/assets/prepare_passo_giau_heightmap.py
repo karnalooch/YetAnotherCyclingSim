@@ -312,7 +312,8 @@ def landscape_import_metadata(
         "landscape_size_vertices": landscape_size,
         "source_fidelity_note": (
             "The Landscape-sized raster is resampled for UE compatibility; "
-            "source terrain fidelity remains that of the original TINITALY grid."
+            "source terrain fidelity remains that of the original TINITALY grid; cubic "
+            "interpolation smooths the presentation surface between source samples."
         ),
         "recommended_transform": {
             "scale_x_cm_per_vertex": round(xy_scale_x_cm, 6),
@@ -371,7 +372,7 @@ def main() -> int:
                 1,
                 out_shape=(args.landscape_size, args.landscape_size),
                 masked=True,
-                resampling=Resampling.bilinear,
+                resampling=Resampling.cubic,
             )
             landscape_filled = fill_masked_nearest_reasonable(
                 landscape,
@@ -467,6 +468,7 @@ def main() -> int:
             elevation_min_m,
             elevation_max_m,
         ),
+        "landscape_resampling": "cubic",
         "orientation": {
             "vertical_flip_applied": bool(args.flip_y),
             "source_raster_row_order": "north_to_south",

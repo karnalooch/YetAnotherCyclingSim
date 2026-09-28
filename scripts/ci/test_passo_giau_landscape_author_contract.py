@@ -148,6 +148,8 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn('"component_126_quads": seam_stats(126)', prepare)
         self.assertIn('"diagnostics": terrain_diagnostics(', prepare)
         self.assertIn("DEFAULT_LANDSCAPE_SIZE = 4033", prepare)
+        self.assertIn("resampling=Resampling.cubic", prepare)
+        self.assertIn('"landscape_resampling": "cubic"', prepare)
 
 
     def test_editor_build_links_landscape_module(self) -> None:
