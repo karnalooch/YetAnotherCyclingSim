@@ -24,6 +24,12 @@ New-Item -ItemType Directory -Path $ArtifactRoot -Force | Out-Null
 $ArtifactRoot = (Resolve-Path -LiteralPath $ArtifactRoot).Path
 
 $SpikeMapRelative = 'Content/Prototype/Maps/L_PassoGiauTerrainSpike.umap'
+$WorldAssetLfsIncludes = @(
+    $SpikeMapRelative,
+    'Content/Prototype/Environment/Stage3G/Imported/Meshes/SM_Stage3G_FirSaplingMedium.uasset',
+    'Content/YACS/WorldGen/PCG/PCG_Forest.uasset',
+    'Content/YACS/WorldGen/PCG/PCG_RouteExclusion.uasset'
+)
 $SpikeMapPath = Join-Path $RepoRoot $SpikeMapRelative
 $CaptureScript = Join-Path $RepoRoot 'scripts/ue/stage3g_capture_passo_giau_roadside_house.py'
 $AssetLibrary = Join-Path $RepoRoot 'scripts/assets/yacs_asset_library.py'
@@ -90,11 +96,25 @@ foreach ($Download in @($Selection.downloads)) {
 Write-Host '[2/5] Materializing persisted Passo Giau map...' -ForegroundColor Cyan
 git -C $RepoRoot lfs install --local
 if ($LASTEXITCODE -ne 0) { throw 'git lfs install failed.' }
-git -C $RepoRoot lfs pull --include=$SpikeMapRelative --exclude=''
-if ($LASTEXITCODE -ne 0) { throw 'git lfs pull for Passo Giau spike map failed.' }
+$LfsIncludeSpec = ($WorldAssetLfsIncludes -join ',')
+git -C $RepoRoot lfs pull --include=$LfsIncludeSpec --exclude=''
+if ($LASTEXITCODE -ne 0) { throw 'git lfs pull for World Authoring proof assets failed.' }
+
+foreach ($RelativePath in $WorldAssetLfsIncludes) {
+    $MaterializedPath = Join-Path $RepoRoot $RelativePath
+    if (-not (Test-Path -LiteralPath $MaterializedPath -PathType Leaf)) {
+        throw "Required World Authoring LFS asset is missing: $RelativePath"
+    }
+    & git -C $RepoRoot lfs pointer --check "--file=$RelativePath" *> $null
+    if ($LASTEXITCODE -eq 0) {
+        throw "Required World Authoring asset remained an LFS pointer: $RelativePath"
+    }
+}
+
 if (-not (Test-Path -LiteralPath $SpikeMapPath -PathType Leaf)) { throw "Passo Giau map is missing: $SpikeMapPath" }
 $MapBytes = (Get-Item -LiteralPath $SpikeMapPath).Length
 if ($MapBytes -lt 100000000) { throw "Passo Giau map was not materialized from LFS (bytes=$MapBytes)." }
+Write-Host ("World Authoring LFS materialization PASS: {0} required assets." -f $WorldAssetLfsIncludes.Count)
 
 Write-Host '[3/5] Building exact UE 5.8 editor revision...' -ForegroundColor Cyan
 $BuildBat = Join-Path $Context.EngineRoot 'Engine/Build/BatchFiles/Build.bat'
