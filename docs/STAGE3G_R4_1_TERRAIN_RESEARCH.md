@@ -17,16 +17,18 @@ Historical merged baseline:
 
 Active PR #215 candidate:
 
-- Regione del Veneto, `DTM 5 m derivato dai rilievi LiDAR`, IODL 2.0;
-- 33 official tiles for the bounded Passo Giau AOI;
-- native 1600x1600 working grid at 5 m;
+- MASE PST, `LiDAR DTM grigliato 1x1`, CC BY 4.0;
+- immutable GitHub prerelease source checkpoint, 356,503,497 bytes;
+- SHA-256 `0e2a133fcc80f225aee2b61aa04bc7a858aa3754c6b80a7c640b8a6ab7d14b8c`;
+- 89 official Float32 GeoTIFF DTM tiles;
+- source CRS EPSG:4326 at 0.00001-degree pixel spacing;
+- explicit metric reprojection to EPSG:32632 before any UE resampling;
+- 8000x8000 / 1 m metric working grid for the bounded 8 km AOI;
 - deterministic 4033x4033 unsigned-16 / little-endian R16 presentation grid;
-- native `ALandscape::Import` succeeds;
-- 32x32 components / 1024 components;
-- the isolated map is persisted without mutating `L_CyclingTest`;
-- source A/B run `36395015722` is GREEN;
-- latest diagnostic authoring run `36399060374` is GREEN;
-- deterministic 3840x2160 lighting-only / forced-LOD0 / FXAA capture succeeds.
+- 32x32 components / 1024 components remain the UE topology target;
+- the isolated map remains protected from `L_CyclingTest` and route/physics truth;
+- fresh MASE exact-SHA UE authoring/render proof is required; previous GREEN
+  authoring runs are Veneto 5 m historical evidence, not acceptance of this source.
 
 The remaining problem is **visual interpretation and level-design use**, not
 "make CI green".
@@ -44,7 +46,65 @@ Do not hide unresolved geometry with broad blur, production vegetation,
 post-processing or Nanite.
 
 
-### P0 source gate — Cortina 2021 LiDAR / 2 m WebGIS contract (2026-09-28)
+### P0 source gate — MASE PST LiDAR DTM 1x1 acquired (2026-09-28)
+
+The source-resolution gate is now **resolved for Passo Giau** by an immutable
+official source-data checkpoint mirrored as a GitHub prerelease outside Git/LFS.
+
+Canonical source checkpoint:
+
+- provider: Ministero dell'Ambiente e della Sicurezza Energetica (**MASE**);
+- program/product: PST / `LiDAR DTM grigliato 1x1`;
+- release tag: `data-mase-pst-passo-giau-dtm-2026-09-28`;
+- archive: `MASE_PST_7eea00c532f94df29dd81e17e6bc8fed_1372707.zip`;
+- archive size: **356,503,497 bytes**;
+- archive SHA-256:
+  `0e2a133fcc80f225aee2b61aa04bc7a858aa3754c6b80a7c640b8a6ab7d14b8c`;
+- contents: **89 GeoTIFF DTM tiles** plus AOI/grid shapefiles;
+- raster contract: Float32, 1000 x 1000 pixels/tile, NoData `-9999`;
+- raster CRS: **EPSG:4326**;
+- pixel size: `0.00001 x 0.00001` degrees, approximately
+  **0.76 x 1.11 m near Passo Giau**;
+- selected AOI: `11.9791322014,46.4496045260 .. 12.1305375358,46.5198136019`;
+- tile-union coverage: `11.97,46.44 .. 12.14,46.52`;
+- Passo Giau reference tile:
+  `areadolomitica_145_D46481205_0101_DTM.tiff`;
+- license checkpoint: **CC BY 4.0**.
+
+The raw release is immutable source evidence. It is not committed to Git/LFS and
+must never be rewritten by the terrain-preparation pipeline.
+
+**Critical coordinate rule:** `0.00001 degrees` is not `1 metre`. EPSG:4326
+longitude/latitude samples must never be interpreted as a metric grid. The
+active authoring path explicitly reprojects the source to a metric CRS before
+any UE Landscape resampling.
+
+Canonical active preparation path:
+
+`pinned release asset -> byte-size/SHA-256 verification -> extract 89 GeoTIFFs -> mosaic -> explicit EPSG:4326 -> EPSG:32632 reprojection -> bounded 8 km AOI at a 1 m metric working grid -> controlled cubic resample to 4033 -> UInt16/R16 -> isolated L_PassoGiauTerrainSpike`.
+
+The established 8 km Landscape extent is shifted only **40 m south** while
+keeping the same 8 km size and therefore the same **198.412698 cm/vertex** UE XY
+scale. This keeps the rotated UTM square inside the immutable source
+tile-union north edge instead of filling an uncovered strip.
+
+### Current decision
+
+- **MASE PST DTM 1x1 is the canonical source path for PR #215.**
+- Veneto LiDAR-derived **5 m** remains a reproducible fallback and A/B baseline.
+- The Veneto Olympic **2 m** WebGIS investigation remains useful historical
+  lineage evidence, but is no longer the blocker for obtaining higher-resolution
+  raw elevation samples for Giau.
+- Existing GREEN Veneto authoring/render runs remain historical proof only.
+  A fresh exact-SHA MASE authoring run and human visual review are required
+  before PR #215 can leave Draft.
+- Route/physics authority remains unchanged; this is presentation-only terrain.
+
+### Historical P0 source gate — Cortina 2021 LiDAR / 2 m WebGIS contract (resolved by MASE source checkpoint)
+
+> Historical record only. The current source decision is the MASE PST section above.
+> Statements below about the “next gate” or “until then” describe the state before
+> the immutable MASE 1x1 package was acquired.
 
 The source-resolution decision is upstream of further terrain art, but the
 research now distinguishes **LiDAR acquisition density**, **DTM product
