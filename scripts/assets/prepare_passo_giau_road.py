@@ -19,7 +19,7 @@ from typing import Any
 import numpy as np
 import rasterio
 from PIL import Image, ImageDraw
-from shapely.geometry import LineString, MultiLineString, box, shape
+from shapely.geometry import LineString, MultiLineString, Point, box, shape
 from shapely.ops import linemerge
 
 TARGET_CRS = "EPSG:32632"
@@ -29,7 +29,7 @@ ROAD_NAME = "SP 638 DEL PASSO GIAU (BL)"
 SAMPLE_SPACING_M = 10.0
 ROAD_SURFACE_OFFSET_CM = 15.0
 Z_SMOOTH_WINDOW = 5
-MAX_JOIN_GAP_M = 1.0
+MAX_JOIN_GAP_M = 1.0\nSPLINE_SIMPLIFY_TOLERANCE_M = 3.0
 
 
 def repository_root() -> Path:
@@ -269,6 +269,33 @@ def main() -> int:
         if smooth_z.size != distances.size:
             raise RuntimeError("road elevation smoothing changed point count")
 
+        spline_line = centerline.simplify(
+            SPLINE_SIMPLIFY_TOLERANCE_M,
+            preserve_topology=False,
+        )
+        if not isinstance(spline_line, LineString) or len(spline_line.coords) < 2:
+            raise RuntimeError("SP638 spline simplification produced invalid geometry")
+        spline_points: list[dict[str, float]] = []
+        for index, (x_value, y_value) in enumerate(spline_line.coords):
+            x = float(x_value)
+            y = float(y_value)
+            s = float(centerline.project(Point(x, y)))
+            z = float(np.interp(s, distances, smooth_z))
+            spline_points.append(
+                {
+                    "index": index,
+                    "s_m": round(s, 3),
+                    "x_epsg32632_m": round(x, 3),
+                    "y_epsg32632_m": round(y, 3),
+                    "ue_x_cm": round((x - TARGET_BOUNDS[0]) * 100.0, 3),
+                    "ue_y_cm": round((TARGET_BOUNDS[3] - y) * 100.0, 3),
+                    "ue_z_cm": round(
+                        z * 100.0 + ROAD_SURFACE_OFFSET_CM,
+                        3,
+                    ),
+                }
+            )
+
         segment_ds = np.diff(distances)
         segment_dz = np.diff(smooth_z)
         grade_pct = np.divide(
@@ -361,9 +388,12 @@ def main() -> int:
             },
             "sample_spacing_m": SAMPLE_SPACING_M,
             "z_smoothing_window_points": Z_SMOOTH_WINDOW,
+            "spline_simplify_tolerance_m": SPLINE_SIMPLIFY_TOLERANCE_M,
             "length_m": round(length_m, 3),
             "point_count": len(points),
             "points": points,
+            "spline_control_point_count": len(spline_points),
+            "spline_points": spline_points,
             "yacs_policy": {
                 "presentation_only": True,
                 "authoritative_route_geometry": False,
@@ -403,6 +433,8 @@ def main() -> int:
             "centerline_length_m": round(length_m, 3),
             "sample_spacing_m": SAMPLE_SPACING_M,
             "sample_count": len(points),
+            "spline_simplify_tolerance_m": SPLINE_SIMPLIFY_TOLERANCE_M,
+            "spline_control_point_count": len(spline_points),
             "dtm_elevation_m": {
                 "raw_min": round(float(raw_z.min()), 3),
                 "raw_max": round(float(raw_z.max()), 3),
@@ -436,6 +468,10 @@ def main() -> int:
         print(f"  ordered features: {len(ordered)}")
         print(f"  centerline: {length_m:.1f} m")
         print(f"  sampled points: {len(points)} @ {SAMPLE_SPACING_M:.1f} m")
+        print(
+            f"  spline controls: {len(spline_points)} "
+            f"@ <= {SPLINE_SIMPLIFY_TOLERANCE_M:.1f} m 2D deviation"
+        )
         print(
             "  elevation: "
             f"{smooth_z.min():.1f} .. {smooth_z.max():.1f} m"
