@@ -8,6 +8,7 @@ on:
       - '.github/workflows/passo-giau-road-source-probe.yml'
   pull_request:
     branches:
+      - main
       - feat/stage3g-r4-1-passo-giau-landscape-spike
     paths:
       - '.github/workflows/passo-giau-road-source-probe.yml'

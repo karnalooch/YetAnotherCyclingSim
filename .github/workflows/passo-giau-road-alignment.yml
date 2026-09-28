@@ -10,6 +10,7 @@ on:
       - '.github/workflows/passo-giau-road-alignment.yml'
   pull_request:
     branches:
+      - main
       - feat/stage3g-r4-1-passo-giau-landscape-spike
     paths:
       - 'scripts/assets/download_passo_giau_road_network.py'

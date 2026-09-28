@@ -3,6 +3,7 @@ name: Passo Giau R4.1 road authoring proof
 on:
   pull_request:
     branches:
+      - main
       - feat/stage3g-r4-1-passo-giau-landscape-spike
     paths:
       - '.github/workflows/passo-giau-r4-1-road-author.yml'
