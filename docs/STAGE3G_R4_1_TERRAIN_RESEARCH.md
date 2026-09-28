@@ -143,6 +143,34 @@ single-valued Landscape heightfield. The 4033 grid is a presentation resample
 to about 1.98 m/vertex; it does **not** create new measured detail beyond the
 native 5 m source.
 
+### P0 diagnostic trap: independent road and terrain grids
+
+Do not confuse Landscape vertex spacing with either source accuracy or source
+alignment.
+
+The SP638 road geometry and the Veneto DTM were measured independently. The
+selected road source is in an approximately 4 m positional-accuracy class while
+the canonical DTM is a 5 m raster. On steep Alpine slopes, that combination is
+large enough that a small XY displacement can select materially different
+terrain heights. A road of similar width to one DTM cell can also lie largely
+between measured terrain samples.
+
+Therefore:
+
+- do not snap SP638 XY to DTM cells or Unreal Landscape vertices;
+- do not treat a 4033-grid vertex (~1.98 m spacing) as a new measured terrain
+  point;
+- keep canonical road XY independent, sample/interpolate DTM Z continuously,
+  and solve the rider-close road bench/cut/fill with local geometry;
+- if a visual mismatch disappears only after moving the canonical road onto the
+  terrain grid, treat that as a failed diagnostic, not a valid fix;
+- any deliberate correction of canonical road XY requires separate evidence
+  that the road source itself is wrong.
+
+This trap is especially important at tight hairpins, where local curvature,
+road width, independent XY uncertainty and the 5 m terrain grid can all be on
+the same spatial scale.
+
 ### Required next diagnostic only if R4.1D cannot cover the residual cleanly
 
 1. capture a representative steep-face crop with wireframe/component boundaries;
