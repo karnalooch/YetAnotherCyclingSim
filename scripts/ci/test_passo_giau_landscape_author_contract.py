@@ -187,18 +187,38 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self,
     ) -> None:
         prepare = read("scripts/assets/prepare_passo_giau_mase_pst.py")
-        self.assertIn("def r16_roundtrip_diagnostics(", prepare)
-        self.assertIn("def seam_diagnostics(", prepare)
-        self.assertIn("def slope_diagnostics(", prepare)
-        self.assertIn("def scanline_diagnostics(", prepare)
-        self.assertIn("def landscape_diagnostics(", prepare)
-        self.assertIn('"vertical_quantization_step_m"', prepare)
-        self.assertIn('"r16_roundtrip_error_m"', prepare)
-        self.assertIn('"subsection_63_quads": seam_diagnostics(', prepare)
-        self.assertIn('"component_126_quads": seam_diagnostics(', prepare)
+        shared = read("scripts/assets/prepare_passo_giau_veneto_lidar.py")
+
+        self.assertIn(
+            "from prepare_passo_giau_veneto_lidar import (",
+            prepare,
+        )
+        for helper in (
+            "adjacent_diagnostics",
+            "encode_u16",
+            "hillshade",
+            "landscape_diagnostics",
+            "scanline_diagnostics",
+            "slope_diagnostics",
+            "stats",
+        ):
+            self.assertIn(helper, prepare)
+
+        # The MASE path deliberately reuses the already-proven numeric
+        # diagnostics instead of forking their implementation.
+        self.assertIn("def r16_roundtrip_diagnostics(", shared)
+        self.assertIn("def seam_diagnostics(", shared)
+        self.assertIn("def slope_diagnostics(", shared)
+        self.assertIn("def scanline_diagnostics(", shared)
+        self.assertIn("def landscape_diagnostics(", shared)
+        self.assertIn('"vertical_quantization_step_m"', shared)
+        self.assertIn('"r16_roundtrip_error_m"', shared)
+        self.assertIn('"subsection_63_quads": seam_diagnostics(', shared)
+        self.assertIn('"component_126_quads": seam_diagnostics(', shared)
+
+        self.assertIn('"landscape_diagnostics": landscape_diagnostics(', prepare)
         self.assertIn('"slope_degrees": slope_diagnostics(', prepare)
         self.assertIn('"scanlines": scanline_diagnostics(', prepare)
-        self.assertIn('"landscape_diagnostics": landscape_diagnostics(', prepare)
         self.assertIn("LANDSCAPE_SIZE = 4033", prepare)
         self.assertIn('SOURCE_CRS = "EPSG:4326"', prepare)
         self.assertIn('TARGET_CRS = "EPSG:32632"', prepare)
