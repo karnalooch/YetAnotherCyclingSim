@@ -80,11 +80,12 @@ def request_bytes(url: str, *, timeout: int = 60) -> bytes:
 def extract_endpoint_candidates(body: str) -> list[str]:
     candidates: list[str] = []
     patterns = (
-        r"""["']([^"']*(?:download|layerdownload|catalog|rest)[^"']*)["']""",
-        r"""\burl\s*[:=]\s*["']([^"']+)["']""",
+        r"""(["'])([^"']*(?:download|layerdownload|catalog|rest)[^"']*)\1""",
+        r"""\burl\s*[:=]\s*(["'])([^"']+)\1""",
     )
     for pattern in patterns:
-        for value in re.findall(pattern, body, flags=re.IGNORECASE):
+        for match in re.findall(pattern, body, flags=re.IGNORECASE):
+            value = match[1]
             cleaned = value.strip()
             if not cleaned or len(cleaned) > 500:
                 continue
