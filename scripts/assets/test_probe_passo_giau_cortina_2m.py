@@ -57,6 +57,19 @@ WCS10_CAPS_XML = b"""<?xml version="1.0" encoding="UTF-8"?>
 </WCS_Capabilities>
 """
 
+CSW_XML = b"""<?xml version="1.0" encoding="UTF-8"?>
+<csw:GetRecordsResponse xmlns:csw="http://www.opengis.net/cat/csw/2.0.2"
+ xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dct="http://purl.org/dc/terms/">
+  <csw:SearchResults numberOfRecordsMatched="1" numberOfRecordsReturned="1">
+    <csw:Record>
+      <dc:identifier>rv:dtm-cortina-2m</dc:identifier>
+      <dc:title>DTM_2m_Cortina</dc:title>
+      <dct:references>https://example.test/cortina.tif</dct:references>
+    </csw:Record>
+  </csw:SearchResults>
+</csw:GetRecordsResponse>
+"""
+
 DESCRIBE_XML = b"""<?xml version="1.0" encoding="UTF-8"?>
 <wcs:CoverageDescriptions xmlns:wcs="http://www.opengis.net/wcs/2.0"
  xmlns:gml="http://www.opengis.net/gml/3.2">
@@ -113,6 +126,20 @@ class Cortina2mProbeTests(unittest.TestCase):
         self.assertEqual(
             [{"identifier": "rv:DTM_2m_clip", "title": "DTM_2m_clip"}],
             matches,
+        )
+
+    def test_csw_parser_keeps_identifier_title_and_distribution(self) -> None:
+        root = probe.parse_xml(CSW_XML, "test CSW")
+        parsed = probe.parse_csw_records(root)
+        self.assertEqual(1, parsed["matched"])
+        self.assertEqual(1, parsed["returned"])
+        self.assertEqual(
+            ["rv:dtm-cortina-2m"],
+            parsed["records"][0]["identifier"],
+        )
+        self.assertEqual(
+            ["https://example.test/cortina.tif"],
+            parsed["records"][0]["references"],
         )
 
     def test_describe_coverage_proves_two_meter_grid(self) -> None:
