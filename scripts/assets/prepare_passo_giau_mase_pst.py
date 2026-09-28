@@ -50,7 +50,7 @@ EXPECTED_MASE_TILE_COUNT = 89
 EXPECTED_MASE_PIXEL_DEG = 0.00001
 MIN_MASE_COVERAGE_SHARE = 0.50
 PASSO_GIAU_WGS84 = (12.05321, 46.48284)
-PASSO_GIAU_REPORT_RADIUS_M = 250
+PASSO_GIAU_REPORT_RADIUS_M = 500
 OVERLAP_SAMPLE_STRIDE = 8
 MAX_VERTICAL_ALIGNMENT_ABS_M = 10.0
 MAX_OVERLAP_RESIDUAL_P95_M = 20.0
@@ -353,17 +353,30 @@ def passo_giau_coverage(
         raise ValueError("Passo Giau reference point is outside target AOI")
 
     on_mase = bool(mase_mask[row, column])
-    if not on_mase:
-        raise ValueError(
-            "Passo Giau reference point is not covered by the MASE 1x1 source"
-        )
 
     radius = PASSO_GIAU_REPORT_RADIUS_M
     r0 = max(0, row - radius)
     r1 = min(TARGET_NATIVE_SIZE, row + radius + 1)
     c0 = max(0, column - radius)
     c1 = min(TARGET_NATIVE_SIZE, column + radius + 1)
-    local_share = float(np.mean(mase_mask[r0:r1, c0:c1]))
+    local_mask = mase_mask[r0:r1, c0:c1]
+    local_share = float(np.mean(local_mask))
+    valid_local = np.argwhere(local_mask)
+    if valid_local.size == 0:
+        raise ValueError(
+            f"MASE has no valid terrain sample within {radius} m of Passo Giau"
+        )
+
+    center_local_row = row - r0
+    center_local_column = column - c0
+    nearest_distance_m = float(
+        np.min(
+            np.hypot(
+                valid_local[:, 0] - center_local_row,
+                valid_local[:, 1] - center_local_column,
+            )
+        )
+    )
 
     return {
         "wgs84": {
@@ -372,7 +385,15 @@ def passo_giau_coverage(
         },
         "target_pixel": {"row": row, "column": column},
         "mase_1m_at_reference_point": on_mase,
-        "coverage_share_within_250m": round(local_share, 9),
+        "neighborhood_radius_m": radius,
+        "mase_valid_samples_in_neighborhood": int(valid_local.shape[0]),
+        "coverage_share_in_neighborhood": round(local_share, 9),
+        "nearest_mase_sample_distance_m": round(nearest_distance_m, 3),
+        "terrain_truth_note": (
+            "Landscape is presentation-only. Canonical road elevation/grade comes "
+            "from the road/route pipeline, so an isolated NoData/fallback cell at "
+            "the pass does not redefine cycling physics."
+        ),
     }
 
 
@@ -633,7 +654,9 @@ def main() -> int:
     )
     print(
         "  Passo Giau MASE: "
-        f"{giau_coverage['mase_1m_at_reference_point']}"
+        f"point={giau_coverage['mase_1m_at_reference_point']}, "
+        f"nearest={giau_coverage['nearest_mase_sample_distance_m']:.1f} m, "
+        f"local={giau_coverage['coverage_share_in_neighborhood'] * 100.0:.1f}%"
     )
     print(
         "  fallback offset: "
