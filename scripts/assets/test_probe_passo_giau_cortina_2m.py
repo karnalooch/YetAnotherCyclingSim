@@ -128,6 +128,23 @@ class Cortina2mProbeTests(unittest.TestCase):
             probe.extract_endpoint_candidates(body),
         )
 
+    def test_json_catalog_matches_find_cortina_layer(self) -> None:
+        payload = {
+            "result": [
+                {"id": 10, "name": "irrelevant"},
+                {
+                    "id": 11,
+                    "name": "DTM_2m_clip",
+                    "workspace": "rv",
+                    "description": "Cortina terrain",
+                },
+            ]
+        }
+        matches = probe.json_catalog_matches(payload)
+        self.assertEqual(1, len(matches))
+        self.assertEqual("$.result[1]", matches[0]["path"])
+        self.assertEqual("DTM_2m_clip", matches[0]["item"]["name"])
+
     def test_ambiguous_wms_matches_remain_visible_to_fail_closed_caller(self) -> None:
         duplicate = WMS_XML.replace(
             b"</Layer>\n    </Layer>",
