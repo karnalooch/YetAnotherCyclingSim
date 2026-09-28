@@ -14,8 +14,7 @@ def read(path: str) -> str:
 class YacsPcgPatchContractTest(unittest.TestCase):
     def test_generic_patch_node_is_route_agnostic(self) -> None:
         header = read(
-            "Source/YetAnotherCyclingSimEditor/Public/PCG/"
-            "YacsPatchCandidatesSettings.h"
+            "Source/YetAnotherCyclingSimEditor/Public/PCG/YacsPatchCandidatesSettings.h"
         )
         cpp = read(
             "Source/YetAnotherCyclingSimEditor/Private/PCG/"
@@ -87,9 +86,7 @@ class YacsPcgPatchContractTest(unittest.TestCase):
         self.assertIn("--untracked-files=all", wrapper)
         self.assertIn("delete_asset(temporary_graph_path)", capture)
 
-        workflow = read(
-            ".github/workflows/passo-giau-r4-1-roadside-house.yml"
-        )
+        workflow = read(".github/workflows/passo-giau-r4-1-roadside-house.yml")
         self.assertIn(
             "Source/YetAnotherCyclingSimEditor/Public/PCG/"
             "YacsPatchCandidatesSettings.h",
