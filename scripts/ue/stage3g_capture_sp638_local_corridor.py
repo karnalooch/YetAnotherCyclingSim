@@ -798,7 +798,7 @@ def main() -> None:
         "landscape_component_count": len(landscape_components),
         "forced_landscape_lod": 0,
         "proof_viewmode": "lightingonly",
-        "neutral_landscape_material": null,
+        "neutral_landscape_material": None,
         "camera_location_cm": [
             float(camera_location.x),
             float(camera_location.y),
