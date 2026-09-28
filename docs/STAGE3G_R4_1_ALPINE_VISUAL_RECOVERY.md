@@ -175,6 +175,43 @@ The prepared 4033 x 4033 Landscape is a presentation resample of a real 5 m
 source DTM. The denser UE grid improves Landscape topology compatibility; it
 does **not** create extra measured terrain detail.
 
+#### P0 guardrail — SP638 / DTM spatial-grid trap
+
+The official SP638 presentation centerline and the terrain raster are
+**independent spatial measurements**. Their grids must never be treated as if
+they share vertices or exact sample locations.
+
+For the current Passo Giau sources, keep these scales explicit during review:
+
+- official road geometry has metre-scale positional uncertainty (approximately
+  the 4 m class documented for the selected road source);
+- the canonical Veneto terrain source is sampled on a 5 m x 5 m grid;
+- the prepared Unreal 4033 x 4033 Landscape is about 1.98 m/vertex, but those
+  extra vertices are interpolated presentation samples rather than new terrain
+  measurements.
+
+On a steep slope or hairpin, shifting a road sample by only a few metres can
+move it across materially different terrain elevations or even across opposite
+sides of a road cut. A road roughly one DTM-cell wide can therefore fall between
+terrain samples even when the final Unreal Landscape grid looks visually dense.
+
+**Never snap the road centerline, road edges, or authoritative road XY to DTM or
+Landscape vertices.** Preserve the canonical road XY, interpolate/sample terrain
+Z continuously from the canonical DTM, and author the road bench, cut, fill,
+embankment and rider-close tie-in as separate local presentation geometry.
+
+Corollaries:
+
+- 5 m DTM -> ~1.98 m/vertex Landscape resampling does not remove the original
+  5 m source spacing;
+- a denser Landscape cannot resolve disagreement caused by independent road and
+  terrain sampling;
+- local road/terrain mismatch is not evidence that the road should be warped to
+  the Landscape grid;
+- review any proposed terrain/road fix that changes canonical road XY as a
+  **P0 architecture violation** unless a separately verified source defect is
+  being corrected deliberately.
+
 #### Real-road alignment policy
 
 The Passo Giau road should be sourced from real GIS geometry instead of being
