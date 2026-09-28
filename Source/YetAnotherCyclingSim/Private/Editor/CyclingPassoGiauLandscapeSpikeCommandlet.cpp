@@ -2,7 +2,12 @@
 
 #if WITH_EDITOR
 
+#include "Components/SplineComponent.h"
+#include "Components/SplineMeshComponent.h"
+#include "Dom/JsonObject.h"
+#include "Engine/StaticMesh.h"
 #include "Engine/World.h"
+#include "GameFramework/Actor.h"
 #include "GameFramework/WorldSettings.h"
 #include "HAL/FileManager.h"
 #include "Landscape.h"
@@ -11,6 +16,8 @@
 #include "Misc/FileHelper.h"
 #include "Misc/Parse.h"
 #include "Misc/Paths.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
 #include "FileHelpers.h"
 #include "UObject/Package.h"
 
@@ -33,6 +40,10 @@ namespace CyclingPassoGiauLandscapeSpikeInternal
 	constexpr int64 ExpectedR16Bytes =
 		static_cast<int64>(LandscapeVertices) *
 		static_cast<int64>(LandscapeVertices) * 2;
+	constexpr double RoadWidthCm = 600.0;
+	constexpr double RoadThicknessCm = 8.0;
+	constexpr int32 MinRoadControlPoints = 50;
+	constexpr int32 MaxRoadControlPoints = 1000;
 
 	bool ReadR16LittleEndian(
 		const FString& Path,
@@ -90,6 +101,219 @@ namespace CyclingPassoGiauLandscapeSpikeInternal
 		return true;
 	}
 
+	bool ReadRoadSplineJson(
+		const FString& Path,
+		TArray<FVector>& OutPoints,
+		FString& OutRoadName,
+		FString& OutError)
+	{
+		FString JsonText;
+		if (!FFileHelper::LoadFileToString(JsonText, *Path))
+		{
+			OutError = FString::Printf(TEXT("failed to read road JSON '%s'"), *Path);
+			return false;
+		}
+
+		TSharedPtr<FJsonObject> Root;
+		const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JsonText);
+		if (!FJsonSerializer::Deserialize(Reader, Root) || !Root.IsValid())
+		{
+			OutError = FString::Printf(TEXT("failed to parse road JSON '%s'"), *Path);
+			return false;
+		}
+
+		Root->TryGetStringField(TEXT("name"), OutRoadName);
+		if (OutRoadName.IsEmpty())
+		{
+			OutRoadName = TEXT("SP 638 DEL PASSO GIAU (BL)");
+		}
+
+		const TArray<TSharedPtr<FJsonValue>>* PointValues = nullptr;
+		if (!Root->TryGetArrayField(TEXT("spline_points"), PointValues) || PointValues == nullptr)
+		{
+			OutError = TEXT("road JSON is missing spline_points");
+			return false;
+		}
+		if (PointValues->Num() < MinRoadControlPoints ||
+			PointValues->Num() > MaxRoadControlPoints)
+		{
+			OutError = FString::Printf(
+				TEXT("road spline control count is outside [%d,%d]: %d"),
+				MinRoadControlPoints,
+				MaxRoadControlPoints,
+				PointValues->Num());
+			return false;
+		}
+
+		OutPoints.Reset();
+		OutPoints.Reserve(PointValues->Num());
+		for (int32 Index = 0; Index < PointValues->Num(); ++Index)
+		{
+			const TSharedPtr<FJsonObject> PointObject = (*PointValues)[Index]->AsObject();
+			if (!PointObject.IsValid())
+			{
+				OutError = FString::Printf(TEXT("road spline point %d is not an object"), Index);
+				return false;
+			}
+
+			double X = 0.0;
+			double Y = 0.0;
+			double Z = 0.0;
+			if (!PointObject->TryGetNumberField(TEXT("ue_x_cm"), X) ||
+				!PointObject->TryGetNumberField(TEXT("ue_y_cm"), Y) ||
+				!PointObject->TryGetNumberField(TEXT("ue_z_cm"), Z))
+			{
+				OutError = FString::Printf(TEXT("road spline point %d is missing UE coordinates"), Index);
+				return false;
+			}
+			if (!FMath::IsFinite(X) || !FMath::IsFinite(Y) || !FMath::IsFinite(Z) ||
+				X < -1000.0 || X > 801000.0 ||
+				Y < -1000.0 || Y > 801000.0 ||
+				Z < 100000.0 || Z > 300000.0)
+			{
+				OutError = FString::Printf(
+					TEXT("road spline point %d is outside the isolated Passo Giau world bounds"),
+					Index);
+				return false;
+			}
+
+			const FVector Point(X, Y, Z);
+			if (OutPoints.Num() > 0)
+			{
+				const double StepCm = FVector::Dist2D(OutPoints.Last(), Point);
+				if (StepCm < 1.0 || StepCm > 200000.0)
+				{
+					OutError = FString::Printf(
+						TEXT("road spline point spacing is invalid at %d: %.3f cm"),
+						Index,
+						StepCm);
+					return false;
+				}
+			}
+			OutPoints.Add(Point);
+		}
+
+		return true;
+	}
+
+	bool SpawnRoadSpline(
+		UWorld* World,
+		const TArray<FVector>& Points,
+		int32& OutSplineMeshCount,
+		FString& OutError)
+	{
+		FActorSpawnParameters SpawnParameters;
+		SpawnParameters.OverrideLevel = World->GetCurrentLevel();
+		SpawnParameters.Name = TEXT("PassoGiauRoad");
+		SpawnParameters.SpawnCollisionHandlingOverride =
+			ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		AActor* RoadActor = World->SpawnActor<AActor>(
+			AActor::StaticClass(),
+			FTransform::Identity,
+			SpawnParameters);
+		if (!IsValid(RoadActor))
+		{
+			OutError = TEXT("failed to spawn Passo Giau road actor");
+			return false;
+		}
+		RoadActor->SetActorLabel(TEXT("SP638 Passo Giau — presentation road"));
+
+		USplineComponent* Spline = NewObject<USplineComponent>(
+			RoadActor,
+			TEXT("SP638Spline"),
+			RF_Transactional);
+		if (!IsValid(Spline))
+		{
+			OutError = TEXT("failed to allocate SP638 spline component");
+			return false;
+		}
+		Spline->CreationMethod = EComponentCreationMethod::Instance;
+		RoadActor->SetRootComponent(Spline);
+		RoadActor->AddInstanceComponent(Spline);
+		Spline->RegisterComponent();
+		Spline->ClearSplinePoints(false);
+
+		for (int32 Index = 0; Index < Points.Num(); ++Index)
+		{
+			Spline->AddSplinePoint(
+				Points[Index],
+				ESplineCoordinateSpace::World,
+				false);
+			Spline->SetSplinePointType(
+				Index,
+				ESplinePointType::CurveClamped,
+				false);
+		}
+		Spline->SetClosedLoop(false, false);
+		Spline->UpdateSpline();
+
+		UStaticMesh* RoadMesh = LoadObject<UStaticMesh>(
+			nullptr,
+			TEXT("/Engine/BasicShapes/Cube.Cube"));
+		if (!IsValid(RoadMesh))
+		{
+			OutError = TEXT("failed to load /Engine/BasicShapes/Cube for road proof");
+			return false;
+		}
+
+		OutSplineMeshCount = 0;
+		const FVector2D CrossSectionScale(
+			RoadWidthCm / 100.0,
+			RoadThicknessCm / 100.0);
+		for (int32 Index = 0; Index < Points.Num() - 1; ++Index)
+		{
+			USplineMeshComponent* Segment = NewObject<USplineMeshComponent>(
+				RoadActor,
+				*FString::Printf(TEXT("SP638Segment_%04d"), Index),
+				RF_Transactional);
+			if (!IsValid(Segment))
+			{
+				OutError = FString::Printf(TEXT("failed to allocate road segment %d"), Index);
+				return false;
+			}
+			Segment->CreationMethod = EComponentCreationMethod::Instance;
+			Segment->SetupAttachment(Spline);
+			Segment->SetStaticMesh(RoadMesh);
+			Segment->SetMobility(EComponentMobility::Static);
+			Segment->SetForwardAxis(ESplineMeshAxis::X, false);
+			Segment->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			Segment->SetGenerateOverlapEvents(false);
+			Segment->SetCastShadow(false);
+
+			FVector StartPosition;
+			FVector StartTangent;
+			FVector EndPosition;
+			FVector EndTangent;
+			Spline->GetLocationAndTangentAtSplinePoint(
+				Index,
+				StartPosition,
+				StartTangent,
+				ESplineCoordinateSpace::Local);
+			Spline->GetLocationAndTangentAtSplinePoint(
+				Index + 1,
+				EndPosition,
+				EndTangent,
+				ESplineCoordinateSpace::Local);
+
+			Segment->SetStartAndEnd(
+				StartPosition,
+				StartTangent,
+				EndPosition,
+				EndTangent,
+				false);
+			Segment->SetStartScale(CrossSectionScale, false);
+			Segment->SetEndScale(CrossSectionScale, false);
+			RoadActor->AddInstanceComponent(Segment);
+			Segment->RegisterComponent();
+			Segment->UpdateMesh();
+			++OutSplineMeshCount;
+		}
+
+		RoadActor->MarkPackageDirty();
+		return true;
+	}
+
 	void StripSpikeMapActors(UWorld* World)
 	{
 		TArray<AActor*> ToDestroy;
@@ -123,14 +347,17 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 
 	FString HeightmapPath;
 	FString ProofPath;
+	FString RoadJsonPath;
 	FParse::Value(*Params, TEXT("Heightmap="), HeightmapPath);
 	FParse::Value(*Params, TEXT("Proof="), ProofPath);
+	FParse::Value(*Params, TEXT("RoadJson="), RoadJsonPath);
 	double RuntimeZScale = ZScale;
 	double RuntimeLocationZCm = LocationZCm;
 	FParse::Value(*Params, TEXT("ScaleZ="), RuntimeZScale);
 	FParse::Value(*Params, TEXT("LocationZCm="), RuntimeLocationZCm);
 	HeightmapPath.TrimQuotesInline();
 	ProofPath.TrimQuotesInline();
+	RoadJsonPath.TrimQuotesInline();
 
 	if (!FMath::IsFinite(RuntimeZScale) ||
 		RuntimeZScale < 250.0 ||
@@ -163,6 +390,26 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error,
 			TEXT("Heightmap does not exist: %s"), *HeightmapPath);
 		return 1;
+	}
+
+	TArray<FVector> RoadPoints;
+	FString RoadName;
+	const bool bImportRoad = !RoadJsonPath.IsEmpty();
+	if (bImportRoad)
+	{
+		RoadJsonPath = FPaths::ConvertRelativePathToFull(RoadJsonPath);
+		if (!FPaths::FileExists(RoadJsonPath))
+		{
+			UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error,
+				TEXT("Road JSON does not exist: %s"), *RoadJsonPath);
+			return 1;
+		}
+		FString RoadError;
+		if (!ReadRoadSplineJson(RoadJsonPath, RoadPoints, RoadName, RoadError))
+		{
+			UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error, TEXT("%s"), *RoadError);
+			return 1;
+		}
 	}
 
 	TArray<uint16> HeightData;
@@ -306,6 +553,29 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		return 1;
 	}
 
+	int32 RoadSplineMeshCount = 0;
+	if (bImportRoad)
+	{
+		FString RoadError;
+		if (!SpawnRoadSpline(
+			MapWorld,
+			RoadPoints,
+			RoadSplineMeshCount,
+			RoadError))
+		{
+			UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error, TEXT("%s"), *RoadError);
+			return 1;
+		}
+		if (RoadSplineMeshCount != RoadPoints.Num() - 1)
+		{
+			UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error,
+				TEXT("Road spline mesh count mismatch: actual=%d expected=%d."),
+				RoadSplineMeshCount,
+				RoadPoints.Num() - 1);
+			return 1;
+		}
+	}
+
 	MapWorld->MarkPackageDirty();
 	if (!UEditorLoadingAndSavingUtils::SaveMap(MapWorld, SpikeMapPackagePath))
 	{
@@ -342,6 +612,10 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		TEXT("  \"scale_z\": %.6f,\n")
 		TEXT("  \"location_z_cm\": %.3f,\n")
 		TEXT("  \"bounds_size_cm\": [%.3f, %.3f, %.3f],\n")
+		TEXT("  \"road_imported\": %s,\n")
+		TEXT("  \"road_control_points\": %d,\n")
+		TEXT("  \"road_spline_mesh_segments\": %d,\n")
+		TEXT("  \"road_width_cm\": %.3f,\n")
 		TEXT("  \"presentation_only\": true,\n")
 		TEXT("  \"authoritative_route_geometry\": false,\n")
 		TEXT("  \"authoritative_physics\": false\n")
@@ -365,7 +639,11 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		RuntimeLocationZCm,
 		BoundsSize.X,
 		BoundsSize.Y,
-		BoundsSize.Z);
+		BoundsSize.Z,
+		bImportRoad ? TEXT("true") : TEXT("false"),
+		RoadPoints.Num(),
+		RoadSplineMeshCount,
+		RoadWidthCm);
 
 	if (!ProofPath.IsEmpty())
 	{
@@ -386,6 +664,15 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		BoundsSize.Z,
 		EncodedMin,
 		EncodedMax);
+	if (bImportRoad)
+	{
+		UE_LOG(LogCyclingPassoGiauLandscapeSpike, Display,
+			TEXT("PassoGiauRoad: imported '%s' control_points=%d spline_meshes=%d width_cm=%.1f."),
+			*RoadName,
+			RoadPoints.Num(),
+			RoadSplineMeshCount,
+			RoadWidthCm);
+	}
 	UE_LOG(LogCyclingPassoGiauLandscapeSpike, Display,
 		TEXT("CyclingPassoGiauLandscapeSpikeCommandlet: done."));
 	return 0;
