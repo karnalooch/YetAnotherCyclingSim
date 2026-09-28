@@ -124,9 +124,10 @@ $ScaleZ = [double]$Transform.scale_z
 $LocationZCm = [double]$Transform.location_z_cm_for_sea_level_preservation
 if ($ScaleZ -lt 250.0 -or $ScaleZ -gt 350.0) { throw 'Unexpected Passo Giau Z scale in MASE terrain report.' }
 if ($LocationZCm -lt 150000.0 -or $LocationZCm -gt 250000.0) { throw 'Unexpected Passo Giau Z midpoint in MASE terrain report.' }
-if ([int]$Terrain.tile_count -ne 89 -or [double]$Terrain.target_aoi.native_cell_m -ne 1.0) { throw 'Hybrid terrain report does not prove the expected 89-tile MASE / 1 m metric working grid.' }
+if ([int]$Terrain.tile_count -ne 204 -or [double]$Terrain.target_aoi.native_cell_m -ne 1.0) { throw 'Hybrid terrain report does not prove the expected 204-tile MASE / 1 m metric working grid.' }
 if ($Terrain.primary_source.source_crs -ne 'EPSG:4326' -or $Terrain.fallback_source.source_crs -ne 'EPSG:7795' -or $Terrain.target_crs -ne 'EPSG:32632') { throw 'Hybrid terrain report does not prove the expected CRS chain.' }
-if ($SourceDownload.archive.sha256 -ne '0e2a133fcc80f225aee2b61aa04bc7a858aa3754c6b80a7c640b8a6ab7d14b8c' -or [int64]$SourceDownload.archive.bytes -ne 356503497) { throw 'MASE source checkpoint digest/size does not match the pinned release asset.' }
+if ($SourceDownload.archive.sha256 -ne '4215d1d37fb8540c44442aedd164b6cda3f1845f3552413a975a6b7b1461e93c' -or [int64]$SourceDownload.archive.bytes -ne 853162557) { throw 'MASE source checkpoint digest/size does not match the pinned release asset.' }
+if ([int]$SourceDownload.source_contract.tile_count -ne 204 -or [int]$SourceDownload.source_contract.dsm_tile_count -ne 0) { throw 'MASE source checkpoint must contain exactly 204 DTM GeoTIFFs and zero DSM tiles.' }
 if ([int]$FallbackDownload.tile_count -lt 1) { throw 'Veneto fallback report does not prove any downloaded fallback tiles.' }
 if ([double]$Terrain.coverage.mase_share -lt 0.50) { throw 'MASE primary coverage share dropped below the accepted hybrid threshold.' }
 if ([double]$Terrain.coverage.passo_giau.nearest_mase_sample_distance_m -gt 500.0) { throw 'No MASE primary terrain exists within 500 m of the Passo Giau reference point.' }
