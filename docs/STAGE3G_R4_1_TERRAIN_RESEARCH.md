@@ -6,42 +6,57 @@
 
 ## 1. Why this exists
 
-The Passo Giau R4.1B spike has already proven the mechanical pipeline:
+R4.1B has now proven both the original bootstrap path and the higher-resolution
+active Landscape path.
 
-- official TINITALY source is downloaded deterministically;
-- the source DEM is float32, 800x800 at 10 m;
-- it is bilinearly resampled to a 1009x1009 Unreal candidate;
-- little-endian R16 is produced deterministically;
+Historical merged baseline:
+
+- TINITALY 1.1 / INGV, 800x800 at 10 m;
+- deterministic 1009x1009 R16 candidate;
+- licensed source/provenance and remote preparation proof on `main`.
+
+Active PR #215 candidate:
+
+- Regione del Veneto, `DTM 5 m derivato dai rilievi LiDAR`, IODL 2.0;
+- 33 official tiles for the bounded Passo Giau AOI;
+- native 1600x1600 working grid at 5 m;
+- deterministic 4033x4033 unsigned-16 / little-endian R16 presentation grid;
 - native `ALandscape::Import` succeeds;
-- the result has 64 components in an 8x8 grid;
+- 32x32 components / 1024 components;
 - the isolated map is persisted without mutating `L_CyclingTest`;
-- deterministic 1920x1080 capture now succeeds.
+- source A/B run `36395015722` is GREEN;
+- latest diagnostic authoring run `36399060374` is GREEN;
+- deterministic 3840x2160 lighting-only / forced-LOD0 / FXAA capture succeeds.
 
-The remaining problem is **visual diagnosis**, not "make CI green".
+The remaining problem is **visual interpretation and level-design use**, not
+"make CI green".
 
-The current proof contains repetitive banding/step-like detail that is visually
-unacceptable. R4.1B stays open until we can prove whether that pattern comes
-from:
+The earlier 1080p proof contained dense repetitive herringbone/striping. The
+4K/FXAA diagnostic substantially reduces that pattern while the source and
+prepared 4033 hillshades remain natural. Screen-space aliasing was therefore a
+real contributor.
 
-1. fallback material / shading;
-2. source or conversion quantization;
-3. import interpretation;
-4. Landscape component/subsection boundaries;
-5. renderer/LOD state;
-6. actual source DEM resolution.
+Visible stepping/ribbing remains on very steep cliff faces. That residual is
+now treated primarily as a heightfield/spatial-resolution representation
+constraint until disproven, not as evidence that the uint16 encoding is broken.
 
-Do not hide the symptom with production materials, vegetation or post-processing.
+Do not hide unresolved geometry with broad blur, production vegetation,
+post-processing or Nanite.
 
 ## 2. Hard facts from Epic documentation
 
-### Valid 1009 topology
+### Valid 4033 topology
 
-Epic's Landscape Technical Guide lists **1009x1009** as a recommended size with:
+Epic's Landscape Technical Guide supports the same 63-quad section /
+2x2-subsection component pattern used by the current candidate.
+
+For the active 4033x4033 Passo Giau Landscape:
 
 - 63 quads per section;
 - 4 sections per component (2x2);
 - 126x126 quads per component;
-- 64 components (8x8).
+- 1024 components (32x32);
+- 4033 vertices per side = 32 * 126 + 1.
 
 That matches the current R4.1B topology.
 
@@ -57,18 +72,20 @@ scaled by Landscape Z scale.
 Reference:
 https://dev.epicgames.com/documentation/unreal-engine/landscape-technical-guide-in-unreal-engine
 
-For our source relief:
+For the active Veneto source proof:
 
-- source min: 1171.353 m;
-- source max: 2713.832 m;
-- relief: 1542.479 m;
-- encoded range: 65536 possible uint16 levels.
+- source min: 1168.833 m;
+- source max: 2715.996 m;
+- relief: 1547.163 m;
+- encoded range: 65536 possible uint16 levels;
+- prepared 4033 raster: 64756 unique uint16 values;
+- exact-flat adjacent-sample share: about 0.026%.
 
 The ideal full-range vertical quantization is therefore approximately:
 
-`1542.479 m / 65535 ~= 0.02354 m`
+`1547.163 m / 65535 ~= 0.02361 m`
 
-or about **2.35 cm per encoded level**.
+or about **2.36 cm per encoded level**.
 
 This is far smaller than the visually obvious large terraces in the current
 proof. Therefore "16-bit is inherently too coarse" is **not** an acceptable
@@ -102,33 +119,39 @@ References:
 - https://dev.epicgames.com/documentation/unreal-engine/creating-custom-landscape-importers-in-unreal-engine
 - https://dev.epicgames.com/documentation/unreal-engine/API/Editor/LandscapeEditor/ILandscapeFileFormat
 
-## 3. Critical current observation: do not confuse material pattern with geometry
+## 3. Current observation: screen aliasing is separated from residual geometry
 
-The current commandlet sets:
+The commandlet still keeps production terrain materials out of the proof:
 
 `Landscape->LandscapeMaterial = nullptr;`
 
-That means the visual proof is not using an intentionally authored neutral
-geometry-diagnostic material.
+The latest capture additionally enforces:
 
-The current screenshot contains fine repetitive striping/herringbone detail
-that can visually amplify or mimic height stepping. The silhouette also needs
-inspection, but a lit screenshot with an engine fallback material is **not a
-sufficient geometry verdict**.
+- Landscape LOD0;
+- lighting-only view mode;
+- proof sun shadows disabled;
+- 3840x2160 spatial capture;
+- deterministic high-quality FXAA.
 
-### Required next A/B
+Compared with the earlier 1920x1080 proof, the dense herringbone/striping is
+substantially reduced. That is direct evidence that the old screenshot
+overstated terrain defects because of screen-space/render aliasing.
 
-Capture the exact same imported map and camera with:
+What remains is concentrated on steep cliff faces: staircase/rib structures
+that are plausible consequences of representing a steep 5 m DTM as a
+single-valued Landscape heightfield. The 4033 grid is a presentation resample
+to about 1.98 m/vertex; it does **not** create new measured detail beyond the
+native 5 m source.
 
-1. **neutral no-grid lit material** — constant base color, controlled roughness,
-   no texture pattern;
-2. **neutral unlit/debug pass** — removes lighting as a source of apparent
-   relief;
-3. optional **wireframe/component-boundary pass** for topology inspection;
-4. the current fallback-material proof retained only as a comparison.
+### Required next diagnostic only if R4.1D cannot cover the residual cleanly
 
-Do not save diagnostic capture-only material overrides into the canonical map
-unless the material becomes an explicit versioned R4.1 asset.
+1. capture a representative steep-face crop with wireframe/component boundaries;
+2. check whether any repeated defect aligns with 63/126-quad boundaries;
+3. compare the same location against the prepared 4033 hillshade/source samples;
+4. use Unreal-native import-reader parity only if the evidence suggests a data
+   interpretation defect.
+
+Do not save diagnostic-only overrides into the canonical map.
 
 ## 4. Diagnostic ladder — run in this order
 
@@ -175,7 +198,7 @@ For the current topology:
 
 - subsection size: 63 quads;
 - component size: 126 quads;
-- component grid: 8x8.
+- component grid: 32x32.
 
 Instrument seam probes around X/Y multiples of 126 and, separately, subsection
 multiples of 63. Compare the source samples on both sides of each boundary and
@@ -287,25 +310,32 @@ R4.1B Landscape path A is technically and visually acceptable only if:
   difference is understood and deliberately resolved;
 - source -> prepared R16 round-trip error is measured and documented;
 - the silhouette and major ridges agree with the source hillshade;
-- the proof remains 1920x1080 and deterministic;
+- the diagnostic proof remains 3840x2160 and deterministic;
 - `L_CyclingTest` remains byte/hash protected;
 - the owner/human review explicitly accepts the visual result.
 
 Green CI remains necessary but is not visual acceptance.
 
-## 9. Working hypothesis priority for the current screenshot
+## 9. Working hypothesis priority after the 4K/FXAA proof
 
-Investigate in this order:
+Current evidence changes the priority order:
 
-1. **fallback material / shading false positive** — high priority because the
-   current Landscape has no authored neutral diagnostic material;
-2. **source/R16 numeric distribution** — verify instead of assuming;
-3. **native-import vs manual-reader parity**;
-4. **component/subsection boundary correlation**;
-5. **actual DEM 10 m source limitation**;
-6. renderer/Nanite only after the above.
+1. **steep-face heightfield / native 5 m spatial-resolution limit** — primary
+   residual hypothesis; Landscape cannot represent overhangs and the 4033
+   resample does not add measured terrain detail;
+2. **component/subsection boundary correlation** — check only if the residual
+   shows periodic alignment with 63/126-quad boundaries;
+3. **native-import vs manual-reader parity** — keep as a fail-closed oracle if
+   data interpretation becomes suspect;
+4. **bounded meso cliff geometry** — use R4.1D Rock Face / cliff / scree assets
+   for inspectable steep faces while keeping the DEM for macro massing;
+5. **renderer aliasing** — proven to have contributed to the old 1080p
+   herringbone, but no longer the main residual after 4K/FXAA;
+6. **Nanite** remains a later performance/rendering decision, not a geometry
+   repair.
 
-This ordering minimizes destructive "fixes" and keeps the diagnosis falsifiable.
+Broad terrain smoothing is still rejected: it would destroy source structure
+without addressing the core heightfield limitation.
 
 ## 10. Source hierarchy
 
