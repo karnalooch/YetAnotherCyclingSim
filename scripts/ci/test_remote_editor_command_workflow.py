@@ -11,7 +11,7 @@ SMOKE = ROOT / "scripts" / "ue" / "remote_editor_smoke.py"
 
 
 class RemoteEditorCommandContractTests(unittest.TestCase):
-    def test_workflow_is_owner_only_and_issue_227_only(self) -> None:
+    def test_workflow_is_owner_only_and_issue_228_only(self) -> None:
         text = WORKFLOW.read_text(encoding="utf-8")
         self.assertIn("issue_comment:", text)
         self.assertIn("github.event.issue.number == 228", text)
