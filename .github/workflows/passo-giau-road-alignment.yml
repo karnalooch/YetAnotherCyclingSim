@@ -1,0 +1,84 @@
+name: Passo Giau R4.1 road alignment proof
+
+on:
+  push:
+    branches:
+      - feat/stage3g-r4-1-passo-giau-road-alignment
+    paths:
+      - 'scripts/assets/download_passo_giau_road_network.py'
+      - 'scripts/assets/prepare_passo_giau_road.py'
+      - '.github/workflows/passo-giau-road-alignment.yml'
+  pull_request:
+    branches:
+      - feat/stage3g-r4-1-passo-giau-landscape-spike
+    paths:
+      - 'scripts/assets/download_passo_giau_road_network.py'
+      - 'scripts/assets/prepare_passo_giau_road.py'
+      - '.github/workflows/passo-giau-road-alignment.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: Prepare official SP638 centerline and overlay
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout exact revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          lfs: false
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+
+      - name: Install GIS dependencies
+        run: |
+          python -m pip install --disable-pip-version-check \
+            numpy==2.2.6 \
+            Pillow==11.3.0 \
+            rasterio==1.4.3 \
+            shapely==2.1.1
+
+      - name: Compile asset scripts
+        run: |
+          python -m py_compile \
+            scripts/assets/download_passo_giau_veneto_lidar.py \
+            scripts/assets/prepare_passo_giau_veneto_lidar.py \
+            scripts/assets/download_passo_giau_road_network.py \
+            scripts/assets/prepare_passo_giau_road.py
+
+      - name: Prepare canonical Veneto 5 m terrain source
+        run: |
+          python scripts/assets/download_passo_giau_veneto_lidar.py
+          python scripts/assets/prepare_passo_giau_veneto_lidar.py
+
+      - name: Download official road graph
+        run: python scripts/assets/download_passo_giau_road_network.py
+
+      - name: Prepare SP638 centerline and GIS proof
+        run: python scripts/assets/prepare_passo_giau_road.py
+
+      - name: Show proof summary
+        run: |
+          cat ExternalAssets/Terrain/PassoGiau/RoadNetwork/road-download-report.json
+          cat ExternalAssets/Terrain/PassoGiau/PreparedRoad/road-preparation-report.json
+          ls -lh ExternalAssets/Terrain/PassoGiau/PreparedRoad/
+
+      - name: Upload road alignment evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: passo-giau-road-alignment-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ExternalAssets/Terrain/PassoGiau/RoadNetwork/road-download-report.json
+            ExternalAssets/Terrain/PassoGiau/RoadNetwork/passo_giau_sp638_source.geojson
+            ExternalAssets/Terrain/PassoGiau/PreparedRoad/**
+          if-no-files-found: error
+          retention-days: 14
