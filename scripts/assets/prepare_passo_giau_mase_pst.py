@@ -501,6 +501,29 @@ def main() -> int:
         )
         if not np.all(np.isfinite(landscape)):
             raise ValueError("4033 Landscape resample contains missing samples")
+
+        # Cubic interpolation may overshoot the measured source elevation
+        # domain by a fraction of a metre near sharp terrain transitions.
+        # Do not encode invented extrema into the R16 transform: clamp the
+        # presentation resample to the valid hybrid source min/max first.
+        preclip_min = float(landscape.min())
+        preclip_max = float(landscape.max())
+        clipped_below_count = int(np.count_nonzero(landscape < elevation_min))
+        clipped_above_count = int(np.count_nonzero(landscape > elevation_max))
+        landscape_resampling_guard = {
+            "preclip_min_m": round(preclip_min, 6),
+            "preclip_max_m": round(preclip_max, 6),
+            "clipped_below_count": clipped_below_count,
+            "clipped_above_count": clipped_above_count,
+            "max_undershoot_m": round(max(0.0, elevation_min - preclip_min), 6),
+            "max_overshoot_m": round(max(0.0, preclip_max - elevation_max), 6),
+            "policy": "clip cubic presentation resample to measured hybrid source domain before R16 encoding",
+        }
+        landscape = np.clip(
+            landscape,
+            elevation_min,
+            elevation_max,
+        ).astype(np.float32, copy=False)
     except Exception as exc:
         print(f"[error] hybrid terrain preparation failed: {exc}", file=sys.stderr)
         return 3
@@ -619,6 +642,7 @@ def main() -> int:
             elevation_max,
         ),
         "landscape_resampling": "cubic",
+        "landscape_resampling_guard": landscape_resampling_guard,
         "reprojection_resampling": "cubic",
         "unreal_landscape_candidate": landscape_metadata(
             elevation_min,
