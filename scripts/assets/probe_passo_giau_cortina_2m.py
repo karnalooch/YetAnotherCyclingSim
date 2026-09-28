@@ -783,6 +783,14 @@ def fetch_coverage_description(
         },
     )
     root = parse_xml(request_bytes(url), "WCS DescribeCoverage")
+    exception_texts = descendant_texts(
+        root,
+        {"ExceptionText", "ServiceException"},
+    )
+    if exception_texts:
+        raise RuntimeError(
+            "WCS DescribeCoverage exception: " + " | ".join(exception_texts)
+        )
     description = parse_describe_coverage(root)
     proven_resolution = validate_resolution(description)
     return url, description, proven_resolution
