@@ -34,6 +34,7 @@ PREFERRED_WMS_LAYER = "rv:DTM_2m_clip"
 PASSO_GIAU_WGS84 = (12.05321, 46.48284)
 EXPECTED_RESOLUTION_M = 2.0
 RESOLUTION_TOLERANCE_M = 0.25
+WCS_VERSIONS = ("2.0.1", "1.1.1", "1.0.0")
 MAX_RESPONSE_BYTES = 16 * 1024 * 1024
 USER_AGENT = (
     "YetAnotherCyclingSim-Cortina2mProbe/1.0 "
@@ -419,10 +420,15 @@ def wcs_coverage_candidates(
     expected.discard("")
     matches: list[dict[str, str | None]] = []
     for element in root.iter():
-        if local_name(element.tag) != "CoverageSummary":
+        if local_name(element.tag) not in {
+            "CoverageSummary",
+            "CoverageOfferingBrief",
+        }:
             continue
-        identifier = child_text(element, "CoverageId") or child_text(
-            element, "Identifier"
+        identifier = (
+            child_text(element, "CoverageId")
+            or child_text(element, "Identifier")
+            or child_text(element, "name")
         )
         title = (
             child_text(element, "Title")
@@ -532,6 +538,20 @@ def fetch_describe_layer() -> tuple[str, list[dict[str, str]]]:
     return url, descriptions
 
 
+def normalize_service_endpoint(value: str) -> str:
+    parsed = urllib.parse.urlsplit(value)
+    if (
+        parsed.hostname == "idt2-geoserver.regione.veneto.it"
+        and parsed.scheme == "http"
+        and parsed.port == 80
+    ):
+        netloc = parsed.hostname
+        return urllib.parse.urlunsplit(
+            ("https", netloc, parsed.path, parsed.query, parsed.fragment)
+        )
+    return value
+
+
 def wcs_endpoint_candidates(
     descriptions: list[dict[str, str]],
 ) -> list[str]:
@@ -539,8 +559,10 @@ def wcs_endpoint_candidates(
     for item in descriptions:
         for key in ("owsURL", "owsUrl", "url"):
             value = item.get(key)
-            if value and value not in candidates:
-                candidates.append(value)
+            if value:
+                normalized_endpoint = normalize_service_endpoint(value)
+                if normalized_endpoint not in candidates:
+                    candidates.append(normalized_endpoint)
     workspace = PREFERRED_WMS_LAYER.split(":", 1)[0]
     workspace_url = (
         "https://idt2-geoserver.regione.veneto.it/geoserver/"
@@ -586,48 +608,60 @@ def discover_wcs_coverage(
     attempts: list[dict[str, Any]] = []
     found: list[dict[str, Any]] = []
     for endpoint in endpoints:
-        url = query_url(
-            endpoint,
-            {
+        for version in WCS_VERSIONS:
+            params = {
                 "service": "WCS",
-                "version": "2.0.1",
                 "request": "GetCapabilities",
-            },
-        )
-        attempt: dict[str, Any] = {
-            "endpoint": endpoint,
-            "get_capabilities_url": url,
-        }
-        try:
-            root = parse_xml(request_bytes(url), "WCS GetCapabilities")
-            matches = wcs_coverage_candidates(root, wms_name=wms_name)
-            attempt["matches"] = matches
-            for match in matches:
-                found.append(
-                    {
-                        "endpoint": endpoint,
-                        "get_capabilities_url": url,
-                        "coverage": match,
-                    }
-                )
-        except Exception as exc:
-            attempt["error"] = str(exc)
-        attempts.append(attempt)
+            }
+            if version.startswith("1.1"):
+                params["AcceptVersions"] = version
+            else:
+                params["version"] = version
+            url = query_url(endpoint, params)
+            attempt: dict[str, Any] = {
+                "endpoint": endpoint,
+                "requested_version": version,
+                "get_capabilities_url": url,
+            }
+            try:
+                root = parse_xml(request_bytes(url), "WCS GetCapabilities")
+                attempt["response_version"] = root.attrib.get("version")
+                matches = wcs_coverage_candidates(root, wms_name=wms_name)
+                attempt["matches"] = matches
+                for match in matches:
+                    found.append(
+                        {
+                            "endpoint": endpoint,
+                            "version": version,
+                            "get_capabilities_url": url,
+                            "coverage": match,
+                        }
+                    )
+            except Exception as exc:
+                attempt["error"] = str(exc)
+            attempts.append(attempt)
 
     return {"attempts": attempts, "found": found}
 
 
 def fetch_coverage_description(
     endpoint: str,
+    version: str,
     coverage_id: str,
 ) -> tuple[str, dict[str, Any], list[float]]:
+    if version.startswith("2."):
+        identifier_param = "coverageId"
+    elif version.startswith("1.1"):
+        identifier_param = "identifiers"
+    else:
+        identifier_param = "coverage"
     url = query_url(
         endpoint,
         {
             "service": "WCS",
-            "version": "2.0.1",
+            "version": version,
             "request": "DescribeCoverage",
-            "coverageId": coverage_id,
+            identifier_param: coverage_id,
         },
     )
     root = parse_xml(request_bytes(url), "WCS DescribeCoverage")
@@ -689,6 +723,7 @@ def main() -> int:
 
         describe_url, description, resolution = fetch_coverage_description(
             str(selected["endpoint"]),
+            str(selected["version"]),
             coverage_id,
         )
         report["wcs"]["selected"] = selected
