@@ -81,6 +81,7 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("$CaptureStdout = Join-Path $ArtifactRoot 'capture.stdout.log'", wrapper)
         self.assertIn("-RedirectStandardOutput $CaptureStdout", wrapper)
         self.assertIn("capture proof LOD stabilization is invalid", wrapper)
+        self.assertIn("geometry proof sun unexpectedly casts shadows", wrapper)
         self.assertIn("capture proof PNG byte count", wrapper)
         self.assertIn("Fatal error|Unhandled Exception|Critical error", wrapper)
         self.assertIn("code_only_lfs_asset_registry_exit_tolerance_used", wrapper)
@@ -101,6 +102,8 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("r.RayTracing.Geometry.Landscape.LODBias -1", capture)
         self.assertIn('"forced_landscape_lod": 0', capture)
         self.assertIn('"ray_tracing_landscape_lod_bias": -1', capture)
+        self.assertIn("sun_component.set_cast_shadows(False)", capture)
+        self.assertIn('"proof_sun_cast_shadows": False', capture)
         self.assertNotIn("get_camera_component()", capture)
         self.assertIn('"visual_acceptance": "PENDING_HUMAN_REVIEW"', capture)
 

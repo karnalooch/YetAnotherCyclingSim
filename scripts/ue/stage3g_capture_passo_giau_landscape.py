@@ -38,6 +38,7 @@ def _finish(success: bool, error: str = "") -> None:
             "landscape_component_count": _landscape_component_count,
             "forced_landscape_lod": 0,
             "ray_tracing_landscape_lod_bias": -1,
+            "proof_sun_cast_shadows": False,
             "camera_location_cm": [
                 float(_camera.get_actor_location().x),
                 float(_camera.get_actor_location().y),
@@ -150,6 +151,12 @@ def main() -> None:
     sun.set_actor_label("PassoGiau_ProofSun")
     sun_component = sun.get_component_by_class(unreal.DirectionalLightComponent)
     sun_component.set_intensity(8.0)
+    # This isolated import proof is intentionally shadowless. The previous
+    # shadowed captures showed periodic self-shadow bands even with Landscape
+    # LOD0 and matching ray-tracing LOD. Disabling cast shadows preserves
+    # directional diffuse slope shading while separating imported geometry
+    # quality from UE's shadow representation.
+    sun_component.set_cast_shadows(False)
 
     sky = actor_subsystem.spawn_actor_from_class(
         unreal.SkyLight,
