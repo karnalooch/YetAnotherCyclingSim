@@ -23,6 +23,8 @@ if (-not [System.IO.Path]::IsPathRooted($ArtifactRoot)) { $ArtifactRoot = Join-P
 New-Item -ItemType Directory -Path $ArtifactRoot -Force | Out-Null
 $ArtifactRoot = (Resolve-Path -LiteralPath $ArtifactRoot).Path
 
+$SpikeMapRelative = 'Content/Prototype/Maps/L_PassoGiauTerrainSpike.umap'
+$SpikeMapPath = Join-Path $RepoRoot $SpikeMapRelative
 $ProbeScript = Join-Path $RepoRoot 'scripts/ue/probe_sp638_local_corridor_topology.py'
 $ProbeLog = Join-Path $ArtifactRoot 'sp638_corridor_topology.log'
 $ProbeStdout = Join-Path $ArtifactRoot 'sp638_corridor_topology.stdout.log'
@@ -41,6 +43,20 @@ if (git -C $RepoRoot status --porcelain=v1 --untracked-files=no) {
     throw 'SP638 local corridor topology checkout has tracked changes before proof.'
 }
 
+Write-Host '[1/2] Materializing only the persisted Passo Giau map...' -ForegroundColor Cyan
+git -C $RepoRoot lfs install --local
+if ($LASTEXITCODE -ne 0) { throw 'git lfs install failed.' }
+git -C $RepoRoot lfs pull --include=$SpikeMapRelative --exclude=''
+if ($LASTEXITCODE -ne 0) { throw 'git lfs pull for Passo Giau spike map failed.' }
+if (-not (Test-Path -LiteralPath $SpikeMapPath -PathType Leaf)) {
+    throw "Passo Giau map is missing: $SpikeMapPath"
+}
+$MapBytes = (Get-Item -LiteralPath $SpikeMapPath).Length
+if ($MapBytes -lt 100000000) {
+    throw "Passo Giau map was not materialized from LFS (bytes=$MapBytes)."
+}
+
+Write-Host '[2/2] Running real-SP638 DynamicMesh topology proof...' -ForegroundColor Cyan
 if (-not (Test-Path -LiteralPath $ProbeScript -PathType Leaf)) {
     throw "Topology probe script is missing: $ProbeScript"
 }
