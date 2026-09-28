@@ -12,6 +12,8 @@ from __future__ import annotations
 import hashlib
 import json
 import sys
+import time
+import urllib.error
 import urllib.request
 import zipfile
 from datetime import datetime, timezone
@@ -39,6 +41,8 @@ SOURCE_PIXEL_SIZE_DEG = 0.00001
 NODATA = -9999.0
 LICENSE = "CC BY 4.0"
 CHUNK_BYTES = 1024 * 1024
+DOWNLOAD_ATTEMPTS = 6
+DOWNLOAD_TIMEOUT_SECONDS = 300
 USER_AGENT = (
     "YetAnotherCyclingSim-MASE-PST-Release-Downloader/1.0 "
     "(+https://github.com/karnalooch/YetAnotherCyclingSim)"
@@ -92,42 +96,150 @@ def download_archive(path: Path) -> None:
             path.unlink(missing_ok=True)
 
     temp = path.with_suffix(path.suffix + ".part")
-    temp.unlink(missing_ok=True)
-    request = urllib.request.Request(
-        ARCHIVE_URL,
-        headers={"User-Agent": USER_AGENT, "Accept": "application/zip,*/*"},
-    )
+    if temp.is_file() and temp.stat().st_size > ARCHIVE_BYTES:
+        temp.unlink()
 
-    digest = hashlib.sha256()
-    written = 0
-    try:
-        with urllib.request.urlopen(request, timeout=120) as response, temp.open("wb") as out:
-            while True:
-                chunk = response.read(CHUNK_BYTES)
-                if not chunk:
-                    break
-                out.write(chunk)
-                digest.update(chunk)
-                written += len(chunk)
-                if written > ARCHIVE_BYTES:
+    last_error: Exception | None = None
+    for attempt in range(1, DOWNLOAD_ATTEMPTS + 1):
+        written = temp.stat().st_size if temp.is_file() else 0
+
+        if written == ARCHIVE_BYTES:
+            actual_sha = sha256_file(temp)
+            if actual_sha == ARCHIVE_SHA256:
+                temp.replace(path)
+                validate_archive(path)
+                print(
+                    f"[download] completed verified archive after {attempt - 1} retries"
+                )
+                return
+            print(
+                "[download] complete partial file has wrong SHA-256; "
+                "discarding and restarting"
+            )
+            temp.unlink(missing_ok=True)
+            written = 0
+
+        headers = {
+            "User-Agent": USER_AGENT,
+            "Accept": "application/zip,*/*",
+        }
+        if written > 0:
+            headers["Range"] = f"bytes={written}-"
+            print(
+                f"[download {attempt}/{DOWNLOAD_ATTEMPTS}] "
+                f"resuming at byte {written}/{ARCHIVE_BYTES}"
+            )
+        else:
+            print(
+                f"[download {attempt}/{DOWNLOAD_ATTEMPTS}] "
+                f"starting {ARCHIVE_NAME}"
+            )
+
+        request = urllib.request.Request(ARCHIVE_URL, headers=headers)
+
+        try:
+            with urllib.request.urlopen(
+                request,
+                timeout=DOWNLOAD_TIMEOUT_SECONDS,
+            ) as response:
+                status = int(getattr(response, "status", response.getcode()))
+
+                if written > 0 and status == 206:
+                    content_range = str(response.headers.get("Content-Range", ""))
+                    expected_prefix = f"bytes {written}-"
+                    if not content_range.startswith(expected_prefix):
+                        temp.unlink(missing_ok=True)
+                        raise RuntimeError(
+                            "resume response has unexpected Content-Range: "
+                            f"{content_range!r}; expected prefix {expected_prefix!r}"
+                        )
+                    mode = "ab"
+                    current = written
+                elif status == 200:
+                    if written > 0:
+                        print(
+                            "[download] server ignored Range; restarting from byte 0"
+                        )
+                    mode = "wb"
+                    current = 0
+                else:
                     raise RuntimeError(
-                        f"download exceeded expected {ARCHIVE_BYTES} bytes"
+                        f"unexpected HTTP status {status} while downloading archive"
                     )
 
-        if written != ARCHIVE_BYTES:
-            raise RuntimeError(
-                f"download byte size mismatch: expected {ARCHIVE_BYTES}, got {written}"
-            )
-        actual_sha = digest.hexdigest()
-        if actual_sha != ARCHIVE_SHA256:
-            raise RuntimeError(
-                f"download SHA-256 mismatch: expected {ARCHIVE_SHA256}, got {actual_sha}"
-            )
-        temp.replace(path)
-    finally:
-        temp.unlink(missing_ok=True)
+                with temp.open(mode) as out:
+                    while True:
+                        chunk = response.read(CHUNK_BYTES)
+                        if not chunk:
+                            break
+                        out.write(chunk)
+                        current += len(chunk)
+                        if current > ARCHIVE_BYTES:
+                            temp.unlink(missing_ok=True)
+                            raise RuntimeError(
+                                f"download exceeded expected {ARCHIVE_BYTES} bytes"
+                            )
 
-    validate_archive(path)
+            if current == ARCHIVE_BYTES:
+                actual_sha = sha256_file(temp)
+                if actual_sha != ARCHIVE_SHA256:
+                    temp.unlink(missing_ok=True)
+                    raise RuntimeError(
+                        "download SHA-256 mismatch: "
+                        f"expected {ARCHIVE_SHA256}, got {actual_sha}"
+                    )
+                temp.replace(path)
+                validate_archive(path)
+                print(
+                    f"[download] verified {ARCHIVE_BYTES} bytes / {ARCHIVE_SHA256}"
+                )
+                return
+
+            if current < ARCHIVE_BYTES:
+                last_error = RuntimeError(
+                    "download ended before expected byte size: "
+                    f"{current}/{ARCHIVE_BYTES}"
+                )
+                print(
+                    f"[download] partial archive retained: "
+                    f"{current}/{ARCHIVE_BYTES} bytes"
+                )
+            else:
+                raise RuntimeError(
+                    f"unexpected download size {current}; expected {ARCHIVE_BYTES}"
+                )
+
+        except (
+            TimeoutError,
+            urllib.error.URLError,
+            OSError,
+            RuntimeError,
+        ) as exc:
+            last_error = exc
+            if isinstance(exc, RuntimeError) and (
+                "SHA-256 mismatch" in str(exc)
+                or "exceeded expected" in str(exc)
+            ):
+                temp.unlink(missing_ok=True)
+
+            if attempt >= DOWNLOAD_ATTEMPTS:
+                break
+
+            retained = temp.stat().st_size if temp.is_file() else 0
+            delay = min(2 ** (attempt - 1), 10)
+            print(
+                f"[download] attempt {attempt} failed: {exc}; "
+                f"retained={retained} bytes; retrying in {delay}s",
+                file=sys.stderr,
+            )
+            time.sleep(delay)
+
+    retained = temp.stat().st_size if temp.is_file() else 0
+    raise RuntimeError(
+        "pinned MASE archive download failed after "
+        f"{DOWNLOAD_ATTEMPTS} attempts; retained={retained}/{ARCHIVE_BYTES} bytes; "
+        f"last_error={last_error}"
+    )
 
 
 def copy_and_hash(source: BinaryIO, destination: Path) -> tuple[int, str]:
