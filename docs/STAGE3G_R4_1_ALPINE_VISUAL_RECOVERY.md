@@ -210,7 +210,12 @@ Corollaries:
   the Landscape grid;
 - review any proposed terrain/road fix that changes canonical road XY as a
   **P0 architecture violation** unless a separately verified source defect is
-  being corrected deliberately.
+  being corrected deliberately;
+- never infer production curvature or local cross-section frames from a window
+  smaller than the road source's positional-accuracy scale. Dense 2 m spline
+  samples are useful mesh stations, not independent 2 m survey observations.
+  R4.1B.3 therefore keeps those exact stations but estimates curvature/tangent
+  frames over a 6 m half-window.
 
 #### Real-road alignment policy
 
