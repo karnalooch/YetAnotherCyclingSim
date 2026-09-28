@@ -9,11 +9,13 @@ on:
       - 'scripts/ue/Invoke-YacsPassoGiauRoadsideHouseProof.ps1'
       - 'scripts/ue/stage3g_capture_passo_giau_roadside_house.py'
       - 'scripts/ue/yacs_scene_composer.py'
+      - 'scripts/ue/yacs_asset_candidate_import.py'
       - 'scripts/worldgen/yacs_scene_layout.py'
       - 'scripts/assets/yacs_asset_library.py'
       - 'scripts/assets/download_stage3g_assets.py'
       - 'scripts/ci/test_yacs_asset_library.py'
       - 'scripts/ci/test_yacs_scene_layout.py'
+      - 'scripts/ci/test_yacs_asset_candidate_import_contract.py'
       - 'worldgen/assets/catalog.json'
       - 'worldgen/presets/alpine_roadside_grove_v1.json'
 
@@ -73,6 +75,7 @@ jobs:
             ./scripts/assets/yacs_asset_library.py `
             ./scripts/worldgen/yacs_scene_layout.py `
             ./scripts/ue/yacs_scene_composer.py `
+            ./scripts/ue/yacs_asset_candidate_import.py `
             ./scripts/ue/stage3g_capture_passo_giau_roadside_house.py
 
       - name: Run World Authoring Library unit tests
@@ -82,6 +85,8 @@ jobs:
           python ./scripts/ci/test_yacs_asset_library.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python ./scripts/ci/test_yacs_scene_layout.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python ./scripts/ci/test_yacs_asset_candidate_import_contract.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Run World Authoring Library SP638 proof
