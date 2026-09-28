@@ -176,6 +176,20 @@ def geographic_bbox(layer: ET.Element) -> dict[str, float] | None:
     return None
 
 
+def descendant_href_values(element: ET.Element, container_name: str) -> list[str]:
+    values: list[str] = []
+    for container in element:
+        if local_name(container.tag) != container_name:
+            continue
+        for item in container.iter():
+            if local_name(item.tag) != "OnlineResource":
+                continue
+            for key, value in item.attrib.items():
+                if local_name(key) == "href" and value and value not in values:
+                    values.append(value)
+    return values
+
+
 def flatten_wms_layers(root: ET.Element) -> list[dict[str, Any]]:
     layers: list[dict[str, Any]] = []
     targets = {
@@ -202,6 +216,9 @@ def flatten_wms_layers(root: ET.Element) -> list[dict[str, Any]]:
                 "title": title,
                 "crs": sorted(set(crs_values)),
                 "geographic_bbox_wgs84": geographic_bbox(element),
+                "abstract": child_text(element, "Abstract"),
+                "metadata_urls": descendant_href_values(element, "MetadataURL"),
+                "data_urls": descendant_href_values(element, "DataURL"),
             }
         )
     return layers
