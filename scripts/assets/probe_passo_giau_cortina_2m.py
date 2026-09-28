@@ -28,6 +28,7 @@ WMS_ENDPOINT = "https://idt2-geoserver.regione.veneto.it/geoserver/wms"
 WCS_ENDPOINT = "https://idt2-geoserver.regione.veneto.it/geoserver/wcs"
 VIEWER_URL = "https://idt2.regione.veneto.it/idt/webgis/viewer?webgisId=86"
 DOWNLOAD_PAGE = "https://idt2.regione.veneto.it/idt/downloader/download"
+GENERIC_LAYERS_ENDPOINT = "https://idt2.regione.veneto.it/idt/download/layerDownload/getDownloadableLayersWithPermission"
 TARGET_LAYER_LABEL = "DTM_2m_Cortina"
 PREFERRED_WMS_LAYER = "rv:DTM_2m_clip"
 PASSO_GIAU_WGS84 = (12.05321, 46.48284)
@@ -198,6 +199,97 @@ def wms_discovery_candidates(root: ET.Element) -> list[dict[str, Any]]:
         candidates,
         key=lambda item: (-int(item["score"]), str(item.get("name") or "")),
     )[:80]
+
+
+def request_json(url: str, *, timeout: int = 30) -> Any:
+    request = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": USER_AGENT,
+            "Accept": "application/json,text/plain,*/*",
+        },
+    )
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        payload = response.read(MAX_RESPONSE_BYTES + 1)
+        if len(payload) > MAX_RESPONSE_BYTES:
+            raise RuntimeError(
+                f"response exceeded {MAX_RESPONSE_BYTES} bytes: {url}"
+            )
+    try:
+        return json.loads(payload.decode("utf-8-sig"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"endpoint returned invalid JSON: {url}: {exc}") from exc
+
+
+def json_catalog_matches(value: Any) -> list[dict[str, Any]]:
+    targets = (
+        normalized(TARGET_LAYER_LABEL),
+        normalized(PREFERRED_WMS_LAYER),
+        normalized("DTM_2m_clip"),
+        normalized("Cortina"),
+    )
+    matches: list[dict[str, Any]] = []
+
+    def visit(node: Any, path: str) -> None:
+        if len(matches) >= 50:
+            return
+        if isinstance(node, dict):
+            primitive_text = " ".join(
+                str(item)
+                for item in node.values()
+                if isinstance(item, (str, int, float, bool))
+            )
+            haystack = normalized(primitive_text)
+            if any(target and target in haystack for target in targets):
+                safe: dict[str, Any] = {}
+                for key, item in node.items():
+                    if isinstance(item, (str, int, float, bool)) or item is None:
+                        text_value = str(item)
+                        safe[str(key)] = (
+                            text_value[:1000]
+                            if isinstance(item, str)
+                            else item
+                        )
+                matches.append({"path": path, "item": safe})
+                return
+            for key, item in node.items():
+                visit(item, f"{path}.{key}")
+        elif isinstance(node, list):
+            for index, item in enumerate(node):
+                visit(item, f"{path}[{index}]")
+
+    visit(value, "$")
+    return matches
+
+
+def discover_generic_downloadable_layers() -> dict[str, Any]:
+    try:
+        payload = request_json(GENERIC_LAYERS_ENDPOINT)
+    except Exception as exc:
+        return {
+            "url": GENERIC_LAYERS_ENDPOINT,
+            "status": "FETCH_FAILED",
+            "error": str(exc),
+        }
+
+    result: dict[str, Any] = {
+        "url": GENERIC_LAYERS_ENDPOINT,
+        "status": "FETCHED",
+        "payload_type": type(payload).__name__,
+        "matches": json_catalog_matches(payload),
+    }
+    if isinstance(payload, dict):
+        result["top_level_keys"] = sorted(str(key) for key in payload.keys())
+        for key in ("result", "data", "items"):
+            item = payload.get(key)
+            if isinstance(item, list):
+                result["item_count"] = len(item)
+                result["item_container"] = key
+                break
+    elif isinstance(payload, list):
+        result["item_count"] = len(payload)
+        result["item_container"] = "$"
+    return result
 
 
 def parse_xml(payload: bytes, label: str) -> ET.Element:
@@ -502,6 +594,7 @@ def main() -> int:
     try:
         report["viewer"] = discover_viewer_context()
         report["download_portal"] = discover_download_portal()
+        report["generic_download_catalog"] = discover_generic_downloadable_layers()
         wms_url, layer = fetch_wms_layer()
         report["wms"] = {
             "get_capabilities_url": wms_url,
