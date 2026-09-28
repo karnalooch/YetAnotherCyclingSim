@@ -257,6 +257,38 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("prepared slope diagnostics", wrapper)
         self.assertIn("deterministic center scanline diagnostics", wrapper)
 
+    def test_road_preparer_samples_active_mase_hybrid_terrain(self) -> None:
+        prepare = read("scripts/assets/prepare_passo_giau_road.py")
+        self.assertIn('return source_root() / "PreparedMasePstLidar1x1"', prepare)
+        self.assertIn('"passo_giau_mase_pst_hybrid_1m_8km_epsg32632.tif"', prepare)
+        self.assertIn('"passo_giau_mase_pst_hybrid_2m_preview_hillshade.png"', prepare)
+        self.assertNotIn("PreparedVenetoLidar5m", prepare)
+        self.assertNotIn("passo_giau_veneto_lidar_5m_8km_epsg32632.tif", prepare)
+
+    def test_sp638_reports_primary_vs_fallback_length_on_active_1m_mask(
+        self,
+    ) -> None:
+        terrain = read("scripts/assets/prepare_passo_giau_mase_pst.py")
+        road = read("scripts/assets/prepare_passo_giau_road.py")
+        workflow = read(".github/workflows/passo-giau-road-alignment.yml")
+        author = read(".github/workflows/passo-giau-r4-1-road-author.yml")
+
+        self.assertIn("passo_giau_mase_pst_primary_coverage_1m.tif", terrain)
+        self.assertIn('"primary_coverage_mask_geotiff"', terrain)
+        self.assertIn("SOURCE_COVERAGE_SAMPLE_INTERVAL_M = 1.0", road)
+        self.assertIn("passo_giau_mase_pst_primary_coverage_1m.tif", road)
+        self.assertIn('"terrain_source_coverage"', road)
+        self.assertIn('"mase_primary_length_m"', road)
+        self.assertIn('"veneto_fallback_length_m"', road)
+        self.assertIn("Prepare active MASE-primary hybrid terrain source", workflow)
+        self.assertIn("download_passo_giau_mase_pst.py", workflow)
+        self.assertIn("prepare_passo_giau_mase_pst.py", workflow)
+        self.assertIn("'scripts/assets/prepare_passo_giau_mase_pst.py'", author)
+        self.assertIn("permissions:\n  contents: read", author)
+        self.assertIn("persist-credentials: false", author)
+        self.assertNotIn("Commit only isolated spike map", author)
+        self.assertNotIn("git push origin", author)
+
     def test_generic_preparer_keeps_reference_diagnostic_contract(self) -> None:
         prepare = read("scripts/assets/prepare_passo_giau_heightmap.py")
         self.assertIn("def terrain_diagnostics(", prepare)

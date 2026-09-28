@@ -568,6 +568,7 @@ def main() -> int:
 
     native_tif = out / "passo_giau_mase_pst_hybrid_1m_8km_epsg32632.tif"
     native_hillshade = out / "passo_giau_mase_pst_hybrid_2m_preview_hillshade.png"
+    coverage_tif = out / "passo_giau_mase_pst_primary_coverage_1m.tif"
     coverage_png = out / "passo_giau_mase_pst_primary_coverage_4m.png"
     landscape_png = out / "passo_giau_mase_pst_ue_landscape_4033_u16.png"
     landscape_r16 = out / "passo_giau_mase_pst_ue_landscape_4033.r16"
@@ -586,6 +587,14 @@ def main() -> int:
     }
     with rasterio.open(native_tif, "w", **profile) as dst:
         dst.write(native.astype(np.float32), 1)
+
+    coverage_profile = {
+        **profile,
+        "dtype": "uint8",
+        "predictor": 2,
+    }
+    with rasterio.open(coverage_tif, "w", **coverage_profile) as dst:
+        dst.write(mase_mask.astype(np.uint8), 1)
 
     Image.fromarray(
         hillshade(native[::2, ::2], TARGET_NATIVE_RESOLUTION_M * 2.0),
@@ -686,7 +695,8 @@ def main() -> int:
         "outputs": {
             "native_geotiff": native_tif.name,
             "native_hillshade": native_hillshade.name,
-            "primary_coverage_mask": coverage_png.name,
+            "primary_coverage_mask_geotiff": coverage_tif.name,
+            "primary_coverage_mask_preview": coverage_png.name,
             "landscape_u16_png": landscape_png.name,
             "landscape_r16_little_endian": landscape_r16.name,
         },
@@ -739,6 +749,7 @@ def main() -> int:
     for output_path in (
         native_tif,
         native_hillshade,
+        coverage_tif,
         coverage_png,
         landscape_png,
         landscape_r16,
