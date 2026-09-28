@@ -57,14 +57,31 @@ def main() -> None:
         "DynamicMeshActor",
         "DynamicMeshComponent",
         "GeneratedDynamicMeshActor",
-        "GeometryScriptLibrary_MeshPrimitiveFunctions",
-        "GeometryScriptLibrary_MeshBasicEditFunctions",
-        "GeometryScriptLibrary_MeshNormalsFunctions",
-        "GeometryScriptLibrary_MeshUVFunctions",
+        "GeometryScript_MeshEdits",
+        "GeometryScript_Primitives",
+        "GeometryScript_Normals",
+        "GeometryScript_UVs",
+        "GeometryScriptSimpleMeshBuffers",
+        "GeometryScriptTriangleList",
         "GeometryScriptPrimitiveOptions",
         "GeometryScriptAppendMeshOptions",
     ]
     presence = {name: hasattr(unreal, name) for name in preferred}
+
+    method_docs: dict[str, str] = {}
+    for owner_name, method_name in (
+        ("DynamicMesh", "append_buffers_to_mesh"),
+        ("DynamicMesh", "add_vertex_to_mesh"),
+        ("DynamicMesh", "add_triangle_to_mesh"),
+        ("DynamicMesh", "recompute_normals"),
+        ("GeneratedDynamicMeshActor", "get_dynamic_mesh_component"),
+        ("DynamicMeshComponent", "set_dynamic_mesh"),
+    ):
+        owner = getattr(unreal, owner_name, None)
+        method = getattr(owner, method_name, None) if owner is not None else None
+        method_docs[f"{owner_name}.{method_name}"] = str(
+            getattr(method, "__doc__", "") or ""
+        )
 
     payload = {
         "schema_version": 1,
@@ -72,6 +89,7 @@ def main() -> None:
         "engine_version": str(unreal.SystemLibrary.get_engine_version()),
         "matched_unreal_symbols": unreal_names,
         "preferred_symbol_presence": presence,
+        "method_docs": method_docs,
         "symbol_members": classes,
         "read_only": True,
         "map_loaded": False,
@@ -85,6 +103,11 @@ def main() -> None:
         "[YacsGeometryScriptProbe] PASS: "
         f"symbols={len(unreal_names)} output={output_path}"
     )
+    for name, available in presence.items():
+        unreal.log(f"[YacsGeometryScriptProbe] PREFERRED {name}={available}")
+    for name, doc in method_docs.items():
+        first_line = doc.splitlines()[0] if doc else "<no-doc>"
+        unreal.log(f"[YacsGeometryScriptProbe] METHOD {name}: {first_line}")
 
 
 try:
