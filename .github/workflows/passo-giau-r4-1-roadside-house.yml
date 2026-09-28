@@ -1,11 +1,13 @@
 name: YACS World Authoring Library SP638 proof
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - spike/r4-1-hairpin-roadside-house
     paths:
       - '.github/workflows/passo-giau-r4-1-roadside-house.yml'
+      - '.github/workflows/reusable-python.yml'
       - 'scripts/ue/Invoke-YacsPassoGiauRoadsideHouseProof.ps1'
       - 'scripts/ue/stage3g_capture_passo_giau_roadside_house.py'
       - 'scripts/ue/yacs_scene_composer.py'
