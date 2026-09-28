@@ -109,6 +109,8 @@ Before adding an asset:
 
 - verify its license;
 - record its source;
+- update `docs/legal/DEPENDENCY_PROVENANCE.md` when the source is external;
+- preserve any required notice in `THIRD_PARTY_NOTICES.md`;
 - check its performance cost;
 - confirm that it is required by the current roadmap stage.
 
@@ -119,6 +121,20 @@ Target performance is 60 FPS at 1920×1080 on:
 - NVIDIA RTX 2070 Super.
 
 Performance must be measured, not guessed.
+
+## Third-party provenance rules
+
+- Publicly visible code or assets are not automatically reusable.
+- Before copying, vendoring, adapting or redistributing external code, plugins,
+  datasets or assets, verify the exact source revision and license.
+- Record external material in `docs/legal/DEPENDENCY_PROVENANCE.md` before it
+  becomes part of YACS.
+- Update `THIRD_PARTY_NOTICES.md` whenever redistribution or attribution
+  obligations apply.
+- Do not copy from a source marked `reference`, `candidate` or `blocked`
+  in the provenance ledger.
+- AI-generated or AI-rewritten output does not bypass third-party license and
+  provenance review.
 
 ## Git rules
 
@@ -205,4 +221,7 @@ Documentation-only branches do not count toward the limit of two implementation 
 - Do not invent APIs, SDK capabilities or device behavior.
 - Verify external API and Unreal Engine claims against official documentation.
 - Mark generated code that still requires validation.
+- Follow `docs/legal/AI_ASSISTED_DEVELOPMENT.md` for AI-assisted work.
+- Treat recognizable external implementations in generated output as
+  third-party material requiring provenance review.
 - When uncertain, stop and ask one focused question.
