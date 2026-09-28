@@ -69,6 +69,9 @@ class YacsPcgPatchContractTest(unittest.TestCase):
         self.assertIn("_pcg_component.is_generating()", capture)
         self.assertIn('get_editor_property("generated")', capture)
         self.assertIn("count_pcg_instances", capture)
+        self.assertIn('_capture_phase = "scheduling_screenshot"', capture)
+        self.assertIn('if _capture_phase == "scheduling_screenshot":', capture)
+        self.assertIn('_capture_phase = "waiting_screenshot"', capture)
         self.assertNotIn(
             "yacs_scene_composer.spawn_transient_forest_patch(",
             capture,
