@@ -425,62 +425,86 @@ Preferred approach is hybrid: real-world terrain data may provide strong macro f
 
 ## Current implementation status — Passo Giau terrain source (2026-09-28)
 
-The R4.1 macro-terrain recovery now has a proven remote source/preparation path.
+The R4.1 macro-terrain recovery has moved from source/bootstrap proof into an
+isolated UE Landscape visual-debug spike. The original TINITALY work remains the
+merged provenance/preparation baseline; PR #215 now carries the better-resolution
+active Landscape candidate.
 
-### Merged repository work
+### Merged baseline on `main`
 
-- PR #211 — `feat(assets): add Passo Giau DEM bootstrap` — **MERGED** as `7db3a63e11b83c3d33f86f80e1d6687c05b8ea78`.
-- PR #212 — `feat(terrain): prepare Passo Giau R4.1 heightmap pipeline` — **MERGED** as `a98162fd590c5d3dc597a5c625d70e9860bb46c7`.
-- downloader: `scripts/assets/download_passo_giau_dem.py`;
-- preparation pipeline: `scripts/assets/prepare_passo_giau_heightmap.py`;
-- remote integration workflow: `.github/workflows/passo-giau-r4-1-terrain-spike.yml`.
+- PR #211 — `feat(assets): add Passo Giau DEM bootstrap` — **MERGED** as `7db3a63e11b83c3d33f86f80e1d6687c05b8ea78`;
+- PR #212 — `feat(terrain): prepare Passo Giau R4.1 heightmap pipeline` — **MERGED** as `a98162fd590c5d3dc597a5c625d70e9860bb46c7`;
+- baseline source: **TINITALY 1.1 / INGV**, CC BY 4.0;
+- baseline AOI: approximately **8 x 8 km around Passo Giau**;
+- baseline source grid: **800 x 800 at 10 m**;
+- baseline source DEM SHA-256:
+  `9a58a8aca8b1856507b4ca3e656f8c975518cbd89bd273036ef2483c148db610`;
+- preparation run **36357523138 — GREEN**;
+- baseline UE candidate: **1009 x 1009**, XY **793.651 cm/vertex**.
 
-### Proven remote source
+This baseline proved licensed remote source acquisition and deterministic Unreal
+heightmap preparation. It is historical evidence, not the currently preferred
+Landscape source.
 
-Provider: **TINITALY 1.1 / INGV**  
-License: **CC BY 4.0**  
-AOI: approximately **8 x 8 km around Passo Giau**  
-Source grid: **800 x 800 at 10 m**  
-Source DEM SHA-256:
+### Active PR #215 candidate — Veneto LiDAR-derived DTM 5 m
 
-`9a58a8aca8b1856507b4ca3e656f8c975518cbd89bd273036ef2483c148db610`
+A bounded source A/B on the same physical 8 km x 8 km AOI showed that the
+official **Regione del Veneto — DTM 5 m derivato dai rilievi LiDAR** source is
+the stronger active Landscape candidate.
 
-Remote download/preparation run: **GitHub Actions #36357523138 — PASS**.
+Current contract:
 
-Observed terrain range:
+- license: **IODL 2.0**;
+- proven download: **33 official tiles**;
+- native working grid: **1600 x 1600 at 5 m**;
+- prepared UE Landscape: **4033 x 4033** unsigned-16 / little-endian R16;
+- topology: **32 x 32 components = 1024 components**;
+- 2 subsections/component, 63 quads/subsection, 126 quads/component;
+- XY scale: **198.412698 cm/vertex** for the 8 km extent;
+- Z scale and sea-level-preserving Z origin are derived from the generated
+  terrain report for the actual source extrema;
+- isolated map only: `/Game/Prototype/Maps/L_PassoGiauTerrainSpike`;
+- `L_CyclingTest`, route truth and physics remain protected and unchanged.
 
-- minimum: **1171.353 m**;
-- maximum: **2713.832 m**;
-- relief: **1542.479 m**;
-- mean elevation: **1993.256 m**.
+Source A/B workflow run **36395015722 — GREEN**.
 
-Prepared Unreal candidate:
+The first complete Veneto UE authoring proof, run **36395726623**, was GREEN and
+persisted the isolated 4033 Landscape. Its source report measured approximately
+**1168.833 .. 2715.996 m** elevation with **1547.163 m** relief.
 
-- **1009 x 1009** 16-bit heightmap;
-- matching little-endian `.r16`;
-- native-resolution 16-bit PNG;
-- hillshade preview;
-- `terrain-report.json`;
-- recommended XY scale: **793.651 cm/vertex**;
-- recommended Z Scale: **301.265**.
+The latest exact-code diagnostic authoring proof is run **36399060374 — GREEN**
+from `e00f9d2b...`; it persisted the regenerated spike map as
+`9f6e3a5c...`. The proof uses forced Landscape LOD0, lighting-only geometry
+diagnosis, disabled proof shadows, and a **3840 x 2160 / FXAA** spatial capture
+so screen-space aliasing is not confused with actual heightfield structure.
 
-The successful remote evidence is retained as GitHub Actions artifact
-`passo-giau-r4-1-terrain-spike`.
+### Current visual conclusion
 
-This evidence proves the external terrain source and preparation path only. It
-does **not** constitute Unreal visual acceptance.
+The 5 m source and prepared 4033 raster do **not** show the dense herringbone
+pattern seen in the earlier 1080p UE proof. The 4K/FXAA diagnostic substantially
+reduces that artifact, which identifies screen-space/render aliasing as a real
+part of the earlier failure.
 
-### Active next step
+Steep cliff faces still show visible heightfield stepping/ribbing in perspective.
+That remaining limitation should not be hidden by blur or by pretending 16-bit
+precision is the cause. The data uses nearly the full uint16 domain and the
+measured vertical quantization step is only about **2.36 cm**. The remaining
+steep-face artifact is therefore treated as a Landscape/heightfield representation
+and source-resolution constraint until disproven.
 
-Issue #213 — **R4.1B — import Passo Giau DEM into isolated Unreal Landscape spike**.
+Decision for R4.1:
 
-The first UE integration must use a separate map such as
-`/Game/Prototype/Maps/L_PassoGiauTerrainSpike`. It must not mutate
-`/Game/Prototype/Maps/L_CyclingTest`, route truth or physics.
+- keep the Veneto Landscape candidate as the **macro-terrain path A** under
+  evaluation;
+- do not propagate it across the canonical route yet;
+- do not unblock R5;
+- use R4.1C material work and especially R4.1D `Rock Face 01` / cliff / scree
+  geometry to replace or mask inspectable steep heightfield faces rather than
+  destructively smoothing the DEM;
+- require a route-level 1200 m golden slice before final human visual acceptance.
 
-The Landscape spike is path A of the documented R4.1 terrain A/B. Geometry
-Script / generated tiled terrain remains path B until a rendered vertical slice
-is reviewed.
+Issue #213 / PR #215 remain open until the bounded Landscape path is reviewed
+and its exploratory scaffolding/evidence is cleaned into a maintainable form.
 
 ## 19. Terrain research / visual-debug SSOT
 
