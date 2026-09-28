@@ -27,7 +27,7 @@ It does **not** vendor:
 - screenshots/sample cities;
 - CC0 texture payloads.
 
-The plugin descriptor is locally adapted from UE 5.7 to UE 5.8 and stripped to the runtime module. Upstream source remains otherwise unchanged for the first compile attempt.
+The plugin descriptor is locally adapted from UE 5.7 to UE 5.8 and stripped to the runtime module.
 
 ## Safety boundary
 
@@ -48,13 +48,30 @@ The plugin descriptor is locally adapted from UE 5.7 to UE 5.8 and stripped to t
 
 ### Attempt 1 — bounded runtime vendor
 
-**State:** PENDING
+**State:** FAILED — small source compatibility issue, donor not rejected.
+
+**Exact SHA:** `76a93781ca5310840a8f77b576dbb03a292c3c8d`  
+**CI:** CyclingSim CI #656 / run `36418207953`
 
 **Change:** import the upstream runtime module and preserve MIT license/provenance; adapt only the plugin descriptor to UE 5.8 and enable the plugin in the YACS project.
 
 **Expected:** UE 5.8 compiles the module with at most small API compatibility fixes.
 
-**Actual:** waiting for exact-SHA CI evidence.
+**Actual:** the real UE 5.8 editor build reached RoadForge compilation and failed with exit code 6. The compiler reported `C2027` / `C2672` at `RoadForge.cpp:11` because `LogRoadForge` is also defined as a file-local static log category in `OSMRoadGenerator.cpp`. Under Unreal unity compilation both source files can share one generated translation unit, making the duplicate static category name collide.
+
+**Diagnosis:** bounded source-level unity-build incompatibility. This does not affect road geometry logic.
+
+**Fix:** rename only the module startup category to `LogRoadForgeModule`; keep the generator category unchanged.
+
+**Unrelated gate:** Governance also failed because the PR body initially omitted the required exact line `Auto-merge: manual`. The PR metadata was corrected; no product code change was needed for that gate.
+
+### Attempt 2 — distinct unity-safe module log category
+
+**State:** PENDING
+
+**Change:** use `LogRoadForgeModule` in `RoadForge.cpp` and document the local adaptation.
+
+**Expected:** compilation proceeds past the only error observed in Attempt 1; any next compiler error must be evaluated independently rather than weakening the build.
 
 ### Exit
 

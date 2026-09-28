@@ -7,7 +7,8 @@ This directory is a **bounded compile-spike subset** of the MIT-licensed RoadFor
 - Upstream license: MIT; preserved verbatim in `Plugins/RoadForge/LICENSE`.
 - Imported scope: runtime module source only (`Plugins/RoadForge/Source/RoadForge`).
 - Intentionally omitted: RoadForgeEditor, screenshots, sample data, generated assets and CC0 texture payloads.
-- YACS adaptation: `RoadForge.uplugin` declares UE 5.8, contains only the runtime module and sets `CanContainContent=false`.
+- YACS descriptor adaptation: `RoadForge.uplugin` declares UE 5.8, contains only the runtime module and sets `CanContainContent=false`.
+- YACS source adaptation: the module startup log category is named `LogRoadForgeModule` to avoid a unity-build collision with the generator's file-local `LogRoadForge` category.
 - No RoadForge source-file copyright headers were removed or rewritten.
 
 ## Purpose

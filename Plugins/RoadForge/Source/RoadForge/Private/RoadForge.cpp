@@ -4,11 +4,11 @@
 
 #define LOCTEXT_NAMESPACE "FRoadForgeModule"
 
-DEFINE_LOG_CATEGORY_STATIC(LogRoadForge, Log, All);
+DEFINE_LOG_CATEGORY_STATIC(LogRoadForgeModule, Log, All);
 
 void FRoadForgeModule::StartupModule()
 {
-	UE_LOG(LogRoadForge, Log, TEXT("RoadForge runtime module started."));
+	UE_LOG(LogRoadForgeModule, Log, TEXT("RoadForge runtime module started."));
 }
 
 void FRoadForgeModule::ShutdownModule()
