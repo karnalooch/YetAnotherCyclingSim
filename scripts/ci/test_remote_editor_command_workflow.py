@@ -14,7 +14,7 @@ class RemoteEditorCommandContractTests(unittest.TestCase):
     def test_workflow_is_owner_only_and_issue_227_only(self) -> None:
         text = WORKFLOW.read_text(encoding="utf-8")
         self.assertIn("issue_comment:", text)
-        self.assertIn("github.event.issue.number == 227", text)
+        self.assertIn("github.event.issue.number == 228", text)
         self.assertIn("github.event.comment.user.login == github.repository_owner", text)
         self.assertIn("github.event.comment.body == '/yacs-editor smoke-cube'", text)
         self.assertIn("runs-on: [self-hosted, yacs-ue58]", text)
