@@ -31,10 +31,6 @@ jobs:
     env:
       GIT_LFS_SKIP_SMUDGE: '1'
 
-    defaults:
-      run:
-        working-directory: _passo-giau-worktree
-
     steps:
       - name: Isolate self-hosted Git configuration
         shell: pwsh
@@ -57,6 +53,7 @@ jobs:
 
       - name: Verify exact SHA and clean checkout
         shell: pwsh
+        working-directory: _passo-giau-worktree
         run: |
           $ErrorActionPreference = 'Stop'
           if ((git rev-parse HEAD).Trim() -ne '${{ github.sha }}') {
@@ -74,24 +71,28 @@ jobs:
 
       - name: Enforce code-only checkout
         shell: pwsh
+        working-directory: _passo-giau-worktree
         run: |
           ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
           if ($LASTEXITCODE -ne 0) { throw 'Passo Giau code-only checkout contract failed.' }
 
       - name: Run repository contract test
         shell: pwsh
+        working-directory: _passo-giau-worktree
         run: |
           python -m unittest scripts.ci.test_passo_giau_landscape_author_contract
           if ($LASTEXITCODE -ne 0) { throw 'Passo Giau authoring contract test failed.' }
 
       - name: Author and render isolated Passo Giau Landscape
         shell: pwsh
+        working-directory: _passo-giau-worktree
         run: |
           ./scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1 -ExpectedBranch 'HEAD' -ExpectedHead '${{ github.sha }}' -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR4_1/PassoGiauLandscape'
           if ($LASTEXITCODE -ne 0) { throw 'Passo Giau Landscape authoring failed.' }
 
       - name: Commit only isolated spike map
         shell: pwsh
+        working-directory: _passo-giau-worktree
         run: |
           $ErrorActionPreference = 'Stop'
           $asset = 'Content/Prototype/Maps/L_PassoGiauTerrainSpike.umap'
@@ -127,8 +128,13 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          git reset --hard
-          git clean -ffd
-          if (git status --porcelain --untracked-files=all) {
-            throw 'Passo Giau authoring workspace has non-ignored mutations after cleanup.'
+          $worktree = Join-Path $env:GITHUB_WORKSPACE '_passo-giau-worktree'
+          if (-not (Test-Path -LiteralPath (Join-Path $worktree '.git'))) {
+            Write-Host 'Passo Giau isolated worktree is absent; nothing to clean.'
+            exit 0
+          }
+          git -C $worktree reset --hard
+          git -C $worktree clean -ffd
+          if (git -C $worktree status --porcelain --untracked-files=all) {
+            throw 'Passo Giau authoring worktree has non-ignored mutations after cleanup.'
           }
