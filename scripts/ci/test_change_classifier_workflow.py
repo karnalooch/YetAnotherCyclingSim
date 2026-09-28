@@ -133,9 +133,7 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
             self.unreal,
         )
         self.assertIn("path: ${{ env.YACS_UNREAL_WORKTREE }}", self.unreal)
-        self.assertIn(
-            "working-directory: ${{ env.YACS_UNREAL_WORKTREE }}", self.unreal
-        )
+        self.assertIn("working-directory: ${{ env.YACS_UNREAL_WORKTREE }}", self.unreal)
         self.assertIn("clean: true", self.unreal)
         self.assertNotIn(
             "Normalize stale LFS payloads before code-only checkout",
