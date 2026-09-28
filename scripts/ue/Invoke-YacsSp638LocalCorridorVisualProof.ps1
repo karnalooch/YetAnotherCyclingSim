@@ -135,11 +135,35 @@ if ([double]$Proof.source_geometry_analysis.half_window_m -lt 5.0) {
 if ([bool]$Proof.source_geometry_analysis.canonical_centerline_xy_modified -ne $false) {
     throw 'SP638 visual proof modified canonical centerline XY.'
 }
-if ([string]$Proof.proof_viewmode -ne 'lightingonly') {
-    throw "SP638 visual proof must use material-independent Lighting Only mode, got '$($Proof.proof_viewmode)'."
+if ([string]$Proof.proof_viewmode -ne 'lit') {
+    throw "SP638 visual proof must use lit DynamicMesh acceptance mode, got '$($Proof.proof_viewmode)'."
 }
 if ($null -ne $Proof.neutral_landscape_material) {
     throw 'SP638 visual proof unexpectedly applied a Landscape material override.'
+}
+if ([bool]$Proof.local_terrain_skin.world_aligned -ne $true) {
+    throw 'SP638 visual proof terrain skin is not world-aligned.'
+}
+if ([bool]$Proof.local_terrain_skin.canonical_road_xy_modified -ne $false) {
+    throw 'SP638 visual proof terrain skin modified canonical road XY.'
+}
+if ([bool]$Proof.local_terrain_skin.landscape_hidden_after_sampling -ne $true) {
+    throw 'SP638 visual proof did not hide the rider-close Landscape after sampling.'
+}
+if ([double]$Proof.local_terrain_skin.grid_step_m -gt 4.01) {
+    throw "SP638 terrain skin grid is too coarse: $($Proof.local_terrain_skin.grid_step_m) m"
+}
+if ([int]$Proof.local_terrain_skin.sample_count -lt 10000) {
+    throw "SP638 terrain skin sampled too few points: $($Proof.local_terrain_skin.sample_count)"
+}
+if ([double]$Proof.local_terrain_skin.max_abs_adjustment_m -gt 0.901) {
+    throw "SP638 terrain skin exceeded bounded smoothing: $($Proof.local_terrain_skin.max_abs_adjustment_m) m"
+}
+if ([double]$Proof.local_terrain_skin.max_abs_laplacian_after_m -ge [double]$Proof.local_terrain_skin.max_abs_laplacian_before_m) {
+    throw 'SP638 terrain skin did not reduce high-frequency height curvature.'
+}
+if ([int]$Proof.local_geometry.terrain_skin.triangles -lt 25000) {
+    throw 'SP638 rider-close terrain skin mesh is unexpectedly sparse.'
 }
 
 $CaptureLogText = Get-Content -LiteralPath $CaptureLog -Raw -ErrorAction Stop
