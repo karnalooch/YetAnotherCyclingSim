@@ -228,6 +228,11 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("TARGET_NATIVE_SIZE = 8000", prepare)
         self.assertIn("MIN_MASE_COVERAGE_SHARE = 0.50", prepare)
         self.assertIn("PASSO_GIAU_WGS84", prepare)
+        self.assertNotIn("expected 1000x1000", prepare)
+        self.assertNotIn("src.width != 1000", prepare)
+        self.assertNotIn("src.height != 1000", prepare)
+        self.assertIn("expected Float32 raster data", prepare)
+        self.assertIn("src.count != 1", prepare)
         self.assertIn("reproject_veneto_fallback(", prepare)
         self.assertIn("mase_missing_samples_filled_by_veneto", prepare)
         self.assertIn("nearest_mase_sample_distance_m", prepare)
@@ -284,6 +289,11 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("EXPECTED_DSM_TILE_COUNT = 0", downloader)
         self.assertIn('SOURCE_CRS = "EPSG:4326"', downloader)
         self.assertIn("SOURCE_PIXEL_SIZE_DEG = 0.00001", downloader)
+        self.assertNotIn('"tile_pixels": [1000, 1000]', downloader)
+        self.assertIn(
+            '"tile_dimensions": "source-defined; validated during terrain preparation"',
+            downloader,
+        )
         self.assertIn("immutable_source_checkpoint", downloader)
         self.assertIn("live_mase_dependency", downloader)
         self.assertNotIn("sim.mase.gov.it", downloader)

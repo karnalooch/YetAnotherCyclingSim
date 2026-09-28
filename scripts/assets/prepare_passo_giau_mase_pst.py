@@ -131,9 +131,15 @@ def landscape_metadata(minimum: float, maximum: float) -> dict[str, Any]:
 
 
 def validate_mase_tile(src: rasterio.io.DatasetReader, tile: Path) -> None:
-    if src.width != 1000 or src.height != 1000:
+    if src.width <= 0 or src.height <= 0:
         raise ValueError(
-            f"{tile.name}: expected 1000x1000, got {src.width}x{src.height}"
+            f"{tile.name}: invalid raster dimensions {src.width}x{src.height}"
+        )
+    if src.count != 1:
+        raise ValueError(f"{tile.name}: expected one raster band, got {src.count}")
+    if len(src.dtypes) != 1 or str(src.dtypes[0]).lower() != "float32":
+        raise ValueError(
+            f"{tile.name}: expected Float32 raster data, got {src.dtypes}"
         )
     if src.crs is None or src.crs.to_epsg() != 4326:
         raise ValueError(f"{tile.name}: expected EPSG:4326, got {src.crs}")

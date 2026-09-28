@@ -341,7 +341,7 @@ def main() -> int:
                 "tile_count": EXPECTED_TILE_COUNT,
                 "raster_crs": SOURCE_CRS,
                 "raster_dtype": "Float32",
-                "tile_pixels": [1000, 1000],
+                "tile_dimensions": "source-defined; validated during terrain preparation",
                 "pixel_size_degrees": [SOURCE_PIXEL_SIZE_DEG, SOURCE_PIXEL_SIZE_DEG],
                 "nodata": NODATA,
                 "selected_aoi_wgs84": [

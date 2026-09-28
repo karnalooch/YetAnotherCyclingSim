@@ -65,7 +65,7 @@ Canonical source checkpoint:
 - archive SHA-256:
   `4215d1d37fb8540c44442aedd164b6cda3f1845f3552413a975a6b7b1461e93c`;
 - contents: **204 GeoTIFF DTM tiles**, all `*_DTM.tiff`; zero DSM tiles;
-- raster contract: Float32, 1000 x 1000 pixels/tile, NoData `-9999`;
+- raster contract: Float32, source-defined tile dimensions, NoData `-9999`; the pinned package is heterogeneous, so fixed 1000 x 1000 dimensions are explicitly not required;
 - raster CRS: **EPSG:4326**;
 - pixel size: `0.00001 x 0.00001` degrees, approximately
   **0.76 x 1.11 m near Passo Giau**;

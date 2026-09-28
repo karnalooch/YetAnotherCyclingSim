@@ -598,7 +598,7 @@ Current source contract:
 - archive SHA-256:
   `4215d1d37fb8540c44442aedd164b6cda3f1845f3552413a975a6b7b1461e93c`;
 - **204** GeoTIFF DTM tiles, all `*_DTM.tiff`, zero DSM tiles;
-- Float32, 1000 x 1000 pixels/tile, NoData `-9999`;
+- Float32, source-defined tile dimensions (the pinned package is heterogeneous; fixed 1000 x 1000 dimensions are not part of the contract), NoData `-9999`;
 - source CRS **EPSG:4326**;
 - source pixel spacing `0.00001 degrees` (~0.76 x 1.11 m near Giau);
 - target working CRS **EPSG:32632**;
