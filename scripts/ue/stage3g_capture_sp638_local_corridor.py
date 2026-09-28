@@ -600,19 +600,23 @@ def main() -> None:
         edit_layer_name=edit_layer_name,
     )
 
-    neutral_landscape_material = unreal.load_asset(
-        "/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial"
-    )
-    if neutral_landscape_material is not None:
-        landscape.set_editor_property("landscape_material", neutral_landscape_material)
-
     basic_material = unreal.load_asset(
         "/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"
     )
+    neutral_landscape_material = None
     earth_material = None
     shoulder_material = None
     road_material = None
     if basic_material is not None:
+        neutral_landscape_material = _make_material(
+            world,
+            basic_material,
+            unreal.LinearColor(0.36, 0.35, 0.32, 1.0),
+        )
+        landscape.set_editor_property(
+            "landscape_material",
+            neutral_landscape_material,
+        )
         earth_material = _make_material(
             world,
             basic_material,
@@ -799,6 +803,7 @@ def main() -> None:
         "landscape_component_count": len(landscape_components),
         "forced_landscape_lod": 0,
         "proof_viewmode": "lit",
+        "neutral_landscape_material": "Engine BasicShapeMaterial solid-color MID",
         "camera_location_cm": [
             float(camera_location.x),
             float(camera_location.y),
