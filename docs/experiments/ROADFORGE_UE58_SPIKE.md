@@ -1,7 +1,7 @@
 # RoadForge -> UE 5.8 compile spike
 
 **Issue:** #218  
-**Status:** PENDING UE 5.8 CI proof  
+**Status:** ACCEPTED as a compile donor; production SP638 adoption still requires a bounded visual adapter proof  
 **Branch:** `spike/r4-1f-roadforge-ue58`  
 **Upstream:** `YuuhenR/roadforge-osm-ue5-procedural-city@781cb046483cc1887e80085aacf0fb2951f4746d`  
 **License:** MIT
@@ -67,11 +67,30 @@ The plugin descriptor is locally adapted from UE 5.7 to UE 5.8 and stripped to t
 
 ### Attempt 2 — distinct unity-safe module log category
 
-**State:** PENDING
+**State:** PASSED / ACCEPTED
+
+**Exact code SHA:** `8fd08105699ffc743abee6c74bf84385accc8735`  
+**CI:** CyclingSim CI #657 / run `36418752759` — **SUCCESS**
 
 **Change:** use `LogRoadForgeModule` in `RoadForge.cpp` and document the local adaptation.
 
-**Expected:** compilation proceeds past the only error observed in Attempt 1; any next compiler error must be evaluated independently rather than weakening the build.
+**Actual proof:**
+
+- trusted UE 5.8 editor build: **PASS**;
+- build log: `Result: Succeeded`;
+- build execution: **167.31 s**;
+- scoped Automation: **26 discovered / 26 passed / 0 failed / 0 errors**;
+- Automation process exit code: **0**;
+- Aggregate CI gate: **PASS**;
+- Governance: **PASS** after adding the required `Auto-merge: manual` PR metadata;
+- Dependency Review: **PASS**;
+- Trivy filesystem: **PASS**;
+- CodeQL C++: **PASS**;
+- unresolved review threads: **0**.
+
+The Automation log also reports missing/invalid SDK validation for platforms not used by this Windows UE proof (for example LinuxArm64/VisionOS); the test process still exited 0 and the YACS proof tally passed. These messages are not treated as RoadForge compatibility failures.
+
+**Decision:** the RoadForge runtime code is compatible enough with YACS / UE 5.8 to justify the next bounded donor-extraction step. This acceptance is **not** approval to merge the whole OSM/city runtime into production unchanged. The production adapter should minimize the retained donor surface, starting with `RoadForgeMeshUtils` primitives such as `AppendFlatRibbon`, `AppendDashedRibbon`, `OffsetPolyline` and per-vertex Z support, then prove the SP638 road visually before adoption.
 
 ### Exit
 
