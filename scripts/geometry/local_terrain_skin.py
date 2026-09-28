@@ -1,0 +1,239 @@
+"""Bounded world-aligned terrain skin helpers for rider-close visual recovery.
+
+This module has no Unreal dependency. It operates on sampled Landscape heights
+only for presentation geometry. It never changes canonical road XY or physics.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+import hashlib
+import math
+import struct
+from typing import Sequence
+
+from scripts.geometry.sp638_local_corridor import Vec3
+
+
+_EPSILON = 1e-9
+
+
+@dataclass(frozen=True)
+class TerrainSkinMesh:
+    vertices: tuple[Vec3, ...]
+    triangles: tuple[tuple[int, int, int], ...]
+    row_count: int
+    column_count: int
+
+
+@dataclass(frozen=True)
+class TerrainSkinSmoothingMetrics:
+    max_abs_adjustment_m: float
+    rms_adjustment_m: float
+    max_abs_laplacian_before_m: float
+    max_abs_laplacian_after_m: float
+
+
+def _validate_grid(heights: Sequence[Sequence[float]]) -> tuple[int, int]:
+    if len(heights) < 3:
+        raise ValueError("terrain skin needs at least 3 rows")
+    columns = len(heights[0])
+    if columns < 3:
+        raise ValueError("terrain skin needs at least 3 columns")
+    for row_index, row in enumerate(heights):
+        if len(row) != columns:
+            raise ValueError("terrain skin height rows must have equal width")
+        for column_index, value in enumerate(row):
+            if not math.isfinite(value):
+                raise ValueError(
+                    f"terrain skin height {row_index},{column_index} is not finite"
+                )
+    return len(heights), columns
+
+
+def _max_abs_laplacian(heights: Sequence[Sequence[float]]) -> float:
+    rows, columns = _validate_grid(heights)
+    maximum = 0.0
+    for row in range(1, rows - 1):
+        for column in range(1, columns - 1):
+            center = heights[row][column]
+            average = (
+                heights[row - 1][column]
+                + heights[row + 1][column]
+                + heights[row][column - 1]
+                + heights[row][column + 1]
+            ) * 0.25
+            maximum = max(maximum, abs(average - center))
+    return maximum
+
+
+def smooth_height_grid(
+    heights: Sequence[Sequence[float]],
+    *,
+    iterations: int = 3,
+    blend: float = 0.45,
+    curvature_threshold_m: float = 0.04,
+    max_step_adjustment_m: float = 0.30,
+    max_total_adjustment_m: float = 0.90,
+    pinned_border_cells: int = 2,
+) -> tuple[tuple[tuple[float, ...], ...], TerrainSkinSmoothingMetrics]:
+    """Low-pass only local second-order height noise, with hard bounded edits.
+
+    A constant or planar slope has a near-zero 4-neighbour Laplacian and remains
+    unchanged. Stair/rib artefacts have high local curvature and are relaxed
+    toward the neighbour mean. Outer cells stay pinned so the skin ties back to
+    the macro Landscape instead of drifting at its boundary.
+    """
+
+    rows, columns = _validate_grid(heights)
+    if isinstance(iterations, bool) or iterations < 1:
+        raise ValueError("iterations must be a positive integer")
+    if not 0.0 < blend <= 1.0:
+        raise ValueError("blend must be in (0, 1]")
+    if curvature_threshold_m < 0.0:
+        raise ValueError("curvature_threshold_m cannot be negative")
+    if max_step_adjustment_m <= 0.0 or max_total_adjustment_m <= 0.0:
+        raise ValueError("adjustment bounds must be positive")
+    if pinned_border_cells < 1:
+        raise ValueError("pinned_border_cells must be positive")
+    if rows <= 2 * pinned_border_cells or columns <= 2 * pinned_border_cells:
+        raise ValueError("terrain skin grid is too small for the pinned border")
+
+    original = tuple(tuple(float(value) for value in row) for row in heights)
+    current = [list(row) for row in original]
+    before = _max_abs_laplacian(original)
+
+    for _ in range(iterations):
+        previous = [row[:] for row in current]
+        for row in range(pinned_border_cells, rows - pinned_border_cells):
+            for column in range(
+                pinned_border_cells,
+                columns - pinned_border_cells,
+            ):
+                center = previous[row][column]
+                average = (
+                    previous[row - 1][column]
+                    + previous[row + 1][column]
+                    + previous[row][column - 1]
+                    + previous[row][column + 1]
+                ) * 0.25
+                laplacian = average - center
+                if abs(laplacian) < curvature_threshold_m:
+                    continue
+
+                step = max(
+                    -max_step_adjustment_m,
+                    min(max_step_adjustment_m, laplacian * blend),
+                )
+                candidate = center + step
+                lower = original[row][column] - max_total_adjustment_m
+                upper = original[row][column] + max_total_adjustment_m
+                current[row][column] = max(lower, min(upper, candidate))
+
+    result = tuple(tuple(row) for row in current)
+    adjustments = [
+        result[row][column] - original[row][column]
+        for row in range(rows)
+        for column in range(columns)
+    ]
+    max_abs = max(abs(value) for value in adjustments)
+    rms = math.sqrt(
+        sum(value * value for value in adjustments) / len(adjustments)
+    )
+    after = _max_abs_laplacian(result)
+    return result, TerrainSkinSmoothingMetrics(
+        max_abs_adjustment_m=max_abs,
+        rms_adjustment_m=rms,
+        max_abs_laplacian_before_m=before,
+        max_abs_laplacian_after_m=after,
+    )
+
+
+def build_terrain_skin_mesh(
+    x_coordinates_m: Sequence[float],
+    y_coordinates_descending_m: Sequence[float],
+    heights_m: Sequence[Sequence[float]],
+    *,
+    origin_x_m: float,
+    origin_y_m: float,
+    origin_z_m: float,
+    lift_m: float = 0.02,
+) -> TerrainSkinMesh:
+    """Build an upward-wound world-aligned regular grid mesh."""
+
+    rows, columns = _validate_grid(heights_m)
+    if len(x_coordinates_m) != columns:
+        raise ValueError("x coordinate count must match terrain skin columns")
+    if len(y_coordinates_descending_m) != rows:
+        raise ValueError("y coordinate count must match terrain skin rows")
+    if any(
+        x_coordinates_m[index + 1] <= x_coordinates_m[index]
+        for index in range(columns - 1)
+    ):
+        raise ValueError("terrain skin x coordinates must be strictly increasing")
+    if any(
+        y_coordinates_descending_m[index + 1]
+        >= y_coordinates_descending_m[index]
+        for index in range(rows - 1)
+    ):
+        raise ValueError("terrain skin y coordinates must be strictly decreasing")
+
+    vertices = tuple(
+        Vec3(
+            x_coordinates_m[column] - origin_x_m,
+            y_coordinates_descending_m[row] - origin_y_m,
+            heights_m[row][column] - origin_z_m + lift_m,
+        )
+        for row in range(rows)
+        for column in range(columns)
+    )
+
+    triangles: list[tuple[int, int, int]] = []
+    for row in range(rows - 1):
+        base = row * columns
+        next_base = (row + 1) * columns
+        for column in range(columns - 1):
+            a = base + column
+            b = a + 1
+            c = next_base + column
+            d = c + 1
+            triangles.append((a, c, b))
+            triangles.append((b, c, d))
+
+    mesh = TerrainSkinMesh(
+        vertices=vertices,
+        triangles=tuple(triangles),
+        row_count=rows,
+        column_count=columns,
+    )
+    validate_terrain_skin_mesh(mesh)
+    return mesh
+
+
+def validate_terrain_skin_mesh(mesh: TerrainSkinMesh) -> None:
+    expected_vertices = mesh.row_count * mesh.column_count
+    expected_triangles = (mesh.row_count - 1) * (mesh.column_count - 1) * 2
+    if len(mesh.vertices) != expected_vertices:
+        raise ValueError("terrain skin vertex count violates grid contract")
+    if len(mesh.triangles) != expected_triangles:
+        raise ValueError("terrain skin triangle count violates grid contract")
+
+    for triangle_index, triangle in enumerate(mesh.triangles):
+        a, b, c = (mesh.vertices[index] for index in triangle)
+        ab = b - a
+        ac = c - a
+        normal_z = ab.x * ac.y - ab.y * ac.x
+        if normal_z <= _EPSILON:
+            raise ValueError(
+                f"terrain skin triangle {triangle_index} is folded in XY"
+            )
+
+
+def terrain_skin_hash(mesh: TerrainSkinMesh) -> str:
+    digest = hashlib.sha256()
+    digest.update(struct.pack("<II", mesh.row_count, mesh.column_count))
+    for vertex in mesh.vertices:
+        digest.update(struct.pack("<ddd", vertex.x, vertex.y, vertex.z))
+    for triangle in mesh.triangles:
+        digest.update(struct.pack("<III", *triangle))
+    return digest.hexdigest()
