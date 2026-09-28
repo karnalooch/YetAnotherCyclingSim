@@ -87,10 +87,18 @@ def discover_download_portal() -> dict[str, Any]:
     )
     terms = ("cortina", "dtm_2m", "dtm2m", "downloaddtm", "lidar")
     hits: list[dict[str, Any]] = []
-    for raw_src in script_sources[:80]:
+    likely_sources = [
+        raw_src
+        for raw_src in script_sources
+        if any(
+            token in raw_src.lower()
+            for token in ("download", "dtm", "configurator")
+        )
+    ][:24]
+    for raw_src in likely_sources:
         url = urllib.parse.urljoin(DOWNLOAD_PAGE, raw_src)
         try:
-            body = request_bytes(url).decode("utf-8", errors="replace")
+            body = request_bytes(url, timeout=12).decode("utf-8", errors="replace")
         except Exception as exc:
             hits.append({"url": url, "fetch_error": str(exc)})
             continue
@@ -121,6 +129,7 @@ def discover_download_portal() -> dict[str, Any]:
     return {
         "url": DOWNLOAD_PAGE,
         "script_count": len(script_sources),
+        "probed_script_count": len(likely_sources),
         "interesting_scripts": hits,
     }
 
