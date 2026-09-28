@@ -40,6 +40,7 @@ def _finish(success: bool, error: str = "") -> None:
             "ray_tracing_landscape_lod_bias": -1,
             "proof_sun_cast_shadows": False,
             "proof_material": "/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial",
+            "proof_viewmode": "lightingonly",
             "camera_location_cm": [
                 float(_camera.get_actor_location().x),
                 float(_camera.get_actor_location().y),
@@ -144,6 +145,10 @@ def main() -> None:
         world,
         "r.RayTracing.Geometry.Landscape.LODBias -1",
     )
+    # Lighting Only is an engine diagnostic view mode: it strips material
+    # appearance from the proof so any remaining banding/terracing belongs to
+    # geometry/import rather than the surface shader.
+    unreal.SystemLibrary.execute_console_command(world, "viewmode lightingonly")
     unreal.log(
         "[PassoGiauCapture] proof LOD stabilized: "
         f"components={_landscape_component_count} forced_lod=0 "
