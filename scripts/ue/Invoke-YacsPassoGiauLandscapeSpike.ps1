@@ -25,13 +25,14 @@ $ArtifactRoot = (Resolve-Path -LiteralPath $ArtifactRoot).Path
 
 $SpikeMapRelative = 'Content/Prototype/Maps/L_PassoGiauTerrainSpike.umap'
 $CanonicalMapRelative = 'Content/Prototype/Maps/L_CyclingTest.umap'
-$PreparedRoot = Join-Path $RepoRoot 'ExternalAssets/Terrain/PassoGiau/Prepared'
-$HeightmapR16 = Join-Path $PreparedRoot 'passo_giau_height_ue_landscape_4033.r16'
+$PreparedRoot = Join-Path $RepoRoot 'ExternalAssets/Terrain/PassoGiau/PreparedVenetoLidar5m'
+$HeightmapR16 = Join-Path $PreparedRoot 'passo_giau_veneto_lidar_ue_landscape_4033.r16'
 $TerrainReport = Join-Path $PreparedRoot 'terrain-report.json'
+$SourceDownloadReport = Join-Path $RepoRoot 'ExternalAssets/Terrain/PassoGiau/Veneto_Lidar5m/veneto-lidar-download-report.json'
 $MapPrepScript = Join-Path $RepoRoot 'scripts/ue/stage3g_prepare_passo_giau_landscape_map.py'
 $CaptureScript = Join-Path $RepoRoot 'scripts/ue/stage3g_capture_passo_giau_landscape.py'
-$DownloadScript = Join-Path $RepoRoot 'scripts/assets/download_passo_giau_dem.py'
-$PrepareScript = Join-Path $RepoRoot 'scripts/assets/prepare_passo_giau_heightmap.py'
+$DownloadScript = Join-Path $RepoRoot 'scripts/assets/download_passo_giau_veneto_lidar.py'
+$PrepareScript = Join-Path $RepoRoot 'scripts/assets/prepare_passo_giau_veneto_lidar.py'
 
 $BuildLog = Join-Path $ArtifactRoot 'build_editor.log'
 $MapPrepLog = Join-Path $ArtifactRoot 'map_prep.log'
@@ -87,7 +88,7 @@ $BuildProc = Start-Process -FilePath $BuildBat -ArgumentList $BuildArgs -NoNewWi
 $BuildProc.WaitForExit()
 if ($BuildProc.ExitCode -ne 0) { throw "Editor build failed with exit code $($BuildProc.ExitCode). See $BuildLog" }
 
-Write-Host '[2/7] Preparing official TINITALY terrain source...' -ForegroundColor Cyan
+Write-Host '[2/7] Preparing official Veneto LiDAR-derived 5 m terrain source...' -ForegroundColor Cyan
 $VenvRoot = Join-Path $env:RUNNER_TEMP ('yacs-passo-giau-' + [Guid]::NewGuid().ToString('N'))
 try {
     & python -m venv $VenvRoot
@@ -96,9 +97,9 @@ try {
     & $VenvPython -m pip install --disable-pip-version-check 'numpy==2.2.6' 'Pillow==11.3.0' 'rasterio==1.4.3'
     if ($LASTEXITCODE -ne 0) { throw 'Failed to install terrain preparation dependencies.' }
     & $VenvPython $DownloadScript
-    if ($LASTEXITCODE -ne 0) { throw 'Official Passo Giau DEM download failed.' }
-    & $VenvPython $PrepareScript --landscape-size 4033
-    if ($LASTEXITCODE -ne 0) { throw 'Passo Giau heightmap preparation failed.' }
+    if ($LASTEXITCODE -ne 0) { throw 'Official Veneto Passo Giau LiDAR DTM download failed.' }
+    & $VenvPython $PrepareScript
+    if ($LASTEXITCODE -ne 0) { throw 'Veneto Passo Giau LiDAR heightmap preparation failed.' }
 }
 finally {
     if (Test-Path -LiteralPath $VenvRoot) { Remove-Item -LiteralPath $VenvRoot -Recurse -Force -ErrorAction SilentlyContinue }
@@ -106,12 +107,20 @@ finally {
 
 if (-not (Test-Path -LiteralPath $HeightmapR16 -PathType Leaf)) { throw "Prepared R16 is missing: $HeightmapR16" }
 if (-not (Test-Path -LiteralPath $TerrainReport -PathType Leaf)) { throw "Terrain report is missing: $TerrainReport" }
+if (-not (Test-Path -LiteralPath $SourceDownloadReport -PathType Leaf)) { throw "Veneto LiDAR source download report is missing: $SourceDownloadReport" }
 $Terrain = Get-Content -LiteralPath $TerrainReport -Raw | ConvertFrom-Json
+$SourceDownload = Get-Content -LiteralPath $SourceDownloadReport -Raw | ConvertFrom-Json
 $Candidate = $Terrain.unreal_landscape_candidate
 if ([int]$Candidate.landscape_size_vertices -ne 4033) { throw 'Terrain report did not produce a 4033-vertex Landscape candidate.' }
 $Transform = $Candidate.recommended_transform
 if ([math]::Abs([double]$Transform.scale_x_cm_per_vertex - 198.412698) -gt 0.001) { throw 'Unexpected Passo Giau XY scale in terrain report.' }
-if ([math]::Abs([double]$Transform.scale_z - 301.26543) -gt 0.001) { throw 'Unexpected Passo Giau Z scale in terrain report.' }
+$ScaleZ = [double]$Transform.scale_z
+$LocationZCm = [double]$Transform.location_z_cm_for_sea_level_preservation
+if ($ScaleZ -lt 250.0 -or $ScaleZ -gt 350.0) { throw 'Unexpected Passo Giau Z scale in Veneto terrain report.' }
+if ($LocationZCm -lt 150000.0 -or $LocationZCm -gt 250000.0) { throw 'Unexpected Passo Giau Z midpoint in Veneto terrain report.' }
+if ([int]$Terrain.tile_count -lt 1 -or [double]$Terrain.target_aoi.native_cell_m -ne 5.0) { throw 'Veneto terrain report does not prove real 5 m source coverage.' }
+$ExpectedElevationMinM = [double]$Terrain.elevation_m.minimum
+$ExpectedElevationMaxM = [double]$Terrain.elevation_m.maximum
 
 Write-Host '[3/7] Creating isolated spike map...' -ForegroundColor Cyan
 $env:YACS_PASSO_GIAU_MAP_PREP_PROOF = $MapPrepProof
@@ -128,7 +137,7 @@ $MapPrep = Get-Content -LiteralPath $MapPrepProof -Raw | ConvertFrom-Json
 if ($MapPrep.passo_giau_map_prep -ne 'PASS' -or $MapPrep.canonical_map_mutated -ne $false) { throw 'Passo Giau isolated map preparation proof is invalid.' }
 
 Write-Host '[4/7] Importing 4033x4033 Landscape with C++ commandlet...' -ForegroundColor Cyan
-$ImportArgs = @($ProjectPath,'-run=CyclingPassoGiauLandscapeSpike',('-Heightmap="' + $HeightmapR16 + '"'),('-Proof="' + $ImportProof + '"'),'-Unattended','-NoPause','-NullRHI','-NoSplash','-NoP4','-log',('-AbsLog=' + $ImportLog))
+$ImportArgs = @($ProjectPath,'-run=CyclingPassoGiauLandscapeSpike',('-Heightmap="' + $HeightmapR16 + '"'),('-Proof="' + $ImportProof + '"'),('-ScaleZ=' + $ScaleZ.ToString([System.Globalization.CultureInfo]::InvariantCulture)),('-LocationZCm=' + $LocationZCm.ToString([System.Globalization.CultureInfo]::InvariantCulture)),'-Unattended','-NoPause','-NullRHI','-NoSplash','-NoP4','-log',('-AbsLog=' + $ImportLog))
 $Proc = Start-Process -FilePath $Context.UnrealEditorCmdPath -ArgumentList $ImportArgs -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $ImportLog -RedirectStandardError $ImportErr
 if (-not $Proc.WaitForExit($TimeoutSec * 1000)) { try { $Proc | Stop-Process -Force } catch { }; throw 'Passo Giau Landscape import commandlet timed out.' }
 $ImportExitCode = $Proc.ExitCode
@@ -137,7 +146,8 @@ $Import = Get-Content -LiteralPath $ImportProof -Raw | ConvertFrom-Json
 if ($Import.passo_giau_landscape_import -ne 'PASS') { throw "Passo Giau Landscape import proof did not report PASS (exit=$ImportExitCode)." }
 if ([int]$Import.component_count -ne 1024 -or [int]$Import.num_subsections -ne 2 -or [int]$Import.subsection_size_quads -ne 63) { throw 'Passo Giau Landscape topology proof is invalid.' }
 if ([int]$Import.encoded_min -gt 512 -or [int]$Import.encoded_max -lt 65023) { throw 'Passo Giau encoded height-domain proof is invalid.' }
-if ([math]::Abs([double]$Import.sampled_elevation_min_m - 1171.353) -gt 10.0 -or [math]::Abs([double]$Import.sampled_elevation_max_m - 2713.832) -gt 10.0) { throw 'Passo Giau sampled elevation range drifted too far from the source DEM.' }
+if ([math]::Abs([double]$Import.sampled_elevation_min_m - $ExpectedElevationMinM) -gt 10.0 -or [math]::Abs([double]$Import.sampled_elevation_max_m - $ExpectedElevationMaxM) -gt 10.0) { throw 'Passo Giau sampled elevation range drifted too far from the Veneto LiDAR-derived source DEM.' }
+if ([math]::Abs([double]$Import.scale_z - $ScaleZ) -gt 0.001 -or [math]::Abs([double]$Import.location_z_cm - $LocationZCm) -gt 0.01) { throw 'Passo Giau import proof did not preserve the Veneto vertical transform.' }
 
 $ImportLogText = Get-Content -LiteralPath $ImportLog -Raw -ErrorAction Stop
 if ($ImportExitCode -notin @(0, 1)) {
@@ -223,9 +233,12 @@ $Final = [ordered]@{
     passo_giau_r4_1b_landscape_spike = 'PASS'
     expected_head = $ExpectedHead
     source = [ordered]@{
-        provider = 'TINITALY 1.1 / INGV'
-        license = 'CC BY 4.0'
-        source_sha256 = '9a58a8aca8b1856507b4ca3e656f8c975518cbd89bd273036ef2483c148db610'
+        provider = 'Regione del Veneto'
+        dataset = 'DTM 5 m derivato dai rilievi LiDAR'
+        license = 'IODL 2.0'
+        tile_count = [int]$Terrain.tile_count
+        native_cell_m = [double]$Terrain.target_aoi.native_cell_m
+        source_download_report = $SourceDownload
         terrain_report = $Terrain
     }
     isolated_map = $SpikeMapRelative
