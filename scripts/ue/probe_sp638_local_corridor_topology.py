@@ -194,6 +194,60 @@ def main() -> None:
     )
     minimum_radius_m = _minimum_sampled_radius_m(centerline)
 
+    actor_subsystem = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+    mesh_actor = actor_subsystem.spawn_actor_from_class(
+        unreal.DynamicMeshActor,
+        unreal.Vector(),
+        unreal.Rotator(),
+        transient=True,
+    )
+    if mesh_actor is None:
+        raise RuntimeError("failed to spawn transient DynamicMeshActor")
+    mesh_actor.set_actor_label("SP638_LocalCorridor_TopologyProbe")
+    mesh_component = mesh_actor.get_dynamic_mesh_component()
+    if mesh_component is None:
+        raise RuntimeError("DynamicMeshActor has no DynamicMeshComponent")
+    dynamic_mesh = mesh_component.get_dynamic_mesh()
+    if dynamic_mesh is None:
+        raise RuntimeError("DynamicMeshComponent has no DynamicMesh")
+
+    buffers = unreal.GeometryScriptSimpleMeshBuffers()
+    buffers.set_editor_property(
+        "vertices",
+        [
+            unreal.Vector(vertex.x * 100.0, vertex.y * 100.0, vertex.z * 100.0)
+            for vertex in mesh.vertices
+        ],
+    )
+    buffers.set_editor_property(
+        "triangles",
+        [unreal.IntVector(*triangle) for triangle in mesh.triangles],
+    )
+    dynamic_mesh.reset()
+    dynamic_mesh.append_buffers_to_mesh(
+        buffers,
+        material_id=0,
+        defer_change_notifications=True,
+    )
+    dynamic_mesh.recompute_normals(
+        unreal.GeometryScriptCalculateNormalsOptions(),
+        defer_change_notifications=True,
+    )
+    mesh_component.notify_mesh_modified()
+
+    unreal_vertex_count = int(dynamic_mesh.get_vertex_count())
+    unreal_triangle_count = int(dynamic_mesh.get_triangle_count())
+    if unreal_vertex_count != len(mesh.vertices):
+        raise RuntimeError(
+            "DynamicMesh vertex count mismatch: "
+            f"{unreal_vertex_count} != {len(mesh.vertices)}"
+        )
+    if unreal_triangle_count != len(mesh.triangles):
+        raise RuntimeError(
+            "DynamicMesh triangle count mismatch: "
+            f"{unreal_triangle_count} != {len(mesh.triangles)}"
+        )
+
     payload = {
         "schema_version": 1,
         "sp638_local_corridor_topology": "PASS",
@@ -221,11 +275,20 @@ def main() -> None:
             round(minimum_radius_m, 3) if minimum_radius_m is not None else None
         ),
         "corridor_mesh_sha256": corridor_mesh_hash(mesh),
+        "unreal_dynamic_mesh": {
+            "actor_class": "DynamicMeshActor",
+            "vertex_count": unreal_vertex_count,
+            "triangle_count": unreal_triangle_count,
+            "append_api": "DynamicMesh.append_buffers_to_mesh",
+            "normals_api": "DynamicMesh.recompute_normals",
+            "transient": True,
+        },
         "validation": {
             "positive_winding": True,
             "no_degenerate_triangles": True,
             "stable_lateral_topology": True,
             "real_sp638_hairpin": True,
+            "dynamic_mesh_counts_match_kernel": True,
         },
     }
     output_path.write_text(
@@ -236,6 +299,8 @@ def main() -> None:
         "[YacsSp638CorridorTopology] PASS: "
         f"stations={mesh.station_count} vertices={len(mesh.vertices)} "
         f"triangles={len(mesh.triangles)} "
+        f"ue_vertices={unreal_vertex_count} "
+        f"ue_triangles={unreal_triangle_count} "
         f"min_radius_m={minimum_radius_m} "
         f"hash={payload['corridor_mesh_sha256']}"
     )
