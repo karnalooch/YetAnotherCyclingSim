@@ -77,14 +77,32 @@ The probe is fail-closed. It currently proves:
   `DTM_2m_slope_recl_clip` and `DTM_2m_aspect_recl_clip` exists over the
   same extent;
 - the raw layer exposes no WMS `MetadataURL` or `DataURL`;
-- the public Veneto WCS does **not** currently advertise a matching coverage.
+- WMS `DescribeLayer` classifies `rv:DTM_2m_clip` as a WCS-backed raster,
+  but the advertised/global and workspace WCS endpoints do **not** enumerate a
+  matching coverage when probed across WCS 2.0.1, 1.1.1 and 1.0.0;
+- Veneto's anonymous generic download catalog is reachable and currently
+  exposes 932 downloadable layers, but contains neither
+  `DTM_2m_Cortina` nor `DTM_2m_clip`;
+- the public CSW 2.0.2 catalog, queried with a supported OGC `FILTER`,
+  returns **0 exact records** for both `DTM_2m_Cortina` and
+  `DTM_2m_clip`; a broader `Cortina DTM` query returns unrelated records,
+  including the established 5 m LiDAR DTM, but no exact 2 m source record.
 
-Therefore the candidate is **not yet approved as a height source**. WMS
-`GetMap` output must not be treated as elevation data: WMS is a rendered-map
-interface and does not prove preservation of raw DEM sample values.
+Therefore the candidate is **not yet approved as a height source**. The
+official 2 m raster is proven as a published WMS/viewer layer, but an official
+lossless/raw elevation transport has not been discovered through Veneto's
+public WCS, anonymous download catalog or CSW metadata catalog.
 
-The next gate is to discover and verify an official raw raster download
-(GeoTIFF/ASC or equivalent), then prove:
+WMS `GetMap` output must not be treated as elevation data: WMS is a
+rendered-map interface and does not by itself prove preservation of raw DEM
+sample values.
+
+The next gate is now explicit: obtain a documented official raw raster
+distribution URL/file for the Cortina 2 m DTM (GeoTIFF/ASC or equivalent),
+or equivalent provider metadata that identifies such a distribution. Do not
+guess hidden downloader URLs and do not scrape styled WMS pixels into a DEM.
+
+After the raw source is obtained, prove:
 
 1. actual ~2 m cell spacing from raster geotransform/metadata;
 2. elevation datatype and NoData contract;
