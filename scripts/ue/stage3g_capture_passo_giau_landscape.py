@@ -12,6 +12,7 @@ import unreal
 
 
 SPIKE_MAP = "/Game/Prototype/Maps/L_PassoGiauTerrainSpike"
+DIAGNOSTIC_MATERIAL = "/Game/Prototype/Environment/Stage3F/Materials/M_Stage3F_Terrain.M_Stage3F_Terrain"
 _task = None
 _tick_handle = None
 _started_at = 0.0
@@ -39,6 +40,7 @@ def _finish(success: bool, error: str = "") -> None:
             "forced_landscape_lod": 0,
             "ray_tracing_landscape_lod_bias": -1,
             "proof_sun_cast_shadows": False,
+            "diagnostic_material": DIAGNOSTIC_MATERIAL,
             "proof_material": "/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial",
             "proof_viewmode": "lightingonly",
             "camera_location_cm": [
@@ -118,6 +120,28 @@ def main() -> None:
     )
     if len(landscapes) != 1:
         raise RuntimeError(f"expected exactly one Landscape, found {len(landscapes)}")
+
+    # Geometry diagnosis must not rely on UE's fallback WorldGrid material.
+    # Reuse the existing constant-color Stage3F terrain material transiently,
+    # enable its Landscape shader permutation in memory, and never save this
+    # override back into the spike map.
+    diagnostic_material = unreal.load_asset(DIAGNOSTIC_MATERIAL)
+    if diagnostic_material is None:
+        raise RuntimeError(f"failed to load diagnostic material {DIAGNOSTIC_MATERIAL}")
+    try:
+        diagnostic_material.set_editor_property("bUsedWithLandscape", True)
+    except Exception as exc:
+        unreal.log_warning(
+            "[PassoGiauCapture] could not toggle bUsedWithLandscape explicitly: "
+            f"{exc}"
+        )
+    unreal.MaterialEditingLibrary.recompile_material(diagnostic_material)
+    landscapes[0].set_editor_property("landscape_material", diagnostic_material)
+    landscapes[0].post_edit_change()
+    unreal.log(
+        "[PassoGiauCapture] transient neutral diagnostic material applied: "
+        f"{DIAGNOSTIC_MATERIAL}"
+    )
 
     # Visual-proof stabilization only: render the imported source geometry at
     # full Landscape detail and keep the ray-tracing representation on the
