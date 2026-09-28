@@ -12,13 +12,25 @@ import json
 import math
 import os
 from pathlib import Path
+import sys
 import time
 import traceback
 
 import unreal
 
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+UE_HELPERS = REPO_ROOT / "scripts" / "ue"
+if str(UE_HELPERS) not in sys.path:
+    sys.path.insert(0, str(UE_HELPERS))
+
+import yacs_scene_composer  # noqa: E402
+
+
 SPIKE_MAP = "/Game/Prototype/Maps/L_PassoGiauTerrainSpike"
+GROVE_PRESET_PATH = (
+    REPO_ROOT / "worldgen" / "presets" / "alpine_roadside_grove_v1.json"
+)
 CAPTURE_RES_X = 3840
 CAPTURE_RES_Y = 2160
 PROOF_AA_QUALITY = 6
@@ -69,11 +81,12 @@ def _finish(success: bool, error: str = "") -> None:
         proof = {
             "schema_version": 1,
             "passo_giau_roadside_house_capture": "PASS",
+            "yacs_world_authoring_library": "PASS",
             "map": SPIKE_MAP,
             "screenshot": str(_output_path),
             "screenshot_bytes": _output_path.stat().st_size,
             "resolution": [CAPTURE_RES_X, CAPTURE_RES_Y],
-            "capture_strategy": "r4.1-hairpin-roadside-house-proof",
+            "capture_strategy": "r4.1-world-authoring-library-house-grove-proof",
             "proof_aa_method": "FXAA",
             "post_process_aa_quality": PROOF_AA_QUALITY,
             "visual_acceptance": "PENDING_HUMAN_REVIEW",
@@ -533,11 +546,16 @@ def main() -> None:
 
     output_value = os.environ.get("YACS_PASSO_GIAU_HOUSE_CAPTURE_PNG", "")
     proof_value = os.environ.get("YACS_PASSO_GIAU_HOUSE_CAPTURE_PROOF", "")
-    if not output_value or not proof_value:
+    selection_value = os.environ.get("YACS_WORLD_ASSET_SELECTION_PLAN", "")
+    if not output_value or not proof_value or not selection_value:
         raise RuntimeError(
-            "YACS_PASSO_GIAU_HOUSE_CAPTURE_PNG and "
-            "YACS_PASSO_GIAU_HOUSE_CAPTURE_PROOF are required"
+            "YACS_PASSO_GIAU_HOUSE_CAPTURE_PNG, "
+            "YACS_PASSO_GIAU_HOUSE_CAPTURE_PROOF and "
+            "YACS_WORLD_ASSET_SELECTION_PLAN are required"
         )
+
+    grove_preset = yacs_scene_composer.load_json(GROVE_PRESET_PATH)
+    selection_plan = yacs_scene_composer.load_json(Path(selection_value))
 
     _output_path = Path(output_value)
     _proof_path = Path(proof_value)
@@ -679,6 +697,32 @@ def main() -> None:
         local_focus_cm,
     )
 
+    house_location = house["location_cm"]
+    road_anchor = house["road_anchor_cm"]
+    outward_x = float(house_location[0]) - float(road_anchor[0])
+    outward_y = float(house_location[1]) - float(road_anchor[1])
+    outward_length = max(1.0, math.hypot(outward_x, outward_y))
+    outward_x /= outward_length
+    outward_y /= outward_length
+
+    house_yaw_rad = math.radians(float(house["yaw_deg"]))
+    tangent_x = math.cos(house_yaw_rad)
+    tangent_y = math.sin(house_yaw_rad)
+
+    forest_center = unreal.Vector(
+        float(house_location[0]) + outward_x * 1100.0 + tangent_x * 180.0,
+        float(house_location[1]) + outward_y * 1100.0 + tangent_y * 180.0,
+        float(road_anchor[2]),
+    )
+    forest = yacs_scene_composer.spawn_transient_forest_patch(
+        preset=grove_preset,
+        selection_plan=selection_plan,
+        actor_subsystem=actor_subsystem,
+        center_cm=forest_center,
+        world_yaw_deg=float(house["yaw_deg"]),
+        label_prefix="YACS_ALPINE_GROVE",
+    )
+
     camera_distance_cm = max(0.0, local_focus_cm - CAMERA_BACK_CM)
     target_distance_cm = min(
         local_length_cm,
@@ -697,11 +741,17 @@ def main() -> None:
         road_camera.y,
         road_camera.z + EYE_HEIGHT_CM,
     )
-    house_location = house["location_cm"]
     target = unreal.Vector(
-        (float(road_target.x) + float(house_location[0])) * 0.5,
-        (float(road_target.y) + float(house_location[1])) * 0.5,
-        (float(road_target.z) + float(house_location[2])) * 0.5 + 160.0,
+        float(road_target.x) * 0.25
+        + float(house_location[0]) * 0.35
+        + float(forest_center.x) * 0.40,
+        float(road_target.y) * 0.25
+        + float(house_location[1]) * 0.35
+        + float(forest_center.y) * 0.40,
+        float(road_target.z) * 0.25
+        + float(house_location[2]) * 0.35
+        + float(forest_center.z) * 0.40
+        + 260.0,
     )
     camera_rotation = unreal.MathLibrary.find_look_at_rotation(
         camera_location,
@@ -770,7 +820,7 @@ def main() -> None:
     camera_component = _camera.get_component_by_class(unreal.CameraComponent)
     if camera_component is None:
         raise RuntimeError("spawned CameraActor has no CameraComponent")
-    camera_component.set_editor_property("field_of_view", 76.0)
+    camera_component.set_editor_property("field_of_view", 82.0)
 
     _proof_data = {
         "source_full_road_length_m": round(full_length_cm / 100.0, 3),
@@ -800,6 +850,8 @@ def main() -> None:
             "segment_length_cm": MESH_SEGMENT_CM,
         },
         "house": house,
+        "forest": forest,
+        "asset_selection_plan": str(Path(selection_value).resolve()),
         "landscape_component_count": len(landscape_components),
         "forced_landscape_lod": 0,
         "neutral_landscape_material": neutral_landscape_material is not None,
@@ -825,7 +877,7 @@ def main() -> None:
         mask_enabled=False,
         capture_hdr=False,
         comparison_tolerance=unreal.ComparisonTolerance.LOW,
-        comparison_notes="R4.1 SP638 hairpin roadside alpine house proof",
+        comparison_notes="YACS World Authoring Library: SP638 house + alpine grove proof",
         delay=3.0,
         force_game_view=True,
     )
@@ -840,7 +892,8 @@ def main() -> None:
         f"focus_m={focus_distance_cm / 100.0:.1f} "
         f"curvature={curvature_score:.4f} "
         f"road_segments={road_segments} shoulder_segments={shoulder_segments} "
-        f"house_offset_m={house['road_offset_m']:.1f}"
+        f"house_offset_m={house['road_offset_m']:.1f} "
+        f"forest_trees={forest['tree_count']}"
     )
 
 
