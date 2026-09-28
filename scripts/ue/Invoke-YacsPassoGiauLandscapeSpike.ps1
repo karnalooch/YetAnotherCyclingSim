@@ -178,6 +178,7 @@ $ImportExitCode = $Proc.ExitCode
 if (-not (Test-Path -LiteralPath $ImportProof -PathType Leaf)) { throw "Passo Giau Landscape import proof is missing (exit=$ImportExitCode)." }
 $Import = Get-Content -LiteralPath $ImportProof -Raw | ConvertFrom-Json
 if ($Import.passo_giau_landscape_import -ne 'PASS') { throw "Passo Giau Landscape import proof did not report PASS (exit=$ImportExitCode)." }
+if ($Import.unreal_native_import_reader_parity -ne 'PASS') { throw 'Passo Giau Unreal-native R16 import-reader parity proof is missing or failed.' }
 if ([int]$Import.component_count -ne 1024 -or [int]$Import.num_subsections -ne 2 -or [int]$Import.subsection_size_quads -ne 63) { throw 'Passo Giau Landscape topology proof is invalid.' }
 if ([int]$Import.encoded_min -gt 512 -or [int]$Import.encoded_max -lt 65023) { throw 'Passo Giau encoded height-domain proof is invalid.' }
 if ([math]::Abs([double]$Import.sampled_elevation_min_m - $ExpectedElevationMinM) -gt 10.0 -or [math]::Abs([double]$Import.sampled_elevation_max_m - $ExpectedElevationMaxM) -gt 10.0) { throw 'Passo Giau sampled elevation range drifted too far from the Veneto LiDAR-derived source DEM.' }
