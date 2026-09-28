@@ -77,7 +77,7 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("$ImportExitCode -notin @(0, 1)", wrapper)
         self.assertIn("CyclingPassoGiauLandscapeSpikeCommandlet: done", wrapper)
         self.assertIn("$CaptureExitCode -notin @(0, 1)", wrapper)
-        self.assertIn(r"\\[PassoGiauCapture\\] PASS:", wrapper)
+        self.assertIn(r"\[PassoGiauCapture\] PASS:", wrapper)
         self.assertIn("Fatal error|Unhandled Exception|Critical error", wrapper)
         self.assertIn("code_only_lfs_asset_registry_exit_tolerance_used", wrapper)
 
