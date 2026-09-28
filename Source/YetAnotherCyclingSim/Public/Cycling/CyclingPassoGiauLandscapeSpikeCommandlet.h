@@ -10,8 +10,8 @@
 /**
  * One-shot editor commandlet for the Stage 3G R4.1B Passo Giau Landscape spike.
  *
- * The commandlet imports the prepared 1009x1009 little-endian R16 heightmap
- * into the isolated /Game/Prototype/Maps/L_PassoGiauTerrainSpike map only.
+ * The commandlet imports the prepared 4033x4033 little-endian R16 heightmap
+ * into the isolated /Game/Prototype/Maps/L_PassoGiauTerrainSpike map only.\n * It may also author the presentation-only official SP638 spline when -RoadJson is supplied.
  *
  * It must never mutate L_CyclingTest and it must never become authoritative
  * route/physics geometry.
