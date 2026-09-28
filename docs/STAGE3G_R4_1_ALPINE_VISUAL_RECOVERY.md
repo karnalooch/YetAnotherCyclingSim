@@ -714,6 +714,35 @@ The proof:
 This keeps iteration cost bounded to LFS map materialization + incremental editor
 build + one Unreal capture.
 
+### Result — run 36415573299
+
+The second R4.1B.2 attempt completed **GREEN** after the first attempt exposed
+two proof-harness API mistakes (invalid edit-layer name and an incorrect Python
+material setter). The successful proof used edit layer `Layer`, a 685.369 m
+maximum-curvature SP638 slice centered around source distance 15.525 km,
+transient raise/lower spline deformation, and a 3840 x 2160 rider capture.
+
+The result is **VISUAL FAIL** despite the green technical proof.
+
+What improved:
+
+- the road is immediately readable from cyclist height;
+- the bounded cut/fill path executes deterministically;
+- the fast proof no longer rebuilds the whole 8 km x 8 km terrain;
+- transient proof changes leave tracked map assets untouched.
+
+What remains unacceptable:
+
+- rider-visible uphill faces still show severe heightfield ribbing/terracing;
+- the uniform proof shoulder/roadbed becomes a large artificial wedge/slab;
+- the local road cut/embankment still does not read as believable Alpine terrain.
+
+Decision: retain the bounded proof loop and spline deformation primitive, but do
+not promote the box-strip corridor. R4.1B.3 must generate dedicated high-detail
+local ground/cut/embankment geometry for the same hairpin and demote Landscape
+to macro background beneath/behind that local corridor. Do not add vegetation or
+production materials before that geometry passes the rider-camera gate.
+
 ### Acceptance gate
 
 The candidate passes only if the rider-height PNG shows all of the following:
