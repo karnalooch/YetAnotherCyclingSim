@@ -112,6 +112,29 @@ jobs:
         run: |
           python ./scripts/ci/test_remote_editor_command_workflow.py
 
+      - name: Build editor and run scoped Automation before editor launch
+        shell: pwsh
+        working-directory: _remote-editor-worktree
+        run: |
+          ./scripts/ci/Invoke-YacsUnrealCi.ps1 -ExpectedHead '${{ github.sha }}'
+
+      - name: Materialize trusted LFS assets for Unreal Editor startup
+        shell: pwsh
+        working-directory: _remote-editor-worktree
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git lfs pull
+          if ($LASTEXITCODE -ne 0) {
+            throw 'git lfs pull failed before remote editor startup.'
+          }
+          git lfs fsck
+          if ($LASTEXITCODE -ne 0) {
+            throw 'git lfs fsck failed before remote editor startup.'
+          }
+          if (git status --porcelain) {
+            throw 'LFS materialization changed repository status.'
+          }
+
       - name: Execute allowlisted Unreal command
         shell: pwsh
         working-directory: _remote-editor-worktree
@@ -127,6 +150,9 @@ jobs:
             _remote-editor-worktree/Saved/RuntimeProof/RemoteEditor/**/*.json
             _remote-editor-worktree/Saved/RuntimeProof/RemoteEditor/**/*.txt
             _remote-editor-worktree/Saved/RuntimeProof/RemoteEditor/**/*.log
+            _remote-editor-worktree/Saved/RuntimeProof/CI/Unreal/**/*.json
+            _remote-editor-worktree/Saved/RuntimeProof/CI/Unreal/**/*.txt
+            _remote-editor-worktree/Saved/RuntimeProof/CI/Unreal/**/*.log
           if-no-files-found: warn
           retention-days: 7
 
