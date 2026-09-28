@@ -14,6 +14,7 @@ import hashlib
 import json
 import math
 import os
+import re
 from pathlib import Path
 import sys
 import time
@@ -405,6 +406,70 @@ def _shoulder_surface_profiles(
     return tuple(result)
 
 
+def _vertical_trace_height_cm(
+    hit,
+    *,
+    expected_x_cm: float,
+    expected_y_cm: float,
+    trace_bottom_z_cm: float,
+    trace_top_z_cm: float,
+) -> float:
+    """Extract a vertical line-trace surface Z without relying on HitResult field names.
+
+    UE Python's reflected HitResult surface changed in 5.8. StructBase.to_tuple()
+    is stable and exposes the underlying values, so select the vector that lies
+    on the known vertical ray. For a line trace, Location and ImpactPoint are
+    coincident; either yields the sampled surface height.
+    """
+
+    try:
+        values = hit.to_tuple()
+    except Exception:
+        values = ()
+
+    candidates: list[float] = []
+    for value in values:
+        if not all(hasattr(value, axis) for axis in ("x", "y", "z")):
+            continue
+        x = float(value.x)
+        y = float(value.y)
+        z = float(value.z)
+        if (
+            abs(x - expected_x_cm) <= 1.0
+            and abs(y - expected_y_cm) <= 1.0
+            and trace_bottom_z_cm - 1.0 <= z <= trace_top_z_cm + 1.0
+            and abs(z - trace_top_z_cm) > 1.0
+            and abs(z - trace_bottom_z_cm) > 1.0
+        ):
+            candidates.append(z)
+
+    if candidates:
+        return candidates[0]
+
+    # Defensive fallback for engine wrappers that expose only text export.
+    try:
+        exported = hit.export_text()
+    except Exception:
+        exported = ""
+    for field_name in ("ImpactPoint", "Location"):
+        match = re.search(
+            rf"{field_name}=\\(X=([-+0-9.eE]+),Y=([-+0-9.eE]+),Z=([-+0-9.eE]+)\\)",
+            exported,
+        )
+        if match is None:
+            continue
+        x = float(match.group(1))
+        y = float(match.group(2))
+        z = float(match.group(3))
+        if abs(x - expected_x_cm) <= 1.0 and abs(y - expected_y_cm) <= 1.0:
+            return z
+
+    raise RuntimeError(
+        "could not extract a surface point from UE HitResult on vertical ray; "
+        f"tuple_len={len(values)} export={exported[:240]!r}"
+    )
+
+
 def _sample_local_terrain_skin(
     world: unreal.World,
     road_actor: unreal.Actor,
@@ -449,8 +514,14 @@ def _sample_local_terrain_skin(
                 misses.append((row_index, column_index))
                 row.append(float("nan"))
                 continue
-            impact_point = hit.get_editor_property("impact_point")
-            row.append(float(impact_point.z) / 100.0)
+            height_cm = _vertical_trace_height_cm(
+                hit,
+                expected_x_cm=x_cm,
+                expected_y_cm=y_cm,
+                trace_bottom_z_cm=trace_bottom_z,
+                trace_top_z_cm=trace_top_z,
+            )
+            row.append(height_cm / 100.0)
         raw_heights_m.append(tuple(row))
 
     if misses:
