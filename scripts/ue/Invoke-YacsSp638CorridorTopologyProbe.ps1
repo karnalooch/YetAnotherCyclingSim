@@ -107,6 +107,18 @@ if ([int]$Proof.station_count -lt 100) {
 if ([int]$Proof.triangle_count -lt 1000) {
     throw "SP638 local corridor topology proof generated too few triangles: $($Proof.triangle_count)"
 }
+if ([double]$Proof.source_geometry_analysis.half_window_m -lt 5.0) {
+    throw "SP638 topology proof used a sub-source curvature window: $($Proof.source_geometry_analysis.half_window_m) m"
+}
+if ([bool]$Proof.source_geometry_analysis.canonical_centerline_xy_modified -ne $false) {
+    throw 'SP638 topology proof modified canonical centerline XY.'
+}
+if ([bool]$Proof.validation.source_scale_curvature_estimation -ne $true) {
+    throw 'SP638 topology proof did not confirm source-scale curvature estimation.'
+}
+if ([double]$Proof.adaptive_inside_offset.minimum_actual_shoulder_width_m -lt 0.25) {
+    throw "SP638 topology proof pinched the shoulder below 0.25 m: $($Proof.adaptive_inside_offset.minimum_actual_shoulder_width_m)"
+}
 
 $ProbeLogText = Get-Content -LiteralPath $ProbeLog -Raw -ErrorAction Stop
 if ($ProbeLogText -match '(?i)Fatal error|Unhandled Exception|Critical error') {
