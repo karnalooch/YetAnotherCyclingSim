@@ -89,6 +89,8 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("runs-on: [self-hosted, yacs-ue58]", workflow)
         self.assertIn("lfs: false", workflow)
         self.assertNotIn("git lfs checkout", workflow)
+        self.assertIn("path: _passo-giau-worktree", workflow)
+        self.assertIn("working-directory: _passo-giau-worktree", workflow)
         self.assertIn("./scripts/ci/Test-YacsCodeOnlyCheckout.ps1", workflow)
         self.assertNotIn("git lfs fsck", workflow)
         self.assertIn("permissions:\n  contents: write", workflow)
