@@ -1,0 +1,56 @@
+{
+  "id": "2026-09-28-sp638-hairpin-corridor-cut-fill",
+  "date": "2026-09-28",
+  "area": "road-terrain",
+  "stage": "R4.1B.2",
+  "title": "SP638 bounded hairpin corridor cut/fill proof",
+  "status": "IN_PROGRESS",
+  "hypothesis": "A bounded ~700 m maximum-curvature SP638 slice using Unreal editor spline raise/lower deformation plus a separate neutral road/shoulder proof surface will remove road-ground clipping and materially improve rider-height readability without rebuilding the full Passo Giau terrain.",
+  "technical": [
+    "Reuse the persisted L_PassoGiauTerrainSpike.umap instead of redownloading the full Veneto DTM source.",
+    "Select the proof slice deterministically from SP638 curvature.",
+    "Use LandscapeProxy.editor_apply_spline with both raise_heights and lower_heights enabled.",
+    "Keep all Landscape deformation transient and unsaved.",
+    "Capture a 3840 x 2160 cyclist-height PNG."
+  ],
+  "visual": [
+    "Pending first R4.1B.2 rider proof."
+  ],
+  "keep": [
+    "Official Veneto SP638 centerline and persisted spline.",
+    "Veneto Landscape as macro terrain.",
+    "Rider-height visual acceptance gate.",
+    "Presentation/physics separation."
+  ],
+  "reject": [
+    "Global Landscape-resolution increases as the next response to the R4.1B.1 visual failure.",
+    "Asset dressing before road/terrain geometry is visually coherent."
+  ],
+  "learnings": [
+    "Epic supports spline-driven raise/lower Landscape deformation with falloff.",
+    "Road tooling such as RoadBuilder separates road and ground responsibilities.",
+    "Community failure reports justify retaining a visual gate even when raise/lower deformation is enabled."
+  ],
+  "next": [
+    "Run the bounded hairpin proof and classify it as TECHNICAL_PASS + human visual result.",
+    "If visually accepted, promote bounded corridor authoring; otherwise move to Landscape Patch/generated ground mesh rather than larger global heightfields."
+  ],
+  "evidence": [
+    {
+      "label": "Epic Landscape Splines",
+      "url": "https://dev.epicgames.com/documentation/unreal-engine/landscape-splines-in-unreal-engine"
+    },
+    {
+      "label": "Epic Landscape Patch System",
+      "url": "https://dev.epicgames.com/documentation/unreal-engine/landscape-patch-system"
+    },
+    {
+      "label": "RoadBuilder ground-mesh pattern",
+      "url": "https://github.com/fullike/RoadBuilder"
+    },
+    {
+      "label": "Community clipping failure mode",
+      "url": "https://www.reddit.com/r/unrealengine/comments/1lag5w5/"
+    }
+  ]
+}
