@@ -1,0 +1,151 @@
+"""Tests for the presentation-only SP638 local corridor mesh kernel."""
+
+from __future__ import annotations
+
+import math
+import unittest
+
+from scripts.geometry.sp638_local_corridor import (
+    CrossSectionPoint,
+    Vec3,
+    build_corridor_mesh,
+    corridor_mesh_hash,
+    make_constant_profiles,
+    triangle_normal,
+)
+
+
+class LocalGroundCorridorTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.profile = (
+            CrossSectionPoint(-8.0, 3.0, "uphill_tie"),
+            CrossSectionPoint(-5.0, 1.2, "cut_to_bench"),
+            CrossSectionPoint(-3.8, 0.15, "left_shoulder"),
+            CrossSectionPoint(-3.0, 0.0, "left_road_edge"),
+            CrossSectionPoint(3.0, 0.0, "right_road_edge"),
+            CrossSectionPoint(4.0, -0.1, "right_shoulder"),
+            CrossSectionPoint(7.0, -1.0, "embankment"),
+            CrossSectionPoint(10.0, -2.0, "downhill_tie"),
+        )
+
+    def test_straight_corridor_preserves_width_and_z(self) -> None:
+        centerline = (
+            Vec3(0.0, 0.0, 100.0),
+            Vec3(10.0, 0.0, 101.0),
+            Vec3(20.0, 0.0, 102.5),
+        )
+        mesh = build_corridor_mesh(
+            centerline,
+            make_constant_profiles(len(centerline), self.profile),
+        )
+
+        self.assertEqual(mesh.station_count, 3)
+        self.assertEqual(mesh.cross_section_point_count, len(self.profile))
+        self.assertEqual(len(mesh.vertices), 3 * len(self.profile))
+        self.assertEqual(
+            len(mesh.triangles),
+            2 * (3 - 1) * (len(self.profile) - 1),
+        )
+
+        first_left = mesh.vertices[0]
+        first_right = mesh.vertices[len(self.profile) - 1]
+        self.assertAlmostEqual(first_left.y, -8.0)
+        self.assertAlmostEqual(first_right.y, 10.0)
+        self.assertAlmostEqual(first_left.z, 103.0)
+        self.assertAlmostEqual(first_right.z, 98.0)
+
+        for triangle in mesh.triangles:
+            self.assertGreater(triangle_normal(mesh, triangle).z, 0.0)
+
+    def test_curved_centerline_keeps_finite_non_degenerate_geometry(self) -> None:
+        angles = (0.0, 0.12, 0.24, 0.36, 0.48, 0.60, 0.72)
+        centerline = tuple(
+            Vec3(
+                20.0 * math.sin(angle),
+                20.0 * (1.0 - math.cos(angle)),
+                120.0 + index * 0.35,
+            )
+            for index, angle in enumerate(angles)
+        )
+        mesh = build_corridor_mesh(
+            centerline,
+            make_constant_profiles(len(centerline), self.profile),
+        )
+
+        for vertex in mesh.vertices:
+            self.assertTrue(math.isfinite(vertex.x))
+            self.assertTrue(math.isfinite(vertex.y))
+            self.assertTrue(math.isfinite(vertex.z))
+        for triangle in mesh.triangles:
+            self.assertGreater(triangle_normal(mesh, triangle).z, 0.0)
+
+    def test_vertical_profile_can_change_per_station_without_moving_offsets(self) -> None:
+        centerline = (
+            Vec3(0.0, 0.0, 50.0),
+            Vec3(5.0, 0.0, 51.0),
+            Vec3(10.0, 0.0, 52.0),
+        )
+        profiles = []
+        for delta in (0.0, 0.25, 0.5):
+            profiles.append(
+                tuple(
+                    CrossSectionPoint(
+                        point.lateral_m,
+                        point.vertical_m + delta
+                        if point.lateral_m < -3.0
+                        else point.vertical_m,
+                        point.role,
+                    )
+                    for point in self.profile
+                )
+            )
+        mesh = build_corridor_mesh(centerline, tuple(profiles))
+
+        width = len(self.profile)
+        self.assertAlmostEqual(mesh.vertices[0].z, 53.0)
+        self.assertAlmostEqual(mesh.vertices[width].z, 54.25)
+        self.assertAlmostEqual(mesh.vertices[2 * width].z, 55.5)
+
+    def test_output_hash_is_deterministic(self) -> None:
+        centerline = (
+            Vec3(0.0, 0.0, 0.0),
+            Vec3(4.0, 1.0, 0.2),
+            Vec3(8.0, 3.0, 0.4),
+        )
+        profiles = make_constant_profiles(len(centerline), self.profile)
+        first = corridor_mesh_hash(build_corridor_mesh(centerline, profiles))
+        second = corridor_mesh_hash(build_corridor_mesh(centerline, profiles))
+        self.assertEqual(first, second)
+        self.assertEqual(len(first), 64)
+
+    def test_rejects_unordered_lateral_topology(self) -> None:
+        centerline = (Vec3(0.0, 0.0, 0.0), Vec3(10.0, 0.0, 0.0))
+        bad = list(self.profile)
+        bad[2] = CrossSectionPoint(-5.0, 0.15, "overlap")
+        with self.assertRaisesRegex(ValueError, "strictly ordered"):
+            build_corridor_mesh(centerline, (self.profile, tuple(bad)))
+
+    def test_rejects_lateral_offsets_that_change_between_stations(self) -> None:
+        centerline = (Vec3(0.0, 0.0, 0.0), Vec3(10.0, 0.0, 0.0))
+        shifted = tuple(
+            CrossSectionPoint(
+                point.lateral_m + (0.1 if index == 1 else 0.0),
+                point.vertical_m,
+                point.role,
+            )
+            for index, point in enumerate(self.profile)
+        )
+        with self.assertRaisesRegex(ValueError, "lateral offsets must stay stable"):
+            build_corridor_mesh(centerline, (self.profile, shifted))
+
+    def test_rejects_centerline_with_no_horizontal_tangent(self) -> None:
+        centerline = (Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 1.0))
+        with self.assertRaisesRegex(ValueError, "stable horizontal tangent"):
+            build_corridor_mesh(
+                centerline,
+                make_constant_profiles(len(centerline), self.profile),
+            )
+
+
+if __name__ == "__main__":
+    unittest.main()
