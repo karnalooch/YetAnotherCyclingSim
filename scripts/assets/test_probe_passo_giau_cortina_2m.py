@@ -107,6 +107,20 @@ class Cortina2mProbeTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "not proven as a 2 m grid"):
             probe.validate_resolution(description)
 
+    def test_endpoint_candidate_extraction_keeps_download_contracts(self) -> None:
+        body = """
+        this.url = "../download/layerSearch/findLayer";
+        location.href = "../download/layerDownload/downloadLayer?id=" + row.id;
+        var unrelated = "hello";
+        """
+        self.assertEqual(
+            [
+                "../download/layerSearch/findLayer",
+                "../download/layerDownload/downloadLayer?id=",
+            ],
+            probe.extract_endpoint_candidates(body),
+        )
+
     def test_ambiguous_wms_matches_remain_visible_to_fail_closed_caller(self) -> None:
         duplicate = WMS_XML.replace(
             b"</Layer>\n    </Layer>",
