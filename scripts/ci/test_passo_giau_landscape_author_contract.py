@@ -270,6 +270,11 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
             downloader,
         )
         self.assertIn("EXPECTED_TILE_COUNT = 204", downloader)
+        self.assertIn("SOURCE_PACKAGE_ID = 1372858", downloader)
+        self.assertIn(
+            'ARCHIVE_NAME = "MASE_PST_8309f0171e3340c6aba45798c4812d54_1372858_DTM.zip"',
+            downloader,
+        )
         self.assertIn('EXPECTED_TILE_SUFFIX = "_DTM.tiff"', downloader)
         self.assertIn("EXPECTED_DSM_TILE_COUNT = 0", downloader)
         self.assertIn('SOURCE_CRS = "EPSG:4326"', downloader)
