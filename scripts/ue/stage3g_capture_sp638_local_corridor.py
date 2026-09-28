@@ -439,7 +439,7 @@ def _sample_local_terrain_skin(
                 world,
                 unreal.Vector(x_cm, y_cm, trace_top_z),
                 unreal.Vector(x_cm, y_cm, trace_bottom_z),
-                unreal.TraceTypeQuery.TRACE_TYPE_QUERY1,
+                unreal.TraceTypeQuery.ECC_VISIBILITY,
                 True,
                 [road_actor],
                 unreal.DrawDebugTrace.NONE,
@@ -449,7 +449,7 @@ def _sample_local_terrain_skin(
                 misses.append((row_index, column_index))
                 row.append(float("nan"))
                 continue
-            row.append(float(hit.impact_point.z) / 100.0)
+            impact_point = hit.get_editor_property("impact_point")\n            row.append(float(impact_point.z) / 100.0)
         raw_heights_m.append(tuple(row))
 
     if misses:
