@@ -44,7 +44,7 @@ $ImportProof = Join-Path $ArtifactRoot 'landscape_import_proof.json'
 $CaptureLog = Join-Path $ArtifactRoot 'capture.log'
 $CaptureStdout = Join-Path $ArtifactRoot 'capture.stdout.log'
 $CaptureErr = $CaptureLog + '.stderr'
-$CapturePng = Join-Path $ArtifactRoot 'passo_giau_landscape_1920x1080.png'
+$CapturePng = Join-Path $ArtifactRoot 'passo_giau_landscape_3840x2160_fxaa.png'
 $CaptureProof = Join-Path $ArtifactRoot 'capture_proof.json'
 $FinalProof = Join-Path $ArtifactRoot 'passo_giau_landscape_spike_proof.json'
 
@@ -186,7 +186,9 @@ if ((Get-Item -LiteralPath $CapturePng).Length -lt 100000) { throw 'Passo Giau r
 if (-not (Test-Path -LiteralPath $CaptureProof -PathType Leaf)) { throw "Passo Giau capture proof is missing (exit=$CaptureExitCode)." }
 $Capture = Get-Content -LiteralPath $CaptureProof -Raw | ConvertFrom-Json
 if ($Capture.passo_giau_landscape_capture -ne 'PASS') { throw "Passo Giau visual capture proof did not report PASS (exit=$CaptureExitCode)." }
-if ([int]$Capture.resolution[0] -ne 1920 -or [int]$Capture.resolution[1] -ne 1080) { throw 'Passo Giau capture proof resolution is invalid.' }
+if ([int]$Capture.resolution[0] -ne 3840 -or [int]$Capture.resolution[1] -ne 2160) { throw 'Passo Giau supersampled capture proof resolution is invalid.' }
+if ($Capture.capture_strategy -ne '2x-spatial-proof-with-fxaa') { throw 'Passo Giau capture proof strategy is invalid.' }
+if ($Capture.proof_aa_method -ne 'FXAA' -or [int]$Capture.post_process_aa_quality -ne 6) { throw 'Passo Giau capture proof anti-aliasing contract is invalid.' }
 if ([int]$Capture.forced_landscape_lod -ne 0 -or [int]$Capture.ray_tracing_landscape_lod_bias -ne -1) { throw 'Passo Giau capture proof LOD stabilization is invalid.' }
 if ([bool]$Capture.proof_sun_cast_shadows -ne $false) { throw 'Passo Giau geometry proof sun unexpectedly casts shadows.' }
 if ($Capture.proof_viewmode -ne 'lightingonly') { throw 'Passo Giau diagnostic proof view mode is invalid.' }

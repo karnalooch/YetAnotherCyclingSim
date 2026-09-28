@@ -67,7 +67,9 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("$CanonicalHashAfter", wrapper)
         self.assertIn("$SpikeMapPath = Join-Path $RepoRoot $SpikeMapRelative", wrapper)
         self.assertIn("Remove-Item -LiteralPath $SpikeMapPath -Force", wrapper)
-        self.assertIn("Failed to remove the existing isolated Passo Giau spike map", wrapper)
+        self.assertIn(
+            "Failed to remove the existing isolated Passo Giau spike map", wrapper
+        )
         self.assertIn(
             "L_CyclingTest changed during isolated Passo Giau authoring",
             wrapper,
@@ -106,8 +108,14 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
     def test_capture_requires_real_png_and_human_review(self) -> None:
         capture = read("scripts/ue/stage3g_capture_passo_giau_landscape.py")
         self.assertIn("take_high_res_screenshot", capture)
-        self.assertIn("res_x=1920", capture)
-        self.assertIn("res_y=1080", capture)
+        self.assertIn("CAPTURE_RES_X = 3840", capture)
+        self.assertIn("CAPTURE_RES_Y = 2160", capture)
+        self.assertIn("res_x=CAPTURE_RES_X", capture)
+        self.assertIn("res_y=CAPTURE_RES_Y", capture)
+        self.assertIn('"r.AntiAliasingMethod 1"', capture)
+        self.assertIn("r.PostProcessAAQuality", capture)
+        self.assertIn('"proof_aa_method": PROOF_AA_METHOD', capture)
+        self.assertIn('"post_process_aa_quality": PROOF_AA_QUALITY', capture)
         self.assertIn("is_task_done()", capture)
         self.assertIn("set_keep_python_script_alive(True)", capture)
         self.assertIn("set_keep_python_script_alive(False)", capture)

@@ -19,6 +19,10 @@ _output_path: Path | None = None
 _proof_path: Path | None = None
 _camera = None
 _landscape_component_count = 0
+CAPTURE_RES_X = 3840
+CAPTURE_RES_Y = 2160
+PROOF_AA_METHOD = "FXAA"
+PROOF_AA_QUALITY = 6
 
 
 def _finish(success: bool, error: str = "") -> None:
@@ -34,7 +38,10 @@ def _finish(success: bool, error: str = "") -> None:
             "map": SPIKE_MAP,
             "screenshot": str(_output_path),
             "screenshot_bytes": _output_path.stat().st_size,
-            "resolution": [1920, 1080],
+            "resolution": [CAPTURE_RES_X, CAPTURE_RES_Y],
+            "capture_strategy": "2x-spatial-proof-with-fxaa",
+            "proof_aa_method": PROOF_AA_METHOD,
+            "post_process_aa_quality": PROOF_AA_QUALITY,
             "landscape_component_count": _landscape_component_count,
             "forced_landscape_lod": 0,
             "ray_tracing_landscape_lod_bias": -1,
@@ -144,6 +151,17 @@ def main() -> None:
     # appearance from the proof so any remaining banding/terracing belongs to
     # geometry/import rather than the surface shader.
     unreal.SystemLibrary.execute_console_command(world, "viewmode lightingonly")
+
+    # High-resolution screenshot tiling does not accumulate temporal AA. For
+    # this diagnostic proof, render at 2x the target 1080p dimensions and use
+    # deterministic high-quality FXAA so screen-space aliasing is not confused
+    # with actual Landscape heightfield terracing.
+    unreal.SystemLibrary.execute_console_command(world, "r.AntiAliasingMethod 1")
+    unreal.SystemLibrary.execute_console_command(
+        world,
+        f"r.PostProcessAAQuality {PROOF_AA_QUALITY}",
+    )
+    unreal.SystemLibrary.execute_console_command(world, "r.ScreenPercentage 100")
     unreal.log(
         "[PassoGiauCapture] proof LOD stabilized: "
         f"components={_landscape_component_count} forced_lod=0 "
@@ -214,8 +232,8 @@ def main() -> None:
 
     unreal.EditorPythonScripting.set_keep_python_script_alive(True)
     _task = unreal.AutomationLibrary.take_high_res_screenshot(
-        res_x=1920,
-        res_y=1080,
+        res_x=CAPTURE_RES_X,
+        res_y=CAPTURE_RES_Y,
         filename=str(_output_path),
         camera=_camera,
         mask_enabled=False,
