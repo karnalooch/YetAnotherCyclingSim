@@ -179,6 +179,7 @@ if ($Capture.passo_giau_landscape_capture -ne 'PASS') { throw "Passo Giau visual
 if ([int]$Capture.resolution[0] -ne 1920 -or [int]$Capture.resolution[1] -ne 1080) { throw 'Passo Giau capture proof resolution is invalid.' }
 if ([int]$Capture.forced_landscape_lod -ne 0 -or [int]$Capture.ray_tracing_landscape_lod_bias -ne -1) { throw 'Passo Giau capture proof LOD stabilization is invalid.' }
 if ([bool]$Capture.proof_sun_cast_shadows -ne $false) { throw 'Passo Giau geometry proof sun unexpectedly casts shadows.' }
+if ($Capture.proof_material -ne '/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial') { throw 'Passo Giau neutral proof material is invalid.' }
 if ([int]$Capture.landscape_component_count -ne 64) { throw 'Passo Giau capture proof Landscape component count is invalid.' }
 if ([int64]$Capture.screenshot_bytes -ne (Get-Item -LiteralPath $CapturePng).Length) { throw 'Passo Giau capture proof PNG byte count does not match the rendered file.' }
 
