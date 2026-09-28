@@ -59,8 +59,10 @@ def _finish(success: bool, error: str = "") -> None:
     elif error:
         unreal.log_error(f"[PassoGiauCapture] FAILURE: {error}")
 
+    # Dropping keep-alive is sufficient for -ExecutePythonScript and lets UE
+    # perform editor shutdown on the next tick. Calling quit_editor() from the
+    # Slate post-tick callback can race Python/Slate teardown in UE 5.8.
     unreal.EditorPythonScripting.set_keep_python_script_alive(False)
-    unreal.SystemLibrary.quit_editor()
 
 
 def _tick(_delta_time: float) -> None:
