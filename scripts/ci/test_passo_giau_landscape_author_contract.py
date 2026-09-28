@@ -52,7 +52,7 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("GetHeightmapImportData(", cpp)
         self.assertIn("Unreal native R16 reader parity mismatch", cpp)
         self.assertIn(
-            r'TEXT("  \\"unreal_native_import_reader_parity\\": \\"PASS\\",\\n")',
+            r'TEXT("  \"unreal_native_import_reader_parity\": \"PASS\",\n")',
             cpp,
         )
         self.assertIn(
