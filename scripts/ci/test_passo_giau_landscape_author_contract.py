@@ -165,6 +165,7 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("'scripts/assets/prepare_passo_giau_heightmap.py'", workflow)
         self.assertIn("'scripts/assets/download_passo_giau_mase_pst.py'", workflow)
         self.assertIn("'scripts/assets/prepare_passo_giau_mase_pst.py'", workflow)
+        self.assertIn("'scripts/assets/prepare_passo_giau_veneto_lidar.py'", workflow)
         self.assertIn("PreparedMasePstLidar1x1/terrain-report.json", workflow)
         self.assertNotIn("git lfs checkout", workflow)
         self.assertIn("path: _passo-giau-worktree", workflow)
