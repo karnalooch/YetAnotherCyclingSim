@@ -88,6 +88,7 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("capture proof LOD stabilization is invalid", wrapper)
         self.assertIn("geometry proof sun unexpectedly casts shadows", wrapper)
         self.assertIn("neutral proof material is invalid", wrapper)
+        self.assertIn("diagnostic proof view mode is invalid", wrapper)
         self.assertIn("capture proof PNG byte count", wrapper)
         self.assertIn("Fatal error|Unhandled Exception|Critical error", wrapper)
         self.assertIn("code_only_lfs_asset_registry_exit_tolerance_used", wrapper)
@@ -114,6 +115,8 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
             '"/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial"', capture
         )
         self.assertIn("component.set_material(0, proof_material)", capture)
+        self.assertIn('"viewmode lightingonly"', capture)
+        self.assertIn('"proof_viewmode": "lightingonly"', capture)
         self.assertNotIn("get_camera_component()", capture)
         self.assertIn('"visual_acceptance": "PENDING_HUMAN_REVIEW"', capture)
 
