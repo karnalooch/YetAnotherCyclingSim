@@ -176,7 +176,9 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("git diff --cached --name-only", workflow)
         self.assertNotIn("git add -A", workflow)
 
-    def test_active_veneto_preparation_reports_numeric_and_seam_diagnostics(self) -> None:
+    def test_active_veneto_preparation_reports_numeric_and_seam_diagnostics(
+        self,
+    ) -> None:
         prepare = read("scripts/assets/prepare_passo_giau_veneto_lidar.py")
         self.assertIn("def r16_roundtrip_diagnostics(", prepare)
         self.assertIn("def seam_diagnostics(", prepare)
