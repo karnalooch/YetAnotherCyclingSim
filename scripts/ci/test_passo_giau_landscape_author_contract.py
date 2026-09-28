@@ -235,6 +235,9 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("sampled_unique_elevation_count", prepare)
         self.assertIn("resampling=Resampling.cubic", prepare)
         self.assertIn('"landscape_resampling": "cubic"', prepare)
+        self.assertIn("landscape_resampling_guard", prepare)
+        self.assertIn("np.clip(", prepare)
+        self.assertIn("clipped_above_count", prepare)
 
         wrapper = read("scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1")
         self.assertIn("nearest_mase_sample_distance_m", wrapper)
