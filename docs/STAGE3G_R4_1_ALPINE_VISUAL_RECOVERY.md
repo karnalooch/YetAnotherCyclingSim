@@ -642,6 +642,39 @@ Decision for R4.1:
 Issue #213 / PR #215 remain open until the bounded Landscape path is reviewed
 and its exploratory scaffolding/evidence is cleaned into a maintainable form.
 
+
+### Superseding P0 source-resolution gate — Cortina 2 m
+
+Further cliff/material propagation is now secondary to one controlled source
+A/B. Official Veneto service discovery has identified the Cortina raw DTM layer
+as **`rv:DTM_2m_clip`** (viewer-facing label: `DTM_2m_Cortina`). The layer's
+advertised geographic extent contains Passo Giau.
+
+The source is not yet ready for UE authoring. The live fail-closed probe has
+also established that:
+
+- the layer advertises EPSG:6876 / RDN2008 Zone 12 (N-E);
+- the public WCS does not expose a matching coverage;
+- WMS publishes no direct MetadataURL/DataURL for the raw raster.
+
+This changes the immediate execution order:
+
+1. prove an official raw raster download and immutable source hash;
+2. prove actual cell spacing, datatype, NoData, CRS/axis order, vertical datum,
+   license and complete AOI coverage;
+3. keep elevation Float32/Float64 and perform one deliberate GIS
+   crop/reproject/resample;
+4. generate the 4033 UInt16/R16 transport candidate;
+5. render the exact same neutral UE proof for **5 m baseline vs verified 2 m**;
+6. only after that result resume road cut/fill, cliff, scree, material and PCG
+   work.
+
+Do **not** use WMS GetMap pixels as a heightmap and do not infer that the name
+`2m` alone proves a 2 m elevation grid.
+
+The existing 5 m Landscape remains the reproducible baseline, not the final
+source decision.
+
 ## 19. Terrain research / visual-debug SSOT
 
 The current Passo Giau Landscape spike now has a dedicated research and
