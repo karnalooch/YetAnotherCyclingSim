@@ -1,9 +1,9 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "1.0",
-	"FriendlyName": "RoadForge",
-	"Description": "YACS compile-spike subset of RoadForge runtime core for procedural road mesh evaluation. Vendored from MIT upstream; editor module and art/content intentionally omitted.",
+	"VersionName": "1.0-yacs-spike",
+	"FriendlyName": "RoadForge Mesh Core",
+	"Description": "Minimal YACS donor subset of RoadForge mesh primitives. Vendored from MIT upstream; OSM, PCG, editor and content layers intentionally omitted.",
 	"Category": "Geometry",
 	"CreatedBy": "RoadForge Contributors",
 	"CreatedByURL": "",
@@ -13,7 +13,7 @@
 	"EngineVersion": "5.8.0",
 	"CanContainContent": false,
 	"IsBetaVersion": false,
-	"IsExperimentalVersion": false,
+	"IsExperimentalVersion": true,
 	"Installed": false,
 	"Modules": [
 		{
@@ -25,10 +25,6 @@
 	"Plugins": [
 		{
 			"Name": "ProceduralMeshComponent",
-			"Enabled": true
-		},
-		{
-			"Name": "PCG",
 			"Enabled": true
 		}
 	]
