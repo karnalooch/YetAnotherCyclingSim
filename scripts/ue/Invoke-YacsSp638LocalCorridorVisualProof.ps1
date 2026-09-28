@@ -129,6 +129,12 @@ if ([bool]$Proof.spatial_grid_guardrail.canonical_road_xy_preserved -ne $true) {
 if ([bool]$Proof.spatial_grid_guardrail.snapped_to_landscape_vertices -ne $false) {
     throw 'SP638 local-corridor proof snapped to Landscape vertices.'
 }
+if ([double]$Proof.source_geometry_analysis.half_window_m -lt 5.0) {
+    throw "SP638 visual proof used a sub-source geometry window: $($Proof.source_geometry_analysis.half_window_m) m"
+}
+if ([bool]$Proof.source_geometry_analysis.canonical_centerline_xy_modified -ne $false) {
+    throw 'SP638 visual proof modified canonical centerline XY.'
+}
 
 $CaptureLogText = Get-Content -LiteralPath $CaptureLog -Raw -ErrorAction Stop
 if ($CaptureExitCode -notin @(0,1)) {
