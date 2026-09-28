@@ -12,6 +12,7 @@ from scripts.geometry.sp638_local_corridor import (
     corridor_mesh_hash,
     make_constant_profiles,
     make_curvature_adaptive_profiles,
+    minimum_sampled_radius_xy,
     triangle_normal,
 )
 
@@ -296,6 +297,61 @@ class LocalGroundCorridorTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "cannot preserve"):
             make_curvature_adaptive_profiles(centerline, self.profile)
+
+    def test_source_scale_window_rejects_dense_resample_curvature_noise(self) -> None:
+        radius = 12.0
+        arc_step_m = 2.0
+        centerline = [
+            Vec3(
+                radius * math.sin(index * arc_step_m / radius),
+                radius * (1.0 - math.cos(index * arc_step_m / radius)),
+                index * 0.01,
+            )
+            for index in range(30)
+        ]
+
+        noisy_index = 12
+        noisy = centerline[noisy_index]
+        centerline[noisy_index] = Vec3(noisy.x, noisy.y + 1.5, noisy.z)
+        centerline_tuple = tuple(centerline)
+
+        raw_radius = minimum_sampled_radius_xy(
+            centerline_tuple,
+            half_window_stations=1,
+        )
+        source_scale_radius = minimum_sampled_radius_xy(
+            centerline_tuple,
+            half_window_stations=3,
+        )
+        self.assertIsNotNone(raw_radius)
+        self.assertIsNotNone(source_scale_radius)
+        self.assertLess(raw_radius, 3.0)
+        self.assertGreater(source_scale_radius, 8.0)
+
+        adaptive = make_curvature_adaptive_profiles(
+            centerline_tuple,
+            self.profile,
+            curvature_half_window_stations=3,
+        )
+        mesh = build_corridor_mesh(
+            centerline_tuple,
+            adaptive,
+            tangent_half_window_stations=3,
+        )
+
+        original_by_role = {point.role: point.lateral_m for point in self.profile}
+        for station_profile in adaptive:
+            by_role = {point.role: point.lateral_m for point in station_profile}
+            self.assertAlmostEqual(
+                by_role["left_road_edge"],
+                original_by_role["left_road_edge"],
+            )
+            self.assertAlmostEqual(
+                by_role["right_road_edge"],
+                original_by_role["right_road_edge"],
+            )
+        for triangle in mesh.triangles:
+            self.assertGreater(triangle_normal(mesh, triangle).z, 0.0)
 
     def test_adaptive_profiles_and_mesh_hash_are_deterministic(self) -> None:
         radius = 8.0
