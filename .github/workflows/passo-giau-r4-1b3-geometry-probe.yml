@@ -10,6 +10,8 @@ on:
       - 'scripts/ue/probe_geometry_script_api.py'
       - 'scripts/ue/probe_sp638_local_corridor_topology.py'
       - 'scripts/ue/Invoke-YacsSp638CorridorTopologyProbe.ps1'
+      - 'scripts/ue/stage3g_capture_sp638_local_corridor.py'
+      - 'scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1'
       - 'scripts/geometry/**'
       - 'YetAnotherCyclingSim.uproject'
   pull_request:
@@ -21,6 +23,8 @@ on:
       - 'scripts/ue/probe_geometry_script_api.py'
       - 'scripts/ue/probe_sp638_local_corridor_topology.py'
       - 'scripts/ue/Invoke-YacsSp638CorridorTopologyProbe.ps1'
+      - 'scripts/ue/stage3g_capture_sp638_local_corridor.py'
+      - 'scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1'
       - 'scripts/geometry/**'
       - 'YetAnotherCyclingSim.uproject'
   workflow_dispatch:
@@ -114,6 +118,15 @@ jobs:
             -ExpectedHead '${{ github.sha }}' `
             -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR4_1/LocalCorridorTopology'
 
+      - name: Render rider-close SP638 local corridor proof
+        shell: pwsh
+        working-directory: _r4-1b3-geometry-probe-worktree
+        run: |
+          ./scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1 `
+            -ExpectedBranch 'HEAD' `
+            -ExpectedHead '${{ github.sha }}' `
+            -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR4_1/LocalCorridorVisual'
+
       - name: Upload capability evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -122,6 +135,7 @@ jobs:
           path: |
             _r4-1b3-geometry-probe-worktree/Saved/RuntimeProof/CI/Stage3GR4_1/GeometryScriptProbe/**
             _r4-1b3-geometry-probe-worktree/Saved/RuntimeProof/CI/Stage3GR4_1/LocalCorridorTopology/**
+            _r4-1b3-geometry-probe-worktree/Saved/RuntimeProof/CI/Stage3GR4_1/LocalCorridorVisual/**
           if-no-files-found: warn
           retention-days: 14
 
