@@ -4,13 +4,13 @@
 The script reads the downloaded TINITALY source DEM and produces:
 
 - a lossless 16-bit PNG at the source raster resolution;
-- an Unreal-Landscape-friendly 2017x2017 16-bit PNG;
+- an Unreal-Landscape-friendly 4033x4033 16-bit PNG;
 - a matching little-endian R16 file;
 - a grayscale hillshade preview;
 - terrain/elevation statistics;
 - explicit Unreal import scale metadata.
 
-The 2017x2017 output is a resampled presentation/import candidate. It does not
+The 4033x4033 output is a resampled presentation/import candidate. It does not
 contain more source detail than the native 10 m TINITALY grid.
 
 External DEM data remains presentation-only. It must never become authoritative
@@ -32,7 +32,7 @@ import rasterio
 from PIL import Image
 from rasterio.enums import Resampling
 
-DEFAULT_LANDSCAPE_SIZE = 2017
+DEFAULT_LANDSCAPE_SIZE = 4033
 SUPPORTED_LANDSCAPE_SIZES = (505, 1009, 2017, 4033)
 DEFAULT_HILLSHADE_AZIMUTH_DEG = 315.0
 DEFAULT_HILLSHADE_ALTITUDE_DEG = 45.0

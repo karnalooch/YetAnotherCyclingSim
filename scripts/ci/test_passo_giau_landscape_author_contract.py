@@ -22,15 +22,15 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
             cpp,
         )
         self.assertNotIn("/Game/Prototype/Maps/L_CyclingTest", cpp)
-        self.assertIn("LandscapeVertices = 2017", cpp)
+        self.assertIn("LandscapeVertices = 4033", cpp)
         self.assertIn("NumSubsections = 2", cpp)
         self.assertIn("SubsectionSizeQuads = 63", cpp)
         self.assertIn(
             "ExpectedComponentCount = ExpectedComponentGrid * ExpectedComponentGrid",
             cpp,
         )
-        self.assertIn("ExpectedComponentGrid = 16", cpp)
-        self.assertIn("XYScaleCmPerVertex = 396.825397", cpp)
+        self.assertIn("ExpectedComponentGrid = 32", cpp)
+        self.assertIn("XYScaleCmPerVertex = 198.412698", cpp)
         self.assertIn("ZScale = 301.26543", cpp)
         self.assertIn("LocationZCm = 194259.253", cpp)
         self.assertEqual(cpp.count("const double SampledElevationMinM ="), 1)
@@ -147,7 +147,7 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn('"subsection_63_quads": seam_stats(63)', prepare)
         self.assertIn('"component_126_quads": seam_stats(126)', prepare)
         self.assertIn('"diagnostics": terrain_diagnostics(', prepare)
-        self.assertIn("DEFAULT_LANDSCAPE_SIZE = 2017", prepare)
+        self.assertIn("DEFAULT_LANDSCAPE_SIZE = 4033", prepare)
 
 
     def test_editor_build_links_landscape_module(self) -> None:

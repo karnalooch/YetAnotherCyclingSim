@@ -19,14 +19,14 @@ DEFINE_LOG_CATEGORY_STATIC(LogCyclingPassoGiauLandscapeSpike, Log, All);
 namespace CyclingPassoGiauLandscapeSpikeInternal
 {
 	const TCHAR* SpikeMapPackagePath = TEXT("/Game/Prototype/Maps/L_PassoGiauTerrainSpike");
-	constexpr int32 LandscapeVertices = 2017;
+	constexpr int32 LandscapeVertices = 4033;
 	constexpr int32 LandscapeMaxIndex = LandscapeVertices - 1;
 	constexpr int32 NumSubsections = 2;
 	constexpr int32 SubsectionSizeQuads = 63;
 	constexpr int32 ExpectedComponentSizeQuads = NumSubsections * SubsectionSizeQuads;
-	constexpr int32 ExpectedComponentGrid = 16;
+	constexpr int32 ExpectedComponentGrid = 32;
 	constexpr int32 ExpectedComponentCount = ExpectedComponentGrid * ExpectedComponentGrid;
-	constexpr double XYScaleCmPerVertex = 396.825397;
+	constexpr double XYScaleCmPerVertex = 198.412698;
 	constexpr double ZScale = 301.26543;
 	constexpr double LocationZCm = 194259.253;
 	constexpr uint16 MaxResampleEdgeLoss = 512;
@@ -357,7 +357,7 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 	}
 
 	UE_LOG(LogCyclingPassoGiauLandscapeSpike, Display,
-		TEXT("PassoGiauLandscapeSpike: PASS vertices=2017x2017 components=256 grid=16x16 subsections=2 subsection_quads=63 bounds_cm=(%.3f,%.3f,%.3f) encoded=(%u,%u)."),
+		TEXT("PassoGiauLandscapeSpike: PASS vertices=4033x4033 components=1024 grid=32x32 subsections=2 subsection_quads=63 bounds_cm=(%.3f,%.3f,%.3f) encoded=(%u,%u)."),
 		BoundsSize.X,
 		BoundsSize.Y,
 		BoundsSize.Z,

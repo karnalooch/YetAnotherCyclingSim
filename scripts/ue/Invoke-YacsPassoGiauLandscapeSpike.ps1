@@ -26,7 +26,7 @@ $ArtifactRoot = (Resolve-Path -LiteralPath $ArtifactRoot).Path
 $SpikeMapRelative = 'Content/Prototype/Maps/L_PassoGiauTerrainSpike.umap'
 $CanonicalMapRelative = 'Content/Prototype/Maps/L_CyclingTest.umap'
 $PreparedRoot = Join-Path $RepoRoot 'ExternalAssets/Terrain/PassoGiau/Prepared'
-$HeightmapR16 = Join-Path $PreparedRoot 'passo_giau_height_ue_landscape_2017.r16'
+$HeightmapR16 = Join-Path $PreparedRoot 'passo_giau_height_ue_landscape_4033.r16'
 $TerrainReport = Join-Path $PreparedRoot 'terrain-report.json'
 $MapPrepScript = Join-Path $RepoRoot 'scripts/ue/stage3g_prepare_passo_giau_landscape_map.py'
 $CaptureScript = Join-Path $RepoRoot 'scripts/ue/stage3g_capture_passo_giau_landscape.py'
@@ -97,7 +97,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Failed to install terrain preparation dependencies.' }
     & $VenvPython $DownloadScript
     if ($LASTEXITCODE -ne 0) { throw 'Official Passo Giau DEM download failed.' }
-    & $VenvPython $PrepareScript --landscape-size 2017
+    & $VenvPython $PrepareScript --landscape-size 4033
     if ($LASTEXITCODE -ne 0) { throw 'Passo Giau heightmap preparation failed.' }
 }
 finally {
@@ -108,9 +108,9 @@ if (-not (Test-Path -LiteralPath $HeightmapR16 -PathType Leaf)) { throw "Prepare
 if (-not (Test-Path -LiteralPath $TerrainReport -PathType Leaf)) { throw "Terrain report is missing: $TerrainReport" }
 $Terrain = Get-Content -LiteralPath $TerrainReport -Raw | ConvertFrom-Json
 $Candidate = $Terrain.unreal_landscape_candidate
-if ([int]$Candidate.landscape_size_vertices -ne 2017) { throw 'Terrain report did not produce a 2017-vertex Landscape candidate.' }
+if ([int]$Candidate.landscape_size_vertices -ne 4033) { throw 'Terrain report did not produce a 4033-vertex Landscape candidate.' }
 $Transform = $Candidate.recommended_transform
-if ([math]::Abs([double]$Transform.scale_x_cm_per_vertex - 396.825397) -gt 0.001) { throw 'Unexpected Passo Giau XY scale in terrain report.' }
+if ([math]::Abs([double]$Transform.scale_x_cm_per_vertex - 198.412698) -gt 0.001) { throw 'Unexpected Passo Giau XY scale in terrain report.' }
 if ([math]::Abs([double]$Transform.scale_z - 301.26543) -gt 0.001) { throw 'Unexpected Passo Giau Z scale in terrain report.' }
 
 Write-Host '[3/7] Creating isolated spike map...' -ForegroundColor Cyan
@@ -127,7 +127,7 @@ if (-not (Test-Path -LiteralPath $MapPrepProof -PathType Leaf)) { throw 'Passo G
 $MapPrep = Get-Content -LiteralPath $MapPrepProof -Raw | ConvertFrom-Json
 if ($MapPrep.passo_giau_map_prep -ne 'PASS' -or $MapPrep.canonical_map_mutated -ne $false) { throw 'Passo Giau isolated map preparation proof is invalid.' }
 
-Write-Host '[4/7] Importing 2017x2017 Landscape with C++ commandlet...' -ForegroundColor Cyan
+Write-Host '[4/7] Importing 4033x4033 Landscape with C++ commandlet...' -ForegroundColor Cyan
 $ImportArgs = @($ProjectPath,'-run=CyclingPassoGiauLandscapeSpike',('-Heightmap="' + $HeightmapR16 + '"'),('-Proof="' + $ImportProof + '"'),'-Unattended','-NoPause','-NullRHI','-NoSplash','-NoP4','-log',('-AbsLog=' + $ImportLog))
 $Proc = Start-Process -FilePath $Context.UnrealEditorCmdPath -ArgumentList $ImportArgs -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $ImportLog -RedirectStandardError $ImportErr
 if (-not $Proc.WaitForExit($TimeoutSec * 1000)) { try { $Proc | Stop-Process -Force } catch { }; throw 'Passo Giau Landscape import commandlet timed out.' }
@@ -135,7 +135,7 @@ $ImportExitCode = $Proc.ExitCode
 if (-not (Test-Path -LiteralPath $ImportProof -PathType Leaf)) { throw "Passo Giau Landscape import proof is missing (exit=$ImportExitCode)." }
 $Import = Get-Content -LiteralPath $ImportProof -Raw | ConvertFrom-Json
 if ($Import.passo_giau_landscape_import -ne 'PASS') { throw "Passo Giau Landscape import proof did not report PASS (exit=$ImportExitCode)." }
-if ([int]$Import.component_count -ne 256 -or [int]$Import.num_subsections -ne 2 -or [int]$Import.subsection_size_quads -ne 63) { throw 'Passo Giau Landscape topology proof is invalid.' }
+if ([int]$Import.component_count -ne 1024 -or [int]$Import.num_subsections -ne 2 -or [int]$Import.subsection_size_quads -ne 63) { throw 'Passo Giau Landscape topology proof is invalid.' }
 if ([int]$Import.encoded_min -gt 512 -or [int]$Import.encoded_max -lt 65023) { throw 'Passo Giau encoded height-domain proof is invalid.' }
 if ([math]::Abs([double]$Import.sampled_elevation_min_m - 1171.353) -gt 10.0 -or [math]::Abs([double]$Import.sampled_elevation_max_m - 2713.832) -gt 10.0) { throw 'Passo Giau sampled elevation range drifted too far from the source DEM.' }
 
@@ -180,7 +180,7 @@ if ([int]$Capture.resolution[0] -ne 1920 -or [int]$Capture.resolution[1] -ne 108
 if ([int]$Capture.forced_landscape_lod -ne 0 -or [int]$Capture.ray_tracing_landscape_lod_bias -ne -1) { throw 'Passo Giau capture proof LOD stabilization is invalid.' }
 if ([bool]$Capture.proof_sun_cast_shadows -ne $false) { throw 'Passo Giau geometry proof sun unexpectedly casts shadows.' }
 if ($Capture.proof_viewmode -ne 'lightingonly') { throw 'Passo Giau diagnostic proof view mode is invalid.' }
-if ([int]$Capture.landscape_component_count -ne 256) { throw 'Passo Giau capture proof Landscape component count is invalid.' }
+if ([int]$Capture.landscape_component_count -ne 1024) { throw 'Passo Giau capture proof Landscape component count is invalid.' }
 if ([int64]$Capture.screenshot_bytes -ne (Get-Item -LiteralPath $CapturePng).Length) { throw 'Passo Giau capture proof PNG byte count does not match the rendered file.' }
 
 $CaptureLogText = Get-Content -LiteralPath $CaptureLog -Raw -ErrorAction Stop
