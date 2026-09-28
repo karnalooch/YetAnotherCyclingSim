@@ -41,6 +41,17 @@ jobs:
           "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
           "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
 
+          # The self-hosted checkout directory is reused between runs. A
+          # successful authoring pass leaves this generated LFS asset
+          # materialized. Remove only that known generated payload before
+          # actions/checkout; with GIT_LFS_SKIP_SMUDGE=1 the checkout/reset
+          # then recreates the committed pointer instead of retaining bytes
+          # from the previous run.
+          $staleSpike = Join-Path $env:GITHUB_WORKSPACE '_passo-giau-worktree/Content/Prototype/Maps/L_PassoGiauTerrainSpike.umap'
+          if (Test-Path -LiteralPath $staleSpike -PathType Leaf) {
+            Remove-Item -LiteralPath $staleSpike -Force
+          }
+
       - name: Checkout exact trusted revision without LFS payloads
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -65,33 +76,6 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'non-ignored workspace cleanup failed.' }
           git lfs install --local
           if ($LASTEXITCODE -ne 0) { throw 'git lfs install failed.' }
-
-          # A successful authoring run leaves the generated LFS asset
-          # materialized in this reused self-hosted worktree. If the next
-          # revision points at the same LFS object, checkout may legitimately
-          # keep those payload bytes even with GIT_LFS_SKIP_SMUDGE=1.
-          #
-          # Do not use checkout/index here: Git attribute filters can smudge
-          # the pointer again. Read the committed blob directly and write the
-          # canonical three-line LFS pointer ourselves, then fail closed if
-          # Git LFS does not recognize it.
-          $spikeAsset = 'Content/Prototype/Maps/L_PassoGiauTerrainSpike.umap'
-          if (Test-Path -LiteralPath $spikeAsset -PathType Leaf) {
-            $pointerLines = @(& git cat-file blob "HEAD:$spikeAsset")
-            if ($LASTEXITCODE -ne 0 -or $pointerLines.Count -ne 3) {
-              throw 'failed to read canonical Passo Giau LFS pointer from HEAD.'
-            }
-            $pointerText = ($pointerLines -join "`n") + "`n"
-            [System.IO.File]::WriteAllText(
-              (Join-Path $PWD $spikeAsset),
-              $pointerText,
-              [System.Text.UTF8Encoding]::new($false)
-            )
-            git lfs pointer --check "--file=$spikeAsset" *> $null
-            if ($LASTEXITCODE -ne 0) {
-              throw 'Passo Giau spike map is still materialized before code-only validation.'
-            }
-          }
 
           if (git status --porcelain --untracked-files=all) {
             throw 'Passo Giau authoring checkout has non-ignored mutations.'
