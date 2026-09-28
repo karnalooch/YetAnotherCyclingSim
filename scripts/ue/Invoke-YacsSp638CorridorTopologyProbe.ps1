@@ -37,8 +37,8 @@ $Preflight = Join-Path $RepoRoot 'scripts/ue/Preflight-YacsProof.ps1'
 $Context = & $Preflight -RepoRoot $RepoRoot -ProjectPath $ProjectPath -ArtifactRoot $ArtifactRoot -ExpectedBranch $ExpectedBranch -ExpectedHead $ExpectedHead
 if ($LASTEXITCODE -ne 0) { throw 'SP638 local corridor topology preflight failed.' }
 
-if (git -C $RepoRoot status --porcelain --untracked-files=all) {
-    throw 'SP638 local corridor topology checkout is dirty before proof.'
+if (git -C $RepoRoot status --porcelain=v1 --untracked-files=no) {
+    throw 'SP638 local corridor topology checkout has tracked changes before proof.'
 }
 
 if (-not (Test-Path -LiteralPath $ProbeScript -PathType Leaf)) {
