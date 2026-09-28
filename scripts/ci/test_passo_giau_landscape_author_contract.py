@@ -111,6 +111,10 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn('"ray_tracing_landscape_lod_bias": -1', capture)
         self.assertIn("sun_component.set_cast_shadows(False)", capture)
         self.assertIn('"proof_sun_cast_shadows": False', capture)
+        self.assertIn("DIAGNOSTIC_MATERIAL =", capture)
+        self.assertIn("M_Stage3F_Terrain.M_Stage3F_Terrain", capture)
+        self.assertIn('set_editor_property("landscape_material", diagnostic_material)', capture)
+        self.assertIn('"diagnostic_material": DIAGNOSTIC_MATERIAL', capture)
         self.assertIn(
             '"/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial"', capture
         )
@@ -124,6 +128,7 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         workflow = read(".github/workflows/passo-giau-r4-1-landscape-author.yml")
         self.assertIn("runs-on: [self-hosted, yacs-ue58]", workflow)
         self.assertIn("lfs: false", workflow)
+        self.assertIn("'scripts/assets/prepare_passo_giau_heightmap.py'", workflow)
         self.assertNotIn("git lfs checkout", workflow)
         self.assertIn("path: _passo-giau-worktree", workflow)
         self.assertIn("working-directory: _passo-giau-worktree", workflow)
@@ -140,6 +145,15 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         )
         self.assertIn("git diff --cached --name-only", workflow)
         self.assertNotIn("git add -A", workflow)
+    def test_preparation_reports_numeric_and_seam_diagnostics(self) -> None:
+        prepare = read("scripts/assets/prepare_passo_giau_heightmap.py")
+        self.assertIn("def terrain_diagnostics(", prepare)
+        self.assertIn('"vertical_quantization_step_m"', prepare)
+        self.assertIn('"r16_roundtrip_error_m"', prepare)
+        self.assertIn('"subsection_63_quads": seam_stats(63)', prepare)
+        self.assertIn('"component_126_quads": seam_stats(126)', prepare)
+        self.assertIn('"diagnostics": terrain_diagnostics(', prepare)
+
 
     def test_editor_build_links_landscape_module(self) -> None:
         build = read("Source/YetAnotherCyclingSim/YetAnotherCyclingSim.Build.cs")
