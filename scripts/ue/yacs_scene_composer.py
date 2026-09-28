@@ -195,6 +195,12 @@ def spawn_transient_forest_patch(
     placements = plan_forest_layout(preset, exclusions=exclusions)
     actors: list[unreal.StaticMeshActor] = []
 
+    mesh_min_z_cm = 0.0
+    if hasattr(mesh, "get_bounding_box"):
+        bounds = mesh.get_bounding_box()
+        if bounds is not None and hasattr(bounds, "min"):
+            mesh_min_z_cm = float(bounds.min.z)
+
     for index, item in enumerate(placements):
         offset_x_m, offset_y_m = _rotate_local_xy(
             float(item.x_m),
@@ -203,11 +209,13 @@ def spawn_transient_forest_patch(
         )
         world_x = float(center_cm.x) + offset_x_m * 100.0
         world_y = float(center_cm.y) + offset_y_m * 100.0
-        world_z = (
+        ground_z = (
             float(height_resolver(world_x, world_y, float(center_cm.z)))
             if height_resolver is not None
             else float(center_cm.z)
         )
+        scale = float(item.uniform_scale)
+        world_z = ground_z - mesh_min_z_cm * scale
         rotation = unreal.Rotator(
             pitch=0.0,
             yaw=world_yaw_deg + float(item.yaw_deg),
@@ -227,7 +235,6 @@ def spawn_transient_forest_patch(
             fail("forest tree {} has no StaticMeshComponent".format(index))
         component.set_static_mesh(mesh)
         component.set_cast_shadow(True)
-        scale = float(item.uniform_scale)
         actor.set_actor_scale3d(unreal.Vector(scale, scale, scale))
         actors.append(actor)
 
@@ -263,6 +270,8 @@ def spawn_transient_forest_patch(
             float(center_cm.z),
         ],
         "world_yaw_deg": float(world_yaw_deg),
+        "mesh_min_z_cm": mesh_min_z_cm,
+        "grounding": "mesh_bounds_min_z",
         "placements": serialize_placements(placements),
     }
     log(
