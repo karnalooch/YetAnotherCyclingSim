@@ -269,6 +269,29 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertNotIn("PreparedVenetoLidar5m", prepare)
         self.assertNotIn("passo_giau_veneto_lidar_5m_8km_epsg32632.tif", prepare)
 
+    def test_sp638_reports_primary_vs_fallback_length_on_active_1m_mask(
+        self,
+    ) -> None:
+        terrain = read("scripts/assets/prepare_passo_giau_mase_pst.py")
+        road = read("scripts/assets/prepare_passo_giau_road.py")
+        workflow = read(".github/workflows/passo-giau-road-alignment.yml")
+        author = read(".github/workflows/passo-giau-r4-1-road-author.yml")
+
+        self.assertIn("passo_giau_mase_pst_primary_coverage_1m.tif", terrain)
+        self.assertIn('"primary_coverage_mask_geotiff"', terrain)
+        self.assertIn("SOURCE_COVERAGE_SAMPLE_INTERVAL_M = 1.0", road)
+        self.assertIn("passo_giau_mase_pst_primary_coverage_1m.tif", road)
+        self.assertIn('"terrain_source_coverage"', road)
+        self.assertIn('"mase_primary_length_m"', road)
+        self.assertIn('"veneto_fallback_length_m"', road)
+        self.assertIn(
+            "Prepare active MASE-primary hybrid terrain source",
+            workflow,
+        )
+        self.assertIn("download_passo_giau_mase_pst.py", workflow)
+        self.assertIn("prepare_passo_giau_mase_pst.py", workflow)
+        self.assertIn("'scripts/assets/prepare_passo_giau_mase_pst.py'", author)
+
     def test_generic_preparer_keeps_reference_diagnostic_contract(self) -> None:
         prepare = read("scripts/assets/prepare_passo_giau_heightmap.py")
         self.assertIn("def terrain_diagnostics(", prepare)
