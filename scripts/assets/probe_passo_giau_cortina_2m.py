@@ -29,6 +29,7 @@ WCS_ENDPOINT = "https://idt2-geoserver.regione.veneto.it/geoserver/wcs"
 VIEWER_URL = "https://idt2.regione.veneto.it/idt/webgis/viewer?webgisId=86"
 DOWNLOAD_PAGE = "https://idt2.regione.veneto.it/idt/downloader/download"
 GENERIC_LAYERS_ENDPOINT = "https://idt2.regione.veneto.it/idt/download/layerDownload/getDownloadableLayersWithPermission"
+CSW_ENDPOINT = "https://idt2.regione.veneto.it/geoportal/csw"
 TARGET_LAYER_LABEL = "DTM_2m_Cortina"
 PREFERRED_WMS_LAYER = "rv:DTM_2m_clip"
 PASSO_GIAU_WGS84 = (12.05321, 46.48284)
@@ -292,6 +293,96 @@ def discover_generic_downloadable_layers() -> dict[str, Any]:
         result["item_count"] = len(payload)
         result["item_container"] = "$"
     return result
+
+
+def parse_csw_records(root: ET.Element) -> dict[str, Any]:
+    search_results: ET.Element | None = None
+    for element in root.iter():
+        if local_name(element.tag) == "SearchResults":
+            search_results = element
+            break
+
+    summary: dict[str, Any] = {
+        "matched": None,
+        "returned": None,
+        "records": [],
+    }
+    if search_results is None:
+        return summary
+
+    for source_key, target_key in (
+        ("numberOfRecordsMatched", "matched"),
+        ("numberOfRecordsReturned", "returned"),
+    ):
+        raw = search_results.attrib.get(source_key)
+        if raw is not None:
+            try:
+                summary[target_key] = int(raw)
+            except ValueError:
+                summary[target_key] = raw
+
+    interesting = {
+        "identifier",
+        "fileIdentifier",
+        "title",
+        "abstract",
+        "description",
+        "URI",
+        "references",
+        "URL",
+        "linkage",
+        "format",
+        "type",
+        "rights",
+        "license",
+        "otherConstraints",
+        "useLimitation",
+    }
+    for child in list(search_results)[:100]:
+        values: dict[str, list[str]] = {}
+        for element in child.iter():
+            name = local_name(element.tag)
+            if name not in interesting:
+                continue
+            text_value = (element.text or "").strip()
+            if not text_value:
+                continue
+            values.setdefault(name, [])
+            if text_value not in values[name]:
+                values[name].append(text_value[:4000])
+        if values:
+            summary["records"].append(values)
+    return summary
+
+
+def discover_csw_metadata() -> dict[str, Any]:
+    queries: list[dict[str, Any]] = []
+    for term in ("DTM_2m_Cortina", "DTM_2m_clip", "Cortina DTM"):
+        constraint = f"AnyText LIKE '%{term}%'"
+        url = query_url(
+            CSW_ENDPOINT,
+            {
+                "service": "CSW",
+                "version": "2.0.2",
+                "request": "GetRecords",
+                "resultType": "results",
+                "typeNames": "csw:Record",
+                "elementSetName": "full",
+                "outputSchema": "http://www.opengis.net/cat/csw/2.0.2",
+                "constraintLanguage": "CQL_TEXT",
+                "constraint_language_version": "1.1.0",
+                "constraint": constraint,
+                "maxRecords": "50",
+            },
+        )
+        item: dict[str, Any] = {"term": term, "url": url}
+        try:
+            root = parse_xml(request_bytes(url), "CSW GetRecords")
+            item.update(parse_csw_records(root))
+        except Exception as exc:
+            item["error"] = str(exc)
+        queries.append(item)
+    return {"endpoint": CSW_ENDPOINT, "queries": queries}
 
 
 def parse_xml(payload: bytes, label: str) -> ET.Element:
@@ -696,6 +787,7 @@ def main() -> int:
         report["viewer"] = discover_viewer_context()
         report["download_portal"] = discover_download_portal()
         report["generic_download_catalog"] = discover_generic_downloadable_layers()
+        report["csw_metadata"] = discover_csw_metadata()
         wms_url, layer = fetch_wms_layer()
         describe_layer_url, layer_descriptions = fetch_describe_layer()
         report["wms"] = {
