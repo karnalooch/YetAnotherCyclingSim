@@ -128,6 +128,12 @@ class Cortina2mProbeTests(unittest.TestCase):
             matches,
         )
 
+    def test_csw_filter_constraint_escapes_literal(self) -> None:
+        constraint = probe.csw_filter_constraint('DTM & "Cortina"')
+        self.assertIn("<ogc:PropertyName>csw:AnyText</ogc:PropertyName>", constraint)
+        self.assertIn("%DTM &amp; &quot;Cortina&quot;%", constraint)
+        self.assertNotIn("CQL_TEXT", constraint)
+
     def test_csw_parser_keeps_identifier_title_and_distribution(self) -> None:
         root = probe.parse_xml(CSW_XML, "test CSW")
         parsed = probe.parse_csw_records(root)
