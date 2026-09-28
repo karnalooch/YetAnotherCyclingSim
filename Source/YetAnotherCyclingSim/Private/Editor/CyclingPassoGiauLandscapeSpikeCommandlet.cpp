@@ -73,10 +73,10 @@ namespace CyclingPassoGiauLandscapeSpikeInternal
 			OutMax = FMath::Max(OutMax, Value);
 		}
 
-		// Bilinear 800 -> 1009 resampling is not guaranteed to preserve the
-		// exact source extrema. The accepted remote artifact currently spans
-		// 31..65405. Require near-full-domain coverage so meaningful relief is
-		// preserved without pretending resampling must contain 0 and 65535.
+		// Terrain preparation may use cubic reprojection/resampling, so exact
+		// source extrema are not guaranteed to survive on the 4033 grid.
+		// Require near-full-domain coverage so meaningful relief is preserved
+		// without pretending resampling must contain exactly 0 and 65535.
 		if (OutMin > MaxResampleEdgeLoss ||
 			OutMax < static_cast<uint16>(MAX_uint16 - MaxResampleEdgeLoss))
 		{
@@ -125,8 +125,31 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 	FString ProofPath;
 	FParse::Value(*Params, TEXT("Heightmap="), HeightmapPath);
 	FParse::Value(*Params, TEXT("Proof="), ProofPath);
+	double RuntimeZScale = ZScale;
+	double RuntimeLocationZCm = LocationZCm;
+	FParse::Value(*Params, TEXT("ScaleZ="), RuntimeZScale);
+	FParse::Value(*Params, TEXT("LocationZCm="), RuntimeLocationZCm);
 	HeightmapPath.TrimQuotesInline();
 	ProofPath.TrimQuotesInline();
+
+	if (!FMath::IsFinite(RuntimeZScale) ||
+		RuntimeZScale < 250.0 ||
+		RuntimeZScale > 350.0)
+	{
+		UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error,
+			TEXT("Invalid -ScaleZ value %.6f; expected a finite Passo Giau terrain scale in [250, 350]."),
+			RuntimeZScale);
+		return 1;
+	}
+	if (!FMath::IsFinite(RuntimeLocationZCm) ||
+		RuntimeLocationZCm < 150000.0 ||
+		RuntimeLocationZCm > 250000.0)
+	{
+		UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error,
+			TEXT("Invalid -LocationZCm value %.3f; expected a finite Passo Giau midpoint in [150000, 250000] cm."),
+			RuntimeLocationZCm);
+		return 1;
+	}
 
 	if (HeightmapPath.IsEmpty())
 	{
@@ -199,8 +222,8 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 	Landscape->SetActorTransform(
 		FTransform(
 			FRotator::ZeroRotator,
-			FVector(0.0, 0.0, LocationZCm),
-			FVector(XYScaleCmPerVertex, XYScaleCmPerVertex, ZScale)));
+			FVector(0.0, 0.0, RuntimeLocationZCm),
+			FVector(XYScaleCmPerVertex, XYScaleCmPerVertex, RuntimeZScale)));
 
 	TArray<FLandscapeImportLayerInfo> MaterialImportLayers;
 	TMap<FGuid, TArray<uint16>> HeightDataPerLayers;
@@ -295,9 +318,9 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 	// UE Landscape stores height around 32768 at 1/128 local Z units.
 	// Report the elevation represented by the persisted Landscape transform.
 	const double SampledElevationMinM =
-		(LocationZCm + ((static_cast<double>(EncodedMin) - 32768.0) / 128.0) * ZScale) / 100.0;
+		(RuntimeLocationZCm + ((static_cast<double>(EncodedMin) - 32768.0) / 128.0) * RuntimeZScale) / 100.0;
 	const double SampledElevationMaxM =
-		(LocationZCm + ((static_cast<double>(EncodedMax) - 32768.0) / 128.0) * ZScale) / 100.0;
+		(RuntimeLocationZCm + ((static_cast<double>(EncodedMax) - 32768.0) / 128.0) * RuntimeZScale) / 100.0;
 
 	const FString ProofJson = FString::Printf(
 		TEXT("{\n")
@@ -338,8 +361,8 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		SampledElevationMaxM,
 		XYScaleCmPerVertex,
 		XYScaleCmPerVertex,
-		ZScale,
-		LocationZCm,
+		RuntimeZScale,
+		RuntimeLocationZCm,
 		BoundsSize.X,
 		BoundsSize.Y,
 		BoundsSize.Z);
