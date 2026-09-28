@@ -933,10 +933,9 @@ def main() -> int:
                 "official Olympic portfolio no longer proves the 2 m rasters "
                 "as provider-side resamples"
             )
-        if not report["portfolio"]["links_olympic_viewer_86"]:
-            raise RuntimeError(
-                "official Olympic portfolio no longer links WebGIS 86"
-            )
+        # The portfolio's initial HTML does not consistently expose its
+        # client-rendered viewer link. Record that observation, but do not turn
+        # a presentation-shell detail into a false source blocker.
         report["download_portal"] = discover_download_portal()
         report["generic_download_catalog"] = discover_generic_downloadable_layers()
         report["csw_metadata"] = discover_csw_metadata()
