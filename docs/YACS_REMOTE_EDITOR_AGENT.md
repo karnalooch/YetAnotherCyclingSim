@@ -1,6 +1,7 @@
 # YACS Remote Editor Agent
 
-**Tracking:** #85  
+**Tracking:** #227  
+**Parent architecture:** #85  
 **Status:** controlled spike  
 **Runner:** `yacs-home-ue58` / label `yacs-ue58`  
 **Transport:** GitHub Actions, outbound-only  
@@ -18,7 +19,7 @@ The initial proof is deliberately tiny:
 Chat / operator
     |
     v
-Issue #85 exact command
+Issue #227 exact command
     |
     v
 GitHub Actions
