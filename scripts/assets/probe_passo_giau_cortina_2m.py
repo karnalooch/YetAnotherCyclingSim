@@ -58,7 +58,8 @@ def normalized(value: str | None) -> str:
 
 
 def query_url(base: str, params: dict[str, str]) -> str:
-    return f"{base}?{urllib.parse.urlencode(params)}"
+    separator = "&" if "?" in base else "?"
+    return f"{base}{separator}{urllib.parse.urlencode(params)}"
 
 
 def request_bytes(url: str, *, timeout: int = 60) -> bytes:
@@ -504,6 +505,52 @@ def validate_resolution(description: dict[str, Any]) -> list[float]:
     return ordered
 
 
+def fetch_describe_layer() -> tuple[str, list[dict[str, str]]]:
+    url = query_url(
+        WMS_ENDPOINT,
+        {
+            "service": "WMS",
+            "version": "1.1.1",
+            "request": "DescribeLayer",
+            "layers": PREFERRED_WMS_LAYER,
+        },
+    )
+    root = parse_xml(request_bytes(url), "WMS DescribeLayer")
+    descriptions: list[dict[str, str]] = []
+    for element in root.iter():
+        if local_name(element.tag) not in {"LayerDescription", "Layer"}:
+            continue
+        attrs = {
+            local_name(key): value
+            for key, value in element.attrib.items()
+            if value
+        }
+        name = attrs.get("name") or attrs.get("layerName")
+        if normalized(name) != normalized(PREFERRED_WMS_LAYER):
+            continue
+        descriptions.append(attrs)
+    return url, descriptions
+
+
+def wcs_endpoint_candidates(
+    descriptions: list[dict[str, str]],
+) -> list[str]:
+    candidates = [WCS_ENDPOINT]
+    for item in descriptions:
+        for key in ("owsURL", "owsUrl", "url"):
+            value = item.get(key)
+            if value and value not in candidates:
+                candidates.append(value)
+    workspace = PREFERRED_WMS_LAYER.split(":", 1)[0]
+    workspace_url = (
+        "https://idt2-geoserver.regione.veneto.it/geoserver/"
+        f"{workspace}/wcs"
+    )
+    if workspace_url not in candidates:
+        candidates.append(workspace_url)
+    return candidates
+
+
 def fetch_wms_layer() -> tuple[str, dict[str, Any]]:
     url = query_url(
         WMS_ENDPOINT,
@@ -532,30 +579,50 @@ def fetch_wms_layer() -> tuple[str, dict[str, Any]]:
     return url, layer
 
 
-def fetch_wcs_coverage(wms_name: str | None) -> tuple[str, dict[str, Any]]:
-    url = query_url(
-        WCS_ENDPOINT,
-        {
-            "service": "WCS",
-            "version": "2.0.1",
-            "request": "GetCapabilities",
-        },
-    )
-    root = parse_xml(request_bytes(url), "WCS GetCapabilities")
-    matches = wcs_coverage_candidates(root, wms_name=wms_name)
-    if len(matches) != 1:
-        raise RuntimeError(
-            "expected exactly one WCS coverage matching DTM_2m_Cortina, "
-            f"found {len(matches)}: {matches}"
+def discover_wcs_coverage(
+    wms_name: str | None,
+    endpoints: list[str],
+) -> dict[str, Any]:
+    attempts: list[dict[str, Any]] = []
+    found: list[dict[str, Any]] = []
+    for endpoint in endpoints:
+        url = query_url(
+            endpoint,
+            {
+                "service": "WCS",
+                "version": "2.0.1",
+                "request": "GetCapabilities",
+            },
         )
-    return url, matches[0]
+        attempt: dict[str, Any] = {
+            "endpoint": endpoint,
+            "get_capabilities_url": url,
+        }
+        try:
+            root = parse_xml(request_bytes(url), "WCS GetCapabilities")
+            matches = wcs_coverage_candidates(root, wms_name=wms_name)
+            attempt["matches"] = matches
+            for match in matches:
+                found.append(
+                    {
+                        "endpoint": endpoint,
+                        "get_capabilities_url": url,
+                        "coverage": match,
+                    }
+                )
+        except Exception as exc:
+            attempt["error"] = str(exc)
+        attempts.append(attempt)
+
+    return {"attempts": attempts, "found": found}
 
 
 def fetch_coverage_description(
+    endpoint: str,
     coverage_id: str,
 ) -> tuple[str, dict[str, Any], list[float]]:
     url = query_url(
-        WCS_ENDPOINT,
+        endpoint,
         {
             "service": "WCS",
             "version": "2.0.1",
@@ -596,24 +663,35 @@ def main() -> int:
         report["download_portal"] = discover_download_portal()
         report["generic_download_catalog"] = discover_generic_downloadable_layers()
         wms_url, layer = fetch_wms_layer()
+        describe_layer_url, layer_descriptions = fetch_describe_layer()
         report["wms"] = {
             "get_capabilities_url": wms_url,
             "layer": layer,
+            "describe_layer_url": describe_layer_url,
+            "describe_layer": layer_descriptions,
         }
 
-        wcs_url, coverage = fetch_wcs_coverage(layer.get("name"))
-        report["wcs"] = {
-            "get_capabilities_url": wcs_url,
-            "coverage": coverage,
-        }
+        endpoints = wcs_endpoint_candidates(layer_descriptions)
+        discovery = discover_wcs_coverage(layer.get("name"), endpoints)
+        report["wcs"] = discovery
+        found = discovery.get("found", [])
+        if len(found) != 1:
+            raise RuntimeError(
+                "expected exactly one WCS coverage matching Cortina 2 m "
+                f"across {len(endpoints)} endpoint(s), found {len(found)}"
+            )
 
+        selected = found[0]
+        coverage = selected["coverage"]
         coverage_id = str(coverage.get("identifier") or "").strip()
         if not coverage_id:
             raise RuntimeError("matched WCS coverage has no identifier")
 
         describe_url, description, resolution = fetch_coverage_description(
-            coverage_id
+            str(selected["endpoint"]),
+            coverage_id,
         )
+        report["wcs"]["selected"] = selected
         report["wcs"]["describe_coverage_url"] = describe_url
         report["wcs"]["description"] = description
         report["proven_native_resolution_m"] = resolution
