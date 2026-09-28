@@ -219,6 +219,42 @@ class Cortina2mProbeTests(unittest.TestCase):
             candidates,
         )
 
+    def test_direct_coverage_ids_prefer_exact_wms_name_and_aliases(self) -> None:
+        self.assertEqual(
+            [
+                "rv:DTM_2m_clip",
+                "DTM_2m_clip",
+                "DTM_2m_Cortina",
+            ],
+            probe.direct_coverage_ids("rv:DTM_2m_clip"),
+        )
+
+    def test_direct_describe_can_prove_unadvertised_wcs_coverage(self) -> None:
+        original = probe.fetch_coverage_description
+
+        def fake_fetch(endpoint: str, version: str, coverage_id: str):
+            if version == "1.0.0" and coverage_id == "rv:DTM_2m_clip":
+                return (
+                    "https://example.test/describe",
+                    {"offset_magnitudes": [2.0, 2.0]},
+                    [2.0, 2.0],
+                )
+            raise RuntimeError("not exposed")
+
+        probe.fetch_coverage_description = fake_fetch
+        try:
+            result = probe.probe_direct_wcs_descriptions(
+                "rv:DTM_2m_clip",
+                ["https://example.test/wcs"],
+            )
+        finally:
+            probe.fetch_coverage_description = original
+
+        self.assertEqual(1, len(result["proven"]))
+        self.assertEqual("rv:DTM_2m_clip", result["proven"][0]["coverage_id"])
+        self.assertEqual("1.0.0", result["proven"][0]["version"])
+        self.assertEqual([2.0, 2.0], result["proven"][0]["proven_native_resolution_m"])
+
     def test_legacy_describe_layer_endpoint_is_normalized_to_https(self) -> None:
         endpoint = probe.normalize_service_endpoint(
             "http://idt2-geoserver.regione.veneto.it:80/geoserver/wcs?"
