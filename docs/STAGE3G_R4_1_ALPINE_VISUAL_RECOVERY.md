@@ -643,48 +643,84 @@ Issue #213 / PR #215 remain open until the bounded Landscape path is reviewed
 and its exploratory scaffolding/evidence is cleaned into a maintainable form.
 
 
-### Superseding P0 source-resolution gate — Cortina 2 m
+### Superseding P0 source-resolution gate — Cortina 2021 LiDAR / 2 m WebGIS
 
-Further cliff/material propagation is now secondary to one controlled source
-A/B. Official Veneto service discovery has identified the Cortina raw DTM layer
-as **`rv:DTM_2m_clip`** (viewer-facing label: `DTM_2m_Cortina`). The layer's
-advertised geographic extent contains Passo Giau.
+The controlled source A/B has produced a valid **negative source-gate result**
+rather than a new terrain import.
 
-The source is not yet ready for UE authoring. The live fail-closed probe has
-also established that:
+Official Veneto evidence now separates three different concepts that must not
+be conflated:
 
-- the layer advertises EPSG:6876 / RDN2008 Zone 12 (N-E);
-- WMS `DescribeLayer` labels it as WCS-backed, but global/workspace WCS
-  discovery across 2.0.1, 1.1.1 and 1.0.0 exposes no matching coverage;
-- WMS publishes no direct MetadataURL/DataURL for the raw raster;
-- Veneto's anonymous downloadable-layer catalog returns 932 entries and
-  contains no exact `DTM_2m_Cortina` / `DTM_2m_clip` entry;
-- Veneto's public CSW catalog returns 0 exact metadata records for those two
-  identifiers; the broader `Cortina DTM` search finds other records,
-  including the known 5 m LiDAR product, but not the 2 m source.
+- **acquisition density:** the Cortina + neighboring-municipalities airborne
+  LiDAR project specifies **4 points/m²**, with DSM and DTM production over
+  about **39,010 ha**;
+- **terrain product lineage:** Veneto states that the Olympic WebGIS terrain
+  rasters derive from the 2021 LiDAR survey;
+- **WebGIS raster resolution:** the Olympic portfolio explicitly calls the DTM,
+  DSM and CHM **"ricampionati a 2m"** — resampled to 2 m.
 
-The 2 m product is therefore currently **viewer/WMS-proven but
-raw-transport-unproven**. That is a source/provenance blocker, not a reason to
-manufacture elevation by scraping rendered WMS output.
+Primary official references:
 
-This changes the immediate execution order:
+- https://bur.regione.veneto.it/BurvServices/Pubblica/DettaglioDgr.aspx?id=426837
+- https://idt2.regione.veneto.it/portfolio/webgis-olimpiadi-2026-in-veneto/
+- https://idt2.regione.veneto.it/idt/webgis/viewer?webgisId=86
 
-1. obtain and verify a documented official raw raster distribution and
-   immutable source hash; do not guess hidden download URLs;
-2. prove actual cell spacing, datatype, NoData, CRS/axis order, vertical datum,
-   license and complete AOI coverage;
-3. keep elevation Float32/Float64 and perform one deliberate GIS
-   crop/reproject/resample;
-4. generate the 4033 UInt16/R16 transport candidate;
-5. render the exact same neutral UE proof for **5 m baseline vs verified 2 m**;
-6. only after that result resume road cut/fill, cliff, scree, material and PCG
-   work.
+The viewer exposes `DTM_2m_Cortina`; live WMS discovery resolves the
+technical layer `rv:DTM_2m_clip`, whose advertised geographic extent contains
+Passo Giau. That proves relevance and publication, **not a native 2 m
+elevation grid**.
 
-Do **not** use WMS GetMap pixels as a heightmap and do not infer that the name
-`2m` alone proves a 2 m elevation grid.
+The live fail-closed source probe has further established:
 
-The existing 5 m Landscape remains the reproducible baseline, not the final
-source decision.
+- the raw-looking layer advertises EPSG:6876 / RDN2008 Zone 12 (N-E);
+- WMS `DescribeLayer` calls it WCS-backed;
+- both public WCS routes tested by YACS return the terminal GeoServer error
+  **`Service WCS is disabled`** for direct `DescribeCoverage`;
+- source-contract run **36453219301 / #26** exercised global/workspace WCS,
+  versions 2.0.1 / 1.1.1 / 1.0.0 and the known Cortina aliases before the
+  probe was optimized to fast-fail a disabled endpoint;
+- the WMS layer provides no direct `MetadataURL` or `DataURL`;
+- Veneto's anonymous download catalog currently returns 932 entries and no
+  exact `DTM_2m_Cortina` / `DTM_2m_clip` item;
+- the public CSW catalog returns no exact metadata record for either identifier;
+- Veneto's public downloader exposes a documented first-party download path for
+  the established **5 m LiDAR DTM**, but no equivalent public 2 m DTM
+  distribution has been discovered.
+
+Therefore the current classification is:
+
+**2021 high-density LiDAR acquisition -> official DTM/DSM -> Olympic WebGIS
+derivative resampled to 2 m -> raw/lossless DTM transport not publicly proven.**
+
+The 2 m product is still valuable evidence: it proves that better source
+material exists upstream of the old 5 m public download. It does **not** justify
+manufacturing a DEM from styled WMS pixels or claiming that a provider-side
+2 m resample adds measured terrain detail.
+
+This fixes the execution order:
+
+1. keep the Veneto 5 m Landscape as the reproducible A/B baseline;
+2. keep the 2 m source candidate blocked until a documented official raw DTM
+   distribution or equivalent provider metadata is obtained;
+3. if obtained, validate raster spacing, datatype, NoData, CRS/axis order,
+   vertical datum, provenance/license, AOI coverage and immutable hash;
+4. record whether the provider raster is native to the DTM production chain or
+   itself resampled;
+5. only then prepare a deterministic 4033 R16 candidate and render the exact
+   same neutral UE proof against the 5 m baseline;
+6. independently continue bounded road cut/fill and cliff/scree investigation
+   where those tasks do not depend on pretending the 2 m source is solved.
+
+Do **not**:
+
+- use WMS `GetMap` pixels as elevation;
+- infer a hidden DTM filename from other public LiDAR derivatives;
+- call the 2 m WebGIS layer a native 2 m DEM;
+- move this GIS experiment into PR #224 / the local-mesh path.
+
+PR #215 remains the single legal slot for this source decision. PR #224 remains
+a documented local-mesh experiment/dead end for this question.
+
 
 ## 19. Terrain research / visual-debug SSOT
 
