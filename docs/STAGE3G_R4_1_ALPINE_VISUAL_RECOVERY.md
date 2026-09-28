@@ -155,8 +155,10 @@ This is an intentional production decision, not a temporary workaround.
 
 Responsibilities are separated as follows:
 
-- **Regione del Veneto LiDAR-derived DTM** -> macro terrain skeleton, valley
-  mass, ridges, mountain silhouettes and continuous ground;
+- **MASE PST LiDAR DTM grigliato 1x1** -> canonical macro terrain skeleton,
+  valley mass, ridges, mountain silhouettes and continuous ground;
+- **Regione del Veneto LiDAR-derived DTM 5 m** -> reproducible fallback and
+  A/B baseline;
 - **official real-road GIS geometry** -> preferred presentation alignment for
   SP638 / Passo Giau;
 - **UE Landscape** -> continuous macro terrain and terrain beneath vegetation;
@@ -171,9 +173,10 @@ Responsibilities are separated as follows:
 - **FRouteGeometryProfile / Road Physics Profile** -> authoritative simulation
   truth until an explicit reviewed migration says otherwise.
 
-The prepared 4033 x 4033 Landscape is a presentation resample of a real 5 m
-source DTM. The denser UE grid improves Landscape topology compatibility; it
-does **not** create extra measured terrain detail.
+The active 4033 x 4033 Landscape candidate is a presentation resample of the
+MASE PST source after an explicit EPSG:4326 -> EPSG:32632 metric reprojection.
+The UE grid improves Landscape topology compatibility; it does **not** create
+measured terrain detail beyond the source samples.
 
 #### Real-road alignment policy
 
@@ -582,41 +585,49 @@ This baseline proved licensed remote source acquisition and deterministic Unreal
 heightmap preparation. It is historical evidence, not the currently preferred
 Landscape source.
 
-### Active PR #215 candidate — Veneto LiDAR-derived DTM 5 m
+### Active PR #215 candidate — MASE PST LiDAR DTM 1x1
 
-A bounded source A/B on the same physical 8 km x 8 km AOI showed that the
-official **Regione del Veneto — DTM 5 m derivato dai rilievi LiDAR** source is
-the stronger active Landscape candidate.
+PR #215 now uses the immutable MASE PST Passo Giau source checkpoint as its
+canonical terrain input.
 
-Current contract:
+Current source contract:
 
-- license: **IODL 2.0**;
-- proven download: **33 official tiles**;
-- native working grid: **1600 x 1600 at 5 m**;
-- prepared UE Landscape: **4033 x 4033** unsigned-16 / little-endian R16;
-- topology: **32 x 32 components = 1024 components**;
-- 2 subsections/component, 63 quads/subsection, 126 quads/component;
-- XY scale: **198.412698 cm/vertex** for the 8 km extent;
-- Z scale and sea-level-preserving Z origin are derived from the generated
-  terrain report for the actual source extrema;
+- release tag: `data-mase-pst-passo-giau-dtm-2026-09-28`;
+- archive size: **356,503,497 bytes**;
+- archive SHA-256:
+  `0e2a133fcc80f225aee2b61aa04bc7a858aa3754c6b80a7c640b8a6ab7d14b8c`;
+- **89** GeoTIFF DTM tiles;
+- Float32, 1000 x 1000 pixels/tile, NoData `-9999`;
+- source CRS **EPSG:4326**;
+- source pixel spacing `0.00001 degrees` (~0.76 x 1.11 m near Giau);
+- target working CRS **EPSG:32632**;
+- target working grid **8000 x 8000 at 1 m** over the bounded 8 km AOI;
+- prepared UE Landscape target **4033 x 4033**;
+- topology remains **32 x 32 components = 1024 components**;
+- XY scale remains **198.412698 cm/vertex**;
 - isolated map only: `/Game/Prototype/Maps/L_PassoGiauTerrainSpike`;
 - `L_CyclingTest`, route truth and physics remain protected and unchanged.
 
-Source A/B workflow run **36395015722 — GREEN**.
+The raw archive stays outside Git/LFS as an immutable prerelease checkpoint.
+The authoring lane verifies byte size and SHA-256 before extracting the 89
+GeoTIFFs. It then mosaics them and performs an explicit geographic-to-metric
+reprojection. Degrees are never interpreted as metres.
 
-The first complete Veneto UE authoring proof, run **36395726623**, was GREEN and
-persisted the isolated 4033 Landscape. Its source report measured approximately
-**1168.833 .. 2715.996 m** elevation with **1547.163 m** relief.
+The older Veneto 5 m candidate remains valuable historical evidence:
 
-The latest exact-code diagnostic authoring proof is run **36399060374 — GREEN**
-from `e00f9d2b...`; it persisted the regenerated spike map as
-`9f6e3a5c...`. The proof uses forced Landscape LOD0, lighting-only geometry
-diagnosis, disabled proof shadows, and a **3840 x 2160 / FXAA** spatial capture
-so screen-space aliasing is not confused with actual heightfield structure.
+- source A/B run **36395015722 — GREEN**;
+- first complete Veneto UE authoring run **36395726623 — GREEN**;
+- diagnostic authoring run **36399060374 — GREEN**;
+- the 5 m proof established the current 4033 topology, native
+  `ALandscape::Import`, mutation guards and deterministic 4K/FXAA geometry
+  capture contract.
 
+Those runs do **not** prove the new MASE source path. A fresh exact-SHA
+authoring/render run is required before visual acceptance.
 ### Current visual conclusion
 
-The 5 m source and prepared 4033 raster do **not** show the dense herringbone
+The existing Veneto 5 m proof remains the comparison baseline. Its source and
+prepared 4033 raster do **not** show the dense herringbone
 pattern seen in the earlier 1080p UE proof. The 4K/FXAA diagnostic substantially
 reduces that artifact, which identifies screen-space/render aliasing as a real
 part of the earlier failure.
@@ -630,9 +641,10 @@ and source-resolution constraint until disproven.
 
 Decision for R4.1:
 
-- keep the Veneto Landscape candidate as the **macro-terrain path A** under
-  evaluation;
-- do not propagate it across the canonical route yet;
+- promote the MASE PST 1x1 source to the **canonical macro-terrain path A**
+  input, subject to a fresh exact-SHA authoring/render proof;
+- retain Veneto 5 m as the reproducible fallback/A-B baseline;
+- do not propagate the new candidate across the canonical route yet;
 - do not unblock R5;
 - use R4.1C material work and especially R4.1D `Rock Face 01` / cliff / scree
   geometry to replace or mask inspectable steep heightfield faces rather than
@@ -643,7 +655,11 @@ Issue #213 / PR #215 remain open until the bounded Landscape path is reviewed
 and its exploratory scaffolding/evidence is cleaned into a maintainable form.
 
 
-### Superseding P0 source-resolution gate — Cortina 2021 LiDAR / 2 m WebGIS
+### Historical P0 source-resolution gate — Cortina 2021 LiDAR / 2 m WebGIS
+
+> This section records the pre-MASE investigation. It is superseded by the
+> immutable MASE PST 1x1 source checkpoint above; its blocked/raw-source wording
+> is historical and no longer the current execution gate.
 
 The controlled source A/B has produced a valid **negative source-gate result**
 rather than a new terrain import.
