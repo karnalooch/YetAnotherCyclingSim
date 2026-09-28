@@ -18,6 +18,7 @@ _started_at = 0.0
 _output_path: Path | None = None
 _proof_path: Path | None = None
 _camera = None
+_landscape_component_count = 0
 
 
 def _finish(success: bool, error: str = "") -> None:
@@ -34,6 +35,9 @@ def _finish(success: bool, error: str = "") -> None:
             "screenshot": str(_output_path),
             "screenshot_bytes": _output_path.stat().st_size,
             "resolution": [1920, 1080],
+            "landscape_component_count": _landscape_component_count,
+            "forced_landscape_lod": 0,
+            "ray_tracing_landscape_lod_bias": -1,
             "camera_location_cm": [
                 float(_camera.get_actor_location().x),
                 float(_camera.get_actor_location().y),
@@ -87,6 +91,7 @@ def _tick(_delta_time: float) -> None:
 
 def main() -> None:
     global _task, _tick_handle, _started_at, _output_path, _proof_path, _camera
+    global _landscape_component_count
 
     output_value = os.environ.get("YACS_PASSO_GIAU_CAPTURE_PNG", "")
     proof_value = os.environ.get("YACS_PASSO_GIAU_CAPTURE_PROOF", "")
@@ -110,6 +115,29 @@ def main() -> None:
     )
     if len(landscapes) != 1:
         raise RuntimeError(f"expected exactly one Landscape, found {len(landscapes)}")
+
+    # Visual-proof stabilization only: render the imported source geometry at
+    # full Landscape detail and keep the ray-tracing representation on the
+    # matching highest-detail LOD. These are transient capture settings and are
+    # never saved back into the spike map.
+    landscape_components = list(
+        landscapes[0].get_components_by_class(unreal.LandscapeComponent)
+    )
+    if not landscape_components:
+        raise RuntimeError("imported Landscape has no LandscapeComponent instances")
+    for component in landscape_components:
+        component.set_forced_lod(0)
+        component.set_lod_bias(0)
+    _landscape_component_count = len(landscape_components)
+    unreal.SystemLibrary.execute_console_command(
+        world,
+        "r.RayTracing.Geometry.Landscape.LODBias -1",
+    )
+    unreal.log(
+        "[PassoGiauCapture] proof LOD stabilized: "
+        f"components={_landscape_component_count} forced_lod=0 "
+        "rt_landscape_lod_bias=-1"
+    )
 
     actor_subsystem = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
 

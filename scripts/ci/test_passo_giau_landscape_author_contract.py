@@ -78,6 +78,10 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("CyclingPassoGiauLandscapeSpikeCommandlet: done", wrapper)
         self.assertIn("$CaptureExitCode -notin @(0, 1)", wrapper)
         self.assertIn(r"\[PassoGiauCapture\] PASS:", wrapper)
+        self.assertIn("$CaptureStdout = Join-Path $ArtifactRoot 'capture.stdout.log'", wrapper)
+        self.assertIn("-RedirectStandardOutput $CaptureStdout", wrapper)
+        self.assertIn("capture proof LOD stabilization is invalid", wrapper)
+        self.assertIn("capture proof PNG byte count", wrapper)
         self.assertIn("Fatal error|Unhandled Exception|Critical error", wrapper)
         self.assertIn("code_only_lfs_asset_registry_exit_tolerance_used", wrapper)
 
@@ -91,6 +95,12 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("set_keep_python_script_alive(False)", capture)
         self.assertNotIn("SystemLibrary.quit_editor", capture)
         self.assertIn("get_component_by_class(unreal.CameraComponent)", capture)
+        self.assertIn("get_components_by_class(unreal.LandscapeComponent)", capture)
+        self.assertIn("component.set_forced_lod(0)", capture)
+        self.assertIn("component.set_lod_bias(0)", capture)
+        self.assertIn("r.RayTracing.Geometry.Landscape.LODBias -1", capture)
+        self.assertIn('"forced_landscape_lod": 0', capture)
+        self.assertIn('"ray_tracing_landscape_lod_bias": -1', capture)
         self.assertNotIn("get_camera_component()", capture)
         self.assertIn('"visual_acceptance": "PENDING_HUMAN_REVIEW"', capture)
 

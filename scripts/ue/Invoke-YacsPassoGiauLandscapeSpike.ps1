@@ -41,12 +41,13 @@ $ImportLog = Join-Path $ArtifactRoot 'landscape_import.log'
 $ImportErr = $ImportLog + '.stderr'
 $ImportProof = Join-Path $ArtifactRoot 'landscape_import_proof.json'
 $CaptureLog = Join-Path $ArtifactRoot 'capture.log'
+$CaptureStdout = Join-Path $ArtifactRoot 'capture.stdout.log'
 $CaptureErr = $CaptureLog + '.stderr'
 $CapturePng = Join-Path $ArtifactRoot 'passo_giau_landscape_1920x1080.png'
 $CaptureProof = Join-Path $ArtifactRoot 'capture_proof.json'
 $FinalProof = Join-Path $ArtifactRoot 'passo_giau_landscape_spike_proof.json'
 
-foreach ($Path in @($BuildLog,$MapPrepLog,$MapPrepErr,$MapPrepProof,$ImportLog,$ImportErr,$ImportProof,$CaptureLog,$CaptureErr,$CapturePng,$CaptureProof,$FinalProof)) {
+foreach ($Path in @($BuildLog,$MapPrepLog,$MapPrepErr,$MapPrepProof,$ImportLog,$ImportErr,$ImportProof,$CaptureLog,$CaptureStdout,$CaptureErr,$CapturePng,$CaptureProof,$FinalProof)) {
     Remove-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
 }
 
@@ -146,7 +147,10 @@ $env:YACS_PASSO_GIAU_CAPTURE_PNG = $CapturePng
 $env:YACS_PASSO_GIAU_CAPTURE_PROOF = $CaptureProof
 try {
     $CaptureArgs = @($ProjectPath,('-ExecutePythonScript="' + $CaptureScript + '"'),'-Unattended','-NoPause','-NoSplash','-NoP4','-windowed','-ResX=1920','-ResY=1080','-NoVSync','-FixedSeed','-ScriptErrorsAreFatal','-log','-stdout',('-AbsLog=' + $CaptureLog))
-    $Proc = Start-Process -FilePath $UEditor -ArgumentList $CaptureArgs -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $CaptureLog -RedirectStandardError $CaptureErr
+    # Keep UE's -AbsLog file separate from redirected stdout. Pointing both
+    # streams at capture.log makes UE rotate its real log to capture_2.log,
+    # which hides the Python PASS marker from the fail-closed gate.
+    $Proc = Start-Process -FilePath $UEditor -ArgumentList $CaptureArgs -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $CaptureStdout -RedirectStandardError $CaptureErr
     if (-not $Proc.WaitForExit(180000)) { try { $Proc | Stop-Process -Force } catch { }; throw 'Passo Giau visual capture timed out.' }
     $CaptureExitCode = $Proc.ExitCode
 }
@@ -159,6 +163,10 @@ if ((Get-Item -LiteralPath $CapturePng).Length -lt 100000) { throw 'Passo Giau r
 if (-not (Test-Path -LiteralPath $CaptureProof -PathType Leaf)) { throw "Passo Giau capture proof is missing (exit=$CaptureExitCode)." }
 $Capture = Get-Content -LiteralPath $CaptureProof -Raw | ConvertFrom-Json
 if ($Capture.passo_giau_landscape_capture -ne 'PASS') { throw "Passo Giau visual capture proof did not report PASS (exit=$CaptureExitCode)." }
+if ([int]$Capture.resolution[0] -ne 1920 -or [int]$Capture.resolution[1] -ne 1080) { throw 'Passo Giau capture proof resolution is invalid.' }
+if ([int]$Capture.forced_landscape_lod -ne 0 -or [int]$Capture.ray_tracing_landscape_lod_bias -ne -1) { throw 'Passo Giau capture proof LOD stabilization is invalid.' }
+if ([int]$Capture.landscape_component_count -ne 64) { throw 'Passo Giau capture proof Landscape component count is invalid.' }
+if ([int64]$Capture.screenshot_bytes -ne (Get-Item -LiteralPath $CapturePng).Length) { throw 'Passo Giau capture proof PNG byte count does not match the rendered file.' }
 
 $CaptureLogText = Get-Content -LiteralPath $CaptureLog -Raw -ErrorAction Stop
 if ($CaptureExitCode -notin @(0, 1)) {
