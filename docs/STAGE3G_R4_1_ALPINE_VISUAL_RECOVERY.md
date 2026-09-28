@@ -587,16 +587,17 @@ Landscape source.
 
 ### Active PR #215 candidate — MASE PST LiDAR DTM 1x1
 
-PR #215 now uses the immutable MASE PST Passo Giau source checkpoint as its
-canonical terrain input.
+PR #215 now uses the corrected MASE PST Passo Giau source checkpoint as its
+canonical terrain input. The earlier `1372707` / 89-tile checkpoint is
+superseded; package `1372858` is DTM-only and contains 204 GeoTIFFs.
 
 Current source contract:
 
 - release tag: `data-mase-pst-passo-giau-dtm-2026-09-28`;
-- archive size: **356,503,497 bytes**;
+- archive size: **853,162,557 bytes**;
 - archive SHA-256:
-  `0e2a133fcc80f225aee2b61aa04bc7a858aa3754c6b80a7c640b8a6ab7d14b8c`;
-- **89** GeoTIFF DTM tiles;
+  `4215d1d37fb8540c44442aedd164b6cda3f1845f3552413a975a6b7b1461e93c`;
+- **204** GeoTIFF DTM tiles, all `*_DTM.tiff`, zero DSM tiles;
 - Float32, 1000 x 1000 pixels/tile, NoData `-9999`;
 - source CRS **EPSG:4326**;
 - source pixel spacing `0.00001 degrees` (~0.76 x 1.11 m near Giau);
@@ -609,7 +610,7 @@ Current source contract:
 - `L_CyclingTest`, route truth and physics remain protected and unchanged.
 
 The raw archive stays outside Git/LFS as an immutable prerelease checkpoint.
-The authoring lane verifies byte size and SHA-256 before extracting the 89
+The authoring lane verifies byte size and SHA-256 before extracting the 204
 GeoTIFFs. It then mosaics them and performs an explicit geographic-to-metric
 reprojection. Degrees are never interpreted as metres.
 
