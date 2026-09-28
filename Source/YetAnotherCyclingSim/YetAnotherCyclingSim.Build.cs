@@ -25,7 +25,7 @@ public class YetAnotherCyclingSim : ModuleRules
 			// Editor-only dependencies for the CyclingPrototypeMapSetupCommandlet,
 			// which is the project's safe editor automation workflow for the
 			// L_CyclingTest binary .umap asset.
-			PrivateDependencyModuleNames.AddRange(new string[] { "UnrealEd", "AssetRegistry", "Landscape" });
+			PrivateDependencyModuleNames.AddRange(new string[] { "UnrealEd", "AssetRegistry", "Landscape", "LandscapeEditor" });
 		}
 	}
 }
