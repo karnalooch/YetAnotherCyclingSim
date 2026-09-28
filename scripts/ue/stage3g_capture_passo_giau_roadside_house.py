@@ -70,7 +70,7 @@ _proof_path: Path | None = None
 _camera = None
 _pcg_volume = None
 _pcg_component = None
-_pcg_ready = False
+_capture_phase = "not_started"
 _proof_data: dict[str, object] = {}
 
 
@@ -114,10 +114,14 @@ def _finish(success: bool, error: str = "") -> None:
 
 
 def _schedule_screenshot() -> None:
-    global _task, _started_at
+    global _task, _started_at, _capture_phase
     if _camera is None or _output_path is None:
         _finish(False, "camera/output is unavailable for screenshot scheduling")
         return
+    # take_high_res_screenshot may pump Slate synchronously before returning.
+    # Mark the transitional phase first so a re-entrant tick cannot interpret
+    # _task=None as a failed screenshot after PCG has already completed.
+    _capture_phase = "scheduling_screenshot"
     _task = unreal.AutomationLibrary.take_high_res_screenshot(
         res_x=CAPTURE_RES_X,
         res_y=CAPTURE_RES_Y,
@@ -136,13 +140,17 @@ def _schedule_screenshot() -> None:
         _finish(False, "AutomationLibrary returned an invalid screenshot task")
         return
     _started_at = time.monotonic()
+    _capture_phase = "waiting_screenshot"
     unreal.log("[PassoGiauRoadsideHouse] PCG generation complete; screenshot scheduled")
 
 
 def _tick(_delta_time: float) -> None:
-    global _pcg_ready
+    global _capture_phase
 
-    if not _pcg_ready:
+    if _capture_phase == "scheduling_screenshot":
+        return
+
+    if _capture_phase == "waiting_pcg":
         if _pcg_component is None or _pcg_volume is None:
             _finish(False, "PCG patch backend was not initialized")
             return
@@ -175,12 +183,14 @@ def _tick(_delta_time: float) -> None:
             )
             return
 
-        _pcg_ready = True
         _schedule_screenshot()
         return
 
+    if _capture_phase != "waiting_screenshot":
+        _finish(False, f"unexpected capture phase: {_capture_phase}")
+        return
     if _task is None:
-        _finish(False, "screenshot task was not initialized after PCG generation")
+        _finish(False, "screenshot task is missing in waiting_screenshot phase")
         return
     if _task.is_task_done():
         if (
@@ -610,7 +620,7 @@ def _spawn_alpine_house(
 
 def main() -> None:
     global _task, _tick_handle, _started_at, _output_path, _proof_path, _camera
-    global _pcg_volume, _pcg_component, _pcg_ready, _proof_data
+    global _pcg_volume, _pcg_component, _capture_phase, _proof_data
 
     output_value = os.environ.get("YACS_PASSO_GIAU_HOUSE_CAPTURE_PNG", "")
     proof_value = os.environ.get("YACS_PASSO_GIAU_HOUSE_CAPTURE_PROOF", "")
@@ -939,7 +949,7 @@ def main() -> None:
     }
 
     unreal.EditorPythonScripting.set_keep_python_script_alive(True)
-    _pcg_ready = False
+    _capture_phase = "waiting_pcg"
     _started_at = time.monotonic()
     _tick_handle = unreal.register_slate_post_tick_callback(_tick)
     unreal.log(
