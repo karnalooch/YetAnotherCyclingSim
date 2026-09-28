@@ -22,7 +22,7 @@ on:
       - 'scripts/ue/stage3g_capture_passo_giau_road.py'
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: passo-giau-r4-1-road-author-${{ github.repository }}
@@ -59,7 +59,7 @@ jobs:
           fetch-depth: 1
           lfs: false
           clean: true
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Verify exact SHA and clean checkout
         shell: pwsh
@@ -99,27 +99,6 @@ jobs:
         run: |
           ./scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1 -ExpectedBranch 'HEAD' -ExpectedHead '${{ github.event.pull_request.head.sha }}' -IncludeRoad -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR4_1/PassoGiauRoad'
           if ($LASTEXITCODE -ne 0) { throw 'Passo Giau road authoring failed.' }
-
-      - name: Commit only isolated spike map
-        shell: pwsh
-        working-directory: _passo-giau-road-worktree
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $asset = 'Content/Prototype/Maps/L_PassoGiauTerrainSpike.umap'
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- $asset
-          if (git diff --cached --quiet) {
-            throw 'Passo Giau road authoring produced no staged spike map.'
-          }
-          $unexpected = @(git diff --cached --name-only | Where-Object { $_ -ne $asset })
-          if ($unexpected.Count -gt 0) {
-            throw ("Unexpected staged paths: {0}" -f ($unexpected -join ', '))
-          }
-          git commit -m 'asset(terrain): persist official SP638 road spline'
-          if ($LASTEXITCODE -ne 0) { throw 'Passo Giau road map commit failed.' }
-          git push origin HEAD:feat/stage3g-r4-1-passo-giau-road-alignment
-          if ($LASTEXITCODE -ne 0) { throw 'Passo Giau road map push failed.' }
 
       - name: Upload Passo Giau road authoring evidence
         if: ${{ always() }}

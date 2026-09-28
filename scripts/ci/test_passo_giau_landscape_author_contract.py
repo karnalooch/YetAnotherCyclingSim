@@ -284,6 +284,10 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("download_passo_giau_mase_pst.py", workflow)
         self.assertIn("prepare_passo_giau_mase_pst.py", workflow)
         self.assertIn("'scripts/assets/prepare_passo_giau_mase_pst.py'", author)
+        self.assertIn("permissions:\n  contents: read", author)
+        self.assertIn("persist-credentials: false", author)
+        self.assertNotIn("Commit only isolated spike map", author)
+        self.assertNotIn("git push origin", author)
 
     def test_generic_preparer_keeps_reference_diagnostic_contract(self) -> None:
         prepare = read("scripts/assets/prepare_passo_giau_heightmap.py")
