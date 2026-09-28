@@ -79,6 +79,7 @@ class YacsPcgPatchContractTest(unittest.TestCase):
 
     def test_proof_fails_closed_without_generated_pcg_instances(self) -> None:
         wrapper = read("scripts/ue/Invoke-YacsPassoGiauRoadsideHouseProof.ps1")
+        capture = read("scripts/ue/stage3g_capture_passo_giau_roadside_house.py")
         self.assertIn("pcg_patch_adapter_v1", wrapper)
         self.assertIn("instanced_mesh_instances", wrapper)
         self.assertIn("generic_candidate_node", wrapper)
