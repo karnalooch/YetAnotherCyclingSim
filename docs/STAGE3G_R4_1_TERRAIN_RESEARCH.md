@@ -247,7 +247,12 @@ Therefore:
 - if a visual mismatch disappears only after moving the canonical road onto the
   terrain grid, treat that as a failed diagnostic, not a valid fix;
 - any deliberate correction of canonical road XY requires separate evidence
-  that the road source itself is wrong.
+  that the road source itself is wrong;
+- do not estimate road curvature, tangent frames or road-cut widths from a
+  sampling window smaller than the source-position uncertainty. Densifying the
+  centerline to 2 m stations does not create 2 m positional truth. For the
+  current proof, source-scale road geometry analysis uses a 6 m half-window
+  while preserving every canonical centerline station unchanged.
 
 This trap is especially important at tight hairpins, where local curvature,
 road width, independent XY uncertainty and the 5 m terrain grid can all be on
