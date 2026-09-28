@@ -1,4 +1,4 @@
-name: Passo Giau R4.1 roadside house proof
+name: YACS World Authoring Library SP638 proof
 
 on:
   push:
@@ -8,6 +8,14 @@ on:
       - '.github/workflows/passo-giau-r4-1-roadside-house.yml'
       - 'scripts/ue/Invoke-YacsPassoGiauRoadsideHouseProof.ps1'
       - 'scripts/ue/stage3g_capture_passo_giau_roadside_house.py'
+      - 'scripts/ue/yacs_scene_composer.py'
+      - 'scripts/worldgen/yacs_scene_layout.py'
+      - 'scripts/assets/yacs_asset_library.py'
+      - 'scripts/assets/download_stage3g_assets.py'
+      - 'scripts/ci/test_yacs_asset_library.py'
+      - 'scripts/ci/test_yacs_scene_layout.py'
+      - 'worldgen/assets/catalog.json'
+      - 'worldgen/presets/alpine_roadside_grove_v1.json'
 
 permissions:
   contents: read
@@ -57,13 +65,26 @@ jobs:
             throw 'Roadside house checkout is dirty.'
           }
 
-      - name: Compile capture script
+      - name: Compile World Authoring Library scripts
         shell: pwsh
         working-directory: _passo-giau-roadside-house-worktree
         run: |
-          python -m py_compile ./scripts/ue/stage3g_capture_passo_giau_roadside_house.py
+          python -m py_compile `
+            ./scripts/assets/yacs_asset_library.py `
+            ./scripts/worldgen/yacs_scene_layout.py `
+            ./scripts/ue/yacs_scene_composer.py `
+            ./scripts/ue/stage3g_capture_passo_giau_roadside_house.py
 
-      - name: Run roadside house proof
+      - name: Run World Authoring Library unit tests
+        shell: pwsh
+        working-directory: _passo-giau-roadside-house-worktree
+        run: |
+          python ./scripts/ci/test_yacs_asset_library.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python ./scripts/ci/test_yacs_scene_layout.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Run World Authoring Library SP638 proof
         shell: pwsh
         working-directory: _passo-giau-roadside-house-worktree
         run: |
