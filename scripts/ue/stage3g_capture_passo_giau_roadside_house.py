@@ -679,10 +679,6 @@ def main() -> None:
         local_focus_cm,
     )
 
-    local_focus_cm = min(
-        max(0.0, focus_distance_cm - slice_start_cm),
-        local_length_cm,
-    )
     camera_distance_cm = max(0.0, local_focus_cm - CAMERA_BACK_CM)
     target_distance_cm = min(
         local_length_cm,
