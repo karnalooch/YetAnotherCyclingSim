@@ -1,0 +1,47 @@
+{
+  "id": "2026-09-28-veneto-dtm-4033-landscape",
+  "date": "2026-09-28",
+  "area": "terrain",
+  "stage": "R4.1B",
+  "title": "Veneto 5 m DTM -> 4033 Landscape candidate",
+  "status": "VISUAL_FAIL",
+  "pr": 215,
+  "commit": "9f6e3a5c",
+  "run": 36395726623,
+  "hypothesis": "A 4033 x 4033 Landscape prepared from the official Veneto 5 m DTM is sufficient for rider-visible Passo Giau terrain.",
+  "technical": [
+    "Official Veneto source acquisition passed.",
+    "33 tiles produced a 1600 x 1600 native 5 m working grid.",
+    "The isolated 4033 x 4033 Landscape authored successfully with 1024 components.",
+    "Route truth and L_CyclingTest remained unchanged."
+  ],
+  "visual": [
+    "Macro terrain is real and correctly scaled, but steep camera-close faces expose visible heightfield stepping/ribbing.",
+    "The Landscape grid is not accepted as final foreground terrain from the rider camera."
+  ],
+  "keep": [
+    "Veneto 5 m DTM as the macro-terrain source.",
+    "Isolated Passo Giau map and deterministic authoring path.",
+    "Landscape for broad continuous terrain away from inspectable steep faces."
+  ],
+  "reject": [
+    "One uniform Landscape heightfield as the only representation for camera-close steep Dolomite terrain."
+  ],
+  "learnings": [
+    "Increasing the UE raster density does not invent source detail.",
+    "Foreground steep surfaces need a different representation or a higher-detail local corridor."
+  ],
+  "next": [
+    "Separate macro Landscape responsibility from rider-visible meso/road-corridor geometry."
+  ],
+  "evidence": [
+    {
+      "label": "PR #215",
+      "url": "https://github.com/karnalooch/YetAnotherCyclingSim/pull/215"
+    },
+    {
+      "label": "Authoring run 36395726623",
+      "url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/36395726623"
+    }
+  ]
+}
