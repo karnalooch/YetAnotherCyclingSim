@@ -1,0 +1,89 @@
+name: Passo Giau R4.1 hairpin corridor proof
+
+on:
+  push:
+    branches:
+      - feat/stage3g-r4-1-hairpin-corridor-spike
+    paths:
+      - '.github/workflows/passo-giau-r4-1-hairpin-corridor.yml'
+      - 'scripts/ue/Invoke-YacsPassoGiauHairpinCorridorProof.ps1'
+      - 'scripts/ue/stage3g_capture_passo_giau_hairpin_corridor.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: passo-giau-r4-1-hairpin-corridor-${{ github.repository }}
+  cancel-in-progress: true
+
+jobs:
+  proof:
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 45
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+
+    steps:
+      - name: Isolate self-hosted Git configuration
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'yacs-hairpin-corridor-global.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+
+      - name: Checkout exact spike revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: _passo-giau-hairpin-worktree
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          lfs: false
+          clean: true
+          persist-credentials: false
+
+      - name: Verify exact SHA and clean checkout
+        shell: pwsh
+        working-directory: _passo-giau-hairpin-worktree
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ((git rev-parse HEAD).Trim() -ne '${{ github.sha }}') {
+            throw 'Hairpin corridor checkout is not exact SHA.'
+          }
+          git reset --hard HEAD
+          git clean -ffd
+          if (git status --porcelain --untracked-files=all) {
+            throw 'Hairpin corridor checkout is dirty.'
+          }
+
+      - name: Run bounded hairpin corridor proof
+        shell: pwsh
+        working-directory: _passo-giau-hairpin-worktree
+        run: |
+          ./scripts/ue/Invoke-YacsPassoGiauHairpinCorridorProof.ps1 `
+            -ExpectedBranch 'HEAD' `
+            -ExpectedHead '${{ github.sha }}' `
+            -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR4_1/HairpinCorridor'
+
+      - name: Upload hairpin corridor evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: passo-giau-r4-1-hairpin-corridor-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            _passo-giau-hairpin-worktree/Saved/RuntimeProof/CI/Stage3GR4_1/HairpinCorridor/**
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Clean self-hosted workspace
+        if: ${{ always() }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $worktree = Join-Path $env:GITHUB_WORKSPACE '_passo-giau-hairpin-worktree'
+          if (Test-Path -LiteralPath (Join-Path $worktree '.git')) {
+            git -C $worktree reset --hard
+            git -C $worktree clean -ffd
+          }
