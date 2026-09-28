@@ -654,12 +654,23 @@ The source is not yet ready for UE authoring. The live fail-closed probe has
 also established that:
 
 - the layer advertises EPSG:6876 / RDN2008 Zone 12 (N-E);
-- the public WCS does not expose a matching coverage;
-- WMS publishes no direct MetadataURL/DataURL for the raw raster.
+- WMS `DescribeLayer` labels it as WCS-backed, but global/workspace WCS
+  discovery across 2.0.1, 1.1.1 and 1.0.0 exposes no matching coverage;
+- WMS publishes no direct MetadataURL/DataURL for the raw raster;
+- Veneto's anonymous downloadable-layer catalog returns 932 entries and
+  contains no exact `DTM_2m_Cortina` / `DTM_2m_clip` entry;
+- Veneto's public CSW catalog returns 0 exact metadata records for those two
+  identifiers; the broader `Cortina DTM` search finds other records,
+  including the known 5 m LiDAR product, but not the 2 m source.
+
+The 2 m product is therefore currently **viewer/WMS-proven but
+raw-transport-unproven**. That is a source/provenance blocker, not a reason to
+manufacture elevation by scraping rendered WMS output.
 
 This changes the immediate execution order:
 
-1. prove an official raw raster download and immutable source hash;
+1. obtain and verify a documented official raw raster distribution and
+   immutable source hash; do not guess hidden download URLs;
 2. prove actual cell spacing, datatype, NoData, CRS/axis order, vertical datum,
    license and complete AOI coverage;
 3. keep elevation Float32/Float64 and perform one deliberate GIS
