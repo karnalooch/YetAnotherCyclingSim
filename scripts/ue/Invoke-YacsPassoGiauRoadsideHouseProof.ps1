@@ -188,9 +188,12 @@ if ($CaptureLogText -match '(?i)Fatal error|Unhandled Exception|Critical error')
 if ($CaptureLogText -notmatch '\[PassoGiauRoadsideHouse\] PASS:') { throw 'Roadside house capture log is missing the explicit PASS marker.' }
 
 Write-Host '[5/5] Enforcing non-persistent visual-spike contract...' -ForegroundColor Cyan
-$TrackedChanges = @(git -C $RepoRoot status --porcelain=v1 --untracked-files=no)
-if ($TrackedChanges.Count -gt 0) {
-    throw ("Roadside house proof mutated tracked files: {0}" -f ($TrackedChanges -join '; '))
+$WorktreeChanges = @(git -C $RepoRoot status --porcelain=v1 --untracked-files=all)
+if ($WorktreeChanges.Count -gt 0) {
+    throw ("World Authoring proof left repository-visible mutations: {0}" -f ($WorktreeChanges -join '; '))
+}
+if ([bool]$Proof.forest.pcg_contract.temporary_graph_cleaned -ne $true) {
+    throw 'World Authoring proof did not confirm temporary PCG graph cleanup.'
 }
 
 Write-Host 'YACS World Authoring Library SP638 proof: PASS.' -ForegroundColor Green
