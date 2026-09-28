@@ -27,6 +27,7 @@ from typing import Any, Iterable
 WMS_ENDPOINT = "https://idt2-geoserver.regione.veneto.it/geoserver/wms"
 WCS_ENDPOINT = "https://idt2-geoserver.regione.veneto.it/geoserver/wcs"
 VIEWER_URL = "https://idt2.regione.veneto.it/idt/webgis/viewer?webgisId=86"
+PORTFOLIO_URL = "https://idt2.regione.veneto.it/portfolio/webgis-olimpiadi-2026-in-veneto/"
 DOWNLOAD_PAGE = "https://idt2.regione.veneto.it/idt/downloader/download"
 GENERIC_LAYERS_ENDPOINT = "https://idt2.regione.veneto.it/idt/download/layerDownload/getDownloadableLayersWithPermission"
 CSW_ENDPOINT = "https://idt2.regione.veneto.it/geoportal/csw"
@@ -176,6 +177,42 @@ def discover_viewer_context() -> dict[str, Any]:
         "contains_target_label": True,
         "bytes": len(payload),
         "snippet": page[start:end],
+    }
+
+def portfolio_contract_from_html(page: str) -> dict[str, Any]:
+    lower = page.lower()
+    resampled_markers = (
+        "ricampionati a 2m",
+        "ricampionati a 2 m",
+    )
+    resampled_index = next(
+        (lower.find(marker) for marker in resampled_markers if marker in lower),
+        -1,
+    )
+    viewer_ref = "webgisid=86"
+    viewer_index = lower.find(viewer_ref)
+    start_candidates = [
+        index for index in (resampled_index, viewer_index) if index >= 0
+    ]
+    snippet = None
+    if start_candidates:
+        center = min(start_candidates)
+        snippet = page[max(0, center - 1000): min(len(page), center + 2400)]
+    return {
+        "mentions_resampled_2m": resampled_index >= 0,
+        "links_olympic_viewer_86": viewer_index >= 0,
+        "snippet": snippet,
+    }
+
+
+def discover_portfolio_context() -> dict[str, Any]:
+    payload = request_bytes(PORTFOLIO_URL)
+    page = payload.decode("utf-8", errors="replace")
+    contract = portfolio_contract_from_html(page)
+    return {
+        "url": PORTFOLIO_URL,
+        "bytes": len(payload),
+        **contract,
     }
 
 
@@ -890,6 +927,16 @@ def main() -> int:
 
     try:
         report["viewer"] = discover_viewer_context()
+        report["portfolio"] = discover_portfolio_context()
+        if not report["portfolio"]["mentions_resampled_2m"]:
+            raise RuntimeError(
+                "official Olympic portfolio no longer proves the 2 m rasters "
+                "as provider-side resamples"
+            )
+        if not report["portfolio"]["links_olympic_viewer_86"]:
+            raise RuntimeError(
+                "official Olympic portfolio no longer links WebGIS 86"
+            )
         report["download_portal"] = discover_download_portal()
         report["generic_download_catalog"] = discover_generic_downloadable_layers()
         report["csw_metadata"] = discover_csw_metadata()
