@@ -60,7 +60,7 @@ command maps to the fixed repository-owned `remote_editor_smoke.py` script.
 
 ## Security invariants
 
-- only Issue **#85** is accepted for comment-driven execution;
+- only Issue **#228** is accepted for comment-driven execution;
 - only the repository owner may issue the command;
 - no fork pull-request trigger is used;
 - `pull_request_target` is forbidden for this path;
@@ -110,7 +110,7 @@ claimed to work.
 
 ## Next gated step
 
-Only after `smoke-cube` is green may #85 add another named command. The next
+Only after `smoke-cube` is green may #228 add another named command. The next
 safe candidate is a read-only visual command such as `capture-current-map`.
 Persistent Stage 3G authoring commands come later and must reuse the existing
 generated-content sandbox and deterministic proof rules.
