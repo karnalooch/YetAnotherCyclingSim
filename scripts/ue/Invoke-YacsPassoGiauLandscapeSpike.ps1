@@ -36,6 +36,7 @@ $DownloadScript = Join-Path $RepoRoot 'scripts/assets/download_passo_giau_veneto
 $PrepareScript = Join-Path $RepoRoot 'scripts/assets/prepare_passo_giau_veneto_lidar.py'
 $RoadDownloadScript = Join-Path $RepoRoot 'scripts/assets/download_passo_giau_road_network.py'
 $RoadPrepareScript = Join-Path $RepoRoot 'scripts/assets/prepare_passo_giau_road.py'
+$RoadCaptureScript = Join-Path $RepoRoot 'scripts/ue/stage3g_capture_passo_giau_road.py'
 $RoadSourceRoot = Join-Path $RepoRoot 'ExternalAssets/Terrain/PassoGiau/RoadNetwork'
 $RoadPreparedRoot = Join-Path $RepoRoot 'ExternalAssets/Terrain/PassoGiau/PreparedRoad'
 $RoadDownloadReport = Join-Path $RoadSourceRoot 'road-download-report.json'
@@ -55,9 +56,14 @@ $CaptureStdout = Join-Path $ArtifactRoot 'capture.stdout.log'
 $CaptureErr = $CaptureLog + '.stderr'
 $CapturePng = Join-Path $ArtifactRoot 'passo_giau_landscape_3840x2160_fxaa.png'
 $CaptureProof = Join-Path $ArtifactRoot 'capture_proof.json'
+$RoadCaptureLog = Join-Path $ArtifactRoot 'road_capture.log'
+$RoadCaptureStdout = Join-Path $ArtifactRoot 'road_capture.stdout.log'
+$RoadCaptureErr = $RoadCaptureLog + '.stderr'
+$RoadCapturePng = Join-Path $ArtifactRoot 'passo_giau_sp638_rider_3840x2160.png'
+$RoadCaptureProof = Join-Path $ArtifactRoot 'road_capture_proof.json'
 $FinalProof = Join-Path $ArtifactRoot 'passo_giau_landscape_spike_proof.json'
 
-foreach ($Path in @($BuildLog,$MapPrepLog,$MapPrepErr,$MapPrepProof,$ImportLog,$ImportErr,$ImportProof,$CaptureLog,$CaptureStdout,$CaptureErr,$CapturePng,$CaptureProof,$FinalProof)) {
+foreach ($Path in @($BuildLog,$MapPrepLog,$MapPrepErr,$MapPrepProof,$ImportLog,$ImportErr,$ImportProof,$CaptureLog,$CaptureStdout,$CaptureErr,$CapturePng,$CaptureProof,$RoadCaptureLog,$RoadCaptureStdout,$RoadCaptureErr,$RoadCapturePng,$RoadCaptureProof,$FinalProof)) {
     Remove-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
 }
 
@@ -256,6 +262,45 @@ if ($CaptureExitCode -eq 1) {
     Write-Warning 'UE returned exit 1 after a proven-successful Passo Giau capture because code-only LFS pointer assets generated unrelated Asset Registry errors.'
 }
 
+$RoadCapture = $null
+if ($IncludeRoad) {
+    Write-Host '[5b/7] Rendering cyclist-height SP638 hairpin proof...' -ForegroundColor Cyan
+    if (-not (Test-Path -LiteralPath $RoadCaptureScript -PathType Leaf)) {
+        throw "SP638 road capture script is missing: $RoadCaptureScript"
+    }
+    $env:YACS_PASSO_GIAU_ROAD_CAPTURE_PNG = $RoadCapturePng
+    $env:YACS_PASSO_GIAU_ROAD_CAPTURE_PROOF = $RoadCaptureProof
+    try {
+        $RoadCaptureArgs = @($ProjectPath,('-ExecutePythonScript="' + $RoadCaptureScript + '"'),'-Unattended','-NoPause','-NoSplash','-NoP4','-windowed','-ResX=1920','-ResY=1080','-NoVSync','-FixedSeed','-ScriptErrorsAreFatal','-log','-stdout',('-AbsLog=' + $RoadCaptureLog))
+        $RoadProc = Start-Process -FilePath $UEditor -ArgumentList $RoadCaptureArgs -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $RoadCaptureStdout -RedirectStandardError $RoadCaptureErr
+        if (-not $RoadProc.WaitForExit(180000)) { try { $RoadProc | Stop-Process -Force } catch { }; throw 'SP638 rider visual capture timed out.' }
+        $RoadCaptureExitCode = $RoadProc.ExitCode
+    }
+    finally {
+        Remove-Item Env:YACS_PASSO_GIAU_ROAD_CAPTURE_PNG -ErrorAction SilentlyContinue
+        Remove-Item Env:YACS_PASSO_GIAU_ROAD_CAPTURE_PROOF -ErrorAction SilentlyContinue
+    }
+
+    if (-not (Test-Path -LiteralPath $RoadCapturePng -PathType Leaf)) { throw "SP638 rider PNG is missing (exit=$RoadCaptureExitCode)." }
+    if ((Get-Item -LiteralPath $RoadCapturePng).Length -lt 100000) { throw 'SP638 rider PNG is unexpectedly small.' }
+    if (-not (Test-Path -LiteralPath $RoadCaptureProof -PathType Leaf)) { throw "SP638 rider capture proof is missing (exit=$RoadCaptureExitCode)." }
+    $RoadCapture = Get-Content -LiteralPath $RoadCaptureProof -Raw | ConvertFrom-Json
+    if ($RoadCapture.passo_giau_sp638_rider_capture -ne 'PASS') { throw "SP638 rider capture proof did not report PASS (exit=$RoadCaptureExitCode)." }
+    if ([int]$RoadCapture.resolution[0] -ne 3840 -or [int]$RoadCapture.resolution[1] -ne 2160) { throw 'SP638 rider proof resolution is invalid.' }
+    if ([int]$RoadCapture.road_control_points -ne [int]$Import.road_control_points) { throw 'SP638 rider proof control count differs from import proof.' }
+    if ([int]$RoadCapture.road_spline_mesh_segments -ne [int]$Import.road_spline_mesh_segments) { throw 'SP638 rider proof spline-mesh count differs from import proof.' }
+    if ([double]$RoadCapture.road_spline_length_m -lt 10000.0 -or [double]$RoadCapture.road_spline_length_m -gt 25000.0) { throw 'SP638 rider proof spline length is outside the expected AOI range.' }
+    if ([double]$RoadCapture.curvature_score -le 0.0) { throw 'SP638 rider proof did not select a curved road segment.' }
+
+    $RoadCaptureLogText = Get-Content -LiteralPath $RoadCaptureLog -Raw -ErrorAction Stop
+    if ($RoadCaptureExitCode -notin @(0, 1)) { throw "SP638 rider capture returned unexpected exit code $RoadCaptureExitCode." }
+    if ($RoadCaptureLogText -match '(?i)Fatal error|Unhandled Exception|Critical error') { throw 'SP638 rider capture log contains a crash/fatal marker.' }
+    if ($RoadCaptureLogText -notmatch '\[PassoGiauRoadCapture\] PASS:') { throw 'SP638 rider capture log is missing the explicit PASS marker.' }
+    if ($RoadCaptureExitCode -eq 1) {
+        Write-Warning 'UE returned exit 1 after a proven-successful SP638 rider capture because code-only LFS pointer assets generated unrelated Asset Registry errors.'
+    }
+}
+
 Write-Host '[6/7] Enforcing canonical-map and mutation guards...' -ForegroundColor Cyan
 $CanonicalHashAfter = (git -C $RepoRoot hash-object -- $CanonicalMapRelative).Trim()
 if ($CanonicalHashBefore -ne $CanonicalHashAfter) { throw 'L_CyclingTest changed during isolated Passo Giau authoring.' }
@@ -286,6 +331,7 @@ if ($IncludeRoad) {
         hillshade_overlay = $RoadOverlay
         imported_control_points = [int]$Import.road_control_points
         imported_spline_mesh_segments = [int]$Import.road_spline_mesh_segments
+        rider_capture = $RoadCapture
         visual_acceptance = 'PENDING_HUMAN_REVIEW'
         presentation_only = $true
         authoritative_route_geometry = $false
@@ -326,6 +372,7 @@ $Final | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $FinalProof -Encodi
 
 if ($IncludeRoad) {
     Write-Host ("SP638 road proof: {0} controls / {1} spline meshes." -f $Import.road_control_points,$Import.road_spline_mesh_segments) -ForegroundColor Green
+    Write-Host ("SP638 rider proof: {0}" -f $RoadCapturePng) -ForegroundColor Green
 }
 Write-Host 'Passo Giau R4.1B isolated Landscape spike: PASS.' -ForegroundColor Green
 Write-Host ("Only tracked mutation: {0}" -f $SpikeMapRelative)
