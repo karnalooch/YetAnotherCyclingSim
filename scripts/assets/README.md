@@ -151,3 +151,37 @@ The GitHub Actions workflow
 `.github/workflows/passo-giau-r4-1-terrain-spike.yml` is intentionally treated as a manual-merge governance change and performs the full remote
 download + preparation and publishes the prepared files as the
 `passo-giau-r4-1-terrain-spike` artifact.
+
+
+## YACS World Authoring Library
+
+Issue #230 adds a semantic layer above the existing curated downloader. It does
+not replace the Stage 3G manifest/downloader; it reuses the same Poly Haven
+file-resolution, size/MD5 verification and ignored-source-cache rules.
+
+The first preset can be resolved with:
+
+```powershell
+python scripts/assets/yacs_asset_library.py `
+  --preset worldgen/presets/alpine_roadside_grove_v1.json `
+  --live-discovery `
+  --output Saved/RuntimeProof/world_asset_selection_plan.json
+```
+
+To prove the acquisition/cache path as well:
+
+```powershell
+python scripts/assets/yacs_asset_library.py `
+  --preset worldgen/presets/alpine_roadside_grove_v1.json `
+  --live-discovery `
+  --download `
+  --output Saved/RuntimeProof/world_asset_selection_plan.json
+```
+
+The semantic catalog is `worldgen/assets/catalog.json`. Automatic acquisition
+is currently fail-closed to the declared Poly Haven provider and CC0 policy.
+Provider discovery does not automatically qualify an asset for Unreal use: a
+new candidate still requires import, scale/pivot/material, visual and
+performance validation before it may receive an approved catalog entry.
+
+See `docs/YACS_WORLD_AUTHORING_LIBRARY.md`.
