@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import BinaryIO
 
 RELEASE_TAG = "data-mase-pst-passo-giau-dtm-2026-09-28"
-ARCHIVE_NAME = "MASE_PST_7eea00c532f94df29dd81e17e6bc8fed_1372707.zip"
+ARCHIVE_NAME = "MASE_PST_8309f0171e3340c6aba45798c4812d54_1372858_DTM.zip"
 ARCHIVE_URL = (
     "https://github.com/karnalooch/YetAnotherCyclingSim/releases/download/"
     f"{RELEASE_TAG}/{ARCHIVE_NAME}"
@@ -28,10 +28,12 @@ RELEASE_PAGE = (
     "https://github.com/karnalooch/YetAnotherCyclingSim/releases/tag/"
     f"{RELEASE_TAG}"
 )
-ARCHIVE_BYTES = 356_503_497
-ARCHIVE_SHA256 = "0e2a133fcc80f225aee2b61aa04bc7a858aa3754c6b80a7c640b8a6ab7d14b8c"
-EXPECTED_TILE_COUNT = 89
-EXPECTED_CENTRAL_TILE = "areadolomitica_145_D46481205_0101_DTM.tiff"
+ARCHIVE_BYTES = 853_162_557
+ARCHIVE_SHA256 = "4215d1d37fb8540c44442aedd164b6cda3f1845f3552413a975a6b7b1461e93c"
+EXPECTED_TILE_COUNT = 204
+SOURCE_PACKAGE_ID = 1372858
+EXPECTED_TILE_SUFFIX = "_DTM.tiff"
+EXPECTED_DSM_TILE_COUNT = 0
 SOURCE_CRS = "EPSG:4326"
 SOURCE_PIXEL_SIZE_DEG = 0.00001
 NODATA = -9999.0
@@ -161,9 +163,16 @@ def extract_tiles(archive_path: Path, tile_dir: Path) -> list[dict[str, object]]
             )
         if len(set(names)) != len(names):
             raise RuntimeError("source archive contains duplicate GeoTIFF basenames")
-        if EXPECTED_CENTRAL_TILE not in names:
+        non_dtm = [name for name in names if not name.endswith(EXPECTED_TILE_SUFFIX)]
+        if non_dtm:
             raise RuntimeError(
-                f"source archive does not contain central tile {EXPECTED_CENTRAL_TILE}"
+                "source archive contains non-DTM GeoTIFFs: "
+                + ", ".join(sorted(non_dtm)[:10])
+            )
+        dsm_names = [name for name in names if "_DSM" in name.upper()]
+        if len(dsm_names) != EXPECTED_DSM_TILE_COUNT:
+            raise RuntimeError(
+                f"expected zero DSM tiles, found {len(dsm_names)}"
             )
 
         records: list[dict[str, object]] = []
@@ -206,6 +215,7 @@ def main() -> int:
             "provider": "Ministero dell'Ambiente e della Sicurezza Energetica (MASE)",
             "program": "Piano Straordinario di Telerilevamento (PST)",
             "dataset": "LiDAR DTM grigliato 1x1",
+            "source_package_id": SOURCE_PACKAGE_ID,
             "license": LICENSE,
             "release_tag": RELEASE_TAG,
             "release_page": RELEASE_PAGE,
@@ -229,7 +239,8 @@ def main() -> int:
                     46.5198136019,
                 ],
                 "tile_union_wgs84": [11.97, 46.44, 12.14, 46.52],
-                "central_tile": EXPECTED_CENTRAL_TILE,
+                "tile_suffix": EXPECTED_TILE_SUFFIX,
+                "dsm_tile_count": EXPECTED_DSM_TILE_COUNT,
             },
             "tiles": tiles,
             "yacs_policy": {
