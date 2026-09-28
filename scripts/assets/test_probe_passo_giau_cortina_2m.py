@@ -290,6 +290,22 @@ class Cortina2mProbeTests(unittest.TestCase):
             probe.VIEWER_URL,
         )
 
+    def test_olympic_portfolio_proves_resample_and_viewer_link(self) -> None:
+        html = """
+        <p>DTM, DSM e CHM, ricampionati a 2m</p>
+        <a href="/idt/webgis/viewer?webgisId=86">Apri Visualizzatore</a>
+        """
+        contract = probe.portfolio_contract_from_html(html)
+        self.assertTrue(contract["mentions_resampled_2m"])
+        self.assertTrue(contract["links_olympic_viewer_86"])
+
+    def test_olympic_portfolio_contract_fails_closed_on_missing_resample_text(self) -> None:
+        contract = probe.portfolio_contract_from_html(
+            '<a href="/idt/webgis/viewer?webgisId=86">viewer</a>'
+        )
+        self.assertFalse(contract["mentions_resampled_2m"])
+        self.assertTrue(contract["links_olympic_viewer_86"])
+
     def test_legacy_describe_layer_endpoint_is_normalized_to_https(self) -> None:
         endpoint = probe.normalize_service_endpoint(
             "http://idt2-geoserver.regione.veneto.it:80/geoserver/wcs?"
