@@ -257,17 +257,18 @@ def make_curvature_adaptive_profiles(
     profile: Sequence[CrossSectionPoint],
     *,
     protected_roles: frozenset[str] = _DEFAULT_PROTECTED_ROLES,
-    safety_fraction: float = 0.86,
-    minimum_earthwork_span_m: float = 0.25,
+    clearance_fraction: float = 0.65,
+    minimum_earthwork_span_m: float = 0.15,
     taper_per_station: float = 0.12,
 ) -> tuple[tuple[CrossSectionPoint, ...], ...]:
     """Contract only inside-bend earthwork before a swept offset can fold.
 
     Road edges and shoulder points are protected. Points farther from the
     centerline may move toward the protected shoulder on the inside of a tight
-    bend. The target outer extent is bounded by safety_fraction * radius and
-    the contraction is tapered across neighboring samples for a deterministic,
-    visually smooth transition.
+    bend. The target retains only clearance_fraction of the space between the
+    protected shoulder and the local curvature radius; the remaining clearance
+    is kept as a deterministic safety margin. Contraction is tapered across
+    neighboring samples for a visually smooth transition.
 
     If the bend is too tight to preserve the protected road/shoulder plus
     minimum_earthwork_span_m, this function fails closed rather than shrinking
@@ -277,8 +278,8 @@ def make_curvature_adaptive_profiles(
     if len(centerline) < 2:
         raise ValueError("centerline needs at least 2 stations")
     _validate_profile(profile, 0)
-    if not 0.0 < safety_fraction < 1.0:
-        raise ValueError("safety_fraction must be between 0 and 1")
+    if not 0.0 < clearance_fraction < 1.0:
+        raise ValueError("clearance_fraction must be between 0 and 1")
     if minimum_earthwork_span_m <= 0.0:
         raise ValueError("minimum_earthwork_span_m must be positive")
     if taper_per_station <= 0.0 or taper_per_station > 1.0:
@@ -305,16 +306,19 @@ def make_curvature_adaptive_profiles(
         if outer_extent <= core_extent + _EPSILON:
             continue
 
-        safe_outer_extent = safety_fraction / abs(curvature)
+        local_radius = 1.0 / abs(curvature)
         minimum_outer_extent = core_extent + minimum_earthwork_span_m
-        if safe_outer_extent < minimum_outer_extent - _EPSILON:
+        if local_radius <= minimum_outer_extent + _EPSILON:
             side = "positive" if positive_inside else "negative"
             raise ValueError(
-                f"centerline station {index} curvature leaves only "
-                f"{safe_outer_extent:.3f} m on the {side} inside side; "
-                f"protected corridor requires at least {minimum_outer_extent:.3f} m"
+                f"centerline station {index} radius {local_radius:.3f} m on the "
+                f"{side} inside side leaves no safe earthwork span beyond the "
+                f"{core_extent:.3f} m protected corridor"
             )
 
+        safe_outer_extent = core_extent + clearance_fraction * (
+            local_radius - core_extent
+        )
         if safe_outer_extent >= outer_extent:
             continue
 

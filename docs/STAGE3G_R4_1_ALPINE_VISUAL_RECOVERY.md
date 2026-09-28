@@ -832,10 +832,12 @@ protected**. Only earthwork points outside the shoulder may contract on the
 inside of a bend.
 
 The deterministic spike uses signed sampled XY curvature to derive the local
-radius and caps the inside earthwork extent to **0.86 x local radius**. The
-contraction is tapered across neighboring stations to avoid an abrupt width
-step. If a bend would leave less than **0.25 m** of earthwork outside the
-protected shoulder, the proof fails closed rather than shrinking or pinching the
+radius. On the inside of a bend it preserves the road/shoulder first, then keeps
+**65% of the remaining clearance between the protected shoulder and the local
+curvature radius** for earthwork; the other 35% stays as a singularity margin.
+The contraction is tapered across neighboring stations to avoid an abrupt width
+step. If the local radius cannot leave at least **0.15 m** outside the protected
+shoulder, the proof fails closed rather than shrinking or pinching the
 road/shoulder presentation.
 
 These values are bounded R4.1B.3 geometry defaults, not route/physics truth.

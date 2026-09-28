@@ -205,6 +205,43 @@ class LocalGroundCorridorTests(unittest.TestCase):
         for triangle in mesh.triangles:
             self.assertGreater(triangle_normal(mesh, triangle).z, 0.0)
 
+    def test_adaptive_offset_handles_real_hairpin_radius_class(self) -> None:
+        radius = 4.35
+        angles = tuple(index * math.radians(5.0) for index in range(40))
+        centerline = tuple(
+            Vec3(
+                radius * math.sin(angle),
+                radius * (1.0 - math.cos(angle)),
+                index * 0.01,
+            )
+            for index, angle in enumerate(angles)
+        )
+
+        adaptive = make_curvature_adaptive_profiles(centerline, self.profile)
+        mesh = build_corridor_mesh(centerline, adaptive)
+
+        original_by_role = {point.role: point.lateral_m for point in self.profile}
+        for station_profile in adaptive:
+            current_by_role = {
+                point.role: point.lateral_m for point in station_profile
+            }
+            self.assertAlmostEqual(
+                current_by_role["right_shoulder"],
+                original_by_role["right_shoulder"],
+            )
+            self.assertAlmostEqual(
+                current_by_role["right_road_edge"],
+                original_by_role["right_road_edge"],
+            )
+
+        minimum_inside_tie = min(
+            profile[-1].lateral_m for profile in adaptive
+        )
+        self.assertGreater(minimum_inside_tie, 4.0)
+        self.assertLess(minimum_inside_tie, radius)
+        for triangle in mesh.triangles:
+            self.assertGreater(triangle_normal(mesh, triangle).z, 0.0)
+
     def test_adaptive_profiles_and_mesh_hash_are_deterministic(self) -> None:
         radius = 8.0
         centerline = tuple(

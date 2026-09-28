@@ -40,8 +40,8 @@ CURVATURE_SAMPLE_STEP_CM = 2500.0
 CURVATURE_HALF_WINDOW_CM = 2500.0
 END_MARGIN_CM = 10000.0
 
-CURVATURE_SAFETY_FRACTION = 0.86
-MINIMUM_EARTHWORK_SPAN_M = 0.25
+INSIDE_CLEARANCE_FRACTION = 0.65
+MINIMUM_EARTHWORK_SPAN_M = 0.15
 TAPER_PER_STATION = 0.12
 PROTECTED_ROLES = frozenset(
     {
@@ -198,7 +198,7 @@ def _profile_diagnostics(
                     )
 
     return {
-        "safety_fraction": CURVATURE_SAFETY_FRACTION,
+        "inside_clearance_fraction": INSIDE_CLEARANCE_FRACTION,
         "minimum_earthwork_span_m": MINIMUM_EARTHWORK_SPAN_M,
         "taper_per_station": TAPER_PER_STATION,
         "clipped_station_count": clipped_station_count,
@@ -239,7 +239,7 @@ def main() -> None:
         centerline,
         TOPOLOGY_PROFILE,
         protected_roles=PROTECTED_ROLES,
-        safety_fraction=CURVATURE_SAFETY_FRACTION,
+        clearance_fraction=INSIDE_CLEARANCE_FRACTION,
         minimum_earthwork_span_m=MINIMUM_EARTHWORK_SPAN_M,
         taper_per_station=TAPER_PER_STATION,
     )
