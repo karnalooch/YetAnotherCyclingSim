@@ -121,6 +121,13 @@ class Cortina2mProbeTests(unittest.TestCase):
             probe.extract_endpoint_candidates(body),
         )
 
+    def test_endpoint_candidate_extraction_does_not_cross_quote_boundaries(self) -> None:
+        body = """var a = "download"; var b = '../rest/catalog'; var c = "safe";"""
+        self.assertEqual(
+            ["download", "../rest/catalog"],
+            probe.extract_endpoint_candidates(body),
+        )
+
     def test_ambiguous_wms_matches_remain_visible_to_fail_closed_caller(self) -> None:
         duplicate = WMS_XML.replace(
             b"</Layer>\n    </Layer>",
