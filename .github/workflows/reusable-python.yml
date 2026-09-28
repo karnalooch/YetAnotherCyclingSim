@@ -113,6 +113,7 @@ jobs:
           python scripts/ci/test_yacs_asset_library.py
           python scripts/ci/test_yacs_scene_layout.py
           python scripts/ci/test_yacs_asset_candidate_import_contract.py
+          python scripts/ci/test_yacs_pcg_patch_contract.py
 
       - name: Run change-classifier workflow contract tests
         run: python scripts/ci/test_change_classifier_workflow.py
