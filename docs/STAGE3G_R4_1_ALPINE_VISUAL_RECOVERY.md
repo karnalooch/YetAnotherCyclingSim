@@ -763,6 +763,97 @@ persistent bounded road-cut/corridor authoring. If it fails, the experiment is
 kept in the journal and the next spike moves to Landscape Patch / generated
 ground-mesh treatment rather than increasing global Landscape resolution.
 
+
+## R4.1B.3 — high-detail local ground / cut / embankment corridor
+
+Issue: [#223](https://github.com/karnalooch/YetAnotherCyclingSim/issues/223)
+
+R4.1B.2 proved the bounded hairpin loop but failed visually. The next terrain
+step therefore keeps Landscape as macro terrain and replaces the rider-close
+box-strip roadbed with dedicated local corridor geometry around the exact same
+official SP638 hairpin.
+
+### Tool ownership
+
+Use the following systems with deliberately separate responsibilities:
+
+1. **Veneto 5 m UE Landscape** — macro mountain mass, valley continuity and
+   distant terrain only.
+2. **Landscape Spline / non-destructive edit layer** — broad bounded raise/lower
+   so the macro heightfield does not pierce the road corridor.
+3. **Landscape Patch System** — bounded evaluation for localized deterministic
+   height correction where spline deformation alone cannot form a clean bench.
+   Patch data must remain editor-time, reproducible and presentation-only.
+4. **Geometry Script / Dynamic Mesh** — primary candidate for the camera-close
+   uphill cut, ditch/bench, shoulder-to-ground transition, downhill embankment
+   and other local earthwork geometry.
+5. **RoadForge mesh core** — asphalt, shoulders and markings only after the
+   terrain/centerline contract passes. RoadForge must not own terrain or restore
+   its OSM/city/PCG subsystems.
+6. **PCG + materials** — dressing only after neutral geometry passes: rock
+   faces, scree, rubble, grass, conifers and transition masking.
+
+Epic's UE 5.8 documentation confirms that Landscape Patch is an editor-side
+procedural height/weight modification system whose results bake into the
+Landscape without runtime patch cost. Geometry Script provides Dynamic Mesh
+construction operations suitable for swept local presentation geometry.
+
+References:
+
+- Epic — Landscape Patch System:
+  https://dev.epicgames.com/documentation/unreal-engine/landscape-patch-system
+- Epic — Landscape Edit Layers:
+  https://dev.epicgames.com/documentation/unreal-engine/landscape-edit-layers-in-unreal-engine
+- Epic — Geometry Scripting Reference:
+  https://dev.epicgames.com/documentation/unreal-engine/geometry-scripting-reference-in-unreal-engine
+
+### Cross-section contract
+
+The local corridor is not a symmetric road slab. Each stable spline sample
+constructs an oriented frame and supports independent left/right earthwork:
+
+    uphill terrain
+      -> cut face
+      -> ditch / bench
+      -> shoulder
+      -> asphalt
+      -> shoulder
+      -> embankment
+      -> downhill terrain
+
+The implementation must preserve per-sample elevation and allow one side to be a
+cut while the other side is a fill. Dense sampling is required at the
+maximum-curvature hairpin.
+
+### Geometry reject conditions
+
+Reject or rework the local-mesh candidate if the neutral proof shows:
+
+- miter spikes or self-intersection on the inside of the hairpin;
+- inverted/degenerate triangles;
+- pinched shoulders;
+- visible regular segment blocks;
+- a rectangular downhill wedge;
+- camera-close Landscape ribbing still dominating the cut face;
+- discontinuous normals or obvious seams;
+- a second, competing SP638 centerline.
+
+### Execution order
+
+1. Reuse the #217 maximum-curvature hairpin selector and persisted official
+   SP638 spline.
+2. Keep the proven transient Landscape spline cut/fill as broad macro
+   accommodation.
+3. Generate the local asymmetric earthwork corridor in neutral geometry.
+4. Capture the same deterministic 3840x2160 cyclist-height proof.
+5. Record topology/determinism evidence and human visual status.
+6. Only after the neutral ground geometry passes, layer in RoadForge road
+   surface and then materials/PCG dressing.
+
+Do not start broad propagation, production materials or foliage before this
+geometry gate passes. A green workflow remains insufficient without human visual
+acceptance.
+
 ## 20. Definition of Done
 
 R4.1 is complete only when:
