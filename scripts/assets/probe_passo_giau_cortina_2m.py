@@ -378,6 +378,13 @@ def discover_csw_metadata() -> dict[str, Any]:
         item: dict[str, Any] = {"term": term, "url": url}
         try:
             root = parse_xml(request_bytes(url), "CSW GetRecords")
+            item["response_root"] = local_name(root.tag)
+            exception_texts = descendant_texts(
+                root,
+                {"ExceptionText", "ServiceException"},
+            )
+            if exception_texts:
+                item["exception_texts"] = exception_texts
             item.update(parse_csw_records(root))
         except Exception as exc:
             item["error"] = str(exc)
