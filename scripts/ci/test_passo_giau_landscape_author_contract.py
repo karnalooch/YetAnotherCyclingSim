@@ -46,6 +46,20 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
             read("scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1"),
         )
 
+        self.assertIn('#include "LandscapeImportHelper.h"', cpp)
+        self.assertIn("VerifyUnrealImportReaderParity(", cpp)
+        self.assertIn("GetHeightmapImportDescriptor(", cpp)
+        self.assertIn("GetHeightmapImportData(", cpp)
+        self.assertIn("Unreal native R16 reader parity mismatch", cpp)
+        self.assertIn(
+            '"unreal_native_import_reader_parity": "PASS"',
+            cpp,
+        )
+        self.assertIn(
+            "Unreal-native R16 import-reader parity proof is missing or failed",
+            read("scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1"),
+        )
+
     def test_map_prep_creates_blank_isolated_spike_without_canonical_load(self) -> None:
         script = read("scripts/ue/stage3g_prepare_passo_giau_landscape_map.py")
         self.assertIn(
@@ -196,9 +210,10 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn('"subsection_63_quads": seam_stats(63)', prepare)
         self.assertIn('"component_126_quads": seam_stats(126)', prepare)
 
-    def test_editor_build_links_landscape_module(self) -> None:
+    def test_editor_build_links_landscape_import_modules(self) -> None:
         build = read("Source/YetAnotherCyclingSim/YetAnotherCyclingSim.Build.cs")
         self.assertIn('"Landscape"', build)
+        self.assertIn('"LandscapeEditor"', build)
 
 
 if __name__ == "__main__":
