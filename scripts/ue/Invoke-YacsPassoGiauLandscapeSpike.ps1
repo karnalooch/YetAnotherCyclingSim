@@ -64,6 +64,19 @@ if ($LASTEXITCODE -ne 0) { throw 'Passo Giau Landscape preflight failed.' }
 
 if (git -C $RepoRoot status --porcelain) { throw 'Passo Giau Landscape checkout is dirty before authoring.' }
 
+# A previous successful authoring pass persists this generated map as an LFS
+# pointer on the branch. Re-authoring must be idempotent: after proving the
+# checkout is clean, remove only the isolated spike target so new_level() can
+# recreate it from scratch. The final mutation guard still permits only this
+# exact path, and workflow cleanup resets it on failure.
+$SpikeMapPath = Join-Path $RepoRoot $SpikeMapRelative
+if (Test-Path -LiteralPath $SpikeMapPath -PathType Leaf) {
+    Remove-Item -LiteralPath $SpikeMapPath -Force
+}
+if (Test-Path -LiteralPath $SpikeMapPath) {
+    throw 'Failed to remove the existing isolated Passo Giau spike map before re-authoring.'
+}
+
 $CanonicalHashBefore = (git -C $RepoRoot hash-object -- $CanonicalMapRelative).Trim()
 if (-not $CanonicalHashBefore) { throw 'Failed to hash canonical L_CyclingTest before spike authoring.' }
 
