@@ -122,6 +122,40 @@ if ([int]$Terrain.tile_count -lt 1 -or [double]$Terrain.target_aoi.native_cell_m
 $ExpectedElevationMinM = [double]$Terrain.elevation_m.minimum
 $ExpectedElevationMaxM = [double]$Terrain.elevation_m.maximum
 
+# Fail closed on diagnostics from the actual active Veneto 5 m preparation path.
+$Diagnostics = $Terrain.landscape_diagnostics
+if ($null -eq $Diagnostics) { throw 'Veneto terrain report is missing Landscape diagnostics.' }
+if ([int]$Diagnostics.unique_u16_count -lt 50000) {
+    throw 'Veneto prepared R16 lost too much encoded height diversity.'
+}
+$QuantizationStepM = [double]$Diagnostics.vertical_quantization_step_m
+if ($QuantizationStepM -le 0.0 -or $QuantizationStepM -gt 0.05) {
+    throw 'Veneto prepared R16 quantization step is outside the expected terrain range.'
+}
+$RoundTrip = $Diagnostics.r16_roundtrip_error_m
+if ($null -eq $RoundTrip) { throw 'Veneto terrain report is missing R16 round-trip diagnostics.' }
+$RoundTripLimitM = ($QuantizationStepM * 0.51) + 0.000001
+if ([double]$RoundTrip.max_abs -gt $RoundTripLimitM) {
+    throw 'Veneto R16 round-trip error exceeds half-step quantization tolerance.'
+}
+$SubsectionSeam = $Diagnostics.seams.subsection_63_quads
+$ComponentSeam = $Diagnostics.seams.component_126_quads
+if ($null -eq $SubsectionSeam -or [int]$SubsectionSeam.sample_count -lt 1) {
+    throw 'Veneto terrain report is missing 63-quad subsection seam diagnostics.'
+}
+if ($null -eq $ComponentSeam -or [int]$ComponentSeam.sample_count -lt 1) {
+    throw 'Veneto terrain report is missing 126-quad component seam diagnostics.'
+}
+if ($null -eq $Diagnostics.slope_degrees -or @($Diagnostics.slope_degrees.histogram).Count -lt 1) {
+    throw 'Veneto terrain report is missing prepared slope diagnostics.'
+}
+if ($null -eq $Diagnostics.scanlines -or @($Diagnostics.scanlines.center_row_elevation_m).Count -lt 2 -or @($Diagnostics.scanlines.center_column_elevation_m).Count -lt 2) {
+    throw 'Veneto terrain report is missing deterministic center scanline diagnostics.'
+}
+if ($null -eq $Terrain.native_diagnostics -or [int]$Terrain.native_diagnostics.unique_elevation_count -lt 10000) {
+    throw 'Veneto native 5 m source diagnostics are incomplete or implausibly low-diversity.'
+}
+
 Write-Host '[3/7] Creating isolated spike map...' -ForegroundColor Cyan
 $env:YACS_PASSO_GIAU_MAP_PREP_PROOF = $MapPrepProof
 try {
