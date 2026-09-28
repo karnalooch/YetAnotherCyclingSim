@@ -227,6 +227,11 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("TARGET_NATIVE_RESOLUTION_M = 1.0", prepare)
         self.assertIn("TARGET_NATIVE_SIZE = 8000", prepare)
         self.assertIn("MIN_MASE_COVERAGE_SHARE = 0.50", prepare)
+        self.assertIn(
+            "EXPECTED_MASE_PIXEL_DEGREES = (0.00001, 0.000005)", prepare
+        )
+        self.assertIn("expected one of {EXPECTED_MASE_PIXEL_DEGREES}", prepare)
+        self.assertIn("non-square angular pixels", prepare)
         self.assertIn("PASSO_GIAU_WGS84", prepare)
         self.assertNotIn("expected 1000x1000", prepare)
         self.assertNotIn("src.width != 1000", prepare)
@@ -288,7 +293,10 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn('EXPECTED_TILE_SUFFIX = "_DTM.tiff"', downloader)
         self.assertIn("EXPECTED_DSM_TILE_COUNT = 0", downloader)
         self.assertIn('SOURCE_CRS = "EPSG:4326"', downloader)
-        self.assertIn("SOURCE_PIXEL_SIZE_DEG = 0.00001", downloader)
+        self.assertIn(
+            "SOURCE_PIXEL_SIZES_DEG = (0.00001, 0.000005)", downloader
+        )
+        self.assertIn('"pixel_sizes_degrees"', downloader)
         self.assertNotIn('"tile_pixels": [1000, 1000]', downloader)
         self.assertIn(
             '"tile_dimensions": "source-defined; validated during terrain preparation"',

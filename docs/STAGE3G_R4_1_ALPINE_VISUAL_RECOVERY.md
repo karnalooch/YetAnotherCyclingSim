@@ -600,7 +600,7 @@ Current source contract:
 - **204** GeoTIFF DTM tiles, all `*_DTM.tiff`, zero DSM tiles;
 - Float32, source-defined tile dimensions (the pinned package is heterogeneous; fixed 1000 x 1000 dimensions are not part of the contract), NoData `-9999`;
 - source CRS **EPSG:4326**;
-- source pixel spacing `0.00001 degrees` (~0.76 x 1.11 m near Giau);
+- observed source pixel spacings `0.00001 degrees` and `0.000005 degrees`; the corrected package mixes 1000- and 2000-sample tiles, so spacing is validated against this pinned fail-closed set before reprojection;
 - target working CRS **EPSG:32632**;
 - target working grid **8000 x 8000 at 1 m** over the bounded 8 km AOI;
 - prepared UE Landscape target **4033 x 4033**;

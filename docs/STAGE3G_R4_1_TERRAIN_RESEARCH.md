@@ -21,7 +21,7 @@ Active PR #215 candidate:
 - immutable GitHub prerelease source checkpoint, 853,162,557 bytes;
 - SHA-256 `4215d1d37fb8540c44442aedd164b6cda3f1845f3552413a975a6b7b1461e93c`;
 - 204 official Float32 GeoTIFF DTM tiles; every raster is `*_DTM.tiff`, with zero DSM tiles;
-- source CRS EPSG:4326 at 0.00001-degree pixel spacing;
+- source CRS EPSG:4326 with pinned observed pixel spacings of 0.00001 and 0.000005 degrees;
 - explicit metric reprojection to EPSG:32632 before any UE resampling;
 - 8000x8000 / 1 m metric working grid for the bounded 8 km AOI;
 - deterministic 4033x4033 unsigned-16 / little-endian R16 presentation grid;
@@ -67,7 +67,7 @@ Canonical source checkpoint:
 - contents: **204 GeoTIFF DTM tiles**, all `*_DTM.tiff`; zero DSM tiles;
 - raster contract: Float32, source-defined tile dimensions, NoData `-9999`; the pinned package is heterogeneous, so fixed 1000 x 1000 dimensions are explicitly not required;
 - raster CRS: **EPSG:4326**;
-- pixel size: `0.00001 x 0.00001` degrees, approximately
+- observed pixel sizes: `0.00001 x 0.00001` and `0.000005 x 0.000005` degrees; the package is heterogeneous and each tile must match one of these pinned square-pixel variants, approximately
   **0.76 x 1.11 m near Passo Giau**;
 - exact AOI/tile-union coverage is re-derived from the 204-tile package during
   the fresh preparation proof rather than inherited from superseded package

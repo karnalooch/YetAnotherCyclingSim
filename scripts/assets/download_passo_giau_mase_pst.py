@@ -37,7 +37,7 @@ SOURCE_PACKAGE_ID = 1372858
 EXPECTED_TILE_SUFFIX = "_DTM.tiff"
 EXPECTED_DSM_TILE_COUNT = 0
 SOURCE_CRS = "EPSG:4326"
-SOURCE_PIXEL_SIZE_DEG = 0.00001
+SOURCE_PIXEL_SIZES_DEG = (0.00001, 0.000005)
 NODATA = -9999.0
 LICENSE = "CC BY 4.0"
 CHUNK_BYTES = 1024 * 1024
@@ -342,7 +342,7 @@ def main() -> int:
                 "raster_crs": SOURCE_CRS,
                 "raster_dtype": "Float32",
                 "tile_dimensions": "source-defined; validated during terrain preparation",
-                "pixel_size_degrees": [SOURCE_PIXEL_SIZE_DEG, SOURCE_PIXEL_SIZE_DEG],
+                "pixel_sizes_degrees": [[size, size] for size in SOURCE_PIXEL_SIZES_DEG],
                 "nodata": NODATA,
                 "selected_aoi_wgs84": [
                     11.9791322014,

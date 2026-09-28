@@ -49,7 +49,7 @@ NODATA = -9999.0
 EXPECTED_MASE_TILE_COUNT = 204
 EXPECTED_MASE_ARCHIVE_NAME = "MASE_PST_8309f0171e3340c6aba45798c4812d54_1372858_DTM.zip"
 EXPECTED_MASE_ARCHIVE_SHA256 = "4215d1d37fb8540c44442aedd164b6cda3f1845f3552413a975a6b7b1461e93c"
-EXPECTED_MASE_PIXEL_DEG = 0.00001
+EXPECTED_MASE_PIXEL_DEGREES = (0.00001, 0.000005)
 MIN_MASE_COVERAGE_SHARE = 0.50
 PASSO_GIAU_WGS84 = (12.05321, 46.48284)
 PASSO_GIAU_REPORT_RADIUS_M = 500
@@ -143,13 +143,27 @@ def validate_mase_tile(src: rasterio.io.DatasetReader, tile: Path) -> None:
         )
     if src.crs is None or src.crs.to_epsg() != 4326:
         raise ValueError(f"{tile.name}: expected EPSG:4326, got {src.crs}")
-    if abs(float(src.transform.a) - EXPECTED_MASE_PIXEL_DEG) > 1e-10:
+    pixel_x = float(src.transform.a)
+    pixel_y = abs(float(src.transform.e))
+    if not any(
+        abs(pixel_x - expected) <= 1e-10
+        for expected in EXPECTED_MASE_PIXEL_DEGREES
+    ):
         raise ValueError(
-            f"{tile.name}: unexpected X pixel size {src.transform.a}"
+            f"{tile.name}: unexpected X pixel size {src.transform.a}; "
+            f"expected one of {EXPECTED_MASE_PIXEL_DEGREES}"
         )
-    if abs(abs(float(src.transform.e)) - EXPECTED_MASE_PIXEL_DEG) > 1e-10:
+    if not any(
+        abs(pixel_y - expected) <= 1e-10
+        for expected in EXPECTED_MASE_PIXEL_DEGREES
+    ):
         raise ValueError(
-            f"{tile.name}: unexpected Y pixel size {src.transform.e}"
+            f"{tile.name}: unexpected Y pixel size {src.transform.e}; "
+            f"expected one of {EXPECTED_MASE_PIXEL_DEGREES}"
+        )
+    if abs(pixel_x - pixel_y) > 1e-10:
+        raise ValueError(
+            f"{tile.name}: non-square angular pixels {pixel_x} x {pixel_y}"
         )
     if src.nodata is None or abs(float(src.nodata) - NODATA) > 1e-6:
         raise ValueError(f"{tile.name}: expected NoData={NODATA}, got {src.nodata}")
@@ -602,7 +616,7 @@ def main() -> int:
             "release_tag": mase_report.get("release_tag"),
             "archive": mase_report.get("archive"),
             "source_crs": PRIMARY_SOURCE_CRS,
-            "source_pixel_size_degrees": EXPECTED_MASE_PIXEL_DEG,
+            "source_pixel_sizes_degrees": list(EXPECTED_MASE_PIXEL_DEGREES),
             "tile_count": len(mase_tiles),
         },
         "fallback_source": {
