@@ -603,20 +603,10 @@ def main() -> None:
     basic_material = unreal.load_asset(
         "/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"
     )
-    neutral_landscape_material = None
     earth_material = None
     shoulder_material = None
     road_material = None
     if basic_material is not None:
-        neutral_landscape_material = _make_material(
-            world,
-            basic_material,
-            unreal.LinearColor(0.36, 0.35, 0.32, 1.0),
-        )
-        landscape.set_editor_property(
-            "landscape_material",
-            neutral_landscape_material,
-        )
         earth_material = _make_material(
             world,
             basic_material,
@@ -683,7 +673,10 @@ def main() -> None:
         world,
         "r.RayTracing.Geometry.Landscape.LODBias -1",
     )
-    unreal.SystemLibrary.execute_console_command(world, "viewmode lit")
+    # Use the same material-independent geometry diagnostic as the canonical
+    # Landscape proof. This prevents an unsupported transient Landscape
+    # material from falling back to the editor world-grid checkerboard.
+    unreal.SystemLibrary.execute_console_command(world, "viewmode lightingonly")
     unreal.SystemLibrary.execute_console_command(world, "r.AntiAliasingMethod 1")
     unreal.SystemLibrary.execute_console_command(
         world,
@@ -700,7 +693,9 @@ def main() -> None:
     sun.set_actor_label("SP638_LocalCorridor_ProofSun")
     sun_component = sun.get_component_by_class(unreal.DirectionalLightComponent)
     sun_component.set_intensity(5.0)
-    sun_component.set_cast_shadows(True)
+    # Shadowless slope shading keeps heightfield self-shadow aliasing out of
+    # the geometry acceptance decision.
+    sun_component.set_cast_shadows(False)
 
     sky = actor_subsystem.spawn_actor_from_class(
         unreal.SkyLight,
@@ -744,7 +739,7 @@ def main() -> None:
     camera_component.set_editor_property("field_of_view", 76.0)
 
     _proof_data = {
-        "capture_strategy": "r4.1b.3-continuous-dynamicmesh-roadside",
+        "capture_strategy": "r4.1b.3-continuous-dynamicmesh-neutral-geometry",
         "source_full_road_length_m": round(full_length_cm / 100.0, 3),
         "source_control_points": original_control_count,
         "selected_hairpin_distance_m": round(focus_cm / 100.0, 3),
@@ -802,8 +797,8 @@ def main() -> None:
         },
         "landscape_component_count": len(landscape_components),
         "forced_landscape_lod": 0,
-        "proof_viewmode": "lit",
-        "neutral_landscape_material": "Engine BasicShapeMaterial solid-color MID",
+        "proof_viewmode": "lightingonly",
+        "neutral_landscape_material": null,
         "camera_location_cm": [
             float(camera_location.x),
             float(camera_location.y),
@@ -825,7 +820,7 @@ def main() -> None:
         mask_enabled=False,
         capture_hdr=False,
         comparison_tolerance=unreal.ComparisonTolerance.LOW,
-        comparison_notes="R4.1B.3 SP638 continuous local-ground corridor proof",
+        comparison_notes="R4.1B.3 SP638 neutral continuous local-ground corridor proof",
         delay=3.0,
         force_game_view=True,
     )
