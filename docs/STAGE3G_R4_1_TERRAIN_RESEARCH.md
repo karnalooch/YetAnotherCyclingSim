@@ -18,9 +18,9 @@ Historical merged baseline:
 Active PR #215 candidate:
 
 - MASE PST, `LiDAR DTM grigliato 1x1`, CC BY 4.0;
-- immutable GitHub prerelease source checkpoint, 356,503,497 bytes;
-- SHA-256 `0e2a133fcc80f225aee2b61aa04bc7a858aa3754c6b80a7c640b8a6ab7d14b8c`;
-- 89 official Float32 GeoTIFF DTM tiles;
+- immutable GitHub prerelease source checkpoint, 853,162,557 bytes;
+- SHA-256 `4215d1d37fb8540c44442aedd164b6cda3f1845f3552413a975a6b7b1461e93c`;
+- 204 official Float32 GeoTIFF DTM tiles; every raster is `*_DTM.tiff`, with zero DSM tiles;
 - source CRS EPSG:4326 at 0.00001-degree pixel spacing;
 - explicit metric reprojection to EPSG:32632 before any UE resampling;
 - 8000x8000 / 1 m metric working grid for the bounded 8 km AOI;
@@ -48,7 +48,11 @@ post-processing or Nanite.
 
 ### P0 source gate — MASE PST LiDAR DTM 1x1 acquired (2026-09-28)
 
-The source-resolution gate is now **resolved for Passo Giau** by an immutable
+**Source correction:** package `1372707` / 89 tiles was an earlier partial
+checkpoint and is now **superseded**. The canonical DTM-only package is
+`1372858`: 204 GeoTIFFs, all `*_DTM.tiff`, zero DSM tiles.
+
+The source-resolution gate is now **resolved for Passo Giau** by a pinned
 official source-data checkpoint mirrored as a GitHub prerelease outside Git/LFS.
 
 Canonical source checkpoint:
@@ -56,19 +60,18 @@ Canonical source checkpoint:
 - provider: Ministero dell'Ambiente e della Sicurezza Energetica (**MASE**);
 - program/product: PST / `LiDAR DTM grigliato 1x1`;
 - release tag: `data-mase-pst-passo-giau-dtm-2026-09-28`;
-- archive: `MASE_PST_7eea00c532f94df29dd81e17e6bc8fed_1372707.zip`;
-- archive size: **356,503,497 bytes**;
+- archive: `MASE_PST_8309f0171e3340c6aba45798c4812d54_1372858_DTM.zip`;
+- archive size: **853,162,557 bytes**;
 - archive SHA-256:
-  `0e2a133fcc80f225aee2b61aa04bc7a858aa3754c6b80a7c640b8a6ab7d14b8c`;
-- contents: **89 GeoTIFF DTM tiles** plus AOI/grid shapefiles;
+  `4215d1d37fb8540c44442aedd164b6cda3f1845f3552413a975a6b7b1461e93c`;
+- contents: **204 GeoTIFF DTM tiles**, all `*_DTM.tiff`; zero DSM tiles;
 - raster contract: Float32, 1000 x 1000 pixels/tile, NoData `-9999`;
 - raster CRS: **EPSG:4326**;
 - pixel size: `0.00001 x 0.00001` degrees, approximately
   **0.76 x 1.11 m near Passo Giau**;
-- selected AOI: `11.9791322014,46.4496045260 .. 12.1305375358,46.5198136019`;
-- tile-union coverage: `11.97,46.44 .. 12.14,46.52`;
-- Passo Giau reference tile:
-  `areadolomitica_145_D46481205_0101_DTM.tiff`;
+- exact AOI/tile-union coverage is re-derived from the 204-tile package during
+  the fresh preparation proof rather than inherited from superseded package
+  `1372707`;
 - license checkpoint: **CC BY 4.0**.
 
 The raw release is immutable source evidence. It is not committed to Git/LFS and
@@ -81,7 +84,7 @@ any UE Landscape resampling.
 
 Canonical active preparation path:
 
-`pinned release asset -> byte-size/SHA-256 verification -> extract 89 GeoTIFFs -> mosaic -> explicit EPSG:4326 -> EPSG:32632 reprojection -> bounded 8 km AOI at a 1 m metric working grid -> controlled cubic resample to 4033 -> UInt16/R16 -> isolated L_PassoGiauTerrainSpike`.
+`pinned release asset -> byte-size/SHA-256 verification -> extract 204 GeoTIFFs -> mosaic -> explicit EPSG:4326 -> EPSG:32632 reprojection -> bounded 8 km AOI at a 1 m metric working grid -> controlled cubic resample to 4033 -> UInt16/R16 -> isolated L_PassoGiauTerrainSpike`.
 
 The established 8 km Landscape extent is shifted only **40 m south** while
 keeping the same 8 km size and therefore the same **198.412698 cm/vertex** UE XY
