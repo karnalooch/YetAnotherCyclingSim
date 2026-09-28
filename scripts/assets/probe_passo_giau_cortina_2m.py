@@ -77,6 +77,22 @@ def request_bytes(url: str, *, timeout: int = 60) -> bytes:
         return payload
 
 
+def extract_endpoint_candidates(body: str) -> list[str]:
+    candidates: list[str] = []
+    patterns = (
+        r"""["']([^"']*(?:download|layerdownload|catalog|rest)[^"']*)["']""",
+        r"""\burl\s*[:=]\s*["']([^"']+)["']""",
+    )
+    for pattern in patterns:
+        for value in re.findall(pattern, body, flags=re.IGNORECASE):
+            cleaned = value.strip()
+            if not cleaned or len(cleaned) > 500:
+                continue
+            if cleaned not in candidates:
+                candidates.append(cleaned)
+    return candidates[:120]
+
+
 def discover_download_portal() -> dict[str, Any]:
     payload = request_bytes(DOWNLOAD_PAGE)
     page = payload.decode("utf-8", errors="replace")
@@ -123,6 +139,7 @@ def discover_download_portal() -> dict[str, Any]:
             {
                 "url": url,
                 "matching_terms": matching_terms,
+                "endpoint_candidates": extract_endpoint_candidates(body),
                 "snippets": snippets,
             }
         )
