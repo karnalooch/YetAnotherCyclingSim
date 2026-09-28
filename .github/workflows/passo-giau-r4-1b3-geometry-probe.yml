@@ -8,6 +8,8 @@ on:
       - '.github/workflows/passo-giau-r4-1b3-geometry-probe.yml'
       - 'scripts/ue/Invoke-YacsGeometryScriptProbe.ps1'
       - 'scripts/ue/probe_geometry_script_api.py'
+      - 'scripts/ue/probe_sp638_local_corridor_topology.py'
+      - 'scripts/ue/Invoke-YacsSp638CorridorTopologyProbe.ps1'
       - 'scripts/geometry/**'
       - 'YetAnotherCyclingSim.uproject'
   pull_request:
@@ -17,6 +19,8 @@ on:
       - '.github/workflows/passo-giau-r4-1b3-geometry-probe.yml'
       - 'scripts/ue/Invoke-YacsGeometryScriptProbe.ps1'
       - 'scripts/ue/probe_geometry_script_api.py'
+      - 'scripts/ue/probe_sp638_local_corridor_topology.py'
+      - 'scripts/ue/Invoke-YacsSp638CorridorTopologyProbe.ps1'
       - 'scripts/geometry/**'
       - 'YetAnotherCyclingSim.uproject'
   workflow_dispatch:
@@ -101,6 +105,15 @@ jobs:
             -ExpectedHead '${{ github.sha }}' `
             -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR4_1/GeometryScriptProbe'
 
+      - name: Run real SP638 local corridor topology proof
+        shell: pwsh
+        working-directory: _r4-1b3-geometry-probe-worktree
+        run: |
+          ./scripts/ue/Invoke-YacsSp638CorridorTopologyProbe.ps1 `
+            -ExpectedBranch 'HEAD' `
+            -ExpectedHead '${{ github.sha }}' `
+            -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR4_1/LocalCorridorTopology'
+
       - name: Upload capability evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -108,6 +121,7 @@ jobs:
           name: passo-giau-r4-1b3-geometry-probe-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             _r4-1b3-geometry-probe-worktree/Saved/RuntimeProof/CI/Stage3GR4_1/GeometryScriptProbe/**
+            _r4-1b3-geometry-probe-worktree/Saved/RuntimeProof/CI/Stage3GR4_1/LocalCorridorTopology/**
           if-no-files-found: warn
           retention-days: 14
 
