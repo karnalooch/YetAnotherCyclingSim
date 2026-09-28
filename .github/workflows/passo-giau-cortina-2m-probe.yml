@@ -1,0 +1,60 @@
+name: Passo Giau Cortina 2 m source contract probe
+
+on:
+  push:
+    branches:
+      - feat/stage3g-r4-1-passo-giau-landscape-spike
+    paths:
+      - 'scripts/assets/probe_passo_giau_cortina_2m.py'
+      - 'scripts/assets/test_probe_passo_giau_cortina_2m.py'
+      - '.github/workflows/passo-giau-cortina-2m-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Prove official Cortina 2 m source contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - name: Checkout exact revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          lfs: false
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+
+      - name: Compile source-contract probe
+        run: |
+          python -m py_compile             scripts/assets/probe_passo_giau_cortina_2m.py             scripts/assets/test_probe_passo_giau_cortina_2m.py
+
+      - name: Run offline contract tests
+        run: python scripts/assets/test_probe_passo_giau_cortina_2m.py
+
+      - name: Probe official Veneto WMS/WCS
+        run: python scripts/assets/probe_passo_giau_cortina_2m.py
+
+      - name: Show source-contract report
+        if: ${{ always() }}
+        run: |
+          report=Saved/RuntimeProof/CI/Stage3GR4_1/Cortina2mProbe/cortina-2m-source-probe.json
+          if [ -f "$report" ]; then
+            cat "$report"
+          fi
+
+      - name: Upload probe evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: passo-giau-cortina-2m-probe-${{ github.run_id }}
+          path: Saved/RuntimeProof/CI/Stage3GR4_1/Cortina2mProbe/**
+          if-no-files-found: warn
+          retention-days: 14

@@ -144,6 +144,131 @@ Rules:
 
 The MVP is a cycling corridor, not a free-roam walking simulator. Spend detail where the camera can inspect it.
 
+
+### Hybrid production-terrain contract
+
+R4.1 adopts a **hybrid production-terrain architecture**. One Landscape
+heightfield is not expected to provide macro terrain, roads, cliffs, road cuts
+and camera-close geological detail simultaneously.
+
+This is an intentional production decision, not a temporary workaround.
+
+Responsibilities are separated as follows:
+
+- **MASE PST LiDAR DTM grigliato 1x1** -> canonical macro terrain skeleton,
+  valley mass, ridges, mountain silhouettes and continuous ground;
+- **Regione del Veneto LiDAR-derived DTM 5 m** -> reproducible fallback and
+  A/B baseline;
+- **official real-road GIS geometry** -> preferred presentation alignment for
+  SP638 / Passo Giau;
+- **UE Landscape** -> continuous macro terrain and terrain beneath vegetation;
+- **Landscape Spline / non-destructive edit layer** -> road embedding, road
+  cuts, embankments and bounded terrain adjustment;
+- **road spline mesh** -> asphalt, markings and shoulder presentation;
+- **Static Mesh / Geometry Script / PCG geometry** -> cliffs, overhang-like
+  forms, road cuts, rock faces, hero rocks, rubble and scree where a heightfield
+  is visually insufficient;
+- **materials / RVT where justified** -> hide system boundaries rather than
+  hide broken geometry;
+- **FRouteGeometryProfile / Road Physics Profile** -> authoritative simulation
+  truth until an explicit reviewed migration says otherwise.
+
+The active 4033 x 4033 Landscape candidate is a presentation resample of the
+MASE PST source after an explicit EPSG:4326 -> EPSG:32632 metric reprojection.
+The UE grid improves Landscape topology compatibility; it does **not** create
+measured terrain detail beyond the source samples.
+
+#### Real-road alignment policy
+
+The Passo Giau road should be sourced from real GIS geometry instead of being
+manually invented from the Landscape where reliable licensed data exists.
+
+Preferred source hierarchy:
+
+1. official Regione del Veneto road network for canonical presentation
+   alignment;
+2. OpenStreetMap only as optional QA/enrichment when useful and license
+   obligations are understood;
+3. manual correction only for a verified source defect or deliberate art
+   direction.
+
+The deterministic road pipeline should be:
+
+    official GIS centerline
+      -> crop to the Passo Giau AOI
+      -> reproject to the terrain CRS
+      -> canonical centerline snapshot + provenance/hash
+      -> sample Z from the canonical DTM
+      -> Unreal road spline
+      -> bounded road cut / edit layer
+      -> asphalt / markings / shoulder
+      -> roadside dressing
+
+Do not silently derive simulation grade, banking or cornering truth from the
+rendered GIS/terrain pipeline.
+
+#### Heightfield limitation policy
+
+Landscape is the macro-terrain system, not a requirement to render every steep
+surface as a heightfield.
+
+Where the rider can inspect steep terrain and the heightfield exposes visible
+stepping, ribbing, square structure or implausible road-cut geometry, use the
+appropriate meso geometry instead of globally smoothing the DEM.
+
+Preferred fixes include:
+
+- Rock Face / cliff meshes;
+- Geometry Script helper geometry;
+- slope/composition-driven rock placement;
+- rubble and scree;
+- retaining / cut geometry;
+- material blending at the Landscape/mesh boundary.
+
+Do **not** blanket-scatter cliff meshes over the map. Detail follows visibility,
+slope and composition.
+
+#### Rider-camera acceptance gate
+
+The production acceptance view is the moving cyclist camera, not an editor
+top-down view and not a static technical Landscape proof.
+
+A route segment is rejected if normal riding reveals obvious:
+
+- Landscape component boundaries;
+- square terrain tiles or grid structure;
+- staircase / Minecraft-like terrain silhouettes;
+- repeating heightfield ribbing at inspectable distance;
+- a floating road;
+- severe road/terrain intersection;
+- exposed raw heightfield on a camera-close cliff that needs dedicated geometry.
+
+If the player can perceive the terrain grid while riding, that segment does not
+pass R4.1.
+
+Do not solve this gate by globally blurring the DEM. Fix the local presentation
+with the correct system: spline deformation, road-cut geometry, cliff meshes,
+rocks, scree, vegetation, material blending or composition.
+
+Nanite may later be evaluated for rendering/LOD benefits, but it is **not** a
+source-detail recovery mechanism. It does not turn a 5 m DTM into high-resolution
+geological geometry.
+
+#### Production references
+
+This architecture follows documented Unreal / procedural-environment practice:
+
+- Epic Games — Landscape Splines:
+  https://dev.epicgames.com/documentation/unreal-engine/landscape-splines-in-unreal-engine
+- Epic Games — Landscape Edit Layers:
+  https://dev.epicgames.com/documentation/unreal-engine/landscape-edit-layers-in-unreal-engine
+- Epic Games — Nanite with Landscapes:
+  https://dev.epicgames.com/documentation/unreal-engine/using-nanite-with-landscapes-in-unreal-engine
+- SideFX — Procedural World Generation in Far Cry 5:
+  https://www.sidefx.com/learn/talks/procedural-world-generation-far-cry-5/
+- SideFX — Houdini Engine for Unreal Landscape workflow:
+  https://www.sidefx.com/docs/houdini/unreal/landscape/index.html
+
 ## 6. Road integration
 
 R4.1 road minimum:
@@ -298,6 +423,7 @@ This is the first R4.1 art-direction gate.
 
 Must show:
 
+- real-road presentation alignment where the official GIS spike has passed;
 - road embedded in real terrain;
 - believable shoulder;
 - meadow foreground;
@@ -345,7 +471,10 @@ Reject the candidate if a canonical capture contains obvious:
 - empty skyline where mountain mass should exist;
 - three biomes reading as the same environment with different density;
 - insufficient atmospheric depth;
-- hero vista blocked by uncontrolled PCG scatter.
+- hero vista blocked by uncontrolled PCG scatter;
+- visible Landscape component/grid boundaries from the rider camera;
+- square, staircase or Minecraft-like terrain silhouettes;
+- camera-close steep faces exposing heightfield stepping/ribbing that should be meso geometry.
 
 Green CI does not override visual rejection.
 
@@ -377,6 +506,11 @@ Do not rescue poor composition with dense grass, excessive dynamic shadows or ve
 
 2. **R4.1B — 300–500 m terrain vertical-slice spike**
    Compare Landscape vs generated/tiled terrain; select one path.
+
+2a. **R4.1B.1 — real-road alignment spike**
+   Import a licensed official SP638/Passo Giau centerline into the same AOI/CRS
+   as the Veneto DTM, sample presentation Z from the DTM, create a deterministic
+   UE spline and prove road/terrain alignment before broad material dressing.
 
 3. **R4.1C — terrain material foundation**
    Meadow / forest floor / rock / scree / gravel / optional snow.
@@ -421,68 +555,214 @@ Requirements:
 - ability to simplify/retile for the corridor;
 - visual proof that it beats project-generated terrain.
 
-Preferred approach is hybrid: real-world terrain data may provide strong macro forms, while YACS keeps its own fictional road, route physics, PCG biomes, materials, roadside dressing and art direction.
+Preferred approach is hybrid: real-world terrain data provides strong macro forms and,
+where licensed reliable GIS data exists, a real road centerline may drive the
+**presentation alignment**. YACS still keeps route physics authoritative and
+independent, while PCG biomes, materials, roadside dressing and art direction
+remain project-owned. A presentation-road import must never silently replace
+`FRouteGeometryProfile` or the Road Physics Profile.
 
 ## Current implementation status — Passo Giau terrain source (2026-09-28)
 
-The R4.1 macro-terrain recovery now has a proven remote source/preparation path.
+The R4.1 macro-terrain recovery has moved from source/bootstrap proof into an
+isolated UE Landscape visual-debug spike. The original TINITALY work remains the
+merged provenance/preparation baseline; PR #215 now carries the better-resolution
+active Landscape candidate.
 
-### Merged repository work
+### Merged baseline on `main`
 
-- PR #211 — `feat(assets): add Passo Giau DEM bootstrap` — **MERGED** as `7db3a63e11b83c3d33f86f80e1d6687c05b8ea78`.
-- PR #212 — `feat(terrain): prepare Passo Giau R4.1 heightmap pipeline` — **MERGED** as `a98162fd590c5d3dc597a5c625d70e9860bb46c7`.
-- downloader: `scripts/assets/download_passo_giau_dem.py`;
-- preparation pipeline: `scripts/assets/prepare_passo_giau_heightmap.py`;
-- remote integration workflow: `.github/workflows/passo-giau-r4-1-terrain-spike.yml`.
+- PR #211 — `feat(assets): add Passo Giau DEM bootstrap` — **MERGED** as `7db3a63e11b83c3d33f86f80e1d6687c05b8ea78`;
+- PR #212 — `feat(terrain): prepare Passo Giau R4.1 heightmap pipeline` — **MERGED** as `a98162fd590c5d3dc597a5c625d70e9860bb46c7`;
+- baseline source: **TINITALY 1.1 / INGV**, CC BY 4.0;
+- baseline AOI: approximately **8 x 8 km around Passo Giau**;
+- baseline source grid: **800 x 800 at 10 m**;
+- baseline source DEM SHA-256:
+  `9a58a8aca8b1856507b4ca3e656f8c975518cbd89bd273036ef2483c148db610`;
+- preparation run **36357523138 — GREEN**;
+- baseline UE candidate: **1009 x 1009**, XY **793.651 cm/vertex**.
 
-### Proven remote source
+This baseline proved licensed remote source acquisition and deterministic Unreal
+heightmap preparation. It is historical evidence, not the currently preferred
+Landscape source.
 
-Provider: **TINITALY 1.1 / INGV**  
-License: **CC BY 4.0**  
-AOI: approximately **8 x 8 km around Passo Giau**  
-Source grid: **800 x 800 at 10 m**  
-Source DEM SHA-256:
+### Active PR #215 candidate — MASE PST LiDAR DTM 1x1
 
-`9a58a8aca8b1856507b4ca3e656f8c975518cbd89bd273036ef2483c148db610`
+PR #215 now uses the corrected MASE PST Passo Giau source checkpoint as its
+canonical terrain input. The earlier `1372707` / 89-tile checkpoint is
+superseded; package `1372858` is DTM-only and contains 204 GeoTIFFs.
 
-Remote download/preparation run: **GitHub Actions #36357523138 — PASS**.
+Current source contract:
 
-Observed terrain range:
+- release tag: `data-mase-pst-passo-giau-dtm-2026-09-28`;
+- archive size: **853,162,557 bytes**;
+- archive SHA-256:
+  `4215d1d37fb8540c44442aedd164b6cda3f1845f3552413a975a6b7b1461e93c`;
+- **204** GeoTIFF DTM tiles, all `*_DTM.tiff`, zero DSM tiles;
+- Float32, source-defined tile dimensions (the pinned package is heterogeneous; fixed 1000 x 1000 dimensions are not part of the contract), NoData `-9999`;
+- source CRS **EPSG:4326**;
+- observed source pixel spacings `0.00001 degrees` and `0.000005 degrees`; the corrected package mixes 1000- and 2000-sample tiles, so spacing is validated against this pinned fail-closed set before reprojection;
+- target working CRS **EPSG:32632**;
+- target working grid **8000 x 8000 at 1 m** over the bounded 8 km AOI;
+- prepared UE Landscape target **4033 x 4033**;
+- topology remains **32 x 32 components = 1024 components**;
+- XY scale remains **198.412698 cm/vertex**;
+- isolated map only: `/Game/Prototype/Maps/L_PassoGiauTerrainSpike`;
+- `L_CyclingTest`, route truth and physics remain protected and unchanged.
 
-- minimum: **1171.353 m**;
-- maximum: **2713.832 m**;
-- relief: **1542.479 m**;
-- mean elevation: **1993.256 m**.
+The raw archive stays outside Git/LFS as an immutable prerelease checkpoint.
+The authoring lane verifies byte size and SHA-256 before extracting the 204
+GeoTIFFs. It then mosaics them and performs an explicit geographic-to-metric
+reprojection. Degrees are never interpreted as metres.
 
-Prepared Unreal candidate:
+The older Veneto 5 m candidate remains valuable historical evidence:
 
-- **1009 x 1009** 16-bit heightmap;
-- matching little-endian `.r16`;
-- native-resolution 16-bit PNG;
-- hillshade preview;
-- `terrain-report.json`;
-- recommended XY scale: **793.651 cm/vertex**;
-- recommended Z Scale: **301.265**.
+- source A/B run **36395015722 — GREEN**;
+- first complete Veneto UE authoring run **36395726623 — GREEN**;
+- diagnostic authoring run **36399060374 — GREEN**;
+- the 5 m proof established the current 4033 topology, native
+  `ALandscape::Import`, mutation guards and deterministic 4K/FXAA geometry
+  capture contract.
 
-The successful remote evidence is retained as GitHub Actions artifact
-`passo-giau-r4-1-terrain-spike`.
+Those runs do **not** prove the new MASE source path. A fresh exact-SHA
+authoring/render run is required before visual acceptance.
+### Current visual conclusion
 
-This evidence proves the external terrain source and preparation path only. It
-does **not** constitute Unreal visual acceptance.
+The existing Veneto 5 m proof remains the comparison baseline. Its source and
+prepared 4033 raster do **not** show the dense herringbone
+pattern seen in the earlier 1080p UE proof. The 4K/FXAA diagnostic substantially
+reduces that artifact, which identifies screen-space/render aliasing as a real
+part of the earlier failure.
 
-### Active next step
+Steep cliff faces still show visible heightfield stepping/ribbing in perspective.
+That remaining limitation should not be hidden by blur or by pretending 16-bit
+precision is the cause. The data uses nearly the full uint16 domain and the
+measured vertical quantization step is only about **2.36 cm**. The remaining
+steep-face artifact is therefore treated as a Landscape/heightfield representation
+and source-resolution constraint until disproven.
 
-Issue #213 — **R4.1B — import Passo Giau DEM into isolated Unreal Landscape spike**.
+Decision for R4.1:
 
-The first UE integration must use a separate map such as
-`/Game/Prototype/Maps/L_PassoGiauTerrainSpike`. It must not mutate
-`/Game/Prototype/Maps/L_CyclingTest`, route truth or physics.
+- promote the MASE PST 1x1 source to the **canonical macro-terrain path A**
+  input, subject to a fresh exact-SHA authoring/render proof;
+- retain Veneto 5 m as the reproducible fallback/A-B baseline;
+- do not propagate the new candidate across the canonical route yet;
+- do not unblock R5;
+- use R4.1C material work and especially R4.1D `Rock Face 01` / cliff / scree
+  geometry to replace or mask inspectable steep heightfield faces rather than
+  destructively smoothing the DEM;
+- require a route-level 1200 m golden slice before final human visual acceptance.
 
-The Landscape spike is path A of the documented R4.1 terrain A/B. Geometry
-Script / generated tiled terrain remains path B until a rendered vertical slice
-is reviewed.
+Issue #213 / PR #215 remain open until the bounded Landscape path is reviewed
+and its exploratory scaffolding/evidence is cleaned into a maintainable form.
 
-## 19. Definition of Done
+
+### Historical P0 source-resolution gate — Cortina 2021 LiDAR / 2 m WebGIS
+
+> This section records the pre-MASE investigation. It is superseded by the
+> immutable MASE PST 1x1 source checkpoint above; its blocked/raw-source wording
+> is historical and no longer the current execution gate.
+
+The controlled source A/B has produced a valid **negative source-gate result**
+rather than a new terrain import.
+
+Official Veneto evidence now separates three different concepts that must not
+be conflated:
+
+- **acquisition density:** the Cortina + neighboring-municipalities airborne
+  LiDAR project specifies **4 points/m²**, with DSM and DTM production over
+  about **39,010 ha**;
+- **terrain product lineage:** Veneto states that the Olympic WebGIS terrain
+  rasters derive from the 2021 LiDAR survey;
+- **WebGIS raster resolution:** the Olympic portfolio explicitly calls the DTM,
+  DSM and CHM **"ricampionati a 2m"** — resampled to 2 m.
+
+Primary official references:
+
+- https://bur.regione.veneto.it/BurvServices/Pubblica/DettaglioDgr.aspx?id=426837
+- https://idt2.regione.veneto.it/portfolio/webgis-olimpiadi-2026-in-veneto/
+- https://idt2.regione.veneto.it/idt/webgis/viewer?webgisId=86
+
+The viewer exposes `DTM_2m_Cortina`; live WMS discovery resolves the
+technical layer `rv:DTM_2m_clip`, whose advertised geographic extent contains
+Passo Giau. That proves relevance and publication, **not a native 2 m
+elevation grid**.
+
+The live fail-closed source probe has further established:
+
+- the raw-looking layer advertises EPSG:6876 / RDN2008 Zone 12 (N-E);
+- WMS `DescribeLayer` calls it WCS-backed;
+- both public WCS routes tested by YACS return the terminal GeoServer error
+  **`Service WCS is disabled`** for direct `DescribeCoverage`;
+- source-contract run **36453219301 / #26** exercised global/workspace WCS,
+  versions 2.0.1 / 1.1.1 / 1.0.0 and the known Cortina aliases before the
+  probe was optimized to fast-fail a disabled endpoint;
+- the WMS layer provides no direct `MetadataURL` or `DataURL`;
+- Veneto's anonymous download catalog currently returns 932 entries and no
+  exact `DTM_2m_Cortina` / `DTM_2m_clip` item;
+- the public CSW catalog returns no exact metadata record for either identifier;
+- Veneto's public downloader exposes a documented first-party download path for
+  the established **5 m LiDAR DTM**, but no equivalent public 2 m DTM
+  distribution has been discovered.
+
+Therefore the current classification is:
+
+**2021 high-density LiDAR acquisition -> official DTM/DSM -> Olympic WebGIS
+derivative resampled to 2 m -> raw/lossless DTM transport not publicly proven.**
+
+The 2 m product is still valuable evidence: it proves that better source
+material exists upstream of the old 5 m public download. It does **not** justify
+manufacturing a DEM from styled WMS pixels or claiming that a provider-side
+2 m resample adds measured terrain detail.
+
+This fixes the execution order:
+
+1. keep the Veneto 5 m Landscape as the reproducible A/B baseline;
+2. keep the 2 m source candidate blocked until a documented official raw DTM
+   distribution or equivalent provider metadata is obtained;
+3. if obtained, validate raster spacing, datatype, NoData, CRS/axis order,
+   vertical datum, provenance/license, AOI coverage and immutable hash;
+4. record whether the provider raster is native to the DTM production chain or
+   itself resampled;
+5. only then prepare a deterministic 4033 R16 candidate and render the exact
+   same neutral UE proof against the 5 m baseline;
+6. independently continue bounded road cut/fill and cliff/scree investigation
+   where those tasks do not depend on pretending the 2 m source is solved.
+
+Do **not**:
+
+- use WMS `GetMap` pixels as elevation;
+- infer a hidden DTM filename from other public LiDAR derivatives;
+- call the 2 m WebGIS layer a native 2 m DEM;
+- move this GIS experiment into PR #224 / the local-mesh path.
+
+PR #215 remains the single legal slot for this source decision. PR #224 remains
+a documented local-mesh experiment/dead end for this question.
+
+
+## 19. Terrain research / visual-debug SSOT
+
+The current Passo Giau Landscape spike now has a dedicated research and
+troubleshooting playbook:
+
+`docs/STAGE3G_R4_1_TERRAIN_RESEARCH.md`
+
+It captures:
+
+- Epic UE 5.8 Landscape topology and height-precision references;
+- official import APIs to use as an oracle against the custom R16 reader;
+- a neutral-material geometry-proof requirement;
+- source/R16 quantization and round-trip diagnostics;
+- 63/126-quad subsection/component seam probes;
+- guidance against blind Gaussian-blur "fixes";
+- Gaea / World Machine terrain-export references;
+- a rule that Nanite is not a geometry-quality repair;
+- the ordered diagnostic ladder for the current Passo Giau visual artifact.
+
+For R4.1B, this playbook is the visual-debug SSOT. No terrain smoothing,
+material camouflage, Nanite change or full-route propagation should bypass its
+diagnostic order.
+
+## 20. Definition of Done
 
 R4.1 is complete only when:
 

@@ -4,13 +4,13 @@
 The script reads the downloaded TINITALY source DEM and produces:
 
 - a lossless 16-bit PNG at the source raster resolution;
-- an Unreal-Landscape-friendly 1009x1009 16-bit PNG;
+- an Unreal-Landscape-friendly 4033x4033 16-bit PNG;
 - a matching little-endian R16 file;
 - a grayscale hillshade preview;
 - terrain/elevation statistics;
 - explicit Unreal import scale metadata.
 
-The 1009x1009 output is a resampled presentation/import candidate. It does not
+The 4033x4033 output is a resampled presentation/import candidate. It does not
 contain more source detail than the native 10 m TINITALY grid.
 
 External DEM data remains presentation-only. It must never become authoritative
@@ -32,7 +32,7 @@ import rasterio
 from PIL import Image
 from rasterio.enums import Resampling
 
-DEFAULT_LANDSCAPE_SIZE = 1009
+DEFAULT_LANDSCAPE_SIZE = 4033
 SUPPORTED_LANDSCAPE_SIZES = (505, 1009, 2017, 4033)
 DEFAULT_HILLSHADE_AZIMUTH_DEG = 315.0
 DEFAULT_HILLSHADE_ALTITUDE_DEG = 45.0
@@ -197,6 +197,87 @@ def hillshade(
     return gray.astype(np.uint8)
 
 
+def terrain_diagnostics(
+    source_elevation_m: np.ndarray,
+    prepared_elevation_m: np.ndarray,
+    prepared_u16: np.ndarray,
+    elevation_min_m: float,
+    elevation_max_m: float,
+) -> dict[str, Any]:
+    span_m = elevation_max_m - elevation_min_m
+    decoded_m = elevation_min_m + (
+        prepared_u16.astype(np.float64) / 65535.0
+    ) * span_m
+    roundtrip_error_m = decoded_m - prepared_elevation_m
+
+    dx = np.abs(np.diff(prepared_elevation_m, axis=1))
+    dy = np.abs(np.diff(prepared_elevation_m, axis=0))
+    adjacent = np.concatenate((dx.ravel(), dy.ravel()))
+    nonzero = adjacent[adjacent > 0.0]
+
+    unique_values = np.unique(prepared_u16)
+    flat_share = float(np.mean(adjacent == 0.0))
+
+    def seam_stats(period: int) -> dict[str, Any]:
+        seam_deltas = []
+        for boundary in range(period, prepared_elevation_m.shape[1], period):
+            seam_deltas.append(
+                np.abs(
+                    prepared_elevation_m[:, boundary]
+                    - prepared_elevation_m[:, boundary - 1]
+                )
+            )
+        for boundary in range(period, prepared_elevation_m.shape[0], period):
+            seam_deltas.append(
+                np.abs(
+                    prepared_elevation_m[boundary, :]
+                    - prepared_elevation_m[boundary - 1, :]
+                )
+            )
+        if not seam_deltas:
+            return {"sample_count": 0}
+        values = np.concatenate([arr.ravel() for arr in seam_deltas])
+        return {
+            "sample_count": int(values.size),
+            "mean_abs_delta_m": round(float(values.mean()), 6),
+            "p95_abs_delta_m": round(float(np.percentile(values, 95)), 6),
+            "p99_abs_delta_m": round(float(np.percentile(values, 99)), 6),
+            "max_abs_delta_m": round(float(values.max()), 6),
+        }
+
+    return {
+        "prepared_u16": {
+            "unique_value_count": int(unique_values.size),
+            "vertical_quantization_step_m": round(span_m / 65535.0, 9),
+            "flat_adjacent_share": round(flat_share, 9),
+        },
+        "adjacent_elevation_delta_m": {
+            "sample_count": int(adjacent.size),
+            "smallest_nonzero": (
+                round(float(nonzero.min()), 9) if nonzero.size else 0.0
+            ),
+            "p50": round(float(np.percentile(adjacent, 50)), 6),
+            "p95": round(float(np.percentile(adjacent, 95)), 6),
+            "p99": round(float(np.percentile(adjacent, 99)), 6),
+            "max": round(float(adjacent.max()), 6),
+        },
+        "r16_roundtrip_error_m": {
+            "rmse": round(
+                float(np.sqrt(np.mean(np.square(roundtrip_error_m)))),
+                9,
+            ),
+            "max_abs": round(float(np.max(np.abs(roundtrip_error_m))), 9),
+        },
+        "seams": {
+            "subsection_63_quads": seam_stats(63),
+            "component_126_quads": seam_stats(126),
+        },
+        "source_unique_elevation_count": int(
+            np.unique(source_elevation_m).size
+        ),
+    }
+
+
 def percentile_dict(values: np.ndarray) -> dict[str, float]:
     percentiles = np.percentile(values, [1, 5, 25, 50, 75, 95, 99])
     labels = ("p01", "p05", "p25", "p50", "p75", "p95", "p99")
@@ -231,7 +312,8 @@ def landscape_import_metadata(
         "landscape_size_vertices": landscape_size,
         "source_fidelity_note": (
             "The Landscape-sized raster is resampled for UE compatibility; "
-            "source terrain fidelity remains that of the original TINITALY grid."
+            "source terrain fidelity remains that of the original TINITALY grid; cubic "
+            "interpolation smooths the presentation surface between source samples."
         ),
         "recommended_transform": {
             "scale_x_cm_per_vertex": round(xy_scale_x_cm, 6),
@@ -290,7 +372,7 @@ def main() -> int:
                 1,
                 out_shape=(args.landscape_size, args.landscape_size),
                 masked=True,
-                resampling=Resampling.bilinear,
+                resampling=Resampling.cubic,
             )
             landscape_filled = fill_masked_nearest_reasonable(
                 landscape,
@@ -379,6 +461,14 @@ def main() -> int:
             "standard_deviation": round(float(values.std()), 3),
             "percentiles": percentile_dict(values),
         },
+        "diagnostics": terrain_diagnostics(
+            source_filled,
+            landscape_filled,
+            landscape_u16,
+            elevation_min_m,
+            elevation_max_m,
+        ),
+        "landscape_resampling": "cubic",
         "orientation": {
             "vertical_flip_applied": bool(args.flip_y),
             "source_raster_row_order": "north_to_south",

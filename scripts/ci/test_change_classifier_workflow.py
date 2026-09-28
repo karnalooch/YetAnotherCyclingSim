@@ -128,8 +128,12 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
         guard = self.unreal.index("Enforce code-only checkout")
         self.assertLess(bootstrap, checkout)
         self.assertLess(checkout, guard)
-        self.assertIn("path: _unreal-worktree", self.unreal)
-        self.assertIn("working-directory: _unreal-worktree", self.unreal)
+        self.assertIn(
+            "YACS_UNREAL_WORKTREE: _unreal-worktree-${{ github.run_id }}-${{ github.run_attempt }}",
+            self.unreal,
+        )
+        self.assertIn("path: ${{ env.YACS_UNREAL_WORKTREE }}", self.unreal)
+        self.assertIn("working-directory: ${{ env.YACS_UNREAL_WORKTREE }}", self.unreal)
         self.assertIn("clean: true", self.unreal)
         self.assertNotIn(
             "Normalize stale LFS payloads before code-only checkout",
