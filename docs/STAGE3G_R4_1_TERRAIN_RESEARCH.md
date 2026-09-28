@@ -168,20 +168,221 @@ Consequences:
 
 This is a permanent production guardrail for R4.1 and later terrain work.
 
+### Priority discovery — Cortina 2 m LiDAR DTM + QGIS/GDAL geospatial SSOT
+
+Research on 2026-09-28 found a materially better source candidate than the
+regional harmonized 5 m baseline.
+
+The Regione del Veneto commissioned a dedicated aerophotogrammetric + airborne
+LiDAR survey for:
+
+- Cortina d'Ampezzo;
+- Colle Santa Lucia;
+- Borca di Cadore;
+- Selva di Cadore;
+- San Vito di Cadore.
+
+The official procurement specifies **4 LiDAR points/m²** and production of both
+DSM and **DTM** products over 39,010 ha. This is directly relevant to the
+SP638 / Passo Giau AOI because the survey explicitly covers Cortina and the
+neighboring municipalities around the pass.
+
+Official source:
+https://bur.regione.veneto.it/BurvServices/Pubblica/DettaglioDgr.aspx?id=426837
+
+The current Veneto geoportal exposes a layer named **`DTM_2m_Cortina`**. This
+is now the **priority higher-resolution terrain-source candidate** for YACS.
+Before promotion to canonical input, the exact downloadable AOI must still be
+verified for:
+
+- complete SP638 / Passo Giau coverage;
+- source metadata and acquisition date;
+- CRS / vertical datum;
+- license / reuse terms;
+- NoData behavior and tile boundaries;
+- actual raster cell size and datatype.
+
+Geoportal viewer:
+https://idt2.regione.veneto.it/idt/webgis/viewer?webgisId=246
+
+The regional harmonized LiDAR-derived DTM remains a valid historical/baseline
+source and is officially published at **5 m cells**:
+https://idt2.regione.veneto.it/nuovo-dtm-derivato-da-dati-lidar/
+
+#### Why this changes the current diagnosis
+
+For the current approximately 8 km x 8 km AOI:
+
+- 2017 vertices imply `8000 / 2016 ~= 3.968 m/vertex`;
+- 4033 vertices imply `8000 / 4032 ~= 1.984 m/vertex`.
+
+A 4033 Landscape generated from the existing 5 m DTM is still an interpolation
+of 5 m measurements. It does **not** become a 2 m measured DEM.
+
+If `DTM_2m_Cortina` verifies as a genuine ~2 m raster over the required AOI,
+then a 4033 x 4033 Landscape at ~1.984 m/vertex becomes a near one-to-one match
+between source sampling scale and UE Landscape vertex spacing. That makes the
+2 m source a decisive A/B test for the remaining Minecraft-like faceting.
+
+This does not invalidate the permanent grid-alignment guardrail. Road XY,
+terrain raster cells and Unreal Landscape vertices remain independent data
+domains and must never be snapped together merely because their nominal spacing
+is similar.
+
+#### QGIS/GDAL becomes the geospatial master pipeline
+
+YACS should move terrain preprocessing out of ad-hoc Unreal runtime repair and
+into a deterministic GIS stage.
+
+Preferred responsibility split:
+
+1. **QGIS/GDAL = geospatial SSOT and preprocessing**
+   - DEM acquisition and provenance;
+   - CRS normalization;
+   - AOI crop;
+   - NoData cleanup;
+   - orthophoto / road / future biome masks in the same metric CRS;
+   - one deliberate reprojection/resample;
+   - Float32/Float64 terrain working products;
+   - final UInt16 Landscape transport encoding.
+
+2. **Unreal Landscape = rendered macro heightfield**
+   - consumes the prepared heightmap;
+   - does not repair source sampling defects;
+   - does not redefine road XY.
+
+3. **SP638 spline + road corridor geometry = road engineering**
+   - road bench;
+   - shoulders;
+   - cut/fill;
+   - retaining / drainage / local transition geometry.
+
+4. **Meshes/PCG/materials = non-heightfield geology and dressing**
+   - cliffs / overhangs;
+   - rock faces / scree;
+   - vegetation and surface breakup.
+
+Use a metric east/north coordinate system throughout the working GIS pipeline.
+**EPSG:7795 — RDN2008 / Zone 12 (E-N)** is the current preferred candidate
+because its axes are Easting/Northing in metres. The downloaded source metadata
+remains authoritative and must be checked before any reprojection.
+
+Reference:
+https://epsg.io/7795
+
+#### Preserve floating-point elevation until the transport boundary
+
+Do **not** render/export a QGIS visualization and treat that image as DEM data.
+
+Keep the terrain raster in Float32/Float64 through acquisition, crop, reprojection
+and source comparison. Convert to UInt16 only at the final Unreal transport
+step.
+
+GDAL explicitly supports target resolution and resampling algorithms including
+`bilinear`, `cubic`, `cubicspline` and `lanczos`:
+https://gdal.org/en/stable/programs/gdalwarp.html
+
+The R4.1 source experiment must resample/reproject only once. For elevation,
+test at least `cubic` and `cubicspline`; do not silently chain multiple
+resize/reprojection stages.
+
+A representative final encoding contract is:
+
+```text
+gdal_translate \
+  -ot UInt16 \
+  -scale MIN_ELEV MAX_ELEV 0 65535 \
+  -exponent 1 \
+  -of PNG \
+  dem_final_float.tif \
+  yacs_height_4033.png
+```
+
+`MIN_ELEV` and `MAX_ELEV` must be deliberate AOI bounds with documented
+headroom where required, not accidental extrema from a NoData/outlier cell.
+
+GDAL reference:
+https://gdal.org/en/stable/programs/gdal_translate.html
+
+Epic supports 16-bit Landscape height data and documents 4033 x 4033 as one of
+the recommended Landscape sizes:
+https://dev.epicgames.com/documentation/unreal-engine/landscape-technical-guide-in-unreal-engine
+https://dev.epicgames.com/documentation/unreal-engine/importing-and-exporting-landscape-heightmaps-in-unreal-engine
+
+For an 8 km extent:
+
+`XY Scale ~= 800000 cm / 4032 ~= 198.412698 cm`
+
+For a heightmap whose deliberately encoded vertical range is
+`vertical_range_m`, use Epic's 512-unit Landscape height domain:
+
+`Z Scale = vertical_range_m * 100 / 512`
+
+and place the Landscape Z origin consistently with the chosen encoded min/max
+range. Example: a 1600 m encoded vertical range gives `Z Scale = 312.5` and
+an ideal UInt16 quantization step of about `1600 / 65535 ~= 2.44 cm`.
+
+#### P0 next experiment — source-resolution A/B, no art camouflage
+
+Do **not** spend another cycle smoothing the current 5 m source globally.
+
+The next decisive experiment is:
+
+`DTM_2m_Cortina -> QGIS/GDAL -> Float DEM -> 4033x4033 -> UInt16/R16 -> UE`
+
+with the same AOI, camera, Landscape topology, forced LOD and lighting-only
+capture used for the current baseline.
+
+Compare directly:
+
+- **A:** current Veneto 5 m source -> 4033 presentation resample;
+- **B:** verified Cortina 2 m source -> 4033 (~1.984 m/vertex).
+
+No production material, foliage, rocks, procedural noise, road cut/fill or
+terrain-skin replacement is allowed in this source-resolution A/B. The purpose
+is to isolate whether genuine horizontal source resolution removes or strongly
+reduces the Minecraft-like faceting.
+
+Acceptance interpretation:
+
+- if B removes or materially reduces the defect, source horizontal resolution
+  is confirmed as the dominant cause and the 2 m DTM becomes the macro-terrain
+  candidate;
+- if B retains the same defect, investigate Landscape triangulation / LOD /
+  importer behavior before adding art;
+- R16 vertical quantization remains a low-priority hypothesis because the
+  measured current quantization is already centimetric.
+
+#### QGIS feature-preserving smoothing is secondary, not the first test
+
+QGIS provides **Feature preserving DEM smoothing**, which can reduce local DEM
+roughness while limiting elevation changes and preserving break-in-slope
+features better than indiscriminate Gaussian blur.
+
+Use it only after the raw 2 m source A/B if the verified 2 m DTM itself still
+contains high-frequency roughness. Any smoothing experiment must preserve a
+raw immutable source and record parameters, before/after error metrics and
+identical-camera visual evidence.
+
+Do not use feature-preserving smoothing to disguise a 5 m -> 2 m upsample.
+
+QGIS reference:
+https://docs.qgis.org/latest/en/docs/user_manual/processing_algs/qgis/rasteranalysis.html
+
 ### Adopted terrain-detail hierarchy
 
-The current production model is deliberately layered:
+The production hierarchy is now source-aware:
 
-1. **Veneto 5 m DTM = macro terrain truth**
-   - mountain massing;
-   - ridges, valleys, passes and broad slope shape;
-   - full 8 km x 8 km baseline.
+1. **Verified highest-quality official DTM = macro terrain truth**
+   - priority candidate: `DTM_2m_Cortina` if AOI/metadata/license verification passes;
+   - fallback/baseline: harmonized Veneto 5 m LiDAR-derived DTM;
+   - mountain massing, ridges, valleys, passes and broad slope shape.
 
-2. **SP638 GIS spline + Landscape Splines/Patches = road-corridor engineering**
+2. **SP638 GIS spline + road-corridor tooling = road engineering**
    - road bench;
    - uphill cut;
    - downhill fill/embankment;
-   - shoulder transitions, drainage-scale shaping and hairpin cleanup.
+   - shoulders, drainage-scale shaping and hairpin cleanup.
 
 3. **Static/Nanite meshes = non-heightfield geology**
    - vertical cliffs;
@@ -196,34 +397,66 @@ The current production model is deliberately layered:
    - grass, shrubs and trees;
    - slope/elevation/road-distance-driven distribution.
 
-The base DEM is therefore not expected to be a finished cyclist-height scene.
-A raw heightfield is the macro foundation, not the final environment.
+The base DEM is still not expected to be a finished cyclist-height scene.
+However, YACS must not knowingly use a 5 m source as canonical macro terrain if
+an official, licensed, correctly covering 2 m DTM is available and materially
+improves the neutral geometry proof.
 
-### Higher-resolution source escalation rule
+### Higher-resolution source escalation rule — revised 2026-09-28
 
-Do **not** replace the full Veneto 5 m baseline pre-emptively.
+The previous rule deferred higher-resolution DEM evaluation until after the
+road/cliff/material art pass. The discovery of an official Cortina-area 2 m DTM
+changes that order.
 
-Consider a higher-resolution source (for example a local 1 m DTM/LiDAR patch)
-only when all of the following are true:
+**Evaluate the verified 2 m DTM before further terrain art camouflage.**
 
-1. the SP638 cut/fill corridor has been authored;
-2. necessary cliff/rock geometry has been added;
-3. material + scree/rock/vegetation dressing has been evaluated from
-   cyclist-height cameras;
-4. a specific bounded area still has a demonstrably wrong **macro shape**
-   traceable to missing source data rather than missing environment art.
+Do not rebuild the production world yet. First perform the bounded, exact-camera
+5 m vs 2 m A/B described above. Promote the 2 m source only if:
 
-If that happens, prefer a **bounded local patch/replacement/mesh solution**
-for the affected corridor or cliff instead of rebuilding the entire 8 km
-Landscape.
+1. coverage includes the required SP638 / Passo Giau AOI;
+2. metadata, CRS, datum, license and provenance are recorded;
+3. the preprocessing path is deterministic and preserves Float elevation until
+   final UInt16 encoding;
+4. the neutral 4033 UE proof materially improves against the 5 m baseline;
+5. road XY remains independent and unchanged.
 
-This yields the production rule:
+This revised rule supersedes the earlier assumption that
+`good 5 m macro DTM + authored corridor` should automatically be preferred
+over testing a denser source. The old 5 m result remains valuable baseline
+evidence, not the final source decision.
 
-`good 5 m macro DTM + high-quality authored road corridor + local geological detail`
+### P0 diagnostic trap: independent road and terrain grids
 
-is preferred over
+Do not confuse Landscape vertex spacing with either source accuracy or source
+alignment.
 
-`globally denser DEM + untreated road corridor`.
+The SP638 road geometry and the Veneto DTM were measured independently. The
+selected road source is in an approximately 4 m positional-accuracy class while
+the canonical DTM is a 5 m raster. On steep Alpine slopes, that combination is
+large enough that a small XY displacement can select materially different
+terrain heights. A road of similar width to one DTM cell can also lie largely
+between measured terrain samples.
+
+Therefore:
+
+- do not snap SP638 XY to DTM cells or Unreal Landscape vertices;
+- do not treat a 4033-grid vertex (~1.98 m spacing) as a new measured terrain
+  point;
+- keep canonical road XY independent, sample/interpolate DTM Z continuously,
+  and solve the rider-close road bench/cut/fill with local geometry;
+- if a visual mismatch disappears only after moving the canonical road onto the
+  terrain grid, treat that as a failed diagnostic, not a valid fix;
+- any deliberate correction of canonical road XY requires separate evidence
+  that the road source itself is wrong;
+- do not estimate road curvature, tangent frames or road-cut widths from a
+  sampling window smaller than the source-position uncertainty. Densifying the
+  centerline to 2 m stations does not create 2 m positional truth. For the
+  current proof, source-scale road geometry analysis uses a 6 m half-window
+  while preserving every canonical centerline station unchanged.
+
+This trap is especially important at tight hairpins, where local curvature,
+road width, independent XY uncertainty and the 5 m terrain grid can all be on
+the same spatial scale.
 
 ### Required next diagnostic only if R4.1D cannot cover the residual cleanly
 
