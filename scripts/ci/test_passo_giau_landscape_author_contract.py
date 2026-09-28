@@ -121,7 +121,7 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("EPSG:32632", wrapper)
         self.assertIn("sampled_unique_elevation_count", wrapper)
         self.assertIn(
-            "0e2a133fcc80f225aee2b61aa04bc7a858aa3754c6b80a7c640b8a6ab7d14b8c",
+            "4215d1d37fb8540c44442aedd164b6cda3f1845f3552413a975a6b7b1461e93c",
             wrapper,
         )
         self.assertIn("CC BY 4.0", wrapper)
@@ -264,12 +264,14 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
             'RELEASE_TAG = "data-mase-pst-passo-giau-dtm-2026-09-28"',
             downloader,
         )
-        self.assertIn("ARCHIVE_BYTES = 356_503_497", downloader)
+        self.assertIn("ARCHIVE_BYTES = 853_162_557", downloader)
         self.assertIn(
-            'ARCHIVE_SHA256 = "0e2a133fcc80f225aee2b61aa04bc7a858aa3754c6b80a7c640b8a6ab7d14b8c"',
+            'ARCHIVE_SHA256 = "4215d1d37fb8540c44442aedd164b6cda3f1845f3552413a975a6b7b1461e93c"',
             downloader,
         )
-        self.assertIn("EXPECTED_TILE_COUNT = 89", downloader)
+        self.assertIn("EXPECTED_TILE_COUNT = 204", downloader)
+        self.assertIn('EXPECTED_TILE_SUFFIX = "_DTM.tiff"', downloader)
+        self.assertIn("EXPECTED_DSM_TILE_COUNT = 0", downloader)
         self.assertIn('SOURCE_CRS = "EPSG:4326"', downloader)
         self.assertIn("SOURCE_PIXEL_SIZE_DEG = 0.00001", downloader)
         self.assertIn("immutable_source_checkpoint", downloader)
