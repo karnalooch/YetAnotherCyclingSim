@@ -275,7 +275,7 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("DOWNLOAD_TIMEOUT_SECONDS = 300", downloader)
         self.assertIn('headers["Range"] = f"bytes={written}-"', downloader)
         self.assertIn('"Content-Range"', downloader)
-        self.assertIn('"resuming at byte", downloader)
+        self.assertIn("resuming at byte", downloader)
         self.assertIn(
             'ARCHIVE_NAME = "MASE_PST_8309f0171e3340c6aba45798c4812d54_1372858_DTM.zip"',
             downloader,
