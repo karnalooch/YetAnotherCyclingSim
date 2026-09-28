@@ -18,7 +18,9 @@ jobs:
       contents: read
     env:
       GIT_LFS_SKIP_SMUDGE: "1"
-
+      # A run-scoped checkout avoids stale Windows file locks from a previous
+      # self-hosted attempt poisoning actions/checkout cleanup.
+      YACS_UNREAL_WORKTREE: _unreal-worktree-${{ github.run_id }}-${{ github.run_attempt }}
 
     steps:
       - name: Isolate self-hosted Git configuration
@@ -55,7 +57,7 @@ jobs:
       - name: Checkout exact caller revision without LFS payloads
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          path: _unreal-worktree
+          path: ${{ env.YACS_UNREAL_WORKTREE }}
           fetch-depth: 20
           lfs: false
           clean: true
@@ -63,13 +65,13 @@ jobs:
 
       - name: Enforce code-only checkout
         shell: pwsh
-        working-directory: _unreal-worktree
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
           ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
 
       - name: Verify runner provenance
         shell: pwsh
-        working-directory: _unreal-worktree
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
           $ErrorActionPreference = 'Stop'
           $actual = (git rev-parse HEAD).Trim()
@@ -80,7 +82,7 @@ jobs:
 
       - name: Build editor and run scoped Automation
         shell: pwsh
-        working-directory: _unreal-worktree
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
           ./scripts/ci/Invoke-YacsUnrealCi.ps1 -ExpectedHead '${{ github.sha }}'
 
@@ -90,16 +92,16 @@ jobs:
         with:
           name: unreal-ci-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            _unreal-worktree/Saved/RuntimeProof/CI/Unreal/**/*.json
-            _unreal-worktree/Saved/RuntimeProof/CI/Unreal/**/*.txt
-            _unreal-worktree/Saved/RuntimeProof/CI/Unreal/**/*.log
+            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/Unreal/**/*.json
+            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/Unreal/**/*.txt
+            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/Unreal/**/*.log
           if-no-files-found: warn
           retention-days: 7
 
       - name: Clean isolated Unreal worktree
         if: ${{ always() }}
         shell: pwsh
-        working-directory: _unreal-worktree
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
           if (Test-Path -LiteralPath '.git') {
             git reset --hard
