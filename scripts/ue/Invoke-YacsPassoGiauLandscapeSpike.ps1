@@ -29,9 +29,11 @@ $PreparedRoot = Join-Path $RepoRoot 'ExternalAssets/Terrain/PassoGiau/PreparedMa
 $HeightmapR16 = Join-Path $PreparedRoot 'passo_giau_mase_pst_ue_landscape_4033.r16'
 $TerrainReport = Join-Path $PreparedRoot 'terrain-report.json'
 $SourceDownloadReport = Join-Path $RepoRoot 'ExternalAssets/Terrain/PassoGiau/MASE_PST_Lidar1x1/mase-pst-download-report.json'
+$FallbackDownloadReport = Join-Path $RepoRoot 'ExternalAssets/Terrain/PassoGiau/Veneto_Lidar5m/veneto-lidar-download-report.json'
 $MapPrepScript = Join-Path $RepoRoot 'scripts/ue/stage3g_prepare_passo_giau_landscape_map.py'
 $CaptureScript = Join-Path $RepoRoot 'scripts/ue/stage3g_capture_passo_giau_landscape.py'
 $DownloadScript = Join-Path $RepoRoot 'scripts/assets/download_passo_giau_mase_pst.py'
+$FallbackDownloadScript = Join-Path $RepoRoot 'scripts/assets/download_passo_giau_veneto_lidar.py'
 $PrepareScript = Join-Path $RepoRoot 'scripts/assets/prepare_passo_giau_mase_pst.py'
 
 $BuildLog = Join-Path $ArtifactRoot 'build_editor.log'
@@ -97,7 +99,9 @@ try {
     & $VenvPython -m pip install --disable-pip-version-check 'numpy==2.2.6' 'Pillow==11.3.0' 'rasterio==1.4.3'
     if ($LASTEXITCODE -ne 0) { throw 'Failed to install terrain preparation dependencies.' }
     & $VenvPython $DownloadScript
-    if ($LASTEXITCODE -ne 0) { throw 'Immutable MASE PST Passo Giau LiDAR DTM download failed.' }
+    if ($LASTEXITCODE -ne 0) { throw 'Pinned MASE PST Passo Giau LiDAR DTM download failed.' }
+    & $VenvPython $FallbackDownloadScript
+    if ($LASTEXITCODE -ne 0) { throw 'Veneto 5 m fallback download failed.' }
     & $VenvPython $PrepareScript
     if ($LASTEXITCODE -ne 0) { throw 'MASE PST Passo Giau LiDAR heightmap preparation failed.' }
 }
@@ -108,8 +112,10 @@ finally {
 if (-not (Test-Path -LiteralPath $HeightmapR16 -PathType Leaf)) { throw "Prepared R16 is missing: $HeightmapR16" }
 if (-not (Test-Path -LiteralPath $TerrainReport -PathType Leaf)) { throw "Terrain report is missing: $TerrainReport" }
 if (-not (Test-Path -LiteralPath $SourceDownloadReport -PathType Leaf)) { throw "MASE PST source download report is missing: $SourceDownloadReport" }
+if (-not (Test-Path -LiteralPath $FallbackDownloadReport -PathType Leaf)) { throw "Veneto fallback download report is missing: $FallbackDownloadReport" }
 $Terrain = Get-Content -LiteralPath $TerrainReport -Raw | ConvertFrom-Json
 $SourceDownload = Get-Content -LiteralPath $SourceDownloadReport -Raw | ConvertFrom-Json
+$FallbackDownload = Get-Content -LiteralPath $FallbackDownloadReport -Raw | ConvertFrom-Json
 $Candidate = $Terrain.unreal_landscape_candidate
 if ([int]$Candidate.landscape_size_vertices -ne 4033) { throw 'Terrain report did not produce a 4033-vertex Landscape candidate.' }
 $Transform = $Candidate.recommended_transform
@@ -118,13 +124,17 @@ $ScaleZ = [double]$Transform.scale_z
 $LocationZCm = [double]$Transform.location_z_cm_for_sea_level_preservation
 if ($ScaleZ -lt 250.0 -or $ScaleZ -gt 350.0) { throw 'Unexpected Passo Giau Z scale in MASE terrain report.' }
 if ($LocationZCm -lt 150000.0 -or $LocationZCm -gt 250000.0) { throw 'Unexpected Passo Giau Z midpoint in MASE terrain report.' }
-if ([int]$Terrain.tile_count -ne 89 -or [double]$Terrain.target_aoi.native_cell_m -ne 1.0) { throw 'MASE terrain report does not prove the expected 89-tile / 1 m metric working grid.' }
-if ($Terrain.source_crs -ne 'EPSG:4326' -or $Terrain.target_crs -ne 'EPSG:32632') { throw 'MASE terrain report does not prove explicit EPSG:4326 -> EPSG:32632 reprojection.' }
+if ([int]$Terrain.tile_count -ne 89 -or [double]$Terrain.target_aoi.native_cell_m -ne 1.0) { throw 'Hybrid terrain report does not prove the expected 89-tile MASE / 1 m metric working grid.' }
+if ($Terrain.primary_source.source_crs -ne 'EPSG:4326' -or $Terrain.fallback_source.source_crs -ne 'EPSG:7795' -or $Terrain.target_crs -ne 'EPSG:32632') { throw 'Hybrid terrain report does not prove the expected CRS chain.' }
 if ($SourceDownload.archive.sha256 -ne '0e2a133fcc80f225aee2b61aa04bc7a858aa3754c6b80a7c640b8a6ab7d14b8c' -or [int64]$SourceDownload.archive.bytes -ne 356503497) { throw 'MASE source checkpoint digest/size does not match the pinned release asset.' }
+if ([int]$FallbackDownload.tile_count -lt 1) { throw 'Veneto fallback report does not prove any downloaded fallback tiles.' }
+if ([double]$Terrain.coverage.mase_share -lt 0.50) { throw 'MASE primary coverage share dropped below the accepted hybrid threshold.' }
+if (-not [bool]$Terrain.coverage.passo_giau.mase_1m_at_reference_point) { throw 'Passo Giau reference point is not covered by MASE primary terrain.' }
+if ([int]$Terrain.coverage.remaining_missing_samples -ne 0) { throw 'Hybrid terrain still contains uncovered samples after fallback fill.' }
 $ExpectedElevationMinM = [double]$Terrain.elevation_m.minimum
 $ExpectedElevationMaxM = [double]$Terrain.elevation_m.maximum
 
-# Fail closed on diagnostics from the actual active Veneto 5 m preparation path.
+# Fail closed on diagnostics from the actual active hybrid preparation path.
 $Diagnostics = $Terrain.landscape_diagnostics
 if ($null -eq $Diagnostics) { throw 'MASE terrain report is missing Landscape diagnostics.' }
 if ([int]$Diagnostics.unique_u16_count -lt 50000) {
@@ -138,7 +148,7 @@ $RoundTrip = $Diagnostics.r16_roundtrip_error_m
 if ($null -eq $RoundTrip) { throw 'MASE terrain report is missing R16 round-trip diagnostics.' }
 $RoundTripLimitM = ($QuantizationStepM * 0.51) + 0.000001
 if ([double]$RoundTrip.max_abs -gt $RoundTripLimitM) {
-    throw 'Veneto R16 round-trip error exceeds half-step quantization tolerance.'
+    throw 'Hybrid R16 round-trip error exceeds half-step quantization tolerance.'
 }
 $SubsectionSeam = $Diagnostics.seams.subsection_63_quads
 $ComponentSeam = $Diagnostics.seams.component_126_quads
