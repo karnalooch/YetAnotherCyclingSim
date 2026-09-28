@@ -46,7 +46,9 @@ TARGET_NATIVE_SIZE = 8000
 LANDSCAPE_SIZE = 4033
 NODATA = -9999.0
 
-EXPECTED_MASE_TILE_COUNT = 89
+EXPECTED_MASE_TILE_COUNT = 204
+EXPECTED_MASE_ARCHIVE_NAME = "MASE_PST_8309f0171e3340c6aba45798c4812d54_1372858_DTM.zip"
+EXPECTED_MASE_ARCHIVE_SHA256 = "4215d1d37fb8540c44442aedd164b6cda3f1845f3552413a975a6b7b1461e93c"
 EXPECTED_MASE_PIXEL_DEG = 0.00001
 MIN_MASE_COVERAGE_SHARE = 0.50
 PASSO_GIAU_WGS84 = (12.05321, 46.48284)
@@ -416,6 +418,19 @@ def main() -> int:
         print(f"[error] missing MASE download report: {mase_report_path}", file=sys.stderr)
         return 2
     mase_report = json.loads(mase_report_path.read_text(encoding="utf-8"))
+    archive_report = mase_report.get("archive") or {}
+    if archive_report.get("name") != EXPECTED_MASE_ARCHIVE_NAME:
+        raise ValueError(
+            "MASE download report references the wrong archive: "
+            f"{archive_report.get('name')!r}"
+        )
+    if str(archive_report.get("sha256", "")).lower() != EXPECTED_MASE_ARCHIVE_SHA256:
+        raise ValueError("MASE download report SHA-256 does not match the pinned DTM package")
+    source_contract = mase_report.get("source_contract") or {}
+    if int(source_contract.get("tile_count", 0)) != EXPECTED_MASE_TILE_COUNT:
+        raise ValueError("MASE download report tile count does not match the pinned DTM package")
+    if int(source_contract.get("dsm_tile_count", -1)) != 0:
+        raise ValueError("MASE download report must prove a DTM-only package with zero DSM tiles")
 
     veneto_root = veneto_input_root()
     veneto_tiles = sorted((veneto_root / "tiles").glob("12_2K_*.asc"))
