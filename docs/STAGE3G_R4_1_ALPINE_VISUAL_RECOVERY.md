@@ -144,6 +144,128 @@ Rules:
 
 The MVP is a cycling corridor, not a free-roam walking simulator. Spend detail where the camera can inspect it.
 
+
+### Hybrid production-terrain contract
+
+R4.1 adopts a **hybrid production-terrain architecture**. One Landscape
+heightfield is not expected to provide macro terrain, roads, cliffs, road cuts
+and camera-close geological detail simultaneously.
+
+This is an intentional production decision, not a temporary workaround.
+
+Responsibilities are separated as follows:
+
+- **Regione del Veneto LiDAR-derived DTM** -> macro terrain skeleton, valley
+  mass, ridges, mountain silhouettes and continuous ground;
+- **official real-road GIS geometry** -> preferred presentation alignment for
+  SP638 / Passo Giau;
+- **UE Landscape** -> continuous macro terrain and terrain beneath vegetation;
+- **Landscape Spline / non-destructive edit layer** -> road embedding, road
+  cuts, embankments and bounded terrain adjustment;
+- **road spline mesh** -> asphalt, markings and shoulder presentation;
+- **Static Mesh / Geometry Script / PCG geometry** -> cliffs, overhang-like
+  forms, road cuts, rock faces, hero rocks, rubble and scree where a heightfield
+  is visually insufficient;
+- **materials / RVT where justified** -> hide system boundaries rather than
+  hide broken geometry;
+- **FRouteGeometryProfile / Road Physics Profile** -> authoritative simulation
+  truth until an explicit reviewed migration says otherwise.
+
+The prepared 4033 x 4033 Landscape is a presentation resample of a real 5 m
+source DTM. The denser UE grid improves Landscape topology compatibility; it
+does **not** create extra measured terrain detail.
+
+#### Real-road alignment policy
+
+The Passo Giau road should be sourced from real GIS geometry instead of being
+manually invented from the Landscape where reliable licensed data exists.
+
+Preferred source hierarchy:
+
+1. official Regione del Veneto road network for canonical presentation
+   alignment;
+2. OpenStreetMap only as optional QA/enrichment when useful and license
+   obligations are understood;
+3. manual correction only for a verified source defect or deliberate art
+   direction.
+
+The deterministic road pipeline should be:
+
+    official GIS centerline
+      -> crop to the Passo Giau AOI
+      -> reproject to the terrain CRS
+      -> canonical centerline snapshot + provenance/hash
+      -> sample Z from the canonical DTM
+      -> Unreal road spline
+      -> bounded road cut / edit layer
+      -> asphalt / markings / shoulder
+      -> roadside dressing
+
+Do not silently derive simulation grade, banking or cornering truth from the
+rendered GIS/terrain pipeline.
+
+#### Heightfield limitation policy
+
+Landscape is the macro-terrain system, not a requirement to render every steep
+surface as a heightfield.
+
+Where the rider can inspect steep terrain and the heightfield exposes visible
+stepping, ribbing, square structure or implausible road-cut geometry, use the
+appropriate meso geometry instead of globally smoothing the DEM.
+
+Preferred fixes include:
+
+- Rock Face / cliff meshes;
+- Geometry Script helper geometry;
+- slope/composition-driven rock placement;
+- rubble and scree;
+- retaining / cut geometry;
+- material blending at the Landscape/mesh boundary.
+
+Do **not** blanket-scatter cliff meshes over the map. Detail follows visibility,
+slope and composition.
+
+#### Rider-camera acceptance gate
+
+The production acceptance view is the moving cyclist camera, not an editor
+top-down view and not a static technical Landscape proof.
+
+A route segment is rejected if normal riding reveals obvious:
+
+- Landscape component boundaries;
+- square terrain tiles or grid structure;
+- staircase / Minecraft-like terrain silhouettes;
+- repeating heightfield ribbing at inspectable distance;
+- a floating road;
+- severe road/terrain intersection;
+- exposed raw heightfield on a camera-close cliff that needs dedicated geometry.
+
+If the player can perceive the terrain grid while riding, that segment does not
+pass R4.1.
+
+Do not solve this gate by globally blurring the DEM. Fix the local presentation
+with the correct system: spline deformation, road-cut geometry, cliff meshes,
+rocks, scree, vegetation, material blending or composition.
+
+Nanite may later be evaluated for rendering/LOD benefits, but it is **not** a
+source-detail recovery mechanism. It does not turn a 5 m DTM into high-resolution
+geological geometry.
+
+#### Production references
+
+This architecture follows documented Unreal / procedural-environment practice:
+
+- Epic Games — Landscape Splines:
+  https://dev.epicgames.com/documentation/unreal-engine/landscape-splines-in-unreal-engine
+- Epic Games — Landscape Edit Layers:
+  https://dev.epicgames.com/documentation/unreal-engine/landscape-edit-layers-in-unreal-engine
+- Epic Games — Nanite with Landscapes:
+  https://dev.epicgames.com/documentation/unreal-engine/using-nanite-with-landscapes-in-unreal-engine
+- SideFX — Procedural World Generation in Far Cry 5:
+  https://www.sidefx.com/learn/talks/procedural-world-generation-far-cry-5/
+- SideFX — Houdini Engine for Unreal Landscape workflow:
+  https://www.sidefx.com/docs/houdini/unreal/landscape/index.html
+
 ## 6. Road integration
 
 R4.1 road minimum:
@@ -298,6 +420,7 @@ This is the first R4.1 art-direction gate.
 
 Must show:
 
+- real-road presentation alignment where the official GIS spike has passed;
 - road embedded in real terrain;
 - believable shoulder;
 - meadow foreground;
@@ -345,7 +468,10 @@ Reject the candidate if a canonical capture contains obvious:
 - empty skyline where mountain mass should exist;
 - three biomes reading as the same environment with different density;
 - insufficient atmospheric depth;
-- hero vista blocked by uncontrolled PCG scatter.
+- hero vista blocked by uncontrolled PCG scatter;
+- visible Landscape component/grid boundaries from the rider camera;
+- square, staircase or Minecraft-like terrain silhouettes;
+- camera-close steep faces exposing heightfield stepping/ribbing that should be meso geometry.
 
 Green CI does not override visual rejection.
 
@@ -377,6 +503,11 @@ Do not rescue poor composition with dense grass, excessive dynamic shadows or ve
 
 2. **R4.1B — 300–500 m terrain vertical-slice spike**
    Compare Landscape vs generated/tiled terrain; select one path.
+
+2a. **R4.1B.1 — real-road alignment spike**
+   Import a licensed official SP638/Passo Giau centerline into the same AOI/CRS
+   as the Veneto DTM, sample presentation Z from the DTM, create a deterministic
+   UE spline and prove road/terrain alignment before broad material dressing.
 
 3. **R4.1C — terrain material foundation**
    Meadow / forest floor / rock / scree / gravel / optional snow.
@@ -421,7 +552,12 @@ Requirements:
 - ability to simplify/retile for the corridor;
 - visual proof that it beats project-generated terrain.
 
-Preferred approach is hybrid: real-world terrain data may provide strong macro forms, while YACS keeps its own fictional road, route physics, PCG biomes, materials, roadside dressing and art direction.
+Preferred approach is hybrid: real-world terrain data provides strong macro forms and,
+where licensed reliable GIS data exists, a real road centerline may drive the
+**presentation alignment**. YACS still keeps route physics authoritative and
+independent, while PCG biomes, materials, roadside dressing and art direction
+remain project-owned. A presentation-road import must never silently replace
+`FRouteGeometryProfile` or the Road Physics Profile.
 
 ## Current implementation status — Passo Giau terrain source (2026-09-28)
 
