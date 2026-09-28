@@ -161,6 +161,7 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         )
         self.assertIn("git diff --cached --name-only", workflow)
         self.assertNotIn("git add -A", workflow)
+
     def test_preparation_reports_numeric_and_seam_diagnostics(self) -> None:
         prepare = read("scripts/assets/prepare_passo_giau_heightmap.py")
         self.assertIn("def terrain_diagnostics(", prepare)
@@ -172,7 +173,6 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("DEFAULT_LANDSCAPE_SIZE = 4033", prepare)
         self.assertIn("resampling=Resampling.cubic", prepare)
         self.assertIn('"landscape_resampling": "cubic"', prepare)
-
 
     def test_editor_build_links_landscape_module(self) -> None:
         build = read("Source/YetAnotherCyclingSim/YetAnotherCyclingSim.Build.cs")
