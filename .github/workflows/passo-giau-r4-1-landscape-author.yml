@@ -11,8 +11,8 @@ on:
       - 'Source/YetAnotherCyclingSim/Private/Editor/CyclingPassoGiauLandscapeSpikeCommandlet.cpp'
       - 'scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1'
       - 'scripts/assets/prepare_passo_giau_heightmap.py'
-      - 'scripts/assets/download_passo_giau_veneto_lidar.py'
-      - 'scripts/assets/prepare_passo_giau_veneto_lidar.py'
+      - 'scripts/assets/download_passo_giau_mase_pst.py'
+      - 'scripts/assets/prepare_passo_giau_mase_pst.py'
       - 'scripts/ue/stage3g_prepare_passo_giau_landscape_map.py'
       - 'scripts/ue/stage3g_capture_passo_giau_landscape.py'
       - 'scripts/ci/test_passo_giau_landscape_author_contract.py'
@@ -133,9 +133,9 @@ jobs:
           name: passo-giau-r4-1b-landscape-author-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             _passo-giau-worktree/Saved/RuntimeProof/CI/Stage3GR4_1/PassoGiauLandscape/**
-            _passo-giau-worktree/ExternalAssets/Terrain/PassoGiau/PreparedVenetoLidar5m/terrain-report.json
-            _passo-giau-worktree/ExternalAssets/Terrain/PassoGiau/PreparedVenetoLidar5m/passo_giau_veneto_lidar_5m_hillshade.png
-            _passo-giau-worktree/ExternalAssets/Terrain/PassoGiau/Veneto_Lidar5m/veneto-lidar-download-report.json
+            _passo-giau-worktree/ExternalAssets/Terrain/PassoGiau/PreparedMasePstLidar1x1/terrain-report.json
+            _passo-giau-worktree/ExternalAssets/Terrain/PassoGiau/PreparedMasePstLidar1x1/passo_giau_mase_pst_2m_preview_hillshade.png
+            _passo-giau-worktree/ExternalAssets/Terrain/PassoGiau/MASE_PST_Lidar1x1/mase-pst-download-report.json
           if-no-files-found: warn
           retention-days: 14
 
