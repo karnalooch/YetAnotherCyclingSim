@@ -68,16 +68,29 @@ jobs:
 
           # A successful authoring run leaves the generated LFS asset
           # materialized in this reused self-hosted worktree. If the next
-          # revision points at the same LFS object, checkout can legitimately
-          # leave those payload bytes in place. Force only this generated
-          # asset back through the index with smudge disabled before the
-          # fail-closed code-only guard.
+          # revision points at the same LFS object, checkout may legitimately
+          # keep those payload bytes even with GIT_LFS_SKIP_SMUDGE=1.
+          #
+          # Do not use checkout/index here: Git attribute filters can smudge
+          # the pointer again. Read the committed blob directly and write the
+          # canonical three-line LFS pointer ourselves, then fail closed if
+          # Git LFS does not recognize it.
           $spikeAsset = 'Content/Prototype/Maps/L_PassoGiauTerrainSpike.umap'
           if (Test-Path -LiteralPath $spikeAsset -PathType Leaf) {
-            git checkout-index -f -- $spikeAsset
-            if ($LASTEXITCODE -ne 0) { throw 'failed to restore Passo Giau LFS pointer from the index.' }
+            $pointerLines = @(& git cat-file blob "HEAD:$spikeAsset")
+            if ($LASTEXITCODE -ne 0 -or $pointerLines.Count -ne 3) {
+              throw 'failed to read canonical Passo Giau LFS pointer from HEAD.'
+            }
+            $pointerText = ($pointerLines -join "`n") + "`n"
+            [System.IO.File]::WriteAllText(
+              (Join-Path $PWD $spikeAsset),
+              $pointerText,
+              [System.Text.UTF8Encoding]::new($false)
+            )
             git lfs pointer --check "--file=$spikeAsset" *> $null
-            if ($LASTEXITCODE -ne 0) { throw 'Passo Giau spike map is still materialized before code-only validation.' }
+            if ($LASTEXITCODE -ne 0) {
+              throw 'Passo Giau spike map is still materialized before code-only validation.'
+            }
           }
 
           if (git status --porcelain --untracked-files=all) {
