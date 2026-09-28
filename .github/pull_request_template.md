@@ -16,6 +16,7 @@ Closes #
 - [ ] No generated Unreal directories are committed
 - [ ] Binary Unreal/source assets that require Git LFS are tracked by LFS
 - [ ] New dependencies have an acceptable license and security posture
+- [ ] Third-party code/assets/data have recorded provenance and required notices, or this PR adds none
 - [ ] CI is expected to execute the relevant suite rather than silently skip it
 
 ## Merge policy
