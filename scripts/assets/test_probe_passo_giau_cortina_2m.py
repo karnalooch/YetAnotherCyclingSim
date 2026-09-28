@@ -255,6 +255,41 @@ class Cortina2mProbeTests(unittest.TestCase):
         self.assertEqual("1.0.0", result["proven"][0]["version"])
         self.assertEqual([2.0, 2.0], result["proven"][0]["proven_native_resolution_m"])
 
+    def test_direct_describe_stops_after_terminal_wcs_disabled_error(self) -> None:
+        original = probe.fetch_coverage_description
+        calls = []
+
+        def fake_fetch(endpoint: str, version: str, coverage_id: str):
+            calls.append((endpoint, version, coverage_id))
+            raise RuntimeError(
+                "WCS DescribeCoverage exception: Service WCS is disabled"
+            )
+
+        probe.fetch_coverage_description = fake_fetch
+        try:
+            result = probe.probe_direct_wcs_descriptions(
+                "rv:DTM_2m_clip",
+                [
+                    "https://example.test/wcs",
+                    "https://example.test/rv/wcs",
+                ],
+            )
+        finally:
+            probe.fetch_coverage_description = original
+
+        self.assertEqual(2, len(calls))
+        self.assertEqual(2, len(result["attempts"]))
+        self.assertTrue(
+            all(item.get("terminal_endpoint_error") for item in result["attempts"])
+        )
+        self.assertEqual([], result["proven"])
+
+    def test_olympic_viewer_contract_uses_webgis_86(self) -> None:
+        self.assertEqual(
+            "https://idt2.regione.veneto.it/idt/webgis/viewer?webgisId=86",
+            probe.VIEWER_URL,
+        )
+
     def test_legacy_describe_layer_endpoint_is_normalized_to_https(self) -> None:
         endpoint = probe.normalize_service_endpoint(
             "http://idt2-geoserver.regione.veneto.it:80/geoserver/wcs?"
