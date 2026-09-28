@@ -524,6 +524,7 @@ def wcs_coverage_candidates(
         title = (
             child_text(element, "Title")
             or child_text(element, "Label")
+            or child_text(element, "label")
             or child_text(element, "Description")
         )
         values = {normalized(identifier), normalized(title)}
