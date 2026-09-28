@@ -13,6 +13,7 @@ on:
       - 'scripts/assets/prepare_passo_giau_heightmap.py'
       - 'scripts/assets/download_passo_giau_mase_pst.py'
       - 'scripts/assets/prepare_passo_giau_mase_pst.py'
+      - 'scripts/assets/prepare_passo_giau_veneto_lidar.py' # shared terrain diagnostics
       - 'scripts/ue/stage3g_prepare_passo_giau_landscape_map.py'
       - 'scripts/ue/stage3g_capture_passo_giau_landscape.py'
       - 'scripts/ci/test_passo_giau_landscape_author_contract.py'
