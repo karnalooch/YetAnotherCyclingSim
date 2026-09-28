@@ -260,12 +260,8 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
     def test_road_preparer_samples_active_mase_hybrid_terrain(self) -> None:
         prepare = read("scripts/assets/prepare_passo_giau_road.py")
         self.assertIn('return source_root() / "PreparedMasePstLidar1x1"', prepare)
-        self.assertIn(
-            '"passo_giau_mase_pst_hybrid_1m_8km_epsg32632.tif"', prepare
-        )
-        self.assertIn(
-            '"passo_giau_mase_pst_hybrid_2m_preview_hillshade.png"', prepare
-        )
+        self.assertIn('"passo_giau_mase_pst_hybrid_1m_8km_epsg32632.tif"', prepare)
+        self.assertIn('"passo_giau_mase_pst_hybrid_2m_preview_hillshade.png"', prepare)
         self.assertNotIn("PreparedVenetoLidar5m", prepare)
         self.assertNotIn("passo_giau_veneto_lidar_5m_8km_epsg32632.tif", prepare)
 
@@ -284,10 +280,7 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn('"terrain_source_coverage"', road)
         self.assertIn('"mase_primary_length_m"', road)
         self.assertIn('"veneto_fallback_length_m"', road)
-        self.assertIn(
-            "Prepare active MASE-primary hybrid terrain source",
-            workflow,
-        )
+        self.assertIn("Prepare active MASE-primary hybrid terrain source", workflow)
         self.assertIn("download_passo_giau_mase_pst.py", workflow)
         self.assertIn("prepare_passo_giau_mase_pst.py", workflow)
         self.assertIn("'scripts/assets/prepare_passo_giau_mase_pst.py'", author)
