@@ -26,7 +26,7 @@ from typing import Any, Iterable
 
 WMS_ENDPOINT = "https://idt2-geoserver.regione.veneto.it/geoserver/wms"
 WCS_ENDPOINT = "https://idt2-geoserver.regione.veneto.it/geoserver/wcs"
-VIEWER_URL = "https://idt2.regione.veneto.it/idt/webgis/viewer?webgisId=246"
+VIEWER_URL = "https://idt2.regione.veneto.it/idt/webgis/viewer?webgisId=86"
 DOWNLOAD_PAGE = "https://idt2.regione.veneto.it/idt/downloader/download"
 GENERIC_LAYERS_ENDPOINT = "https://idt2.regione.veneto.it/idt/download/layerDownload/getDownloadableLayersWithPermission"
 CSW_ENDPOINT = "https://idt2.regione.veneto.it/geoportal/csw"
@@ -828,7 +828,10 @@ def probe_direct_wcs_descriptions(
     proven: list[dict[str, Any]] = []
     coverage_ids = direct_coverage_ids(wms_name)
     for endpoint in endpoints:
+        endpoint_disabled = False
         for version in WCS_VERSIONS:
+            if endpoint_disabled:
+                break
             for coverage_id in coverage_ids:
                 attempt: dict[str, Any] = {
                     "endpoint": endpoint,
@@ -847,9 +850,15 @@ def probe_direct_wcs_descriptions(
                     attempt["status"] = "PROVEN"
                     proven.append(dict(attempt))
                 except Exception as exc:
+                    error = str(exc)
                     attempt["status"] = "FAILED"
-                    attempt["error"] = str(exc)
+                    attempt["error"] = error
+                    if "service wcs is disabled" in error.lower():
+                        attempt["terminal_endpoint_error"] = True
+                        endpoint_disabled = True
                 attempts.append(attempt)
+                if endpoint_disabled:
+                    break
     return {
         "coverage_ids": coverage_ids,
         "attempts": attempts,
