@@ -1,6 +1,6 @@
 # YACS UE-MCP world-generation architecture
 
-**Status:** Stage 3G visual/asset recovery active; native/editor-scripted persistent PCG work is already in flight in Draft PR #162, while persistent **agent-driven MCP** worldgen still requires its own guarded proof before adoption
+**Status:** Stage 3G visual/asset recovery active; PR #162 has merged the deterministic PCG forest/route-exclusion baseline, while persistent **agent-driven MCP** worldgen still requires its own guarded proof before adoption
 **Tracking:** #85
 **Initial upstream:** `db-lyon/ue-mcp`
 **Reviewed pin:** `v1.3.9`
@@ -63,7 +63,7 @@ Existing authored/prototype content outside that root is input/reference, not an
 
 The Stage 3G spike is stricter: it starts with inspection and transient verification only. Persistent writes are intentionally not enabled yet.
 
-**Recovery note (27.09.2026):** PR #155 proved the Stage 3G CI/authoring harness. Draft PR #162 now contains the first real conifer baseline plus persisted `PCG_RouteExclusion` and `PCG_Forest` authoring assets, but its final committed-SHA UE/full-validation/visual/performance acceptance is still pending. This progress was achieved through explicit project authoring workflows and does **not** mean persistent MCP-driven generation is already approved. #85 remains the controlled agent-orchestration track, not a prerequisite that blocks all native/editor-scripted PCG work.
+**Recovery note (28.09.2026):** PR #155 proved the Stage 3G CI/authoring harness and PR #162 is merged, providing the first real conifer baseline plus persisted `PCG_RouteExclusion` and `PCG_Forest` assets. Issue #230 now builds the YACS World Authoring Library above those assets: semantic presets, approved-provider discovery/acquisition, deterministic layout and a guarded Scene Composer. This does **not** mean persistent MCP-driven generation is already approved. #85 remains the controlled agent-orchestration track.
 
 ## 3. Why UE-MCP
 
@@ -297,3 +297,28 @@ an explicit work item.
 The first proven headless transport command is not visual acceptance. A later
 interactive/GPU proof must separately demonstrate visual capture before remote
 world-art authoring is claimed to work.
+
+## 14. World Authoring Library intent layer
+
+Issue #230 introduces the repo-owned semantic layer documented in
+[`YACS_WORLD_AUTHORING_LIBRARY.md`](YACS_WORLD_AUTHORING_LIBRARY.md).
+
+The library sits **above** the transport/MCP surface and **above** raw provider
+APIs:
+
+```text
+natural-language request
+        -> repo-owned intent preset
+        -> semantic asset selection / approved acquisition
+        -> deterministic Scene Composer
+        -> existing YACS PCG graphs or transient proof backend
+        -> screenshot/proof
+```
+
+The agent never passes arbitrary Python, shell, asset URLs or Unreal paths
+through this interface. Automatic provider discovery is candidate discovery;
+only qualified catalog assets may be used by the first visual composer.
+
+The initial #230 proof remains transient. Persistent output keeps the existing
+Phase B requirement: writes only under `/Game/Generated/YACS/**`, with
+rollback/proof and separate acceptance.

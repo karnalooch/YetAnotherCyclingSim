@@ -178,6 +178,48 @@ MASE PST source after an explicit EPSG:4326 -> EPSG:32632 metric reprojection.
 The UE grid improves Landscape topology compatibility; it does **not** create
 measured terrain detail beyond the source samples.
 
+#### P0 guardrail — SP638 / DTM spatial-grid trap
+
+The official SP638 presentation centerline and the terrain raster are
+**independent spatial measurements**. Their grids must never be treated as if
+they share vertices or exact sample locations.
+
+For the current Passo Giau sources, keep these scales explicit during review:
+
+- official road geometry has metre-scale positional uncertainty (approximately
+  the 4 m class documented for the selected road source);
+- the canonical Veneto terrain source is sampled on a 5 m x 5 m grid;
+- the prepared Unreal 4033 x 4033 Landscape is about 1.98 m/vertex, but those
+  extra vertices are interpolated presentation samples rather than new terrain
+  measurements.
+
+On a steep slope or hairpin, shifting a road sample by only a few metres can
+move it across materially different terrain elevations or even across opposite
+sides of a road cut. A road roughly one DTM-cell wide can therefore fall between
+terrain samples even when the final Unreal Landscape grid looks visually dense.
+
+**Never snap the road centerline, road edges, or authoritative road XY to DTM or
+Landscape vertices.** Preserve the canonical road XY, interpolate/sample terrain
+Z continuously from the canonical DTM, and author the road bench, cut, fill,
+embankment and rider-close tie-in as separate local presentation geometry.
+
+Corollaries:
+
+- 5 m DTM -> ~1.98 m/vertex Landscape resampling does not remove the original
+  5 m source spacing;
+- a denser Landscape cannot resolve disagreement caused by independent road and
+  terrain sampling;
+- local road/terrain mismatch is not evidence that the road should be warped to
+  the Landscape grid;
+- review any proposed terrain/road fix that changes canonical road XY as a
+  **P0 architecture violation** unless a separately verified source defect is
+  being corrected deliberately;
+- never infer production curvature or local cross-section frames from a window
+  smaller than the road source's positional-accuracy scale. Dense 2 m spline
+  samples are useful mesh stations, not independent 2 m survey observations.
+  R4.1B.3 therefore keeps those exact stations but estimates curvature/tangent
+  frames over a 6 m half-window.
+
 #### Real-road alignment policy
 
 The Passo Giau road should be sourced from real GIS geometry instead of being
@@ -636,11 +678,140 @@ part of the earlier failure.
 Steep cliff faces still show visible heightfield stepping/ribbing in perspective.
 That remaining limitation should not be hidden by blur or by pretending 16-bit
 precision is the cause. The data uses nearly the full uint16 domain and the
-measured vertical quantization step is only about **2.36 cm**. The remaining
-steep-face artifact is therefore treated as a Landscape/heightfield representation
-and source-resolution constraint until disproven.
+measured vertical quantization step is only about **2.36 cm**.
 
-Decision for R4.1:
+### Priority source discovery — `DTM_2m_Cortina` (2026-09-28)
+
+The terrain-source decision changed after new official-source research.
+
+Regione del Veneto commissioned a dedicated aerial photogrammetry + LiDAR survey
+covering Cortina d'Ampezzo and the neighboring municipalities **Colle Santa
+Lucia, Borca di Cadore, Selva di Cadore and San Vito di Cadore**. The official
+procurement specifies **4 LiDAR points/m²** and production of both DSM and DTM
+products.
+
+Official source:
+https://bur.regione.veneto.it/BurvServices/Pubblica/DettaglioDgr.aspx?id=426837
+
+The Veneto geoportal currently exposes a layer named **`DTM_2m_Cortina`**.
+That layer is now the priority candidate for a source-resolution A/B over the
+Passo Giau / SP638 AOI.
+
+Geoportal:
+https://idt2.regione.veneto.it/idt/webgis/viewer?webgisId=246
+
+The existing harmonized regional DTM remains the proven baseline and is
+officially published with **5 m cells**:
+https://idt2.regione.veneto.it/nuovo-dtm-derivato-da-dati-lidar/
+
+This matters because the current 4033 x 4033 Landscape over ~8 km has about
+**1.984 m/vertex**, but the existing source still contains measured terrain only
+at 5 m spacing. A verified 2 m DTM would make the source sampling scale closely
+match the UE Landscape vertex spacing instead of merely interpolating a coarser
+surface.
+
+For reference:
+
+- current 2017 candidate: `8000 / 2016 ~= 3.968 m/vertex`;
+- target 4033 candidate: `8000 / 4032 ~= 1.984 m/vertex`;
+- Epic explicitly lists **4033 x 4033** as a recommended Landscape size.
+
+Epic reference:
+https://dev.epicgames.com/documentation/unreal-engine/landscape-technical-guide-in-unreal-engine
+
+### Geospatial pipeline decision
+
+**QGIS/GDAL becomes the master preprocessing layer for YACS world data.**
+
+The intended pipeline is now:
+
+`official DEM -> QGIS/GDAL Float working raster -> one CRS/resample step -> final Float DEM -> UInt16/R16 transport -> Unreal Landscape`
+
+Rules:
+
+- keep the source DEM immutable;
+- keep elevation in Float32/Float64 through crop/reprojection/resampling;
+- use one metric CRS for terrain, SP638, orthophoto and future world masks;
+- prefer **EPSG:7795 / RDN2008 Zone 12 (E-N)** as the working candidate when
+  consistent with downloaded source metadata;
+- do not render QGIS imagery and reuse it as height data;
+- perform at most one deliberate reprojection/resample;
+- test `cubic` and `cubicspline` for elevation rather than chaining arbitrary
+  resize operations;
+- convert to UInt16 only at the Unreal transport boundary;
+- choose elevation min/max deliberately with documented headroom;
+- preserve SP638 XY independently from the raster grid.
+
+GDAL supports explicit target resolution and resampling algorithms:
+https://gdal.org/en/stable/programs/gdalwarp.html
+
+GDAL UInt16 range mapping:
+https://gdal.org/en/stable/programs/gdal_translate.html
+
+For the 8 km / 4033 target:
+
+`XY Scale ~= 198.412698 cm`
+
+For an encoded vertical range `R` metres:
+
+`Z Scale = R * 100 / 512`
+
+per Epic's Landscape height-domain contract.
+
+### P0 next experiment — 5 m vs real 2 m
+
+Do **not** continue adding terrain art, runtime smoothing or local replacement
+skins until this source-resolution experiment is complete.
+
+Build two otherwise identical neutral Landscape proofs:
+
+1. **Baseline A**
+   - current harmonized Veneto 5 m DTM;
+   - 4033 x 4033;
+   - same AOI;
+   - same UE import path;
+   - same forced LOD / lighting-only camera.
+
+2. **Candidate B**
+   - verified `DTM_2m_Cortina`;
+   - same physical AOI;
+   - QGIS/GDAL deterministic preprocessing;
+   - 4033 x 4033;
+   - ~1.984 m/vertex;
+   - same UE import path and camera.
+
+No production material, foliage, rocks, cliff meshes, procedural noise,
+road cut/fill or runtime terrain-skin replacement is allowed in this A/B.
+
+Interpretation:
+
+- if B removes or dramatically reduces the Minecraft-like faceting, the
+  horizontal resolution of the source is confirmed as the dominant problem and
+  the 2 m DTM becomes the macro-terrain candidate;
+- if B looks materially the same, investigate Landscape triangulation, LOD and
+  importer behavior before resuming art work.
+
+The current 16-bit path remains unlikely to be the root cause because the
+measured vertical quantization is already centimetric.
+
+### Status of the R4.1B.3 local terrain-skin experiment
+
+The R4.1B.3 world-aligned rider-close terrain-skin path reached technical green:
+
+- deterministic kernel tests passed;
+- UE 5.8 Geometry Script capability passed;
+- real SP638 topology proof passed;
+- 4K terrain-skin render completed.
+
+However, **technical green did not produce an acceptable rider-camera terrain**.
+The terrain-skin path is therefore retained as diagnostic/prototyping evidence,
+not promoted as the production terrain solution.
+
+This is a useful negative result: Unreal-side runtime/local smoothing should not
+become the default repair for a source-resolution problem that can be solved
+upstream in GIS.
+
+### Revised decision for R4.1
 
 - promote the MASE PST 1x1 source to the **canonical macro-terrain path A**
   input, subject to a fresh exact-SHA authoring/render proof;
@@ -652,8 +823,8 @@ Decision for R4.1:
   destructively smoothing the DEM;
 - require a route-level 1200 m golden slice before final human visual acceptance.
 
-Issue #213 / PR #215 remain open until the bounded Landscape path is reviewed
-and its exploratory scaffolding/evidence is cleaned into a maintainable form.
+Issue #213 / PR #215 history remains valid evidence of the 5 m baseline. The
+new 2 m A/B is the priority source-selection gate before final R4.1 propagation.
 
 
 ### Historical P0 source-resolution gate — Cortina 2021 LiDAR / 2 m WebGIS
@@ -761,6 +932,215 @@ It captures:
 For R4.1B, this playbook is the visual-debug SSOT. No terrain smoothing,
 material camouflage, Nanite change or full-route propagation should bypass its
 diagnostic order.
+
+## R4.1B.2 — bounded SP638 hairpin corridor spike (2026-09-28)
+
+The first persisted-SP638 cyclist-height proof was technically valid but visually
+rejected. R4.1B.2 therefore stops broad world propagation and tests one bounded
+hairpin before any material/asset dressing.
+
+### Research-backed implementation contract
+
+The spike follows four external signals:
+
+- Epic Landscape Splines: spline-driven Landscape deformation supports smooth
+  raise/lower cut-fill with side falloff:
+  https://dev.epicgames.com/documentation/unreal-engine/landscape-splines-in-unreal-engine
+- Epic Landscape Patch: if spline cut-fill is insufficient, a later bounded
+  patch/edit-layer implementation can procedurally change the heightmap and bake
+  the result without runtime cost:
+  https://dev.epicgames.com/documentation/unreal-engine/landscape-patch-system
+- RoadBuilder uses separate road/ground geometry and exposes a boundary spline
+  for PCG, reinforcing the project decision to separate road presentation from
+  macro Landscape responsibility:
+  https://github.com/fullike/RoadBuilder
+- A community report shows Landscape spline roads can still clip on uneven terrain
+  even with Raise/Lower enabled. This is not an authority, but it is a useful
+  failure-mode warning: the proof remains rider-camera visual evidence, not an
+  assumption that the tool must work:
+  https://www.reddit.com/r/unrealengine/comments/1lag5w5/
+
+### Fast proof scope
+
+The R4.1B.2 proof deliberately reuses the already-persisted
+`L_PassoGiauTerrainSpike.umap`. It does **not** redownload the 33 Veneto DTM
+tiles and does **not** rebuild the 8 km x 8 km Landscape.
+
+The proof:
+
+1. materializes only the persisted LFS map;
+2. finds the official SP638 spline and selects the maximum-curvature hairpin;
+3. crops the working spline to approximately 700 m;
+4. hides the old full-road debug spline meshes;
+5. applies transient `LandscapeProxy.editor_apply_spline(...)` deformation with
+   bounded raise/lower and side falloff;
+6. renders a neutral 6 m road plus a 10 m shoulder/roadbed proof surface;
+7. replaces the checkerboard Landscape material with a neutral diagnostic material;
+8. captures a deterministic 3840 x 2160 cyclist-height PNG;
+9. does not save the transient Landscape deformation back into the map.
+
+This keeps iteration cost bounded to LFS map materialization + incremental editor
+build + one Unreal capture.
+
+### Result — run 36415573299
+
+The second R4.1B.2 attempt completed **GREEN** after the first attempt exposed
+two proof-harness API mistakes (invalid edit-layer name and an incorrect Python
+material setter). The successful proof used edit layer `Layer`, a 685.369 m
+maximum-curvature SP638 slice centered around source distance 15.525 km,
+transient raise/lower spline deformation, and a 3840 x 2160 rider capture.
+
+The result is **VISUAL FAIL** despite the green technical proof.
+
+What improved:
+
+- the road is immediately readable from cyclist height;
+- the bounded cut/fill path executes deterministically;
+- the fast proof no longer rebuilds the whole 8 km x 8 km terrain;
+- transient proof changes leave tracked map assets untouched.
+
+What remains unacceptable:
+
+- rider-visible uphill faces still show severe heightfield ribbing/terracing;
+- the uniform proof shoulder/roadbed becomes a large artificial wedge/slab;
+- the local road cut/embankment still does not read as believable Alpine terrain.
+
+Decision: retain the bounded proof loop and spline deformation primitive, but do
+not promote the box-strip corridor. R4.1B.3 must generate dedicated high-detail
+local ground/cut/embankment geometry for the same hairpin and demote Landscape
+to macro background beneath/behind that local corridor. Do not add vegetation or
+production materials before that geometry passes the rider-camera gate.
+
+### Acceptance gate
+
+The candidate passes only if the rider-height PNG shows all of the following:
+
+- the hairpin reads immediately as a mountain road;
+- no obvious road/terrain clipping;
+- no floating road slab;
+- cut/fill transition is smoother than the rejected R4.1B.1 proof;
+- the immediate road corridor no longer exposes the previous Minecraft-like
+  heightfield failure as the dominant foreground read;
+- the road remains presentation-only and does not alter
+  `FRouteGeometryProfile` or Road Physics Profile truth.
+
+A technically green run can still be recorded as `VISUAL_FAIL`.
+
+If this spike passes visually, the next implementation promotes the method into
+persistent bounded road-cut/corridor authoring. If it fails, the experiment is
+kept in the journal and the next spike moves to Landscape Patch / generated
+ground-mesh treatment rather than increasing global Landscape resolution.
+
+
+## R4.1B.3 — high-detail local ground / cut / embankment corridor
+
+Issue: [#223](https://github.com/karnalooch/YetAnotherCyclingSim/issues/223)
+
+R4.1B.2 proved the bounded hairpin loop but failed visually. The next terrain
+step therefore keeps Landscape as macro terrain and replaces the rider-close
+box-strip roadbed with dedicated local corridor geometry around the exact same
+official SP638 hairpin.
+
+### Tool ownership
+
+Use the following systems with deliberately separate responsibilities:
+
+1. **Veneto 5 m UE Landscape** — macro mountain mass, valley continuity and
+   distant terrain only.
+2. **Landscape Spline / non-destructive edit layer** — broad bounded raise/lower
+   so the macro heightfield does not pierce the road corridor.
+3. **Landscape Patch System** — bounded evaluation for localized deterministic
+   height correction where spline deformation alone cannot form a clean bench.
+   Patch data must remain editor-time, reproducible and presentation-only.
+4. **Geometry Script / Dynamic Mesh** — primary candidate for the camera-close
+   uphill cut, ditch/bench, shoulder-to-ground transition, downhill embankment
+   and other local earthwork geometry.
+5. **RoadForge mesh core** — asphalt, shoulders and markings only after the
+   terrain/centerline contract passes. RoadForge must not own terrain or restore
+   its OSM/city/PCG subsystems.
+6. **PCG + materials** — dressing only after neutral geometry passes: rock
+   faces, scree, rubble, grass, conifers and transition masking.
+
+Epic's UE 5.8 documentation confirms that Landscape Patch is an editor-side
+procedural height/weight modification system whose results bake into the
+Landscape without runtime patch cost. Geometry Script provides Dynamic Mesh
+construction operations suitable for swept local presentation geometry.
+
+References:
+
+- Epic — Landscape Patch System:
+  https://dev.epicgames.com/documentation/unreal-engine/landscape-patch-system
+- Epic — Landscape Edit Layers:
+  https://dev.epicgames.com/documentation/unreal-engine/landscape-edit-layers-in-unreal-engine
+- Epic — Geometry Scripting Reference:
+  https://dev.epicgames.com/documentation/unreal-engine/geometry-scripting-reference-in-unreal-engine
+
+### Cross-section contract
+
+The local corridor is not a symmetric road slab. Each stable spline sample
+constructs an oriented frame and supports independent left/right earthwork:
+
+    uphill terrain
+      -> cut face
+      -> ditch / bench
+      -> shoulder
+      -> asphalt
+      -> shoulder
+      -> embankment
+      -> downhill terrain
+
+The implementation must preserve per-sample elevation and allow one side to be a
+cut while the other side is a fill. Dense sampling is required at the
+maximum-curvature hairpin.
+
+### Hairpin adaptive-offset rule
+
+For the bounded maximum-curvature hairpin, **road-edge and shoulder offsets are
+protected**. Only earthwork points outside the shoulder may contract on the
+inside of a bend.
+
+The deterministic spike uses signed sampled XY curvature to derive the local
+radius. On the inside of a bend it preserves the road/shoulder first, then keeps
+**65% of the remaining clearance between the protected shoulder and the local
+curvature radius** for earthwork; the other 35% stays as a singularity margin.
+The contraction is tapered across neighboring stations to avoid an abrupt width
+step. If the local radius cannot leave at least **0.15 m** outside the protected
+shoulder, the proof fails closed rather than shrinking or pinching the
+road/shoulder presentation.
+
+These values are bounded R4.1B.3 geometry defaults, not route/physics truth.
+Cross-section role order remains stable while outer earthwork lateral offsets
+may vary per station. The deterministic mesh hash covers the resulting actual
+vertices and triangle ordering.
+
+### Geometry reject conditions
+
+Reject or rework the local-mesh candidate if the neutral proof shows:
+
+- miter spikes or self-intersection on the inside of the hairpin;
+- inverted/degenerate triangles;
+- pinched shoulders;
+- visible regular segment blocks;
+- a rectangular downhill wedge;
+- camera-close Landscape ribbing still dominating the cut face;
+- discontinuous normals or obvious seams;
+- a second, competing SP638 centerline.
+
+### Execution order
+
+1. Reuse the #217 maximum-curvature hairpin selector and persisted official
+   SP638 spline.
+2. Keep the proven transient Landscape spline cut/fill as broad macro
+   accommodation.
+3. Generate the local asymmetric earthwork corridor in neutral geometry.
+4. Capture the same deterministic 3840x2160 cyclist-height proof.
+5. Record topology/determinism evidence and human visual status.
+6. Only after the neutral ground geometry passes, layer in RoadForge road
+   surface and then materials/PCG dressing.
+
+Do not start broad propagation, production materials or foliage before this
+geometry gate passes. A green workflow remains insufficient without human visual
+acceptance.
 
 ## 20. Definition of Done
 

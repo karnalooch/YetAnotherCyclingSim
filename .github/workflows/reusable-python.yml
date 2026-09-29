@@ -33,7 +33,10 @@ jobs:
         run: ruff format --check scripts/ci
 
       - name: Compile Python sources
-        run: python -m compileall -q physics_reference/src scripts/ci
+        run: |
+          python -m compileall -q physics_reference/src scripts/ci
+          python -m py_compile scripts/assets/yacs_asset_library.py
+          python -m py_compile scripts/worldgen/yacs_scene_layout.py
 
       - name: Run GitHub Actions platform contract tests
         run: python scripts/ci/test_ci_platform_contract.py
@@ -104,6 +107,13 @@ jobs:
 
       - name: Run asset validation unit tests
         run: python scripts/ci/test_validate_changed_assets.py
+
+      - name: Run YACS World Authoring Library unit tests
+        run: |
+          python scripts/ci/test_yacs_asset_library.py
+          python scripts/ci/test_yacs_scene_layout.py
+          python scripts/ci/test_yacs_asset_candidate_import_contract.py
+          python scripts/ci/test_yacs_pcg_patch_contract.py
 
       - name: Run change-classifier workflow contract tests
         run: python scripts/ci/test_change_classifier_workflow.py

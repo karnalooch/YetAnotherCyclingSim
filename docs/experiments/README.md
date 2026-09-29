@@ -28,6 +28,7 @@ The renderer is standard-library-only and intentionally not coupled to the heavy
 
 | Date | Stage | Area | Status | Experiment record | PR | Run |
 |---|---|---|---|---|---:|---:|
+| 2026-09-28 | R4.1B.2 | road-terrain | **VISUAL FAIL** | [SP638 bounded hairpin corridor cut/fill proof](records/2026-09-28-sp638-hairpin-corridor-cut-fill.json) | [#217](https://github.com/karnalooch/YetAnotherCyclingSim/pull/217) | [36415573299](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/36415573299) |
 | 2026-09-28 | R4.1B | terrain | **VISUAL FAIL** | [Veneto 5 m DTM -> 4033 Landscape candidate](records/2026-09-28-veneto-dtm-4033-landscape.json) | [#215](https://github.com/karnalooch/YetAnotherCyclingSim/pull/215) | [36395726623](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/36395726623) |
 | 2026-09-28 | R4.1B | terrain | **TECHNICAL PASS** | [4K FXAA Landscape geometry diagnostic](records/2026-09-28-veneto-4k-fxaa-diagnostic.json) | [#215](https://github.com/karnalooch/YetAnotherCyclingSim/pull/215) | [36399060374](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/36399060374) |
 | 2026-09-28 | R4.1B | terrain | **SUPERSEDED** | [TINITALY 10 m DEM bootstrap and Unreal heightmap preparation](records/2026-09-28-tinitaly-dem-bootstrap.json) | [#212](https://github.com/karnalooch/YetAnotherCyclingSim/pull/212) | [36357523138](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/36357523138) |

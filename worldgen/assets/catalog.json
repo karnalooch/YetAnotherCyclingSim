@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "generated_content_root": "/Game/Generated/YACS",
+  "providers": {
+    "polyhaven": {
+      "name": "Poly Haven",
+      "api_base": "https://api.polyhaven.com",
+      "asset_license": "CC0-1.0",
+      "allowed_download_hosts": ["dl.polyhaven.org"],
+      "credit": "Source assets are provided by Poly Haven."
+    }
+  },
+  "assets": [
+    {
+      "id": "stage3g_fir_sapling_medium",
+      "semantic_roles": ["mass_conifer", "alpine_conifer", "forest_tree"],
+      "lifecycle_status": "approved",
+      "source": {
+        "provider": "polyhaven",
+        "asset_id": "fir_sapling_medium"
+      },
+      "ue_asset_path": "/Game/Prototype/Environment/Stage3G/Imported/Meshes/SM_Stage3G_FirSaplingMedium",
+      "capabilities": {
+        "pcg_mass_scatter": true,
+        "hero_near_camera": false,
+        "has_lods": true
+      },
+      "cost": {
+        "profile": "mass_forest",
+        "notes": "Validated R2 mass-scatter conifer with aggressive LOD profile."
+      }
+    },
+    {
+      "id": "stage3g_fir_tree_01",
+      "semantic_roles": ["hero_conifer", "alpine_conifer", "forest_tree"],
+      "lifecycle_status": "candidate",
+      "source": {
+        "provider": "polyhaven",
+        "asset_id": "fir_tree_01"
+      },
+      "ue_asset_path": null,
+      "capabilities": {
+        "pcg_mass_scatter": false,
+        "hero_near_camera": true,
+        "has_lods": true
+      },
+      "cost": {
+        "profile": "heavy_hero",
+        "notes": "Whole-FBX import exceeded practical memory budget during broad-scatter reduction profiling; never auto-select for mass forest."
+      }
+    },
+    {
+      "id": "stage3g_boulder",
+      "semantic_roles": ["roadside_boulder", "rock_dressing", "high_alpine_rock"],
+      "lifecycle_status": "approved",
+      "source": {
+        "provider": "polyhaven",
+        "asset_id": "boulder_01"
+      },
+      "ue_asset_path": "/Game/Prototype/Environment/Stage3G/Imported/Meshes/SM_Stage3G_Boulder",
+      "capabilities": {
+        "pcg_mass_scatter": true,
+        "hero_near_camera": true,
+        "has_lods": true
+      },
+      "cost": {
+        "profile": "sparse_rock",
+        "notes": "Validated Stage 3G boulder with generated LOD policy."
+      }
+    },
+    {
+      "id": "stage3g_forest_ground",
+      "semantic_roles": ["forest_ground", "ground_material"],
+      "lifecycle_status": "approved",
+      "source": {
+        "provider": "polyhaven",
+        "asset_id": "forrest_ground_03"
+      },
+      "ue_asset_path": "/Game/Prototype/Environment/Stage3G/Imported/Textures/T_Stage3G_ForestGround_BaseColor",
+      "capabilities": {
+        "pcg_mass_scatter": false,
+        "hero_near_camera": false,
+        "has_lods": false
+      },
+      "cost": {
+        "profile": "ground_texture",
+        "notes": "Existing forest-ground source family; material composition remains separate."
+      }
+    }
+  ]
+}
