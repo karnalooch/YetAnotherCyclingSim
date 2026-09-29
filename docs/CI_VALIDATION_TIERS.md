@@ -27,6 +27,35 @@ For `main` pushes, `asset_full` changes continue to run the full proof.
 
 This means vegetation, material, water, lighting and other world-art iteration can be accumulated in a draft PR without paying for a full LFS checkout, authoring pass and three-point Stage 3G proof after every small commit.
 
+## Gumball Proof Broker — explicit heavy proof intent
+
+R4.1 heavyweight proof requests use the trusted Gumball v0.6 Proof Broker
+instead of routine Actions-UI clicking.
+
+Current configured proof:
+
+```text
+/gumball proof r4-1b3-geometry
+```
+
+The broker runs from trusted default-branch code, authorizes the requester,
+resolves the open same-repository PR HEAD to an exact 40-character SHA, verifies
+the allow-listed target workflow contract, then dispatches that workflow with
+the exact SHA and a deterministic request id.
+
+For one proof + PR + exact SHA:
+
+- existing matching artifact -> reuse;
+- successful matching run -> reuse;
+- queued/running matching run -> do not duplicate;
+- failed matching run -> explicit `retry` is required;
+- explicit authorized request -> dispatch;
+- non-critical automatic heavy request -> defer.
+
+The target R4.1B.3 workflow keeps `workflow_dispatch` as a recovery fallback,
+but broker-driven dispatch is the normal path. Heavy proof still runs only when
+explicitly requested; this changes the control plane, not the evidence bar.
+
 ## R4.1 prepared proof-suite reuse
 
 For the bounded Stage 3G R4.1 terrain/road diagnostics, the canonical heavy manual lane uses **build once, prove many** inside one trusted runner job:

@@ -34,12 +34,17 @@ jobs:
 
       - name: Compile Python sources
         run: |
-          python -m compileall -q physics_reference/src scripts/ci
+          python -m compileall -q physics_reference/src scripts/ci scripts/ops
           python -m py_compile scripts/assets/yacs_asset_library.py
           python -m py_compile scripts/worldgen/yacs_scene_layout.py
 
       - name: Run GitHub Actions platform contract tests
         run: python scripts/ci/test_ci_platform_contract.py
+
+      - name: Run Gumball Proof Broker contract tests
+        run: |
+          python scripts/ops/proof_broker.py validate
+          python -m unittest scripts/ci/test_proof_broker.py -v
 
       - name: Run GitHub Windows probe workflow contract tests
         run: python scripts/ci/test_windows_probe_workflow.py
@@ -52,6 +57,7 @@ jobs:
 
       - name: Run reusable Stage 3G full-validation contract tests
         run: python scripts/ci/test_reusable_stage3g_full_workflow.py
+
       - name: Run R4.1 prepared proof-suite contract tests
         run: python scripts/ci/test_r4_1_proof_suite_contract.py
 
