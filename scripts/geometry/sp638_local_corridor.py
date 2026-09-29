@@ -477,6 +477,18 @@ def make_curvature_adaptive_profiles(
     right_core, right_outer = _side_extents(
         profile, protected_roles, positive_side=True
     )
+    left_shoulder = _side_shoulder_extent(
+        profile, shoulder_roles, positive_side=False
+    )
+    right_shoulder = _side_shoulder_extent(
+        profile, shoulder_roles, positive_side=True
+    )
+    if left_shoulder is None or right_shoulder is None:
+        raise ValueError("adaptive corridor requires protected shoulders on both sides")
+    if left_shoulder < left_core + minimum_shoulder_span_m - _EPSILON:
+        raise ValueError("left protected shoulder is narrower than minimum span")
+    if right_shoulder < right_core + minimum_shoulder_span_m - _EPSILON:
+        raise ValueError("right protected shoulder is narrower than minimum span")
 
     raw_left = [1.0] * len(centerline)
     raw_right = [1.0] * len(centerline)
@@ -493,33 +505,29 @@ def make_curvature_adaptive_profiles(
         positive_inside = curvature > 0.0
         core_extent = right_core if positive_inside else left_core
         outer_extent = right_outer if positive_inside else left_outer
-        if outer_extent <= core_extent + _EPSILON:
+        shoulder_extent = right_shoulder if positive_inside else left_shoulder
+        if outer_extent <= shoulder_extent + _EPSILON:
             continue
 
         local_radius = 1.0 / abs(curvature)
-        if local_radius <= core_extent + _EPSILON:
+        if local_radius <= shoulder_extent + _EPSILON:
             side = "positive" if positive_inside else "negative"
             raise ValueError(
                 f"centerline station {index} radius {local_radius:.3f} m "
-                f"reaches the {core_extent:.3f} m protected {side} road edge"
+                f"reaches the {shoulder_extent:.3f} m protected {side} shoulder"
             )
 
-        safe_outer_extent = core_extent + clearance_fraction * (
-            local_radius - core_extent
+        safe_outer_extent = shoulder_extent + clearance_fraction * (
+            local_radius - shoulder_extent
         )
-        minimum_outer_extent = (
-            core_extent
-            + minimum_shoulder_span_m
-            + minimum_earthwork_span_m
-        )
+        minimum_outer_extent = shoulder_extent + minimum_earthwork_span_m
         if safe_outer_extent < minimum_outer_extent - _EPSILON:
             side = "positive" if positive_inside else "negative"
             raise ValueError(
                 f"centerline station {index} safe outer extent "
                 f"{safe_outer_extent:.3f} m on the {side} inside side cannot "
-                f"preserve {minimum_shoulder_span_m:.3f} m shoulder plus "
-                f"{minimum_earthwork_span_m:.3f} m earthwork beyond the "
-                f"{core_extent:.3f} m protected road edge"
+                f"preserve {minimum_earthwork_span_m:.3f} m earthwork beyond "
+                f"the {shoulder_extent:.3f} m protected shoulder"
             )
 
         if safe_outer_extent >= outer_extent:
@@ -536,12 +544,8 @@ def make_curvature_adaptive_profiles(
     left_scales = _taper_scales(raw_left, taper_per_station)
     right_scales = _taper_scales(raw_right, taper_per_station)
 
-    left_minimum_outer = (
-        left_core + minimum_shoulder_span_m + minimum_earthwork_span_m
-    )
-    right_minimum_outer = (
-        right_core + minimum_shoulder_span_m + minimum_earthwork_span_m
-    )
+    left_minimum_outer = left_shoulder + minimum_earthwork_span_m
+    right_minimum_outer = right_shoulder + minimum_earthwork_span_m
     left_floor_scale = (
         (left_minimum_outer - left_core) / (left_outer - left_core)
         if left_outer > left_core + _EPSILON
