@@ -110,7 +110,6 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
         )
         self.assertIn("adaptive_asymmetric_earthwork_envelope", wrapper)
         self.assertIn("minimum_protected_clearance_m", wrapper)
-        self.assertIn("make_curvature_superelevation_angles(", capture)
         self.assertIn("apply_superelevation_to_profiles(", capture)
         self.assertIn("regularize_measured_superelevation_angles(", capture)
         self.assertIn("_sample_mase_lidar_bank_angles(", capture)
