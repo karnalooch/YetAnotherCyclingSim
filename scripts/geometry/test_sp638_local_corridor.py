@@ -11,6 +11,7 @@ from scripts.geometry.sp638_local_corridor import (
     build_corridor_mesh,
     corridor_mesh_hash,
     apply_superelevation_to_profiles,
+    fit_road_crossfall_from_transect,
     make_constant_profiles,
     make_curvature_adaptive_profiles,
     make_curvature_superelevation_angles,
@@ -195,6 +196,52 @@ class LocalGroundCorridorTests(unittest.TestCase):
         self.assertGreater(banked[apex][0].vertical_m, banked[apex][1].vertical_m)
         self.assertAlmostEqual(banked[apex][0].lateral_m, -3.0)
         self.assertAlmostEqual(banked[apex][1].lateral_m, 3.0)
+
+    def test_lidar_transect_finds_shifted_road_strip_inside_steep_hillside(self) -> None:
+        offsets = tuple(float(value) for value in range(-6, 7))
+        heights = []
+        for offset in offsets:
+            if -1.0 <= offset <= 4.0:
+                heights.append(100.0 - 0.04 * offset)
+            else:
+                heights.append(100.0 + 0.45 * offset)
+
+        angle, diagnostics = fit_road_crossfall_from_transect(
+            offsets,
+            tuple(heights),
+            candidate_width_m=5.0,
+            max_center_offset_m=1.5,
+            max_abs_grade=0.10,
+            max_rms_residual_m=0.05,
+        )
+
+        self.assertIsNotNone(angle)
+        self.assertAlmostEqual(
+            angle or 0.0,
+            math.degrees(math.atan(0.04)),
+            places=6,
+        )
+        self.assertAlmostEqual(
+            float(diagnostics["selected_center_offset_m"] or 0.0),
+            1.5,
+            places=6,
+        )
+        self.assertLess(
+            float(diagnostics["selected_rms_residual_m"] or 1.0),
+            1e-9,
+        )
+
+    def test_lidar_transect_rejects_only_steep_mountain_surface(self) -> None:
+        offsets = tuple(float(value) for value in range(-6, 7))
+        heights = tuple(100.0 + 0.35 * offset for offset in offsets)
+        angle, diagnostics = fit_road_crossfall_from_transect(
+            offsets,
+            heights,
+            candidate_width_m=5.0,
+            max_abs_grade=0.10,
+        )
+        self.assertIsNone(angle)
+        self.assertEqual(diagnostics["candidate_count"], 0)
 
     def test_measured_superelevation_keeps_real_signal_and_rejects_raster_spike(self) -> None:
         radius = 10.0
