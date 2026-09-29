@@ -447,7 +447,7 @@ def make_curvature_adaptive_profiles(
     *,
     protected_roles: frozenset[str] = _DEFAULT_PROTECTED_ROLES,
     shoulder_roles: frozenset[str] = _DEFAULT_SHOULDER_ROLES,
-    clearance_fraction: float = 0.75,
+    clearance_fraction: float = 0.65,
     minimum_shoulder_span_m: float = 0.25,
     minimum_earthwork_span_m: float = 0.10,
     taper_per_station: float = 0.12,

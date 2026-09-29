@@ -1045,8 +1045,9 @@ official SP638 hairpin.
 
 Use the following systems with deliberately separate responsibilities:
 
-1. **Veneto 5 m UE Landscape** — macro mountain mass, valley continuity and
-   distant terrain only.
+1. **MASE PST 1372858 DTM-primary UE Landscape** — canonical macro mountain
+   mass, valley continuity and distant terrain; Veneto 5 m remains only the
+   bounded fallback/A-B source where measured MASE coverage is absent.
 2. **Landscape Spline / non-destructive edit layer** — broad bounded raise/lower
    so the macro heightfield does not pierce the road corridor.
 3. **Landscape Patch System** — bounded evaluation for localized deterministic
@@ -1150,6 +1151,42 @@ Prepared-workspace reuse is job-local only. Each child wrapper validates a
 stamp bound to the exact HEAD, worktree, materialized map byte count and editor
 build identity before skipping its normal standalone preparation. No build or
 stamp may be reused across a different SHA or runner job.
+
+### R4.1B.3.1 — overlap / road-occlusion correction
+
+Issue: [#238](https://github.com/karnalooch/YetAnotherCyclingSim/issues/238)
+
+The latest B.3 rider-camera proof is a material visual improvement over B.2, so
+the hybrid MASE Landscape + bounded DynamicMesh direction is retained. It is
+still not visually accepted. The remaining black road fragments can be caused
+by either non-local swept-surface overlap or rider-close terrain covering the
+road/shoulder envelope, so the correction must diagnose both instead of
+assuming one cause.
+
+B.3.1 therefore adds these fail-closed presentation contracts:
+
+- non-adjacent swept corridor bands are checked for overlapping XY footprint
+  when their Z ranges are not safely separated;
+- only terminal, non-protected earthwork may contract automatically to resolve
+  such overlap; protected road edges, shoulder contract and canonical SP638 XY
+  are not moved;
+- the world-aligned terrain skin is lowered only where required to preserve a
+  bounded vertical clearance below the asphalt/shoulder presentation envelope,
+  with a finite maximum correction;
+- terrain-skin smoothing adjustments taper back to zero near the outer skin
+  boundary so the local mesh converges to the sampled MASE macro Landscape
+  instead of reading as a hard sheet;
+- the visual proof uses a plain neutral lit material treatment rather than the
+  checker-like editor fallback, so slope, occlusion and seams are easier to
+  judge.
+
+The deterministic hairpin contraction keeps the documented **65%** of usable
+inside clearance beyond the protected road edge. This value is presentation
+geometry only and does not change route/physics truth.
+
+B.3.1 is still a neutral-geometry gate. RoadForge, production materials,
+foliage and PCG dressing remain blocked until the same rider-camera proof is
+human-accepted.
 
 Do not start broad propagation, production materials or foliage before this
 geometry gate passes. A green workflow remains insufficient without human visual
