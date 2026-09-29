@@ -9,6 +9,7 @@ on:
       - '.github/workflows/passo-giau-r4-1b3-geometry-probe.yml'
       - 'scripts/ue/Invoke-YacsGeometryScriptProbe.ps1'
       - 'scripts/ue/Invoke-YacsR4_1ProofSuite.ps1'
+      - 'scripts/ue/r4_1_editor_session.py'
       - 'scripts/ue/Test-YacsR4_1PreparedWorkspace.ps1'
       - 'scripts/ue/Invoke-YacsPassoGiauHairpinCorridorProof.ps1'
       - 'scripts/ci/test_r4_1_proof_suite_contract.py'
@@ -26,6 +27,7 @@ on:
       - '.github/workflows/passo-giau-r4-1b3-geometry-probe.yml'
       - 'scripts/ue/Invoke-YacsGeometryScriptProbe.ps1'
       - 'scripts/ue/Invoke-YacsR4_1ProofSuite.ps1'
+      - 'scripts/ue/r4_1_editor_session.py'
       - 'scripts/ue/Test-YacsR4_1PreparedWorkspace.ps1'
       - 'scripts/ue/Invoke-YacsPassoGiauHairpinCorridorProof.ps1'
       - 'scripts/ci/test_r4_1_proof_suite_contract.py'
@@ -77,8 +79,11 @@ jobs:
       - name: Run deterministic local corridor geometry tests
         run: python -m unittest scripts.geometry.test_sp638_local_corridor scripts.geometry.test_local_terrain_skin
 
-      - name: Syntax-check rider-close Unreal visual proof
-        run: python -m py_compile scripts/ue/stage3g_capture_sp638_local_corridor.py
+      - name: Syntax-check R4.1 Unreal Python entry points
+        run: |
+          python -m py_compile scripts/ue/r4_1_editor_session.py
+          python -m py_compile scripts/ue/stage3g_capture_passo_giau_hairpin_corridor.py
+          python -m py_compile scripts/ue/stage3g_capture_sp638_local_corridor.py
 
   probe:
     # Cost-control gate: deterministic kernel checks remain automatic.
@@ -126,7 +131,7 @@ jobs:
             throw 'R4.1B.3 geometry probe checkout is dirty.'
           }
 
-      - name: Run prepared R4.1 build-once proof suite
+      - name: Run prepared R4.1 build-once boot-once proof suite
         shell: pwsh
         working-directory: _r4-1b3-geometry-probe-worktree
         run: |
