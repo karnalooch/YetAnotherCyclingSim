@@ -672,6 +672,51 @@ def _contract_profile_side(
     inner_span = max(_EPSILON, shoulder_extent - core_extent)
     outer_span = max(_EPSILON, outer_extent - shoulder_extent)
 
+    # Lateral contraction must not turn an authored shallow earthwork profile
+    # into a near-vertical wall by leaving Z unchanged. Scale the vertical
+    # deltas with the same piecewise contraction used in XY: protected road
+    # edge -> shoulder, then shoulder -> outer tie. This preserves the authored
+    # cross-section grades while still allowing the presentation-only envelope
+    # to tighten around a hairpin.
+    side_points = [
+        point
+        for point in profile
+        if (point.lateral_m > 0.0 if positive_side else point.lateral_m < 0.0)
+    ]
+    core_candidates = [
+        point for point in side_points if point.role in protected_roles
+    ]
+    core_vertical_m = (
+        max(core_candidates, key=lambda point: abs(point.lateral_m)).vertical_m
+        if core_candidates
+        else 0.0
+    )
+    shoulder_candidates = [
+        point for point in side_points if point.role in shoulder_roles
+    ]
+    shoulder_point = (
+        max(shoulder_candidates, key=lambda point: abs(point.lateral_m))
+        if shoulder_candidates
+        else None
+    )
+    shoulder_vertical_m = (
+        shoulder_point.vertical_m if shoulder_point is not None else core_vertical_m
+    )
+    if shoulder_point is not None:
+        inner_vertical_scale = (
+            (contracted_shoulder_extent - core_extent) / inner_span
+        )
+        contracted_shoulder_vertical_m = core_vertical_m + (
+            shoulder_vertical_m - core_vertical_m
+        ) * inner_vertical_scale
+    else:
+        inner_vertical_scale = 1.0
+        contracted_shoulder_vertical_m = core_vertical_m
+
+    outer_vertical_scale = (
+        (contracted_outer_extent - contracted_shoulder_extent) / outer_span
+    )
+
     result: list[CrossSectionPoint] = []
     for point in profile:
         on_side = (
@@ -688,21 +733,28 @@ def _contract_profile_side(
 
         if point.role in shoulder_roles:
             new_extent = contracted_shoulder_extent
+            new_vertical_m = contracted_shoulder_vertical_m
         elif extent < shoulder_extent:
             normalized = (extent - core_extent) / inner_span
             new_extent = core_extent + normalized * (
                 contracted_shoulder_extent - core_extent
             )
+            new_vertical_m = core_vertical_m + (
+                point.vertical_m - core_vertical_m
+            ) * inner_vertical_scale
         else:
             normalized = (extent - shoulder_extent) / outer_span
             new_extent = contracted_shoulder_extent + normalized * (
                 contracted_outer_extent - contracted_shoulder_extent
             )
+            new_vertical_m = contracted_shoulder_vertical_m + (
+                point.vertical_m - shoulder_vertical_m
+            ) * outer_vertical_scale
 
         result.append(
             CrossSectionPoint(
                 new_extent if positive_side else -new_extent,
-                point.vertical_m,
+                new_vertical_m,
                 point.role,
             )
         )
