@@ -429,15 +429,44 @@ with the geometry fix, so the next exact-SHA run can attribute the result.
 
 B.4.7 adds a **human ride-through diagnostic** after the static rider-close
 proof, in the same prepared Unreal Editor process and without changing authored
-assets. It reuses the transient B.4.6 corridor geometry, starts the rider camera
-100 m before the selected hairpin and advances a presentation-only pace using
-the Python reference cycling model at 100 W / 90 rpm with local visual-spline
-grade. This is deliberately **not SP638 physics authority**. The live pass
-records editor-viewport frame times, then captures 1920 x 1080 Lighting Only
-reference frames at -100, -75, -50, -25, 0, +20 and +40 m relative to the
-hairpin so the product owner can inspect the defect from a moving-rider context.
-The canonical Stage 3G game performance gate and the later R4.1C-PHYS promotion
-remain separate.
+assets. It starts the rider camera 100 m before the selected hairpin and advances
+a presentation-only pace using the Python reference cycling model at 100 W /
+90 rpm with local visual-spline grade. This is deliberately **not SP638 physics
+authority**. The live pass records editor-viewport frame times, then captures
+1920 x 1080 Lighting Only reference frames at -100, -75, -50, -25, 0, +20 and
++40 m relative to the hairpin so the product owner can inspect the road/terrain
+join from a moving-rider context. The canonical Stage 3G game performance gate
+and the later R4.1C-PHYS promotion remain separate.
+
+**B.4.8 road-first simplification supersedes the active B.4.4-B.4.7 terrain
+tie-in geometry.** The earlier proofs remain valid diagnostic history, but their
+continuous custom `Earthwork` + `MesoGround` ownership is no longer the active
+implementation. Human inspection showed that this architecture created a second
+terrain system beside UE Landscape and forced repeated seam, overlap, normal,
+lighting and near-vertical-face fixes.
+
+The active rule is now the simpler production pattern used by UE Landscape
+Splines:
+
+1. official SP638 GIS centerline remains canonical presentation XY;
+2. MASE/LiDAR-derived Z and regularized real-data-first crossfall drive the road
+   presentation without becoming Road Physics Profile authority;
+3. transient DynamicMesh owns only asphalt and shoulders;
+4. `LandscapeProxy.editor_apply_spline` raises and lowers the MASE Landscape
+   under the road/shoulder envelope;
+5. the Landscape blends back to untouched measured terrain through a bounded
+   side falloff;
+6. no continuous custom earthwork or meso-ground mesh is inserted between road
+   and Landscape;
+7. a retaining/cliff/hero mesh may be added later only at a specific location
+   where a heightfield cannot represent the real cut convincingly.
+
+For the current hairpin proof the asphalt half-width is 3.0 m, shoulder outer
+half-width is 4.0 m, Landscape conform half-width is 4.25 m and the side falloff
+is 12.0 m. Both raise and lower are enabled. These are presentation parameters,
+not source-resolution claims, and the operation remains transient until human
+visual acceptance. The canonical SP638 XY and Road Physics Profile are not
+rewritten.
 
 
 
