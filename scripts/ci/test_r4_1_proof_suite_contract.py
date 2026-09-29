@@ -113,8 +113,13 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
         self.assertIn("apply_superelevation_to_profiles(", capture)
         self.assertIn("regularize_measured_superelevation_angles(", capture)
         self.assertIn("_sample_mase_lidar_bank_angles(", capture)
+        self.assertIn("fit_road_crossfall_from_transect(", capture)
         self.assertIn('"mode": "mase_lidar_seeded_crossfall"', capture)
-        self.assertIn('"measurement_kind": "LiDAR_DTM_crossfall_observation"', capture)
+        self.assertIn(
+            '"measurement_kind": "LiDAR_DTM_adaptive_road_transect_fit"',
+            capture,
+        )
+        self.assertIn('"method": "adaptive_transect_linear_road_fit"', capture)
         self.assertIn("superelevation.peak_abs_bank_deg", wrapper)
         self.assertIn("superelevation.maximum_adjacent_delta_deg", wrapper)
         self.assertNotIn("proof_viewmode -ne 'lit'", wrapper)
