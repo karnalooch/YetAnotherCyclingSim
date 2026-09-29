@@ -44,6 +44,7 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
             "probe_sp638_local_corridor_topology.py",
             "stage3g_capture_passo_giau_hairpin_corridor.py",
             "stage3g_capture_sp638_local_corridor.py",
+            "stage3g_ride_through_sp638_local_corridor.py",
         ):
             self.assertIn(script, dispatcher)
         self.assertIn('"editor_process_count": 1', dispatcher)
@@ -168,6 +169,24 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
             "    level_editor.editor_set_viewport_realtime(True, viewport_config_key)",
             capture,
         )
+
+    def test_local_corridor_ride_through_is_bounded_and_presentation_only(
+        self,
+    ) -> None:
+        ride = read("scripts/ue/stage3g_ride_through_sp638_local_corridor.py")
+        dispatcher = read("scripts/ue/r4_1_editor_session.py")
+        self.assertIn("POWER_W = 100.0", ride)
+        self.assertIn("START_BEFORE_HAIRPIN_M = 100.0", ride)
+        self.assertIn("END_AFTER_HAIRPIN_M = 20.0", ride)
+        self.assertIn("CAPTURE_RES_X = 1920", ride)
+        self.assertIn("CAPTURE_RES_Y = 1080", ride)
+        self.assertIn('"authoritative_sp638_physics": False', ride)
+        self.assertIn(
+            '"pace_source": "python_reference_physics_plus_local_visual_spline_grade"',
+            ride,
+        )
+        self.assertIn("stage3g_ride_through_sp638_local_corridor.py", dispatcher)
+        self.assertIn('"local_corridor_ride_through"', dispatcher)
 
     def test_child_wrappers_fail_closed_before_reuse(self) -> None:
         for path in (
