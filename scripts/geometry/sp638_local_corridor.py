@@ -603,22 +603,38 @@ def make_curvature_adaptive_profiles(
             return result
 
         station_index, lateral_index = folded
+
+        # Only the terminal tie-to-macro-terrain band may be healed
+        # automatically. A fold that reaches the shoulder/embankment interior
+        # or protected road corridor is evidence that the canonical geometry
+        # or cross-section needs an explicit redesign, not more smoothing.
+        negative_terminal = lateral_index == 0
+        positive_terminal = lateral_index == len(profile) - 2
+        if not negative_terminal and not positive_terminal:
+            raise ValueError(
+                "non-terminal corridor band folds between stations "
+                f"{station_index} and {station_index + 1} at lateral band "
+                f"{lateral_index}; terminal tie contraction must not mask "
+                "inner shoulder/road geometry"
+            )
+
         left_point = profile[lateral_index]
         right_point = profile[lateral_index + 1]
         positive_side = (
-            left_point.lateral_m >= right_core - _EPSILON
+            positive_terminal
+            and left_point.lateral_m >= right_core - _EPSILON
             and right_point.lateral_m > right_core + _EPSILON
         )
         negative_side = (
-            right_point.lateral_m <= -left_core + _EPSILON
+            negative_terminal
+            and right_point.lateral_m <= -left_core + _EPSILON
             and left_point.lateral_m < -left_core - _EPSILON
         )
 
         if not positive_side and not negative_side:
             raise ValueError(
-                "protected road strip folds between stations "
-                f"{station_index} and {station_index + 1}; "
-                "outer earthwork contraction cannot repair canonical geometry"
+                "terminal corridor fold cannot be assigned to a safe "
+                "non-protected side"
             )
 
         if positive_side:
