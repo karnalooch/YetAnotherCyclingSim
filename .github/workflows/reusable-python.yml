@@ -37,6 +37,11 @@ jobs:
           python -m compileall -q physics_reference/src scripts/ci scripts/ops
           python -m py_compile scripts/assets/yacs_asset_library.py
           python -m py_compile scripts/worldgen/yacs_scene_layout.py
+          python -m py_compile scripts/ue/run_r4_1_proof_session.py
+          python -m py_compile scripts/ue/probe_geometry_script_api.py
+          python -m py_compile scripts/ue/probe_sp638_local_corridor_topology.py
+          python -m py_compile scripts/ue/stage3g_capture_passo_giau_hairpin_corridor.py
+          python -m py_compile scripts/ue/stage3g_capture_sp638_local_corridor.py
 
       - name: Run GitHub Actions platform contract tests
         run: python scripts/ci/test_ci_platform_contract.py

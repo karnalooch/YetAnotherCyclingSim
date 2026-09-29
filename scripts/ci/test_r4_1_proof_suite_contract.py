@@ -47,7 +47,7 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
             "scripts/ue/stage3g_capture_sp638_local_corridor.py",
         ):
             capture = read(path)
-            self.assertIn('YACS_R4_1_SESSION_MODE', capture)
+            self.assertIn("YACS_R4_1_SESSION_MODE", capture)
             self.assertIn("get_session_result", capture)
             self.assertIn("_session_result", capture)
 
@@ -79,6 +79,7 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
         workflow = read(".github/workflows/passo-giau-r4-1b3-geometry-probe.yml")
         self.assertIn("if: github.event_name == 'workflow_dispatch'", workflow)
         self.assertIn("Invoke-YacsR4_1ProofSuite.ps1", workflow)
+        self.assertIn("scripts/ue/run_r4_1_proof_session.py", workflow)
         self.assertNotIn("./scripts/ue/Invoke-YacsGeometryScriptProbe.ps1", workflow)
         self.assertIn("git -C $worktree clean -ffdx", workflow)
 

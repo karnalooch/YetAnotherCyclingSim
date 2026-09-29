@@ -152,8 +152,15 @@ def _tick(_delta_time: float) -> None:
                 _STATUS["hairpin_corridor"] = "FAIL"
                 _finish(False, "hairpin proof PNG is missing or too small")
                 return
-            _annotate(root / "hairpin_capture_proof.json", "passo_giau_hairpin_corridor_capture")
+            _annotate(
+                root / "hairpin_capture_proof.json",
+                "passo_giau_hairpin_corridor_capture",
+            )
             _STATUS["hairpin_corridor"] = "PASS"
+            _STATE = "START_LOCAL_VISUAL"
+            return
+
+        if _STATE == "START_LOCAL_VISUAL":
             _start_local_visual()
             return
 
