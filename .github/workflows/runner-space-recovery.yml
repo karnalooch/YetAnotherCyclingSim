@@ -1,0 +1,101 @@
+name: YACS runner space recovery
+
+on:
+  push:
+    branches:
+      - fix/223-r4-1b3-mase-overlay
+    paths:
+      - .github/workflows/runner-space-recovery.yml
+
+permissions:
+  contents: read
+
+jobs:
+  recover:
+    name: Reclaim stale yacs-ue58 workspace
+    if: github.actor == github.repository_owner
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 10
+
+    steps:
+      - name: Reclaim stale isolated worktrees
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $workRoot = Split-Path -Parent $env:RUNNER_TEMP
+          $repoRoot = Join-Path $workRoot 'YetAnotherCyclingSim\YetAnotherCyclingSim'
+          $drive = [System.IO.Path]::GetPathRoot($workRoot).TrimEnd('\')
+          $driveName = $drive.TrimEnd(':')
+          $before = Get-PSDrive -Name $driveName
+          Write-Host ("Free before: {0:N2} GB" -f ($before.Free / 1GB))
+          Write-Host "Work root: $workRoot"
+          Write-Host "Repository workspace: $repoRoot"
+
+          $failures = @()
+          if (Test-Path -LiteralPath $repoRoot -PathType Container) {
+            $stale = @(
+              Get-ChildItem -LiteralPath $repoRoot -Directory -Force |
+                Where-Object {
+                  $_.Name -match '^_.*worktree' -or
+                  $_.Name -match '^_passo-giau-' -or
+                  $_.Name -match '^_unreal-worktree-' -or
+                  $_.Name -match '^_remote-editor-'
+                }
+            )
+            foreach ($dir in $stale) {
+              if ($dir.FullName -eq $env:GITHUB_WORKSPACE) {
+                continue
+              }
+              Write-Host "Removing stale isolated workspace: $($dir.FullName)"
+              try {
+                Remove-Item -LiteralPath $dir.FullName -Recurse -Force
+              }
+              catch {
+                $failures += "$($dir.FullName): $($_.Exception.Message)"
+              }
+            }
+
+            foreach ($generated in @('Binaries','DerivedDataCache','Intermediate','Saved')) {
+              $target = Join-Path $repoRoot $generated
+              if (Test-Path -LiteralPath $target) {
+                Write-Host "Removing generated root: $target"
+                try {
+                  Remove-Item -LiteralPath $target -Recurse -Force
+                }
+                catch {
+                  $failures += "${target}: $($_.Exception.Message)"
+                }
+              }
+            }
+          }
+
+          $actionsRoot = Join-Path $workRoot '_actions'
+          if (Test-Path -LiteralPath $actionsRoot -PathType Container) {
+            foreach ($temp in @(Get-ChildItem -LiteralPath $actionsRoot -Directory -Filter '_temp_*' -Force)) {
+              Write-Host "Removing stale action staging: $($temp.FullName)"
+              try {
+                Remove-Item -LiteralPath $temp.FullName -Recurse -Force
+              }
+              catch {
+                $failures += "$($temp.FullName): $($_.Exception.Message)"
+              }
+            }
+          }
+
+          $after = Get-PSDrive -Name $driveName
+          Write-Host ("Free after: {0:N2} GB" -f ($after.Free / 1GB))
+          Write-Host ("Recovered: {0:N2} GB" -f (($after.Free - $before.Free) / 1GB))
+
+          if ($failures.Count -gt 0) {
+            Write-Host 'Cleanup failures:'
+            $failures | ForEach-Object { Write-Host " - $_" }
+          }
+          if ($after.Free -lt 12GB) {
+            throw ("Runner still has insufficient free space after cleanup: {0:N2} GB" -f ($after.Free / 1GB))
+          }
+          if ($failures.Count -gt 0) {
+            throw 'Runner space recovery had deletion failures despite reaching the free-space threshold.'
+          }
+
+          Write-Host 'Runner space recovery: PASS.'

@@ -1,8 +1,8 @@
 """Render the R4.1B.3 rider-close SP638 local-ground corridor proof.
 
-The proof keeps the Veneto Landscape as macro terrain, applies only a broad
-transient Landscape cut/fill around the selected real SP638 hairpin, and then
-covers the cyclist-close road bench with continuous DynamicMesh surfaces.
+The proof keeps the corrected MASE Landscape as macro terrain, applies only a
+broad transient Landscape cut/fill around the selected real SP638 hairpin, and
+then overlays the cyclist-close road bench with continuous DynamicMesh surfaces.
 
 The canonical road XY is never snapped to Landscape/DTM vertices. Nothing is
 saved back to the map.
@@ -809,6 +809,16 @@ def main() -> None:
         terrain_skin_center_world,
     )
 
+    neutral_landscape_material = unreal.load_asset(
+        "/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial"
+    )
+    if neutral_landscape_material is None:
+        raise RuntimeError("failed to load neutral Landscape proof material")
+    landscape.set_editor_property(
+        "landscape_material",
+        neutral_landscape_material,
+    )
+
     basic_material = unreal.load_asset(
         "/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"
     )
@@ -847,11 +857,9 @@ def main() -> None:
         terrain_skin_material,
     )
 
-    # The local terrain skin now owns the rider-close ground in this proof.
-    # Hide the macro heightfield only after sampling it; no persisted map change.
-    for component in landscape_components:
-        component.set_visibility(False, True)
-
+    # Keep the corrected MASE Landscape visible as macro terrain. The lifted,
+    # smoothed DynamicMesh skin owns only the bounded rider-close patch and
+    # overlays the Landscape locally; no persisted map change is saved.
     origin_world = kernel_world[0]
     earth_counts = _spawn_dynamic_mesh(
         actor_subsystem,
@@ -1021,17 +1029,21 @@ def main() -> None:
             "canonical_road_xy_preserved": True,
             "snapped_to_dtm_grid": False,
             "snapped_to_landscape_vertices": False,
-            "veneto_source_spacing_m": 5.0,
+            "canonical_macro_terrain_source": "MASE PST 1372858",
+            "prepared_metric_working_grid_m": 1.0,
+            "veneto_fallback_source_spacing_m": 5.0,
             "landscape_vertex_spacing_is_source_resolution": False,
         },
         "local_terrain_skin": {
             **terrain_skin_diagnostics,
-            "landscape_hidden_after_sampling": True,
+            "landscape_hidden_after_sampling": False,
+            "macro_landscape_visible": True,
+            "occlusion_lift_m": TERRAIN_SKIN_LIFT_M,
         },
         "landscape_component_count": len(landscape_components),
         "forced_landscape_lod": 0,
         "proof_viewmode": "lit",
-        "neutral_landscape_material": None,
+        "neutral_landscape_material": True,
         "camera_location_cm": [
             float(camera_location.x),
             float(camera_location.y),

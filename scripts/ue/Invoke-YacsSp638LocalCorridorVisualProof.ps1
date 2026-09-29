@@ -138,8 +138,8 @@ if ([bool]$Proof.source_geometry_analysis.canonical_centerline_xy_modified -ne $
 if ([string]$Proof.proof_viewmode -ne 'lit') {
     throw "SP638 visual proof must use lit DynamicMesh acceptance mode, got '$($Proof.proof_viewmode)'."
 }
-if ($null -ne $Proof.neutral_landscape_material) {
-    throw 'SP638 visual proof unexpectedly applied a Landscape material override.'
+if ([bool]$Proof.neutral_landscape_material -ne $true) {
+    throw 'SP638 visual proof did not apply the required neutral Landscape proof material.'
 }
 if ([bool]$Proof.local_terrain_skin.world_aligned -ne $true) {
     throw 'SP638 visual proof terrain skin is not world-aligned.'
@@ -147,8 +147,11 @@ if ([bool]$Proof.local_terrain_skin.world_aligned -ne $true) {
 if ([bool]$Proof.local_terrain_skin.canonical_road_xy_modified -ne $false) {
     throw 'SP638 visual proof terrain skin modified canonical road XY.'
 }
-if ([bool]$Proof.local_terrain_skin.landscape_hidden_after_sampling -ne $true) {
-    throw 'SP638 visual proof did not hide the rider-close Landscape after sampling.'
+if ([bool]$Proof.local_terrain_skin.landscape_hidden_after_sampling -ne $false) {
+    throw 'SP638 visual proof unexpectedly hid the corrected MASE Landscape after sampling.'
+}
+if ([bool]$Proof.local_terrain_skin.macro_landscape_visible -ne $true) {
+    throw 'SP638 visual proof did not keep the corrected MASE Landscape visible as macro terrain.'
 }
 if ([double]$Proof.local_terrain_skin.grid_step_m -gt 4.01) {
     throw "SP638 terrain skin grid is too coarse: $($Proof.local_terrain_skin.grid_step_m) m"
