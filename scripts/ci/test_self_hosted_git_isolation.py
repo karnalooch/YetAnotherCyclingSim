@@ -56,8 +56,14 @@ class SelfHostedGitIsolationTests(unittest.TestCase):
         for path in ISOLATED_CODE_ONLY_WORKFLOWS:
             text = path.read_text(encoding="utf-8")
             with self.subTest(workflow=path.name):
-                self.assertIn("path: _unreal-worktree", text)
-                self.assertIn("working-directory: _unreal-worktree", text)
+                self.assertIn(
+                    "YACS_UNREAL_WORKTREE: _unreal-worktree-${{ github.run_id }}-${{ github.run_attempt }}",
+                    text,
+                )
+                self.assertIn("path: ${{ env.YACS_UNREAL_WORKTREE }}", text)
+                self.assertIn(
+                    "working-directory: ${{ env.YACS_UNREAL_WORKTREE }}", text
+                )
                 self.assertIn("lfs: false", text)
                 self.assertIn("clean: true", text)
                 self.assertNotIn(

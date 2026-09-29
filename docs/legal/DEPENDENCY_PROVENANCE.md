@@ -57,23 +57,34 @@ recording only a moving branch name.
 |---|---|---|---|---|---|
 | Poly Haven Stage 3G assets / World Authoring Library | **included** | curated IDs in `scripts/assets/stage3g_polyhaven.json` plus semantic catalog/presets under `worldgen/`; exact resolved source URLs, sizes and MD5 values captured by downloader/selection plan | CC0-1.0; provider/license gate recorded in manifest and semantic catalog | selected textures/models imported as Unreal assets; #230 may use the public API for deterministic candidate discovery and bounded source caching, but discovered candidates are not auto-approved | existing reproducible asset pipeline + #230 semantic discovery layer; reviewed 2026-09-28 |
 | TINITALY 1.1 | **acquired / derived input** | dataset v1.1, DOI `10.13127/tinitaly/1.1`; exact WCS request/checksum captured by downloader | CC BY 4.0 recorded by `download_passo_giau_dem.py` and generated `SOURCE_AND_LICENSE.txt` | Passo Giau macro-terrain source; raw GeoTIFF remains outside Git | existing reproducible terrain pipeline; reviewed 2026-09-28 |
-| RoadForge | **candidate / reference** | `YuuhenR/roadforge-osm-ue5-procedural-city` @ `781cb046483cc1887e80085aacf0fb2951f4746d` | root `LICENSE`: MIT License, copyright 2026 RoadForge Contributors | architecture/implementation reference for procedural road geometry; **no code recorded as copied yet** | license file verified 2026-09-28 |
+| RoadForge | **included** | `YuuhenR/roadforge-osm-ue5-procedural-city` @ `781cb046483cc1887e80085aacf0fb2951f4746d`; vendored by PR #219 | upstream root `LICENSE`: MIT License, copyright 2026 RoadForge Contributors; preserved at `Plugins/RoadForge/LICENSE` | minimal runtime donor subset: module bootstrap + `RoadForgeMeshUtils.{h,cpp}`; descriptor adapted to UE 5.8 and module log category renamed for unity-build safety; OSM/city/editor/sample/content surfaces omitted | source revision/license/subset verified 2026-09-28; trusted UE 5.8 build + Automation proven before merge |
 | GeoTerrain | **blocked for copying / reference only** | `caonao/GeoTerrain` @ `c9ba031b77dfecfaa228f993b84685dd470bfe87` | README says “MIT”, but no root `LICENSE` file was present when checked | reference for terrain/OSM/Landscape techniques only; **do not vendor/adapt source until license grant is unambiguous** | checked 2026-09-28 |
 
-## 5. RoadForge adoption rule
+## 5. RoadForge included donor
 
-RoadForge may be used as a source candidate because its verified revision
-contains an MIT license. Before copying any substantial portion:
+PR #219 promoted RoadForge from reference/candidate status to an **included**
+minimal donor subset from exact upstream commit
+`781cb046483cc1887e80085aacf0fb2951f4746d`.
 
-- record the exact files and upstream commit used;
-- retain the upstream copyright and MIT permission notice in a local notice or
-  vendored license file;
-- describe material YACS modifications;
-- update `THIRD_PARTY_NOTICES.md`;
-- review whether any RoadForge subcomponent has its own third-party terms.
+Included surface:
 
-Studying an algorithm/API shape without copying source still remains
-`reference` use and should not be misrepresented as vendoring.
+- `Plugins/RoadForge/Source/RoadForge/Private/RoadForge.cpp`;
+- `Plugins/RoadForge/Source/RoadForge/Private/RoadForgeMeshUtils.cpp`;
+- `Plugins/RoadForge/Source/RoadForge/Public/RoadForge.h`;
+- `Plugins/RoadForge/Source/RoadForge/Public/RoadForgeMeshUtils.h`;
+- `Plugins/RoadForge/Source/RoadForge/RoadForge.Build.cs`;
+- the adapted `Plugins/RoadForge/RoadForge.uplugin`;
+- vendoring note `Plugins/RoadForge/README.YACS.md`;
+- upstream MIT license preserved verbatim at `Plugins/RoadForge/LICENSE`.
+
+YACS intentionally omits the upstream OSM ingestion, procedural-city
+generator, PCG scatter/editor modules, sample data, screenshots, textures and
+other content payloads. The retained descriptor targets UE 5.8 and the module
+log category was renamed to `LogRoadForgeModule` for unity-build safety.
+No retained upstream source-file copyright header was removed.
+
+The donor remains presentation tooling only. Production SP638 use is separately
+gated by #222 and must never become route or physics truth.
 
 ## 6. GeoTerrain adoption rule
 

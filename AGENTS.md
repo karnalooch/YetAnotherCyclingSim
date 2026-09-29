@@ -42,6 +42,37 @@ After editing:
 5. Report any unverified behavior.
 6. Suggest one logical commit message.
 
+### Documentation SSOT and freshness
+
+Documentation verification is mandatory for every repository-changing task.
+
+Before implementation:
+
+- Start from `docs/README.md` and use it to identify the current authoritative SSOT for the affected area.
+- Do not treat takeover notes, snapshots, historical handoffs, or anything under `archive/` as current truth unless the current SSOT explicitly points to it as authoritative.
+- If `docs/README.md` is missing or does not identify an authoritative source for the affected area, report that as a documentation-governance defect instead of guessing which document is current.
+
+After implementation:
+
+- Re-check the relevant SSOT against the resulting code, configuration, workflows and CI behavior.
+- If the implementation makes the documentation stale, incomplete or misleading, update the affected documentation in the **same pull request**.
+- Do not defer a required documentation correction to a later task merely because the code change is already working.
+
+When any documentation changes, run all required documentation guards:
+
+- links;
+- i18n;
+- structure;
+- freshness.
+
+Do not silently skip a required guard. If a guard is unavailable, missing or broken, report that explicitly with the command/workflow attempted and the resulting evidence.
+
+The final status/report for the task must state:
+
+- which current SSOT was identified through `docs/README.md` and verified;
+- whether implementation required documentation updates;
+- the result of each documentation guard: links, i18n, structure and freshness.
+
 ### Problem reporting
 
 If any problem, failure, blocker, unexpected behavior, or incomplete validation occurs, describe it precisely in the status or final report. Do not reduce it to a vague statement such as "it failed", "UE hung", or "the test did not work".
@@ -109,6 +140,8 @@ Before adding an asset:
 
 - verify its license;
 - record its source;
+- update `docs/legal/DEPENDENCY_PROVENANCE.md` when the source is external;
+- preserve any required notice in `THIRD_PARTY_NOTICES.md`;
 - check its performance cost;
 - confirm that it is required by the current roadmap stage.
 
@@ -119,6 +152,20 @@ Target performance is 60 FPS at 1920×1080 on:
 - NVIDIA RTX 2070 Super.
 
 Performance must be measured, not guessed.
+
+## Third-party provenance rules
+
+- Publicly visible code or assets are not automatically reusable.
+- Before copying, vendoring, adapting or redistributing external code, plugins,
+  datasets or assets, verify the exact source revision and license.
+- Record external material in `docs/legal/DEPENDENCY_PROVENANCE.md` before it
+  becomes part of YACS.
+- Update `THIRD_PARTY_NOTICES.md` whenever redistribution or attribution
+  obligations apply.
+- Do not copy from a source marked `reference`, `candidate` or `blocked`
+  in the provenance ledger.
+- AI-generated or AI-rewritten output does not bypass third-party license and
+  provenance review.
 
 ## Git rules
 
@@ -205,4 +252,7 @@ Documentation-only branches do not count toward the limit of two implementation 
 - Do not invent APIs, SDK capabilities or device behavior.
 - Verify external API and Unreal Engine claims against official documentation.
 - Mark generated code that still requires validation.
+- Follow `docs/legal/AI_ASSISTED_DEVELOPMENT.md` for AI-assisted work.
+- Treat recognizable external implementations in generated output as
+  third-party material requiring provenance review.
 - When uncertain, stop and ask one focused question.

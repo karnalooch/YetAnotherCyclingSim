@@ -230,6 +230,73 @@ For routine world generation, prefer named YACS flows over free-form chains of l
 
 This integration does not change physics ownership, Stage 3 route geometry ownership, begin Stage 4 mechanics, turn 3G into final Stage 7 art, authorize broad autonomous writes, authorize arbitrary Python/console execution, require a backend service, or monopolize world authoring by forcing all PCG creation through MCP.
 
+## 13. Remote GitHub runner transport
+
+Issue #228, under the broader #85 architecture track, owns the controlled
+chat-to-runner transport spike documented in
+[`YACS_REMOTE_EDITOR_AGENT.md`](YACS_REMOTE_EDITOR_AGENT.md).
+
+The transport is deliberately separated from the agent-facing MCP surface:
+
+```text
+ChatGPT / repository owner
+        |
+        | exact allowlisted command
+        v
+GitHub Issue #228
+        |
+        v
+GitHub Actions
+        |
+        v
+[self-hosted, yacs-ue58]
+        |
+        v
+repository-owned allowlist wrapper
+        |
+        v
+UnrealEditor-Cmd.exe + fixed Unreal Python
+        |
+        v
+proof JSON + Unreal log artifact
+```
+
+The transport does **not** expose UE-MCP to the network. GitHub Actions remains
+the only remote control plane; the trusted `yacs-ue58` host executes
+repository-owned allowlisted commands locally.
+
+The initial command is exactly:
+
+```text
+/yacs-editor smoke-cube
+```
+
+Its behavior is intentionally non-persistent:
+
+- only the repository owner may trigger it;
+- only Issue #228 is accepted;
+- comment text is compared to one exact literal and is never interpolated into
+  PowerShell, Python or Unreal arguments;
+- the PowerShell wrapper exposes a fixed `ValidateSet`;
+- the Unreal script spawns `YACS_REMOTE_SMOKE_CUBE` with `transient=true`;
+- the actor is destroyed before exit;
+- no level is saved and no persistent asset is created;
+- repository permissions remain read-only;
+- the worktree must be clean before/after execution and is cleaned unconditionally.
+
+The branch-only owner push canary exists only to prove the bridge before the
+`issue_comment` workflow lands on `main`. It must not be broadened to forks or
+pull-request-controlled execution.
+
+This transport is complementary to the existing MCP architecture. Later named
+commands may call guarded YACS MCP flows on localhost only after their own
+write-boundary and proof gates are green. Persistent editor/MCP mutations still
+require the Phase B `/Game/Generated/YACS/**` sandbox, rollback/proof rules and
+an explicit work item.
+
+The first proven headless transport command is not visual acceptance. A later
+interactive/GPU proof must separately demonstrate visual capture before remote
+world-art authoring is claimed to work.
 
 ## 14. World Authoring Library intent layer
 

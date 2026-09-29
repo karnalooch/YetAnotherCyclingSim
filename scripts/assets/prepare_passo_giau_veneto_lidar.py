@@ -115,6 +115,159 @@ def adjacent_diagnostics(values: np.ndarray) -> dict[str, Any]:
     }
 
 
+def r16_roundtrip_diagnostics(
+    prepared_elevation_m: np.ndarray,
+    prepared_u16: np.ndarray,
+    minimum_m: float,
+    maximum_m: float,
+) -> dict[str, Any]:
+    span_m = maximum_m - minimum_m
+    quantization_step_m = span_m / 65535.0
+    decoded_m = minimum_m + (
+        prepared_u16.astype(np.float64) / 65535.0
+    ) * span_m
+    error_m = decoded_m - prepared_elevation_m.astype(np.float64)
+    return {
+        "rmse": round(
+            float(np.sqrt(np.mean(np.square(error_m)))),
+            9,
+        ),
+        "max_abs": round(float(np.max(np.abs(error_m))), 9),
+        "theoretical_half_step_m": round(quantization_step_m / 2.0, 9),
+    }
+
+
+def seam_diagnostics(
+    values: np.ndarray,
+    period: int,
+    global_adjacent_p99_m: float,
+) -> dict[str, Any]:
+    seam_deltas: list[np.ndarray] = []
+    for boundary in range(period, values.shape[1], period):
+        seam_deltas.append(
+            np.abs(
+                values[:, boundary].astype(np.float64)
+                - values[:, boundary - 1].astype(np.float64)
+            )
+        )
+    for boundary in range(period, values.shape[0], period):
+        seam_deltas.append(
+            np.abs(
+                values[boundary, :].astype(np.float64)
+                - values[boundary - 1, :].astype(np.float64)
+            )
+        )
+    if not seam_deltas:
+        return {"sample_count": 0}
+
+    samples = np.concatenate([item.ravel() for item in seam_deltas])
+    p99 = float(np.percentile(samples, 99))
+    return {
+        "period_quads": period,
+        "sample_count": int(samples.size),
+        "mean_abs_delta_m": round(float(samples.mean()), 6),
+        "p95_abs_delta_m": round(float(np.percentile(samples, 95)), 6),
+        "p99_abs_delta_m": round(p99, 6),
+        "max_abs_delta_m": round(float(samples.max()), 6),
+        "p99_to_global_adjacent_p99_ratio": (
+            round(p99 / global_adjacent_p99_m, 6)
+            if global_adjacent_p99_m > 0.0
+            else None
+        ),
+    }
+
+
+def slope_diagnostics(values: np.ndarray, cell_m: float) -> dict[str, Any]:
+    grad_y, grad_x = np.gradient(
+        values.astype(np.float64),
+        cell_m,
+        cell_m,
+    )
+    slope_deg = np.degrees(np.arctan(np.hypot(grad_x, grad_y)))
+    bin_edges = (0.0, 5.0, 15.0, 30.0, 45.0, 60.0, 90.0)
+    counts, _ = np.histogram(slope_deg, bins=bin_edges)
+    total = int(slope_deg.size)
+    histogram = []
+    for index, count in enumerate(counts):
+        histogram.append(
+            {
+                "min_deg": bin_edges[index],
+                "max_deg": bin_edges[index + 1],
+                "count": int(count),
+                "share": round(float(count) / total, 9),
+            }
+        )
+    return {
+        "cell_m": round(float(cell_m), 9),
+        "p50_deg": round(float(np.percentile(slope_deg, 50)), 6),
+        "p95_deg": round(float(np.percentile(slope_deg, 95)), 6),
+        "p99_deg": round(float(np.percentile(slope_deg, 99)), 6),
+        "max_deg": round(float(slope_deg.max()), 6),
+        "histogram": histogram,
+    }
+
+
+def scanline_diagnostics(values: np.ndarray, sample_count: int = 33) -> dict[str, Any]:
+    if sample_count < 2:
+        raise ValueError("scanline sample_count must be at least 2")
+    row = values.shape[0] // 2
+    column = values.shape[1] // 2
+    x_indices = np.linspace(0, values.shape[1] - 1, sample_count, dtype=int)
+    y_indices = np.linspace(0, values.shape[0] - 1, sample_count, dtype=int)
+    return {
+        "center_row_index": int(row),
+        "center_column_index": int(column),
+        "center_row_sample_indices": [int(value) for value in x_indices],
+        "center_row_elevation_m": [
+            round(float(values[row, index]), 3) for index in x_indices
+        ],
+        "center_column_sample_indices": [int(value) for value in y_indices],
+        "center_column_elevation_m": [
+            round(float(values[index, column]), 3) for index in y_indices
+        ],
+    }
+
+
+def landscape_diagnostics(
+    landscape: np.ndarray,
+    encoded: np.ndarray,
+    minimum_m: float,
+    maximum_m: float,
+) -> dict[str, Any]:
+    adjacent = adjacent_diagnostics(landscape)
+    landscape_cell_m = (
+        (TARGET_BOUNDS[2] - TARGET_BOUNDS[0]) / (LANDSCAPE_SIZE - 1)
+    )
+    return {
+        **adjacent,
+        "unique_u16_count": int(np.unique(encoded).size),
+        "vertical_quantization_step_m": round(
+            (maximum_m - minimum_m) / 65535.0,
+            9,
+        ),
+        "r16_roundtrip_error_m": r16_roundtrip_diagnostics(
+            landscape,
+            encoded,
+            minimum_m,
+            maximum_m,
+        ),
+        "seams": {
+            "subsection_63_quads": seam_diagnostics(
+                landscape,
+                63,
+                float(adjacent["p99_m"]),
+            ),
+            "component_126_quads": seam_diagnostics(
+                landscape,
+                126,
+                float(adjacent["p99_m"]),
+            ),
+        },
+        "slope_degrees": slope_diagnostics(landscape, landscape_cell_m),
+        "scanlines": scanline_diagnostics(landscape),
+    }
+
+
 def landscape_metadata(minimum: float, maximum: float) -> dict[str, Any]:
     span = maximum - minimum
     midpoint = (minimum + maximum) / 2.0
@@ -305,15 +458,21 @@ def main() -> int:
             "extent_m": [8000.0, 8000.0],
         },
         "elevation_m": native_stats,
-        "native_diagnostics": adjacent_diagnostics(native),
-        "landscape_diagnostics": {
-            **adjacent_diagnostics(landscape),
-            "unique_u16_count": int(np.unique(encoded).size),
-            "vertical_quantization_step_m": round(
-                (elevation_max - elevation_min) / 65535.0,
-                9,
+        "native_diagnostics": {
+            **adjacent_diagnostics(native),
+            "unique_elevation_count": int(np.unique(native).size),
+            "slope_degrees": slope_diagnostics(
+                native,
+                TARGET_NATIVE_RESOLUTION_M,
             ),
+            "scanlines": scanline_diagnostics(native),
         },
+        "landscape_diagnostics": landscape_diagnostics(
+            landscape,
+            encoded,
+            elevation_min,
+            elevation_max,
+        ),
         "landscape_resampling": "cubic",
         "reprojection_resampling": "cubic",
         "unreal_landscape_candidate": landscape_metadata(

@@ -10,6 +10,7 @@ on:
       - '.github/workflows/passo-giau-road-alignment.yml'
   pull_request:
     branches:
+      - main
       - feat/stage3g-r4-1-passo-giau-landscape-spike
     paths:
       - 'scripts/assets/download_passo_giau_road_network.py'
@@ -50,15 +51,18 @@ jobs:
       - name: Compile asset scripts
         run: |
           python -m py_compile \
+            scripts/assets/download_passo_giau_mase_pst.py \
             scripts/assets/download_passo_giau_veneto_lidar.py \
+            scripts/assets/prepare_passo_giau_mase_pst.py \
             scripts/assets/prepare_passo_giau_veneto_lidar.py \
             scripts/assets/download_passo_giau_road_network.py \
             scripts/assets/prepare_passo_giau_road.py
 
-      - name: Prepare canonical Veneto 5 m terrain source
+      - name: Prepare active MASE-primary hybrid terrain source
         run: |
+          python scripts/assets/download_passo_giau_mase_pst.py
           python scripts/assets/download_passo_giau_veneto_lidar.py
-          python scripts/assets/prepare_passo_giau_veneto_lidar.py
+          python scripts/assets/prepare_passo_giau_mase_pst.py
 
       - name: Download official road graph
         run: python scripts/assets/download_passo_giau_road_network.py

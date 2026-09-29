@@ -17,16 +17,18 @@ Historical merged baseline:
 
 Active PR #215 candidate:
 
-- Regione del Veneto, `DTM 5 m derivato dai rilievi LiDAR`, IODL 2.0;
-- 33 official tiles for the bounded Passo Giau AOI;
-- native 1600x1600 working grid at 5 m;
+- MASE PST, `LiDAR DTM grigliato 1x1`, CC BY 4.0;
+- immutable GitHub prerelease source checkpoint, 853,162,557 bytes;
+- SHA-256 `4215d1d37fb8540c44442aedd164b6cda3f1845f3552413a975a6b7b1461e93c`;
+- 204 official Float32 GeoTIFF DTM tiles; every raster is `*_DTM.tiff`, with zero DSM tiles;
+- source CRS EPSG:4326 with pinned observed pixel spacings of 0.00001 and 0.000005 degrees;
+- explicit metric reprojection to EPSG:32632 before any UE resampling;
+- 8000x8000 / 1 m metric working grid for the bounded 8 km AOI;
 - deterministic 4033x4033 unsigned-16 / little-endian R16 presentation grid;
-- native `ALandscape::Import` succeeds;
-- 32x32 components / 1024 components;
-- the isolated map is persisted without mutating `L_CyclingTest`;
-- source A/B run `36395015722` is GREEN;
-- latest diagnostic authoring run `36399060374` is GREEN;
-- deterministic 3840x2160 lighting-only / forced-LOD0 / FXAA capture succeeds.
+- 32x32 components / 1024 components remain the UE topology target;
+- the isolated map remains protected from `L_CyclingTest` and route/physics truth;
+- fresh MASE exact-SHA UE authoring/render proof is required; previous GREEN
+  authoring runs are Veneto 5 m historical evidence, not acceptance of this source.
 
 The remaining problem is **visual interpretation and level-design use**, not
 "make CI green".
@@ -42,6 +44,198 @@ constraint until disproven, not as evidence that the uint16 encoding is broken.
 
 Do not hide unresolved geometry with broad blur, production vegetation,
 post-processing or Nanite.
+
+
+### P0 source gate — MASE PST LiDAR DTM 1x1 acquired (2026-09-28)
+
+**Source correction:** package `1372707` / 89 tiles was an earlier partial
+checkpoint and is now **superseded**. The canonical DTM-only package is
+`1372858`: 204 GeoTIFFs, all `*_DTM.tiff`, zero DSM tiles.
+
+The source-resolution gate is now **resolved for Passo Giau** by a pinned
+official source-data checkpoint mirrored as a GitHub prerelease outside Git/LFS.
+
+Canonical source checkpoint:
+
+- provider: Ministero dell'Ambiente e della Sicurezza Energetica (**MASE**);
+- program/product: PST / `LiDAR DTM grigliato 1x1`;
+- release tag: `data-mase-pst-passo-giau-dtm-2026-09-28`;
+- archive: `MASE_PST_8309f0171e3340c6aba45798c4812d54_1372858_DTM.zip`;
+- archive size: **853,162,557 bytes**;
+- archive SHA-256:
+  `4215d1d37fb8540c44442aedd164b6cda3f1845f3552413a975a6b7b1461e93c`;
+- contents: **204 GeoTIFF DTM tiles**, all `*_DTM.tiff`; zero DSM tiles;
+- raster contract: Float32, source-defined tile dimensions, NoData `-9999`; the pinned package is heterogeneous, so fixed 1000 x 1000 dimensions are explicitly not required;
+- raster CRS: **EPSG:4326**;
+- observed pixel sizes: `0.00001 x 0.00001` and `0.000005 x 0.000005` degrees; the package is heterogeneous and each tile must match one of these pinned square-pixel variants, approximately
+  **0.76 x 1.11 m near Passo Giau**;
+- exact AOI/tile-union coverage is re-derived from the 204-tile package during
+  the fresh preparation proof rather than inherited from superseded package
+  `1372707`;
+- license checkpoint: **CC BY 4.0**.
+
+The raw release is immutable source evidence. It is not committed to Git/LFS and
+must never be rewritten by the terrain-preparation pipeline.
+
+**Critical coordinate rule:** `0.00001 degrees` is not `1 metre`. EPSG:4326
+longitude/latitude samples must never be interpreted as a metric grid. The
+active authoring path explicitly reprojects the source to a metric CRS before
+any UE Landscape resampling.
+
+Canonical active preparation path:
+
+`pinned release asset -> byte-size/SHA-256 verification -> extract 204 GeoTIFFs -> mosaic -> explicit EPSG:4326 -> EPSG:32632 reprojection -> bounded 8 km AOI at a 1 m metric working grid -> controlled cubic resample to 4033 -> UInt16/R16 -> isolated L_PassoGiauTerrainSpike`.
+
+The established 8 km Landscape extent is shifted only **40 m south** while
+keeping the same 8 km size and therefore the same **198.412698 cm/vertex** UE XY
+scale. This keeps the rotated UTM square inside the immutable source
+tile-union north edge instead of filling an uncovered strip.
+
+### Current decision
+
+- **MASE PST DTM 1x1 is the canonical source path for PR #215.**
+- Veneto LiDAR-derived **5 m** remains a reproducible fallback and A/B baseline.
+- The Veneto Olympic **2 m** WebGIS investigation remains useful historical
+  lineage evidence, but is no longer the blocker for obtaining higher-resolution
+  raw elevation samples for Giau.
+- Existing GREEN Veneto authoring/render runs remain historical proof only.
+  A fresh exact-SHA MASE authoring run and human visual review are required
+  before PR #215 can leave Draft.
+- Route/physics authority remains unchanged; this is presentation-only terrain.
+
+### Historical P0 source gate — Cortina 2021 LiDAR / 2 m WebGIS contract (resolved by MASE source checkpoint)
+
+> Historical record only. The current source decision is the MASE PST section above.
+> Statements below about the “next gate” or “until then” describe the state before
+> the immutable MASE 1x1 package was acquired.
+
+The source-resolution decision is upstream of further terrain art, but the
+research now distinguishes **LiDAR acquisition density**, **DTM product
+resolution**, and **WebGIS display/derivative resolution** instead of treating
+the label `2m` as proof of native terrain samples.
+
+Official Veneto evidence establishes the acquisition context:
+
+- the Cortina + neighboring-municipalities project covers Cortina d'Ampezzo,
+  Colle Santa Lucia, Borca di Cadore, Selva di Cadore and San Vito di Cadore;
+- the commissioned airborne LiDAR density was **4 points/m²** with production
+  of both DSM and DTM over about **39,010 ha**;
+- Veneto's 2026 Olympic WebGIS portfolio describes the 2021 LiDAR-derived DTM,
+  DSM and CHM as **"ricampionati a 2m"** — resampled to 2 m.
+
+Primary references:
+
+- Regione del Veneto DGR / BUR project:
+  https://bur.regione.veneto.it/BurvServices/Pubblica/DettaglioDgr.aspx?id=426837
+- Regione del Veneto Olympic 2026 WebGIS portfolio:
+  https://idt2.regione.veneto.it/portfolio/webgis-olimpiadi-2026-in-veneto/
+- Olympic viewer:
+  https://idt2.regione.veneto.it/idt/webgis/viewer?webgisId=86
+
+The Olympic viewer exposes the display label `DTM_2m_Cortina`. Live WMS
+discovery identifies its raw-looking technical layer as **`rv:DTM_2m_clip`**.
+Its advertised WGS84 extent is approximately:
+
+`11.988525 .. 12.258246 E, 46.461630 .. 46.675067 N`
+
+and therefore contains the Passo Giau reference point
+`12.05321 E, 46.48284 N`.
+
+The WMS layer advertises **EPSG:6876 / RDN2008 Zone 12 (N-E)** plus CRS:84.
+EPSG:6876 uses Northing/Easting axis order; **EPSG:7795 is the corresponding
+GIS-oriented Easting/Northing form**. YACS may prefer 7795 as a working GIS
+CRS, but source-axis order must be handled explicitly and never inferred from
+numeric similarity.
+
+Live evidence is generated by:
+
+- `scripts/assets/probe_passo_giau_cortina_2m.py`;
+- `scripts/assets/test_probe_passo_giau_cortina_2m.py`;
+- `.github/workflows/passo-giau-cortina-2m-probe.yml`.
+
+The probe is fail-closed. Source-contract run
+**36453219301 / probe #26** established the terminal WCS behavior across the
+full alias/version matrix; the subsequent optimized probe preserves that
+evidence while fast-failing a disabled endpoint.
+
+The source contract proves:
+
+- the official Olympic portfolio describes the 2021 DTM/DSM/CHM as
+  **resampled to 2 m**;
+- the official Olympic viewer is tracked separately as **WebGIS 86**; its
+  initial anonymous HTML is only a client shell, so neither the dynamic layer
+  list nor the portfolio-to-viewer navigation is inferred from that raw HTML;
+- the WMS source identity and Passo Giau geographic coverage;
+- the derivative family `DTM_2m_clip_hillshade`,
+  `DTM_2m_slope_recl_clip` and `DTM_2m_aspect_recl_clip` exists over the
+  same area;
+- the raw-looking WMS layer exposes no WMS `MetadataURL` or `DataURL`;
+- WMS `DescribeLayer` classifies `rv:DTM_2m_clip` as WCS-backed;
+- both tested public WCS endpoints — global and `rv` workspace — return the
+  terminal GeoServer error **`Service WCS is disabled`** for direct
+  `DescribeCoverage` probes;
+- run #26 exercised the known layer aliases against WCS 2.0.1, 1.1.1 and
+  1.0.0 before the probe was optimized to short-circuit this terminal
+  endpoint-level error;
+- Veneto's anonymous generic download catalog is reachable and currently
+  exposes 932 downloadable layers, but contains neither
+  `DTM_2m_Cortina` nor `DTM_2m_clip`;
+- the public CSW 2.0.2 catalog returns 0 exact records for both identifiers;
+- Veneto's public downloader JavaScript exposes a first-party
+  `getDtmLidar5ByProvincia` / `getDtmLidar5ByComune` /
+  `downloadDtmLidar5` transport contract for the established **5 m** LiDAR
+  DTM product, but no equivalent public 2 m DTM transport has been identified.
+
+### Decision
+
+The Cortina dataset is now classified as:
+
+**high-density 2021 LiDAR acquisition -> official DTM/DSM products -> Olympic
+WebGIS derivatives resampled to 2 m.**
+
+It is **not** classified as a proven native 2 m elevation source.
+
+The 2 m candidate is therefore **not approved for UE height authoring**. We
+have proven its official viewer/WMS publication and geographic relevance, but
+we have not proven an official lossless/raw DTM distribution preserving
+elevation samples. Public WCS is explicitly disabled.
+
+WMS `GetMap` output must not be treated as elevation data. A rendered map
+interface does not prove preservation of raw DEM sample values, and a 2 m WMS
+label does not create measurement detail absent from the source product.
+
+The next gate is intentionally narrow: obtain a documented official raw DTM
+distribution for the 2021 Cortina acquisition (GeoTIFF/ASC or equivalent), or
+provider metadata that identifies such a distribution. Do not guess sibling
+filenames, scrape styled WMS pixels, or infer a hidden DTM download merely from
+other published derivatives.
+
+If such a raw source is obtained, prove:
+
+1. actual raster geotransform / cell spacing;
+2. elevation datatype and NoData contract;
+3. CRS, axis order and vertical datum;
+4. license/provenance;
+5. complete Passo Giau/SP638 AOI coverage;
+6. immutable source hash;
+7. whether the raster is native to the DTM production chain or itself a
+   provider-side resample.
+
+Only then may the deterministic A/B preparation path proceed:
+
+`verified raw DTM -> one deliberate GIS crop/reproject/resample -> 4033 Float -> UInt16/R16 -> UE`.
+
+Until then:
+
+- the existing Veneto **5 m** pipeline remains the reproducible terrain
+  baseline;
+- the 2 m WebGIS path remains a **documented blocked source candidate**, not a
+  hidden TODO to brute-force;
+- no GIS work moves into PR #224 / the local-mesh path;
+- road cut/fill, cliffs/scree and materials may be evaluated against the 5 m
+  baseline, but any claim that 2 m has already solved the steep-face problem is
+  prohibited by the source evidence.
+
 
 ## 2. Hard facts from Epic documentation
 

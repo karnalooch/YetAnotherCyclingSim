@@ -46,6 +46,20 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
             read("scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1"),
         )
 
+        self.assertIn('#include "LandscapeImportHelper.h"', cpp)
+        self.assertIn("VerifyUnrealImportReaderParity(", cpp)
+        self.assertIn("GetHeightmapImportDescriptor(", cpp)
+        self.assertIn("GetHeightmapImportData(", cpp)
+        self.assertIn("Unreal native R16 reader parity mismatch", cpp)
+        self.assertIn(
+            r'TEXT("  \"unreal_native_import_reader_parity\": \"PASS\",\n")',
+            cpp,
+        )
+        self.assertIn(
+            "Unreal-native R16 import-reader parity proof is missing or failed",
+            read("scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1"),
+        )
+
     def test_map_prep_creates_blank_isolated_spike_without_canonical_load(self) -> None:
         script = read("scripts/ue/stage3g_prepare_passo_giau_landscape_map.py")
         self.assertIn(
@@ -97,13 +111,20 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("capture proof PNG byte count", wrapper)
         self.assertIn("Fatal error|Unhandled Exception|Critical error", wrapper)
         self.assertIn("code_only_lfs_asset_registry_exit_tolerance_used", wrapper)
-        self.assertIn("download_passo_giau_veneto_lidar.py", wrapper)
-        self.assertIn("prepare_passo_giau_veneto_lidar.py", wrapper)
-        self.assertIn("PreparedVenetoLidar5m", wrapper)
+        self.assertIn("download_passo_giau_mase_pst.py", wrapper)
+        self.assertIn("prepare_passo_giau_mase_pst.py", wrapper)
+        self.assertIn("PreparedMasePstLidar1x1", wrapper)
         self.assertIn("('-ScaleZ=' + $ScaleZ.ToString", wrapper)
         self.assertIn("('-LocationZCm=' + $LocationZCm.ToString", wrapper)
         self.assertIn("native_cell_m", wrapper)
-        self.assertIn("IODL 2.0", wrapper)
+        self.assertIn("EPSG:4326", wrapper)
+        self.assertIn("EPSG:32632", wrapper)
+        self.assertIn("sampled_unique_elevation_count", wrapper)
+        self.assertIn(
+            "4215d1d37fb8540c44442aedd164b6cda3f1845f3552413a975a6b7b1461e93c",
+            wrapper,
+        )
+        self.assertIn("CC BY 4.0", wrapper)
 
     def test_capture_requires_real_png_and_human_review(self) -> None:
         capture = read("scripts/ue/stage3g_capture_passo_giau_landscape.py")
@@ -142,9 +163,11 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("runs-on: [self-hosted, yacs-ue58]", workflow)
         self.assertIn("lfs: false", workflow)
         self.assertIn("'scripts/assets/prepare_passo_giau_heightmap.py'", workflow)
+        self.assertIn("'scripts/assets/download_passo_giau_mase_pst.py'", workflow)
         self.assertIn("'scripts/assets/download_passo_giau_veneto_lidar.py'", workflow)
+        self.assertIn("'scripts/assets/prepare_passo_giau_mase_pst.py'", workflow)
         self.assertIn("'scripts/assets/prepare_passo_giau_veneto_lidar.py'", workflow)
-        self.assertIn("PreparedVenetoLidar5m/terrain-report.json", workflow)
+        self.assertIn("PreparedMasePstLidar1x1/terrain-report.json", workflow)
         self.assertNotIn("git lfs checkout", workflow)
         self.assertIn("path: _passo-giau-worktree", workflow)
         self.assertIn("working-directory: _passo-giau-worktree", workflow)
@@ -162,21 +185,159 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("git diff --cached --name-only", workflow)
         self.assertNotIn("git add -A", workflow)
 
-    def test_preparation_reports_numeric_and_seam_diagnostics(self) -> None:
+    def test_active_mase_pst_preparation_reports_numeric_and_seam_diagnostics(
+        self,
+    ) -> None:
+        prepare = read("scripts/assets/prepare_passo_giau_mase_pst.py")
+        shared = read("scripts/assets/prepare_passo_giau_veneto_lidar.py")
+
+        self.assertIn(
+            "from prepare_passo_giau_veneto_lidar import (",
+            prepare,
+        )
+        for helper in (
+            "adjacent_diagnostics",
+            "encode_u16",
+            "hillshade",
+            "landscape_diagnostics",
+            "scanline_diagnostics",
+            "slope_diagnostics",
+            "stats",
+        ):
+            self.assertIn(helper, prepare)
+
+        # The MASE path deliberately reuses the already-proven numeric
+        # diagnostics instead of forking their implementation.
+        self.assertIn("def r16_roundtrip_diagnostics(", shared)
+        self.assertIn("def seam_diagnostics(", shared)
+        self.assertIn("def slope_diagnostics(", shared)
+        self.assertIn("def scanline_diagnostics(", shared)
+        self.assertIn("def landscape_diagnostics(", shared)
+        self.assertIn('"vertical_quantization_step_m"', shared)
+        self.assertIn('"r16_roundtrip_error_m"', shared)
+        self.assertIn('"subsection_63_quads": seam_diagnostics(', shared)
+        self.assertIn('"component_126_quads": seam_diagnostics(', shared)
+
+        self.assertIn('"landscape_diagnostics": landscape_diagnostics(', prepare)
+        self.assertIn('"slope_degrees": slope_diagnostics(', prepare)
+        self.assertIn('"scanlines": scanline_diagnostics(', prepare)
+        self.assertIn("LANDSCAPE_SIZE = 4033", prepare)
+        self.assertIn('PRIMARY_SOURCE_CRS = "EPSG:4326"', prepare)
+        self.assertIn('TARGET_CRS = "EPSG:32632"', prepare)
+        self.assertIn("TARGET_NATIVE_RESOLUTION_M = 1.0", prepare)
+        self.assertIn("TARGET_NATIVE_SIZE = 8000", prepare)
+        self.assertIn("MIN_MASE_COVERAGE_SHARE = 0.50", prepare)
+        self.assertIn("EXPECTED_MASE_PIXEL_DEGREES = (0.00001, 0.000005)", prepare)
+        self.assertIn("expected one of {EXPECTED_MASE_PIXEL_DEGREES}", prepare)
+        self.assertIn("non-square angular pixels", prepare)
+        self.assertIn("PASSO_GIAU_WGS84", prepare)
+        self.assertNotIn("expected 1000x1000", prepare)
+        self.assertNotIn("src.width != 1000", prepare)
+        self.assertNotIn("src.height != 1000", prepare)
+        self.assertIn("expected Float32 raster data", prepare)
+        self.assertIn("src.count != 1", prepare)
+        self.assertIn("reproject_veneto_fallback(", prepare)
+        self.assertIn("mase_missing_samples_filled_by_veneto", prepare)
+        self.assertIn("nearest_mase_sample_distance_m", prepare)
+        self.assertIn("terrain_truth_note", prepare)
+        self.assertIn("sampled_unique_elevation_count", prepare)
+        self.assertIn("resampling=Resampling.cubic", prepare)
+        self.assertIn('"landscape_resampling": "cubic"', prepare)
+        self.assertIn("landscape_resampling_guard", prepare)
+        self.assertIn("np.clip(", prepare)
+        self.assertIn("clipped_above_count", prepare)
+
+        wrapper = read("scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1")
+        self.assertIn("nearest_mase_sample_distance_m", wrapper)
+        self.assertIn("$Diagnostics = $Terrain.landscape_diagnostics", wrapper)
+        self.assertIn("$Diagnostics.r16_roundtrip_error_m", wrapper)
+        self.assertIn("$Diagnostics.seams.subsection_63_quads", wrapper)
+        self.assertIn("$Diagnostics.seams.component_126_quads", wrapper)
+        self.assertIn("R16 round-trip error exceeds half-step", wrapper)
+        self.assertIn("prepared slope diagnostics", wrapper)
+        self.assertIn("deterministic center scanline diagnostics", wrapper)
+
+    def test_road_preparer_samples_active_mase_hybrid_terrain(self) -> None:
+        prepare = read("scripts/assets/prepare_passo_giau_road.py")
+        self.assertIn('return source_root() / "PreparedMasePstLidar1x1"', prepare)
+        self.assertIn('"passo_giau_mase_pst_hybrid_1m_8km_epsg32632.tif"', prepare)
+        self.assertIn('"passo_giau_mase_pst_hybrid_2m_preview_hillshade.png"', prepare)
+        self.assertNotIn("PreparedVenetoLidar5m", prepare)
+        self.assertNotIn("passo_giau_veneto_lidar_5m_8km_epsg32632.tif", prepare)
+
+    def test_sp638_reports_primary_vs_fallback_length_on_active_1m_mask(
+        self,
+    ) -> None:
+        terrain = read("scripts/assets/prepare_passo_giau_mase_pst.py")
+        road = read("scripts/assets/prepare_passo_giau_road.py")
+        workflow = read(".github/workflows/passo-giau-road-alignment.yml")
+        author = read(".github/workflows/passo-giau-r4-1-road-author.yml")
+
+        self.assertIn("passo_giau_mase_pst_primary_coverage_1m.tif", terrain)
+        self.assertIn('"primary_coverage_mask_geotiff"', terrain)
+        self.assertIn("SOURCE_COVERAGE_SAMPLE_INTERVAL_M = 1.0", road)
+        self.assertIn("passo_giau_mase_pst_primary_coverage_1m.tif", road)
+        self.assertIn('"terrain_source_coverage"', road)
+        self.assertIn('"mase_primary_length_m"', road)
+        self.assertIn('"veneto_fallback_length_m"', road)
+        self.assertIn("Prepare active MASE-primary hybrid terrain source", workflow)
+        self.assertIn("download_passo_giau_mase_pst.py", workflow)
+        self.assertIn("prepare_passo_giau_mase_pst.py", workflow)
+        self.assertIn("'scripts/assets/prepare_passo_giau_mase_pst.py'", author)
+        self.assertIn("permissions:\n  contents: read", author)
+        self.assertIn("persist-credentials: false", author)
+        self.assertNotIn("Commit only isolated spike map", author)
+        self.assertNotIn("git push origin", author)
+
+    def test_generic_preparer_keeps_reference_diagnostic_contract(self) -> None:
         prepare = read("scripts/assets/prepare_passo_giau_heightmap.py")
         self.assertIn("def terrain_diagnostics(", prepare)
-        self.assertIn('"vertical_quantization_step_m"', prepare)
         self.assertIn('"r16_roundtrip_error_m"', prepare)
         self.assertIn('"subsection_63_quads": seam_stats(63)', prepare)
         self.assertIn('"component_126_quads": seam_stats(126)', prepare)
-        self.assertIn('"diagnostics": terrain_diagnostics(', prepare)
-        self.assertIn("DEFAULT_LANDSCAPE_SIZE = 4033", prepare)
-        self.assertIn("resampling=Resampling.cubic", prepare)
-        self.assertIn('"landscape_resampling": "cubic"', prepare)
 
-    def test_editor_build_links_landscape_module(self) -> None:
+    def test_mase_release_source_is_pinned_and_does_not_depend_on_live_mase(
+        self,
+    ) -> None:
+        downloader = read("scripts/assets/download_passo_giau_mase_pst.py")
+        self.assertIn(
+            'RELEASE_TAG = "data-mase-pst-passo-giau-dtm-2026-09-28"',
+            downloader,
+        )
+        self.assertIn("ARCHIVE_BYTES = 853_162_557", downloader)
+        self.assertIn(
+            'ARCHIVE_SHA256 = "4215d1d37fb8540c44442aedd164b6cda3f1845f3552413a975a6b7b1461e93c"',
+            downloader,
+        )
+        self.assertIn("EXPECTED_TILE_COUNT = 204", downloader)
+        self.assertIn("SOURCE_PACKAGE_ID = 1372858", downloader)
+        self.assertIn("DOWNLOAD_ATTEMPTS = 6", downloader)
+        self.assertIn("DOWNLOAD_TIMEOUT_SECONDS = 300", downloader)
+        self.assertIn('headers["Range"] = f"bytes={written}-"', downloader)
+        self.assertIn('"Content-Range"', downloader)
+        self.assertIn("resuming at byte", downloader)
+        self.assertIn(
+            'ARCHIVE_NAME = "MASE_PST_8309f0171e3340c6aba45798c4812d54_1372858_DTM.zip"',
+            downloader,
+        )
+        self.assertIn('EXPECTED_TILE_SUFFIX = "_DTM.tiff"', downloader)
+        self.assertIn("EXPECTED_DSM_TILE_COUNT = 0", downloader)
+        self.assertIn('SOURCE_CRS = "EPSG:4326"', downloader)
+        self.assertIn("SOURCE_PIXEL_SIZES_DEG = (0.00001, 0.000005)", downloader)
+        self.assertIn('"pixel_sizes_degrees"', downloader)
+        self.assertNotIn('"tile_pixels": [1000, 1000]', downloader)
+        self.assertIn(
+            '"tile_dimensions": "source-defined; validated during terrain preparation"',
+            downloader,
+        )
+        self.assertIn("immutable_source_checkpoint", downloader)
+        self.assertIn("live_mase_dependency", downloader)
+        self.assertNotIn("sim.mase.gov.it", downloader)
+
+    def test_editor_build_links_landscape_import_modules(self) -> None:
         build = read("Source/YetAnotherCyclingSim/YetAnotherCyclingSim.Build.cs")
         self.assertIn('"Landscape"', build)
+        self.assertIn('"LandscapeEditor"', build)
 
 
 if __name__ == "__main__":
