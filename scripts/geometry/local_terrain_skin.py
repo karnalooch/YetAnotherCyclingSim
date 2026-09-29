@@ -6,6 +6,7 @@ only for presentation geometry. It never changes canonical road XY or physics.
 
 from __future__ import annotations
 
+from collections import deque
 from dataclasses import dataclass
 import hashlib
 import math
@@ -32,6 +33,28 @@ class TerrainSkinSmoothingMetrics:
     rms_adjustment_m: float
     max_abs_laplacian_before_m: float
     max_abs_laplacian_after_m: float
+
+
+@dataclass(frozen=True)
+class MesoGroundMesh:
+    """Compact irregular mesh cut from a sampled terrain grid."""
+
+    vertices: tuple[Vec3, ...]
+    triangles: tuple[tuple[int, int, int], ...]
+    source_row_count: int
+    source_column_count: int
+    boundary_vertex_count: int
+
+
+@dataclass(frozen=True)
+class MesoGroundMetrics:
+    active_vertex_count: int
+    triangle_count: int
+    boundary_vertex_count: int
+    max_abs_adjustment_m: float
+    rms_adjustment_m: float
+    boundary_max_abs_adjustment_m: float
+    minimum_protected_distance_m: float | None
 
 
 def _validate_grid(heights: Sequence[Sequence[float]]) -> tuple[int, int]:
@@ -240,6 +263,295 @@ def validate_terrain_skin_mesh(mesh: TerrainSkinMesh) -> None:
             raise ValueError(
                 f"terrain skin triangle {triangle_index} is folded in XY"
             )
+
+
+
+def _point_to_segment_distance_xy(
+    point_x: float,
+    point_y: float,
+    start: tuple[float, float],
+    end: tuple[float, float],
+) -> float:
+    dx = end[0] - start[0]
+    dy = end[1] - start[1]
+    length_squared = dx * dx + dy * dy
+    if length_squared <= _EPSILON:
+        return math.hypot(point_x - start[0], point_y - start[1])
+    t = (
+        (point_x - start[0]) * dx + (point_y - start[1]) * dy
+    ) / length_squared
+    t = max(0.0, min(1.0, t))
+    closest_x = start[0] + t * dx
+    closest_y = start[1] + t * dy
+    return math.hypot(point_x - closest_x, point_y - closest_y)
+
+
+def _minimum_polyline_distance_xy(
+    point_x: float,
+    point_y: float,
+    polyline_xy_m: Sequence[tuple[float, float]],
+) -> float | None:
+    if not polyline_xy_m:
+        return None
+    if len(polyline_xy_m) < 2:
+        raise ValueError("protected centerline needs at least two points")
+    return min(
+        _point_to_segment_distance_xy(
+            point_x,
+            point_y,
+            polyline_xy_m[index],
+            polyline_xy_m[index + 1],
+        )
+        for index in range(len(polyline_xy_m) - 1)
+    )
+
+
+def _smoothstep01(value: float) -> float:
+    t = max(0.0, min(1.0, value))
+    return t * t * (3.0 - 2.0 * t)
+
+
+def build_bounded_meso_ground_mesh(
+    x_coordinates_m: Sequence[float],
+    y_coordinates_descending_m: Sequence[float],
+    source_heights_m: Sequence[Sequence[float]],
+    target_heights_m: Sequence[Sequence[float]],
+    *,
+    origin_x_m: float,
+    origin_y_m: float,
+    origin_z_m: float,
+    center_x_m: float,
+    center_y_m: float,
+    radius_x_m: float,
+    radius_y_m: float,
+    protected_centerline_xy_m: Sequence[tuple[float, float]] = (),
+    protected_half_width_m: float = 0.0,
+    seam_rings: int = 4,
+    lift_m: float = 0.03,
+) -> tuple[MesoGroundMesh, MesoGroundMetrics]:
+    """Build an irregular rider-close meso patch with pinned topology seams.
+
+    The patch uses the sampled macro terrain only as input. A smooth target may
+    correct rider-visible heightfield ribbing, but the actual mesh boundary is
+    pinned exactly back to the source terrain. Triangles touching the protected
+    road/shoulder corridor are omitted rather than pushing authoritative road XY.
+    """
+
+    rows, columns = _validate_grid(source_heights_m)
+    target_rows, target_columns = _validate_grid(target_heights_m)
+    if (target_rows, target_columns) != (rows, columns):
+        raise ValueError("source and target meso-ground grids must match")
+    if len(x_coordinates_m) != columns:
+        raise ValueError("x coordinate count must match meso-ground columns")
+    if len(y_coordinates_descending_m) != rows:
+        raise ValueError("y coordinate count must match meso-ground rows")
+    if radius_x_m <= 0.0 or radius_y_m <= 0.0:
+        raise ValueError("meso-ground radii must be positive")
+    if protected_half_width_m < 0.0:
+        raise ValueError("protected_half_width_m cannot be negative")
+    if seam_rings < 1:
+        raise ValueError("seam_rings must be positive")
+    if lift_m < 0.0:
+        raise ValueError("lift_m cannot be negative")
+    if any(
+        x_coordinates_m[index + 1] <= x_coordinates_m[index]
+        for index in range(columns - 1)
+    ):
+        raise ValueError("meso-ground x coordinates must be strictly increasing")
+    if any(
+        y_coordinates_descending_m[index + 1]
+        >= y_coordinates_descending_m[index]
+        for index in range(rows - 1)
+    ):
+        raise ValueError("meso-ground y coordinates must be strictly decreasing")
+    if protected_half_width_m > 0.0 and len(protected_centerline_xy_m) < 2:
+        raise ValueError(
+            "protected centerline needs at least two points when width is positive"
+        )
+
+    active: list[bool] = []
+    protected_distances: list[float | None] = []
+    for row in range(rows):
+        y = float(y_coordinates_descending_m[row])
+        for column in range(columns):
+            x = float(x_coordinates_m[column])
+            ellipse = (
+                ((x - center_x_m) / radius_x_m) ** 2
+                + ((y - center_y_m) / radius_y_m) ** 2
+            )
+            protected_distance = _minimum_polyline_distance_xy(
+                x,
+                y,
+                protected_centerline_xy_m,
+            )
+            protected_distances.append(protected_distance)
+            outside_protected = (
+                protected_distance is None
+                or protected_distance + _EPSILON >= protected_half_width_m
+            )
+            active.append(ellipse <= 1.0 + _EPSILON and outside_protected)
+
+    source_triangles: list[tuple[int, int, int]] = []
+    for row in range(rows - 1):
+        base = row * columns
+        next_base = (row + 1) * columns
+        for column in range(columns - 1):
+            a = base + column
+            b = a + 1
+            c_index = next_base + column
+            d = c_index + 1
+            for triangle in ((a, c_index, b), (b, c_index, d)):
+                if all(active[index] for index in triangle):
+                    source_triangles.append(triangle)
+    if not source_triangles:
+        raise ValueError("meso-ground footprint produced no triangles")
+
+    edge_counts: dict[tuple[int, int], int] = {}
+    adjacency: dict[int, set[int]] = {}
+    used_source_indices: set[int] = set()
+    for triangle in source_triangles:
+        used_source_indices.update(triangle)
+        for start, end in (
+            (triangle[0], triangle[1]),
+            (triangle[1], triangle[2]),
+            (triangle[2], triangle[0]),
+        ):
+            edge = (min(start, end), max(start, end))
+            edge_counts[edge] = edge_counts.get(edge, 0) + 1
+            adjacency.setdefault(start, set()).add(end)
+            adjacency.setdefault(end, set()).add(start)
+
+    boundary_vertices = {
+        vertex
+        for edge, count in edge_counts.items()
+        if count == 1
+        for vertex in edge
+    }
+    if not boundary_vertices:
+        raise ValueError("meso-ground mesh has no boundary")
+
+    ring_distance: dict[int, int] = {index: 0 for index in boundary_vertices}
+    queue = deque(boundary_vertices)
+    while queue:
+        current = queue.popleft()
+        next_distance = ring_distance[current] + 1
+        for neighbor in adjacency.get(current, ()):
+            if neighbor in ring_distance:
+                continue
+            ring_distance[neighbor] = next_distance
+            queue.append(neighbor)
+
+    compact_order = sorted(used_source_indices)
+    compact_index = {
+        source_index: index for index, source_index in enumerate(compact_order)
+    }
+    vertices: list[Vec3] = []
+    adjustments: list[float] = []
+    boundary_adjustments: list[float] = []
+    used_protected_distances: list[float] = []
+
+    for source_index in compact_order:
+        row, column = divmod(source_index, columns)
+        x = float(x_coordinates_m[column])
+        y = float(y_coordinates_descending_m[row])
+        source_height = float(source_heights_m[row][column])
+        target_height = float(target_heights_m[row][column])
+        rings_from_boundary = ring_distance.get(source_index, seam_rings)
+        correction_weight = _smoothstep01(rings_from_boundary / seam_rings)
+        adjustment = (target_height - source_height + lift_m) * correction_weight
+        vertices.append(
+            Vec3(
+                x - origin_x_m,
+                y - origin_y_m,
+                source_height - origin_z_m + adjustment,
+            )
+        )
+        adjustments.append(adjustment)
+        if source_index in boundary_vertices:
+            boundary_adjustments.append(adjustment)
+        protected_distance = protected_distances[source_index]
+        if protected_distance is not None:
+            used_protected_distances.append(protected_distance)
+
+    triangles = tuple(
+        tuple(compact_index[index] for index in triangle)
+        for triangle in source_triangles
+    )
+    mesh = MesoGroundMesh(
+        vertices=tuple(vertices),
+        triangles=triangles,
+        source_row_count=rows,
+        source_column_count=columns,
+        boundary_vertex_count=len(boundary_vertices),
+    )
+    validate_meso_ground_mesh(mesh)
+
+    rms = math.sqrt(
+        sum(value * value for value in adjustments) / len(adjustments)
+    )
+    metrics = MesoGroundMetrics(
+        active_vertex_count=len(mesh.vertices),
+        triangle_count=len(mesh.triangles),
+        boundary_vertex_count=len(boundary_vertices),
+        max_abs_adjustment_m=max(abs(value) for value in adjustments),
+        rms_adjustment_m=rms,
+        boundary_max_abs_adjustment_m=max(
+            (abs(value) for value in boundary_adjustments),
+            default=0.0,
+        ),
+        minimum_protected_distance_m=min(used_protected_distances, default=None),
+    )
+    if (
+        metrics.minimum_protected_distance_m is not None
+        and metrics.minimum_protected_distance_m
+        < protected_half_width_m - 1e-7
+    ):
+        raise ValueError("meso-ground entered the protected road corridor")
+    if metrics.boundary_max_abs_adjustment_m > 1e-9:
+        raise ValueError("meso-ground boundary must tie exactly to source terrain")
+    return mesh, metrics
+
+
+def validate_meso_ground_mesh(mesh: MesoGroundMesh) -> None:
+    if not mesh.vertices or not mesh.triangles:
+        raise ValueError("meso-ground mesh cannot be empty")
+    if mesh.boundary_vertex_count < 3:
+        raise ValueError("meso-ground mesh boundary is unexpectedly small")
+    triangle_set: set[tuple[int, int, int]] = set()
+    for triangle_index, triangle in enumerate(mesh.triangles):
+        if triangle in triangle_set:
+            raise ValueError(f"duplicate meso-ground triangle {triangle_index}")
+        triangle_set.add(triangle)
+        if any(index < 0 or index >= len(mesh.vertices) for index in triangle):
+            raise ValueError(f"meso-ground triangle {triangle_index} has invalid index")
+        a, b, c = (mesh.vertices[index] for index in triangle)
+        ab = b - a
+        ac = c - a
+        normal_z = ab.x * ac.y - ab.y * ac.x
+        if normal_z <= _EPSILON:
+            raise ValueError(
+                f"meso-ground triangle {triangle_index} is degenerate or folded in XY"
+            )
+    for vertex_index, vertex in enumerate(mesh.vertices):
+        if not all(math.isfinite(value) for value in (vertex.x, vertex.y, vertex.z)):
+            raise ValueError(f"meso-ground vertex {vertex_index} is not finite")
+
+
+def meso_ground_hash(mesh: MesoGroundMesh) -> str:
+    digest = hashlib.sha256()
+    digest.update(
+        struct.pack(
+            "<III",
+            mesh.source_row_count,
+            mesh.source_column_count,
+            mesh.boundary_vertex_count,
+        )
+    )
+    for vertex in mesh.vertices:
+        digest.update(struct.pack("<ddd", vertex.x, vertex.y, vertex.z))
+    for triangle in mesh.triangles:
+        digest.update(struct.pack("<III", *triangle))
+    return digest.hexdigest()
 
 
 def terrain_skin_hash(mesh: TerrainSkinMesh) -> str:
