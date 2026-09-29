@@ -44,15 +44,11 @@ class YacsProofBrokerContractTests(unittest.TestCase):
             ("r4-1b3-geometry", "run"),
         )
         self.assertEqual(
-            proof_broker.parse_comment(
-                "/gumball proof r4-1b3-geometry retry"
-            ),
+            proof_broker.parse_comment("/gumball proof r4-1b3-geometry retry"),
             ("r4-1b3-geometry", "retry"),
         )
         self.assertEqual(
-            proof_broker.parse_comment(
-                "/gumball proof r4-1b3-geometry status"
-            ),
+            proof_broker.parse_comment("/gumball proof r4-1b3-geometry status"),
             ("r4-1b3-geometry", "status"),
         )
 
@@ -98,9 +94,7 @@ class YacsProofBrokerContractTests(unittest.TestCase):
                     "head": {
                         "ref": "feat/example",
                         "sha": "c" * 40,
-                        "repo": {
-                            "full_name": "karnalooch/YetAnotherCyclingSim"
-                        },
+                        "repo": {"full_name": "karnalooch/YetAnotherCyclingSim"},
                     },
                 },
             ),
