@@ -289,6 +289,8 @@ geometry**:
 - pin every topology boundary back to the sampled MASE surface so the patch
   cannot read as a slab or floating sheet;
 - taper the local correction inward from that pinned seam;
+- keep the visible meso surface at or above the sampled macro Landscape so the
+  underlying heightfield cannot reappear through depth/occlusion conflicts;
 - exclude the protected asphalt + shoulder corridor from meso-ground triangles;
 - preserve official SP638 centerline XY and Road Physics Profile authority;
 - keep the patch transient until exact-SHA technical proof and human visual
