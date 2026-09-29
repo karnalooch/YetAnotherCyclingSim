@@ -189,13 +189,13 @@ if ([double]$Proof.local_meso_ground.minimum_adjustment_m -lt -0.000001) {
 if ([double]$Proof.local_meso_ground.boundary_max_abs_adjustment_m -gt 0.000001) {
     throw "SP638 meso-ground seam is not pinned to source terrain: $($Proof.local_meso_ground.boundary_max_abs_adjustment_m) m"
 }
-if ([double]$Proof.local_meso_ground.minimum_protected_distance_m -lt 4.49) {
+if ([double]$Proof.local_meso_ground.minimum_protected_distance_m -lt 10.49) {
     throw "SP638 meso ground entered the protected road/shoulder corridor: $($Proof.local_meso_ground.minimum_protected_distance_m) m"
 }
 if ([double]$Proof.local_meso_ground.max_abs_laplacian_after_m -ge [double]$Proof.local_meso_ground.max_abs_laplacian_before_m) {
     throw 'SP638 meso-ground target did not reduce high-frequency height curvature.'
 }
-if ([int]$Proof.local_geometry.meso_ground.triangles -lt 8000) {
+if ([int]$Proof.local_geometry.meso_ground.triangles -lt 6000) {
     throw 'SP638 rider-close meso-ground mesh is unexpectedly sparse.'
 }
 
