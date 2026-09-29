@@ -72,7 +72,16 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
     def test_rider_close_geometry_proof_is_material_independent(self) -> None:
         capture = read("scripts/ue/stage3g_capture_sp638_local_corridor.py")
         wrapper = read("scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1")
-        self.assertIn('"viewmode lightingonly"', capture)
+        self.assertNotIn('"viewmode lightingonly"', capture)
+        self.assertIn("unreal.ViewModeIndex.VMI_LIGHTING_ONLY", capture)
+        self.assertIn(
+            "unreal.AutomationLibrary.set_editor_active_viewport_view_mode(",
+            capture,
+        )
+        self.assertIn(
+            "unreal.AutomationLibrary.get_editor_active_viewport_view_mode()",
+            capture,
+        )
         self.assertIn('"proof_viewmode": "lightingonly"', capture)
         self.assertIn('"material_independent_geometry_proof": True', capture)
         self.assertIn("unreal.LevelEditorSubsystem", capture)
@@ -82,6 +91,11 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
         self.assertIn("editor_set_game_view(True", capture)
         self.assertIn('"capture_source": "primary_level_editor_viewport"', capture)
         self.assertIn('"offscreen_camera_capture": False', capture)
+        self.assertIn('"viewport_viewmode_verified": True', capture)
+        self.assertIn(
+            '"AutomationLibrary.set_editor_active_viewport_view_mode"',
+            capture,
+        )
         self.assertIn("camera=None", capture)
         self.assertIn("force_game_view=False", capture)
         self.assertNotIn("unreal.CameraActor", capture)
@@ -89,6 +103,11 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
         self.assertIn("material_independent_geometry_proof", wrapper)
         self.assertIn("primary_level_editor_viewport", wrapper)
         self.assertIn("offscreen_camera_capture", wrapper)
+        self.assertIn("viewport_viewmode_verified", wrapper)
+        self.assertIn(
+            "AutomationLibrary.set_editor_active_viewport_view_mode",
+            wrapper,
+        )
         self.assertNotIn("proof_viewmode -ne 'lit'", wrapper)
 
     def test_child_wrappers_fail_closed_before_reuse(self) -> None:
