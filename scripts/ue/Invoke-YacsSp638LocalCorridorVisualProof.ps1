@@ -10,6 +10,7 @@ param(
     [Parameter(Mandatory=$true)] [string] $ExpectedBranch,
     [Parameter(Mandatory=$true)] [string] $ExpectedHead,
     [string] $PreparedWorkspaceStamp,
+    [switch] $ValidateOnly,
     [int] $TimeoutSec = 900
 )
 
@@ -33,8 +34,10 @@ $CaptureErr = $CaptureLog + '.stderr'
 $CapturePng = Join-Path $ArtifactRoot 'sp638_local_corridor_rider_3840x2160.png'
 $CaptureProof = Join-Path $ArtifactRoot 'local_corridor_visual_proof.json'
 
-foreach ($Path in @($CaptureLog,$CaptureStdout,$CaptureErr,$CapturePng,$CaptureProof)) {
-    Remove-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+if (-not $ValidateOnly) {
+    foreach ($Path in @($CaptureLog,$CaptureStdout,$CaptureErr,$CapturePng,$CaptureProof)) {
+        Remove-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+    }
 }
 
 $Preflight = Join-Path $RepoRoot 'scripts/ue/Preflight-YacsProof.ps1'
@@ -45,56 +48,62 @@ if (git -C $RepoRoot status --porcelain=v1 --untracked-files=no) {
     throw 'SP638 local-corridor visual checkout has tracked changes before proof.'
 }
 
-$PreparedValidator = Join-Path $RepoRoot 'scripts/ue/Test-YacsR4_1PreparedWorkspace.ps1'
-if ($PreparedWorkspaceStamp) {
-    & $PreparedValidator -StampPath $PreparedWorkspaceStamp -RepoRoot $RepoRoot -ExpectedHead $ExpectedHead -RequireMap | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw 'Prepared R4.1 workspace validation failed before local-corridor visual proof.' }
-    Write-Host '[1/3] Reusing materialized Passo Giau map from prepared R4.1 workspace.' -ForegroundColor Cyan
+if ($ValidateOnly) {
+    $CaptureExitCode = 0
+    Write-Host '[validate-only] Reusing evidence from the single R4.1 editor session.' -ForegroundColor Cyan
 }
 else {
-    Write-Host '[1/3] Materializing only the persisted Passo Giau map...' -ForegroundColor Cyan
-    git -C $RepoRoot lfs install --local
-    if ($LASTEXITCODE -ne 0) { throw 'git lfs install failed.' }
-    git -C $RepoRoot lfs pull --include=$SpikeMapRelative --exclude=''
-    if ($LASTEXITCODE -ne 0) { throw 'git lfs pull for Passo Giau spike map failed.' }
-    if (-not (Test-Path -LiteralPath $SpikeMapPath -PathType Leaf)) {
-        throw "Passo Giau map is missing: $SpikeMapPath"
+    $PreparedValidator = Join-Path $RepoRoot 'scripts/ue/Test-YacsR4_1PreparedWorkspace.ps1'
+    if ($PreparedWorkspaceStamp) {
+        & $PreparedValidator -StampPath $PreparedWorkspaceStamp -RepoRoot $RepoRoot -ExpectedHead $ExpectedHead -RequireMap | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw 'Prepared R4.1 workspace validation failed before local-corridor visual proof.' }
+        Write-Host '[1/3] Reusing materialized Passo Giau map from prepared R4.1 workspace.' -ForegroundColor Cyan
     }
-    $MapBytes = (Get-Item -LiteralPath $SpikeMapPath).Length
-    if ($MapBytes -lt 100000000) {
-        throw "Passo Giau map was not materialized from LFS (bytes=$MapBytes)."
+    else {
+        Write-Host '[1/3] Materializing only the persisted Passo Giau map...' -ForegroundColor Cyan
+        git -C $RepoRoot lfs install --local
+        if ($LASTEXITCODE -ne 0) { throw 'git lfs install failed.' }
+        git -C $RepoRoot lfs pull --include=$SpikeMapRelative --exclude=''
+        if ($LASTEXITCODE -ne 0) { throw 'git lfs pull for Passo Giau spike map failed.' }
+        if (-not (Test-Path -LiteralPath $SpikeMapPath -PathType Leaf)) {
+            throw "Passo Giau map is missing: $SpikeMapPath"
+        }
+        $MapBytes = (Get-Item -LiteralPath $SpikeMapPath).Length
+        if ($MapBytes -lt 100000000) {
+            throw "Passo Giau map was not materialized from LFS (bytes=$MapBytes)."
+        }
     }
-}
-
-Write-Host '[2/3] Rendering continuous DynamicMesh rider-close proof...' -ForegroundColor Cyan
-$UEditor = $Context.UnrealEditorPath
-if (-not $UEditor -or -not (Test-Path -LiteralPath $UEditor)) {
-    throw 'UnrealEditor.exe GUI executable is unavailable.'
-}
-if (-not (Test-Path -LiteralPath $CaptureScript -PathType Leaf)) {
-    throw "Local corridor visual script is missing: $CaptureScript"
-}
-
-$env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PNG = $CapturePng
-$env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PROOF = $CaptureProof
-try {
-    $Args = @(
-        $ProjectPath,
-        ('-ExecutePythonScript="' + $CaptureScript + '"'),
-        '-Unattended','-NoPause','-NoSplash','-NoP4',
-        '-windowed','-ResX=1920','-ResY=1080','-NoVSync','-FixedSeed',
-        '-ScriptErrorsAreFatal','-log','-stdout',('-AbsLog=' + $CaptureLog)
-    )
-    $Proc = Start-Process -FilePath $UEditor -ArgumentList $Args -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $CaptureStdout -RedirectStandardError $CaptureErr
-    if (-not $Proc.WaitForExit($TimeoutSec * 1000)) {
-        try { $Proc | Stop-Process -Force } catch { }
-        throw 'SP638 local-corridor visual capture timed out.'
+    
+    Write-Host '[2/3] Rendering continuous DynamicMesh rider-close proof...' -ForegroundColor Cyan
+    $UEditor = $Context.UnrealEditorPath
+    if (-not $UEditor -or -not (Test-Path -LiteralPath $UEditor)) {
+        throw 'UnrealEditor.exe GUI executable is unavailable.'
     }
-    $CaptureExitCode = $Proc.ExitCode
-}
-finally {
-    Remove-Item Env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PNG -ErrorAction SilentlyContinue
-    Remove-Item Env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PROOF -ErrorAction SilentlyContinue
+    if (-not (Test-Path -LiteralPath $CaptureScript -PathType Leaf)) {
+        throw "Local corridor visual script is missing: $CaptureScript"
+    }
+    
+    $env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PNG = $CapturePng
+    $env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PROOF = $CaptureProof
+    try {
+        $Args = @(
+            $ProjectPath,
+            ('-ExecutePythonScript="' + $CaptureScript + '"'),
+            '-Unattended','-NoPause','-NoSplash','-NoP4',
+            '-windowed','-ResX=1920','-ResY=1080','-NoVSync','-FixedSeed',
+            '-ScriptErrorsAreFatal','-log','-stdout',('-AbsLog=' + $CaptureLog)
+        )
+        $Proc = Start-Process -FilePath $UEditor -ArgumentList $Args -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $CaptureStdout -RedirectStandardError $CaptureErr
+        if (-not $Proc.WaitForExit($TimeoutSec * 1000)) {
+            try { $Proc | Stop-Process -Force } catch { }
+            throw 'SP638 local-corridor visual capture timed out.'
+        }
+        $CaptureExitCode = $Proc.ExitCode
+    }
+    finally {
+        Remove-Item Env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PNG -ErrorAction SilentlyContinue
+        Remove-Item Env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PROOF -ErrorAction SilentlyContinue
+    }
 }
 
 if (-not (Test-Path -LiteralPath $CapturePng -PathType Leaf)) {
@@ -178,15 +187,17 @@ if ([int]$Proof.local_geometry.terrain_skin.triangles -lt 25000) {
     throw 'SP638 rider-close terrain skin mesh is unexpectedly sparse.'
 }
 
-$CaptureLogText = Get-Content -LiteralPath $CaptureLog -Raw -ErrorAction Stop
-if ($CaptureExitCode -notin @(0,1)) {
-    throw "SP638 local-corridor capture returned unexpected exit code $CaptureExitCode."
-}
-if ($CaptureLogText -match '(?i)Fatal error|Unhandled Exception|Critical error') {
-    throw 'SP638 local-corridor capture log contains a crash/fatal marker.'
-}
-if ($CaptureLogText -notmatch '\[YacsSp638LocalCorridorVisual\] PASS:') {
-    throw 'SP638 local-corridor log is missing the explicit PASS marker.'
+if (-not $ValidateOnly) {
+    $CaptureLogText = Get-Content -LiteralPath $CaptureLog -Raw -ErrorAction Stop
+    if ($CaptureExitCode -notin @(0,1)) {
+        throw "SP638 local-corridor capture returned unexpected exit code $CaptureExitCode."
+    }
+    if ($CaptureLogText -match '(?i)Fatal error|Unhandled Exception|Critical error') {
+        throw 'SP638 local-corridor capture log contains a crash/fatal marker.'
+    }
+    if ($CaptureLogText -notmatch '\[YacsSp638LocalCorridorVisual\] PASS:') {
+        throw 'SP638 local-corridor log is missing the explicit PASS marker.'
+    }
 }
 
 Write-Host '[3/3] Enforcing non-persistent proof contract...' -ForegroundColor Cyan
