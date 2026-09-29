@@ -872,6 +872,20 @@ R4.1B.4 recovery path (#247). The implementation deliberately:
 A finer local mesh is **not** evidence of finer terrain measurement. It only
 provides presentation topology for a local non-heightfield repair.
 
+The first B.4 Gumball proof on PR #251 (run `36571406362`) technically passed
+the bounded-meso contract at exact HEAD
+`257f75d6baddeb42ea3a9489c9f09a310e8a640a`: one editor process/boot, zero seam
+adjustment, at least 10.5 m protected earthwork clearance, no meso vertex below
+the visible macro Landscape, and reduced high-frequency curvature. Human review
+still rejected that Lit frame because checker/fallback proof materials obscured
+whether the remaining dark ribbons were geometry or shading artifacts.
+
+The next B.4 geometry proof therefore uses UE 5.8 `viewmode lightingonly`.
+Lighting Only deliberately replaces scene materials with a neutral
+lighting-only diagnostic and omits source normal maps. This makes the exact-SHA
+human geometry gate material-independent; production materials remain a
+separate later visual/dressing acceptance concern.
+
 ## 10. Source hierarchy
 
 Prefer sources in this order:
