@@ -144,6 +144,12 @@ class YacsProofBrokerContractTests(unittest.TestCase):
         dispatched_inputs = dispatch.call_args.args[4]
         self.assertEqual(dispatched_inputs["exact_sha"], "c" * 40)
 
+    def test_reusable_artifact_is_created_only_after_success(self):
+        workflow = TARGET_WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn("if: ${{ success() }}", workflow)
+        self.assertIn("if-no-files-found: error", workflow)
+        self.assertIn("diagnostic-r4-1b3-geometry-", workflow)
+
     def test_broker_workflow_keeps_trusted_default_branch_boundary(self):
         workflow = BROKER_WORKFLOW.read_text(encoding="utf-8")
         self.assertIn("Checkout trusted default branch", workflow)
