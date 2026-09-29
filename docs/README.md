@@ -4,6 +4,75 @@ This directory is the navigation layer for YetAnotherCyclingSim documentation. S
 
 > **Rule of thumb:** use the document marked **authoritative** for the affected area. Working notes, experiments, proof history and rollout plans are supporting evidence, not a replacement for the current SSOT.
 
+## Documentation map
+
+```mermaid
+flowchart TB
+    INDEX["docs/README.md<br/>documentation router"]
+
+    INDEX --> PRODUCT["Product & delivery"]
+    INDEX --> SIM["Simulation & route"]
+    INDEX --> WORLD["World & terrain"]
+    INDEX --> ENG["Engineering & proof"]
+
+    PRODUCT --> PRD["PRODUCT_REQUIREMENTS.md<br/>MVP scope"]
+    PRODUCT --> ROADMAP["ROADMAP.md<br/>stage gates"]
+
+    SIM --> RUNTIME["STAGE_2_RUNTIME_CONTRACT.md"]
+    SIM --> ROUTE["STAGE_3_ROUTE_GEOMETRY_CONTRACT.md"]
+    SIM --> PHYS["ROAD_PHYSICS_PROFILE.md"]
+
+    WORLD --> R41["STAGE3G_R4_1_ALPINE_VISUAL_RECOVERY.md"]
+    WORLD --> TERRAIN["STAGE3G_R4_1_TERRAIN_RESEARCH.md"]
+    WORLD --> AUTHOR["YACS_WORLD_AUTHORING_LIBRARY.md"]
+
+    ENG --> CI["CI_VALIDATION_TIERS.md"]
+    ENG --> PLATFORM["ENGINEERING_PLATFORM.md"]
+    ENG --> EVIDENCE["Visual / Performance History"]
+```
+
+The graph is a navigation aid, not a second source of truth. The linked documents below remain authoritative for their own areas.
+
+## Current focus
+
+| Area | Current state |
+|---|---|
+| Delivery | **Stage 3G R4.1 — Alpine Visual Recovery** |
+| Golden visual slice | **1200 m** before full-route propagation |
+| Terrain | **MASE DTM macro terrain + bounded rider-close terrain correction** |
+| Road authority | **SP638 / route XY and Road Physics Profile remain authoritative** |
+| Acceptance | **human visual review + exact-SHA performance/proof evidence** |
+| Next gate | **R5 stays blocked until R4.1 closeout is accepted** |
+
+```mermaid
+flowchart LR
+    FOUNDATION["Stages 1–2<br/>physics + runtime"] --> ROUTE["Stage 3 / 3G<br/>route + world"]
+    ROUTE --> R41["R4.1<br/>Alpine Visual Recovery"]
+    R41 --> R5["R5<br/>Rendering Tech"]
+    R5 --> S4["Stage 4<br/>cornering"]
+
+    class R41 current
+    classDef current stroke-width:4px
+```
+
+### Passo Giau terrain and proof pipeline
+
+```mermaid
+flowchart LR
+    SOURCE["MASE LiDAR / DTM"] --> METRIC["Metric reprojection<br/>EPSG:32632"]
+    METRIC --> GRID["Controlled terrain grid"]
+    GRID --> LAND["UE Landscape<br/>macro terrain"]
+    LAND --> LOCAL["Bounded local<br/>terrain correction"]
+    LOCAL --> ROAD["SP638 road<br/>presentation"]
+    ROAD --> VIS["Visual proof"]
+    VIS --> PERF["Performance /<br/>closeout proof"]
+
+    PHYS["Road Physics Profile<br/>route truth"] -. "authority preserved" .-> ROAD
+    ROUTEGEOM["Canonical route XY"] -. "not rewritten by terrain" .-> LOCAL
+```
+
+This pipeline deliberately keeps **terrain presentation**, **road presentation** and **route/physics authority** separate. A visually better Landscape must not silently become physics truth.
+
 ## Start here
 
 | Need | Read first | Status |
