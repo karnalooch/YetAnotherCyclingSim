@@ -85,7 +85,7 @@ TERRAIN_SKIN_MAX_TOTAL_ADJUSTMENT_M = 3.00
 TERRAIN_SKIN_PINNED_BORDER_CELLS = 2
 MESO_GROUND_RADIUS_X_M = 100.0
 MESO_GROUND_RADIUS_Y_M = 80.0
-MESO_GROUND_PROTECTED_HALF_WIDTH_M = 10.5
+MESO_GROUND_EARTHWORK_CLEARANCE_M = 0.50
 MESO_GROUND_SEAM_RINGS = 4
 
 INSIDE_CLEARANCE_FRACTION = 0.75
@@ -488,6 +488,7 @@ def _sample_local_terrain_skin(
     road_actor: unreal.Actor,
     center_world: unreal.Vector,
     protected_centerline_world: tuple[unreal.Vector, ...],
+    protected_half_widths_m: tuple[float, ...],
 ):
     """Sample Landscape and build the bounded R4.1B.4 rider-close meso ground."""
 
@@ -581,7 +582,7 @@ def _sample_local_terrain_skin(
         radius_x_m=MESO_GROUND_RADIUS_X_M,
         radius_y_m=MESO_GROUND_RADIUS_Y_M,
         protected_centerline_xy_m=protected_centerline_xy_m,
-        protected_half_width_m=MESO_GROUND_PROTECTED_HALF_WIDTH_M,
+        protected_half_widths_m=protected_half_widths_m,
         seam_rings=MESO_GROUND_SEAM_RINGS,
         lift_m=TERRAIN_SKIN_LIFT_M,
     )
@@ -599,7 +600,12 @@ def _sample_local_terrain_skin(
         "column_count": len(x_coordinates_m),
         "sample_count": len(y_coordinates_m) * len(x_coordinates_m),
         "footprint_radius_m": [MESO_GROUND_RADIUS_X_M, MESO_GROUND_RADIUS_Y_M],
-        "protected_half_width_m": MESO_GROUND_PROTECTED_HALF_WIDTH_M,
+        "protected_half_width_mode": "adaptive_earthwork_envelope",
+        "earthwork_clearance_m": MESO_GROUND_EARTHWORK_CLEARANCE_M,
+        "protected_half_width_range_m": [
+            meso_metrics.minimum_protected_half_width_m,
+            meso_metrics.maximum_protected_half_width_m,
+        ],
         "seam_rings": MESO_GROUND_SEAM_RINGS,
         "active_vertex_count": meso_metrics.active_vertex_count,
         "triangle_count": meso_metrics.triangle_count,
@@ -609,6 +615,9 @@ def _sample_local_terrain_skin(
         ),
         "minimum_protected_distance_m": (
             meso_metrics.minimum_protected_distance_m
+        ),
+        "minimum_protected_clearance_m": (
+            meso_metrics.minimum_protected_clearance_m
         ),
         "smoothing_iterations": TERRAIN_SKIN_SMOOTHING_ITERATIONS,
         "smoothing_blend": TERRAIN_SKIN_SMOOTHING_BLEND,
@@ -848,6 +857,11 @@ def main() -> None:
         edit_layer_name=edit_layer_name,
     )
 
+    meso_protected_half_widths_m = tuple(
+        max(abs(profile[0].lateral_m), abs(profile[-1].lateral_m))
+        + MESO_GROUND_EARTHWORK_CLEARANCE_M
+        for profile in adaptive_profiles
+    )
     terrain_skin_center_world = kernel_world[len(kernel_world) // 2]
     (
         terrain_skin_mesh,
@@ -858,6 +872,7 @@ def main() -> None:
         road_actor,
         terrain_skin_center_world,
         tuple(kernel_world),
+        meso_protected_half_widths_m,
     )
 
     neutral_landscape_material = unreal.load_asset(
