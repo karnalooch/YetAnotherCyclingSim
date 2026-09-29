@@ -1,4 +1,4 @@
-#<
+<#
 .SYNOPSIS
     Build once and run the bounded Stage 3G R4.1 proof sequence from one exact-SHA worktree.
 #>

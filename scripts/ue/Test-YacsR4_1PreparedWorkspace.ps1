@@ -1,4 +1,4 @@
-#<
+<#
 .SYNOPSIS
     Validate an in-job prepared R4.1 Unreal workspace before a child proof reuses it.
 #>
