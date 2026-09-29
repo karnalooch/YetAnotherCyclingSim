@@ -170,6 +170,19 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
             capture,
         )
 
+    def test_transient_corridor_actor_handoff_survives_runpy_stage_boundary(
+        self,
+    ) -> None:
+        capture = read("scripts/ue/stage3g_capture_sp638_local_corridor.py")
+        dispatcher = read("scripts/ue/r4_1_editor_session.py")
+        self.assertIn("_retained_transient_actors", capture)
+        self.assertIn("_retained_transient_actors.append(actor)", capture)
+        self.assertIn("_stage_runtime_globals", dispatcher)
+        self.assertIn(
+            '_stage_runtime_globals[str(stage["name"])] = stage_globals',
+            dispatcher,
+        )
+
     def test_local_corridor_ride_through_is_bounded_and_presentation_only(
         self,
     ) -> None:
