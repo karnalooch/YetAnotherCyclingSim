@@ -904,6 +904,23 @@ boundary remains pinned to sampled MASE height, and the existing interior lift
 continues to keep active meso geometry from falling below the visible macro
 Landscape.
 
+Exact-SHA proof `c0b9f7e4a2053614eba95f1fe437a3601248cb47` (run
+`36593194546`) validated that contract numerically and completed the prepared
+build-once / boot-once suite successfully. The resulting Lighting Only frame
+still contains the long black wedges, so the narrow exposed-Landscape seam was
+not sufficient to explain the artefact. Do not increase the overlap further
+without new evidence.
+
+The same UE log reports a concrete normals warning for each transient
+DynamicMesh: `RecomputeNormals` was called before a normals layer existed and
+UE fell back to per-vertex normals. That warning is not yet proven to be the
+visual root cause. The next proof therefore adds a same-camera Unlit actor-ID
+frame with distinct transient colors for meso, earthwork, shoulders and asphalt.
+If the wedge becomes a colored surface, the responsible mesh is identified; if
+the wedge disappears while geometry remains continuous, lighting/normals/shadow
+becomes the primary hypothesis; if it remains an unowned black region, geometry
+coverage stays suspect.
+
 ### 9.2 SP638 banking/crossfall — real-data-first guardrail
 
 PR #251 also establishes the presentation-side banking rule for real SP638:
