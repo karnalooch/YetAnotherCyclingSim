@@ -1172,10 +1172,13 @@ B.3.1 therefore adds these fail-closed presentation contracts:
   are not moved;
 - the world-aligned terrain skin is lowered only where required to preserve a
   bounded vertical clearance below the asphalt/shoulder presentation envelope.
-  The B.3.1 hairpin proof keeps a **4.0 m fail-closed maximum correction**:
-  exact-SHA proof evidence measured a required 3.362 m cut, so the earlier
-  provisional 3.0 m cap was below the real bounded hairpin geometry; corrections
-  above 4.0 m remain rejected rather than silently excavating arbitrary terrain;
+  The B.3.1 hairpin proof currently keeps a **4.0 m fail-closed diagnostic
+  bound**. The first exact-SHA failure exposed a 3.362 m requested cut, but the
+  next exact-SHA run exposed a later 4.467 m request. This proves that repeatedly
+  raising the cap from the first failing sample would be unsafe. The clearance
+  kernel therefore scans the full bounded patch and reports the worst requested
+  cut plus its XY/distance before any further geometry decision; corrections
+  above 4.0 m remain rejected while that diagnosis is collected;
 - terrain-skin smoothing adjustments taper back to zero near the outer skin
   boundary so the local mesh converges to the sampled MASE macro Landscape
   instead of reading as a hard sheet;
