@@ -52,6 +52,7 @@ class MesoGroundMetrics:
     triangle_count: int
     boundary_vertex_count: int
     max_abs_adjustment_m: float
+    minimum_adjustment_m: float
     rms_adjustment_m: float
     boundary_max_abs_adjustment_m: float
     minimum_protected_distance_m: float | None
@@ -458,7 +459,14 @@ def build_bounded_meso_ground_mesh(
         target_height = float(target_heights_m[row][column])
         rings_from_boundary = ring_distance.get(source_index, seam_rings)
         correction_weight = _smoothstep01(rings_from_boundary / seam_rings)
-        adjustment = (target_height - source_height + lift_m) * correction_weight
+        # The macro Landscape stays visible below the local patch. Never move
+        # meso ground below that sampled source surface or the heightfield can
+        # win depth testing and reintroduce occlusion/ribbon artefacts. The
+        # bounded repair is therefore a fill/cover envelope: low ribs may rise
+        # toward the smoothed target, while source highs remain covered by the
+        # small interior lift. The topology seam itself remains exactly pinned.
+        target_delta = max(0.0, target_height - source_height)
+        adjustment = (target_delta + lift_m) * correction_weight
         vertices.append(
             Vec3(
                 x - origin_x_m,
@@ -494,6 +502,7 @@ def build_bounded_meso_ground_mesh(
         triangle_count=len(mesh.triangles),
         boundary_vertex_count=len(boundary_vertices),
         max_abs_adjustment_m=max(abs(value) for value in adjustments),
+        minimum_adjustment_m=min(adjustments),
         rms_adjustment_m=rms,
         boundary_max_abs_adjustment_m=max(
             (abs(value) for value in boundary_adjustments),
@@ -509,6 +518,8 @@ def build_bounded_meso_ground_mesh(
         raise ValueError("meso-ground entered the protected road corridor")
     if metrics.boundary_max_abs_adjustment_m > 1e-9:
         raise ValueError("meso-ground boundary must tie exactly to source terrain")
+    if metrics.minimum_adjustment_m < -1e-9:
+        raise ValueError("meso-ground must not fall below sampled macro terrain")
     return mesh, metrics
 
 
