@@ -108,7 +108,7 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
             "AutomationLibrary.set_editor_active_viewport_view_mode",
             wrapper,
         )
-        self.assertIn("adaptive_earthwork_envelope", wrapper)
+        self.assertIn("adaptive_asymmetric_earthwork_envelope", wrapper)
         self.assertIn("minimum_protected_clearance_m", wrapper)
         self.assertNotIn("proof_viewmode -ne 'lit'", wrapper)
 
