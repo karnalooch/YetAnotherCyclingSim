@@ -1,0 +1,21 @@
+name: Drain superseded Passo Giau authoring
+
+on:
+  push:
+    branches:
+      - ci/257-adaptive-unreal-parallelism
+    paths:
+      - '.github/workflows/drain-legacy-passo-giau-author.yml'
+
+permissions: {}
+
+concurrency:
+  group: passo-giau-r4-1b-landscape-author-${{ github.repository }}
+  cancel-in-progress: true
+
+jobs:
+  drain:
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "legacy authoring concurrency drained"
