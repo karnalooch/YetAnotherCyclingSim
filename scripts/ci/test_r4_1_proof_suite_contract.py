@@ -124,6 +124,12 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
         self.assertIn("superelevation.maximum_adjacent_delta_deg", wrapper)
         self.assertNotIn("proof_viewmode -ne 'lit'", wrapper)
 
+    def test_transient_dynamic_mesh_normals_are_initialized_explicitly(self) -> None:
+        capture = read("scripts/ue/stage3g_capture_sp638_local_corridor.py")
+        spawn = capture.split("def _spawn_dynamic_mesh(", 1)[1].split("\ndef main()", 1)[0]
+        self.assertIn("dynamic_mesh.set_per_vertex_normals()", spawn)
+        self.assertNotIn("dynamic_mesh.recompute_normals(", spawn)
+
     def test_child_wrappers_fail_closed_before_reuse(self) -> None:
         for path in (
             "scripts/ue/Invoke-YacsGeometryScriptProbe.ps1",
