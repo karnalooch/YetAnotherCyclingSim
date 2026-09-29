@@ -46,6 +46,19 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
             read("scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1"),
         )
 
+        self.assertIn("ConvertNonEditLayerLandscape()", cpp)
+        self.assertIn('FName BaseLayerName(TEXT("MASE_Base"))', cpp)
+        self.assertIn('FName RoadLayerName(TEXT("SP638_Road"))', cpp)
+        self.assertIn("ULandscapeEditLayer::StaticClass()", cpp)
+        self.assertIn("Landscape->ForceLayersFullUpdate()", cpp)
+        self.assertIn(r'TEXT("  \"edit_layers_enabled\": true,\n")', cpp)
+        self.assertIn(r'TEXT("  \"edit_layer_count\": %d,\n")', cpp)
+        wrapper = read("scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1")
+        self.assertIn("edit_layers_enabled", wrapper)
+        self.assertIn("edit_layer_count -ne 2", wrapper)
+        self.assertIn("base_edit_layer -ne 'MASE_Base'", wrapper)
+        self.assertIn("road_edit_layer -ne 'SP638_Road'", wrapper)
+
         self.assertIn('#include "LandscapeImportHelper.h"', cpp)
         self.assertIn("VerifyUnrealImportReaderParity(", cpp)
         self.assertIn("GetHeightmapImportDescriptor(", cpp)
