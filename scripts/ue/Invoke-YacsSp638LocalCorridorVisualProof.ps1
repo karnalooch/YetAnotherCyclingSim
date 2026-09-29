@@ -153,6 +153,30 @@ if ([double]$Proof.source_geometry_analysis.half_window_m -lt 5.0) {
 if ([bool]$Proof.source_geometry_analysis.canonical_centerline_xy_modified -ne $false) {
     throw 'SP638 visual proof modified canonical centerline XY.'
 }
+if ([string]$Proof.superelevation.mode -ne 'curvature_bounded_presentation') {
+    throw "SP638 visual proof did not use curvature-bounded superelevation: '$($Proof.superelevation.mode)'."
+}
+if ([bool]$Proof.superelevation.measured_sp638_bank_data -ne $false) {
+    throw 'SP638 visual proof incorrectly claims measured bank-angle source data.'
+}
+if ([bool]$Proof.superelevation.authoritative_physics -ne $false) {
+    throw 'SP638 presentation superelevation incorrectly claims physics authority.'
+}
+if ([bool]$Proof.superelevation.canonical_centerline_xy_modified -ne $false) {
+    throw 'SP638 presentation superelevation modified canonical centerline XY.'
+}
+if ([double]$Proof.superelevation.peak_abs_bank_deg -lt 1.0) {
+    throw "SP638 hairpin proof did not produce a visible bank: $($Proof.superelevation.peak_abs_bank_deg) deg."
+}
+if ([double]$Proof.superelevation.peak_abs_bank_deg -gt 4.01) {
+    throw "SP638 presentation bank exceeded the 4-degree cap: $($Proof.superelevation.peak_abs_bank_deg) deg."
+}
+if ([double]$Proof.superelevation.maximum_adjacent_delta_deg -gt 0.351) {
+    throw "SP638 presentation bank transition snapped between stations: $($Proof.superelevation.maximum_adjacent_delta_deg) deg."
+}
+if ([int]$Proof.superelevation.active_station_count -lt 5) {
+    throw "SP638 hairpin proof banked too few stations: $($Proof.superelevation.active_station_count)."
+}
 if ([string]$Proof.proof_viewmode -ne 'lightingonly') {
     throw "SP638 visual proof must use Lighting Only geometry mode, got '$($Proof.proof_viewmode)'."
 }
