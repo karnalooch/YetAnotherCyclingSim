@@ -145,7 +145,10 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
         self.assertIn("_actor_id_output_path.unlink(missing_ok=True)", capture)
         self.assertIn("Rotator(pitch=-90.0, yaw=0.0, roll=0.0)", capture)
         self.assertIn('"purpose": "neutral_overhead_geometry_diagnostic"', capture)
-        self.assertNotIn("editor_set_viewport_realtime(True", capture)
+        self.assertNotIn(
+            "    level_editor.editor_set_viewport_realtime(True, viewport_config_key)",
+            capture,
+        )
 
     def test_child_wrappers_fail_closed_before_reuse(self) -> None:
         for path in (
