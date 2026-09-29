@@ -864,7 +864,7 @@ R4.1B.4 recovery path (#247). The implementation deliberately:
 - pins the patch topology boundary exactly to source terrain;
 - keeps the meso surface from falling below the still-visible macro Landscape,
   preventing depth/occlusion ribbons from exposing the raw heightfield;
-- leaves a protected asphalt/shoulder corridor cut out of the patch;
+- leaves the complete local road-bench / earthwork envelope cut out of the patch so the meso surface cannot overlap the dedicated ±10 m earthwork mesh;
 - validates deterministic mesh/hash, seam error, protected-distance clearance,
   non-degenerate triangles and bounded correction before the UE proof;
 - retains human cyclist-camera acceptance as the final geometry decision.
