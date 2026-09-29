@@ -24,7 +24,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: passo-giau-r4-1b-landscape-author-${{ github.repository }}
+  group: passo-giau-r4-1b-landscape-author-${{ github.repository }}-${{ github.ref_name }}
   cancel-in-progress: true
 
 jobs:
