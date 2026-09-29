@@ -1,5 +1,8 @@
 # Stage 3G R4.1 — Alpine Visual Recovery
 
+> **Documentation status after 2026-09-29:** legacy M3 execution/proof dossier. This file remains valuable for R4.1 evidence, exact historical decisions and proof traceability, but it is no longer the world-building methodology SSOT or an active roadmap hierarchy. New world architecture starts from [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md); active delivery uses [`ROADMAP.md`](ROADMAP.md).
+
+
 **Status:** required before R5  
 **Trigger:** R4 technical merge passed, post-merge human visual review rejected the rendered world as an acceptable Stage 3G visual closeout  
 **Reference target:** owner-provided alpine-road reference image reviewed on 2026-09-28  

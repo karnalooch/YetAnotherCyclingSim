@@ -1,8 +1,8 @@
 # YACS documentation
 
-This directory is the navigation layer for YetAnotherCyclingSim documentation. Start here before changing code, Unreal assets, CI, physics, route geometry, or the world.
+This directory is the navigation layer for YetAnotherCyclingSim documentation.
 
-> **Rule of thumb:** use the document marked **authoritative** for the affected area. Working notes, experiments, proof history and rollout plans are supporting evidence, not a replacement for the current SSOT.
+> **Rule:** use the document marked **authoritative** for the affected area. Experiments, old stage plans and proof history are evidence, not current architecture.
 
 ## Documentation map
 
@@ -12,135 +12,118 @@ flowchart TB
 
     INDEX --> PRODUCT["Product & delivery"]
     INDEX --> SIM["Simulation & route"]
-    INDEX --> WORLD["World & terrain"]
+    INDEX --> WORLD["World building"]
     INDEX --> ENG["Engineering & proof"]
+    INDEX --> HIST["History"]
 
     PRODUCT --> PRD["PRODUCT_REQUIREMENTS.md<br/>MVP scope"]
-    PRODUCT --> ROADMAP["ROADMAP.md<br/>stage gates"]
+    PRODUCT --> ROADMAP["ROADMAP.md<br/>M0-M10 delivery"]
 
     SIM --> RUNTIME["STAGE_2_RUNTIME_CONTRACT.md"]
     SIM --> ROUTE["STAGE_3_ROUTE_GEOMETRY_CONTRACT.md"]
     SIM --> PHYS["ROAD_PHYSICS_PROFILE.md"]
 
-    WORLD --> R41["STAGE3G_R4_1_ALPINE_VISUAL_RECOVERY.md"]
-    WORLD --> TERRAIN["STAGE3G_R4_1_TERRAIN_RESEARCH.md"]
-    WORLD --> AUTHOR["YACS_WORLD_AUTHORING_LIBRARY.md"]
+    WORLD --> BIBLE["WORLD_BUILDING_BIBLE.md<br/>methodology"]
+    WORLD --> AUTHOR["YACS_WORLD_AUTHORING_LIBRARY.md<br/>reusable authoring systems"]
+    WORLD --> ASSETS["ASSET_PLAN.md"]
 
     ENG --> CI["CI_VALIDATION_TIERS.md"]
     ENG --> PLATFORM["ENGINEERING_PLATFORM.md"]
-    ENG --> EVIDENCE["Visual / Performance History"]
-```
+    ENG --> PERF["performance/"]
 
-The graph is a navigation aid, not a second source of truth. The linked documents below remain authoritative for their own areas.
+    HIST --> R41["STAGE3G_R4_1_*<br/>legacy M3 execution dossiers"]
+    HIST --> ARCHIVE["archive/"]
+    HIST --> EVIDENCE["visual/performance history"]
+```
 
 ## Current focus
 
 | Area | Current state |
 |---|---|
-| Delivery | **Stage 3G R4.1 — Alpine Visual Recovery** |
-| Golden visual slice | **1200 m** before full-route propagation |
-| Terrain | **MASE DTM macro terrain + bounded rider-close terrain correction** |
-| Road authority | **SP638 / route XY and Road Physics Profile remain authoritative** |
-| Acceptance | **human visual review + exact-SHA performance/proof evidence** |
-| Next gate | **R5 stays blocked until R4.1 closeout is accepted** |
+| Delivery | **M3 — Route & World Foundation** |
+| World method | **World Building Bible is authoritative** |
+| Current priority | **real SP638 road + non-destructive Landscape earthworks** |
+| Terrain source | **canonical real DTM path; presentation remains separate from physics truth** |
+| Road authority | **canonical route / SP638 alignment; do not snap to Landscape grid** |
+| Acceptance | **rider-camera visual review + exact-SHA technical/performance evidence** |
+| Next product milestone | **M4 Cornering**, after M3 closes |
 
-```mermaid
-flowchart LR
-    FOUNDATION["Stages 1–2<br/>physics + runtime"] --> ROUTE["Stage 3 / 3G<br/>route + world"]
-    ROUTE --> R41["R4.1<br/>Alpine Visual Recovery"]
-    R41 --> R5["R5<br/>Rendering Tech"]
-    R5 --> S4["Stage 4<br/>cornering"]
-
-    class R41 current
-    classDef current stroke-width:4px
-```
-
-### Passo Giau terrain and proof pipeline
-
-```mermaid
-flowchart LR
-    SOURCE["MASE LiDAR / DTM"] --> METRIC["Metric reprojection<br/>EPSG:32632"]
-    METRIC --> GRID["Controlled terrain grid"]
-    GRID --> LAND["UE Landscape<br/>macro terrain"]
-    LAND --> LOCAL["Bounded local<br/>terrain correction"]
-    LOCAL --> ROAD["SP638 road<br/>presentation"]
-    ROAD --> VIS["Visual proof"]
-    VIS --> PERF["Performance /<br/>closeout proof"]
-
-    PHYS["Road Physics Profile<br/>route truth"] -. "authority preserved" .-> ROAD
-    ROUTEGEOM["Canonical route XY"] -. "not rewritten by terrain" .-> LOCAL
-```
-
-This pipeline deliberately keeps **terrain presentation**, **road presentation** and **route/physics authority** separate. A visually better Landscape must not silently become physics truth.
+The old Stage 3G / R4.1 / B.x vocabulary is historical. Existing workflow names and evidence may retain it temporarily, but new planning uses M0-M10 plus named workstreams and GitHub Issues.
 
 ## Start here
 
 | Need | Read first | Status |
 |---|---|---|
 | Product scope and MVP boundaries | [`PRODUCT_REQUIREMENTS.md`](PRODUCT_REQUIREMENTS.md) | **Authoritative** |
-| Delivery order and current stage | [`ROADMAP.md`](ROADMAP.md) | **Authoritative** |
-| Current Stage 3G R4.1 visual recovery | [`STAGE3G_R4_1_ALPINE_VISUAL_RECOVERY.md`](STAGE3G_R4_1_ALPINE_VISUAL_RECOVERY.md) | **Authoritative for R4.1** |
-| Passo Giau terrain / DEM research | [`STAGE3G_R4_1_TERRAIN_RESEARCH.md`](STAGE3G_R4_1_TERRAIN_RESEARCH.md) | **Active working research** |
+| Delivery order and current milestone | [`ROADMAP.md`](ROADMAP.md) | **Authoritative** |
+| How to build terrain/roads/worlds | [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md) | **Authoritative** |
 | Road and cornering physics geometry | [`ROAD_PHYSICS_PROFILE.md`](ROAD_PHYSICS_PROFILE.md) | **Authoritative** |
+| Reusable world-authoring systems | [`YACS_WORLD_AUTHORING_LIBRARY.md`](YACS_WORLD_AUTHORING_LIBRARY.md) | **Authoritative implementation library** |
+| Asset plan / provenance | [`ASSET_PLAN.md`](ASSET_PLAN.md) | **Authoritative** |
 | CI cost / proof cadence | [`CI_VALIDATION_TIERS.md`](CI_VALIDATION_TIERS.md) | **Authoritative** |
 | Shared CI and governance platform | [`ENGINEERING_PLATFORM.md`](ENGINEERING_PLATFORM.md) | **Authoritative** |
 | AI contributor rules | [`../AGENTS.md`](../AGENTS.md) | **Authoritative repository policy** |
 
 ## Authority map
 
-### Product, route and simulation
+### Product and delivery
 
-- [`PRODUCT_REQUIREMENTS.md`](PRODUCT_REQUIREMENTS.md) — product intent, MVP scope and simulation requirements.
-- [`ROADMAP.md`](ROADMAP.md) — stage sequencing, Definition of Done and current delivery gates.
-- [`STAGE_2_RUNTIME_CONTRACT.md`](STAGE_2_RUNTIME_CONTRACT.md) — Unreal/runtime ownership and fixed-step integration contract.
-- [`STAGE_3_ROUTE_CONTEXT_CONTRACT.md`](STAGE_3_ROUTE_CONTEXT_CONTRACT.md) — route/environment context resolution at fixed-step boundaries.
-- [`STAGE_3_ROUTE_GEOMETRY_CONTRACT.md`](STAGE_3_ROUTE_GEOMETRY_CONTRACT.md) — deterministic route geometry and spline presentation contract.
-- [`ROAD_PHYSICS_PROFILE.md`](ROAD_PHYSICS_PROFILE.md) — canonical road-physics profile, curvature, banking and route-local coordinates.
+- [`PRODUCT_REQUIREMENTS.md`](PRODUCT_REQUIREMENTS.md) — product intent and MVP boundaries.
+- [`ROADMAP.md`](ROADMAP.md) — M0-M10 delivery order, current milestone and milestone acceptance.
+- [`archive/ROADMAP_STAGE_TREE_2026-09-29.md`](archive/ROADMAP_STAGE_TREE_2026-09-29.md) — frozen legacy roadmap; history only.
+
+### Simulation and route
+
+- [`STAGE_2_RUNTIME_CONTRACT.md`](STAGE_2_RUNTIME_CONTRACT.md) — runtime ownership and fixed-step integration.
+- [`STAGE_3_ROUTE_CONTEXT_CONTRACT.md`](STAGE_3_ROUTE_CONTEXT_CONTRACT.md) — route/environment context resolution.
+- [`STAGE_3_ROUTE_GEOMETRY_CONTRACT.md`](STAGE_3_ROUTE_GEOMETRY_CONTRACT.md) — deterministic route geometry and presentation contract.
+- [`ROAD_PHYSICS_PROFILE.md`](ROAD_PHYSICS_PROFILE.md) — canonical road-physics profile.
+
+The `STAGE_*` filenames above are retained identifiers for established technical contracts. They are not permission to create new nested roadmap stages.
 
 ### World, terrain and authoring
 
-- [`STAGE3G_R4_1_ALPINE_VISUAL_RECOVERY.md`](STAGE3G_R4_1_ALPINE_VISUAL_RECOVERY.md) — current R4.1 visual-recovery acceptance contract.
-- [`STAGE3G_R4_1_TERRAIN_RESEARCH.md`](STAGE3G_R4_1_TERRAIN_RESEARCH.md) — active Passo Giau terrain source and Unreal Landscape research.
-- [`ASSET_PLAN.md`](ASSET_PLAN.md) — source/technical asset plan and provenance expectations.
-- [`YACS_WORLD_AUTHORING_LIBRARY.md`](YACS_WORLD_AUTHORING_LIBRARY.md) — reusable world-authoring library contract.
-- [`UE_MCP_WORLD_GENERATION.md`](UE_MCP_WORLD_GENERATION.md) — UE MCP world-generation workflow.
+- [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md) — **authoritative methodology**: source terrain, Landscape Edit Layers, roads, earthworks, cliffs, materials, PCG, RVT, streaming and world acceptance.
+- [`YACS_WORLD_AUTHORING_LIBRARY.md`](YACS_WORLD_AUTHORING_LIBRARY.md) — reusable authoring systems, semantic catalog, presets and generated-output boundary.
+- [`ASSET_PLAN.md`](ASSET_PLAN.md) — source/technical asset ledger and provenance expectations.
+- [`UE_MCP_WORLD_GENERATION.md`](UE_MCP_WORLD_GENERATION.md) — UE MCP orchestration workflow.
 - [`YACS_REMOTE_EDITOR_AGENT.md`](YACS_REMOTE_EDITOR_AGENT.md) — remote editor-agent operating contract.
-- [`UNREAL_TOOLING_PLUGIN_PLAN.md`](UNREAL_TOOLING_PLUGIN_PLAN.md) — Unreal tooling/plugin plan; treat as a plan unless a current SSOT explicitly promotes a section to contract.
+- [`UNREAL_TOOLING_PLUGIN_PLAN.md`](UNREAL_TOOLING_PLUGIN_PLAN.md) — plugin/tool plan; optional tooling never overrides the Bible.
 
 ### Performance
 
-- [`performance/PERFORMANCE_FRAMEWORK.md`](performance/PERFORMANCE_FRAMEWORK.md) — cross-stage performance framework.
-- [`performance/BUDGETS.md`](performance/BUDGETS.md) — current performance budgets and budget-change rules.
-- [`performance/STAGE3G_R5_RENDERING_TECH.md`](performance/STAGE3G_R5_RENDERING_TECH.md) — Stage 3G R5 rendering-tech scope.
-- [`STAGE3G_ENVIRONMENT_PERFORMANCE.md`](STAGE3G_ENVIRONMENT_PERFORMANCE.md) — Stage 3G environment performance contract.
-- [`PERFORMANCE_MULTIPLAYER_ARCHITECTURE.md`](PERFORMANCE_MULTIPLAYER_ARCHITECTURE.md) — forward-looking performance/multiplayer architecture; not permission to pull post-MVP scope forward.
+- [`performance/PERFORMANCE_FRAMEWORK.md`](performance/PERFORMANCE_FRAMEWORK.md) — cross-milestone performance lifecycle.
+- [`performance/BUDGETS.md`](performance/BUDGETS.md) — budgets and budget-change rules.
+- [`performance/STAGE3G_R5_RENDERING_TECH.md`](performance/STAGE3G_R5_RENDERING_TECH.md) — legacy-named M3 rendering/performance work packet.
+- [`STAGE3G_ENVIRONMENT_PERFORMANCE.md`](STAGE3G_ENVIRONMENT_PERFORMANCE.md) — legacy-named environment performance contract.
+- [`PERFORMANCE_MULTIPLAYER_ARCHITECTURE.md`](PERFORMANCE_MULTIPLAYER_ARCHITECTURE.md) — forward-looking architecture; not MVP scope authority.
 
 ### CI, runners and engineering platform
 
-- [`CI_VALIDATION_TIERS.md`](CI_VALIDATION_TIERS.md) — when lightweight, visual, performance and full proofs run.
+- [`CI_VALIDATION_TIERS.md`](CI_VALIDATION_TIERS.md) — lightweight, visual, performance and heavy-proof cadence.
 - [`ENGINEERING_PLATFORM.md`](ENGINEERING_PLATFORM.md) — shared governance/security/CI contract.
-- [`UNREAL_CI_RUNNER.md`](UNREAL_CI_RUNNER.md) — current Unreal CI runner operations.
+- [`UNREAL_CI_RUNNER.md`](UNREAL_CI_RUNNER.md) — current Unreal runner operations.
 - [`ci/BRANCH_HYGIENE.md`](ci/BRANCH_HYGIENE.md) — branch cleanup and hygiene.
 - [`ci/CHANGE_CLASSIFIER.md`](ci/CHANGE_CLASSIFIER.md) — CI path classification.
-- [`ci/GITHUB_ACTIONS_PLATFORM.md`](ci/GITHUB_ACTIONS_PLATFORM.md) — GitHub Actions platform conventions.
-- [`ci/PROJECT_WORKFLOW.md`](ci/PROJECT_WORKFLOW.md) — project workflow automation.
-- [`UNREAL_RUNNER_PHASE1.md`](UNREAL_RUNNER_PHASE1.md) and [`UNREAL_SELF_HOSTED_RUNNER_PLAN.md`](UNREAL_SELF_HOSTED_RUNNER_PLAN.md) — rollout/history documents; verify against `UNREAL_CI_RUNNER.md` before using them as current operations truth.
+- [`ci/GITHUB_ACTIONS_PLATFORM.md`](ci/GITHUB_ACTIONS_PLATFORM.md) — Actions conventions.
+- [`ci/PROJECT_WORKFLOW.md`](ci/PROJECT_WORKFLOW.md) — project automation.
 
 ## Evidence, experiments and history
 
-These directories are intentionally **not** the primary SSOT for current implementation decisions:
+These documents remain valuable but no longer define the active roadmap hierarchy:
 
-- [`visual-history/README.md`](visual-history/README.md) — accepted/rejected visual evidence and provenance.
-- [`performance-history/README.md`](performance-history/README.md) — performance evidence over time.
-- [`experiments/README.md`](experiments/README.md) — bounded spikes and experiment records.
-- [`legal/AI_ASSISTED_DEVELOPMENT.md`](legal/AI_ASSISTED_DEVELOPMENT.md) — AI-assisted development policy.
-- [`legal/DEPENDENCY_PROVENANCE.md`](legal/DEPENDENCY_PROVENANCE.md) — dependency and third-party provenance ledger.
+- [`STAGE3G_R4_1_ALPINE_VISUAL_RECOVERY.md`](STAGE3G_R4_1_ALPINE_VISUAL_RECOVERY.md) — detailed historical/current M3 visual-recovery dossier and proof record.
+- [`STAGE3G_R4_1_TERRAIN_RESEARCH.md`](STAGE3G_R4_1_TERRAIN_RESEARCH.md) — terrain-source and Landscape research record.
+- [`visual-history/README.md`](visual-history/README.md) — accepted/rejected visual evidence.
+- [`performance-history/README.md`](performance-history/README.md) — performance evidence.
+- [`experiments/README.md`](experiments/README.md) — bounded spikes.
+- [`archive/`](archive/) — frozen/deprecated planning records.
 
-Historical evidence may explain *why* a decision was made. It does not override a newer authoritative contract.
+When a legacy dossier disagrees with `WORLD_BUILDING_BIBLE.md` on **how new world work should be built**, the Bible wins unless a newer explicit architecture decision updates it.
 
 ## Complete top-level catalog
 
-Every top-level Markdown document in `docs/` must appear here. CI enforces this so a new document cannot become invisible and this index cannot silently disappear.
+Every top-level Markdown document in `docs/` must appear here.
 
 | Document | Role |
 |---|---|
@@ -149,11 +132,11 @@ Every top-level Markdown document in `docs/` must appear here. CI enforces this 
 | [`ENGINEERING_PLATFORM.md`](ENGINEERING_PLATFORM.md) | Shared engineering platform |
 | [`PERFORMANCE_MULTIPLAYER_ARCHITECTURE.md`](PERFORMANCE_MULTIPLAYER_ARCHITECTURE.md) | Forward-looking architecture |
 | [`PRODUCT_REQUIREMENTS.md`](PRODUCT_REQUIREMENTS.md) | Product/MVP SSOT |
-| [`ROADMAP.md`](ROADMAP.md) | Delivery/stage SSOT |
+| [`ROADMAP.md`](ROADMAP.md) | M0-M10 delivery SSOT |
 | [`ROAD_PHYSICS_PROFILE.md`](ROAD_PHYSICS_PROFILE.md) | Road physics SSOT |
-| [`STAGE3G_ENVIRONMENT_PERFORMANCE.md`](STAGE3G_ENVIRONMENT_PERFORMANCE.md) | Stage 3G performance contract |
-| [`STAGE3G_R4_1_ALPINE_VISUAL_RECOVERY.md`](STAGE3G_R4_1_ALPINE_VISUAL_RECOVERY.md) | Active R4.1 visual contract |
-| [`STAGE3G_R4_1_TERRAIN_RESEARCH.md`](STAGE3G_R4_1_TERRAIN_RESEARCH.md) | Active terrain research |
+| [`STAGE3G_ENVIRONMENT_PERFORMANCE.md`](STAGE3G_ENVIRONMENT_PERFORMANCE.md) | Legacy-named M3 performance contract |
+| [`STAGE3G_R4_1_ALPINE_VISUAL_RECOVERY.md`](STAGE3G_R4_1_ALPINE_VISUAL_RECOVERY.md) | Legacy M3 execution/proof dossier |
+| [`STAGE3G_R4_1_TERRAIN_RESEARCH.md`](STAGE3G_R4_1_TERRAIN_RESEARCH.md) | Terrain research record |
 | [`STAGE_2_RUNTIME_CONTRACT.md`](STAGE_2_RUNTIME_CONTRACT.md) | Runtime integration contract |
 | [`STAGE_3_ROUTE_CONTEXT_CONTRACT.md`](STAGE_3_ROUTE_CONTEXT_CONTRACT.md) | Route-context contract |
 | [`STAGE_3_ROUTE_GEOMETRY_CONTRACT.md`](STAGE_3_ROUTE_GEOMETRY_CONTRACT.md) | Route-geometry contract |
@@ -162,16 +145,20 @@ Every top-level Markdown document in `docs/` must appear here. CI enforces this 
 | [`UNREAL_RUNNER_PHASE1.md`](UNREAL_RUNNER_PHASE1.md) | Runner rollout history |
 | [`UNREAL_SELF_HOSTED_RUNNER_PLAN.md`](UNREAL_SELF_HOSTED_RUNNER_PLAN.md) | Runner rollout plan/history |
 | [`UNREAL_TOOLING_PLUGIN_PLAN.md`](UNREAL_TOOLING_PLUGIN_PLAN.md) | Unreal tooling plan |
+| [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md) | Authoritative world-building methodology |
 | [`YACS_REMOTE_EDITOR_AGENT.md`](YACS_REMOTE_EDITOR_AGENT.md) | Remote editor-agent contract |
-| [`YACS_WORLD_AUTHORING_LIBRARY.md`](YACS_WORLD_AUTHORING_LIBRARY.md) | World-authoring library contract |
+| [`YACS_WORLD_AUTHORING_LIBRARY.md`](YACS_WORLD_AUTHORING_LIBRARY.md) | World-authoring implementation library |
 
 ## Documentation maintenance
 
-When a change affects behavior, architecture, CI, assets or acceptance criteria:
+When behavior, architecture, CI, assets or acceptance criteria change:
 
-1. start from this index and identify the authoritative document for that area;
-2. update that document in the same PR if the implementation changes its truth;
-3. keep experiment/proof history separate from current contracts;
-4. run the documentation index contract: `python scripts/ci/check_docs_index.py`.
+1. start here and identify the authoritative document;
+2. update that SSOT in the same PR;
+3. keep experiments/proof history separate from current contracts;
+4. do not create a new nested roadmap identifier for a task;
+5. run the documentation guards required by `AGENTS.md`.
 
-The contract verifies the index exists, required authority links are present, local index links resolve, UTF-8 text is readable, and every top-level `docs/*.md` file is indexed.
+The documentation-index contract remains:
+
+`python scripts/ci/check_docs_index.py`
