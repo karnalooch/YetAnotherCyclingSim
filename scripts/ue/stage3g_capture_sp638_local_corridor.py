@@ -30,10 +30,12 @@ if str(REPO_ROOT) not in sys.path:
 from scripts.geometry.sp638_local_corridor import (  # noqa: E402
     CrossSectionPoint,
     Vec3,
+    apply_superelevation_to_profiles,
     build_corridor_mesh,
     corridor_mesh_hash,
     make_constant_profiles,
     make_curvature_adaptive_profiles,
+    make_curvature_superelevation_angles,
     minimum_sampled_radius_xy,
 )
 from scripts.geometry.local_terrain_skin import (  # noqa: E402
@@ -92,6 +94,15 @@ INSIDE_CLEARANCE_FRACTION = 0.75
 MINIMUM_SHOULDER_SPAN_M = 0.25
 MINIMUM_EARTHWORK_SPAN_M = 0.10
 TAPER_PER_STATION = 0.12
+
+# Presentation-only road banking. This is a curvature-driven visual model, not
+# measured SP638 survey data and not Road Physics Profile authority.
+SUPERELEVATION_MAX_BANK_DEG = 4.0
+SUPERELEVATION_FULL_BANK_CURVATURE_PER_M = 0.05
+SUPERELEVATION_MAX_DELTA_DEG_PER_STATION = 0.35
+SUPERELEVATION_FULL_BANK_EXTENT_M = 4.0
+SUPERELEVATION_ZERO_BANK_EXTENT_M = 10.0
+
 PROTECTED_ROLES = frozenset(
     {
         "left_road_edge",
@@ -812,27 +823,71 @@ def main() -> None:
         taper_per_station=TAPER_PER_STATION,
         curvature_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
     )
+    bank_angles_deg = make_curvature_superelevation_angles(
+        centerline,
+        max_bank_deg=SUPERELEVATION_MAX_BANK_DEG,
+        full_bank_curvature_per_m=SUPERELEVATION_FULL_BANK_CURVATURE_PER_M,
+        max_delta_deg_per_station=SUPERELEVATION_MAX_DELTA_DEG_PER_STATION,
+        curvature_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
+    )
+    banked_adaptive_profiles = apply_superelevation_to_profiles(
+        adaptive_profiles,
+        bank_angles_deg,
+        full_bank_extent_m=SUPERELEVATION_FULL_BANK_EXTENT_M,
+        zero_bank_extent_m=SUPERELEVATION_ZERO_BANK_EXTENT_M,
+    )
+    banked_road_profiles = apply_superelevation_to_profiles(
+        make_constant_profiles(len(centerline), ROAD_PROFILE),
+        bank_angles_deg,
+        full_bank_extent_m=SUPERELEVATION_FULL_BANK_EXTENT_M,
+        zero_bank_extent_m=SUPERELEVATION_ZERO_BANK_EXTENT_M,
+    )
+
     earthwork_mesh = build_corridor_mesh(
         centerline,
-        adaptive_profiles,
+        banked_adaptive_profiles,
         tangent_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
     )
     road_mesh = build_corridor_mesh(
         centerline,
-        make_constant_profiles(len(centerline), ROAD_PROFILE),
+        banked_road_profiles,
         tangent_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
     )
     left_shoulder_mesh = build_corridor_mesh(
         centerline,
-        _shoulder_surface_profiles(adaptive_profiles, left=True),
+        _shoulder_surface_profiles(banked_adaptive_profiles, left=True),
         tangent_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
     )
     right_shoulder_mesh = build_corridor_mesh(
         centerline,
-        _shoulder_surface_profiles(adaptive_profiles, left=False),
+        _shoulder_surface_profiles(banked_adaptive_profiles, left=False),
         tangent_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
     )
-    profile_diagnostics = _profile_diagnostics(adaptive_profiles)
+    profile_diagnostics = _profile_diagnostics(banked_adaptive_profiles)
+    superelevation_diagnostics = {
+        "mode": "curvature_bounded_presentation",
+        "measured_sp638_bank_data": False,
+        "authoritative_physics": False,
+        "canonical_centerline_xy_modified": False,
+        "max_bank_deg": SUPERELEVATION_MAX_BANK_DEG,
+        "full_bank_curvature_per_m": SUPERELEVATION_FULL_BANK_CURVATURE_PER_M,
+        "max_delta_deg_per_station": SUPERELEVATION_MAX_DELTA_DEG_PER_STATION,
+        "full_bank_extent_m": SUPERELEVATION_FULL_BANK_EXTENT_M,
+        "zero_bank_extent_m": SUPERELEVATION_ZERO_BANK_EXTENT_M,
+        "minimum_bank_deg": min(bank_angles_deg),
+        "maximum_bank_deg": max(bank_angles_deg),
+        "peak_abs_bank_deg": max(abs(value) for value in bank_angles_deg),
+        "active_station_count": sum(
+            1 for value in bank_angles_deg if abs(value) > 0.01
+        ),
+        "maximum_adjacent_delta_deg": max(
+            (
+                abs(bank_angles_deg[index + 1] - bank_angles_deg[index])
+                for index in range(len(bank_angles_deg) - 1)
+            ),
+            default=0.0,
+        ),
+    }
 
     landscape_slice = _sample_world(
         spline,
@@ -1110,6 +1165,7 @@ def main() -> None:
         ),
         "corridor_mesh_sha256": corridor_mesh_hash(earthwork_mesh),
         "adaptive_inside_offset": profile_diagnostics,
+        "superelevation": superelevation_diagnostics,
         "local_geometry": {
             "continuous_dynamic_mesh_surfaces": True,
             "box_strip_roadbed": False,
