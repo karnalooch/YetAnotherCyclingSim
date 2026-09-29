@@ -10,7 +10,7 @@ on:
 permissions: {}
 
 concurrency:
-  group: passo-giau-r4-1b-landscape-author-${{ github.repository }}
+  group: passo-giau-r4-1b-landscape-author-${{ github.repository }}-feat/247-r4-1b4-meso-ground
   cancel-in-progress: true
 
 jobs:
