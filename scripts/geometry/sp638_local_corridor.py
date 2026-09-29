@@ -181,6 +181,123 @@ def minimum_sampled_radius_xy(
     return min(radii) if radii else None
 
 
+def make_curvature_superelevation_angles(
+    centerline: Sequence[Vec3],
+    *,
+    max_bank_deg: float = 4.0,
+    full_bank_curvature_per_m: float = 0.05,
+    max_delta_deg_per_station: float = 0.35,
+    curvature_half_window_stations: int = 1,
+) -> tuple[float, ...]:
+    """Return bounded presentation-only road bank angles for each station.
+
+    Positive curvature means the positive-lateral side is the bend inside. A
+    positive bank angle therefore raises the negative-lateral outside edge and
+    lowers the positive-lateral inside edge. The result changes only cross-
+    section Z; canonical centerline XY and physics authority remain untouched.
+    """
+
+    if len(centerline) < 2:
+        raise ValueError("centerline needs at least 2 stations")
+    if not math.isfinite(max_bank_deg) or max_bank_deg <= 0.0:
+        raise ValueError("max_bank_deg must be positive and finite")
+    if (
+        not math.isfinite(full_bank_curvature_per_m)
+        or full_bank_curvature_per_m <= 0.0
+    ):
+        raise ValueError("full_bank_curvature_per_m must be positive and finite")
+    if (
+        not math.isfinite(max_delta_deg_per_station)
+        or max_delta_deg_per_station <= 0.0
+    ):
+        raise ValueError("max_delta_deg_per_station must be positive and finite")
+    _validate_half_window_stations(
+        curvature_half_window_stations,
+        "curvature_half_window_stations",
+    )
+
+    raw: list[float] = []
+    for index in range(len(centerline)):
+        curvature = _signed_curvature_xy(
+            centerline,
+            index,
+            curvature_half_window_stations,
+        )
+        if abs(curvature) <= _EPSILON:
+            raw.append(0.0)
+            continue
+        magnitude = max_bank_deg * min(
+            1.0,
+            abs(curvature) / full_bank_curvature_per_m,
+        )
+        raw.append(math.copysign(magnitude, curvature))
+
+    # Rate-limit in both directions so entry/exit transitions cannot snap even
+    # when sampled curvature changes abruptly. Repeating the two passes lets the
+    # zero-curvature ends propagate a smooth ramp into the bend.
+    result = list(raw)
+    for _ in range(2):
+        for index in range(1, len(result)):
+            lower = result[index - 1] - max_delta_deg_per_station
+            upper = result[index - 1] + max_delta_deg_per_station
+            result[index] = max(lower, min(upper, result[index]))
+        for index in range(len(result) - 2, -1, -1):
+            lower = result[index + 1] - max_delta_deg_per_station
+            upper = result[index + 1] + max_delta_deg_per_station
+            result[index] = max(lower, min(upper, result[index]))
+
+    return tuple(result)
+
+
+def apply_superelevation_to_profiles(
+    profiles: Sequence[Sequence[CrossSectionPoint]],
+    bank_angles_deg: Sequence[float],
+    *,
+    full_bank_extent_m: float = 4.0,
+    zero_bank_extent_m: float = 10.0,
+) -> tuple[tuple[CrossSectionPoint, ...], ...]:
+    """Bank road/shoulders and smoothly fade roll through outer earthwork."""
+
+    if len(profiles) != len(bank_angles_deg):
+        raise ValueError("one bank angle is required for every cross-section profile")
+    if full_bank_extent_m <= 0.0:
+        raise ValueError("full_bank_extent_m must be positive")
+    if zero_bank_extent_m <= full_bank_extent_m:
+        raise ValueError("zero_bank_extent_m must exceed full_bank_extent_m")
+
+    banked: list[tuple[CrossSectionPoint, ...]] = []
+    for station_index, (profile, angle_deg) in enumerate(
+        zip(profiles, bank_angles_deg)
+    ):
+        _validate_profile(profile, station_index)
+        if not math.isfinite(float(angle_deg)):
+            raise ValueError(f"bank angle {station_index} is not finite")
+        slope = math.tan(math.radians(float(angle_deg)))
+        station: list[CrossSectionPoint] = []
+        for point in profile:
+            extent = abs(point.lateral_m)
+            if extent <= full_bank_extent_m + _EPSILON:
+                weight = 1.0
+            elif extent >= zero_bank_extent_m - _EPSILON:
+                weight = 0.0
+            else:
+                t = (extent - full_bank_extent_m) / (
+                    zero_bank_extent_m - full_bank_extent_m
+                )
+                smooth = t * t * (3.0 - 2.0 * t)
+                weight = 1.0 - smooth
+            vertical = point.vertical_m - point.lateral_m * slope * weight
+            station.append(
+                CrossSectionPoint(
+                    point.lateral_m,
+                    vertical,
+                    point.role,
+                )
+            )
+        banked.append(tuple(station))
+    return tuple(banked)
+
+
 def _validate_profile(profile: Sequence[CrossSectionPoint], station_index: int) -> None:
     if len(profile) < 2:
         raise ValueError(
