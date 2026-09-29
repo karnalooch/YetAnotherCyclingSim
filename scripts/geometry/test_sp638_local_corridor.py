@@ -405,6 +405,65 @@ class LocalGroundCorridorTests(unittest.TestCase):
         for triangle in mesh.triangles:
             self.assertGreater(triangle_normal(mesh, triangle).z, 0.0)
 
+    def test_adaptive_contraction_preserves_authored_cross_section_grades(
+        self,
+    ) -> None:
+        radius = 4.35
+        angles = tuple(index * math.radians(5.0) for index in range(40))
+        centerline = tuple(
+            Vec3(
+                radius * math.sin(angle),
+                radius * (1.0 - math.cos(angle)),
+                index * 0.01,
+            )
+            for index, angle in enumerate(angles)
+        )
+
+        adaptive = make_curvature_adaptive_profiles(centerline, self.profile)
+        contracted_band_count = 0
+        vertical_adjustment_seen = False
+
+        for station_profile in adaptive:
+            for index in range(len(self.profile) - 1):
+                original_a = self.profile[index]
+                original_b = self.profile[index + 1]
+                current_a = station_profile[index]
+                current_b = station_profile[index + 1]
+                original_span = abs(
+                    original_b.lateral_m - original_a.lateral_m
+                )
+                current_span = abs(
+                    current_b.lateral_m - current_a.lateral_m
+                )
+                if current_span >= original_span - 1e-9:
+                    continue
+
+                contracted_band_count += 1
+                original_grade = abs(
+                    (original_b.vertical_m - original_a.vertical_m)
+                    / original_span
+                )
+                current_grade = abs(
+                    (current_b.vertical_m - current_a.vertical_m)
+                    / current_span
+                )
+                self.assertAlmostEqual(current_grade, original_grade, places=9)
+                vertical_adjustment_seen = vertical_adjustment_seen or (
+                    not math.isclose(
+                        current_a.vertical_m,
+                        original_a.vertical_m,
+                        abs_tol=1e-9,
+                    )
+                    or not math.isclose(
+                        current_b.vertical_m,
+                        original_b.vertical_m,
+                        abs_tol=1e-9,
+                    )
+                )
+
+        self.assertGreater(contracted_band_count, 0)
+        self.assertTrue(vertical_adjustment_seen)
+
     def test_adaptive_offset_handles_real_hairpin_radius_class(self) -> None:
         radius = 4.35
         angles = tuple(index * math.radians(5.0) for index in range(40))
