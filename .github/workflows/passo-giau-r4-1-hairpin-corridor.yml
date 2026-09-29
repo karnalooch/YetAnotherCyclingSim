@@ -46,7 +46,9 @@ jobs:
             throw 'Hairpin corridor checkout is not exact SHA.'
           }
           git reset --hard HEAD
-          git clean -ffd
+          if ($LASTEXITCODE -ne 0) { throw 'Hairpin corridor reset failed before proof.' }
+          git clean -ffdx
+          if ($LASTEXITCODE -ne 0) { throw 'Hairpin corridor ignored/untracked cleanup failed before proof.' }
           if (git status --porcelain --untracked-files=all) {
             throw 'Hairpin corridor checkout is dirty.'
           }
@@ -78,5 +80,7 @@ jobs:
           $worktree = Join-Path $env:GITHUB_WORKSPACE '_passo-giau-hairpin-worktree'
           if (Test-Path -LiteralPath (Join-Path $worktree '.git')) {
             git -C $worktree reset --hard
-            git -C $worktree clean -ffd
+            if ($LASTEXITCODE -ne 0) { throw 'Hairpin corridor reset failed during cleanup.' }
+            git -C $worktree clean -ffdx
+            if ($LASTEXITCODE -ne 0) { throw 'Hairpin corridor ignored/untracked cleanup failed.' }
           }
