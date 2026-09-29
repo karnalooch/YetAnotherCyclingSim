@@ -326,6 +326,22 @@ existing non-negative meso-vs-Landscape lift contract. SP638 XY, measured
 crossfall, the Road Physics Profile, source DEM and broad smoothing policy remain
 unchanged.
 
+The B.4.1 exact-SHA proof at `c0b9f7e4a2053614eba95f1fe437a3601248cb47`
+(Gumball run `36593194546`) passed the full build-once / boot-once suite and
+proved the intended 0.65 m overlap / maximum 0.15 m earthwork underlap, but
+human review still found the same long black wedges. The exposed-Landscape-gap
+hypothesis is therefore **not confirmed as the root cause** and must not be
+expanded into wider overlap.
+
+The same proof log reports that each transient DynamicMesh reached
+`RecomputeNormals` without an existing normals layer and UE fell back to
+per-vertex normals. B.4.2 therefore adds a second, same-camera **Unlit actor-ID
+diagnostic** to the visual proof. Lighting Only remains the acceptance image;
+the additional diagnostic uses high-contrast transient BaseColor only to identify
+whether a dark wedge belongs to meso ground, earthwork, shoulder/asphalt, a true
+gap, or lighting/normal/shadow behaviour. It changes no route, terrain or physics
+geometry.
+
 #### Real-data-first road-bank boundary
 
 R4.1 may use measured road evidence to improve the **visual** crossfall of SP638,
