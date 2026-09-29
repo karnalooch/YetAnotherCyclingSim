@@ -58,16 +58,20 @@ explicitly requested; this changes the control plane, not the evidence bar.
 
 ## R4.1 prepared proof-suite reuse
 
-For the bounded Stage 3G R4.1 terrain/road diagnostics, the canonical heavy manual lane uses **build once, prove many** inside one trusted runner job:
+For the bounded Stage 3G R4.1 terrain/road diagnostics, the canonical heavy lane uses **build once, boot once, prove many** inside one trusted runner job:
 
 1. exact-SHA clean checkout once;
 2. targeted materialization of the persisted Passo Giau map once;
 3. one `YetAnotherCyclingSimEditor Win64 Development` build;
-4. Geometry Script capability -> SP638 topology -> bounded hairpin -> rider-close local visual proof from the same prepared worktree.
+4. one cold `UnrealEditor.exe` boot;
+5. a repository-owned fixed session executes Geometry Script capability -> SP638 topology -> bounded hairpin -> rider-close local visual proof in that same editor process;
+6. the editor closes only after the proof bundle completes or fails.
 
-The prepared-workspace stamp is valid only inside that exact worktree/job and records the exact HEAD, map byte count and editor build identity. Child proof wrappers validate the stamp before they may skip their standalone build/LFS preparation. The stamp is never a cross-run or cross-SHA cache.
+Every proof JSON records the exact HEAD, session id, editor PID and `editor_boot_count=1`. The sequence is hard-coded in repository code; PR/comment text cannot select arbitrary Python, console commands, maps or proof steps. Standalone proof wrappers remain available for isolated diagnosis, but the canonical bundle no longer starts a new Unreal process for each proof.
 
-The R4.1 heavy visual suite remains an explicit `workflow_dispatch` checkpoint. Deterministic kernel/contract tests stay automatic. This reduces runner cost without weakening the later human visual gate, performance checkpoint or Stage 3G full closeout proof.
+The prepared-workspace stamp is valid only inside that exact worktree/job and records the exact HEAD, map byte count and editor build identity. It is never a cross-run or cross-SHA cache.
+
+The Gumball-triggered heavy run is still a **cold exact-SHA acceptance session**: warm editor state from previous jobs is not reused. Deterministic kernel/contract tests stay automatic, human visual acceptance remains separate, and any material change after acceptance requires fresh exact-head evidence.
 
 ## Tier 2 — visual acceptance checkpoint
 

@@ -428,9 +428,10 @@ def main() -> None:
     )
 
 
-try:
-    main()
-except Exception as exc:
-    unreal.log_error(f"[YacsSp638CorridorTopology] FAILURE: {exc}")
-    unreal.log_error(traceback.format_exc())
-    raise
+if os.environ.get("YACS_R4_1_SESSION_MODE") != "1":
+    try:
+        main()
+    except Exception as exc:
+        unreal.log_error(f"[YacsSp638CorridorTopology] FAILURE: {exc}")
+        unreal.log_error(traceback.format_exc())
+        raise

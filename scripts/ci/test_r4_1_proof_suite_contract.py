@@ -20,17 +20,36 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
         self.assertIn("lfs_map_materialization_count = 1", suite)
         self.assertIn("prepared_workspace.json", suite)
 
-    def test_suite_runs_all_bounded_proofs_from_same_stamp(self) -> None:
+    def test_suite_boots_unreal_once_for_all_bounded_proofs(self) -> None:
         suite = read("scripts/ue/Invoke-YacsR4_1ProofSuite.ps1")
-        for script in (
-            "Invoke-YacsGeometryScriptProbe.ps1",
-            "Invoke-YacsSp638CorridorTopologyProbe.ps1",
-            "Invoke-YacsPassoGiauHairpinCorridorProof.ps1",
-            "Invoke-YacsSp638LocalCorridorVisualProof.ps1",
+        self.assertIn("run_r4_1_proof_session.py", suite)
+        self.assertEqual(suite.count("Start-Process -FilePath $UEditor"), 1)
+        self.assertIn("editor_boot_count = 1", suite)
+        self.assertIn("r4_1_session_id", suite)
+        self.assertIn("editor_pid", suite)
+        self.assertNotIn("Invoke-R4_1ChildProof", suite)
+
+        session = read("scripts/ue/run_r4_1_proof_session.py")
+        for token in (
+            "probe_geometry_script_api.py",
+            "probe_sp638_local_corridor_topology.py",
+            "stage3g_capture_passo_giau_hairpin_corridor.py",
+            "stage3g_capture_sp638_local_corridor.py",
+            "r4_1_session_id",
+            "editor_pid",
+            "editor_boot_count",
         ):
-            self.assertIn(script, suite)
-        self.assertIn("'-PreparedWorkspaceStamp', $StampPath", suite)
-        self.assertIn("& $Pwsh @ChildArgs", suite)
+            self.assertIn(token, session)
+
+    def test_capture_scripts_support_guarded_parent_session(self) -> None:
+        for path in (
+            "scripts/ue/stage3g_capture_passo_giau_hairpin_corridor.py",
+            "scripts/ue/stage3g_capture_sp638_local_corridor.py",
+        ):
+            capture = read(path)
+            self.assertIn('YACS_R4_1_SESSION_MODE', capture)
+            self.assertIn("get_session_result", capture)
+            self.assertIn("_session_result", capture)
 
     def test_child_wrappers_fail_closed_before_reuse(self) -> None:
         for path in (

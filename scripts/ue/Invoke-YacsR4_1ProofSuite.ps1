@@ -40,7 +40,7 @@ if (git -C $RepoRoot status --porcelain --untracked-files=all) {
     throw 'R4.1 prepared proof-suite checkout is dirty before workspace preparation.'
 }
 
-Write-Host '[1/6] Materializing persisted Passo Giau map once...' -ForegroundColor Cyan
+Write-Host '[1/3] Materializing persisted Passo Giau map once...' -ForegroundColor Cyan
 git -C $RepoRoot lfs install --local
 if ($LASTEXITCODE -ne 0) { throw 'git lfs install failed.' }
 git -C $RepoRoot lfs pull --include=$SpikeMapRelative --exclude=''
@@ -53,7 +53,7 @@ if ($MapBytes -lt 100000000) {
     throw "Passo Giau map was not materialized from LFS (bytes=$MapBytes)."
 }
 
-Write-Host '[2/6] Building exact UE 5.8 editor revision once...' -ForegroundColor Cyan
+Write-Host '[2/3] Building exact UE 5.8 editor revision once...' -ForegroundColor Cyan
 $BuildBat = Join-Path $Context.EngineRoot 'Engine/Build/BatchFiles/Build.bat'
 $BuildArgs = @($ProjectPath,'YetAnotherCyclingSimEditor','Win64','Development','-WaitMutex','-FromMsBuild')
 $BuildProc = Start-Process -FilePath $BuildBat -ArgumentList $BuildArgs -NoNewWindow -PassThru -RedirectStandardOutput $BuildLog -WorkingDirectory (Split-Path $BuildBat -Parent)
@@ -81,56 +81,116 @@ $Stamp = [ordered]@{
 }
 $Stamp | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $StampPath -Encoding UTF8
 
-$Pwsh = (Get-Command pwsh -ErrorAction Stop).Source
-function Invoke-R4_1ChildProof {
-    param(
-        [Parameter(Mandatory=$true)] [string] $Label,
-        [Parameter(Mandatory=$true)] [string] $ScriptRelative,
-        [Parameter(Mandatory=$true)] [string] $ArtifactName
+$SessionScript = Join-Path $RepoRoot 'scripts/ue/run_r4_1_proof_session.py'
+$SessionLog = Join-Path $ArtifactRoot 'r4_1_session.log'
+$SessionStdout = Join-Path $ArtifactRoot 'r4_1_session.stdout.log'
+$SessionStderr = Join-Path $ArtifactRoot 'r4_1_session.stderr.log'
+foreach ($Path in @($SessionLog,$SessionStdout,$SessionStderr,$SummaryPath)) {
+    Remove-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+}
+if (-not (Test-Path -LiteralPath $SessionScript -PathType Leaf)) {
+    throw "R4.1 session script is missing: $SessionScript"
+}
+
+Write-Host '[3/3] Booting Unreal once and running the fixed R4.1 proof session...' -ForegroundColor Cyan
+$UEditor = $Context.UnrealEditorPath
+if (-not $UEditor -or -not (Test-Path -LiteralPath $UEditor -PathType Leaf)) {
+    throw 'UnrealEditor.exe GUI executable is unavailable.'
+}
+
+$env:YACS_R4_1_SESSION_ARTIFACT_ROOT = $ArtifactRoot
+$env:YACS_R4_1_SESSION_EXACT_HEAD = $ExpectedHead
+try {
+    $SessionArgs = @(
+        $ProjectPath,
+        ('-ExecutePythonScript="' + $SessionScript + '"'),
+        '-Unattended','-NoPause','-NoSplash','-NoP4',
+        '-windowed','-ResX=1920','-ResY=1080','-NoVSync','-FixedSeed',
+        '-ScriptErrorsAreFatal','-log','-stdout',('-AbsLog=' + $SessionLog)
     )
-    $ScriptPath = Join-Path $RepoRoot $ScriptRelative
-    if (-not (Test-Path -LiteralPath $ScriptPath -PathType Leaf)) {
-        throw "R4.1 proof script is missing: $ScriptPath"
+    $SessionProc = Start-Process -FilePath $UEditor -ArgumentList $SessionArgs -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $SessionStdout -RedirectStandardError $SessionStderr
+    if (-not $SessionProc.WaitForExit($TimeoutSec * 1000)) {
+        try { $SessionProc | Stop-Process -Force } catch { }
+        throw 'R4.1 boot-once proof session timed out.'
     }
-    $ChildArtifactRoot = Join-Path $ArtifactRoot $ArtifactName
-    $ChildArgs = @(
-        '-NoProfile',
-        '-File', $ScriptPath,
-        '-RepoRoot', $RepoRoot,
-        '-ProjectPath', $ProjectPath,
-        '-ArtifactRoot', $ChildArtifactRoot,
-        '-ExpectedBranch', $ExpectedBranch,
-        '-ExpectedHead', $ExpectedHead,
-        '-PreparedWorkspaceStamp', $StampPath,
-        '-TimeoutSec', [string]$TimeoutSec
-    )
-    & $Pwsh @ChildArgs
-    if ($LASTEXITCODE -ne 0) {
-        throw "$Label failed with exit code $LASTEXITCODE."
+    $SessionExit = $SessionProc.ExitCode
+}
+finally {
+    Remove-Item Env:YACS_R4_1_SESSION_ARTIFACT_ROOT -ErrorAction SilentlyContinue
+    Remove-Item Env:YACS_R4_1_SESSION_EXACT_HEAD -ErrorAction SilentlyContinue
+}
+
+if ($SessionExit -notin @(0,1)) {
+    throw "R4.1 boot-once proof session returned unexpected exit code $SessionExit."
+}
+if (-not (Test-Path -LiteralPath $SummaryPath -PathType Leaf)) {
+    throw 'R4.1 boot-once proof session summary is missing.'
+}
+$SessionSummary = Get-Content -LiteralPath $SummaryPath -Raw | ConvertFrom-Json
+if ($SessionSummary.r4_1_boot_once_proof_suite -ne 'PASS') {
+    throw "R4.1 boot-once proof session did not PASS: $($SessionSummary.error)"
+}
+if ([string]$SessionSummary.expected_head -ne $ExpectedHead) {
+    throw 'R4.1 boot-once proof session summary HEAD mismatch.'
+}
+if ([int]$SessionSummary.editor_boot_count -ne 1) {
+    throw "R4.1 proof session booted Unreal more than once: $($SessionSummary.editor_boot_count)"
+}
+
+$Evidence = @(
+    @{ Path = (Join-Path $ArtifactRoot 'GeometryScriptProbe/geometry_script_probe.json'); Field = 'geometry_script_probe'; Png = $null },
+    @{ Path = (Join-Path $ArtifactRoot 'LocalCorridorTopology/sp638_corridor_topology.json'); Field = 'sp638_local_corridor_topology'; Png = $null },
+    @{ Path = (Join-Path $ArtifactRoot 'HairpinCorridor/hairpin_capture_proof.json'); Field = 'passo_giau_hairpin_corridor_capture'; Png = (Join-Path $ArtifactRoot 'HairpinCorridor/passo_giau_sp638_hairpin_corridor_3840x2160.png') },
+    @{ Path = (Join-Path $ArtifactRoot 'LocalCorridorVisual/local_corridor_visual_proof.json'); Field = 'sp638_local_corridor_visual'; Png = (Join-Path $ArtifactRoot 'LocalCorridorVisual/sp638_local_corridor_rider_3840x2160.png') }
+)
+foreach ($Item in $Evidence) {
+    if (-not (Test-Path -LiteralPath $Item.Path -PathType Leaf)) {
+        throw "R4.1 proof evidence is missing: $($Item.Path)"
+    }
+    $Proof = Get-Content -LiteralPath $Item.Path -Raw | ConvertFrom-Json
+    if ([string]$Proof.($Item.Field) -ne 'PASS') {
+        throw "R4.1 proof evidence did not report PASS: $($Item.Path)"
+    }
+    if ([string]$Proof.exact_head -ne $ExpectedHead) {
+        throw "R4.1 proof evidence HEAD mismatch: $($Item.Path)"
+    }
+    if ([string]$Proof.r4_1_session_id -ne [string]$SessionSummary.r4_1_session_id) {
+        throw "R4.1 proof evidence session mismatch: $($Item.Path)"
+    }
+    if ([int]$Proof.editor_pid -ne [int]$SessionSummary.editor_pid) {
+        throw "R4.1 proof evidence came from a different Unreal process: $($Item.Path)"
+    }
+    if ([int]$Proof.editor_boot_count -ne 1) {
+        throw "R4.1 proof evidence reports more than one Unreal boot: $($Item.Path)"
+    }
+    if ($Item.Png) {
+        if (-not (Test-Path -LiteralPath $Item.Png -PathType Leaf)) {
+            throw "R4.1 proof PNG is missing: $($Item.Png)"
+        }
+        if ((Get-Item -LiteralPath $Item.Png).Length -lt 100000) {
+            throw "R4.1 proof PNG is unexpectedly small: $($Item.Png)"
+        }
     }
 }
 
-Write-Host '[3/6] Geometry Script capability proof...' -ForegroundColor Cyan
-Invoke-R4_1ChildProof -Label 'Geometry Script capability proof' -ScriptRelative 'scripts/ue/Invoke-YacsGeometryScriptProbe.ps1' -ArtifactName 'GeometryScriptProbe'
-
-Write-Host '[4/6] Real SP638 topology proof...' -ForegroundColor Cyan
-Invoke-R4_1ChildProof -Label 'SP638 topology proof' -ScriptRelative 'scripts/ue/Invoke-YacsSp638CorridorTopologyProbe.ps1' -ArtifactName 'LocalCorridorTopology'
-
-Write-Host '[5/6] Bounded SP638 hairpin cut/fill proof...' -ForegroundColor Cyan
-Invoke-R4_1ChildProof -Label 'SP638 hairpin proof' -ScriptRelative 'scripts/ue/Invoke-YacsPassoGiauHairpinCorridorProof.ps1' -ArtifactName 'HairpinCorridor'
-
-Write-Host '[6/6] Rider-close local corridor visual proof...' -ForegroundColor Cyan
-Invoke-R4_1ChildProof -Label 'SP638 local corridor visual proof' -ScriptRelative 'scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1' -ArtifactName 'LocalCorridorVisual'
+$SessionLogText = Get-Content -LiteralPath $SessionLog -Raw -ErrorAction Stop
+if ($SessionLogText -notmatch '\[YacsR41Session\] PASS:') {
+    throw 'R4.1 session log is missing the explicit PASS marker.'
+}
 
 $TrackedChanges = @(git -C $RepoRoot status --porcelain=v1 --untracked-files=no)
 if ($TrackedChanges.Count -gt 0) {
     throw ("R4.1 prepared proof suite mutated tracked files: {0}" -f ($TrackedChanges -join '; '))
 }
 
-$Summary = [ordered]@{
+$FinalSummary = [ordered]@{
     r4_1_prepared_proof_suite = 'PASS'
+    r4_1_boot_once_proof_suite = 'PASS'
     expected_head = $ExpectedHead
     editor_build_count = 1
+    editor_boot_count = 1
+    editor_pid = [int]$SessionSummary.editor_pid
+    r4_1_session_id = [string]$SessionSummary.r4_1_session_id
     lfs_map_materialization_count = 1
     prepared_workspace_stamp = $StampPath
     proofs = [ordered]@{
@@ -140,8 +200,8 @@ $Summary = [ordered]@{
         local_corridor_visual = 'PASS'
     }
 }
-$Summary | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $SummaryPath -Encoding UTF8
+$FinalSummary | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $SummaryPath -Encoding UTF8
 
-Write-Host 'Stage 3G R4.1 prepared proof suite: PASS.' -ForegroundColor Green
+Write-Host 'Stage 3G R4.1 build-once / boot-once proof suite: PASS.' -ForegroundColor Green
 Write-Host ("Summary: {0}" -f $SummaryPath)
 exit 0

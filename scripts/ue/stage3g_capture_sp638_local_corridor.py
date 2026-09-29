@@ -117,10 +117,11 @@ _output_path: Path | None = None
 _proof_path: Path | None = None
 _camera = None
 _proof_data: dict[str, object] = {}
+_session_result: dict[str, object] | None = None
 
 
 def _finish(success: bool, error: str = "") -> None:
-    global _tick_handle
+    global _tick_handle, _session_result
     if _tick_handle is not None:
         unreal.unregister_slate_post_tick_callback(_tick_handle)
         _tick_handle = None
@@ -155,7 +156,13 @@ def _finish(success: bool, error: str = "") -> None:
     elif error:
         unreal.log_error(f"[YacsSp638LocalCorridorVisual] FAILURE: {error}")
 
-    unreal.EditorPythonScripting.set_keep_python_script_alive(False)
+    _session_result = {"success": success, "error": error}
+    if os.environ.get("YACS_R4_1_SESSION_MODE") != "1":
+        unreal.EditorPythonScripting.set_keep_python_script_alive(False)
+
+
+def get_session_result() -> dict[str, object] | None:
+    return dict(_session_result) if _session_result is not None else None
 
 
 def _tick(_delta_time: float) -> None:
@@ -659,7 +666,9 @@ def _spawn_dynamic_mesh(
 
 def main() -> None:
     global _task, _tick_handle, _started_at, _output_path, _proof_path, _camera
-    global _proof_data
+    global _proof_data, _session_result
+
+    _session_result = None
 
     output_value = os.environ.get("YACS_SP638_LOCAL_CORRIDOR_VISUAL_PNG", "")
     proof_value = os.environ.get("YACS_SP638_LOCAL_CORRIDOR_VISUAL_PROOF", "")
@@ -1085,10 +1094,11 @@ def main() -> None:
     )
 
 
-try:
-    main()
-except Exception as exc:
-    unreal.log_error(f"[YacsSp638LocalCorridorVisual] FAILURE: {exc}")
-    unreal.log_error(traceback.format_exc())
-    unreal.EditorPythonScripting.set_keep_python_script_alive(False)
-    raise
+if os.environ.get("YACS_R4_1_SESSION_MODE") != "1":
+    try:
+        main()
+    except Exception as exc:
+        unreal.log_error(f"[YacsSp638LocalCorridorVisual] FAILURE: {exc}")
+        unreal.log_error(traceback.format_exc())
+        unreal.EditorPythonScripting.set_keep_python_script_alive(False)
+        raise
