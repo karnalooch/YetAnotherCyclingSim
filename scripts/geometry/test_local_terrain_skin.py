@@ -108,6 +108,7 @@ class LocalTerrainSkinTests(unittest.TestCase):
         self.assertGreater(len(first.triangles), 100)
         self.assertLess(len(first.triangles), (31 - 1) * (31 - 1) * 2)
         self.assertGreater(metrics.max_abs_adjustment_m, 0.0)
+        self.assertGreaterEqual(metrics.minimum_adjustment_m, 0.0)
         self.assertAlmostEqual(metrics.boundary_max_abs_adjustment_m, 0.0)
         self.assertGreaterEqual(metrics.minimum_protected_distance_m or 0.0, 3.0)
 
@@ -140,6 +141,16 @@ class LocalTerrainSkinTests(unittest.TestCase):
                 vertex.z + origin_z,
                 heights[row][column],
                 places=9,
+            )
+
+        for vertex in first.vertices:
+            world_x = vertex.x
+            world_y = vertex.y + 60.0
+            row = y_to_row[round(world_y, 9)]
+            column = x_to_column[round(world_x, 9)]
+            self.assertGreaterEqual(
+                vertex.z + origin_z + 1e-9,
+                heights[row][column],
             )
 
     def test_mesh_is_upward_wound_and_deterministic(self) -> None:
