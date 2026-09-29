@@ -159,8 +159,11 @@ if ([string]$Proof.superelevation.mode -ne 'mase_lidar_seeded_crossfall') {
 if ([bool]$Proof.superelevation.measured_sp638_bank_data -ne $true) {
     throw 'SP638 visual proof did not use measured terrain crossfall as its primary bank source.'
 }
-if ([string]$Proof.superelevation.measurement_kind -ne 'LiDAR_DTM_crossfall_observation') {
+if ([string]$Proof.superelevation.measurement_kind -ne 'LiDAR_DTM_adaptive_road_transect_fit') {
     throw "SP638 visual proof used unexpected bank measurement kind: '$($Proof.superelevation.measurement_kind)'."
+}
+if ([string]$Proof.superelevation.lidar_sampling.method -ne 'adaptive_transect_linear_road_fit') {
+    throw "SP638 visual proof did not recover the road strip from a LiDAR transect: '$($Proof.superelevation.lidar_sampling.method)'."
 }
 if ([bool]$Proof.superelevation.instrument_survey_grade -ne $false) {
     throw 'SP638 LiDAR-derived bank proof incorrectly claims instrument-survey grade.'
