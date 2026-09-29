@@ -64,7 +64,7 @@ jobs:
                   Remove-Item -LiteralPath $target -Recurse -Force
                 }
                 catch {
-                  $failures += "$target: $($_.Exception.Message)"
+                  $failures += "${target}: $($_.Exception.Message)"
                 }
               }
             }
