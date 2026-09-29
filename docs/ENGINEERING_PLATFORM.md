@@ -42,6 +42,39 @@ reference-model checks and no-op discovery protection.
 The public entrypoint remains `.github/workflows/ci.yml`, whose final required
 check is named exactly `Aggregate CI gate`.
 
+## Gumball v0.6 Proof Broker
+
+YACS adopts the trusted Gumball **v0.6.0 Proof Broker** consumer pattern from
+canonical Gumball commit:
+
+`6c94ec9f4817df430c3b6d5fdbbc025578ebf950`
+
+This adoption is intentionally narrow and preserve-local. Existing shared
+repository/security/governance workflows remain pinned to the reviewed v0.3.1
+consumer SHA above; this change does not silently move those reusable workflow
+pins.
+
+Broker orchestration is local and trusted on the YACS default branch:
+
+- `.github/workflows/proof-broker.yml` runs default-branch broker code only;
+- `.gumball/proof-broker.json` is the proof allow-list;
+- `scripts/ops/proof_broker.py` binds an authorized request to the exact open
+  PR HEAD SHA and deterministic request id;
+- heavy target workflows remain read-only and receive the exact SHA as an
+  explicit input;
+- matching proof artifacts/successful runs are reused, queued/running work is
+  deduplicated, and failed work requires explicit `retry`;
+- ordinary target-workflow `workflow_dispatch` remains an emergency fallback.
+
+The first enabled consumer proof is `r4-1b3-geometry`. An authorized
+write/maintain/admin actor can request it from the PR conversation with:
+
+```text
+/gumball proof r4-1b3-geometry
+```
+
+The broker does not make heavyweight Unreal work automatic on every PR update.
+
 ## Governance guard
 
 The shared Governance Guard protects rules that should not depend on memory:
