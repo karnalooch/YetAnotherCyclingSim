@@ -50,6 +50,13 @@ CAPTURE_RES_X = 3840
 CAPTURE_RES_Y = 2160
 PROOF_AA_QUALITY = 6
 
+SESSION_MANAGED_ENV = "YACS_R4_1_EDITOR_SESSION_MANAGED"
+
+
+def _release_python_script() -> None:
+    if os.environ.get(SESSION_MANAGED_ENV, "").strip() != "1":
+        unreal.EditorPythonScripting.set_keep_python_script_alive(False)
+
 SLICE_HALF_LENGTH_CM = 35000.0
 KERNEL_SAMPLE_STEP_CM = 200.0
 SOURCE_GEOMETRY_HALF_WINDOW_M = 6.0
@@ -163,7 +170,7 @@ def _finish(success: bool, error: str = "") -> None:
     elif error:
         unreal.log_error(f"[YacsSp638LocalCorridorVisual] FAILURE: {error}")
 
-    unreal.EditorPythonScripting.set_keep_python_script_alive(False)
+    _release_python_script()
 
 
 def _tick(_delta_time: float) -> None:
@@ -1146,5 +1153,5 @@ try:
 except Exception as exc:
     unreal.log_error(f"[YacsSp638LocalCorridorVisual] FAILURE: {exc}")
     unreal.log_error(traceback.format_exc())
-    unreal.EditorPythonScripting.set_keep_python_script_alive(False)
+    _release_python_script()
     raise

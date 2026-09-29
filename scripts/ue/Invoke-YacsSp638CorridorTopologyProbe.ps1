@@ -10,6 +10,7 @@ param(
     [Parameter(Mandatory=$true)] [string] $ExpectedBranch,
     [Parameter(Mandatory=$true)] [string] $ExpectedHead,
     [string] $PreparedWorkspaceStamp,
+    [switch] $ValidateOnly,
     [int] $TimeoutSec = 300
 )
 
@@ -32,8 +33,10 @@ $ProbeStdout = Join-Path $ArtifactRoot 'sp638_corridor_topology.stdout.log'
 $ProbeErr = $ProbeLog + '.stderr'
 $ProbeJson = Join-Path $ArtifactRoot 'sp638_corridor_topology.json'
 
-foreach ($Path in @($ProbeLog,$ProbeStdout,$ProbeErr,$ProbeJson)) {
-    Remove-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+if (-not $ValidateOnly) {
+    foreach ($Path in @($ProbeLog,$ProbeStdout,$ProbeErr,$ProbeJson)) {
+        Remove-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+    }
 }
 
 $Preflight = Join-Path $RepoRoot 'scripts/ue/Preflight-YacsProof.ps1'
@@ -44,53 +47,59 @@ if (git -C $RepoRoot status --porcelain=v1 --untracked-files=no) {
     throw 'SP638 local corridor topology checkout has tracked changes before proof.'
 }
 
-$PreparedValidator = Join-Path $RepoRoot 'scripts/ue/Test-YacsR4_1PreparedWorkspace.ps1'
-if ($PreparedWorkspaceStamp) {
-    & $PreparedValidator -StampPath $PreparedWorkspaceStamp -RepoRoot $RepoRoot -ExpectedHead $ExpectedHead -RequireMap | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw 'Prepared R4.1 workspace validation failed before SP638 topology proof.' }
-    Write-Host '[1/2] Reusing materialized Passo Giau map from prepared R4.1 workspace.' -ForegroundColor Cyan
+if ($ValidateOnly) {
+    $ProbeExitCode = 0
+    Write-Host '[validate-only] Reusing evidence from the single R4.1 editor session.' -ForegroundColor Cyan
 }
 else {
-    Write-Host '[1/2] Materializing only the persisted Passo Giau map...' -ForegroundColor Cyan
-    git -C $RepoRoot lfs install --local
-    if ($LASTEXITCODE -ne 0) { throw 'git lfs install failed.' }
-    git -C $RepoRoot lfs pull --include=$SpikeMapRelative --exclude=''
-    if ($LASTEXITCODE -ne 0) { throw 'git lfs pull for Passo Giau spike map failed.' }
-    if (-not (Test-Path -LiteralPath $SpikeMapPath -PathType Leaf)) {
-        throw "Passo Giau map is missing: $SpikeMapPath"
+    $PreparedValidator = Join-Path $RepoRoot 'scripts/ue/Test-YacsR4_1PreparedWorkspace.ps1'
+    if ($PreparedWorkspaceStamp) {
+        & $PreparedValidator -StampPath $PreparedWorkspaceStamp -RepoRoot $RepoRoot -ExpectedHead $ExpectedHead -RequireMap | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw 'Prepared R4.1 workspace validation failed before SP638 topology proof.' }
+        Write-Host '[1/2] Reusing materialized Passo Giau map from prepared R4.1 workspace.' -ForegroundColor Cyan
     }
-    $MapBytes = (Get-Item -LiteralPath $SpikeMapPath).Length
-    if ($MapBytes -lt 100000000) {
-        throw "Passo Giau map was not materialized from LFS (bytes=$MapBytes)."
+    else {
+        Write-Host '[1/2] Materializing only the persisted Passo Giau map...' -ForegroundColor Cyan
+        git -C $RepoRoot lfs install --local
+        if ($LASTEXITCODE -ne 0) { throw 'git lfs install failed.' }
+        git -C $RepoRoot lfs pull --include=$SpikeMapRelative --exclude=''
+        if ($LASTEXITCODE -ne 0) { throw 'git lfs pull for Passo Giau spike map failed.' }
+        if (-not (Test-Path -LiteralPath $SpikeMapPath -PathType Leaf)) {
+            throw "Passo Giau map is missing: $SpikeMapPath"
+        }
+        $MapBytes = (Get-Item -LiteralPath $SpikeMapPath).Length
+        if ($MapBytes -lt 100000000) {
+            throw "Passo Giau map was not materialized from LFS (bytes=$MapBytes)."
+        }
     }
-}
-
-Write-Host '[2/2] Running real-SP638 DynamicMesh topology proof...' -ForegroundColor Cyan
-if (-not (Test-Path -LiteralPath $ProbeScript -PathType Leaf)) {
-    throw "Topology probe script is missing: $ProbeScript"
-}
-$UEditor = $Context.UnrealEditorPath
-if (-not $UEditor -or -not (Test-Path -LiteralPath $UEditor)) {
-    throw 'UnrealEditor.exe GUI executable is unavailable.'
-}
-
-$env:YACS_SP638_CORRIDOR_TOPOLOGY_JSON = $ProbeJson
-try {
-    $Args = @(
-        $ProjectPath,
-        ('-ExecutePythonScript="' + $ProbeScript + '"'),
-        '-Unattended','-NoPause','-NoSplash','-NoP4',
-        '-ScriptErrorsAreFatal','-log','-stdout',('-AbsLog=' + $ProbeLog)
-    )
-    $Proc = Start-Process -FilePath $UEditor -ArgumentList $Args -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $ProbeStdout -RedirectStandardError $ProbeErr
-    if (-not $Proc.WaitForExit($TimeoutSec * 1000)) {
-        try { $Proc | Stop-Process -Force } catch { }
-        throw 'SP638 local corridor topology probe timed out.'
+    
+    Write-Host '[2/2] Running real-SP638 DynamicMesh topology proof...' -ForegroundColor Cyan
+    if (-not (Test-Path -LiteralPath $ProbeScript -PathType Leaf)) {
+        throw "Topology probe script is missing: $ProbeScript"
     }
-    $ProbeExitCode = $Proc.ExitCode
-}
-finally {
-    Remove-Item Env:YACS_SP638_CORRIDOR_TOPOLOGY_JSON -ErrorAction SilentlyContinue
+    $UEditor = $Context.UnrealEditorPath
+    if (-not $UEditor -or -not (Test-Path -LiteralPath $UEditor)) {
+        throw 'UnrealEditor.exe GUI executable is unavailable.'
+    }
+    
+    $env:YACS_SP638_CORRIDOR_TOPOLOGY_JSON = $ProbeJson
+    try {
+        $Args = @(
+            $ProjectPath,
+            ('-ExecutePythonScript="' + $ProbeScript + '"'),
+            '-Unattended','-NoPause','-NoSplash','-NoP4',
+            '-ScriptErrorsAreFatal','-log','-stdout',('-AbsLog=' + $ProbeLog)
+        )
+        $Proc = Start-Process -FilePath $UEditor -ArgumentList $Args -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $ProbeStdout -RedirectStandardError $ProbeErr
+        if (-not $Proc.WaitForExit($TimeoutSec * 1000)) {
+            try { $Proc | Stop-Process -Force } catch { }
+            throw 'SP638 local corridor topology probe timed out.'
+        }
+        $ProbeExitCode = $Proc.ExitCode
+    }
+    finally {
+        Remove-Item Env:YACS_SP638_CORRIDOR_TOPOLOGY_JSON -ErrorAction SilentlyContinue
+    }
 }
 
 if ($ProbeExitCode -notin @(0,1)) {
@@ -129,12 +138,14 @@ if ([double]$Proof.adaptive_inside_offset.minimum_actual_shoulder_width_m -lt 0.
     throw "SP638 topology proof pinched the shoulder below 0.25 m: $($Proof.adaptive_inside_offset.minimum_actual_shoulder_width_m)"
 }
 
-$ProbeLogText = Get-Content -LiteralPath $ProbeLog -Raw -ErrorAction Stop
-if ($ProbeLogText -match '(?i)Fatal error|Unhandled Exception|Critical error') {
-    throw 'SP638 local corridor topology log contains a crash/fatal marker.'
-}
-if ($ProbeLogText -notmatch '\[YacsSp638CorridorTopology\] PASS:') {
-    throw 'SP638 local corridor topology log is missing the explicit PASS marker.'
+if (-not $ValidateOnly) {
+    $ProbeLogText = Get-Content -LiteralPath $ProbeLog -Raw -ErrorAction Stop
+    if ($ProbeLogText -match '(?i)Fatal error|Unhandled Exception|Critical error') {
+        throw 'SP638 local corridor topology log contains a crash/fatal marker.'
+    }
+    if ($ProbeLogText -notmatch '\[YacsSp638CorridorTopology\] PASS:') {
+        throw 'SP638 local corridor topology log is missing the explicit PASS marker.'
+    }
 }
 
 $TrackedChanges = @(git -C $RepoRoot status --porcelain=v1 --untracked-files=no)

@@ -117,3 +117,27 @@ generated-content sandbox and deterministic proof rules.
 
 Arbitrary Python, arbitrary Unreal console commands, arbitrary asset/map paths,
 and free-form world-edit instructions remain out of scope for this spike.
+
+
+## R4.1 single-Editor proof session
+
+Issue **#248** reuses the same repository-owned/fail-closed philosophy for the
+heavy Passo Giau proof lane, but it is not a new public command surface.
+
+The canonical R4.1 proof job now prepares one exact-SHA worktree, builds the
+Editor once, starts one `UnrealEditor.exe` process, and lets a fixed
+repository-owned dispatcher execute the capability, topology, hairpin and
+rider-close visual proof sequence in that process.
+
+Important boundary:
+
+- one Editor process is reused **inside one exact-SHA workflow run**;
+- a later commit still receives a fresh checkout and fresh Editor boot;
+- no arbitrary issue/comment text becomes Python or an Unreal command;
+- no long-lived network listener or daemon is introduced;
+- standalone proof wrappers keep their cold execution path for recovery and
+  independent verification;
+- final proof evidence remains tied to the exact SHA and human visual review.
+
+This optimization removes repeated Editor windows/startup cost without turning
+CI state into reusable authoring state across commits.
