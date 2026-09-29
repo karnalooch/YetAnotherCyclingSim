@@ -14,7 +14,7 @@
     "manual_workflow_dispatch_fallback": true,
     "reconcile_interval_minutes": 60,
     "status_label_template": "proof-status:$proof:$status",
-    "trusted_actor_logins": []
+    "trusted_actor_logins": ["karnalooch"]
   },
   "proofs": {
     "r4-1b3-geometry": {

@@ -52,6 +52,19 @@ class YacsProofBrokerContractTests(unittest.TestCase):
             ("r4-1b3-geometry", "status"),
         )
 
+    def test_repository_owner_is_explicit_trusted_actor(self):
+        policy = self.policy()
+        self.assertEqual(policy["defaults"]["trusted_actor_logins"], ["karnalooch"])
+        with mock.patch.object(proof_broker, "actor_permission") as permission:
+            result = proof_broker.authorize_actor(
+                "karnalooch/YetAnotherCyclingSim",
+                "token",
+                "karnalooch",
+                policy,
+            )
+        self.assertEqual(result, "trusted-actor")
+        permission.assert_not_called()
+
     def test_request_id_is_exact_revision_bound(self):
         sha = "a" * 40
         request_id = proof_broker.make_request_id(
