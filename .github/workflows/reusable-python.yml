@@ -58,6 +58,9 @@ jobs:
       - name: Run reusable Stage 3G full-validation contract tests
         run: python scripts/ci/test_reusable_stage3g_full_workflow.py
 
+      - name: Run R4.1 prepared proof-suite contract tests
+        run: python scripts/ci/test_r4_1_proof_suite_contract.py
+
       - name: Run Visual History repository contract tests
         run: python scripts/ci/test_visual_history_repository_contract.py
 
@@ -76,7 +79,13 @@ jobs:
             'scripts/ue/Invoke-YacsProof.ps1',
             'scripts/ue/Preflight-YacsProof.ps1',
             'scripts/ue/Invoke-YacsStage3GAuthoring.ps1',
-            'scripts/ue/Invoke-YacsStage3GProof.ps1'
+            'scripts/ue/Invoke-YacsStage3GProof.ps1',
+            'scripts/ue/Invoke-YacsR4_1ProofSuite.ps1',
+            'scripts/ue/Test-YacsR4_1PreparedWorkspace.ps1',
+            'scripts/ue/Invoke-YacsGeometryScriptProbe.ps1',
+            'scripts/ue/Invoke-YacsSp638CorridorTopologyProbe.ps1',
+            'scripts/ue/Invoke-YacsPassoGiauHairpinCorridorProof.ps1',
+            'scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1'
           )) {
             $tokens = $null
             $errors = $null

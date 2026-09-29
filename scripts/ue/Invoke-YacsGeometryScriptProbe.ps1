@@ -9,6 +9,7 @@ param(
     [string] $ArtifactRoot,
     [Parameter(Mandatory=$true)] [string] $ExpectedBranch,
     [Parameter(Mandatory=$true)] [string] $ExpectedHead,
+    [string] $PreparedWorkspaceStamp,
     [int] $TimeoutSec = 600
 )
 
@@ -42,12 +43,20 @@ if (git -C $RepoRoot status --porcelain --untracked-files=all) {
     throw 'Geometry Script probe checkout is dirty before build.'
 }
 
-Write-Host '[1/3] Building exact UE 5.8 editor revision...' -ForegroundColor Cyan
-$BuildBat = Join-Path $Context.EngineRoot 'Engine/Build/BatchFiles/Build.bat'
-$BuildArgs = @($ProjectPath,'YetAnotherCyclingSimEditor','Win64','Development','-WaitMutex','-FromMsBuild')
-$BuildProc = Start-Process -FilePath $BuildBat -ArgumentList $BuildArgs -NoNewWindow -PassThru -RedirectStandardOutput $BuildLog -WorkingDirectory (Split-Path $BuildBat -Parent)
-$BuildProc.WaitForExit()
-if ($BuildProc.ExitCode -ne 0) { throw "Editor build failed with exit code $($BuildProc.ExitCode). See $BuildLog" }
+$PreparedValidator = Join-Path $RepoRoot 'scripts/ue/Test-YacsR4_1PreparedWorkspace.ps1'
+if ($PreparedWorkspaceStamp) {
+    & $PreparedValidator -StampPath $PreparedWorkspaceStamp -RepoRoot $RepoRoot -ExpectedHead $ExpectedHead -RequireBuild | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Prepared R4.1 workspace validation failed before Geometry Script probe.' }
+    Write-Host '[1/3] Reusing exact-SHA editor build from prepared R4.1 workspace.' -ForegroundColor Cyan
+}
+else {
+    Write-Host '[1/3] Building exact UE 5.8 editor revision...' -ForegroundColor Cyan
+    $BuildBat = Join-Path $Context.EngineRoot 'Engine/Build/BatchFiles/Build.bat'
+    $BuildArgs = @($ProjectPath,'YetAnotherCyclingSimEditor','Win64','Development','-WaitMutex','-FromMsBuild')
+    $BuildProc = Start-Process -FilePath $BuildBat -ArgumentList $BuildArgs -NoNewWindow -PassThru -RedirectStandardOutput $BuildLog -WorkingDirectory (Split-Path $BuildBat -Parent)
+    $BuildProc.WaitForExit()
+    if ($BuildProc.ExitCode -ne 0) { throw "Editor build failed with exit code $($BuildProc.ExitCode). See $BuildLog" }
+}
 
 Write-Host '[2/3] Probing Geometry Script / Dynamic Mesh Python API...' -ForegroundColor Cyan
 $UEditor = $Context.UnrealEditorPath

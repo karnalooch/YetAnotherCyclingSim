@@ -1138,6 +1138,19 @@ Reject or rework the local-mesh candidate if the neutral proof shows:
 6. Only after the neutral ground geometry passes, layer in RoadForge road
    surface and then materials/PCG dressing.
 
+### R4.1B.3 proof-suite execution
+
+The final B.3/scenic rerun uses the #234 **build-once / prove-many** lane. One
+trusted exact-SHA worktree materializes the persisted Passo Giau map once and
+builds the UE 5.8 editor once, then runs the Geometry Script capability,
+real-SP638 topology, bounded hairpin and rider-close local visual proofs from
+that same prepared workspace.
+
+Prepared-workspace reuse is job-local only. Each child wrapper validates a
+stamp bound to the exact HEAD, worktree, materialized map byte count and editor
+build identity before skipping its normal standalone preparation. No build or
+stamp may be reused across a different SHA or runner job.
+
 Do not start broad propagation, production materials or foliage before this
 geometry gate passes. A green workflow remains insufficient without human visual
 acceptance.
