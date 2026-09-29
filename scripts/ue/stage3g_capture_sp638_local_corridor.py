@@ -37,9 +37,9 @@ from scripts.geometry.sp638_local_corridor import (  # noqa: E402
     minimum_sampled_radius_xy,
 )
 from scripts.geometry.local_terrain_skin import (  # noqa: E402
-    build_terrain_skin_mesh,
+    build_bounded_meso_ground_mesh,
+    meso_ground_hash,
     smooth_height_grid,
-    terrain_skin_hash,
 )
 
 
@@ -53,7 +53,7 @@ SESSION_MANAGED_ENV = "YACS_R4_1_EDITOR_SESSION_MANAGED"
 
 def _release_python_script() -> None:
     if os.environ.get(SESSION_MANAGED_ENV, "").strip() != "1":
-        _release_python_script()
+        unreal.EditorPythonScripting.set_keep_python_script_alive(False)
 
 SLICE_HALF_LENGTH_CM = 35000.0
 KERNEL_SAMPLE_STEP_CM = 200.0
@@ -68,18 +68,25 @@ LANDSCAPE_SPLINE_WIDTH_CM = 520.0
 LANDSCAPE_SPLINE_FALLOFF_CM = 1600.0
 LANDSCAPE_SPLINE_SUBDIVISIONS = 240
 
-# Rider-close terrain is a bounded presentation skin sampled from the already
-# deformed Landscape. World-aligned sampling avoids hairpin offset singularities.
-TERRAIN_SKIN_HALF_EXTENT_CM = 25000.0
-TERRAIN_SKIN_GRID_STEP_CM = 400.0
+# Rider-close terrain is sampled from the already deformed Landscape, then
+# rebuilt as a bounded irregular meso patch. The smaller 2 m working grid does
+# not claim new DEM detail; it gives the local presentation mesh enough topology
+# to remove visible heightfield ribbing while the outer/topological seam remains
+# pinned to sampled MASE terrain.
+TERRAIN_SKIN_HALF_EXTENT_CM = 12000.0
+TERRAIN_SKIN_GRID_STEP_CM = 200.0
 TERRAIN_SKIN_TRACE_HALF_SPAN_CM = 250000.0
-TERRAIN_SKIN_LIFT_M = 0.02
-TERRAIN_SKIN_SMOOTHING_ITERATIONS = 3
-TERRAIN_SKIN_SMOOTHING_BLEND = 0.45
-TERRAIN_SKIN_CURVATURE_THRESHOLD_M = 0.04
-TERRAIN_SKIN_MAX_STEP_ADJUSTMENT_M = 0.30
-TERRAIN_SKIN_MAX_TOTAL_ADJUSTMENT_M = 0.90
+TERRAIN_SKIN_LIFT_M = 0.03
+TERRAIN_SKIN_SMOOTHING_ITERATIONS = 6
+TERRAIN_SKIN_SMOOTHING_BLEND = 0.60
+TERRAIN_SKIN_CURVATURE_THRESHOLD_M = 0.02
+TERRAIN_SKIN_MAX_STEP_ADJUSTMENT_M = 0.65
+TERRAIN_SKIN_MAX_TOTAL_ADJUSTMENT_M = 3.00
 TERRAIN_SKIN_PINNED_BORDER_CELLS = 2
+MESO_GROUND_RADIUS_X_M = 100.0
+MESO_GROUND_RADIUS_Y_M = 80.0
+MESO_GROUND_PROTECTED_HALF_WIDTH_M = 4.5
+MESO_GROUND_SEAM_RINGS = 4
 
 INSIDE_CLEARANCE_FRACTION = 0.75
 MINIMUM_SHOULDER_SPAN_M = 0.25
@@ -481,12 +488,15 @@ def _sample_local_terrain_skin(
     world: unreal.World,
     road_actor: unreal.Actor,
     center_world: unreal.Vector,
+    protected_centerline_world: tuple[unreal.Vector, ...],
 ):
-    """Sample the transient Landscape into a bounded world-aligned local skin."""
+    """Sample Landscape and build the bounded R4.1B.4 rider-close meso ground."""
 
-    span_count = int(round((2.0 * TERRAIN_SKIN_HALF_EXTENT_CM) / TERRAIN_SKIN_GRID_STEP_CM))
+    span_count = int(
+        round((2.0 * TERRAIN_SKIN_HALF_EXTENT_CM) / TERRAIN_SKIN_GRID_STEP_CM)
+    )
     if span_count < 4:
-        raise RuntimeError("terrain skin grid is unexpectedly small")
+        raise RuntimeError("meso-ground sampling grid is unexpectedly small")
 
     min_x_cm = float(center_world.x) - TERRAIN_SKIN_HALF_EXTENT_CM
     max_y_cm = float(center_world.y) + TERRAIN_SKIN_HALF_EXTENT_CM
@@ -534,12 +544,13 @@ def _sample_local_terrain_skin(
     if misses:
         preview = ", ".join(f"{row}:{column}" for row, column in misses[:8])
         raise RuntimeError(
-            "terrain skin Landscape sampling missed "
+            "meso-ground Landscape sampling missed "
             f"{len(misses)} grid points; first={preview}"
         )
 
-    smoothed_heights_m, metrics = smooth_height_grid(
-        tuple(raw_heights_m),
+    source_heights_m = tuple(raw_heights_m)
+    smoothed_heights_m, smoothing_metrics = smooth_height_grid(
+        source_heights_m,
         iterations=TERRAIN_SKIN_SMOOTHING_ITERATIONS,
         blend=TERRAIN_SKIN_SMOOTHING_BLEND,
         curvature_threshold_m=TERRAIN_SKIN_CURVATURE_THRESHOLD_M,
@@ -552,15 +563,27 @@ def _sample_local_terrain_skin(
     y_coordinates_m = tuple(value / 100.0 for value in y_coordinates_cm)
     origin_x_m = x_coordinates_m[0]
     origin_y_m = y_coordinates_m[0]
-    origin_z_m = min(min(row) for row in smoothed_heights_m)
+    origin_z_m = min(min(row) for row in source_heights_m)
+    protected_centerline_xy_m = tuple(
+        (float(point.x) / 100.0, float(point.y) / 100.0)
+        for point in protected_centerline_world
+    )
 
-    mesh = build_terrain_skin_mesh(
+    mesh, meso_metrics = build_bounded_meso_ground_mesh(
         x_coordinates_m,
         y_coordinates_m,
+        source_heights_m,
         smoothed_heights_m,
         origin_x_m=origin_x_m,
         origin_y_m=origin_y_m,
         origin_z_m=origin_z_m,
+        center_x_m=float(center_world.x) / 100.0,
+        center_y_m=float(center_world.y) / 100.0,
+        radius_x_m=MESO_GROUND_RADIUS_X_M,
+        radius_y_m=MESO_GROUND_RADIUS_Y_M,
+        protected_centerline_xy_m=protected_centerline_xy_m,
+        protected_half_width_m=MESO_GROUND_PROTECTED_HALF_WIDTH_M,
+        seam_rings=MESO_GROUND_SEAM_RINGS,
         lift_m=TERRAIN_SKIN_LIFT_M,
     )
     origin_world = unreal.Vector(
@@ -569,28 +592,48 @@ def _sample_local_terrain_skin(
         origin_z_m * 100.0,
     )
     diagnostics = {
+        "mode": "bounded_meso_ground",
         "world_aligned": True,
         "half_extent_m": TERRAIN_SKIN_HALF_EXTENT_CM / 100.0,
         "grid_step_m": TERRAIN_SKIN_GRID_STEP_CM / 100.0,
-        "row_count": mesh.row_count,
-        "column_count": mesh.column_count,
-        "sample_count": mesh.row_count * mesh.column_count,
+        "row_count": len(y_coordinates_m),
+        "column_count": len(x_coordinates_m),
+        "sample_count": len(y_coordinates_m) * len(x_coordinates_m),
+        "footprint_radius_m": [MESO_GROUND_RADIUS_X_M, MESO_GROUND_RADIUS_Y_M],
+        "protected_half_width_m": MESO_GROUND_PROTECTED_HALF_WIDTH_M,
+        "seam_rings": MESO_GROUND_SEAM_RINGS,
+        "active_vertex_count": meso_metrics.active_vertex_count,
+        "triangle_count": meso_metrics.triangle_count,
+        "boundary_vertex_count": meso_metrics.boundary_vertex_count,
+        "boundary_max_abs_adjustment_m": (
+            meso_metrics.boundary_max_abs_adjustment_m
+        ),
+        "minimum_protected_distance_m": (
+            meso_metrics.minimum_protected_distance_m
+        ),
         "smoothing_iterations": TERRAIN_SKIN_SMOOTHING_ITERATIONS,
         "smoothing_blend": TERRAIN_SKIN_SMOOTHING_BLEND,
         "curvature_threshold_m": TERRAIN_SKIN_CURVATURE_THRESHOLD_M,
         "max_step_adjustment_m": TERRAIN_SKIN_MAX_STEP_ADJUSTMENT_M,
         "max_total_adjustment_m": TERRAIN_SKIN_MAX_TOTAL_ADJUSTMENT_M,
         "pinned_border_cells": TERRAIN_SKIN_PINNED_BORDER_CELLS,
-        "max_abs_adjustment_m": metrics.max_abs_adjustment_m,
-        "rms_adjustment_m": metrics.rms_adjustment_m,
-        "max_abs_laplacian_before_m": metrics.max_abs_laplacian_before_m,
-        "max_abs_laplacian_after_m": metrics.max_abs_laplacian_after_m,
-        "mesh_sha256": terrain_skin_hash(mesh),
+        "max_abs_adjustment_m": meso_metrics.max_abs_adjustment_m,
+        "rms_adjustment_m": meso_metrics.rms_adjustment_m,
+        "smoothing_max_abs_adjustment_m": (
+            smoothing_metrics.max_abs_adjustment_m
+        ),
+        "smoothing_rms_adjustment_m": smoothing_metrics.rms_adjustment_m,
+        "max_abs_laplacian_before_m": (
+            smoothing_metrics.max_abs_laplacian_before_m
+        ),
+        "max_abs_laplacian_after_m": (
+            smoothing_metrics.max_abs_laplacian_after_m
+        ),
+        "mesh_sha256": meso_ground_hash(mesh),
         "source": "transient Landscape collision after broad spline cut/fill",
         "canonical_road_xy_modified": False,
     }
     return mesh, origin_world, diagnostics
-
 
 def _make_material(
     world: unreal.World,
@@ -814,6 +857,7 @@ def main() -> None:
         world,
         road_actor,
         terrain_skin_center_world,
+        tuple(kernel_world),
     )
 
     neutral_landscape_material = unreal.load_asset(
@@ -860,13 +904,14 @@ def main() -> None:
         actor_subsystem,
         terrain_skin_origin_world,
         terrain_skin_mesh,
-        "SP638_LocalTerrainSkin",
+        "SP638_LocalMesoGround",
         terrain_skin_material,
     )
 
-    # Keep the corrected MASE Landscape visible as macro terrain. The lifted,
-    # smoothed DynamicMesh skin owns only the bounded rider-close patch and
-    # overlays the Landscape locally; no persisted map change is saved.
+    # Keep the corrected MASE Landscape visible as macro terrain. The irregular
+    # meso-ground DynamicMesh owns only the bounded rider-close steep-face patch,
+    # pins back to sampled MASE heights at every topology boundary and leaves the
+    # protected road/shoulder corridor open for the dedicated corridor meshes.
     origin_world = kernel_world[0]
     earth_counts = _spawn_dynamic_mesh(
         actor_subsystem,
@@ -917,8 +962,7 @@ def main() -> None:
         "r.RayTracing.Geometry.Landscape.LODBias -1",
     )
     # Render the DynamicMesh-owned rider-close terrain in ordinary lit mode.
-    # The Landscape is hidden after sampling, so the editor checker fallback
-    # cannot masquerade as terrain geometry.
+    # The macro Landscape remains visible outside the bounded meso patch.
     unreal.SystemLibrary.execute_console_command(world, "viewmode lit")
     unreal.SystemLibrary.execute_console_command(world, "r.AntiAliasingMethod 1")
     unreal.SystemLibrary.execute_console_command(
@@ -982,7 +1026,7 @@ def main() -> None:
     camera_component.set_editor_property("field_of_view", 76.0)
 
     _proof_data = {
-        "capture_strategy": "r4.1b.3-world-aligned-terrain-skin-plus-corridor",
+        "capture_strategy": "r4.1b.4-bounded-meso-ground-plus-corridor",
         "source_full_road_length_m": round(full_length_cm / 100.0, 3),
         "source_control_points": original_control_count,
         "selected_hairpin_distance_m": round(focus_cm / 100.0, 3),
@@ -1017,6 +1061,7 @@ def main() -> None:
             "continuous_dynamic_mesh_surfaces": True,
             "box_strip_roadbed": False,
             "terrain_skin": terrain_skin_counts,
+            "meso_ground": terrain_skin_counts,
             "earthwork": earth_counts,
             "left_shoulder": left_shoulder_counts,
             "right_shoulder": right_shoulder_counts,
@@ -1042,6 +1087,12 @@ def main() -> None:
             "landscape_vertex_spacing_is_source_resolution": False,
         },
         "local_terrain_skin": {
+            **terrain_skin_diagnostics,
+            "landscape_hidden_after_sampling": False,
+            "macro_landscape_visible": True,
+            "occlusion_lift_m": TERRAIN_SKIN_LIFT_M,
+        },
+        "local_meso_ground": {
             **terrain_skin_diagnostics,
             "landscape_hidden_after_sampling": False,
             "macro_landscape_visible": True,
