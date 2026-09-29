@@ -85,7 +85,7 @@ TERRAIN_SKIN_MAX_TOTAL_ADJUSTMENT_M = 3.00
 TERRAIN_SKIN_PINNED_BORDER_CELLS = 2
 MESO_GROUND_RADIUS_X_M = 100.0
 MESO_GROUND_RADIUS_Y_M = 80.0
-MESO_GROUND_PROTECTED_HALF_WIDTH_M = 4.5
+MESO_GROUND_PROTECTED_HALF_WIDTH_M = 10.5
 MESO_GROUND_SEAM_RINGS = 4
 
 INSIDE_CLEARANCE_FRACTION = 0.75
@@ -912,7 +912,7 @@ def main() -> None:
     # Keep the corrected MASE Landscape visible as macro terrain. The irregular
     # meso-ground DynamicMesh owns only the bounded rider-close steep-face patch,
     # pins back to sampled MASE heights at every topology boundary and leaves the
-    # protected road/shoulder corridor open for the dedicated corridor meshes.
+    # full road-bench/earthwork envelope open for the dedicated corridor meshes.
     origin_world = kernel_world[0]
     earth_counts = _spawn_dynamic_mesh(
         actor_subsystem,
