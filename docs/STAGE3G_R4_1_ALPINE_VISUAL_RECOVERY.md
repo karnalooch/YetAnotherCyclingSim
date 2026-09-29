@@ -374,6 +374,21 @@ geometry diagnostic: all validated upward-facing meso/earthwork triangles receiv
 positive illumination, so a side-facing proof sun cannot create a false black
 wedge. It changes no authored geometry or production lighting.
 
+The B.4.4 exact-SHA proof on `f69c8f082a842b9b900ff7a6dc3b2b00b1a1b29b`
+completed the full build-once / boot-once suite and emitted both screenshots
+(artifact `11049336933`). The capture race is fixed, but human review still
+rejects the Lighting Only frame: the same earthwork/meso dark wedges remain
+despite explicit per-vertex normals, an overhead proof light and disabled
+shadows. Actor-ID still shows owned geometry in those pixels. B.4.5 therefore
+tests one narrower proof-harness hypothesis before any geometry edit: the
+transient Directional Light and Sky Light components are explicitly set to
+`Movable`, matching UE's fully dynamic lighting mobility for transient
+DynamicMesh actors. Geometry, overlap, source heights, road banking and physics
+authority remain unchanged. If exact-SHA visual evidence is unchanged, light
+mobility is rejected as the cause and the next investigation must use measured
+surface-orientation/lighting evidence rather than another seam edit.
+
+
 #### Real-data-first road-bank boundary
 
 R4.1 may use measured road evidence to improve the **visual** crossfall of SP638,
