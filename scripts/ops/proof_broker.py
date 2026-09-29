@@ -24,6 +24,10 @@ COMMAND_RE = re.compile(
 )
 SHA40 = re.compile(r"^[0-9a-f]{40}$")
 PROOF_ID = re.compile(r"^[a-z0-9][a-z0-9._-]{0,79}$")
+SENSITIVE_FIELD = re.compile(
+    r"(?:authorization|token|secret|password|passwd|api[-_]?key|cookie|credential)",
+    re.IGNORECASE,
+)
 FAILED_CONCLUSIONS = {
     "failure",
     "cancelled",
@@ -54,6 +58,82 @@ STATUS_DESCRIPTIONS = {
 
 class BrokerError(RuntimeError):
     pass
+
+
+def _redact_sensitive(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {
+            str(key): (
+                "***REDACTED***"
+                if SENSITIVE_FIELD.search(str(key))
+                else _redact_sensitive(item)
+            )
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [_redact_sensitive(item) for item in value]
+    if isinstance(value, str):
+        text = re.sub(
+            r"(?i)\bBearer\s+[A-Za-z0-9._~+/-]+=*",
+            "Bearer ***REDACTED***",
+            value,
+        )
+        text = re.sub(
+            r"\b(?:github_pat_|gh[pousr]_)[A-Za-z0-9_]+\b",
+            "***REDACTED***",
+            text,
+        )
+        return text
+    return value
+
+
+def _safe_github_api_failure(exc: Exception) -> str:
+    raw = str(exc)
+    match = re.fullmatch(
+        r"(?s)([A-Z]+)\s+(https?://\S+?):\s+HTTP\s+(\d+):\s*(.*)",
+        raw,
+    )
+    if not match:
+        return "GitHub API request failed (unstructured details redacted)"
+
+    method, url, status, body = match.groups()
+    parsed = urllib.parse.urlsplit(url)
+    endpoint = parsed.path or "/"
+    if parsed.query:
+        query = []
+        for key, value in urllib.parse.parse_qsl(
+            parsed.query,
+            keep_blank_values=True,
+        ):
+            safe_value = "***REDACTED***" if SENSITIVE_FIELD.search(key) else value
+            query.append((key, safe_value))
+        endpoint += "?" + urllib.parse.urlencode(query)
+
+    safe_body: Any
+    try:
+        safe_body = _redact_sensitive(json.loads(body))
+        rendered_body = json.dumps(
+            safe_body,
+            ensure_ascii=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        )
+    except json.JSONDecodeError:
+        rendered_body = str(_redact_sensitive(body))
+        rendered_body = re.sub(
+            r'(?i)(authorization|token|secret|password|passwd|api[-_]?key|cookie|credential)'
+            r'(["\']?\s*[:=]\s*["\']?)[^"\'\s,}]+',
+            r"\1\2***REDACTED***",
+            rendered_body,
+        )
+
+    if len(rendered_body) > 1200:
+        rendered_body = rendered_body[:1200] + "...[truncated]"
+
+    return (
+        f"GitHub API request failed: {method} {endpoint} -> HTTP {status}; "
+        f"body={rendered_body}"
+    )
 
 
 def load_policy(path: Path) -> dict[str, Any]:
@@ -1168,9 +1248,9 @@ def main() -> int:
     except BrokerError as exc:
         print(f"proof-broker: BLOCKED - {exc}", file=sys.stderr)
         return 2
-    except github_ops.GitHubError:
+    except github_ops.GitHubError as exc:
         print(
-            "proof-broker: BLOCKED - GitHub API request failed",
+            f"proof-broker: BLOCKED - {_safe_github_api_failure(exc)}",
             file=sys.stderr,
         )
         return 2
