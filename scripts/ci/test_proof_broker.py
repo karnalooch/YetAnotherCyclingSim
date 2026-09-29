@@ -52,6 +52,36 @@ class YacsProofBrokerContractTests(unittest.TestCase):
             ("r4-1b3-geometry", "status"),
         )
 
+    def test_github_api_failure_diagnostics_are_structured_and_redacted(self):
+        exc = RuntimeError(
+            "POST https://api.github.com/repos/acme/repo/actions/workflows/"
+            "proof.yml/dispatches?ref=main&token=query-secret: HTTP 422: "
+            '{"message":"workflow blocked",'
+            '"token":"body-secret",'
+            '"nested":{"authorization":"Bearer bearer-secret"}}'
+        )
+        message = proof_broker._safe_github_api_failure(exc)
+
+        self.assertIn(
+            "POST /repos/acme/repo/actions/workflows/proof.yml/dispatches",
+            message,
+        )
+        self.assertIn("HTTP 422", message)
+        self.assertIn('"token":"***REDACTED***"', message)
+        self.assertIn('"authorization":"***REDACTED***"', message)
+        self.assertNotIn("query-secret", message)
+        self.assertNotIn("body-secret", message)
+        self.assertNotIn("bearer-secret", message)
+
+    def test_unstructured_github_error_details_are_not_echoed(self):
+        message = proof_broker._safe_github_api_failure(
+            RuntimeError("opaque token=do-not-print")
+        )
+        self.assertEqual(
+            message,
+            "GitHub API request failed (unstructured details redacted)",
+        )
+
     def test_repository_owner_is_explicit_trusted_actor(self):
         policy = self.policy()
         self.assertEqual(policy["defaults"]["trusted_actor_logins"], ["karnalooch"])
