@@ -28,7 +28,7 @@ SESSION_MANAGED_ENV = "YACS_R4_1_EDITOR_SESSION_MANAGED"
 
 def _release_python_script() -> None:
     if os.environ.get(SESSION_MANAGED_ENV, "").strip() != "1":
-        _release_python_script()
+        unreal.EditorPythonScripting.set_keep_python_script_alive(False)
 
 SLICE_HALF_LENGTH_CM = 35000.0
 SLICE_POINT_STEP_CM = 1000.0
