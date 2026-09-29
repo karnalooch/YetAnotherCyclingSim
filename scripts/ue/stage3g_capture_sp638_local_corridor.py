@@ -159,6 +159,7 @@ _output_path: Path | None = None
 _actor_id_output_path: Path | None = None
 _proof_path: Path | None = None
 _proof_data: dict[str, object] = {}
+_retained_transient_actors: list[unreal.Actor] = []
 
 
 def _finish(success: bool, error: str = "") -> None:
@@ -983,6 +984,11 @@ def _spawn_dynamic_mesh(
     if actor is None:
         raise RuntimeError(f"failed to spawn DynamicMeshActor for {label}")
     actor.set_actor_label(label)
+    # Keep an explicit Python reference for the remainder of the prepared
+    # single-editor session. The follow-up human ride-through stage reuses
+    # exactly these transient B.4.6 meshes; without this reference Unreal/Python
+    # GC may collect them as soon as runpy.run_path() returns.
+    _retained_transient_actors.append(actor)
 
     component = actor.get_dynamic_mesh_component()
     if component is None:
