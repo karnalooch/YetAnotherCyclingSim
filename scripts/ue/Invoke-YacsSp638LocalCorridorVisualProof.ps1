@@ -153,11 +153,23 @@ if ([double]$Proof.source_geometry_analysis.half_window_m -lt 5.0) {
 if ([bool]$Proof.source_geometry_analysis.canonical_centerline_xy_modified -ne $false) {
     throw 'SP638 visual proof modified canonical centerline XY.'
 }
-if ([string]$Proof.superelevation.mode -ne 'curvature_bounded_presentation') {
-    throw "SP638 visual proof did not use curvature-bounded superelevation: '$($Proof.superelevation.mode)'."
+if ([string]$Proof.superelevation.mode -ne 'mase_lidar_seeded_crossfall') {
+    throw "SP638 visual proof did not use MASE/LiDAR-seeded crossfall: '$($Proof.superelevation.mode)'."
 }
-if ([bool]$Proof.superelevation.measured_sp638_bank_data -ne $false) {
-    throw 'SP638 visual proof incorrectly claims measured bank-angle source data.'
+if ([bool]$Proof.superelevation.measured_sp638_bank_data -ne $true) {
+    throw 'SP638 visual proof did not use measured terrain crossfall as its primary bank source.'
+}
+if ([string]$Proof.superelevation.measurement_kind -ne 'LiDAR_DTM_crossfall_observation') {
+    throw "SP638 visual proof used unexpected bank measurement kind: '$($Proof.superelevation.measurement_kind)'."
+}
+if ([bool]$Proof.superelevation.instrument_survey_grade -ne $false) {
+    throw 'SP638 LiDAR-derived bank proof incorrectly claims instrument-survey grade.'
+}
+if ([string]$Proof.superelevation.lidar_sampling.source -ne 'MASE_PST_1372858_LiDAR_DTM') {
+    throw "SP638 visual proof used unexpected bank source: '$($Proof.superelevation.lidar_sampling.source)'."
+}
+if ([int]$Proof.superelevation.lidar_sampling.valid_station_count -lt 50) {
+    throw "SP638 LiDAR bank sampling produced too few valid stations: $($Proof.superelevation.lidar_sampling.valid_station_count)."
 }
 if ([bool]$Proof.superelevation.authoritative_physics -ne $false) {
     throw 'SP638 presentation superelevation incorrectly claims physics authority.'
@@ -169,7 +181,7 @@ if ([double]$Proof.superelevation.peak_abs_bank_deg -lt 1.0) {
     throw "SP638 hairpin proof did not produce a visible bank: $($Proof.superelevation.peak_abs_bank_deg) deg."
 }
 if ([double]$Proof.superelevation.peak_abs_bank_deg -gt 4.01) {
-    throw "SP638 presentation bank exceeded the 4-degree cap: $($Proof.superelevation.peak_abs_bank_deg) deg."
+    throw "SP638 LiDAR-regularized bank exceeded the 4-degree hard guard: $($Proof.superelevation.peak_abs_bank_deg) deg."
 }
 if ([double]$Proof.superelevation.maximum_adjacent_delta_deg -gt 0.351) {
     throw "SP638 presentation bank transition snapped between stations: $($Proof.superelevation.maximum_adjacent_delta_deg) deg."
