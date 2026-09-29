@@ -152,7 +152,9 @@ LOOK_AHEAD_CM = 6500.0
 _task = None
 _tick_handle = None
 _started_at = 0.0
+_capture_phase = "lighting_only"
 _output_path: Path | None = None
+_actor_id_output_path: Path | None = None
 _proof_path: Path | None = None
 _proof_data: dict[str, object] = {}
 
@@ -163,8 +165,16 @@ def _finish(success: bool, error: str = "") -> None:
         unreal.unregister_slate_post_tick_callback(_tick_handle)
         _tick_handle = None
 
-    if success and _output_path is not None and _proof_path is not None:
+    if (
+        success
+        and _output_path is not None
+        and _actor_id_output_path is not None
+        and _proof_path is not None
+    ):
         screenshot_sha256 = hashlib.sha256(_output_path.read_bytes()).hexdigest()
+        actor_id_sha256 = hashlib.sha256(
+            _actor_id_output_path.read_bytes()
+        ).hexdigest()
         proof = {
             "schema_version": 1,
             "sp638_local_corridor_visual": "PASS",
@@ -172,6 +182,9 @@ def _finish(success: bool, error: str = "") -> None:
             "screenshot": str(_output_path),
             "screenshot_bytes": _output_path.stat().st_size,
             "screenshot_sha256": screenshot_sha256,
+            "actor_id_screenshot": str(_actor_id_output_path),
+            "actor_id_screenshot_bytes": _actor_id_output_path.stat().st_size,
+            "actor_id_screenshot_sha256": actor_id_sha256,
             "resolution": [CAPTURE_RES_X, CAPTURE_RES_Y],
             "visual_acceptance": "PENDING_HUMAN_REVIEW",
             "presentation_only": True,
@@ -196,22 +209,92 @@ def _finish(success: bool, error: str = "") -> None:
     _release_python_script()
 
 
+def _schedule_high_res_capture(
+    output_path: Path,
+    view_mode: unreal.ViewModeIndex,
+    phase: str,
+) -> None:
+    global _task, _started_at, _capture_phase
+
+    unreal.AutomationLibrary.set_editor_viewport_view_mode(view_mode)
+    unreal.AutomationLibrary.set_editor_active_viewport_view_mode(view_mode)
+    active_view_mode = unreal.AutomationLibrary.get_editor_active_viewport_view_mode()
+    if active_view_mode != view_mode:
+        raise RuntimeError(
+            f"failed to bind {phase} view mode to active editor viewport: "
+            f"{active_view_mode}"
+        )
+
+    level_editor = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
+    level_editor.editor_invalidate_viewports()
+    _capture_phase = phase
+    _task = unreal.AutomationLibrary.take_high_res_screenshot(
+        res_x=CAPTURE_RES_X,
+        res_y=CAPTURE_RES_Y,
+        filename=str(output_path),
+        camera=None,
+        mask_enabled=False,
+        capture_hdr=False,
+        comparison_tolerance=unreal.ComparisonTolerance.LOW,
+        comparison_notes=(
+            "R4.1B.4 SP638 bounded meso-ground "
+            f"{phase} geometry diagnostic"
+        ),
+        delay=3.0,
+        force_game_view=False,
+    )
+    if not _task or not _task.is_valid_task():
+        raise RuntimeError(
+            f"AutomationLibrary returned an invalid {phase} screenshot task"
+        )
+    _started_at = time.monotonic()
+
+
 def _tick(_delta_time: float) -> None:
     if _task is None:
         _finish(False, "screenshot task was not initialized")
         return
+
     if _task.is_task_done():
+        if _capture_phase == "lighting_only":
+            if (
+                _output_path is None
+                or not _output_path.is_file()
+                or _output_path.stat().st_size < 100_000
+            ):
+                _finish(
+                    False,
+                    "Lighting Only screenshot task completed without a valid PNG",
+                )
+                return
+            if _actor_id_output_path is None:
+                _finish(False, "actor-ID screenshot output path was not initialized")
+                return
+            _proof_data["lighting_only_capture_completed"] = True
+            _schedule_high_res_capture(
+                _actor_id_output_path,
+                unreal.ViewModeIndex.VMI_UNLIT,
+                "actor_id_unlit",
+            )
+            return
+
         if (
-            _output_path is not None
-            and _output_path.is_file()
-            and _output_path.stat().st_size >= 100_000
+            _capture_phase == "actor_id_unlit"
+            and _actor_id_output_path is not None
+            and _actor_id_output_path.is_file()
+            and _actor_id_output_path.stat().st_size >= 100_000
         ):
+            _proof_data["actor_id_unlit_capture_completed"] = True
             _finish(True)
         else:
-            _finish(False, "screenshot task completed without a valid PNG")
+            _finish(
+                False,
+                f"{_capture_phase} screenshot task completed without a valid PNG",
+            )
         return
+
     if time.monotonic() - _started_at > 90.0:
-        _finish(False, "screenshot task timed out after 90 seconds")
+        _finish(False, f"{_capture_phase} screenshot task timed out after 90 seconds")
 
 
 def _dot(a: unreal.Vector, b: unreal.Vector) -> float:
@@ -903,8 +986,8 @@ def _spawn_dynamic_mesh(
 
 
 def main() -> None:
-    global _task, _tick_handle, _started_at, _output_path, _proof_path
-    global _proof_data
+    global _task, _tick_handle, _started_at, _output_path
+    global _actor_id_output_path, _proof_path, _proof_data
 
     output_value = os.environ.get("YACS_SP638_LOCAL_CORRIDOR_VISUAL_PNG", "")
     proof_value = os.environ.get("YACS_SP638_LOCAL_CORRIDOR_VISUAL_PROOF", "")
@@ -915,6 +998,9 @@ def main() -> None:
         )
 
     _output_path = Path(output_value)
+    _actor_id_output_path = _output_path.with_name(
+        f"{_output_path.stem}_actor_id_unlit{_output_path.suffix}"
+    )
     _proof_path = Path(proof_value)
     _output_path.parent.mkdir(parents=True, exist_ok=True)
     _output_path.unlink(missing_ok=True)
@@ -1154,22 +1240,22 @@ def main() -> None:
         terrain_skin_material = _make_material(
             world,
             basic_material,
-            unreal.LinearColor(0.34, 0.33, 0.29, 1.0),
+            unreal.LinearColor(0.90, 0.08, 0.08, 1.0),
         )
         earth_material = _make_material(
             world,
             basic_material,
-            unreal.LinearColor(0.33, 0.31, 0.27, 1.0),
+            unreal.LinearColor(0.08, 0.82, 0.12, 1.0),
         )
         shoulder_material = _make_material(
             world,
             basic_material,
-            unreal.LinearColor(0.22, 0.20, 0.16, 1.0),
+            unreal.LinearColor(0.08, 0.22, 0.95, 1.0),
         )
         road_material = _make_material(
             world,
             basic_material,
-            unreal.LinearColor(0.025, 0.025, 0.028, 1.0),
+            unreal.LinearColor(0.95, 0.82, 0.05, 1.0),
         )
 
     actor_subsystem = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
@@ -1307,22 +1393,12 @@ def main() -> None:
     level_editor.editor_set_game_view(True, viewport_config_key)
     level_editor.editor_set_viewport_realtime(True, viewport_config_key)
 
-    # Bind the diagnostic mode through the editor automation API itself rather
-    # than through a console command. High-res automation capture can decouple
-    # from console-command viewport state; this API owns the editor viewport
-    # ViewModeIndex and lets us read it back before scheduling the screenshot.
+    # The acceptance frame remains Lighting Only. A second Unlit actor-ID frame
+    # is captured from the same camera/session with high-contrast transient
+    # materials. This distinguishes true gaps/overlaps from lighting/normal
+    # artefacts without changing the geometry under review.
     lighting_only_mode = unreal.ViewModeIndex.VMI_LIGHTING_ONLY
-    unreal.AutomationLibrary.set_editor_viewport_view_mode(lighting_only_mode)
-    unreal.AutomationLibrary.set_editor_active_viewport_view_mode(
-        lighting_only_mode
-    )
-    active_view_mode = unreal.AutomationLibrary.get_editor_active_viewport_view_mode()
-    if active_view_mode != lighting_only_mode:
-        raise RuntimeError(
-            "failed to bind Lighting Only to active editor viewport: "
-            f"{active_view_mode}"
-        )
-    level_editor.editor_invalidate_viewports()
+    active_view_mode = lighting_only_mode
 
     _proof_data = {
         "capture_strategy": "r4.1b.4-bounded-meso-ground-plus-corridor",
@@ -1402,6 +1478,13 @@ def main() -> None:
         "forced_landscape_lod": 0,
         "proof_viewmode": "lightingonly",
         "material_independent_geometry_proof": True,
+        "actor_id_diagnostic_viewmode": "unlit",
+        "actor_id_color_legend": {
+            "meso_ground": "red",
+            "earthwork": "green",
+            "shoulders": "blue",
+            "asphalt": "yellow",
+        },
         "capture_source": "primary_level_editor_viewport",
         "viewport_config_key": str(viewport_config_key),
         "offscreen_camera_capture": False,
@@ -1426,22 +1509,11 @@ def main() -> None:
     }
 
     unreal.EditorPythonScripting.set_keep_python_script_alive(True)
-    _task = unreal.AutomationLibrary.take_high_res_screenshot(
-        res_x=CAPTURE_RES_X,
-        res_y=CAPTURE_RES_Y,
-        filename=str(_output_path),
-        camera=None,
-        mask_enabled=False,
-        capture_hdr=False,
-        comparison_tolerance=unreal.ComparisonTolerance.LOW,
-        comparison_notes="R4.1B.4 SP638 lighting-only bounded meso-ground geometry proof",
-        delay=3.0,
-        force_game_view=False,
+    _schedule_high_res_capture(
+        _output_path,
+        lighting_only_mode,
+        "lighting_only",
     )
-    if not _task or not _task.is_valid_task():
-        raise RuntimeError("AutomationLibrary returned an invalid screenshot task")
-
-    _started_at = time.monotonic()
     _tick_handle = unreal.register_slate_post_tick_callback(_tick)
     unreal.log(
         "[YacsSp638LocalCorridorVisual] screenshot scheduled: "
