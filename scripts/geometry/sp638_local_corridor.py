@@ -695,7 +695,10 @@ def make_curvature_adaptive_profiles(
             result,
             tangent_half_window_stations=curvature_half_window_stations,
         )
-        diagnostics = corridor_global_overlap_diagnostics(mesh)
+        diagnostics = corridor_global_overlap_diagnostics(
+            mesh,
+            stop_after_first=True,
+        )
         if diagnostics.overlap_pair_count == 0:
             return result
 
@@ -933,6 +936,7 @@ def corridor_global_overlap_diagnostics(
     *,
     minimum_station_gap: int = 2,
     z_clearance_m: float = 0.05,
+    stop_after_first: bool = False,
 ) -> CorridorOverlapDiagnostics:
     """Detect non-local swept-quad overlap without penalizing shared topology."""
 
@@ -1021,6 +1025,12 @@ def corridor_global_overlap_diagnostics(
                     first_band,
                     second_station,
                     second_band,
+                )
+            if stop_after_first:
+                return CorridorOverlapDiagnostics(
+                    checked_pair_count=checked,
+                    overlap_pair_count=1,
+                    first_overlap=first_overlap,
                 )
 
     return CorridorOverlapDiagnostics(
