@@ -153,8 +153,11 @@ if ([double]$Proof.source_geometry_analysis.half_window_m -lt 5.0) {
 if ([bool]$Proof.source_geometry_analysis.canonical_centerline_xy_modified -ne $false) {
     throw 'SP638 visual proof modified canonical centerline XY.'
 }
-if ([string]$Proof.proof_viewmode -ne 'lit') {
-    throw "SP638 visual proof must use lit DynamicMesh acceptance mode, got '$($Proof.proof_viewmode)'."
+if ([string]$Proof.proof_viewmode -ne 'lightingonly') {
+    throw "SP638 visual proof must use Lighting Only geometry mode, got '$($Proof.proof_viewmode)'."
+}
+if ([bool]$Proof.material_independent_geometry_proof -ne $true) {
+    throw 'SP638 visual proof did not declare material-independent geometry evidence.'
 }
 if ([bool]$Proof.neutral_landscape_material -ne $true) {
     throw 'SP638 visual proof did not apply the required neutral Landscape proof material.'
