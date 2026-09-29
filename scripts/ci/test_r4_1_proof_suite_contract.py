@@ -69,6 +69,16 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
                 script,
             )
 
+    def test_rider_close_geometry_proof_is_material_independent(self) -> None:
+        capture = read("scripts/ue/stage3g_capture_sp638_local_corridor.py")
+        wrapper = read("scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1")
+        self.assertIn('"viewmode lightingonly"', capture)
+        self.assertIn('"proof_viewmode": "lightingonly"', capture)
+        self.assertIn('"material_independent_geometry_proof": True', capture)
+        self.assertIn("proof_viewmode -ne 'lightingonly'", wrapper)
+        self.assertIn("material_independent_geometry_proof", wrapper)
+        self.assertNotIn("proof_viewmode -ne 'lit'", wrapper)
+
     def test_child_wrappers_fail_closed_before_reuse(self) -> None:
         for path in (
             "scripts/ue/Invoke-YacsGeometryScriptProbe.ps1",
