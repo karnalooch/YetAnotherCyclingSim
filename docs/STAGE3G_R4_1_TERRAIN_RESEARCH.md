@@ -864,7 +864,11 @@ R4.1B.4 recovery path (#247). The implementation deliberately:
 - pins the patch topology boundary exactly to source terrain;
 - keeps the meso surface from falling below the still-visible macro Landscape,
   preventing depth/occlusion ribbons from exposing the raw heightfield;
-- leaves the complete local road-bench / earthwork envelope cut out of the patch so the meso surface cannot overlap the dedicated ±10 m earthwork mesh;
+- keeps the road/shoulder corridor excluded while B.4.1 permits a bounded
+  road-facing transition overlap: the meso cutout starts from the actual
+  earthwork outer extent plus 0.50 m clearance, then shrinks by 0.65 m so the
+  meso patch may underlap the dedicated outer earthwork edge by at most 0.15 m
+  instead of exposing macro Landscape between the two systems;
 - validates deterministic mesh/hash, seam error, protected-distance clearance,
   non-degenerate triangles and bounded correction before the UE proof;
 - retains human cyclist-camera acceptance as the final geometry decision.
@@ -885,6 +889,20 @@ Lighting Only deliberately replaces scene materials with a neutral
 lighting-only diagnostic and omits source normal maps. This makes the exact-SHA
 human geometry gate material-independent; production materials remain a
 separate later visual/dressing acceptance concern.
+
+Human review of that Lighting Only path later isolated a narrower defect: long
+dark seam wedges remained at the `earthwork -> exposed Landscape -> meso`
+interface even though the macro/meso non-penetration and topology checks passed.
+This is treated as an interface problem, not a reason to alter the MASE source,
+SP638 XY, measured banking or broad terrain smoothing.
+
+B.4.1 therefore adds a deterministic transition-underlap contract. The meso
+boundary may move inward only through a named overlap allowance; with the current
+proof values, 0.65 m overlap against 0.50 m nominal earthwork clearance yields a
+maximum 0.15 m underlap beneath the outer earthwork edge. The meso topology
+boundary remains pinned to sampled MASE height, and the existing interior lift
+continues to keep active meso geometry from falling below the visible macro
+Landscape.
 
 ### 9.2 SP638 banking/crossfall — real-data-first guardrail
 
