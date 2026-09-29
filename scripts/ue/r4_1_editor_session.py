@@ -33,6 +33,7 @@ _current_deadline = 0.0
 _session_root: Path | None = None
 _expected_head = ""
 _stage_results: dict[str, dict[str, object]] = {}
+_stage_runtime_globals: dict[str, dict[str, object]] = {}
 
 
 def _stage(
@@ -218,7 +219,11 @@ def _run_stage_script(stage: dict[str, object]) -> None:
         unreal.log(
             f"[YacsR41EditorSession] START {stage['name']}: {script_path}"
         )
-        runpy.run_path(str(script_path), run_name="__main__")
+        stage_globals = runpy.run_path(str(script_path), run_name="__main__")
+        # Keep the returned module globals alive for the duration of the
+        # prepared single-editor session. Some proof stages intentionally
+        # hand transient Unreal actors to the immediately following stage.
+        _stage_runtime_globals[str(stage["name"])] = stage_globals
     finally:
         for name in env_names:
             os.environ.pop(name, None)
