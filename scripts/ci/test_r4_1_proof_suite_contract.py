@@ -110,6 +110,11 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
         )
         self.assertIn("adaptive_asymmetric_earthwork_envelope", wrapper)
         self.assertIn("minimum_protected_clearance_m", wrapper)
+        self.assertIn("make_curvature_superelevation_angles(", capture)
+        self.assertIn("apply_superelevation_to_profiles(", capture)
+        self.assertIn('"mode": "curvature_bounded_presentation"', capture)
+        self.assertIn("superelevation.peak_abs_bank_deg", wrapper)
+        self.assertIn("superelevation.maximum_adjacent_delta_deg", wrapper)
         self.assertNotIn("proof_viewmode -ne 'lit'", wrapper)
 
     def test_child_wrappers_fail_closed_before_reuse(self) -> None:
