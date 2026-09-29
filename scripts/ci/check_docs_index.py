@@ -41,7 +41,7 @@ REQUIRED_LINKS = {
 def read_utf8(path: Path) -> str:
     text = path.read_text(encoding="utf-8")
     if "\ufffd" in text:
-        raise ValueError(f"{path.relative_to(ROOT)} contains Unicode replacement characters")
+        raise ValueError(\n            f"{path.relative_to(ROOT)} contains Unicode replacement characters"\n        )
     return text
 
 
@@ -61,7 +61,7 @@ def local_targets(source: Path, text: str) -> set[Path]:
         ).resolve()
 
         if not candidate.is_relative_to(ROOT):
-            raise ValueError(f"{source.relative_to(ROOT)} links outside repository: {raw}")
+            raise ValueError(\n                f"{source.relative_to(ROOT)} links outside repository: {raw}"\n            )
         targets.add(candidate)
     return targets
 
@@ -117,7 +117,7 @@ def main() -> int:
         }
         missing_top_level = sorted(top_level - indexed_top_level)
         if missing_top_level:
-            return fail("top-level docs missing from index: " + ", ".join(missing_top_level))
+            return fail(\n                "top-level docs missing from index: " + ", ".join(missing_top_level)\n            )
         print("docs-index: freshness PASS")
     except (OSError, UnicodeError, ValueError) as exc:
         return fail(str(exc))
