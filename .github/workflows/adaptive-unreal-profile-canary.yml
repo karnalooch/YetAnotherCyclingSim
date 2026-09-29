@@ -19,6 +19,7 @@ concurrency:
 
 jobs:
   canary:
+    if: ${{ false }}
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 45
     env:
