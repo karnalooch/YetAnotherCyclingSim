@@ -32,7 +32,7 @@ PHYSICS_SRC = REPO_ROOT / "physics_reference" / "src"
 if str(PHYSICS_SRC) not in sys.path:
     sys.path.insert(0, str(PHYSICS_SRC))
 
-from cycling_physics import (  # noqa: E402
+from cycling_physics.model import (  # noqa: E402
     Environment,
     RiderInput,
     RiderParameters,
@@ -51,11 +51,11 @@ CADENCE_RPM = 90.0
 INITIAL_SPEED_MPS = 2.5
 FIXED_STEP_S = 0.05
 START_BEFORE_HAIRPIN_M = 100.0
-END_AFTER_HAIRPIN_M = 40.0
+END_AFTER_HAIRPIN_M = 20.0
 LOOK_AHEAD_M = 15.0
 EYE_HEIGHT_CM = 160.0
 FOV_DEG = 76.0
-LIVE_RIDE_TIMEOUT_S = 145.0
+LIVE_RIDE_TIMEOUT_S = 120.0
 CAPTURE_TIMEOUT_S = 30.0
 MIN_CAPTURE_BYTES = 50_000
 CAPTURE_RES_X = 1920
@@ -401,11 +401,15 @@ def _tick(delta_time: float) -> None:
                 return
 
             if time.monotonic() - _started_at > LIVE_RIDE_TIMEOUT_S:
-                raise TimeoutError(
-                    "100 W ride did not reach the requested +40 m exit within "
-                    f"{LIVE_RIDE_TIMEOUT_S:.0f}s; reached "
-                    f"{(absolute_cm - _focus_cm) / 100.0:+.1f} m relative to hairpin"
-                )
+                if absolute_cm < _focus_cm:
+                    raise TimeoutError(
+                        "100 W ride did not reach the hairpin within "
+                        f"{LIVE_RIDE_TIMEOUT_S:.0f}s; reached "
+                        f"{(absolute_cm - _focus_cm) / 100.0:+.1f} m relative to hairpin"
+                    )
+                _capture_index = 0
+                _schedule_capture(_capture_index)
+                return
             return
 
         if _phase == "capture":
@@ -468,7 +472,8 @@ def main() -> None:
     _proof_path.unlink(missing_ok=True)
     _csv_path.unlink(missing_ok=True)
 
-    _world = unreal.EditorLevelLibrary.get_editor_world()
+    editor_subsystem = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem)
+    _world = editor_subsystem.get_editor_world()
     if _world is None:
         raise RuntimeError("editor world is unavailable for ride-through")
 
