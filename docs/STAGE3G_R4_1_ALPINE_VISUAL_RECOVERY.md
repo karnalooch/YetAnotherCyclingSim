@@ -291,7 +291,11 @@ geometry**:
 - taper the local correction inward from that pinned seam;
 - keep the visible meso surface at or above the sampled macro Landscape so the
   underlying heightfield cannot reappear through depth/occlusion conflicts;
-- exclude the complete local road-bench / earthwork envelope from meso-ground triangles (the current proof reserves 10.5 m from the centerline, beyond the ±10 m earthwork profile);
+- keep the road/shoulder corridor protected while allowing a bounded road-facing
+  transition overlap: B.4.1 starts from the earthwork outer extent plus 0.50 m
+  clearance, then permits 0.65 m of meso overlap, so the pinned meso boundary
+  may tuck at most 0.15 m beneath the dedicated outer earthwork edge instead of
+  exposing a strip of macro Landscape between the two presentation systems;
 - preserve official SP638 centerline XY and Road Physics Profile authority;
 - keep the patch transient until exact-SHA technical proof and human visual
   review accept the geometry.
@@ -311,6 +315,16 @@ applies a neutral material affected only by lighting and excludes source normal
 maps, so the human reviewer can judge silhouette, seams, overlaps and occlusion
 without BaseColor/material noise. This is a diagnostic geometry view only; it
 does not replace the later production-material/dressing acceptance view.
+
+Human review of the later Lighting Only frame narrowed the remaining B.4 failure
+to the road-facing interface: topology and source-height guards still passed, but
+long dark wedges remained where dedicated earthwork, exposed macro Landscape and
+meso ground met. B.4.1 therefore changes only that seam. The meso cutout now
+uses a deterministic transition overlap that produces at most 0.15 m of underlap
+beneath the outer earthwork tie while preserving the pinned MASE boundary and the
+existing non-negative meso-vs-Landscape lift contract. SP638 XY, measured
+crossfall, the Road Physics Profile, source DEM and broad smoothing policy remain
+unchanged.
 
 #### Real-data-first road-bank boundary
 
