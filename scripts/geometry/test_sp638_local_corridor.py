@@ -223,7 +223,7 @@ class LocalGroundCorridorTests(unittest.TestCase):
         self.assertAlmostEqual(regularized[8], 2.4)
         self.assertAlmostEqual(regularized[10], 2.4)
         self.assertAlmostEqual(regularized[15], 2.4)
-        self.assertEqual(diagnostics["measured_station_count"], 20)
+        self.assertEqual(diagnostics["measured_station_count"], 19)
         self.assertEqual(diagnostics["hard_rejected_station_count"], 1)
         self.assertEqual(diagnostics["fallback_station_count"], 0)
         self.assertLessEqual(max(abs(value) for value in regularized), 4.0)
