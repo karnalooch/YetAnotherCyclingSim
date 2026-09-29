@@ -1,4 +1,4 @@
-name: Drain superseded Passo Giau authoring
+name: Cancel superseded Passo Giau authoring run
 
 on:
   push:
@@ -7,16 +7,24 @@ on:
     paths:
       - '.github/workflows/drain-legacy-passo-giau-author.yml'
 
-permissions: {}
+permissions:
+  actions: write
+  contents: read
 
 concurrency:
-  group: passo-giau-r4-1b-landscape-author-${{ github.repository }}-feat/247-r4-1b4-meso-ground
+  group: cancel-superseded-passo-giau-authoring-${{ github.repository }}
   cancel-in-progress: true
 
 jobs:
-  drain:
+  cancel:
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          echo "legacy authoring concurrency drained"
-          sleep 2
+      - name: Cancel exact superseded legacy run
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GH_REPO}/actions/runs/36638798865/cancel"
+          echo "cancel requested for superseded run 36638798865"
