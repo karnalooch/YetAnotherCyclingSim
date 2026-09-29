@@ -168,6 +168,12 @@ if ([bool]$Proof.offscreen_camera_capture -ne $false) {
 if ([bool]$Proof.viewport_game_view -ne $true) {
     throw 'SP638 visual proof did not keep the Level Editor viewport in Game View.'
 }
+if ([bool]$Proof.viewport_viewmode_verified -ne $true) {
+    throw 'SP638 visual proof did not read back Lighting Only from the active editor viewport.'
+}
+if ([string]$Proof.viewmode_binding_api -ne 'AutomationLibrary.set_editor_active_viewport_view_mode') {
+    throw "SP638 visual proof used an unexpected viewmode binding API: '$($Proof.viewmode_binding_api)'."
+}
 if ([double]$Proof.viewport_fov_deg -lt 75.9 -or [double]$Proof.viewport_fov_deg -gt 76.1) {
     throw "SP638 visual proof rider viewport FOV drifted: $($Proof.viewport_fov_deg)."
 }
