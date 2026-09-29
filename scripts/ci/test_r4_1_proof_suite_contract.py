@@ -109,8 +109,11 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
             "AutomationLibrary.set_editor_active_viewport_view_mode",
             wrapper,
         )
-        self.assertIn("adaptive_asymmetric_earthwork_envelope", wrapper)
-        self.assertIn("minimum_protected_clearance_m", wrapper)
+        self.assertIn("road_first_landscape_conform", wrapper)
+        self.assertIn("official_sp638_gis", wrapper)
+        self.assertIn('"terrain_owned_by_landscape": True', capture)
+        self.assertIn('"custom_earthwork_mesh": False', capture)
+        self.assertIn('"custom_meso_ground_mesh": False', capture)
         self.assertIn("apply_superelevation_to_profiles(", capture)
         self.assertIn("regularize_measured_superelevation_angles(", capture)
         self.assertIn("_sample_mase_lidar_bank_angles(", capture)
@@ -200,6 +203,9 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
         )
         self.assertIn("stage3g_ride_through_sp638_local_corridor.py", dispatcher)
         self.assertIn('"local_corridor_ride_through"', dispatcher)
+        self.assertIn('"SP638_LocalCorridor_Asphalt"', ride)
+        self.assertNotIn('"SP638_LocalCorridor_Earthwork"', ride)
+        self.assertNotIn('"SP638_LocalMesoGround"', ride)
 
     def test_child_wrappers_fail_closed_before_reuse(self) -> None:
         for path in (
