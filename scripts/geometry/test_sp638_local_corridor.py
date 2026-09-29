@@ -226,8 +226,9 @@ class LocalGroundCorridorTests(unittest.TestCase):
             1.5,
             places=6,
         )
+        self.assertIsNotNone(diagnostics["selected_rms_residual_m"])
         self.assertLess(
-            float(diagnostics["selected_rms_residual_m"] or 1.0),
+            float(diagnostics["selected_rms_residual_m"]),
             1e-9,
         )
 
