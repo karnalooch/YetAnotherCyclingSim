@@ -34,6 +34,14 @@ class TerrainSkinSmoothingMetrics:
     max_abs_laplacian_after_m: float
 
 
+@dataclass(frozen=True)
+class TerrainRoadClearanceMetrics:
+    adjusted_sample_count: int
+    protected_sample_count: int
+    max_lowering_m: float
+    minimum_vertical_clearance_m: float
+
+
 def _validate_grid(heights: Sequence[Sequence[float]]) -> tuple[int, int]:
     if len(heights) < 3:
         raise ValueError("terrain skin needs at least 3 rows")
@@ -83,6 +91,7 @@ def smooth_height_grid(
     max_step_adjustment_m: float = 0.30,
     max_total_adjustment_m: float = 0.90,
     pinned_border_cells: int = 2,
+    boundary_blend_cells: int = 6,
 ) -> tuple[tuple[tuple[float, ...], ...], TerrainSkinSmoothingMetrics]:
     """Low-pass only local second-order height noise, with hard bounded edits.
 
@@ -105,6 +114,8 @@ def smooth_height_grid(
         raise ValueError("pinned_border_cells must be positive")
     if rows <= 2 * pinned_border_cells or columns <= 2 * pinned_border_cells:
         raise ValueError("terrain skin grid is too small for the pinned border")
+    if boundary_blend_cells < 1:
+        raise ValueError("boundary_blend_cells must be positive")
 
     original = tuple(tuple(float(value) for value in row) for row in heights)
     current = [list(row) for row in original]
@@ -140,7 +151,31 @@ def smooth_height_grid(
                 upper = original[row][column] + max_total_adjustment_m
                 current[row][column] = max(lower, min(upper, candidate))
 
-    result = tuple(tuple(row) for row in current)
+    tapered: list[tuple[float, ...]] = []
+    for row in range(rows):
+        values: list[float] = []
+        for column in range(columns):
+            edge_distance = min(
+                row,
+                column,
+                rows - 1 - row,
+                columns - 1 - column,
+            )
+            if edge_distance < pinned_border_cells:
+                weight = 0.0
+            else:
+                blend_distance = edge_distance - pinned_border_cells + 1
+                weight = min(
+                    1.0,
+                    blend_distance / float(boundary_blend_cells + 1),
+                )
+            values.append(
+                original[row][column]
+                + (current[row][column] - original[row][column]) * weight
+            )
+        tapered.append(tuple(values))
+
+    result = tuple(tapered)
     adjustments = [
         result[row][column] - original[row][column]
         for row in range(rows)
@@ -159,6 +194,133 @@ def smooth_height_grid(
         rms_adjustment_m=rms,
         max_abs_laplacian_before_m=before,
         max_abs_laplacian_after_m=after,
+    )
+
+
+def _nearest_centerline_projection_xy(
+    x_m: float,
+    y_m: float,
+    centerline: Sequence[Vec3],
+) -> tuple[float, float]:
+    if len(centerline) < 2:
+        raise ValueError("road-clearance centerline needs at least 2 stations")
+
+    best_distance_sq = math.inf
+    best_z_m = 0.0
+    found = False
+    for start, end in zip(centerline, centerline[1:]):
+        dx = end.x - start.x
+        dy = end.y - start.y
+        length_sq = dx * dx + dy * dy
+        if length_sq <= _EPSILON:
+            continue
+        t = ((x_m - start.x) * dx + (y_m - start.y) * dy) / length_sq
+        t = max(0.0, min(1.0, t))
+        projected_x = start.x + dx * t
+        projected_y = start.y + dy * t
+        distance_sq = (x_m - projected_x) ** 2 + (y_m - projected_y) ** 2
+        if distance_sq < best_distance_sq:
+            best_distance_sq = distance_sq
+            best_z_m = start.z + (end.z - start.z) * t
+            found = True
+
+    if not found:
+        raise ValueError("road-clearance centerline has no stable XY segment")
+    return math.sqrt(best_distance_sq), best_z_m
+
+
+def apply_road_clearance_to_height_grid(
+    x_coordinates_m: Sequence[float],
+    y_coordinates_descending_m: Sequence[float],
+    heights_m: Sequence[Sequence[float]],
+    centerline_world_m: Sequence[Vec3],
+    *,
+    protected_half_width_m: float = 4.0,
+    transition_width_m: float = 4.0,
+    minimum_surface_offset_m: float = -0.07,
+    vertical_clearance_m: float = 0.08,
+    max_lowering_m: float = 3.0,
+) -> tuple[tuple[tuple[float, ...], ...], TerrainRoadClearanceMetrics]:
+    """Lower only presentation terrain that could cover road/shoulder surfaces."""
+
+    rows, columns = _validate_grid(heights_m)
+    if len(x_coordinates_m) != columns:
+        raise ValueError("road-clearance x coordinate count does not match grid")
+    if len(y_coordinates_descending_m) != rows:
+        raise ValueError("road-clearance y coordinate count does not match grid")
+    if protected_half_width_m <= 0.0:
+        raise ValueError("protected_half_width_m must be positive")
+    if transition_width_m <= 0.0:
+        raise ValueError("transition_width_m must be positive")
+    if vertical_clearance_m <= 0.0:
+        raise ValueError("vertical_clearance_m must be positive")
+    if max_lowering_m <= 0.0:
+        raise ValueError("max_lowering_m must be positive")
+
+    result = [list(float(value) for value in row) for row in heights_m]
+    adjusted = 0
+    protected = 0
+    max_lowering = 0.0
+    minimum_clearance = math.inf
+    outer_width = protected_half_width_m + transition_width_m
+
+    for row, y_m in enumerate(y_coordinates_descending_m):
+        for column, x_m in enumerate(x_coordinates_m):
+            distance_m, road_z_m = _nearest_centerline_projection_xy(
+                float(x_m),
+                float(y_m),
+                centerline_world_m,
+            )
+            if distance_m > outer_width + _EPSILON:
+                continue
+
+            minimum_surface_z_m = road_z_m + minimum_surface_offset_m
+            allowed_terrain_z_m = minimum_surface_z_m - vertical_clearance_m
+            current_z_m = result[row][column]
+            if distance_m <= protected_half_width_m + _EPSILON:
+                weight = 1.0
+                protected += 1
+            else:
+                weight = max(
+                    0.0,
+                    min(
+                        1.0,
+                        (outer_width - distance_m) / transition_width_m,
+                    ),
+                )
+
+            if current_z_m > allowed_terrain_z_m + _EPSILON and weight > 0.0:
+                requested_lowering = (
+                    current_z_m - allowed_terrain_z_m
+                ) * weight
+                if requested_lowering > max_lowering_m + _EPSILON:
+                    raise ValueError(
+                        "road-clearance terrain lowering exceeds bounded limit: "
+                        f"{requested_lowering:.3f} m > {max_lowering_m:.3f} m"
+                    )
+                result[row][column] = current_z_m - requested_lowering
+                adjusted += 1
+                max_lowering = max(max_lowering, requested_lowering)
+
+            if distance_m <= protected_half_width_m + _EPSILON:
+                minimum_clearance = min(
+                    minimum_clearance,
+                    minimum_surface_z_m - result[row][column],
+                )
+
+    if protected == 0:
+        raise ValueError("road-clearance grid sampled no protected road cells")
+    if minimum_clearance < vertical_clearance_m - 1e-8:
+        raise ValueError(
+            "road-clearance contract was not preserved: "
+            f"{minimum_clearance:.6f} m < {vertical_clearance_m:.6f} m"
+        )
+
+    return tuple(tuple(row) for row in result), TerrainRoadClearanceMetrics(
+        adjusted_sample_count=adjusted,
+        protected_sample_count=protected,
+        max_lowering_m=max_lowering,
+        minimum_vertical_clearance_m=minimum_clearance,
     )
 
 
