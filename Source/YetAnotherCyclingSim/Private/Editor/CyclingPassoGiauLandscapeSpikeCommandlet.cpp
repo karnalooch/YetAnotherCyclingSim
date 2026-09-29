@@ -621,13 +621,13 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 			TEXT("Landscape edit-layer lookup failed after creation."));
 		return 1;
 	}
-	if (RoadEditLayer->GetNameBP() != RoadLayerName ||
-		BaseEditLayer->GetNameBP() != BaseLayerName)
+	if (RoadEditLayer->GetName() != RoadLayerName ||
+		BaseEditLayer->GetName() != BaseLayerName)
 	{
 		UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error,
 			TEXT("Landscape edit-layer naming drifted: base='%s' road='%s'."),
-			*BaseEditLayer->GetNameBP().ToString(),
-			*RoadEditLayer->GetNameBP().ToString());
+			*BaseEditLayer->GetName().ToString(),
+			*RoadEditLayer->GetName().ToString());
 		return 1;
 	}
 
