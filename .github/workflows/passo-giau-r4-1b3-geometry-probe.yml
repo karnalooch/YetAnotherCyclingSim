@@ -12,10 +12,6 @@ on:
       - 'scripts/ue/Test-YacsR4_1PreparedWorkspace.ps1'
       - 'scripts/ue/Invoke-YacsPassoGiauHairpinCorridorProof.ps1'
       - 'scripts/ci/test_r4_1_proof_suite_contract.py'
-      - 'scripts/ue/Invoke-YacsR4_1ProofSuite.ps1'
-      - 'scripts/ue/Test-YacsR4_1PreparedWorkspace.ps1'
-      - 'scripts/ue/Invoke-YacsPassoGiauHairpinCorridorProof.ps1'
-      - 'scripts/ci/test_r4_1_proof_suite_contract.py'
       - 'scripts/ue/probe_geometry_script_api.py'
       - 'scripts/ue/probe_sp638_local_corridor_topology.py'
       - 'scripts/ue/Invoke-YacsSp638CorridorTopologyProbe.ps1'
@@ -29,6 +25,10 @@ on:
     paths:
       - '.github/workflows/passo-giau-r4-1b3-geometry-probe.yml'
       - 'scripts/ue/Invoke-YacsGeometryScriptProbe.ps1'
+      - 'scripts/ue/Invoke-YacsR4_1ProofSuite.ps1'
+      - 'scripts/ue/Test-YacsR4_1PreparedWorkspace.ps1'
+      - 'scripts/ue/Invoke-YacsPassoGiauHairpinCorridorProof.ps1'
+      - 'scripts/ci/test_r4_1_proof_suite_contract.py'
       - 'scripts/ue/probe_geometry_script_api.py'
       - 'scripts/ue/probe_sp638_local_corridor_topology.py'
       - 'scripts/ue/Invoke-YacsSp638CorridorTopologyProbe.ps1'
@@ -135,11 +135,21 @@ jobs:
             -ExpectedHead '${{ github.event_name == 'workflow_dispatch' && inputs.exact_sha || github.sha }}' `
             -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR4_1/PreparedSuite'
 
-      - name: Upload prepared R4.1 proof-suite evidence
-        if: ${{ always() }}
+      - name: Upload reusable successful R4.1 proof evidence
+        if: ${{ success() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: proof-r4-1b3-geometry-${{ inputs.exact_sha }}
+          path: |
+            _r4-1b3-geometry-probe-worktree/Saved/RuntimeProof/CI/Stage3GR4_1/PreparedSuite/**
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload failed R4.1 proof diagnostics
+        if: ${{ failure() || cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: diagnostic-r4-1b3-geometry-${{ inputs.exact_sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             _r4-1b3-geometry-probe-worktree/Saved/RuntimeProof/CI/Stage3GR4_1/PreparedSuite/**
           if-no-files-found: warn
