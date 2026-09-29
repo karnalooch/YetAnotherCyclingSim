@@ -159,32 +159,41 @@ if ([string]$Proof.proof_viewmode -ne 'lit') {
 if ([bool]$Proof.neutral_landscape_material -ne $true) {
     throw 'SP638 visual proof did not apply the required neutral Landscape proof material.'
 }
-if ([bool]$Proof.local_terrain_skin.world_aligned -ne $true) {
-    throw 'SP638 visual proof terrain skin is not world-aligned.'
+if ([string]$Proof.local_meso_ground.mode -ne 'bounded_meso_ground') {
+    throw "SP638 visual proof did not use the bounded R4.1B.4 meso-ground path: $($Proof.local_meso_ground.mode)"
 }
-if ([bool]$Proof.local_terrain_skin.canonical_road_xy_modified -ne $false) {
-    throw 'SP638 visual proof terrain skin modified canonical road XY.'
+if ([bool]$Proof.local_meso_ground.world_aligned -ne $true) {
+    throw 'SP638 visual proof meso ground is not world-aligned.'
 }
-if ([bool]$Proof.local_terrain_skin.landscape_hidden_after_sampling -ne $false) {
+if ([bool]$Proof.local_meso_ground.canonical_road_xy_modified -ne $false) {
+    throw 'SP638 visual proof meso ground modified canonical road XY.'
+}
+if ([bool]$Proof.local_meso_ground.landscape_hidden_after_sampling -ne $false) {
     throw 'SP638 visual proof unexpectedly hid the corrected MASE Landscape after sampling.'
 }
-if ([bool]$Proof.local_terrain_skin.macro_landscape_visible -ne $true) {
+if ([bool]$Proof.local_meso_ground.macro_landscape_visible -ne $true) {
     throw 'SP638 visual proof did not keep the corrected MASE Landscape visible as macro terrain.'
 }
-if ([double]$Proof.local_terrain_skin.grid_step_m -gt 4.01) {
-    throw "SP638 terrain skin grid is too coarse: $($Proof.local_terrain_skin.grid_step_m) m"
+if ([double]$Proof.local_meso_ground.grid_step_m -gt 2.01) {
+    throw "SP638 meso-ground sampling grid is too coarse: $($Proof.local_meso_ground.grid_step_m) m"
 }
-if ([int]$Proof.local_terrain_skin.sample_count -lt 10000) {
-    throw "SP638 terrain skin sampled too few points: $($Proof.local_terrain_skin.sample_count)"
+if ([int]$Proof.local_meso_ground.sample_count -lt 14000) {
+    throw "SP638 meso ground sampled too few points: $($Proof.local_meso_ground.sample_count)"
 }
-if ([double]$Proof.local_terrain_skin.max_abs_adjustment_m -gt 0.901) {
-    throw "SP638 terrain skin exceeded bounded smoothing: $($Proof.local_terrain_skin.max_abs_adjustment_m) m"
+if ([double]$Proof.local_meso_ground.max_abs_adjustment_m -gt 3.031) {
+    throw "SP638 meso ground exceeded bounded local correction: $($Proof.local_meso_ground.max_abs_adjustment_m) m"
 }
-if ([double]$Proof.local_terrain_skin.max_abs_laplacian_after_m -ge [double]$Proof.local_terrain_skin.max_abs_laplacian_before_m) {
-    throw 'SP638 terrain skin did not reduce high-frequency height curvature.'
+if ([double]$Proof.local_meso_ground.boundary_max_abs_adjustment_m -gt 0.000001) {
+    throw "SP638 meso-ground seam is not pinned to source terrain: $($Proof.local_meso_ground.boundary_max_abs_adjustment_m) m"
 }
-if ([int]$Proof.local_geometry.terrain_skin.triangles -lt 25000) {
-    throw 'SP638 rider-close terrain skin mesh is unexpectedly sparse.'
+if ([double]$Proof.local_meso_ground.minimum_protected_distance_m -lt 4.49) {
+    throw "SP638 meso ground entered the protected road/shoulder corridor: $($Proof.local_meso_ground.minimum_protected_distance_m) m"
+}
+if ([double]$Proof.local_meso_ground.max_abs_laplacian_after_m -ge [double]$Proof.local_meso_ground.max_abs_laplacian_before_m) {
+    throw 'SP638 meso-ground target did not reduce high-frequency height curvature.'
+}
+if ([int]$Proof.local_geometry.meso_ground.triangles -lt 8000) {
+    throw 'SP638 rider-close meso-ground mesh is unexpectedly sparse.'
 }
 
 if (-not $ValidateOnly) {
@@ -206,6 +215,6 @@ if ($TrackedChanges.Count -gt 0) {
     throw ("SP638 local-corridor visual proof mutated tracked files: {0}" -f ($TrackedChanges -join '; '))
 }
 
-Write-Host 'R4.1B.3 continuous SP638 local-corridor visual proof: PASS.' -ForegroundColor Green
+Write-Host 'R4.1B.4 bounded SP638 meso-ground visual proof: PASS.' -ForegroundColor Green
 Write-Host ("Rendered proof: {0}" -f $CapturePng)
 exit 0
