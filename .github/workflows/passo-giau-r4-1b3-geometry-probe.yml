@@ -16,7 +16,7 @@ on:
       - 'YetAnotherCyclingSim.uproject'
   pull_request:
     branches:
-      - feat/stage3g-r4-1-hairpin-corridor-spike
+      - main
     paths:
       - '.github/workflows/passo-giau-r4-1b3-geometry-probe.yml'
       - 'scripts/ue/Invoke-YacsGeometryScriptProbe.ps1'
@@ -63,6 +63,10 @@ jobs:
         run: python -m py_compile scripts/ue/stage3g_capture_sp638_local_corridor.py
 
   probe:
+    # Interim cost-control gate: keep deterministic kernel checks automatic,
+    # but run the heavy trusted-runner UE proof only on explicit dispatch until
+    # the R4.1 build-once / prove-many pipeline is implemented.
+    if: github.event_name == 'workflow_dispatch'
     needs: kernel-tests
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 30
