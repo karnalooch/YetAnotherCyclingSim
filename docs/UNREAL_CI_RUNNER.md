@@ -105,6 +105,34 @@ Next:
 9. [ ] Promote the reusable generic C++ Unreal lane to automatic trusted execution.
 10. [ ] Add generic Unreal C++ validation to Aggregate CI only in Phase 3 and reconfirm #22 branch protection first.
 
+## Adaptive Unreal build parallelism
+
+Tracked by issue #257.
+
+The generic self-hosted Unreal lane keeps UBA disabled because PR #143 recorded
+a real Windows error 1455 / `VirtualAlloc failed` when the host was near its
+virtual-memory commit limit. The CI profile therefore does **not** re-enable UBA
+as a speed optimization.
+
+The previous fixed `MaxParallelActions=2` cap was replaced by a bounded,
+memory-aware policy using the preflight `FreeVirtualGb` value:
+
+- below 8 GiB free virtual memory: 2 actions;
+- 8 to <14 GiB: 3 actions;
+- 14 GiB or more: 4 actions;
+- the result is also capped to roughly two-thirds of reported logical CPUs.
+
+The selected cap is written only to the run-local
+`Saved/UnrealBuildTool/BuildConfiguration.xml` and is printed in the build log.
+If memory pressure returns, CI automatically falls back toward 2 actions rather
+than requiring another repository change.
+
+The optimization baseline from 2026-09-29 was a green 22-action editor build on
+the trusted runner with 6 physical/6 logical CPUs and 31.92 GiB RAM:
+`MaxParallelActions=2`, UBA disabled, UBT execution time **165.07 s**. Changes
+to this policy should compare against that baseline and keep the exact-head
+Automation gate green.
+
 ## R4.1 in-job prepared workspace reuse
 
 Issue #234 adds a narrow exception to repeated setup work, not to trust boundaries. A single manually dispatched R4.1 proof-suite job may reuse one prepared exact-SHA worktree across capability, topology, bounded hairpin and rider-close visual proofs.

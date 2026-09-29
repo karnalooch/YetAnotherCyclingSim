@@ -1,0 +1,83 @@
+name: Adaptive Unreal parallelism canary
+
+on:
+  push:
+    branches:
+      - ci/257-adaptive-unreal-parallelism
+    paths:
+      - '.github/workflows/adaptive-unreal-profile-canary.yml'
+      - 'scripts/ue/Invoke-YacsProof.ps1'
+      - 'scripts/ci/Invoke-YacsUnrealCi.ps1'
+      - 'scripts/ci/test_unreal_ci_build_profile.py'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: adaptive-unreal-profile-canary-${{ github.repository }}
+  cancel-in-progress: true
+
+jobs:
+  canary:
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 45
+    env:
+      GIT_LFS_SKIP_SMUDGE: "1"
+      YACS_UNREAL_WORKTREE: _adaptive-unreal-canary-${{ github.run_id }}-${{ github.run_attempt }}
+
+    steps:
+      - name: Isolate self-hosted Git configuration
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'yacs-adaptive-unreal-global.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+
+      - name: Checkout exact branch revision without LFS payloads
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: ${{ env.YACS_UNREAL_WORKTREE }}
+          ref: ${{ github.sha }}
+          fetch-depth: 20
+          lfs: false
+          clean: true
+          persist-credentials: false
+
+      - name: Enforce code-only checkout
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+
+      - name: Run build-profile contract
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: python -m unittest scripts.ci.test_unreal_ci_build_profile
+
+      - name: Run exact-SHA Unreal build and Automation
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: ./scripts/ci/Invoke-YacsUnrealCi.ps1 -ExpectedHead '${{ github.sha }}'
+
+      - name: Upload proof
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: adaptive-unreal-profile-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/Unreal/**/*.json
+            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/Unreal/**/*.txt
+            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/Unreal/**/*.log
+          if-no-files-found: warn
+          retention-days: 3
+
+      - name: Clean worktree
+        if: ${{ always() }}
+        shell: pwsh
+        run: |
+          $root = Join-Path $env:GITHUB_WORKSPACE $env:YACS_UNREAL_WORKTREE
+          if (Test-Path -LiteralPath $root) {
+            git -C $root reset --hard
+            git -C $root clean -ffdx -e Saved/Logs/YetAnotherCyclingSim.log
+          }
