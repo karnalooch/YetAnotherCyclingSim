@@ -44,8 +44,10 @@
 
 .PARAMETER ConservativeBuild
     Write an ephemeral project-local UBT BuildConfiguration.xml under
-    Saved/UnrealBuildTool that disables UBA and limits compilation to two
-    parallel actions. Intended for resource-constrained self-hosted CI only.
+    Saved/UnrealBuildTool that keeps UBA disabled after the historical
+    VirtualAlloc/1455 failure, but chooses a bounded 2/3/4 parallel-action
+    cap from live virtual-memory headroom and CPU count. Intended for
+    resource-constrained self-hosted CI only.
 
 .PARAMETER TestFilter
     Override the default test filter. The default matches the Stage 2
@@ -190,17 +192,50 @@ if ($ConservativeBuild) {
     $UbtConfigDir = Join-Path -Path $RepoRoot -ChildPath 'Saved/UnrealBuildTool'
     New-Item -ItemType Directory -Path $UbtConfigDir -Force | Out-Null
     $UbtConfigPath = Join-Path -Path $UbtConfigDir -ChildPath 'BuildConfiguration.xml'
-    @'
+
+    # Keep UBA disabled: PR #143 proved that this host can exhaust virtual
+    # memory inside UBA (Windows 1455 / VirtualAlloc failed). The slow part we
+    # can safely relax is the old fixed MaxParallelActions=2 cap.
+    $LogicalProcessors = [Math]::Max(1, [Environment]::ProcessorCount)
+    $FreeVirtualGb = [double]$Context.Machine.FreeVirtualGb
+
+    # Memory-first bounded policy:
+    #   < 8 GiB free virtual memory  -> 2 actions
+    #   8..13.99 GiB                -> 3 actions
+    #   >= 14 GiB                   -> 4 actions
+    # The CPU cap prevents selecting more than roughly 2/3 of the available
+    # logical processors, while retaining a floor of 2 for the trusted runner.
+    $CpuActionCap = [Math]::Max(2, [Math]::Floor($LogicalProcessors * 0.67))
+    if ($FreeVirtualGb -ge 14.0) {
+        $MemoryActionCap = 4
+    }
+    elseif ($FreeVirtualGb -ge 8.0) {
+        $MemoryActionCap = 3
+    }
+    else {
+        $MemoryActionCap = 2
+    }
+    $MaxParallelActions = [int][Math]::Min($MemoryActionCap, $CpuActionCap)
+    $MaxParallelActions = [int][Math]::Max(2, $MaxParallelActions)
+
+    $UbtConfig = @"
 <?xml version="1.0" encoding="utf-8" ?>
 <Configuration xmlns="https://www.unrealengine.com/BuildConfiguration">
   <BuildConfiguration>
     <bAllowUBAExecutor>false</bAllowUBAExecutor>
     <bAllowUBALocalExecutor>false</bAllowUBALocalExecutor>
-    <MaxParallelActions>2</MaxParallelActions>
+    <MaxParallelActions>$MaxParallelActions</MaxParallelActions>
   </BuildConfiguration>
 </Configuration>
-'@ | Set-Content -LiteralPath $UbtConfigPath -Encoding UTF8
-    Write-Host ("CI conservative UBT profile: UBA disabled; MaxParallelActions=2; config={0}" -f $UbtConfigPath) -ForegroundColor Yellow
+"@
+    $UbtConfig | Set-Content -LiteralPath $UbtConfigPath -Encoding UTF8
+    Write-Host (
+        "CI adaptive UBT profile: UBA disabled; MaxParallelActions={0}; logicalProcessors={1}; freeVirtualGb={2:N2}; config={3}" -f
+        $MaxParallelActions,
+        $LogicalProcessors,
+        $FreeVirtualGb,
+        $UbtConfigPath
+    ) -ForegroundColor Yellow
 }
 
 if (-not $SkipBuild) {

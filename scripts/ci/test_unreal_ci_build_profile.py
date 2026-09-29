@@ -17,7 +17,7 @@ class UnrealCiBuildProfileTests(unittest.TestCase):
         cls.ci_wrapper = CI_WRAPPER.read_text(encoding="utf-8")
         cls.preflight = PREFLIGHT.read_text(encoding="utf-8")
 
-    def test_ci_wrapper_always_uses_conservative_build_profile(self):
+    def test_ci_wrapper_uses_resource_aware_conservative_build_profile(self):
         self.assertIn("ConservativeBuild = $true", self.ci_wrapper)
         self.assertIn("$ProofArgs", self.ci_wrapper)
 
@@ -33,8 +33,20 @@ class UnrealCiBuildProfileTests(unittest.TestCase):
             self.proof,
         )
 
-    def test_conservative_profile_limits_parallel_actions(self):
-        self.assertIn("<MaxParallelActions>2</MaxParallelActions>", self.proof)
+    def test_conservative_profile_adapts_parallel_actions_to_headroom(self):
+        for token in (
+            "$FreeVirtualGb -ge 14.0",
+            "$FreeVirtualGb -ge 8.0",
+            "$MemoryActionCap = 4",
+            "$MemoryActionCap = 3",
+            "$MemoryActionCap = 2",
+            "[Environment]::ProcessorCount",
+            "$LogicalProcessors * 0.67",
+            "<MaxParallelActions>$MaxParallelActions</MaxParallelActions>",
+            "CI adaptive UBT profile",
+        ):
+            self.assertIn(token, self.proof)
+        self.assertNotIn("<MaxParallelActions>2</MaxParallelActions>", self.proof)
 
     def test_preflight_records_memory_and_pagefile_headroom(self):
         for token in (
