@@ -707,13 +707,23 @@ def make_curvature_adaptive_profiles(
             (diagnostics.first_overlap[0], diagnostics.first_overlap[1]),
             (diagnostics.first_overlap[2], diagnostics.first_overlap[3]),
         ):
-            if lateral_index == 0:
-                requested.append((False, station_index))
-            elif lateral_index == len(profile) - 2:
+            left_point = profile[lateral_index]
+            right_point = profile[lateral_index + 1]
+            positive_earthwork = (
+                left_point.lateral_m >= right_shoulder - _EPSILON
+                and right_point.lateral_m > right_shoulder + _EPSILON
+            )
+            negative_earthwork = (
+                right_point.lateral_m <= -left_shoulder + _EPSILON
+                and left_point.lateral_m < -left_shoulder - _EPSILON
+            )
+            if positive_earthwork:
                 requested.append((True, station_index))
+            elif negative_earthwork:
+                requested.append((False, station_index))
             else:
-                # Never contract road/shoulder/interior earthwork to hide a
-                # non-local collision. Let strict mesh validation fail closed.
+                # Never contract protected shoulder/road bands to hide a
+                # non-local collision. Strict mesh validation owns rejection.
                 return result
 
         changed = False
