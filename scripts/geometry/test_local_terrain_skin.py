@@ -102,7 +102,11 @@ class LocalTerrainSkinTests(unittest.TestCase):
         ys = (4.2, 0.0, -4.2)
         # Exact-head R4.1B.3.1 proof measured a 4.467 m weighted correction
         # 4.2 m from the centerline, just outside the protected 4.0 m shoulder.
-        heights = tuple(tuple(14.702 for _ in xs) for _ in ys)
+        heights = (
+            (9.0, 14.552105263, 9.0),
+            (9.0, 9.0, 9.0),
+            (9.0, 9.0, 9.0),
+        )
         centerline = (Vec3(-4.2, 0.0, 10.0), Vec3(4.2, 0.0, 10.0))
 
         _, metrics = apply_road_clearance_to_height_grid(
