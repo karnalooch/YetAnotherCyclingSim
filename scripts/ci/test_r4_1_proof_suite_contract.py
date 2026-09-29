@@ -132,6 +132,19 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
         self.assertIn("dynamic_mesh.set_per_vertex_normals()", spawn)
         self.assertNotIn("dynamic_mesh.recompute_normals(", spawn)
 
+    def test_transient_dynamic_mesh_tangent_mode_is_recorded_not_changed(
+        self,
+    ) -> None:
+        # Diagnostic only: B.4.6 geometry fix must remain the single render
+        # change under test, so the tangent mode is reported, never overridden.
+        capture = read("scripts/ue/stage3g_capture_sp638_local_corridor.py")
+        spawn = capture.split("def _spawn_dynamic_mesh(", 1)[1].split(
+            "\ndef main()", 1
+        )[0]
+        self.assertIn("str(component.get_tangents_type())", spawn)
+        self.assertIn('"tangents_type": tangents_type', spawn)
+        self.assertNotIn("set_tangents_type(", spawn)
+
     def test_local_corridor_capture_waits_for_png_flush_and_uses_neutral_light(
         self,
     ) -> None:

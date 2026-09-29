@@ -416,6 +416,17 @@ kernel test prevents future XY-only contraction, and the heavy proof now records
 unit-normal orientation diagnostics for meso, earthwork, shoulders and asphalt
 so any remaining dark ribbon can be distinguished from a genuinely steep face.
 
+B.4.6 also records each transient DynamicMesh's `tangents_type` in the proof
+JSON, without changing it. Reason: `DynamicMeshComponent` defaults to
+`TangentsType=Default` ("From Dynamic Mesh"), while these proof buffers carry
+no UV or tangent layer. In the B.4.4/B.4.5 frames the only visible DynamicMesh
+pixels are the earthwork wedge and the meso line, so those frames cannot tell
+steep geometry apart from a missing tangent frame. If the slope-preserving
+proof still shows black owned pixels while `surface_orientation` reports
+healthy normals, the missing tangent frame becomes the next single candidate
+(`NoTangents` for the untextured proof material). It is not applied together
+with the geometry fix, so the next exact-SHA run can attribute the result.
+
 
 
 #### Real-data-first road-bank boundary

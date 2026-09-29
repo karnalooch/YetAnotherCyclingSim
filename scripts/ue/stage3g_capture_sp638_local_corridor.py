@@ -973,7 +973,7 @@ def _spawn_dynamic_mesh(
     mesh,
     label: str,
     material,
-) -> dict[str, int]:
+) -> dict[str, object]:
     actor = actor_subsystem.spawn_actor_from_class(
         unreal.DynamicMeshActor,
         origin_world,
@@ -1015,6 +1015,11 @@ def _spawn_dynamic_mesh(
     # back implicitly. Initialize the overlay explicitly so Lighting Only proof
     # uses deterministic per-vertex normals for every transient proof mesh.
     dynamic_mesh.set_per_vertex_normals()
+    # Record-only diagnostic (no render change): TangentsType=Default reads
+    # tangents "From Dynamic Mesh", but these buffers carry no UV/tangent layer.
+    # If owned pixels stay black while surface_orientation reports healthy
+    # normals, this value makes the missing tangent frame the next candidate.
+    tangents_type = str(component.get_tangents_type())
     component.notify_mesh_modified()
     if material is not None:
         component.set_material(0, material)
@@ -1027,7 +1032,11 @@ def _spawn_dynamic_mesh(
             f"{vertex_count}/{triangle_count} != "
             f"{len(mesh.vertices)}/{len(mesh.triangles)}"
         )
-    return {"vertices": vertex_count, "triangles": triangle_count}
+    return {
+        "vertices": vertex_count,
+        "triangles": triangle_count,
+        "tangents_type": tangents_type,
+    }
 
 
 def main() -> None:
