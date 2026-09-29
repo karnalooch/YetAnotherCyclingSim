@@ -200,6 +200,49 @@ class LocalTerrainSkinTests(unittest.TestCase):
         self.assertGreaterEqual(metrics.minimum_protected_clearance_m or 0.0, -1e-9)
         self.assertLess(metrics.minimum_protected_distance_m or 99.0, 7.0)
 
+    def test_asymmetric_protected_width_opens_only_the_contracted_side(self) -> None:
+        xs = tuple(float(index * 2) for index in range(31))
+        ys = tuple(float(60 - index * 2) for index in range(31))
+        heights = tuple(
+            tuple(25.0 + row * 0.05 + column * 0.02 for column in range(31))
+            for row in range(31)
+        )
+        mesh, metrics = build_bounded_meso_ground_mesh(
+            xs,
+            ys,
+            heights,
+            heights,
+            origin_x_m=0.0,
+            origin_y_m=60.0,
+            origin_z_m=min(min(row) for row in heights),
+            center_x_m=30.0,
+            center_y_m=30.0,
+            radius_x_m=26.0,
+            radius_y_m=26.0,
+            protected_centerline_xy_m=(
+                (30.0, 0.0),
+                (30.0, 30.0),
+                (30.0, 60.0),
+            ),
+            protected_negative_half_widths_m=(3.0, 3.0, 3.0),
+            protected_positive_half_widths_m=(7.0, 7.0, 7.0),
+            seam_rings=2,
+            lift_m=0.03,
+        )
+
+        world_xs = [vertex.x for vertex in mesh.vertices]
+        negative_side_distances = [
+            x - 30.0 for x in world_xs if x > 30.0
+        ]
+        positive_side_distances = [
+            30.0 - x for x in world_xs if x < 30.0
+        ]
+        self.assertLess(min(negative_side_distances), 7.0)
+        self.assertGreaterEqual(min(positive_side_distances), 7.0)
+        self.assertAlmostEqual(metrics.minimum_protected_half_width_m or 0.0, 3.0)
+        self.assertAlmostEqual(metrics.maximum_protected_half_width_m or 0.0, 7.0)
+        self.assertGreaterEqual(metrics.minimum_protected_clearance_m or 0.0, -1e-9)
+
     def test_variable_protected_width_requires_one_width_per_station(self) -> None:
         xs = (0.0, 2.0, 4.0, 6.0, 8.0)
         ys = (8.0, 6.0, 4.0, 2.0, 0.0)
