@@ -153,6 +153,68 @@ class LocalTerrainSkinTests(unittest.TestCase):
                 heights[row][column],
             )
 
+    def test_protected_transition_overlap_creates_bounded_underlap(self) -> None:
+        xs = tuple(float(index * 2) for index in range(31))
+        ys = tuple(float(60 - index * 2) for index in range(31))
+        heights = tuple(tuple(42.0 for _ in xs) for _ in ys)
+        common = dict(
+            origin_x_m=0.0,
+            origin_y_m=60.0,
+            origin_z_m=42.0,
+            center_x_m=30.0,
+            center_y_m=30.0,
+            radius_x_m=26.0,
+            radius_y_m=26.0,
+            protected_centerline_xy_m=((30.0, 0.0), (30.0, 60.0)),
+            protected_half_width_m=7.0,
+            seam_rings=2,
+            lift_m=0.03,
+        )
+
+        baseline, _ = build_bounded_meso_ground_mesh(
+            xs,
+            ys,
+            heights,
+            heights,
+            **common,
+        )
+        overlapped, metrics = build_bounded_meso_ground_mesh(
+            xs,
+            ys,
+            heights,
+            heights,
+            protected_transition_overlap_m=1.0,
+            **common,
+        )
+
+        self.assertGreater(len(overlapped.vertices), len(baseline.vertices))
+        self.assertAlmostEqual(metrics.minimum_protected_half_width_m or 0.0, 6.0)
+        self.assertAlmostEqual(metrics.maximum_protected_half_width_m or 0.0, 6.0)
+        self.assertGreaterEqual(metrics.minimum_protected_clearance_m or 0.0, -1e-9)
+        self.assertAlmostEqual(metrics.boundary_max_abs_adjustment_m, 0.0)
+
+    def test_protected_transition_overlap_cannot_consume_protected_corridor(self) -> None:
+        xs = (0.0, 2.0, 4.0, 6.0, 8.0)
+        ys = (8.0, 6.0, 4.0, 2.0, 0.0)
+        heights = tuple(tuple(10.0 for _ in xs) for _ in ys)
+        with self.assertRaisesRegex(ValueError, "must stay inside"):
+            build_bounded_meso_ground_mesh(
+                xs,
+                ys,
+                heights,
+                heights,
+                origin_x_m=0.0,
+                origin_y_m=8.0,
+                origin_z_m=10.0,
+                center_x_m=4.0,
+                center_y_m=4.0,
+                radius_x_m=4.0,
+                radius_y_m=4.0,
+                protected_centerline_xy_m=((4.0, 0.0), (4.0, 8.0)),
+                protected_half_width_m=3.0,
+                protected_transition_overlap_m=3.0,
+            )
+
     def test_variable_protected_width_follows_actual_earthwork_envelope(self) -> None:
         xs = tuple(float(index * 2) for index in range(31))
         ys = tuple(float(60 - index * 2) for index in range(31))
