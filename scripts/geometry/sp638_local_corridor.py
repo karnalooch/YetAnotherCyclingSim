@@ -70,6 +70,13 @@ class CorridorMesh:
     cross_section_point_count: int
 
 
+@dataclass(frozen=True)
+class CorridorOverlapDiagnostics:
+    checked_pair_count: int
+    overlap_pair_count: int
+    first_overlap: tuple[int, int, int, int] | None
+
+
 def _xy_length(vector: Vec3) -> float:
     return math.hypot(vector.x, vector.y)
 
@@ -600,7 +607,7 @@ def make_curvature_adaptive_profiles(
             tangent_half_window_stations=curvature_half_window_stations,
         )
         if folded is None:
-            return result
+            break
 
         station_index, lateral_index = folded
 
@@ -677,21 +684,78 @@ def make_curvature_adaptive_profiles(
             )
             left_scales = _taper_scales(raw_left, taper_per_station)
 
+    max_overlap_iterations = max(16, len(centerline) * 2)
+    for _ in range(max_overlap_iterations):
+        result = build_profiles_from_scales()
+        if (
+            _first_folded_lateral_band(
+                centerline,
+                result,
+                tangent_half_window_stations=curvature_half_window_stations,
+            )
+            is not None
+        ):
+            return result
+
+        mesh = _assemble_corridor_mesh(
+            centerline,
+            result,
+            tangent_half_window_stations=curvature_half_window_stations,
+        )
+        diagnostics = corridor_global_overlap_diagnostics(mesh)
+        if diagnostics.overlap_pair_count == 0:
+            return result
+
+        if diagnostics.first_overlap is None:
+            raise ValueError("global overlap diagnostics lost first overlap identity")
+
+        requested: list[tuple[bool, int]] = []
+        for station_index, lateral_index in (
+            (diagnostics.first_overlap[0], diagnostics.first_overlap[1]),
+            (diagnostics.first_overlap[2], diagnostics.first_overlap[3]),
+        ):
+            if lateral_index == 0:
+                requested.append((False, station_index))
+            elif lateral_index == len(profile) - 2:
+                requested.append((True, station_index))
+            else:
+                # Never contract road/shoulder/interior earthwork to hide a
+                # non-local collision. Let strict mesh validation fail closed.
+                return result
+
+        changed = False
+        for positive_side, station_index in requested:
+            station_pair = (station_index, station_index + 1)
+            scales = right_scales if positive_side else left_scales
+            raw = raw_right if positive_side else raw_left
+            floor_scale = right_floor_scale if positive_side else left_floor_scale
+            current_scale = min(scales[index] for index in station_pair)
+            if current_scale <= floor_scale + _EPSILON:
+                continue
+
+            target_scale = max(
+                floor_scale,
+                0.5 * (current_scale + floor_scale),
+            )
+            for index in station_pair:
+                raw[index] = min(raw[index], target_scale)
+            changed = True
+
+        if not changed:
+            return result
+
+        left_scales = _taper_scales(raw_left, taper_per_station)
+        right_scales = _taper_scales(raw_right, taper_per_station)
+
     return build_profiles_from_scales()
 
 
-def build_corridor_mesh(
+def _assemble_corridor_mesh(
     centerline: Sequence[Vec3],
     profiles: Sequence[Sequence[CrossSectionPoint]],
     *,
     tangent_half_window_stations: int = 1,
 ) -> CorridorMesh:
-    """Sweep asymmetric cross-sections along a presentation-only centerline.
-
-    A wider tangent window changes only the local cross-section frame. It never
-    moves or resamples the canonical centerline stations.
-    """
-
     _validate_inputs(centerline, profiles)
     _validate_half_window_stations(
         tangent_half_window_stations,
@@ -736,6 +800,26 @@ def build_corridor_mesh(
     return mesh
 
 
+def build_corridor_mesh(
+    centerline: Sequence[Vec3],
+    profiles: Sequence[Sequence[CrossSectionPoint]],
+    *,
+    tangent_half_window_stations: int = 1,
+) -> CorridorMesh:
+    """Sweep asymmetric cross-sections and reject non-local overlap.
+
+    A wider tangent window changes only the local cross-section frame. It never
+    moves or resamples the canonical centerline stations.
+    """
+
+    mesh = _assemble_corridor_mesh(
+        centerline,
+        profiles,
+        tangent_half_window_stations=tangent_half_window_stations,
+    )
+    validate_corridor_global_topology(mesh)
+    return mesh
+
 def _cross(a: Vec3, b: Vec3) -> Vec3:
     return Vec3(
         a.y * b.z - a.z * b.y,
@@ -777,6 +861,180 @@ def validate_corridor_mesh(mesh: CorridorMesh) -> None:
                 f"triangle {triangle_index} is inverted or folded in XY"
             )
 
+
+
+def _orientation_xy(a: Vec3, b: Vec3, c: Vec3) -> float:
+    return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)
+
+
+def _strict_segment_intersection_xy(
+    a: Vec3,
+    b: Vec3,
+    c: Vec3,
+    d: Vec3,
+) -> bool:
+    ab_c = _orientation_xy(a, b, c)
+    ab_d = _orientation_xy(a, b, d)
+    cd_a = _orientation_xy(c, d, a)
+    cd_b = _orientation_xy(c, d, b)
+    return (
+        ab_c * ab_d < -_EPSILON
+        and cd_a * cd_b < -_EPSILON
+    )
+
+
+def _strict_point_in_triangle_xy(
+    point: Vec3,
+    a: Vec3,
+    b: Vec3,
+    c: Vec3,
+) -> bool:
+    o1 = _orientation_xy(a, b, point)
+    o2 = _orientation_xy(b, c, point)
+    o3 = _orientation_xy(c, a, point)
+    has_positive = max(o1, o2, o3) > _EPSILON
+    has_negative = min(o1, o2, o3) < -_EPSILON
+    if has_positive and has_negative:
+        return False
+    return min(abs(o1), abs(o2), abs(o3)) > _EPSILON
+
+
+def _triangles_overlap_xy(
+    first: tuple[Vec3, Vec3, Vec3],
+    second: tuple[Vec3, Vec3, Vec3],
+) -> bool:
+    first_edges = (
+        (first[0], first[1]),
+        (first[1], first[2]),
+        (first[2], first[0]),
+    )
+    second_edges = (
+        (second[0], second[1]),
+        (second[1], second[2]),
+        (second[2], second[0]),
+    )
+    if any(
+        _strict_segment_intersection_xy(a, b, c, d)
+        for a, b in first_edges
+        for c, d in second_edges
+    ):
+        return True
+    return (
+        _strict_point_in_triangle_xy(first[0], *second)
+        or _strict_point_in_triangle_xy(second[0], *first)
+    )
+
+
+def corridor_global_overlap_diagnostics(
+    mesh: CorridorMesh,
+    *,
+    minimum_station_gap: int = 2,
+    z_clearance_m: float = 0.05,
+) -> CorridorOverlapDiagnostics:
+    """Detect non-local swept-quad overlap without penalizing shared topology."""
+
+    if minimum_station_gap < 2:
+        raise ValueError("minimum_station_gap must be at least 2")
+    if z_clearance_m < 0.0:
+        raise ValueError("z_clearance_m cannot be negative")
+
+    width = mesh.cross_section_point_count
+    quads: list[
+        tuple[
+            int,
+            int,
+            tuple[Vec3, Vec3, Vec3, Vec3],
+            tuple[float, float, float, float, float, float],
+        ]
+    ] = []
+    for station_index in range(mesh.station_count - 1):
+        row = station_index * width
+        next_row = (station_index + 1) * width
+        for lateral_index in range(width - 1):
+            a = mesh.vertices[row + lateral_index]
+            b = mesh.vertices[row + lateral_index + 1]
+            c = mesh.vertices[next_row + lateral_index]
+            d = mesh.vertices[next_row + lateral_index + 1]
+            points = (a, b, c, d)
+            quads.append(
+                (
+                    station_index,
+                    lateral_index,
+                    points,
+                    (
+                        min(point.x for point in points),
+                        max(point.x for point in points),
+                        min(point.y for point in points),
+                        max(point.y for point in points),
+                        min(point.z for point in points),
+                        max(point.z for point in points),
+                    ),
+                )
+            )
+
+    checked = 0
+    overlaps = 0
+    first_overlap: tuple[int, int, int, int] | None = None
+    for index, first in enumerate(quads):
+        first_station, first_band, first_points, first_bounds = first
+        for second in quads[index + 1 :]:
+            second_station, second_band, second_points, second_bounds = second
+            if abs(first_station - second_station) < minimum_station_gap:
+                continue
+
+            if (
+                first_bounds[1] <= second_bounds[0] + _EPSILON
+                or second_bounds[1] <= first_bounds[0] + _EPSILON
+                or first_bounds[3] <= second_bounds[2] + _EPSILON
+                or second_bounds[3] <= first_bounds[2] + _EPSILON
+            ):
+                continue
+            if (
+                first_bounds[5] + z_clearance_m < second_bounds[4]
+                or second_bounds[5] + z_clearance_m < first_bounds[4]
+            ):
+                continue
+
+            checked += 1
+            first_triangles = (
+                (first_points[0], first_points[2], first_points[1]),
+                (first_points[1], first_points[2], first_points[3]),
+            )
+            second_triangles = (
+                (second_points[0], second_points[2], second_points[1]),
+                (second_points[1], second_points[2], second_points[3]),
+            )
+            if not any(
+                _triangles_overlap_xy(first_triangle, second_triangle)
+                for first_triangle in first_triangles
+                for second_triangle in second_triangles
+            ):
+                continue
+
+            overlaps += 1
+            if first_overlap is None:
+                first_overlap = (
+                    first_station,
+                    first_band,
+                    second_station,
+                    second_band,
+                )
+
+    return CorridorOverlapDiagnostics(
+        checked_pair_count=checked,
+        overlap_pair_count=overlaps,
+        first_overlap=first_overlap,
+    )
+
+
+def validate_corridor_global_topology(mesh: CorridorMesh) -> None:
+    diagnostics = corridor_global_overlap_diagnostics(mesh)
+    if diagnostics.overlap_pair_count > 0:
+        raise ValueError(
+            "corridor has non-local XY overlap: "
+            f"count={diagnostics.overlap_pair_count} "
+            f"first={diagnostics.first_overlap}"
+        )
 
 def corridor_mesh_hash(mesh: CorridorMesh) -> str:
     """Return a stable binary hash for deterministic-output regression tests."""

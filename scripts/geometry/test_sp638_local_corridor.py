@@ -6,9 +6,11 @@ import math
 import unittest
 
 from scripts.geometry.sp638_local_corridor import (
+    _assemble_corridor_mesh as _build_without_global_for_test,
     CrossSectionPoint,
     Vec3,
     build_corridor_mesh,
+    corridor_global_overlap_diagnostics,
     corridor_mesh_hash,
     make_constant_profiles,
     make_curvature_adaptive_profiles,
@@ -356,6 +358,66 @@ class LocalGroundCorridorTests(unittest.TestCase):
                 adaptive,
                 tangent_half_window_stations=3,
             )
+
+    def test_global_overlap_rejects_nonlocal_crossing_corridor(self) -> None:
+        centerline = (
+            Vec3(-12.0, 0.0, 0.0),
+            Vec3(-4.0, 0.0, 0.0),
+            Vec3(4.0, 0.0, 0.0),
+            Vec3(12.0, 0.0, 0.0),
+            Vec3(4.0, 8.0, 0.0),
+            Vec3(-4.0, 8.0, 0.0),
+            Vec3(-12.0, 8.0, 0.0),
+            Vec3(-4.0, 0.0, 0.0),
+        )
+        narrow = (
+            CrossSectionPoint(-1.0, 0.0, "left"),
+            CrossSectionPoint(1.0, 0.0, "right"),
+        )
+        with self.assertRaisesRegex(ValueError, "non-local XY overlap"):
+            build_corridor_mesh(
+                centerline,
+                make_constant_profiles(len(centerline), narrow),
+            )
+
+    def test_global_overlap_diagnostics_ignore_vertical_separation(self) -> None:
+        centerline = (
+            Vec3(-12.0, 0.0, 0.0),
+            Vec3(0.0, 0.0, 0.0),
+            Vec3(12.0, 0.0, 0.0),
+            Vec3(0.0, 0.0, 5.0),
+            Vec3(-12.0, 0.0, 5.0),
+        )
+        narrow = (
+            CrossSectionPoint(-1.0, 0.0, "left"),
+            CrossSectionPoint(1.0, 0.0, "right"),
+        )
+        profiles = make_constant_profiles(len(centerline), narrow)
+        mesh = _build_without_global_for_test(centerline, profiles)
+        diagnostics = corridor_global_overlap_diagnostics(mesh)
+        self.assertEqual(diagnostics.overlap_pair_count, 0)
+
+    def test_adaptive_profiles_contract_terminal_overlap_before_road_core(self) -> None:
+        radius = 5.5
+        angles = tuple(index * math.radians(6.0) for index in range(31))
+        centerline = tuple(
+            Vec3(
+                radius * math.sin(angle),
+                radius * (1.0 - math.cos(angle)),
+                index * 0.02,
+            )
+            for index, angle in enumerate(angles)
+        )
+        adaptive = make_curvature_adaptive_profiles(centerline, self.profile)
+        mesh = build_corridor_mesh(centerline, adaptive)
+        diagnostics = corridor_global_overlap_diagnostics(mesh)
+        self.assertEqual(diagnostics.overlap_pair_count, 0)
+
+        authored = {point.role: point.lateral_m for point in self.profile}
+        for station_profile in adaptive:
+            by_role = {point.role: point.lateral_m for point in station_profile}
+            self.assertAlmostEqual(by_role["left_road_edge"], authored["left_road_edge"])
+            self.assertAlmostEqual(by_role["right_road_edge"], authored["right_road_edge"])
 
     def test_adaptive_profiles_and_mesh_hash_are_deterministic(self) -> None:
         radius = 8.0
