@@ -108,7 +108,7 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 - [`ci/GITHUB_ACTIONS_PLATFORM.md`](ci/GITHUB_ACTIONS_PLATFORM.md) — Actions conventions.
 - [`ci/PROJECT_WORKFLOW.md`](ci/PROJECT_WORKFLOW.md) — project automation.
 
-## Legacy execution dossiers and evidence
+## Evidence, experiments and history
 
 These documents remain valuable but no longer define the active roadmap hierarchy:
 
