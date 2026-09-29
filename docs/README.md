@@ -39,7 +39,7 @@ The graph is a navigation aid, not a second source of truth. The linked document
 |---|---|
 | Delivery | **Stage 3G R4.1 — Alpine Visual Recovery** |
 | Golden visual slice | **1200 m** before full-route propagation |
-| Terrain | **MASE DTM macro terrain + R4.1B.4 bounded rider-close meso ground** |
+| Terrain | **MASE DTM macro terrain + R4.1B.8 road-first Landscape conform around real SP638** |
 | Road authority | **SP638 / route XY and Road Physics Profile remain authoritative; banking is real-data-first and never inferred from arbitrary render mesh or replaced by a fixed synthetic bank** |
 | Acceptance | **human visual review + exact-SHA performance/proof evidence** |
 | Next gate | **R5 stays blocked until R4.1 closeout is accepted** |
@@ -62,13 +62,13 @@ flowchart LR
     SOURCE["MASE LiDAR / DTM"] --> METRIC["Metric reprojection<br/>EPSG:32632"]
     METRIC --> GRID["Controlled terrain grid"]
     GRID --> LAND["UE Landscape<br/>macro terrain"]
-    LAND --> LOCAL["Bounded local<br/>terrain correction"]
-    LOCAL --> ROAD["SP638 road<br/>presentation"]
-    ROAD --> VIS["Visual proof"]
+    ROUTEGEOM["Official SP638 GIS<br/>canonical presentation XY"] --> ROAD["Banked asphalt + shoulders"]
+    LAND --> CONFORM["Bounded Landscape<br/>raise/lower + falloff"]
+    ROAD --> CONFORM
+    CONFORM --> VIS["Visual proof"]
     VIS --> PERF["Performance /<br/>closeout proof"]
 
     PHYS["Road Physics Profile<br/>route truth"] -. "authority preserved" .-> ROAD
-    ROUTEGEOM["Canonical route XY"] -. "not rewritten by terrain" .-> LOCAL
 ```
 
 This pipeline deliberately keeps **terrain presentation**, **road presentation** and **route/physics authority** separate. A visually better Landscape must not silently become physics truth.
