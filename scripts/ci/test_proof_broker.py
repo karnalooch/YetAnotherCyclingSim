@@ -201,6 +201,8 @@ class YacsProofBrokerContractTests(unittest.TestCase):
             workflow,
         )
         self.assertIn("actions: write", workflow)
+        self.assertEqual(workflow.count("pull-requests: write"), 2)
+        self.assertNotIn("pull-requests: read", workflow)
         self.assertNotIn("permissions: write-all", workflow)
 
 
