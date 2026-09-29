@@ -97,6 +97,18 @@ STAGES = (
         },
         asynchronous=True,
     ),
+    _stage(
+        "local_corridor_ride_through",
+        "scripts/ue/stage3g_ride_through_sp638_local_corridor.py",
+        "LocalCorridorRideThrough/ride_through_proof.json",
+        "sp638_local_corridor_ride_through",
+        environment={
+            "YACS_SP638_RIDE_THROUGH_PROOF": "LocalCorridorRideThrough/ride_through_proof.json",
+            "YACS_SP638_RIDE_THROUGH_FRAME_ROOT": "LocalCorridorRideThrough/frames",
+            "YACS_SP638_RIDE_THROUGH_CSV": "LocalCorridorRideThrough/frame_times.csv",
+        },
+        asynchronous=True,
+    ),
 )
 
 
