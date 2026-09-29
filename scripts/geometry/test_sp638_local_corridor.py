@@ -264,14 +264,13 @@ class LocalGroundCorridorTests(unittest.TestCase):
             for station_profile in adaptive
         )
         minimum_inside_tie = min(profile[-1].lateral_m for profile in adaptive)
-        self.assertGreaterEqual(minimum_inside_shoulder, 3.25)
-        self.assertLess(minimum_inside_shoulder, 4.0)
+        self.assertAlmostEqual(minimum_inside_shoulder, 4.0)
         self.assertGreater(minimum_inside_tie, minimum_inside_shoulder)
         self.assertLess(minimum_inside_tie, radius)
         for triangle in mesh.triangles:
             self.assertGreater(triangle_normal(mesh, triangle).z, 0.0)
 
-    def test_adaptive_offset_handles_sub_four_metre_real_apex_class(self) -> None:
+    def test_adaptive_offset_rejects_radius_inside_protected_shoulder(self) -> None:
         radius = 3.55
         angles = tuple(index * math.radians(5.0) for index in range(44))
         centerline = tuple(
@@ -283,29 +282,9 @@ class LocalGroundCorridorTests(unittest.TestCase):
             for index, angle in enumerate(angles)
         )
 
-        adaptive = make_curvature_adaptive_profiles(centerline, self.profile)
-        mesh = build_corridor_mesh(centerline, adaptive)
+        with self.assertRaisesRegex(ValueError, "protected positive shoulder"):
+            make_curvature_adaptive_profiles(centerline, self.profile)
 
-        for station_profile in adaptive:
-            by_role = {point.role: point.lateral_m for point in station_profile}
-            self.assertAlmostEqual(by_role["right_road_edge"], 3.0)
-            self.assertGreaterEqual(by_role["right_shoulder"], 3.25)
-            self.assertGreater(by_role["embankment"], by_role["right_shoulder"])
-            self.assertGreater(by_role["downhill_tie"], by_role["embankment"])
-
-        self.assertLess(
-            min(
-                next(
-                    point.lateral_m
-                    for point in station_profile
-                    if point.role == "right_shoulder"
-                )
-                for station_profile in adaptive
-            ),
-            4.0,
-        )
-        for triangle in mesh.triangles:
-            self.assertGreater(triangle_normal(mesh, triangle).z, 0.0)
 
     def test_adaptive_offset_fails_when_minimum_spans_do_not_fit(self) -> None:
         radius = 3.40
@@ -319,7 +298,7 @@ class LocalGroundCorridorTests(unittest.TestCase):
             for index, angle in enumerate(angles)
         )
 
-        with self.assertRaisesRegex(ValueError, "cannot preserve"):
+        with self.assertRaisesRegex(ValueError, "protected positive shoulder"):
             make_curvature_adaptive_profiles(centerline, self.profile)
 
     def test_source_scale_window_rejects_dense_resample_curvature_noise(self) -> None:
@@ -382,15 +361,15 @@ class LocalGroundCorridorTests(unittest.TestCase):
             )
 
     def test_global_overlap_rejects_nonlocal_crossing_corridor(self) -> None:
-        centerline = (
-            Vec3(-12.0, 0.0, 0.0),
-            Vec3(-4.0, 0.0, 0.0),
-            Vec3(4.0, 0.0, 0.0),
-            Vec3(12.0, 0.0, 0.0),
-            Vec3(4.0, 8.0, 0.0),
-            Vec3(-4.0, 8.0, 0.0),
-            Vec3(-12.0, 8.0, 0.0),
-            Vec3(-4.0, 0.0, 0.0),
+        radius = 10.0
+        angles = tuple(index * math.radians(10.0) for index in range(38))
+        centerline = tuple(
+            Vec3(
+                radius * math.cos(angle),
+                radius * math.sin(angle),
+                0.0,
+            )
+            for angle in angles
         )
         narrow = (
             CrossSectionPoint(-1.0, 0.0, "left"),
@@ -402,13 +381,17 @@ class LocalGroundCorridorTests(unittest.TestCase):
                 make_constant_profiles(len(centerline), narrow),
             )
 
+
     def test_global_overlap_diagnostics_ignore_vertical_separation(self) -> None:
-        centerline = (
-            Vec3(-12.0, 0.0, 0.0),
-            Vec3(0.0, 0.0, 0.0),
-            Vec3(12.0, 0.0, 0.0),
-            Vec3(0.0, 0.0, 5.0),
-            Vec3(-12.0, 0.0, 5.0),
+        radius = 10.0
+        angles = tuple(index * math.radians(10.0) for index in range(38))
+        centerline = tuple(
+            Vec3(
+                radius * math.cos(angle),
+                radius * math.sin(angle),
+                index * (5.0 / 37.0),
+            )
+            for index, angle in enumerate(angles)
         )
         narrow = (
             CrossSectionPoint(-1.0, 0.0, "left"),
@@ -418,6 +401,7 @@ class LocalGroundCorridorTests(unittest.TestCase):
         mesh = _build_without_global_for_test(centerline, profiles)
         diagnostics = corridor_global_overlap_diagnostics(mesh)
         self.assertEqual(diagnostics.overlap_pair_count, 0)
+
 
     def test_adaptive_profiles_contract_terminal_overlap_before_road_core(self) -> None:
         radius = 5.5
