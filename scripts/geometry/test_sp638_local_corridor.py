@@ -208,6 +208,28 @@ class LocalGroundCorridorTests(unittest.TestCase):
         for triangle in mesh.triangles:
             self.assertGreater(triangle_normal(mesh, triangle).z, 0.0)
 
+    def test_default_adaptive_clearance_matches_r4_1_ssot_65_percent(self) -> None:
+        radius = 5.0
+        angles = tuple(index * math.radians(5.0) for index in range(36))
+        centerline = tuple(
+            Vec3(
+                radius * math.sin(angle),
+                radius * (1.0 - math.cos(angle)),
+                index * 0.01,
+            )
+            for index, angle in enumerate(angles)
+        )
+        default_profiles = make_curvature_adaptive_profiles(
+            centerline,
+            self.profile,
+        )
+        explicit_profiles = make_curvature_adaptive_profiles(
+            centerline,
+            self.profile,
+            clearance_fraction=0.65,
+        )
+        self.assertEqual(default_profiles, explicit_profiles)
+
     def test_adaptive_offset_handles_real_hairpin_radius_class(self) -> None:
         radius = 4.35
         angles = tuple(index * math.radians(5.0) for index in range(40))
