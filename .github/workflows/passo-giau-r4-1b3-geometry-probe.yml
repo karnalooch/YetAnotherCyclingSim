@@ -16,7 +16,7 @@ on:
       - 'YetAnotherCyclingSim.uproject'
   pull_request:
     branches:
-      - feat/stage3g-r4-1-hairpin-corridor-spike
+      - main
     paths:
       - '.github/workflows/passo-giau-r4-1b3-geometry-probe.yml'
       - 'scripts/ue/Invoke-YacsGeometryScriptProbe.ps1'
