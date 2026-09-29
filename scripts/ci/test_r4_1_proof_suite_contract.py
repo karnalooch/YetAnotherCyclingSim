@@ -132,6 +132,21 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
         self.assertIn("dynamic_mesh.set_per_vertex_normals()", spawn)
         self.assertNotIn("dynamic_mesh.recompute_normals(", spawn)
 
+    def test_local_corridor_capture_waits_for_png_flush_and_uses_neutral_light(
+        self,
+    ) -> None:
+        capture = read("scripts/ue/stage3g_capture_sp638_local_corridor.py")
+        tick = capture.split("def _tick(", 1)[1].split("\ndef _dot(", 1)[0]
+        self.assertIn("def _capture_png_is_ready(", capture)
+        self.assertIn("CAPTURE_TIMEOUT_SECONDS = 90.0", capture)
+        self.assertIn("MIN_CAPTURE_BYTES = 100_000", capture)
+        self.assertIn("if not _capture_png_is_ready(_output_path):", tick)
+        self.assertIn("if not _capture_png_is_ready(_actor_id_output_path):", tick)
+        self.assertIn("_actor_id_output_path.unlink(missing_ok=True)", capture)
+        self.assertIn("Rotator(pitch=-90.0, yaw=0.0, roll=0.0)", capture)
+        self.assertIn('"purpose": "neutral_overhead_geometry_diagnostic"', capture)
+        self.assertNotIn("editor_set_viewport_realtime(True", capture)
+
     def test_child_wrappers_fail_closed_before_reuse(self) -> None:
         for path in (
             "scripts/ue/Invoke-YacsGeometryScriptProbe.ps1",

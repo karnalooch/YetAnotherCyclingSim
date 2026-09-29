@@ -924,14 +924,25 @@ both frames. The large lower black Lighting Only wedge resolves to **earthwork**
 is present in both locations, so an exposed Landscape gap is no longer the
 leading explanation and the seam overlap must not be widened further.
 
-B.4.3 is therefore a bounded normals experiment: initialize the transient
-DynamicMesh normals overlay explicitly with `set_per_vertex_normals()` immediately
-after buffer append instead of invoking `RecomputeNormals` before the layer
-exists. This changes no geometry, source height, overlap, road banking, canonical
-SP638 XY or physics authority. It is still a hypothesis until a fresh exact-SHA
-Lighting Only proof demonstrates that the dark wedges are gone. If the image is
-unchanged, the next suspect is the deliberately simplified proof-lighting
-orientation rather than missing geometry.
+B.4.3 initialized the transient DynamicMesh normals overlay explicitly with
+`set_per_vertex_normals()` immediately after buffer append instead of invoking
+`RecomputeNormals` before the layer exists. Exact-SHA Gumball run `36598295676`
+for target `e0b6de3030d3d5badec38e24467f9513af0a0655` produced a Lighting
+Only frame that is visually unchanged at the black earthwork/meso wedges. The
+normal-layer warning is absent from the local-corridor phase, so that warning was
+real harness debt but not the visual root cause.
+
+The run also reproduces the 180-second session failure and makes its lifecycle
+cause explicit: the Actor-ID screenshot task can become `done` before the PNG
+has finished flushing to disk. B.4.4 therefore treats task completion and file
+readiness as separate bounded states, deletes any stale Actor-ID frame before
+capture, and waits for the PNG within the existing capture timeout. In parallel,
+the Lighting Only proof sun becomes shadowless and overhead rather than oblique.
+That is a diagnostic-lighting correction, not terrain authoring: the mesh kernels
+already require upward triangle winding, so overhead illumination prevents a
+valid slope from becoming pure black only because its normal faces away from an
+oblique proof light. Source heights, topology, overlap, road banking, canonical
+SP638 XY and physics authority remain unchanged.
 
 ### 9.2 SP638 banking/crossfall — real-data-first guardrail
 

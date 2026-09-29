@@ -354,9 +354,25 @@ B.4.3 hypothesis.
 B.4.3 does not alter topology, source heights, overlap, banking, route XY or
 physics authority. It only initializes the DynamicMesh normals overlay explicitly
 with `set_per_vertex_normals()` after buffer append instead of calling
-`RecomputeNormals` on a mesh that has no normals layer yet. The visual root cause
-remains unconfirmed until a fresh exact-SHA Lighting Only proof removes the dark
-wedges; if it does not, proof-lighting orientation becomes the next diagnostic.
+`RecomputeNormals` on a mesh that has no normals layer yet.
+
+Exact-SHA target `e0b6de3030d3d5badec38e24467f9513af0a0655` was exercised
+by Gumball run `36598295676` after ordinary CI `#975` passed. Its Lighting
+Only frame is visually unchanged at the black earthwork/meso wedges, so explicit
+normal-layer initialization is **not** the visual root cause. The local-corridor
+phase also no longer emits the earlier missing-normal-layer warning; the remaining
+warning in the combined editor log occurs before that phase in another proof.
+
+The same run confirms a separate capture-lifecycle defect: UE reported the
+Actor-ID screenshot task complete before its PNG had finished flushing, the
+callback failed immediately, and the session then waited 180 seconds for a proof
+JSON that could no longer be produced. B.4.4 therefore waits for a completed
+screenshot's file to become valid within the existing bounded capture timeout,
+removes stale Actor-ID evidence before capture, and uses a shadowless overhead
+Directional Light for Lighting Only. The overhead light is intentionally a
+geometry diagnostic: all validated upward-facing meso/earthwork triangles receive
+positive illumination, so a side-facing proof sun cannot create a false black
+wedge. It changes no authored geometry or production lighting.
 
 #### Real-data-first road-bank boundary
 

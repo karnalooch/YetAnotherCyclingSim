@@ -148,6 +148,8 @@ ROAD_PROFILE = (
 EYE_HEIGHT_CM = 160.0
 CAMERA_BACK_CM = 3500.0
 LOOK_AHEAD_CM = 6500.0
+CAPTURE_TIMEOUT_SECONDS = 90.0
+MIN_CAPTURE_BYTES = 100_000
 
 _task = None
 _tick_handle = None
@@ -250,22 +252,32 @@ def _schedule_high_res_capture(
     _started_at = time.monotonic()
 
 
+def _capture_png_is_ready(path: Path | None) -> bool:
+    if path is None:
+        return False
+    try:
+        return path.is_file() and path.stat().st_size >= MIN_CAPTURE_BYTES
+    except OSError:
+        # High-res screenshot completion and filesystem flush are asynchronous.
+        # A transient stat/read failure is not a geometry-proof failure.
+        return False
+
+
 def _tick(_delta_time: float) -> None:
     if _task is None:
         _finish(False, "screenshot task was not initialized")
         return
 
+    elapsed = time.monotonic() - _started_at
     if _task.is_task_done():
         if _capture_phase == "lighting_only":
-            if (
-                _output_path is None
-                or not _output_path.is_file()
-                or _output_path.stat().st_size < 100_000
-            ):
-                _finish(
-                    False,
-                    "Lighting Only screenshot task completed without a valid PNG",
-                )
+            if not _capture_png_is_ready(_output_path):
+                if elapsed > CAPTURE_TIMEOUT_SECONDS:
+                    _finish(
+                        False,
+                        "Lighting Only screenshot task completed but PNG did not "
+                        f"flush within {CAPTURE_TIMEOUT_SECONDS:.0f} seconds",
+                    )
                 return
             if _actor_id_output_path is None:
                 _finish(False, "actor-ID screenshot output path was not initialized")
@@ -278,23 +290,28 @@ def _tick(_delta_time: float) -> None:
             )
             return
 
-        if (
-            _capture_phase == "actor_id_unlit"
-            and _actor_id_output_path is not None
-            and _actor_id_output_path.is_file()
-            and _actor_id_output_path.stat().st_size >= 100_000
-        ):
+        if _capture_phase == "actor_id_unlit":
+            if not _capture_png_is_ready(_actor_id_output_path):
+                if elapsed > CAPTURE_TIMEOUT_SECONDS:
+                    _finish(
+                        False,
+                        "actor-ID screenshot task completed but PNG did not "
+                        f"flush within {CAPTURE_TIMEOUT_SECONDS:.0f} seconds",
+                    )
+                return
             _proof_data["actor_id_unlit_capture_completed"] = True
             _finish(True)
-        else:
-            _finish(
-                False,
-                f"{_capture_phase} screenshot task completed without a valid PNG",
-            )
+            return
+
+        _finish(False, f"unexpected screenshot phase: {_capture_phase}")
         return
 
-    if time.monotonic() - _started_at > 90.0:
-        _finish(False, f"{_capture_phase} screenshot task timed out after 90 seconds")
+    if elapsed > CAPTURE_TIMEOUT_SECONDS:
+        _finish(
+            False,
+            f"{_capture_phase} screenshot task timed out after "
+            f"{CAPTURE_TIMEOUT_SECONDS:.0f} seconds",
+        )
 
 
 def _dot(a: unreal.Vector, b: unreal.Vector) -> float:
@@ -1005,6 +1022,7 @@ def main() -> None:
     _proof_path = Path(proof_value)
     _output_path.parent.mkdir(parents=True, exist_ok=True)
     _output_path.unlink(missing_ok=True)
+    _actor_id_output_path.unlink(missing_ok=True)
     _proof_path.unlink(missing_ok=True)
 
     world = unreal.EditorLoadingAndSavingUtils.load_map(SPIKE_MAP)
@@ -1336,14 +1354,16 @@ def main() -> None:
     sun = actor_subsystem.spawn_actor_from_class(
         unreal.DirectionalLight,
         camera_location + unreal.Vector(0.0, 0.0, 200000.0),
-        unreal.Rotator(pitch=-32.0, yaw=-55.0, roll=0.0),
+        unreal.Rotator(pitch=-90.0, yaw=0.0, roll=0.0),
         transient=True,
     )
     sun.set_actor_label("SP638_LocalCorridor_ProofSun")
     sun_component = sun.get_component_by_class(unreal.DirectionalLightComponent)
     sun_component.set_intensity(5.0)
-    # Shadowless slope shading keeps heightfield self-shadow aliasing out of
-    # the geometry acceptance decision.
+    # The proof light points straight down so every validated upward-facing
+    # meso/earthwork triangle receives positive diagnostic illumination.
+    # Shadowless lighting keeps both orientation and heightfield self-shadow
+    # aliasing out of the geometry acceptance decision.
     sun_component.set_cast_shadows(False)
 
     sky = actor_subsystem.spawn_actor_from_class(
@@ -1392,7 +1412,10 @@ def main() -> None:
     )
     level_editor.set_level_viewport_fov(76.0, viewport_config_key)
     level_editor.editor_set_game_view(True, viewport_config_key)
-    level_editor.editor_set_viewport_realtime(True, viewport_config_key)
+    # Do not call editor_set_viewport_realtime(True) here. In UE 5.8 this can
+    # try to remove a Level Editor Subsystem realtime override that was never
+    # installed and emits an ensure. The screenshot task invalidates/renders
+    # the viewport explicitly.
 
     # The acceptance frame remains Lighting Only. A second Unlit actor-ID frame
     # is captured from the same camera/session with high-contrast transient
@@ -1403,6 +1426,13 @@ def main() -> None:
 
     _proof_data = {
         "capture_strategy": "r4.1b.4-bounded-meso-ground-plus-corridor",
+        "proof_lighting": {
+            "purpose": "neutral_overhead_geometry_diagnostic",
+            "directional_pitch_deg": -90.0,
+            "directional_yaw_deg": 0.0,
+            "directional_intensity": 5.0,
+            "cast_shadows": False,
+        },
         "source_full_road_length_m": round(full_length_cm / 100.0, 3),
         "source_control_points": original_control_count,
         "selected_hairpin_distance_m": round(focus_cm / 100.0, 3),
