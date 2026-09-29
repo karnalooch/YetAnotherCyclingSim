@@ -33,6 +33,7 @@ from scripts.geometry.sp638_local_corridor import (  # noqa: E402
     apply_superelevation_to_profiles,
     build_corridor_mesh,
     corridor_mesh_hash,
+    fit_road_crossfall_from_transect,
     make_constant_profiles,
     make_curvature_adaptive_profiles,
     minimum_sampled_radius_xy,
@@ -99,7 +100,12 @@ TAPER_PER_STATION = 0.12
 # SP638 alignment. The curvature model is fallback only when raster sampling is
 # missing or implausible. Values remain presentation-only until road-physics
 # authority explicitly adopts the same profile.
-SUPERELEVATION_LIDAR_SAMPLE_HALF_WIDTH_M = 2.5
+SUPERELEVATION_LIDAR_TRANSECT_HALF_WIDTH_M = 6.0
+SUPERELEVATION_LIDAR_TRANSECT_STEP_M = 1.0
+SUPERELEVATION_LIDAR_ROAD_FIT_WIDTH_M = 5.0
+SUPERELEVATION_LIDAR_MAX_CENTER_OFFSET_M = 1.5
+SUPERELEVATION_LIDAR_MAX_ABS_GRADE = 0.10
+SUPERELEVATION_LIDAR_MAX_RMS_RESIDUAL_M = 0.25
 SUPERELEVATION_HARD_MAX_BANK_DEG = 4.0
 SUPERELEVATION_SNOW_GUIDANCE_MAX_BANK_DEG = 3.434
 SUPERELEVATION_FULL_BANK_CURVATURE_PER_M = 0.05
@@ -505,15 +511,28 @@ def _sample_mase_lidar_bank_angles(
     road_actor: unreal.Actor,
     centerline_world: tuple[unreal.Vector, ...],
 ) -> tuple[tuple[float | None, ...], dict[str, object]]:
-    """Observe SP638 crossfall from the undeformed MASE/LiDAR Landscape."""
+    """Recover SP638 crossfall from full undeformed MASE/LiDAR transects."""
 
     if len(centerline_world) < 2:
         raise RuntimeError("LiDAR bank sampling needs at least two road stations")
 
-    half_width_cm = SUPERELEVATION_LIDAR_SAMPLE_HALF_WIDTH_M * 100.0
+    step_count = int(
+        round(
+            (2.0 * SUPERELEVATION_LIDAR_TRANSECT_HALF_WIDTH_M)
+            / SUPERELEVATION_LIDAR_TRANSECT_STEP_M
+        )
+    )
+    offsets_m = tuple(
+        -SUPERELEVATION_LIDAR_TRANSECT_HALF_WIDTH_M
+        + index * SUPERELEVATION_LIDAR_TRANSECT_STEP_M
+        for index in range(step_count + 1)
+    )
     raw_angles: list[float | None] = []
-    misses = 0
-    sample_pairs: list[list[float] | None] = []
+    trace_miss_count = 0
+    fit_failure_count = 0
+    center_offsets_m: list[float] = []
+    residuals_m: list[float] = []
+    fit_candidate_counts: list[int] = []
 
     for index, center in enumerate(centerline_world):
         left_index = max(0, index - SOURCE_GEOMETRY_HALF_WINDOW_STATIONS)
@@ -528,25 +547,18 @@ def _sample_mase_lidar_bank_angles(
         length = math.hypot(dx, dy)
         if length <= 1e-6:
             raw_angles.append(None)
-            sample_pairs.append(None)
-            misses += 1
+            fit_failure_count += 1
             continue
 
         right_x = -dy / length
         right_y = dx / length
-        left_x_cm = float(center.x) - right_x * half_width_cm
-        left_y_cm = float(center.y) - right_y * half_width_cm
-        right_x_cm = float(center.x) + right_x * half_width_cm
-        right_y_cm = float(center.y) + right_y * half_width_cm
         trace_top_z = float(center.z) + TERRAIN_SKIN_TRACE_HALF_SPAN_CM
         trace_bottom_z = float(center.z) - TERRAIN_SKIN_TRACE_HALF_SPAN_CM
+        heights_m: list[float | None] = []
 
-        heights_cm: list[float] = []
-        failed = False
-        for x_cm, y_cm in (
-            (left_x_cm, left_y_cm),
-            (right_x_cm, right_y_cm),
-        ):
+        for offset_m in offsets_m:
+            x_cm = float(center.x) + right_x * offset_m * 100.0
+            y_cm = float(center.y) + right_y * offset_m * 100.0
             hit = unreal.SystemLibrary.line_trace_single(
                 world,
                 unreal.Vector(x_cm, y_cm, trace_top_z),
@@ -558,9 +570,10 @@ def _sample_mase_lidar_bank_angles(
                 True,
             )
             if hit is None:
-                failed = True
-                break
-            heights_cm.append(
+                heights_m.append(None)
+                trace_miss_count += 1
+                continue
+            heights_m.append(
                 _vertical_trace_height_cm(
                     hit,
                     expected_x_cm=x_cm,
@@ -568,20 +581,28 @@ def _sample_mase_lidar_bank_angles(
                     trace_bottom_z_cm=trace_bottom_z,
                     trace_top_z_cm=trace_top_z,
                 )
+                / 100.0
             )
-        if failed:
-            raw_angles.append(None)
-            sample_pairs.append(None)
-            misses += 1
-            continue
 
-        left_z_cm, right_z_cm = heights_cm
-        road_width_cm = 2.0 * half_width_cm
-        angle_deg = math.degrees(
-            math.atan2(left_z_cm - right_z_cm, road_width_cm)
+        angle_deg, fit = fit_road_crossfall_from_transect(
+            offsets_m,
+            tuple(heights_m),
+            candidate_width_m=SUPERELEVATION_LIDAR_ROAD_FIT_WIDTH_M,
+            max_center_offset_m=SUPERELEVATION_LIDAR_MAX_CENTER_OFFSET_M,
+            max_abs_grade=SUPERELEVATION_LIDAR_MAX_ABS_GRADE,
+            max_rms_residual_m=SUPERELEVATION_LIDAR_MAX_RMS_RESIDUAL_M,
         )
         raw_angles.append(angle_deg)
-        sample_pairs.append([left_z_cm / 100.0, right_z_cm / 100.0])
+        fit_candidate_counts.append(int(fit["candidate_count"]))
+        if angle_deg is None:
+            fit_failure_count += 1
+            continue
+        center_offset = fit["selected_center_offset_m"]
+        residual = fit["selected_rms_residual_m"]
+        if center_offset is not None:
+            center_offsets_m.append(float(center_offset))
+        if residual is not None:
+            residuals_m.append(float(residual))
 
     valid_angles = [
         value for value in raw_angles
@@ -590,17 +611,30 @@ def _sample_mase_lidar_bank_angles(
     diagnostics = {
         "source": "MASE_PST_1372858_LiDAR_DTM",
         "sampling_stage": "undeformed_macro_landscape_before_cut_fill",
-        "sample_half_width_m": SUPERELEVATION_LIDAR_SAMPLE_HALF_WIDTH_M,
+        "method": "adaptive_transect_linear_road_fit",
+        "transect_half_width_m": SUPERELEVATION_LIDAR_TRANSECT_HALF_WIDTH_M,
+        "transect_step_m": SUPERELEVATION_LIDAR_TRANSECT_STEP_M,
+        "road_fit_width_m": SUPERELEVATION_LIDAR_ROAD_FIT_WIDTH_M,
+        "max_center_offset_m": SUPERELEVATION_LIDAR_MAX_CENTER_OFFSET_M,
+        "max_abs_grade": SUPERELEVATION_LIDAR_MAX_ABS_GRADE,
+        "max_rms_residual_m": SUPERELEVATION_LIDAR_MAX_RMS_RESIDUAL_M,
         "sample_station_count": len(centerline_world),
         "valid_station_count": len(valid_angles),
-        "miss_count": misses,
+        "fit_failure_count": fit_failure_count,
+        "trace_miss_count": trace_miss_count,
         "raw_min_bank_deg": min(valid_angles, default=None),
         "raw_max_bank_deg": max(valid_angles, default=None),
         "raw_peak_abs_bank_deg": max(
             (abs(value) for value in valid_angles),
             default=0.0,
         ),
-        "sample_edge_heights_m_preview": sample_pairs[:8],
+        "selected_center_offset_range_m": [
+            min(center_offsets_m, default=None),
+            max(center_offsets_m, default=None),
+        ],
+        "selected_rms_residual_max_m": max(residuals_m, default=None),
+        "fit_candidate_count_min": min(fit_candidate_counts, default=0),
+        "fit_candidate_count_max": max(fit_candidate_counts, default=0),
     }
     return tuple(raw_angles), diagnostics
 
@@ -995,7 +1029,7 @@ def main() -> None:
     superelevation_diagnostics = {
         "mode": "mase_lidar_seeded_crossfall",
         "measured_sp638_bank_data": True,
-        "measurement_kind": "LiDAR_DTM_crossfall_observation",
+        "measurement_kind": "LiDAR_DTM_adaptive_road_transect_fit",
         "instrument_survey_grade": False,
         "authoritative_physics": False,
         "canonical_centerline_xy_modified": False,
