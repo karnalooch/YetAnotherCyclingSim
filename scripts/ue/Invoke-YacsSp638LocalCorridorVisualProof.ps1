@@ -213,8 +213,20 @@ if ([double]$Proof.local_meso_ground.minimum_adjustment_m -lt -0.000001) {
 if ([double]$Proof.local_meso_ground.boundary_max_abs_adjustment_m -gt 0.000001) {
     throw "SP638 meso-ground seam is not pinned to source terrain: $($Proof.local_meso_ground.boundary_max_abs_adjustment_m) m"
 }
-if ([double]$Proof.local_meso_ground.minimum_protected_distance_m -lt 10.49) {
-    throw "SP638 meso ground entered the protected road/shoulder corridor: $($Proof.local_meso_ground.minimum_protected_distance_m) m"
+if ([string]$Proof.local_meso_ground.protected_half_width_mode -ne 'adaptive_earthwork_envelope') {
+    throw "SP638 meso ground did not follow the adaptive earthwork envelope: '$($Proof.local_meso_ground.protected_half_width_mode)'."
+}
+if ([double]$Proof.local_meso_ground.earthwork_clearance_m -lt 0.49) {
+    throw "SP638 meso-ground earthwork clearance regressed: $($Proof.local_meso_ground.earthwork_clearance_m) m"
+}
+if ([double]$Proof.local_meso_ground.protected_half_width_range_m[0] -lt 3.84) {
+    throw "SP638 adaptive meso protection pinched the road/shoulder envelope: $($Proof.local_meso_ground.protected_half_width_range_m[0]) m"
+}
+if ([double]$Proof.local_meso_ground.protected_half_width_range_m[1] -gt 10.51) {
+    throw "SP638 adaptive meso protection exceeded the nominal earthwork envelope: $($Proof.local_meso_ground.protected_half_width_range_m[1]) m"
+}
+if ([double]$Proof.local_meso_ground.minimum_protected_clearance_m -lt -0.000001) {
+    throw "SP638 meso ground entered the adaptive earthwork envelope: $($Proof.local_meso_ground.minimum_protected_clearance_m) m clearance"
 }
 if ([double]$Proof.local_meso_ground.max_abs_laplacian_after_m -ge [double]$Proof.local_meso_ground.max_abs_laplacian_before_m) {
     throw 'SP638 meso-ground target did not reduce high-frequency height curvature.'
