@@ -249,6 +249,111 @@ def make_curvature_superelevation_angles(
     return tuple(result)
 
 
+def fit_road_crossfall_from_transect(
+    offsets_m: Sequence[float],
+    heights_m: Sequence[float | None],
+    *,
+    candidate_width_m: float = 5.0,
+    max_center_offset_m: float = 1.5,
+    max_abs_grade: float = 0.10,
+    max_rms_residual_m: float = 0.25,
+) -> tuple[float | None, dict[str, float | int | None]]:
+    """Recover roadway crossfall from a LiDAR/DTM transect.
+
+    The real road may be slightly offset from the authoritative centerline and
+    the surrounding mountain slope can be much steeper than the carriageway.
+    Search contiguous windows close to the centerline, fit a plane across each
+    candidate and keep the smoothest plausible road-width strip. This preserves
+    the measured signal instead of replacing it with a synthetic design value.
+    """
+
+    if len(offsets_m) != len(heights_m):
+        raise ValueError("transect offsets and heights must have equal length")
+    if len(offsets_m) < 4:
+        raise ValueError("road transect needs at least four samples")
+    if candidate_width_m <= 0.0:
+        raise ValueError("candidate_width_m must be positive")
+    if max_center_offset_m < 0.0:
+        raise ValueError("max_center_offset_m cannot be negative")
+    if max_abs_grade <= 0.0 or max_rms_residual_m <= 0.0:
+        raise ValueError("road-fit limits must be positive")
+    if any(
+        float(offsets_m[index + 1]) <= float(offsets_m[index])
+        for index in range(len(offsets_m) - 1)
+    ):
+        raise ValueError("transect offsets must be strictly increasing")
+
+    candidates: list[tuple[float, float, float, float, int, int]] = []
+    for start in range(len(offsets_m) - 2):
+        for end in range(start + 2, len(offsets_m)):
+            span = float(offsets_m[end]) - float(offsets_m[start])
+            if span + 1e-9 < candidate_width_m:
+                continue
+            if span > candidate_width_m + 1.01:
+                break
+
+            center_offset = 0.5 * (
+                float(offsets_m[start]) + float(offsets_m[end])
+            )
+            if abs(center_offset) > max_center_offset_m + _EPSILON:
+                continue
+
+            values = heights_m[start : end + 1]
+            if any(
+                value is None or not math.isfinite(float(value))
+                for value in values
+            ):
+                continue
+
+            xs = [float(value) for value in offsets_m[start : end + 1]]
+            ys = [float(value) for value in values if value is not None]
+            x_mean = sum(xs) / len(xs)
+            y_mean = sum(ys) / len(ys)
+            denominator = sum((x - x_mean) ** 2 for x in xs)
+            if denominator <= _EPSILON:
+                continue
+            slope = sum(
+                (x - x_mean) * (y - y_mean)
+                for x, y in zip(xs, ys)
+            ) / denominator
+            if abs(slope) > max_abs_grade + _EPSILON:
+                continue
+            intercept = y_mean - slope * x_mean
+            residuals = [
+                y - (intercept + slope * x)
+                for x, y in zip(xs, ys)
+            ]
+            rms = math.sqrt(
+                sum(value * value for value in residuals) / len(residuals)
+            )
+            if rms > max_rms_residual_m + _EPSILON:
+                continue
+
+            score = rms + 0.02 * abs(center_offset) - 0.001 * span
+            candidates.append(
+                (score, slope, rms, center_offset, start, end)
+            )
+
+    if not candidates:
+        return None, {
+            "candidate_count": 0,
+            "selected_center_offset_m": None,
+            "selected_rms_residual_m": None,
+            "selected_grade": None,
+            "selected_span_m": None,
+        }
+
+    _score, slope, rms, center_offset, start, end = min(candidates)
+    bank_angle_deg = math.degrees(math.atan(-slope))
+    return bank_angle_deg, {
+        "candidate_count": len(candidates),
+        "selected_center_offset_m": center_offset,
+        "selected_rms_residual_m": rms,
+        "selected_grade": slope,
+        "selected_span_m": float(offsets_m[end]) - float(offsets_m[start]),
+    }
+
+
 def regularize_measured_superelevation_angles(
     centerline: Sequence[Vec3],
     measured_angles_deg: Sequence[float | None],
