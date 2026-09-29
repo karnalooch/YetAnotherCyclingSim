@@ -913,13 +913,25 @@ without new evidence.
 
 The same UE log reports a concrete normals warning for each transient
 DynamicMesh: `RecomputeNormals` was called before a normals layer existed and
-UE fell back to per-vertex normals. That warning is not yet proven to be the
-visual root cause. The next proof therefore adds a same-camera Unlit actor-ID
-frame with distinct transient colors for meso, earthwork, shoulders and asphalt.
-If the wedge becomes a colored surface, the responsible mesh is identified; if
-the wedge disappears while geometry remains continuous, lighting/normals/shadow
-becomes the primary hypothesis; if it remains an unowned black region, geometry
-coverage stays suspect.
+UE fell back to per-vertex normals. B.4.2 therefore added a same-camera Unlit
+actor-ID frame with distinct transient colors for meso, earthwork, shoulders and
+asphalt.
+
+The diagnostic artifact for target revision
+`bb75e98a455b81c2a327dad8a7cf8195e1c4ca5f` from run `36595346245` contains
+both frames. The large lower black Lighting Only wedge resolves to **earthwork**
+(green) and the upper dark ribbon resolves to **meso ground** (red). The geometry
+is present in both locations, so an exposed Landscape gap is no longer the
+leading explanation and the seam overlap must not be widened further.
+
+B.4.3 is therefore a bounded normals experiment: initialize the transient
+DynamicMesh normals overlay explicitly with `set_per_vertex_normals()` immediately
+after buffer append instead of invoking `RecomputeNormals` before the layer
+exists. This changes no geometry, source height, overlap, road banking, canonical
+SP638 XY or physics authority. It is still a hypothesis until a fresh exact-SHA
+Lighting Only proof demonstrates that the dark wedges are gone. If the image is
+unchanged, the next suspect is the deliberately simplified proof-lighting
+orientation rather than missing geometry.
 
 ### 9.2 SP638 banking/crossfall — real-data-first guardrail
 
