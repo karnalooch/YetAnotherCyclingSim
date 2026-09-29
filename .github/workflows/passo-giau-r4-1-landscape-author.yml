@@ -105,7 +105,7 @@ jobs:
         shell: pwsh
         working-directory: _passo-giau-worktree
         run: |
-          ./scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1 -ExpectedBranch 'HEAD' -ExpectedHead '${{ github.sha }}' -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR4_1/PassoGiauLandscape'
+          ./scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1 -ExpectedBranch 'HEAD' -ExpectedHead '${{ github.sha }}' -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR4_1/PassoGiauLandscape' -IncludeRoad
           if ($LASTEXITCODE -ne 0) { throw 'Passo Giau Landscape authoring failed.' }
 
       - name: Commit only isolated spike map
