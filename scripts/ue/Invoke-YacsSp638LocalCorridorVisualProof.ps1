@@ -171,6 +171,18 @@ if ([int]$Proof.local_terrain_skin.sample_count -lt 10000) {
 if ([double]$Proof.local_terrain_skin.max_abs_adjustment_m -gt 0.901) {
     throw "SP638 terrain skin exceeded bounded smoothing: $($Proof.local_terrain_skin.max_abs_adjustment_m) m"
 }
+if ([int]$Proof.local_terrain_skin.boundary_blend_cells -lt 4) {
+    throw "SP638 terrain skin boundary blend is too narrow: $($Proof.local_terrain_skin.boundary_blend_cells) cells"
+}
+if ([int]$Proof.local_terrain_skin.road_clearance.protected_sample_count -lt 1) {
+    throw 'SP638 terrain skin road-clearance proof sampled no protected road cells.'
+}
+if ([double]$Proof.local_terrain_skin.road_clearance.minimum_vertical_clearance_m -lt 0.079) {
+    throw "SP638 terrain skin can occlude protected road/shoulder surfaces: $($Proof.local_terrain_skin.road_clearance.minimum_vertical_clearance_m) m"
+}
+if ([double]$Proof.local_terrain_skin.road_clearance.max_lowering_m -gt 3.001) {
+    throw "SP638 terrain skin road-clearance correction exceeded bounded limit: $($Proof.local_terrain_skin.road_clearance.max_lowering_m) m"
+}
 if ([double]$Proof.local_terrain_skin.max_abs_laplacian_after_m -ge [double]$Proof.local_terrain_skin.max_abs_laplacian_before_m) {
     throw 'SP638 terrain skin did not reduce high-frequency height curvature.'
 }

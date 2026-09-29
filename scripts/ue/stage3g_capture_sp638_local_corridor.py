@@ -37,6 +37,7 @@ from scripts.geometry.sp638_local_corridor import (  # noqa: E402
     minimum_sampled_radius_xy,
 )
 from scripts.geometry.local_terrain_skin import (  # noqa: E402
+    apply_road_clearance_to_height_grid,
     build_terrain_skin_mesh,
     smooth_height_grid,
     terrain_skin_hash,
@@ -73,6 +74,12 @@ TERRAIN_SKIN_CURVATURE_THRESHOLD_M = 0.04
 TERRAIN_SKIN_MAX_STEP_ADJUSTMENT_M = 0.30
 TERRAIN_SKIN_MAX_TOTAL_ADJUSTMENT_M = 0.90
 TERRAIN_SKIN_PINNED_BORDER_CELLS = 2
+TERRAIN_SKIN_BOUNDARY_BLEND_CELLS = 6
+TERRAIN_SKIN_ROAD_PROTECTED_HALF_WIDTH_M = 4.0
+TERRAIN_SKIN_ROAD_TRANSITION_WIDTH_M = 4.0
+TERRAIN_SKIN_MINIMUM_SURFACE_OFFSET_M = -0.07
+TERRAIN_SKIN_VERTICAL_CLEARANCE_M = 0.08
+TERRAIN_SKIN_MAX_LOWERING_M = 3.0
 
 INSIDE_CLEARANCE_FRACTION = 0.75
 MINIMUM_SHOULDER_SPAN_M = 0.25
@@ -474,6 +481,7 @@ def _sample_local_terrain_skin(
     world: unreal.World,
     road_actor: unreal.Actor,
     center_world: unreal.Vector,
+    road_centerline_world: list[unreal.Vector],
 ):
     """Sample the transient Landscape into a bounded world-aligned local skin."""
 
@@ -539,18 +547,39 @@ def _sample_local_terrain_skin(
         max_step_adjustment_m=TERRAIN_SKIN_MAX_STEP_ADJUSTMENT_M,
         max_total_adjustment_m=TERRAIN_SKIN_MAX_TOTAL_ADJUSTMENT_M,
         pinned_border_cells=TERRAIN_SKIN_PINNED_BORDER_CELLS,
+        boundary_blend_cells=TERRAIN_SKIN_BOUNDARY_BLEND_CELLS,
     )
 
     x_coordinates_m = tuple(value / 100.0 for value in x_coordinates_cm)
     y_coordinates_m = tuple(value / 100.0 for value in y_coordinates_cm)
+    road_centerline_world_m = tuple(
+        Vec3(
+            float(point.x) / 100.0,
+            float(point.y) / 100.0,
+            float(point.z) / 100.0,
+        )
+        for point in road_centerline_world
+    )
+    cleared_heights_m, road_clearance = apply_road_clearance_to_height_grid(
+        x_coordinates_m,
+        y_coordinates_m,
+        smoothed_heights_m,
+        road_centerline_world_m,
+        protected_half_width_m=TERRAIN_SKIN_ROAD_PROTECTED_HALF_WIDTH_M,
+        transition_width_m=TERRAIN_SKIN_ROAD_TRANSITION_WIDTH_M,
+        minimum_surface_offset_m=TERRAIN_SKIN_MINIMUM_SURFACE_OFFSET_M,
+        vertical_clearance_m=TERRAIN_SKIN_VERTICAL_CLEARANCE_M,
+        max_lowering_m=TERRAIN_SKIN_MAX_LOWERING_M,
+    )
+
     origin_x_m = x_coordinates_m[0]
     origin_y_m = y_coordinates_m[0]
-    origin_z_m = min(min(row) for row in smoothed_heights_m)
+    origin_z_m = min(min(row) for row in cleared_heights_m)
 
     mesh = build_terrain_skin_mesh(
         x_coordinates_m,
         y_coordinates_m,
-        smoothed_heights_m,
+        cleared_heights_m,
         origin_x_m=origin_x_m,
         origin_y_m=origin_y_m,
         origin_z_m=origin_z_m,
@@ -574,6 +603,20 @@ def _sample_local_terrain_skin(
         "max_step_adjustment_m": TERRAIN_SKIN_MAX_STEP_ADJUSTMENT_M,
         "max_total_adjustment_m": TERRAIN_SKIN_MAX_TOTAL_ADJUSTMENT_M,
         "pinned_border_cells": TERRAIN_SKIN_PINNED_BORDER_CELLS,
+        "boundary_blend_cells": TERRAIN_SKIN_BOUNDARY_BLEND_CELLS,
+        "road_clearance": {
+            "protected_half_width_m": TERRAIN_SKIN_ROAD_PROTECTED_HALF_WIDTH_M,
+            "transition_width_m": TERRAIN_SKIN_ROAD_TRANSITION_WIDTH_M,
+            "minimum_surface_offset_m": TERRAIN_SKIN_MINIMUM_SURFACE_OFFSET_M,
+            "required_vertical_clearance_m": TERRAIN_SKIN_VERTICAL_CLEARANCE_M,
+            "max_lowering_limit_m": TERRAIN_SKIN_MAX_LOWERING_M,
+            "adjusted_sample_count": road_clearance.adjusted_sample_count,
+            "protected_sample_count": road_clearance.protected_sample_count,
+            "max_lowering_m": road_clearance.max_lowering_m,
+            "minimum_vertical_clearance_m": (
+                road_clearance.minimum_vertical_clearance_m
+            ),
+        },
         "max_abs_adjustment_m": metrics.max_abs_adjustment_m,
         "rms_adjustment_m": metrics.rms_adjustment_m,
         "max_abs_laplacian_before_m": metrics.max_abs_laplacian_before_m,
@@ -807,46 +850,44 @@ def main() -> None:
         world,
         road_actor,
         terrain_skin_center_world,
-    )
-
-    neutral_landscape_material = unreal.load_asset(
-        "/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial"
-    )
-    if neutral_landscape_material is None:
-        raise RuntimeError("failed to load neutral Landscape proof material")
-    landscape.set_editor_property(
-        "landscape_material",
-        neutral_landscape_material,
+        kernel_world,
     )
 
     basic_material = unreal.load_asset(
         "/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"
     )
-    terrain_skin_material = None
-    earth_material = None
-    shoulder_material = None
-    road_material = None
-    if basic_material is not None:
-        terrain_skin_material = _make_material(
-            world,
-            basic_material,
-            unreal.LinearColor(0.34, 0.33, 0.29, 1.0),
-        )
-        earth_material = _make_material(
-            world,
-            basic_material,
-            unreal.LinearColor(0.33, 0.31, 0.27, 1.0),
-        )
-        shoulder_material = _make_material(
-            world,
-            basic_material,
-            unreal.LinearColor(0.22, 0.20, 0.16, 1.0),
-        )
-        road_material = _make_material(
-            world,
-            basic_material,
-            unreal.LinearColor(0.025, 0.025, 0.028, 1.0),
-        )
+    if basic_material is None:
+        raise RuntimeError("failed to load solid neutral proof material")
+
+    neutral_landscape_material = _make_material(
+        world,
+        basic_material,
+        unreal.LinearColor(0.36, 0.35, 0.31, 1.0),
+    )
+    landscape.set_editor_property(
+        "landscape_material",
+        neutral_landscape_material,
+    )
+    terrain_skin_material = _make_material(
+        world,
+        basic_material,
+        unreal.LinearColor(0.34, 0.33, 0.29, 1.0),
+    )
+    earth_material = _make_material(
+        world,
+        basic_material,
+        unreal.LinearColor(0.33, 0.31, 0.27, 1.0),
+    )
+    shoulder_material = _make_material(
+        world,
+        basic_material,
+        unreal.LinearColor(0.22, 0.20, 0.16, 1.0),
+    )
+    road_material = _make_material(
+        world,
+        basic_material,
+        unreal.LinearColor(0.025, 0.025, 0.028, 1.0),
+    )
 
     actor_subsystem = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
     terrain_skin_counts = _spawn_dynamic_mesh(
@@ -909,9 +950,9 @@ def main() -> None:
         world,
         "r.RayTracing.Geometry.Landscape.LODBias -1",
     )
-    # Render the DynamicMesh-owned rider-close terrain in ordinary lit mode.
-    # The Landscape is hidden after sampling, so the editor checker fallback
-    # cannot masquerade as terrain geometry.
+    # Render the rider-close terrain and visible macro Landscape in ordinary
+    # lit mode with solid neutral proof materials so slope/occlusion artifacts
+    # are readable without the editor checker pattern masking the geometry.
     unreal.SystemLibrary.execute_console_command(world, "viewmode lit")
     unreal.SystemLibrary.execute_console_command(world, "r.AntiAliasingMethod 1")
     unreal.SystemLibrary.execute_console_command(
@@ -1044,6 +1085,9 @@ def main() -> None:
         "forced_landscape_lod": 0,
         "proof_viewmode": "lit",
         "neutral_landscape_material": True,
+        "neutral_landscape_material_source": (
+            "/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"
+        ),
         "camera_location_cm": [
             float(camera_location.x),
             float(camera_location.y),
