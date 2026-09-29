@@ -427,6 +427,18 @@ healthy normals, the missing tangent frame becomes the next single candidate
 (`NoTangents` for the untextured proof material). It is not applied together
 with the geometry fix, so the next exact-SHA run can attribute the result.
 
+B.4.7 adds a **human ride-through diagnostic** after the static rider-close
+proof, in the same prepared Unreal Editor process and without changing authored
+assets. It reuses the transient B.4.6 corridor geometry, starts the rider camera
+100 m before the selected hairpin and advances a presentation-only pace using
+the Python reference cycling model at 100 W / 90 rpm with local visual-spline
+grade. This is deliberately **not SP638 physics authority**. The live pass
+records editor-viewport frame times, then captures 1920 x 1080 Lighting Only
+reference frames at -100, -75, -50, -25, 0, +20 and +40 m relative to the
+hairpin so the product owner can inspect the defect from a moving-rider context.
+The canonical Stage 3G game performance gate and the later R4.1C-PHYS promotion
+remain separate.
+
 
 
 #### Real-data-first road-bank boundary
