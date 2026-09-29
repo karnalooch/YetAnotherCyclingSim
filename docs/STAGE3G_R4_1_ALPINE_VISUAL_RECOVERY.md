@@ -388,6 +388,35 @@ authority remain unchanged. If exact-SHA visual evidence is unchanged, light
 mobility is rejected as the cause and the next investigation must use measured
 surface-orientation/lighting evidence rather than another seam edit.
 
+The B.4.5 exact-SHA proof at
+`954ce09bc55c333a1381c6cc9112e72f6b457711` (Gumball run
+`36611336693`, artifact `11053745822`) passed the complete build-once /
+boot-once suite and confirmed both proof lights as `Movable`. Human review is
+still a fail: the Actor-ID frame is pixel-identical to B.4.4 and the Lighting
+Only frame changes by only about 0.26 RGB levels per channel on average. The
+large earthwork wedge remains dark, so light mobility is rejected as the root
+cause.
+
+The same exact proof exposes the geometry mechanism. The adaptive profile reports
+137 clipped stations, a minimum shoulder width of 1.0 m and a minimum negative
+outer extent of 4.1867 m while that side's shoulder remains at 4.0 m. The outer
+earthwork is therefore compressed into only about 0.1867 m. Because the previous
+contraction changed lateral offsets but retained the authored vertical offsets,
+its two outer half-spans are about 0.0934 m while carrying roughly 1.05 m and
+1.30 m of vertical change, producing approximately 84.9 and 85.9 degree
+cross-section faces. That explains why the owned earthwork renders nearly black
+under the overhead Lighting Only diagnostic even with valid upward winding.
+
+B.4.6 fixes that specific geometry defect by making adaptive contraction
+slope-preserving: vertical deltas are scaled with the same piecewise contraction
+as lateral deltas for `road edge -> shoulder` and `shoulder -> outer tie`.
+Protected road edges, canonical SP638 XY, measured road banking, source terrain,
+meso overlap and Road Physics Profile authority do not change. A deterministic
+kernel test prevents future XY-only contraction, and the heavy proof now records
+unit-normal orientation diagnostics for meso, earthwork, shoulders and asphalt
+so any remaining dark ribbon can be distinguished from a genuinely steep face.
+
+
 
 #### Real-data-first road-bank boundary
 
