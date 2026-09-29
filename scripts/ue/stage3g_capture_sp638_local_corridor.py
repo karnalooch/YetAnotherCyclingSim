@@ -1359,6 +1359,7 @@ def main() -> None:
     )
     sun.set_actor_label("SP638_LocalCorridor_ProofSun")
     sun_component = sun.get_component_by_class(unreal.DirectionalLightComponent)
+    sun_component.set_mobility(unreal.ComponentMobility.MOVABLE)
     sun_component.set_intensity(5.0)
     # The proof light points straight down so every validated upward-facing
     # meso/earthwork triangle receives positive diagnostic illumination.
@@ -1373,7 +1374,9 @@ def main() -> None:
         transient=True,
     )
     sky.set_actor_label("SP638_LocalCorridor_ProofSky")
-    sky.get_component_by_class(unreal.SkyLightComponent).set_intensity(1.0)
+    sky_component = sky.get_component_by_class(unreal.SkyLightComponent)
+    sky_component.set_mobility(unreal.ComponentMobility.MOVABLE)
+    sky_component.set_intensity(1.0)
 
     atmosphere = actor_subsystem.spawn_actor_from_class(
         unreal.SkyAtmosphere,
@@ -1431,6 +1434,8 @@ def main() -> None:
             "directional_pitch_deg": -90.0,
             "directional_yaw_deg": 0.0,
             "directional_intensity": 5.0,
+            "directional_mobility": "movable",
+            "skylight_mobility": "movable",
             "cast_shadows": False,
         },
         "source_full_road_length_m": round(full_length_cm / 100.0, 3),
