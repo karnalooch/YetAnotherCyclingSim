@@ -35,7 +35,6 @@ from scripts.geometry.sp638_local_corridor import (  # noqa: E402
     corridor_mesh_hash,
     make_constant_profiles,
     make_curvature_adaptive_profiles,
-    make_curvature_superelevation_angles,
     minimum_sampled_radius_xy,
     regularize_measured_superelevation_angles,
 )
