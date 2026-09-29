@@ -10,8 +10,10 @@ from scripts.geometry.sp638_local_corridor import (
     Vec3,
     build_corridor_mesh,
     corridor_mesh_hash,
+    apply_superelevation_to_profiles,
     make_constant_profiles,
     make_curvature_adaptive_profiles,
+    make_curvature_superelevation_angles,
     minimum_sampled_radius_xy,
     triangle_normal,
 )
@@ -154,6 +156,90 @@ class LocalGroundCorridorTests(unittest.TestCase):
                 centerline,
                 make_constant_profiles(len(centerline), self.profile),
             )
+
+    def test_curvature_superelevation_banks_outside_edge_and_tapers(self) -> None:
+        radius = 12.0
+        centerline = tuple(
+            Vec3(
+                radius * math.sin(index * 0.08),
+                radius * (1.0 - math.cos(index * 0.08)),
+                0.0,
+            )
+            for index in range(40)
+        )
+        angles = make_curvature_superelevation_angles(
+            centerline,
+            max_bank_deg=4.0,
+            full_bank_curvature_per_m=0.05,
+            max_delta_deg_per_station=0.35,
+            curvature_half_window_stations=2,
+        )
+        self.assertEqual(len(angles), len(centerline))
+        self.assertGreater(max(angles), 3.0)
+        self.assertLessEqual(max(abs(value) for value in angles), 4.0 + 1e-9)
+        self.assertTrue(
+            all(
+                abs(angles[index + 1] - angles[index]) <= 0.35 + 1e-9
+                for index in range(len(angles) - 1)
+            )
+        )
+
+        road = (
+            CrossSectionPoint(-3.0, 0.06, "left_road_surface"),
+            CrossSectionPoint(3.0, 0.06, "right_road_surface"),
+        )
+        profiles = make_constant_profiles(len(centerline), road)
+        banked = apply_superelevation_to_profiles(profiles, angles)
+        apex = max(range(len(angles)), key=lambda index: angles[index])
+        self.assertGreater(banked[apex][0].vertical_m, banked[apex][1].vertical_m)
+        self.assertAlmostEqual(banked[apex][0].lateral_m, -3.0)
+        self.assertAlmostEqual(banked[apex][1].lateral_m, 3.0)
+
+    def test_superelevation_flips_with_turn_direction_and_fades_at_ties(self) -> None:
+        positive = (
+            Vec3(0.0, 0.0, 0.0),
+            Vec3(4.0, 0.4, 0.0),
+            Vec3(7.5, 1.8, 0.0),
+            Vec3(10.0, 4.0, 0.0),
+            Vec3(11.0, 7.0, 0.0),
+        )
+        negative = tuple(Vec3(point.x, -point.y, point.z) for point in positive)
+        pos_angles = make_curvature_superelevation_angles(
+            positive,
+            max_delta_deg_per_station=4.0,
+        )
+        neg_angles = make_curvature_superelevation_angles(
+            negative,
+            max_delta_deg_per_station=4.0,
+        )
+        self.assertGreater(pos_angles[2], 0.0)
+        self.assertLess(neg_angles[2], 0.0)
+
+        banked = apply_superelevation_to_profiles(
+            make_constant_profiles(len(positive), self.profile),
+            pos_angles,
+            full_bank_extent_m=4.0,
+            zero_bank_extent_m=10.0,
+        )
+        original_by_role = {point.role: point for point in self.profile}
+        apex = banked[2]
+        by_role = {point.role: point for point in apex}
+        self.assertAlmostEqual(
+            by_role["uphill_tie"].vertical_m,
+            original_by_role["uphill_tie"].vertical_m,
+        )
+        self.assertAlmostEqual(
+            by_role["downhill_tie"].vertical_m,
+            original_by_role["downhill_tie"].vertical_m,
+        )
+        self.assertNotAlmostEqual(
+            by_role["left_shoulder"].vertical_m,
+            original_by_role["left_shoulder"].vertical_m,
+        )
+        self.assertNotAlmostEqual(
+            by_role["right_shoulder"].vertical_m,
+            original_by_role["right_shoulder"].vertical_m,
+        )
 
     def test_adaptive_inside_offset_preserves_road_and_prevents_hairpin_fold(self) -> None:
         radius = 7.0
