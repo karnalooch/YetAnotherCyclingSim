@@ -270,6 +270,37 @@ Preferred fixes include:
 Do **not** blanket-scatter cliff meshes over the map. Detail follows visibility,
 slope and composition.
 
+#### R4.1B.4 bounded meso-ground recovery
+
+The final R4.1B.3 rider-close proof on PR #239 confirmed the next failure mode:
+the corridor/topology checks passed technically, but the 3840 x 2160 rider
+camera still exposed dominant heightfield ribbing/staircase terrain and long
+black occlusion ribbons. This is evidence against further global Landscape
+smoothing, not permission to weaken the visual gate.
+
+R4.1B.4 therefore owns the camera-close steep-face correction as **bounded meso
+geometry**:
+
+- keep the MASE Landscape visible and authoritative for macro mountain/valley
+  massing;
+- sample the already deformed Landscape only as the local presentation source;
+- generate an irregular bounded DynamicMesh patch for the rider-close steep
+  face instead of rendering a second rectangular heightfield skin;
+- pin every topology boundary back to the sampled MASE surface so the patch
+  cannot read as a slab or floating sheet;
+- taper the local correction inward from that pinned seam;
+- exclude the protected asphalt + shoulder corridor from meso-ground triangles;
+- preserve official SP638 centerline XY and Road Physics Profile authority;
+- keep the patch transient until exact-SHA technical proof and human visual
+  review accept the geometry.
+
+The denser local working grid is presentation topology only. It does **not**
+claim extra measured DEM detail or replace the 1 m MASE working source.
+
+The canonical heavy R4.1 proof remains build-once / boot-Unreal-once / prove-many.
+R4.1B.4 must pass the same exact-SHA evidence path and the cyclist-height human
+visual gate before broader propagation or production dressing.
+
 #### Rider-camera acceptance gate
 
 The production acceptance view is the moving cyclist camera, not an editor
