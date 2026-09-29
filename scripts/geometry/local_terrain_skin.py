@@ -263,6 +263,7 @@ def apply_road_clearance_to_height_grid(
     max_lowering = 0.0
     minimum_clearance = math.inf
     outer_width = protected_half_width_m + transition_width_m
+    limit_violation: tuple[float, float, float, float, float, float] | None = None
 
     for row, y_m in enumerate(y_coordinates_descending_m):
         for column, x_m in enumerate(x_coordinates_m):
@@ -294,10 +295,19 @@ def apply_road_clearance_to_height_grid(
                     current_z_m - allowed_terrain_z_m
                 ) * weight
                 if requested_lowering > max_lowering_m + _EPSILON:
-                    raise ValueError(
-                        "road-clearance terrain lowering exceeds bounded limit: "
-                        f"{requested_lowering:.3f} m > {max_lowering_m:.3f} m"
-                    )
+                    if (
+                        limit_violation is None
+                        or requested_lowering > limit_violation[0]
+                    ):
+                        limit_violation = (
+                            requested_lowering,
+                            float(x_m),
+                            float(y_m),
+                            distance_m,
+                            current_z_m,
+                            allowed_terrain_z_m,
+                        )
+                    continue
                 result[row][column] = current_z_m - requested_lowering
                 adjusted += 1
                 max_lowering = max(max_lowering, requested_lowering)
@@ -307,6 +317,23 @@ def apply_road_clearance_to_height_grid(
                     minimum_clearance,
                     minimum_surface_z_m - result[row][column],
                 )
+
+    if limit_violation is not None:
+        (
+            requested_lowering,
+            x_m,
+            y_m,
+            distance_m,
+            current_z_m,
+            allowed_terrain_z_m,
+        ) = limit_violation
+        raise ValueError(
+            "road-clearance terrain lowering exceeds bounded limit: "
+            f"maximum requested {requested_lowering:.3f} m > "
+            f"{max_lowering_m:.3f} m at x={x_m:.3f} y={y_m:.3f} "
+            f"distance={distance_m:.3f} m current_z={current_z_m:.3f} m "
+            f"allowed_z={allowed_terrain_z_m:.3f} m"
+        )
 
     if protected == 0:
         raise ValueError("road-clearance grid sampled no protected road cells")
