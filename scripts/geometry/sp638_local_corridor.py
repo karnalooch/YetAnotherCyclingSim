@@ -376,6 +376,64 @@ def _contract_profile_side(
     return tuple(result)
 
 
+def _first_folded_lateral_band(
+    centerline: Sequence[Vec3],
+    profiles: Sequence[Sequence[CrossSectionPoint]],
+    *,
+    tangent_half_window_stations: int,
+) -> tuple[int, int] | None:
+    """Return the first station/lateral band whose swept triangles fold in XY.
+
+    This mirrors the exact tangent-frame geometry used by build_corridor_mesh,
+    but reports the offending band before a mesh is accepted. It exists only to
+    tighten non-protected presentation earthwork; it never moves centerline XY
+    or protected road edges.
+    """
+
+    _validate_inputs(centerline, profiles)
+    _validate_half_window_stations(
+        tangent_half_window_stations,
+        "tangent_half_window_stations",
+    )
+
+    vertices: list[Vec3] = []
+    for station_index, center in enumerate(centerline):
+        tangent = _horizontal_tangent(
+            centerline,
+            station_index,
+            tangent_half_window_stations,
+        )
+        right = Vec3(-tangent.y, tangent.x, 0.0)
+        for section_point in profiles[station_index]:
+            vertices.append(
+                center
+                + right * section_point.lateral_m
+                + Vec3(0.0, 0.0, section_point.vertical_m)
+            )
+
+    width = len(profiles[0])
+    for station_index in range(len(centerline) - 1):
+        row = station_index * width
+        next_row = (station_index + 1) * width
+        for lateral_index in range(width - 1):
+            a = vertices[row + lateral_index]
+            b = vertices[row + lateral_index + 1]
+            c = vertices[next_row + lateral_index]
+            d = vertices[next_row + lateral_index + 1]
+
+            first_normal_z = (
+                (c.x - a.x) * (b.y - a.y)
+                - (c.y - a.y) * (b.x - a.x)
+            )
+            second_normal_z = (
+                (c.x - b.x) * (d.y - b.y)
+                - (c.y - b.y) * (d.x - b.x)
+            )
+            if first_normal_z <= _EPSILON or second_normal_z <= _EPSILON:
+                return station_index, lateral_index
+    return None
+
+
 def make_curvature_adaptive_profiles(
     centerline: Sequence[Vec3],
     profile: Sequence[CrossSectionPoint],
@@ -482,34 +540,137 @@ def make_curvature_adaptive_profiles(
     left_scales = _taper_scales(raw_left, taper_per_station)
     right_scales = _taper_scales(raw_right, taper_per_station)
 
-    profiles: list[tuple[CrossSectionPoint, ...]] = []
-    for left_scale, right_scale in zip(left_scales, right_scales):
-        station_profile = tuple(profile)
-        if left_scale < 1.0 - _EPSILON:
-            station_profile = _contract_profile_side(
-                station_profile,
-                positive_side=False,
-                scale=left_scale,
-                protected_roles=protected_roles,
-                shoulder_roles=shoulder_roles,
-                minimum_shoulder_span_m=minimum_shoulder_span_m,
-                minimum_earthwork_span_m=minimum_earthwork_span_m,
-            )
-        if right_scale < 1.0 - _EPSILON:
-            station_profile = _contract_profile_side(
-                station_profile,
-                positive_side=True,
-                scale=right_scale,
-                protected_roles=protected_roles,
-                shoulder_roles=shoulder_roles,
-                minimum_shoulder_span_m=minimum_shoulder_span_m,
-                minimum_earthwork_span_m=minimum_earthwork_span_m,
-            )
-        profiles.append(station_profile)
+    left_minimum_outer = (
+        left_core + minimum_shoulder_span_m + minimum_earthwork_span_m
+    )
+    right_minimum_outer = (
+        right_core + minimum_shoulder_span_m + minimum_earthwork_span_m
+    )
+    left_floor_scale = (
+        (left_minimum_outer - left_core) / (left_outer - left_core)
+        if left_outer > left_core + _EPSILON
+        else 1.0
+    )
+    right_floor_scale = (
+        (right_minimum_outer - right_core) / (right_outer - right_core)
+        if right_outer > right_core + _EPSILON
+        else 1.0
+    )
 
-    result = tuple(profiles)
-    _validate_inputs(centerline, result)
-    return result
+    def build_profiles_from_scales() -> tuple[tuple[CrossSectionPoint, ...], ...]:
+        built: list[tuple[CrossSectionPoint, ...]] = []
+        for left_scale, right_scale in zip(left_scales, right_scales):
+            station_profile = tuple(profile)
+            if left_scale < 1.0 - _EPSILON:
+                station_profile = _contract_profile_side(
+                    station_profile,
+                    positive_side=False,
+                    scale=left_scale,
+                    protected_roles=protected_roles,
+                    shoulder_roles=shoulder_roles,
+                    minimum_shoulder_span_m=minimum_shoulder_span_m,
+                    minimum_earthwork_span_m=minimum_earthwork_span_m,
+                )
+            if right_scale < 1.0 - _EPSILON:
+                station_profile = _contract_profile_side(
+                    station_profile,
+                    positive_side=True,
+                    scale=right_scale,
+                    protected_roles=protected_roles,
+                    shoulder_roles=shoulder_roles,
+                    minimum_shoulder_span_m=minimum_shoulder_span_m,
+                    minimum_earthwork_span_m=minimum_earthwork_span_m,
+                )
+            built.append(station_profile)
+        return tuple(built)
+
+    # Curvature radius is only a first-order bound. On a real non-uniform
+    # hairpin, neighboring source-scale tangent frames can still make an outer
+    # earthwork quad fold even when each individual radius estimate is safe.
+    # Tighten only the offending non-protected side, taper the contraction
+    # across neighboring stations, and fail closed if the protected road plus
+    # minimum shoulder/earthwork cannot fit.
+    max_sweep_iterations = max(16, len(centerline) * 2)
+    for _ in range(max_sweep_iterations):
+        result = build_profiles_from_scales()
+        _validate_inputs(centerline, result)
+        folded = _first_folded_lateral_band(
+            centerline,
+            result,
+            tangent_half_window_stations=curvature_half_window_stations,
+        )
+        if folded is None:
+            return result
+
+        station_index, lateral_index = folded
+        left_point = profile[lateral_index]
+        right_point = profile[lateral_index + 1]
+        positive_side = (
+            left_point.lateral_m >= right_core - _EPSILON
+            and right_point.lateral_m > right_core + _EPSILON
+        )
+        negative_side = (
+            right_point.lateral_m <= -left_core + _EPSILON
+            and left_point.lateral_m < -left_core - _EPSILON
+        )
+
+        if not positive_side and not negative_side:
+            raise ValueError(
+                "protected road strip folds between stations "
+                f"{station_index} and {station_index + 1}; "
+                "outer earthwork contraction cannot repair canonical geometry"
+            )
+
+        if positive_side:
+            current_scale = min(
+                right_scales[station_index],
+                right_scales[station_index + 1],
+            )
+            if current_scale <= right_floor_scale + _EPSILON:
+                raise ValueError(
+                    "positive inside corridor still folds at the minimum "
+                    "shoulder/earthwork extent"
+                )
+            target_scale = max(
+                right_floor_scale,
+                0.5 * (current_scale + right_floor_scale),
+            )
+            raw_right[station_index] = min(
+                raw_right[station_index],
+                target_scale,
+            )
+            raw_right[station_index + 1] = min(
+                raw_right[station_index + 1],
+                target_scale,
+            )
+            right_scales = _taper_scales(raw_right, taper_per_station)
+        else:
+            current_scale = min(
+                left_scales[station_index],
+                left_scales[station_index + 1],
+            )
+            if current_scale <= left_floor_scale + _EPSILON:
+                raise ValueError(
+                    "negative inside corridor still folds at the minimum "
+                    "shoulder/earthwork extent"
+                )
+            target_scale = max(
+                left_floor_scale,
+                0.5 * (current_scale + left_floor_scale),
+            )
+            raw_left[station_index] = min(
+                raw_left[station_index],
+                target_scale,
+            )
+            raw_left[station_index + 1] = min(
+                raw_left[station_index + 1],
+                target_scale,
+            )
+            left_scales = _taper_scales(raw_left, taper_per_station)
+
+    raise ValueError(
+        "adaptive corridor sweep-safety contraction did not converge"
+    )
 
 
 def build_corridor_mesh(
