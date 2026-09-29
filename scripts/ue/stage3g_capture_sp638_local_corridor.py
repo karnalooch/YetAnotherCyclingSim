@@ -966,10 +966,11 @@ def _spawn_dynamic_mesh(
         material_id=0,
         defer_change_notifications=True,
     )
-    dynamic_mesh.recompute_normals(
-        unreal.GeometryScriptCalculateNormalsOptions(),
-        defer_change_notifications=True,
-    )
+    # append_buffers_to_mesh() creates geometry before a normals overlay exists.
+    # UE 5.8 warns when recompute_normals() is called in that state and falls
+    # back implicitly. Initialize the overlay explicitly so Lighting Only proof
+    # uses deterministic per-vertex normals for every transient proof mesh.
+    dynamic_mesh.set_per_vertex_normals()
     component.notify_mesh_modified()
     if material is not None:
         component.set_material(0, material)
