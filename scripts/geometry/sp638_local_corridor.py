@@ -442,17 +442,16 @@ def make_curvature_adaptive_profiles(
     taper_per_station: float = 0.12,
     curvature_half_window_stations: int = 1,
 ) -> tuple[tuple[CrossSectionPoint, ...], ...]:
-    """Contract inside-bend shoulder/earthwork before a swept offset can fold.
+    """Contract only presentation earthwork outside the protected shoulder.
 
-    Road edges stay fixed. The inside shoulder may narrow only where its authored
-    offset would cross the local curvature radius, and it retains a bounded
-    minimum width. Earthwork remains outside that shoulder. The target outer
-    extent consumes only clearance_fraction of the radial clearance beyond the
-    protected road edge, leaving the rest as a singularity margin.
+    Road edges and shoulders stay fixed. On the inside of a bend, only earthwork
+    beyond the authored shoulder may contract. The target outer extent consumes
+    clearance_fraction of the radial clearance from that protected shoulder to
+    the local curvature radius, leaving the rest as a singularity margin.
 
-    Contraction is tapered across neighboring samples. If the road edge plus the
-    minimum shoulder and earthwork spans cannot fit, the function fails closed
-    instead of pinching the rideable road.
+    Contraction is tapered across neighboring samples. If the local radius
+    reaches the protected shoulder, or the minimum earthwork span cannot fit
+    outside it, the function fails closed instead of pinching the rideable road.
     """
 
     if len(centerline) < 2:
