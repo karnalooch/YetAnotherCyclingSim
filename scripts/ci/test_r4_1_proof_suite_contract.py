@@ -59,6 +59,15 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
             script = read(path)
             self.assertIn("YACS_R4_1_EDITOR_SESSION_MANAGED", script)
             self.assertIn("def _release_python_script()", script)
+            self.assertIn(
+                "unreal.EditorPythonScripting.set_keep_python_script_alive(False)",
+                script,
+            )
+            self.assertNotIn(
+                'if os.environ.get(SESSION_MANAGED_ENV, "").strip() != "1":\n'
+                "        _release_python_script()",
+                script,
+            )
 
     def test_child_wrappers_fail_closed_before_reuse(self) -> None:
         for path in (
