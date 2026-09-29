@@ -144,6 +144,12 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
         self.assertIn("if not _capture_png_is_ready(_actor_id_output_path):", tick)
         self.assertIn("_actor_id_output_path.unlink(missing_ok=True)", capture)
         self.assertIn("Rotator(pitch=-90.0, yaw=0.0, roll=0.0)", capture)
+        self.assertGreaterEqual(
+            capture.count("set_mobility(unreal.ComponentMobility.MOVABLE)"),
+            2,
+        )
+        self.assertIn('"directional_mobility": "movable"', capture)
+        self.assertIn('"skylight_mobility": "movable"', capture)
         self.assertIn('"purpose": "neutral_overhead_geometry_diagnostic"', capture)
         self.assertNotIn(
             "    level_editor.editor_set_viewport_realtime(True, viewport_config_key)",
