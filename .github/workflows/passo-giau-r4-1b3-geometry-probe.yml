@@ -1,4 +1,5 @@
 name: Passo Giau R4.1B.3 Geometry Script capability probe
+run-name: Passo Giau R4.1B.3 ${{ inputs.gumball_request_id || github.event_name }}
 
 on:
   push:
@@ -7,6 +8,14 @@ on:
     paths:
       - '.github/workflows/passo-giau-r4-1b3-geometry-probe.yml'
       - 'scripts/ue/Invoke-YacsGeometryScriptProbe.ps1'
+      - 'scripts/ue/Invoke-YacsR4_1ProofSuite.ps1'
+      - 'scripts/ue/Test-YacsR4_1PreparedWorkspace.ps1'
+      - 'scripts/ue/Invoke-YacsPassoGiauHairpinCorridorProof.ps1'
+      - 'scripts/ci/test_r4_1_proof_suite_contract.py'
+      - 'scripts/ue/Invoke-YacsR4_1ProofSuite.ps1'
+      - 'scripts/ue/Test-YacsR4_1PreparedWorkspace.ps1'
+      - 'scripts/ue/Invoke-YacsPassoGiauHairpinCorridorProof.ps1'
+      - 'scripts/ci/test_r4_1_proof_suite_contract.py'
       - 'scripts/ue/probe_geometry_script_api.py'
       - 'scripts/ue/probe_sp638_local_corridor_topology.py'
       - 'scripts/ue/Invoke-YacsSp638CorridorTopologyProbe.ps1'
@@ -28,12 +37,21 @@ on:
       - 'scripts/geometry/**'
       - 'YetAnotherCyclingSim.uproject'
   workflow_dispatch:
+    inputs:
+      exact_sha:
+        description: Exact 40-character PR HEAD SHA to prove
+        required: true
+        type: string
+      gumball_request_id:
+        description: Deterministic Gumball proof request id
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: passo-giau-r4-1b3-geometry-probe-${{ github.repository }}
+  group: passo-giau-r4-1b3-geometry-probe-${{ github.repository }}-${{ inputs.gumball_request_id || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -46,7 +64,7 @@ jobs:
       - name: Checkout exact spike revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.exact_sha || github.sha }}
           fetch-depth: 1
           lfs: false
           persist-credentials: false
@@ -63,13 +81,12 @@ jobs:
         run: python -m py_compile scripts/ue/stage3g_capture_sp638_local_corridor.py
 
   probe:
-    # Interim cost-control gate: keep deterministic kernel checks automatic,
-    # but run the heavy trusted-runner UE proof only on explicit dispatch until
-    # the R4.1 build-once / prove-many pipeline is implemented.
+    # Cost-control gate: deterministic kernel checks remain automatic.
+    # The canonical heavy build-once / prove-many UE suite is explicit dispatch.
     if: github.event_name == 'workflow_dispatch'
     needs: kernel-tests
     runs-on: [self-hosted, yacs-ue58]
-    timeout-minutes: 30
+    timeout-minutes: 60
     env:
       GIT_LFS_SKIP_SMUDGE: '1'
 
@@ -87,7 +104,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: _r4-1b3-geometry-probe-worktree
-          ref: ${{ github.sha }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.exact_sha || github.sha }}
           fetch-depth: 1
           lfs: false
           clean: true
@@ -98,51 +115,33 @@ jobs:
         working-directory: _r4-1b3-geometry-probe-worktree
         run: |
           $ErrorActionPreference = 'Stop'
-          if ((git rev-parse HEAD).Trim() -ne '${{ github.sha }}') {
+          if ((git rev-parse HEAD).Trim() -ne '${{ github.event_name == 'workflow_dispatch' && inputs.exact_sha || github.sha }}') {
             throw 'R4.1B.3 geometry probe checkout is not exact SHA.'
           }
           git reset --hard HEAD
-          git clean -ffd
+          if ($LASTEXITCODE -ne 0) { throw 'R4.1B.3 reset failed before proof-suite preparation.' }
+          git clean -ffdx
+          if ($LASTEXITCODE -ne 0) { throw 'R4.1B.3 ignored/untracked cleanup failed before proof-suite preparation.' }
           if (git status --porcelain --untracked-files=all) {
             throw 'R4.1B.3 geometry probe checkout is dirty.'
           }
 
-      - name: Run UE 5.8 Geometry Script capability probe
+      - name: Run prepared R4.1 build-once proof suite
         shell: pwsh
         working-directory: _r4-1b3-geometry-probe-worktree
         run: |
-          ./scripts/ue/Invoke-YacsGeometryScriptProbe.ps1 `
+          ./scripts/ue/Invoke-YacsR4_1ProofSuite.ps1 `
             -ExpectedBranch 'HEAD' `
-            -ExpectedHead '${{ github.sha }}' `
-            -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR4_1/GeometryScriptProbe'
+            -ExpectedHead '${{ github.event_name == 'workflow_dispatch' && inputs.exact_sha || github.sha }}' `
+            -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR4_1/PreparedSuite'
 
-      - name: Run real SP638 local corridor topology proof
-        shell: pwsh
-        working-directory: _r4-1b3-geometry-probe-worktree
-        run: |
-          ./scripts/ue/Invoke-YacsSp638CorridorTopologyProbe.ps1 `
-            -ExpectedBranch 'HEAD' `
-            -ExpectedHead '${{ github.sha }}' `
-            -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR4_1/LocalCorridorTopology'
-
-      - name: Render rider-close SP638 local corridor proof
-        shell: pwsh
-        working-directory: _r4-1b3-geometry-probe-worktree
-        run: |
-          ./scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1 `
-            -ExpectedBranch 'HEAD' `
-            -ExpectedHead '${{ github.sha }}' `
-            -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR4_1/LocalCorridorVisual'
-
-      - name: Upload capability evidence
+      - name: Upload prepared R4.1 proof-suite evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: passo-giau-r4-1b3-geometry-probe-${{ github.run_id }}-${{ github.run_attempt }}
+          name: proof-r4-1b3-geometry-${{ inputs.exact_sha }}
           path: |
-            _r4-1b3-geometry-probe-worktree/Saved/RuntimeProof/CI/Stage3GR4_1/GeometryScriptProbe/**
-            _r4-1b3-geometry-probe-worktree/Saved/RuntimeProof/CI/Stage3GR4_1/LocalCorridorTopology/**
-            _r4-1b3-geometry-probe-worktree/Saved/RuntimeProof/CI/Stage3GR4_1/LocalCorridorVisual/**
+            _r4-1b3-geometry-probe-worktree/Saved/RuntimeProof/CI/Stage3GR4_1/PreparedSuite/**
           if-no-files-found: warn
           retention-days: 14
 
@@ -154,5 +153,10 @@ jobs:
           $worktree = Join-Path $env:GITHUB_WORKSPACE '_r4-1b3-geometry-probe-worktree'
           if (Test-Path -LiteralPath (Join-Path $worktree '.git')) {
             git -C $worktree reset --hard
-            git -C $worktree clean -ffd
+            if ($LASTEXITCODE -ne 0) { throw 'R4.1 proof-suite reset failed during cleanup.' }
+            git -C $worktree clean -ffdx
+            if ($LASTEXITCODE -ne 0) { throw 'R4.1 proof-suite ignored/untracked cleanup failed.' }
+            if (git -C $worktree status --porcelain --untracked-files=all) {
+              throw 'R4.1 proof-suite worktree is dirty after cleanup.'
+            }
           }
