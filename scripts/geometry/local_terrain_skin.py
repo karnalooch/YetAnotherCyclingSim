@@ -275,26 +275,32 @@ def _point_to_segment_distance_and_t_xy(
     point_y: float,
     start: tuple[float, float],
     end: tuple[float, float],
-) -> tuple[float, float]:
+) -> tuple[float, float, float]:
     dx = end[0] - start[0]
     dy = end[1] - start[1]
     length_squared = dx * dx + dy * dy
     if length_squared <= _EPSILON:
-        return math.hypot(point_x - start[0], point_y - start[1]), 0.0
+        return math.hypot(point_x - start[0], point_y - start[1]), 0.0, 0.0
     t = (
         (point_x - start[0]) * dx + (point_y - start[1]) * dy
     ) / length_squared
     t = max(0.0, min(1.0, t))
     closest_x = start[0] + t * dx
     closest_y = start[1] + t * dy
-    return math.hypot(point_x - closest_x, point_y - closest_y), t
+    distance = math.hypot(point_x - closest_x, point_y - closest_y)
+    segment_length = math.sqrt(length_squared)
+    signed_lateral = (
+        dx * (point_y - closest_y) - dy * (point_x - closest_x)
+    ) / segment_length
+    return distance, t, signed_lateral
 
 
 def _minimum_polyline_protection_xy(
     point_x: float,
     point_y: float,
     polyline_xy_m: Sequence[tuple[float, float]],
-    half_widths_m: Sequence[float],
+    negative_half_widths_m: Sequence[float],
+    positive_half_widths_m: Sequence[float],
 ) -> tuple[float, float, float] | None:
     """Return minimum signed clearance, distance and interpolated half-width."""
 
@@ -302,21 +308,36 @@ def _minimum_polyline_protection_xy(
         return None
     if len(polyline_xy_m) < 2:
         raise ValueError("protected centerline needs at least two points")
-    if len(half_widths_m) != len(polyline_xy_m):
+    if (
+        len(negative_half_widths_m) != len(polyline_xy_m)
+        or len(positive_half_widths_m) != len(polyline_xy_m)
+    ):
         raise ValueError(
             "protected half-width profile must match protected centerline points"
         )
 
     best: tuple[float, float, float] | None = None
     for index in range(len(polyline_xy_m) - 1):
-        distance, t = _point_to_segment_distance_and_t_xy(
+        distance, t, signed_lateral = _point_to_segment_distance_and_t_xy(
             point_x,
             point_y,
             polyline_xy_m[index],
             polyline_xy_m[index + 1],
         )
-        start_width = float(half_widths_m[index])
-        end_width = float(half_widths_m[index + 1])
+        if signed_lateral > _EPSILON:
+            widths = positive_half_widths_m
+        elif signed_lateral < -_EPSILON:
+            widths = negative_half_widths_m
+        else:
+            widths = tuple(
+                max(negative, positive)
+                for negative, positive in zip(
+                    negative_half_widths_m,
+                    positive_half_widths_m,
+                )
+            )
+        start_width = float(widths[index])
+        end_width = float(widths[index + 1])
         half_width = start_width + t * (end_width - start_width)
         clearance = distance - half_width
         candidate = (clearance, distance, half_width)
@@ -346,6 +367,8 @@ def build_bounded_meso_ground_mesh(
     protected_centerline_xy_m: Sequence[tuple[float, float]] = (),
     protected_half_width_m: float = 0.0,
     protected_half_widths_m: Sequence[float] = (),
+    protected_negative_half_widths_m: Sequence[float] = (),
+    protected_positive_half_widths_m: Sequence[float] = (),
     seam_rings: int = 4,
     lift_m: float = 0.03,
 ) -> tuple[MesoGroundMesh, MesoGroundMetrics]:
@@ -369,15 +392,33 @@ def build_bounded_meso_ground_mesh(
         raise ValueError("meso-ground radii must be positive")
     if protected_half_width_m < 0.0:
         raise ValueError("protected_half_width_m cannot be negative")
-    if protected_half_widths_m and protected_half_width_m > 0.0:
-        raise ValueError(
-            "use either protected_half_width_m or protected_half_widths_m, not both"
-        )
-    if any(
-        not math.isfinite(float(value)) or float(value) < 0.0
-        for value in protected_half_widths_m
+    asymmetric_widths = bool(
+        protected_negative_half_widths_m or protected_positive_half_widths_m
+    )
+    if asymmetric_widths and (
+        protected_half_width_m > 0.0 or protected_half_widths_m
     ):
-        raise ValueError("protected half-width profile must be finite and non-negative")
+        raise ValueError(
+            "use scalar, symmetric profile, or asymmetric profiles, not a mix"
+        )
+    if asymmetric_widths and not (
+        protected_negative_half_widths_m and protected_positive_half_widths_m
+    ):
+        raise ValueError(
+            "both negative and positive protected half-width profiles are required"
+        )
+    for widths in (
+        protected_half_widths_m,
+        protected_negative_half_widths_m,
+        protected_positive_half_widths_m,
+    ):
+        if any(
+            not math.isfinite(float(value)) or float(value) < 0.0
+            for value in widths
+        ):
+            raise ValueError(
+                "protected half-width profile must be finite and non-negative"
+            )
     if seam_rings < 1:
         raise ValueError("seam_rings must be positive")
     if lift_m < 0.0:
@@ -393,7 +434,26 @@ def build_bounded_meso_ground_mesh(
         for index in range(rows - 1)
     ):
         raise ValueError("meso-ground y coordinates must be strictly decreasing")
-    if protected_half_widths_m:
+    if asymmetric_widths:
+        if len(protected_centerline_xy_m) < 2:
+            raise ValueError(
+                "protected centerline needs at least two points for width profile"
+            )
+        if (
+            len(protected_negative_half_widths_m) != len(protected_centerline_xy_m)
+            or len(protected_positive_half_widths_m)
+            != len(protected_centerline_xy_m)
+        ):
+            raise ValueError(
+                "protected half-width profile must match protected centerline points"
+            )
+        negative_protection_widths = tuple(
+            float(value) for value in protected_negative_half_widths_m
+        )
+        positive_protection_widths = tuple(
+            float(value) for value in protected_positive_half_widths_m
+        )
+    elif protected_half_widths_m:
         if len(protected_centerline_xy_m) < 2:
             raise ValueError(
                 "protected centerline needs at least two points for width profile"
@@ -402,17 +462,22 @@ def build_bounded_meso_ground_mesh(
             raise ValueError(
                 "protected half-width profile must match protected centerline points"
             )
-        protection_widths = tuple(float(value) for value in protected_half_widths_m)
+        symmetric = tuple(float(value) for value in protected_half_widths_m)
+        negative_protection_widths = symmetric
+        positive_protection_widths = symmetric
     elif protected_centerline_xy_m:
         if protected_half_width_m > 0.0 and len(protected_centerline_xy_m) < 2:
             raise ValueError(
                 "protected centerline needs at least two points when width is positive"
             )
-        protection_widths = tuple(
+        symmetric = tuple(
             float(protected_half_width_m) for _ in protected_centerline_xy_m
         )
+        negative_protection_widths = symmetric
+        positive_protection_widths = symmetric
     else:
-        protection_widths = ()
+        negative_protection_widths = ()
+        positive_protection_widths = ()
 
     active: list[bool] = []
     protected_distances: list[float | None] = []
@@ -430,9 +495,10 @@ def build_bounded_meso_ground_mesh(
                     x,
                     y,
                     protected_centerline_xy_m,
-                    protection_widths,
+                    negative_protection_widths,
+                    positive_protection_widths,
                 )
-                if protection_widths
+                if negative_protection_widths
                 else None
             )
             protected_distance = protection[1] if protection is not None else None
@@ -570,8 +636,14 @@ def build_bounded_meso_ground_mesh(
             used_protected_clearances,
             default=None,
         ),
-        minimum_protected_half_width_m=min(protection_widths, default=None),
-        maximum_protected_half_width_m=max(protection_widths, default=None),
+        minimum_protected_half_width_m=min(
+            (*negative_protection_widths, *positive_protection_widths),
+            default=None,
+        ),
+        maximum_protected_half_width_m=max(
+            (*negative_protection_widths, *positive_protection_widths),
+            default=None,
+        ),
     )
     if (
         metrics.minimum_protected_clearance_m is not None
