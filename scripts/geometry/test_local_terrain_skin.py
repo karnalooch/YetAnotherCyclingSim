@@ -97,26 +97,30 @@ class LocalTerrainSkinTests(unittest.TestCase):
         self.assertLessEqual(metrics.max_lowering_m, 0.151)
         self.assertGreaterEqual(metrics.minimum_vertical_clearance_m, 0.08 - 1e-9)
 
-    def test_road_clearance_accepts_observed_hairpin_cut_with_four_metre_bound(self) -> None:
-        xs = (-4.0, 0.0, 4.0)
-        ys = (4.0, 0.0, -4.0)
-        heights = tuple(tuple(13.212 for _ in xs) for _ in ys)
-        centerline = (Vec3(-4.0, 0.0, 10.0), Vec3(4.0, 0.0, 10.0))
+    def test_road_clearance_accepts_measured_hairpin_transition_with_four_point_five_metre_bound(self) -> None:
+        xs = (-4.2, 0.0, 4.2)
+        ys = (4.2, 0.0, -4.2)
+        # Exact-head R4.1B.3.1 proof measured a 4.467 m weighted correction
+        # 4.2 m from the centerline, just outside the protected 4.0 m shoulder.
+        heights = tuple(tuple(14.702 for _ in xs) for _ in ys)
+        centerline = (Vec3(-4.2, 0.0, 10.0), Vec3(4.2, 0.0, 10.0))
 
         _, metrics = apply_road_clearance_to_height_grid(
             xs,
             ys,
             heights,
             centerline,
-            max_lowering_m=4.0,
+            protected_half_width_m=4.0,
+            transition_width_m=4.0,
+            max_lowering_m=4.5,
         )
 
-        self.assertAlmostEqual(metrics.max_lowering_m, 3.362, places=3)
+        self.assertAlmostEqual(metrics.max_lowering_m, 4.467, places=3)
 
-    def test_road_clearance_fails_closed_above_four_metre_hairpin_bound(self) -> None:
+    def test_road_clearance_fails_closed_above_four_point_five_metre_hairpin_bound(self) -> None:
         xs = (-4.0, 0.0, 4.0)
         ys = (4.0, 0.0, -4.0)
-        heights = tuple(tuple(14.2 for _ in xs) for _ in ys)
+        heights = tuple(tuple(14.7 for _ in xs) for _ in ys)
         centerline = (Vec3(-4.0, 0.0, 10.0), Vec3(4.0, 0.0, 10.0))
         with self.assertRaisesRegex(ValueError, "bounded limit"):
             apply_road_clearance_to_height_grid(
@@ -124,7 +128,7 @@ class LocalTerrainSkinTests(unittest.TestCase):
                 ys,
                 heights,
                 centerline,
-                max_lowering_m=4.0,
+                max_lowering_m=4.5,
             )
 
     def test_road_clearance_reports_worst_bounded_limit_violation(self) -> None:

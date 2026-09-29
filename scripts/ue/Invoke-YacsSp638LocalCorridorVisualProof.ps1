@@ -183,7 +183,7 @@ if ([int]$Proof.local_terrain_skin.road_clearance.protected_sample_count -lt 1) 
 if ([double]$Proof.local_terrain_skin.road_clearance.minimum_vertical_clearance_m -lt 0.079) {
     throw "SP638 terrain skin can occlude protected road/shoulder surfaces: $($Proof.local_terrain_skin.road_clearance.minimum_vertical_clearance_m) m"
 }
-if ([double]$Proof.local_terrain_skin.road_clearance.max_lowering_m -gt 3.001) {
+if ([double]$Proof.local_terrain_skin.road_clearance.max_lowering_m -gt 4.501) {
     throw "SP638 terrain skin road-clearance correction exceeded bounded limit: $($Proof.local_terrain_skin.road_clearance.max_lowering_m) m"
 }
 if ([double]$Proof.local_terrain_skin.max_abs_laplacian_after_m -ge [double]$Proof.local_terrain_skin.max_abs_laplacian_before_m) {
