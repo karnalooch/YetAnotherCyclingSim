@@ -1,8 +1,10 @@
-"""Render the R4.1B.4 rider-close SP638 bounded meso-ground proof.
+"""Render the rider-close real-SP638 road-first Landscape-conform proof.
 
-The proof keeps the corrected MASE Landscape as macro terrain, applies only a
-broad transient Landscape cut/fill around the selected real SP638 hairpin, and
-then overlays a bounded irregular meso-ground patch plus continuous road-bench DynamicMesh surfaces.
+The official SP638 presentation spline remains the road authority. The proof
+builds only the banked asphalt and shoulder surfaces, then lets UE Landscape
+raise/lower itself to the road corridor with a bounded side falloff. It does not
+insert a continuous custom earthwork or meso-ground surface between the road and
+the Landscape.
 
 The canonical road XY is never snapped to Landscape/DTM vertices. Nothing is
 saved back to the map.
@@ -35,7 +37,6 @@ from scripts.geometry.sp638_local_corridor import (  # noqa: E402
     corridor_mesh_hash,
     fit_road_crossfall_from_transect,
     make_constant_profiles,
-    make_curvature_adaptive_profiles,
     minimum_sampled_radius_xy,
     regularize_measured_superelevation_angles,
 )
@@ -67,8 +68,12 @@ CURVATURE_SAMPLE_STEP_CM = 2500.0
 CURVATURE_HALF_WINDOW_CM = 2500.0
 END_MARGIN_CM = 10000.0
 
-LANDSCAPE_SPLINE_WIDTH_CM = 520.0
-LANDSCAPE_SPLINE_FALLOFF_CM = 1600.0
+# Road-first terrain conform: keep the Landscape flat/supportive only under the
+# asphalt + shoulders, then blend back to the measured MASE terrain. The road
+# remains authoritative; the terrain yields to it rather than introducing a
+# second continuous earthwork surface.
+LANDSCAPE_SPLINE_WIDTH_CM = 425.0
+LANDSCAPE_SPLINE_FALLOFF_CM = 1200.0
 LANDSCAPE_SPLINE_SUBDIVISIONS = 240
 
 # Rider-close terrain is sampled from the already deformed Landscape, then
@@ -139,6 +144,13 @@ EARTHWORK_PROFILE = (
     CrossSectionPoint(4.0, -0.10, "right_shoulder"),
     CrossSectionPoint(7.0, -0.9, "right_earthwork"),
     CrossSectionPoint(10.0, -1.8, "right_tie"),
+)
+
+ROAD_SUPPORT_PROFILE = (
+    CrossSectionPoint(-4.0, 0.0, "left_shoulder"),
+    CrossSectionPoint(-3.0, 0.0, "left_road_edge"),
+    CrossSectionPoint(3.0, 0.0, "right_road_edge"),
+    CrossSectionPoint(4.0, 0.0, "right_shoulder"),
 )
 
 ROAD_PROFILE = (
@@ -1124,17 +1136,6 @@ def main() -> None:
         half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
     )
 
-    adaptive_profiles = make_curvature_adaptive_profiles(
-        centerline,
-        EARTHWORK_PROFILE,
-        protected_roles=PROTECTED_ROLES,
-        shoulder_roles=SHOULDER_ROLES,
-        clearance_fraction=INSIDE_CLEARANCE_FRACTION,
-        minimum_shoulder_span_m=MINIMUM_SHOULDER_SPAN_M,
-        minimum_earthwork_span_m=MINIMUM_EARTHWORK_SPAN_M,
-        taper_per_station=TAPER_PER_STATION,
-        curvature_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
-    )
     raw_mase_bank_angles_deg, lidar_bank_diagnostics = (
         _sample_mase_lidar_bank_angles(
             world,
@@ -1159,8 +1160,8 @@ def main() -> None:
             ),
         )
     )
-    banked_adaptive_profiles = apply_superelevation_to_profiles(
-        adaptive_profiles,
+    banked_support_profiles = apply_superelevation_to_profiles(
+        make_constant_profiles(len(centerline), ROAD_SUPPORT_PROFILE),
         bank_angles_deg,
         full_bank_extent_m=SUPERELEVATION_FULL_BANK_EXTENT_M,
         zero_bank_extent_m=SUPERELEVATION_ZERO_BANK_EXTENT_M,
@@ -1172,11 +1173,6 @@ def main() -> None:
         zero_bank_extent_m=SUPERELEVATION_ZERO_BANK_EXTENT_M,
     )
 
-    earthwork_mesh = build_corridor_mesh(
-        centerline,
-        banked_adaptive_profiles,
-        tangent_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
-    )
     road_mesh = build_corridor_mesh(
         centerline,
         banked_road_profiles,
@@ -1184,15 +1180,14 @@ def main() -> None:
     )
     left_shoulder_mesh = build_corridor_mesh(
         centerline,
-        _shoulder_surface_profiles(banked_adaptive_profiles, left=True),
+        _shoulder_surface_profiles(banked_support_profiles, left=True),
         tangent_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
     )
     right_shoulder_mesh = build_corridor_mesh(
         centerline,
-        _shoulder_surface_profiles(banked_adaptive_profiles, left=False),
+        _shoulder_surface_profiles(banked_support_profiles, left=False),
         tangent_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
     )
-    profile_diagnostics = _profile_diagnostics(banked_adaptive_profiles)
     superelevation_diagnostics = {
         "mode": "mase_lidar_seeded_crossfall",
         "measured_sp638_bank_data": True,
@@ -1258,28 +1253,6 @@ def main() -> None:
         edit_layer_name=edit_layer_name,
     )
 
-    meso_protected_negative_half_widths_m = tuple(
-        abs(profile[0].lateral_m) + MESO_GROUND_EARTHWORK_CLEARANCE_M
-        for profile in adaptive_profiles
-    )
-    meso_protected_positive_half_widths_m = tuple(
-        abs(profile[-1].lateral_m) + MESO_GROUND_EARTHWORK_CLEARANCE_M
-        for profile in adaptive_profiles
-    )
-    terrain_skin_center_world = kernel_world[len(kernel_world) // 2]
-    (
-        terrain_skin_mesh,
-        terrain_skin_origin_world,
-        terrain_skin_diagnostics,
-    ) = _sample_local_terrain_skin(
-        world,
-        road_actor,
-        terrain_skin_center_world,
-        tuple(kernel_world),
-        meso_protected_negative_half_widths_m,
-        meso_protected_positive_half_widths_m,
-    )
-
     neutral_landscape_material = unreal.load_asset(
         "/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial"
     )
@@ -1293,21 +1266,9 @@ def main() -> None:
     basic_material = unreal.load_asset(
         "/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"
     )
-    terrain_skin_material = None
-    earth_material = None
     shoulder_material = None
     road_material = None
     if basic_material is not None:
-        terrain_skin_material = _make_material(
-            world,
-            basic_material,
-            unreal.LinearColor(0.90, 0.08, 0.08, 1.0),
-        )
-        earth_material = _make_material(
-            world,
-            basic_material,
-            unreal.LinearColor(0.08, 0.82, 0.12, 1.0),
-        )
         shoulder_material = _make_material(
             world,
             basic_material,
@@ -1320,28 +1281,9 @@ def main() -> None:
         )
 
     actor_subsystem = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
-    terrain_skin_counts = _spawn_dynamic_mesh(
-        actor_subsystem,
-        terrain_skin_origin_world,
-        terrain_skin_mesh,
-        "SP638_LocalMesoGround",
-        terrain_skin_material,
-    )
-
-    # Keep the corrected MASE Landscape visible as macro terrain. The irregular
-    # meso-ground DynamicMesh owns only the bounded rider-close steep-face patch.
-    # Its outer topology remains pinned to sampled MASE heights, while the
-    # road-facing cutout uses a bounded transition overlap so the meso patch tucks
-    # 0.15 m beneath the dedicated outer earthwork edge instead of exposing a
-    # Landscape strip between the two presentation systems.
+    # Road-first ownership: the Landscape performs cut/fill and is the only
+    # terrain tie-in surface. DynamicMesh is restricted to asphalt + shoulders.
     origin_world = kernel_world[0]
-    earth_counts = _spawn_dynamic_mesh(
-        actor_subsystem,
-        origin_world,
-        earthwork_mesh,
-        "SP638_LocalCorridor_Earthwork",
-        earth_material,
-    )
     left_shoulder_counts = _spawn_dynamic_mesh(
         actor_subsystem,
         origin_world,
@@ -1403,10 +1345,10 @@ def main() -> None:
     sun_component = sun.get_component_by_class(unreal.DirectionalLightComponent)
     sun_component.set_mobility(unreal.ComponentMobility.MOVABLE)
     sun_component.set_intensity(5.0)
-    # The proof light points straight down so every validated upward-facing
-    # meso/earthwork triangle receives positive diagnostic illumination.
-    # Shadowless lighting keeps both orientation and heightfield self-shadow
-    # aliasing out of the geometry acceptance decision.
+    # The proof light points straight down so road/shoulder geometry and the
+    # conformed Landscape receive stable diagnostic illumination.
+    # Shadowless lighting keeps heightfield self-shadow aliasing out of the
+    # road-to-terrain acceptance decision.
     sun_component.set_cast_shadows(False)
 
     sky = actor_subsystem.spawn_actor_from_class(
@@ -1470,7 +1412,7 @@ def main() -> None:
     active_view_mode = lighting_only_mode
 
     _proof_data = {
-        "capture_strategy": "r4.1b.4-bounded-meso-ground-plus-corridor",
+        "capture_strategy": "r4.1b.8-real-road-landscape-conform",
         "proof_lighting": {
             "purpose": "neutral_overhead_geometry_diagnostic",
             "directional_pitch_deg": -90.0,
@@ -1487,7 +1429,7 @@ def main() -> None:
         "slice_start_m": round(start_cm / 100.0, 3),
         "slice_end_m": round(end_cm / 100.0, 3),
         "kernel_sample_step_m": KERNEL_SAMPLE_STEP_CM / 100.0,
-        "station_count": earthwork_mesh.station_count,
+        "station_count": road_mesh.station_count,
         "source_geometry_analysis": {
             "half_window_m": SOURCE_GEOMETRY_HALF_WINDOW_M,
             "half_window_stations": SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
@@ -1508,27 +1450,26 @@ def main() -> None:
             if source_scale_minimum_radius_m is not None
             else None
         ),
-        "corridor_mesh_sha256": corridor_mesh_hash(earthwork_mesh),
-        "adaptive_inside_offset": profile_diagnostics,
+        "corridor_mesh_sha256": corridor_mesh_hash(road_mesh),
         "superelevation": superelevation_diagnostics,
         "local_geometry": {
             "continuous_dynamic_mesh_surfaces": True,
             "box_strip_roadbed": False,
-            "terrain_skin": terrain_skin_counts,
-            "meso_ground": terrain_skin_counts,
-            "earthwork": earth_counts,
+            "terrain_owned_by_landscape": True,
+            "custom_earthwork_mesh": False,
+            "custom_meso_ground_mesh": False,
             "left_shoulder": left_shoulder_counts,
             "right_shoulder": right_shoulder_counts,
             "asphalt": road_counts,
             "surface_orientation": {
-                "meso_ground": _mesh_orientation_diagnostics(terrain_skin_mesh),
-                "earthwork": _mesh_orientation_diagnostics(earthwork_mesh),
                 "left_shoulder": _mesh_orientation_diagnostics(left_shoulder_mesh),
                 "right_shoulder": _mesh_orientation_diagnostics(right_shoulder_mesh),
                 "asphalt": _mesh_orientation_diagnostics(road_mesh),
             },
         },
         "landscape_cut_fill": {
+            "mode": "road_first_landscape_conform",
+            "road_authority": "official_sp638_gis",
             "api": "LandscapeProxy.editor_apply_spline",
             "edit_layer_name": edit_layer_name,
             "width_cm": LANDSCAPE_SPLINE_WIDTH_CM,
@@ -1537,6 +1478,10 @@ def main() -> None:
             "raise_heights": True,
             "lower_heights": True,
             "saved_to_map": False,
+            "road_half_width_m": 3.0,
+            "shoulder_outer_half_width_m": 4.0,
+            "terrain_conform_half_width_m": LANDSCAPE_SPLINE_WIDTH_CM / 100.0,
+            "terrain_falloff_m": LANDSCAPE_SPLINE_FALLOFF_CM / 100.0,
         },
         "spatial_grid_guardrail": {
             "canonical_road_xy_preserved": True,
@@ -1547,28 +1492,15 @@ def main() -> None:
             "veneto_fallback_source_spacing_m": 5.0,
             "landscape_vertex_spacing_is_source_resolution": False,
         },
-        "local_terrain_skin": {
-            **terrain_skin_diagnostics,
-            "landscape_hidden_after_sampling": False,
-            "macro_landscape_visible": True,
-            "occlusion_lift_m": TERRAIN_SKIN_LIFT_M,
-        },
-        "local_meso_ground": {
-            **terrain_skin_diagnostics,
-            "landscape_hidden_after_sampling": False,
-            "macro_landscape_visible": True,
-            "occlusion_lift_m": TERRAIN_SKIN_LIFT_M,
-        },
         "landscape_component_count": len(landscape_components),
         "forced_landscape_lod": 0,
         "proof_viewmode": "lightingonly",
         "material_independent_geometry_proof": True,
         "actor_id_diagnostic_viewmode": "unlit",
         "actor_id_color_legend": {
-            "meso_ground": "red",
-            "earthwork": "green",
             "shoulders": "blue",
             "asphalt": "yellow",
+            "landscape": "neutral_engine_material",
         },
         "capture_source": "primary_level_editor_viewport",
         "viewport_config_key": str(viewport_config_key),
@@ -1602,12 +1534,13 @@ def main() -> None:
     _tick_handle = unreal.register_slate_post_tick_callback(_tick)
     unreal.log(
         "[YacsSp638LocalCorridorVisual] screenshot scheduled: "
-        f"stations={earthwork_mesh.station_count} "
+        f"stations={road_mesh.station_count} "
         f"raw_adjacent_min_radius_m={raw_adjacent_minimum_radius_m} "
         f"source_scale_min_radius_m={source_scale_minimum_radius_m} "
         f"analysis_half_window_m={SOURCE_GEOMETRY_HALF_WINDOW_M} "
-        f"clipped={profile_diagnostics['clipped_station_count']} "
-        f"hash={corridor_mesh_hash(earthwork_mesh)}"
+        f"terrain_width_m={LANDSCAPE_SPLINE_WIDTH_CM / 100.0:.2f} "
+        f"terrain_falloff_m={LANDSCAPE_SPLINE_FALLOFF_CM / 100.0:.2f} "
+        f"hash={corridor_mesh_hash(road_mesh)}"
     )
 
 
