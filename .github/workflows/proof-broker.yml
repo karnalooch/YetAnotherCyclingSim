@@ -44,6 +44,7 @@ jobs:
       actions: write
       contents: read
       issues: write
+      # Required for labels/status updates on pull requests.
       pull-requests: write
     env:
       GITHUB_TOKEN: ${{ github.token }}
@@ -77,6 +78,7 @@ jobs:
       actions: read
       contents: read
       issues: write
+      # Required for labels/status updates on pull requests.
       pull-requests: write
     env:
       GITHUB_TOKEN: ${{ github.token }}
