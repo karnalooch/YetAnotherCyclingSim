@@ -14,6 +14,7 @@
 #include "LandscapeComponent.h"
 #include "LandscapeInfo.h"
 #include "LandscapeImportHelper.h"
+#include "LandscapeEditLayer.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Parse.h"
 #include "Misc/Paths.h"
@@ -580,8 +581,65 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 	}
 
 	Landscape->RegisterAllComponents();
-
 	Landscape->PostEditChange();
+
+	// UE 5.8 treats non-edit-layer Landscapes as legacy. Preserve the imported
+	// MASE heightmap as the non-destructive base, then create a dedicated
+	// persistent road-conform layer for SP638. The road layer starts empty;
+	// rider-close proof code owns transient deformation until human acceptance.
+	Landscape->ConvertNonEditLayerLandscape();
+
+	TArray<ULandscapeEditLayerBase*> EditLayers = Landscape->GetEditLayers();
+	if (EditLayers.Num() != 1 || !IsValid(EditLayers[0]))
+	{
+		UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error,
+			TEXT("Landscape edit-layer conversion failed: expected one default layer, found %d."),
+			EditLayers.Num());
+		return 1;
+	}
+
+	const FName BaseLayerName(TEXT("MASE_Base"));
+	const FName RoadLayerName(TEXT("SP638_Road"));
+	EditLayers[0]->SetName(BaseLayerName, true);
+
+	const int32 RoadLayerIndex = Landscape->CreateLayer(
+		RoadLayerName,
+		ULandscapeEditLayer::StaticClass(),
+		false);
+	if (RoadLayerIndex == INDEX_NONE)
+	{
+		UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error,
+			TEXT("Failed to create dedicated SP638_Road Landscape edit layer."));
+		return 1;
+	}
+
+	ULandscapeEditLayerBase* RoadEditLayer = Landscape->GetEditLayer(RoadLayerIndex);
+	ULandscapeEditLayerBase* BaseEditLayer = Landscape->GetEditLayer(BaseLayerName);
+	if (!IsValid(RoadEditLayer) || !IsValid(BaseEditLayer))
+	{
+		UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error,
+			TEXT("Landscape edit-layer lookup failed after creation."));
+		return 1;
+	}
+	if (RoadEditLayer->GetNameBP() != RoadLayerName ||
+		BaseEditLayer->GetNameBP() != BaseLayerName)
+	{
+		UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error,
+			TEXT("Landscape edit-layer naming drifted: base='%s' road='%s'."),
+			*BaseEditLayer->GetNameBP().ToString(),
+			*RoadEditLayer->GetNameBP().ToString());
+		return 1;
+	}
+
+	EditLayers = Landscape->GetEditLayers();
+	if (EditLayers.Num() != 2)
+	{
+		UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error,
+			TEXT("Landscape edit-layer count mismatch after SP638 setup: %d."),
+			EditLayers.Num());
+		return 1;
+	}
+	Landscape->ForceLayersFullUpdate();
 
 	TArray<ULandscapeComponent*> Components;
 	Landscape->GetComponents<ULandscapeComponent>(Components);
@@ -692,6 +750,11 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		TEXT("  \"road_control_points\": %d,\n")
 		TEXT("  \"road_spline_mesh_segments\": %d,\n")
 		TEXT("  \"road_width_cm\": %.3f,\n")
+		TEXT("  \"edit_layers_enabled\": true,\n")
+		TEXT("  \"edit_layer_count\": %d,\n")
+		TEXT("  \"base_edit_layer\": \"MASE_Base\",\n")
+		TEXT("  \"road_edit_layer\": \"SP638_Road\",\n")
+		TEXT("  \"road_edit_layer_initially_empty\": true,\n")
 		TEXT("  \"presentation_only\": true,\n")
 		TEXT("  \"authoritative_route_geometry\": false,\n")
 		TEXT("  \"authoritative_physics\": false\n")
@@ -719,7 +782,8 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		bImportRoad ? TEXT("true") : TEXT("false"),
 		RoadPoints.Num(),
 		RoadSplineMeshCount,
-		RoadWidthCm);
+		RoadWidthCm,
+		EditLayers.Num());
 
 	if (!ProofPath.IsEmpty())
 	{
@@ -749,6 +813,9 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 			RoadSplineMeshCount,
 			RoadWidthCm);
 	}
+	UE_LOG(LogCyclingPassoGiauLandscapeSpike, Display,
+		TEXT("Landscape edit layers: base=MASE_Base road=SP638_Road count=%d."),
+		EditLayers.Num());
 	UE_LOG(LogCyclingPassoGiauLandscapeSpike, Display,
 		TEXT("CyclingPassoGiauLandscapeSpikeCommandlet: done."));
 	return 0;
