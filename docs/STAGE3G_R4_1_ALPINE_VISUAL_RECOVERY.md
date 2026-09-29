@@ -342,6 +342,22 @@ whether a dark wedge belongs to meso ground, earthwork, shoulder/asphalt, a true
 gap, or lighting/normal/shadow behaviour. It changes no route, terrain or physics
 geometry.
 
+The B.4.2 diagnostic artifact for target revision `bb75e98a455b81c2a327dad8a7cf8195e1c4ca5f`
+from Gumball run `36595346245` contains both requested frames even though the
+suite later timed out before the final proof JSON was emitted. The actor-ID frame
+shows the large lower black Lighting Only wedge as **earthwork** (green) and the
+upper dark ribbon as **meso ground** (red). Those regions are therefore owned
+geometry rather than an exposed Landscape gap. This rejects further seam widening
+as the next action and makes transient mesh normal/lighting handling the bounded
+B.4.3 hypothesis.
+
+B.4.3 does not alter topology, source heights, overlap, banking, route XY or
+physics authority. It only initializes the DynamicMesh normals overlay explicitly
+with `set_per_vertex_normals()` after buffer append instead of calling
+`RecomputeNormals` on a mesh that has no normals layer yet. The visual root cause
+remains unconfirmed until a fresh exact-SHA Lighting Only proof removes the dark
+wedges; if it does not, proof-lighting orientation becomes the next diagnostic.
+
 #### Real-data-first road-bank boundary
 
 R4.1 may use measured road evidence to improve the **visual** crossfall of SP638,
