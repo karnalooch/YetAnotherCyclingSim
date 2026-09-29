@@ -9,6 +9,7 @@ param(
     [string] $ArtifactRoot,
     [Parameter(Mandatory=$true)] [string] $ExpectedBranch,
     [Parameter(Mandatory=$true)] [string] $ExpectedHead,
+    [string] $PreparedWorkspaceStamp,
     [int] $TimeoutSec = 300
 )
 
@@ -43,17 +44,25 @@ if (git -C $RepoRoot status --porcelain=v1 --untracked-files=no) {
     throw 'SP638 local corridor topology checkout has tracked changes before proof.'
 }
 
-Write-Host '[1/2] Materializing only the persisted Passo Giau map...' -ForegroundColor Cyan
-git -C $RepoRoot lfs install --local
-if ($LASTEXITCODE -ne 0) { throw 'git lfs install failed.' }
-git -C $RepoRoot lfs pull --include=$SpikeMapRelative --exclude=''
-if ($LASTEXITCODE -ne 0) { throw 'git lfs pull for Passo Giau spike map failed.' }
-if (-not (Test-Path -LiteralPath $SpikeMapPath -PathType Leaf)) {
-    throw "Passo Giau map is missing: $SpikeMapPath"
+$PreparedValidator = Join-Path $RepoRoot 'scripts/ue/Test-YacsR4_1PreparedWorkspace.ps1'
+if ($PreparedWorkspaceStamp) {
+    & $PreparedValidator -StampPath $PreparedWorkspaceStamp -RepoRoot $RepoRoot -ExpectedHead $ExpectedHead -RequireMap | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Prepared R4.1 workspace validation failed before SP638 topology proof.' }
+    Write-Host '[1/2] Reusing materialized Passo Giau map from prepared R4.1 workspace.' -ForegroundColor Cyan
 }
-$MapBytes = (Get-Item -LiteralPath $SpikeMapPath).Length
-if ($MapBytes -lt 100000000) {
-    throw "Passo Giau map was not materialized from LFS (bytes=$MapBytes)."
+else {
+    Write-Host '[1/2] Materializing only the persisted Passo Giau map...' -ForegroundColor Cyan
+    git -C $RepoRoot lfs install --local
+    if ($LASTEXITCODE -ne 0) { throw 'git lfs install failed.' }
+    git -C $RepoRoot lfs pull --include=$SpikeMapRelative --exclude=''
+    if ($LASTEXITCODE -ne 0) { throw 'git lfs pull for Passo Giau spike map failed.' }
+    if (-not (Test-Path -LiteralPath $SpikeMapPath -PathType Leaf)) {
+        throw "Passo Giau map is missing: $SpikeMapPath"
+    }
+    $MapBytes = (Get-Item -LiteralPath $SpikeMapPath).Length
+    if ($MapBytes -lt 100000000) {
+        throw "Passo Giau map was not materialized from LFS (bytes=$MapBytes)."
+    }
 }
 
 Write-Host '[2/2] Running real-SP638 DynamicMesh topology proof...' -ForegroundColor Cyan

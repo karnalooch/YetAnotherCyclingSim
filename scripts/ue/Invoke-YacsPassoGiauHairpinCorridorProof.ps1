@@ -9,6 +9,7 @@ param(
     [string] $ArtifactRoot,
     [Parameter(Mandatory=$true)] [string] $ExpectedBranch,
     [Parameter(Mandatory=$true)] [string] $ExpectedHead,
+    [string] $PreparedWorkspaceStamp,
     [int] $TimeoutSec = 900
 )
 
@@ -45,21 +46,30 @@ if (git -C $RepoRoot status --porcelain --untracked-files=all) {
     throw 'Hairpin corridor checkout is dirty before LFS materialization.'
 }
 
-Write-Host '[1/4] Materializing only the persisted Passo Giau map...' -ForegroundColor Cyan
-git -C $RepoRoot lfs install --local
-if ($LASTEXITCODE -ne 0) { throw 'git lfs install failed.' }
-git -C $RepoRoot lfs pull --include=$SpikeMapRelative --exclude=''
-if ($LASTEXITCODE -ne 0) { throw 'git lfs pull for Passo Giau spike map failed.' }
-if (-not (Test-Path -LiteralPath $SpikeMapPath -PathType Leaf)) { throw "Passo Giau map is missing: $SpikeMapPath" }
-$MapBytes = (Get-Item -LiteralPath $SpikeMapPath).Length
-if ($MapBytes -lt 100000000) { throw "Passo Giau map was not materialized from LFS (bytes=$MapBytes)." }
+$PreparedValidator = Join-Path $RepoRoot 'scripts/ue/Test-YacsR4_1PreparedWorkspace.ps1'
+if ($PreparedWorkspaceStamp) {
+    & $PreparedValidator -StampPath $PreparedWorkspaceStamp -RepoRoot $RepoRoot -ExpectedHead $ExpectedHead -RequireMap -RequireBuild | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Prepared R4.1 workspace validation failed before hairpin corridor proof.' }
+    Write-Host '[1/4] Reusing materialized Passo Giau map from prepared R4.1 workspace.' -ForegroundColor Cyan
+    Write-Host '[2/4] Reusing exact-SHA editor build from prepared R4.1 workspace.' -ForegroundColor Cyan
+}
+else {
+    Write-Host '[1/4] Materializing only the persisted Passo Giau map...' -ForegroundColor Cyan
+    git -C $RepoRoot lfs install --local
+    if ($LASTEXITCODE -ne 0) { throw 'git lfs install failed.' }
+    git -C $RepoRoot lfs pull --include=$SpikeMapRelative --exclude=''
+    if ($LASTEXITCODE -ne 0) { throw 'git lfs pull for Passo Giau spike map failed.' }
+    if (-not (Test-Path -LiteralPath $SpikeMapPath -PathType Leaf)) { throw "Passo Giau map is missing: $SpikeMapPath" }
+    $MapBytes = (Get-Item -LiteralPath $SpikeMapPath).Length
+    if ($MapBytes -lt 100000000) { throw "Passo Giau map was not materialized from LFS (bytes=$MapBytes)." }
 
-Write-Host '[2/4] Building exact UE 5.8 editor revision...' -ForegroundColor Cyan
-$BuildBat = Join-Path $Context.EngineRoot 'Engine/Build/BatchFiles/Build.bat'
-$BuildArgs = @($ProjectPath,'YetAnotherCyclingSimEditor','Win64','Development','-WaitMutex','-FromMsBuild')
-$BuildProc = Start-Process -FilePath $BuildBat -ArgumentList $BuildArgs -NoNewWindow -PassThru -RedirectStandardOutput $BuildLog -WorkingDirectory (Split-Path $BuildBat -Parent)
-$BuildProc.WaitForExit()
-if ($BuildProc.ExitCode -ne 0) { throw "Editor build failed with exit code $($BuildProc.ExitCode). See $BuildLog" }
+    Write-Host '[2/4] Building exact UE 5.8 editor revision...' -ForegroundColor Cyan
+    $BuildBat = Join-Path $Context.EngineRoot 'Engine/Build/BatchFiles/Build.bat'
+    $BuildArgs = @($ProjectPath,'YetAnotherCyclingSimEditor','Win64','Development','-WaitMutex','-FromMsBuild')
+    $BuildProc = Start-Process -FilePath $BuildBat -ArgumentList $BuildArgs -NoNewWindow -PassThru -RedirectStandardOutput $BuildLog -WorkingDirectory (Split-Path $BuildBat -Parent)
+    $BuildProc.WaitForExit()
+    if ($BuildProc.ExitCode -ne 0) { throw "Editor build failed with exit code $($BuildProc.ExitCode). See $BuildLog" }
+}
 
 Write-Host '[3/4] Rendering bounded SP638 hairpin corridor proof...' -ForegroundColor Cyan
 $UEditor = $Context.UnrealEditorPath
