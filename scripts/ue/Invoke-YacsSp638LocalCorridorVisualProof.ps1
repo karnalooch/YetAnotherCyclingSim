@@ -183,6 +183,9 @@ if ([int]$Proof.local_meso_ground.sample_count -lt 14000) {
 if ([double]$Proof.local_meso_ground.max_abs_adjustment_m -gt 3.031) {
     throw "SP638 meso ground exceeded bounded local correction: $($Proof.local_meso_ground.max_abs_adjustment_m) m"
 }
+if ([double]$Proof.local_meso_ground.minimum_adjustment_m -lt -0.000001) {
+    throw "SP638 meso ground fell below sampled macro terrain: $($Proof.local_meso_ground.minimum_adjustment_m) m"
+}
 if ([double]$Proof.local_meso_ground.boundary_max_abs_adjustment_m -gt 0.000001) {
     throw "SP638 meso-ground seam is not pinned to source terrain: $($Proof.local_meso_ground.boundary_max_abs_adjustment_m) m"
 }
