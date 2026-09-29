@@ -846,6 +846,30 @@ Current evidence changes the priority order:
 Broad terrain smoothing is still rejected: it would destroy source structure
 without addressing the core heightfield limitation.
 
+### 9.1 R4.1B.3 result -> R4.1B.4 decision
+
+PR #239 produced a successful exact-head technical proof at
+`556e89600ee05ddeca6f3c9680da4769c6da530c` (Gumball run
+`36563292917`), including zero non-local corridor overlap pairs and bounded
+road-clearance diagnostics. Human review nevertheless rejected the 3840 x 2160
+rider-close image because heightfield ribbing/staircase terrain and black
+occlusion ribbons remained dominant.
+
+That result promotes **bounded meso geometry** from hypothesis to the active
+R4.1B.4 recovery path (#247). The implementation deliberately:
+
+- keeps MASE Landscape as macro terrain;
+- samples local Landscape height only as a source surface;
+- builds a bounded irregular meso patch on a local working grid;
+- pins the patch topology boundary exactly to source terrain;
+- leaves a protected asphalt/shoulder corridor cut out of the patch;
+- validates deterministic mesh/hash, seam error, protected-distance clearance,
+  non-degenerate triangles and bounded correction before the UE proof;
+- retains human cyclist-camera acceptance as the final geometry decision.
+
+A finer local mesh is **not** evidence of finer terrain measurement. It only
+provides presentation topology for a local non-heightfield repair.
+
 ## 10. Source hierarchy
 
 Prefer sources in this order:
