@@ -468,6 +468,35 @@ not source-resolution claims, and the operation remains transient until human
 visual acceptance. The canonical SP638 XY and Road Physics Profile are not
 rewritten.
 
+**B.4.9 moves that road-first conform onto explicit UE 5.8 Landscape Edit
+Layers.** The Passo Giau authoring commandlet now converts the imported
+non-layered MASE Landscape using `ConvertNonEditLayerLandscape()`, renames the
+resulting persistent base layer to `MASE_Base`, then creates a second standard
+persistent edit layer named `SP638_Road`. The persisted map therefore starts
+with exactly two terrain-authoring layers:
+
+- `MASE_Base` owns the imported MASE DTM heightmap;
+- `SP638_Road` starts empty and is the only layer allowed to receive transient
+  road-conform deformation during the #251 proof.
+
+Because `EditorApplySpline` on a regular Edit Layer represents an additive
+height contribution, the proof no longer feeds absolute world-space road Z
+directly into the layer. It samples the unchanged MASE surface every 1 m along
+the bounded road slice, computes `desired road Z - current Landscape Z`, encodes
+that delta relative to the Landscape actor origin in a temporary LINEAR proxy
+spline, and applies only that proxy to `SP638_Road`. A hard ±3 m correction
+guard fails closed on source/transform mismatches instead of sculpting an
+implausible trench or berm. Immediately after the Landscape operation the
+temporary delta representation is discarded and the visible SP638 spline is
+restored to its real world-space XY/Z.
+
+This is deliberately a **standard persistent edit layer**, not the special
+procedural `ULandscapeEditLayerSplines` type yet. It keeps the current
+`editor_apply_spline` proof small and reversible while matching the modern UE
+non-destructive Landscape workflow. Promotion to the procedural Splines layer is
+a later authoring ergonomics decision, not a prerequisite for validating this
+hairpin.
+
 
 
 #### Real-data-first road-bank boundary
