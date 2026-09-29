@@ -80,6 +80,9 @@ jobs:
             --head "${CURRENT_SHA}" \
             --github-output "${GITHUB_OUTPUT}"
 
+      - name: Verify documentation index contract
+        run: python scripts/ci/check_docs_index.py
+
   repo-policy:
     name: Repository policy
     permissions:
