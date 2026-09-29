@@ -89,6 +89,8 @@ TERRAIN_SKIN_PINNED_BORDER_CELLS = 2
 MESO_GROUND_RADIUS_X_M = 100.0
 MESO_GROUND_RADIUS_Y_M = 80.0
 MESO_GROUND_EARTHWORK_CLEARANCE_M = 0.50
+MESO_GROUND_TRANSITION_OVERLAP_M = 0.65
+MESO_GROUND_MAX_EARTHWORK_UNDERLAP_M = 0.15
 MESO_GROUND_SEAM_RINGS = 4
 
 INSIDE_CLEARANCE_FRACTION = 0.75
@@ -726,6 +728,20 @@ def _sample_local_terrain_skin(
         for point in protected_centerline_world
     )
 
+    transition_underlap_m = max(
+        0.0,
+        MESO_GROUND_TRANSITION_OVERLAP_M - MESO_GROUND_EARTHWORK_CLEARANCE_M,
+    )
+    if (
+        transition_underlap_m
+        > MESO_GROUND_MAX_EARTHWORK_UNDERLAP_M + 1e-9
+    ):
+        raise RuntimeError(
+            "meso-ground transition underlap exceeds bounded seam allowance: "
+            f"{transition_underlap_m:.6f} m > "
+            f"{MESO_GROUND_MAX_EARTHWORK_UNDERLAP_M:.6f} m"
+        )
+
     mesh, meso_metrics = build_bounded_meso_ground_mesh(
         x_coordinates_m,
         y_coordinates_m,
@@ -741,6 +757,7 @@ def _sample_local_terrain_skin(
         protected_centerline_xy_m=protected_centerline_xy_m,
         protected_negative_half_widths_m=protected_negative_half_widths_m,
         protected_positive_half_widths_m=protected_positive_half_widths_m,
+        protected_transition_overlap_m=MESO_GROUND_TRANSITION_OVERLAP_M,
         seam_rings=MESO_GROUND_SEAM_RINGS,
         lift_m=TERRAIN_SKIN_LIFT_M,
     )
@@ -760,6 +777,9 @@ def _sample_local_terrain_skin(
         "footprint_radius_m": [MESO_GROUND_RADIUS_X_M, MESO_GROUND_RADIUS_Y_M],
         "protected_half_width_mode": "adaptive_asymmetric_earthwork_envelope",
         "earthwork_clearance_m": MESO_GROUND_EARTHWORK_CLEARANCE_M,
+        "transition_overlap_m": MESO_GROUND_TRANSITION_OVERLAP_M,
+        "transition_underlap_beyond_clearance_m": transition_underlap_m,
+        "maximum_transition_underlap_m": MESO_GROUND_MAX_EARTHWORK_UNDERLAP_M,
         "protected_half_width_range_m": [
             meso_metrics.minimum_protected_half_width_m,
             meso_metrics.maximum_protected_half_width_m,
@@ -1162,9 +1182,11 @@ def main() -> None:
     )
 
     # Keep the corrected MASE Landscape visible as macro terrain. The irregular
-    # meso-ground DynamicMesh owns only the bounded rider-close steep-face patch,
-    # pins back to sampled MASE heights at every topology boundary and leaves the
-    # full road-bench/earthwork envelope open for the dedicated corridor meshes.
+    # meso-ground DynamicMesh owns only the bounded rider-close steep-face patch.
+    # Its outer topology remains pinned to sampled MASE heights, while the
+    # road-facing cutout uses a bounded transition overlap so the meso patch tucks
+    # 0.15 m beneath the dedicated outer earthwork edge instead of exposing a
+    # Landscape strip between the two presentation systems.
     origin_world = kernel_world[0]
     earth_counts = _spawn_dynamic_mesh(
         actor_subsystem,
