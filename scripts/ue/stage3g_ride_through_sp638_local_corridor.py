@@ -1,8 +1,9 @@
 """Run a presentation-only 100 W ride-through over the active SP638 hairpin.
 
-This stage is intentionally diagnostic. It reuses the transient B.4.6 geometry
-already created by stage3g_capture_sp638_local_corridor.py in the same R4.1
-editor session. It does not promote SP638 visual geometry to physics authority.
+This stage is intentionally diagnostic. It reuses the transient B.4.8 road-first
+asphalt/shoulder geometry plus the conformed Landscape created by
+stage3g_capture_sp638_local_corridor.py in the same R4.1 editor session. It does
+not promote SP638 visual geometry to physics authority.
 
 The rider pace uses the Python reference cycling model with the prototype rider
 fixture and the local 3D spline grade. The camera starts 100 m before the
@@ -142,8 +143,6 @@ def _find_active_sp638_spline() -> unreal.SplineComponent:
 
 def _require_transient_geometry() -> None:
     required = {
-        "SP638_LocalMesoGround",
-        "SP638_LocalCorridor_Earthwork",
         "SP638_LocalCorridor_LeftShoulder",
         "SP638_LocalCorridor_RightShoulder",
         "SP638_LocalCorridor_Asphalt",
