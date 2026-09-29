@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Render the R4.1B.4 cyclist-height proof with bounded DynamicMesh meso ground.
+    Render the cyclist-height real-SP638 road-first Landscape-conform proof.
 #>
 [CmdletBinding()]
 param(
@@ -74,7 +74,7 @@ else {
         }
     }
     
-    Write-Host '[2/3] Rendering continuous DynamicMesh rider-close proof...' -ForegroundColor Cyan
+    Write-Host '[2/3] Rendering real-SP638 road-first Landscape-conform proof...' -ForegroundColor Cyan
     $UEditor = $Context.UnrealEditorPath
     if (-not $UEditor -or -not (Test-Path -LiteralPath $UEditor)) {
         throw 'UnrealEditor.exe GUI executable is unavailable.'
@@ -138,8 +138,20 @@ if ([bool]$Proof.local_geometry.box_strip_roadbed -ne $false) {
 if ([int]$Proof.station_count -lt 250) {
     throw "SP638 local-corridor proof sampled too few stations: $($Proof.station_count)"
 }
-if ([int]$Proof.local_geometry.earthwork.triangles -lt 3000) {
-    throw 'SP638 local-corridor earthwork mesh is unexpectedly sparse.'
+if ([bool]$Proof.local_geometry.terrain_owned_by_landscape -ne $true) {
+    throw 'SP638 road-first proof did not assign terrain ownership to Landscape.'
+}
+if ([bool]$Proof.local_geometry.custom_earthwork_mesh -ne $false) {
+    throw 'SP638 road-first proof unexpectedly created a continuous custom earthwork mesh.'
+}
+if ([bool]$Proof.local_geometry.custom_meso_ground_mesh -ne $false) {
+    throw 'SP638 road-first proof unexpectedly created a continuous custom meso-ground mesh.'
+}
+if ([int]$Proof.local_geometry.asphalt.triangles -lt 500) {
+    throw 'SP638 road-first asphalt mesh is unexpectedly sparse.'
+}
+if ([int]$Proof.local_geometry.left_shoulder.triangles -lt 500 -or [int]$Proof.local_geometry.right_shoulder.triangles -lt 500) {
+    throw 'SP638 road-first shoulder mesh is unexpectedly sparse.'
 }
 if ([bool]$Proof.spatial_grid_guardrail.canonical_road_xy_preserved -ne $true) {
     throw 'SP638 local-corridor proof did not preserve canonical road XY.'
@@ -222,62 +234,32 @@ if ([string]::IsNullOrWhiteSpace([string]$Proof.viewport_config_key)) {
 if ([bool]$Proof.neutral_landscape_material -ne $true) {
     throw 'SP638 visual proof did not apply the required neutral Landscape proof material.'
 }
-if ([string]$Proof.local_meso_ground.mode -ne 'bounded_meso_ground') {
-    throw "SP638 visual proof did not use the bounded R4.1B.4 meso-ground path: $($Proof.local_meso_ground.mode)"
+if ([string]$Proof.capture_strategy -ne 'r4.1b.8-real-road-landscape-conform') {
+    throw "SP638 visual proof used unexpected capture strategy: '$($Proof.capture_strategy)'."
 }
-if ([bool]$Proof.local_meso_ground.world_aligned -ne $true) {
-    throw 'SP638 visual proof meso ground is not world-aligned.'
+if ([string]$Proof.landscape_cut_fill.mode -ne 'road_first_landscape_conform') {
+    throw "SP638 terrain did not use road-first Landscape conform: '$($Proof.landscape_cut_fill.mode)'."
 }
-if ([bool]$Proof.local_meso_ground.canonical_road_xy_modified -ne $false) {
-    throw 'SP638 visual proof meso ground modified canonical road XY.'
+if ([string]$Proof.landscape_cut_fill.road_authority -ne 'official_sp638_gis') {
+    throw "SP638 road-first proof used unexpected road authority: '$($Proof.landscape_cut_fill.road_authority)'."
 }
-if ([bool]$Proof.local_meso_ground.landscape_hidden_after_sampling -ne $false) {
-    throw 'SP638 visual proof unexpectedly hid the corrected MASE Landscape after sampling.'
+if ([bool]$Proof.landscape_cut_fill.raise_heights -ne $true -or [bool]$Proof.landscape_cut_fill.lower_heights -ne $true) {
+    throw 'SP638 road-first terrain conform must allow both cut and fill.'
 }
-if ([bool]$Proof.local_meso_ground.macro_landscape_visible -ne $true) {
-    throw 'SP638 visual proof did not keep the corrected MASE Landscape visible as macro terrain.'
+if ([bool]$Proof.landscape_cut_fill.saved_to_map -ne $false) {
+    throw 'SP638 road-first terrain conform unexpectedly persisted the Landscape edit.'
 }
-if ([double]$Proof.local_meso_ground.grid_step_m -gt 2.01) {
-    throw "SP638 meso-ground sampling grid is too coarse: $($Proof.local_meso_ground.grid_step_m) m"
+if ([double]$Proof.landscape_cut_fill.terrain_conform_half_width_m -lt 4.0 -or [double]$Proof.landscape_cut_fill.terrain_conform_half_width_m -gt 4.5) {
+    throw "SP638 terrain conform width drifted from road/shoulder envelope: $($Proof.landscape_cut_fill.terrain_conform_half_width_m) m"
 }
-if ([int]$Proof.local_meso_ground.sample_count -lt 14000) {
-    throw "SP638 meso ground sampled too few points: $($Proof.local_meso_ground.sample_count)"
+if ([double]$Proof.landscape_cut_fill.terrain_falloff_m -lt 8.0 -or [double]$Proof.landscape_cut_fill.terrain_falloff_m -gt 16.0) {
+    throw "SP638 terrain conform falloff is outside the bounded blend range: $($Proof.landscape_cut_fill.terrain_falloff_m) m"
 }
-if ([double]$Proof.local_meso_ground.max_abs_adjustment_m -gt 3.031) {
-    throw "SP638 meso ground exceeded bounded local correction: $($Proof.local_meso_ground.max_abs_adjustment_m) m"
+if ([double]$Proof.landscape_cut_fill.road_half_width_m -ne 3.0) {
+    throw "SP638 asphalt half-width drifted: $($Proof.landscape_cut_fill.road_half_width_m) m"
 }
-if ([double]$Proof.local_meso_ground.minimum_adjustment_m -lt -0.000001) {
-    throw "SP638 meso ground fell below sampled macro terrain: $($Proof.local_meso_ground.minimum_adjustment_m) m"
-}
-if ([double]$Proof.local_meso_ground.boundary_max_abs_adjustment_m -gt 0.000001) {
-    throw "SP638 meso-ground seam is not pinned to source terrain: $($Proof.local_meso_ground.boundary_max_abs_adjustment_m) m"
-}
-if ([string]$Proof.local_meso_ground.protected_half_width_mode -ne 'adaptive_asymmetric_earthwork_envelope') {
-    throw "SP638 meso ground did not follow the asymmetric adaptive earthwork envelope: '$($Proof.local_meso_ground.protected_half_width_mode)'."
-}
-if ([double]$Proof.local_meso_ground.earthwork_clearance_m -lt 0.49) {
-    throw "SP638 meso-ground earthwork clearance regressed: $($Proof.local_meso_ground.earthwork_clearance_m) m"
-}
-if ([double]$Proof.local_meso_ground.protected_half_width_range_m[0] -lt 3.84) {
-    throw "SP638 adaptive meso protection pinched the road/shoulder envelope: $($Proof.local_meso_ground.protected_half_width_range_m[0]) m"
-}
-if ([double]$Proof.local_meso_ground.protected_half_width_range_m[1] -gt 10.51) {
-    throw "SP638 adaptive meso protection exceeded the nominal earthwork envelope: $($Proof.local_meso_ground.protected_half_width_range_m[1]) m"
-}
-if (
-    [double]$Proof.local_meso_ground.protected_negative_half_width_range_m[0] -ge 10.49 -and
-    [double]$Proof.local_meso_ground.protected_positive_half_width_range_m[0] -ge 10.49
-) {
-    throw 'SP638 asymmetric meso protection did not follow any contracted earthwork side.'
-}
-if ([double]$Proof.local_meso_ground.minimum_protected_clearance_m -lt -0.000001) {
-    throw "SP638 meso ground entered the adaptive earthwork envelope: $($Proof.local_meso_ground.minimum_protected_clearance_m) m clearance"
-}
-if ([double]$Proof.local_meso_ground.max_abs_laplacian_after_m -ge [double]$Proof.local_meso_ground.max_abs_laplacian_before_m) {
-    throw 'SP638 meso-ground target did not reduce high-frequency height curvature.'
-}
-if ([int]$Proof.local_geometry.meso_ground.triangles -lt 6000) {
-    throw 'SP638 rider-close meso-ground mesh is unexpectedly sparse.'
+if ([double]$Proof.landscape_cut_fill.shoulder_outer_half_width_m -ne 4.0) {
+    throw "SP638 shoulder envelope drifted: $($Proof.landscape_cut_fill.shoulder_outer_half_width_m) m"
 }
 
 if (-not $ValidateOnly) {
@@ -299,6 +281,6 @@ if ($TrackedChanges.Count -gt 0) {
     throw ("SP638 local-corridor visual proof mutated tracked files: {0}" -f ($TrackedChanges -join '; '))
 }
 
-Write-Host 'R4.1B.4 bounded SP638 meso-ground visual proof: PASS.' -ForegroundColor Green
+Write-Host 'R4.1B.8 real-SP638 road-first Landscape-conform visual proof: PASS.' -ForegroundColor Green
 Write-Host ("Rendered proof: {0}" -f $CapturePng)
 exit 0
