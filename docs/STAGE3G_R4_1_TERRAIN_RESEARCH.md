@@ -1,5 +1,8 @@
 # Stage 3G R4.1 — Terrain / Landscape research playbook
 
+> **Documentation status after 2026-09-29:** terrain research/evidence record for M3. Source measurements and historical diagnostics remain valid where not superseded, but new world-building method is defined by [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md) and current delivery by [`ROADMAP.md`](ROADMAP.md).
+
+
 **Status:** active working research for R4.1B  
 **Scope:** Passo Giau DEM -> Unreal Engine 5.8 Landscape visual-quality diagnosis  
 **Rule:** this document informs presentation only; route/physics truth remains independent.

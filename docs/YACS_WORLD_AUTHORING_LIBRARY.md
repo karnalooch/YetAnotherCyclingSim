@@ -1,5 +1,8 @@
 # YACS World Authoring Library
 
+> **Role after the 2026-09-29 documentation reset:** this document is the reusable **implementation library/catalog** for world authoring. The authoritative methodology for how YACS builds terrain, roads, earthworks, materials, PCG and world streaming is [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md). Legacy Stage 3G/R4.x labels in this file are historical traceability, not new roadmap hierarchy.
+
+
 **Status:** Stage 3G foundation spike  
 **Tracking:** #230  
 **Generated-content sandbox:** `/Game/Generated/YACS/**`

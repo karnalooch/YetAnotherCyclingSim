@@ -8,6 +8,7 @@ Before making changes, read:
 
 - `docs/PRODUCT_REQUIREMENTS.md`
 - `docs/ROADMAP.md`
+- for world/terrain/road work: `docs/WORLD_BUILDING_BIBLE.md`
 
 The product owner is a beginner programmer. Explanations intended for the product owner must be written in clear Polish. Code, identifiers, filenames, commit messages and technical names must be written in English.
 
@@ -16,7 +17,7 @@ The product owner is a beginner programmer. Explanations intended for the produc
 - Implement only the task explicitly requested.
 - Do not add speculative features.
 - Do not expand MVP scope without updating the requirements.
-- Do not start future roadmap stages early.
+- Do not start future product milestones early.
 - Prefer the smallest working solution.
 - Do not introduce a service, framework, plugin or dependency without explaining why it is needed.
 - Do not create a separate backend process unless measurements or requirements justify it.
@@ -41,6 +42,15 @@ After editing:
 4. List changed files.
 5. Report any unverified behavior.
 6. Suggest one logical commit message.
+
+### Roadmap and world-building nomenclature
+
+- `docs/ROADMAP.md` uses only product milestones `M0` through `M10`.
+- Do not create recursive planning identifiers such as `M3.1.2`, `R4.1B.3` or equivalent.
+- Concrete work is tracked by GitHub Issue number plus a human-readable title.
+- Existing Stage/R/B identifiers may remain in historical documents, workflow names and proof artifacts for traceability.
+- For any terrain, road, earthwork, Landscape, PCG, material, cliff, world-streaming or world-performance change, `docs/WORLD_BUILDING_BIBLE.md` is the methodology SSOT.
+- `docs/YACS_WORLD_AUTHORING_LIBRARY.md` defines reusable implementation/catalog systems; it does not override the Bible's world architecture.
 
 ### Documentation SSOT and freshness
 
@@ -143,7 +153,7 @@ Before adding an asset:
 - update `docs/legal/DEPENDENCY_PROVENANCE.md` when the source is external;
 - preserve any required notice in `THIRD_PARTY_NOTICES.md`;
 - check its performance cost;
-- confirm that it is required by the current roadmap stage.
+- confirm that it is required by the current product milestone or an explicitly approved supporting workstream.
 
 Target performance is 60 FPS at 1920×1080 on:
 

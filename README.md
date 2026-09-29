@@ -2,20 +2,22 @@
 
 Realistic indoor cycling simulator built with Unreal Engine 5.
 
-YACS combines deterministic cycling physics with an Unreal Engine world pipeline currently focused on Alpine terrain, route geometry and reproducible visual/runtime proof.
+YACS combines deterministic cycling physics with a real-data-first Unreal Engine world pipeline currently focused on the Passo Giau route.
 
 ## Documentation
 
-**Start with the [documentation map](docs/README.md).** It identifies the current source of truth for product scope, roadmap, physics, terrain/world work, CI and historical evidence.
+**Start with the [documentation map](docs/README.md).**
 
 Quick links:
 
 - [Product requirements](docs/PRODUCT_REQUIREMENTS.md)
-- [Roadmap](docs/ROADMAP.md)
-- [Current Stage 3G R4.1 visual recovery](docs/STAGE3G_R4_1_ALPINE_VISUAL_RECOVERY.md)
-- [Passo Giau terrain research](docs/STAGE3G_R4_1_TERRAIN_RESEARCH.md)
+- [MVP roadmap](docs/ROADMAP.md)
+- [World Building Bible](docs/WORLD_BUILDING_BIBLE.md)
 - [Road physics profile](docs/ROAD_PHYSICS_PROFILE.md)
+- [World authoring library](docs/YACS_WORLD_AUTHORING_LIBRARY.md)
 - [CI validation tiers](docs/CI_VALIDATION_TIERS.md)
+
+Historical Stage 3G / R4.1 documents remain available as execution/proof history, but new planning uses M0-M10 milestones plus named workstreams and GitHub Issues.
 
 ## Governance
 

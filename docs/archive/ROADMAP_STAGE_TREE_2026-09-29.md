@@ -1,0 +1,1026 @@
+# YetAnotherCyclingSim — roadmapa
+
+**Wersja:** 0.1
+**Status:** Draft
+**Tryb pracy:** 11–20 godzin tygodniowo
+**Cel krótkoterminowy:** grywalna wersja od startu do mety
+**Cel docelowy:** pełne MVP opisane w PRODUCT_REQUIREMENTS.md
+
+## Zasady pracy
+
+1. Każdy etap kończy się działającym rezultatem.
+2. Nie rozpoczynamy kolejnego dużego modułu, dopóki obecny nie działa.
+3. Najpierw poprawność, później wygląd i optymalizacja.
+4. Kod generowany przez AI musi zostać uruchomiony i sprawdzony.
+5. Jedna zmiana logiczna powinna odpowiadać jednemu commitowi.
+6. Nie kupujemy assetów bez konkretnego zastosowania.
+7. Nie dodajemy funkcji spoza wymagań MVP.
+8. Co tydzień przygotowujemy działającą wersję projektu.
+9. Płynność mierzymy regularnie na komputerze referencyjnym.
+10. Każdy ważny wzór fizyczny otrzymuje test automatyczny.
+11. Performance jest kontraktem inżynierskim, nie końcowym etapem „optymalizacji”.
+12. Projektujemy tanie ścieżki skalowania wcześnie, ale optymalizujemy dopiero na podstawie pomiarów.
+13. Regresje czasu klatki, pamięci, shaderów, builda lub cooka porównujemy z zapisanym baseline'em; nie oceniamy ich wyłącznie „na oko”.
+14. Każdy zewnętrzny asset lub pakiet musi mieć przypisany etap, zastosowanie i status licencji zgodnie z [`ASSET_PLAN.md`](ASSET_PLAN.md).
+15. **Asset gate jest częścią Definition of Done etapu.** Minimalnych assetów przypisanych do wcześniejszego etapu nie wolno odkładać do późniejszego „art passu” tylko dlatego, że kod i CI są zielone. Etap może mieć ukończony rdzeń techniczny, ale pozostaje otwarty wizualnie, dopóki jego wymagane source/technical assets nie zostaną zaimportowane, zwalidowane i pokazane w wymaganym proofie.
+16. **Visual History jest obowiązkową bramką dla większych zmian wizualnych.** Zmiana może mieć zielony build/CI i jednocześnie zostać odrzucona wizualnie. Dla zmian wymagających oceny obrazu zapisujemy osobno status techniczny i wizualny oraz porównanie `BEFORE | NOW | AFTER` zgodnie z [`visual-history/README.md`](visual-history/README.md). `AFTER` powstaje dopiero po akceptacji; nie wolno kopiować do niego niezaakceptowanego `NOW`.
+
+## Realistyczne oczekiwania czasowe
+
+Plan 12-tygodniowy jest wariantem ambitnym.
+
+Przy braku wcześniejszego doświadczenia pełne MVP może wymagać więcej czasu. Po 12 tygodniach priorytetem jest kompletna i grywalna jazda, nawet jeśli część grafiki, animacji, pogody lub eksportu FIT będzie wymagała dalszego dopracowania.
+
+Zakresu nie zwiększamy bez aktualizacji dokumentu wymagań i roadmapy.
+
+## Plan assetów
+
+Szczegółowa lista potrzebnych assetów, kolejność ich pozyskiwania oraz dwa rejestry — **Source Asset Ledger** i **Technical UE Asset Ledger** — znajdują się w [`ASSET_PLAN.md`](ASSET_PLAN.md). Technical UE assets (np. PCG Graph, Control Rig, IK Rig, Niagara, MetaSound) są pełnoprawnymi deliverables produkcyjnymi, mimo że nie są kupowanymi paczkami.
+
+## Visual History
+
+Źródłem prawdy dla porównywalnych dowodów wizualnych jest [`visual-history/`](visual-history/README.md).
+
+Dla większej zmiany wizualnej zapisujemy:
+
+- punkt roadmapy / wersję;
+- baseline `BEFORE` z ostatniego zaakceptowanego stanu;
+- bieżący `NOW` z dokładnym SHA/PR/CI;
+- `AFTER` dopiero po akceptacji;
+- trzy stabilne capture points dla Stage 3G: **1200 m / 4900 m / 8000 m**;
+- użyte assety, PCG graphy, seed, route clearance i inne wejścia wpływające na obraz;
+- osobny `technical_status` i `visual_status`;
+- powód odrzucenia oraz następny krok, jeżeli technicznie zielona zmiana nie daje oczekiwanego efektu wizualnego.
+
+Visual History nie zastępuje testów technicznych. Jest dodatkowym acceptance gate dla zmian, których sukces zależy od renderowanego wyniku.
+
+**Automatyzacja:** #193 — generator evidence pack ma tworzyć trzy tryptyki `BEFORE | NOW | AFTER`, HUD, SHA-256/manifest i trwały binary upload dla większych zmian wizualnych. Do czasu automatyzacji dopuszczalny jest ręczny pack, ale provenance i decyzja wizualna są obowiązkowe.
+
+## Stage-level world validation cadence
+
+Od Stage 3G R4 obowiązuje jawny model walidacji świata: **szybka iteracja, osobny performance checkpoint po akceptacji wizualnej i jeden ciężki full proof przy zamknięciu etapu**.
+
+- **Iteration / Draft:** dodawanie trawy, wody, skał, materiałów, lighting/fog, biome dressing i innych zmian world-art uruchamia lekkie/static/contract/LFS checks. Zmiany C++/UE tooling nadal dostają code-only Unreal build.
+- **Visual acceptance checkpoint:** kiedy właściciel produktu akceptuje wygląd kandydata, zamrażamy dokładny SHA, zapisujemy porównywalne 1200/4900/8000 m w Visual History i uruchamiamy performance gate dla tego exact SHA.
+- **Stage closeout / Ready for review:** dopiero przy zamknięciu Stage uruchamiamy pełny Unreal/Automation/full-LFS/Map Check/save-reopen/Stage 3G proof. Ten exact-head full proof jest obowiązkowym merge gate.
+- Jeżeli po zaakceptowanym performance checkpoint nastąpi materialna zmiana wizualna/runtime, performance acceptance traci ważność i musi zostać wykonany ponownie.
+- Jeżeli full proof zamyka dokładnie ten sam tree, który już przeszedł zaakceptowany performance checkpoint, nie powtarzamy performance tylko dlatego, że uruchomiono full proof.
+
+Źródłem prawdy dla szczegółowej mechaniki CI jest [`CI_VALIDATION_TIERS.md`](CI_VALIDATION_TIERS.md).
+
+## YACS Performance Framework
+
+Performance ma własny **cross-stage lifecycle**, ale nie jest osobnym etapem produktu. Źródłem prawdy jest [`performance/PERFORMANCE_FRAMEWORK.md`](performance/PERFORMANCE_FRAMEWORK.md), a budżety i zasady ich zmiany są w [`performance/BUDGETS.md`](performance/BUDGETS.md).
+
+| Framework | Powiązany etap | Zakres |
+|---|---|---|
+| **v1.0 — Frame Budget Core** | **3G / teraz** | Frame/Game/Draw/RHI/GPU p50/p95/p99/max, baseline delta, limiting-domain classification, forest A/B diagnostics. |
+| **v1.1 — Scenario + Visual Delta** | **5** | reusable named scenarios, performance delta w Visual History, regresje HUD/session. |
+| **v2.0 — Rider / Animation Budget** | **6** | rider, skeletal LOD, animacja, Control Rig, IK, kamery, significance/update-rate evidence. |
+| **v2.1 — World Scale + Streaming** | **7** | RAM/VRAM, hitch percentiles, streaming/HLOD, traversal, visible-instance/LOD distribution. |
+| **v3.0 — Weather / Effects** | **8** | deszcz, wet road, fog, shadows, WPO, VFX i worst-case weather proof. |
+| **v4.0 — MVP Release Gate** | **10** | packaged full-route proof, final budgets, PSO/first-use stutter, streaming i finalny baseline. |
+
+**Stage 3G revision R5** jest konkretnym performance/rendering-tech pass-em wewnątrz **Performance Framework v1.0**; nie należy go mylić z produktowym **Stage 5**, który uruchamia framework v1.1. Szczegółowy zakres R5 jest w [`performance/STAGE3G_R5_RENDERING_TECH.md`](performance/STAGE3G_R5_RENDERING_TECH.md), a trwały format dowodów w [`performance-history/README.md`](performance-history/README.md).
+
+### Stage 3G R4.1 — Alpine Visual Recovery
+
+Post-merge review R4 wykazał rozjazd między poprawnym technicznie route-aware grounding a oczekiwanym poziomem wizualnym. PR #200 pozostaje ważnym technicznym krokiem, ale **nie jest zaakceptowanym visual closeoutem Stage 3G**. R5 pozostaje zablokowane do czasu zamknięcia R4.1.
+
+R4.1 używa jednego golden vertical slice przy 1200 m do ustalenia języka świata przed propagacją na pełną trasę. Zakres obejmuje makro/meso terrain, spójny terrain-material foundation, cliffs/rocks/scree, warstwowy forest, minimalny roadside kit oraz deterministyczny atmosphere/lighting pass. Physics/route authority pozostaje bez zmian.
+
+Pełny kontrakt: [`STAGE3G_R4_1_ALPINE_VISUAL_RECOVERY.md`](STAGE3G_R4_1_ALPINE_VISUAL_RECOVERY.md).
+
+**Entry do R5:** dopiero po human visual acceptance 1200/4900/8000, Visual History `AFTER`, exact-SHA performance gate i finalnym Stage 3G closeout proof.
+
+**Aktualny R4.1 checkpoint (28.09.2026):** TINITALY 10 m pozostaje scalonym baseline'em provenance/preparation z PR #211/#212, a Veneto LiDAR 5 m zachowujemy jako reprodukowalny fallback/A-B baseline. Aktywny PR #215 ma teraz canonical source **MASE PST `LiDAR DTM grigliato 1x1`** z immutable prerelease `data-mase-pst-passo-giau-dtm-2026-09-28`: 204 GeoTIFF-y DTM (wszystkie `*_DTM.tiff`, zero DSM), `853,162,557 B`, SHA-256 `4215d1d37fb8540c44442aedd164b6cda3f1845f3552413a975a6b7b1461e93c`, EPSG:4326 / 0.00001° (~0.76×1.11 m przy Giau), NoData -9999, CC BY 4.0. Pipeline jawnie reprojektuje dane do **EPSG:32632** i 1 m metric working grid przed kontrolowanym resample do **4033×4033 / 32×32 / 1024 komponentów**; stopni geograficznych nie wolno traktować jak metrów. Poprzednie GREEN runy `36395015722` / `36399060374` są dowodem ścieżki Veneto 5 m, nie nowego MASE source path. Dla MASE wymagany jest świeży exact-SHA authoring/render proof i human visual acceptance. `L_CyclingTest` oraz route/physics truth pozostają nietknięte. **R5 nadal zablokowane**; przed propagacją potrzebny jest zaakceptowany 1200 m golden slice.
+
+Zasada wersjonowania: kolejnej wersji frameworka nie implementujemy „na zapas”. Wchodzi dopiero wtedy, gdy odpowiadający etap tworzy realny nowy koszt do zmierzenia. Stage 3G forest jest pierwszym klientem v1.0.
+
+## Plan narzędzi i pluginów Unreal Engine
+
+Pluginy i narzędzia UE włączamy etapami, dokładnie tak samo jak assety. Każdy plugin musi mieć konkretny cel, przypisany etap oraz własną walidację; nie aktywujemy dużych zestawów funkcji „na zapas”.
+
+Źródłem prawdy dla planu integracji jest [`UNREAL_TOOLING_PLUGIN_PLAN.md`](UNREAL_TOOLING_PLUGIN_PLAN.md).
+
+Najważniejsze bramki:
+
+| Etap | Tooling / plugin gate |
+|---|---|
+| **3G** | PCG, Editor Scripting Utilities, Geometry Script; PCG Geometry Script Interop tylko gdy potrzebny do konkretnego graphu; PCGToolset dopiero po zielonym MCP smoke |
+| **3G / #85** | db-lyon `ue-mcp` pozostaje warstwą orkiestracji/guards/flows; oficjalny UE 5.8 Unreal MCP / Toolset Registry może być wykorzystywany przez tę warstwę, ale nie uruchamiamy na początku dwóch niezależnych MCP serverów |
+| **6** | Control Rig + IK Rig + FullBodyIK; opcjonalnie Skeletal Mesh Editing Tools i Control Rig Modules po realnym zapotrzebowaniu |
+| **7** | opcjonalnie Scriptable Tools Editor Mode, jeśli własny panel/tryb worldgen przyspiesza pracę względem flows |
+| **8** | Niagara dla VFX oraz MetaSounds dla parametrycznego audio |
+| **opcjonalnie 3G/7** | Water + Landmass tylko jeśli jezioro/rzeka pozostają w art direction i uzasadniają koszt subsystemu |
+
+Assety wchodzą etapami, a nie jako osobny wielki art-pass:
+
+| Etap | Asset gate |
+|---|---|
+| **3G** | landscape/ground baseline, vegetation, rocks/cliffs, atmosphere/sky/fog; bez obowiązku zakupu, jeśli natywne/darmowe zasoby wystarczą |
+| **4** | wyłącznie lekkie debug/guidance decals potrzebne do mechaniki zakrętów |
+| **5** | font i minimalny zestaw ikon HUD |
+| **6** | jeden produkcyjny rider + jeden road bike + strój/kask + rig/retargeting |
+| **7** | właściwy environment art pass: vegetation, rocks, road dressing, alpine buildings, roadside props, kilka pojazdów/scenek życia |
+| **8** | wet-weather VFX oraz cycling/nature audio |
+| **10** | asset freeze; wyłącznie polish i braki blokujące spójność/czytelność MVP |
+| **Po MVP** | tłumy, traffic, zwierzęta, wiele rowerów/ubrań i kolejne regiony |
+
+## Równoległa praca biuro–dom
+
+Prace prowadzone są na dwóch komputerach: biurowym (dokumentacja, Git, lekki kod, testy Pythona, bez Unreal Engine) i domowym (build projektu UE, testy automatyzacji, walidacja wydajności).
+
+- Jednocześnie mogą istnieć co najwyżej dwie niescalone gałęzie implementacyjne.
+- Równoległa praca jest dozwolona w ramach bieżącego etapu oraz jawnie oznaczonych niezależnych workstreamów, jeżeli mają wspólny formalny kontrakt danych, osobne bramki CI i nie wymagają niescalonych zmian z drugiego workstreamu.
+- Zadania równoległe muszą być od siebie niezależne.
+- Gałąź równoległa nie może korzystać z API, plików źródłowych, assetów ani zachowań, które wprowadza dopiero inna niescalona gałąź.
+- Każde zadanie korzysta z jednego issue i jednej dedykowanej gałęzi: recenzja → commit → push → PR → automatyczne scalenie po spełnieniu wymaganych bramek i walidacji.
+- Checkpoint przygotowany na komputerze biurowym może zostać zacommitowany i wypchnięty po recenzji, ale raport musi jawnie oznaczać `Unreal validation pending`.
+- **Draft PR** z kodem C++ UE, assetami UE lub zmianami integracyjnymi może zostać otwarty przed pełnym proofem domowym, jeśli służy review, CI albo checkpointowi; musi pozostać draftem i jawnie wymieniać brakujące walidacje.
+- Taki PR nie może zostać oznaczony jako ready-for-review ani scalony, dopóki wymagany build UE, Automation i stage-specific asset/runtime proof nie przejdą na komputerze domowym lub zaufanym runnerze UE.
+- Pull Requesty zawierające wyłącznie dokumentację oraz inne zmiany niemające wpływu na build UE nie wymagają walidacji w Unreal Engine.
+- Od 2026-09-23 obowiązuje stała zgoda właściciela produktu na automatyczne scalanie: PR może zostać scalony bez osobnej komendy `scal`, jeżeli zakres jest zatwierdzony, wszystkie wymagane walidacje i bramki CI są zielone, nie ma nierozwiązanych uwag ani blockerów, a PR jest mergeable i nie jest draftem.
+- Stała zgoda na merge nie omija walidacji: nie wolno automatycznie scalać przy brakującym wymaganym proofie UE/home-PC, oczekującej lub czerwonej bramce, nierozwiązanym review/blockerze, konflikcie/drafcie ani gdy właściciel jawnie każe wstrzymać merge.
+- Po niepowodzeniu walidacji nie wolno osłabiać wymagań ani testów; najpierw trzeba zdiagnozować przyczynę.
+- Prac z kolejnych etapów roadmapy nie rozpoczynamy przed spełnieniem kryteriów ukończenia obecnego etapu, **chyba że roadmapa jawnie oznacza dany zakres jako równoległy workstream**. Taki wyjątek nie znosi końcowego integration gate ani Definition of Done wcześniejszego etapu.
+- Kompilacja UE, integracja z edytorem, walidacja assetów i wydajności pozostają odpowiedzialnością komputera domowego, gdy na komputerze biurowym nie ma Unreal Engine.
+- Docelowo komputer domowy jest kontrolowanym self-hosted runnerem GitHub Actions dla zaufanych workflow UE. Do czasu ukończenia #24 obowiązuje ręczne uruchamianie proofów; podczas Phase 1 #24 dozwolony jest wyłącznie ręczny `workflow_dispatch`, bez triggera na dowolny `pull_request`.
+
+Gałęzie wyłącznie dokumentacyjne nie wliczają się do limitu dwóch gałęzi implementacyjnych.
+
+---
+
+# Etap 0 — fundament projektu
+
+**Planowany czas:** tydzień 1
+
+## Zadania
+
+- [x] Utworzenie repozytorium GitHub (obecnie publicznego).
+- [x] Dodanie `.gitignore` dla Unreal Engine.
+- [x] Utworzenie dokumentu wymagań.
+- [x] Utworzenie roadmapy.
+- [x] Konfiguracja Git LFS.
+- [x] Utworzenie zasad pracy dla asystentów AI.
+- [x] GitHub Project `YACS — MVP` / workflow automation — #88 ukończone; bootstrap porównuje układ ze źródłem zamiast hardkodować liczbę kolumn.
+- [x] Instalacja wymaganych narzędzi na komputerze domowym.
+- [x] Utworzenie projektu Unreal Engine 5.
+- [x] Uruchomienie pustego projektu na komputerze referencyjnym.
+
+**Notatka statusowa:** na komputerze referencyjnym udało się zbudować projekt
+UE 5.8 w trybie C++ (edytor, Windows) oraz uruchomić pusty projekt
+YetAnotherCyclingSim.
+
+**Jawny dług infrastrukturalny (nie blokuje bieżącego 3G):**
+
+- #22 — włączyć pozostałe ustawienia bezpieczeństwa GitHub i ochronę `main`; API nadal raportuje `main.protected = false`.
+- #24 — realny Windows/Unreal Engine runner działa na `yacs-home-ue58`; exact-SHA build, Automation, intentional-red, cleanup oraz Stage 3G full-validation canary zostały udowodnione. Od PR #163 generic trusted C++/UE lane jest automatycznie wymagany przez `Aggregate CI gate` dla `ue_code=true`. **Issue pozostaje otwarte wyłącznie dla dalszego Phase 2/3 hardeningu, autostartu/reboot proofu i zależności od #22.** Pełny plan: [`UNREAL_SELF_HOSTED_RUNNER_PLAN.md`](UNREAL_SELF_HOSTED_RUNNER_PLAN.md).
+  - **Odroczony milestone operacyjny — dopiero przed Phase 2:** zastąpić ręczne uruchamianie `run.cmd` kontrolowanym autostartem runnera przez Windows Task Scheduler pod dedykowanym kontem runnera. Nie blokuje Phase 1 ani Stage 3G. Przed włączeniem trusted automatic UE execution wymagany jest reboot proof: restart hosta → runner sam wraca online → odbiera testowy job → build/Automation oraz co najmniej jeden workload wymagający interaktywnej sesji/GPU nadal przechodzą. Klasyczna usługa Windows nie jest domyślną ścieżką dla workloadów visual/GPU; można ją rozważyć wyłącznie po osobnym proofie kompatybilności.
+- #23 — ekstrakcja wspólnego CI do `engineering-platform` jest ukończona i zamknięta.
+
+## Kryterium ukończenia
+
+- Repozytorium można sklonować na obu komputerach.
+- Dokumentacja jest dostępna w repozytorium.
+- Pusty projekt UE5 uruchamia się bez błędów.
+- Projekt można zbudować na Windows.
+
+---
+
+# Etap 1 — prototyp fizyki poza grafiką
+
+**Planowany czas:** tydzień 1–2
+
+**Status:** ukończony
+
+## Cel
+
+Stworzyć testowalny model jazdy, zanim powstanie docelowa trasa i grafika.
+
+## Zadania
+
+- [x] Zdefiniowanie jednostek wszystkich parametrów.
+- [x] Zdefiniowanie danych wejściowych i wyjściowych silnika fizycznego.
+- [x] Implementacja masy kolarza i roweru.
+- [x] Implementacja mocy i kadencji testowej.
+- [x] Implementacja grawitacji.
+- [x] Implementacja oporu toczenia.
+- [x] Implementacja oporu aerodynamicznego.
+- [x] Implementacja wiatru.
+- [x] Implementacja przyspieszania i toczenia.
+- [x] Zastosowanie stałego kroku czasowego.
+- [x] Dodanie testów dla podjazdu, płaskiego odcinka i zjazdu.
+- [x] Dodanie prostego rejestru wyników symulacji.
+
+**Uwaga:** Referencyjny pakiet Pythona w katalogu `physics_reference/`
+(kontrakty danych, siły, stały krok czasowy i testy jednostkowe) jest
+ukończony i przechodzi **260 testów automatycznych**. Port C++ do Unreal
+Engine jest ukończony: zawiera kontrakty danych, siły oporu,
+deterministyczny krok symulacji oraz testy dynamiki długookresowej.
+Budowa edytora UE 5.8 (Windows, Development) kończy się sukcesem,
+a wszystkie cztery testy automatyczne `CyclingPhysics` przechodzą.
+Etap 1 dostarcza czyste obliczenia ze stałym krokiem czasowym. Akumulator
+czasu w trakcie gry, który uniezależnia rozgrywkę od zmiennego FPS, został
+następnie zaimplementowany i przetestowany w ramach etapu 2. Prototypy Pythona dotyczące trasy, pogody
+i zakrętów nie oznaczają jednak ukończenia późniejszych etapów Unreal
+Engine — te etapy nadal wymagają implementacji i weryfikacji w UE5.
+
+## Kryterium ukończenia
+
+Dla ustalonych parametrów symulator oblicza powtarzalną prędkość i dystans, a wszystkie testy przechodzą automatycznie.
+
+---
+
+# Etap 2 — pierwszy grywalny prototyp UE5
+
+**Planowany czas:** tydzień 2–3
+**Status:** ukończony
+
+## Cel
+
+Połączyć wejście testowe, fizykę i ruch obiektu po prostej trasie.
+
+## Zadania
+
+- [x] Utworzenie podstawowej mapy testowej.
+- [x] Utworzenie drogi opartej na spline.
+- [x] Dodanie tymczasowego obiektu reprezentującego rower.
+- [x] Poruszanie obiektu zgodnie z wynikiem silnika fizycznego.
+- [x] Sterowanie mocą i kadencją z klawiatury.
+- [x] Dodanie panelu diagnostycznego.
+- [x] Dodanie zatrzymania i ponownego uruchomienia jazdy.
+- [x] Dodanie stałego kroku fizyki niezależnego od FPS.
+- [x] Pomiar liczby FPS i czasu klatki.
+
+### Domknięte transze architektoniczne Stage 2
+
+- [x] **2.2.1 — #17:** `FCyclingSimulationSession` — czysty, testowalny C++ spinający `RiderInputController`, parametry kolarza/środowiska i `FixedStepRunner`; konfiguracja oraz operacje fallible są transakcyjne, reset i deterministyczny rerun są objęte Automation. Ta transza została wcześniej zaimplementowana i scalona, ale nie była jawnie zapisana w roadmapie.
+
+**Dowód ukończenia:** #17, #44, #47, #48 oraz końcowy proof #49 / PR #59.
+Stage 2 zakończył się zielonym buildem i Automation, realnym PIE proof, deterministycznym frame-pacing proof oraz bazowym pomiarem wydajności 1920×1080 na komputerze referencyjnym.
+
+## Kryterium ukończenia
+
+Użytkownik może przejechać prostą trasę, zmieniając moc i kadencję, a prędkość wynika z modelu fizycznego.
+
+---
+
+# Etap 3 — trasa testowa i profil wysokości
+
+**Planowany czas:** tydzień 3–5
+**Status:** rdzeń 3A–3F ukończony; 3G technicznie udowodnione, ale **wizualny/asset acceptance ponownie otwarty**; 3H Road Physics Profile ukończone przez PR #165, #167 i #168; Stage 4A ukończone, 4B/4C odblokowane
+
+## Cel
+
+Stworzyć pełny przebieg fikcyjnej trasy alpejskiej i doprowadzić jej prototypową prezentację do uzgodnionego poziomu referencyjnego przed rozpoczęciem mechaniki zakrętów.
+
+## Plan wykonawczy
+
+Stage 3 jest realizowany kolejno:
+
+1. **3A — #53:** route context i granice rozwiązywane na poziomie każdego fixed-step — **ukończone / PR #70**.
+2. **3B — #64:** port profilu `ALPINE_JOURNEY` do czystego modelu domenowego Unreal — **ukończone / PR #71**.
+3. **3C — #65:** pełny ciągły spline 10 km oraz deterministyczne wyznaczanie nachylenia z geometrii — **ukończone / PR #74**.
+4. **3D — #66:** integracja runtime, start/sektory/meta i deterministyczne crossing events — **ukończone / PR #75**.
+5. **3E — #67:** minimalny teren oraz pełny start-to-finish proof Stage 3 — **ukończone / PR #78**.
+6. **3F — PR #79:** utrwalenie pełnego stanu mapy, materiałów drogi/terenu i wizualnego baseline'u — **ukończone**.
+7. **3G — #80:** Reference Environment Pass — **techniczny authoring/final-proof pipeline jest ukończony przez PR #155, ale acceptance wizualny i progressive asset gate nie zostały spełnione; #80 wraca jako aktywny etap**.
+8. **3G-MCP — #85:** kontrolowany spike `db-lyon/ue-mcp` pozostaje częścią 3G tooling/worldgen; nie wolno traktować go jako substytutu PCG ani jako powodu do pominięcia source assetów.
+9. **3H — Road Physics Profile & Route Geometry Contract:** formalny kontrakt fizycznej drogi, niezależny od renderowanego mesha/PCG — **ukończone przez PR #165, #167 i #168**.
+
+**Korekta po audycie 26.09.2026:** Stage 4A zostało zrealizowane przed wykryciem luki acceptance i pozostaje ważnym, scalonym modelem domenowym. Od teraz Stage 3 ma dwa jawnie rozdzielone workstreamy: **World/3G** (assets, PCG, environment) oraz **Physics/3H → 4B/4C** (kontrakt drogi i czysta mechanika zakrętów). Mogą być rozwijane równolegle, ponieważ są spięte formalnym `Road Physics Profile` i osobnymi bramkami CI. **Końcowy in-world integration/acceptance 4D/4E nie może zostać uznany za ukończony, dopóki 3G i 3H nie są zielone.**
+
+## Zadania rdzenia Stage 3
+
+- [x] Zaprojektowanie profilu 20–30-minutowej jazdy.
+- [x] Utworzenie przebiegu od doliny do wysokich gór.
+- [x] Dodanie podjazdów, zjazdów i wypłaszczeń.
+- [x] Dodanie zakrętów o różnych promieniach.
+- [x] Obliczanie nachylenia z geometrii trasy.
+- [x] Utworzenie punktów startu, sektorów i mety.
+- [x] Dodanie podstawowego terenu.
+- [x] Sprawdzenie ciągłości drogi i braku gwałtownych zmian nachylenia.
+- [x] Pierwszy pełny przejazd od startu do mety.
+- [x] Zapisać Stage 3 baseline czasu lokalnego build/proof dla bieżącego małego projektu, bez wymuszania pełnego cooka przy każdej zmianie.
+- [x] Potwierdzić granicę domenową: wynik symulacji trasy/jazdy nie zależy od `AActor`, renderingu ani transformu presentation jako źródła prawdy.
+
+**Dowód ukończenia rdzenia:** PR #70, #71, #74, #75 i #78. PR #78 raportuje 10 km trasy, zielony pełny proof, Map Check 0/0, save/reopen oraz reprezentatywny proof 1080p. PR #79 utrwala pełny stan mapy i materiałów Stage 3F na `main`.
+
+## 3G — Reference Environment Pass
+
+> **Status 27.09.2026:** R2 / PR #162 jest MERGED jako `fd77094…`; R3 / #187 / PR #192 jest MERGED jako `02ff23f0…` z zamkniętym Visual History `VH-3G-R3-001`. Historyczny Stage 3G environment-performance baseline z PR #197 / run #13 mierzył sparse forest przy 4900 m jako **11.443 ms frame p95 / 10.641 ms GPU p95 / 94.52 FPS avg**. Issue **#201 / PR #202** zastępuje ten sparse proxy reprezentatywnym target-density forest (primary/background/understory). Persisted forest/map commit `eea7da9e…` przeszedł exact-SHA target-density performance run **#1 / 36334574786** na `09aed220…`: **forest 9.530 ms frame p95 / 7.953 ms GPU p95 / 122.90 FPS avg / 0% over-budget**, więc ostrzejszy gate **frame/GPU p95 <= 14.0 ms** jest GREEN. Full Stage 3G exact-SHA proof run `36336130795` jest GREEN, ale capture 4900 m odrzucił `target_density_v1` wizualnie jako nadal zbyt rzadki i powtarzalny. #202 pozostaje zablokowany przed merge; R3.1 wprowadza `target_density_v2` (~1997 oczekiwanych instancji, ok. +87% względem v1) i musi ponownie przejść niezmieniony performance + visual gate. `PCG_Valley` i `PCG_HighAlpine` pozostają `validated`. **Stage 3G jako całość nadal pozostaje otwarte** dla R4 terrain/road/world closeout i późniejszego R5 rendering-tech passu.
+
+- [ ] Ukształtować spójną dolinę otaczającą drogę zamiast czytelnych jako osobne kafle podpór terenu.
+- [ ] Zbudować kilka planów gór z wyraźną głębią i atmospheric perspective.
+- [ ] Poprawić kontrolowaną, deterministyczną gęstość lasu w sektorze leśnym — **#201 / PR #202**: `target_density_v1` ma GREEN performance + full proof, ale został **VISUAL_REJECTED** na 4900 m; `target_density_v2` zwiększa oczekiwany scatter z ~1069 do ~1997, wzmacnia skalę canopy i czeka na re-authoring, ponowny 14 ms perf gate oraz visual review.
+- [ ] Uporządkować przejście materiałów/kolorystyki: meadow → forest → high Alpine.
+- [ ] Dodać wodę w dolinie, jeżeli poprawia uzgodnioną kompozycję bez tworzenia dużego nowego subsystemu.
+- [ ] Poprawić lighting / sky / fog przy zachowaniu czytelności drogi.
+- [x] Wykonać i zarejestrować w **Visual History** porównywalny tryptyk `BEFORE | NOW | AFTER` dla 1200 m, 4900 m i 8000 m; finalny merged-main AFTER jest zapisany w `VH-3G-R3-001`.
+- [x] Potwierdzić build, Automation, Map Check, save/reopen, LFS/fresh-checkout i podstawowy 1080p/60 performance sanity na komputerze referencyjnym. Proof: PR #197 / run #13 / `docs/STAGE3G_ENVIRONMENT_PERFORMANCE.md`.
+
+### Visual History gate 3G
+
+| Visual History | Roadmap slice | Status | Baseline / proof |
+|---|---|---|---|
+| `VH-3G-R1-001` | R1 — real Alpine ground + rocks | historical accepted baseline | PR #160 / `91c1150…` |
+| `VH-3G-R2-001` | R2 — deterministic PCG forest | **VISUAL_ACCEPTED / MERGED** | PR #162 / `fd77094…` / CI #398 |
+| `VH-3G-R3-001` | R3 — valley + high-Alpine PCG/massing | **VISUAL_ACCEPTED / MERGED** | #187 / PR #192 / `02ff23f0…` / CI #421 |
+| `VH-3G-R3-002` | R3/R3.1 follow-up — representative forest target density | **V1 PERFORMANCE_PASS / VISUAL_REJECTED; V2 ITERATING** | #201 / PR #202 / v1 perf `09aed220…` / full proof `36336130795` |
+| `VH-3G-R4-001` | R4 — forest / terrain / road visual-world closeout | **IN PROGRESS** | final closeout report + 1200/4900/8000 m evidence pending |
+
+R3 zachowuje wszystkie odrzucone checkpointy (#408 brak widocznej integracji, #412 oversized/floating massing, #415 brak podłoża dla distant massing). NOW `58c89674…` / CI #417 został zaakceptowany wizualnie, a finalny AFTER pochodzi z merged `main` `02ff23f0…` / CI #421. Ten wpis Visual History jest zamknięty; dalszy polish świata należy do pozostałych gate'ów Stage 3G i późniejszego Stage 7.
+
+**Performance baseline 3G:** PR #197 / run #13 pozostaje historycznym sparse-forest baseline'em. Reprezentatywny target-density forest z #201 / PR #202 ma osobny exact-SHA proof `09aed220…` / run `36334574786`: valley **9.469/6.408 ms, 134.27 FPS**, forest **9.530/7.953 ms, 122.90 FPS**, high Alpine **8.868/6.487 ms, 135.32 FPS** (frame/GPU p95, avg FPS), wszędzie **0%** klatek powyżej 16.667 ms. Forest przechodzi dodatkowy budżet **14.0 ms** dla frame i GPU. Ten wynik pozostaje technicznym datapointem `target_density_v1`, ale **nie jest zaakceptowanym baseline'em gęstego lasu**, ponieważ pełny capture 4900 m został odrzucony wizualnie. Dopiero target-density iteration zaakceptowana jednocześnie przez visual + performance gate staje się baseline'em przed R4; nie zastępuje to końcowego R4 pre-optimization reportu ani późniejszego Stage 7 full-route RAM/VRAM/hitch/streaming proof.
+
+### Tooling gate 3G
+
+- [x] Włączyć natywny UE plugin **PCG** jako podstawowy system proceduralnego rozmieszczania vegetation/rocks/roadside dressing. Plugin jest jawnie włączony w `.uproject`; produkcyjny graph/proof pozostaje częścią 3G-R2.
+- [x] Włączyć **Editor Scripting Utilities** jako uzupełnienie istniejącego `PythonScriptPlugin` dla bezpiecznej automatyzacji edytora. Plugin jest jawnie włączony w `.uproject`.
+- [x] Włączyć **Geometry Script** dla generowania, analizy i modyfikacji geometrii pomocniczej; plugin jest jawnie włączony w `.uproject`, pozostaje narzędziem pomocniczym i nie jest źródłem prawdy dla trasy.
+- [ ] Włączyć **PCG Geometry Script Interop** tylko wtedy, gdy pierwszy graph faktycznie potrzebuje przepływu PCG ↔ Dynamic/Static Mesh; nie jest warunkiem samego startu PCG.
+- [ ] Po zielonym #85 MCP smoke ocenić eksperymentalny **PCGToolset** UE 5.8 do tworzenia/modyfikacji PCG Graphów przez agenta.
+- [ ] **Water/Landmass** pozostawić wyłączone do decyzji, że jezioro/rzeka są częścią zaakceptowanej kompozycji 3G.
+- [x] Pierwszy stock-PCG proof jest editor-time i deterministyczny: R2 / PR #162 utrwalił `PCG_RouteExclusion -> PCG_Forest` na zaakceptowanym committed-SHA proofie; runtime PCG nie jest wymaganiem MVP.
+- [x] PCG konsumuje WorldSpec i canonical route geometry jako constraints, ale nie jest źródłem prawdy dla przebiegu trasy; `FRouteGeometryProfile` pozostaje authoritative.
+- [x] Domknąć pierwszy zestaw Technical UE Asset Ledger: `PCG_RouteExclusion`, `PCG_Forest`, `PCG_Valley` i `PCG_HighAlpine` = `validated`; Valley/HighAlpine mają R3 Visual History + merged-main proof oraz osobny 1080p/60 performance gate PR #197 / run #13.
+- [ ] Authoring assets PCG przechowywać poza `/Game/Generated/YACS/**`; katalog `Generated` jest wyłącznie dla odtwarzalnych outputów generatora.
+
+### 3G-R4 — forest / terrain / road visual-world closeout
+
+R4 pozostaje bieżącym visual/world milestone i **nie dostaje scope creep z R5**. Agent kończy las, teren, dopasowanie świata do drogi/trasy oraz wymagany visual proof. Dopiero po ukończeniu pracy publikuje raport zamykający.
+
+Wymagany R4 closeout report:
+- exact HEAD/commit i branch;
+- co wizualnie zmieniono;
+- stan lasu / terenu / drogi;
+- screenshoty **1200 m / 4900 m / 8000 m**;
+- average FPS + **1% low**;
+- Frame / Game / Draw / GPU timing;
+- VRAM high-water mark, jeśli dostępny;
+- hitch count / hitch evidence;
+- stan CI/proof;
+- znane problemy i regresje.
+
+R4 closeout jest **baseline'em przed optymalizacją**. Nie wolno poprawiać liczb kosztem zmiany zaakceptowanego stanu bez zachowania dokładnego pre-optimization evidence.
+
+### 3G-R5 — Smooth Frame / Rendering Tech
+
+R5 zaczyna się dopiero po R4 closeout. Celem jest stabilny frametime i brak hitchy na referencyjnym **1920×1080 / 60 FPS / RTX 2070 SUPER**, a nie maksymalizacja average FPS.
+
+Źródła prawdy:
+- [`performance/STAGE3G_R5_RENDERING_TECH.md`](performance/STAGE3G_R5_RENDERING_TECH.md);
+- [`performance/PERFORMANCE_FRAMEWORK.md`](performance/PERFORMANCE_FRAMEWORK.md);
+- [`performance/BUDGETS.md`](performance/BUDGETS.md);
+- [`performance-history/README.md`](performance-history/README.md).
+
+Zakres R5:
+- [ ] ustanowić Performance History i deterministyczny 60–90 s benchmark;
+- [ ] zachować R4 exact-SHA pre-optimization baseline;
+- [ ] wdrożyć/zwalidować interpolation presentation nad fixed-step physics bez zmiany simulation truth;
+- [ ] zmierzyć Lumen Medium jako opcję jakości/wydajności;
+- [ ] stroić foliage WPO/wind/shadow distance i VSM invalidation;
+- [ ] zmierzyć Nanite distance/foliage policy, bez uzależniania MVP od eksperymentalnych funkcji;
+- [ ] zbadać PCG hierarchical/runtime generation budgets i bounded per-frame generation;
+- [ ] zbadać World Partition/HLOD + preload przed riderem + unload za riderem;
+- [ ] objąć PSO/first-use stutter measured proofem;
+- [ ] utrzymać **Native + TSR** jako vendor-neutral baseline;
+- [ ] dodać capability-gated **DLSS / FSR / XeSS Super Resolution** przez jedną warstwę projektu;
+- [ ] walidować motion vectors, WPO foliage, spokes, rider, thin geometry, translucency i ghosting dla temporalnych backendów;
+- [ ] integrować **Reflex / Anti-Lag 2 / XeLL** tylko tam, gdzie są wspierane i uzasadnione;
+- [ ] zmierzyć dynamic resolution dopiero po statycznych baseline'ach;
+- [ ] zrobić Frame Generation jako osobny późny spike; SR i FG pozostają logicznie rozdzielone;
+- [ ] utrzymywać jawną compatibility matrix dla SR + FG + low-latency;
+- [ ] `Auto` ma bazować na runtime capabilities + hardware benchmark + user override, nie na prostym vendor switchu;
+- [ ] generated/displayed FPS nigdy nie zastępuje base-rendered FPS w hard acceptance.
+
+### 3G-R6 — worldgen tooling research / adoption gate
+
+Kandydaci z researchu są jawnie śledzeni, ale **nie stają się dependency tylko dlatego, że istnieją**. Najpierw stock UE PCG musi przejść realny `PCG_RouteExclusion -> PCG_Forest` proof. Dopiero potem mierzymy, czy zewnętrzne narzędzie usuwa konkretny koszt lub brak funkcji.
+
+- [ ] **PCGEx / PCGExtendedToolkit** — zrobić mały spike po pierwszym zielonym stock-PCG forest proofie. Ocenić route-distance filtering, spatial queries, asset staging i path/cluster tooling. Adoptować tylko wtedy, gdy realnie usuwa własny kod lub upraszcza grafy; w przeciwnym razie pozostaje poza MVP.
+- [ ] **EssentialUE5PCG** — używać jako **reference implementation**, nie dependency. Przejrzeć wzorce spline -> forest/rocks/path, dynamic-mesh authoring i projection; kopiować wyłącznie potrzebne wzorce zgodnie z licencją.
+- [ ] **PCG Biome Core** — traktować jako **reference architecture / optional experiment** dla data-driven biome definitions, asset sets, filters, exclusions, blending i priority. Nie włączać eksperymentalnego pluginu do MVP bez konkretnej luki w naszym WorldSpec/PCG.
+- [ ] **Analog Strike** — reference pipeline dla deterministycznego offline generation -> UE import/authoring -> capture/proof. Nie dodawać jako dependency.
+- [ ] **RoadForge** — odłożyć do Stage 7 / post-MVP jako reference dla spline -> procedural road presentation, shoulders/markings/roadside dressing; nie może przejąć ownershipu trasy.
+- [ ] **GeoTerrain** — odłożyć do Stage 7 / post-MVP jako research dla DEM/OSM, real-world terrain, altitude/slope materials i foliage avoidance; nie instalować do fikcyjnej 10 km trasy MVP bez potrzeby.
+- [ ] **Heightmap Level Generator** — R&D only dla erosion/heightmap/mask ideas; nie używać jego własnej sieci dróg jako źródła YACS route truth.
+
+**Adoption rule:** każdy kandydat musi skończyć jako `reference`, `rejected`, `optional`, `adopted-editor-only` albo `adopted-runtime`, z krótkim uzasadnieniem i wpływem na build/perf/licencję. Brak decyzji nie może zniknąć z roadmapy.
+
+### Asset gate 3G
+
+Na tym etapie **muszą realnie wejść do projektu** minimalne assety potrzebne do uzyskania referencyjnego środowiska: bazowe landscape/ground materials, vegetation, rocks/cliffs oraz atmosfera. Sam wpis `candidate` / `approved` w ledgerze ani samo pobranie źródeł nie spełniają gate'u.
+
+Minimalny przebieg:
+1. pobrać i zweryfikować wybrany zestaw CC0 z `scripts/assets/stage3g_polyhaven.json`;
+2. zaimportować wyłącznie potrzebne elementy do UE i zapisać source/provenance;
+3. zwalidować materiały, LOD/Nanite/instancing oraz koszt na komputerze referencyjnym;
+4. użyć zatwierdzonych assetów w deterministycznym environment authoringu/PCG;
+5. przejść route-clearance + regenerate proof;
+6. pokazać wynik w capture'ach 1200 m / 4900 m / 8000 m i dopiero wtedy nadać status `validated`.
+
+Pierwsza kolejność: `Sparse Grass`, `Forest Ground 03`, `Rocky Terrain`, `Rock Face 01`, `Boulder 01`; `Fir Tree 01`, `Grass Medium 01` i `Mountainside` wchodzą po pomiarze kosztu i przydatności.
+
+To nadal **nie jest finalny art pass Stage 7**: Stage 3G ma usunąć wygląd greybox/placeholder i ustanowić wiarygodny baseline dolina → las → high Alpine. Stage 7 rozwija ten baseline o produkcyjne road dressing, budynki, landmarki, życie i pełny polish. Zakup paczki jest uzasadniony wyłącznie wtedy, gdy natywne UE/darmowe zasoby nie pozwalają osiągnąć spójnego baseline'u. Szczegóły: [`ASSET_PLAN.md`](ASSET_PLAN.md).
+
+## Kryterium ukończenia
+
+**Rdzeń 3A–3F jest ukończony:** całą trasę można przejechać bez przerwania, błędu pozycji lub opuszczenia drogi; baseline build/proof jest zapisany, a domenowa symulacja pozostaje niezależna od presentation.
+
+**Stage 3 jako całość pozostaje otwarty do czasu domknięcia 3G:** valley / forest / high-Alpine muszą być wizualnie rozróżnialne przy ride speed, wymagane minimalne assety muszą mieć udowodnione użycie i walidację, a trzy canonical captures muszą pokazywać spójny environment baseline zamiast greyboxowych zastępników.
+
+### 3G-MCP — kontrolowana warstwa world generation (#85)
+
+UE-MCP jest narzędziem deweloperskim dla Stage 3G i późniejszego Stage 7, a nie nowym źródłem prawdy dla trasy. **Nie jest też jedyną dozwoloną ścieżką authoringu PCG**: deterministyczne, projektowe workflow C++/Python/editor mogą tworzyć te same technical assets, o ile respektują route authority, guards, proof i cleanup. #85 jest bramką dla trwałych mutacji wykonywanych przez surface agenta/MCP, nie blokadą dla całego PCG.
+
+- [ ] Przypiąć stabilne `db-lyon/ue-mcp` i uruchomić bridge na UE 5.8.2.
+- [ ] Zachować Stage 3 route profile / geometry / spline / fixed-step simulation jako warstwę autorytatywną.
+- [ ] Wprowadzić `WorldSpec` z deterministycznym seedem i jawnymi granicami biome/set-dressing.
+- [ ] Zacząć od read-only inspection oraz transient actor proof, którego nie da się zapisać do mapy.
+- [ ] Włączyć trwałe generowanie dopiero po zielonym bridge/build/Automation proof i po aktywowaniu generated-content guard.
+- [ ] Docelowe trwałe outputy world generation ograniczyć do `/Game/Generated/YACS/**`.
+- [ ] Nie wystawiać agentowi escape hatchy `execute_python` / `execute_command` w początkowym surface.
+- [ ] Reużyć istniejące BEFORE/AFTER proofy 1200 m / 4900 m / 8000 m.
+
+Szczegóły architektury i plan wdrożenia: [`UE_MCP_WORLD_GENERATION.md`](UE_MCP_WORLD_GENERATION.md).
+
+**Warunek końcowej integracji Stage 4:** **NIESPEŁNIONY wizualnie.** PR #155 spełnił część techniczną: build ✅, Automation 53/53 ✅, Map Check 0/0 ✅, LFS/fresh-checkout ✅, trzy canonical captures ✅, cleanup ✅. Capture'y potwierdziły jednak, że environment nadal nie spełnia własnych kryteriów #80. **Nie blokuje to czystego workstreamu Physics po ukończeniu 3H:** 4B/4C mogą rozwijać route context, banking, grip i technique na syntetycznych profilach/testach. **4D/4E oraz finalny full-route in-world acceptance wymagają zielonych 3G i 3H.**
+
+**Canary infrastrukturalny:** Stage 3G jest pierwszym rzeczywistym workloadem dla Phase 1 #24. Jeżeli runner zostanie zarejestrowany przed finalnym proofem 3G, authoring/build/Automation/capture mogą zostać wykonane przez ręczny workflow na home PC. Nie zmienia to kryteriów 3G: wynik musi być przypięty do dokładnego SHA, artefakty `.uasset`/`.umap` muszą wejść przez Git LFS, a wizualny AFTER proof nadal podlega review.
+
+## 3H — Road Physics Profile & Route Geometry Contract
+
+**Status:** **ukończone** przez PR #165 (kanoniczny profil), #167 (Stage 3 geometry → physics) i #168 (lateral cross-slope + granica surface/grip metadata). 4B/4C są odblokowane. Dokument źródłowy: [`ROAD_PHYSICS_PROFILE.md`](ROAD_PHYSICS_PROFILE.md).
+
+### Cel
+
+Oddzielić autorytatywną fizyczną reprezentację drogi od renderowanego spline'a, mesha, terenu i PCG. Route/world authoring i fizyka mają konsumować ten sam jawny kontrakt, zamiast wyprowadzać fizykę z przypadkowych normalnych trójkątów lub wizualnej geometrii.
+
+### Minimalny kontrakt Stage 3H
+
+- [x] Zdefiniować route-local coordinates: dystans wzdłuż trasy `S` i pozycję boczną `D`.
+- [x] Zdefiniować elevation oraz longitudinal grade jako autorytatywne dane trasy.
+- [x] Zdefiniować signed horizontal curvature / radius i kierunek zakrętu.
+- [x] Zdefiniować vertical curvature jako metadata potrzebne pod przyszłe efekty nacisku na crest/compression.
+- [x] Zdefiniować road width i dopuszczalny lateral envelope dla racing line.
+- [x] Zdefiniować banking / cross-slope niezależnie od longitudinal grade.
+- [x] Wymagać ciągłych przejść krzywizny i bankingu; konkretny algorytm (np. clothoid-like) nie jest częścią kontraktu.
+- [x] Zdefiniować surface type, wetness i roughness jako metadata drogi.
+- [x] Zapewnić deterministyczne look-ahead queries dla corner anticipation / technique evaluation.
+- [x] Zdefiniować validation invariants dla nieciągłości, patologicznych spike'ów grade/curvature/banking, nieprawidłowej szerokości i wartości niefinitych.
+- [x] Zachować możliwość przyszłego front/rear tyre state bez wymuszania pełnego modelu opon w MVP.
+
+**Dowód implementacyjny:** PR #165 wprowadza parity Python/C++ dla S/D, elevation, grade, curvature, width, metadata i look-ahead; PR #167 buduje profil bezpośrednio z autorytatywnej Stage 3 geometry; PR #168 rozszerza cross-slope o lewą/prawą połowę jezdni zależną od D, zachowuje Alpine baseline 0°/0° i jawnie pozostawia resolver `surface_id + wetness → grip` dla 4B/4C. Żaden z tych kroków nie używa renderowanego spline'a, road mesha, terrainu, PCG ani Actor transformów jako źródła fizyki.
+
+### Granica MVP / post-MVP
+
+**Przed MVP fizyka ma faktycznie wykorzystywać:** longitudinal grade, horizontal curvature, road width + lateral position/racing line, banking/cross-slope, surface/wetness w uproszczonym grip modelu, shared braking+cornering grip budget oraz look-ahead potrzebny do oceny techniki.
+
+**Reprezentujemy teraz, ale zaawansowany wpływ fizyczny odkładamy po MVP:** vertical-curvature load effects, roughness energy loss/vibration, szczegółowy front/rear load transfer, szczegółowy tyre model / Magic Formula, lateral crosswind force i steering/roll moments, weave/wobble oraz crash/fall simulation.
+
+### Równoległe workstreamy
+
+Po zatwierdzeniu 3H obowiązuje podział:
+
+- **World lane:** 3G / assets / PCG / terrain / environment / visual polish.
+- **Physics lane:** synthetic Road Physics Profiles → 4B route corner context → 4C technique/consequences.
+- **Integration lane:** 4D guidance i 4E full-route proof dopiero po zielonych wymaganych bramkach obu lane'ów.
+
+Zmiana tylko w fizyce nie może wymagać pełnego pobrania assetów; zmiana tylko w assetach nie może wymuszać przebudowy fizyki bez powodu. Dla `ue_code=true` obowiązkowy jest code-only reusable Unreal lane z PR #163, a asset/full pozostaje osobnym ciężkim proofem.
+
+### Kryterium ukończenia
+
+- kanoniczny `Road Physics Profile` jest udokumentowany i wersjonowany;
+- route-local coordinate convention i jednostki są jednoznaczne;
+- MVP/post-MVP boundary jest zapisana;
+- Stage 4B może konsumować kontrakt bez zależności od PCG lub finalnych assetów;
+- future physics może rozszerzać kontrakt bez zastępowania go inną reprezentacją drogi.
+
+---
+
+# Etap 4 — technika pokonywania zakrętów
+
+**Planowany czas:** tydzień 5–7
+**Status:** Stage 4A ukończone przez PR #157; **4B-A/#169, 4B-B/#170 i 4B-C/#171 ukończone; 4C-A + 4C-B1/B2/B3a/B3b/B3c scalone przez PR #177; 4C-C1 scalone przez PR #179; 4C-C2 scalone przez PR #181; 4C-C3a scalone przez PR #183; 4C-C3b scalone przez PR #184; Stage 4C ukończone; 4D/4E wymagają wspólnego integration gate z World lane**
+
+## Cel
+
+Wprowadzić autorską mechanikę oceniającą odpuszczenie i ponowne rozpoczęcie pedałowania.
+
+## Plan wykonawczy
+
+1. **4A — #156:** czysty C++ cornering domain contract z parity do Python reference model — **ukończone / PR #157**.
+2. **4B-A — PR #169:** route corner context z `Road Physics Profile` — signed curvature/radius, road width, lateral position, corner-ahead/look-ahead, entry/apex/exit — **ukończone**.
+3. **4B-B — PR #170:** jawna `SurfaceGripPolicy` — `surface_id + wetness -> grip_multiplier`, bez ukrytych współczynników; Alpine asphalt zachowuje parity z istniejącym `ALPINE_WEATHER` — **ukończone**.
+4. **4B-C — PR #171:** banking/off-camber + czysty fizyczny limit lateralny per fixed-step; brak arbitralnego safety factor i brak shared braking budget — **ukończone**.
+5. **4C-A — #173 / PR #177:** czysty shared grip kernel jako unit friction circle: znormalizowane żądanie longitudinal + lateral trafia do jednego budżetu; bez ukrytego braking modelu i bez consequence policy.
+6. **4C-B1 — #173 / PR #177:** jawny `brake_ratio ∈ [0,1]` w rider input/controller/session; default `0`, legacy path zachowuje exact regression parity.
+7. **4C-B2 — #173 / PR #177:** demand bridge per fixed-step: `brake_ratio -> longitudinal_usage`, a aktywne cornering `speed² / effective_radius / lateral_acceleration_limit -> lateral_usage`; oba trafiają do 4C-A.
+8. **4C-B3a — #173 / PR #177:** tyre-limited brake-force resolver: `μ_eff · static normal load`, ograniczony remaining longitudinal capacity z 4C-A; bez arbitralnego max-brake constant.
+9. **4C-B3b — #173 / PR #177:** explicit brake-force fixed-step integrator: siła hamowania trafia do predictor + work/energy balance, a legacy step deleguje z `0 N` dla exact regression parity.
+10. **4C-B3c — #173 / PR #177:** fixed-step orchestration: każdy substep pobiera bieżący Road Physics Profile, rozdziela look-ahead `Approach` od realnego lateral demand w `Entry/Apex/Exit`, rozwiązuje shared grip + brake force i dopiero wtedy wywołuje integrator; render-frame batching nie może zmieniać wyniku.
+11. **4C-C1 — #178 / PR #179:** geometry-derived consequences — `CornerContext + CornerGripDemand -> clean / wide line / controlled slip`, target `D` i minimalny target speed bez arbitralnych progów grip usage; bez upadków w MVP.
+12. **4C-C2 — #180 / PR #181:** route-derived technique score — realne fazy `Approach/Entry/Apex/Exit`, ciągłe release/recovery score dla mocy i kadencji oraz fizyczne line/speed retention z C1; osiem jawnych równoważnych składników, bez ukrytych wag i progów ratingowych — **ukończone**.
+13. **4C-C3a — #182 / PR #183:** authoritative consequence application — signed route-local `D` jest częścią authoritative `SimulationState`; C1 target line jest osiągany deterministycznie po dystansie zakrętu bez teleportu, a `controlled_slip` może tylko odebrać prędkość/energię — **ukończone**.
+14. **4C-C3b — #182 / PR #184:** runtime corner scoring — fixed-step runner transakcyjnie zbiera route-derived `Approach/Entry/Apex/Exit`, agreguje najgorszy line/speed consequence i finalizuje C2 score po wyjściu z zakrętu. Corner interval jest stabilizowany na globalnej siatce `scan_step_m` zakotwiczonej w `S=0`, a 30/60 FPS/jitter daje identyczny score — **ukończone**.
+15. **4D:** guidance + assists — linia przejazdu, markery entry/apex/exit, grip warning i poziomy asysty jako presentation-only; wymaga wspólnego integration gate z World lane.
+16. **4E:** deterministyczny full-route corner proof dla reprezentatywnych flat/banked/off-camber zakrętów oraz suchej/mokrej nawierzchni.
+
+## World + Physics execution lock — do wejścia w Stage 5
+
+Od 27.09.2026 mapa/World i fizyka Stage 4 są prowadzone jako jeden wspólny front wykonawczy. Nie uznajemy Stage 4 za domknięte na podstawie samego zielonego rdzenia fizyki: końcowy integration gate wymaga jednocześnie zielonego World/3G i Physics/4D/4E.
+
+Obowiązująca kolejność domknięcia:
+
+1. **World/3G:** zamknąć Reference Environment Pass, w tym deterministyczny PCG forest, route exclusion, progressive asset gate, visual/performance proof 1200/4900/8000 m oraz committed-SHA asset/full acceptance.
+2. **4D — guidance + assists:** recommended speed, jawny target line / auto line selection w granicach Road Physics Profile, presentation-only entry/apex/exit guidance, grip warning i regulowane poziomy asysty. Guidance i assists nie mogą zmieniać autorytatywnej fizyki poza jawnymi, testowalnymi wejściami polityki asysty.
+3. **4E — full-route corner proof:** deterministyczny start-to-finish proof obejmujący reprezentatywne flat/banked/off-camber zakręty, suchą/mokrą nawierzchnię, 30/60 FPS/jitter parity, route bounds, brak teleportów oraz spójny corner score/consequence telemetry.
+4. **Stage 5 entry gate:** dopiero po zielonym 3G + 4D + 4E rozpoczynamy właściwy HUD/session flow. Stage 5 konsumuje gotowe dane cornering/guidance/session, ale nie redefiniuje fizyki ani geometrii świata.
+
+Przez ten okres raportowanie projektu prowadzi się wspólnie jako **World + Physics**, żeby nie zgubić zależności pomiędzy mapą, widocznym guidance, route geometry i autorytatywną fizyką.
+
+## Zadania
+
+- [x] Obliczanie signed curvature drogi i efektywnego promienia toru przejazdu — PR #169.
+- [x] Określenie strefy wejścia, apeksu i wyjścia — PR #169.
+- [ ] Obliczanie zalecanej prędkości.
+- [x] Analiza momentu zmniejszenia mocy na poziomie realnych faz route-derived — 4C-C2/#180; dokładniejszy sub-phase timing może zostać dopracowany po MVP.
+- [x] Analiza wznowienia mocy/kadencji w `Exit` względem jawnego baseline `Approach` — 4C-C2/#180.
+- [ ] Automatyczny wybór toru przejazdu z jawną pozycją boczną na drodze (`D`) i wykorzystaniem dostępnej szerokości.
+- [ ] Wizualna linia przejazdu i strefy entry/apex/exit na drodze.
+- [ ] Kontekstowe ostrzeżenia o przyczepności i trudności zakrętu.
+- [x] Deterministyczne wyliczenie i zastosowanie poszerzenia toru po błędzie — 4C-C1/#178/PR #179 + authoritative `D` application PR #183.
+- [x] Deterministyczne wyliczenie i zastosowanie minimalnej utraty prędkości po błędzie — 4C-C1/#178/PR #179 + controlled-slip speed projection PR #183.
+- [x] Model controlled slip bez upadku i bez arbitralnych progów — 4C-C1/#178/PR #179; authoritative runtime application scalone przez PR #183.
+- [x] Wpływ bankingu / off-camber oraz mokrej nawierzchni na czysty limit lateralny — 4B-B/4B-C; shared braking budget pozostaje 4C.
+- [x] Wspólny budżet przyczepności end-to-end dla hamowania i corneringu — 4C-A + 4C-B1/B2/B3a/B3b/B3c scalone przez PR #177.
+- [x] Deterministyczny look-ahead do oceny przygotowania przed zakrętem — PR #169.
+- [x] Ocena każdego kompletnego zakrętu z realnych fixed-step faz route-derived; niepełne epizody są jawnie liczone jako skipped — 4C-C3b/#182.
+- [ ] Regulowane poziomy asysty.
+- [x] Testy powtarzalności wyniku fizyki i score przy 30 FPS / 60 FPS / jitter oraz rollback całego epizodu po błędzie batcha — 4C-C3b/#182.
+
+### Asset gate Stage 4
+
+Nie planujemy zakupu produkcyjnej paczki graficznej. Dopuszczalne są proste decals/markery potrzebne do czytelnego pokazania entry/apex/exit, linii przejazdu, grip warning i debug guidance. Finalne road dressing i decals należą do Stage 7.
+
+## Kryterium ukończenia
+
+Różne decyzje dotyczące mocy i kadencji dają widocznie różne, ale powtarzalne rezultaty przejazdu zakrętu.
+
+---
+
+# Etap 5 — HUD i przebieg sesji
+
+**Planowany czas:** tydzień 6–8
+
+## Zadania
+
+- [ ] Ekran konfiguracji jazdy.
+- [ ] Ustawienia masy, CdA i Crr.
+- [ ] Wybór poziomu asysty.
+- [ ] Moc i kadencja.
+- [ ] Prędkość.
+- [ ] Nachylenie.
+- [ ] Czas i dystans.
+- [ ] Pozostały dystans.
+- [ ] Profil wysokości.
+- [ ] Pozycja na profilu.
+- [ ] Informacje o nadchodzącym zakręcie.
+- [ ] Ocena przejazdu zakrętu.
+- [ ] Ekran mety i podsumowania.
+- [ ] Możliwość ograniczenia lub ukrycia HUD-u.
+- [ ] Dobrać produkcyjny font i minimalny zestaw ikon/SVG HUD zgodnie z `ASSET_PLAN.md`; nie kupować pełnego UI kitu bez uzasadnienia.
+
+## Kryterium ukończenia
+
+Użytkownik może rozpocząć, ukończyć i podsumować całą sesję bez korzystania z narzędzi deweloperskich.
+
+---
+
+# Etap 6 — kamery, kolarz i rower
+
+**Planowany czas:** tydzień 7–9
+**Status:** planowany; implementacja pozostaje zablokowana do przejścia wspólnego World + Physics integration gate przed Stage 5/6. Poniższy preflight jest przygotowaniem zakresu, nie zgodą na wcześniejsze rozpoczęcie Stage 6.
+
+## Założenie animacji kolarza
+
+Mocap jest bazową warstwą naturalnego ruchu, a nie zbiorem gotowych animacji dla
+każdej sytuacji. Docelowa poza kolarza ma wynikać z parametrów jazdy przez
+warstwowanie animacji, `Control Rig`, IK i proceduralne offsety. Pozwala to
+obsłużyć zjazd, zakręty, zmianę chwytu lub geometrii roweru bez nagrywania
+osobnego mocapu dla każdego przypadku.
+
+Minimalny przepływ Stage 6:
+
+`cycling mocap / base animation -> IK Rig + IK Retargeter -> cadence/posture layer -> Control Rig procedural offsets -> FullBodyIK contact solve -> head/look-ahead additive -> final rider pose`.
+
+Rower jest źródłem transformów kontaktowych: co najmniej `LeftHandGrip`, `RightHandGrip`, `LeftPedal` i `RightPedal`. Obrót korby/pedałów wynika z kadencji, a stan fizyki dostarcza m.in. lean, braking, grade i corner context. Warstwa prezentacji może te dane konsumować, ale nie może modyfikować fizyki.
+
+## Stage 6 risk-reduction preflight
+
+Zanim wybierzemy finalnego ridera i rozpoczniemy pełny art/animation pass:
+
+- potraktować **Game Animation Sample 5.8** wyłącznie jako aktualny reference project dla retargetingu, Control Rig, additive Look-At i debugowania animacji; nie migrować całego frameworka ani jego locomotion stacku do YACS;
+- na placeholder riderze udowodnić retarget jednego reprezentatywnego cycling clipu oraz cztery jednoczesne kontakty FBIK: dwie dłonie na gripach i dwie stopy na pedałach;
+- udowodnić cadence-driven crank/pedals oraz zmianę pozycji bez utraty kontaktów;
+- udowodnić physics-driven lean/corner posture z istniejącego stanu Stage 4, bez odtwarzania fizyki w Animation Blueprint;
+- udowodnić additive head stabilization/look-ahead po trasie;
+- przygotować powtarzalny authoring/proof flow przez istniejącą kontrolowaną warstwę `ue-mcp` tam, gdzie jej powierzchnia narzędziowa jest już zwalidowana; brakujące operacje nie uzasadniają automatycznie nowego frameworka;
+- kamera MVP startuje od zwykłego `CameraComponent` / `SpringArm` / `PlayerCameraManager`. Experimental **Gameplay Cameras** i zewnętrzny **GameplayCameraToolset** mogą otrzymać osobny, mały spike tylko wtedy, gdy zwykła ścieżka ujawni konkretny problem z dampingiem, collision, blendingiem lub authoringiem.
+
+Preflight ma zmniejszyć ryzyko Stage 6. Nie jest osobnym etapem i nie rozszerza MVP.
+
+## Zadania
+
+- [ ] Jeden model roweru.
+- [ ] Jeden model kolarza.
+- [ ] Dopasowanie kolarza do roweru.
+- [ ] Import szkieletu kolarza i przygotowanie retargetingu bazowego mocapu.
+- [ ] Animacja pedałowania zależna od kadencji.
+- [ ] Obrót korby i pedałów jako jawne źródło transformów celu dla foot IK; nie wypiekać kontaktu stóp wyłącznie w klipie animacji.
+- [ ] Toczenie bez pedałowania.
+- [ ] Bazowe blendowane pozycje: neutral seated, aggressive/aero, descending tuck, standing/sprint i cornering.
+- [ ] Pochylenie roweru i ciała w zakrętach sterowane stanem fizyki zamiast sztywną animacją.
+- [ ] `Control Rig` / proceduralne offsety dla miednicy, kręgosłupa, głowy, barków i łokci.
+- [ ] FBIK/IK utrzymujące cztery jawne cele kontaktowe: lewa/prawa dłoń → grip, lewa/prawa stopa → pedał, niezależnie od bazowego mocapu i bieżącej pozycji.
+- [ ] Stabilizacja głowy i look-ahead po spline trasy, tak aby kolarz patrzył przez zakręt.
+- [ ] Rozdzielenie warstwy prezentacji od konkretnego mesha/szkieletu, aby model kolarza można było później podmienić bez przepisywania logiki jazdy.
+- [ ] Kamera za kolarzem.
+- [ ] Kamera z perspektywy kierownicy.
+- [ ] Przełączanie kamer podczas jazdy.
+- [ ] Stabilizacja kamer na nierównościach i zakrętach.
+- [ ] Dodać interpolation presentation pomiędzy stanami fixed-step bez sprzężenia zwrotnego do fizyki.
+- [ ] Zmierzyć baseline kosztu jednego ridera: Animation Blueprint / Control Rig / IK / skeletal mesh na komputerze referencyjnym.
+- [ ] Utrzymać animation/presentation API tak, aby późniejsze ograniczenie update rate przez significance nie wymagało zmian w fizyce jazdy.
+
+## Parametry proceduralnej pozy
+
+Warstwa prezentacji może korzystać m.in. z: `Speed`, `Grade`,
+`CornerRadius` / `LateralAcceleration`, `Cadence`, `Braking`,
+`Technique` i `AeroLevel`. Wynikiem są wyłącznie parametry prezentacji,
+np. rotacje/przesunięcia `Pelvis`, `Spine`, `Head`, `Elbow`, `Knee`
+oraz cele IK `Hand` / `Foot`; system animacji nie może zmieniać wyniku fizyki.
+
+### Tooling gate Stage 6
+
+- [ ] Włączyć **Control Rig** dla proceduralnej warstwy pozy kolarza.
+- [ ] Włączyć **IK Rig** dla retargetingu oraz definiowania goal/solver chain dla ridera.
+- [ ] Włączyć **FullBodyIK** dla wielu jednoczesnych celów dłonie/pedały/głowa/miednica i proceduralnych korekt całego ciała.
+- [ ] Użyć **Game Animation Sample 5.8** jako reference/sample do wzorców retargetingu, additive Look-At i debugowania; nie dodawać go jako runtime/framework dependency YACS.
+- [ ] Zbudować powtarzalny Stage 6 authoring/proof flow przez kontrolowaną powierzchnię `ue-mcp` tylko dla operacji, które przechodzą istniejące guards/build/proof; nowe AI toolsety są CONDITIONAL, nie domyślne.
+- [ ] Zachować klasyczny stos kamer MVP (`CameraComponent` / `SpringArm` / `PlayerCameraManager`); **Gameplay Cameras** pozostają Experimental i nie są zależnością MVP bez osobnego comparative spike.
+- [ ] Ocenić **Skeletal Mesh Editing Tools** tylko jeśli naprawy skinning/rigging w UE realnie oszczędzają eksport do Blendera.
+- [ ] Ocenić **Control Rig Modules** dopiero po powstaniu pierwszego działającego minimalnego Control Riga; nie dodawać modułów przed pomiarem potrzeby.
+- [ ] Zmierzyć koszt Control Rig + IK/FBIK na komputerze referencyjnym i zachować możliwość LOD/update-rate reduction bez wpływu na fizykę.
+- [ ] Technical UE Asset Ledger musi objąć co najmniej `IK_Rider`, `RTG_CyclingMocap` i `CR_Cyclist`; status `validated` wymaga retarget proof oraz kontaktu dłoni/stóp w reprezentatywnych pozach.
+
+### Asset gate Stage 6
+
+To pierwszy obowiązkowy asset pass postaci: wybieramy i walidujemy **jeden** model kolarza oraz **jeden** road bike. Rider obejmuje minimalny strój/kask i skeleton/rig nadający się do retargetingu; rower powinien mieć rozdzielone elementy wymagające animacji (co najmniej koła i korba/pedały). Model z Tripo/Meshy jest dopuszczalny po review topologii, skali, materiałów i riggingu. Nie budujemy jeszcze katalogu rowerów ani ubrań.
+
+## Kryterium ukończenia
+
+Ruch kolarza, roweru i kamer jest płynny i zgodny z parametrami jazdy.
+Zmiana kadencji, wejście w zakręt i przejście do zjazdu dają widoczną,
+ciągłą zmianę pozy bez utraty kontaktu dłoni z kierownicą i stóp z pedałami.
+
+---
+
+# Etap 7 — świat i oprawa wizualna
+
+**Planowany czas:** tydzień 8–11
+
+## Zadania
+
+- [ ] Podział świata na dolinę, las i wysokie góry.
+- [ ] Materiały drogi i mokrej nawierzchni.
+- [ ] Roślinność.
+- [ ] Skały i teren wysokogórski.
+- [ ] Mała miejscowość.
+- [ ] Punkty charakterystyczne trasy.
+- [ ] Życie w kilku przygotowanych lokalizacjach.
+- [ ] System LOD, Nanite lub instancjonowania zależnie od assetu.
+- [ ] Kontrola gęstości obiektów.
+- [ ] Profile jakości grafiki.
+- [ ] Testy 1080p/60 FPS na RTX 2070 Super.
+- [ ] Zdefiniować i zmierzyć Wind/Animation LOD dla foliage; daleka roślinność nie może bez pomiaru ponosić kosztu pełnego WPO/wind.
+- [ ] Wykonać Alpine Skyline / Streaming Proof: dolina → las → podjazd → odsłonięte góry, z kontrolą HLOD, pop-in, dziur świata i hitchy streamingu.
+- [ ] Wprowadzić Material/Shader Permutation Contract: każdy nowy Static Switch wymagający dodatkowych permutacji musi mieć uzasadnienie; ciągłe stany pogody preferują parametry runtime, gdy to właściwe.
+- [ ] Zebrać baseline GPU, Game Thread, Render Thread, RAM/VRAM i hitchy dla reprezentatywnych scen.
+- [ ] Nanite, Virtual Texturing/RVT i inne cięższe technologie dobierać przez benchmark przed/po, nie jako domyślną regułę świata.
+
+### Tooling gate Stage 7
+
+- [ ] Rozszerzać istniejące PCG graphs/flows zamiast ręcznie stawiać masowe environment dressing.
+- [ ] Traktować **PCG Biome Core / Sample** jako reference architecture dla data-driven biome composition (valley / forest / high Alpine), a nie jako automatyczną zależność produkcyjną; plugin jest Experimental i wymaga własnego proofu, jeśli miałby wejść do projektu.
+- [ ] Wykonać ograniczony **PCGEx** spike tylko wtedy, gdy vanilla PCG ujawni konkretny koszt złożoności, np. route-exclusion/spatial queries albo kontrolę forest density. Przyjąć dependency wyłącznie po porównaniu graph complexity, determinism, build/upgrade risk i performance z rozwiązaniem natywnym.
+- [ ] Rozważyć **Scriptable Tools Editor Mode** tylko wtedy, gdy własny panel/tryb typu „Generate YACS World” daje wyraźną przewagę nad nazwanymi MCP flows i zwykłymi Editor Utility workflows.
+- [ ] Nie dodawać ciężkich world-building frameworków, jeżeli natywne PCG + Geometry Script + nasze flows pokrywają potrzebę.
+- [ ] Każde nowe narzędzie świata musi respektować `/Game/Generated/YACS/**`, deterministyczny seed, route clearance i cleanup/regeneration contract.
+
+### Asset gate Stage 7
+
+To główny produkcyjny art pass środowiska. W tym etapie dobieramy/uzupełniamy: vegetation, rocks/cliffs, road/roadside props, asphalt/decals, modularne alpine buildings, village props, landmarks oraz ograniczony zestaw pojazdów i przygotowanych scenek życia. Preferujemy spójność zestawu landscape + vegetation + rocks nad liczbę różnych paczek. Nie wdrażamy pełnego traffic systemu.
+
+Każdy płatny lub zewnętrzny pack trafia do Asset Ledger w [`ASSET_PLAN.md`](ASSET_PLAN.md) wraz z licencją, kosztem, etapem i wynikiem podstawowej walidacji wydajności.
+
+## Kryterium ukończenia
+
+Świat ma spójny alpejski charakter, a pełna trasa utrzymuje założony budżet wydajności.
+
+---
+
+# Etap 8 — dynamiczna pogoda i dźwięk
+
+**Planowany czas:** tydzień 9–11
+
+## Zadania
+
+- [ ] Zaplanowany przebieg pogody.
+- [ ] Opcjonalny tryb losowy.
+- [ ] Zapisywane ziarno losowości.
+- [ ] Wiatr wpływający na fizykę.
+- [ ] Deszcz i moknięcie nawierzchni.
+- [ ] Wpływ mokrej drogi na fizykę zakrętów.
+- [ ] Dźwięki napędu i wolnobiegu.
+- [ ] Dźwięki opon i hamowania.
+- [ ] Wiatr zależny od prędkości i kierunku.
+- [ ] Dźwięki deszczu, lasu, zwierząt i miejscowości.
+- [ ] Testy wydajności podczas najcięższych warunków, w tym co najmniej dense foliage + deszcz + mokra droga + dynamiczne cienie na reprezentatywnym fragmencie.
+
+### Tooling gate Stage 8
+
+- [ ] Włączyć/zweryfikować **Niagara** jako podstawowy system VFX dla deszczu, sprayu, wind/debris i subtelnych efektów atmosferycznych.
+- [ ] Deszcz i wheel spray budować jako **lokalne efekty wokół ridera/kamery**, skalowane jakościowo i profilowane; stan pogody może być globalny, ale MVP nie symuluje cząstek deszczu na całej trasie.
+- [ ] Wetness ma być wspólnym gameplay/presentation state: fizyka konsumuje autorytatywną wartość wetness/grip, a materiały/Niagara/audio wyłącznie ją prezentują.
+- [ ] Włączyć/zweryfikować **MetaSounds** dla parametrycznego drivetrain/freehub/tyres/brakes/wind audio zależnego od stanu jazdy; preferować mały zestaw źródeł + parametry `speed/cadence/power/coasting/braking/surface/wetness/wind` zamiast eksplozji wariantów sampli.
+- [ ] Nie włączać eksperymentalnego MetaSounds feature set bez konkretnej potrzeby; bazowy MetaSound ma pierwszeństwo.
+- [ ] Audio/VFX otrzymują parametry z gameplay/presentation, ale nie stają się źródłem prawdy dla fizyki.
+- [ ] Zarejestrować i zwalidować w Technical UE Asset Ledger co najmniej `NS_Rain`, `NS_WheelSpray`, `MS_Drivetrain` i `MS_Wind`, z proofem GPU/audio odpowiednim dla typu assetu.
+
+### Asset gate Stage 8
+
+Wprowadzamy wyłącznie efekty i dźwięki potrzebne do działającej pogody i wiarygodnego roweru: rain/spray, wetness/puddles gdy uzasadnione, subtelne wind/debris particles, drivetrain/freehub/tyres/brakes oraz ambience deszczu, lasu i miejscowości. Najpierw wykorzystujemy natywne systemy UE; duży zewnętrzny weather framework wymaga osobnego dowodu, że rozwiązuje konkretną lukę.
+
+## Kryterium ukończenia
+
+Pogoda zmienia wygląd, dźwięk i fizykę, nie powodując niedopuszczalnych spadków płynności.
+
+---
+
+# Etap 9 — zapis sesji i eksport FIT
+
+**Planowany czas:** tydzień 11–12
+
+## Zadania
+
+- [ ] Lokalny format zapisu sesji.
+- [ ] Historia przejazdów.
+- [ ] Automatyczne zabezpieczenie danych podczas jazdy.
+- [ ] Podsumowanie zakrętów.
+- [ ] Generowanie pliku FIT.
+- [ ] Walidacja wygenerowanego pliku.
+- [ ] Test importu FIT do co najmniej jednej zewnętrznej usługi.
+- [ ] Obsługa błędu zapisu.
+
+## Kryterium ukończenia
+
+Ukończona aktywność jest dostępna lokalnie i może zostać wyeksportowana jako poprawny plik FIT.
+
+---
+
+# Etap 10 — stabilizacja MVP
+
+**Planowany czas:** od tygodnia 12
+
+## Zadania
+
+- [ ] Pełny test trasy od startu do mety.
+- [ ] Test różnych poziomów mocy.
+- [ ] Test wszystkich poziomów asysty.
+- [ ] Test suchej i mokrej nawierzchni.
+- [ ] Test obu kamer.
+- [ ] Test zapisu i eksportu FIT.
+- [ ] Profilowanie CPU, GPU i pamięci.
+- [ ] Zebrać końcowy MVP baseline: Game Thread, Render Thread, GPU, RAM/VRAM, hitch percentiles/spikes i streaming stalls podczas pełnego przejazdu.
+- [ ] Zebrać baseline build pipeline: C++ compile, shader compile, cook, package/stage, total build time i rozmiar artefaktu tam, gdzie pomiar jest dostępny.
+- [ ] Wykonać packaged PSO/first-use stutter proof dla reprezentatywnego materiałowo pełnego przejazdu.
+- [ ] Porównać końcowe wyniki 1080p/60 z wcześniejszymi baseline'ami i wyjaśnić istotne regresje.
+- [ ] Usunięcie błędów blokujących.
+- [ ] Przygotowanie wersji Windows.
+- [ ] Instrukcja instalacji i uruchomienia.
+- [ ] Oznaczenie wydania `v0.1.0-mvp`.
+- [ ] Zamknąć Asset Ledger dla MVP: źródło/licencja/status wszystkich użytych zewnętrznych assetów i brak nieużywanych importów „na zapas”.
+- [ ] Asset freeze: nowe zakupy tylko wtedy, gdy rozwiązują konkretny blocker jakości/czytelności lub regresję, której nie można rozsądnie naprawić istniejącymi zasobami.
+
+## Kryterium ukończenia
+
+Spełnione są wszystkie kryteria z dokumentu PRODUCT_REQUIREMENTS.md, a aplikację można uruchomić na innym komputerze z Windows bez środowiska programistycznego.
+
+---
+
+# Po MVP
+
+Kolejność orientacyjna:
+
+1. Obsługa BLE/FTMS i pierwszego prawdziwego trenażera.
+2. Sterowanie oporem.
+3. Integracja ze Stravą.
+4. Import i generowanie kolejnych tras.
+5. Treningi strukturalne.
+6. Ghost i porównywanie przejazdów.
+7. Multiplayer.
+8. Pack Dynamics: drafting, automatyczne pozycjonowanie, wyprzedzanie i fizyka grupy.
+9. Kolejne platformy treningowe.
+10. Inne systemy operacyjne.
+
+### Skalowanie riderów przed pełnym multiplayerem
+
+Zanim architektura zostanie uznana za gotową na duży peleton, wymagany jest `Crowd Scaling Spike` z pomiarami dla:
+
+- 1 rider;
+- 10 riderów;
+- 50 riderów;
+- 100 riderów;
+- 300 riderów jako stress probe.
+
+Dla każdego poziomu mierzymy co najmniej Game Thread, Render Thread, GPU, rider simulation time, animation cost, RAM/VRAM, hitching oraz później koszt sieci. 300 riderów nie jest wymaganiem MVP ani gwarantowanym targetem produktu — służy do znalezienia punktu załamania architektury.
+
+Po MVP należy wprowadzić centralny `RiderSignificance` / Unified Rider Cost Policy sterujący oddzielnymi budżetami dla simulation update rate, animacji, IK, collision/physics detail, render/shadows, audio/UI oraz przyszłej network relevancy. Dokładne progi ustalamy wyłącznie na podstawie profilowania.
+
+Jeżeli zwykła scentralizowana/batchowa reprezentacja stanów riderów przestanie skalować się wystarczająco dobrze, dopiero wtedy wykonujemy spike MassEntity/ECS. MassEntity nie jest wymaganiem MVP ani warunkiem rozpoczęcia multiplayera.
+
+W przyszłym multiplayerze network update/relevancy korzysta ze wspólnych danych significance, ale gameplay relevance, visual relevance i session relevance pozostają rozdzielone. Wybór Iris vs Replication Graph pozostaje odroczony do aktualnej wersji UE i pomiarów.
+
+### YACS Pose Lab / CyclingPoseController — narzędzie po MVP
+
+Po ustabilizowaniu podstawowej warstwy animacji ze Stage 6 można zbudować
+narzędzie deweloperskie minimalizujące ręczną pracę animatora.
+
+Założenia:
+
+- `CyclingPoseController` przyjmuje parametry jazdy, m.in. `Speed`, `Grade`,
+  `CornerRadius` / `LateralAcceleration`, `Cadence`, `Braking`,
+  `Technique` i `AeroLevel`;
+- wyjściem są kontrolowane offsety miednicy, kręgosłupa, głowy, łokci i kolan
+  oraz cele IK dla dłoni i stóp;
+- `YACS Pose Lab` udostępnia podgląd i strojenie pozy w edytorze z operacjami
+  `Save Pose`, `Mirror Pose` i `Export JSON`;
+- pozycje można przygotowywać na podstawie pojedynczych klatek referencyjnych
+  z nagrań rzeczywistych kolarzy, np. `Approach -> TurnIn -> Apex -> Exit`;
+- późniejsza iteracja może półautomatycznie wyciągać punkty ciała lub kąty
+  stawów z materiału referencyjnego, ale film jest źródłem biomechanicznej
+  referencji, a nie źródłem fizyki gry;
+- fizyka określa wymagany ruch roweru i wielkość pochylenia, a referencja
+  określa relacje ciała, np. counter-lean głowy, pracę łokci i pozycję
+  zewnętrznej nogi;
+- system musi wspierać co najmniej zjazd, zakręty, aero, hamowanie,
+  standing/sprint i późniejsze warianty zmęczenia;
+- lewa/prawa wersja symetrycznej pozy powinna być generowana przez mirror,
+  gdy nie wymaga osobnej biomechanicznej definicji;
+- celem jest ograniczenie ręcznego ustawiania kości i liczby wymaganych
+  nagrań mocap, nie zastąpienie walidacji wizualnej.
+
+Pose Lab pozostaje narzędziem deweloperskim po MVP; Stage 6 zawiera tylko
+minimalną warstwę runtime potrzebną do wiarygodnego single-player ridera.
+
+### Pack Dynamics — założenia projektowe
+
+Ten zakres jest planowany po stabilizacji single-player MVP.
+
+- Gracz nie steruje bezpośrednio w lewo/prawo; moc i kadencja określają wysiłek i wynikającą z niego intencję prędkości.
+- Tor boczny jest wybierany automatycznie na podstawie geometrii drogi, zajętości przestrzeni, dostępnych luk, ryzyka kolizji, draftu i ograniczeń trajektorii.
+- Każda zmiana boczna musi mieć jawny `LateralIntent`; brak intencji oznacza utrzymanie stabilnej linii.
+- System stosuje predykcyjne unikanie kolizji zamiast odpychania modeli po kontakcie.
+- Twarde obszary rowerów/kolarzy nie mogą się przenikać; większe miękkie strefy służą do wcześniejszego planowania.
+- Gdy wyprzedzenie nie jest możliwe, zawodnik pozostaje na kole zamiast przenikać przez model lub wykonywać sztuczny skok w bok.
+- Solver nie może przypadkowo tworzyć trwałej pełnej „ściany” zawodników blokującej całą użyteczną szerokość drogi (`No Static Wall`).
+- Solver nie może tworzyć stałego pustego pasa ani „VIP lane”; może wykorzystywać i rezerwować naturalnie istniejące lub przewidywane luki.
+- `BOXED_IN` jest poprawny, gdy rzeczywista geometria i occupancy fizycznie uzasadniają brak przejazdu; chwilowe zajęcie całej szerokości drogi może być prawidłowe.
+- `Passing Opportunity Negotiation` może rezerwować naturalną lukę i dopuszczać tylko małe korekty innych riderów, które same są uzasadnione avoidance/stabilnością — nie może rozpychać peletonu dla gracza.
+- Rozpoczęty manewr ma commitment/hysteresis, aby wyeliminować bezcelowe myszkowanie lewo–prawo.
+- Automatyczna zmiana toru jest ciągłą trajektorią z ograniczeniami prędkości bocznej, przyspieszenia, jerk i krzywizny.
+- Animacja skrętu, yaw i pochylenie muszą wynikać z trajektorii, aby automatyczne prowadzenie było wizualnie wiarygodne.
+- Pierwszeństwo jest deterministyczne: jadący z przodu domyślnie utrzymuje linię, a wyprzedzający odpowiada za znalezienie bezpiecznej luki.
+- Docelowy subsystem obejmuje drafting, hold-wheel, anti-churn, overtaking, drop/bridge i pack cornering; crosswind/echelons oraz bardziej zaawansowana taktyka należą do późniejszych iteracji.
+- Sąsiedztwo Pack Dynamics musi respektować topologię trasy, a nie tylko odległość XYZ; serpentyny, mosty, tunele i różne okrążenia nie mogą generować fałszywego draftu/kolizji.
+- Planner stosuje twardą hierarchię: collision → road bounds → grip/kinematics → committed manoeuvre → pack safety → power intent → draft → comfort.
+- Moc niewykorzystana podczas automatycznego ograniczenia prędkości nie może być magazynowana jako późniejszy boost; trafia do rozliczenia strat, np. `WastedEnergy`.
+- Prediction horizon i safety margin muszą skalować się z prędkością i sytuacją.
+
+### Road Guidance Overlay — rozwój po MVP
+
+Road Guidance Overlay ma pozostać kontekstową warstwą informacyjną, a nie systemem sterowania.
+
+Po wdrożeniu Pack Dynamics planowane są:
+- `DRAFT_POCKET`;
+- `HOLD_WHEEL`;
+- `BOXED_IN`;
+- `PASS_CORRIDOR_LEFT` / `PASS_CORRIDOR_RIGHT`;
+- stan `SEARCHING_FOR_GAP` podczas wyszukiwania bezpiecznej możliwości wyprzedzenia;
+- ostrzeżenia o zamykającej się luce;
+- strefy kompresji grupy;
+- sygnalizacja zwężeń i bocznego wiatru;
+- wizualizacja stopnia pewności guidance.
+
+Każdy overlay korzysta z już obliczonego stanu fizyki, trasy lub Pack Dynamics i nie może wpływać zwrotnie na wynik symulacji.
+
+### Rider Technical Profile — rozwój po MVP
+
+Po ustabilizowaniu Pack Dynamics można dodać deterministyczny profil umiejętności technicznych zawodnika.
+
+Założenia:
+
+- parametry fizyczne (np. masa, `CdA`, geometria postaci) zmieniają rzeczywiste możliwości fizyczne;
+- cechy techniczne nie dają magicznych bonusów do prędkości, mocy ani przyczepności;
+- należy rozdzielić `PhysicalCapability`, `PlayerTechnique` i `AutopilotProficiency`;
+- progres może dotyczyć wyłącznie zachowań, na które użytkownik faktycznie miał wpływ; sukces wykonany wyłącznie przez autopilot nie może sam zwiększać skilla;
+- `PackHandling` i `BikeHandling` przed implementacją muszą zostać sklasyfikowane jako rzeczywista technika użytkownika albo parametr autopilota, zamiast mieszać oba pojęcia;
+- wynik manewru powinien zależeć od relacji `TechnicalDemand` do `TechnicalCapacity`, a nie od losowego rzutu procentowego;
+- wysoka technika nie może łamać twardych ograniczeń geometrii, kolizji ani zasad Pack Dynamics;
+- przyszły `PackTechniqueScore` może raportować m.in. draft efficiency, wheel holding, gap closures, wasted energy i missed passing opportunities.
+
+### Skill balancing i progresja — wymagania po MVP
+
+Przed implementacją progresji Rider Technical Profile należy:
+
+- zagwarantować `Power Integrity`: skill nie może modyfikować `PowerWatts` ani tworzyć wirtualnych watów;
+- utrzymać priorytet rzeczywistej mocy i fizyki nad progresją postaci;
+- projektować skill jako redukcję strat i poprawę jakości decyzji automatycznego prowadzenia;
+- unikać prostego grindu kilometrów, czasu gry i banalnych powtarzalnych sytuacji;
+- premiować poprawne wykonanie scenariuszy o `TechnicalDemand` zbliżonym do `TechnicalCapacity`;
+- zastosować diminishing returns i twarde limity wpływu bardzo wysokiego skilla;
+- zbudować deterministyczny balancing harness dla scenariuszy `TechnicalDemand × TechnicalCapacity`;
+- stroić krzywe później na podstawie telemetrii rzeczywistych jazd.
+
+### Feedback dla mechanik bez naturalnych bodźców fizycznych
+
+Przy implementacji zakrętów, Pack Dynamics, techniki i warunków środowiskowych należy jawnie identyfikować sytuacje, w których użytkownik trenażera nie otrzymuje bodźca obecnego podczas prawdziwej jazdy.
+
+Dla takich sytuacji wymagany jest odpowiedni feedback wizualny, a opcjonalnie także dźwiękowy.
+
+Priorytet prezentacji:
+1. zachowanie świata i animacji;
+2. oznaczenie na drodze lub w świecie;
+3. dyskretny HUD;
+4. tekst tylko jako ostateczne wsparcie.
+
+Do kryteriów ukończenia odpowiednich systemów należy dodać walidację, czy użytkownik rozumie:
+- co się wydarzyło;
+- dlaczego automat zachował się w dany sposób;
+- czy ograniczenie wynika z fizyki, geometrii, Pack Dynamics czy jego techniki;
+- czy powinien zmienić moc lub kadencję.
+
+Mechanika bez realnego odpowiednika haptycznego/kinestetycznego nie jest kompletna, jeśli jej kluczowy stan pozostaje niewidoczny dla gracza.
+
+Przy kilku jednoczesnych sygnałach wymagany jest `GuidanceComposer`, który ustala priorytet i ogranicza wizualny clutter. Kolor nie może być jedynym nośnikiem znaczenia; wymagane są także różnice kształtu/wzoru/animacji oraz walidacja w różnych kamerach i warunkach pogodowo-oświetleniowych.
+
+### Pack Dynamics Torture Harness — wymagania przed implementacją produkcyjną
+
+Przed uznaniem Pack Dynamics za stabilny wymagany jest deterministyczny harness bez renderingu obejmujący ręczne edge case'y oraz masowo generowane warianty.
+
+Obowiązkowe invariants:
+- brak hard overlap;
+- brak teleportów;
+- brak wyjazdu poza dozwoloną drogę;
+- brak niemożliwego lateral acceleration;
+- brak trwałego reciprocal dance / oscillation;
+- brak sztucznego deadlocku;
+- brak energy banking;
+- brak fałszywych interakcji pomiędzy różnymi segmentami/poziomami trasy;
+- brak wymuszonego `VIP lane`;
+- identyczny stan i wejścia dają identyczny wynik.
+
+Harness musi zawierać co najmniej scenariusze: wspólna luka dla dwóch riderów, zamknięcie luki w trakcie passu, symetryczny deadlock, realne i sztuczne `BOXED_IN`, crosswind/echelon, hairpin, mokry zakręt, crest, szybki zjazd, wolny podjazd, stopped rider, merge/split grup, serpentyny/mosty/tunele, różne `lapIndex`, finish behavior oraz błędne/dropoutowe wejście mocy.
+
+### Pack Dynamics v0.1 — spec freeze
+
+Przed właściwą implementacją Pack Dynamics wymagane są następujące kontrakty:
+
+- jawna `RiderPackStateMachine`;
+- opisowy `PackPhaseModel`;
+- `RouteOccupancyModel`;
+- atomowy i deterministyczny `GapReservation`;
+- `InputIntegrity` dla danych trenażera;
+- debug/telemetry contract;
+- deterministic replay;
+- performance contract oparty na lokalnym neighborhood zamiast O(N²);
+- rozdzielenie `PlayerTechnique` i `AutopilotProficiency`;
+- competitive fairness policy;
+- przyszły network authority contract;
+- posture-aware occupancy;
+- walidacja bicycle-like/non-holonomic kinematics dla każdej trajektorii lateralnej.
+
+Po zapisaniu tych zasad spec Pack Dynamics v0.1 uznaje się za zamrożoną do czasu właściwego etapu po MVP.
+
+Nowe pomysły dotyczące Pack Dynamics trafiają do backlogu, chyba że rozwiązują krytyczną lukę w istniejących invariants.
+
+## Dokument kierunkowy po MVP
+
+Założenia dotyczące budżetów runtime/build, streamingu świata, przyszłej sieci dróg, skalowania dużej liczby kolarzy oraz multiplayera opisuje
+[`PERFORMANCE_MULTIPLAYER_ARCHITECTURE.md`](PERFORMANCE_MULTIPLAYER_ARCHITECTURE.md).
+
+Dokument ten definiuje ograniczenia architektoniczne i edge case'y, ale nie przenosi
+multiplayera ani otwartego świata do bieżącego zakresu MVP.
