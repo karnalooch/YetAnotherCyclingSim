@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Render the R4.1B.3 cyclist-height proof with continuous DynamicMesh local ground.
+    Render the R4.1B.4 cyclist-height proof with bounded DynamicMesh meso ground.
 #>
 [CmdletBinding()]
 param(
