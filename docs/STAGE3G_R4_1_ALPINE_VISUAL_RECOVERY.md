@@ -1171,8 +1171,11 @@ B.3.1 therefore adds these fail-closed presentation contracts:
   such overlap; protected road edges, shoulder contract and canonical SP638 XY
   are not moved;
 - the world-aligned terrain skin is lowered only where required to preserve a
-  bounded vertical clearance below the asphalt/shoulder presentation envelope,
-  with a finite maximum correction;
+  bounded vertical clearance below the asphalt/shoulder presentation envelope.
+  The B.3.1 hairpin proof keeps a **4.0 m fail-closed maximum correction**:
+  exact-SHA proof evidence measured a required 3.362 m cut, so the earlier
+  provisional 3.0 m cap was below the real bounded hairpin geometry; corrections
+  above 4.0 m remain rejected rather than silently excavating arbitrary terrain;
 - terrain-skin smoothing adjustments taper back to zero near the outer skin
   boundary so the local mesh converges to the sampled MASE macro Landscape
   instead of reading as a hard sheet;
