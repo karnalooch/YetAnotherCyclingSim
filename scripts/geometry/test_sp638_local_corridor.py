@@ -15,6 +15,7 @@ from scripts.geometry.sp638_local_corridor import (
     make_curvature_adaptive_profiles,
     make_curvature_superelevation_angles,
     minimum_sampled_radius_xy,
+    regularize_measured_superelevation_angles,
     triangle_normal,
 )
 
@@ -194,6 +195,58 @@ class LocalGroundCorridorTests(unittest.TestCase):
         self.assertGreater(banked[apex][0].vertical_m, banked[apex][1].vertical_m)
         self.assertAlmostEqual(banked[apex][0].lateral_m, -3.0)
         self.assertAlmostEqual(banked[apex][1].lateral_m, 3.0)
+
+    def test_measured_superelevation_keeps_real_signal_and_rejects_raster_spike(self) -> None:
+        radius = 10.0
+        centerline = tuple(
+            Vec3(
+                radius * math.sin(index * 0.08),
+                radius * (1.0 - math.cos(index * 0.08)),
+                0.0,
+            )
+            for index in range(21)
+        )
+        measured = [2.4] * len(centerline)
+        measured[10] = 12.0
+        measured[15] = None
+
+        regularized, diagnostics = regularize_measured_superelevation_angles(
+            centerline,
+            tuple(measured),
+            hard_max_bank_deg=4.0,
+            median_radius_stations=2,
+            spike_tolerance_deg=1.0,
+            max_delta_deg_per_station=0.35,
+            curvature_half_window_stations=2,
+        )
+
+        self.assertAlmostEqual(regularized[8], 2.4)
+        self.assertAlmostEqual(regularized[10], 2.4)
+        self.assertAlmostEqual(regularized[15], 2.4)
+        self.assertEqual(diagnostics["measured_station_count"], 20)
+        self.assertEqual(diagnostics["hard_rejected_station_count"], 1)
+        self.assertEqual(diagnostics["fallback_station_count"], 0)
+        self.assertLessEqual(max(abs(value) for value in regularized), 4.0)
+
+    def test_measured_superelevation_falls_back_only_without_local_lidar_signal(self) -> None:
+        radius = 8.0
+        centerline = tuple(
+            Vec3(
+                radius * math.sin(index * 0.1),
+                radius * (1.0 - math.cos(index * 0.1)),
+                0.0,
+            )
+            for index in range(12)
+        )
+        regularized, diagnostics = regularize_measured_superelevation_angles(
+            centerline,
+            tuple(None for _ in centerline),
+            fallback_max_bank_deg=3.434,
+            curvature_half_window_stations=2,
+        )
+        self.assertGreater(max(abs(value) for value in regularized), 0.5)
+        self.assertLessEqual(max(abs(value) for value in regularized), 3.434 + 1e-9)
+        self.assertEqual(diagnostics["fallback_station_count"], len(centerline))
 
     def test_superelevation_flips_with_turn_direction_and_fades_at_ties(self) -> None:
         positive = (
