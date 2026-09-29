@@ -618,6 +618,7 @@ def _sample_local_terrain_skin(
         "max_total_adjustment_m": TERRAIN_SKIN_MAX_TOTAL_ADJUSTMENT_M,
         "pinned_border_cells": TERRAIN_SKIN_PINNED_BORDER_CELLS,
         "max_abs_adjustment_m": meso_metrics.max_abs_adjustment_m,
+        "minimum_adjustment_m": meso_metrics.minimum_adjustment_m,
         "rms_adjustment_m": meso_metrics.rms_adjustment_m,
         "smoothing_max_abs_adjustment_m": (
             smoothing_metrics.max_abs_adjustment_m
