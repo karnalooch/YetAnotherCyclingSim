@@ -1,8 +1,8 @@
-"""Render the R4.1B.3 rider-close SP638 local-ground corridor proof.
+"""Render the R4.1B.4 rider-close SP638 bounded meso-ground proof.
 
 The proof keeps the corrected MASE Landscape as macro terrain, applies only a
 broad transient Landscape cut/fill around the selected real SP638 hairpin, and
-then overlays the cyclist-close road bench with continuous DynamicMesh surfaces.
+then overlays a bounded irregular meso-ground patch plus continuous road-bench DynamicMesh surfaces.
 
 The canonical road XY is never snapped to Landscape/DTM vertices. Nothing is
 saved back to the map.
@@ -1123,7 +1123,7 @@ def main() -> None:
         mask_enabled=False,
         capture_hdr=False,
         comparison_tolerance=unreal.ComparisonTolerance.LOW,
-        comparison_notes="R4.1B.3 SP638 neutral continuous local-ground corridor proof",
+        comparison_notes="R4.1B.4 SP638 neutral bounded meso-ground corridor proof",
         delay=3.0,
         force_game_view=True,
     )
