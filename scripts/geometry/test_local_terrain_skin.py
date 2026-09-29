@@ -127,6 +127,29 @@ class LocalTerrainSkinTests(unittest.TestCase):
                 max_lowering_m=4.0,
             )
 
+    def test_road_clearance_reports_worst_bounded_limit_violation(self) -> None:
+        xs = (-4.0, 0.0, 4.0)
+        ys = (4.0, 0.0, -4.0)
+        heights = (
+            (13.95, 13.90, 13.90),
+            (14.10, 15.10, 14.00),
+            (13.90, 13.90, 13.90),
+        )
+        centerline = (Vec3(-4.0, 0.0, 10.0), Vec3(4.0, 0.0, 10.0))
+
+        with self.assertRaisesRegex(
+            ValueError,
+            r"maximum requested 5\.250 m > 4\.000 m "
+            r"at x=0\.000 y=0\.000 distance=0\.000 m",
+        ):
+            apply_road_clearance_to_height_grid(
+                xs,
+                ys,
+                heights,
+                centerline,
+                max_lowering_m=4.0,
+            )
+
     def test_mesh_is_upward_wound_and_deterministic(self) -> None:
         xs = (0.0, 4.0, 8.0, 12.0)
         ys = (12.0, 8.0, 4.0, 0.0)
