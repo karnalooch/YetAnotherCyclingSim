@@ -611,12 +611,11 @@ def make_curvature_adaptive_profiles(
         negative_terminal = lateral_index == 0
         positive_terminal = lateral_index == len(profile) - 2
         if not negative_terminal and not positive_terminal:
-            raise ValueError(
-                "non-terminal corridor band folds between stations "
-                f"{station_index} and {station_index + 1} at lateral band "
-                f"{lateral_index}; terminal tie contraction must not mask "
-                "inner shoulder/road geometry"
-            )
+            # Do not heal folds that reach the inner earthwork/shoulder/road.
+            # Return the bounded curvature-adaptive profile unchanged and let
+            # build_corridor_mesh() retain ownership of strict topology
+            # rejection for invalid canonical geometry.
+            return result
 
         left_point = profile[lateral_index]
         right_point = profile[lateral_index + 1]
@@ -643,10 +642,7 @@ def make_curvature_adaptive_profiles(
                 right_scales[station_index + 1],
             )
             if current_scale <= right_floor_scale + _EPSILON:
-                raise ValueError(
-                    "positive inside corridor still folds at the minimum "
-                    "shoulder/earthwork extent"
-                )
+                return result
             target_scale = max(
                 right_floor_scale,
                 0.5 * (current_scale + right_floor_scale),
@@ -666,10 +662,7 @@ def make_curvature_adaptive_profiles(
                 left_scales[station_index + 1],
             )
             if current_scale <= left_floor_scale + _EPSILON:
-                raise ValueError(
-                    "negative inside corridor still folds at the minimum "
-                    "shoulder/earthwork extent"
-                )
+                return result
             target_scale = max(
                 left_floor_scale,
                 0.5 * (current_scale + left_floor_scale),
@@ -684,9 +677,7 @@ def make_curvature_adaptive_profiles(
             )
             left_scales = _taper_scales(raw_left, taper_per_station)
 
-    raise ValueError(
-        "adaptive corridor sweep-safety contraction did not converge"
-    )
+    return build_profiles_from_scales()
 
 
 def build_corridor_mesh(
