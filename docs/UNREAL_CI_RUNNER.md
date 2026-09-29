@@ -105,6 +105,21 @@ Next:
 9. [ ] Promote the reusable generic C++ Unreal lane to automatic trusted execution.
 10. [ ] Add generic Unreal C++ validation to Aggregate CI only in Phase 3 and reconfirm #22 branch protection first.
 
+## R4.1 in-job prepared workspace reuse
+
+Issue #234 adds a narrow exception to repeated setup work, not to trust boundaries. A single manually dispatched R4.1 proof-suite job may reuse one prepared exact-SHA worktree across capability, topology, bounded hairpin and rider-close visual proofs.
+
+The suite must:
+
+- materialize the required Passo Giau LFS map once;
+- build `YetAnotherCyclingSimEditor Win64 Development` once;
+- write a prepared-workspace stamp containing the exact HEAD, worktree path, map byte count and build identity;
+- require every child proof that skips standalone preparation to validate that stamp;
+- never reuse that stamp or build state across jobs, worktrees or different SHAs;
+- run unconditional `git reset --hard` plus `git clean -ffdx` cleanup after artifact upload.
+
+Standalone proof wrappers remain self-contained when no prepared-workspace stamp is supplied.
+
 ## Workspace hygiene
 
 The reusable job checks out with clean: true and runs git reset --hard plus
