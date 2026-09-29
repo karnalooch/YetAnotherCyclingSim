@@ -1031,7 +1031,22 @@ def main() -> None:
     level_editor.set_level_viewport_fov(76.0, viewport_config_key)
     level_editor.editor_set_game_view(True, viewport_config_key)
     level_editor.editor_set_viewport_realtime(True, viewport_config_key)
-    unreal.SystemLibrary.execute_console_command(world, "viewmode lightingonly")
+
+    # Bind the diagnostic mode through the editor automation API itself rather
+    # than through a console command. High-res automation capture can decouple
+    # from console-command viewport state; this API owns the editor viewport
+    # ViewModeIndex and lets us read it back before scheduling the screenshot.
+    lighting_only_mode = unreal.ViewModeIndex.VMI_LIGHTING_ONLY
+    unreal.AutomationLibrary.set_editor_viewport_view_mode(lighting_only_mode)
+    unreal.AutomationLibrary.set_editor_active_viewport_view_mode(
+        lighting_only_mode
+    )
+    active_view_mode = unreal.AutomationLibrary.get_editor_active_viewport_view_mode()
+    if active_view_mode != lighting_only_mode:
+        raise RuntimeError(
+            "failed to bind Lighting Only to active editor viewport: "
+            f"{active_view_mode}"
+        )
     level_editor.editor_invalidate_viewports()
 
     _proof_data = {
@@ -1116,6 +1131,11 @@ def main() -> None:
         "offscreen_camera_capture": False,
         "viewport_game_view": True,
         "viewport_fov_deg": 76.0,
+        "viewmode_binding_api": (
+            "AutomationLibrary.set_editor_active_viewport_view_mode"
+        ),
+        "viewport_viewmode_verified": True,
+        "active_viewmode_label": str(active_view_mode),
         "neutral_landscape_material": True,
         "camera_location_cm": [
             float(camera_location.x),
