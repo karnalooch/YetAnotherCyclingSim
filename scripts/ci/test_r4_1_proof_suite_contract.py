@@ -126,7 +126,9 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
 
     def test_transient_dynamic_mesh_normals_are_initialized_explicitly(self) -> None:
         capture = read("scripts/ue/stage3g_capture_sp638_local_corridor.py")
-        spawn = capture.split("def _spawn_dynamic_mesh(", 1)[1].split("\ndef main()", 1)[0]
+        spawn = capture.split("def _spawn_dynamic_mesh(", 1)[1].split(
+            "\ndef main()", 1
+        )[0]
         self.assertIn("dynamic_mesh.set_per_vertex_normals()", spawn)
         self.assertNotIn("dynamic_mesh.recompute_normals(", spawn)
 
