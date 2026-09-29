@@ -291,7 +291,7 @@ geometry**:
 - taper the local correction inward from that pinned seam;
 - keep the visible meso surface at or above the sampled macro Landscape so the
   underlying heightfield cannot reappear through depth/occlusion conflicts;
-- exclude the protected asphalt + shoulder corridor from meso-ground triangles;
+- exclude the complete local road-bench / earthwork envelope from meso-ground triangles (the current proof reserves 10.5 m from the centerline, beyond the ±10 m earthwork profile);
 - preserve official SP638 centerline XY and Road Physics Profile authority;
 - keep the patch transient until exact-SHA technical proof and human visual
   review accept the geometry.
