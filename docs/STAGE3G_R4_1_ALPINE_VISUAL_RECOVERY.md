@@ -303,6 +303,15 @@ The canonical heavy R4.1 proof remains build-once / boot-Unreal-once / prove-man
 R4.1B.4 must pass the same exact-SHA evidence path and the cyclist-height human
 visual gate before broader propagation or production dressing.
 
+The first B.4 exact-head proof on PR #251 passed every topology/clearance
+assertion but the Lit screenshot was not decision-quality because fallback/proof
+materials introduced dominant checker/grid regions. The geometry gate therefore
+uses Unreal Engine **Lighting Only** mode (`viewmode lightingonly`): the engine
+applies a neutral material affected only by lighting and excludes source normal
+maps, so the human reviewer can judge silhouette, seams, overlaps and occlusion
+without BaseColor/material noise. This is a diagnostic geometry view only; it
+does not replace the later production-material/dressing acceptance view.
+
 #### Rider-camera acceptance gate
 
 The production acceptance view is the moving cyclist camera, not an editor
