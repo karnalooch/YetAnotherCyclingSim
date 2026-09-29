@@ -243,6 +243,35 @@ if ([string]$Proof.landscape_cut_fill.mode -ne 'road_first_landscape_conform') {
 if ([string]$Proof.landscape_cut_fill.road_authority -ne 'official_sp638_gis') {
     throw "SP638 road-first proof used unexpected road authority: '$($Proof.landscape_cut_fill.road_authority)'."
 }
+if ([string]$Proof.landscape_cut_fill.edit_layer_name -ne 'SP638_Road') {
+    throw "SP638 road-first proof wrote to unexpected edit layer: '$($Proof.landscape_cut_fill.edit_layer_name)'."
+}
+if ([string]$Proof.landscape_cut_fill.base_edit_layer -ne 'MASE_Base') {
+    throw "SP638 road-first proof lost MASE base edit layer: '$($Proof.landscape_cut_fill.base_edit_layer)'."
+}
+if ([string]$Proof.landscape_cut_fill.road_edit_layer -ne 'SP638_Road') {
+    throw "SP638 road-first proof road edit-layer contract drifted: '$($Proof.landscape_cut_fill.road_edit_layer)'."
+}
+if (@($Proof.landscape_cut_fill.edit_layer_names).Count -ne 2 -or
+    @($Proof.landscape_cut_fill.edit_layer_names) -notcontains 'MASE_Base' -or
+    @($Proof.landscape_cut_fill.edit_layer_names) -notcontains 'SP638_Road') {
+    throw "SP638 road-first proof did not observe exact MASE_Base + SP638_Road edit layers: $($Proof.landscape_cut_fill.edit_layer_names -join ', ')."
+}
+if ([string]$Proof.landscape_cut_fill.delta_proxy.encoding -ne 'edit_layer_delta_relative_to_landscape_origin') {
+    throw "SP638 road-first proof used unexpected edit-layer Z encoding: '$($Proof.landscape_cut_fill.delta_proxy.encoding)'."
+}
+if ([string]$Proof.landscape_cut_fill.delta_proxy.proxy_point_type -ne 'linear') {
+    throw "SP638 road-first proof delta proxy must use LINEAR points, got '$($Proof.landscape_cut_fill.delta_proxy.proxy_point_type)'."
+}
+if ([double]$Proof.landscape_cut_fill.delta_proxy.sample_step_m -gt 1.001) {
+    throw "SP638 road-first proof delta proxy is too sparse: $($Proof.landscape_cut_fill.delta_proxy.sample_step_m) m."
+}
+if ([int]$Proof.landscape_cut_fill.delta_proxy.sample_count -lt 500) {
+    throw "SP638 road-first proof sampled too few edit-layer proxy points: $($Proof.landscape_cut_fill.delta_proxy.sample_count)."
+}
+if ([double]$Proof.landscape_cut_fill.delta_proxy.maximum_abs_correction_m -gt 3.001) {
+    throw "SP638 road-first proof exceeded bounded MASE correction: $($Proof.landscape_cut_fill.delta_proxy.maximum_abs_correction_m) m."
+}
 if ([bool]$Proof.landscape_cut_fill.raise_heights -ne $true -or [bool]$Proof.landscape_cut_fill.lower_heights -ne $true) {
     throw 'SP638 road-first terrain conform must allow both cut and fill.'
 }
