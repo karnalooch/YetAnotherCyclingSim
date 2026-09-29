@@ -249,6 +249,117 @@ def make_curvature_superelevation_angles(
     return tuple(result)
 
 
+def regularize_measured_superelevation_angles(
+    centerline: Sequence[Vec3],
+    measured_angles_deg: Sequence[float | None],
+    *,
+    fallback_max_bank_deg: float = 3.434,
+    fallback_full_bank_curvature_per_m: float = 0.05,
+    hard_max_bank_deg: float = 4.0,
+    median_radius_stations: int = 2,
+    spike_tolerance_deg: float = 1.25,
+    max_delta_deg_per_station: float = 0.35,
+    curvature_half_window_stations: int = 1,
+) -> tuple[tuple[float, ...], dict[str, float | int]]:
+    """Regularize LiDAR/DTM-observed road crossfall without replacing it.
+
+    Finite measured values within the hard physical envelope remain the primary
+    source. Only obvious local spikes are replaced by the local median; missing
+    or invalid samples fall back to curvature-derived road design. The final
+    station-to-station rate limiter is deliberately small so 1 m terrain raster
+    noise cannot become a saw-tooth road surface.
+    """
+
+    if len(measured_angles_deg) != len(centerline):
+        raise ValueError("one measured bank sample is required per centerline station")
+    if median_radius_stations < 1:
+        raise ValueError("median_radius_stations must be positive")
+    if hard_max_bank_deg <= 0.0 or spike_tolerance_deg <= 0.0:
+        raise ValueError("bank limits must be positive")
+
+    fallback = make_curvature_superelevation_angles(
+        centerline,
+        max_bank_deg=fallback_max_bank_deg,
+        full_bank_curvature_per_m=fallback_full_bank_curvature_per_m,
+        max_delta_deg_per_station=max_delta_deg_per_station,
+        curvature_half_window_stations=curvature_half_window_stations,
+    )
+
+    accepted: list[float | None] = []
+    invalid_count = 0
+    clipped_count = 0
+    for value in measured_angles_deg:
+        if value is None or not math.isfinite(float(value)):
+            accepted.append(None)
+            invalid_count += 1
+            continue
+        numeric = float(value)
+        if abs(numeric) > hard_max_bank_deg + 1e-9:
+            accepted.append(None)
+            invalid_count += 1
+            clipped_count += 1
+            continue
+        accepted.append(numeric)
+
+    filtered: list[float] = []
+    fallback_count = 0
+    spike_replaced_count = 0
+    for index, value in enumerate(accepted):
+        neighbors = sorted(
+            candidate
+            for candidate in accepted[
+                max(0, index - median_radius_stations):
+                min(len(accepted), index + median_radius_stations + 1)
+            ]
+            if candidate is not None
+        )
+        local_median = (
+            neighbors[len(neighbors) // 2]
+            if neighbors
+            else None
+        )
+        if value is None:
+            if local_median is not None:
+                filtered.append(local_median)
+            else:
+                filtered.append(fallback[index])
+                fallback_count += 1
+            continue
+        if (
+            local_median is not None
+            and abs(value - local_median) > spike_tolerance_deg
+        ):
+            filtered.append(local_median)
+            spike_replaced_count += 1
+        else:
+            filtered.append(value)
+
+    result = list(filtered)
+    for _ in range(2):
+        for index in range(1, len(result)):
+            lower = result[index - 1] - max_delta_deg_per_station
+            upper = result[index - 1] + max_delta_deg_per_station
+            result[index] = max(lower, min(upper, result[index]))
+        for index in range(len(result) - 2, -1, -1):
+            lower = result[index + 1] - max_delta_deg_per_station
+            upper = result[index + 1] + max_delta_deg_per_station
+            result[index] = max(lower, min(upper, result[index]))
+
+    diagnostics: dict[str, float | int] = {
+        "measured_station_count": sum(value is not None for value in accepted),
+        "invalid_station_count": invalid_count,
+        "hard_rejected_station_count": clipped_count,
+        "fallback_station_count": fallback_count,
+        "spike_replaced_station_count": spike_replaced_count,
+        "peak_abs_raw_measured_deg": max(
+            (abs(float(value)) for value in measured_angles_deg if value is not None and math.isfinite(float(value))),
+            default=0.0,
+        ),
+        "peak_abs_regularized_deg": max((abs(value) for value in result), default=0.0),
+    }
+    return tuple(result), diagnostics
+
+
 def apply_superelevation_to_profiles(
     profiles: Sequence[Sequence[CrossSectionPoint]],
     bank_angles_deg: Sequence[float],
