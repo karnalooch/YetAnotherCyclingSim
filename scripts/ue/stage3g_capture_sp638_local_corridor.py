@@ -318,6 +318,33 @@ def _dot(a: unreal.Vector, b: unreal.Vector) -> float:
     return float(a.x * b.x + a.y * b.y + a.z * b.z)
 
 
+def _mesh_orientation_diagnostics(mesh) -> dict[str, float | int]:
+    unit_normal_z: list[float] = []
+    for triangle in mesh.triangles:
+        a, b, c = (mesh.vertices[index] for index in triangle)
+        ab = b - a
+        ac = c - a
+        nx = ab.y * ac.z - ab.z * ac.y
+        ny = ab.z * ac.x - ab.x * ac.z
+        nz = ab.x * ac.y - ab.y * ac.x
+        length = math.sqrt(nx * nx + ny * ny + nz * nz)
+        if length <= 1e-12:
+            raise RuntimeError("surface-orientation diagnostic found degenerate triangle")
+        unit_normal_z.append(max(-1.0, min(1.0, nz / length)))
+
+    ordered = sorted(unit_normal_z)
+    minimum = ordered[0]
+    percentile_05 = ordered[min(len(ordered) - 1, int(0.05 * (len(ordered) - 1)))]
+    median = ordered[len(ordered) // 2]
+    return {
+        "triangle_count": len(ordered),
+        "minimum_unit_normal_z": minimum,
+        "p05_unit_normal_z": percentile_05,
+        "median_unit_normal_z": median,
+        "maximum_tilt_from_up_deg": math.degrees(math.acos(minimum)),
+    }
+
+
 def _find_road_spline() -> tuple[unreal.Actor, unreal.SplineComponent, int]:
     actor_subsystem = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
     candidates: list[tuple[unreal.Actor, unreal.SplineComponent, int]] = []
@@ -1478,6 +1505,13 @@ def main() -> None:
             "left_shoulder": left_shoulder_counts,
             "right_shoulder": right_shoulder_counts,
             "asphalt": road_counts,
+            "surface_orientation": {
+                "meso_ground": _mesh_orientation_diagnostics(terrain_skin_mesh),
+                "earthwork": _mesh_orientation_diagnostics(earthwork_mesh),
+                "left_shoulder": _mesh_orientation_diagnostics(left_shoulder_mesh),
+                "right_shoulder": _mesh_orientation_diagnostics(right_shoulder_mesh),
+                "asphalt": _mesh_orientation_diagnostics(road_mesh),
+            },
         },
         "landscape_cut_fill": {
             "api": "LandscapeProxy.editor_apply_spline",
