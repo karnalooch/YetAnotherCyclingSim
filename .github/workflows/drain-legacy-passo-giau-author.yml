@@ -15,7 +15,8 @@ concurrency:
 
 jobs:
   drain:
-    if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
-      - run: echo "legacy authoring concurrency drained"
+      - run: |
+          echo "legacy authoring concurrency drained"
+          sleep 2
