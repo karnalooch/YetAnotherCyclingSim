@@ -944,6 +944,21 @@ valid slope from becoming pure black only because its normal faces away from an
 oblique proof light. Source heights, topology, overlap, road banking, canonical
 SP638 XY and physics authority remain unchanged.
 
+The B.4.4 exact-SHA proof on `f69c8f082a842b9b900ff7a6dc3b2b00b1a1b29b`
+completed the full build-once / boot-once suite and emitted both screenshots
+(artifact `11049336933`). The capture race is fixed, but human review still
+rejects the Lighting Only frame: the same earthwork/meso dark wedges remain
+despite explicit per-vertex normals, an overhead proof light and disabled
+shadows. Actor-ID still shows owned geometry in those pixels. B.4.5 therefore
+tests one narrower proof-harness hypothesis before any geometry edit: the
+transient Directional Light and Sky Light components are explicitly set to
+`Movable`, matching UE's fully dynamic lighting mobility for transient
+DynamicMesh actors. Geometry, overlap, source heights, road banking and physics
+authority remain unchanged. If exact-SHA visual evidence is unchanged, light
+mobility is rejected as the cause and the next investigation must use measured
+surface-orientation/lighting evidence rather than another seam edit.
+
+
 ### 9.2 SP638 banking/crossfall — real-data-first guardrail
 
 PR #251 also establishes the presentation-side banking rule for real SP638:
