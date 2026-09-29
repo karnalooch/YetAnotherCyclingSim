@@ -224,7 +224,10 @@ class LocalGroundCorridorTests(unittest.TestCase):
         original_by_role = {point.role: point for point in self.profile}
         apex = banked[2]
         by_role = {point.role: point for point in apex}
-        self.assertAlmostEqual(
+        # The -8 m fixture tie is inside the 4..10 m fade band, so it keeps
+        # only a residual fraction of the road bank. The +10 m tie is the zero-
+        # bank boundary and must remain exactly on its authored elevation.
+        self.assertNotAlmostEqual(
             by_role["uphill_tie"].vertical_m,
             original_by_role["uphill_tie"].vertical_m,
         )
@@ -232,6 +235,15 @@ class LocalGroundCorridorTests(unittest.TestCase):
             by_role["downhill_tie"].vertical_m,
             original_by_role["downhill_tie"].vertical_m,
         )
+        left_tie_delta = abs(
+            by_role["uphill_tie"].vertical_m
+            - original_by_role["uphill_tie"].vertical_m
+        )
+        left_shoulder_delta = abs(
+            by_role["left_shoulder"].vertical_m
+            - original_by_role["left_shoulder"].vertical_m
+        )
+        self.assertLess(left_tie_delta, left_shoulder_delta)
         self.assertNotAlmostEqual(
             by_role["left_shoulder"].vertical_m,
             original_by_role["left_shoulder"].vertical_m,
