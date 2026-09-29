@@ -369,6 +369,7 @@ def build_bounded_meso_ground_mesh(
     protected_half_widths_m: Sequence[float] = (),
     protected_negative_half_widths_m: Sequence[float] = (),
     protected_positive_half_widths_m: Sequence[float] = (),
+    protected_transition_overlap_m: float = 0.0,
     seam_rings: int = 4,
     lift_m: float = 0.03,
 ) -> tuple[MesoGroundMesh, MesoGroundMetrics]:
@@ -376,8 +377,11 @@ def build_bounded_meso_ground_mesh(
 
     The patch uses the sampled macro terrain only as input. A smooth target may
     correct rider-visible heightfield ribbing, but the actual mesh boundary is
-    pinned exactly back to the source terrain. Triangles touching the protected
-    road/shoulder corridor are omitted rather than pushing authoritative road XY.
+    pinned exactly back to the source terrain. Triangles touching the effective
+    protected road/shoulder corridor are omitted rather than pushing authoritative
+    road XY. protected_transition_overlap_m may deliberately shrink that cutout so
+    the pinned meso boundary tucks beneath a dedicated corridor edge instead of
+    leaving the macro Landscape exposed between the two presentation systems.
     """
 
     rows, columns = _validate_grid(source_heights_m)
@@ -392,6 +396,13 @@ def build_bounded_meso_ground_mesh(
         raise ValueError("meso-ground radii must be positive")
     if protected_half_width_m < 0.0:
         raise ValueError("protected_half_width_m cannot be negative")
+    if (
+        not math.isfinite(protected_transition_overlap_m)
+        or protected_transition_overlap_m < 0.0
+    ):
+        raise ValueError(
+            "protected_transition_overlap_m must be finite and non-negative"
+        )
     asymmetric_widths = bool(
         protected_negative_half_widths_m or protected_positive_half_widths_m
     )
@@ -478,6 +489,27 @@ def build_bounded_meso_ground_mesh(
     else:
         negative_protection_widths = ()
         positive_protection_widths = ()
+
+    if protected_transition_overlap_m > 0.0:
+        if not negative_protection_widths:
+            raise ValueError(
+                "protected transition overlap requires a protected centerline"
+            )
+        minimum_requested_half_width = min(
+            (*negative_protection_widths, *positive_protection_widths)
+        )
+        if protected_transition_overlap_m >= minimum_requested_half_width - _EPSILON:
+            raise ValueError(
+                "protected transition overlap must stay inside the protected half-width"
+            )
+        negative_protection_widths = tuple(
+            value - protected_transition_overlap_m
+            for value in negative_protection_widths
+        )
+        positive_protection_widths = tuple(
+            value - protected_transition_overlap_m
+            for value in positive_protection_widths
+        )
 
     active: list[bool] = []
     protected_distances: list[float | None] = []
