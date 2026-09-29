@@ -962,9 +962,10 @@ def main() -> None:
         world,
         "r.RayTracing.Geometry.Landscape.LODBias -1",
     )
-    # Render the DynamicMesh-owned rider-close terrain in ordinary lit mode.
-    # The macro Landscape remains visible outside the bounded meso patch.
-    unreal.SystemLibrary.execute_console_command(world, "viewmode lit")
+    # Render the rider-close geometry with an engine material-independent
+    # Lighting Only view. This removes BaseColor/normal-map noise from the
+    # human geometry gate while keeping actual lighting and silhouette cues.
+    unreal.SystemLibrary.execute_console_command(world, "viewmode lightingonly")
     unreal.SystemLibrary.execute_console_command(world, "r.AntiAliasingMethod 1")
     unreal.SystemLibrary.execute_console_command(
         world,
@@ -1101,7 +1102,8 @@ def main() -> None:
         },
         "landscape_component_count": len(landscape_components),
         "forced_landscape_lod": 0,
-        "proof_viewmode": "lit",
+        "proof_viewmode": "lightingonly",
+        "material_independent_geometry_proof": True,
         "neutral_landscape_material": True,
         "camera_location_cm": [
             float(camera_location.x),
@@ -1124,7 +1126,7 @@ def main() -> None:
         mask_enabled=False,
         capture_hdr=False,
         comparison_tolerance=unreal.ComparisonTolerance.LOW,
-        comparison_notes="R4.1B.4 SP638 neutral bounded meso-ground corridor proof",
+        comparison_notes="R4.1B.4 SP638 lighting-only bounded meso-ground geometry proof",
         delay=3.0,
         force_game_view=True,
     )
