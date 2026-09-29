@@ -886,6 +886,33 @@ lighting-only diagnostic and omits source normal maps. This makes the exact-SHA
 human geometry gate material-independent; production materials remain a
 separate later visual/dressing acceptance concern.
 
+### 9.2 SP638 banking/crossfall — real-data-first guardrail
+
+PR #251 also establishes the presentation-side banking rule for real SP638:
+**do not manufacture a constant `4° everywhere` bank**.
+
+The active estimator is road-band-first rather than hillside-first: it samples a
+cross-road LiDAR transect around the SP638 centerline, isolates/fits the
+approximately carriageway-width band, and only then derives signed crossfall.
+This is necessary because a naïve two-point transect can measure the adjacent
+mountain slope, ditch or embankment instead of the road itself and produce
+physically meaningless angles.
+
+The presentation path may apply bounded regularization to reject that
+contamination and keep the road surface continuous, but the result must remain
+traceable to the measured samples. A synthetic constant is not an acceptable
+production fallback when usable measured evidence exists.
+
+This presentation crossfall does **not** automatically become simulation
+banking. The `Road Physics Profile` remains physics authority. Promotion of
+measured SP638 crossfall into physics is the separate post-#251
+`R4.1C-PHYS — Road banking physics authority` gate defined in
+`docs/ROAD_PHYSICS_PROFILE.md`.
+
+The two representations may be smoothed differently for their responsibilities,
+but a validation proof must catch a material visual-bank vs physics-bank
+mismatch before physics promotion is accepted.
+
 ## 10. Source hierarchy
 
 Prefer sources in this order:

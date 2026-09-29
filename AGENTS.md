@@ -120,6 +120,12 @@ Never claim that code works without running an appropriate check.
 - Cornering outcomes must be deterministic for the same inputs.
 - Crashes are outside the MVP.
 - MVP cornering consequences are line widening, controlled slip, speed loss, time loss and technique score.
+- Road banking/crossfall is **real-data-first**. When measured or authoritative road evidence exists, use it as the source instead of inventing a global synthetic bank.
+- Never replace measured/authoritative banking with a fixed value such as `4° everywhere`. A constant synthetic bank is permitted only as an explicit temporary diagnostic/non-production override.
+- Bounded smoothing, regularization and interpolation are allowed only to reject terrain contamination, noise/outliers, discontinuities or numerically unstable edge cases. They must remain traceable to the measured source.
+- Rendered road meshes, Landscape normals and arbitrary terrain triangles are not physics authority. Physics-facing banking belongs in the `Road Physics Profile`.
+- Visual road geometry and the `Road Physics Profile` may use different smoothing strengths, but both must remain traceable to the same source evidence; neither may silently fall back to a global fixed bank.
+- Banking validation must cover sign transitions, low-speed hairpins, reverse traversal, supported vs adverse camber, bank-rate continuity, wet+braking grip sharing and visual-mesh vs physics-profile mismatch. See `docs/ROAD_PHYSICS_PROFILE.md`.
 
 ## Unreal Engine rules
 

@@ -106,7 +106,78 @@ bank_support_angle = -sign(horizontal_curvature) * local_cross_slope
 
 A positive support angle is banked in favour of the turn; a negative value is off-camber/adverse. The pure-lateral limit uses the resolved surface grip and effective racing-line radius. It deliberately does not consume braking demand yet; the shared longitudinal+lateral friction budget remains Stage 4C. No arbitrary recommended-speed margin is embedded in the physics limit.
 
-The current Alpine Journey baseline is intentionally `0° / 0°`. Stage 3 route geometry does not yet carry authored banking/crown values, so Stage 3H does not invent them.
+The current Alpine Journey baseline remains intentionally `0° / 0°` only until a validated banking/crown source is promoted into the profile. This is an explicit not-yet-authored fallback, not permission to keep a synthetic constant once measured or authoritative banking evidence exists.
+
+### 6.1 Real-data-first banking authority
+
+For a real road, measured or authoritative road evidence is the preferred source of banking/crossfall. For SP638 / Passo Giau, LiDAR-derived road transects and other verified road evidence may feed authoring, but the raw rendered mesh is never the physics authority.
+
+**Do not use a global synthetic bank such as `4° everywhere`.** A constant value may exist only as a clearly marked temporary diagnostic/non-production override.
+
+Measured banking may be regularized before it becomes physics-facing. Regularization is deliberately bounded and exists to:
+
+- reject slope, ditch, shoulder, wall or embankment contamination outside the rideable carriageway;
+- suppress isolated measurement noise and outliers;
+- bridge short missing/unreliable samples conservatively;
+- keep banking continuous and numerically stable;
+- bound `d(bank)/ds` so a road cannot flip camber in one physics sample;
+- produce interpolation that is at least `C1`-continuous at the physics-query level where practical.
+
+Regularization must preserve provenance. A physics sample must remain explainable from the same measured source used by road authoring, even when the visual mesh and physics profile use different smoothing strengths.
+
+The dependency rule is therefore:
+
+```text
+measured / authoritative road evidence
+        |                    |
+        v                    v
+visual road authoring   bounded physics regularization
+                             |
+                             v
+                    Road Physics Profile
+```
+
+LiDAR tells YACS how the road is measured to look; the `Road Physics Profile` tells the simulator how to ride it. Importing a visual bank into physics is a separate promotion/validation step, not an automatic mesh-to-physics coupling.
+
+### 6.2 Required banking edge cases
+
+Banking/crossfall implementation and tests must explicitly cover:
+
+- **sign transition:** e.g. positive -> zero -> negative crossfall without an instantaneous lateral-force flip; validate a bounded bank rate;
+- **low-speed hairpin:** approximately 4–8 km/h must not create an artificial auto-slide merely because gravity has a lateral component on a banked surface;
+- **reverse / wrong-way traversal:** world-space crossfall keeps its sign while turn direction changes, so the bank-support relation must be recomputed from signed curvature rather than inverted blindly;
+- **supported vs adverse camber:** favourable and off-camber road geometry must remain signed; never reduce banking to `abs(bank)`;
+- **straight -> bank -> hairpin transition:** curvature and bank-rate continuity must prevent step changes in lateral demand;
+- **wet surface + adverse camber:** reduced grip must combine with signed banking rather than being evaluated as an unrelated modifier;
+- **braking in a corner:** longitudinal braking demand and lateral cornering demand share one grip budget (friction circle/ellipse or an equivalent deterministic model) rather than passing independent limits;
+- **wind + bank:** lateral aerodynamic force remains an extensibility point and must not require replacing the banking representation;
+- **visual mesh vs physics-profile mismatch:** validation must detect a material difference between rendered banking and the promoted physics banking instead of allowing the rider to react to an invisible road shape;
+- **sampling/interpolation:** sparse authored samples must not produce staircase force changes through tight hairpins.
+
+Minimum deterministic banking test names/behaviours are:
+
+- `flat`;
+- `positive bank`;
+- `adverse camber`;
+- `sign transition`;
+- `low-speed hairpin`;
+- `wet + braking`;
+- `reverse direction`;
+- `bank-rate continuity`.
+
+### 6.3 Post-#251 gate — R4.1C-PHYS: Road banking physics authority
+
+After the R4.1B.4 / PR #251 visual banking work is accepted, physics promotion is a separate small gate named **R4.1C-PHYS — Road banking physics authority**.
+
+The `-PHYS` suffix is intentional: the Alpine visual roadmap already uses plain `R4.1C` for terrain material foundation, so the existing visual-stage numbering is not renumbered.
+
+This gate must:
+
+1. ingest a traceable measured/regularized bank profile rather than rendered mesh triangles;
+2. define and test the allowed visual-bank vs physics-bank tolerance;
+3. validate the edge cases in section 6.2;
+4. keep current route XY, grade and other Road Physics Profile authority unchanged;
+5. make no claim that a denser visual mesh creates additional measured road data.
 
 ## 7. Racing line and lateral position
 

@@ -312,6 +312,23 @@ maps, so the human reviewer can judge silhouette, seams, overlaps and occlusion
 without BaseColor/material noise. This is a diagnostic geometry view only; it
 does not replace the later production-material/dressing acceptance view.
 
+#### Real-data-first road-bank boundary
+
+R4.1 may use measured road evidence to improve the **visual** crossfall of SP638,
+but it must not replace that evidence with a fixed synthetic bank such as
+`4° everywhere`.
+
+Bounded smoothing/regularization is allowed to reject hillside, ditch,
+embankment and other non-carriageway contamination and to keep the authored road
+continuous. The regularized value must remain traceable to the source evidence.
+
+Visual banking is not simulation authority. The `Road Physics Profile` remains
+the only physics-facing banking contract, and measured visual banking is promoted
+into it only through the separate post-#251 `R4.1C-PHYS — Road banking physics
+authority` gate. That gate owns sign transitions, low-speed hairpins, reverse
+traversal, adverse camber, bank-rate continuity, wet+braking grip sharing,
+sampling/interpolation and visual-vs-physics mismatch tests.
+
 #### Rider-camera acceptance gate
 
 The production acceptance view is the moving cyclist camera, not an editor
@@ -595,6 +612,14 @@ Do not rescue poor composition with dense grass, excessive dynamic shadows or ve
    Import a licensed official SP638/Passo Giau centerline into the same AOI/CRS
    as the Veneto DTM, sample presentation Z from the DTM, create a deterministic
    UE spline and prove road/terrain alignment before broad material dressing.
+
+2b. **R4.1C-PHYS — road banking physics authority (post-#251 gate)**
+   Keep visual road banking real-data-first, then separately promote a bounded,
+   traceable bank profile into the `Road Physics Profile`. Validate sign
+   transitions, low-speed hairpins, reverse traversal, adverse camber,
+   bank-rate continuity, wet+braking grip sharing and visual-vs-physics
+   tolerance. This namespaced physics gate does not renumber the existing
+   visual `R4.1C` material slice below.
 
 3. **R4.1C — terrain material foundation**
    Meadow / forest floor / rock / scree / gravel / optional snow.

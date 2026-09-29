@@ -40,7 +40,7 @@ The graph is a navigation aid, not a second source of truth. The linked document
 | Delivery | **Stage 3G R4.1 — Alpine Visual Recovery** |
 | Golden visual slice | **1200 m** before full-route propagation |
 | Terrain | **MASE DTM macro terrain + R4.1B.4 bounded rider-close meso ground** |
-| Road authority | **SP638 / route XY and Road Physics Profile remain authoritative** |
+| Road authority | **SP638 / route XY and Road Physics Profile remain authoritative; banking is real-data-first and never inferred from arbitrary render mesh or replaced by a fixed synthetic bank** |
 | Acceptance | **human visual review + exact-SHA performance/proof evidence** |
 | Next gate | **R5 stays blocked until R4.1 closeout is accepted** |
 
