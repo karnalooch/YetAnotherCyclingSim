@@ -319,33 +319,31 @@ def _contract_profile_side(
     if outer_extent <= core_extent + _EPSILON or scale >= 1.0 - _EPSILON:
         return tuple(profile)
 
-    contracted_outer_extent = core_extent + (outer_extent - core_extent) * scale
     shoulder_extent = _side_shoulder_extent(
         profile,
         shoulder_roles,
         positive_side=positive_side,
     )
-    if shoulder_extent is None or shoulder_extent <= core_extent + _EPSILON:
-        shoulder_extent = core_extent
-
-    minimum_shoulder_extent = core_extent + minimum_shoulder_span_m
-    maximum_shoulder_extent = contracted_outer_extent - minimum_earthwork_span_m
-    if maximum_shoulder_extent < minimum_shoulder_extent - _EPSILON:
+    if shoulder_extent is None:
+        raise ValueError("adaptive corridor side is missing its protected shoulder")
+    if shoulder_extent < core_extent + minimum_shoulder_span_m - _EPSILON:
         side = "positive" if positive_side else "negative"
         raise ValueError(
-            f"contracted {side} corridor leaves no room for minimum shoulder "
-            f"{minimum_shoulder_span_m:.3f} m plus earthwork "
+            f"authored {side} shoulder does not preserve minimum span "
+            f"{minimum_shoulder_span_m:.3f} m"
+        )
+
+    contracted_outer_extent = core_extent + (outer_extent - core_extent) * scale
+    minimum_outer_extent = shoulder_extent + minimum_earthwork_span_m
+    if contracted_outer_extent < minimum_outer_extent - _EPSILON:
+        side = "positive" if positive_side else "negative"
+        raise ValueError(
+            f"contracted {side} corridor reaches protected shoulder "
+            f"{shoulder_extent:.3f} m before preserving earthwork "
             f"{minimum_earthwork_span_m:.3f} m"
         )
 
-    contracted_shoulder_extent = min(shoulder_extent, maximum_shoulder_extent)
-    contracted_shoulder_extent = max(
-        contracted_shoulder_extent,
-        minimum_shoulder_extent,
-    )
-    inner_span = max(_EPSILON, shoulder_extent - core_extent)
     outer_span = max(_EPSILON, outer_extent - shoulder_extent)
-
     result: list[CrossSectionPoint] = []
     for point in profile:
         on_side = (
@@ -355,24 +353,16 @@ def _contract_profile_side(
         if (
             not on_side
             or point.role in protected_roles
-            or extent <= core_extent + _EPSILON
+            or point.role in shoulder_roles
+            or extent <= shoulder_extent + _EPSILON
         ):
             result.append(point)
             continue
 
-        if point.role in shoulder_roles:
-            new_extent = contracted_shoulder_extent
-        elif extent < shoulder_extent:
-            normalized = (extent - core_extent) / inner_span
-            new_extent = core_extent + normalized * (
-                contracted_shoulder_extent - core_extent
-            )
-        else:
-            normalized = (extent - shoulder_extent) / outer_span
-            new_extent = contracted_shoulder_extent + normalized * (
-                contracted_outer_extent - contracted_shoulder_extent
-            )
-
+        normalized = (extent - shoulder_extent) / outer_span
+        new_extent = shoulder_extent + normalized * (
+            contracted_outer_extent - shoulder_extent
+        )
         result.append(
             CrossSectionPoint(
                 new_extent if positive_side else -new_extent,
@@ -381,7 +371,6 @@ def _contract_profile_side(
             )
         )
     return tuple(result)
-
 
 def _first_folded_lateral_band(
     centerline: Sequence[Vec3],
