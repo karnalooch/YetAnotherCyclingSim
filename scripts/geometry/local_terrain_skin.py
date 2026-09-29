@@ -56,6 +56,9 @@ class MesoGroundMetrics:
     rms_adjustment_m: float
     boundary_max_abs_adjustment_m: float
     minimum_protected_distance_m: float | None
+    minimum_protected_clearance_m: float | None
+    minimum_protected_half_width_m: float | None
+    maximum_protected_half_width_m: float | None
 
 
 def _validate_grid(heights: Sequence[Sequence[float]]) -> tuple[int, int]:
@@ -267,44 +270,59 @@ def validate_terrain_skin_mesh(mesh: TerrainSkinMesh) -> None:
 
 
 
-def _point_to_segment_distance_xy(
+def _point_to_segment_distance_and_t_xy(
     point_x: float,
     point_y: float,
     start: tuple[float, float],
     end: tuple[float, float],
-) -> float:
+) -> tuple[float, float]:
     dx = end[0] - start[0]
     dy = end[1] - start[1]
     length_squared = dx * dx + dy * dy
     if length_squared <= _EPSILON:
-        return math.hypot(point_x - start[0], point_y - start[1])
+        return math.hypot(point_x - start[0], point_y - start[1]), 0.0
     t = (
         (point_x - start[0]) * dx + (point_y - start[1]) * dy
     ) / length_squared
     t = max(0.0, min(1.0, t))
     closest_x = start[0] + t * dx
     closest_y = start[1] + t * dy
-    return math.hypot(point_x - closest_x, point_y - closest_y)
+    return math.hypot(point_x - closest_x, point_y - closest_y), t
 
 
-def _minimum_polyline_distance_xy(
+def _minimum_polyline_protection_xy(
     point_x: float,
     point_y: float,
     polyline_xy_m: Sequence[tuple[float, float]],
-) -> float | None:
+    half_widths_m: Sequence[float],
+) -> tuple[float, float, float] | None:
+    """Return minimum signed clearance, distance and interpolated half-width."""
+
     if not polyline_xy_m:
         return None
     if len(polyline_xy_m) < 2:
         raise ValueError("protected centerline needs at least two points")
-    return min(
-        _point_to_segment_distance_xy(
+    if len(half_widths_m) != len(polyline_xy_m):
+        raise ValueError(
+            "protected half-width profile must match protected centerline points"
+        )
+
+    best: tuple[float, float, float] | None = None
+    for index in range(len(polyline_xy_m) - 1):
+        distance, t = _point_to_segment_distance_and_t_xy(
             point_x,
             point_y,
             polyline_xy_m[index],
             polyline_xy_m[index + 1],
         )
-        for index in range(len(polyline_xy_m) - 1)
-    )
+        start_width = float(half_widths_m[index])
+        end_width = float(half_widths_m[index + 1])
+        half_width = start_width + t * (end_width - start_width)
+        clearance = distance - half_width
+        candidate = (clearance, distance, half_width)
+        if best is None or candidate[0] < best[0]:
+            best = candidate
+    return best
 
 
 def _smoothstep01(value: float) -> float:
@@ -327,6 +345,7 @@ def build_bounded_meso_ground_mesh(
     radius_y_m: float,
     protected_centerline_xy_m: Sequence[tuple[float, float]] = (),
     protected_half_width_m: float = 0.0,
+    protected_half_widths_m: Sequence[float] = (),
     seam_rings: int = 4,
     lift_m: float = 0.03,
 ) -> tuple[MesoGroundMesh, MesoGroundMetrics]:
@@ -350,6 +369,15 @@ def build_bounded_meso_ground_mesh(
         raise ValueError("meso-ground radii must be positive")
     if protected_half_width_m < 0.0:
         raise ValueError("protected_half_width_m cannot be negative")
+    if protected_half_widths_m and protected_half_width_m > 0.0:
+        raise ValueError(
+            "use either protected_half_width_m or protected_half_widths_m, not both"
+        )
+    if any(
+        not math.isfinite(float(value)) or float(value) < 0.0
+        for value in protected_half_widths_m
+    ):
+        raise ValueError("protected half-width profile must be finite and non-negative")
     if seam_rings < 1:
         raise ValueError("seam_rings must be positive")
     if lift_m < 0.0:
@@ -365,13 +393,30 @@ def build_bounded_meso_ground_mesh(
         for index in range(rows - 1)
     ):
         raise ValueError("meso-ground y coordinates must be strictly decreasing")
-    if protected_half_width_m > 0.0 and len(protected_centerline_xy_m) < 2:
-        raise ValueError(
-            "protected centerline needs at least two points when width is positive"
+    if protected_half_widths_m:
+        if len(protected_centerline_xy_m) < 2:
+            raise ValueError(
+                "protected centerline needs at least two points for width profile"
+            )
+        if len(protected_half_widths_m) != len(protected_centerline_xy_m):
+            raise ValueError(
+                "protected half-width profile must match protected centerline points"
+            )
+        protection_widths = tuple(float(value) for value in protected_half_widths_m)
+    elif protected_centerline_xy_m:
+        if protected_half_width_m > 0.0 and len(protected_centerline_xy_m) < 2:
+            raise ValueError(
+                "protected centerline needs at least two points when width is positive"
+            )
+        protection_widths = tuple(
+            float(protected_half_width_m) for _ in protected_centerline_xy_m
         )
+    else:
+        protection_widths = ()
 
     active: list[bool] = []
     protected_distances: list[float | None] = []
+    protected_clearances: list[float | None] = []
     for row in range(rows):
         y = float(y_coordinates_descending_m[row])
         for column in range(columns):
@@ -380,15 +425,23 @@ def build_bounded_meso_ground_mesh(
                 ((x - center_x_m) / radius_x_m) ** 2
                 + ((y - center_y_m) / radius_y_m) ** 2
             )
-            protected_distance = _minimum_polyline_distance_xy(
-                x,
-                y,
-                protected_centerline_xy_m,
+            protection = (
+                _minimum_polyline_protection_xy(
+                    x,
+                    y,
+                    protected_centerline_xy_m,
+                    protection_widths,
+                )
+                if protection_widths
+                else None
             )
+            protected_distance = protection[1] if protection is not None else None
+            protected_clearance = protection[0] if protection is not None else None
             protected_distances.append(protected_distance)
+            protected_clearances.append(protected_clearance)
             outside_protected = (
-                protected_distance is None
-                or protected_distance + _EPSILON >= protected_half_width_m
+                protected_clearance is None
+                or protected_clearance >= -_EPSILON
             )
             active.append(ellipse <= 1.0 + _EPSILON and outside_protected)
 
@@ -450,6 +503,7 @@ def build_bounded_meso_ground_mesh(
     adjustments: list[float] = []
     boundary_adjustments: list[float] = []
     used_protected_distances: list[float] = []
+    used_protected_clearances: list[float] = []
 
     for source_index in compact_order:
         row, column = divmod(source_index, columns)
@@ -480,6 +534,9 @@ def build_bounded_meso_ground_mesh(
         protected_distance = protected_distances[source_index]
         if protected_distance is not None:
             used_protected_distances.append(protected_distance)
+        protected_clearance = protected_clearances[source_index]
+        if protected_clearance is not None:
+            used_protected_clearances.append(protected_clearance)
 
     triangles = tuple(
         tuple(compact_index[index] for index in triangle)
@@ -509,11 +566,16 @@ def build_bounded_meso_ground_mesh(
             default=0.0,
         ),
         minimum_protected_distance_m=min(used_protected_distances, default=None),
+        minimum_protected_clearance_m=min(
+            used_protected_clearances,
+            default=None,
+        ),
+        minimum_protected_half_width_m=min(protection_widths, default=None),
+        maximum_protected_half_width_m=max(protection_widths, default=None),
     )
     if (
-        metrics.minimum_protected_distance_m is not None
-        and metrics.minimum_protected_distance_m
-        < protected_half_width_m - 1e-7
+        metrics.minimum_protected_clearance_m is not None
+        and metrics.minimum_protected_clearance_m < -1e-7
     ):
         raise ValueError("meso-ground entered the protected road corridor")
     if metrics.boundary_max_abs_adjustment_m > 1e-9:
