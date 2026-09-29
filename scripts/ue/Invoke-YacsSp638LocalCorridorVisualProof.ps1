@@ -159,6 +159,21 @@ if ([string]$Proof.proof_viewmode -ne 'lightingonly') {
 if ([bool]$Proof.material_independent_geometry_proof -ne $true) {
     throw 'SP638 visual proof did not declare material-independent geometry evidence.'
 }
+if ([string]$Proof.capture_source -ne 'primary_level_editor_viewport') {
+    throw "SP638 visual proof did not use the primary Level Editor viewport: '$($Proof.capture_source)'."
+}
+if ([bool]$Proof.offscreen_camera_capture -ne $false) {
+    throw 'SP638 visual proof regressed to an offscreen CameraActor capture.'
+}
+if ([bool]$Proof.viewport_game_view -ne $true) {
+    throw 'SP638 visual proof did not keep the Level Editor viewport in Game View.'
+}
+if ([double]$Proof.viewport_fov_deg -lt 75.9 -or [double]$Proof.viewport_fov_deg -gt 76.1) {
+    throw "SP638 visual proof rider viewport FOV drifted: $($Proof.viewport_fov_deg)."
+}
+if ([string]::IsNullOrWhiteSpace([string]$Proof.viewport_config_key)) {
+    throw 'SP638 visual proof did not record its Level Editor viewport key.'
+}
 if ([bool]$Proof.neutral_landscape_material -ne $true) {
     throw 'SP638 visual proof did not apply the required neutral Landscape proof material.'
 }
