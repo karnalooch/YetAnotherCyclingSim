@@ -242,6 +242,11 @@ if ([int]$Import.component_count -ne 1024 -or [int]$Import.num_subsections -ne 2
 if ([int]$Import.encoded_min -gt 512 -or [int]$Import.encoded_max -lt 65023) { throw 'Passo Giau encoded height-domain proof is invalid.' }
 if ([math]::Abs([double]$Import.sampled_elevation_min_m - $ExpectedElevationMinM) -gt 10.0 -or [math]::Abs([double]$Import.sampled_elevation_max_m - $ExpectedElevationMaxM) -gt 10.0) { throw 'Passo Giau sampled elevation range drifted too far from the MASE PST LiDAR source DEM.' }
 if ([math]::Abs([double]$Import.scale_z - $ScaleZ) -gt 0.001 -or [math]::Abs([double]$Import.location_z_cm - $LocationZCm) -gt 0.01) { throw 'Passo Giau import proof did not preserve the MASE vertical transform.' }
+if ([bool]$Import.edit_layers_enabled -ne $true) { throw 'Passo Giau Landscape import did not enable edit layers.' }
+if ([int]$Import.edit_layer_count -ne 2) { throw "Passo Giau Landscape must contain exactly two initial edit layers, got $($Import.edit_layer_count)." }
+if ([string]$Import.base_edit_layer -ne 'MASE_Base') { throw "Passo Giau base edit layer drifted: '$($Import.base_edit_layer)'." }
+if ([string]$Import.road_edit_layer -ne 'SP638_Road') { throw "Passo Giau road edit layer drifted: '$($Import.road_edit_layer)'." }
+if ([bool]$Import.road_edit_layer_initially_empty -ne $true) { throw 'SP638_Road must start empty before transient road conform proof.' }
 
 if ([math]::Abs([double]$Import.scale_z - $ScaleZ) -gt 0.001 -or [math]::Abs([double]$Import.location_z_cm - $LocationZCm) -gt 0.01) { throw 'Passo Giau import proof did not preserve the Veneto vertical transform.' }
 if ($IncludeRoad) {
