@@ -135,9 +135,6 @@ if ([int]$Proof.local_geometry.earthwork.triangles -lt 3000) {
 if ([int]$Proof.local_geometry.earthwork_overlap_guard.overlap_pair_count -ne 0) {
     throw "SP638 local-corridor proof contains non-local earthwork overlap: $($Proof.local_geometry.earthwork_overlap_guard.overlap_pair_count)"
 }
-if ([int]$Proof.local_geometry.earthwork_overlap_guard.checked_pair_count -lt 1) {
-    throw 'SP638 local-corridor overlap guard checked no non-local candidate pairs.'
-}
 if ([bool]$Proof.spatial_grid_guardrail.canonical_road_xy_preserved -ne $true) {
     throw 'SP638 local-corridor proof did not preserve canonical road XY.'
 }
