@@ -31,6 +31,7 @@ from scripts.geometry.sp638_local_corridor import (  # noqa: E402
     CrossSectionPoint,
     Vec3,
     build_corridor_mesh,
+    corridor_global_overlap_diagnostics,
     corridor_mesh_hash,
     make_constant_profiles,
     make_curvature_adaptive_profiles,
@@ -791,6 +792,12 @@ def main() -> None:
         adaptive_profiles,
         tangent_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
     )
+    earthwork_overlap = corridor_global_overlap_diagnostics(earthwork_mesh)
+    if earthwork_overlap.overlap_pair_count != 0:
+        raise RuntimeError(
+            "earthwork overlap guard passed mesh construction but reported "
+            f"{earthwork_overlap.overlap_pair_count} non-local overlaps"
+        )
     road_mesh = build_corridor_mesh(
         centerline,
         make_constant_profiles(len(centerline), ROAD_PROFILE),
@@ -1052,6 +1059,11 @@ def main() -> None:
             "box_strip_roadbed": False,
             "terrain_skin": terrain_skin_counts,
             "earthwork": earth_counts,
+            "earthwork_overlap_guard": {
+                "checked_pair_count": earthwork_overlap.checked_pair_count,
+                "overlap_pair_count": earthwork_overlap.overlap_pair_count,
+                "first_overlap": earthwork_overlap.first_overlap,
+            },
             "left_shoulder": left_shoulder_counts,
             "right_shoulder": right_shoulder_counts,
             "asphalt": road_counts,
