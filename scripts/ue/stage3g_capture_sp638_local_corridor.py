@@ -64,6 +64,10 @@ KERNEL_SAMPLE_STEP_CM = 200.0
 SOURCE_GEOMETRY_HALF_WINDOW_M = 6.0
 SOURCE_GEOMETRY_HALF_WINDOW_STATIONS = 3
 LANDSCAPE_SPLINE_POINT_STEP_CM = 1000.0
+LANDSCAPE_CONFORM_SAMPLE_STEP_CM = 100.0
+LANDSCAPE_MAX_ABS_CORRECTION_CM = 300.0
+LANDSCAPE_BASE_EDIT_LAYER = "MASE_Base"
+LANDSCAPE_ROAD_EDIT_LAYER = "SP638_Road"
 CURVATURE_SAMPLE_STEP_CM = 2500.0
 CURVATURE_HALF_WINDOW_CM = 2500.0
 END_MARGIN_CM = 10000.0
@@ -74,7 +78,7 @@ END_MARGIN_CM = 10000.0
 # second continuous earthwork surface.
 LANDSCAPE_SPLINE_WIDTH_CM = 425.0
 LANDSCAPE_SPLINE_FALLOFF_CM = 1200.0
-LANDSCAPE_SPLINE_SUBDIVISIONS = 240
+LANDSCAPE_SPLINE_SUBDIVISIONS = 1
 
 # Rider-close terrain is sampled from the already deformed Landscape, then
 # rebuilt as a bounded irregular meso patch. The smaller 2 m working grid does
@@ -445,17 +449,107 @@ def _to_local_centerline_m(points: list[unreal.Vector]) -> tuple[Vec3, ...]:
 def _replace_with_slice(
     spline: unreal.SplineComponent,
     points: list[unreal.Vector],
+    *,
+    point_type=unreal.SplinePointType.CURVE_CLAMPED,
 ) -> None:
     spline.clear_spline_points(False)
     for index, point in enumerate(points):
         spline.add_spline_point(point, unreal.SplineCoordinateSpace.WORLD, False)
-        spline.set_spline_point_type(
-            index,
-            unreal.SplinePointType.CURVE_CLAMPED,
-            False,
-        )
+        spline.set_spline_point_type(index, point_type, False)
     spline.set_closed_loop(False, False)
     spline.update_spline()
+
+
+def _landscape_edit_layer_names(landscape: unreal.Landscape) -> list[str]:
+    layers = (
+        landscape.get_edit_layers_bp()
+        if hasattr(landscape, "get_edit_layers_bp")
+        else landscape.get_edit_layers()
+    )
+    result: list[str] = []
+    for edit_layer in layers:
+        if edit_layer is None or not hasattr(edit_layer, "get_name_bp"):
+            continue
+        name = str(edit_layer.get_name_bp())
+        if name and name != "None":
+            result.append(name)
+    return result
+
+
+def _build_landscape_delta_proxy_points(
+    world: unreal.World,
+    landscape: unreal.Landscape,
+    road_actor: unreal.Actor,
+    spline: unreal.SplineComponent,
+    start_cm: float,
+    end_cm: float,
+) -> tuple[list[unreal.Vector], dict[str, object]]:
+    """Encode road-vs-MASE height deltas for a regular Landscape Edit Layer."""
+
+    desired_points = _sample_world(
+        spline,
+        start_cm,
+        end_cm,
+        LANDSCAPE_CONFORM_SAMPLE_STEP_CM,
+    )
+    landscape_origin_z = float(landscape.get_actor_location().z)
+    proxy_points: list[unreal.Vector] = []
+    corrections_cm: list[float] = []
+
+    for desired in desired_points:
+        x_cm = float(desired.x)
+        y_cm = float(desired.y)
+        trace_top_z = float(desired.z) + TERRAIN_SKIN_TRACE_HALF_SPAN_CM
+        trace_bottom_z = float(desired.z) - TERRAIN_SKIN_TRACE_HALF_SPAN_CM
+        hit = unreal.SystemLibrary.line_trace_single(
+            world,
+            unreal.Vector(x_cm, y_cm, trace_top_z),
+            unreal.Vector(x_cm, y_cm, trace_bottom_z),
+            unreal.TraceTypeQuery.ECC_VISIBILITY,
+            True,
+            [road_actor],
+            unreal.DrawDebugTrace.NONE,
+            True,
+        )
+        if hit is None:
+            raise RuntimeError(
+                "road-first Landscape conform missed MASE surface at "
+                f"({x_cm / 100.0:.2f}, {y_cm / 100.0:.2f}) m"
+            )
+
+        terrain_z = _vertical_trace_height_cm(
+            hit,
+            expected_x_cm=x_cm,
+            expected_y_cm=y_cm,
+            trace_bottom_z_cm=trace_bottom_z,
+            trace_top_z_cm=trace_top_z,
+        )
+        correction_cm = float(desired.z) - terrain_z
+        if abs(correction_cm) > LANDSCAPE_MAX_ABS_CORRECTION_CM:
+            raise RuntimeError(
+                "road-first Landscape conform exceeded bounded SP638/MASE "
+                f"height correction: {correction_cm:.2f} cm at "
+                f"({x_cm / 100.0:.2f}, {y_cm / 100.0:.2f}) m"
+            )
+        corrections_cm.append(correction_cm)
+        proxy_points.append(
+            unreal.Vector(
+                x_cm,
+                y_cm,
+                landscape_origin_z + correction_cm,
+            )
+        )
+
+    return proxy_points, {
+        "encoding": "edit_layer_delta_relative_to_landscape_origin",
+        "sample_step_m": LANDSCAPE_CONFORM_SAMPLE_STEP_CM / 100.0,
+        "sample_count": len(proxy_points),
+        "minimum_correction_m": min(corrections_cm) / 100.0,
+        "maximum_correction_m": max(corrections_cm) / 100.0,
+        "maximum_abs_correction_m": max(abs(v) for v in corrections_cm) / 100.0,
+        "hard_max_abs_correction_m": LANDSCAPE_MAX_ABS_CORRECTION_CM / 100.0,
+        "proxy_point_type": "linear",
+    }
 
 
 def _circumradius_xy(a: Vec3, b: Vec3, c: Vec3) -> float | None:
@@ -1226,18 +1320,33 @@ def main() -> None:
         end_cm,
         LANDSCAPE_SPLINE_POINT_STEP_CM,
     )
-    _replace_with_slice(spline, landscape_slice)
 
-    edit_layer_names: list[str] = []
-    if hasattr(landscape, "get_edit_layers"):
-        for edit_layer in landscape.get_edit_layers():
-            if edit_layer is None:
-                continue
-            if hasattr(edit_layer, "get_name_bp"):
-                name = str(edit_layer.get_name_bp())
-                if name and name != "None":
-                    edit_layer_names.append(name)
-    edit_layer_name = edit_layer_names[0] if edit_layer_names else "Layer"
+    edit_layer_names = _landscape_edit_layer_names(landscape)
+    expected_edit_layers = {
+        LANDSCAPE_BASE_EDIT_LAYER,
+        LANDSCAPE_ROAD_EDIT_LAYER,
+    }
+    if set(edit_layer_names) != expected_edit_layers:
+        raise RuntimeError(
+            "Passo Giau road-first proof requires exact Landscape edit layers "
+            f"{sorted(expected_edit_layers)}, found {sorted(edit_layer_names)}"
+        )
+
+    conform_proxy_points, conform_delta_diagnostics = (
+        _build_landscape_delta_proxy_points(
+            world,
+            landscape,
+            road_actor,
+            spline,
+            start_cm,
+            end_cm,
+        )
+    )
+    _replace_with_slice(
+        spline,
+        conform_proxy_points,
+        point_type=unreal.SplinePointType.LINEAR,
+    )
     landscape.editor_apply_spline(
         spline,
         start_width=LANDSCAPE_SPLINE_WIDTH_CM,
@@ -1250,8 +1359,16 @@ def main() -> None:
         raise_heights=True,
         lower_heights=True,
         paint_layer=None,
-        edit_layer_name=edit_layer_name,
+        edit_layer_name=unreal.Name(LANDSCAPE_ROAD_EDIT_LAYER),
     )
+    if hasattr(landscape, "force_layers_full_update"):
+        landscape.force_layers_full_update()
+
+    # The delta proxy is only an edit-layer encoding detail. Restore the real
+    # SP638 world-space spline immediately so rider camera/visual geometry remain
+    # on the authoritative presentation alignment.
+    _replace_with_slice(spline, landscape_slice)
+    edit_layer_name = LANDSCAPE_ROAD_EDIT_LAYER
 
     neutral_landscape_material = unreal.load_asset(
         "/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial"
@@ -1475,6 +1592,10 @@ def main() -> None:
             "width_cm": LANDSCAPE_SPLINE_WIDTH_CM,
             "side_falloff_cm": LANDSCAPE_SPLINE_FALLOFF_CM,
             "subdivisions": LANDSCAPE_SPLINE_SUBDIVISIONS,
+            "edit_layer_names": edit_layer_names,
+            "base_edit_layer": LANDSCAPE_BASE_EDIT_LAYER,
+            "road_edit_layer": LANDSCAPE_ROAD_EDIT_LAYER,
+            "delta_proxy": conform_delta_diagnostics,
             "raise_heights": True,
             "lower_heights": True,
             "saved_to_map": False,
