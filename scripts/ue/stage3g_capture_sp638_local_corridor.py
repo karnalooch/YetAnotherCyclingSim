@@ -129,7 +129,6 @@ _tick_handle = None
 _started_at = 0.0
 _output_path: Path | None = None
 _proof_path: Path | None = None
-_camera = None
 _proof_data: dict[str, object] = {}
 
 
@@ -709,7 +708,7 @@ def _spawn_dynamic_mesh(
 
 
 def main() -> None:
-    global _task, _tick_handle, _started_at, _output_path, _proof_path, _camera
+    global _task, _tick_handle, _started_at, _output_path, _proof_path
     global _proof_data
 
     output_value = os.environ.get("YACS_SP638_LOCAL_CORRIDOR_VISUAL_PNG", "")
@@ -962,10 +961,9 @@ def main() -> None:
         world,
         "r.RayTracing.Geometry.Landscape.LODBias -1",
     )
-    # Render the rider-close geometry with an engine material-independent
-    # Lighting Only view. This removes BaseColor/normal-map noise from the
-    # human geometry gate while keeping actual lighting and silhouette cues.
-    unreal.SystemLibrary.execute_console_command(world, "viewmode lightingonly")
+    # View mode is applied after the rider transform is bound to the primary
+    # Level Editor viewport. CameraActor high-res captures use an offscreen path
+    # that does not reliably preserve editor diagnostic view modes.
     unreal.SystemLibrary.execute_console_command(world, "r.AntiAliasingMethod 1")
     unreal.SystemLibrary.execute_console_command(
         world,
@@ -1015,17 +1013,26 @@ def main() -> None:
     fog_component.set_editor_property("fog_height_falloff", 0.22)
     fog_component.set_editor_property("fog_max_opacity", 0.16)
 
-    _camera = actor_subsystem.spawn_actor_from_class(
-        unreal.CameraActor,
+    level_editor = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
+    viewport_config_key = level_editor.get_active_viewport_config_key()
+    if str(viewport_config_key) in {"", "None"}:
+        viewport_keys = list(level_editor.get_viewport_config_keys())
+        if not viewport_keys:
+            raise RuntimeError(
+                "no Level Editor viewport is available for geometry proof"
+            )
+        viewport_config_key = viewport_keys[0]
+
+    level_editor.set_level_viewport_camera_info(
         camera_location,
         camera_rotation,
-        transient=True,
+        viewport_config_key,
     )
-    _camera.set_actor_label("SP638_LocalCorridor_RiderCamera")
-    camera_component = _camera.get_component_by_class(unreal.CameraComponent)
-    if camera_component is None:
-        raise RuntimeError("spawned CameraActor has no CameraComponent")
-    camera_component.set_editor_property("field_of_view", 76.0)
+    level_editor.set_level_viewport_fov(76.0, viewport_config_key)
+    level_editor.editor_set_game_view(True, viewport_config_key)
+    level_editor.editor_set_viewport_realtime(True, viewport_config_key)
+    unreal.SystemLibrary.execute_console_command(world, "viewmode lightingonly")
+    level_editor.editor_invalidate_viewports()
 
     _proof_data = {
         "capture_strategy": "r4.1b.4-bounded-meso-ground-plus-corridor",
@@ -1104,6 +1111,11 @@ def main() -> None:
         "forced_landscape_lod": 0,
         "proof_viewmode": "lightingonly",
         "material_independent_geometry_proof": True,
+        "capture_source": "primary_level_editor_viewport",
+        "viewport_config_key": str(viewport_config_key),
+        "offscreen_camera_capture": False,
+        "viewport_game_view": True,
+        "viewport_fov_deg": 76.0,
         "neutral_landscape_material": True,
         "camera_location_cm": [
             float(camera_location.x),
@@ -1122,13 +1134,13 @@ def main() -> None:
         res_x=CAPTURE_RES_X,
         res_y=CAPTURE_RES_Y,
         filename=str(_output_path),
-        camera=_camera,
+        camera=None,
         mask_enabled=False,
         capture_hdr=False,
         comparison_tolerance=unreal.ComparisonTolerance.LOW,
         comparison_notes="R4.1B.4 SP638 lighting-only bounded meso-ground geometry proof",
         delay=3.0,
-        force_game_view=True,
+        force_game_view=False,
     )
     if not _task or not _task.is_valid_task():
         raise RuntimeError("AutomationLibrary returned an invalid screenshot task")
