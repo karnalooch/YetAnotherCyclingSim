@@ -862,6 +862,8 @@ R4.1B.4 recovery path (#247). The implementation deliberately:
 - samples local Landscape height only as a source surface;
 - builds a bounded irregular meso patch on a local working grid;
 - pins the patch topology boundary exactly to source terrain;
+- keeps the meso surface from falling below the still-visible macro Landscape,
+  preventing depth/occlusion ribbons from exposing the raw heightfield;
 - leaves a protected asphalt/shoulder corridor cut out of the patch;
 - validates deterministic mesh/hash, seam error, protected-distance clearance,
   non-degenerate triangles and bounded correction before the UE proof;
