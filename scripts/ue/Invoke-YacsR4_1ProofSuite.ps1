@@ -81,8 +81,71 @@ $Stamp = [ordered]@{
 }
 $Stamp | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $StampPath -Encoding UTF8
 
+$SessionScript = Join-Path $RepoRoot 'scripts/ue/r4_1_editor_session.py'
+$SessionLog = Join-Path $ArtifactRoot 'editor_session.log'
+$SessionStdout = Join-Path $ArtifactRoot 'editor_session.stdout.log'
+$SessionErr = Join-Path $ArtifactRoot 'editor_session.stderr.log'
+$SessionSummaryPath = Join-Path $ArtifactRoot 'editor_session_summary.json'
+foreach ($Path in @($SessionLog,$SessionStdout,$SessionErr,$SessionSummaryPath)) {
+    Remove-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+}
+if (-not (Test-Path -LiteralPath $SessionScript -PathType Leaf)) {
+    throw "R4.1 editor-session dispatcher is missing: $SessionScript"
+}
+$UEditor = [string]$Context.UnrealEditorPath
+if (-not $UEditor -or -not (Test-Path -LiteralPath $UEditor -PathType Leaf)) {
+    throw 'R4.1 prepared suite could not resolve UnrealEditor.exe.'
+}
+
+Write-Host '[3/6] Booting Unreal once for the complete R4.1 proof bundle...' -ForegroundColor Cyan
+$env:YACS_R4_1_SESSION_ARTIFACT_ROOT = $ArtifactRoot
+$env:YACS_R4_1_SESSION_EXPECTED_HEAD = $ExpectedHead
+try {
+    $SessionArgs = @(
+        $ProjectPath,
+        ('-ExecutePythonScript="' + $SessionScript + '"'),
+        '-Unattended','-NoPause','-NoSplash','-NoP4',
+        '-windowed','-ResX=1920','-ResY=1080','-NoVSync','-FixedSeed',
+        '-ScriptErrorsAreFatal','-log','-stdout',('-AbsLog=' + $SessionLog)
+    )
+    $SessionProc = Start-Process -FilePath $UEditor -ArgumentList $SessionArgs -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $SessionStdout -RedirectStandardError $SessionErr
+    if (-not $SessionProc.WaitForExit($TimeoutSec * 1000)) {
+        try { $SessionProc | Stop-Process -Force } catch { }
+        throw 'R4.1 single-editor proof session timed out.'
+    }
+    $SessionExitCode = $SessionProc.ExitCode
+}
+finally {
+    Remove-Item Env:YACS_R4_1_SESSION_ARTIFACT_ROOT -ErrorAction SilentlyContinue
+    Remove-Item Env:YACS_R4_1_SESSION_EXPECTED_HEAD -ErrorAction SilentlyContinue
+}
+
+if (-not (Test-Path -LiteralPath $SessionSummaryPath -PathType Leaf)) {
+    throw "R4.1 editor-session summary is missing (exit=$SessionExitCode)."
+}
+$SessionSummary = Get-Content -LiteralPath $SessionSummaryPath -Raw | ConvertFrom-Json
+if ($SessionSummary.r4_1_editor_session -ne 'PASS') {
+    throw "R4.1 editor session did not report PASS: $($SessionSummary.error)"
+}
+if ([int]$SessionSummary.editor_process_count -ne 1 -or [bool]$SessionSummary.single_editor_process -ne $true) {
+    throw 'R4.1 proof bundle did not use exactly one Unreal Editor process.'
+}
+if ([string]$SessionSummary.expected_head -ne $ExpectedHead -or [string]$SessionSummary.actual_head -ne $ExpectedHead) {
+    throw 'R4.1 editor-session exact-SHA provenance mismatch.'
+}
+if ($SessionExitCode -notin @(0,1)) {
+    throw "R4.1 single-editor proof session returned unexpected exit code $SessionExitCode."
+}
+$SessionLogText = Get-Content -LiteralPath $SessionLog -Raw -ErrorAction Stop
+if ($SessionLogText -match '(?i)Fatal error|Unhandled Exception|Critical error') {
+    throw 'R4.1 single-editor session log contains a crash/fatal marker.'
+}
+if ($SessionLogText -notmatch '\[YacsR41EditorSession\] PASS: all R4\.1 proofs completed in one editor process') {
+    throw 'R4.1 single-editor session log is missing the final PASS marker.'
+}
+
 $Pwsh = (Get-Command pwsh -ErrorAction Stop).Source
-function Invoke-R4_1ChildProof {
+function Test-R4_1SessionEvidence {
     param(
         [Parameter(Mandatory=$true)] [string] $Label,
         [Parameter(Mandatory=$true)] [string] $ScriptRelative,
@@ -90,7 +153,7 @@ function Invoke-R4_1ChildProof {
     )
     $ScriptPath = Join-Path $RepoRoot $ScriptRelative
     if (-not (Test-Path -LiteralPath $ScriptPath -PathType Leaf)) {
-        throw "R4.1 proof script is missing: $ScriptPath"
+        throw "R4.1 proof validator is missing: $ScriptPath"
     }
     $ChildArtifactRoot = Join-Path $ArtifactRoot $ArtifactName
     $ChildArgs = @(
@@ -102,25 +165,24 @@ function Invoke-R4_1ChildProof {
         '-ExpectedBranch', $ExpectedBranch,
         '-ExpectedHead', $ExpectedHead,
         '-PreparedWorkspaceStamp', $StampPath,
+        '-ValidateOnly',
         '-TimeoutSec', [string]$TimeoutSec
     )
     & $Pwsh @ChildArgs
     if ($LASTEXITCODE -ne 0) {
-        throw "$Label failed with exit code $LASTEXITCODE."
+        throw "$Label validation failed with exit code $LASTEXITCODE."
     }
 }
 
-Write-Host '[3/6] Geometry Script capability proof...' -ForegroundColor Cyan
-Invoke-R4_1ChildProof -Label 'Geometry Script capability proof' -ScriptRelative 'scripts/ue/Invoke-YacsGeometryScriptProbe.ps1' -ArtifactName 'GeometryScriptProbe'
+Write-Host '[4/6] Validating capability and topology evidence without rebooting Unreal...' -ForegroundColor Cyan
+Test-R4_1SessionEvidence -Label 'Geometry Script capability proof' -ScriptRelative 'scripts/ue/Invoke-YacsGeometryScriptProbe.ps1' -ArtifactName 'GeometryScriptProbe'
+Test-R4_1SessionEvidence -Label 'SP638 topology proof' -ScriptRelative 'scripts/ue/Invoke-YacsSp638CorridorTopologyProbe.ps1' -ArtifactName 'LocalCorridorTopology'
 
-Write-Host '[4/6] Real SP638 topology proof...' -ForegroundColor Cyan
-Invoke-R4_1ChildProof -Label 'SP638 topology proof' -ScriptRelative 'scripts/ue/Invoke-YacsSp638CorridorTopologyProbe.ps1' -ArtifactName 'LocalCorridorTopology'
+Write-Host '[5/6] Validating bounded hairpin evidence without rebooting Unreal...' -ForegroundColor Cyan
+Test-R4_1SessionEvidence -Label 'SP638 hairpin proof' -ScriptRelative 'scripts/ue/Invoke-YacsPassoGiauHairpinCorridorProof.ps1' -ArtifactName 'HairpinCorridor'
 
-Write-Host '[5/6] Bounded SP638 hairpin cut/fill proof...' -ForegroundColor Cyan
-Invoke-R4_1ChildProof -Label 'SP638 hairpin proof' -ScriptRelative 'scripts/ue/Invoke-YacsPassoGiauHairpinCorridorProof.ps1' -ArtifactName 'HairpinCorridor'
-
-Write-Host '[6/6] Rider-close local corridor visual proof...' -ForegroundColor Cyan
-Invoke-R4_1ChildProof -Label 'SP638 local corridor visual proof' -ScriptRelative 'scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1' -ArtifactName 'LocalCorridorVisual'
+Write-Host '[6/6] Validating rider-close evidence without rebooting Unreal...' -ForegroundColor Cyan
+Test-R4_1SessionEvidence -Label 'SP638 local corridor visual proof' -ScriptRelative 'scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1' -ArtifactName 'LocalCorridorVisual'
 
 $TrackedChanges = @(git -C $RepoRoot status --porcelain=v1 --untracked-files=no)
 if ($TrackedChanges.Count -gt 0) {
@@ -131,7 +193,10 @@ $Summary = [ordered]@{
     r4_1_prepared_proof_suite = 'PASS'
     expected_head = $ExpectedHead
     editor_build_count = 1
+    editor_process_count = 1
+    editor_boot_count = 1
     lfs_map_materialization_count = 1
+    editor_session_summary = $SessionSummaryPath
     prepared_workspace_stamp = $StampPath
     proofs = [ordered]@{
         geometry_script_capability = 'PASS'

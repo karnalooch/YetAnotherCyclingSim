@@ -20,8 +20,13 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
         self.assertIn("lfs_map_materialization_count = 1", suite)
         self.assertIn("prepared_workspace.json", suite)
 
-    def test_suite_runs_all_bounded_proofs_from_same_stamp(self) -> None:
+    def test_suite_boots_one_editor_and_validates_all_bounded_proofs(self) -> None:
         suite = read("scripts/ue/Invoke-YacsR4_1ProofSuite.ps1")
+        self.assertIn("scripts/ue/r4_1_editor_session.py", suite)
+        self.assertEqual(suite.count("Start-Process -FilePath $UEditor"), 1)
+        self.assertIn("editor_process_count = 1", suite)
+        self.assertIn("editor_boot_count = 1", suite)
+        self.assertIn("'-ValidateOnly'", suite)
         for script in (
             "Invoke-YacsGeometryScriptProbe.ps1",
             "Invoke-YacsSp638CorridorTopologyProbe.ps1",
@@ -30,7 +35,30 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
         ):
             self.assertIn(script, suite)
         self.assertIn("'-PreparedWorkspaceStamp', $StampPath", suite)
-        self.assertIn("& $Pwsh @ChildArgs", suite)
+        self.assertNotIn("Invoke-R4_1ChildProof", suite)
+
+    def test_editor_dispatcher_is_fixed_scope_and_single_process(self) -> None:
+        dispatcher = read("scripts/ue/r4_1_editor_session.py")
+        for script in (
+            "probe_geometry_script_api.py",
+            "probe_sp638_local_corridor_topology.py",
+            "stage3g_capture_passo_giau_hairpin_corridor.py",
+            "stage3g_capture_sp638_local_corridor.py",
+        ):
+            self.assertIn(script, dispatcher)
+        self.assertIn('"editor_process_count": 1', dispatcher)
+        self.assertIn('"single_editor_process": True', dispatcher)
+        self.assertIn("YACS_R4_1_SESSION_EXPECTED_HEAD", dispatcher)
+        self.assertNotIn("input(", dispatcher)
+
+    def test_visual_proofs_support_session_managed_lifetime(self) -> None:
+        for path in (
+            "scripts/ue/stage3g_capture_passo_giau_hairpin_corridor.py",
+            "scripts/ue/stage3g_capture_sp638_local_corridor.py",
+        ):
+            script = read(path)
+            self.assertIn("YACS_R4_1_EDITOR_SESSION_MANAGED", script)
+            self.assertIn("def _release_python_script()", script)
 
     def test_child_wrappers_fail_closed_before_reuse(self) -> None:
         for path in (
@@ -41,6 +69,7 @@ class R41PreparedProofSuiteContractTests(unittest.TestCase):
         ):
             wrapper = read(path)
             self.assertIn("[string] $PreparedWorkspaceStamp", wrapper)
+            self.assertIn("[switch] $ValidateOnly", wrapper)
             self.assertIn("Test-YacsR4_1PreparedWorkspace.ps1", wrapper)
 
     def test_stamp_is_bound_to_sha_worktree_map_and_build(self) -> None:
