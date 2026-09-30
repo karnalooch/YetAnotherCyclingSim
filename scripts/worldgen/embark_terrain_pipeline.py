@@ -2,7 +2,7 @@
 """Orchestrate the Passo Giau Embark-style terrain authoring pipeline.
 
 The script intentionally does not recreate unpublished Embark internals. It wires
-YACS-owned data to documented Houdini PDG, Gaea Build Swarm, Houdini heightfield,
+YACS-owned data to documented Houdini PDG, Gaea2Houdini, Houdini heightfield HDA,
 and Unreal proof boundaries and fails closed when a required recipe/tool is absent.
 """
 
@@ -124,10 +124,12 @@ def preflight(config_path: Path, report_path: Path) -> dict[str, Any]:
     recipes = config["recipes"]
     hip = repo_path(recipes["houdini_hip"])
     gaea_recipe = repo_path(recipes["gaea_terrain"])
+    heightfield_hda = repo_path(recipes["houdini_heightfield_hda"])
     recipe_contract = repo_path(recipes["recipe_contract"])
 
     for label, path in (
         ("Houdini HIP recipe", hip),
+        ("YACS heightfield HDA", heightfield_hda),
         ("Gaea terrain recipe", gaea_recipe),
         ("recipe contract", recipe_contract),
     ):
@@ -170,6 +172,33 @@ def preflight(config_path: Path, report_path: Path) -> dict[str, Any]:
         except PipelineError as exc:
             record("Gaea version probe", False, str(exc))
 
+    recipe_validation_report = report_path.resolve().parent / "houdini-recipe-validation.json"
+    if hython is not None and hip.is_file() and heightfield_hda.is_file():
+        try:
+            validation_output = run_capture(
+                (
+                    str(hython),
+                    str(repo_path("scripts/houdini/validate_embark_recipe.py")),
+                    "--hip",
+                    str(hip),
+                    "--hda",
+                    str(heightfield_hda),
+                    "--preprocess-top",
+                    recipes["houdini_preprocess_top"],
+                    "--finalize-top",
+                    recipes["houdini_finalize_top"],
+                    "--gaea-processor",
+                    recipes["houdini_gaea_processor_node"],
+                    "--gaea-output",
+                    recipes["houdini_gaea_bridge_node"],
+                    "--report",
+                    str(recipe_validation_report),
+                )
+            )
+            record("Houdini/Gaea2Houdini recipe contract", True, validation_output)
+        except PipelineError as exc:
+            record("Houdini/Gaea2Houdini recipe contract", False, str(exc))
+
     failed = [check for check in checks if check["status"] != "PASS"]
     payload = {
         "schema_version": 1,
@@ -181,6 +210,7 @@ def preflight(config_path: Path, report_path: Path) -> dict[str, Any]:
         "tools": tools,
         "recipe_hashes": {
             "houdini_hip": sha256_file(hip) if hip.is_file() else None,
+            "houdini_heightfield_hda": sha256_file(heightfield_hda) if heightfield_hda.is_file() else None,
             "gaea_terrain": sha256_file(gaea_recipe) if gaea_recipe.is_file() else None,
         },
     }
@@ -265,10 +295,10 @@ def run_pipeline(
     resolved = preflight_payload.pop("_resolved")
 
     hython = Path(resolved["hython"])
-    gaea_swarm = Path(resolved["gaea_swarm"])
     pwsh = Path(resolved["pwsh"])
 
     hip = repo_path(config["recipes"]["houdini_hip"])
+    heightfield_hda = repo_path(config["recipes"]["houdini_heightfield_hda"])
     gaea_recipe = repo_path(config["recipes"]["gaea_terrain"])
     pdg_output = repo_path(outputs["pdg_heightfield"])
     gaea_output = repo_path(outputs["gaea_heightfield"])
@@ -331,8 +361,11 @@ def run_pipeline(
         {
             "YACS_EMBARK_PIPELINE_CONFIG": str(config_path),
             "YACS_EMBARK_PDG_OUTPUT": str(pdg_output),
+            "YACS_EMBARK_GAEA_RECIPE": str(gaea_recipe),
+            "YACS_EMBARK_GAEA_VARS": str(gaea_vars),
             "YACS_EMBARK_GAEA_OUTPUT": str(gaea_output),
             "YACS_EMBARK_HOUDINI_OUTPUT": str(houdini_output),
+            "YACS_EMBARK_HEIGHTFIELD_HDA": str(heightfield_hda),
         }
     )
 
@@ -355,21 +388,24 @@ def run_pipeline(
         env=houdini_env,
     )
 
+    gaea_bridge_report = gaea_output.parent / "houdini-gaea2houdini-bridge.json"
     run_stage(
         manifest,
-        "gaea_shape",
+        "gaea2houdini_shape",
         (
-            str(gaea_swarm),
-            "-filename",
-            str(gaea_recipe),
-            "-ignorecache",
-            "true",
-            "-seed",
-            str(config["gaea"]["seed"]),
-            "-vars",
-            str(gaea_vars),
+            str(hython),
+            str(repo_path("scripts/houdini/cook_houdini_node.py")),
+            "--hip",
+            str(hip),
+            "--hda",
+            str(heightfield_hda),
+            "--node",
+            config["recipes"]["houdini_gaea_bridge_node"],
+            "--report",
+            str(gaea_bridge_report),
         ),
-        expected_outputs=(gaea_output,),
+        expected_outputs=(gaea_output, gaea_bridge_report),
+        env=houdini_env,
     )
 
     finalize_report = houdini_output.parent / "houdini-finalize.json"
