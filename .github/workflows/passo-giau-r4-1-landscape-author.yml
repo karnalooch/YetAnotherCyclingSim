@@ -1,9 +1,9 @@
-name: Passo Giau M3 Road & Earthworks authoring proof
+name: Passo Giau R4.1B Landscape authoring proof
 
 on:
   push:
     branches:
-      - feat/255-sp638-road-earthworks
+      - feat/stage3g-r4-1-passo-giau-landscape-spike
     paths:
       - '.github/workflows/passo-giau-r4-1-landscape-author.yml'
       - 'Source/YetAnotherCyclingSim/YetAnotherCyclingSim.Build.cs'
@@ -17,7 +17,6 @@ on:
       - 'scripts/assets/prepare_passo_giau_veneto_lidar.py' # shared terrain diagnostics
       - 'scripts/ue/stage3g_prepare_passo_giau_landscape_map.py'
       - 'scripts/ue/stage3g_capture_passo_giau_landscape.py'
-      - 'scripts/ue/stage3g_capture_passo_giau_road.py'
       - 'scripts/ci/test_passo_giau_landscape_author_contract.py'
   workflow_dispatch:
 
@@ -25,19 +24,17 @@ permissions:
   contents: write
 
 concurrency:
-  # Keep the legacy group temporarily so this M3 run cancels any stale closed-#251 authoring attempt.
   group: passo-giau-r4-1b-landscape-author-${{ github.repository }}
   cancel-in-progress: true
 
 jobs:
   author:
-    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.ref == 'refs/heads/feat/255-sp638-road-earthworks' }}
+    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.ref == 'refs/heads/feat/stage3g-r4-1-passo-giau-landscape-spike' }}
     runs-on: [self-hosted, yacs-ue58]
-    # M3 Road & Earthworks authoring lane; exact SHA, one persisted isolated map.
+    # Single authoritative R4.1B authoring lane; restart on the latest exact SHA.
     timeout-minutes: 90
     env:
       GIT_LFS_SKIP_SMUDGE: '1'
-      YACS_AUTHOR_BRANCH: ${{ github.ref_name }}
 
     steps:
       - name: Isolate self-hosted Git configuration
@@ -107,7 +104,7 @@ jobs:
         shell: pwsh
         working-directory: _passo-giau-worktree
         run: |
-          ./scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1 -ExpectedBranch 'HEAD' -ExpectedHead '${{ github.sha }}' -ArtifactRoot 'Saved/RuntimeProof/CI/M3/RoadEarthworks' -IncludeRoad
+          ./scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1 -ExpectedBranch 'HEAD' -ExpectedHead '${{ github.sha }}' -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR4_1/PassoGiauLandscape'
           if ($LASTEXITCODE -ne 0) { throw 'Passo Giau Landscape authoring failed.' }
 
       - name: Commit only isolated spike map
@@ -128,24 +125,19 @@ jobs:
           }
           git commit -m 'asset(terrain): persist Passo Giau Landscape spike'
           if ($LASTEXITCODE -ne 0) { throw 'Passo Giau spike map commit failed.' }
-          if ($env:YACS_AUTHOR_BRANCH -ne 'feat/255-sp638-road-earthworks') {
-            throw "Unexpected Passo Giau authoring destination '$env:YACS_AUTHOR_BRANCH'."
-          }
-          git push origin "HEAD:$env:YACS_AUTHOR_BRANCH"
+          git push origin HEAD:feat/stage3g-r4-1-passo-giau-landscape-spike
           if ($LASTEXITCODE -ne 0) { throw 'Passo Giau spike map push failed.' }
 
       - name: Upload Passo Giau authoring evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: passo-giau-m3-road-earthworks-${{ github.run_id }}-${{ github.run_attempt }}
+          name: passo-giau-r4-1b-landscape-author-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            _passo-giau-worktree/Saved/RuntimeProof/CI/M3/RoadEarthworks/**
+            _passo-giau-worktree/Saved/RuntimeProof/CI/Stage3GR4_1/PassoGiauLandscape/**
             _passo-giau-worktree/ExternalAssets/Terrain/PassoGiau/PreparedMasePstLidar1x1/terrain-report.json
             _passo-giau-worktree/ExternalAssets/Terrain/PassoGiau/PreparedMasePstLidar1x1/passo_giau_mase_pst_2m_preview_hillshade.png
             _passo-giau-worktree/ExternalAssets/Terrain/PassoGiau/MASE_PST_Lidar1x1/mase-pst-download-report.json
-            _passo-giau-worktree/ExternalAssets/Terrain/PassoGiau/PreparedRoad/road-preparation-report.json
-            _passo-giau-worktree/ExternalAssets/Terrain/PassoGiau/PreparedRoad/passo_giau_sp638_hillshade_overlay.png
           if-no-files-found: warn
           retention-days: 14
 
