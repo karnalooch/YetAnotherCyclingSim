@@ -357,7 +357,7 @@ flowchart LR
     PDG --> WORK["WORKING TERRAIN<br/>32-bit metric heightfield"]
     WORK --> GAEA["GAEA BRIDGE<br/>Terrain shaping"]
     GAEA --> HUTIL["HOUDINI HEIGHTFIELD<br/>Utility / validation pass"]
-    HUTIL --> HDA["HOUDINI ENGINE<br/>Landscape handoff"]
+    HUTIL --> HDA["BRIDGE<br/>Houdini → Unreal export/import"]
     HDA --> BASE["UNREAL<br/>Base_DTM Edit Layer"]
     BASE --> EARTH["UNREAL<br/>Road_Earthworks"]
     EARTH --> ROAD["PRESENTATION<br/>Independent SP638 mesh"]
@@ -425,7 +425,9 @@ The pipeline must keep these boundaries explicit:
    recipe and explicit input/output paths. It is presentation authoring, not
    route or physics authority.
 4. **Houdini final heightfield** — validated dimensions, bounds, min/max domain,
-   masks and export attributes suitable for Unreal Landscape conversion.
+   masks and export attributes suitable for the documented Houdini → Unreal
+   export/import boundary. The exact bridge implementation is YACS-owned unless
+   stronger public Embark evidence proves their internal choice.
 5. **Unreal `Base_DTM`** — engine representation of the conditioned terrain.
    It remains separate from `Road_Earthworks` and later
    `Local_Corrections`.
