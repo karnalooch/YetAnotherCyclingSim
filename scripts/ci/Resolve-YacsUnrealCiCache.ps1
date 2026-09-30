@@ -48,7 +48,12 @@ $EngineRoot = if ($Engine) { [string] $Engine.Root } else { 'unresolved' }
 
 function Resolve-YacsToolchainIdentity {
     $VsRoots = [System.Collections.Generic.List[string]]::new()
-    $VsWhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
+    $ProgramFilesX86 = [Environment]::GetEnvironmentVariable('ProgramFiles(x86)')
+    $ProgramFiles = [Environment]::GetEnvironmentVariable('ProgramFiles')
+    if (-not $ProgramFilesX86 -or -not $ProgramFiles) {
+        return $null
+    }
+    $VsWhere = Join-Path $ProgramFilesX86 'Microsoft Visual Studio/Installer/vswhere.exe'
     if (Test-Path -LiteralPath $VsWhere -PathType Leaf) {
         $Resolved = @(
             & $VsWhere -products * -latest -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath 2>$null
@@ -61,7 +66,7 @@ function Resolve-YacsToolchainIdentity {
     }
 
     foreach ($Edition in @('BuildTools','Community','Professional','Enterprise')) {
-        $Candidate = Join-Path $env:ProgramFiles "Microsoft Visual Studio/2022/$Edition"
+        $Candidate = Join-Path $ProgramFiles "Microsoft Visual Studio/2022/$Edition"
         if (Test-Path -LiteralPath $Candidate -PathType Container) {
             [void]$VsRoots.Add((Resolve-Path -LiteralPath $Candidate).Path)
         }
@@ -103,7 +108,7 @@ function Resolve-YacsToolchainIdentity {
     }
 
     $SdkRc = $null
-    $SdkBin = Join-Path ${env:ProgramFiles(x86)} 'Windows Kits/10/bin'
+    $SdkBin = Join-Path $ProgramFilesX86 'Windows Kits/10/bin'
     if (Test-Path -LiteralPath $SdkBin -PathType Container) {
         $SdkRc = Get-ChildItem -LiteralPath $SdkBin -Directory -ErrorAction SilentlyContinue |
             Sort-Object -Property Name -Descending |
