@@ -30,35 +30,20 @@ $ExpectedBinaries = @(
     (Join-Path $RepoRoot 'Binaries/Win64/UnrealEditor-YetAnotherCyclingSimEditor.dll')
 )
 
-function Get-YacsEngineIdentity {
-    $Roots = @(
-        'D:\Epic Games\UE_5.8',
-        'D:\UE_5.8',
-        'C:\Program Files\Epic Games\UE_5.8',
-        'C:\UE_5.8'
-    )
-    foreach ($Root in $Roots) {
-        $BuildVersion = Join-Path $Root 'Engine/Build/Build.version'
-        if (-not (Test-Path -LiteralPath $BuildVersion -PathType Leaf)) { continue }
-        $Hash = (Get-FileHash -LiteralPath $BuildVersion -Algorithm SHA256).Hash.ToLowerInvariant()
-        $Json = Get-Content -LiteralPath $BuildVersion -Raw | ConvertFrom-Json
-        return [pscustomobject]@{
-            Root = (Resolve-Path -LiteralPath $Root).Path
-            Hash = $Hash
-            Version = ('{0}.{1}.{2}-{3}' -f $Json.MajorVersion,$Json.MinorVersion,$Json.PatchVersion,$Json.Changelist)
-        }
-    }
-    return $null
-}
-
 Push-Location $RepoRoot
 try { $ActualHead = (& git rev-parse HEAD).Trim() } finally { Pop-Location }
 if ($ActualHead -ne $ExpectedHead) {
     throw "Unreal cache provenance mismatch: HEAD '$ActualHead' != expected '$ExpectedHead'."
 }
 
-$Engine = Get-YacsEngineIdentity
-$EngineIdentity = if ($Engine) { "$($Engine.Version):$($Engine.Hash)" } else { 'unresolved' }
+$EngineResolverPath = Join-Path $RepoRoot 'scripts/ci/Resolve-YacsUnrealEngine.ps1'
+if (-not (Test-Path -LiteralPath $EngineResolverPath -PathType Leaf)) {
+    throw "Canonical Unreal Engine resolver is missing: $EngineResolverPath"
+}
+. $EngineResolverPath
+$Engine = Resolve-YacsUnrealEngine -ProjectPath (Join-Path $RepoRoot 'YetAnotherCyclingSim.uproject')
+$EngineIdentity = if ($Engine) { [string] $Engine.Identity } else { 'unresolved' }
+$EngineRoot = if ($Engine) { [string] $Engine.Root } else { 'unresolved' }
 
 if ($Action -eq 'Record') {
     if (-not $CompletedMode) { throw '-CompletedMode is required for Record.' }
@@ -92,10 +77,11 @@ if ($Action -eq 'Record') {
 
     New-Item -ItemType Directory -Path $StateDir -Force | Out-Null
     $State = [ordered]@{
-        SchemaVersion = 1
+        SchemaVersion = 2
         CompileFingerprint = $ExpectedCompileFingerprint
         ProofFingerprint = $ExpectedProofFingerprint
         EngineIdentity = $EngineIdentity
+        EngineRoot = $EngineRoot
         CompilePassed = $true
         ProofPassed = $true
         CompileHead = $CompileHead
@@ -131,6 +117,7 @@ if ($State) {
             'CompileFingerprint',
             'ProofFingerprint',
             'EngineIdentity',
+            'EngineRoot',
             'CompilePassed',
             'ProofPassed',
             'ProofHead'
@@ -146,7 +133,7 @@ if ($State) {
             $Reason = 'engine-identity-unresolved'
             $Purge = $true
         }
-        elseif ([int]$State.SchemaVersion -ne 1) {
+        elseif ([int]$State.SchemaVersion -ne 2) {
             $Reason = 'cache-schema-mismatch'
             $Purge = $true
         }
@@ -201,7 +188,7 @@ elseif ($Mode -eq 'runtime' -and $State) {
 }
 
 $Evidence = [ordered]@{
-    SchemaVersion = 1
+    SchemaVersion = 2
     Head = $ExpectedHead
     Mode = $Mode
     Reason = $Reason
@@ -210,6 +197,7 @@ $Evidence = [ordered]@{
     CompileFingerprint = $ExpectedCompileFingerprint
     ProofFingerprint = $ExpectedProofFingerprint
     EngineIdentity = $EngineIdentity
+    EngineRoot = $EngineRoot
     PreviousProofHead = $PreviousProofHead
     ExpectedBinaries = $ExpectedBinaries
     TimestampUtc = (Get-Date).ToUniversalTime().ToString('o')

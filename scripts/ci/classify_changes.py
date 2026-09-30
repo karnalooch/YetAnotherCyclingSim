@@ -64,6 +64,7 @@ UE_CODE_TOOLING_EXACT = {
     "scripts/ci/Test-YacsCodeOnlyCheckout.ps1",
     "scripts/ue/Invoke-YacsProof.ps1",
     "scripts/ue/Preflight-YacsProof.ps1",
+    "scripts/ci/Resolve-YacsUnrealEngine.ps1",
 }
 
 UNREAL_COMPILE_TOOLING_EXACT = {
@@ -71,6 +72,7 @@ UNREAL_COMPILE_TOOLING_EXACT = {
     "scripts/ci/Invoke-YacsUnrealCi.ps1",
     "scripts/ue/Invoke-YacsProof.ps1",
     "scripts/ue/Preflight-YacsProof.ps1",
+    "scripts/ci/Resolve-YacsUnrealEngine.ps1",
 }
 
 UE_TOOLING_PREFIXES = (
@@ -433,6 +435,7 @@ UNREAL_PROOF_EXACT = {
     "scripts/ci/Test-YacsCodeOnlyCheckout.ps1",
     "scripts/ue/Invoke-YacsProof.ps1",
     "scripts/ue/Preflight-YacsProof.ps1",
+    "scripts/ci/Resolve-YacsUnrealEngine.ps1",
 }
 
 

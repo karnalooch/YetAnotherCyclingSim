@@ -7,6 +7,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW = ROOT / ".github" / "workflows" / "reusable-unreal.yml"
 CACHE = ROOT / "scripts" / "ci" / "Resolve-YacsUnrealCiCache.ps1"
+ENGINE = ROOT / "scripts" / "ci" / "Resolve-YacsUnrealEngine.ps1"
 
 
 class UnrealCiCacheContractTests(unittest.TestCase):
@@ -14,6 +15,7 @@ class UnrealCiCacheContractTests(unittest.TestCase):
     def setUpClass(cls):
         cls.workflow = WORKFLOW.read_text(encoding="utf-8")
         cls.cache = CACHE.read_text(encoding="utf-8")
+        cls.engine = ENGINE.read_text(encoding="utf-8")
 
     def test_workflow_preserves_only_allow_listed_warm_build_state(self):
         # Keep this list intentionally identical to the workflow's persistent
@@ -48,7 +50,7 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         for token in (
             "UnrealEditor-YetAnotherCyclingSim.dll",
             "UnrealEditor-YetAnotherCyclingSimEditor.dll",
-            "Engine/Build/Build.version",
+            "Resolve-YacsUnrealEngine.ps1",
             "compile-fingerprint-mismatch",
             "proof-fingerprint-mismatch",
             "expected-binary-missing",
@@ -60,6 +62,20 @@ class UnrealCiCacheContractTests(unittest.TestCase):
             "$State.ProofPassed = $false",
         ):
             self.assertIn(token, self.cache)
+
+    def test_engine_identity_has_one_project_association_authority(self):
+        for token in (
+            "EngineAssociation",
+            "Build.version",
+            "Build.bat",
+            "UnrealEditor-Cmd.exe",
+            "BuildVersionSha256",
+            "BuildBatSha256",
+            "UnrealEditorCmdSha256",
+            "Identity = $Identity",
+        ):
+            self.assertIn(token, self.engine)
+        self.assertIn("Resolve-YacsUnrealEngine -ProjectPath", self.cache)
 
     def test_workspace_lock_cleanup_knows_warm_worktree(self):
         cleanup = (

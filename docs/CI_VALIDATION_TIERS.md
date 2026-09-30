@@ -89,6 +89,10 @@ cannot leave reusable proof behind.
 
 The compile fingerprint covers the project descriptor, compiled project/plugin
 inputs and the build/engine-selection orchestration used by the normal Unreal lane.
+`scripts/ci/Resolve-YacsUnrealEngine.ps1` is the single engine-discovery authority
+for both preflight/build and cache validation: it requires the `.uproject`
+`EngineAssociation` and identities the resolved installation from its root plus
+hashed `Build.version`, `Build.bat` and `UnrealEditor-Cmd.exe` evidence.
 The proof fingerprint extends that identity with runtime-critical Config and the
 remaining code-only Unreal proof tooling. Engine drift invalidates reuse;
 unknown or malformed state fails closed.

@@ -72,7 +72,10 @@ the explicit build-state allow-list survives between revisions: project/plugin
 untracked and ignored residue is removed before and after proof execution.
 Reuse is accepted only when the current compile fingerprint, proof fingerprint,
 installed UE build identity and expected project DLLs match a previously green
-state. Missing or malformed state fails closed. Engine drift purges incompatible
+state. Engine discovery is shared with the actual build through
+`scripts/ci/Resolve-YacsUnrealEngine.ps1`; the `.uproject` `EngineAssociation` is
+mandatory and the identity includes the resolved root plus hashes of the engine
+version, build launcher and Editor command binary. Missing or malformed state fails closed. Engine drift purges incompatible
 build outputs. Before COMPILE work the prior verified stamp is invalidated; before
 RUNTIME work its proof bit is invalidated. A cancelled or failed mutable run can
 therefore never leave a green stamp that a later revision may trust. A

@@ -76,39 +76,6 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $EffectiveAllowedDirtyPaths = @($AllowedDirtyPaths) + @($AdditionalAllowedDirtyPaths)
 
-function Resolve-CommandPath {
-    param([string] $Command, [string[]] $SearchDirs)
-    foreach ($Dir in $SearchDirs) {
-        if (-not (Test-Path -LiteralPath $Dir)) { continue }
-        $Candidate = Join-Path -Path $Dir -ChildPath $Command
-        if (Test-Path -LiteralPath $Candidate -PathType Leaf) {
-            return (Resolve-Path -LiteralPath $Candidate).Path
-        }
-    }
-    return $null
-}
-
-function Read-EngineVersion {
-    param([string] $EngineRoot)
-    $BuildVersion = Join-Path -Path $EngineRoot -ChildPath 'Engine/Build/Build.version'
-    if (-not (Test-Path -LiteralPath $BuildVersion)) { return $null }
-    try {
-        $Json = Get-Content -LiteralPath $BuildVersion -Raw -ErrorAction Stop | ConvertFrom-Json
-        return [pscustomobject]@{
-            MajorVersion    = [int] $Json.MajorVersion
-            MinorVersion    = [int] $Json.MinorVersion
-            PatchVersion    = [int] $Json.PatchVersion
-            Changelist      = [int] $Json.Changelist
-            CompatibleChangelist = [int] $Json.CompatibleChangelist
-            IsLicenseeVersion     = [bool] $Json.IsLicenseeVersion
-            BranchName      = [string] $Json.BranchName
-            Raw             = $Json
-        }
-    } catch {
-        return $null
-    }
-}
-
 if (-not (Test-Path -LiteralPath $RepoRoot)) {
     throw "RepoRoot '$RepoRoot' does not exist."
 }
@@ -170,59 +137,18 @@ foreach ($p in ($DirtyPaths + $UntrackedPaths)) {
 
 # --- Unreal Engine discovery ----------------------------------------------
 
-$SearchDirs = @(
-    'D:\Epic Games',
-    'C:\Program Files\Epic Games',
-    'C:\Epic Games',
-    'D:\UE_5.8',
-    'D:\UE_5.7',
-    'C:\UE_5.8'
-)
-$EngineRoot = $null
-foreach ($d in $SearchDirs) {
-    if (-not (Test-Path -LiteralPath $d)) { continue }
-
-    # SearchDirs may contain either a parent directory (for example
-    # C:\Program Files\Epic Games) or an engine root itself (the hosted
-    # CircleCI restore target is C:\UE_5.8). Accept a direct engine root
-    # before enumerating child UE_* directories.
-    $directUat = Join-Path -Path $d -ChildPath 'Engine/Build/BatchFiles/RunUAT.bat'
-    if (Test-Path -LiteralPath $directUat -PathType Leaf) {
-        $EngineRoot = (Resolve-Path -LiteralPath $d).Path
-        break
-    }
-
-    $candidates = Get-ChildItem -LiteralPath $d -Directory -ErrorAction SilentlyContinue |
-        Where-Object { $_.Name -match '^(UE_[0-9]+\.[0-9]+|UE_[0-9]+|UnrealEngine)$' }
-    foreach ($c in $candidates) {
-        $candidate = $c.FullName
-        if (Test-Path -LiteralPath (Join-Path -Path $candidate -ChildPath 'Engine/Build/BatchFiles/RunUAT.bat')) {
-            $EngineRoot = $candidate
-            break
-        }
-    }
-    if ($EngineRoot) { break }
+$EngineResolverPath = Join-Path -Path $RepoRoot -ChildPath 'scripts/ci/Resolve-YacsUnrealEngine.ps1'
+if (-not (Test-Path -LiteralPath $EngineResolverPath -PathType Leaf)) {
+    throw "Canonical Unreal Engine resolver is missing: $EngineResolverPath"
 }
+. $EngineResolverPath
+$ResolvedEngine = Resolve-YacsUnrealEngine -ProjectPath $ProjectPath
 
-$EngineVersion = $null
-$UATPath = $null
-$UEditorPath = $null
-if ($EngineRoot) {
-    $EngineVersion = Read-EngineVersion -EngineRoot $EngineRoot
-    $UATPath = Resolve-CommandPath -Command 'RunUAT.bat' `
-        -SearchDirs @(
-            (Join-Path -Path $EngineRoot -ChildPath 'Engine/Build/BatchFiles'),
-            (Join-Path -Path $EngineRoot -ChildPath 'Engine/Build/BatchFiles/Windows')
-        )
-    $UEditorPath = Resolve-CommandPath -Command 'UnrealEditor-Cmd.exe' `
-        -SearchDirs @(
-            (Join-Path -Path $EngineRoot -ChildPath 'Engine/Binaries/Win64')
-        )
-    $UEditorGuiPath = Resolve-CommandPath -Command 'UnrealEditor.exe' `
-        -SearchDirs @(
-            (Join-Path -Path $EngineRoot -ChildPath 'Engine/Binaries/Win64')
-        )
-}
+$EngineRoot = if ($ResolvedEngine) { $ResolvedEngine.Root } else { $null }
+$EngineVersion = if ($ResolvedEngine) { $ResolvedEngine.VersionObject } else { $null }
+$UATPath = if ($ResolvedEngine) { $ResolvedEngine.UATPath } else { $null }
+$UEditorPath = if ($ResolvedEngine) { $ResolvedEngine.UnrealEditorCmdPath } else { $null }
+$UEditorGuiPath = if ($ResolvedEngine) { $ResolvedEngine.UnrealEditorPath } else { $null }
 
 # --- Machine / GPU --------------------------------------------------------
 
