@@ -105,6 +105,23 @@ runner-space recovery and Project/bootstrap operations are deliberately **not**
 Proof Broker targets. Their purpose is mutation, release/full validation or
 administrative recovery rather than reusable PR proof.
 
+Explicit current exceptions are:
+
+- `reusable-stage3g-full.yml` — merge-critical, classifier-driven exact-head
+  proof; it belongs in the local Aggregate graph rather than explicit broker
+  intent;
+- `asset-full.yml` — release/full-asset entrypoint;
+- `stage3g-forest-target-density-author.yml` — mutating author workflow owned
+  by its still-live dedicated branch;
+- `stage3g-forest-target-density-performance.yml` — paired with that live
+  dedicated-branch workstream and still has its own automatic branch trigger;
+- `passo-giau-r4-1-landscape-author.yml` and
+  `passo-giau-r4-1-road-author.yml` — disposition remains owned by active
+  PR #256 and is tracked as `UNKNOWN` in workflow lifecycle policy;
+- `manual-unreal.yml`, `runner-space-recovery.yml`, Project bootstrap and
+  remote-editor command — administrative/recovery controls, not reusable PR
+  evidence.
+
 ## R4.1 prepared proof-suite reuse
 
 For the bounded Stage 3G R4.1 terrain/road diagnostics, the canonical heavy manual lane uses **build once, boot once, prove many** inside one trusted runner job:
