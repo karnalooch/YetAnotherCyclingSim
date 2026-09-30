@@ -11,9 +11,28 @@ from scripts.ops import proof_broker
 ROOT = Path(__file__).resolve().parents[2]
 POLICY = ROOT / ".gumball" / "proof-broker.json"
 BROKER_WORKFLOW = ROOT / ".github" / "workflows" / "proof-broker.yml"
-TARGET_WORKFLOW = (
-    ROOT / ".github" / "workflows" / "passo-giau-r4-1b3-geometry-probe.yml"
-)
+TARGET_WORKFLOWS = {
+    "r4-1b3-geometry": ROOT
+    / ".github"
+    / "workflows"
+    / "passo-giau-r4-1b3-geometry-probe.yml",
+    "m3-hairpin-corridor": ROOT
+    / ".github"
+    / "workflows"
+    / "passo-giau-r4-1-hairpin-corridor.yml",
+    "world-authoring-sp638": ROOT
+    / ".github"
+    / "workflows"
+    / "passo-giau-r4-1-roadside-house.yml",
+    "environment-performance": ROOT
+    / ".github"
+    / "workflows"
+    / "stage3g-environment-performance.yml",
+    "source-asset-audit": ROOT
+    / ".github"
+    / "workflows"
+    / "stage3g-source-asset-audit.yml",
+}
 
 
 class YacsProofBrokerContractTests(unittest.TestCase):
@@ -23,20 +42,26 @@ class YacsProofBrokerContractTests(unittest.TestCase):
     def test_policy_is_valid(self):
         self.assertEqual(proof_broker.validate_policy(self.policy()), [])
 
-    def test_r4_1b3_target_workflow_matches_policy(self):
-        proof = self.policy()["proofs"]["r4-1b3-geometry"]
-        workflow = TARGET_WORKFLOW.read_text(encoding="utf-8")
-        self.assertEqual(
-            proof_broker.validate_workflow_contract(workflow, proof),
-            [],
-        )
+    def test_all_target_workflows_match_policy(self):
+        policy = self.policy()
+        self.assertEqual(set(policy["proofs"]), set(TARGET_WORKFLOWS))
+        for proof_id, path in TARGET_WORKFLOWS.items():
+            with self.subTest(proof=proof_id):
+                proof = policy["proofs"][proof_id]
+                workflow = path.read_text(encoding="utf-8")
+                self.assertEqual(
+                    proof_broker.validate_workflow_contract(workflow, proof),
+                    [],
+                )
 
-    def test_r4_1b3_is_explicit_heavy_nonautomatic_proof(self):
-        proof = self.policy()["proofs"]["r4-1b3-geometry"]
-        self.assertEqual(proof["cost_class"], "heavy")
-        self.assertFalse(proof["merge_critical"])
-        self.assertFalse(proof["automatic"]["enabled"])
-        self.assertEqual(proof["artifact_name"], "proof-$proof-$sha")
+    def test_all_proofs_are_explicit_heavy_nonautomatic_and_read_only(self):
+        for proof_id, proof in self.policy()["proofs"].items():
+            with self.subTest(proof=proof_id):
+                self.assertEqual(proof["cost_class"], "heavy")
+                self.assertFalse(proof["merge_critical"])
+                self.assertFalse(proof["automatic"]["enabled"])
+                self.assertEqual(proof["artifact_name"], "proof-$proof-$sha")
+                self.assertEqual(proof["allowed_write_permissions"], [])
 
     def test_comment_contract_supports_run_retry_and_status(self):
         self.assertEqual(
@@ -164,7 +189,7 @@ class YacsProofBrokerContractTests(unittest.TestCase):
             mock.patch.object(
                 proof_broker,
                 "fetch_workflow_text",
-                return_value=TARGET_WORKFLOW.read_text(encoding="utf-8"),
+                return_value=TARGET_WORKFLOWS["r4-1b3-geometry"].read_text(encoding="utf-8"),
             ),
             mock.patch.object(proof_broker, "set_status_label"),
             mock.patch.object(proof_broker, "ensure_request_label"),
@@ -187,11 +212,17 @@ class YacsProofBrokerContractTests(unittest.TestCase):
         dispatched_inputs = dispatch.call_args.args[4]
         self.assertEqual(dispatched_inputs["exact_sha"], "c" * 40)
 
-    def test_reusable_artifact_is_created_only_after_success(self):
-        workflow = TARGET_WORKFLOW.read_text(encoding="utf-8")
-        self.assertIn("if: ${{ success() }}", workflow)
-        self.assertIn("if-no-files-found: error", workflow)
-        self.assertIn("diagnostic-r4-1b3-geometry-", workflow)
+    def test_reusable_artifacts_are_created_only_after_success(self):
+        for proof_id, path in TARGET_WORKFLOWS.items():
+            with self.subTest(proof=proof_id):
+                workflow = path.read_text(encoding="utf-8")
+                self.assertIn("if: ${{ success() }}", workflow)
+                self.assertIn("if-no-files-found: error", workflow)
+                self.assertIn(
+                    f"proof-{proof_id}-${{{{ inputs.exact_sha }}}}",
+                    workflow,
+                )
+                self.assertIn(f"diagnostic-{proof_id}-", workflow)
 
     def test_broker_workflow_keeps_trusted_default_branch_boundary(self):
         workflow = BROKER_WORKFLOW.read_text(encoding="utf-8")
