@@ -50,6 +50,34 @@ a lane classified as unnecessary must actually be skipped. It also validates
 that `ci_cost_class` is one of the three canonical values and that heavy
 Unreal/full-world impact cannot be mislabeled as a cheaper class.
 
+### Unreal execution class
+
+The cost label and the Unreal execution mode are deliberately separate. The
+classifier also emits `unreal_execution_class`:
+
+- `static` — no fresh Unreal runtime is required by the changed surface;
+- `runtime` — Unreal/world/Automation evidence is required, but verified
+  Editor binaries may be reused;
+- `compile` — the compiled binary contract changed and the Editor must be
+  rebuilt before runtime evidence.
+
+`unreal_compile_fingerprint` hashes the project descriptor plus compiled
+project/plugin source and plugin descriptors. `unreal_proof_fingerprint`
+extends that identity with runtime-critical Config and the code-only proof
+orchestration contract.
+
+The self-hosted code-only lane keeps a repository-scoped warm worktree. Reuse
+is accepted only when the current compile fingerprint, proof fingerprint,
+installed UE build identity and expected project DLLs match a previously green
+state. Missing or malformed state fails closed. Engine drift purges incompatible
+build outputs. A compile-fingerprint mismatch rebuilds; a proof-only mismatch
+runs Automation with `-SkipBuild`; a full match emits a fresh exact-head
+equivalence artifact without rerunning unchanged Automation.
+
+This is semantic proof reuse, not SHA reuse: the current HEAD is still checked
+out and verified exactly, and the equivalence evidence records the current HEAD
+plus the fingerprints of every input allowed to affect the reused proof.
+
 ## Dedicated proof refinements
 
 Specialized heavyweight proofs may ask the same central classifier for a
