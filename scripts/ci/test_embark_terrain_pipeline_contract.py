@@ -234,11 +234,13 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         wrapper = (
             ROOT / "scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1"
         ).read_text(encoding="utf-8")
-        workflow = (
-            ROOT / ".github/workflows/passo-giau-embark-terrain.yml"
-        ).read_text(encoding="utf-8")
+        workflow = (ROOT / ".github/workflows/passo-giau-embark-terrain.yml").read_text(
+            encoding="utf-8"
+        )
 
-        self.assertIn('DIAGNOSTIC_VARIANT_ENV = "YACS_SP638_LOCAL_CORRIDOR_VARIANT"', capture)
+        self.assertIn(
+            'DIAGNOSTIC_VARIANT_ENV = "YACS_SP638_LOCAL_CORRIDOR_VARIANT"', capture
+        )
         for variant in ('"A": {', '"B": {', '"C": {', '"D": {', '"E": {'):
             self.assertIn(variant, capture)
         self.assertIn('"Base_DTM" not in edit_layer_names', capture)
