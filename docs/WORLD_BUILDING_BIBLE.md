@@ -498,11 +498,22 @@ p95, about 0.8 m horizontal max and about 7.5 mm vertical p95 for the proven
 corridor). This is sufficient to stop treating PCGEx road smoothing as the default
 suspect for the current visual failure.
 
-The remaining failure is terrain presentation: the rider proof still combines
-the legacy macro Landscape with local terrain/earthwork surfaces, and the
-rider-close terrain skin is sampled from that already-problematic Landscape.
+Gate C.1 then separated two independent terrain-presentation defects at the
+same exact-SHA hairpin. Variant A proved that rider-close faceting already exists
+with the macro Landscape alone. Variant C proved that the previous local terrain
+skin is independently invalid even with the Landscape hidden, so the failure is
+not explained by coincident-surface overlap alone. Variants B/D/E preserve those
+failures while adding the corridor/combined ownership states.
+
 Therefore, until a concrete regression says otherwise, **freeze the proven PCGEx
-road path and diagnose terrain surface ownership instead of tuning road smoothing**.
+road path and diagnose terrain source/near-field ownership instead of tuning road
+smoothing**. The active Gate C.3 proof reads a bounded 512 m x 512 m, 1 m working
+grid directly from the prepared native metric DTM, transfers only that patch to
+the Unreal proof runner, performs no Landscape collision sampling and no terrain
+smoothing, hides the macro Landscape, and renders the resulting DynamicMesh with
+the road corridor disabled. Its purpose is diagnostic: distinguish source quality
+from DynamicMesh transform/winding/rendering defects before road constraints are
+introduced.
 
 If the terrain-ownership recovery later proves a real PCGEx boundary, document
 that evidence and then use the tools-first ladder. Do not hide the failure with
@@ -560,12 +571,19 @@ hairpin, camera pose, FOV and lighting with only ownership toggled:
 | D | OFF | ON | ON | local ground + road without macro overlap |
 | E | ON | ON | ON | current combined baseline |
 
-Interpretation is evidence-driven:
+Observed Gate C.1 result is evidence-driven:
 
-- D clean + E broken strongly indicates competing-surface overlap/intersection;
-- C still faceted indicates the local source or spacing is insufficient;
-- A being the dominant failure confirms macro Landscape as the visible source
-  of the rider-close artifact.
+- A fails with macro-Landscape faceting before any road/local surface is present;
+- C fails independently with the Landscape hidden, so the old
+  `Landscape -> line trace -> 4 m grid -> smoothing -> DynamicMesh` path is not a
+  valid near-field foundation;
+- B/D/E combine those failures with corridor/ownership interactions and do not
+  justify changing the frozen road authority.
+
+Gate C.3 therefore changes exactly one causal variable: the local terrain source.
+It uses the prepared 1 m metric DTM directly as a bounded neutral mesh and keeps
+macro Landscape, road corridor, cut/fill, smoothing, materials camouflage and
+route/physics changes out of the proof.
 
 Do not replace this diagnostic with guessed smoothing percentages.
 
