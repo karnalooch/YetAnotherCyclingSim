@@ -98,6 +98,13 @@ class ChangeClassifierTests(unittest.TestCase):
             with self.subTest(path=path):
                 self.assertTrue(cc.classify_paths([path]).asset_full)
 
+    def test_asset_full_ue_tooling_is_heavy_without_code_build(self):
+        result = cc.classify_paths(["scripts/ue/Invoke-YacsStage3GAuthoring.ps1"])
+        self.assertTrue(result.ue_tooling)
+        self.assertTrue(result.asset_full)
+        self.assertFalse(result.ue_code)
+        self.assertEqual(result.ci_cost_class, "heavy")
+
     def test_code_plus_assets_routes_both(self):
         result = cc.classify_paths(
             [
