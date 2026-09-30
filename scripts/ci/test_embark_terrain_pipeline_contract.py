@@ -187,6 +187,8 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
             "Resample->SampleLength.Constant = 100.0",
             "Smooth->bPreserveStart = true",
             "Smooth->bPreserveEnd = true",
+            "Smooth->BlendingInterface = EPCGExBlendingInterface::Monolithic",
+            "FPCGExBlendingDetails(EPCGExBlendingType::Average)",
             "OffsetLeft->Offset.Constant = 300.0",
             "OffsetRight->Offset.Constant = 300.0",
             "Graph->AddLabeledEdge(SmoothNode, PathPin, OutputNode, GraphOutputPin)",
