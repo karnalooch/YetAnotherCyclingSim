@@ -194,6 +194,44 @@ class BranchDecisionTests(unittest.TestCase):
         self.assertFalse(delete)
         self.assertIn("no merged pull request", reason)
 
+    def test_architecture_reset_purges_exact_legacy_branch_without_pr_proof(self):
+        delete, reason = cb.should_delete(
+            branch_name="feat/stage4c-brake-force-demand",
+            branch_sha="LEGACY",
+            default_branch="main",
+            open_branch_names=set(),
+            open_base_branch_names=set(),
+            merged_head_shas=set(),
+            tip_is_in_default=False,
+            architecture_reset_delete_branches=cb.ARCHITECTURE_RESET_DELETE_BRANCHES,
+        )
+        self.assertTrue(delete)
+        self.assertIn("post-architecture reset purge", reason)
+
+    def test_open_pr_still_beats_architecture_reset_purge(self):
+        branch = "feat/stage4c-brake-force-demand"
+        delete, reason = cb.should_delete(
+            branch_name=branch,
+            branch_sha="LEGACY",
+            default_branch="main",
+            open_branch_names={branch},
+            open_base_branch_names=set(),
+            merged_head_shas=set(),
+            tip_is_in_default=False,
+            architecture_reset_delete_branches=cb.ARCHITECTURE_RESET_DELETE_BRANCHES,
+        )
+        self.assertFalse(delete)
+        self.assertEqual(reason, "open pull request")
+
+    def test_landscape_survivors_are_not_in_architecture_reset_purge(self):
+        self.assertTrue(
+            {
+                "feat/255-sp638-road-earthworks",
+                "feat/247-r4-1b4-meso-ground",
+                "feat/238-r4-1b3-1-corridor-occlusion",
+            }.isdisjoint(cb.ARCHITECTURE_RESET_DELETE_BRANCHES)
+        )
+
     def test_open_heads_ignore_forks(self):
         pulls = [
             {

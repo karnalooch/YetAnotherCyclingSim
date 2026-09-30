@@ -25,6 +25,32 @@ from urllib.request import Request, urlopen
 API_ROOT = "https://api.github.com"
 EXPLICIT_DELETE_MARKER = "<!-- yacs-branch-hygiene:delete-head-safe -->"
 
+# One-time exact-name purge for the 2026-09-30 post-architecture reset.
+# This list is deliberately inert once these refs are gone. Open PR heads and
+# open PR bases remain protected before this override is considered.
+ARCHITECTURE_RESET_DELETE_BRANCHES = {
+    "chore/platform-canary-36226a69",
+    "ci/docs-four-guards",
+    "ci/phase1-conservative-ue-build-v2",
+    "ci/stage3g-authoring-one-shot",
+    "ci/244-proof-broker-api-diagnostics",
+    "ci/248-r4-1-boot-once-proof-session",
+    "ci/259-enable-local-uba",
+    "docs/visual-history-r3-after",
+    "feat/stage3b-alpine-route-profile",
+    "feat/stage3g-forest-target-density",
+    "feat/stage3g-r2-conifer-route-exclusion",
+    "feat/stage4c-brake-force-demand",
+    "feat/stage4c-brake-input-contract",
+    "feat/stage4c-corner-grip-demand",
+    "feat/stage4c-shared-grip-budget",
+    "ops/passo-giau-dem-download",
+    "ops/passo-giau-veneto-dtm-probe",
+    "proof/stage3g-r1-41308225",
+    "proof/stage4a-1d928e20",
+    "tmp/stage4c-technique-runtime-preserve",
+}
+
 
 class CleanupError(RuntimeError):
     """Raised when branch cleanup cannot complete safely."""
@@ -203,6 +229,7 @@ def should_delete(
     merged_head_shas: set[str],
     tip_is_in_default: bool,
     explicit_delete_head_shas: set[str] | None = None,
+    architecture_reset_delete_branches: set[str] | None = None,
 ) -> tuple[bool, str]:
     if branch_name == default_branch:
         return False, "default branch"
@@ -210,6 +237,8 @@ def should_delete(
         return False, "open pull request"
     if branch_name in open_base_branch_names:
         return False, "base of open pull request"
+    if branch_name in (architecture_reset_delete_branches or set()):
+        return True, "explicit post-architecture reset purge"
     if branch_sha in (explicit_delete_head_shas or set()):
         return True, "current tip explicitly marked safe to delete by closed PR"
     if not merged_head_shas:
@@ -289,6 +318,7 @@ def run_cleanup(
             merged_head_shas=merged_shas,
             tip_is_in_default=contained,
             explicit_delete_head_shas=explicit_delete.get(branch_name, set()),
+            architecture_reset_delete_branches=ARCHITECTURE_RESET_DELETE_BRANCHES,
         )
 
         if not delete:
