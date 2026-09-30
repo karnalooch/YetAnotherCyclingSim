@@ -196,7 +196,7 @@ jobs:
       - name: Upload prepared SP638 input
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: passo-giau-m3-pcgex-input-${{ github.run_id }}-${{ github.run_attempt }}
+          name: passo-giau-m3-pcgex-input-${{ github.run_id }}
           path: |
             ExternalAssets/Terrain/PassoGiau/PreparedRoad/**
             ExternalAssets/Terrain/PassoGiau/PreparedNearField/**
@@ -280,7 +280,7 @@ jobs:
       - name: Download prepared SP638 input
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
-          name: passo-giau-m3-pcgex-input-${{ github.run_id }}-${{ github.run_attempt }}
+          name: passo-giau-m3-pcgex-input-${{ github.run_id }}
           path: ${{ runner.temp }}/yacs-pcgex-prepared-road
 
       - name: Materialize prepared SP638 input for Unreal authoring
@@ -496,7 +496,7 @@ jobs:
       - name: Download prepared SP638 input
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
-          name: passo-giau-m3-pcgex-input-${{ github.run_id }}-${{ github.run_attempt }}
+          name: passo-giau-m3-pcgex-input-${{ github.run_id }}
           path: ${{ runner.temp }}/yacs-pcgex-source
 
       - name: Download executed PCGEx evidence
