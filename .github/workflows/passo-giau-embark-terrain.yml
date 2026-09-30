@@ -6,21 +6,27 @@ on:
       - feat/287-embark-terrain-pipeline
     paths:
       - '.github/workflows/passo-giau-embark-terrain.yml'
+      - '.gitignore'
       - 'AGENTS.md'
       - '.gitattributes'
+      - '.gumball/workflow-lifecycle.json'
       - 'docs/WORLD_BUILDING_BIBLE.md'
+      - 'docs/ci/WORKFLOW_LIFECYCLE.md'
       - 'docs/legal/DEPENDENCY_PROVENANCE.md'
       - 'worldgen/embark/**'
-      - 'scripts/houdini/**'
       - 'scripts/worldgen/**'
-      - 'scripts/assets/finalize_passo_giau_embark_heightfield.py'
-      - 'scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1'
+      - 'scripts/ue/Invoke-YacsPassoGiauPcgExGraph.ps1'
       - 'scripts/ci/test_embark_terrain_pipeline_contract.py'
-      - 'Source/YetAnotherCyclingSim/Private/Editor/CyclingPassoGiauLandscapeSpikeCommandlet.cpp'
+      - 'Source/YetAnotherCyclingSimEditor/Private/PCG/YacsPassoGiauPcgExGraphCommandlet.cpp'
+      - 'Source/YetAnotherCyclingSimEditor/Private/PCG/YacsPassoGiauSp638PathSettings.cpp'
+      - 'Source/YetAnotherCyclingSimEditor/Public/PCG/YacsPassoGiauPcgExGraphCommandlet.h'
+      - 'Source/YetAnotherCyclingSimEditor/Public/PCG/YacsPassoGiauSp638PathSettings.h'
+      - 'Source/YetAnotherCyclingSimEditor/YetAnotherCyclingSimEditor.Build.cs'
+      - 'YetAnotherCyclingSim.uproject'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: passo-giau-m3-embark-terrain-${{ github.repository }}
@@ -49,32 +55,27 @@ jobs:
           test "$(git rev-parse HEAD)" = "${{ github.sha }}"
           test -z "$(git status --porcelain --untracked-files=all)"
 
-      - name: Validate Embark terrain repository contract
+      - name: Validate Embark/PCGEx repository contract
         run: python -m unittest scripts.ci.test_embark_terrain_pipeline_contract
 
   author:
-    name: Embark DCC + Unreal authoring
+    name: PCGEx corridor graph authoring
     needs: contract
     if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.ref == 'refs/heads/feat/287-embark-terrain-pipeline' }}
     runs-on: [self-hosted, yacs-ue58]
-    timeout-minutes: 180
+    timeout-minutes: 120
     env:
       GIT_LFS_SKIP_SMUDGE: '1'
-      YACS_AUTHOR_BRANCH: ${{ github.ref_name }}
 
     steps:
       - name: Isolate self-hosted Git configuration
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $isolated = Join-Path $env:RUNNER_TEMP 'yacs-embark-terrain-global.gitconfig'
+          $isolated = Join-Path $env:RUNNER_TEMP 'yacs-pcgex-author-global.gitconfig'
           Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
           "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
           "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
-          $staleSpike = Join-Path $env:GITHUB_WORKSPACE '_embark-terrain-worktree/Content/Prototype/Maps/L_PassoGiauTerrainSpike.umap'
-          if (Test-Path -LiteralPath $staleSpike -PathType Leaf) {
-            Remove-Item -LiteralPath $staleSpike -Force
-          }
 
       - name: Checkout exact trusted revision without LFS payloads
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -84,7 +85,7 @@ jobs:
           fetch-depth: 1
           lfs: false
           clean: true
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Verify exact SHA and code-only checkout
         shell: pwsh
@@ -92,25 +93,14 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           if ((git rev-parse HEAD).Trim() -ne '${{ github.sha }}') {
-            throw 'Embark terrain checkout is not exact SHA.'
+            throw 'PCGEx authoring checkout is not exact SHA.'
           }
           git lfs install --local
           if ($LASTEXITCODE -ne 0) { throw 'git lfs install failed.' }
           ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
           if ($LASTEXITCODE -ne 0) { throw 'Code-only checkout contract failed.' }
           if (git status --porcelain --untracked-files=all) {
-            throw 'Embark terrain checkout is dirty before recipe materialization.'
-          }
-
-      - name: Materialize only DCC recipe binaries
-        shell: pwsh
-        working-directory: _embark-terrain-worktree
-        run: |
-          $ErrorActionPreference = 'Stop'
-          git lfs pull --include "worldgen/embark/recipes/*.hiplc,worldgen/embark/recipes/*.hdalc,worldgen/embark/recipes/*.terrain" --exclude ""
-          if ($LASTEXITCODE -ne 0) { throw 'DCC recipe LFS materialization failed.' }
-          if (git status --porcelain --untracked-files=all) {
-            throw 'Recipe materialization changed tracked repository state.'
+            throw 'PCGEx authoring checkout is dirty before bootstrap.'
           }
 
       - name: Re-run repository contract
@@ -118,80 +108,23 @@ jobs:
         working-directory: _embark-terrain-worktree
         run: |
           python -m unittest scripts.ci.test_embark_terrain_pipeline_contract
-          if ($LASTEXITCODE -ne 0) { throw 'Embark terrain contract failed on the authoring runner.' }
+          if ($LASTEXITCODE -ne 0) { throw 'Embark/PCGEx contract failed on the authoring runner.' }
 
-      - name: Fail-closed DCC toolchain preflight
+      - name: Build and author deterministic PCGEx graph
         shell: pwsh
         working-directory: _embark-terrain-worktree
         run: |
-          $ErrorActionPreference = 'Continue'
-          $report = 'Saved/RuntimeProof/CI/M3/EmbarkTerrain/toolchain-preflight.json'
-          python scripts/worldgen/embark_terrain_pipeline.py preflight --report $report
-          $code = $LASTEXITCODE
-          if ($code -ne 0) {
-            Write-Host "::error::Embark terrain DCC preflight failed. Inspect $report for the exact missing tool/license/recipe."
-            exit $code
-          }
+          ./scripts/ue/Invoke-YacsPassoGiauPcgExGraph.ps1 -ExpectedBranch 'HEAD' -ExpectedHead '${{ github.sha }}' -ArtifactRoot 'Saved/RuntimeProof/CI/M3/PCGExCorridor'
+          if ($LASTEXITCODE -ne 0) { throw 'PCGEx corridor graph proof failed.' }
 
-      - name: Execute full Embark terrain pipeline
-        shell: pwsh
-        working-directory: _embark-terrain-worktree
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $venv = Join-Path $env:RUNNER_TEMP ('yacs-embark-terrain-' + [Guid]::NewGuid().ToString('N'))
-          try {
-            python -m venv $venv
-            if ($LASTEXITCODE -ne 0) { throw 'Failed to create terrain pipeline venv.' }
-            $py = Join-Path $venv 'Scripts/python.exe'
-            & $py -m pip install --disable-pip-version-check numpy==2.2.6 Pillow==11.3.0 rasterio==1.4.3 shapely==2.1.1
-            if ($LASTEXITCODE -ne 0) { throw 'Failed to install pinned terrain pipeline dependencies.' }
-            & $py scripts/worldgen/embark_terrain_pipeline.py run --expected-branch HEAD --expected-head '${{ github.sha }}' --artifact-root 'Saved/RuntimeProof/CI/M3/EmbarkTerrain'
-            if ($LASTEXITCODE -ne 0) { throw 'Full Embark terrain pipeline failed.' }
-          }
-          finally {
-            if (Test-Path -LiteralPath $venv) {
-              Remove-Item -LiteralPath $venv -Recurse -Force -ErrorAction SilentlyContinue
-            }
-          }
-
-      - name: Commit only conditioned Passo Giau spike map
-        shell: pwsh
-        working-directory: _embark-terrain-worktree
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $asset = 'Content/Prototype/Maps/L_PassoGiauTerrainSpike.umap'
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- $asset
-          if (git diff --cached --quiet) {
-            throw 'Embark terrain authoring produced no staged spike map.'
-          }
-          $unexpected = @(git diff --cached --name-only | Where-Object { $_ -ne $asset })
-          if ($unexpected.Count -gt 0) {
-            throw ("Unexpected staged paths: {0}" -f ($unexpected -join ', '))
-          }
-          git commit -m 'asset(terrain): persist Embark-conditioned Passo Giau'
-          if ($LASTEXITCODE -ne 0) { throw 'Conditioned terrain map commit failed.' }
-          if ($env:YACS_AUTHOR_BRANCH -ne 'feat/287-embark-terrain-pipeline') {
-            throw "Unexpected Embark terrain destination '$env:YACS_AUTHOR_BRANCH'."
-          }
-          git push origin "HEAD:$env:YACS_AUTHOR_BRANCH"
-          if ($LASTEXITCODE -ne 0) { throw 'Conditioned terrain map push failed.' }
-
-      - name: Upload Embark terrain evidence
+      - name: Upload PCGEx authoring evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: passo-giau-m3-embark-terrain-${{ github.run_id }}-${{ github.run_attempt }}
+          name: passo-giau-m3-pcgex-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            _embark-terrain-worktree/Saved/RuntimeProof/CI/M3/EmbarkTerrain/**
-            _embark-terrain-worktree/ExternalAssets/Terrain/PassoGiau/EmbarkPipeline/**/*.json
-            _embark-terrain-worktree/ExternalAssets/Terrain/PassoGiau/PreparedEmbarkLandscape/terrain-report.json
-            _embark-terrain-worktree/ExternalAssets/Terrain/PassoGiau/PreparedEmbarkLandscape/passo_giau_embark_hillshade.png
-            _embark-terrain-worktree/ExternalAssets/Terrain/PassoGiau/MASE_PST_Lidar1x1/mase-pst-download-report.json
-            _embark-terrain-worktree/ExternalAssets/Terrain/PassoGiau/Veneto_Lidar5m/veneto-lidar-download-report.json
-            _embark-terrain-worktree/ExternalAssets/Terrain/PassoGiau/PreparedRoad/road-preparation-report.json
-            _embark-terrain-worktree/ExternalAssets/Terrain/PassoGiau/PreparedRoad/passo_giau_sp638_hillshade_overlay.png
+            _embark-terrain-worktree/Saved/RuntimeProof/CI/M3/PCGExCorridor/**
+            _embark-terrain-worktree/Content/WorldGen/PCGEx/PCG_PassoGiau_SP638_Corridor.uasset
           if-no-files-found: warn
           retention-days: 14
 
@@ -204,8 +137,12 @@ jobs:
           if (-not (Test-Path -LiteralPath (Join-Path $worktree '.git'))) {
             exit 0
           }
+          $pcgex = Join-Path $worktree 'Plugins/PCGExtendedToolkit'
+          if (Test-Path -LiteralPath $pcgex) {
+            Remove-Item -LiteralPath $pcgex -Recurse -Force
+          }
           git -C $worktree reset --hard
           git -C $worktree clean -ffd
           if (git -C $worktree status --porcelain --untracked-files=all) {
-            throw 'Embark terrain worktree has mutations after cleanup.'
+            throw 'PCGEx authoring worktree has non-ignored mutations after cleanup.'
           }
