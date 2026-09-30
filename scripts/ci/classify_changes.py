@@ -131,7 +131,7 @@ class Classification:
     def unreal_execution_class(self) -> str:
         if self.unreal_compile:
             return "compile"
-        if self.unreal_runtime:
+        if self.unreal_runtime or self.asset_full:
             return "runtime"
         return "static"
 
