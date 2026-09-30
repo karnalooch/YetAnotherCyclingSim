@@ -1158,6 +1158,231 @@ Do not start broad propagation, production materials or foliage before this
 geometry gate passes. A green workflow remains insufficient without human visual
 acceptance.
 
+## Passo Giau #287/#288 — Gate C surface-ownership recovery (2026-09-30)
+
+> These `Gate C.x` names are PR/proof labels retained for traceability. They are
+> not new roadmap hierarchy; Issue #287 remains the canonical work item.
+
+### Baseline frozen from Gate B
+
+Gate B is considered technically successful at HEAD `eb33c583...`.
+
+Preserve as baseline evidence:
+
+- PCGEx commit `39a8f1bd...`;
+- PCGEx Example Project reference commit `78e5842c...`;
+- current YACS PCGEx graph;
+- graph-execution output;
+- deviation report;
+- current rider PNG;
+- proof JSON and exact repository HEAD.
+
+The proven road contract is approximately:
+
+- horizontal centerline deviation p95: ~0.176 m;
+- horizontal centerline deviation max: ~0.8 m;
+- vertical deviation p95: ~7.5 mm;
+- nominal corridor: ~6.0 m.
+
+Do not change PCGEx smoothing/corridor behavior during terrain recovery unless a
+new proof demonstrates a road regression.
+
+### Current diagnosis
+
+The rider render proves the road/corridor path can execute, but visual acceptance
+still fails because terrain ownership is unresolved.
+
+The current proof effectively stacks:
+
+`legacy macro Landscape + transient Landscape road cut/fill + local terrain skin + local earthworks + shoulders + asphalt`.
+
+The local terrain skin is also sampled by vertical traces from the already
+problematic Landscape instead of directly from the prepared metric DTM. Its
+current coarse spacing is 4 m, while the rider camera inspects steep cuts,
+ditches, slopes and hairpins at much closer range.
+
+The main hypotheses are therefore:
+
+1. macro Landscape remains the source of the visible stair-step/Minecraft read;
+2. 4 m local-ground triangulation and/or Landscape-derived sampling is too coarse;
+3. macro Landscape and local terrain skin can intersect because both remain visible
+   while the local surface may be adjusted much more than its tiny nominal lift.
+
+These hypotheses must be isolated before another terrain architecture is added.
+
+### Gate C.0 — freeze the road success
+
+Record the Gate B graph/plugin/source identities and exact-SHA artifacts. Every
+terrain iteration must preserve the established SP638 alignment contract. A
+terrain fix that moves the canonical road by metres is a failure, not a visual
+improvement.
+
+### Gate C.1 — A-E diagnostic render matrix
+
+Use one exact-SHA proof with the same hairpin, camera, FOV and lighting:
+
+| Variant | Landscape | local terrain | corridor | Question |
+|---|---:|---:|---:|---|
+| A | ON | OFF | OFF | how much of the artifact is macro Landscape? |
+| B | ON | OFF | ON | how does the road read on macro only? |
+| C | OFF | ON | OFF | is local terrain itself faceted/broken? |
+| D | OFF | ON | ON | is local terrain + road clean without macro overlap? |
+| E | ON | ON | ON | current combined baseline |
+
+Interpretation:
+
+- D clean while E is broken -> strong evidence of competing-surface overlap;
+- C still faceted -> local source/spacing is inadequate;
+- A dominant -> macro Landscape is the visible source of the Minecraft artifact.
+
+### Gate C.2 — explicit Edit Layer contract
+
+Replace any `edit_layer_names[0]` behavior with semantic selection.
+
+Proof must record:
+
+- `Base_DTM` exists;
+- exactly one `Road_Earthworks` exists;
+- cut/fill targets only `Road_Earthworks`;
+- `Base_DTM` remains source/base terrain;
+- available layer names;
+- `selected_earthworks_layer = Road_Earthworks`.
+
+Missing, duplicate or wrong-layer selection fails closed.
+
+### Gate C.3 — native-DTM bounded near-field patch
+
+Stop using:
+
+`Landscape -> line trace -> terrain skin`.
+
+Build the bounded rider-close candidate from:
+
+`prepared native metric DTM -> bounded patch -> local ground`.
+
+MASE is primary; Veneto remains the documented fallback where required.
+Use the same metric transformation as the SP638 preparation so road and terrain
+meet before Landscape-grid quantization.
+
+Start with a bounded hairpin at native or near-native spacing, approximately
+1-2 m for this proof. Do not increase the entire 8 km world to the same density.
+
+### Gate C.4 — single-surface ownership
+
+Inside the accepted rider-close patch, either macro Landscape or local ground is
+the visual owner, never both.
+
+Do not solve ordering with a larger arbitrary Z lift.
+
+The target model is:
+
+- Landscape = macro/distant terrain;
+- native-DTM local ground = rider-close surface where required;
+- Road_Earthworks/local constraints = road accommodation;
+- asphalt and shoulders = separate presentation;
+- Road Physics Profile = independent simulation authority.
+
+### Gate C.5 — deterministic transition band
+
+Join near-field to macro terrain through an explicit transition region:
+
+- native-DTM interior;
+- blend/transition band;
+- outer ring constrained to macro height;
+- measured maximum seam delta;
+- no overlapping competing surfaces in the owned interior.
+
+Reuse existing proven pinned-border behavior where applicable.
+
+### Gate C.6 — road earthworks on the new local ground
+
+Apply the proven PCGEx centerline/corridor and YACS road-profile constraints
+before final local-ground triangulation where possible:
+
+`native patch -> corridor constraints -> cut/fill transition -> local mesh -> asphalt/shoulders`.
+
+The desired output is one coherent local ground surface, not stacked independent
+ground/earthwork/skin/Landscape surfaces.
+
+### Gate C.7 — same-hairpin rider PNG
+
+Capture the same rider view as the Gate B baseline for a direct 1:1 comparison.
+The important question is whether native-DTM, single-owner ground removes both
+the black wedges and the rider-close stair-step read while preserving SP638.
+
+### Gate C.8 — representative route cameras
+
+A hairpin-only success does not close the recovery. Add at least:
+
+- difficult hairpin;
+- normal/moderate slope + ordinary corridor;
+- large elevation difference / strong earthworks.
+
+If the next 200 m returns to Minecraft, Gate C is still open.
+
+### Gate C.9 — performance proof
+
+Measure the chosen representation only after neutral geometry passes human visual
+acceptance. Record the bounded near-field spacing/extent and compare against the
+project performance budget rather than guessing that higher resolution is cheap.
+
+### Gate C.10 — only then meso and dressing
+
+After ground ownership is accepted:
+
+- cliffs / retaining / rocks / scree may move to dedicated mesh/PCG treatment;
+- materials and RVT may blend valid geometry;
+- vegetation follows;
+- weather/final lighting follows.
+
+Do not use these layers to hide unresolved ground geometry.
+
+### Required proof evidence
+
+Gate C proof should record at minimum:
+
+| Area | Evidence |
+|---|---|
+| route authority | preserved |
+| road/PCGEx role | presentation-only |
+| physics authority | separate Road Physics Profile |
+| macro source | canonical DTM identity/hash |
+| near-field source | native prepared metric DTM |
+| road edit layer | exactly `Road_Earthworks` |
+| near-field spacing | explicit value |
+| terrain adjustment | p50/p95/max |
+| transition band | width + maximum seam delta |
+| overlaps/intersections | diagnostic result |
+| road deviation | p50/p95/max vs SP638 |
+| screenshot | exact repository SHA |
+| render | 3840 x 2160, fixed camera transform |
+| human visual status | explicit PASS/FAIL |
+
+Thresholds should be frozen from a healthy measured result, not invented first
+and then optimized toward.
+
+### Human visual acceptance
+
+Gate C passes only when rider-view evidence shows:
+
+- no representation-driven terrain stairs dominating the foreground;
+- no black wedges, cracks or competing-surface artifacts;
+- no road/terrain gaps;
+- no floating or buried road;
+- believable road width;
+- shoulders transition naturally into ground;
+- cut/fill reads as earthworks rather than a knife-cut spline;
+- the road preserves its real SP638 alignment;
+- macro mountain form still follows the DTM;
+- the image was not repaired by moving canonical road XY.
+
+The immediate objective is deliberately narrow:
+
+**same hairpin, same camera, zero Minecraft, zero black wedges.**
+
+Only after that bounded proof succeeds without cheating does the solution scale
+to the remaining route.
+
 ## 20. Definition of Done
 
 R4.1 is complete only when:
