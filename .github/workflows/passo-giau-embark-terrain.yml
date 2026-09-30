@@ -378,15 +378,6 @@ jobs:
                 $compileKind = 'cold'
                 $reason = 'cache-schema-mismatch'
               }
-              elseif (-not [bool]$state.compile_passed) {
-                if ([string]$state.environment_identity -eq $environmentIdentity -and
-                    [string]$state.pcgex_commit -eq $expectedPcgExCommit) {
-                  $compileKind = 'warm'
-                  $reason = 'previous-compile-not-verified'
-                  $purgeProjectBuild = $false
-                  $purgePlugin = ($pluginHead -ne $expectedPcgExCommit)
-                }
-              }
               elseif ($environmentIdentity -eq 'unresolved' -or
                       [string]$state.environment_identity -ne $environmentIdentity) {
                 $compileKind = 'cold'
@@ -399,6 +390,12 @@ jobs:
               elseif ($pluginHead -and $pluginHead -ne $expectedPcgExCommit) {
                 $compileKind = 'cold'
                 $reason = 'pcgex-checkout-drift'
+              }
+              elseif (-not [bool]$state.compile_passed) {
+                $compileKind = 'warm'
+                $reason = 'previous-compile-not-verified'
+                $purgeProjectBuild = $false
+                $purgePlugin = (-not $pluginHead)
               }
               elseif ([string]$state.compile_fingerprint -ne $fingerprint) {
                 $compileKind = 'warm'
