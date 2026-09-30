@@ -118,10 +118,19 @@ The active Passo Giau Embark terrain workflow calls
   changes.
 
 The same invocation emits `compile_fingerprint`, a SHA-256 identity derived
-from the pinned UE/PCGEx versions plus `.uproject`, `Source/**` compiled
-inputs and `.Build.cs` / `.Target.cs`. Runtime reuse is allowed only when
-that fingerprint and required binaries match. Unknown/empty specialized change
-sets fail closed to `heavy`.
+from the pinned UE/PCGEx versions plus the project binary graph and M3 build
+contract. `proof_mode=heavy` means **build required**, not **cold rebuild**.
+The self-hosted M3 resolver separately chooses:
+
+- `none` on a verified fingerprint + environment + PCGEx pin/binary hit;
+- `warm` when build inputs changed but the UE/toolchain environment and pinned
+  plugin dependency remain compatible, preserving intermediates for UBT;
+- `cold` only for missing/untrusted state, environment drift or PCGEx
+  pin/checkout drift.
+
+Unknown/empty specialized change sets still fail closed to `heavy`; they may
+benefit from WARM compilation only after the runner proves the reusable
+environment boundary.
 
 ## Unreal code vs Unreal tooling
 
@@ -141,6 +150,7 @@ The automatic code-only Unreal lane is reserved for:
 - the reusable automatic Unreal workflow itself;
 - the exact build/provenance helpers used by that lane:
   - `scripts/ci/Invoke-YacsUnrealCi.ps1`;
+  - `scripts/ci/Resolve-YacsUnrealBuildEnvironment.ps1`;
   - `scripts/ci/Resolve-YacsUnrealEngine.ps1`;
   - `scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1`;
   - `scripts/ci/Test-YacsCodeOnlyCheckout.ps1`;
