@@ -189,10 +189,23 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn('"proof_viewmode": "lightingonly"', capture)
         self.assertNotIn("get_camera_component()", capture)
         self.assertIn('"visual_acceptance": "PENDING_HUMAN_REVIEW"', capture)
-        self.assertIn("YACS_PASSO_GIAU_ROAD_TERRAIN_ONLY_PNG", capture)
-        self.assertIn("same-camera-combined-vs-terrain-only", capture)
-        self.assertIn("mesh.set_visibility(False, True)", capture)
-        self.assertIn("mesh.set_visibility(True, True)", capture)
+
+    def test_road_capture_compares_combined_and_terrain_only_same_camera(
+        self,
+    ) -> None:
+        road_capture = read("scripts/ue/stage3g_capture_passo_giau_road.py")
+        self.assertIn("YACS_PASSO_GIAU_ROAD_TERRAIN_ONLY_PNG", road_capture)
+        self.assertIn("same-camera-combined-vs-terrain-only", road_capture)
+        self.assertIn("mesh.set_visibility(False, True)", road_capture)
+        self.assertIn("mesh.set_visibility(True, True)", road_capture)
+        self.assertIn(
+            "_task = _schedule_screenshot(_terrain_only_output_path)",
+            road_capture,
+        )
+        self.assertIn(
+            "global _capture_stage, _started_at, _task",
+            road_capture,
+        )
 
     def test_workflow_runs_only_on_ue58_and_commits_only_spike_map(self) -> None:
         workflow = read(".github/workflows/passo-giau-r4-1-landscape-author.yml")
