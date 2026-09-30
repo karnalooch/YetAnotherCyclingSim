@@ -69,11 +69,18 @@ This means vegetation, material, water, lighting and other world-art iteration c
 R4.1 heavyweight proof requests use the trusted Gumball v0.6 Proof Broker
 instead of routine Actions-UI clicking.
 
-Current configured proof:
+Current configured proof commands:
 
 ```text
 /gumball proof r4-1b3-geometry
+/gumball proof m3-hairpin-corridor
+/gumball proof world-authoring-sp638
+/gumball proof environment-performance
+/gumball proof source-asset-audit
 ```
+
+All five are explicit, heavy and non-automatic. Successful exact-revision
+artifacts may be reused; failed runs require explicit `retry`.
 
 The broker runs from trusted default-branch code, authorizes the requester,
 resolves the open same-repository PR HEAD to an exact 40-character SHA, verifies
@@ -89,9 +96,14 @@ For one proof + PR + exact SHA:
 - explicit authorized request -> dispatch;
 - non-critical automatic heavy request -> defer.
 
-The target R4.1B.3 workflow keeps `workflow_dispatch` as a recovery fallback,
-but broker-driven dispatch is the normal path. Heavy proof still runs only when
-explicitly requested; this changes the control plane, not the evidence bar.
+Each broker target keeps `workflow_dispatch` as a recovery fallback, but
+broker-driven dispatch is the normal operator path. Heavy proof still runs only
+when explicitly requested; this changes the control plane, not the evidence bar.
+
+Mutating asset-author workflows, `asset-full.yml`, manual Unreal recovery,
+runner-space recovery and Project/bootstrap operations are deliberately **not**
+Proof Broker targets. Their purpose is mutation, release/full validation or
+administrative recovery rather than reusable PR proof.
 
 ## R4.1 prepared proof-suite reuse
 
