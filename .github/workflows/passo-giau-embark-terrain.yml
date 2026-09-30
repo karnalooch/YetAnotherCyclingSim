@@ -12,7 +12,7 @@ on:
       - 'docs/legal/DEPENDENCY_PROVENANCE.md'
       - 'worldgen/embark/**'
       - 'scripts/houdini/**'
-      - 'scripts/worldgen/embark_terrain_pipeline.py'
+      - 'scripts/worldgen/**'
       - 'scripts/assets/finalize_passo_giau_embark_heightfield.py'
       - 'scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1'
       - 'scripts/ci/test_embark_terrain_pipeline_contract.py'
