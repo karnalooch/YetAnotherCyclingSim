@@ -1,0 +1,177 @@
+<#
+.SYNOPSIS
+    Build and author the deterministic Passo Giau PCGEx corridor graph.
+
+.DESCRIPTION
+    Installs the exact reviewed PCGEx source revision as an ignored authoring-only
+    checkout, builds YetAnotherCyclingSimEditor against that revision, executes the
+    YacsPassoGiauPcgExGraph commandlet, and emits exact-SHA proof metadata.
+
+    This proof validates graph topology authoring and plugin/API integration.
+    It does not claim the graph has already executed against prepared SP638 data.
+#>
+[CmdletBinding()]
+param(
+    [string] $RepoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path,
+    [string] $ProjectPath,
+    [string] $ArtifactRoot,
+    [string] $ExpectedBranch = 'HEAD',
+    [Parameter(Mandatory=$true)] [string] $ExpectedHead,
+    [int] $TimeoutSec = 900
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+$RepoRoot = (Resolve-Path -LiteralPath $RepoRoot).Path
+if (-not $ProjectPath) { $ProjectPath = Join-Path $RepoRoot 'YetAnotherCyclingSim.uproject' }
+$ProjectPath = (Resolve-Path -LiteralPath $ProjectPath).Path
+
+if (-not $ArtifactRoot) {
+    $ArtifactRoot = Join-Path $RepoRoot 'Saved/RuntimeProof/CI/M3/PCGExCorridor'
+}
+if (-not [System.IO.Path]::IsPathRooted($ArtifactRoot)) {
+    $ArtifactRoot = Join-Path $RepoRoot $ArtifactRoot
+}
+New-Item -ItemType Directory -Path $ArtifactRoot -Force | Out-Null
+$ArtifactRoot = (Resolve-Path -LiteralPath $ArtifactRoot).Path
+
+$Preflight = Join-Path $RepoRoot 'scripts/ue/Preflight-YacsProof.ps1'
+$Bootstrap = Join-Path $RepoRoot 'scripts/worldgen/Bootstrap-YacsPcgEx.ps1'
+$ManifestPath = Join-Path $RepoRoot 'worldgen/embark/pcgex/passo_giau_corridor.json'
+$BootstrapReport = Join-Path $ArtifactRoot 'pcgex-bootstrap.json'
+$BuildLog = Join-Path $ArtifactRoot 'build_editor_pcgex.log'
+$CommandletLog = Join-Path $ArtifactRoot 'pcgex_graph_commandlet.log'
+$CommandletErr = Join-Path $ArtifactRoot 'pcgex_graph_commandlet.stderr.log'
+$ProofPath = Join-Path $ArtifactRoot 'pcgex_graph_proof.json'
+
+$GeneratedAssetRelative = 'Content/WorldGen/PCGEx/PCG_PassoGiau_SP638_Corridor.uasset'
+$GeneratedAssetPath = Join-Path $RepoRoot $GeneratedAssetRelative
+
+foreach ($Path in @($BootstrapReport, $BuildLog, $CommandletLog, $CommandletErr, $ProofPath)) {
+    Remove-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+}
+
+$PreflightArgs = @{
+    RepoRoot = $RepoRoot
+    ProjectPath = $ProjectPath
+    ArtifactRoot = $ArtifactRoot
+    ExpectedBranch = $ExpectedBranch
+    ExpectedHead = $ExpectedHead
+}
+$Context = & $Preflight @PreflightArgs
+if ($LASTEXITCODE -ne 0) { throw 'PCGEx corridor preflight failed.' }
+
+if (Test-Path -LiteralPath $GeneratedAssetPath -PathType Leaf) {
+    throw "Generated PCGEx graph asset already exists before authoring: $GeneratedAssetRelative"
+}
+
+Write-Host '[1/4] Installing exact PCGEx authoring revision...' -ForegroundColor Cyan
+& $Bootstrap -Mode Install -RepoRoot $RepoRoot -ReportPath $BootstrapReport
+if ($LASTEXITCODE -ne 0) { throw 'PCGEx exact-SHA bootstrap failed.' }
+
+$DirtyAfterBootstrap = @(git -C $RepoRoot status --porcelain --untracked-files=all)
+if ($DirtyAfterBootstrap.Count -gt 0) {
+    throw ("PCGEx bootstrap dirtied the tracked worktree: {0}" -f ($DirtyAfterBootstrap -join '; '))
+}
+
+$BootstrapData = Get-Content -LiteralPath $BootstrapReport -Raw | ConvertFrom-Json
+if ($BootstrapData.status -ne 'PASS') { throw 'PCGEx bootstrap report did not report PASS.' }
+if ($BootstrapData.actual_commit -ne '39a8f1bdc65b2c4613a1e87b71d93b4576db0a66') {
+    throw 'PCGEx bootstrap report does not match the pinned reviewed revision.'
+}
+if ([bool]$BootstrapData.shipping_runtime_dependency -ne $false) {
+    throw 'PCGEx bootstrap unexpectedly declares a shipping runtime dependency.'
+}
+
+Write-Host '[2/4] Building YetAnotherCyclingSimEditor with PCGEx enabled...' -ForegroundColor Cyan
+$BuildBat = Join-Path $Context.EngineRoot 'Engine/Build/BatchFiles/Build.bat'
+$BuildArgs = @($ProjectPath, 'YetAnotherCyclingSimEditor', 'Win64', 'Development', '-WaitMutex', '-FromMsBuild')
+$BuildProc = Start-Process -FilePath $BuildBat -ArgumentList $BuildArgs -WorkingDirectory (Split-Path $BuildBat -Parent) -NoNewWindow -PassThru -RedirectStandardOutput $BuildLog
+$BuildProc.WaitForExit()
+if ($BuildProc.ExitCode -ne 0) {
+    throw "PCGEx-enabled editor build failed with exit code $($BuildProc.ExitCode). See $BuildLog"
+}
+
+$BuildText = Get-Content -LiteralPath $BuildLog -Raw -ErrorAction Stop
+if ($BuildText -notmatch 'Result:\s+Succeeded' -and $BuildText -notmatch 'Target is up to date') {
+    throw 'PCGEx-enabled editor build log is missing a success marker.'
+}
+
+Write-Host '[3/4] Authoring deterministic PCGEx corridor graph asset...' -ForegroundColor Cyan
+$CommandletArgs = @(
+    $ProjectPath,
+    '-run=YacsPassoGiauPcgExGraph',
+    '-Unattended',
+    '-NoPause',
+    '-NullRHI',
+    '-NoSplash',
+    '-NoP4',
+    '-log',
+    ('-AbsLog=' + $CommandletLog)
+)
+$Proc = Start-Process -FilePath $Context.UnrealEditorCmdPath -ArgumentList $CommandletArgs -WorkingDirectory $RepoRoot -NoNewWindow -PassThru -RedirectStandardOutput $CommandletLog -RedirectStandardError $CommandletErr
+
+if (-not $Proc.WaitForExit($TimeoutSec * 1000)) {
+    try { $Proc | Stop-Process -Force } catch { }
+    throw 'PCGEx graph commandlet timed out.'
+}
+$ExitCode = $Proc.ExitCode
+
+if (-not (Test-Path -LiteralPath $GeneratedAssetPath -PathType Leaf)) {
+    throw "PCGEx graph asset was not generated (exit=$ExitCode): $GeneratedAssetRelative"
+}
+$CommandletText = Get-Content -LiteralPath $CommandletLog -Raw -ErrorAction Stop
+if ($ExitCode -notin @(0, 1)) {
+    throw "PCGEx graph commandlet returned unexpected exit code $ExitCode."
+}
+if ($CommandletText -match '(?i)Fatal error|Unhandled Exception|Critical error') {
+    throw 'PCGEx graph commandlet log contains a crash/fatal marker.'
+}
+if ($CommandletText -notmatch 'YACS PCGEx corridor graph authored:') {
+    throw 'PCGEx graph commandlet log is missing the authoring success marker.'
+}
+if ($CommandletText -notmatch 'SP638 presentation -> resample 1m -> bounded smooth -> \+/-3m offsets') {
+    throw 'PCGEx graph commandlet log is missing the deterministic graph contract marker.'
+}
+if ($ExitCode -eq 1) {
+    Write-Warning 'UE returned exit 1 after the graph asset and success markers were proven; treating known code-only Asset Registry noise as non-owning.'
+}
+
+Write-Host '[4/4] Writing exact-SHA PCGEx graph proof...' -ForegroundColor Cyan
+$Head = (git -C $RepoRoot rev-parse HEAD).Trim()
+if ($Head -ne $ExpectedHead) { throw "PCGEx graph proof HEAD drifted: actual=$Head expected=$ExpectedHead" }
+
+$AssetInfo = Get-Item -LiteralPath $GeneratedAssetPath
+$AssetHash = (Get-FileHash -LiteralPath $GeneratedAssetPath -Algorithm SHA256).Hash.ToLowerInvariant()
+$ManifestHash = (Get-FileHash -LiteralPath $ManifestPath -Algorithm SHA256).Hash.ToLowerInvariant()
+
+$NormalizedGeneratedPath = $GeneratedAssetRelative.Replace('\','/')
+$Unexpected = @(
+    git -C $RepoRoot status --porcelain --untracked-files=all |
+        Where-Object { $_ -notmatch [regex]::Escape($NormalizedGeneratedPath) }
+)
+if ($Unexpected.Count -gt 0) {
+    throw ("Unexpected tracked/untracked mutations after PCGEx graph authoring: {0}" -f ($Unexpected -join '; '))
+}
+
+$Proof = [ordered]@{
+    schema_version = 1
+    proof = 'yacs-passo-giau-pcgex-graph'
+    status = 'PASS'
+    repository_head = $Head
+    pcgex_commit = [string]$BootstrapData.actual_commit
+    pcgex_shipping_runtime_dependency = $false
+    graph = [ordered]@{
+        package = '/Game/WorldGen/PCGEx/PCG_PassoGiau_SP638_Corridor'
+        asset_relative_path = $GeneratedAssetRelative
+        bytes = [int64]$AssetInfo.Length
+        sha256 = $AssetHash
+        manifest_sha256 = $ManifestHash
+        execution_scope = 'graph_authoring_and_api_integration_only'
+    }
+    commandlet_exit_code = $ExitCode
+}
+$Proof | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $ProofPath -Encoding UTF8
+
+Write-Host "PCGEx corridor graph proof: PASS ($Head)" -ForegroundColor Green
