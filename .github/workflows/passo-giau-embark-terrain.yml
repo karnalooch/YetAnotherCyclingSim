@@ -235,6 +235,22 @@ jobs:
         shell: pwsh
         working-directory: _embark-terrain-worktree
         run: |
+          $ErrorActionPreference = 'Stop'
+
+          # The graph commandlet intentionally authors a transient proof asset.
+          # The rider-close renderer consumes only pcgex_graph_output.json, while
+          # its fail-closed preflight correctly rejects unrelated untracked
+          # Content. Preserve the authored asset as evidence under ignored Saved/
+          # and remove only the generated, untracked WorldGen directory before
+          # starting the visual proof.
+          $generatedAsset = Join-Path (Get-Location) 'Content/WorldGen/PCGEx/PCG_PassoGiau_SP638_Corridor.uasset'
+          if (-not (Test-Path -LiteralPath $generatedAsset -PathType Leaf)) {
+            throw 'Generated PCGEx graph asset is missing before rider proof.'
+          }
+          $evidenceAsset = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/M3/PCGExCorridor/PCG_PassoGiau_SP638_Corridor.uasset'
+          Copy-Item -LiteralPath $generatedAsset -Destination $evidenceAsset -Force
+          Remove-Item -LiteralPath (Join-Path (Get-Location) 'Content/WorldGen') -Recurse -Force
+
           ./scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1 `
             -ExpectedBranch 'HEAD' `
             -ExpectedHead '${{ github.sha }}' `
