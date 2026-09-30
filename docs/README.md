@@ -67,7 +67,7 @@ flowchart TB
 | World method | **World Building Bible is authoritative** |
 | Architecture policy | **Embark-first tooling admission + tools-first + evidence ladder + local proof** |
 | Diagram language | **Gumball Blueprint Mermaid style** |
-| Current priority | **real SP638 road + non-destructive Landscape earthworks** |
+| Current priority | **freeze proven SP638/PCGEx road path; recover macro/near-field terrain surface ownership** |
 | Terrain source | **canonical real DTM path; presentation remains separate from physics truth** |
 | Road authority | **canonical route / SP638 alignment; do not snap to Landscape grid** |
 | Acceptance | **rider-camera visual review + exact-SHA technical/performance evidence** |
