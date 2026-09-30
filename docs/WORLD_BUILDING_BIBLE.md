@@ -89,7 +89,113 @@ These can accelerate production but are not architecture:
 - Ultra Dynamic Sky or similar weather/sky packages.
 - Houdini: advanced procedural world production if later justified by scale.
 
-Do not adopt an optional tool until it solves a measured production problem.
+Do not adopt an optional tool merely because it is fashionable or appears in a tutorial. Prefer it when a bounded evaluation shows that it solves a real YACS production problem better than a smaller or more native solution.
+
+### 3.1 Tools-first authoring policy
+
+YACS owns the **truth and the acceptance contract**. It does not need to own every world-building algorithm.
+
+The default rule is:
+
+> **No custom world-building system before a tool audit.**
+
+Before creating a new terrain, road-earthwork, biome, vegetation, snow, erosion, scatter or world-generation subsystem, evaluate the problem in this order:
+
+1. **Unreal Engine native first** — use current engine systems such as Landscape Edit Layers, Landscape Splines, Landscape Patch, PCG, World Partition, HLOD and material layers when they satisfy the contract.
+2. **Epic reference/sample second** — inspect Epic-provided examples and reference implementations before inventing an equivalent architecture. Experimental examples such as PCG Biome Core are valuable design references, but they are not automatically production dependencies.
+3. **Mature external/DCC tooling third** — evaluate established tools such as Houdini Engine when the problem is genuinely procedural or GIS-heavy and native Unreal is insufficient.
+4. **Open-source/reference implementations fourth** — inspect GitHub projects for proven patterns, algorithms and failure modes. Reuse code only after license/provenance review; otherwise treat it as reference material.
+5. **Custom YACS last** — write bespoke code only for the remaining gap that is specific to YACS or cannot meet the required quality, determinism, provenance, performance or automation contract with the options above.
+
+The intended architecture is:
+
+```text
+real-world data + YACS authority
+            |
+            v
+   established authoring tool
+            |
+            v
+   thin YACS integration layer
+            |
+            v
+ deterministic generated result
+            |
+            v
+ YACS visual/technical acceptance
+```
+
+What remains YACS-owned even when an external tool performs authoring:
+
+- canonical route XY and route-local identity;
+- Road Physics Profile and simulation authority;
+- verified DTM/LiDAR/GIS source data and provenance;
+- road visual profile constraints such as width, longitudinal profile and regularized crossfall/camber;
+- deterministic seeds/configuration where generation must be reproducible;
+- performance budgets;
+- exact-SHA technical proof and human rider-camera acceptance.
+
+The tool may shape presentation. It may not silently become the source of physical truth.
+
+#### Road / earthworks decision ladder
+
+For road-terrain adaptation, do not extend the custom earthwork solver merely because a difficult hairpin exposes another edge case.
+
+For a representative difficult corridor, compare the smallest viable approaches against the **same** canonical road input and the **same** rider-camera proof:
+
+```text
+A. Unreal Landscape Spline / spline edit-layer earthworks
+B. Unreal Landscape Patch based earthworks
+C. existing YACS custom cut/fill path
+```
+
+Compare at minimum:
+
+- cut/fill plausibility;
+- road/terrain continuity and absence of black wedges/light leaks;
+- preservation of canonical route and road profile authority;
+- behavior at stacked/nearby hairpin branches;
+- reproducibility and editability;
+- authoring complexity;
+- runtime/editor cost.
+
+If a native Unreal path satisfies the contract, prefer it and delete or avoid bespoke machinery that no longer adds value.
+
+If native Unreal cannot satisfy the contract, evaluate an established procedural route such as a bounded Houdini HDA **before** adding another layer of custom earthwork mathematics.
+
+#### Biome / environment decision ladder
+
+Do not build a separate YACS biome engine before exhausting the existing PCG ecosystem.
+
+Biome decisions should start from real or derived spatial inputs such as:
+
+- elevation;
+- slope;
+- aspect / sun exposure;
+- land-cover or vegetation masks;
+- forest type / density;
+- distance from road;
+- exclusion zones;
+- season/weather state where relevant.
+
+The preferred pattern is:
+
+```text
+GIS / terrain-derived masks
+        |
+        v
+UE PCG + proven biome patterns
+        |
+        v
+YACS semantic asset catalog
+        |
+        v
+validated vegetation / rock / snow / ground output
+```
+
+Epic's PCG Biome Core/Sample should be inspected as a reference implementation for biome maps, generators, filters and composition. Because it is Experimental in UE 5.8, adopting it as a hard runtime/editor dependency requires a separate bounded evaluation. Its patterns may be reused without requiring YACS to depend on the plugin itself.
+
+The same principle applies to snow: first represent *where snow may accumulate* as terrain/material/environment data; only use custom PCG or meshes for details that actually need geometry.
 
 ---
 
@@ -205,7 +311,7 @@ The terrain adaptation around the road:
 - ditch / verge where required;
 - soft transition into untouched macro terrain.
 
-This belongs primarily to the `Road_Earthworks` Landscape Edit Layer, with helper meshes where a heightfield is the wrong representation.
+This belongs primarily to the `Road_Earthworks` Landscape Edit Layer. The first implementation choice should be a native Landscape Spline / spline edit-layer or Landscape Patch workflow when it satisfies the corridor contract. Use helper meshes where a heightfield is the wrong representation. Extend the custom YACS cut/fill solver only for a demonstrated gap that survives the tools-first comparison in section 3.1.
 
 ### 7.3 Final road mesh
 
@@ -326,6 +432,8 @@ Minimum road rule:
 Use manual placement for hero objects and composition exceptions, not for thousands of repeated trees.
 
 Generated PCG output must remain reproducible from its graph, inputs and seed.
+
+Do not create a parallel custom biome engine merely to classify where these graphs should run. Prefer GIS/terrain-derived masks plus existing UE PCG capabilities and proven biome patterns; add YACS-specific code only for the remaining integration gap.
 
 ---
 
@@ -501,7 +609,12 @@ MASE PST LiDAR / DTM
 
 official / verified SP638 alignment
   -> canonical route-local representation
-  -> Road_Earthworks edit layer
+  -> tools-first earthworks evaluation
+       -> Landscape Spline / spline edit layer
+       -> Landscape Patch where appropriate
+       -> custom YACS cut/fill only for remaining demonstrated gaps
+       -> Houdini HDA candidate before expanding bespoke math further
+  -> Road_Earthworks edit layer / equivalent reproducible output
   -> bounded cut/fill / shoulders
   -> custom road mesh
   -> real-data-informed, regularized crossfall/camber
@@ -542,6 +655,8 @@ Do not:
 - use a zero-width seam between independently generated surfaces as the primary road/terrain joining strategy;
 - place thousands of repeated assets manually when PCG can express the rule;
 - buy a plugin before identifying the problem it solves;
+- build a custom world-authoring subsystem before completing the tools-first audit;
+- keep bespoke machinery merely because it already exists when a simpler validated native/tool-based path replaces it;
 - call a technical proof "visual acceptance";
 - create a new planning identifier like `Stage 3G R4.1B.4.3.2`.
 
@@ -608,6 +723,12 @@ Official Unreal Engine references are architecture references:
   https://dev.epicgames.com/documentation/unreal-engine/using-nanite-with-landscapes-in-unreal-engine
 - Epic Games — PCG framework:  
   https://dev.epicgames.com/documentation/unreal-engine/procedural-content-generation-framework-in-unreal-engine
+- Epic Games — Landscape Patch System:  
+  https://dev.epicgames.com/documentation/unreal-engine/landscape-patch-system
+- Epic Games — PCG Biome Core and Sample:  
+  https://dev.epicgames.com/documentation/unreal-engine/procedural-content-generation-pcg-biome-core-and-sample-plugins-in-unreal-engine
+- SideFX — Houdini Engine for Unreal Landscapes:  
+  https://www.sidefx.com/docs/houdini/unreal/landscape/index.html
 
 Learning/tutorial references that illustrate the workflow:
 
@@ -630,12 +751,13 @@ When confused, ask in this order:
 
 1. **What is truth?** DTM? route profile? verified road GIS?
 2. **What is presentation?** Landscape, road mesh, cliffs, vegetation?
-3. **Am I editing non-destructively?**
-4. **Should this be Landscape or a mesh?**
-5. **Should this be generated by spline/PCG instead of hand-built?**
-6. **Am I trying to fix geometry with a material?**
-7. **Can I see the problem from the rider camera?**
-8. **Did I measure performance?**
-9. **Can the result be reproduced from source inputs?**
+3. **Have I completed the tools-first audit before writing custom world-building code?**
+4. **Am I editing non-destructively?**
+5. **Should this be Landscape or a mesh?**
+6. **Should this be generated by spline/PCG instead of hand-built?**
+7. **Am I trying to fix geometry with a material?**
+8. **Can I see the problem from the rider camera?**
+9. **Did I measure performance?**
+10. **Can the result be reproduced from source inputs?**
 
 If those answers are clear, world building is usually straightforward.

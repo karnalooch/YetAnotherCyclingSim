@@ -1,6 +1,6 @@
 # YACS World Authoring Library
 
-> **Role after the 2026-09-29 documentation reset:** this document is the reusable **implementation library/catalog** for world authoring. The authoritative methodology for how YACS builds terrain, roads, earthworks, materials, PCG and world streaming is [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md). Legacy Stage 3G/R4.x labels in this file are historical traceability, not new roadmap hierarchy.
+> **Role after the 2026-09-29 documentation reset:** this document is the reusable **implementation library/catalog** for world authoring. The authoritative methodology for how YACS builds terrain, roads, earthworks, materials, PCG and world streaming is [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md), including its **tools-first authoring policy**. This library implements bounded YACS integration; it must not become a parallel custom world-generation framework. Legacy Stage 3G/R4.x labels in this file are historical traceability, not new roadmap hierarchy.
 
 
 **Status:** Stage 3G foundation spike  
@@ -53,6 +53,32 @@ Natural-language interpretation stays outside Unreal. Unreal receives only
 repo-reviewed presets and selection plans. Free-form Python, shell, console
 commands, arbitrary URLs and arbitrary asset destinations are not part of this
 contract.
+
+### Tools-first integration boundary
+
+The World Authoring Library is a **thin integration layer**, not permission to
+reimplement capabilities already supplied by Unreal Engine, Epic reference
+content or an approved mature authoring tool.
+
+Before adding a new generator/backend here:
+
+1. follow the tools-first audit in `WORLD_BUILDING_BIBLE.md`;
+2. prefer an existing qualified UE/PCG/Landscape path when it satisfies the contract;
+3. use this library to translate YACS semantic intent, provenance and deterministic
+   configuration into that backend;
+4. add custom layout/generation logic only for a demonstrated YACS-specific gap;
+5. preserve the ability to replace a backend without changing canonical route,
+   physics or source-data authority.
+
+In particular:
+
+- road-earthwork generation does not belong here unless it is a bounded adapter
+  around the chosen Landscape/authoring tool;
+- biome placement should consume terrain/GIS-derived masks and proven PCG
+  patterns before any bespoke biome engine is introduced;
+- asset discovery/selection remains YACS-owned because provenance, license,
+  qualification and performance status are project policy rather than renderer
+  behavior.
 
 ## 2. Existing systems reused
 
@@ -262,15 +288,20 @@ New providers require a separate license/API/terms review and explicit catalog
 policy. They are never enabled merely because an endpoint can technically be
 scraped.
 
-## 12. Documentation-governance defect
+## 12. Methodology boundary
 
-`AGENTS.md` requires implementation work to identify documentation SSOT
-through `docs/README.md`, but that file does not currently exist.
+`docs/README.md` identifies `WORLD_BUILDING_BIBLE.md` as the authoritative
+world-building methodology. This document may define reusable catalogs,
+presets, selectors and adapters, but it must not override the Bible's decisions
+about:
 
-It also names documentation guards for links, i18n, structure and freshness,
-while no matching scripts/workflows are currently present under
-`scripts/ci/` or `.github/workflows/`.
+- truth versus presentation authority;
+- tools-first evaluation;
+- road/earthwork architecture;
+- terrain and Landscape ownership;
+- PCG/biome strategy;
+- visual and performance acceptance.
 
-Therefore this document is an architecture record for #230, but repository
-documentation governance cannot be reported fully compliant until those
-missing mechanisms are repaired.
+If a reusable authoring implementation would require changing those rules,
+update and review the Bible first rather than silently encoding a new
+architecture here.
