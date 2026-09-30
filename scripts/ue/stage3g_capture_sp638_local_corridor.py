@@ -926,15 +926,21 @@ def main() -> None:
     )
     _replace_with_slice(spline, landscape_slice)
 
+    if not hasattr(landscape, "get_edit_layers_bp"):
+        raise RuntimeError(
+            "UE 5.8 Landscape.get_edit_layers_bp() is unavailable; "
+            "cannot verify semantic edit-layer ownership"
+        )
+
     edit_layer_names: list[str] = []
-    if hasattr(landscape, "get_edit_layers"):
-        for edit_layer in landscape.get_edit_layers():
-            if edit_layer is None:
-                continue
-            if hasattr(edit_layer, "get_name_bp"):
-                name = str(edit_layer.get_name_bp())
-                if name and name != "None":
-                    edit_layer_names.append(name)
+    for edit_layer in landscape.get_edit_layers_bp():
+        if edit_layer is None or not hasattr(edit_layer, "get_name_bp"):
+            raise RuntimeError(
+                "Landscape edit-layer entry does not expose get_name_bp()"
+            )
+        name = str(edit_layer.get_name_bp())
+        if name and name != "None":
+            edit_layer_names.append(name)
 
     if "Base_DTM" not in edit_layer_names:
         raise RuntimeError(
