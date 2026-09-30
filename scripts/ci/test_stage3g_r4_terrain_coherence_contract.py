@@ -54,7 +54,9 @@ TERRAIN_SPEC = (
     / "Stage3PrototypeTerrain.spec.cpp"
 )
 HARNESS = ROOT / "scripts" / "ue" / "Invoke-YacsStage3GR4TerrainCoherence.ps1"
-RETIRED_WORKFLOW = ROOT / ".github" / "workflows" / "stage3g-r4-terrain-coherence-author.yml"
+RETIRED_WORKFLOW = (
+    ROOT / ".github" / "workflows" / "stage3g-r4-terrain-coherence-author.yml"
+)
 
 
 class Stage3GR4TerrainCoherenceContract(unittest.TestCase):
@@ -108,7 +110,6 @@ class Stage3GR4TerrainCoherenceContract(unittest.TestCase):
         self.assertIn("Content/Prototype/Maps/L_CyclingTest.umap", harness)
         self.assertIn("Unexpected tracked mutations", harness)
         self.assertFalse(RETIRED_WORKFLOW.exists())
-
 
 
 if __name__ == "__main__":
