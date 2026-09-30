@@ -287,6 +287,34 @@ that every Embark repository becomes a dependency. Public Embark repositories
 are evidence of public tooling approaches, not proof of the complete internal
 ARC Raiders production stack.
 
+### Explicit Embark-mode directive
+
+When the product owner explicitly says **"Embarkuj"**, **"embark this"** or an
+equivalent unambiguous instruction for a subsystem, treat that as explicit
+architecture/scope approval to follow the strongest relevant **publicly
+documented, production-proven Embark pattern end-to-end** for the current task.
+
+- Do not silently down-scope the pattern to a cheaper, smaller or custom
+  approximation merely to save implementation effort, CI time or tool cost.
+- Do not replace a documented Embark stage with a guessed YACS shortcut while
+  the documented stage is available and applicable.
+- Distinguish evidence from inference. If Embark's internal implementation is
+  proprietary or unpublished, do **not** invent its node graph, algorithm or
+  parameters. Reproduce only the public stage/contract with documented tools
+  and YACS-owned inputs, or fail closed and report the missing recipe, license,
+  asset or evidence.
+- Once a lower-tier YACS/native baseline has failed its required visual or
+  technical proof and the evidence ladder justifies escalation, do not keep
+  retrying variations of that failed tier unless new evidence identifies a
+  specific owning defect.
+- Preserve YACS-owned truths: route/physics authority, source provenance,
+  deterministic inputs, exact-SHA proof, performance budgets and human visual
+  acceptance remain mandatory even in Embark mode.
+- A tool or paid license required by the proven pattern is a real dependency
+  decision. Record provenance/license evidence and surface acquisition cost or
+  runner prerequisites explicitly instead of pretending the dependency does
+  not exist.
+
 Before copying, vendoring or adapting third-party source, follow
 `docs/legal/DEPENDENCY_PROVENANCE.md`. A reference implementation may be
 studied without entering the dependency graph.
