@@ -44,10 +44,10 @@
 
 .PARAMETER ConservativeBuild
     Write an ephemeral project-local UBT BuildConfiguration.xml under
-    Saved/UnrealBuildTool that enables the local-only UBA executor while
-    keeping distributed UBA disabled, and chooses a bounded 2/3/4
-    parallel-action cap from live virtual-memory headroom and CPU count.
-    Intended for the trusted self-hosted CI runner.
+    Saved/UnrealBuildTool that keeps UBA disabled after the historical
+    VirtualAlloc/1455 failure, but chooses a bounded 2/3/4 parallel-action
+    cap from live virtual-memory headroom and CPU count. Intended for
+    resource-constrained self-hosted CI only.
 
 .PARAMETER TestFilter
     Override the default test filter. The default matches the Stage 2
@@ -193,10 +193,9 @@ if ($ConservativeBuild) {
     New-Item -ItemType Directory -Path $UbtConfigDir -Force | Out-Null
     $UbtConfigPath = Join-Path -Path $UbtConfigDir -ChildPath 'BuildConfiguration.xml'
 
-    # PR #143 proved that this host can exhaust virtual memory inside UBA
-    # (Windows 1455 / VirtualAlloc failed). After increasing commit headroom,
-    # enable only the local UBA executor; distributed/Horde UBA stays disabled.
-    # Keep the adaptive action cap so memory pressure can still reduce parallelism.
+    # Keep UBA disabled: PR #143 proved that this host can exhaust virtual
+    # memory inside UBA (Windows 1455 / VirtualAlloc failed). The slow part we
+    # can safely relax is the old fixed MaxParallelActions=2 cap.
     $LogicalProcessors = [Math]::Max(1, [Environment]::ProcessorCount)
     $FreeVirtualGb = [double]$Context.Machine.FreeVirtualGb
 
@@ -224,14 +223,14 @@ if ($ConservativeBuild) {
 <Configuration xmlns="https://www.unrealengine.com/BuildConfiguration">
   <BuildConfiguration>
     <bAllowUBAExecutor>false</bAllowUBAExecutor>
-    <bAllowUBALocalExecutor>true</bAllowUBALocalExecutor>
+    <bAllowUBALocalExecutor>false</bAllowUBALocalExecutor>
     <MaxParallelActions>$MaxParallelActions</MaxParallelActions>
   </BuildConfiguration>
 </Configuration>
 "@
     $UbtConfig | Set-Content -LiteralPath $UbtConfigPath -Encoding UTF8
     Write-Host (
-        "CI adaptive UBT profile: UBA local enabled; UBA remote disabled; MaxParallelActions={0}; logicalProcessors={1}; freeVirtualGb={2:N2}; config={3}" -f
+        "CI adaptive UBT profile: UBA disabled; MaxParallelActions={0}; logicalProcessors={1}; freeVirtualGb={2:N2}; config={3}" -f
         $MaxParallelActions,
         $LogicalProcessors,
         $FreeVirtualGb,
