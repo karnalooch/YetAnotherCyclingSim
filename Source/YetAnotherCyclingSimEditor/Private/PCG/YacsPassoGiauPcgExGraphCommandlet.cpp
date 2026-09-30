@@ -3,16 +3,28 @@
 #include "PCG/YacsPassoGiauSp638PathSettings.h"
 
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Data/PCGPointData.h"
+#include "Dom/JsonObject.h"
+#include "Engine/World.h"
+#include "FileHelpers.h"
+#include "GameFramework/Actor.h"
 #include "HAL/FileManager.h"
+#include "HAL/PlatformTime.h"
+#include "Misc/FileHelper.h"
 #include "Misc/PackageName.h"
 #include "Misc/Parse.h"
 #include "Misc/Paths.h"
 #include "Modules/ModuleManager.h"
+#include "PCGComponent.h"
+#include "PCGData.h"
 #include "PCGGraph.h"
 #include "PCGNode.h"
 #include "PCGPin.h"
+#include "Serialization/JsonSerializer.h"
+#include "Serialization/JsonWriter.h"
 #include "UObject/Package.h"
 #include "UObject/SavePackage.h"
+#include "WorldPartition/WorldPartitionHelpers.h"
 
 #if YACS_WITH_PCGEX
 #include "Elements/PCGExOffsetPath.h"
@@ -26,6 +38,166 @@ namespace
 {
     constexpr TCHAR DefaultPackageName[] =
         TEXT("/Game/WorldGen/PCGEx/PCG_PassoGiau_SP638_Corridor");
+
+    bool ExecuteGraphAndWriteProof(
+        UPCGGraph* Graph,
+        const FString& PackageName,
+        const FString& OutputPath,
+        const double TimeoutSeconds)
+    {
+        if (!Graph || OutputPath.IsEmpty())
+        {
+            UE_LOG(LogYacsPassoGiauPcgExGraph, Error, TEXT("PCGEx execution: graph or output path is missing."));
+            return false;
+        }
+
+        UWorld* World = UEditorLoadingAndSavingUtils::NewBlankMap(false);
+        if (!World)
+        {
+            UE_LOG(LogYacsPassoGiauPcgExGraph, Error, TEXT("PCGEx execution: failed to create a blank editor world."));
+            return false;
+        }
+
+        FActorSpawnParameters SpawnParameters;
+        SpawnParameters.Name = TEXT("YacsPcgExProofHost");
+        AActor* Host = World->SpawnActor<AActor>(
+            AActor::StaticClass(),
+            FVector::ZeroVector,
+            FRotator::ZeroRotator,
+            SpawnParameters);
+        if (!Host)
+        {
+            UE_LOG(LogYacsPassoGiauPcgExGraph, Error, TEXT("PCGEx execution: failed to spawn proof host actor."));
+            return false;
+        }
+
+        UPCGComponent* Component = NewObject<UPCGComponent>(Host, TEXT("YacsPcgExProofComponent"));
+        if (!Component)
+        {
+            UE_LOG(LogYacsPassoGiauPcgExGraph, Error, TEXT("PCGEx execution: failed to allocate PCG component."));
+            return false;
+        }
+        Host->AddInstanceComponent(Component);
+        Component->RegisterComponent();
+        Component->SetGraphLocal(Graph);
+
+        // Execute through stock UE PCG component APIs. Generation is delayed, so
+        // pump editor frames using the same helper used by Epic's PCG world builder.
+        Component->GenerateLocal(true);
+        FWorldPartitionHelpers::FakeEngineTick(World);
+
+        const double StartedAt = FPlatformTime::Seconds();
+        while (Component->IsGenerating())
+        {
+            if ((FPlatformTime::Seconds() - StartedAt) > TimeoutSeconds)
+            {
+                UE_LOG(
+                    LogYacsPassoGiauPcgExGraph,
+                    Error,
+                    TEXT("PCGEx execution timed out after %.1f seconds."),
+                    TimeoutSeconds);
+                return false;
+            }
+            FWorldPartitionHelpers::FakeEngineTick(World);
+        }
+        FWorldPartitionHelpers::FakeEngineTick(World);
+
+        const FPCGDataCollection& Generated = Component->GetGeneratedGraphOutput();
+        TArray<TSharedPtr<FJsonValue>> DatasetValues;
+        int32 TotalPointCount = 0;
+        int32 PointDatasetCount = 0;
+
+        for (int32 DatasetIndex = 0; DatasetIndex < Generated.TaggedData.Num(); ++DatasetIndex)
+        {
+            const FPCGTaggedData& Tagged = Generated.TaggedData[DatasetIndex];
+            const UPCGPointData* PointData = Cast<const UPCGPointData>(Tagged.Data);
+            if (!PointData)
+            {
+                UE_LOG(
+                    LogYacsPassoGiauPcgExGraph,
+                    Warning,
+                    TEXT("PCGEx execution output %d is not UPCGPointData; skipping it in the point proof."),
+                    DatasetIndex);
+                continue;
+            }
+
+            const TArray<FPCGPoint>& Points = PointData->GetPoints();
+            TSharedRef<FJsonObject> DatasetObject = MakeShared<FJsonObject>();
+            DatasetObject->SetNumberField(TEXT("source_collection_index"), DatasetIndex);
+            DatasetObject->SetNumberField(TEXT("point_count"), Points.Num());
+
+            TArray<TSharedPtr<FJsonValue>> TagValues;
+            for (const FString& Tag : Tagged.Tags)
+            {
+                TagValues.Add(MakeShared<FJsonValueString>(Tag));
+            }
+            DatasetObject->SetArrayField(TEXT("tags"), MoveTemp(TagValues));
+
+            TArray<TSharedPtr<FJsonValue>> PointValues;
+            PointValues.Reserve(Points.Num());
+            for (const FPCGPoint& Point : Points)
+            {
+                const FVector Location = Point.Transform.GetLocation();
+                TSharedRef<FJsonObject> PointObject = MakeShared<FJsonObject>();
+                PointObject->SetNumberField(TEXT("x_cm"), Location.X);
+                PointObject->SetNumberField(TEXT("y_cm"), Location.Y);
+                PointObject->SetNumberField(TEXT("z_cm"), Location.Z);
+                PointValues.Add(MakeShared<FJsonValueObject>(PointObject));
+            }
+            DatasetObject->SetArrayField(TEXT("points"), MoveTemp(PointValues));
+
+            TotalPointCount += Points.Num();
+            ++PointDatasetCount;
+            DatasetValues.Add(MakeShared<FJsonValueObject>(DatasetObject));
+        }
+
+        if (PointDatasetCount < 3 || TotalPointCount <= 0)
+        {
+            UE_LOG(
+                LogYacsPassoGiauPcgExGraph,
+                Error,
+                TEXT("PCGEx execution produced insufficient point output: datasets=%d total_points=%d."),
+                PointDatasetCount,
+                TotalPointCount);
+            return false;
+        }
+
+        TSharedRef<FJsonObject> Root = MakeShared<FJsonObject>();
+        Root->SetNumberField(TEXT("schema_version"), 1);
+        Root->SetStringField(TEXT("status"), TEXT("PASS"));
+        Root->SetStringField(TEXT("graph_package"), PackageName);
+        Root->SetNumberField(TEXT("point_dataset_count"), PointDatasetCount);
+        Root->SetNumberField(TEXT("total_point_count"), TotalPointCount);
+        Root->SetArrayField(TEXT("datasets"), MoveTemp(DatasetValues));
+
+        FString JsonText;
+        const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JsonText);
+        if (!FJsonSerializer::Serialize(Root, Writer))
+        {
+            UE_LOG(LogYacsPassoGiauPcgExGraph, Error, TEXT("PCGEx execution: failed to serialize output proof."));
+            return false;
+        }
+
+        IFileManager::Get().MakeDirectory(*FPaths::GetPath(OutputPath), true);
+        if (!FFileHelper::SaveStringToFile(JsonText, *OutputPath))
+        {
+            UE_LOG(
+                LogYacsPassoGiauPcgExGraph,
+                Error,
+                TEXT("PCGEx execution: failed to write output proof to %s."),
+                *OutputPath);
+            return false;
+        }
+
+        UE_LOG(
+            LogYacsPassoGiauPcgExGraph,
+            Display,
+            TEXT("YACS PCGEx corridor graph executed: datasets=%d total_points=%d output=%s"),
+            PointDatasetCount,
+            TotalPointCount,
+            *OutputPath);
+        return true;
+    }
 
     bool Connect(
         UPCGGraph* Graph,
@@ -198,6 +370,7 @@ int32 UYacsPassoGiauPcgExGraphCommandlet::Main(const FString& Params)
     }
 
     const FName GraphOutputPin = OutputNode->GetInputPins()[0]->Properties.Label;
+    Graph->AddLabeledEdge(SmoothNode, PathPin, OutputNode, GraphOutputPin);
     Graph->AddLabeledEdge(OffsetLeftNode, PathPin, OutputNode, GraphOutputPin);
     Graph->AddLabeledEdge(OffsetRightNode, PathPin, OutputNode, GraphOutputPin);
 
@@ -224,6 +397,26 @@ int32 UYacsPassoGiauPcgExGraphCommandlet::Main(const FString& Params)
             TEXT("Failed to save PCGEx graph asset to %s."),
             *Filename);
         return 31;
+    }
+
+    const bool bExecute = FParse::Param(*Params, TEXT("Execute"));
+    if (bExecute)
+    {
+        FString ExecutionOutput;
+        FParse::Value(*Params, TEXT("ExecutionOutput="), ExecutionOutput);
+        if (ExecutionOutput.IsEmpty())
+        {
+            UE_LOG(LogYacsPassoGiauPcgExGraph, Error, TEXT("-Execute requires -ExecutionOutput=<path>."));
+            return 32;
+        }
+        if (FPaths::IsRelative(ExecutionOutput))
+        {
+            ExecutionOutput = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir(), ExecutionOutput);
+        }
+        if (!ExecuteGraphAndWriteProof(Graph, PackageName, ExecutionOutput, 60.0))
+        {
+            return 33;
+        }
     }
 
     UE_LOG(

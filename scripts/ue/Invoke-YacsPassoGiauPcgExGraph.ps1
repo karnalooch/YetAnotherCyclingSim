@@ -7,8 +7,9 @@
     checkout, builds YetAnotherCyclingSimEditor against that revision, executes the
     YacsPassoGiauPcgExGraph commandlet, and emits exact-SHA proof metadata.
 
-    This proof validates graph topology authoring and plugin/API integration.
-    It does not claim the graph has already executed against prepared SP638 data.
+    This proof validates graph topology authoring, plugin/API integration, and
+    execution against the prepared official SP638 presentation input. It records
+    generated PCG point collections for the subsequent deviation analysis.
 #>
 [CmdletBinding()]
 param(
@@ -44,11 +45,12 @@ $BuildLog = Join-Path $ArtifactRoot 'build_editor_pcgex.log'
 $CommandletLog = Join-Path $ArtifactRoot 'pcgex_graph_commandlet.log'
 $CommandletErr = Join-Path $ArtifactRoot 'pcgex_graph_commandlet.stderr.log'
 $ProofPath = Join-Path $ArtifactRoot 'pcgex_graph_proof.json'
+$ExecutionOutputPath = Join-Path $ArtifactRoot 'pcgex_graph_output.json'
 
 $GeneratedAssetRelative = 'Content/WorldGen/PCGEx/PCG_PassoGiau_SP638_Corridor.uasset'
 $GeneratedAssetPath = Join-Path $RepoRoot $GeneratedAssetRelative
 
-foreach ($Path in @($BootstrapReport, $BuildLog, $CommandletLog, $CommandletErr, $ProofPath)) {
+foreach ($Path in @($BootstrapReport, $BuildLog, $CommandletLog, $CommandletErr, $ProofPath, $ExecutionOutputPath)) {
     Remove-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
 }
 
@@ -102,6 +104,8 @@ Write-Host '[3/4] Authoring deterministic PCGEx corridor graph asset...' -Foregr
 $CommandletArgs = @(
     $ProjectPath,
     '-run=YacsPassoGiauPcgExGraph',
+    '-Execute',
+    ('-ExecutionOutput=' + $ExecutionOutputPath),
     '-Unattended',
     '-NoPause',
     '-NullRHI',
@@ -134,6 +138,20 @@ if ($CommandletText -notmatch 'YACS PCGEx corridor graph authored:') {
 if ($CommandletText -notmatch 'SP638 presentation -> resample 1m -> bounded smooth -> \+/-3m offsets') {
     throw 'PCGEx graph commandlet log is missing the deterministic graph contract marker.'
 }
+if ($CommandletText -notmatch 'YACS PCGEx corridor graph executed:') {
+    throw 'PCGEx graph commandlet log is missing the execution success marker.'
+}
+if (-not (Test-Path -LiteralPath $ExecutionOutputPath -PathType Leaf)) {
+    throw 'PCGEx graph execution did not produce pcgex_graph_output.json.'
+}
+$ExecutionData = Get-Content -LiteralPath $ExecutionOutputPath -Raw | ConvertFrom-Json
+if ($ExecutionData.status -ne 'PASS') { throw 'PCGEx graph execution output did not report PASS.' }
+if ([int]$ExecutionData.point_dataset_count -lt 3) {
+    throw "PCGEx graph execution produced fewer than three point datasets: $($ExecutionData.point_dataset_count)"
+}
+if ([int]$ExecutionData.total_point_count -le 0) {
+    throw 'PCGEx graph execution produced no points.'
+}
 if ($ExitCode -eq 1) {
     Write-Warning 'UE returned exit 1 after the graph asset and success markers were proven; treating known code-only Asset Registry noise as non-owning.'
 }
@@ -145,6 +163,7 @@ if ($Head -ne $ExpectedHead) { throw "PCGEx graph proof HEAD drifted: actual=$He
 $AssetInfo = Get-Item -LiteralPath $GeneratedAssetPath
 $AssetHash = (Get-FileHash -LiteralPath $GeneratedAssetPath -Algorithm SHA256).Hash.ToLowerInvariant()
 $ManifestHash = (Get-FileHash -LiteralPath $ManifestPath -Algorithm SHA256).Hash.ToLowerInvariant()
+$ExecutionOutputHash = (Get-FileHash -LiteralPath $ExecutionOutputPath -Algorithm SHA256).Hash.ToLowerInvariant()
 
 $NormalizedGeneratedPath = $GeneratedAssetRelative.Replace('\','/')
 $Unexpected = @(
@@ -168,7 +187,10 @@ $Proof = [ordered]@{
         bytes = [int64]$AssetInfo.Length
         sha256 = $AssetHash
         manifest_sha256 = $ManifestHash
-        execution_scope = 'graph_authoring_and_api_integration_only'
+        execution_scope = 'graph_execution_against_prepared_sp638'
+        execution_output_sha256 = $ExecutionOutputHash
+        point_dataset_count = [int]$ExecutionData.point_dataset_count
+        total_point_count = [int]$ExecutionData.total_point_count
     }
     commandlet_exit_code = $ExitCode
 }

@@ -191,6 +191,13 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
             "Smooth->bPreserveEnd = true",
             "OffsetLeft->Offset.Constant = 300.0",
             "OffsetRight->Offset.Constant = 300.0",
+            "Graph->AddLabeledEdge(SmoothNode, PathPin, OutputNode, GraphOutputPin)",
+            "UEditorLoadingAndSavingUtils::NewBlankMap(false)",
+            "Component->SetGraphLocal(Graph)",
+            "Component->GenerateLocal(true)",
+            "FWorldPartitionHelpers::FakeEngineTick(World)",
+            "Component->GetGeneratedGraphOutput()",
+            "YACS PCGEx corridor graph executed:",
             "YACS PCGEx corridor graph authored:",
             "SP638 presentation -> resample 1m -> bounded smooth -> +/-3m offsets.",
         ):
@@ -206,16 +213,16 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
             "Bootstrap-YacsPcgEx.ps1",
             "YetAnotherCyclingSimEditor",
             "-run=YacsPassoGiauPcgExGraph",
+            "-Execute",
+            "pcgex_graph_output.json",
             "pcgex_graph_proof.json",
-            "graph_authoring_and_api_integration_only",
+            "graph_execution_against_prepared_sp638",
+            "point_dataset_count",
+            "total_point_count",
             "shipping_runtime_dependency",
             "Get-FileHash",
         ):
             self.assertIn(token, wrapper)
-        self.assertIn(
-            "It does not claim the graph has already executed against prepared SP638 data.",
-            wrapper,
-        )
 
     def test_active_workflow_tracks_pcgex_inputs_and_does_not_require_dcc(self) -> None:
         workflow = (ROOT / ".github/workflows/passo-giau-embark-terrain.yml").read_text(
