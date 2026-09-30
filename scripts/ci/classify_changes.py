@@ -55,6 +55,27 @@ UE_CRITICAL_CONFIG = {
     "Config/DefaultEditor.ini",
 }
 
+UE_CODE_TOOLING_EXACT = {
+    ".github/workflows/reusable-unreal.yml",
+    "scripts/ci/Invoke-YacsUnrealCi.ps1",
+    "scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1",
+    "scripts/ci/Test-YacsCodeOnlyCheckout.ps1",
+    "scripts/ue/Invoke-YacsProof.ps1",
+    "scripts/ue/Preflight-YacsProof.ps1",
+}
+
+UE_TOOLING_PREFIXES = (
+    "scripts/ue/",
+    "tools/ue-mcp/",
+)
+
+RUNTIME_SENSITIVE_PREFIXES = (
+    "Source/",
+    "Config/",
+    "Plugins/",
+    "Build/",
+)
+
 
 @dataclass(frozen=True)
 class Classification:
@@ -64,6 +85,7 @@ class Classification:
     assets: bool = False
     ci: bool = False
     ue_code: bool = False
+    ue_tooling: bool = False
     unknown: bool = False
     docs_only: bool = False
     asset_only: bool = False
@@ -72,6 +94,14 @@ class Classification:
     @property
     def security_base(self) -> bool:
         return self.python or self.cpp or self.ci or self.ue_code or self.unknown
+
+    @property
+    def ci_cost_class(self) -> str:
+        if self.ue_code or self.asset_full:
+            return "heavy"
+        if self.docs_only:
+            return "light"
+        return "standard"
 
 
 def _is_docs(path: str) -> bool:
@@ -99,7 +129,8 @@ def _is_python(path: str) -> bool:
 
 def _is_cpp(path: str) -> bool:
     pure = PurePosixPath(path)
-    if not path.startswith("Source/"):
+    in_source_tree = path.startswith("Source/") or "/Source/" in path
+    if not in_source_tree:
         return False
     return pure.suffix.lower() in {".cpp", ".c", ".h", ".hpp", ".inl", ".cs"}
 
@@ -146,25 +177,25 @@ def _is_ci(path: str) -> bool:
     return False
 
 
+def _is_ue_tooling(path: str) -> bool:
+    return path == "ue-mcp.yml" or path.startswith(UE_TOOLING_PREFIXES)
+
+
 def _is_ue_code(path: str) -> bool:
     pure = PurePosixPath(path)
     if _is_cpp(path):
         return True
     if pure.suffix.lower() in {".uproject", ".uplugin"}:
         return True
-    if path in UE_CRITICAL_CONFIG or path.startswith("Config/"):
+    if path in UE_CRITICAL_CONFIG:
         return True
-    if path.startswith("scripts/ue/"):
-        return True
-    if path in {
-        "scripts/ci/Invoke-YacsUnrealCi.ps1",
-        "scripts/ci/Test-YacsCodeOnlyCheckout.ps1",
-        ".github/workflows/reusable-unreal.yml",
-        ".github/workflows/manual-unreal.yml",
-        ".circleci/config.yml",
-    }:
+    if path in UE_CODE_TOOLING_EXACT:
         return True
     return False
+
+
+def _is_runtime_sensitive_unknown(path: str) -> bool:
+    return path.startswith(RUNTIME_SENSITIVE_PREFIXES)
 
 
 def classify_paths(paths: Iterable[str]) -> Classification:
@@ -184,6 +215,7 @@ def classify_paths(paths: Iterable[str]) -> Classification:
     assets = False
     ci = False
     ue_code = False
+    ue_tooling = False
     unknown = False
     asset_full = False
 
@@ -208,6 +240,9 @@ def classify_paths(paths: Iterable[str]) -> Classification:
         if _is_ci(path):
             ci = True
             matched = True
+        if _is_ue_tooling(path):
+            ue_tooling = True
+            matched = True
         if _is_ue_code(path):
             ue_code = True
             matched = True
@@ -225,6 +260,8 @@ def classify_paths(paths: Iterable[str]) -> Classification:
 
         if not matched:
             unknown = True
+            if _is_runtime_sensitive_unknown(path):
+                ue_code = True
 
     docs_only = docs and not any((python, cpp, assets, ci, ue_code, unknown))
     asset_only = assets and not any((python, cpp, ci, ue_code, unknown))
@@ -236,6 +273,7 @@ def classify_paths(paths: Iterable[str]) -> Classification:
         assets=assets,
         ci=ci,
         ue_code=ue_code,
+        ue_tooling=ue_tooling,
         unknown=unknown,
         docs_only=docs_only,
         asset_only=asset_only,
@@ -277,6 +315,7 @@ def emit_github_output(
     with open(output_path, "a", encoding="utf-8") as handle:
         for key, value in values.items():
             handle.write(f"{key}={'true' if value else 'false'}\n")
+        handle.write(f"ci_cost_class={classification.ci_cost_class}\n")
         handle.write(f"base_sha={base}\n")
         handle.write(f"head_sha={head}\n")
 
@@ -319,6 +358,7 @@ def main(argv: list[str] | None = None) -> int:
         "paths": paths,
         **asdict(classification),
         "security_base": classification.security_base,
+        "ci_cost_class": classification.ci_cost_class,
     }
     print(json.dumps(payload, indent=2, sort_keys=True))
 

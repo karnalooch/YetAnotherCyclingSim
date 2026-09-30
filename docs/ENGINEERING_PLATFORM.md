@@ -200,10 +200,16 @@ Current strengths already present downstream include:
 - the R4.1 proof suite uses job-local **build once / boot once / prove many**;
 - Proof Broker deduplicates and reuses exact-revision heavy proof evidence.
 
-A known follow-up remains: the local path classifier currently treats broad
-`scripts/ue/**` changes as `ue_code`, so some proof/tooling-only edits may
-still schedule a code build. Refining that split belongs in a dedicated CI Cost
-Governor PR, not in the baseline-adoption change.
+The local classifier now separates `ue_code` from `ue_tooling`.
+Broad `scripts/ue/**` proof/editor/authoring changes no longer schedule the
+automatic Unreal code build merely because of their directory. Only compiled,
+critical-config or explicitly build-contract tooling paths set `ue_code=true`.
+
+The classifier also emits `ci_cost_class=light|standard|heavy`, and the local
+Aggregate gate validates that heavy Unreal/full-world impact cannot be
+mislabeled as a cheaper class. Runtime-sensitive unknown paths fail closed to
+the Unreal build path; ordinary unknown repository paths remain conservative
+without automatically consuming the self-hosted runner.
 
 ## Unreal-specific repository policy
 
