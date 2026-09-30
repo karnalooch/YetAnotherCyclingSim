@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW = ROOT / ".github" / "workflows" / "reusable-unreal.yml"
 CACHE = ROOT / "scripts" / "ci" / "Resolve-YacsUnrealCiCache.ps1"
 ENGINE = ROOT / "scripts" / "ci" / "Resolve-YacsUnrealEngine.ps1"
+PREFLIGHT = ROOT / "scripts" / "ue" / "Preflight-YacsProof.ps1"
 
 
 class UnrealCiCacheContractTests(unittest.TestCase):
@@ -16,6 +17,7 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         cls.workflow = WORKFLOW.read_text(encoding="utf-8")
         cls.cache = CACHE.read_text(encoding="utf-8")
         cls.engine = ENGINE.read_text(encoding="utf-8")
+        cls.preflight = PREFLIGHT.read_text(encoding="utf-8")
 
     def test_workflow_preserves_only_allow_listed_warm_build_state(self):
         # Keep this list intentionally identical to the workflow's persistent
@@ -76,6 +78,10 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         ):
             self.assertIn(token, self.engine)
         self.assertIn("Resolve-YacsUnrealEngine -ProjectPath", self.cache)
+        self.assertIn("Resolve-YacsUnrealEngine.ps1", self.preflight)
+        self.assertIn("Resolve-YacsUnrealEngine -ProjectPath", self.preflight)
+        self.assertNotIn("$SearchDirs = @(", self.preflight)
+        self.assertNotIn("function Read-EngineVersion", self.preflight)
 
     def test_workspace_lock_cleanup_knows_warm_worktree(self):
         cleanup = (
