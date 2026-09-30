@@ -78,10 +78,14 @@ The normal code-only Unreal lane now separates binary work from runtime proof:
   proven equivalent. CI builds the Editor and then runs Automation.
 
 The runner-local warm worktree is serialized by repository-wide Unreal CI
-concurrency. Every run still resets tracked files to the requested SHA, removes
-non-ignored residue, enforces the code-only LFS contract and checks exact HEAD.
-Ignored build outputs survive only as candidates for reuse; they are never
-trusted without the fingerprint/state checks.
+concurrency. Every run resets tracked files to the requested SHA and removes all
+untracked/ignored residue except the explicit warm-state allow-list: project and
+plugin `Binaries`, `Intermediate`, and `Saved/BuildCache/UnrealCi`. The
+code-only LFS contract and exact HEAD are then rechecked. Preserved outputs are
+only candidates for reuse; they are never trusted without fingerprint, engine
+identity and expected-binary checks. Before mutable COMPILE/RUNTIME work starts,
+the corresponding previous green state is invalidated so cancellation or failure
+cannot leave reusable proof behind.
 
 The compile fingerprint covers the project descriptor, compiled project/plugin
 inputs and the build/engine-selection orchestration used by the normal Unreal lane.

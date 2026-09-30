@@ -66,13 +66,19 @@ project/plugin source, plugin descriptors and the normal lane's build/engine-sel
 orchestration contract. `unreal_proof_fingerprint` extends that identity with
 runtime-critical Config and the remaining code-only proof contract.
 
-The self-hosted code-only lane keeps a repository-scoped warm worktree. Reuse
-is accepted only when the current compile fingerprint, proof fingerprint,
+The self-hosted code-only lane keeps a repository-scoped warm worktree. Only
+the explicit build-state allow-list survives between revisions: project/plugin
+`Binaries`, `Intermediate`, and `Saved/BuildCache/UnrealCi`. All other
+untracked and ignored residue is removed before and after proof execution.
+Reuse is accepted only when the current compile fingerprint, proof fingerprint,
 installed UE build identity and expected project DLLs match a previously green
 state. Missing or malformed state fails closed. Engine drift purges incompatible
-build outputs. A compile-fingerprint mismatch rebuilds; a proof-only mismatch
-runs Automation with `-SkipBuild`; a full match emits a fresh exact-head
-equivalence artifact without rerunning unchanged Automation.
+build outputs. Before COMPILE work the prior verified stamp is invalidated; before
+RUNTIME work its proof bit is invalidated. A cancelled or failed mutable run can
+therefore never leave a green stamp that a later revision may trust. A
+compile-fingerprint mismatch rebuilds; a proof-only mismatch runs Automation with
+`-SkipBuild`; a full match emits a fresh exact-head equivalence artifact without
+rerunning unchanged Automation.
 
 This is semantic proof reuse, not SHA reuse: the current HEAD is still checked
 out and verified exactly, and the equivalence evidence records the current HEAD

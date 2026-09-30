@@ -79,8 +79,12 @@ class SelfHostedGitIsolationTests(unittest.TestCase):
                     text,
                 )
                 self.assertIn("git reset --hard '${{ inputs.target_sha }}'", text)
-                self.assertIn("git clean -ffd", text)
-                self.assertNotIn("git clean -ffdx", text)
+                self.assertIn("git clean -ffdx", text)
+                self.assertIn("-e '/Binaries/'", text)
+                self.assertIn("-e '/Intermediate/'", text)
+                self.assertIn("-e '/Plugins/**/Binaries/'", text)
+                self.assertIn("-e '/Plugins/**/Intermediate/'", text)
+                self.assertIn("-e '/Saved/BuildCache/UnrealCi/'", text)
                 self.assertIn("Verify exact SHA and clean tracked state", text)
                 self.assertIn("Test-YacsCodeOnlyCheckout.ps1", text)
                 self.assertNotIn(

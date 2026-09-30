@@ -185,12 +185,28 @@ if ($State) {
     }
 }
 
+$PreviousStateInvalidated = $false
+if ($Mode -eq 'compile') {
+    if (Test-Path -LiteralPath $StatePath -PathType Leaf) {
+        Remove-Item -LiteralPath $StatePath -Force
+        $PreviousStateInvalidated = $true
+    }
+}
+elseif ($Mode -eq 'runtime' -and $State) {
+    $State.ProofPassed = $false
+    $InvalidateTmp = "$StatePath.invalidate.tmp"
+    $State | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $InvalidateTmp -Encoding UTF8
+    Move-Item -LiteralPath $InvalidateTmp -Destination $StatePath -Force
+    $PreviousStateInvalidated = $true
+}
+
 $Evidence = [ordered]@{
     SchemaVersion = 1
     Head = $ExpectedHead
     Mode = $Mode
     Reason = $Reason
     PurgeBuildCache = $Purge
+    PreviousStateInvalidated = $PreviousStateInvalidated
     CompileFingerprint = $ExpectedCompileFingerprint
     ProofFingerprint = $ExpectedProofFingerprint
     EngineIdentity = $EngineIdentity
@@ -205,8 +221,9 @@ if ($Out) {
     "mode=$Mode" | Out-File -LiteralPath $Out -Append -Encoding utf8
     "reason=$Reason" | Out-File -LiteralPath $Out -Append -Encoding utf8
     "purge_build_cache=$($Purge.ToString().ToLowerInvariant())" | Out-File -LiteralPath $Out -Append -Encoding utf8
+    "previous_state_invalidated=$($PreviousStateInvalidated.ToString().ToLowerInvariant())" | Out-File -LiteralPath $Out -Append -Encoding utf8
     "engine_identity=$EngineIdentity" | Out-File -LiteralPath $Out -Append -Encoding utf8
 }
 
-Write-Host "UNREAL CACHE: mode=$Mode reason=$Reason purge=$Purge"
+Write-Host "UNREAL CACHE: mode=$Mode reason=$Reason purge=$Purge invalidated=$PreviousStateInvalidated"
 exit 0

@@ -15,16 +15,20 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         cls.workflow = WORKFLOW.read_text(encoding="utf-8")
         cls.cache = CACHE.read_text(encoding="utf-8")
 
-    def test_workflow_uses_serialized_warm_worktree_without_destructive_clean(self):
+    def test_workflow_preserves_only_allow_listed_warm_build_state(self):
         for token in (
             "group: yacs-unreal-ci-${{ github.repository }}",
             "YACS_UNREAL_WORKTREE: _unreal-ci-warm",
             "clean: false",
-            "git clean -ffd",
+            "git clean -ffdx",
+            "-e '/Binaries/'",
+            "-e '/Intermediate/'",
+            "-e '/Plugins/**/Binaries/'",
+            "-e '/Plugins/**/Intermediate/'",
+            "-e '/Saved/BuildCache/UnrealCi/'",
             "Resolve verified Unreal execution mode",
         ):
             self.assertIn(token, self.workflow)
-        self.assertNotIn("git clean -ffdx", self.workflow)
 
     def test_workflow_has_static_runtime_compile_paths(self):
         for token in (
@@ -49,6 +53,9 @@ class UnrealCiCacheContractTests(unittest.TestCase):
             "engine-identity-mismatch",
             "invalid-cache-state-shape",
             "verified-equivalent-proof",
+            "PreviousStateInvalidated",
+            "Remove-Item -LiteralPath $StatePath -Force",
+            "$State.ProofPassed = $false",
         ):
             self.assertIn(token, self.cache)
 

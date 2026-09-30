@@ -80,8 +80,8 @@ jobs:
           $ErrorActionPreference = 'Stop'
           git reset --hard '${{ inputs.target_sha }}'
           if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree reset failed.' }
-          git clean -ffd
-          if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree clean failed.' }
+          git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/'
+          if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree allow-listed clean failed.' }
 
       - name: Enforce code-only checkout
         shell: pwsh
@@ -197,7 +197,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      - name: Clean current-run evidence and non-ignored residue
+      - name: Clean current-run evidence and non-allow-listed residue
         if: ${{ always() }}
         shell: pwsh
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
@@ -209,8 +209,8 @@ jobs:
           if (Test-Path -LiteralPath '.git') {
             git reset --hard
             if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree cleanup git reset failed.' }
-            git clean -ffd
-            if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree cleanup git clean failed.' }
+            git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/'
+            if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree cleanup allow-listed clean failed.' }
           }
           else {
             Write-Host 'Unreal warm-worktree cleanup: no checkout worktree to clean.'

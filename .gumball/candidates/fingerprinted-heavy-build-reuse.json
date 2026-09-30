@@ -3,7 +3,7 @@
   "source": "karnalooch/YetAnotherCyclingSim",
   "category": "ci",
   "problem": "Heavy self-hosted proofs can rebuild unchanged native dependencies or rerun unchanged runtime proof after documentation, Python, asset or proof-orchestration edits, wasting runner time and increasing machine load.",
-  "invariant": "Separate STATIC, RUNTIME and COMPILE evidence. Hash binary-contract inputs into a compile fingerprint and runtime/proof-contract inputs into a proof fingerprint. Reuse binaries only when the compile fingerprint, installed engine identity and expected binaries match a previously green state. Reuse runtime proof only when the proof fingerprint also matches, while emitting fresh exact-revision equivalence evidence. Missing, malformed or drifting evidence fails closed.",
+  "invariant": "Separate STATIC, RUNTIME and COMPILE evidence. Hash binary-contract inputs into a compile fingerprint and runtime/proof-contract inputs into a proof fingerprint. Reuse binaries only when the compile fingerprint, installed engine identity and expected binaries match a previously green state. Reuse runtime proof only when the proof fingerprint also matches, while emitting fresh exact-revision equivalence evidence. Missing, malformed or drifting evidence fails closed. Persist only an explicit allow-list of build outputs/state across revisions, and invalidate the previous mutable proof lease before COMPILE or RUNTIME begins.",
   "evidence": [
     "YACS PR #288 proved compile-fingerprint reuse for the Passo Giau M3 PCGEx lane",
     "YACS Issue #289 generalizes the pattern to normal code-only Unreal CI",
@@ -14,6 +14,6 @@
     "PCGEx-specific binary names",
     "YACS runner workspace layout"
   ],
-  "failure_behavior": "Unknown runtime-sensitive inputs force COMPILE. Missing or malformed state, engine drift, compile-fingerprint mismatch or missing expected binaries forces build/proof validation. A proof-fingerprint-only mismatch permits RUNTIME with verified binaries but never skips Automation. STATIC is allowed only after exact-head checkout plus full compile/proof equivalence checks.",
+  "failure_behavior": "Unknown runtime-sensitive inputs force COMPILE. Missing or malformed state, engine drift, compile-fingerprint mismatch or missing expected binaries forces build/proof validation. A proof-fingerprint-only mismatch permits RUNTIME with verified binaries but never skips Automation. STATIC is allowed only after exact-head checkout plus full compile/proof equivalence checks. A mutable run invalidates the relevant prior green state before execution, so cancellation or failure cannot leave a reusable stamp.",
   "status": "candidate"
 }
