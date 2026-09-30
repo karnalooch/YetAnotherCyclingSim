@@ -99,6 +99,23 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         ):
             self.assertNotIn(forbidden, source)
 
+    def test_bootstrap_keeps_credentials_out_of_repository_contract(self) -> None:
+        bootstrap = (
+            ROOT / "scripts/worldgen/Bootstrap-YacsEmbarkTerrainToolchain.ps1"
+        ).read_text(encoding="utf-8")
+        for token in (
+            "houdini_installer.exe",
+            "--settings-file",
+            "--product', 'Houdini",
+            "/VERYSILENT",
+            "/CURRENTUSER",
+            "-Activate",
+            "secrets_persisted = $false",
+        ):
+            self.assertIn(token, bootstrap)
+        self.assertNotIn("password=", bootstrap)
+        self.assertNotIn("client_secret=", bootstrap)
+
     def test_finalizer_is_validation_and_encoding_not_secret_smoothing(self) -> None:
         source = (
             ROOT / "scripts/assets/finalize_passo_giau_embark_heightfield.py"
