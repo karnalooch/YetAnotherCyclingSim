@@ -721,7 +721,7 @@ def _sample_local_terrain_skin(
     return mesh, origin_world, diagnostics
 
 
-def _load_native_dtm_patch():
+def _load_native_dtm_patch(center_world: unreal.Vector):
     metadata_value = os.environ.get(NATIVE_DTM_PATCH_ENV, "").strip()
     if not metadata_value:
         raise RuntimeError(
@@ -780,6 +780,26 @@ def _load_native_dtm_patch():
     first_y_m = float(grid["first_ue_y_m"])
     x_coordinates_m = tuple(first_x_m + column * step_x_m for column in range(columns))
     y_coordinates_m = tuple(first_y_m - row * step_y_m for row in range(rows))
+
+    focus_x_m = float(center_world.x) / 100.0
+    focus_y_m = float(center_world.y) / 100.0
+    min_x_m = min(x_coordinates_m)
+    max_x_m = max(x_coordinates_m)
+    min_y_m = min(y_coordinates_m)
+    max_y_m = max(y_coordinates_m)
+    focus_margin_m = min(
+        focus_x_m - min_x_m,
+        max_x_m - focus_x_m,
+        focus_y_m - min_y_m,
+        max_y_m - focus_y_m,
+    )
+    if focus_margin_m < 100.0:
+        raise RuntimeError(
+            "Gate C.3 prepared patch does not contain the actual rendered hairpin "
+            f"with the required 100 m margin: margin={focus_margin_m:.3f} m "
+            f"focus=({focus_x_m:.3f},{focus_y_m:.3f})"
+        )
+
     origin_z_m = min(values)
     mesh = build_terrain_skin_mesh(
         x_coordinates_m,
@@ -805,6 +825,8 @@ def _load_native_dtm_patch():
         "column_count": columns,
         "sample_count": rows * columns,
         "smoothing_applied": False,
+        "proof_focus_margin_m": focus_margin_m,
+        "proof_focus_ue_m": [focus_x_m, focus_y_m],
         "occlusion_lift_m": 0.0,
         "mesh_sha256": terrain_skin_hash(mesh),
         "canonical_road_xy_modified": False,
@@ -1086,7 +1108,7 @@ def main() -> None:
             terrain_skin_origin_world,
             terrain_skin_diagnostics,
         ) = (
-            _load_native_dtm_patch()
+            _load_native_dtm_patch(terrain_skin_center_world)
             if variant_name == "C3"
             else _sample_local_terrain_skin(
                 world,
