@@ -8,173 +8,209 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class EmbarkTerrainPipelineContractTests(unittest.TestCase):
-    def test_owner_embark_directive_is_full_pattern_not_shortcut(self) -> None:
+    def test_owner_embark_directive_allows_license_clean_pattern_substitution(self) -> None:
         agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
-        self.assertIn("### Explicit Embark-mode directive", agents)
-        self.assertIn("production-proven Embark pattern end-to-end", agents)
-        self.assertIn("Do not silently down-scope", agents)
-        self.assertIn("do **not** invent its node graph", agents)
-
-    def test_world_bible_selects_full_dcc_escalation_after_native_failure(self) -> None:
-        bible = (ROOT / "docs/WORLD_BUILDING_BIBLE.md").read_text(encoding="utf-8")
-        self.assertIn(
-            "Passo Giau Embark escalation — selected after native visual failure", bible
-        )
         for token in (
-            "HOUDINI PDG",
-            "GAEA BRIDGE",
-            "HOUDINI HEIGHTFIELD",
-            "Houdini → Unreal",
+            "### Explicit Embark-mode directive",
+            "production-proven Embark pattern end-to-end",
+            "Do not silently down-scope",
+            "strongest **public production pattern and boundary**",
+            "license-clean Unreal-native or open-source implementation",
+            "do **not** invent its node graph",
+        ):
+            self.assertIn(token, agents)
+
+    def test_world_bible_records_pcgex_first_bounded_substitution(self) -> None:
+        bible = (ROOT / "docs/WORLD_BUILDING_BIBLE.md").read_text(encoding="utf-8")
+        for token in (
+            "Passo Giau Embark escalation — selected after native visual failure",
+            "Current bounded substitution — PCGEx-first proof",
+            "PCGEx is not claimed to be an Embark Studios dependency",
             "Base_DTM",
             "Road_Earthworks",
-            "World Partition",
-            "RVT",
-            "custom NumPy blur",
+            "route or physics authority",
+            "Houdini/Gaea",
+            "rider-camera",
         ):
             self.assertIn(token, bible)
 
-    def test_pipeline_config_preserves_authority_and_full_stage_chain(self) -> None:
+    def test_pcgex_manifest_pins_authoring_dependency_and_authority_boundaries(self) -> None:
         config = json.loads(
-            (ROOT / "worldgen/embark/passo_giau_terrain_pipeline.json").read_text(
+            (ROOT / "worldgen/embark/pcgex/passo_giau_corridor.json").read_text(
                 encoding="utf-8"
             )
         )
-        self.assertEqual(config["pipeline_id"], "passo-giau-embark-landscape-v1")
-        self.assertEqual(config["spatial_contract"]["crs"], "EPSG:32632")
-        self.assertEqual(config["spatial_contract"]["unreal_landscape_vertices"], 4033)
-        self.assertLessEqual(
-            config["spatial_contract"]["max_conditioned_source_cell_m"], 2.0
-        )
-        self.assertEqual(config["gaea"]["seed"], 0)
-        self.assertTrue(config["invariants"]["preserve_route_xy"])
-        self.assertTrue(config["invariants"]["preserve_physics_authority"])
-        self.assertTrue(config["invariants"]["preserve_source_provenance"])
-        self.assertTrue(config["invariants"]["require_32bit_intermediate_heightfields"])
-        self.assertTrue(config["invariants"]["forbid_guessed_embark_internal_nodes"])
-        self.assertTrue(config["recipes"]["houdini_hip"].endswith(".hiplc"))
-        self.assertTrue(config["recipes"]["gaea_terrain"].endswith(".terrain"))
-        self.assertTrue(config["recipes"]["houdini_heightfield_hda"].endswith(".hdalc"))
+        self.assertEqual(config["pipeline_id"], "passo-giau-embark-pcgex-v2")
+        self.assertTrue(config["architecture"]["authoring_only"])
+        self.assertFalse(config["architecture"]["shipping_runtime_dependency"])
         self.assertEqual(
-            config["recipes"]["houdini_gaea_processor_node"],
-            "/obj/yacs_passo_giau_gaea/GAEA_PROCESSOR",
+            config["pcgex"]["commit"],
+            "39a8f1bdc65b2c4613a1e87b71d93b4576db0a66",
+        )
+        self.assertEqual(config["pcgex"]["version_name"], "0.79")
+        self.assertEqual(config["pcgex"]["engine_version"], "5.8.0")
+        self.assertEqual(config["pcgex"]["license"], "MIT")
+        self.assertEqual(
+            config["graph"]["asset"],
+            "/Game/WorldGen/PCGEx/PCG_PassoGiau_SP638_Corridor",
         )
         self.assertEqual(
-            config["recipes"]["houdini_gaea_bridge_node"],
-            "/obj/yacs_passo_giau_gaea/OUT_GAEA",
+            config["graph"]["generator_commandlet"], "YacsPassoGiauPcgExGraph"
         )
+        classes = [node["class"] for node in config["graph"]["nodes"]]
         self.assertEqual(
-            config["recipes"]["houdini_preprocess_top"],
-            "/tasks/yacs_passo_giau_preprocess",
+            classes,
+            [
+                "UYacsPassoGiauSp638PathSettings",
+                "UPCGExResamplePathSettings",
+                "UPCGExSmoothSettings",
+                "UPCGExOffsetPathSettings",
+                "UPCGExOffsetPathSettings",
+            ],
         )
-        self.assertEqual(
-            config["recipes"]["houdini_finalize_top"],
-            "/tasks/yacs_passo_giau_finalize",
-        )
+        invariants = config["invariants"]
+        self.assertTrue(invariants["preserve_route_xy"])
+        self.assertTrue(invariants["preserve_physics_authority"])
+        self.assertTrue(invariants["preserve_source_provenance"])
+        self.assertTrue(invariants["base_dtm_is_non_destructive"])
+        self.assertTrue(invariants["road_earthworks_are_separate"])
+        self.assertTrue(invariants["forbid_houdini_or_gaea_as_required_dependencies"])
+        self.assertTrue(invariants["forbid_pcgex_as_route_or_physics_authority"])
 
-    def test_orchestrator_uses_documented_dcc_boundaries(self) -> None:
-        source = (ROOT / "scripts/worldgen/embark_terrain_pipeline.py").read_text(
+    def test_dependency_ledger_makes_pcgex_current_and_dcc_optional(self) -> None:
+        ledger = (ROOT / "docs/legal/DEPENDENCY_PROVENANCE.md").read_text(
             encoding="utf-8"
         )
-        for token in (
-            "cook_top_network.py",
-            "houdini_pdg_preprocess",
-            "gaea2houdini_shape",
-            "houdini_heightfield_finalize",
-            "finalize_unreal_heightfield",
-            "unreal_author_and_rider_proof",
-            "validate_embark_recipe.py",
-            "cook_houdini_node.py",
-            "houdini_gaea_bridge_node",
-            "houdini_heightfield_hda",
-            "dcc_handoff_manifest",
-            '"-PreparedTerrainRoot"',
-            '"-SkipTerrainPreparation"',
-        ):
-            self.assertIn(token, source)
-        for forbidden in (
-            "gaussian_filter",
-            "uniform_filter",
-            "median_filter",
-            "cv2.GaussianBlur",
-            "np.convolve",
-        ):
-            self.assertNotIn(forbidden, source)
+        self.assertIn("PCGEx / PCG Extended Toolkit", ledger)
+        self.assertIn("**approved pinned authoring dependency**", ledger)
+        self.assertIn("39a8f1bdc65b2c4613a1e87b71d93b4576db0a66", ledger)
+        self.assertIn("**reference / optional escalation**", ledger)
+        self.assertIn("not required by #287/#288", ledger)
 
-    def test_bootstrap_keeps_credentials_out_of_repository_contract(self) -> None:
+    def test_pcgex_bootstrap_is_exact_sha_clean_and_credential_free(self) -> None:
         bootstrap = (
-            ROOT / "scripts/worldgen/Bootstrap-YacsEmbarkTerrainToolchain.ps1"
+            ROOT / "scripts/worldgen/Bootstrap-YacsPcgEx.ps1"
         ).read_text(encoding="utf-8")
         for token in (
-            "houdini_installer.exe",
-            "--settings-file",
-            "--product', 'Houdini",
-            "/VERYSILENT",
-            "/CURRENTUSER",
-            "-Activate",
-            "secrets_persisted = $false",
+            "https://github.com/PCGEx/PCGExtendedToolkit.git",
+            "39a8f1bdc65b2c4613a1e87b71d93b4576db0a66",
+            "$ExpectedVersion = '0.79'",
+            "$ExpectedEngineVersion = '5.8.0'",
+            "$ExpectedLicenseFirstLine = 'MIT License'",
+            "shipping_runtime_dependency = $false",
+            "clean_checkout",
         ):
             self.assertIn(token, bootstrap)
-        self.assertNotIn("password=", bootstrap)
-        self.assertNotIn("client_secret=", bootstrap)
+        self.assertNotIn("password=", bootstrap.lower())
+        self.assertNotIn("client_secret=", bootstrap.lower())
 
-    def test_finalizer_is_validation_and_encoding_not_secret_smoothing(self) -> None:
-        source = (
-            ROOT / "scripts/assets/finalize_passo_giau_embark_heightfield.py"
+        gitignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
+        self.assertIn("Plugins/PCGExtendedToolkit/", gitignore)
+
+    def test_unreal_project_and_editor_module_keep_pcgex_optional(self) -> None:
+        uproject = json.loads(
+            (ROOT / "YetAnotherCyclingSim.uproject").read_text(encoding="utf-8")
+        )
+        plugin = next(
+            item
+            for item in uproject["Plugins"]
+            if item["Name"] == "PCGExtendedToolkit"
+        )
+        self.assertTrue(plugin["Enabled"])
+        self.assertTrue(plugin["Optional"])
+        self.assertEqual(plugin["TargetAllowList"], ["Editor"])
+
+        build = (
+            ROOT / "Source/YetAnotherCyclingSimEditor/YetAnotherCyclingSimEditor.Build.cs"
         ).read_text(encoding="utf-8")
         for token in (
-            'TARGET_CRS = "EPSG:32632"',
-            "LANDSCAPE_SIZE = 4033",
-            "MAX_SOURCE_CELL_M = 2.0",
-            '"passo-giau-embark-landscape-v1"',
-            "conditioned_source",
-            "dcc_handoff_manifest_sha256",
+            "Plugins",
+            "PCGExtendedToolkit",
+            "YACS_WITH_PCGEX=",
+            "PCGExCore",
+            "PCGExFoundations",
+            "PCGExElementsPaths",
+            "PCGExElementsSampling",
+            "PCGExElementsTopology",
+        ):
+            self.assertIn(token, build)
+
+    def test_pcg_source_adapter_enforces_presentation_only_policy(self) -> None:
+        source = (
+            ROOT
+            / "Source/YetAnotherCyclingSimEditor/Private/PCG/YacsPassoGiauSp638PathSettings.cpp"
+        ).read_text(encoding="utf-8")
+        for token in (
+            "presentation_only",
+            "authoritative_route_geometry",
+            "authoritative_physics",
+            'TEXT("ue_x_cm")',
+            'TEXT("ue_y_cm")',
+            'TEXT("ue_z_cm")',
+            "YACS.SP638.PresentationOnly",
+            "YACS.Source.RegioneDelVeneto",
         ):
             self.assertIn(token, source)
-        for forbidden in (
-            "gaussian_filter",
-            "uniform_filter",
-            "median_filter",
-            "cv2.GaussianBlur",
-            "np.convolve",
-        ):
-            self.assertNotIn(forbidden, source)
 
-    def test_unreal_wrapper_accepts_only_proven_external_conditioned_terrain(
-        self,
-    ) -> None:
-        wrapper = (
-            ROOT / "scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1"
+    def test_graph_commandlet_authors_bounded_deterministic_first_spike(self) -> None:
+        source = (
+            ROOT
+            / "Source/YetAnotherCyclingSimEditor/Private/PCG/YacsPassoGiauPcgExGraphCommandlet.cpp"
         ).read_text(encoding="utf-8")
         for token in (
-            "[string] $PreparedTerrainRoot",
-            "[switch] $SkipTerrainPreparation",
-            "passo-giau-embark-landscape-v1",
-            "conditioned_source.dcc_handoff_manifest_sha256",
-            "conditioned_source.sha256",
-            "Base_DTM",
-            "Road_Earthworks",
+            "#if YACS_WITH_PCGEX",
+            "UPCGExResamplePathSettings",
+            "UPCGExSmoothSettings",
+            "UPCGExOffsetPathSettings",
+            "Resample->SampleLength.Constant = 100.0",
+            "Smooth->bPreserveStart = true",
+            "Smooth->bPreserveEnd = true",
+            "OffsetLeft->Offset.Constant = 300.0",
+            "OffsetRight->Offset.Constant = 300.0",
+            "YACS PCGEx corridor graph authored:",
+            "SP638 presentation -> resample 1m -> bounded smooth -> +/-3m offsets.",
+        ):
+            self.assertIn(token, source)
+
+    def test_exact_sha_graph_wrapper_proves_api_integration_without_overclaiming(self) -> None:
+        wrapper = (
+            ROOT / "scripts/ue/Invoke-YacsPassoGiauPcgExGraph.ps1"
+        ).read_text(encoding="utf-8")
+        for token in (
+            "Bootstrap-YacsPcgEx.ps1",
+            "YetAnotherCyclingSimEditor",
+            "-run=YacsPassoGiauPcgExGraph",
+            "pcgex_graph_proof.json",
+            "graph_authoring_and_api_integration_only",
+            "shipping_runtime_dependency",
+            "Get-FileHash",
         ):
             self.assertIn(token, wrapper)
+        self.assertIn(
+            "It does not claim the graph has already executed against prepared SP638 data.",
+            wrapper,
+        )
 
-    def test_dcc_binary_recipes_are_lfs_and_not_faked_as_text(self) -> None:
-        attrs = (ROOT / ".gitattributes").read_text(encoding="utf-8")
-        self.assertIn("*.hiplc filter=lfs", attrs)
-        self.assertIn("*.terrain filter=lfs", attrs)
-
-        recipes = ROOT / "worldgen/embark/recipes"
-        self.assertTrue((recipes / "README.md").is_file())
-        # Until a real licensed DCC authoring pass produces them, these files
-        # must be absent rather than generated as fake textual stand-ins.
-        for filename in (
-            "passo_giau_landscape.hiplc",
-            "yacs_passo_giau_heightfield.hdalc",
-            "passo_giau_landscape.terrain",
+    def test_active_workflow_tracks_pcgex_inputs_and_does_not_require_dcc(self) -> None:
+        workflow = (
+            ROOT / ".github/workflows/passo-giau-embark-terrain.yml"
+        ).read_text(encoding="utf-8")
+        for token in (
+            "PCGEx corridor graph authoring",
+            "Invoke-YacsPassoGiauPcgExGraph.ps1",
+            "YacsPassoGiauPcgExGraphCommandlet.cpp",
+            "YacsPassoGiauSp638PathSettings.cpp",
+            "YetAnotherCyclingSimEditor.Build.cs",
+            "YetAnotherCyclingSim.uproject",
+            "Plugins/PCGExtendedToolkit",
         ):
-            path = recipes / filename
-            if path.exists():
-                header = path.read_bytes()[:128]
-                self.assertNotIn(b"placeholder", header.lower())
-                self.assertNotIn(b"fake", header.lower())
+            self.assertIn(token, workflow)
+        for forbidden in (
+            "embark_terrain_pipeline.py preflight",
+            "Materialize only DCC recipe binaries",
+            "Execute full Embark terrain pipeline",
+        ):
+            self.assertNotIn(forbidden, workflow)
 
 
 if __name__ == "__main__":
