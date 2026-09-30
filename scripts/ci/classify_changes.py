@@ -66,6 +66,13 @@ UE_CODE_TOOLING_EXACT = {
     "scripts/ue/Preflight-YacsProof.ps1",
 }
 
+UNREAL_COMPILE_TOOLING_EXACT = {
+    ".github/workflows/reusable-unreal.yml",
+    "scripts/ci/Invoke-YacsUnrealCi.ps1",
+    "scripts/ue/Invoke-YacsProof.ps1",
+    "scripts/ue/Preflight-YacsProof.ps1",
+}
+
 UE_TOOLING_PREFIXES = (
     "scripts/ue/",
     "tools/ue-mcp/",
@@ -215,6 +222,8 @@ def _is_ue_tooling(path: str) -> bool:
 
 def _is_unreal_compile_input(path: str) -> bool:
     pure = PurePosixPath(path)
+    if path in UNREAL_COMPILE_TOOLING_EXACT:
+        return True
     if _is_cpp(path):
         return True
     return pure.suffix.lower() in {".uproject", ".uplugin"}
@@ -421,8 +430,8 @@ def _hash_repository_inputs(
     return hasher.hexdigest()
 
 
-def unreal_compile_fingerprint(repo_root: str | Path = ".") -> str:
-    """Hash every tracked repository input that can change YACS Editor binaries."""
+def _unreal_binary_fingerprint(repo_root: str | Path = ".") -> str:
+    """Hash project/plugin inputs that define the compiled binary graph."""
 
     root = Path(repo_root).resolve()
     candidates: set[Path] = {root / "YetAnotherCyclingSim.uproject"}
@@ -442,8 +451,21 @@ def unreal_compile_fingerprint(repo_root: str | Path = ".") -> str:
 
     return _hash_repository_inputs(
         root,
-        namespace="yacs-unreal-compile-v1",
+        namespace="yacs-unreal-binary-v1",
         inputs=candidates,
+    )
+
+
+def unreal_compile_fingerprint(repo_root: str | Path = ".") -> str:
+    """Hash binary inputs plus the normal lane's build/engine-selection contract."""
+
+    root = Path(repo_root).resolve()
+    candidates = {root / path for path in UNREAL_COMPILE_TOOLING_EXACT}
+    return _hash_repository_inputs(
+        root,
+        namespace="yacs-unreal-compile-v2",
+        inputs=candidates,
+        seed=f"binary={_unreal_binary_fingerprint(root)}",
     )
 
 
@@ -469,10 +491,16 @@ def embark_terrain_compile_fingerprint(repo_root: str | Path = ".") -> str:
     engine_version = str(config["pcgex"]["engine_version"])
     pcgex_commit = str(config["pcgex"]["commit"])
 
+    heavy_contract = _hash_repository_inputs(
+        root,
+        namespace="yacs-embark-terrain-build-contract-v1",
+        inputs={root / path for path in EMBARK_TERRAIN_HEAVY_EXACT},
+    )
     hasher = hashlib.sha256()
-    hasher.update(b"yacs-embark-terrain-compile-v2\n")
+    hasher.update(b"yacs-embark-terrain-compile-v3\n")
     hasher.update(f"ue={engine_version}\npcgex={pcgex_commit}\n".encode("utf-8"))
-    hasher.update(unreal_compile_fingerprint(root).encode("ascii"))
+    hasher.update(_unreal_binary_fingerprint(root).encode("ascii"))
+    hasher.update(heavy_contract.encode("ascii"))
     return hasher.hexdigest()
 
 
