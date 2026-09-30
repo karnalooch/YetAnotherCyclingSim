@@ -298,6 +298,10 @@ class ChangeClassifierTests(unittest.TestCase):
             "render",
         )
         self.assertEqual(
+            cc.classify_embark_terrain_proof(["Config/DefaultEngine.ini"]),
+            "render",
+        )
+        self.assertEqual(
             cc.classify_embark_terrain_proof(
                 ["Source/YetAnotherCyclingSimEditor/Private/PCG/Test.cpp"]
             ),
