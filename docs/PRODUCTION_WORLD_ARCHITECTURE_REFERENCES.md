@@ -4,7 +4,7 @@
 **Authority:** informative evidence only; `WORLD_BUILDING_BIBLE.md` remains the world-building methodology SSOT  
 **Diagram language:** [`DIAGRAM_STYLE.md`](DIAGRAM_STYLE.md)
 
-This dossier reconstructs publicly documented production pipelines from **Far Cry 5** and **THE FINALS** as original YACS Mermaid diagrams.
+This dossier reconstructs publicly documented production pipelines from **Far Cry 5**, **Embark Landscape Creation**, **THE FINALS** and later **ARC Raiders** worldbuilding evidence as original YACS Mermaid diagrams.
 
 The purpose is to learn architecture, not to redistribute another studio's artwork or implementation.
 
@@ -40,6 +40,15 @@ Copyright in the original presentations, articles, screenshots, game assets and 
 
 - SideFX / Embark Studios — *Making the Procedural Buildings of THE FINALS*, Adrian Björkerud:  
   https://www.sidefx.com/community/making-the-procedural-buildings-of-the-finals-using-houdini/
+
+**Embark Landscape Creation / ARC Raiders**
+
+- SideFX / Embark Studios — *Embark Landscape Creation*, Darko Pracic, GDC HIVE 2023:  
+  https://www.sidefx.com/learn/talks/embark-landscape-creation/
+- SideFX — *GDC 2023 Houdini HIVE* programme entry for *Embark Landscape Creation*:  
+  https://www.sidefx.com/houdini-hive/gdc-2023/
+- Epic Games / Embark Studios — *Embark Studios build the award-winning ARC Raiders with Unreal Engine*, 2026:  
+  https://www.unrealengine.com/developer-interviews/embark-studios-build-the-award-winning-arc-raiders-with-unreal-engine
 
 ### Secondary reconstruction aid
 
@@ -85,6 +94,201 @@ Architectural lessons YACS may adopt independently:
 **Evidence boundary:** these public repositories demonstrate Embark's public
 tooling approaches. They are **not evidence of the complete internal ARC Raiders
 pipeline**, and this document must not present them as such.
+
+# 1.2 Embark Studios — landscape creation evidence
+
+## 1.2.1 Evidence boundary
+
+The 2023 SideFX presentation description documents Embark's use of Houdini to
+create realistic landscapes for Unreal Engine. The public description explicitly
+names:
+
+- LiDAR as source terrain data;
+- PDG as the LiDAR-processing setup replacing older artist-facing GIS workflows;
+- the Gaea bridge as part of artist terrain shaping;
+- export/import from Houdini to Unreal Engine;
+- in-house heightfield utility HDAs;
+- large landscape changes performed in 3D by non-technical artists.
+
+The 2026 Epic interview adds later shipped-product evidence that Embark relies
+heavily on Unreal Engine's worldbuilding toolkit for large terrain-heavy worlds,
+specifically naming **World Partition** and **Runtime Virtual Texturing**.
+
+The graph below is therefore an **original YACS reconstruction of documented
+stages and responsibilities**. It is not a copy of an Embark slide, does not
+claim to reproduce Embark's exact proprietary node graph, and does not imply
+that every stage was used unchanged in every Embark title.
+
+## 1.2.2 Reconstructed Embark landscape pipeline
+
+```mermaid
+flowchart LR
+    LIDAR["SOURCE<br/>LiDAR terrain data"] --> PDG["PROCESS<br/>PDG LiDAR conditioning"]
+    PDG --> HF["WORKING DATA<br/>Heightfield terrain"]
+
+    HF --> GAEA["SHAPE<br/>Gaea bridge"]
+    GAEA --> HF
+    HF --> HDA["TOOLS<br/>Heightfield utility HDAs"]
+    HDA --> ART["ARTIST CONTROL<br/>Large 3D landscape edits"]
+    ART --> HF
+
+    HF --> EXPORT["BRIDGE<br/>Houdini export / Unreal import"]
+    EXPORT --> UEL["ENGINE<br/>Unreal Landscape"]
+
+    UEL --> WP["WORLD SYSTEM<br/>World Partition"]
+    UEL --> RVT["PRESENTATION<br/>Runtime Virtual Texturing"]
+    WP --> GAME["OUTPUT<br/>Large terrain-heavy world"]
+    RVT --> GAME
+
+    classDef input fill:#303846,stroke:#8ea1b8,color:#f7f9fc,stroke-width:2px;
+    classDef exec fill:#123f73,stroke:#49a2ff,color:#ffffff,stroke-width:3px;
+    classDef tool fill:#4b2f69,stroke:#b77cff,color:#ffffff,stroke-width:2px;
+    classDef decision fill:#69470e,stroke:#f0a72f,color:#ffffff,stroke-width:3px;
+    classDef success fill:#1f5736,stroke:#63d889,color:#ffffff,stroke-width:3px;
+    classDef danger fill:#6b2429,stroke:#ff6b73,color:#ffffff,stroke-width:3px;
+    classDef owned fill:#34373d,stroke:#9da4ae,color:#ffffff,stroke-width:2px;
+    classDef evidence fill:#164d5c,stroke:#5bd6ef,color:#ffffff,stroke-width:2px;
+
+    class LIDAR input;
+    class PDG,ART,EXPORT exec;
+    class GAEA,HDA tool;
+    class HF evidence;
+    class UEL owned;
+    class WP,RVT exec;
+    class GAME success;
+
+    linkStyle default stroke-width:2px;
+```
+
+The important transferable pattern is the separation between:
+
+1. **immutable/verified source data**;
+2. **derived working terrain that may be conditioned and artist-shaped**;
+3. **engine-native Landscape/world systems**.
+
+That separation is more important to YACS than the choice of Houdini or Gaea.
+
+## 1.2.3 Embark stage → YACS equivalent → current gap
+
+| Embark evidence stage | YACS equivalent today | Status / gap |
+|---|---|---|
+| LiDAR source terrain | MASE PST LiDAR / DTM provenance | **Present.** Raw real-world source remains canonical evidence. |
+| PDG LiDAR processing | CRS validation, metric conversion, source hashing and current DTM preparation scripts | **Partial.** YACS has deterministic preparation, but no explicit reusable terrain-conditioning product between source DTM and Unreal import. |
+| Gaea bridge terrain shaping | No mandatory equivalent | **Intentional gap.** YACS must not add Gaea merely to mimic Embark. A shaping stage is admitted only if a bounded Passo Giau proof demonstrates a real need. |
+| Heightfield utility HDAs | UE Landscape-native tools first; later proven DCC/HDA only for a demonstrated native gap | **Policy match.** The World Building Bible already requires native-first/tools-first admission. |
+| Artist-friendly large 3D edits | Landscape Edit Layers: `Road_Earthworks`, later `Local_Corrections` | **Present conceptually.** Current M3 proof is validating `Road_Earthworks`; `Local_Corrections` must remain bounded and non-destructive. |
+| Houdini → Unreal export/import | Deterministic YACS authoring commandlets/scripts → persisted `.umap` / Landscape assets | **Present in YACS form.** Different tool, same explicit authoring boundary. |
+| Unreal Landscape | `Base_DTM` + Edit Layers + independent road mesh | **Present and currently under proof.** |
+| World Partition | Planned/available Unreal-native world streaming path when scale requires it | **Later M3/world-performance concern.** Do not block current road proof on it. |
+| Runtime Virtual Texturing | Optional visual blending after geometry correctness | **Later presentation concern.** RVT must never hide bad geometry. |
+| Fast artist iteration | Exact-input deterministic regeneration + bounded proof + rider visual review | **Partly present.** The missing production question is whether local terrain conditioning can be regenerated independently from raw source data. |
+
+## 1.2.4 The one missing layer worth testing in YACS
+
+The Embark evidence exposes a useful distinction that YACS currently compresses:
+
+```text
+raw real-world terrain
+    -> conditioned / shaped working terrain
+    -> engine Landscape
+```
+
+YACS currently trends closer to:
+
+```text
+raw/verified DTM
+    -> Base_DTM Landscape
+    -> Edit Layers
+```
+
+This is not automatically wrong. For a cycling route, preserving real geometry
+is more important than adding a large artistic terrain-authoring stack.
+
+However, if Passo Giau rider-view proof shows aliasing, stair-stepping,
+quantization artifacts or other source-to-Landscape problems that cannot be
+solved by choosing the correct Landscape sampling/resolution, YACS should test
+one explicit intermediate product:
+
+```text
+Canonical_DTM
+    -> Derived_Terrain_Conditioning
+    -> Base_DTM
+```
+
+The admission rules are strict:
+
+- `Canonical_DTM` stays immutable and reproducible;
+- conditioning is a derived artifact, never the new source of truth;
+- conditioning must record source identity, CRS, resolution and generator config;
+- it must not move the authoritative SP638 XY alignment;
+- it must not be used to hide a Landscape-resolution defect;
+- the same rider-view proof must compare direct import vs conditioned import;
+- Houdini/Gaea are candidates only after an Epic-native or existing YACS path
+  fails the same bounded contract.
+
+### Decision sequence for Passo Giau
+
+```mermaid
+flowchart LR
+    RAW["SOURCE<br/>Canonical DTM"] --> DIRECT["BASELINE<br/>Direct Base_DTM import"]
+    DIRECT --> PROOF{"RIDER PROOF<br/>Terrain quality acceptable?"}
+
+    PROOF -->|"YES"| KEEP["KEEP<br/>No conditioning stage"]
+    PROOF -->|"NO"| DIAG{"DIAGNOSE<br/>Why?"}
+
+    DIAG -->|"Landscape sampling / resolution"| GRID["FIX<br/>Landscape sampling"]
+    DIAG -->|"Source noise / conditioning need"| COND["SPIKE<br/>Derived terrain conditioning"]
+    DIAG -->|"Heightfield cannot represent form"| MESH["ESCALATE<br/>Local mesh / cliff solution"]
+
+    GRID --> REPROOF["VERIFY<br/>Same rider proof"]
+    COND --> REPROOF
+    MESH --> REPROOF
+
+    REPROOF -->|"PASS"| ADOPT["ADOPT<br/>Smallest proven layer"]
+    REPROOF -->|"FAIL"| BLOCK["FAIL CLOSED<br/>Do not decorate over geometry defect"]
+
+    classDef input fill:#303846,stroke:#8ea1b8,color:#f7f9fc,stroke-width:2px;
+    classDef exec fill:#123f73,stroke:#49a2ff,color:#ffffff,stroke-width:3px;
+    classDef tool fill:#4b2f69,stroke:#b77cff,color:#ffffff,stroke-width:2px;
+    classDef decision fill:#69470e,stroke:#f0a72f,color:#ffffff,stroke-width:3px;
+    classDef success fill:#1f5736,stroke:#63d889,color:#ffffff,stroke-width:3px;
+    classDef danger fill:#6b2429,stroke:#ff6b73,color:#ffffff,stroke-width:3px;
+    classDef owned fill:#34373d,stroke:#9da4ae,color:#ffffff,stroke-width:2px;
+    classDef evidence fill:#164d5c,stroke:#5bd6ef,color:#ffffff,stroke-width:2px;
+
+    class RAW input;
+    class DIRECT,GRID,COND,MESH,REPROOF exec;
+    class PROOF,DIAG decision;
+    class KEEP,ADOPT success;
+    class BLOCK danger;
+
+    linkStyle default stroke-width:2px;
+```
+
+### Current architecture decision
+
+This evidence **does not change the World Building Bible today**.
+
+It strengthens the existing tools-first policy and adds one proof-gated candidate:
+an explicit **derived terrain-conditioning stage** between canonical DTM and
+`Base_DTM` when, and only when, rider-view evidence demonstrates that source
+conditioning is the owning problem.
+
+Current SP638 work therefore remains:
+
+```text
+Canonical DTM
+  -> Base_DTM
+  -> Road_Earthworks
+  -> independent road mesh
+  -> rider proof
+```
+
+If that proof fails because of terrain sampling/conditioning, diagnose that
+layer before adding retaining helpers, material camouflage or another custom
+road-earthwork subsystem.
+
+---
 
 # 2. Far Cry 5 — production world-generation architecture
 
