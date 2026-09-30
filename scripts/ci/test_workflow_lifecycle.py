@@ -58,6 +58,13 @@ class WorkflowLifecycleContractTests(unittest.TestCase):
             with self.subTest(workflow=path.name):
                 self.assertIsNone(pattern.search(path.read_text(encoding="utf-8")))
 
+    def test_runner_recovery_is_explicit_owner_only_main_action(self) -> None:
+        text = (WORKFLOWS / "runner-space-recovery.yml").read_text(encoding="utf-8")
+        self.assertIn("workflow_dispatch:", text)
+        self.assertNotIn("push:", text)
+        self.assertIn("github.actor == github.repository_owner", text)
+        self.assertIn("github.ref == 'refs/heads/main'", text)
+
     def test_unknown_workflows_are_bounded_to_active_m3_transition(self) -> None:
         unknown = {
             row["file"] for row in self.rows if row["state"] == "UNKNOWN"
