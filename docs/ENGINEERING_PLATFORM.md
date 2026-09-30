@@ -111,13 +111,22 @@ Broker orchestration is trusted on the YACS default branch:
 - failed work requires explicit `retry`;
 - target-workflow `workflow_dispatch` remains an emergency fallback.
 
-The first enabled consumer proof remains `r4-1b3-geometry`:
+The enabled broker-managed heavy proof set is:
 
 ```text
 /gumball proof r4-1b3-geometry
+/gumball proof m3-hairpin-corridor
+/gumball proof world-authoring-sp638
+/gumball proof environment-performance
+/gumball proof source-asset-audit
 ```
 
-The broker does not make heavyweight Unreal work automatic on every PR update.
+These targets are read-only proof workflows with exact-SHA/request-id inputs,
+success-only reusable artifacts and separate failure diagnostics. The broker
+does not make heavyweight Unreal work automatic on every PR update.
+
+Mutating authoring workflows, release/full-asset validation and administrative
+recovery remain outside the broker by design.
 
 Reusable improvements discovered in YACS are recorded under
 `.gumball/candidates/` for explicit downstream -> Gumball promotion.
