@@ -92,6 +92,8 @@ RUNTIME_SENSITIVE_PREFIXES = (
 EMBARK_TERRAIN_HEAVY_EXACT = {
     ".github/workflows/passo-giau-embark-terrain.yml",
     "scripts/ci/classify_changes.py",
+    "scripts/ci/Resolve-YacsUnrealBuildEnvironment.ps1",
+    "scripts/ci/Resolve-YacsUnrealEngine.ps1",
     "scripts/ue/Invoke-YacsPassoGiauPcgExGraph.ps1",
     "scripts/worldgen/Bootstrap-YacsPcgEx.ps1",
 }
