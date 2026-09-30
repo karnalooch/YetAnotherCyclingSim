@@ -6,23 +6,77 @@ YACS routes CI from one path classifier: `scripts/ci/classify_changes.py`.
 The classifier decides which lanes are required; individual workflows must not
 grow their own competing path-regex policy.
 
+The classifier follows the Gumball CI Cost Governor rule: **classify before
+computing and run the cheapest trustworthy proof**.
+
+## Routing outputs
+
+The main impact outputs are:
+
+- `python` — Python/static contract surface changed;
+- `cpp` — C/C++/C# source under a project or plugin `Source/` tree changed;
+- `assets` — tracked source/game asset surface changed;
+- `ci` — CI/tooling surface changed;
+- `ue_code` — a code-build-affecting Unreal surface changed and the automatic
+  code-only Editor build + Automation lane is required;
+- `ue_tooling` — Unreal editor/authoring/proof tooling changed, but that fact
+  alone does **not** require an automatic Editor build;
+- `asset_full` — the change requires the heavy Stage 3G/full-world proof at
+  the configured readiness boundary;
+- `unknown` — the classifier could not map at least one path confidently;
+- `ci_cost_class` — one of `light`, `standard`, `heavy`.
+
 ## Routing matrix
 
-| Change class | Required lanes |
-| --- | --- |
-| docs-only | Repository policy, Governance, Aggregate |
-| Python | Python reference tests, security baseline, CodeQL Python |
-| C++ | security baseline, CodeQL C++; classifier also emits `ue_code=true` |
-| Build.cs / Target.cs / .uproject / .uplugin / critical Config | security baseline, CodeQL C++; classifier also emits `ue_code=true` |
-| CI/tooling | CI contract tests plus security baseline; UE canary only when Unreal-facing tooling changed |
-| asset-only | Repository policy, Governance, lightweight asset validation; Stage 3G/high-risk assets additionally require full validation |
-| code + assets | union of the relevant code lanes and asset validation |
-| unknown path | Repository policy, Governance, security baseline; classifier exposes `unknown=true` |
-| schedule/manual static run | Python + C++ static/security + CI contracts, but no asset payload and no UE canary |
+| Change class | Required lanes | Cost |
+| --- | --- | --- |
+| docs-only | Repository policy, Governance, Aggregate | `light` |
+| Python | Python reference tests, security baseline, CodeQL Python | `standard` |
+| C++ / plugin C++ | security baseline, CodeQL C++, code-only Unreal build + Automation | `heavy` |
+| Build.cs / Target.cs / .uproject / .uplugin / critical Config | security baseline, CodeQL C++, code-only Unreal build + Automation | `heavy` |
+| CI/tooling | CI contract tests plus security baseline | normally `standard` |
+| Unreal proof/editor/authoring tooling | CI/Python/contracts as applicable; **no automatic code build solely because the path is under `scripts/ue/**`** | normally `standard` |
+| code-build tooling used by the automatic Unreal lane | CI contracts plus code-only Unreal build + Automation | `heavy` |
+| asset-only | Repository policy, Governance, lightweight asset validation | `standard` |
+| `asset_full` world change | lightweight validation plus the configured full-world proof at readiness | `heavy` |
+| code + assets | union of the relevant code lanes and asset validation | highest required class |
+| unknown repository path | Repository policy, Governance, security baseline; exposes `unknown=true` | `standard` |
+| unknown runtime-sensitive path under `Source/`, `Config/`, `Plugins/` or `Build/` | fail closed to `ue_code=true` | `heavy` |
+| schedule/manual static run | Python + C++ static/security + CI contracts, but no asset payload and no automatic UE build | `standard` |
 
 The local `Aggregate CI gate` is fail-closed. For every optional lane it checks
 both directions: a lane classified as required must finish successfully, while
-a lane classified as unnecessary must actually be skipped.
+a lane classified as unnecessary must actually be skipped. It also validates
+that `ci_cost_class` is one of the three canonical values and that heavy
+Unreal/full-world impact cannot be mislabeled as a cheaper class.
+
+## Unreal code vs Unreal tooling
+
+The old rule `scripts/ue/** => ue_code=true` was intentionally removed.
+
+Most files under `scripts/ue/` are proof wrappers, authoring scripts, visual
+capture helpers, profiling tools or editor orchestration. Changing those files
+usually needs hosted CI/contract validation and, for Python files, Python
+security/static checks. It does not prove that recompiling
+`YetAnotherCyclingSimEditor` is useful evidence.
+
+The automatic code-only Unreal lane is reserved for:
+
+- compiled project/plugin source;
+- `.uproject` / `.uplugin`;
+- critical runtime/editor Config;
+- the reusable automatic Unreal workflow itself;
+- the exact build/provenance helpers used by that lane:
+  - `scripts/ci/Invoke-YacsUnrealCi.ps1`;
+  - `scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1`;
+  - `scripts/ci/Test-YacsCodeOnlyCheckout.ps1`;
+  - `scripts/ue/Invoke-YacsProof.ps1`;
+  - `scripts/ue/Preflight-YacsProof.ps1`.
+
+A change to `.github/workflows/manual-unreal.yml` or a bounded proof wrapper is
+CI/tooling work and does not automatically schedule the code build. Its own
+contract tests and any explicit proof workflow remain responsible for its
+behavior.
 
 ## Code-only Unreal contract
 
@@ -33,11 +87,13 @@ The reusable Unreal lane is intentionally source-only:
 - `Test-YacsCodeOnlyCheckout.ps1` requires tracked LFS assets to remain pointer files;
 - only after that guard passes may the Editor build and scoped Automation run.
 
-The reusable code-only lane remains a routing building block. Heavy Unreal execution uses the proven repository-scoped `yacs-ue58` self-hosted runner and must never depend on shipping the Engine through hosted CI cache/workspace storage.
+Heavy Unreal execution uses the repository-scoped `yacs-ue58` self-hosted
+runner and must never depend on shipping the Engine through hosted CI
+cache/workspace storage.
 
-When automatic Unreal execution is enabled, a C++ change must not download
-project textures, maps, FBX files, audio or other LFS payloads merely to prove
-that source code compiles and the code-centric Automation suites pass.
+A C++ or build-contract change must not download project textures, maps, FBX
+files, audio or other LFS payloads merely to prove that source code compiles and
+the code-centric Automation suites pass.
 
 ## Lightweight asset validation
 
@@ -51,7 +107,7 @@ required LFS extensions.
 
 ## Full asset / release lanes
 
-High-risk Stage 3G changes now participate in normal PR CI through
+High-risk Stage 3G changes participate in normal PR CI through
 `.github/workflows/reusable-stage3g-full.yml`. The classifier emits
 `asset_full=true` only for the canonical Stage 3G environment, map, terrain
 runtime, authoring/proof tooling and world-generation specification. Ordinary
@@ -70,34 +126,17 @@ artifacts and unconditionally cleans the runner workspace.
 Release-oriented binary validation remains deliberately separate. The manual
 trusted entrypoint is `.github/workflows/asset-full.yml`.
 
-Phase 1 exposes four manual modes on `main` only:
-
-- `map-smoke` — full LFS checkout, Editor build + Stage 3 Automation,
-  deterministic save/reload verification and Map Check, with rendered
-  performance intentionally skipped;
-- `visual` — full LFS checkout and rendered Stage 3 visual-environment proof;
-- `package` — explicit Win64 `BuildCookRun` for
-  `/Game/Prototype/Maps/L_CyclingTest`, covering build + cook + stage +
-  pak/archive and validating the archived executable/content containers;
-- `full` — Stage 3 build/Automation/persistence/Map Check/performance,
-  rendered visual proof, and Win64 package proof.
-
-The workflow resolves an exact trusted `main` SHA before checkout, uses the
-repository-scoped `yacs-ue58` self-hosted runner, requests read-only repository
-permissions, runs `git lfs fsck`, uploads only concise proof artifacts and
-always cleans the workspace.
-
-Packaging remains manual and fail-closed; the package mode performs the cook as part of BuildCookRun rather than maintaining a second, partially overlapping cook-only implementation. A future nightly may reuse the trusted heavy lane, but package/full release proof is not part of ordinary PR validation.
-
 The normal Aggregate gate must never start a full asset/cook/package workload
-only because a documentation, Python, C++ or small asset change was pushed.
+only because a documentation, Python, CI or proof-tooling change was pushed.
 
 ## Ownership
 
-- **Classifier:** which lanes are required.
+- **Classifier:** which lanes are required and the machine-readable cost class.
 - **Governance:** high-risk path and workflow policy.
 - **Repository policy:** LFS and repository hygiene.
 - **Security workflows:** dependency, Trivy and language-specific CodeQL.
-- **Unreal code lane:** source build + scoped Automation without assets.
+- **Unreal code lane:** source/build-contract proof without assets.
+- **Unreal tooling/proof workflows:** project-owned explicit evidence, not an
+  automatic code-build trigger by directory name.
 - **Full asset/release lane:** explicit heavy runtime proof.
 - **Aggregate CI gate:** verifies the classifier decision was actually honored.
