@@ -34,7 +34,7 @@ MAX_SOURCE_CELL_M = 2.0
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", required=True, type=Path)
-    parser.add_argument("--pipeline-run-manifest", required=True, type=Path)
+    parser.add_argument("--dcc-handoff-manifest", required=True, type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
     return parser.parse_args()
 
@@ -86,17 +86,17 @@ def landscape_metadata(minimum: float, maximum: float) -> dict[str, Any]:
 def main() -> int:
     args = parse_args()
     source = args.source.resolve()
-    pipeline_manifest = args.pipeline_run_manifest.resolve()
+    dcc_handoff_manifest = args.dcc_handoff_manifest.resolve()
     output_dir = args.output_dir.resolve()
 
     if not source.is_file():
         print(f"[error] missing conditioned heightfield: {source}", file=sys.stderr)
         return 2
-    if not pipeline_manifest.is_file():
-        print(f"[error] missing pipeline run manifest: {pipeline_manifest}", file=sys.stderr)
+    if not dcc_handoff_manifest.is_file():
+        print(f"[error] missing immutable DCC handoff manifest: {dcc_handoff_manifest}", file=sys.stderr)
         return 2
 
-    pipeline = json.loads(pipeline_manifest.read_text(encoding="utf-8"))
+    pipeline = json.loads(dcc_handoff_manifest.read_text(encoding="utf-8"))
     if pipeline.get("pipeline_id") != "passo-giau-embark-landscape-v1":
         print("[error] unexpected pipeline_id in run manifest", file=sys.stderr)
         return 2
@@ -211,8 +211,8 @@ def main() -> int:
             "sha256": sha256_file(source),
             "native_grid": [int(native.shape[1]), int(native.shape[0])],
             "native_cell_m": [round(cell_x, 6), round(cell_y, 6)],
-            "pipeline_run_manifest": str(pipeline_manifest),
-            "pipeline_run_manifest_sha256": sha256_file(pipeline_manifest),
+            "dcc_handoff_manifest": str(dcc_handoff_manifest),
+            "dcc_handoff_manifest_sha256": sha256_file(dcc_handoff_manifest),
         },
         "elevation_m": native_stats,
         "landscape_diagnostics": landscape_diagnostics(
