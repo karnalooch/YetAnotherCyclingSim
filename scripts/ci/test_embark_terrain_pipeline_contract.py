@@ -351,7 +351,6 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         ):
             self.assertNotIn(forbidden, workflow)
 
-
     def test_embark_proof_uses_fingerprinted_build_reuse_fail_closed(self) -> None:
         workflow = (ROOT / ".github/workflows/passo-giau-embark-terrain.yml").read_text(
             encoding="utf-8"
@@ -396,6 +395,11 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
             "Compile-fingerprint cache is missing PCGEx plugin binaries.",
         ):
             self.assertIn(token, wrapper)
+
+        self.assertIn(
+            '$UbtConfig = @"\n<?xml version="1.0" encoding="utf-8" ?>',
+            wrapper,
+        )
 
         self.assertNotIn(
             "Remove-Item -LiteralPath $pcgex -Recurse -Force",

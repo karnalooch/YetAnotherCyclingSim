@@ -137,14 +137,14 @@ else {
     $MaxParallelActions = [int][Math]::Max(2, $MaxParallelActions)
     
     $UbtConfig = @"
-    <?xml version="1.0" encoding="utf-8" ?>
-    <Configuration xmlns="https://www.unrealengine.com/BuildConfiguration">
-      <BuildConfiguration>
-        <bAllowUBAExecutor>false</bAllowUBAExecutor>
-        <bAllowUBALocalExecutor>false</bAllowUBALocalExecutor>
-        <MaxParallelActions>$MaxParallelActions</MaxParallelActions>
-      </BuildConfiguration>
-    </Configuration>
+<?xml version="1.0" encoding="utf-8" ?>
+<Configuration xmlns="https://www.unrealengine.com/BuildConfiguration">
+  <BuildConfiguration>
+    <bAllowUBAExecutor>false</bAllowUBAExecutor>
+    <bAllowUBALocalExecutor>false</bAllowUBALocalExecutor>
+    <MaxParallelActions>$MaxParallelActions</MaxParallelActions>
+  </BuildConfiguration>
+</Configuration>
 "@
     $UbtConfig | Set-Content -LiteralPath $UbtConfigPath -Encoding UTF8
     Write-Host (
