@@ -331,6 +331,18 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         ):
             self.assertIn(token, rider_wrapper)
 
+        pcgex_wrapper = (
+            ROOT / "scripts/ue/Invoke-YacsPassoGiauPcgExGraph.ps1"
+        ).read_text(encoding="utf-8")
+        for token in (
+            "PCGEx conservative UBT profile",
+            "<bAllowUBAExecutor>false</bAllowUBAExecutor>",
+            "<bAllowUBALocalExecutor>false</bAllowUBALocalExecutor>",
+            "<MaxParallelActions>$MaxParallelActions</MaxParallelActions>",
+            "$Context.Machine.FreeVirtualGb",
+        ):
+            self.assertIn(token, pcgex_wrapper)
+
         for forbidden in (
             "embark_terrain_pipeline.py preflight",
             "Materialize only DCC recipe binaries",
