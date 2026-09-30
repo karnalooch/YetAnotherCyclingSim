@@ -50,7 +50,9 @@ After editing:
 - Concrete work is tracked by GitHub Issue number plus a human-readable title.
 - Existing Stage/R/B identifiers may remain in historical documents, workflow names and proof artifacts for traceability.
 - For any terrain, road, earthwork, Landscape, PCG, material, cliff, world-streaming or world-performance change, `docs/WORLD_BUILDING_BIBLE.md` is the methodology SSOT.
+- Before creating or materially extending a custom world-building subsystem, follow the Bible's tools-first audit and architecture evidence ladder. External production evidence increases confidence but never replaces a bounded YACS proof against YACS inputs.
 - `docs/YACS_WORLD_AUTHORING_LIBRARY.md` defines reusable implementation/catalog systems; it does not override the Bible's world architecture.
+- New or substantially revised architecture/workflow diagrams must follow `docs/DIAGRAM_STYLE.md`, the YACS adoption of the Gumball Blueprint Mermaid language.
 
 ### Documentation SSOT and freshness
 
