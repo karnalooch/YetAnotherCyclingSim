@@ -9,10 +9,31 @@ Runs for draft and ready PRs as applicable:
 - change classification;
 - repository and governance policy;
 - Python/C++ security lanes when their paths change;
-- code-only Unreal build for UE C++/tooling changes;
+- code-only Unreal build for C++ and explicitly build-affecting Unreal changes;
 - lightweight asset/LFS-pointer validation for asset changes.
 
 Draft PRs are the normal iteration mode for world-building work.
+
+### Gumball CI Cost Governor routing
+
+The classifier emits a machine-readable `ci_cost_class`:
+
+- `light` — documentation-only work;
+- `standard` — Python, ordinary CI/tooling, proof/editor tooling and regular
+  asset validation;
+- `heavy` — compiled/build-affecting Unreal changes or `asset_full` world
+  changes.
+
+`scripts/ue/**` is **not** an automatic code-build trigger. Most scripts in
+that directory are authoring/proof/editor tooling and remain on hosted
+CI/contract lanes unless the exact path is part of the automatic code-build
+contract. The build-sensitive exceptions are documented in
+[`ci/CHANGE_CLASSIFIER.md`](ci/CHANGE_CLASSIFIER.md).
+
+Unknown paths inside runtime-sensitive `Source/`, `Config/`, `Plugins/`
+or `Build/` fail closed to the heavy `ue_code` path. Ordinary unknown
+repository paths remain visible as `unknown=true` and receive conservative
+security/contract validation without automatically burning the Unreal runner.
 
 ## Tier 1 — heavy Stage 3G proof at merge-candidate readiness
 
@@ -112,7 +133,7 @@ The lifecycle is:
 1. **Iteration — lightweight**
    - add or tune vegetation, water, rocks, terrain dressing, materials, lighting, fog and similar world elements;
    - run static/contract/policy/LFS-pointer checks;
-   - keep code-only Unreal validation for C++/UE tooling changes;
+   - keep code-only Unreal validation for C++ and build-contract changes; keep ordinary proof/editor tooling on hosted CI/contract validation;
    - do not run the full map/world proof after every art commit.
 
 2. **Owner visual acceptance — performance checkpoint**
