@@ -15,6 +15,7 @@ import json
 import math
 import os
 import re
+import struct
 from pathlib import Path
 import sys
 import time
@@ -54,6 +55,8 @@ PCGEX_CENTER_DATASET_INDEX = 0
 PCGEX_RENDER_SPLINE_STRIDE = 5
 
 DIAGNOSTIC_VARIANT_ENV = "YACS_SP638_LOCAL_CORRIDOR_VARIANT"
+NATIVE_DTM_PATCH_ENV = "YACS_NATIVE_DTM_PATCH_METADATA"
+
 DIAGNOSTIC_VARIANTS = {
     "A": {
         "macro_landscape_visible": True,
@@ -84,6 +87,12 @@ DIAGNOSTIC_VARIANTS = {
         "local_terrain_visible": True,
         "corridor_visible": True,
         "apply_landscape_cut_fill": True,
+    },
+    "C3": {
+        "macro_landscape_visible": False,
+        "local_terrain_visible": True,
+        "corridor_visible": False,
+        "apply_landscape_cut_fill": False,
     },
 }
 
@@ -712,6 +721,97 @@ def _sample_local_terrain_skin(
     return mesh, origin_world, diagnostics
 
 
+def _load_native_dtm_patch():
+    metadata_value = os.environ.get(NATIVE_DTM_PATCH_ENV, "").strip()
+    if not metadata_value:
+        raise RuntimeError(
+            f"{NATIVE_DTM_PATCH_ENV} is required for Gate C.3 native-DTM proof"
+        )
+    metadata_path = Path(metadata_value)
+    if not metadata_path.is_file():
+        raise RuntimeError(f"native DTM patch metadata is missing: {metadata_path}")
+
+    payload = json.loads(metadata_path.read_text(encoding="utf-8"))
+    source = payload.get("source") or {}
+    grid = payload.get("grid") or {}
+    binary = payload.get("binary") or {}
+    policy = payload.get("yacs_policy") or {}
+    if payload.get("schema_version") != 1 or payload.get("proof_gate") != "C.3":
+        raise RuntimeError("native DTM patch schema/gate mismatch")
+    if source.get("kind") != "prepared native metric DTM":
+        raise RuntimeError("native DTM patch source kind drifted")
+    if source.get("crs") != "EPSG:32632":
+        raise RuntimeError(f"native DTM patch CRS drifted: {source.get('crs')}")
+    if source.get("landscape_collision_sampled") is not False:
+        raise RuntimeError("Gate C.3 patch unexpectedly samples Landscape collision")
+    if policy.get("native_dtm_direct") is not True or policy.get("smoothing_applied") is not False:
+        raise RuntimeError("Gate C.3 native-DTM policy drifted")
+    if grid.get("x_order") != "ue_x_ascending" or grid.get("row_order") != "ue_y_descending":
+        raise RuntimeError("Gate C.3 patch axis order drifted")
+
+    rows = int(grid["rows"])
+    columns = int(grid["columns"])
+    step_x_m = float(grid["step_x_m"])
+    step_y_m = float(grid["step_y_m"])
+    if rows < 3 or columns < 3 or abs(step_x_m - 1.0) > 1e-6 or abs(step_y_m - 1.0) > 1e-6:
+        raise RuntimeError(
+            f"Gate C.3 patch grid drifted: rows={rows} columns={columns} "
+            f"step=({step_x_m},{step_y_m})"
+        )
+
+    binary_path = metadata_path.parent / str(binary["file"])
+    raw = binary_path.read_bytes()
+    expected_bytes = rows * columns * 4
+    if len(raw) != expected_bytes or int(binary.get("byte_count", -1)) != expected_bytes:
+        raise RuntimeError(
+            f"Gate C.3 patch byte count mismatch: actual={len(raw)} expected={expected_bytes}"
+        )
+    if hashlib.sha256(raw).hexdigest() != str(binary.get("sha256", "")):
+        raise RuntimeError("Gate C.3 patch binary SHA256 mismatch")
+    if binary.get("dtype") != "float32-le" or binary.get("layout") != "row-major":
+        raise RuntimeError("Gate C.3 patch binary contract drifted")
+
+    values = struct.unpack(f"<{rows * columns}f", raw)
+    heights_m = tuple(
+        tuple(values[row * columns : (row + 1) * columns])
+        for row in range(rows)
+    )
+    first_x_m = float(grid["first_ue_x_m"])
+    first_y_m = float(grid["first_ue_y_m"])
+    x_coordinates_m = tuple(first_x_m + column * step_x_m for column in range(columns))
+    y_coordinates_m = tuple(first_y_m - row * step_y_m for row in range(rows))
+    origin_z_m = min(values)
+    mesh = build_terrain_skin_mesh(
+        x_coordinates_m,
+        y_coordinates_m,
+        heights_m,
+        origin_x_m=first_x_m,
+        origin_y_m=first_y_m,
+        origin_z_m=origin_z_m,
+        lift_m=0.0,
+    )
+    origin_world = unreal.Vector(first_x_m * 100.0, first_y_m * 100.0, origin_z_m * 100.0)
+    diagnostics = {
+        "world_aligned": True,
+        "native_metric_dtm": True,
+        "landscape_collision_sampled": False,
+        "source": "prepared native metric DTM bounded patch",
+        "source_crs": source["crs"],
+        "source_sha256": source["sha256"],
+        "binary_sha256": binary["sha256"],
+        "grid_step_m": step_x_m,
+        "half_extent_m": float(grid["extent_m"]) * 0.5,
+        "row_count": rows,
+        "column_count": columns,
+        "sample_count": rows * columns,
+        "smoothing_applied": False,
+        "occlusion_lift_m": 0.0,
+        "mesh_sha256": terrain_skin_hash(mesh),
+        "canonical_road_xy_modified": False,
+    }
+    return mesh, origin_world, diagnostics
+
+
 def _make_material(
     world: unreal.World,
     parent: unreal.MaterialInterface,
@@ -985,10 +1085,14 @@ def main() -> None:
             terrain_skin_mesh,
             terrain_skin_origin_world,
             terrain_skin_diagnostics,
-        ) = _sample_local_terrain_skin(
-            world,
-            road_actor,
-            terrain_skin_center_world,
+        ) = (
+            _load_native_dtm_patch()
+            if variant_name == "C3"
+            else _sample_local_terrain_skin(
+                world,
+                road_actor,
+                terrain_skin_center_world,
+            )
         )
         terrain_skin_diagnostics["enabled"] = True
 
@@ -1169,7 +1273,11 @@ def main() -> None:
     camera_component.set_editor_property("field_of_view", 76.0)
 
     _proof_data = {
-        "capture_strategy": "gate-c1-surface-ownership-diagnostic",
+        "capture_strategy": (
+            "gate-c3-native-dtm-bounded-patch"
+            if variant_name == "C3"
+            else "gate-c1-surface-ownership-diagnostic"
+        ),
         "diagnostic_variant": variant_name,
         "surface_visibility": {
             "macro_landscape": macro_landscape_visible,
@@ -1252,7 +1360,7 @@ def main() -> None:
             "landscape_hidden_after_sampling": not macro_landscape_visible,
             "macro_landscape_visible": macro_landscape_visible,
             "occlusion_lift_m": (
-                TERRAIN_SKIN_LIFT_M
+                float(terrain_skin_diagnostics.get("occlusion_lift_m", TERRAIN_SKIN_LIFT_M))
                 if bool(variant["local_terrain_visible"])
                 else 0.0
             ),
@@ -1282,7 +1390,11 @@ def main() -> None:
         mask_enabled=False,
         capture_hdr=False,
         comparison_tolerance=unreal.ComparisonTolerance.LOW,
-        comparison_notes=f"Gate C.1 surface ownership diagnostic variant {variant_name}",
+        comparison_notes=(
+            "Gate C.3 native metric DTM bounded patch"
+            if variant_name == "C3"
+            else f"Gate C.1 surface ownership diagnostic variant {variant_name}"
+        ),
         delay=3.0,
         force_game_view=True,
     )
