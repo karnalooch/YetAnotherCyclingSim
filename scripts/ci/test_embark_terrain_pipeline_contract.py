@@ -237,6 +237,14 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         workflow = (ROOT / ".github/workflows/passo-giau-embark-terrain.yml").read_text(
             encoding="utf-8"
         )
+        extractor = (
+            ROOT / "scripts/assets/extract_passo_giau_native_dtm_patch.py"
+        ).read_text(encoding="utf-8")
+        manifest = json.loads(
+            (ROOT / "worldgen/embark/passo_giau_terrain_pipeline.json").read_text(
+                encoding="utf-8"
+            )
+        )
 
         self.assertIn(
             'DIAGNOSTIC_VARIANT_ENV = "YACS_SP638_LOCAL_CORRIDOR_VARIANT"', capture
@@ -266,6 +274,12 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         self.assertIn("prepared native metric DTM bounded patch", capture)
         self.assertIn("landscape_collision_sampled", capture)
         self.assertIn("Gate C.3 did not use the native metric DTM.", wrapper)
+        self.assertIn("proof_hairpin_station_m", extractor)
+        self.assertNotIn("choose_hairpin", extractor)
+        proof_location = manifest["proof_locations"]["gate_c_hairpin"]
+        self.assertEqual(proof_location["source_station_m"], 15560.0)
+        self.assertEqual(proof_location["gate_c1_pcgex_focus_distance_m"], 15450.0)
+        self.assertLess(proof_location["observed_source_to_render_focus_xy_delta_m"], 2.0)
 
     def test_active_workflow_tracks_pcgex_inputs_and_does_not_require_dcc(self) -> None:
         workflow = (ROOT / ".github/workflows/passo-giau-embark-terrain.yml").read_text(
