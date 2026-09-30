@@ -686,10 +686,12 @@ def build_corridor_mesh(
     *,
     tangent_half_window_stations: int = 1,
 ) -> CorridorMesh:
-    """Sweep asymmetric cross-sections along a presentation-only centerline.
+    """Sweep asymmetric cross-sections into an Unreal-front-facing mesh.
 
     A wider tangent window changes only the local cross-section frame. It never
-    moves or resamples the canonical centerline stations.
+    moves or resamples the canonical centerline stations. Output triangle
+    winding is clockwise for Unreal's left-handed world; geometric fold
+    detection remains independent from render-face orientation.
     """
 
     _validate_inputs(centerline, profiles)
@@ -723,8 +725,14 @@ def build_corridor_mesh(
             b = row + lateral_index + 1
             c = next_row + lateral_index
             d = next_row + lateral_index + 1
-            triangles.append((a, c, b))
-            triangles.append((b, c, d))
+            # Unreal DynamicMesh renders clockwise front faces in its
+            # left-handed world. With stations advancing along the centerline
+            # and profile points ordered left-to-right, (a,b,c)/(b,d,c)
+            # presents the corridor surface to the rider camera. The previous
+            # conventional +Z winding exposed the back face and rendered the
+            # asphalt/earthwork/shoulders as black torn ribbons.
+            triangles.append((a, b, c))
+            triangles.append((b, d, c))
 
     mesh = CorridorMesh(
         vertices=tuple(vertices),
@@ -772,9 +780,13 @@ def validate_corridor_mesh(mesh: CorridorMesh) -> None:
         normal = triangle_normal(mesh, triangle)
         if _length(normal) <= _EPSILON:
             raise ValueError(f"triangle {triangle_index} is degenerate")
-        if normal.z <= _EPSILON:
+        # Conventional right-handed XY cross-product is negative for
+        # Unreal's front-facing clockwise winding. Zero or positive means the
+        # render face is degenerate, flipped, or the swept corridor folded.
+        if normal.z >= -_EPSILON:
             raise ValueError(
-                f"triangle {triangle_index} is inverted or folded in XY"
+                f"triangle {triangle_index} has invalid UE front-face winding "
+                "or is inverted or folded in XY"
             )
 
 

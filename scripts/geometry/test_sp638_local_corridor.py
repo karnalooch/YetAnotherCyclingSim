@@ -56,8 +56,16 @@ class LocalGroundCorridorTests(unittest.TestCase):
         self.assertAlmostEqual(first_left.z, 103.0)
         self.assertAlmostEqual(first_right.z, 98.0)
 
+        # Stations advance in +X and the profile is ordered left-to-right
+        # in +Y. Unreal's visible side is clockwise from +Z, so the first quad
+        # must use (a,b,c)/(b,d,c), with a negative conventional Z normal.
+        self.assertEqual(mesh.triangles[0], (0, 1, len(self.profile)))
+        self.assertEqual(
+            mesh.triangles[1],
+            (1, len(self.profile) + 1, len(self.profile)),
+        )
         for triangle in mesh.triangles:
-            self.assertGreater(triangle_normal(mesh, triangle).z, 0.0)
+            self.assertLess(triangle_normal(mesh, triangle).z, 0.0)
 
     def test_curved_centerline_keeps_finite_non_degenerate_geometry(self) -> None:
         angles = (0.0, 0.12, 0.24, 0.36, 0.48, 0.60, 0.72)
@@ -79,7 +87,7 @@ class LocalGroundCorridorTests(unittest.TestCase):
             self.assertTrue(math.isfinite(vertex.y))
             self.assertTrue(math.isfinite(vertex.z))
         for triangle in mesh.triangles:
-            self.assertGreater(triangle_normal(mesh, triangle).z, 0.0)
+            self.assertLess(triangle_normal(mesh, triangle).z, 0.0)
 
     def test_vertical_profile_can_change_per_station_without_moving_offsets(self) -> None:
         centerline = (
@@ -204,7 +212,7 @@ class LocalGroundCorridorTests(unittest.TestCase):
             )
         )
         for triangle in mesh.triangles:
-            self.assertGreater(triangle_normal(mesh, triangle).z, 0.0)
+            self.assertLess(triangle_normal(mesh, triangle).z, 0.0)
 
     def test_adaptive_offset_handles_real_hairpin_radius_class(self) -> None:
         radius = 4.35
@@ -245,7 +253,7 @@ class LocalGroundCorridorTests(unittest.TestCase):
         self.assertGreater(minimum_inside_tie, minimum_inside_shoulder)
         self.assertLess(minimum_inside_tie, radius)
         for triangle in mesh.triangles:
-            self.assertGreater(triangle_normal(mesh, triangle).z, 0.0)
+            self.assertLess(triangle_normal(mesh, triangle).z, 0.0)
 
     def test_adaptive_offset_handles_sub_four_metre_real_apex_class(self) -> None:
         radius = 3.55
@@ -281,7 +289,7 @@ class LocalGroundCorridorTests(unittest.TestCase):
             4.0,
         )
         for triangle in mesh.triangles:
-            self.assertGreater(triangle_normal(mesh, triangle).z, 0.0)
+            self.assertLess(triangle_normal(mesh, triangle).z, 0.0)
 
     def test_adaptive_offset_fails_when_minimum_spans_do_not_fit(self) -> None:
         radius = 3.40
