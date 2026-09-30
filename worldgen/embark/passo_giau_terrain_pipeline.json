@@ -33,7 +33,9 @@
       "ui_env": "YACS_GAEA_EXE",
       "required_edition": "Professional or Enterprise",
       "target_production_version": "2.3.1.0",
-      "license_note": "Automation and Gaea2Houdini support require a production-capable paid edition."
+      "license_note": "Automation and Gaea2Houdini support require a production-capable paid edition.",
+      "bridge": "Gaea2Houdini via SideFX Labs",
+      "bridge_requirement": "Gaea2Houdini installed and a regular activated Gaea Professional/Enterprise installation"
     },
     "unreal": {
       "proof_wrapper": "scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1",
@@ -45,7 +47,9 @@
     "houdini_preprocess_top": "/tasks/yacs_passo_giau_preprocess",
     "houdini_finalize_top": "/tasks/yacs_passo_giau_finalize",
     "gaea_terrain": "worldgen/embark/recipes/passo_giau_landscape.terrain",
-    "recipe_contract": "worldgen/embark/recipes/README.md"
+    "recipe_contract": "worldgen/embark/recipes/README.md",
+    "houdini_heightfield_hda": "worldgen/embark/recipes/yacs_passo_giau_heightfield.hdalc",
+    "houdini_gaea_bridge_node": "/obj/yacs_passo_giau_gaea/OUT_GAEA"
   },
   "source": {
     "download_mase": "scripts/assets/download_passo_giau_mase_pst.py",
