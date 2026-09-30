@@ -25,6 +25,8 @@ on:
       - 'scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1'
       - 'scripts/ue/stage3g_capture_sp638_local_corridor.py'
       - 'scripts/geometry/**'
+      - 'scripts/ci/classify_changes.py'
+      - 'scripts/ci/test_classify_changes.py'
       - 'scripts/ci/test_embark_terrain_pipeline_contract.py'
       - 'Source/YetAnotherCyclingSimEditor/Private/PCG/YacsPassoGiauPcgExGraphCommandlet.cpp'
       - 'Source/YetAnotherCyclingSimEditor/Private/PCG/YacsPassoGiauSp638PathSettings.cpp'
