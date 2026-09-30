@@ -10,6 +10,7 @@ and unknown paths are surfaced explicitly instead of being silently ignored.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -75,6 +76,26 @@ RUNTIME_SENSITIVE_PREFIXES = (
     "Plugins/",
     "Build/",
 )
+
+EMBARK_TERRAIN_HEAVY_EXACT = {
+    ".github/workflows/passo-giau-embark-terrain.yml",
+    "scripts/ci/classify_changes.py",
+    "scripts/ue/Invoke-YacsPassoGiauPcgExGraph.ps1",
+    "scripts/worldgen/Bootstrap-YacsPcgEx.ps1",
+}
+
+EMBARK_TERRAIN_RENDER_PREFIXES = (
+    "scripts/assets/",
+    "scripts/geometry/",
+    "scripts/houdini/",
+    "scripts/worldgen/",
+    "worldgen/embark/",
+)
+
+EMBARK_TERRAIN_RENDER_EXACT = {
+    "scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1",
+    "scripts/ue/stage3g_capture_sp638_local_corridor.py",
+}
 
 
 @dataclass(frozen=True)
@@ -303,6 +324,75 @@ def full_static_classification() -> Classification:
     )
 
 
+def classify_embark_terrain_proof(paths: Iterable[str]) -> str:
+    """Return the cheapest trustworthy M3 Embark terrain proof mode.
+
+    The central classifier remains the only path-policy authority.  The
+    specialized proof mode refines already-classified repository changes into
+    cheap, render, or heavy execution for the dedicated Passo Giau proof.
+    """
+
+    normalized = sorted(
+        {
+            path.strip().replace("\\", "/").removeprefix("./")
+            for path in paths
+            if path.strip()
+        }
+    )
+    if not normalized:
+        return "heavy"
+
+    for path in normalized:
+        if path in EMBARK_TERRAIN_HEAVY_EXACT or _is_ue_code(path):
+            return "heavy"
+
+    for path in normalized:
+        if path in EMBARK_TERRAIN_RENDER_EXACT:
+            return "render"
+        if path.startswith(EMBARK_TERRAIN_RENDER_PREFIXES):
+            return "render"
+
+    return "cheap"
+
+
+def embark_terrain_compile_fingerprint(repo_root: str | Path = ".") -> str:
+    """Hash only inputs that can change the compiled UE/PCGEx binary contract."""
+
+    root = Path(repo_root).resolve()
+    config_path = root / "worldgen/embark/pcgex/passo_giau_corridor.json"
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    engine_version = str(config["pcgex"]["engine_version"])
+    pcgex_commit = str(config["pcgex"]["commit"])
+
+    hasher = hashlib.sha256()
+    hasher.update(f"ue={engine_version}\npcgex={pcgex_commit}\n".encode("utf-8"))
+
+    candidates: set[Path] = {root / "YetAnotherCyclingSim.uproject"}
+    source_root = root / "Source"
+    if source_root.exists():
+        for path in source_root.rglob("*"):
+            if path.is_file() and path.suffix.lower() in {
+                ".cpp",
+                ".c",
+                ".h",
+                ".hpp",
+                ".inl",
+                ".cs",
+            }:
+                candidates.add(path)
+    for pattern in ("*.Build.cs", "*.Target.cs"):
+        candidates.update(path for path in root.rglob(pattern) if path.is_file())
+
+    for path in sorted(candidates, key=lambda item: item.as_posix().lower()):
+        relative = path.relative_to(root).as_posix()
+        hasher.update(relative.encode("utf-8"))
+        hasher.update(b"\0")
+        hasher.update(path.read_bytes())
+        hasher.update(b"\0")
+
+    return hasher.hexdigest()
+
+
 def emit_github_output(
     classification: Classification,
     *,
@@ -327,6 +417,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--all-static", action="store_true")
     parser.add_argument("--github-output")
     parser.add_argument("--paths-file")
+    parser.add_argument("--embark-terrain-proof", action="store_true")
+    parser.add_argument("--repo-root", default=".")
     return parser.parse_args(argv)
 
 
@@ -354,12 +446,21 @@ def main(argv: list[str] | None = None) -> int:
             paths = git_changed_paths(base, head)
         classification = classify_paths(paths)
 
+    proof_mode = None
+    compile_fingerprint = None
+    if args.embark_terrain_proof:
+        proof_mode = classify_embark_terrain_proof(paths)
+        compile_fingerprint = embark_terrain_compile_fingerprint(args.repo_root)
+
     payload = {
         "paths": paths,
         **asdict(classification),
         "security_base": classification.security_base,
         "ci_cost_class": classification.ci_cost_class,
     }
+    if proof_mode is not None:
+        payload["proof_mode"] = proof_mode
+        payload["compile_fingerprint"] = compile_fingerprint
     print(json.dumps(payload, indent=2, sort_keys=True))
 
     output_path = args.github_output or os.environ.get("GITHUB_OUTPUT")
@@ -370,6 +471,10 @@ def main(argv: list[str] | None = None) -> int:
             base=base,
             head=head,
         )
+        if proof_mode is not None:
+            with open(output_path, "a", encoding="utf-8") as handle:
+                handle.write(f"proof_mode={proof_mode}\n")
+                handle.write(f"compile_fingerprint={compile_fingerprint}\n")
     return 0
 
 
