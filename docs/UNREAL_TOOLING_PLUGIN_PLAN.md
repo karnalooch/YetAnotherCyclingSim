@@ -60,6 +60,36 @@ Any change to the explicit plugin list is an integration change and requires an 
 | **3G+ dev tooling** | **db-lyon ue-mcp** | MUST for planned worldgen workflow | single orchestration layer for Kilo: flows, guards, rollback, editor actions and proof | #85 remains part of Stage 3G recovery; pinned release; upgrade only after review |
 | **3G+ dev tooling** | **UE ModelContextProtocol / Toolset Registry** | SELECTIVE/EXPERIMENTAL | official UE 5.8 AI-callable toolsets such as PCGToolset | consume selectively through the chosen orchestration path, not as a second uncontrolled server |
 
+### Embark-first tooling admission rule
+
+Before YACS creates a new Unreal/editor/DCC/agent tool, review the closest
+public Embark implementation or published workflow first. The default order is:
+
+```text
+Embark tool/pattern -> Epic-native capability -> proven OSS -> custom YACS tool
+```
+
+This is deliberately stronger than a generic "build vs buy" check. Embark is
+the preferred external architecture reference because its public tooling shows
+production-oriented patterns around Unreal, DCC integration, asset search and
+automation. It does **not** imply that every public Embark repository is part of
+ARC Raiders or that YACS should adopt another runtime/language without need.
+
+Two public Embark references are now explicit:
+
+- **SkyHook** — DCC <-> game-engine communication reference for Blender,
+  Houdini, Maya, Substance and Unreal integration. Treat as a reference/candidate
+  for transport and command-boundary design, not an automatic dependency.
+- **UnrealClaudeFileHelper / `embark-claude-index`** — project index/search
+  reference for fast read-side discovery across Unreal code/assets. Treat it as
+  a read-only knowledge/index layer pattern, separate from the mutation plane.
+
+YACS should expose high-level domain operations (for example generate a road
+corridor, regenerate a world sector, validate clearance, capture proof) rather
+than asking an agent to assemble production changes from dozens of low-level
+editor calls. Any adopted external implementation still requires provenance,
+pinning, rollback and the normal UE proof contract.
+
 ### Researched worldgen candidates
 
 These are tracked candidates, **not current dependencies**:
@@ -73,13 +103,18 @@ These are tracked candidates, **not current dependencies**:
 | **RoadForge** | spline-to-road presentation, markings, shoulders and roadside dressing patterns | Stage 7 / post-MVP | `reference-later` |
 | **GeoTerrain** | DEM/OSM terrain, slope/altitude materials and foliage-avoidance research | Stage 7 / post-MVP route import | `research-later` |
 | **Heightmap Level Generator** | erosion/heightmap/mask R&D only | optional post-MVP terrain experiments | `r&d-only` |
+| **Embark SkyHook** | reference/candidate for a small DCC <-> Unreal transport boundary and command model | when Blender/Houdini round-trips become a measured bottleneck | `reference/candidate` |
+| **Embark UnrealClaudeFileHelper / embark-claude-index** | read-only project indexing/search pattern for code, assets and agent context | before building any YACS-specific project index | `reference; copy blocked pending license-artifact review` |
 
 Adoption policy:
-- stock UE PCG + WorldSpec remains the default until a measured gap exists;
+- run the Embark-first architecture/tooling review before designing a custom solution;
+- stock UE PCG + WorldSpec remains the default production worldgen base until a measured gap exists;
+- prefer an Epic-native capability over adding a third-party runtime dependency when both solve the same problem cleanly;
 - a candidate is adopted only when it removes a concrete implementation/performance/authoring problem;
 - editor-only adoption is preferred over runtime dependency for the MVP;
-- any adopted third-party tool requires license/provenance review, pinned version, build proof and removal/rollback path;
-- reference projects may inform patterns without entering the dependency graph.
+- any adopted third-party tool requires license/provenance review, an exact pin, build/integration proof and a removal/rollback path;
+- reference projects may inform patterns without entering the dependency graph;
+- do not claim a public Embark repository represents the complete internal ARC Raiders production stack unless Embark documents that explicitly.
 ## 4. Stage 3G world-generation stack
 
 Target:
