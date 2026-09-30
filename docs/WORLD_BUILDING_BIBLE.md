@@ -910,6 +910,8 @@ A route slice is acceptable when:
 
 ### Production architecture evidence
 
+For detailed copyright-safe reconstructions of the public Far Cry 5 and THE FINALS pipelines, including data-flow graphs and direct YACS mappings, see [`PRODUCTION_WORLD_ARCHITECTURE_REFERENCES.md`](PRODUCTION_WORLD_ARCHITECTURE_REFERENCES.md).
+
 - Ubisoft / SideFX — Far Cry 5 procedural world generation:  
   https://www.sidefx.com/learn/talks/procedural-world-generation-far-cry-5/
 - Embark Studios / SideFX — procedural buildings of THE FINALS:  
