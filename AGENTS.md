@@ -85,6 +85,19 @@ The final status/report for the task must state:
 - whether implementation required documentation updates;
 - the result of each documentation guard: links, i18n, structure and freshness.
 
+## Gumball repository baseline
+
+YACS consumes shared engineering contracts through Gumball (`karnalooch/engineering-platform`). The repository-specific authority for that integration is `docs/ENGINEERING_PLATFORM.md`.
+
+- Adopt Gumball in `preserve-local` mode: never replace a stronger YACS-specific control merely because a generic platform equivalent exists.
+- Keep all external Actions and shared workflow references pinned to reviewed immutable 40-character SHAs.
+- Keep the final `Aggregate CI gate` caller-local and fail closed.
+- Treat `.gumball/repository-os.json` as the shared lifecycle/label/CI-cost policy, while preserving existing YACS Project automation and branch hygiene when they are stronger or more specific.
+- Active pull requests should normally carry the canonical Gumball `type:*`, `area:*`, `risk:*` and `ci:*` dimensions once trusted Repository Ops has classified them.
+- Heavy runtime, visual, hardware or editor proofs must follow the YACS validation tiers and exact-SHA policy. When a proof is broker-managed, use the trusted Proof Broker intent path and keep manual `workflow_dispatch` only as fallback.
+- After completing a CI, governance, security, documentation, tooling, MCP or agent-workflow improvement, decide whether the reusable invariant should be promoted back to Gumball. Record a downstream candidate under `.gumball/candidates/` when appropriate.
+- Promote reusable invariants and failure behavior, not YACS-specific map names, machine paths or product-specific acceptance thresholds.
+
 ### Problem reporting
 
 If any problem, failure, blocker, unexpected behavior, or incomplete validation occurs, describe it precisely in the status or final report. Do not reduce it to a vague statement such as "it failed", "UE hung", or "the test did not work".

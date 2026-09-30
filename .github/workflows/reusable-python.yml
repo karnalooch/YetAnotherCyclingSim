@@ -45,6 +45,8 @@ jobs:
         run: |
           python scripts/ops/proof_broker.py validate
           python -m unittest scripts/ci/test_proof_broker.py -v
+      - name: Run Gumball consumer baseline contract tests
+        run: python -m unittest scripts/ci/test_gumball_baseline.py -v
 
       - name: Run GitHub Windows probe workflow contract tests
         run: python scripts/ci/test_windows_probe_workflow.py
