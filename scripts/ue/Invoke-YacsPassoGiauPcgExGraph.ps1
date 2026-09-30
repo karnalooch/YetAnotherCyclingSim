@@ -87,6 +87,49 @@ if ([bool]$BootstrapData.shipping_runtime_dependency -ne $false) {
 }
 
 Write-Host '[2/4] Building YetAnotherCyclingSimEditor with PCGEx enabled...' -ForegroundColor Cyan
+
+# Reuse the proven resource-constrained CI profile from Invoke-YacsProof.ps1.
+# PCGEx materially increases translation-unit and link pressure; allowing the
+# default UBA executor on this host has already produced Windows VirtualAlloc
+# error 1455 followed by an MSVC C1001 internal compiler error. Keep this proof
+# on the same fail-closed memory policy as the green Unreal CI lane.
+$UbtConfigDir = Join-Path -Path $RepoRoot -ChildPath 'Saved/UnrealBuildTool'
+New-Item -ItemType Directory -Path $UbtConfigDir -Force | Out-Null
+$UbtConfigPath = Join-Path -Path $UbtConfigDir -ChildPath 'BuildConfiguration.xml'
+$LogicalProcessors = [Math]::Max(1, [Environment]::ProcessorCount)
+$FreeVirtualGb = [double]$Context.Machine.FreeVirtualGb
+$CpuActionCap = [Math]::Max(2, [Math]::Floor($LogicalProcessors * 0.67))
+if ($FreeVirtualGb -ge 14.0) {
+    $MemoryActionCap = 4
+}
+elseif ($FreeVirtualGb -ge 8.0) {
+    $MemoryActionCap = 3
+}
+else {
+    $MemoryActionCap = 2
+}
+$MaxParallelActions = [int][Math]::Min($MemoryActionCap, $CpuActionCap)
+$MaxParallelActions = [int][Math]::Max(2, $MaxParallelActions)
+
+$UbtConfig = @"
+<?xml version="1.0" encoding="utf-8" ?>
+<Configuration xmlns="https://www.unrealengine.com/BuildConfiguration">
+  <BuildConfiguration>
+    <bAllowUBAExecutor>false</bAllowUBAExecutor>
+    <bAllowUBALocalExecutor>false</bAllowUBALocalExecutor>
+    <MaxParallelActions>$MaxParallelActions</MaxParallelActions>
+  </BuildConfiguration>
+</Configuration>
+"@
+$UbtConfig | Set-Content -LiteralPath $UbtConfigPath -Encoding UTF8
+Write-Host (
+    "PCGEx conservative UBT profile: UBA disabled; MaxParallelActions={0}; logicalProcessors={1}; freeVirtualGb={2:N2}; config={3}" -f
+    $MaxParallelActions,
+    $LogicalProcessors,
+    $FreeVirtualGb,
+    $UbtConfigPath
+) -ForegroundColor Yellow
+
 $BuildBat = Join-Path $Context.EngineRoot 'Engine/Build/BatchFiles/Build.bat'
 $BuildArgs = @($ProjectPath, 'YetAnotherCyclingSimEditor', 'Win64', 'Development', '-WaitMutex', '-FromMsBuild')
 $BuildProc = Start-Process -FilePath $BuildBat -ArgumentList $BuildArgs -WorkingDirectory (Split-Path $BuildBat -Parent) -NoNewWindow -PassThru -RedirectStandardOutput $BuildLog
