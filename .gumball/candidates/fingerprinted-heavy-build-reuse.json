@@ -1,0 +1,19 @@
+{
+  "id": "fingerprinted-heavy-build-reuse",
+  "source": "karnalooch/YetAnotherCyclingSim",
+  "category": "ci",
+  "problem": "A heavyweight self-hosted proof rebuilt unchanged compiled dependencies after Python, documentation or render-only edits, wasting runner time and increasing local machine load.",
+  "invariant": "Classify proof cost before reserving the heavy runner. Reuse compiled outputs only when a deterministic fingerprint of every binary-contract input matches and the expected binaries still exist; otherwise fail closed to a fresh build. Keep current-revision data preparation, runtime evidence and exact-SHA validation independent from compile reuse.",
+  "evidence": [
+    "YACS PR #288",
+    "Passo Giau M3 Embark terrain proof #64 established the heavy C3 baseline before fingerprinted reuse",
+    "docs/CI_VALIDATION_TIERS.md defines cheap/render/heavy proof sub-tiers"
+  ],
+  "do_not_copy": [
+    "Passo Giau paths, camera coordinates or proof variant names",
+    "PCGEx-specific binary names",
+    "YACS runner workspace layout"
+  ],
+  "failure_behavior": "Unknown or empty specialized change sets are heavy. Missing cache state, fingerprint mismatch, missing expected binaries or dependency drift forces a fresh build; it must never silently downgrade required compile evidence.",
+  "status": "candidate"
+}
