@@ -54,6 +54,50 @@ After editing:
 - `docs/YACS_WORLD_AUTHORING_LIBRARY.md` defines reusable implementation/catalog systems; it does not override the Bible's world architecture.
 - New or substantially revised architecture/workflow diagrams must follow `docs/DIAGRAM_STYLE.md`, the YACS adoption of the Gumball Blueprint Mermaid language.
 
+### Passo Giau terrain-recovery guardrails
+
+For Issue #287 / PR #288, Gate B is an established road-authoring baseline, not an
+open smoothing experiment. The pinned PCGEx graph has executed against prepared
+official SP638 presentation data, produced bounded deviation evidence and fed the
+rider-close consumer. Until a concrete regression proves otherwise:
+
+- do not change PCGEx resample/smoothing/corridor behavior merely to improve terrain appearance;
+- do not move canonical road XY, route authority or Road Physics Profile truth to repair a visual seam;
+- keep PCGEx presentation-only and authoring-only; it is not physics authority.
+
+Before introducing another terrain generator, another smoothing stack or another
+global-resolution change, isolate the owning surface with the same exact-SHA
+camera/light/FOV proof. For the current hairpin this means the A-E diagnostic matrix:
+
+- A: macro Landscape only;
+- B: macro Landscape + road corridor;
+- C: local/near-field ground only;
+- D: local/near-field ground + road corridor;
+- E: full combined baseline.
+
+Use the result to identify the owning layer before changing architecture.
+
+Rider-close terrain must follow these rules:
+
+- prefer a bounded near-field surface derived directly from the prepared native
+  metric DTM over line-tracing/resampling a known-bad Landscape;
+- use finer bounded spacing where the rider camera can inspect the ground rather
+  than increasing the entire world to the same resolution;
+- select `Road_Earthworks` explicitly by semantic name; missing, duplicate or
+  accidental `Base_DTM` selection fails closed;
+- one place has one visual ground owner: do not rely on two coincident surfaces,
+  arbitrary Z lift or overlap to hide disagreement between Landscape and a local mesh;
+- connect near-field to macro terrain with a deterministic transition band whose
+  outer boundary is constrained to the macro surface;
+- apply road/cut/fill constraints to the local ground before final triangulation
+  where that produces a single coherent surface;
+- do not use materials, RVT, vegetation, fog, AA or lighting to conceal unresolved geometry.
+
+A terrain recovery is not accepted because one hairpin looks good. After the
+baseline hairpin passes, prove at least a normal/moderate slope corridor and a
+large-elevation-difference/earthworks case. Run the relevant performance proof
+after neutral geometry passes visually, not as a substitute for visual acceptance.
+
 ### Documentation SSOT and freshness
 
 Documentation verification is mandatory for every repository-changing task.
