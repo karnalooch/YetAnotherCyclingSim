@@ -401,6 +401,15 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
             wrapper,
         )
 
+        self.assertIn(
+            "passo-giau-m3-pcgex-input-${{ github.run_id }}",
+            workflow,
+        )
+        self.assertNotIn(
+            "passo-giau-m3-pcgex-input-${{ github.run_id }}-${{ github.run_attempt }}",
+            workflow,
+        )
+
         self.assertNotIn(
             "Remove-Item -LiteralPath $pcgex -Recurse -Force",
             workflow,
