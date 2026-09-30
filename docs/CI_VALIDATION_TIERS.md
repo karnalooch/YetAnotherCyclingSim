@@ -44,23 +44,39 @@ classification into three execution modes without weakening exact-SHA evidence:
   classification/contract checks and do not reserve the Unreal runner;
 - `render` — native-DTM preparation, bounded geometry/Python capture changes,
   proof-camera changes and other presentation inputs prepare current data and
-  rerun author/render evidence against a previously validated compiled binary
-  state when its fingerprint still matches;
+  rerun author/render evidence; compilation may be skipped only on a verified
+  exact compile-cache hit;
 - `heavy` — compiled Unreal source, `.Build.cs` / `.Target.cs`,
-  `.uproject`, the PCGEx build/bootstrap wrapper or the proof workflow contract
-  itself require a fresh PCGEx-enabled Editor build before author/render.
+  `.uproject`, the PCGEx build/bootstrap wrapper, shared build-environment
+  resolver or proof workflow contract changed, so build execution is required.
+  **Heavy does not mean cold.**
 
 The compile fingerprint is SHA-256 over the pinned UE/PCGEx identity plus the
-project descriptor and compiled source/build inputs. A render run may skip
-compilation only when the fingerprint matches a runner-local ignored cache
-stamp **and** the expected project and PCGEx binaries still exist. Missing,
-invalid or stale cache state falls back to a fresh build; it never converts a
-required build into a pass.
+project descriptor, compiled source/build inputs and M3 build contract. The M3
+runner then resolves one of three compile actions:
+
+- **none / exact hit** — fingerprint, environment identity, PCGEx pin/checkout
+  and expected project/plugin binaries match a previously green state; skip
+  compilation and continue current-revision graph author/render proof;
+- **warm** — build is required but UE/toolchain identity and the pinned PCGEx
+  dependency remain compatible. Preserve project/plugin build state and let
+  UnrealBuildTool determine the minimal outdated compile/link graph. A compile
+  fingerprint mismatch, previous failed build or missing expected binary uses
+  this path;
+- **cold** — environment identity or PCGEx pin/checkout drifted, cache state is
+  malformed/untrusted, or no usable state exists. Purge the incompatible build
+  surfaces before rebuilding.
+
+The legacy schema-1 M3 cache is migrated once through **warm** rather than being
+trusted as an exact hit: the previous green binaries/intermediates are preserved,
+but UBT must validate/rebuild them before schema-2 state with environment
+identity can be recorded.
 
 The persistent state is compile output only. Exact-SHA checkout, prepared
 SP638/DTM inputs, graph execution, rider render, evidence upload and deviation
 validation still run for the current revision when the proof mode requires
-them. The cache is not accepted across a fingerprint change.
+them. A fingerprint change therefore invalidates proof reuse but no longer
+implies destructive cleanup by itself.
 
 ### General Unreal STATIC / RUNTIME / COMPILE reuse
 
