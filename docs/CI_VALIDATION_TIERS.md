@@ -83,9 +83,10 @@ non-ignored residue, enforces the code-only LFS contract and checks exact HEAD.
 Ignored build outputs survive only as candidates for reuse; they are never
 trusted without the fingerprint/state checks.
 
-The compile fingerprint covers the project descriptor plus compiled project and
-plugin inputs. The proof fingerprint extends that identity with runtime-critical
-Config and the code-only Unreal proof tooling. Engine drift invalidates reuse;
+The compile fingerprint covers the project descriptor, compiled project/plugin
+inputs and the build/engine-selection orchestration used by the normal Unreal lane.
+The proof fingerprint extends that identity with runtime-critical Config and the
+remaining code-only Unreal proof tooling. Engine drift invalidates reuse;
 unknown or malformed state fails closed.
 
 World/runtime cost is independent from compilation. A normal tree, house,
