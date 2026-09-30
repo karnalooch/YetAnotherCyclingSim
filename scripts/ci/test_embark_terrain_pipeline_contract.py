@@ -240,6 +240,8 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
             "Render PCGEx rider-close corridor proof",
             "Invoke-YacsSp638LocalCorridorVisualProof.ps1",
             "PcgExExecutionOutput",
+            "AdditionalAllowedDirtyPaths",
+            "Content/WorldGen/",
             "YacsPassoGiauPcgExGraphCommandlet.cpp",
             "YacsPassoGiauSp638PathSettings.cpp",
             "YetAnotherCyclingSimEditor.Build.cs",
