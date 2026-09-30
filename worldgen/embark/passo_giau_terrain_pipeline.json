@@ -70,7 +70,8 @@
     "gaea_vars": "ExternalAssets/Terrain/PassoGiau/EmbarkPipeline/20_gaea/gaea-vars.json",
     "run_manifest": "ExternalAssets/Terrain/PassoGiau/EmbarkPipeline/pipeline-run.json",
     "prepared_unreal_root": "ExternalAssets/Terrain/PassoGiau/PreparedEmbarkLandscape",
-    "artifact_root": "Saved/RuntimeProof/CI/M3/EmbarkTerrain"
+    "artifact_root": "Saved/RuntimeProof/CI/M3/EmbarkTerrain",
+    "dcc_handoff_manifest": "ExternalAssets/Terrain/PassoGiau/EmbarkPipeline/dcc-handoff.json"
   },
   "gaea": {
     "seed": 0,
