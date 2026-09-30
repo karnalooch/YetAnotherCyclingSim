@@ -280,7 +280,8 @@ if ($Remaining.Count -gt 0) {
 # locked below that child even when the outer workspace log is clear.
 $LockedLogCandidates = @(
     (Join-Path $Workspace 'Saved/Logs/YetAnotherCyclingSim.log'),
-    (Join-Path $Workspace '_stage3g-full-worktree/Saved/Logs/YetAnotherCyclingSim.log')
+    (Join-Path $Workspace '_stage3g-full-worktree/Saved/Logs/YetAnotherCyclingSim.log'),
+    (Join-Path $Workspace '_unreal-ci-warm/Saved/Logs/YetAnotherCyclingSim.log')
 ) | Select-Object -Unique
 
 foreach ($LockedLog in $LockedLogCandidates) {
