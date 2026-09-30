@@ -8,19 +8,17 @@
 class UHierarchicalInstancedStaticMeshComponent;
 class USceneComponent;
 
-// Deterministic Stage 3 prototype-world presentation.
+// LEGACY M3 PROTOTYPE WORLD - FROZEN.
 //
-// This actor remains a deterministic validation/presentation scaffold rather
-// than final Stage 7 art. Stage 3F established the road/material baseline;
-// Stage 3G progressively replaces placeholder presentation with validated
-// project-owned assets. R1 added texture-backed biome ground and imported rock
-// dressing. R2 replaces the forest silhouette with the validated mass-forest
-// conifer. R3 replaces valley/high-Alpine Engine Cone massing with bounds-aware
-// instances of the validated project-owned boulder mesh while the overall world
-// remains an MVP presentation scaffold. Simulation truth stays outside presentation.
+// This actor is retained only as a deterministic regression/presentation
+// scaffold while the real-data Landscape / SP638 / PCG production path reaches
+// M3 acceptance parity. Do not add new terrain, road, biome, asset-pipeline or
+// visual features here. New world work belongs to docs/WORLD_BUILDING_BIBLE.md.
 //
 // Runtime physics never reads this actor. The geometry profile remains the
 // source of route shape/grade truth and the spline remains presentation only.
+// Removal is allowed only after the replacement world has equivalent fresh-load,
+// rider-camera, performance and exact-SHA proof coverage.
 UCLASS()
 class YETANOTHERCYCLINGSIM_API AStage3PrototypeTerrainActor : public AActor
 {
