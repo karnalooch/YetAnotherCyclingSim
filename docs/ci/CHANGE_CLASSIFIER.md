@@ -61,10 +61,10 @@ classifier also emits `unreal_execution_class`:
 - `compile` — the compiled binary contract changed and the Editor must be
   rebuilt before runtime evidence.
 
-`unreal_compile_fingerprint` hashes the project descriptor plus compiled
-project/plugin source and plugin descriptors. `unreal_proof_fingerprint`
-extends that identity with runtime-critical Config and the code-only proof
-orchestration contract.
+`unreal_compile_fingerprint` hashes the project descriptor, compiled
+project/plugin source, plugin descriptors and the normal lane's build/engine-selection
+orchestration contract. `unreal_proof_fingerprint` extends that identity with
+runtime-critical Config and the remaining code-only proof contract.
 
 The self-hosted code-only lane keeps a repository-scoped warm worktree. Reuse
 is accepted only when the current compile fingerprint, proof fingerprint,
