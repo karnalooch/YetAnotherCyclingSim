@@ -278,8 +278,12 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         self.assertNotIn("choose_hairpin", extractor)
         proof_location = manifest["proof_locations"]["gate_c_hairpin"]
         self.assertEqual(proof_location["source_station_m"], 15560.0)
-        self.assertEqual(proof_location["gate_c1_pcgex_focus_distance_m"], 15450.0)
-        self.assertLess(proof_location["observed_source_to_render_focus_xy_delta_m"], 2.0)
+        self.assertEqual(
+            proof_location["gate_c1_pcgex_focus_distance_m"], 15450.0
+        )
+        self.assertLess(
+            proof_location["observed_source_to_render_focus_xy_delta_m"], 2.0
+        )
 
     def test_active_workflow_tracks_pcgex_inputs_and_does_not_require_dcc(self) -> None:
         workflow = (ROOT / ".github/workflows/passo-giau-embark-terrain.yml").read_text(
