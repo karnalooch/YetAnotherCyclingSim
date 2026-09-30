@@ -1,6 +1,6 @@
 # YACS UE-MCP world-generation architecture
 
-**Status:** Stage 3G visual/asset recovery active; PR #162 has merged the deterministic PCG forest/route-exclusion baseline, while persistent **agent-driven MCP** worldgen still requires its own guarded proof before adoption
+**Status:** M3 world/asset recovery active; legacy Stage 3G asset/flow identifiers are retained for traceability, while persistent **agent-driven MCP** worldgen still requires its own guarded proof before adoption
 **Tracking:** #85
 **Initial upstream:** `db-lyon/ue-mcp`
 **Reviewed pin:** `v1.3.9`
@@ -8,7 +8,7 @@
 
 ## 1. Purpose
 
-YACS will use UE-MCP as a **development-time Unreal Editor execution layer** for building and validating route environments.
+YACS uses UE-MCP as a **development-time Unreal Editor execution layer** for bounded M3 world authoring and validation.
 
 UE-MCP does not replace the existing Stage 3 architecture. Route profile, geometry, persisted spline, fixed-step route context and `FSimulationState::DistanceM` remain authoritative.
 
@@ -73,7 +73,7 @@ UE-MCP is an **optional controlled execution/orchestration surface**, not the on
 
 ## 4. Dependency policy
 
-The spike pins stable `ue-mcp` **1.3.9**. Do not float `latest`. Upgrades require review because UE-MCP has direct write access to the editor project.
+The toolchain pins `ue-mcp` **1.3.9** and records upstream commit `d79a34bb6e7a5883457efe8f33c9f85b1ba3e136`. Do not float `latest`. The complete npm dependency graph is committed in `tools/ue-mcp/package-lock.json`, and setup must use `npm ci --ignore-scripts`. Upgrades require provenance review, lock refresh and integration proof because UE-MCP has direct write access to the editor project.
 
 The upstream repository is MIT licensed. The full upstream repository is not vendored into YACS.
 
@@ -221,7 +221,7 @@ After Phase A is green:
 7. add deterministic cleanup/regeneration;
 8. enable git snapshot around persistent generation flows.
 
-### Phase C — Stage 3G generator flows
+### Phase C — M3 generator flows (legacy command names retained)
 
 Prefer focused YACS flows:
 
