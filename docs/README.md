@@ -65,7 +65,7 @@ flowchart TB
 |---|---|
 | Delivery | **M3 — Route & World Foundation** |
 | World method | **World Building Bible is authoritative** |
-| Architecture policy | **tools-first + evidence ladder + local proof** |
+| Architecture policy | **Embark-first tooling admission + tools-first + evidence ladder + local proof** |
 | Diagram language | **Gumball Blueprint Mermaid style** |
 | Current priority | **real SP638 road + non-destructive Landscape earthworks** |
 | Terrain source | **canonical real DTM path; presentation remains separate from physics truth** |
