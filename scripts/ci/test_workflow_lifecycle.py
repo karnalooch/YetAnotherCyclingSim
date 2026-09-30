@@ -34,9 +34,7 @@ class WorkflowLifecycleContractTests(unittest.TestCase):
             for path in WORKFLOWS.iterdir()
             if path.suffix in {".yml", ".yaml"}
         }
-        expected = {
-            row["file"] for row in self.rows if row["state"] in ACTIVE_STATES
-        }
+        expected = {row["file"] for row in self.rows if row["state"] in ACTIVE_STATES}
         self.assertEqual(actual, expected)
 
     def test_retired_workflows_are_not_executable(self) -> None:
@@ -66,9 +64,7 @@ class WorkflowLifecycleContractTests(unittest.TestCase):
         self.assertIn("github.ref == 'refs/heads/main'", text)
 
     def test_unknown_workflows_are_bounded_to_active_m3_transition(self) -> None:
-        unknown = {
-            row["file"] for row in self.rows if row["state"] == "UNKNOWN"
-        }
+        unknown = {row["file"] for row in self.rows if row["state"] == "UNKNOWN"}
         self.assertEqual(
             unknown,
             {
