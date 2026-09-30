@@ -8,7 +8,9 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class EmbarkTerrainPipelineContractTests(unittest.TestCase):
-    def test_owner_embark_directive_allows_license_clean_pattern_substitution(self) -> None:
+    def test_owner_embark_directive_allows_license_clean_pattern_substitution(
+        self,
+    ) -> None:
         agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
         for token in (
             "### Explicit Embark-mode directive",
@@ -34,7 +36,9 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         ):
             self.assertIn(token, bible)
 
-    def test_pcgex_manifest_pins_authoring_dependency_and_authority_boundaries(self) -> None:
+    def test_pcgex_manifest_pins_authoring_dependency_and_authority_boundaries(
+        self,
+    ) -> None:
         config = json.loads(
             (ROOT / "worldgen/embark/pcgex/passo_giau_corridor.json").read_text(
                 encoding="utf-8"
@@ -88,9 +92,9 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         self.assertIn("not required by #287/#288", ledger)
 
     def test_pcgex_bootstrap_is_exact_sha_clean_and_credential_free(self) -> None:
-        bootstrap = (
-            ROOT / "scripts/worldgen/Bootstrap-YacsPcgEx.ps1"
-        ).read_text(encoding="utf-8")
+        bootstrap = (ROOT / "scripts/worldgen/Bootstrap-YacsPcgEx.ps1").read_text(
+            encoding="utf-8"
+        )
         for token in (
             "https://github.com/PCGEx/PCGExtendedToolkit.git",
             "39a8f1bdc65b2c4613a1e87b71d93b4576db0a66",
@@ -112,16 +116,15 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
             (ROOT / "YetAnotherCyclingSim.uproject").read_text(encoding="utf-8")
         )
         plugin = next(
-            item
-            for item in uproject["Plugins"]
-            if item["Name"] == "PCGExtendedToolkit"
+            item for item in uproject["Plugins"] if item["Name"] == "PCGExtendedToolkit"
         )
         self.assertTrue(plugin["Enabled"])
         self.assertTrue(plugin["Optional"])
         self.assertEqual(plugin["TargetAllowList"], ["Editor"])
 
         build = (
-            ROOT / "Source/YetAnotherCyclingSimEditor/YetAnotherCyclingSimEditor.Build.cs"
+            ROOT
+            / "Source/YetAnotherCyclingSimEditor/YetAnotherCyclingSimEditor.Build.cs"
         ).read_text(encoding="utf-8")
         for token in (
             "Plugins",
@@ -172,10 +175,12 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         ):
             self.assertIn(token, source)
 
-    def test_exact_sha_graph_wrapper_proves_api_integration_without_overclaiming(self) -> None:
-        wrapper = (
-            ROOT / "scripts/ue/Invoke-YacsPassoGiauPcgExGraph.ps1"
-        ).read_text(encoding="utf-8")
+    def test_exact_sha_graph_wrapper_proves_api_integration_without_overclaiming(
+        self,
+    ) -> None:
+        wrapper = (ROOT / "scripts/ue/Invoke-YacsPassoGiauPcgExGraph.ps1").read_text(
+            encoding="utf-8"
+        )
         for token in (
             "Bootstrap-YacsPcgEx.ps1",
             "YetAnotherCyclingSimEditor",
@@ -192,9 +197,9 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         )
 
     def test_active_workflow_tracks_pcgex_inputs_and_does_not_require_dcc(self) -> None:
-        workflow = (
-            ROOT / ".github/workflows/passo-giau-embark-terrain.yml"
-        ).read_text(encoding="utf-8")
+        workflow = (ROOT / ".github/workflows/passo-giau-embark-terrain.yml").read_text(
+            encoding="utf-8"
+        )
         for token in (
             "PCGEx corridor graph authoring",
             "Invoke-YacsPassoGiauPcgExGraph.ps1",
