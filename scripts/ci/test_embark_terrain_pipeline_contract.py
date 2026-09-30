@@ -49,6 +49,15 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         self.assertTrue(config["invariants"]["forbid_guessed_embark_internal_nodes"])
         self.assertTrue(config["recipes"]["houdini_hip"].endswith(".hiplc"))
         self.assertTrue(config["recipes"]["gaea_terrain"].endswith(".terrain"))
+        self.assertTrue(config["recipes"]["houdini_heightfield_hda"].endswith(".hdalc"))
+        self.assertEqual(
+            config["recipes"]["houdini_gaea_processor_node"],
+            "/obj/yacs_passo_giau_gaea/GAEA_PROCESSOR",
+        )
+        self.assertEqual(
+            config["recipes"]["houdini_gaea_bridge_node"],
+            "/obj/yacs_passo_giau_gaea/OUT_GAEA",
+        )
         self.assertEqual(
             config["recipes"]["houdini_preprocess_top"],
             "/tasks/yacs_passo_giau_preprocess",
@@ -65,13 +74,14 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         for token in (
             "cook_top_network.py",
             "houdini_pdg_preprocess",
-            "gaea_shape",
+            "gaea2houdini_shape",
             "houdini_heightfield_finalize",
             "finalize_unreal_heightfield",
             "unreal_author_and_rider_proof",
-            '"-filename"',
-            '"-vars"',
-            '"-seed"',
+            "validate_embark_recipe.py",
+            "cook_houdini_node.py",
+            "houdini_gaea_bridge_node",
+            "houdini_heightfield_hda",
             '"-PreparedTerrainRoot"',
             '"-SkipTerrainPreparation"',
         ):
@@ -131,7 +141,11 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         self.assertTrue((recipes / "README.md").is_file())
         # Until a real licensed DCC authoring pass produces them, these files
         # must be absent rather than generated as fake textual stand-ins.
-        for filename in ("passo_giau_landscape.hiplc", "passo_giau_landscape.terrain"):
+        for filename in (
+            "passo_giau_landscape.hiplc",
+            "yacs_passo_giau_heightfield.hdalc",
+            "passo_giau_landscape.terrain",
+        ):
             path = recipes / filename
             if path.exists():
                 header = path.read_bytes()[:128]
