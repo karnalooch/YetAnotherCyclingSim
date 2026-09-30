@@ -11,7 +11,8 @@ param(
     [Parameter(Mandatory=$true)] [string] $ExpectedHead,
     [string] $PreparedWorkspaceStamp,
     [string] $PcgExExecutionOutput,
-    [ValidateSet('A','B','C','D','E')] [string] $Variant = 'E',
+    [string] $NativeDtmPatchMetadata,
+    [ValidateSet('A','B','C','D','E','C3')] [string] $Variant = 'E',
     [switch] $ValidateOnly,
     [int] $TimeoutSec = 900
 )
@@ -31,6 +32,7 @@ $SpikeMapRelative = 'Content/Prototype/Maps/L_PassoGiauTerrainSpike.umap'
 $SpikeMapPath = Join-Path $RepoRoot $SpikeMapRelative
 $CaptureScript = Join-Path $RepoRoot 'scripts/ue/stage3g_capture_sp638_local_corridor.py'
 $VariantLower = $Variant.ToLowerInvariant()
+if (-not $NativeDtmPatchMetadata) { $NativeDtmPatchMetadata = Join-Path $RepoRoot 'ExternalAssets/Terrain/PassoGiau/PreparedNearField/passo_giau_native_dtm_patch.json' }
 $CaptureLog = Join-Path $ArtifactRoot ("local_corridor_visual_{0}.log" -f $VariantLower)
 $CaptureStdout = Join-Path $ArtifactRoot ("local_corridor_visual_{0}.stdout.log" -f $VariantLower)
 $CaptureErr = $CaptureLog + '.stderr'
@@ -106,6 +108,18 @@ else {
     $env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PNG = $CapturePng
     $env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PROOF = $CaptureProof
     $env:YACS_SP638_LOCAL_CORRIDOR_VARIANT = $Variant
+    if ($Variant -eq 'C3') {
+        if (-not (Test-Path -LiteralPath $NativeDtmPatchMetadata -PathType Leaf)) {
+            throw "Gate C.3 native DTM patch metadata is missing: $NativeDtmPatchMetadata"
+        }
+        $NativeDtmPatchMetadata = (Resolve-Path -LiteralPath $NativeDtmPatchMetadata).Path
+        $meta = Get-Content -LiteralPath $NativeDtmPatchMetadata -Raw | ConvertFrom-Json
+        $binary = Join-Path (Split-Path -Parent $NativeDtmPatchMetadata) ([string]$meta.binary.file)
+        if (-not (Test-Path -LiteralPath $binary -PathType Leaf)) {
+            throw "Gate C.3 native DTM patch binary is missing: $binary"
+        }
+        $env:YACS_NATIVE_DTM_PATCH_METADATA = $NativeDtmPatchMetadata
+    }
     if ($PcgExExecutionOutput) {
         $env:YACS_PCGEX_CORRIDOR_OUTPUT = $PcgExExecutionOutput
     }
@@ -128,6 +142,7 @@ else {
         Remove-Item Env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PNG -ErrorAction SilentlyContinue
         Remove-Item Env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PROOF -ErrorAction SilentlyContinue
         Remove-Item Env:YACS_SP638_LOCAL_CORRIDOR_VARIANT -ErrorAction SilentlyContinue
+        Remove-Item Env:YACS_NATIVE_DTM_PATCH_METADATA -ErrorAction SilentlyContinue
         Remove-Item Env:YACS_PCGEX_CORRIDOR_OUTPUT -ErrorAction SilentlyContinue
     }
 }
@@ -195,10 +210,17 @@ if ([bool]$Proof.neutral_landscape_material -ne $true) {
     throw 'SP638 visual proof did not apply the required neutral Landscape proof material.'
 }
 
-$ExpectedMacro = $Variant -in @('A','B','E')
-$ExpectedLocal = $Variant -in @('C','D','E')
-$ExpectedCorridor = $Variant -in @('B','D','E')
-$ExpectedCutFill = $Variant -ne 'A'
+if ($Variant -eq 'C3') {
+    $ExpectedMacro = $false
+    $ExpectedLocal = $true
+    $ExpectedCorridor = $false
+    $ExpectedCutFill = $false
+} else {
+    $ExpectedMacro = $Variant -in @('A','B','E')
+    $ExpectedLocal = $Variant -in @('C','D','E')
+    $ExpectedCorridor = $Variant -in @('B','D','E')
+    $ExpectedCutFill = $Variant -ne 'A'
+}
 
 if ([bool]$Proof.surface_visibility.macro_landscape -ne $ExpectedMacro) {
     throw "Variant $Variant macro Landscape visibility mismatch."
@@ -229,20 +251,44 @@ if ($ExpectedLocal) {
     if ([bool]$Proof.local_terrain_skin.canonical_road_xy_modified -ne $false) {
         throw "Variant $Variant terrain skin modified canonical road XY."
     }
-    if ([double]$Proof.local_terrain_skin.grid_step_m -gt 4.01) {
-        throw "Variant $Variant terrain skin grid is too coarse: $($Proof.local_terrain_skin.grid_step_m) m"
-    }
-    if ([int]$Proof.local_terrain_skin.sample_count -lt 10000) {
-        throw "Variant $Variant terrain skin sampled too few points: $($Proof.local_terrain_skin.sample_count)"
-    }
-    if ([double]$Proof.local_terrain_skin.max_abs_adjustment_m -gt 0.901) {
-        throw "Variant $Variant terrain skin exceeded bounded smoothing: $($Proof.local_terrain_skin.max_abs_adjustment_m) m"
-    }
-    if ([double]$Proof.local_terrain_skin.max_abs_laplacian_after_m -ge [double]$Proof.local_terrain_skin.max_abs_laplacian_before_m) {
-        throw "Variant $Variant terrain skin did not reduce high-frequency height curvature."
-    }
-    if ([int]$Proof.local_geometry.terrain_skin.triangles -lt 25000) {
-        throw "Variant $Variant rider-close terrain skin mesh is unexpectedly sparse."
+    if ($Variant -eq 'C3') {
+        if ([bool]$Proof.local_terrain_skin.native_metric_dtm -ne $true) {
+            throw 'Gate C.3 did not use the native metric DTM.'
+        }
+        if ([bool]$Proof.local_terrain_skin.landscape_collision_sampled -ne $false) {
+            throw 'Gate C.3 unexpectedly sampled Landscape collision.'
+        }
+        if ([bool]$Proof.local_terrain_skin.smoothing_applied -ne $false) {
+            throw 'Gate C.3 unexpectedly smoothed the native DTM patch.'
+        }
+        if ([string]$Proof.local_terrain_skin.source -ne 'prepared native metric DTM bounded patch') {
+            throw "Gate C.3 source drifted: $($Proof.local_terrain_skin.source)"
+        }
+        if ([double]$Proof.local_terrain_skin.grid_step_m -gt 1.01) {
+            throw "Gate C.3 native grid is too coarse: $($Proof.local_terrain_skin.grid_step_m) m"
+        }
+        if ([int]$Proof.local_terrain_skin.sample_count -lt 250000) {
+            throw "Gate C.3 native patch sampled too few points: $($Proof.local_terrain_skin.sample_count)"
+        }
+        if ([int]$Proof.local_geometry.terrain_skin.triangles -lt 500000) {
+            throw "Gate C.3 native terrain mesh is unexpectedly sparse."
+        }
+    } else {
+        if ([double]$Proof.local_terrain_skin.grid_step_m -gt 4.01) {
+            throw "Variant $Variant terrain skin grid is too coarse: $($Proof.local_terrain_skin.grid_step_m) m"
+        }
+        if ([int]$Proof.local_terrain_skin.sample_count -lt 10000) {
+            throw "Variant $Variant terrain skin sampled too few points: $($Proof.local_terrain_skin.sample_count)"
+        }
+        if ([double]$Proof.local_terrain_skin.max_abs_adjustment_m -gt 0.901) {
+            throw "Variant $Variant terrain skin exceeded bounded smoothing: $($Proof.local_terrain_skin.max_abs_adjustment_m) m"
+        }
+        if ([double]$Proof.local_terrain_skin.max_abs_laplacian_after_m -ge [double]$Proof.local_terrain_skin.max_abs_laplacian_before_m) {
+            throw "Variant $Variant terrain skin did not reduce high-frequency height curvature."
+        }
+        if ([int]$Proof.local_geometry.terrain_skin.triangles -lt 25000) {
+            throw "Variant $Variant rider-close terrain skin mesh is unexpectedly sparse."
+        }
     }
 } else {
     if ([bool]$Proof.local_terrain_skin.enabled -ne $false -or [bool]$Proof.local_geometry.terrain_skin.spawned -ne $false) {
@@ -285,6 +331,6 @@ if ($TrackedChanges.Count -gt 0) {
     throw ("SP638 local-corridor visual proof mutated tracked files: {0}" -f ($TrackedChanges -join '; '))
 }
 
-Write-Host ("Gate C.1 surface-ownership variant {0}: PASS." -f $Variant) -ForegroundColor Green
+Write-Host (($(if ($Variant -eq 'C3') { 'Gate C.3 native-DTM patch' } else { 'Gate C.1 surface-ownership variant' })) + " {0}: PASS." -f $Variant) -ForegroundColor Green
 Write-Host ("Rendered proof: {0}" -f $CapturePng)
 exit 0
