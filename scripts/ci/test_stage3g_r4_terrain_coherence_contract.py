@@ -54,7 +54,7 @@ TERRAIN_SPEC = (
     / "Stage3PrototypeTerrain.spec.cpp"
 )
 HARNESS = ROOT / "scripts" / "ue" / "Invoke-YacsStage3GR4TerrainCoherence.ps1"
-WORKFLOW = ROOT / ".github" / "workflows" / "stage3g-r4-terrain-coherence-author.yml"
+RETIRED_WORKFLOW = ROOT / ".github" / "workflows" / "stage3g-r4-terrain-coherence-author.yml"
 
 
 class Stage3GR4TerrainCoherenceContract(unittest.TestCase):
@@ -98,9 +98,8 @@ class Stage3GR4TerrainCoherenceContract(unittest.TestCase):
         self.assertIn("Candidate.SignedLateralOffsetM", text)
         self.assertIn("PositionM.Z += Surface.SurfaceRiseM", text)
 
-    def test_authoring_is_exact_sha_map_only_and_self_hosted(self):
+    def test_authoring_harness_remains_fail_closed_after_workflow_retirement(self):
         harness = HARNESS.read_text(encoding="utf-8")
-        workflow = WORKFLOW.read_text(encoding="utf-8")
 
         self.assertIn("ExpectedHead", harness)
         self.assertIn("git -C $RepoRoot lfs fsck", harness)
@@ -108,18 +107,8 @@ class Stage3GR4TerrainCoherenceContract(unittest.TestCase):
         self.assertIn("-run=CyclingStage3RouteSetup", harness)
         self.assertIn("Content/Prototype/Maps/L_CyclingTest.umap", harness)
         self.assertIn("Unexpected tracked mutations", harness)
+        self.assertFalse(RETIRED_WORKFLOW.exists())
 
-        self.assertIn("runs-on: [self-hosted, yacs-ue58]", workflow)
-        self.assertIn("Bootstrap cleanup helper outside persistent worktree", workflow)
-        self.assertIn("Release-YacsUnrealWorkspaceLocks.ps1", workflow)
-        self.assertIn("path: _stage3g-r4-author-worktree", workflow)
-        self.assertIn("working-directory: _stage3g-r4-author-worktree", workflow)
-        self.assertIn("ref: $" + "{{ github.sha }}", workflow)
-        self.assertIn("lfs: true", workflow)
-        self.assertIn("persist-credentials: true", workflow)
-        self.assertIn("test_stage3g_r4_terrain_coherence_contract", workflow)
-        self.assertIn("git lfs fsck", workflow)
-        self.assertIn("Commit only the rebuilt Stage 3 map", workflow)
 
 
 if __name__ == "__main__":
