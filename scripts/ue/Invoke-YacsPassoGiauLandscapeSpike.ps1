@@ -63,10 +63,11 @@ $RoadCaptureLog = Join-Path $ArtifactRoot 'road_capture.log'
 $RoadCaptureStdout = Join-Path $ArtifactRoot 'road_capture.stdout.log'
 $RoadCaptureErr = $RoadCaptureLog + '.stderr'
 $RoadCapturePng = Join-Path $ArtifactRoot 'passo_giau_sp638_rider_3840x2160.png'
+$RoadTerrainOnlyPng = Join-Path $ArtifactRoot 'passo_giau_sp638_rider_terrain_only_3840x2160.png'
 $RoadCaptureProof = Join-Path $ArtifactRoot 'road_capture_proof.json'
 $FinalProof = Join-Path $ArtifactRoot 'passo_giau_landscape_spike_proof.json'
 
-foreach ($Path in @($BuildLog,$MapPrepLog,$MapPrepErr,$MapPrepProof,$ImportLog,$ImportErr,$ImportProof,$CaptureLog,$CaptureStdout,$CaptureErr,$CapturePng,$CaptureProof,$RoadCaptureLog,$RoadCaptureStdout,$RoadCaptureErr,$RoadCapturePng,$RoadCaptureProof,$FinalProof)) {
+foreach ($Path in @($BuildLog,$MapPrepLog,$MapPrepErr,$MapPrepProof,$ImportLog,$ImportErr,$ImportProof,$CaptureLog,$CaptureStdout,$CaptureErr,$CapturePng,$CaptureProof,$RoadCaptureLog,$RoadCaptureStdout,$RoadCaptureErr,$RoadCapturePng,$RoadTerrainOnlyPng,$RoadCaptureProof,$FinalProof)) {
     Remove-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
 }
 
@@ -335,6 +336,7 @@ if ($IncludeRoad) {
         throw "SP638 road capture script is missing: $RoadCaptureScript"
     }
     $env:YACS_PASSO_GIAU_ROAD_CAPTURE_PNG = $RoadCapturePng
+    $env:YACS_PASSO_GIAU_ROAD_TERRAIN_ONLY_PNG = $RoadTerrainOnlyPng
     $env:YACS_PASSO_GIAU_ROAD_CAPTURE_PROOF = $RoadCaptureProof
     try {
         $RoadCaptureArgs = @($ProjectPath,('-ExecutePythonScript="' + $RoadCaptureScript + '"'),'-Unattended','-NoPause','-NoSplash','-NoP4','-windowed','-ResX=1920','-ResY=1080','-NoVSync','-FixedSeed','-ScriptErrorsAreFatal','-log','-stdout',('-AbsLog=' + $RoadCaptureLog))
@@ -344,11 +346,14 @@ if ($IncludeRoad) {
     }
     finally {
         Remove-Item Env:YACS_PASSO_GIAU_ROAD_CAPTURE_PNG -ErrorAction SilentlyContinue
+        Remove-Item Env:YACS_PASSO_GIAU_ROAD_TERRAIN_ONLY_PNG -ErrorAction SilentlyContinue
         Remove-Item Env:YACS_PASSO_GIAU_ROAD_CAPTURE_PROOF -ErrorAction SilentlyContinue
     }
 
     if (-not (Test-Path -LiteralPath $RoadCapturePng -PathType Leaf)) { throw "SP638 rider PNG is missing (exit=$RoadCaptureExitCode)." }
     if ((Get-Item -LiteralPath $RoadCapturePng).Length -lt 100000) { throw 'SP638 rider PNG is unexpectedly small.' }
+    if (-not (Test-Path -LiteralPath $RoadTerrainOnlyPng -PathType Leaf)) { throw "SP638 terrain-only comparison PNG is missing (exit=$RoadCaptureExitCode)." }
+    if ((Get-Item -LiteralPath $RoadTerrainOnlyPng).Length -lt 100000) { throw 'SP638 terrain-only comparison PNG is unexpectedly small.' }
     if (-not (Test-Path -LiteralPath $RoadCaptureProof -PathType Leaf)) { throw "SP638 rider capture proof is missing (exit=$RoadCaptureExitCode)." }
     $RoadCapture = Get-Content -LiteralPath $RoadCaptureProof -Raw | ConvertFrom-Json
     if ($RoadCapture.passo_giau_sp638_rider_capture -ne 'PASS') { throw "SP638 rider capture proof did not report PASS (exit=$RoadCaptureExitCode)." }
@@ -357,6 +362,8 @@ if ($IncludeRoad) {
     if ([int]$RoadCapture.road_spline_mesh_segments -ne [int]$Import.road_spline_mesh_segments) { throw 'SP638 rider proof spline-mesh count differs from import proof.' }
     if ([double]$RoadCapture.road_spline_length_m -lt 10000.0 -or [double]$RoadCapture.road_spline_length_m -gt 25000.0) { throw 'SP638 rider proof spline length is outside the expected AOI range.' }
     if ([double]$RoadCapture.curvature_score -le 0.0) { throw 'SP638 rider proof did not select a curved road segment.' }
+    if ($RoadCapture.comparison_strategy -ne 'same-camera-combined-vs-terrain-only') { throw 'SP638 rider proof comparison strategy is invalid.' }
+    if ([int64]$RoadCapture.terrain_only_screenshot_bytes -ne (Get-Item -LiteralPath $RoadTerrainOnlyPng).Length) { throw 'SP638 terrain-only proof PNG byte count does not match the rendered file.' }
 
     $RoadCaptureLogText = Get-Content -LiteralPath $RoadCaptureLog -Raw -ErrorAction Stop
     if ($RoadCaptureExitCode -notin @(0, 1)) { throw "SP638 rider capture returned unexpected exit code $RoadCaptureExitCode." }

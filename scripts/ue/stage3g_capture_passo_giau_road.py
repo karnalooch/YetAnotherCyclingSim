@@ -27,13 +27,18 @@ _task = None
 _tick_handle = None
 _started_at = 0.0
 _output_path: Path | None = None
+_terrain_only_output_path: Path | None = None
 _proof_path: Path | None = None
 _camera = None
+_spline_meshes: list[unreal.SplineMeshComponent] = []
+_capture_stage = "combined"
 _proof_data: dict[str, object] = {}
 
 
 def _finish(success: bool, error: str = "") -> None:
     global _tick_handle
+    for mesh in _spline_meshes:
+        mesh.set_visibility(True, True)
     if _tick_handle is not None:
         unreal.unregister_slate_post_tick_callback(_tick_handle)
         _tick_handle = None
@@ -45,6 +50,9 @@ def _finish(success: bool, error: str = "") -> None:
             "map": SPIKE_MAP,
             "screenshot": str(_output_path),
             "screenshot_bytes": _output_path.stat().st_size,
+            "terrain_only_screenshot": str(_terrain_only_output_path),
+            "terrain_only_screenshot_bytes": _terrain_only_output_path.stat().st_size,
+            "comparison_strategy": "same-camera-combined-vs-terrain-only",
             "resolution": [CAPTURE_RES_X, CAPTURE_RES_Y],
             "camera_height_above_road_cm": EYE_HEIGHT_CM,
             "capture_strategy": "rider-height-max-curvature-road-proof",
@@ -71,20 +79,58 @@ def _finish(success: bool, error: str = "") -> None:
     unreal.EditorPythonScripting.set_keep_python_script_alive(False)
 
 
+def _schedule_screenshot(path: Path):
+    task = unreal.AutomationLibrary.take_high_res_screenshot(
+        res_x=CAPTURE_RES_X,
+        res_y=CAPTURE_RES_Y,
+        filename=str(path),
+        camera=_camera,
+        mask_enabled=False,
+        capture_hdr=False,
+        comparison_tolerance=unreal.ComparisonTolerance.LOW,
+        comparison_notes="M3 official SP638 cyclist-height road proof",
+        delay=2.0,
+        force_game_view=True,
+    )
+    if not task or not task.is_valid_task():
+        raise RuntimeError("AutomationLibrary returned an invalid screenshot task")
+    return task
+
+
 def _tick(_delta_time: float) -> None:
     if _task is None:
         _finish(False, "screenshot task was not initialized")
         return
 
     if _task.is_task_done():
+        global _capture_stage, _started_at, _task
+        if _capture_stage == "combined":
+            if (
+                _output_path is None
+                or not _output_path.is_file()
+                or _output_path.stat().st_size < 100_000
+            ):
+                _finish(False, "combined screenshot task completed without a valid PNG")
+                return
+            if _terrain_only_output_path is None:
+                _finish(False, "terrain-only screenshot path was not initialized")
+                return
+            for mesh in _spline_meshes:
+                mesh.set_visibility(False, True)
+            _capture_stage = "terrain_only"
+            _task = _schedule_screenshot(_terrain_only_output_path)
+            _started_at = time.monotonic()
+            unreal.log("[PassoGiauRoadCapture] terrain-only comparison screenshot scheduled")
+            return
+
         if (
-            _output_path is not None
-            and _output_path.is_file()
-            and _output_path.stat().st_size >= 100_000
+            _terrain_only_output_path is not None
+            and _terrain_only_output_path.is_file()
+            and _terrain_only_output_path.stat().st_size >= 100_000
         ):
             _finish(True)
         else:
-            _finish(False, "screenshot task completed without a valid PNG")
+            _finish(False, "terrain-only screenshot task completed without a valid PNG")
         return
 
     if time.monotonic() - _started_at > 90.0:
@@ -146,22 +192,29 @@ def _choose_hairpin_distance(spline: unreal.SplineComponent) -> tuple[float, flo
 
 
 def main() -> None:
-    global _task, _tick_handle, _started_at, _output_path, _proof_path, _camera
-    global _proof_data
+    global _task, _tick_handle, _started_at, _output_path, _terrain_only_output_path
+    global _proof_path, _camera, _spline_meshes, _capture_stage, _proof_data
 
     output_value = os.environ.get("YACS_PASSO_GIAU_ROAD_CAPTURE_PNG", "")
+    terrain_only_value = os.environ.get(
+        "YACS_PASSO_GIAU_ROAD_TERRAIN_ONLY_PNG", ""
+    )
     proof_value = os.environ.get("YACS_PASSO_GIAU_ROAD_CAPTURE_PROOF", "")
-    if not output_value or not proof_value:
+    if not output_value or not terrain_only_value or not proof_value:
         raise RuntimeError(
-            "YACS_PASSO_GIAU_ROAD_CAPTURE_PNG and "
+            "YACS_PASSO_GIAU_ROAD_CAPTURE_PNG, "
+            "YACS_PASSO_GIAU_ROAD_TERRAIN_ONLY_PNG and "
             "YACS_PASSO_GIAU_ROAD_CAPTURE_PROOF are required"
         )
 
     _output_path = Path(output_value)
+    _terrain_only_output_path = Path(terrain_only_value)
     _proof_path = Path(proof_value)
     _output_path.parent.mkdir(parents=True, exist_ok=True)
     _output_path.unlink(missing_ok=True)
+    _terrain_only_output_path.unlink(missing_ok=True)
     _proof_path.unlink(missing_ok=True)
+    _capture_stage = "combined"
 
     world = unreal.EditorLoadingAndSavingUtils.load_map(SPIKE_MAP)
     if not world:
@@ -187,6 +240,7 @@ def main() -> None:
     spline_meshes = list(
         road_actor.get_components_by_class(unreal.SplineMeshComponent)
     )
+    _spline_meshes = spline_meshes
     if len(spline_meshes) != control_count - 1:
         raise RuntimeError(
             "persisted road spline-mesh count mismatch: "
@@ -312,20 +366,7 @@ def main() -> None:
     }
 
     unreal.EditorPythonScripting.set_keep_python_script_alive(True)
-    _task = unreal.AutomationLibrary.take_high_res_screenshot(
-        res_x=CAPTURE_RES_X,
-        res_y=CAPTURE_RES_Y,
-        filename=str(_output_path),
-        camera=_camera,
-        mask_enabled=False,
-        capture_hdr=False,
-        comparison_tolerance=unreal.ComparisonTolerance.LOW,
-        comparison_notes="Stage 3G R4.1 official SP638 cyclist-height road proof",
-        delay=2.0,
-        force_game_view=True,
-    )
-    if not _task or not _task.is_valid_task():
-        raise RuntimeError("AutomationLibrary returned an invalid screenshot task")
+    _task = _schedule_screenshot(_output_path)
 
     _started_at = time.monotonic()
     _tick_handle = unreal.register_slate_post_tick_callback(_tick)
