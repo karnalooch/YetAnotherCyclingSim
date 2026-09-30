@@ -149,7 +149,9 @@ class ChangeClassifierTests(unittest.TestCase):
         self.assertFalse(result.ue_code)
         self.assertEqual(result.ci_cost_class, "standard")
 
-    def test_editor_authoring_python_routes_python_and_tooling_without_unreal_build(self):
+    def test_editor_authoring_python_routes_python_and_tooling_without_unreal_build(
+        self,
+    ):
         result = cc.classify_paths(["scripts/ue/stage3g_capture_passo_giau_road.py"])
         self.assertTrue(result.python)
         self.assertTrue(result.ci)
