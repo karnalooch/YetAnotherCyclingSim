@@ -70,7 +70,6 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("road_earthworks_side_falloff_cm - 650.0", wrapper)
         self.assertNotIn("retaining_helper", wrapper)
 
-
         self.assertIn('#include "LandscapeImportHelper.h"', cpp)
         self.assertIn("VerifyUnrealImportReaderParity(", cpp)
         self.assertIn("GetHeightmapImportDescriptor(", cpp)
