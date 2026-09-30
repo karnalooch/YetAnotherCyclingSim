@@ -87,5 +87,14 @@
     "require_32bit_intermediate_heightfields": true,
     "forbid_material_camouflage_as_geometry_fix": true,
     "forbid_guessed_embark_internal_nodes": true
+  },
+  "proof_locations": {
+    "gate_c_hairpin": {
+      "source_station_m": 15560,
+      "selection_basis": "nearest prepared official SP638 sample to the Gate C.1 PCGEx-selected rider-proof hairpin",
+      "gate_c1_pcgex_focus_distance_m": 15450,
+      "observed_source_to_render_focus_xy_delta_m": 0.85,
+      "purpose": "stable exact-location A-E/C3 terrain ownership comparison; not route or physics authority"
+    }
   }
 }
