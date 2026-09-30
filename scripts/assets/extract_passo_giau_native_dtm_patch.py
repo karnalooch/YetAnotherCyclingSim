@@ -3,6 +3,8 @@
 
 The patch is cut directly from the prepared 1 m hybrid MASE/Veneto GeoTIFF.
 It never samples Unreal Landscape collision and never changes route/physics truth.
+Its center is the versioned Gate C proof XY derived from the actual PCGEx rider proof,
+not a separately re-selected station on the prepared SP638 source polyline.
 """
 
 from __future__ import annotations
@@ -37,17 +39,6 @@ def source_heightfield_path() -> Path:
     )
 
 
-def source_road_path() -> Path:
-    return (
-        repository_root()
-        / "ExternalAssets"
-        / "Terrain"
-        / "PassoGiau"
-        / "PreparedRoad"
-        / "passo_giau_sp638_ue_centerline.json"
-    )
-
-
 def output_root() -> Path:
     return (
         repository_root()
@@ -70,84 +61,57 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _points(payload: dict[str, Any]) -> list[dict[str, float]]:
-    points = payload.get("points")
-    if not isinstance(points, list) or len(points) < 8:
-        raise ValueError("prepared SP638 input contains too few sampled points")
-    result: list[dict[str, float]] = []
-    previous_s = -1.0
-    for item in points:
-        if not isinstance(item, dict):
-            raise ValueError("prepared SP638 point is not an object")
-        point = {
-            "s_m": float(item["s_m"]),
-            "x": float(item["x_epsg32632_m"]),
-            "y": float(item["y_epsg32632_m"]),
-        }
-        if point["s_m"] <= previous_s:
-            raise ValueError("prepared SP638 station distances are not strictly increasing")
-        previous_s = point["s_m"]
-        result.append(point)
-    return result
-
-
-def _segment_index(points: list[dict[str, float]], distance_m: float) -> int:
-    if distance_m <= points[0]["s_m"]:
-        return 0
-    for index in range(len(points) - 1):
-        if points[index]["s_m"] <= distance_m <= points[index + 1]["s_m"]:
-            return index
-    return len(points) - 2
-
-
-def _sample_xy(points: list[dict[str, float]], distance_m: float) -> tuple[float, float]:
-    index = _segment_index(points, distance_m)
-    left = points[index]
-    right = points[index + 1]
-    span = right["s_m"] - left["s_m"]
-    if span <= 0.0:
-        raise ValueError("prepared SP638 segment has non-positive station span")
-    alpha = max(0.0, min(1.0, (distance_m - left["s_m"]) / span))
-    return (
-        left["x"] + (right["x"] - left["x"]) * alpha,
-        left["y"] + (right["y"] - left["y"]) * alpha,
-    )
-
-
-def proof_hairpin_station_m() -> tuple[float, dict[str, Any]]:
+def proof_hairpin_focus() -> tuple[float, float, dict[str, Any]]:
     path = pipeline_manifest_path()
     if not path.is_file():
         raise FileNotFoundError(f"terrain pipeline manifest is missing: {path}")
+
     payload = json.loads(path.read_text(encoding="utf-8"))
     proof = (payload.get("proof_locations") or {}).get("gate_c_hairpin")
     if not isinstance(proof, dict):
         raise ValueError("pipeline manifest is missing proof_locations.gate_c_hairpin")
-    station = float(proof.get("source_station_m", -1.0))
-    if station <= 0.0:
-        raise ValueError(f"invalid Gate C proof source station: {station}")
-    basis = str(proof.get("selection_basis", "")).strip()
-    if not basis:
+
+    focus_epsg = proof.get("focus_epsg32632_m")
+    focus_ue = proof.get("focus_ue_m")
+    if not isinstance(focus_epsg, list) or len(focus_epsg) != 2:
+        raise ValueError("Gate C proof focus_epsg32632_m must contain exactly two values")
+    if not isinstance(focus_ue, list) or len(focus_ue) != 2:
+        raise ValueError("Gate C proof focus_ue_m must contain exactly two values")
+
+    focus_x = float(focus_epsg[0])
+    focus_y = float(focus_epsg[1])
+    focus_ue_x = float(focus_ue[0])
+    focus_ue_y = float(focus_ue[1])
+    values = np.asarray([focus_x, focus_y, focus_ue_x, focus_ue_y], dtype=np.float64)
+    if not np.all(np.isfinite(values)):
+        raise ValueError("Gate C proof focus contains non-finite coordinates")
+
+    expected_ue_x = focus_x - TARGET_BOUNDS[0]
+    expected_ue_y = TARGET_BOUNDS[3] - focus_y
+    coordinate_delta_m = float(
+        np.hypot(expected_ue_x - focus_ue_x, expected_ue_y - focus_ue_y)
+    )
+    if coordinate_delta_m > 0.01:
+        raise ValueError(
+            "Gate C proof EPSG/UE focus coordinates disagree: "
+            f"delta={coordinate_delta_m:.6f} m"
+        )
+
+    selection_basis = str(proof.get("selection_basis", "")).strip()
+    if not selection_basis:
         raise ValueError("Gate C proof location is missing selection_basis")
-    return station, proof
+    if float(proof.get("max_render_focus_xy_drift_m", -1.0)) <= 0.0:
+        raise ValueError("Gate C proof location has invalid max_render_focus_xy_drift_m")
+
+    return focus_x, focus_y, proof
 
 
 def main() -> int:
     source = source_heightfield_path()
-    road = source_road_path()
     if not source.is_file():
         raise FileNotFoundError(f"native metric DTM is missing: {source}")
-    if not road.is_file():
-        raise FileNotFoundError(f"prepared SP638 input is missing: {road}")
 
-    road_payload = json.loads(road.read_text(encoding="utf-8"))
-    points = _points(road_payload)
-    focus_s_m, proof_location = proof_hairpin_station_m()
-    if focus_s_m < points[0]["s_m"] or focus_s_m > points[-1]["s_m"]:
-        raise ValueError(
-            f"Gate C proof station {focus_s_m:.3f} m is outside prepared SP638 "
-            f"{points[0]['s_m']:.3f}..{points[-1]['s_m']:.3f} m"
-        )
-    focus_x, focus_y = _sample_xy(points, focus_s_m)
+    focus_x, focus_y, proof_location = proof_hairpin_focus()
 
     with rasterio.open(source) as dataset:
         if dataset.count != 1:
@@ -172,7 +136,7 @@ def main() -> int:
             or col_off + PATCH_VERTEX_COUNT > dataset.width
         ):
             raise ValueError(
-                "selected C.3 hairpin patch falls outside native DTM bounds: "
+                "selected C.3 proof-focus patch falls outside native DTM bounds: "
                 f"row={center_row} col={center_col}"
             )
 
@@ -216,10 +180,10 @@ def main() -> int:
     # Raster rows run north -> south, while build_terrain_skin_mesh expects UE Y
     # to descend across rows. UE Y increases southward, so reverse the rows.
     ue_rows = np.flipud(heights).astype("<f4", copy=False)
-    first_ue_x_m = (float(north_x) - TARGET_BOUNDS[0])
-    first_ue_y_m = (TARGET_BOUNDS[3] - float(south_y))
-    last_ue_x_m = (float(east_x) - TARGET_BOUNDS[0])
-    last_ue_y_m = (TARGET_BOUNDS[3] - float(north_y))
+    first_ue_x_m = float(north_x) - TARGET_BOUNDS[0]
+    first_ue_y_m = TARGET_BOUNDS[3] - float(south_y)
+    last_ue_x_m = float(east_x) - TARGET_BOUNDS[0]
+    last_ue_y_m = TARGET_BOUNDS[3] - float(north_y)
 
     out = output_root()
     out.mkdir(parents=True, exist_ok=True)
@@ -239,15 +203,25 @@ def main() -> int:
             "landscape_collision_sampled": False,
         },
         "hairpin_selection": {
-            "source": "versioned Gate C proof location on prepared official SP638",
-            "focus_s_m": round(focus_s_m, 3),
-            "focus_epsg32632_m": [round(focus_x, 3), round(focus_y, 3)],
+            "source": "versioned Gate C proof XY derived from PCGEx rider proof",
+            "focus_epsg32632_m": [
+                round(focus_x, 3),
+                round(focus_y, 3),
+            ],
+            "focus_ue_m": [
+                float(proof_location["focus_ue_m"][0]),
+                float(proof_location["focus_ue_m"][1]),
+            ],
             "selection_basis": proof_location["selection_basis"],
-            "gate_c1_pcgex_focus_distance_m": float(
-                proof_location["gate_c1_pcgex_focus_distance_m"]
+            "reference_pcgex_focus_distance_m": float(
+                proof_location["reference_pcgex_focus_distance_m"]
             ),
-            "observed_source_to_render_focus_xy_delta_m": float(
-                proof_location["observed_source_to_render_focus_xy_delta_m"]
+            "reference_pcgex_execution_output_sha256": proof_location[
+                "reference_pcgex_execution_output_sha256"
+            ],
+            "reference_workflow_run_id": int(proof_location["reference_workflow_run_id"]),
+            "max_render_focus_xy_drift_m": float(
+                proof_location["max_render_focus_xy_drift_m"]
             ),
             "canonical_route_authority_preserved": True,
         },
@@ -291,7 +265,9 @@ def main() -> int:
     print(
         "Gate C.3 native DTM patch: "
         f"{PATCH_VERTEX_COUNT}x{PATCH_VERTEX_COUNT} @ 1 m, "
-        f"focus_s={focus_s_m:.1f} m, selection=pinned-gate-c-proof-location"
+        f"focus_ue=({proof_location['focus_ue_m'][0]:.3f},"
+        f"{proof_location['focus_ue_m'][1]:.3f}) m, "
+        "selection=pinned-pcgex-proof-xy"
     )
     print(f"[ok] {metadata_path}")
     print(f"[ok] {binary_path}: {binary_path.stat().st_size} bytes")
