@@ -8,32 +8,53 @@ This directory is the navigation layer for YetAnotherCyclingSim documentation.
 
 ```mermaid
 flowchart TB
-    INDEX["docs/README.md<br/>documentation router"]
+    INDEX["ROUTER<br/>docs/README.md"]
 
-    INDEX --> PRODUCT["Product & delivery"]
-    INDEX --> SIM["Simulation & route"]
-    INDEX --> WORLD["World building"]
-    INDEX --> ENG["Engineering & proof"]
-    INDEX --> HIST["History"]
+    INDEX --> PRODUCT["PRODUCT<br/>Scope · delivery"]
+    INDEX --> SIM["SIMULATION<br/>Route · physics"]
+    INDEX --> WORLD["WORLD<br/>Terrain · authoring"]
+    INDEX --> ENG["ENGINEERING<br/>CI · proof"]
+    INDEX -.-> HIST["HISTORY<br/>Evidence · archive"]
 
-    PRODUCT --> PRD["PRODUCT_REQUIREMENTS.md<br/>MVP scope"]
-    PRODUCT --> ROADMAP["ROADMAP.md<br/>M0-M10 delivery"]
+    PRODUCT --> PRD["SSOT<br/>PRODUCT_REQUIREMENTS"]
+    PRODUCT --> ROADMAP["SSOT<br/>ROADMAP M0-M10"]
 
-    SIM --> RUNTIME["STAGE_2_RUNTIME_CONTRACT.md"]
-    SIM --> ROUTE["STAGE_3_ROUTE_GEOMETRY_CONTRACT.md"]
-    SIM --> PHYS["ROAD_PHYSICS_PROFILE.md"]
+    SIM --> RUNTIME["CONTRACT<br/>Runtime"]
+    SIM --> ROUTE["CONTRACT<br/>Route geometry"]
+    SIM --> PHYS["SSOT<br/>Road physics"]
 
-    WORLD --> BIBLE["WORLD_BUILDING_BIBLE.md<br/>methodology"]
-    WORLD --> AUTHOR["YACS_WORLD_AUTHORING_LIBRARY.md<br/>reusable authoring systems"]
-    WORLD --> ASSETS["ASSET_PLAN.md"]
+    WORLD --> BIBLE["SSOT<br/>World Building Bible"]
+    WORLD --> AUTHOR["LIBRARY<br/>World authoring"]
+    WORLD --> ASSETS["LEDGER<br/>Asset plan"]
+    WORLD --> STYLE["STYLE<br/>Blueprint diagrams"]
 
-    ENG --> CI["CI_VALIDATION_TIERS.md"]
-    ENG --> PLATFORM["ENGINEERING_PLATFORM.md"]
-    ENG --> PERF["performance/"]
+    ENG --> CI["CONTRACT<br/>CI validation tiers"]
+    ENG --> PLATFORM["PLATFORM<br/>Gumball integration"]
+    ENG --> PERF["EVIDENCE<br/>Performance"]
 
-    HIST --> R41["STAGE3G_R4_1_*<br/>legacy M3 execution dossiers"]
-    HIST --> ARCHIVE["archive/"]
-    HIST --> EVIDENCE["visual/performance history"]
+    HIST --> R41["LEGACY<br/>Stage / R / B dossiers"]
+    HIST --> ARCHIVE["ARCHIVE<br/>Frozen history"]
+    HIST --> EVIDENCE["EVIDENCE<br/>Visual + performance"]
+
+    classDef input fill:#303846,stroke:#8ea1b8,color:#f7f9fc,stroke-width:2px;
+    classDef exec fill:#123f73,stroke:#49a2ff,color:#ffffff,stroke-width:3px;
+    classDef tool fill:#4b2f69,stroke:#b77cff,color:#ffffff,stroke-width:2px;
+    classDef decision fill:#69470e,stroke:#f0a72f,color:#ffffff,stroke-width:3px;
+    classDef success fill:#1f5736,stroke:#63d889,color:#ffffff,stroke-width:3px;
+    classDef danger fill:#6b2429,stroke:#ff6b73,color:#ffffff,stroke-width:3px;
+    classDef owned fill:#34373d,stroke:#9da4ae,color:#ffffff,stroke-width:2px;
+    classDef evidence fill:#164d5c,stroke:#5bd6ef,color:#ffffff,stroke-width:2px;
+
+    class INDEX decision;
+    class PRODUCT,SIM,WORLD,ENG exec;
+    class HIST input;
+    class PRD,ROADMAP,RUNTIME,ROUTE,PHYS,BIBLE owned;
+    class AUTHOR,ASSETS,STYLE,PLATFORM tool;
+    class CI owned;
+    class PERF,EVIDENCE evidence;
+    class R41,ARCHIVE input;
+
+    linkStyle default stroke-width:2px;
 ```
 
 ## Current focus
@@ -42,6 +63,8 @@ flowchart TB
 |---|---|
 | Delivery | **M3 — Route & World Foundation** |
 | World method | **World Building Bible is authoritative** |
+| Architecture policy | **tools-first + evidence ladder + local proof** |
+| Diagram language | **Gumball Blueprint Mermaid style** |
 | Current priority | **real SP638 road + non-destructive Landscape earthworks** |
 | Terrain source | **canonical real DTM path; presentation remains separate from physics truth** |
 | Road authority | **canonical route / SP638 alignment; do not snap to Landscape grid** |
@@ -57,6 +80,7 @@ The old Stage 3G / R4.1 / B.x vocabulary is historical. Existing workflow names 
 | Product scope and MVP boundaries | [`PRODUCT_REQUIREMENTS.md`](PRODUCT_REQUIREMENTS.md) | **Authoritative** |
 | Delivery order and current milestone | [`ROADMAP.md`](ROADMAP.md) | **Authoritative** |
 | How to build terrain/roads/worlds | [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md) | **Authoritative** |
+| Draw architecture/workflow diagrams | [`DIAGRAM_STYLE.md`](DIAGRAM_STYLE.md) | **Authoritative visual convention** |
 | Road and cornering physics geometry | [`ROAD_PHYSICS_PROFILE.md`](ROAD_PHYSICS_PROFILE.md) | **Authoritative** |
 | Reusable world-authoring systems | [`YACS_WORLD_AUTHORING_LIBRARY.md`](YACS_WORLD_AUTHORING_LIBRARY.md) | **Authoritative implementation library** |
 | Asset plan / provenance | [`ASSET_PLAN.md`](ASSET_PLAN.md) | **Authoritative** |
@@ -83,7 +107,8 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 
 ### World, terrain and authoring
 
-- [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md) — **authoritative methodology**: source terrain, Landscape Edit Layers, roads, earthworks, cliffs, materials, PCG, RVT, streaming and world acceptance.
+- [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md) — **authoritative methodology**: source terrain, tools-first/evidence-led architecture, Landscape Edit Layers, roads, earthworks, cliffs, materials, PCG, RVT, streaming and world acceptance.
+- [`DIAGRAM_STYLE.md`](DIAGRAM_STYLE.md) — Gumball-derived Blueprint Mermaid language for new or substantially revised YACS architecture/workflow diagrams.
 - [`YACS_WORLD_AUTHORING_LIBRARY.md`](YACS_WORLD_AUTHORING_LIBRARY.md) — reusable authoring systems, semantic catalog, presets and generated-output boundary.
 - [`ASSET_PLAN.md`](ASSET_PLAN.md) — source/technical asset ledger and provenance expectations.
 - [`UE_MCP_WORLD_GENERATION.md`](UE_MCP_WORLD_GENERATION.md) — UE MCP orchestration workflow.
@@ -129,6 +154,7 @@ Every top-level Markdown document in `docs/` must appear here.
 |---|---|
 | [`ASSET_PLAN.md`](ASSET_PLAN.md) | Asset plan and provenance |
 | [`CI_VALIDATION_TIERS.md`](CI_VALIDATION_TIERS.md) | CI/proof cadence |
+| [`DIAGRAM_STYLE.md`](DIAGRAM_STYLE.md) | Gumball-derived Blueprint diagram convention |
 | [`ENGINEERING_PLATFORM.md`](ENGINEERING_PLATFORM.md) | Shared engineering platform |
 | [`PERFORMANCE_MULTIPLAYER_ARCHITECTURE.md`](PERFORMANCE_MULTIPLAYER_ARCHITECTURE.md) | Forward-looking architecture |
 | [`PRODUCT_REQUIREMENTS.md`](PRODUCT_REQUIREMENTS.md) | Product/MVP SSOT |
@@ -157,7 +183,8 @@ When behavior, architecture, CI, assets or acceptance criteria change:
 2. update that SSOT in the same PR;
 3. keep experiments/proof history separate from current contracts;
 4. do not create a new nested roadmap identifier for a task;
-5. run the documentation guards required by `AGENTS.md`.
+5. use [`DIAGRAM_STYLE.md`](DIAGRAM_STYLE.md) when materially revising architecture/workflow diagrams;
+6. run the documentation guards required by `AGENTS.md`.
 
 The documentation-index contract remains:
 
