@@ -241,7 +241,7 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         self.assertIn(
             'DIAGNOSTIC_VARIANT_ENV = "YACS_SP638_LOCAL_CORRIDOR_VARIANT"', capture
         )
-        for variant in ('"A": {', '"B": {', '"C": {', '"D": {', '"E": {'):
+        for variant in ('"A": {', '"B": {', '"C": {', '"D": {', '"E": {', '"C3": {'):
             self.assertIn(variant, capture)
         self.assertIn('"Base_DTM" not in edit_layer_names', capture)
         self.assertIn('name == "Road_Earthworks"', capture)
@@ -251,7 +251,8 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         self.assertNotIn("edit_layer_names[0]", capture)
         self.assertIn("set_visibility(macro_landscape_visible, True)", capture)
 
-        self.assertIn("[ValidateSet('A','B','C','D','E')]", wrapper)
+        self.assertIn("[ValidateSet('A','B','C','D','E','C3')]", wrapper)
+        self.assertIn("if ($Variant -eq 'C3')", wrapper)
         self.assertIn("$ExpectedMacro = $Variant -in @('A','B','E')", wrapper)
         self.assertIn("$ExpectedLocal = $Variant -in @('C','D','E')", wrapper)
         self.assertIn("$ExpectedCorridor = $Variant -in @('B','D','E')", wrapper)
@@ -259,6 +260,12 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
 
         self.assertIn("foreach ($variant in @('A','B','C','D','E'))", workflow)
         self.assertIn("-Variant $variant", workflow)
+        self.assertIn("extract_passo_giau_native_dtm_patch.py", workflow)
+        self.assertIn("-Variant C3", workflow)
+        self.assertIn("YACS_NATIVE_DTM_PATCH_METADATA", capture)
+        self.assertIn("prepared native metric DTM bounded patch", capture)
+        self.assertIn("landscape_collision_sampled", capture)
+        self.assertIn("Gate C.3 did not use the native metric DTM.", wrapper)
 
     def test_active_workflow_tracks_pcgex_inputs_and_does_not_require_dcc(self) -> None:
         workflow = (ROOT / ".github/workflows/passo-giau-embark-terrain.yml").read_text(
@@ -267,6 +274,8 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         for token in (
             "Prepare real SP638 authoring input",
             "passo_giau_sp638_ue_centerline.json",
+            "passo_giau_native_dtm_patch.json",
+            "extract_passo_giau_native_dtm_patch.py",
             "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c",
             "Remove-Item -LiteralPath $spikePath -Force",
             "version https://git-lfs.github.com/spec/v1",
