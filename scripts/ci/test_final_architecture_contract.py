@@ -40,9 +40,7 @@ def main() -> int:
     )
 
     project = load_json("YetAnotherCyclingSim.uproject")
-    roadforge_project = next(
-        p for p in project["Plugins"] if p["Name"] == "RoadForge"
-    )
+    roadforge_project = next(p for p in project["Plugins"] if p["Name"] == "RoadForge")
     require(
         roadforge_project.get("TargetAllowList") == ["Editor"],
         "RoadForge project plugin must be Editor-only",
@@ -73,6 +71,10 @@ def main() -> int:
         package.get("yacs", {}).get("upstream_commit") == UE_MCP_COMMIT,
         "ue-mcp provenance metadata drifted",
     )
+    require(
+        package.get("overrides", {}).get("fast-uri") == "3.1.7",
+        "fast-uri security override drifted",
+    )
 
     lock = load_json("tools/ue-mcp/package-lock.json")
     require(lock.get("lockfileVersion") == 3, "unexpected npm lockfile version")
@@ -83,6 +85,10 @@ def main() -> int:
     require(
         lock["packages"]["node_modules/ue-mcp"].get("version") == UE_MCP_VERSION,
         "locked ue-mcp version drifted",
+    )
+    require(
+        lock["packages"]["node_modules/fast-uri"].get("version") == "3.1.7",
+        "patched fast-uri lock version drifted",
     )
 
     setup = read("scripts/ue/Setup-YacsUeMcp.ps1")
