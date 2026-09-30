@@ -1,0 +1,17 @@
+{
+  "id": "heavy-proof-single-session",
+  "source": "karnalooch/YetAnotherCyclingSim",
+  "category": "ci",
+  "problem": "Multiple heavyweight proofs for one exact revision can waste runner time by rebuilding identical source and repeatedly starting the same expensive editor/runtime process.",
+  "invariant": "When several bounded proofs share one exact revision and heavyweight runtime, prepare one clean exact-SHA workspace, build once, start the runtime once, execute an allow-listed proof bundle, then validate emitted evidence without reopening the runtime. Do not reuse a live process across revisions.",
+  "evidence": [
+    "YACS PR #250 / commit aded6977b2bc960497176f1e19bd40c1d449cf8e",
+    "docs/CI_VALIDATION_TIERS.md documents the job-local build-once/boot-once R4.1 proof suite"
+  ],
+  "do_not_copy": [
+    "Unreal-specific dispatcher commands",
+    "Passo Giau map paths or R4.1 proof identifiers"
+  ],
+  "failure_behavior": "Any build, runtime startup, bounded proof, exact-SHA assertion or evidence validation failure fails the bundle. Arbitrary commands/paths are not accepted, and no cross-commit warm daemon is treated as proof.",
+  "status": "proven"
+}
