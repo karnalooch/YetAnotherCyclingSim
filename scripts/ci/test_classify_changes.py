@@ -35,6 +35,9 @@ class ChangeClassifierTests(unittest.TestCase):
         )
         self.assertTrue(result.cpp)
         self.assertTrue(result.ue_code)
+        self.assertTrue(result.unreal_compile)
+        self.assertTrue(result.unreal_runtime)
+        self.assertEqual(result.unreal_execution_class, "compile")
         self.assertTrue(result.security_base)
         self.assertEqual(result.ci_cost_class, "heavy")
 
@@ -51,11 +54,16 @@ class ChangeClassifierTests(unittest.TestCase):
     def test_critical_config_routes_unreal(self):
         result = cc.classify_paths(["Config/DefaultEngine.ini"])
         self.assertTrue(result.ue_code)
+        self.assertFalse(result.unreal_compile)
+        self.assertTrue(result.unreal_runtime)
+        self.assertEqual(result.unreal_execution_class, "runtime")
         self.assertFalse(result.assets)
 
     def test_uproject_routes_unreal(self):
         result = cc.classify_paths(["YetAnotherCyclingSim.uproject"])
         self.assertTrue(result.ue_code)
+        self.assertTrue(result.unreal_compile)
+        self.assertTrue(result.unreal_runtime)
 
     def test_asset_only_stays_out_of_cpp_and_python(self):
         result = cc.classify_paths(
@@ -71,6 +79,7 @@ class ChangeClassifierTests(unittest.TestCase):
         self.assertFalse(result.ue_code)
         self.assertFalse(result.security_base)
         self.assertTrue(result.asset_full)
+        self.assertEqual(result.unreal_execution_class, "runtime")
         self.assertEqual(result.ci_cost_class, "heavy")
 
     def test_regular_asset_does_not_force_full_unreal(self):
@@ -80,6 +89,7 @@ class ChangeClassifierTests(unittest.TestCase):
         self.assertTrue(result.assets)
         self.assertTrue(result.asset_only)
         self.assertFalse(result.asset_full)
+        self.assertEqual(result.unreal_execution_class, "static")
         self.assertEqual(result.ci_cost_class, "standard")
 
     def test_yacs_worldgen_pcg_asset_forces_full_validation(self):
@@ -165,12 +175,16 @@ class ChangeClassifierTests(unittest.TestCase):
             "scripts/ue/Preflight-YacsProof.ps1",
             "scripts/ci/Invoke-YacsUnrealCi.ps1",
             "scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1",
+            "scripts/ci/Resolve-YacsUnrealCiCache.ps1",
             "scripts/ci/Test-YacsCodeOnlyCheckout.ps1",
             ".github/workflows/reusable-unreal.yml",
         ):
             with self.subTest(path=path):
                 result = cc.classify_paths([path])
                 self.assertTrue(result.ue_code)
+                self.assertFalse(result.unreal_compile)
+                self.assertTrue(result.unreal_runtime)
+                self.assertEqual(result.unreal_execution_class, "runtime")
                 self.assertEqual(result.ci_cost_class, "heavy")
 
     def test_manual_unreal_workflow_is_ci_not_automatic_code_build(self):
@@ -192,6 +206,8 @@ class ChangeClassifierTests(unittest.TestCase):
         result = cc.classify_paths(["Plugins/YacsTools/Resources/runtime.payload"])
         self.assertTrue(result.unknown)
         self.assertTrue(result.ue_code)
+        self.assertTrue(result.unreal_compile)
+        self.assertTrue(result.unreal_runtime)
         self.assertTrue(result.security_base)
         self.assertEqual(result.ci_cost_class, "heavy")
 
@@ -207,7 +223,33 @@ class ChangeClassifierTests(unittest.TestCase):
         self.assertFalse(result.assets)
         self.assertTrue(result.ci)
         self.assertFalse(result.ue_code)
+        self.assertFalse(result.unreal_compile)
+        self.assertFalse(result.unreal_runtime)
         self.assertFalse(result.asset_full)
+
+    def test_unreal_fingerprints_separate_compile_from_runtime_inputs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "Source/Module").mkdir(parents=True)
+            (root / "Config").mkdir(parents=True)
+            (root / "YetAnotherCyclingSim.uproject").write_text(
+                '{"FileVersion": 3, "EngineAssociation": "5.8"}\n',
+                encoding="utf-8",
+            )
+            source = root / "Source/Module/Test.cpp"
+            source.write_text("int x = 1;\n", encoding="utf-8")
+            config = root / "Config/DefaultEngine.ini"
+            config.write_text("[SystemSettings]\nr.Test=1\n", encoding="utf-8")
+
+            compile_v1 = cc.unreal_compile_fingerprint(root)
+            proof_v1 = cc.unreal_proof_fingerprint(root)
+
+            config.write_text("[SystemSettings]\nr.Test=2\n", encoding="utf-8")
+            self.assertEqual(compile_v1, cc.unreal_compile_fingerprint(root))
+            self.assertNotEqual(proof_v1, cc.unreal_proof_fingerprint(root))
+
+            source.write_text("int x = 2;\n", encoding="utf-8")
+            self.assertNotEqual(compile_v1, cc.unreal_compile_fingerprint(root))
 
     def test_embark_terrain_proof_modes(self):
         self.assertEqual(
