@@ -264,7 +264,7 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         self.assertIn("selected_earthworks_layer -ne 'Road_Earthworks'", wrapper)
         for token in (
             "Release-YacsUnrealWorkspaceLocks.ps1",
-            "-Workspace $RepoRoot",
+            "& $WorkspaceCleanup -Workspace $RepoRoot",
             "$MinFreeVirtualGb = 8.0",
             "$ResourceHeadroomWaitSec = 15",
             "render_resource_headroom.txt",
