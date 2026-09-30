@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW = ROOT / ".github" / "workflows" / "reusable-unreal.yml"
 CACHE = ROOT / "scripts" / "ci" / "Resolve-YacsUnrealCiCache.ps1"
 ENGINE = ROOT / "scripts" / "ci" / "Resolve-YacsUnrealEngine.ps1"
+ENVIRONMENT = ROOT / "scripts" / "ci" / "Resolve-YacsUnrealBuildEnvironment.ps1"
 PREFLIGHT = ROOT / "scripts" / "ue" / "Preflight-YacsProof.ps1"
 
 
@@ -17,6 +18,7 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         cls.workflow = WORKFLOW.read_text(encoding="utf-8")
         cls.cache = CACHE.read_text(encoding="utf-8")
         cls.engine = ENGINE.read_text(encoding="utf-8")
+        cls.environment = ENVIRONMENT.read_text(encoding="utf-8")
         cls.preflight = PREFLIGHT.read_text(encoding="utf-8")
 
     def test_workflow_preserves_only_allow_listed_warm_build_state(self):
@@ -110,6 +112,20 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         self.assertIn("Resolve-YacsUnrealEngine -ProjectPath", self.preflight)
         self.assertNotIn("$SearchDirs = @(", self.preflight)
         self.assertNotIn("function Read-EngineVersion", self.preflight)
+
+    def test_environment_identity_is_shared_and_toolchain_aware(self):
+        for token in (
+            "Resolve-YacsUnrealEngine.ps1",
+            "Resolve-YacsUnrealToolchain",
+            "clSha256",
+            "linkSha256",
+            "rcSha256",
+            "Resolve-YacsUnrealBuildEnvironment",
+            "Identity = $Identity",
+        ):
+            self.assertIn(token, self.environment)
+        self.assertIn("Resolve-YacsUnrealBuildEnvironment.ps1", self.cache)
+        self.assertNotIn("function Resolve-YacsToolchainIdentity", self.cache)
 
     def test_workspace_lock_cleanup_knows_warm_worktree(self):
         cleanup = (
