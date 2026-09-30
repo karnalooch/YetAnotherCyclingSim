@@ -56,7 +56,7 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         for token in (
             "UnrealEditor-YetAnotherCyclingSim.dll",
             "UnrealEditor-YetAnotherCyclingSimEditor.dll",
-            "Resolve-YacsUnrealEngine.ps1",
+            "Resolve-YacsUnrealBuildEnvironment.ps1",
             "compile-fingerprint-mismatch",
             "proof-fingerprint-mismatch",
             "expected-binary-missing",
@@ -107,7 +107,9 @@ class UnrealCiCacheContractTests(unittest.TestCase):
             "Identity = $Identity",
         ):
             self.assertIn(token, self.engine)
-        self.assertIn("Resolve-YacsUnrealEngine -ProjectPath", self.cache)
+        self.assertIn("Resolve-YacsUnrealBuildEnvironment -ProjectPath", self.cache)
+        self.assertIn("Resolve-YacsUnrealEngine.ps1", self.environment)
+        self.assertIn("Resolve-YacsUnrealEngine -ProjectPath", self.environment)
         self.assertIn("Resolve-YacsUnrealEngine.ps1", self.preflight)
         self.assertIn("Resolve-YacsUnrealEngine -ProjectPath", self.preflight)
         self.assertNotIn("$SearchDirs = @(", self.preflight)
