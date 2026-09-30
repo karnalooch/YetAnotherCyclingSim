@@ -245,6 +245,8 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
             self.assertIn(variant, capture)
         self.assertIn('"Base_DTM" not in edit_layer_names', capture)
         self.assertIn('name == "Road_Earthworks"', capture)
+        self.assertIn("get_edit_layers_bp()", capture)
+        self.assertNotIn("landscape.get_edit_layers()", capture)
         self.assertIn('"selected_earthworks_layer": edit_layer_name', capture)
         self.assertNotIn("edit_layer_names[0]", capture)
         self.assertIn("set_visibility(macro_landscape_visible, True)", capture)
