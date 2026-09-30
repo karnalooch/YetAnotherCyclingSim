@@ -12,6 +12,8 @@ This document answers one question:
 
 It is the architectural source of truth for world construction. Experiments and historical proof documents may explain how we arrived here, but new world work starts from this document.
 
+Architecture and workflow diagrams in this document follow the shared [YACS Blueprint diagram style](DIAGRAM_STYLE.md), inherited from Gumball.
+
 ---
 
 ## 1. The 12-year-old mental model
@@ -109,20 +111,40 @@ Before creating a new terrain, road-earthwork, biome, vegetation, snow, erosion,
 
 The intended architecture is:
 
-```text
-real-world data + YACS authority
-            |
-            v
-   established authoring tool
-            |
-            v
-   thin YACS integration layer
-            |
-            v
- deterministic generated result
-            |
-            v
- YACS visual/technical acceptance
+```mermaid
+flowchart LR
+    SRC["SOURCE<br/>Real-world data"] --> AUTH["YACS AUTHORITY<br/>Route · physics · provenance"]
+    AUTH --> AUDIT["AUDIT<br/>Smallest capable tool"]
+
+    AUDIT --> NATIVE["UE NATIVE<br/>Landscape · Patch · PCG"]
+    AUDIT -.-> EXT["MATURE TOOL<br/>Houdini · Gaea · World Creator"]
+
+    NATIVE --> ADAPT["INTEGRATE<br/>Thin YACS adapter"]
+    EXT --> ADAPT
+
+    ADAPT --> GEN["GENERATE<br/>Deterministic presentation"]
+    GEN --> VERIFY["VERIFY<br/>Visual · technical · performance"]
+    VERIFY -->|"PASS"| WORLD["OUTPUT<br/>Accepted world slice"]
+    VERIFY -->|"FAIL"| FIX["FAIL CLOSED<br/>Change tool or contract"]
+
+    classDef input fill:#303846,stroke:#8ea1b8,color:#f7f9fc,stroke-width:2px;
+    classDef exec fill:#123f73,stroke:#49a2ff,color:#ffffff,stroke-width:3px;
+    classDef tool fill:#4b2f69,stroke:#b77cff,color:#ffffff,stroke-width:2px;
+    classDef decision fill:#69470e,stroke:#f0a72f,color:#ffffff,stroke-width:3px;
+    classDef success fill:#1f5736,stroke:#63d889,color:#ffffff,stroke-width:3px;
+    classDef danger fill:#6b2429,stroke:#ff6b73,color:#ffffff,stroke-width:3px;
+    classDef owned fill:#34373d,stroke:#9da4ae,color:#ffffff,stroke-width:2px;
+    classDef evidence fill:#164d5c,stroke:#5bd6ef,color:#ffffff,stroke-width:2px;
+
+    class SRC input;
+    class AUTH owned;
+    class AUDIT decision;
+    class NATIVE,EXT tool;
+    class ADAPT,GEN,VERIFY exec;
+    class WORLD success;
+    class FIX danger;
+
+    linkStyle default stroke-width:2px;
 ```
 
 What remains YACS-owned even when an external tool performs authoring:
@@ -137,16 +159,139 @@ What remains YACS-owned even when an external tool performs authoring:
 
 The tool may shape presentation. It may not silently become the source of physical truth.
 
+### 3.2 Architecture evidence ladder
+
+YACS must distinguish a proven production pattern from an attractive demo.
+
+Use this evidence order when evaluating a world-building architecture:
+
+```mermaid
+flowchart LR
+    SHIP["1 · SHIPPED PRODUCT<br/>Documented real use"] --> CASE["2 · PRODUCTION CASE<br/>Studio pipeline evidence"]
+    CASE --> SAMPLE["3 · OFFICIAL SAMPLE<br/>Working reference project"]
+    SAMPLE --> DEMO["4 · TECH DEMO<br/>Integrated proof"]
+    DEMO --> TUTORIAL["5 · TUTORIAL<br/>Learning example"]
+    TUTORIAL --> HYP["6 · HYPOTHESIS<br/>YACS assumption"]
+
+    classDef input fill:#303846,stroke:#8ea1b8,color:#f7f9fc,stroke-width:2px;
+    classDef exec fill:#123f73,stroke:#49a2ff,color:#ffffff,stroke-width:3px;
+    classDef tool fill:#4b2f69,stroke:#b77cff,color:#ffffff,stroke-width:2px;
+    classDef decision fill:#69470e,stroke:#f0a72f,color:#ffffff,stroke-width:3px;
+    classDef success fill:#1f5736,stroke:#63d889,color:#ffffff,stroke-width:3px;
+    classDef danger fill:#6b2429,stroke:#ff6b73,color:#ffffff,stroke-width:3px;
+    classDef owned fill:#34373d,stroke:#9da4ae,color:#ffffff,stroke-width:2px;
+    classDef evidence fill:#164d5c,stroke:#5bd6ef,color:#ffffff,stroke-width:2px;
+
+    class SHIP success;
+    class CASE,SAMPLE evidence;
+    class DEMO tool;
+    class TUTORIAL input;
+    class HYP danger;
+
+    linkStyle default stroke-width:2px;
+```
+
+The arrow means **decreasing evidentiary strength**, not a mandatory implementation order.
+
+A stronger external precedent increases confidence that a pattern is viable. It does **not** prove that the same tool or configuration works for Passo Giau. YACS still requires its own bounded proof against its own inputs and acceptance contract.
+
+Current reference points:
+
+| Reference | Evidence tier | What it supports | What it does **not** prove |
+|---|---|---|---|
+| **Far Cry 5 / Ubisoft** | shipped product + documented production pipeline | procedural tools can generate biomes, terrain texturing, freshwater networks, cliffs and other large-world layers while artists retain control | that Ubisoft's exact tools or terrain assumptions fit YACS |
+| **THE FINALS / Embark** | shipped product + production case study | procedural Houdini tooling can automate expensive repeated environment-authoring work while exposing artist-friendly controls | that its building/destruction workflow directly solves terrain or roads |
+| **Unreal Engine 5.8 City Sample PCG** | official working sample | large procedural world construction can be authored entirely inside current Unreal using PCG, uneven terrain, roads, vegetation and World Partition | shipped-game production maturity for every demonstrated Experimental/Beta subsystem |
+| **Project Pegasus / SideFX** | integrated tech demo | Houdini + Unreal can form a coherent open-world terrain, paths, material and foliage pipeline | shipped-product evidence |
+
+Sources:
+
+- SideFX / Ubisoft — Far Cry 5 procedural world generation:  
+  https://www.sidefx.com/learn/talks/procedural-world-generation-far-cry-5/
+- SideFX / Embark Studios — procedural buildings of THE FINALS:  
+  https://www.sidefx.com/community/making-the-procedural-buildings-of-the-finals-using-houdini/
+- Epic Games — Unreal Engine 5.8 City Sample PCG update:  
+  https://www.unrealengine.com/learning/city-sample-gets-a-major-update-with-pcg-and-unreal-mcp-workflows
+- SideFX — Project Pegasus:  
+  https://www.sidefx.com/pegasus/
+
+#### Tools-first decision flow
+
+A tools audit is itself a fail-closed architecture decision:
+
+```mermaid
+flowchart LR
+    PROBLEM["INPUT<br/>Bounded world problem"] --> NATIVE["TRY<br/>UE native"]
+    NATIVE --> D1{"MEETS<br/>YACS contract?"}
+    D1 -->|"YES"| ADOPT["ADOPT<br/>Smallest solution"]
+    D1 -->|"NO"| EPIC["INSPECT<br/>Epic references"]
+    EPIC --> EXT["EVALUATE<br/>Mature DCC / plugin"]
+    EXT --> D2{"MEETS<br/>YACS contract?"}
+    D2 -->|"YES"| ADOPT
+    D2 -->|"NO"| OSS["INSPECT<br/>OSS patterns"]
+    OSS --> CUSTOM["IMPLEMENT<br/>Minimal YACS gap"]
+    CUSTOM --> VERIFY["VERIFY<br/>Same proof contract"]
+    ADOPT --> VERIFY
+    VERIFY -->|"PASS"| ACCEPT["OUTPUT<br/>Validated architecture"]
+    VERIFY -->|"FAIL"| BLOCK["FAIL CLOSED<br/>Revise approach"]
+    BLOCK -.-> PROBLEM
+
+    classDef input fill:#303846,stroke:#8ea1b8,color:#f7f9fc,stroke-width:2px;
+    classDef exec fill:#123f73,stroke:#49a2ff,color:#ffffff,stroke-width:3px;
+    classDef tool fill:#4b2f69,stroke:#b77cff,color:#ffffff,stroke-width:2px;
+    classDef decision fill:#69470e,stroke:#f0a72f,color:#ffffff,stroke-width:3px;
+    classDef success fill:#1f5736,stroke:#63d889,color:#ffffff,stroke-width:3px;
+    classDef danger fill:#6b2429,stroke:#ff6b73,color:#ffffff,stroke-width:3px;
+    classDef owned fill:#34373d,stroke:#9da4ae,color:#ffffff,stroke-width:2px;
+    classDef evidence fill:#164d5c,stroke:#5bd6ef,color:#ffffff,stroke-width:2px;
+
+    class PROBLEM input;
+    class NATIVE,ADOPT,CUSTOM,VERIFY exec;
+    class EPIC,EXT,OSS tool;
+    class D1,D2 decision;
+    class ACCEPT success;
+    class BLOCK danger;
+
+    linkStyle default stroke-width:2px;
+```
+
 #### Road / earthworks decision ladder
 
 For road-terrain adaptation, do not extend the custom earthwork solver merely because a difficult hairpin exposes another edge case.
 
 For a representative difficult corridor, compare the smallest viable approaches against the **same** canonical road input and the **same** rider-camera proof:
 
-```text
-A. Unreal Landscape Spline / spline edit-layer earthworks
-B. Unreal Landscape Patch based earthworks
-C. existing YACS custom cut/fill path
+```mermaid
+flowchart LR
+    ROAD["AUTHORITY<br/>Canonical SP638"] --> A["A · UE NATIVE<br/>Landscape Spline"]
+    ROAD --> B["B · UE NATIVE<br/>Landscape Patch"]
+    ROAD --> C["C · YACS OWNED<br/>Current cut/fill"]
+    A --> PROOF["VERIFY<br/>Same hairpin proof"]
+    B --> PROOF
+    C --> PROOF
+    PROOF -->|"native passes"| KEEP["PREFER<br/>Native solution"]
+    PROOF -->|"native gap remains"| HDA["EVALUATE<br/>Houdini HDA"]
+    HDA --> PROOF2["VERIFY<br/>Same proof contract"]
+    PROOF2 -->|"PASS"| KEEP2["ADOPT<br/>Tool-backed solution"]
+    PROOF2 -->|"FAIL"| GAP["CUSTOM<br/>Smallest remaining gap"]
+
+    classDef input fill:#303846,stroke:#8ea1b8,color:#f7f9fc,stroke-width:2px;
+    classDef exec fill:#123f73,stroke:#49a2ff,color:#ffffff,stroke-width:3px;
+    classDef tool fill:#4b2f69,stroke:#b77cff,color:#ffffff,stroke-width:2px;
+    classDef decision fill:#69470e,stroke:#f0a72f,color:#ffffff,stroke-width:3px;
+    classDef success fill:#1f5736,stroke:#63d889,color:#ffffff,stroke-width:3px;
+    classDef danger fill:#6b2429,stroke:#ff6b73,color:#ffffff,stroke-width:3px;
+    classDef owned fill:#34373d,stroke:#9da4ae,color:#ffffff,stroke-width:2px;
+    classDef evidence fill:#164d5c,stroke:#5bd6ef,color:#ffffff,stroke-width:2px;
+
+    class ROAD,C owned;
+    class A,B exec;
+    class PROOF,PROOF2 evidence;
+    class HDA tool;
+    class KEEP,KEEP2 success;
+    class GAP decision;
+
+    linkStyle default stroke-width:2px;
 ```
 
 Compare at minimum:
@@ -180,17 +325,35 @@ Biome decisions should start from real or derived spatial inputs such as:
 
 The preferred pattern is:
 
-```text
-GIS / terrain-derived masks
-        |
-        v
-UE PCG + proven biome patterns
-        |
-        v
-YACS semantic asset catalog
-        |
-        v
-validated vegetation / rock / snow / ground output
+```mermaid
+flowchart LR
+    GIS["SOURCE<br/>GIS · DTM · land cover"] --> FEATURES["DERIVE<br/>Elevation · slope · aspect"]
+    GIS --> MASKS["CLASSIFY<br/>Vegetation · rock · water"]
+    FEATURES --> BIOME["WORLD DATA<br/>Biome / snow potential"]
+    MASKS --> BIOME
+    BIOME --> PCG["AUTHOR<br/>UE PCG / proven patterns"]
+    CATALOG["YACS OWNED<br/>Semantic asset catalog"] --> PCG
+    PCG --> OUTPUT["GENERATE<br/>Trees · grass · rocks · snow"]
+    OUTPUT --> PROOF["VERIFY<br/>Visual + performance"]
+    PROOF -->|"PASS"| ACCEPT["OUTPUT<br/>Accepted environment"]
+
+    classDef input fill:#303846,stroke:#8ea1b8,color:#f7f9fc,stroke-width:2px;
+    classDef exec fill:#123f73,stroke:#49a2ff,color:#ffffff,stroke-width:3px;
+    classDef tool fill:#4b2f69,stroke:#b77cff,color:#ffffff,stroke-width:2px;
+    classDef decision fill:#69470e,stroke:#f0a72f,color:#ffffff,stroke-width:3px;
+    classDef success fill:#1f5736,stroke:#63d889,color:#ffffff,stroke-width:3px;
+    classDef danger fill:#6b2429,stroke:#ff6b73,color:#ffffff,stroke-width:3px;
+    classDef owned fill:#34373d,stroke:#9da4ae,color:#ffffff,stroke-width:2px;
+    classDef evidence fill:#164d5c,stroke:#5bd6ef,color:#ffffff,stroke-width:2px;
+
+    class GIS input;
+    class FEATURES,MASKS,PCG,OUTPUT exec;
+    class BIOME evidence;
+    class CATALOG owned;
+    class PROOF evidence;
+    class ACCEPT success;
+
+    linkStyle default stroke-width:2px;
 ```
 
 Epic's PCG Biome Core/Sample should be inspected as a reference implementation for biome maps, generators, filters and composition. Because it is Experimental in UE 5.8, adopting it as a hard runtime/editor dependency requires a separate bounded evaluation. Its patterns may be reused without requiring YACS to depend on the plugin itself.
@@ -203,21 +366,39 @@ The same principle applies to snow: first represent *where snow may accumulate* 
 
 Every new YACS route/world follows this order.
 
-```text
-verified source data
-  -> metric GIS preparation
-  -> macro Landscape
-  -> Landscape Edit Layers
-  -> canonical road alignment
-  -> road earthworks corridor
-  -> final road mesh
-  -> cliffs / retaining / meso geometry
-  -> landscape materials
-  -> PCG vegetation / rocks / props
-  -> visual blending
-  -> lighting / atmosphere / weather
-  -> streaming / LOD / performance
-  -> visual + technical proof
+```mermaid
+flowchart LR
+    SRC["SOURCE<br/>Verified real data"] --> GIS["PREPARE<br/>Metric GIS"]
+    GIS --> LAND["AUTHOR<br/>Macro Landscape"]
+    LAND --> LAYERS["AUTHOR<br/>Edit Layers"]
+    LAYERS --> ROAD["AUTHOR<br/>Road + earthworks"]
+    ROAD --> MESO["AUTHOR<br/>Cliffs · retaining · meso"]
+    MESO --> MAT["SHADE<br/>Landscape materials"]
+    MAT --> PCG["POPULATE<br/>PCG environment"]
+    PCG --> BLEND["BLEND<br/>RVT if justified"]
+    BLEND --> ATM["LIGHT<br/>Atmosphere · weather"]
+    ATM --> PERF["SCALE<br/>Partition · HLOD · culling"]
+    PERF --> PROOF["VERIFY<br/>Visual + technical proof"]
+    PROOF -->|"PASS"| DONE["OUTPUT<br/>Accepted world slice"]
+    PROOF -->|"FAIL"| FIX["FAIL CLOSED<br/>Fix owning layer"]
+    FIX -.-> ROAD
+
+    classDef input fill:#303846,stroke:#8ea1b8,color:#f7f9fc,stroke-width:2px;
+    classDef exec fill:#123f73,stroke:#49a2ff,color:#ffffff,stroke-width:3px;
+    classDef tool fill:#4b2f69,stroke:#b77cff,color:#ffffff,stroke-width:2px;
+    classDef decision fill:#69470e,stroke:#f0a72f,color:#ffffff,stroke-width:3px;
+    classDef success fill:#1f5736,stroke:#63d889,color:#ffffff,stroke-width:3px;
+    classDef danger fill:#6b2429,stroke:#ff6b73,color:#ffffff,stroke-width:3px;
+    classDef owned fill:#34373d,stroke:#9da4ae,color:#ffffff,stroke-width:2px;
+    classDef evidence fill:#164d5c,stroke:#5bd6ef,color:#ffffff,stroke-width:2px;
+
+    class SRC input;
+    class GIS,LAND,LAYERS,ROAD,MESO,MAT,PCG,BLEND,ATM,PERF exec;
+    class PROOF evidence;
+    class DONE success;
+    class FIX danger;
+
+    linkStyle default stroke-width:2px;
 ```
 
 Changing the order requires an explicit architecture decision.
@@ -600,42 +781,62 @@ Top-down editor views are diagnostic, not final acceptance.
 
 For the current YACS world:
 
-```text
-MASE PST LiDAR / DTM
-  -> immutable source verification
-  -> EPSG:32632 metric preparation
-  -> deterministic Landscape input
-  -> Base_DTM Landscape Edit Layer
+```mermaid
+flowchart TB
+    DTM["SOURCE<br/>MASE PST LiDAR / DTM"] --> VERIFYDTM["VERIFY<br/>Hash · CRS · provenance"]
+    VERIFYDTM --> GIS["PREPARE<br/>EPSG:32632"]
+    GIS --> BASE["AUTHOR<br/>Base_DTM Edit Layer"]
 
-official / verified SP638 alignment
-  -> canonical route-local representation
-  -> tools-first earthworks evaluation
-       -> Landscape Spline / spline edit layer
-       -> Landscape Patch where appropriate
-       -> custom YACS cut/fill only for remaining demonstrated gaps
-       -> Houdini HDA candidate before expanding bespoke math further
-  -> Road_Earthworks edit layer / equivalent reproducible output
-  -> bounded cut/fill / shoulders
-  -> custom road mesh
-  -> real-data-informed, regularized crossfall/camber
+    SP638["SOURCE<br/>Verified SP638"] --> ROUTE["YACS AUTHORITY<br/>Canonical route-local data"]
+    ROUTE --> AUDIT["AUDIT<br/>Earthworks tool"]
 
-Landscape limitations
-  -> cliffs / rock faces / retaining meshes
-  -> scree / boulders / roadside detail
+    AUDIT --> SPLINE["UE NATIVE<br/>Landscape Spline"]
+    AUDIT --> PATCH["UE NATIVE<br/>Landscape Patch"]
+    AUDIT -.-> CUSTOM["YACS OWNED<br/>Existing cut/fill"]
+    SPLINE --> CORRIDOR["AUTHOR<br/>Road_Earthworks"]
+    PATCH --> CORRIDOR
+    CUSTOM --> CORRIDOR
 
-materials
-  -> slope/elevation/biome rules
+    CORRIDOR --> HAIRPIN["VERIFY<br/>Difficult hairpin"]
+    HAIRPIN -->|"native gap"| HDA["FALLBACK<br/>Houdini HDA"]
+    HDA --> CORRIDOR
+    HAIRPIN -->|"PASS"| ROAD["AUTHOR<br/>Final road mesh"]
+    ROUTE --> ROAD
 
-PCG
-  -> valley / forest / high-Alpine populations
-  -> route exclusion
-  -> deterministic seeds
+    BASE --> WORLD["COMPOSE<br/>Landscape world"]
+    CORRIDOR --> WORLD
+    ROAD --> WORLD
 
-then
-  -> RVT only where blending needs it
-  -> lighting / atmosphere
-  -> World Partition / LOD / performance proof
-  -> rider-camera visual acceptance
+    WORLD --> MESO["DETAIL<br/>Cliffs · retaining · scree"]
+    WORLD --> MASKS["CLASSIFY<br/>Slope · elevation · biome"]
+    MASKS --> PCG["POPULATE<br/>Forest · valley · high Alpine"]
+    MESO --> FINAL["ASSEMBLE<br/>World presentation"]
+    PCG --> FINAL
+    ROAD --> FINAL
+
+    FINAL --> PERF["VERIFY<br/>World Partition · LOD · 60 FPS"]
+    FINAL --> VIS["VERIFY<br/>Rider-camera visual"]
+    PERF --> GATE["ACCEPT<br/>Exact-SHA world slice"]
+    VIS --> GATE
+
+    classDef input fill:#303846,stroke:#8ea1b8,color:#f7f9fc,stroke-width:2px;
+    classDef exec fill:#123f73,stroke:#49a2ff,color:#ffffff,stroke-width:3px;
+    classDef tool fill:#4b2f69,stroke:#b77cff,color:#ffffff,stroke-width:2px;
+    classDef decision fill:#69470e,stroke:#f0a72f,color:#ffffff,stroke-width:3px;
+    classDef success fill:#1f5736,stroke:#63d889,color:#ffffff,stroke-width:3px;
+    classDef danger fill:#6b2429,stroke:#ff6b73,color:#ffffff,stroke-width:3px;
+    classDef owned fill:#34373d,stroke:#9da4ae,color:#ffffff,stroke-width:2px;
+    classDef evidence fill:#164d5c,stroke:#5bd6ef,color:#ffffff,stroke-width:2px;
+
+    class DTM,SP638 input;
+    class ROUTE,CUSTOM owned;
+    class VERIFYDTM,HAIRPIN,PERF,VIS evidence;
+    class GIS,BASE,CORRIDOR,ROAD,WORLD,MESO,MASKS,PCG,FINAL exec;
+    class AUDIT decision;
+    class SPLINE,PATCH,HDA tool;
+    class GATE success;
+
+    linkStyle default stroke-width:2px;
 ```
 
 The road may request bounded local terrain adaptation. It may not rewrite route/physics authority.
@@ -656,6 +857,8 @@ Do not:
 - place thousands of repeated assets manually when PCG can express the rule;
 - buy a plugin before identifying the problem it solves;
 - build a custom world-authoring subsystem before completing the tools-first audit;
+- treat a tutorial or tech demo as if it were shipped-product evidence;
+- choose an architecture only because another studio used it without proving it against YACS inputs;
 - keep bespoke machinery merely because it already exists when a simpler validated native/tool-based path replaces it;
 - call a technical proof "visual acceptance";
 - create a new planning identifier like `Stage 3G R4.1B.4.3.2`.
@@ -705,6 +908,19 @@ A route slice is acceptable when:
 
 ## 24. Learning references
 
+### Production architecture evidence
+
+- Ubisoft / SideFX — Far Cry 5 procedural world generation:  
+  https://www.sidefx.com/learn/talks/procedural-world-generation-far-cry-5/
+- Embark Studios / SideFX — procedural buildings of THE FINALS:  
+  https://www.sidefx.com/community/making-the-procedural-buildings-of-the-finals-using-houdini/
+- Epic Games — UE 5.8 City Sample PCG update:  
+  https://www.unrealengine.com/learning/city-sample-gets-a-major-update-with-pcg-and-unreal-mcp-workflows
+- SideFX — Project Pegasus tech demo:  
+  https://www.sidefx.com/pegasus/
+
+### Official tool references
+
 Official Unreal Engine references are architecture references:
 
 - Epic Games — Landscape Splines:  
@@ -751,13 +967,14 @@ When confused, ask in this order:
 
 1. **What is truth?** DTM? route profile? verified road GIS?
 2. **What is presentation?** Landscape, road mesh, cliffs, vegetation?
-3. **Have I completed the tools-first audit before writing custom world-building code?**
-4. **Am I editing non-destructively?**
-5. **Should this be Landscape or a mesh?**
-6. **Should this be generated by spline/PCG instead of hand-built?**
-7. **Am I trying to fix geometry with a material?**
-8. **Can I see the problem from the rider camera?**
-9. **Did I measure performance?**
-10. **Can the result be reproduced from source inputs?**
+3. **What is the evidence tier?** Shipped product, production case, sample, demo, tutorial or hypothesis?
+4. **Have I completed the tools-first audit before writing custom world-building code?**
+5. **Am I editing non-destructively?**
+6. **Should this be Landscape or a mesh?**
+7. **Should this be generated by spline/PCG instead of hand-built?**
+8. **Am I trying to fix geometry with a material?**
+9. **Can I see the problem from the rider camera?**
+10. **Did I measure performance?**
+11. **Can the result be reproduced from source inputs?**
 
 If those answers are clear, world building is usually straightforward.
