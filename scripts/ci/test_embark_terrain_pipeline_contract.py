@@ -352,5 +352,56 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
             self.assertNotIn(forbidden, workflow)
 
 
+    def test_embark_proof_uses_fingerprinted_build_reuse_fail_closed(self) -> None:
+        workflow = (ROOT / ".github/workflows/passo-giau-embark-terrain.yml").read_text(
+            encoding="utf-8"
+        )
+        classifier = (ROOT / "scripts/ci/classify_changes.py").read_text(
+            encoding="utf-8"
+        )
+        wrapper = (ROOT / "scripts/ue/Invoke-YacsPassoGiauPcgExGraph.ps1").read_text(
+            encoding="utf-8"
+        )
+
+        for token in (
+            "Classify Embark proof cost",
+            "--embark-terrain-proof",
+            "compile_fingerprint",
+            "proof_mode",
+            "Resolve compile-fingerprint cache",
+            "Compile cache HIT",
+            "Compile cache MISS",
+            "skip_build",
+            "clean: false",
+            "Saved/BuildCache/PCGEx/compile-state.json",
+        ):
+            self.assertIn(token, workflow)
+
+        for token in (
+            "classify_embark_terrain_proof",
+            "embark_terrain_compile_fingerprint",
+            '"heavy"',
+            '"render"',
+            '"cheap"',
+            "YetAnotherCyclingSim.uproject",
+            "pcgex_commit",
+            "engine_version",
+        ):
+            self.assertIn(token, classifier)
+
+        for token in (
+            "[switch] $SkipBuild",
+            "validated compile fingerprint cache hit",
+            "Compile-fingerprint cache is missing YetAnotherCyclingSimEditor binaries.",
+            "Compile-fingerprint cache is missing PCGEx plugin binaries.",
+        ):
+            self.assertIn(token, wrapper)
+
+        self.assertNotIn(
+            "Remove-Item -LiteralPath $pcgex -Recurse -Force",
+            workflow,
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
