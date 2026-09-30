@@ -262,6 +262,16 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         self.assertIn("$ExpectedLocal = $Variant -in @('C','D','E')", wrapper)
         self.assertIn("$ExpectedCorridor = $Variant -in @('B','D','E')", wrapper)
         self.assertIn("selected_earthworks_layer -ne 'Road_Earthworks'", wrapper)
+        for token in (
+            "Release-YacsUnrealWorkspaceLocks.ps1",
+            "-Workspace $RepoRoot",
+            "$MinFreeVirtualGb = 8.0",
+            "$ResourceHeadroomWaitSec = 15",
+            "render_resource_headroom.txt",
+            "SP638 render resource gate",
+            "Refusing to launch UnrealEditor",
+        ):
+            self.assertIn(token, wrapper)
 
         self.assertIn("foreach ($variant in @('A','B','C','D','E'))", workflow)
         self.assertIn("-Variant $variant", workflow)
