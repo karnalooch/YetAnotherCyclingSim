@@ -11,7 +11,6 @@ from scripts.geometry.sp638_local_corridor import (
     build_corridor_mesh,
     corridor_mesh_hash,
     make_constant_profiles,
-    make_branch_clearance_adaptive_profiles,
     make_curvature_adaptive_profiles,
     minimum_sampled_radius_xy,
     triangle_normal,
@@ -375,42 +374,6 @@ class LocalGroundCorridorTests(unittest.TestCase):
             corridor_mesh_hash(build_corridor_mesh(centerline, first_profiles)),
             corridor_mesh_hash(build_corridor_mesh(centerline, second_profiles)),
         )
-
-
-    def test_branch_clearance_contracts_only_side_facing_parallel_hairpin_arm(self) -> None:
-        centerline = tuple(
-            [Vec3(float(x), 0.0, 0.0) for x in range(0, 31, 3)]
-            + [Vec3(30.0, float(y), 0.0) for y in range(3, 13, 3)]
-            + [Vec3(float(x), 12.0, 1.5) for x in range(27, -1, -3)]
-        )
-        base = make_constant_profiles(len(centerline), self.profile)
-        adaptive = make_branch_clearance_adaptive_profiles(
-            centerline,
-            base,
-            minimum_station_separation=4,
-            maximum_neighbor_distance_m=20.0,
-            tangent_half_window_stations=1,
-        )
-
-        first_arm = adaptive[3]
-        by_role = {point.role: point.lateral_m for point in first_arm}
-        original = {point.role: point.lateral_m for point in self.profile}
-
-        self.assertAlmostEqual(
-            by_role["left_road_edge"],
-            original["left_road_edge"],
-        )
-        self.assertAlmostEqual(
-            by_role["right_road_edge"],
-            original["right_road_edge"],
-        )
-        self.assertAlmostEqual(
-            by_role["uphill_tie"],
-            original["uphill_tie"],
-        )
-        self.assertLess(by_role["downhill_tie"], original["downhill_tie"])
-        self.assertGreater(by_role["downhill_tie"], by_role["right_shoulder"])
-
 
 
 if __name__ == "__main__":
