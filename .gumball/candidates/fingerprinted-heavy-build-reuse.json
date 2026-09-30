@@ -2,18 +2,18 @@
   "id": "fingerprinted-heavy-build-reuse",
   "source": "karnalooch/YetAnotherCyclingSim",
   "category": "ci",
-  "problem": "A heavyweight self-hosted proof rebuilt unchanged compiled dependencies after Python, documentation or render-only edits, wasting runner time and increasing local machine load.",
-  "invariant": "Classify proof cost before reserving the heavy runner. Reuse compiled outputs only when a deterministic fingerprint of every binary-contract input matches and the expected binaries still exist; otherwise fail closed to a fresh build. Keep current-revision data preparation, runtime evidence and exact-SHA validation independent from compile reuse.",
+  "problem": "Heavy self-hosted proofs can rebuild unchanged native dependencies or rerun unchanged runtime proof after documentation, Python, asset or proof-orchestration edits, wasting runner time and increasing machine load.",
+  "invariant": "Separate STATIC, RUNTIME and COMPILE evidence. Hash binary-contract inputs into a compile fingerprint and runtime/proof-contract inputs into a proof fingerprint. Reuse binaries only when the compile fingerprint, installed engine identity and expected binaries match a previously green state. Reuse runtime proof only when the proof fingerprint also matches, while emitting fresh exact-revision equivalence evidence. Missing, malformed or drifting evidence fails closed.",
   "evidence": [
-    "YACS PR #288",
-    "Passo Giau M3 Embark terrain proof #64 established the heavy C3 baseline before fingerprinted reuse",
-    "docs/CI_VALIDATION_TIERS.md defines cheap/render/heavy proof sub-tiers"
+    "YACS PR #288 proved compile-fingerprint reuse for the Passo Giau M3 PCGEx lane",
+    "YACS Issue #289 generalizes the pattern to normal code-only Unreal CI",
+    "docs/CI_VALIDATION_TIERS.md defines STATIC/RUNTIME/COMPILE semantics"
   ],
   "do_not_copy": [
     "Passo Giau paths, camera coordinates or proof variant names",
     "PCGEx-specific binary names",
     "YACS runner workspace layout"
   ],
-  "failure_behavior": "Unknown or empty specialized change sets are heavy. Missing cache state, fingerprint mismatch, missing expected binaries or dependency drift forces a fresh build; it must never silently downgrade required compile evidence.",
+  "failure_behavior": "Unknown runtime-sensitive inputs force COMPILE. Missing or malformed state, engine drift, compile-fingerprint mismatch or missing expected binaries forces build/proof validation. A proof-fingerprint-only mismatch permits RUNTIME with verified binaries but never skips Automation. STATIC is allowed only after exact-head checkout plus full compile/proof equivalence checks.",
   "status": "candidate"
 }
