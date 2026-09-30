@@ -48,6 +48,9 @@ jobs:
       - name: Run Gumball consumer baseline contract tests
         run: python -m unittest scripts/ci/test_gumball_baseline.py -v
 
+      - name: Run Gumball workflow lifecycle contract tests
+        run: python -m unittest scripts/ci/test_workflow_lifecycle.py -v
+
       - name: Run GitHub Windows probe workflow contract tests
         run: python scripts/ci/test_windows_probe_workflow.py
 
