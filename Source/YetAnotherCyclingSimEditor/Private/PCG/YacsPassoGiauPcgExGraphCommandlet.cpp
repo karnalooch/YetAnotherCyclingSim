@@ -3,6 +3,7 @@
 #include "PCG/YacsPassoGiauSp638PathSettings.h"
 
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Components/BoxComponent.h"
 #include "Data/PCGPointData.h"
 #include "Dom/JsonObject.h"
 #include "Engine/World.h"
@@ -70,6 +71,27 @@ namespace
             UE_LOG(LogYacsPassoGiauPcgExGraph, Error, TEXT("PCGEx execution: failed to spawn proof host actor."));
             return false;
         }
+
+        // Stock PCG scheduling requires the owning actor to have valid bounds.
+        // This tiny box is scheduler-only scaffolding: it does not contribute
+        // route, terrain, corridor, or physics geometry.
+        UBoxComponent* SchedulerBounds = NewObject<UBoxComponent>(
+            Host,
+            TEXT("YacsPcgExSchedulerBounds"));
+        if (!SchedulerBounds)
+        {
+            UE_LOG(
+                LogYacsPassoGiauPcgExGraph,
+                Error,
+                TEXT("PCGEx execution: failed to allocate scheduler bounds."));
+            return false;
+        }
+        SchedulerBounds->InitBoxExtent(FVector(50.0));
+        SchedulerBounds->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        SchedulerBounds->SetHiddenInGame(true);
+        Host->SetRootComponent(SchedulerBounds);
+        Host->AddInstanceComponent(SchedulerBounds);
+        SchedulerBounds->RegisterComponent();
 
         UPCGComponent* Component = NewObject<UPCGComponent>(Host, TEXT("YacsPcgExProofComponent"));
         if (!Component)
