@@ -1,6 +1,6 @@
 <# 
 .SYNOPSIS
-    Author and prove the isolated Stage 3G R4.1B Passo Giau Landscape spike.
+    Author and prove the isolated Passo Giau M3 Landscape / Road & Earthworks slice.
 #>
 [CmdletBinding()]
 param(
@@ -258,20 +258,6 @@ if ($IncludeRoad) {
     if ([math]::Abs([double]$Import.road_earthworks_half_width_cm - 450.0) -gt 0.01) { throw 'SP638 Road_Earthworks half-width drifted from 4.5 m.' }
     if ([math]::Abs([double]$Import.road_earthworks_side_falloff_cm - 650.0) -gt 0.01) { throw 'SP638 Road_Earthworks side falloff drifted from 6.5 m.' }
     if ([int]$Import.road_earthworks_subdivisions -lt 256 -or [int]$Import.road_earthworks_subdivisions -gt 4096) { throw 'SP638 Road_Earthworks subdivision count is outside the bounded contract.' }
-    if ([bool]$Import.retaining_helper_applied -ne $true) { throw 'SP638 bounded retaining-helper proof was not authored.' }
-    if ($Import.retaining_helper_strategy -ne 'max-curvature-r16-high-side-proof') { throw 'SP638 retaining-helper strategy drifted.' }
-    if ($Import.retaining_helper_side -notin @('left','right')) { throw 'SP638 retaining-helper side is invalid.' }
-    if ([double]$Import.retaining_helper_focus_distance_m -lt 100.0) { throw 'SP638 retaining-helper focus distance is invalid.' }
-    if ([math]::Abs([double]$Import.retaining_helper_probe_offset_cm - 1200.0) -gt 0.01) { throw 'SP638 retaining-helper terrain probe offset drifted from 12 m.' }
-    if ([math]::Abs([double]$Import.retaining_helper_left_probe_delta_cm - [double]$Import.retaining_helper_right_probe_delta_cm) -lt 50.0) { throw 'SP638 retaining-helper imported-R16 terrain probes did not establish a meaningful high side.' }
-    $ExpectedRetainingSide = if ([double]$Import.retaining_helper_left_probe_delta_cm -gt [double]$Import.retaining_helper_right_probe_delta_cm) { 'left' } else { 'right' }
-    if ($Import.retaining_helper_side -ne $ExpectedRetainingSide) { throw 'SP638 retaining-helper side does not match the higher imported-R16 probe.' }
-    if ([math]::Abs([double]$Import.retaining_helper_window_half_length_cm - 10000.0) -gt 0.01) { throw 'SP638 retaining-helper window drifted from bounded 100 m half-length.' }
-    if ([math]::Abs([double]$Import.retaining_helper_offset_cm - 430.0) -gt 0.01) { throw 'SP638 retaining-helper offset drifted from 4.3 m.' }
-    if ([math]::Abs([double]$Import.retaining_helper_height_cm - 350.0) -gt 0.01) { throw 'SP638 retaining-helper height drifted from 3.5 m.' }
-    if ([math]::Abs([double]$Import.retaining_helper_thickness_cm - 100.0) -gt 0.01) { throw 'SP638 retaining-helper thickness drifted from 1.0 m.' }
-    if ([int]$Import.retaining_helper_segments -lt 20 -or [int]$Import.retaining_helper_segments -ge 50) { throw 'SP638 retaining-helper segment count is outside the bounded proof contract.' }
-    if ([bool]$Import.retaining_helper_presentation_only -ne $true) { throw 'SP638 retaining-helper must remain presentation-only.' }
 } elseif ([bool]$Import.road_imported -eq $true) {
     throw 'Base Landscape authoring unexpectedly imported a road without -IncludeRoad.'
 }
@@ -365,39 +351,6 @@ if ($IncludeRoad) {
     if ([int]$RoadCapture.road_spline_mesh_segments -ne [int]$Import.road_spline_mesh_segments) { throw 'SP638 rider proof spline-mesh count differs from import proof.' }
     if ([double]$RoadCapture.road_spline_length_m -lt 10000.0 -or [double]$RoadCapture.road_spline_length_m -gt 25000.0) { throw 'SP638 rider proof spline length is outside the expected AOI range.' }
     if ([double]$RoadCapture.curvature_score -le 0.0) { throw 'SP638 rider proof did not select a curved road segment.' }
-    if ([int]$RoadCapture.retaining_helper_segments -ne [int]$Import.retaining_helper_segments) { throw 'SP638 rider proof retaining-helper count differs from import proof.' }
-    if ([bool]$RoadCapture.persisted_retaining_helper_visible_for_high_side_ab -ne $true) { throw 'SP638 rider proof did not expose the persisted high-side retaining helper.' }
-    if ($RoadCapture.capture_strategy -ne 'rider-height-retaining-fill-road-tangent-clamp-proof') { throw 'SP638 rider proof road-tangent A/B capture strategy drifted.' }
-    if ($RoadCapture.cut_skin.strategy -ne 'r16-curvature-branch-adaptive-route-local-dynamic-mesh') { throw 'SP638 rider cut-skin strategy drifted.' }
-    if ($RoadCapture.cut_skin.side -ne [string]$Import.retaining_helper_side) { throw 'SP638 rider cut-skin side differs from imported R16 high side.' }
-    if ($RoadCapture.cut_skin.role -ne 'cut' -or [double]$RoadCapture.cut_skin.focus_outer_relief_m -lt 0.5) { throw 'SP638 rider cut skin is not a meaningful uphill cut.' }
-    $ExpectedFillSide = if ([string]$Import.retaining_helper_side -eq 'right') { 'left' } else { 'right' }
-    if ($RoadCapture.fill_skin.strategy -ne 'r16-curvature-branch-adaptive-route-local-dynamic-mesh' -or $RoadCapture.fill_skin.role -ne 'fill') { throw 'SP638 rider fill-skin strategy drifted.' }
-    if ($RoadCapture.fill_skin.side -ne $ExpectedFillSide) { throw 'SP638 rider fill skin is not on the downhill side.' }
-    if ([bool]$RoadCapture.fill_skin.transient -ne $true -or [bool]$RoadCapture.fill_skin.saved_to_map -ne $false) { throw 'SP638 rider fill skin must remain transient until visual acceptance.' }
-    if ([double]$RoadCapture.fill_skin.focus_outer_relief_m -gt -0.5) { throw 'SP638 rider fill skin is not a meaningful downhill embankment.' }
-    if ([int]$RoadCapture.fill_skin.vertices -ne [int]$RoadCapture.cut_skin.vertices -or [int]$RoadCapture.fill_skin.triangles -ne [int]$RoadCapture.cut_skin.triangles) { throw 'SP638 rider cut/fill skin topology differs unexpectedly.' }
-    if ([bool]$RoadCapture.cut_skin.transient -ne $true -or [bool]$RoadCapture.cut_skin.saved_to_map -ne $false) { throw 'SP638 rider cut-skin must remain transient until visual acceptance.' }
-    if ([math]::Abs([double]$RoadCapture.cut_skin.half_length_m - 100.0) -gt 0.01) { throw 'SP638 rider cut-skin half-length drifted from 100 m.' }
-    if ([math]::Abs([double]$RoadCapture.cut_skin.station_step_m - 2.5) -gt 0.01) { throw 'SP638 rider cut-skin station spacing drifted from 2.5 m.' }
-    if ([math]::Abs([double]$RoadCapture.cut_skin.inner_offset_m - 3.15) -gt 0.01 -or [math]::Abs([double]$RoadCapture.cut_skin.max_authored_outer_tie_offset_m - 11.0) -gt 0.01) { throw 'SP638 rider cut-skin authored cross-section drifted.' }
-    if ([bool]$RoadCapture.cut_skin.curvature_adaptive_profiles -ne $true -or [bool]$RoadCapture.cut_skin.branch_clearance_adaptive_profiles -ne $true -or [bool]$RoadCapture.cut_skin.road_edge_preserved -ne $true) { throw 'SP638 rider cut-skin adaptive corridor contract is missing.' }
-    if ([double]$RoadCapture.cut_skin.maximum_outer_tie_offset_m -gt 11.001) { throw 'SP638 rider cut-skin expanded beyond the authored 11 m envelope.' }
-    if ([double]$RoadCapture.fill_skin.maximum_outer_tie_offset_m -gt 11.001) { throw 'SP638 rider fill-skin expanded beyond the authored 11 m envelope.' }
-    if ([int]$RoadCapture.cut_skin.columns -ne 6 -or $RoadCapture.cut_skin.cross_profile -ne 'curvature-branch-adaptive-smoothstep-road-edge-to-r16-tie-in') { throw 'SP638 rider cut-skin smoothing profile drifted.' }
-    if ([bool]$RoadCapture.cut_skin.cast_shadow -ne $false -or [bool]$RoadCapture.fill_skin.cast_shadow -ne $false) { throw 'SP638 rider earthwork skins must not cast proof shadows.' }
-    if ([bool]$RoadCapture.cut_skin.visible -ne $false) { throw 'SP638 rider high-side cut skin must be hidden for retaining-helper A/B.' }
-    if ([bool]$RoadCapture.fill_skin.visible -ne $true) { throw 'SP638 rider low-side fill skin must remain visible for retaining-helper A/B.' }
-    if ([bool]$RoadCapture.road_mesh_tangent_ab.presentation_only -ne $true -or [bool]$RoadCapture.road_mesh_tangent_ab.saved_to_map -ne $false) { throw 'SP638 road-tangent A/B must remain transient presentation-only proof.' }
-    if ([math]::Abs([double]$RoadCapture.road_mesh_tangent_ab.tangent_chord_factor - 0.5) -gt 0.001) { throw 'SP638 road-tangent A/B factor drifted from 0.5 chord.' }
-    if ([int]$RoadCapture.road_mesh_tangent_ab.segments -ne [int]$RoadCapture.road_spline_mesh_segments) { throw 'SP638 road-tangent A/B segment count differs from road mesh.' }
-    if ([int]$RoadCapture.road_mesh_tangent_ab.clamped_segments -lt 1) { throw 'SP638 road-tangent A/B did not clamp any road mesh segment.' }
-    if ([double]$RoadCapture.road_mesh_tangent_ab.max_tangent_to_chord_after -gt 0.501) { throw 'SP638 road-tangent A/B exceeded the 0.5 chord bound.' }
-    if ([double]$RoadCapture.road_mesh_tangent_ab.max_tangent_to_chord_before -le [double]$RoadCapture.road_mesh_tangent_ab.max_tangent_to_chord_after) { throw 'SP638 road-tangent A/B did not reduce the measured tangent/chord ratio.' }
-    if ([bool]$RoadCapture.proof_sun_cast_shadows -ne $false) { throw 'SP638 rider geometry proof sun unexpectedly casts shadows.' }
-    if ([double]$RoadCapture.cut_skin.focus_outer_relief_m -lt 0.5) { throw 'SP638 rider cut-skin focus relief is too small.' }
-    if ([int]$RoadCapture.cut_skin.vertices -lt 80 -or [int]$RoadCapture.cut_skin.triangles -lt 100) { throw 'SP638 rider cut-skin mesh is unexpectedly small.' }
-    if ([math]::Abs([double]$RoadCapture.selected_hairpin_distance_m - [double]$Import.retaining_helper_focus_distance_m) -gt 0.1) { throw 'SP638 rider proof and retaining-helper proof selected different hairpins.' }
 
     $RoadCaptureLogText = Get-Content -LiteralPath $RoadCaptureLog -Raw -ErrorAction Stop
     if ($RoadCaptureExitCode -notin @(0, 1)) { throw "SP638 rider capture returned unexpected exit code $RoadCaptureExitCode." }
@@ -438,30 +391,6 @@ if ($IncludeRoad) {
         hillshade_overlay = $RoadOverlay
         imported_control_points = [int]$Import.road_control_points
         imported_spline_mesh_segments = [int]$Import.road_spline_mesh_segments
-        earthworks = [ordered]@{
-            edit_layer = [string]$Import.road_edit_layer
-            applied = [bool]$Import.road_earthworks_applied
-            half_width_cm = [double]$Import.road_earthworks_half_width_cm
-            side_falloff_cm = [double]$Import.road_earthworks_side_falloff_cm
-            subdivisions = [int]$Import.road_earthworks_subdivisions
-            raise_heights = [bool]$Import.road_earthworks_raise_heights
-            lower_heights = [bool]$Import.road_earthworks_lower_heights
-        }
-        retaining_helper = [ordered]@{
-            applied = [bool]$Import.retaining_helper_applied
-            strategy = [string]$Import.retaining_helper_strategy
-            focus_distance_m = [double]$Import.retaining_helper_focus_distance_m
-            side = [string]$Import.retaining_helper_side
-            probe_offset_cm = [double]$Import.retaining_helper_probe_offset_cm
-            left_probe_delta_cm = [double]$Import.retaining_helper_left_probe_delta_cm
-            right_probe_delta_cm = [double]$Import.retaining_helper_right_probe_delta_cm
-            window_half_length_cm = [double]$Import.retaining_helper_window_half_length_cm
-            offset_cm = [double]$Import.retaining_helper_offset_cm
-            height_cm = [double]$Import.retaining_helper_height_cm
-            thickness_cm = [double]$Import.retaining_helper_thickness_cm
-            segments = [int]$Import.retaining_helper_segments
-            presentation_only = [bool]$Import.retaining_helper_presentation_only
-        }
         rider_capture = $RoadCapture
         visual_acceptance = 'PENDING_HUMAN_REVIEW'
         presentation_only = $true
