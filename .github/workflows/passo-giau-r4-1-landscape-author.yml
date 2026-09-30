@@ -18,8 +18,6 @@ on:
       - 'scripts/ue/stage3g_prepare_passo_giau_landscape_map.py'
       - 'scripts/ue/stage3g_capture_passo_giau_landscape.py'
       - 'scripts/ue/stage3g_capture_passo_giau_road.py'
-      - 'scripts/geometry/sp638_local_corridor.py'
-      - 'scripts/geometry/test_sp638_local_corridor.py'
       - 'scripts/ci/test_passo_giau_landscape_author_contract.py'
   workflow_dispatch:
 
