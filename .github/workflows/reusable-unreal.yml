@@ -2,6 +2,19 @@ name: Reusable Unreal CI
 
 on:
   workflow_call:
+    inputs:
+      target_sha:
+        description: Exact source revision to validate.
+        required: true
+        type: string
+      compile_fingerprint:
+        description: Deterministic identity of inputs that can change Editor binaries.
+        required: true
+        type: string
+      proof_fingerprint:
+        description: Deterministic identity of code-only Unreal proof/runtime inputs.
+        required: true
+        type: string
 
 permissions: {}
 
@@ -18,9 +31,7 @@ jobs:
       contents: read
     env:
       GIT_LFS_SKIP_SMUDGE: "1"
-      # A run-scoped checkout avoids stale Windows file locks from a previous
-      # self-hosted attempt poisoning actions/checkout cleanup.
-      YACS_UNREAL_WORKTREE: _unreal-worktree-${{ github.run_id }}-${{ github.run_attempt }}
+      YACS_UNREAL_WORKTREE: _unreal-ci-warm
 
     steps:
       - name: Isolate self-hosted Git configuration
@@ -29,12 +40,10 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $isolated = Join-Path $env:RUNNER_TEMP 'yacs-global.gitconfig'
           Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
-
           $env:GIT_CONFIG_GLOBAL = $isolated
           $env:GIT_CONFIG_NOSYSTEM = '1'
           "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
           "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
-
           Write-Host "Using isolated Git config: $isolated"
           git config --global --list --show-origin
 
@@ -58,10 +67,21 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: ${{ env.YACS_UNREAL_WORKTREE }}
+          ref: ${{ inputs.target_sha }}
           fetch-depth: 20
           lfs: false
-          clean: true
+          clean: false
           persist-credentials: false
+
+      - name: Sanitize tracked workspace while preserving verified build outputs
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git reset --hard '${{ inputs.target_sha }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree reset failed.' }
+          git clean -ffd
+          if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree clean failed.' }
 
       - name: Enforce code-only checkout
         shell: pwsh
@@ -69,22 +89,101 @@ jobs:
         run: |
           ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
 
-      - name: Verify runner provenance
+      - name: Verify exact SHA and clean tracked state
         shell: pwsh
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
           $ErrorActionPreference = 'Stop'
           $actual = (git rev-parse HEAD).Trim()
-          if ($actual -ne '${{ github.sha }}') {
-            throw "checkout HEAD '$actual' != caller SHA '${{ github.sha }}'"
+          if ($actual -ne '${{ inputs.target_sha }}') {
+            throw "checkout HEAD '$actual' != caller SHA '${{ inputs.target_sha }}'"
           }
-          git status --short
+          $dirty = @(git status --porcelain --untracked-files=all)
+          if ($dirty.Count -gt 0) {
+            $dirty | ForEach-Object { Write-Host $_ }
+            throw 'Warm Unreal worktree is not clean after sanitization.'
+          }
 
-      - name: Build editor and run scoped Automation
+      - name: Reset current-run Unreal proof evidence
         shell: pwsh
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
-          ./scripts/ci/Invoke-YacsUnrealCi.ps1 -ExpectedHead '${{ github.sha }}'
+          $proof = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/Unreal'
+          if (Test-Path -LiteralPath $proof) {
+            Remove-Item -LiteralPath $proof -Recurse -Force
+          }
+
+      - name: Resolve verified Unreal execution mode
+        id: cache
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          ./scripts/ci/Resolve-YacsUnrealCiCache.ps1 `
+            -Action Resolve `
+            -ExpectedHead '${{ inputs.target_sha }}' `
+            -ExpectedCompileFingerprint '${{ inputs.compile_fingerprint }}' `
+            -ExpectedProofFingerprint '${{ inputs.proof_fingerprint }}' `
+            -GithubOutput $env:GITHUB_OUTPUT
+
+      - name: Purge incompatible build cache
+        if: ${{ steps.cache.outputs.purge_build_cache == 'true' }}
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          foreach ($relative in @('Binaries', 'Intermediate')) {
+            if (Test-Path -LiteralPath $relative) {
+              Remove-Item -LiteralPath $relative -Recurse -Force
+            }
+          }
+          if (Test-Path -LiteralPath 'Plugins') {
+            Get-ChildItem -LiteralPath 'Plugins' -Directory | ForEach-Object {
+              foreach ($leaf in @('Binaries', 'Intermediate')) {
+                $candidate = Join-Path $_.FullName $leaf
+                if (Test-Path -LiteralPath $candidate) {
+                  Remove-Item -LiteralPath $candidate -Recurse -Force
+                }
+              }
+            }
+          }
+
+      - name: Build or run runtime-only Automation
+        if: ${{ steps.cache.outputs.mode != 'static' }}
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        env:
+          YACS_UNREAL_EXECUTION_MODE: ${{ steps.cache.outputs.mode }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ($env:YACS_UNREAL_EXECUTION_MODE -eq 'compile') {
+            ./scripts/ci/Invoke-YacsUnrealCi.ps1 -ExpectedHead '${{ inputs.target_sha }}'
+          }
+          elseif ($env:YACS_UNREAL_EXECUTION_MODE -eq 'runtime') {
+            ./scripts/ci/Invoke-YacsUnrealCi.ps1 -ExpectedHead '${{ inputs.target_sha }}' -SkipBuild
+          }
+          else {
+            throw "Unexpected Unreal execution mode '$env:YACS_UNREAL_EXECUTION_MODE'."
+          }
+
+      - name: Record verified Unreal state
+        if: ${{ steps.cache.outputs.mode != 'static' }}
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          ./scripts/ci/Resolve-YacsUnrealCiCache.ps1 `
+            -Action Record `
+            -CompletedMode '${{ steps.cache.outputs.mode }}' `
+            -ExpectedHead '${{ inputs.target_sha }}' `
+            -ExpectedCompileFingerprint '${{ inputs.compile_fingerprint }}' `
+            -ExpectedProofFingerprint '${{ inputs.proof_fingerprint }}'
+
+      - name: Report equivalent exact-head proof reuse
+        if: ${{ steps.cache.outputs.mode == 'static' }}
+        shell: pwsh
+        run: |
+          Write-Host "STATIC Unreal equivalence proof: exact HEAD ${{ inputs.target_sha }}"
+          Write-Host "Compile and proof fingerprints match a previously green run."
+          Write-Host "Reason: ${{ steps.cache.outputs.reason }}"
 
       - name: Upload concise Unreal proof
         if: ${{ always() }}
@@ -95,20 +194,24 @@ jobs:
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/Unreal/**/*.json
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/Unreal/**/*.txt
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/Unreal/**/*.log
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 7
 
-      - name: Clean isolated Unreal worktree
+      - name: Clean current-run evidence and non-ignored residue
         if: ${{ always() }}
         shell: pwsh
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
+          $proof = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/Unreal'
+          if (Test-Path -LiteralPath $proof) {
+            Remove-Item -LiteralPath $proof -Recurse -Force
+          }
           if (Test-Path -LiteralPath '.git') {
             git reset --hard
-            if ($LASTEXITCODE -ne 0) { throw 'Unreal worktree cleanup git reset failed.' }
-            git clean -ffdx -e Saved/Logs/YetAnotherCyclingSim.log
-            if ($LASTEXITCODE -ne 0) { throw 'Unreal worktree cleanup git clean failed.' }
+            if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree cleanup git reset failed.' }
+            git clean -ffd
+            if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree cleanup git clean failed.' }
           }
           else {
-            Write-Host 'Unreal worktree cleanup: no checkout worktree to clean.'
+            Write-Host 'Unreal warm-worktree cleanup: no checkout worktree to clean.'
           }
