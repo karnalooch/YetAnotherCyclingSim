@@ -54,6 +54,27 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         self.assertEqual(config["pcgex"]["version_name"], "0.79")
         self.assertEqual(config["pcgex"]["engine_version"], "5.8.0")
         self.assertEqual(config["pcgex"]["license"], "MIT")
+        examples = config["reference_examples"]
+        self.assertEqual(
+            examples["repository"], "https://github.com/PCGEx/PCGExExampleProject"
+        )
+        self.assertEqual(
+            examples["commit"], "78e5842c116ae0500408e22e8f7d002e12d45831"
+        )
+        self.assertEqual(examples["engine_version"], "5.8")
+        self.assertIn("reference_only", examples["use_policy"])
+        self.assertEqual(
+            examples["assets"]["road_corridor"],
+            "Content/Examples/ConnectRoad/PCGEx_ConnectRoad.uasset",
+        )
+        self.assertEqual(
+            examples["assets"]["landscape_tensors"],
+            "Content/Categories/Tensors/LandscapeTensors/PCGEx_LandscapeTensors.uasset",
+        )
+        self.assertEqual(
+            examples["assets"]["cliff"],
+            "Content/Categories/Misc/Isolines/PCGEx_Cliff.uasset",
+        )
         self.assertEqual(
             config["graph"]["asset"],
             "/Game/WorldGen/PCGEx/PCG_PassoGiau_SP638_Corridor",
@@ -201,6 +222,9 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
             encoding="utf-8"
         )
         for token in (
+            "Prepare real SP638 authoring input",
+            "passo_giau_sp638_ue_centerline.json",
+            "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c",
             "PCGEx corridor graph authoring",
             "Invoke-YacsPassoGiauPcgExGraph.ps1",
             "YacsPassoGiauPcgExGraphCommandlet.cpp",

@@ -15,6 +15,11 @@ on:
       - 'docs/legal/DEPENDENCY_PROVENANCE.md'
       - 'worldgen/embark/**'
       - 'scripts/worldgen/**'
+      - 'scripts/assets/download_passo_giau_mase_pst.py'
+      - 'scripts/assets/download_passo_giau_veneto_lidar.py'
+      - 'scripts/assets/prepare_passo_giau_mase_pst.py'
+      - 'scripts/assets/download_passo_giau_road_network.py'
+      - 'scripts/assets/prepare_passo_giau_road.py'
       - 'scripts/ue/Invoke-YacsPassoGiauPcgExGraph.ps1'
       - 'scripts/ci/test_embark_terrain_pipeline_contract.py'
       - 'Source/YetAnotherCyclingSimEditor/Private/PCG/YacsPassoGiauPcgExGraphCommandlet.cpp'
@@ -58,9 +63,88 @@ jobs:
       - name: Validate Embark/PCGEx repository contract
         run: python -m unittest scripts.ci.test_embark_terrain_pipeline_contract
 
+  prepare:
+    name: Prepare real SP638 authoring input
+    needs: contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact revision without LFS payloads
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Install pinned GIS preparation dependencies
+        run: |
+          python -m pip install --disable-pip-version-check \
+            numpy==2.2.6 \
+            Pillow==11.3.0 \
+            rasterio==1.4.3 \
+            shapely==2.1.1
+
+      - name: Compile SP638 and terrain preparation scripts
+        run: |
+          python -m py_compile \
+            scripts/assets/download_passo_giau_mase_pst.py \
+            scripts/assets/download_passo_giau_veneto_lidar.py \
+            scripts/assets/prepare_passo_giau_mase_pst.py \
+            scripts/assets/download_passo_giau_road_network.py \
+            scripts/assets/prepare_passo_giau_road.py
+
+      - name: Prepare canonical terrain input used for SP638 presentation elevation
+        run: |
+          python scripts/assets/download_passo_giau_mase_pst.py
+          python scripts/assets/download_passo_giau_veneto_lidar.py
+          python scripts/assets/prepare_passo_giau_mase_pst.py
+
+      - name: Prepare official SP638 presentation input
+        run: |
+          python scripts/assets/download_passo_giau_road_network.py
+          python scripts/assets/prepare_passo_giau_road.py
+
+      - name: Validate prepared SP638 authority boundary
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("ExternalAssets/Terrain/PassoGiau/PreparedRoad/passo_giau_sp638_ue_centerline.json")
+          payload = json.loads(path.read_text(encoding="utf-8"))
+          policy = payload.get("yacs_policy") or {}
+          if policy.get("presentation_only") is not True:
+              raise SystemExit("prepared SP638 input is not presentation-only")
+          if policy.get("authoritative_route_geometry") is not False:
+              raise SystemExit("prepared SP638 input claims route authority")
+          if policy.get("authoritative_physics") is not False:
+              raise SystemExit("prepared SP638 input claims physics authority")
+          points = payload.get("points") or []
+          if len(points) < 2:
+              raise SystemExit("prepared SP638 input contains fewer than two points")
+          print(f"Prepared SP638 input: {len(points)} points, {payload.get('length_m')} m")
+          PY
+
+      - name: Upload prepared SP638 input
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: passo-giau-m3-pcgex-input-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ExternalAssets/Terrain/PassoGiau/PreparedRoad/**
+          if-no-files-found: error
+          retention-days: 14
+
   author:
     name: PCGEx corridor graph authoring
-    needs: contract
+    needs: [contract, prepare]
     if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.ref == 'refs/heads/feat/287-embark-terrain-pipeline' }}
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 120
@@ -109,6 +193,33 @@ jobs:
         run: |
           python -m unittest scripts.ci.test_embark_terrain_pipeline_contract
           if ($LASTEXITCODE -ne 0) { throw 'Embark/PCGEx contract failed on the authoring runner.' }
+
+      - name: Download prepared SP638 input
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: passo-giau-m3-pcgex-input-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/yacs-pcgex-prepared-road
+
+      - name: Materialize prepared SP638 input for Unreal authoring
+        shell: pwsh
+        working-directory: _embark-terrain-worktree
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $downloadRoot = Join-Path '${{ runner.temp }}' 'yacs-pcgex-prepared-road'
+          $source = Get-ChildItem -LiteralPath $downloadRoot -Recurse -File -Filter 'passo_giau_sp638_ue_centerline.json' | Select-Object -First 1
+          if (-not $source) { throw 'Prepared SP638 artifact is missing passo_giau_sp638_ue_centerline.json.' }
+          $target = Join-Path (Get-Location) 'ExternalAssets/Terrain/PassoGiau/PreparedRoad'
+          New-Item -ItemType Directory -Path $target -Force | Out-Null
+          Copy-Item -LiteralPath (Join-Path $source.Directory.FullName '*') -Destination $target -Recurse -Force
+          $materialized = Join-Path $target 'passo_giau_sp638_ue_centerline.json'
+          if (-not (Test-Path -LiteralPath $materialized -PathType Leaf)) {
+            throw 'Prepared SP638 input was not materialized at the PCG source contract path.'
+          }
+          $payload = Get-Content -LiteralPath $materialized -Raw | ConvertFrom-Json
+          if (-not [bool]$payload.yacs_policy.presentation_only) { throw 'SP638 input lost presentation-only policy.' }
+          if ([bool]$payload.yacs_policy.authoritative_route_geometry) { throw 'SP638 input unexpectedly claims route authority.' }
+          if ([bool]$payload.yacs_policy.authoritative_physics) { throw 'SP638 input unexpectedly claims physics authority.' }
+          Write-Host ("Materialized prepared SP638 input: {0} points" -f @($payload.points).Count)
 
       - name: Build and author deterministic PCGEx graph
         shell: pwsh
