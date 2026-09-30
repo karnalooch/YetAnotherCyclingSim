@@ -39,7 +39,7 @@
     {
       "file": "passo-giau-embark-terrain.yml",
       "state": "CURRENT",
-      "reason": "Current fail-closed exact-SHA Passo Giau DCC-to-Unreal terrain authoring proof selected by #287 after the direct native baseline failed rider-view acceptance."
+      "reason": "Current fail-closed exact-SHA PCGEx corridor graph authoring proof for the #287/#288 bounded Embark-pattern substitution; Houdini/Gaea remain optional escalation evidence, not current prerequisites."
     },
     {
       "file": "passo-giau-r4-1-hairpin-corridor.yml",
