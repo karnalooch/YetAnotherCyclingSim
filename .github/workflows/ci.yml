@@ -319,8 +319,8 @@ jobs:
             fi
           fi
 
-          if [[ "${CLASS_UE_TOOLING}" == "true" && "${CLASS_UE_CODE}" == "false" && "${CLASS_CI_COST}" == "heavy" ]]; then
-            echo "::error::proof/editor tooling without ue_code must not claim automatic heavy code-build cost"
+          if [[ "${CLASS_UE_TOOLING}" == "true" && "${CLASS_UE_CODE}" == "false" && "${CLASS_ASSET_FULL}" == "false" && "${CLASS_CI_COST}" == "heavy" ]]; then
+            echo "::error::proof/editor tooling without ue_code or asset_full must not claim heavy cost"
             failed=1
           fi
 
