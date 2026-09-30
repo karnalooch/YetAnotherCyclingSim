@@ -78,7 +78,19 @@
         "enabled": false,
         "require_ci_class": "heavy"
       },
-      "allowed_write_permissions": []
+      "allowed_write_permissions": [],
+      "scope_paths": [
+        "Source/YetAnotherCyclingSimEditor/Public/PCG/YacsPatchCandidatesSettings.h",
+        "Source/YetAnotherCyclingSimEditor/Private/PCG/YacsPatchCandidatesSettings.cpp",
+        "scripts/ue/Invoke-YacsPassoGiauRoadsideHouseProof.ps1",
+        "scripts/ue/stage3g_capture_passo_giau_roadside_house.py",
+        "scripts/ue/yacs_scene_composer.py",
+        "scripts/ue/yacs_asset_candidate_import.py",
+        "scripts/worldgen/yacs_scene_layout.py",
+        "scripts/assets/yacs_asset_library.py",
+        "worldgen/assets/catalog.json",
+        "worldgen/presets/alpine_roadside_grove_v1.json"
+      ]
     },
     "environment-performance": {
       "enabled": true,
