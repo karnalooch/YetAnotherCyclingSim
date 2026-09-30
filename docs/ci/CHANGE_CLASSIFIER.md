@@ -63,8 +63,10 @@ classifier also emits `unreal_execution_class`:
 - `static` — no fresh Unreal runtime is required by the changed surface;
 - `runtime` — Unreal/world/Automation evidence is required, but verified
   Editor binaries may be reused;
-- `compile` — the compiled binary contract changed and the Editor must be
-  rebuilt before runtime evidence.
+- `compile` — the compiled binary contract changed and a build is required
+  before runtime evidence. The self-hosted resolver then chooses `warm` or
+  `cold`; path classification does not try to outsmart UnrealBuildTool's
+  dependency graph.
 
 `unreal_compile_fingerprint` hashes the project descriptor, compiled
 project/plugin source, plugin descriptors and the normal lane's build/engine-selection
@@ -80,13 +82,21 @@ installed UE build identity and expected project DLLs match a previously green
 state. Engine discovery is shared with the actual build through
 `scripts/ci/Resolve-YacsUnrealEngine.ps1`; the `.uproject` `EngineAssociation` is
 mandatory and the identity includes the resolved root plus hashes of the engine
-version, build launcher and Editor command binary. Missing or malformed state fails closed. Engine drift purges incompatible
-build outputs. Before COMPILE work the prior verified stamp is invalidated; before
-RUNTIME work its proof bit is invalidated. A cancelled or failed mutable run can
-therefore never leave a green stamp that a later revision may trust. A
-compile-fingerprint mismatch rebuilds; a proof-only mismatch runs Automation with
-`-SkipBuild`; a full match emits a fresh exact-head equivalence artifact without
-rerunning unchanged Automation.
+version, build launcher and Editor command binary. Missing or malformed state fails closed. COMPILE has two runner-side
+submodes:
+
+- `warm` — verified engine/toolchain provenance matches. Preserve project and
+  plugin `Binaries/Intermediate` and let UBT/UBA decide the minimal outdated
+  compile/link action graph. Compile-fingerprint mismatch, a previous failed
+  compile, or a missing final DLL use this path.
+- `cold` — cache provenance is missing/malformed or the engine/toolchain
+  environment identity drifted. Purge project/plugin build outputs before UBT.
+
+Before COMPILE work the prior verified stamp is invalidated; before RUNTIME work
+its proof bit is invalidated. A cancelled or failed mutable run can therefore
+never leave a green stamp that a later revision may trust. A proof-only mismatch
+runs Automation with `-SkipBuild`; a full match emits a fresh exact-head
+equivalence artifact without rerunning unchanged Automation.
 
 This is semantic proof reuse, not SHA reuse: the current HEAD is still checked
 out and verified exactly, and the equivalence evidence records the current HEAD
