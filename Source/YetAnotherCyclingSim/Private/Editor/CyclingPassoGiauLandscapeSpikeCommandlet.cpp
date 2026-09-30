@@ -49,20 +49,6 @@ namespace CyclingPassoGiauLandscapeSpikeInternal
 	constexpr int32 RoadEarthworksMinSubdivisions = 256;
 	constexpr int32 RoadEarthworksMaxSubdivisions = 4096;
 	constexpr int32 RoadEarthworksSubdivisionsPerControlPoint = 4;
-	// Bounded diagnostic helper: hide only the near-vertical inner cut at the
-	// strongest hairpin. This never changes the canonical SP638 centerline or
-	// physics; it tests the World Building Bible retaining/cliff-mesh path.
-	constexpr double RetainingHelperWindowHalfLengthCm = 10000.0;
-	constexpr double RetainingHelperSampleSpacingCm = 500.0;
-	constexpr double RetainingHelperOffsetCm = 430.0;
-	constexpr double RetainingHelperThicknessCm = 100.0;
-	constexpr double RetainingHelperHeightCm = 350.0;
-	constexpr double RetainingHelperBottomOverlapCm = 35.0;
-	constexpr double RetainingHelperTerrainProbeOffsetCm = 1200.0;
-	constexpr double RetainingHelperMinSideDifferenceCm = 50.0;
-	constexpr double RetainingCurvatureSampleStepCm = 5000.0;
-	constexpr double RetainingCurvatureHalfWindowCm = 2500.0;
-	constexpr double RetainingEndMarginCm = 10000.0;
 	constexpr int32 MinRoadControlPoints = 50;
 	constexpr int32 MaxRoadControlPoints = 1000;
 
@@ -283,290 +269,13 @@ namespace CyclingPassoGiauLandscapeSpikeInternal
 	}
 
 
-
-	bool SampleImportedTerrainHeightCm(
-		const TArray<uint16>& HeightData,
-		double RuntimeZScale,
-		double RuntimeLocationZCm,
-		const FVector& WorldLocation,
-		double& OutHeightCm)
-	{
-		if (HeightData.Num() != LandscapeVertices * LandscapeVertices ||
-			!FMath::IsFinite(WorldLocation.X) ||
-			!FMath::IsFinite(WorldLocation.Y))
-		{
-			return false;
-		}
-
-		const double GridX = WorldLocation.X / XYScaleCmPerVertex;
-		const double GridY = WorldLocation.Y / XYScaleCmPerVertex;
-		if (GridX < 0.0 || GridY < 0.0 ||
-			GridX > static_cast<double>(LandscapeMaxIndex) ||
-			GridY > static_cast<double>(LandscapeMaxIndex))
-		{
-			return false;
-		}
-
-		const int32 X0 = FMath::Clamp(FMath::FloorToInt(GridX), 0, LandscapeMaxIndex);
-		const int32 Y0 = FMath::Clamp(FMath::FloorToInt(GridY), 0, LandscapeMaxIndex);
-		const int32 X1 = FMath::Min(X0 + 1, LandscapeMaxIndex);
-		const int32 Y1 = FMath::Min(Y0 + 1, LandscapeMaxIndex);
-		const double FracX = GridX - static_cast<double>(X0);
-		const double FracY = GridY - static_cast<double>(Y0);
-
-		auto SampleEncoded = [&HeightData](int32 X, int32 Y) -> double
-		{
-			return static_cast<double>(
-				HeightData[Y * LandscapeVertices + X]);
-		};
-
-		const double Encoded00 = SampleEncoded(X0, Y0);
-		const double Encoded10 = SampleEncoded(X1, Y0);
-		const double Encoded01 = SampleEncoded(X0, Y1);
-		const double Encoded11 = SampleEncoded(X1, Y1);
-		const double EncodedTop = FMath::Lerp(Encoded00, Encoded10, FracX);
-		const double EncodedBottom = FMath::Lerp(Encoded01, Encoded11, FracX);
-		const double Encoded = FMath::Lerp(EncodedTop, EncodedBottom, FracY);
-
-		OutHeightCm =
-			RuntimeLocationZCm +
-			((Encoded - 32768.0) / 128.0) * RuntimeZScale;
-		return FMath::IsFinite(OutHeightCm);
-	}
-
-	bool SpawnHairpinRetainingHelper(
-		AActor* RoadActor,
-		USplineComponent* RoadSpline,
-		const TArray<uint16>& HeightData,
-		double RuntimeZScale,
-		double RuntimeLocationZCm,
-		UStaticMesh* CubeMesh,
-		int32& OutMeshCount,
-		double& OutFocusDistanceCm,
-		FString& OutSide,
-		double& OutLeftProbeDeltaCm,
-		double& OutRightProbeDeltaCm,
-		FString& OutError)
-	{
-		if (!IsValid(RoadActor) || !IsValid(RoadSpline) || !IsValid(CubeMesh))
-		{
-			OutError = TEXT("cannot author retaining helper without road actor, spline, and proof mesh");
-			return false;
-		}
-
-		const double SplineLengthCm = RoadSpline->GetSplineLength();
-		if (SplineLengthCm <= 2.0 * RetainingEndMarginCm)
-		{
-			OutError = FString::Printf(
-				TEXT("road spline is too short for bounded retaining-helper search: %.3f cm"),
-				SplineLengthCm);
-			return false;
-		}
-
-		double BestDistanceCm = RetainingEndMarginCm;
-		double BestScore = -1.0;
-		for (double DistanceCm = RetainingEndMarginCm;
-			 DistanceCm <= SplineLengthCm - RetainingEndMarginCm;
-			 DistanceCm += RetainingCurvatureSampleStepCm)
-		{
-			const FVector Before = RoadSpline->GetDirectionAtDistanceAlongSpline(
-				FMath::Max(0.0, DistanceCm - RetainingCurvatureHalfWindowCm),
-				ESplineCoordinateSpace::World);
-			const FVector After = RoadSpline->GetDirectionAtDistanceAlongSpline(
-				FMath::Min(SplineLengthCm, DistanceCm + RetainingCurvatureHalfWindowCm),
-				ESplineCoordinateSpace::World);
-			const double Dot = FMath::Clamp(FVector::DotProduct(Before, After), -1.0, 1.0);
-			const double Score = 1.0 - Dot;
-			if (Score > BestScore)
-			{
-				BestScore = Score;
-				BestDistanceCm = DistanceCm;
-			}
-		}
-
-		if (BestScore <= 0.0)
-		{
-			OutError = FString::Printf(
-				TEXT("maximum-curvature retaining-helper search produced invalid score %.6f"),
-				BestScore);
-			return false;
-		}
-
-		// Pick the actual uphill/cut side from the exact R16 terrain source used
-		// to create the Landscape rather than guessing from turn direction.
-		// Probe outside the full 4.5 m + 6.5 m earthworks tie-in so the sample
-		// reflects the real terrain and remains deterministic under -NullRHI.
-		const FVector FocusRoadLocation = RoadSpline->GetLocationAtDistanceAlongSpline(
-			BestDistanceCm,
-			ESplineCoordinateSpace::World);
-		const FVector FocusRoadRight = RoadSpline->GetRightVectorAtDistanceAlongSpline(
-			BestDistanceCm,
-			ESplineCoordinateSpace::World).GetSafeNormal();
-		const FVector LeftProbeLocation =
-			FocusRoadLocation - FocusRoadRight * RetainingHelperTerrainProbeOffsetCm;
-		const FVector RightProbeLocation =
-			FocusRoadLocation + FocusRoadRight * RetainingHelperTerrainProbeOffsetCm;
-		double LeftHeightCm = 0.0;
-		double RightHeightCm = 0.0;
-		if (!SampleImportedTerrainHeightCm(
-				HeightData,
-				RuntimeZScale,
-				RuntimeLocationZCm,
-				LeftProbeLocation,
-				LeftHeightCm) ||
-			!SampleImportedTerrainHeightCm(
-				HeightData,
-				RuntimeZScale,
-				RuntimeLocationZCm,
-				RightProbeLocation,
-				RightHeightCm))
-		{
-			OutError = TEXT("failed to sample imported R16 terrain on both sides of the selected hairpin");
-			return false;
-		}
-		OutLeftProbeDeltaCm = LeftHeightCm - FocusRoadLocation.Z;
-		OutRightProbeDeltaCm = RightHeightCm - FocusRoadLocation.Z;
-		if (FMath::Abs(OutLeftProbeDeltaCm - OutRightProbeDeltaCm) < RetainingHelperMinSideDifferenceCm)
-		{
-			OutError = FString::Printf(
-				TEXT("retaining-helper high side is ambiguous: left_delta_cm=%.3f right_delta_cm=%.3f"),
-				OutLeftProbeDeltaCm,
-				OutRightProbeDeltaCm);
-			return false;
-		}
-		const double SideMultiplier = OutLeftProbeDeltaCm > OutRightProbeDeltaCm ? -1.0 : 1.0;
-		OutSide = SideMultiplier < 0.0 ? TEXT("left") : TEXT("right");
-		OutFocusDistanceCm = BestDistanceCm;
-
-		const double StartDistanceCm = FMath::Max(
-			RetainingEndMarginCm,
-			BestDistanceCm - RetainingHelperWindowHalfLengthCm);
-		const double EndDistanceCm = FMath::Min(
-			SplineLengthCm - RetainingEndMarginCm,
-			BestDistanceCm + RetainingHelperWindowHalfLengthCm);
-		const int32 SegmentCount = FMath::CeilToInt(
-			(EndDistanceCm - StartDistanceCm) / RetainingHelperSampleSpacingCm);
-		if (SegmentCount < 1 || SegmentCount >= MinRoadControlPoints)
-		{
-			OutError = FString::Printf(
-				TEXT("bounded retaining-helper segment count is invalid: %d"),
-				SegmentCount);
-			return false;
-		}
-
-		USplineComponent* RetainingSpline = NewObject<USplineComponent>(
-			RoadActor,
-			TEXT("SP638RetainingHelperSpline"),
-			RF_Transactional);
-		if (!IsValid(RetainingSpline))
-		{
-			OutError = TEXT("failed to allocate SP638 retaining-helper spline");
-			return false;
-		}
-		RetainingSpline->CreationMethod = EComponentCreationMethod::Instance;
-		RetainingSpline->SetupAttachment(RoadSpline);
-		RoadActor->AddInstanceComponent(RetainingSpline);
-		RetainingSpline->RegisterComponent();
-		RetainingSpline->ClearSplinePoints(false);
-
-		for (int32 Index = 0; Index <= SegmentCount; ++Index)
-		{
-			const double Alpha = static_cast<double>(Index) / static_cast<double>(SegmentCount);
-			const double DistanceCm = FMath::Lerp(StartDistanceCm, EndDistanceCm, Alpha);
-			const FVector RoadLocation = RoadSpline->GetLocationAtDistanceAlongSpline(
-				DistanceCm,
-				ESplineCoordinateSpace::World);
-			const FVector RoadRight = RoadSpline->GetRightVectorAtDistanceAlongSpline(
-				DistanceCm,
-				ESplineCoordinateSpace::World).GetSafeNormal();
-			FVector HelperLocation =
-				RoadLocation + RoadRight * SideMultiplier * RetainingHelperOffsetCm;
-			HelperLocation.Z +=
-				RetainingHelperHeightCm * 0.5 - RetainingHelperBottomOverlapCm;
-			RetainingSpline->AddSplinePoint(
-				HelperLocation,
-				ESplineCoordinateSpace::World,
-				false);
-			RetainingSpline->SetSplinePointType(
-				Index,
-				ESplinePointType::CurveClamped,
-				false);
-		}
-		RetainingSpline->SetClosedLoop(false, false);
-		RetainingSpline->UpdateSpline();
-
-		OutMeshCount = 0;
-		const FVector2D CrossSectionScale(
-			RetainingHelperThicknessCm / 100.0,
-			RetainingHelperHeightCm / 100.0);
-		for (int32 Index = 0; Index < SegmentCount; ++Index)
-		{
-			USplineMeshComponent* Segment = NewObject<USplineMeshComponent>(
-				RoadActor,
-				*FString::Printf(TEXT("SP638RetainingSegment_%03d"), Index),
-				RF_Transactional);
-			if (!IsValid(Segment))
-			{
-				OutError = FString::Printf(
-					TEXT("failed to allocate retaining-helper segment %d"),
-					Index);
-				return false;
-			}
-			Segment->CreationMethod = EComponentCreationMethod::Instance;
-			Segment->SetupAttachment(RetainingSpline);
-			Segment->SetStaticMesh(CubeMesh);
-			Segment->SetMobility(EComponentMobility::Static);
-			Segment->SetForwardAxis(ESplineMeshAxis::X, false);
-			Segment->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-			Segment->SetGenerateOverlapEvents(false);
-			Segment->SetCastShadow(false);
-
-			FVector StartPosition;
-			FVector StartTangent;
-			FVector EndPosition;
-			FVector EndTangent;
-			RetainingSpline->GetLocationAndTangentAtSplinePoint(
-				Index,
-				StartPosition,
-				StartTangent,
-				ESplineCoordinateSpace::Local);
-			RetainingSpline->GetLocationAndTangentAtSplinePoint(
-				Index + 1,
-				EndPosition,
-				EndTangent,
-				ESplineCoordinateSpace::Local);
-			Segment->SetStartAndEnd(
-				StartPosition,
-				StartTangent,
-				EndPosition,
-				EndTangent,
-				false);
-			Segment->SetStartScale(CrossSectionScale, false);
-			Segment->SetEndScale(CrossSectionScale, false);
-			RoadActor->AddInstanceComponent(Segment);
-			Segment->RegisterComponent();
-			Segment->UpdateMesh();
-			++OutMeshCount;
-		}
-
-		return OutMeshCount == SegmentCount;
-	}
-
 	bool SpawnRoadSpline(
 		UWorld* World,
 		ALandscape* Landscape,
 		const FName& RoadEditLayerName,
 		const TArray<FVector>& Points,
-		const TArray<uint16>& HeightData,
-		double RuntimeZScale,
-		double RuntimeLocationZCm,
 		int32& OutSplineMeshCount,
 		int32& OutEarthworksSubdivisions,
-		int32& OutRetainingHelperMeshCount,
-		double& OutRetainingHelperFocusDistanceCm,
-		FString& OutRetainingHelperSide,
-		double& OutRetainingHelperLeftProbeDeltaCm,
-		double& OutRetainingHelperRightProbeDeltaCm,
 		FString& OutError)
 	{
 		FActorSpawnParameters SpawnParameters;
@@ -711,23 +420,6 @@ namespace CyclingPassoGiauLandscapeSpikeInternal
 			Segment->RegisterComponent();
 			Segment->UpdateMesh();
 			++OutSplineMeshCount;
-		}
-
-		if (!SpawnHairpinRetainingHelper(
-				RoadActor,
-				Spline,
-				HeightData,
-				RuntimeZScale,
-				RuntimeLocationZCm,
-				RoadMesh,
-				OutRetainingHelperMeshCount,
-				OutRetainingHelperFocusDistanceCm,
-				OutRetainingHelperSide,
-				OutRetainingHelperLeftProbeDeltaCm,
-				OutRetainingHelperRightProbeDeltaCm,
-				OutError))
-		{
-			return false;
 		}
 
 		RoadActor->MarkPackageDirty();
@@ -1041,11 +733,6 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 
 	int32 RoadSplineMeshCount = 0;
 	int32 RoadEarthworksSubdivisions = 0;
-	int32 RetainingHelperMeshCount = 0;
-	double RetainingHelperFocusDistanceCm = 0.0;
-	FString RetainingHelperSide(TEXT("none"));
-	double RetainingHelperLeftProbeDeltaCm = 0.0;
-	double RetainingHelperRightProbeDeltaCm = 0.0;
 	if (bImportRoad)
 	{
 		FString RoadError;
@@ -1054,16 +741,8 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 			Landscape,
 			RoadLayerName,
 			RoadPoints,
-			HeightData,
-			RuntimeZScale,
-			RuntimeLocationZCm,
 			RoadSplineMeshCount,
 			RoadEarthworksSubdivisions,
-			RetainingHelperMeshCount,
-			RetainingHelperFocusDistanceCm,
-			RetainingHelperSide,
-			RetainingHelperLeftProbeDeltaCm,
-			RetainingHelperRightProbeDeltaCm,
 			RoadError))
 		{
 			UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error, TEXT("%s"), *RoadError);
@@ -1130,19 +809,6 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		TEXT("  \"road_earthworks_subdivisions\": %d,\n")
 		TEXT("  \"road_earthworks_raise_heights\": true,\n")
 		TEXT("  \"road_earthworks_lower_heights\": true,\n")
-		TEXT("  \"retaining_helper_applied\": %s,\n")
-		TEXT("  \"retaining_helper_strategy\": \"max-curvature-r16-high-side-proof\",\n")
-		TEXT("  \"retaining_helper_focus_distance_m\": %.3f,\n")
-		TEXT("  \"retaining_helper_side\": \"%s\",\n")
-		TEXT("  \"retaining_helper_probe_offset_cm\": %.3f,\n")
-		TEXT("  \"retaining_helper_left_probe_delta_cm\": %.3f,\n")
-		TEXT("  \"retaining_helper_right_probe_delta_cm\": %.3f,\n")
-		TEXT("  \"retaining_helper_window_half_length_cm\": %.3f,\n")
-		TEXT("  \"retaining_helper_offset_cm\": %.3f,\n")
-		TEXT("  \"retaining_helper_height_cm\": %.3f,\n")
-		TEXT("  \"retaining_helper_thickness_cm\": %.3f,\n")
-		TEXT("  \"retaining_helper_segments\": %d,\n")
-		TEXT("  \"retaining_helper_presentation_only\": true,\n")
 		TEXT("  \"presentation_only\": true,\n")
 		TEXT("  \"authoritative_route_geometry\": false,\n")
 		TEXT("  \"authoritative_physics\": false\n")
@@ -1175,18 +841,7 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		bImportRoad ? TEXT("true") : TEXT("false"),
 		RoadEarthworksHalfWidthCm,
 		RoadEarthworksSideFalloffCm,
-		RoadEarthworksSubdivisions,
-		bImportRoad ? TEXT("true") : TEXT("false"),
-		RetainingHelperFocusDistanceCm / 100.0,
-		*RetainingHelperSide,
-		RetainingHelperTerrainProbeOffsetCm,
-		RetainingHelperLeftProbeDeltaCm,
-		RetainingHelperRightProbeDeltaCm,
-		RetainingHelperWindowHalfLengthCm,
-		RetainingHelperOffsetCm,
-		RetainingHelperHeightCm,
-		RetainingHelperThicknessCm,
-		RetainingHelperMeshCount);
+		RoadEarthworksSubdivisions);
 
 	if (!ProofPath.IsEmpty())
 	{
@@ -1220,14 +875,6 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 			RoadEarthworksHalfWidthCm,
 			RoadEarthworksSideFalloffCm,
 			RoadEarthworksSubdivisions);
-		UE_LOG(LogCyclingPassoGiauLandscapeSpike, Display,
-			TEXT("SP638 retaining helper: strategy=max-curvature-r16-high-side-proof focus_m=%.1f side=%s left_delta_cm=%.1f right_delta_cm=%.1f segments=%d height_cm=%.1f."),
-			RetainingHelperFocusDistanceCm / 100.0,
-			*RetainingHelperSide,
-			RetainingHelperLeftProbeDeltaCm,
-			RetainingHelperRightProbeDeltaCm,
-			RetainingHelperMeshCount,
-			RetainingHelperHeightCm);
 	}
 	UE_LOG(LogCyclingPassoGiauLandscapeSpike, Display,
 		TEXT("Landscape edit layers: base=Base_DTM road=Road_Earthworks count=%d."),
