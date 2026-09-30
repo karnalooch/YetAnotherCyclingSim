@@ -298,6 +298,13 @@ documented, production-proven Embark pattern end-to-end** for the current task.
   approximation merely to save implementation effort, CI time or tool cost.
 - Do not replace a documented Embark stage with a guessed YACS shortcut while
   the documented stage is available and applicable.
+- Embark mode copies the strongest **public production pattern and boundary**, not
+  a vendor brand by itself. If the exact DCC/tool used by the reference pattern is
+  unavailable, commercially unsuitable, or unjustified for YACS, use the strongest
+  license-clean Unreal-native or open-source implementation that preserves the same
+  producer -> derived-data -> consumer contract and required proof. Record the
+  substitution explicitly and never claim Embark uses the substitute unless public
+  evidence says so.
 - Distinguish evidence from inference. If Embark's internal implementation is
   proprietary or unpublished, do **not** invent its node graph, algorithm or
   parameters. Reproduce only the public stage/contract with documented tools
