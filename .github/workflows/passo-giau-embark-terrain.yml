@@ -251,12 +251,15 @@ jobs:
           Copy-Item -LiteralPath $generatedAsset -Destination $evidenceAsset -Force
           Remove-Item -LiteralPath (Join-Path (Get-Location) 'Content/WorldGen') -Recurse -Force
 
-          ./scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1 `
-            -ExpectedBranch 'HEAD' `
-            -ExpectedHead '${{ github.sha }}' `
-            -ArtifactRoot 'Saved/RuntimeProof/CI/M3/PCGExCorridor/Visual' `
-            -PcgExExecutionOutput 'Saved/RuntimeProof/CI/M3/PCGExCorridor/pcgex_graph_output.json'
-          if ($LASTEXITCODE -ne 0) { throw 'PCGEx rider-close visual proof failed.' }
+          foreach ($variant in @('A','B','C','D','E')) {
+            ./scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1 `
+              -ExpectedBranch 'HEAD' `
+              -ExpectedHead '${{ github.sha }}' `
+              -ArtifactRoot ("Saved/RuntimeProof/CI/M3/PCGExCorridor/Visual/{0}" -f $variant) `
+              -PcgExExecutionOutput 'Saved/RuntimeProof/CI/M3/PCGExCorridor/pcgex_graph_output.json' `
+              -Variant $variant
+            if ($LASTEXITCODE -ne 0) { throw "PCGEx Gate C.1 variant $variant failed." }
+          }
 
       - name: Upload PCGEx authoring evidence
         if: ${{ always() }}

@@ -11,6 +11,7 @@ param(
     [Parameter(Mandatory=$true)] [string] $ExpectedHead,
     [string] $PreparedWorkspaceStamp,
     [string] $PcgExExecutionOutput,
+    [ValidateSet('A','B','C','D','E')] [string] $Variant = 'E',
     [switch] $ValidateOnly,
     [int] $TimeoutSec = 900
 )
@@ -29,11 +30,12 @@ $ArtifactRoot = (Resolve-Path -LiteralPath $ArtifactRoot).Path
 $SpikeMapRelative = 'Content/Prototype/Maps/L_PassoGiauTerrainSpike.umap'
 $SpikeMapPath = Join-Path $RepoRoot $SpikeMapRelative
 $CaptureScript = Join-Path $RepoRoot 'scripts/ue/stage3g_capture_sp638_local_corridor.py'
-$CaptureLog = Join-Path $ArtifactRoot 'local_corridor_visual.log'
-$CaptureStdout = Join-Path $ArtifactRoot 'local_corridor_visual.stdout.log'
+$VariantLower = $Variant.ToLowerInvariant()
+$CaptureLog = Join-Path $ArtifactRoot ("local_corridor_visual_{0}.log" -f $VariantLower)
+$CaptureStdout = Join-Path $ArtifactRoot ("local_corridor_visual_{0}.stdout.log" -f $VariantLower)
 $CaptureErr = $CaptureLog + '.stderr'
-$CapturePng = Join-Path $ArtifactRoot 'sp638_local_corridor_rider_3840x2160.png'
-$CaptureProof = Join-Path $ArtifactRoot 'local_corridor_visual_proof.json'
+$CapturePng = Join-Path $ArtifactRoot ("sp638_surface_{0}_rider_3840x2160.png" -f $VariantLower)
+$CaptureProof = Join-Path $ArtifactRoot ("surface_ownership_{0}_proof.json" -f $VariantLower)
 
 if ($PcgExExecutionOutput) {
     if (-not [System.IO.Path]::IsPathRooted($PcgExExecutionOutput)) {
@@ -103,6 +105,7 @@ else {
     
     $env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PNG = $CapturePng
     $env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PROOF = $CaptureProof
+    $env:YACS_SP638_LOCAL_CORRIDOR_VARIANT = $Variant
     if ($PcgExExecutionOutput) {
         $env:YACS_PCGEX_CORRIDOR_OUTPUT = $PcgExExecutionOutput
     }
@@ -124,6 +127,7 @@ else {
     finally {
         Remove-Item Env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PNG -ErrorAction SilentlyContinue
         Remove-Item Env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PROOF -ErrorAction SilentlyContinue
+        Remove-Item Env:YACS_SP638_LOCAL_CORRIDOR_VARIANT -ErrorAction SilentlyContinue
         Remove-Item Env:YACS_PCGEX_CORRIDOR_OUTPUT -ErrorAction SilentlyContinue
     }
 }
@@ -162,17 +166,15 @@ if ($PcgExExecutionOutput) {
         throw 'PCGEx visual proof used an unexpected centerline dataset.'
     }
 }
-if ([bool]$Proof.local_geometry.continuous_dynamic_mesh_surfaces -ne $true) {
-    throw 'SP638 local-corridor proof did not use continuous DynamicMesh surfaces.'
+if ([string]$Proof.diagnostic_variant -ne $Variant) {
+    throw "SP638 diagnostic proof variant mismatch: expected $Variant got $($Proof.diagnostic_variant)."
 }
-if ([bool]$Proof.local_geometry.box_strip_roadbed -ne $false) {
-    throw 'SP638 local-corridor proof regressed to box-strip road geometry.'
+if ([string]$Proof.landscape_cut_fill.selected_earthworks_layer -ne 'Road_Earthworks') {
+    throw 'SP638 diagnostic proof did not select Road_Earthworks explicitly.'
 }
-if ([int]$Proof.station_count -lt 250) {
-    throw "SP638 local-corridor proof sampled too few stations: $($Proof.station_count)"
-}
-if ([int]$Proof.local_geometry.earthwork.triangles -lt 3000) {
-    throw 'SP638 local-corridor earthwork mesh is unexpectedly sparse.'
+$AvailableLayers = @($Proof.landscape_cut_fill.available_edit_layers)
+if ($AvailableLayers -notcontains 'Base_DTM' -or $AvailableLayers -notcontains 'Road_Earthworks') {
+    throw "SP638 diagnostic proof is missing required edit layers: $($AvailableLayers -join ', ')."
 }
 if ([bool]$Proof.spatial_grid_guardrail.canonical_road_xy_preserved -ne $true) {
     throw 'SP638 local-corridor proof did not preserve canonical road XY.'
@@ -187,37 +189,81 @@ if ([bool]$Proof.source_geometry_analysis.canonical_centerline_xy_modified -ne $
     throw 'SP638 visual proof modified canonical centerline XY.'
 }
 if ([string]$Proof.proof_viewmode -ne 'lit') {
-    throw "SP638 visual proof must use lit DynamicMesh acceptance mode, got '$($Proof.proof_viewmode)'."
+    throw "SP638 visual proof must use lit acceptance mode, got '$($Proof.proof_viewmode)'."
 }
 if ([bool]$Proof.neutral_landscape_material -ne $true) {
     throw 'SP638 visual proof did not apply the required neutral Landscape proof material.'
 }
-if ([bool]$Proof.local_terrain_skin.world_aligned -ne $true) {
-    throw 'SP638 visual proof terrain skin is not world-aligned.'
+
+$ExpectedMacro = $Variant -in @('A','B','E')
+$ExpectedLocal = $Variant -in @('C','D','E')
+$ExpectedCorridor = $Variant -in @('B','D','E')
+$ExpectedCutFill = $Variant -ne 'A'
+
+if ([bool]$Proof.surface_visibility.macro_landscape -ne $ExpectedMacro) {
+    throw "Variant $Variant macro Landscape visibility mismatch."
 }
-if ([bool]$Proof.local_terrain_skin.canonical_road_xy_modified -ne $false) {
-    throw 'SP638 visual proof terrain skin modified canonical road XY.'
+if ([bool]$Proof.surface_visibility.local_terrain -ne $ExpectedLocal) {
+    throw "Variant $Variant local terrain visibility mismatch."
 }
-if ([bool]$Proof.local_terrain_skin.landscape_hidden_after_sampling -ne $false) {
-    throw 'SP638 visual proof unexpectedly hid the corrected MASE Landscape after sampling.'
+if ([bool]$Proof.surface_visibility.corridor -ne $ExpectedCorridor) {
+    throw "Variant $Variant corridor visibility mismatch."
 }
-if ([bool]$Proof.local_terrain_skin.macro_landscape_visible -ne $true) {
-    throw 'SP638 visual proof did not keep the corrected MASE Landscape visible as macro terrain.'
+if ([bool]$Proof.landscape_cut_fill.applied -ne $ExpectedCutFill) {
+    throw "Variant $Variant Landscape cut/fill state mismatch."
 }
-if ([double]$Proof.local_terrain_skin.grid_step_m -gt 4.01) {
-    throw "SP638 terrain skin grid is too coarse: $($Proof.local_terrain_skin.grid_step_m) m"
+if ([bool]$Proof.local_terrain_skin.macro_landscape_visible -ne $ExpectedMacro) {
+    throw "Variant $Variant proof recorded the wrong macro Landscape state."
 }
-if ([int]$Proof.local_terrain_skin.sample_count -lt 10000) {
-    throw "SP638 terrain skin sampled too few points: $($Proof.local_terrain_skin.sample_count)"
+
+if ($ExpectedLocal) {
+    if ([bool]$Proof.local_terrain_skin.enabled -ne $true) {
+        throw "Variant $Variant did not sample the required local terrain."
+    }
+    if ([bool]$Proof.local_geometry.terrain_skin.spawned -ne $true) {
+        throw "Variant $Variant did not spawn the required local terrain mesh."
+    }
+    if ([bool]$Proof.local_terrain_skin.world_aligned -ne $true) {
+        throw "Variant $Variant terrain skin is not world-aligned."
+    }
+    if ([bool]$Proof.local_terrain_skin.canonical_road_xy_modified -ne $false) {
+        throw "Variant $Variant terrain skin modified canonical road XY."
+    }
+    if ([double]$Proof.local_terrain_skin.grid_step_m -gt 4.01) {
+        throw "Variant $Variant terrain skin grid is too coarse: $($Proof.local_terrain_skin.grid_step_m) m"
+    }
+    if ([int]$Proof.local_terrain_skin.sample_count -lt 10000) {
+        throw "Variant $Variant terrain skin sampled too few points: $($Proof.local_terrain_skin.sample_count)"
+    }
+    if ([double]$Proof.local_terrain_skin.max_abs_adjustment_m -gt 0.901) {
+        throw "Variant $Variant terrain skin exceeded bounded smoothing: $($Proof.local_terrain_skin.max_abs_adjustment_m) m"
+    }
+    if ([double]$Proof.local_terrain_skin.max_abs_laplacian_after_m -ge [double]$Proof.local_terrain_skin.max_abs_laplacian_before_m) {
+        throw "Variant $Variant terrain skin did not reduce high-frequency height curvature."
+    }
+    if ([int]$Proof.local_geometry.terrain_skin.triangles -lt 25000) {
+        throw "Variant $Variant rider-close terrain skin mesh is unexpectedly sparse."
+    }
+} else {
+    if ([bool]$Proof.local_terrain_skin.enabled -ne $false -or [bool]$Proof.local_geometry.terrain_skin.spawned -ne $false) {
+        throw "Variant $Variant unexpectedly created local terrain."
+    }
 }
-if ([double]$Proof.local_terrain_skin.max_abs_adjustment_m -gt 0.901) {
-    throw "SP638 terrain skin exceeded bounded smoothing: $($Proof.local_terrain_skin.max_abs_adjustment_m) m"
-}
-if ([double]$Proof.local_terrain_skin.max_abs_laplacian_after_m -ge [double]$Proof.local_terrain_skin.max_abs_laplacian_before_m) {
-    throw 'SP638 terrain skin did not reduce high-frequency height curvature.'
-}
-if ([int]$Proof.local_geometry.terrain_skin.triangles -lt 25000) {
-    throw 'SP638 rider-close terrain skin mesh is unexpectedly sparse.'
+
+if ($ExpectedCorridor) {
+    if ([bool]$Proof.local_geometry.earthwork.spawned -ne $true -or [bool]$Proof.local_geometry.asphalt.spawned -ne $true) {
+        throw "Variant $Variant did not spawn the required road corridor."
+    }
+    if ([int]$Proof.local_geometry.earthwork.triangles -lt 3000) {
+        throw "Variant $Variant earthwork mesh is unexpectedly sparse."
+    }
+    if ([int]$Proof.station_count -lt 250) {
+        throw "Variant $Variant sampled too few corridor stations: $($Proof.station_count)"
+    }
+} else {
+    if ([bool]$Proof.local_geometry.earthwork.spawned -ne $false -or [bool]$Proof.local_geometry.asphalt.spawned -ne $false) {
+        throw "Variant $Variant unexpectedly spawned road corridor geometry."
+    }
 }
 
 if (-not $ValidateOnly) {
@@ -239,6 +285,6 @@ if ($TrackedChanges.Count -gt 0) {
     throw ("SP638 local-corridor visual proof mutated tracked files: {0}" -f ($TrackedChanges -join '; '))
 }
 
-Write-Host 'R4.1B.3 continuous SP638 local-corridor visual proof: PASS.' -ForegroundColor Green
+Write-Host ("Gate C.1 surface-ownership variant {0}: PASS." -f $Variant) -ForegroundColor Green
 Write-Host ("Rendered proof: {0}" -f $CapturePng)
 exit 0

@@ -227,6 +227,35 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         ):
             self.assertIn(token, wrapper)
 
+    def test_gate_c_surface_ownership_matrix_is_fail_closed(self) -> None:
+        capture = (
+            ROOT / "scripts/ue/stage3g_capture_sp638_local_corridor.py"
+        ).read_text(encoding="utf-8")
+        wrapper = (
+            ROOT / "scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1"
+        ).read_text(encoding="utf-8")
+        workflow = (
+            ROOT / ".github/workflows/passo-giau-embark-terrain.yml"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn('DIAGNOSTIC_VARIANT_ENV = "YACS_SP638_LOCAL_CORRIDOR_VARIANT"', capture)
+        for variant in ('"A": {', '"B": {', '"C": {', '"D": {', '"E": {'):
+            self.assertIn(variant, capture)
+        self.assertIn('"Base_DTM" not in edit_layer_names', capture)
+        self.assertIn('name == "Road_Earthworks"', capture)
+        self.assertIn('"selected_earthworks_layer": edit_layer_name', capture)
+        self.assertNotIn("edit_layer_names[0]", capture)
+        self.assertIn("set_visibility(macro_landscape_visible, True)", capture)
+
+        self.assertIn("[ValidateSet('A','B','C','D','E')]", wrapper)
+        self.assertIn("$ExpectedMacro = $Variant -in @('A','B','E')", wrapper)
+        self.assertIn("$ExpectedLocal = $Variant -in @('C','D','E')", wrapper)
+        self.assertIn("$ExpectedCorridor = $Variant -in @('B','D','E')", wrapper)
+        self.assertIn("selected_earthworks_layer -ne 'Road_Earthworks'", wrapper)
+
+        self.assertIn("foreach ($variant in @('A','B','C','D','E'))", workflow)
+        self.assertIn("-Variant $variant", workflow)
+
     def test_active_workflow_tracks_pcgex_inputs_and_does_not_require_dcc(self) -> None:
         workflow = (ROOT / ".github/workflows/passo-giau-embark-terrain.yml").read_text(
             encoding="utf-8"

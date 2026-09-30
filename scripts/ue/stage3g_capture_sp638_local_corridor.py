@@ -53,6 +53,40 @@ PCGEX_CORRIDOR_OUTPUT_ENV = "YACS_PCGEX_CORRIDOR_OUTPUT"
 PCGEX_CENTER_DATASET_INDEX = 0
 PCGEX_RENDER_SPLINE_STRIDE = 5
 
+DIAGNOSTIC_VARIANT_ENV = "YACS_SP638_LOCAL_CORRIDOR_VARIANT"
+DIAGNOSTIC_VARIANTS = {
+    "A": {
+        "macro_landscape_visible": True,
+        "local_terrain_visible": False,
+        "corridor_visible": False,
+        "apply_landscape_cut_fill": False,
+    },
+    "B": {
+        "macro_landscape_visible": True,
+        "local_terrain_visible": False,
+        "corridor_visible": True,
+        "apply_landscape_cut_fill": True,
+    },
+    "C": {
+        "macro_landscape_visible": False,
+        "local_terrain_visible": True,
+        "corridor_visible": False,
+        "apply_landscape_cut_fill": True,
+    },
+    "D": {
+        "macro_landscape_visible": False,
+        "local_terrain_visible": True,
+        "corridor_visible": True,
+        "apply_landscape_cut_fill": True,
+    },
+    "E": {
+        "macro_landscape_visible": True,
+        "local_terrain_visible": True,
+        "corridor_visible": True,
+        "apply_landscape_cut_fill": True,
+    },
+}
+
 
 def _release_python_script() -> None:
     if os.environ.get(SESSION_MANAGED_ENV, "").strip() != "1":
@@ -747,12 +781,24 @@ def _spawn_dynamic_mesh(
             f"{vertex_count}/{triangle_count} != "
             f"{len(mesh.vertices)}/{len(mesh.triangles)}"
         )
-    return {"vertices": vertex_count, "triangles": triangle_count}
+    return {"vertices": vertex_count, "triangles": triangle_count, "spawned": True}
+
+
+def _disabled_mesh_counts() -> dict[str, int | bool]:
+    return {"vertices": 0, "triangles": 0, "spawned": False}
 
 
 def main() -> None:
     global _task, _tick_handle, _started_at, _output_path, _proof_path, _camera
     global _proof_data
+
+    variant_name = os.environ.get(DIAGNOSTIC_VARIANT_ENV, "E").strip().upper() or "E"
+    if variant_name not in DIAGNOSTIC_VARIANTS:
+        raise RuntimeError(
+            f"unsupported {DIAGNOSTIC_VARIANT_ENV}={variant_name!r}; "
+            f"expected one of {sorted(DIAGNOSTIC_VARIANTS)}"
+        )
+    variant = DIAGNOSTIC_VARIANTS[variant_name]
 
     output_value = os.environ.get("YACS_SP638_LOCAL_CORRIDOR_VISUAL_PNG", "")
     proof_value = os.environ.get("YACS_SP638_LOCAL_CORRIDOR_VISUAL_PROOF", "")
@@ -889,32 +935,56 @@ def main() -> None:
                 name = str(edit_layer.get_name_bp())
                 if name and name != "None":
                     edit_layer_names.append(name)
-    edit_layer_name = edit_layer_names[0] if edit_layer_names else "Layer"
-    landscape.editor_apply_spline(
-        spline,
-        start_width=LANDSCAPE_SPLINE_WIDTH_CM,
-        end_width=LANDSCAPE_SPLINE_WIDTH_CM,
-        start_side_falloff=LANDSCAPE_SPLINE_FALLOFF_CM,
-        end_side_falloff=LANDSCAPE_SPLINE_FALLOFF_CM,
-        start_roll=0.0,
-        end_roll=0.0,
-        num_subdivisions=LANDSCAPE_SPLINE_SUBDIVISIONS,
-        raise_heights=True,
-        lower_heights=True,
-        paint_layer=None,
-        edit_layer_name=edit_layer_name,
-    )
 
-    terrain_skin_center_world = kernel_world[len(kernel_world) // 2]
-    (
-        terrain_skin_mesh,
-        terrain_skin_origin_world,
-        terrain_skin_diagnostics,
-    ) = _sample_local_terrain_skin(
-        world,
-        road_actor,
-        terrain_skin_center_world,
-    )
+    if "Base_DTM" not in edit_layer_names:
+        raise RuntimeError(
+            f"required Base_DTM edit layer is missing: {edit_layer_names}"
+        )
+    road_earthworks_layers = [
+        name for name in edit_layer_names if name == "Road_Earthworks"
+    ]
+    if len(road_earthworks_layers) != 1:
+        raise RuntimeError(
+            "expected exactly one Road_Earthworks edit layer, "
+            f"found {len(road_earthworks_layers)} in {edit_layer_names}"
+        )
+    edit_layer_name = road_earthworks_layers[0]
+
+    if bool(variant["apply_landscape_cut_fill"]):
+        landscape.editor_apply_spline(
+            spline,
+            start_width=LANDSCAPE_SPLINE_WIDTH_CM,
+            end_width=LANDSCAPE_SPLINE_WIDTH_CM,
+            start_side_falloff=LANDSCAPE_SPLINE_FALLOFF_CM,
+            end_side_falloff=LANDSCAPE_SPLINE_FALLOFF_CM,
+            start_roll=0.0,
+            end_roll=0.0,
+            num_subdivisions=LANDSCAPE_SPLINE_SUBDIVISIONS,
+            raise_heights=True,
+            lower_heights=True,
+            paint_layer=None,
+            edit_layer_name=edit_layer_name,
+        )
+
+    terrain_skin_mesh = None
+    terrain_skin_origin_world = None
+    terrain_skin_diagnostics: dict[str, object] = {
+        "enabled": False,
+        "source": "not sampled for this diagnostic variant",
+        "canonical_road_xy_modified": False,
+    }
+    if bool(variant["local_terrain_visible"]):
+        terrain_skin_center_world = kernel_world[len(kernel_world) // 2]
+        (
+            terrain_skin_mesh,
+            terrain_skin_origin_world,
+            terrain_skin_diagnostics,
+        ) = _sample_local_terrain_skin(
+            world,
+            road_actor,
+            terrain_skin_center_world,
+        )
+        terrain_skin_diagnostics["enabled"] = True
 
     neutral_landscape_material = unreal.load_asset(
         "/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial"
@@ -956,46 +1026,58 @@ def main() -> None:
         )
 
     actor_subsystem = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
-    terrain_skin_counts = _spawn_dynamic_mesh(
-        actor_subsystem,
-        terrain_skin_origin_world,
-        terrain_skin_mesh,
-        "SP638_LocalTerrainSkin",
-        terrain_skin_material,
-    )
 
-    # Keep the corrected MASE Landscape visible as macro terrain. The lifted,
-    # smoothed DynamicMesh skin owns only the bounded rider-close patch and
-    # overlays the Landscape locally; no persisted map change is saved.
+    terrain_skin_counts = _disabled_mesh_counts()
+    if bool(variant["local_terrain_visible"]):
+        if terrain_skin_mesh is None or terrain_skin_origin_world is None:
+            raise RuntimeError("local terrain variant did not build a terrain skin")
+        terrain_skin_counts = _spawn_dynamic_mesh(
+            actor_subsystem,
+            terrain_skin_origin_world,
+            terrain_skin_mesh,
+            "SP638_LocalTerrainSkin",
+            terrain_skin_material,
+        )
+
     origin_world = kernel_world[0]
-    earth_counts = _spawn_dynamic_mesh(
-        actor_subsystem,
-        origin_world,
-        earthwork_mesh,
-        "SP638_LocalCorridor_Earthwork",
-        earth_material,
-    )
-    left_shoulder_counts = _spawn_dynamic_mesh(
-        actor_subsystem,
-        origin_world,
-        left_shoulder_mesh,
-        "SP638_LocalCorridor_LeftShoulder",
-        shoulder_material,
-    )
-    right_shoulder_counts = _spawn_dynamic_mesh(
-        actor_subsystem,
-        origin_world,
-        right_shoulder_mesh,
-        "SP638_LocalCorridor_RightShoulder",
-        shoulder_material,
-    )
-    road_counts = _spawn_dynamic_mesh(
-        actor_subsystem,
-        origin_world,
-        road_mesh,
-        "SP638_LocalCorridor_Asphalt",
-        road_material,
-    )
+    earth_counts = _disabled_mesh_counts()
+    left_shoulder_counts = _disabled_mesh_counts()
+    right_shoulder_counts = _disabled_mesh_counts()
+    road_counts = _disabled_mesh_counts()
+    if bool(variant["corridor_visible"]):
+        earth_counts = _spawn_dynamic_mesh(
+            actor_subsystem,
+            origin_world,
+            earthwork_mesh,
+            "SP638_LocalCorridor_Earthwork",
+            earth_material,
+        )
+        left_shoulder_counts = _spawn_dynamic_mesh(
+            actor_subsystem,
+            origin_world,
+            left_shoulder_mesh,
+            "SP638_LocalCorridor_LeftShoulder",
+            shoulder_material,
+        )
+        right_shoulder_counts = _spawn_dynamic_mesh(
+            actor_subsystem,
+            origin_world,
+            right_shoulder_mesh,
+            "SP638_LocalCorridor_RightShoulder",
+            shoulder_material,
+        )
+        road_counts = _spawn_dynamic_mesh(
+            actor_subsystem,
+            origin_world,
+            road_mesh,
+            "SP638_LocalCorridor_Asphalt",
+            road_material,
+        )
+
+    macro_landscape_visible = bool(variant["macro_landscape_visible"])
+    landscape.set_actor_hidden_in_game(not macro_landscape_visible)
+    for component in landscape_components:
+        component.set_visibility(macro_landscape_visible, True)
 
     camera_location = unreal.Vector(
         road_camera.x,
@@ -1016,9 +1098,8 @@ def main() -> None:
         world,
         "r.RayTracing.Geometry.Landscape.LODBias -1",
     )
-    # Render the DynamicMesh-owned rider-close terrain in ordinary lit mode.
-    # The Landscape is hidden after sampling, so the editor checker fallback
-    # cannot masquerade as terrain geometry.
+    # Keep all A-E captures on the same lit proof path. Surface ownership is
+    # changed only through explicit variant visibility, never through lighting.
     unreal.SystemLibrary.execute_console_command(world, "viewmode lit")
     unreal.SystemLibrary.execute_console_command(world, "r.AntiAliasingMethod 1")
     unreal.SystemLibrary.execute_console_command(
@@ -1082,11 +1163,13 @@ def main() -> None:
     camera_component.set_editor_property("field_of_view", 76.0)
 
     _proof_data = {
-        "capture_strategy": (
-            "pcgex-presentation-centerline-plus-r4.1b.3-local-corridor"
-            if pcgex_metadata is not None
-            else "r4.1b.3-world-aligned-terrain-skin-plus-corridor"
-        ),
+        "capture_strategy": "gate-c1-surface-ownership-diagnostic",
+        "diagnostic_variant": variant_name,
+        "surface_visibility": {
+            "macro_landscape": macro_landscape_visible,
+            "local_terrain": bool(variant["local_terrain_visible"]),
+            "corridor": bool(variant["corridor_visible"]),
+        },
         "render_centerline": (
             pcgex_metadata
             if pcgex_metadata is not None
@@ -1138,6 +1221,9 @@ def main() -> None:
         },
         "landscape_cut_fill": {
             "api": "LandscapeProxy.editor_apply_spline",
+            "applied": bool(variant["apply_landscape_cut_fill"]),
+            "available_edit_layers": edit_layer_names,
+            "selected_earthworks_layer": edit_layer_name,
             "edit_layer_name": edit_layer_name,
             "width_cm": LANDSCAPE_SPLINE_WIDTH_CM,
             "side_falloff_cm": LANDSCAPE_SPLINE_FALLOFF_CM,
@@ -1157,9 +1243,13 @@ def main() -> None:
         },
         "local_terrain_skin": {
             **terrain_skin_diagnostics,
-            "landscape_hidden_after_sampling": False,
-            "macro_landscape_visible": True,
-            "occlusion_lift_m": TERRAIN_SKIN_LIFT_M,
+            "landscape_hidden_after_sampling": not macro_landscape_visible,
+            "macro_landscape_visible": macro_landscape_visible,
+            "occlusion_lift_m": (
+                TERRAIN_SKIN_LIFT_M
+                if bool(variant["local_terrain_visible"])
+                else 0.0
+            ),
         },
         "landscape_component_count": len(landscape_components),
         "forced_landscape_lod": 0,
@@ -1186,7 +1276,7 @@ def main() -> None:
         mask_enabled=False,
         capture_hdr=False,
         comparison_tolerance=unreal.ComparisonTolerance.LOW,
-        comparison_notes="R4.1B.3 SP638 neutral continuous local-ground corridor proof",
+        comparison_notes=f"Gate C.1 surface ownership diagnostic variant {variant_name}",
         delay=3.0,
         force_game_view=True,
     )
@@ -1197,6 +1287,7 @@ def main() -> None:
     _tick_handle = unreal.register_slate_post_tick_callback(_tick)
     unreal.log(
         "[YacsSp638LocalCorridorVisual] screenshot scheduled: "
+        f"variant={variant_name} "
         f"stations={earthwork_mesh.station_count} "
         f"raw_adjacent_min_radius_m={raw_adjacent_minimum_radius_m} "
         f"source_scale_min_radius_m={source_scale_minimum_radius_m} "
