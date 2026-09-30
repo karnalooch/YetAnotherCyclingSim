@@ -24,6 +24,8 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
             "assets:",
             "ci:",
             "ue_code:",
+            "ue_tooling:",
+            "ci_cost_class:",
             "docs_only:",
             "asset_only:",
             "asset_full:",
@@ -56,6 +58,15 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
             self.ci,
         )
         self.assertIn("uses: ./.github/workflows/reusable-unreal.yml", self.ci)
+
+    def test_classifier_exposes_tooling_and_cost_separately(self):
+        self.assertIn("ue_tooling: ${{ steps.classify.outputs.ue_tooling }}", self.ci)
+        self.assertIn(
+            "ci_cost_class: ${{ steps.classify.outputs.ci_cost_class }}",
+            self.ci,
+        )
+        self.assertIn("CLASS_UE_TOOLING:", self.ci)
+        self.assertIn("CLASS_CI_COST:", self.ci)
 
     def test_unreal_code_lane_is_fail_closed_in_aggregate(self):
         self.assertIn("- unreal-code", self.ci)
@@ -154,6 +165,18 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
             self.assertIn(f"- {lane}", self.ci)
         self.assertIn("require_optional", self.ci)
         self.assertIn("expected skipped", self.ci)
+
+    def test_aggregate_rejects_invalid_or_inconsistent_cost_class(self):
+        self.assertIn("require_ci_cost()", self.ci)
+        self.assertIn("expected light/standard/heavy classifier output", self.ci)
+        self.assertIn(
+            "heavy Unreal/runtime impact must classify ci_cost_class=heavy",
+            self.ci,
+        )
+        self.assertIn(
+            "proof/editor tooling without ue_code must not claim automatic heavy code-build cost",
+            self.ci,
+        )
 
     def test_docs_only_has_no_forced_runtime_lane(self):
         self.assertNotIn("needs.changes.outputs.docs_only == 'true'", self.ci)
