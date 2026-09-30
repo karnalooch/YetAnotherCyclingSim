@@ -58,9 +58,7 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         self.assertEqual(
             examples["repository"], "https://github.com/PCGEx/PCGExExampleProject"
         )
-        self.assertEqual(
-            examples["commit"], "78e5842c116ae0500408e22e8f7d002e12d45831"
-        )
+        self.assertEqual(examples["commit"], "78e5842c116ae0500408e22e8f7d002e12d45831")
         self.assertEqual(examples["engine_version"], "5.8")
         self.assertIn("reference_only", examples["use_policy"])
         self.assertEqual(
@@ -193,6 +191,8 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
             "OffsetRight->Offset.Constant = 300.0",
             "Graph->AddLabeledEdge(SmoothNode, PathPin, OutputNode, GraphOutputPin)",
             "UEditorLoadingAndSavingUtils::NewBlankMap(false)",
+            "UBoxComponent",
+            "YacsPcgExSchedulerBounds",
             "Component->SetGraphLocal(Graph)",
             "Component->GenerateLocal(true)",
             "FWorldPartitionHelpers::FakeEngineTick(World)",
