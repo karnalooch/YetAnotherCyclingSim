@@ -107,6 +107,8 @@ class Classification:
     ci: bool = False
     ue_code: bool = False
     ue_tooling: bool = False
+    unreal_compile: bool = False
+    unreal_runtime: bool = False
     unknown: bool = False
     docs_only: bool = False
     asset_only: bool = False
@@ -123,6 +125,14 @@ class Classification:
         if self.docs_only:
             return "light"
         return "standard"
+
+    @property
+    def unreal_execution_class(self) -> str:
+        if self.unreal_compile:
+            return "compile"
+        if self.unreal_runtime:
+            return "runtime"
+        return "static"
 
 
 def _is_docs(path: str) -> bool:
@@ -202,17 +212,26 @@ def _is_ue_tooling(path: str) -> bool:
     return path == "ue-mcp.yml" or path.startswith(UE_TOOLING_PREFIXES)
 
 
-def _is_ue_code(path: str) -> bool:
+def _is_unreal_compile_input(path: str) -> bool:
     pure = PurePosixPath(path)
     if _is_cpp(path):
         return True
-    if pure.suffix.lower() in {".uproject", ".uplugin"}:
+    return pure.suffix.lower() in {".uproject", ".uplugin"}
+
+
+def _is_unreal_runtime_input(path: str) -> bool:
+    if _is_unreal_compile_input(path):
         return True
     if path in UE_CRITICAL_CONFIG:
         return True
     if path in UE_CODE_TOOLING_EXACT:
         return True
     return False
+
+
+def _is_ue_code(path: str) -> bool:
+    """Backward-compatible signal for the automatic code-only Unreal lane."""
+    return _is_unreal_runtime_input(path)
 
 
 def _is_runtime_sensitive_unknown(path: str) -> bool:
@@ -237,6 +256,8 @@ def classify_paths(paths: Iterable[str]) -> Classification:
     ci = False
     ue_code = False
     ue_tooling = False
+    unreal_compile = False
+    unreal_runtime = False
     unknown = False
     asset_full = False
 
@@ -264,7 +285,13 @@ def classify_paths(paths: Iterable[str]) -> Classification:
         if _is_ue_tooling(path):
             ue_tooling = True
             matched = True
-        if _is_ue_code(path):
+        if _is_unreal_compile_input(path):
+            unreal_compile = True
+            unreal_runtime = True
+            ue_code = True
+            matched = True
+        elif _is_unreal_runtime_input(path):
+            unreal_runtime = True
             ue_code = True
             matched = True
 
@@ -282,7 +309,10 @@ def classify_paths(paths: Iterable[str]) -> Classification:
         if not matched:
             unknown = True
             if _is_runtime_sensitive_unknown(path):
+                # Unknown runtime-sensitive inputs fail closed to a binary rebuild.
                 ue_code = True
+                unreal_runtime = True
+                unreal_compile = True
 
     docs_only = docs and not any((python, cpp, assets, ci, ue_code, unknown))
     asset_only = assets and not any((python, cpp, ci, ue_code, unknown))
@@ -295,6 +325,8 @@ def classify_paths(paths: Iterable[str]) -> Classification:
         ci=ci,
         ue_code=ue_code,
         ue_tooling=ue_tooling,
+        unreal_compile=unreal_compile,
+        unreal_runtime=unreal_runtime,
         unknown=unknown,
         docs_only=docs_only,
         asset_only=asset_only,
@@ -355,8 +387,80 @@ def classify_embark_terrain_proof(paths: Iterable[str]) -> str:
     return "cheap"
 
 
+UNREAL_COMPILE_EXTENSIONS = {".cpp", ".c", ".h", ".hpp", ".inl", ".cs"}
+
+UNREAL_PROOF_EXACT = {
+    ".github/workflows/reusable-unreal.yml",
+    "scripts/ci/Invoke-YacsUnrealCi.ps1",
+    "scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1",
+    "scripts/ci/Resolve-YacsUnrealCiCache.ps1",
+    "scripts/ci/Test-YacsCodeOnlyCheckout.ps1",
+    "scripts/ue/Invoke-YacsProof.ps1",
+    "scripts/ue/Preflight-YacsProof.ps1",
+}
+
+
+def _hash_repository_inputs(
+    root: Path,
+    *,
+    namespace: str,
+    inputs: Iterable[Path],
+    seed: str = "",
+) -> str:
+    hasher = hashlib.sha256()
+    hasher.update(f"{namespace}\n{seed}\n".encode("utf-8"))
+    for path in sorted(set(inputs), key=lambda item: item.as_posix().lower()):
+        if not path.is_file():
+            continue
+        relative = path.relative_to(root).as_posix()
+        hasher.update(relative.encode("utf-8"))
+        hasher.update(b"\0")
+        hasher.update(path.read_bytes())
+        hasher.update(b"\0")
+    return hasher.hexdigest()
+
+
+def unreal_compile_fingerprint(repo_root: str | Path = ".") -> str:
+    """Hash every tracked repository input that can change YACS Editor binaries."""
+
+    root = Path(repo_root).resolve()
+    candidates: set[Path] = {root / "YetAnotherCyclingSim.uproject"}
+
+    for source_root in (root / "Source", root / "Plugins"):
+        if not source_root.exists():
+            continue
+        for path in source_root.rglob("*"):
+            if not path.is_file():
+                continue
+            relative = path.relative_to(root).as_posix()
+            if path.suffix.lower() == ".uplugin":
+                candidates.add(path)
+                continue
+            if "/Source/" in f"/{relative}" and path.suffix.lower() in UNREAL_COMPILE_EXTENSIONS:
+                candidates.add(path)
+
+    return _hash_repository_inputs(
+        root,
+        namespace="yacs-unreal-compile-v1",
+        inputs=candidates,
+    )
+
+
+def unreal_proof_fingerprint(repo_root: str | Path = ".") -> str:
+    """Hash inputs that can change the code-only Unreal Automation proof."""
+
+    root = Path(repo_root).resolve()
+    candidates = {root / path for path in UE_CRITICAL_CONFIG | UNREAL_PROOF_EXACT}
+    return _hash_repository_inputs(
+        root,
+        namespace="yacs-unreal-proof-v1",
+        inputs=candidates,
+        seed=f"compile={unreal_compile_fingerprint(root)}",
+    )
+
+
 def embark_terrain_compile_fingerprint(repo_root: str | Path = ".") -> str:
-    """Hash only inputs that can change the compiled UE/PCGEx binary contract."""
+    """Extend the generic Unreal fingerprint with the pinned PCGEx dependency."""
 
     root = Path(repo_root).resolve()
     config_path = root / "worldgen/embark/pcgex/passo_giau_corridor.json"
@@ -365,31 +469,9 @@ def embark_terrain_compile_fingerprint(repo_root: str | Path = ".") -> str:
     pcgex_commit = str(config["pcgex"]["commit"])
 
     hasher = hashlib.sha256()
+    hasher.update(b"yacs-embark-terrain-compile-v2\n")
     hasher.update(f"ue={engine_version}\npcgex={pcgex_commit}\n".encode("utf-8"))
-
-    candidates: set[Path] = {root / "YetAnotherCyclingSim.uproject"}
-    source_root = root / "Source"
-    if source_root.exists():
-        for path in source_root.rglob("*"):
-            if path.is_file() and path.suffix.lower() in {
-                ".cpp",
-                ".c",
-                ".h",
-                ".hpp",
-                ".inl",
-                ".cs",
-            }:
-                candidates.add(path)
-    for pattern in ("*.Build.cs", "*.Target.cs"):
-        candidates.update(path for path in root.rglob(pattern) if path.is_file())
-
-    for path in sorted(candidates, key=lambda item: item.as_posix().lower()):
-        relative = path.relative_to(root).as_posix()
-        hasher.update(relative.encode("utf-8"))
-        hasher.update(b"\0")
-        hasher.update(path.read_bytes())
-        hasher.update(b"\0")
-
+    hasher.update(unreal_compile_fingerprint(root).encode("ascii"))
     return hasher.hexdigest()
 
 
@@ -452,11 +534,17 @@ def main(argv: list[str] | None = None) -> int:
         proof_mode = classify_embark_terrain_proof(paths)
         compile_fingerprint = embark_terrain_compile_fingerprint(args.repo_root)
 
+    unreal_compile_fp = unreal_compile_fingerprint(args.repo_root)
+    unreal_proof_fp = unreal_proof_fingerprint(args.repo_root)
+
     payload = {
         "paths": paths,
         **asdict(classification),
         "security_base": classification.security_base,
         "ci_cost_class": classification.ci_cost_class,
+        "unreal_execution_class": classification.unreal_execution_class,
+        "unreal_compile_fingerprint": unreal_compile_fp,
+        "unreal_proof_fingerprint": unreal_proof_fp,
     }
     if proof_mode is not None:
         payload["proof_mode"] = proof_mode
@@ -471,8 +559,13 @@ def main(argv: list[str] | None = None) -> int:
             base=base,
             head=head,
         )
-        if proof_mode is not None:
-            with open(output_path, "a", encoding="utf-8") as handle:
+        with open(output_path, "a", encoding="utf-8") as handle:
+            handle.write(
+                f"unreal_execution_class={classification.unreal_execution_class}\n"
+            )
+            handle.write(f"unreal_compile_fingerprint={unreal_compile_fp}\n")
+            handle.write(f"unreal_proof_fingerprint={unreal_proof_fp}\n")
+            if proof_mode is not None:
                 handle.write(f"proof_mode={proof_mode}\n")
                 handle.write(f"compile_fingerprint={compile_fingerprint}\n")
     return 0
