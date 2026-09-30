@@ -17,7 +17,9 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
 
     def test_world_bible_selects_full_dcc_escalation_after_native_failure(self) -> None:
         bible = (ROOT / "docs/WORLD_BUILDING_BIBLE.md").read_text(encoding="utf-8")
-        self.assertIn("Passo Giau Embark escalation — selected after native visual failure", bible)
+        self.assertIn(
+            "Passo Giau Embark escalation — selected after native visual failure", bible
+        )
         for token in (
             "HOUDINI PDG",
             "GAEA BRIDGE",
@@ -40,7 +42,9 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         self.assertEqual(config["pipeline_id"], "passo-giau-embark-landscape-v1")
         self.assertEqual(config["spatial_contract"]["crs"], "EPSG:32632")
         self.assertEqual(config["spatial_contract"]["unreal_landscape_vertices"], 4033)
-        self.assertLessEqual(config["spatial_contract"]["max_conditioned_source_cell_m"], 2.0)
+        self.assertLessEqual(
+            config["spatial_contract"]["max_conditioned_source_cell_m"], 2.0
+        )
         self.assertEqual(config["gaea"]["seed"], 0)
         self.assertTrue(config["invariants"]["preserve_route_xy"])
         self.assertTrue(config["invariants"]["preserve_physics_authority"])
@@ -117,7 +121,9 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         ):
             self.assertNotIn(forbidden, source)
 
-    def test_unreal_wrapper_accepts_only_proven_external_conditioned_terrain(self) -> None:
+    def test_unreal_wrapper_accepts_only_proven_external_conditioned_terrain(
+        self,
+    ) -> None:
         wrapper = (
             ROOT / "scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1"
         ).read_text(encoding="utf-8")
