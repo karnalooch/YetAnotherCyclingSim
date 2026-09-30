@@ -150,6 +150,7 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
             "PCGExtendedToolkit",
             "YACS_WITH_PCGEX=",
             "PCGExCore",
+            "PCGExBlending",
             "PCGExFoundations",
             "PCGExElementsPaths",
             "PCGExElementsSampling",
@@ -241,6 +242,9 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
             "YetAnotherCyclingSimEditor.Build.cs",
             "YetAnotherCyclingSim.uproject",
             "Plugins/PCGExtendedToolkit",
+            "PCGEx corridor deviation report",
+            "validate_pcgex_corridor_output.py",
+            "pcgex_corridor_deviation.json",
         ):
             self.assertIn(token, workflow)
         for forbidden in (

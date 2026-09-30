@@ -257,3 +257,64 @@ jobs:
           if (git -C $worktree status --porcelain --untracked-files=all) {
             throw 'PCGEx authoring worktree has non-ignored mutations after cleanup.'
           }
+
+
+  validate:
+    name: PCGEx corridor deviation report
+    needs: [prepare, author]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact revision without LFS payloads
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Install pinned deviation dependencies
+        run: |
+          python -m pip install --disable-pip-version-check \
+            numpy==2.2.6 \
+            shapely==2.1.1
+
+      - name: Download prepared SP638 input
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: passo-giau-m3-pcgex-input-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/yacs-pcgex-source
+
+      - name: Download executed PCGEx evidence
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: passo-giau-m3-pcgex-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/yacs-pcgex-execution
+
+      - name: Measure presentation deviation against official SP638
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE="$(find "${{ runner.temp }}/yacs-pcgex-source" -type f -name 'passo_giau_sp638_ue_centerline.json' -print -quit)"
+          EXECUTION="$(find "${{ runner.temp }}/yacs-pcgex-execution" -type f -name 'pcgex_graph_output.json' -print -quit)"
+          test -n "$SOURCE"
+          test -n "$EXECUTION"
+          python scripts/worldgen/validate_pcgex_corridor_output.py \
+            --source "$SOURCE" \
+            --execution-output "$EXECUTION" \
+            --output Saved/RuntimeProof/CI/M3/PCGExCorridor/pcgex_corridor_deviation.json
+
+      - name: Upload PCGEx deviation evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: passo-giau-m3-pcgex-deviation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: Saved/RuntimeProof/CI/M3/PCGExCorridor/pcgex_corridor_deviation.json
+          if-no-files-found: error
+          retention-days: 14

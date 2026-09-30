@@ -32,6 +32,7 @@ public class YetAnotherCyclingSimEditor : ModuleRules
 			PrivateDependencyModuleNames.AddRange(new string[]
 			{
 				"PCGExCore",
+				"PCGExBlending",
 				"PCGExFoundations",
 				"PCGExElementsPaths",
 				"PCGExElementsSampling",
