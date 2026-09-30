@@ -62,6 +62,37 @@ SP638/DTM inputs, graph execution, rider render, evidence upload and deviation
 validation still run for the current revision when the proof mode requires
 them. The cache is not accepted across a fingerprint change.
 
+### General Unreal STATIC / RUNTIME / COMPILE reuse
+
+The normal code-only Unreal lane now separates binary work from runtime proof:
+
+- **STATIC** — the current exact HEAD has the same compile and proof
+  fingerprints as a previously green run. CI verifies the current checkout,
+  installed UE build identity and expected project DLLs, then emits a fresh
+  exact-head equivalence artifact without launching Unreal.
+- **RUNTIME** — compiled inputs are unchanged but runtime-critical Config or
+  the proof/orchestration contract changed. CI reuses verified DLLs and reruns
+  scoped Automation with `-SkipBuild`.
+- **COMPILE** — compiled project/plugin source, project/plugin descriptors,
+  Build/Target rules, engine identity or required binaries changed or cannot be
+  proven equivalent. CI builds the Editor and then runs Automation.
+
+The runner-local warm worktree is serialized by repository-wide Unreal CI
+concurrency. Every run still resets tracked files to the requested SHA, removes
+non-ignored residue, enforces the code-only LFS contract and checks exact HEAD.
+Ignored build outputs survive only as candidates for reuse; they are never
+trusted without the fingerprint/state checks.
+
+The compile fingerprint covers the project descriptor plus compiled project and
+plugin inputs. The proof fingerprint extends that identity with runtime-critical
+Config and the code-only Unreal proof tooling. Engine drift invalidates reuse;
+unknown or malformed state fails closed.
+
+World/runtime cost is independent from compilation. A normal tree, house,
+material or similar asset does not imply a C++ rebuild. A world change that
+crosses an `asset_full` boundary is RUNTIME work at its configured readiness
+checkpoint, and becomes COMPILE only when a binary-contract input also changed.
+
 ### Executable workflow lifecycle
 
 The set of executable GitHub Actions workflows is governed by
