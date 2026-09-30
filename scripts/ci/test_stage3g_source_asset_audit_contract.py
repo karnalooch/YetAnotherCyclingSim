@@ -75,18 +75,24 @@ class Stage3GSourceAssetAuditContract(unittest.TestCase):
         self.assertIn("audit-only / no asset mutation", text)
         self.assertIn("exit 1", text)
 
-    def test_workflow_uses_trusted_runner_and_retains_failure_evidence(self):
+    def test_workflow_is_broker_ready_and_retains_failure_evidence(self):
         text = WORKFLOW.read_text(encoding="utf-8")
         self.assertIn("runs-on: [self-hosted, yacs-ue58]", text)
+        self.assertIn("workflow_dispatch:", text)
+        self.assertNotIn("push:", text)
+        self.assertIn("exact_sha:", text)
+        self.assertIn("gumball_request_id:", text)
+        self.assertIn("inputs.gumball_request_id", text)
         self.assertIn("lfs: true", text)
-        self.assertIn("ref: $" + "{{ github.sha }}", text)
+        self.assertIn("ref: $" + "{{ inputs.exact_sha }}", text)
         self.assertIn("cancel-in-progress: true", text)
         self.assertIn("Invoke-YacsStage3GSourceAssetAudit.ps1", text)
         self.assertIn("SM_Stage3G_Boulder.uasset", text)
         self.assertIn("Invoke-YacsStage3GEnvironmentPerformance.ps1", text)
         self.assertIn("-SkipBuild", text)
-        self.assertIn("if: $" + "{{ always() }}", text)
-        self.assertIn("stage3g-source-asset-audit-", text)
+        self.assertIn("if: $" + "{{ success() }}", text)
+        self.assertIn("proof-source-asset-audit-", text)
+        self.assertIn("diagnostic-source-asset-audit-", text)
         self.assertIn("retention-days: 14", text)
 
 
