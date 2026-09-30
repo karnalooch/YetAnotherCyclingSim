@@ -57,6 +57,8 @@ class SelfHostedGitIsolationTests(unittest.TestCase):
     def test_reusable_code_only_workflows_use_serialized_sanitized_warm_worktree(
         self,
     ):
+        # Persistence is allowed only inside the dedicated serialized child
+        # worktree; tracked and non-ignored state must still be reset per SHA.
         for path in WARM_ISOLATED_CODE_ONLY_WORKFLOWS:
             text = path.read_text(encoding="utf-8")
             with self.subTest(workflow=path.name):
