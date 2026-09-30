@@ -7,8 +7,9 @@ The binary recipe files are intentionally **not fabricated by text tooling**. Th
 must be authored with the real licensed applications and committed through Git LFS:
 
 - `passo_giau_landscape.hiplc` — Houdini Indie HIP containing the two required TOP
-  networks;
-- `passo_giau_landscape.terrain` — Gaea terrain recipe used by Build Swarm.
+  networks and the Gaea2Houdini bridge network;
+- `yacs_passo_giau_heightfield.hdalc` — YACS-owned Houdini heightfield utility HDA;
+- `passo_giau_landscape.terrain` — Gaea terrain recipe consumed through Gaea2Houdini.
 
 YACS does not claim to reproduce Embark's proprietary internal graph. The recipe
 must implement the **publicly documented stages** using official Houdini/Gaea
@@ -61,6 +62,20 @@ Required output:
 The final TOP validates/normalizes the Gaea result for Unreal Landscape handoff. It
 must not silently reposition the route, change CRS, or replace source provenance.
 
+## Gaea2Houdini bridge contract
+
+The Houdini HIP must contain the Gaea2Houdini processing/output network at:
+
+- `/obj/yacs_passo_giau_gaea/OUT_GAEA`
+
+The network must use the official Gaea2Houdini integration from SideFX Labs with a
+regular activated Gaea Professional/Enterprise installation. A direct custom blur,
+home-grown erosion substitute, or opaque Python replacement is not equivalent.
+
+The bridge consumes the PDG-conditioned terrain and produces:
+
+`ExternalAssets/Terrain/PassoGiau/EmbarkPipeline/20_gaea/passo_giau_gaea_shaped.tif`
+
 ## Gaea recipe contract
 
 The recipe must expose exactly these pipeline variables:
@@ -86,12 +101,15 @@ Required output:
 Create and validate the recipes once in their native UIs before automation:
 
 1. Houdini: author the HIP/TOP networks and prove both networks cook successfully.
-2. Gaea: author the terrain graph, expose the two file variables, configure the
-   production build profile, and use **Copy Command Line** to verify the Build Swarm
-   invocation.
-3. Commit the binary recipes via Git LFS.
-4. Run `scripts/worldgen/embark_terrain_pipeline.py preflight`.
-5. Only after preflight passes run the full pipeline and compare rider-view evidence
+2. Houdini/SideFX Labs: install and validate Gaea2Houdini, wire the Gaea terrain
+   processor into `/obj/yacs_passo_giau_gaea/OUT_GAEA`, and prove the bridge cooks.
+3. Gaea: author the terrain graph, expose the two file variables, configure the
+   production build profile, and verify the same recipe can build through Gaea2Houdini.
+4. Author `yacs_passo_giau_heightfield.hdalc` with the reusable YACS heightfield
+   validation/utility operations required by the final TOP.
+5. Commit all binary recipes via Git LFS.
+6. Run `scripts/worldgen/embark_terrain_pipeline.py preflight`.
+7. Only after preflight passes run the full pipeline and compare rider-view evidence
    against the closed #256 direct-DTM baseline.
 
 This is a fail-closed boundary. Missing recipe binaries are a real blocker, not an
