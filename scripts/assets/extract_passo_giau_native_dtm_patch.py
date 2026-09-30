@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import math
 from pathlib import Path
 from typing import Any
 
@@ -21,9 +20,6 @@ TARGET_CRS = "EPSG:32632"
 TARGET_BOUNDS = (730406.587, 5148246.775, 738406.587, 5156246.775)
 PATCH_EXTENT_M = 512.0
 PATCH_VERTEX_COUNT = 513
-CURVATURE_SAMPLE_STEP_M = 25.0
-CURVATURE_HALF_WINDOW_M = 25.0
-END_MARGIN_M = 100.0
 
 
 def repository_root() -> Path:
@@ -60,6 +56,10 @@ def output_root() -> Path:
         / "PassoGiau"
         / "PreparedNearField"
     )
+
+
+def pipeline_manifest_path() -> Path:
+    return repository_root() / "worldgen" / "embark" / "passo_giau_terrain_pipeline.json"
 
 
 def sha256_file(path: Path) -> str:
@@ -114,44 +114,21 @@ def _sample_xy(points: list[dict[str, float]], distance_m: float) -> tuple[float
     )
 
 
-def _direction_at(points: list[dict[str, float]], distance_m: float) -> tuple[float, float]:
-    index = _segment_index(points, distance_m)
-    left = points[index]
-    right = points[index + 1]
-    dx = right["x"] - left["x"]
-    dy = right["y"] - left["y"]
-    length = math.hypot(dx, dy)
-    if length <= 1e-9:
-        raise ValueError("prepared SP638 contains a zero-length segment")
-    return dx / length, dy / length
-
-
-def choose_hairpin(points: list[dict[str, float]]) -> tuple[float, float, float, float]:
-    length_m = points[-1]["s_m"]
-    if length_m <= 2.0 * END_MARGIN_M:
-        raise ValueError(f"prepared SP638 is unexpectedly short: {length_m:.1f} m")
-
-    best_distance = END_MARGIN_M
-    best_score = -1.0
-    distance = END_MARGIN_M
-    while distance <= length_m - END_MARGIN_M + 1e-9:
-        before = _direction_at(
-            points,
-            max(0.0, distance - CURVATURE_HALF_WINDOW_M),
-        )
-        after = _direction_at(
-            points,
-            min(length_m, distance + CURVATURE_HALF_WINDOW_M),
-        )
-        dot = max(-1.0, min(1.0, before[0] * after[0] + before[1] * after[1]))
-        score = 1.0 - dot
-        if score > best_score:
-            best_score = score
-            best_distance = distance
-        distance += CURVATURE_SAMPLE_STEP_M
-
-    x, y = _sample_xy(points, best_distance)
-    return best_distance, best_score, x, y
+def proof_hairpin_station_m() -> tuple[float, dict[str, Any]]:
+    path = pipeline_manifest_path()
+    if not path.is_file():
+        raise FileNotFoundError(f"terrain pipeline manifest is missing: {path}")
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    proof = (payload.get("proof_locations") or {}).get("gate_c_hairpin")
+    if not isinstance(proof, dict):
+        raise ValueError("pipeline manifest is missing proof_locations.gate_c_hairpin")
+    station = float(proof.get("source_station_m", -1.0))
+    if station <= 0.0:
+        raise ValueError(f"invalid Gate C proof source station: {station}")
+    basis = str(proof.get("selection_basis", "")).strip()
+    if not basis:
+        raise ValueError("Gate C proof location is missing selection_basis")
+    return station, proof
 
 
 def main() -> int:
@@ -164,7 +141,13 @@ def main() -> int:
 
     road_payload = json.loads(road.read_text(encoding="utf-8"))
     points = _points(road_payload)
-    focus_s_m, curvature_score, focus_x, focus_y = choose_hairpin(points)
+    focus_s_m, proof_location = proof_hairpin_station_m()
+    if focus_s_m < points[0]["s_m"] or focus_s_m > points[-1]["s_m"]:
+        raise ValueError(
+            f"Gate C proof station {focus_s_m:.3f} m is outside prepared SP638 "
+            f"{points[0]['s_m']:.3f}..{points[-1]['s_m']:.3f} m"
+        )
+    focus_x, focus_y = _sample_xy(points, focus_s_m)
 
     with rasterio.open(source) as dataset:
         if dataset.count != 1:
@@ -256,10 +239,16 @@ def main() -> int:
             "landscape_collision_sampled": False,
         },
         "hairpin_selection": {
-            "source": "prepared official SP638 presentation centerline",
+            "source": "versioned Gate C proof location on prepared official SP638",
             "focus_s_m": round(focus_s_m, 3),
-            "curvature_score": round(curvature_score, 9),
             "focus_epsg32632_m": [round(focus_x, 3), round(focus_y, 3)],
+            "selection_basis": proof_location["selection_basis"],
+            "gate_c1_pcgex_focus_distance_m": float(
+                proof_location["gate_c1_pcgex_focus_distance_m"]
+            ),
+            "observed_source_to_render_focus_xy_delta_m": float(
+                proof_location["observed_source_to_render_focus_xy_delta_m"]
+            ),
             "canonical_route_authority_preserved": True,
         },
         "grid": {
@@ -302,7 +291,7 @@ def main() -> int:
     print(
         "Gate C.3 native DTM patch: "
         f"{PATCH_VERTEX_COUNT}x{PATCH_VERTEX_COUNT} @ 1 m, "
-        f"focus_s={focus_s_m:.1f} m, curvature={curvature_score:.6f}"
+        f"focus_s={focus_s_m:.1f} m, selection=pinned-gate-c-proof-location"
     )
     print(f"[ok] {metadata_path}")
     print(f"[ok] {binary_path}: {binary_path.stat().st_size} bytes")
