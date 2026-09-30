@@ -109,10 +109,10 @@ Next:
 
 Tracked by issue #257.
 
-PR #143 recorded a real Windows error 1455 / `VirtualAlloc failed` when the
-host was near its virtual-memory commit limit. After increasing commit headroom,
-the trusted runner now enables **local-only UBA** while leaving distributed/Horde
-UBA disabled. The adaptive action cap remains the memory-pressure safety valve.
+The generic self-hosted Unreal lane keeps UBA disabled because PR #143 recorded
+a real Windows error 1455 / `VirtualAlloc failed` when the host was near its
+virtual-memory commit limit. The CI profile therefore does **not** re-enable UBA
+as a speed optimization.
 
 The previous fixed `MaxParallelActions=2` cap was replaced by a bounded,
 memory-aware policy using the preflight `FreeVirtualGb` value:
@@ -129,7 +129,7 @@ than requiring another repository change.
 
 The optimization baseline from 2026-09-29 was a green 22-action editor build on
 the trusted runner with 6 physical/6 logical CPUs and 31.92 GiB RAM:
-`MaxParallelActions=2`, UBA disabled, UBT execution time **165.07 s**. This is the pre-UBA baseline. Changes
+`MaxParallelActions=2`, UBA disabled, UBT execution time **165.07 s**. Changes
 to this policy should compare against that baseline and keep the exact-head
 Automation gate green.
 
