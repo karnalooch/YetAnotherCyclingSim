@@ -174,6 +174,7 @@ class ChangeClassifierTests(unittest.TestCase):
             "scripts/ue/Invoke-YacsProof.ps1",
             "scripts/ue/Preflight-YacsProof.ps1",
             "scripts/ci/Invoke-YacsUnrealCi.ps1",
+            "scripts/ci/Resolve-YacsUnrealBuildEnvironment.ps1",
             "scripts/ci/Resolve-YacsUnrealEngine.ps1",
             ".github/workflows/reusable-unreal.yml",
         ):
