@@ -72,6 +72,9 @@ jobs:
       - name: Run Unreal CI build profile contract tests
         run: python scripts/ci/test_unreal_ci_build_profile.py
 
+      - name: Run Unreal CI cache contract tests
+        run: python scripts/ci/test_unreal_ci_cache_contract.py
+
       - name: Parse active CI PowerShell helpers
         shell: pwsh
         run: |
@@ -79,6 +82,7 @@ jobs:
           foreach ($script in @(
             'scripts/ci/Test-YacsCodeOnlyCheckout.ps1',
             'scripts/ci/Invoke-YacsUnrealCi.ps1',
+            'scripts/ci/Resolve-YacsUnrealCiCache.ps1',
             'scripts/ci/Invoke-YacsWindowsProbe.ps1',
             'scripts/ue/Invoke-YacsPackageProof.ps1',
             'scripts/ue/Invoke-YacsProof.ps1',
