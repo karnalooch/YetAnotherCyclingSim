@@ -329,6 +329,135 @@ flowchart LR
     linkStyle default stroke-width:2px;
 ```
 
+#### Passo Giau Embark escalation — selected after native visual failure
+
+The direct Unreal-native Passo Giau baseline is now a **failed visual baseline**,
+not an open architecture question.
+
+Evidence from PR #256 established that the implementation can:
+
+- import the 4033 x 4033 Passo Giau R16 through Unreal's native Landscape reader;
+- persist a real `Base_DTM` edit layer;
+- author `Road_Earthworks` with the verified SP638 spline using
+  `EditorApplySpline`;
+- persist an independent spline road mesh;
+- generate technical proof and rider-view evidence.
+
+The same rider-view proof showed unacceptable blocky/stair-stepped terrain.
+Therefore the tools-first ladder has moved past the direct-DTM/native-only
+terrain-foundation tier for this route. Repeating cosmetic variations of the
+same direct import is not the default next action.
+
+The selected Passo Giau authoring chain is based on Embark's publicly documented
+landscape workflow, while keeping unpublished Embark internals out of scope:
+
+```mermaid
+flowchart LR
+    RAW["SOURCE<br/>MASE LiDAR + Veneto fallback"] --> PDG["HOUDINI PDG<br/>Ingest · reconcile · condition"]
+    PDG --> WORK["WORKING TERRAIN<br/>32-bit metric heightfield"]
+    WORK --> GAEA["GAEA BRIDGE<br/>Terrain shaping"]
+    GAEA --> HUTIL["HOUDINI HEIGHTFIELD<br/>Utility / validation pass"]
+    HUTIL --> HDA["HOUDINI ENGINE<br/>Landscape handoff"]
+    HDA --> BASE["UNREAL<br/>Base_DTM Edit Layer"]
+    BASE --> EARTH["UNREAL<br/>Road_Earthworks"]
+    EARTH --> ROAD["PRESENTATION<br/>Independent SP638 mesh"]
+    ROAD --> MESO["PRESENTATION<br/>Cliffs · retaining · meso"]
+    MESO --> RVT["BLEND<br/>RVT when geometry is correct"]
+    RVT --> WP["SCALE<br/>World Partition when justified"]
+    WP --> PROOF["VERIFY<br/>Rider view · exact SHA · perf"]
+    PROOF -->|"PASS"| ACCEPT["OUTPUT<br/>Accepted Passo Giau terrain"]
+    PROOF -->|"FAIL"| OWNER{"DIAGNOSE<br/>Owning stage"}
+    OWNER -.-> PDG
+    OWNER -.-> GAEA
+    OWNER -.-> HUTIL
+    OWNER -.-> EARTH
+    OWNER -.-> MESO
+
+    classDef input fill:#303846,stroke:#8ea1b8,color:#f7f9fc,stroke-width:2px;
+    classDef exec fill:#123f73,stroke:#49a2ff,color:#ffffff,stroke-width:3px;
+    classDef tool fill:#4b2f69,stroke:#b77cff,color:#ffffff,stroke-width:2px;
+    classDef decision fill:#69470e,stroke:#f0a72f,color:#ffffff,stroke-width:3px;
+    classDef success fill:#1f5736,stroke:#63d889,color:#ffffff,stroke-width:3px;
+    classDef danger fill:#6b2429,stroke:#ff6b73,color:#ffffff,stroke-width:3px;
+    classDef owned fill:#34373d,stroke:#9da4ae,color:#ffffff,stroke-width:2px;
+    classDef evidence fill:#164d5c,stroke:#5bd6ef,color:#ffffff,stroke-width:2px;
+
+    class RAW input;
+    class PDG,HUTIL,HDA tool;
+    class GAEA tool;
+    class WORK evidence;
+    class BASE,EARTH,ROAD,MESO,RVT,WP exec;
+    class PROOF evidence;
+    class OWNER decision;
+    class ACCEPT success;
+
+    linkStyle default stroke-width:2px;
+```
+
+Public evidence supporting this escalation:
+
+- Embark Landscape Creation, Darko Pracic, GDC HIVE 2023 — Embark publicly
+  describes LiDAR terrain input, PDG LiDAR processing, the Gaea bridge,
+  in-house heightfield utility HDAs, and export/import from Houdini to Unreal:
+  https://www.sidefx.com/learn/talks/embark-landscape-creation/
+- SideFX Houdini Engine for Unreal — current plugin documentation supports
+  Landscape input/output, Height Fields, Edit Layers and World Partition:
+  https://www.sidefx.com/docs/houdini/unreal/landscape/basics.html
+- Epic / Embark ARC Raiders production interview — Embark identifies Runtime
+  Virtual Texturing and World Partition as key UE5 worldbuilding systems for
+  large terrain-heavy worlds:
+  https://www.unrealengine.com/developer-interviews/embark-studios-build-the-award-winning-arc-raiders-with-unreal-engine
+
+This does **not** authorize invention of Embark's proprietary HDA internals.
+YACS must use official Houdini/Gaea primitives and its own explicit contracts
+for source reconciliation, terrain shaping, masks and export. Unknown Embark
+parameters remain unknown.
+
+##### Passo Giau data contract
+
+The pipeline must keep these boundaries explicit:
+
+1. **Canonical source evidence** — original MASE/Veneto packages, hashes,
+   licenses, CRS and coverage reports remain immutable.
+2. **PDG working heightfield** — 32-bit metric terrain in EPSG:32632, with source
+   masks and reconciliation metadata. This is derived, reproducible data.
+3. **Gaea shaping result** — 32-bit terrain output with a fixed seed/build
+   recipe and explicit input/output paths. It is presentation authoring, not
+   route or physics authority.
+4. **Houdini final heightfield** — validated dimensions, bounds, min/max domain,
+   masks and export attributes suitable for Unreal Landscape conversion.
+5. **Unreal `Base_DTM`** — engine representation of the conditioned terrain.
+   It remains separate from `Road_Earthworks` and later
+   `Local_Corrections`.
+6. **SP638 authority** — canonical road XY/profile/physics stay outside the
+   terrain generator and may not be moved by Gaea/Houdini shaping.
+
+Every stage must record:
+
+- tool executable/version identity;
+- recipe/HIP/HDA/terrain-file hash;
+- input hashes;
+- output hashes;
+- CRS / spatial bounds / resolution;
+- deterministic seed or explicit statement that the stage is deterministic
+  without a seed;
+- stage duration and exit code;
+- the exact downstream artifact that consumed the output.
+
+##### No-shortcut rule for this escalation
+
+For Passo Giau, do not replace the selected chain with:
+
+- another direct cubic R16 import with different smoothing constants;
+- a custom NumPy blur sold as "terrain conditioning";
+- material/RVT camouflage for geometric defects;
+- helper meshes that merely hide the failed macro terrain;
+- guessed recreations of Embark proprietary nodes.
+
+A deviation is allowed only when a documented tool is unavailable/incompatible
+or a bounded YACS proof demonstrates that a stage adds no value. Record that
+evidence before removing the stage.
+
 #### Road / earthworks decision ladder
 
 For road-terrain adaptation, do not extend the custom earthwork solver merely because a difficult hairpin exposes another edge case.
