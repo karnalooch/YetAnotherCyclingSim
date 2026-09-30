@@ -312,6 +312,84 @@ def _load_pcgex_presentation_centerline() -> tuple[list[unreal.Vector], dict[str
     return world_points, metadata
 
 
+def _gate_c_proof_focus_contract() -> dict[str, object]:
+    manifest_path = (
+        REPO_ROOT / "worldgen" / "embark" / "passo_giau_terrain_pipeline.json"
+    )
+    if not manifest_path.is_file():
+        raise RuntimeError(f"terrain pipeline manifest is missing: {manifest_path}")
+
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    proof = (payload.get("proof_locations") or {}).get("gate_c_hairpin")
+    if not isinstance(proof, dict):
+        raise RuntimeError(
+            "terrain pipeline manifest is missing proof_locations.gate_c_hairpin"
+        )
+
+    focus_ue = proof.get("focus_ue_m")
+    if not isinstance(focus_ue, list) or len(focus_ue) != 2:
+        raise RuntimeError("Gate C proof focus_ue_m must contain exactly two values")
+
+    focus_x_m = float(focus_ue[0])
+    focus_y_m = float(focus_ue[1])
+    max_drift_m = float(proof.get("max_render_focus_xy_drift_m", -1.0))
+    if not all(math.isfinite(value) for value in (focus_x_m, focus_y_m, max_drift_m)):
+        raise RuntimeError("Gate C proof focus contract contains non-finite values")
+    if max_drift_m <= 0.0:
+        raise RuntimeError("Gate C proof focus contract has a non-positive drift limit")
+
+    return {
+        "focus_ue_m": [focus_x_m, focus_y_m],
+        "max_render_focus_xy_drift_m": max_drift_m,
+        "selection_basis": str(proof.get("selection_basis", "")),
+        "reference_pcgex_focus_distance_m": float(
+            proof["reference_pcgex_focus_distance_m"]
+        ),
+        "reference_pcgex_execution_output_sha256": str(
+            proof["reference_pcgex_execution_output_sha256"]
+        ),
+        "reference_workflow_run_id": int(proof["reference_workflow_run_id"]),
+    }
+
+
+def _validate_pcgex_proof_focus(
+    center_world: unreal.Vector,
+    pcgex_metadata: dict[str, object] | None,
+) -> dict[str, object]:
+    if pcgex_metadata is None:
+        return {
+            "enforced": False,
+            "reason": "renderer is not using the PCGEx presentation centerline",
+        }
+
+    contract = _gate_c_proof_focus_contract()
+    expected_x_m, expected_y_m = contract["focus_ue_m"]
+    actual_x_m = float(center_world.x) / 100.0
+    actual_y_m = float(center_world.y) / 100.0
+    drift_m = math.hypot(actual_x_m - expected_x_m, actual_y_m - expected_y_m)
+    max_drift_m = float(contract["max_render_focus_xy_drift_m"])
+    if drift_m > max_drift_m:
+        raise RuntimeError(
+            "Gate C PCGEx proof focus drifted from the versioned proof-selected XY: "
+            f"drift={drift_m:.3f} m limit={max_drift_m:.3f} m "
+            f"expected=({expected_x_m:.3f},{expected_y_m:.3f}) "
+            f"actual=({actual_x_m:.3f},{actual_y_m:.3f})"
+        )
+
+    return {
+        **contract,
+        "enforced": True,
+        "actual_render_focus_ue_m": [
+            round(actual_x_m, 6),
+            round(actual_y_m, 6),
+        ],
+        "observed_xy_drift_m": round(drift_m, 6),
+        "current_pcgex_execution_output_sha256": pcgex_metadata[
+            "execution_output_sha256"
+        ],
+    }
+
+
 def _replace_with_pcgex_centerline(
     spline: unreal.SplineComponent,
     points: list[unreal.Vector],
@@ -997,6 +1075,11 @@ def main() -> None:
         end_cm,
         KERNEL_SAMPLE_STEP_CM,
     )
+    terrain_skin_center_world = kernel_world[len(kernel_world) // 2]
+    proof_focus_contract = _validate_pcgex_proof_focus(
+        terrain_skin_center_world,
+        pcgex_metadata,
+    )
     centerline = _to_local_centerline_m(kernel_world)
     raw_adjacent_minimum_radius_m = minimum_sampled_radius_xy(
         centerline,
@@ -1102,7 +1185,6 @@ def main() -> None:
         "canonical_road_xy_modified": False,
     }
     if bool(variant["local_terrain_visible"]):
-        terrain_skin_center_world = kernel_world[len(kernel_world) // 2]
         (
             terrain_skin_mesh,
             terrain_skin_origin_world,
@@ -1319,6 +1401,7 @@ def main() -> None:
         "source_full_road_length_m": round(full_length_cm / 100.0, 3),
         "source_control_points": original_control_count,
         "selected_hairpin_distance_m": round(focus_cm / 100.0, 3),
+        "proof_focus_contract": proof_focus_contract,
         "curvature_score": round(curvature_score, 6),
         "slice_start_m": round(start_cm / 100.0, 3),
         "slice_end_m": round(end_cm / 100.0, 3),
