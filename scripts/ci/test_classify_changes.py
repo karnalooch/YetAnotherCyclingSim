@@ -309,6 +309,12 @@ class ChangeClassifierTests(unittest.TestCase):
             ),
             "heavy",
         )
+        self.assertEqual(
+            cc.classify_embark_terrain_proof(
+                ["scripts/ci/Resolve-YacsUnrealBuildEnvironment.ps1"]
+            ),
+            "heavy",
+        )
         self.assertEqual(cc.classify_embark_terrain_proof([]), "heavy")
 
     def test_embark_compile_fingerprint_is_stable_and_source_sensitive(self):
