@@ -35,6 +35,22 @@ or `Build/` fail closed to the heavy `ue_code` path. Ordinary unknown
 repository paths remain visible as `unknown=true` and receive conservative
 security/contract validation without automatically burning the Unreal runner.
 
+### Executable workflow lifecycle
+
+The set of executable GitHub Actions workflows is governed by
+[`ci/WORKFLOW_LIFECYCLE.md`](ci/WORKFLOW_LIFECYCLE.md) and the machine-readable
+`.gumball/workflow-lifecycle.json` registry.
+
+Historical Stage/R experiments remain valid evidence in PRs, docs and retained
+scripts, but their branch-specific workflow files are not kept executable after
+their branch/workstream is finished. Current M3 SP638/MASE proofs, explicit
+performance/source-asset audits, manual recovery tools and broker targets remain
+available.
+
+The two legacy-named Passo Giau author workflows currently marked `UNKNOWN`
+are retained only while active PR #256 owns their disposition. They must become
+branch-independent CURRENT workflows or be retired when that workstream closes.
+
 ## Tier 1 — heavy Stage 3G proof at merge-candidate readiness
 
 The full Stage 3G self-hosted proof is required only when both conditions are true:
