@@ -78,6 +78,17 @@ class LocalTerrainSkinTests(unittest.TestCase):
         self.assertEqual(len(first.triangles), 18)
         self.assertTrue(all(math.isfinite(v.z) for v in first.vertices))
 
+        # Rows descend in UE Y. Unreal's front face therefore uses the
+        # clockwise (a,b,c)/(b,d,c) winding when viewed from +Z.
+        self.assertEqual(first.triangles[0], (0, 1, 4))
+        self.assertEqual(first.triangles[1], (1, 5, 4))
+        for triangle in first.triangles:
+            a, b, c = (first.vertices[index] for index in triangle)
+            ab = b - a
+            ac = c - a
+            conventional_normal_z = ab.x * ac.y - ab.y * ac.x
+            self.assertLess(conventional_normal_z, 0.0)
+
 
 if __name__ == "__main__":
     unittest.main()
