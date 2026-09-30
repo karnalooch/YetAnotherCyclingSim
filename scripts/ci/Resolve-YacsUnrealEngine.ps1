@@ -36,11 +36,113 @@ function Resolve-YacsUnrealEngine {
     }
 
     $Association = [string] $Project.EngineAssociation
-    if ($Association -notmatch '^(?<major>[0-9]+)\.(?<minor>[0-9]+)$') {
+    $AssociationMatch = [regex]::Match(
+        $Association,
+        '^(?<major>[0-9]+)\.(?<minor>[0-9]+)
+    $Candidates = @()
+    foreach ($SearchRoot in $SearchRoots) {
+        if (-not (Test-Path -LiteralPath $SearchRoot -PathType Container)) {
+            continue
+        }
+
+        $DirectUat = Join-Path $SearchRoot 'Engine/Build/BatchFiles/RunUAT.bat'
+        if (Test-Path -LiteralPath $DirectUat -PathType Leaf) {
+            $Candidates += (Resolve-Path -LiteralPath $SearchRoot).Path
+            continue
+        }
+
+        $Candidates += @(
+            Get-ChildItem -LiteralPath $SearchRoot -Directory -ErrorAction SilentlyContinue |
+                Where-Object { $_.Name -match '^(UE_[0-9]+\.[0-9]+|UE_[0-9]+|UnrealEngine)$' } |
+                Sort-Object -Property FullName |
+                Select-Object -ExpandProperty FullName
+        )
+    }
+
+    $Seen = @{}
+    foreach ($Candidate in $Candidates) {
+        $Root = (Resolve-Path -LiteralPath $Candidate).Path
+        $Key = $Root.ToLowerInvariant()
+        if ($Seen.ContainsKey($Key)) { continue }
+        $Seen[$Key] = $true
+
+        $BuildVersionPath = Join-Path $Root 'Engine/Build/Build.version'
+        $BuildBatPath = Join-Path $Root 'Engine/Build/BatchFiles/Build.bat'
+        $UatPath = Join-Path $Root 'Engine/Build/BatchFiles/RunUAT.bat'
+        $EditorCmdPath = Join-Path $Root 'Engine/Binaries/Win64/UnrealEditor-Cmd.exe'
+        $EditorPath = Join-Path $Root 'Engine/Binaries/Win64/UnrealEditor.exe'
+
+        if (-not (Test-Path -LiteralPath $BuildVersionPath -PathType Leaf)) { continue }
+        if (-not (Test-Path -LiteralPath $BuildBatPath -PathType Leaf)) { continue }
+        if (-not (Test-Path -LiteralPath $UatPath -PathType Leaf)) { continue }
+        if (-not (Test-Path -LiteralPath $EditorCmdPath -PathType Leaf)) { continue }
+
+        try {
+            $VersionJson = Get-Content -LiteralPath $BuildVersionPath -Raw -ErrorAction Stop |
+                ConvertFrom-Json -ErrorAction Stop
+        }
+        catch {
+            continue
+        }
+
+        if ([int] $VersionJson.MajorVersion -ne $ExpectedMajor -or
+            [int] $VersionJson.MinorVersion -ne $ExpectedMinor) {
+            continue
+        }
+
+        $BuildVersionHash = (Get-FileHash -LiteralPath $BuildVersionPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        $BuildBatHash = (Get-FileHash -LiteralPath $BuildBatPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        $EditorCmdHash = (Get-FileHash -LiteralPath $EditorCmdPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        $Version = ('{0}.{1}.{2}-{3}' -f
+            $VersionJson.MajorVersion,
+            $VersionJson.MinorVersion,
+            $VersionJson.PatchVersion,
+            $VersionJson.Changelist)
+
+        $CanonicalRoot = $Root.ToLowerInvariant()
+        $Identity = @(
+            "root=$CanonicalRoot",
+            "association=$Association",
+            "version=$Version",
+            "buildVersionSha256=$BuildVersionHash",
+            "buildBatSha256=$BuildBatHash",
+            "editorCmdSha256=$EditorCmdHash"
+        ) -join '|'
+
+        return [pscustomobject]@{
+            Root = $Root
+            Association = $Association
+            Version = $Version
+            VersionObject = [pscustomobject]@{
+                MajorVersion = [int] $VersionJson.MajorVersion
+                MinorVersion = [int] $VersionJson.MinorVersion
+                PatchVersion = [int] $VersionJson.PatchVersion
+                Changelist = [int] $VersionJson.Changelist
+                CompatibleChangelist = [int] $VersionJson.CompatibleChangelist
+                IsLicenseeVersion = [bool] $VersionJson.IsLicenseeVersion
+                BranchName = [string] $VersionJson.BranchName
+            }
+            BuildVersionPath = $BuildVersionPath
+            BuildBatPath = $BuildBatPath
+            UATPath = $UatPath
+            UnrealEditorCmdPath = $EditorCmdPath
+            UnrealEditorPath = if (Test-Path -LiteralPath $EditorPath -PathType Leaf) { $EditorPath } else { $null }
+            BuildVersionSha256 = $BuildVersionHash
+            BuildBatSha256 = $BuildBatHash
+            UnrealEditorCmdSha256 = $EditorCmdHash
+            Identity = $Identity
+        }
+    }
+
+    return $null
+}
+
+    )
+    if (-not $AssociationMatch.Success) {
         throw "Unsupported EngineAssociation '$Association' in '$ProjectPath'; expected major.minor."
     }
-    $ExpectedMajor = [int] $Matches.major
-    $ExpectedMinor = [int] $Matches.minor
+    $ExpectedMajor = [int] $AssociationMatch.Groups['major'].Value
+    $ExpectedMinor = [int] $AssociationMatch.Groups['minor'].Value
 
     $Candidates = @()
     foreach ($SearchRoot in $SearchRoots) {
