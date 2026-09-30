@@ -6,9 +6,11 @@
 #include "HAL/FileManager.h"
 #include "Misc/PackageName.h"
 #include "Misc/Parse.h"
+#include "Misc/Paths.h"
 #include "Modules/ModuleManager.h"
 #include "PCGGraph.h"
 #include "PCGNode.h"
+#include "PCGPin.h"
 #include "UObject/Package.h"
 #include "UObject/SavePackage.h"
 
