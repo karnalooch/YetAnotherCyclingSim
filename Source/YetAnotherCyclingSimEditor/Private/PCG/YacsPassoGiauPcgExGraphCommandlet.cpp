@@ -346,6 +346,12 @@ int32 UYacsPassoGiauPcgExGraphCommandlet::Main(const FString& Params)
     }
     Smooth->bPreserveStart = true;
     Smooth->bPreserveEnd = true;
+    // PCGEx 0.79 defaults Path : Smooth to the Individual blending interface.
+    // With no Blend Ops connected that intentionally falls back to a no-op
+    // blender. Use PCGEx's stock monolithic Average configuration so the
+    // moving-average smoothing actually modifies point positions.
+    Smooth->BlendingInterface = EPCGExBlendingInterface::Monolithic;
+    Smooth->BlendingSettings = FPCGExBlendingDetails(EPCGExBlendingType::Average);
     Smooth->Influence.Constant = 1.0;
     Smooth->SmoothingAmount.Constant = 3.0;
 
