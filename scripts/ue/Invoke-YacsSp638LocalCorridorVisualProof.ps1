@@ -61,7 +61,20 @@ $WorkspaceCleanup = Join-Path $RepoRoot 'scripts/ci/Release-YacsUnrealWorkspaceL
 if (-not (Test-Path -LiteralPath $WorkspaceCleanup -PathType Leaf)) {
     throw "Workspace-scoped Unreal cleanup helper is missing: $WorkspaceCleanup"
 }
-& $WorkspaceCleanup -Workspace $RepoRoot
+$CleanupWorkspace = $RepoRoot
+if (-not [string]::IsNullOrWhiteSpace($env:GITHUB_WORKSPACE)) {
+    $CandidateWorkspace = [System.IO.Path]::GetFullPath($env:GITHUB_WORKSPACE).TrimEnd('\')
+    if ($RepoRoot.StartsWith(
+        $CandidateWorkspace,
+        [System.StringComparison]::OrdinalIgnoreCase
+    )) {
+        # The self-hosted runner can retain a cancelled Unreal process from a
+        # sibling YACS worktree. Clean the whole repository workspace so that
+        # stale commandlets cannot consume commit headroom before this render.
+        $CleanupWorkspace = $CandidateWorkspace
+    }
+}
+& $WorkspaceCleanup -Workspace $CleanupWorkspace
 
 $Preflight = Join-Path $RepoRoot 'scripts/ue/Preflight-YacsProof.ps1'
 $AdditionalAllowedDirtyPaths = @()
@@ -114,14 +127,12 @@ if (-not $ValidateOnly) {
     $ResourceLines | Set-Content -LiteralPath $ResourceEvidence -Encoding UTF8
 
     if ($FreeVirtualGb -lt $MinFreeVirtualGb) {
-        throw (
+        $ResourceMessage = (
             "SP638 render resource gate: free virtual memory {0} GB is below required {1} GB after workspace cleanup. " +
             "Refusing to launch UnrealEditor because prior M3 evidence shows pagefile/commit exhaustion can masquerade as a missing PNG. " +
-            "See {2}." -f
-                $FreeVirtualGb,
-                $MinFreeVirtualGb,
-                $ResourceEvidence
-        )
+            "See {2}."
+        ) -f $FreeVirtualGb,$MinFreeVirtualGb,$ResourceEvidence
+        throw $ResourceMessage
     }
     Write-Host ("Render resource gate: PASS freeVirtual={0} GB required={1} GB" -f $FreeVirtualGb,$MinFreeVirtualGb) -ForegroundColor Green
 }
