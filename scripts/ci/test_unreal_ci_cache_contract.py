@@ -43,6 +43,8 @@ class UnrealCiCacheContractTests(unittest.TestCase):
             "steps.cache.outputs.mode != 'static'",
             "YACS_UNREAL_EXECUTION_MODE -eq 'compile'",
             "YACS_UNREAL_EXECUTION_MODE -eq 'runtime'",
+            "YACS_UNREAL_COMPILE_KIND",
+            "steps.cache.outputs.compile_kind",
             "-SkipBuild",
             "STATIC Unreal equivalence proof",
         ):
@@ -56,14 +58,40 @@ class UnrealCiCacheContractTests(unittest.TestCase):
             "compile-fingerprint-mismatch",
             "proof-fingerprint-mismatch",
             "expected-binary-missing",
-            "engine-identity-mismatch",
+            "environment-identity-mismatch",
+            "environment-identity-unresolved",
             "invalid-cache-state-shape",
             "verified-equivalent-proof",
             "PreviousStateInvalidated",
-            "Remove-Item -LiteralPath $StatePath -Force",
+            "$State.CompilePassed = $false",
             "$State.ProofPassed = $false",
+            "compile_kind=$CompileKind",
         ):
             self.assertIn(token, self.cache)
+
+    def test_compile_cache_distinguishes_warm_from_cold(self):
+        for token in (
+            "$CompileKind = 'cold'",
+            "$CompileKind = 'warm'",
+            "compile-fingerprint-mismatch",
+            "expected-binary-missing",
+            "$Purge = $false",
+            "cache-schema-mismatch",
+            "environment-identity-mismatch",
+            "$Purge = $true",
+            "ToolchainIdentity",
+            "EnvironmentIdentity",
+            "CompletedCompileKind",
+        ):
+            self.assertIn(token, self.cache)
+
+        # Source/graph changes must stay incremental; only environment/cache
+        # trust failures may request destructive cleanup.
+        mismatch = self.cache.index("compile-fingerprint-mismatch")
+        warm = self.cache.rfind("$CompileKind = 'warm'", 0, mismatch)
+        purge_false = self.cache.find("$Purge = $false", mismatch)
+        self.assertGreaterEqual(warm, 0)
+        self.assertGreater(purge_false, mismatch)
 
     def test_engine_identity_has_one_project_association_authority(self):
         for token in (
