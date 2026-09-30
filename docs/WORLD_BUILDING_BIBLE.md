@@ -490,15 +490,153 @@ The current PCGEx proof is deliberately narrow:
 - record exact-SHA evidence, presentation deviation and rider-camera visual proof
   before accepting any generated road/earthworks result.
 
-The first graph-authoring proof establishes only **plugin/API integration and
-deterministic graph topology**. It is not evidence that the graph has already
-executed successfully against the prepared SP638 dataset, nor that macro terrain
-quality is solved. Those are subsequent proof gates.
+The current Gate B proof is now an **established road-authoring baseline**.
+At exact repository state `eb33c583...`, the pinned PCGEx path executed against
+the prepared official SP638 presentation data and fed the rider-close consumer.
+The measured presentation deviation remained bounded (about 0.176 m horizontal
+p95, about 0.8 m horizontal max and about 7.5 mm vertical p95 for the proven
+corridor). This is sufficient to stop treating PCGEx road smoothing as the default
+suspect for the current visual failure.
 
-If PCGEx cannot satisfy the rider-camera geometry/terrain acceptance contract,
-do not hide the failure with material camouflage or another bespoke smoothing
-stack. Diagnose the owning stage and escalate to the documented Houdini/Gaea
-path (or another evidence-backed tool preserving the same contract).
+The remaining failure is terrain presentation: the rider proof still combines
+the legacy macro Landscape with local terrain/earthwork surfaces, and the
+rider-close terrain skin is sampled from that already-problematic Landscape.
+Therefore, until a concrete regression says otherwise, **freeze the proven PCGEx
+road path and diagnose terrain surface ownership instead of tuning road smoothing**.
+
+If the terrain-ownership recovery later proves a real PCGEx boundary, document
+that evidence and then use the tools-first ladder. Do not hide the failure with
+material camouflage, another bespoke smoothing stack or a road-alignment change.
+
+#### Passo Giau surface-ownership recovery after Gate B
+
+Issue #287 / PR #288 established a useful separation of concerns:
+
+- official SP638 -> YACS source -> PCGEx resample/smooth -> bounded corridor is a
+  working presentation path;
+- the road/corridor can be technically healthy while the surrounding terrain is
+  still visually unacceptable;
+- the current rider proof still depends on the legacy
+  `/Game/Prototype/Maps/L_PassoGiauTerrainSpike` macro Landscape and a local
+  terrain surface sampled back from that Landscape.
+
+The immediate architecture problem is therefore **surface ownership**, not
+another road-centerline algorithm.
+
+##### One visual owner per place
+
+Do not render two independently modified ground surfaces in the same rider-close
+space and rely on a tiny Z offset to keep them ordered. If a local near-field
+surface is the rider-visible ground owner, the macro Landscape must stop owning
+that same patch.
+
+The target ownership model is:
+
+| Zone / concern | Geometry authority |
+|---|---|
+| distant mountains / valley mass | Macro Landscape / `Base_DTM` |
+| medium distance | Macro Landscape plus meso meshes |
+| broad road accommodation | `Road_Earthworks` |
+| rider-close ground requiring higher fidelity | native-DTM-derived bounded near-field surface |
+| asphalt | independent road mesh |
+| shoulders | road/shoulder presentation geometry |
+| unusual cut/fill | local earthwork geometry or constrained local ground |
+| cliffs / walls / rocks / scree | dedicated mesh / PCG geometry |
+| simulation | Road Physics Profile / route contracts, separately |
+
+PCGEx does not become physics authority. Landscape does not become road XY
+authority. A visually better terrain mesh does not become simulation truth.
+
+##### Diagnostic matrix before another generator
+
+Before changing the terrain architecture again, capture the same exact-SHA
+hairpin, camera pose, FOV and lighting with only ownership toggled:
+
+| Variant | Macro Landscape | near-field/local ground | road corridor | Purpose |
+|---|---:|---:|---:|---|
+| A | ON | OFF | OFF | isolate macro-terrain faceting |
+| B | ON | OFF | ON | macro terrain + road |
+| C | OFF | ON | OFF | isolate local ground quality |
+| D | OFF | ON | ON | local ground + road without macro overlap |
+| E | ON | ON | ON | current combined baseline |
+
+Interpretation is evidence-driven:
+
+- D clean + E broken strongly indicates competing-surface overlap/intersection;
+- C still faceted indicates the local source or spacing is insufficient;
+- A being the dominant failure confirms macro Landscape as the visible source
+  of the rider-close artifact.
+
+Do not replace this diagnostic with guessed smoothing percentages.
+
+##### Native metric DTM for rider-close ground
+
+The production candidate for near-field ground should be:
+
+`prepared native metric DTM -> bounded rider patch -> road/earthwork constraints -> transition -> mesh`
+
+not:
+
+`Landscape -> vertical trace -> replacement terrain skin`.
+
+MASE remains the primary terrain source and the documented Veneto source remains
+fallback where required by coverage/provenance. Road and terrain preprocessing
+must meet in the same metric coordinate system before Unreal Landscape-grid
+quantization.
+
+Start with a bounded representative hairpin at native or near-native spacing
+(typically around 1-2 m for the current proof) rather than making the entire
+8 km world equally dense. The rider corridor and distant mountain mass have
+different spatial-quality budgets.
+
+##### Deterministic transition to macro terrain
+
+The local owner must transition to macro Landscape through a deliberate band,
+not by coincident overlap or an arbitrary lift. A suitable bounded pattern is:
+
+- high-fidelity native-DTM interior;
+- transition band;
+- outer ring pinned/constrained to macro-terrain height;
+- measurable seam delta and no competing surface inside the owned patch.
+
+Reuse proven local primitives such as existing pinned-border-cell behavior where
+they satisfy this contract instead of inventing another world system.
+
+##### Road constraints before local triangulation
+
+Where practical, apply the proven PCGEx centerline/corridor and YACS road-profile
+constraints to the near-field terrain before final triangulation:
+
+`native terrain -> road corridor constraints -> cut/fill transition -> single local ground mesh -> asphalt/shoulders`.
+
+The goal is to avoid stacking road mesh + earthwork mesh + terrain skin +
+Landscape as four independent surfaces at the same location.
+
+##### Edit-layer semantics are explicit
+
+Never select a Landscape edit layer by API-return order. For road work:
+
+- `Base_DTM` must exist and remain semantic source terrain;
+- exactly one `Road_Earthworks` layer must exist;
+- road cut/fill selects `Road_Earthworks` explicitly by name;
+- missing/duplicate `Road_Earthworks`, or accidental `Base_DTM` selection,
+  fails closed;
+- proof output records available edit layers and the selected earthworks layer.
+
+##### Acceptance and scaling order
+
+Neutral geometry passes before materials/foliage/RVT/lighting camouflage.
+The first accepted hairpin is only a bounded proof. Before route propagation,
+repeat the rider proof on at least:
+
+- a difficult hairpin;
+- a normal/moderate slope corridor;
+- a high-elevation-difference / strong-earthworks section.
+
+Only after neutral geometry is visually accepted should the relevant performance
+proof set thresholds for the chosen representation. Meso cliffs/rocks/retaining,
+materials, vegetation and final weather follow after the ground ownership contract
+is proven.
 
 #### Road / earthworks decision ladder
 
@@ -685,6 +823,13 @@ Do not treat geographic degrees as metres.
 Do not claim a Landscape is higher fidelity merely because it has more vertices than the source raster.
 
 ### 5.2 Landscape is macro terrain
+
+Landscape is the macro continuity representation, not a requirement that every
+rider-visible centimetre of ground be owned by the heightfield. A bounded
+native-DTM-derived near-field surface may own rider-close ground when a proof
+shows that Landscape resolution/topology is visually insufficient. In that case,
+ownership must be exclusive inside the patch and transition deterministically
+back to the macro Landscape.
 
 Landscape represents:
 
