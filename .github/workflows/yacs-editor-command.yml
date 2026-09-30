@@ -3,14 +3,6 @@ name: YACS Remote Editor Command
 on:
   issue_comment:
     types: [created]
-  push:
-    branches:
-      - feat/85-remote-editor-command-bridge
-    paths:
-      - .github/workflows/yacs-editor-command.yml
-      - scripts/ue/Invoke-YacsRemoteEditorCommand.ps1
-      - scripts/ue/remote_editor_smoke.py
-      - scripts/ci/test_remote_editor_command_workflow.py
 
 permissions:
   contents: read
@@ -23,12 +15,9 @@ jobs:
   remote-editor:
     name: Trusted remote editor smoke
     if: >-
-      (github.event_name == 'push' &&
-       github.actor == github.repository_owner) ||
-      (github.event_name == 'issue_comment' &&
-       github.event.issue.number == 228 &&
-       github.event.comment.user.login == github.repository_owner &&
-       github.event.comment.body == '/yacs-editor smoke-cube')
+      github.event.issue.number == 228 &&
+      github.event.comment.user.login == github.repository_owner &&
+      github.event.comment.body == '/yacs-editor smoke-cube'
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 20
 
@@ -42,21 +31,11 @@ jobs:
             throw "Unexpected repository '${{ github.repository }}'."
           }
 
-          if ('${{ github.event_name }}' -eq 'push') {
-            if ('${{ github.ref }}' -ne 'refs/heads/feat/85-remote-editor-command-bridge') {
-              throw "Branch canary may run only from the dedicated #85 spike branch."
-            }
-            if ('${{ github.actor }}' -ne '${{ github.repository_owner }}') {
-              throw "Branch canary requires repository owner actor."
-            }
-          }
-          elseif ('${{ github.event_name }}' -eq 'issue_comment') {
-            if ('${{ github.ref }}' -ne 'refs/heads/main') {
-              throw "Issue-command workflow must execute from the default branch definition."
-            }
-          }
-          else {
+          if ('${{ github.event_name }}' -ne 'issue_comment') {
             throw "Unsupported event '${{ github.event_name }}'."
+          }
+          if ('${{ github.ref }}' -ne 'refs/heads/main') {
+            throw "Issue-command workflow must execute from the default branch definition."
           }
 
           if ('${{ github.sha }}' -notmatch '^[0-9a-f]{40}$') {

@@ -1,0 +1,245 @@
+{
+  "schema_version": 1,
+  "authority": "docs/ci/WORKFLOW_LIFECYCLE.md",
+  "states": [
+    "CURRENT",
+    "BROKER-MANAGED",
+    "HISTORICAL/RETIRED",
+    "ONE-SHOT/DEAD",
+    "UNKNOWN"
+  ],
+  "rules": {
+    "undocumented_workflow": "fail",
+    "retired_workflow_must_be_absent": true,
+    "permanent_false_job_forbidden": true,
+    "hardcoded_run_cancellation_forbidden": true,
+    "unknown_requires_reason": true
+  },
+  "workflows": [
+    {
+      "file": "asset-full.yml",
+      "state": "CURRENT",
+      "reason": "Explicit trusted full asset/release-oriented validation entrypoint."
+    },
+    {
+      "file": "branch-hygiene.yml",
+      "state": "CURRENT",
+      "reason": "Stronger YACS-local merged-branch cleanup control preserved by Gumball."
+    },
+    {
+      "file": "ci.yml",
+      "state": "CURRENT",
+      "reason": "Primary caller-local PR/main CI graph and Aggregate CI gate."
+    },
+    {
+      "file": "manual-unreal.yml",
+      "state": "CURRENT",
+      "reason": "Explicit trusted manual Unreal validation and recovery entrypoint."
+    },
+    {
+      "file": "passo-giau-r4-1-hairpin-corridor.yml",
+      "state": "CURRENT",
+      "reason": "Bounded exact-revision SP638 hairpin proof used by current M3 road work."
+    },
+    {
+      "file": "passo-giau-r4-1-landscape-author.yml",
+      "state": "UNKNOWN",
+      "reason": "Retained while active PR #256 may retarget the isolated MASE/SP638 authoring lane; disposition belongs to that current M3 work."
+    },
+    {
+      "file": "passo-giau-r4-1-road-author.yml",
+      "state": "UNKNOWN",
+      "reason": "Legacy-bound road author workflow retained while active PR #256 owns the current SP638 authoring transition."
+    },
+    {
+      "file": "passo-giau-r4-1-roadside-house.yml",
+      "state": "CURRENT",
+      "reason": "Manual World Authoring Library SP638 proof; branch canary is historical but workflow_dispatch remains useful."
+    },
+    {
+      "file": "passo-giau-r4-1b3-geometry-probe.yml",
+      "state": "BROKER-MANAGED",
+      "reason": "Current Gumball Proof Broker target for r4-1b3-geometry; workflow_dispatch remains recovery fallback."
+    },
+    {
+      "file": "passo-giau-road-alignment.yml",
+      "state": "CURRENT",
+      "reason": "Current official SP638 GIS preparation/alignment proof using the active terrain-source path."
+    },
+    {
+      "file": "pr-orchestrator.yml",
+      "state": "CURRENT",
+      "reason": "Trusted PR orchestration control."
+    },
+    {
+      "file": "project-bootstrap.yml",
+      "state": "CURRENT",
+      "reason": "Manual Project-board bootstrap/recovery utility."
+    },
+    {
+      "file": "project-status.yml",
+      "state": "CURRENT",
+      "reason": "YACS-specific Project lifecycle synchronization preserved over generic Gumball Projects flow."
+    },
+    {
+      "file": "proof-broker.yml",
+      "state": "CURRENT",
+      "reason": "Trusted default-branch Gumball Proof Broker orchestration."
+    },
+    {
+      "file": "repository-ops.yml",
+      "state": "CURRENT",
+      "reason": "Trusted Gumball label/lifecycle repository reconciliation."
+    },
+    {
+      "file": "reusable-python.yml",
+      "state": "CURRENT",
+      "reason": "Hosted Python and repository contract validation lane."
+    },
+    {
+      "file": "reusable-stage3g-full.yml",
+      "state": "CURRENT",
+      "reason": "Current exact-head heavy full-world proof used by the main CI graph."
+    },
+    {
+      "file": "reusable-unreal.yml",
+      "state": "CURRENT",
+      "reason": "Current code-only Unreal build and Automation reusable lane."
+    },
+    {
+      "file": "runner-space-recovery.yml",
+      "state": "CURRENT",
+      "reason": "Owner-only manual main-branch self-hosted runner disk recovery."
+    },
+    {
+      "file": "scorecard.yml",
+      "state": "CURRENT",
+      "reason": "OpenSSF supply-chain posture audit."
+    },
+    {
+      "file": "slack-notify.yml",
+      "state": "CURRENT",
+      "reason": "High-signal CI/release Slack routing."
+    },
+    {
+      "file": "stage3g-environment-performance.yml",
+      "state": "CURRENT",
+      "reason": "Manual decision-relevant 1080p60 environment performance proof."
+    },
+    {
+      "file": "stage3g-forest-target-density-author.yml",
+      "state": "CURRENT",
+      "reason": "Target-density forest authoring workflow; dedicated branch still exists and manual fallback remains."
+    },
+    {
+      "file": "stage3g-forest-target-density-performance.yml",
+      "state": "CURRENT",
+      "reason": "Target-density forest performance workflow paired with the live authoring branch."
+    },
+    {
+      "file": "stage3g-source-asset-audit.yml",
+      "state": "CURRENT",
+      "reason": "Manual non-mutating source-asset lifecycle/performance audit."
+    },
+    {
+      "file": "windows-probe.yml",
+      "state": "CURRENT",
+      "reason": "Cheap generic manual GitHub-hosted Windows toolchain probe."
+    },
+    {
+      "file": "yacs-editor-command.yml",
+      "state": "CURRENT",
+      "reason": "Owner-only issue-comment remote-editor smoke command from trusted default-branch workflow code."
+    },
+    {
+      "file": "adaptive-unreal-profile-canary.yml",
+      "state": "ONE-SHOT/DEAD",
+      "reason": "Dedicated ci/257 branch is gone and the only job was permanently disabled with if:false."
+    },
+    {
+      "file": "drain-legacy-passo-giau-author.yml",
+      "state": "ONE-SHOT/DEAD",
+      "reason": "One-shot cancellation of historical Actions run 36638798865 on a deleted canary branch."
+    },
+    {
+      "file": "passo-giau-r4-1-terrain-spike.yml",
+      "state": "HISTORICAL/RETIRED",
+      "reason": "TINITALY terrain spike is historical evidence; current World Building Bible uses MASE PST LiDAR/DTM."
+    },
+    {
+      "file": "passo-giau-cortina-2m-probe.yml",
+      "state": "HISTORICAL/RETIRED",
+      "reason": "Cortina 2 m source investigation is superseded by the canonical MASE terrain source."
+    },
+    {
+      "file": "passo-giau-veneto-fast-probe.yml",
+      "state": "HISTORICAL/RETIRED",
+      "reason": "Endpoint-discovery spike for the older Veneto source path; evidence remains in terrain research history."
+    },
+    {
+      "file": "passo-giau-veneto-lidar-probe.yml",
+      "state": "HISTORICAL/RETIRED",
+      "reason": "Older Veneto LiDAR source probe; current terrain source is MASE PST."
+    },
+    {
+      "file": "passo-giau-veneto-source-ab.yml",
+      "state": "HISTORICAL/RETIRED",
+      "reason": "TINITALY vs Veneto A/B established historical evidence but neither is the current MASE source workflow."
+    },
+    {
+      "file": "passo-giau-road-source-probe.yml",
+      "state": "HISTORICAL/RETIRED",
+      "reason": "Raw official-road source probe is superseded by the current passo-giau-road-alignment workflow."
+    },
+    {
+      "file": "stage3g-boulder-lod-author.yml",
+      "state": "ONE-SHOT/DEAD",
+      "reason": "Workflow declares one-shot authoring and its dedicated audit branch no longer exists."
+    },
+    {
+      "file": "stage3g-r2-conifer-author.yml",
+      "state": "HISTORICAL/RETIRED",
+      "reason": "Push-only R2 authoring workflow targeted a deleted feat/stage3g-pcg-forest-r2 branch."
+    },
+    {
+      "file": "stage3g-r2-conifer-reduction-profile.yml",
+      "state": "HISTORICAL/RETIRED",
+      "reason": "Push-only R2 reduction profiling targeted a deleted branch; reusable profiling code remains downstream."
+    },
+    {
+      "file": "stage3g-r2-fir-profile.yml",
+      "state": "HISTORICAL/RETIRED",
+      "reason": "R2 fallback profiling workflow retired; reusable profiler/wrapper contracts remain tested."
+    },
+    {
+      "file": "stage3g-r2-fir-reduction-profile.yml",
+      "state": "HISTORICAL/RETIRED",
+      "reason": "Manual R2 reduction experiment retired from Actions; reusable reduction implementation remains testable."
+    },
+    {
+      "file": "stage3g-r2-pcg-route-exclusion.yml",
+      "state": "HISTORICAL/RETIRED",
+      "reason": "Push-only R2 authoring workflow targeted a deleted branch; route-exclusion implementation remains contract-tested."
+    },
+    {
+      "file": "stage3g-r2-persist-forest-assets.yml",
+      "state": "HISTORICAL/RETIRED",
+      "reason": "Mutating R2 persistence workflow targeted a deleted branch and is no longer a current authoring authority."
+    },
+    {
+      "file": "stage3g-r2-persist-pcg-forest.yml",
+      "state": "HISTORICAL/RETIRED",
+      "reason": "Mutating R2 recovery/persistence workflow targeted a deleted branch; current full-world authoring owns persistence proof."
+    },
+    {
+      "file": "stage3g-r3-persist-pcg-biomes.yml",
+      "state": "HISTORICAL/RETIRED",
+      "reason": "Mutating R3 biome persistence workflow targeted a deleted branch; implementation contracts remain in repository tests."
+    },
+    {
+      "file": "stage3g-r4-terrain-coherence-author.yml",
+      "state": "HISTORICAL/RETIRED",
+      "reason": "Dedicated R4 mutating author workflow targeted a deleted branch; reusable terrain-coherence harness remains contract-tested."
+    }
+  ]
+}

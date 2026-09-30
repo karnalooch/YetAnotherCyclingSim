@@ -1,11 +1,7 @@
 name: YACS runner space recovery
 
 on:
-  push:
-    branches:
-      - fix/223-r4-1b3-mase-overlay
-    paths:
-      - .github/workflows/runner-space-recovery.yml
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -13,7 +9,7 @@ permissions:
 jobs:
   recover:
     name: Reclaim stale yacs-ue58 workspace
-    if: github.actor == github.repository_owner
+    if: ${{ github.actor == github.repository_owner && github.ref == 'refs/heads/main' }}
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 10
 

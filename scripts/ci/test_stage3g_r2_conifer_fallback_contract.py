@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / "scripts" / "assets" / "stage3g_polyhaven.json"
 PROFILE = ROOT / "scripts" / "ue" / "stage3g_profile_fir_tree.py"
 WRAPPER = ROOT / "scripts" / "ue" / "Invoke-YacsStage3GR2FirProfile.ps1"
-WORKFLOW = ROOT / ".github" / "workflows" / "stage3g-r2-fir-profile.yml"
+RETIRED_WORKFLOW = ROOT / ".github" / "workflows" / "stage3g-r2-fir-profile.yml"
 
 
 class Stage3GR2ConiferFallbackContractTests(unittest.TestCase):
@@ -34,11 +34,8 @@ class Stage3GR2ConiferFallbackContractTests(unittest.TestCase):
         self.assertIn("YACS_STAGE3G_PROFILE_ASSET_ID", wrapper)
         self.assertIn("$Profile.asset_id -ne $AssetId", wrapper)
 
-    def test_trusted_runner_profiles_fallback_before_scatter(self):
-        workflow = WORKFLOW.read_text(encoding="utf-8")
-        self.assertIn("fir_sapling_medium", workflow)
-        self.assertIn("yacs-ue58", workflow)
-        self.assertIn("FirSaplingMediumProfile", workflow)
+    def test_historical_profile_workflow_stays_retired(self):
+        self.assertFalse(RETIRED_WORKFLOW.exists())
 
 
 if __name__ == "__main__":

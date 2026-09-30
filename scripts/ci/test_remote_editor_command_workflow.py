@@ -24,11 +24,12 @@ class RemoteEditorCommandContractTests(unittest.TestCase):
         self.assertIn("persist-credentials: false", text)
         self.assertNotIn("${{ github.event.comment.body }}", text)
 
-    def test_branch_canary_is_narrow(self) -> None:
+    def test_retired_branch_canary_cannot_trigger_remote_editor(self) -> None:
         text = WORKFLOW.read_text(encoding="utf-8")
-        self.assertIn("feat/85-remote-editor-command-bridge", text)
-        self.assertIn("github.actor == github.repository_owner", text)
+        self.assertNotIn("feat/85-remote-editor-command-bridge", text)
+        self.assertNotIn("push:", text)
         self.assertNotIn("pull_request_target", text)
+        self.assertIn("github.event.issue.number == 228", text)
 
     def test_lfs_materialization_fails_closed_on_pointers(self) -> None:
         text = WORKFLOW.read_text(encoding="utf-8")
