@@ -35,6 +35,33 @@ or `Build/` fail closed to the heavy `ue_code` path. Ordinary unknown
 repository paths remain visible as `unknown=true` and receive conservative
 security/contract validation without automatically burning the Unreal runner.
 
+### M3 Embark terrain proof sub-tiers
+
+The dedicated Passo Giau Embark/PCGEx proof refines the central change
+classification into three execution modes without weakening exact-SHA evidence:
+
+- `cheap` — documentation, policy and contract-only changes run hosted
+  classification/contract checks and do not reserve the Unreal runner;
+- `render` — native-DTM preparation, bounded geometry/Python capture changes,
+  proof-camera changes and other presentation inputs prepare current data and
+  rerun author/render evidence against a previously validated compiled binary
+  state when its fingerprint still matches;
+- `heavy` — compiled Unreal source, `.Build.cs` / `.Target.cs`,
+  `.uproject`, the PCGEx build/bootstrap wrapper or the proof workflow contract
+  itself require a fresh PCGEx-enabled Editor build before author/render.
+
+The compile fingerprint is SHA-256 over the pinned UE/PCGEx identity plus the
+project descriptor and compiled source/build inputs. A render run may skip
+compilation only when the fingerprint matches a runner-local ignored cache
+stamp **and** the expected project and PCGEx binaries still exist. Missing,
+invalid or stale cache state falls back to a fresh build; it never converts a
+required build into a pass.
+
+The persistent state is compile output only. Exact-SHA checkout, prepared
+SP638/DTM inputs, graph execution, rider render, evidence upload and deviation
+validation still run for the current revision when the proof mode requires
+them. The cache is not accepted across a fingerprint change.
+
 ### Executable workflow lifecycle
 
 The set of executable GitHub Actions workflows is governed by
