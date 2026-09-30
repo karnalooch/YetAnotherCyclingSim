@@ -1,0 +1,17 @@
+{
+  "id": "proof-broker-pr-label-write-permission",
+  "source": "karnalooch/YetAnotherCyclingSim",
+  "category": "governance",
+  "problem": "A trusted Proof Broker that updates request/status labels on pull requests cannot reliably perform those writes with pull-requests: read.",
+  "invariant": "A broker workflow that owns pull-request proof labels must receive the minimum pull-requests: write permission in the trusted default-branch orchestration jobs, while keeping all unrelated scopes read-only or absent.",
+  "evidence": [
+    "YACS PR #246 / commit 8ab95926218b681d7c814fa0be919fe1b781aac2",
+    "YACS PR #256 currently carries broker-managed proof request/status labels after the permission correction"
+  ],
+  "do_not_copy": [
+    "YACS proof ids and Passo Giau workflow names",
+    "repository-specific trusted actor configuration"
+  ],
+  "failure_behavior": "If the broker cannot update its owned PR labels, report BLOCKED/FAIL with the API result; never broaden to write-all or silently claim status reconciliation succeeded.",
+  "status": "proven"
+}
