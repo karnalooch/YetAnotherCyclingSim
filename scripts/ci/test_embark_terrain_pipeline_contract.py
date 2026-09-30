@@ -368,8 +368,14 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
             "compile_fingerprint",
             "proof_mode",
             "Resolve compile-fingerprint cache",
-            "Compile cache HIT",
-            "Compile cache MISS",
+            "PCGEx compile cache HIT",
+            "PCGEx compile required",
+            "compile_kind",
+            "environment_identity",
+            "legacy-cache-schema-migration",
+            "compile-fingerprint-mismatch",
+            "environment-identity-mismatch",
+            "pcgex-pin-mismatch",
             "skip_build",
             "clean: false",
             "Saved/BuildCache/PCGEx/compile-state.json",
@@ -399,6 +405,32 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         self.assertIn(
             '$UbtConfig = @"\n<?xml version="1.0" encoding="utf-8" ?>',
             wrapper,
+        )
+
+        self.assertIn(
+            "passo-giau-m3-pcgex-input-${{ github.run_id }}",
+            workflow,
+        )
+        self.assertNotIn(
+            "passo-giau-m3-pcgex-input-${{ github.run_id }}-${{ github.run_attempt }}",
+            workflow,
+        )
+
+        self.assertIn(
+            "Resolve-YacsUnrealBuildEnvironment.ps1",
+            workflow,
+        )
+        self.assertIn(
+            "schema_version = 2",
+            workflow,
+        )
+        self.assertIn(
+            "$purgeProjectBuild = $false",
+            workflow,
+        )
+        self.assertNotIn(
+            "if ($mode -ne 'heavy'",
+            workflow,
         )
 
         self.assertNotIn(

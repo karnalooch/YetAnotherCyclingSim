@@ -44,23 +44,114 @@ classification into three execution modes without weakening exact-SHA evidence:
   classification/contract checks and do not reserve the Unreal runner;
 - `render` — native-DTM preparation, bounded geometry/Python capture changes,
   proof-camera changes and other presentation inputs prepare current data and
-  rerun author/render evidence against a previously validated compiled binary
-  state when its fingerprint still matches;
+  rerun author/render evidence; compilation may be skipped only on a verified
+  exact compile-cache hit;
 - `heavy` — compiled Unreal source, `.Build.cs` / `.Target.cs`,
-  `.uproject`, the PCGEx build/bootstrap wrapper or the proof workflow contract
-  itself require a fresh PCGEx-enabled Editor build before author/render.
+  `.uproject`, the PCGEx build/bootstrap wrapper, shared build-environment
+  resolver or proof workflow contract changed, so build execution is required.
+  **Heavy does not mean cold.**
 
 The compile fingerprint is SHA-256 over the pinned UE/PCGEx identity plus the
-project descriptor and compiled source/build inputs. A render run may skip
-compilation only when the fingerprint matches a runner-local ignored cache
-stamp **and** the expected project and PCGEx binaries still exist. Missing,
-invalid or stale cache state falls back to a fresh build; it never converts a
-required build into a pass.
+project descriptor, compiled source/build inputs and M3 build contract. The M3
+runner then resolves one of three compile actions:
+
+- **none / exact hit** — fingerprint, environment identity, PCGEx pin/checkout
+  and expected project/plugin binaries match a previously green state; skip
+  compilation and continue current-revision graph author/render proof;
+- **warm** — build is required but UE/toolchain identity and the pinned PCGEx
+  dependency remain compatible. Preserve project/plugin build state and let
+  UnrealBuildTool determine the minimal outdated compile/link graph. A compile
+  fingerprint mismatch, previous failed build or missing expected binary uses
+  this path;
+- **cold** — environment identity or PCGEx pin/checkout drifted, cache state is
+  malformed/untrusted, or no usable state exists. Purge the incompatible build
+  surfaces before rebuilding.
+
+The legacy schema-1 M3 cache is migrated once through **warm** rather than being
+trusted as an exact hit: the previous green binaries/intermediates are preserved,
+but UBT must validate/rebuild them before schema-2 state with environment
+identity can be recorded.
 
 The persistent state is compile output only. Exact-SHA checkout, prepared
 SP638/DTM inputs, graph execution, rider render, evidence upload and deviation
 validation still run for the current revision when the proof mode requires
-them. The cache is not accepted across a fingerprint change.
+them. A fingerprint change therefore invalidates proof reuse but no longer
+implies destructive cleanup by itself.
+
+### General Unreal STATIC / RUNTIME / COMPILE reuse
+
+The normal code-only Unreal lane now separates binary work from runtime proof:
+
+- **STATIC** — the current exact HEAD has the same compile and proof
+  fingerprints as a previously green run. CI verifies the current checkout,
+  installed UE build identity and expected project DLLs, then emits a fresh
+  exact-head equivalence artifact without launching Unreal.
+- **RUNTIME** — compiled inputs are unchanged but runtime-critical Config or
+  the proof/orchestration contract changed. CI reuses verified DLLs and reruns
+  scoped Automation with `-SkipBuild`.
+- **COMPILE** — compiled project/plugin source, project/plugin descriptors,
+  Build/Target rules or another binary-contract input changed, or verified
+  binaries cannot be proven reusable. COMPILE then splits again:
+  - **WARM COMPILE** preserves trusted project/plugin `Binaries` and
+    `Intermediate` and lets UnrealBuildTool/UBA compute the minimal outdated
+    action graph. Source/header/Build.cs/Target.cs/.uproject/.uplugin edits and
+    a missing final DLL use this path when the engine/toolchain identity still
+    matches.
+  - **COLD COMPILE** purges project/plugin build outputs first. It is reserved
+    for missing/malformed cache provenance or engine/toolchain drift.
+
+The runner-local warm worktree is serialized by repository-wide Unreal CI
+concurrency. Every run resets tracked files to the requested SHA and removes all
+untracked/ignored residue except the explicit warm-state allow-list: project and
+plugin `Binaries`, `Intermediate`, and `Saved/BuildCache/UnrealCi`. The
+code-only LFS contract and exact HEAD are then rechecked. Preserved outputs are
+only candidates for reuse; they are never trusted without fingerprint and
+environment checks. A compile-fingerprint mismatch is **not** cache corruption:
+when engine/toolchain provenance still matches, the lane invalidates the green
+stamp but keeps `Intermediate/Binaries` and performs a WARM COMPILE. Missing
+final project DLLs are handled the same way because UBT can relink/rebuild them
+from trusted intermediates. Only an untrusted cache state or environment drift
+requests COLD purge. Before mutable COMPILE/RUNTIME work starts, the
+corresponding previous green state is invalidated so cancellation or failure
+cannot leave reusable proof behind.
+
+The compile fingerprint covers the project descriptor, compiled project/plugin
+inputs and the build/engine-selection orchestration used by the normal Unreal lane.
+`scripts/ci/Resolve-YacsUnrealEngine.ps1` is the single engine-discovery authority
+for both preflight/build and cache validation: it requires the `.uproject`
+`EngineAssociation` and identities the resolved installation from its root plus
+hashed `Build.version`, `Build.bat` and `UnrealEditor-Cmd.exe` evidence.
+The cache resolver separately identities the active MSVC compiler/linker and
+Windows resource tool. The resulting environment identity is the COLD/WARM
+boundary: source/build-graph drift with the same environment is WARM; engine or
+toolchain drift is COLD. The proof fingerprint extends the compile identity with
+runtime-critical Config and the remaining code-only Unreal proof tooling.
+Unknown or malformed state fails closed.
+
+World/runtime cost is independent from compilation. A normal tree, house,
+material or similar asset does not imply a C++ rebuild. A world change that
+crosses an `asset_full` boundary is RUNTIME work at its configured readiness
+checkpoint, and becomes COMPILE only when a binary-contract input also changed.
+
+#### PR #290 validation evidence
+
+The first live validation of this policy on `yacs-ue58` established the cost
+difference directly:
+
+- COLD seed: `compileKind=cold`, `reason=missing-cache-state`, purge enabled;
+  UBT total execution **146.16 s**, including **135.59 s** in the local UBA
+  executor.
+- WARM build after a legitimate build-contract fingerprint change:
+  `compileKind=warm`, `reason=compile-fingerprint-mismatch`, purge disabled;
+  UBT total execution **1.54 s**, including **0.12 s** in local UBA, followed by
+  26/26 Automation tests passing.
+- RUNTIME after a proof-only fingerprint change: `mode=runtime`,
+  `compileKind=none`, purge disabled and the build phase explicitly
+  **skipped** before Automation.
+
+These timings are evidence from that runner/revision, not a guaranteed future
+performance budget. The architectural invariant is the cache decision and
+fail-closed provenance, not a specific duration.
 
 ### Executable workflow lifecycle
 

@@ -17,8 +17,12 @@ The main impact outputs are:
 - `cpp` — C/C++/C# source under a project or plugin `Source/` tree changed;
 - `assets` — tracked source/game asset surface changed;
 - `ci` — CI/tooling surface changed;
-- `ue_code` — a code-build-affecting Unreal surface changed and the automatic
-  code-only Editor build + Automation lane is required;
+- `ue_code` — the automatic code-only Unreal lane is required (legacy
+  compatibility signal; equivalent to `unreal_runtime`);
+- `unreal_compile` — an input capable of changing Editor binaries or their
+  build/engine-selection contract changed;
+- `unreal_runtime` — fresh code-only Unreal/Automation evidence is required;
+- `unreal_execution_class` — `static`, `runtime`, or `compile`;
 - `ue_tooling` — Unreal editor/authoring/proof tooling changed, but that fact
   alone does **not** require an automatic Editor build;
 - `asset_full` — the change requires the heavy Stage 3G/full-world proof at
@@ -33,7 +37,8 @@ The main impact outputs are:
 | docs-only | Repository policy, Governance, Aggregate | `light` |
 | Python | Python reference tests, security baseline, CodeQL Python | `standard` |
 | C++ / plugin C++ | security baseline, CodeQL C++, code-only Unreal build + Automation | `heavy` |
-| Build.cs / Target.cs / .uproject / .uplugin / critical Config | security baseline, CodeQL C++, code-only Unreal build + Automation | `heavy` |
+| Build.cs / Target.cs / .uproject / .uplugin / compile-orchestration helper | security baseline, CodeQL C++, code-only Unreal COMPILE + Automation | `heavy` |
+| critical Config | security baseline plus code-only Unreal RUNTIME Automation on verified binaries | `heavy` |
 | CI/tooling | CI contract tests plus security baseline | normally `standard` |
 | Unreal proof/editor/authoring tooling | CI/Python/contracts as applicable; **no automatic code build solely because the path is under `scripts/ue/**`** | normally `standard` |
 | code-build tooling used by the automatic Unreal lane | CI contracts plus code-only Unreal build + Automation | `heavy` |
@@ -49,6 +54,53 @@ both directions: a lane classified as required must finish successfully, while
 a lane classified as unnecessary must actually be skipped. It also validates
 that `ci_cost_class` is one of the three canonical values and that heavy
 Unreal/full-world impact cannot be mislabeled as a cheaper class.
+
+### Unreal execution class
+
+The cost label and the Unreal execution mode are deliberately separate. The
+classifier also emits `unreal_execution_class`:
+
+- `static` — no fresh Unreal runtime is required by the changed surface;
+- `runtime` — Unreal/world/Automation evidence is required, but verified
+  Editor binaries may be reused;
+- `compile` — the compiled binary contract changed and a build is required
+  before runtime evidence. The self-hosted resolver then chooses `warm` or
+  `cold`; path classification does not try to outsmart UnrealBuildTool's
+  dependency graph.
+
+`unreal_compile_fingerprint` hashes the project descriptor, compiled
+project/plugin source, plugin descriptors and the normal lane's build/engine-selection
+orchestration contract. `unreal_proof_fingerprint` extends that identity with
+runtime-critical Config and the remaining code-only proof contract.
+
+The self-hosted code-only lane keeps a repository-scoped warm worktree. Only
+the explicit build-state allow-list survives between revisions: project/plugin
+`Binaries`, `Intermediate`, and `Saved/BuildCache/UnrealCi`. All other
+untracked and ignored residue is removed before and after proof execution.
+Reuse is accepted only when the current compile fingerprint, proof fingerprint,
+installed UE build identity and expected project DLLs match a previously green
+state. Engine discovery is shared with the actual build through
+`scripts/ci/Resolve-YacsUnrealEngine.ps1`; the `.uproject` `EngineAssociation` is
+mandatory and the identity includes the resolved root plus hashes of the engine
+version, build launcher and Editor command binary. Missing or malformed state fails closed. COMPILE has two runner-side
+submodes:
+
+- `warm` — verified engine/toolchain provenance matches. Preserve project and
+  plugin `Binaries/Intermediate` and let UBT/UBA decide the minimal outdated
+  compile/link action graph. Compile-fingerprint mismatch, a previous failed
+  compile, or a missing final DLL use this path.
+- `cold` — cache provenance is missing/malformed or the engine/toolchain
+  environment identity drifted. Purge project/plugin build outputs before UBT.
+
+Before COMPILE work the prior verified stamp is invalidated; before RUNTIME work
+its proof bit is invalidated. A cancelled or failed mutable run can therefore
+never leave a green stamp that a later revision may trust. A proof-only mismatch
+runs Automation with `-SkipBuild`; a full match emits a fresh exact-head
+equivalence artifact without rerunning unchanged Automation.
+
+This is semantic proof reuse, not SHA reuse: the current HEAD is still checked
+out and verified exactly, and the equivalence evidence records the current HEAD
+plus the fingerprints of every input allowed to affect the reused proof.
 
 ## Dedicated proof refinements
 
@@ -66,10 +118,19 @@ The active Passo Giau Embark terrain workflow calls
   changes.
 
 The same invocation emits `compile_fingerprint`, a SHA-256 identity derived
-from the pinned UE/PCGEx versions plus `.uproject`, `Source/**` compiled
-inputs and `.Build.cs` / `.Target.cs`. Runtime reuse is allowed only when
-that fingerprint and required binaries match. Unknown/empty specialized change
-sets fail closed to `heavy`.
+from the pinned UE/PCGEx versions plus the project binary graph and M3 build
+contract. `proof_mode=heavy` means **build required**, not **cold rebuild**.
+The self-hosted M3 resolver separately chooses:
+
+- `none` on a verified fingerprint + environment + PCGEx pin/binary hit;
+- `warm` when build inputs changed but the UE/toolchain environment and pinned
+  plugin dependency remain compatible, preserving intermediates for UBT;
+- `cold` only for missing/untrusted state, environment drift or PCGEx
+  pin/checkout drift.
+
+Unknown/empty specialized change sets still fail closed to `heavy`; they may
+benefit from WARM compilation only after the runner proves the reusable
+environment boundary.
 
 ## Unreal code vs Unreal tooling
 
@@ -89,6 +150,8 @@ The automatic code-only Unreal lane is reserved for:
 - the reusable automatic Unreal workflow itself;
 - the exact build/provenance helpers used by that lane:
   - `scripts/ci/Invoke-YacsUnrealCi.ps1`;
+  - `scripts/ci/Resolve-YacsUnrealBuildEnvironment.ps1`;
+  - `scripts/ci/Resolve-YacsUnrealEngine.ps1`;
   - `scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1`;
   - `scripts/ci/Test-YacsCodeOnlyCheckout.ps1`;
   - `scripts/ue/Invoke-YacsProof.ps1`;
