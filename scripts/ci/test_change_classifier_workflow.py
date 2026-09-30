@@ -174,7 +174,7 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
             self.ci,
         )
         self.assertIn(
-            "proof/editor tooling without ue_code must not claim automatic heavy code-build cost",
+            "proof/editor tooling without ue_code or asset_full must not claim heavy cost",
             self.ci,
         )
 
