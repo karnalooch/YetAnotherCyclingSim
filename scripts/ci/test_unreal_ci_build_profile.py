@@ -26,10 +26,10 @@ class UnrealCiBuildProfileTests(unittest.TestCase):
         self.assertIn("BuildConfiguration.xml", self.proof)
         self.assertNotIn("AppData\\Roaming\\Unreal Engine", self.proof)
 
-    def test_conservative_profile_uses_local_only_uba(self):
+    def test_conservative_profile_disables_uba(self):
         self.assertIn("<bAllowUBAExecutor>false</bAllowUBAExecutor>", self.proof)
         self.assertIn(
-            "<bAllowUBALocalExecutor>true</bAllowUBALocalExecutor>",
+            "<bAllowUBALocalExecutor>false</bAllowUBALocalExecutor>",
             self.proof,
         )
 
