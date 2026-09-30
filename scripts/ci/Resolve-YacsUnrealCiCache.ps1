@@ -76,7 +76,19 @@ if ($Action -eq 'Record') {
     if (Test-Path -LiteralPath $StatePath -PathType Leaf) {
         try { $Previous = Get-Content -LiteralPath $StatePath -Raw | ConvertFrom-Json } catch { $Previous = $null }
     }
-    $CompileHead = if ($CompletedMode -eq 'compile') { $ExpectedHead } elseif ($Previous -and $Previous.CompileHead) { [string]$Previous.CompileHead } else { $ExpectedHead }
+    $PreviousCompileHead = $null
+    if ($Previous -and $Previous.PSObject.Properties.Name -contains 'CompileHead') {
+        $PreviousCompileHead = [string]$Previous.CompileHead
+    }
+    $CompileHead = if ($CompletedMode -eq 'compile') {
+        $ExpectedHead
+    }
+    elseif ($PreviousCompileHead) {
+        $PreviousCompileHead
+    }
+    else {
+        $ExpectedHead
+    }
 
     New-Item -ItemType Directory -Path $StateDir -Force | Out-Null
     $State = [ordered]@{
@@ -113,39 +125,63 @@ if (Test-Path -LiteralPath $StatePath -PathType Leaf) {
 }
 
 if ($State) {
-    $PreviousProofHead = [string]$State.ProofHead
-    if (-not $Engine) {
-        $Reason = 'engine-identity-unresolved'
+    try {
+        $RequiredStateFields = @(
+            'SchemaVersion',
+            'CompileFingerprint',
+            'ProofFingerprint',
+            'EngineIdentity',
+            'CompilePassed',
+            'ProofPassed',
+            'ProofHead'
+        )
+        foreach ($Field in $RequiredStateFields) {
+            if ($State.PSObject.Properties.Name -notcontains $Field) {
+                throw "cache state missing required field '$Field'"
+            }
+        }
+
+        $PreviousProofHead = [string]$State.ProofHead
+        if (-not $Engine) {
+            $Reason = 'engine-identity-unresolved'
+            $Purge = $true
+        }
+        elseif ([int]$State.SchemaVersion -ne 1) {
+            $Reason = 'cache-schema-mismatch'
+            $Purge = $true
+        }
+        elseif ([string]$State.EngineIdentity -ne $EngineIdentity) {
+            $Reason = 'engine-identity-mismatch'
+            $Purge = $true
+        }
+        elseif (-not [bool]$State.CompilePassed) {
+            $Reason = 'previous-compile-not-verified'
+        }
+        elseif ([string]$State.CompileFingerprint -ne $ExpectedCompileFingerprint) {
+            $Reason = 'compile-fingerprint-mismatch'
+        }
+        elseif (@($ExpectedBinaries | Where-Object { -not (Test-Path -LiteralPath $_ -PathType Leaf) }).Count -gt 0) {
+            $Reason = 'expected-binary-missing'
+        }
+        elseif (-not [bool]$State.ProofPassed) {
+            $Mode = 'runtime'
+            $Reason = 'previous-proof-not-verified'
+        }
+        elseif ([string]$State.ProofFingerprint -ne $ExpectedProofFingerprint) {
+            $Mode = 'runtime'
+            $Reason = 'proof-fingerprint-mismatch'
+        }
+        else {
+            $Mode = 'static'
+            $Reason = 'verified-equivalent-proof'
+        }
+    }
+    catch {
+        $Mode = 'compile'
+        $Reason = 'invalid-cache-state-shape'
         $Purge = $true
-    }
-    elseif ([int]$State.SchemaVersion -ne 1) {
-        $Reason = 'cache-schema-mismatch'
-        $Purge = $true
-    }
-    elseif ([string]$State.EngineIdentity -ne $EngineIdentity) {
-        $Reason = 'engine-identity-mismatch'
-        $Purge = $true
-    }
-    elseif (-not [bool]$State.CompilePassed) {
-        $Reason = 'previous-compile-not-verified'
-    }
-    elseif ([string]$State.CompileFingerprint -ne $ExpectedCompileFingerprint) {
-        $Reason = 'compile-fingerprint-mismatch'
-    }
-    elseif (@($ExpectedBinaries | Where-Object { -not (Test-Path -LiteralPath $_ -PathType Leaf) }).Count -gt 0) {
-        $Reason = 'expected-binary-missing'
-    }
-    elseif (-not [bool]$State.ProofPassed) {
-        $Mode = 'runtime'
-        $Reason = 'previous-proof-not-verified'
-    }
-    elseif ([string]$State.ProofFingerprint -ne $ExpectedProofFingerprint) {
-        $Mode = 'runtime'
-        $Reason = 'proof-fingerprint-mismatch'
-    }
-    else {
-        $Mode = 'static'
-        $Reason = 'verified-equivalent-proof'
+        $PreviousProofHead = $null
+        Write-Warning ("Ignoring invalid Unreal cache state: {0}" -f $_.Exception.Message)
     }
 }
 
