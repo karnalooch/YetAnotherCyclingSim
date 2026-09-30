@@ -52,6 +52,15 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         ):
             self.assertIn(token, self.cache)
 
+    def test_workspace_lock_cleanup_knows_warm_worktree(self):
+        cleanup = (
+            ROOT / "scripts" / "ci" / "Release-YacsUnrealWorkspaceLocks.ps1"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            "_unreal-ci-warm/Saved/Logs/YetAnotherCyclingSim.log",
+            cleanup,
+        )
+
     def test_cache_records_exact_head_equivalence_evidence(self):
         for token in (
             "Head = $ExpectedHead",
