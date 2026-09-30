@@ -4,7 +4,8 @@
 
 .DESCRIPTION
     Installs the exact reviewed PCGEx source revision as an ignored authoring-only
-    checkout, builds YetAnotherCyclingSimEditor against that revision, executes the
+    checkout, builds YetAnotherCyclingSimEditor against that revision when the
+    compile fingerprint is not already validated, executes the
     YacsPassoGiauPcgExGraph commandlet, and emits exact-SHA proof metadata.
 
     This proof validates graph topology authoring, plugin/API integration, and
@@ -18,6 +19,7 @@ param(
     [string] $ArtifactRoot,
     [string] $ExpectedBranch = 'HEAD',
     [Parameter(Mandatory=$true)] [string] $ExpectedHead,
+    [switch] $SkipBuild,
     [int] $TimeoutSec = 900
 )
 
@@ -86,61 +88,87 @@ if ([bool]$BootstrapData.shipping_runtime_dependency -ne $false) {
     throw 'PCGEx bootstrap unexpectedly declares a shipping runtime dependency.'
 }
 
-Write-Host '[2/4] Building YetAnotherCyclingSimEditor with PCGEx enabled...' -ForegroundColor Cyan
-
-# Reuse the proven resource-constrained CI profile from Invoke-YacsProof.ps1.
-# PCGEx materially increases translation-unit and link pressure; allowing the
-# default UBA executor on this host has already produced Windows VirtualAlloc
-# error 1455 followed by an MSVC C1001 internal compiler error. Keep this proof
-# on the same fail-closed memory policy as the green Unreal CI lane.
-$UbtConfigDir = Join-Path -Path $RepoRoot -ChildPath 'Saved/UnrealBuildTool'
-New-Item -ItemType Directory -Path $UbtConfigDir -Force | Out-Null
-$UbtConfigPath = Join-Path -Path $UbtConfigDir -ChildPath 'BuildConfiguration.xml'
-$LogicalProcessors = [Math]::Max(1, [Environment]::ProcessorCount)
-$FreeVirtualGb = [double]$Context.Machine.FreeVirtualGb
-$CpuActionCap = [Math]::Max(2, [Math]::Floor($LogicalProcessors * 0.67))
-if ($FreeVirtualGb -ge 14.0) {
-    $MemoryActionCap = 4
-}
-elseif ($FreeVirtualGb -ge 8.0) {
-    $MemoryActionCap = 3
+if ($SkipBuild) {
+    Write-Host '[2/4] Reusing compile-fingerprinted YetAnotherCyclingSimEditor + PCGEx binaries...' -ForegroundColor Cyan
+    $ProjectBinaryRoot = Join-Path $RepoRoot 'Binaries/Win64'
+    $PluginBinaryRoot = Join-Path $RepoRoot 'Plugins/PCGExtendedToolkit/Binaries/Win64'
+    $ProjectModules = @(
+        Get-ChildItem -LiteralPath $ProjectBinaryRoot -File -Filter 'UnrealEditor-YetAnotherCyclingSimEditor*.dll' -ErrorAction SilentlyContinue
+    )
+    $PluginModules = @(
+        Get-ChildItem -LiteralPath $PluginBinaryRoot -File -Filter '*.dll' -ErrorAction SilentlyContinue
+    )
+    if ($ProjectModules.Count -eq 0) {
+        throw 'Compile-fingerprint cache is missing YetAnotherCyclingSimEditor binaries.'
+    }
+    if ($PluginModules.Count -eq 0) {
+        throw 'Compile-fingerprint cache is missing PCGEx plugin binaries.'
+    }
+    @(
+        'Build skipped: validated compile fingerprint cache hit.'
+        ('Project modules: {0}' -f $ProjectModules.Count)
+        ('PCGEx modules: {0}' -f $PluginModules.Count)
+    ) | Set-Content -LiteralPath $BuildLog -Encoding UTF8
 }
 else {
-    $MemoryActionCap = 2
-}
-$MaxParallelActions = [int][Math]::Min($MemoryActionCap, $CpuActionCap)
-$MaxParallelActions = [int][Math]::Max(2, $MaxParallelActions)
-
-$UbtConfig = @"
-<?xml version="1.0" encoding="utf-8" ?>
-<Configuration xmlns="https://www.unrealengine.com/BuildConfiguration">
-  <BuildConfiguration>
-    <bAllowUBAExecutor>false</bAllowUBAExecutor>
-    <bAllowUBALocalExecutor>false</bAllowUBALocalExecutor>
-    <MaxParallelActions>$MaxParallelActions</MaxParallelActions>
-  </BuildConfiguration>
-</Configuration>
-"@
-$UbtConfig | Set-Content -LiteralPath $UbtConfigPath -Encoding UTF8
-Write-Host (
-    "PCGEx conservative UBT profile: UBA disabled; MaxParallelActions={0}; logicalProcessors={1}; freeVirtualGb={2:N2}; config={3}" -f
-    $MaxParallelActions,
-    $LogicalProcessors,
-    $FreeVirtualGb,
-    $UbtConfigPath
-) -ForegroundColor Yellow
-
-$BuildBat = Join-Path $Context.EngineRoot 'Engine/Build/BatchFiles/Build.bat'
-$BuildArgs = @($ProjectPath, 'YetAnotherCyclingSimEditor', 'Win64', 'Development', '-WaitMutex', '-FromMsBuild')
-$BuildProc = Start-Process -FilePath $BuildBat -ArgumentList $BuildArgs -WorkingDirectory (Split-Path $BuildBat -Parent) -NoNewWindow -PassThru -RedirectStandardOutput $BuildLog
-$BuildProc.WaitForExit()
-if ($BuildProc.ExitCode -ne 0) {
-    throw "PCGEx-enabled editor build failed with exit code $($BuildProc.ExitCode). See $BuildLog"
-}
-
-$BuildText = Get-Content -LiteralPath $BuildLog -Raw -ErrorAction Stop
-if ($BuildText -notmatch 'Result:\s+Succeeded' -and $BuildText -notmatch 'Target is up to date') {
-    throw 'PCGEx-enabled editor build log is missing a success marker.'
+    Write-Host '[2/4] Building YetAnotherCyclingSimEditor with PCGEx enabled...' -ForegroundColor Cyan
+    
+    # Reuse the proven resource-constrained CI profile from Invoke-YacsProof.ps1.
+    # PCGEx materially increases translation-unit and link pressure; allowing the
+    # default UBA executor on this host has already produced Windows VirtualAlloc
+    # error 1455 followed by an MSVC C1001 internal compiler error. Keep this proof
+    # on the same fail-closed memory policy as the green Unreal CI lane.
+    $UbtConfigDir = Join-Path -Path $RepoRoot -ChildPath 'Saved/UnrealBuildTool'
+    New-Item -ItemType Directory -Path $UbtConfigDir -Force | Out-Null
+    $UbtConfigPath = Join-Path -Path $UbtConfigDir -ChildPath 'BuildConfiguration.xml'
+    $LogicalProcessors = [Math]::Max(1, [Environment]::ProcessorCount)
+    $FreeVirtualGb = [double]$Context.Machine.FreeVirtualGb
+    $CpuActionCap = [Math]::Max(2, [Math]::Floor($LogicalProcessors * 0.67))
+    if ($FreeVirtualGb -ge 14.0) {
+        $MemoryActionCap = 4
+    }
+    elseif ($FreeVirtualGb -ge 8.0) {
+        $MemoryActionCap = 3
+    }
+    else {
+        $MemoryActionCap = 2
+    }
+    $MaxParallelActions = [int][Math]::Min($MemoryActionCap, $CpuActionCap)
+    $MaxParallelActions = [int][Math]::Max(2, $MaxParallelActions)
+    
+    $UbtConfig = @"
+    <?xml version="1.0" encoding="utf-8" ?>
+    <Configuration xmlns="https://www.unrealengine.com/BuildConfiguration">
+      <BuildConfiguration>
+        <bAllowUBAExecutor>false</bAllowUBAExecutor>
+        <bAllowUBALocalExecutor>false</bAllowUBALocalExecutor>
+        <MaxParallelActions>$MaxParallelActions</MaxParallelActions>
+      </BuildConfiguration>
+    </Configuration>
+    "@
+    $UbtConfig | Set-Content -LiteralPath $UbtConfigPath -Encoding UTF8
+    Write-Host (
+        "PCGEx conservative UBT profile: UBA disabled; MaxParallelActions={0}; logicalProcessors={1}; freeVirtualGb={2:N2}; config={3}" -f
+        $MaxParallelActions,
+        $LogicalProcessors,
+        $FreeVirtualGb,
+        $UbtConfigPath
+    ) -ForegroundColor Yellow
+    
+    $BuildBat = Join-Path $Context.EngineRoot 'Engine/Build/BatchFiles/Build.bat'
+    $BuildArgs = @($ProjectPath, 'YetAnotherCyclingSimEditor', 'Win64', 'Development', '-WaitMutex', '-FromMsBuild')
+    $BuildProc = Start-Process -FilePath $BuildBat -ArgumentList $BuildArgs -WorkingDirectory (Split-Path $BuildBat -Parent) -NoNewWindow -PassThru -RedirectStandardOutput $BuildLog
+    $BuildProc.WaitForExit()
+    if ($BuildProc.ExitCode -ne 0) {
+        throw "PCGEx-enabled editor build failed with exit code $($BuildProc.ExitCode). See $BuildLog"
+    }
+    
+    $BuildText = Get-Content -LiteralPath $BuildLog -Raw -ErrorAction Stop
+    if ($BuildText -notmatch 'Result:\s+Succeeded' -and $BuildText -notmatch 'Target is up to date') {
+        throw 'PCGEx-enabled editor build log is missing a success marker.'
+    }
+    
+    
 }
 
 Write-Host '[3/4] Authoring deterministic PCGEx corridor graph asset...' -ForegroundColor Cyan
