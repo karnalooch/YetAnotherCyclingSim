@@ -29,6 +29,8 @@ jobs:
       assets: ${{ steps.classify.outputs.assets }}
       ci: ${{ steps.classify.outputs.ci }}
       ue_code: ${{ steps.classify.outputs.ue_code }}
+      ue_tooling: ${{ steps.classify.outputs.ue_tooling }}
+      ci_cost_class: ${{ steps.classify.outputs.ci_cost_class }}
       unknown: ${{ steps.classify.outputs.unknown }}
       docs_only: ${{ steps.classify.outputs.docs_only }}
       asset_only: ${{ steps.classify.outputs.asset_only }}
@@ -243,6 +245,8 @@ jobs:
           CLASS_ASSETS: ${{ needs.changes.outputs.assets }}
           CLASS_CI: ${{ needs.changes.outputs.ci }}
           CLASS_UE_CODE: ${{ needs.changes.outputs.ue_code }}
+          CLASS_UE_TOOLING: ${{ needs.changes.outputs.ue_tooling }}
+          CLASS_CI_COST: ${{ needs.changes.outputs.ci_cost_class }}
           CLASS_SECURITY_BASE: ${{ needs.changes.outputs.security_base }}
           CLASS_ASSET_FULL: ${{ needs.changes.outputs.asset_full }}
           EVENT_NAME: ${{ github.event_name }}
@@ -256,6 +260,14 @@ jobs:
             local value="$2"
             if [[ "${value}" != "true" && "${value}" != "false" ]]; then
               echo "::error::${name}: expected literal true/false classifier output, got '${value}'"
+              failed=1
+            fi
+          }
+
+          require_ci_cost() {
+            local value="$1"
+            if [[ "${value}" != "light" && "${value}" != "standard" && "${value}" != "heavy" ]]; then
+              echo "::error::class-ci-cost: expected light/standard/heavy classifier output, got '${value}'"
               failed=1
             fi
           }
@@ -290,12 +302,26 @@ jobs:
           require_bool "class-assets" "${CLASS_ASSETS}"
           require_bool "class-ci" "${CLASS_CI}"
           require_bool "class-ue-code" "${CLASS_UE_CODE}"
+          require_bool "class-ue-tooling" "${CLASS_UE_TOOLING}"
+          require_ci_cost "${CLASS_CI_COST}"
           require_bool "class-security-base" "${CLASS_SECURITY_BASE}"
           require_bool "class-asset-full" "${CLASS_ASSET_FULL}"
 
           python_expected=false
           if [[ "${CLASS_PYTHON}" == "true" || "${CLASS_CI}" == "true" ]]; then
             python_expected=true
+          fi
+
+          if [[ "${CLASS_UE_CODE}" == "true" || "${CLASS_ASSET_FULL}" == "true" ]]; then
+            if [[ "${CLASS_CI_COST}" != "heavy" ]]; then
+              echo "::error::heavy Unreal/runtime impact must classify ci_cost_class=heavy, got ${CLASS_CI_COST}"
+              failed=1
+            fi
+          fi
+
+          if [[ "${CLASS_UE_TOOLING}" == "true" && "${CLASS_UE_CODE}" == "false" && "${CLASS_CI_COST}" == "heavy" ]]; then
+            echo "::error::proof/editor tooling without ue_code must not claim automatic heavy code-build cost"
+            failed=1
           fi
 
           cpp_security_expected=false
