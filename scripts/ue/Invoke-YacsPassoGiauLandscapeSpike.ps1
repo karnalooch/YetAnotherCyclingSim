@@ -182,7 +182,7 @@ if ($IsEmbarkTerrain) {
     if ([math]::Abs([double]$Terrain.target_aoi.extent_m[0] - 8000.0) -gt 0.001 -or [math]::Abs([double]$Terrain.target_aoi.extent_m[1] - 8000.0) -gt 0.001) {
         throw 'Embark terrain report does not preserve the 8 km Passo Giau AOI.'
     }
-    if (-not $Terrain.conditioned_source.sha256 -or -not $Terrain.conditioned_source.pipeline_run_manifest_sha256) {
+    if (-not $Terrain.conditioned_source.sha256 -or -not $Terrain.conditioned_source.dcc_handoff_manifest_sha256) {
         throw 'Embark terrain report is missing conditioned-source reproducibility hashes.'
     }
     $NativeCell = @($Terrain.conditioned_source.native_cell_m)
@@ -451,7 +451,7 @@ $Final = [ordered]@{
             dataset = 'MASE/Veneto -> Houdini PDG -> Gaea -> Houdini heightfield'
             pipeline_id = [string]$Terrain.pipeline_id
             conditioned_source_sha256 = [string]$Terrain.conditioned_source.sha256
-            pipeline_run_manifest_sha256 = [string]$Terrain.conditioned_source.pipeline_run_manifest_sha256
+            dcc_handoff_manifest_sha256 = [string]$Terrain.conditioned_source.dcc_handoff_manifest_sha256
             native_cell_m = @($Terrain.conditioned_source.native_cell_m)
             source_download_report = $SourceDownload
             fallback_download_report = $FallbackDownload
