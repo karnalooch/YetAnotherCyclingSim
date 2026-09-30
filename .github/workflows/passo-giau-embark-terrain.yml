@@ -42,6 +42,54 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  classify:
+    name: Classify Embark proof cost
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      proof_mode: ${{ steps.classify.outputs.proof_mode }}
+      compile_fingerprint: ${{ steps.classify.outputs.compile_fingerprint }}
+    steps:
+      - name: Checkout exact revision for change classification
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          lfs: false
+          persist-credentials: false
+
+      - name: Resolve comparison base
+        id: base
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="${{ github.event.before }}"
+          if [[ -z "$BASE" || "$BASE" =~ ^0+$ ]] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            BASE="$(git rev-parse HEAD^)"
+          fi
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+
+      - name: Classify proof mode and compile fingerprint
+        id: classify
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/ci/classify_changes.py             --base "${{ steps.base.outputs.base }}"             --head "${{ github.sha }}"             --embark-terrain-proof             --repo-root .             --github-output "$GITHUB_OUTPUT"
+
+      - name: Validate proof routing outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${{ steps.classify.outputs.proof_mode }}" in
+            cheap|render|heavy) ;;
+            *) echo "Invalid proof mode: ${{ steps.classify.outputs.proof_mode }}" >&2; exit 1 ;;
+          esac
+          [[ "${{ steps.classify.outputs.compile_fingerprint }}" =~ ^[0-9a-f]{64}$ ]]
+          echo "Embark proof mode: ${{ steps.classify.outputs.proof_mode }}"
+          echo "Compile fingerprint: ${{ steps.classify.outputs.compile_fingerprint }}"
+
   contract:
     name: Embark terrain contract
     runs-on: ubuntu-latest
@@ -69,7 +117,8 @@ jobs:
 
   prepare:
     name: Prepare real SP638 authoring input
-    needs: contract
+    needs: [contract, classify]
+    if: ${{ needs.classify.outputs.proof_mode != 'cheap' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -154,8 +203,8 @@ jobs:
 
   author:
     name: PCGEx corridor graph authoring
-    needs: [contract, prepare]
-    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.ref == 'refs/heads/feat/287-embark-terrain-pipeline' }}
+    needs: [contract, classify, prepare]
+    if: ${{ needs.classify.outputs.proof_mode != 'cheap' && github.repository == 'karnalooch/YetAnotherCyclingSim' && github.ref == 'refs/heads/feat/287-embark-terrain-pipeline' }}
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 120
     env:
@@ -178,7 +227,7 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 1
           lfs: false
-          clean: true
+          clean: false
           persist-credentials: false
 
       - name: Verify exact SHA and code-only checkout
@@ -186,6 +235,12 @@ jobs:
         working-directory: _embark-terrain-worktree
         run: |
           $ErrorActionPreference = 'Stop'
+          # Preserve only ignored compile-cache state. Any tracked or ordinary
+          # untracked residue from an interrupted run is discarded fail-closed.
+          git reset --hard
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to reset PCGEx authoring checkout.' }
+          git clean -ffd
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to clean non-ignored PCGEx authoring residue.' }
           if ((git rev-parse HEAD).Trim() -ne '${{ github.sha }}') {
             throw 'PCGEx authoring checkout is not exact SHA.'
           }
@@ -263,12 +318,81 @@ jobs:
           }
           Write-Host ("Materialized Gate C.3 patch: {0}x{1} @ {2} m" -f $patch.grid.rows,$patch.grid.columns,$patch.grid.step_x_m)
 
-      - name: Build and author deterministic PCGEx graph
+      - name: Resolve compile-fingerprint cache
+        id: compile_cache
         shell: pwsh
         working-directory: _embark-terrain-worktree
         run: |
-          ./scripts/ue/Invoke-YacsPassoGiauPcgExGraph.ps1 -ExpectedBranch 'HEAD' -ExpectedHead '${{ github.sha }}' -ArtifactRoot 'Saved/RuntimeProof/CI/M3/PCGExCorridor'
+          $ErrorActionPreference = 'Stop'
+          $mode = '${{ needs.classify.outputs.proof_mode }}'
+          $fingerprint = '${{ needs.classify.outputs.compile_fingerprint }}'
+          $statePath = Join-Path (Get-Location) 'Saved/BuildCache/PCGEx/compile-state.json'
+          $warm = $false
+
+          if ($mode -ne 'heavy' -and (Test-Path -LiteralPath $statePath -PathType Leaf)) {
+            try {
+              $state = Get-Content -LiteralPath $statePath -Raw | ConvertFrom-Json
+              $projectModules = @(
+                Get-ChildItem -LiteralPath (Join-Path (Get-Location) 'Binaries/Win64') -File -Filter 'UnrealEditor-YetAnotherCyclingSimEditor*.dll' -ErrorAction SilentlyContinue
+              )
+              $pluginModules = @(
+                Get-ChildItem -LiteralPath (Join-Path (Get-Location) 'Plugins/PCGExtendedToolkit/Binaries/Win64') -File -Filter '*.dll' -ErrorAction SilentlyContinue
+              )
+              $pluginCheckout = Test-Path -LiteralPath (Join-Path (Get-Location) 'Plugins/PCGExtendedToolkit/.git')
+              $warm = (
+                [string]$state.compile_fingerprint -eq $fingerprint -and
+                $projectModules.Count -gt 0 -and
+                $pluginModules.Count -gt 0 -and
+                $pluginCheckout
+              )
+            }
+            catch {
+              Write-Warning ("Ignoring invalid compile cache state: {0}" -f $_.Exception.Message)
+              $warm = $false
+            }
+          }
+
+          if (-not $warm) {
+            Write-Host ("Compile cache MISS: mode={0} fingerprint={1}" -f $mode,$fingerprint) -ForegroundColor Yellow
+            foreach ($relative in @('Binaries','Intermediate','Plugins/PCGExtendedToolkit')) {
+              Remove-Item -LiteralPath (Join-Path (Get-Location) $relative) -Recurse -Force -ErrorAction SilentlyContinue
+            }
+          }
+          else {
+            Write-Host ("Compile cache HIT: fingerprint={0}" -f $fingerprint) -ForegroundColor Green
+          }
+
+          "skip_build=$($warm.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+
+      - name: Build or reuse binaries and author deterministic PCGEx graph
+        shell: pwsh
+        working-directory: _embark-terrain-worktree
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $params = @{
+            ExpectedBranch = 'HEAD'
+            ExpectedHead = '${{ github.sha }}'
+            ArtifactRoot = 'Saved/RuntimeProof/CI/M3/PCGExCorridor'
+          }
+          if ('${{ steps.compile_cache.outputs.skip_build }}' -eq 'true') {
+            $params.SkipBuild = $true
+          }
+
+          & ./scripts/ue/Invoke-YacsPassoGiauPcgExGraph.ps1 @params
           if ($LASTEXITCODE -ne 0) { throw 'PCGEx corridor graph proof failed.' }
+
+          if ('${{ steps.compile_cache.outputs.skip_build }}' -ne 'true') {
+            $statePath = Join-Path (Get-Location) 'Saved/BuildCache/PCGEx/compile-state.json'
+            New-Item -ItemType Directory -Path (Split-Path -Parent $statePath) -Force | Out-Null
+            [ordered]@{
+              schema_version = 1
+              compile_fingerprint = '${{ needs.classify.outputs.compile_fingerprint }}'
+              validated_head = '${{ github.sha }}'
+              pcgex_commit = '39a8f1bdc65b2c4613a1e87b71d93b4576db0a66'
+              proof_mode = '${{ needs.classify.outputs.proof_mode }}'
+            } | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $statePath -Encoding UTF8
+            Write-Host "Persisted validated PCGEx compile fingerprint cache state." -ForegroundColor Green
+          }
 
       - name: Render PCGEx rider-close corridor proof
         shell: pwsh
@@ -329,10 +453,9 @@ jobs:
           if (-not (Test-Path -LiteralPath (Join-Path $worktree '.git'))) {
             exit 0
           }
-          $pcgex = Join-Path $worktree 'Plugins/PCGExtendedToolkit'
-          if (Test-Path -LiteralPath $pcgex) {
-            Remove-Item -LiteralPath $pcgex -Recurse -Force
-          }
+          # Deliberately preserve ignored Binaries/Intermediate/Saved and the
+          # ignored exact-SHA PCGEx checkout. Their reuse is gated next run by
+          # the compile fingerprint plus required-binary checks.
           git -C $worktree reset --hard
           git -C $worktree clean -ffd
           if (git -C $worktree status --porcelain --untracked-files=all) {
@@ -342,7 +465,8 @@ jobs:
 
   validate:
     name: PCGEx corridor deviation report
-    needs: [prepare, author]
+    needs: [classify, prepare, author]
+    if: ${{ needs.classify.outputs.proof_mode != 'cheap' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
