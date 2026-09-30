@@ -54,9 +54,9 @@ class GumballBaselineContractTests(unittest.TestCase):
             self.assertEqual(set(refs), {CURRENT_GUMBALL_PIN}, relative)
 
     def test_repository_ops_runs_trusted_default_branch_code(self) -> None:
-        text = (
-            ROOT / ".github" / "workflows" / "repository-ops.yml"
-        ).read_text(encoding="utf-8")
+        text = (ROOT / ".github" / "workflows" / "repository-ops.yml").read_text(
+            encoding="utf-8"
+        )
         self.assertIn("pull_request_target:", text)
         self.assertIn("ref: ${{ github.event.repository.default_branch }}", text)
         self.assertNotIn("ref: ${{ github.event.pull_request.head.sha }}", text)
