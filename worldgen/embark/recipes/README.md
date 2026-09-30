@@ -78,12 +78,23 @@ The bridge consumes the PDG-conditioned terrain and produces:
 
 ## Gaea recipe contract
 
-The recipe must expose exactly these pipeline variables:
+The recipe must follow the official Gaea2Houdini `In > Process > Out` contract:
 
-- `inputHeightfield`
-- `outputHeightfield`
+- create a String variable named `inputHeightfield` with Type = `Input`;
+- bind a Gaea File node's Filename property to `inputHeightfield`;
+- place the approved shaping/simulation nodes between input and output;
+- create a String variable named `outputHeightfield` with Type = `Output`;
+- create an Export node with format = `GaeaRaw`, Location = `Explicit`, and bind
+  Output Path to `outputHeightfield`;
+- expose only the shaping controls that the YACS recipe actually needs.
 
-Build Swarm receives them through a generated JSON variable file.
+The Gaea2Houdini SOP must consume that real `.terrain` recipe. The surrounding
+Houdini network owns the conversion from the bridge output back to the 32-bit
+metric YACS working heightfield written at the configured `gaea_heightfield`
+handoff path.
+
+The generated variable JSON is retained as reproducibility evidence; it is not a
+replacement for the Gaea2Houdini node contract.
 
 The recipe is allowed to shape presentation terrain, but it must preserve the route
 corridor mask/constraints supplied by the Houdini preprocessing stage. It must not
