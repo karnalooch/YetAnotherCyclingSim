@@ -10,6 +10,7 @@ param(
     [Parameter(Mandatory=$true)] [string] $ExpectedBranch,
     [Parameter(Mandatory=$true)] [string] $ExpectedHead,
     [string] $PreparedWorkspaceStamp,
+    [string] $PcgExExecutionOutput,
     [switch] $ValidateOnly,
     [int] $TimeoutSec = 900
 )
@@ -33,6 +34,16 @@ $CaptureStdout = Join-Path $ArtifactRoot 'local_corridor_visual.stdout.log'
 $CaptureErr = $CaptureLog + '.stderr'
 $CapturePng = Join-Path $ArtifactRoot 'sp638_local_corridor_rider_3840x2160.png'
 $CaptureProof = Join-Path $ArtifactRoot 'local_corridor_visual_proof.json'
+
+if ($PcgExExecutionOutput) {
+    if (-not [System.IO.Path]::IsPathRooted($PcgExExecutionOutput)) {
+        $PcgExExecutionOutput = Join-Path $RepoRoot $PcgExExecutionOutput
+    }
+    if (-not (Test-Path -LiteralPath $PcgExExecutionOutput -PathType Leaf)) {
+        throw "PCGEx execution output is missing: $PcgExExecutionOutput"
+    }
+    $PcgExExecutionOutput = (Resolve-Path -LiteralPath $PcgExExecutionOutput).Path
+}
 
 if (-not $ValidateOnly) {
     foreach ($Path in @($CaptureLog,$CaptureStdout,$CaptureErr,$CapturePng,$CaptureProof)) {
@@ -85,6 +96,9 @@ else {
     
     $env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PNG = $CapturePng
     $env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PROOF = $CaptureProof
+    if ($PcgExExecutionOutput) {
+        $env:YACS_PCGEX_CORRIDOR_OUTPUT = $PcgExExecutionOutput
+    }
     try {
         $Args = @(
             $ProjectPath,
@@ -103,6 +117,7 @@ else {
     finally {
         Remove-Item Env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PNG -ErrorAction SilentlyContinue
         Remove-Item Env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PROOF -ErrorAction SilentlyContinue
+        Remove-Item Env:YACS_PCGEX_CORRIDOR_OUTPUT -ErrorAction SilentlyContinue
     }
 }
 
@@ -128,6 +143,17 @@ if ([bool]$Proof.saved_to_map -ne $false -or [bool]$Proof.authoritative_physics 
 }
 if ([bool]$Proof.road_xy_snapped_to_terrain_grid -ne $false) {
     throw 'SP638 local-corridor visual proof snapped road XY to terrain.'
+}
+if ($PcgExExecutionOutput) {
+    if ([bool]$Proof.render_centerline.pcgex_presentation_only -ne $true) {
+        throw 'PCGEx visual proof did not identify its render centerline as presentation-only.'
+    }
+    if ([bool]$Proof.render_centerline.canonical_route_authority_preserved -ne $true) {
+        throw 'PCGEx visual proof did not preserve canonical route authority.'
+    }
+    if ([int]$Proof.render_centerline.source_collection_index -ne 0) {
+        throw 'PCGEx visual proof used an unexpected centerline dataset.'
+    }
 }
 if ([bool]$Proof.local_geometry.continuous_dynamic_mesh_surfaces -ne $true) {
     throw 'SP638 local-corridor proof did not use continuous DynamicMesh surfaces.'

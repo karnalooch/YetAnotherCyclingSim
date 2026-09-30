@@ -49,11 +49,14 @@ CAPTURE_RES_Y = 2160
 PROOF_AA_QUALITY = 6
 
 SESSION_MANAGED_ENV = "YACS_R4_1_EDITOR_SESSION_MANAGED"
+PCGEX_CORRIDOR_OUTPUT_ENV = "YACS_PCGEX_CORRIDOR_OUTPUT"
+PCGEX_CENTER_DATASET_INDEX = 0
+PCGEX_RENDER_SPLINE_STRIDE = 5
 
 
 def _release_python_script() -> None:
     if os.environ.get(SESSION_MANAGED_ENV, "").strip() != "1":
-        _release_python_script()
+        unreal.EditorPythonScripting.set_keep_python_script_alive(False)
 
 SLICE_HALF_LENGTH_CM = 35000.0
 KERNEL_SAMPLE_STEP_CM = 200.0
@@ -206,6 +209,88 @@ def _find_road_spline() -> tuple[unreal.Actor, unreal.SplineComponent, int]:
             f"found {len(candidates)}: {labels}"
         )
     return candidates[0]
+
+
+def _load_pcgex_presentation_centerline() -> tuple[list[unreal.Vector], dict[str, object]] | None:
+    output_value = os.environ.get(PCGEX_CORRIDOR_OUTPUT_ENV, "").strip()
+    if not output_value:
+        return None
+
+    output_path = Path(output_value)
+    if not output_path.is_file():
+        raise RuntimeError(f"PCGEx corridor output is missing: {output_path}")
+
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    if payload.get("status") != "PASS":
+        raise RuntimeError("PCGEx corridor output did not report PASS")
+
+    datasets = payload.get("datasets") or []
+    center_dataset = next(
+        (
+            dataset
+            for dataset in datasets
+            if int(dataset.get("source_collection_index", -1))
+            == PCGEX_CENTER_DATASET_INDEX
+        ),
+        None,
+    )
+    if center_dataset is None:
+        raise RuntimeError(
+            f"PCGEx corridor output is missing center dataset {PCGEX_CENTER_DATASET_INDEX}"
+        )
+
+    raw_points = center_dataset.get("points") or []
+    if len(raw_points) < 100:
+        raise RuntimeError(
+            f"PCGEx center dataset is unexpectedly sparse: {len(raw_points)} points"
+        )
+
+    world_points = [
+        unreal.Vector(
+            float(point["x_cm"]),
+            float(point["y_cm"]),
+            float(point["z_cm"]),
+        )
+        for point in raw_points
+    ]
+    output_sha256 = hashlib.sha256(output_path.read_bytes()).hexdigest()
+    metadata = {
+        "source": "pcgex_graph_output",
+        "pcgex_presentation_only": True,
+        "canonical_route_authority_preserved": True,
+        "authoritative_physics": False,
+        "source_collection_index": PCGEX_CENTER_DATASET_INDEX,
+        "source_point_count": len(world_points),
+        "render_spline_stride": PCGEX_RENDER_SPLINE_STRIDE,
+        "execution_output_sha256": output_sha256,
+        "pcgex_edge_paths_rendered": False,
+    }
+    return world_points, metadata
+
+
+def _replace_with_pcgex_centerline(
+    spline: unreal.SplineComponent,
+    points: list[unreal.Vector],
+) -> int:
+    sampled = points[::PCGEX_RENDER_SPLINE_STRIDE]
+    if sampled[-1] != points[-1]:
+        sampled.append(points[-1])
+
+    spline.clear_spline_points(False)
+    for index, point in enumerate(sampled):
+        spline.add_spline_point(
+            point,
+            unreal.SplineCoordinateSpace.WORLD,
+            False,
+        )
+        spline.set_spline_point_type(
+            index,
+            unreal.SplinePointType.LINEAR,
+            False,
+        )
+    spline.set_closed_loop(False, False)
+    spline.update_spline()
+    return len(sampled)
 
 
 def _choose_hairpin_distance(spline: unreal.SplineComponent) -> tuple[float, float]:
@@ -707,6 +792,20 @@ def main() -> None:
     for component in road_actor.get_components_by_class(unreal.SplineMeshComponent):
         component.set_visibility(False, True)
 
+    pcgex_presentation = _load_pcgex_presentation_centerline()
+    pcgex_metadata: dict[str, object] | None = None
+    if pcgex_presentation is not None:
+        pcgex_points, pcgex_metadata = pcgex_presentation
+        render_control_count = _replace_with_pcgex_centerline(
+            spline,
+            pcgex_points,
+        )
+        pcgex_metadata["render_control_point_count"] = render_control_count
+        unreal.log(
+            "[YacsSp638LocalCorridorVisual] using PCGEx presentation centerline: "
+            f"source_points={len(pcgex_points)} render_controls={render_control_count}"
+        )
+
     full_length_cm = float(spline.get_spline_length())
     focus_cm, curvature_score = _choose_hairpin_distance(spline)
     start_cm = max(0.0, focus_cm - SLICE_HALF_LENGTH_CM)
@@ -982,7 +1081,21 @@ def main() -> None:
     camera_component.set_editor_property("field_of_view", 76.0)
 
     _proof_data = {
-        "capture_strategy": "r4.1b.3-world-aligned-terrain-skin-plus-corridor",
+        "capture_strategy": (
+            "pcgex-presentation-centerline-plus-r4.1b.3-local-corridor"
+            if pcgex_metadata is not None
+            else "r4.1b.3-world-aligned-terrain-skin-plus-corridor"
+        ),
+        "render_centerline": (
+            pcgex_metadata
+            if pcgex_metadata is not None
+            else {
+                "source": "persisted_sp638_spline",
+                "pcgex_presentation_only": False,
+                "canonical_route_authority_preserved": True,
+                "authoritative_physics": False,
+            }
+        ),
         "source_full_road_length_m": round(full_length_cm / 100.0, 3),
         "source_control_points": original_control_count,
         "selected_hairpin_distance_m": round(focus_cm / 100.0, 3),

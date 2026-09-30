@@ -21,6 +21,9 @@ on:
       - 'scripts/assets/download_passo_giau_road_network.py'
       - 'scripts/assets/prepare_passo_giau_road.py'
       - 'scripts/ue/Invoke-YacsPassoGiauPcgExGraph.ps1'
+      - 'scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1'
+      - 'scripts/ue/stage3g_capture_sp638_local_corridor.py'
+      - 'scripts/geometry/**'
       - 'scripts/ci/test_embark_terrain_pipeline_contract.py'
       - 'Source/YetAnotherCyclingSimEditor/Private/PCG/YacsPassoGiauPcgExGraphCommandlet.cpp'
       - 'Source/YetAnotherCyclingSimEditor/Private/PCG/YacsPassoGiauSp638PathSettings.cpp'
@@ -227,6 +230,17 @@ jobs:
         run: |
           ./scripts/ue/Invoke-YacsPassoGiauPcgExGraph.ps1 -ExpectedBranch 'HEAD' -ExpectedHead '${{ github.sha }}' -ArtifactRoot 'Saved/RuntimeProof/CI/M3/PCGExCorridor'
           if ($LASTEXITCODE -ne 0) { throw 'PCGEx corridor graph proof failed.' }
+
+      - name: Render PCGEx rider-close corridor proof
+        shell: pwsh
+        working-directory: _embark-terrain-worktree
+        run: |
+          ./scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1 `
+            -ExpectedBranch 'HEAD' `
+            -ExpectedHead '${{ github.sha }}' `
+            -ArtifactRoot 'Saved/RuntimeProof/CI/M3/PCGExCorridor/Visual' `
+            -PcgExExecutionOutput 'Saved/RuntimeProof/CI/M3/PCGExCorridor/pcgex_graph_output.json'
+          if ($LASTEXITCODE -ne 0) { throw 'PCGEx rider-close visual proof failed.' }
 
       - name: Upload PCGEx authoring evidence
         if: ${{ always() }}
