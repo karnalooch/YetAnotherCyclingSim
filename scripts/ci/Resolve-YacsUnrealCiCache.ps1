@@ -37,120 +37,17 @@ if ($ActualHead -ne $ExpectedHead) {
     throw "Unreal cache provenance mismatch: HEAD '$ActualHead' != expected '$ExpectedHead'."
 }
 
-$EngineResolverPath = Join-Path $RepoRoot 'scripts/ci/Resolve-YacsUnrealEngine.ps1'
-if (-not (Test-Path -LiteralPath $EngineResolverPath -PathType Leaf)) {
-    throw "Canonical Unreal Engine resolver is missing: $EngineResolverPath"
+$EnvironmentResolverPath = Join-Path $RepoRoot 'scripts/ci/Resolve-YacsUnrealBuildEnvironment.ps1'
+if (-not (Test-Path -LiteralPath $EnvironmentResolverPath -PathType Leaf)) {
+    throw "Canonical Unreal build-environment resolver is missing: $EnvironmentResolverPath"
 }
-. $EngineResolverPath
-$Engine = Resolve-YacsUnrealEngine -ProjectPath (Join-Path $RepoRoot 'YetAnotherCyclingSim.uproject')
+. $EnvironmentResolverPath
+$BuildEnvironment = Resolve-YacsUnrealBuildEnvironment -ProjectPath (Join-Path $RepoRoot 'YetAnotherCyclingSim.uproject')
+$Engine = if ($BuildEnvironment) { $BuildEnvironment.Engine } else { $null }
 $EngineIdentity = if ($Engine) { [string] $Engine.Identity } else { 'unresolved' }
 $EngineRoot = if ($Engine) { [string] $Engine.Root } else { 'unresolved' }
-
-function Resolve-YacsToolchainIdentity {
-    $VsRoots = [System.Collections.Generic.List[string]]::new()
-    $ProgramFilesX86 = [Environment]::GetEnvironmentVariable('ProgramFiles(x86)')
-    $ProgramFiles = [Environment]::GetEnvironmentVariable('ProgramFiles')
-    if (-not $ProgramFilesX86 -or -not $ProgramFiles) {
-        return $null
-    }
-    $VsWhere = Join-Path $ProgramFilesX86 'Microsoft Visual Studio/Installer/vswhere.exe'
-    if (Test-Path -LiteralPath $VsWhere -PathType Leaf) {
-        $Resolved = @(
-            & $VsWhere -products * -latest -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath 2>$null
-        )
-        foreach ($Path in $Resolved) {
-            if ($Path -and (Test-Path -LiteralPath $Path -PathType Container)) {
-                [void]$VsRoots.Add((Resolve-Path -LiteralPath $Path).Path)
-            }
-        }
-    }
-
-    foreach ($Edition in @('BuildTools','Community','Professional','Enterprise')) {
-        $Candidate = Join-Path $ProgramFiles "Microsoft Visual Studio/2022/$Edition"
-        if (Test-Path -LiteralPath $Candidate -PathType Container) {
-            [void]$VsRoots.Add((Resolve-Path -LiteralPath $Candidate).Path)
-        }
-    }
-
-    $Compiler = $null
-    $Linker = $null
-    foreach ($VsRoot in @($VsRoots | Select-Object -Unique)) {
-        $MsvcRoot = Join-Path $VsRoot 'VC/Tools/MSVC'
-        if (-not (Test-Path -LiteralPath $MsvcRoot -PathType Container)) { continue }
-        $ToolVersion = Get-ChildItem -LiteralPath $MsvcRoot -Directory -ErrorAction SilentlyContinue |
-            Sort-Object -Property Name -Descending |
-            Select-Object -First 1
-        if (-not $ToolVersion) { continue }
-
-        $Cl = Join-Path $ToolVersion.FullName 'bin/Hostx64/x64/cl.exe'
-        $Link = Join-Path $ToolVersion.FullName 'bin/Hostx64/x64/link.exe'
-        if ((Test-Path -LiteralPath $Cl -PathType Leaf) -and
-            (Test-Path -LiteralPath $Link -PathType Leaf)) {
-            $Compiler = $Cl
-            $Linker = $Link
-            break
-        }
-    }
-
-    if (-not $Compiler) {
-        $Command = Get-Command cl.exe -ErrorAction SilentlyContinue
-        if ($Command) {
-            $Compiler = $Command.Source
-            $LinkCandidate = Join-Path (Split-Path -Parent $Compiler) 'link.exe'
-            if (Test-Path -LiteralPath $LinkCandidate -PathType Leaf) {
-                $Linker = $LinkCandidate
-            }
-        }
-    }
-
-    if (-not $Compiler -or -not $Linker) {
-        return $null
-    }
-
-    $SdkRc = $null
-    $SdkBin = Join-Path $ProgramFilesX86 'Windows Kits/10/bin'
-    if (Test-Path -LiteralPath $SdkBin -PathType Container) {
-        $SdkRc = Get-ChildItem -LiteralPath $SdkBin -Directory -ErrorAction SilentlyContinue |
-            Sort-Object -Property Name -Descending |
-            ForEach-Object { Join-Path $_.FullName 'x64/rc.exe' } |
-            Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } |
-            Select-Object -First 1
-    }
-
-    $ClHash = (Get-FileHash -LiteralPath $Compiler -Algorithm SHA256).Hash.ToLowerInvariant()
-    $LinkHash = (Get-FileHash -LiteralPath $Linker -Algorithm SHA256).Hash.ToLowerInvariant()
-    $RcIdentity = if ($SdkRc) {
-        $RcHash = (Get-FileHash -LiteralPath $SdkRc -Algorithm SHA256).Hash.ToLowerInvariant()
-        "rc=$($SdkRc.ToLowerInvariant())|rcSha256=$RcHash"
-    }
-    else {
-        'rc=unresolved'
-    }
-
-    return @(
-        "cl=$($Compiler.ToLowerInvariant())",
-        "clSha256=$ClHash",
-        "link=$($Linker.ToLowerInvariant())",
-        "linkSha256=$LinkHash",
-        $RcIdentity
-    ) -join '|'
-}
-
-$ToolchainIdentity = Resolve-YacsToolchainIdentity
-$EnvironmentIdentity = if ($Engine -and $ToolchainIdentity) {
-    $EnvironmentSeed = "$EngineIdentity`n$ToolchainIdentity"
-    $Bytes = [System.Text.Encoding]::UTF8.GetBytes($EnvironmentSeed)
-    $Hasher = [System.Security.Cryptography.SHA256]::Create()
-    try {
-        ([System.BitConverter]::ToString($Hasher.ComputeHash($Bytes))).Replace('-', '').ToLowerInvariant()
-    }
-    finally {
-        $Hasher.Dispose()
-    }
-}
-else {
-    'unresolved'
-}
+$ToolchainIdentity = if ($BuildEnvironment) { [string] $BuildEnvironment.Toolchain.Identity } else { 'unresolved' }
+$EnvironmentIdentity = if ($BuildEnvironment) { [string] $BuildEnvironment.Identity } else { 'unresolved' }
 
 if ($Action -eq 'Record') {
     if (-not $CompletedMode) { throw '-CompletedMode is required for Record.' }
