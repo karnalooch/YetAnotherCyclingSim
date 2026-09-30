@@ -305,3 +305,23 @@ about:
 If a reusable authoring implementation would require changing those rules,
 update and review the Bible first rather than silently encoding a new
 architecture here.
+
+## 13. Known documentation-guard gap
+
+`docs/README.md` now exists and correctly routes world-building work to
+`WORLD_BUILDING_BIBLE.md`. The repository also has
+`scripts/ci/check_docs_index.py`, and the current CI runs that index contract.
+
+However, the four documentation guards required by `AGENTS.md` are not
+currently implemented as independently runnable checks in YACS or in the
+pinned reusable governance workflow:
+
+- links;
+- i18n;
+- structure;
+- freshness.
+
+Until those guards are added, documentation-only work must report them as
+**unavailable**, rather than claiming they passed. The existing documentation
+index check, repository policy and governance policy do not substitute for
+those four named guards.
