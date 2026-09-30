@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "pipeline_id": "passo-giau-embark-landscape-v1",
+  "selected_by_issue": 287,
+  "evidence": {
+    "embark_landscape_creation": "https://www.sidefx.com/learn/talks/embark-landscape-creation/",
+    "houdini_unreal_landscape": "https://www.sidefx.com/docs/houdini/unreal/landscape/basics.html",
+    "arc_raiders_unreal_worldbuilding": "https://www.unrealengine.com/developer-interviews/embark-studios-build-the-award-winning-arc-raiders-with-unreal-engine"
+  },
+  "spatial_contract": {
+    "crs": "EPSG:32632",
+    "bounds_m": [
+      730406.587,
+      5148246.775,
+      738406.587,
+      5156246.775
+    ],
+    "extent_m": [
+      8000,
+      8000
+    ],
+    "unreal_landscape_vertices": 4033,
+    "max_conditioned_source_cell_m": 2
+  },
+  "tools": {
+    "houdini": {
+      "executable_env": "YACS_HYTHON",
+      "required_family": "Houdini Indie/Core/FX with PDG and HeightFields",
+      "license_note": "Houdini Engine Indie alone cannot author the interactive HIP/HDA recipe."
+    },
+    "gaea": {
+      "swarm_env": "YACS_GAEA_SWARM",
+      "ui_env": "YACS_GAEA_EXE",
+      "required_edition": "Professional or Enterprise",
+      "target_production_version": "2.3.1.0",
+      "license_note": "Automation and Gaea2Houdini support require a production-capable paid edition."
+    },
+    "unreal": {
+      "proof_wrapper": "scripts/ue/Invoke-YacsPassoGiauLandscapeSpike.ps1",
+      "engine_association": "5.8"
+    }
+  },
+  "recipes": {
+    "houdini_hip": "worldgen/embark/recipes/passo_giau_landscape.hiplc",
+    "houdini_preprocess_top": "/tasks/yacs_passo_giau_preprocess",
+    "houdini_finalize_top": "/tasks/yacs_passo_giau_finalize",
+    "gaea_terrain": "worldgen/embark/recipes/passo_giau_landscape.terrain",
+    "recipe_contract": "worldgen/embark/recipes/README.md"
+  },
+  "source": {
+    "download_mase": "scripts/assets/download_passo_giau_mase_pst.py",
+    "download_veneto": "scripts/assets/download_passo_giau_veneto_lidar.py",
+    "prepare_baseline_diagnostics": "scripts/assets/prepare_passo_giau_mase_pst.py",
+    "download_road": "scripts/assets/download_passo_giau_road_network.py",
+    "prepare_road": "scripts/assets/prepare_passo_giau_road.py",
+    "mase_report": "ExternalAssets/Terrain/PassoGiau/MASE_PST_Lidar1x1/mase-pst-download-report.json",
+    "veneto_report": "ExternalAssets/Terrain/PassoGiau/Veneto_Lidar5m/veneto-lidar-download-report.json",
+    "road_report": "ExternalAssets/Terrain/PassoGiau/PreparedRoad/road-preparation-report.json"
+  },
+  "outputs": {
+    "root": "ExternalAssets/Terrain/PassoGiau/EmbarkPipeline",
+    "pdg_heightfield": "ExternalAssets/Terrain/PassoGiau/EmbarkPipeline/10_pdg/passo_giau_pdg_conditioned.tif",
+    "gaea_heightfield": "ExternalAssets/Terrain/PassoGiau/EmbarkPipeline/20_gaea/passo_giau_gaea_shaped.tif",
+    "houdini_heightfield": "ExternalAssets/Terrain/PassoGiau/EmbarkPipeline/30_houdini/passo_giau_final_heightfield.tif",
+    "gaea_vars": "ExternalAssets/Terrain/PassoGiau/EmbarkPipeline/20_gaea/gaea-vars.json",
+    "run_manifest": "ExternalAssets/Terrain/PassoGiau/EmbarkPipeline/pipeline-run.json",
+    "prepared_unreal_root": "ExternalAssets/Terrain/PassoGiau/PreparedEmbarkLandscape",
+    "artifact_root": "Saved/RuntimeProof/CI/M3/EmbarkTerrain"
+  },
+  "gaea": {
+    "seed": 0,
+    "variables": {
+      "inputHeightfield": "${pdg_heightfield}",
+      "outputHeightfield": "${gaea_heightfield}"
+    }
+  },
+  "invariants": {
+    "preserve_route_xy": true,
+    "preserve_physics_authority": true,
+    "preserve_source_provenance": true,
+    "require_32bit_intermediate_heightfields": true,
+    "forbid_material_camouflage_as_geometry_fix": true,
+    "forbid_guessed_embark_internal_nodes": true
+  }
+}
