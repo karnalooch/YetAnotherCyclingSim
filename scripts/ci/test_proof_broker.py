@@ -189,7 +189,9 @@ class YacsProofBrokerContractTests(unittest.TestCase):
             mock.patch.object(
                 proof_broker,
                 "fetch_workflow_text",
-                return_value=TARGET_WORKFLOWS["r4-1b3-geometry"].read_text(encoding="utf-8"),
+                return_value=TARGET_WORKFLOWS["r4-1b3-geometry"].read_text(
+                    encoding="utf-8"
+                ),
             ),
             mock.patch.object(proof_broker, "set_status_label"),
             mock.patch.object(proof_broker, "ensure_request_label"),
