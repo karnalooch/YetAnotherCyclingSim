@@ -585,6 +585,15 @@ It uses the prepared 1 m metric DTM directly as a bounded neutral mesh and keeps
 macro Landscape, road corridor, cut/fill, smoothing, materials camouflage and
 route/physics changes out of the proof.
 
+The proof location is versioned explicitly. Do not let the DTM-preparation stage
+and the post-PCGEx Unreal renderer independently choose a "most curved" hairpin:
+bounded smoothing can change which hairpin wins that heuristic without changing
+road authority. Gate C uses the representative hairpin recorded in
+`worldgen/embark/passo_giau_terrain_pipeline.json`; the native patch is cut at
+that official-SP638 station and the renderer still fails closed unless its actual
+PCGEx-selected focus lands inside the patch with the required margin. Proof
+location selection is test infrastructure, not route or physics truth.
+
 Do not replace this diagnostic with guessed smoothing percentages.
 
 ##### Native metric DTM for rider-close ground
