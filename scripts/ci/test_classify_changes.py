@@ -209,6 +209,67 @@ class ChangeClassifierTests(unittest.TestCase):
         self.assertFalse(result.ue_code)
         self.assertFalse(result.asset_full)
 
+    def test_embark_terrain_proof_modes(self):
+        self.assertEqual(
+            cc.classify_embark_terrain_proof(
+                ["scripts/ci/test_embark_terrain_pipeline_contract.py"]
+            ),
+            "cheap",
+        )
+        self.assertEqual(
+            cc.classify_embark_terrain_proof(
+                ["scripts/geometry/local_terrain_skin.py"]
+            ),
+            "render",
+        )
+        self.assertEqual(
+            cc.classify_embark_terrain_proof(
+                ["scripts/ue/stage3g_capture_sp638_local_corridor.py"]
+            ),
+            "render",
+        )
+        self.assertEqual(
+            cc.classify_embark_terrain_proof(
+                ["Source/YetAnotherCyclingSimEditor/Private/PCG/Test.cpp"]
+            ),
+            "heavy",
+        )
+        self.assertEqual(
+            cc.classify_embark_terrain_proof(
+                [".github/workflows/passo-giau-embark-terrain.yml"]
+            ),
+            "heavy",
+        )
+        self.assertEqual(cc.classify_embark_terrain_proof([]), "heavy")
+
+    def test_embark_compile_fingerprint_is_stable_and_source_sensitive(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "Source/Module").mkdir(parents=True)
+            (root / "worldgen/embark/pcgex").mkdir(parents=True)
+            (root / "YetAnotherCyclingSim.uproject").write_text(
+                '{"FileVersion": 3}\n', encoding="utf-8"
+            )
+            (root / "Source/Module/Module.Build.cs").write_text(
+                "build-v1\n", encoding="utf-8"
+            )
+            source = root / "Source/Module/Test.cpp"
+            source.write_text("int x = 1;\n", encoding="utf-8")
+            (root / "worldgen/embark/pcgex/passo_giau_corridor.json").write_text(
+                '{"pcgex":{"engine_version":"5.8.0","commit":"abc"}}\n',
+                encoding="utf-8",
+            )
+
+            first = cc.embark_terrain_compile_fingerprint(root)
+            second = cc.embark_terrain_compile_fingerprint(root)
+            self.assertEqual(first, second)
+
+            source.write_text("int x = 2;\n", encoding="utf-8")
+            self.assertNotEqual(
+                first,
+                cc.embark_terrain_compile_fingerprint(root),
+            )
+
     def test_main_emits_github_outputs_for_worldgen_pcg(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
