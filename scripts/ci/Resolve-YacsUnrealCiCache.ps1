@@ -204,6 +204,7 @@ if ($Action -eq 'Record') {
         CompileHead = $CompileHead
         ProofHead = $ExpectedHead
         LastCompileKind = $CompletedCompileKind
+        BuildCachePolicy = 'ubt-native-incremental-v1'
         UpdatedUtc = (Get-Date).ToUniversalTime().ToString('o')
     }
     $Tmp = "$StatePath.tmp"
@@ -352,6 +353,7 @@ $Evidence = [ordered]@{
     EnvironmentIdentity = $EnvironmentIdentity
     PreviousProofHead = $PreviousProofHead
     ExpectedBinaries = $ExpectedBinaries
+    BuildCachePolicy = 'ubt-native-incremental-v1'
     TimestampUtc = (Get-Date).ToUniversalTime().ToString('o')
 }
 $Evidence | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $EvidencePath -Encoding UTF8
