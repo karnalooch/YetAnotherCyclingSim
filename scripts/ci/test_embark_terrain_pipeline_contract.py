@@ -240,8 +240,6 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
             "Render PCGEx rider-close corridor proof",
             "Invoke-YacsSp638LocalCorridorVisualProof.ps1",
             "PcgExExecutionOutput",
-            "AdditionalAllowedDirtyPaths",
-            "Content/WorldGen/",
             "YacsPassoGiauPcgExGraphCommandlet.cpp",
             "YacsPassoGiauSp638PathSettings.cpp",
             "YetAnotherCyclingSimEditor.Build.cs",
@@ -252,6 +250,16 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
             "pcgex_corridor_deviation.json",
         ):
             self.assertIn(token, workflow)
+        rider_wrapper = (
+            ROOT / "scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1"
+        ).read_text(encoding="utf-8")
+        for token in (
+            "AdditionalAllowedDirtyPaths",
+            "Content/WorldGen/",
+            "PcgExExecutionOutput",
+        ):
+            self.assertIn(token, rider_wrapper)
+
         for forbidden in (
             "embark_terrain_pipeline.py preflight",
             "Materialize only DCC recipe binaries",
