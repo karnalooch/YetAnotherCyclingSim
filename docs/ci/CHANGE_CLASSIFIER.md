@@ -50,6 +50,27 @@ a lane classified as unnecessary must actually be skipped. It also validates
 that `ci_cost_class` is one of the three canonical values and that heavy
 Unreal/full-world impact cannot be mislabeled as a cheaper class.
 
+## Dedicated proof refinements
+
+Specialized heavyweight proofs may ask the same central classifier for a
+narrower execution mode when the proof has materially different setup costs.
+They must not create a second independent path-regex authority.
+
+The active Passo Giau Embark terrain workflow calls
+`scripts/ci/classify_changes.py --embark-terrain-proof`. That refinement emits:
+
+- `proof_mode=cheap` for contract/documentation-only changes;
+- `proof_mode=render` for current terrain-preparation, bounded geometry and
+  visual-proof inputs that need fresh evidence but not a new binary contract;
+- `proof_mode=heavy` for build-affecting Unreal or proof-build contract
+  changes.
+
+The same invocation emits `compile_fingerprint`, a SHA-256 identity derived
+from the pinned UE/PCGEx versions plus `.uproject`, `Source/**` compiled
+inputs and `.Build.cs` / `.Target.cs`. Runtime reuse is allowed only when
+that fingerprint and required binaries match. Unknown/empty specialized change
+sets fail closed to `heavy`.
+
 ## Unreal code vs Unreal tooling
 
 The old rule `scripts/ue/** => ue_code=true` was intentionally removed.
