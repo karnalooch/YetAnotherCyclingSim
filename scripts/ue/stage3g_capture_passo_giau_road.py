@@ -98,12 +98,12 @@ def _schedule_screenshot(path: Path):
 
 
 def _tick(_delta_time: float) -> None:
+    global _capture_stage, _started_at, _task
     if _task is None:
         _finish(False, "screenshot task was not initialized")
         return
 
     if _task.is_task_done():
-        global _capture_stage, _started_at, _task
         if _capture_stage == "combined":
             if (
                 _output_path is None
