@@ -60,6 +60,7 @@ UE_CODE_TOOLING_EXACT = {
     ".github/workflows/reusable-unreal.yml",
     "scripts/ci/Invoke-YacsUnrealCi.ps1",
     "scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1",
+    "scripts/ci/Resolve-YacsUnrealCiCache.ps1",
     "scripts/ci/Test-YacsCodeOnlyCheckout.ps1",
     "scripts/ue/Invoke-YacsProof.ps1",
     "scripts/ue/Preflight-YacsProof.ps1",
