@@ -630,8 +630,6 @@ Use deliberate overlap, burial or falloff where visually appropriate. Do not rel
 
 At hairpins, cross-section construction must understand that nearby road branches can be geometrically close while belonging to different elevations. Corridor logic must be route-local, not "nearest arbitrary road point wins."
 
-For bounded rider-close helper meshes, curvature-only contraction is insufficient if another arm of the same hairpin approaches from the opposite side. Apply an additional non-local **branch-clearance** bound in XY, while excluding neighboring along-track samples. Divide the available gap conservatively between the two branches, taper contractions across stations, and keep both protected road edges immutable. If the protected road plus minimum shoulder/earthwork span cannot fit, fail closed and choose a dedicated retaining/cliff representation rather than pinching the road. This helper is presentation-only and does not replace the non-destructive `Road_Earthworks` Landscape layer or redefine canonical road/physics geometry.
-
 ---
 
 ## 9. Cut, fill, cliffs and retaining geometry
