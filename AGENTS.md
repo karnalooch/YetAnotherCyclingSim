@@ -269,6 +269,39 @@ The following rules apply to every task and do not weaken any earlier rule in th
 
 Documentation-only branches do not count toward the limit of two implementation branches.
 
+## External tooling architecture policy
+
+YACS uses an **Embark-first tooling review** because proven production tooling
+patterns are preferable to inventing another local framework.
+
+For a new editor, DCC, asset-pipeline, indexing, world-authoring or agent tool,
+use this decision order:
+
+1. inspect the closest public Embark Studios tool or documented pattern first;
+2. use an Epic-native Unreal capability when it solves the same problem cleanly;
+3. evaluate a proven open-source tool when neither of the above is sufficient;
+4. build custom YACS tooling only for a concrete remaining gap.
+
+"Embark-first" means **adopt or adapt proven patterns before inventing**, not
+that every Embark repository becomes a dependency. Public Embark repositories
+are evidence of public tooling approaches, not proof of the complete internal
+ARC Raiders production stack.
+
+Before copying, vendoring or adapting third-party source, follow
+`docs/legal/DEPENDENCY_PROVENANCE.md`. A reference implementation may be
+studied without entering the dependency graph.
+
+Prefer small, high-level YACS domain operations such as route/world generation,
+clearance validation and proof capture over exposing a large surface of
+low-level Unreal calls to an agent. Repeated multi-step manual authoring should
+be treated as pipeline friction worth automating once it is stable and
+repeatable.
+
+External tooling never bypasses Gumball policy, generated-content boundaries,
+exact-SHA proof, rollback, CI or human visual acceptance. Do not introduce
+Rust, AngelScript or another language merely because Embark uses it elsewhere;
+language/runtime changes still require a concrete YACS need.
+
 ## AI safety rules
 
 - Do not execute broad autonomous changes.
