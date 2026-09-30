@@ -14,7 +14,9 @@ param(
     [string] $NativeDtmPatchMetadata,
     [ValidateSet('A','B','C','D','E','C3')] [string] $Variant = 'E',
     [switch] $ValidateOnly,
-    [int] $TimeoutSec = 900
+    [int] $TimeoutSec = 900,
+    [double] $MinFreeVirtualGb = 8.0,
+    [int] $ResourceHeadroomWaitSec = 15
 )
 
 Set-StrictMode -Version Latest
@@ -55,6 +57,15 @@ if (-not $ValidateOnly) {
     }
 }
 
+$WorkspaceCleanup = Join-Path $RepoRoot 'scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
+if (-not (Test-Path -LiteralPath $WorkspaceCleanup -PathType Leaf)) {
+    throw "Workspace-scoped Unreal cleanup helper is missing: $WorkspaceCleanup"
+}
+& $WorkspaceCleanup -Workspace $RepoRoot
+if ($LASTEXITCODE -ne 0) {
+    throw 'Workspace-scoped Unreal cleanup failed before SP638 render preflight.'
+}
+
 $Preflight = Join-Path $RepoRoot 'scripts/ue/Preflight-YacsProof.ps1'
 $AdditionalAllowedDirtyPaths = @()
 if ($PcgExExecutionOutput) {
@@ -65,6 +76,58 @@ if ($PcgExExecutionOutput) {
 }
 $Context = & $Preflight -RepoRoot $RepoRoot -ProjectPath $ProjectPath -ArtifactRoot $ArtifactRoot -ExpectedBranch $ExpectedBranch -ExpectedHead $ExpectedHead -AdditionalAllowedDirtyPaths $AdditionalAllowedDirtyPaths
 if ($LASTEXITCODE -ne 0) { throw 'SP638 local-corridor visual preflight failed.' }
+
+if (-not $ValidateOnly) {
+    $Deadline = [DateTime]::UtcNow.AddSeconds([Math]::Max(0, $ResourceHeadroomWaitSec))
+    $FreeVirtualGb = [double]$Context.Machine.FreeVirtualGb
+    while ($FreeVirtualGb -lt $MinFreeVirtualGb -and [DateTime]::UtcNow -lt $Deadline) {
+        Start-Sleep -Seconds 1
+        $OsHeadroom = Get-CimInstance Win32_OperatingSystem -ErrorAction SilentlyContinue
+        if ($OsHeadroom) {
+            $FreeVirtualGb = [math]::Round(([double]$OsHeadroom.FreeVirtualMemory * 1KB / 1GB), 2)
+        }
+    }
+
+    $ResourceEvidence = Join-Path $ArtifactRoot 'render_resource_headroom.txt'
+    $ResourceLines = [System.Collections.Generic.List[string]]::new()
+    [void]$ResourceLines.Add(('requiredFreeVirtualGb={0}' -f $MinFreeVirtualGb))
+    [void]$ResourceLines.Add(('observedFreeVirtualGb={0}' -f $FreeVirtualGb))
+    [void]$ResourceLines.Add(('preflightFreeVirtualGb={0}' -f $Context.Machine.FreeVirtualGb))
+    [void]$ResourceLines.Add(('freePhysicalGb={0}' -f $Context.Machine.FreeRamGb))
+    foreach ($PageFile in @($Context.Machine.PageFiles)) {
+        [void]$ResourceLines.Add(
+            ('pageFile={0};allocatedMb={1};currentUsageMb={2};peakUsageMb={3}' -f
+                $PageFile.Name,
+                $PageFile.AllocatedBaseSizeMb,
+                $PageFile.CurrentUsageMb,
+                $PageFile.PeakUsageMb)
+        )
+    }
+    [void]$ResourceLines.Add('topPrivateMemoryProcesses:')
+    foreach ($Process in @(Get-Process -ErrorAction SilentlyContinue |
+        Sort-Object -Property PrivateMemorySize64 -Descending |
+        Select-Object -First 10)) {
+        [void]$ResourceLines.Add(
+            ('  {0};pid={1};privateGb={2}' -f
+                $Process.ProcessName,
+                $Process.Id,
+                [math]::Round(([double]$Process.PrivateMemorySize64 / 1GB), 2))
+        )
+    }
+    $ResourceLines | Set-Content -LiteralPath $ResourceEvidence -Encoding UTF8
+
+    if ($FreeVirtualGb -lt $MinFreeVirtualGb) {
+        throw (
+            "SP638 render resource gate: free virtual memory {0} GB is below required {1} GB after workspace cleanup. " +
+            "Refusing to launch UnrealEditor because prior M3 evidence shows pagefile/commit exhaustion can masquerade as a missing PNG. " +
+            "See {2}." -f
+                $FreeVirtualGb,
+                $MinFreeVirtualGb,
+                $ResourceEvidence
+        )
+    }
+    Write-Host ("Render resource gate: PASS freeVirtual={0} GB required={1} GB" -f $FreeVirtualGb,$MinFreeVirtualGb) -ForegroundColor Green
+}
 
 if (git -C $RepoRoot status --porcelain=v1 --untracked-files=no) {
     throw 'SP638 local-corridor visual checkout has tracked changes before proof.'
