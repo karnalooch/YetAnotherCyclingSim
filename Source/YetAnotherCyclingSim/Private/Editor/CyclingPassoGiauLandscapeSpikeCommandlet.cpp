@@ -633,9 +633,12 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 	// non-destructive macro base, then author SP638 cut/fill on a separate
 	// persistent Landscape edit layer. The visible road mesh stays independent
 	// from the Landscape vertex grid.
-	Landscape->ConvertNonEditLayerLandscape();
-
 	TArray<ULandscapeEditLayerBase*> EditLayers = Landscape->GetEditLayers();
+	if (EditLayers.Num() == 0)
+	{
+		Landscape->ConvertNonEditLayerLandscape();
+		EditLayers = Landscape->GetEditLayers();
+	}
 	if (EditLayers.Num() != 1 || !IsValid(EditLayers[0]))
 	{
 		UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error,
