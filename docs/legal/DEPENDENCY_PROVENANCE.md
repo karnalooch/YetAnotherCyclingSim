@@ -55,10 +55,27 @@ recording only a moving branch name.
 
 | Source | Status | Exact source / revision | License evidence | YACS use | Verification |
 |---|---|---|---|---|---|
+| Embark Studios SkyHook | **candidate / reference** | `EmbarkStudios/skyhook` @ `fa8a44d51518303c0563d03b433b10145af7e51d` | upstream `LICENSE-MIT` and `LICENSE-APACHE`; dual MIT / Apache-2.0 | architecture reference for a small DCC <-> Unreal/game-engine transport and command boundary; no source vendored in YACS | exact revision and license files reviewed 2026-09-30 |
+| Embark Studios UnrealClaudeFileHelper / `embark-claude-index` | **reference; copying blocked pending stronger license artifact** | `EmbarkStudios/UnrealClaudeFileHelper` @ `2c87c3b4c433ab710b64ae348d0c0c55a927a641` | `package.json` declares `MIT`, but reviewed root contains no `LICENSE`, `LICENSE.md` or `LICENSE-MIT` artifact | read-only architecture reference for fast Unreal code/asset indexing and agent search; no source copied or vendored | package metadata and missing root license artifact reviewed 2026-09-30 |
 | Poly Haven Stage 3G assets / World Authoring Library | **included** | curated IDs in `scripts/assets/stage3g_polyhaven.json` plus semantic catalog/presets under `worldgen/`; exact resolved source URLs, sizes and MD5 values captured by downloader/selection plan | CC0-1.0; provider/license gate recorded in manifest and semantic catalog | selected textures/models imported as Unreal assets; #230 may use the public API for deterministic candidate discovery and bounded source caching, but discovered candidates are not auto-approved | existing reproducible asset pipeline + #230 semantic discovery layer; reviewed 2026-09-28 |
 | TINITALY 1.1 | **acquired / derived input** | dataset v1.1, DOI `10.13127/tinitaly/1.1`; exact WCS request/checksum captured by downloader | CC BY 4.0 recorded by `download_passo_giau_dem.py` and generated `SOURCE_AND_LICENSE.txt` | Passo Giau macro-terrain source; raw GeoTIFF remains outside Git | existing reproducible terrain pipeline; reviewed 2026-09-28 |
 | RoadForge | **included** | `YuuhenR/roadforge-osm-ue5-procedural-city` @ `781cb046483cc1887e80085aacf0fb2951f4746d`; vendored by PR #219 | upstream root `LICENSE`: MIT License, copyright 2026 RoadForge Contributors; preserved at `Plugins/RoadForge/LICENSE` | minimal runtime donor subset: module bootstrap + `RoadForgeMeshUtils.{h,cpp}`; descriptor adapted to UE 5.8 and module log category renamed for unity-build safety; OSM/city/editor/sample/content surfaces omitted | source revision/license/subset verified 2026-09-28; trusted UE 5.8 build + Automation proven before merge |
 | GeoTerrain | **blocked for copying / reference only** | `caonao/GeoTerrain` @ `c9ba031b77dfecfaa228f993b84685dd470bfe87` | README says “MIT”, but no root `LICENSE` file was present when checked | reference for terrain/OSM/Landscape techniques only; **do not vendor/adapt source until license grant is unambiguous** | checked 2026-09-28 |
+
+### 4.1 Embark reference rule
+
+Embark references are intentionally strong inputs to YACS architecture review,
+but **reference strength is separate from copy permission**.
+
+- SkyHook may be evaluated as a candidate because exact MIT/Apache-2.0 license
+  files are present at the reviewed revision.
+- UnrealClaudeFileHelper / `embark-claude-index` may be studied as an
+  architecture reference, but YACS must not copy or adapt its source while the
+  reviewed repository lacks a root license artifact, despite the MIT declaration
+  in `package.json`.
+- Neither entry is currently a YACS dependency.
+- Public Embark code must not be described as the complete internal ARC Raiders
+  toolchain without explicit supporting evidence from Embark.
 
 ## 5. RoadForge included donor
 

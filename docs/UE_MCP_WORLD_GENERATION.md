@@ -111,6 +111,46 @@ Initial rule:
 
 Detailed plugin schedule: [`UNREAL_TOOLING_PLUGIN_PLAN.md`](UNREAL_TOOLING_PLUGIN_PLAN.md).
 
+## 4.2. Embark-first read/write tooling boundary
+
+World-authoring automation follows the repository-wide Embark-first tooling
+policy, but separates **project knowledge** from **project mutation**.
+
+The preferred architecture is:
+
+```text
+                 +--> Embark-style project index/search
+agent / Kilo ----+        READ / DISCOVER
+                 |
+                 +--> guarded YACS execution surface
+                          INSPECT / MUTATE / PROVE
+                               |
+                               v
+                    Unreal Editor / PCG / Geometry Script
+```
+
+The public Embark `UnrealClaudeFileHelper` project
+(`embark-claude-index`) is a strong reference for the read side: indexing
+Unreal code/assets so an agent can discover the project quickly instead of
+scanning it ad hoc. It is **not** permission to let an index service mutate
+Unreal content, and its source must not be copied into YACS until provenance
+and license-artifact review explicitly permits that.
+
+Embark SkyHook is the corresponding DCC-integration reference: keep transport
+and commands small, explicit and tool-oriented instead of creating a giant
+general-purpose remote-control API.
+
+For the mutation side, the existing YACS guards, generated-content boundaries,
+rollback and proof rules remain authoritative regardless of whether the eventual
+executor is db-lyon `ue-mcp`, selected UE-native Toolset Registry capabilities,
+or a later bounded replacement. Any attempt to replace the current executor
+must prove parity for guards, rollback, deterministic flows and exact-SHA proof
+before the old path is removed.
+
+Public Embark repositories are architecture references unless explicitly
+adopted through provenance. They must not be represented as the complete
+internal ARC Raiders authoring stack.
+
 ## 5. Initial MCP surface
 
 The tracked `ue-mcp.yml` exposes only:

@@ -21,6 +21,36 @@ the repository, but they must not silently replace stronger YACS-specific
 Project automation, branch hygiene, Unreal proof, runtime acceptance or
 product-specific CI.
 
+## External tooling decision policy
+
+Gumball remains the governance and proof plane, while YACS may reuse external
+tooling for editor automation, DCC integration, project indexing and world
+authoring.
+
+For those external-tooling decisions YACS applies:
+
+```text
+Embark-first review
+        |
+        v
+Epic-native Unreal capability
+        |
+        v
+proven OSS
+        |
+        v
+small YACS-specific tool only for the remaining gap
+```
+
+This is a review/adoption order, not permission to copy public source. Embark
+projects are especially valuable as production-oriented architecture references,
+but any code adoption still requires an exact revision, license evidence and
+the provenance workflow. Public repositories must not be described as the full
+internal ARC Raiders toolchain unless Embark documents that explicitly.
+
+The preferred shape is a small set of high-level domain tools guarded by
+Gumball, not a second broad automation framework.
+
 ## Active platform contract
 
 YACS consumes the current reviewed **Gumball v0.6 line** from the immutable

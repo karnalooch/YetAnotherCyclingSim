@@ -52,6 +52,40 @@ Secondary notes are treated as a navigation/reconstruction aid, not as stronger 
 
 ---
 
+# 1.1 Embark Studios — tooling architecture references
+
+Embark is the preferred external tooling reference for YACS when the task is
+editor automation, DCC integration, project indexing/search or procedural
+authoring.
+
+Primary public repositories reviewed for this policy:
+
+- **SkyHook** — https://github.com/EmbarkStudios/skyhook
+  - public Python communication layer for DCCs and game engines;
+  - relevant as an architectural reference for Blender/Houdini/Maya/Substance
+    <-> Unreal command and transport boundaries;
+  - dual license files: MIT and Apache-2.0.
+- **UnrealClaudeFileHelper / `embark-claude-index`** —
+  https://github.com/EmbarkStudios/UnrealClaudeFileHelper
+  - relevant as a read-side architecture reference for indexing and searching
+    Unreal project code/assets for agents;
+  - current package metadata declares MIT, but the reviewed repository revision
+    has no root LICENSE artifact, so YACS treats it as reference-only for copying
+    purposes until provenance review is stronger.
+
+Architectural lessons YACS may adopt independently:
+
+1. remove repeated manual authoring through deterministic tools;
+2. integrate DCC applications with Unreal through small explicit boundaries;
+3. provide fast project/asset discovery to tools and agents;
+4. keep authoring operations high-level and domain-specific;
+5. prefer reproducible/non-destructive generation and validation over manual
+   one-off editing.
+
+**Evidence boundary:** these public repositories demonstrate Embark's public
+tooling approaches. They are **not evidence of the complete internal ARC Raiders
+pipeline**, and this document must not present them as such.
+
 # 2. Far Cry 5 — production world-generation architecture
 
 ## 2.1 What is production-proven
