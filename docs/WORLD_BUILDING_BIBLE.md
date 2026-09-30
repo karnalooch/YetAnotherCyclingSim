@@ -460,6 +460,46 @@ A deviation is allowed only when a documented tool is unavailable/incompatible
 or a bounded YACS proof demonstrates that a stage adds no value. Record that
 evidence before removing the stage.
 
+##### Current bounded substitution — PCGEx-first proof
+
+Issue #287 / PR #288 currently use a **bounded PCGEx-first substitution** for the
+first procedural authoring proof. The public Embark evidence still defines the
+production pattern we are preserving — deterministic source ingest, procedural
+derived-data authoring, explicit authority boundaries, reproducible handoff to
+Unreal and rider-camera proof — but **PCGEx is not claimed to be an Embark Studios dependency**.
+
+This substitution is selected because the exact Houdini/Gaea DCC chain is not a
+current runner prerequisite and its commercial/tooling setup would block the
+bounded YACS proof before we know whether an Unreal-native, MIT-licensed authoring
+tool can satisfy the immediate road/corridor need. Houdini/Gaea remain the
+documented optional escalation when the bounded PCGEx proof leaves a demonstrated
+terrain-authoring gap.
+
+The current PCGEx proof is deliberately narrow:
+
+- bootstrap the reviewed PCGEx revision at an immutable commit and keep it
+  authoring-only;
+- compile the YACS Editor module against that exact plugin API;
+- generate a deterministic PCG graph from YACS-owned C++ rather than hand-edited
+  graph state;
+- consume the prepared official SP638 presentation data while preserving the
+  canonical route or physics authority outside PCGEx;
+- derive bounded resample/smooth/offset corridor paths without moving the
+  authoritative road;
+- keep `Base_DTM` and `Road_Earthworks` separate and non-destructive;
+- record exact-SHA evidence, presentation deviation and rider-camera visual proof
+  before accepting any generated road/earthworks result.
+
+The first graph-authoring proof establishes only **plugin/API integration and
+deterministic graph topology**. It is not evidence that the graph has already
+executed successfully against the prepared SP638 dataset, nor that macro terrain
+quality is solved. Those are subsequent proof gates.
+
+If PCGEx cannot satisfy the rider-camera geometry/terrain acceptance contract,
+do not hide the failure with material camouflage or another bespoke smoothing
+stack. Diagnose the owning stage and escalate to the documented Houdini/Gaea
+path (or another evidence-backed tool preserving the same contract).
+
 #### Road / earthworks decision ladder
 
 For road-terrain adaptation, do not extend the custom earthwork solver merely because a difficult hairpin exposes another edge case.
