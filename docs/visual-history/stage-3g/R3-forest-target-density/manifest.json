@@ -1,0 +1,218 @@
+{
+  "schema_version": 1,
+  "visual_history_id": "VH-3G-R3-002",
+  "title": "Stage 3G — representative forest target-density baseline",
+  "roadmap": {
+    "stage": "Stage 3G",
+    "version": "R3.1",
+    "slice": "Forest target-density visual correction",
+    "title": "Layered representative forest before R4 terrain coherence",
+    "issue_number": 201
+  },
+  "timestamps": {
+    "created_at": "2026-09-27",
+    "visual_accepted_at": null,
+    "merged_at": null
+  },
+  "status": {
+    "technical_status": "WORKING",
+    "visual_status": "IN_REVIEW"
+  },
+  "git": {
+    "branch": "feat/stage3g-forest-target-density",
+    "baseline_commit_sha": "02ff23f0a24228432ae9c34eb65aa4cb3694ae1d",
+    "source_commit_sha": "94adc3dd19574dfb023fafcdc98b1983b82e2361",
+    "source_commit_short": "94adc3dd",
+    "accepted_commit_sha": null,
+    "merge_commit_sha": null
+  },
+  "pull_request": {
+    "number": 202,
+    "title": "feat(stage3g): add target-density layered forest",
+    "status": "DRAFT"
+  },
+  "ci": {
+    "workflow_name": "CyclingSim CI",
+    "workflow_run_id": 36341840827,
+    "workflow_run_number": 510,
+    "proof_artifact_name": "stage3g-full-validation-36341840827-1",
+    "automation_status": "PERFORMANCE_PASS",
+    "automation_summary": "target_density_v2 performance PASS on run 36340735616: valley 13.829/7.926 ms at 106.61 FPS, forest 12.290/9.817 ms at 101.90 FPS, high Alpine 8.651/6.538 ms at 136.71 FPS (frame/GPU p95 / avg FPS). Forest frame/GPU p95 remain below the 14 ms budget.",
+    "fresh_load_status": "PASS",
+    "map_check_errors": null,
+    "map_check_warnings": null,
+    "lfs_fsck_status": "PASS",
+    "visual_capture_status": "PASS_PENDING_REVIEW",
+    "full_stage3g_run_id": 36341840827,
+    "full_stage3g_status": "PASS"
+  },
+  "worldgen": {
+    "generation_seed": 42017,
+    "route_clearance_m": 4,
+    "graphs_used": [
+      "PCG_Forest",
+      "PCG_RouteExclusion"
+    ],
+    "biomes_affected": [
+      "alpine_forest"
+    ],
+    "distance_ranges_m": [
+      {
+        "biome": "alpine_forest",
+        "start_m": 3700,
+        "end_m": 6200
+      }
+    ],
+    "density_values": {
+      "base_vegetation_density": 0.84,
+      "primary_multiplier": 1,
+      "background_multiplier": 0.95,
+      "understory_multiplier": 0.68
+    },
+    "simulation_truth_source": "FRouteGeometryProfile",
+    "target_profile": "target_density_v2",
+    "configured_expected_candidate_mean_approx": 1997.3184
+  },
+  "assets": {
+    "validated_assets_used": [
+      "SM_Stage3G_FirSaplingMedium — aggressive LOD profile"
+    ],
+    "meshes_added": [],
+    "meshes_replaced": [],
+    "materials_added": [],
+    "materials_replaced": [],
+    "placeholder_assets_removed": []
+  },
+  "visual_review": {
+    "visual_change_detected": true,
+    "technical_acceptance": true,
+    "visual_acceptance": false,
+    "reviewer_summary": "target_density_v2 exact-squash evidence is retained in the repository; final 4900 m visual acceptance is pending.",
+    "rejection_reason": null,
+    "rejected_visual_commit_sha": "36b0ae47f75e0ab2d81a15849328febaa239a6f5",
+    "rejected_visual_run_id": 36336130795,
+    "next_step": "Review the repository-retained 4900 m v2 triptych, then record VISUAL_ACCEPTED or iterate to v3 before merge."
+  },
+  "captures": [
+    {
+      "capture_id": "01-valley-1200m",
+      "label": "Valley",
+      "distance_m": 1200,
+      "camera_name": "Stage3G-Valley-1200m",
+      "resolution": "1920x1080",
+      "before": {
+        "commit_sha": "02ff23f0a24228432ae9c34eb65aa4cb3694ae1d",
+        "image": "VH-3G-R3-001 accepted AFTER",
+        "sha256": "5cefb738c8e051d4603fe6cbcc13d7400ed80b9f95732897edf1a949456d90bd",
+        "status": "VISUAL_ACCEPTED"
+      },
+      "now": {
+        "commit_sha": "94adc3dd19574dfb023fafcdc98b1983b82e2361",
+        "image": "stage3g-full-validation-36341840827-1 / FinalProof/Visual/01_meadow_valley_1200m_AFTER.png",
+        "sha256": null,
+        "status": "REGRESSION_OK"
+      },
+      "after": {
+        "commit_sha": null,
+        "image": null,
+        "sha256": null,
+        "status": "PENDING"
+      },
+      "triptych_image": "captures/01_valley_1200m_triptych.jpg",
+      "pixel_diff": null,
+      "triptych_sha256": "3fa9b99b6cd69704e65d5fae3c1afc706370eb8e673d0707096d7ea688af5c29"
+    },
+    {
+      "capture_id": "02-forest-4900m",
+      "label": "Forest",
+      "distance_m": 4900,
+      "camera_name": "Stage3G-Forest-4900m",
+      "resolution": "1920x1080",
+      "before": {
+        "commit_sha": "02ff23f0a24228432ae9c34eb65aa4cb3694ae1d",
+        "image": "VH-3G-R3-001 accepted AFTER",
+        "sha256": "867144551a0cbdf5f0ac6a2847f04b43a6bf476e877c7a5aac56f3a4a1b96ba8",
+        "status": "VISUAL_ACCEPTED"
+      },
+      "now": {
+        "commit_sha": "94adc3dd19574dfb023fafcdc98b1983b82e2361",
+        "image": "stage3g-full-validation-36341840827-1 / FinalProof/Visual/02_forest_sector_4900m_AFTER.png",
+        "sha256": null,
+        "status": "IN_REVIEW"
+      },
+      "after": {
+        "commit_sha": null,
+        "image": null,
+        "sha256": null,
+        "status": "PENDING"
+      },
+      "triptych_image": "captures/02_forest_4900m_triptych.jpg",
+      "pixel_diff": null,
+      "triptych_sha256": "6783ad77d4167e72464acbb56d7b4b0e3144fb97fbac29760fe312b33bcd0477"
+    },
+    {
+      "capture_id": "03-high-alpine-8000m",
+      "label": "High Alpine",
+      "distance_m": 8000,
+      "camera_name": "Stage3G-HighAlpine-8000m",
+      "resolution": "1920x1080",
+      "before": {
+        "commit_sha": "02ff23f0a24228432ae9c34eb65aa4cb3694ae1d",
+        "image": "VH-3G-R3-001 accepted AFTER",
+        "sha256": "7dc5dfd184092dab5852c45fea255b67523e10774c12597acd6aeeebb0a60d76",
+        "status": "VISUAL_ACCEPTED"
+      },
+      "now": {
+        "commit_sha": "94adc3dd19574dfb023fafcdc98b1983b82e2361",
+        "image": "stage3g-full-validation-36341840827-1 / FinalProof/Visual/03_high_valley_mountains_8000m_AFTER.png",
+        "sha256": null,
+        "status": "REGRESSION_OK"
+      },
+      "after": {
+        "commit_sha": null,
+        "image": null,
+        "sha256": null,
+        "status": "PENDING"
+      },
+      "triptych_image": "captures/03_high_alpine_8000m_triptych.jpg",
+      "pixel_diff": null,
+      "triptych_sha256": "690e1077352800b79a4f91aded84518f1b36d87409cc78d2e6f1500f34297728"
+    }
+  ],
+  "performance": {
+    "exact_sha": "e30fa4d1521947b56d00abd5054e326e754d6a1f",
+    "persisted_asset_commit_sha": "78ef48feec0457bebb8284e175b9dabd5c1aea79",
+    "workflow_run_id": 36340735616,
+    "resolution": "1920x1080",
+    "reference_gpu": "RTX 2070 SUPER",
+    "forest_budget_ms": 14,
+    "sectors": [
+      {
+        "sector": "valley",
+        "distance_m": 1200,
+        "frame_p95_ms": 13.829,
+        "gpu_p95_ms": 7.926,
+        "average_fps": 106.61,
+        "over_budget_ratio": 0.0234
+      },
+      {
+        "sector": "forest",
+        "distance_m": 4900,
+        "frame_p95_ms": 12.29,
+        "gpu_p95_ms": 9.817,
+        "average_fps": 101.9,
+        "over_budget_ratio": 0.0098
+      },
+      {
+        "sector": "high_alpine",
+        "distance_m": 8000,
+        "frame_p95_ms": 8.651,
+        "gpu_p95_ms": 6.538,
+        "average_fps": 136.71,
+        "over_budget_ratio": 0
+      }
+    ],
+    "result": "PASS_TECHNICAL_VISUAL_REVIEW_PENDING",
+    "profile": "target_density_v2"
+  }
+}

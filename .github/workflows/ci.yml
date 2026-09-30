@@ -1,0 +1,400 @@
+name: CyclingSim CI
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review, converted_to_draft]
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 3 * * 0'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: cyclingsim-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  changes:
+    name: Classify changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      docs: ${{ steps.classify.outputs.docs }}
+      python: ${{ steps.classify.outputs.python }}
+      cpp: ${{ steps.classify.outputs.cpp }}
+      assets: ${{ steps.classify.outputs.assets }}
+      ci: ${{ steps.classify.outputs.ci }}
+      ue_code: ${{ steps.classify.outputs.ue_code }}
+      ue_tooling: ${{ steps.classify.outputs.ue_tooling }}
+      unreal_compile: ${{ steps.classify.outputs.unreal_compile }}
+      unreal_runtime: ${{ steps.classify.outputs.unreal_runtime }}
+      unreal_execution_class: ${{ steps.classify.outputs.unreal_execution_class }}
+      unreal_compile_fingerprint: ${{ steps.classify.outputs.unreal_compile_fingerprint }}
+      unreal_proof_fingerprint: ${{ steps.classify.outputs.unreal_proof_fingerprint }}
+      ci_cost_class: ${{ steps.classify.outputs.ci_cost_class }}
+      unknown: ${{ steps.classify.outputs.unknown }}
+      docs_only: ${{ steps.classify.outputs.docs_only }}
+      asset_only: ${{ steps.classify.outputs.asset_only }}
+      asset_full: ${{ steps.classify.outputs.asset_full }}
+      security_base: ${{ steps.classify.outputs.security_base }}
+      base_sha: ${{ steps.classify.outputs.base_sha }}
+      head_sha: ${{ steps.classify.outputs.head_sha }}
+    steps:
+      - name: Checkout repository without LFS payloads
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          lfs: false
+          persist-credentials: false
+
+      - name: Classify changed paths
+        id: classify
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || '' }}
+          PUSH_BEFORE_SHA: ${{ github.event.before || '' }}
+          CURRENT_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          if [[ "${EVENT_NAME}" == "pull_request" ]]; then
+            python scripts/ci/classify_changes.py \
+              --base "${PR_BASE_SHA}" \
+              --head "${PR_HEAD_SHA}" \
+              --github-output "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          if [[ "${EVENT_NAME}" == "push" ]] &&
+             [[ -n "${PUSH_BEFORE_SHA}" ]] &&
+             [[ "${PUSH_BEFORE_SHA}" != "0000000000000000000000000000000000000000" ]]; then
+            python scripts/ci/classify_changes.py \
+              --base "${PUSH_BEFORE_SHA}" \
+              --head "${CURRENT_SHA}" \
+              --github-output "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          python scripts/ci/classify_changes.py \
+            --all-static \
+            --base "ALL_STATIC" \
+            --head "${CURRENT_SHA}" \
+            --github-output "${GITHUB_OUTPUT}"
+
+      - name: Verify documentation index contract
+        run: python scripts/ci/check_docs_index.py
+
+      - name: Verify final architecture/tooling contract
+        run: python scripts/ci/test_final_architecture_contract.py
+
+      - name: Verify locked UE-MCP install plan
+        run: npm ci --prefix tools/ue-mcp --ignore-scripts --dry-run
+
+  repo-policy:
+    name: Repository policy
+    permissions:
+      contents: read
+    uses: karnalooch/engineering-platform/.github/workflows/reusable-repo-policy.yml@03eb6f6bc6cd2260349386489bffb005c44b3236
+    with:
+      max_non_lfs_mib: 10
+      required_lfs_extensions: ".uasset,.umap,.fbx,.blend,.wav,.flac,.mp3,.exr,.hdr,.tga"
+      forbidden_path_components: ".vs,Binaries,DerivedDataCache,Intermediate,Saved"
+
+  governance:
+    name: Governance policy
+    permissions:
+      contents: read
+    uses: karnalooch/engineering-platform/.github/workflows/reusable-governance.yml@03eb6f6bc6cd2260349386489bffb005c44b3236
+    with:
+      additional_high_risk_patterns: |
+        *.uproject
+        **/*.uproject
+        *.uplugin
+        **/*.uplugin
+        Source/**/*.Build.cs
+        Source/**/*.Target.cs
+        Config/DefaultEngine.ini
+
+  python-reference:
+    name: Python reference model
+    needs: changes
+    if: ${{ needs.changes.outputs.python == 'true' || needs.changes.outputs.ci == 'true' }}
+    permissions:
+      contents: read
+    uses: ./.github/workflows/reusable-python.yml
+
+  security-base:
+    name: Security baseline
+    needs: changes
+    if: ${{ needs.changes.outputs.security_base == 'true' }}
+    permissions:
+      contents: read
+      security-events: write
+    uses: karnalooch/engineering-platform/.github/workflows/reusable-security.yml@03eb6f6bc6cd2260349386489bffb005c44b3236
+    with:
+      enable_codeql: false
+      enable_dependency_review: true
+      enable_trivy: true
+      enable_sbom: true
+
+  security-python:
+    name: CodeQL Python
+    needs: changes
+    if: ${{ needs.changes.outputs.python == 'true' }}
+    permissions:
+      contents: read
+      security-events: write
+    uses: karnalooch/engineering-platform/.github/workflows/reusable-security.yml@03eb6f6bc6cd2260349386489bffb005c44b3236
+    with:
+      enable_dependency_review: false
+      enable_codeql: true
+      codeql_languages_json: '["python"]'
+      enable_trivy: false
+      enable_sbom: false
+
+  security-cpp:
+    name: CodeQL C++
+    needs: changes
+    if: ${{ needs.changes.outputs.cpp == 'true' || needs.changes.outputs.ue_code == 'true' }}
+    permissions:
+      contents: read
+      security-events: write
+    uses: karnalooch/engineering-platform/.github/workflows/reusable-security.yml@03eb6f6bc6cd2260349386489bffb005c44b3236
+    with:
+      enable_dependency_review: false
+      enable_codeql: true
+      codeql_languages_json: '["c-cpp"]'
+      enable_trivy: false
+      enable_sbom: false
+
+  unreal-code:
+    name: Unreal code build and Automation
+    needs: changes
+    if: ${{ needs.changes.outputs.ue_code == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    permissions:
+      contents: read
+    uses: ./.github/workflows/reusable-unreal.yml
+    with:
+      target_sha: ${{ needs.changes.outputs.head_sha }}
+      compile_fingerprint: ${{ needs.changes.outputs.unreal_compile_fingerprint }}
+      proof_fingerprint: ${{ needs.changes.outputs.unreal_proof_fingerprint }}
+
+  asset-validation:
+    name: Lightweight asset validation
+    needs: changes
+    if: ${{ needs.changes.outputs.assets == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    env:
+      GIT_LFS_SKIP_SMUDGE: "1"
+    steps:
+      - name: Checkout repository without LFS payloads
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          lfs: false
+          persist-credentials: false
+
+      - name: Validate changed asset metadata and LFS pointers
+        shell: bash
+        env:
+          BASE_SHA: ${{ needs.changes.outputs.base_sha }}
+          HEAD_SHA: ${{ needs.changes.outputs.head_sha }}
+        run: |
+          set -euo pipefail
+          python scripts/ci/validate_changed_assets.py \
+            --base "${BASE_SHA}" \
+            --head "${HEAD_SHA}"
+
+  stage3g-full-validation:
+    name: Stage 3G full validation
+    needs: changes
+    if: ${{ needs.changes.outputs.asset_full == 'true' && (github.event_name != 'pull_request' || (github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository)) }}
+    permissions:
+      contents: read
+    uses: ./.github/workflows/reusable-stage3g-full.yml
+    with:
+      target_sha: ${{ needs.changes.outputs.head_sha }}
+
+  aggregate:
+    name: Aggregate CI gate
+    if: ${{ always() }}
+    needs:
+      - changes
+      - repo-policy
+      - governance
+      - python-reference
+      - security-base
+      - security-python
+      - security-cpp
+      - unreal-code
+      - asset-validation
+      - stage3g-full-validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions: {}
+    steps:
+      - name: Fail closed unless required lanes passed
+        shell: bash
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          REPO_POLICY_RESULT: ${{ needs.repo-policy.result }}
+          GOVERNANCE_RESULT: ${{ needs.governance.result }}
+          PYTHON_REFERENCE_RESULT: ${{ needs.python-reference.result }}
+          SECURITY_BASE_RESULT: ${{ needs.security-base.result }}
+          SECURITY_PYTHON_RESULT: ${{ needs.security-python.result }}
+          SECURITY_CPP_RESULT: ${{ needs.security-cpp.result }}
+          UNREAL_CODE_RESULT: ${{ needs.unreal-code.result }}
+          ASSET_VALIDATION_RESULT: ${{ needs.asset-validation.result }}
+          STAGE3G_FULL_RESULT: ${{ needs.stage3g-full-validation.result }}
+          CLASS_PYTHON: ${{ needs.changes.outputs.python }}
+          CLASS_CPP: ${{ needs.changes.outputs.cpp }}
+          CLASS_ASSETS: ${{ needs.changes.outputs.assets }}
+          CLASS_CI: ${{ needs.changes.outputs.ci }}
+          CLASS_UE_CODE: ${{ needs.changes.outputs.ue_code }}
+          CLASS_UE_TOOLING: ${{ needs.changes.outputs.ue_tooling }}
+          CLASS_UNREAL_COMPILE: ${{ needs.changes.outputs.unreal_compile }}
+          CLASS_UNREAL_RUNTIME: ${{ needs.changes.outputs.unreal_runtime }}
+          CLASS_UNREAL_EXECUTION: ${{ needs.changes.outputs.unreal_execution_class }}
+          CLASS_CI_COST: ${{ needs.changes.outputs.ci_cost_class }}
+          CLASS_SECURITY_BASE: ${{ needs.changes.outputs.security_base }}
+          CLASS_ASSET_FULL: ${{ needs.changes.outputs.asset_full }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_DRAFT: ${{ github.event.pull_request.draft || false }}
+        run: |
+          set -euo pipefail
+          failed=0
+
+          require_bool() {
+            local name="$1"
+            local value="$2"
+            if [[ "${value}" != "true" && "${value}" != "false" ]]; then
+              echo "::error::${name}: expected literal true/false classifier output, got '${value}'"
+              failed=1
+            fi
+          }
+
+          require_ci_cost() {
+            local value="$1"
+            if [[ "${value}" != "light" && "${value}" != "standard" && "${value}" != "heavy" ]]; then
+              echo "::error::class-ci-cost: expected light/standard/heavy classifier output, got '${value}'"
+              failed=1
+            fi
+          }
+
+          require_unreal_execution() {
+            local value="$1"
+            if [[ "${value}" != "static" && "${value}" != "runtime" && "${value}" != "compile" ]]; then
+              echo "::error::class-unreal-execution: expected static/runtime/compile, got '${value}'"
+              failed=1
+            fi
+          }
+
+          require_success() {
+            local name="$1"
+            local result="$2"
+            if [[ "${result}" != "success" ]]; then
+              echo "::error::${name}: expected success, got ${result}"
+              failed=1
+            fi
+          }
+
+          require_optional() {
+            local name="$1"
+            local expected="$2"
+            local result="$3"
+            if [[ "${expected}" == "true" ]]; then
+              require_success "${name}" "${result}"
+            elif [[ "${result}" != "skipped" ]]; then
+              echo "::error::${name}: expected skipped, got ${result}"
+              failed=1
+            fi
+          }
+
+          require_success "changes" "${CHANGES_RESULT}"
+          require_success "repo-policy" "${REPO_POLICY_RESULT}"
+          require_success "governance" "${GOVERNANCE_RESULT}"
+
+          require_bool "class-python" "${CLASS_PYTHON}"
+          require_bool "class-cpp" "${CLASS_CPP}"
+          require_bool "class-assets" "${CLASS_ASSETS}"
+          require_bool "class-ci" "${CLASS_CI}"
+          require_bool "class-ue-code" "${CLASS_UE_CODE}"
+          require_bool "class-ue-tooling" "${CLASS_UE_TOOLING}"
+          require_bool "class-unreal-compile" "${CLASS_UNREAL_COMPILE}"
+          require_bool "class-unreal-runtime" "${CLASS_UNREAL_RUNTIME}"
+          require_unreal_execution "${CLASS_UNREAL_EXECUTION}"
+          require_ci_cost "${CLASS_CI_COST}"
+          require_bool "class-security-base" "${CLASS_SECURITY_BASE}"
+          require_bool "class-asset-full" "${CLASS_ASSET_FULL}"
+
+          python_expected=false
+          if [[ "${CLASS_PYTHON}" == "true" || "${CLASS_CI}" == "true" ]]; then
+            python_expected=true
+          fi
+
+          if [[ "${CLASS_UE_CODE}" == "true" || "${CLASS_ASSET_FULL}" == "true" ]]; then
+            if [[ "${CLASS_CI_COST}" != "heavy" ]]; then
+              echo "::error::heavy Unreal/runtime impact must classify ci_cost_class=heavy, got ${CLASS_CI_COST}"
+              failed=1
+            fi
+          fi
+
+          expected_unreal_execution=static
+          if [[ "${CLASS_UNREAL_COMPILE}" == "true" ]]; then
+            expected_unreal_execution=compile
+          elif [[ "${CLASS_UNREAL_RUNTIME}" == "true" || "${CLASS_ASSET_FULL}" == "true" ]]; then
+            expected_unreal_execution=runtime
+          fi
+          if [[ "${CLASS_UNREAL_EXECUTION}" != "${expected_unreal_execution}" ]]; then
+            echo "::error::unreal execution class mismatch: expected ${expected_unreal_execution}, got ${CLASS_UNREAL_EXECUTION}"
+            failed=1
+          fi
+          if [[ "${CLASS_UNREAL_COMPILE}" == "true" && "${CLASS_UNREAL_RUNTIME}" != "true" ]]; then
+            echo "::error::compile impact must also be runtime-relevant"
+            failed=1
+          fi
+          if [[ "${CLASS_UE_CODE}" != "${CLASS_UNREAL_RUNTIME}" ]]; then
+            echo "::error::legacy ue_code must match unreal_runtime until callers migrate"
+            failed=1
+          fi
+
+          if [[ "${CLASS_UE_TOOLING}" == "true" && "${CLASS_UE_CODE}" == "false" && "${CLASS_ASSET_FULL}" == "false" && "${CLASS_CI_COST}" == "heavy" ]]; then
+            echo "::error::proof/editor tooling without ue_code or asset_full must not claim heavy cost"
+            failed=1
+          fi
+
+          cpp_security_expected=false
+          if [[ "${CLASS_CPP}" == "true" || "${CLASS_UE_CODE}" == "true" ]]; then
+            cpp_security_expected=true
+          fi
+
+          require_optional "python-reference" "${python_expected}" "${PYTHON_REFERENCE_RESULT}"
+          require_optional "security-base" "${CLASS_SECURITY_BASE}" "${SECURITY_BASE_RESULT}"
+          require_optional "security-python" "${CLASS_PYTHON}" "${SECURITY_PYTHON_RESULT}"
+          require_optional "security-cpp" "${cpp_security_expected}" "${SECURITY_CPP_RESULT}"
+          require_optional "unreal-code" "${CLASS_UE_CODE}" "${UNREAL_CODE_RESULT}"
+          require_optional "asset-validation" "${CLASS_ASSETS}" "${ASSET_VALIDATION_RESULT}"
+
+          stage3g_full_expected=false
+          if [[ "${CLASS_ASSET_FULL}" == "true" ]]; then
+            if [[ "${EVENT_NAME}" != "pull_request" || "${PR_DRAFT}" == "false" ]]; then
+              stage3g_full_expected=true
+            fi
+          fi
+
+          require_optional "stage3g-full-validation" "${stage3g_full_expected}" "${STAGE3G_FULL_RESULT}"
+
+          if [[ "${failed}" -ne 0 ]]; then
+            exit 1
+          fi
+
+          echo "aggregate: PASS"

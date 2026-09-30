@@ -1,0 +1,185 @@
+{
+  "schema_version": 1,
+  "visual_history_id": "VH-3G-R2-001",
+  "title": "Stage 3G R2 — deterministic PCG forest baseline",
+  "roadmap": {
+    "stage": "Stage 3G",
+    "version": "R2",
+    "slice": "PCG forest baseline",
+    "title": "Real conifer + route-excluded deterministic forest",
+    "issue_number": null
+  },
+  "timestamps": {
+    "created_at": "2026-09-27",
+    "visual_accepted_at": "2026-09-27T06:22:26Z",
+    "merged_at": "2026-09-27T06:41:17Z"
+  },
+  "status": {
+    "technical_status": "MERGED",
+    "visual_status": "VISUAL_ACCEPTED"
+  },
+  "git": {
+    "branch": "feat/stage3g-pcg-forest-r2",
+    "baseline_commit_sha": "91c1150fa63488028054b17b36ce6aee1bb2e8d7",
+    "source_commit_sha": "fb5f900c86066aef475dcc3a8fd1a4365793433c",
+    "source_commit_short": "fb5f900c",
+    "accepted_commit_sha": "fb5f900c86066aef475dcc3a8fd1a4365793433c",
+    "merge_commit_sha": "fd77094ffe0c8f29c3bd9949ba22079fc73fc1c5"
+  },
+  "pull_request": {
+    "number": 162,
+    "title": "feat(stage3g): build R2 deterministic PCG forest baseline",
+    "status": "MERGED"
+  },
+  "ci": {
+    "workflow_name": "CyclingSim CI",
+    "workflow_run_id": 36299298530,
+    "workflow_run_number": 398,
+    "proof_artifact_name": "stage3g-full-validation-36299298530-1",
+    "automation_status": "PASS",
+    "automation_summary": "Committed-SHA Unreal build/Automation and Stage 3G full validation passed.",
+    "fresh_load_status": "PASS",
+    "map_check_errors": 0,
+    "map_check_warnings": 0,
+    "lfs_fsck_status": "PASS",
+    "visual_capture_status": "PASS"
+  },
+  "worldgen": {
+    "generation_seed": 42017,
+    "route_clearance_m": 4,
+    "graphs_used": [
+      "PCG_RouteExclusion",
+      "PCG_Forest"
+    ],
+    "biomes_affected": [
+      "forest"
+    ],
+    "distance_ranges_m": [
+      {
+        "biome": "forest",
+        "start_m": 3700,
+        "end_m": 6200
+      }
+    ],
+    "density_values": {
+      "forest": 0.72
+    },
+    "simulation_truth_source": "FRouteGeometryProfile"
+  },
+  "assets": {
+    "validated_assets_used": [
+      "SM_Stage3G_FirSaplingMedium",
+      "Stage 3G texture-backed forest ground"
+    ],
+    "meshes_added": [
+      "SM_Stage3G_FirSaplingMedium"
+    ],
+    "meshes_replaced": [
+      "forest massing placeholders -> SM_Stage3G_FirSaplingMedium"
+    ],
+    "materials_added": [],
+    "materials_replaced": [],
+    "placeholder_assets_removed": [
+      "Engine Cone/Cylinder forest presentation"
+    ]
+  },
+  "visual_review": {
+    "visual_change_detected": true,
+    "technical_acceptance": true,
+    "visual_acceptance": true,
+    "reviewer_summary": "The 4900 m forest sector visibly uses the validated conifer while route clearance and the Stage 3G proof remain green.",
+    "rejection_reason": null,
+    "next_step": "Use this merged state as the BEFORE baseline for Stage 3G R3 valley/high-Alpine work."
+  },
+  "evidence_storage": {
+    "mode": "REPOSITORY_BACKFILL",
+    "note": "Genuine R1/R2 CI captures were backfilled into repository-retained triptychs. The AFTER panel reuses the accepted R2 render because the merge introduced no visual delta.",
+    "artifact_name": "stage3g-full-validation-36299298530-1"
+  },
+  "captures": [
+    {
+      "capture_id": "01-valley-1200m",
+      "label": "Valley",
+      "distance_m": 1200,
+      "camera_name": "Stage3G-Valley-1200m",
+      "resolution": "1920x1080",
+      "before": {
+        "commit_sha": "91c1150fa63488028054b17b36ce6aee1bb2e8d7",
+        "image": null,
+        "sha256": null,
+        "status": "HISTORICAL_BASELINE"
+      },
+      "now": {
+        "commit_sha": "fb5f900c86066aef475dcc3a8fd1a4365793433c",
+        "image": "CI artifact: FinalProof/Visual/01_meadow_valley_1200m_AFTER.png",
+        "sha256": null,
+        "status": "VISUAL_ACCEPTED"
+      },
+      "after": {
+        "commit_sha": "fd77094ffe0c8f29c3bd9949ba22079fc73fc1c5",
+        "image": null,
+        "sha256": null,
+        "status": "MERGED_BASELINE"
+      },
+      "triptych_image": "captures/01_valley_1200m_triptych.jpg",
+      "pixel_diff": null,
+      "triptych_sha256": "9e4a3cf0637098ad7fd52aaa805b358c045126c9897813945b65861995b5f1fd"
+    },
+    {
+      "capture_id": "02-forest-4900m",
+      "label": "Forest",
+      "distance_m": 4900,
+      "camera_name": "Stage3G-Forest-4900m",
+      "resolution": "1920x1080",
+      "before": {
+        "commit_sha": "91c1150fa63488028054b17b36ce6aee1bb2e8d7",
+        "image": null,
+        "sha256": null,
+        "status": "HISTORICAL_BASELINE"
+      },
+      "now": {
+        "commit_sha": "fb5f900c86066aef475dcc3a8fd1a4365793433c",
+        "image": "CI artifact: FinalProof/Visual/02_forest_sector_4900m_AFTER.png",
+        "sha256": null,
+        "status": "VISUAL_ACCEPTED"
+      },
+      "after": {
+        "commit_sha": "fd77094ffe0c8f29c3bd9949ba22079fc73fc1c5",
+        "image": null,
+        "sha256": null,
+        "status": "MERGED_BASELINE"
+      },
+      "triptych_image": "captures/02_forest_4900m_triptych.jpg",
+      "pixel_diff": null,
+      "triptych_sha256": "ea089a3d9131223b7b9bd906a6ce2ba285f930cf6aeb9216032147f8a2d49db9"
+    },
+    {
+      "capture_id": "03-high-alpine-8000m",
+      "label": "High Alpine",
+      "distance_m": 8000,
+      "camera_name": "Stage3G-HighAlpine-8000m",
+      "resolution": "1920x1080",
+      "before": {
+        "commit_sha": "91c1150fa63488028054b17b36ce6aee1bb2e8d7",
+        "image": null,
+        "sha256": null,
+        "status": "HISTORICAL_BASELINE"
+      },
+      "now": {
+        "commit_sha": "fb5f900c86066aef475dcc3a8fd1a4365793433c",
+        "image": "CI artifact: FinalProof/Visual/03_high_valley_mountains_8000m_AFTER.png",
+        "sha256": null,
+        "status": "VISUAL_ACCEPTED"
+      },
+      "after": {
+        "commit_sha": "fd77094ffe0c8f29c3bd9949ba22079fc73fc1c5",
+        "image": null,
+        "sha256": null,
+        "status": "MERGED_BASELINE"
+      },
+      "triptych_image": "captures/03_high_alpine_8000m_triptych.jpg",
+      "pixel_diff": null,
+      "triptych_sha256": "d3ea07d2b29ba14908d8f09913ed1f846f64b651c35201318fdd7cdc83050c36"
+    }
+  ]
+}

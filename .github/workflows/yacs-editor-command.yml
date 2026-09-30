@@ -1,0 +1,198 @@
+name: YACS Remote Editor Command
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yacs-remote-editor-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  remote-editor:
+    name: Trusted remote editor smoke
+    if: >-
+      github.event.issue.number == 228 &&
+      github.event.comment.user.login == github.repository_owner &&
+      github.event.comment.body == '/yacs-editor smoke-cube'
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 20
+
+    steps:
+      - name: Validate event trust boundary
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          if ('${{ github.repository }}' -ne 'karnalooch/YetAnotherCyclingSim') {
+            throw "Unexpected repository '${{ github.repository }}'."
+          }
+
+          if ('${{ github.event_name }}' -ne 'issue_comment') {
+            throw "Unsupported event '${{ github.event_name }}'."
+          }
+          if ('${{ github.ref }}' -ne 'refs/heads/main') {
+            throw "Issue-command workflow must execute from the default branch definition."
+          }
+
+          if ('${{ github.sha }}' -notmatch '^[0-9a-f]{40}$') {
+            throw "GitHub event SHA is not a full commit SHA."
+          }
+
+          Write-Host "Trusted remote editor event accepted: ${{ github.event_name }} @ ${{ github.sha }}"
+
+      - name: Isolate self-hosted Git configuration
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'yacs-remote-editor.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+
+      - name: Checkout exact trusted revision without LFS payloads
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        env:
+          GIT_LFS_SKIP_SMUDGE: "1"
+        with:
+          ref: ${{ github.sha }}
+          path: _remote-editor-worktree
+          fetch-depth: 1
+          lfs: false
+          clean: true
+          persist-credentials: false
+
+      - name: Enforce code-only checkout
+        shell: pwsh
+        working-directory: _remote-editor-worktree
+        run: |
+          ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+
+      - name: Verify exact SHA and clean worktree
+        shell: pwsh
+        working-directory: _remote-editor-worktree
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $actual = (git rev-parse HEAD).Trim()
+          if ($actual -ne '${{ github.sha }}') {
+            throw "checkout HEAD '$actual' != trusted event SHA '${{ github.sha }}'."
+          }
+          if (git status --porcelain) {
+            throw 'Remote editor checkout is dirty before execution.'
+          }
+
+      - name: Run static bridge contract tests
+        shell: pwsh
+        working-directory: _remote-editor-worktree
+        run: |
+          python ./scripts/ci/test_remote_editor_command_workflow.py
+
+      - name: Build editor and run scoped Automation before editor launch
+        shell: pwsh
+        working-directory: _remote-editor-worktree
+        run: |
+          ./scripts/ci/Invoke-YacsUnrealCi.ps1 -ExpectedHead '${{ github.sha }}'
+
+      - name: Materialize trusted LFS assets for Unreal Editor startup
+        shell: pwsh
+        working-directory: _remote-editor-worktree
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          git lfs install --local
+          if ($LASTEXITCODE -ne 0) {
+            throw 'git lfs install --local failed before remote editor startup.'
+          }
+
+          git lfs pull
+          if ($LASTEXITCODE -ne 0) {
+            throw 'git lfs pull failed before remote editor startup.'
+          }
+
+          git lfs fsck
+          if ($LASTEXITCODE -ne 0) {
+            throw 'git lfs fsck failed before remote editor startup.'
+          }
+
+          $lfsPaths = @(git lfs ls-files --name-only)
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Could not enumerate LFS paths after materialization.'
+          }
+          if ($lfsPaths.Count -eq 0) {
+            throw 'Expected tracked LFS files, but git lfs ls-files returned none.'
+          }
+
+          $stillPointers = @()
+          foreach ($rawPath in $lfsPaths) {
+            $path = $rawPath.Trim()
+            if (-not $path) { continue }
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+              throw "Tracked LFS file is missing after pull: $path"
+            }
+
+            & git lfs pointer --check "--file=$path" *> $null
+            if ($LASTEXITCODE -eq 0) {
+              $stillPointers += $path
+            }
+          }
+
+          if ($stillPointers.Count -gt 0) {
+            throw "LFS materialization left pointer files in the worktree: $($stillPointers -join ', ')"
+          }
+
+          if (git status --porcelain) {
+            throw 'LFS materialization changed repository status.'
+          }
+
+          Write-Host "LFS materialization PASS: $($lfsPaths.Count) tracked LFS files are materialized."
+
+      - name: Execute allowlisted Unreal command
+        shell: pwsh
+        working-directory: _remote-editor-worktree
+        run: |
+          ./scripts/ue/Invoke-YacsRemoteEditorCommand.ps1 -Command smoke-cube -ExpectedHead '${{ github.sha }}'
+
+      - name: Upload remote editor proof
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: yacs-remote-editor-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            _remote-editor-worktree/Saved/RuntimeProof/RemoteEditor/**/*.json
+            _remote-editor-worktree/Saved/RuntimeProof/RemoteEditor/**/*.txt
+            _remote-editor-worktree/Saved/RuntimeProof/RemoteEditor/**/*.log
+            _remote-editor-worktree/Saved/RuntimeProof/CI/Unreal/**/*.json
+            _remote-editor-worktree/Saved/RuntimeProof/CI/Unreal/**/*.txt
+            _remote-editor-worktree/Saved/RuntimeProof/CI/Unreal/**/*.log
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Clean isolated remote editor worktree
+        if: ${{ always() }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $worktree = Join-Path $env:GITHUB_WORKSPACE '_remote-editor-worktree'
+          if (-not (Test-Path -LiteralPath $worktree -PathType Container)) {
+            Write-Host 'Remote editor worktree was not created; nothing to clean.'
+            exit 0
+          }
+
+          Push-Location -LiteralPath $worktree
+          try {
+            if (Test-Path -LiteralPath '.git') {
+              git reset --hard
+              if ($LASTEXITCODE -ne 0) { throw 'Remote editor cleanup git reset failed.' }
+              git clean -ffdx
+              if ($LASTEXITCODE -ne 0) { throw 'Remote editor cleanup git clean failed.' }
+              if (git status --porcelain) {
+                throw 'Remote editor worktree is still dirty after cleanup.'
+              }
+            }
+          }
+          finally {
+            Pop-Location
+          }

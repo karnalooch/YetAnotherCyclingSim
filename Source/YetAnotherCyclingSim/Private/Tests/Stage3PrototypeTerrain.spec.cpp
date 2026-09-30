@@ -1,0 +1,213 @@
+#if WITH_DEV_AUTOMATION_TESTS
+
+#include "Misc/AutomationTest.h"
+
+#include "Cycling/AlpineJourneyGeometry.h"
+#include "Cycling/Stage3PrototypeTerrainActor.h"
+
+#include "Components/HierarchicalInstancedStaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
+#include "Engine/World.h"
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FStage3PrototypeTerrainBuildTest,
+	"CyclingStage3World.PrototypeTerrain",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FStage3PrototypeTerrainBuildTest::RunTest(const FString& Parameters)
+{
+	using namespace CyclingSimulation;
+
+	UWorld* World = UWorld::CreateWorld(
+		EWorldType::Game,
+		false,
+		TEXT("Stage3PrototypeTerrainTestWorld"));
+	if (!World)
+	{
+		AddError(TEXT("failed to create transient Stage 3 terrain test world"));
+		return false;
+	}
+
+	FRouteGeometryProfile Geometry;
+	FString Error;
+	TestTrue(TEXT("Alpine geometry builds"),
+		TryBuildAlpineJourneyRouteGeometry(Geometry, Error));
+
+	AStage3PrototypeTerrainActor* Terrain =
+		World->SpawnActor<AStage3PrototypeTerrainActor>();
+	TestNotNull(TEXT("prototype terrain actor spawns"), Terrain);
+
+	if (Terrain)
+	{
+		TestTrue(TEXT("prototype terrain rebuild succeeds"),
+			Terrain->RebuildFromGeometry(Geometry, Error));
+		TestTrue(TEXT("prototype terrain validates against route geometry"),
+			Terrain->ValidateAgainstGeometry(Geometry, Error));
+
+		TestEqual(TEXT("one road tile per 10 m geometry interval"),
+			Terrain->GetRoadInstanceCount(), 1000);
+		TestEqual(TEXT("terrain support uses seven route-aware bands per 50 m slice"),
+			Terrain->GetTerrainInstanceCount(), 1400);
+		TestTrue(TEXT("target-density understory is materially populated"),
+			Terrain->GetForestPropInstanceCount() >= 100);
+		TestEqual(TEXT("high-mountain progression prop count remains deterministic"),
+			Terrain->GetMountainPropInstanceCount(), 30);
+		TestEqual(TEXT("Stage 3G valley ridge count remains deterministic"),
+			Terrain->GetValleyRidgeInstanceCount(), 32);
+		TestTrue(TEXT("target-density primary/background forest is materially populated"),
+			Terrain->GetForestCanopyInstanceCount() >= 600);
+		const int32 TargetDensityForestCount =
+			Terrain->GetForestPropInstanceCount()
+			+ Terrain->GetForestCanopyInstanceCount();
+		TestTrue(TEXT("target-density persisted forest count >= 1700"),
+			TargetDensityForestCount >= 1700);
+		TestTrue(TEXT("target-density persisted forest count <= 2300"),
+			TargetDensityForestCount <= 2300);
+		TestNotNull(TEXT("Stage 3G forest props use a real mesh"),
+			Terrain->ForestProps->GetStaticMesh().Get());
+		TestNotNull(TEXT("Stage 3G forest canopy uses a real mesh"),
+			Terrain->ForestCanopyProps->GetStaticMesh().Get());
+		if (Terrain->ForestProps->GetStaticMesh()
+			&& Terrain->ForestCanopyProps->GetStaticMesh())
+		{
+			TestEqual(
+				TEXT("Stage 3G forest props use the validated conifer"),
+				Terrain->ForestProps->GetStaticMesh()->GetPathName(),
+				FString(AStage3PrototypeTerrainActor::Stage3GConiferMeshPath));
+			TestEqual(
+				TEXT("Stage 3G forest canopy uses the validated conifer"),
+				Terrain->ForestCanopyProps->GetStaticMesh()->GetPathName(),
+				FString(AStage3PrototypeTerrainActor::Stage3GConiferMeshPath));
+		}
+
+		TestNotNull(TEXT("Stage 3G valley ridges use a real mesh"),
+			Terrain->ValleyRidgeProps->GetStaticMesh().Get());
+		TestNotNull(TEXT("Stage 3G near-Alpine massing uses a real mesh"),
+			Terrain->MountainProps->GetStaticMesh().Get());
+		TestNotNull(TEXT("Stage 3G distant mountain massing uses a real mesh"),
+			Terrain->DistantMountainProps->GetStaticMesh().Get());
+		TestNotNull(TEXT("Stage 3G rock dressing uses a real mesh"),
+			Terrain->RockProps->GetStaticMesh().Get());
+		if (Terrain->ValleyRidgeProps->GetStaticMesh()
+			&& Terrain->MountainProps->GetStaticMesh()
+			&& Terrain->DistantMountainProps->GetStaticMesh()
+			&& Terrain->RockProps->GetStaticMesh())
+		{
+			for (const UHierarchicalInstancedStaticMeshComponent* Component : {
+				Terrain->ValleyRidgeProps.Get(),
+				Terrain->MountainProps.Get(),
+				Terrain->DistantMountainProps.Get(),
+				Terrain->RockProps.Get() })
+			{
+				TestEqual(
+					TEXT("Stage 3G valley/high-Alpine massing uses the validated boulder"),
+					Component->GetStaticMesh()->GetPathName(),
+					FString(AStage3PrototypeTerrainActor::Stage3GBoulderMeshPath));
+			}
+
+			auto TestMaxWorldDimension =
+				[this](
+					const TCHAR* Label,
+					const UHierarchicalInstancedStaticMeshComponent* Component,
+					double MaxDimensionM)
+				{
+					const FVector MeshSizeCm =
+						Component->GetStaticMesh()->GetBounds().BoxExtent * 2.0;
+					for (int32 InstanceIndex = 0;
+						InstanceIndex < Component->GetInstanceCount();
+						++InstanceIndex)
+					{
+						FTransform Transform;
+						if (!Component->GetInstanceTransform(
+							InstanceIndex,
+							Transform,
+							false))
+						{
+							AddError(FString::Printf(
+								TEXT("%s instance %d transform is unavailable"),
+								Label,
+								InstanceIndex));
+							continue;
+						}
+
+						const FVector Scale = Transform.GetScale3D().GetAbs();
+						const FVector WorldSizeCm(
+							MeshSizeCm.X * Scale.X,
+							MeshSizeCm.Y * Scale.Y,
+							MeshSizeCm.Z * Scale.Z);
+						const double ActualMaxDimensionM =
+							FMath::Max3(
+								static_cast<double>(WorldSizeCm.X),
+								static_cast<double>(WorldSizeCm.Y),
+								static_cast<double>(WorldSizeCm.Z))
+							/ 100.0;
+
+						TestTrue(
+							FString::Printf(
+								TEXT("%s instance %d max dimension %.3f m <= %.3f m"),
+								Label,
+								InstanceIndex,
+								ActualMaxDimensionM,
+								MaxDimensionM),
+							ActualMaxDimensionM <= MaxDimensionM + UE_KINDA_SMALL_NUMBER);
+					}
+				};
+
+			TestMaxWorldDimension(TEXT("valley ridge"), Terrain->ValleyRidgeProps, 45.0);
+			TestMaxWorldDimension(TEXT("near-Alpine massing"), Terrain->MountainProps, 18.0);
+			TestMaxWorldDimension(TEXT("distant mountain"), Terrain->DistantMountainProps, 120.0);
+			TestMaxWorldDimension(TEXT("rock dressing"), Terrain->RockProps, 4.0);
+		}
+		TestEqual(TEXT("Stage 3G distant mountain count remains deterministic"),
+			Terrain->GetDistantMountainInstanceCount(), 28);
+		TestEqual(TEXT("Stage 3G real rock dressing count remains deterministic"),
+			Terrain->GetRockPropInstanceCount(), 40);
+		TestEqual(TEXT("Stage 3G water tile count remains deterministic"),
+			Terrain->GetWaterTileInstanceCount(), 26);
+
+		const int32 RoadCountBefore =
+			Terrain->GetRoadInstanceCount();
+		const int32 TerrainCountBefore =
+			Terrain->GetTerrainInstanceCount();
+		const int32 ForestCountBefore =
+			Terrain->GetForestPropInstanceCount();
+		const int32 MountainCountBefore =
+			Terrain->GetMountainPropInstanceCount();
+		const int32 ValleyRidgeCountBefore =
+			Terrain->GetValleyRidgeInstanceCount();
+		const int32 ForestCanopyCountBefore =
+			Terrain->GetForestCanopyInstanceCount();
+		const int32 DistantMountainCountBefore =
+			Terrain->GetDistantMountainInstanceCount();
+		const int32 RockPropCountBefore =
+			Terrain->GetRockPropInstanceCount();
+		const int32 WaterTileCountBefore =
+			Terrain->GetWaterTileInstanceCount();
+
+		TestTrue(TEXT("idempotent rebuild succeeds"),
+			Terrain->RebuildFromGeometry(Geometry, Error));
+		TestEqual(TEXT("idempotent road count unchanged"),
+			Terrain->GetRoadInstanceCount(), RoadCountBefore);
+		TestEqual(TEXT("idempotent terrain count unchanged"),
+			Terrain->GetTerrainInstanceCount(), TerrainCountBefore);
+		TestEqual(TEXT("idempotent forest prop count unchanged"),
+			Terrain->GetForestPropInstanceCount(), ForestCountBefore);
+		TestEqual(TEXT("idempotent mountain prop count unchanged"),
+			Terrain->GetMountainPropInstanceCount(), MountainCountBefore);
+		TestEqual(TEXT("idempotent valley ridge count unchanged"),
+			Terrain->GetValleyRidgeInstanceCount(), ValleyRidgeCountBefore);
+		TestEqual(TEXT("idempotent forest canopy count unchanged"),
+			Terrain->GetForestCanopyInstanceCount(), ForestCanopyCountBefore);
+		TestEqual(TEXT("idempotent distant mountain count unchanged"),
+			Terrain->GetDistantMountainInstanceCount(), DistantMountainCountBefore);
+		TestEqual(TEXT("idempotent rock dressing count unchanged"),
+			Terrain->GetRockPropInstanceCount(), RockPropCountBefore);
+		TestEqual(TEXT("idempotent water tile count unchanged"),
+			Terrain->GetWaterTileInstanceCount(), WaterTileCountBefore);
+	}
+
+	World->DestroyWorld(false);
+	return true;
+}
+
+#endif // WITH_DEV_AUTOMATION_TESTS

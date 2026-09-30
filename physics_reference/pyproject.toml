@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cycling-physics-reference"
+version = "0.1.0"
+description = "Reference deterministic cycling physics model for verification before the Unreal Engine 5 C++ implementation."
+readme = "README.md"
+requires-python = ">=3.14"
+license = { text = "Proprietary" }
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]

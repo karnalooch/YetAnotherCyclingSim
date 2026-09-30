@@ -1,0 +1,125 @@
+name: YACS World Authoring Library SP638 proof
+run-name: World Authoring SP638 ${{ inputs.gumball_request_id }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      exact_sha:
+        description: Exact 40-character PR HEAD SHA to prove
+        required: true
+        type: string
+      gumball_request_id:
+        description: Deterministic Gumball proof request id
+        required: true
+        type: string
+permissions:
+  contents: read
+
+concurrency:
+  group: passo-giau-r4-1-roadside-house-${{ github.repository }}-${{ inputs.gumball_request_id }}
+  cancel-in-progress: true
+
+jobs:
+  proof:
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 45
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+
+    steps:
+      - name: Isolate self-hosted Git configuration
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'yacs-roadside-house-global.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+
+      - name: Checkout exact spike revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: _passo-giau-roadside-house-worktree
+          ref: ${{ inputs.exact_sha }}
+          fetch-depth: 1
+          lfs: false
+          clean: true
+          persist-credentials: false
+
+      - name: Verify exact SHA and clean checkout
+        shell: pwsh
+        working-directory: _passo-giau-roadside-house-worktree
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ((git rev-parse HEAD).Trim() -ne '${{ inputs.exact_sha }}') {
+            throw 'Roadside house checkout is not exact SHA.'
+          }
+          git reset --hard HEAD
+          git clean -ffd
+          if (git status --porcelain --untracked-files=all) {
+            throw 'Roadside house checkout is dirty.'
+          }
+
+      - name: Compile World Authoring Library scripts
+        shell: pwsh
+        working-directory: _passo-giau-roadside-house-worktree
+        run: |
+          python -m py_compile `
+            ./scripts/assets/yacs_asset_library.py `
+            ./scripts/worldgen/yacs_scene_layout.py `
+            ./scripts/ue/yacs_scene_composer.py `
+            ./scripts/ue/yacs_asset_candidate_import.py `
+            ./scripts/ue/stage3g_capture_passo_giau_roadside_house.py
+
+      - name: Run World Authoring Library unit tests
+        shell: pwsh
+        working-directory: _passo-giau-roadside-house-worktree
+        run: |
+          python ./scripts/ci/test_yacs_asset_library.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python ./scripts/ci/test_yacs_scene_layout.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python ./scripts/ci/test_yacs_asset_candidate_import_contract.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python ./scripts/ci/test_yacs_pcg_patch_contract.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Run World Authoring Library SP638 proof
+        shell: pwsh
+        working-directory: _passo-giau-roadside-house-worktree
+        run: |
+          ./scripts/ue/Invoke-YacsPassoGiauRoadsideHouseProof.ps1 `
+            -ExpectedBranch 'HEAD' `
+            -ExpectedHead '${{ inputs.exact_sha }}' `
+            -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR4_1/RoadsideHouse'
+
+      - name: Upload reusable successful World Authoring evidence
+        if: ${{ success() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: proof-world-authoring-sp638-${{ inputs.exact_sha }}
+          path: |
+            _passo-giau-roadside-house-worktree/Saved/RuntimeProof/CI/Stage3GR4_1/RoadsideHouse/**
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload failed World Authoring diagnostics
+        if: ${{ failure() || cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: diagnostic-world-authoring-sp638-${{ inputs.exact_sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            _passo-giau-roadside-house-worktree/Saved/RuntimeProof/CI/Stage3GR4_1/RoadsideHouse/**
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Clean self-hosted workspace
+        if: ${{ always() }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $worktree = Join-Path $env:GITHUB_WORKSPACE '_passo-giau-roadside-house-worktree'
+          if (Test-Path -LiteralPath (Join-Path $worktree '.git')) {
+            git -C $worktree reset --hard
+            git -C $worktree clean -ffd
+          }

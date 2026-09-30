@@ -1,0 +1,17 @@
+{
+  "id": "proof-broker-safe-api-diagnostics",
+  "source": "karnalooch/YetAnotherCyclingSim",
+  "category": "tooling",
+  "problem": "Opaque GitHub API failures make trusted automation difficult to diagnose, while raw exception output can expose authentication material.",
+  "invariant": "Trusted GitHub automation should report method, sanitized endpoint, HTTP status and bounded structured response details while removing authentication material. Unstructured failures should fall back to a generic diagnostic.",
+  "evidence": [
+    "YACS PR #245 / commit d91de2cd46a459cf52cfb5069fb9c62acf10dda3",
+    "YACS test_proof_broker.py covers structured sanitization and opaque-error fallback"
+  ],
+  "do_not_copy": [
+    "YACS-specific proof workflow names",
+    "product-specific error wording not required by the invariant"
+  ],
+  "failure_behavior": "If a failure cannot be rendered safely, return a generic BLOCKED diagnostic instead of raw exception text.",
+  "status": "candidate"
+}

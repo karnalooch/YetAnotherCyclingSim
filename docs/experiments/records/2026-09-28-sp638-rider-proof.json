@@ -1,0 +1,53 @@
+{
+  "id": "2026-09-28-sp638-rider-proof",
+  "date": "2026-09-28",
+  "area": "road-terrain",
+  "stage": "R4.1B.1",
+  "title": "SP638 cyclist-height Unreal rider proof",
+  "status": "VISUAL_FAIL",
+  "pr": 216,
+  "commit": "5e434bd45cbd8561f55ba2de3c627c3792b6bfc4",
+  "run": 36409905697,
+  "hypothesis": "Official SP638 persisted on the Veneto Landscape will already read as a credible mountain road from cyclist height.",
+  "technical": [
+    "The road authoring run is GREEN.",
+    "The official spline is present in the map.",
+    "The 3840 x 2160 rider proof was captured from the authored world."
+  ],
+  "visual": [
+    "Rejected by human review on 2026-09-28.",
+    "The road does not read clearly enough as a mountain road.",
+    "Foreground terrain shows severe stepping/faceted heightfield structure.",
+    "The checker material exposes geometry problems rather than causing them."
+  ],
+  "keep": [
+    "Official SP638 data and spline.",
+    "GIS topology/Z sampling pipeline.",
+    "Rider-height proof as the acceptance view."
+  ],
+  "reject": [
+    "Current foreground Landscape representation as visually acceptable.",
+    "Adding cosmetic assets/materials before fixing the rider-visible terrain/road foundation."
+  ],
+  "learnings": [
+    "The experiment succeeded diagnostically by proving that the problem is structural, not merely a missing-material pass.",
+    "The project needs a hybrid terrain strategy: macro Landscape plus a high-detail road corridor/meso geometry."
+  ],
+  "next": [
+    "Build a bounded 500-1000 m hairpin vertical slice with a high-detail corridor, road cut and readable asphalt before propagating the solution."
+  ],
+  "evidence": [
+    {
+      "label": "PR #216",
+      "url": "https://github.com/karnalooch/YetAnotherCyclingSim/pull/216"
+    },
+    {
+      "label": "GREEN authoring run 36409905697",
+      "url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/36409905697"
+    },
+    {
+      "label": "Failed rider proof artifact (14-day Actions retention)",
+      "url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/36409905697"
+    }
+  ]
+}
