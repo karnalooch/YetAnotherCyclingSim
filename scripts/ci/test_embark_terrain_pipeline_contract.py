@@ -86,6 +86,7 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
             "cook_houdini_node.py",
             "houdini_gaea_bridge_node",
             "houdini_heightfield_hda",
+            "dcc_handoff_manifest",
             '"-PreparedTerrainRoot"',
             '"-SkipTerrainPreparation"',
         ):
@@ -126,7 +127,7 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
             "MAX_SOURCE_CELL_M = 2.0",
             '"passo-giau-embark-landscape-v1"',
             "conditioned_source",
-            "pipeline_run_manifest_sha256",
+            "dcc_handoff_manifest_sha256",
         ):
             self.assertIn(token, source)
         for forbidden in (
@@ -148,7 +149,7 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
             "[string] $PreparedTerrainRoot",
             "[switch] $SkipTerrainPreparation",
             "passo-giau-embark-landscape-v1",
-            "conditioned_source.pipeline_run_manifest_sha256",
+            "conditioned_source.dcc_handoff_manifest_sha256",
             "conditioned_source.sha256",
             "Base_DTM",
             "Road_Earthworks",
