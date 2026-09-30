@@ -49,7 +49,8 @@
     "gaea_terrain": "worldgen/embark/recipes/passo_giau_landscape.terrain",
     "recipe_contract": "worldgen/embark/recipes/README.md",
     "houdini_heightfield_hda": "worldgen/embark/recipes/yacs_passo_giau_heightfield.hdalc",
-    "houdini_gaea_bridge_node": "/obj/yacs_passo_giau_gaea/OUT_GAEA"
+    "houdini_gaea_bridge_node": "/obj/yacs_passo_giau_gaea/OUT_GAEA",
+    "houdini_gaea_processor_node": "/obj/yacs_passo_giau_gaea/GAEA_PROCESSOR"
   },
   "source": {
     "download_mase": "scripts/assets/download_passo_giau_mase_pst.py",
