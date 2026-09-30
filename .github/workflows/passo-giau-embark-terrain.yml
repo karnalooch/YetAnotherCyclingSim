@@ -210,7 +210,7 @@ jobs:
           if (-not $source) { throw 'Prepared SP638 artifact is missing passo_giau_sp638_ue_centerline.json.' }
           $target = Join-Path (Get-Location) 'ExternalAssets/Terrain/PassoGiau/PreparedRoad'
           New-Item -ItemType Directory -Path $target -Force | Out-Null
-          Copy-Item -LiteralPath (Join-Path $source.Directory.FullName '*') -Destination $target -Recurse -Force
+          Copy-Item -Path (Join-Path $source.Directory.FullName '*') -Destination $target -Recurse -Force
           $materialized = Join-Path $target 'passo_giau_sp638_ue_centerline.json'
           if (-not (Test-Path -LiteralPath $materialized -PathType Leaf)) {
             throw 'Prepared SP638 input was not materialized at the PCG source contract path.'
