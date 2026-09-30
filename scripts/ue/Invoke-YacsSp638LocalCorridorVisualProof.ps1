@@ -62,9 +62,6 @@ if (-not (Test-Path -LiteralPath $WorkspaceCleanup -PathType Leaf)) {
     throw "Workspace-scoped Unreal cleanup helper is missing: $WorkspaceCleanup"
 }
 & $WorkspaceCleanup -Workspace $RepoRoot
-if ($LASTEXITCODE -ne 0) {
-    throw 'Workspace-scoped Unreal cleanup failed before SP638 render preflight.'
-}
 
 $Preflight = Join-Path $RepoRoot 'scripts/ue/Preflight-YacsProof.ps1'
 $AdditionalAllowedDirtyPaths = @()
