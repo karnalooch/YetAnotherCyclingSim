@@ -52,7 +52,14 @@ if (-not $ValidateOnly) {
 }
 
 $Preflight = Join-Path $RepoRoot 'scripts/ue/Preflight-YacsProof.ps1'
-$Context = & $Preflight -RepoRoot $RepoRoot -ProjectPath $ProjectPath -ArtifactRoot $ArtifactRoot -ExpectedBranch $ExpectedBranch -ExpectedHead $ExpectedHead
+$AdditionalAllowedDirtyPaths = @()
+if ($PcgExExecutionOutput) {
+    # The immediately preceding PCGEx authoring step deliberately creates this
+    # untracked authoring-only asset. Keep preflight fail-closed for everything
+    # else while allowing the known handoff product to coexist with the render.
+    $AdditionalAllowedDirtyPaths += 'Content/WorldGen/'
+}
+$Context = & $Preflight -RepoRoot $RepoRoot -ProjectPath $ProjectPath -ArtifactRoot $ArtifactRoot -ExpectedBranch $ExpectedBranch -ExpectedHead $ExpectedHead -AdditionalAllowedDirtyPaths $AdditionalAllowedDirtyPaths
 if ($LASTEXITCODE -ne 0) { throw 'SP638 local-corridor visual preflight failed.' }
 
 if (git -C $RepoRoot status --porcelain=v1 --untracked-files=no) {
