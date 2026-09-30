@@ -18,6 +18,7 @@ on:
       - 'scripts/assets/download_passo_giau_mase_pst.py'
       - 'scripts/assets/download_passo_giau_veneto_lidar.py'
       - 'scripts/assets/prepare_passo_giau_mase_pst.py'
+      - 'scripts/assets/extract_passo_giau_native_dtm_patch.py'
       - 'scripts/assets/download_passo_giau_road_network.py'
       - 'scripts/assets/prepare_passo_giau_road.py'
       - 'scripts/ue/Invoke-YacsPassoGiauPcgExGraph.ps1'
@@ -101,6 +102,7 @@ jobs:
             scripts/assets/download_passo_giau_mase_pst.py \
             scripts/assets/download_passo_giau_veneto_lidar.py \
             scripts/assets/prepare_passo_giau_mase_pst.py \
+            scripts/assets/extract_passo_giau_native_dtm_patch.py \
             scripts/assets/download_passo_giau_road_network.py \
             scripts/assets/prepare_passo_giau_road.py
 
@@ -114,6 +116,9 @@ jobs:
         run: |
           python scripts/assets/download_passo_giau_road_network.py
           python scripts/assets/prepare_passo_giau_road.py
+
+      - name: Extract Gate C.3 native DTM near-field patch
+        run: python scripts/assets/extract_passo_giau_native_dtm_patch.py
 
       - name: Validate prepared SP638 authority boundary
         shell: bash
@@ -141,7 +146,9 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: passo-giau-m3-pcgex-input-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ExternalAssets/Terrain/PassoGiau/PreparedRoad/**
+          path: |
+            ExternalAssets/Terrain/PassoGiau/PreparedRoad/**
+            ExternalAssets/Terrain/PassoGiau/PreparedNearField/**
           if-no-files-found: error
           retention-days: 14
 
@@ -240,6 +247,22 @@ jobs:
           if ([bool]$payload.yacs_policy.authoritative_physics) { throw 'SP638 input unexpectedly claims physics authority.' }
           Write-Host ("Materialized prepared SP638 input: {0} points" -f @($payload.points).Count)
 
+          $patchSource = Get-ChildItem -LiteralPath $downloadRoot -Recurse -File -Filter 'passo_giau_native_dtm_patch.json' | Select-Object -First 1
+          if (-not $patchSource) { throw 'Prepared input artifact is missing Gate C.3 native DTM patch metadata.' }
+          $patchTarget = Join-Path (Get-Location) 'ExternalAssets/Terrain/PassoGiau/PreparedNearField'
+          New-Item -ItemType Directory -Path $patchTarget -Force | Out-Null
+          Copy-Item -Path (Join-Path $patchSource.Directory.FullName '*') -Destination $patchTarget -Recurse -Force
+          $patchMetadata = Join-Path $patchTarget 'passo_giau_native_dtm_patch.json'
+          $patch = Get-Content -LiteralPath $patchMetadata -Raw | ConvertFrom-Json
+          $patchBinary = Join-Path $patchTarget ([string]$patch.binary.file)
+          if (-not (Test-Path -LiteralPath $patchBinary -PathType Leaf)) {
+            throw 'Gate C.3 native DTM patch binary was not materialized.'
+          }
+          if ([string]$patch.source.kind -ne 'prepared native metric DTM') {
+            throw 'Gate C.3 native DTM patch source contract drifted.'
+          }
+          Write-Host ("Materialized Gate C.3 patch: {0}x{1} @ {2} m" -f $patch.grid.rows,$patch.grid.columns,$patch.grid.step_x_m)
+
       - name: Build and author deterministic PCGEx graph
         shell: pwsh
         working-directory: _embark-terrain-worktree
@@ -276,6 +299,15 @@ jobs:
               -Variant $variant
             if ($LASTEXITCODE -ne 0) { throw "PCGEx Gate C.1 variant $variant failed." }
           }
+
+          ./scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1 `
+            -ExpectedBranch 'HEAD' `
+            -ExpectedHead '${{ github.sha }}' `
+            -ArtifactRoot 'Saved/RuntimeProof/CI/M3/PCGExCorridor/Visual/C3' `
+            -PcgExExecutionOutput 'Saved/RuntimeProof/CI/M3/PCGExCorridor/pcgex_graph_output.json' `
+            -NativeDtmPatchMetadata 'ExternalAssets/Terrain/PassoGiau/PreparedNearField/passo_giau_native_dtm_patch.json' `
+            -Variant C3
+          if ($LASTEXITCODE -ne 0) { throw 'PCGEx Gate C.3 native-DTM patch failed.' }
 
       - name: Upload PCGEx authoring evidence
         if: ${{ always() }}
