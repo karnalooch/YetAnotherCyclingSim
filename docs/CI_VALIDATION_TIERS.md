@@ -117,6 +117,26 @@ material or similar asset does not imply a C++ rebuild. A world change that
 crosses an `asset_full` boundary is RUNTIME work at its configured readiness
 checkpoint, and becomes COMPILE only when a binary-contract input also changed.
 
+#### PR #290 validation evidence
+
+The first live validation of this policy on `yacs-ue58` established the cost
+difference directly:
+
+- COLD seed: `compileKind=cold`, `reason=missing-cache-state`, purge enabled;
+  UBT total execution **146.16 s**, including **135.59 s** in the local UBA
+  executor.
+- WARM build after a legitimate build-contract fingerprint change:
+  `compileKind=warm`, `reason=compile-fingerprint-mismatch`, purge disabled;
+  UBT total execution **1.54 s**, including **0.12 s** in local UBA, followed by
+  26/26 Automation tests passing.
+- RUNTIME after a proof-only fingerprint change: `mode=runtime`,
+  `compileKind=none`, purge disabled and the build phase explicitly
+  **skipped** before Automation.
+
+These timings are evidence from that runner/revision, not a guaranteed future
+performance budget. The architectural invariant is the cache decision and
+fail-closed provenance, not a specific duration.
+
 ### Executable workflow lifecycle
 
 The set of executable GitHub Actions workflows is governed by
