@@ -270,6 +270,9 @@ if ($ExpectedLocal) {
         if ([int]$Proof.local_terrain_skin.sample_count -lt 250000) {
             throw "Gate C.3 native patch sampled too few points: $($Proof.local_terrain_skin.sample_count)"
         }
+        if ([double]$Proof.local_terrain_skin.proof_focus_margin_m -lt 100.0) {
+            throw "Gate C.3 patch is not centered on the rendered hairpin: margin=$($Proof.local_terrain_skin.proof_focus_margin_m) m"
+        }
         if ([int]$Proof.local_geometry.terrain_skin.triangles -lt 500000) {
             throw "Gate C.3 native terrain mesh is unexpectedly sparse."
         }
@@ -331,6 +334,7 @@ if ($TrackedChanges.Count -gt 0) {
     throw ("SP638 local-corridor visual proof mutated tracked files: {0}" -f ($TrackedChanges -join '; '))
 }
 
-Write-Host (($(if ($Variant -eq 'C3') { 'Gate C.3 native-DTM patch' } else { 'Gate C.1 surface-ownership variant' })) + " {0}: PASS." -f $Variant) -ForegroundColor Green
+$GateLabel = if ($Variant -eq 'C3') { 'Gate C.3 native-DTM patch' } else { 'Gate C.1 surface-ownership variant' }
+Write-Host ("{0} {1}: PASS." -f $GateLabel,$Variant) -ForegroundColor Green
 Write-Host ("Rendered proof: {0}" -f $CapturePng)
 exit 0
