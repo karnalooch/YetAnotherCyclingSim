@@ -248,6 +248,32 @@ def _is_runtime_sensitive_unknown(path: str) -> bool:
     return path.startswith(RUNTIME_SENSITIVE_PREFIXES)
 
 
+def _is_known_repository_path(path: str) -> bool:
+    matched = any(
+        (
+            _is_docs(path),
+            _is_python(path),
+            _is_cpp(path),
+            _is_asset(path),
+            _is_asset_full(path),
+            _is_ci(path),
+            _is_ue_tooling(path),
+            _is_unreal_runtime_input(path),
+        )
+    )
+    if matched:
+        return True
+    if path.startswith("scripts/"):
+        return True
+    if "/" not in path:
+        return PurePosixPath(path).suffix.lower() in {".yml", ".yaml", ".toml"}
+    return False
+
+
+def _is_unknown_runtime_compile_input(path: str) -> bool:
+    return _is_runtime_sensitive_unknown(path) and not _is_known_repository_path(path)
+
+
 def classify_paths(paths: Iterable[str]) -> Classification:
     normalized = sorted(
         {
@@ -436,17 +462,21 @@ def _unreal_binary_fingerprint(repo_root: str | Path = ".") -> str:
     root = Path(repo_root).resolve()
     candidates: set[Path] = {root / "YetAnotherCyclingSim.uproject"}
 
-    for source_root in (root / "Source", root / "Plugins"):
+    for source_root in (
+        root / "Source",
+        root / "Plugins",
+        root / "Config",
+        root / "Build",
+    ):
         if not source_root.exists():
             continue
         for path in source_root.rglob("*"):
             if not path.is_file():
                 continue
             relative = path.relative_to(root).as_posix()
-            if path.suffix.lower() == ".uplugin":
-                candidates.add(path)
-                continue
-            if "/Source/" in f"/{relative}" and path.suffix.lower() in UNREAL_COMPILE_EXTENSIONS:
+            if _is_unreal_compile_input(relative) or _is_unknown_runtime_compile_input(
+                relative
+            ):
                 candidates.add(path)
 
     return _hash_repository_inputs(
