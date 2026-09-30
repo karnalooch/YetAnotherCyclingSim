@@ -83,6 +83,7 @@ jobs:
             'scripts/ci/Test-YacsCodeOnlyCheckout.ps1',
             'scripts/ci/Invoke-YacsUnrealCi.ps1',
             'scripts/ci/Resolve-YacsUnrealCiCache.ps1',
+            'scripts/ci/Resolve-YacsUnrealBuildEnvironment.ps1',
             'scripts/ci/Resolve-YacsUnrealEngine.ps1',
             'scripts/ci/Invoke-YacsWindowsProbe.ps1',
             'scripts/ue/Invoke-YacsPackageProof.ps1',
