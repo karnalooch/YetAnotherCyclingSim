@@ -90,10 +90,19 @@
   },
   "proof_locations": {
     "gate_c_hairpin": {
-      "source_station_m": 15560,
-      "selection_basis": "nearest prepared official SP638 sample to the Gate C.1 PCGEx-selected rider-proof hairpin",
-      "gate_c1_pcgex_focus_distance_m": 15450,
-      "observed_source_to_render_focus_xy_delta_m": 0.85,
+      "focus_ue_m": [
+        5605.084,
+        1821.661
+      ],
+      "focus_epsg32632_m": [
+        736011.671,
+        5154425.114
+      ],
+      "selection_basis": "pinned from the Gate C.1 PCGEx presentation-centerline proof at the selected 15450 m hairpin; direct XY avoids source-vs-render station parameterization drift",
+      "reference_pcgex_focus_distance_m": 15450,
+      "reference_pcgex_execution_output_sha256": "40a5be69de99a2a3db01f1656f16593ca900c1cb5350d27061f802619fd8b37b",
+      "reference_workflow_run_id": 36764749645,
+      "max_render_focus_xy_drift_m": 2,
       "purpose": "stable exact-location A-E/C3 terrain ownership comparison; not route or physics authority"
     }
   }
