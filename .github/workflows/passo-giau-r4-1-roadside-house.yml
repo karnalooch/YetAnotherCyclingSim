@@ -1,34 +1,22 @@
 name: YACS World Authoring Library SP638 proof
+run-name: World Authoring SP638 ${{ inputs.gumball_request_id }}
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - spike/r4-1-hairpin-roadside-house
-    paths:
-      - '.github/workflows/passo-giau-r4-1-roadside-house.yml'
-      - '.github/workflows/reusable-python.yml'
-      - 'scripts/ue/Invoke-YacsPassoGiauRoadsideHouseProof.ps1'
-      - 'scripts/ue/stage3g_capture_passo_giau_roadside_house.py'
-      - 'scripts/ue/yacs_scene_composer.py'
-      - 'Source/YetAnotherCyclingSimEditor/Public/PCG/YacsPatchCandidatesSettings.h'
-      - 'Source/YetAnotherCyclingSimEditor/Private/PCG/YacsPatchCandidatesSettings.cpp'
-      - 'scripts/ue/yacs_asset_candidate_import.py'
-      - 'scripts/worldgen/yacs_scene_layout.py'
-      - 'scripts/assets/yacs_asset_library.py'
-      - 'scripts/assets/download_stage3g_assets.py'
-      - 'scripts/ci/test_yacs_asset_library.py'
-      - 'scripts/ci/test_yacs_scene_layout.py'
-      - 'scripts/ci/test_yacs_asset_candidate_import_contract.py'
-      - 'scripts/ci/test_yacs_pcg_patch_contract.py'
-      - 'worldgen/assets/catalog.json'
-      - 'worldgen/presets/alpine_roadside_grove_v1.json'
-
+    inputs:
+      exact_sha:
+        description: Exact 40-character PR HEAD SHA to prove
+        required: true
+        type: string
+      gumball_request_id:
+        description: Deterministic Gumball proof request id
+        required: true
+        type: string
 permissions:
   contents: read
 
 concurrency:
-  group: passo-giau-r4-1-roadside-house-${{ github.repository }}
+  group: passo-giau-r4-1-roadside-house-${{ github.repository }}-${{ inputs.gumball_request_id }}
   cancel-in-progress: true
 
 jobs:
@@ -52,7 +40,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: _passo-giau-roadside-house-worktree
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.exact_sha }}
           fetch-depth: 1
           lfs: false
           clean: true
@@ -63,7 +51,7 @@ jobs:
         working-directory: _passo-giau-roadside-house-worktree
         run: |
           $ErrorActionPreference = 'Stop'
-          if ((git rev-parse HEAD).Trim() -ne '${{ github.sha }}') {
+          if ((git rev-parse HEAD).Trim() -ne '${{ inputs.exact_sha }}') {
             throw 'Roadside house checkout is not exact SHA.'
           }
           git reset --hard HEAD
@@ -102,14 +90,24 @@ jobs:
         run: |
           ./scripts/ue/Invoke-YacsPassoGiauRoadsideHouseProof.ps1 `
             -ExpectedBranch 'HEAD' `
-            -ExpectedHead '${{ github.sha }}' `
+            -ExpectedHead '${{ inputs.exact_sha }}' `
             -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GR4_1/RoadsideHouse'
 
-      - name: Upload roadside house evidence
-        if: ${{ always() }}
+      - name: Upload reusable successful World Authoring evidence
+        if: ${{ success() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: passo-giau-r4-1-roadside-house-${{ github.run_id }}-${{ github.run_attempt }}
+          name: proof-world-authoring-sp638-${{ inputs.exact_sha }}
+          path: |
+            _passo-giau-roadside-house-worktree/Saved/RuntimeProof/CI/Stage3GR4_1/RoadsideHouse/**
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload failed World Authoring diagnostics
+        if: ${{ failure() || cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: diagnostic-world-authoring-sp638-${{ inputs.exact_sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             _passo-giau-roadside-house-worktree/Saved/RuntimeProof/CI/Stage3GR4_1/RoadsideHouse/**
           if-no-files-found: warn

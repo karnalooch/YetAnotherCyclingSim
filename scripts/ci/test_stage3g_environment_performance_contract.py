@@ -39,14 +39,20 @@ class Stage3GEnvironmentPerformanceContract(unittest.TestCase):
         self.assertIn("ToMilliseconds64", text)
         self.assertIn("YACS_STAGE3G_PERF_CSV", text)
 
-    def test_workflow_is_trusted_self_hosted_and_publishes_failure_evidence(self):
+    def test_workflow_is_broker_ready_and_retains_failure_evidence(self):
         text = WORKFLOW.read_text(encoding="utf-8")
         self.assertIn("runs-on: [self-hosted, yacs-ue58]", text)
-        self.assertIn("perf/stage3g-environment-gate", text)
+        self.assertIn("workflow_dispatch:", text)
+        self.assertNotIn("push:", text)
+        self.assertIn("exact_sha:", text)
+        self.assertIn("gumball_request_id:", text)
+        self.assertIn("inputs.gumball_request_id", text)
+        self.assertIn("ref: $" + "{{ inputs.exact_sha }}", text)
         self.assertIn("cancel-in-progress: true", text)
         self.assertIn("Invoke-YacsStage3GEnvironmentPerformance.ps1", text)
-        self.assertIn("if: $" + "{{ always() }}", text)
-        self.assertIn("stage3g-environment-performance-", text)
+        self.assertIn("if: $" + "{{ success() }}", text)
+        self.assertIn("proof-environment-performance-", text)
+        self.assertIn("diagnostic-environment-performance-", text)
         self.assertIn("retention-days: 14", text)
 
 

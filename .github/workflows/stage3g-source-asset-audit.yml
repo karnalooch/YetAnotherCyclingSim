@@ -1,26 +1,22 @@
 name: Stage 3G source asset audit
+run-name: Source asset audit ${{ inputs.gumball_request_id }}
 
 on:
-  push:
-    branches:
-      - audit/stage3g-source-assets
-    paths:
-      - '.github/workflows/stage3g-source-asset-audit.yml'
-      - 'scripts/ue/stage3g_source_asset_audit.py'
-      - 'scripts/ue/Invoke-YacsStage3GSourceAssetAudit.ps1'
-      - 'scripts/ci/test_stage3g_source_asset_audit_contract.py'
-      - 'scripts/ue/stage3g_import_source_assets.py'
-      - 'scripts/ue/Invoke-YacsStage3GAuthoring.ps1'
-      - 'scripts/ue/Invoke-YacsStage3GBoulderLodAuthor.ps1'
-      - 'scripts/ue/stage3g_author_boulder_lods.py'
-      - 'Content/Prototype/Environment/Stage3G/Imported/Meshes/SM_Stage3G_Boulder.uasset'
   workflow_dispatch:
-
+    inputs:
+      exact_sha:
+        description: Exact 40-character PR HEAD SHA to prove
+        required: true
+        type: string
+      gumball_request_id:
+        description: Deterministic Gumball proof request id
+        required: true
+        type: string
 permissions:
   contents: read
 
 concurrency:
-  group: stage3g-source-asset-audit-${{ github.repository }}
+  group: stage3g-source-asset-audit-${{ github.repository }}-${{ inputs.gumball_request_id }}
   cancel-in-progress: true
 
 jobs:
@@ -32,7 +28,7 @@ jobs:
       - name: Checkout exact trusted revision with LFS
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.exact_sha }}
           fetch-depth: 0
           lfs: true
           clean: true
@@ -42,7 +38,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          if ((git rev-parse HEAD).Trim() -ne '${{ github.sha }}') {
+          if ((git rev-parse HEAD).Trim() -ne '${{ inputs.exact_sha }}') {
             throw 'Source-asset audit checkout is not exact SHA.'
           }
           git lfs install --local
@@ -62,20 +58,30 @@ jobs:
       - name: Run non-mutating Stage 3G source-asset audit
         shell: pwsh
         run: |
-          ./scripts/ue/Invoke-YacsStage3GSourceAssetAudit.ps1 -ExpectedBranch HEAD -ExpectedHead '${{ github.sha }}' -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GSourceAssetAudit'
+          ./scripts/ue/Invoke-YacsStage3GSourceAssetAudit.ps1 -ExpectedBranch HEAD -ExpectedHead '${{ inputs.exact_sha }}' -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GSourceAssetAudit'
           if ($LASTEXITCODE -ne 0) { throw 'Stage 3G source-asset lifecycle audit failed.' }
 
       - name: Run 1080p60 environment regression after source audit
         shell: pwsh
         run: |
-          ./scripts/ue/Invoke-YacsStage3GEnvironmentPerformance.ps1 -ExpectedBranch HEAD -ExpectedHead '${{ github.sha }}' -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GSourceAssetAudit/EnvironmentPerformance' -SkipBuild
+          ./scripts/ue/Invoke-YacsStage3GEnvironmentPerformance.ps1 -ExpectedBranch HEAD -ExpectedHead '${{ inputs.exact_sha }}' -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GSourceAssetAudit/EnvironmentPerformance' -SkipBuild
           if ($LASTEXITCODE -ne 0) { throw 'Stage 3G performance regression after source-asset validation failed.' }
 
-      - name: Upload source-asset audit evidence
-        if: ${{ always() }}
+      - name: Upload reusable successful source-asset audit evidence
+        if: ${{ success() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: stage3g-source-asset-audit-${{ github.run_id }}-${{ github.run_attempt }}
+          name: proof-source-asset-audit-${{ inputs.exact_sha }}
+          path: |
+            Saved/RuntimeProof/CI/Stage3GSourceAssetAudit/**
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload failed source-asset audit diagnostics
+        if: ${{ failure() || cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: diagnostic-source-asset-audit-${{ inputs.exact_sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             Saved/RuntimeProof/CI/Stage3GSourceAssetAudit/**
           if-no-files-found: warn

@@ -1,21 +1,22 @@
 name: Stage 3G environment performance
+run-name: Environment performance ${{ inputs.gumball_request_id }}
 
 on:
-  push:
-    branches:
-      - perf/stage3g-environment-gate
-    paths:
-      - '.github/workflows/stage3g-environment-performance.yml'
-      - 'Source/YetAnotherCyclingSim/Private/Tests/CyclingStage3GEnvironmentPerformanceProof.spec.cpp'
-      - 'scripts/ue/Invoke-YacsStage3GEnvironmentPerformance.ps1'
-      - 'scripts/ci/test_stage3g_environment_performance_contract.py'
   workflow_dispatch:
-
+    inputs:
+      exact_sha:
+        description: Exact 40-character PR HEAD SHA to prove
+        required: true
+        type: string
+      gumball_request_id:
+        description: Deterministic Gumball proof request id
+        required: true
+        type: string
 permissions:
   contents: read
 
 concurrency:
-  group: stage3g-environment-performance-${{ github.repository }}
+  group: stage3g-environment-performance-${{ github.repository }}-${{ inputs.gumball_request_id }}
   cancel-in-progress: true
 
 jobs:
@@ -27,7 +28,7 @@ jobs:
       - name: Checkout exact trusted revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.exact_sha }}
           fetch-depth: 0
           lfs: true
           clean: true
@@ -37,7 +38,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          if ((git rev-parse HEAD).Trim() -ne '${{ github.sha }}') {
+          if ((git rev-parse HEAD).Trim() -ne '${{ inputs.exact_sha }}') {
             throw 'Environment performance checkout is not exact SHA.'
           }
           git lfs install --local
@@ -57,14 +58,24 @@ jobs:
       - name: Run Stage 3G 1080p60 environment gate
         shell: pwsh
         run: |
-          ./scripts/ue/Invoke-YacsStage3GEnvironmentPerformance.ps1 -ExpectedBranch HEAD -ExpectedHead '${{ github.sha }}' -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GEnvironmentPerformance'
+          ./scripts/ue/Invoke-YacsStage3GEnvironmentPerformance.ps1 -ExpectedBranch HEAD -ExpectedHead '${{ inputs.exact_sha }}' -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GEnvironmentPerformance'
           if ($LASTEXITCODE -ne 0) { throw 'Stage 3G environment performance gate failed.' }
 
-      - name: Upload performance evidence
-        if: ${{ always() }}
+      - name: Upload reusable successful performance evidence
+        if: ${{ success() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: stage3g-environment-performance-${{ github.run_id }}-${{ github.run_attempt }}
+          name: proof-environment-performance-${{ inputs.exact_sha }}
+          path: |
+            Saved/RuntimeProof/CI/Stage3GEnvironmentPerformance/**
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload failed performance diagnostics
+        if: ${{ failure() || cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: diagnostic-environment-performance-${{ inputs.exact_sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             Saved/RuntimeProof/CI/Stage3GEnvironmentPerformance/**
           if-no-files-found: warn

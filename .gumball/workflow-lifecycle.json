@@ -38,8 +38,8 @@
     },
     {
       "file": "passo-giau-r4-1-hairpin-corridor.yml",
-      "state": "CURRENT",
-      "reason": "Bounded exact-revision SP638 hairpin proof used by current M3 road work."
+      "state": "BROKER-MANAGED",
+      "reason": "Broker-managed bounded exact-revision SP638 hairpin proof; manual dispatch remains recovery fallback."
     },
     {
       "file": "passo-giau-r4-1-landscape-author.yml",
@@ -53,8 +53,8 @@
     },
     {
       "file": "passo-giau-r4-1-roadside-house.yml",
-      "state": "CURRENT",
-      "reason": "Manual World Authoring Library SP638 proof; branch canary is historical but workflow_dispatch remains useful."
+      "state": "BROKER-MANAGED",
+      "reason": "Broker-managed World Authoring Library SP638 proof; manual dispatch remains recovery fallback."
     },
     {
       "file": "passo-giau-r4-1b3-geometry-probe.yml",
@@ -123,8 +123,8 @@
     },
     {
       "file": "stage3g-environment-performance.yml",
-      "state": "CURRENT",
-      "reason": "Manual decision-relevant 1080p60 environment performance proof."
+      "state": "BROKER-MANAGED",
+      "reason": "Broker-managed decision-relevant 1080p60 environment performance proof; manual dispatch remains fallback."
     },
     {
       "file": "stage3g-forest-target-density-author.yml",
@@ -138,8 +138,8 @@
     },
     {
       "file": "stage3g-source-asset-audit.yml",
-      "state": "CURRENT",
-      "reason": "Manual non-mutating source-asset lifecycle/performance audit."
+      "state": "BROKER-MANAGED",
+      "reason": "Broker-managed non-mutating source-asset lifecycle/performance audit; manual dispatch remains fallback."
     },
     {
       "file": "windows-probe.yml",

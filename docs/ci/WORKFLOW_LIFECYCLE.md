@@ -37,10 +37,10 @@ endpoint is forbidden outside an explicit test fixture.
 | `branch-hygiene.yml` | CURRENT | Stronger YACS-local merged-branch cleanup |
 | `ci.yml` | CURRENT | Primary CI graph and caller-local Aggregate gate |
 | `manual-unreal.yml` | CURRENT | Trusted manual Unreal validation/recovery |
-| `passo-giau-r4-1-hairpin-corridor.yml` | CURRENT | Current bounded SP638 hairpin proof |
+| `passo-giau-r4-1-hairpin-corridor.yml` | BROKER-MANAGED | Exact-SHA SP638 hairpin proof; manual dispatch is fallback |
 | `passo-giau-r4-1-landscape-author.yml` | UNKNOWN | Retained while active PR #256 owns MASE/SP638 authoring retarget |
 | `passo-giau-r4-1-road-author.yml` | UNKNOWN | Retained while active PR #256 owns the SP638 authoring transition |
-| `passo-giau-r4-1-roadside-house.yml` | CURRENT | Manual World Authoring Library SP638 proof |
+| `passo-giau-r4-1-roadside-house.yml` | BROKER-MANAGED | World Authoring Library SP638 proof; manual dispatch is fallback |
 | `passo-giau-r4-1b3-geometry-probe.yml` | BROKER-MANAGED | Gumball proof target for `r4-1b3-geometry` |
 | `passo-giau-road-alignment.yml` | CURRENT | Current official SP638 GIS preparation/alignment proof |
 | `pr-orchestrator.yml` | CURRENT | Trusted PR orchestration |
@@ -54,10 +54,10 @@ endpoint is forbidden outside an explicit test fixture.
 | `runner-space-recovery.yml` | CURRENT | Owner-only manual main-branch runner recovery |
 | `scorecard.yml` | CURRENT | OpenSSF supply-chain audit |
 | `slack-notify.yml` | CURRENT | High-signal CI/release Slack routing |
-| `stage3g-environment-performance.yml` | CURRENT | Manual 1080p60 performance proof |
+| `stage3g-environment-performance.yml` | BROKER-MANAGED | Exact-SHA 1080p60 performance proof; manual dispatch is fallback |
 | `stage3g-forest-target-density-author.yml` | CURRENT | Live target-density authoring branch + manual fallback |
 | `stage3g-forest-target-density-performance.yml` | CURRENT | Paired target-density performance proof |
-| `stage3g-source-asset-audit.yml` | CURRENT | Manual non-mutating source-asset/performance audit |
+| `stage3g-source-asset-audit.yml` | BROKER-MANAGED | Exact-SHA non-mutating source-asset/performance audit; manual dispatch is fallback |
 | `windows-probe.yml` | CURRENT | Cheap manual hosted-Windows probe |
 | `yacs-editor-command.yml` | CURRENT | Owner-only issue-command remote-editor smoke |
 
@@ -101,10 +101,10 @@ The surviving Actions surface is intentionally grouped:
    Repository Ops, branch hygiene and PR orchestration.
 3. **Explicit recovery/probes:** manual Unreal, Windows probe, runner-space
    recovery, Project bootstrap and remote-editor command.
-4. **Current M3 road/world proof:** SP638 alignment, hairpin, authoring/library
-   proofs and the broker-managed geometry suite.
-5. **Current environment evidence:** target-density forest, source-asset audit
-   and environment performance.
+4. **Current M3 road/world proof:** SP638 alignment plus broker-managed geometry,
+   hairpin and World Authoring Library SP638 proofs.
+5. **Current environment evidence:** target-density forest plus broker-managed
+   source-asset audit and environment performance.
 6. **Delivery/notification:** full asset validation, Scorecard and Slack.
 
 A branch-specific experiment workflow should not survive merely because its

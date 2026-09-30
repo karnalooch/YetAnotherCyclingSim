@@ -69,11 +69,18 @@ This means vegetation, material, water, lighting and other world-art iteration c
 R4.1 heavyweight proof requests use the trusted Gumball v0.6 Proof Broker
 instead of routine Actions-UI clicking.
 
-Current configured proof:
+Current configured proof commands:
 
 ```text
 /gumball proof r4-1b3-geometry
+/gumball proof m3-hairpin-corridor
+/gumball proof world-authoring-sp638
+/gumball proof environment-performance
+/gumball proof source-asset-audit
 ```
+
+All five are explicit, heavy and non-automatic. Successful exact-revision
+artifacts may be reused; failed runs require explicit `retry`.
 
 The broker runs from trusted default-branch code, authorizes the requester,
 resolves the open same-repository PR HEAD to an exact 40-character SHA, verifies
@@ -89,9 +96,31 @@ For one proof + PR + exact SHA:
 - explicit authorized request -> dispatch;
 - non-critical automatic heavy request -> defer.
 
-The target R4.1B.3 workflow keeps `workflow_dispatch` as a recovery fallback,
-but broker-driven dispatch is the normal path. Heavy proof still runs only when
-explicitly requested; this changes the control plane, not the evidence bar.
+Each broker target keeps `workflow_dispatch` as a recovery fallback, but
+broker-driven dispatch is the normal operator path. Heavy proof still runs only
+when explicitly requested; this changes the control plane, not the evidence bar.
+
+Mutating asset-author workflows, `asset-full.yml`, manual Unreal recovery,
+runner-space recovery and Project/bootstrap operations are deliberately **not**
+Proof Broker targets. Their purpose is mutation, release/full validation or
+administrative recovery rather than reusable PR proof.
+
+Explicit current exceptions are:
+
+- `reusable-stage3g-full.yml` — merge-critical, classifier-driven exact-head
+  proof; it belongs in the local Aggregate graph rather than explicit broker
+  intent;
+- `asset-full.yml` — release/full-asset entrypoint;
+- `stage3g-forest-target-density-author.yml` — mutating author workflow owned
+  by its still-live dedicated branch;
+- `stage3g-forest-target-density-performance.yml` — paired with that live
+  dedicated-branch workstream and still has its own automatic branch trigger;
+- `passo-giau-r4-1-landscape-author.yml` and
+  `passo-giau-r4-1-road-author.yml` — disposition remains owned by active
+  PR #256 and is tracked as `UNKNOWN` in workflow lifecycle policy;
+- `manual-unreal.yml`, `runner-space-recovery.yml`, Project bootstrap and
+  remote-editor command — administrative/recovery controls, not reusable PR
+  evidence.
 
 ## R4.1 prepared proof-suite reuse
 
