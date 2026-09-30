@@ -271,15 +271,26 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         self.assertIn("prepared native metric DTM bounded patch", capture)
         self.assertIn("landscape_collision_sampled", capture)
         self.assertIn("Gate C.3 did not use the native metric DTM.", wrapper)
-        self.assertIn("proof_hairpin_station_m", extractor)
+        self.assertIn("proof_hairpin_focus", extractor)
+        self.assertIn("focus_epsg32632_m", extractor)
+        self.assertNotIn("source_station_m", extractor)
         self.assertNotIn("choose_hairpin", extractor)
+        self.assertIn("_validate_pcgex_proof_focus", capture)
+        self.assertIn("Gate C PCGEx proof focus drifted", capture)
         proof_location = manifest["proof_locations"]["gate_c_hairpin"]
-        self.assertEqual(proof_location["source_station_m"], 15560.0)
+        self.assertEqual(proof_location["focus_ue_m"], [5605.084, 1821.661])
         self.assertEqual(
-            proof_location["gate_c1_pcgex_focus_distance_m"], 15450.0
+            proof_location["focus_epsg32632_m"],
+            [736011.671, 5154425.114],
         )
-        self.assertLess(
-            proof_location["observed_source_to_render_focus_xy_delta_m"], 2.0
+        self.assertEqual(
+            proof_location["reference_pcgex_focus_distance_m"],
+            15450.0,
+        )
+        self.assertEqual(proof_location["reference_workflow_run_id"], 36764749645)
+        self.assertLessEqual(
+            proof_location["max_render_focus_xy_drift_m"],
+            2.0,
         )
 
     def test_active_workflow_tracks_pcgex_inputs_and_does_not_require_dcc(self) -> None:
