@@ -494,13 +494,17 @@ jobs:
             $statePath = Join-Path (Get-Location) 'Saved/BuildCache/PCGEx/compile-state.json'
             New-Item -ItemType Directory -Path (Split-Path -Parent $statePath) -Force | Out-Null
             [ordered]@{
-              schema_version = 1
+              schema_version = 2
               compile_fingerprint = '${{ needs.classify.outputs.compile_fingerprint }}'
+              environment_identity = '${{ steps.compile_cache.outputs.environment_identity }}'
               validated_head = '${{ github.sha }}'
               pcgex_commit = '39a8f1bdc65b2c4613a1e87b71d93b4576db0a66'
+              compile_passed = $true
+              compile_kind = '${{ steps.compile_cache.outputs.compile_kind }}'
               proof_mode = '${{ needs.classify.outputs.proof_mode }}'
+              updated_utc = (Get-Date).ToUniversalTime().ToString('o')
             } | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $statePath -Encoding UTF8
-            Write-Host "Persisted validated PCGEx compile fingerprint cache state." -ForegroundColor Green
+            Write-Host ("Persisted validated PCGEx compile state: kind={0}." -f '${{ steps.compile_cache.outputs.compile_kind }}') -ForegroundColor Green
           }
 
       - name: Render PCGEx rider-close corridor proof
