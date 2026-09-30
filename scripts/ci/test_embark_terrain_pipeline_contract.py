@@ -24,7 +24,7 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
             "HOUDINI PDG",
             "GAEA BRIDGE",
             "HOUDINI HEIGHTFIELD",
-            "HOUDINI ENGINE",
+            "Houdini → Unreal",
             "Base_DTM",
             "Road_Earthworks",
             "World Partition",
