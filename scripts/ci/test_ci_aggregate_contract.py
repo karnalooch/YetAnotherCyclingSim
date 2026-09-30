@@ -19,6 +19,7 @@ class AggregateCIGateContractTests(unittest.TestCase):
             'require_bool "class-assets" "${CLASS_ASSETS}"',
             'require_bool "class-ci" "${CLASS_CI}"',
             'require_bool "class-ue-code" "${CLASS_UE_CODE}"',
+            'require_bool "class-ue-tooling" "${CLASS_UE_TOOLING}"',
             'require_bool "class-security-base" "${CLASS_SECURITY_BASE}"',
             'require_bool "class-asset-full" "${CLASS_ASSET_FULL}"',
         )
@@ -28,6 +29,15 @@ class AggregateCIGateContractTests(unittest.TestCase):
 
         self.assertIn(
             "expected literal true/false classifier output",
+            workflow,
+        )
+        self.assertIn('require_ci_cost "${CLASS_CI_COST}"', workflow)
+        self.assertIn(
+            "expected light/standard/heavy classifier output",
+            workflow,
+        )
+        self.assertIn(
+            "heavy Unreal/runtime impact must classify ci_cost_class=heavy",
             workflow,
         )
 
