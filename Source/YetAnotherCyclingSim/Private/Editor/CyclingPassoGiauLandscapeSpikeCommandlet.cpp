@@ -305,6 +305,7 @@ namespace CyclingPassoGiauLandscapeSpikeInternal
 			return false;
 		}
 		Spline->CreationMethod = EComponentCreationMethod::Instance;
+		Spline->SetMobility(EComponentMobility::Static);
 		RoadActor->SetRootComponent(Spline);
 		RoadActor->AddInstanceComponent(Spline);
 		Spline->RegisterComponent();

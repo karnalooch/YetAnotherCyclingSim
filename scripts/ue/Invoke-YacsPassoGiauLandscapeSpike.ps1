@@ -269,6 +269,9 @@ if ($ImportExitCode -notin @(0, 1)) {
 if ($ImportLogText -match '(?i)Fatal error|Unhandled Exception|Critical error') {
     throw 'Passo Giau Landscape import log contains a crash/fatal marker.'
 }
+if ($IncludeRoad -and $ImportLogText -match '(?i)AttachTo:.*SP638Spline.*is not static.*SP638Segment_') {
+    throw 'SP638 road persistence log contains spline-mesh mobility attachment failures.'
+}
 if ($ImportLogText -notmatch 'CyclingPassoGiauLandscapeSpikeCommandlet: done\.') {
     throw 'Passo Giau Landscape import log is missing the commandlet completion marker.'
 }

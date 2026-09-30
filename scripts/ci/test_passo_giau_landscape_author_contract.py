@@ -51,6 +51,7 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn('FName RoadLayerName(TEXT("Road_Earthworks"))', cpp)
         self.assertIn("ULandscapeEditLayer::StaticClass()", cpp)
         self.assertIn("Landscape->EditorApplySpline(", cpp)
+        self.assertIn("Spline->SetMobility(EComponentMobility::Static);", cpp)
         self.assertIn("RoadEarthworksHalfWidthCm = 450.0", cpp)
         self.assertIn("RoadEarthworksSideFalloffCm = 650.0", cpp)
         self.assertIn("RoadEarthworksSubdivisionsPerControlPoint = 4", cpp)
@@ -68,6 +69,8 @@ class PassoGiauLandscapeAuthorContractTest(unittest.TestCase):
         self.assertIn("road_earthworks_raise_heights", wrapper)
         self.assertIn("road_earthworks_lower_heights", wrapper)
         self.assertIn("road_earthworks_side_falloff_cm - 650.0", wrapper)
+        self.assertIn("spline-mesh mobility attachment failures", wrapper)
+        self.assertIn("AttachTo:.*SP638Spline.*is not static.*SP638Segment_", wrapper)
         self.assertNotIn("retaining_helper", wrapper)
 
         self.assertIn('#include "LandscapeImportHelper.h"', cpp)
