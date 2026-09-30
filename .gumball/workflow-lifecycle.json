@@ -37,6 +37,11 @@
       "reason": "Explicit trusted manual Unreal validation and recovery entrypoint."
     },
     {
+      "file": "passo-giau-embark-terrain.yml",
+      "state": "CURRENT",
+      "reason": "Current fail-closed exact-SHA Passo Giau DCC-to-Unreal terrain authoring proof selected by #287 after the direct native baseline failed rider-view acceptance."
+    },
+    {
       "file": "passo-giau-r4-1-hairpin-corridor.yml",
       "state": "BROKER-MANAGED",
       "reason": "Broker-managed bounded exact-revision SP638 hairpin proof; manual dispatch remains recovery fallback."
@@ -44,12 +49,12 @@
     {
       "file": "passo-giau-r4-1-landscape-author.yml",
       "state": "UNKNOWN",
-      "reason": "Retained while active PR #256 may retarget the isolated MASE/SP638 authoring lane; disposition belongs to that current M3 work."
+      "reason": "Retained as the failed direct-DTM/native Landscape baseline and recovery evidence while #287/#288 proves the replacement Embark-mode terrain pipeline; disposition follows that proof."
     },
     {
       "file": "passo-giau-r4-1-road-author.yml",
       "state": "UNKNOWN",
-      "reason": "Legacy-bound road author workflow retained while active PR #256 owns the current SP638 authoring transition."
+      "reason": "Retained as legacy SP638 native-authoring recovery evidence while #287/#288 proves the replacement Embark-mode terrain pipeline; disposition follows that proof."
     },
     {
       "file": "passo-giau-r4-1-roadside-house.yml",
