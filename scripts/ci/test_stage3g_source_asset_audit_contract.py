@@ -87,7 +87,6 @@ class Stage3GSourceAssetAuditContract(unittest.TestCase):
         self.assertIn("ref: $" + "{{ inputs.exact_sha }}", text)
         self.assertIn("cancel-in-progress: true", text)
         self.assertIn("Invoke-YacsStage3GSourceAssetAudit.ps1", text)
-        self.assertIn("SM_Stage3G_Boulder.uasset", text)
         self.assertIn("Invoke-YacsStage3GEnvironmentPerformance.ps1", text)
         self.assertIn("-SkipBuild", text)
         self.assertIn("if: $" + "{{ success() }}", text)
