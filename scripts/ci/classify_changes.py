@@ -417,13 +417,19 @@ def classify_embark_terrain_proof(paths: Iterable[str]) -> str:
         return "heavy"
 
     for path in normalized:
-        if path in EMBARK_TERRAIN_HEAVY_EXACT or _is_ue_code(path):
+        if (
+            path in EMBARK_TERRAIN_HEAVY_EXACT
+            or _is_unreal_compile_input(path)
+            or _is_unknown_runtime_compile_input(path)
+        ):
             return "heavy"
 
     for path in normalized:
         if path in EMBARK_TERRAIN_RENDER_EXACT:
             return "render"
         if path.startswith(EMBARK_TERRAIN_RENDER_PREFIXES):
+            return "render"
+        if _is_unreal_runtime_input(path):
             return "render"
 
     return "cheap"
