@@ -215,6 +215,77 @@ Sources:
 - SideFX — Project Pegasus:  
   https://www.sidefx.com/pegasus/
 
+### 3.3 Implementation proof gate
+
+The architecture is now mature enough that further generalization must be earned by implementation evidence.
+
+> **Do not generalize the world-data model before one complete producer → derived data → consumer → regeneration path has been proven.**
+
+> **A world-generation architecture is not validated until a local source change produces a deterministic, bounded downstream rebuild.**
+
+Before introducing or materially expanding a reusable world-generation subsystem, answer these five production questions with evidence from the smallest working vertical slice:
+
+| Question | Required answer |
+|---|---|
+| **Data contract** | What exact data crosses the boundary? Define ownership, units, CRS/coordinate space, resolution/sampling and version identity only for fields the slice actually needs. |
+| **Invalidation** | If one source changes locally, what becomes dirty, and what explicitly stays clean? |
+| **Stable intermediate representation** | Which derived facts are computed once and reused by downstream systems, and in what concrete representation? |
+| **Override survival** | Which local authored corrections must survive regeneration, and how is that intent stored independently from regenerated output? |
+| **Reproducibility metadata** | Which source hashes, generator/config versions, seed and spatial scope are sufficient to reproduce the generated result? |
+
+Do **not** answer these questions by designing a large speculative schema. Add fields and abstractions only when a proven producer or consumer requires them.
+
+The first proof target is intentionally narrow:
+
+```mermaid
+flowchart LR
+    SP638["SOURCE<br/>Real SP638 change"] --> CORRIDOR["PRODUCER<br/>Road Corridor Data"]
+    DTM["SOURCE<br/>Real DTM"] --> CORRIDOR
+
+    CORRIDOR --> EARTH["AUTHOR<br/>One earthwork path"]
+    CORRIDOR --> MASK["DERIVE<br/>Road exclusion / distance"]
+    MASK --> CONSUMER["CONSUMER<br/>One PCG/environment rule"]
+
+    EARTH --> BEFORE["PROOF A<br/>Deterministic baseline"]
+    CONSUMER --> BEFORE
+
+    CHANGE["LOCAL EDIT<br/>Bounded SP638 change"] --> DIRTY{"INVALIDATE<br/>Affected scope only"}
+    DIRTY --> CORRIDOR2["REBUILD<br/>Local corridor data"]
+    CORRIDOR2 --> EARTH2["REBUILD<br/>Affected earthworks"]
+    CORRIDOR2 --> MASK2["REBUILD<br/>Affected road data"]
+    MASK2 --> CONSUMER2["REBUILD<br/>Affected consumer"]
+
+    EARTH2 --> AFTER["PROOF B<br/>Expected local delta"]
+    CONSUMER2 --> AFTER
+    DIRTY -.-> CLEAN["UNCHANGED<br/>Unrelated world remains clean"]
+
+    AFTER --> GATE{"VERIFY<br/>Same inputs = same output?"}
+    CLEAN --> GATE
+    GATE -->|"YES"| ACCEPT["ACCEPT<br/>Architecture proven"]
+    GATE -->|"NO"| BLOCK["STOP<br/>Fix contract before generalizing"]
+
+    classDef input fill:#303846,stroke:#8ea1b8,color:#f7f9fc,stroke-width:2px;
+    classDef exec fill:#123f73,stroke:#49a2ff,color:#ffffff,stroke-width:3px;
+    classDef tool fill:#4b2f69,stroke:#b77cff,color:#ffffff,stroke-width:2px;
+    classDef decision fill:#69470e,stroke:#f0a72f,color:#ffffff,stroke-width:3px;
+    classDef success fill:#1f5736,stroke:#63d889,color:#ffffff,stroke-width:3px;
+    classDef danger fill:#6b2429,stroke:#ff6b73,color:#ffffff,stroke-width:3px;
+    classDef owned fill:#34373d,stroke:#9da4ae,color:#ffffff,stroke-width:2px;
+    classDef evidence fill:#164d5c,stroke:#5bd6ef,color:#ffffff,stroke-width:2px;
+
+    class SP638,DTM,CHANGE input;
+    class CORRIDOR,CORRIDOR2 owned;
+    class EARTH,MASK,CONSUMER,EARTH2,MASK2,CONSUMER2 exec;
+    class DIRTY,GATE decision;
+    class BEFORE,AFTER,CLEAN evidence;
+    class ACCEPT success;
+    class BLOCK danger;
+
+    linkStyle default stroke-width:2px;
+```
+
+This is an **implementation proof target**, not permission to pre-design a universal world schema. The concrete data contract should emerge from this slice and then be generalized only when a second real consumer or producer demonstrates the need.
+
 #### Tools-first decision flow
 
 A tools audit is itself a fail-closed architecture decision:
@@ -857,6 +928,8 @@ Do not:
 - place thousands of repeated assets manually when PCG can express the rule;
 - buy a plugin before identifying the problem it solves;
 - build a custom world-authoring subsystem before completing the tools-first audit;
+- generalize a universal world-data schema before one complete producer → derived data → consumer → regeneration path is proven;
+- rebuild the whole world when a bounded source change can be represented by a bounded invalidation contract;
 - treat a tutorial or tech demo as if it were shipped-product evidence;
 - choose an architecture only because another studio used it without proving it against YACS inputs;
 - keep bespoke machinery merely because it already exists when a simpler validated native/tool-based path replaces it;
@@ -902,7 +975,8 @@ A route slice is acceptable when:
 - no obvious grid/seam/floating-road artifact remains;
 - performance meets the relevant budget;
 - exact-SHA proof exists where required;
-- human visual acceptance exists for changes whose success depends on image quality.
+- human visual acceptance exists for changes whose success depends on image quality;
+- when a reusable generation subsystem is introduced or materially changed, a local source edit has demonstrated deterministic bounded downstream regeneration before the abstraction is generalized.
 
 ---
 
@@ -970,13 +1044,14 @@ When confused, ask in this order:
 1. **What is truth?** DTM? route profile? verified road GIS?
 2. **What is presentation?** Landscape, road mesh, cliffs, vegetation?
 3. **What is the evidence tier?** Shipped product, production case, sample, demo, tutorial or hypothesis?
-4. **Have I completed the tools-first audit before writing custom world-building code?**
-5. **Am I editing non-destructively?**
-6. **Should this be Landscape or a mesh?**
-7. **Should this be generated by spline/PCG instead of hand-built?**
-8. **Am I trying to fix geometry with a material?**
-9. **Can I see the problem from the rider camera?**
-10. **Did I measure performance?**
-11. **Can the result be reproduced from source inputs?**
+4. **Has one complete producer → derived data → consumer → regeneration path been proven before I generalize the model?**
+5. **Have I completed the tools-first audit before writing custom world-building code?**
+6. **Am I editing non-destructively?**
+7. **Should this be Landscape or a mesh?**
+8. **Should this be generated by spline/PCG instead of hand-built?**
+9. **Am I trying to fix geometry with a material?**
+10. **Can I see the problem from the rider camera?**
+11. **Did I measure performance?**
+12. **Can the result be reproduced from source inputs?**
 
 If those answers are clear, world building is usually straightforward.
