@@ -240,11 +240,8 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         extractor = (
             ROOT / "scripts/assets/extract_passo_giau_native_dtm_patch.py"
         ).read_text(encoding="utf-8")
-        manifest = json.loads(
-            (ROOT / "worldgen/embark/passo_giau_terrain_pipeline.json").read_text(
-                encoding="utf-8"
-            )
-        )
+        manifest_path = ROOT / "worldgen/embark/passo_giau_terrain_pipeline.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 
         self.assertIn(
             'DIAGNOSTIC_VARIANT_ENV = "YACS_SP638_LOCAL_CORRIDOR_VARIANT"', capture
