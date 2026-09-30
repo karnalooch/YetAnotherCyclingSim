@@ -37,9 +37,10 @@ endpoint is forbidden outside an explicit test fixture.
 | `branch-hygiene.yml` | CURRENT | Stronger YACS-local merged-branch cleanup |
 | `ci.yml` | CURRENT | Primary CI graph and caller-local Aggregate gate |
 | `manual-unreal.yml` | CURRENT | Trusted manual Unreal validation/recovery |
+| `passo-giau-embark-terrain.yml` | CURRENT | Fail-closed exact-SHA PCGEx corridor graph authoring proof for the #287/#288 bounded Embark-pattern substitution; Houdini/Gaea remain optional escalation evidence |
 | `passo-giau-r4-1-hairpin-corridor.yml` | BROKER-MANAGED | Exact-SHA SP638 hairpin proof; manual dispatch is fallback |
-| `passo-giau-r4-1-landscape-author.yml` | UNKNOWN | Retained while active PR #256 owns MASE/SP638 authoring retarget |
-| `passo-giau-r4-1-road-author.yml` | UNKNOWN | Retained while active PR #256 owns the SP638 authoring transition |
+| `passo-giau-r4-1-landscape-author.yml` | UNKNOWN | Failed direct-DTM/native Landscape baseline retained as recovery evidence while #287/#288 proves the Embark-mode replacement |
+| `passo-giau-r4-1-road-author.yml` | UNKNOWN | Legacy SP638 native-authoring recovery evidence retained while #287/#288 proves the Embark-mode replacement |
 | `passo-giau-r4-1-roadside-house.yml` | BROKER-MANAGED | World Authoring Library SP638 proof; manual dispatch is fallback |
 | `passo-giau-r4-1b3-geometry-probe.yml` | BROKER-MANAGED | Gumball proof target for `r4-1b3-geometry` |
 | `passo-giau-road-alignment.yml` | CURRENT | Current official SP638 GIS preparation/alignment proof |
@@ -61,9 +62,10 @@ endpoint is forbidden outside an explicit test fixture.
 | `windows-probe.yml` | CURRENT | Cheap manual hosted-Windows probe |
 | `yacs-editor-command.yml` | CURRENT | Owner-only issue-command remote-editor smoke |
 
-The two `UNKNOWN` Passo Giau workflows are intentionally retained only because
-PR #256 is still active. When that workstream closes, its merge PR must either
-promote them to CURRENT with a branch-independent contract or retire them.
+The two `UNKNOWN` native Passo Giau workflows are intentionally retained only as
+failed-baseline/recovery evidence while #287/#288 proves the replacement Embark-mode
+terrain path. Their final disposition follows that proof; they must not silently
+become current production authority again.
 
 ## Retired executable surface
 
@@ -101,8 +103,10 @@ The surviving Actions surface is intentionally grouped:
    Repository Ops, branch hygiene and PR orchestration.
 3. **Explicit recovery/probes:** manual Unreal, Windows probe, runner-space
    recovery, Project bootstrap and remote-editor command.
-4. **Current M3 road/world proof:** SP638 alignment plus broker-managed geometry,
-   hairpin and World Authoring Library SP638 proofs.
+4. **Current M3 road/world proof:** the bounded Embark-pattern PCGEx corridor graph
+   proof, SP638 alignment, plus broker-managed geometry, hairpin and World Authoring
+   Library SP638 proofs. Houdini/Gaea remain an optional escalation when the bounded
+   PCGEx proof demonstrates a gap.
 5. **Current environment evidence:** target-density forest plus broker-managed
    source-asset audit and environment performance.
 6. **Delivery/notification:** full asset validation, Scorecard and Slack.

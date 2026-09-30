@@ -25,6 +25,11 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
             "ci:",
             "ue_code:",
             "ue_tooling:",
+            "unreal_compile:",
+            "unreal_runtime:",
+            "unreal_execution_class:",
+            "unreal_compile_fingerprint:",
+            "unreal_proof_fingerprint:",
             "ci_cost_class:",
             "docs_only:",
             "asset_only:",
@@ -129,7 +134,7 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
         self.assertNotIn("lfs: true", self.unreal)
         self.assertIn("Test-YacsCodeOnlyCheckout.ps1", self.unreal)
 
-    def test_reusable_unreal_uses_isolated_code_only_worktree(self):
+    def test_reusable_unreal_uses_sanitized_warm_code_only_worktree(self):
         bootstrap = self.unreal.index(
             "Bootstrap cleanup helper outside persistent worktree"
         )
@@ -139,13 +144,23 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
         guard = self.unreal.index("Enforce code-only checkout")
         self.assertLess(bootstrap, checkout)
         self.assertLess(checkout, guard)
-        self.assertIn(
-            "YACS_UNREAL_WORKTREE: _unreal-worktree-${{ github.run_id }}-${{ github.run_attempt }}",
-            self.unreal,
-        )
+        self.assertIn("group: yacs-unreal-ci-${{ github.repository }}", self.unreal)
+        self.assertIn("cancel-in-progress: false", self.unreal)
+        self.assertIn("YACS_UNREAL_WORKTREE: _unreal-ci-warm", self.unreal)
         self.assertIn("path: ${{ env.YACS_UNREAL_WORKTREE }}", self.unreal)
         self.assertIn("working-directory: ${{ env.YACS_UNREAL_WORKTREE }}", self.unreal)
-        self.assertIn("clean: true", self.unreal)
+        self.assertIn("clean: false", self.unreal)
+        self.assertIn("git reset --hard '${{ inputs.target_sha }}'", self.unreal)
+        self.assertIn("git clean -ffdx", self.unreal)
+        for exclusion in (
+            "-e '/Binaries/'",
+            "-e '/Intermediate/'",
+            "-e '/Plugins/**/Binaries/'",
+            "-e '/Plugins/**/Intermediate/'",
+            "-e '/Saved/BuildCache/UnrealCi/'",
+        ):
+            self.assertIn(exclusion, self.unreal)
+        self.assertIn("Verify exact SHA and clean tracked state", self.unreal)
         self.assertNotIn(
             "Normalize stale LFS payloads before code-only checkout",
             self.unreal,

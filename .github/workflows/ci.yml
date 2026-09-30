@@ -30,6 +30,11 @@ jobs:
       ci: ${{ steps.classify.outputs.ci }}
       ue_code: ${{ steps.classify.outputs.ue_code }}
       ue_tooling: ${{ steps.classify.outputs.ue_tooling }}
+      unreal_compile: ${{ steps.classify.outputs.unreal_compile }}
+      unreal_runtime: ${{ steps.classify.outputs.unreal_runtime }}
+      unreal_execution_class: ${{ steps.classify.outputs.unreal_execution_class }}
+      unreal_compile_fingerprint: ${{ steps.classify.outputs.unreal_compile_fingerprint }}
+      unreal_proof_fingerprint: ${{ steps.classify.outputs.unreal_proof_fingerprint }}
       ci_cost_class: ${{ steps.classify.outputs.ci_cost_class }}
       unknown: ${{ steps.classify.outputs.unknown }}
       docs_only: ${{ steps.classify.outputs.docs_only }}
@@ -175,6 +180,10 @@ jobs:
     permissions:
       contents: read
     uses: ./.github/workflows/reusable-unreal.yml
+    with:
+      target_sha: ${{ needs.changes.outputs.head_sha }}
+      compile_fingerprint: ${{ needs.changes.outputs.unreal_compile_fingerprint }}
+      proof_fingerprint: ${{ needs.changes.outputs.unreal_proof_fingerprint }}
 
   asset-validation:
     name: Lightweight asset validation
@@ -252,6 +261,9 @@ jobs:
           CLASS_CI: ${{ needs.changes.outputs.ci }}
           CLASS_UE_CODE: ${{ needs.changes.outputs.ue_code }}
           CLASS_UE_TOOLING: ${{ needs.changes.outputs.ue_tooling }}
+          CLASS_UNREAL_COMPILE: ${{ needs.changes.outputs.unreal_compile }}
+          CLASS_UNREAL_RUNTIME: ${{ needs.changes.outputs.unreal_runtime }}
+          CLASS_UNREAL_EXECUTION: ${{ needs.changes.outputs.unreal_execution_class }}
           CLASS_CI_COST: ${{ needs.changes.outputs.ci_cost_class }}
           CLASS_SECURITY_BASE: ${{ needs.changes.outputs.security_base }}
           CLASS_ASSET_FULL: ${{ needs.changes.outputs.asset_full }}
@@ -274,6 +286,14 @@ jobs:
             local value="$1"
             if [[ "${value}" != "light" && "${value}" != "standard" && "${value}" != "heavy" ]]; then
               echo "::error::class-ci-cost: expected light/standard/heavy classifier output, got '${value}'"
+              failed=1
+            fi
+          }
+
+          require_unreal_execution() {
+            local value="$1"
+            if [[ "${value}" != "static" && "${value}" != "runtime" && "${value}" != "compile" ]]; then
+              echo "::error::class-unreal-execution: expected static/runtime/compile, got '${value}'"
               failed=1
             fi
           }
@@ -309,6 +329,9 @@ jobs:
           require_bool "class-ci" "${CLASS_CI}"
           require_bool "class-ue-code" "${CLASS_UE_CODE}"
           require_bool "class-ue-tooling" "${CLASS_UE_TOOLING}"
+          require_bool "class-unreal-compile" "${CLASS_UNREAL_COMPILE}"
+          require_bool "class-unreal-runtime" "${CLASS_UNREAL_RUNTIME}"
+          require_unreal_execution "${CLASS_UNREAL_EXECUTION}"
           require_ci_cost "${CLASS_CI_COST}"
           require_bool "class-security-base" "${CLASS_SECURITY_BASE}"
           require_bool "class-asset-full" "${CLASS_ASSET_FULL}"
@@ -323,6 +346,25 @@ jobs:
               echo "::error::heavy Unreal/runtime impact must classify ci_cost_class=heavy, got ${CLASS_CI_COST}"
               failed=1
             fi
+          fi
+
+          expected_unreal_execution=static
+          if [[ "${CLASS_UNREAL_COMPILE}" == "true" ]]; then
+            expected_unreal_execution=compile
+          elif [[ "${CLASS_UNREAL_RUNTIME}" == "true" || "${CLASS_ASSET_FULL}" == "true" ]]; then
+            expected_unreal_execution=runtime
+          fi
+          if [[ "${CLASS_UNREAL_EXECUTION}" != "${expected_unreal_execution}" ]]; then
+            echo "::error::unreal execution class mismatch: expected ${expected_unreal_execution}, got ${CLASS_UNREAL_EXECUTION}"
+            failed=1
+          fi
+          if [[ "${CLASS_UNREAL_COMPILE}" == "true" && "${CLASS_UNREAL_RUNTIME}" != "true" ]]; then
+            echo "::error::compile impact must also be runtime-relevant"
+            failed=1
+          fi
+          if [[ "${CLASS_UE_CODE}" != "${CLASS_UNREAL_RUNTIME}" ]]; then
+            echo "::error::legacy ue_code must match unreal_runtime until callers migrate"
+            failed=1
           fi
 
           if [[ "${CLASS_UE_TOOLING}" == "true" && "${CLASS_UE_CODE}" == "false" && "${CLASS_ASSET_FULL}" == "false" && "${CLASS_CI_COST}" == "heavy" ]]; then

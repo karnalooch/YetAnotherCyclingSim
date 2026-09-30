@@ -197,6 +197,8 @@ try {
             $Context.EngineVersion.PatchVersion
         )
         TestFilter = $TestFilter
+        ExecutionMode = [string]$env:YACS_UNREAL_EXECUTION_MODE
+        CompileKind = [string]$env:YACS_UNREAL_COMPILE_KIND
         SkipBuild = [bool]$SkipBuild
         ConservativeBuild = $true
         Discovered = [int]$Summary.Discovered

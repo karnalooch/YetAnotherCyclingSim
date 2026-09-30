@@ -54,6 +54,50 @@ After editing:
 - `docs/YACS_WORLD_AUTHORING_LIBRARY.md` defines reusable implementation/catalog systems; it does not override the Bible's world architecture.
 - New or substantially revised architecture/workflow diagrams must follow `docs/DIAGRAM_STYLE.md`, the YACS adoption of the Gumball Blueprint Mermaid language.
 
+### Passo Giau terrain-recovery guardrails
+
+For Issue #287 / PR #288, Gate B is an established road-authoring baseline, not an
+open smoothing experiment. The pinned PCGEx graph has executed against prepared
+official SP638 presentation data, produced bounded deviation evidence and fed the
+rider-close consumer. Until a concrete regression proves otherwise:
+
+- do not change PCGEx resample/smoothing/corridor behavior merely to improve terrain appearance;
+- do not move canonical road XY, route authority or Road Physics Profile truth to repair a visual seam;
+- keep PCGEx presentation-only and authoring-only; it is not physics authority.
+
+Before introducing another terrain generator, another smoothing stack or another
+global-resolution change, isolate the owning surface with the same exact-SHA
+camera/light/FOV proof. For the current hairpin this means the A-E diagnostic matrix:
+
+- A: macro Landscape only;
+- B: macro Landscape + road corridor;
+- C: local/near-field ground only;
+- D: local/near-field ground + road corridor;
+- E: full combined baseline.
+
+Use the result to identify the owning layer before changing architecture.
+
+Rider-close terrain must follow these rules:
+
+- prefer a bounded near-field surface derived directly from the prepared native
+  metric DTM over line-tracing/resampling a known-bad Landscape;
+- use finer bounded spacing where the rider camera can inspect the ground rather
+  than increasing the entire world to the same resolution;
+- select `Road_Earthworks` explicitly by semantic name; missing, duplicate or
+  accidental `Base_DTM` selection fails closed;
+- one place has one visual ground owner: do not rely on two coincident surfaces,
+  arbitrary Z lift or overlap to hide disagreement between Landscape and a local mesh;
+- connect near-field to macro terrain with a deterministic transition band whose
+  outer boundary is constrained to the macro surface;
+- apply road/cut/fill constraints to the local ground before final triangulation
+  where that produces a single coherent surface;
+- do not use materials, RVT, vegetation, fog, AA or lighting to conceal unresolved geometry.
+
+A terrain recovery is not accepted because one hairpin looks good. After the
+baseline hairpin passes, prove at least a normal/moderate slope corridor and a
+large-elevation-difference/earthworks case. Run the relevant performance proof
+after neutral geometry passes visually, not as a substitute for visual acceptance.
+
 ### Documentation SSOT and freshness
 
 Documentation verification is mandatory for every repository-changing task.
@@ -286,6 +330,41 @@ use this decision order:
 that every Embark repository becomes a dependency. Public Embark repositories
 are evidence of public tooling approaches, not proof of the complete internal
 ARC Raiders production stack.
+
+### Explicit Embark-mode directive
+
+When the product owner explicitly says **"Embarkuj"**, **"embark this"** or an
+equivalent unambiguous instruction for a subsystem, treat that as explicit
+architecture/scope approval to follow the strongest relevant **publicly
+documented, production-proven Embark pattern end-to-end** for the current task.
+
+- Do not silently down-scope the pattern to a cheaper, smaller or custom
+  approximation merely to save implementation effort, CI time or tool cost.
+- Do not replace a documented Embark stage with a guessed YACS shortcut while
+  the documented stage is available and applicable.
+- Embark mode copies the strongest **public production pattern and boundary**, not
+  a vendor brand by itself. If the exact DCC/tool used by the reference pattern is
+  unavailable, commercially unsuitable, or unjustified for YACS, use the strongest
+  license-clean Unreal-native or open-source implementation that preserves the same
+  producer -> derived-data -> consumer contract and required proof. Record the
+  substitution explicitly and never claim Embark uses the substitute unless public
+  evidence says so.
+- Distinguish evidence from inference. If Embark's internal implementation is
+  proprietary or unpublished, do **not** invent its node graph, algorithm or
+  parameters. Reproduce only the public stage/contract with documented tools
+  and YACS-owned inputs, or fail closed and report the missing recipe, license,
+  asset or evidence.
+- Once a lower-tier YACS/native baseline has failed its required visual or
+  technical proof and the evidence ladder justifies escalation, do not keep
+  retrying variations of that failed tier unless new evidence identifies a
+  specific owning defect.
+- Preserve YACS-owned truths: route/physics authority, source provenance,
+  deterministic inputs, exact-SHA proof, performance budgets and human visual
+  acceptance remain mandatory even in Embark mode.
+- A tool or paid license required by the proven pattern is a real dependency
+  decision. Record provenance/license evidence and surface acquisition cost or
+  runner prerequisites explicitly instead of pretending the dependency does
+  not exist.
 
 Before copying, vendoring or adapting third-party source, follow
 `docs/legal/DEPENDENCY_PROVENANCE.md`. A reference implementation may be

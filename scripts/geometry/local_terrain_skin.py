@@ -172,7 +172,7 @@ def build_terrain_skin_mesh(
     origin_z_m: float,
     lift_m: float = 0.02,
 ) -> TerrainSkinMesh:
-    """Build an upward-wound world-aligned regular grid mesh."""
+    """Build a UE-front-facing world-aligned regular grid mesh."""
 
     rows, columns = _validate_grid(heights_m)
     if len(x_coordinates_m) != columns:
@@ -210,8 +210,12 @@ def build_terrain_skin_mesh(
             b = a + 1
             c = next_base + column
             d = c + 1
-            triangles.append((a, c, b))
-            triangles.append((b, c, d))
+            # Unreal renders clockwise front faces in its left-handed world.
+            # Rows descend in UE Y, so (a,b,c)/(b,d,c) faces the terrain
+            # upward to the rider camera. The previous conventional +Z winding
+            # exposed the underside and produced the black-ribbon/sky visual.
+            triangles.append((a, b, c))
+            triangles.append((b, d, c))
 
     mesh = TerrainSkinMesh(
         vertices=vertices,
@@ -235,10 +239,13 @@ def validate_terrain_skin_mesh(mesh: TerrainSkinMesh) -> None:
         a, b, c = (mesh.vertices[index] for index in triangle)
         ab = b - a
         ac = c - a
-        normal_z = ab.x * ac.y - ab.y * ac.x
-        if normal_z <= _EPSILON:
+        conventional_normal_z = ab.x * ac.y - ab.y * ac.x
+        # With descending UE Y rows, the Unreal front-facing winding has a
+        # negative conventional XY cross-product. Reject degenerate or flipped
+        # cells rather than silently rendering their underside.
+        if conventional_normal_z >= -_EPSILON:
             raise ValueError(
-                f"terrain skin triangle {triangle_index} is folded in XY"
+                f"terrain skin triangle {triangle_index} has invalid UE front-face winding"
             )
 
 

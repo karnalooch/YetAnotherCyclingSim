@@ -15,6 +15,7 @@ import json
 import math
 import os
 import re
+import struct
 from pathlib import Path
 import sys
 import time
@@ -49,11 +50,57 @@ CAPTURE_RES_Y = 2160
 PROOF_AA_QUALITY = 6
 
 SESSION_MANAGED_ENV = "YACS_R4_1_EDITOR_SESSION_MANAGED"
+PCGEX_CORRIDOR_OUTPUT_ENV = "YACS_PCGEX_CORRIDOR_OUTPUT"
+PCGEX_CENTER_DATASET_INDEX = 0
+PCGEX_RENDER_SPLINE_STRIDE = 5
+
+DIAGNOSTIC_VARIANT_ENV = "YACS_SP638_LOCAL_CORRIDOR_VARIANT"
+NATIVE_DTM_PATCH_ENV = "YACS_NATIVE_DTM_PATCH_METADATA"
+
+DIAGNOSTIC_VARIANTS = {
+    "A": {
+        "macro_landscape_visible": True,
+        "local_terrain_visible": False,
+        "corridor_visible": False,
+        "apply_landscape_cut_fill": False,
+    },
+    "B": {
+        "macro_landscape_visible": True,
+        "local_terrain_visible": False,
+        "corridor_visible": True,
+        "apply_landscape_cut_fill": True,
+    },
+    "C": {
+        "macro_landscape_visible": False,
+        "local_terrain_visible": True,
+        "corridor_visible": False,
+        "apply_landscape_cut_fill": True,
+    },
+    "D": {
+        "macro_landscape_visible": False,
+        "local_terrain_visible": True,
+        "corridor_visible": True,
+        "apply_landscape_cut_fill": True,
+    },
+    "E": {
+        "macro_landscape_visible": True,
+        "local_terrain_visible": True,
+        "corridor_visible": True,
+        "apply_landscape_cut_fill": True,
+    },
+    "C3": {
+        "macro_landscape_visible": False,
+        "local_terrain_visible": True,
+        "corridor_visible": False,
+        "apply_landscape_cut_fill": False,
+    },
+}
 
 
 def _release_python_script() -> None:
     if os.environ.get(SESSION_MANAGED_ENV, "").strip() != "1":
-        _release_python_script()
+        unreal.EditorPythonScripting.set_keep_python_script_alive(False)
+
 
 SLICE_HALF_LENGTH_CM = 35000.0
 KERNEL_SAMPLE_STEP_CM = 200.0
@@ -206,6 +253,166 @@ def _find_road_spline() -> tuple[unreal.Actor, unreal.SplineComponent, int]:
             f"found {len(candidates)}: {labels}"
         )
     return candidates[0]
+
+
+def _load_pcgex_presentation_centerline() -> tuple[list[unreal.Vector], dict[str, object]] | None:
+    output_value = os.environ.get(PCGEX_CORRIDOR_OUTPUT_ENV, "").strip()
+    if not output_value:
+        return None
+
+    output_path = Path(output_value)
+    if not output_path.is_file():
+        raise RuntimeError(f"PCGEx corridor output is missing: {output_path}")
+
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    if payload.get("status") != "PASS":
+        raise RuntimeError("PCGEx corridor output did not report PASS")
+
+    datasets = payload.get("datasets") or []
+    center_dataset = next(
+        (
+            dataset
+            for dataset in datasets
+            if int(dataset.get("source_collection_index", -1))
+            == PCGEX_CENTER_DATASET_INDEX
+        ),
+        None,
+    )
+    if center_dataset is None:
+        raise RuntimeError(
+            f"PCGEx corridor output is missing center dataset {PCGEX_CENTER_DATASET_INDEX}"
+        )
+
+    raw_points = center_dataset.get("points") or []
+    if len(raw_points) < 100:
+        raise RuntimeError(
+            f"PCGEx center dataset is unexpectedly sparse: {len(raw_points)} points"
+        )
+
+    world_points = [
+        unreal.Vector(
+            float(point["x_cm"]),
+            float(point["y_cm"]),
+            float(point["z_cm"]),
+        )
+        for point in raw_points
+    ]
+    output_sha256 = hashlib.sha256(output_path.read_bytes()).hexdigest()
+    metadata = {
+        "source": "pcgex_graph_output",
+        "pcgex_presentation_only": True,
+        "canonical_route_authority_preserved": True,
+        "authoritative_physics": False,
+        "source_collection_index": PCGEX_CENTER_DATASET_INDEX,
+        "source_point_count": len(world_points),
+        "render_spline_stride": PCGEX_RENDER_SPLINE_STRIDE,
+        "execution_output_sha256": output_sha256,
+        "pcgex_edge_paths_rendered": False,
+    }
+    return world_points, metadata
+
+
+def _gate_c_proof_focus_contract() -> dict[str, object]:
+    manifest_path = (
+        REPO_ROOT / "worldgen" / "embark" / "passo_giau_terrain_pipeline.json"
+    )
+    if not manifest_path.is_file():
+        raise RuntimeError(f"terrain pipeline manifest is missing: {manifest_path}")
+
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    proof = (payload.get("proof_locations") or {}).get("gate_c_hairpin")
+    if not isinstance(proof, dict):
+        raise RuntimeError(
+            "terrain pipeline manifest is missing proof_locations.gate_c_hairpin"
+        )
+
+    focus_ue = proof.get("focus_ue_m")
+    if not isinstance(focus_ue, list) or len(focus_ue) != 2:
+        raise RuntimeError("Gate C proof focus_ue_m must contain exactly two values")
+
+    focus_x_m = float(focus_ue[0])
+    focus_y_m = float(focus_ue[1])
+    max_drift_m = float(proof.get("max_render_focus_xy_drift_m", -1.0))
+    if not all(math.isfinite(value) for value in (focus_x_m, focus_y_m, max_drift_m)):
+        raise RuntimeError("Gate C proof focus contract contains non-finite values")
+    if max_drift_m <= 0.0:
+        raise RuntimeError("Gate C proof focus contract has a non-positive drift limit")
+
+    return {
+        "focus_ue_m": [focus_x_m, focus_y_m],
+        "max_render_focus_xy_drift_m": max_drift_m,
+        "selection_basis": str(proof.get("selection_basis", "")),
+        "reference_pcgex_focus_distance_m": float(
+            proof["reference_pcgex_focus_distance_m"]
+        ),
+        "reference_pcgex_execution_output_sha256": str(
+            proof["reference_pcgex_execution_output_sha256"]
+        ),
+        "reference_workflow_run_id": int(proof["reference_workflow_run_id"]),
+    }
+
+
+def _validate_pcgex_proof_focus(
+    center_world: unreal.Vector,
+    pcgex_metadata: dict[str, object] | None,
+) -> dict[str, object]:
+    if pcgex_metadata is None:
+        return {
+            "enforced": False,
+            "reason": "renderer is not using the PCGEx presentation centerline",
+        }
+
+    contract = _gate_c_proof_focus_contract()
+    expected_x_m, expected_y_m = contract["focus_ue_m"]
+    actual_x_m = float(center_world.x) / 100.0
+    actual_y_m = float(center_world.y) / 100.0
+    drift_m = math.hypot(actual_x_m - expected_x_m, actual_y_m - expected_y_m)
+    max_drift_m = float(contract["max_render_focus_xy_drift_m"])
+    if drift_m > max_drift_m:
+        raise RuntimeError(
+            "Gate C PCGEx proof focus drifted from the versioned proof-selected XY: "
+            f"drift={drift_m:.3f} m limit={max_drift_m:.3f} m "
+            f"expected=({expected_x_m:.3f},{expected_y_m:.3f}) "
+            f"actual=({actual_x_m:.3f},{actual_y_m:.3f})"
+        )
+
+    return {
+        **contract,
+        "enforced": True,
+        "actual_render_focus_ue_m": [
+            round(actual_x_m, 6),
+            round(actual_y_m, 6),
+        ],
+        "observed_xy_drift_m": round(drift_m, 6),
+        "current_pcgex_execution_output_sha256": pcgex_metadata[
+            "execution_output_sha256"
+        ],
+    }
+
+
+def _replace_with_pcgex_centerline(
+    spline: unreal.SplineComponent,
+    points: list[unreal.Vector],
+) -> int:
+    sampled = points[::PCGEX_RENDER_SPLINE_STRIDE]
+    if (len(points) - 1) % PCGEX_RENDER_SPLINE_STRIDE != 0:
+        sampled.append(points[-1])
+
+    spline.clear_spline_points(False)
+    for index, point in enumerate(sampled):
+        spline.add_spline_point(
+            point,
+            unreal.SplineCoordinateSpace.WORLD,
+            False,
+        )
+        spline.set_spline_point_type(
+            index,
+            unreal.SplinePointType.LINEAR,
+            False,
+        )
+    spline.set_closed_loop(False, False)
+    spline.update_spline()
+    return len(sampled)
 
 
 def _choose_hairpin_distance(spline: unreal.SplineComponent) -> tuple[float, float]:
@@ -592,6 +799,119 @@ def _sample_local_terrain_skin(
     return mesh, origin_world, diagnostics
 
 
+def _load_native_dtm_patch(center_world: unreal.Vector):
+    metadata_value = os.environ.get(NATIVE_DTM_PATCH_ENV, "").strip()
+    if not metadata_value:
+        raise RuntimeError(
+            f"{NATIVE_DTM_PATCH_ENV} is required for Gate C.3 native-DTM proof"
+        )
+    metadata_path = Path(metadata_value)
+    if not metadata_path.is_file():
+        raise RuntimeError(f"native DTM patch metadata is missing: {metadata_path}")
+
+    payload = json.loads(metadata_path.read_text(encoding="utf-8"))
+    source = payload.get("source") or {}
+    grid = payload.get("grid") or {}
+    binary = payload.get("binary") or {}
+    policy = payload.get("yacs_policy") or {}
+    if payload.get("schema_version") != 1 or payload.get("proof_gate") != "C.3":
+        raise RuntimeError("native DTM patch schema/gate mismatch")
+    if source.get("kind") != "prepared native metric DTM":
+        raise RuntimeError("native DTM patch source kind drifted")
+    if source.get("crs") != "EPSG:32632":
+        raise RuntimeError(f"native DTM patch CRS drifted: {source.get('crs')}")
+    if source.get("landscape_collision_sampled") is not False:
+        raise RuntimeError("Gate C.3 patch unexpectedly samples Landscape collision")
+    if policy.get("native_dtm_direct") is not True or policy.get("smoothing_applied") is not False:
+        raise RuntimeError("Gate C.3 native-DTM policy drifted")
+    if grid.get("x_order") != "ue_x_ascending" or grid.get("row_order") != "ue_y_descending":
+        raise RuntimeError("Gate C.3 patch axis order drifted")
+
+    rows = int(grid["rows"])
+    columns = int(grid["columns"])
+    step_x_m = float(grid["step_x_m"])
+    step_y_m = float(grid["step_y_m"])
+    if rows < 3 or columns < 3 or abs(step_x_m - 1.0) > 1e-6 or abs(step_y_m - 1.0) > 1e-6:
+        raise RuntimeError(
+            f"Gate C.3 patch grid drifted: rows={rows} columns={columns} "
+            f"step=({step_x_m},{step_y_m})"
+        )
+
+    binary_path = metadata_path.parent / str(binary["file"])
+    raw = binary_path.read_bytes()
+    expected_bytes = rows * columns * 4
+    if len(raw) != expected_bytes or int(binary.get("byte_count", -1)) != expected_bytes:
+        raise RuntimeError(
+            f"Gate C.3 patch byte count mismatch: actual={len(raw)} expected={expected_bytes}"
+        )
+    if hashlib.sha256(raw).hexdigest() != str(binary.get("sha256", "")):
+        raise RuntimeError("Gate C.3 patch binary SHA256 mismatch")
+    if binary.get("dtype") != "float32-le" or binary.get("layout") != "row-major":
+        raise RuntimeError("Gate C.3 patch binary contract drifted")
+
+    values = struct.unpack(f"<{rows * columns}f", raw)
+    heights_m = tuple(
+        tuple(values[row * columns : (row + 1) * columns])
+        for row in range(rows)
+    )
+    first_x_m = float(grid["first_ue_x_m"])
+    first_y_m = float(grid["first_ue_y_m"])
+    x_coordinates_m = tuple(first_x_m + column * step_x_m for column in range(columns))
+    y_coordinates_m = tuple(first_y_m - row * step_y_m for row in range(rows))
+
+    focus_x_m = float(center_world.x) / 100.0
+    focus_y_m = float(center_world.y) / 100.0
+    min_x_m = min(x_coordinates_m)
+    max_x_m = max(x_coordinates_m)
+    min_y_m = min(y_coordinates_m)
+    max_y_m = max(y_coordinates_m)
+    focus_margin_m = min(
+        focus_x_m - min_x_m,
+        max_x_m - focus_x_m,
+        focus_y_m - min_y_m,
+        max_y_m - focus_y_m,
+    )
+    if focus_margin_m < 100.0:
+        raise RuntimeError(
+            "Gate C.3 prepared patch does not contain the actual rendered hairpin "
+            f"with the required 100 m margin: margin={focus_margin_m:.3f} m "
+            f"focus=({focus_x_m:.3f},{focus_y_m:.3f})"
+        )
+
+    origin_z_m = min(values)
+    mesh = build_terrain_skin_mesh(
+        x_coordinates_m,
+        y_coordinates_m,
+        heights_m,
+        origin_x_m=first_x_m,
+        origin_y_m=first_y_m,
+        origin_z_m=origin_z_m,
+        lift_m=0.0,
+    )
+    origin_world = unreal.Vector(first_x_m * 100.0, first_y_m * 100.0, origin_z_m * 100.0)
+    diagnostics = {
+        "world_aligned": True,
+        "native_metric_dtm": True,
+        "landscape_collision_sampled": False,
+        "source": "prepared native metric DTM bounded patch",
+        "source_crs": source["crs"],
+        "source_sha256": source["sha256"],
+        "binary_sha256": binary["sha256"],
+        "grid_step_m": step_x_m,
+        "half_extent_m": float(grid["extent_m"]) * 0.5,
+        "row_count": rows,
+        "column_count": columns,
+        "sample_count": rows * columns,
+        "smoothing_applied": False,
+        "proof_focus_margin_m": focus_margin_m,
+        "proof_focus_ue_m": [focus_x_m, focus_y_m],
+        "occlusion_lift_m": 0.0,
+        "mesh_sha256": terrain_skin_hash(mesh),
+        "canonical_road_xy_modified": False,
+    }
+    return mesh, origin_world, diagnostics
+
+
 def _make_material(
     world: unreal.World,
     parent: unreal.MaterialInterface,
@@ -661,12 +981,24 @@ def _spawn_dynamic_mesh(
             f"{vertex_count}/{triangle_count} != "
             f"{len(mesh.vertices)}/{len(mesh.triangles)}"
         )
-    return {"vertices": vertex_count, "triangles": triangle_count}
+    return {"vertices": vertex_count, "triangles": triangle_count, "spawned": True}
+
+
+def _disabled_mesh_counts() -> dict[str, int | bool]:
+    return {"vertices": 0, "triangles": 0, "spawned": False}
 
 
 def main() -> None:
     global _task, _tick_handle, _started_at, _output_path, _proof_path, _camera
     global _proof_data
+
+    variant_name = os.environ.get(DIAGNOSTIC_VARIANT_ENV, "E").strip().upper() or "E"
+    if variant_name not in DIAGNOSTIC_VARIANTS:
+        raise RuntimeError(
+            f"unsupported {DIAGNOSTIC_VARIANT_ENV}={variant_name!r}; "
+            f"expected one of {sorted(DIAGNOSTIC_VARIANTS)}"
+        )
+    variant = DIAGNOSTIC_VARIANTS[variant_name]
 
     output_value = os.environ.get("YACS_SP638_LOCAL_CORRIDOR_VISUAL_PNG", "")
     proof_value = os.environ.get("YACS_SP638_LOCAL_CORRIDOR_VISUAL_PROOF", "")
@@ -707,6 +1039,20 @@ def main() -> None:
     for component in road_actor.get_components_by_class(unreal.SplineMeshComponent):
         component.set_visibility(False, True)
 
+    pcgex_presentation = _load_pcgex_presentation_centerline()
+    pcgex_metadata: dict[str, object] | None = None
+    if pcgex_presentation is not None:
+        pcgex_points, pcgex_metadata = pcgex_presentation
+        render_control_count = _replace_with_pcgex_centerline(
+            spline,
+            pcgex_points,
+        )
+        pcgex_metadata["render_control_point_count"] = render_control_count
+        unreal.log(
+            "[YacsSp638LocalCorridorVisual] using PCGEx presentation centerline: "
+            f"source_points={len(pcgex_points)} render_controls={render_control_count}"
+        )
+
     full_length_cm = float(spline.get_spline_length())
     focus_cm, curvature_score = _choose_hairpin_distance(spline)
     start_cm = max(0.0, focus_cm - SLICE_HALF_LENGTH_CM)
@@ -728,6 +1074,11 @@ def main() -> None:
         start_cm,
         end_cm,
         KERNEL_SAMPLE_STEP_CM,
+    )
+    terrain_skin_center_world = kernel_world[len(kernel_world) // 2]
+    proof_focus_contract = _validate_pcgex_proof_focus(
+        terrain_skin_center_world,
+        pcgex_metadata,
     )
     centerline = _to_local_centerline_m(kernel_world)
     raw_adjacent_minimum_radius_m = minimum_sampled_radius_xy(
@@ -780,41 +1131,74 @@ def main() -> None:
     )
     _replace_with_slice(spline, landscape_slice)
 
-    edit_layer_names: list[str] = []
-    if hasattr(landscape, "get_edit_layers"):
-        for edit_layer in landscape.get_edit_layers():
-            if edit_layer is None:
-                continue
-            if hasattr(edit_layer, "get_name_bp"):
-                name = str(edit_layer.get_name_bp())
-                if name and name != "None":
-                    edit_layer_names.append(name)
-    edit_layer_name = edit_layer_names[0] if edit_layer_names else "Layer"
-    landscape.editor_apply_spline(
-        spline,
-        start_width=LANDSCAPE_SPLINE_WIDTH_CM,
-        end_width=LANDSCAPE_SPLINE_WIDTH_CM,
-        start_side_falloff=LANDSCAPE_SPLINE_FALLOFF_CM,
-        end_side_falloff=LANDSCAPE_SPLINE_FALLOFF_CM,
-        start_roll=0.0,
-        end_roll=0.0,
-        num_subdivisions=LANDSCAPE_SPLINE_SUBDIVISIONS,
-        raise_heights=True,
-        lower_heights=True,
-        paint_layer=None,
-        edit_layer_name=edit_layer_name,
-    )
+    if not hasattr(landscape, "get_edit_layers_bp"):
+        raise RuntimeError(
+            "UE 5.8 Landscape.get_edit_layers_bp() is unavailable; "
+            "cannot verify semantic edit-layer ownership"
+        )
 
-    terrain_skin_center_world = kernel_world[len(kernel_world) // 2]
-    (
-        terrain_skin_mesh,
-        terrain_skin_origin_world,
-        terrain_skin_diagnostics,
-    ) = _sample_local_terrain_skin(
-        world,
-        road_actor,
-        terrain_skin_center_world,
-    )
+    edit_layer_names: list[str] = []
+    for edit_layer in landscape.get_edit_layers_bp():
+        if edit_layer is None or not hasattr(edit_layer, "get_name_bp"):
+            raise RuntimeError(
+                "Landscape edit-layer entry does not expose get_name_bp()"
+            )
+        name = str(edit_layer.get_name_bp())
+        if name and name != "None":
+            edit_layer_names.append(name)
+
+    if "Base_DTM" not in edit_layer_names:
+        raise RuntimeError(
+            f"required Base_DTM edit layer is missing: {edit_layer_names}"
+        )
+    road_earthworks_layers = [
+        name for name in edit_layer_names if name == "Road_Earthworks"
+    ]
+    if len(road_earthworks_layers) != 1:
+        raise RuntimeError(
+            "expected exactly one Road_Earthworks edit layer, "
+            f"found {len(road_earthworks_layers)} in {edit_layer_names}"
+        )
+    edit_layer_name = road_earthworks_layers[0]
+
+    if bool(variant["apply_landscape_cut_fill"]):
+        landscape.editor_apply_spline(
+            spline,
+            start_width=LANDSCAPE_SPLINE_WIDTH_CM,
+            end_width=LANDSCAPE_SPLINE_WIDTH_CM,
+            start_side_falloff=LANDSCAPE_SPLINE_FALLOFF_CM,
+            end_side_falloff=LANDSCAPE_SPLINE_FALLOFF_CM,
+            start_roll=0.0,
+            end_roll=0.0,
+            num_subdivisions=LANDSCAPE_SPLINE_SUBDIVISIONS,
+            raise_heights=True,
+            lower_heights=True,
+            paint_layer=None,
+            edit_layer_name=edit_layer_name,
+        )
+
+    terrain_skin_mesh = None
+    terrain_skin_origin_world = None
+    terrain_skin_diagnostics: dict[str, object] = {
+        "enabled": False,
+        "source": "not sampled for this diagnostic variant",
+        "canonical_road_xy_modified": False,
+    }
+    if bool(variant["local_terrain_visible"]):
+        (
+            terrain_skin_mesh,
+            terrain_skin_origin_world,
+            terrain_skin_diagnostics,
+        ) = (
+            _load_native_dtm_patch(terrain_skin_center_world)
+            if variant_name == "C3"
+            else _sample_local_terrain_skin(
+                world,
+                road_actor,
+                terrain_skin_center_world,
+            )
+        )
+        terrain_skin_diagnostics["enabled"] = True
 
     neutral_landscape_material = unreal.load_asset(
         "/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial"
@@ -856,46 +1240,58 @@ def main() -> None:
         )
 
     actor_subsystem = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
-    terrain_skin_counts = _spawn_dynamic_mesh(
-        actor_subsystem,
-        terrain_skin_origin_world,
-        terrain_skin_mesh,
-        "SP638_LocalTerrainSkin",
-        terrain_skin_material,
-    )
 
-    # Keep the corrected MASE Landscape visible as macro terrain. The lifted,
-    # smoothed DynamicMesh skin owns only the bounded rider-close patch and
-    # overlays the Landscape locally; no persisted map change is saved.
+    terrain_skin_counts = _disabled_mesh_counts()
+    if bool(variant["local_terrain_visible"]):
+        if terrain_skin_mesh is None or terrain_skin_origin_world is None:
+            raise RuntimeError("local terrain variant did not build a terrain skin")
+        terrain_skin_counts = _spawn_dynamic_mesh(
+            actor_subsystem,
+            terrain_skin_origin_world,
+            terrain_skin_mesh,
+            "SP638_LocalTerrainSkin",
+            terrain_skin_material,
+        )
+
     origin_world = kernel_world[0]
-    earth_counts = _spawn_dynamic_mesh(
-        actor_subsystem,
-        origin_world,
-        earthwork_mesh,
-        "SP638_LocalCorridor_Earthwork",
-        earth_material,
-    )
-    left_shoulder_counts = _spawn_dynamic_mesh(
-        actor_subsystem,
-        origin_world,
-        left_shoulder_mesh,
-        "SP638_LocalCorridor_LeftShoulder",
-        shoulder_material,
-    )
-    right_shoulder_counts = _spawn_dynamic_mesh(
-        actor_subsystem,
-        origin_world,
-        right_shoulder_mesh,
-        "SP638_LocalCorridor_RightShoulder",
-        shoulder_material,
-    )
-    road_counts = _spawn_dynamic_mesh(
-        actor_subsystem,
-        origin_world,
-        road_mesh,
-        "SP638_LocalCorridor_Asphalt",
-        road_material,
-    )
+    earth_counts = _disabled_mesh_counts()
+    left_shoulder_counts = _disabled_mesh_counts()
+    right_shoulder_counts = _disabled_mesh_counts()
+    road_counts = _disabled_mesh_counts()
+    if bool(variant["corridor_visible"]):
+        earth_counts = _spawn_dynamic_mesh(
+            actor_subsystem,
+            origin_world,
+            earthwork_mesh,
+            "SP638_LocalCorridor_Earthwork",
+            earth_material,
+        )
+        left_shoulder_counts = _spawn_dynamic_mesh(
+            actor_subsystem,
+            origin_world,
+            left_shoulder_mesh,
+            "SP638_LocalCorridor_LeftShoulder",
+            shoulder_material,
+        )
+        right_shoulder_counts = _spawn_dynamic_mesh(
+            actor_subsystem,
+            origin_world,
+            right_shoulder_mesh,
+            "SP638_LocalCorridor_RightShoulder",
+            shoulder_material,
+        )
+        road_counts = _spawn_dynamic_mesh(
+            actor_subsystem,
+            origin_world,
+            road_mesh,
+            "SP638_LocalCorridor_Asphalt",
+            road_material,
+        )
+
+    macro_landscape_visible = bool(variant["macro_landscape_visible"])
+    landscape.set_actor_hidden_in_game(not macro_landscape_visible)
+    for component in landscape_components:
+        component.set_visibility(macro_landscape_visible, True)
 
     camera_location = unreal.Vector(
         road_camera.x,
@@ -916,9 +1312,8 @@ def main() -> None:
         world,
         "r.RayTracing.Geometry.Landscape.LODBias -1",
     )
-    # Render the DynamicMesh-owned rider-close terrain in ordinary lit mode.
-    # The Landscape is hidden after sampling, so the editor checker fallback
-    # cannot masquerade as terrain geometry.
+    # Keep all A-E captures on the same lit proof path. Surface ownership is
+    # changed only through explicit variant visibility, never through lighting.
     unreal.SystemLibrary.execute_console_command(world, "viewmode lit")
     unreal.SystemLibrary.execute_console_command(world, "r.AntiAliasingMethod 1")
     unreal.SystemLibrary.execute_console_command(
@@ -982,10 +1377,31 @@ def main() -> None:
     camera_component.set_editor_property("field_of_view", 76.0)
 
     _proof_data = {
-        "capture_strategy": "r4.1b.3-world-aligned-terrain-skin-plus-corridor",
+        "capture_strategy": (
+            "gate-c3-native-dtm-bounded-patch"
+            if variant_name == "C3"
+            else "gate-c1-surface-ownership-diagnostic"
+        ),
+        "diagnostic_variant": variant_name,
+        "surface_visibility": {
+            "macro_landscape": macro_landscape_visible,
+            "local_terrain": bool(variant["local_terrain_visible"]),
+            "corridor": bool(variant["corridor_visible"]),
+        },
+        "render_centerline": (
+            pcgex_metadata
+            if pcgex_metadata is not None
+            else {
+                "source": "persisted_sp638_spline",
+                "pcgex_presentation_only": False,
+                "canonical_route_authority_preserved": True,
+                "authoritative_physics": False,
+            }
+        ),
         "source_full_road_length_m": round(full_length_cm / 100.0, 3),
         "source_control_points": original_control_count,
         "selected_hairpin_distance_m": round(focus_cm / 100.0, 3),
+        "proof_focus_contract": proof_focus_contract,
         "curvature_score": round(curvature_score, 6),
         "slice_start_m": round(start_cm / 100.0, 3),
         "slice_end_m": round(end_cm / 100.0, 3),
@@ -1024,6 +1440,9 @@ def main() -> None:
         },
         "landscape_cut_fill": {
             "api": "LandscapeProxy.editor_apply_spline",
+            "applied": bool(variant["apply_landscape_cut_fill"]),
+            "available_edit_layers": edit_layer_names,
+            "selected_earthworks_layer": edit_layer_name,
             "edit_layer_name": edit_layer_name,
             "width_cm": LANDSCAPE_SPLINE_WIDTH_CM,
             "side_falloff_cm": LANDSCAPE_SPLINE_FALLOFF_CM,
@@ -1043,9 +1462,13 @@ def main() -> None:
         },
         "local_terrain_skin": {
             **terrain_skin_diagnostics,
-            "landscape_hidden_after_sampling": False,
-            "macro_landscape_visible": True,
-            "occlusion_lift_m": TERRAIN_SKIN_LIFT_M,
+            "landscape_hidden_after_sampling": not macro_landscape_visible,
+            "macro_landscape_visible": macro_landscape_visible,
+            "occlusion_lift_m": (
+                float(terrain_skin_diagnostics.get("occlusion_lift_m", TERRAIN_SKIN_LIFT_M))
+                if bool(variant["local_terrain_visible"])
+                else 0.0
+            ),
         },
         "landscape_component_count": len(landscape_components),
         "forced_landscape_lod": 0,
@@ -1072,7 +1495,11 @@ def main() -> None:
         mask_enabled=False,
         capture_hdr=False,
         comparison_tolerance=unreal.ComparisonTolerance.LOW,
-        comparison_notes="R4.1B.3 SP638 neutral continuous local-ground corridor proof",
+        comparison_notes=(
+            "Gate C.3 native metric DTM bounded patch"
+            if variant_name == "C3"
+            else f"Gate C.1 surface ownership diagnostic variant {variant_name}"
+        ),
         delay=3.0,
         force_game_view=True,
     )
@@ -1083,6 +1510,7 @@ def main() -> None:
     _tick_handle = unreal.register_slate_post_tick_callback(_tick)
     unreal.log(
         "[YacsSp638LocalCorridorVisual] screenshot scheduled: "
+        f"variant={variant_name} "
         f"stations={earthwork_mesh.station_count} "
         f"raw_adjacent_min_radius_m={raw_adjacent_minimum_radius_m} "
         f"source_scale_min_radius_m={source_scale_minimum_radius_m} "

@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "pipeline_id": "passo-giau-embark-pcgex-v2",
+  "selected_by_issue": 287,
+  "architecture": {
+    "pattern": "Embark-style procedural world-authoring boundary adapted to Unreal PCG/PCGEx",
+    "claim_boundary": "YACS does not claim Embark Studios uses PCGEx. PCGEx is the license-clean YACS implementation of the public procedural-authoring pattern.",
+    "authoring_only": true,
+    "shipping_runtime_dependency": false
+  },
+  "pcgex": {
+    "repository": "https://github.com/PCGEx/PCGExtendedToolkit",
+    "stable_branch": "5.8",
+    "commit": "39a8f1bdc65b2c4613a1e87b71d93b4576db0a66",
+    "version_name": "0.79",
+    "engine_version": "5.8.0",
+    "license": "MIT",
+    "plugin_path": "Plugins/PCGExtendedToolkit",
+    "required_modules": [
+      "PCGExCore",
+      "PCGExElementsPaths",
+      "PCGExElementsSampling",
+      "PCGExElementsTopology"
+    ]
+  },
+  "source": {
+    "terrain_authority": "MASE/Veneto licensed DTM imported as Unreal Landscape Base_DTM",
+    "road_presentation_input": "ExternalAssets/Terrain/PassoGiau/PreparedRoad/passo_giau_sp638_ue_centerline.json",
+    "road_source_provider": "Regione del Veneto",
+    "road_input_policy": "presentation_only; never route or physics authority",
+    "road_points_field": "points",
+    "road_position_fields_cm": [
+      "ue_x_cm",
+      "ue_y_cm",
+      "ue_z_cm"
+    ]
+  },
+  "graph": {
+    "asset": "/Game/WorldGen/PCGEx/PCG_PassoGiau_SP638_Corridor",
+    "generator_commandlet": "YacsPassoGiauPcgExGraph",
+    "nodes": [
+      {
+        "id": "sp638_source",
+        "class": "UYacsPassoGiauSp638PathSettings",
+        "purpose": "Emit prepared official SP638 presentation points without changing route/physics authority."
+      },
+      {
+        "id": "resample",
+        "class": "UPCGExResamplePathSettings",
+        "purpose": "Create deterministic evenly spaced presentation points."
+      },
+      {
+        "id": "smooth",
+        "class": "UPCGExSmoothSettings",
+        "purpose": "Bounded presentation-only smoothing; endpoints preserved and deviation measured."
+      },
+      {
+        "id": "offset_left",
+        "class": "UPCGExOffsetPathSettings",
+        "purpose": "Generate the left road/corridor edge from the derived presentation path."
+      },
+      {
+        "id": "offset_right",
+        "class": "UPCGExOffsetPathSettings",
+        "purpose": "Generate the right road/corridor edge from the derived presentation path."
+      }
+    ],
+    "planned_extensions_after_first_green_spike": [
+      "Landscape projection/sampling",
+      "closed corridor polygon",
+      "Path Surface road/earthworks mesh",
+      "shoulder and ditch paths",
+      "route exclusion masks",
+      "roadside scatter"
+    ]
+  },
+  "spatial_contract": {
+    "crs": "EPSG:32632",
+    "bounds_m": [
+      730406.587,
+      5148246.775,
+      738406.587,
+      5156246.775
+    ],
+    "extent_m": [
+      8000,
+      8000
+    ],
+    "unreal_landscape_vertices": 4033
+  },
+  "proof": {
+    "exact_sha_required": true,
+    "pcgex_exact_sha_required": true,
+    "rider_camera_visual_required": true,
+    "human_visual_acceptance_required": true,
+    "presentation_deviation_report_required": true,
+    "performance_measurement_required": true
+  },
+  "invariants": {
+    "preserve_route_xy": true,
+    "preserve_physics_authority": true,
+    "preserve_source_provenance": true,
+    "base_dtm_is_non_destructive": true,
+    "road_earthworks_are_separate": true,
+    "forbid_material_camouflage_as_geometry_fix": true,
+    "forbid_guessed_embark_internal_nodes": true,
+    "forbid_houdini_or_gaea_as_required_dependencies": true,
+    "forbid_pcgex_as_route_or_physics_authority": true
+  },
+  "reference_examples": {
+    "repository": "https://github.com/PCGEx/PCGExExampleProject",
+    "commit": "78e5842c116ae0500408e22e8f7d002e12d45831",
+    "engine_version": "5.8",
+    "use_policy": "reference_only; do not vendor assets or infer unverified binary graph internals",
+    "assets": {
+      "road_corridor": "Content/Examples/ConnectRoad/PCGEx_ConnectRoad.uasset",
+      "landscape_tensors": "Content/Categories/Tensors/LandscapeTensors/PCGEx_LandscapeTensors.uasset",
+      "cliff": "Content/Categories/Misc/Isolines/PCGEx_Cliff.uasset"
+    }
+  }
+}

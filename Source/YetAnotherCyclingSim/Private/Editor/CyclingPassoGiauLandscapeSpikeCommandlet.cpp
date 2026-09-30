@@ -14,6 +14,7 @@
 #include "LandscapeComponent.h"
 #include "LandscapeInfo.h"
 #include "LandscapeImportHelper.h"
+#include "LandscapeEditLayer.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Parse.h"
 #include "Misc/Paths.h"
@@ -43,6 +44,11 @@ namespace CyclingPassoGiauLandscapeSpikeInternal
 		static_cast<int64>(LandscapeVertices) * 2;
 	constexpr double RoadWidthCm = 600.0;
 	constexpr double RoadThicknessCm = 8.0;
+	constexpr double RoadEarthworksHalfWidthCm = 450.0;
+	constexpr double RoadEarthworksSideFalloffCm = 650.0;
+	constexpr int32 RoadEarthworksMinSubdivisions = 256;
+	constexpr int32 RoadEarthworksMaxSubdivisions = 4096;
+	constexpr int32 RoadEarthworksSubdivisionsPerControlPoint = 4;
 	constexpr int32 MinRoadControlPoints = 50;
 	constexpr int32 MaxRoadControlPoints = 1000;
 
@@ -262,10 +268,14 @@ namespace CyclingPassoGiauLandscapeSpikeInternal
 		return true;
 	}
 
+
 	bool SpawnRoadSpline(
 		UWorld* World,
+		ALandscape* Landscape,
+		const FName& RoadEditLayerName,
 		const TArray<FVector>& Points,
 		int32& OutSplineMeshCount,
+		int32& OutEarthworksSubdivisions,
 		FString& OutError)
 	{
 		FActorSpawnParameters SpawnParameters;
@@ -295,6 +305,7 @@ namespace CyclingPassoGiauLandscapeSpikeInternal
 			return false;
 		}
 		Spline->CreationMethod = EComponentCreationMethod::Instance;
+		Spline->SetMobility(EComponentMobility::Static);
 		RoadActor->SetRootComponent(Spline);
 		RoadActor->AddInstanceComponent(Spline);
 		Spline->RegisterComponent();
@@ -313,6 +324,42 @@ namespace CyclingPassoGiauLandscapeSpikeInternal
 		}
 		Spline->SetClosedLoop(false, false);
 		Spline->UpdateSpline();
+
+		if (!IsValid(Landscape))
+		{
+			OutError = TEXT("cannot apply SP638 earthworks without a valid Landscape");
+			return false;
+		}
+		if (RoadEditLayerName.IsNone())
+		{
+			OutError = TEXT("cannot apply SP638 earthworks without a named edit layer");
+			return false;
+		}
+
+		OutEarthworksSubdivisions = FMath::Clamp(
+			Points.Num() * RoadEarthworksSubdivisionsPerControlPoint,
+			RoadEarthworksMinSubdivisions,
+			RoadEarthworksMaxSubdivisions);
+
+		// World Building Bible contract: the real SP638 centerline owns the local
+		// road corridor, while the macro DTM remains intact on its base edit layer.
+		// EditorApplySpline writes only to Road_Earthworks and uses both raise and
+		// lower so the Landscape can form believable cut/fill around the road.
+		Landscape->EditorApplySpline(
+			Spline,
+			static_cast<float>(RoadEarthworksHalfWidthCm),
+			static_cast<float>(RoadEarthworksHalfWidthCm),
+			static_cast<float>(RoadEarthworksSideFalloffCm),
+			static_cast<float>(RoadEarthworksSideFalloffCm),
+			0.0f,
+			0.0f,
+			OutEarthworksSubdivisions,
+			true,
+			true,
+			nullptr,
+			RoadEditLayerName);
+		Landscape->ForceLayersFullUpdate();
+		Landscape->PostEditChange();
 
 		UStaticMesh* RoadMesh = LoadObject<UStaticMesh>(
 			nullptr,
@@ -580,8 +627,65 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 	}
 
 	Landscape->RegisterAllComponents();
-
 	Landscape->PostEditChange();
+
+	// World Building Bible contract: preserve the imported real DTM as the
+	// non-destructive macro base, then author SP638 cut/fill on a separate
+	// persistent Landscape edit layer. The visible road mesh stays independent
+	// from the Landscape vertex grid.
+	Landscape->ConvertNonEditLayerLandscape();
+
+	TArray<ULandscapeEditLayerBase*> EditLayers = Landscape->GetEditLayers();
+	if (EditLayers.Num() != 1 || !IsValid(EditLayers[0]))
+	{
+		UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error,
+			TEXT("Landscape edit-layer conversion failed: expected one default layer, found %d."),
+			EditLayers.Num());
+		return 1;
+	}
+
+	const FName BaseLayerName(TEXT("Base_DTM"));
+	const FName RoadLayerName(TEXT("Road_Earthworks"));
+	EditLayers[0]->SetName(BaseLayerName, true);
+
+	const int32 RoadLayerIndex = Landscape->CreateLayer(
+		RoadLayerName,
+		ULandscapeEditLayer::StaticClass(),
+		false);
+	if (RoadLayerIndex == INDEX_NONE)
+	{
+		UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error,
+			TEXT("Failed to create dedicated Road_Earthworks Landscape edit layer."));
+		return 1;
+	}
+
+	ULandscapeEditLayerBase* RoadEditLayer = Landscape->GetEditLayer(RoadLayerIndex);
+	ULandscapeEditLayerBase* BaseEditLayer = Landscape->GetEditLayer(BaseLayerName);
+	if (!IsValid(RoadEditLayer) || !IsValid(BaseEditLayer))
+	{
+		UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error,
+			TEXT("Landscape edit-layer lookup failed after creation."));
+		return 1;
+	}
+	if (RoadEditLayer->GetName() != RoadLayerName ||
+		BaseEditLayer->GetName() != BaseLayerName)
+	{
+		UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error,
+			TEXT("Landscape edit-layer naming drifted: base='%s' road='%s'."),
+			*BaseEditLayer->GetName().ToString(),
+			*RoadEditLayer->GetName().ToString());
+		return 1;
+	}
+
+	EditLayers = Landscape->GetEditLayers();
+	if (EditLayers.Num() != 2)
+	{
+		UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error,
+			TEXT("Landscape edit-layer count mismatch after SP638 setup: %d."),
+			EditLayers.Num());
+		return 1;
+	}
+	Landscape->ForceLayersFullUpdate();
 
 	TArray<ULandscapeComponent*> Components;
 	Landscape->GetComponents<ULandscapeComponent>(Components);
@@ -629,13 +733,17 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 	}
 
 	int32 RoadSplineMeshCount = 0;
+	int32 RoadEarthworksSubdivisions = 0;
 	if (bImportRoad)
 	{
 		FString RoadError;
 		if (!SpawnRoadSpline(
 			MapWorld,
+			Landscape,
+			RoadLayerName,
 			RoadPoints,
 			RoadSplineMeshCount,
+			RoadEarthworksSubdivisions,
 			RoadError))
 		{
 			UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error, TEXT("%s"), *RoadError);
@@ -692,6 +800,16 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		TEXT("  \"road_control_points\": %d,\n")
 		TEXT("  \"road_spline_mesh_segments\": %d,\n")
 		TEXT("  \"road_width_cm\": %.3f,\n")
+		TEXT("  \"edit_layers_enabled\": true,\n")
+		TEXT("  \"edit_layer_count\": %d,\n")
+		TEXT("  \"base_edit_layer\": \"Base_DTM\",\n")
+		TEXT("  \"road_edit_layer\": \"Road_Earthworks\",\n")
+		TEXT("  \"road_earthworks_applied\": %s,\n")
+		TEXT("  \"road_earthworks_half_width_cm\": %.3f,\n")
+		TEXT("  \"road_earthworks_side_falloff_cm\": %.3f,\n")
+		TEXT("  \"road_earthworks_subdivisions\": %d,\n")
+		TEXT("  \"road_earthworks_raise_heights\": true,\n")
+		TEXT("  \"road_earthworks_lower_heights\": true,\n")
 		TEXT("  \"presentation_only\": true,\n")
 		TEXT("  \"authoritative_route_geometry\": false,\n")
 		TEXT("  \"authoritative_physics\": false\n")
@@ -719,7 +837,12 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		bImportRoad ? TEXT("true") : TEXT("false"),
 		RoadPoints.Num(),
 		RoadSplineMeshCount,
-		RoadWidthCm);
+		RoadWidthCm,
+		EditLayers.Num(),
+		bImportRoad ? TEXT("true") : TEXT("false"),
+		RoadEarthworksHalfWidthCm,
+		RoadEarthworksSideFalloffCm,
+		RoadEarthworksSubdivisions);
 
 	if (!ProofPath.IsEmpty())
 	{
@@ -748,7 +871,15 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 			RoadPoints.Num(),
 			RoadSplineMeshCount,
 			RoadWidthCm);
+		UE_LOG(LogCyclingPassoGiauLandscapeSpike, Display,
+			TEXT("SP638 earthworks: layer=Road_Earthworks half_width_cm=%.1f falloff_cm=%.1f subdivisions=%d raise=true lower=true."),
+			RoadEarthworksHalfWidthCm,
+			RoadEarthworksSideFalloffCm,
+			RoadEarthworksSubdivisions);
 	}
+	UE_LOG(LogCyclingPassoGiauLandscapeSpike, Display,
+		TEXT("Landscape edit layers: base=Base_DTM road=Road_Earthworks count=%d."),
+		EditLayers.Num());
 	UE_LOG(LogCyclingPassoGiauLandscapeSpike, Display,
 		TEXT("CyclingPassoGiauLandscapeSpikeCommandlet: done."));
 	return 0;

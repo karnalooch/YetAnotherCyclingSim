@@ -10,8 +10,13 @@ param(
     [Parameter(Mandatory=$true)] [string] $ExpectedBranch,
     [Parameter(Mandatory=$true)] [string] $ExpectedHead,
     [string] $PreparedWorkspaceStamp,
+    [string] $PcgExExecutionOutput,
+    [string] $NativeDtmPatchMetadata,
+    [ValidateSet('A','B','C','D','E','C3')] [string] $Variant = 'E',
     [switch] $ValidateOnly,
-    [int] $TimeoutSec = 900
+    [int] $TimeoutSec = 900,
+    [double] $MinFreeVirtualGb = 8.0,
+    [int] $ResourceHeadroomWaitSec = 15
 )
 
 Set-StrictMode -Version Latest
@@ -28,11 +33,23 @@ $ArtifactRoot = (Resolve-Path -LiteralPath $ArtifactRoot).Path
 $SpikeMapRelative = 'Content/Prototype/Maps/L_PassoGiauTerrainSpike.umap'
 $SpikeMapPath = Join-Path $RepoRoot $SpikeMapRelative
 $CaptureScript = Join-Path $RepoRoot 'scripts/ue/stage3g_capture_sp638_local_corridor.py'
-$CaptureLog = Join-Path $ArtifactRoot 'local_corridor_visual.log'
-$CaptureStdout = Join-Path $ArtifactRoot 'local_corridor_visual.stdout.log'
+$VariantLower = $Variant.ToLowerInvariant()
+if (-not $NativeDtmPatchMetadata) { $NativeDtmPatchMetadata = Join-Path $RepoRoot 'ExternalAssets/Terrain/PassoGiau/PreparedNearField/passo_giau_native_dtm_patch.json' }
+$CaptureLog = Join-Path $ArtifactRoot ("local_corridor_visual_{0}.log" -f $VariantLower)
+$CaptureStdout = Join-Path $ArtifactRoot ("local_corridor_visual_{0}.stdout.log" -f $VariantLower)
 $CaptureErr = $CaptureLog + '.stderr'
-$CapturePng = Join-Path $ArtifactRoot 'sp638_local_corridor_rider_3840x2160.png'
-$CaptureProof = Join-Path $ArtifactRoot 'local_corridor_visual_proof.json'
+$CapturePng = Join-Path $ArtifactRoot ("sp638_surface_{0}_rider_3840x2160.png" -f $VariantLower)
+$CaptureProof = Join-Path $ArtifactRoot ("surface_ownership_{0}_proof.json" -f $VariantLower)
+
+if ($PcgExExecutionOutput) {
+    if (-not [System.IO.Path]::IsPathRooted($PcgExExecutionOutput)) {
+        $PcgExExecutionOutput = Join-Path $RepoRoot $PcgExExecutionOutput
+    }
+    if (-not (Test-Path -LiteralPath $PcgExExecutionOutput -PathType Leaf)) {
+        throw "PCGEx execution output is missing: $PcgExExecutionOutput"
+    }
+    $PcgExExecutionOutput = (Resolve-Path -LiteralPath $PcgExExecutionOutput).Path
+}
 
 if (-not $ValidateOnly) {
     foreach ($Path in @($CaptureLog,$CaptureStdout,$CaptureErr,$CapturePng,$CaptureProof)) {
@@ -40,9 +57,85 @@ if (-not $ValidateOnly) {
     }
 }
 
+$WorkspaceCleanup = Join-Path $RepoRoot 'scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
+if (-not (Test-Path -LiteralPath $WorkspaceCleanup -PathType Leaf)) {
+    throw "Workspace-scoped Unreal cleanup helper is missing: $WorkspaceCleanup"
+}
+$CleanupWorkspace = $RepoRoot
+if (-not [string]::IsNullOrWhiteSpace($env:GITHUB_WORKSPACE)) {
+    $CandidateWorkspace = [System.IO.Path]::GetFullPath($env:GITHUB_WORKSPACE).TrimEnd('\')
+    if ($RepoRoot.StartsWith(
+        $CandidateWorkspace,
+        [System.StringComparison]::OrdinalIgnoreCase
+    )) {
+        # The self-hosted runner can retain a cancelled Unreal process from a
+        # sibling YACS worktree. Clean the whole repository workspace so that
+        # stale commandlets cannot consume commit headroom before this render.
+        $CleanupWorkspace = $CandidateWorkspace
+    }
+}
+& $WorkspaceCleanup -Workspace $CleanupWorkspace
+
 $Preflight = Join-Path $RepoRoot 'scripts/ue/Preflight-YacsProof.ps1'
-$Context = & $Preflight -RepoRoot $RepoRoot -ProjectPath $ProjectPath -ArtifactRoot $ArtifactRoot -ExpectedBranch $ExpectedBranch -ExpectedHead $ExpectedHead
+$AdditionalAllowedDirtyPaths = @()
+if ($PcgExExecutionOutput) {
+    # The immediately preceding PCGEx authoring step deliberately creates this
+    # untracked authoring-only asset. Keep preflight fail-closed for everything
+    # else while allowing the known handoff product to coexist with the render.
+    $AdditionalAllowedDirtyPaths += 'Content/WorldGen/'
+}
+$Context = & $Preflight -RepoRoot $RepoRoot -ProjectPath $ProjectPath -ArtifactRoot $ArtifactRoot -ExpectedBranch $ExpectedBranch -ExpectedHead $ExpectedHead -AdditionalAllowedDirtyPaths $AdditionalAllowedDirtyPaths
 if ($LASTEXITCODE -ne 0) { throw 'SP638 local-corridor visual preflight failed.' }
+
+if (-not $ValidateOnly) {
+    $Deadline = [DateTime]::UtcNow.AddSeconds([Math]::Max(0, $ResourceHeadroomWaitSec))
+    $FreeVirtualGb = [double]$Context.Machine.FreeVirtualGb
+    while ($FreeVirtualGb -lt $MinFreeVirtualGb -and [DateTime]::UtcNow -lt $Deadline) {
+        Start-Sleep -Seconds 1
+        $OsHeadroom = Get-CimInstance Win32_OperatingSystem -ErrorAction SilentlyContinue
+        if ($OsHeadroom) {
+            $FreeVirtualGb = [math]::Round(([double]$OsHeadroom.FreeVirtualMemory * 1KB / 1GB), 2)
+        }
+    }
+
+    $ResourceEvidence = Join-Path $ArtifactRoot 'render_resource_headroom.txt'
+    $ResourceLines = [System.Collections.Generic.List[string]]::new()
+    [void]$ResourceLines.Add(('requiredFreeVirtualGb={0}' -f $MinFreeVirtualGb))
+    [void]$ResourceLines.Add(('observedFreeVirtualGb={0}' -f $FreeVirtualGb))
+    [void]$ResourceLines.Add(('preflightFreeVirtualGb={0}' -f $Context.Machine.FreeVirtualGb))
+    [void]$ResourceLines.Add(('freePhysicalGb={0}' -f $Context.Machine.FreeRamGb))
+    foreach ($PageFile in @($Context.Machine.PageFiles)) {
+        [void]$ResourceLines.Add(
+            ('pageFile={0};allocatedMb={1};currentUsageMb={2};peakUsageMb={3}' -f
+                $PageFile.Name,
+                $PageFile.AllocatedBaseSizeMb,
+                $PageFile.CurrentUsageMb,
+                $PageFile.PeakUsageMb)
+        )
+    }
+    [void]$ResourceLines.Add('topPrivateMemoryProcesses:')
+    foreach ($Process in @(Get-Process -ErrorAction SilentlyContinue |
+        Sort-Object -Property PrivateMemorySize64 -Descending |
+        Select-Object -First 10)) {
+        [void]$ResourceLines.Add(
+            ('  {0};pid={1};privateGb={2}' -f
+                $Process.ProcessName,
+                $Process.Id,
+                [math]::Round(([double]$Process.PrivateMemorySize64 / 1GB), 2))
+        )
+    }
+    $ResourceLines | Set-Content -LiteralPath $ResourceEvidence -Encoding UTF8
+
+    if ($FreeVirtualGb -lt $MinFreeVirtualGb) {
+        $ResourceMessage = (
+            "SP638 render resource gate: free virtual memory {0} GB is below required {1} GB after workspace cleanup. " +
+            "Refusing to launch UnrealEditor because prior M3 evidence shows pagefile/commit exhaustion can masquerade as a missing PNG. " +
+            "See {2}."
+        ) -f $FreeVirtualGb,$MinFreeVirtualGb,$ResourceEvidence
+        throw $ResourceMessage
+    }
+    Write-Host ("Render resource gate: PASS freeVirtual={0} GB required={1} GB" -f $FreeVirtualGb,$MinFreeVirtualGb) -ForegroundColor Green
+}
 
 if (git -C $RepoRoot status --porcelain=v1 --untracked-files=no) {
     throw 'SP638 local-corridor visual checkout has tracked changes before proof.'
@@ -85,6 +178,22 @@ else {
     
     $env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PNG = $CapturePng
     $env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PROOF = $CaptureProof
+    $env:YACS_SP638_LOCAL_CORRIDOR_VARIANT = $Variant
+    if ($Variant -eq 'C3') {
+        if (-not (Test-Path -LiteralPath $NativeDtmPatchMetadata -PathType Leaf)) {
+            throw "Gate C.3 native DTM patch metadata is missing: $NativeDtmPatchMetadata"
+        }
+        $NativeDtmPatchMetadata = (Resolve-Path -LiteralPath $NativeDtmPatchMetadata).Path
+        $meta = Get-Content -LiteralPath $NativeDtmPatchMetadata -Raw | ConvertFrom-Json
+        $binary = Join-Path (Split-Path -Parent $NativeDtmPatchMetadata) ([string]$meta.binary.file)
+        if (-not (Test-Path -LiteralPath $binary -PathType Leaf)) {
+            throw "Gate C.3 native DTM patch binary is missing: $binary"
+        }
+        $env:YACS_NATIVE_DTM_PATCH_METADATA = $NativeDtmPatchMetadata
+    }
+    if ($PcgExExecutionOutput) {
+        $env:YACS_PCGEX_CORRIDOR_OUTPUT = $PcgExExecutionOutput
+    }
     try {
         $Args = @(
             $ProjectPath,
@@ -103,6 +212,9 @@ else {
     finally {
         Remove-Item Env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PNG -ErrorAction SilentlyContinue
         Remove-Item Env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PROOF -ErrorAction SilentlyContinue
+        Remove-Item Env:YACS_SP638_LOCAL_CORRIDOR_VARIANT -ErrorAction SilentlyContinue
+        Remove-Item Env:YACS_NATIVE_DTM_PATCH_METADATA -ErrorAction SilentlyContinue
+        Remove-Item Env:YACS_PCGEX_CORRIDOR_OUTPUT -ErrorAction SilentlyContinue
     }
 }
 
@@ -129,17 +241,26 @@ if ([bool]$Proof.saved_to_map -ne $false -or [bool]$Proof.authoritative_physics 
 if ([bool]$Proof.road_xy_snapped_to_terrain_grid -ne $false) {
     throw 'SP638 local-corridor visual proof snapped road XY to terrain.'
 }
-if ([bool]$Proof.local_geometry.continuous_dynamic_mesh_surfaces -ne $true) {
-    throw 'SP638 local-corridor proof did not use continuous DynamicMesh surfaces.'
+if ($PcgExExecutionOutput) {
+    if ([bool]$Proof.render_centerline.pcgex_presentation_only -ne $true) {
+        throw 'PCGEx visual proof did not identify its render centerline as presentation-only.'
+    }
+    if ([bool]$Proof.render_centerline.canonical_route_authority_preserved -ne $true) {
+        throw 'PCGEx visual proof did not preserve canonical route authority.'
+    }
+    if ([int]$Proof.render_centerline.source_collection_index -ne 0) {
+        throw 'PCGEx visual proof used an unexpected centerline dataset.'
+    }
 }
-if ([bool]$Proof.local_geometry.box_strip_roadbed -ne $false) {
-    throw 'SP638 local-corridor proof regressed to box-strip road geometry.'
+if ([string]$Proof.diagnostic_variant -ne $Variant) {
+    throw "SP638 diagnostic proof variant mismatch: expected $Variant got $($Proof.diagnostic_variant)."
 }
-if ([int]$Proof.station_count -lt 250) {
-    throw "SP638 local-corridor proof sampled too few stations: $($Proof.station_count)"
+if ([string]$Proof.landscape_cut_fill.selected_earthworks_layer -ne 'Road_Earthworks') {
+    throw 'SP638 diagnostic proof did not select Road_Earthworks explicitly.'
 }
-if ([int]$Proof.local_geometry.earthwork.triangles -lt 3000) {
-    throw 'SP638 local-corridor earthwork mesh is unexpectedly sparse.'
+$AvailableLayers = @($Proof.landscape_cut_fill.available_edit_layers)
+if ($AvailableLayers -notcontains 'Base_DTM' -or $AvailableLayers -notcontains 'Road_Earthworks') {
+    throw "SP638 diagnostic proof is missing required edit layers: $($AvailableLayers -join ', ')."
 }
 if ([bool]$Proof.spatial_grid_guardrail.canonical_road_xy_preserved -ne $true) {
     throw 'SP638 local-corridor proof did not preserve canonical road XY.'
@@ -154,37 +275,115 @@ if ([bool]$Proof.source_geometry_analysis.canonical_centerline_xy_modified -ne $
     throw 'SP638 visual proof modified canonical centerline XY.'
 }
 if ([string]$Proof.proof_viewmode -ne 'lit') {
-    throw "SP638 visual proof must use lit DynamicMesh acceptance mode, got '$($Proof.proof_viewmode)'."
+    throw "SP638 visual proof must use lit acceptance mode, got '$($Proof.proof_viewmode)'."
 }
 if ([bool]$Proof.neutral_landscape_material -ne $true) {
     throw 'SP638 visual proof did not apply the required neutral Landscape proof material.'
 }
-if ([bool]$Proof.local_terrain_skin.world_aligned -ne $true) {
-    throw 'SP638 visual proof terrain skin is not world-aligned.'
+
+if ($Variant -eq 'C3') {
+    $ExpectedMacro = $false
+    $ExpectedLocal = $true
+    $ExpectedCorridor = $false
+    $ExpectedCutFill = $false
+} else {
+    $ExpectedMacro = $Variant -in @('A','B','E')
+    $ExpectedLocal = $Variant -in @('C','D','E')
+    $ExpectedCorridor = $Variant -in @('B','D','E')
+    $ExpectedCutFill = $Variant -ne 'A'
 }
-if ([bool]$Proof.local_terrain_skin.canonical_road_xy_modified -ne $false) {
-    throw 'SP638 visual proof terrain skin modified canonical road XY.'
+
+if ([bool]$Proof.surface_visibility.macro_landscape -ne $ExpectedMacro) {
+    throw "Variant $Variant macro Landscape visibility mismatch."
 }
-if ([bool]$Proof.local_terrain_skin.landscape_hidden_after_sampling -ne $false) {
-    throw 'SP638 visual proof unexpectedly hid the corrected MASE Landscape after sampling.'
+if ([bool]$Proof.surface_visibility.local_terrain -ne $ExpectedLocal) {
+    throw "Variant $Variant local terrain visibility mismatch."
 }
-if ([bool]$Proof.local_terrain_skin.macro_landscape_visible -ne $true) {
-    throw 'SP638 visual proof did not keep the corrected MASE Landscape visible as macro terrain.'
+if ([bool]$Proof.surface_visibility.corridor -ne $ExpectedCorridor) {
+    throw "Variant $Variant corridor visibility mismatch."
 }
-if ([double]$Proof.local_terrain_skin.grid_step_m -gt 4.01) {
-    throw "SP638 terrain skin grid is too coarse: $($Proof.local_terrain_skin.grid_step_m) m"
+if ([bool]$Proof.landscape_cut_fill.applied -ne $ExpectedCutFill) {
+    throw "Variant $Variant Landscape cut/fill state mismatch."
 }
-if ([int]$Proof.local_terrain_skin.sample_count -lt 10000) {
-    throw "SP638 terrain skin sampled too few points: $($Proof.local_terrain_skin.sample_count)"
+if ([bool]$Proof.local_terrain_skin.macro_landscape_visible -ne $ExpectedMacro) {
+    throw "Variant $Variant proof recorded the wrong macro Landscape state."
 }
-if ([double]$Proof.local_terrain_skin.max_abs_adjustment_m -gt 0.901) {
-    throw "SP638 terrain skin exceeded bounded smoothing: $($Proof.local_terrain_skin.max_abs_adjustment_m) m"
+
+if ($ExpectedLocal) {
+    if ([bool]$Proof.local_terrain_skin.enabled -ne $true) {
+        throw "Variant $Variant did not sample the required local terrain."
+    }
+    if ([bool]$Proof.local_geometry.terrain_skin.spawned -ne $true) {
+        throw "Variant $Variant did not spawn the required local terrain mesh."
+    }
+    if ([bool]$Proof.local_terrain_skin.world_aligned -ne $true) {
+        throw "Variant $Variant terrain skin is not world-aligned."
+    }
+    if ([bool]$Proof.local_terrain_skin.canonical_road_xy_modified -ne $false) {
+        throw "Variant $Variant terrain skin modified canonical road XY."
+    }
+    if ($Variant -eq 'C3') {
+        if ([bool]$Proof.local_terrain_skin.native_metric_dtm -ne $true) {
+            throw 'Gate C.3 did not use the native metric DTM.'
+        }
+        if ([bool]$Proof.local_terrain_skin.landscape_collision_sampled -ne $false) {
+            throw 'Gate C.3 unexpectedly sampled Landscape collision.'
+        }
+        if ([bool]$Proof.local_terrain_skin.smoothing_applied -ne $false) {
+            throw 'Gate C.3 unexpectedly smoothed the native DTM patch.'
+        }
+        if ([string]$Proof.local_terrain_skin.source -ne 'prepared native metric DTM bounded patch') {
+            throw "Gate C.3 source drifted: $($Proof.local_terrain_skin.source)"
+        }
+        if ([double]$Proof.local_terrain_skin.grid_step_m -gt 1.01) {
+            throw "Gate C.3 native grid is too coarse: $($Proof.local_terrain_skin.grid_step_m) m"
+        }
+        if ([int]$Proof.local_terrain_skin.sample_count -lt 250000) {
+            throw "Gate C.3 native patch sampled too few points: $($Proof.local_terrain_skin.sample_count)"
+        }
+        if ([double]$Proof.local_terrain_skin.proof_focus_margin_m -lt 100.0) {
+            throw "Gate C.3 patch is not centered on the rendered hairpin: margin=$($Proof.local_terrain_skin.proof_focus_margin_m) m"
+        }
+        if ([int]$Proof.local_geometry.terrain_skin.triangles -lt 500000) {
+            throw "Gate C.3 native terrain mesh is unexpectedly sparse."
+        }
+    } else {
+        if ([double]$Proof.local_terrain_skin.grid_step_m -gt 4.01) {
+            throw "Variant $Variant terrain skin grid is too coarse: $($Proof.local_terrain_skin.grid_step_m) m"
+        }
+        if ([int]$Proof.local_terrain_skin.sample_count -lt 10000) {
+            throw "Variant $Variant terrain skin sampled too few points: $($Proof.local_terrain_skin.sample_count)"
+        }
+        if ([double]$Proof.local_terrain_skin.max_abs_adjustment_m -gt 0.901) {
+            throw "Variant $Variant terrain skin exceeded bounded smoothing: $($Proof.local_terrain_skin.max_abs_adjustment_m) m"
+        }
+        if ([double]$Proof.local_terrain_skin.max_abs_laplacian_after_m -ge [double]$Proof.local_terrain_skin.max_abs_laplacian_before_m) {
+            throw "Variant $Variant terrain skin did not reduce high-frequency height curvature."
+        }
+        if ([int]$Proof.local_geometry.terrain_skin.triangles -lt 25000) {
+            throw "Variant $Variant rider-close terrain skin mesh is unexpectedly sparse."
+        }
+    }
+} else {
+    if ([bool]$Proof.local_terrain_skin.enabled -ne $false -or [bool]$Proof.local_geometry.terrain_skin.spawned -ne $false) {
+        throw "Variant $Variant unexpectedly created local terrain."
+    }
 }
-if ([double]$Proof.local_terrain_skin.max_abs_laplacian_after_m -ge [double]$Proof.local_terrain_skin.max_abs_laplacian_before_m) {
-    throw 'SP638 terrain skin did not reduce high-frequency height curvature.'
-}
-if ([int]$Proof.local_geometry.terrain_skin.triangles -lt 25000) {
-    throw 'SP638 rider-close terrain skin mesh is unexpectedly sparse.'
+
+if ($ExpectedCorridor) {
+    if ([bool]$Proof.local_geometry.earthwork.spawned -ne $true -or [bool]$Proof.local_geometry.asphalt.spawned -ne $true) {
+        throw "Variant $Variant did not spawn the required road corridor."
+    }
+    if ([int]$Proof.local_geometry.earthwork.triangles -lt 3000) {
+        throw "Variant $Variant earthwork mesh is unexpectedly sparse."
+    }
+    if ([int]$Proof.station_count -lt 250) {
+        throw "Variant $Variant sampled too few corridor stations: $($Proof.station_count)"
+    }
+} else {
+    if ([bool]$Proof.local_geometry.earthwork.spawned -ne $false -or [bool]$Proof.local_geometry.asphalt.spawned -ne $false) {
+        throw "Variant $Variant unexpectedly spawned road corridor geometry."
+    }
 }
 
 if (-not $ValidateOnly) {
@@ -206,6 +405,7 @@ if ($TrackedChanges.Count -gt 0) {
     throw ("SP638 local-corridor visual proof mutated tracked files: {0}" -f ($TrackedChanges -join '; '))
 }
 
-Write-Host 'R4.1B.3 continuous SP638 local-corridor visual proof: PASS.' -ForegroundColor Green
+$GateLabel = if ($Variant -eq 'C3') { 'Gate C.3 native-DTM patch' } else { 'Gate C.1 surface-ownership variant' }
+Write-Host ("{0} {1}: PASS." -f $GateLabel,$Variant) -ForegroundColor Green
 Write-Host ("Rendered proof: {0}" -f $CapturePng)
 exit 0

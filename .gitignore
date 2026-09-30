@@ -115,3 +115,6 @@ ue-mcp-audit.log
 # UE-MCP bridge is a reproducibly deployed local development plugin.
 # Do not vendor it into YACS during the Stage 3G spike.
 Plugins/UE_MCP_Bridge/
+
+# Reproducibly bootstrapped PCGEx authoring dependency (exact SHA; never vendored)
+Plugins/PCGExtendedToolkit/

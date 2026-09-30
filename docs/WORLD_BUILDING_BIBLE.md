@@ -329,6 +329,342 @@ flowchart LR
     linkStyle default stroke-width:2px;
 ```
 
+#### Passo Giau Embark escalation — selected after native visual failure
+
+The direct Unreal-native Passo Giau baseline is now a **failed visual baseline**,
+not an open architecture question.
+
+Evidence from PR #256 established that the implementation can:
+
+- import the 4033 x 4033 Passo Giau R16 through Unreal's native Landscape reader;
+- persist a real `Base_DTM` edit layer;
+- author `Road_Earthworks` with the verified SP638 spline using
+  `EditorApplySpline`;
+- persist an independent spline road mesh;
+- generate technical proof and rider-view evidence.
+
+The same rider-view proof showed unacceptable blocky/stair-stepped terrain.
+Therefore the tools-first ladder has moved past the direct-DTM/native-only
+terrain-foundation tier for this route. Repeating cosmetic variations of the
+same direct import is not the default next action.
+
+The selected Passo Giau authoring chain is based on Embark's publicly documented
+landscape workflow, while keeping unpublished Embark internals out of scope:
+
+```mermaid
+flowchart LR
+    RAW["SOURCE<br/>MASE LiDAR + Veneto fallback"] --> PDG["HOUDINI PDG<br/>Ingest · reconcile · condition"]
+    PDG --> WORK["WORKING TERRAIN<br/>32-bit metric heightfield"]
+    WORK --> GAEA["GAEA BRIDGE<br/>Terrain shaping"]
+    GAEA --> HUTIL["HOUDINI HEIGHTFIELD<br/>Utility / validation pass"]
+    HUTIL --> HDA["BRIDGE<br/>Houdini → Unreal export/import"]
+    HDA --> BASE["UNREAL<br/>Base_DTM Edit Layer"]
+    BASE --> EARTH["UNREAL<br/>Road_Earthworks"]
+    EARTH --> ROAD["PRESENTATION<br/>Independent SP638 mesh"]
+    ROAD --> MESO["PRESENTATION<br/>Cliffs · retaining · meso"]
+    MESO --> RVT["BLEND<br/>RVT when geometry is correct"]
+    RVT --> WP["SCALE<br/>World Partition when justified"]
+    WP --> PROOF["VERIFY<br/>Rider view · exact SHA · perf"]
+    PROOF -->|"PASS"| ACCEPT["OUTPUT<br/>Accepted Passo Giau terrain"]
+    PROOF -->|"FAIL"| OWNER{"DIAGNOSE<br/>Owning stage"}
+    OWNER -.-> PDG
+    OWNER -.-> GAEA
+    OWNER -.-> HUTIL
+    OWNER -.-> EARTH
+    OWNER -.-> MESO
+
+    classDef input fill:#303846,stroke:#8ea1b8,color:#f7f9fc,stroke-width:2px;
+    classDef exec fill:#123f73,stroke:#49a2ff,color:#ffffff,stroke-width:3px;
+    classDef tool fill:#4b2f69,stroke:#b77cff,color:#ffffff,stroke-width:2px;
+    classDef decision fill:#69470e,stroke:#f0a72f,color:#ffffff,stroke-width:3px;
+    classDef success fill:#1f5736,stroke:#63d889,color:#ffffff,stroke-width:3px;
+    classDef danger fill:#6b2429,stroke:#ff6b73,color:#ffffff,stroke-width:3px;
+    classDef owned fill:#34373d,stroke:#9da4ae,color:#ffffff,stroke-width:2px;
+    classDef evidence fill:#164d5c,stroke:#5bd6ef,color:#ffffff,stroke-width:2px;
+
+    class RAW input;
+    class PDG,HUTIL,HDA tool;
+    class GAEA tool;
+    class WORK evidence;
+    class BASE,EARTH,ROAD,MESO,RVT,WP exec;
+    class PROOF evidence;
+    class OWNER decision;
+    class ACCEPT success;
+
+    linkStyle default stroke-width:2px;
+```
+
+Public evidence supporting this escalation:
+
+- Embark Landscape Creation, Darko Pracic, GDC HIVE 2023 — Embark publicly
+  describes LiDAR terrain input, PDG LiDAR processing, the Gaea bridge,
+  in-house heightfield utility HDAs, and export/import from Houdini to Unreal:
+  https://www.sidefx.com/learn/talks/embark-landscape-creation/
+- SideFX Houdini Engine for Unreal — current plugin documentation supports
+  Landscape input/output, Height Fields, Edit Layers and World Partition:
+  https://www.sidefx.com/docs/houdini/unreal/landscape/basics.html
+- Epic / Embark ARC Raiders production interview — Embark identifies Runtime
+  Virtual Texturing and World Partition as key UE5 worldbuilding systems for
+  large terrain-heavy worlds:
+  https://www.unrealengine.com/developer-interviews/embark-studios-build-the-award-winning-arc-raiders-with-unreal-engine
+
+This does **not** authorize invention of Embark's proprietary HDA internals.
+YACS must use official Houdini/Gaea primitives and its own explicit contracts
+for source reconciliation, terrain shaping, masks and export. Unknown Embark
+parameters remain unknown.
+
+##### Passo Giau data contract
+
+The pipeline must keep these boundaries explicit:
+
+1. **Canonical source evidence** — original MASE/Veneto packages, hashes,
+   licenses, CRS and coverage reports remain immutable.
+2. **PDG working heightfield** — 32-bit metric terrain in EPSG:32632, with source
+   masks and reconciliation metadata. This is derived, reproducible data.
+3. **Gaea shaping result** — 32-bit terrain output with a fixed seed/build
+   recipe and explicit input/output paths. It is presentation authoring, not
+   route or physics authority.
+4. **Houdini final heightfield** — validated dimensions, bounds, min/max domain,
+   masks and export attributes suitable for the documented Houdini → Unreal
+   export/import boundary. The exact bridge implementation is YACS-owned unless
+   stronger public Embark evidence proves their internal choice.
+5. **Unreal `Base_DTM`** — engine representation of the conditioned terrain.
+   It remains separate from `Road_Earthworks` and later
+   `Local_Corrections`.
+6. **SP638 authority** — canonical road XY/profile/physics stay outside the
+   terrain generator and may not be moved by Gaea/Houdini shaping.
+
+Every stage must record:
+
+- tool executable/version identity;
+- recipe/HIP/HDA/terrain-file hash;
+- input hashes;
+- output hashes;
+- CRS / spatial bounds / resolution;
+- deterministic seed or explicit statement that the stage is deterministic
+  without a seed;
+- stage duration and exit code;
+- the exact downstream artifact that consumed the output.
+
+##### No-shortcut rule for this escalation
+
+For Passo Giau, do not replace the selected chain with:
+
+- another direct cubic R16 import with different smoothing constants;
+- a custom NumPy blur sold as "terrain conditioning";
+- material/RVT camouflage for geometric defects;
+- helper meshes that merely hide the failed macro terrain;
+- guessed recreations of Embark proprietary nodes.
+
+A deviation is allowed only when a documented tool is unavailable/incompatible
+or a bounded YACS proof demonstrates that a stage adds no value. Record that
+evidence before removing the stage.
+
+##### Current bounded substitution — PCGEx-first proof
+
+Issue #287 / PR #288 currently use a **bounded PCGEx-first substitution** for the
+first procedural authoring proof. The public Embark evidence still defines the
+production pattern we are preserving — deterministic source ingest, procedural
+derived-data authoring, explicit authority boundaries, reproducible handoff to
+Unreal and rider-camera proof — but **PCGEx is not claimed to be an Embark Studios dependency**.
+
+This substitution is selected because the exact Houdini/Gaea DCC chain is not a
+current runner prerequisite and its commercial/tooling setup would block the
+bounded YACS proof before we know whether an Unreal-native, MIT-licensed authoring
+tool can satisfy the immediate road/corridor need. Houdini/Gaea remain the
+documented optional escalation when the bounded PCGEx proof leaves a demonstrated
+terrain-authoring gap.
+
+The current PCGEx proof is deliberately narrow:
+
+- bootstrap the reviewed PCGEx revision at an immutable commit and keep it
+  authoring-only;
+- compile the YACS Editor module against that exact plugin API;
+- generate a deterministic PCG graph from YACS-owned C++ rather than hand-edited
+  graph state;
+- consume the prepared official SP638 presentation data while preserving the
+  canonical route or physics authority outside PCGEx;
+- derive bounded resample/smooth/offset corridor paths without moving the
+  authoritative road;
+- keep `Base_DTM` and `Road_Earthworks` separate and non-destructive;
+- record exact-SHA evidence, presentation deviation and rider-camera visual proof
+  before accepting any generated road/earthworks result.
+
+The current Gate B proof is now an **established road-authoring baseline**.
+At exact repository state `eb33c583...`, the pinned PCGEx path executed against
+the prepared official SP638 presentation data and fed the rider-close consumer.
+The measured presentation deviation remained bounded (about 0.176 m horizontal
+p95, about 0.8 m horizontal max and about 7.5 mm vertical p95 for the proven
+corridor). This is sufficient to stop treating PCGEx road smoothing as the default
+suspect for the current visual failure.
+
+Gate C.1 then separated two independent terrain-presentation defects at the
+same exact-SHA hairpin. Variant A proved that rider-close faceting already exists
+with the macro Landscape alone. Variant C proved that the previous local terrain
+skin is independently invalid even with the Landscape hidden, so the failure is
+not explained by coincident-surface overlap alone. Variants B/D/E preserve those
+failures while adding the corridor/combined ownership states.
+
+Therefore, until a concrete regression says otherwise, **freeze the proven PCGEx
+road path and diagnose terrain source/near-field ownership instead of tuning road
+smoothing**. The active Gate C.3 proof reads a bounded 512 m x 512 m, 1 m working
+grid directly from the prepared native metric DTM, transfers only that patch to
+the Unreal proof runner, performs no Landscape collision sampling and no terrain
+smoothing, hides the macro Landscape, and renders the resulting DynamicMesh with
+the road corridor disabled. Its purpose is diagnostic: distinguish source quality
+from DynamicMesh transform/winding/rendering defects before road constraints are
+introduced.
+
+If the terrain-ownership recovery later proves a real PCGEx boundary, document
+that evidence and then use the tools-first ladder. Do not hide the failure with
+material camouflage, another bespoke smoothing stack or a road-alignment change.
+
+#### Passo Giau surface-ownership recovery after Gate B
+
+Issue #287 / PR #288 established a useful separation of concerns:
+
+- official SP638 -> YACS source -> PCGEx resample/smooth -> bounded corridor is a
+  working presentation path;
+- the road/corridor can be technically healthy while the surrounding terrain is
+  still visually unacceptable;
+- the current rider proof still depends on the legacy
+  `/Game/Prototype/Maps/L_PassoGiauTerrainSpike` macro Landscape and a local
+  terrain surface sampled back from that Landscape.
+
+The immediate architecture problem is therefore **surface ownership**, not
+another road-centerline algorithm.
+
+##### One visual owner per place
+
+Do not render two independently modified ground surfaces in the same rider-close
+space and rely on a tiny Z offset to keep them ordered. If a local near-field
+surface is the rider-visible ground owner, the macro Landscape must stop owning
+that same patch.
+
+The target ownership model is:
+
+| Zone / concern | Geometry authority |
+|---|---|
+| distant mountains / valley mass | Macro Landscape / `Base_DTM` |
+| medium distance | Macro Landscape plus meso meshes |
+| broad road accommodation | `Road_Earthworks` |
+| rider-close ground requiring higher fidelity | native-DTM-derived bounded near-field surface |
+| asphalt | independent road mesh |
+| shoulders | road/shoulder presentation geometry |
+| unusual cut/fill | local earthwork geometry or constrained local ground |
+| cliffs / walls / rocks / scree | dedicated mesh / PCG geometry |
+| simulation | Road Physics Profile / route contracts, separately |
+
+PCGEx does not become physics authority. Landscape does not become road XY
+authority. A visually better terrain mesh does not become simulation truth.
+
+##### Diagnostic matrix before another generator
+
+Before changing the terrain architecture again, capture the same exact-SHA
+hairpin, camera pose, FOV and lighting with only ownership toggled:
+
+| Variant | Macro Landscape | near-field/local ground | road corridor | Purpose |
+|---|---:|---:|---:|---|
+| A | ON | OFF | OFF | isolate macro-terrain faceting |
+| B | ON | OFF | ON | macro terrain + road |
+| C | OFF | ON | OFF | isolate local ground quality |
+| D | OFF | ON | ON | local ground + road without macro overlap |
+| E | ON | ON | ON | current combined baseline |
+
+Observed Gate C.1 result is evidence-driven:
+
+- A fails with macro-Landscape faceting before any road/local surface is present;
+- C fails independently with the Landscape hidden, so the old
+  `Landscape -> line trace -> 4 m grid -> smoothing -> DynamicMesh` path is not a
+  valid near-field foundation;
+- B/D/E combine those failures with corridor/ownership interactions and do not
+  justify changing the frozen road authority.
+
+Gate C.3 therefore changes exactly one causal variable: the local terrain source.
+It uses the prepared 1 m metric DTM directly as a bounded neutral mesh and keeps
+macro Landscape, road corridor, cut/fill, smoothing, materials camouflage and
+route/physics changes out of the proof.
+
+The proof location is versioned explicitly. Do not let the DTM-preparation stage
+and the post-PCGEx Unreal renderer independently choose a "most curved" hairpin:
+bounded smoothing can change which hairpin wins that heuristic without changing
+road authority. Gate C uses the representative hairpin recorded in
+`worldgen/embark/passo_giau_terrain_pipeline.json`; the native patch is cut at
+that official-SP638 station and the renderer still fails closed unless its actual
+PCGEx-selected focus lands inside the patch with the required margin. Proof
+location selection is test infrastructure, not route or physics truth.
+
+Do not replace this diagnostic with guessed smoothing percentages.
+
+##### Native metric DTM for rider-close ground
+
+The production candidate for near-field ground should be:
+
+`prepared native metric DTM -> bounded rider patch -> road/earthwork constraints -> transition -> mesh`
+
+not:
+
+`Landscape -> vertical trace -> replacement terrain skin`.
+
+MASE remains the primary terrain source and the documented Veneto source remains
+fallback where required by coverage/provenance. Road and terrain preprocessing
+must meet in the same metric coordinate system before Unreal Landscape-grid
+quantization.
+
+Start with a bounded representative hairpin at native or near-native spacing
+(typically around 1-2 m for the current proof) rather than making the entire
+8 km world equally dense. The rider corridor and distant mountain mass have
+different spatial-quality budgets.
+
+##### Deterministic transition to macro terrain
+
+The local owner must transition to macro Landscape through a deliberate band,
+not by coincident overlap or an arbitrary lift. A suitable bounded pattern is:
+
+- high-fidelity native-DTM interior;
+- transition band;
+- outer ring pinned/constrained to macro-terrain height;
+- measurable seam delta and no competing surface inside the owned patch.
+
+Reuse proven local primitives such as existing pinned-border-cell behavior where
+they satisfy this contract instead of inventing another world system.
+
+##### Road constraints before local triangulation
+
+Where practical, apply the proven PCGEx centerline/corridor and YACS road-profile
+constraints to the near-field terrain before final triangulation:
+
+`native terrain -> road corridor constraints -> cut/fill transition -> single local ground mesh -> asphalt/shoulders`.
+
+The goal is to avoid stacking road mesh + earthwork mesh + terrain skin +
+Landscape as four independent surfaces at the same location.
+
+##### Edit-layer semantics are explicit
+
+Never select a Landscape edit layer by API-return order. For road work:
+
+- `Base_DTM` must exist and remain semantic source terrain;
+- exactly one `Road_Earthworks` layer must exist;
+- road cut/fill selects `Road_Earthworks` explicitly by name;
+- missing/duplicate `Road_Earthworks`, or accidental `Base_DTM` selection,
+  fails closed;
+- proof output records available edit layers and the selected earthworks layer.
+
+##### Acceptance and scaling order
+
+Neutral geometry passes before materials/foliage/RVT/lighting camouflage.
+The first accepted hairpin is only a bounded proof. Before route propagation,
+repeat the rider proof on at least:
+
+- a difficult hairpin;
+- a normal/moderate slope corridor;
+- a high-elevation-difference / strong-earthworks section.
+
+Only after neutral geometry is visually accepted should the relevant performance
+proof set thresholds for the chosen representation. Meso cliffs/rocks/retaining,
+materials, vegetation and final weather follow after the ground ownership contract
+is proven.
+
 #### Road / earthworks decision ladder
 
 For road-terrain adaptation, do not extend the custom earthwork solver merely because a difficult hairpin exposes another edge case.
@@ -514,6 +850,13 @@ Do not treat geographic degrees as metres.
 Do not claim a Landscape is higher fidelity merely because it has more vertices than the source raster.
 
 ### 5.2 Landscape is macro terrain
+
+Landscape is the macro continuity representation, not a requirement that every
+rider-visible centimetre of ground be owned by the heightfield. A bounded
+native-DTM-derived near-field surface may own rider-close ground when a proof
+shows that Landscape resolution/topology is visually insufficient. In that case,
+ownership must be exclusive inside the patch and transition deterministically
+back to the macro Landscape.
 
 Landscape represents:
 
