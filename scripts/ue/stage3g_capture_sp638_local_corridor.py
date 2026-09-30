@@ -58,6 +58,7 @@ def _release_python_script() -> None:
     if os.environ.get(SESSION_MANAGED_ENV, "").strip() != "1":
         unreal.EditorPythonScripting.set_keep_python_script_alive(False)
 
+
 SLICE_HALF_LENGTH_CM = 35000.0
 KERNEL_SAMPLE_STEP_CM = 200.0
 SOURCE_GEOMETRY_HALF_WINDOW_M = 6.0
@@ -273,7 +274,7 @@ def _replace_with_pcgex_centerline(
     points: list[unreal.Vector],
 ) -> int:
     sampled = points[::PCGEX_RENDER_SPLINE_STRIDE]
-    if sampled[-1] != points[-1]:
+    if (len(points) - 1) % PCGEX_RENDER_SPLINE_STRIDE != 0:
         sampled.append(points[-1])
 
     spline.clear_spline_points(False)
