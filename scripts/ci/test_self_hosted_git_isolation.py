@@ -11,7 +11,9 @@ WORKFLOWS = (
     ROOT / ".github" / "workflows" / "reusable-unreal.yml",
 )
 PERSISTENT_CODE_ONLY_WORKFLOWS = (ROOT / ".github" / "workflows" / "manual-unreal.yml",)
-ISOLATED_CODE_ONLY_WORKFLOWS = (ROOT / ".github" / "workflows" / "reusable-unreal.yml",)
+WARM_ISOLATED_CODE_ONLY_WORKFLOWS = (
+    ROOT / ".github" / "workflows" / "reusable-unreal.yml",
+)
 
 
 class SelfHostedGitIsolationTests(unittest.TestCase):
@@ -52,20 +54,33 @@ class SelfHostedGitIsolationTests(unittest.TestCase):
                 checkout = text.index("without LFS payloads")
                 self.assertLess(normalize, checkout)
 
-    def test_reusable_code_only_workflows_use_isolated_worktree(self):
-        for path in ISOLATED_CODE_ONLY_WORKFLOWS:
+    def test_reusable_code_only_workflows_use_serialized_sanitized_warm_worktree(
+        self,
+    ):
+        for path in WARM_ISOLATED_CODE_ONLY_WORKFLOWS:
             text = path.read_text(encoding="utf-8")
             with self.subTest(workflow=path.name):
                 self.assertIn(
-                    "YACS_UNREAL_WORKTREE: _unreal-worktree-${{ github.run_id }}-${{ github.run_attempt }}",
+                    "group: yacs-unreal-ci-${{ github.repository }}",
                     text,
                 )
+                self.assertIn("cancel-in-progress: false", text)
+                self.assertIn("YACS_UNREAL_WORKTREE: _unreal-ci-warm", text)
                 self.assertIn("path: ${{ env.YACS_UNREAL_WORKTREE }}", text)
                 self.assertIn(
                     "working-directory: ${{ env.YACS_UNREAL_WORKTREE }}", text
                 )
                 self.assertIn("lfs: false", text)
-                self.assertIn("clean: true", text)
+                self.assertIn("clean: false", text)
+                self.assertIn(
+                    "Sanitize tracked workspace while preserving verified build outputs",
+                    text,
+                )
+                self.assertIn("git reset --hard '${{ inputs.target_sha }}'", text)
+                self.assertIn("git clean -ffd", text)
+                self.assertNotIn("git clean -ffdx", text)
+                self.assertIn("Verify exact SHA and clean tracked state", text)
+                self.assertIn("Test-YacsCodeOnlyCheckout.ps1", text)
                 self.assertNotIn(
                     "Normalize stale LFS payloads before code-only checkout",
                     text,
