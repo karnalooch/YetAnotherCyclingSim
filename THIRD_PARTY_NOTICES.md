@@ -58,7 +58,7 @@ Citation recorded by the YACS downloader:
 YACS is built with Unreal Engine. Unreal Engine itself is not vendored in this
 repository and remains subject to Epic Games' applicable license terms.
 
-## RoadForge minimal runtime donor
+## RoadForge minimal editor donor
 
 Upstream: `YuuhenR/roadforge-osm-ue5-procedural-city`  \
 Pinned revision: `781cb046483cc1887e80085aacf0fb2951f4746d`  \
@@ -67,9 +67,10 @@ Upstream copyright: Copyright (c) 2026 RoadForge Contributors  \
 Preserved license: `Plugins/RoadForge/LICENSE`  \
 Vendoring note: `Plugins/RoadForge/README.YACS.md`
 
-YACS includes only the runtime module bootstrap and
+YACS includes only the editor-target module bootstrap and
 `RoadForgeMeshUtils.{h,cpp}` geometry donor surface plus the minimum plugin
-build/descriptor files needed to compile it. OSM ingestion, procedural-city
+build/descriptor files needed to compile it. The donor is not part of the
+shipping runtime surface. OSM ingestion, procedural-city
 generation, PCG/editor tooling, sample data, screenshots, textures and other
 content payloads are not included.
 

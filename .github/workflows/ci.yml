@@ -85,6 +85,12 @@ jobs:
       - name: Verify documentation index contract
         run: python scripts/ci/check_docs_index.py
 
+      - name: Verify final architecture/tooling contract
+        run: python scripts/ci/test_final_architecture_contract.py
+
+      - name: Verify locked UE-MCP install plan
+        run: npm ci --prefix tools/ue-mcp --ignore-scripts --dry-run
+
   repo-policy:
     name: Repository policy
     permissions:

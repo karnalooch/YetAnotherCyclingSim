@@ -112,7 +112,7 @@ claimed to work.
 
 Only after `smoke-cube` is green may #228 add another named command. The next
 safe candidate is a read-only visual command such as `capture-current-map`.
-Persistent Stage 3G authoring commands come later and must reuse the existing
+Persistent M3 authoring commands come later and must reuse the existing
 generated-content sandbox and deterministic proof rules.
 
 Arbitrary Python, arbitrary Unreal console commands, arbitrary asset/map paths,

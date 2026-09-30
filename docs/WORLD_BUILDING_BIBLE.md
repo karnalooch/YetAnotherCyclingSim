@@ -74,7 +74,7 @@ A road mesh must never be snapped to Landscape vertices just because that makes 
 - Landscape for macro terrain.
 - Landscape Edit Layers for non-destructive world authoring.
 - Landscape Splines or an equivalent controlled spline-earthwork path for road corridor deformation.
-- Custom road mesh generation for the actual drivable asphalt geometry.
+- Road presentation mesh generated independently from the Landscape grid; the implementation is selected through the tooling admission policy rather than assumed to be bespoke.
 - Geometry Script / Landscape patches / explicit helper meshes for bounded local geometry where Landscape alone is insufficient.
 - Landscape Materials for broad surface classification.
 - PCG for deterministic repeated placement.
@@ -103,24 +103,26 @@ The default rule is:
 
 Before creating a new terrain, road-earthwork, biome, vegetation, snow, erosion, scatter or world-generation subsystem, evaluate the problem in this order:
 
-1. **Unreal Engine native first** — use current engine systems such as Landscape Edit Layers, Landscape Splines, Landscape Patch, PCG, World Partition, HLOD and material layers when they satisfy the contract.
-2. **Epic reference/sample second** — inspect Epic-provided examples and reference implementations before inventing an equivalent architecture. Experimental examples such as PCG Biome Core are valuable design references, but they are not automatically production dependencies.
-3. **Mature external/DCC tooling third** — evaluate established tools such as Houdini Engine when the problem is genuinely procedural or GIS-heavy and native Unreal is insufficient.
-4. **Open-source/reference implementations fourth** — inspect GitHub projects for proven patterns, algorithms and failure modes. Reuse code only after license/provenance review; otherwise treat it as reference material.
-5. **Custom YACS last** — write bespoke code only for the remaining gap that is specific to YACS or cannot meet the required quality, determinism, provenance, performance or automation contract with the options above.
+1. **Embark production-pattern review first** — inspect the closest public Embark tool or documented workflow and extract the relevant production boundary, data-flow and authoring lessons. This is evidence review, not automatic dependency adoption.
+2. **Epic-native capability second** — use current Unreal systems and official Epic samples/reference implementations such as Landscape Edit Layers, Landscape Splines, Landscape Patch, PCG, World Partition, HLOD and material layers when they satisfy the contract.
+3. **Proven external / open-source / DCC tooling third** — evaluate established tools such as Houdini Engine or reviewed OSS when Epic-native capabilities leave a concrete gap. Reuse source only after license/provenance review.
+4. **Custom YACS last** — write bespoke code only for the smallest remaining gap that is specific to YACS or cannot meet the required quality, determinism, provenance, performance or automation contract with the options above.
 
 The intended architecture is:
 
 ```mermaid
 flowchart LR
     SRC["SOURCE<br/>Real-world data"] --> AUTH["YACS AUTHORITY<br/>Route · physics · provenance"]
-    AUTH --> AUDIT["AUDIT<br/>Smallest capable tool"]
+    AUTH --> EMBARK["REVIEW<br/>Embark public pattern"]
+    EMBARK --> AUDIT["AUDIT<br/>Smallest capable tool"]
 
-    AUDIT --> NATIVE["UE NATIVE<br/>Landscape · Patch · PCG"]
-    AUDIT -.-> EXT["MATURE TOOL<br/>Houdini · Gaea · World Creator"]
+    AUDIT --> NATIVE["EPIC NATIVE<br/>Landscape · Patch · PCG"]
+    AUDIT -.-> EXT["PROVEN TOOL<br/>OSS · Houdini · DCC"]
+    AUDIT -.-> CUSTOM["YACS GAP<br/>Minimal custom"]
 
     NATIVE --> ADAPT["INTEGRATE<br/>Thin YACS adapter"]
     EXT --> ADAPT
+    CUSTOM --> ADAPT
 
     ADAPT --> GEN["GENERATE<br/>Deterministic presentation"]
     GEN --> VERIFY["VERIFY<br/>Visual · technical · performance"]
@@ -138,8 +140,9 @@ flowchart LR
 
     class SRC input;
     class AUTH owned;
+    class EMBARK evidence;
     class AUDIT decision;
-    class NATIVE,EXT tool;
+    class NATIVE,EXT,CUSTOM tool;
     class ADAPT,GEN,VERIFY exec;
     class WORLD success;
     class FIX danger;
@@ -292,15 +295,14 @@ A tools audit is itself a fail-closed architecture decision:
 
 ```mermaid
 flowchart LR
-    PROBLEM["INPUT<br/>Bounded world problem"] --> NATIVE["TRY<br/>UE native"]
+    PROBLEM["INPUT<br/>Bounded world problem"] --> EMBARK["REVIEW<br/>Closest Embark pattern"]
+    EMBARK --> NATIVE["TRY<br/>Epic-native path"]
     NATIVE --> D1{"MEETS<br/>YACS contract?"}
     D1 -->|"YES"| ADOPT["ADOPT<br/>Smallest solution"]
-    D1 -->|"NO"| EPIC["INSPECT<br/>Epic references"]
-    EPIC --> EXT["EVALUATE<br/>Mature DCC / plugin"]
+    D1 -->|"NO"| EXT["EVALUATE<br/>Proven OSS / DCC"]
     EXT --> D2{"MEETS<br/>YACS contract?"}
     D2 -->|"YES"| ADOPT
-    D2 -->|"NO"| OSS["INSPECT<br/>OSS patterns"]
-    OSS --> CUSTOM["IMPLEMENT<br/>Minimal YACS gap"]
+    D2 -->|"NO"| CUSTOM["IMPLEMENT<br/>Minimal YACS gap"]
     CUSTOM --> VERIFY["VERIFY<br/>Same proof contract"]
     ADOPT --> VERIFY
     VERIFY -->|"PASS"| ACCEPT["OUTPUT<br/>Validated architecture"]
@@ -317,8 +319,9 @@ flowchart LR
     classDef evidence fill:#164d5c,stroke:#5bd6ef,color:#ffffff,stroke-width:2px;
 
     class PROBLEM input;
+    class EMBARK evidence;
     class NATIVE,ADOPT,CUSTOM,VERIFY exec;
-    class EPIC,EXT,OSS tool;
+    class EXT tool;
     class D1,D2 decision;
     class ACCEPT success;
     class BLOCK danger;
@@ -334,9 +337,10 @@ For a representative difficult corridor, compare the smallest viable approaches 
 
 ```mermaid
 flowchart LR
-    ROAD["AUTHORITY<br/>Canonical SP638"] --> A["A · UE NATIVE<br/>Landscape Spline"]
-    ROAD --> B["B · UE NATIVE<br/>Landscape Patch"]
-    ROAD --> C["C · YACS OWNED<br/>Current cut/fill"]
+    ROAD["AUTHORITY<br/>Canonical SP638"] --> REVIEW["REVIEW<br/>Embark / production pattern"]
+    REVIEW --> A["A · UE NATIVE<br/>Landscape Spline"]
+    REVIEW --> B["B · UE NATIVE<br/>Landscape Patch"]
+    REVIEW --> C["C · YACS BASELINE<br/>Current cut/fill"]
     A --> PROOF["VERIFY<br/>Same hairpin proof"]
     B --> PROOF
     C --> PROOF
@@ -356,6 +360,7 @@ flowchart LR
     classDef evidence fill:#164d5c,stroke:#5bd6ef,color:#ffffff,stroke-width:2px;
 
     class ROAD,C owned;
+    class REVIEW evidence;
     class A,B exec;
     class PROOF,PROOF2 evidence;
     class HDA tool;
@@ -430,6 +435,21 @@ flowchart LR
 Epic's PCG Biome Core/Sample should be inspected as a reference implementation for biome maps, generators, filters and composition. Because it is Experimental in UE 5.8, adopting it as a hard runtime/editor dependency requires a separate bounded evaluation. Its patterns may be reused without requiring YACS to depend on the plugin itself.
 
 The same principle applies to snow: first represent *where snow may accumulate* as terrain/material/environment data; only use custom PCG or meshes for details that actually need geometry.
+
+### 3.4 Legacy prototype-world retirement boundary
+
+`AStage3PrototypeTerrainActor` and the HISM-heavy prototype-world presentation in `L_CyclingTest` are now **frozen legacy regression scaffolding**, not a second production world architecture.
+
+Rules:
+
+- do not add new terrain, road, biome, asset-pipeline or visual features to the prototype actor;
+- new M3 world work must use the real-data Landscape / SP638 / PCG architecture defined by this Bible;
+- legacy code may receive only the smallest compatibility or regression-proof fix needed to keep an already-required proof valid;
+- no new subsystem may depend on `AStage3PrototypeTerrainActor`;
+- removal is allowed only after the M3 production world replacement demonstrates equivalent route continuity, fresh-load/save-reopen behavior, rider-camera acceptance, required performance evidence and exact-SHA technical proof;
+- deletion/cleanup may be a separate housekeeping change after that parity evidence exists; historical proof artifacts and workflow names remain preserved for traceability.
+
+This freezes the old path without deleting a regression oracle before the replacement has earned it.
 
 ---
 

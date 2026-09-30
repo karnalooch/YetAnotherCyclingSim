@@ -3,10 +3,11 @@
     Prepare the pinned UE-MCP development tooling for YACS.
 
 .DESCRIPTION
-    Installs the exact ue-mcp version declared in tools/ue-mcp/package.json.
+    Installs the exact ue-mcp version and transitive graph declared by
+    tools/ue-mcp/package.json + package-lock.json.
     Optionally runs ue-mcp init from the repository root, which deploys the
     local development bridge plugin. The bridge is intentionally gitignored
-    during the Stage 3G spike.
+    during the M3 world-authoring tooling.
 
     This script does NOT run Unreal validation. After init, build the UE 5.8.2
     editor target and run the existing Stage 3 proof before opening a PR.
@@ -22,9 +23,12 @@ $ErrorActionPreference = 'Stop'
 $RepoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path
 $ToolRoot = Join-Path $RepoRoot 'tools/ue-mcp'
 $PackageJson = Join-Path $ToolRoot 'package.json'
+$PackageLock = Join-Path $ToolRoot 'package-lock.json'
 
-if (-not (Test-Path -LiteralPath $PackageJson)) {
-    throw "Missing UE-MCP package manifest: $PackageJson"
+foreach ($RequiredManifest in @($PackageJson, $PackageLock)) {
+    if (-not (Test-Path -LiteralPath $RequiredManifest)) {
+        throw "Missing locked UE-MCP manifest: $RequiredManifest"
+    }
 }
 
 $Node = Get-Command node -ErrorAction Stop
@@ -41,10 +45,10 @@ Write-Host "RepoRoot : $RepoRoot"
 Write-Host "Node     : $NodeVersionText"
 Write-Host "ToolRoot : $ToolRoot"
 Write-Host ""
-Write-Host "[1/2] Installing pinned UE-MCP tooling..." -ForegroundColor Cyan
-& $Npm.Source install --prefix $ToolRoot
+Write-Host "[1/2] Installing locked UE-MCP tooling..." -ForegroundColor Cyan
+& $Npm.Source ci --prefix $ToolRoot --ignore-scripts
 if ($LASTEXITCODE -ne 0) {
-    throw "npm install failed with exit code $LASTEXITCODE."
+    throw "npm ci --ignore-scripts failed with exit code $LASTEXITCODE."
 }
 
 if ($RunInit) {

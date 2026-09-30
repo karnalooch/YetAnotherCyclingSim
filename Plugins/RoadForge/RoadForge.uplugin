@@ -3,7 +3,7 @@
 	"Version": 1,
 	"VersionName": "1.0-yacs-spike",
 	"FriendlyName": "RoadForge Mesh Core",
-	"Description": "Minimal YACS donor subset of RoadForge mesh primitives. Vendored from MIT upstream; OSM, PCG, editor and content layers intentionally omitted.",
+	"Description": "Minimal editor-only YACS donor subset of RoadForge mesh primitives. Vendored from MIT upstream; OSM, PCG, editor UI and content layers intentionally omitted.",
 	"Category": "Geometry",
 	"CreatedBy": "RoadForge Contributors",
 	"CreatedByURL": "",
@@ -18,8 +18,11 @@
 	"Modules": [
 		{
 			"Name": "RoadForge",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"Type": "Editor",
+			"LoadingPhase": "Default",
+			"TargetAllowList": [
+				"Editor"
+			]
 		}
 	],
 	"Plugins": [

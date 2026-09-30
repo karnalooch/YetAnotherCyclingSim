@@ -3,7 +3,7 @@
 > **Role after the 2026-09-29 documentation reset:** this document is the reusable **implementation library/catalog** for world authoring. The authoritative methodology for how YACS builds terrain, roads, earthworks, materials, PCG and world streaming is [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md), including its **tools-first authoring policy**. This library implements bounded YACS integration; it must not become a parallel custom world-generation framework. Legacy Stage 3G/R4.x labels in this file are historical traceability, not new roadmap hierarchy.
 
 
-**Status:** Stage 3G foundation spike  
+**Status:** M3 world-authoring foundation; legacy Stage 3G implementation identifiers are retained for traceability  
 **Tracking:** #230  
 **Generated-content sandbox:** `/Game/Generated/YACS/**`
 
@@ -62,13 +62,13 @@ content or an approved mature authoring tool.
 
 Before adding a new generator/backend here:
 
-1. follow the tools-first audit in `WORLD_BUILDING_BIBLE.md`;
-2. prefer an existing qualified UE/PCG/Landscape path when it satisfies the contract;
-3. use this library to translate YACS semantic intent, provenance and deterministic
-   configuration into that backend;
-4. add custom layout/generation logic only for a demonstrated YACS-specific gap;
-5. preserve the ability to replace a backend without changing canonical route,
-   physics or source-data authority.
+1. follow the Embark-first tools audit in `WORLD_BUILDING_BIBLE.md`;
+2. use the closest public Embark pattern to shape boundaries and data flow, without treating it as an automatic dependency;
+3. prefer an existing qualified Epic-native UE/PCG/Landscape path when it satisfies the contract;
+4. evaluate proven OSS/DCC tooling before implementing a new backend;
+5. use this library to translate YACS semantic intent, provenance and deterministic configuration into the chosen backend;
+6. add custom layout/generation logic only for a demonstrated YACS-specific gap;
+7. preserve the ability to replace a backend without changing canonical route, physics or source-data authority.
 
 In particular:
 
@@ -273,7 +273,7 @@ Human visual acceptance remains separate from technical PASS.
 The library can grow by adding semantic slots and composition presets rather
 than one-off scripts.
 
-Expected Stage 3G/7 families include:
+Expected M3/M7 families include:
 
 - conifer forest and treeline;
 - meadow and ground cover;

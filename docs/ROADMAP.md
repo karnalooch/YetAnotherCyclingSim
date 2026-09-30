@@ -98,6 +98,10 @@ M3 is complete when:
 - the relevant 1080p/60 performance budget passes on the reference PC;
 - documentation and provenance are current.
 
+### Legacy prototype-world retirement gate
+
+`AStage3PrototypeTerrainActor` / the HISM-heavy prototype world is frozen as a regression scaffold during M3. No new world feature may target it. After the real Landscape/SP638/PCG path satisfies the M3 exit proof with equivalent fresh-load, rider-camera, performance and exact-SHA coverage, the legacy actor/path may be removed in a bounded housekeeping PR without preserving it as a second production architecture.
+
 ---
 
 ## 4. M4 — Cornering Technique

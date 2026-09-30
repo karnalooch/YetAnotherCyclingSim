@@ -53,7 +53,10 @@
 		},
 		{
 			"Name": "RoadForge",
-			"Enabled": true
+			"Enabled": true,
+			"TargetAllowList": [
+				"Editor"
+			]
 		}
 	]
 }

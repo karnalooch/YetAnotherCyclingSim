@@ -14,5 +14,16 @@
     "init": "cd ../.. && ue-mcp init",
     "doctor": "cd ../.. && ue-mcp doctor",
     "start": "cd ../.. && ue-mcp YetAnotherCyclingSim.uproject"
+  },
+  "yacs": {
+    "upstream": "db-lyon/ue-mcp",
+    "upstream_commit": "d79a34bb6e7a5883457efe8f33c9f85b1ba3e136",
+    "install": "npm ci --ignore-scripts",
+    "security_overrides": {
+      "fast-uri": "3.1.7"
+    }
+  },
+  "overrides": {
+    "fast-uri": "3.1.7"
   }
 }
