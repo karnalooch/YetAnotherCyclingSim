@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 import unittest
 
@@ -87,15 +88,17 @@ class YacsPcgPatchContractTest(unittest.TestCase):
         self.assertIn("delete_asset(temporary_graph_path)", capture)
 
         workflow = read(".github/workflows/passo-giau-r4-1-roadside-house.yml")
+        policy = json.loads(read(".gumball/proof-broker.json"))
+        scope = policy["proofs"]["world-authoring-sp638"]["scope_paths"]
         self.assertIn(
             "Source/YetAnotherCyclingSimEditor/Public/PCG/"
             "YacsPatchCandidatesSettings.h",
-            workflow,
+            scope,
         )
         self.assertIn(
             "Source/YetAnotherCyclingSimEditor/Private/PCG/"
             "YacsPatchCandidatesSettings.cpp",
-            workflow,
+            scope,
         )
         self.assertIn("test_yacs_pcg_patch_contract.py", workflow)
 
