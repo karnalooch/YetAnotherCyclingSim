@@ -145,7 +145,7 @@ else {
         <MaxParallelActions>$MaxParallelActions</MaxParallelActions>
       </BuildConfiguration>
     </Configuration>
-    "@
+"@
     $UbtConfig | Set-Content -LiteralPath $UbtConfigPath -Encoding UTF8
     Write-Host (
         "PCGEx conservative UBT profile: UBA disabled; MaxParallelActions={0}; logicalProcessors={1}; freeVirtualGb={2:N2}; config={3}" -f
