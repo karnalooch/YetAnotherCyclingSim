@@ -262,6 +262,20 @@ class ChangeClassifierTests(unittest.TestCase):
             source.write_text("int x = 2;\n", encoding="utf-8")
             self.assertNotEqual(compile_v1, cc.unreal_compile_fingerprint(root))
 
+    def test_unknown_runtime_input_changes_compile_fingerprint(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "Build").mkdir(parents=True)
+            (root / "YetAnotherCyclingSim.uproject").write_text(
+                '{"FileVersion": 3, "EngineAssociation": "5.8"}\n',
+                encoding="utf-8",
+            )
+            unknown = root / "Build/custom.runtime"
+            unknown.write_text("v1\n", encoding="utf-8")
+            first = cc.unreal_compile_fingerprint(root)
+            unknown.write_text("v2\n", encoding="utf-8")
+            self.assertNotEqual(first, cc.unreal_compile_fingerprint(root))
+
     def test_embark_terrain_proof_modes(self):
         self.assertEqual(
             cc.classify_embark_terrain_proof(
