@@ -169,15 +169,26 @@ class ChangeClassifierTests(unittest.TestCase):
         self.assertFalse(result.ue_code)
         self.assertEqual(result.ci_cost_class, "standard")
 
-    def test_code_build_proof_wrapper_still_routes_unreal(self):
+    def test_build_orchestration_routes_compile(self):
         for path in (
             "scripts/ue/Invoke-YacsProof.ps1",
             "scripts/ue/Preflight-YacsProof.ps1",
             "scripts/ci/Invoke-YacsUnrealCi.ps1",
+            ".github/workflows/reusable-unreal.yml",
+        ):
+            with self.subTest(path=path):
+                result = cc.classify_paths([path])
+                self.assertTrue(result.ue_code)
+                self.assertTrue(result.unreal_compile)
+                self.assertTrue(result.unreal_runtime)
+                self.assertEqual(result.unreal_execution_class, "compile")
+                self.assertEqual(result.ci_cost_class, "heavy")
+
+    def test_unreal_lane_support_tooling_routes_runtime_without_compile(self):
+        for path in (
             "scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1",
             "scripts/ci/Resolve-YacsUnrealCiCache.ps1",
             "scripts/ci/Test-YacsCodeOnlyCheckout.ps1",
-            ".github/workflows/reusable-unreal.yml",
         ):
             with self.subTest(path=path):
                 result = cc.classify_paths([path])
