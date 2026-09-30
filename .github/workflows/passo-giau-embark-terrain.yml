@@ -328,43 +328,150 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $mode = '${{ needs.classify.outputs.proof_mode }}'
           $fingerprint = '${{ needs.classify.outputs.compile_fingerprint }}'
+          $expectedPcgExCommit = '39a8f1bdc65b2c4613a1e87b71d93b4576db0a66'
           $statePath = Join-Path (Get-Location) 'Saved/BuildCache/PCGEx/compile-state.json'
-          $warm = $false
+          $pluginRoot = Join-Path (Get-Location) 'Plugins/PCGExtendedToolkit'
+          $pluginGit = Join-Path $pluginRoot '.git'
+          $projectModules = @(
+            Get-ChildItem -LiteralPath (Join-Path (Get-Location) 'Binaries/Win64') -File -Filter 'UnrealEditor-YetAnotherCyclingSimEditor*.dll' -ErrorAction SilentlyContinue
+          )
+          $pluginModules = @(
+            Get-ChildItem -LiteralPath (Join-Path $pluginRoot 'Binaries/Win64') -File -Filter '*.dll' -ErrorAction SilentlyContinue
+          )
 
-          if ($mode -ne 'heavy' -and (Test-Path -LiteralPath $statePath -PathType Leaf)) {
+          $environmentResolver = Join-Path (Get-Location) 'scripts/ci/Resolve-YacsUnrealBuildEnvironment.ps1'
+          if (-not (Test-Path -LiteralPath $environmentResolver -PathType Leaf)) {
+            throw "Shared Unreal build-environment resolver is missing: $environmentResolver"
+          }
+          . $environmentResolver
+          $buildEnvironment = Resolve-YacsUnrealBuildEnvironment -ProjectPath (Join-Path (Get-Location) 'YetAnotherCyclingSim.uproject')
+          $environmentIdentity = if ($buildEnvironment) { [string]$buildEnvironment.Identity } else { 'unresolved' }
+
+          $pluginHead = $null
+          if (Test-Path -LiteralPath $pluginGit) {
+            try { $pluginHead = (& git -C $pluginRoot rev-parse HEAD).Trim() } catch { $pluginHead = $null }
+          }
+
+          $compileKind = 'cold'
+          $reason = 'missing-cache-state'
+          $skipBuild = $false
+          $purgeProjectBuild = $true
+          $purgePlugin = $true
+          $state = $null
+
+          if (Test-Path -LiteralPath $statePath -PathType Leaf) {
             try {
               $state = Get-Content -LiteralPath $statePath -Raw | ConvertFrom-Json
-              $projectModules = @(
-                Get-ChildItem -LiteralPath (Join-Path (Get-Location) 'Binaries/Win64') -File -Filter 'UnrealEditor-YetAnotherCyclingSimEditor*.dll' -ErrorAction SilentlyContinue
-              )
-              $pluginModules = @(
-                Get-ChildItem -LiteralPath (Join-Path (Get-Location) 'Plugins/PCGExtendedToolkit/Binaries/Win64') -File -Filter '*.dll' -ErrorAction SilentlyContinue
-              )
-              $pluginCheckout = Test-Path -LiteralPath (Join-Path (Get-Location) 'Plugins/PCGExtendedToolkit/.git')
-              $warm = (
-                [string]$state.compile_fingerprint -eq $fingerprint -and
-                $projectModules.Count -gt 0 -and
-                $pluginModules.Count -gt 0 -and
-                $pluginCheckout
-              )
+              $schema = if ($state.PSObject.Properties.Name -contains 'schema_version') { [int]$state.schema_version } else { 0 }
+              $statePcgExCommit = if ($state.PSObject.Properties.Name -contains 'pcgex_commit') { [string]$state.pcgex_commit } else { '' }
+
+              if ($schema -eq 1 -and $statePcgExCommit -eq $expectedPcgExCommit) {
+                # One-time migration from the pre-environment-fingerprint cache.
+                # Never skip the build, but preserve trusted intermediates and
+                # let UBT validate/rebuild what is outdated.
+                $compileKind = 'warm'
+                $reason = 'legacy-cache-schema-migration'
+                $purgeProjectBuild = $false
+                $purgePlugin = ($pluginHead -ne $expectedPcgExCommit)
+              }
+              elseif ($schema -ne 2) {
+                $compileKind = 'cold'
+                $reason = 'cache-schema-mismatch'
+              }
+              elseif (-not [bool]$state.compile_passed) {
+                if ([string]$state.environment_identity -eq $environmentIdentity -and
+                    [string]$state.pcgex_commit -eq $expectedPcgExCommit) {
+                  $compileKind = 'warm'
+                  $reason = 'previous-compile-not-verified'
+                  $purgeProjectBuild = $false
+                  $purgePlugin = ($pluginHead -ne $expectedPcgExCommit)
+                }
+              }
+              elseif ($environmentIdentity -eq 'unresolved' -or
+                      [string]$state.environment_identity -ne $environmentIdentity) {
+                $compileKind = 'cold'
+                $reason = 'environment-identity-mismatch'
+              }
+              elseif ([string]$state.pcgex_commit -ne $expectedPcgExCommit) {
+                $compileKind = 'cold'
+                $reason = 'pcgex-pin-mismatch'
+              }
+              elseif ($pluginHead -and $pluginHead -ne $expectedPcgExCommit) {
+                $compileKind = 'cold'
+                $reason = 'pcgex-checkout-drift'
+              }
+              elseif ([string]$state.compile_fingerprint -ne $fingerprint) {
+                $compileKind = 'warm'
+                $reason = 'compile-fingerprint-mismatch'
+                $purgeProjectBuild = $false
+                $purgePlugin = ($pluginHead -ne $expectedPcgExCommit)
+              }
+              elseif ($projectModules.Count -eq 0 -or $pluginModules.Count -eq 0 -or -not $pluginHead) {
+                $compileKind = 'warm'
+                $reason = 'expected-binary-or-checkout-missing'
+                $purgeProjectBuild = $false
+                $purgePlugin = (-not $pluginHead)
+              }
+              else {
+                $compileKind = 'none'
+                $reason = 'verified-compile-cache-hit'
+                $skipBuild = $true
+                $purgeProjectBuild = $false
+                $purgePlugin = $false
+              }
             }
             catch {
-              Write-Warning ("Ignoring invalid compile cache state: {0}" -f $_.Exception.Message)
-              $warm = $false
+              Write-Warning ("Ignoring invalid PCGEx compile cache state: {0}" -f $_.Exception.Message)
+              $compileKind = 'cold'
+              $reason = 'invalid-cache-state'
+              $skipBuild = $false
+              $purgeProjectBuild = $true
+              $purgePlugin = $true
             }
           }
 
-          if (-not $warm) {
-            Write-Host ("Compile cache MISS: mode={0} fingerprint={1}" -f $mode,$fingerprint) -ForegroundColor Yellow
-            foreach ($relative in @('Binaries','Intermediate','Plugins/PCGExtendedToolkit')) {
+          if ($environmentIdentity -eq 'unresolved') {
+            $compileKind = 'cold'
+            $reason = 'environment-identity-unresolved'
+            $skipBuild = $false
+            $purgeProjectBuild = $true
+            $purgePlugin = $true
+          }
+
+          if ($skipBuild) {
+            Write-Host ("PCGEx compile cache HIT: kind=none fingerprint={0}" -f $fingerprint) -ForegroundColor Green
+          }
+          else {
+            Write-Host ("PCGEx compile required: kind={0} reason={1} fingerprint={2}" -f $compileKind,$reason,$fingerprint) -ForegroundColor Yellow
+          }
+
+          if ($purgeProjectBuild) {
+            foreach ($relative in @('Binaries','Intermediate')) {
               Remove-Item -LiteralPath (Join-Path (Get-Location) $relative) -Recurse -Force -ErrorAction SilentlyContinue
             }
           }
-          else {
-            Write-Host ("Compile cache HIT: fingerprint={0}" -f $fingerprint) -ForegroundColor Green
+          if ($purgePlugin) {
+            Remove-Item -LiteralPath $pluginRoot -Recurse -Force -ErrorAction SilentlyContinue
           }
 
-          "skip_build=$($warm.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          if (-not $skipBuild -and $state) {
+            # Revoke the previous green lease before mutable compilation so an
+            # interrupted run can never be reused as if it had passed.
+            try {
+              $state.compile_passed = $false
+              $state | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $statePath -Encoding UTF8
+            }
+            catch {
+              Remove-Item -LiteralPath $statePath -Force -ErrorAction SilentlyContinue
+            }
+          }
+
+          "skip_build=$($skipBuild.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          "compile_kind=$compileKind" >> $env:GITHUB_OUTPUT
+          "reason=$reason" >> $env:GITHUB_OUTPUT
+          "environment_identity=$environmentIdentity" >> $env:GITHUB_OUTPUT
+          "purged_project_build=$($purgeProjectBuild.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          "purged_plugin=$($purgePlugin.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
 
       - name: Build or reuse binaries and author deterministic PCGEx graph
         shell: pwsh
