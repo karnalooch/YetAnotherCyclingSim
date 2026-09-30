@@ -778,3 +778,38 @@ The following principles are supported by the public production evidence above a
 10. **Use expensive derived processing after creative authoring dependencies.**
 11. **Measure production value by iteration cost, not by how sophisticated the generator looks.**
 12. **External evidence informs architecture; YACS proof decides adoption.**
+
+---
+
+# 7. Architecture review exit criteria
+
+The Far Cry 5 and THE FINALS evidence is now sufficient to stop expanding the conceptual architecture and move to a bounded implementation proof.
+
+Before generalizing any reusable YACS world-data abstraction, the first vertical slice must answer:
+
+1. **Data contract** — what exact data crosses one producer/consumer boundary?
+2. **Invalidation** — what becomes dirty after a local source change, and what remains untouched?
+3. **Stable intermediate representation** — which derived facts are computed once and reused?
+4. **Override survival** — which local authored corrections survive regeneration?
+5. **Reproducibility metadata** — which hashes, versions, seed/config and spatial scope reproduce the output?
+
+The review rule is deliberately conservative:
+
+> **No second architecture layer until the first complete producer → derived data → consumer → regeneration path works on real YACS data.**
+
+The intended first proof is:
+
+```text
+real SP638 + real DTM
+  -> Road Corridor Data
+  -> one earthwork producer
+  -> road exclusion / distance data
+  -> one downstream PCG/environment consumer
+  -> deterministic baseline
+  -> bounded road edit
+  -> bounded downstream regeneration
+```
+
+If that proof exposes missing fields or ownership rules, extend the contract from evidence. Do not pre-fill a universal `WorldEnvironmentData` structure merely because future systems might need it.
+
+This dossier should now be treated primarily as **reference evidence during implementation review**, not as an invitation to keep adding architecture before the vertical slice exists.
