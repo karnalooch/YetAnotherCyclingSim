@@ -306,22 +306,19 @@ If a reusable authoring implementation would require changing those rules,
 update and review the Bible first rather than silently encoding a new
 architecture here.
 
-## 13. Known documentation-guard gap
+## 13. Documentation guard implementation
 
-`docs/README.md` now exists and correctly routes world-building work to
-`WORLD_BUILDING_BIBLE.md`. The repository also has
-`scripts/ci/check_docs_index.py`, and the current CI runs that index contract.
+`docs/README.md` routes world-building work to
+`WORLD_BUILDING_BIBLE.md`, and `scripts/ci/check_docs_index.py` is the
+repository-local documentation guard required for documentation changes.
 
-However, the four documentation guards required by `AGENTS.md` are not
-currently implemented as independently runnable checks in YACS or in the
-pinned reusable governance workflow:
+That single guard reports the four named checks required by `AGENTS.md`:
 
-- links;
-- i18n;
-- structure;
-- freshness.
+- **i18n** — UTF-8 documentation entrypoints are readable;
+- **structure** — required headings, authority links and root routing are present;
+- **links** — local documentation links resolve;
+- **freshness** — every top-level Markdown document under `docs/` is indexed.
 
-Until those guards are added, documentation-only work must report them as
-**unavailable**, rather than claiming they passed. The existing documentation
-index check, repository policy and governance policy do not substitute for
-those four named guards.
+The main CI runs this contract in the `Classify changes` job. Reports must
+state the result of each named check from that guard rather than describing
+them as unavailable merely because they are implemented by one script.
