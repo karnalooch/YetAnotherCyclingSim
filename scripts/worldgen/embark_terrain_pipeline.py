@@ -290,6 +290,7 @@ def run_pipeline(
     config = load_json(config_path)
     outputs = config["outputs"]
     run_manifest_path = repo_path(outputs["run_manifest"])
+    dcc_handoff_path = repo_path(outputs["dcc_handoff_manifest"])
     preflight_report = run_manifest_path.parent / "toolchain-preflight.json"
     preflight_payload = preflight(config_path, preflight_report)
     resolved = preflight_payload.pop("_resolved")
@@ -426,9 +427,14 @@ def run_pipeline(
         env=houdini_env,
     )
 
-    run_manifest_path.parent.mkdir(parents=True, exist_ok=True)
-    run_manifest_path.write_text(
-        json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+    dcc_handoff = {
+        **manifest,
+        "handoff_status": "PASS",
+        "handoff_output_sha256": sha256_file(houdini_output),
+    }
+    dcc_handoff_path.parent.mkdir(parents=True, exist_ok=True)
+    dcc_handoff_path.write_text(
+        json.dumps(dcc_handoff, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
 
@@ -443,8 +449,8 @@ def run_pipeline(
             str(finalizer),
             "--source",
             str(houdini_output),
-            "--pipeline-run-manifest",
-            str(run_manifest_path),
+            "--dcc-handoff-manifest",
+            str(dcc_handoff_path),
             "--output-dir",
             str(prepared_root),
         ),
