@@ -153,9 +153,11 @@ jobs:
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         env:
           YACS_UNREAL_EXECUTION_MODE: ${{ steps.cache.outputs.mode }}
+          YACS_UNREAL_COMPILE_KIND: ${{ steps.cache.outputs.compile_kind }}
         run: |
           $ErrorActionPreference = 'Stop'
           if ($env:YACS_UNREAL_EXECUTION_MODE -eq 'compile') {
+            Write-Host ("Unreal compile path: {0}" -f $env:YACS_UNREAL_COMPILE_KIND) -ForegroundColor Cyan
             ./scripts/ci/Invoke-YacsUnrealCi.ps1 -ExpectedHead '${{ inputs.target_sha }}'
           }
           elseif ($env:YACS_UNREAL_EXECUTION_MODE -eq 'runtime') {
@@ -173,6 +175,7 @@ jobs:
           ./scripts/ci/Resolve-YacsUnrealCiCache.ps1 `
             -Action Record `
             -CompletedMode '${{ steps.cache.outputs.mode }}' `
+            -CompletedCompileKind '${{ steps.cache.outputs.compile_kind }}' `
             -ExpectedHead '${{ inputs.target_sha }}' `
             -ExpectedCompileFingerprint '${{ inputs.compile_fingerprint }}' `
             -ExpectedProofFingerprint '${{ inputs.proof_fingerprint }}'
@@ -184,6 +187,7 @@ jobs:
           Write-Host "STATIC Unreal equivalence proof: exact HEAD ${{ inputs.target_sha }}"
           Write-Host "Compile and proof fingerprints match a previously green run."
           Write-Host "Reason: ${{ steps.cache.outputs.reason }}"
+          Write-Host "Compile kind: ${{ steps.cache.outputs.compile_kind }}"
 
       - name: Upload concise Unreal proof
         if: ${{ always() }}
