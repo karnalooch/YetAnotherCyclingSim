@@ -106,8 +106,8 @@ jobs:
             ) | Out-Null
             if ($errors.Count -gt 0) {
               $failed = $true
-              foreach ($error in $errors) {
-                Write-Error "${script}: $($error.Message)"
+              foreach ($parseError in $errors) {
+                Write-Error "${script}: $($parseError.Message)"
               }
             }
           }
