@@ -264,6 +264,7 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
             "embark_terrain_pipeline.py preflight",
             "Materialize only DCC recipe binaries",
             "Execute full Embark terrain pipeline",
+            "AdditionalAllowedDirtyPaths",
         ):
             self.assertNotIn(forbidden, workflow)
 
