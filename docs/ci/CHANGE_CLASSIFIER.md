@@ -17,8 +17,12 @@ The main impact outputs are:
 - `cpp` — C/C++/C# source under a project or plugin `Source/` tree changed;
 - `assets` — tracked source/game asset surface changed;
 - `ci` — CI/tooling surface changed;
-- `ue_code` — a code-build-affecting Unreal surface changed and the automatic
-  code-only Editor build + Automation lane is required;
+- `ue_code` — the automatic code-only Unreal lane is required (legacy
+  compatibility signal; equivalent to `unreal_runtime`);
+- `unreal_compile` — an input capable of changing Editor binaries or their
+  build/engine-selection contract changed;
+- `unreal_runtime` — fresh code-only Unreal/Automation evidence is required;
+- `unreal_execution_class` — `static`, `runtime`, or `compile`;
 - `ue_tooling` — Unreal editor/authoring/proof tooling changed, but that fact
   alone does **not** require an automatic Editor build;
 - `asset_full` — the change requires the heavy Stage 3G/full-world proof at
@@ -33,7 +37,8 @@ The main impact outputs are:
 | docs-only | Repository policy, Governance, Aggregate | `light` |
 | Python | Python reference tests, security baseline, CodeQL Python | `standard` |
 | C++ / plugin C++ | security baseline, CodeQL C++, code-only Unreal build + Automation | `heavy` |
-| Build.cs / Target.cs / .uproject / .uplugin / critical Config | security baseline, CodeQL C++, code-only Unreal build + Automation | `heavy` |
+| Build.cs / Target.cs / .uproject / .uplugin / compile-orchestration helper | security baseline, CodeQL C++, code-only Unreal COMPILE + Automation | `heavy` |
+| critical Config | security baseline plus code-only Unreal RUNTIME Automation on verified binaries | `heavy` |
 | CI/tooling | CI contract tests plus security baseline | normally `standard` |
 | Unreal proof/editor/authoring tooling | CI/Python/contracts as applicable; **no automatic code build solely because the path is under `scripts/ue/**`** | normally `standard` |
 | code-build tooling used by the automatic Unreal lane | CI contracts plus code-only Unreal build + Automation | `heavy` |
@@ -126,6 +131,7 @@ The automatic code-only Unreal lane is reserved for:
 - the reusable automatic Unreal workflow itself;
 - the exact build/provenance helpers used by that lane:
   - `scripts/ci/Invoke-YacsUnrealCi.ps1`;
+  - `scripts/ci/Resolve-YacsUnrealEngine.ps1`;
   - `scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1`;
   - `scripts/ci/Test-YacsCodeOnlyCheckout.ps1`;
   - `scripts/ue/Invoke-YacsProof.ps1`;
