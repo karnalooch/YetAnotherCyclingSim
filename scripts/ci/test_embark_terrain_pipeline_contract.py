@@ -376,9 +376,13 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         self.assertIn("-Variant C3", workflow)
         self.assertIn("-Variant H", workflow)
         self.assertIn("apply_corridor_constraints_to_height_grid", capture)
+        self.assertIn("make_road_clearance_profiles", capture)
         self.assertIn(
             '"single_local_ground_owner": constraint_metrics is not None', capture
         )
+        self.assertIn('"shoulders_capped_to_road_edge_height": True', capture)
+        self.assertIn('"asphalt_vertical_clearance_m"', capture)
+        self.assertIn("asphalt-edge clearance apron", wrapper)
         self.assertIn("YACS_NATIVE_DTM_PATCH_METADATA", capture)
         self.assertIn("prepared native metric DTM bounded patch", capture)
         self.assertIn("landscape_collision_sampled", capture)
