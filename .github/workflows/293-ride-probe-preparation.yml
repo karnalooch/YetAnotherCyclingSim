@@ -10,7 +10,7 @@ concurrency:
 jobs:
   prepare:
     if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.ref == 'refs/heads/ci/293-source-inspection' && github.actor == 'karnalooch' && github.triggering_actor == 'karnalooch' && github.event_name == 'push' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: write
@@ -26,7 +26,17 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install --disable-pip-version-check ruff==0.16.8 Pillow==11.3.0
-      - name: Apply immutable candidate with exact source and output checks
+      - name: Provision reviewed distro codec on ephemeral host only
+        run: |
+          set -euo pipefail
+          . /etc/os-release
+          test "$ID:$VERSION_ID" = 'ubuntu:24.04'
+          sudo apt-get update -qq
+          sudo apt-get install --yes --no-install-recommends 'ffmpeg=7:6.1.1-3ubuntu5'
+          test "$(dpkg-query -W -f='${Version}' ffmpeg)" = '7:6.1.1-3ubuntu5'
+          ffmpeg -version
+          ffprobe -version
+      - name: Apply immutable candidate and bounded host-codec correction
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -72,10 +82,26 @@ jobs:
           for item in plan['files']:
               if blob(Path(item['path']).read_bytes()) != item['after']:
                   raise SystemExit('Patched blob mismatch: ' + item['path'])
+          def edit(path, old, new):
+              p = Path(path); text = p.read_text(encoding='utf-8')
+              if text.count(old) != 1: raise SystemExit('Missing/ambiguous codec correction: ' + path)
+              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+          wf = '.github/workflows/passo-giau-embark-terrain.yml'
+          old = "  validate:\n    name: PCGEx corridor deviation report\n    needs: [classify, prepare, author]\n    if: ${{ needs.classify.outputs.execute_proof == 'true' }}\n    runs-on: ubuntu-latest"
+          edit(wf, old, old.replace('ubuntu-latest', 'ubuntu-24.04'))
+          old = '          command -v ffmpeg\n          command -v ffprobe\n'
+          new = "          . /etc/os-release\n          test \"$ID:$VERSION_ID\" = 'ubuntu:24.04'\n          sudo apt-get update -qq\n          sudo apt-get install --yes --no-install-recommends 'ffmpeg=7:6.1.1-3ubuntu5'\n          test \"$(dpkg-query -W -f='${Version}' ffmpeg)\" = '7:6.1.1-3ubuntu5'\n          command -v ffmpeg\n          command -v ffprobe\n"
+          edit(wf, old, new)
+          edit('docs/CI_VALIDATION_TIERS.md', 'The host media stage uses the already-used `Pillow==11.3.0` plus its installed\nFFmpeg/ffprobe, recording exact versions/configuration with the output. It\n', 'The ephemeral Ubuntu 24.04 media stage uses the already-used `Pillow==11.3.0`\nand installs distro `ffmpeg=7:6.1.1-3ubuntu5` from the signed Ubuntu archive only\nfor an explicit diagnostic request. It verifies the package version and records\nFFmpeg/ffprobe versions/configuration with the output. It\n')
+          edit('docs/legal/DEPENDENCY_PROVENANCE.md', 'FFmpeg/ffprobe are optional host-installed build tools for derived diagnostic\nMP4s, not linked/vendored/redistributed runtime dependencies. No FFmpeg binary is\ncommitted or installed on the reference PC. The media report records the exact\n', 'FFmpeg/ffprobe are host build tools for derived diagnostic MP4s, not linked,\nvendored or redistributed runtime dependencies. Explicit diagnostic media jobs\ninstall Ubuntu 24.04 package `ffmpeg=7:6.1.1-3ubuntu5` from the signed distro\narchive, verify its version and fail if unavailable. Source/package evidence:\nhttps://packages.ubuntu.com/noble/ffmpeg . No binary is committed or installed\non the reference PC. Only hash-checked, fully Pillow-decoded project PNGs enter\nthe PNG decoder; ffprobe reads the resulting local MP4. This is not a generic\nuploaded-media ingestion service. The media report records the exact\n')
+          p = Path('docs/legal/DEPENDENCY_PROVENANCE.md')
+          with p.open('a', encoding='utf-8') as out:
+              out.write('\nDistro security notice USN-8329-1 documents a CAF decoder issue and an ESM\nupdate. CAF is not accepted by this bounded PNG-to-MP4 tool path. The pin is\nnot a security-clean claim for arbitrary formats; expanding accepted input\nrequires a codec/security review and a supported updated distribution.\nhttps://ubuntu.com/security/notices/USN-8329-1\n')
+          edit('scripts/proof/package_ride_probe.py', '"-start_number", "0", "-i",', '"-start_number", "0", "-f", "image2", "-c:v", "png", "-i",')
           changed = set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines()) | set(subprocess.check_output(['git','ls-files','--others','--exclude-standard'],text=True).splitlines())
           if changed != allowed: raise SystemExit('Unexpected changed files')
           Path(os.environ['RUNNER_TEMP'],'ride-plan.json').write_text(json.dumps(plan))
-          print('Exact source and all 14 patched-file hashes verified. No branch ref changed.')
+          print('Exact source and immutable patch verified; reviewed codec correction applied. No branch ref changed.')
           PY
       - name: Run existing and new static contracts without UE
         run: |
