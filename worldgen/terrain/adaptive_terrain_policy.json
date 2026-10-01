@@ -55,5 +55,26 @@
     "name": "BOB",
     "expansion": "Builder Of Berms",
     "system_id": "bob-terrain-architect-v1"
+  },
+  "retaining_repair_rule": {
+    "rule_id": "bob-local-retaining-repair-v1",
+    "scope": "contiguous_flagged_region_with_verified_tie_ins",
+    "preserve_canonical_road_xy": true,
+    "shared_ground_owner_between_branches": true,
+    "cut_solution": "rock_cut_with_local_retaining_where_space_is_insufficient",
+    "fill_solution": "supported_shoulder_with_local_retaining_and_native_slope_tie_in",
+    "steps": [
+      "measure_signed_cut_fill_per_side",
+      "resolve_competing_branch_ownership",
+      "design_local_structure_and_tie_ins",
+      "generate_candidate",
+      "remeasure_clearance_cut_fill_and_surface_ownership",
+      "render_neutral_geometry_for_human_review"
+    ],
+    "promotion_requires": [
+      "same_exact_sha_technical_PASS",
+      "same_exact_sha_human_visual_PASS"
+    ],
+    "threshold_override_allowed": false
   }
 }

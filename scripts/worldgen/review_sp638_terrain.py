@@ -205,13 +205,16 @@ Cut/fill is the road-edge/shoulder envelope; outer zero-weight ties are excluded
                 for dy in (-step_y, 0.0, step_y)
             ]
             envelope = []
+            signed_edges = {}
             for offset, profile_point in enumerate(profiles[index]):
                 if profile_point.role not in {
                     "left_road_edge", "right_road_edge", "left_shoulder", "right_shoulder"
                 }:
                     continue
                 vertex = corridor_mesh.vertices[index * width + offset]
-                envelope.append(abs(vertex.z + origin.z - sample(vertex.x + origin.x, vertex.y + origin.y)))
+                delta = vertex.z + origin.z - sample(vertex.x + origin.x, vertex.y + origin.y)
+                signed_edges[profile_point.role] = delta
+                envelope.append(abs(delta))
             if len(envelope) != 4:
                 raise ValueError("BOB cut/fill measurement requires four edge/shoulder roles")
             branch_xy, branch_z = _nearest_branch(world, distances, index, nonlocal_arc_exclusion_m)
@@ -238,6 +241,24 @@ Cut/fill is the road-edge/shoulder envelope; outer zero-weight ties are excluded
                 exact_sha=exact_sha, provenance=provenance, features=features,
             ))
             report.update({"station_index": index, "station_m": station_m})
+            report["signed_edge_delta_m"] = signed_edges
+            if "repair_plan" in report:
+                plan = report["repair_plan"]
+                plan["side_resolution"] = "MEASURED_ROAD_LOCAL_FRAME"
+                plan["side_candidates"] = {}
+                for side in ("left", "right"):
+                    deltas = [value for role, value in signed_edges.items() if role.startswith(side + "_")]
+                    # A side can require both cut and fill. Do not pick from slope alone.
+                    actions = []
+                    if min(deltas) < 0.0:
+                        actions.append(plan["rule"]["cut_solution"])
+                    if max(deltas) > 0.0:
+                        actions.append(plan["rule"]["fill_solution"])
+                    plan["side_candidates"][side] = {
+                        "required_cut_m": max(0.0, -min(deltas)),
+                        "required_fill_m": max(0.0, max(deltas)),
+                        "design_candidates": actions,
+                    }
             reports.append(report)
             if report["decision"]["strategy"] not in HEIGHTFIELD_STRATEGIES:
                 escalations.append(index)

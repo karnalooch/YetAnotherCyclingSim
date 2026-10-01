@@ -52,6 +52,13 @@ class AdaptiveTerrainSolverTests(unittest.TestCase):
     def setUp(self) -> None:
         self.policy = load_policy(POLICY_PATH)
 
+    def test_expert_repair_rule_cannot_bypass_acceptance(self) -> None:
+        import copy
+        policy = copy.deepcopy(self.policy)
+        policy["retaining_repair_rule"]["promotion_requires"] = ["same_exact_sha_technical_PASS"]
+        with self.assertRaisesRegex(ValueError, "human visual PASS"):
+            BobTerrainArchitect(policy=policy, cases=())
+
     def test_bob_identity_is_stable_and_policy_owned(self) -> None:
         self.assertEqual(BOB_NAME, "BOB")
         self.assertEqual(BOB_EXPANSION, "Builder Of Berms")
@@ -310,6 +317,22 @@ class ExistingCorridorReviewTests(unittest.TestCase):
         self.assertEqual(result["status"], "MEASURED")
         self.assertFalse(result["parameters_applied"])
         self.assertFalse(result["learning_case_promoted"])
+
+    def test_escalation_measures_cut_and_fill_sides_before_proposing_repairs(self):
+        fill = self.review(height_delta=5.0)["decisions"][5]
+        cut = self.review(height_delta=-5.0)["decisions"][5]
+        for report in (fill, cut):
+            plan = report["repair_plan"]
+            self.assertEqual(plan["status"], "PROPOSED_NOT_EXECUTED")
+            self.assertEqual(plan["side_resolution"], "MEASURED_ROAD_LOCAL_FRAME")
+            self.assertFalse(plan["learning_case_promoted"])
+            self.assertFalse(plan["rule"]["threshold_override_allowed"])
+            self.assertTrue(plan["rule"]["shared_ground_owner_between_branches"])
+        for side in ("left", "right"):
+            self.assertGreater(fill["repair_plan"]["side_candidates"][side]["required_fill_m"], 4.0)
+            self.assertEqual(fill["repair_plan"]["side_candidates"][side]["required_cut_m"], 0.0)
+            self.assertGreater(cut["repair_plan"]["side_candidates"][side]["required_cut_m"], 4.0)
+            self.assertEqual(cut["repair_plan"]["side_candidates"][side]["required_fill_m"], 0.0)
 
     def test_existing_large_earthwork_is_rejected_without_policy_rewrite(self):
         result = self.review(height_delta=5.0)

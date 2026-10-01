@@ -818,6 +818,19 @@ This review never updates policy, applies proposed parameters or promotes a
 learning case. Offline calibration and the full strategy execution loop remain
 under Issue #303.
 
+BOB also carries the versioned expert rule `bob-local-retaining-repair-v1` in
+`adaptive_terrain_policy.json`. On escalation its report proposes a local rock
+cut/retaining solution for cut and a supported shoulder/retaining solution for
+fill, using signed native-DTM deltas at both road edges and shoulders. Left and
+right refer to the road-local mesh frame, not screenshot coordinates. Mixed
+cut/fill on one side retains both design candidates. Shared ground between
+branches must have one owner; canonical road XY and escalation thresholds stay
+protected. The recipe requires local tie-ins, candidate generation, repeated
+measurement and neutral render review. It is proposed expert knowledge, **not
+executed geometry or a verified learning case**. Structural suitability still
+needs a generator and verification under Issue #303; promotion requires technical
+and human visual PASS on the same exact SHA.
+
 ```mermaid
 flowchart LR
     OBS["OBSERVE<br/>Road + native DTM"] --> FEAT["MEASURE<br/>Deterministic features"]

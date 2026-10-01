@@ -290,6 +290,20 @@ def validate_policy(policy: Mapping[str, Any]) -> None:
     for strategy in ALL_STRATEGIES:
         _strategy_parameters(policy, strategy)
 
+    repair = policy.get("retaining_repair_rule")
+    if not isinstance(repair, Mapping):
+        raise ValueError("policy requires a retaining_repair_rule")
+    if (repair.get("preserve_canonical_road_xy") is not True
+            or repair.get("shared_ground_owner_between_branches") is not True
+            or repair.get("threshold_override_allowed") is not False):
+        raise ValueError("retaining repair cannot weaken road or ground ownership bounds")
+    if repair.get("promotion_requires") != [
+        "same_exact_sha_technical_PASS", "same_exact_sha_human_visual_PASS"
+    ]:
+        raise ValueError("retaining repair promotion requires technical and human visual PASS")
+    if not repair.get("rule_id") or not repair.get("steps"):
+        raise ValueError("retaining repair requires an identified execution recipe")
+
 
 def baseline_strategy(
     features: TerrainFeatures,
@@ -621,7 +635,18 @@ class BobTerrainArchitect:
         return choose_terrain_decision(features, self.policy, self.cases)
 
     def review(self, packet: TerrainFeaturePacket) -> dict[str, Any]:
-        return decision_report(packet, self.decide(packet.features))
+        decision = self.decide(packet.features)
+        report = decision_report(packet, decision)
+        if decision.strategy == STRATEGY_RETAINING_OR_CLIFF:
+            # Repository-owned expert knowledge, not an accepted geometry case.
+            report["repair_plan"] = {
+                "status": "PROPOSED_NOT_EXECUTED",
+                "knowledge_source": "reviewed_policy_rule",
+                "rule": json.loads(json.dumps(self.policy["retaining_repair_rule"])),
+                "side_resolution": "REQUIRES_SIGNED_EDGE_MEASUREMENTS",
+                "learning_case_promoted": False,
+            }
+        return report
 
 
 def main() -> int:
@@ -653,3 +678,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
