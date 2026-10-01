@@ -4,138 +4,61 @@ on:
     branches: [ci/293-source-inspection]
     paths: ['.github/workflows/293-source-snapshot.yml']
 permissions: {}
-env:
-  GIT_LFS_SKIP_SMUDGE: '1'
 concurrency:
   group: issue-293-source-preparation
   cancel-in-progress: false
 jobs:
-  publish-reviewed-blobs:
+  dispatch-reviewed-isolation:
     if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.ref == 'refs/heads/ci/293-source-inspection' && github.actor == 'karnalooch' && github.triggering_actor == 'karnalooch' && github.event_name == 'push' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 3
     permissions:
-      contents: write
+      contents: read
+      actions: write
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          ref: bb15df0003c7ad22025844f3ca8b8e93d42a9fca
-          fetch-depth: 1
-          lfs: false
-          persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
-        with:
-          python-version: '3.14'
-      - run: python -m pip install --disable-pip-version-check ruff==0.16.8
-      - name: Validate exact isolation edits and publish immutable blobs only
+      - name: Verify the exact reviewed branch and dispatch one full isolation checkpoint
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          set -euo pipefail
           python - <<'PY'
-          import base64
-          import hashlib
           import json
           import os
-          import subprocess
-          import sys
+          import urllib.error
           import urllib.request
-          from pathlib import Path
-          REPO = 'karnalooch/YetAnotherCyclingSim'
-          BASE = 'bb15df0003c7ad22025844f3ca8b8e93d42a9fca'
-          PLAN_SHAS = ('3c7818fa0d81edf9533002f12029b447b4f0b960', 'fe6bf911f99c5957a693f9c43719ee1fb869fff5')
-          ALLOWED = {
-              'scripts/ue/stage3g_capture_sp638_local_corridor.py',
-              'scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1',
-              '.github/workflows/passo-giau-embark-terrain.yml',
-              'scripts/ci/test_embark_terrain_pipeline_contract.py',
-              'scripts/ci/test_terrain_proof_routing.py',
-              'docs/WORLD_BUILDING_BIBLE.md',
-              'docs/CI_VALIDATION_TIERS.md',
-          }
-          def git(*args):
-              return subprocess.check_output(['git', *args], text=True).strip()
-          def blob(data):
-              return hashlib.sha1(f'blob {len(data)}\0'.encode() + data).hexdigest()
-          def api(path, body=None):
-              request = urllib.request.Request('https://api.github.com/repos/' + REPO + path,
-                  data=None if body is None else json.dumps(body).encode(),
-                  method='GET' if body is None else 'POST',
-                  headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json'})
-              with urllib.request.urlopen(request, timeout=40) as response:
-                  return json.load(response)
-          if git('rev-parse', 'HEAD') != BASE:
-              raise SystemExit('Unexpected source HEAD')
-          if api('/git/ref/heads/fix/293-macro-landscape')['object']['sha'] != BASE:
-              raise SystemExit('PR moved; refusing stale preparation')
-          entries = []
-          for plan_sha in PLAN_SHAS:
-              data = base64.b64decode(api('/git/blobs/' + plan_sha)['content'])
-              if blob(data) != plan_sha:
-                  raise SystemExit('Plan blob mismatch')
-              plan = json.loads(data)
-              if plan['base'] != BASE:
-                  raise SystemExit('Unexpected plan base')
-              entries.extend(plan['files'])
-          if {x['path'] for x in entries} != ALLOWED or len(entries) != len(ALLOWED):
-              raise SystemExit('Unexpected plan scope')
-          for entry in entries:
-              path = Path(entry['path'])
-              data = path.read_bytes()
-              if blob(data) != entry['before_blob']:
-                  raise SystemExit('Source drift: ' + str(path))
-              text = data.decode('utf-8')
-              for change in entry['edits']:
-                  if text.count(change['old']) != 1:
-                      raise SystemExit('Absent or ambiguous anchor: ' + str(path))
-                  text = text.replace(change['old'], change['new'], 1)
-              path.write_text(text, encoding='utf-8')
-          def checked(args):
-              result = subprocess.run(args, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=300)
-              print('$ ' + ' '.join(args), flush=True)
-              print(result.stdout if result.returncode else result.stdout[-3500:], flush=True)
-              if result.returncode:
-                  raise SystemExit('Validation failed: ' + str(result.returncode))
-          checked(['ruff', 'format', 'scripts/ci/test_embark_terrain_pipeline_contract.py', 'scripts/ci/test_terrain_proof_routing.py'])
-          checked(['ruff', 'check', 'scripts/ci', '--select', 'E9,F63,F7,F82'])
-          checked([sys.executable, '-m', 'unittest', 'scripts.ci.test_embark_terrain_pipeline_contract', 'scripts.ci.test_terrain_proof_request', 'scripts.ci.test_terrain_proof_routing', '-v'])
-          checked([sys.executable, 'scripts/ci/run_python_tests.py'])
-          checked([sys.executable, '-m', 'py_compile', 'scripts/ue/stage3g_capture_sp638_local_corridor.py'])
-          checked(['pwsh', '-NoProfile', '-Command', '$tokens=$null; $errors=$null; [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1),[ref]$tokens,[ref]$errors) | Out-Null; if ($errors.Count) { $errors | Format-List; exit 1 }; Write-Output "PowerShell parse PASS"'])
-          checked([sys.executable, 'scripts/ci/check_docs_index.py'])
-          checked(['git', 'diff', '--check'])
-          from scripts.ci.check_docs_index import local_targets, read_utf8
-          for doc in ('docs/WORLD_BUILDING_BIBLE.md', 'docs/CI_VALIDATION_TIERS.md'):
-              path = Path(doc)
-              if any(not target.exists() for target in local_targets(path, read_utf8(path))):
-                  raise SystemExit('Broken changed-document link: ' + doc)
-          paths = set(git('diff', '--name-only').splitlines())
-          if paths != ALLOWED:
-              raise SystemExit('Unexpected changed paths: ' + repr(paths ^ ALLOWED))
-          elements = []
-          for path in sorted(paths):
-              data = Path(path).read_bytes()
-              result = api('/git/blobs', {'content': data.decode('utf-8'), 'encoding': 'utf-8'})
-              if result['sha'] != blob(data):
-                  raise SystemExit('Published blob mismatch: ' + path)
-              elements.append({'path': path, 'mode': '100644', 'type': 'blob', 'sha': result['sha']})
-          result = {'parent': BASE, 'tree_elements': elements, 'validation': '51 contract/admission/routing and 391 reference tests PASS; PS parse PASS; docs links/i18n/structure/freshness PASS; visual NOT RUN'}
-          Path(os.environ['RUNNER_TEMP'], 'reviewed-isolation-blobs.json').write_text(json.dumps(result, indent=2))
-          print('REVIEWED_ISOLATION_BLOBS=' + json.dumps(result), flush=True)
-          print('No PR refs changed. No road/terrain geometry or compiled source changes.', flush=True)
+          from urllib.parse import quote
+          repo = 'karnalooch/YetAnotherCyclingSim'
+          branch = 'fix/293-macro-landscape'
+          sha = 'e330aa97608a61a0965b23a0cd1f0799c6ab61e3'
+          workflow = 'passo-giau-embark-terrain.yml'
+          request_id = 'manual-m3-pr294-e330aa97608a-isolation'
+          def api(path, data=None):
+              request = urllib.request.Request(
+                  'https://api.github.com/repos/' + repo + path,
+                  data=None if data is None else json.dumps(data).encode(),
+                  method='GET' if data is None else 'POST',
+                  headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json'},
+              )
+              try:
+                  with urllib.request.urlopen(request, timeout=40) as response:
+                      raw = response.read()
+                      return json.loads(raw) if raw else None
+              except urllib.error.HTTPError as exc:
+                  raise SystemExit(f'GitHub request failed: {exc.code} {exc.read().decode()[:1000]}') from None
+          pr = api('/pulls/294')
+          if pr['state'] != 'open' or pr['head']['sha'] != sha or pr['head']['ref'] != branch or pr['head']['repo']['full_name'] != repo:
+              raise SystemExit('Reviewed PR revision drifted; no dispatch')
+          ref = api('/git/ref/heads/' + branch)
+          if ref['object']['sha'] != sha:
+              raise SystemExit('Branch changed; no dispatch')
+          content = api('/contents/.github/workflows/' + workflow + '?ref=' + sha)
+          if content['sha'] != '13bbd04e5eba91f8f52927cf441bf6a06f5c5a85':
+              raise SystemExit('Workflow definition is not reviewed')
+          runs = api('/actions/workflows/' + workflow + '/runs?event=workflow_dispatch&per_page=100')['workflow_runs']
+          existing = [run for run in runs if request_id in run.get('display_title', '') or request_id in run.get('name', '')]
+          if existing:
+              print('Existing request retained; not dispatching twice: ' + str(existing[0]['id']))
+          else:
+              api('/actions/workflows/' + workflow + '/dispatches', {'ref': branch, 'inputs': {'exact_sha': sha, 'gumball_request_id': request_id, 'include_surface_isolation': 'true'}})
+              print('DISPATCH_ACCEPTED=' + request_id)
+              print('Exact target: ' + sha + '; A-E/C3 plus explicit F/G. No repository ref changes.')
           PY
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: issue293-reviewed-surface-isolation
-          path: |
-            ${{ runner.temp }}/reviewed-isolation-blobs.json
-            scripts/ue/stage3g_capture_sp638_local_corridor.py
-            scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1
-            .github/workflows/passo-giau-embark-terrain.yml
-            scripts/ci/test_embark_terrain_pipeline_contract.py
-            scripts/ci/test_terrain_proof_routing.py
-            docs/WORLD_BUILDING_BIBLE.md
-            docs/CI_VALIDATION_TIERS.md
-          if-no-files-found: error
-          include-hidden-files: true
-          retention-days: 2
