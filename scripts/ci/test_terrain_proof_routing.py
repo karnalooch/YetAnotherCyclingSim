@@ -119,9 +119,9 @@ class TerrainProofRoutingTests(unittest.TestCase):
             "/pcgex_graph_output.json",
         ):
             self.assertIn("${{ env.YACS_M3_EVIDENCE_ROOT }}" + suffix, author)
-        compact = author.split("- name: Upload compact H candidate evidence", 1)[1].split(
-            "- name: Upload PCGEx authoring evidence", 1
-        )[0]
+        compact = author.split("- name: Upload compact H candidate evidence", 1)[
+            1
+        ].split("- name: Upload PCGEx authoring evidence", 1)[0]
         self.assertIn(
             "passo-giau-m3-h-candidate-${{ github.run_id }}-${{ github.run_attempt }}",
             compact,
