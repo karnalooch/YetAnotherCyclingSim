@@ -331,7 +331,15 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         self.assertIn(
             'DIAGNOSTIC_VARIANT_ENV = "YACS_SP638_LOCAL_CORRIDOR_VARIANT"', capture
         )
-        for variant in ('"A": {', '"B": {', '"C": {', '"D": {', '"E": {', '"C3": {', '"H": {'):
+        for variant in (
+            '"A": {',
+            '"B": {',
+            '"C": {',
+            '"D": {',
+            '"E": {',
+            '"C3": {',
+            '"H": {',
+        ):
             self.assertIn(variant, capture)
         self.assertIn('"Base_DTM" not in edit_layer_names', capture)
         self.assertIn('name == "Road_Earthworks"', capture)
@@ -368,7 +376,9 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         self.assertIn("-Variant C3", workflow)
         self.assertIn("-Variant H", workflow)
         self.assertIn("apply_corridor_constraints_to_height_grid", capture)
-        self.assertIn('"single_local_ground_owner": constraint_metrics is not None', capture)
+        self.assertIn(
+            '"single_local_ground_owner": constraint_metrics is not None', capture
+        )
         self.assertIn("YACS_NATIVE_DTM_PATCH_METADATA", capture)
         self.assertIn("prepared native metric DTM bounded patch", capture)
         self.assertIn("landscape_collision_sampled", capture)
