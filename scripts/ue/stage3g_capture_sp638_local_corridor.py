@@ -1035,6 +1035,13 @@ def main() -> None:
         component.set_forced_lod(0)
         component.set_lod_bias(0)
 
+    if variant_name == "A":
+        from scripts.ue.audit_macro_landscape import capture_macro_height_evidence
+
+        capture_macro_height_evidence(
+            world, landscape, landscape_components, _proof_path.parent
+        )
+
     road_actor, spline, original_control_count = _find_road_spline()
     for component in road_actor.get_components_by_class(unreal.SplineMeshComponent):
         component.set_visibility(False, True)
