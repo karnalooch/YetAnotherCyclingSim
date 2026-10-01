@@ -22,6 +22,7 @@ TARGET_WORKFLOWS = {
     / "workflows"
     / "passo-giau-r4-1-hairpin-corridor.yml",
     "m3-terrain": ROOT / ".github" / "workflows" / "passo-giau-embark-terrain.yml",
+    "m3-h-focus": ROOT / ".github" / "workflows" / "passo-giau-embark-terrain.yml",
     "world-authoring-sp638": ROOT
     / ".github"
     / "workflows"
