@@ -271,5 +271,82 @@ class AdaptiveTerrainSolverTests(unittest.TestCase):
         self.assertEqual(first, second)
 
 
+class ExistingCorridorReviewTests(unittest.TestCase):
+    def review(self, *, height_delta=0.0, xs=None, points=None, exact_sha="a" * 40):
+        from scripts.geometry.sp638_local_corridor import (
+            CrossSectionPoint, Vec3, build_corridor_mesh, make_constant_profiles,
+        )
+        from scripts.worldgen.review_sp638_terrain import review_existing_corridor
+
+        xs = tuple(range(-20, 21)) if xs is None else xs
+        ys = tuple(range(20, -21, -1))
+        heights = tuple(tuple(0.10 * x + 0.20 * y for x in xs) for y in ys)
+        points = points or tuple(Vec3(x, 0.0, 0.10 * x + height_delta) for x in range(-10, 11, 2))
+        profile = (
+            CrossSectionPoint(-4.0, 0.0, "left_shoulder"),
+            CrossSectionPoint(-3.0, 0.0, "left_road_edge"),
+            CrossSectionPoint(3.0, 0.0, "right_road_edge"),
+            CrossSectionPoint(4.0, 0.0, "right_shoulder"),
+        )
+        profiles = make_constant_profiles(len(points), profile)
+        mesh = build_corridor_mesh(points, profiles, tangent_half_window_stations=3)
+        return review_existing_corridor(
+            bob=BobTerrainArchitect.from_paths(POLICY_PATH, CASES_PATH),
+            xs=xs, ys=ys, native_heights=heights, centerline=points,
+            corridor_mesh=mesh, profiles=profiles, origin=Vec3(0.0, 0.0, 0.0),
+            exact_sha=exact_sha, native_binary_sha256="b" * 64,
+            pcgex_output_sha256="c" * 64, start_station_m=100.0,
+        )
+
+    def test_planar_native_terrain_has_zero_roughness_and_measured_cross_slopes(self):
+        result = self.review()
+        feature = result["decisions"][5]["features"]
+        self.assertAlmostEqual(feature["longitudinal_grade"], 0.10)
+        self.assertAlmostEqual(feature["left_cross_slope"], -0.20)
+        self.assertAlmostEqual(feature["right_cross_slope"], 0.20)
+        self.assertAlmostEqual(feature["road_to_dtm_delta_m"], 0.0)
+        self.assertAlmostEqual(feature["dtm_roughness_m"], 0.0)
+        self.assertAlmostEqual(feature["max_cut_fill_m"], 0.8)
+        self.assertEqual(result["status"], "MEASURED")
+        self.assertFalse(result["parameters_applied"])
+        self.assertFalse(result["learning_case_promoted"])
+
+    def test_existing_large_earthwork_is_rejected_without_policy_rewrite(self):
+        result = self.review(height_delta=5.0)
+        self.assertEqual(result["status"], "REQUIRES_ESCALATION")
+        self.assertEqual(result["technical_acceptance"], "FAIL")
+        self.assertEqual(len(result["escalation_station_indices"]), result["station_count"])
+        self.assertFalse(result["learning_case_promoted"])
+
+    def test_missing_native_coverage_is_not_clamped_or_marked_pass(self):
+        result = self.review(xs=tuple(range(-3, 4)))
+        self.assertEqual(result["status"], "INCOMPLETE")
+        self.assertLess(result["measured_station_count"], result["station_count"])
+        self.assertTrue(result["uncovered_stations"])
+        self.assertNotEqual(result["technical_acceptance"], "PASS")
+
+    def test_invalid_exact_sha_is_rejected_even_without_coverage(self):
+        with self.assertRaisesRegex(ValueError, "SHA40"):
+            self.review(xs=tuple(range(-3, 4)), exact_sha="missing")
+
+    def test_repeated_review_is_deterministic(self):
+        self.assertEqual(self.review(), self.review())
+
+    def test_competing_branch_distance_and_z_come_from_the_same_segment(self):
+        from scripts.geometry.sp638_local_corridor import Vec3
+        from scripts.worldgen.review_sp638_terrain import _nearest_branch
+
+        points = (Vec3(0, 0, 0), Vec3(10, 0, 0), Vec3(10, 4, 3), Vec3(-10, 4, 3))
+        xy, z = _nearest_branch(points, (0.0, 10.0, 25.0, 45.0), 0, 20.0)
+        self.assertAlmostEqual(xy, 4.0)
+        self.assertAlmostEqual(z, 3.0)
+
+    def test_native_sample_rejects_uncovered_positions(self):
+        from scripts.worldgen.review_sp638_terrain import MissingDtmCoverage, sample_native_height
+
+        with self.assertRaises(MissingDtmCoverage):
+            sample_native_height((0, 1, 2), (2, 1, 0), ((0, 0, 0),) * 3, -0.01, 1.0)
+
+
 if __name__ == "__main__":
     unittest.main()

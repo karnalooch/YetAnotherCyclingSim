@@ -830,6 +830,8 @@ def _load_native_dtm_patch(
     corridor_mesh=None,
     corridor_profiles=None,
     corridor_origin_world: unreal.Vector | None = None,
+    corridor_centerline=None,
+    corridor_start_station_m: float | None = None,
 ):
     metadata_value = os.environ.get(NATIVE_DTM_PATCH_ENV, "").strip()
     if not metadata_value:
@@ -912,11 +914,46 @@ def _load_native_dtm_patch(
         )
 
     constraint_metrics = None
+    bob_report = None
     if corridor_mesh is not None:
-        if corridor_profiles is None or corridor_origin_world is None:
+        if (
+            corridor_profiles is None or corridor_origin_world is None
+            or corridor_centerline is None or corridor_start_station_m is None
+        ):
             raise RuntimeError(
-                "native-DTM road constraints require profiles and corridor origin"
+                "native-DTM road constraints require profiles, origin and measured centerline"
             )
+        from scripts.worldgen.adaptive_terrain_solver import BobTerrainArchitect
+        from scripts.worldgen.review_sp638_terrain import review_existing_corridor
+
+        pcgex_path = Path(os.environ.get(PCGEX_CORRIDOR_OUTPUT_ENV, ""))
+        if not pcgex_path.is_file():
+            raise RuntimeError("BOB's H review requires the actual PCGEx execution output")
+        bob_report = review_existing_corridor(
+            bob=BobTerrainArchitect.from_paths(
+                REPO_ROOT / "worldgen/terrain/adaptive_terrain_policy.json",
+                REPO_ROOT / "worldgen/terrain/verified_terrain_cases.json",
+            ),
+            xs=x_coordinates_m, ys=y_coordinates_m, native_heights=heights_m,
+            centerline=corridor_centerline, corridor_mesh=corridor_mesh,
+            profiles=corridor_profiles,
+            origin=Vec3(
+                float(corridor_origin_world.x) / 100.0,
+                float(corridor_origin_world.y) / 100.0,
+                float(corridor_origin_world.z) / 100.0,
+            ),
+            exact_sha=os.environ.get("YACS_RIDE_PROBE_SHA", ""),
+            native_binary_sha256=str(binary["sha256"]),
+            pcgex_output_sha256=hashlib.sha256(pcgex_path.read_bytes()).hexdigest(),
+            start_station_m=corridor_start_station_m,
+            sample_step_m=KERNEL_SAMPLE_STEP_CM / 100.0,
+            tangent_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
+        )
+        bob_report_path = _proof_path.parent / "bob_terrain_review.json"
+        bob_report_path.write_text(
+            json.dumps(bob_report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        # Retain BOB's decision even if the existing constraint kernel fails.
         heights_m, constraint_metrics = apply_corridor_constraints_to_height_grid(
             x_coordinates_m,
             y_coordinates_m,
@@ -928,6 +965,16 @@ def _load_native_dtm_patch(
                 float(corridor_origin_world.y) / 100.0,
                 float(corridor_origin_world.z) / 100.0,
             ),
+        )
+        bob_report["existing_candidate_metrics"] = {
+            "constrained_sample_count": constraint_metrics.constrained_sample_count,
+            "max_abs_adjustment_m": constraint_metrics.max_abs_adjustment_m,
+            "rms_adjustment_m": constraint_metrics.rms_adjustment_m,
+            "overlapping_sample_count": constraint_metrics.overlapping_sample_count,
+            "max_overlap_delta_m": constraint_metrics.max_overlap_delta_m,
+        }
+        bob_report_path.write_text(
+            json.dumps(bob_report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )
 
     origin_z_m = min(min(row) for row in heights_m)
@@ -988,6 +1035,7 @@ def _load_native_dtm_patch(
         "occlusion_lift_m": 0.0,
         "mesh_sha256": terrain_skin_hash(mesh),
         "canonical_road_xy_modified": False,
+        "bob_review": bob_report,
     }
     return mesh, origin_world, diagnostics
 
@@ -1312,6 +1360,8 @@ def main() -> None:
                     ground_constraint_profiles if variant_name == "H" else None
                 ),
                 corridor_origin_world=origin_world if variant_name == "H" else None,
+                corridor_centerline=centerline if variant_name == "H" else None,
+                corridor_start_station_m=start_cm / 100.0 if variant_name == "H" else None,
             )
             if variant_name in {"C3", "H"}
             else _sample_local_terrain_skin(

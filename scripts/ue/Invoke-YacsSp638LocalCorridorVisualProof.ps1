@@ -387,6 +387,13 @@ if ($ExpectedLocal) {
             }
         }
         if ($Variant -eq 'H') {
+            $Bob = $Proof.local_terrain_skin.bob_review
+            if ($Bob.architect.name -ne 'BOB' -or $Bob.exact_sha -ne $ExpectedHead -or $Bob.parameters_applied -ne $false) {
+                throw 'Variant H BOB review identity, exact SHA or review-only contract is invalid.'
+            }
+            if ($Bob.status -ne 'MEASURED') {
+                throw "BOB rejected the existing H candidate: status=$($Bob.status), escalations=$(@($Bob.escalation_station_indices).Count), uncovered=$(@($Bob.uncovered_stations).Count). Inspect bob_terrain_review.json; no terrain acceptance or learning case was issued."
+            }
             if ([bool]$Proof.local_terrain_skin.road_constraints_applied -ne $true -or [bool]$Proof.local_terrain_skin.single_local_ground_owner -ne $true) {
                 throw 'Variant H did not bake road constraints into the single native-DTM ground owner.'
             }
