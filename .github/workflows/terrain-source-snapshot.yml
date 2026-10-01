@@ -1,28 +1,75 @@
-name: Issue 293 source inspection snapshot
+name: Issue 293 exact source edit
 on:
   push:
     branches: [fix/293-macro-landscape]
     paths: ['.github/workflows/terrain-source-snapshot.yml']
 permissions:
-  contents: read
-env:
-  GIT_LFS_SKIP_SMUDGE: '1'
+  contents: write
 jobs:
-  snapshot:
-    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.actor == 'karnalooch' && github.event_name == 'push' }}
+  edit:
+    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.actor == 'karnalooch' && github.triggering_actor == 'karnalooch' && github.ref == 'refs/heads/fix/293-macro-landscape' && github.event_name == 'push' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 3
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          ref: b5a659b7fef730800b847178e2d5b71a49b03217
-          lfs: false
-          persist-credentials: false
-      - name: Archive only tracked baseline source, without assets or credentials
-        run: git archive --format=zip --output="${RUNNER_TEMP}/yacs-source.zip" HEAD AGENTS.md README.md .github .gumball .gitignore .gitattributes docs scripts Source physics_reference Config worldgen tools YetAnotherCyclingSim.uproject gumball.yaml THIRD_PARTY_NOTICES.md
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: issue-293-baseline-source
-          path: ${{ runner.temp }}/yacs-source.zip
-          if-no-files-found: error
-          retention-days: 1
+      - name: Apply only the reviewed seven-line diagnostic hook with blob guards
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import base64
+          import hashlib
+          import json
+          import os
+          import urllib.request
+          import urllib.error
+          repo = 'karnalooch/YetAnotherCyclingSim'
+          branch = 'fix/293-macro-landscape'
+          path = 'scripts/ue/stage3g_capture_sp638_local_corridor.py'
+          original = '9d4261399790d8f2948f60d85f8c10e4b015ed40'
+          wanted = '54d57973af5e43abd698e427d9e7bc137ac3ef27'
+          def api(endpoint, data=None):
+              request = urllib.request.Request(
+                  'https://api.github.com/repos/' + repo + endpoint,
+                  method='GET' if data is None else 'PUT',
+                  data=None if data is None else json.dumps(data).encode(),
+                  headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+                           'Accept': 'application/vnd.github+json',
+                           'Content-Type': 'application/json',
+                           'X-GitHub-Api-Version': '2026-03-10'},
+              )
+              try:
+                  with urllib.request.urlopen(request, timeout=30) as response:
+                      return json.load(response)
+              except urllib.error.HTTPError as exc:
+                  raise SystemExit(f'Exact source edit HTTP {exc.code}') from None
+          ref = api('/git/ref/heads/' + branch)
+          if ref['object']['sha'] != os.environ['GITHUB_SHA']:
+              raise SystemExit('Branch advanced; no edit performed')
+          source = api('/contents/' + path + '?ref=' + branch)
+          if source['sha'] != original:
+              raise SystemExit('Capture source differs from reviewed original')
+          before = '    road_actor, spline, original_control_count = _find_road_spline()\n'
+          insert = (
+              '    if variant_name == "A":\n'
+              '        from scripts.ue.audit_macro_landscape import capture_macro_height_evidence\n'
+              '\n'
+              '        capture_macro_height_evidence(\n'
+              '            world, landscape, landscape_components, _proof_path.parent\n'
+              '        )\n'
+              '\n'
+          )
+          text = base64.b64decode(source['content']).decode('utf-8')
+          if text.count(before) != 1:
+              raise SystemExit('Expected unique insertion point missing')
+          updated = text.replace(before, insert + before).encode('utf-8')
+          digest = hashlib.sha1(b'blob ' + str(len(updated)).encode() + b'\0' + updated).hexdigest()
+          if digest != wanted:
+              raise SystemExit('Result does not match the locally reviewed source blob')
+          result = api('/contents/' + path, {
+              'branch': branch, 'sha': original,
+              'message': 'test(world): inspect persisted macro height before transient deformation',
+              'content': base64.b64encode(updated).decode(),
+          })
+          print('Updated reviewed blob:', result['content']['sha'])
+          print('Source commit:', result['commit']['sha'])
+          PY
