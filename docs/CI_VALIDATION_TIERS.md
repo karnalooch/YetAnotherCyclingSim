@@ -78,6 +78,45 @@ validation still run for the current revision when the proof mode requires
 them. A fingerprint change therefore invalidates proof reuse but no longer
 implies destructive cleanup by itself.
 
+#### M3 admission and scheduling after #292
+
+Cost classification is not permission to launch expensive work. Every scoped
+non-main push runs hosted admission/classification/contracts only, including a
+push classified as `render` or `heavy`. Main and Dependabot pushes remain outside
+the dedicated automatic M3 workflow. The independent normal Unreal CI lane is
+unchanged and still validates binary-affecting work when required.
+
+Use `/gumball proof m3-terrain` for the full checkpoint. The broker resolves one
+same-repository PR HEAD, deduplicates requests and dispatches the trusted default-
+branch workflow with `exact_sha` and `gumball_request_id`. Explicit manual
+`workflow_dispatch` with those same inputs is the recovery fallback. Admission
+rejects other repositories, unsupported events, malformed SHA and request IDs.
+The target must be reachable from a branch fetched from the canonical repository.
+Workflow-definition SHA and proof-target SHA are separate: every preparation,
+checkout, author/render wrapper and proof receipt uses the validated target SHA.
+
+An explicit request always runs the existing A-E/C3 and deviation bundle, even
+when its most recent commit is docs-only. Compilation remains independently
+subject to the verified `none`/`warm`/`cold` decision above. A static push does not
+produce an accepted heavy-proof artifact.
+
+Static workflow cancellation is scoped by branch and event. Explicit requests
+use a separate request group and are not cancelled by later pushes. A separate
+non-cancelling author-job concurrency group serializes the persistent PCGEx
+worktree; `queue: max` retains up to GitHub's supported queue limit instead of
+replacing the single pending author job. Temporary input-download directories
+are namespaced by run and attempt. This lock is not a global multi-runner GPU
+scheduler and does not change the independent Unreal CI worktree contract.
+
+Only successful author/render **and** deviation validation publish
+`proof-m3-terrain-<exact-sha>` for broker reuse. Partial diagnostics have different
+names. The receipt distinguishes technical PASS from human visual acceptance,
+which remains PENDING until the owner accepts the images.
+
+This change does not claim prepared-DTM cache, single-Editor A-E/C3 execution or
+unified full-world compile reuse. Those are separate measured optimization steps;
+all six standalone captures and current preparation remain intact here.
+
 ### General Unreal STATIC / RUNTIME / COMPILE reuse
 
 The normal code-only Unreal lane now separates binary work from runtime proof:
@@ -166,8 +205,8 @@ performance/source-asset audits, manual recovery tools and broker targets remain
 available.
 
 The two legacy-named Passo Giau author workflows currently marked `UNKNOWN`
-are retained only while active PR #256 owns their disposition. They must become
-branch-independent CURRENT workflows or be retired when that workstream closes.
+remain failed-baseline/recovery evidence after #288. Their final disposition
+follows macro-terrain convergence; they do not regain production authority.
 
 ## Tier 1 — heavy Stage 3G proof at merge-candidate readiness
 
@@ -184,7 +223,7 @@ This means vegetation, material, water, lighting and other world-art iteration c
 
 ## Gumball Proof Broker — explicit heavy proof intent
 
-R4.1 heavyweight proof requests use the trusted Gumball v0.6 Proof Broker
+R4.1 and M3 heavyweight proof requests use the trusted Gumball v0.6 Proof Broker
 instead of routine Actions-UI clicking.
 
 Current configured proof commands:
@@ -192,12 +231,13 @@ Current configured proof commands:
 ```text
 /gumball proof r4-1b3-geometry
 /gumball proof m3-hairpin-corridor
+/gumball proof m3-terrain
 /gumball proof world-authoring-sp638
 /gumball proof environment-performance
 /gumball proof source-asset-audit
 ```
 
-All five are explicit, heavy and non-automatic. Successful exact-revision
+All six are explicit, heavy and non-automatic. Successful exact-revision
 artifacts may be reused; failed runs require explicit `retry`.
 
 The broker runs from trusted default-branch code, authorizes the requester,
@@ -234,8 +274,8 @@ Explicit current exceptions are:
 - `stage3g-forest-target-density-performance.yml` — paired with that live
   dedicated-branch workstream and still has its own automatic branch trigger;
 - `passo-giau-r4-1-landscape-author.yml` and
-  `passo-giau-r4-1-road-author.yml` — disposition remains owned by active
-  PR #256 and is tracked as `UNKNOWN` in workflow lifecycle policy;
+  `passo-giau-r4-1-road-author.yml` — failed-baseline recovery after #288,
+  tracked as `UNKNOWN` until macro-terrain convergence resolves disposition;
 - `manual-unreal.yml`, `runner-space-recovery.yml`, Project bootstrap and
   remote-editor command — administrative/recovery controls, not reusable PR
   evidence.

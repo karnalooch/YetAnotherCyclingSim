@@ -1,4 +1,5 @@
 name: Passo Giau M3 Embark terrain proof
+run-name: M3 terrain ${{ inputs.gumball_request_id || github.ref_name }}
 
 on:
   push:
@@ -11,7 +12,9 @@ on:
       - 'AGENTS.md'
       - '.gitattributes'
       - '.gumball/workflow-lifecycle.json'
+      - '.gumball/proof-broker.json'
       - 'docs/WORLD_BUILDING_BIBLE.md'
+      - 'docs/CI_VALIDATION_TIERS.md'
       - 'docs/ci/WORKFLOW_LIFECYCLE.md'
       - 'docs/legal/DEPENDENCY_PROVENANCE.md'
       - 'worldgen/embark/**'
@@ -29,6 +32,9 @@ on:
       - 'scripts/ci/classify_changes.py'
       - 'scripts/ci/test_classify_changes.py'
       - 'scripts/ci/test_embark_terrain_pipeline_contract.py'
+      - 'scripts/ci/terrain_proof_request.py'
+      - 'scripts/ci/test_terrain_proof_request.py'
+      - 'scripts/ci/test_terrain_proof_routing.py'
       - 'Source/YetAnotherCyclingSimEditor/Private/PCG/YacsPassoGiauPcgExGraphCommandlet.cpp'
       - 'Source/YetAnotherCyclingSimEditor/Private/PCG/YacsPassoGiauSp638PathSettings.cpp'
       - 'Source/YetAnotherCyclingSimEditor/Public/PCG/YacsPassoGiauPcgExGraphCommandlet.h'
@@ -36,13 +42,24 @@ on:
       - 'Source/YetAnotherCyclingSimEditor/YetAnotherCyclingSimEditor.Build.cs'
       - 'YetAnotherCyclingSim.uproject'
   workflow_dispatch:
+    inputs:
+      exact_sha:
+        description: Exact 40-character same-repository HEAD SHA to prove
+        required: true
+        type: string
+      gumball_request_id:
+        description: Deterministic Gumball proof request id (or unique manual recovery id)
+        required: true
+        type: string
 
 permissions:
   contents: read
 
+# Static pushes can replace only static work on the same branch. They cannot
+# cancel an explicit proof, including a proof dispatched from the same ref.
 concurrency:
-  group: passo-giau-m3-embark-terrain-${{ github.repository }}
-  cancel-in-progress: true
+  group: passo-giau-m3-${{ github.repository }}-${{ github.event_name }}-${{ inputs.gumball_request_id || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'push' }}
 
 jobs:
   classify:
@@ -52,10 +69,12 @@ jobs:
     permissions:
       contents: read
     outputs:
+      source_sha: ${{ steps.request.outputs.source_sha }}
+      execute_proof: ${{ steps.request.outputs.execute_proof }}
       proof_mode: ${{ steps.classify.outputs.proof_mode }}
       compile_fingerprint: ${{ steps.classify.outputs.compile_fingerprint }}
     steps:
-      - name: Checkout exact revision for change classification
+      - name: Checkout workflow definition for trusted request admission
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: ${{ github.sha }}
@@ -63,12 +82,35 @@ jobs:
           lfs: false
           persist-credentials: false
 
+      - name: Resolve explicit proof request
+        id: request
+        env:
+          YACS_REQUESTED_SHA: ${{ inputs.exact_sha }}
+          YACS_REQUEST_ID: ${{ inputs.gumball_request_id }}
+        run: python scripts/ci/terrain_proof_request.py --github-output "$GITHUB_OUTPUT"
+
+      - name: Checkout validated same-repository target
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ steps.request.outputs.source_sha }}
+        run: |
+          set -euo pipefail
+          git cat-file -e "$SOURCE_SHA^{commit}"
+          # Only commits reachable from a branch fetched from this repository
+          # are admitted. A fork PR ref is not a trusted same-repository branch.
+          REFS="$(git for-each-ref --contains="$SOURCE_SHA" --format='%(refname)' refs/remotes/origin/)"
+          test -n "$REFS"
+          git checkout --detach "$SOURCE_SHA"
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+
       - name: Resolve comparison base
         id: base
         shell: bash
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
         run: |
           set -euo pipefail
-          BASE="${{ github.event.before }}"
+          BASE="$BEFORE_SHA"
           if [[ -z "$BASE" || "$BASE" =~ ^0+$ ]] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
             BASE="$(git rev-parse HEAD^)"
           fi
@@ -77,24 +119,42 @@ jobs:
       - name: Classify proof mode and compile fingerprint
         id: classify
         shell: bash
+        env:
+          SOURCE_SHA: ${{ steps.request.outputs.source_sha }}
+          BASE_SHA: ${{ steps.base.outputs.base }}
+          EXECUTE_PROOF: ${{ steps.request.outputs.execute_proof }}
         run: |
           set -euo pipefail
-          python scripts/ci/classify_changes.py             --base "${{ steps.base.outputs.base }}"             --head "${{ github.sha }}"             --embark-terrain-proof             --repo-root .             --github-output "$GITHUB_OUTPUT"
+          python scripts/ci/classify_changes.py \
+            --base "$BASE_SHA" --head "$SOURCE_SHA" \
+            --embark-terrain-proof --repo-root . \
+            --github-output "$GITHUB_OUTPUT"
+          # An explicit checkpoint requests the full existing evidence bundle
+          # even when the last commit is documentation-only. Compile reuse is
+          # still resolved independently from this intent.
+          if [[ "$EXECUTE_PROOF" == 'true' ]] && grep -qx 'proof_mode=cheap' "$GITHUB_OUTPUT"; then
+            echo 'proof_mode=render' >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Validate proof routing outputs
         shell: bash
+        env:
+          PROOF_MODE: ${{ steps.classify.outputs.proof_mode }}
+          COMPILE_FINGERPRINT: ${{ steps.classify.outputs.compile_fingerprint }}
+          EXECUTE_PROOF: ${{ steps.request.outputs.execute_proof }}
         run: |
           set -euo pipefail
-          case "${{ steps.classify.outputs.proof_mode }}" in
-            cheap|render|heavy) ;;
-            *) echo "Invalid proof mode: ${{ steps.classify.outputs.proof_mode }}" >&2; exit 1 ;;
-          esac
-          [[ "${{ steps.classify.outputs.compile_fingerprint }}" =~ ^[0-9a-f]{64}$ ]]
-          echo "Embark proof mode: ${{ steps.classify.outputs.proof_mode }}"
-          echo "Compile fingerprint: ${{ steps.classify.outputs.compile_fingerprint }}"
+          case "$PROOF_MODE" in cheap|render|heavy) ;; *) exit 1 ;; esac
+          [[ "$COMPILE_FINGERPRINT" =~ ^[0-9a-f]{64}$ ]]
+          echo "Embark proof mode: $PROOF_MODE"
+          echo "Compile fingerprint: $COMPILE_FINGERPRINT"
+          if [[ "$EXECUTE_PROOF" != 'true' ]]; then
+            echo 'Heavy proof deferred: push runs hosted contracts only; request /gumball proof m3-terrain.'
+          fi
 
   contract:
     name: Embark terrain contract
+    needs: [classify]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -103,25 +163,29 @@ jobs:
       - name: Checkout exact revision without LFS payloads
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ needs.classify.outputs.source_sha }}
           fetch-depth: 1
           lfs: false
           persist-credentials: false
 
       - name: Verify exact SHA
         shell: bash
+        env:
+          SOURCE_SHA: ${{ needs.classify.outputs.source_sha }}
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "${{ github.sha }}"
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
           test -z "$(git status --porcelain --untracked-files=all)"
 
       - name: Validate Embark/PCGEx repository contract
-        run: python -m unittest scripts.ci.test_embark_terrain_pipeline_contract
+        run: |
+          python -m unittest scripts.ci.test_embark_terrain_pipeline_contract
+          python -m unittest scripts.ci.test_terrain_proof_request scripts.ci.test_terrain_proof_routing
 
   prepare:
     name: Prepare real SP638 authoring input
     needs: [contract, classify]
-    if: ${{ needs.classify.outputs.proof_mode != 'cheap' }}
+    if: ${{ needs.classify.outputs.execute_proof == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -130,7 +194,7 @@ jobs:
       - name: Checkout exact revision without LFS payloads
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ needs.classify.outputs.source_sha }}
           fetch-depth: 1
           lfs: false
           persist-credentials: false
@@ -207,7 +271,13 @@ jobs:
   author:
     name: PCGEx corridor graph authoring
     needs: [contract, classify, prepare]
-    if: ${{ needs.classify.outputs.proof_mode != 'cheap' && github.repository == 'karnalooch/YetAnotherCyclingSim' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+    if: ${{ needs.classify.outputs.execute_proof == 'true' && github.repository == 'karnalooch/YetAnotherCyclingSim' && github.event_name == 'workflow_dispatch' }}
+    # This lock protects the persistent worktree across different proof requests.
+    # Keep active work alive and queue other admitted requests instead of killing it.
+    concurrency:
+      group: yacs-pcgex-author-workspace-${{ github.repository }}
+      cancel-in-progress: false
+      queue: max
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 120
     env:
@@ -227,7 +297,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           path: _embark-terrain-worktree
-          ref: ${{ github.sha }}
+          ref: ${{ needs.classify.outputs.source_sha }}
           fetch-depth: 1
           lfs: false
           clean: false
@@ -244,7 +314,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Failed to reset PCGEx authoring checkout.' }
           git clean -ffd
           if ($LASTEXITCODE -ne 0) { throw 'Failed to clean non-ignored PCGEx authoring residue.' }
-          if ((git rev-parse HEAD).Trim() -ne '${{ github.sha }}') {
+          if ((git rev-parse HEAD).Trim() -ne '${{ needs.classify.outputs.source_sha }}') {
             throw 'PCGEx authoring checkout is not exact SHA.'
           }
           git lfs install --local
@@ -282,14 +352,14 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           name: passo-giau-m3-pcgex-input-${{ github.run_id }}
-          path: ${{ runner.temp }}/yacs-pcgex-prepared-road
+          path: ${{ runner.temp }}/yacs-pcgex-prepared-road-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Materialize prepared SP638 input for Unreal authoring
         shell: pwsh
         working-directory: _embark-terrain-worktree
         run: |
           $ErrorActionPreference = 'Stop'
-          $downloadRoot = Join-Path '${{ runner.temp }}' 'yacs-pcgex-prepared-road'
+          $downloadRoot = Join-Path '${{ runner.temp }}' 'yacs-pcgex-prepared-road-${{ github.run_id }}-${{ github.run_attempt }}'
           $source = Get-ChildItem -LiteralPath $downloadRoot -Recurse -File -Filter 'passo_giau_sp638_ue_centerline.json' | Select-Object -First 1
           if (-not $source) { throw 'Prepared SP638 artifact is missing passo_giau_sp638_ue_centerline.json.' }
           $target = Join-Path (Get-Location) 'ExternalAssets/Terrain/PassoGiau/PreparedRoad'
@@ -478,7 +548,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $params = @{
             ExpectedBranch = 'HEAD'
-            ExpectedHead = '${{ github.sha }}'
+            ExpectedHead = '${{ needs.classify.outputs.source_sha }}'
             ArtifactRoot = 'Saved/RuntimeProof/CI/M3/PCGExCorridor'
           }
           if ('${{ steps.compile_cache.outputs.skip_build }}' -eq 'true') {
@@ -495,7 +565,7 @@ jobs:
               schema_version = 2
               compile_fingerprint = '${{ needs.classify.outputs.compile_fingerprint }}'
               environment_identity = '${{ steps.compile_cache.outputs.environment_identity }}'
-              validated_head = '${{ github.sha }}'
+              validated_head = '${{ needs.classify.outputs.source_sha }}'
               pcgex_commit = '39a8f1bdc65b2c4613a1e87b71d93b4576db0a66'
               compile_passed = $true
               compile_kind = '${{ steps.compile_cache.outputs.compile_kind }}'
@@ -528,7 +598,7 @@ jobs:
           foreach ($variant in @('A','B','C','D','E')) {
             ./scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1 `
               -ExpectedBranch 'HEAD' `
-              -ExpectedHead '${{ github.sha }}' `
+              -ExpectedHead '${{ needs.classify.outputs.source_sha }}' `
               -ArtifactRoot ("Saved/RuntimeProof/CI/M3/PCGExCorridor/Visual/{0}" -f $variant) `
               -PcgExExecutionOutput 'Saved/RuntimeProof/CI/M3/PCGExCorridor/pcgex_graph_output.json' `
               -Variant $variant
@@ -537,7 +607,7 @@ jobs:
 
           ./scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1 `
             -ExpectedBranch 'HEAD' `
-            -ExpectedHead '${{ github.sha }}' `
+            -ExpectedHead '${{ needs.classify.outputs.source_sha }}' `
             -ArtifactRoot 'Saved/RuntimeProof/CI/M3/PCGExCorridor/Visual/C3' `
             -PcgExExecutionOutput 'Saved/RuntimeProof/CI/M3/PCGExCorridor/pcgex_graph_output.json' `
             -NativeDtmPatchMetadata 'ExternalAssets/Terrain/PassoGiau/PreparedNearField/passo_giau_native_dtm_patch.json' `
@@ -573,11 +643,10 @@ jobs:
             throw 'PCGEx authoring worktree has non-ignored mutations after cleanup.'
           }
 
-
   validate:
     name: PCGEx corridor deviation report
     needs: [classify, prepare, author]
-    if: ${{ needs.classify.outputs.proof_mode != 'cheap' }}
+    if: ${{ needs.classify.outputs.execute_proof == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -586,7 +655,7 @@ jobs:
       - name: Checkout exact revision without LFS payloads
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ needs.classify.outputs.source_sha }}
           fetch-depth: 1
           lfs: false
           persist-credentials: false
@@ -632,5 +701,44 @@ jobs:
         with:
           name: passo-giau-m3-pcgex-deviation-${{ github.run_id }}-${{ github.run_attempt }}
           path: Saved/RuntimeProof/CI/M3/PCGExCorridor/pcgex_corridor_deviation.json
+          if-no-files-found: error
+          retention-days: 14
+
+      # Only the completed author+render+deviation chain can produce the name
+      # recognized by the broker. Diagnostic uploads above are not reusable PASS.
+      - name: Record successful exact-SHA technical proof receipt
+        env:
+          SOURCE_SHA: ${{ needs.classify.outputs.source_sha }}
+          REQUEST_ID: ${{ inputs.gumball_request_id }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          receipt = {
+              "schema_version": 1,
+              "proof": "m3-terrain",
+              "exact_sha": os.environ["SOURCE_SHA"],
+              "request_id": os.environ["REQUEST_ID"],
+              "workflow_sha": os.environ["GITHUB_SHA"],
+              "run_id": os.environ["GITHUB_RUN_ID"],
+              "run_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
+              "technical_status": "PASS",
+              "human_visual_status": "PENDING",
+          }
+          root = Path(os.environ["RUNNER_TEMP"]) / "yacs-pcgex-execution"
+          root.joinpath("proof-receipt.json").write_text(
+              json.dumps(receipt, indent=2) + "\n", encoding="utf-8"
+          )
+          PY
+
+      - name: Upload reusable successful M3 terrain evidence
+        if: ${{ success() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: proof-m3-terrain-${{ needs.classify.outputs.source_sha }}
+          path: |
+            ${{ runner.temp }}/yacs-pcgex-execution/**
+            Saved/RuntimeProof/CI/M3/PCGExCorridor/pcgex_corridor_deviation.json
           if-no-files-found: error
           retention-days: 14

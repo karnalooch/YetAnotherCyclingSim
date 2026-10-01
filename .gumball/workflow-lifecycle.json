@@ -38,8 +38,8 @@
     },
     {
       "file": "passo-giau-embark-terrain.yml",
-      "state": "CURRENT",
-      "reason": "Current fail-closed exact-SHA PCGEx-first terrain/corridor proof for post-#288 M3 terrain recovery; #288 established the bounded substitution baseline and Houdini/Gaea remain optional escalation evidence, not current prerequisites."
+      "state": "BROKER-MANAGED",
+      "reason": "Explicit exact-SHA PCGEx-first M3 terrain/corridor proof; pushes run hosted contracts only, Gumball m3-terrain requests the full existing evidence bundle, and non-cancelling author concurrency protects the persistent compile-cache worktree. Houdini/Gaea are not required."
     },
     {
       "file": "passo-giau-r4-1-hairpin-corridor.yml",

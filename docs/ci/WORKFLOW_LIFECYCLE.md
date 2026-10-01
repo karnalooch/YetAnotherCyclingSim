@@ -37,7 +37,7 @@ endpoint is forbidden outside an explicit test fixture.
 | `branch-hygiene.yml` | CURRENT | Stronger YACS-local merged-branch cleanup |
 | `ci.yml` | CURRENT | Primary CI graph and caller-local Aggregate gate |
 | `manual-unreal.yml` | CURRENT | Trusted manual Unreal validation/recovery |
-| `passo-giau-embark-terrain.yml` | CURRENT | Fail-closed exact-SHA PCGEx-first terrain/corridor proof for post-#288 M3 terrain recovery; #288 established the bounded substitution baseline and Houdini/Gaea remain optional escalation evidence |
+| `passo-giau-embark-terrain.yml` | BROKER-MANAGED | PCGEx-first M3 terrain/corridor proof via `m3-terrain`; scoped pushes run hosted contracts only, explicit requests run exact-SHA A-E/C3 plus deviation, and author jobs serialize without cancelling active work |
 | `passo-giau-r4-1-hairpin-corridor.yml` | BROKER-MANAGED | Exact-SHA SP638 hairpin proof; manual dispatch is fallback |
 | `passo-giau-r4-1-landscape-author.yml` | UNKNOWN | Failed direct-DTM/native Landscape baseline retained as recovery evidence after #288 while macro-terrain convergence continues |
 | `passo-giau-r4-1-road-author.yml` | UNKNOWN | Legacy SP638 native-authoring recovery evidence retained after #288 while macro-terrain convergence continues |
@@ -103,13 +103,17 @@ The surviving Actions surface is intentionally grouped:
    Repository Ops, branch hygiene and PR orchestration.
 3. **Explicit recovery/probes:** manual Unreal, Windows probe, runner-space
    recovery, Project bootstrap and remote-editor command.
-4. **Current M3 road/world proof:** the bounded Embark-pattern PCGEx corridor graph
-   proof, SP638 alignment, plus broker-managed geometry, hairpin and World Authoring
-   Library SP638 proofs. Houdini/Gaea remain an optional escalation when the bounded
-   PCGEx proof demonstrates a gap.
+4. **Current M3 road/world proof:** broker-managed PCGEx terrain/corridor,
+   geometry, hairpin and World Authoring Library SP638 proofs plus SP638 alignment.
+   Houdini/Gaea are not prerequisites of the PCGEx-first baseline.
 5. **Current environment evidence:** target-density forest plus broker-managed
    source-asset audit and environment performance.
 6. **Delivery/notification:** full asset validation, Scorecard and Slack.
 
 A branch-specific experiment workflow should not survive merely because its
 historical branch name still explains where it came from.
+
+M3 admission, exact-target handling, separate static/proof concurrency and the
+non-cancelling author-worktree lock are specified in
+[`../CI_VALIDATION_TIERS.md`](../CI_VALIDATION_TIERS.md). Broker reuse requires
+successful technical evidence and never implies human visual acceptance.
