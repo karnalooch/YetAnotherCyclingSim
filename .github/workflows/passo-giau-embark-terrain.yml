@@ -627,10 +627,37 @@ jobs:
               -NativeDtmPatchMetadata 'ExternalAssets/Terrain/PassoGiau/PreparedNearField/passo_giau_native_dtm_patch.json' `
               -Variant H
             if ($LASTEXITCODE -ne 0) { throw 'Optional native-DTM constrained H candidate failed.' }
+
+            if (Test-Path -LiteralPath './scripts/ue/ride_probe_capture.py' -PathType Leaf) {
+              ./scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1 `
+                -ExpectedBranch 'HEAD' `
+                -ExpectedHead '${{ needs.classify.outputs.source_sha }}' `
+                -ArtifactRoot 'Saved/RuntimeProof/CI/M3/PCGExCorridor/TraversalH' `
+                -PcgExExecutionOutput 'Saved/RuntimeProof/CI/M3/PCGExCorridor/pcgex_graph_output.json' `
+                -NativeDtmPatchMetadata 'ExternalAssets/Terrain/PassoGiau/PreparedNearField/passo_giau_native_dtm_patch.json' `
+                -Variant H `
+                -RideProbeMode focus `
+                -RideProbeCenterM '15460' `
+                -RideProbeWide
+              if ($LASTEXITCODE -ne 0) { throw 'Optional H focus/wide traversal failed.' }
+            }
+            else {
+              Write-Host 'Target SHA has H but no ride-probe capture capability; skipping H focus/wide traversal.'
+            }
           }
           else {
             Write-Host 'Target SHA does not expose diagnostic variant H; skipping optional H candidate.'
           }
+
+      - name: Upload compact H focus-wide traversal evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: passo-giau-m3-h-focus-wide-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            _embark-terrain-worktree/Saved/RuntimeProof/CI/M3/PCGExCorridor/TraversalH/**
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Upload compact H candidate evidence
         if: ${{ always() }}
