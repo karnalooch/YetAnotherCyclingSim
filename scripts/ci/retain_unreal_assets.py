@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 
 
@@ -28,9 +29,25 @@ def retain(workspace: Path, archive: Path) -> dict:
     content = workspace / "Content"
     if content.is_symlink():
         raise ValueError("Content cannot be a symbolic link")
-    for source in sorted(content.rglob("*")) if content.exists() else []:
-        if source.suffix.lower() not in {".umap", ".uasset"}:
-            continue
+    sources = (
+        {
+            path
+            for path in content.rglob("*")
+            if path.suffix.lower() in {".umap", ".uasset"}
+        }
+        if content.exists()
+        else set()
+    )
+    if (workspace / ".git").exists():
+        tracked = subprocess.run(
+            ["git", "lfs", "ls-files", "--name-only"],
+            cwd=workspace,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        sources.update(workspace / name for name in tracked.stdout.splitlines() if name)
+    for source in sorted(sources):
         if source.is_symlink() or not source.resolve().is_relative_to(workspace):
             raise ValueError(f"Asset escapes workspace: {source}")
         if not source.is_file():
