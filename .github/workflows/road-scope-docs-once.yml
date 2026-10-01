@@ -1,0 +1,198 @@
+name: Prepare approved road-scope documentation once
+
+on:
+  push:
+    branches: [docs/295-full-area-road-network]
+    paths: [.github/workflows/road-scope-docs-once.yml]
+
+permissions: {}
+
+concurrency:
+  group: yacs-docs-295
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.ref == 'refs/heads/docs/295-full-area-road-network' && github.actor == 'karnalooch' && github.triggering_actor == 'karnalooch' && github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout exact owner-authored preparation revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+          lfs: false
+          persist-credentials: false
+        env:
+          GIT_LFS_SKIP_SMUDGE: '1'
+      - name: Update only three scope documents and remove this temporary workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          import subprocess
+          import urllib.error
+          import urllib.request
+          from pathlib import Path
+          from scripts.ci.check_docs_index import local_targets, read_utf8
+
+          repo = 'karnalooch/YetAnotherCyclingSim'
+          branch = 'docs/295-full-area-road-network'
+          base = 'b5a659b7fef730800b847178e2d5b71a49b03217'
+          temporary = '.github/workflows/road-scope-docs-once.yml'
+          head = os.environ['GITHUB_SHA']
+          expected = {
+              'GITHUB_REPOSITORY': repo,
+              'GITHUB_REF': 'refs/heads/' + branch,
+              'GITHUB_EVENT_NAME': 'push',
+              'GITHUB_ACTOR': 'karnalooch',
+              'GITHUB_TRIGGERING_ACTOR': 'karnalooch',
+          }
+          if any(os.environ.get(k) != v for k, v in expected.items()):
+              raise SystemExit('Unexpected caller; no documentation write allowed')
+
+          def git(*args):
+              return subprocess.check_output(['git', *args], text=True).strip()
+
+          if git('rev-parse', 'HEAD') != head or git('rev-parse', 'HEAD^') != base:
+              raise SystemExit('Preparation source revision drifted')
+          if git('diff', '--name-only', base, head).splitlines() != [temporary]:
+              raise SystemExit('Preparation must differ from the reviewed base only by this helper')
+
+          def replace_once(text, old, new):
+              if text.count(old) != 1:
+                  raise SystemExit('Documentation anchor absent or ambiguous: ' + old[:100])
+              return text.replace(old, new, 1)
+
+          product = Path('docs/PRODUCT_REQUIREMENTS.md')
+          text = product.read_text(encoding='utf-8')
+          text = replace_once(text,
+              'Pierwsze pełne MVP umożliwia ukończenie swobodnej jazdy po jednej fikcyjnej trasie inspirowanej Alpami.',
+              'Pierwsze pełne MVP umożliwia ukończenie jazdy od startu do mety po jednej wybranej trasie w rzeczywistym obszarze Passo Giau. Aktualnym odcinkiem referencyjnym prac drogowych jest SP638; kanoniczna trasa i profil fizyczny pozostają odrębnymi źródłami prawdy.')
+          text = replace_once(text, '- być fikcyjna, ale wiarygodna geograficznie;', '- korzystać ze zweryfikowanej rzeczywistej geometrii drogowej obszaru Passo Giau;')
+          text = replace_once(text, '- być inspirowana krajobrazem alpejskim;', '- zachowywać wiarygodny krajobraz alpejski oparty na danych rzeczywistego obszaru;')
+          text = replace_once(text, '- realistyczne odwzorowanie konkretnej prawdziwej trasy;\n', '')
+          product_section = '''### 3.1 Docelowo wszystkie rzeczywiste drogi obszaru
+
+          **Decyzja właściciela z 2026-10-01; zapis wymagań: Issue #295.** Docelowy świat ma odwzorowywać **wszystkie drogi istniejące w rzeczywistości w granicach obszaru Passo Giau objętego projektem**, a nie wyłącznie SP638 lub kilka wybranych tras. SP638 jest pierwszym sprawdzanym wycinkiem, nie docelowym limitem sieci.
+
+          Zakres obejmuje również drogi boczne, lokalne, dojazdowe, serwisowe i nieutwardzone, jeżeli występują w obszarze. Drogi rowerowe i ścieżki należy zachować w inwentaryzacji jako odrębne klasy, nie zamieniać automatycznie w asfalt. Skrzyżowania, odgałęzienia, ślepe zakończenia, mosty i tunele mają zachowywać rzeczywiste połączenia oraz rozdzielenie wysokościowe, gdzie występują.
+
+          Kompletność wymaga jawnej, wersjonowanej granicy obszaru oraz daty i pochodzenia danych. Raport pokrycia ma rozliczać drogi i ich długość według klas, brakujące odcinki, niepewne połączenia i rozbieżności źródeł. Nie wolno ogłaszać pełnej zgodności z rzeczywistością tylko dlatego, że zaimportowano jeden zbiór; braków nie należy ukrywać przez pominięcie danej klasy albo zmniejszenie granicy świata.
+
+          Odwzorowanie drogi w świecie i dopuszczenie jej do aktywnej jazdy to osobne stany. Docelowa sieć nie ma być jedynie dekoracją, ale rozszerzanie jazdy wymaga zweryfikowanych połączeń, profilu fizycznego, nawierzchni i zasad dostępu. Nie każda widoczna droga jest automatycznie dozwolonym odcinkiem rowerowym; nieznane dane pozostają jawnie nieznane.
+
+          Dostawa jest etapowa: najpierw poprawna integracja SP638 z terenem, następnie inwentaryzacja całego obszaru i kontrolowane rozszerzanie sieci. Bieżące MVP zachowuje jedno kompletne przejście od startu do mety. Pełne pokrycie jest zatwierdzonym celem docelowego świata, a nie dodatkowym warunkiem zamknięcia bieżącego PR naprawy makroterenu #294. Harmonogram rozszerzenia wymaga osobnych zadań po zaakceptowaniu fundamentu; ten zapis nie oznacza, że nowe drogi już zaimplementowano.
+
+          Metodologia i kryteria pokrycia: [World Building Bible, sekcja 7.4](WORLD_BUILDING_BIBLE.md#74-full-area-real-road-network-target). Kolejność dostawy: [roadmapa](ROADMAP.md). Road Physics Profile, proweniencja, deterministyczna regeneracja i budżet wydajności nadal obowiązują.
+
+          '''
+          text = replace_once(text, '## 4. Sterowanie MVP\n', product_section + '## 4. Sterowanie MVP\n')
+          product.write_text(text, encoding='utf-8')
+
+          bible = Path('docs/WORLD_BUILDING_BIBLE.md')
+          text = bible.read_text(encoding='utf-8')
+          bible_section = '''### 7.4 Full-area real-road network target
+
+          **Owner-approved destination, 2026-10-01; requirement record: Issue #295.** [Product Requirements section 3.1](PRODUCT_REQUIREMENTS.md#31-docelowo-wszystkie-rzeczywiste-drogi-obszaru) requires every real road within the project's Passo Giau area, not just SP638. SP638 is the first validated producer/consumer slice, not the final world inventory. This section records requirements, not an implemented network subsystem or a new prerequisite for terrain-recovery PR #294.
+
+          Coverage and source evidence must preserve:
+
+          - one explicit, versioned world area of interest, with CRS, boundary and reference data date; do not silently shrink it to a rider corridor or screenshot;
+          - all real road classes where present, including minor/access/service and unpaved roads; retain cycleways and paths as separately classified features rather than silently dropping them or pretending they are asphalt;
+          - source identities, geometry, surface/access evidence and unresolved attributes; retain immutable source packages and complete the existing license/provenance review before importing a new dataset;
+          - actual junction connectivity, dead ends and boundary continuations; a bridge, tunnel or nearby hairpin must not become a junction merely because lines overlap in XY;
+          - a coverage ledger mapping source segments to represented, pending, uncertain or verified-not-a-road states, with counts and length by class and explicit discrepancy review. Pending/missing roads are not completed coverage. A complete import from one dataset alone is not proof that all real roads have been captured.
+
+          World coverage is distinct from playable-route activation. Do not reduce the final network to decorative lines, but activate riding only through the established route/physics contracts and validated topology, surface and access semantics. Roads not suitable or permitted for riding may still require faithful world representation. No presentation mesh, PCGEx output or sampled Landscape becomes simulation authority.
+
+          Reuse the established pinned, authoring-only PCGEx road/corridor path and Epic-native capabilities under the tools-first gate. Embark remains production-pattern evidence, not a claim that Embark uses PCGEx. Neither Houdini nor Gaea is a prerequisite for this target. Prove a second real road and junction through the existing producer -> derived data -> consumer -> regeneration gate before generalizing; do not build a universal schema in anticipation of the full network.
+
+          Expansion must preserve independent alignment, non-destructive Road_Earthworks, route-local handling of vertically separated roads and one rider-close ground owner. An accepted source edit must regenerate only affected road/earthwork/PCG scope and justified dependencies, with source/config fingerprints and unrelated outputs remaining reusable. Full-area coverage does not require full-detail residency everywhere: spatial streaming and quality budgets must preserve visible roads while respecting the measured 1080p/60 target.
+
+          Before claiming the expanded network accepted, require a reviewed full-area coverage ledger and discrepancy resolution, true-junction/grade-separation checks, representative rider-camera proofs (including normal slopes and major earthworks), fresh-load/regeneration evidence and applicable exact-SHA performance proof. A good SP638 hairpin or green build cannot substitute for whole-area coverage.
+
+          '''
+          text = replace_once(text, '\n---\n\n## 8. The road/terrain rule that prevents black wedges', '\n' + bible_section + '---\n\n## 8. The road/terrain rule that prevents black wedges')
+          bible.write_text(text, encoding='utf-8')
+
+          roadmap = Path('docs/ROADMAP.md')
+          text = roadmap.read_text(encoding='utf-8')
+          roadmap_section = '''
+          ### Approved world destination — complete real-road coverage
+
+          Owner decision of 2026-10-01, recorded by Issue #295: the final Passo Giau world must include all roads that actually exist inside the explicit project area, not just SP638 or a few selected rides. [Product Requirements section 3.1](PRODUCT_REQUIREMENTS.md#31-docelowo-wszystkie-rzeczywiste-drogi-obszaru) owns the scope; [World Building Bible section 7.4](WORLD_BUILDING_BIBLE.md#74-full-area-real-road-network-target) owns coverage, topology, provenance and regeneration acceptance.
+
+          This destination is approved but not implemented by its documentation record. Keep the current SP638 terrain/road repair bounded, then inventory the full area and deliver additional roads and junctions through scoped Issues after the relevant M3 foundation is accepted. Plan playable-route activation separately from world coverage without reducing the final network to scenery only. The present MVP still proves one complete ride; this decision does not silently add a new closure gate to #294, start later gameplay systems, or change M0-M10 entry/exit rules. The expansion schedule remains to be assigned after the inventory and foundation proof.
+          '''
+          anchor = 'The current goal is still a complete playable ride from start to finish before broad polish.\n'
+          text = replace_once(text, anchor, anchor + roadmap_section)
+          roadmap.write_text(text, encoding='utf-8')
+
+          paths = [str(product), str(bible), str(roadmap)]
+          if set(git('diff', '--name-only').splitlines()) != set(paths):
+              raise SystemExit('Unexpected changed paths')
+          subprocess.run(['git', 'diff', '--check'], check=True)
+          subprocess.run(['python3', 'scripts/ci/check_docs_index.py'], check=True)
+          for path in (product, bible, roadmap):
+              content = read_utf8(path)
+              missing = [str(p) for p in local_targets(path, content) if not p.exists()]
+              if missing:
+                  raise SystemExit('Broken local document links: ' + ', '.join(missing))
+              if 'Issue #295' not in content:
+                  raise SystemExit('Missing decision provenance: ' + str(path))
+          for phrase in ('jednej fikcyjnej trasie', '- być fikcyjna, ale wiarygodna geograficznie;', '- realistyczne odwzorowanie konkretnej prawdziwej trasy;'):
+              if phrase in product.read_text(encoding='utf-8'):
+                  raise SystemExit('Stale fictional-route scope remains')
+          if '### 7.4 Full-area real-road network target' not in bible.read_text(encoding='utf-8'):
+              raise SystemExit('Missing road-network methodology')
+          print('Changed-document UTF-8, local links, decision provenance and scope consistency: PASS')
+          print(git('diff', '--stat'))
+
+          def api(path, method='GET', body=None):
+              request = urllib.request.Request(
+                  'https://api.github.com/repos/' + repo + path,
+                  data=None if body is None else json.dumps(body).encode('utf-8'),
+                  method=method,
+                  headers={
+                      'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+                      'Accept': 'application/vnd.github+json',
+                      'Content-Type': 'application/json',
+                      'X-GitHub-Api-Version': '2022-11-28',
+                  },
+              )
+              try:
+                  with urllib.request.urlopen(request, timeout=30) as response:
+                      raw = response.read()
+                      return json.loads(raw) if raw else {}
+              except urllib.error.HTTPError as exc:
+                  raise SystemExit(f'Documentation API {method} {path}: HTTP {exc.code}') from None
+
+          current = api('/git/ref/heads/' + branch)
+          if current['object']['sha'] != head:
+              raise SystemExit('Remote branch moved; refusing to overwrite work')
+          commit = api('/git/commits/' + head)
+          entries = [{'path': p, 'mode': '100644', 'type': 'blob', 'content': Path(p).read_text(encoding='utf-8')} for p in paths]
+          entries.append({'path': temporary, 'mode': '100644', 'type': 'blob', 'sha': None})
+          tree = api('/git/trees', 'POST', {'base_tree': commit['tree']['sha'], 'tree': entries})
+          result = api('/git/commits', 'POST', {
+              'message': 'docs(world): define full-area real-road coverage target',
+              'tree': tree['sha'], 'parents': [head],
+          })
+          api('/git/refs/heads/' + branch, 'PATCH', {'sha': result['sha'], 'force': False})
+          print('DOCS_COMMIT=' + result['sha'])
+          print('TEMPORARY_WORKFLOW_REMOVED=' + temporary)
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as summary:
+              summary.write('## Full-area road requirement recorded\n\n')
+              summary.write('Commit: `' + result['sha'] + '`\n\n')
+              summary.write('Documentation guards: links PASS; i18n PASS; structure PASS; freshness PASS.\n\n')
+              summary.write('Changed-document link/UTF-8/scope checks and git diff --check: PASS.\n\n')
+              summary.write('Three Markdown documents only; temporary helper removed from final tree. No Unreal or terrain proof run.\n')
+          PY
