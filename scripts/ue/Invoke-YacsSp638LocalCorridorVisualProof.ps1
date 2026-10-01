@@ -399,6 +399,18 @@ if ($ExpectedLocal) {
             if ([double]$Proof.local_terrain_skin.constraint_max_abs_adjustment_m -gt 6.0) {
                 throw "Variant H terrain adjustment exceeded the bounded proof guard: $($Proof.local_terrain_skin.constraint_max_abs_adjustment_m) m"
             }
+            if ([bool]$Proof.local_terrain_skin.shoulders_capped_to_road_edge_height -ne $true) {
+                throw 'Variant H did not keep the ground shoulder below the asphalt-edge ground height.'
+            }
+            if ([double]$Proof.local_terrain_skin.shoulder_constraint_weight -ne 1.0) {
+                throw 'Variant H shoulder clearance apron is not fully constrained.'
+            }
+            if ([double]$Proof.local_terrain_skin.left_clearance_apron_m -lt 0.9 -or [double]$Proof.local_terrain_skin.right_clearance_apron_m -lt 0.9) {
+                throw 'Variant H asphalt-edge clearance apron is unexpectedly narrow.'
+            }
+            if ([double]$Proof.local_terrain_skin.asphalt_vertical_clearance_m -lt 0.05) {
+                throw "Variant H asphalt vertical clearance is too small: $($Proof.local_terrain_skin.asphalt_vertical_clearance_m) m"
+            }
         }
     } else {
         if ([double]$Proof.local_terrain_skin.grid_step_m -gt 4.01) {
