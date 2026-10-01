@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "file": "sa_calobra_8x8km_mdt50cm_epsg25831.tif",
+  "sha256": "6092a48a949b7b7e8ccf120cb46d59cfd7fdd3522085e8a55162fd52fe5a139a",
+  "size_bytes": 389039616,
+  "area": "Sa Calobra and Coll de Cal Reis, Mallorca",
+  "output": {
+    "width": 16000,
+    "height": 16000,
+    "count": 1,
+    "dtype": "float32",
+    "crs": "EPSG:25831",
+    "resolution_m": [
+      0.5,
+      0.5
+    ],
+    "bounds_epsg25831": [
+      479650.0,
+      4405899.5,
+      487650.0,
+      4413899.5
+    ],
+    "nodata": -32767.0,
+    "compression": "zstd",
+    "statistics": {
+      "valid_pixel_count": 249818980,
+      "valid_percent": 97.5855390625,
+      "elevation_min_m": -1.2999999523162842,
+      "elevation_max_m": 1437.158203125,
+      "elevation_mean_m": 429.34504837888784
+    },
+    "benchmark_elevations_m": {
+      "Port de sa Calobra": 15.0600004196167,
+      "Coll de Cal Reis": 724.1900024414062
+    }
+  },
+  "center_epsg25831": [
+    483650.0,
+    4409899.5
+  ],
+  "benchmark_points_epsg4258": {
+    "Port de sa Calobra": [
+      2.799688121,
+      39.85037817
+    ],
+    "Coll de Cal Reis": [
+      2.81811561100005,
+      39.8275145580001
+    ]
+  },
+  "inputs": [
+    {
+      "name": "MDT50CM-ETRS89-H31-0643-7-8-COB3-V1.tif",
+      "size_bytes": 37499279,
+      "sha256": "76551315e06902fe9902148049cd411f9bc97614f43b8cdc06378429dfb53acc"
+    },
+    {
+      "name": "MDT50CM-ETRS89-H31-0643-8-7-COB3-V1.tif",
+      "size_bytes": 25586926,
+      "sha256": "fc746a8792ca7b1ca31eaf29235670b1a1932df22bb71f03be6dfe1f0c0c29cc"
+    },
+    {
+      "name": "MDT50CM-ETRS89-H31-0643-8-8-COB3-V1.tif",
+      "size_bytes": 114852248,
+      "sha256": "5c5bdf7b005070ab9866df2d1dd564629bfb600506ea49d74daa0ac4608bc105"
+    },
+    {
+      "name": "MDT50CM-ETRS89-H31-0644-1-6-COB3-V1.tif",
+      "size_bytes": 2068529,
+      "sha256": "cc965d0cc2ac487e5f7d6b152cbb35c616bf8be5e1294f0127873699763b0c9e"
+    },
+    {
+      "name": "MDT50CM-ETRS89-H31-0644-1-7-COB3-V1.tif",
+      "size_bytes": 71681708,
+      "sha256": "fa885bd6ff052f8419cd6512933bbd9e2730f308a4b96ec7ba4a7493bf731136"
+    },
+    {
+      "name": "MDT50CM-ETRS89-H31-0644-1-8-COB3-V1.tif",
+      "size_bytes": 117496115,
+      "sha256": "aac08bad7d10938a9789cb59f0a7f2ec196984f1f1a534bc55539e142607fe3a"
+    },
+    {
+      "name": "MDT50CM-ETRS89-H31-0644-2-6-COB3-V1.tif",
+      "size_bytes": 56839976,
+      "sha256": "70cce352e7158988b498606359a32408fdc9f6fb665e3d64c5b8f5b0ca20e2e5"
+    },
+    {
+      "name": "MDT50CM-ETRS89-H31-0644-2-7-COB3-V1.tif",
+      "size_bytes": 115320376,
+      "sha256": "ffaaca25b3463ef9a813c7865b418b56e1e7534381447b1e554bcfed66820e7d"
+    },
+    {
+      "name": "MDT50CM-ETRS89-H31-0644-2-8-COB3-V1.tif",
+      "size_bytes": 103568495,
+      "sha256": "52f8cf6f38a0a91aa33b7d20fdcb0c8bc15b65162bc49099276b8912f7f47d2e"
+    },
+    {
+      "name": "MDT50CM-ETRS89-H31-0670-7-1-COB3-V1.tif",
+      "size_bytes": 110225444,
+      "sha256": "5b12b247f159b8c109693455640fcb44a393e5475caea7269e1cad745048917f"
+    },
+    {
+      "name": "MDT50CM-ETRS89-H31-0670-7-2-COB3-V1.tif",
+      "size_bytes": 112302996,
+      "sha256": "00447e5681cbe7d59833baf4a65fc900a3bd294687debfc8bc30ec9f5653ad4b"
+    },
+    {
+      "name": "MDT50CM-ETRS89-H31-0670-8-1-COB3-V1.tif",
+      "size_bytes": 114913540,
+      "sha256": "e4f8d3cfd4c3af3bd5d88a0934325de3316e387e2ee8b71fb6ed6c8a704a0d57"
+    },
+    {
+      "name": "MDT50CM-ETRS89-H31-0670-8-2-COB3-V1.tif",
+      "size_bytes": 115047131,
+      "sha256": "211e4e18ae6b6a60f24f6d922b605e4d72ca15be5f32c9c174226992ebe22528"
+    },
+    {
+      "name": "MDT50CM-ETRS89-H31-0671-1-1-COB3-V1.tif",
+      "size_bytes": 112026604,
+      "sha256": "6b10f6fac934139712848474d2b06d6c1556acc46a5504406871a754028846b0"
+    },
+    {
+      "name": "MDT50CM-ETRS89-H31-0671-1-2-COB3-V1.tif",
+      "size_bytes": 110724573,
+      "sha256": "ff463c7b6d4b77330690fab18f6cdff894cdcd4ab3ee6fe49deef98dd33b316e"
+    },
+    {
+      "name": "MDT50CM-ETRS89-H31-0671-2-1-COB3-V1.tif",
+      "size_bytes": 105141698,
+      "sha256": "db80d05275630e0646584a57f30c0d0f141a4778c7ae1151b369034c0a2ee413"
+    },
+    {
+      "name": "MDT50CM-ETRS89-H31-0671-2-2-COB3-V1.tif",
+      "size_bytes": 114019379,
+      "sha256": "15c952d11d7a508ee7549876df844cc29261a716e66e1315615a5c1d29835849"
+    }
+  ],
+  "source": {
+    "provider": "CNIG/IGN",
+    "product": "MDT50 cm - 3rd coverage (2022-2025), v1",
+    "product_url": "https://centrodedescargas.cnig.es/CentroDescargas/modelo-digital-terreno-mdt50cm",
+    "retrieved_utc_date": "2026-10-01",
+    "source_crs": "EPSG:3043 (ETRS89 / UTM zone 31N, formal N-E axes)"
+  },
+  "license": {
+    "name": "CNIG general-use license compatible with CC BY 4.0",
+    "url": "https://www.scne.es/",
+    "attribution": "Obra derivada de MDT50cm-cob3 2022-2025 CC-BY 4.0 scne.es"
+  },
+  "tools": {
+    "rasterio": "1.5.2",
+    "gdal": "3.12.2",
+    "pyproj": "3.8.0"
+  }
+}

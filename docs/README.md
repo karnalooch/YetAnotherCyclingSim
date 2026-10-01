@@ -67,9 +67,9 @@ flowchart TB
 | World method | **World Building Bible is authoritative** |
 | Architecture policy | **Embark-first tooling admission + tools-first + evidence ladder + local proof** |
 | Diagram language | **Gumball Blueprint Mermaid style** |
-| Current priority | **freeze proven SP638/PCGEx road path; recover macro/near-field terrain surface ownership** |
-| Terrain source | **canonical real DTM path; presentation remains separate from physics truth** |
-| Road authority | **canonical route / SP638 alignment; do not snap to Landscape grid** |
+| Current priority | **import and validate the Sa Calobra 0.5 m DTM baseline, then prove the Ma-2141 road corridor** |
+| Terrain source | **CNIG/IGN MDT50cm Sa Calobra 8 km × 8 km benchmark; UE import acceptance pending** |
+| Road authority | **verified Ma-2141 alignment; do not snap canonical road XY to the Landscape grid** |
 | Acceptance | **rider-camera visual review + exact-SHA technical/performance evidence** |
 | Next product milestone | **M4 Cornering**, after M3 closes |
 

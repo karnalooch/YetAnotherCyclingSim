@@ -52,9 +52,9 @@ The current goal is still a complete playable ride from start to finish before b
 
 ### Approved world destination — complete real-road coverage
 
-Owner decision of 2026-10-01, recorded by Issue #295: the final Passo Giau world must include all roads that actually exist inside the explicit project area, not just SP638 or a few selected rides. [Product Requirements section 3.1](PRODUCT_REQUIREMENTS.md#31-docelowo-wszystkie-rzeczywiste-drogi-obszaru) owns the scope; [World Building Bible section 7.4](WORLD_BUILDING_BIBLE.md#74-full-area-real-road-network-target) owns coverage, topology, provenance and regeneration acceptance.
+Owner decision of 2026-10-01, with the active terrain benchmark recorded by Issue #312: the final Sa Calobra world must include all roads that actually exist inside the explicit project area, not just Ma-2141 or a few selected rides. [Product Requirements section 3.1](PRODUCT_REQUIREMENTS.md#31-docelowo-wszystkie-rzeczywiste-drogi-obszaru) owns the scope; [World Building Bible section 7.4](WORLD_BUILDING_BIBLE.md#74-full-area-real-road-network-target) owns coverage, topology, provenance and regeneration acceptance.
 
-This destination is approved but not implemented by its documentation record. Keep the current SP638 terrain/road repair bounded, then inventory the full area and deliver additional roads and junctions through scoped Issues after the relevant M3 foundation is accepted. Plan playable-route activation separately from world coverage without reducing the final network to scenery only. The present MVP still proves one complete ride; this decision does not silently add a new closure gate to #294, start later gameplay systems, or change M0-M10 entry/exit rules. The expansion schedule remains to be assigned after the inventory and foundation proof.
+This destination is approved but not implemented by its documentation record. First import and validate the Sa Calobra MDT50cm terrain, then prove the Ma-2141 corridor before delivering additional roads and junctions through scoped Issues. Plan playable-route activation separately from world coverage without reducing the final network to scenery only. The present MVP still proves one complete ride; this decision does not start later gameplay systems or change M0-M10 entry/exit rules. The expansion schedule remains to be assigned after the inventory and foundation proof.
 
 The owner also approved mixed asphalt/gravel riding (Issue #297; Product Requirements section 3.2). The existing reference model may receive an independent synthetic support proof now; this does not activate roads, calibrate gravel physics or complete a future gameplay milestone. After the terrain/road foundation and source inventory are accepted, select a real mixed-route checkpoint before expanding activation. A fixed mixed itinerary is sufficient initially; free junction navigation remains a separate feature.
 
@@ -64,7 +64,7 @@ The owner also approved mixed asphalt/gravel riding (Issue #297; Product Require
 
 ### Goal
 
-Produce a believable, deterministic Passo Giau route/world foundation that can support the later gameplay milestones without rebuilding the terrain and road architecture again.
+Produce a believable, deterministic Sa Calobra route/world foundation that can support the later gameplay milestones without rebuilding the terrain and road architecture again.
 
 ### Named workstreams
 
@@ -72,9 +72,9 @@ Produce a believable, deterministic Passo Giau route/world foundation that can s
 |---|---|---|
 | **Route truth** | canonical route XY, distance, grade, curvature and road-physics profile | established; remains authoritative |
 | **Terrain** | real DTM -> metric deterministic Landscape foundation | active / proven source path; architecture being consolidated |
-| **Road & Earthworks** | real SP638 alignment, road mesh, non-destructive cut/fill, shoulder tie-in | **current priority** |
+| **Road & Earthworks** | real Ma-2141 alignment, road mesh, non-destructive cut/fill, shoulder tie-in | **current priority after DTM import** |
 | **Materials** | coherent terrain/road surface foundation | baseline exists; refine after geometry |
-| **Biomes** | valley / forest / high-Alpine PCG and route exclusion | baseline exists; preserve and refine |
+| **Biomes** | valley / forest / exposed limestone-upland PCG and route exclusion | baseline systems exist; preserve the tooling and retune presentation for Mallorca |
 | **Proof** | rider-camera visual acceptance, exact-SHA technical evidence, performance | active |
 | **Tooling** | reproducible authoring, remote editor, CI/proof orchestration | active support work |
 
@@ -82,7 +82,7 @@ Produce a believable, deterministic Passo Giau route/world foundation that can s
 
 1. Put the production Landscape on the `WORLD_BUILDING_BIBLE.md` layer model.
 2. Preserve the canonical DTM as `Base_DTM`.
-3. Use real SP638 alignment as the road presentation source.
+3. Use real Ma-2141 alignment as the road presentation source.
 4. Author road cut/fill on a non-destructive `Road_Earthworks` layer or equivalent reproducible path.
 5. Generate the final road mesh independently from the Landscape vertex grid.
 6. Add dedicated cliff/retaining geometry where a heightfield is the wrong representation.
@@ -100,7 +100,7 @@ M3 is complete when:
 - road alignment is real-data-first;
 - road/terrain integration no longer depends on fragile exact seams;
 - the Landscape workflow is non-destructive and reproducible;
-- valley / forest / high-Alpine world foundation remains usable;
+- valley / forest / exposed limestone-upland world foundation remains usable;
 - rider-camera proof has no obvious grid, floating-road, black-wedge or major intersection failures;
 - required exact-SHA Unreal proof passes;
 - the relevant 1080p/60 performance budget passes on the reference PC;
@@ -108,7 +108,7 @@ M3 is complete when:
 
 ### Legacy prototype-world retirement gate
 
-`AStage3PrototypeTerrainActor` / the HISM-heavy prototype world is frozen as a regression scaffold during M3. No new world feature may target it. After the real Landscape/SP638/PCG path satisfies the M3 exit proof with equivalent fresh-load, rider-camera, performance and exact-SHA coverage, the legacy actor/path may be removed in a bounded housekeeping PR without preserving it as a second production architecture.
+`AStage3PrototypeTerrainActor` / the HISM-heavy prototype world is frozen as a regression scaffold during M3. No new world feature may target it. After the real Landscape/Ma-2141/PCG path satisfies the M3 exit proof with equivalent fresh-load, rider-camera, performance and exact-SHA coverage, the legacy actor/path may be removed in a bounded housekeeping PR without preserving it as a second production architecture.
 
 ---
 
@@ -170,7 +170,7 @@ Rider visual animation remains presentation; simulation physics stays determinis
 
 ### Goal
 
-Turn the technically correct M3 world foundation into a coherent, lived-in Alpine route.
+Turn the technically correct M3 world foundation into a coherent, lived-in Serra de Tramuntana route.
 
 ### Required outcome
 
