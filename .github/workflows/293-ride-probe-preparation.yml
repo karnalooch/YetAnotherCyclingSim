@@ -1,0 +1,150 @@
+name: Issue 293 bounded ride-probe preparation
+on:
+  push:
+    branches: [ci/293-source-inspection]
+    paths: ['.github/workflows/293-ride-probe-preparation.yml']
+permissions: {}
+concurrency:
+  group: issue-293-ride-probe-preparation
+  cancel-in-progress: false
+jobs:
+  prepare:
+    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.ref == 'refs/heads/ci/293-source-inspection' && github.actor == 'karnalooch' && github.triggering_actor == 'karnalooch' && github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: e330aa97608a61a0965b23a0cd1f0799c6ab61e3
+          lfs: false
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.14'
+      - run: python -m pip install --disable-pip-version-check ruff==0.16.8 Pillow==11.3.0
+      - name: Apply immutable candidate with exact source and output checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import base64, hashlib, json, lzma, os, subprocess, urllib.request
+          from pathlib import Path
+          BASE = 'e330aa97608a61a0965b23a0cd1f0799c6ab61e3'
+          REPO = 'karnalooch/YetAnotherCyclingSim'
+          PARTS = ['1641e5b73357ac8269d3436b50b5c346b403f4ce', '3731f296b5bf165f472bb3237fb149bcc8254478', 'ece946021813f31000a56419f91890cf8f1da442', '56e4e93073f974660c3a9ada1ca1be8d852757b6', '5591bc6df5e9c784a43bc9cf08679ec25993fb61', 'f6ef2145e7adaaa98e525b7814250f288528ac60']
+          def blob(data):
+              return hashlib.sha1(f'blob {len(data)}\0'.encode() + data).hexdigest()
+          def read(path):
+              request = urllib.request.Request('https://api.github.com/repos/' + REPO + path, headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json'})
+              with urllib.request.urlopen(request, timeout=40) as response:
+                  return json.load(response)
+          if subprocess.check_output(['git','rev-parse','HEAD'], text=True).strip() != BASE:
+              raise SystemExit('Unexpected checked-out source')
+          if read('/git/ref/heads/fix/293-macro-landscape')['object']['sha'] != BASE:
+              raise SystemExit('PR head moved; refuse stale preparation')
+          parts = []
+          for sha in PARTS:
+              data = base64.b64decode(read('/git/blobs/' + sha)['content'], validate=False)
+              if blob(data) != sha:
+                  raise SystemExit('Candidate part digest mismatch')
+              parts.append(data)
+          compressed = b''.join(parts)
+          if blob(compressed) != 'b0a33a998c611a54281a8c86488d80a595017a47':
+              raise SystemExit('Candidate package digest mismatch')
+          plan = json.loads(lzma.decompress(compressed, memlimit=200000000))
+          allowed = {'scripts/proof/ride_probe.py','scripts/proof/package_ride_probe.py','scripts/ue/ride_probe_capture.py','scripts/ci/test_ride_probe.py','.gumball/candidates/bounded-scout-focus-proof.json','scripts/ue/stage3g_capture_sp638_local_corridor.py','scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1','.github/workflows/passo-giau-embark-terrain.yml','.github/workflows/reusable-python.yml','scripts/ci/test_terrain_proof_routing.py','scripts/ci/classify_changes.py','docs/CI_VALIDATION_TIERS.md','docs/WORLD_BUILDING_BIBLE.md','docs/legal/DEPENDENCY_PROVENANCE.md'}
+          if plan['base'] != BASE or len(plan['files']) != len(allowed) or {item['path'] for item in plan['files']} != allowed:
+              raise SystemExit('Unexpected candidate scope')
+          for item in plan['files']:
+              path = Path(item['path'])
+              if item['before'] is None:
+                  if path.exists(): raise SystemExit('New path already exists: ' + str(path))
+              elif blob(path.read_bytes()) != item['before']:
+                  raise SystemExit('Source blob mismatch: ' + str(path))
+          patch = Path(os.environ['RUNNER_TEMP'], 'ride-probe.patch')
+          patch.write_text(plan['patch'], encoding='utf-8')
+          subprocess.run(['git','apply','--check',str(patch)], check=True)
+          subprocess.run(['git','apply',str(patch)], check=True)
+          for item in plan['files']:
+              if blob(Path(item['path']).read_bytes()) != item['after']:
+                  raise SystemExit('Patched blob mismatch: ' + item['path'])
+          changed = set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines()) | set(subprocess.check_output(['git','ls-files','--others','--exclude-standard'],text=True).splitlines())
+          if changed != allowed: raise SystemExit('Unexpected changed files')
+          Path(os.environ['RUNNER_TEMP'],'ride-plan.json').write_text(json.dumps(plan))
+          print('Exact source and all 14 patched-file hashes verified. No branch ref changed.')
+          PY
+      - name: Run existing and new static contracts without UE
+        run: |
+          set -euo pipefail
+          ruff format scripts/ci/test_ride_probe.py scripts/ci/test_terrain_proof_routing.py scripts/ci/classify_changes.py scripts/ue/ride_probe_capture.py scripts/proof/ride_probe.py scripts/proof/package_ride_probe.py
+          ruff check physics_reference scripts/ci scripts/proof scripts/ue/ride_probe_capture.py --select E9,F63,F7,F82
+          ruff format --check scripts/ci
+          python -m py_compile scripts/proof/ride_probe.py scripts/proof/package_ride_probe.py scripts/ue/ride_probe_capture.py scripts/ue/stage3g_capture_sp638_local_corridor.py
+          python -m unittest scripts.ci.test_embark_terrain_pipeline_contract scripts.ci.test_terrain_proof_request scripts.ci.test_terrain_proof_routing scripts.ci.test_ride_probe -v
+          python scripts/ci/test_classify_changes.py
+          python scripts/ci/run_python_tests.py
+          python scripts/ci/check_docs_index.py
+          git diff --check
+      - name: Parse affected PowerShell wrapper
+        shell: pwsh
+        run: |
+          $tokens = $null; $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1'), [ref]$tokens, [ref]$errors) | Out-Null
+          if ($errors.Count) { $errors | Format-List; throw 'PowerShell parsing failed' }
+      - name: Execute codec integration with an explicitly synthetic fixture
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          from scripts.ci.test_ride_probe import CaptureTests, SHA
+          from scripts.proof.ride_probe import ProbeConfig
+          from scripts.proof.package_ride_probe import package
+          case = CaptureTests(); case.setUp()
+          try:
+              case.config = ProbeConfig(SHA, 'focus')
+              case.complete()
+              result = package(case.root, SHA)
+              assert result['media'][0]['stream']['nb_read_frames'] == '41'
+              assert result['media'][0]['stream']['r_frame_rate'] == '10/1'
+              Path(os.environ['RUNNER_TEMP'],'synthetic-codec-check.json').write_text(json.dumps(result, indent=2))
+              print('SYNTHETIC_CODEC_TEST_ONLY: 41 frames / 1080p / 10fps; not YACS world evidence.')
+          finally:
+              case.doCleanups()
+          PY
+      - name: Publish reviewed immutable blobs only
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import hashlib, json, os, shutil, subprocess, urllib.request
+          from pathlib import Path
+          plan = json.loads(Path(os.environ['RUNNER_TEMP'],'ride-plan.json').read_text())
+          paths = {item['path'] for item in plan['files']}
+          changed = set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines()) | set(subprocess.check_output(['git','ls-files','--others','--exclude-standard'],text=True).splitlines())
+          if changed != paths: raise SystemExit('Scope drift after validation')
+          out = Path(os.environ['RUNNER_TEMP'],'ride-reviewed'); out.mkdir()
+          elements = []
+          for path in sorted(paths):
+              data = Path(path).read_bytes()
+              request = urllib.request.Request('https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs', data=json.dumps({'content':data.decode('utf-8'),'encoding':'utf-8'}).encode(), method='POST', headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','Content-Type':'application/json'})
+              with urllib.request.urlopen(request,timeout=40) as response: result=json.load(response)
+              expected = hashlib.sha1(f'blob {len(data)}\0'.encode()+data).hexdigest()
+              if result['sha'] != expected: raise SystemExit('Published blob digest mismatch')
+              elements.append({'path':path,'mode':'100644','type':'blob','sha':expected})
+              target=out/path;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(data)
+          receipt={'parent':plan['base'],'tree_elements':elements,'validation':'static contracts, reference tests, docs four guards, PowerShell parse, synthetic codec PASS; Unreal/runtime/visual PENDING'}
+          (out/'reviewed-blobs.json').write_text(json.dumps(receipt,indent=2))
+          shutil.copyfile(Path(os.environ['RUNNER_TEMP'],'synthetic-codec-check.json'),out/'synthetic-codec-check.json')
+          print('REVIEWED_RIDE_BLOBS='+json.dumps(receipt))
+          PY
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: issue293-reviewed-ride-probe
+          path: ${{ runner.temp }}/ride-reviewed/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 2
