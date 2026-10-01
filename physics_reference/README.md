@@ -82,3 +82,26 @@ ze `slots`), z walidacją wartości w momencie tworzenia i komunikatami
 (grawitacja, opór toczenia, opór aerodynamiczny) oraz pojedynczy
 deterministyczny krok symulacji `step_simulation` metodą bilansu energii.
 Wyniki zostaną następnie przeniesione do C++ w UE5.
+
+## Syntetyczny test asfalt - szuter - asfalt
+
+`examples/run_mixed_surface.py` wykonuje ciągły przejazd po 300-metrowej trasie testowej, używając istniejącego Road Physics Profile, oporu toczenia i kroku 0,05 s. Jawna polityka przyczepności jest odczytywana niezależnie; prostoliniowy przykład nie wykonuje pokonywania zakrętów ani hamowania.
+
+**Wszystkie parametry i geometria są syntetycznymi danymi testowymi. Nie są skalibrowanym modelem gravela, rzeczywistą trasą Passo Giau ani dowodem integracji z Unreal.** Zmiana nawierzchni nie resetuje prędkości, dystansu ani czasu; brak polityki nie zamienia się w asfalt. Ostatni krok może nieznacznie przekroczyć koniec trasy bez ukrytego przycinania stanu.
+
+Z katalogu głównego repozytorium w PowerShell:
+
+```powershell
+$env:PYTHONPATH = "physics_reference/src"
+python physics_reference/examples/run_mixed_surface.py
+python -m unittest discover -s physics_reference/tests -p test_mixed_surface_reference.py -v
+```
+
+W powłoce POSIX:
+
+```sh
+PYTHONPATH=physics_reference/src python physics_reference/examples/run_mixed_surface.py
+PYTHONPATH=physics_reference/src python -m unittest discover -s physics_reference/tests -p test_mixed_surface_reference.py -v
+```
+
+Przykład wypisuje JSON z ostrzeżeniem `SYNTHETIC_ONLY_NOT_CALIBRATED_NOT_A_REAL_ROUTE`, przejściami nawierzchni i końcowym stanem. Zestaw regresji sprawdza granice odcinków, deterministyczność, grupowanie podkroków, niezależność przyczepności/oporu i brak resetowania stanu. Jest automatycznie wykrywany przez istniejące `scripts/ci/run_python_tests.py`; nie potrzebuje renderów ani kompilacji UE.

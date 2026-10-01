@@ -136,7 +136,9 @@ def run_reference(batch_size: int = 1) -> dict:
                     }
                 )
                 previous_surface = surface
-            state = step_simulation(rider, environment, rider_input, state, FIXED_STEP_S)
+            state = step_simulation(
+                rider, environment, rider_input, state, FIXED_STEP_S
+            )
             states.append(asdict(state))
             steps += 1
     return {

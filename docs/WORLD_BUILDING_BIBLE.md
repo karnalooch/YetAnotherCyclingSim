@@ -964,6 +964,18 @@ Expansion must preserve independent alignment, non-destructive Road_Earthworks, 
 
 Before claiming the expanded network accepted, require a reviewed full-area coverage ledger and discrepancy resolution, true-junction/grade-separation checks, representative rider-camera proofs (including normal slopes and major earthworks), fresh-load/regeneration evidence and applicable exact-SHA performance proof. A good SP638 hairpin or green build cannot substitute for whole-area coverage.
 
+### 7.5 Mixed-surface riding destination
+
+Owner approval of 2026-10-01 (Issue #297) extends the network destination to rideable asphalt/gravel combinations; [Product Requirements section 3.2](PRODUCT_REQUIREMENTS.md#32-jazda-mieszana-szosa-i-gravel) owns this scope. This is not an additional closure requirement for terrain PR #294.
+
+Preserve surface evidence separately from road class, roughness/obstacles, width, topology and bicycle access. Distinguish asphalt, compacted aggregate, loose gravel, earth and unknown at inventory/authoring boundaries without treating them as calibrated physics presets. Unknown or conflicting inputs remain unresolved; neither a path label nor the appearance of a mesh establishes safe/legal ride activation. Review actual source licenses before any new dataset enters the project.
+
+Reuse the pinned authoring-only PCGEx corridor and existing route/physics boundaries. Surface-aware presentation must not manufacture asphalt widths, move road XY, merge grade-separated branches or layer competing ground surfaces to hide seams. No separate gravel generator, global streaming disable, arbitrary speed penalty or new dependency is authorized by this requirement.
+
+The first real mixed-route proof must establish source-backed surface transitions and true road connections, continuous rider state, explicit rolling/grip configuration, neutral rider-camera geometry, regeneration and relevant performance. Keep source coverage, physics calibration, technical tests and visual acceptance distinct. A synthetic reference example cannot stand in for these proofs.
+
+The current support exercise is `physics_reference/examples/run_mixed_surface.py`, tested through the existing reference-test discovery. It composes RoadPhysicsProfile, SurfaceGripPolicy, Environment and the unchanged step_simulation. Fixture coefficients are explicitly synthetic. Surface selection occurs at current S/D before each fixed substep; batching cannot alter the result. The last substep may pass the test endpoint slightly without resetting distance or velocity. The straight-line exercise reports grip but does not execute a corner/braking solver or prove UE/runtime parity. Detailed tyre/roughness physics and actual network activation remain separate work after the applicable foundation gate.
+
 ---
 
 ## 8. The road/terrain rule that prevents black wedges
