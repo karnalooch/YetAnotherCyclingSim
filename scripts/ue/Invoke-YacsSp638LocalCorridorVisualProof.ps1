@@ -12,7 +12,7 @@ param(
     [string] $PreparedWorkspaceStamp,
     [string] $PcgExExecutionOutput,
     [string] $NativeDtmPatchMetadata,
-    [ValidateSet('A','B','C','D','E','C3','F','G')] [string] $Variant = 'E',
+    [ValidateSet('A','B','C','D','E','C3','F','G','H')] [string] $Variant = 'E',
     [ValidateSet('off','light','focus')] [string] $RideProbeMode = 'off',
     [string] $RideProbeCenterM = '',
     [switch] $RideProbeWide,
@@ -193,7 +193,7 @@ else {
     $env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PNG = $CapturePng
     $env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PROOF = $CaptureProof
     $env:YACS_SP638_LOCAL_CORRIDOR_VARIANT = $Variant
-    if ($Variant -eq 'C3') {
+    if ($Variant -in @('C3','H')) {
         if (-not (Test-Path -LiteralPath $NativeDtmPatchMetadata -PathType Leaf)) {
             throw "Gate C.3 native DTM patch metadata is missing: $NativeDtmPatchMetadata"
         }
@@ -302,11 +302,22 @@ if ($Variant -eq 'C3') {
     $ExpectedMacro = $false
     $ExpectedLocal = $true
     $ExpectedCorridor = $false
+    $ExpectedCorridorGround = $false
+    $ExpectedAsphalt = $false
+    $ExpectedCutFill = $false
+} elseif ($Variant -eq 'H') {
+    $ExpectedMacro = $false
+    $ExpectedLocal = $true
+    $ExpectedCorridor = $true
+    $ExpectedCorridorGround = $false
+    $ExpectedAsphalt = $true
     $ExpectedCutFill = $false
 } else {
     $ExpectedMacro = $Variant -in @('A','B','E','F','G')
     $ExpectedLocal = $Variant -in @('C','D','E')
     $ExpectedCorridor = $Variant -in @('B','D','E','G')
+    $ExpectedCorridorGround = $ExpectedCorridor
+    $ExpectedAsphalt = $ExpectedCorridor
     $ExpectedCutFill = $Variant -in @('B','C','D','E','F')
 }
 
@@ -318,6 +329,12 @@ if ([bool]$Proof.surface_visibility.local_terrain -ne $ExpectedLocal) {
 }
 if ([bool]$Proof.surface_visibility.corridor -ne $ExpectedCorridor) {
     throw "Variant $Variant corridor visibility mismatch."
+}
+if ([bool]$Proof.surface_visibility.corridor_ground -ne $ExpectedCorridorGround) {
+    throw "Variant $Variant corridor-ground visibility mismatch."
+}
+if ([bool]$Proof.surface_visibility.asphalt -ne $ExpectedAsphalt) {
+    throw "Variant $Variant asphalt visibility mismatch."
 }
 if ([bool]$Proof.landscape_cut_fill.applied -ne $ExpectedCutFill) {
     throw "Variant $Variant Landscape cut/fill state mismatch."
@@ -339,9 +356,9 @@ if ($ExpectedLocal) {
     if ([bool]$Proof.local_terrain_skin.canonical_road_xy_modified -ne $false) {
         throw "Variant $Variant terrain skin modified canonical road XY."
     }
-    if ($Variant -eq 'C3') {
+    if ($Variant -in @('C3','H')) {
         if ([bool]$Proof.local_terrain_skin.native_metric_dtm -ne $true) {
-            throw 'Gate C.3 did not use the native metric DTM.'
+            throw 'Native-DTM proof did not use the native metric DTM.'
         }
         if ([bool]$Proof.local_terrain_skin.landscape_collision_sampled -ne $false) {
             throw 'Gate C.3 unexpectedly sampled Landscape collision.'
@@ -362,7 +379,26 @@ if ($ExpectedLocal) {
             throw "Gate C.3 patch is not centered on the rendered hairpin: margin=$($Proof.local_terrain_skin.proof_focus_margin_m) m"
         }
         if ([int]$Proof.local_geometry.terrain_skin.triangles -lt 500000) {
-            throw "Gate C.3 native terrain mesh is unexpectedly sparse."
+            throw "Native-DTM terrain mesh is unexpectedly sparse."
+        }
+        if ($Variant -eq 'C3') {
+            if ([bool]$Proof.local_terrain_skin.road_constraints_applied -ne $false) {
+                throw 'Gate C.3 must remain the unconstrained native-DTM control.'
+            }
+        }
+        if ($Variant -eq 'H') {
+            if ([bool]$Proof.local_terrain_skin.road_constraints_applied -ne $true -or [bool]$Proof.local_terrain_skin.single_local_ground_owner -ne $true) {
+                throw 'Variant H did not bake road constraints into the single native-DTM ground owner.'
+            }
+            if ([double]$Proof.local_terrain_skin.constraint_transition_outer_weight -ne 0.0) {
+                throw 'Variant H transition does not pin its outer ribbon to native terrain.'
+            }
+            if ([int]$Proof.local_terrain_skin.constraint_sample_count -lt 1000) {
+                throw "Variant H constrained too few native terrain samples: $($Proof.local_terrain_skin.constraint_sample_count)"
+            }
+            if ([double]$Proof.local_terrain_skin.constraint_max_abs_adjustment_m -gt 6.0) {
+                throw "Variant H terrain adjustment exceeded the bounded proof guard: $($Proof.local_terrain_skin.constraint_max_abs_adjustment_m) m"
+            }
         }
     } else {
         if ([double]$Proof.local_terrain_skin.grid_step_m -gt 4.01) {
@@ -388,11 +424,20 @@ if ($ExpectedLocal) {
 }
 
 if ($ExpectedCorridor) {
-    if ([bool]$Proof.local_geometry.earthwork.spawned -ne $true -or [bool]$Proof.local_geometry.asphalt.spawned -ne $true) {
-        throw "Variant $Variant did not spawn the required road corridor."
-    }
-    if ([int]$Proof.local_geometry.earthwork.triangles -lt 3000) {
-        throw "Variant $Variant earthwork mesh is unexpectedly sparse."
+    if ($Variant -eq 'H') {
+        if ([bool]$Proof.local_geometry.earthwork.spawned -ne $false -or [bool]$Proof.local_geometry.left_shoulder.spawned -ne $false -or [bool]$Proof.local_geometry.right_shoulder.spawned -ne $false) {
+            throw 'Variant H spawned competing earthwork/shoulder ground meshes.'
+        }
+        if ([bool]$Proof.local_geometry.asphalt.spawned -ne $true) {
+            throw 'Variant H did not spawn the asphalt surface.'
+        }
+    } else {
+        if ([bool]$Proof.local_geometry.earthwork.spawned -ne $true -or [bool]$Proof.local_geometry.asphalt.spawned -ne $true) {
+            throw "Variant $Variant did not spawn the required road corridor."
+        }
+        if ([int]$Proof.local_geometry.earthwork.triangles -lt 3000) {
+            throw "Variant $Variant earthwork mesh is unexpectedly sparse."
+        }
     }
     if ([int]$Proof.station_count -lt 250) {
         throw "Variant $Variant sampled too few corridor stations: $($Proof.station_count)"
@@ -434,7 +479,7 @@ if ($TrackedChanges.Count -gt 0) {
     throw ("SP638 local-corridor visual proof mutated tracked files: {0}" -f ($TrackedChanges -join '; '))
 }
 
-$GateLabel = if ($Variant -eq 'C3') { 'Gate C.3 native-DTM patch' } else { 'Gate C.1 surface-ownership variant' }
+$GateLabel = if ($Variant -eq 'H') { 'Native-DTM road-constrained single-owner candidate' } elseif ($Variant -eq 'C3') { 'Gate C.3 native-DTM patch' } else { 'Gate C.1 surface-ownership variant' }
 Write-Host ("{0} {1}: PASS." -f $GateLabel,$Variant) -ForegroundColor Green
 Write-Host ("Rendered proof: {0}" -f $CapturePng)
 exit 0
