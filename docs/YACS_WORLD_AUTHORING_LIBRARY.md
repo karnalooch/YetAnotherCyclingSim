@@ -72,6 +72,9 @@ Before adding a new generator/backend here:
 
 In particular:
 
+- **BOB — Builder Of Berms** owns adaptive road-earthworks policy, verified-case
+  learning and safety escalation; the World Authoring Library may call BOB but
+  must not duplicate its policy or case memory;
 - road-earthwork generation does not belong here unless it is a bounded adapter
   around the chosen Landscape/authoring tool;
 - biome placement should consume terrain/GIS-derived masks and proven PCG
