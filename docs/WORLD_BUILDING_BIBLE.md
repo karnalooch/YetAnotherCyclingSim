@@ -743,6 +743,35 @@ the tools-first decision ladder below. A strategy may invoke only an already
 admitted native/custom authoring path. If a heightfield is structurally wrong for
 the observed geometry, the solver escalates instead of learning to hide the defect.
 
+PCGEx is the preferred **spatial feature engine**, not the owner of the adaptive
+policy. Reuse its strengths in filters, attributes, sampling, graph/path operations,
+heuristics and—only where separately proven useful—tensor/vector-field operations
+to measure or propagate corridor context. Normalize those results into the
+versioned `adaptive_terrain_feature_contract.json` packet. The packet must record
+its source artifact and exact PCGEx revision, preserve canonical road XY, and
+explicitly remain non-authoritative for route geometry and physics.
+
+YACS owns the next layer:
+
+- safe baseline strategy selection;
+- strategy-specific bounded parameters;
+- verified-case similarity matching;
+- learning eligibility;
+- non-heightfield escalation;
+- the final explainable decision report.
+
+This separation is deliberate. A PCGEx graph may answer **"what spatial situation
+is this?"** and may provide reusable scores/attributes. It must not answer **"this
+proof is accepted, add it to memory"** and must not silently rewrite the policy.
+
+Embark's public `texture-synthesis` project is useful only as an architectural
+analogy for **example-based generation**: multiple examples may inform a new
+result while the generator remains explicit about its inputs. It is not evidence
+that Embark uses an equivalent terrain-learning system, and YACS does not copy or
+depend on that repository for terrain generation. The transferable lesson is to
+keep examples as explicit inputs instead of burying successful one-off fixes in
+location-specific code.
+
 Learning is review-gated and deterministic:
 
 1. baseline policy chooses a safe strategy from versioned thresholds;
