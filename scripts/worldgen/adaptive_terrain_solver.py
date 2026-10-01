@@ -304,6 +304,18 @@ def validate_policy(policy: Mapping[str, Any]) -> None:
     if not repair.get("rule_id") or not repair.get("steps"):
         raise ValueError("retaining repair requires an identified execution recipe")
 
+    executor = repair.get("executor")
+    if not isinstance(executor, Mapping):
+        raise ValueError("retaining repair requires bounded executor settings")
+    if (type(executor.get("tie_in_stations")) is not int
+            or executor["tie_in_stations"] < 1
+            or not 0 < float(executor.get("wall_fraction",0)) < 1):
+        raise ValueError("retaining executor needs positive tie-ins and an interior wall")
+    for name in ("max_region_length_m", "max_face_height_m"):
+        value = float(executor.get(name,0))
+        if not math.isfinite(value) or value <= 0:
+            raise ValueError("retaining executor bounds must be finite and positive")
+
 
 def baseline_strategy(
     features: TerrainFeatures,

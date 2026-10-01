@@ -318,6 +318,33 @@ class ExistingCorridorReviewTests(unittest.TestCase):
         self.assertFalse(result["parameters_applied"])
         self.assertFalse(result["learning_case_promoted"])
 
+    def test_retaining_executor_generates_local_faces_and_preserves_road_input(self):
+        from scripts.geometry.local_terrain_skin import build_terrain_skin_mesh
+        from scripts.geometry.sp638_local_corridor import (
+            Vec3,CrossSectionPoint,build_corridor_mesh,make_constant_profiles,corridor_mesh_hash,
+        )
+        from scripts.worldgen.execute_retaining_repair import execute_retaining_repair
+        report=self.review(height_delta=5.0)
+        report["escalation_station_indices"]=[5]
+        xs,ys=tuple(range(-20,21)),tuple(range(20,-21,-1))
+        native=((0.,)*41,)*41
+        constrained=((5.,)*41,)*41
+        base=build_terrain_skin_mesh(xs,ys,constrained,origin_x_m=0,origin_y_m=0,origin_z_m=0,lift_m=0)
+        points=tuple(Vec3(x,0,5) for x in range(-10,11,2))
+        profiles=make_constant_profiles(len(points),(
+            CrossSectionPoint(-10,0,"left_tie"),CrossSectionPoint(-4,0,"left_shoulder"),
+            CrossSectionPoint(4,0,"right_shoulder"),CrossSectionPoint(10,0,"right_tie")))
+        road=build_corridor_mesh(points,profiles,tangent_half_window_stations=3)
+        before=corridor_mesh_hash(road)
+        mesh,evidence=execute_retaining_repair(mesh=base,report=report,policy=load_policy(POLICY_PATH),
+            xs=xs,ys=ys,native_heights=native,constrained_heights=constrained,
+            corridor_mesh=road,profiles=profiles,corridor_origin=Vec3(0,0,0),terrain_origin=Vec3(0,0,0))
+        self.assertEqual(before,corridor_mesh_hash(road))
+        self.assertGreater(evidence["vertical_face_triangle_count"],0)
+        self.assertEqual(evidence["technical_acceptance"],"PENDING")
+        self.assertFalse(evidence["learning_case_promoted"])
+        self.assertGreater(len(mesh.triangles),len(base.triangles))
+
     def test_escalation_measures_cut_and_fill_sides_before_proposing_repairs(self):
         fill = self.review(height_delta=5.0)["decisions"][5]
         cut = self.review(height_delta=-5.0)["decisions"][5]

@@ -75,6 +75,12 @@
       "same_exact_sha_technical_PASS",
       "same_exact_sha_human_visual_PASS"
     ],
-    "threshold_override_allowed": false
+    "threshold_override_allowed": false,
+    "executor": {
+      "tie_in_stations": 3,
+      "wall_fraction": 0.15,
+      "max_region_length_m": 60.0,
+      "max_face_height_m": 6.0
+    }
   }
 }

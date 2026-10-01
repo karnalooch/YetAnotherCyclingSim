@@ -799,8 +799,9 @@ acceptance order above.
 
 The bounded H candidate now runs `scripts/worldgen/review_sp638_terrain.py`
 against its actual rendered centerline, road-edge/shoulder constraint mesh and
-verified native-DTM grid. This is **review of the existing candidate**, not
-execution of BOB's proposed parameters. Feature measurement is YACS Python
+verified native-DTM grid. This measures the existing candidate and may generate the bounded retaining
+repair candidate described below. It does not execute BOB's proposed heightfield
+parameters. Feature measurement is YACS Python
 analysis; it must not be described as native PCGEx feature emission.
 
 `bob_terrain_review.json` retains exact SHA and input digests, per-station
@@ -814,8 +815,10 @@ before constraint generation so rejected/failed attempts retain the decisions.
 The existing H render remains diagnostic and is retained for inspection, but
 the H validator rejects BOB escalation or incomplete coverage. `MEASURED`
 means measurement and strategy admission completed, not human visual PASS.
-This review never updates policy, applies proposed parameters or promotes a
-learning case. Offline calibration and the full strategy execution loop remain
+This review never updates policy, applies proposed heightfield parameters or
+promotes a learning case. Retaining execution has its own explicit
+`repair_execution.geometry_applied` evidence; `parameters_applied` still refers
+to the heightfield decision parameters. Offline calibration and full acceptance remain
 under Issue #303.
 
 BOB also carries the versioned expert rule `bob-local-retaining-repair-v1` in
@@ -827,9 +830,17 @@ cut/fill on one side retains both design candidates. Shared ground between
 branches must have one owner; canonical road XY and escalation thresholds stay
 protected. The recipe requires local tie-ins, candidate generation, repeated
 measurement and neutral render review. It is proposed expert knowledge, **not
-executed geometry or a verified learning case**. Structural suitability still
-needs a generator and verification under Issue #303; promotion requires technical
-and human visual PASS on the same exact SHA.
+executed geometry or a verified learning case**. The bounded candidate executor now reuses the existing transient DynamicMesh
+consumer: it clips original shoulder-to-tie ground triangles, inserts a bench,
+vertical cut/fill face and native tie-in, and tapers the flagged interval at both
+ends. Signed edge measurements choose the side; station numbers are not hardcoded.
+Folded footprints, unsupported stacked branches, mixed cut/fill faces and excessive
+region/face bounds fail closed. The report labels execution
+`GENERATED_PENDING_VALIDATION`: source-DTM escalation remains visible and still
+blocks the H acceptance gate. Generation is not structural suitability or proof
+of all clearance/ownership/performance contracts. Verification and final promotion
+remain under Issue #303, requiring technical and human visual PASS on the same
+exact SHA.
 
 ```mermaid
 flowchart LR

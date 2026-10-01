@@ -217,5 +217,51 @@ class LocalTerrainSkinTests(unittest.TestCase):
             )
 
 
+class RetainingRepairGeometryTests(unittest.TestCase):
+    def test_cut_and_fill_replace_ground_without_changing_projected_coverage(self):
+        from scripts.geometry.retaining_repair import replace_shoulder_ground
+        xs,ys = tuple(range(-2,7)),tuple(range(6,-3,-1))
+        base = build_terrain_skin_mesh(xs,ys,((0.0,)*9,)*9,
+            origin_x_m=0,origin_y_m=0,origin_z_m=0,lift_m=0)
+        segments = [
+            {"inner_start":Vec3(0,0,0),"inner_end":Vec3(2,0,0),
+             "outer_start":Vec3(0,3,0),"outer_end":Vec3(2,3,0),
+             "start_strength":0.0,"end_strength":1.0},
+            {"inner_start":Vec3(2,0,0),"inner_end":Vec3(4,0,0),
+             "outer_start":Vec3(2,3,0),"outer_end":Vec3(4,3,0),
+             "start_strength":1.0,"end_strength":0.0},
+        ]
+        def area(mesh):
+            total=0.0
+            for tri in mesh.triangles:
+                a,b,c=(mesh.vertices[i] for i in tri)
+                total+=abs((b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x))/2
+            return total
+        for native in (-5.0,5.0):
+            result = replace_shoulder_ground(base,segments,
+                sample_constrained=lambda x,y:0.0,sample_native=lambda x,y:native)
+            self.assertGreater(result.replaced_triangle_count,0)
+            self.assertGreater(result.vertical_face_triangle_count,0)
+            self.assertAlmostEqual(result.max_face_height_m,5.0)
+            self.assertAlmostEqual(area(result.mesh),area(base),places=7)
+            for tri in result.mesh.triangles:
+                for index in tri:
+                    p=result.mesh.vertices[index]
+                    if p.x <= 0 or p.x >= 4 or p.y <= 0 or p.y >= 3:
+                        self.assertAlmostEqual(p.z,0.0)
+
+    def test_folded_repair_footprint_is_rejected(self):
+        from scripts.geometry.retaining_repair import replace_shoulder_ground
+        base=build_terrain_skin_mesh((0,1,2),(2,1,0),((0.,)*3,)*3,
+            origin_x_m=0,origin_y_m=0,origin_z_m=0,lift_m=0)
+        segment={"inner_start":Vec3(0,0,0),"inner_end":Vec3(2,2,0),
+                 "outer_start":Vec3(0,2,0),"outer_end":Vec3(2,0,0),
+                 "start_strength":0,"end_strength":1}
+        with self.assertRaisesRegex(ValueError,"degenerate|folds"):
+            replace_shoulder_ground(base,[segment],sample_constrained=lambda x,y:0,
+                                    sample_native=lambda x,y:5)
+
+
 if __name__ == "__main__":
     unittest.main()
+

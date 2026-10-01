@@ -913,6 +913,7 @@ def _load_native_dtm_patch(
             f"focus=({focus_x_m:.3f},{focus_y_m:.3f})"
         )
 
+    native_heights_m = heights_m
     constraint_metrics = None
     bob_report = None
     if corridor_mesh is not None:
@@ -953,6 +954,10 @@ def _load_native_dtm_patch(
         bob_report_path.write_text(
             json.dumps(bob_report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )
+        # Compact diagnostic evidence survives a kernel failure before render.
+        _proof_path.write_text(json.dumps({"schema_version": 1,
+            "capture_status": "MEASURED_BEFORE_RENDER",
+            "local_terrain_skin": {"bob_review": bob_report}},indent=2)+"\n",encoding="utf-8")
         # Retain BOB's decision even if the existing constraint kernel fails.
         heights_m, constraint_metrics = apply_corridor_constraints_to_height_grid(
             x_coordinates_m,
@@ -988,6 +993,32 @@ def _load_native_dtm_patch(
         lift_m=0.0,
     )
     origin_world = unreal.Vector(first_x_m * 100.0, first_y_m * 100.0, origin_z_m * 100.0)
+    if bob_report is not None and bob_report["escalation_station_indices"]:
+        from scripts.worldgen.execute_retaining_repair import execute_retaining_repair
+        from scripts.worldgen.adaptive_terrain_solver import load_policy
+        try:
+            mesh, repair_evidence = execute_retaining_repair(
+                mesh=mesh, report=bob_report,
+                policy=load_policy(REPO_ROOT / "worldgen/terrain/adaptive_terrain_policy.json"),
+                xs=x_coordinates_m, ys=y_coordinates_m,
+                native_heights=native_heights_m, constrained_heights=heights_m,
+                corridor_mesh=corridor_mesh, profiles=corridor_profiles,
+                corridor_origin=Vec3(float(corridor_origin_world.x)/100.0,
+                                     float(corridor_origin_world.y)/100.0,
+                                     float(corridor_origin_world.z)/100.0),
+                terrain_origin=Vec3(first_x_m,first_y_m,origin_z_m),
+            )
+        except ValueError as exc:
+            bob_report["repair_execution"] = {"status":"FAILED_CLOSED", "error":str(exc),
+                "learning_case_promoted":False}
+            bob_report_path.write_text(json.dumps(bob_report,indent=2)+"\n",encoding="utf-8")
+            _proof_path.write_text(json.dumps({"schema_version":1,"capture_status":"REPAIR_FAILED",
+                "local_terrain_skin":{"bob_review":bob_report}},indent=2)+"\n",encoding="utf-8")
+            raise
+        bob_report["repair_execution"] = repair_evidence
+        bob_report["mode"] = "review_with_retaining_candidate"
+        bob_report_path.write_text(json.dumps(bob_report,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+
     diagnostics = {
         "world_aligned": True,
         "native_metric_dtm": True,
