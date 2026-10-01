@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -42,6 +43,16 @@ class YacsProofBrokerContractTests(unittest.TestCase):
 
     def test_policy_is_valid(self):
         self.assertEqual(proof_broker.validate_policy(self.policy()), [])
+
+    def test_documented_command_catalogs_match_enabled_proofs(self):
+        expected = {
+            name for name, proof in self.policy()["proofs"].items() if proof["enabled"]
+        }
+        for name in ("CI_VALIDATION_TIERS.md", "ENGINEERING_PLATFORM.md"):
+            with self.subTest(document=name):
+                text = (ROOT / "docs" / name).read_text(encoding="utf-8")
+                commands = set(re.findall(r"(?m)^/gumball proof ([a-z0-9._-]+)$", text))
+                self.assertEqual(commands, expected)
 
     def test_all_target_workflows_match_policy(self):
         policy = self.policy()
