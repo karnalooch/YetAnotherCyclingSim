@@ -6,9 +6,18 @@ import math
 import unittest
 
 from scripts.geometry.local_terrain_skin import (
+    apply_corridor_constraints_to_height_grid,
     build_terrain_skin_mesh,
+    make_road_clearance_profiles,
     smooth_height_grid,
     terrain_skin_hash,
+)
+from scripts.geometry.sp638_local_corridor import (
+    CorridorMesh,
+    CrossSectionPoint,
+    Vec3,
+    build_corridor_mesh,
+    make_constant_profiles,
 )
 
 
@@ -88,6 +97,124 @@ class LocalTerrainSkinTests(unittest.TestCase):
             ac = c - a
             conventional_normal_z = ab.x * ac.y - ab.y * ac.x
             self.assertLess(conventional_normal_z, 0.0)
+
+
+    def test_road_clearance_profiles_cap_only_shoulders(self) -> None:
+        profile = (
+            CrossSectionPoint(-10.0, 2.5, "left_tie"),
+            CrossSectionPoint(-7.0, 1.2, "left_earthwork"),
+            CrossSectionPoint(-4.0, 0.15, "left_shoulder"),
+            CrossSectionPoint(-3.0, 0.0, "left_road_edge"),
+            CrossSectionPoint(3.0, 0.0, "right_road_edge"),
+            CrossSectionPoint(4.0, -0.10, "right_shoulder"),
+            CrossSectionPoint(7.0, -0.9, "right_earthwork"),
+            CrossSectionPoint(10.0, -1.8, "right_tie"),
+        )
+        result = make_road_clearance_profiles((profile,))[0]
+        by_role = {point.role: point for point in result}
+
+        self.assertEqual(by_role["left_shoulder"].vertical_m, 0.0)
+        self.assertEqual(by_role["right_shoulder"].vertical_m, -0.10)
+        self.assertEqual(by_role["left_road_edge"].vertical_m, 0.0)
+        self.assertEqual(by_role["right_road_edge"].vertical_m, 0.0)
+        self.assertEqual(by_role["left_earthwork"].vertical_m, 1.2)
+        self.assertEqual(by_role["right_earthwork"].vertical_m, -0.9)
+        self.assertEqual(
+            tuple(point.lateral_m for point in result),
+            tuple(point.lateral_m for point in profile),
+        )
+        self.assertEqual(
+            tuple(point.role for point in result),
+            tuple(point.role for point in profile),
+        )
+
+    def test_road_clearance_profiles_fail_closed_on_missing_roles(self) -> None:
+        profile = (
+            CrossSectionPoint(-3.0, 0.0, "left_road_edge"),
+            CrossSectionPoint(3.0, 0.0, "right_road_edge"),
+        )
+        with self.assertRaisesRegex(ValueError, "left_shoulder"):
+            make_road_clearance_profiles((profile,))
+
+    def test_native_grid_corridor_constraints_pin_outer_transition(self) -> None:
+        xs = tuple(float(value) for value in range(21))
+        ys = tuple(float(value) for value in range(20, -1, -1))
+        heights = tuple(tuple(100.0 for _ in xs) for _ in ys)
+        profile = (
+            CrossSectionPoint(-4.0, 0.0, "left_tie"),
+            CrossSectionPoint(-2.0, 0.0, "left_road_edge"),
+            CrossSectionPoint(2.0, 0.0, "right_road_edge"),
+            CrossSectionPoint(4.0, 0.0, "right_tie"),
+        )
+        centerline = (
+            Vec3(2.0, 10.0, 102.0),
+            Vec3(18.0, 10.0, 102.0),
+        )
+        profiles = make_constant_profiles(len(centerline), profile)
+        mesh = build_corridor_mesh(centerline, profiles)
+
+        constrained, metrics = apply_corridor_constraints_to_height_grid(
+            xs,
+            ys,
+            heights,
+            mesh,
+            profiles,
+            corridor_origin_m=Vec3(0.0, 0.0, 0.0),
+        )
+
+        column = xs.index(10.0)
+        self.assertAlmostEqual(constrained[ys.index(10.0)][column], 102.0, places=6)
+        self.assertAlmostEqual(constrained[ys.index(6.0)][column], 100.0, places=6)
+        self.assertAlmostEqual(constrained[ys.index(14.0)][column], 100.0, places=6)
+        self.assertAlmostEqual(constrained[ys.index(5.0)][column], 100.0, places=6)
+        self.assertGreater(metrics.constrained_sample_count, 0)
+        self.assertAlmostEqual(metrics.max_abs_adjustment_m, 2.0, places=6)
+
+    def test_native_grid_constraints_fail_on_strong_stacked_overlap(self) -> None:
+        xs = tuple(float(value) for value in range(9))
+        ys = tuple(float(value) for value in range(8, -1, -1))
+        heights = tuple(tuple(100.0 for _ in xs) for _ in ys)
+        profile = (
+            CrossSectionPoint(-2.0, 0.0, "left_tie"),
+            CrossSectionPoint(-1.0, 0.0, "left_road_edge"),
+            CrossSectionPoint(1.0, 0.0, "right_road_edge"),
+            CrossSectionPoint(2.0, 0.0, "right_tie"),
+        )
+        profiles = make_constant_profiles(4, profile)
+        lower = (
+            Vec3(1.0, 2.0, 101.0),
+            Vec3(1.0, 3.0, 101.0),
+            Vec3(1.0, 5.0, 101.0),
+            Vec3(1.0, 6.0, 101.0),
+            Vec3(7.0, 2.0, 101.0),
+            Vec3(7.0, 3.0, 101.0),
+            Vec3(7.0, 5.0, 101.0),
+            Vec3(7.0, 6.0, 101.0),
+        )
+        upper = tuple(Vec3(v.x, v.y, v.z + 3.0) for v in lower)
+        mesh = CorridorMesh(
+            vertices=lower + upper,
+            triangles=(
+                (0, 1, 4), (1, 5, 4),
+                (1, 2, 5), (2, 6, 5),
+                (2, 3, 6), (3, 7, 6),
+                (8, 9, 12), (9, 13, 12),
+                (9, 10, 13), (10, 14, 13),
+                (10, 11, 14), (11, 15, 14),
+            ),
+            station_count=4,
+            cross_section_point_count=4,
+        )
+
+        with self.assertRaisesRegex(ValueError, "strongly overlap"):
+            apply_corridor_constraints_to_height_grid(
+                xs,
+                ys,
+                heights,
+                mesh,
+                profiles,
+                corridor_origin_m=Vec3(0.0, 0.0, 0.0),
+            )
 
 
 if __name__ == "__main__":

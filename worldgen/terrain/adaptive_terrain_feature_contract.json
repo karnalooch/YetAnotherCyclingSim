@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "contract_id": "yacs-adaptive-terrain-feature-packet-v1",
+  "preferred_spatial_producer": "pcgex_spatial_analysis",
+  "producer_boundary": {
+    "pcgex_role": "spatial feature extraction, filtering, sampling and attribute propagation",
+    "yacs_role": "safe strategy policy, verified-case memory, learning gate and final decision",
+    "canonical_road_xy_preserved": true,
+    "authoritative_route_geometry": false,
+    "authoritative_physics": false
+  },
+  "required_features": {
+    "longitudinal_grade": {
+      "unit": "ratio",
+      "spatial_source": "route-local path tangent/elevation"
+    },
+    "left_cross_slope": {
+      "unit": "ratio",
+      "spatial_source": "native DTM samples at signed left offsets"
+    },
+    "right_cross_slope": {
+      "unit": "ratio",
+      "spatial_source": "native DTM samples at signed right offsets"
+    },
+    "road_to_dtm_delta_m": {
+      "unit": "m",
+      "spatial_source": "native DTM sample relative to presentation road elevation"
+    },
+    "dtm_roughness_m": {
+      "unit": "m",
+      "spatial_source": "bounded native DTM neighborhood statistic"
+    },
+    "curvature_radius_m": {
+      "unit": "m",
+      "nullable": true,
+      "spatial_source": "route-local path curvature"
+    },
+    "nearest_branch_xy_m": {
+      "unit": "m",
+      "nullable": true,
+      "spatial_source": "spatial query against non-adjacent road branches"
+    },
+    "nearest_branch_z_separation_m": {
+      "unit": "m",
+      "nullable": true,
+      "spatial_source": "height difference for the selected competing branch"
+    },
+    "max_cut_fill_m": {
+      "unit": "m",
+      "spatial_source": "bounded corridor road-vs-native-DTM envelope"
+    }
+  },
+  "pcgex_capability_mapping": {
+    "filters_and_attributes": "classify and propagate feature values without owning terrain policy",
+    "sampling": "sample spatial datasets and transfer bounded values",
+    "path_and_graph_ops": "route-local curvature and neighboring-branch queries",
+    "heuristics": "optional reusable scoring input; final strategy policy remains YACS-owned",
+    "tensors": "optional spatial influence fields where a later proof demonstrates value"
+  },
+  "output_rule": "PCGEx may emit a feature packet, but it must not choose route/physics authority or write verified case memory.",
+  "learning_rule": "Only exact-SHA technical PASS plus human visual PASS cases may enter the reviewed YACS case ledger."
+}

@@ -144,3 +144,28 @@ YACS currently has no project-wide `LICENSE` file. This document does not
 choose one. A future decision to publish YACS under an open-source license, a
 source-available license or proprietary terms must be made explicitly by the
 project owner and checked against all included third-party obligations.
+
+
+## Hosted diagnostic media encoding (Issue #293)
+
+FFmpeg/ffprobe are host build tools for derived diagnostic MP4s, not linked,
+vendored or redistributed runtime dependencies. Explicit diagnostic media jobs
+install Ubuntu 24.04 package `ffmpeg=7:6.1.1-3ubuntu5` from the signed distro
+archive, verify its version and fail if unavailable. Source/package evidence:
+https://packages.ubuntu.com/noble/ffmpeg . No binary is committed or installed
+on the reference PC. Only hash-checked, fully Pillow-decoded project PNGs enter
+the PNG decoder; ffprobe reads the resulting local MP4. This is not a generic
+uploaded-media ingestion service. The media report records the exact
+host version/build configuration from `ffmpeg -version` and `ffprobe -version`;
+libx264 capability and output are checked at execution. Official reference:
+https://ffmpeg.org/ffmpeg.html ; project/legal notices: https://ffmpeg.org/legal.html .
+Do not infer one license for all external codec builds or bundle one without a
+separate source/version/license review. Existing pinned Pillow 11.3.0 is reused
+on the hosted lane. PNG evidence and a capture receipt survive missing host tools;
+that condition is a media validation failure, not fabricated MP4 success.
+
+Distro security notice USN-8329-1 documents a CAF decoder issue and an ESM
+update. CAF is not accepted by this bounded PNG-to-MP4 tool path. The pin is
+not a security-clean claim for arbitrary formats; expanding accepted input
+requires a codec/security review and a supported updated distribution.
+https://ubuntu.com/security/notices/USN-8329-1

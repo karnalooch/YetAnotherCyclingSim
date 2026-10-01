@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "policy_id": "yacs-near-field-terrain-v1",
+  "feature_scales": {
+    "grade_abs": 0.08,
+    "cross_slope_abs": 0.15,
+    "road_dtm_delta_abs_m": 1.0,
+    "dtm_roughness_m": 0.25,
+    "curvature_inverse_per_m": 0.05,
+    "branch_inverse_per_m": 0.1,
+    "branch_z_separation_m": 2.0,
+    "max_cut_fill_m": 2.0
+  },
+  "thresholds": {
+    "stacked_branch_xy_m": 6.0,
+    "stacked_branch_z_m": 2.0,
+    "retaining_cut_fill_m": 4.0,
+    "hairpin_radius_m": 20.0,
+    "hairpin_branch_xy_m": 12.0,
+    "minor_delta_m": 0.35,
+    "minor_roughness_m": 0.15,
+    "minor_cut_fill_m": 0.75
+  },
+  "learning": {
+    "minimum_similarity": 0.78,
+    "max_cases": 3
+  },
+  "strategies": {
+    "native_blend": {
+      "shoulder_apron_m": 1.0,
+      "transition_width_m": 6.0,
+      "max_ground_adjustment_m": 1.0,
+      "min_asphalt_clearance_m": 0.06
+    },
+    "constrained_cut_fill": {
+      "shoulder_apron_m": 1.0,
+      "transition_width_m": 10.0,
+      "max_ground_adjustment_m": 4.0,
+      "min_asphalt_clearance_m": 0.06
+    },
+    "hairpin_clearance": {
+      "shoulder_apron_m": 1.5,
+      "transition_width_m": 10.0,
+      "max_ground_adjustment_m": 6.0,
+      "min_asphalt_clearance_m": 0.06
+    },
+    "retaining_or_cliff": {
+      "shoulder_apron_m": 1.5,
+      "transition_width_m": 12.0,
+      "max_ground_adjustment_m": 4.0,
+      "min_asphalt_clearance_m": 0.06
+    }
+  }
+}

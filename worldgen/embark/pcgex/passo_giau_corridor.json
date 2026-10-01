@@ -72,7 +72,33 @@
       "shoulder and ditch paths",
       "route exclusion masks",
       "roadside scatter"
-    ]
+    ],
+    "adaptive_terrain_feature_role": {
+      "status": "contract-defined_not_yet_emitted_by_graph",
+      "contract": "worldgen/terrain/adaptive_terrain_feature_contract.json",
+      "responsibility": "PCGEx extracts and propagates spatial terrain/road features; YACS owns safe strategy policy, verified-case memory and learning decisions.",
+      "planned_feature_families": [
+        "route-local grade and curvature attributes",
+        "native-DTM signed-offset sampling for cross-slope and road-to-terrain delta",
+        "bounded DTM-neighborhood roughness",
+        "non-adjacent branch proximity and vertical-separation queries",
+        "bounded cut/fill envelope metrics"
+      ],
+      "permitted_pcgex_capabilities": [
+        "filters",
+        "attributes",
+        "sampling",
+        "path_and_graph_ops",
+        "heuristics",
+        "tensors_when_proven_useful"
+      ],
+      "forbidden_responsibilities": [
+        "route_authority",
+        "physics_authority",
+        "automatic_verified_case_promotion",
+        "runtime_policy_rewrite"
+      ]
+    }
   },
   "spatial_contract": {
     "crs": "EPSG:32632",
@@ -105,7 +131,10 @@
     "forbid_material_camouflage_as_geometry_fix": true,
     "forbid_guessed_embark_internal_nodes": true,
     "forbid_houdini_or_gaea_as_required_dependencies": true,
-    "forbid_pcgex_as_route_or_physics_authority": true
+    "forbid_pcgex_as_route_or_physics_authority": true,
+    "pcgex_spatial_features_are_non_authoritative": true,
+    "verified_case_learning_is_yacs_owned": true,
+    "forbid_unreviewed_proof_as_learning_case": true
   },
   "reference_examples": {
     "repository": "https://github.com/PCGEx/PCGExExampleProject",

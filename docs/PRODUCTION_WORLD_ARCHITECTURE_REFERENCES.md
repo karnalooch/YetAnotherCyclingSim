@@ -91,6 +91,18 @@ Architectural lessons YACS may adopt independently:
 5. prefer reproducible/non-destructive generation and validation over manual
    one-off editing.
 
+Embark's archived public **texture-synthesis** repository is a separate useful
+reference for an *example-based* generation pattern:
+https://github.com/EmbarkStudios/texture-synthesis
+
+The project synthesizes image results from explicit example inputs and supports
+workflows where multiple examples can inform generation. YACS uses this only as
+an architectural analogy for the adaptive-terrain case memory: successful
+examples remain explicit, inspectable inputs instead of becoming hidden
+location-specific code. `texture-synthesis` is **not** a terrain system, is not a
+YACS dependency, and is not evidence that Embark's internal terrain pipeline
+learns from accepted terrain proofs.
+
 **Evidence boundary:** these public repositories demonstrate Embark's public
 tooling approaches. They are **not evidence of the complete internal ARC Raiders
 pipeline**, and this document must not present them as such.

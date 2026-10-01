@@ -1,0 +1,11 @@
+{
+  "id": "bounded-scout-focus-proof",
+  "source": "karnalooch/YetAnotherCyclingSim",
+  "category": "tooling",
+  "problem": "Long video or full-runtime proofs are wasteful for localized visual defects.",
+  "invariant": "Capture a bounded low-cost scout, retain exact-revision spatial/time identity, and select a bounded context window without silently moving the viewpoint. Use one prepared runtime and independently verify every emitted frame. Reduced diagnostic evidence must never mint full-proof or performance success.",
+  "evidence": ["YACS Issue #293: planner, asynchronous capture and evidence-validation contracts; native proof required"],
+  "do_not_copy": ["Passo Giau station numbers", "Unreal-specific APIs", "YACS collision trigger values"],
+  "failure_behavior": "Missing or stale frames, wrong SHA, unknown source or media failure remains explicit. No detected suspect is not visual acceptance.",
+  "status": "candidate"
+}

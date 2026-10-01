@@ -38,7 +38,9 @@ from scripts.geometry.sp638_local_corridor import (  # noqa: E402
     minimum_sampled_radius_xy,
 )
 from scripts.geometry.local_terrain_skin import (  # noqa: E402
+    apply_corridor_constraints_to_height_grid,
     build_terrain_skin_mesh,
+    make_road_clearance_profiles,
     smooth_height_grid,
     terrain_skin_hash,
 )
@@ -88,10 +90,33 @@ DIAGNOSTIC_VARIANTS = {
         "corridor_visible": True,
         "apply_landscape_cut_fill": True,
     },
+    # F/G isolate the additional transient spline edit from corridor meshes.
+    # Persisted map layers remain unchanged; these are not new world owners.
+    "F": {
+        "macro_landscape_visible": True,
+        "local_terrain_visible": False,
+        "corridor_visible": False,
+        "apply_landscape_cut_fill": True,
+    },
+    "G": {
+        "macro_landscape_visible": True,
+        "local_terrain_visible": False,
+        "corridor_visible": True,
+        "apply_landscape_cut_fill": False,
+    },
     "C3": {
         "macro_landscape_visible": False,
         "local_terrain_visible": True,
         "corridor_visible": False,
+        "apply_landscape_cut_fill": False,
+    },
+    # H is the single-ground-owner candidate: native 1 m DTM receives the
+    # route-local road/earthwork constraints before triangulation. Separate
+    # earthwork/shoulder ground meshes and the extra Landscape spline edit stay off.
+    "H": {
+        "macro_landscape_visible": False,
+        "local_terrain_visible": True,
+        "corridor_visible": True,
         "apply_landscape_cut_fill": False,
     },
 }
@@ -799,7 +824,13 @@ def _sample_local_terrain_skin(
     return mesh, origin_world, diagnostics
 
 
-def _load_native_dtm_patch(center_world: unreal.Vector):
+def _load_native_dtm_patch(
+    center_world: unreal.Vector,
+    *,
+    corridor_mesh=None,
+    corridor_profiles=None,
+    corridor_origin_world: unreal.Vector | None = None,
+):
     metadata_value = os.environ.get(NATIVE_DTM_PATCH_ENV, "").strip()
     if not metadata_value:
         raise RuntimeError(
@@ -824,6 +855,8 @@ def _load_native_dtm_patch(center_world: unreal.Vector):
         raise RuntimeError("Gate C.3 patch unexpectedly samples Landscape collision")
     if policy.get("native_dtm_direct") is not True or policy.get("smoothing_applied") is not False:
         raise RuntimeError("Gate C.3 native-DTM policy drifted")
+    if policy.get("road_constraints_applied") is not False:
+        raise RuntimeError("prepared native DTM source unexpectedly contains road constraints")
     if grid.get("x_order") != "ue_x_ascending" or grid.get("row_order") != "ue_y_descending":
         raise RuntimeError("Gate C.3 patch axis order drifted")
 
@@ -878,7 +911,26 @@ def _load_native_dtm_patch(center_world: unreal.Vector):
             f"focus=({focus_x_m:.3f},{focus_y_m:.3f})"
         )
 
-    origin_z_m = min(values)
+    constraint_metrics = None
+    if corridor_mesh is not None:
+        if corridor_profiles is None or corridor_origin_world is None:
+            raise RuntimeError(
+                "native-DTM road constraints require profiles and corridor origin"
+            )
+        heights_m, constraint_metrics = apply_corridor_constraints_to_height_grid(
+            x_coordinates_m,
+            y_coordinates_m,
+            heights_m,
+            corridor_mesh,
+            corridor_profiles,
+            corridor_origin_m=Vec3(
+                float(corridor_origin_world.x) / 100.0,
+                float(corridor_origin_world.y) / 100.0,
+                float(corridor_origin_world.z) / 100.0,
+            ),
+        )
+
+    origin_z_m = min(min(row) for row in heights_m)
     mesh = build_terrain_skin_mesh(
         x_coordinates_m,
         y_coordinates_m,
@@ -903,6 +955,34 @@ def _load_native_dtm_patch(center_world: unreal.Vector):
         "column_count": columns,
         "sample_count": rows * columns,
         "smoothing_applied": False,
+        "road_constraints_applied": constraint_metrics is not None,
+        "single_local_ground_owner": constraint_metrics is not None,
+        "constraint_transition_outer_weight": 0.0,
+        "constraint_sample_count": (
+            constraint_metrics.constrained_sample_count
+            if constraint_metrics is not None
+            else 0
+        ),
+        "constraint_max_abs_adjustment_m": (
+            constraint_metrics.max_abs_adjustment_m
+            if constraint_metrics is not None
+            else 0.0
+        ),
+        "constraint_rms_adjustment_m": (
+            constraint_metrics.rms_adjustment_m
+            if constraint_metrics is not None
+            else 0.0
+        ),
+        "constraint_overlap_sample_count": (
+            constraint_metrics.overlapping_sample_count
+            if constraint_metrics is not None
+            else 0
+        ),
+        "constraint_max_overlap_delta_m": (
+            constraint_metrics.max_overlap_delta_m
+            if constraint_metrics is not None
+            else 0.0
+        ),
         "proof_focus_margin_m": focus_margin_m,
         "proof_focus_ue_m": [focus_x_m, focus_y_m],
         "occlusion_lift_m": 0.0,
@@ -1035,6 +1115,13 @@ def main() -> None:
         component.set_forced_lod(0)
         component.set_lod_bias(0)
 
+    if variant_name == "A":
+        from scripts.ue.audit_macro_landscape import capture_macro_height_evidence
+
+        capture_macro_height_evidence(
+            world, landscape, landscape_components, _proof_path.parent
+        )
+
     road_actor, spline, original_control_count = _find_road_spline()
     for component in road_actor.get_components_by_class(unreal.SplineMeshComponent):
         component.set_visibility(False, True)
@@ -1060,6 +1147,11 @@ def main() -> None:
 
     camera_distance_cm = max(0.0, focus_cm - CAMERA_BACK_CM)
     target_distance_cm = min(full_length_cm, focus_cm + LOOK_AHEAD_CM)
+    # Sample the forward frame before replacing the full spline with its slice.
+    road_forward = spline.get_direction_at_distance_along_spline(
+        camera_distance_cm,
+        unreal.SplineCoordinateSpace.WORLD,
+    )
     road_camera = spline.get_location_at_distance_along_spline(
         camera_distance_cm,
         unreal.SplineCoordinateSpace.WORLD,
@@ -1068,6 +1160,15 @@ def main() -> None:
         target_distance_cm,
         unreal.SplineCoordinateSpace.WORLD,
     )
+
+    from scripts.ue.ride_probe_capture import config_from_env, sample_native_camera, scan_ground
+
+    probe_config = config_from_env(camera_distance_cm / 100.0)
+    probe_samples = (
+        sample_native_camera(unreal, spline, probe_config, start_cm / 100.0, end_cm / 100.0)
+        if probe_config is not None else []
+    )
+    probe_events = []
 
     kernel_world = _sample_world(
         spline,
@@ -1106,6 +1207,12 @@ def main() -> None:
         adaptive_profiles,
         tangent_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
     )
+    ground_constraint_profiles = make_road_clearance_profiles(adaptive_profiles)
+    ground_constraint_mesh = build_corridor_mesh(
+        centerline,
+        ground_constraint_profiles,
+        tangent_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
+    )
     road_mesh = build_corridor_mesh(
         centerline,
         make_constant_profiles(len(centerline), ROAD_PROFILE),
@@ -1122,6 +1229,7 @@ def main() -> None:
         tangent_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
     )
     profile_diagnostics = _profile_diagnostics(adaptive_profiles)
+    origin_world = kernel_world[0]
 
     landscape_slice = _sample_world(
         spline,
@@ -1177,6 +1285,13 @@ def main() -> None:
             edit_layer_name=edit_layer_name,
         )
 
+    if probe_config is not None:
+        if bool(variant["macro_landscape_visible"]):
+            probe_events = scan_ground(unreal, world, road_actor, probe_samples, _vertical_trace_height_cm)
+        else:
+            from scripts.proof.ride_probe import terrain_event
+            probe_events = [terrain_event(row, None) for row in probe_samples]
+
     terrain_skin_mesh = None
     terrain_skin_origin_world = None
     terrain_skin_diagnostics: dict[str, object] = {
@@ -1190,8 +1305,15 @@ def main() -> None:
             terrain_skin_origin_world,
             terrain_skin_diagnostics,
         ) = (
-            _load_native_dtm_patch(terrain_skin_center_world)
-            if variant_name == "C3"
+            _load_native_dtm_patch(
+                terrain_skin_center_world,
+                corridor_mesh=ground_constraint_mesh if variant_name == "H" else None,
+                corridor_profiles=(
+                    ground_constraint_profiles if variant_name == "H" else None
+                ),
+                corridor_origin_world=origin_world if variant_name == "H" else None,
+            )
+            if variant_name in {"C3", "H"}
             else _sample_local_terrain_skin(
                 world,
                 road_actor,
@@ -1199,6 +1321,33 @@ def main() -> None:
             )
         )
         terrain_skin_diagnostics["enabled"] = True
+        if variant_name == "H":
+            first_profile = ground_constraint_profiles[0]
+            by_role = {point.role: point for point in first_profile}
+            terrain_skin_diagnostics.update(
+                {
+                    "shoulders_capped_to_road_edge_height": True,
+                    "shoulder_constraint_weight": 1.0,
+                    "left_clearance_apron_m": abs(
+                        by_role["left_shoulder"].lateral_m
+                        - by_role["left_road_edge"].lateral_m
+                    ),
+                    "right_clearance_apron_m": abs(
+                        by_role["right_shoulder"].lateral_m
+                        - by_role["right_road_edge"].lateral_m
+                    ),
+                    "asphalt_vertical_clearance_m": min(
+                        point.vertical_m for point in ROAD_PROFILE
+                    )
+                    - max(
+                        by_role["left_road_edge"].vertical_m,
+                        by_role["right_road_edge"].vertical_m,
+                    ),
+                    "ground_constraint_mesh_sha256": corridor_mesh_hash(
+                        ground_constraint_mesh
+                    ),
+                }
+            )
 
     neutral_landscape_material = unreal.load_asset(
         "/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial"
@@ -1253,12 +1402,13 @@ def main() -> None:
             terrain_skin_material,
         )
 
-    origin_world = kernel_world[0]
     earth_counts = _disabled_mesh_counts()
     left_shoulder_counts = _disabled_mesh_counts()
     right_shoulder_counts = _disabled_mesh_counts()
     road_counts = _disabled_mesh_counts()
-    if bool(variant["corridor_visible"]):
+    corridor_ground_visible = bool(variant["corridor_visible"]) and variant_name != "H"
+    asphalt_visible = bool(variant["corridor_visible"])
+    if corridor_ground_visible:
         earth_counts = _spawn_dynamic_mesh(
             actor_subsystem,
             origin_world,
@@ -1280,6 +1430,7 @@ def main() -> None:
             "SP638_LocalCorridor_RightShoulder",
             shoulder_material,
         )
+    if asphalt_visible:
         road_counts = _spawn_dynamic_mesh(
             actor_subsystem,
             origin_world,
@@ -1293,16 +1444,18 @@ def main() -> None:
     for component in landscape_components:
         component.set_visibility(macro_landscape_visible, True)
 
-    camera_location = unreal.Vector(
-        road_camera.x,
-        road_camera.y,
-        road_camera.z + EYE_HEIGHT_CM,
+    from scripts.ue.road_capture_camera import rider_capture_frame
+
+    camera_frame = rider_capture_frame(
+        (float(road_camera.x), float(road_camera.y), float(road_camera.z)),
+        (float(road_forward.x), float(road_forward.y), float(road_forward.z)),
+        (float(road_target.x), float(road_target.y), float(road_target.z) + 80.0),
+        EYE_HEIGHT_CM,
     )
-    target = unreal.Vector(
-        road_target.x,
-        road_target.y,
-        road_target.z + 80.0,
-    )
+    camera_frame["camera_station_m"] = camera_distance_cm / 100.0
+    camera_frame["legacy_target_station_m"] = target_distance_cm / 100.0
+    camera_location = unreal.Vector(*camera_frame["camera_location_cm"])
+    target = unreal.Vector(*camera_frame["target_cm"])
     camera_rotation = unreal.MathLibrary.find_look_at_rotation(
         camera_location,
         target,
@@ -1378,15 +1531,22 @@ def main() -> None:
 
     _proof_data = {
         "capture_strategy": (
-            "gate-c3-native-dtm-bounded-patch"
-            if variant_name == "C3"
-            else "gate-c1-surface-ownership-diagnostic"
+            "native-dtm-road-constrained-single-owner"
+            if variant_name == "H"
+            else (
+                "gate-c3-native-dtm-bounded-patch"
+                if variant_name == "C3"
+                else "gate-c1-surface-ownership-diagnostic"
+            )
         ),
         "diagnostic_variant": variant_name,
+        "persisted_map_layers_preserved": True,
         "surface_visibility": {
             "macro_landscape": macro_landscape_visible,
             "local_terrain": bool(variant["local_terrain_visible"]),
             "corridor": bool(variant["corridor_visible"]),
+            "corridor_ground": corridor_ground_visible,
+            "asphalt": asphalt_visible,
         },
         "render_centerline": (
             pcgex_metadata
@@ -1474,6 +1634,7 @@ def main() -> None:
         "forced_landscape_lod": 0,
         "proof_viewmode": "lit",
         "neutral_landscape_material": True,
+        "camera_frame": camera_frame,
         "camera_location_cm": [
             float(camera_location.x),
             float(camera_location.y),
@@ -1485,6 +1646,26 @@ def main() -> None:
             float(camera_rotation.roll),
         ],
     }
+
+    # Load for the actual rider view; elapsed time alone is not resource readiness.
+    from scripts.ue.prepare_landscape_capture import prepare_capture
+
+    _proof_data["capture_preparation"] = prepare_capture(
+        unreal, landscape, camera_location, camera_rotation, _proof_path.parent,
+        request_height_mips=macro_landscape_visible,
+    )
+
+    if probe_config is not None:
+        from scripts.ue.ride_probe_capture import start_capture
+
+        start_capture(
+            api=unreal, camera=_camera, landscape=landscape, config=probe_config,
+            samples=probe_samples, events=probe_events, proof_data=_proof_data,
+            root=_proof_path.parent / "RideProbe", baseline_png=_output_path,
+            baseline_location=camera_location, baseline_rotation=camera_rotation,
+            done=_finish, prepare=prepare_capture,
+        )
+        return
 
     unreal.EditorPythonScripting.set_keep_python_script_alive(True)
     _task = unreal.AutomationLibrary.take_high_res_screenshot(

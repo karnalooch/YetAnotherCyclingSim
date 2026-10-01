@@ -596,6 +596,53 @@ location selection is test infrastructure, not route or physics truth.
 
 Do not replace this diagnostic with guessed smoothing percentages.
 
+##### Capture resource readiness — Issue #293
+
+A fixed screenshot delay is not evidence that the engine has loaded the height
+textures needed by the rider view. The bounded capture path primes the existing
+rider camera in the editor viewport and invokes Epic's native
+`AutomationLibrary.finish_loading_before_screenshot()` immediately before
+submitting A-E/C3 screenshots. It records map-owned height-texture metadata
+before/after in `capture-readiness.json` and in the proof. Missing viewport,
+failed native loading or still-placeholder/compiling height textures fail closed.
+No height pixels, source resolution, LOD policy, road geometry, materials or
+persisted map assets are changed by this preparation.
+
+This is a capture-validity experiment, not acceptance of the macro terrain.
+Mip readback is taken before screenshot-task submission, not on the exact GPU
+capture frame; completed texture compilation alone does not establish full mip
+residency or visual quality. Compare the unchanged camera and road hashes and
+inspect the PNG before attributing stair-stepping to this stage. Never respond
+to a failed result with a hidden global streaming disable or DTM smoothing.
+
+M3 run 92 completed the native loading barrier but retained macro stepping;
+64 combined height textures still reported 7 of 10 resident mips. The controlled
+run 94 at `b22ea83432c96dc7796cba9b802fe4c049001536` requested full height mips
+for variant A only. All 64 became 10/10 and the pronounced macro staircase
+artifact disappeared from that same-camera A image. B/E retained 7/10 and the
+coarse terrain. The sampled height-texture source exports were byte-identical,
+and camera, PCGEx output and corridor hashes were unchanged. This establishes
+height-mip residency as a cause of the observed capture defect, not source-data
+quantization or a reason to replace the established road pipeline.
+
+The bounded capture preparation therefore requests a transient 120-second native
+mip-residency lease for map-owned, mipmapped height textures whenever the macro
+Landscape is visible (A/B/E). C/D/C3 do not request macro mip residency. The native
+loading barrier must finish and full-mip readback must pass before capture;
+partial/placeholder results fail closed. The lease expires after the process or
+duration, does not serialize `NeverStream`, and does not disable streaming globally.
+
+This fixes a forced-LOD proof resource precondition; it is not a blanket production
+runtime policy, performance acceptance or a cure for every terrain/road seam.
+Keep the single-owner near-field and road/earthwork acceptance gates independent.
+The A-only causal result does not substitute for reviewing the combined A-E/C3
+candidate, additional representative locations and performance where required.
+
+Official API references:
+- https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Engine/UStreamableRenderAsset
+- https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/AutomationLibrary
+- https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/UnrealEditorSubsystem
+
 ##### Native metric DTM for rider-close ground
 
 The production candidate for near-field ground should be:
@@ -664,6 +711,119 @@ Only after neutral geometry is visually accepted should the relevant performance
 proof set thresholds for the chosen representation. Meso cliffs/rocks/retaining,
 materials, vegetation and final weather follow after the ground ownership contract
 is proven.
+
+##### Adaptive terrain policy and verified-case learning
+
+Route-wide terrain adaptation must not become a growing list of location-specific
+patches. The production direction is a deterministic adaptive solver that observes
+road/terrain context, chooses among already-admitted terrain strategies, records
+why it made that choice, and may reuse parameters only from previously verified
+proof cases.
+
+The initial decision vector includes at least:
+
+- longitudinal grade;
+- left/right cross-slope;
+- road-to-native-DTM elevation delta;
+- local native-DTM roughness;
+- signed curvature/radius;
+- distance and height separation to a competing road branch;
+- required cut/fill magnitude.
+
+The strategy library is intentionally small:
+
+- native blend / minor correction;
+- constrained cut/fill corridor;
+- tight-hairpin clearance corridor;
+- retaining/cliff or other non-heightfield escalation when one heightfield cannot
+  represent the geometry safely.
+
+The adaptive layer is a **policy/orchestration layer**, not permission to bypass
+the tools-first decision ladder below. A strategy may invoke only an already
+admitted native/custom authoring path. If a heightfield is structurally wrong for
+the observed geometry, the solver escalates instead of learning to hide the defect.
+
+PCGEx is the preferred **spatial feature engine**, not the owner of the adaptive
+policy. Reuse its strengths in filters, attributes, sampling, graph/path operations,
+heuristics and—only where separately proven useful—tensor/vector-field operations
+to measure or propagate corridor context. Normalize those results into the
+versioned `adaptive_terrain_feature_contract.json` packet. The packet must record
+its source artifact and exact PCGEx revision, preserve canonical road XY, and
+explicitly remain non-authoritative for route geometry and physics.
+
+YACS owns the next layer:
+
+- safe baseline strategy selection;
+- strategy-specific bounded parameters;
+- verified-case similarity matching;
+- learning eligibility;
+- non-heightfield escalation;
+- the final explainable decision report.
+
+This separation is deliberate. A PCGEx graph may answer **"what spatial situation
+is this?"** and may provide reusable scores/attributes. It must not answer **"this
+proof is accepted, add it to memory"** and must not silently rewrite the policy.
+
+Embark's public `texture-synthesis` project is useful only as an architectural
+analogy for **example-based generation**: multiple examples may inform a new
+result while the generator remains explicit about its inputs. It is not evidence
+that Embark uses an equivalent terrain-learning system, and YACS does not copy or
+depend on that repository for terrain generation. The transferable lesson is to
+keep examples as explicit inputs instead of burying successful one-off fixes in
+location-specific code.
+
+Learning is review-gated and deterministic:
+
+1. baseline policy chooses a safe strategy from versioned thresholds;
+2. only cases with exact-SHA technical PASS **and** human visual PASS are eligible
+   learning examples;
+3. sufficiently similar accepted cases may tune bounded parameters **inside the
+   same safe strategy**;
+4. case memory cannot override a retaining/cliff or ambiguity escalation;
+5. proof output records the feature vector, baseline strategy, final parameters,
+   contributing case IDs and similarity/confidence;
+6. accepted cases enter a versioned repository ledger through normal review;
+7. threshold/model calibration happens offline and produces a reviewed candidate
+   config change; runtime/editor generation never rewrites its own policy.
+
+Do not auto-promote failed, merely green, or unreviewed visual evidence into the
+learning memory. Do not infer successful terrain behavior from a single hairpin.
+The first route-general policy requires accepted cases for the difficult hairpin,
+a normal/moderate slope and a major-earthworks section already required by the
+acceptance order above.
+
+```mermaid
+flowchart LR
+    OBS["OBSERVE<br/>Road + native DTM"] --> FEAT["MEASURE<br/>Deterministic features"]
+    FEAT --> POLICY["DECIDE<br/>Versioned safe policy"]
+    CASES["MEMORY<br/>Verified PASS cases"] --> MATCH["MATCH<br/>Similar same-strategy cases"]
+    POLICY --> MATCH
+    MATCH --> STRAT["AUTHOR<br/>Admitted terrain strategy"]
+    STRAT --> PROOF["VERIFY<br/>Exact-SHA rider proof"]
+    PROOF -->|"PASS"| ACCEPT["ACCEPT<br/>Reviewed case"]
+    PROOF -->|"FAIL"| FIX["FAIL CLOSED<br/>Owning layer / escalation"]
+    ACCEPT --> CASES
+    FIX -.-> POLICY
+
+    classDef input fill:#303846,stroke:#8ea1b8,color:#f7f9fc,stroke-width:2px;
+    classDef exec fill:#123f73,stroke:#49a2ff,color:#ffffff,stroke-width:3px;
+    classDef tool fill:#4b2f69,stroke:#b77cff,color:#ffffff,stroke-width:2px;
+    classDef decision fill:#69470e,stroke:#f0a72f,color:#ffffff,stroke-width:3px;
+    classDef success fill:#1f5736,stroke:#63d889,color:#ffffff,stroke-width:3px;
+    classDef danger fill:#6b2429,stroke:#ff6b73,color:#ffffff,stroke-width:3px;
+    classDef owned fill:#34373d,stroke:#9da4ae,color:#ffffff,stroke-width:2px;
+    classDef evidence fill:#164d5c,stroke:#5bd6ef,color:#ffffff,stroke-width:2px;
+
+    class OBS input;
+    class FEAT,STRAT exec;
+    class POLICY,MATCH decision;
+    class CASES owned;
+    class PROOF evidence;
+    class ACCEPT success;
+    class FIX danger;
+
+    linkStyle default stroke-width:2px;
+```
 
 #### Road / earthworks decision ladder
 
@@ -908,6 +1068,50 @@ This is the default YACS answer to "how do people on YouTube avoid destroying th
 
 The road has three separate concepts.
 
+### Rider-camera direction is route-local
+
+The terrain diagnostic keeps its selected camera station, XY and 1.6 m eye
+height fixed. Camera orientation uses the forward tangent at that same station,
+not a chord to a point far beyond a hairpin. A route-ahead point can already be
+behind the rider in world space; such a view is not forward-riding evidence.
+Record the old target and its angle to the local tangent in `camera_frame` so
+the change remains auditable. This changes proof-camera orientation only; it
+must not lift/reposition the camera to hide geometry or change the established
+PCGEx road, earthworks, source terrain or simulation. Historical same-pose
+captures remain comparison evidence, not deleted or reclassified as accepted.
+A forward camera still requires review for real road/terrain penetration,
+exclusive surface ownership, fresh loading and representative locations.
+
+### Bounded transient-edit isolation
+
+M3 #98 at `bb15df0003c7ad22025844f3ca8b8e93d42a9fca` completed the forward-camera
+experiment. Native spline data measured the old look-ahead chord at 135.616 degrees
+from forward. B now reveals the road and severe adjacent walls; E partly covers
+those with its legacy collision-derived skin. Neither image is accepted geometry.
+Camera correctness did not cure surface ownership. Do not tune the established
+PCGEx alignment or hide the exposed walls with the skin.
+
+Keep A/B/C/D/E/C3 unchanged and optionally add F/G at the same pose, material,
+height-mip readiness, prepared inputs and corridor hash:
+
+| Control | Additional transient spline edit | Corridor meshes | Local skin |
+|---|---|---|---|
+| A | off | off | off |
+| F | on | off | off |
+| G | off | on | off |
+| B | on | on | off |
+
+All four keep the persisted map and its original edit layers; `off` means not
+executing the additional `editor_apply_spline` in this capture, not clearing
+existing `Road_Earthworks`. F can attribute a regression to that operation; it
+cannot by itself distinguish layer blending, geometry or resource-update causes.
+G tests corridor visibility against the persisted terrain without the extra edit.
+No camera repositioning, terrain smoothing or parameter tuning is part of this
+isolation. F/G are evidence controls, never substitute production ground owners.
+They require explicit `include_surface_isolation=true` in a manual M3 dispatch;
+the normal broker still requests the six baseline captures. No additional proof
+runs on ordinary pushes. Technical receipts record whether F/G were requested.
+
 ### 7.1 Canonical alignment
 
 The line saying **where the road is**.
@@ -977,6 +1181,20 @@ The first real mixed-route proof must establish source-backed surface transition
 The current support exercise is `physics_reference/examples/run_mixed_surface.py`, tested through the existing reference-test discovery. It composes RoadPhysicsProfile, SurfaceGripPolicy, Environment and the unchanged step_simulation. Fixture coefficients are explicitly synthetic. Surface selection occurs at current S/D before each fixed substep; batching cannot alter the result. The last substep may pass the test endpoint slightly without resetting distance or velocity. The straight-line exercise reports grip but does not execute a corner/braking solver or prove UE/runtime parity. Detailed tyre/roughness physics and actual network activation remain separate work after the applicable foundation gate.
 
 ---
+
+### Bounded scout and focused traversal evidence
+
+Owner-approved Issue #293 tooling adds an opt-in light traversal followed by a
+single +/-2-second detail window. The operational contract and limits live in
+[CI Validation Tiers](CI_VALIDATION_TIERS.md#bounded-traversal-diagnostics-issue-293).
+Reuse the current exact-SHA PCGEx scene, native route-local camera and transient
+height-mip preparation. The camera is not raised or moved to avoid faults.
+Collision-derived suspects only locate candidate stations; missing signals do
+not pass the world. Inspect both clips and original PNGs before attributing a
+render defect. The light/focus receipt is NOT the full A-E/C3 acceptance receipt.
+These settled camera samples do not measure live gameplay FPS, streaming hitches
+or the full road network. Normal rider-camera, surface-owner, representative
+location and performance gates still apply.
 
 ## 8. The road/terrain rule that prevents black wedges
 

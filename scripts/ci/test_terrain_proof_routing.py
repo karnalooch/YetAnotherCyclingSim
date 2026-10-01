@@ -64,8 +64,10 @@ class TerrainProofRoutingTests(unittest.TestCase):
             "environment-identity-mismatch",
             "$purgeProjectBuild = $false",
             "$state.compile_passed = $false",
-            "foreach ($variant in @('A','B','C','D','E'))",
+            "$variants = @('A','B','C','D','E')",
+            "foreach ($variant in $variants)",
             "-Variant C3",
+            "-Variant H",
         ):
             self.assertIn(token, author)
 
@@ -78,9 +80,74 @@ class TerrainProofRoutingTests(unittest.TestCase):
             validate.index("validate_pcgex_corridor_output.py"),
             validate.index("name: proof-m3-terrain-"),
         )
-        self.assertIn("if: ${{ success() }}", validate)
+        self.assertIn(
+            "success() && (inputs.ride_probe_mode == 'off' || inputs.ride_probe_mode == '')",
+            validate,
+        )
+        self.assertIn(
+            "name: ride-probe-${{ github.run_id }}-${{ github.run_attempt }}", validate
+        )
         self.assertIn('"human_visual_status": "PENDING"', validate)
         self.assertIn('"exact_sha": os.environ["SOURCE_SHA"]', validate)
+
+    def test_each_attempt_has_one_isolated_evidence_root(self) -> None:
+        global_block = self.workflow.split("\njobs:", 1)[0]
+        self.assertIn(
+            "YACS_M3_EVIDENCE_ROOT: Saved/RuntimeProof/CI/M3/PCGExCorridor/"
+            "${{ github.run_id }}-${{ github.run_attempt }}",
+            global_block,
+        )
+        author = job(self.workflow, "author")
+        init = author.split("- name: Initialize isolated proof output", 1)[1].split(
+            "- name: Build or reuse binaries", 1
+        )[0]
+        self.assertIn("$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT", init)
+        self.assertIn("if (Test-Path -LiteralPath $root)", init)
+        self.assertIn("throw 'M3 run evidence already exists", init)
+        self.assertNotIn("Remove-Item", init)
+        self.assertNotIn("Binaries", init)
+        self.assertNotIn("BuildCache", init)
+
+    def test_authoring_and_captures_share_only_current_output(self) -> None:
+        author = job(self.workflow, "author")
+        self.assertIn("ArtifactRoot = '${{ env.YACS_M3_EVIDENCE_ROOT }}'", author)
+        for suffix in (
+            "/Traversal",
+            "/Visual/{0}",
+            "/Visual/C3",
+            "/Visual/H",
+            "/pcgex_graph_output.json",
+        ):
+            self.assertIn("${{ env.YACS_M3_EVIDENCE_ROOT }}" + suffix, author)
+        compact = author.split("- name: Upload compact H candidate evidence", 1)[
+            1
+        ].split("- name: Upload PCGEx authoring evidence", 1)[0]
+        self.assertIn(
+            "passo-giau-m3-h-candidate-${{ github.run_id }}-${{ github.run_attempt }}",
+            compact,
+        )
+        self.assertIn("/Visual/H/sp638_surface_h_rider_3840x2160.png", compact)
+        self.assertIn("/Visual/H/surface_ownership_h_proof.json", compact)
+
+        upload = author.split("- name: Upload PCGEx authoring evidence", 1)[1].split(
+            "- name: Clean self-hosted workspace", 1
+        )[0]
+        self.assertIn(
+            "_embark-terrain-worktree/${{ env.YACS_M3_EVIDENCE_ROOT }}/**", upload
+        )
+        self.assertNotIn("_embark-terrain-worktree/Content", upload)
+        self.assertNotIn("/PCGExCorridor/**", upload)
+        self.assertIn("'Saved/BuildCache/PCGEx/compile-state.json'", author)
+
+    def test_deviation_rejects_ambiguous_sources_and_execution(self) -> None:
+        validate = job(self.workflow, "validate")
+        self.assertIn('test "${#SOURCES[@]}" -eq 1', validate)
+        self.assertIn('test "${#EXECUTIONS[@]}" -eq 1', validate)
+        self.assertNotIn("-print -quit", validate)
+        self.assertIn(
+            "--output ${{ env.YACS_M3_EVIDENCE_ROOT }}/pcgex_corridor_deviation.json",
+            validate,
+        )
 
     def test_broker_registration_is_explicit_exact_sha_and_read_only(self) -> None:
         policy = json.loads((ROOT / ".gumball/proof-broker.json").read_text())
