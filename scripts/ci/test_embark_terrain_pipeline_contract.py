@@ -184,6 +184,46 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         self.assertTrue(invariants["road_earthworks_are_separate"])
         self.assertTrue(invariants["forbid_houdini_or_gaea_as_required_dependencies"])
         self.assertTrue(invariants["forbid_pcgex_as_route_or_physics_authority"])
+        self.assertTrue(invariants["pcgex_spatial_features_are_non_authoritative"])
+        self.assertTrue(invariants["verified_case_learning_is_yacs_owned"])
+        self.assertTrue(invariants["forbid_unreviewed_proof_as_learning_case"])
+
+        adaptive = config["graph"]["adaptive_terrain_feature_role"]
+        self.assertEqual(
+            adaptive["contract"],
+            "worldgen/terrain/adaptive_terrain_feature_contract.json",
+        )
+        self.assertIn("filters", adaptive["permitted_pcgex_capabilities"])
+        self.assertIn("sampling", adaptive["permitted_pcgex_capabilities"])
+        self.assertIn("heuristics", adaptive["permitted_pcgex_capabilities"])
+        self.assertIn("route_authority", adaptive["forbidden_responsibilities"])
+        self.assertIn(
+            "automatic_verified_case_promotion",
+            adaptive["forbidden_responsibilities"],
+        )
+
+        feature_contract = json.loads(
+            (
+                ROOT
+                / "worldgen/terrain/adaptive_terrain_feature_contract.json"
+            ).read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            feature_contract["preferred_spatial_producer"],
+            "pcgex_spatial_analysis",
+        )
+        boundary = feature_contract["producer_boundary"]
+        self.assertTrue(boundary["canonical_road_xy_preserved"])
+        self.assertFalse(boundary["authoritative_route_geometry"])
+        self.assertFalse(boundary["authoritative_physics"])
+        self.assertIn(
+            "nearest_branch_xy_m",
+            feature_contract["required_features"],
+        )
+        self.assertIn(
+            "curvature_radius_m",
+            feature_contract["required_features"],
+        )
 
     def test_dependency_ledger_makes_pcgex_current_and_dcc_optional(self) -> None:
         ledger = (ROOT / "docs/legal/DEPENDENCY_PROVENANCE.md").read_text(
