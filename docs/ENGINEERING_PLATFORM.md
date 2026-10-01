@@ -146,6 +146,7 @@ The enabled broker-managed heavy proof set is:
 ```text
 /gumball proof r4-1b3-geometry
 /gumball proof m3-hairpin-corridor
+/gumball proof m3-terrain
 /gumball proof world-authoring-sp638
 /gumball proof environment-performance
 /gumball proof source-asset-audit

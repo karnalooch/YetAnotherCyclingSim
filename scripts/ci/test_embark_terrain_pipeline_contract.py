@@ -363,6 +363,22 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         ):
             self.assertNotIn(forbidden, workflow)
 
+    def test_active_workflow_is_not_bound_to_merged_feature_branch(self) -> None:
+        workflow = (ROOT / ".github/workflows/passo-giau-embark-terrain.yml").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertNotIn("feat/287-embark-terrain-pipeline", workflow)
+        for token in (
+            "branches-ignore:",
+            "- main",
+            "- 'dependabot/**'",
+            "github.repository == 'karnalooch/YetAnotherCyclingSim'",
+            "github.event_name == 'push'",
+            "github.event_name == 'workflow_dispatch'",
+        ):
+            self.assertIn(token, workflow)
+
     def test_embark_proof_uses_fingerprinted_build_reuse_fail_closed(self) -> None:
         workflow = (ROOT / ".github/workflows/passo-giau-embark-terrain.yml").read_text(
             encoding="utf-8"

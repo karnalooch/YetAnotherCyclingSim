@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -20,6 +21,7 @@ TARGET_WORKFLOWS = {
     / ".github"
     / "workflows"
     / "passo-giau-r4-1-hairpin-corridor.yml",
+    "m3-terrain": ROOT / ".github" / "workflows" / "passo-giau-embark-terrain.yml",
     "world-authoring-sp638": ROOT
     / ".github"
     / "workflows"
@@ -41,6 +43,16 @@ class YacsProofBrokerContractTests(unittest.TestCase):
 
     def test_policy_is_valid(self):
         self.assertEqual(proof_broker.validate_policy(self.policy()), [])
+
+    def test_documented_command_catalogs_match_enabled_proofs(self):
+        expected = {
+            name for name, proof in self.policy()["proofs"].items() if proof["enabled"]
+        }
+        for name in ("CI_VALIDATION_TIERS.md", "ENGINEERING_PLATFORM.md"):
+            with self.subTest(document=name):
+                text = (ROOT / "docs" / name).read_text(encoding="utf-8")
+                commands = set(re.findall(r"(?m)^/gumball proof ([a-z0-9._-]+)$", text))
+                self.assertEqual(commands, expected)
 
     def test_all_target_workflows_match_policy(self):
         policy = self.policy()
@@ -220,11 +232,31 @@ class YacsProofBrokerContractTests(unittest.TestCase):
                 workflow = path.read_text(encoding="utf-8")
                 self.assertIn("if: ${{ success() }}", workflow)
                 self.assertIn("if-no-files-found: error", workflow)
-                self.assertIn(
-                    f"proof-{proof_id}-${{{{ inputs.exact_sha }}}}",
-                    workflow,
-                )
-                self.assertIn(f"diagnostic-{proof_id}-", workflow)
+                if proof_id == "m3-terrain":
+                    # M3 validates its input before downstream checkout and keeps
+                    # the established internal artifact names as diagnostics.
+                    self.assertIn(
+                        "proof-m3-terrain-${{ needs.classify.outputs.source_sha }}",
+                        workflow,
+                    )
+                    self.assertIn(
+                        "passo-giau-m3-pcgex-${{ github.run_id }}-${{ github.run_attempt }}",
+                        workflow,
+                    )
+                    author, validate = workflow.split("\n  validate:", 1)
+                    self.assertNotIn("name: proof-m3-terrain-", author)
+                    self.assertIn("needs: [classify, prepare, author]", validate)
+                    self.assertLess(
+                        validate.index("validate_pcgex_corridor_output.py"),
+                        validate.index("name: proof-m3-terrain-"),
+                    )
+                    self.assertIn('"human_visual_status": "PENDING"', validate)
+                else:
+                    self.assertIn(
+                        f"proof-{proof_id}-${{{{ inputs.exact_sha }}}}",
+                        workflow,
+                    )
+                    self.assertIn(f"diagnostic-{proof_id}-", workflow)
 
     def test_broker_workflow_keeps_trusted_default_branch_boundary(self):
         workflow = BROKER_WORKFLOW.read_text(encoding="utf-8")

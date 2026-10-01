@@ -38,8 +38,8 @@
     },
     {
       "file": "passo-giau-embark-terrain.yml",
-      "state": "CURRENT",
-      "reason": "Current fail-closed exact-SHA PCGEx corridor graph authoring proof for the #287/#288 bounded Embark-pattern substitution; Houdini/Gaea remain optional escalation evidence, not current prerequisites."
+      "state": "BROKER-MANAGED",
+      "reason": "Explicit exact-SHA PCGEx-first M3 terrain/corridor proof; pushes run hosted contracts only, Gumball m3-terrain requests the full existing evidence bundle, and non-cancelling author concurrency protects the persistent compile-cache worktree. Houdini/Gaea are not required."
     },
     {
       "file": "passo-giau-r4-1-hairpin-corridor.yml",
@@ -49,12 +49,12 @@
     {
       "file": "passo-giau-r4-1-landscape-author.yml",
       "state": "UNKNOWN",
-      "reason": "Retained as the failed direct-DTM/native Landscape baseline and recovery evidence while #287/#288 proves the replacement Embark-mode terrain pipeline; disposition follows that proof."
+      "reason": "Retained as the failed direct-DTM/native Landscape baseline and recovery evidence after #288; disposition follows post-#288 macro-terrain convergence and it must not silently regain current authority."
     },
     {
       "file": "passo-giau-r4-1-road-author.yml",
       "state": "UNKNOWN",
-      "reason": "Retained as legacy SP638 native-authoring recovery evidence while #287/#288 proves the replacement Embark-mode terrain pipeline; disposition follows that proof."
+      "reason": "Retained as legacy SP638 native-authoring recovery evidence after #288; disposition follows post-#288 macro-terrain convergence and it must not silently regain current authority."
     },
     {
       "file": "passo-giau-r4-1-roadside-house.yml",
