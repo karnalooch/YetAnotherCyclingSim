@@ -86,7 +86,9 @@ push classified as `render` or `heavy`. Main and Dependabot pushes remain outsid
 the dedicated automatic M3 workflow. The independent normal Unreal CI lane is
 unchanged and still validates binary-affecting work when required.
 
-Use `/gumball proof m3-terrain` for the full checkpoint. The broker resolves one
+Use `/gumball proof m3-terrain` for the full checkpoint. Use
+`/gumball proof m3-h-focus` for the dedicated H focus/wide diagnostic without
+deduplicating to an existing full-terrain receipt. The broker resolves one
 same-repository PR HEAD, deduplicates requests and dispatches the trusted default-
 branch workflow with `exact_sha` and `gumball_request_id`. Explicit manual
 `workflow_dispatch` with those same inputs is the recovery fallback. Admission
