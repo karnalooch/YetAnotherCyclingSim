@@ -52,6 +52,12 @@ on:
         required: true
         type: string
 
+      include_surface_isolation:
+        description: Add F/G causal isolation captures to the full A-E/C3 proof
+        required: false
+        default: false
+        type: boolean
+
 permissions:
   contents: read
 
@@ -576,6 +582,8 @@ jobs:
           }
 
       - name: Render PCGEx rider-close corridor proof
+        env:
+          YACS_SURFACE_ISOLATION: ${{ inputs.include_surface_isolation && 'true' || 'false' }}
         shell: pwsh
         working-directory: _embark-terrain-worktree
         run: |
@@ -595,7 +603,11 @@ jobs:
           Copy-Item -LiteralPath $generatedAsset -Destination $evidenceAsset -Force
           Remove-Item -LiteralPath (Join-Path (Get-Location) 'Content/WorldGen') -Recurse -Force
 
-          foreach ($variant in @('A','B','C','D','E')) {
+          $variants = @('A','B','C','D','E')
+          if ($env:YACS_SURFACE_ISOLATION -eq 'true') {
+            $variants += @('F','G')
+          }
+          foreach ($variant in $variants) {
             ./scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1 `
               -ExpectedBranch 'HEAD' `
               -ExpectedHead '${{ needs.classify.outputs.source_sha }}' `
@@ -710,6 +722,7 @@ jobs:
         env:
           SOURCE_SHA: ${{ needs.classify.outputs.source_sha }}
           REQUEST_ID: ${{ inputs.gumball_request_id }}
+          YACS_SURFACE_ISOLATION: ${{ inputs.include_surface_isolation && 'true' || 'false' }}
         run: |
           python - <<'PY'
           import json
@@ -725,6 +738,7 @@ jobs:
               "run_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
               "technical_status": "PASS",
               "human_visual_status": "PENDING",
+              "surface_isolation_requested": os.environ["YACS_SURFACE_ISOLATION"] == "true",
           }
           root = Path(os.environ["RUNNER_TEMP"]) / "yacs-pcgex-execution"
           root.joinpath("proof-receipt.json").write_text(

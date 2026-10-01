@@ -95,6 +95,17 @@ The target must be reachable from a branch fetched from the canonical repository
 Workflow-definition SHA and proof-target SHA are separate: every preparation,
 checkout, author/render wrapper and proof receipt uses the validated target SHA.
 
+An operator may additionally set `include_surface_isolation=true` on an explicit
+manual M3 dispatch to append F/G, without replacing A-E/C3 or deviation. The
+optional boolean defaults to false, so broker requests and ordinary iteration
+retain their previous cost. F isolates the additional transient native spline
+cut/fill without meshes; G isolates corridor meshes without that additional edit.
+These controls preserve existing map layers, camera and input identity, and do
+not imply visual acceptance. The receipt records the request. Before this new
+workflow input is on main, dispatch the reviewed same-repository PR branch as
+the documented recovery fallback, with its exact target SHA and a unique request
+ID; keep admission, resource lock and compile fingerprint reuse intact.
+
 An explicit request always runs the existing A-E/C3 and deviation bundle, even
 when its most recent commit is docs-only. Compilation remains independently
 subject to the verified `none`/`warm`/`cold` decision above. A static push does not

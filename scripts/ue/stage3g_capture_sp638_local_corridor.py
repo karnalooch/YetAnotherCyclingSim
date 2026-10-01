@@ -88,6 +88,20 @@ DIAGNOSTIC_VARIANTS = {
         "corridor_visible": True,
         "apply_landscape_cut_fill": True,
     },
+    # F/G isolate the additional transient spline edit from corridor meshes.
+    # Persisted map layers remain unchanged; these are not new world owners.
+    "F": {
+        "macro_landscape_visible": True,
+        "local_terrain_visible": False,
+        "corridor_visible": False,
+        "apply_landscape_cut_fill": True,
+    },
+    "G": {
+        "macro_landscape_visible": True,
+        "local_terrain_visible": False,
+        "corridor_visible": True,
+        "apply_landscape_cut_fill": False,
+    },
     "C3": {
         "macro_landscape_visible": False,
         "local_terrain_visible": True,
@@ -1397,6 +1411,7 @@ def main() -> None:
             else "gate-c1-surface-ownership-diagnostic"
         ),
         "diagnostic_variant": variant_name,
+        "persisted_map_layers_preserved": True,
         "surface_visibility": {
             "macro_landscape": macro_landscape_visible,
             "local_terrain": bool(variant["local_terrain_visible"]),

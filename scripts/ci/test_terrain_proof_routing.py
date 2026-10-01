@@ -64,7 +64,8 @@ class TerrainProofRoutingTests(unittest.TestCase):
             "environment-identity-mismatch",
             "$purgeProjectBuild = $false",
             "$state.compile_passed = $false",
-            "foreach ($variant in @('A','B','C','D','E'))",
+            "$variants = @('A','B','C','D','E')",
+            "foreach ($variant in $variants)",
             "-Variant C3",
         ):
             self.assertIn(token, author)

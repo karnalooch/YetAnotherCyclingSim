@@ -969,6 +969,36 @@ captures remain comparison evidence, not deleted or reclassified as accepted.
 A forward camera still requires review for real road/terrain penetration,
 exclusive surface ownership, fresh loading and representative locations.
 
+### Bounded transient-edit isolation
+
+M3 #98 at `bb15df0003c7ad22025844f3ca8b8e93d42a9fca` completed the forward-camera
+experiment. Native spline data measured the old look-ahead chord at 135.616 degrees
+from forward. B now reveals the road and severe adjacent walls; E partly covers
+those with its legacy collision-derived skin. Neither image is accepted geometry.
+Camera correctness did not cure surface ownership. Do not tune the established
+PCGEx alignment or hide the exposed walls with the skin.
+
+Keep A/B/C/D/E/C3 unchanged and optionally add F/G at the same pose, material,
+height-mip readiness, prepared inputs and corridor hash:
+
+| Control | Additional transient spline edit | Corridor meshes | Local skin |
+|---|---|---|---|
+| A | off | off | off |
+| F | on | off | off |
+| G | off | on | off |
+| B | on | on | off |
+
+All four keep the persisted map and its original edit layers; `off` means not
+executing the additional `editor_apply_spline` in this capture, not clearing
+existing `Road_Earthworks`. F can attribute a regression to that operation; it
+cannot by itself distinguish layer blending, geometry or resource-update causes.
+G tests corridor visibility against the persisted terrain without the extra edit.
+No camera repositioning, terrain smoothing or parameter tuning is part of this
+isolation. F/G are evidence controls, never substitute production ground owners.
+They require explicit `include_surface_isolation=true` in a manual M3 dispatch;
+the normal broker still requests the six baseline captures. No additional proof
+runs on ordinary pushes. Technical receipts record whether F/G were requested.
+
 ### 7.1 Canonical alignment
 
 The line saying **where the road is**.

@@ -341,11 +341,11 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         self.assertNotIn("edit_layer_names[0]", capture)
         self.assertIn("set_visibility(macro_landscape_visible, True)", capture)
 
-        self.assertIn("[ValidateSet('A','B','C','D','E','C3')]", wrapper)
+        self.assertIn("[ValidateSet('A','B','C','D','E','C3','F','G')]", wrapper)
         self.assertIn("if ($Variant -eq 'C3')", wrapper)
-        self.assertIn("$ExpectedMacro = $Variant -in @('A','B','E')", wrapper)
+        self.assertIn("$ExpectedMacro = $Variant -in @('A','B','E','F','G')", wrapper)
         self.assertIn("$ExpectedLocal = $Variant -in @('C','D','E')", wrapper)
-        self.assertIn("$ExpectedCorridor = $Variant -in @('B','D','E')", wrapper)
+        self.assertIn("$ExpectedCorridor = $Variant -in @('B','D','E','G')", wrapper)
         self.assertIn("selected_earthworks_layer -ne 'Road_Earthworks'", wrapper)
         for token in (
             "Release-YacsUnrealWorkspaceLocks.ps1",
@@ -360,7 +360,8 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         ):
             self.assertIn(token, wrapper)
 
-        self.assertIn("foreach ($variant in @('A','B','C','D','E'))", workflow)
+        self.assertIn("$variants = @('A','B','C','D','E')", workflow)
+        self.assertIn("foreach ($variant in $variants)", workflow)
         self.assertIn("-Variant $variant", workflow)
         self.assertIn("extract_passo_giau_native_dtm_patch.py", workflow)
         self.assertIn("-Variant C3", workflow)
@@ -447,6 +448,66 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
             "AdditionalAllowedDirtyPaths",
         ):
             self.assertNotIn(forbidden, workflow)
+
+    def test_surface_isolation_is_an_explicit_complete_two_by_two(self) -> None:
+        import ast
+
+        capture = (
+            ROOT / "scripts/ue/stage3g_capture_sp638_local_corridor.py"
+        ).read_text(encoding="utf-8")
+        tree = ast.parse(capture)
+        variants = next(
+            ast.literal_eval(node.value)
+            for node in tree.body
+            if isinstance(node, ast.Assign)
+            and any(
+                isinstance(target, ast.Name) and target.id == "DIAGNOSTIC_VARIANTS"
+                for target in node.targets
+            )
+        )
+        for name, cut_fill, corridor in (
+            ("A", False, False),
+            ("F", True, False),
+            ("G", False, True),
+            ("B", True, True),
+        ):
+            with self.subTest(variant=name):
+                self.assertEqual(
+                    variants[name],
+                    {
+                        "macro_landscape_visible": True,
+                        "local_terrain_visible": False,
+                        "corridor_visible": corridor,
+                        "apply_landscape_cut_fill": cut_fill,
+                    },
+                )
+        wrapper = (
+            ROOT / "scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1"
+        ).read_text()
+        self.assertIn("$ExpectedCorridor = $Variant -in @('B','D','E','G')", wrapper)
+        self.assertIn("$ExpectedCutFill = $Variant -in @('B','C','D','E','F')", wrapper)
+        self.assertIn('"persisted_map_layers_preserved": True', capture)
+
+    def test_surface_isolation_is_opt_in_and_does_not_replace_baseline(self) -> None:
+        workflow = (
+            ROOT / ".github/workflows/passo-giau-embark-terrain.yml"
+        ).read_text()
+        self.assertIn("include_surface_isolation:", workflow)
+        option = workflow.split("      include_surface_isolation:", 1)[1].split(
+            "permissions:", 1
+        )[0]
+        self.assertIn("default: false", option)
+        self.assertIn("type: boolean", option)
+        self.assertIn("$variants = @('A','B','C','D','E')", workflow)
+        self.assertIn(
+            "if ($env:YACS_SURFACE_ISOLATION -eq 'true') {\n            $variants += @('F','G')",
+            workflow,
+        )
+        self.assertIn("-Variant C3", workflow)
+        self.assertIn(
+            '"surface_isolation_requested": os.environ["YACS_SURFACE_ISOLATION"] == "true"',
+            workflow,
+        )
 
     def test_active_workflow_is_not_bound_to_merged_feature_branch(self) -> None:
         workflow = (ROOT / ".github/workflows/passo-giau-embark-terrain.yml").read_text(
@@ -776,7 +837,7 @@ class LandscapeCaptureReadinessTests(unittest.TestCase):
                 for name, policy in variants.items()
                 if policy["macro_landscape_visible"]
             },
-            {"A", "B", "E"},
+            {"A", "B", "E", "F", "G"},
         )
         calls = [
             node

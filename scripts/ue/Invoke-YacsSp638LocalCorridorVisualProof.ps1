@@ -12,7 +12,7 @@ param(
     [string] $PreparedWorkspaceStamp,
     [string] $PcgExExecutionOutput,
     [string] $NativeDtmPatchMetadata,
-    [ValidateSet('A','B','C','D','E','C3')] [string] $Variant = 'E',
+    [ValidateSet('A','B','C','D','E','C3','F','G')] [string] $Variant = 'E',
     [switch] $ValidateOnly,
     [int] $TimeoutSec = 900,
     [double] $MinFreeVirtualGb = 8.0,
@@ -287,10 +287,10 @@ if ($Variant -eq 'C3') {
     $ExpectedCorridor = $false
     $ExpectedCutFill = $false
 } else {
-    $ExpectedMacro = $Variant -in @('A','B','E')
+    $ExpectedMacro = $Variant -in @('A','B','E','F','G')
     $ExpectedLocal = $Variant -in @('C','D','E')
-    $ExpectedCorridor = $Variant -in @('B','D','E')
-    $ExpectedCutFill = $Variant -ne 'A'
+    $ExpectedCorridor = $Variant -in @('B','D','E','G')
+    $ExpectedCutFill = $Variant -in @('B','C','D','E','F')
 }
 
 if ([bool]$Proof.surface_visibility.macro_landscape -ne $ExpectedMacro) {
