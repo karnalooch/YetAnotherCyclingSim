@@ -43,12 +43,13 @@ jobs:
           from pathlib import Path
           REPO = 'karnalooch/YetAnotherCyclingSim'
           BASE = 'bb15df0003c7ad22025844f3ca8b8e93d42a9fca'
-          PLAN_SHA = '3c7818fa0d81edf9533002f12029b447b4f0b960'
+          PLAN_SHAS = ('3c7818fa0d81edf9533002f12029b447b4f0b960', 'fe6bf911f99c5957a693f9c43719ee1fb869fff5')
           ALLOWED = {
               'scripts/ue/stage3g_capture_sp638_local_corridor.py',
               'scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1',
               '.github/workflows/passo-giau-embark-terrain.yml',
               'scripts/ci/test_embark_terrain_pipeline_contract.py',
+              'scripts/ci/test_terrain_proof_routing.py',
               'docs/WORLD_BUILDING_BIBLE.md',
               'docs/CI_VALIDATION_TIERS.md',
           }
@@ -67,13 +68,18 @@ jobs:
               raise SystemExit('Unexpected source HEAD')
           if api('/git/ref/heads/fix/293-macro-landscape')['object']['sha'] != BASE:
               raise SystemExit('PR moved; refusing stale preparation')
-          data = base64.b64decode(api('/git/blobs/' + PLAN_SHA)['content'])
-          if blob(data) != PLAN_SHA:
-              raise SystemExit('Plan blob mismatch')
-          plan = json.loads(data)
-          if plan['base'] != BASE or {x['path'] for x in plan['files']} != ALLOWED or len(plan['files']) != len(ALLOWED):
+          entries = []
+          for plan_sha in PLAN_SHAS:
+              data = base64.b64decode(api('/git/blobs/' + plan_sha)['content'])
+              if blob(data) != plan_sha:
+                  raise SystemExit('Plan blob mismatch')
+              plan = json.loads(data)
+              if plan['base'] != BASE:
+                  raise SystemExit('Unexpected plan base')
+              entries.extend(plan['files'])
+          if {x['path'] for x in entries} != ALLOWED or len(entries) != len(ALLOWED):
               raise SystemExit('Unexpected plan scope')
-          for entry in plan['files']:
+          for entry in entries:
               path = Path(entry['path'])
               data = path.read_bytes()
               if blob(data) != entry['before_blob']:
@@ -87,10 +93,10 @@ jobs:
           def checked(args):
               result = subprocess.run(args, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=300)
               print('$ ' + ' '.join(args), flush=True)
-              print(result.stdout[-3500:], flush=True)
+              print(result.stdout if result.returncode else result.stdout[-3500:], flush=True)
               if result.returncode:
                   raise SystemExit('Validation failed: ' + str(result.returncode))
-          checked(['ruff', 'format', 'scripts/ci/test_embark_terrain_pipeline_contract.py'])
+          checked(['ruff', 'format', 'scripts/ci/test_embark_terrain_pipeline_contract.py', 'scripts/ci/test_terrain_proof_routing.py'])
           checked(['ruff', 'check', 'scripts/ci', '--select', 'E9,F63,F7,F82'])
           checked([sys.executable, '-m', 'unittest', 'scripts.ci.test_embark_terrain_pipeline_contract', 'scripts.ci.test_terrain_proof_request', 'scripts.ci.test_terrain_proof_routing', '-v'])
           checked([sys.executable, 'scripts/ci/run_python_tests.py'])
@@ -113,7 +119,7 @@ jobs:
               if result['sha'] != blob(data):
                   raise SystemExit('Published blob mismatch: ' + path)
               elements.append({'path': path, 'mode': '100644', 'type': 'blob', 'sha': result['sha']})
-          result = {'parent': BASE, 'tree_elements': elements, 'validation': 'contract/admission/routing and 391 reference tests PASS; PS parse PASS; docs links/i18n/structure/freshness PASS; visual NOT RUN'}
+          result = {'parent': BASE, 'tree_elements': elements, 'validation': '51 contract/admission/routing and 391 reference tests PASS; PS parse PASS; docs links/i18n/structure/freshness PASS; visual NOT RUN'}
           Path(os.environ['RUNNER_TEMP'], 'reviewed-isolation-blobs.json').write_text(json.dumps(result, indent=2))
           print('REVIEWED_ISOLATION_BLOBS=' + json.dumps(result), flush=True)
           print('No PR refs changed. No road/terrain geometry or compiled source changes.', flush=True)
@@ -127,6 +133,7 @@ jobs:
             scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1
             .github/workflows/passo-giau-embark-terrain.yml
             scripts/ci/test_embark_terrain_pipeline_contract.py
+            scripts/ci/test_terrain_proof_routing.py
             docs/WORLD_BUILDING_BIBLE.md
             docs/CI_VALIDATION_TIERS.md
           if-no-files-found: error
