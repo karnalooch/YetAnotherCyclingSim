@@ -8,54 +8,31 @@ concurrency:
   group: issue-293-source-preparation
   cancel-in-progress: false
 jobs:
-  validate-proof-isolation:
+  snapshot:
     if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.ref == 'refs/heads/ci/293-source-inspection' && github.actor == 'karnalooch' && github.triggering_actor == 'karnalooch' && github.event_name == 'push' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
-      contents: write
+      contents: read
     env:
       GIT_LFS_SKIP_SMUDGE: '1'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: 75cb4f0ed3e1d7d3e2c3b1ba4cf2cf3f038e7745
+          ref: 32d73652bf8d7638d27644aad04accfd62f07f09
           lfs: false
           persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
-        with:
-          python-version: '3.14'
-      - run: python -m pip install --disable-pip-version-check ruff==0.16.8
-      - name: Execute hash-verified reviewed preparation outside template expansion
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Archive immutable tracked source without checkout credentials
         run: |
-          python - <<'PY'
-          import base64, hashlib, json, os, textwrap, urllib.request
-          from pathlib import Path
-          sha = '3300bd3ae88b65ec94b741a2243bf8cbde536e34'
-          request = urllib.request.Request(
-              'https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/' + sha,
-              headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json'})
-          with urllib.request.urlopen(request, timeout=40) as response:
-              data = base64.b64decode(json.load(response)['content'])
-          if hashlib.sha1(f'blob {len(data)}\0'.encode() + data).hexdigest() != sha:
-              raise SystemExit('Reviewed preparation blob mismatch')
-          text = data.decode('utf-8')
-          start = "          python - <<'PY'\n"
-          end = '\n          PY\n'
-          if text.count(start) != 1 or text.count(end) != 1:
-              raise SystemExit('Ambiguous reviewed script boundaries')
-          code = textwrap.dedent(text.split(start,1)[1].split(end,1)[0])
-          target = Path(os.environ['RUNNER_TEMP'], 'reviewed-proof-isolation.py')
-          target.write_text(code, encoding='utf-8')
-          # The pinned code verifies input SHA/path hashes, executes tests and
-          # creates immutable blobs only. It does not update any branch ref.
-          exec(compile(code, str(target), 'exec'), {'__name__':'__main__'})
-          PY
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = 32d73652bf8d7638d27644aad04accfd62f07f09
+          mkdir -p "$RUNNER_TEMP/pr294-source"
+          git archive --format=zip --output="$RUNNER_TEMP/pr294-source/source.zip" HEAD
+          git rev-parse HEAD > "$RUNNER_TEMP/pr294-source/source-sha.txt"
+          sha256sum "$RUNNER_TEMP/pr294-source/source.zip" > "$RUNNER_TEMP/pr294-source/source-sha256.txt"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: issue293-reviewed-proof-isolation
-          path: reviewed-proof-isolation.json
+          name: pr294-source-32d73652
+          path: ${{ runner.temp }}/pr294-source/
           if-no-files-found: error
           retention-days: 2
