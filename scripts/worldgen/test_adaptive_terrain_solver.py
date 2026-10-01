@@ -7,10 +7,14 @@ from pathlib import Path
 import unittest
 
 from scripts.worldgen.adaptive_terrain_solver import (
+    BOB_EXPANSION,
+    BOB_NAME,
+    BOB_SYSTEM_ID,
     FEATURE_SOURCE_PCGEX,
     STRATEGY_HAIRPIN_CLEARANCE,
     STRATEGY_NATIVE_BLEND,
     STRATEGY_RETAINING_OR_CLIFF,
+    BobTerrainArchitect,
     TerrainFeaturePacket,
     TerrainFeatureProvenance,
     TerrainFeatures,
@@ -47,6 +51,46 @@ def hairpin_features() -> TerrainFeatures:
 class AdaptiveTerrainSolverTests(unittest.TestCase):
     def setUp(self) -> None:
         self.policy = load_policy(POLICY_PATH)
+
+    def test_bob_identity_is_stable_and_policy_owned(self) -> None:
+        self.assertEqual(BOB_NAME, "BOB")
+        self.assertEqual(BOB_EXPANSION, "Builder Of Berms")
+        self.assertEqual(BOB_SYSTEM_ID, "bob-terrain-architect-v1")
+        self.assertEqual(
+            self.policy["policy_id"],
+            "bob-near-field-terrain-v1",
+        )
+        self.assertEqual(self.policy["architect"]["name"], "BOB")
+
+    def test_bob_architect_emits_identity_in_decision_report(self) -> None:
+        packet = TerrainFeaturePacket(
+            corridor_id="sp638-hairpin-15460",
+            exact_sha="a" * 40,
+            provenance=TerrainFeatureProvenance(
+                source_kind="yacs_python_analysis",
+                source_artifact_sha256="b" * 64,
+                source_dataset_id="hairpin-fixture",
+                canonical_road_xy_preserved=True,
+                authoritative_route_geometry=False,
+                authoritative_physics=False,
+            ),
+            features=hairpin_features(),
+        )
+        bob = BobTerrainArchitect(policy=self.policy, cases=())
+        report = bob.review(packet)
+        self.assertEqual(report["architect"]["name"], "BOB")
+        self.assertEqual(
+            report["architect"]["expansion"],
+            "Builder Of Berms",
+        )
+        self.assertEqual(
+            report["architect"]["system_id"],
+            "bob-terrain-architect-v1",
+        )
+        self.assertEqual(
+            report["decision"]["strategy"],
+            STRATEGY_HAIRPIN_CLEARANCE,
+        )
 
     def test_empty_verified_memory_is_valid(self) -> None:
         self.assertEqual(load_case_memory(CASES_PATH), ())
