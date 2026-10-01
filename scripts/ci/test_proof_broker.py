@@ -239,17 +239,36 @@ class YacsProofBrokerContractTests(unittest.TestCase):
                     )
                     if re.search(r"(?m)^          name: proof-", block)
                 ]
-                self.assertEqual(len(uploads), 1)
-                upload = uploads[0]
-                guard = (
-                    "success() && (inputs.ride_probe_mode == 'off' || inputs.ride_probe_mode == '')"
-                    if proof_id == "m3-terrain"
-                    else "success()"
-                )
+                if proof_id in {"m3-terrain", "m3-h-focus"}:
+                    expected_name = f"name: proof-{proof_id}-"
+                    matching_uploads = [
+                        block for block in uploads if expected_name in block
+                    ]
+                    self.assertEqual(len(matching_uploads), 1)
+                    upload = matching_uploads[0]
+                else:
+                    self.assertEqual(len(uploads), 1)
+                    upload = uploads[0]
+
+                if proof_id == "m3-terrain":
+                    guard = (
+                        "success() && (inputs.ride_probe_mode == 'off' || "
+                        "inputs.ride_probe_mode == '') && "
+                        "!startsWith(inputs.gumball_request_id, 'gb-m3-h-focus-')"
+                    )
+                elif proof_id == "m3-h-focus":
+                    guard = (
+                        "success() && (inputs.ride_probe_mode == 'off' || "
+                        "inputs.ride_probe_mode == '') && "
+                        "startsWith(inputs.gumball_request_id, 'gb-m3-h-focus-')"
+                    )
+                else:
+                    guard = "success()"
                 self.assertIn("if: ${{ " + guard + " }}", upload)
                 self.assertIn("if-no-files-found: error", upload)
-                if proof_id == "m3-terrain":
-                    # M3 validates its input before downstream checkout and keeps
+                if proof_id in {"m3-terrain", "m3-h-focus"}:
+                    # Both M3 receipts validate input before downstream checkout
+                    # and keep established diagnostic artifact names separate.
                     # the established internal artifact names as diagnostics.
                     self.assertIn(
                         "proof-m3-terrain-${{ needs.classify.outputs.source_sha }}",
