@@ -8,57 +8,50 @@ concurrency:
   group: issue-293-source-preparation
   cancel-in-progress: false
 jobs:
-  dispatch-reviewed-isolation:
+  inspect-installed-landscape-api:
     if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.ref == 'refs/heads/ci/293-source-inspection' && github.actor == 'karnalooch' && github.triggering_actor == 'karnalooch' && github.event_name == 'push' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 3
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 5
     permissions:
       contents: read
-      actions: write
     steps:
-      - name: Verify the exact reviewed branch and dispatch one full isolation checkpoint
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Isolate Git configuration for the separate read-only checkout
+        shell: pwsh
         run: |
-          python - <<'PY'
-          import json
-          import os
-          import urllib.error
-          import urllib.request
-          from urllib.parse import quote
-          repo = 'karnalooch/YetAnotherCyclingSim'
-          branch = 'fix/293-macro-landscape'
-          sha = 'e330aa97608a61a0965b23a0cd1f0799c6ab61e3'
-          workflow = 'passo-giau-embark-terrain.yml'
-          request_id = 'manual-m3-pr294-e330aa97608a-isolation'
-          def api(path, data=None):
-              request = urllib.request.Request(
-                  'https://api.github.com/repos/' + repo + path,
-                  data=None if data is None else json.dumps(data).encode(),
-                  method='GET' if data is None else 'POST',
-                  headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json'},
-              )
-              try:
-                  with urllib.request.urlopen(request, timeout=40) as response:
-                      raw = response.read()
-                      return json.loads(raw) if raw else None
-              except urllib.error.HTTPError as exc:
-                  raise SystemExit(f'GitHub request failed: {exc.code} {exc.read().decode()[:1000]}') from None
-          pr = api('/pulls/294')
-          if pr['state'] != 'open' or pr['head']['sha'] != sha or pr['head']['ref'] != branch or pr['head']['repo']['full_name'] != repo:
-              raise SystemExit('Reviewed PR revision drifted; no dispatch')
-          ref = api('/git/ref/heads/' + branch)
-          if ref['object']['sha'] != sha:
-              raise SystemExit('Branch changed; no dispatch')
-          content = api('/contents/.github/workflows/' + workflow + '?ref=' + sha)
-          if content['sha'] != '13bbd04e5eba91f8f52927cf441bf6a06f5c5a85':
-              raise SystemExit('Workflow definition is not reviewed')
-          runs = api('/actions/workflows/' + workflow + '/runs?event=workflow_dispatch&per_page=100')['workflow_runs']
-          existing = [run for run in runs if request_id in run.get('display_title', '') or request_id in run.get('name', '')]
-          if existing:
-              print('Existing request retained; not dispatching twice: ' + str(existing[0]['id']))
-          else:
-              api('/actions/workflows/' + workflow + '/dispatches', {'ref': branch, 'inputs': {'exact_sha': sha, 'gumball_request_id': request_id, 'include_surface_isolation': 'true'}})
-              print('DISPATCH_ACCEPTED=' + request_id)
-              print('Exact target: ' + sha + '; A-E/C3 plus explicit F/G. No repository ref changes.')
-          PY
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'issue293-api-read.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+          'GIT_LFS_SKIP_SMUDGE=1' >> $env:GITHUB_ENV
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: e330aa97608a61a0965b23a0cd1f0799c6ab61e3
+          path: _issue293-api-inspection
+          lfs: false
+          persist-credentials: false
+      - name: Report installed public signatures and bounded spline implementation evidence
+        shell: pwsh
+        working-directory: _issue293-api-inspection
+        run: |
+          $ErrorActionPreference = 'Stop'
+          . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
+          $ue = Resolve-YacsUnrealEngine -ProjectPath (Join-Path (Get-Location) 'YetAnotherCyclingSim.uproject')
+          $root = $ue.EngineRoot
+          if (-not $root) { throw 'Canonical resolver did not return EngineRoot.' }
+          Write-Host ('Inspected engine: ' + $ue.Version)
+          $specs = @(
+            @{ file='Engine/Source/Runtime/Landscape/Classes/Landscape.h'; pattern='GetLayer\(|GetEditLayer|GetLayerAlpha|GetLayerBlendMode|SetLayerReservedForSplines|GetLandscapeSplinesReservedLayer|GetEditingLayer' },
+            @{ file='Engine/Source/Runtime/Landscape/Classes/LandscapeEditLayer.h'; pattern='GetGuid|GetNameBP|GetBlendMode|GetHeightmapBlend|OnLayerCreated|IsVisible|GetAlpha|GetName\(' },
+            @{ file='Engine/Source/Runtime/Landscape/Public/LandscapeEdit.h'; pattern='FLandscapeEditDataInterface\(|GetHeightDataFast\(|SetEditLayer|SetHeightData\(' },
+            @{ file='Engine/Source/Runtime/Landscape/Private/LandscapeBlueprintSupport.cpp'; pattern='EditorApplySpline|LandscapeEdit\(|GetHeightData|SetHeightData|Rasterize|EditingLayer|BlendMode|LayerIndex' }
+          )
+          foreach ($spec in $specs) {
+            $path = Join-Path $root $spec.file
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { Write-Host ('NOT_INSTALLED=' + $spec.file); continue }
+            Write-Host ('FILE=' + $spec.file + ' SHA256=' + (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash)
+            # Public signatures or short relevant lines only; never distribute complete engine sources.
+            $matches = @(Select-String -LiteralPath $path -Pattern $spec.pattern | Select-Object -First 24)
+            foreach ($match in $matches) { Write-Host ('{0}: {1}' -f $match.LineNumber,$match.Line.Trim()) }
+          }
+          Write-Host 'READ_ONLY_API_INSPECTION_DONE: no Unreal launch, no build, no map, cache or production worktree changes.'
