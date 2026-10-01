@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "enabled": true,
+  "issue": 310,
+  "map": "/Game/Prototype/Maps/L_PassoGiauTerrainRecovery",
+  "earthworks_enabled": false,
+  "retain_assets": true
+}

@@ -13,6 +13,7 @@ public class YetAnotherCyclingSimEditor : ModuleRules
 			"CoreUObject",
 			"Engine",
 			"UnrealEd",
+			"Landscape",
 			"PCG",
 			"Json",
 			"AssetRegistry",

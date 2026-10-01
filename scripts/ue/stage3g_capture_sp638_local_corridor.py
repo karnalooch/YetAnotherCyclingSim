@@ -1647,6 +1647,14 @@ def main() -> None:
         ],
     }
 
+    if variant_name == "H":
+        baseline_path = _proof_path.parent.parent / "CleanBaseline/clean_baseline_proof.json"
+        if baseline_path.is_file():
+            baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
+            from scripts.ue.clean_baseline_receipt import validate_receipt
+            validate_receipt(baseline, os.environ["YACS_RIDE_PROBE_SHA"])
+            _proof_data["clean_dtm_baseline"] = baseline
+
     # Load for the actual rider view; elapsed time alone is not resource readiness.
     from scripts.ue.prepare_landscape_capture import prepare_capture
 

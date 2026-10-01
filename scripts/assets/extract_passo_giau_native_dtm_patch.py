@@ -262,6 +262,27 @@ def main() -> int:
         encoding="utf-8",
     )
 
+    recovery_config = repository_root() / "worldgen/terrain/recovery_baseline.json"
+    if recovery_config.is_file() and json.loads(recovery_config.read_text())["enabled"]:
+        from shutil import copyfile
+        prepared = source.parent
+        report_path = prepared / "terrain-report.json"
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        original = prepared / report["outputs"]["landscape_r16_little_endian"]
+        retained = out / "full_dtm_baseline.r16"
+        copyfile(original, retained)
+        if retained.stat().st_size != 4033 * 4033 * 2:
+            raise ValueError("Recovery baseline R16 has an invalid size")
+        (out / "full_dtm_baseline.json").write_text(json.dumps({
+            "schema_version": 1,
+            "binary": {"file": retained.name, "byte_count": retained.stat().st_size,
+                       "sha256": sha256_file(retained)},
+            "transform": report["unreal_landscape_candidate"]["recommended_transform"],
+            "terrain_report_sha256": sha256_file(report_path),
+            "native_source_sha256": metadata["source"]["sha256"],
+            "road_constraints_applied": False,
+        }, indent=2) + "\n", encoding="utf-8")
+
     print(
         "Gate C.3 native DTM patch: "
         f"{PATCH_VERTEX_COUNT}x{PATCH_VERTEX_COUNT} @ 1 m, "

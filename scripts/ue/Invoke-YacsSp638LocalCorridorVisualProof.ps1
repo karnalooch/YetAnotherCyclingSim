@@ -88,6 +88,9 @@ if (-not [string]::IsNullOrWhiteSpace($env:GITHUB_WORKSPACE)) {
 
 $Preflight = Join-Path $RepoRoot 'scripts/ue/Preflight-YacsProof.ps1'
 $AdditionalAllowedDirtyPaths = @()
+if (Test-Path -LiteralPath (Join-Path $RepoRoot 'worldgen/terrain/recovery_baseline.json')) {
+    $AdditionalAllowedDirtyPaths += 'Content/Prototype/Maps/L_PassoGiauTerrainRecovery.umap'
+}
 if ($PcgExExecutionOutput) {
     # The immediately preceding PCGEx authoring step deliberately creates this
     # untracked authoring-only asset. Keep preflight fail-closed for everything
@@ -387,6 +390,13 @@ if ($ExpectedLocal) {
             }
         }
         if ($Variant -eq 'H') {
+            $Bob = $Proof.local_terrain_skin.bob_review
+            if ($Bob.architect.name -ne 'BOB' -or $Bob.exact_sha -ne $ExpectedHead -or $Bob.parameters_applied -ne $false) {
+                throw 'Variant H BOB review identity, exact SHA or review-only contract is invalid.'
+            }
+            if ($Bob.status -ne 'MEASURED') {
+                throw "BOB rejected the existing H candidate: status=$($Bob.status), escalations=$(@($Bob.escalation_station_indices).Count), uncovered=$(@($Bob.uncovered_stations).Count). Inspect bob_terrain_review.json; no terrain acceptance or learning case was issued."
+            }
             if ([bool]$Proof.local_terrain_skin.road_constraints_applied -ne $true -or [bool]$Proof.local_terrain_skin.single_local_ground_owner -ne $true) {
                 throw 'Variant H did not bake road constraints into the single native-DTM ground owner.'
             }
@@ -489,6 +499,44 @@ Write-Host '[3/3] Enforcing non-persistent proof contract...' -ForegroundColor C
 $TrackedChanges = @(git -C $RepoRoot status --porcelain=v1 --untracked-files=no)
 if ($TrackedChanges.Count -gt 0) {
     throw ("SP638 local-corridor visual proof mutated tracked files: {0}" -f ($TrackedChanges -join '; '))
+}
+
+
+if ($Variant -eq 'A' -and -not $ValidateOnly -and (Test-Path -LiteralPath (Join-Path $RepoRoot 'worldgen/terrain/recovery_baseline.json'))) {
+    $Config = Get-Content -LiteralPath (Join-Path $RepoRoot 'worldgen/terrain/recovery_baseline.json') -Raw | ConvertFrom-Json
+    if ($Config.enabled) {
+        $CleanRoot = Join-Path (Split-Path -Parent $ArtifactRoot) 'CleanBaseline'
+        New-Item -ItemType Directory -Path $CleanRoot -Force | Out-Null
+        $env:YACS_CLEAN_BASELINE_OUTPUT = $CleanRoot
+        $env:YACS_CLEAN_BASELINE_SHA = $ExpectedHead
+        try {
+            foreach ($phase in @('import','verify')) {
+                $env:YACS_CLEAN_BASELINE_PHASE = $phase
+                $CleanScript = Join-Path $RepoRoot 'scripts/ue/stage3g_capture_clean_dtm_baseline.py'
+                $CleanLog = Join-Path $CleanRoot ("{0}.log" -f $phase)
+                $CleanArgs = @($ProjectPath,('-ExecutePythonScript="' + $CleanScript + '"'),'-Unattended','-NoPause','-NoSplash','-NoP4','-windowed','-ResX=1920','-ResY=1080','-NoVSync','-ScriptErrorsAreFatal','-log',('-AbsLog=' + $CleanLog))
+                $CleanProc = Start-Process -FilePath $Context.UnrealEditorPath -ArgumentList $CleanArgs -WorkingDirectory $RepoRoot -PassThru -RedirectStandardOutput ($CleanLog + '.stdout') -RedirectStandardError ($CleanLog + '.stderr')
+                if (-not $CleanProc.WaitForExit($TimeoutSec * 1000)) {
+                    $CleanProc | Stop-Process -Force
+                    throw "Clean baseline $phase timed out."
+                }
+                if ($CleanProc.ExitCode -notin @(0,1)) { throw "Clean baseline $phase failed: exit=$($CleanProc.ExitCode)" }
+                $CleanProof = Get-Content -LiteralPath (Join-Path $CleanRoot 'clean_baseline_proof.json') -Raw | ConvertFrom-Json
+                $ExpectedStatus = if ($phase -eq 'import') { 'IMPORTED_PENDING_RELOAD' } else { 'PASS' }
+                if ($CleanProof.status -ne $ExpectedStatus -or $CleanProof.exact_sha -ne $ExpectedHead) {
+                    throw "Clean baseline $phase proof failed or source SHA drifted."
+                }
+                if ((Get-Content -LiteralPath $CleanLog -Raw) -match '(?i)Fatal error|Unhandled Exception|Critical error') {
+                    throw "Clean baseline $phase log contains a crash."
+                }
+            }
+        }
+        finally {
+            Remove-Item Env:YACS_CLEAN_BASELINE_OUTPUT -ErrorAction SilentlyContinue
+            Remove-Item Env:YACS_CLEAN_BASELINE_SHA -ErrorAction SilentlyContinue
+            Remove-Item Env:YACS_CLEAN_BASELINE_PHASE -ErrorAction SilentlyContinue
+        }
+    }
 }
 
 $GateLabel = if ($Variant -eq 'H') { 'Native-DTM road-constrained single-owner candidate' } elseif ($Variant -eq 'C3') { 'Gate C.3 native-DTM patch' } else { 'Gate C.1 surface-ownership variant' }

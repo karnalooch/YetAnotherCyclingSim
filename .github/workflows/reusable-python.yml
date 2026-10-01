@@ -72,6 +72,9 @@ jobs:
       - name: Run Unreal CI build profile contract tests
         run: python scripts/ci/test_unreal_ci_build_profile.py
 
+      - name: Run clean baseline receipt tests
+        run: python -m unittest scripts.ci.test_clean_baseline_receipt -v
+
       - name: Run persistent terrain asset retention tests
         run: python -m unittest scripts.ci.test_retain_unreal_assets -v
 
