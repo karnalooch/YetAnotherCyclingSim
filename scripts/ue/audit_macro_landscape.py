@@ -1,4 +1,4 @@
-"""Read-only CPU/source and packed-RG height evidence for macro recovery.
+"""Read-only CPU/source and native runtime metadata for macro recovery.
 
 No height edits, resampling, material changes or map saves are performed here.
 """
@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import struct
 from pathlib import Path
 
 import unreal
@@ -32,16 +31,6 @@ def _file(path: Path) -> dict:
             "sha256": hashlib.sha256(data).hexdigest()}
 
 
-def _png_dimensions(path: Path) -> list[int]:
-    header = path.read_bytes()[:33]
-    if header[:8] != b"\x89PNG\r\n\x1a\n" or header[12:16] != b"IHDR":
-        raise RuntimeError("Native height export is not a PNG")
-    width, height = struct.unpack(">II", header[16:24])
-    if (width, height) != (4033, 4033):
-        raise RuntimeError(f"Native height export was resized: {width}x{height}")
-    return [width, height]
-
-
 def _export_sources(landscape, output: Path) -> list[dict]:
     # Component HeightmapTexture is not reflected in UE 5.8 Python. Use the
     # documented object iterator and exact owning package, without editing it.
@@ -60,8 +49,13 @@ def _export_sources(landscape, output: Path) -> list[dict]:
                "properties": {key: _property(texture, key) for key in (
                    "compression_settings", "srgb", "filter", "lod_group",
                    "mip_gen_settings", "lod_bias", "never_stream",
-                   "lossy_compression_amount", "max_texture_size",
+                   "lossy_compression_amount", "max_texture_size", "compression_none", "availability",
                )}}
+        row["native_runtime"] = json.loads(
+            unreal.YacsTextureAuditLibrary.describe_texture(texture)
+        )
+        if "error" in row["native_runtime"]:
+            raise RuntimeError(str(row["native_runtime"]))
         if "heightmap" in str(row["properties"]["lod_group"]).lower() and exported < 8:
             path = output / f"source-height-{exported}.tga"
             path.unlink(missing_ok=True)
@@ -85,7 +79,7 @@ def capture_macro_height_evidence(world, landscape, components, output: Path) ->
     output = Path(output) / "macro-height-audit"
     output.mkdir(parents=True, exist_ok=True)
     report = {
-        "schema_version": 2,
+        "schema_version": 3,
         "saved_to_map": False,
         "height_edits_applied": False,
         "resampling_applied": False,
@@ -96,53 +90,18 @@ def capture_macro_height_evidence(world, landscape, components, output: Path) ->
             "enable_nanite", "collision_mip_level", "simple_collision_mip_level",
         )},
     }
-    target = None
     try:
         report["source_textures"] = _export_sources(landscape, output)
-        # Do not set editor properties on the allocated target: PostEditChange
-        # asks a >2048 allocation dialog and unattended mode can resize it.
-        target = unreal.RenderingLibrary.create_render_target2d(
-            world, width=4033, height=4033,
-            format=unreal.TextureRenderTargetFormat.RTF_RGBA8,
-            auto_generate_mip_maps=False,
-        )
-        if target is None:
-            raise RuntimeError("Could not allocate packed-height render target")
-        actual_size = [int(target.size_x), int(target.size_y)]
-        report["render_target"] = {"actual_size": actual_size,
-                                   "target_gamma": _property(target, "target_gamma"),
-                                   "srgb": _property(target, "srgb")}
-        if actual_size != [4033, 4033]:
-            raise RuntimeError(f"Packed-height allocation was resized: {actual_size}")
-        if not landscape.landscape_export_heightmap_to_render_target(
-            target, export_height_into_rg_channel=True,
-            export_landscape_proxies=True,
-        ):
-            raise RuntimeError("Native Landscape heightmap export returned false")
-        png = output / "combined-height-rg.png"
-        png.unlink(missing_ok=True)
-        unreal.RenderingLibrary.export_render_target(world, target, str(output), png.name)
-        report["combined_height_export"] = {
-            **_file(png), "packing": "uint16 = (R << 8) | G",
-            "target_format": "RTF_RGBA8", "size": _png_dimensions(png),
+        report["gpu_height_export"] = {
+            "status": "UNAVAILABLE",
+            "reason": "Runs 87/88 returned an all-zero render target; not height evidence",
         }
-        samples = []
-        for x, y in ((1000, 1000), (2016, 2016), (2800, 900)):
-            color = unreal.RenderingLibrary.read_render_target_raw_pixel(
-                world, target, x, y, normalize=False
-            )
-            samples.append([x, y, float(color.r), float(color.g)])
-        report["raw_height_samples"] = samples
-        if not any(row[2] != 0 or row[3] != 0 for row in samples):
-            raise RuntimeError("Native export returned only clear height samples")
-        report["status"] = "EXPORTED_FOR_DIAGNOSIS"
+        report["status"] = "CPU_SOURCE_AND_RUNTIME_METADATA_EXPORTED"
     except Exception as exc:
         report["status"] = "FAILED"
         report["error"] = str(exc)
         raise
     finally:
-        if target is not None:
-            unreal.RenderingLibrary.release_render_target2d(target)
         (output / "macro-height-audit.json").write_text(
             json.dumps(report, indent=2) + "\n", encoding="utf-8"
         )
