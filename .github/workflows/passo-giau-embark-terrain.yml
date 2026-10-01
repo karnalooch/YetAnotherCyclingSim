@@ -715,6 +715,18 @@ jobs:
             -Variant H
           if ($LASTEXITCODE -ne 0) { throw 'Native-DTM road-constrained single-owner candidate failed.' }
 
+      - name: Upload compact H candidate evidence
+        if: ${{ always() && (inputs.ride_probe_mode == 'off' || inputs.ride_probe_mode == '') }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: passo-giau-m3-h-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            _embark-terrain-worktree/${{ env.YACS_M3_EVIDENCE_ROOT }}/Visual/H/sp638_surface_h_rider_3840x2160.png
+            _embark-terrain-worktree/${{ env.YACS_M3_EVIDENCE_ROOT }}/Visual/H/surface_ownership_h_proof.json
+            _embark-terrain-worktree/${{ env.YACS_M3_EVIDENCE_ROOT }}/Visual/H/render_resource_headroom.txt
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Upload PCGEx authoring evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
