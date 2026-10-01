@@ -1,0 +1,46 @@
+name: Issue 293 one-shot traversal request
+on:
+  push:
+    branches: [ci/293-source-inspection]
+    paths: ['.github/workflows/293-ride-probe-launch-once.yml']
+permissions: {}
+concurrency:
+  group: issue293-one-shot-traversal-request
+  cancel-in-progress: false
+jobs:
+  request:
+    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.ref == 'refs/heads/ci/293-source-inspection' && github.event_name == 'push' && github.actor == 'karnalooch' && github.triggering_actor == 'karnalooch' && github.run_attempt == 1 }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    permissions:
+      contents: read
+      actions: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Request bounded light mode for reviewed PR revision only
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request
+          REPO='karnalooch/YetAnotherCyclingSim'
+          SHA='75cb4f0ed3e1d7d3e2c3b1ba4cf2cf3f038e7745'
+          REF='fix/293-macro-landscape'
+          ID='manual-pr294-ride-light-75cb4f0ed3e1'
+          def api(path, body=None):
+              request=urllib.request.Request('https://api.github.com/repos/'+REPO+path, data=None if body is None else json.dumps(body).encode(), method='GET' if body is None else 'POST', headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','Content-Type':'application/json'})
+              with urllib.request.urlopen(request,timeout=40) as response:
+                  raw=response.read()
+                  return json.loads(raw) if raw else {}
+          pr=api('/pulls/294')
+          if pr['state']!='open' or pr['head']['sha']!=SHA or pr['head']['ref']!=REF or pr['head']['repo']['full_name']!=REPO:
+              raise SystemExit('Reviewed PR revision changed; no request made')
+          wf=api('/contents/.github/workflows/passo-giau-embark-terrain.yml?ref='+SHA)
+          if wf['sha']!='dd7778b143837ca74fbda03509acf663eb85b856':
+              raise SystemExit('Reviewed workflow blob mismatch')
+          runs=api('/actions/runs?event=workflow_dispatch&per_page=100')['workflow_runs']
+          if any(ID in item['display_title'] for item in runs):
+              raise SystemExit('This exact diagnostic request already exists; refusing duplicate')
+          api('/actions/workflows/passo-giau-embark-terrain.yml/dispatches', {'ref':REF,'inputs':{'exact_sha':SHA,'gumball_request_id':ID,'include_surface_isolation':False,'ride_probe_mode':'light','ride_probe_station_m':'','ride_probe_variant':'E','ride_probe_wide':False}})
+          print('REQUESTED '+ID+' for '+SHA)
+          print('One diagnostic variant only; no full M3 certificate or visual/performance acceptance requested.')
+          PY
