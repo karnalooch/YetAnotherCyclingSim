@@ -614,6 +614,36 @@ jobs:
             -Variant C3
           if ($LASTEXITCODE -ne 0) { throw 'PCGEx Gate C.3 native-DTM patch failed.' }
 
+          # H is an optional target-SHA capability. The trusted default-branch
+          # workflow may prove a newer candidate commit without assuming that
+          # every historical target implements the H diagnostic variant.
+          $visualWrapper = Get-Content -LiteralPath './scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1' -Raw
+          if ($visualWrapper.Contains("'H')]")) {
+            ./scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1 `
+              -ExpectedBranch 'HEAD' `
+              -ExpectedHead '${{ needs.classify.outputs.source_sha }}' `
+              -ArtifactRoot 'Saved/RuntimeProof/CI/M3/PCGExCorridor/Visual/H' `
+              -PcgExExecutionOutput 'Saved/RuntimeProof/CI/M3/PCGExCorridor/pcgex_graph_output.json' `
+              -NativeDtmPatchMetadata 'ExternalAssets/Terrain/PassoGiau/PreparedNearField/passo_giau_native_dtm_patch.json' `
+              -Variant H
+            if ($LASTEXITCODE -ne 0) { throw 'Optional native-DTM constrained H candidate failed.' }
+          }
+          else {
+            Write-Host 'Target SHA does not expose diagnostic variant H; skipping optional H candidate.'
+          }
+
+      - name: Upload compact H candidate evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: passo-giau-m3-h-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            _embark-terrain-worktree/Saved/RuntimeProof/CI/M3/PCGExCorridor/Visual/H/sp638_surface_h_rider_3840x2160.png
+            _embark-terrain-worktree/Saved/RuntimeProof/CI/M3/PCGExCorridor/Visual/H/surface_ownership_h_proof.json
+            _embark-terrain-worktree/Saved/RuntimeProof/CI/M3/PCGExCorridor/Visual/H/render_resource_headroom.txt
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Upload PCGEx authoring evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
