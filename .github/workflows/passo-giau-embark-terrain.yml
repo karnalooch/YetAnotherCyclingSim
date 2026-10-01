@@ -234,6 +234,7 @@ jobs:
         run: |
           python -m unittest scripts.ci.test_embark_terrain_pipeline_contract
           python -m unittest scripts.ci.test_terrain_proof_request scripts.ci.test_terrain_proof_routing scripts.ci.test_ride_probe
+          python -m unittest scripts.worldgen.test_adaptive_terrain_solver -v
 
   prepare:
     name: Prepare real SP638 authoring input
