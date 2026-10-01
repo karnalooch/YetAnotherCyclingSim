@@ -26,182 +26,32 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install --disable-pip-version-check ruff==0.16.8
-      - name: Validate exact input, scoped edits and immutable output blobs
+      - name: Execute hash-verified reviewed preparation outside template expansion
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           python - <<'PY'
-          import hashlib, json, os, subprocess, urllib.request
+          import base64, hashlib, json, os, textwrap, urllib.request
           from pathlib import Path
-          BASE = '75cb4f0ed3e1d7d3e2c3b1ba4cf2cf3f038e7745'
-          REPO = 'karnalooch/YetAnotherCyclingSim'
-          paths = {
-              '.github/workflows/passo-giau-embark-terrain.yml': 'dd7778b143837ca74fbda03509acf663eb85b856',
-              'scripts/ci/test_proof_broker.py': 'ba1c187b0592ded69128ebc0ff13545ec5e5a81f',
-              'scripts/ci/test_terrain_proof_routing.py': '2eeab7be447d6b3085e9f92109bf494dd15af132',
-              'docs/CI_VALIDATION_TIERS.md': 'a21d930a483a4175c3322cd3ba2f0888c0103d84',
-          }
-          def blob(data):
-              return hashlib.sha1(f'blob {len(data)}\0'.encode() + data).hexdigest()
-          def api(path, body=None):
-              request = urllib.request.Request('https://api.github.com/repos/' + REPO + path,
-                  data=None if body is None else json.dumps(body).encode(),
-                  method='GET' if body is None else 'POST',
-                  headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json'})
-              with urllib.request.urlopen(request, timeout=40) as response:
-                  return json.load(response)
-          if subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip() != BASE:
-              raise SystemExit('Unexpected checkout')
-          if api('/git/ref/heads/fix/293-macro-landscape')['object']['sha'] != BASE:
-              raise SystemExit('PR advanced; stop stale preparation')
-          for path, sha in paths.items():
-              if blob(Path(path).read_bytes()) != sha:
-                  raise SystemExit('Input blob drift: ' + path)
-          def replace_once(text, old, new):
-              if text.count(old) != 1:
-                  raise SystemExit('Absent/ambiguous edit anchor: ' + old[:80])
-              return text.replace(old, new, 1)
-          path = Path('.github/workflows/passo-giau-embark-terrain.yml')
-          text = path.read_text()
-          text = text.replace('Saved/RuntimeProof/CI/M3/PCGExCorridor', '${{ env.YACS_M3_EVIDENCE_ROOT }}')
-          text = replace_once(text, 'permissions:\n  contents: read\n', 'permissions:\n  contents: read\n\n# Proof output is per-run; ignored compile caches remain separate and reusable.\nenv:\n  YACS_M3_EVIDENCE_ROOT: Saved/RuntimeProof/CI/M3/PCGExCorridor/${{ github.run_id }}-${{ github.run_attempt }}\n')
-          init_script = '''$ErrorActionPreference = 'Stop'
-          $expected = "Saved/RuntimeProof/CI/M3/PCGExCorridor/$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
-          if ($env:YACS_M3_EVIDENCE_ROOT -ne $expected) {
-            throw 'Unexpected M3 run evidence path.'
-          }
-          $root = Join-Path (Get-Location) $env:YACS_M3_EVIDENCE_ROOT
-          if (Test-Path -LiteralPath $root) {
-            throw 'M3 run evidence already exists; rerun with a new attempt.'
-          }
-          New-Item -ItemType Directory -Path $root -ErrorAction Stop | Out-Null
-          '''
-          init_step = '      - name: Initialize isolated proof output\n        shell: pwsh\n        working-directory: _embark-terrain-worktree\n        run: |\n' + ''.join('          ' + line + '\n' for line in init_script.splitlines()) + '\n'
-          anchor = '      - name: Build or reuse binaries and author deterministic PCGEx graph\n'
-          text = replace_once(text, anchor, init_step + anchor)
-          text = replace_once(text, '            _embark-terrain-worktree/Content/WorldGen/PCGEx/PCG_PassoGiau_SP638_Corridor.uasset\n', '')
-          old_find = '''          SOURCE="$(find "${{ runner.temp }}/yacs-pcgex-source" -type f -name 'passo_giau_sp638_ue_centerline.json' -print -quit)"
-                    EXECUTION="$(find "${{ runner.temp }}/yacs-pcgex-execution" -type f -name 'pcgex_graph_output.json' -print -quit)"
-                    test -n "$SOURCE"
-                    test -n "$EXECUTION"
-          '''
-          new_find = '''          mapfile -t SOURCES < <(find "${{ runner.temp }}/yacs-pcgex-source" -type f -name 'passo_giau_sp638_ue_centerline.json')
-                    mapfile -t EXECUTIONS < <(find "${{ runner.temp }}/yacs-pcgex-execution" -type f -name 'pcgex_graph_output.json')
-                    test "${#SOURCES[@]}" -eq 1
-                    test "${#EXECUTIONS[@]}" -eq 1
-                    SOURCE="${SOURCES[0]}"
-                    EXECUTION="${EXECUTIONS[0]}"
-          '''
-          text = replace_once(text, old_find, new_find)
-          path.write_text(text)
-          path = Path('scripts/ci/test_proof_broker.py')
-          text = path.read_text()
-          old = '                self.assertIn("if: ${{ success() }}", workflow)\n                self.assertIn("if-no-files-found: error", workflow)\n'
-          new = '''                # Assert the receipt upload itself, not an unrelated step's guard.
-                          uploads = [
-                              block
-                              for block in re.findall(
-                                  r"(?ms)^      - name:.*?(?=^      - name:|\Z)", workflow
-                              )
-                              if re.search(r"(?m)^          name: proof-", block)
-                          ]
-                          self.assertEqual(len(uploads), 1)
-                          upload = uploads[0]
-                          guard = (
-                              "success() && (inputs.ride_probe_mode == 'off' || inputs.ride_probe_mode == '')"
-                              if proof_id == "m3-terrain"
-                              else "success()"
-                          )
-                          self.assertIn("if: ${{ " + guard + " }}", upload)
-                          self.assertIn("if-no-files-found: error", upload)
-          '''
-          path.write_text(replace_once(text, old, new))
-          path = Path('scripts/ci/test_terrain_proof_routing.py')
-          text = path.read_text()
-          anchor = '    def test_broker_registration_is_explicit_exact_sha_and_read_only(self) -> None:\n'
-          tests = '''    def test_each_attempt_has_one_isolated_evidence_root(self) -> None:
-                  global_block = self.workflow.split("\\njobs:", 1)[0]
-                  self.assertIn(
-                      "YACS_M3_EVIDENCE_ROOT: Saved/RuntimeProof/CI/M3/PCGExCorridor/"
-                      "${{ github.run_id }}-${{ github.run_attempt }}",
-                      global_block,
-                  )
-                  author = job(self.workflow, "author")
-                  init = author.split("- name: Initialize isolated proof output", 1)[1].split(
-                      "- name: Build or reuse binaries", 1
-                  )[0]
-                  self.assertIn("$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT", init)
-                  self.assertIn("if (Test-Path -LiteralPath $root)", init)
-                  self.assertIn("throw 'M3 run evidence already exists", init)
-                  self.assertNotIn("Remove-Item", init)
-                  self.assertNotIn("Binaries", init)
-                  self.assertNotIn("BuildCache", init)
-
-              def test_authoring_and_captures_share_only_current_output(self) -> None:
-                  author = job(self.workflow, "author")
-                  self.assertIn("ArtifactRoot = '${{ env.YACS_M3_EVIDENCE_ROOT }}'", author)
-                  for suffix in ("/Traversal", "/Visual/{0}", "/Visual/C3", "/pcgex_graph_output.json"):
-                      self.assertIn("${{ env.YACS_M3_EVIDENCE_ROOT }}" + suffix, author)
-                  upload = author.split("- name: Upload PCGEx authoring evidence", 1)[1].split(
-                      "- name: Clean self-hosted workspace", 1
-                  )[0]
-                  self.assertIn("_embark-terrain-worktree/${{ env.YACS_M3_EVIDENCE_ROOT }}/**", upload)
-                  self.assertNotIn("_embark-terrain-worktree/Content", upload)
-                  self.assertNotIn("/PCGExCorridor/**", upload)
-                  self.assertIn("'Saved/BuildCache/PCGEx/compile-state.json'", author)
-
-              def test_deviation_rejects_ambiguous_sources_and_execution(self) -> None:
-                  validate = job(self.workflow, "validate")
-                  self.assertIn('test "${#SOURCES[@]}" -eq 1', validate)
-                  self.assertIn('test "${#EXECUTIONS[@]}" -eq 1', validate)
-                  self.assertNotIn("-print -quit", validate)
-                  self.assertIn(
-                      "--output ${{ env.YACS_M3_EVIDENCE_ROOT }}/pcgex_corridor_deviation.json",
-                      validate,
-                  )
-
-          '''
-          path.write_text(replace_once(text, anchor, tests + anchor))
-          path = Path('docs/CI_VALIDATION_TIERS.md')
-          text = path.read_text()
-          anchor = 'The ephemeral Ubuntu 24.04 media stage uses the already-used `Pillow==11.3.0`\n'
-          paragraph = '''Each workflow attempt owns a new output directory under
-          `Saved/RuntimeProof/CI/M3/PCGExCorridor/<run_id>-<run_attempt>/`, resolved by
-          `YACS_M3_EVIDENCE_ROOT`. Authoring, captures and uploads use only that directory;
-          an existing directory for the same attempt fails closed. Old runs and their
-          backup logs are never merged into the current artifact. No history or compile
-          cache is deleted: `Saved/BuildCache/PCGEx`, Binaries, Intermediate and the pinned
-          plugin remain under the independent compile-reuse policy. Deviation validation
-          requires exactly one source and one executed graph instead of choosing the first
-          recursive match. Diagnostic media still cannot issue a full terrain receipt.
-          The broker contract tests the guard on the actual reusable upload step, including
-          the explicit exclusion of light/focus runs.
-
-          '''
-          path.write_text(replace_once(text, anchor, paragraph + anchor))
-          subprocess.run(['ruff', 'format', 'scripts/ci/test_proof_broker.py', 'scripts/ci/test_terrain_proof_routing.py'], check=True)
-          subprocess.run(['ruff', 'check', 'scripts/ci', '--select', 'E9,F63,F7,F82'], check=True)
-          subprocess.run(['python', '-m', 'unittest', 'scripts.ci.test_proof_broker', 'scripts.ci.test_terrain_proof_routing', 'scripts.ci.test_ride_probe', 'scripts.ci.test_embark_terrain_pipeline_contract', 'scripts.ci.test_terrain_proof_request'], check=True)
-          subprocess.run(['python', 'scripts/ci/run_python_tests.py'], check=True)
-          subprocess.run(['python', 'scripts/ci/check_docs_index.py'], check=True)
-          subprocess.run(['git', 'diff', '--check'], check=True)
-          actual = set(subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines())
-          if actual != set(paths):
-              raise SystemExit('Unexpected changed paths')
-          parse_path = Path(os.environ['RUNNER_TEMP'], 'initialize-proof-output.ps1')
-          parse_path.write_text(init_script)
-          os.environ['YACS_PARSE_PATH'] = str(parse_path)
-          subprocess.run(['pwsh', '-NoProfile', '-Command', '$e=$null; $t=$null; [System.Management.Automation.Language.Parser]::ParseFile($env:YACS_PARSE_PATH,[ref]$t,[ref]$e) | Out-Null; if ($e.Count -gt 0) { $e | Out-String | Write-Host; exit 1 }'], check=True)
-          elements=[]
-          for path in sorted(paths):
-              data=Path(path).read_bytes()
-              result=api('/git/blobs', {'content':data.decode('utf-8'),'encoding':'utf-8'})
-              if result['sha'] != blob(data):
-                  raise SystemExit('Output blob mismatch')
-              elements.append({'path':path,'mode':'100644','type':'blob','sha':result['sha']})
-          result={'parent':BASE,'tree_elements':elements,'validation':'98 contracts and 391 reference tests; docs guards and PowerShell parse PASS; no native media, UE or visual result claimed'}
-          Path('reviewed-proof-isolation.json').write_text(json.dumps(result,indent=2))
-          print(json.dumps(result))
+          sha = '3300bd3ae88b65ec94b741a2243bf8cbde536e34'
+          request = urllib.request.Request(
+              'https://api.github.com/repos/karnalooch/YetAnotherCyclingSim/git/blobs/' + sha,
+              headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json'})
+          with urllib.request.urlopen(request, timeout=40) as response:
+              data = base64.b64decode(json.load(response)['content'])
+          if hashlib.sha1(f'blob {len(data)}\0'.encode() + data).hexdigest() != sha:
+              raise SystemExit('Reviewed preparation blob mismatch')
+          text = data.decode('utf-8')
+          start = "          python - <<'PY'\n"
+          end = '\n          PY\n'
+          if text.count(start) != 1 or text.count(end) != 1:
+              raise SystemExit('Ambiguous reviewed script boundaries')
+          code = textwrap.dedent(text.split(start,1)[1].split(end,1)[0])
+          target = Path(os.environ['RUNNER_TEMP'], 'reviewed-proof-isolation.py')
+          target.write_text(code, encoding='utf-8')
+          # The pinned code verifies input SHA/path hashes, executes tests and
+          # creates immutable blobs only. It does not update any branch ref.
+          exec(compile(code, str(target), 'exec'), {'__name__':'__main__'})
           PY
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
