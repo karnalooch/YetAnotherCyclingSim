@@ -1,8 +1,9 @@
 # Sa Calobra MDT50cm terrain benchmark
 
-This directory contains a bounded terrain-research input for Sa Calobra and
-Coll de Cal Reis, Mallorca. It is independent from the canonical Passo Giau
-world and does not represent Unreal, visual or performance acceptance.
+This directory contains the selected M3 terrain source for Sa Calobra and Coll
+de Cal Reis, Mallorca. It replaces the retired Passo Giau Landscape map as the
+active world input, but it does not yet represent Unreal import, visual or
+performance acceptance.
 
 ## Included output
 

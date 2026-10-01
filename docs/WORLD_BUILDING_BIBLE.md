@@ -623,8 +623,9 @@ The pipeline must keep these boundaries explicit:
 5. **Unreal `Base_DTM`** — engine representation of the conditioned terrain.
    It remains separate from `Road_Earthworks` and later
    `Local_Corrections`.
-6. **SP638 authority** — canonical road XY/profile/physics stay outside the
-   terrain generator and may not be moved by Gaea/Houdini shaping.
+6. **Route authority** — canonical road XY/profile/physics stay outside the
+   terrain generator and may not be moved by Gaea/Houdini shaping. For the
+   active Sa Calobra world, the first bounded corridor is Ma-2141.
 
 Every stage must record:
 
@@ -711,7 +712,7 @@ If the terrain-ownership recovery later proves a real PCGEx boundary, document
 that evidence and then use the tools-first ladder. Do not hide the failure with
 material camouflage, another bespoke smoothing stack or a road-alignment change.
 
-#### Passo Giau surface-ownership recovery after Gate B
+#### Historical Passo Giau surface-ownership recovery after Gate B
 
 Issue #287 / PR #288 established a useful separation of concerns:
 
@@ -719,9 +720,14 @@ Issue #287 / PR #288 established a useful separation of concerns:
   working presentation path;
 - the road/corridor can be technically healthy while the surrounding terrain is
   still visually unacceptable;
-- the current rider proof still depends on the legacy
+- the historical rider proof depended on the now-retired
   `/Game/Prototype/Maps/L_PassoGiauTerrainSpike` macro Landscape and a local
   terrain surface sampled back from that Landscape.
+
+The proof remains useful methodology evidence, but its map and DTM are not an
+active YACS world input. New terrain evidence uses the Sa Calobra MDT50cm source
+and must reproduce the same surface-ownership controls rather than copying the
+retired map.
 
 The immediate architecture problem is therefore **surface ownership**, not
 another road-centerline algorithm.
@@ -1315,7 +1321,7 @@ runs on ordinary pushes. Technical receipts record whether F/G were requested.
 
 The line saying **where the road is**.
 
-For Passo Giau this comes from verified SP638/GIS route geometry plus the canonical route contract.
+For Sa Calobra this comes from verified Ma-2141/GIS route geometry plus the canonical route contract.
 
 Never derive the canonical road XY from Landscape vertices.
 

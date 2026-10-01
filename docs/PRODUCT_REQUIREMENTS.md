@@ -21,7 +21,7 @@ Docelową przewagą produktu ma być połączenie realizmu wizualnego, fizyki, p
 
 ## 2. Cel MVP
 
-Pierwsze pełne MVP umożliwia ukończenie jazdy od startu do mety po jednej wybranej trasie w rzeczywistym obszarze Passo Giau. Aktualnym odcinkiem referencyjnym prac drogowych jest SP638; kanoniczna trasa i profil fizyczny pozostają odrębnymi źródłami prawdy.
+Pierwsze pełne MVP umożliwia ukończenie jazdy od startu do mety po jednej wybranej trasie w rzeczywistym obszarze Sa Calobra / Coll dels Reis na Majorce. Aktualnym odcinkiem referencyjnym prac drogowych jest Ma-2141; kanoniczna trasa i profil fizyczny pozostają odrębnymi źródłami prawdy.
 
 Jazda powinna trwać około 20–30 minut i prowadzić od startu do mety bez powtarzania fragmentów trasy.
 
@@ -29,8 +29,8 @@ Jazda powinna trwać około 20–30 minut i prowadzić od startu do mety bez pow
 
 Trasa powinna:
 
-- korzystać ze zweryfikowanej rzeczywistej geometrii drogowej obszaru Passo Giau;
-- zachowywać wiarygodny krajobraz alpejski oparty na danych rzeczywistego obszaru;
+- korzystać ze zweryfikowanej rzeczywistej geometrii drogowej obszaru Sa Calobra / Coll dels Reis;
+- zachowywać wiarygodny wapienny i śródziemnomorski krajobraz Serra de Tramuntana oparty na danych rzeczywistego obszaru;
 - mieć pofałdowany profil z podjazdami i zjazdami;
 - zawierać zakręty o różnej trudności, w tym możliwość banked i off-camber geometry;
 - prowadzić przez trzy główne strefy:
@@ -43,7 +43,7 @@ Trasa powinna:
 
 ### 3.1 Docelowo wszystkie rzeczywiste drogi obszaru
 
-**Decyzja właściciela z 2026-10-01; zapis wymagań: Issue #295.** Docelowy świat ma odwzorowywać **wszystkie drogi istniejące w rzeczywistości w granicach obszaru Passo Giau objętego projektem**, a nie wyłącznie SP638 lub kilka wybranych tras. SP638 jest pierwszym sprawdzanym wycinkiem, nie docelowym limitem sieci.
+**Decyzja właściciela z 2026-10-01; aktywny benchmark: Issue #312.** Docelowy świat ma odwzorowywać **wszystkie drogi istniejące w rzeczywistości w granicach obszaru Sa Calobra objętego projektem**, a nie wyłącznie Ma-2141 lub kilka wybranych tras. Ma-2141 jest pierwszym sprawdzanym wycinkiem, nie docelowym limitem sieci.
 
 Zakres obejmuje również drogi boczne, lokalne, dojazdowe, serwisowe i nieutwardzone, jeżeli występują w obszarze. Drogi rowerowe i ścieżki należy zachować w inwentaryzacji jako odrębne klasy, nie zamieniać automatycznie w asfalt. Skrzyżowania, odgałęzienia, ślepe zakończenia, mosty i tunele mają zachowywać rzeczywiste połączenia oraz rozdzielenie wysokościowe, gdzie występują.
 
@@ -51,7 +51,7 @@ Kompletność wymaga jawnej, wersjonowanej granicy obszaru oraz daty i pochodzen
 
 Odwzorowanie drogi w świecie i dopuszczenie jej do aktywnej jazdy to osobne stany. Docelowa sieć nie ma być jedynie dekoracją, ale rozszerzanie jazdy wymaga zweryfikowanych połączeń, profilu fizycznego, nawierzchni i zasad dostępu. Nie każda widoczna droga jest automatycznie dozwolonym odcinkiem rowerowym; nieznane dane pozostają jawnie nieznane.
 
-Dostawa jest etapowa: najpierw poprawna integracja SP638 z terenem, następnie inwentaryzacja całego obszaru i kontrolowane rozszerzanie sieci. Bieżące MVP zachowuje jedno kompletne przejście od startu do mety. Pełne pokrycie jest zatwierdzonym celem docelowego świata, a nie dodatkowym warunkiem zamknięcia bieżącego PR naprawy makroterenu #294. Harmonogram rozszerzenia wymaga osobnych zadań po zaakceptowaniu fundamentu; ten zapis nie oznacza, że nowe drogi już zaimplementowano.
+Dostawa jest etapowa: najpierw poprawna integracja Ma-2141 z terenem, następnie inwentaryzacja całego obszaru i kontrolowane rozszerzanie sieci. Bieżące MVP zachowuje jedno kompletne przejście od startu do mety. Pełne pokrycie jest zatwierdzonym celem docelowego świata, a nie dodatkowym warunkiem akceptacji samego benchmarku MDT50cm z Issue #312. Harmonogram rozszerzenia wymaga osobnych zadań po zaakceptowaniu fundamentu; ten zapis nie oznacza, że nowe drogi już zaimplementowano.
 
 Metodologia i kryteria pokrycia: [World Building Bible, sekcja 7.4](WORLD_BUILDING_BIBLE.md#74-full-area-real-road-network-target). Kolejność dostawy: [roadmapa](ROADMAP.md). Road Physics Profile, proweniencja, deterministyczna regeneracja i budżet wydajności nadal obowiązują.
 
@@ -1204,4 +1204,3 @@ Po przyjęciu powyższych kontraktów Pack Dynamics v0.1 należy traktować jako
 Nowe pomysły mogą trafiać do backlogu, ale nie powinny rozszerzać v0.1 bez wyraźnej decyzji o zmianie zakresu.
 
 Celem freeze jest powrót do bieżącego MVP i uniknięcie nieskończonego projektowania systemu, który zgodnie z roadmapą jest planowany po MVP.
-
