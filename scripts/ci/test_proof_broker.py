@@ -230,8 +230,23 @@ class YacsProofBrokerContractTests(unittest.TestCase):
         for proof_id, path in TARGET_WORKFLOWS.items():
             with self.subTest(proof=proof_id):
                 workflow = path.read_text(encoding="utf-8")
-                self.assertIn("if: ${{ success() }}", workflow)
-                self.assertIn("if-no-files-found: error", workflow)
+                # Assert the receipt upload itself, not an unrelated step's guard.
+                uploads = [
+                    block
+                    for block in re.findall(
+                        r"(?ms)^      - name:.*?(?=^      - name:|\Z)", workflow
+                    )
+                    if re.search(r"(?m)^          name: proof-", block)
+                ]
+                self.assertEqual(len(uploads), 1)
+                upload = uploads[0]
+                guard = (
+                    "success() && (inputs.ride_probe_mode == 'off' || inputs.ride_probe_mode == '')"
+                    if proof_id == "m3-terrain"
+                    else "success()"
+                )
+                self.assertIn("if: ${{ " + guard + " }}", upload)
+                self.assertIn("if-no-files-found: error", upload)
                 if proof_id == "m3-terrain":
                     # M3 validates its input before downstream checkout and keeps
                     # the established internal artifact names as diagnostics.

@@ -83,6 +83,10 @@ on:
 permissions:
   contents: read
 
+# Proof output is per-run; ignored compile caches remain separate and reusable.
+env:
+  YACS_M3_EVIDENCE_ROOT: Saved/RuntimeProof/CI/M3/PCGExCorridor/${{ github.run_id }}-${{ github.run_attempt }}
+
 # Static pushes can replace only static work on the same branch. They cannot
 # cancel an explicit proof, including a proof dispatched from the same ref.
 concurrency:
@@ -590,6 +594,21 @@ jobs:
           "purged_project_build=$($purgeProjectBuild.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
           "purged_plugin=$($purgePlugin.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
 
+      - name: Initialize isolated proof output
+        shell: pwsh
+        working-directory: _embark-terrain-worktree
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $expected = "Saved/RuntimeProof/CI/M3/PCGExCorridor/$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          if ($env:YACS_M3_EVIDENCE_ROOT -ne $expected) {
+            throw 'Unexpected M3 run evidence path.'
+          }
+          $root = Join-Path (Get-Location) $env:YACS_M3_EVIDENCE_ROOT
+          if (Test-Path -LiteralPath $root) {
+            throw 'M3 run evidence already exists; rerun with a new attempt.'
+          }
+          New-Item -ItemType Directory -Path $root -ErrorAction Stop | Out-Null
+
       - name: Build or reuse binaries and author deterministic PCGEx graph
         shell: pwsh
         working-directory: _embark-terrain-worktree
@@ -598,7 +617,7 @@ jobs:
           $params = @{
             ExpectedBranch = 'HEAD'
             ExpectedHead = '${{ needs.classify.outputs.source_sha }}'
-            ArtifactRoot = 'Saved/RuntimeProof/CI/M3/PCGExCorridor'
+            ArtifactRoot = '${{ env.YACS_M3_EVIDENCE_ROOT }}'
           }
           if ('${{ steps.compile_cache.outputs.skip_build }}' -eq 'true') {
             $params.SkipBuild = $true
@@ -646,7 +665,7 @@ jobs:
           if (-not (Test-Path -LiteralPath $generatedAsset -PathType Leaf)) {
             throw 'Generated PCGEx graph asset is missing before rider proof.'
           }
-          $evidenceAsset = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/M3/PCGExCorridor/PCG_PassoGiau_SP638_Corridor.uasset'
+          $evidenceAsset = Join-Path (Get-Location) '${{ env.YACS_M3_EVIDENCE_ROOT }}/PCG_PassoGiau_SP638_Corridor.uasset'
           Copy-Item -LiteralPath $generatedAsset -Destination $evidenceAsset -Force
           Remove-Item -LiteralPath (Join-Path (Get-Location) 'Content/WorldGen') -Recurse -Force
 
@@ -654,8 +673,8 @@ jobs:
             ./scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1 `
               -ExpectedBranch 'HEAD' `
               -ExpectedHead '${{ needs.classify.outputs.source_sha }}' `
-              -ArtifactRoot 'Saved/RuntimeProof/CI/M3/PCGExCorridor/Traversal' `
-              -PcgExExecutionOutput 'Saved/RuntimeProof/CI/M3/PCGExCorridor/pcgex_graph_output.json' `
+              -ArtifactRoot '${{ env.YACS_M3_EVIDENCE_ROOT }}/Traversal' `
+              -PcgExExecutionOutput '${{ env.YACS_M3_EVIDENCE_ROOT }}/pcgex_graph_output.json' `
               -Variant $env:YACS_RIDE_PROBE_VARIANT `
               -RideProbeMode $env:YACS_RIDE_PROBE_MODE `
               -RideProbeCenterM $env:YACS_RIDE_PROBE_CENTER_M `
@@ -672,8 +691,8 @@ jobs:
             ./scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1 `
               -ExpectedBranch 'HEAD' `
               -ExpectedHead '${{ needs.classify.outputs.source_sha }}' `
-              -ArtifactRoot ("Saved/RuntimeProof/CI/M3/PCGExCorridor/Visual/{0}" -f $variant) `
-              -PcgExExecutionOutput 'Saved/RuntimeProof/CI/M3/PCGExCorridor/pcgex_graph_output.json' `
+              -ArtifactRoot ("${{ env.YACS_M3_EVIDENCE_ROOT }}/Visual/{0}" -f $variant) `
+              -PcgExExecutionOutput '${{ env.YACS_M3_EVIDENCE_ROOT }}/pcgex_graph_output.json' `
               -Variant $variant
             if ($LASTEXITCODE -ne 0) { throw "PCGEx Gate C.1 variant $variant failed." }
           }
@@ -681,8 +700,8 @@ jobs:
           ./scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1 `
             -ExpectedBranch 'HEAD' `
             -ExpectedHead '${{ needs.classify.outputs.source_sha }}' `
-            -ArtifactRoot 'Saved/RuntimeProof/CI/M3/PCGExCorridor/Visual/C3' `
-            -PcgExExecutionOutput 'Saved/RuntimeProof/CI/M3/PCGExCorridor/pcgex_graph_output.json' `
+            -ArtifactRoot '${{ env.YACS_M3_EVIDENCE_ROOT }}/Visual/C3' `
+            -PcgExExecutionOutput '${{ env.YACS_M3_EVIDENCE_ROOT }}/pcgex_graph_output.json' `
             -NativeDtmPatchMetadata 'ExternalAssets/Terrain/PassoGiau/PreparedNearField/passo_giau_native_dtm_patch.json' `
             -Variant C3
           if ($LASTEXITCODE -ne 0) { throw 'PCGEx Gate C.3 native-DTM patch failed.' }
@@ -693,8 +712,7 @@ jobs:
         with:
           name: passo-giau-m3-pcgex-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            _embark-terrain-worktree/Saved/RuntimeProof/CI/M3/PCGExCorridor/**
-            _embark-terrain-worktree/Content/WorldGen/PCGEx/PCG_PassoGiau_SP638_Corridor.uasset
+            _embark-terrain-worktree/${{ env.YACS_M3_EVIDENCE_ROOT }}/**
           if-no-files-found: warn
           retention-days: 14
 
@@ -780,20 +798,22 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          SOURCE="$(find "${{ runner.temp }}/yacs-pcgex-source" -type f -name 'passo_giau_sp638_ue_centerline.json' -print -quit)"
-          EXECUTION="$(find "${{ runner.temp }}/yacs-pcgex-execution" -type f -name 'pcgex_graph_output.json' -print -quit)"
-          test -n "$SOURCE"
-          test -n "$EXECUTION"
+          mapfile -t SOURCES < <(find "${{ runner.temp }}/yacs-pcgex-source" -type f -name 'passo_giau_sp638_ue_centerline.json')
+          mapfile -t EXECUTIONS < <(find "${{ runner.temp }}/yacs-pcgex-execution" -type f -name 'pcgex_graph_output.json')
+          test "${#SOURCES[@]}" -eq 1
+          test "${#EXECUTIONS[@]}" -eq 1
+          SOURCE="${SOURCES[0]}"
+          EXECUTION="${EXECUTIONS[0]}"
           python scripts/worldgen/validate_pcgex_corridor_output.py \
             --source "$SOURCE" \
             --execution-output "$EXECUTION" \
-            --output Saved/RuntimeProof/CI/M3/PCGExCorridor/pcgex_corridor_deviation.json
+            --output ${{ env.YACS_M3_EVIDENCE_ROOT }}/pcgex_corridor_deviation.json
 
       - name: Upload PCGEx deviation evidence
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: passo-giau-m3-pcgex-deviation-${{ github.run_id }}-${{ github.run_attempt }}
-          path: Saved/RuntimeProof/CI/M3/PCGExCorridor/pcgex_corridor_deviation.json
+          path: ${{ env.YACS_M3_EVIDENCE_ROOT }}/pcgex_corridor_deviation.json
           if-no-files-found: error
           retention-days: 14
 
@@ -836,7 +856,7 @@ jobs:
           name: proof-m3-terrain-${{ needs.classify.outputs.source_sha }}
           path: |
             ${{ runner.temp }}/yacs-pcgex-execution/**
-            Saved/RuntimeProof/CI/M3/PCGExCorridor/pcgex_corridor_deviation.json
+            ${{ env.YACS_M3_EVIDENCE_ROOT }}/pcgex_corridor_deviation.json
           if-no-files-found: error
           retention-days: 14
 

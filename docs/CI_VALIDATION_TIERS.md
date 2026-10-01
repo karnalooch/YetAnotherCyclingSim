@@ -405,6 +405,18 @@ rejected before reserving the reference runner.
   represented as full-area coverage. Normal terrain representative-location,
   regeneration and performance gates remain unchanged.
 
+Each workflow attempt owns a new output directory under
+`Saved/RuntimeProof/CI/M3/PCGExCorridor/<run_id>-<run_attempt>/`, resolved by
+`YACS_M3_EVIDENCE_ROOT`. Authoring, captures and uploads use only that directory;
+an existing directory for the same attempt fails closed. Old runs and their
+backup logs are never merged into the current artifact. No history or compile
+cache is deleted: `Saved/BuildCache/PCGEx`, Binaries, Intermediate and the pinned
+plugin remain under the independent compile-reuse policy. Deviation validation
+requires exactly one source and one executed graph instead of choosing the first
+recursive match. Diagnostic media still cannot issue a full terrain receipt.
+The broker contract tests the guard on the actual reusable upload step, including
+the explicit exclusion of light/focus runs.
+
 The ephemeral Ubuntu 24.04 media stage uses the already-used `Pillow==11.3.0`
 and installs distro `ffmpeg=7:6.1.1-3ubuntu5` from the signed Ubuntu archive only
 for an explicit diagnostic request. It verifies the package version and records
