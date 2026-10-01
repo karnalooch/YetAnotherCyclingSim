@@ -1,0 +1,92 @@
+name: Issue 293 bounded media prerequisite probe
+on:
+  push:
+    branches: [ci/293-source-inspection]
+    paths: ['.github/workflows/293-media-preflight-once.yml']
+permissions:
+  contents: read
+jobs:
+  media-tools:
+    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.actor == 'karnalooch' && github.triggering_actor == 'karnalooch' && github.event_name == 'push' }}
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 3
+    steps:
+      - name: Inspect only declared codec executables and Python
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = Join-Path $env:RUNNER_TEMP ('yacs-media-probe-' + $env:GITHUB_RUN_ID)
+          New-Item -ItemType Directory -Path $root -Force | Out-Null
+          $paths = @()
+          foreach ($name in @('ffmpeg.exe','ffprobe.exe')) {
+            $command = Get-Command $name -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($command) { $paths += $command.Source }
+          }
+          # The owner reports an existing running FFmpeg. Read its executable
+          # location only; never inspect arguments, stop it, or scan user files.
+          $running = @(Get-CimInstance Win32_Process -Filter "Name = 'ffmpeg.exe'" -ErrorAction SilentlyContinue)
+          foreach ($process in $running) {
+            if ($process.ExecutablePath) { $paths += [string]$process.ExecutablePath }
+          }
+          $initial = @($paths)
+          foreach ($path in $initial) {
+            foreach ($name in @('ffmpeg.exe','ffprobe.exe')) {
+              $candidate = Join-Path (Split-Path -Parent $path) $name
+              if (Test-Path -LiteralPath $candidate -PathType Leaf) { $paths += $candidate }
+            }
+          }
+          $tools = @()
+          foreach ($path in @($paths | Sort-Object -Unique)) {
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { continue }
+            $version = (& $path -version 2>&1 | Out-String)
+            if ($LASTEXITCODE -ne 0) { throw "Version probe failed: $path" }
+            $tools += [ordered]@{ path = $path; sha256 = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant(); version = $version }
+          }
+          $python = (& python --version 2>&1 | Out-String).Trim()
+          $result = [ordered]@{ run_id = $env:GITHUB_RUN_ID; python = $python; tools = $tools; ffmpeg_process_count = $running.Count; installed_nothing = $true; stopped_no_processes = $true }
+          $result | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $root 'media-tools.json') -Encoding utf8
+          $result | ConvertTo-Json -Depth 5 | Write-Host
+          "YACS_MEDIA_PROBE_DIR=$root" >> $env:GITHUB_ENV
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: issue293-owner-media-tools
+          path: ${{ env.YACS_MEDIA_PROBE_DIR }}/media-tools.json
+          if-no-files-found: error
+          retention-days: 2
+  exact-source:
+    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.actor == 'karnalooch' && github.triggering_actor == 'karnalooch' && github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 75cb4f0ed3e1d7d3e2c3b1ba4cf2cf3f038e7745
+          lfs: false
+          persist-credentials: false
+      - name: Archive tracked source only at the requested revision
+        env:
+          GIT_LFS_SKIP_SMUDGE: '1'
+        run: |
+          python - <<'PY'
+          import os, subprocess, zipfile
+          from pathlib import Path
+          sha = subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          assert sha == '75cb4f0ed3e1d7d3e2c3b1ba4cf2cf3f038e7745'
+          allowed = {'.github','.gumball','scripts','docs','physics_reference','Source','Config','worldgen'}
+          files = subprocess.check_output(['git','ls-files','-z']).decode().split('\0')
+          out = Path(os.environ['RUNNER_TEMP']) / 'issue293-source-current.zip'
+          with zipfile.ZipFile(out,'w',zipfile.ZIP_DEFLATED) as archive:
+              for name in files:
+                  if not name: continue
+                  p = Path(name)
+                  if p.parts[0] in allowed or name in {'AGENTS.md','README.md','THIRD_PARTY_NOTICES.md','YetAnotherCyclingSim.uproject','.gitignore','.gitattributes'}:
+                      archive.write(p,name)
+              archive.writestr('SOURCE_SHA.txt',sha+'\n')
+          print('Exact source archived:',sha,out.stat().st_size)
+          PY
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: issue293-source-current
+          path: ${{ runner.temp }}/issue293-source-current.zip
+          if-no-files-found: error
+          retention-days: 2
