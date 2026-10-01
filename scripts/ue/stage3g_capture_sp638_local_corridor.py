@@ -202,8 +202,12 @@ _layer_comparison = None
 
 def _restore_comparison_layers() -> None:
     if _layer_comparison is not None:
+        changed = False
         for layer, visible in _layer_comparison["original_visibility"]:
+            changed |= bool(layer.get_editor_property("visible")) != visible
             layer.set_editor_property("visible", visible)
+        if changed:
+            _layer_comparison["landscape"].force_update_layers_content(False)
 
 
 def _advance_layer_comparison() -> bool:
@@ -212,27 +216,35 @@ def _advance_layer_comparison() -> bool:
     state = _layer_comparison
     if state is None:
         return False
-    if state["phase"] == "combined":
+    if _tick_handle is not None:
+        unreal.unregister_slate_post_tick_callback(_tick_handle)
+        _tick_handle = None
+    if state["phase"] in ("combined", "rebuilt_combined"):
         # The native loading barrier pumps Slate. Do not re-enter _tick while
         # it still observes the completed first task and an absent second PNG.
         if _tick_handle is not None:
             unreal.unregister_slate_post_tick_callback(_tick_handle)
             _tick_handle = None
-        state["phase"] = "base_only"
+        base_only = state["phase"] == "rebuilt_combined"
+        state["phase"] = "base_only" if base_only else "rebuilt_combined"
         for layer, _visible in state["original_visibility"]:
-            layer.set_editor_property("visible", str(layer.get_name_bp()) == "Base_DTM")
+            visible = str(layer.get_name_bp()) == "Base_DTM" if base_only else _visible
+            layer.set_editor_property("visible", visible)
+            if bool(layer.get_editor_property("visible")) != visible:
+                raise RuntimeError("Landscape edit-layer visibility readback mismatch")
+        state["landscape"].force_update_layers_content(False)
         from scripts.ue.prepare_landscape_capture import prepare_capture
 
-        state["base_capture_preparation"] = prepare_capture(
+        state[state["phase"] + "_capture_preparation"] = prepare_capture(
             unreal, state["landscape"], state["location"], state["rotation"],
             _proof_path.parent, request_height_mips=True,
         )
         _task = unreal.AutomationLibrary.take_high_res_screenshot(
             res_x=CAPTURE_RES_X, res_y=CAPTURE_RES_Y,
-            filename=str(state["base_png"]), camera=_camera,
+            filename=str(state[state["phase"] + "_png"]), camera=_camera,
             mask_enabled=False, capture_hdr=False,
             comparison_tolerance=unreal.ComparisonTolerance.LOW,
-            comparison_notes="Persisted Landscape: Base_DTM only; same A camera",
+            comparison_notes="Persisted Landscape: native layer rebuild; same A camera",
             delay=3.0, force_game_view=True,
         )
         if not _task or not _task.is_valid_task():
@@ -256,7 +268,10 @@ def _advance_layer_comparison() -> bool:
         "same_camera_light_fov": True,
         "additional_spline_edit": False,
         "saved_to_map": False,
-        "base_capture_preparation": state["base_capture_preparation"],
+        "base_capture_preparation": state["base_only_capture_preparation"],
+        "rebuilt_combined_png": str(state["rebuilt_combined_png"]),
+        "rebuilt_combined_sha256": hashlib.sha256(state["rebuilt_combined_png"].read_bytes()).hexdigest(),
+        "native_layer_rebuild_api": "Landscape.force_update_layers_content(False)",
     }
     return False
 
@@ -272,10 +287,10 @@ def _attach_persisted_layer_comparison(proof_dir: Path) -> dict[str, object]:
         raise RuntimeError("persisted layer comparison has a different source SHA")
     images = {}
     total = 0
-    for role in ("combined", "base_only"):
+    for role in ("combined", "rebuilt_combined", "base_only"):
         raw = Path(pair[f"{role}_png"]).read_bytes()
         total += len(raw)
-        if total > 20_000_000:
+        if total > 25_000_000:
             raise RuntimeError("persisted layer comparison exceeds compact evidence budget")
         if hashlib.sha256(raw).hexdigest() != pair[f"{role}_sha256"]:
             raise RuntimeError("persisted layer comparison PNG hash mismatch")
@@ -285,10 +300,10 @@ def _attach_persisted_layer_comparison(proof_dir: Path) -> dict[str, object]:
 
 def _finish(success: bool, error: str = "") -> None:
     global _tick_handle
-    _restore_comparison_layers()
     if _tick_handle is not None:
         unreal.unregister_slate_post_tick_callback(_tick_handle)
         _tick_handle = None
+    _restore_comparison_layers()
 
     if success and _output_path is not None and _proof_path is not None:
         screenshot_sha256 = hashlib.sha256(_output_path.read_bytes()).hexdigest()
@@ -329,8 +344,8 @@ def _tick(_delta_time: float) -> None:
         return
     if _task.is_task_done():
         active_png = (
-            _layer_comparison["base_png"]
-            if _layer_comparison is not None and _layer_comparison["phase"] == "base_only"
+            _layer_comparison[_layer_comparison["phase"] + "_png"]
+            if _layer_comparison is not None and _layer_comparison["phase"] != "combined"
             else _output_path
         )
         if (
@@ -1292,6 +1307,8 @@ def main() -> None:
         component.set_lod_bias(0)
 
     if variant_name == "A":
+        if not hasattr(landscape, "force_update_layers_content"):
+            raise RuntimeError("native Landscape.force_update_layers_content is unavailable")
         from scripts.ue.audit_macro_landscape import capture_macro_height_evidence
 
         capture_macro_height_evidence(
@@ -1836,9 +1853,12 @@ def main() -> None:
             "phase": "combined", "landscape": landscape,
             "location": camera_location, "rotation": camera_rotation,
             "base_png": _output_path.with_name("sp638_base_dtm_only_rider_3840x2160.png"),
+            "base_only_png": _output_path.with_name("sp638_base_dtm_only_rider_3840x2160.png"),
+            "rebuilt_combined_png": _output_path.with_name("sp638_rebuilt_combined_rider_3840x2160.png"),
             "original_visibility": [(layer, bool(layer.get_editor_property("visible"))) for layer in layers],
         }
         _layer_comparison["base_png"].unlink(missing_ok=True)
+        _layer_comparison["rebuilt_combined_png"].unlink(missing_ok=True)
     elif variant_name == "H":
         _proof_data["persisted_layer_comparison"] = _attach_persisted_layer_comparison(_proof_path.parent)
 
