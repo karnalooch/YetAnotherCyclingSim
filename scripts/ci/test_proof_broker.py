@@ -20,6 +20,7 @@ TARGET_WORKFLOWS = {
     / ".github"
     / "workflows"
     / "passo-giau-r4-1-hairpin-corridor.yml",
+    "m3-terrain": ROOT / ".github" / "workflows" / "passo-giau-embark-terrain.yml",
     "world-authoring-sp638": ROOT
     / ".github"
     / "workflows"
@@ -220,11 +221,31 @@ class YacsProofBrokerContractTests(unittest.TestCase):
                 workflow = path.read_text(encoding="utf-8")
                 self.assertIn("if: ${{ success() }}", workflow)
                 self.assertIn("if-no-files-found: error", workflow)
-                self.assertIn(
-                    f"proof-{proof_id}-${{{{ inputs.exact_sha }}}}",
-                    workflow,
-                )
-                self.assertIn(f"diagnostic-{proof_id}-", workflow)
+                if proof_id == "m3-terrain":
+                    # M3 validates its input before downstream checkout and keeps
+                    # the established internal artifact names as diagnostics.
+                    self.assertIn(
+                        "proof-m3-terrain-${{ needs.classify.outputs.source_sha }}",
+                        workflow,
+                    )
+                    self.assertIn(
+                        "passo-giau-m3-pcgex-${{ github.run_id }}-${{ github.run_attempt }}",
+                        workflow,
+                    )
+                    author, validate = workflow.split("\n  validate:", 1)
+                    self.assertNotIn("name: proof-m3-terrain-", author)
+                    self.assertIn("needs: [classify, prepare, author]", validate)
+                    self.assertLess(
+                        validate.index("validate_pcgex_corridor_output.py"),
+                        validate.index("name: proof-m3-terrain-"),
+                    )
+                    self.assertIn('"human_visual_status": "PENDING"', validate)
+                else:
+                    self.assertIn(
+                        f"proof-{proof_id}-${{{{ inputs.exact_sha }}}}",
+                        workflow,
+                    )
+                    self.assertIn(f"diagnostic-{proof_id}-", workflow)
 
     def test_broker_workflow_keeps_trusted_default_branch_boundary(self):
         workflow = BROKER_WORKFLOW.read_text(encoding="utf-8")
