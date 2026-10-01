@@ -879,10 +879,17 @@ jobs:
           import json
           import os
           from pathlib import Path
+          request_id = os.environ["REQUEST_ID"]
+          ride_probe_mode = os.environ["YACS_RIDE_PROBE_MODE"]
+          is_h_focus = request_id.startswith("gb-m3-h-focus-")
           receipt = {
               "schema_version": 1,
-              "proof": "m3-terrain" if os.environ["YACS_RIDE_PROBE_MODE"] == "off" else "m3-ride-diagnostic",
-              "ride_probe_mode": os.environ["YACS_RIDE_PROBE_MODE"],
+              "proof": (
+                  "m3-h-focus"
+                  if is_h_focus
+                  else ("m3-terrain" if ride_probe_mode == "off" else "m3-ride-diagnostic")
+              ),
+              "ride_probe_mode": ride_probe_mode,
               "exact_sha": os.environ["SOURCE_SHA"],
               "request_id": os.environ["REQUEST_ID"],
               "workflow_sha": os.environ["GITHUB_SHA"],
@@ -899,10 +906,21 @@ jobs:
           PY
 
       - name: Upload reusable successful M3 terrain evidence
-        if: ${{ success() && (inputs.ride_probe_mode == 'off' || inputs.ride_probe_mode == '') }}
+        if: ${{ success() && (inputs.ride_probe_mode == 'off' || inputs.ride_probe_mode == '') && !startsWith(inputs.gumball_request_id, 'gb-m3-h-focus-') }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: proof-m3-terrain-${{ needs.classify.outputs.source_sha }}
+          path: |
+            ${{ runner.temp }}/yacs-pcgex-execution/**
+            ${{ env.YACS_M3_EVIDENCE_ROOT }}/pcgex_corridor_deviation.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload reusable successful H focus evidence
+        if: ${{ success() && (inputs.ride_probe_mode == 'off' || inputs.ride_probe_mode == '') && startsWith(inputs.gumball_request_id, 'gb-m3-h-focus-') }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: proof-m3-h-focus-${{ needs.classify.outputs.source_sha }}
           path: |
             ${{ runner.temp }}/yacs-pcgex-execution/**
             ${{ env.YACS_M3_EVIDENCE_ROOT }}/pcgex_corridor_deviation.json
