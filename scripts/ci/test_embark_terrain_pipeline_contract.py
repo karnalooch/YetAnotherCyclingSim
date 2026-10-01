@@ -7,6 +7,91 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 
+class RoadCaptureCameraTests(unittest.TestCase):
+    def frame(
+        self,
+        road=(0.0, 0.0, 100.0),
+        forward=(1.0, 0.0, 0.0),
+        legacy=(-100.0, 20.0, 100.0),
+    ):
+        from scripts.ue.road_capture_camera import rider_capture_frame
+
+        return rider_capture_frame(road, forward, legacy, 160.0)
+
+    def test_hairpin_chord_cannot_reverse_rider_view(self):
+        import math
+
+        result = self.frame()
+        self.assertGreater(result["legacy_chord_angle_deg"], 90.0)
+        self.assertLess(result["legacy_chord_horizontal_alignment"], 0.0)
+        self.assertEqual(result["road_forward_unit"], [1.0, 0.0, 0.0])
+        self.assertEqual(result["camera_location_cm"], [0.0, 0.0, 260.0])
+        self.assertTrue(all(math.isfinite(v) for v in result["target_cm"]))
+
+    def test_position_and_height_never_change_to_avoid_geometry(self):
+        result = self.frame(road=(12345.0, -222.0, 170000.0))
+        self.assertEqual(result["camera_location_cm"], [12345.0, -222.0, 170160.0])
+        self.assertFalse(result["position_adjusted_for_visibility"])
+        self.assertFalse(result["route_or_terrain_modified"])
+
+    def test_grade_and_direction_are_preserved(self):
+        import math
+
+        result = self.frame(forward=(0.0, -20.0, 2.0))
+        forward = result["road_forward_unit"]
+        self.assertAlmostEqual(math.hypot(*forward), 1.0)
+        self.assertAlmostEqual(forward[2] / -forward[1], 0.1)
+        self.assertEqual(forward[0], 0.0)
+
+    def test_translation_and_tangent_scale_do_not_change_orientation(self):
+        a = self.frame(forward=(3.0, 4.0, 1.0))
+        b = self.frame(road=(200000.0, 300000.0, 400000.0), forward=(30.0, 40.0, 10.0))
+        for first, second in zip(a["road_forward_unit"], b["road_forward_unit"]):
+            self.assertAlmostEqual(first, second)
+
+    def test_invalid_direction_fails_closed(self):
+        import math
+
+        for forward in (
+            (0.0, 0.0, 0.0),
+            (0.0, 0.0, 1.0),
+            (math.nan, 1.0, 0.0),
+            (True, 0.0, 0.0),
+        ):
+            with self.subTest(forward=forward), self.assertRaises(ValueError):
+                self.frame(forward=forward)
+
+    def test_invalid_eye_height_fails_closed(self):
+        import math
+        from scripts.ue.road_capture_camera import rider_capture_frame
+
+        for height in (0.0, -1.0, math.inf, math.nan, True):
+            with self.subTest(height=height), self.assertRaises(ValueError):
+                rider_capture_frame((0, 0, 0), (1, 0, 0), (2, 0, 0), height)
+
+    def test_degenerate_legacy_target_does_not_control_new_frame(self):
+        result = self.frame(legacy=(0.0, 0.0, 100.0))
+        self.assertIsNone(result["legacy_chord_angle_deg"])
+        self.assertEqual(result["road_forward_unit"], [1.0, 0.0, 0.0])
+
+    def test_capture_uses_the_original_camera_station_before_slice(self):
+        capture = (
+            ROOT / "scripts/ue/stage3g_capture_sp638_local_corridor.py"
+        ).read_text()
+        self.assertIn(
+            "road_forward = spline.get_direction_at_distance_along_spline(\n        camera_distance_cm,",
+            capture,
+        )
+        self.assertLess(
+            capture.index(
+                "road_forward = spline.get_direction_at_distance_along_spline"
+            ),
+            capture.index("_replace_with_slice(spline, landscape_slice)"),
+        )
+        self.assertIn('"camera_frame": camera_frame', capture)
+        self.assertIn("request_height_mips=macro_landscape_visible", capture)
+
+
 class EmbarkTerrainPipelineContractTests(unittest.TestCase):
     def test_owner_embark_directive_allows_license_clean_pattern_substitution(
         self,

@@ -955,6 +955,20 @@ This is the default YACS answer to "how do people on YouTube avoid destroying th
 
 The road has three separate concepts.
 
+### Rider-camera direction is route-local
+
+The terrain diagnostic keeps its selected camera station, XY and 1.6 m eye
+height fixed. Camera orientation uses the forward tangent at that same station,
+not a chord to a point far beyond a hairpin. A route-ahead point can already be
+behind the rider in world space; such a view is not forward-riding evidence.
+Record the old target and its angle to the local tangent in `camera_frame` so
+the change remains auditable. This changes proof-camera orientation only; it
+must not lift/reposition the camera to hide geometry or change the established
+PCGEx road, earthworks, source terrain or simulation. Historical same-pose
+captures remain comparison evidence, not deleted or reclassified as accepted.
+A forward camera still requires review for real road/terrain penetration,
+exclusive surface ownership, fresh loading and representative locations.
+
 ### 7.1 Canonical alignment
 
 The line saying **where the road is**.
@@ -990,6 +1004,38 @@ The actual visible asphalt:
 The road mesh is generated independently from the Landscape grid.
 
 The road presentation may use real cross-section evidence, but noisy LiDAR samples must be regularized before they become a road surface. Dense mesh stations are not automatically independent survey observations.
+
+### 7.4 Full-area real-road network target
+
+**Owner-approved destination, 2026-10-01; requirement record: Issue #295.** [Product Requirements section 3.1](PRODUCT_REQUIREMENTS.md#31-docelowo-wszystkie-rzeczywiste-drogi-obszaru) requires every real road within the project's Passo Giau area, not just SP638. SP638 is the first validated producer/consumer slice, not the final world inventory. This section records requirements, not an implemented network subsystem or a new prerequisite for terrain-recovery PR #294.
+
+Coverage and source evidence must preserve:
+
+- one explicit, versioned world area of interest, with CRS, boundary and reference data date; do not silently shrink it to a rider corridor or screenshot;
+- all real road classes where present, including minor/access/service and unpaved roads; retain cycleways and paths as separately classified features rather than silently dropping them or pretending they are asphalt;
+- source identities, geometry, surface/access evidence and unresolved attributes; retain immutable source packages and complete the existing license/provenance review before importing a new dataset;
+- actual junction connectivity, dead ends and boundary continuations; a bridge, tunnel or nearby hairpin must not become a junction merely because lines overlap in XY;
+- a coverage ledger mapping source segments to represented, pending, uncertain or verified-not-a-road states, with counts and length by class and explicit discrepancy review. Pending/missing roads are not completed coverage. A complete import from one dataset alone is not proof that all real roads have been captured.
+
+World coverage is distinct from playable-route activation. Do not reduce the final network to decorative lines, but activate riding only through the established route/physics contracts and validated topology, surface and access semantics. Roads not suitable or permitted for riding may still require faithful world representation. No presentation mesh, PCGEx output or sampled Landscape becomes simulation authority.
+
+Reuse the established pinned, authoring-only PCGEx road/corridor path and Epic-native capabilities under the tools-first gate. Embark remains production-pattern evidence, not a claim that Embark uses PCGEx. Neither Houdini nor Gaea is a prerequisite for this target. Prove a second real road and junction through the existing producer -> derived data -> consumer -> regeneration gate before generalizing; do not build a universal schema in anticipation of the full network.
+
+Expansion must preserve independent alignment, non-destructive Road_Earthworks, route-local handling of vertically separated roads and one rider-close ground owner. An accepted source edit must regenerate only affected road/earthwork/PCG scope and justified dependencies, with source/config fingerprints and unrelated outputs remaining reusable. Full-area coverage does not require full-detail residency everywhere: spatial streaming and quality budgets must preserve visible roads while respecting the measured 1080p/60 target.
+
+Before claiming the expanded network accepted, require a reviewed full-area coverage ledger and discrepancy resolution, true-junction/grade-separation checks, representative rider-camera proofs (including normal slopes and major earthworks), fresh-load/regeneration evidence and applicable exact-SHA performance proof. A good SP638 hairpin or green build cannot substitute for whole-area coverage.
+
+### 7.5 Mixed-surface riding destination
+
+Owner approval of 2026-10-01 (Issue #297) extends the network destination to rideable asphalt/gravel combinations; [Product Requirements section 3.2](PRODUCT_REQUIREMENTS.md#32-jazda-mieszana-szosa-i-gravel) owns this scope. This is not an additional closure requirement for terrain PR #294.
+
+Preserve surface evidence separately from road class, roughness/obstacles, width, topology and bicycle access. Distinguish asphalt, compacted aggregate, loose gravel, earth and unknown at inventory/authoring boundaries without treating them as calibrated physics presets. Unknown or conflicting inputs remain unresolved; neither a path label nor the appearance of a mesh establishes safe/legal ride activation. Review actual source licenses before any new dataset enters the project.
+
+Reuse the pinned authoring-only PCGEx corridor and existing route/physics boundaries. Surface-aware presentation must not manufacture asphalt widths, move road XY, merge grade-separated branches or layer competing ground surfaces to hide seams. No separate gravel generator, global streaming disable, arbitrary speed penalty or new dependency is authorized by this requirement.
+
+The first real mixed-route proof must establish source-backed surface transitions and true road connections, continuous rider state, explicit rolling/grip configuration, neutral rider-camera geometry, regeneration and relevant performance. Keep source coverage, physics calibration, technical tests and visual acceptance distinct. A synthetic reference example cannot stand in for these proofs.
+
+The current support exercise is `physics_reference/examples/run_mixed_surface.py`, tested through the existing reference-test discovery. It composes RoadPhysicsProfile, SurfaceGripPolicy, Environment and the unchanged step_simulation. Fixture coefficients are explicitly synthetic. Surface selection occurs at current S/D before each fixed substep; batching cannot alter the result. The last substep may pass the test endpoint slightly without resetting distance or velocity. The straight-line exercise reports grip but does not execute a corner/braking solver or prove UE/runtime parity. Detailed tyre/roughness physics and actual network activation remain separate work after the applicable foundation gate.
 
 ---
 

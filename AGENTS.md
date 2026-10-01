@@ -43,6 +43,17 @@ After editing:
 5. Report any unverified behavior.
 6. Suggest one logical commit message.
 
+### Remote-first delivery and durable owner preferences
+
+Owner reaffirmation, 2026-10-01 (Issue #297): use authorized remote GitHub delivery from the current conversation whenever available. Do not default to handing the owner a patch or requiring a mode switch merely because local Git, credentials, DNS, Unreal or a workstation is unavailable.
+
+- Discover the current connector's read and write capabilities, inspect the exact repository/PR state, and attempt the applicable authorized operation before declaring a remote limitation. Historical success is not proof that every current operation is available, but an unavailable local CLI is not proof that GitHub is read-only.
+- Prefer normal connector writes, focused branches/PRs and the trusted Proof Broker. Use an authorized supported alternative when necessary; never obtain hidden credentials, bypass permissions, weaken protection, fabricate CI success or force-push shared history.
+- Report a real failure with the attempted operation, error and affected layer: local container, tool availability, authorization, protected branch, Actions or runner. Do not turn one failing operation into a blanket claim that all remote delivery is impossible.
+- Within the approved scope, the owner's standing authorization covers choosing necessary proofs and normal protected closeout. Keep cost classification, compile reuse, exact-SHA evidence, required tests and visual/performance gates. Do not launch unnecessary heavy jobs or ask repeatedly for approval already given.
+- Distinguish a local candidate, a remote commit, a passing test, a render, a merge and a playable feature. Never promise unattended/background continuation unless an actual supported scheduled mechanism was created.
+- These instructions are durable project memory in this repository. Do not claim to have changed global ChatGPT profile memory without a successful memory-write operation.
+
 ### Roadmap and world-building nomenclature
 
 - `docs/ROADMAP.md` uses only product milestones `M0` through `M10`.

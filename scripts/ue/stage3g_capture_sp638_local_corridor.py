@@ -1067,6 +1067,11 @@ def main() -> None:
 
     camera_distance_cm = max(0.0, focus_cm - CAMERA_BACK_CM)
     target_distance_cm = min(full_length_cm, focus_cm + LOOK_AHEAD_CM)
+    # Sample the forward frame before replacing the full spline with its slice.
+    road_forward = spline.get_direction_at_distance_along_spline(
+        camera_distance_cm,
+        unreal.SplineCoordinateSpace.WORLD,
+    )
     road_camera = spline.get_location_at_distance_along_spline(
         camera_distance_cm,
         unreal.SplineCoordinateSpace.WORLD,
@@ -1300,16 +1305,18 @@ def main() -> None:
     for component in landscape_components:
         component.set_visibility(macro_landscape_visible, True)
 
-    camera_location = unreal.Vector(
-        road_camera.x,
-        road_camera.y,
-        road_camera.z + EYE_HEIGHT_CM,
+    from scripts.ue.road_capture_camera import rider_capture_frame
+
+    camera_frame = rider_capture_frame(
+        (float(road_camera.x), float(road_camera.y), float(road_camera.z)),
+        (float(road_forward.x), float(road_forward.y), float(road_forward.z)),
+        (float(road_target.x), float(road_target.y), float(road_target.z) + 80.0),
+        EYE_HEIGHT_CM,
     )
-    target = unreal.Vector(
-        road_target.x,
-        road_target.y,
-        road_target.z + 80.0,
-    )
+    camera_frame["camera_station_m"] = camera_distance_cm / 100.0
+    camera_frame["legacy_target_station_m"] = target_distance_cm / 100.0
+    camera_location = unreal.Vector(*camera_frame["camera_location_cm"])
+    target = unreal.Vector(*camera_frame["target_cm"])
     camera_rotation = unreal.MathLibrary.find_look_at_rotation(
         camera_location,
         target,
@@ -1481,6 +1488,7 @@ def main() -> None:
         "forced_landscape_lod": 0,
         "proof_viewmode": "lit",
         "neutral_landscape_material": True,
+        "camera_frame": camera_frame,
         "camera_location_cm": [
             float(camera_location.x),
             float(camera_location.y),

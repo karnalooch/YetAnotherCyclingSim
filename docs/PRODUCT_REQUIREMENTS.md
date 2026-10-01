@@ -21,7 +21,7 @@ Docelową przewagą produktu ma być połączenie realizmu wizualnego, fizyki, p
 
 ## 2. Cel MVP
 
-Pierwsze pełne MVP umożliwia ukończenie swobodnej jazdy po jednej fikcyjnej trasie inspirowanej Alpami.
+Pierwsze pełne MVP umożliwia ukończenie jazdy od startu do mety po jednej wybranej trasie w rzeczywistym obszarze Passo Giau. Aktualnym odcinkiem referencyjnym prac drogowych jest SP638; kanoniczna trasa i profil fizyczny pozostają odrębnymi źródłami prawdy.
 
 Jazda powinna trwać około 20–30 minut i prowadzić od startu do mety bez powtarzania fragmentów trasy.
 
@@ -29,8 +29,8 @@ Jazda powinna trwać około 20–30 minut i prowadzić od startu do mety bez pow
 
 Trasa powinna:
 
-- być fikcyjna, ale wiarygodna geograficznie;
-- być inspirowana krajobrazem alpejskim;
+- korzystać ze zweryfikowanej rzeczywistej geometrii drogowej obszaru Passo Giau;
+- zachowywać wiarygodny krajobraz alpejski oparty na danych rzeczywistego obszaru;
 - mieć pofałdowany profil z podjazdami i zjazdami;
 - zawierać zakręty o różnej trudności, w tym możliwość banked i off-camber geometry;
 - prowadzić przez trzy główne strefy:
@@ -40,6 +40,32 @@ Trasa powinna:
 - nie wykorzystywać widocznie powtarzających się fragmentów;
 - zawierać kilka starannie przygotowanych, ożywionych miejsc;
 - poza kluczowymi punktami koncentrować się na naturze i krajobrazie.
+
+### 3.1 Docelowo wszystkie rzeczywiste drogi obszaru
+
+**Decyzja właściciela z 2026-10-01; zapis wymagań: Issue #295.** Docelowy świat ma odwzorowywać **wszystkie drogi istniejące w rzeczywistości w granicach obszaru Passo Giau objętego projektem**, a nie wyłącznie SP638 lub kilka wybranych tras. SP638 jest pierwszym sprawdzanym wycinkiem, nie docelowym limitem sieci.
+
+Zakres obejmuje również drogi boczne, lokalne, dojazdowe, serwisowe i nieutwardzone, jeżeli występują w obszarze. Drogi rowerowe i ścieżki należy zachować w inwentaryzacji jako odrębne klasy, nie zamieniać automatycznie w asfalt. Skrzyżowania, odgałęzienia, ślepe zakończenia, mosty i tunele mają zachowywać rzeczywiste połączenia oraz rozdzielenie wysokościowe, gdzie występują.
+
+Kompletność wymaga jawnej, wersjonowanej granicy obszaru oraz daty i pochodzenia danych. Raport pokrycia ma rozliczać drogi i ich długość według klas, brakujące odcinki, niepewne połączenia i rozbieżności źródeł. Nie wolno ogłaszać pełnej zgodności z rzeczywistością tylko dlatego, że zaimportowano jeden zbiór; braków nie należy ukrywać przez pominięcie danej klasy albo zmniejszenie granicy świata.
+
+Odwzorowanie drogi w świecie i dopuszczenie jej do aktywnej jazdy to osobne stany. Docelowa sieć nie ma być jedynie dekoracją, ale rozszerzanie jazdy wymaga zweryfikowanych połączeń, profilu fizycznego, nawierzchni i zasad dostępu. Nie każda widoczna droga jest automatycznie dozwolonym odcinkiem rowerowym; nieznane dane pozostają jawnie nieznane.
+
+Dostawa jest etapowa: najpierw poprawna integracja SP638 z terenem, następnie inwentaryzacja całego obszaru i kontrolowane rozszerzanie sieci. Bieżące MVP zachowuje jedno kompletne przejście od startu do mety. Pełne pokrycie jest zatwierdzonym celem docelowego świata, a nie dodatkowym warunkiem zamknięcia bieżącego PR naprawy makroterenu #294. Harmonogram rozszerzenia wymaga osobnych zadań po zaakceptowaniu fundamentu; ten zapis nie oznacza, że nowe drogi już zaimplementowano.
+
+Metodologia i kryteria pokrycia: [World Building Bible, sekcja 7.4](WORLD_BUILDING_BIBLE.md#74-full-area-real-road-network-target). Kolejność dostawy: [roadmapa](ROADMAP.md). Road Physics Profile, proweniencja, deterministyczna regeneracja i budżet wydajności nadal obowiązują.
+
+### 3.2 Jazda mieszana: szosa i gravel
+
+**Zatwierdzony kierunek właściciela z 2026-10-01; Issue #297.** Docelowa sieć ma umożliwiać jazdę asfalt -> szuter -> asfalt w jednym rzeczywistym świecie, nie na osobnej fikcyjnej mapie gravelowej. Nieutwardzone odcinki nie mają być tylko dekoracją. Udostępnienie ich do jazdy wymaga jednak zaakceptowanego połączenia drogi z terenem oraz weryfikacji źródeł, topologii, nawierzchni i dostępu rowerowego.
+
+Inwentaryzacja rozróżnia co najmniej asfalt, ubite kruszywo, luźny żwir, grunt i stan nieznany. Surowe informacje źródłowe, gładkość/przeszkody i dostęp pozostają odrębne. Nie wolno uznać każdej górskiej ścieżki, schodów lub trudnego odcinka MTB za łatwy gravel ani wyprowadzać przejezdności wyłącznie z nazwy nawierzchni. Brak danych nie oznacza asfaltu ani pozwolenia na jazdę.
+
+Jazda mieszana korzysta z tego samego deterministycznego silnika i Road Physics Profile. Opór toczenia oraz przyczepność mają jawne, osobno testowane parametry; nie dodajemy arbitralnego procentowego odejmowania prędkości ani drugiej fizyki. Wygląd i dźwięk pozostają prezentacją. Kalibracja opon, bardziej szczegółowe straty od nierówności i pełny model luźnego podłoża wymagają późniejszych osobnych dowodów, nie są implikowane przez samą etykietę gravel.
+
+Pierwszy rzeczywisty checkpoint obejmie zweryfikowany odcinek mieszany, ciągłe przejścia nawierzchni, poprawne połączenia i profil fizyczny oraz odbiór z kamery kolarza i pomiar wydajności. Może to być ustalona trasa; wybór skrętu na każdym skrzyżowaniu nie jest warunkiem tego testu. Bieżące MVP nadal wymaga jednego kompletnego przejazdu. Nie rozszerza to zamknięcia PR #294 ani nie oznacza, że sieć jest już przejezdna.
+
+Obecny przykład `physics_reference/examples/run_mixed_surface.py` i jego testy są wyłącznie syntetycznym dowodem użycia istniejącego modelu referencyjnego. Współczynniki i 300-metrowa trasa są danymi testowymi, nie pomiarami ani skalibrowanym presetem gravela. Przykład nie aktywuje jazdy w UE, nie dowodzi gravelowego pokonywania zakrętów i nie importuje żadnych rzeczywistych dróg.
 
 ## 4. Sterowanie MVP
 
@@ -298,7 +324,6 @@ Do MVP nie należą:
 - pełny ruch drogowy;
 - upadki;
 - cykl dnia i nocy;
-- realistyczne odwzorowanie konkretnej prawdziwej trasy;
 - multiplayer i drafting grupowy.
 
 ## 18. Kryterium ukończenia MVP
