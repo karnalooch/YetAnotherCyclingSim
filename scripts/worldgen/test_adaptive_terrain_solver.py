@@ -7,13 +7,18 @@ from pathlib import Path
 import unittest
 
 from scripts.worldgen.adaptive_terrain_solver import (
+    FEATURE_SOURCE_PCGEX,
     STRATEGY_HAIRPIN_CLEARANCE,
     STRATEGY_NATIVE_BLEND,
     STRATEGY_RETAINING_OR_CLIFF,
+    TerrainFeaturePacket,
+    TerrainFeatureProvenance,
     TerrainFeatures,
     TerrainParameters,
     VerifiedTerrainCase,
     choose_terrain_decision,
+    decision_report,
+    feature_packet_from_mapping,
     load_case_memory,
     load_policy,
     similarity_score,
@@ -153,6 +158,68 @@ class AdaptiveTerrainSolverTests(unittest.TestCase):
         )
         decision = choose_terrain_decision(hairpin_features(), self.policy, (case,))
         self.assertFalse(decision.learning_applied)
+
+
+    def test_pcgex_feature_packet_preserves_authority_boundary(self) -> None:
+        packet = feature_packet_from_mapping(
+            {
+                "schema_version": 1,
+                "corridor_id": "sp638-hairpin-15460",
+                "exact_sha": "d" * 40,
+                "provenance": {
+                    "source_kind": FEATURE_SOURCE_PCGEX,
+                    "source_artifact_sha256": "e" * 64,
+                    "source_dataset_id": "pcgex-center-dataset-0",
+                    "canonical_road_xy_preserved": True,
+                    "authoritative_route_geometry": False,
+                    "authoritative_physics": False,
+                    "pcgex_commit": "f" * 40,
+                },
+                "features": {
+                    "longitudinal_grade": -0.059,
+                    "left_cross_slope": 0.18,
+                    "right_cross_slope": -0.12,
+                    "road_to_dtm_delta_m": 0.45,
+                    "dtm_roughness_m": 0.18,
+                    "curvature_radius_m": 8.15,
+                    "nearest_branch_xy_m": 9.0,
+                    "nearest_branch_z_separation_m": 0.8,
+                    "max_cut_fill_m": 3.5,
+                },
+            }
+        )
+        self.assertEqual(packet.provenance.source_kind, FEATURE_SOURCE_PCGEX)
+        self.assertFalse(packet.provenance.authoritative_route_geometry)
+        self.assertFalse(packet.provenance.authoritative_physics)
+
+        decision = choose_terrain_decision(packet.features, self.policy, ())
+        report = decision_report(packet, decision)
+        self.assertEqual(report["corridor_id"], "sp638-hairpin-15460")
+        self.assertEqual(
+            report["feature_provenance"]["source_kind"],
+            FEATURE_SOURCE_PCGEX,
+        )
+        self.assertEqual(
+            report["decision"]["strategy"],
+            STRATEGY_HAIRPIN_CLEARANCE,
+        )
+
+    def test_feature_packet_rejects_pcgex_route_authority(self) -> None:
+        with self.assertRaisesRegex(ValueError, "route authority"):
+            TerrainFeaturePacket(
+                corridor_id="bad-pcgex-authority",
+                exact_sha="1" * 40,
+                provenance=TerrainFeatureProvenance(
+                    source_kind=FEATURE_SOURCE_PCGEX,
+                    source_artifact_sha256="2" * 64,
+                    source_dataset_id="dataset-0",
+                    canonical_road_xy_preserved=True,
+                    authoritative_route_geometry=True,
+                    authoritative_physics=False,
+                    pcgex_commit="3" * 40,
+                ),
+                features=hairpin_features(),
+            )
 
     def test_decision_is_deterministic_for_same_inputs(self) -> None:
         first = choose_terrain_decision(hairpin_features(), self.policy, ())
