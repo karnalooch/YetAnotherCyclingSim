@@ -37,10 +37,10 @@ endpoint is forbidden outside an explicit test fixture.
 | `branch-hygiene.yml` | CURRENT | Stronger YACS-local merged-branch cleanup |
 | `ci.yml` | CURRENT | Primary CI graph and caller-local Aggregate gate |
 | `manual-unreal.yml` | CURRENT | Trusted manual Unreal validation/recovery |
-| `passo-giau-embark-terrain.yml` | CURRENT | Fail-closed exact-SHA PCGEx corridor graph authoring proof for the #287/#288 bounded Embark-pattern substitution; Houdini/Gaea remain optional escalation evidence |
+| `passo-giau-embark-terrain.yml` | CURRENT | Fail-closed exact-SHA PCGEx-first terrain/corridor proof for post-#288 M3 terrain recovery; #288 established the bounded substitution baseline and Houdini/Gaea remain optional escalation evidence |
 | `passo-giau-r4-1-hairpin-corridor.yml` | BROKER-MANAGED | Exact-SHA SP638 hairpin proof; manual dispatch is fallback |
-| `passo-giau-r4-1-landscape-author.yml` | UNKNOWN | Failed direct-DTM/native Landscape baseline retained as recovery evidence while #287/#288 proves the Embark-mode replacement |
-| `passo-giau-r4-1-road-author.yml` | UNKNOWN | Legacy SP638 native-authoring recovery evidence retained while #287/#288 proves the Embark-mode replacement |
+| `passo-giau-r4-1-landscape-author.yml` | UNKNOWN | Failed direct-DTM/native Landscape baseline retained as recovery evidence after #288 while macro-terrain convergence continues |
+| `passo-giau-r4-1-road-author.yml` | UNKNOWN | Legacy SP638 native-authoring recovery evidence retained after #288 while macro-terrain convergence continues |
 | `passo-giau-r4-1-roadside-house.yml` | BROKER-MANAGED | World Authoring Library SP638 proof; manual dispatch is fallback |
 | `passo-giau-r4-1b3-geometry-probe.yml` | BROKER-MANAGED | Gumball proof target for `r4-1b3-geometry` |
 | `passo-giau-road-alignment.yml` | CURRENT | Current official SP638 GIS preparation/alignment proof |
@@ -63,9 +63,9 @@ endpoint is forbidden outside an explicit test fixture.
 | `yacs-editor-command.yml` | CURRENT | Owner-only issue-command remote-editor smoke |
 
 The two `UNKNOWN` native Passo Giau workflows are intentionally retained only as
-failed-baseline/recovery evidence while #287/#288 proves the replacement Embark-mode
-terrain path. Their final disposition follows that proof; they must not silently
-become current production authority again.
+failed-baseline/recovery evidence after #288. Their final disposition follows the
+post-#288 macro-terrain convergence work; they must not silently become current
+production authority again.
 
 ## Retired executable surface
 

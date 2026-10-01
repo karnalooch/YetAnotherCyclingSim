@@ -2,8 +2,9 @@ name: Passo Giau M3 Embark terrain proof
 
 on:
   push:
-    branches:
-      - feat/287-embark-terrain-pipeline
+    branches-ignore:
+      - main
+      - 'dependabot/**'
     paths:
       - '.github/workflows/passo-giau-embark-terrain.yml'
       - '.gitignore'
@@ -206,7 +207,7 @@ jobs:
   author:
     name: PCGEx corridor graph authoring
     needs: [contract, classify, prepare]
-    if: ${{ needs.classify.outputs.proof_mode != 'cheap' && github.repository == 'karnalooch/YetAnotherCyclingSim' && github.ref == 'refs/heads/feat/287-embark-terrain-pipeline' }}
+    if: ${{ needs.classify.outputs.proof_mode != 'cheap' && github.repository == 'karnalooch/YetAnotherCyclingSim' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 120
     env:
