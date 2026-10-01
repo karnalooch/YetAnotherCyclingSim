@@ -10,6 +10,10 @@ world and does not represent Unreal, visual or performance acceptance.
   SHA-256 `6092a48a949b7b7e8ccf120cb46d59cfd7fdd3522085e8a55162fd52fe5a139a`;
 - `sa_calobra_8x8km_mdt50cm_epsg25831.json` — complete source-file hashes,
   raster contract, statistics, benchmark points, tool versions and license.
+- `sa_calobra_road_inventory_2026-10-01.json` — clipped OpenStreetMap road
+  inventory totals and the first named-road authoring scope;
+- `ROAD_DELIVERY_PRIORITY.md` — bounded P0-P4 authoring order, acceptance gates
+  and the explicit local-only Strava evidence boundary.
 
 Raster contract: 16,000 × 16,000 Float32 pixels, one band, 0.5 m spacing,
 8,000 × 8,000 m bounds, EPSG:25831, NoData `-32767`, tiled ZSTD compression.
@@ -42,3 +46,8 @@ License: CNIG general-use license compatible with CC BY 4.0.
 Required derived-work attribution:
 
 > Obra derivada de MDT50cm-cob3 2022-2025 CC-BY 4.0 scne.es
+
+Road inventory source: OpenStreetMap contributors, ODbL 1.0:
+https://www.openstreetmap.org/copyright
+
+The road summary contains no Strava data or derivative heatmap artifact.

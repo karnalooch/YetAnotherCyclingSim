@@ -75,6 +75,32 @@ Required attribution retained in the GeoTIFF metadata and report:
 This data is a terrain-research benchmark. Its inclusion is not visual,
 performance or production-world acceptance.
 
+## OpenStreetMap Sa Calobra road inventory
+
+- Provider: OpenStreetMap contributors
+- Copyright and license: https://www.openstreetmap.org/copyright
+- License: Open Data Commons Open Database License 1.0
+- Snapshot timestamp: `2026-10-01T20:46:35Z`
+- Bounds: WGS84 `2.76258,39.80384,2.85626,39.87588`
+- Included summary:
+  `worldgen/terrain/benchmarks/sa_calobra/sa_calobra_road_inventory_2026-10-01.json`
+
+YACS includes aggregate road-class lengths and named-road planning totals. Raw
+OpenStreetMap geometry is not committed by this benchmark. The summary is a
+planning inventory and is not route, physics, surface, access or gameplay
+authority.
+
+## Strava Global Heatmap reference not included
+
+The Strava Global Heatmap was inspected locally as a planning reference. YACS
+does not include Strava tiles, screenshots, sampled intensity values, ranked
+geometry, CSV, GeoJSON or derivative heatmap imagery. The source remains
+blocked from copying or derived-data inclusion under the current Strava Terms
+of Service and API Policy:
+
+- https://www.strava.com/legal/terms
+- https://www.strava.com/legal/api_policy
+
 ## Unreal Engine
 
 YACS is built with Unreal Engine. Unreal Engine itself is not vendored in this

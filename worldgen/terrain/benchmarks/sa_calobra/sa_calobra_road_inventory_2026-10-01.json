@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "benchmark": "sa_calobra_8x8km",
+  "generated_at": "2026-10-01T20:46:35Z",
+  "bounds_wgs84": {
+    "west": 2.76258,
+    "south": 39.80384,
+    "east": 2.85626,
+    "north": 39.87588
+  },
+  "source": {
+    "provider": "OpenStreetMap contributors",
+    "interface": "Overpass API",
+    "license": "Open Data Commons Open Database License 1.0",
+    "copyright_url": "https://www.openstreetmap.org/copyright"
+  },
+  "method": "Clip highway geometry to the benchmark polygon and sum geodesic segment lengths by road class.",
+  "length_km": {
+    "motor_road": 31.294,
+    "track": 20.79,
+    "path": 82.421,
+    "all_highway": 134.506,
+    "first_authoring_scope_motor_plus_track": 52.084
+  },
+  "named_motor_roads": [
+    {
+      "name": "Ma-2141",
+      "length_km": 12.876,
+      "delivery_priority": "P0"
+    },
+    {
+      "name": "Ma-10",
+      "length_km": 7.04,
+      "delivery_priority": "P0"
+    },
+    {
+      "name": "carretera de Cala Tuent",
+      "length_km": 3.694,
+      "delivery_priority": "P0"
+    }
+  ],
+  "priority_basis": [
+    "benchmark coverage",
+    "named-road continuity",
+    "connected terrain and road-authoring proof",
+    "surface and bicycle-access verification before mixed-surface admission"
+  ],
+  "strava": {
+    "status": "local_reference_only_not_included",
+    "excluded": [
+      "tiles",
+      "screenshots",
+      "sampled intensity values",
+      "ranked geometry",
+      "CSV",
+      "GeoJSON",
+      "derivative heatmap images"
+    ],
+    "reason": "The current Strava terms do not grant redistribution rights for the locally inspected heatmap data or derivative artifacts."
+  }
+}
