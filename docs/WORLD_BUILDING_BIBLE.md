@@ -712,7 +712,7 @@ proof set thresholds for the chosen representation. Meso cliffs/rocks/retaining,
 materials, vegetation and final weather follow after the ground ownership contract
 is proven.
 
-##### Adaptive terrain policy and verified-case learning
+##### BOB — Builder Of Berms: adaptive terrain policy and verified-case learning
 
 Route-wide terrain adaptation must not become a growing list of location-specific
 patches. The production direction is a deterministic adaptive solver that observes
@@ -751,7 +751,12 @@ versioned `adaptive_terrain_feature_contract.json` packet. The packet must recor
 its source artifact and exact PCGEx revision, preserve canonical road XY, and
 explicitly remain non-authoritative for route geometry and physics.
 
-YACS owns the next layer:
+The YACS-owned architect for this layer is **BOB — Builder Of Berms**.
+BOB is the deterministic road-earthworks decision system; the technical module
+and schemas retain descriptive adaptive-terrain names so implementation details
+remain searchable and backend-neutral.
+
+BOB owns the next layer:
 
 - safe baseline strategy selection;
 - strategy-specific bounded parameters;
