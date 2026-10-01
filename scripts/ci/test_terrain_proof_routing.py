@@ -67,6 +67,7 @@ class TerrainProofRoutingTests(unittest.TestCase):
             "$variants = @('A','B','C','D','E')",
             "foreach ($variant in $variants)",
             "-Variant C3",
+            "-Variant H",
         ):
             self.assertIn(token, author)
 
@@ -114,6 +115,7 @@ class TerrainProofRoutingTests(unittest.TestCase):
             "/Traversal",
             "/Visual/{0}",
             "/Visual/C3",
+            "/Visual/H",
             "/pcgex_graph_output.json",
         ):
             self.assertIn("${{ env.YACS_M3_EVIDENCE_ROOT }}" + suffix, author)
