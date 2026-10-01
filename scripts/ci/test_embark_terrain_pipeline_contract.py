@@ -331,7 +331,7 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         self.assertIn(
             'DIAGNOSTIC_VARIANT_ENV = "YACS_SP638_LOCAL_CORRIDOR_VARIANT"', capture
         )
-        for variant in ('"A": {', '"B": {', '"C": {', '"D": {', '"E": {', '"C3": {'):
+        for variant in ('"A": {', '"B": {', '"C": {', '"D": {', '"E": {', '"C3": {', '"H": {'):
             self.assertIn(variant, capture)
         self.assertIn('"Base_DTM" not in edit_layer_names', capture)
         self.assertIn('name == "Road_Earthworks"', capture)
@@ -341,11 +341,12 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         self.assertNotIn("edit_layer_names[0]", capture)
         self.assertIn("set_visibility(macro_landscape_visible, True)", capture)
 
-        self.assertIn("[ValidateSet('A','B','C','D','E','C3','F','G')]", wrapper)
-        self.assertIn("if ($Variant -eq 'C3')", wrapper)
+        self.assertIn("[ValidateSet('A','B','C','D','E','C3','F','G','H')]", wrapper)
+        self.assertIn("if ($Variant -in @('C3','H'))", wrapper)
         self.assertIn("$ExpectedMacro = $Variant -in @('A','B','E','F','G')", wrapper)
         self.assertIn("$ExpectedLocal = $Variant -in @('C','D','E')", wrapper)
         self.assertIn("$ExpectedCorridor = $Variant -in @('B','D','E','G')", wrapper)
+        self.assertIn("$Variant -eq 'H'", wrapper)
         self.assertIn("selected_earthworks_layer -ne 'Road_Earthworks'", wrapper)
         for token in (
             "Release-YacsUnrealWorkspaceLocks.ps1",
@@ -365,6 +366,9 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         self.assertIn("-Variant $variant", workflow)
         self.assertIn("extract_passo_giau_native_dtm_patch.py", workflow)
         self.assertIn("-Variant C3", workflow)
+        self.assertIn("-Variant H", workflow)
+        self.assertIn("apply_corridor_constraints_to_height_grid", capture)
+        self.assertIn('"single_local_ground_owner": constraint_metrics is not None', capture)
         self.assertIn("YACS_NATIVE_DTM_PATCH_METADATA", capture)
         self.assertIn("prepared native metric DTM bounded patch", capture)
         self.assertIn("landscape_collision_sampled", capture)
@@ -504,6 +508,7 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
             workflow,
         )
         self.assertIn("-Variant C3", workflow)
+        self.assertIn("-Variant H", workflow)
         self.assertIn(
             '"surface_isolation_requested": os.environ["YACS_SURFACE_ISOLATION"] == "true"',
             workflow,
