@@ -6,9 +6,17 @@ import math
 import unittest
 
 from scripts.geometry.local_terrain_skin import (
+    apply_corridor_constraints_to_height_grid,
     build_terrain_skin_mesh,
     smooth_height_grid,
     terrain_skin_hash,
+)
+from scripts.geometry.sp638_local_corridor import (
+    CorridorMesh,
+    CrossSectionPoint,
+    Vec3,
+    build_corridor_mesh,
+    make_constant_profiles,
 )
 
 
@@ -88,6 +96,87 @@ class LocalTerrainSkinTests(unittest.TestCase):
             ac = c - a
             conventional_normal_z = ab.x * ac.y - ab.y * ac.x
             self.assertLess(conventional_normal_z, 0.0)
+
+
+    def test_native_grid_corridor_constraints_pin_outer_transition(self) -> None:
+        xs = tuple(float(value) for value in range(21))
+        ys = tuple(float(value) for value in range(20, -1, -1))
+        heights = tuple(tuple(100.0 for _ in xs) for _ in ys)
+        profile = (
+            CrossSectionPoint(-4.0, 0.0, "left_tie"),
+            CrossSectionPoint(-2.0, 0.0, "left_road_edge"),
+            CrossSectionPoint(2.0, 0.0, "right_road_edge"),
+            CrossSectionPoint(4.0, 0.0, "right_tie"),
+        )
+        centerline = (
+            Vec3(2.0, 10.0, 102.0),
+            Vec3(18.0, 10.0, 102.0),
+        )
+        profiles = make_constant_profiles(len(centerline), profile)
+        mesh = build_corridor_mesh(centerline, profiles)
+
+        constrained, metrics = apply_corridor_constraints_to_height_grid(
+            xs,
+            ys,
+            heights,
+            mesh,
+            profiles,
+            corridor_origin_m=Vec3(0.0, 0.0, 0.0),
+        )
+
+        column = xs.index(10.0)
+        self.assertAlmostEqual(constrained[ys.index(10.0)][column], 102.0, places=6)
+        self.assertAlmostEqual(constrained[ys.index(6.0)][column], 100.0, places=6)
+        self.assertAlmostEqual(constrained[ys.index(14.0)][column], 100.0, places=6)
+        self.assertAlmostEqual(constrained[ys.index(5.0)][column], 100.0, places=6)
+        self.assertGreater(metrics.constrained_sample_count, 0)
+        self.assertAlmostEqual(metrics.max_abs_adjustment_m, 2.0, places=6)
+
+    def test_native_grid_constraints_fail_on_strong_stacked_overlap(self) -> None:
+        xs = tuple(float(value) for value in range(9))
+        ys = tuple(float(value) for value in range(8, -1, -1))
+        heights = tuple(tuple(100.0 for _ in xs) for _ in ys)
+        profile = (
+            CrossSectionPoint(-2.0, 0.0, "left_tie"),
+            CrossSectionPoint(-1.0, 0.0, "left_road_edge"),
+            CrossSectionPoint(1.0, 0.0, "right_road_edge"),
+            CrossSectionPoint(2.0, 0.0, "right_tie"),
+        )
+        profiles = make_constant_profiles(4, profile)
+        lower = (
+            Vec3(1.0, 2.0, 101.0),
+            Vec3(1.0, 3.0, 101.0),
+            Vec3(1.0, 5.0, 101.0),
+            Vec3(1.0, 6.0, 101.0),
+            Vec3(7.0, 2.0, 101.0),
+            Vec3(7.0, 3.0, 101.0),
+            Vec3(7.0, 5.0, 101.0),
+            Vec3(7.0, 6.0, 101.0),
+        )
+        upper = tuple(Vec3(v.x, v.y, v.z + 3.0) for v in lower)
+        mesh = CorridorMesh(
+            vertices=lower + upper,
+            triangles=(
+                (0, 1, 4), (1, 5, 4),
+                (1, 2, 5), (2, 6, 5),
+                (2, 3, 6), (3, 7, 6),
+                (8, 9, 12), (9, 13, 12),
+                (9, 10, 13), (10, 14, 13),
+                (10, 11, 14), (11, 15, 14),
+            ),
+            station_count=4,
+            cross_section_point_count=4,
+        )
+
+        with self.assertRaisesRegex(ValueError, "strongly overlap"):
+            apply_corridor_constraints_to_height_grid(
+                xs,
+                ys,
+                heights,
+                mesh,
+                profiles,
+                corridor_origin_m=Vec3(0.0, 0.0, 0.0),
+            )
 
 
 if __name__ == "__main__":
