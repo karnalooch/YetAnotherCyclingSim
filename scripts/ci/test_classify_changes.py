@@ -8,6 +8,18 @@ import classify_changes as cc
 
 
 class ChangeClassifierTests(unittest.TestCase):
+    def test_terrain_data_policy_and_memory_require_render(self):
+        for path in (
+            "worldgen/terrain/benchmarks/sa_calobra/sa_calobra_8x8km_mdt50cm_epsg25831.tif",
+            "worldgen/terrain/benchmarks/sa_calobra/terrain_import_profile.json",
+            "worldgen/terrain/adaptive_terrain_policy.json",
+            "worldgen/terrain/verified_terrain_cases.json",
+            "scripts/ue/Invoke-YacsRegionTerrainImport.ps1",
+            "scripts/ue/prepare_region_terrain_map.py",
+        ):
+            with self.subTest(path=path):
+                self.assertEqual(cc.classify_embark_terrain_proof([path]), "render")
+
     def test_docs_only_is_lightweight(self):
         result = cc.classify_paths(["README.md", "docs/ci/PROJECT_WORKFLOW.md"])
         self.assertTrue(result.docs_only)

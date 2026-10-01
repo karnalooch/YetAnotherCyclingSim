@@ -461,32 +461,79 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 	FString HeightmapPath;
 	FString ProofPath;
 	FString RoadJsonPath;
+	FString TerrainManifestPath;
 	FParse::Value(*Params, TEXT("Heightmap="), HeightmapPath);
 	FParse::Value(*Params, TEXT("Proof="), ProofPath);
 	FParse::Value(*Params, TEXT("RoadJson="), RoadJsonPath);
+	FParse::Value(*Params, TEXT("TerrainManifest="), TerrainManifestPath);
 	double RuntimeZScale = ZScale;
 	double RuntimeLocationZCm = LocationZCm;
+	double RuntimeXYScale = XYScaleCmPerVertex;
+	FString RuntimeMapPackagePath = SpikeMapPackagePath;
+	FString RuntimeRegionId = TEXT("passo_giau_legacy");
 	FParse::Value(*Params, TEXT("ScaleZ="), RuntimeZScale);
 	FParse::Value(*Params, TEXT("LocationZCm="), RuntimeLocationZCm);
 	HeightmapPath.TrimQuotesInline();
 	ProofPath.TrimQuotesInline();
 	RoadJsonPath.TrimQuotesInline();
+	TerrainManifestPath.TrimQuotesInline();
+	const bool bManifestImport = !TerrainManifestPath.IsEmpty();
+	if (bManifestImport)
+	{
+		FString ManifestText;
+		TSharedPtr<FJsonObject> Manifest;
+		if (!FFileHelper::LoadFileToString(ManifestText, *TerrainManifestPath) ||
+			!FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(ManifestText), Manifest) ||
+			!Manifest.IsValid())
+		{
+			UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error, TEXT("Invalid terrain import manifest."));
+			return 1;
+		}
+		FString SourceCrs;
+		FString SourceSha;
+		double SchemaVersion = 0.0;
+		double NoDataCount = -1.0;
+		bool bPresentationOnly = false;
+		bool bRouteAuthority = true;
+		bool bPhysicsAuthority = true;
+		const TArray<TSharedPtr<FJsonValue>>* Vertices = nullptr;
+		if (!Manifest->TryGetNumberField(TEXT("schema_version"), SchemaVersion) || SchemaVersion != 1.0 ||
+			!Manifest->TryGetStringField(TEXT("region_id"), RuntimeRegionId) || RuntimeRegionId != TEXT("sa_calobra") ||
+			!Manifest->TryGetStringField(TEXT("source_crs"), SourceCrs) || SourceCrs != TEXT("EPSG:25831") ||
+			!Manifest->TryGetStringField(TEXT("source_sha256"), SourceSha) ||
+			SourceSha != TEXT("6092a48a949b7b7e8ccf120cb46d59cfd7fdd3522085e8a55162fd52fe5a139a") ||
+			!Manifest->TryGetStringField(TEXT("map_package"), RuntimeMapPackagePath) ||
+			RuntimeMapPackagePath != TEXT("/Game/Worlds/SaCalobra/L_SaCalobraTerrainBaseline") ||
+			!Manifest->TryGetArrayField(TEXT("vertices"), Vertices) || Vertices->Num() != 2 ||
+			(*Vertices)[0]->AsNumber() != LandscapeVertices || (*Vertices)[1]->AsNumber() != LandscapeVertices ||
+			!Manifest->TryGetNumberField(TEXT("nodata_sample_count"), NoDataCount) || NoDataCount != 0.0 ||
+			!Manifest->TryGetBoolField(TEXT("presentation_only"), bPresentationOnly) || !bPresentationOnly ||
+			!Manifest->TryGetBoolField(TEXT("authoritative_route_geometry"), bRouteAuthority) || bRouteAuthority ||
+			!Manifest->TryGetBoolField(TEXT("authoritative_physics"), bPhysicsAuthority) || bPhysicsAuthority ||
+			!Manifest->TryGetNumberField(TEXT("scale_xy_cm_per_vertex"), RuntimeXYScale) || RuntimeXYScale != 50.0 ||
+			!Manifest->TryGetNumberField(TEXT("scale_z"), RuntimeZScale) ||
+			!Manifest->TryGetNumberField(TEXT("location_z_cm"), RuntimeLocationZCm) || !RoadJsonPath.IsEmpty())
+		{
+			UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error, TEXT("Terrain manifest violates the admitted Sa Calobra terrain-only contract."));
+			return 1;
+		}
+	}
 
 	if (!FMath::IsFinite(RuntimeZScale) ||
-		RuntimeZScale < 250.0 ||
-		RuntimeZScale > 350.0)
+		RuntimeZScale < (bManifestImport ? 0.001 : 250.0) ||
+		RuntimeZScale > (bManifestImport ? 2000.0 : 350.0))
 	{
 		UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error,
-			TEXT("Invalid -ScaleZ value %.6f; expected a finite Passo Giau terrain scale in [250, 350]."),
+			TEXT("Invalid terrain ScaleZ value %.6f for the selected import contract."),
 			RuntimeZScale);
 		return 1;
 	}
 	if (!FMath::IsFinite(RuntimeLocationZCm) ||
-		RuntimeLocationZCm < 150000.0 ||
-		RuntimeLocationZCm > 250000.0)
+		RuntimeLocationZCm < (bManifestImport ? -50000.0 : 150000.0) ||
+		RuntimeLocationZCm > (bManifestImport ? 900000.0 : 250000.0))
 	{
 		UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error,
-			TEXT("Invalid -LocationZCm value %.3f; expected a finite Passo Giau midpoint in [150000, 250000] cm."),
+			TEXT("Invalid terrain LocationZCm value %.3f for the selected import contract."),
 			RuntimeLocationZCm);
 		return 1;
 	}
@@ -549,12 +596,12 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		TEXT("Unreal native R16 import-reader parity: PASS (%d samples)."),
 		HeightData.Num());
 
-	UPackage* MapPackage = LoadPackage(nullptr, SpikeMapPackagePath, LOAD_None);
+	UPackage* MapPackage = LoadPackage(nullptr, *RuntimeMapPackagePath, LOAD_None);
 	if (!MapPackage)
 	{
 		UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error,
 			TEXT("Failed to load isolated spike map package '%s'."),
-			SpikeMapPackagePath);
+			*RuntimeMapPackagePath);
 		return 1;
 	}
 
@@ -571,7 +618,7 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 
 	FActorSpawnParameters SpawnParameters;
 	SpawnParameters.OverrideLevel = MapWorld->GetCurrentLevel();
-	SpawnParameters.Name = TEXT("PassoGiauLandscape");
+	SpawnParameters.Name = bManifestImport ? TEXT("SaCalobraLandscape") : TEXT("PassoGiauLandscape");
 	SpawnParameters.SpawnCollisionHandlingOverride =
 		ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
@@ -586,13 +633,13 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		return 1;
 	}
 
-	Landscape->SetActorLabel(TEXT("Passo Giau DEM Landscape"));
+	Landscape->SetActorLabel(bManifestImport ? TEXT("Sa Calobra native DTM Landscape") : TEXT("Passo Giau DEM Landscape"));
 	Landscape->LandscapeMaterial = nullptr;
 	Landscape->SetActorTransform(
 		FTransform(
 			FRotator::ZeroRotator,
 			FVector(0.0, 0.0, RuntimeLocationZCm),
-			FVector(XYScaleCmPerVertex, XYScaleCmPerVertex, RuntimeZScale)));
+			FVector(RuntimeXYScale, RuntimeXYScale, RuntimeZScale)));
 
 	TArray<FLandscapeImportLayerInfo> MaterialImportLayers;
 	TMap<FGuid, TArray<uint16>> HeightDataPerLayers;
@@ -760,11 +807,11 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 	}
 
 	MapWorld->MarkPackageDirty();
-	if (!UEditorLoadingAndSavingUtils::SaveMap(MapWorld, SpikeMapPackagePath))
+	if (!UEditorLoadingAndSavingUtils::SaveMap(MapWorld, RuntimeMapPackagePath))
 	{
 		UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error,
 			TEXT("Failed to save isolated spike map '%s'."),
-			SpikeMapPackagePath);
+			*RuntimeMapPackagePath);
 		return 1;
 	}
 
@@ -779,6 +826,7 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		TEXT("{\n")
 		TEXT("  \"schema_version\": 1,\n")
 		TEXT("  \"passo_giau_landscape_import\": \"PASS\",\n")
+		TEXT("  \"terrain_region_id\": \"%s\",\n")
 		TEXT("  \"map\": \"%s\",\n")
 		TEXT("  \"vertices\": [%d, %d],\n")
 		TEXT("  \"component_grid\": [%d, %d],\n")
@@ -814,7 +862,8 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		TEXT("  \"authoritative_route_geometry\": false,\n")
 		TEXT("  \"authoritative_physics\": false\n")
 		TEXT("}\n"),
-		SpikeMapPackagePath,
+		*RuntimeRegionId,
+		*RuntimeMapPackagePath,
 		LandscapeVertices,
 		LandscapeVertices,
 		ExpectedComponentGrid,
@@ -827,8 +876,8 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		EncodedMax,
 		SampledElevationMinM,
 		SampledElevationMaxM,
-		XYScaleCmPerVertex,
-		XYScaleCmPerVertex,
+		RuntimeXYScale,
+		RuntimeXYScale,
 		RuntimeZScale,
 		RuntimeLocationZCm,
 		BoundsSize.X,

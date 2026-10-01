@@ -2,6 +2,14 @@
 
 YACS uses staged validation so world/art iteration stays fast without weakening the merge gate.
 
+Sa Calobra terrain preparation is covered by synthetic native-GeoTIFF tests in
+the lightweight Python lane. Benchmark/profile/BOB policy/case-memory changes
+require render classification without invalidating the C++ compile fingerprint.
+The bounded manifest-driven import in Issue #318 still requires an exact-SHA
+editor build/import and separate visual/performance acceptance; hosted Python
+PASS does not close the terrain milestone. Existing broker `m3-terrain` remains
+the legacy SP638 execution lane until its runner migration is separately proven.
+
 ## Tier 0 — static / lightweight on every PR update
 
 Runs for draft and ready PRs as applicable:

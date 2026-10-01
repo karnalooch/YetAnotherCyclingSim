@@ -36,7 +36,7 @@ Trasa powinna:
 - prowadzić przez trzy główne strefy:
   1. zieloną dolinę i niewielką miejscowość;
   2. gęsty las;
-  3. surowy teren wysokogórski;
+  3. odsłonięty, skalisty teren wapienny Serra de Tramuntana;
 - nie wykorzystywać widocznie powtarzających się fragmentów;
 - zawierać kilka starannie przygotowanych, ożywionych miejsc;
 - poza kluczowymi punktami koncentrować się na naturze i krajobrazie.

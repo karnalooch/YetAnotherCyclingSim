@@ -127,6 +127,35 @@ Photogrammetry can be a strong source for hero surfaces or visible structure, bu
 
 #### Mallorca / Spain source stack
 
+The initial Sa Calobra import is a **bounded terrain-only diagnostic**, not
+full-area acceptance. `worldgen/terrain/benchmarks/sa_calobra/terrain_import_profile.json`
+pins the source LFS hash, EPSG:25831, 0.5 m spacing, NoData and source/baseline
+bounds. `scripts/assets/prepare_region_terrain.py` reads 4033 x 4033 native samples
+around Coll dels Reis without interpolation. Any masked or non-finite sample
+rejects the window before R16 generation; coastal or other missing-data regions
+require an explicit separate source/mask decision, never implicit median filling.
+The 2016 m vertex extent is intentionally smaller than the 8 km source area and
+does not reduce the final world or road-network coverage target.
+
+The producer emits a hash-bearing `terrain-import.json` and little-endian R16.
+Raster pixel centres define the local origin: UE X increases east and UE Y
+increases south. The manifest retains the metric origin for later GIS consumers;
+it does not grant road/physics authority. Height encoding uses the exact inverse
+of Unreal's `(encoded - 32768) / 128` transform to preserve source elevations.
+
+`scripts/ue/Invoke-YacsRegionTerrainImport.ps1` requires a built editor at the
+specified SHA and creates `/Game/Worlds/SaCalobra/L_SaCalobraTerrainBaseline`.
+The existing Landscape commandlet accepts this explicitly admitted manifest
+through `-TerrainManifest=`; the legacy Passo Giau invocation remains historical.
+The new path preserves `Base_DTM` and `Road_Earthworks`, admits no road yet and
+refuses existing evidence/map targets rather than deleting payloads. Technical
+import PASS is separate from human visual and performance acceptance. Runner
+integration and those proofs remain pending; this contract is not evidence that
+Sa Calobra has already been imported or rendered.
+
+Terrain benchmark, profile, BOB policy and verified-case changes require render
+classification. They do not by themselves invalidate compiled C++ binaries.
+
 For a Mallorca world slice, the preferred candidate stack is:
 
 | Need | Preferred source role |

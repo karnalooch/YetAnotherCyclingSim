@@ -105,12 +105,15 @@ EMBARK_TERRAIN_RENDER_PREFIXES = (
     "scripts/houdini/",
     "scripts/worldgen/",
     "worldgen/embark/",
+    "worldgen/terrain/",
 )
 
 EMBARK_TERRAIN_RENDER_EXACT = {
     "scripts/ue/ride_probe_capture.py",
     "scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1",
     "scripts/ue/stage3g_capture_sp638_local_corridor.py",
+    "scripts/ue/Invoke-YacsRegionTerrainImport.ps1",
+    "scripts/ue/prepare_region_terrain_map.py",
 }
 
 

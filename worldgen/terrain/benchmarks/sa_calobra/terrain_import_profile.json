@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "region_id": "sa_calobra",
+  "source": "worldgen/terrain/benchmarks/sa_calobra/sa_calobra_8x8km_mdt50cm_epsg25831.tif",
+  "source_sha256": "6092a48a949b7b7e8ccf120cb46d59cfd7fdd3522085e8a55162fd52fe5a139a",
+  "source_size_bytes": 389039616,
+  "source_crs": "EPSG:25831",
+  "source_resolution_m": 0.5,
+  "source_nodata": -32767.0,
+  "source_bounds_m": [479650.0, 4405899.5, 487650.0, 4413899.5],
+  "baseline_bounds_m": [483000.0, 4407500.0, 485016.5, 4409516.5],
+  "landscape_vertices": 4033,
+  "map_package": "/Game/Worlds/SaCalobra/L_SaCalobraTerrainBaseline",
+  "nodata_policy": "reject_in_baseline",
+  "axis_mapping": "UE_X=easting-origin_easting; UE_Y=origin_northing-northing; UE_Z=orthometric_height",
+  "scope": "Bounded native-resolution terrain-only diagnostic around Coll dels Reis; not full-area or road acceptance."
+}
