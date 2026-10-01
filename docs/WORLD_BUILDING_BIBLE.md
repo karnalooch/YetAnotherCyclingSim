@@ -1169,7 +1169,7 @@ map. The original A capture remains the combined persisted Landscape. This pair
 isolates persisted layer contribution; it does not establish an accepted repair
 or prove a particular blend/transform defect without reviewing the evidence.
 H carries the pair's exact-SHA metadata and hash-verified PNG payloads in its
-existing compact artifact (bounded to 16 MB of raw comparison images). A
+existing compact artifact (bounded to 20 MB of raw comparison images). A
 standalone H without A reports the comparison unavailable. The original H
 acceptance gate remains unchanged.
 

@@ -208,11 +208,16 @@ def _restore_comparison_layers() -> None:
 
 def _advance_layer_comparison() -> bool:
     """Capture Base_DTM alone after A, preserving A and its exact camera."""
-    global _task, _started_at
+    global _task, _started_at, _tick_handle
     state = _layer_comparison
     if state is None:
         return False
     if state["phase"] == "combined":
+        # The native loading barrier pumps Slate. Do not re-enter _tick while
+        # it still observes the completed first task and an absent second PNG.
+        if _tick_handle is not None:
+            unreal.unregister_slate_post_tick_callback(_tick_handle)
+            _tick_handle = None
         state["phase"] = "base_only"
         for layer, _visible in state["original_visibility"]:
             layer.set_editor_property("visible", str(layer.get_name_bp()) == "Base_DTM")
@@ -233,6 +238,7 @@ def _advance_layer_comparison() -> bool:
         if not _task or not _task.is_valid_task():
             raise RuntimeError("invalid Base_DTM comparison screenshot task")
         _started_at = time.monotonic()
+        _tick_handle = unreal.register_slate_post_tick_callback(_tick)
         return True
     _restore_comparison_layers()
     _proof_data["persisted_layer_comparison"] = {
@@ -269,7 +275,7 @@ def _attach_persisted_layer_comparison(proof_dir: Path) -> dict[str, object]:
     for role in ("combined", "base_only"):
         raw = Path(pair[f"{role}_png"]).read_bytes()
         total += len(raw)
-        if total > 16_000_000:
+        if total > 20_000_000:
             raise RuntimeError("persisted layer comparison exceeds compact evidence budget")
         if hashlib.sha256(raw).hexdigest() != pair[f"{role}_sha256"]:
             raise RuntimeError("persisted layer comparison PNG hash mismatch")
