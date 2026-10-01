@@ -518,6 +518,7 @@ Po wyborze konkretnych paczek tabela poniżej staje się rejestrem źródła pra
 | Fir Sapling (`fir_sapling`) | Poly Haven | CC0 | 0 zł | 3G | candidate | lightweight young-tree / understory candidate; useful as forest variation, not the primary tall-canopy mesh |
 | Fir Sapling Medium (`fir_sapling_medium`) | Poly Haven | CC0 | 0 zł | 3G | validated | R2 mass-scatter conifer; persisted as `SM_Stage3G_FirSaplingMedium`, used by `PCG_Forest` and reference-map forest layers; PR #162 / CI #398 / 4900 m visual proof accepted |
 | Grass Medium 01 (`grass_medium_01`) | Poly Haven | CC0 | 0 zł | 3G/R4.1 | candidate | R4.1 foreground/roadside meadow clusters; controlled instancing, density and cull policy required; LOD/instancing validation pending |
+| Sa Calobra MDT50cm benchmark | CNIG/IGN MDT50 cm — 3ª cobertura v1 | CNIG license compatible with CC BY 4.0 | 0 zł | Terrain research | acquired | 8 km × 8 km, 0,5 m, EPSG:25831; derived GeoTIFF tracked in Git LFS under `worldgen/terrain/benchmarks/sa_calobra/`; 17 verified source COG tiles remain outside Git; benchmark only, not an accepted production world |
 
 Statusy: `candidate`, `approved`, `acquired`, `imported`, `validated`, `rejected`.
 
