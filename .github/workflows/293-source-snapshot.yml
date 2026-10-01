@@ -4,10 +4,12 @@ on:
     branches: [ci/293-source-inspection]
     paths: ['.github/workflows/293-source-snapshot.yml']
 permissions:
-  contents: read
+  contents: write
+env:
+  GIT_LFS_SKIP_SMUDGE: '1'
 jobs:
-  snapshot:
-    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.actor == 'karnalooch' && github.event_name == 'push' }}
+  publish-reviewed-blobs:
+    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.actor == 'karnalooch' && github.triggering_actor == 'karnalooch' && github.event_name == 'push' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -16,15 +18,305 @@ jobs:
           ref: 8ba00cac0ecfc56c153422150444a129a97c051b
           lfs: false
           persist-credentials: false
-      - name: Archive only the exact tracked source without running it
+      - run: python -m pip install --disable-pip-version-check ruff==0.16.8
+      - name: Apply hash-verified edits and create blobs without changing refs
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          set -euo pipefail
-          test "$(git rev-parse HEAD)" = '8ba00cac0ecfc56c153422150444a129a97c051b'
-          git archive --format=zip -o "$RUNNER_TEMP/yacs-source-8ba00cac.zip" HEAD
-          sha256sum "$RUNNER_TEMP/yacs-source-8ba00cac.zip"
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+          import urllib.request
+          ROOT = Path.cwd()
+          BASE = '8ba00cac0ecfc56c153422150444a129a97c051b'
+          REPO = 'karnalooch/YetAnotherCyclingSim'
+          helper = '''"""Prepare the current rider viewport with Epic's native loading barrier.
+
+          Editor proof only: do not alter height data, LOD policy, materials or assets.
+          Texture telemetry is evidence, not a terrain quality acceptance decision.
+          """
+          from __future__ import annotations
+
+          import json
+          from pathlib import Path
+          import time
+
+
+          def _height_textures(api, landscape) -> list[dict]:
+              prefix = landscape.get_path_name().split(".", 1)[0] + "."
+              textures = sorted(
+                  (
+                      texture
+                      for texture in api.ObjectIterator(api.Texture2D)
+                      if texture.get_path_name().startswith(prefix)
+                      and texture.get_editor_property("lod_group")
+                      == api.TextureGroup.TEXTUREGROUP_TERRAIN_HEIGHTMAP
+                  ),
+                  key=lambda texture: texture.get_path_name(),
+              )
+              if not textures:
+                  raise RuntimeError("No map-owned Landscape height textures for capture readback")
+              rows = []
+              for texture in textures:
+                  row = json.loads(api.YacsTextureAuditLibrary.describe_texture(texture))
+                  if "error" in row:
+                      raise RuntimeError(f"Native capture texture readback failed: {row['error']}")
+                  rows.append(row)
+              return rows
+
+
+          def prepare_capture(api, landscape, location, rotation, output: Path) -> dict:
+              """Prime the already-selected camera, finish loading, and preserve readbacks."""
+              report = {
+                  "schema_version": 1,
+                  "status": "STARTED",
+                  "native_loading_barrier": "AutomationLibrary.finish_loading_before_screenshot",
+                  "saved_to_map": False,
+                  "height_edits_applied": False,
+                  "terrain_quality_accepted": False,
+                  "telemetry_stage": "immediately before screenshot task submission",
+              }
+              output = Path(output)
+              output.mkdir(parents=True, exist_ok=True)
+              started = time.monotonic()
+              try:
+                  viewport = api.get_editor_subsystem(api.UnrealEditorSubsystem)
+                  if viewport is None or viewport.get_level_viewport_camera_info() is None:
+                      raise RuntimeError("Landscape capture requires an active level viewport")
+                  report["textures_before"] = _height_textures(api, landscape)
+                  viewport.set_level_viewport_camera_info(location, rotation)
+                  report["viewport_primed_at_rider_camera"] = True
+                  api.AutomationLibrary.finish_loading_before_screenshot()
+                  report["native_loading_barrier_completed"] = True
+                  report["textures_after"] = _height_textures(api, landscape)
+                  if any(
+                      row["is_default_texture"] or row["is_compiling"]
+                      for row in report["textures_after"]
+                  ):
+                      raise RuntimeError("Landscape height textures are not ready after loading barrier")
+                  report["status"] = "NATIVE_LOADING_COMPLETED"
+                  return report
+              except Exception as exc:
+                  report["status"] = "FAILED"
+                  report["error"] = str(exc)
+                  raise
+              finally:
+                  report["duration_seconds"] = round(time.monotonic() - started, 6)
+                  (output / "capture-readiness.json").write_text(
+                      json.dumps(report, indent=2) + "\\n", encoding="utf-8"
+                  )
+          '''
+          hook_old = '    unreal.EditorPythonScripting.set_keep_python_script_alive(True)\n'
+          hook_new = '''    # Load for the actual rider view; elapsed time alone is not resource readiness.
+              from scripts.ue.prepare_landscape_capture import prepare_capture
+
+              _proof_data["capture_preparation"] = prepare_capture(
+                  unreal, landscape, camera_location, camera_rotation, _proof_path.parent
+              )
+
+              unreal.EditorPythonScripting.set_keep_python_script_alive(True)
+          '''
+          tests = '''class LandscapeCaptureReadinessTests(unittest.TestCase):
+              def setUp(self) -> None:
+                  from types import SimpleNamespace
+                  from unittest.mock import Mock
+
+                  self.events = []
+                  self.landscape = SimpleNamespace(get_path_name=lambda: "/Game/Map.Map:Landscape")
+                  self.texture = SimpleNamespace(
+                      get_path_name=lambda: "/Game/Map.Map:Landscape.Heightmap_0",
+                      get_editor_property=lambda name: "heightmap",
+                  )
+                  self.state = {
+                      "texture": self.texture.get_path_name(),
+                      "is_default_texture": False,
+                      "is_compiling": False,
+                      "mips": 10,
+                      "resident_mips": 7,
+                  }
+                  self.viewport = SimpleNamespace(
+                      get_level_viewport_camera_info=lambda: ("old-position", "old-rotation"),
+                      set_level_viewport_camera_info=lambda *args: self.events.append(("view", args)),
+                  )
+                  self.api = SimpleNamespace(
+                      Texture2D=object,
+                      UnrealEditorSubsystem=object,
+                      TextureGroup=SimpleNamespace(TEXTUREGROUP_TERRAIN_HEIGHTMAP="heightmap"),
+                      ObjectIterator=lambda _: [self.texture],
+                      get_editor_subsystem=lambda _: self.viewport,
+                      YacsTextureAuditLibrary=SimpleNamespace(
+                          describe_texture=lambda _: json.dumps(self.state)
+                      ),
+                      AutomationLibrary=SimpleNamespace(
+                          finish_loading_before_screenshot=Mock(
+                              side_effect=lambda: self.events.append(("barrier", ()))
+                          )
+                      ),
+                  )
+
+              def capture(self, output):
+                  from scripts.ue.prepare_landscape_capture import prepare_capture
+
+                  return prepare_capture(self.api, self.landscape, "rider-position", "rider-rotation", output)
+
+              def test_actual_view_is_set_before_native_barrier_and_recorded(self):
+                  import tempfile
+
+                  with tempfile.TemporaryDirectory() as directory:
+                      report = self.capture(Path(directory))
+                      self.assertEqual(self.events, [("view", ("rider-position", "rider-rotation")), ("barrier", ())])
+                      self.assertEqual(report["status"], "NATIVE_LOADING_COMPLETED")
+                      self.assertFalse(report["terrain_quality_accepted"])
+                      self.assertFalse(report["height_edits_applied"])
+                      self.assertFalse(report["saved_to_map"])
+                      self.assertEqual(report["textures_after"][0]["resident_mips"], 7)
+                      self.assertEqual(json.loads((Path(directory) / "capture-readiness.json").read_text()), report)
+
+              def test_missing_viewport_fails_before_barrier(self):
+                  import tempfile
+
+                  self.api.get_editor_subsystem = lambda _: None
+                  with tempfile.TemporaryDirectory() as directory:
+                      with self.assertRaisesRegex(RuntimeError, "active level viewport"):
+                          self.capture(Path(directory))
+                      self.api.AutomationLibrary.finish_loading_before_screenshot.assert_not_called()
+                      self.assertEqual(json.loads((Path(directory) / "capture-readiness.json").read_text())["status"], "FAILED")
+
+              def test_unrelated_package_textures_are_excluded(self):
+                  import tempfile
+                  from types import SimpleNamespace
+
+                  foreign = SimpleNamespace(get_path_name=lambda: "/Game/MapOther.MapOther:T")
+                  self.api.ObjectIterator = lambda _: [foreign, self.texture]
+                  with tempfile.TemporaryDirectory() as directory:
+                      self.assertEqual(len(self.capture(Path(directory))["textures_after"]), 1)
+
+              def test_no_height_textures_fails_closed(self):
+                  import tempfile
+
+                  self.api.ObjectIterator = lambda _: []
+                  with tempfile.TemporaryDirectory() as directory:
+                      with self.assertRaisesRegex(RuntimeError, "No map-owned"):
+                          self.capture(Path(directory))
+                      self.api.AutomationLibrary.finish_loading_before_screenshot.assert_not_called()
+
+              def test_native_barrier_error_is_not_swallowed(self):
+                  import tempfile
+
+                  self.api.AutomationLibrary.finish_loading_before_screenshot.side_effect = RuntimeError("loading failed")
+                  with tempfile.TemporaryDirectory() as directory:
+                      with self.assertRaisesRegex(RuntimeError, "loading failed"):
+                          self.capture(Path(directory))
+                      self.assertNotIn("native_loading_barrier_completed", json.loads((Path(directory) / "capture-readiness.json").read_text()))
+
+              def test_readback_error_is_not_a_success(self):
+                  import tempfile
+
+                  self.state = {"error": "missing derived data"}
+                  with tempfile.TemporaryDirectory() as directory:
+                      with self.assertRaisesRegex(RuntimeError, "missing derived data"):
+                          self.capture(Path(directory))
+
+              def test_unready_texture_rejects_capture(self):
+                  import tempfile
+
+                  self.state["is_default_texture"] = True
+                  with tempfile.TemporaryDirectory() as directory:
+                      with self.assertRaisesRegex(RuntimeError, "not ready"):
+                          self.capture(Path(directory))
+
+              def test_capture_hook_is_after_camera_and_before_screenshot_for_every_variant(self):
+                  capture = (ROOT / "scripts/ue/stage3g_capture_sp638_local_corridor.py").read_text()
+                  start = capture.index('    _proof_data["capture_preparation"] = prepare_capture(')
+                  self.assertLess(capture.index('camera_component.set_editor_property("field_of_view", 76.0)'), start)
+                  self.assertLess(start, capture.index("    _task = unreal.AutomationLibrary.take_high_res_screenshot("))
+                  block = capture[start:capture.index("    _task = unreal.AutomationLibrary.take_high_res_screenshot(")]
+                  self.assertNotIn("if variant_name", block)
+                  self.assertIn("camera_location, camera_rotation, _proof_path.parent", block)
+
+
+          if __name__ == "__main__":
+          '''
+          bible = '''##### Capture resource readiness — Issue #293
+
+          A fixed screenshot delay is not evidence that the engine has loaded the height
+          textures needed by the rider view. The bounded capture path primes the existing
+          rider camera in the editor viewport and invokes Epic's native
+          `AutomationLibrary.finish_loading_before_screenshot()` immediately before
+          submitting A-E/C3 screenshots. It records map-owned height-texture metadata
+          before/after in `capture-readiness.json` and in the proof. Missing viewport,
+          failed native loading or still-placeholder/compiling height textures fail closed.
+          No height pixels, source resolution, LOD policy, road geometry, materials or
+          persisted map assets are changed by this preparation.
+
+          This is a capture-validity experiment, not acceptance of the macro terrain.
+          Mip readback is taken before screenshot-task submission, not on the exact GPU
+          capture frame; completed texture compilation alone does not establish full mip
+          residency or visual quality. Compare the unchanged camera and road hashes and
+          inspect the PNG before attributing stair-stepping to this stage. Never respond
+          to a failed result with a hidden global streaming disable or DTM smoothing.
+
+          Official API references:
+          - https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/AutomationLibrary
+          - https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/UnrealEditorSubsystem
+
+          ##### Native metric DTM for rider-close ground
+          '''
+          PLAN = [
+              {'path':'scripts/ue/prepare_landscape_capture.py','before':None,'after':'d8c5f216f12dec99bca3f8af1dd907fb987e8b41','content':helper},
+              {'path':'scripts/ue/stage3g_capture_sp638_local_corridor.py','before':'54d57973af5e43abd698e427d9e7bc137ac3ef27','after':'0dd2ac9a357fead62f8101c9d8f9b777410a8b64','old':hook_old,'new':hook_new},
+              {'path':'scripts/ci/test_embark_terrain_pipeline_contract.py','before':'1ca24a9cfdccfc57cc27f08d00de5098bfa15ca4','after':'7b95badc0fafacd858c6176ca88ce228cd123532','old':'if __name__ == "__main__":\n','new':tests},
+              {'path':'docs/WORLD_BUILDING_BIBLE.md','before':'699e1e3a337928b2dbe28ad8dd57d5ecf095b79b','after':'22f8a0284955d52b9f26a809f3392bf0b76b42f5','old':'##### Native metric DTM for rider-close ground\n','new':bible},
+          ]
+          def blob(data):
+              return hashlib.sha1(f'blob {len(data)}\0'.encode() + data).hexdigest()
+          if subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip() != BASE:
+              raise SystemExit('Unexpected source HEAD')
+          paths=[entry['path'] for entry in PLAN]
+          assert len(paths)==len(set(paths))==4
+          for entry in PLAN:
+              path=ROOT/entry['path']
+              if entry['before'] is None:
+                  assert not path.exists(),entry['path']
+                  updated=entry['content']
+              else:
+                  original=path.read_bytes()
+                  assert blob(original)==entry['before'],entry['path']
+                  original=original.decode('utf-8')
+                  assert original.count(entry['old'])==1,entry['path']
+                  updated=original.replace(entry['old'],entry['new'],1)
+              data=updated.encode('utf-8')
+              assert blob(data)==entry['after'],(entry['path'],blob(data))
+              path.parent.mkdir(parents=True,exist_ok=True)
+              path.write_bytes(data)
+          subprocess.run(['ruff','format','scripts/ci/test_embark_terrain_pipeline_contract.py'],check=True)
+          subprocess.run(['ruff','check','scripts/ci','--select','E9,F63,F7,F82'],check=True)
+          subprocess.run(['python','-m','unittest','scripts.ci.test_embark_terrain_pipeline_contract','-v'],check=True)
+          subprocess.run(['python','-m','py_compile','scripts/ue/prepare_landscape_capture.py','scripts/ue/stage3g_capture_sp638_local_corridor.py'],check=True)
+          subprocess.run(['python','scripts/ci/check_docs_index.py'],check=True)
+          # Create immutable blobs only. No target ref, PR, issue or settings writes.
+          results=[]
+          for entry in PLAN:
+              data=(ROOT/entry['path']).read_bytes()
+              req=urllib.request.Request('https://api.github.com/repos/'+REPO+'/git/blobs',data=json.dumps({'content':data.decode('utf-8'),'encoding':'utf-8'}).encode(),method='POST',headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','Content-Type':'application/json'})
+              with urllib.request.urlopen(req,timeout=40) as response:
+                  result=json.load(response)
+              assert result['sha']==blob(data),entry['path']
+              results.append({'path':entry['path'],'sha':result['sha'],'mode':'100644','type':'blob'})
+          print('REVIEWED_BLOBS='+json.dumps(results))
+          Path(os.environ['RUNNER_TEMP'],'reviewed-blobs.json').write_text(json.dumps({'parent':BASE,'tree_elements':results},indent=2))
+          PY
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: issue293-source-8ba00cac
-          path: ${{ runner.temp }}/yacs-source-8ba00cac.zip
+          name: issue293-reviewed-capture-patch
+          path: |
+            ${{ runner.temp }}/reviewed-blobs.json
+            scripts/ue/prepare_landscape_capture.py
+            scripts/ue/stage3g_capture_sp638_local_corridor.py
+            scripts/ci/test_embark_terrain_pipeline_contract.py
+            docs/WORLD_BUILDING_BIBLE.md
           if-no-files-found: error
           retention-days: 2
