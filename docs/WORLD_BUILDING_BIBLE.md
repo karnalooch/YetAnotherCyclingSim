@@ -50,10 +50,202 @@ YACS deliberately separates physical truth from visual presentation.
 | Physics grade / distance / curvature / banking inputs | `ROAD_PHYSICS_PROFILE.md` and route contracts | **No** |
 | Macro mountain shape | licensed canonical DTM/DEM | only bounded presentation corrections |
 | Road visual surface | generated road mesh from canonical alignment | yes, within presentation tolerances |
-| Road cut / fill / shoulders | Landscape Edit Layer / local geometry | yes |
-| Cliffs / rocks / scree | dedicated meshes / PCG / materials | yes |
-| Vegetation | PCG / authored hero placement | yes |
+| Road cut / fill / shoulders | Road/Earthworks Authority + Landscape Edit Layer / local geometry | yes |
+| Buildings: existence and footprint | verified cadastral / authoritative building geometry | only bounded reconstruction fallback |
+| Buildings: height / roof form | measured or derived LiDAR / surface evidence, with confidence | yes, if marked inferred |
+| Forest / grassland / cropland extent | World Authority spatial masks derived from verified source layers | PCG may dress, not move the boundary silently |
+| Individual vegetation structure | LiDAR-derived canopy evidence where available | presentation may vary asset identity within confidence |
+| Hydrology / major infrastructure | authoritative GIS / classified LiDAR where available | only bounded presentation corrections |
+| Snow cover | Snow Authority state, calibrated by dated observation products | dynamic simulation may evolve it |
+| Cliffs / rocks / scree | terrain-derived masks + dedicated meshes / PCG / materials | yes |
 | Weather / lighting | environment systems | yes |
+
+### 2.1 Real-world reconstruction and World Authority
+
+YACS uses a **real-world-first** world-building model:
+
+> **Verified or derived real-world data decides what exists and where it exists. Procedural systems decide mainly how that truth is represented efficiently and believably in Unreal.**
+
+This is not a promise of a literal centimetre-perfect digital twin. The target is a **procedural digital twin optimized for a game**: preserve geographically meaningful structure and measurable dimensions, then use deterministic procedural presentation for the visual detail that source data does not justify.
+
+#### Responsibility boundaries
+
+`World Authority` is an orchestration and provenance boundary, not one giant generator. It delegates to focused domains:
+
+| Domain authority | Owns | Explicitly does not own |
+|---|---|---|
+| **Road / Earthworks Authority ("BOB")** | road corridor, cuts, fills, shoulders, retaining needs, road/terrain tie-in | trees, forests, crops, snow, building style |
+| **Terrain Authority** | canonical ground elevation, source validity, slope/roughness derivatives | road physics truth or decorative rock placement |
+| **Building Authority** | building presence, footprint, terrain contact, measured/derived height and roof evidence | arbitrary relocation for composition |
+| **Vegetation Authority** | forest/grass/shrub masks, canopy height/density evidence, vegetation exclusions | road earthworks |
+| **Agriculture / Land-cover Authority** | field boundaries, crop/grassland/land-cover evidence and temporal validity | final mesh/foliage asset choice |
+| **Snow Authority** | dynamic snow mask/state from weather, terrain and dated observations | permanent painting of one historical snow image |
+| **Hydrology Authority** | coast, water bodies, streams and drainage evidence | fake water used to hide terrain errors |
+| **Infrastructure Authority** | bridges, power lines/towers and other verified linear/point infrastructure | road alignment authority |
+| **Rock / Surface Authority** | exposed-rock, scree, cliff and bare-ground masks derived from terrain and source data | fixing incorrect macro geometry with materials |
+
+**BOB remains the road and earthworks specialist.** Do not grow it into a general world generator just because it already understands terrain near roads.
+
+#### Evidence classes
+
+Every generated world fact that can affect placement should be classified before it reaches PCG/PCGEx:
+
+| Class | Meaning | Examples | Procedural freedom |
+|---|---|---|---|
+| **Hard fact** | directly supplied by an authoritative/verified source | cadastral footprint, verified road XY, ground-class DTM elevation | very low |
+| **Derived measurement** | deterministic calculation from source data | building height from LiDAR, canopy height, slope, roughness, road-distance mask | low, derivation must be reproducible |
+| **Inference** | plausible interpretation with uncertainty | roof type from roof-plane fitting, shrub vs low tree, likely regional species | medium, confidence required |
+| **Decorative presentation** | visual choice not asserted as geographic truth | exact tree mesh variant, bark material, window trim, small scatter rocks | high within domain constraints |
+
+A renderer must never promote an **inference** or **decorative** choice into a new hard fact.
+
+#### Required provenance record
+
+Spatial world inputs and important derived products must retain enough metadata to reproduce and challenge the result:
+
+- source provider and product/dataset name;
+- license / attribution requirement;
+- acquisition or reference date when the data is time-dependent;
+- original CRS, axis order and vertical interpretation;
+- source resolution / point density where meaningful;
+- NoData / invalid-value semantics;
+- immutable source hash or equivalent version identity;
+- derivation step/version for generated masks or measurements;
+- evidence class and confidence for non-hard facts.
+
+#### Photogrammetry, LiDAR, DTM, DSM and orthophoto are different things
+
+Do not use these terms interchangeably:
+
+- **photogrammetry** reconstructs geometry or image products from overlapping photographs; it is useful for orthophoto, meshes and detailed visible surfaces;
+- **LiDAR point clouds** are direct 3D measurements and can include classified ground, vegetation, buildings and other objects;
+- **DTM / MDT** represents the ground surface after non-ground objects have been removed or filtered;
+- **DSM / MDS** represents the visible/top surface and can include buildings and vegetation;
+- **orthophoto** is geometrically corrected imagery; it is excellent visual/context evidence but is not itself a ground-height authority.
+
+Photogrammetry can be a strong source for hero surfaces or visible structure, but it must not silently replace a validated ground DTM when the required truth is bare-earth elevation.
+
+#### Mallorca / Spain source stack
+
+For a Mallorca world slice, the preferred candidate stack is:
+
+| Need | Preferred source role |
+|---|---|
+| bare-earth terrain | PNOA-LiDAR **MDT50cm 3rd coverage** or validated equivalent; 0.5 m grid derived from classified ground points |
+| visible/top surface | PNOA MDS / LiDAR point cloud |
+| vegetation height/structure | PNOA classified LiDAR and normalized vegetation-surface products where available |
+| building footprint | Dirección General del Catastro INSPIRE **BU Buildings** |
+| building height / roof evidence | PNOA LiDAR / normalized building-surface products |
+| forest density/type | Copernicus Tree Cover Density / Forest Type |
+| grassland | Copernicus High Resolution Layer Grassland |
+| agricultural parcels | SIGPAC |
+| crop class / seasonal agricultural state | Copernicus High Resolution Layer Croplands |
+| dated snow observation | Copernicus Fractional Snow Cover or an equivalent validated observation product |
+| hydrology / infrastructure | official GIS plus classified LiDAR when the class/product is fit for purpose |
+
+The current PNOA-LiDAR third-coverage MDT50cm product is described by the provider as a 0.5 m DTM interpolated from the **ground class** of third-coverage LiDAR flights. For Illes Balears the source coordinate framework is ETRS89 with the corresponding UTM zone and orthometric heights. Import/preprocessing must therefore prove CRS, vertical interpretation and NoData handling before Unreal import.
+
+#### Domain reconstruction rules
+
+**Buildings**
+
+- keep the verified footprint in the real location;
+- derive terrain contact from Terrain Authority, not from a random PCG trace against an unverified surface;
+- use LiDAR/surface evidence for height when available;
+- roof form may be inferred from point-cloud planes, but must stay marked as inference;
+- façade material, windows, shutters and small architectural detail may come from a Mallorca/regional asset grammar;
+- procedural generation may simplify a building for performance but must not silently move it or invent a different footprint.
+
+**Trees, forest and shrubs**
+
+- use real forest/vegetation extent where source coverage supports it;
+- use LiDAR-derived canopy height/density to constrain placement when available;
+- individual crown detection may produce candidate tree locations, but those locations are **derived measurements**, not perfect botanical truth;
+- forest type products may constrain broadleaf/coniferous selection;
+- exact species and exact mesh variant remain inference/presentation unless a stronger source proves them;
+- roadside exclusion comes from the road/world contract, not from arbitrary post-generation deletion.
+
+**Grassland and meadows**
+
+- source land-cover/grassland masks decide the eligible area;
+- Terrain Authority can further constrain by slope/wetness/exposure where the source requires refinement;
+- PCG selects density, clump variation and mesh instances inside the eligible mask.
+
+**Fields and crops**
+
+- use real agricultural parcel geometry where available;
+- crop products may constrain the main crop or seasonal state, but their reference year/date must travel with the data;
+- never turn one year's crop classification into timeless land-use truth;
+- row direction, stubble, bare soil and growth-stage presentation may be procedural when consistent with the source state.
+
+**Snow**
+
+A dated snow raster is an **observation**, not a permanent level-design mask.
+
+Snow Authority should ultimately combine:
+
+- elevation;
+- slope;
+- aspect;
+- temperature;
+- precipitation;
+- solar exposure / melt tendency;
+- wind redistribution later if justified;
+- dated satellite snow observations for calibration/validation.
+
+This lets the same real mountain behave differently under different YACS weather instead of freezing one historical Sentinel observation into the map.
+
+**Rock, scree and exposed ground**
+
+Use terrain derivatives such as slope, curvature and roughness together with land-cover/imagery evidence. Dedicated meshes own overhangs, cliffs and shapes that a heightfield cannot represent. Materials may classify/read the surface; they may not repair a wrong silhouette.
+
+**Hydrology and other infrastructure**
+
+Prefer authoritative geometry or correctly classified LiDAR for water, bridges, power infrastructure and similar features. If source classes are incomplete or ambiguous, preserve the uncertainty instead of fabricating precise infrastructure.
+
+#### Conflict and fail-closed policy
+
+When sources disagree:
+
+1. keep all original inputs inspectable;
+2. compare acquisition/reference dates and stated product purpose;
+3. prefer the source whose semantics match the question — for example, DTM for ground and DSM/LiDAR for top-of-object height;
+4. do not assume "newer" automatically means "more correct" for a different semantic layer;
+5. emit a bounded conflict/invalid mask with provenance;
+6. for route, terrain continuity, building footprint or other placement-critical truth, **fail closed** instead of generating confident nonsense;
+7. decorative consumers may fall back to a generic regional asset, but may not rewrite hard spatial truth.
+
+Specific import checks for terrain must catch at minimum:
+
+- NoData treated as a real elevation;
+- CRS/axis mismatch;
+- degree/metre confusion;
+- incorrect vertical scale or double Z scaling;
+- datum/vertical-reference mismatch;
+- seam discontinuities between tiles;
+- implausible local elevation jumps.
+
+These checks exist precisely to prevent a source/preprocessing defect from becoming a "canyon", "viaduct" or other fake earthwork that BOB then tries to solve downstream.
+
+#### PCG / PCGEx role under World Authority
+
+PCG/PCGEx is primarily a **presentation executor** for world reconstruction.
+
+It should consume authoritative or derived masks such as:
+
+- building footprints and buildable volumes;
+- forest/grass/shrub/crop eligibility;
+- canopy height/density;
+- rock/scree masks;
+- road and water exclusions;
+- infrastructure locations;
+- temporal environment state.
+
+Its job is then to choose efficient meshes, variants, density, scatter detail and deterministic dressing.
+
+> **If reliable source data already says what is there and where it is, PCG must not invent a different geography merely because a random seed produces a prettier result.**
+
+---
 
 A prettier Landscape must never silently become physics truth.
 
@@ -961,7 +1153,8 @@ Every new YACS route/world follows this order.
 ```mermaid
 flowchart LR
     SRC["SOURCE<br/>Verified real data"] --> GIS["PREPARE<br/>Metric GIS"]
-    GIS --> LAND["AUTHOR<br/>Macro Landscape"]
+    GIS --> AUTH["AUTHORITY<br/>World facts · confidence · provenance"]
+    AUTH --> LAND["AUTHOR<br/>Macro Landscape"]
     LAND --> LAYERS["AUTHOR<br/>Edit Layers"]
     LAYERS --> ROAD["AUTHOR<br/>Road + earthworks"]
     ROAD --> MESO["AUTHOR<br/>Cliffs · retaining · meso"]
@@ -986,6 +1179,7 @@ flowchart LR
 
     class SRC input;
     class GIS,LAND,LAYERS,ROAD,MESO,MAT,PCG,BLEND,ATM,PERF exec;
+    class AUTH owned;
     class PROOF evidence;
     class DONE success;
     class FIX danger;
@@ -1283,27 +1477,32 @@ Materials cannot fix incorrect geometry. If a silhouette is wrong, fix geometry 
 
 ## 11. PCG vegetation and rocks
 
-PCG is the default for repeated world content.
+PCG is the default for repeated **presentation content**, but it is not the default authority for real-world geography.
 
-PCG rules should be based on explicit inputs such as:
+Where reliable source data exists, PCG rules should consume `World Authority` outputs such as:
 
-- elevation band;
-- slope;
-- biome mask;
-- distance from road;
+- elevation, slope, aspect and roughness derivatives;
+- verified/derived forest, grassland, shrub and cropland masks;
+- LiDAR-derived canopy height/density or candidate crown locations;
+- building footprints / buildable volumes;
+- road, water and infrastructure exclusion masks;
+- dated environment state such as snow eligibility;
 - visibility/composition zone;
-- deterministic seed;
-- exclusion areas.
+- deterministic seed.
 
 Minimum road rule:
 
 > mass vegetation must respect a deterministic protected road corridor.
 
+Minimum geography rule:
+
+> PCG may vary **how** an eligible area is dressed; it must not silently change **what/where** authoritative data says exists.
+
 Use manual placement for hero objects and composition exceptions, not for thousands of repeated trees.
 
-Generated PCG output must remain reproducible from its graph, inputs and seed.
+Generated PCG output must remain reproducible from its graph, source-derived inputs and seed. When a source mask changes, the downstream affected area should regenerate deterministically and stay bounded.
 
-Do not create a parallel custom biome engine merely to classify where these graphs should run. Prefer GIS/terrain-derived masks plus existing UE PCG capabilities and proven biome patterns; add YACS-specific code only for the remaining integration gap.
+Do not create a parallel custom biome engine merely to classify where these graphs should run. Prefer World Authority outputs built from GIS/LiDAR/terrain-derived masks plus existing UE PCG capabilities and proven biome patterns; add YACS-specific code only for the remaining integration gap.
 
 ---
 
@@ -1424,6 +1623,8 @@ Order:
 4. only then dynamic weather polish.
 
 A dramatic sunset must not be used to hide broken road/terrain geometry.
+
+Snow is treated as dynamic environment state, not a permanently painted historical mask. The future Snow Authority should combine terrain properties and weather state, then use dated satellite snow observations for calibration/validation where useful.
 
 Weather systems belong to later product milestones, but world architecture must not make them impossible.
 
@@ -1613,6 +1814,25 @@ For detailed copyright-safe reconstructions of the public Far Cry 5 and THE FINA
 - SideFX — Project Pegasus tech demo:  
   https://www.sidefx.com/pegasus/
 
+### Official real-world data references
+
+These links describe candidate source products and semantics. They do not waive the per-source license/provenance review required by the asset policy.
+
+- PNOA-LiDAR downloadable products, including third-coverage MDT50cm / MDS and LiDAR products:  
+  https://pnoa.ign.es/pnoa-lidar/productos-a-descarga
+- Dirección General del Catastro INSPIRE, including BU Buildings:  
+  https://www.catastro.hacienda.gob.es/webinspire/index.html
+- SIGPAC national agricultural parcel viewer:  
+  https://www.mapa.gob.es/es/agricultura/temas/sistema-de-informacion-geografica-de-parcelas-agricolas-sigpac-/visor-sigpac
+- Copernicus Tree Cover and Forests:  
+  https://land.copernicus.eu/en/products/high-resolution-layer-forests-and-tree-cover
+- Copernicus Grasslands:  
+  https://land.copernicus.eu/en/products/high-resolution-layer-grasslands
+- Copernicus Croplands:  
+  https://land.copernicus.eu/en/products/high-resolution-layer-croplands
+- Copernicus Fractional Snow Cover:  
+  https://land.copernicus.eu/en/products/snow/fractional-snow-cover
+
 ### Official tool references
 
 Official Unreal Engine references are architecture references:
@@ -1659,18 +1879,20 @@ Tutorials are examples, not source of truth. When tutorial advice conflicts with
 
 When confused, ask in this order:
 
-1. **What is truth?** DTM? route profile? verified road GIS?
-2. **What is presentation?** Landscape, road mesh, cliffs, vegetation?
-3. **What is the evidence tier?** Shipped product, production case, sample, demo, tutorial or hypothesis?
-4. **Has one complete producer → derived data → consumer → regeneration path been proven before I generalize the model?**
-5. **Have I completed the tools-first audit before writing custom world-building code?**
-6. **Am I editing non-destructively?**
-7. **Should this be Landscape or a mesh?**
-8. **Should this be generated by spline/PCG instead of hand-built?**
-9. **Am I trying to fix geometry with a material?**
-10. **Can I see the problem from the rider camera?**
-11. **Did I measure performance?**
-12. **Can the result be reproduced from source inputs?**
+1. **What is truth?** DTM? route profile? verified road GIS? cadastral footprint? dated land-cover observation?
+2. **Who owns this domain?** Terrain, BOB/road-earthworks, Buildings, Vegetation, Agriculture/Land-cover, Snow, Hydrology, Infrastructure or Rock/Surface?
+3. **Is this a hard fact, derived measurement, inference or decorative presentation?**
+4. **What is presentation?** Landscape, road mesh, building asset, foliage instance, cliffs, materials?
+5. **What is the evidence tier?** Shipped product, production case, sample, demo, tutorial or hypothesis?
+6. **Has one complete producer → derived data → consumer → regeneration path been proven before I generalize the model?**
+7. **Have I completed the tools-first audit before writing custom world-building code?**
+8. **Am I editing non-destructively?**
+9. **Should this be Landscape or a mesh?**
+10. **Should this be generated by spline/PCG instead of hand-built?**
+11. **Am I trying to fix geometry with a material?**
+12. **Can I see the problem from the rider camera?**
+13. **Did I measure performance?**
+14. **Can the result be reproduced from source inputs?**
 
 If those answers are clear, world building is usually straightforward.
 
