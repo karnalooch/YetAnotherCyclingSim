@@ -17,7 +17,7 @@ jobs:
       contents: read
       pull-requests: read
     steps:
-      - name: Dispatch one bounded focus only after exact-head validation
+      - name: Request two bounded ownership controls after exact-head validation
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -26,8 +26,6 @@ jobs:
           from pathlib import Path
           repo = 'karnalooch/YetAnotherCyclingSim'
           sha = '32d73652bf8d7638d27644aad04accfd62f07f09'
-          request_id = 'manual-pr294-focus-15460-32d73652bf8d'
-          workflow = 'passo-giau-embark-terrain.yml'
           def api(path, body=None):
               request = urllib.request.Request('https://api.github.com/repos/' + repo + path,
                   data=None if body is None else json.dumps(body).encode(),
@@ -35,17 +33,21 @@ jobs:
                   headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'], 'Accept':'application/vnd.github+json', 'Content-Type':'application/json'})
               with urllib.request.urlopen(request,timeout=40) as response:
                   return None if response.status == 204 else json.load(response)
-          pr = api('/pulls/294')
-          if pr['state'] != 'open' or pr['head']['sha'] != sha or pr['head']['repo']['full_name'] != repo:
-              raise SystemExit('PR target changed; refusing stale dispatch')
-          runs = api('/actions/runs?head_sha=' + sha + '&per_page=100')['workflow_runs']
-          if any(r.get('display_title') == 'M3 terrain ' + request_id for r in runs):
-              print('Existing exact request found; not duplicated')
-          else:
+          summary = []
+          for variant in ('B', 'G'):
+              pr = api('/pulls/294')
+              if pr['state'] != 'open' or pr['head']['sha'] != sha or pr['head']['repo']['full_name'] != repo:
+                  raise SystemExit('PR target changed; refusing stale dispatch')
+              request_id = 'manual-pr294-owner-' + variant.lower() + '-15460-32d73652bf8d'
+              runs = api('/actions/runs?head_sha=' + sha + '&per_page=100')['workflow_runs']
+              if any(r.get('display_title') == 'M3 terrain ' + request_id for r in runs):
+                  summary.append('Existing request, not duplicated: ' + request_id)
+                  continue
               inputs = {'exact_sha':sha, 'gumball_request_id':request_id,
                   'include_surface_isolation':'false','ride_probe_mode':'focus',
-                  'ride_probe_station_m':'15460','ride_probe_variant':'E','ride_probe_wide':'true'}
-              api('/actions/workflows/' + workflow + '/dispatches', {'ref':pr['head']['ref'],'inputs':inputs})
-              print('Requested bounded focus; not a successful proof or merge: '+request_id)
-              Path(os.environ['GITHUB_STEP_SUMMARY']).write_text('Requested one exact-head focus at 15460 m, +/-2 s, with primary and secondary wide views. No scout and no full-world proof.\n')
+                  'ride_probe_station_m':'15460','ride_probe_variant':variant,'ride_probe_wide':'true'}
+              api('/actions/workflows/passo-giau-embark-terrain.yml/dispatches', {'ref':pr['head']['ref'],'inputs':inputs})
+              summary.append('Requested only, not a successful proof: ' + request_id)
+          Path(os.environ['GITHUB_STEP_SUMMARY']).write_text('\n\n'.join(summary) + '\n')
+          print('\n'.join(summary))
           PY
