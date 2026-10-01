@@ -37,8 +37,8 @@ jobs:
           $ErrorActionPreference = 'Stop'
           . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
           $ue = Resolve-YacsUnrealEngine -ProjectPath (Join-Path (Get-Location) 'YetAnotherCyclingSim.uproject')
-          $root = $ue.EngineRoot
-          if (-not $root) { throw 'Canonical resolver did not return EngineRoot.' }
+          $root = $ue.Root
+          if (-not $root) { throw 'Canonical resolver did not return Root.' }
           Write-Host ('Inspected engine: ' + $ue.Version)
           $specs = @(
             @{ file='Engine/Source/Runtime/Landscape/Classes/Landscape.h'; pattern='GetLayer\(|GetEditLayer|GetLayerAlpha|GetLayerBlendMode|SetLayerReservedForSplines|GetLandscapeSplinesReservedLayer|GetEditingLayer' },
