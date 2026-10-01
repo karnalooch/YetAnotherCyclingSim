@@ -72,6 +72,9 @@ jobs:
       - name: Run Unreal CI build profile contract tests
         run: python scripts/ci/test_unreal_ci_build_profile.py
 
+      - name: Run persistent terrain asset retention tests
+        run: python -m unittest scripts.ci.test_retain_unreal_assets -v
+
       - name: Run Unreal CI cache contract tests
         run: python scripts/ci/test_unreal_ci_cache_contract.py
 

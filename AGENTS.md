@@ -54,6 +54,10 @@ Owner reaffirmation, 2026-10-01 (Issue #297): use authorized remote GitHub deliv
 - Distinguish a local candidate, a remote commit, a passing test, a render, a merge and a playable feature. Never promise unattended/background continuation unless an actual supported scheduled mechanism was created.
 - These instructions are durable project memory in this repository. Do not claim to have changed global ChatGPT profile memory without a successful memory-write operation.
 
+### Retain terrain LFS assets on disk
+
+Owner directive, 2026-10-01 (Issue #308): keep downloaded/materialized LFS assets on disk while rebuilding terrain. Do not prune LFS storage or delete asset payloads during cleanup. The original `_embark-terrain-worktree` remains untouched by the recovery lane. Before checkout/reset/cleanup of `_terrain-recovery-worktree`, move materialized Unreal assets to the sibling `_yacs-retained-lfs/<run>-<attempt>/` archive, verify their SHA-256 and size, and fail before cleanup if retention fails. Code-only checkouts can still use pointers; the retained binary bytes and `.git/lfs/objects` remain on disk.
+
 ### Roadmap and world-building nomenclature
 
 - `docs/ROADMAP.md` uses only product milestones `M0` through `M10`.

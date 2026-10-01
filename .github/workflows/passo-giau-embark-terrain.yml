@@ -232,7 +232,7 @@ jobs:
 
       - name: Validate Embark/PCGEx repository contract
         run: |
-          python -m unittest scripts.ci.test_embark_terrain_pipeline_contract
+          python -m unittest scripts.ci.test_embark_terrain_pipeline_contract scripts.ci.test_retain_unreal_assets
           python -m unittest scripts.ci.test_terrain_proof_request scripts.ci.test_terrain_proof_routing scripts.ci.test_ride_probe
           python -m unittest scripts.worldgen.test_adaptive_terrain_solver -v
 
@@ -347,10 +347,29 @@ jobs:
           "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
           "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
 
+      - name: Checkout retention helper outside the mutable worktree
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: _terrain-retention-control
+          ref: ${{ needs.classify.outputs.source_sha }}
+          sparse-checkout: scripts/ci/retain_unreal_assets.py
+          sparse-checkout-cone-mode: false
+          lfs: false
+          persist-credentials: false
+
+      - name: Retain previous recovery assets before checkout
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $worktree = Join-Path $env:GITHUB_WORKSPACE '_terrain-recovery-worktree'
+          $archive = Join-Path $env:GITHUB_WORKSPACE ("_yacs-retained-lfs/{0}-{1}/before-checkout" -f $env:GITHUB_RUN_ID,$env:GITHUB_RUN_ATTEMPT)
+          python _terrain-retention-control/scripts/ci/retain_unreal_assets.py --workspace $worktree --archive $archive
+          if ($LASTEXITCODE -ne 0) { throw 'Asset retention failed before checkout; do not mutate workspace.' }
+
       - name: Checkout exact trusted revision without LFS payloads
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          path: _embark-terrain-worktree
+          path: _terrain-recovery-worktree
           ref: ${{ needs.classify.outputs.source_sha }}
           fetch-depth: 1
           lfs: false
@@ -359,7 +378,7 @@ jobs:
 
       - name: Verify exact SHA and code-only checkout
         shell: pwsh
-        working-directory: _embark-terrain-worktree
+        working-directory: _terrain-recovery-worktree
         run: |
           $ErrorActionPreference = 'Stop'
           # Preserve only ignored compile-cache state. Any tracked or ordinary
@@ -374,21 +393,9 @@ jobs:
           git lfs install --local
           if ($LASTEXITCODE -ne 0) { throw 'git lfs install failed.' }
 
-          # A previous proof may leave this tracked LFS path materialized in the
-          # persistent self-hosted workspace. actions/checkout + reset can keep
-          # that payload because it is a valid clean LFS working-tree value.
-          # Force the known proof asset back to its pointer before enforcing the
-          # code-only checkout contract.
-          $spikeMap = 'Content/Prototype/Maps/L_PassoGiauTerrainSpike.umap'
-          $spikePath = Join-Path (Get-Location) $spikeMap
-          Remove-Item -LiteralPath $spikePath -Force -ErrorAction SilentlyContinue
-          git checkout -- $spikeMap
-          if ($LASTEXITCODE -ne 0) { throw 'Failed to restore Passo Giau map as an LFS pointer.' }
-          $pointerHeader = Get-Content -LiteralPath $spikePath -TotalCount 1 -ErrorAction Stop
-          if ($pointerHeader -ne 'version https://git-lfs.github.com/spec/v1') {
-            throw 'Passo Giau map remained materialized before code-only checkout guard.'
-          }
-
+          # Materialized assets were moved, never deleted, before checkout.
+          # The former _embark-terrain-worktree is intentionally untouched.
+          # git LFS object storage is retained and is never pruned.
           ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
           if ($LASTEXITCODE -ne 0) { throw 'Code-only checkout contract failed.' }
           if (git status --porcelain --untracked-files=all) {
@@ -397,9 +404,9 @@ jobs:
 
       - name: Re-run repository contract
         shell: pwsh
-        working-directory: _embark-terrain-worktree
+        working-directory: _terrain-recovery-worktree
         run: |
-          python -m unittest scripts.ci.test_embark_terrain_pipeline_contract
+          python -m unittest scripts.ci.test_embark_terrain_pipeline_contract scripts.ci.test_retain_unreal_assets
           if ($LASTEXITCODE -ne 0) { throw 'Embark/PCGEx contract failed on the authoring runner.' }
 
       - name: Download prepared SP638 input
@@ -410,7 +417,7 @@ jobs:
 
       - name: Materialize prepared SP638 input for Unreal authoring
         shell: pwsh
-        working-directory: _embark-terrain-worktree
+        working-directory: _terrain-recovery-worktree
         run: |
           $ErrorActionPreference = 'Stop'
           $downloadRoot = Join-Path '${{ runner.temp }}' 'yacs-pcgex-prepared-road-${{ github.run_id }}-${{ github.run_attempt }}'
@@ -448,7 +455,7 @@ jobs:
       - name: Resolve compile-fingerprint cache
         id: compile_cache
         shell: pwsh
-        working-directory: _embark-terrain-worktree
+        working-directory: _terrain-recovery-worktree
         run: |
           $ErrorActionPreference = 'Stop'
           $mode = '${{ needs.classify.outputs.proof_mode }}'
@@ -597,7 +604,7 @@ jobs:
 
       - name: Initialize isolated proof output
         shell: pwsh
-        working-directory: _embark-terrain-worktree
+        working-directory: _terrain-recovery-worktree
         run: |
           $ErrorActionPreference = 'Stop'
           $expected = "Saved/RuntimeProof/CI/M3/PCGExCorridor/$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
@@ -612,7 +619,7 @@ jobs:
 
       - name: Build or reuse binaries and author deterministic PCGEx graph
         shell: pwsh
-        working-directory: _embark-terrain-worktree
+        working-directory: _terrain-recovery-worktree
         run: |
           $ErrorActionPreference = 'Stop'
           $params = @{
@@ -652,7 +659,7 @@ jobs:
           YACS_RIDE_PROBE_VARIANT: ${{ inputs.ride_probe_variant || 'E' }}
           YACS_SURFACE_ISOLATION: ${{ inputs.include_surface_isolation && 'true' || 'false' }}
         shell: pwsh
-        working-directory: _embark-terrain-worktree
+        working-directory: _terrain-recovery-worktree
         run: |
           $ErrorActionPreference = 'Stop'
 
@@ -739,7 +746,7 @@ jobs:
         with:
           name: passo-giau-m3-h-focus-wide-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            _embark-terrain-worktree/${{ env.YACS_M3_EVIDENCE_ROOT }}/TraversalH/**
+            _terrain-recovery-worktree/${{ env.YACS_M3_EVIDENCE_ROOT }}/TraversalH/**
           if-no-files-found: warn
           retention-days: 14
 
@@ -749,9 +756,9 @@ jobs:
         with:
           name: passo-giau-m3-h-candidate-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            _embark-terrain-worktree/${{ env.YACS_M3_EVIDENCE_ROOT }}/Visual/H/sp638_surface_h_rider_3840x2160.png
-            _embark-terrain-worktree/${{ env.YACS_M3_EVIDENCE_ROOT }}/Visual/H/surface_ownership_h_proof.json
-            _embark-terrain-worktree/${{ env.YACS_M3_EVIDENCE_ROOT }}/Visual/H/render_resource_headroom.txt
+            _terrain-recovery-worktree/${{ env.YACS_M3_EVIDENCE_ROOT }}/Visual/H/sp638_surface_h_rider_3840x2160.png
+            _terrain-recovery-worktree/${{ env.YACS_M3_EVIDENCE_ROOT }}/Visual/H/surface_ownership_h_proof.json
+            _terrain-recovery-worktree/${{ env.YACS_M3_EVIDENCE_ROOT }}/Visual/H/render_resource_headroom.txt
           if-no-files-found: warn
           retention-days: 14
 
@@ -761,7 +768,7 @@ jobs:
         with:
           name: passo-giau-m3-pcgex-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            _embark-terrain-worktree/${{ env.YACS_M3_EVIDENCE_ROOT }}/**
+            _terrain-recovery-worktree/${{ env.YACS_M3_EVIDENCE_ROOT }}/**
           if-no-files-found: warn
           retention-days: 14
 
@@ -770,10 +777,13 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $worktree = Join-Path $env:GITHUB_WORKSPACE '_embark-terrain-worktree'
+          $worktree = Join-Path $env:GITHUB_WORKSPACE '_terrain-recovery-worktree'
           if (-not (Test-Path -LiteralPath (Join-Path $worktree '.git'))) {
             exit 0
           }
+          $archive = Join-Path $env:GITHUB_WORKSPACE ("_yacs-retained-lfs/{0}-{1}/after-proof" -f $env:GITHUB_RUN_ID,$env:GITHUB_RUN_ATTEMPT)
+          python _terrain-retention-control/scripts/ci/retain_unreal_assets.py --workspace $worktree --archive $archive
+          if ($LASTEXITCODE -ne 0) { throw 'Asset retention failed after proof; do not reset or clean.' }
           # Deliberately preserve ignored Binaries/Intermediate/Saved and the
           # ignored exact-SHA PCGEx checkout. Their reuse is gated next run by
           # the compile fingerprint plus required-binary checks.
