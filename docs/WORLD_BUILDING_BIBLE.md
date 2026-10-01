@@ -596,6 +596,29 @@ location selection is test infrastructure, not route or physics truth.
 
 Do not replace this diagnostic with guessed smoothing percentages.
 
+##### Capture resource readiness — Issue #293
+
+A fixed screenshot delay is not evidence that the engine has loaded the height
+textures needed by the rider view. The bounded capture path primes the existing
+rider camera in the editor viewport and invokes Epic's native
+`AutomationLibrary.finish_loading_before_screenshot()` immediately before
+submitting A-E/C3 screenshots. It records map-owned height-texture metadata
+before/after in `capture-readiness.json` and in the proof. Missing viewport,
+failed native loading or still-placeholder/compiling height textures fail closed.
+No height pixels, source resolution, LOD policy, road geometry, materials or
+persisted map assets are changed by this preparation.
+
+This is a capture-validity experiment, not acceptance of the macro terrain.
+Mip readback is taken before screenshot-task submission, not on the exact GPU
+capture frame; completed texture compilation alone does not establish full mip
+residency or visual quality. Compare the unchanged camera and road hashes and
+inspect the PNG before attributing stair-stepping to this stage. Never respond
+to a failed result with a hidden global streaming disable or DTM smoothing.
+
+Official API references:
+- https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/AutomationLibrary
+- https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/UnrealEditorSubsystem
+
 ##### Native metric DTM for rider-close ground
 
 The production candidate for near-field ground should be:

@@ -467,5 +467,164 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         )
 
 
+class LandscapeCaptureReadinessTests(unittest.TestCase):
+    def setUp(self) -> None:
+        from types import SimpleNamespace
+        from unittest.mock import Mock
+
+        self.events = []
+        self.landscape = SimpleNamespace(
+            get_path_name=lambda: "/Game/Map.Map:Landscape"
+        )
+        self.texture = SimpleNamespace(
+            get_path_name=lambda: "/Game/Map.Map:Landscape.Heightmap_0",
+            get_editor_property=lambda name: "heightmap",
+        )
+        self.state = {
+            "texture": self.texture.get_path_name(),
+            "is_default_texture": False,
+            "is_compiling": False,
+            "mips": 10,
+            "resident_mips": 7,
+        }
+        self.viewport = SimpleNamespace(
+            get_level_viewport_camera_info=lambda: ("old-position", "old-rotation"),
+            set_level_viewport_camera_info=lambda *args: self.events.append(
+                ("view", args)
+            ),
+        )
+        self.api = SimpleNamespace(
+            Texture2D=object,
+            UnrealEditorSubsystem=object,
+            TextureGroup=SimpleNamespace(TEXTUREGROUP_TERRAIN_HEIGHTMAP="heightmap"),
+            ObjectIterator=lambda _: [self.texture],
+            get_editor_subsystem=lambda _: self.viewport,
+            YacsTextureAuditLibrary=SimpleNamespace(
+                describe_texture=lambda _: json.dumps(self.state)
+            ),
+            AutomationLibrary=SimpleNamespace(
+                finish_loading_before_screenshot=Mock(
+                    side_effect=lambda: self.events.append(("barrier", ()))
+                )
+            ),
+        )
+
+    def capture(self, output):
+        from scripts.ue.prepare_landscape_capture import prepare_capture
+
+        return prepare_capture(
+            self.api, self.landscape, "rider-position", "rider-rotation", output
+        )
+
+    def test_actual_view_is_set_before_native_barrier_and_recorded(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as directory:
+            report = self.capture(Path(directory))
+            self.assertEqual(
+                self.events,
+                [("view", ("rider-position", "rider-rotation")), ("barrier", ())],
+            )
+            self.assertEqual(report["status"], "NATIVE_LOADING_COMPLETED")
+            self.assertFalse(report["terrain_quality_accepted"])
+            self.assertFalse(report["height_edits_applied"])
+            self.assertFalse(report["saved_to_map"])
+            self.assertEqual(report["textures_after"][0]["resident_mips"], 7)
+            self.assertEqual(
+                json.loads((Path(directory) / "capture-readiness.json").read_text()),
+                report,
+            )
+
+    def test_missing_viewport_fails_before_barrier(self):
+        import tempfile
+
+        self.api.get_editor_subsystem = lambda _: None
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(RuntimeError, "active level viewport"):
+                self.capture(Path(directory))
+            self.api.AutomationLibrary.finish_loading_before_screenshot.assert_not_called()
+            self.assertEqual(
+                json.loads((Path(directory) / "capture-readiness.json").read_text())[
+                    "status"
+                ],
+                "FAILED",
+            )
+
+    def test_unrelated_package_textures_are_excluded(self):
+        import tempfile
+        from types import SimpleNamespace
+
+        foreign = SimpleNamespace(get_path_name=lambda: "/Game/MapOther.MapOther:T")
+        self.api.ObjectIterator = lambda _: [foreign, self.texture]
+        with tempfile.TemporaryDirectory() as directory:
+            self.assertEqual(len(self.capture(Path(directory))["textures_after"]), 1)
+
+    def test_no_height_textures_fails_closed(self):
+        import tempfile
+
+        self.api.ObjectIterator = lambda _: []
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(RuntimeError, "No map-owned"):
+                self.capture(Path(directory))
+            self.api.AutomationLibrary.finish_loading_before_screenshot.assert_not_called()
+
+    def test_native_barrier_error_is_not_swallowed(self):
+        import tempfile
+
+        self.api.AutomationLibrary.finish_loading_before_screenshot.side_effect = (
+            RuntimeError("loading failed")
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(RuntimeError, "loading failed"):
+                self.capture(Path(directory))
+            self.assertNotIn(
+                "native_loading_barrier_completed",
+                json.loads((Path(directory) / "capture-readiness.json").read_text()),
+            )
+
+    def test_readback_error_is_not_a_success(self):
+        import tempfile
+
+        self.state = {"error": "missing derived data"}
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(RuntimeError, "missing derived data"):
+                self.capture(Path(directory))
+
+    def test_unready_texture_rejects_capture(self):
+        import tempfile
+
+        self.state["is_default_texture"] = True
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(RuntimeError, "not ready"):
+                self.capture(Path(directory))
+
+    def test_capture_hook_is_after_camera_and_before_screenshot_for_every_variant(self):
+        capture = (
+            ROOT / "scripts/ue/stage3g_capture_sp638_local_corridor.py"
+        ).read_text()
+        start = capture.index(
+            '    _proof_data["capture_preparation"] = prepare_capture('
+        )
+        self.assertLess(
+            capture.index(
+                'camera_component.set_editor_property("field_of_view", 76.0)'
+            ),
+            start,
+        )
+        self.assertLess(
+            start,
+            capture.index(
+                "    _task = unreal.AutomationLibrary.take_high_res_screenshot("
+            ),
+        )
+        block = capture[
+            start : capture.index(
+                "    _task = unreal.AutomationLibrary.take_high_res_screenshot("
+            )
+        ]
+        self.assertNotIn("if variant_name", block)
+        self.assertIn("camera_location, camera_rotation, _proof_path.parent", block)
+
+
 if __name__ == "__main__":
     unittest.main()

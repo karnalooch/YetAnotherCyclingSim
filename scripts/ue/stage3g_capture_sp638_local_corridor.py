@@ -1493,6 +1493,13 @@ def main() -> None:
         ],
     }
 
+    # Load for the actual rider view; elapsed time alone is not resource readiness.
+    from scripts.ue.prepare_landscape_capture import prepare_capture
+
+    _proof_data["capture_preparation"] = prepare_capture(
+        unreal, landscape, camera_location, camera_rotation, _proof_path.parent
+    )
+
     unreal.EditorPythonScripting.set_keep_python_script_alive(True)
     _task = unreal.AutomationLibrary.take_high_res_screenshot(
         res_x=CAPTURE_RES_X,
