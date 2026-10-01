@@ -716,6 +716,33 @@ jobs:
             -Variant H
           if ($LASTEXITCODE -ne 0) { throw 'Native-DTM road-constrained single-owner candidate failed.' }
 
+          if (Test-Path -LiteralPath './scripts/ue/ride_probe_capture.py' -PathType Leaf) {
+            ./scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1 `
+              -ExpectedBranch 'HEAD' `
+              -ExpectedHead '${{ needs.classify.outputs.source_sha }}' `
+              -ArtifactRoot '${{ env.YACS_M3_EVIDENCE_ROOT }}/TraversalH' `
+              -PcgExExecutionOutput '${{ env.YACS_M3_EVIDENCE_ROOT }}/pcgex_graph_output.json' `
+              -NativeDtmPatchMetadata 'ExternalAssets/Terrain/PassoGiau/PreparedNearField/passo_giau_native_dtm_patch.json' `
+              -Variant H `
+              -RideProbeMode focus `
+              -RideProbeCenterM '15460' `
+              -RideProbeWide
+            if ($LASTEXITCODE -ne 0) { throw 'Optional H focus/wide traversal failed.' }
+          }
+          else {
+            Write-Host 'Target SHA has H but no ride-probe capture capability; skipping H focus/wide traversal.'
+          }
+
+      - name: Upload compact H focus-wide traversal evidence
+        if: ${{ always() && (inputs.ride_probe_mode == 'off' || inputs.ride_probe_mode == '') }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: passo-giau-m3-h-focus-wide-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            _embark-terrain-worktree/${{ env.YACS_M3_EVIDENCE_ROOT }}/TraversalH/**
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Upload compact H candidate evidence
         if: ${{ always() && (inputs.ride_probe_mode == 'off' || inputs.ride_probe_mode == '') }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
