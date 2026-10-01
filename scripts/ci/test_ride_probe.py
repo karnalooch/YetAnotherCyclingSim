@@ -416,6 +416,7 @@ class WiringTests(unittest.TestCase):
         self.assertIn('else "m3-ride-diagnostic"', text)
         self.assertIn("$variants = @('A','B','C','D','E')", text)
         self.assertIn("-Variant C3", text)
+        self.assertIn("-Variant H", text)
 
     def test_request_values_are_environment_not_shell_interpolation(self):
         text = (ROOT / ".github/workflows/passo-giau-embark-terrain.yml").read_text()
