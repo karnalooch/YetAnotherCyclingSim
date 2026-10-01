@@ -24,6 +24,10 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 
+BOB_NAME = "BOB"
+BOB_EXPANSION = "Builder Of Berms"
+BOB_SYSTEM_ID = "bob-terrain-architect-v1"
+
 STRATEGY_NATIVE_BLEND = "native_blend"
 STRATEGY_CONSTRAINED_CUT_FILL = "constrained_cut_fill"
 STRATEGY_HAIRPIN_CLEARANCE = "hairpin_clearance"
@@ -233,6 +237,8 @@ def _strategy_parameters(policy: Mapping[str, Any], strategy: str) -> TerrainPar
 def validate_policy(policy: Mapping[str, Any]) -> None:
     if int(policy.get("schema_version", -1)) != 1:
         raise ValueError("adaptive terrain policy schema_version must be 1")
+    if str(policy.get("policy_id", "")) != "bob-near-field-terrain-v1":
+        raise ValueError("adaptive terrain policy must use BOB policy_id")
 
     scales = policy.get("feature_scales")
     if not isinstance(scales, Mapping):
@@ -577,12 +583,45 @@ def decision_report(
 ) -> dict[str, Any]:
     return {
         "schema_version": 1,
+        "architect": {
+            "name": BOB_NAME,
+            "expansion": BOB_EXPANSION,
+            "system_id": BOB_SYSTEM_ID,
+        },
         "corridor_id": packet.corridor_id,
         "exact_sha": packet.exact_sha,
         "feature_provenance": asdict(packet.provenance),
         "features": asdict(packet.features),
         "decision": decision_to_dict(decision),
     }
+
+
+@dataclass(frozen=True)
+class BobTerrainArchitect:
+    """BOB — Builder Of Berms, the deterministic road-earthworks architect."""
+
+    policy: Mapping[str, Any]
+    cases: tuple[VerifiedTerrainCase, ...]
+
+    def __post_init__(self) -> None:
+        validate_policy(self.policy)
+
+    @classmethod
+    def from_paths(
+        cls,
+        policy_path: Path,
+        case_memory_path: Path,
+    ) -> "BobTerrainArchitect":
+        return cls(
+            policy=load_policy(policy_path),
+            cases=load_case_memory(case_memory_path),
+        )
+
+    def decide(self, features: TerrainFeatures) -> TerrainDecision:
+        return choose_terrain_decision(features, self.policy, self.cases)
+
+    def review(self, packet: TerrainFeaturePacket) -> dict[str, Any]:
+        return decision_report(packet, self.decide(packet.features))
 
 
 def main() -> int:
@@ -593,20 +632,14 @@ def main() -> int:
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
 
-    policy = load_policy(args.policy)
-    cases = load_case_memory(args.cases)
+    bob = BobTerrainArchitect.from_paths(args.policy, args.cases)
     raw_features = json.loads(args.features.read_text(encoding="utf-8"))
     if not isinstance(raw_features, Mapping):
         raise ValueError("terrain feature input must be an object")
     packet = feature_packet_from_mapping(raw_features)
 
-    decision = choose_terrain_decision(
-        packet.features,
-        policy,
-        cases,
-    )
     rendered = json.dumps(
-        decision_report(packet, decision),
+        bob.review(packet),
         indent=2,
         sort_keys=True,
     ) + "\n"
