@@ -40,6 +40,7 @@ from scripts.geometry.sp638_local_corridor import (  # noqa: E402
 from scripts.geometry.local_terrain_skin import (  # noqa: E402
     apply_corridor_constraints_to_height_grid,
     build_terrain_skin_mesh,
+    make_road_clearance_profiles,
     smooth_height_grid,
     terrain_skin_hash,
 )
@@ -1206,6 +1207,12 @@ def main() -> None:
         adaptive_profiles,
         tangent_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
     )
+    ground_constraint_profiles = make_road_clearance_profiles(adaptive_profiles)
+    ground_constraint_mesh = build_corridor_mesh(
+        centerline,
+        ground_constraint_profiles,
+        tangent_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
+    )
     road_mesh = build_corridor_mesh(
         centerline,
         make_constant_profiles(len(centerline), ROAD_PROFILE),
@@ -1300,8 +1307,10 @@ def main() -> None:
         ) = (
             _load_native_dtm_patch(
                 terrain_skin_center_world,
-                corridor_mesh=earthwork_mesh if variant_name == "H" else None,
-                corridor_profiles=adaptive_profiles if variant_name == "H" else None,
+                corridor_mesh=ground_constraint_mesh if variant_name == "H" else None,
+                corridor_profiles=(
+                    ground_constraint_profiles if variant_name == "H" else None
+                ),
                 corridor_origin_world=origin_world if variant_name == "H" else None,
             )
             if variant_name in {"C3", "H"}
@@ -1312,6 +1321,33 @@ def main() -> None:
             )
         )
         terrain_skin_diagnostics["enabled"] = True
+        if variant_name == "H":
+            first_profile = ground_constraint_profiles[0]
+            by_role = {point.role: point for point in first_profile}
+            terrain_skin_diagnostics.update(
+                {
+                    "shoulders_capped_to_road_edge_height": True,
+                    "shoulder_constraint_weight": 1.0,
+                    "left_clearance_apron_m": abs(
+                        by_role["left_shoulder"].lateral_m
+                        - by_role["left_road_edge"].lateral_m
+                    ),
+                    "right_clearance_apron_m": abs(
+                        by_role["right_shoulder"].lateral_m
+                        - by_role["right_road_edge"].lateral_m
+                    ),
+                    "asphalt_vertical_clearance_m": min(
+                        point.vertical_m for point in ROAD_PROFILE
+                    )
+                    - max(
+                        by_role["left_road_edge"].vertical_m,
+                        by_role["right_road_edge"].vertical_m,
+                    ),
+                    "ground_constraint_mesh_sha256": corridor_mesh_hash(
+                        ground_constraint_mesh
+                    ),
+                }
+            )
 
     neutral_landscape_material = unreal.load_asset(
         "/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial"
