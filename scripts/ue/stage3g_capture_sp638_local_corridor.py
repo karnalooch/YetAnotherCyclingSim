@@ -38,6 +38,7 @@ from scripts.geometry.sp638_local_corridor import (  # noqa: E402
     minimum_sampled_radius_xy,
 )
 from scripts.geometry.local_terrain_skin import (  # noqa: E402
+    apply_corridor_constraints_to_height_grid,
     build_terrain_skin_mesh,
     smooth_height_grid,
     terrain_skin_hash,
@@ -106,6 +107,15 @@ DIAGNOSTIC_VARIANTS = {
         "macro_landscape_visible": False,
         "local_terrain_visible": True,
         "corridor_visible": False,
+        "apply_landscape_cut_fill": False,
+    },
+    # H is the single-ground-owner candidate: native 1 m DTM receives the
+    # route-local road/earthwork constraints before triangulation. Separate
+    # earthwork/shoulder ground meshes and the extra Landscape spline edit stay off.
+    "H": {
+        "macro_landscape_visible": False,
+        "local_terrain_visible": True,
+        "corridor_visible": True,
         "apply_landscape_cut_fill": False,
     },
 }
@@ -813,7 +823,13 @@ def _sample_local_terrain_skin(
     return mesh, origin_world, diagnostics
 
 
-def _load_native_dtm_patch(center_world: unreal.Vector):
+def _load_native_dtm_patch(
+    center_world: unreal.Vector,
+    *,
+    corridor_mesh=None,
+    corridor_profiles=None,
+    corridor_origin_world: unreal.Vector | None = None,
+):
     metadata_value = os.environ.get(NATIVE_DTM_PATCH_ENV, "").strip()
     if not metadata_value:
         raise RuntimeError(
@@ -838,6 +854,8 @@ def _load_native_dtm_patch(center_world: unreal.Vector):
         raise RuntimeError("Gate C.3 patch unexpectedly samples Landscape collision")
     if policy.get("native_dtm_direct") is not True or policy.get("smoothing_applied") is not False:
         raise RuntimeError("Gate C.3 native-DTM policy drifted")
+    if policy.get("road_constraints_applied") is not False:
+        raise RuntimeError("prepared native DTM source unexpectedly contains road constraints")
     if grid.get("x_order") != "ue_x_ascending" or grid.get("row_order") != "ue_y_descending":
         raise RuntimeError("Gate C.3 patch axis order drifted")
 
@@ -892,7 +910,26 @@ def _load_native_dtm_patch(center_world: unreal.Vector):
             f"focus=({focus_x_m:.3f},{focus_y_m:.3f})"
         )
 
-    origin_z_m = min(values)
+    constraint_metrics = None
+    if corridor_mesh is not None:
+        if corridor_profiles is None or corridor_origin_world is None:
+            raise RuntimeError(
+                "native-DTM road constraints require profiles and corridor origin"
+            )
+        heights_m, constraint_metrics = apply_corridor_constraints_to_height_grid(
+            x_coordinates_m,
+            y_coordinates_m,
+            heights_m,
+            corridor_mesh,
+            corridor_profiles,
+            corridor_origin_m=Vec3(
+                float(corridor_origin_world.x) / 100.0,
+                float(corridor_origin_world.y) / 100.0,
+                float(corridor_origin_world.z) / 100.0,
+            ),
+        )
+
+    origin_z_m = min(min(row) for row in heights_m)
     mesh = build_terrain_skin_mesh(
         x_coordinates_m,
         y_coordinates_m,
@@ -917,6 +954,34 @@ def _load_native_dtm_patch(center_world: unreal.Vector):
         "column_count": columns,
         "sample_count": rows * columns,
         "smoothing_applied": False,
+        "road_constraints_applied": constraint_metrics is not None,
+        "single_local_ground_owner": constraint_metrics is not None,
+        "constraint_transition_outer_weight": 0.0,
+        "constraint_sample_count": (
+            constraint_metrics.constrained_sample_count
+            if constraint_metrics is not None
+            else 0
+        ),
+        "constraint_max_abs_adjustment_m": (
+            constraint_metrics.max_abs_adjustment_m
+            if constraint_metrics is not None
+            else 0.0
+        ),
+        "constraint_rms_adjustment_m": (
+            constraint_metrics.rms_adjustment_m
+            if constraint_metrics is not None
+            else 0.0
+        ),
+        "constraint_overlap_sample_count": (
+            constraint_metrics.overlapping_sample_count
+            if constraint_metrics is not None
+            else 0
+        ),
+        "constraint_max_overlap_delta_m": (
+            constraint_metrics.max_overlap_delta_m
+            if constraint_metrics is not None
+            else 0.0
+        ),
         "proof_focus_margin_m": focus_margin_m,
         "proof_focus_ue_m": [focus_x_m, focus_y_m],
         "occlusion_lift_m": 0.0,
@@ -1157,6 +1222,7 @@ def main() -> None:
         tangent_half_window_stations=SOURCE_GEOMETRY_HALF_WINDOW_STATIONS,
     )
     profile_diagnostics = _profile_diagnostics(adaptive_profiles)
+    origin_world = kernel_world[0]
 
     landscape_slice = _sample_world(
         spline,
@@ -1232,8 +1298,13 @@ def main() -> None:
             terrain_skin_origin_world,
             terrain_skin_diagnostics,
         ) = (
-            _load_native_dtm_patch(terrain_skin_center_world)
-            if variant_name == "C3"
+            _load_native_dtm_patch(
+                terrain_skin_center_world,
+                corridor_mesh=earthwork_mesh if variant_name == "H" else None,
+                corridor_profiles=adaptive_profiles if variant_name == "H" else None,
+                corridor_origin_world=origin_world if variant_name == "H" else None,
+            )
+            if variant_name in {"C3", "H"}
             else _sample_local_terrain_skin(
                 world,
                 road_actor,
@@ -1295,12 +1366,13 @@ def main() -> None:
             terrain_skin_material,
         )
 
-    origin_world = kernel_world[0]
     earth_counts = _disabled_mesh_counts()
     left_shoulder_counts = _disabled_mesh_counts()
     right_shoulder_counts = _disabled_mesh_counts()
     road_counts = _disabled_mesh_counts()
-    if bool(variant["corridor_visible"]):
+    corridor_ground_visible = bool(variant["corridor_visible"]) and variant_name != "H"
+    asphalt_visible = bool(variant["corridor_visible"])
+    if corridor_ground_visible:
         earth_counts = _spawn_dynamic_mesh(
             actor_subsystem,
             origin_world,
@@ -1322,6 +1394,7 @@ def main() -> None:
             "SP638_LocalCorridor_RightShoulder",
             shoulder_material,
         )
+    if asphalt_visible:
         road_counts = _spawn_dynamic_mesh(
             actor_subsystem,
             origin_world,
@@ -1422,9 +1495,13 @@ def main() -> None:
 
     _proof_data = {
         "capture_strategy": (
-            "gate-c3-native-dtm-bounded-patch"
-            if variant_name == "C3"
-            else "gate-c1-surface-ownership-diagnostic"
+            "native-dtm-road-constrained-single-owner"
+            if variant_name == "H"
+            else (
+                "gate-c3-native-dtm-bounded-patch"
+                if variant_name == "C3"
+                else "gate-c1-surface-ownership-diagnostic"
+            )
         ),
         "diagnostic_variant": variant_name,
         "persisted_map_layers_preserved": True,
@@ -1432,6 +1509,8 @@ def main() -> None:
             "macro_landscape": macro_landscape_visible,
             "local_terrain": bool(variant["local_terrain_visible"]),
             "corridor": bool(variant["corridor_visible"]),
+            "corridor_ground": corridor_ground_visible,
+            "asphalt": asphalt_visible,
         },
         "render_centerline": (
             pcgex_metadata
