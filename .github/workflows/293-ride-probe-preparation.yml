@@ -87,8 +87,11 @@ jobs:
               if text.count(old) != 1: raise SystemExit('Missing/ambiguous codec correction: ' + path)
               p.write_text(text.replace(old, new, 1), encoding='utf-8')
           wf = '.github/workflows/passo-giau-embark-terrain.yml'
-          old = "  validate:\n    name: PCGEx corridor deviation report\n    needs: [classify, prepare, author]\n    if: ${{ needs.classify.outputs.execute_proof == 'true' }}\n    runs-on: ubuntu-latest"
-          edit(wf, old, old.replace('ubuntu-latest', 'ubuntu-24.04'))
+          p = Path(wf)
+          prefix, marker, suffix = p.read_text(encoding='utf-8').partition('\n  validate:\n')
+          if not marker or suffix.count('    runs-on: ubuntu-latest') != 1:
+              raise SystemExit('Cannot locate bounded hosted validation job')
+          p.write_text(prefix + marker + suffix.replace('    runs-on: ubuntu-latest', '    runs-on: ubuntu-24.04', 1), encoding='utf-8')
           old = '          command -v ffmpeg\n          command -v ffprobe\n'
           new = "          . /etc/os-release\n          test \"$ID:$VERSION_ID\" = 'ubuntu:24.04'\n          sudo apt-get update -qq\n          sudo apt-get install --yes --no-install-recommends 'ffmpeg=7:6.1.1-3ubuntu5'\n          test \"$(dpkg-query -W -f='${Version}' ffmpeg)\" = '7:6.1.1-3ubuntu5'\n          command -v ffmpeg\n          command -v ffprobe\n"
           edit(wf, old, new)
