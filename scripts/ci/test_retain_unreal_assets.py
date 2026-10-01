@@ -4,10 +4,29 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.ci.retain_unreal_assets import digest, persistent_archive_path, retain
+from scripts.ci.retain_unreal_assets import (
+    digest,
+    migrate_legacy_archives,
+    persistent_archive_path,
+    retain,
+)
 
 
 class RetentionTests(unittest.TestCase):
+    def test_legacy_archives_are_moved_outside_actions_without_losing_bytes(self):
+        with tempfile.TemporaryDirectory() as folder:
+            runner = Path(folder)
+            checkout = runner / "_work/repo/repo"
+            asset = checkout / "_yacs-retained-lfs/old-run/Content/map.umap"
+            asset.parent.mkdir(parents=True)
+            asset.write_bytes(b"retained original")
+            sha = digest(asset)
+            migrate_legacy_archives(checkout)
+            self.assertEqual(
+                sha, digest(runner / "_yacs-retained-lfs/old-run/Content/map.umap")
+            )
+            self.assertFalse(asset.exists())
+
     def test_archive_is_outside_future_actions_checkout_cleanup(self):
         with tempfile.TemporaryDirectory() as folder:
             runner = Path(folder)

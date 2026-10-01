@@ -35,6 +35,29 @@ def persistent_archive_path(archive: Path, actions_workspace: Path | None) -> Pa
     return archive
 
 
+def migrate_legacy_archives(actions_workspace: Path | None) -> None:
+    """Preserve archives from earlier proof revisions before checkout cleanup."""
+    if actions_workspace is None:
+        return
+    actions_workspace = actions_workspace.resolve()
+    legacy = actions_workspace / "_yacs-retained-lfs"
+    if not legacy.exists():
+        return
+    if legacy.is_symlink():
+        raise ValueError("Legacy archive cannot be a symbolic link")
+    durable = actions_workspace.parent.parent.parent / legacy.name
+    durable.mkdir(parents=True, exist_ok=True)
+    for source in sorted(legacy.iterdir()):
+        if source.is_symlink():
+            raise ValueError("Legacy archive entry cannot be a symbolic link")
+        destination = durable / source.name
+        if destination.exists():
+            raise FileExistsError(
+                "Legacy archive collision; never overwrite retained data"
+            )
+        source.rename(destination)
+
+
 def retain(workspace: Path, archive: Path) -> dict:
     workspace = workspace.resolve()
     archive = archive.resolve()
@@ -107,6 +130,7 @@ def main() -> None:
     archive = persistent_archive_path(
         args.archive, Path(actions_value) if actions_value else None
     )
+    migrate_legacy_archives(Path(actions_value) if actions_value else None)
     result = retain(args.workspace, archive)
     print(f"ASSET RETENTION PASS: {len(result['assets'])} asset(s); {archive}")
 
