@@ -1,0 +1,22 @@
+---
+description: Keep Unreal Editor and the YACS project open after the final visual capture for owner inspection
+alwaysApply: true
+---
+
+# Preserve the final Unreal session
+
+- After the final screenshot, render or visual-proof capture, leave Unreal
+  Editor and the YACS project open for the owner's manual inspection.
+- Do not stop the editor process, close the project or run final cleanup that
+  destroys the inspection state.
+- When practical, leave the captured map, camera and relevant viewport state
+  visible at handoff.
+- Helper processes may be stopped when they are not needed to keep the editor
+  and project available.
+- If an automation normally shuts Unreal down, disable that final cleanup or
+  reopen the target project and map before handoff.
+- Close or restart Unreal only when the owner explicitly requests it or when a
+  restart is required to complete the requested work. Report an unavoidable
+  restart and restore the inspection state afterward when possible.
+- The final status must say whether Unreal was left open and identify the map
+  or view prepared for inspection.
