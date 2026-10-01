@@ -1162,6 +1162,17 @@ They require explicit `include_surface_isolation=true` in a manual M3 dispatch;
 the normal broker still requests the six baseline captures. No additional proof
 runs on ordinary pushes. Technical receipts record whether F/G were requested.
 
+A also captures a second control with only `Base_DTM` visible, using the same
+camera, lighting, FOV and resource-readiness path. It temporarily hides
+`Road_Earthworks`, restores both original visibility flags, and never saves the
+map. The original A capture remains the combined persisted Landscape. This pair
+isolates persisted layer contribution; it does not establish an accepted repair
+or prove a particular blend/transform defect without reviewing the evidence.
+H carries the pair's exact-SHA metadata and hash-verified PNG payloads in its
+existing compact artifact (bounded to 16 MB of raw comparison images). A
+standalone H without A reports the comparison unavailable. The original H
+acceptance gate remains unchanged.
+
 ### 7.1 Canonical alignment
 
 The line saying **where the road is**.

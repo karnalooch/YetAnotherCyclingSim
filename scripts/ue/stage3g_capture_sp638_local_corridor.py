@@ -10,6 +10,7 @@ saved back to the map.
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import math
@@ -196,10 +197,89 @@ _output_path: Path | None = None
 _proof_path: Path | None = None
 _camera = None
 _proof_data: dict[str, object] = {}
+_layer_comparison = None
+
+
+def _restore_comparison_layers() -> None:
+    if _layer_comparison is not None:
+        for layer, visible in _layer_comparison["original_visibility"]:
+            layer.set_editor_property("visible", visible)
+
+
+def _advance_layer_comparison() -> bool:
+    """Capture Base_DTM alone after A, preserving A and its exact camera."""
+    global _task, _started_at
+    state = _layer_comparison
+    if state is None:
+        return False
+    if state["phase"] == "combined":
+        state["phase"] = "base_only"
+        for layer, _visible in state["original_visibility"]:
+            layer.set_editor_property("visible", str(layer.get_name_bp()) == "Base_DTM")
+        from scripts.ue.prepare_landscape_capture import prepare_capture
+
+        state["base_capture_preparation"] = prepare_capture(
+            unreal, state["landscape"], state["location"], state["rotation"],
+            _proof_path.parent, request_height_mips=True,
+        )
+        _task = unreal.AutomationLibrary.take_high_res_screenshot(
+            res_x=CAPTURE_RES_X, res_y=CAPTURE_RES_Y,
+            filename=str(state["base_png"]), camera=_camera,
+            mask_enabled=False, capture_hdr=False,
+            comparison_tolerance=unreal.ComparisonTolerance.LOW,
+            comparison_notes="Persisted Landscape: Base_DTM only; same A camera",
+            delay=3.0, force_game_view=True,
+        )
+        if not _task or not _task.is_valid_task():
+            raise RuntimeError("invalid Base_DTM comparison screenshot task")
+        _started_at = time.monotonic()
+        return True
+    _restore_comparison_layers()
+    _proof_data["persisted_layer_comparison"] = {
+        "status": "CAPTURED_PENDING_REVIEW",
+        "source_sha": os.environ.get("YACS_RIDE_PROBE_SHA", ""),
+        "combined_png": str(_output_path),
+        "combined_sha256": hashlib.sha256(_output_path.read_bytes()).hexdigest(),
+        "base_only_png": str(state["base_png"]),
+        "base_only_sha256": hashlib.sha256(state["base_png"].read_bytes()).hexdigest(),
+        "original_visibility": {
+            str(layer.get_name_bp()): visible
+            for layer, visible in state["original_visibility"]
+        },
+        "visibility_restored": True,
+        "same_camera_light_fov": True,
+        "additional_spline_edit": False,
+        "saved_to_map": False,
+        "base_capture_preparation": state["base_capture_preparation"],
+    }
+    return False
+
+
+def _attach_persisted_layer_comparison(proof_dir: Path) -> dict[str, object]:
+    """Carry bounded A controls in the existing compact H evidence artifact."""
+    source = proof_dir.parent / "A" / "surface_ownership_a_proof.json"
+    if not source.is_file():
+        return {"status": "UNAVAILABLE", "reason": "A control was not captured in this proof"}
+    report = json.loads(source.read_text(encoding="utf-8"))
+    pair = report["persisted_layer_comparison"]
+    if not pair["source_sha"] or pair["source_sha"] != os.environ.get("YACS_RIDE_PROBE_SHA", ""):
+        raise RuntimeError("persisted layer comparison has a different source SHA")
+    images = {}
+    total = 0
+    for role in ("combined", "base_only"):
+        raw = Path(pair[f"{role}_png"]).read_bytes()
+        total += len(raw)
+        if total > 16_000_000:
+            raise RuntimeError("persisted layer comparison exceeds compact evidence budget")
+        if hashlib.sha256(raw).hexdigest() != pair[f"{role}_sha256"]:
+            raise RuntimeError("persisted layer comparison PNG hash mismatch")
+        images[role] = base64.b64encode(raw).decode("ascii")
+    return {**pair, "png_base64": images}
 
 
 def _finish(success: bool, error: str = "") -> None:
     global _tick_handle
+    _restore_comparison_layers()
     if _tick_handle is not None:
         unreal.unregister_slate_post_tick_callback(_tick_handle)
         _tick_handle = None
@@ -242,11 +322,22 @@ def _tick(_delta_time: float) -> None:
         _finish(False, "screenshot task was not initialized")
         return
     if _task.is_task_done():
+        active_png = (
+            _layer_comparison["base_png"]
+            if _layer_comparison is not None and _layer_comparison["phase"] == "base_only"
+            else _output_path
+        )
         if (
-            _output_path is not None
-            and _output_path.is_file()
-            and _output_path.stat().st_size >= 100_000
+            active_png is not None
+            and active_png.is_file()
+            and active_png.stat().st_size >= 100_000
         ):
+            try:
+                if _advance_layer_comparison():
+                    return
+            except Exception as exc:
+                _finish(False, f"persisted layer comparison failed: {exc}")
+                return
             _finish(True)
         else:
             _finish(False, "screenshot task completed without a valid PNG")
@@ -1149,7 +1240,7 @@ def _disabled_mesh_counts() -> dict[str, int | bool]:
 
 def main() -> None:
     global _task, _tick_handle, _started_at, _output_path, _proof_path, _camera
-    global _proof_data
+    global _proof_data, _layer_comparison
 
     variant_name = os.environ.get(DIAGNOSTIC_VARIANT_ENV, "E").strip().upper() or "E"
     if variant_name not in DIAGNOSTIC_VARIANTS:
@@ -1731,6 +1822,20 @@ def main() -> None:
     # Load for the actual rider view; elapsed time alone is not resource readiness.
     from scripts.ue.prepare_landscape_capture import prepare_capture
 
+    if variant_name == "A":
+        layers = list(landscape.get_edit_layers_bp())
+        if sorted(str(layer.get_name_bp()) for layer in layers) != ["Base_DTM", "Road_Earthworks"]:
+            raise RuntimeError("layer comparison requires exactly Base_DTM and Road_Earthworks")
+        _layer_comparison = {
+            "phase": "combined", "landscape": landscape,
+            "location": camera_location, "rotation": camera_rotation,
+            "base_png": _output_path.with_name("sp638_base_dtm_only_rider_3840x2160.png"),
+            "original_visibility": [(layer, bool(layer.get_editor_property("visible"))) for layer in layers],
+        }
+        _layer_comparison["base_png"].unlink(missing_ok=True)
+    elif variant_name == "H":
+        _proof_data["persisted_layer_comparison"] = _attach_persisted_layer_comparison(_proof_path.parent)
+
     _proof_data["capture_preparation"] = prepare_capture(
         unreal, landscape, camera_location, camera_rotation, _proof_path.parent,
         request_height_mips=macro_landscape_visible,
@@ -1785,6 +1890,7 @@ def main() -> None:
 try:
     main()
 except Exception as exc:
+    _restore_comparison_layers()
     unreal.log_error(f"[YacsSp638LocalCorridorVisual] FAILURE: {exc}")
     unreal.log_error(traceback.format_exc())
     _release_python_script()

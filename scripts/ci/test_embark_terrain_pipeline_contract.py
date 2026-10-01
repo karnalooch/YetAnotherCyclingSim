@@ -897,9 +897,13 @@ class LandscapeCaptureReadinessTests(unittest.TestCase):
             },
             {"A", "B", "E", "F", "G"},
         )
+        main = next(
+            node for node in tree.body
+            if isinstance(node, ast.FunctionDef) and node.name == "main"
+        )
         calls = [
             node
-            for node in ast.walk(tree)
+            for node in ast.walk(main)
             if isinstance(node, ast.Call)
             and isinstance(node.func, ast.Name)
             and node.func.id == "prepare_capture"
@@ -933,16 +937,43 @@ class LandscapeCaptureReadinessTests(unittest.TestCase):
         self.assertLess(
             start,
             capture.index(
-                "    _task = unreal.AutomationLibrary.take_high_res_screenshot("
+                "    _task = unreal.AutomationLibrary.take_high_res_screenshot(", start
             ),
         )
         block = capture[
             start : capture.index(
-                "    _task = unreal.AutomationLibrary.take_high_res_screenshot("
+                "    _task = unreal.AutomationLibrary.take_high_res_screenshot(", start
             )
         ]
         self.assertNotIn("if variant_name", block)
         self.assertIn("camera_location, camera_rotation, _proof_path.parent", block)
+
+    def test_base_layer_comparison_prepares_before_second_capture(self):
+        import ast
+
+        capture = (
+            ROOT / "scripts/ue/stage3g_capture_sp638_local_corridor.py"
+        ).read_text()
+        tree = ast.parse(capture)
+        helper = next(
+            node for node in tree.body
+            if isinstance(node, ast.FunctionDef)
+            and node.name == "_advance_layer_comparison"
+        )
+        calls = [node for node in ast.walk(helper) if isinstance(node, ast.Call)]
+        prepare = next(
+            node for node in calls
+            if isinstance(node.func, ast.Name)
+            and node.func.id == "prepare_capture"
+        )
+        shot = next(
+            node for node in calls
+            if isinstance(node.func, ast.Attribute)
+            and node.func.attr == "take_high_res_screenshot"
+        )
+        self.assertLess(prepare.lineno, shot.lineno)
+        option = next(k.value for k in prepare.keywords if k.arg == "request_height_mips")
+        self.assertIs(option.value, True)
 
 
 if __name__ == "__main__":
