@@ -5,6 +5,8 @@ on:
     paths: ['.github/workflows/terrain-source-snapshot.yml']
 permissions:
   contents: read
+env:
+  GIT_LFS_SKIP_SMUDGE: '1'
 jobs:
   snapshot:
     if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.actor == 'karnalooch' && github.event_name == 'push' }}
@@ -16,8 +18,8 @@ jobs:
           ref: b5a659b7fef730800b847178e2d5b71a49b03217
           lfs: false
           persist-credentials: false
-      - name: Archive only tracked baseline source, without credentials or generated files
-        run: git archive --format=zip --output="${RUNNER_TEMP}/yacs-source.zip" HEAD
+      - name: Archive only tracked baseline source, without assets or credentials
+        run: git archive --format=zip --output="${RUNNER_TEMP}/yacs-source.zip" HEAD AGENTS.md README.md .github .gumball .gitignore .gitattributes docs scripts Source physics_reference Config worldgen tools YetAnotherCyclingSim.uproject gumball.yaml THIRD_PARTY_NOTICES.md
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: issue-293-baseline-source
