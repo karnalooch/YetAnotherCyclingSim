@@ -126,6 +126,64 @@ class TerrainDecision:
     reasons: tuple[str, ...]
 
 
+FEATURE_SOURCE_PCGEX = "pcgex_spatial_analysis"
+FEATURE_SOURCE_YACS = "yacs_python_analysis"
+ALLOWED_FEATURE_SOURCES = frozenset({FEATURE_SOURCE_PCGEX, FEATURE_SOURCE_YACS})
+
+
+@dataclass(frozen=True)
+class TerrainFeatureProvenance:
+    source_kind: str
+    source_artifact_sha256: str
+    source_dataset_id: str
+    canonical_road_xy_preserved: bool
+    authoritative_route_geometry: bool
+    authoritative_physics: bool
+    pcgex_commit: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.source_kind not in ALLOWED_FEATURE_SOURCES:
+            raise ValueError(f"unsupported terrain feature source {self.source_kind!r}")
+        if len(self.source_artifact_sha256) != 64 or any(
+            character not in "0123456789abcdef"
+            for character in self.source_artifact_sha256
+        ):
+            raise ValueError("feature source artifact SHA256 must be lowercase hex")
+        if not self.source_dataset_id:
+            raise ValueError("feature source dataset id cannot be empty")
+        if self.canonical_road_xy_preserved is not True:
+            raise ValueError("feature producer must preserve canonical road XY")
+        if self.authoritative_route_geometry is not False:
+            raise ValueError("feature producer cannot claim route authority")
+        if self.authoritative_physics is not False:
+            raise ValueError("feature producer cannot claim physics authority")
+        if self.source_kind == FEATURE_SOURCE_PCGEX:
+            if (
+                self.pcgex_commit is None
+                or len(self.pcgex_commit) != 40
+                or any(character not in "0123456789abcdef" for character in self.pcgex_commit)
+            ):
+                raise ValueError(
+                    "PCGEx feature packets require the exact lowercase PCGEx commit"
+                )
+
+
+@dataclass(frozen=True)
+class TerrainFeaturePacket:
+    corridor_id: str
+    exact_sha: str
+    provenance: TerrainFeatureProvenance
+    features: TerrainFeatures
+
+    def __post_init__(self) -> None:
+        if not self.corridor_id:
+            raise ValueError("terrain feature packet corridor_id cannot be empty")
+        if len(self.exact_sha) != 40 or any(
+            character not in "0123456789abcdef" for character in self.exact_sha
+        ):
+            raise ValueError("terrain feature packet exact_sha must be lowercase SHA40")
+
+
 def _feature_vector(features: TerrainFeatures) -> dict[str, float]:
     curvature_inverse = (
         0.0
@@ -424,6 +482,37 @@ def _features_from_mapping(raw: Mapping[str, Any]) -> TerrainFeatures:
     )
 
 
+def _provenance_from_mapping(raw: Mapping[str, Any]) -> TerrainFeatureProvenance:
+    return TerrainFeatureProvenance(
+        source_kind=str(raw["source_kind"]),
+        source_artifact_sha256=str(raw["source_artifact_sha256"]),
+        source_dataset_id=str(raw["source_dataset_id"]),
+        canonical_road_xy_preserved=bool(raw["canonical_road_xy_preserved"]),
+        authoritative_route_geometry=bool(raw["authoritative_route_geometry"]),
+        authoritative_physics=bool(raw["authoritative_physics"]),
+        pcgex_commit=(
+            None if raw.get("pcgex_commit") is None else str(raw["pcgex_commit"])
+        ),
+    )
+
+
+def feature_packet_from_mapping(raw: Mapping[str, Any]) -> TerrainFeaturePacket:
+    if int(raw.get("schema_version", -1)) != 1:
+        raise ValueError("terrain feature packet schema_version must be 1")
+    features = raw.get("features")
+    provenance = raw.get("provenance")
+    if not isinstance(features, Mapping):
+        raise ValueError("terrain feature packet features must be an object")
+    if not isinstance(provenance, Mapping):
+        raise ValueError("terrain feature packet provenance must be an object")
+    return TerrainFeaturePacket(
+        corridor_id=str(raw["corridor_id"]),
+        exact_sha=str(raw["exact_sha"]),
+        provenance=_provenance_from_mapping(provenance),
+        features=_features_from_mapping(features),
+    )
+
+
 def _parameters_from_mapping(raw: Mapping[str, Any]) -> TerrainParameters:
     return TerrainParameters(
         shoulder_apron_m=float(raw["shoulder_apron_m"]),
@@ -482,6 +571,20 @@ def decision_to_dict(decision: TerrainDecision) -> dict[str, Any]:
     return payload
 
 
+def decision_report(
+    packet: TerrainFeaturePacket,
+    decision: TerrainDecision,
+) -> dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "corridor_id": packet.corridor_id,
+        "exact_sha": packet.exact_sha,
+        "feature_provenance": asdict(packet.provenance),
+        "features": asdict(packet.features),
+        "decision": decision_to_dict(decision),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--policy", type=Path, required=True)
@@ -495,13 +598,18 @@ def main() -> int:
     raw_features = json.loads(args.features.read_text(encoding="utf-8"))
     if not isinstance(raw_features, Mapping):
         raise ValueError("terrain feature input must be an object")
+    packet = feature_packet_from_mapping(raw_features)
 
     decision = choose_terrain_decision(
-        _features_from_mapping(raw_features),
+        packet.features,
         policy,
         cases,
     )
-    rendered = json.dumps(decision_to_dict(decision), indent=2, sort_keys=True) + "\n"
+    rendered = json.dumps(
+        decision_report(packet, decision),
+        indent=2,
+        sort_keys=True,
+    ) + "\n"
     if args.output is None:
         print(rendered, end="")
     else:
