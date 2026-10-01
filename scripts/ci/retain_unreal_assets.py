@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -15,6 +16,23 @@ def digest(path: Path) -> str:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             result.update(chunk)
     return result.hexdigest()
+
+
+def persistent_archive_path(archive: Path, actions_workspace: Path | None) -> Path:
+    """Keep runner archives outside the entire Actions checkout/cleanup root."""
+    archive = archive.resolve()
+    if actions_workspace is None:
+        return archive
+    actions_workspace = actions_workspace.resolve()
+    if archive.is_relative_to(actions_workspace):
+        # Self-hosted layout: <runner>/_work/<repo>/<repo>. Future checkout
+        # cleanup can remove siblings inside GITHUB_WORKSPACE, so use <runner>.
+        archive = actions_workspace.parent.parent.parent / archive.relative_to(
+            actions_workspace
+        )
+    if archive.is_relative_to(actions_workspace.parent.parent):
+        raise ValueError("Persistent asset archive cannot live under Actions _work")
+    return archive
 
 
 def retain(workspace: Path, archive: Path) -> dict:
@@ -85,8 +103,12 @@ def main() -> None:
     parser.add_argument("--workspace", type=Path, required=True)
     parser.add_argument("--archive", type=Path, required=True)
     args = parser.parse_args()
-    result = retain(args.workspace, args.archive)
-    print(f"ASSET RETENTION PASS: {len(result['assets'])} asset(s); {args.archive}")
+    actions_value = os.environ.get("GITHUB_WORKSPACE")
+    archive = persistent_archive_path(
+        args.archive, Path(actions_value) if actions_value else None
+    )
+    result = retain(args.workspace, archive)
+    print(f"ASSET RETENTION PASS: {len(result['assets'])} asset(s); {archive}")
 
 
 if __name__ == "__main__":

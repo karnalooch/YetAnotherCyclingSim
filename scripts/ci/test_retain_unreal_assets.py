@@ -4,10 +4,20 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.ci.retain_unreal_assets import digest, retain
+from scripts.ci.retain_unreal_assets import digest, persistent_archive_path, retain
 
 
 class RetentionTests(unittest.TestCase):
+    def test_archive_is_outside_future_actions_checkout_cleanup(self):
+        with tempfile.TemporaryDirectory() as folder:
+            runner = Path(folder)
+            checkout = runner / "_work/repo/repo"
+            archive = persistent_archive_path(
+                checkout / "_yacs-retained-lfs/42/before", checkout
+            )
+            self.assertEqual(runner / "_yacs-retained-lfs/42/before", archive)
+            self.assertFalse(archive.is_relative_to(runner / "_work"))
+
     def test_retains_non_unreal_lfs_payload_from_real_git_repository(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

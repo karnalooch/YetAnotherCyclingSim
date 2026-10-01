@@ -56,7 +56,7 @@ Owner reaffirmation, 2026-10-01 (Issue #297): use authorized remote GitHub deliv
 
 ### Retain terrain LFS assets on disk
 
-Owner directive, 2026-10-01 (Issue #308): keep downloaded/materialized LFS assets on disk while rebuilding terrain. Do not prune LFS storage or delete asset payloads during cleanup. The original `_embark-terrain-worktree` remains untouched by the recovery lane. Before checkout/reset/cleanup of `_terrain-recovery-worktree`, move materialized Unreal assets to the sibling `_yacs-retained-lfs/<run>-<attempt>/` archive, verify their SHA-256 and size, and fail before cleanup if retention fails. Code-only checkouts can still use pointers; the retained binary bytes and `.git/lfs/objects` remain on disk.
+Owner directive, 2026-10-01 (Issue #308): keep downloaded/materialized LFS assets on disk while rebuilding terrain. Do not prune LFS storage or delete asset payloads during cleanup. The original `_embark-terrain-worktree` remains untouched by the recovery lane. Before checkout/reset/cleanup of `_terrain-recovery-worktree`, move materialized Unreal assets to the runner-level `_yacs-retained-lfs/<run>-<attempt>/` archive outside the entire Actions `_work` tree, verify their SHA-256 and size, and fail before cleanup if retention fails. Code-only checkouts can still use pointers; the retained binary bytes and `.git/lfs/objects` remain on disk.
 
 ### Roadmap and world-building nomenclature
 
