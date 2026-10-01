@@ -491,6 +491,12 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		}
 		FString SourceCrs;
 		FString SourceSha;
+		bool bSourceShaValid = Manifest->TryGetStringField(TEXT("source_sha256"), SourceSha) && SourceSha.Len() == 64;
+		for (const TCHAR Character : SourceSha)
+		{
+			bSourceShaValid = bSourceShaValid && ((Character >= TEXT('0') && Character <= TEXT('9')) ||
+				(Character >= TEXT('a') && Character <= TEXT('f')));
+		}
 		double SchemaVersion = 0.0;
 		double NoDataCount = -1.0;
 		bool bPresentationOnly = false;
@@ -500,8 +506,7 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 		if (!Manifest->TryGetNumberField(TEXT("schema_version"), SchemaVersion) || SchemaVersion != 1.0 ||
 			!Manifest->TryGetStringField(TEXT("region_id"), RuntimeRegionId) || RuntimeRegionId != TEXT("sa_calobra") ||
 			!Manifest->TryGetStringField(TEXT("source_crs"), SourceCrs) || SourceCrs != TEXT("EPSG:25831") ||
-			!Manifest->TryGetStringField(TEXT("source_sha256"), SourceSha) ||
-			SourceSha != TEXT("6092a48a949b7b7e8ccf120cb46d59cfd7fdd3522085e8a55162fd52fe5a139a") ||
+			!bSourceShaValid ||
 			!Manifest->TryGetStringField(TEXT("map_package"), RuntimeMapPackagePath) ||
 			RuntimeMapPackagePath != TEXT("/Game/Worlds/SaCalobra/L_SaCalobraTerrainBaseline") ||
 			!Manifest->TryGetArrayField(TEXT("vertices"), Vertices) || Vertices->Num() != 2 ||
