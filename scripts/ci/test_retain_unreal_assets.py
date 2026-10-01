@@ -1,3 +1,4 @@
+import os
 import subprocess
 import tempfile
 import unittest
@@ -82,8 +83,22 @@ class RetentionTests(unittest.TestCase):
             target = root / "original.umap"
             target.write_bytes(b"original")
             content = root / "worktree/Content"
-            content.mkdir(parents=True)
-            (content / "map.umap").symlink_to(target)
+            content.parent.mkdir(parents=True)
+            if os.name == "nt":
+                # Directory junctions exercise the escape guard without the
+                # administrator-only Windows symbolic-link privilege.
+                external = root / "external"
+                external.mkdir()
+                target = external / "map.umap"
+                target.write_bytes(b"original")
+                subprocess.run(
+                    ["cmd", "/c", "mklink", "/J", str(content), str(external)],
+                    check=True,
+                    capture_output=True,
+                )
+            else:
+                content.mkdir()
+                (content / "map.umap").symlink_to(target)
             with self.assertRaises(ValueError):
                 retain(root / "worktree", root / "retained")
             self.assertEqual(b"original", target.read_bytes())
