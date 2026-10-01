@@ -898,7 +898,8 @@ class LandscapeCaptureReadinessTests(unittest.TestCase):
             {"A", "B", "E", "F", "G"},
         )
         main = next(
-            node for node in tree.body
+            node
+            for node in tree.body
             if isinstance(node, ast.FunctionDef) and node.name == "main"
         )
         calls = [
@@ -956,23 +957,27 @@ class LandscapeCaptureReadinessTests(unittest.TestCase):
         ).read_text()
         tree = ast.parse(capture)
         helper = next(
-            node for node in tree.body
+            node
+            for node in tree.body
             if isinstance(node, ast.FunctionDef)
             and node.name == "_advance_layer_comparison"
         )
         calls = [node for node in ast.walk(helper) if isinstance(node, ast.Call)]
         prepare = next(
-            node for node in calls
-            if isinstance(node.func, ast.Name)
-            and node.func.id == "prepare_capture"
+            node
+            for node in calls
+            if isinstance(node.func, ast.Name) and node.func.id == "prepare_capture"
         )
         shot = next(
-            node for node in calls
+            node
+            for node in calls
             if isinstance(node.func, ast.Attribute)
             and node.func.attr == "take_high_res_screenshot"
         )
         self.assertLess(prepare.lineno, shot.lineno)
-        option = next(k.value for k in prepare.keywords if k.arg == "request_height_mips")
+        option = next(
+            k.value for k in prepare.keywords if k.arg == "request_height_mips"
+        )
         self.assertIs(option.value, True)
 
 
