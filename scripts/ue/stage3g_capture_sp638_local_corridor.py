@@ -1095,6 +1095,15 @@ def main() -> None:
         unreal.SplineCoordinateSpace.WORLD,
     )
 
+    from scripts.ue.ride_probe_capture import config_from_env, sample_native_camera, scan_ground
+
+    probe_config = config_from_env(camera_distance_cm / 100.0)
+    probe_samples = (
+        sample_native_camera(unreal, spline, probe_config, start_cm / 100.0, end_cm / 100.0)
+        if probe_config is not None else []
+    )
+    probe_events = []
+
     kernel_world = _sample_world(
         spline,
         start_cm,
@@ -1202,6 +1211,13 @@ def main() -> None:
             paint_layer=None,
             edit_layer_name=edit_layer_name,
         )
+
+    if probe_config is not None:
+        if bool(variant["macro_landscape_visible"]):
+            probe_events = scan_ground(unreal, world, road_actor, probe_samples, _vertical_trace_height_cm)
+        else:
+            from scripts.proof.ride_probe import terrain_event
+            probe_events = [terrain_event(row, None) for row in probe_samples]
 
     terrain_skin_mesh = None
     terrain_skin_origin_world = None
@@ -1523,6 +1539,18 @@ def main() -> None:
         unreal, landscape, camera_location, camera_rotation, _proof_path.parent,
         request_height_mips=macro_landscape_visible,
     )
+
+    if probe_config is not None:
+        from scripts.ue.ride_probe_capture import start_capture
+
+        start_capture(
+            api=unreal, camera=_camera, landscape=landscape, config=probe_config,
+            samples=probe_samples, events=probe_events, proof_data=_proof_data,
+            root=_proof_path.parent / "RideProbe", baseline_png=_output_path,
+            baseline_location=camera_location, baseline_rotation=camera_rotation,
+            done=_finish, prepare=prepare_capture,
+        )
+        return
 
     unreal.EditorPythonScripting.set_keep_python_script_alive(True)
     _task = unreal.AutomationLibrary.take_high_res_screenshot(

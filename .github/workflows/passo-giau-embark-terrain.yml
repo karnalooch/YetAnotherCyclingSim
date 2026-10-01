@@ -29,6 +29,9 @@ on:
       - 'scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1'
       - 'scripts/ue/stage3g_capture_sp638_local_corridor.py'
       - 'scripts/geometry/**'
+      - 'scripts/proof/**'
+      - 'scripts/ue/ride_probe_capture.py'
+      - 'scripts/ci/test_ride_probe.py'
       - 'scripts/ci/classify_changes.py'
       - 'scripts/ci/test_classify_changes.py'
       - 'scripts/ci/test_embark_terrain_pipeline_contract.py'
@@ -57,6 +60,25 @@ on:
         required: false
         default: false
         type: boolean
+
+      ride_probe_mode:
+        description: off keeps full M3; light scouts and focuses one suspect; focus captures only +/-2 seconds
+        type: choice
+        options: ['off', light, focus]
+        default: 'off'
+      ride_probe_station_m:
+        description: Optional SP638 station in metres; blank uses the baseline camera station
+        type: string
+        default: ''
+      ride_probe_variant:
+        description: Diagnostic surface to traverse (not full-world acceptance)
+        type: choice
+        options: [E, B, G, F, A, D, C]
+        default: E
+      ride_probe_wide:
+        description: Add a 105-degree secondary focused camera; primary remains 76 degrees
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -108,6 +130,27 @@ jobs:
           test -n "$REFS"
           git checkout --detach "$SOURCE_SHA"
           test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+
+      - name: Validate bounded traversal intent before reserving the runner
+        env:
+          YACS_RIDE_PROBE_MODE: ${{ inputs.ride_probe_mode || 'off' }}
+          YACS_RIDE_PROBE_CENTER_M: ${{ inputs.ride_probe_station_m }}
+          YACS_RIDE_PROBE_WIDE: ${{ inputs.ride_probe_wide && 'true' || 'false' }}
+          YACS_RIDE_PROBE_SHA: ${{ steps.request.outputs.source_sha }}
+          YACS_RIDE_PROBE_VARIANT: ${{ inputs.ride_probe_variant || 'E' }}
+          YACS_SURFACE_ISOLATION: ${{ inputs.include_surface_isolation && 'true' || 'false' }}
+        run: |
+          python - <<'PY'
+          import os
+          from scripts.ue.ride_probe_capture import config_from_env
+          config = config_from_env(15415.0)
+          if config is not None:
+              if os.environ['YACS_RIDE_PROBE_VARIANT'] not in {'A','B','C','D','E','F','G'}:
+                  raise SystemExit('Unsupported traversal surface')
+              if os.environ['YACS_SURFACE_ISOLATION'] == 'true':
+                  raise SystemExit('Traversal cannot substitute for full F/G isolation')
+              print(config.to_dict())
+          PY
 
       - name: Resolve comparison base
         id: base
@@ -186,7 +229,7 @@ jobs:
       - name: Validate Embark/PCGEx repository contract
         run: |
           python -m unittest scripts.ci.test_embark_terrain_pipeline_contract
-          python -m unittest scripts.ci.test_terrain_proof_request scripts.ci.test_terrain_proof_routing
+          python -m unittest scripts.ci.test_terrain_proof_request scripts.ci.test_terrain_proof_routing scripts.ci.test_ride_probe
 
   prepare:
     name: Prepare real SP638 authoring input
@@ -583,6 +626,10 @@ jobs:
 
       - name: Render PCGEx rider-close corridor proof
         env:
+          YACS_RIDE_PROBE_MODE: ${{ inputs.ride_probe_mode || 'off' }}
+          YACS_RIDE_PROBE_CENTER_M: ${{ inputs.ride_probe_station_m }}
+          YACS_RIDE_PROBE_WIDE: ${{ inputs.ride_probe_wide && 'true' || 'false' }}
+          YACS_RIDE_PROBE_VARIANT: ${{ inputs.ride_probe_variant || 'E' }}
           YACS_SURFACE_ISOLATION: ${{ inputs.include_surface_isolation && 'true' || 'false' }}
         shell: pwsh
         working-directory: _embark-terrain-worktree
@@ -602,6 +649,20 @@ jobs:
           $evidenceAsset = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/M3/PCGExCorridor/PCG_PassoGiau_SP638_Corridor.uasset'
           Copy-Item -LiteralPath $generatedAsset -Destination $evidenceAsset -Force
           Remove-Item -LiteralPath (Join-Path (Get-Location) 'Content/WorldGen') -Recurse -Force
+
+          if ($env:YACS_RIDE_PROBE_MODE -ne 'off') {
+            ./scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1 `
+              -ExpectedBranch 'HEAD' `
+              -ExpectedHead '${{ needs.classify.outputs.source_sha }}' `
+              -ArtifactRoot 'Saved/RuntimeProof/CI/M3/PCGExCorridor/Traversal' `
+              -PcgExExecutionOutput 'Saved/RuntimeProof/CI/M3/PCGExCorridor/pcgex_graph_output.json' `
+              -Variant $env:YACS_RIDE_PROBE_VARIANT `
+              -RideProbeMode $env:YACS_RIDE_PROBE_MODE `
+              -RideProbeCenterM $env:YACS_RIDE_PROBE_CENTER_M `
+              -RideProbeWide:($env:YACS_RIDE_PROBE_WIDE -eq 'true')
+            if ($LASTEXITCODE -ne 0) { throw 'Bounded traversal diagnostic failed.' }
+            exit 0
+          }
 
           $variants = @('A','B','C','D','E')
           if ($env:YACS_SURFACE_ISOLATION -eq 'true') {
@@ -659,7 +720,7 @@ jobs:
     name: PCGEx corridor deviation report
     needs: [classify, prepare, author]
     if: ${{ needs.classify.outputs.execute_proof == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
@@ -695,6 +756,26 @@ jobs:
           name: passo-giau-m3-pcgex-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/yacs-pcgex-execution
 
+      - name: Package and independently validate bounded traversal media
+        if: ${{ inputs.ride_probe_mode == 'light' || inputs.ride_probe_mode == 'focus' }}
+        env:
+          SOURCE_SHA: ${{ needs.classify.outputs.source_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check Pillow==11.3.0
+          . /etc/os-release
+          test "$ID:$VERSION_ID" = 'ubuntu:24.04'
+          sudo apt-get update -qq
+          sudo apt-get install --yes --no-install-recommends 'ffmpeg=7:6.1.1-3ubuntu5'
+          test "$(dpkg-query -W -f='${Version}' ffmpeg)" = '7:6.1.1-3ubuntu5'
+          command -v ffmpeg
+          command -v ffprobe
+          ROOTS=()
+          while IFS= read -r file; do ROOTS+=("$(dirname "$file")"); done < <(find "${{ runner.temp }}/yacs-pcgex-execution" -type f -name 'ride-probe.json')
+          test "${#ROOTS[@]}" -eq 1
+          python scripts/proof/package_ride_probe.py "${ROOTS[0]}" --expected-sha "$SOURCE_SHA"
+
       - name: Measure presentation deviation against official SP638
         shell: bash
         run: |
@@ -720,6 +801,7 @@ jobs:
       # recognized by the broker. Diagnostic uploads above are not reusable PASS.
       - name: Record successful exact-SHA technical proof receipt
         env:
+          YACS_RIDE_PROBE_MODE: ${{ inputs.ride_probe_mode || 'off' }}
           SOURCE_SHA: ${{ needs.classify.outputs.source_sha }}
           REQUEST_ID: ${{ inputs.gumball_request_id }}
           YACS_SURFACE_ISOLATION: ${{ inputs.include_surface_isolation && 'true' || 'false' }}
@@ -730,7 +812,8 @@ jobs:
           from pathlib import Path
           receipt = {
               "schema_version": 1,
-              "proof": "m3-terrain",
+              "proof": "m3-terrain" if os.environ["YACS_RIDE_PROBE_MODE"] == "off" else "m3-ride-diagnostic",
+              "ride_probe_mode": os.environ["YACS_RIDE_PROBE_MODE"],
               "exact_sha": os.environ["SOURCE_SHA"],
               "request_id": os.environ["REQUEST_ID"],
               "workflow_sha": os.environ["GITHUB_SHA"],
@@ -747,12 +830,21 @@ jobs:
           PY
 
       - name: Upload reusable successful M3 terrain evidence
-        if: ${{ success() }}
+        if: ${{ success() && (inputs.ride_probe_mode == 'off' || inputs.ride_probe_mode == '') }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: proof-m3-terrain-${{ needs.classify.outputs.source_sha }}
           path: |
             ${{ runner.temp }}/yacs-pcgex-execution/**
             Saved/RuntimeProof/CI/M3/PCGExCorridor/pcgex_corridor_deviation.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload bounded diagnostic media (never a full M3 receipt)
+        if: ${{ success() && (inputs.ride_probe_mode == 'light' || inputs.ride_probe_mode == 'focus') }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: ride-probe-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/yacs-pcgex-execution/**
           if-no-files-found: error
           retention-days: 14

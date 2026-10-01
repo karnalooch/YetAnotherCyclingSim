@@ -79,7 +79,13 @@ class TerrainProofRoutingTests(unittest.TestCase):
             validate.index("validate_pcgex_corridor_output.py"),
             validate.index("name: proof-m3-terrain-"),
         )
-        self.assertIn("if: ${{ success() }}", validate)
+        self.assertIn(
+            "success() && (inputs.ride_probe_mode == 'off' || inputs.ride_probe_mode == '')",
+            validate,
+        )
+        self.assertIn(
+            "name: ride-probe-${{ github.run_id }}-${{ github.run_attempt }}", validate
+        )
         self.assertIn('"human_visual_status": "PENDING"', validate)
         self.assertIn('"exact_sha": os.environ["SOURCE_SHA"]', validate)
 

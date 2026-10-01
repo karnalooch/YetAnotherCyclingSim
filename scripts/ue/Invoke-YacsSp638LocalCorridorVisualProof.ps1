@@ -13,6 +13,9 @@ param(
     [string] $PcgExExecutionOutput,
     [string] $NativeDtmPatchMetadata,
     [ValidateSet('A','B','C','D','E','C3','F','G')] [string] $Variant = 'E',
+    [ValidateSet('off','light','focus')] [string] $RideProbeMode = 'off',
+    [string] $RideProbeCenterM = '',
+    [switch] $RideProbeWide,
     [switch] $ValidateOnly,
     [int] $TimeoutSec = 900,
     [double] $MinFreeVirtualGb = 8.0,
@@ -41,8 +44,15 @@ $CaptureErr = $CaptureLog + '.stderr'
 $CapturePng = Join-Path $ArtifactRoot ("sp638_surface_{0}_rider_3840x2160.png" -f $VariantLower)
 $CaptureProof = Join-Path $ArtifactRoot ("surface_ownership_{0}_proof.json" -f $VariantLower)
 
+$RideProbeRoot = Join-Path $ArtifactRoot 'RideProbe'
+if ($RideProbeMode -ne 'off' -and -not $ValidateOnly -and (Test-Path -LiteralPath $RideProbeRoot)) {
+    # Only disposable output inside this explicitly selected proof directory.
+    Remove-Item -LiteralPath $RideProbeRoot -Recurse -Force
+}
+
 if ($PcgExExecutionOutput) {
     if (-not [System.IO.Path]::IsPathRooted($PcgExExecutionOutput)) {
+
         $PcgExExecutionOutput = Join-Path $RepoRoot $PcgExExecutionOutput
     }
     if (-not (Test-Path -LiteralPath $PcgExExecutionOutput -PathType Leaf)) {
@@ -176,6 +186,10 @@ else {
         throw "Local corridor visual script is missing: $CaptureScript"
     }
     
+    $env:YACS_RIDE_PROBE_MODE = $RideProbeMode
+    $env:YACS_RIDE_PROBE_CENTER_M = $RideProbeCenterM
+    $env:YACS_RIDE_PROBE_WIDE = ([bool]$RideProbeWide).ToString().ToLowerInvariant()
+    $env:YACS_RIDE_PROBE_SHA = $ExpectedHead
     $env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PNG = $CapturePng
     $env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PROOF = $CaptureProof
     $env:YACS_SP638_LOCAL_CORRIDOR_VARIANT = $Variant
@@ -210,6 +224,9 @@ else {
         $CaptureExitCode = $Proc.ExitCode
     }
     finally {
+        foreach ($Name in @('YACS_RIDE_PROBE_MODE','YACS_RIDE_PROBE_CENTER_M','YACS_RIDE_PROBE_WIDE','YACS_RIDE_PROBE_SHA')) {
+            Remove-Item -LiteralPath ("Env:{0}" -f $Name) -ErrorAction SilentlyContinue
+        }
         Remove-Item Env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PNG -ErrorAction SilentlyContinue
         Remove-Item Env:YACS_SP638_LOCAL_CORRIDOR_VISUAL_PROOF -ErrorAction SilentlyContinue
         Remove-Item Env:YACS_SP638_LOCAL_CORRIDOR_VARIANT -ErrorAction SilentlyContinue
@@ -399,6 +416,18 @@ if (-not $ValidateOnly) {
     }
 }
 
+if ($RideProbeMode -ne 'off') {
+    $ProbePath = Join-Path $RideProbeRoot 'ride-probe.json'
+    if (-not (Test-Path -LiteralPath $ProbePath -PathType Leaf)) { throw 'Ride probe receipt is missing.' }
+    $Probe = Get-Content -LiteralPath $ProbePath -Raw | ConvertFrom-Json
+    if ($Probe.status -ne 'CAPTURED' -or $Probe.exact_sha -ne $ExpectedHead -or $Probe.config.mode -ne $RideProbeMode) {
+        throw 'Ride probe did not complete on the requested exact SHA/mode.'
+    }
+    if ($Probe.diagnostic_variant -ne $Variant -or $Probe.visual_acceptance -ne 'PENDING_HUMAN_REVIEW' -or $Probe.performance_acceptance -ne 'NOT_MEASURED') {
+        throw 'Ride probe scope/acceptance receipt is invalid.'
+    }
+    if (@($Probe.frames).Count -ne @($Probe.planned_frames).Count) { throw 'Ride probe has missing frames.' }
+}
 Write-Host '[3/3] Enforcing non-persistent proof contract...' -ForegroundColor Cyan
 $TrackedChanges = @(git -C $RepoRoot status --porcelain=v1 --untracked-files=no)
 if ($TrackedChanges.Count -gt 0) {

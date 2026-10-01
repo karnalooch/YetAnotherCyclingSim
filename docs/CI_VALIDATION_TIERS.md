@@ -364,3 +364,76 @@ The lifecycle is:
 If the final full proof runs on the same tree that already passed the accepted performance checkpoint, performance does not need to be repeated merely because the full proof ran. A material visual/runtime change after the accepted performance checkpoint invalidates that checkpoint and requires a new one.
 
 The intent is to make **world iteration cheap and stage acceptance strict**.
+
+### Bounded traversal diagnostics (Issue #293)
+
+Owner approval, 2026-10-01: use a light scout and a focused +/-2-second clip to
+localize the current road/terrain defect instead of repeatedly producing long
+rides. This is diagnostic M3 tooling, not a new world generator, gameplay camera,
+physics replay or Performance Framework milestone.
+
+`passo-giau-embark-terrain.yml` keeps its full A-E/C3 (optional F/G) path when
+`ride_probe_mode=off` (the default and ordinary broker request). Explicit `light`
+or `focus` requests use one allow-listed surface variant and one editor process.
+Their artifacts are named `ride-probe-<run>-<attempt>` and MUST NOT satisfy the
+`proof-m3-terrain-<sha>` broker receipt. Combining traversal with F/G isolation is
+rejected before reserving the reference runner.
+
+- **light:** 12 virtual seconds at 10 m/s; 25 native 960x540 screenshots at 2 Hz.
+  The original native spline is sampled at 10 Hz, including +/-2-second margins
+  (161 cheap route/height queries total). Landscape collision more than 0.20 m
+  above the source road nominates an inspection location; this threshold is a
+  diagnostic trigger, not a terrain-design or acceptance budget. Select at most
+  one maximum-severity location and capture its full +/-2-second context.
+- **focus:** request a known `ride_probe_station_m` directly, including a station
+  chosen from a scout image. Capture 41 endpoint-inclusive 1920x1080 frames at
+  10 Hz over a four-second virtual window; no new scout or whole-route run.
+- Camera direction comes from the original local native tangent before slicing;
+  eye height stays 160 cm and primary horizontal FOV stays 76 degrees. Optional
+  `ride_probe_wide=true` adds a secondary 105-degree clip at identical positions,
+  never replaces the primary camera or moves it away from an obstruction.
+- Every frame has exact SHA context, virtual time, station, camera pose/FOV,
+  visibility/geometry provenance, readiness status and a PNG digest. Native
+  height-mip readiness is renewed per frame for visible macro terrain. The scene
+  is prepared once; no new editor or mesh generation is launched per frame.
+- Missing terrain queries remain `unmeasured_ground`. Collision is not rendered
+  height: it can be stale, differ in LOD, or miss mesh ownership problems. No
+  automatic finding means inspect the scout, NOT a clean-world verdict. This
+  does not detect every wall, hole, material issue or temporal streaming defect.
+- Existing 700 m prepared-corridor and local-surface bounds still apply. Requests
+  outside the prepared corridor fail; they are never clamped, relocated or
+  represented as full-area coverage. Normal terrain representative-location,
+  regeneration and performance gates remain unchanged.
+
+The ephemeral Ubuntu 24.04 media stage uses the already-used `Pillow==11.3.0`
+and installs distro `ffmpeg=7:6.1.1-3ubuntu5` from the signed Ubuntu archive only
+for an explicit diagnostic request. It verifies the package version and records
+FFmpeg/ffprobe versions/configuration with the output. It
+validates frame identities/counts/hashes/dimensions and fully decodes PNGs, then
+produces labelled contact sheets, H.264 MP4, small GIF and `frames.csv`.
+PNG + `ride-probe.json` remain primary evidence. GIF palettes and MP4 compression
+are not geometry truth. 41 samples span four seconds; video holds the last sample
+for another 0.1 s. Missing codecs fail the media step while raw author artifacts
+remain available. No binary is downloaded or installed on the owner's machine.
+
+These are settled deterministic camera samples, NOT real-time footage. Capture
+wall time and encoded 10 FPS do not measure runtime FPS or prove streaming under
+motion. Existing Frame/Game/Draw/RHI/GPU sampling and performance gates remain
+separate. `package_ride_probe.py --performance-csv ... --performance-context ...`
+can produce station locators only with matching exact SHA and explicit
+`route_id=SP638-presentation`, plus a positive caller-owned `frame_threshold_ms`.
+It uses existing CSV `distance_m` and `frame_ms`; a sector-local `rel_s` is NOT
+mapped to the new clip clock. Legacy Alpine Journey benchmark data is rejected
+rather than silently overlaid on Passo Giau.
+
+Tools-first review: the existing production-reference dossier's Embark lesson is
+bounded high-level reproducible operations, not a public Embark video-capture
+recipe. Reuse Epic's existing screenshot task, native spline and loading barrier;
+no new runtime plugin or claimed Embark/PCGEx upstream feature. Primary API/tool
+references reviewed for the adapter and derived-media commands:
+
+- https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/AutomationLibrary
+- https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/Actor
+- https://ffmpeg.org/ffmpeg.html
+
+The exact UE runner proof, not the API reference alone, establishes compatibility.

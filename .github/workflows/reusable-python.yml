@@ -152,5 +152,8 @@ jobs:
       - name: Run Project automation unit tests
         run: python scripts/ci/test_project_automation.py
 
+      - name: Run bounded ride-probe planner and capture contracts
+        run: python -m unittest scripts.ci.test_ride_probe -v
+
       - name: Run reference-model unit tests and prevent no-op discovery
         run: python scripts/ci/run_python_tests.py

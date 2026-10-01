@@ -99,6 +99,7 @@ EMBARK_TERRAIN_HEAVY_EXACT = {
 }
 
 EMBARK_TERRAIN_RENDER_PREFIXES = (
+    "scripts/proof/",
     "scripts/assets/",
     "scripts/geometry/",
     "scripts/houdini/",
@@ -107,6 +108,7 @@ EMBARK_TERRAIN_RENDER_PREFIXES = (
 )
 
 EMBARK_TERRAIN_RENDER_EXACT = {
+    "scripts/ue/ride_probe_capture.py",
     "scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1",
     "scripts/ue/stage3g_capture_sp638_local_corridor.py",
 }

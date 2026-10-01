@@ -1069,6 +1069,20 @@ The current support exercise is `physics_reference/examples/run_mixed_surface.py
 
 ---
 
+### Bounded scout and focused traversal evidence
+
+Owner-approved Issue #293 tooling adds an opt-in light traversal followed by a
+single +/-2-second detail window. The operational contract and limits live in
+[CI Validation Tiers](CI_VALIDATION_TIERS.md#bounded-traversal-diagnostics-issue-293).
+Reuse the current exact-SHA PCGEx scene, native route-local camera and transient
+height-mip preparation. The camera is not raised or moved to avoid faults.
+Collision-derived suspects only locate candidate stations; missing signals do
+not pass the world. Inspect both clips and original PNGs before attributing a
+render defect. The light/focus receipt is NOT the full A-E/C3 acceptance receipt.
+These settled camera samples do not measure live gameplay FPS, streaming hitches
+or the full road network. Normal rider-camera, surface-owner, representative
+location and performance gates still apply.
+
 ## 8. The road/terrain rule that prevents black wedges
 
 Avoid designing two unrelated surfaces that must meet perfectly along one mathematical edge.
