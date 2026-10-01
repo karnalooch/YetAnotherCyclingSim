@@ -712,6 +712,90 @@ proof set thresholds for the chosen representation. Meso cliffs/rocks/retaining,
 materials, vegetation and final weather follow after the ground ownership contract
 is proven.
 
+##### Adaptive terrain policy and verified-case learning
+
+Route-wide terrain adaptation must not become a growing list of location-specific
+patches. The production direction is a deterministic adaptive solver that observes
+road/terrain context, chooses among already-admitted terrain strategies, records
+why it made that choice, and may reuse parameters only from previously verified
+proof cases.
+
+The initial decision vector includes at least:
+
+- longitudinal grade;
+- left/right cross-slope;
+- road-to-native-DTM elevation delta;
+- local native-DTM roughness;
+- signed curvature/radius;
+- distance and height separation to a competing road branch;
+- required cut/fill magnitude.
+
+The strategy library is intentionally small:
+
+- native blend / minor correction;
+- constrained cut/fill corridor;
+- tight-hairpin clearance corridor;
+- retaining/cliff or other non-heightfield escalation when one heightfield cannot
+  represent the geometry safely.
+
+The adaptive layer is a **policy/orchestration layer**, not permission to bypass
+the tools-first decision ladder below. A strategy may invoke only an already
+admitted native/custom authoring path. If a heightfield is structurally wrong for
+the observed geometry, the solver escalates instead of learning to hide the defect.
+
+Learning is review-gated and deterministic:
+
+1. baseline policy chooses a safe strategy from versioned thresholds;
+2. only cases with exact-SHA technical PASS **and** human visual PASS are eligible
+   learning examples;
+3. sufficiently similar accepted cases may tune bounded parameters **inside the
+   same safe strategy**;
+4. case memory cannot override a retaining/cliff or ambiguity escalation;
+5. proof output records the feature vector, baseline strategy, final parameters,
+   contributing case IDs and similarity/confidence;
+6. accepted cases enter a versioned repository ledger through normal review;
+7. threshold/model calibration happens offline and produces a reviewed candidate
+   config change; runtime/editor generation never rewrites its own policy.
+
+Do not auto-promote failed, merely green, or unreviewed visual evidence into the
+learning memory. Do not infer successful terrain behavior from a single hairpin.
+The first route-general policy requires accepted cases for the difficult hairpin,
+a normal/moderate slope and a major-earthworks section already required by the
+acceptance order above.
+
+```mermaid
+flowchart LR
+    OBS["OBSERVE<br/>Road + native DTM"] --> FEAT["MEASURE<br/>Deterministic features"]
+    FEAT --> POLICY["DECIDE<br/>Versioned safe policy"]
+    CASES["MEMORY<br/>Verified PASS cases"] --> MATCH["MATCH<br/>Similar same-strategy cases"]
+    POLICY --> MATCH
+    MATCH --> STRAT["AUTHOR<br/>Admitted terrain strategy"]
+    STRAT --> PROOF["VERIFY<br/>Exact-SHA rider proof"]
+    PROOF -->|"PASS"| ACCEPT["ACCEPT<br/>Reviewed case"]
+    PROOF -->|"FAIL"| FIX["FAIL CLOSED<br/>Owning layer / escalation"]
+    ACCEPT --> CASES
+    FIX -.-> POLICY
+
+    classDef input fill:#303846,stroke:#8ea1b8,color:#f7f9fc,stroke-width:2px;
+    classDef exec fill:#123f73,stroke:#49a2ff,color:#ffffff,stroke-width:3px;
+    classDef tool fill:#4b2f69,stroke:#b77cff,color:#ffffff,stroke-width:2px;
+    classDef decision fill:#69470e,stroke:#f0a72f,color:#ffffff,stroke-width:3px;
+    classDef success fill:#1f5736,stroke:#63d889,color:#ffffff,stroke-width:3px;
+    classDef danger fill:#6b2429,stroke:#ff6b73,color:#ffffff,stroke-width:3px;
+    classDef owned fill:#34373d,stroke:#9da4ae,color:#ffffff,stroke-width:2px;
+    classDef evidence fill:#164d5c,stroke:#5bd6ef,color:#ffffff,stroke-width:2px;
+
+    class OBS input;
+    class FEAT,STRAT exec;
+    class POLICY,MATCH decision;
+    class CASES owned;
+    class PROOF evidence;
+    class ACCEPT success;
+    class FIX danger;
+
+    linkStyle default stroke-width:2px;
+```
+
 #### Road / earthworks decision ladder
 
 For road-terrain adaptation, do not extend the custom earthwork solver merely because a difficult hairpin exposes another edge case.
