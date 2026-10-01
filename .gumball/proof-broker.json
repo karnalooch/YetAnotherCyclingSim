@@ -165,7 +165,8 @@
         "enabled": false,
         "require_ci_class": "heavy"
       },
-      "allowed_write_permissions": []
+      "allowed_write_permissions": [],
+      "artifact_name": "proof-$proof-$sha"
     }
   }
 }
