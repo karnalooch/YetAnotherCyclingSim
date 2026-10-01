@@ -1,0 +1,30 @@
+name: Issue 293 bounded source snapshot
+on:
+  push:
+    branches: [ci/293-source-inspection]
+    paths: ['.github/workflows/293-source-snapshot.yml']
+permissions:
+  contents: read
+jobs:
+  snapshot:
+    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.actor == 'karnalooch' && github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 8ba00cac0ecfc56c153422150444a129a97c051b
+          lfs: false
+          persist-credentials: false
+      - name: Archive only the exact tracked source without running it
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = '8ba00cac0ecfc56c153422150444a129a97c051b'
+          git archive --format=zip -o "$RUNNER_TEMP/yacs-source-8ba00cac.zip" HEAD
+          sha256sum "$RUNNER_TEMP/yacs-source-8ba00cac.zip"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: issue293-source-8ba00cac
+          path: ${{ runner.temp }}/yacs-source-8ba00cac.zip
+          if-no-files-found: error
+          retention-days: 2
