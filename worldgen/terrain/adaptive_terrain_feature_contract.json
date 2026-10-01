@@ -4,7 +4,7 @@
   "preferred_spatial_producer": "pcgex_spatial_analysis",
   "producer_boundary": {
     "pcgex_role": "spatial feature extraction, filtering, sampling and attribute propagation",
-    "yacs_role": "safe strategy policy, verified-case memory, learning gate and final decision",
+    "yacs_role": "BOB owns safe strategy policy, verified-case memory, learning gate and final decision",
     "canonical_road_xy_preserved": true,
     "authoritative_route_geometry": false,
     "authoritative_physics": false
@@ -57,6 +57,11 @@
     "heuristics": "optional reusable scoring input; final strategy policy remains YACS-owned",
     "tensors": "optional spatial influence fields where a later proof demonstrates value"
   },
-  "output_rule": "PCGEx may emit a feature packet, but it must not choose route/physics authority or write verified case memory.",
-  "learning_rule": "Only exact-SHA technical PASS plus human visual PASS cases may enter the reviewed YACS case ledger."
+  "output_rule": "PCGEx may emit a feature packet, but BOB owns the terrain decision and must not surrender route/physics authority or verified-case admission.",
+  "learning_rule": "Only exact-SHA technical PASS plus human visual PASS cases may enter the reviewed YACS case ledger.",
+  "architect": {
+    "name": "BOB",
+    "expansion": "Builder Of Berms",
+    "system_id": "bob-terrain-architect-v1"
+  }
 }
