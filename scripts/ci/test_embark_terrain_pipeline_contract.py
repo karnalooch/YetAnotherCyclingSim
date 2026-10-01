@@ -372,7 +372,7 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         self.assertIn("YACS_NATIVE_DTM_PATCH_METADATA", capture)
         self.assertIn("prepared native metric DTM bounded patch", capture)
         self.assertIn("landscape_collision_sampled", capture)
-        self.assertIn("Gate C.3 did not use the native metric DTM.", wrapper)
+        self.assertIn("Native-DTM proof did not use the native metric DTM.", wrapper)
         self.assertIn("proof_hairpin_focus", extractor)
         self.assertIn("focus_epsg32632_m", extractor)
         self.assertNotIn("source_station_m", extractor)
