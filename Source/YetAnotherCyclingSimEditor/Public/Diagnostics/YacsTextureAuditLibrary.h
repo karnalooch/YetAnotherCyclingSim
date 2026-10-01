@@ -16,4 +16,8 @@ public:
 	/** Read derived format/residency without changing source pixels or saving assets. */
 	UFUNCTION(BlueprintCallable, Category = "YACS|Diagnostics")
 	static FString DescribeTexture(UTexture2D* Texture);
+
+	/** Finish only the explicitly selected texture builds; never change source art. */
+	UFUNCTION(BlueprintCallable, Category = "YACS|Diagnostics")
+	static bool FinishTextureCompilation(const TArray<UTexture2D*>& Textures);
 };

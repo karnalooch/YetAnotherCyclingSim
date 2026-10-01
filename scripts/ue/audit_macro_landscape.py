@@ -1,4 +1,4 @@
-"""Read-only CPU/source and native runtime metadata for macro recovery.
+"""Non-persistent height-texture readiness and native source evidence.
 
 No height edits, resampling, material changes or map saves are performed here.
 """
@@ -42,6 +42,14 @@ def _export_sources(landscape, output: Path) -> list[dict]:
     )
     if not textures:
         raise RuntimeError("No Texture2D source objects found in the Landscape package")
+    before = {
+        texture.get_path_name(): json.loads(
+            unreal.YacsTextureAuditLibrary.describe_texture(texture)
+        )
+        for texture in textures
+    }
+    if not unreal.YacsTextureAuditLibrary.finish_texture_compilation(textures):
+        raise RuntimeError("Native height-texture compilation did not complete")
     rows = []
     exported = 0
     for texture in textures:
@@ -51,6 +59,7 @@ def _export_sources(landscape, output: Path) -> list[dict]:
                    "mip_gen_settings", "lod_bias", "never_stream",
                    "lossy_compression_amount", "max_texture_size", "compression_none", "availability",
                )}}
+        row["native_before_wait"] = before[row["texture"]]
         row["native_runtime"] = json.loads(
             unreal.YacsTextureAuditLibrary.describe_texture(texture)
         )
@@ -79,10 +88,11 @@ def capture_macro_height_evidence(world, landscape, components, output: Path) ->
     output = Path(output) / "macro-height-audit"
     output.mkdir(parents=True, exist_ok=True)
     report = {
-        "schema_version": 3,
+        "schema_version": 4,
         "saved_to_map": False,
         "height_edits_applied": False,
         "resampling_applied": False,
+        "native_texture_compilation_wait": True,
         "landscape": landscape.get_path_name(),
         "transform": str(landscape.get_actor_transform()),
         "component_count": len(components),
@@ -96,7 +106,7 @@ def capture_macro_height_evidence(world, landscape, components, output: Path) ->
             "status": "UNAVAILABLE",
             "reason": "Runs 87/88 returned an all-zero render target; not height evidence",
         }
-        report["status"] = "CPU_SOURCE_AND_RUNTIME_METADATA_EXPORTED"
+        report["status"] = "SOURCE_PRESERVED_TEXTURE_COMPILATION_READY"
     except Exception as exc:
         report["status"] = "FAILED"
         report["error"] = str(exc)
