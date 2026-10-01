@@ -162,9 +162,7 @@ def main() -> None:
         component.set_editor_property("forced_lod", 0)
     landscape.set_editor_property(
         "landscape_material",
-        unreal.load_asset(
-            "/Engine/EngineMaterials/WorldGridMaterial.WorldGridMaterial"
-        ),
+        unreal.load_asset("/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial"),
     )
 
     # Use the exact camera frame computed by the ordinary A diagnostic. This
@@ -201,6 +199,13 @@ def main() -> None:
     actors.spawn_actor_from_class(
         unreal.SkyAtmosphere, unreal.Vector(), unreal.Rotator(), transient=True
     )
+    fog = actors.spawn_actor_from_class(
+        unreal.ExponentialHeightFog, camera_location, unreal.Rotator(), transient=True
+    )
+    fog_component = fog.get_component_by_class(unreal.ExponentialHeightFogComponent)
+    fog_component.set_editor_property("fog_density", 0.00018)
+    fog_component.set_editor_property("fog_height_falloff", 0.22)
+    fog_component.set_editor_property("fog_max_opacity", 0.16)
     for command in [
         "viewmode lit",
         "r.AntiAliasingMethod 1",
