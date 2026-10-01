@@ -1,0 +1,26 @@
+name: Issue 293 source inspection snapshot
+on:
+  push:
+    branches: [fix/293-macro-landscape]
+    paths: ['.github/workflows/terrain-source-snapshot.yml']
+permissions:
+  contents: read
+jobs:
+  snapshot:
+    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.actor == 'karnalooch' && github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: b5a659b7fef730800b847178e2d5b71a49b03217
+          lfs: false
+          persist-credentials: false
+      - name: Archive only tracked baseline source, without credentials or generated files
+        run: git archive --format=zip --output="${RUNNER_TEMP}/yacs-source.zip" HEAD
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: issue-293-baseline-source
+          path: ${{ runner.temp }}/yacs-source.zip
+          if-no-files-found: error
+          retention-days: 1
