@@ -8,6 +8,7 @@ import unittest
 from scripts.geometry.local_terrain_skin import (
     apply_corridor_constraints_to_height_grid,
     build_terrain_skin_mesh,
+    make_road_clearance_profiles,
     smooth_height_grid,
     terrain_skin_hash,
 )
@@ -97,6 +98,43 @@ class LocalTerrainSkinTests(unittest.TestCase):
             conventional_normal_z = ab.x * ac.y - ab.y * ac.x
             self.assertLess(conventional_normal_z, 0.0)
 
+
+    def test_road_clearance_profiles_cap_only_shoulders(self) -> None:
+        profile = (
+            CrossSectionPoint(-10.0, 2.5, "left_tie"),
+            CrossSectionPoint(-7.0, 1.2, "left_earthwork"),
+            CrossSectionPoint(-4.0, 0.15, "left_shoulder"),
+            CrossSectionPoint(-3.0, 0.0, "left_road_edge"),
+            CrossSectionPoint(3.0, 0.0, "right_road_edge"),
+            CrossSectionPoint(4.0, -0.10, "right_shoulder"),
+            CrossSectionPoint(7.0, -0.9, "right_earthwork"),
+            CrossSectionPoint(10.0, -1.8, "right_tie"),
+        )
+        result = make_road_clearance_profiles((profile,))[0]
+        by_role = {point.role: point for point in result}
+
+        self.assertEqual(by_role["left_shoulder"].vertical_m, 0.0)
+        self.assertEqual(by_role["right_shoulder"].vertical_m, -0.10)
+        self.assertEqual(by_role["left_road_edge"].vertical_m, 0.0)
+        self.assertEqual(by_role["right_road_edge"].vertical_m, 0.0)
+        self.assertEqual(by_role["left_earthwork"].vertical_m, 1.2)
+        self.assertEqual(by_role["right_earthwork"].vertical_m, -0.9)
+        self.assertEqual(
+            tuple(point.lateral_m for point in result),
+            tuple(point.lateral_m for point in profile),
+        )
+        self.assertEqual(
+            tuple(point.role for point in result),
+            tuple(point.role for point in profile),
+        )
+
+    def test_road_clearance_profiles_fail_closed_on_missing_roles(self) -> None:
+        profile = (
+            CrossSectionPoint(-3.0, 0.0, "left_road_edge"),
+            CrossSectionPoint(3.0, 0.0, "right_road_edge"),
+        )
+        with self.assertRaisesRegex(ValueError, "left_shoulder"):
+            make_road_clearance_profiles((profile,))
 
     def test_native_grid_corridor_constraints_pin_outer_transition(self) -> None:
         xs = tuple(float(value) for value in range(21))
