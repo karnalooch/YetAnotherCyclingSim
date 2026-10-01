@@ -3,81 +3,129 @@ on:
   push:
     branches: [ci/293-source-inspection]
     paths: ['.github/workflows/293-source-snapshot.yml']
-permissions:
-  contents: write
+permissions: {}
 env:
   GIT_LFS_SKIP_SMUDGE: '1'
+concurrency:
+  group: issue-293-source-preparation
+  cancel-in-progress: false
 jobs:
   publish-reviewed-blobs:
-    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.actor == 'karnalooch' && github.triggering_actor == 'karnalooch' && github.event_name == 'push' }}
+    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' && github.ref == 'refs/heads/ci/293-source-inspection' && github.actor == 'karnalooch' && github.triggering_actor == 'karnalooch' && github.event_name == 'push' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: b22ea83432c96dc7796cba9b802fe4c049001536
+          ref: 35ba65e5cfe69b5653f73d175662df5afbefb035
+          fetch-depth: 0
           lfs: false
           persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.14'
       - run: python -m pip install --disable-pip-version-check ruff==0.16.8
-      - name: Apply hash-verified edits and create blobs without changing refs
+      - name: Merge pinned main locally, validate reviewed camera edits, publish blobs only
         env:
           GH_TOKEN: ${{ github.token }}
+        shell: bash
         run: |
+          set -euo pipefail
           python - <<'PY'
+          import base64
           import hashlib
           import json
           import os
-          from pathlib import Path
           import subprocess
           import urllib.request
-          ROOT = Path.cwd()
-          BASE = "b22ea83432c96dc7796cba9b802fe4c049001536"
-          REPO = "karnalooch/YetAnotherCyclingSim"
-          PLAN = [{'path': 'scripts/ue/stage3g_capture_sp638_local_corridor.py', 'before': 'a26ffb00be4dd4dda4ca94c5b7a46a700a924882', 'after': '8a23d70549050337fe45d766d968abaaa2b342a3', 'old': 'request_height_mips=(variant_name == "A"),', 'new': 'request_height_mips=macro_landscape_visible,'}, {'path': 'scripts/ci/test_embark_terrain_pipeline_contract.py', 'before': 'a8527592a70b3777c829de7fb76aa0836a6a0f82', 'after': 'bb1220a993bd2da1bfc6882690450f47346a0d7a', 'old': '        self.assertIn(\'request_height_mips=(variant_name == "A")\', capture)\n', 'new': '        self.assertIn("request_height_mips=macro_landscape_visible", capture)\n\n    def test_only_visible_macro_variants_request_height_mips(self):\n        import ast\n\n        capture = (ROOT / "scripts/ue/stage3g_capture_sp638_local_corridor.py").read_text()\n        tree = ast.parse(capture)\n        variants = next(\n            ast.literal_eval(node.value)\n            for node in tree.body\n            if isinstance(node, ast.Assign)\n            and any(isinstance(target, ast.Name) and target.id == "DIAGNOSTIC_VARIANTS" for target in node.targets)\n        )\n        self.assertEqual(\n            {name for name, policy in variants.items() if policy["macro_landscape_visible"]},\n            {"A", "B", "E"},\n        )\n        calls = [\n            node for node in ast.walk(tree)\n            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)\n            and node.func.id == "prepare_capture"\n        ]\n        self.assertEqual(len(calls), 1)\n        option = next(keyword.value for keyword in calls[0].keywords if keyword.arg == "request_height_mips")\n        self.assertIsInstance(option, ast.Name)\n        self.assertEqual(option.id, "macro_landscape_visible")\n        self.assertIn(\'macro_landscape_visible = bool(variant["macro_landscape_visible"])\', capture)\n'}, {'path': 'docs/WORLD_BUILDING_BIBLE.md', 'before': 'ab5f834c2393f5fac931e1e6f2309ff9983d778c', 'after': 'aac41c6b5d2d2d1c6eaa201c4e2dd4b481d3599e', 'old': 'M3 run 92 completed this barrier and all six captures but retained macro stepping.\nIts 64 combined height textures still reported 7 of 10 resident mips. A second\nbounded experiment therefore requests a transient 120-second native mip residency\nlease for map-owned, mipmapped height textures in variant A only, followed by the\nsame native loading barrier. B-E/C3 remain controls. The lease must produce full\nnative mip readback before A is captured; a partial/placeholder result fails closed.\nIt expires after the capture process or duration and does not serialize `NeverStream`\nor disable streaming globally. This experiment is not a runtime/performance policy\nand does not prove a terrain repair until the actual A image improves.\n', 'new': 'M3 run 92 completed the native loading barrier but retained macro stepping;\n64 combined height textures still reported 7 of 10 resident mips. The controlled\nrun 94 at `b22ea83432c96dc7796cba9b802fe4c049001536` requested full height mips\nfor variant A only. All 64 became 10/10 and the pronounced macro staircase\nartifact disappeared from that same-camera A image. B/E retained 7/10 and the\ncoarse terrain. The sampled height-texture source exports were byte-identical,\nand camera, PCGEx output and corridor hashes were unchanged. This establishes\nheight-mip residency as a cause of the observed capture defect, not source-data\nquantization or a reason to replace the established road pipeline.\n\nThe bounded capture preparation therefore requests a transient 120-second native\nmip-residency lease for map-owned, mipmapped height textures whenever the macro\nLandscape is visible (A/B/E). C/D/C3 do not request macro mip residency. The native\nloading barrier must finish and full-mip readback must pass before capture;\npartial/placeholder results fail closed. The lease expires after the process or\nduration, does not serialize `NeverStream`, and does not disable streaming globally.\n\nThis fixes a forced-LOD proof resource precondition; it is not a blanket production\nruntime policy, performance acceptance or a cure for every terrain/road seam.\nKeep the single-owner near-field and road/earthwork acceptance gates independent.\nThe A-only causal result does not substitute for reviewing the combined A-E/C3\ncandidate, additional representative locations and performance where required.\n'}]
+          from pathlib import Path
+          REPO = 'karnalooch/YetAnotherCyclingSim'
+          BASE = '35ba65e5cfe69b5653f73d175662df5afbefb035'
+          MAIN = '8ba08b12c03c37dc54a9d620c224aa4f06de7fc4'
+          PLAN_SHA = 'a2c07e22fb04d2a12b9b0fc420bb549ec0504c89'
+          HELPER_SHA = 'a8095a3e9c49896ee626c8c727bac812e29159ef'
+          HELPER_PATH = 'scripts/ue/road_capture_camera.py'
+          def git(*args):
+              return subprocess.check_output(['git', *args], text=True).strip()
           def blob(data):
-              return hashlib.sha1(f"blob {len(data)}\0".encode() + data).hexdigest()
-          if subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip() != BASE:
-              raise SystemExit("Unexpected source HEAD")
-          paths = [entry["path"] for entry in PLAN]
-          assert len(paths) == len(set(paths)) == 3
-          for entry in PLAN:
-              path = ROOT / entry["path"]
-              original = path.read_bytes()
-              assert blob(original) == entry["before"], entry["path"]
-              original = original.decode("utf-8")
-              assert original.count(entry["old"]) == 1, entry["path"]
-              data = original.replace(entry["old"], entry["new"], 1).encode("utf-8")
-              assert blob(data) == entry["after"], entry["path"]
-              path.write_bytes(data)
-          subprocess.run(["ruff", "format", "scripts/ci/test_embark_terrain_pipeline_contract.py"], check=True)
-          subprocess.run(["ruff", "check", "scripts/ci", "--select", "E9,F63,F7,F82"], check=True)
-          subprocess.run(["python", "-m", "unittest", "scripts.ci.test_embark_terrain_pipeline_contract", "-v"], check=True)
-          subprocess.run(["python", "-m", "py_compile", "scripts/ue/prepare_landscape_capture.py", "scripts/ue/stage3g_capture_sp638_local_corridor.py"], check=True)
-          subprocess.run(["python", "scripts/ci/check_docs_index.py"], check=True)
-          results = []
-          for entry in PLAN:
-              data = (ROOT / entry["path"]).read_bytes()
-              req = urllib.request.Request(
-                  "https://api.github.com/repos/" + REPO + "/git/blobs",
-                  data=json.dumps({"content": data.decode("utf-8"), "encoding": "utf-8"}).encode(),
-                  method="POST",
-                  headers={"Authorization": "Bearer " + os.environ["GH_TOKEN"], "Accept": "application/vnd.github+json", "Content-Type": "application/json"},
-              )
-              with urllib.request.urlopen(req, timeout=40) as response:
-                  result = json.load(response)
-              assert result["sha"] == blob(data), entry["path"]
-              results.append({"path": entry["path"], "sha": result["sha"], "mode": "100644", "type": "blob"})
-          print("REVIEWED_BLOBS=" + json.dumps(results))
-          Path(os.environ["RUNNER_TEMP"], "reviewed-blobs.json").write_text(json.dumps({"parent": BASE, "tree_elements": results}, indent=2))
+              return hashlib.sha1(f'blob {len(data)}\0'.encode() + data).hexdigest()
+          def api(path, body=None):
+              request = urllib.request.Request('https://api.github.com/repos/' + REPO + path,
+                  data=None if body is None else json.dumps(body).encode(),
+                  method='GET' if body is None else 'POST',
+                  headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json'})
+              with urllib.request.urlopen(request, timeout=40) as response:
+                  return json.load(response)
+          def read_blob(sha):
+              data = base64.b64decode(api('/git/blobs/' + sha)['content'])
+              if blob(data) != sha:
+                  raise SystemExit('Blob hash mismatch: ' + sha)
+              return data
+          if git('rev-parse', 'HEAD') != BASE:
+              raise SystemExit('Unexpected source HEAD')
+          if api('/git/ref/heads/fix/293-macro-landscape')['object']['sha'] != BASE:
+              raise SystemExit('PR moved; do not prepare stale work')
+          plan = json.loads(read_blob(PLAN_SHA))
+          if plan['base'] != BASE or plan['main'] != MAIN:
+              raise SystemExit('Unexpected source plan')
+          for entry in plan['files']:
+              if git('rev-parse', BASE + ':' + entry['path']) != entry['before_blob']:
+                  raise SystemExit('Source path drift: ' + entry['path'])
+          git('config', 'user.name', 'github-actions[bot]')
+          git('config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com')
+          subprocess.run(['git', 'merge', '--no-commit', '--no-ff', MAIN], check=True)
+          for entry in plan['files']:
+              path = Path(entry['path'])
+              text = path.read_text(encoding='utf-8')
+              for edit in entry['edits']:
+                  if text.count(edit['old']) != 1:
+                      raise SystemExit('Absent or ambiguous patch anchor: ' + str(path))
+                  text = text.replace(edit['old'], edit['new'], 1)
+              path.write_text(text, encoding='utf-8')
+          helper = Path(HELPER_PATH)
+          if helper.exists():
+              raise SystemExit('Unexpected existing camera helper')
+          helper.write_bytes(read_blob(HELPER_SHA))
+          subprocess.run(['ruff', 'format', 'scripts/ci/test_embark_terrain_pipeline_contract.py', HELPER_PATH], check=True)
+          subprocess.run(['ruff', 'check', 'scripts/ci', HELPER_PATH, '--select', 'E9,F63,F7,F82'], check=True)
+          subprocess.run(['python', '-m', 'unittest', 'scripts.ci.test_embark_terrain_pipeline_contract', '-v'], check=True)
+          subprocess.run(['python', 'scripts/ci/run_python_tests.py'], check=True)
+          subprocess.run(['python', '-m', 'py_compile', HELPER_PATH, 'scripts/ue/stage3g_capture_sp638_local_corridor.py'], check=True)
+          subprocess.run(['python', 'scripts/ci/check_docs_index.py'], check=True)
+          subprocess.run(['git', 'diff', '--check', 'HEAD'], check=True)
+          from scripts.ci.check_docs_index import local_targets, read_utf8
+          for path in (Path('AGENTS.md'), Path('docs/PRODUCT_REQUIREMENTS.md'), Path('docs/ROADMAP.md'), Path('docs/WORLD_BUILDING_BIBLE.md')):
+              if any(not target.exists() for target in local_targets(path, read_utf8(path))):
+                  raise SystemExit('Broken changed-document link: ' + str(path))
+          expected = {'AGENTS.md', 'docs/PRODUCT_REQUIREMENTS.md', 'docs/ROADMAP.md', 'docs/WORLD_BUILDING_BIBLE.md', 'physics_reference/README.md', 'physics_reference/examples/run_mixed_surface.py', 'physics_reference/tests/test_mixed_surface_reference.py', 'scripts/ue/stage3g_capture_sp638_local_corridor.py', 'scripts/ci/test_embark_terrain_pipeline_contract.py', HELPER_PATH}
+          paths = set(git('diff', 'HEAD', '--name-only').splitlines()) | set(git('ls-files', '--others', '--exclude-standard').splitlines())
+          if paths != expected:
+              raise SystemExit('Unexpected changed paths: ' + repr(paths ^ expected))
+          elements = []
+          for path in sorted(paths):
+              data = Path(path).read_bytes()
+              result = api('/git/blobs', {'content': data.decode('utf-8'), 'encoding': 'utf-8'})
+              if result['sha'] != blob(data):
+                  raise SystemExit('Published blob mismatch')
+              elements.append({'path': path, 'mode': '100644', 'type': 'blob', 'sha': result['sha']})
+          result = {'parent': BASE, 'additional_parent_shas': [MAIN], 'tree_elements': elements, 'validation': 'camera-contract 33/33; reference 391/391; docs links/i18n/structure/freshness PASS; no UE or visual acceptance claimed'}
+          Path(os.environ['RUNNER_TEMP'], 'reviewed-camera-blobs.json').write_text(json.dumps(result, indent=2))
+          print('REVIEWED_CAMERA_BLOBS=' + json.dumps(result))
+          print('No branch refs changed. No terrain/road geometry or active workflow changed.')
           PY
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: issue293-reviewed-visible-mips-patch
+          name: issue293-reviewed-route-camera
           path: |
-            ${{ runner.temp }}/reviewed-blobs.json
-            scripts/ue/prepare_landscape_capture.py
+            ${{ runner.temp }}/reviewed-camera-blobs.json
+            scripts/ue/road_capture_camera.py
             scripts/ue/stage3g_capture_sp638_local_corridor.py
             scripts/ci/test_embark_terrain_pipeline_contract.py
             docs/WORLD_BUILDING_BIBLE.md
+            docs/PRODUCT_REQUIREMENTS.md
+            docs/ROADMAP.md
+            AGENTS.md
           if-no-files-found: error
           retention-days: 2
