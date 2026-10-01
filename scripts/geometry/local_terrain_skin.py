@@ -46,10 +46,10 @@ class TerrainConstraintMetrics:
 _DEFAULT_CORRIDOR_ROLE_WEIGHTS: Mapping[str, float] = {
     "left_tie": 0.0,
     "left_earthwork": 0.35,
-    "left_shoulder": 0.80,
+    "left_shoulder": 1.0,
     "left_road_edge": 1.0,
     "right_road_edge": 1.0,
-    "right_shoulder": 0.80,
+    "right_shoulder": 1.0,
     "right_earthwork": 0.35,
     "right_tie": 0.0,
 }
@@ -182,6 +182,58 @@ def smooth_height_grid(
         max_abs_laplacian_after_m=after,
     )
 
+
+
+def make_road_clearance_profiles(
+    profiles: Sequence[Sequence[CrossSectionPoint]],
+) -> tuple[tuple[CrossSectionPoint, ...], ...]:
+    """Keep the first ground metre outside asphalt from rising into the road.
+
+    The asphalt already owns the visible rideable surface above the road-edge
+    ground height. On a regular 1 m terrain grid, an uphill shoulder vertex can
+    otherwise form a triangle that crosses back over the asphalt edge and
+    produces a moving saw-tooth seam. Preserve every lateral coordinate, role
+    and road-edge height; only cap each shoulder height to its adjacent road
+    edge so the terrain transition starts outside that clearance apron.
+    """
+
+    result: list[tuple[CrossSectionPoint, ...]] = []
+    for station_index, profile in enumerate(profiles):
+        role_points: dict[str, list[CrossSectionPoint]] = {}
+        for point in profile:
+            role_points.setdefault(point.role, []).append(point)
+
+        required = (
+            "left_shoulder",
+            "left_road_edge",
+            "right_road_edge",
+            "right_shoulder",
+        )
+        for role in required:
+            matches = role_points.get(role, [])
+            if len(matches) != 1:
+                raise ValueError(
+                    f"corridor profile {station_index} needs exactly one {role}"
+                )
+
+        left_edge_height_m = role_points["left_road_edge"][0].vertical_m
+        right_edge_height_m = role_points["right_road_edge"][0].vertical_m
+        built: list[CrossSectionPoint] = []
+        for point in profile:
+            vertical_m = point.vertical_m
+            if point.role == "left_shoulder":
+                vertical_m = min(vertical_m, left_edge_height_m)
+            elif point.role == "right_shoulder":
+                vertical_m = min(vertical_m, right_edge_height_m)
+            built.append(
+                CrossSectionPoint(
+                    lateral_m=point.lateral_m,
+                    vertical_m=vertical_m,
+                    role=point.role,
+                )
+            )
+        result.append(tuple(built))
+    return tuple(result)
 
 
 def _uniform_axis_step(
