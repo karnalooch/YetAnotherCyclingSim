@@ -56,6 +56,8 @@ Owner decision of 2026-10-01, recorded by Issue #295: the final Passo Giau world
 
 This destination is approved but not implemented by its documentation record. Keep the current SP638 terrain/road repair bounded, then inventory the full area and deliver additional roads and junctions through scoped Issues after the relevant M3 foundation is accepted. Plan playable-route activation separately from world coverage without reducing the final network to scenery only. The present MVP still proves one complete ride; this decision does not silently add a new closure gate to #294, start later gameplay systems, or change M0-M10 entry/exit rules. The expansion schedule remains to be assigned after the inventory and foundation proof.
 
+The owner also approved mixed asphalt/gravel riding (Issue #297; Product Requirements section 3.2). The existing reference model may receive an independent synthetic support proof now; this does not activate roads, calibrate gravel physics or complete a future gameplay milestone. After the terrain/road foundation and source inventory are accepted, select a real mixed-route checkpoint before expanding activation. A fixed mixed itinerary is sufficient initially; free junction navigation remains a separate feature.
+
 ---
 
 ## 3. Current milestone — M3 Route & World Foundation

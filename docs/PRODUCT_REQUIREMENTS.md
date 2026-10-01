@@ -55,6 +55,18 @@ Dostawa jest etapowa: najpierw poprawna integracja SP638 z terenem, następnie i
 
 Metodologia i kryteria pokrycia: [World Building Bible, sekcja 7.4](WORLD_BUILDING_BIBLE.md#74-full-area-real-road-network-target). Kolejność dostawy: [roadmapa](ROADMAP.md). Road Physics Profile, proweniencja, deterministyczna regeneracja i budżet wydajności nadal obowiązują.
 
+### 3.2 Jazda mieszana: szosa i gravel
+
+**Zatwierdzony kierunek właściciela z 2026-10-01; Issue #297.** Docelowa sieć ma umożliwiać jazdę asfalt -> szuter -> asfalt w jednym rzeczywistym świecie, nie na osobnej fikcyjnej mapie gravelowej. Nieutwardzone odcinki nie mają być tylko dekoracją. Udostępnienie ich do jazdy wymaga jednak zaakceptowanego połączenia drogi z terenem oraz weryfikacji źródeł, topologii, nawierzchni i dostępu rowerowego.
+
+Inwentaryzacja rozróżnia co najmniej asfalt, ubite kruszywo, luźny żwir, grunt i stan nieznany. Surowe informacje źródłowe, gładkość/przeszkody i dostęp pozostają odrębne. Nie wolno uznać każdej górskiej ścieżki, schodów lub trudnego odcinka MTB za łatwy gravel ani wyprowadzać przejezdności wyłącznie z nazwy nawierzchni. Brak danych nie oznacza asfaltu ani pozwolenia na jazdę.
+
+Jazda mieszana korzysta z tego samego deterministycznego silnika i Road Physics Profile. Opór toczenia oraz przyczepność mają jawne, osobno testowane parametry; nie dodajemy arbitralnego procentowego odejmowania prędkości ani drugiej fizyki. Wygląd i dźwięk pozostają prezentacją. Kalibracja opon, bardziej szczegółowe straty od nierówności i pełny model luźnego podłoża wymagają późniejszych osobnych dowodów, nie są implikowane przez samą etykietę gravel.
+
+Pierwszy rzeczywisty checkpoint obejmie zweryfikowany odcinek mieszany, ciągłe przejścia nawierzchni, poprawne połączenia i profil fizyczny oraz odbiór z kamery kolarza i pomiar wydajności. Może to być ustalona trasa; wybór skrętu na każdym skrzyżowaniu nie jest warunkiem tego testu. Bieżące MVP nadal wymaga jednego kompletnego przejazdu. Nie rozszerza to zamknięcia PR #294 ani nie oznacza, że sieć jest już przejezdna.
+
+Obecny przykład `physics_reference/examples/run_mixed_surface.py` i jego testy są wyłącznie syntetycznym dowodem użycia istniejącego modelu referencyjnego. Współczynniki i 300-metrowa trasa są danymi testowymi, nie pomiarami ani skalibrowanym presetem gravela. Przykład nie aktywuje jazdy w UE, nie dowodzi gravelowego pokonywania zakrętów i nie importuje żadnych rzeczywistych dróg.
+
 ## 4. Sterowanie MVP
 
 Pierwsza wersja będzie testowana bez fizycznego trenażera.
