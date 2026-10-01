@@ -73,7 +73,7 @@ on:
       ride_probe_variant:
         description: Diagnostic surface to traverse (not full-world acceptance)
         type: choice
-        options: [E, B, G, F, A, D, C]
+        options: [E, H, C3, B, G, F, A, D, C]
         default: E
       ride_probe_wide:
         description: Add a 105-degree secondary focused camera; primary remains 76 degrees
@@ -705,6 +705,15 @@ jobs:
             -NativeDtmPatchMetadata 'ExternalAssets/Terrain/PassoGiau/PreparedNearField/passo_giau_native_dtm_patch.json' `
             -Variant C3
           if ($LASTEXITCODE -ne 0) { throw 'PCGEx Gate C.3 native-DTM patch failed.' }
+
+          ./scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1 `
+            -ExpectedBranch 'HEAD' `
+            -ExpectedHead '${{ needs.classify.outputs.source_sha }}' `
+            -ArtifactRoot '${{ env.YACS_M3_EVIDENCE_ROOT }}/Visual/H' `
+            -PcgExExecutionOutput '${{ env.YACS_M3_EVIDENCE_ROOT }}/pcgex_graph_output.json' `
+            -NativeDtmPatchMetadata 'ExternalAssets/Terrain/PassoGiau/PreparedNearField/passo_giau_native_dtm_patch.json' `
+            -Variant H
+          if ($LASTEXITCODE -ne 0) { throw 'Native-DTM road-constrained single-owner candidate failed.' }
 
       - name: Upload PCGEx authoring evidence
         if: ${{ always() }}
