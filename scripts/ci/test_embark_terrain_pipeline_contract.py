@@ -204,8 +204,7 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
 
         feature_contract = json.loads(
             (
-                ROOT
-                / "worldgen/terrain/adaptive_terrain_feature_contract.json"
+                ROOT / "worldgen/terrain/adaptive_terrain_feature_contract.json"
             ).read_text(encoding="utf-8")
         )
         self.assertEqual(
