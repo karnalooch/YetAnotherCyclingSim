@@ -509,11 +509,16 @@ class LandscapeCaptureReadinessTests(unittest.TestCase):
             ),
         )
 
-    def capture(self, output):
+    def capture(self, output, **kwargs):
         from scripts.ue.prepare_landscape_capture import prepare_capture
 
         return prepare_capture(
-            self.api, self.landscape, "rider-position", "rider-rotation", output
+            self.api,
+            self.landscape,
+            "rider-position",
+            "rider-rotation",
+            output,
+            **kwargs,
         )
 
     def test_actual_view_is_set_before_native_barrier_and_recorded(self):
@@ -597,6 +602,72 @@ class LandscapeCaptureReadinessTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             with self.assertRaisesRegex(RuntimeError, "not ready"):
                 self.capture(Path(directory))
+
+    def test_native_mip_request_waits_and_records_full_residency(self):
+        import tempfile
+        from unittest.mock import Mock
+
+        self.texture.set_force_mip_levels_to_be_resident = Mock(
+            side_effect=lambda *args: self.events.append(("mip-request", args))
+        )
+
+        def complete_requested_streaming():
+            self.events.append(("barrier", ()))
+            if self.texture.set_force_mip_levels_to_be_resident.called:
+                self.state["resident_mips"] = 10
+
+        self.api.AutomationLibrary.finish_loading_before_screenshot.side_effect = (
+            complete_requested_streaming
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            report = self.capture(Path(directory), request_height_mips=True)
+            self.assertEqual(report["status"], "NATIVE_LOADING_AND_MIPS_READY")
+            self.assertEqual(
+                report["textures_before_mip_request"][0]["resident_mips"], 7
+            )
+            self.assertEqual(report["textures_after"][0]["resident_mips"], 10)
+            self.assertEqual(report["mip_residency_request_count"], 1)
+            self.texture.set_force_mip_levels_to_be_resident.assert_called_once_with(
+                120.0, 0
+            )
+            self.assertEqual(
+                [event[0] for event in self.events],
+                ["view", "barrier", "mip-request", "barrier"],
+            )
+            self.assertFalse(report["terrain_quality_accepted"])
+
+    def test_partial_residency_fails_and_releases_transient_request(self):
+        import tempfile
+        from unittest.mock import Mock, call
+
+        self.texture.set_force_mip_levels_to_be_resident = Mock()
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(RuntimeError, "not fully resident"):
+                self.capture(Path(directory), request_height_mips=True)
+            self.assertEqual(
+                self.texture.set_force_mip_levels_to_be_resident.call_args_list,
+                [call(120.0, 0), call(0.0, 0)],
+            )
+            report = json.loads(
+                (Path(directory) / "capture-readiness.json").read_text()
+            )
+            self.assertEqual(report["status"], "FAILED")
+            self.assertEqual(report["textures_after"][0]["resident_mips"], 7)
+
+    def test_controls_do_not_request_residency(self):
+        import tempfile
+        from unittest.mock import Mock
+
+        self.texture.set_force_mip_levels_to_be_resident = Mock()
+        with tempfile.TemporaryDirectory() as directory:
+            report = self.capture(Path(directory))
+            self.texture.set_force_mip_levels_to_be_resident.assert_not_called()
+            self.assertFalse(report["height_mip_lease_requested"])
+            self.assertEqual(report["height_mip_lease_seconds"], 0.0)
+        capture = (
+            ROOT / "scripts/ue/stage3g_capture_sp638_local_corridor.py"
+        ).read_text()
+        self.assertIn('request_height_mips=(variant_name == "A")', capture)
 
     def test_capture_hook_is_after_camera_and_before_screenshot_for_every_variant(self):
         capture = (

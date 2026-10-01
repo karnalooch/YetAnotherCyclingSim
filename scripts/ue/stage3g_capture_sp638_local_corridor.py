@@ -1497,7 +1497,8 @@ def main() -> None:
     from scripts.ue.prepare_landscape_capture import prepare_capture
 
     _proof_data["capture_preparation"] = prepare_capture(
-        unreal, landscape, camera_location, camera_rotation, _proof_path.parent
+        unreal, landscape, camera_location, camera_rotation, _proof_path.parent,
+        request_height_mips=(variant_name == "A"),
     )
 
     unreal.EditorPythonScripting.set_keep_python_script_alive(True)

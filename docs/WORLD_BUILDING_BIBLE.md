@@ -615,7 +615,18 @@ residency or visual quality. Compare the unchanged camera and road hashes and
 inspect the PNG before attributing stair-stepping to this stage. Never respond
 to a failed result with a hidden global streaming disable or DTM smoothing.
 
+M3 run 92 completed this barrier and all six captures but retained macro stepping.
+Its 64 combined height textures still reported 7 of 10 resident mips. A second
+bounded experiment therefore requests a transient 120-second native mip residency
+lease for map-owned, mipmapped height textures in variant A only, followed by the
+same native loading barrier. B-E/C3 remain controls. The lease must produce full
+native mip readback before A is captured; a partial/placeholder result fails closed.
+It expires after the capture process or duration and does not serialize `NeverStream`
+or disable streaming globally. This experiment is not a runtime/performance policy
+and does not prove a terrain repair until the actual A image improves.
+
 Official API references:
+- https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Engine/UStreamableRenderAsset
 - https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/AutomationLibrary
 - https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/UnrealEditorSubsystem
 
