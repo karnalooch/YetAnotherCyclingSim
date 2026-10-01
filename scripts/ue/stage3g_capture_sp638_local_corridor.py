@@ -1498,7 +1498,7 @@ def main() -> None:
 
     _proof_data["capture_preparation"] = prepare_capture(
         unreal, landscape, camera_location, camera_rotation, _proof_path.parent,
-        request_height_mips=(variant_name == "A"),
+        request_height_mips=macro_landscape_visible,
     )
 
     unreal.EditorPythonScripting.set_keep_python_script_alive(True)

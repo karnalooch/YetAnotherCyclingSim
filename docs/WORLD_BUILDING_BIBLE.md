@@ -615,15 +615,28 @@ residency or visual quality. Compare the unchanged camera and road hashes and
 inspect the PNG before attributing stair-stepping to this stage. Never respond
 to a failed result with a hidden global streaming disable or DTM smoothing.
 
-M3 run 92 completed this barrier and all six captures but retained macro stepping.
-Its 64 combined height textures still reported 7 of 10 resident mips. A second
-bounded experiment therefore requests a transient 120-second native mip residency
-lease for map-owned, mipmapped height textures in variant A only, followed by the
-same native loading barrier. B-E/C3 remain controls. The lease must produce full
-native mip readback before A is captured; a partial/placeholder result fails closed.
-It expires after the capture process or duration and does not serialize `NeverStream`
-or disable streaming globally. This experiment is not a runtime/performance policy
-and does not prove a terrain repair until the actual A image improves.
+M3 run 92 completed the native loading barrier but retained macro stepping;
+64 combined height textures still reported 7 of 10 resident mips. The controlled
+run 94 at `b22ea83432c96dc7796cba9b802fe4c049001536` requested full height mips
+for variant A only. All 64 became 10/10 and the pronounced macro staircase
+artifact disappeared from that same-camera A image. B/E retained 7/10 and the
+coarse terrain. The sampled height-texture source exports were byte-identical,
+and camera, PCGEx output and corridor hashes were unchanged. This establishes
+height-mip residency as a cause of the observed capture defect, not source-data
+quantization or a reason to replace the established road pipeline.
+
+The bounded capture preparation therefore requests a transient 120-second native
+mip-residency lease for map-owned, mipmapped height textures whenever the macro
+Landscape is visible (A/B/E). C/D/C3 do not request macro mip residency. The native
+loading barrier must finish and full-mip readback must pass before capture;
+partial/placeholder results fail closed. The lease expires after the process or
+duration, does not serialize `NeverStream`, and does not disable streaming globally.
+
+This fixes a forced-LOD proof resource precondition; it is not a blanket production
+runtime policy, performance acceptance or a cure for every terrain/road seam.
+Keep the single-owner near-field and road/earthwork acceptance gates independent.
+The A-only causal result does not substitute for reviewing the combined A-E/C3
+candidate, additional representative locations and performance where required.
 
 Official API references:
 - https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Engine/UStreamableRenderAsset

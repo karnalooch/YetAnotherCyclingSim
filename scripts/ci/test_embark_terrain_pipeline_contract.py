@@ -667,7 +667,51 @@ class LandscapeCaptureReadinessTests(unittest.TestCase):
         capture = (
             ROOT / "scripts/ue/stage3g_capture_sp638_local_corridor.py"
         ).read_text()
-        self.assertIn('request_height_mips=(variant_name == "A")', capture)
+        self.assertIn("request_height_mips=macro_landscape_visible", capture)
+
+    def test_only_visible_macro_variants_request_height_mips(self):
+        import ast
+
+        capture = (
+            ROOT / "scripts/ue/stage3g_capture_sp638_local_corridor.py"
+        ).read_text()
+        tree = ast.parse(capture)
+        variants = next(
+            ast.literal_eval(node.value)
+            for node in tree.body
+            if isinstance(node, ast.Assign)
+            and any(
+                isinstance(target, ast.Name) and target.id == "DIAGNOSTIC_VARIANTS"
+                for target in node.targets
+            )
+        )
+        self.assertEqual(
+            {
+                name
+                for name, policy in variants.items()
+                if policy["macro_landscape_visible"]
+            },
+            {"A", "B", "E"},
+        )
+        calls = [
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "prepare_capture"
+        ]
+        self.assertEqual(len(calls), 1)
+        option = next(
+            keyword.value
+            for keyword in calls[0].keywords
+            if keyword.arg == "request_height_mips"
+        )
+        self.assertIsInstance(option, ast.Name)
+        self.assertEqual(option.id, "macro_landscape_visible")
+        self.assertIn(
+            'macro_landscape_visible = bool(variant["macro_landscape_visible"])',
+            capture,
+        )
 
     def test_capture_hook_is_after_camera_and_before_screenshot_for_every_variant(self):
         capture = (
