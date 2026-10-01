@@ -50,6 +50,12 @@ M10 MVP Stabilization
 
 The current goal is still a complete playable ride from start to finish before broad polish.
 
+### Approved world destination — complete real-road coverage
+
+Owner decision of 2026-10-01, recorded by Issue #295: the final Passo Giau world must include all roads that actually exist inside the explicit project area, not just SP638 or a few selected rides. [Product Requirements section 3.1](PRODUCT_REQUIREMENTS.md#31-docelowo-wszystkie-rzeczywiste-drogi-obszaru) owns the scope; [World Building Bible section 7.4](WORLD_BUILDING_BIBLE.md#74-full-area-real-road-network-target) owns coverage, topology, provenance and regeneration acceptance.
+
+This destination is approved but not implemented by its documentation record. Keep the current SP638 terrain/road repair bounded, then inventory the full area and deliver additional roads and junctions through scoped Issues after the relevant M3 foundation is accepted. Plan playable-route activation separately from world coverage without reducing the final network to scenery only. The present MVP still proves one complete ride; this decision does not silently add a new closure gate to #294, start later gameplay systems, or change M0-M10 entry/exit rules. The expansion schedule remains to be assigned after the inventory and foundation proof.
+
 ---
 
 ## 3. Current milestone — M3 Route & World Foundation
