@@ -19,18 +19,17 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: 35ba65e5cfe69b5653f73d175662df5afbefb035
-          fetch-depth: 0
+          ref: bb15df0003c7ad22025844f3ca8b8e93d42a9fca
+          fetch-depth: 1
           lfs: false
           persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.14'
       - run: python -m pip install --disable-pip-version-check ruff==0.16.8
-      - name: Merge pinned main locally, validate reviewed camera edits, publish blobs only
+      - name: Validate exact isolation edits and publish immutable blobs only
         env:
           GH_TOKEN: ${{ github.token }}
-        shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
@@ -39,14 +38,20 @@ jobs:
           import json
           import os
           import subprocess
+          import sys
           import urllib.request
           from pathlib import Path
           REPO = 'karnalooch/YetAnotherCyclingSim'
-          BASE = '35ba65e5cfe69b5653f73d175662df5afbefb035'
-          MAIN = '8ba08b12c03c37dc54a9d620c224aa4f06de7fc4'
-          PLAN_SHA = 'a2c07e22fb04d2a12b9b0fc420bb549ec0504c89'
-          HELPER_SHA = 'a8095a3e9c49896ee626c8c727bac812e29159ef'
-          HELPER_PATH = 'scripts/ue/road_capture_camera.py'
+          BASE = 'bb15df0003c7ad22025844f3ca8b8e93d42a9fca'
+          PLAN_SHA = '3c7818fa0d81edf9533002f12029b447b4f0b960'
+          ALLOWED = {
+              'scripts/ue/stage3g_capture_sp638_local_corridor.py',
+              'scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1',
+              '.github/workflows/passo-giau-embark-terrain.yml',
+              'scripts/ci/test_embark_terrain_pipeline_contract.py',
+              'docs/WORLD_BUILDING_BIBLE.md',
+              'docs/CI_VALIDATION_TIERS.md',
+          }
           def git(*args):
               return subprocess.check_output(['git', *args], text=True).strip()
           def blob(data):
@@ -58,74 +63,72 @@ jobs:
                   headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json'})
               with urllib.request.urlopen(request, timeout=40) as response:
                   return json.load(response)
-          def read_blob(sha):
-              data = base64.b64decode(api('/git/blobs/' + sha)['content'])
-              if blob(data) != sha:
-                  raise SystemExit('Blob hash mismatch: ' + sha)
-              return data
           if git('rev-parse', 'HEAD') != BASE:
               raise SystemExit('Unexpected source HEAD')
           if api('/git/ref/heads/fix/293-macro-landscape')['object']['sha'] != BASE:
-              raise SystemExit('PR moved; do not prepare stale work')
-          plan = json.loads(read_blob(PLAN_SHA))
-          if plan['base'] != BASE or plan['main'] != MAIN:
-              raise SystemExit('Unexpected source plan')
-          for entry in plan['files']:
-              if git('rev-parse', BASE + ':' + entry['path']) != entry['before_blob']:
-                  raise SystemExit('Source path drift: ' + entry['path'])
-          git('config', 'user.name', 'github-actions[bot]')
-          git('config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com')
-          subprocess.run(['git', 'merge', '--no-commit', '--no-ff', MAIN], check=True)
+              raise SystemExit('PR moved; refusing stale preparation')
+          data = base64.b64decode(api('/git/blobs/' + PLAN_SHA)['content'])
+          if blob(data) != PLAN_SHA:
+              raise SystemExit('Plan blob mismatch')
+          plan = json.loads(data)
+          if plan['base'] != BASE or {x['path'] for x in plan['files']} != ALLOWED or len(plan['files']) != len(ALLOWED):
+              raise SystemExit('Unexpected plan scope')
           for entry in plan['files']:
               path = Path(entry['path'])
-              text = path.read_text(encoding='utf-8')
-              for edit in entry['edits']:
-                  if text.count(edit['old']) != 1:
-                      raise SystemExit('Absent or ambiguous patch anchor: ' + str(path))
-                  text = text.replace(edit['old'], edit['new'], 1)
+              data = path.read_bytes()
+              if blob(data) != entry['before_blob']:
+                  raise SystemExit('Source drift: ' + str(path))
+              text = data.decode('utf-8')
+              for change in entry['edits']:
+                  if text.count(change['old']) != 1:
+                      raise SystemExit('Absent or ambiguous anchor: ' + str(path))
+                  text = text.replace(change['old'], change['new'], 1)
               path.write_text(text, encoding='utf-8')
-          helper = Path(HELPER_PATH)
-          if helper.exists():
-              raise SystemExit('Unexpected existing camera helper')
-          helper.write_bytes(read_blob(HELPER_SHA))
-          subprocess.run(['ruff', 'format', 'scripts/ci/test_embark_terrain_pipeline_contract.py', HELPER_PATH], check=True)
-          subprocess.run(['ruff', 'check', 'scripts/ci', HELPER_PATH, '--select', 'E9,F63,F7,F82'], check=True)
-          subprocess.run(['python', '-m', 'unittest', 'scripts.ci.test_embark_terrain_pipeline_contract', '-v'], check=True)
-          subprocess.run(['python', 'scripts/ci/run_python_tests.py'], check=True)
-          subprocess.run(['python', '-m', 'py_compile', HELPER_PATH, 'scripts/ue/stage3g_capture_sp638_local_corridor.py'], check=True)
-          subprocess.run(['python', 'scripts/ci/check_docs_index.py'], check=True)
-          subprocess.run(['git', 'diff', '--check', 'HEAD'], check=True)
+          def checked(args):
+              result = subprocess.run(args, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=300)
+              print('$ ' + ' '.join(args), flush=True)
+              print(result.stdout[-3500:], flush=True)
+              if result.returncode:
+                  raise SystemExit('Validation failed: ' + str(result.returncode))
+          checked(['ruff', 'format', 'scripts/ci/test_embark_terrain_pipeline_contract.py'])
+          checked(['ruff', 'check', 'scripts/ci', '--select', 'E9,F63,F7,F82'])
+          checked([sys.executable, '-m', 'unittest', 'scripts.ci.test_embark_terrain_pipeline_contract', 'scripts.ci.test_terrain_proof_request', 'scripts.ci.test_terrain_proof_routing', '-v'])
+          checked([sys.executable, 'scripts/ci/run_python_tests.py'])
+          checked([sys.executable, '-m', 'py_compile', 'scripts/ue/stage3g_capture_sp638_local_corridor.py'])
+          checked(['pwsh', '-NoProfile', '-Command', '$tokens=$null; $errors=$null; [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1),[ref]$tokens,[ref]$errors) | Out-Null; if ($errors.Count) { $errors | Format-List; exit 1 }; Write-Output "PowerShell parse PASS"'])
+          checked([sys.executable, 'scripts/ci/check_docs_index.py'])
+          checked(['git', 'diff', '--check'])
           from scripts.ci.check_docs_index import local_targets, read_utf8
-          for path in (Path('AGENTS.md'), Path('docs/PRODUCT_REQUIREMENTS.md'), Path('docs/ROADMAP.md'), Path('docs/WORLD_BUILDING_BIBLE.md')):
+          for doc in ('docs/WORLD_BUILDING_BIBLE.md', 'docs/CI_VALIDATION_TIERS.md'):
+              path = Path(doc)
               if any(not target.exists() for target in local_targets(path, read_utf8(path))):
-                  raise SystemExit('Broken changed-document link: ' + str(path))
-          expected = {'AGENTS.md', 'docs/PRODUCT_REQUIREMENTS.md', 'docs/ROADMAP.md', 'docs/WORLD_BUILDING_BIBLE.md', 'physics_reference/README.md', 'physics_reference/examples/run_mixed_surface.py', 'physics_reference/tests/test_mixed_surface_reference.py', 'scripts/ue/stage3g_capture_sp638_local_corridor.py', 'scripts/ci/test_embark_terrain_pipeline_contract.py', HELPER_PATH}
-          paths = set(git('diff', 'HEAD', '--name-only').splitlines()) | set(git('ls-files', '--others', '--exclude-standard').splitlines())
-          if paths != expected:
-              raise SystemExit('Unexpected changed paths: ' + repr(paths ^ expected))
+                  raise SystemExit('Broken changed-document link: ' + doc)
+          paths = set(git('diff', '--name-only').splitlines())
+          if paths != ALLOWED:
+              raise SystemExit('Unexpected changed paths: ' + repr(paths ^ ALLOWED))
           elements = []
           for path in sorted(paths):
               data = Path(path).read_bytes()
               result = api('/git/blobs', {'content': data.decode('utf-8'), 'encoding': 'utf-8'})
               if result['sha'] != blob(data):
-                  raise SystemExit('Published blob mismatch')
+                  raise SystemExit('Published blob mismatch: ' + path)
               elements.append({'path': path, 'mode': '100644', 'type': 'blob', 'sha': result['sha']})
-          result = {'parent': BASE, 'additional_parent_shas': [MAIN], 'tree_elements': elements, 'validation': 'camera-contract 33/33; reference 391/391; docs links/i18n/structure/freshness PASS; no UE or visual acceptance claimed'}
-          Path(os.environ['RUNNER_TEMP'], 'reviewed-camera-blobs.json').write_text(json.dumps(result, indent=2))
-          print('REVIEWED_CAMERA_BLOBS=' + json.dumps(result))
-          print('No branch refs changed. No terrain/road geometry or active workflow changed.')
+          result = {'parent': BASE, 'tree_elements': elements, 'validation': 'contract/admission/routing and 391 reference tests PASS; PS parse PASS; docs links/i18n/structure/freshness PASS; visual NOT RUN'}
+          Path(os.environ['RUNNER_TEMP'], 'reviewed-isolation-blobs.json').write_text(json.dumps(result, indent=2))
+          print('REVIEWED_ISOLATION_BLOBS=' + json.dumps(result), flush=True)
+          print('No PR refs changed. No road/terrain geometry or compiled source changes.', flush=True)
           PY
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: issue293-reviewed-route-camera
+          name: issue293-reviewed-surface-isolation
           path: |
-            ${{ runner.temp }}/reviewed-camera-blobs.json
-            scripts/ue/road_capture_camera.py
+            ${{ runner.temp }}/reviewed-isolation-blobs.json
             scripts/ue/stage3g_capture_sp638_local_corridor.py
+            scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1
+            .github/workflows/passo-giau-embark-terrain.yml
             scripts/ci/test_embark_terrain_pipeline_contract.py
             docs/WORLD_BUILDING_BIBLE.md
-            docs/PRODUCT_REQUIREMENTS.md
-            docs/ROADMAP.md
-            AGENTS.md
+            docs/CI_VALIDATION_TIERS.md
           if-no-files-found: error
+          include-hidden-files: true
           retention-days: 2
