@@ -8,6 +8,7 @@ on:
       - '.github/workflows/sa-calobra-world-data-cnig-probe.yml'
       - 'scripts/assets/acquire_sa_calobra_world_data.py'
       - 'scripts/assets/resolve_sa_calobra_cnig_records.py'
+      - 'scripts/assets/resolve_sa_calobra_cnig_browser.py'
       - 'worldgen/terrain/benchmarks/sa_calobra/world_data/working_space_sources.json'
 
 permissions:
@@ -86,12 +87,14 @@ jobs:
       - name: Install CNIG resolver dependencies
         shell: bash
         run: |
-          python -m pip install --disable-pip-version-check --only-binary=:all: requests==2.32.5 pyproj==3.8.0
+          python -m pip install --disable-pip-version-check --only-binary=:all: requests==2.32.5 pyproj==3.8.0 selenium==4.35.0
 
-      - name: Resolve exact LiDAR and MDS records for current working space
+      - name: Resolve exact LiDAR and MDS records through CNIG public browser search
         shell: bash
         run: |
-          python scripts/assets/resolve_sa_calobra_cnig_records.py \
+          google-chrome --version || true
+          chromedriver --version || true
+          python scripts/assets/resolve_sa_calobra_cnig_browser.py \
             --manifest worldgen/terrain/benchmarks/sa_calobra/world_data/working_space_sources.json \
             --output cnig-working-space-records.json
 
