@@ -384,14 +384,14 @@ jobs:
           $pythonDir = Join-Path (Get-Location) 'Content/Python'
           New-Item -ItemType Directory -Path $pythonDir -Force | Out-Null
           $bootstrap = @'
-import os
-import sys
-import unreal
-project = unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_dir())
-if project not in sys.path:
-    sys.path.insert(0, project)
-from scripts.ue import owner_handoff_startup
-'@
+          import os
+          import sys
+          import unreal
+          project = unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_dir())
+          if project not in sys.path:
+              sys.path.insert(0, project)
+          from scripts.ue import owner_handoff_startup
+          '@
           Set-Content -LiteralPath (Join-Path $pythonDir 'init_unreal.py') -Value $bootstrap -Encoding utf8
 
           $env:YACS_TERRAIN_CAPTURE_ROOT = $root
