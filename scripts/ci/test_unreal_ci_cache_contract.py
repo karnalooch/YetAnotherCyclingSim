@@ -103,7 +103,7 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         paths = [
             line.strip() for line in block.splitlines() if "/RegionTerrain/" in line
         ]
-        self.assertEqual(len(paths), 3)
+        self.assertEqual(len(paths), 4)
         self.assertNotIn("Upload bounded BOB construction lesson", block)
         self.assertNotIn("bob-build-lesson", block)
         self.assertNotIn("bob-lesson-", block)
@@ -133,7 +133,10 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         self.assertIn("$cut.status -ne 'TECHNICAL_CUT_PASS'", capture)
         self.assertIn("$cut.geometry_repair_executed -ne $true", capture)
         self.assertIn("$cut.transient_road_earthworks_modified -ne $true", capture)
+        self.assertIn("[int]$cut.new_fill_required_sample_count -ne 0", capture)
         self.assertIn("[int]$cut.after.class_counts.CUT_REQUIRED -ne 0", capture)
+        self.assertIn("$inspection.actual_viewmode -ne 'VMI_CLAY'", capture)
+        self.assertIn("Final road rider capture did not return to Lit mode.", capture)
         self.assertIn("WaitForExit(300000)", capture)
         self.assertNotIn("YACS_KEEP_EDITOR_OPEN", capture)
         self.assertNotIn("RUNNER_TRACKING_ID", capture)
