@@ -23,6 +23,8 @@ from scripts.assets.prepare_ma2141_road_preview import (  # noqa: E402
     triangle_candidates,
 )
 
+from scripts.worldgen.bob_profile_inspector import inspect_road_profile  # noqa: E402
+
 STATION_STEP_M = 0.5
 FIT_RADIUS_M = 5.0
 # Review triggers for this experiment, NOT engineering acceptance thresholds.
@@ -227,6 +229,7 @@ def prepare(prepared: Path, output: Path, exact_sha: str):
         ],
         "attribution": profile["attribution"],
     }
+    result["bob_inspection"] = inspect_road_profile(result)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, separators=(",", ":"), allow_nan=False) + "\n")
     return result

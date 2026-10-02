@@ -1080,6 +1080,43 @@ or empty sample evidence stays pending. The review lists source reconciliation,
 profile regularization, bounded native `Road_Earthworks` and escalation checks;
 it does not execute an unvalidated repair or grant road/learning admission.
 
+Owner direction, 2026-10-02: operate BOB as an **inspector now**; autonomous
+construction and learning are later work. The existing profile assessment calls
+`scripts/worldgen/bob_profile_inspector.py` and embeds `bob_inspection` in
+`ma2141-profile-candidate.json`, already uploaded by the native terrain CI.
+This is a read-only extension of the admitted offline assessment and BOB policy,
+not another geometry solver, dependency, terrain writer or PCGEx replacement.
+
+The inspector validates input hashes, source-XY preservation, finite full-width
+samples and complete regular chainage spacing. It recomputes cut/fill sample
+differences, transverse endpoint slope and longitudinal center grade instead of
+trusting summary metrics or a supplied list of flagged stations. Consecutive
+exceedances become findings with start/end chainage, peak location, peak value,
+units, sample count and the actual experimental review trigger. Disjoint ranges
+stay separate; grade findings cover both ends of their measured segment.
+Causes remain `UNRESOLVED`: a height discrepancy cannot identify a wall, an
+incorrect footprint or an epoch mismatch by itself.
+
+`INSPECTION_INCOMPLETE` means required evidence is invalid/missing;
+`REVIEW_REQUIRED` means measured symptoms exceed experimental triggers;
+`REVIEW_PENDING` means none exceed them. None means road acceptance.
+`inspection_complete` refers only to these numeric profile checks. Geographic
+edges, curve/edge smoothness, retaining structures, competing-branch clearance,
+continuous contact, native contact of the regularized candidate, collision,
+rider visuals, bounded ride and performance remain explicitly unverified.
+Passing contact of the raw DTM-conforming preview does not prove contact of the
+regularized profile. Inspector source hash and candidate provenance are retained.
+
+Every inspection keeps authoring permission, repair execution, road admission
+and learning eligibility false. It neither calls a construction strategy nor
+changes terrain or verified-case memory. Its work list directs source/structure
+review and plan/rider inspection; it does not prescribe an unmeasured wall or
+ordinary shoulder fill. On the revision-4 benchmark the first local inspection
+finds 22 ranges: 3 cut differences, 15 fill differences and 4 crossfall ranges;
+no grade exceedance. The largest fill difference is 2.477 m at 150.5 m and
+largest crossfall is 14.58% at 142 m. These are diagnostics, not construction
+measurements or acceptance thresholds.
+
 Keep rejected cases as diagnostic evidence, separate from verified-case memory.
 The first Spanish example is
 [`ma2141_contact_failure_5826507.json`](../worldgen/terrain/benchmarks/sa_calobra/ma2141_contact_failure_5826507.json).

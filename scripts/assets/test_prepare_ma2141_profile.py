@@ -1,8 +1,10 @@
+import copy
 import unittest
 
 import numpy as np
 
 from scripts.assets.prepare_ma2141_profile import fit_sections, local_linear_fit
+from scripts.worldgen.bob_profile_inspector import inspect_road_profile
 
 
 class RoadProfileTests(unittest.TestCase):
@@ -65,6 +67,115 @@ class RoadProfileTests(unittest.TestCase):
                 local_linear_fit(stations, values, radius)
         with self.assertRaises(ValueError):
             fit_sections(self.stations, self.lateral[:, ::-1], self.lateral)
+
+
+class BobProfileInspectorTests(unittest.TestCase):
+    def packet(self):
+        return {
+            "exact_sha": "a" * 40,
+            **{
+                key: "b" * 64
+                for key in (
+                    "source_sha256",
+                    "profile_sha256",
+                    "heightmap_sha256",
+                    "imagery_sha256",
+                    "producer_sha256",
+                )
+            },
+            "source_xy_preserved": True,
+            "parameters": {
+                "station_step_m": 0.5,
+                "review_delta_m": 0.5,
+                "review_grade": 0.25,
+                "review_crossfall": 0.12,
+            },
+            "stations": [
+                {
+                    "station_m": i * 0.5,
+                    "candidate_center_m": 600.0,
+                    "lateral_m": np.linspace(-3, 3, 25).tolist(),
+                    "native_ground_m": [600.0] * 25,
+                    "candidate_ground_m": [600.0] * 25,
+                }
+                for i in range(7)
+            ],
+        }
+
+    def test_flat_profile_never_admits_unverified_road_or_learning(self):
+        packet = self.packet()
+        before = copy.deepcopy(packet)
+        result = inspect_road_profile(packet)
+        self.assertEqual(packet, before)
+        self.assertEqual(result["status"], "REVIEW_PENDING")
+        self.assertTrue(result["inspection_complete"])
+        for key in (
+            "earthworks_authoring_permitted",
+            "geometry_repair_executed",
+            "road_admitted",
+            "eligible_for_learning",
+        ):
+            self.assertFalse(result[key])
+        self.assertIn("curve_and_edge_smoothness", result["unverified_checks"])
+
+    def test_groups_disjoint_edge_failures_without_trusting_summary(self):
+        packet = self.packet()
+        packet["metrics"] = {"max_fill_m": 0}
+        packet["review_stations_m"] = []
+        for i in [1, 2, 5]:
+            packet["stations"][i]["native_ground_m"][0] = 598.0 - i / 10
+        findings = inspect_road_profile(packet)["findings"]
+        self.assertEqual(len(findings), 2)
+        self.assertEqual(
+            [(f["start_station_m"], f["end_station_m"]) for f in findings],
+            [(0.5, 1.0), (2.5, 2.5)],
+        )
+        self.assertEqual(findings[0]["peak_station_m"], 1.0)
+        self.assertEqual(findings[0]["kind"], "FILL_DIFFERENCE")
+        self.assertEqual(findings[0]["cause"], "UNRESOLVED")
+
+    def test_cut_crossfall_and_grade_are_separate_findings(self):
+        packet = self.packet()
+        for i, row in enumerate(packet["stations"]):
+            row["candidate_center_m"] = 600 + i * 0.2
+            row["candidate_ground_m"] = [
+                600 + i * 0.2 + 0.2 * x for x in row["lateral_m"]
+            ]
+            row["native_ground_m"] = [x + 1 for x in row["candidate_ground_m"]]
+        findings = inspect_road_profile(packet)["findings"]
+        self.assertEqual(
+            {f["kind"] for f in findings}, {"CUT_DIFFERENCE", "CROSSFALL", "GRADE"}
+        )
+        grade = next(f for f in findings if f["kind"] == "GRADE")
+        self.assertEqual(grade["end_station_m"], 3.0)
+        self.assertEqual(grade["sample_count"], 6)
+
+    def test_missing_nonfinite_boolean_and_gapped_evidence_fail_closed(self):
+        packets = []
+        p = self.packet()
+        del p["heightmap_sha256"]
+        packets.append(p)
+        p = self.packet()
+        p["stations"][2]["native_ground_m"][0] = float("nan")
+        packets.append(p)
+        p = self.packet()
+        p["parameters"]["review_delta_m"] = True
+        packets.append(p)
+        p = self.packet()
+        del p["stations"][3]
+        packets.append(p)
+        p = self.packet()
+        p["stations"][2]["lateral_m"] = [0.0] * 25
+        packets.append(p)
+        p = self.packet()
+        p["source_xy_preserved"] = False
+        packets.append(p)
+        for packet in packets:
+            with self.subTest(packet=packet):
+                result = inspect_road_profile(packet)
+                self.assertEqual(result["status"], "INSPECTION_INCOMPLETE")
+                self.assertFalse(result["inspection_complete"])
+                self.assertFalse(result["earthworks_authoring_permitted"])
 
 
 if __name__ == "__main__":
