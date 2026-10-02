@@ -107,13 +107,8 @@ def _decode_height_m(encoded, manifest):
     ) / 100.0
 
 
-def _encode_delta_m(delta_m, manifest):
-    encoded = round(
-        NEUTRAL_HEIGHT + delta_m * 100.0 * 128.0 / float(manifest["scale_z"])
-    )
-    if not 0 <= encoded <= 65535:
-        raise ValueError("Road_Earthworks CUT delta exceeds Landscape encoding")
-    return int(encoded)
+def _world_height_cm(encoded, manifest):
+    return _decode_height_m(encoded, manifest) * 100.0
 
 
 def prepare(prepared, profile_path, output_manifest, output_r16, exact_sha):
@@ -217,7 +212,15 @@ def prepare(prepared, profile_path, output_manifest, output_r16, exact_sha):
     max_y = max(key[1] for key in requested)
     width = max_x - min_x + 1
     height = max_y - min_y + 1
-    patch = np.full((height, width), NEUTRAL_HEIGHT, dtype="<u2")
+    patch = np.empty((height, width), dtype="<f4")
+    for patch_y in range(height):
+        grid_y = min_y + patch_y
+        for patch_x in range(width):
+            grid_x = min_x + patch_x
+            patch[patch_y, patch_x] = _world_height_cm(
+                terrain[grid_y, grid_x],
+                terrain_manifest,
+            )
 
     modified = 0
     skipped_guard_over_cap = 0
@@ -234,9 +237,9 @@ def prepare(prepared, profile_path, output_manifest, output_r16, exact_sha):
         if delta_m < -1e-6:
             modified += 1
             cut_values.append(-delta_m)
-            patch[grid_y - min_y, grid_x - min_x] = _encode_delta_m(
-                delta_m, terrain_manifest
-            )
+            patch[grid_y - min_y, grid_x - min_x] = (
+                base_m + delta_m
+            ) * 100.0
 
     if modified == 0:
         raise ValueError("CUT-only patch contains no terrain changes")
@@ -251,7 +254,11 @@ def prepare(prepared, profile_path, output_manifest, output_r16, exact_sha):
         "operation": "CUT_ONLY",
         "status": "BOUNDED_TRANSIENT_RECIPE",
         "layer": "Road_Earthworks",
-        "layer_encoding": "ADDITIVE_DELTA_R16_32768_ZERO",
+        "layer_encoding": "LANDSCAPE_TEXTURE_PATCH_WORLD_UNITS_F32_MIN",
+        "blend_mode": "Min",
+        "height_encoding": "WorldUnits",
+        "zero_height_meaning": "WorldZero",
+        "world_space_unit": "centimeter",
         "base_layer": "Base_DTM",
         "base_dtm_modified": False,
         "route_xy_modified": False,
@@ -277,6 +284,16 @@ def prepare(prepared, profile_path, output_manifest, output_r16, exact_sha):
         "patch_file": output_r16.name,
         "patch_sha256": sha256(output_r16),
         "patch_byte_count": output_r16.stat().st_size,
+        "texture_resolution": [width, height],
+        "unscaled_coverage_cm": [
+            (width - 1) * GRID_STEP_M * 100.0,
+            (height - 1) * GRID_STEP_M * 100.0,
+        ],
+        "texture_center_world_cm": [
+            (min_x + max_x) * 0.5 * GRID_STEP_M * 100.0,
+            (min_y + max_y) * 0.5 * GRID_STEP_M * 100.0,
+            0.0,
+        ],
         "profile_sha256": sha256(profile_path),
         "heightmap_sha256": terrain_manifest["heightmap_sha256"],
         "expected_pre_fit": {
@@ -305,14 +322,14 @@ if __name__ == "__main__":
     parser.add_argument("--prepared-terrain", type=Path, required=True)
     parser.add_argument("--profile", type=Path, required=True)
     parser.add_argument("--output-manifest", type=Path, required=True)
-    parser.add_argument("--output-r16", type=Path, required=True)
+    parser.add_argument("--output-f32", type=Path, required=True)
     parser.add_argument("--exact-sha", required=True)
     args = parser.parse_args()
     result = prepare(
         args.prepared_terrain,
         args.profile,
         args.output_manifest,
-        args.output_r16,
+        args.output_f32,
         args.exact_sha,
     )
     print(
