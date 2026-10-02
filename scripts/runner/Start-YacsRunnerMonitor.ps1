@@ -31,13 +31,17 @@ $script:lastWorkerWrite = [DateTime]::MinValue
 $script:muted = $false
 $script:initial = $true
 $script:status = 'Waiting for runner activity'
+$script:startupNotice = $false
 $icon = [Windows.Forms.NotifyIcon]::new()
 $icon.Icon = [Drawing.SystemIcons]::Information
 $icon.Text = 'YACS runner monitor'
 $menu = [Windows.Forms.ContextMenuStrip]::new()
 $context = [Windows.Forms.ApplicationContext]::new()
 function Show-Notice([string]$Title, [string]$Message, [string]$Severity = 'Info') {
-    if (-not $script:muted) { $icon.ShowBalloonTip(8000, $Title, $Message, [Windows.Forms.ToolTipIcon]::$Severity) }
+    if (-not $script:muted) {
+        $icon.ShowBalloonTip(8000, $Title, $Message, [Windows.Forms.ToolTipIcon]::$Severity)
+        Write-YacsMonitorRecord $logDirectory @{ kind = 'notification_requested'; title = $Title; severity = $Severity }
+    }
 }
 $statusItem = $menu.Items.Add('Status')
 $statusItem.add_Click({ [void][Windows.Forms.MessageBox]::Show($script:status, 'YACS runner') })
@@ -128,6 +132,10 @@ $timer.add_Tick({
             $script:status = "Service: $serviceState`nLast observed job: $($script:job)`nFree RAM: $([Math]::Round($os.FreePhysicalMemory / 1MB, 1)) GiB`nFree disk: $([Math]::Round($disk.AvailableFreeSpace / 1GB, 1)) GiB`nDiagnostics: $diag"
             Write-YacsMonitorRecord $logDirectory @{ kind = 'health'; service = $serviceState; job = $script:job; freeRamGiB = [Math]::Round($os.FreePhysicalMemory / 1MB, 2); freeDiskGiB = [Math]::Round($disk.AvailableFreeSpace / 1GB, 2); quietMinutes = [Math]::Round($quiet, 1) }
             $script:lastHealth = [DateTime]::UtcNow
+            if (-not $script:startupNotice) {
+                Show-Notice 'YACS - monitor ready' 'Runner notifications are active. Right-click the tray icon for status and live logs.'
+                $script:startupNotice = $true
+            }
         }
         $tip = if ($script:job) { 'YACS: ' + $script:job } else { 'YACS: no active job observed' }
         $icon.Text = $tip.Substring(0, [Math]::Min(63, $tip.Length))
@@ -144,7 +152,7 @@ $timer.add_Tick({
     }
 })
 try {
-    Write-YacsMonitorRecord $logDirectory @{ kind = 'monitor_started'; runner = $RunnerRoot }
+    Write-YacsMonitorRecord $logDirectory @{ kind = 'monitor_started'; runner = $RunnerRoot; processId = $PID; sessionId = (Get-Process -Id $PID).SessionId }
     $timer.Start()
     [Windows.Forms.Application]::Run($context)
 } finally {
