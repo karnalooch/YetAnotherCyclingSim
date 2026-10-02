@@ -1,7 +1,7 @@
 """Capture accepted Sa Calobra terrain and the native-contact Ma-2141 road.
 
-PR #319 runs BOB as INSPECTOR_ONLY. The experimental builder remains available
-as study/history but is never executed by this active visual lane.
+PR #319 keeps BOB's inspector and executes one bounded transient cut-only builder.
+The builder never saves the map, fills terrain or modifies Base_DTM.
 """
 
 from __future__ import annotations
@@ -56,6 +56,13 @@ def finish(error=""):
         and isinstance(_road_objects[2], dict)
         else None
     )
+    cut_preview = (
+        _road_objects[2].get("bob_cut_only_preview")
+        if _road_objects
+        and len(_road_objects) >= 3
+        and isinstance(_road_objects[2], dict)
+        else None
+    )
     result = {
         "schema_version": 1,
         "exact_sha": os.environ["YACS_TERRAIN_SHA"],
@@ -68,10 +75,23 @@ def finish(error=""):
         "performance_status": "PENDING",
         "road_status": "INFERRED_CONTACT_TRIAL" if _road_objects else "NOT_SPAWNED",
         "final_road_status": "NOT_ADMITTED",
-        "bob_mode": "INSPECTOR_ONLY",
+        "bob_mode": "INSPECTOR_PLUS_TRANSIENT_CUT_ONLY",
         "bob_inspection_status": _bob_inspection_status,
-        "builder_lesson_status": "DISABLED_OWNER_INSPECTOR_ONLY",
+        "builder_lesson_status": (
+            cut_preview.get("status") if cut_preview else "NOT_EXECUTED"
+        ),
         "builder_map_saved": False,
+        "bob_cut_only_preview_proof": (
+            "bob-cut-only-preview-proof.json" if cut_preview else None
+        ),
+        "bob_cut_only_max_depth_m": (
+            cut_preview.get("max_cut_depth_m") if cut_preview else None
+        ),
+        "bob_cut_only_remaining_penetration_count": (
+            cut_preview.get("remaining_road_penetration_count")
+            if cut_preview
+            else None
+        ),
         "road_geometry_inspection_required": True,
         "road_geometry_inspection_view": "road-geometry-inspection",
         "road_terrain_fit_status": (
