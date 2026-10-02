@@ -97,11 +97,23 @@ def validate(manifest: dict[str, Any]) -> dict[str, Any]:
     if any(abs(a - b) > 1e-6 for a, b in zip(center, calculated_center)):
         raise ValueError("AOI center_m does not match bounds_m")
 
-    half_extent = float(aoi["square_half_extent_m"])
     width = max_e - min_e
     height = max_n - min_n
-    if abs(width - 2.0 * half_extent) > 1e-6 or abs(height - 2.0 * half_extent) > 1e-6:
-        raise ValueError("AOI is not the declared square")
+    if "size_m" in aoi:
+        declared_size = [float(value) for value in aoi["size_m"]]
+        if len(declared_size) != 2:
+            raise ValueError("AOI size_m must contain width and height")
+        if abs(width - declared_size[0]) > 1e-6 or abs(height - declared_size[1]) > 1e-6:
+            raise ValueError(
+                f"AOI size_m does not match bounds_m: declared={declared_size}, "
+                f"calculated={[width, height]}"
+            )
+    elif "square_half_extent_m" in aoi:
+        half_extent = float(aoi["square_half_extent_m"])
+        if abs(width - 2.0 * half_extent) > 1e-6 or abs(height - 2.0 * half_extent) > 1e-6:
+            raise ValueError("AOI is not the declared square")
+    else:
+        raise ValueError("AOI must declare size_m or square_half_extent_m")
 
     selection = manifest["selection"]
     grid_size = int(selection["lidar_grid_size_m"])
