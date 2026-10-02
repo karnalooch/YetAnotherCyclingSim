@@ -80,6 +80,20 @@ class YacsProofBrokerContractTests(unittest.TestCase):
                 self.assertEqual(proof["artifact_name"], "proof-$proof-$sha")
                 self.assertEqual(proof["allowed_write_permissions"], [])
 
+    def test_status_labels_fit_github_limit_without_collisions(self):
+        policy = self.policy()
+        labels = [
+            proof_broker.status_label_name(policy, proof, status)
+            for proof in [*policy["proofs"], "x" * 80, "x" * 79 + "y"]
+            for status in proof_broker.STATUS_COLORS
+        ]
+        self.assertTrue(all(len(label) <= 50 for label in labels))
+        self.assertEqual(len(labels), len(set(labels)))
+        self.assertEqual(
+            proof_broker.status_label_name(policy, "m3-terrain", "passed"),
+            "proof-status:m3-terrain:passed",
+        )
+
     def test_comment_contract_supports_run_retry_and_status(self):
         self.assertEqual(
             proof_broker.parse_comment("/gumball proof r4-1b3-geometry"),
