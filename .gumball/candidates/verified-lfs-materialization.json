@@ -1,0 +1,19 @@
+{
+  "id": "verified-lfs-materialization",
+  "source": "karnalooch/YetAnotherCyclingSim",
+  "category": "ci",
+  "problem": "Git LFS commands can exit successfully while an expected runtime input remains a pointer, and code-only proof does not establish that asset packages load.",
+  "invariant": "Before an asset-consuming proof, explicitly fetch and checkout the exact revision inputs, reject remaining pointers, and verify pinned input size and SHA-256. Materialize required runtime package dependencies separately from source data.",
+  "evidence": [
+    "PR #319: run 36966205362 had successful LFS command but unresolved source pointer",
+    "Run 36966763516 verified source but commandlet rejected 57 unresolved startup Content packages",
+    "Run 36967539981 verified source and startup packages, then passed native import and two runtime captures"
+  ],
+  "do_not_copy": [
+    "Sa Calobra source paths or hash",
+    "Unreal startup package list",
+    "Temporary PR-scoped execution bootstrap"
+  ],
+  "failure_behavior": "Fail before asset consumption for missing files, pointer files, size or hash mismatch. Never infer asset proof from code-only build/Automation success.",
+  "status": "proven"
+}
