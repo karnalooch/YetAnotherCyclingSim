@@ -12,11 +12,12 @@ if ($ExpectedHead -notmatch '^[0-9a-f]{40}$' -or (git rev-parse HEAD).Trim() -ne
 . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
 $project=Join-Path $repo 'YetAnotherCyclingSim.uproject'
 $engine=Resolve-YacsUnrealEngine -ProjectPath $project
+if ($null -eq $engine -or -not $engine.UnrealEditorPath) { throw 'Required Unreal Engine editor could not be resolved.' }
 $gpu=@(Get-CimInstance Win32_VideoController | ForEach-Object { $_.Name })
 if (-not ($gpu | Where-Object { $_ -match '(?i)RTX\s*2070.*SUPER' })) { throw 'RTX 2070 SUPER required.' }
 $buildRoot=Join-Path $repo 'Saved/RuntimeProof/CI/SaCalobraPerformanceBuild'
 New-Item -ItemType Directory -Path $buildRoot -Force | Out-Null
-$buildBat=Join-Path $engine.EngineRoot 'Engine/Build/BatchFiles/Build.bat'
+$buildBat=$engine.BuildBatPath
 $buildArgs=@('YetAnotherCyclingSimEditor','Win64','Development',('"'+$project+'"'),'-WaitMutex','-FromMsBuild')
 $build=Start-Process -FilePath $buildBat -ArgumentList $buildArgs -PassThru -NoNewWindow -Wait -RedirectStandardOutput (Join-Path $buildRoot 'build.log') -RedirectStandardError (Join-Path $buildRoot 'build.stderr.log')
 if ($build.ExitCode -ne 0) { Get-Content (Join-Path $buildRoot 'build.log') -Tail 80; throw 'Performance editor build failed.' }
