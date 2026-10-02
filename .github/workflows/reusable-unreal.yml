@@ -295,7 +295,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Ma-2141 profile assessment failed.' }
           $profile = Get-Content "$root/ma2141-profile-candidate.json" -Raw | ConvertFrom-Json
           if ($profile.presentation_plan.status -ne 'PASS' -or
-              $profile.presentation_plan.recipe -ne 'native-paired-edge-curves-v1' -or
+              $profile.presentation_plan.recipe -ne 'native-common-axis-width-v2' -or
               $profile.source_xy_preserved -ne $false -or
               $profile.canonical_source_xy_preserved -ne $true) {
             throw 'Native curved pavement plan was not validated.'

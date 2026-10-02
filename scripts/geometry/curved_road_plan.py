@@ -8,6 +8,7 @@ import json
 import math
 
 RECIPE = "native-paired-edge-curves-v1"
+COMMON_AXIS_RECIPE = "native-common-axis-width-v2"
 RENDER_STEP_M = 0.25
 STATION_COUNT = 1201
 MAX_DISPLACEMENT_M = (
@@ -74,7 +75,7 @@ def profile_plan_valid(profile):
     return (
         profile.get("source_xy_preserved") is False
         and profile.get("canonical_source_xy_preserved") is True
-        and plan.get("recipe") == RECIPE
+        and plan.get("recipe") in (RECIPE, COMMON_AXIS_RECIPE)
         and plan.get("status") == "PASS"
         and plan.get("exact_sha") == profile.get("exact_sha")
         and plan.get("source_sha256") == profile.get("source_sha256")
@@ -100,7 +101,12 @@ def prepare_sections(
         or packet.get("profile_sha256") != profile_sha
         or packet.get("origin_epsg_m") != origin
         or packet.get("producer") != "USplineComponent"
-        or packet.get("point_type") != "Curve"
+        or packet.get("point_type")
+        != (
+            "CurveCustomTangent"
+            if packet.get("geometry_contract") == "common-axis-width-v2"
+            else "Curve"
+        )
         or packet.get("status") != "NATIVE_CURVES_EXPORTED_REVIEW_REQUIRED"
         or packet.get("canonical_source_modified") is not False
         or packet.get("map_modified") is not False
@@ -126,6 +132,51 @@ def prepare_sections(
             )
         ):
             raise ValueError("Nonfinite or unordered native curve samples")
+    width_metrics = None
+    if packet.get("geometry_contract") == "common-axis-width-v2":
+        from scripts.geometry.road_width_profile import offset_edges, width_at
+
+        profile = packet["width_profile"]
+        max_error, minimum, maximum = 0.0, math.inf, 0.0
+        for row in rows:
+            center, tangent = row["center_xy_m"], row["tangent_xy_m_per_key"]
+            if any(
+                len(p) != 2 or any(not math.isfinite(v) for v in p)
+                for p in (center, tangent)
+            ):
+                raise ValueError("Nonfinite common-axis sample")
+            expected = offset_edges(
+                center, tangent, width_at(profile, row["station_m"])
+            )
+            error = max(math.dist(a, b) for a, b in zip(expected, row["edges_xy_m"]))
+            max_error = max(max_error, error)
+            width = math.dist(*row["edges_xy_m"])
+            minimum, maximum = min(minimum, width), max(maximum, width)
+        if max_error > 1e-4:
+            raise ValueError(
+                "Pavement departs from common axis / intended width profile"
+            )
+        arc = packet["axis_arc"]
+        if (
+            not 0 <= arc["fit_start_m"] < arc["fit_end_m"] <= 300
+            or arc["radius_m"] <= 0
+        ):
+            raise ValueError("Invalid designed arc domain")
+        radial_error = max(
+            abs(math.dist(row["center_xy_m"], arc["center_xy_m"]) - arc["radius_m"])
+            for row in rows
+            if arc["fit_start_m"] <= row["station_m"] <= arc["fit_end_m"]
+        )
+        if radial_error > MAX_CHORD_ERROR_M:
+            raise ValueError("Native axis departs from designed circular arc")
+        width_metrics = {
+            "profile": profile,
+            "maximum_edge_profile_error_m": max_error,
+            "minimum_width_m": minimum,
+            "maximum_width_m": maximum,
+            "axis_arc": arc,
+            "maximum_axis_radial_error_m": radial_error,
+        }
     boundaries = [[r["edges_xy_m"][side] for r in rows] for side in (0, 1)]
     polygon = Polygon(boundaries[0] + boundaries[1][::-1])
     if not polygon.is_valid or polygon.area <= 0:
@@ -188,7 +239,8 @@ def prepare_sections(
                 if area <= 1e-9:
                     raise ValueError("Curved road cross-sections fold or invert")
     return sections, {
-        "recipe": RECIPE,
+        "recipe": COMMON_AXIS_RECIPE if width_metrics else RECIPE,
+        "controlled_width": width_metrics,
         "status": "PASS",
         "exact_sha": exact_sha,
         "source_sha256": source_sha,

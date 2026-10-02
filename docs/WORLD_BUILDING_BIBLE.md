@@ -2715,35 +2715,52 @@ GIS polyline corners; denser sampling and normal recomputation cannot round
 that silhouette. Height regularization did not smooth XY. This is a confirmed
 presentation defect, not permission to change canonical route/physics data.
 
-Tools-first correction uses Epic's existing `USplineComponent`, not a second
-custom spline evaluator or a replacement mesh framework. Two transient Curve
-splines interpolate paired pavement boundary guides every 2.5 m of source
-chainage. Both use the same input key (`source_station / 2.5`), so matching
-sections cannot drift because the inner and outer edge have different lengths.
-The existing map-preparation boot exports the curves at 0.0625 m source-chainage
-intervals. No spline actor is saved and no additional editor boot is introduced.
-The center of each paired section is derived from these boundaries.
+Current owner requirement (2026-10-02): construct both pavement boundaries from
+one coherent presentation axis and an explicit width profile. Nominal width may
+have justified local widening with smooth entry/exit. This contract applies to
+Ma-2141 now and all subsequent roads. Road plan, grade and crossfall have priority;
+BOB cuts protruding terrain and builds downward support outside the approximately
+0.5 m shoulder after the pavement is fixed. Terrain/contact failures must never
+be used to optimize road width or shift the axis.
 
-The offline consumer preserves the original XY in `source_xy_local_m`, marks
-`source_xy_preserved=false` for the **derived** profile, and separately records
-`canonical_source_xy_preserved=true`. Legacy source-preserving profiles remain
-supported. The curved recipe requires exact SHA/source/profile/origin identity,
-finite complete samples, no boundary self-intersection, no folded/inverted
-triangles, a maximum 1 m corresponding-edge displacement (the existing inferred
-edge review allowance), and a maximum 2 cm sampled chord error for the new
-0.25 m render sections. The latter is measured at quarter/mid/three-quarter
-samples; it is not an analytic continuous-error proof. A failed bound rejects
-the candidate instead of widening the allowance or silently reverting to the
-angular geometry. Render length is not promoted to canonical chainage.
+The current producer fits a bounded circle to inferred pavement midpoints in
+135–155 m, with native cubic tangent-matched transitions to the approach in 125–135 and 155–165 m. The existing weighted local fit regularizes approach midpoints over 7.5 m;
+the fit radius and observation residual are exported. This is an explicit preview
+inference from the pinned PNOA profile, not survey or vehicle swept-path evidence.
+The 9–10 m width observations remain provisional: metric re-review perpendicular
+to the new axis and owner visual review are still required. Do not interpret
+technical validation as acceptance of the previous bulge.
 
-Terrain heights are resampled under the corrected footprint before the existing
-height/crossfall fit. Asphalt, bounded CUT and support all consume that same
-profile; mixing new XY with old heights or an old CUT patch is prohibited.
-Native-contact diagnostic geometry stays separate and source-preserving.
-The capture bundle includes overhead tight-hairpin and moderate-bend views,
-the existing neutral mesh inspection, oblique view and Lit rider handoff.
-Implementation is a candidate until native execution and human review pass.
-The 1 m CUT cap, Base_DTM preservation and visual/performance admission remain.
+Tools-first implementation uses one transient native UE 5.8 USplineComponent
+with CurveCustomTangent controls every 2.5 m. Both edges are calculated from its
+horizontal tangent normal and the same width profile at the same source-chainage
+key. The reusable `scripts/geometry/road_width_profile.py` owns width validation,
+quintic interpolation and normal offsets; future road producers provide evidence
+and left/right width observations rather than independently smoothing edges.
+The current width observations are symmetric about inferred pavement midpoints;
+future observed asymmetric widening is supported. Quintic interpolation preserves
+observations without overshoot and has zero first/second derivatives at joins.
+It is a YACS presentation choice, not a formula prescribed by road standards.
+
+The existing map-preparation boot exports 4801 samples at 0.0625 m intervals and
+builds 1201 render sections at 0.25 m. Recipe `native-common-axis-width-v2` checks
+complete finite samples, exact guide/author/source/profile identity, edge offsets
+against the explicit width profile (0.1 mm tolerance), sampled axis deviation
+from the designed circle (2 cm), no self-intersections and no folded triangles.
+The existing 1 m corresponding-source-edge allowance and 2 cm sampled tessellation
+error are retained; failure rejects the candidate. The legacy paired-edge recipe
+is retained for historical evidence only. Presentation length is not physics
+length. Raw canonical source and corresponding source XY remain separate.
+
+Terrain is resampled under the resulting footprint before height/crossfall fit;
+asphalt, CUT and support all consume that same validated profile. Native
+execution and the same overhead/rider cameras are required. Geographic width,
+vehicle passage, saved collision, ride and combined performance remain pending.
+
+Engineering reference: [Spanish 3.1-IC, section 7.3.5](https://www.boe.es/boe/dias/2016/03/04/pdfs/BOE-A-2016-2217.pdf)
+uses vehicle-envelope analysis for tight-curve widening and gradual transitions.
+It supports the principle, not a claim that these preview dimensions are measured
+Ma-2141 road dimensions or that highway design parameters apply unchanged here.
 
 Official API references:
 - [Spline component](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/USplineComponent)
@@ -2755,14 +2772,14 @@ DynamicMesh can consume sampled native curves and shares its exact boundaries
 with earthworks. Native spline evaluation does not itself prove geographic
 fidelity, acceptable width, branch clearance, smooth height or rider acceptance.
 
-### Bounded apex fillet
+### Historical bounded apex fillet
 
 The first native curved-edge checkpoint (`a5f0ba82`) passed technical CI but
 retained an approximately 0.30 m inner radius at source station 150 m. This
 pinched apex was present in the interpolation controls themselves. The owner
 requested a simple correction of the bend before wider road/PCGEx work.
 
-The presentation guide packet now specifies a bounded inner-edge span from
+The previous presentation guide packet specified a bounded inner-edge span from
 140 to 155 m. Within that span a single two-point native `USplineComponent`
 with `CurveCustomTangent` replaces the intermediate controls. Endpoint
 positions and derivatives are taken from the original native boundary;
@@ -2784,3 +2801,25 @@ API evidence: Epic Unreal Engine **5.8** `USplineComponent` reference above,
 `ESplinePointType::CurveCustomTangent`; the official Python binding reference
 was also consulted. Native execution, the same cameras and human review are
 required before visual acceptance. PCGEx and Blender are not introduced here.
+
+
+Current common-axis candidate is not admitted: the offline design check found
+valid nonintersecting boundaries but 2.136358 m maximum corresponding displacement
+at 135 m, beyond the unchanged 1 m review allowance. This is a geometry/input
+review blocker, not a test to weaken. Native export must still pass the same
+consumer guard; no previous artifact admits this candidate. Re-review the pinned
+photo against perpendicular common-axis transects before replacing inferred
+width/axis observations. Do not dispatch a heavy editor proof while the known
+lightweight admission failure remains.
+
+
+Owner clarification: when the pavement footprint changes, evaluate and regenerate
+CUT/support from the clean pre-earthworks native DTM, never the last visible
+cut Landscape. The existing Invoke-YacsRegionTerrainImport lane creates an
+isolated map, imports the pinned heightmap into Base_DTM and creates an empty
+Road_Earthworks layer. CUT actors and support are transient and maps are not
+saved by capture/handoff. Reopening the saved clean baseline removes those
+session edits; owner handoff then reapplies the current patch deliberately.
+Do not roll back Git/main or discard retained assets to reset terrain. The open
+owner editor may still show previous transient cuts until explicitly reloaded;
+no claim of live restoration is made by this documentation change.

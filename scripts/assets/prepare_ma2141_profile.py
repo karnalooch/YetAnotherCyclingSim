@@ -132,7 +132,9 @@ def fit_sections(stations, lateral_m, ground_m, radius_m=FIT_RADIUS_M):
     }
 
 
-def prepare(prepared: Path, output: Path, exact_sha: str, curved_edges: Path | None = None):
+def prepare(
+    prepared: Path, output: Path, exact_sha: str, curved_edges: Path | None = None
+):
     if len(exact_sha) != 40 or any(c not in "0123456789abcdef" for c in exact_sha):
         raise ValueError("Exact lowercase SHA required")
     if output.exists():
@@ -173,22 +175,42 @@ def prepare(prepared: Path, output: Path, exact_sha: str, curved_edges: Path | N
     source_sections = sections[:, :, :2].tolist()
     presentation_plan = None
     if curved_edges is not None:
-        from scripts.geometry.curved_road_plan import prepare_sections, RENDER_STEP_M, STATION_COUNT
+        from scripts.geometry.curved_road_plan import (
+            prepare_sections,
+            RENDER_STEP_M,
+            STATION_COUNT,
+        )
+
         stations = np.arange(STATION_COUNT) * RENDER_STEP_M
         original_xy = sections[:, :, :2]
         # Preserve corresponding source-polyline XY at the denser chainage.
-        source_sections = np.array([
-            original_xy[min(i // 2, 599)] * (1 - (i - min(i // 2, 599) * 2) / 2)
-            + original_xy[min(i // 2, 599) + 1] * ((i - min(i // 2, 599) * 2) / 2)
-            for i in range(STATION_COUNT)
-        ]).tolist()
+        source_sections = np.array(
+            [
+                original_xy[min(i // 2, 599)] * (1 - (i - min(i // 2, 599) * 2) / 2)
+                + original_xy[min(i // 2, 599) + 1] * ((i - min(i // 2, 599) * 2) / 2)
+                for i in range(STATION_COUNT)
+            ]
+        ).tolist()
         packet = json.loads(curved_edges.read_text())
-        if (
-            packet.get("guide_sha256") != sha256(curved_edges.with_name("ma2141-curve-guides.json"))
-            or packet.get("author_sha256") != sha256(ROOT / "scripts/ue/author_ma2141_curved_edges.py")
+        if packet.get("guide_sha256") != sha256(
+            curved_edges.with_name("ma2141-curve-guides.json")
+        ) or packet.get("author_sha256") != sha256(
+            ROOT / "scripts/ue/author_ma2141_curved_edges.py"
         ):
             raise ValueError("Native curve guide/author identity mismatch")
-        guides = json.loads(curved_edges.with_name("ma2141-curve-guides.json").read_text())
+        guides = json.loads(
+            curved_edges.with_name("ma2141-curve-guides.json").read_text()
+        )
+        if any(
+            packet.get(key) != guides.get(key)
+            for key in (
+                "geometry_contract",
+                "width_profile",
+                "axis_arc",
+                "axis_transitions",
+            )
+        ):
+            raise ValueError("Native common-axis/width contract was not applied")
         spans = packet.get("boundary_spans", [])
         expected = guides.get("boundary_spans", [])
         if len(spans) != len(expected) or any(
@@ -197,21 +219,37 @@ def prepare(prepared: Path, output: Path, exact_sha: str, curved_edges: Path | N
         ):
             raise ValueError("Native boundary span was not applied")
         xy, presentation_plan = prepare_sections(
-            packet, source_sections, exact_sha=exact_sha,
-            source_sha=SOURCE_SHA, profile_sha=sha256(PROFILE), origin=origin,
+            packet,
+            source_sections,
+            exact_sha=exact_sha,
+            source_sha=SOURCE_SHA,
+            profile_sha=sha256(PROFILE),
+            origin=origin,
         )
         sections = np.zeros((STATION_COUNT, 25, 3))
         sections[:, :, :2] = np.asarray(xy)
         # Re-evaluate terrain at the new footprint; old-Z/new-XY is invalid.
-        ground = np.array([
-            [triangle_candidates(heights, manifest, origin[0] + x, origin[1] - y)[0] for x, y in row]
-            for row in xy
-        ])
-        lateral = np.array([
-            np.linspace(-np.linalg.norm(np.subtract(row[-1], row[0])) / 2,
-                        np.linalg.norm(np.subtract(row[-1], row[0])) / 2, 25)
-            for row in xy
-        ])
+        ground = np.array(
+            [
+                [
+                    triangle_candidates(
+                        heights, manifest, origin[0] + x, origin[1] - y
+                    )[0]
+                    for x, y in row
+                ]
+                for row in xy
+            ]
+        )
+        lateral = np.array(
+            [
+                np.linspace(
+                    -np.linalg.norm(np.subtract(row[-1], row[0])) / 2,
+                    np.linalg.norm(np.subtract(row[-1], row[0])) / 2,
+                    25,
+                )
+                for row in xy
+            ]
+        )
         presentation_plan["native_export_sha256"] = sha256(curved_edges)
     fit = fit_sections(stations, lateral, ground)
     rows = []
@@ -293,5 +331,7 @@ if __name__ == "__main__":
     parser.add_argument("--exact-sha", required=True)
     parser.add_argument("--curved-edges", type=Path)
     args = parser.parse_args()
-    result = prepare(args.prepared_terrain, args.output, args.exact_sha, args.curved_edges)
+    result = prepare(
+        args.prepared_terrain, args.output, args.exact_sha, args.curved_edges
+    )
     print(json.dumps({"status": result["status"], "metrics": result["metrics"]}))
