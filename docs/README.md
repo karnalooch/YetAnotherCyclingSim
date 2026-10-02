@@ -68,7 +68,7 @@ flowchart TB
 | Architecture policy | **Embark-first tooling admission + tools-first + evidence ladder + local proof** |
 | Diagram language | **Gumball Blueprint Mermaid style** |
 | Current priority | **import and validate the Sa Calobra 0.5 m DTM baseline, then prove the Ma-2141 road corridor** |
-| Terrain source | **CNIG/IGN MDT50cm Sa Calobra 8 km × 8 km benchmark; bounded native UE import PASS, visual/performance pending** |
+| Terrain source | **CNIG/IGN MDT50cm Sa Calobra 8 km × 8 km benchmark; bounded native UE import PASS, terrain visual accepted; performance pending** |
 | Road authority | **verified Ma-2141 alignment; do not snap canonical road XY to the Landscape grid** |
 | Acceptance | **rider-camera visual review + exact-SHA technical/performance evidence** |
 | Next product milestone | **M4 Cornering**, after M3 closes |

@@ -277,6 +277,11 @@ jobs:
             --output "$root/ma2141-native-alignment.json" `
             --exact-sha '${{ inputs.target_sha }}'
           if ($LASTEXITCODE -ne 0) { throw 'Ma-2141 native alignment diagnostic failed.' }
+          python scripts/assets/prepare_ma2141_road_preview.py `
+            --prepared-terrain "$root/Prepared" `
+            --output "$root/ma2141-road-preview.json" `
+            --exact-sha '${{ inputs.target_sha }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Ma-2141 pavement trial preparation failed.' }
 
       - name: Capture isolated native Sa Calobra terrain
         if: ${{ inputs.region_terrain_import }}
@@ -299,7 +304,7 @@ jobs:
           }
           if ($process.ExitCode -ne 0) { throw "Terrain capture editor exit $($process.ExitCode)." }
           $proof = Get-Content (Join-Path $root 'terrain-capture-proof.json') -Raw | ConvertFrom-Json
-          if ($proof.technical_capture_status -ne 'PASS' -or $proof.exact_sha -ne '${{ inputs.target_sha }}' -or $proof.captures.Count -ne 2) { throw 'Terrain capture proof failed.' }
+          if ($proof.technical_capture_status -ne 'PASS' -or $proof.exact_sha -ne '${{ inputs.target_sha }}' -or $proof.captures.Count -ne 4) { throw 'Terrain capture proof failed.' }
 
       - name: Retire owner-approved obsolete Italy payloads
         if: ${{ inputs.region_terrain_import }}

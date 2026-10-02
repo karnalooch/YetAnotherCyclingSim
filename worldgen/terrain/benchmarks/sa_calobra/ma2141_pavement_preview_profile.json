@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "status": "INFERRED_PREVIEW_ONLY",
+  "evidence_class": "Inference",
+  "reviewer": "AI visual interpretation; owner road review pending",
+  "imagery_file": "ma2141_pnoa_review_2026-10-02.jpg",
+  "imagery_sha256": "4c896f9e64f9e86aa4005d59bd33d46f6b7619dac84cf0201180f4b79b1f20f9",
+  "request_url": "https://www.ign.es/wms-inspire/pnoa-ma?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=OI.OrthoimageCoverage&STYLES=&CRS=EPSG%3A25831&BBOX=484020%2C4408835%2C484180%2C4409050&WIDTH=1280&HEIGHT=1720&FORMAT=image%2Fjpeg",
+  "request_date": "2026-10-02",
+  "image_acquisition_date": "UNKNOWN",
+  "request_bbox_epsg25831": [
+    484020,
+    4408835,
+    484180,
+    4409050
+  ],
+  "image_pixels": [
+    1280,
+    1720
+  ],
+  "request_pixel_size_m": 0.125,
+  "native_gsd_m": null,
+  "license": "CC-BY-4.0",
+  "attribution": "Obra derivada de PNOA, consulta 2026-10-02, CC BY 4.0 scne.es",
+  "license_url": "https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf",
+  "method": "Approximate visible pavement edges manually interpreted on 25 m transects of the pinned CartoCiudad 300 m clip. Tangent uses +/-2 m station window; signed offset follows EPSG left normal (-dy,dx). Linear interpolation between observations is inference, not a boundary survey. Shadows, curbs and imagery date are unresolved.",
+  "edge_uncertainty_m": 1.0,
+  "uncertainty_is": "review allowance, not measured statistical accuracy",
+  "geographic_width_admitted": false,
+  "earthworks_admitted": false,
+  "physics_admitted": false,
+  "samples": [
+    {
+      "station_m": 0,
+      "min_offset_m": -1.5,
+      "max_offset_m": 3.5
+    },
+    {
+      "station_m": 25,
+      "min_offset_m": -1.5,
+      "max_offset_m": 4.5
+    },
+    {
+      "station_m": 50,
+      "min_offset_m": -3.5,
+      "max_offset_m": 1.5
+    },
+    {
+      "station_m": 75,
+      "min_offset_m": -3.5,
+      "max_offset_m": 1.5
+    },
+    {
+      "station_m": 100,
+      "min_offset_m": -2.5,
+      "max_offset_m": 1.5
+    },
+    {
+      "station_m": 125,
+      "min_offset_m": -1.5,
+      "max_offset_m": 4.5
+    },
+    {
+      "station_m": 150,
+      "min_offset_m": -2.5,
+      "max_offset_m": 7
+    },
+    {
+      "station_m": 175,
+      "min_offset_m": -4.5,
+      "max_offset_m": 4.5
+    },
+    {
+      "station_m": 200,
+      "min_offset_m": -2.5,
+      "max_offset_m": 3.5
+    },
+    {
+      "station_m": 225,
+      "min_offset_m": -1.5,
+      "max_offset_m": 3.5
+    },
+    {
+      "station_m": 250,
+      "min_offset_m": -0.5,
+      "max_offset_m": 4.5
+    },
+    {
+      "station_m": 275,
+      "min_offset_m": -0.5,
+      "max_offset_m": 4.5
+    },
+    {
+      "station_m": 300,
+      "min_offset_m": -1.5,
+      "max_offset_m": 4.5
+    }
+  ]
+}

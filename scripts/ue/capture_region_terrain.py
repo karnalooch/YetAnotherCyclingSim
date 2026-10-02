@@ -24,6 +24,8 @@ _started = 0.0
 _index = 0
 _views = []
 _proofs = []
+_road_objects = None
+_world = None
 
 
 def height(x_cm, y_cm):
@@ -53,7 +55,8 @@ def finish(error=""):
         "captures": _proofs,
         "human_visual_status": "PENDING",
         "performance_status": "PENDING",
-        "road_status": "NOT_AUTHORED",
+        "road_status": "INFERRED_CONTACT_TRIAL",
+        "final_road_status": "NOT_ADMITTED",
     }
     (_root / "terrain-capture-proof.json").write_text(
         json.dumps(result, indent=2) + "\n", encoding="utf-8"
@@ -64,7 +67,11 @@ def finish(error=""):
 
 
 def schedule():
-    global _task, _started
+    global _task, _started, _road_objects
+    if _index == 2:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from ma2141_road_preview import spawn_trial
+        _road_objects = spawn_trial(_world, _root, os.environ["YACS_TERRAIN_SHA"])
     view = _views[_index]
     location, target = unreal.Vector(*view["location"]), unreal.Vector(*view["target"])
     _camera.set_actor_location(location, False, False)
@@ -82,7 +89,7 @@ def schedule():
         mask_enabled=False,
         capture_hdr=False,
         comparison_tolerance=unreal.ComparisonTolerance.LOW,
-        comparison_notes="Sa Calobra native terrain-only diagnostic",
+        comparison_notes="Sa Calobra terrain / inferred pavement contact trial",
         delay=5.0,
         force_game_view=True,
     )
@@ -124,7 +131,7 @@ def tick(_delta):
 
 
 def main():
-    global _manifest, _root, _camera, _views, _handle
+    global _manifest, _root, _camera, _views, _handle, _world
     _root = Path(os.environ["YACS_TERRAIN_CAPTURE_ROOT"])
     _manifest = json.loads(
         (_root / "Prepared/terrain-import.json").read_text(encoding="utf-8")
@@ -136,6 +143,7 @@ def main():
     ):
         raise RuntimeError("Unadmitted terrain capture identity")
     world = unreal.EditorLoadingAndSavingUtils.load_map(_manifest["map_package"])
+    _world = world
     if not world:
         raise RuntimeError("Could not load imported native terrain map")
     landscapes = list(
@@ -188,6 +196,17 @@ def main():
             "target": [127000, 87000, height(127000, 87000) + 170],
         },
     ]
+    alignment = json.loads((_root / "ma2141-native-alignment.json").read_text(encoding="utf-8"))
+    points = alignment["points_ue_cm"]
+    def at_station(s):
+        p = min(points, key=lambda p: abs(p["station_m"]-s))
+        return [p["x_cm"],p["y_cm"],p["z_cm"]]
+    focus = at_station(150)
+    start, target = at_station(120), at_station(130)
+    _views.extend([
+        {"name": "road-contact-overview", "location": [focus[0]-9000,focus[1]+9000,focus[2]+13000], "target": focus},
+        {"name": "road-contact-rider", "location": [start[0],start[1],start[2]+170], "target": [target[0],target[1],target[2]+170]},
+    ])
     _camera = actors.spawn_actor_from_class(
         unreal.CameraActor, unreal.Vector(), unreal.Rotator(), transient=True
     )

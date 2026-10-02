@@ -139,6 +139,7 @@ jobs:
           python -m pip install --disable-pip-version-check --only-binary=:all: numpy==2.3.5 rasterio==1.5.2 pyproj==3.8.0 Pillow==12.3.0 shapely==2.1.2
           python -m unittest discover -s scripts/assets -p test_prepare_region_terrain.py -v
           python -m unittest scripts.assets.test_prepare_ma2141_diagnostic -v
+          python -m unittest scripts.assets.test_prepare_ma2141_road_preview -v
 
       - name: Run asset validation unit tests
         run: python scripts/ci/test_validate_changed_assets.py

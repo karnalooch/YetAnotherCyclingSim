@@ -1964,3 +1964,37 @@ Its `fictitious=true` flag, vertical datum and feature-specific accuracy are
 unresolved. The producer compares it numerically with native DTM and preserves
 its source hash; it does not use it to carve terrain, establish asphalt heights
 or authorize physics. Matching CartoCiudad XY is not independent validation.
+
+
+### Sa Calobra owner review and first pavement contact trial
+
+On 2026-10-02 the owner accepted the appearance of the bounded terrain-only
+views from PR #319 commit `f49d877656f452a2d36de1c0acc33dc78fa39806`,
+CI run 36970754781, artifact 11211213434. This closes that terrain visual review
+only; road, earthworks, collision, ride and performance remain separate gates.
+Preserve the accepted `Base_DTM`. Finished at-grade pavement must be supported by
+Landscape across its full width, including both edges and hairpins. Any necessary
+local cuts/fills belong to `Road_Earthworks`; no arbitrary road lift may hide gaps.
+
+The first Ma-2141 pavement contact trial reuses the asymmetric corridor kernel
+and UE Geometry Script consumer. Thirteen approximate edge observations on a
+pinned PNOA image provide an explicitly **inferred preview**, not surveyed widths.
+The 0.125 m WMS request pixel spacing is not native imagery GSD. Acquisition date,
+shadowed edges, access and final surface/profile admission remain unresolved.
+The GIS line stays fixed; distinct left/right offsets avoid assuming it is the
+pavement midpoint. Do not promote these observations into geographic width truth.
+
+The trial samples native DTM across 25 transverse points at 0.5 m longitudinal
+spacing. It is deliberately an unregularized contact diagnostic, not a final
+asphalt profile. The closed 80 mm nominal visual slab is embedded 40 mm in the
+sampled ground; this construction parameter is not a measured pavement thickness.
+It is not an adaptive clearance offset. Source geometry is never raised in
+response to failed support tests. Triangle-centroid R16 tests and native Landscape
+traces report penetration/support failures separately from successful capture.
+Native vertex traces are not proof of continuous triangle contact or road collision.
+
+Capture produces the two original terrain-only views first, then spawns a transient
+road trial and produces overview/rider images. No map, `Base_DTM` or
+`Road_Earthworks` is saved or modified by this trial. Mesh JSON and contact receipts
+are reproducible evidence; they do not make a playable road. Failed contact must
+be resolved before carving, final road admission or BOB verified-case learning.
