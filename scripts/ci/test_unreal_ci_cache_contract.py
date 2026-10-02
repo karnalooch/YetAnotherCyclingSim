@@ -38,8 +38,22 @@ class UnrealCiCacheContractTests(unittest.TestCase):
             "-e '/Plugins/**/Intermediate/'",
             "-e '/Saved/BuildCache/UnrealCi/'",
             "Resolve verified Unreal execution mode",
+            "Retain previous owner-handoff LFS payloads before sanitization",
+            "_yacs-retained-lfs/handoff-${{ github.run_id }}-${{ github.run_attempt }}",
+            "retain_unreal_assets.py",
         ):
             self.assertIn(token, self.workflow)
+
+    def test_handoff_lfs_retention_precedes_code_only_sanitization(self):
+        retain_index = self.workflow.index(
+            "Retain previous owner-handoff LFS payloads before sanitization"
+        )
+        sanitize_index = self.workflow.index(
+            "Sanitize tracked workspace while preserving verified build outputs"
+        )
+        code_only_index = self.workflow.index("Enforce code-only checkout")
+        self.assertLess(retain_index, sanitize_index)
+        self.assertLess(sanitize_index, code_only_index)
 
     def test_cleanup_retains_only_diagnostic_logs_and_admitted_build_surfaces(self):
         commands = [

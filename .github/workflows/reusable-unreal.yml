@@ -78,6 +78,15 @@ jobs:
           clean: false
           persist-credentials: false
 
+      - name: Retain previous owner-handoff LFS payloads before sanitization
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $archive = Join-Path $env:GITHUB_WORKSPACE '_yacs-retained-lfs/handoff-${{ github.run_id }}-${{ github.run_attempt }}'
+          python scripts/ci/retain_unreal_assets.py --workspace (Get-Location).Path --archive $archive
+          if ($LASTEXITCODE -ne 0) { throw 'Previous owner-handoff LFS retention failed; do not sanitize the worktree.' }
+
       - name: Sanitize tracked workspace while preserving verified build outputs
         shell: pwsh
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
