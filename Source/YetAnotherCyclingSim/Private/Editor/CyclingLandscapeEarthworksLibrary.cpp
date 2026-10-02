@@ -306,7 +306,8 @@ bool UCyclingLandscapeEarthworksLibrary::ApplyRoadEarthworksPatch(
 		UE_LOG(LogCyclingLandscapeEarthworks, Error, TEXT("Failed to bind CUT patch to Road_Earthworks."));
 		return false;
 	}
-	RoadLayer->RequestLandscapeUpdate(true);
+	// Request the full merge through Landscape; the patch-layer helper is not
+	// exported by the installed UE 5.8 binary (LNK2019).
 	Landscape->ForceLayersFullUpdate();
 	Landscape->PostEditChange();
 

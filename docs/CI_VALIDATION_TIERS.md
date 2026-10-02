@@ -695,3 +695,10 @@ one meter. The importer and production patch decoder are unchanged.
 Synchronization does not admit the terrain or road. The independent Sa Calobra
 performance producer and exact-head runtime/visual proofs remain required
 before readiness and merge.
+
+The UE 5.8 runner rejected a direct call to
+`ULandscapePatchEditLayer::RequestLandscapeUpdate` with LNK2019 in run
+37025464029. The native CUT adapter now relies on the existing public
+`ALandscape::ForceLayersFullUpdate` and `PostEditChange` after patch binding,
+without that unexported helper. This preserves the full layer-update request;
+exact-head native build and post-cut measurements still establish acceptance.
