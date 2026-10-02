@@ -26,6 +26,7 @@ _views = []
 _proofs = []
 _road_objects = None
 _world = None
+_scheduling = False
 
 
 def height(x_cm, y_cm):
@@ -67,47 +68,57 @@ def finish(error=""):
 
 
 def schedule():
-    global _task, _started, _road_objects
-    if _index == 2:
-        sys.path.insert(0, str(Path(unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_dir())) / "scripts/ue"))
-        from ma2141_road_preview import spawn_trial
-        _road_objects = spawn_trial(_world, _root, os.environ["YACS_TERRAIN_SHA"])
-    view = _views[_index]
-    location, target = unreal.Vector(*view["location"]), unreal.Vector(*view["target"])
-    _camera.set_actor_location(location, False, False)
-    _camera.set_actor_rotation(
-        unreal.MathLibrary.find_look_at_rotation(location, target), False
-    )
-    path = _root / (view["name"] + ".png")
-    if path.exists():
-        raise RuntimeError("Screenshot already exists; never overwrite evidence")
-    _task = unreal.AutomationLibrary.take_high_res_screenshot(
-        res_x=3840,
-        res_y=2160,
-        filename=str(path),
-        camera=_camera,
-        mask_enabled=False,
-        capture_hdr=False,
-        comparison_tolerance=unreal.ComparisonTolerance.LOW,
-        comparison_notes="Sa Calobra terrain / inferred pavement contact trial",
-        delay=5.0,
-        force_game_view=True,
-    )
-    if not _task or not _task.is_valid_task():
-        raise RuntimeError("Invalid terrain screenshot task")
-    _started = time.monotonic()
+    global _task, _started, _road_objects, _scheduling
+    # Geometry creation can pump Slate and re-enter this tick callback while the
+    # previous screenshot task is still marked done. Fence the whole transition.
+    _scheduling = True
+    _task = None
+    try:
+        if _index == 2:
+            sys.path.insert(0, str(Path(unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_dir())) / "scripts/ue"))
+            from ma2141_road_preview import spawn_trial
+            _road_objects = spawn_trial(_world, _root, os.environ["YACS_TERRAIN_SHA"])
+        view = _views[_index]
+        location, target = unreal.Vector(*view["location"]), unreal.Vector(*view["target"])
+        _camera.set_actor_location(location, False, False)
+        _camera.set_actor_rotation(
+            unreal.MathLibrary.find_look_at_rotation(location, target), False
+        )
+        path = _root / (view["name"] + ".png")
+        if path.exists():
+            raise RuntimeError("Screenshot already exists; never overwrite evidence")
+        _task = unreal.AutomationLibrary.take_high_res_screenshot(
+            res_x=3840,
+            res_y=2160,
+            filename=str(path),
+            camera=_camera,
+            mask_enabled=False,
+            capture_hdr=False,
+            comparison_tolerance=unreal.ComparisonTolerance.LOW,
+            comparison_notes="Sa Calobra terrain / inferred pavement contact trial",
+            delay=5.0,
+            force_game_view=True,
+        )
+        if not _task or not _task.is_valid_task():
+            raise RuntimeError("Invalid terrain screenshot task")
+        _started = time.monotonic()
+    finally:
+        _scheduling = False
 
 
 def tick(_delta):
     global _index
+    if _scheduling or _task is None:
+        return
     try:
         if time.monotonic() - _started > 120:
-            finish("Screenshot task timeout")
+            finish("Screenshot task/file readiness timeout: " + _views[_index]["name"])
         elif _task.is_task_done():
             view = _views[_index]
             path = _root / (view["name"] + ".png")
             if not path.is_file() or path.stat().st_size < 100000:
-                finish("Screenshot task produced no usable PNG")
+                # A completed automation task can precede the PNG write. Keep
+                # the existing size requirement and bounded timeout.
                 return
             _proofs.append(
                 {

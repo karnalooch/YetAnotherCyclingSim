@@ -2020,3 +2020,23 @@ road trial and produces overview/rider images. No map, `Base_DTM` or
 `Road_Earthworks` is saved or modified by this trial. Mesh JSON and contact receipts
 are reproducible evidence; they do not make a playable road. Failed contact must
 be resolved before carving, final road admission or BOB verified-case learning.
+
+
+#### Contact-trial follow-up: separate source and tooling defects
+
+Run 36974574263 at `41d90df294480a5b69076c75dac1d967ad5065b9`
+executed all 15,025 native Landscape traces without misses. It measured 232
+unsupported and 203 penetrating vertex samples (-0.884 m to +1.033 m).
+BOB emitted `REJECT_CONTACT`; no verified learning case was created. The
+`__file__` issue was resolved, but the third capture reported no usable PNG.
+The capture transition is now fenced against Slate re-entry, and task completion
+must also await the actual PNG under the existing bounded timeout. This is a
+capture fix candidate until its own Unreal run succeeds, not a geometric fix.
+
+Magnified review of the pinned PNOA transects identified incorrect initial edge
+interpretations near stations 125 m and 175 m: their inferred footprints extended
+into roadside ground. Preview profile revision 2 records the corrected readings
+and their history. The 13 observations/interpolation remain coarse and unadmitted;
+this is not an assertion of survey accuracy. The transferable BOB lesson is to
+recheck the road footprint before compensating for its error with earthworks.
+Do not lower/raise accepted terrain to fit a mistaken pavement boundary.

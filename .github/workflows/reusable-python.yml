@@ -141,6 +141,7 @@ jobs:
           python -m unittest scripts.assets.test_prepare_ma2141_diagnostic -v
           python -m unittest scripts.assets.test_prepare_ma2141_road_preview -v
           python -m unittest scripts.worldgen.test_adaptive_terrain_solver -v
+          python -m unittest scripts.ue.test_capture_region_terrain -v
 
       - name: Run asset validation unit tests
         run: python scripts/ci/test_validate_changed_assets.py

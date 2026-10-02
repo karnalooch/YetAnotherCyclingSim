@@ -32,8 +32,8 @@
   "samples": [
     {
       "station_m": 0,
-      "min_offset_m": -1.5,
-      "max_offset_m": 3.5
+      "min_offset_m": -2,
+      "max_offset_m": 3.25
     },
     {
       "station_m": 25,
@@ -52,48 +52,57 @@
     },
     {
       "station_m": 100,
-      "min_offset_m": -2.5,
+      "min_offset_m": -3,
       "max_offset_m": 1.5
     },
     {
       "station_m": 125,
-      "min_offset_m": -1.5,
-      "max_offset_m": 4.5
+      "min_offset_m": -3,
+      "max_offset_m": 2
     },
     {
       "station_m": 150,
-      "min_offset_m": -2.5,
+      "min_offset_m": -2,
       "max_offset_m": 7
     },
     {
       "station_m": 175,
-      "min_offset_m": -4.5,
-      "max_offset_m": 4.5
+      "min_offset_m": -2.5,
+      "max_offset_m": 3
     },
     {
       "station_m": 200,
       "min_offset_m": -2.5,
-      "max_offset_m": 3.5
+      "max_offset_m": 4
     },
     {
       "station_m": 225,
-      "min_offset_m": -1.5,
-      "max_offset_m": 3.5
+      "min_offset_m": -1,
+      "max_offset_m": 3
     },
     {
       "station_m": 250,
       "min_offset_m": -0.5,
-      "max_offset_m": 4.5
+      "max_offset_m": 4.25
     },
     {
       "station_m": 275,
       "min_offset_m": -0.5,
-      "max_offset_m": 4.5
+      "max_offset_m": 4.25
     },
     {
       "station_m": 300,
       "min_offset_m": -1.5,
       "max_offset_m": 4.5
+    }
+  ],
+  "revision": 2,
+  "review_history": [
+    {
+      "previous_commit": "5826507a84a0dd90998d2fbb7c92b0e6bf492f4a",
+      "trigger": "Contact trial rejected; middle-width fit inspection found extreme departures near stations 125-128 and 175-177 m.",
+      "review": "Magnified pinned-photo transects show initial estimates at 125 and 175 extended beyond pavement into roadside ground; reinterpreted edges. This is source interpretation correction, not automated narrowing to meet contact thresholds.",
+      "remaining_limits": "13 transects and interpolation remain coarse, especially near the hairpin; imagery age, shadows and edge accuracy are unresolved. No width/earthwork/physics admission."
     }
   ]
 }
