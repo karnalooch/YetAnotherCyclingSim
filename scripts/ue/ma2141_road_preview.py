@@ -5,6 +5,8 @@ from pathlib import Path
 import sys
 import unreal
 
+from scripts.geometry.smooth_road_ribbon import build_smooth_road_ribbon
+
 
 def spawn_trial(world, root, exact_sha):
     trial = json.loads((root / "ma2141-road-preview.json").read_text(encoding="utf-8"))
@@ -51,6 +53,15 @@ def spawn_trial(world, root, exact_sha):
                     diagonal_errors[j].append(abs(trial["native_triangle_candidates_m"][i][j]-ground_m))
             worst.append({"sample_index": i, "sample_kind": "vertex" if i<top_count else "centroid",
                           "local_xy_m": point[:2], "surface_minus_landscape_m": deltas[-1]})
+    profile = json.loads(
+        (root / "ma2141-profile-candidate.json").read_text(encoding="utf-8")
+    )
+    if profile.get("exact_sha") != exact_sha:
+        raise RuntimeError("Smooth road profile candidate SHA mismatch")
+    smooth_vertices, smooth_triangles, smooth_meta = build_smooth_road_ribbon(
+        profile
+    )
+
     report = {
         "schema_version": 1, "exact_sha": exact_sha,
         "region_id": "sa_calobra", "status": "INFERRED_CONTACT_TRIAL",
@@ -75,6 +86,9 @@ def spawn_trial(world, root, exact_sha):
         "road_collision_status": "NOT_PROVEN", "human_visual_status": "PENDING",
         "performance_status": "PENDING", "final_road_status": "NOT_ADMITTED",
         "terrain_modified": False, "road_earthworks_modified": False,
+        "visible_road_mesh_role": smooth_meta["role"],
+        "contact_mesh_visible": False,
+        "smooth_presentation": smooth_meta,
         "attribution": trial["attribution"],
     }
     sys.path.insert(0, str(Path(unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_dir()))))
@@ -83,8 +97,12 @@ def spawn_trial(world, root, exact_sha):
         trial["contact_diagnostic"], geographic_width_admitted=False, native_contact=report)
     (root / "ma2141-road-contact-proof.json").write_text(
         json.dumps(report, indent=2)+"\n", encoding="utf-8")
-    actor, material = spawn_pavement_mesh(world, vertices, triangles,
-        "Ma-2141 inferred pavement contact trial — not admitted")
+    actor, material = spawn_pavement_mesh(
+        world,
+        smooth_vertices,
+        smooth_triangles,
+        "Ma-2141 smooth asphalt ribbon — inspector preview only",
+    )
     return actor, material, report
 
 

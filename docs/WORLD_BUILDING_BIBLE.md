@@ -2491,6 +2491,22 @@ legacy Italy layer behavior and all earlier thresholds remain unchanged.
 This correction requires new native proof; it is not a verified learning case.
 API reference: [Epic native spline edit layer](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Landscape/ULandscapeEditLayerSplines).
 
+#### Smooth asphalt ribbon for owner-visible road
+
+Owner review of PR #319 rejected the raw native-facet pavement as a visible road.
+That mesh deliberately follows every 0.5 m Landscape triangle and is useful for
+contact evidence, but it produces a jagged surface that is not an acceptable
+asphalt presentation.
+
+The active preview therefore separates **contact evidence** from **visible
+asphalt**. Native-facet vertices/centroids remain the input to BOB contact review
+and are not rendered. The owner-visible transient road is a separate closed
+ribbon built from the already inspected `ma2141-profile-candidate.json`:
+source-preserving `xy_local_m` plus regularized `candidate_ground_m` at the
+existing 0.5 m stations. The ribbon fails closed on folded/inverted XY topology.
+It does not change `Base_DTM`, `Road_Earthworks`, route authority or physics,
+and remains an unadmitted presentation preview.
+
 #### Inspector-only Sa Calobra handoff
 
 Owner direction, 2026-10-02: PR #319 no longer executes the experimental BOB
