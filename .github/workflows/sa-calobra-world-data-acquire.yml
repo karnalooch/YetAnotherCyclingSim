@@ -19,7 +19,7 @@ on:
       - '.github/workflows/sa-calobra-world-data-acquire.yml'
       - 'scripts/assets/acquire_sa_calobra_world_data.py'
       - 'scripts/assets/plan_sa_calobra_world_data.py'
-      - 'worldgen/terrain/benchmarks/sa_calobra/world_data/**'
+      - 'worldgen/terrain/benchmarks/sa_calobra/world_data/working_space_sources.json'
 
 permissions:
   contents: read
