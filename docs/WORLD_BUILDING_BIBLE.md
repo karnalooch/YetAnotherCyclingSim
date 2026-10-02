@@ -2692,3 +2692,12 @@ Unreal validation, human visual review and road/earthworks performance are
 pending for this implementation. A terrain-only performance PASS does not
 admit the combined road/support scene. Current scope remains Issue #324 /
 Draft PR #325; the rejected CUT-only evidence is retained in history.
+
+
+The first combined native run at `964d99a` produced all seven captures and
+1,202 support traces, but retained one 0.527 m penetration at station 138.5 m.
+The requested vertex lay on the texture coverage edge: the native result matched
+leaving that outer vertex unchanged. The patch now includes one neutral native
+texel outside all requested vertices so the cut lies inside texture coverage.
+The 1 m cap and zero-penetration criterion remain unchanged. Fresh native proof
+is required for this correction; the first run is not an accepted construction.

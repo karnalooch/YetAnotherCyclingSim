@@ -220,10 +220,14 @@ def prepare(prepared, profile_path, output_manifest, output_r16, exact_sha):
                     previous = requested.get((gx, gy))
                     requested[(gx, gy)] = target_m if previous is None else min(previous, target_m)
 
-    min_x = min(key[0] for key in requested)
-    max_x = max(key[0] for key in requested)
-    min_y = min(key[1] for key in requested)
-    max_y = max(key[1] for key in requested)
+    # Landscape Texture Patch excludes its outer coverage edge. Keep every
+    # requested vertex one unchanged native texel inside that edge.
+    min_x = max(0, min(key[0] for key in requested) - 1)
+    max_x = min(4032, max(key[0] for key in requested) + 1)
+    min_y = max(0, min(key[1] for key in requested) - 1)
+    max_y = min(4032, max(key[1] for key in requested) + 1)
+    if any(x in (min_x, max_x) or y in (min_y, max_y) for x,y in requested):
+        raise ValueError("CUT requests need one neutral native texel around texture coverage")
     width = max_x - min_x + 1
     height = max_y - min_y + 1
     patch = np.empty((height, width), dtype="<f4")
