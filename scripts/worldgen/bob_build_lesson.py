@@ -15,6 +15,9 @@ LESSON_STUDY_DOMAINS = (
     "mountain_road_earthworks",
     "retaining_and_stability",
     "road_geometry_review",
+    "landscape_height_encoding",
+    "unreal_coordinate_spaces",
+    "landscape_patch_alternative",
 )
 
 

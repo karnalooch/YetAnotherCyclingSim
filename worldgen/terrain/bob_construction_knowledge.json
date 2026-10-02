@@ -134,6 +134,63 @@
         "Use these categories as inspection questions, not as authority to redesign the canonical YACS route.",
         "YACS physics and canonical route geometry remain outside BOB's authority."
       ]
+    },
+    {
+      "id": "epic-landscape-height-encoding-ue58",
+      "domain": "landscape_height_encoding",
+      "authority": "REFERENCE_ONLY",
+      "source": {
+        "publisher": "Epic Games",
+        "title": "Landscape Technical Guide in Unreal Engine",
+        "url": "https://dev.epicgames.com/documentation/unreal-engine/landscape-technical-guide-in-unreal-engine",
+        "retrieved": "2026-10-02"
+      },
+      "principles": [
+        "Landscape height values use a signed internal range that is multiplied by the Landscape Z scale.",
+        "Real-world elevation must be converted deliberately into Unreal height encoding and world units; numeric equality between source metres, height samples and world Z cannot be assumed."
+      ],
+      "bob_constraints": [
+        "Before terrain authoring, record Landscape transform and Z scale and prove conversion with sampled world-space heights.",
+        "Reject any lesson whose proposed metre-scale correction produces a world-space change outside the recipe bound."
+      ]
+    },
+    {
+      "id": "epic-coordinate-spaces-ue58",
+      "domain": "unreal_coordinate_spaces",
+      "authority": "REFERENCE_ONLY",
+      "source": {
+        "publisher": "Epic Games",
+        "title": "Coordinate System and Spaces in Unreal Engine",
+        "url": "https://dev.epicgames.com/documentation/unreal-engine/coordinate-system-and-spaces-in-unreal-engine",
+        "retrieved": "2026-10-02"
+      },
+      "principles": [
+        "World space is absolute to the level while local space is relative to an actor or scene component and its transform.",
+        "Spline APIs can explicitly consume world or local coordinates, while other spline parameters may still be defined in component-local space."
+      ],
+      "bob_constraints": [
+        "Record the holder actor transform, spline component transform and Landscape transform before applying a lesson.",
+        "Do not mix world-space spline points with local-space assumptions for width, falloff or height reasoning."
+      ]
+    },
+    {
+      "id": "epic-landscape-patch-system-ue58",
+      "domain": "landscape_patch_alternative",
+      "authority": "REFERENCE_ONLY",
+      "source": {
+        "publisher": "Epic Games",
+        "title": "Landscape Patch System",
+        "url": "https://dev.epicgames.com/documentation/unreal-engine/landscape-patch-system",
+        "retrieved": "2026-10-02"
+      },
+      "principles": [
+        "Landscape Patches provide another non-destructive procedural mechanism for modifying Landscape height data.",
+        "Patch height encoding explicitly distinguishes world-space encoding scale and the meaning of zero height relative to the patch or Landscape."
+      ],
+      "bob_constraints": [
+        "Treat Landscape Patches as an alternative experiment when spline semantics are unsuitable; do not switch production backends without a bounded comparison.",
+        "Any patch experiment must preserve Base_DTM and use the same before/after footprint guards as spline lessons."
+      ]
     }
   ]
 }
