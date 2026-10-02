@@ -24,7 +24,7 @@ DEFAULT_MANIFEST = (
     / "benchmarks"
     / "sa_calobra"
     / "world_data"
-    / "golden_hairpin_sources.json"
+    / "working_space_sources.json"
 )
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 EXACT_FILE_STATES = {"acquired", "included", "derived"}
@@ -83,12 +83,12 @@ def validate_exact_files(source: dict[str, Any]) -> None:
 
 
 def validate(manifest: dict[str, Any]) -> dict[str, Any]:
-    if manifest.get("schema_version") != 1:
+    if manifest.get("schema_version") not in (1, 2):
         raise ValueError("Unsupported World Data Stack manifest schema")
 
     aoi = manifest["aoi"]
     if aoi.get("crs") != "EPSG:25831":
-        raise ValueError("Golden Hairpin AOI must use EPSG:25831")
+        raise ValueError("Sa Calobra working-space AOI must use EPSG:25831")
 
     bounds = [float(value) for value in aoi["bounds_m"]]
     center = [float(value) for value in aoi["center_m"]]
