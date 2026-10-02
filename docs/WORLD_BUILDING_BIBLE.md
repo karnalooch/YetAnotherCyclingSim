@@ -149,9 +149,13 @@ The existing Landscape commandlet accepts this explicitly admitted manifest
 through `-TerrainManifest=`; the legacy Passo Giau invocation remains historical.
 The new path preserves `Base_DTM` and `Road_Earthworks`, admits no road yet and
 refuses existing evidence/map targets rather than deleting payloads. Technical
-import PASS is separate from human visual and performance acceptance. Runner
-integration and those proofs remain pending; this contract is not evidence that
-Sa Calobra has already been imported or rendered.
+import PASS is separate from human visual and performance acceptance. Exact-SHA runtime evidence is now available: run `36967539981` imported all
+16,265,089 native samples with reader parity PASS, 1024 Landscape components and
+the two named edit layers. Run `36968109437` repeated import and captured two
+3840 x 2160 neutral-engine-material views. Those captures prove execution, not
+human visual or performance acceptance; both remain PENDING. Neither run
+authored a road. The latter run also produced the bounded 300 m official Ma-2141
+alignment diagnostic; its native-DTM Z is not asphalt-height authority.
 
 Terrain benchmark, profile, BOB policy and verified-case changes require render
 classification. They do not by themselves invalidate compiled C++ binaries.

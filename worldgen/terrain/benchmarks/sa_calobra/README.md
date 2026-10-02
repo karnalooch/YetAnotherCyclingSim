@@ -2,8 +2,9 @@
 
 This directory contains the selected M3 terrain source for Sa Calobra and Coll
 de Cal Reis, Mallorca. It replaces the retired Passo Giau Landscape map as the
-active world input, but it does not yet represent Unreal import, visual or
-performance acceptance.
+active world input. Actual native import and diagnostic capture have passed;
+human visual and performance acceptance remain pending. See the runtime
+evidence below.
 
 ## Included output
 
@@ -74,3 +75,25 @@ producer preserves official vertices and linearly densifies only on source XY.
 Its Z samples the native terrain and is explicitly not reconstructed asphalt
 height. Width, surface and bicycle access remain unknown; no earthworks or
 Road Physics Profile admission is granted by this diagnostic.
+
+## Runtime evidence and remaining admission
+
+- Run `36967539981`, commit `05a7e92eb6d27bc09c19bc68d0d66e78f08ce732`: full
+  CI success, native-reader parity over 16,265,089 samples, 1024 Landscape
+  components, native 0.5 m spacing and two edit layers. Its initial checker
+  material capture is not the neutral visual acceptance record.
+- Run `36968109437`, commit `6bdd8d38357777f7ca97063a3a3cf0fde64e4ef0`: Unreal
+  build/Automation, native import, two neutral 3840 x 2160 captures and 300 m
+  Ma-2141 native alignment all passed. Overall CI failed in Python dependency
+  installation because Shapely 2.1.1 had no Python 3.14 wheel. The follow-up
+  pins Shapely 2.1.2 and requires binary wheels.
+- Bounded runner retirement in the first run removed 15 positively identified
+  Italy payload files totaling 209,775,758 bytes. Its artifact contains the
+  inventory and deletion receipt. Shared LFS object storage and Git history
+  were not pruned. Repeating retirement produced a zero-file receipt.
+
+No Spanish corridor mesh, BOB earthworks, collision/ride, environment placement
+or performance acceptance is established by these artifacts. Human visual
+review remains pending. Source width, asphalt-height profile, surface and
+bicycle access remain unresolved; do not substitute native DTM heights for
+those missing road facts or promote this diagnostic into BOB case memory.
