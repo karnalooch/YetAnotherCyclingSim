@@ -52,6 +52,13 @@
 			]
 		},
 		{
+			"Name": "LandscapePatch",
+			"Enabled": true,
+			"TargetAllowList": [
+				"Editor"
+			]
+		},
+		{
 			"Name": "RoadForge",
 			"Enabled": true,
 			"TargetAllowList": [
