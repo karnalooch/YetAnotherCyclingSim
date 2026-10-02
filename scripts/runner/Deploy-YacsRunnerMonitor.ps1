@@ -7,7 +7,7 @@ if ($env:RUNNER_NAME -ne 'yacs-home-ue58') { throw 'Unexpected runner identity.'
 $head = (git rev-parse HEAD).Trim()
 if ($LASTEXITCODE -ne 0 -or $head -ne $ExpectedHead) { throw 'Checkout does not match the authorized exact SHA.' }
 $desktopUser = (Get-CimInstance Win32_ComputerSystem).UserName
-if (-not $desktopUser) { throw 'No console user is logged in. Installation cannot verify desktop notifications.' }
+if (-not $desktopUser) { throw 'No console user is logged in. Installation cannot verify the desktop tray monitor.' }
 $workRoot = Split-Path $env:RUNNER_TEMP -Parent
 $runnerRoot = Split-Path $workRoot -Parent
 if (-not (Test-Path (Join-Path $runnerRoot '.runner'))) { throw 'Unable to identify the installed runner root.' }
@@ -53,4 +53,4 @@ $receipt = [ordered]@{
 [void][IO.Directory]::CreateDirectory('monitor-proof')
 $receipt | ConvertTo-Json -Depth 5 | Set-Content 'monitor-proof/installation.json' -Encoding utf8
 $receipt | ConvertTo-Json -Depth 5 | Write-Host
-Write-Host 'PASS: desktop task, interactive process, fresh health and notification request verified.'
+Write-Host 'PASS: desktop task, interactive process, fresh health and silent mode verified.'
