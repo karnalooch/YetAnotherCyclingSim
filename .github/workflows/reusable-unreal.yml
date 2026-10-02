@@ -522,10 +522,9 @@ jobs:
             $proof.lighting_status -ne 'PASS' -or
             [double]$proof.directional_light_intensity -le 0.0 -or
             [double]$proof.skylight_intensity -le 0.0 -or
-            $proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_CUT_ONLY' -or
-            $proof.cut_preview_status -ne 'TECHNICAL_PREVIEW_PASS' -or
-            $proof.cut_preview_map_saved -ne $false -or
-            [int]$proof.cut_preview_remaining_penetration_count -ne 0 -or
+            $proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_ROAD_EARTHWORKS_CUT' -or
+            $proof.cut_patch_applied -ne $true -or
+            $proof.cut_patch_layer -ne 'Road_Earthworks' -or
             $proof.map_saved -ne $false
           ) { throw 'Owner handoff proof failed.' }
 
@@ -534,7 +533,7 @@ jobs:
           if ($process.HasExited) {
             throw "Owner handoff Editor did not remain open; exit code $($process.ExitCode)."
           }
-          Write-Host "OWNER HANDOFF PASS: Unreal Editor pid=$($process.Id) remains open on Sa Calobra road-contact-rider in VMI_LIT with diagnostic lighting."
+          Write-Host "OWNER HANDOFF PASS: Unreal Editor pid=$($process.Id) remains open on Sa Calobra road-contact-rider in VMI_LIT with transient Road_Earthworks CUT and diagnostic lighting."
 
       - name: Clean current-run evidence and non-allow-listed residue
         if: ${{ always() && !inputs.region_terrain_import }}
