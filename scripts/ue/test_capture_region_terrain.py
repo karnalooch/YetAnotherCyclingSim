@@ -1,4 +1,4 @@
-"""Regression for Sa Calobra inspector-only capture and owner handoff."""
+"""Regression for Sa Calobra inspection plus transient cut-only owner handoff."""
 
 import json
 import os
@@ -11,12 +11,15 @@ from unittest.mock import Mock, patch
 
 
 class CaptureTransitionTests(unittest.TestCase):
-    def test_active_capture_is_inspector_only(self):
+    def test_active_capture_keeps_inspector_and_cut_only_builder(self):
         script = Path(__file__).with_name("capture_region_terrain.py").read_text()
         self.assertNotIn("bob_native_build_lesson", script)
         self.assertNotIn("bob-lesson-before", script)
         self.assertNotIn("bob-lesson-after", script)
-        self.assertIn('"bob_mode": "INSPECTOR_ONLY"', script)
+        self.assertIn(
+            '"bob_mode": "INSPECTOR_PLUS_TRANSIENT_CUT_ONLY"', script
+        )
+        self.assertIn('"bob_cut_only_preview_proof"', script)
         self.assertIn('"road-geometry-inspection"', script)
         self.assertIn('"road-contact-rider"', script)
         self.assertIn("unreal.ViewModeIndex.VMI_CLAY", script)
@@ -91,7 +94,21 @@ class CaptureTransitionTests(unittest.TestCase):
                     "map_package": "/Game/Worlds/SaCalobra/L_SaCalobraTerrainBaseline"
                 },
                 _proofs=[{"name": "road-contact-rider"}],
-                _road_objects=("actor", "material", "report"),
+                _road_objects=(
+                    "actor",
+                    "material",
+                    {
+                        "terrain_fit": {
+                            "status": "REVIEW_REQUIRED",
+                            "inspection_complete": True,
+                        },
+                        "bob_cut_only_preview": {
+                            "status": "TECHNICAL_PREVIEW_PASS",
+                            "max_cut_depth_m": 0.88,
+                            "remaining_road_penetration_count": 0,
+                        },
+                    },
+                ),
                 _bob_inspection_status="REVIEW_REQUIRED",
                 _views=[{"name": "road-contact-rider"}],
                 _handle=None,
@@ -106,11 +123,19 @@ class CaptureTransitionTests(unittest.TestCase):
                 ns["finish"]()
 
             proof = json.loads((root / "terrain-capture-proof.json").read_text())
-            self.assertEqual(proof["bob_mode"], "INSPECTOR_ONLY")
+            self.assertEqual(
+                proof["bob_mode"],
+                "INSPECTOR_PLUS_TRANSIENT_CUT_ONLY",
+            )
             self.assertEqual(proof["bob_inspection_status"], "REVIEW_REQUIRED")
             self.assertEqual(
                 proof["builder_lesson_status"],
-                "DISABLED_OWNER_INSPECTOR_ONLY",
+                "TECHNICAL_PREVIEW_PASS",
+            )
+            self.assertEqual(proof["bob_cut_only_max_depth_m"], 0.88)
+            self.assertEqual(
+                proof["bob_cut_only_remaining_penetration_count"],
+                0,
             )
             self.assertTrue(proof["editor_handoff_requested"])
             self.assertEqual(proof["editor_handoff_view"], "road-contact-rider")
