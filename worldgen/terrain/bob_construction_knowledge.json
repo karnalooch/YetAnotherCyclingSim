@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "library_id": "bob-construction-knowledge-v1",
+  "architect": {
+    "name": "BOB",
+    "expansion": "Builder Of Berms",
+    "system_id": "bob-terrain-architect-v1"
+  },
+  "role": "STUDY_REFERENCE_ONLY",
+  "memory_boundary": {
+    "verified_case_memory": "worldgen/terrain/verified_terrain_cases.json",
+    "rules": [
+      "Reading reference material never creates or modifies a verified terrain case.",
+      "Reference material may inform hypotheses, inspection questions and bounded lesson design only.",
+      "Only YACS evidence that passes the required technical and human acceptance gates may later enter verified case memory.",
+      "Reference material cannot grant road admission or production authoring permission."
+    ]
+  },
+  "entries": [
+    {
+      "id": "epic-editor-apply-spline-ue58",
+      "domain": "unreal_spline_application",
+      "authority": "REFERENCE_ONLY",
+      "source": {
+        "publisher": "Epic Games",
+        "title": "Editor Apply Spline | Unreal Engine 5.8 Documentation",
+        "url": "https://dev.epicgames.com/documentation/en-us/unreal-engine/BlueprintAPI/Landscape/Editor/EditorApplySpline",
+        "retrieved": "2026-10-02"
+      },
+      "principles": [
+        "EditorApplySpline deforms Landscape using a spline component and can target a named Landscape Edit Layer.",
+        "Spline width and side-falloff inputs are expressed in the spline component local space.",
+        "Raise Heights and Lower Heights control whether the operation may move terrain toward the spline."
+      ],
+      "bob_constraints": [
+        "Do not infer undocumented absolute-Z, transform or layer-composition semantics from this reference.",
+        "Measure the actual affected footprint and height delta after every bounded trial."
+      ]
+    },
+    {
+      "id": "epic-landscape-splines-ue58",
+      "domain": "unreal_spline_edit_layers",
+      "authority": "REFERENCE_ONLY",
+      "source": {
+        "publisher": "Epic Games",
+        "title": "Landscape Splines in Unreal Engine",
+        "url": "https://dev.epicgames.com/documentation/en-us/unreal-engine/landscape-splines-in-unreal-engine",
+        "retrieved": "2026-10-02"
+      },
+      "principles": [
+        "Landscape splines affect the heightmap through a Spline Edit Layer.",
+        "The Landscape can be raised or lowered to fit the spline with a smooth falloff controlled by spline width and falloff settings.",
+        "Spline authoring is a specialized terrain-deformation workflow and should remain isolated from the imported Base_DTM."
+      ],
+      "bob_constraints": [
+        "Treat the spline edit layer as procedural terrain authoring, not as proof that a generated road is geometrically correct.",
+        "Keep Base_DTM immutable during builder lessons."
+      ]
+    },
+    {
+      "id": "epic-landscape-edit-layers-ue58",
+      "domain": "unreal_layer_ownership",
+      "authority": "REFERENCE_ONLY",
+      "source": {
+        "publisher": "Epic Games",
+        "title": "Landscape Edit Layers in Unreal Engine",
+        "url": "https://dev.epicgames.com/documentation/en-us/unreal-engine/landscape-edit-layers-in-unreal-engine",
+        "retrieved": "2026-10-02"
+      },
+      "principles": [
+        "Landscape Edit Layers separate heightmap and weightmap changes into independent non-destructive layers.",
+        "Spline Edit Layers are specialized procedural layers managed separately from ordinary sculpting layers."
+      ],
+      "bob_constraints": [
+        "BOB may author road earthworks only in the designated Road_Earthworks ownership boundary.",
+        "A layer type match does not replace before/after proof of the actual terrain contribution."
+      ]
+    },
+    {
+      "id": "usfs-low-volume-road-earthworks",
+      "domain": "mountain_road_earthworks",
+      "authority": "REFERENCE_ONLY",
+      "source": {
+        "publisher": "USDA Forest Service",
+        "title": "Low-Volume Roads Engineering Best Management Practices Field Guide",
+        "url": "https://www.fs.usda.gov/t-d/programs/forest_mgmt/projects/lowvolroads/cover.pdf",
+        "retrieved": "2026-10-02"
+      },
+      "principles": [
+        "Mountain-road earthworks should distinguish cut, fill, benching, slope stabilization and retaining solutions instead of forcing one heightfield recipe everywhere.",
+        "Balanced cut-and-fill can reduce earthwork in suitable terrain, while steep ground may require different construction strategies.",
+        "Drainage and slope stability are part of the road-earthworks problem, not decorative afterthoughts."
+      ],
+      "bob_constraints": [
+        "The guide is a conceptual engineering reference, not geometric authority for Ma-2141 or Mallorca.",
+        "Do not copy generic slope ratios or dimensions into YACS without site-specific evidence and project acceptance."
+      ]
+    },
+    {
+      "id": "fhwa-roadside-geotechnical",
+      "domain": "retaining_and_stability",
+      "authority": "REFERENCE_ONLY",
+      "source": {
+        "publisher": "Federal Highway Administration",
+        "title": "Integrated Approach to Sustainable Roadside Design - Geotechnical",
+        "url": "https://www.fhwa.dot.gov/clas/pdfs/IntegratedApproachtoSustainableRoadsideDesign.pdf",
+        "retrieved": "2026-10-02"
+      },
+      "principles": [
+        "Large elevation changes, cuts and fills can require slope stabilization, drainage or retaining structures.",
+        "Retaining-wall need is a geotechnical and structural question rather than a cosmetic mesh-placement decision.",
+        "Roadside transitions should be considered in both longitudinal and lateral terrain context."
+      ],
+      "bob_constraints": [
+        "Escalate unresolved structural support to review instead of inventing a retaining wall.",
+        "Use source evidence to decide whether a structure exists before choosing its representation."
+      ]
+    },
+    {
+      "id": "fhwa-controlling-criteria",
+      "domain": "road_geometry_review",
+      "authority": "REFERENCE_ONLY",
+      "source": {
+        "publisher": "Federal Highway Administration",
+        "title": "About the Controlling Criteria",
+        "url": "https://highways.fhwa.dot.gov/federal-lands/pddm/dpg/about-controlling-criteria",
+        "retrieved": "2026-10-02"
+      },
+      "principles": [
+        "Road geometry review treats horizontal radius, grade, cross slope, superelevation, lane width and shoulder width as separate design criteria.",
+        "A plausible road cannot be validated by pavement contact alone."
+      ],
+      "bob_constraints": [
+        "Use these categories as inspection questions, not as authority to redesign the canonical YACS route.",
+        "YACS physics and canonical route geometry remain outside BOB's authority."
+      ]
+    }
+  ]
+}

@@ -37,6 +37,16 @@ def execute(world, root, exact_sha):
     from ma2141_road_preview import spawn_pavement_mesh
 
     plan = json.loads((root / "bob-build-lesson.json").read_text())
+    study = plan.get("construction_study")
+    if (
+        not isinstance(study, dict)
+        or study.get("role") != "STUDY_REFERENCE_ONLY"
+        or not study.get("knowledge_entry_ids")
+        or study.get("verified_case_memory_modified") is not False
+        or study.get("knowledge_can_grant_admission") is not False
+        or study.get("knowledge_can_grant_learning_admission") is not False
+    ):
+        raise RuntimeError("BOB lesson is missing the study-only knowledge contract")
     if (
         plan["exact_sha"] != exact_sha
         or plan["recipe_id"] != "bob-native-spline-minor-adjustment-v1"
@@ -179,6 +189,7 @@ def execute(world, root, exact_sha):
         and max_change <= 0.5
         else "REJECT_LESSON",
         "station_range_m": plan["station_range_m"],
+        "construction_study": study,
         "api": "LandscapeProxy.editor_apply_spline",
         "selected_layer": "Road_Earthworks",
         "selected_layer_class": road_layer.get_class().get_name(),

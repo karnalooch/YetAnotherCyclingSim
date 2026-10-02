@@ -2,11 +2,20 @@
 
 import math
 
+from scripts.worldgen.bob_construction_knowledge import construction_study_manifest
 from scripts.worldgen.bob_profile_inspector import inspect_road_profile
 
 START_M, END_M = 70.0, 90.0
 MAX_ADJUSTMENT_M = 0.5
 MAX_CROSSFALL = 0.08
+LESSON_STUDY_DOMAINS = (
+    "unreal_spline_application",
+    "unreal_spline_edit_layers",
+    "unreal_layer_ownership",
+    "mountain_road_earthworks",
+    "retaining_and_stability",
+    "road_geometry_review",
+)
 
 
 def plan_lesson(candidate):
@@ -69,6 +78,7 @@ def plan_lesson(candidate):
         "points": points,
         "side_falloff_m": 1.0,
         "layer": "Road_Earthworks",
+        "construction_study": construction_study_manifest(LESSON_STUDY_DOMAINS),
         "production_authoring_permitted": False,
         "eligible_for_learning": False,
         "source_xy_modified": False,
