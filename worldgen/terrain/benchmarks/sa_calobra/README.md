@@ -42,6 +42,47 @@ at 39.83040946, 2.81367791. The alignment remains diagnostic-only: road
 physics, final pavement geometry, BOB earthworks and collision/ride acceptance
 are not admitted by these coordinates.
 
+### Working-area map and Google Maps
+
+[![Sa Calobra working AOI: 8 km benchmark, bounded Unreal import and current 300 m Ma-2141 diagnostic](../../../../docs/assets/sa_calobra_working_aoi.webp)](https://www.google.com/maps/search/?api=1&query=39.83040946%2C2.81367791)
+
+The figure is a documentation overview of the three nested work scopes. It is
+not survey evidence and does not replace the metric bounds, pinned source
+geometry or acceptance artifacts above.
+
+- [Imported AOI centre — Google Maps](https://www.google.com/maps/search/?api=1&query=39.82641749%2C2.81312695)
+- [Current Ma-2141 hairpin — Google Maps](https://www.google.com/maps/search/?api=1&query=39.83040946%2C2.81367791)
+- [Current 300 m diagnostic — Google Maps](https://www.google.com/maps/dir/?api=1&origin=39.82963155%2C2.81454613&destination=39.83101147%2C2.81432764&travelmode=driving)
+
+### Next import-window selection
+
+The complete 8 km × 8 km MDT50cm benchmark remains the source coverage. The
+current ~2 km Landscape is only the first admitted window.
+
+For a follow-up window whose goal is **more Ma-2141 road length and hairpins in
+a small area**, the first candidate direction is west / north-west from the
+current Coll dels Reis window, toward the Sa Calobra descent. This is a planning
+candidate, not an admitted next tile.
+
+For a follow-up whose goal is **more distinct roads and junctions**, do not pick
+a window by visual impression alone. Partition the retained 8 km benchmark into
+candidate windows and rank them from source-derived road inventory using at
+least:
+
+- total represented road length;
+- number of distinct routable road/way identities;
+- junction count;
+- curvature and hairpin count;
+- overlap with the delivery-priority route set;
+- source completeness, NoData margin and terrain validity;
+- road-source confidence and unresolved topology.
+
+If the retained 8 km benchmark does not contain enough network diversity, use a
+second source AOI rather than distorting route geometry or inflating the current
+Landscape. Scaling from this diagnostic to multiple windows must keep the
+source DTM and route authority unchanged and should use bounded regeneration /
+streaming rather than one monolithic 8 km native-resolution Landscape.
+
 ## Rebuild
 
 Download the 17 CNIG files named and hashed by
