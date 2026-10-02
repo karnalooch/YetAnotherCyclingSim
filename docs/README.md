@@ -68,7 +68,7 @@ flowchart TB
 | Geographic fidelity | **1:1 real-world scale; no route compression, relocation or invented macro terrain** |
 | Architecture policy | **Embark-first tooling admission + tools-first + evidence ladder + local proof** |
 | Diagram language | **Gumball Blueprint Mermaid style** |
-| Current priority | **Issue #331: replace angular asphalt presentation edges with native Unreal curves; preserve canonical road XY, validate derived boundaries, and rebuild bounded CUT/shoulders/support from the same presentation profile** |
+| Current priority | **Issue #331: constrain asphalt to the reviewed cliff-side boundary and explicit width; distinguish travel/bend/terrain edge roles, preserve canonical XY and rebuild CUT/shoulders/support from clean DTM** |
 | Route reference | **sea-level Sa Calobra → Coll dels Reis → Ma-10 → Menut/Binifaldó → Coll des Pedregaret; ~29–30 km planning estimate, exact chainage pending** |
 | Terrain source | **CNIG/IGN MDT50cm Sa Calobra 8 km × 8 km benchmark; bounded native UE import PASS, terrain visual accepted; performance pending** |
 | Road authority | **verified Ma-2141 alignment; smooth presentation ribbon is evaluated against Landscape, never snapped/bent to native DTM facets; terrain-fit residuals drive cut/fill/structure review** |

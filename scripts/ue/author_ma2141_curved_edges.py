@@ -13,10 +13,11 @@ from pathlib import Path
 import unreal
 
 
-def axis_transition(holder, source, start, end):
+def reference_transition(holder, source, spec):
+    start, end = spec["start_station_m"], spec["end_station_m"]
+    duration = (end - start) / 2.5
     span = unreal.SplineComponent(outer=holder)
     span.clear_spline_points(False)
-    duration = (end - start) / 2.5
     for index, station in enumerate((start, end)):
         key = station / 2.5
         point = source.get_location_at_spline_input_key(
@@ -63,15 +64,20 @@ def author(guide_path):
     if not holder:
         raise RuntimeError("Cannot create transient spline holder")
     try:
-        from scripts.geometry.road_width_profile import offset_edges, width_at
+        from scripts.geometry.road_edge_roles import anchored_edges
+        from scripts.geometry.road_width_profile import boundary_width_profile, width_at
 
         spline = unreal.SplineComponent(outer=holder)
         spline.clear_spline_points(False)
-        if guides.get("geometry_contract") != "common-axis-width-v2":
-            raise ValueError("Road authoring requires a common axis and explicit width")
+        if guides.get("geometry_contract") != "cliff-edge-width-v3":
+            raise ValueError(
+                "Road authoring requires an authoritative edge and explicit width"
+            )
+        anchor_edge = guides["edge_constraint"]["reference_edge"]
+        if anchor_edge not in (0, 1):
+            raise ValueError("Missing explicit reference edge")
         for index, row in enumerate(guides["guides"]):
-            x, y = row["center_xy_m"]
-            tx, ty = row["tangent_xy_m_per_key"]
+            x, y = row["reference_xy_m"]
             spline.add_spline_point(
                 unreal.Vector(x * 100, y * 100, 0),
                 unreal.SplineCoordinateSpace.LOCAL,
@@ -80,22 +86,20 @@ def author(guide_path):
             spline.set_spline_point_type(
                 index, unreal.SplinePointType.CURVE_CUSTOM_TANGENT, False
             )
-            spline.set_tangent_at_spline_point(
+            arrive, leave = row["arrive_tangent_xy_m"], row["leave_tangent_xy_m"]
+            spline.set_tangents_at_spline_point(
                 index,
-                unreal.Vector(tx * 100, ty * 100, 0),
+                unreal.Vector(arrive[0] * 100, arrive[1] * 100, 0),
+                unreal.Vector(leave[0] * 100, leave[1] * 100, 0),
                 unreal.SplineCoordinateSpace.LOCAL,
                 False,
             )
+        spline.set_editor_property("allow_discontinuous_spline", True)
         spline.set_closed_loop(False, False)
         spline.update_spline()
         transitions = [
-            (
-                spec,
-                axis_transition(
-                    holder, spline, spec["start_station_m"], spec["end_station_m"]
-                ),
-            )
-            for spec in guides["axis_transitions"]
+            (spec, reference_transition(holder, spline, spec))
+            for spec in guides["reference_arc"]["transitions"]
         ]
         rows = []
         for index in range(4801):
@@ -114,21 +118,33 @@ def author(guide_path):
             direction = active.get_tangent_at_spline_input_key(
                 key, unreal.SplineCoordinateSpace.LOCAL
             )
-            center = [float(point.x) / 100, float(point.y) / 100]
+            anchor = [float(point.x) / 100, float(point.y) / 100]
             tangent = [
                 float(direction.x) / 100 * derivative_scale,
                 float(direction.y) / 100 * derivative_scale,
             ]
-            edges = offset_edges(
-                center, tangent, width_at(guides["width_profile"], station)
-            )
             rows.append(
                 {
                     "station_m": station,
-                    "edges_xy_m": edges,
-                    "center_xy_m": center,
-                    "tangent_xy_m_per_key": tangent,
+                    "anchor_xy_m": anchor,
+                    "anchor_tangent_xy_m_per_key": tangent,
                 }
+            )
+        distance_profile, distances = boundary_width_profile(
+            guides["width_profile"], rows
+        )
+        for row, distance in zip(rows, distances):
+            width = sum(width_at(distance_profile, distance))
+            edges = anchored_edges(
+                row["anchor_xy_m"],
+                row["anchor_tangent_xy_m_per_key"],
+                width,
+                anchor_edge,
+            )
+            row.update(
+                edges_xy_m=edges,
+                center_xy_m=[(edges[0][k] + edges[1][k]) / 2 for k in range(2)],
+                boundary_distance_m=distance,
             )
         result = {
             "schema_version": 1,
@@ -142,10 +158,11 @@ def author(guide_path):
             "point_type": "CurveCustomTangent",
             "boundary_spans": [],
             "geometry_contract": guides["geometry_contract"],
-            "axis_arc": guides["axis_arc"],
-            "axis_transitions": guides["axis_transitions"],
+            "edge_constraint": guides["edge_constraint"],
+            "reference_arc": guides["reference_arc"],
             "width_profile": guides["width_profile"],
-            "parameterization": "common axis at source chainage / 2.5 m; not physics distance",
+            "width_distance_profile": distance_profile,
+            "parameterization": "authoritative boundary at source chainage / 2.5 m; not physics distance",
             "status": "NATIVE_CURVES_EXPORTED_REVIEW_REQUIRED",
             "stations": rows,
             "canonical_source_modified": False,
@@ -153,7 +170,7 @@ def author(guide_path):
         }
         output.write_text(json.dumps(result, allow_nan=False) + "\n")
         unreal.log(
-            "[BobCurvedEdges] Native common-axis pavement exported; validation pending"
+            "[BobCurvedEdges] Native edge-constrained pavement exported; validation pending"
         )
     finally:
         actors.destroy_actor(holder)

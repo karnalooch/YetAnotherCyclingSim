@@ -59,3 +59,34 @@ def offset_edges(center, tangent, widths):
         [center[k] - left * normal[k] for k in range(2)],
         [center[k] + right * normal[k] for k in range(2)],
     ]
+
+
+def boundary_width_profile(source_profile, rows):
+    """Reparameterize observations onto sampled boundary distance in metres.
+
+    Uneven source keys/native cubic handles must not introduce width-rate kinks.
+    This is presentation distance only; canonical source/physics stay separate.
+    """
+    validate_width_profile(source_profile)
+    distances = [0.0]
+    stations = {}
+    for i, row in enumerate(rows):
+        s = row["station_m"]
+        if s in stations or (i and s <= rows[i - 1]["station_m"]):
+            raise ValueError("Unordered boundary distance samples")
+        if i:
+            step = math.dist(rows[i - 1]["anchor_xy_m"], row["anchor_xy_m"])
+            if not math.isfinite(step) or step <= 0:
+                raise ValueError("Boundary distance stops")
+            distances.append(distances[-1] + step)
+        stations[s] = distances[i]
+    samples = []
+    for observation in source_profile["samples"]:
+        if observation["station_m"] not in stations:
+            raise ValueError("Width observation lacks a boundary-distance sample")
+        samples.append(dict(observation, station_m=stations[observation["station_m"]]))
+    return dict(
+        source_profile,
+        samples=samples,
+        parameterization="sampled reference-boundary distance",
+    ), distances

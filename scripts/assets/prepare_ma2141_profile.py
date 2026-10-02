@@ -208,9 +208,11 @@ def prepare(
                 "width_profile",
                 "axis_arc",
                 "axis_transitions",
+                "edge_constraint",
+                "reference_arc",
             )
         ):
-            raise ValueError("Native common-axis/width contract was not applied")
+            raise ValueError("Native road edge/width contract was not applied")
         spans = packet.get("boundary_spans", [])
         expected = guides.get("boundary_spans", [])
         if len(spans) != len(expected) or any(

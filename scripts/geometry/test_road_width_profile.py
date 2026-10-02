@@ -127,3 +127,25 @@ class CommonAxisAdmissionTests(unittest.TestCase):
         self.assertEqual(proof["recipe"], "native-common-axis-width-v2")
         self.assertLess(proof["controlled_width"]["maximum_edge_profile_error_m"], 1e-8)
         self.assertLess(proof["controlled_width"]["maximum_axis_radial_error_m"], 1e-8)
+
+
+class BoundaryDistanceWidthTests(unittest.TestCase):
+    def test_source_key_spacing_does_not_control_geometric_width_rate(self):
+        from scripts.geometry.road_width_profile import boundary_width_profile, width_at
+
+        profile = {
+            "evidence": {"class": "test"},
+            "samples": [
+                {"station_m": s, "left_m": a, "right_m": 3}
+                for s, a in ((0, 2), (5, 3), (10, 2))
+            ],
+        }
+        rows = [
+            {"station_m": s, "anchor_xy_m": [d, 0]}
+            for s, d in ((0, 0), (2.5, 3), (5, 10), (7.5, 11), (10, 20))
+        ]
+        mapped, distances = boundary_width_profile(profile, rows)
+        self.assertEqual(distances, [0, 3, 10, 11, 20])
+        self.assertEqual(width_at(mapped, 10), (3, 3))
+        self.assertEqual(width_at(mapped, 20), (2, 3))
+        self.assertEqual(profile["samples"][1]["station_m"], 5)

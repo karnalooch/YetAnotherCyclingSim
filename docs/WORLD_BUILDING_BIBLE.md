@@ -2715,42 +2715,80 @@ GIS polyline corners; denser sampling and normal recomputation cannot round
 that silhouette. Height regularization did not smooth XY. This is a confirmed
 presentation defect, not permission to change canonical route/physics data.
 
-Current owner requirement (2026-10-02): construct both pavement boundaries from
-one coherent presentation axis and an explicit width profile. Nominal width may
-have justified local widening with smooth entry/exit. This contract applies to
-Ma-2141 now and all subsequent roads. Road plan, grade and crossfall have priority;
-BOB cuts protruding terrain and builds downward support outside the approximately
-0.5 m shoulder after the pavement is fixed. Terrain/contact failures must never
-be used to optimize road width or shift the axis.
+Current owner requirement (2026-10-02): use the reviewed cliff-side pavement
+boundary as the positional datum. From that one native curve and an explicit
+width W(s), derive the other pavement boundary and the presentation midpoint
+axis. Nominal width may have evidenced local widening with smooth entry/exit.
+This contract applies to Ma-2141 now and subsequent road authoring windows.
+Road plan, grade and crossfall have priority; BOB cuts protruding terrain and
+builds downward support outside the approximately 0.5 m shoulder after the
+pavement is fixed. Terrain/contact failures must not optimize width or shift
+the datum. Vegetation is later dressing, not a geometry repair.
 
-The current producer fits a bounded circle to inferred pavement midpoints in
-135–155 m, with native cubic tangent-matched transitions to the approach in 125–135 and 155–165 m. The existing weighted local fit regularizes approach midpoints over 7.5 m;
-the fit radius and observation residual are exported. This is an explicit preview
-inference from the pinned PNOA profile, not survey or vehicle swept-path evidence.
-The 9–10 m width observations remain provisional: metric re-review perpendicular
-to the new axis and owner visual review are still required. Do not interpret
-technical validation as acceptance of the previous bulge.
+Never conflate the following independently named edge attributes:
 
-Tools-first implementation uses one transient native UE 5.8 USplineComponent
-with CurveCustomTangent controls every 2.5 m. Both edges are calculated from its
-horizontal tangent normal and the same width profile at the same source-chainage
-key. The reusable `scripts/geometry/road_width_profile.py` owns width validation,
-quintic interpolation and normal offsets; future road producers provide evidence
-and left/right width observations rather than independently smoothing edges.
-The current width observations are symmetric about inferred pavement midpoints;
-future observed asymmetric widening is supported. Quintic interpolation preserves
-observations without overshoot and has zero first/second derivatives at joins.
-It is a YACS presentation choice, not a formula prescribed by road standards.
+| Attribute | Definition |
+|---|---|
+| Physical index | Stable boundary 0 or 1 in authored source order |
+| Travel side | LEFT/RIGHT relative to travel; reverses when riding backward |
+| Bend role | INNER/OUTER from signed presentation-midpoint curvature; STRAIGHT below 0.0001/m |
+| Terrain role | CLIFF/MOUNTAIN/UNKNOWN from explicit bounded evidence; independent of bend role |
 
-The existing map-preparation boot exports 4801 samples at 0.0625 m intervals and
-builds 1201 render sections at 0.25 m. Recipe `native-common-axis-width-v2` checks
-complete finite samples, exact guide/author/source/profile identity, edge offsets
-against the explicit width profile (0.1 mm tolerance), sampled axis deviation
-from the designed circle (2 cm), no self-intersections and no folded triangles.
-The existing 1 m corresponding-source-edge allowance and 2 cm sampled tessellation
-error are retained; failure rejects the candidate. The legacy paired-edge recipe
-is retained for historical evidence only. Presentation length is not physics
-length. Raw canonical source and corresponding source XY remain separate.
+In UE's X/Y frame, positive signed XY curvature turns toward the travel-right
+side in authored direction. Edge 0 is authored travel-left, edge 1 travel-right.
+Reversing travel swaps LEFT/RIGHT but preserves physical index, INNER/OUTER and
+terrain identity. A cliff can be either inner or outer. Unknown terrain roles
+remain UNKNOWN; do not classify cliffs by turn sign. The current owner-reviewed
+125–165 m hairpin window labels physical edge 0 CLIFF and edge 1 MOUNTAIN as
+preview interpretation. Other stations remain UNKNOWN. The source boundaries
+are inferred from PNOA and CartoCiudad, not LiDAR-extracted pavement lines; DTM
+height resolution does not prove horizontal asphalt boundaries or vertical walls.
+
+Tools-first implementation uses one transient UE 5.8 USplineComponent with
+CurveCustomTangent controls every 2.5 m of source chainage. The 135–155 m
+reference-edge arc is fitted from that boundary alone; its radius is at least
+maximum intended width plus a provisional 1.3 m offset margin, preventing a
+normal-offset focal singularity. A fixed-radius least-squares center fit refines
+the result. Approach controls reuse the existing local fit with a 7.5 m radius;
+127.5–135 and 155–165 m native cubic transitions match position/tangent direction.
+Circular segments use explicit arriving/leaving handles (4R*tan(delta_angle/4)
+in native cubic tangent units). Reflected bAllowDiscontinuousSpline enables
+unequal magnitudes for uneven source keys; directions still join continuously.
+Native execution verifies the Python property binding and actual geometry.
+The provisional 1.3 m margin is a presentation design control, not a surveyed
+inner radius or vehicle-passage proof.
+Native position/tangent samples determine the horizontal boundary normal; the
+derived edge is offset by W(s). The midpoint comes from those same cross-sections.
+This supersedes the rejected circle fit through inferred pavement midpoints.
+No independent smoothing of the derived edge can change the intended width.
+A different road window may explicitly select reference edge 1; switches between
+windows require a reviewed continuous join rather than guessing by curve sign.
+
+Widths are measured in the authoritative-boundary horizontal normal frame.
+For varying width the derived midpoint tangent need not be perpendicular to
+that frame; do not claim the same numerical width in a different measurement
+frame. The current profile supplies total W(s) from inferred observations;
+left/right source half-widths are not independently admitted centerline offsets
+in this anchored recipe. Width observations are mapped from source stations to
+sampled reference-boundary arc distance before interpolation. This maintains
+geometric width-rate continuity despite differing arriving/leaving key speeds;
+that sampled distance is presentation-only. The consumer recomputes the mapping.
+Quintic interpolation preserves observations without
+overshoot and has zero first/second derivatives at observation joins. The
+provisional 9–10 m observations still require geographic/owner review.
+
+The existing boot exports 4801 samples at 0.0625 m; the consumer builds 1201
+sections at 0.25 m. Recipe `native-cliff-edge-width-v3` verifies exact identity,
+finite complete data, reference edge displacement <=1 m, normal-frame width
+conformity (0.1 mm), reference circle deviation <=2 cm, derived midpoint consistency, semantic side evidence,
+no intersections/folded triangles and sampled tessellation error <=2 cm.
+Both edge displacements are reported. Per owner refinement, movement of the
+inferred derived edge is not capped by the old symmetric 1 m comparison; its
+width/shape/topology remain mandatory. This explicit asymmetry is not an
+increased global allowance. Semantic role samples are hashed and rechecked
+by consumers; stored authored travel direction is explicit. Historical paired
+and common-axis recipes remain supported for evidence, not current authoring.
+Presentation length is not physics length; raw source XY stays separate.
 
 Terrain is resampled under the resulting footprint before height/crossfall fit;
 asphalt, CUT and support all consume that same validated profile. Native
@@ -2803,15 +2841,11 @@ was also consulted. Native execution, the same cameras and human review are
 required before visual acceptance. PCGEx and Blender are not introduced here.
 
 
-Current common-axis candidate is not admitted: the offline design check found
-valid nonintersecting boundaries but 2.136358 m maximum corresponding displacement
-at 135 m, beyond the unchanged 1 m review allowance. This is a geometry/input
-review blocker, not a test to weaken. Native export must still pass the same
-consumer guard; no previous artifact admits this candidate. Re-review the pinned
-photo against perpendicular common-axis transects before replacing inferred
-width/axis observations. Do not dispatch a heavy editor proof while the known
-lightweight admission failure remains.
-
+Historical common-axis checkpoint `36982be` failed the symmetric comparison:
+2.136358 m inner-edge displacement at 135 m. The subsequent owner refinement
+accepts movement on the mountain side and gives the cliff-side boundary
+positional priority. The v3 anchored producer/validator above implements that
+revised requirement. This does not grant geographic width or visual acceptance.
 
 Owner clarification: when the pavement footprint changes, evaluate and regenerate
 CUT/support from the clean pre-earthworks native DTM, never the last visible
