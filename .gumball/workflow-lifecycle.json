@@ -254,7 +254,7 @@
     {
       "file": "runner-monitor.yml",
       "state": "CURRENT",
-      "reason": "Owner-authorized desktop monitor installation; bounded rollout branch push and owner-only main manual maintenance. No Unreal or service restart."
+      "reason": "Owner-only manual main-branch desktop monitor deployment. Rollout push trigger retired after verified silent installation. No Unreal or service restart."
     }
   ]
 }
