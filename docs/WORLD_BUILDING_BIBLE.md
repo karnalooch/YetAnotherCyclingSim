@@ -1957,3 +1957,10 @@ The PR #319 native-import CI checkpoint preserves the Spanish source/map under
 before cleanup. It is a terrain-only diagnostic, not road or visual acceptance.
 
 Owner directive of 2026-10-01 (Issue #308): rebuilding the DTM baseline must preserve downloaded LFS payloads on the runner disk. The trusted terrain workflow uses `_terrain-recovery-worktree`; the earlier `_embark-terrain-worktree` is left untouched. Before checkout and again before final reset/clean, `scripts/ci/retain_unreal_assets.py` moves materialized `.umap`/`.uasset` files into the sibling `_yacs-retained-lfs/<run>-<attempt>/` archive and records verified SHA-256/byte counts in `retention.json`. Git LFS pointers remain valid in the code-only lane, and its local `.git/lfs/objects` cache is never pruned. Archive collisions, unsafe paths or failed verification stop cleanup. Retention is a byte-preservation prerequisite, not acceptance of the current terrain geometry.
+
+The additional IGN IGR-RT source review for the bounded Ma-2141 diagnostic
+provides third coordinates and source claims of two lanes / paved surface.
+Its `fictitious=true` flag, vertical datum and feature-specific accuracy are
+unresolved. The producer compares it numerically with native DTM and preserves
+its source hash; it does not use it to carve terrain, establish asphalt heights
+or authorize physics. Matching CartoCiudad XY is not independent validation.

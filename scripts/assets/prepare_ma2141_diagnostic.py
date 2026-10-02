@@ -15,7 +15,7 @@ from pathlib import Path
 import numpy as np
 from pyproj import Transformer
 from shapely import wkt
-from shapely.geometry import box
+from shapely.geometry import LineString, Point, box
 from shapely.ops import substring, transform
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -24,6 +24,76 @@ SOURCE = (
     / "worldgen/terrain/benchmarks/sa_calobra/ma2141_cartociudad_source_2026-10-02.json"
 )
 SOURCE_SHA = "6520b92486b5d1c63353b8253d388ab21d380c78fda119849311be8344d8ae36"
+IGR_SOURCE = SOURCE.with_name("ma2141_igr_rt_source_2026-10-02.json")
+IGR_SOURCE_SHA = "ebc7c1c985caae5b7727719856646d52824463803d13095462f8d7ef1fcd7d5f"
+
+
+def compare_igr_profile(points: list[dict], source: Path = IGR_SOURCE) -> dict:
+    """Compare raw third coordinates; never promote them to asphalt truth."""
+    if sha256(source) != IGR_SOURCE_SHA:
+        raise ValueError("Official IGR-RT source hash mismatch")
+    raw = json.loads(source.read_text(encoding="utf-8"))
+    features = [f for f in raw["features"] if f["id"] == "VIAL_TR70190001272"]
+    if len(features) != 1 or features[0]["geometry"]["type"] != "LineString":
+        raise ValueError("IGR-RT source identity/geometry mismatch")
+    feature = features[0]
+    coords = np.asarray(feature["geometry"]["coordinates"], dtype=float)
+    if coords.shape != (223, 3) or not np.isfinite(coords).all():
+        raise ValueError("IGR-RT requires finite pinned XYZ coordinates")
+    x, y = Transformer.from_crs(4326, 25831, always_xy=True).transform(
+        coords[:, 0], coords[:, 1]
+    )
+    xy = np.column_stack([x, y])
+    lengths = np.linalg.norm(np.diff(xy, axis=0), axis=1)
+    if (lengths <= 0).any():
+        raise ValueError("IGR-RT contains duplicate consecutive XY")
+    source_stations = np.r_[0, np.cumsum(lengths)]
+    line = LineString(xy)
+    samples = [Point(p["easting_m"], p["northing_m"]) for p in points]
+    if len(samples) < 2:
+        raise ValueError("IGR-RT comparison requires at least two samples")
+    offsets = np.array([line.distance(p) for p in samples])
+    if offsets.max() > 0.001:
+        raise ValueError("IGR-RT XY does not match the selected source alignment")
+    stations = np.array([line.project(p) for p in samples])
+    station_steps = np.diff(stations)
+    if (station_steps < -1e-7).any() or not (station_steps > 1e-7).any():
+        raise ValueError("IGR-RT station order is ambiguous")
+    source_z = np.interp(stations, source_stations, coords[:, 2])
+    dtm_z = np.array([p["native_dtm_z_m"] for p in points], dtype=float)
+    if not np.isfinite(dtm_z).all():
+        raise ValueError("Comparison terrain heights must be finite")
+    difference = source_z - dtm_z
+    return {
+        "status": "REQUIRES_REVIEW",
+        "source_sha256": IGR_SOURCE_SHA,
+        "feature_id": feature["id"],
+        "source_properties": feature["properties"],
+        "max_xy_difference_m": float(offsets.max()),
+        "independent_xy_validation": False,
+        "vertical_datum": "UNVERIFIED",
+        "numeric_z_comparison_only": True,
+        "source_minus_dtm_min": float(difference.min()),
+        "source_minus_dtm_median": float(np.median(difference)),
+        "source_minus_dtm_max": float(difference.max()),
+        "source_minus_dtm_rms": float(np.sqrt(np.mean(difference**2))),
+        "source_linear_profile_max_abs_slope": float(
+            np.max(
+                np.abs(
+                    np.diff(source_z)[station_steps > 1e-7]
+                    / station_steps[station_steps > 1e-7]
+                )
+            )
+        ),
+        "earthwork_input_admitted": False,
+        "physics_input_admitted": False,
+        "reasons": [
+            "Vertical datum and feature-specific accuracy are unverified",
+            "Source fictitious=true needs interpretation and positional review",
+            "Road width and bicycle access remain unknown",
+            "Paved category does not specify asphalt composition or physics",
+        ],
+    }
 
 
 def sha256(path: Path) -> str:
@@ -109,12 +179,13 @@ def prepare(prepared_terrain: Path, output: Path, exact_sha: str) -> dict:
     coordinates = list(line.coords)
     for a, b in zip(coordinates, coordinates[1:]):
         source_stations.append(source_stations[-1] + math.dist(a, b))
-    stations = sorted(
-        set(
-            [station - 150 + i for i in range(301)]
-            + [s for s in source_stations if station - 150 <= s <= station + 150]
-        )
-    )
+    # Keep original vertices when a uniform sample is numerically coincident.
+    # A plain set retains 150.0 and 150.00000000000023 as distinct stations.
+    stations = [s for s in source_stations if station - 150 <= s <= station + 150]
+    for s in [station - 150 + i for i in range(301)]:
+        if not any(abs(s - original) < 1e-7 for original in stations):
+            stations.append(s)
+    stations.sort()
     points = []
     for s in stations:
         xy = line.interpolate(s)
@@ -152,6 +223,7 @@ def prepare(prepared_terrain: Path, output: Path, exact_sha: str) -> dict:
         "road_physics_status": "NOT_ADMITTED",
         "road_earthworks_status": "NOT_AUTHORED",
         "learning_case_status": "NOT_ELIGIBLE",
+        "igr_rt_source_comparison": compare_igr_profile(points),
         "points_ue_cm": points,
         "policy": {
             "presentation_only": True,

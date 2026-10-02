@@ -142,3 +142,17 @@ The immutable response is included for source/topology review. Metric lengths
 and coordinates are derived by projection from service EPSG:4326 to EPSG:25831.
 No road width, access, surface or vertical crossing interpretation is added.
 License/service coordinate evidence: https://www.cartociudad.es/web/portal/faq
+
+## IGN IGR Redes de Transporte Ma-2141 source review
+
+Source: https://api-features.idee.es/collections/roadlink
+
+Obra derivada de IGR Redes de Transporte, consulta 2026-10-02, CC BY 4.0 scne.es
+
+License: https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf
+
+The pinned OGC API response retains four original features. The bounded
+comparison selects `VIAL_TR70190001272`, projects horizontal coordinates into
+EPSG:25831 and compares raw third-coordinate numbers with the native DTM.
+It does not establish a common vertical datum or asphalt-height authority.
+Source `paved`, lane count and `fictitious` attributes remain source claims.

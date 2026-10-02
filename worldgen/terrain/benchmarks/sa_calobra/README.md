@@ -97,3 +97,25 @@ or performance acceptance is established by these artifacts. Human visual
 review remains pending. Source width, asphalt-height profile, surface and
 bicycle access remain unresolved; do not substitute native DTM heights for
 those missing road facts or promote this diagnostic into BOB case memory.
+
+## IGN IGR-RT height and surface candidate
+
+`ma2141_igr_rt_source_2026-10-02.json` preserves the official four-feature OGC
+API response, with license and limitations in `ma2141_igr_rt_source_review.json`.
+Feature `VIAL_TR70190001272` coincides with the selected CartoCiudad XY within
+numerical projection tolerance; this is not independent positional validation.
+Its source attributes indicate two lanes and `paved`, but also `fictitious=true`.
+Neither lane count nor paved class establishes road width or asphalt composition.
+
+The diagnostic producer now emits a hash-verified IGR-RT comparison alongside
+the native alignment. Initial comparison with the captured 300 m diagnostic
+gave raw third-coordinate minus DTM values from -1.117 to +2.897, RMS 1.141,
+and a maximum piecewise-linear source slope of 0.30044. These are numerical
+checks, not measured road/terrain displacement: the third-coordinate datum and
+feature-specific accuracy remain unverified. These values must not drive BOB
+cut/fill or Road Physics Profile admission.
+
+An accessible IDEIB endpoint exposing 3D road and asphalt-edge layers was
+rejected for production inclusion because its service metadata explicitly calls
+it preproduction/test-only. The production endpoint returned HTTP 503.
+No IDEIB geometry was imported.
