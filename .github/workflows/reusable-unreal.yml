@@ -282,10 +282,6 @@ jobs:
             --output "$root/ma2141-profile-candidate.json" `
             --exact-sha '${{ inputs.target_sha }}'
           if ($LASTEXITCODE -ne 0) { throw 'Ma-2141 profile assessment failed.' }
-          python scripts/assets/prepare_bob_build_lesson.py `
-            --profile "$root/ma2141-profile-candidate.json" `
-            --output "$root/bob-build-lesson.json"
-          if ($LASTEXITCODE -ne 0) { throw 'BOB lesson preparation failed.' }
           python scripts/assets/prepare_ma2141_road_preview.py `
             --prepared-terrain "$root/Prepared" `
             --output "$root/ma2141-road-preview.json" `
@@ -306,15 +302,57 @@ jobs:
           $engine = Resolve-YacsUnrealEngine -ProjectPath $project
           $script = Join-Path (Get-Location) 'scripts/ue/capture_region_terrain.py'
           $arguments = @(('"' + $project + '"'), ('-ExecutePythonScript="' + $script + '"'), '-Unattended', '-NoPause', '-NoSplash', '-NoP4', '-windowed', '-ResX=1920', '-ResY=1080', '-NoVSync', '-FixedSeed', '-ScriptErrorsAreFatal', '-stdout', ('-AbsLog="' + (Join-Path $root 'capture.engine.log') + '"'))
-          $process = Start-Process -FilePath $engine.UnrealEditorPath -ArgumentList $arguments -PassThru -NoNewWindow -RedirectStandardOutput (Join-Path $root 'capture.stdout.log') -RedirectStandardError (Join-Path $root 'capture.stderr.log')
-          if (-not $process.WaitForExit(300000)) {
-            $process | Stop-Process -Force
-            throw 'Sa Calobra terrain capture timed out.'
+          $env:YACS_KEEP_EDITOR_OPEN = '1'
+          $proofPath = Join-Path $root 'terrain-capture-proof.json'
+
+          # Keep the successful final rider view alive after the Actions step.
+          # The self-hosted runner normally reaps child processes by tracking id,
+          # so this owner-handoff Editor gets a distinct id. The next YACS Unreal
+          # job still closes workspace-scoped stale Editors before checkout/reset.
+          $runnerTrackingId = $env:RUNNER_TRACKING_ID
+          $env:RUNNER_TRACKING_ID = "yacs-region-handoff-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          try {
+            $process = Start-Process -FilePath $engine.UnrealEditorPath -ArgumentList $arguments -PassThru -NoNewWindow -RedirectStandardOutput (Join-Path $root 'capture.stdout.log') -RedirectStandardError (Join-Path $root 'capture.stderr.log')
           }
-          if ($process.ExitCode -ne 0) { throw "Terrain capture editor exit $($process.ExitCode)." }
-          $proof = Get-Content (Join-Path $root 'terrain-capture-proof.json') -Raw | ConvertFrom-Json
-          if ($proof.technical_capture_status -ne 'PASS' -or $proof.exact_sha -ne '${{ inputs.target_sha }}' -or $proof.captures.Count -ne 6) { throw 'Terrain capture proof failed.' }
-          Get-Content (Join-Path $root 'bob-build-lesson-proof.json') -Raw | Write-Host
+          finally {
+            if ([string]::IsNullOrEmpty($runnerTrackingId)) {
+              Remove-Item Env:RUNNER_TRACKING_ID -ErrorAction SilentlyContinue
+            }
+            else {
+              $env:RUNNER_TRACKING_ID = $runnerTrackingId
+            }
+          }
+
+          $deadline = [DateTime]::UtcNow.AddSeconds(300)
+          while (-not (Test-Path -LiteralPath $proofPath) -and [DateTime]::UtcNow -lt $deadline) {
+            $process.Refresh()
+            if ($process.HasExited) {
+              throw "Terrain capture editor exited before proof with code $($process.ExitCode)."
+            }
+            Start-Sleep -Seconds 2
+          }
+          if (-not (Test-Path -LiteralPath $proofPath)) {
+            if (-not $process.HasExited) { $process | Stop-Process -Force }
+            throw 'Sa Calobra terrain capture proof timed out.'
+          }
+
+          Start-Sleep -Milliseconds 500
+          $proof = Get-Content $proofPath -Raw | ConvertFrom-Json
+          if (
+            $proof.technical_capture_status -ne 'PASS' -or
+            $proof.exact_sha -ne '${{ inputs.target_sha }}' -or
+            $proof.captures.Count -ne 4 -or
+            $proof.bob_mode -ne 'INSPECTOR_ONLY' -or
+            $proof.editor_handoff_requested -ne $true -or
+            $proof.editor_handoff_view -ne 'road-contact-rider'
+          ) { throw 'Terrain capture proof failed.' }
+
+          Start-Sleep -Seconds 3
+          $process.Refresh()
+          if ($process.HasExited) {
+            throw "Unreal Editor did not remain open for owner inspection; exit code $($process.ExitCode)."
+          }
+          Write-Host "Sa Calobra handoff PASS; Unreal Editor pid=$($process.Id) remains open on road-contact-rider."
 
       - name: Retire owner-approved obsolete Italy payloads
         if: ${{ inputs.region_terrain_import }}
@@ -342,20 +380,7 @@ jobs:
           path: |
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.json
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.txt
-            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.log
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.png
-            !${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/bob-lesson-*.png
-          if-no-files-found: error
-          retention-days: 14
-
-      - name: Upload bounded BOB construction lesson
-        if: ${{ always() && inputs.region_terrain_import }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: bob-build-lesson-${{ inputs.target_sha }}-${{ github.run_attempt }}
-          path: |
-            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/bob-build-lesson*.json
-            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/bob-lesson-*.png
           if-no-files-found: error
           retention-days: 14
 
@@ -372,7 +397,7 @@ jobs:
           retention-days: 7
 
       - name: Clean current-run evidence and non-allow-listed residue
-        if: ${{ always() }}
+        if: ${{ always() && !inputs.region_terrain_import }}
         shell: pwsh
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
