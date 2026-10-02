@@ -157,7 +157,7 @@ is trusted. Build/test logs are retained for seven days.
 ## Desktop notifications and local diagnostics
 
 Issue #329 adds an optional, read-only desktop companion in `scripts/runner/`.
-This is a local candidate until Windows host acceptance is recorded. The current
+The implementation is tracked in Draft PR #330; Windows host acceptance is pending. The current
 runner execution mode must be inspected on the host; historical notes do not
 prove that a native service is installed or active.
 
