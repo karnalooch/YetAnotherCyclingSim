@@ -13,6 +13,10 @@ ROOT = Path(__file__).resolve().parents[2]
 POLICY = ROOT / ".gumball" / "proof-broker.json"
 BROKER_WORKFLOW = ROOT / ".github" / "workflows" / "proof-broker.yml"
 TARGET_WORKFLOWS = {
+    "sa-calobra-terrain-performance": ROOT
+    / ".github"
+    / "workflows"
+    / "sa-calobra-terrain-performance.yml",
     "r4-1b3-geometry": ROOT
     / ".github"
     / "workflows"

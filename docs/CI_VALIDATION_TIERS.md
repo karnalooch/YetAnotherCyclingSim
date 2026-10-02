@@ -42,44 +42,20 @@ producer errors fail the job. It does not apply the candidate in Unreal. The
 four existing captures continue to show the raw native-contact trial, not the
 regularized candidate. The JSON is included in the existing artifact upload.
 
-#### Inspector plus transient direct Road_Earthworks CUT handoff
+#### Inspector-only delivery after the owner-approved split
 
-For active Sa Calobra PR #319, BOB keeps its profile/terrain-fit inspectors and
-executes one bounded direct Landscape recipe after inspection:
-`bob-direct-road-earthworks-cut-v1`. The superseded
-`bob-cut-only-local-ground-v1` preview and failed spline lesson remain retained
-as study evidence but are not the active proof path.
+The owner approved separating the rejected CUT experiment on 2026-10-02.
+PR #319 delivers the native terrain, inferred smooth road preview and BOB's
+read-only terrain-fit inspection. Five captures prove two terrain views, one
+cyan Geometry Inspection view, and Lit road overview/rider views. The owner
+handoff remains Lit with a verified sun and sky. No CUT patch is prepared or
+applied by this lane. Earthworks, continuous support, road collision, ride and
+BOB learning admission are not delivered or claimed by this PR.
 
-The region preparation emits `ma2141-cut-patch.json` plus a little-endian R16
-delta patch. The manifest is exact-SHA bound, CUT-only, limited to 1.0 m, names
-`Road_Earthworks`, keeps `Base_DTM` immutable, refuses fill/structures and
-sets `save_map=false`.
-
-Runtime proof then requires:
-
-1. pre-cut `ma2141-road-terrain-fit-proof.json` with all 15,025 smooth-ribbon
-   samples classified and zero trace misses;
-2. two mandatory cyan Geometry Inspection captures,
-   `road-geometry-inspection-before` and
-   `road-geometry-inspection-after`;
-3. native C++ application of the R16 delta to the standard
-   `Road_Earthworks` edit layer;
-4. post-cut remeasurement of the same 15,025 samples;
-5. `bob-road-earthworks-cut-proof.json` with
-   `status=TECHNICAL_CUT_PASS`, `geometry_repair_executed=true`,
-   `transient_road_earthworks_modified=true`, zero post-cut
-   `CUT_REQUIRED`, zero `STRUCTURE_REVIEW`, no fill, no structures,
-   `base_dtm_modified=false` and `map_saved=false`.
-
-`FILL_REQUIRED` remains unresolved and is not silently converted into terrain
-or structure authoring. The direct cut is a transient technical construction
-proof, not road admission or a learned BOB case.
-
-The region capture therefore requires six views: two terrain views, Geometry
-Inspection before/after, Lit road overview and Lit rider view. The interactive
-handoff must additionally prove `VMI_LIT`, positive directional-light and
-skylight intensity, and `cut_patch_applied=true`; the editor remains open for
-owner review without saving the map.
+The experimental CUT branch preserves its complete implementation and original
+no-new-fill / zero-remaining-cut gates. Run 37033558831 at fd234e46 rejected it:
+986 to 3 CUT samples, but 2046 to 13642 FILL samples. This is not a passing
+construction recipe. It must be reviewed independently before activation.
 
 PR #319 run 37007690564 remains explicit failed historical evidence: native
 preparation reached contact PASS, but capture stopped after two terrain images
@@ -353,6 +329,7 @@ Current configured proof commands:
 /gumball proof m3-h-focus
 /gumball proof world-authoring-sp638
 /gumball proof environment-performance
+/gumball proof sa-calobra-terrain-performance
 /gumball proof source-asset-audit
 ```
 
@@ -702,3 +679,26 @@ The UE 5.8 runner rejected a direct call to
 `ALandscape::ForceLayersFullUpdate` and `PostEditChange` after patch binding,
 without that unexported helper. This preserves the full layer-update request;
 exact-head native build and post-cut measurements still establish acceptance.
+
+### Sa Calobra performance producer
+
+`sa-calobra-terrain-performance.yml` is the explicit trusted default-branch
+producer for `/gumball proof sa-calobra-terrain-performance`. Its exact-SHA
+checkout builds the editor, imports the pinned native terrain and executes
+`CyclingRuntime.SaCalobraTerrainPerformanceProof` in a real 1920x1080 standalone
+viewport. The active RHI must identify RTX 2070 SUPER; the map and 1024-component
+topology are checked in the running world. Three fixed overview/rider/slope
+cameras each settle for 5 s and sample for 8 s. VSync, FPS limiting and dynamic
+resolution are off; screen percentage is 100. Lighting is the neutral terrain
+baseline (sun 8, sky 0.8, no shadows), with no road or gameplay acceptance.
+
+The sampler uses the existing frame/thread counters and native GPU frame-time
+history. Raw CSV and p50/p95/p99 summaries are checked by the same world-proof
+validator; each view needs at least 120 frame and 120 positive GPU samples,
+p95 frame/GPU <= 16.667 ms, and at most 5% over-budget frames. Missing timing,
+wrong hardware/map/topology or inconsistent summary fails. Settings and prepared
+terrain hashes are included. Retention runs before checkout and after execution;
+no downloaded Unreal/LFS payload is pruned.
+
+The trusted workflow registration must reach main before requesting this proof
+for the implementation PR. Producer code is loaded from the explicit proof SHA.

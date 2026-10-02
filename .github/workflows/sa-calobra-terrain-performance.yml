@@ -1,0 +1,90 @@
+name: Sa Calobra terrain performance
+run-name: Sa Calobra performance ${{ inputs.gumball_request_id }}
+on:
+  workflow_dispatch:
+    inputs:
+      exact_sha:
+        description: Exact commit containing the native terrain sampler
+        required: true
+        type: string
+      gumball_request_id:
+        description: Gumball proof request identity
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: sa-calobra-terrain-performance
+  cancel-in-progress: false
+jobs:
+  performance:
+    if: ${{ github.repository == 'karnalooch/YetAnotherCyclingSim' }}
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout trusted retention helper
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: _sa-calobra-proof-bootstrap
+          lfs: false
+          persist-credentials: false
+      - name: Retain previous proof assets before checkout
+        run: |
+          $ErrorActionPreference='Stop'
+          python _sa-calobra-proof-bootstrap/scripts/ci/retain_unreal_assets.py --workspace "$env:GITHUB_WORKSPACE/_sa-calobra-performance" --archive "$env:GITHUB_WORKSPACE/_yacs-retained-lfs/sa-perf-before-${{ github.run_id }}-${{ github.run_attempt }}"
+          if ($LASTEXITCODE -ne 0) { throw 'Asset retention failed; checkout prohibited.' }
+      - name: Checkout exact proof revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: _sa-calobra-performance
+          ref: ${{ inputs.exact_sha }}
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Verify revision and materialize only Spanish and startup assets
+        working-directory: _sa-calobra-performance
+        run: |
+          $ErrorActionPreference='Stop'
+          if ('${{ inputs.exact_sha }}' -notmatch '^[0-9a-f]{40}$' -or (git rev-parse HEAD).Trim() -ne '${{ inputs.exact_sha }}') { throw 'Exact SHA mismatch.' }
+          if (git diff --name-only HEAD) { throw 'Tracked files are dirty.' }
+          git lfs install --local
+          if ($LASTEXITCODE -ne 0) { throw 'LFS setup failed.' }
+          git lfs pull --include='Content/**,worldgen/terrain/benchmarks/sa_calobra/*.tif' --exclude=''
+          if ($LASTEXITCODE -ne 0) { throw 'Source/startup materialization failed.' }
+          python -m pip install --only-binary=:all: numpy==2.3.5 rasterio==1.5.2 pyproj==3.8.0 Pillow==12.3.0
+          if ($LASTEXITCODE -ne 0) { throw 'Terrain dependencies failed.' }
+      - name: Prove native map and 1080p60 budget
+        working-directory: _sa-calobra-performance
+        run: |
+          ./scripts/ue/Invoke-YacsSaCalobraPerformance.ps1 -ExpectedHead '${{ inputs.exact_sha }}' -ArtifactRoot 'Saved/RuntimeProof/CI/SaCalobraPerformance/${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Sa Calobra performance failed.' }
+      - name: Publish successful exact-SHA proof
+        if: ${{ success() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: proof-sa-calobra-terrain-performance-${{ inputs.exact_sha }}
+          path: |
+            _sa-calobra-performance/Saved/RuntimeProof/CI/SaCalobraPerformance/${{ github.run_id }}-${{ github.run_attempt }}/*.json
+            _sa-calobra-performance/Saved/RuntimeProof/CI/SaCalobraPerformance/${{ github.run_id }}-${{ github.run_attempt }}/*.csv
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain failed run diagnostics
+        if: ${{ failure() || cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: diagnostic-sa-calobra-terrain-performance-${{ inputs.exact_sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            _sa-calobra-performance/Saved/RuntimeProof/CI/SaCalobraPerformance/${{ github.run_id }}-${{ github.run_attempt }}/*.log
+            _sa-calobra-performance/Saved/RuntimeProof/CI/SaCalobraPerformance/${{ github.run_id }}-${{ github.run_attempt }}/*.json
+            _sa-calobra-performance/Saved/RuntimeProof/CI/SaCalobraPerformance/${{ github.run_id }}-${{ github.run_attempt }}/*.csv
+            _sa-calobra-performance/Saved/RuntimeProof/CI/SaCalobraPerformanceBuild/*.log
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Retain generated and downloaded assets
+        if: ${{ always() }}
+        run: |
+          python _sa-calobra-proof-bootstrap/scripts/ci/retain_unreal_assets.py --workspace "$env:GITHUB_WORKSPACE/_sa-calobra-performance" --archive "$env:GITHUB_WORKSPACE/_yacs-retained-lfs/sa-perf-after-${{ github.run_id }}-${{ github.run_attempt }}"
+          if ($LASTEXITCODE -ne 0) { throw 'Final asset retention failed.' }

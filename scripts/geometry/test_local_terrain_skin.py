@@ -170,48 +170,6 @@ class LocalTerrainSkinTests(unittest.TestCase):
         self.assertGreater(metrics.constrained_sample_count, 0)
         self.assertAlmostEqual(metrics.max_abs_adjustment_m, 2.0, places=6)
 
-    def test_native_grid_cut_only_never_raises_ground(self) -> None:
-        xs = tuple(float(value) for value in range(21))
-        ys = tuple(float(value) for value in range(20, -1, -1))
-        heights = tuple(tuple(100.0 for _ in xs) for _ in ys)
-        profile = (
-            CrossSectionPoint(-4.0, 0.0, "left_tie"),
-            CrossSectionPoint(-2.0, 0.0, "left_road_edge"),
-            CrossSectionPoint(2.0, 0.0, "right_road_edge"),
-            CrossSectionPoint(4.0, 0.0, "right_tie"),
-        )
-        profiles = make_constant_profiles(2, profile)
-
-        raised_mesh = build_corridor_mesh(
-            (Vec3(2.0, 10.0, 102.0), Vec3(18.0, 10.0, 102.0)),
-            profiles,
-        )
-        unchanged, _ = apply_corridor_constraints_to_height_grid(
-            xs, ys, heights, raised_mesh, profiles,
-            corridor_origin_m=Vec3(0.0, 0.0, 0.0),
-            adjustment_mode="cut_only",
-        )
-        self.assertEqual(unchanged, heights)
-
-        lowered_mesh = build_corridor_mesh(
-            (Vec3(2.0, 10.0, 99.0), Vec3(18.0, 10.0, 99.0)),
-            profiles,
-        )
-        lowered, metrics = apply_corridor_constraints_to_height_grid(
-            xs, ys, heights, lowered_mesh, profiles,
-            corridor_origin_m=Vec3(0.0, 0.0, 0.0),
-            adjustment_mode="cut_only",
-        )
-        self.assertTrue(
-            all(
-                lowered[row][column] <= heights[row][column] + 1e-12
-                for row in range(len(ys))
-                for column in range(len(xs))
-            )
-        )
-        self.assertLess(lowered[ys.index(10.0)][xs.index(10.0)], 100.0)
-        self.assertGreater(metrics.constrained_sample_count, 0)
-
     def test_native_grid_constraints_fail_on_strong_stacked_overlap(self) -> None:
         xs = tuple(float(value) for value in range(9))
         ys = tuple(float(value) for value in range(8, -1, -1))

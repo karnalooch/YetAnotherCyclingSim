@@ -245,6 +245,11 @@
       "file": "stage3g-r4-terrain-coherence-author.yml",
       "state": "HISTORICAL/RETIRED",
       "reason": "Dedicated R4 mutating author workflow targeted a deleted branch; reusable terrain-coherence harness remains contract-tested."
+    },
+    {
+      "file": "sa-calobra-terrain-performance.yml",
+      "state": "BROKER-MANAGED",
+      "reason": "Explicit exact-SHA 1080p60 native Sa Calobra baseline; fixed views and reference RTX 2070 SUPER, retained assets."
     }
   ]
 }

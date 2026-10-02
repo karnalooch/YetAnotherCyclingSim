@@ -2630,3 +2630,20 @@ The earlier local-ground cut-only preview is retained as rejected/superseded
 active-proof history, not deleted. Historical spline-builder failures and their
 construction-study evidence also remain retained.
 
+
+## Owner-approved Sa Calobra delivery split — 2026-10-02
+
+The owner approved merging the terrain/road-preview/inspector scope separately
+from experimental CUT construction. This decision supersedes earlier statements
+that require the rejected direct CUT recipe in the active PR #319 capture or
+owner handoff. The active lane is INSPECTOR_ONLY; geometry findings remain
+REVIEW_REQUIRED and do not admit road collision, support, rides or learning.
+
+The CUT experiment is preserved on a separate Draft branch with its acceptance
+thresholds intact. Run 37033558831 at fd234e46 builds successfully but rejects
+construction: 986 to 3 remaining CUT samples, and 2046 to 13642 FILL samples.
+No saved Base_DTM was changed. The accepted separation does not authorize
+relaxing the 8 cm contact band or claiming this rejected recipe as learned.
+
+The terrain-only 1080p60 proof remains mandatory for the inspector delivery.
+It does not substitute for future road/earthworks performance or visual proof.

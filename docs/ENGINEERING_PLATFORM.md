@@ -150,6 +150,7 @@ The enabled broker-managed heavy proof set is:
 /gumball proof m3-h-focus
 /gumball proof world-authoring-sp638
 /gumball proof environment-performance
+/gumball proof sa-calobra-terrain-performance
 /gumball proof source-asset-audit
 ```
 
