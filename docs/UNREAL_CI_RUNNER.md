@@ -223,8 +223,8 @@ acceptance remain separate; installing a tray monitor does not establish either.
 
 The owner authorized host installation on 2026-10-02. `runner-monitor.yml` uses
 the existing `yacs-home-ue58`, exact SHA, isolated Git config and a separate sparse
-code checkout. It accepts only the repository owner on the bounded rollout branch
-or manual main dispatch. The branch push trigger is retired after rollout.
+code checkout. It accepts only repository-owner manual dispatch from main. The temporary rollout
+branch push trigger was retired after successful installation.
 No Unreal build or service restart is part of deployment.
 
 `Deploy-YacsRunnerMonitor.ps1` runs portable tests on Windows, resolves the logged-in
@@ -251,3 +251,12 @@ popups and are not evidence of the subsequently requested silent mode.
 The service was observed **Stopped** while the interactive runner executed jobs.
 No service migration was performed. Logoff/reboot behavior and manual menu visual
 inspection remain unverified; do not describe them as tested.
+
+Silent deployment run `37052438001` at `e7be03008b1f64c63472ab0f8f210dc42b1869fc`
+passed on 2026-10-02: task Running, interactive session 1, fresh health and
+`notification=disabled-by-owner`. The prior monitor remained alive between jobs
+and observed a real Failed completion; earlier rollout observed Succeeded.
+Installed runtime script bytes are unchanged by the documentation/workflow
+closeout. Artifacts retain installed script hashes. Reinstallation with the
+DACL fix succeeded, including run `37052190396` attempt 2. No popup API remains
+in the deployed silent companion. Native service mode remains unchanged.
