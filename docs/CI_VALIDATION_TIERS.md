@@ -42,11 +42,12 @@ producer errors fail the job. It does not apply the candidate in Unreal. The
 four existing captures continue to show the raw native-contact trial, not the
 regularized candidate. The JSON is included in the existing artifact upload.
 
-#### Inspector-only owner handoff
+#### Inspector plus transient cut-only owner handoff
 
-For the active Sa Calobra PR #319 lane, BOB now runs only as the profile
-inspector. The experimental builder remains retained as historical/future
-teaching material but is not prepared or executed by this proof.
+For the active Sa Calobra PR #319 lane, BOB keeps its profile/terrain-fit
+inspectors and executes one separate bounded builder:
+`bob-cut-only-local-ground-v1`. The historical spline builder remains retained
+as failed/study evidence and is not executed.
 
 The region capture produces five required views: two terrain views, mandatory
 `road-geometry-inspection`, normal road overview and final
@@ -80,16 +81,31 @@ no terrain authoring. Findings such as `CUT_REQUIRED` or `FILL_REQUIRED` do
 fails only when the inspection is incomplete, self-authoring, missing, or does
 not classify every required sample.
 
-Current convergence requires three independent receipts:
+Current convergence requires four independent receipts:
 
 1. **native contact** — no misses/floating/penetrating on the evidence mesh;
 2. **smooth ribbon topology** — closed/non-folded/non-inverted presentation mesh;
 3. **road-to-terrain fit** — signed residuals classified as `CONTACT_OK`,
-   `CUT_REQUIRED`, `FILL_REQUIRED` or `STRUCTURE_REVIEW`.
+   `CUT_REQUIRED`, `FILL_REQUIRED` or `STRUCTURE_REVIEW`;
+4. **transient cut-only construction** — BOB materializes a bounded native-DTM
+   local ground owner, lowers at least one constrained grid sample, raises zero
+   samples, stays within the 1.0 m first-lesson cut limit, leaves zero road
+   penetrations, keeps the saved baseline map hash unchanged and performs no
+   persistent Landscape authoring.
 
-Until the third receipt exists and the owner accepts rider-camera evidence,
-terrain fit remains unresolved even if the ribbon looks smooth. BOB stays
-inspector-only and no earthworks are authored automatically.
+The fourth receipt is `bob-cut-only-preview-proof.json`. CI requires
+`TECHNICAL_PREVIEW_PASS`, `CUT_ONLY_TRANSIENT`, zero
+`STRUCTURE_REVIEW`, zero raised grid samples, at least one cut grid sample,
+zero remaining road penetration, hidden component count greater than zero,
+`saved_baseline_unchanged=true`, `map_saved=false`,
+`production_authoring_permitted=false` and
+`eligible_for_learning=false`.
+
+`FILL_REQUIRED` findings are intentionally **not** resolved by this lesson and
+do not by themselves fail the cut-only proof. The builder records how many fill
+samples it ignored. Retaining structures and durable `Road_Earthworks`
+authoring remain later gates after human acceptance of the transient cut
+preview.
 
 PR #319 run 37007690564 is explicit failed evidence: native preparation reached
 contact PASS, but capture stopped after two terrain images because the UE
