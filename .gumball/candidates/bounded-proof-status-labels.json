@@ -1,1 +1,16 @@
-{"schema_version":1,"status":"candidate","invariant":"Broker-generated labels must fit provider limits without changing proof or artifact identity; preserve short labels and deterministically disambiguate long labels.","source":"scripts/ops/proof_broker.py","regression":"scripts/ci/test_proof_broker.py"}
+{
+  "id": "bounded-proof-status-labels",
+  "source": "karnalooch/YetAnotherCyclingSim",
+  "category": "ci",
+  "problem": "Long proof status labels fail GitHub API label creation before dispatch.",
+  "invariant": "Fit provider label limits with stable collision-resistant names without changing proof identity.",
+  "evidence": [
+    "Issue #327",
+    "scripts/ci/test_proof_broker.py"
+  ],
+  "do_not_copy": [
+    "YACS proof names"
+  ],
+  "failure_behavior": "Unknown statuses still fail; short labels remain unchanged; long names retain a hash identity.",
+  "status": "candidate"
+}
