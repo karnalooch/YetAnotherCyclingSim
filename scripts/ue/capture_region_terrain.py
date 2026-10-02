@@ -30,6 +30,7 @@ _world = None
 _bob_inspection_status = "NOT_LOADED"
 _cut_patch = None
 _cut_report = None
+_mode_reasserted = False
 _scheduling = False
 
 
@@ -180,10 +181,12 @@ def _apply_capture_view_mode(view):
 
 def schedule():
     global _task, _started, _road_objects, _cut_patch, _scheduling
+    global _mode_reasserted
     # Geometry creation can pump Slate and re-enter this tick callback while the
     # previous screenshot task is still marked done. Fence the whole transition.
     _scheduling = True
     _task = None
+    _mode_reasserted = False
     try:
         if _index == 2:
             sys.path.insert(
@@ -243,20 +246,49 @@ def schedule():
 
 
 def tick(_delta):
-    global _index
+    global _index, _mode_reasserted
     if _scheduling or _task is None:
         return
     try:
-        if time.monotonic() - _started > 120:
+        view = _views[_index]
+        elapsed = time.monotonic() - _started
+        if (
+            view.get("geometry_inspection") is True
+            and not _mode_reasserted
+            and elapsed >= 2.0
+        ):
+            # Procedural Landscape evaluation can reset the editor viewport mode
+            # after the patch is registered. Reassert Clay after that update but
+            # before the 5 s high-res screenshot delay expires.
+            _apply_capture_view_mode(view)
+            _mode_reasserted = True
+        if elapsed > 120:
             finish("Screenshot task/file readiness timeout: " + _views[_index]["name"])
         elif _task.is_task_done():
             global _cut_report
-            view = _views[_index]
             path = _root / (view["name"] + ".png")
             if not path.is_file() or path.stat().st_size < 100000:
                 # A completed automation task can precede the PNG write. Keep
                 # the existing size requirement and bounded timeout.
                 return
+            actual_viewmode = (
+                unreal.AutomationLibrary.get_editor_active_viewport_view_mode()
+            )
+            expected_viewmode = (
+                unreal.ViewModeIndex.VMI_CLAY
+                if view.get("geometry_inspection") is True
+                else unreal.ViewModeIndex.VMI_LIT
+            )
+            if actual_viewmode != expected_viewmode:
+                raise RuntimeError(
+                    "Capture viewport mode drifted before evidence acceptance: "
+                    + view["name"]
+                )
+            actual_viewmode_name = (
+                "VMI_CLAY"
+                if actual_viewmode == unreal.ViewModeIndex.VMI_CLAY
+                else "VMI_LIT"
+            )
             if view.get("verify_cut_after") is True and _cut_report is None:
                 from bob_road_earthworks_cut import (
                     finalize_cut_proof,
@@ -293,6 +325,7 @@ def tick(_delta):
                     "viewmode": view.get(
                         "viewmode", "lit-with-neutral-engine-material"
                     ),
+                    "actual_viewmode": actual_viewmode_name,
                     "geometry_inspection": view.get(
                         "geometry_inspection", False
                     ),
