@@ -2975,3 +2975,59 @@ only in the already-supported offline profile designer. The receipt hashes every
 station/XY/Z coordinate and recomputes metrics, rejecting stale reports even
 when a small change leaves the maximum metrics unchanged. Cross-runtime metric
 comparison tolerates 1e-9 numeric rounding; geometric limits are not relaxed.
+
+#### BOB single-direction bend contract
+
+**Normative owner decision, 2026-10-03; Issue #331 / PR #332.** This applies to
+the current Ma-2141 hairpin and future BOB-authored single bends. It supersedes
+the provisional 8.625 m plateau and approach-widening recipe above as an
+acceptance target. The 183a30e technical proof remains historical; the owner
+rejected its remaining reverse-turn nose. This documentation records required
+behavior, not an implemented solver or passing proof.
+
+1. **Entry:** one explicit base pavement width `W_base`, constant throughout
+   the entry approach. The approach may be straight or gently curved in the
+   same direction as the main bend.
+2. **Main bend:** retain `W_base` unless a documented vehicle swept-path need
+   justifies modest additional pavement width. Record the required vehicle,
+   evidence and bounded width increment; an inferred width maximum or an
+   arbitrary average is not a bus-clearance requirement. Any increase and
+   return belong to the main-bend design domain, have continuous width and
+   width rate, and meet the constant approaches with zero width rate.
+3. **Exit:** return to the same `W_base` before the exit approach, then keep
+   that width constant. The exit may remain a gentle curve in the same turn
+   direction. Do not use approach widening to hide a bad alignment fit.
+4. **One turn direction across all three parts:** the final reference boundary,
+   opposite pavement boundary and derived presentation axis must have no
+   unintended curvature sign reversal. Heading rotates monotonically in the
+   intended turn direction; zero curvature is allowed. Reverse travel reverses
+   the sign convention consistently, not the physical bend identity. This
+   single-bend rule does not erase separately evidenced real S-bends elsewhere.
+5. **Joint solution:** fit entry, main arc and exit together with width, allowing
+   small, explicit approach position/tangent adjustments inside the admitted
+   presentation envelope. Retain cliff-side positional priority and its current
+   guard; derive the opposite edge from the accepted alignment/width. Preserve
+   canonical source and physics. If the constraints are incompatible, report
+   the conflict; do not silently enlarge the envelope, reverse curvature or
+   inflate width to make the endpoints connect.
+6. **Geometry admission:** recompute curvature/heading and actual transverse
+   width on both final boundaries and the derived axis after offsetting and
+   tessellation. Measure width normal to the reference curve, not across a
+   screenshot. Record domain endpoints, intended turn sign, width/rate envelope,
+   minimum inner radius, signed-turn extrema and any counter-turn interval.
+   Use a stated numerical tolerance tied to precision, never one that admits a
+   visible reverse turn. Reject a nose, pinch, self-intersection, unintended
+   local widening or reverse turn even when endpoint G2 and surface gates pass.
+7. **Regeneration and review:** accept the bounded XY/width solution first,
+   then regenerate the road height/banking, CUT and 0.5 m shoulders/downward
+   support from clean `Base_DTM`. Require fresh exact-SHA plan and rider views,
+   owner visual acceptance and the existing independent surface/support,
+   collision and performance admissions before propagation.
+
+The regression case is the owner's red-line/red-arrow review of 183a30e:
+the derived inner boundary accumulated about 90 degrees of turn and then
+about 84 degrees in the opposite direction before the main arc. Constant
+width on a circle and G2 at its joins did not prevent that approach nose.
+Future acceptance must exercise the complete entry -> main bend -> exit and
+both final edges, not only the reference circle or endpoint residuals.
+

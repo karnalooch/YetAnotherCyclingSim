@@ -204,3 +204,9 @@ The documentation-index contract remains:
 Issue #331 closeout also validates hairpin entry/exit curvature and bounded 3D
 road banking/height before regenerating CUT/support; see the World Building
 Bible's Hairpin alignment and surface closeout subsection.
+
+Owner acceptance now also requires the
+[BOB single-direction bend contract](WORLD_BUILDING_BIBLE.md#bob-single-direction-bend-contract):
+constant matching entry/exit widths, justified main-bend widening only, and no
+reverse turns on either final pavement edge. The current 183a30e visual result
+is rejected against that requirement; implementation and fresh proof remain pending.
