@@ -151,11 +151,15 @@ class CaptureTransitionTests(unittest.TestCase):
                 ],
             )
 
+            road_actor = Mock()
+            road_component = Mock()
+            road_actor.get_component_by_class.return_value = road_component
+
             def spawn(*args):
                 ns["tick"](0)  # A native call pumps Slate before the new task exists.
                 self.assertEqual(ns["_index"], 2)
                 finish.assert_not_called()
-                return ("actor", "material", "report")
+                return (road_actor, Mock(), {"terrain_fit": {}})
 
             helper = SimpleNamespace(spawn_trial=spawn)
             original_path = sys.path[:]
