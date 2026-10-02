@@ -1,7 +1,7 @@
 """Prepare the interactive Sa Calobra owner handoff in a normal Unreal Editor.
 
 This module is started from the guarded project Content/Python/init_unreal.py. It keeps
-BOB inspector-only, loads the accepted Base_DTM map, spawns the verified
+BOB inspection plus one bounded transient cut-only builder, loads the accepted Base_DTM map, spawns the verified
 native-contact road preview plus deterministic diagnostic sun/sky lighting,
 positions the primary editor viewport at the rider view, writes a small proof,
 and never saves the map.
@@ -26,7 +26,14 @@ _done = False
 _kept_objects = None
 
 
-def _write_proof(root, exact_sha, status, error="", lighting=None):
+def _write_proof(
+    root,
+    exact_sha,
+    status,
+    error="",
+    lighting=None,
+    cut_patch_applied=False,
+):
     payload = {
         "schema_version": 1,
         "exact_sha": exact_sha,
@@ -40,7 +47,9 @@ def _write_proof(root, exact_sha, status, error="", lighting=None):
             lighting.get("directional_light_intensity") if lighting else None
         ),
         "skylight_intensity": lighting.get("skylight_intensity") if lighting else None,
-        "bob_mode": "INSPECTOR_ONLY",
+        "bob_mode": "INSPECTOR_PLUS_TRANSIENT_ROAD_EARTHWORKS_CUT",
+        "cut_patch_applied": cut_patch_applied,
+        "cut_patch_layer": "Road_Earthworks" if cut_patch_applied else None,
         "map_saved": False,
     }
     (root / "owner-handoff-proof.json").write_text(
@@ -152,8 +161,12 @@ def _configure():
     )
     sys.path.insert(0, str(project / "scripts/ue"))
     from ma2141_road_preview import spawn_trial
+    from bob_road_earthworks_cut import apply_cut_patch
 
     road = spawn_trial(world, root, exact_sha)
+    if len(road) < 4:
+        raise RuntimeError("Owner handoff road trial is missing BOB CUT context")
+    apply_cut_patch(world, root, exact_sha, road[3]["pre_fit"])
 
     alignment = json.loads(
         (root / "ma2141-native-alignment.json").read_text(encoding="utf-8")
@@ -179,10 +192,17 @@ def _configure():
     editor.set_level_viewport_camera_info(camera_location, camera_rotation)
 
     _kept_objects = (road, sun, sky)
-    _write_proof(root, exact_sha, "PASS", lighting=lighting)
+    _write_proof(
+        root,
+        exact_sha,
+        "PASS",
+        lighting=lighting,
+        cut_patch_applied=True,
+    )
     unreal.log(
-        "[OwnerHandoff] PASS; Sa Calobra + native-contact road left open "
-        "at road-contact-rider in VMI_LIT with diagnostic sun + skylight."
+        "[OwnerHandoff] PASS; Sa Calobra + smooth road + transient "
+        "Road_Earthworks CUT left open at road-contact-rider in VMI_LIT "
+        "with diagnostic sun + skylight."
     )
 
 
