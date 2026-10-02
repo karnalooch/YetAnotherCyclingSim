@@ -1,0 +1,57 @@
+name: YACS runner desktop monitor
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yacs-runner-monitor-install
+  cancel-in-progress: false
+
+jobs:
+  install:
+    name: Install desktop companion on trusted Windows
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.actor == github.repository_owner &&
+      github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 5
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - name: Isolate self-hosted Git configuration
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'yacs-monitor.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          'GIT_CONFIG_NOSYSTEM=1' >> $env:GITHUB_ENV
+
+      - name: Checkout exact monitor candidate without assets
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: _runner-monitor-deploy
+          persist-credentials: false
+          lfs: false
+          clean: false
+          sparse-checkout: scripts/runner
+
+      - name: Validate and install for the logged-in desktop
+        shell: pwsh
+        working-directory: _runner-monitor-deploy
+        env:
+          EXPECTED_HEAD: ${{ github.sha }}
+        run: ./scripts/runner/Deploy-YacsRunnerMonitor.ps1 -ExpectedHead $env:EXPECTED_HEAD
+
+      - name: Retain installation receipt
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: runner-monitor-${{ github.sha }}-${{ github.run_attempt }}
+          path: _runner-monitor-deploy/monitor-proof/installation.json
+          if-no-files-found: error
+          retention-days: 14
