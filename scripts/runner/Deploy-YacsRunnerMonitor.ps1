@@ -12,6 +12,20 @@ $workRoot = Split-Path $env:RUNNER_TEMP -Parent
 $runnerRoot = Split-Path $workRoot -Parent
 if (-not (Test-Path (Join-Path $runnerRoot '.runner'))) { throw 'Unable to identify the installed runner root.' }
 & (Join-Path $PSScriptRoot 'Test-RunnerMonitor.ps1')
+$priorLog = Join-Path (Split-Path $runnerRoot -Parent) 'yacs-runner-monitor/logs/monitor.jsonl'
+$priorHealth = $null; $priorCompleted = $null; $priorAlive = $false
+if (Test-Path $priorLog) {
+    $records = @(Get-Content $priorLog -Tail 200 | ForEach-Object {
+        try { $_ | ConvertFrom-Json } catch { }
+    })
+    $priorHealth = $records | Where-Object kind -eq 'health' | Select-Object -Last 1
+    $priorCompleted = $records | Where-Object kind -eq 'completed' | Select-Object -Last 1
+    $priorStart = $records | Where-Object kind -eq 'monitor_started' | Select-Object -Last 1
+    if ($priorHealth -and $priorStart -and ([DateTime]::UtcNow - [DateTime]$priorHealth.utc).TotalSeconds -lt 120) {
+        $priorProcess = Get-Process -Id $priorStart.processId -ErrorAction SilentlyContinue
+        $priorAlive = $null -ne $priorProcess -and $priorProcess.SessionId -gt 0
+    }
+}
 $installation = & (Join-Path $PSScriptRoot 'Install-YacsRunnerMonitor.ps1') -RunnerRoot $runnerRoot -DesktopUser $desktopUser -Verify
 if (-not $installation -or $installation.health -ne 'fresh') { throw 'No verified installation receipt.' }
 $serviceState = 'not registered'
@@ -30,6 +44,8 @@ $receipt = [ordered]@{
     serviceState = $serviceState
     serviceChanged = $false
     rebootProof = 'not performed'
+    previousMonitorAlive = $priorAlive
+    previousCompletion = if ($priorCompleted) { [string]$priorCompleted.result } else { 'not observed' }
     files = @(Get-ChildItem $installation.installRoot -File | Where-Object Extension -in @('.ps1', '.psm1') | ForEach-Object {
         @{ name = $_.Name; sha256 = (Get-FileHash $_.FullName -Algorithm SHA256).Hash }
     })
