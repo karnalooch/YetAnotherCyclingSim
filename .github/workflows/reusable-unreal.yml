@@ -196,7 +196,7 @@ jobs:
 
       # Bootstrap the approved region migration inside the existing same-repo
       # CI boundary. This is an import diagnostic, never a broker PASS receipt.
-      - name: Materialize only verified Sa Calobra source and import native terrain
+      - name: Materialize verified Sa Calobra source and required editor startup assets
         if: ${{ inputs.region_terrain_import }}
         shell: pwsh
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
@@ -207,10 +207,22 @@ jobs:
           try {
             git lfs install --local --skip-smudge
             if ($LASTEXITCODE -ne 0) { throw 'Local LFS driver installation failed.' }
-            git -c "lfs.fetchinclude=$source" -c 'lfs.fetchexclude=' lfs fetch origin '${{ inputs.target_sha }}'
+            # Unreal's asset registry scans Content at editor/commandlet startup.
+            # Shared prototype CDOs also load materials there; pointers are not
+            # valid packages even when the imported map uses engine-only shading.
+            git -c "lfs.fetchinclude=$source,Content/**" -c 'lfs.fetchexclude=' lfs fetch origin '${{ inputs.target_sha }}'
             if ($LASTEXITCODE -ne 0) { throw 'Pinned Sa Calobra LFS object fetch failed.' }
             git lfs checkout "$source"
             if ($LASTEXITCODE -ne 0) { throw 'Pinned Sa Calobra LFS object checkout failed.' }
+            git lfs checkout 'Content/**'
+            if ($LASTEXITCODE -ne 0) { throw 'Shared editor startup asset checkout failed.' }
+            $contentPaths = @(git lfs ls-files --name-only --include='Content/**')
+            if ($LASTEXITCODE -ne 0) { throw 'Startup LFS inventory failed.' }
+            foreach ($path in $contentPaths) {
+              git lfs pointer --check "--file=$path" *> $null
+              if ($LASTEXITCODE -eq 0) { throw "Unmaterialized startup package: $path" }
+              if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Missing startup package: $path" }
+            }
             $bytes = (Get-Item -LiteralPath $source).Length
             Write-Host "Sa Calobra source bytes after checkout: $bytes"
             if ($bytes -ne 389039616) { throw 'Sa Calobra TIFF is still a pointer or has the wrong byte count.' }

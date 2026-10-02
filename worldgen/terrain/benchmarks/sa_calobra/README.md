@@ -52,3 +52,17 @@ Road inventory source: OpenStreetMap contributors, ODbL 1.0:
 https://www.openstreetmap.org/copyright
 
 The road summary contains no Strava data or derivative heatmap artifact.
+
+## Official Ma-2141 geometry review
+
+The immutable CartoCiudad REST Geocoder response is retained in
+`ma2141_cartociudad_source_2026-10-02.json`; its hash and projected metrics are
+recorded in `ma2141_source_review.json`. Service coordinates are EPSG:4326 and
+metric review uses EPSG:25831. Attribution: CC BY 4.0
+www.scne.es/productos.html#CartoCiudad.
+
+The response has six line parts, including one closed loop that meets other
+parts at the same XY. Preserve source vertices and investigate vertical
+separation before road carving; never infer both road levels from a single DTM
+height. This is a source-review candidate, not admitted canonical route or road
+physics. Width, surface and bicycle access remain unknown.

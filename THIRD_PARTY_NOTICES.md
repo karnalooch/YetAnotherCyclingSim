@@ -131,3 +131,14 @@ MIT permission notice are preserved.
 GeoTerrain remains reference-only because the checked revision has unresolved
 license-artifact ambiguity. Its current provenance status is tracked in
 `docs/legal/DEPENDENCY_PROVENANCE.md`.
+
+## CartoCiudad Ma-2141 source geometry
+
+Source: https://www.cartociudad.es/geocoder/api/geocoder/find?q=Ma-2141
+
+CC BY 4.0 www.scne.es/productos.html#CartoCiudad
+
+The immutable response is included for source/topology review. Metric lengths
+and coordinates are derived by projection from service EPSG:4326 to EPSG:25831.
+No road width, access, surface or vertical crossing interpretation is added.
+License/service coordinate evidence: https://www.cartociudad.es/web/portal/faq

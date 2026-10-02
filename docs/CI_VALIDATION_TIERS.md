@@ -10,8 +10,10 @@ guard and exact caller SHA. Other PRs and main runs keep code-only behavior.
 This temporary bootstrap does not change the default-branch Proof Broker trust
 boundary, issue a `proof-m3-terrain` receipt or make SP638 a Spanish proof.
 
-After the verified build/Automation checkpoint, only the profile-selected
-Spanish source TIFF is materialized. The source, topology, transforms and layers
+After the verified build/Automation checkpoint, the profile-selected Spanish source TIFF and shared `Content/**` startup assets
+are materialized. Code-only Unreal Automation still runs before materialization.
+The asset registry and prototype constructors cannot treat LFS pointers as UE
+packages, even when the isolated target map uses engine-only shading. The source, topology, transforms and layers
 are validated by the producer/importer. Import logs and manifests are uploaded
 as `sa-calobra-import-<sha>-<attempt>`. Spanish source and generated assets are
 retained outside the mutable worktree before cleanup. The same job captures terrain-only overview/near-ground PNGs through the existing
