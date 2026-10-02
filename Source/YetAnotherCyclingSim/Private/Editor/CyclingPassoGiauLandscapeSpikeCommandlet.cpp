@@ -15,6 +15,7 @@
 #include "LandscapeInfo.h"
 #include "LandscapeImportHelper.h"
 #include "LandscapeEditLayer.h"
+#include "LandscapePatchEditLayer.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Parse.h"
 #include "Misc/Paths.h"
@@ -705,10 +706,10 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 
 	const int32 RoadLayerIndex = Landscape->CreateLayer(
 		RoadLayerName,
-		// Sa Calobra uses deterministic direct height deltas on a standard
-		// non-destructive sculpt layer. The rejected spline lesson is retained
-		// as history only and must not own the active Road_Earthworks surface.
-		ULandscapeEditLayer::StaticClass(),
+		// Sa Calobra CUT-only authoring uses Epic's procedural Landscape Patch
+		// edit layer. Texture patches can use Min blending, so road earthworks
+		// can lower terrain without ever turning the same recipe into fill.
+		bManifestImport ? ULandscapePatchEditLayer::StaticClass() : ULandscapeEditLayer::StaticClass(),
 		false);
 	if (RoadLayerIndex == INDEX_NONE)
 	{
