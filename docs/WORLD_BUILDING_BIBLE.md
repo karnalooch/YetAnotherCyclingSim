@@ -2568,65 +2568,59 @@ does not pretend those contextual checks are complete. It records contiguous
 cut/fill/structure station intervals, maximum required adjustments and the worst
 samples in `ma2141-road-terrain-fit-proof.json`.
 
-BOB keeps this classification as **INSPECTOR_ONLY**, but PR #319 now
-executes one separate bounded construction capability:
-`bob-cut-only-local-ground-v1`. The inspector still decides where
-`CUT_REQUIRED`, `FILL_REQUIRED` and `STRUCTURE_REVIEW` apply; the builder
-may consume only a complete inspection with zero `STRUCTURE_REVIEW` samples
-and a maximum required cut no deeper than the existing 1.0 m
-`native_blend.max_ground_adjustment_m` policy bound.
+BOB keeps the classification itself **INSPECTOR_ONLY**. PR #319 now
+executes one separately bounded construction recipe after the inspection:
+`bob-direct-road-earthworks-cut-v1`.
 
-The first construction capability is deliberately **CUT ONLY**. It reuses the
-existing local-terrain single-ground-owner kernel rather than
-`LandscapeProxy.editor_apply_spline`: a component-aligned 0.5 m native-DTM
-grid is reconstructed for the bounded road corridor, the road constraint is
-applied with `adjustment_mode=cut_only`, and the matching macro Landscape
-components are hidden only for the current editor session. The local transient
-DynamicMesh becomes the single visible ground owner in that bounded patch.
+The active recipe is deliberately **CUT ONLY**. It does not hide Landscape
+components and it does not substitute a local-ground DynamicMesh. The previous
+`bob-cut-only-local-ground-v1` preview remains retained as construction-study
+history, but it is no longer the active proof because it could demonstrate the
+shape without proving that Landscape earthworks were actually written.
 
-The builder may lower terrain but may never raise it, fill a void, create a
-retaining structure, move canonical road XY, distort the road ribbon, save the
-map, change verified case memory or grant physics/geographic authority.
-Acceptance requires at least one actually lowered ground sample, zero raised
-samples, maximum cut within the 1.0 m bound, zero remaining road penetration
-across all smooth-ribbon top samples, and an unchanged saved
-`L_SaCalobraTerrainBaseline.umap` hash. The proof is
-`bob-cut-only-preview-proof.json`; it remains
-`production_authoring_permitted=false`, `eligible_for_learning=false`,
-`fill_authored=false` and `structures_authored=false`.
+The current path prepares a deterministic 0.5 m R16 delta patch from the
+inspected regularized road profile. Neutral edit-layer height is encoded as
+32768; the patch may encode only negative deltas. It refuses any
+`STRUCTURE_REVIEW` sample, refuses a pre-cut depth above 1.0 m, never authors
+fill, never moves canonical road XY and never touches `Base_DTM`. A single
+0.5 m guard ring may be lowered around required road cuts so native Landscape
+triangles at the road edge do not borrow an unchanged high vertex.
 
-This transient lesson does **not** modify persistent `Base_DTM` or
-`Road_Earthworks`. Durable earthworks remain a later gate after technical and
-human acceptance of the cut-only preview. `Base_DTM` remains immutable source
-terrain.
+Unreal applies that patch only to a standard `Road_Earthworks`
+`ULandscapeEditLayer` through `FScopedSetLandscapeEditingLayer` and
+`FHeightmapAccessor`. The map remains unsaved. The writer is therefore a real
+Landscape mutation in the current editor session, not a presentation mesh, but
+it is still not durable production authoring.
 
-The first smooth-ribbon runtime attempt at `ef15a020`, CI run 37007690564,
-did **not** validate ribbon geometry: capture stopped after the two terrain views
-because `ma2141_road_preview.py` could not import the repository-level
-`scripts.geometry.smooth_road_ribbon` module in the Editor Python path. This is
-an integration/import-path failure, not evidence that the ribbon or terrain-fit
-contract passed or failed. The preceding native-facet preparation still reported
-zero floating and zero penetrating centroids.
+The proof is deliberately measured from the merged Landscape after the write.
+Before the write, all 15,025 smooth-ribbon top samples are traced and classified.
+After the write and the second Geometry Inspection capture, the same 15,025
+locations are traced again. `TECHNICAL_CUT_PASS` requires zero trace misses,
+zero remaining `CUT_REQUIRED`, zero `STRUCTURE_REVIEW`, at least one modified
+Road_Earthworks vertex, a maximum patch depth no greater than 1.0 m,
+`base_dtm_modified=false`, `map_saved=false`, no fill and no structures.
+`FILL_REQUIRED` remains intentionally unresolved by this recipe.
 
-#### Inspector plus transient cut-only Sa Calobra handoff
+The fourth receipt is now `bob-road-earthworks-cut-proof.json`. Its
+`geometry_repair_executed=true` and
+`transient_road_earthworks_modified=true` mean BOB actually changed the named
+Landscape edit layer in the proof session. They do **not** mean the road is
+admitted, learned or saved.
 
-Owner direction, 2026-10-02: the active PR #319 lane keeps BOB's profile and
-terrain-fit inspectors and now executes exactly one bounded construction lesson:
-`CUT_ONLY_TRANSIENT`. Historical spline-builder failures and construction-study
-references remain retained, but the old `editor_apply_spline` builder is not
-used.
+The region capture now produces six required views: two terrain views,
+`road-geometry-inspection-before`, `road-geometry-inspection-after`, normal
+road overview and final `road-contact-rider`. Both Geometry Inspection views
+use the cyan rendered DynamicMesh wireframe in `VMI_CLAY`; the normal views
+return to Lit mode.
 
-The current proof loads the accepted Sa Calobra `Base_DTM`, prepares the
-Ma-2141 alignment/profile, performs the 15,025-sample BOB terrain-fit inspection,
-builds the bounded cut-only local ground owner, then spawns the smooth road
-preview. It captures five required views: two terrain views, mandatory
-`road-geometry-inspection`, normal road overview and final
-`road-contact-rider`.
+The interactive owner handoff reloads the accepted Base_DTM map, respawns the
+smooth road, reapplies the same transient `Road_Earthworks` CUT patch and
+leaves Unreal Editor open at `road-contact-rider`. The handoff is explicitly
+`VMI_LIT` and creates a transient directional light plus skylight, so owner
+review is not left in an unlit diagnostic scene. The handoff never saves the
+map.
 
-A successful handoff leaves Unreal Editor open with that same transient cut-only
-ground owner and road preview visible in `VMI_LIT`. Covered macro Landscape
-components are hidden only in the current editor session. The map is never
-saved by this handoff, persistent `Base_DTM` and `Road_Earthworks` remain
-unchanged, and a later exact-SHA proof may close the previous session before
-starting fresh.
+The earlier local-ground cut-only preview is retained as rejected/superseded
+active-proof history, not deleted. Historical spline-builder failures and their
+construction-study evidence also remain retained.
 
