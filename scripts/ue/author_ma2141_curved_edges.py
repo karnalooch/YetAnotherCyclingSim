@@ -8,9 +8,66 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from pathlib import Path
 
 import unreal
+
+
+def boundary_span(holder, source, start_key, end_key):
+    """One native cubic, with the source endpoint positions and derivatives."""
+    span = unreal.SplineComponent(outer=holder)
+    span.clear_spline_points(False)
+    duration = end_key - start_key
+    if duration <= 0:
+        raise ValueError("Boundary span must advance source chainage")
+    for index, key in enumerate((start_key, end_key)):
+        point = source.get_location_at_spline_input_key(
+            key, unreal.SplineCoordinateSpace.LOCAL
+        )
+        tangent = source.get_tangent_at_spline_input_key(
+            key, unreal.SplineCoordinateSpace.LOCAL
+        )
+        # Source keys cover 2.5 m; the new single segment covers the whole span.
+        tangent = unreal.Vector(tangent.x * duration, tangent.y * duration, 0.0)
+        span.add_spline_point(point, unreal.SplineCoordinateSpace.LOCAL, False)
+        span.set_spline_point_type(
+            index, unreal.SplinePointType.CURVE_CUSTOM_TANGENT, False
+        )
+        span.set_tangent_at_spline_point(
+            index, tangent, unreal.SplineCoordinateSpace.LOCAL, False
+        )
+    span.set_closed_loop(False, False)
+    span.update_spline()
+    position_error, tangent_error = 0.0, 0.0
+    for index, key in enumerate((start_key, end_key)):
+        original = source.get_location_at_spline_input_key(
+            key, unreal.SplineCoordinateSpace.LOCAL
+        )
+        actual = span.get_location_at_spline_input_key(
+            index, unreal.SplineCoordinateSpace.LOCAL
+        )
+        before = source.get_tangent_at_spline_input_key(
+            key, unreal.SplineCoordinateSpace.LOCAL
+        )
+        after = span.get_tangent_at_spline_input_key(
+            index, unreal.SplineCoordinateSpace.LOCAL
+        )
+        position_error = max(
+            position_error,
+            math.hypot(actual.x - original.x, actual.y - original.y) / 100,
+        )
+        tangent_error = max(
+            tangent_error,
+            math.hypot(after.x / duration - before.x, after.y / duration - before.y)
+            / 100,
+        )
+    if max(position_error, tangent_error) > 1e-4:
+        raise ValueError("Native boundary span breaks position/tangent continuity")
+    return span, {
+        "join_position_error_m": position_error,
+        "join_tangent_error_m_per_key": tangent_error,
+    }
 
 
 def author(guide_path):
@@ -49,13 +106,33 @@ def author(guide_path):
             spline.set_closed_loop(False, False)
             spline.update_spline()
             curves.append(spline)
+        spans = []
+        for spec in guides.get("boundary_spans", []):
+            start, end = spec["start_station_m"], spec["end_station_m"]
+            if spec["edge"] not in (0, 1) or not 0 <= start < end <= 300:
+                raise ValueError("Invalid presentation boundary span")
+            if any(
+                old["edge"] == spec["edge"]
+                and max(start, old["start_station_m"]) < min(end, old["end_station_m"])
+                for old, _ in spans
+            ):
+                raise ValueError("Overlapping presentation boundary spans")
+            replacement, joins = boundary_span(
+                holder, curves[spec["edge"]], start / 2.5, end / 2.5
+            )
+            spans.append((dict(spec, **joins), replacement))
         rows = []
         for index in range(4801):
             station = index * 0.0625
             edges = []
-            for spline in curves:
+            for edge, spline in enumerate(curves):
+                key = station / 2.5
+                for spec, replacement in spans:
+                    start, end = spec["start_station_m"], spec["end_station_m"]
+                    if edge == spec["edge"] and start <= station <= end:
+                        spline, key = replacement, (station - start) / (end - start)
                 point = spline.get_location_at_spline_input_key(
-                    station / 2.5, unreal.SplineCoordinateSpace.LOCAL
+                    key, unreal.SplineCoordinateSpace.LOCAL
                 )
                 edges.append([float(point.x) / 100.0, float(point.y) / 100.0])
             rows.append({"station_m": station, "edges_xy_m": edges})
@@ -69,6 +146,9 @@ def author(guide_path):
             "author_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
             "producer": "USplineComponent",
             "point_type": "Curve",
+            "boundary_spans": [
+                dict(spec, point_type="CurveCustomTangent") for spec, _ in spans
+            ],
             "parameterization": "shared source chainage / 2.5 m; not edge arc length",
             "status": "NATIVE_CURVES_EXPORTED_REVIEW_REQUIRED",
             "stations": rows,

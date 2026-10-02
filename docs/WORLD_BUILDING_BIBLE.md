@@ -2754,3 +2754,33 @@ Official API references:
 DynamicMesh can consume sampled native curves and shares its exact boundaries
 with earthworks. Native spline evaluation does not itself prove geographic
 fidelity, acceptable width, branch clearance, smooth height or rider acceptance.
+
+### Bounded apex fillet
+
+The first native curved-edge checkpoint (`a5f0ba82`) passed technical CI but
+retained an approximately 0.30 m inner radius at source station 150 m. This
+pinched apex was present in the interpolation controls themselves. The owner
+requested a simple correction of the bend before wider road/PCGEx work.
+
+The presentation guide packet now specifies a bounded inner-edge span from
+140 to 155 m. Within that span a single two-point native `USplineComponent`
+with `CurveCustomTangent` replaces the intermediate controls. Endpoint
+positions and derivatives are taken from the original native boundary;
+derivatives are rescaled for the longer spline segment. Both boundaries still
+share source-chainage correspondence. The outer edge already passes the
+geometric checks and retains its existing controls. The operation is reusable;
+this span is explicit authoring data for the reviewed apex, not a claim of
+automatic whole-network hairpin design.
+
+Native endpoint position and tangent continuity are checked to 0.0001 m (and
+metres per source input key). The dense export must meet a minimum sampled
+inner radius of 1.5 m throughout the repaired span, in addition to the unchanged
+1 m displacement, 2 cm sampled chord-error, width, winding and intersection
+bounds. Existing 0.5 m shoulders, CUT and vertical support are rebuilt from the
+same corrected profile. Canonical route/physics data remain untouched.
+
+API evidence: Epic Unreal Engine **5.8** `USplineComponent` reference above,
+`GetTangentAtSplineInputKey`, `SetTangentAtSplinePoint`, and
+`ESplinePointType::CurveCustomTangent`; the official Python binding reference
+was also consulted. Native execution, the same cameras and human review are
+required before visual acceptance. PCGEx and Blender are not introduced here.

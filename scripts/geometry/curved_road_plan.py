@@ -16,6 +16,47 @@ MAX_DISPLACEMENT_M = (
 MAX_CHORD_ERROR_M = 0.02
 
 
+def boundary_span_metrics(rows, spec):
+    """Reject a pinched native fillet and retain its measured endpoint joins."""
+    edge, start, end = spec["edge"], spec["start_station_m"], spec["end_station_m"]
+    required = spec["minimum_radius_m"]
+    joins = [
+        spec.get("join_position_error_m"),
+        spec.get("join_tangent_error_m_per_key"),
+    ]
+    if (
+        edge not in (0, 1)
+        or not 0 <= start < end <= 300
+        or not math.isfinite(required)
+        or required < 1.5
+        or spec.get("point_type") != "CurveCustomTangent"
+        or any(
+            not isinstance(v, (int, float))
+            or not math.isfinite(v)
+            or not 0 <= v <= 1e-4
+            for v in joins
+        )
+    ):
+        raise ValueError("Invalid native boundary span or discontinuous join")
+    points = [r["edges_xy_m"][edge] for r in rows if start <= r["station_m"] <= end]
+    if len(points) < 3:
+        raise ValueError("Boundary span needs complete curvature samples")
+    max_curvature = 0.0
+    for a, b, c in zip(points, points[1:], points[2:]):
+        ab, bc, ac = math.dist(a, b), math.dist(b, c), math.dist(a, c)
+        if min(ab, bc, ac) <= 1e-9:
+            raise ValueError("Boundary span stops or reverses")
+        double_area = abs((b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]))
+        max_curvature = max(max_curvature, 2 * double_area / (ab * bc * ac))
+    if max_curvature > 1 / required:
+        raise ValueError("Boundary span remains pinched below its minimum radius")
+    return dict(
+        spec,
+        maximum_sampled_curvature_per_m=max_curvature,
+        minimum_sampled_radius_m=1 / max_curvature if max_curvature else None,
+    )
+
+
 def xy_digest(sections):
     return hashlib.sha256(
         json.dumps(sections, separators=(",", ":"), allow_nan=False).encode()
@@ -91,6 +132,9 @@ def prepare_sections(
         raise ValueError("Curved pavement self-intersects or edges cross")
     if any(not LineString(edge).is_simple for edge in boundaries):
         raise ValueError("Curved pavement boundary self-intersects")
+    spans = [
+        boundary_span_metrics(rows, spec) for spec in packet.get("boundary_spans", [])
+    ]
     sections, displacement, chord_error, min_area = [], 0.0, 0.0, math.inf
     for index, row in enumerate(rows):
         segment = min(index // 4, STATION_COUNT - 2)
@@ -155,6 +199,7 @@ def prepare_sections(
         "max_sampled_chord_error_m": chord_error,
         "minimum_triangle_double_area_m2": min_area,
         "self_intersection": False,
+        "boundary_spans": spans,
         "human_visual_status": "PENDING",
         "canonical_chainage_preserved": True,
         "presentation_length_is_not_physics_length": True,

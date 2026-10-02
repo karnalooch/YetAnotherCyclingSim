@@ -16,6 +16,17 @@ from scripts.assets.prepare_ma2141_road_preview import (
     read_profile,
 )
 
+# Owner-reviewed apex window. These are presentation controls, not route edits.
+# The reusable native span operation preserves the existing endpoint tangents.
+HAIRPIN_BOUNDARY_SPANS = [
+    {
+        "edge": 1,
+        "start_station_m": 140.0,
+        "end_station_m": 155.0,
+        "minimum_radius_m": 1.5,
+    }
+]
+
 
 def prepare(prepared, output, exact_sha):
     if output.exists():
@@ -43,6 +54,7 @@ def prepare(prepared, output, exact_sha):
         "guide_step_m": 2.5,
         "sample_step_m": 0.0625,
         "guides": guides,
+        "boundary_spans": HAIRPIN_BOUNDARY_SPANS,
     }
     output.write_text(json.dumps(packet, allow_nan=False) + "\n")
 

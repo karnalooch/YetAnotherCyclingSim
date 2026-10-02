@@ -4,7 +4,11 @@ import copy
 import math
 import unittest
 
-from scripts.geometry.curved_road_plan import prepare_sections, profile_plan_valid
+from scripts.geometry.curved_road_plan import (
+    boundary_span_metrics,
+    prepare_sections,
+    profile_plan_valid,
+)
 from scripts.geometry.smooth_road_ribbon import build_smooth_road_ribbon
 from scripts.worldgen.bob_profile_inspector import inspect_road_profile
 
@@ -134,6 +138,40 @@ class CurvedRoadPlanTests(unittest.TestCase):
         self.assertFalse(
             profile_plan_valid({"source_xy_preserved": True, "presentation_plan": {}})
         )
+
+    def test_fillet_rejects_the_pinched_apex_but_accepts_a_round_boundary(self):
+        spec = {
+            "edge": 1,
+            "start_station_m": 140,
+            "end_station_m": 155,
+            "minimum_radius_m": 1.5,
+            "point_type": "CurveCustomTangent",
+            "join_position_error_m": 0.0,
+            "join_tangent_error_m_per_key": 0.0,
+        }
+        for radius in (0.3, 3.0):
+            rows = [
+                {
+                    "station_m": 140 + i / 16,
+                    "edges_xy_m": [
+                        [0, 0],
+                        [radius * math.cos(i / 240), radius * math.sin(i / 240)],
+                    ],
+                }
+                for i in range(241)
+            ]
+            if radius < 1.5:
+                with self.assertRaisesRegex(ValueError, "pinched"):
+                    boundary_span_metrics(rows, spec)
+            else:
+                result = boundary_span_metrics(rows, spec)
+                self.assertAlmostEqual(result["minimum_sampled_radius_m"], radius)
+                for key in ("join_position_error_m", "join_tangent_error_m_per_key"):
+                    with (
+                        self.subTest(key=key),
+                        self.assertRaisesRegex(ValueError, "join"),
+                    ):
+                        boundary_span_metrics(rows, dict(spec, **{key: 0.1}))
 
 
 if __name__ == "__main__":

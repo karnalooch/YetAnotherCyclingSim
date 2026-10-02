@@ -188,6 +188,14 @@ def prepare(prepared: Path, output: Path, exact_sha: str, curved_edges: Path | N
             or packet.get("author_sha256") != sha256(ROOT / "scripts/ue/author_ma2141_curved_edges.py")
         ):
             raise ValueError("Native curve guide/author identity mismatch")
+        guides = json.loads(curved_edges.with_name("ma2141-curve-guides.json").read_text())
+        spans = packet.get("boundary_spans", [])
+        expected = guides.get("boundary_spans", [])
+        if len(spans) != len(expected) or any(
+            any(actual.get(key) != value for key, value in required.items())
+            for actual, required in zip(spans, expected, strict=True)
+        ):
+            raise ValueError("Native boundary span was not applied")
         xy, presentation_plan = prepare_sections(
             packet, source_sections, exact_sha=exact_sha,
             source_sha=SOURCE_SHA, profile_sha=sha256(PROFILE), origin=origin,
