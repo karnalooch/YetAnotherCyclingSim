@@ -2490,3 +2490,22 @@ also rejects measured changes above 0.5 m. Base_DTM import data, source route,
 legacy Italy layer behavior and all earlier thresholds remain unchanged.
 This correction requires new native proof; it is not a verified learning case.
 API reference: [Epic native spline edit layer](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Landscape/ULandscapeEditLayerSplines).
+
+#### Inspector-only Sa Calobra handoff
+
+Owner direction, 2026-10-02: PR #319 no longer executes the experimental BOB
+builder in its active visual lane. Keep the builder implementation, study
+library and rejected lesson evidence for future teaching and historical review.
+BOB remains active as the road-profile inspector only.
+
+The current proof uses the accepted Sa Calobra `Base_DTM`, prepares the
+Ma-2141 alignment/profile and BOB inspection, and spawns the verified
+native-contact pavement preview without changing `Road_Earthworks`. It
+captures two terrain views, one road overview and a final
+`road-contact-rider` view.
+
+After a successful final capture, Unreal Editor and the loaded Sa Calobra map
+remain open for owner inspection with the transient road preview still present.
+The map is not saved by this handoff. A later Unreal proof may close the
+previous inspection session before preparing a fresh exact-revision workspace.
+
