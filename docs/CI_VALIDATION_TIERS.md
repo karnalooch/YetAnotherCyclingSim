@@ -42,75 +42,49 @@ producer errors fail the job. It does not apply the candidate in Unreal. The
 four existing captures continue to show the raw native-contact trial, not the
 regularized candidate. The JSON is included in the existing artifact upload.
 
-#### Inspector plus transient cut-only owner handoff
+#### Inspector plus transient direct Road_Earthworks CUT handoff
 
-For the active Sa Calobra PR #319 lane, BOB keeps its profile/terrain-fit
-inspectors and executes one separate bounded builder:
-`bob-cut-only-local-ground-v1`. The historical spline builder remains retained
-as failed/study evidence and is not executed.
+For active Sa Calobra PR #319, BOB keeps its profile/terrain-fit inspectors and
+executes one bounded direct Landscape recipe after inspection:
+`bob-direct-road-earthworks-cut-v1`. The superseded
+`bob-cut-only-local-ground-v1` preview and failed spline lesson remain retained
+as study evidence but are not the active proof path.
 
-The region capture produces five required views: two terrain views, mandatory
-`road-geometry-inspection`, normal road overview and final
-`road-contact-rider`. A successful capture writes its proof while Unreal
-Editor remains open for the owner's manual inspection. Final cleanup for that
-region handoff does not reset the inspection state. A later Unreal proof may
-close the previous session before its fresh exact-revision checkout.
+The region preparation emits `ma2141-cut-patch.json` plus a little-endian R16
+delta patch. The manifest is exact-SHA bound, CUT-only, limited to 1.0 m, names
+`Road_Earthworks`, keeps `Base_DTM` immutable, refuses fill/structures and
+sets `save_map=false`.
 
-The visible-road proof is now split from native contact evidence. The native
-0.5 m facet mesh remains the technical contact sampler; the rider-visible mesh
-is the smooth ribbon built from the inspected candidate profile. CI must never
-accept a smooth-looking road merely because native contact passed, and must
-never accept native contact by forcing the visible ribbon to inherit DTM facet
-roughness.
+Runtime proof then requires:
 
-The Geometry Inspection image is a required review surface, not optional
-debug decoration. CI sets the editor viewport to `VMI_CLAY`, enables the
-DynamicMesh road's explicit wireframe render pass with cyan wireframe color,
-keeps editor mesh-edge/selection aids enabled, then restores normal Lit mode and
-disables the explicit road wireframe before the ordinary overview and rider
-view. The explicit DynamicMesh wireframe is required because high-res camera
-capture does not reliably preserve editor-only selection overlays. The proof
-fails closed if that named inspection capture or its explicit-wireframe mode
-metadata is missing.
+1. pre-cut `ma2141-road-terrain-fit-proof.json` with all 15,025 smooth-ribbon
+   samples classified and zero trace misses;
+2. two mandatory cyan Geometry Inspection captures,
+   `road-geometry-inspection-before` and
+   `road-geometry-inspection-after`;
+3. native C++ application of the R16 delta to the standard
+   `Road_Earthworks` edit layer;
+4. post-cut remeasurement of the same 15,025 samples;
+5. `bob-road-earthworks-cut-proof.json` with
+   `status=TECHNICAL_CUT_PASS`, `geometry_repair_executed=true`,
+   `transient_road_earthworks_modified=true`, zero post-cut
+   `CUT_REQUIRED`, zero `STRUCTURE_REVIEW`, no fill, no structures,
+   `base_dtm_modified=false` and `map_saved=false`.
 
-The road-to-terrain receipt is now machine-enforced. Runtime proof must contain
-`ma2141-road-terrain-fit-proof.json` with all 15,025 smooth-ribbon top samples
-traced against the real Landscape, zero trace misses, `role=INSPECTOR_ONLY` and
-no terrain authoring. Findings such as `CUT_REQUIRED` or `FILL_REQUIRED` do
-**not** fail CI by themselves; they are the expected output of inspection. CI
-fails only when the inspection is incomplete, self-authoring, missing, or does
-not classify every required sample.
+`FILL_REQUIRED` remains unresolved and is not silently converted into terrain
+or structure authoring. The direct cut is a transient technical construction
+proof, not road admission or a learned BOB case.
 
-Current convergence requires four independent receipts:
+The region capture therefore requires six views: two terrain views, Geometry
+Inspection before/after, Lit road overview and Lit rider view. The interactive
+handoff must additionally prove `VMI_LIT`, positive directional-light and
+skylight intensity, and `cut_patch_applied=true`; the editor remains open for
+owner review without saving the map.
 
-1. **native contact** — no misses/floating/penetrating on the evidence mesh;
-2. **smooth ribbon topology** — closed/non-folded/non-inverted presentation mesh;
-3. **road-to-terrain fit** — signed residuals classified as `CONTACT_OK`,
-   `CUT_REQUIRED`, `FILL_REQUIRED` or `STRUCTURE_REVIEW`;
-4. **transient cut-only construction** — BOB materializes a bounded native-DTM
-   local ground owner, lowers at least one constrained grid sample, raises zero
-   samples, stays within the 1.0 m first-lesson cut limit, leaves zero road
-   penetrations, keeps the saved baseline map hash unchanged and performs no
-   persistent Landscape authoring.
-
-The fourth receipt is `bob-cut-only-preview-proof.json`. CI requires
-`TECHNICAL_PREVIEW_PASS`, `CUT_ONLY_TRANSIENT`, zero
-`STRUCTURE_REVIEW`, zero raised grid samples, at least one cut grid sample,
-zero remaining road penetration, hidden component count greater than zero,
-`saved_baseline_unchanged=true`, `map_saved=false`,
-`production_authoring_permitted=false` and
-`eligible_for_learning=false`.
-
-`FILL_REQUIRED` findings are intentionally **not** resolved by this lesson and
-do not by themselves fail the cut-only proof. The builder records how many fill
-samples it ignored. Retaining structures and durable `Road_Earthworks`
-authoring remain later gates after human acceptance of the transient cut
-preview.
-
-PR #319 run 37007690564 is explicit failed evidence: native preparation reached
-contact PASS, but capture stopped after two terrain images because the UE
-consumer could not resolve the repository-level smooth-ribbon module. It must
-not be reused as a visual or terrain-fit PASS.
+PR #319 run 37007690564 remains explicit failed historical evidence: native
+preparation reached contact PASS, but capture stopped after two terrain images
+because the UE consumer could not resolve the repository-level smooth-ribbon
+module. It must not be reused as a visual, terrain-fit or earthworks PASS.
 
 Retire this PR-specific bootstrap after a trusted region proof lane replaces it.
 
