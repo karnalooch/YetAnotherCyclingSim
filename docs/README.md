@@ -65,6 +65,7 @@ flowchart TB
 |---|---|
 | Delivery | **M3 — Route & World Foundation** |
 | World method | **World Building Bible is authoritative** |
+| Geographic fidelity | **1:1 real-world scale; no route compression, relocation or invented macro terrain** |
 | Architecture policy | **Embark-first tooling admission + tools-first + evidence ladder + local proof** |
 | Diagram language | **Gumball Blueprint Mermaid style** |
 | Current priority | **import and validate the Sa Calobra 0.5 m DTM baseline, then prove the Ma-2141 road corridor** |
