@@ -685,7 +685,10 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 	// non-destructive macro base, then author SP638 cut/fill on a separate
 	// persistent Landscape edit layer. The visible road mesh stays independent
 	// from the Landscape vertex grid.
-	Landscape->ConvertNonEditLayerLandscape();
+	if (Landscape->GetEditLayers().IsEmpty())
+	{
+		Landscape->ConvertNonEditLayerLandscape();
+	}
 
 	TArray<ULandscapeEditLayerBase*> EditLayers = Landscape->GetEditLayers();
 	if (EditLayers.Num() != 1 || !IsValid(EditLayers[0]))
@@ -764,8 +767,8 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 
 	const FBox Bounds = Landscape->GetComponentsBoundingBox(true);
 	const FVector BoundsSize = Bounds.GetSize();
-	constexpr double ExpectedPlanarSizeCm = 800000.0;
-	constexpr double PlanarToleranceCm = 3000.0;
+	const double ExpectedPlanarSizeCm = RuntimeXYScale * (LandscapeVertices - 1);
+	const double PlanarToleranceCm = bManifestImport ? 1.0 : 3000.0;
 	if (!FMath::IsNearlyEqual(BoundsSize.X, ExpectedPlanarSizeCm, PlanarToleranceCm) ||
 		!FMath::IsNearlyEqual(BoundsSize.Y, ExpectedPlanarSizeCm, PlanarToleranceCm))
 	{
@@ -776,11 +779,17 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 			ExpectedPlanarSizeCm);
 		return 1;
 	}
-	if (BoundsSize.Z < 140000.0 || BoundsSize.Z > 170000.0)
+	const double ExpectedReliefCm =
+		(static_cast<double>(EncodedMax) - static_cast<double>(EncodedMin)) * RuntimeZScale / 128.0;
+	const bool bReliefMatches = bManifestImport
+		? FMath::IsNearlyEqual(BoundsSize.Z, ExpectedReliefCm, 1.0)
+		: (BoundsSize.Z >= 140000.0 && BoundsSize.Z <= 170000.0);
+	if (!bReliefMatches)
 	{
 		UE_LOG(LogCyclingPassoGiauLandscapeSpike, Error,
-			TEXT("Landscape vertical relief is outside expected Passo Giau range: %.3f cm."),
-			BoundsSize.Z);
+			TEXT("Landscape vertical relief mismatch: actual=%.3f cm encoded-source expectation=%.3f cm."),
+			BoundsSize.Z,
+			ExpectedReliefCm);
 		return 1;
 	}
 

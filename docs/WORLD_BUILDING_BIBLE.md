@@ -1933,6 +1933,14 @@ If those answers are clear, world building is usually straightforward.
 
 ## Terrain recovery asset retention
 
+The official CartoCiudad Ma-2141 source review is pinned under the Sa Calobra
+benchmark. Keep its six multipart lines and source SHA intact. One closed part
+meets two other parts at identical XY; road elevation separation is unknown from
+this 2D service. Do not turn that graph into a flattened DTM-carved route or
+silently discard its loop. A bounded first corridor can be selected away from
+that ambiguity; it still needs native-DTM alignment, width/access/surface review
+and independent Road Physics Profile admission.
+
 Owner update, 2026-10-02: obsolete Italian LFS payloads may now be retired after
 exact-path/hash inventory and dependency review. This supersedes the earlier
 retention directive for those obsolete Italy assets only. Spanish terrain inputs,
