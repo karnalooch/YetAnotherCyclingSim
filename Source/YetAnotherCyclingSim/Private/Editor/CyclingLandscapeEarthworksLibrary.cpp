@@ -3,10 +3,12 @@
 #if WITH_EDITOR
 
 #include "Dom/JsonObject.h"
+#include "Engine/Texture2D.h"
+#include "Engine/World.h"
+#include "GameFramework/Actor.h"
 #include "Landscape.h"
-#include "LandscapeEdit.h"
-#include "LandscapeEditLayer.h"
-#include "LandscapeInfo.h"
+#include "LandscapePatchEditLayer.h"
+#include "LandscapeTexturePatch.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "Serialization/JsonReader.h"
@@ -17,7 +19,8 @@ DEFINE_LOG_CATEGORY_STATIC(LogCyclingLandscapeEarthworks, Log, All);
 namespace CyclingLandscapeEarthworksInternal
 {
 	constexpr int32 LandscapeMaxIndex = 4032;
-	constexpr uint16 NeutralHeight = 32768;
+	constexpr float LandscapeGridStepCm = 50.0f;
+	constexpr int64 MaxPatchSamples = 4000000;
 
 	bool ReadIntField(
 		const TSharedPtr<FJsonObject>& Object,
@@ -33,6 +36,16 @@ namespace CyclingLandscapeEarthworksInternal
 		}
 		OutValue = static_cast<int32>(Value);
 		return true;
+	}
+
+	bool ReadBoolFalse(
+		const TSharedPtr<FJsonObject>& Object,
+		const TCHAR* Name)
+	{
+		bool Value = true;
+		return Object.IsValid() &&
+			Object->TryGetBoolField(Name, Value) &&
+			!Value;
 	}
 }
 
@@ -64,12 +77,12 @@ bool UCyclingLandscapeEarthworksLibrary::ApplyRoadEarthworksPatch(
 	FString Operation;
 	FString LayerName;
 	FString LayerEncoding;
+	FString BlendMode;
+	FString HeightEncoding;
+	FString ZeroHeightMeaning;
+	FString WorldSpaceUnit;
 	FString BaseLayerName;
 	FString PatchFile;
-	bool bBaseDtmModified = true;
-	bool bFillPermitted = true;
-	bool bStructurePermitted = true;
-	bool bSaveMap = true;
 	if (!Root->TryGetNumberField(TEXT("schema_version"), SchemaVersion) ||
 		SchemaVersion != 1.0 ||
 		!Root->TryGetStringField(TEXT("region_id"), RegionId) ||
@@ -79,22 +92,26 @@ bool UCyclingLandscapeEarthworksLibrary::ApplyRoadEarthworksPatch(
 		!Root->TryGetStringField(TEXT("layer"), LayerName) ||
 		LayerName != TEXT("Road_Earthworks") ||
 		!Root->TryGetStringField(TEXT("layer_encoding"), LayerEncoding) ||
-		LayerEncoding != TEXT("ADDITIVE_DELTA_R16_32768_ZERO") ||
+		LayerEncoding != TEXT("LANDSCAPE_TEXTURE_PATCH_WORLD_UNITS_F32_MIN") ||
+		!Root->TryGetStringField(TEXT("blend_mode"), BlendMode) ||
+		BlendMode != TEXT("Min") ||
+		!Root->TryGetStringField(TEXT("height_encoding"), HeightEncoding) ||
+		HeightEncoding != TEXT("WorldUnits") ||
+		!Root->TryGetStringField(TEXT("zero_height_meaning"), ZeroHeightMeaning) ||
+		ZeroHeightMeaning != TEXT("WorldZero") ||
+		!Root->TryGetStringField(TEXT("world_space_unit"), WorldSpaceUnit) ||
+		WorldSpaceUnit != TEXT("centimeter") ||
 		!Root->TryGetStringField(TEXT("base_layer"), BaseLayerName) ||
 		BaseLayerName != TEXT("Base_DTM") ||
 		!Root->TryGetStringField(TEXT("patch_file"), PatchFile) ||
 		PatchFile.IsEmpty() ||
 		FPaths::GetCleanFilename(PatchFile) != PatchFile ||
-		!Root->TryGetBoolField(TEXT("base_dtm_modified"), bBaseDtmModified) ||
-		bBaseDtmModified ||
-		!Root->TryGetBoolField(TEXT("fill_authoring_permitted"), bFillPermitted) ||
-		bFillPermitted ||
-		!Root->TryGetBoolField(TEXT("structure_authoring_permitted"), bStructurePermitted) ||
-		bStructurePermitted ||
-		!Root->TryGetBoolField(TEXT("save_map"), bSaveMap) ||
-		bSaveMap)
+		!ReadBoolFalse(Root, TEXT("base_dtm_modified")) ||
+		!ReadBoolFalse(Root, TEXT("fill_authoring_permitted")) ||
+		!ReadBoolFalse(Root, TEXT("structure_authoring_permitted")) ||
+		!ReadBoolFalse(Root, TEXT("save_map")))
 	{
-		UE_LOG(LogCyclingLandscapeEarthworks, Error, TEXT("CUT patch manifest violates the bounded recipe contract."));
+		UE_LOG(LogCyclingLandscapeEarthworks, Error, TEXT("CUT patch manifest violates the native Min-patch contract."));
 		return false;
 	}
 
@@ -116,7 +133,8 @@ bool UCyclingLandscapeEarthworksLibrary::ApplyRoadEarthworksPatch(
 		!ReadIntField(Rect, TEXT("max_y"), MaxY) ||
 		!ReadIntField(Rect, TEXT("width"), Width) ||
 		!ReadIntField(Rect, TEXT("height"), Height) ||
-		MinX < 0 || MinY < 0 || MaxX > LandscapeMaxIndex || MaxY > LandscapeMaxIndex ||
+		MinX < 0 || MinY < 0 ||
+		MaxX > LandscapeMaxIndex || MaxY > LandscapeMaxIndex ||
 		MaxX < MinX || MaxY < MinY ||
 		Width != MaxX - MinX + 1 ||
 		Height != MaxY - MinY + 1)
@@ -125,8 +143,9 @@ bool UCyclingLandscapeEarthworksLibrary::ApplyRoadEarthworksPatch(
 		return false;
 	}
 
-	const int64 ExpectedSamples = static_cast<int64>(Width) * static_cast<int64>(Height);
-	if (ExpectedSamples <= 0 || ExpectedSamples > 4000000)
+	const int64 ExpectedSamples =
+		static_cast<int64>(Width) * static_cast<int64>(Height);
+	if (ExpectedSamples <= 0 || ExpectedSamples > MaxPatchSamples)
 	{
 		UE_LOG(LogCyclingLandscapeEarthworks, Error, TEXT("CUT patch rect exceeds bounded sample budget."));
 		return false;
@@ -135,87 +154,174 @@ bool UCyclingLandscapeEarthworksLibrary::ApplyRoadEarthworksPatch(
 	const FString PatchPath = FPaths::Combine(FPaths::GetPath(ManifestPath), PatchFile);
 	TArray<uint8> Bytes;
 	if (!FFileHelper::LoadFileToArray(Bytes, *PatchPath) ||
-		Bytes.Num() != ExpectedSamples * 2)
+		Bytes.Num() != ExpectedSamples * static_cast<int64>(sizeof(float)))
 	{
-		UE_LOG(LogCyclingLandscapeEarthworks, Error, TEXT("CUT patch R16 byte count mismatch: %s"), *PatchPath);
+		UE_LOG(LogCyclingLandscapeEarthworks, Error, TEXT("CUT patch float32 byte count mismatch: %s"), *PatchPath);
 		return false;
 	}
 
-	TArray<uint16> HeightData;
-	HeightData.SetNumUninitialized(static_cast<int32>(ExpectedSamples));
-	int32 ModifiedCount = 0;
-	for (int32 Index = 0; Index < HeightData.Num(); ++Index)
+	TArray<float> HeightsCm;
+	HeightsCm.SetNumUninitialized(static_cast<int32>(ExpectedSamples));
+	FMemory::Memcpy(
+		HeightsCm.GetData(),
+		Bytes.GetData(),
+		static_cast<SIZE_T>(Bytes.Num()));
+
+	float MinHeightCm = TNumericLimits<float>::Max();
+	float MaxHeightCm = TNumericLimits<float>::Lowest();
+	for (const float HeightCm : HeightsCm)
 	{
-		const int32 ByteIndex = Index * 2;
-		const uint16 Value =
-			static_cast<uint16>(Bytes[ByteIndex]) |
-			(static_cast<uint16>(Bytes[ByteIndex + 1]) << 8);
-		if (Value > NeutralHeight)
+		if (!FMath::IsFinite(HeightCm) ||
+			HeightCm < -50000.0f ||
+			HeightCm > 200000.0f)
 		{
-			UE_LOG(LogCyclingLandscapeEarthworks, Error, TEXT("CUT-only patch attempted a positive/fill delta."));
+			UE_LOG(LogCyclingLandscapeEarthworks, Error, TEXT("CUT patch contains invalid world-space height."));
 			return false;
 		}
-		HeightData[Index] = Value;
-		ModifiedCount += Value < NeutralHeight ? 1 : 0;
-	}
-	if (ModifiedCount <= 0)
-	{
-		UE_LOG(LogCyclingLandscapeEarthworks, Error, TEXT("CUT patch contains no modified vertices."));
-		return false;
+		MinHeightCm = FMath::Min(MinHeightCm, HeightCm);
+		MaxHeightCm = FMath::Max(MaxHeightCm, HeightCm);
 	}
 
-	ULandscapeEditLayerBase* BaseLayer = Landscape->GetEditLayer(FName(TEXT("Base_DTM")));
-	ULandscapeEditLayerBase* RoadLayer = Landscape->GetEditLayer(FName(TEXT("Road_Earthworks")));
-	if (!IsValid(BaseLayer) || !IsValid(RoadLayer) ||
-		!RoadLayer->IsA<ULandscapeEditLayer>())
+	ULandscapeEditLayerBase* BaseLayer =
+		Landscape->GetEditLayer(FName(TEXT("Base_DTM")));
+	ULandscapeEditLayerBase* RoadLayerBase =
+		Landscape->GetEditLayer(FName(TEXT("Road_Earthworks")));
+	ULandscapePatchEditLayer* RoadLayer =
+		Cast<ULandscapePatchEditLayer>(RoadLayerBase);
+	if (!IsValid(BaseLayer) || !IsValid(RoadLayer))
 	{
 		UE_LOG(
 			LogCyclingLandscapeEarthworks,
 			Error,
-			TEXT("CUT patch requires Base_DTM plus a standard Road_Earthworks edit layer."));
+			TEXT("CUT patch requires Base_DTM plus native Landscape Patch Road_Earthworks layer."));
 		return false;
 	}
 
-	ULandscapeInfo* LandscapeInfo = Landscape->GetLandscapeInfo();
-	if (!IsValid(LandscapeInfo))
+	UWorld* World = Landscape->GetWorld();
+	if (!IsValid(World))
 	{
-		UE_LOG(LogCyclingLandscapeEarthworks, Error, TEXT("CUT patch LandscapeInfo is unavailable."));
+		UE_LOG(LogCyclingLandscapeEarthworks, Error, TEXT("CUT patch Landscape world is unavailable."));
 		return false;
 	}
 
-	const FGuid RoadLayerGuid = RoadLayer->GetGuid();
+	UTexture2D* HeightTexture = UTexture2D::CreateTransient(
+		Width,
+		Height,
+		PF_R32_FLOAT,
+		TEXT("BOB_RoadEarthworks_MinHeight"));
+	if (!IsValid(HeightTexture) ||
+		HeightTexture->GetPlatformData() == nullptr ||
+		HeightTexture->GetPlatformData()->Mips.IsEmpty())
 	{
-		FScopedSetLandscapeEditingLayer EditingScope(
-			Landscape,
-			RoadLayerGuid,
-			[]() {});
-		FHeightmapAccessor<false> HeightmapAccessor(LandscapeInfo, nullptr);
-		HeightmapAccessor.SetEditLayer(RoadLayerGuid);
-		HeightmapAccessor.SetData(
-			MinX,
-			MinY,
-			MaxX,
-			MaxY,
-			HeightData.GetData(),
-			ELandscapeLayerPaintingRestriction::None);
-		HeightmapAccessor.Flush();
+		UE_LOG(LogCyclingLandscapeEarthworks, Error, TEXT("Failed to allocate transient float32 CUT texture."));
+		return false;
 	}
+	HeightTexture->SRGB = false;
+	HeightTexture->NeverStream = true;
+	HeightTexture->Filter = TF_Bilinear;
+	HeightTexture->CompressionSettings = TC_HDR;
+	HeightTexture->MipGenSettings = TMGS_NoMipmaps;
+	HeightTexture->SetFlags(RF_Transient);
 
-	// FHeightmapAccessor::Flush owns the changed-component update path. Force
-	// the layer stack to evaluate, but do not call component-private collision
-	// internals from this utility.
+	FTexture2DMipMap& Mip = HeightTexture->GetPlatformData()->Mips[0];
+	void* TextureData = Mip.BulkData.Lock(LOCK_READ_WRITE);
+	if (TextureData == nullptr)
+	{
+		Mip.BulkData.Unlock();
+		UE_LOG(LogCyclingLandscapeEarthworks, Error, TEXT("Failed to lock transient CUT texture."));
+		return false;
+	}
+	FMemory::Memcpy(
+		TextureData,
+		HeightsCm.GetData(),
+		static_cast<SIZE_T>(Bytes.Num()));
+	Mip.BulkData.Unlock();
+	HeightTexture->UpdateResource();
+
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.OverrideLevel = World->GetCurrentLevel();
+	SpawnParameters.Name = TEXT("BOB_RoadEarthworksCutPatch");
+	SpawnParameters.ObjectFlags |= RF_Transient;
+	SpawnParameters.SpawnCollisionHandlingOverride =
+		ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	AActor* PatchActor = World->SpawnActor<AActor>(
+		AActor::StaticClass(),
+		FTransform::Identity,
+		SpawnParameters);
+	if (!IsValid(PatchActor))
+	{
+		UE_LOG(LogCyclingLandscapeEarthworks, Error, TEXT("Failed to spawn transient CUT patch actor."));
+		return false;
+	}
+	PatchActor->SetActorLabel(TEXT("BOB Road_Earthworks CUT-only Min patch — transient"));
+
+	ULandscapeTexturePatch* Patch = NewObject<ULandscapeTexturePatch>(
+		PatchActor,
+		TEXT("BOB_RoadEarthworks_MinPatch"),
+		RF_Transient | RF_Transactional);
+	if (!IsValid(Patch))
+	{
+		UE_LOG(LogCyclingLandscapeEarthworks, Error, TEXT("Failed to allocate Landscape Texture Patch component."));
+		return false;
+	}
+	Patch->CreationMethod = EComponentCreationMethod::Instance;
+	PatchActor->SetRootComponent(Patch);
+	PatchActor->AddInstanceComponent(Patch);
+	Patch->RegisterComponent();
+
+	const FVector PatchLocation(
+		(static_cast<double>(MinX) + static_cast<double>(MaxX)) *
+			0.5 * LandscapeGridStepCm,
+		(static_cast<double>(MinY) + static_cast<double>(MaxY)) *
+			0.5 * LandscapeGridStepCm,
+		0.0);
+	PatchActor->SetActorLocation(PatchLocation, false, nullptr, ETeleportType::TeleportPhysics);
+	PatchActor->SetActorRotation(FRotator::ZeroRotator);
+
+	Patch->SetUnscaledCoverage(
+		FVector2D(
+			static_cast<double>(Width - 1) * LandscapeGridStepCm,
+			static_cast<double>(Height - 1) * LandscapeGridStepCm));
+	Patch->SetHeightSourceMode(ELandscapeTexturePatchSourceMode::TextureAsset);
+	Patch->SetHeightTextureAsset(HeightTexture);
+	Patch->SetHeightEncodingMode(
+		ELandscapeTextureHeightPatchEncoding::WorldUnits);
+	Patch->SetZeroHeightMeaning(
+		ELandscapeTextureHeightPatchZeroHeightMeaning::WorldZero);
+	FLandscapeTexturePatchEncodingSettings EncodingSettings;
+	EncodingSettings.ZeroInEncoding = 0.0;
+	EncodingSettings.WorldSpaceEncodingScale = 1.0;
+	Patch->SetHeightEncodingSettings(EncodingSettings);
+	Patch->SetHeightAlphaSourceMode(
+		ELandscapeTexturePatchAlphaSourceMode::None,
+		false);
+	Patch->SetBlendMode(ELandscapeTexturePatchBlendMode::Min);
+	Patch->SetFalloff(0.0f);
+	Patch->SetIsEnabled(true);
+
+	if (!Patch->AssignToLandscape(
+		Landscape,
+		FName(TEXT("Road_Earthworks"))))
+	{
+		UE_LOG(LogCyclingLandscapeEarthworks, Error, TEXT("Failed to bind CUT patch to Road_Earthworks."));
+		return false;
+	}
+	RoadLayer->RequestLandscapeUpdate(true);
 	Landscape->ForceLayersFullUpdate();
 	Landscape->PostEditChange();
 
 	UE_LOG(
 		LogCyclingLandscapeEarthworks,
 		Display,
-		TEXT("BOB CUT patch applied transiently: rect=(%d,%d)-(%d,%d) modified_vertices=%d layer=Road_Earthworks."),
+		TEXT("BOB native Min CUT patch active transiently: rect=(%d,%d)-(%d,%d) texture=%dx%d height_cm=[%.3f,%.3f] layer=Road_Earthworks."),
 		MinX,
 		MinY,
 		MaxX,
 		MaxY,
-		ModifiedCount);
+		Width,
+		Height,
+		MinHeightCm,
+		MaxHeightCm);
 	return true;
 }
 
