@@ -209,4 +209,6 @@ Owner acceptance now also requires the
 [BOB single-direction bend contract](WORLD_BUILDING_BIBLE.md#bob-single-direction-bend-contract):
 constant matching entry/exit widths, justified main-bend widening only, and no
 reverse turns on either final pavement edge. The current 183a30e visual result
-is rejected against that requirement; implementation and fresh proof remain pending.
+is rejected against that requirement. The native convex-cubic implementation
+below that contract owns the replacement; fresh exact-SHA proof and owner visual
+acceptance are required before admitting it.

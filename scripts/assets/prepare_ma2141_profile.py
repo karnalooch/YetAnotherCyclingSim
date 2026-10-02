@@ -213,10 +213,14 @@ def prepare(
                 "axis_transitions",
                 "edge_constraint",
                 "reference_arc",
+                "single_bend",
             )
         ):
             raise ValueError("Native road edge/width contract was not applied")
-        if guides.get("reference_arc", {}).get("transition_method") == "quintic-G2-from-native-endpoints" and packet.get("transition_evaluator") != "quintic-G2-from-native-endpoints":
+        from scripts.geometry.road_single_bend import CONTRACT, METHOD
+        if guides.get("geometry_contract") == CONTRACT and packet.get("transition_evaluator") != METHOD:
+            raise ValueError("Native single bend evaluator missing")
+        if (guides.get("reference_arc") or {}).get("transition_method") == "quintic-G2-from-native-endpoints" and packet.get("transition_evaluator") != "quintic-G2-from-native-endpoints":
             raise ValueError("Native G2 transition evaluator missing")
         spans = packet.get("boundary_spans", [])
         expected = guides.get("boundary_spans", [])
@@ -260,7 +264,7 @@ def prepare(
         presentation_plan["native_export_sha256"] = sha256(curved_edges)
     fit = fit_sections(stations, lateral, ground)
     surface_design = None
-    if presentation_plan is not None and presentation_plan["controlled_width"].get("reference_arc", {}).get("transition_method") == "quintic-G2-from-native-endpoints":
+    if presentation_plan is not None and (presentation_plan["controlled_width"].get("single_bend") or (presentation_plan["controlled_width"].get("reference_arc") or {}).get("transition_method") == "quintic-G2-from-native-endpoints"):
         from scripts.geometry.road_surface_profile import design_profile
         apex_roles = next(r["edges"] for r in presentation_plan["edge_role_samples"] if r["station_m"] == 145.0)
         inner_edge = next(r["edge_index"] for r in apex_roles if r["bend_role"] == "INNER")

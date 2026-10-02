@@ -1,7 +1,8 @@
 """Use native USplineComponent curves to author paired presentation edges.
 
-Runs during the existing map-preparation boot. No saved actor, terrain edit,
-custom spline evaluator, or change to the canonical road source is involved.
+Runs during the existing map-preparation boot. The current convex design uses
+native cubic controls; historical quintic-transition packets remain readable.
+No saved actor, terrain edit or canonical road-source change is involved.
 """
 
 from __future__ import annotations
@@ -85,11 +86,12 @@ def author(guide_path):
         raise RuntimeError("Cannot create transient spline holder")
     try:
         from scripts.geometry.road_edge_roles import anchored_edges
+        from scripts.geometry.road_single_bend import CONTRACT, METHOD, inspect
         from scripts.geometry.road_width_profile import boundary_width_profile, width_at
 
         spline = unreal.SplineComponent(outer=holder)
         spline.clear_spline_points(False)
-        if guides.get("geometry_contract") != "cliff-edge-width-v3":
+        if guides.get("geometry_contract") not in ("cliff-edge-width-v3", CONTRACT):
             raise ValueError(
                 "Road authoring requires an authoritative edge and explicit width"
             )
@@ -119,7 +121,7 @@ def author(guide_path):
         spline.update_spline()
         transitions = [
             (spec, reference_transition(holder, spline, spec))
-            for spec in guides["reference_arc"]["transitions"]
+            for spec in guides.get("reference_arc", {}).get("transitions", [])
         ]
         rows = []
         for index in range(4801):
@@ -167,13 +169,15 @@ def author(guide_path):
             "guide_sha256": hashlib.sha256(guide_bytes).hexdigest(),
             "author_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
             "producer": "USplineComponent",
-            "transition_evaluator": "quintic-G2-from-native-endpoints",
+            "transition_evaluator": METHOD if guides["geometry_contract"] == CONTRACT else "quintic-G2-from-native-endpoints",
             "transition_join_proof": [proof for spec, (coefficients, proof) in transitions],
             "point_type": "CurveCustomTangent",
             "boundary_spans": [],
             "geometry_contract": guides["geometry_contract"],
             "edge_constraint": guides["edge_constraint"],
-            "reference_arc": guides["reference_arc"],
+            "reference_arc": guides.get("reference_arc"),
+            "single_bend": guides.get("single_bend"),
+            "single_bend_inspection": inspect(rows, guides["single_bend"]) if guides["geometry_contract"] == CONTRACT else None,
             "width_profile": guides["width_profile"],
             "width_distance_profile": distance_profile,
             "parameterization": "authoritative boundary at source chainage / 2.5 m; not physics distance",

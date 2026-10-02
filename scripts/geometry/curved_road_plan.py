@@ -7,6 +7,9 @@ import itertools
 import json
 import math
 
+from scripts.geometry.road_single_bend import CONTRACT as CONVEX_CONTRACT
+from scripts.geometry.road_single_bend import RECIPE as CONVEX_RECIPE
+
 RECIPE = "native-paired-edge-curves-v1"
 ANCHOR_RECIPE = "native-cliff-edge-width-v3"
 COMMON_AXIS_RECIPE = "native-common-axis-width-v2"
@@ -67,7 +70,7 @@ def xy_digest(sections):
 
 
 def edge_role_proof_valid(plan):
-    if plan.get("recipe") != ANCHOR_RECIPE:
+    if plan.get("recipe") not in (ANCHOR_RECIPE, CONVEX_RECIPE):
         return True
     from scripts.geometry.road_edge_roles import edge_roles, terrain_roles_at
 
@@ -99,14 +102,18 @@ def profile_plan_valid(profile):
     rows = profile.get("stations", [])
     if not isinstance(plan, dict) or not isinstance(rows, list):
         return False
-    if (plan.get("controlled_width") or {}).get("reference_arc", {}).get("transition_method") == "quintic-G2-from-native-endpoints":
+    if plan.get("recipe") == CONVEX_RECIPE:
+        from scripts.geometry.road_single_bend import profile_proof_valid
+        if not profile_proof_valid(profile):
+            return False
+    if plan.get("recipe") == CONVEX_RECIPE or ((plan.get("controlled_width") or {}).get("reference_arc") or {}).get("transition_method") == "quintic-G2-from-native-endpoints":
         from scripts.geometry.road_surface_profile import surface_proof_valid
         if not surface_proof_valid(profile):
             return False
     return (
         profile.get("source_xy_preserved") is False
         and profile.get("canonical_source_xy_preserved") is True
-        and plan.get("recipe") in (RECIPE, COMMON_AXIS_RECIPE, ANCHOR_RECIPE)
+        and plan.get("recipe") in (RECIPE, COMMON_AXIS_RECIPE, ANCHOR_RECIPE, CONVEX_RECIPE)
         and plan.get("status") == "PASS"
         and edge_role_proof_valid(plan)
         and plan.get("exact_sha") == profile.get("exact_sha")
@@ -137,7 +144,7 @@ def prepare_sections(
         != (
             "CurveCustomTangent"
             if packet.get("geometry_contract")
-            in ("common-axis-width-v2", "cliff-edge-width-v3")
+            in ("common-axis-width-v2", "cliff-edge-width-v3", CONVEX_CONTRACT)
             else "Curve"
         )
         or packet.get("status") != "NATIVE_CURVES_EXPORTED_REVIEW_REQUIRED"
@@ -145,7 +152,7 @@ def prepare_sections(
         or packet.get("map_modified") is not False
     ):
         raise ValueError("Native curve provenance mismatch")
-    if packet.get("reference_arc", {}).get("transition_method") == "quintic-G2-from-native-endpoints":
+    if (packet.get("reference_arc") or {}).get("transition_method") == "quintic-G2-from-native-endpoints":
         from scripts.geometry.road_transition import verify_join_proof
         verify_join_proof(packet.get("transition_join_proof"), packet["reference_arc"]["transitions"])
     rows = packet["stations"]
@@ -168,7 +175,12 @@ def prepare_sections(
             )
         ):
             raise ValueError("Nonfinite or unordered native curve samples")
-    anchor_contract = packet.get("geometry_contract") == "cliff-edge-width-v3"
+    convex_contract = packet.get("geometry_contract") == CONVEX_CONTRACT
+    anchor_contract = packet.get("geometry_contract") in ("cliff-edge-width-v3", CONVEX_CONTRACT)
+    if convex_contract:
+        from scripts.geometry.road_single_bend import inspect
+        if inspect(rows, packet["single_bend"]) != packet.get("single_bend_inspection"):
+            raise ValueError("Native single bend proof mismatch")
     anchor_edge = None
     width_metrics = None
     if packet.get("geometry_contract") == "common-axis-width-v2":
@@ -283,6 +295,7 @@ def prepare_sections(
             "profile": packet["width_profile"],
             "distance_profile": distance_profile,
             "reference_arc": reference_arc,
+            "single_bend": packet.get("single_bend"),
             "maximum_reference_radial_error_m": radial_error,
             "maximum_edge_profile_error_m": max_error,
             "minimum_width_m": minimum,
@@ -384,7 +397,7 @@ def prepare_sections(
                 }
             )
     return sections, {
-        "recipe": ANCHOR_RECIPE
+        "recipe": CONVEX_RECIPE if convex_contract else ANCHOR_RECIPE
         if anchor_contract
         else (COMMON_AXIS_RECIPE if width_metrics else RECIPE),
         "edge_role_samples": role_samples,
@@ -392,6 +405,10 @@ def prepare_sections(
         "edge_displacements_m": side_displacements,
         "maximum_constrained_edge_displacement_m": constrained_displacement,
         "controlled_width": width_metrics,
+        "single_bend_inspection": inspect([
+            {"station_m": i * RENDER_STEP_M, "edges_xy_m": [row[0], row[-1]]}
+            for i, row in enumerate(sections)
+        ], packet["single_bend"]) if convex_contract else None,
         "status": "PASS",
         "exact_sha": exact_sha,
         "source_sha256": source_sha,

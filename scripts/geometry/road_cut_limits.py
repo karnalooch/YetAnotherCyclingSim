@@ -1,13 +1,13 @@
 """Bound deeper preview cuts to evidence-marked cliff spans, never the route."""
 
-from scripts.geometry.curved_road_plan import ANCHOR_RECIPE
+from scripts.geometry.curved_road_plan import ANCHOR_RECIPE, CONVEX_RECIPE
 
 
 def cut_limits(plan, policy):
     ordinary = float(policy["strategies"]["native_blend"]["max_ground_adjustment_m"])
     spans = []
     maximum = ordinary
-    if plan.get("recipe") == ANCHOR_RECIPE:
+    if plan.get("recipe") in (ANCHOR_RECIPE, CONVEX_RECIPE):
         for span in plan["controlled_width"]["edge_constraint"]["terrain_spans"]:
             if "CLIFF" in span["roles"] and "MOUNTAIN" in span["roles"]:
                 spans.append([span["start_station_m"], span["end_station_m"]])

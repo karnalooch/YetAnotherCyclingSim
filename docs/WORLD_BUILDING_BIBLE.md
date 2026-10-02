@@ -3031,3 +3031,54 @@ width on a circle and G2 at its joins did not prevent that approach nose.
 Future acceptance must exercise the complete entry -> main bend -> exit and
 both final edges, not only the reference circle or endpoint residuals.
 
+#### Native convex-cubic implementation of the single-bend contract
+
+The replacement recipe is `native-cliff-convex-bend-v4`, authored as ordinary
+UE 5.8 `USplineComponent` cubic points with explicit arrive/leave tangents.
+`scripts/geometry/road_single_bend.py` owns the bounded producer and independent
+stdlib consumer. The authoring API remains Epic's native spline API; no PCGEx,
+custom runtime evaluator or new package is introduced.
+
+The producer jointly fits the reference outline over 115..180 m source keys.
+It builds a convex reference control envelope, performs a regularized least
+squares fit to dense source positions with a 0.75 circular-fairness prior and
+regularization weight 10, and restores the convex control envelope. The circle
+is a fit prior, not a mandatory circle with separately patched approaches.
+Cardinal cubic B-spline knot values and derivatives become native cubic Hermite
+controls over 110..185 m. Inside the bounded design the curve is C2; adjoining
+unchanged-road segments retain explicit shared tangents. The method does not
+claim a clothoid, surveyed geometry or a universal road-network solver.
+
+The admitted bend domain is 122.5..175 m, with main bend 137.5..155 m. Entry,
+main bend and exit use one provisional 5 m width, obtained from the existing
+station-125 observation. No vehicle-widening requirement has been proved, so
+the width increment is zero; bus swept-path admission remains pending. Raw
+width observations are retained, while the final inner edge is derived from
+the reference normal. Noisy maxima or the rejected 8.625 m mean are not width
+requirements. Original source, physics and the 1 m reference displacement
+guard remain unchanged.
+
+Native export and profile consumers independently check both final edges and
+the derived axis. Every original segment is checked for counter-turns, then a
+0.25 m physical-distance sampling measures signed curvature and heading. The
+angular roundoff allowance is derived from 0.0001 m position precision and
+adjacent segment lengths, not a visual tolerance for reverse bends. The bounded
+width must stay within 0.0001 m of its explicit base width, the sampled inner
+radius must remain at least 1.5 m, and the full bounded station/edge fingerprint
+must match. Missing, stale or unsupported receipts fail closed. Source
+displacement, 0.02 m chord error, winding and intersection gates still apply.
+
+Re-evaluating native terrain beneath the narrower pavement exposed unstable
+hillside-derived bank derivatives near 100..110 m. The vertical/banking design
+therefore starts at the stable 95 m approach and retains the 165 m end and
+135..155 m provisional 2% bank. The inspected surface domain expands from
+110..165 to 95..165 m; crossfall 6%, rate 0.005/m, facet angle 5 degrees and edge
+grade 0.5 limits are unchanged. Road height preserves the inferred reference
+apex datum, and CUT/support are regenerated from clean Base_DTM afterward.
+
+The regression suite rejects a constant-width reverse-turn nose, approach width
+bulges, an unsupported widening claim, wrong turn sign, incomplete domains and
+stale/missing consumer evidence. Mirrored turn directions and physical edge
+ordering are covered. Fresh exact-SHA Unreal capture and owner review are still
+required; local mathematical checks do not confer native, visual, collision,
+continuous-support, performance or vehicle-clearance acceptance.

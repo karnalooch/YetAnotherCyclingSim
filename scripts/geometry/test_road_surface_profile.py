@@ -55,7 +55,7 @@ class RoadSurfaceTests(unittest.TestCase):
         for reference_edge, inner_edge in ((0, 1), (1, 0)):
             z, q, meta = design_profile(self.stations, self.xy, self.center, self.crossfall,
                                        reference_edge=reference_edge, inner_edge=inner_edge)
-            outside = (self.stations < 110) | (self.stations > 165)
+            outside = (self.stations < 95) | (self.stations > 165)
             np.testing.assert_array_equal(z[outside], self.center[outside])
             np.testing.assert_array_equal(q[outside], self.crossfall[outside])
             offset = -3 if reference_edge == 0 else 3
@@ -64,6 +64,7 @@ class RoadSurfaceTests(unittest.TestCase):
                                    self.center[apex] + self.crossfall[apex] * offset)
             self.assertAlmostEqual(abs(q[apex]), 0.02)
             self.assertFalse(meta["engineering_admitted"])
+            self.assertEqual(meta["window_m"], [95.0, 165.0])
             self.assertEqual(inspect_surface(self.rows(z, q))["status"], "PASS")
 
     def test_new_height_crease_cannot_reuse_a_passing_report(self):

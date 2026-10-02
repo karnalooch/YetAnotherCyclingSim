@@ -6,7 +6,9 @@ import math
 
 from scripts.geometry.road_transition import evaluate, quintic
 
-WINDOW = (110.0, 165.0)
+# Begin on the stable approach before the noisy hillside-fit derivatives near
+# 100..110 m. This expands the inspected domain; all former gates still apply.
+WINDOW = (95.0, 165.0)
 ARC = (135.0, 155.0)
 PREVIEW_CROSSFALL = -0.02
 LIMITS = {"crossfall_abs": 0.06, "crossfall_rate_per_m": 0.005,

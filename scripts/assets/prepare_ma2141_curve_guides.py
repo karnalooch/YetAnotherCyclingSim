@@ -15,7 +15,7 @@ from scripts.assets.prepare_ma2141_road_preview import (
     build_trial,
     read_profile,
 )
-from scripts.geometry.road_width_profile import circular_width_profile
+from scripts.geometry.road_single_bend import CONTRACT, design
 
 # Explicit reviewed-window semantics, not a network-wide terrain assumption.
 # Stored edge 0 is travel-left in the authored direction in UE's X/Y frame.
@@ -150,9 +150,10 @@ def prepare(prepared, output, exact_sha):
         ],
     }
     reference_arc = reference_guides(guides, width_profile)
-    # Keep the reference fit/margin based on unmodified observations. Replace
-    # noisy transverse widening only in the explicit presentation width design.
-    width_profile = circular_width_profile(width_profile, 135.0, 155.0, 125.0, 175.0)
+    width_profile, single_bend = design(
+        guides, [vertices[i * 25:(i + 1) * 25] for i in range(601)],
+        width_profile, reference_arc, reference_edge=EDGE_CONSTRAINT["reference_edge"],
+    )
     packet = {
         "schema_version": 1,
         "exact_sha": exact_sha,
@@ -164,9 +165,9 @@ def prepare(prepared, output, exact_sha):
         "guides": guides,
         "boundary_spans": [],
         "edge_constraint": EDGE_CONSTRAINT,
-        "reference_arc": reference_arc,
+        "single_bend": single_bend,
         "width_profile": width_profile,
-        "geometry_contract": "cliff-edge-width-v3",
+        "geometry_contract": CONTRACT,
     }
     output.write_text(json.dumps(packet, allow_nan=False) + "\n")
 
