@@ -32,7 +32,7 @@ def _write_proof(
     status,
     error="",
     lighting=None,
-    cut_preview=None,
+    cut_patch_applied=False,
 ):
     payload = {
         "schema_version": 1,
@@ -47,18 +47,9 @@ def _write_proof(
             lighting.get("directional_light_intensity") if lighting else None
         ),
         "skylight_intensity": lighting.get("skylight_intensity") if lighting else None,
-        "bob_mode": "INSPECTOR_PLUS_TRANSIENT_CUT_ONLY",
-        "cut_preview_status": (
-            cut_preview.get("status") if cut_preview else "NOT_VERIFIED"
-        ),
-        "cut_preview_map_saved": (
-            cut_preview.get("map_saved") if cut_preview else None
-        ),
-        "cut_preview_remaining_penetration_count": (
-            cut_preview.get("remaining_road_penetration_count")
-            if cut_preview
-            else None
-        ),
+        "bob_mode": "INSPECTOR_PLUS_TRANSIENT_ROAD_EARTHWORKS_CUT",
+        "cut_patch_applied": cut_patch_applied,
+        "cut_patch_layer": "Road_Earthworks" if cut_patch_applied else None,
         "map_saved": False,
     }
     (root / "owner-handoff-proof.json").write_text(
@@ -170,17 +161,12 @@ def _configure():
     )
     sys.path.insert(0, str(project / "scripts/ue"))
     from ma2141_road_preview import spawn_trial
+    from bob_road_earthworks_cut import apply_cut_patch
 
     road = spawn_trial(world, root, exact_sha)
-    cut_preview = road[2].get("bob_cut_only_preview")
-    if (
-        not isinstance(cut_preview, dict)
-        or cut_preview.get("status") != "TECHNICAL_PREVIEW_PASS"
-        or cut_preview.get("remaining_road_penetration_count") != 0
-        or cut_preview.get("saved_baseline_unchanged") is not True
-        or cut_preview.get("production_authoring_permitted") is not False
-    ):
-        raise RuntimeError("Owner handoff cut-only builder contract failed")
+    if len(road) < 4:
+        raise RuntimeError("Owner handoff road trial is missing BOB CUT context")
+    apply_cut_patch(world, root, exact_sha, road[3]["pre_fit"])
 
     alignment = json.loads(
         (root / "ma2141-native-alignment.json").read_text(encoding="utf-8")
@@ -211,11 +197,12 @@ def _configure():
         exact_sha,
         "PASS",
         lighting=lighting,
-        cut_preview=cut_preview,
+        cut_patch_applied=True,
     )
     unreal.log(
-        "[OwnerHandoff] PASS; Sa Calobra + native-contact road left open "
-        "at road-contact-rider in VMI_LIT with diagnostic sun + skylight."
+        "[OwnerHandoff] PASS; Sa Calobra + smooth road + transient "
+        "Road_Earthworks CUT left open at road-contact-rider in VMI_LIT "
+        "with diagnostic sun + skylight."
     )
 
 
