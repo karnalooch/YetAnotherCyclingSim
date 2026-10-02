@@ -37,12 +37,6 @@ foreach ($path in @($RunnerRoot, $InstallRoot)) {
 if ($InstallRoot.StartsWith($RunnerRoot.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase) -or $InstallRoot -eq $RunnerRoot) {
     throw 'InstallRoot must be outside RunnerRoot.'
 }
-$existing = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
-if ($existing) {
-    Stop-ScheduledTask -TaskName $taskName
-    for ($i = 0; $i -lt 20 -and (Get-ScheduledTask -TaskName $taskName).State -eq 'Running'; $i++) { Start-Sleep -Milliseconds 250 }
-    if ((Get-ScheduledTask -TaskName $taskName).State -eq 'Running') { throw 'Previous monitor did not stop; installation aborted.' }
-}
 [void][IO.Directory]::CreateDirectory($InstallRoot)
 # This directory contains only this companion; do not rewrite an unrelated ACL.
 $allowedNames = @('RunnerMonitor.psm1', 'Start-YacsRunnerMonitor.ps1', 'Show-YacsRunnerLog.ps1', 'logs')
@@ -57,7 +51,23 @@ foreach ($entry in @(@($sid, 'Modify'), @('S-1-5-18', 'FullControl'), @('S-1-5-3
         'ContainerInherit,ObjectInherit', 'None', 'Allow')
     $acl.AddAccessRule($rule)
 }
-Set-Acl -LiteralPath $InstallRoot -AclObject $acl
+# Persist only DACL changes. Set-Acl with a fresh descriptor can request SACL
+# privileges on an existing directory; no audit-policy change is intended here.
+$directory = [IO.DirectoryInfo]::new($InstallRoot)
+$currentAcl = [IO.FileSystemAclExtensions]::GetAccessControl($directory, [Security.AccessControl.AccessControlSections]::Access)
+$desiredSddl = $acl.GetSecurityDescriptorSddlForm([Security.AccessControl.AccessControlSections]::Access)
+$currentSddl = $currentAcl.GetSecurityDescriptorSddlForm([Security.AccessControl.AccessControlSections]::Access)
+if ($currentSddl -ne $desiredSddl) {
+    $currentAcl.SetSecurityDescriptorSddlForm($desiredSddl, [Security.AccessControl.AccessControlSections]::Access)
+    [IO.FileSystemAclExtensions]::SetAccessControl($directory, $currentAcl)
+}
+$existing = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+if ($existing) {
+    Stop-ScheduledTask -TaskName $taskName
+    for ($i = 0; $i -lt 20 -and (Get-ScheduledTask -TaskName $taskName).State -eq 'Running'; $i++) { Start-Sleep -Milliseconds 250 }
+    if ((Get-ScheduledTask -TaskName $taskName).State -eq 'Running') { throw 'Previous monitor did not stop; installation aborted.' }
+}
+
 foreach ($name in @('RunnerMonitor.psm1', 'Start-YacsRunnerMonitor.ps1', 'Show-YacsRunnerLog.ps1')) {
     $source = Join-Path $PSScriptRoot $name
     $target = Join-Path $InstallRoot $name
