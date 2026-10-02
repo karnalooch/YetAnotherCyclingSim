@@ -224,7 +224,14 @@ jobs:
             $actual = (Get-FileHash -LiteralPath $response -Algorithm SHA256).Hash.ToLowerInvariant()
             Write-Host "Pinned response SHA256: $actual ($response)"
             if ($actual -ne $pinnedResponses[$response]) { throw "Pinned response hash mismatch before editor startup: $response" }
+            git check-attr --all -- "$response"
+            git rev-parse "HEAD:$response" ":$response"
+            git hash-object --no-filters "$response"
+            git diff --raw -- "$response"
+            git diff --numstat -- "$response"
           }
+          git update-index --refresh
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned source checkout did not refresh to a clean Git index.' }
           $env:GIT_LFS_SKIP_SMUDGE = '0'
           try {
             git lfs install --local --skip-smudge
