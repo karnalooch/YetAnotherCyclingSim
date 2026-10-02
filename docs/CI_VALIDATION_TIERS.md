@@ -42,6 +42,19 @@ producer errors fail the job. It does not apply the candidate in Unreal. The
 four existing captures continue to show the raw native-contact trial, not the
 regularized candidate. The JSON is included in the existing artifact upload.
 
+#### Inspector-only owner handoff
+
+For the active Sa Calobra PR #319 lane, BOB now runs only as the profile
+inspector. The experimental builder remains retained as historical/future
+teaching material but is not prepared or executed by this proof.
+
+The region capture produces four views: two terrain views, road overview and
+final `road-contact-rider`. A successful capture writes its proof while Unreal
+Editor remains open for the owner's manual inspection. Final cleanup for that
+region handoff does not reset the inspection state. A later Unreal proof may
+close the previous session before its fresh exact-revision checkout.
+
+
 Retire this PR-specific bootstrap after a trusted region proof lane replaces it.
 
 YACS uses staged validation so world/art iteration stays fast without weakening the merge gate.
