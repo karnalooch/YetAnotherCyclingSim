@@ -2289,3 +2289,48 @@ Its four UE images still depict the unchanged native-contact trial. No
 regularized-candidate render or `Road_Earthworks` write is claimed. Review the
 flagged transects and source/structure evidence before a bounded native authoring
 trial; preserve `Base_DTM`, the hairpin island and the established contact proof.
+
+#### Three-window footprint review — revision 4
+
+After access resumed, the 2026-10-02 Street View review inspected July 2026
+panoramas `4Isp6L1Nh0cNZRdy5VN0yg` (39.8299339, 2.8142938),
+`N2iYXMWUwncrESOlsCmIuw` (39.8302633, 2.8139155), and
+`CC1kFdwcYsGsX58vGXxG5Q` (39.8309598, 2.8142707), near requested stations
+60.5, 180.5 and 290.5 m respectively. They show stone parapets beside drops,
+roadside gravel, and uphill rock/vegetation. Camera positions are nearby, not
+exact transects. These observations do not measure wall heights or boundaries.
+
+Revision 4 of `ma2141_pavement_preview_profile.json` reinterprets both pavement
+edges independently on the pinned PNOA image at 5 m spacing in 50–75, 175–200
+and 275–300 m windows. A station/lateral image strip uses the existing corridor
+transects and the pinned WMS extent; UE signed offsets convert to EPSG left
+normal as `[min,max]=[-UEmax,-UEmin]`. The previous footprint included roadside
+areas at the suspect sections. Corrections shift, narrow or widen the footprint
+according to visible asphalt; they are not fitted to a cut/fill threshold.
+There are now 33 observations. Canonical source XY, fitting method and review
+triggers remain unchanged. Shadows, imagery epoch and the 1 m unmeasured edge
+review allowance remain unresolved; this is still `INFERRED_PREVIEW_ONLY`.
+
+Local assessment of revision 4 reports:
+
+| Requested station | Previous proposed fill | Revised proposed fill |
+| --- | ---: | ---: |
+| 60.5 m | 3.239 m | 0.646 m |
+| 180.5 m | 3.132 m | 1.596 m |
+| 290.5 m | 3.633 m | 0.148 m |
+
+Across all 601 sections, maximum proposed cut is 0.923 m, fill 2.477 m,
+p95 absolute adjustment 0.265 m, RMS adjustment 0.153 m, maximum absolute
+crossfall 14.58% and grade 14.10%; 276 stations still trigger review.
+The largest fill is now at 150.5 m near the apex. These are model differences,
+not observed construction dimensions. The remaining apex and 180.5 m
+structure/footprint/DTM discrepancy prevents earthworks authorization. Do not
+turn a retaining edge into ordinary shoulder fill or tune widths until it passes.
+
+The revision changes only inferred preview edges and their review record.
+`Base_DTM`, `Road_Earthworks`, source alignment, physics authority and BOB
+verified memory remain unchanged. A new native contact/capture receipt is
+required for this footprint; earlier 27,552-sample receipts describe revision 3.
+Even a renewed contact PASS will not admit final asphalt, continuous support,
+collision, ride or performance. Next review: the apex and retaining-side residual
+at 180.5 m, including source epoch and native DTM representation.

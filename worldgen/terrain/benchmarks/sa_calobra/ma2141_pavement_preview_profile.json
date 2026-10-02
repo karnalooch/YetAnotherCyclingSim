@@ -23,7 +23,7 @@
   "license": "CC-BY-4.0",
   "attribution": "Obra derivada de PNOA, consulta 2026-10-02, CC BY 4.0 scne.es",
   "license_url": "https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf",
-  "method": "Approximate visible pavement edges manually interpreted on 25 m transects, with additional 5 m observations from 130 through 170 m around the apex of the pinned CartoCiudad 300 m clip. Tangent uses +/-2 m station window; signed offset follows EPSG left normal (-dy,dx). Linear interpolation between observations is inference, not a boundary survey. Shadows, curbs and imagery date are unresolved.",
+  "method": "Approximate visible pavement edges manually interpreted on 25 m transects, with additional 5 m observations from 130 through 170 m around the apex of the pinned CartoCiudad 300 m clip. Tangent uses +/-2 m station window; signed offset follows EPSG left normal (-dy,dx). Linear interpolation between observations is inference, not a boundary survey. Shadows, curbs and imagery date are unresolved. Revision 4 independently reinterprets pinned-photo pavement boundaries at 5 m spacing in 50-75, 175-200 and 275-300 m windows. The image is sampled along the same +/-2 m tangent transects; UE signed offsets are converted to EPSG left normal by [min,max]=[-UEmax,-UEmin]. Painted lines, roadside gravel, parapets and shadow boundaries are distinguished where visible; unresolved edge interpretation retains the 1 m review allowance.",
   "edge_uncertainty_m": 1.0,
   "uncertainty_is": "review allowance, not measured statistical accuracy",
   "geographic_width_admitted": false,
@@ -42,13 +42,33 @@
     },
     {
       "station_m": 50,
-      "min_offset_m": -3.5,
-      "max_offset_m": 1.5
+      "min_offset_m": -2.5,
+      "max_offset_m": 2.25
+    },
+    {
+      "station_m": 55,
+      "min_offset_m": -2.25,
+      "max_offset_m": 2.5
+    },
+    {
+      "station_m": 60,
+      "min_offset_m": -2.25,
+      "max_offset_m": 2.75
+    },
+    {
+      "station_m": 65,
+      "min_offset_m": -2.25,
+      "max_offset_m": 2.75
+    },
+    {
+      "station_m": 70,
+      "min_offset_m": -2,
+      "max_offset_m": 3
     },
     {
       "station_m": 75,
-      "min_offset_m": -3.5,
-      "max_offset_m": 1.5
+      "min_offset_m": -2.25,
+      "max_offset_m": 2.5
     },
     {
       "station_m": 100,
@@ -107,13 +127,33 @@
     },
     {
       "station_m": 175,
+      "min_offset_m": -2.75,
+      "max_offset_m": 3
+    },
+    {
+      "station_m": 180,
+      "min_offset_m": -2.75,
+      "max_offset_m": 2.5
+    },
+    {
+      "station_m": 185,
       "min_offset_m": -2.5,
       "max_offset_m": 3
     },
     {
-      "station_m": 200,
+      "station_m": 190,
       "min_offset_m": -2.5,
-      "max_offset_m": 4
+      "max_offset_m": 2.5
+    },
+    {
+      "station_m": 195,
+      "min_offset_m": -2.25,
+      "max_offset_m": 3.5
+    },
+    {
+      "station_m": 200,
+      "min_offset_m": -2.75,
+      "max_offset_m": 2.75
     },
     {
       "station_m": 225,
@@ -127,16 +167,36 @@
     },
     {
       "station_m": 275,
-      "min_offset_m": -0.5,
-      "max_offset_m": 4.25
+      "min_offset_m": -1.75,
+      "max_offset_m": 3
+    },
+    {
+      "station_m": 280,
+      "min_offset_m": -2.25,
+      "max_offset_m": 2.75
+    },
+    {
+      "station_m": 285,
+      "min_offset_m": -2.5,
+      "max_offset_m": 2.75
+    },
+    {
+      "station_m": 290,
+      "min_offset_m": -2.5,
+      "max_offset_m": 2.75
+    },
+    {
+      "station_m": 295,
+      "min_offset_m": -2.5,
+      "max_offset_m": 2.75
     },
     {
       "station_m": 300,
-      "min_offset_m": -1.5,
-      "max_offset_m": 4.5
+      "min_offset_m": -2.5,
+      "max_offset_m": 3
     }
   ],
-  "revision": 3,
+  "revision": 4,
   "review_history": [
     {
       "previous_commit": "5826507a84a0dd90998d2fbb7c92b0e6bf492f4a",
@@ -149,6 +209,32 @@
       "trigger": "Street View confirms separate hairpin island; coarse edge interpolation around apex requires closer photo review.",
       "review": "Added independent 5 m transect observations on the same pinned orthophoto at 130,135,140,145,155,160,165,170 m. Read visible asphalt boundary rather than assuming painted edge line or using contact failures to narrow the road.",
       "remaining_limits": "Manual approximate interpretation; imagery acquisition date and native GSD unresolved; no survey, earthworks or physics admission."
+    },
+    {
+      "previous_commit": "03644c742e84c482a7c970ee121561848e75b56c",
+      "trigger": "Bounded profile assessment flagged large differences at 60.5, 180.5 and 290.5 m.",
+      "review": "Read both edges independently from chainage/lateral strips of the pinned PNOA image before recomputing heights. Added 5 m observations in three windows; this shifts and sometimes widens the footprint, rather than optimizing it against cut/fill thresholds. July 2026 Street View confirms stone parapets beside drops and uphill rock/vegetation near the reviewed sections.",
+      "street_view_reference": [
+        {
+          "requested_station_m": 60.5,
+          "pano_id": "4Isp6L1Nh0cNZRdy5VN0yg",
+          "lat": 39.8299339,
+          "lon": 2.8142938
+        },
+        {
+          "requested_station_m": 180.5,
+          "pano_id": "N2iYXMWUwncrESOlsCmIuw",
+          "lat": 39.8302633,
+          "lon": 2.8139155
+        },
+        {
+          "requested_station_m": 290.5,
+          "pano_id": "CC1kFdwcYsGsX58vGXxG5Q",
+          "lat": 39.8309598,
+          "lon": 2.8142707
+        }
+      ],
+      "remaining_limits": "Street View selects nearby camera positions, not exact transects; it supplies no metric boundary or wall dimensions. PNOA acquisition date, native GSD, shadows and epoch registration remain unresolved. Other windows retain earlier interpretation. No survey, earthworks, physics or learning admission."
     }
   ]
 }
