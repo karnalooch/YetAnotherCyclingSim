@@ -10,6 +10,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.geometry.smooth_road_ribbon import build_smooth_road_ribbon
+from scripts.worldgen.bob_terrain_fit_inspector import inspect_terrain_fit
 
 
 def spawn_trial(world, root, exact_sha):
@@ -66,6 +67,71 @@ def spawn_trial(world, root, exact_sha):
         profile
     )
 
+    policy = json.loads(
+        (ROOT / "worldgen/terrain/adaptive_terrain_policy.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    structure_threshold_m = float(
+        policy["thresholds"]["retaining_cut_fill_m"]
+    )
+    fit_samples = []
+    smooth_top_count = int(smooth_meta["top_vertex_count"])
+    section_points = int(smooth_meta["cross_section_point_count"])
+    profile_rows = profile["stations"]
+    if smooth_top_count != len(profile_rows) * section_points:
+        raise RuntimeError("Smooth ribbon/profile sample count mismatch")
+
+    for sample_index, point in enumerate(smooth_vertices[:smooth_top_count]):
+        x_m, y_m, road_z_m = [float(value) for value in point]
+        x_cm, y_cm, road_z_cm = (
+            x_m * 100.0,
+            y_m * 100.0,
+            road_z_m * 100.0,
+        )
+        hit = unreal.SystemLibrary.line_trace_single(
+            world,
+            unreal.Vector(x_cm, y_cm, road_z_cm + 10000.0),
+            unreal.Vector(x_cm, y_cm, road_z_cm - 10000.0),
+            unreal.TraceTypeQuery.ECC_VISIBILITY,
+            True,
+            [],
+            unreal.DrawDebugTrace.NONE,
+            True,
+        )
+        values = () if hit is None else hit.to_tuple()
+        candidates = [
+            float(value.z) / 100.0
+            for value in values
+            if all(hasattr(value, key) for key in ("x", "y", "z"))
+            and abs(float(value.x) - x_cm) < 0.1
+            and abs(float(value.y) - y_cm) < 0.1
+            and abs(float(value.z) - road_z_cm) < 9999.0
+        ]
+        station_index = sample_index // section_points
+        lateral_index = sample_index % section_points
+        row = profile_rows[station_index]
+        fit_samples.append(
+            {
+                "station_m": float(row["station_m"]),
+                "lateral_m": float(row["lateral_m"][lateral_index]),
+                "local_xy_m": [x_m, y_m],
+                "road_surface_z_m": road_z_m,
+                "landscape_z_m": candidates[0] if candidates else None,
+            }
+        )
+
+    terrain_fit = inspect_terrain_fit(
+        fit_samples,
+        exact_sha=exact_sha,
+        contact_band_max_m=float(trial["pavement_thickness_m"]),
+        structure_review_threshold_m=structure_threshold_m,
+    )
+    (root / "ma2141-road-terrain-fit-proof.json").write_text(
+        json.dumps(terrain_fit, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
     report = {
         "schema_version": 1, "exact_sha": exact_sha,
         "region_id": "sa_calobra", "status": "INFERRED_CONTACT_TRIAL",
@@ -93,6 +159,25 @@ def spawn_trial(world, root, exact_sha):
         "visible_road_mesh_role": smooth_meta["role"],
         "contact_mesh_visible": False,
         "smooth_presentation": smooth_meta,
+        "terrain_fit": {
+            "status": terrain_fit["status"],
+            "inspection_complete": terrain_fit["inspection_complete"],
+            "sample_count": terrain_fit["sample_count"],
+            "trace_miss_count": terrain_fit["trace_miss_count"],
+            "class_counts": terrain_fit["class_counts"],
+            "max_cut_required_m": terrain_fit["max_cut_required_m"],
+            "max_fill_required_m": terrain_fit["max_fill_required_m"],
+            "max_required_adjustment_m": terrain_fit[
+                "max_required_adjustment_m"
+            ],
+            "geometry_inspection_view": terrain_fit[
+                "geometry_inspection_view"
+            ],
+            "earthworks_authoring_permitted": terrain_fit[
+                "earthworks_authoring_permitted"
+            ],
+        },
+        "terrain_fit_proof": "ma2141-road-terrain-fit-proof.json",
         "attribution": trial["attribution"],
     }
     sys.path.insert(0, str(Path(unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_dir()))))

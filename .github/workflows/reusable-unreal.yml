@@ -328,6 +328,32 @@ jobs:
             $proof.road_geometry_inspection_required -ne $true
           ) { throw 'Terrain capture proof failed.' }
 
+          $fitPath = Join-Path $root 'ma2141-road-terrain-fit-proof.json'
+          if (-not (Test-Path -LiteralPath $fitPath -PathType Leaf)) {
+            throw 'BOB road-to-terrain fit proof is missing.'
+          }
+          $fit = Get-Content $fitPath -Raw | ConvertFrom-Json
+          if (
+            $fit.status -ne 'REVIEW_REQUIRED' -or
+            $fit.inspection_complete -ne $true -or
+            $fit.role -ne 'INSPECTOR_ONLY' -or
+            $fit.sample_count -ne 15025 -or
+            $fit.evaluated_sample_count -ne 15025 -or
+            $fit.trace_miss_count -ne 0 -or
+            $fit.geometry_inspection_view -ne 'road-geometry-inspection' -or
+            $fit.earthworks_authoring_permitted -ne $false -or
+            $fit.geometry_repair_executed -ne $false
+          ) { throw 'BOB road-to-terrain fit inspection failed.' }
+          $classified = (
+            [int]$fit.class_counts.CONTACT_OK +
+            [int]$fit.class_counts.CUT_REQUIRED +
+            [int]$fit.class_counts.FILL_REQUIRED +
+            [int]$fit.class_counts.STRUCTURE_REVIEW
+          )
+          if ($classified -ne 15025) {
+            throw 'BOB terrain-fit classification does not cover every ribbon sample.'
+          }
+
           $inspection = @(
             $proof.captures | Where-Object { $_.name -eq 'road-geometry-inspection' }
           )

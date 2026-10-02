@@ -2538,6 +2538,28 @@ road spans and abrupt road/Landscape disagreement that can be difficult to read
 from the normal Lit rider view. A road-to-terrain review is incomplete when this
 capture is absent, even if the normal overview and rider image look acceptable.
 
+The implemented inspector is `bob-road-terrain-fit-v1`. It samples every
+smooth-ribbon top vertex against the **actual imported Landscape in Unreal**:
+601 stations x 25 transverse samples = 15,025 required traces. The road is not
+spawned until those traces finish, so the inspector cannot accidentally hit the
+preview mesh and certify its own support.
+
+Classification is deterministic:
+
+- `0 <= road_surface_z - Landscape_z <= 0.08 m` -> `CONTACT_OK`;
+- terrain above the road surface -> `CUT_REQUIRED`;
+- road surface more than 0.08 m above terrain -> `FILL_REQUIRED`;
+- required cut/fill reaching the existing
+  `adaptive_terrain_policy.thresholds.retaining_cut_fill_m` (currently 4 m)
+  -> `STRUCTURE_REVIEW`.
+
+The 4 m structure threshold is reused from BOB's existing policy rather than
+inventing another PR-specific constant. Separate branch-clearance/retaining
+context checks may also escalate a location later; this first residual inspector
+does not pretend those contextual checks are complete. It records contiguous
+cut/fill/structure station intervals, maximum required adjustments and the worst
+samples in `ma2141-road-terrain-fit-proof.json`.
+
 BOB owns this classification as **INSPECTOR_ONLY** in PR #319. It may report
 required cut/fill/structure review but must not author terrain, move canonical
 road XY, distort the visible ribbon to match DTM facets, or promote the preview

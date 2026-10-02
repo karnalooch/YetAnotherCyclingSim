@@ -49,6 +49,13 @@ def finish(error=""):
         unreal.unregister_slate_post_tick_callback(_handle)
         _handle = None
     keep_open = not error and os.environ.get("YACS_KEEP_EDITOR_OPEN") == "1"
+    terrain_fit = (
+        _road_objects[2].get("terrain_fit")
+        if _road_objects
+        and len(_road_objects) >= 3
+        and isinstance(_road_objects[2], dict)
+        else None
+    )
     result = {
         "schema_version": 1,
         "exact_sha": os.environ["YACS_TERRAIN_SHA"],
@@ -67,6 +74,17 @@ def finish(error=""):
         "builder_map_saved": False,
         "road_geometry_inspection_required": True,
         "road_geometry_inspection_view": "road-geometry-inspection",
+        "road_terrain_fit_status": (
+            terrain_fit.get("status") if terrain_fit else "NOT_MEASURED"
+        ),
+        "road_terrain_fit_inspection_complete": (
+            terrain_fit.get("inspection_complete", False)
+            if terrain_fit
+            else False
+        ),
+        "road_terrain_fit_proof": (
+            "ma2141-road-terrain-fit-proof.json" if terrain_fit else None
+        ),
         "editor_handoff_requested": keep_open,
         "editor_handoff_map": _manifest["map_package"] if keep_open else None,
         "editor_handoff_view": _views[-1]["name"] if keep_open and _views else None,

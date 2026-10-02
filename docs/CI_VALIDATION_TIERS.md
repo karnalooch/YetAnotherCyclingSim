@@ -69,6 +69,14 @@ overlays enabled, then restores normal Lit mode before the ordinary overview and
 rider view. The proof fails closed if that named inspection capture or its mode
 metadata is missing.
 
+The road-to-terrain receipt is now machine-enforced. Runtime proof must contain
+`ma2141-road-terrain-fit-proof.json` with all 15,025 smooth-ribbon top samples
+traced against the real Landscape, zero trace misses, `role=INSPECTOR_ONLY` and
+no terrain authoring. Findings such as `CUT_REQUIRED` or `FILL_REQUIRED` do
+**not** fail CI by themselves; they are the expected output of inspection. CI
+fails only when the inspection is incomplete, self-authoring, missing, or does
+not classify every required sample.
+
 Current convergence requires three independent receipts:
 
 1. **native contact** — no misses/floating/penetrating on the evidence mesh;
