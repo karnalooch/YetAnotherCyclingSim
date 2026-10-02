@@ -160,7 +160,16 @@ def search_point(
         "referCatastral": "",
         "orderBy": "",
     }
-    response = session.get(endpoint, params=params, timeout=TIMEOUT)
+    response = session.get(
+        endpoint,
+        params=params,
+        timeout=TIMEOUT,
+        headers={
+            "Referer": product_url,
+            "X-Requested-With": "XMLHttpRequest",
+            "Accept": "text/html, */*; q=0.01",
+        },
+    )
     response.raise_for_status()
     rows = parse_rows(response.text, extension_pattern)
     return rows, {
