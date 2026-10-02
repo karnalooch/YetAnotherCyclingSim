@@ -15,7 +15,12 @@ def spawn_trial(world, root, exact_sha):
         raise RuntimeError("Road preview identity/authority mismatch")
     vertices = trial["vertices_local_m"]
     triangles = trial["triangles"]
-    if len(vertices) != 30050 or len(triangles) != 60096:
+    topology = trial["native_mesh"]
+    top_count = topology["top_vertex_count"]
+    face_count = topology["top_triangle_count"]
+    if (not 1000 <= top_count <= 30000 or not 1000 <= face_count <= 60000
+            or len(vertices) != top_count*2 or not face_count*2 <= len(triangles) <= 150000
+            or topology["native_diagonal"] != "a_d" or topology["native_cell_size_m"] != 0.5):
         raise RuntimeError("Unexpected bounded pavement mesh topology")
     # Sample each transverse vertex before spawning the road, so the trace cannot
     # accidentally hit the road itself and declare a floating surface supported.
@@ -23,8 +28,11 @@ def spawn_trial(world, root, exact_sha):
     misses = []
     diagonal_errors = [[], []]
     worst = []
-    for i in range(15025):
-        x,y,z = [v*100 for v in vertices[i]]
+    samples = list(vertices[:top_count])
+    samples.extend([[sum(vertices[i][axis] for i in face)/3 for axis in range(3)]
+                    for face in triangles[:face_count]])
+    for i,point in enumerate(samples):
+        x,y,z = [v*100 for v in point]
         hit = unreal.SystemLibrary.line_trace_single(
             world, unreal.Vector(x,y,z+10000), unreal.Vector(x,y,z-10000),
             unreal.TraceTypeQuery.ECC_VISIBILITY, True, [], unreal.DrawDebugTrace.NONE, True)
@@ -38,14 +46,18 @@ def spawn_trial(world, root, exact_sha):
         else:
             deltas.append((z-candidates[0])/100)
             ground_m = candidates[0]/100
-            for j in range(2):
-                diagonal_errors[j].append(abs(trial["native_triangle_candidates_m"][i][j]-ground_m))
-            worst.append({"vertex_index": i, "station_m": (i//25)*0.5,
-                          "transverse_index": i%25, "surface_minus_landscape_m": deltas[-1]})
+            if i < top_count:
+                for j in range(2):
+                    diagonal_errors[j].append(abs(trial["native_triangle_candidates_m"][i][j]-ground_m))
+            worst.append({"sample_index": i, "sample_kind": "vertex" if i<top_count else "centroid",
+                          "local_xy_m": point[:2], "surface_minus_landscape_m": deltas[-1]})
     report = {
         "schema_version": 1, "exact_sha": exact_sha,
         "region_id": "sa_calobra", "status": "INFERRED_CONTACT_TRIAL",
         "trace_sample_count": len(deltas), "trace_miss_count": len(misses),
+        "requested_vertex_trace_count": top_count,
+        "requested_centroid_trace_count": face_count,
+        "native_mesh": topology,
         "missing_sample_indices": misses[:50],
         "triangle_diagonal_comparison": {
             name: {"max_abs_error_m": max(errors) if errors else None,

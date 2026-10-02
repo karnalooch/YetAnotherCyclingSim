@@ -2160,3 +2160,31 @@ both possible R16 quad diagonals against actual Landscape traces and records the
 worst vertex locations. This isolates bilinear sampling error from footprint
 error before changing road geometry. No diagonal is admitted until native proof
 identifies it; terrain layers, road admission and BOB verified memory are unchanged.
+
+
+#### Native-facet pavement contact repair candidate
+
+Run 36978626576, commit `b20463aa52f5f999f6eab9e95848ea4b8ec36295`,
+artifact 11214277220 measured all 15,025 native samples without misses.
+R16 quad diagonal A–D matched Landscape with maximum error 0.001347462 m
+(mean 0.000418253 m); B–C reached 0.533299793 m. The bilinear road still failed
+contact (176 floating, 154 penetrating vertices). This identifies a concrete
+interpolation mismatch in the pavement producer, independently of inferred widths.
+
+The bounded repair candidate retains the established corridor kernel's XY
+footprint and clips its interior against the measured native 0.5 m A–D facets.
+It reuses already-pinned Shapely 2.1 constrained triangulation in offline
+preparation and the existing UE Geometry Script consumer; no dependency, global
+terrain generator, runtime subsystem or alternative terrain skin is introduced.
+A fixed 80 mm nominal slab remains embedded by 40 mm. No adaptive lift, terrain
+smoothing, source XY relocation or edit-layer change occurs.
+
+Coverage checks reject invalid polygons and lost/duplicated area. Tests cover a
+nonplanar cell, both diagonal hypotheses, closed slab winding and a concave
+footprint with an empty hairpin island. Native capture now traces every top
+vertex and every triangle centroid before spawning pavement. Model contact PASS
+does not imply native contact PASS, continuous support, final asphalt quality,
+collision, ride or performance. Raw terrain roughness is intentionally retained;
+profile regularization and justified local earthworks remain later work.
+The repair is unverified in UE until its own immutable run completes. BOB verified
+memory remains unchanged; this is a candidate, not a learned successful solution.

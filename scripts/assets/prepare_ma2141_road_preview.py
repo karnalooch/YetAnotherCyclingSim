@@ -25,10 +25,43 @@ from scripts.geometry.sp638_local_corridor import (  # noqa: E402
 )
 
 from scripts.worldgen.adaptive_terrain_solver import review_pavement_contact_trial  # noqa: E402
+from scripts.geometry.native_heightfield_pavement import build_surface, solidify  # noqa: E402
 
 PROFILE = SOURCE.with_name("ma2141_pavement_preview_profile.json")
 PAVEMENT_THICKNESS_M = 0.08  # Nominal visual construction parameter, not survey.
 BURIAL_M = 0.04
+
+
+def conform_trial(seed, heights, manifest, diagonal):
+    # Keep the corridor kernel's footprint; only split its interior on native
+    # cell/diagonal boundaries. No terrain change or clearance fitting occurs.
+    top = seed[:15025]
+    outline = [v[:2] for v in top[::25]] + [v[:2] for v in reversed(top[24::25])]
+
+    def grid_height(x, y):
+        c,r = round(x/.5),round(y/.5)
+        if not (0 <= r < heights.shape[0] and 0 <= c < heights.shape[1]):
+            raise ValueError("Native footprint outside terrain")
+        return ((float(heights[r,c])-32768)*manifest["scale_z"]/128+manifest["location_z_cm"])/100
+
+    ground, faces, proof = build_surface(outline, grid_height, diagonal=diagonal)
+    vertices, triangles = solidify(ground, faces, thickness=PAVEMENT_THICKNESS_M, burial=BURIAL_M)
+    gaps=[]
+    for face in faces:
+        x,y,z=np.mean([vertices[i] for i in face],axis=0)
+        expected=triangle_candidates(heights,manifest,manifest["origin_epsg_m"][0]+x,
+                                     manifest["origin_epsg_m"][1]-y)[0 if diagonal=='a_d' else 1]
+        gaps.append(float(z-expected))
+    contact={
+        "sample_count":len(ground),"triangle_centroid_count":len(gaps),
+        "surface_minus_dtm_min_m":min(gaps),"surface_minus_dtm_max_m":max(gaps),
+        "floating_centroid_count":sum(g>PAVEMENT_THICKNESS_M for g in gaps),
+        "penetrating_centroid_count":sum(g<0 for g in gaps),
+        "native_unreal_contact_status":"PENDING",
+        "r16_contact_status":"PASS" if all(0<=g<=PAVEMENT_THICKNESS_M for g in gaps) else "FAIL",
+        "height_interpolation":"native triangle facets; fixed nominal slab embedding",
+    }
+    return vertices,triangles,contact,{**proof,"top_vertex_count":len(ground),"top_triangle_count":len(faces)}
 
 
 def read_profile(path=PROFILE):
@@ -141,6 +174,8 @@ def prepare(prepared, output, exact_sha):
     heights = np.fromfile(r16, dtype="<u2").reshape(4033,4033)
     vertices, triangles, contact = build_trial(
         samples, lambda x,y: sample_encoded(heights, manifest, x,y), manifest["origin_epsg_m"])
+    seed_contact = contact
+    vertices, triangles, contact, native_mesh = conform_trial(vertices, heights, manifest, 'a_d')
     result = {
         "schema_version": 1, "exact_sha": exact_sha, "region_id": "sa_calobra",
         "status": "INFERRED_CONTACT_TRIAL", "length_m": 300,
@@ -154,9 +189,13 @@ def prepare(prepared, output, exact_sha):
         "thickness_evidence_class": "Decorative presentation; nominal, not survey",
         "height_interpretation": "Raw native DTM contact trial; not regularized asphalt or physics profile",
         "vertices_local_m": vertices, "triangles": triangles,
+        "native_mesh": native_mesh,
+        "diagonal_evidence": {"exact_sha":"b20463aa52f5f999f6eab9e95848ea4b8ec36295",
+            "run_id":36978626576,"artifact_id":11214277220,"max_abs_error_m":0.001347462028661539},
+        "seed_bilinear_contact_diagnostic": seed_contact,
         "native_triangle_candidates_m": [triangle_candidates(
             heights, manifest, manifest["origin_epsg_m"][0]+v[0],
-            manifest["origin_epsg_m"][1]-v[1]) for v in vertices[:15025]],
+            manifest["origin_epsg_m"][1]-v[1]) for v in vertices[:native_mesh["top_vertex_count"]]],
         "contact_diagnostic": contact, "attribution": profile["attribution"],
         "bob_review": review_pavement_contact_trial(contact, geographic_width_admitted=False),
     }
