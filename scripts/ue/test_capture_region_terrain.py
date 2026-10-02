@@ -17,7 +17,7 @@ class CaptureTransitionTests(unittest.TestCase):
         self.assertNotIn("bob-lesson-before", script)
         self.assertNotIn("bob-lesson-after", script)
         self.assertIn(
-            '"bob_mode": "INSPECTOR_PLUS_TRANSIENT_ROAD_EARTHWORKS_CUT"',
+            '"bob_mode": "INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT"',
             script,
         )
         self.assertIn('"bob_road_earthworks_cut_proof"', script)
@@ -129,7 +129,7 @@ class CaptureTransitionTests(unittest.TestCase):
             proof = json.loads((root / "terrain-capture-proof.json").read_text())
             self.assertEqual(
                 proof["bob_mode"],
-                "INSPECTOR_PLUS_TRANSIENT_ROAD_EARTHWORKS_CUT",
+                "INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT",
             )
             self.assertEqual(proof["bob_inspection_status"], "REVIEW_REQUIRED")
             self.assertEqual(

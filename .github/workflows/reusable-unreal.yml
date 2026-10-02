@@ -330,8 +330,8 @@ jobs:
           if (
             $proof.technical_capture_status -ne 'PASS' -or
             $proof.exact_sha -ne '${{ inputs.target_sha }}' -or
-            $proof.captures.Count -ne 6 -or
-            $proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_ROAD_EARTHWORKS_CUT' -or
+            $proof.captures.Count -ne 7 -or
+            $proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT' -or
             $proof.road_geometry_inspection_required -ne $true
           ) { throw 'Terrain capture proof failed.' }
 
@@ -367,7 +367,7 @@ jobs:
           }
           $cut = Get-Content $cutPath -Raw | ConvertFrom-Json
           if (
-            $cut.status -ne 'TECHNICAL_CUT_PASS' -or
+            $cut.exact_sha -ne '${{ inputs.target_sha }}' -or
             $cut.operation -ne 'CUT_ONLY' -or
             $cut.selected_layer -ne 'Road_Earthworks' -or
             $cut.base_layer -ne 'Base_DTM' -or
@@ -377,7 +377,6 @@ jobs:
             $cut.map_saved -ne $false -or
             $cut.fill_authored -ne $false -or
             $cut.structures_authored -ne $false -or
-            [int]$cut.new_fill_required_sample_count -ne 0 -or
             [int]$cut.patch_modified_vertex_count -le 0 -or
             [double]$cut.patch_max_cut_m -gt 1.000001 -or
             [int]$cut.before.class_counts.CUT_REQUIRED -ne [int]$fit.class_counts.CUT_REQUIRED -or
@@ -388,6 +387,26 @@ jobs:
             $cut.road_admitted -ne $false -or
             $cut.eligible_for_learning -ne $false
           ) { throw 'BOB direct Road_Earthworks CUT proof failed.' }
+
+          # CUT-only remains a historical rejected recipe when it creates fill.
+          # The new visual recipe closes those sides with explicit support mesh.
+          $support = Get-Content (Join-Path $root 'bob-vertical-support-proof.json') -Raw | ConvertFrom-Json
+          if (
+            $support.exact_sha -ne '${{ inputs.target_sha }}' -or
+            $support.recipe_id -ne 'bob-vertical-support-v1' -or
+            $support.status -ne 'GEOMETRY_BUILT_VISUAL_REVIEW_PENDING' -or
+            $support.shoulder_m -ne 0.5 -or
+            $support.station_count -ne 601 -or
+            $support.ground_trace_count -ne 1202 -or
+            $support.wall_segment_count -le 0 -or
+            $support.base_dtm_modified -ne $false -or
+            $support.map_saved -ne $false -or
+            $support.road_admitted -ne $false
+          ) { throw 'BOB vertical support geometry proof failed.' }
+          $supportView = @($proof.captures | Where-Object { $_.name -eq 'road-geometry-inspection-support' })
+          if ($supportView.Count -ne 1 -or $supportView[0].actual_viewmode -ne 'VMI_CLAY') {
+            throw 'BOB vertical support neutral capture missing.'
+          }
 
           $beforeInspection = @(
             $proof.captures | Where-Object {
@@ -533,8 +552,9 @@ jobs:
             $proof.lighting_status -ne 'PASS' -or
             [double]$proof.directional_light_intensity -le 0.0 -or
             [double]$proof.skylight_intensity -le 0.0 -or
-            $proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_ROAD_EARTHWORKS_CUT' -or
+            $proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT' -or
             $proof.cut_patch_applied -ne $true -or
+            $proof.vertical_support_built -ne $true -or
             $proof.cut_patch_layer -ne 'Road_Earthworks' -or
             $proof.map_saved -ne $false
           ) { throw 'Owner handoff proof failed.' }

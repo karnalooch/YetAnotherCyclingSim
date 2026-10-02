@@ -185,7 +185,7 @@ jobs:
       compile_fingerprint: ${{ needs.changes.outputs.unreal_compile_fingerprint }}
       proof_fingerprint: ${{ needs.changes.outputs.unreal_proof_fingerprint }}
       # Approved migration checkpoint only, never fork or generic art commits.
-      region_terrain_import: ${{ github.event_name == 'pull_request' && github.event.pull_request.number == 319 && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'fix/sa-calobra-terrain-import' }}
+      region_terrain_import: ${{ github.event_name == 'pull_request' && github.event.pull_request.number == 325 && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'experiment/bob-cut-preserved' }}
 
   asset-validation:
     name: Lightweight asset validation

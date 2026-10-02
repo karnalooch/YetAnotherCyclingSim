@@ -11,10 +11,10 @@ from __future__ import annotations
 
 import json
 import os
-from pathlib import Path
 import sys
 import time
 import traceback
+from pathlib import Path
 
 import unreal
 
@@ -33,6 +33,7 @@ def _write_proof(
     error="",
     lighting=None,
     cut_patch_applied=False,
+    vertical_support_built=False,
 ):
     payload = {
         "schema_version": 1,
@@ -47,8 +48,9 @@ def _write_proof(
             lighting.get("directional_light_intensity") if lighting else None
         ),
         "skylight_intensity": lighting.get("skylight_intensity") if lighting else None,
-        "bob_mode": "INSPECTOR_PLUS_TRANSIENT_ROAD_EARTHWORKS_CUT",
+        "bob_mode": "INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT",
         "cut_patch_applied": cut_patch_applied,
+        "vertical_support_built": vertical_support_built,
         "cut_patch_layer": "Road_Earthworks" if cut_patch_applied else None,
         "map_saved": False,
     }
@@ -160,8 +162,8 @@ def _configure():
         unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_dir())
     )
     sys.path.insert(0, str(project / "scripts/ue"))
-    from ma2141_road_preview import spawn_trial
     from bob_road_earthworks_cut import apply_cut_patch
+    from ma2141_road_preview import spawn_trial
 
     road = spawn_trial(world, root, exact_sha)
     if len(road) < 4:
@@ -191,19 +193,27 @@ def _configure():
     editor = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem)
     editor.set_level_viewport_camera_info(camera_location, camera_rotation)
 
+    # Support is constructed on a later editor tick after Landscape evaluation.
+    def finish_support(_delta):
+        global _kept_objects
+        if time.monotonic() - support_started < 5.0:
+            return
+        unreal.unregister_slate_post_tick_callback(support_handle)
+        try:
+            from scripts.ue.bob_vertical_support_preview import spawn_support
+            support = spawn_support(world, root, exact_sha, road[3])
+            _kept_objects = (road, sun, sky, support)
+            _write_proof(root, exact_sha, "PASS", lighting=lighting,
+                         cut_patch_applied=True, vertical_support_built=True)
+            unreal.log("[OwnerHandoff] CUT + vertical support ready in Lit mode")
+        except Exception:  # noqa: BLE001 - report callback failure in proof
+            _write_proof(root, exact_sha, "FAIL", error=traceback.format_exc())
+            unreal.log_error(traceback.format_exc())
+
+    support_started = time.monotonic()
+    support_handle = unreal.register_slate_post_tick_callback(finish_support)
     _kept_objects = (road, sun, sky)
-    _write_proof(
-        root,
-        exact_sha,
-        "PASS",
-        lighting=lighting,
-        cut_patch_applied=True,
-    )
-    unreal.log(
-        "[OwnerHandoff] PASS; Sa Calobra + smooth road + transient "
-        "Road_Earthworks CUT left open at road-contact-rider in VMI_LIT "
-        "with diagnostic sun + skylight."
-    )
+
 
 
 def _tick(_delta):
@@ -213,7 +223,7 @@ def _tick(_delta):
     _done = True
     try:
         _configure()
-    except Exception:
+    except Exception:  # noqa: BLE001 - report callback failure in proof
         root = Path(os.environ["YACS_TERRAIN_CAPTURE_ROOT"])
         exact_sha = os.environ.get("YACS_TERRAIN_SHA", "")
         error = traceback.format_exc()

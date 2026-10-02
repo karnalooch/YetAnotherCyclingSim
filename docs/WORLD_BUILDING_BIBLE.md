@@ -2647,3 +2647,48 @@ relaxing the 8 cm contact band or claiming this rejected recipe as learned.
 
 The terrain-only 1080p60 proof remains mandatory for the inspector delivery.
 It does not substitute for future road/earthworks performance or visual proof.
+
+
+## Owner-approved default road support — 2026-10-02
+
+The owner explicitly selected one simple presentation rule for BOB across the
+whole route: retain smooth asphalt with its longitudinal grade and crossfall,
+cut terrain protruding above it, extend a nominal 0.5 m shoulder on each side,
+and drop the outer edge vertically to the ground wherever it is unsupported.
+Do not reproduce native DTM bumps in the asphalt. "Flat like a table" means
+smooth pavement, not a geographically level road. The nominal shoulder and
+vertical faces are owner-approved approximations, not surveyed wall dimensions.
+The reviewed Ma-2141 Street View panorama N2iYXMWUwncrESOlsCmIuw shows stone
+masonry and irregular ground around this road edge. It is reference only;
+Google imagery is not copied into shipped materials.
+
+Use the existing Geometry Script consumer for vertical faces; a heightfield
+cannot represent a vertical wall. No new inference engine, dependency or
+per-stone construction is required. Stone dressing follows neutral geometry
+review. The first implementation applies the rule to every station in the
+available 300 m profile. The rule is reusable for subsequent prepared profiles;
+it does not claim that the full ~29–30 km candidate route is already prepared.
+
+The transient recipe now combines the bounded Min Landscape CUT with
+`bob-vertical-support-v1`. Support tops meet the existing slab underside;
+shoulders are therefore 80 mm below asphalt. Outer wall feet are traced against
+actual Landscape after the CUT capture. The support uses no collision and does
+not rewrite route XY, road profile, Base_DTM, or the saved map. Uphill portions
+above the support top have no invented negative-height wall. At tight concave corners only the shoulder tapers locally to avoid a fold;
+asphalt is unchanged. The receipt records the actual minimum/maximum extent.
+Remaining folded extensions and missing ground traces fail closed.
+
+The CUT-only receipt and its zero-new-fill acceptance remain unchanged as a
+separate diagnostic; it may still say REJECT_CUT. The new combined visual proof
+requires zero remaining road penetration, all 1,202 outer-edge traces, geometry
+at all 601 stations, a dedicated neutral support image, overview and rider
+captures. It is not a continuous-support/collision/ride admission. The 1 m CUT
+cap remains in force. Guard vertices that exceed it now lower to the cap
+instead of remaining completely untouched. All inspected native facets are
+covered; any remaining interpolation excess is removed from available corners
+within that same cap. This must receive fresh native proof. Larger required cuts remain blocked rather than silently relaxing it.
+
+Unreal validation, human visual review and road/earthworks performance are
+pending for this implementation. A terrain-only performance PASS does not
+admit the combined road/support scene. Current scope remains Issue #324 /
+Draft PR #325; the rejected CUT-only evidence is retained in history.

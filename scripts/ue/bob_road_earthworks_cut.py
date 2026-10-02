@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import unreal
 
@@ -131,7 +131,7 @@ def apply_cut_patch(world, root, exact_sha, pre_fit):
     return patch
 
 
-def finalize_cut_proof(root, exact_sha, patch, pre_fit, post_fit):
+def finalize_cut_proof(root, exact_sha, patch, pre_fit, post_fit, *, reject_on_failure=True):
     before = pre_fit["class_counts"]
     after = post_fit["class_counts"]
     new_fill_required = max(
@@ -193,6 +193,6 @@ def finalize_cut_proof(root, exact_sha, patch, pre_fit, post_fit):
         json.dumps(report, indent=2) + "\n",
         encoding="utf-8",
     )
-    if not passed:
+    if not passed and reject_on_failure:
         raise RuntimeError("BOB CUT patch did not eliminate every CUT_REQUIRED sample")
     return report

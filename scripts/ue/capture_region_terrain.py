@@ -1,7 +1,7 @@
 """Capture accepted Sa Calobra terrain and the native-contact Ma-2141 road.
 
-PR #319 keeps BOB's inspector and executes one bounded transient cut-only builder.
-The builder never saves the map, fills terrain or modifies Base_DTM.
+BOB cuts terrain above asphalt and builds simple vertical visual support.
+The builder never saves the map or modifies Base_DTM.
 """
 
 from __future__ import annotations
@@ -9,10 +9,10 @@ from __future__ import annotations
 import array
 import json
 import os
-from pathlib import Path
 import sys
 import time
 import traceback
+from pathlib import Path
 
 import unreal
 
@@ -30,6 +30,7 @@ _world = None
 _bob_inspection_status = "NOT_LOADED"
 _cut_patch = None
 _cut_report = None
+_support_objects = None
 _mode_reasserted = False
 _scheduling = False
 
@@ -39,7 +40,7 @@ def height(x_cm, y_cm):
     data.frombytes((_root / "Prepared/terrain.r16").read_bytes())
     if sys.byteorder != "little":
         data.byteswap()
-    column, row = int(round(x_cm / 50)), int(round(y_cm / 50))
+    column, row = round(x_cm / 50), round(y_cm / 50)
     if not (0 <= row < 4033 and 0 <= column < 4033):
         raise RuntimeError("Diagnostic camera sample outside native terrain")
     encoded = data[row * 4033 + column]
@@ -71,12 +72,13 @@ def finish(error=""):
         "performance_status": "PENDING",
         "road_status": "INFERRED_CONTACT_TRIAL" if _road_objects else "NOT_SPAWNED",
         "final_road_status": "NOT_ADMITTED",
-        "bob_mode": "INSPECTOR_PLUS_TRANSIENT_ROAD_EARTHWORKS_CUT",
+        "bob_mode": "INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT",
         "bob_inspection_status": _bob_inspection_status,
         "builder_lesson_status": (
             _cut_report.get("status") if _cut_report else "NOT_EXECUTED"
         ),
         "builder_map_saved": False,
+        "vertical_support_proof": ("bob-vertical-support-proof.json" if _support_objects else None),
         "bob_road_earthworks_cut_proof": (
             "bob-road-earthworks-cut-proof.json" if _cut_report else None
         ),
@@ -246,7 +248,7 @@ def schedule():
 
 
 def tick(_delta):
-    global _index, _mode_reasserted
+    global _index, _mode_reasserted, _scheduling
     if _scheduling or _task is None:
         return
     try:
@@ -265,7 +267,7 @@ def tick(_delta):
         if elapsed > 120:
             finish("Screenshot task/file readiness timeout: " + _views[_index]["name"])
         elif _task.is_task_done():
-            global _cut_report
+            global _cut_report, _support_objects
             path = _root / (view["name"] + ".png")
             if not path.is_file() or path.stat().st_size < 100000:
                 # A completed automation task can precede the PNG write. Keep
@@ -295,27 +297,36 @@ def tick(_delta):
                     measure_smooth_terrain_fit,
                 )
 
-                context = _road_objects[3]
-                post_fit = measure_smooth_terrain_fit(
-                    _world,
-                    context["profile"],
-                    context["smooth_vertices"],
-                    context["smooth_meta"],
-                    exact_sha=os.environ["YACS_TERRAIN_SHA"],
-                    contact_band_max_m=context["pavement_thickness_m"],
-                    geometry_inspection_view="road-geometry-inspection-after",
-                )
-                (_root / "ma2141-road-terrain-fit-after-cut-proof.json").write_text(
-                    json.dumps(post_fit, indent=2) + "\n",
-                    encoding="utf-8",
-                )
-                _cut_report = finalize_cut_proof(
-                    _root,
-                    os.environ["YACS_TERRAIN_SHA"],
-                    _cut_patch,
-                    context["pre_fit"],
-                    post_fit,
-                )
+                _scheduling = True
+                try:
+                    context = _road_objects[3]
+                    post_fit = measure_smooth_terrain_fit(
+                        _world,
+                        context["profile"],
+                        context["smooth_vertices"],
+                        context["smooth_meta"],
+                        exact_sha=os.environ["YACS_TERRAIN_SHA"],
+                        contact_band_max_m=context["pavement_thickness_m"],
+                        geometry_inspection_view="road-geometry-inspection-after",
+                    )
+                    (_root / "ma2141-road-terrain-fit-after-cut-proof.json").write_text(
+                        json.dumps(post_fit, indent=2) + "\n",
+                        encoding="utf-8",
+                    )
+                    _cut_report = finalize_cut_proof(
+                        _root,
+                        os.environ["YACS_TERRAIN_SHA"],
+                        _cut_patch,
+                        context["pre_fit"],
+                        post_fit,
+                        reject_on_failure=False,
+                    )
+                    from scripts.ue.bob_vertical_support_preview import spawn_support
+                    _support_objects = spawn_support(
+                        _world, _root, os.environ["YACS_TERRAIN_SHA"], context
+                    )
+                finally:
+                    _scheduling = False
             _proofs.append(
                 {
                     **view,
@@ -347,7 +358,7 @@ def tick(_delta):
                 finish()
             else:
                 schedule()
-    except Exception:
+    except Exception:  # noqa: BLE001 - report callback failure in proof
         finish(traceback.format_exc())
 
 
@@ -468,6 +479,20 @@ def main():
             "force_game_view": False,
             "earthworks_state": "AFTER_CUT",
             "verify_cut_after": True,
+        },
+        {
+            "name": "road-geometry-inspection-support",
+            "location": [focus[0]-9000,focus[1]+9000,focus[2]+13000],
+            "target": focus,
+            "viewmode": "geometry-inspection-clay-wireframe",
+            "geometry_inspection": True,
+            "inspection_mode": "VMI_CLAY",
+            "mesh_edges": True,
+            "road_selected": True,
+            "explicit_road_wireframe": True,
+            "wireframe_color_rgba": [0.0, 1.0, 1.0, 1.0],
+            "force_game_view": False,
+            "earthworks_state": "CUT_AND_VERTICAL_SUPPORT",
         },
         {
             "name": "road-contact-overview",

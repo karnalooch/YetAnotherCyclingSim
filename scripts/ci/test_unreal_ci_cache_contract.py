@@ -116,7 +116,7 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         capture = self.workflow.split(
             "- name: Capture isolated native Sa Calobra terrain", 1
         )[1].split("- name: Retire owner-approved obsolete Italy payloads", 1)[0]
-        self.assertIn("$proof.captures.Count -ne 6", capture)
+        self.assertIn("$proof.captures.Count -ne 7", capture)
         self.assertIn("road-geometry-inspection-before", capture)
         self.assertIn("road-geometry-inspection-after", capture)
         self.assertIn("geometry-inspection-clay-wireframe", capture)
@@ -125,15 +125,15 @@ class UnrealCiCacheContractTests(unittest.TestCase):
             capture,
         )
         self.assertIn(
-            "$proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_ROAD_EARTHWORKS_CUT'",
+            "$proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT'",
             capture,
         )
         self.assertIn("bob-road-earthworks-cut-proof.json", capture)
         self.assertIn("BOB direct Road_Earthworks CUT proof failed.", capture)
-        self.assertIn("$cut.status -ne 'TECHNICAL_CUT_PASS'", capture)
+        self.assertIn("bob-vertical-support-proof.json", capture)
         self.assertIn("$cut.geometry_repair_executed -ne $true", capture)
         self.assertIn("$cut.transient_road_earthworks_modified -ne $true", capture)
-        self.assertIn("[int]$cut.new_fill_required_sample_count -ne 0", capture)
+        self.assertIn("$support.wall_segment_count -le 0", capture)
         self.assertIn("[int]$cut.after.class_counts.CUT_REQUIRED -ne 0", capture)
         self.assertIn("$inspection.actual_viewmode -ne 'VMI_CLAY'", capture)
         self.assertIn("Final road rider capture did not return to Lit mode.", capture)
@@ -157,7 +157,7 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         self.assertIn("[double]$proof.directional_light_intensity -le 0.0", handoff)
         self.assertIn("[double]$proof.skylight_intensity -le 0.0", handoff)
         self.assertIn(
-            "$proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_ROAD_EARTHWORKS_CUT'",
+            "$proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT'",
             handoff,
         )
         self.assertIn("$proof.cut_patch_applied -ne $true", handoff)
@@ -174,7 +174,7 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         self.assertIn("unreal.DirectionalLight", startup)
         self.assertIn("unreal.SkyLight", startup)
         self.assertIn('"lighting_status"', startup)
-        self.assertIn('"INSPECTOR_PLUS_TRANSIENT_ROAD_EARTHWORKS_CUT"', startup)
+        self.assertIn('"INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT"', startup)
         self.assertIn('"cut_patch_applied"', startup)
         self.assertIn("apply_cut_patch", startup)
 

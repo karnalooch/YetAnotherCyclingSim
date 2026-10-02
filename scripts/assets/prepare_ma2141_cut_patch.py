@@ -11,16 +11,15 @@ import argparse
 import hashlib
 import json
 import math
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from scripts.worldgen.bob_terrain_fit_inspector import inspect_terrain_fit  # noqa: E402
-
+from scripts.worldgen.bob_terrain_fit_inspector import inspect_terrain_fit
 
 GRID_STEP_M = 0.5
 SECTION_POINTS = 25
@@ -206,6 +205,21 @@ def prepare(prepared, profile_path, output_manifest, output_r16, exact_sha):
                         target_m if previous is None else min(previous, target_m)
                     )
 
+    # Cover all four native cell corners under every inspected road sample.
+    # Rasterizing only grid vertices inside the road can miss thin edge wedges.
+    # These extra boundary requests obey the existing guard depth cap.
+    for row in profile["stations"]:
+        for (x_m, y_m), target_m in zip(
+            row["xy_local_m"], row["candidate_ground_m"], strict=True
+        ):
+            cell_x, cell_y = math.floor(x_m / GRID_STEP_M), math.floor(y_m / GRID_STEP_M)
+            for gy in (cell_y, cell_y + 1):
+                for gx in (cell_x, cell_x + 1):
+                    if not (0 <= gx <= 4032 and 0 <= gy <= 4032):
+                        raise ValueError("Road sample cell lies outside native terrain")
+                    previous = requested.get((gx, gy))
+                    requested[(gx, gy)] = target_m if previous is None else min(previous, target_m)
+
     min_x = min(key[0] for key in requested)
     max_x = max(key[0] for key in requested)
     min_y = min(key[1] for key in requested)
@@ -223,7 +237,7 @@ def prepare(prepared, profile_path, output_manifest, output_r16, exact_sha):
             )
 
     modified = 0
-    skipped_guard_over_cap = 0
+    clamped_guard_at_cap = 0
     cut_values = []
     road_keys = set(road_targets)
     for (grid_x, grid_y), target_m in requested.items():
@@ -232,14 +246,59 @@ def prepare(prepared, profile_path, output_manifest, output_r16, exact_sha):
         if delta_m < -MAX_CUT_M - 1e-6:
             if (grid_x, grid_y) in road_keys:
                 raise ValueError("Road CUT target exceeded the 1.0 m safety cap")
-            skipped_guard_over_cap += 1
-            continue
+            clamped_guard_at_cap += 1
+            delta_m = -MAX_CUT_M
         if delta_m < -1e-6:
             modified += 1
             cut_values.append(-delta_m)
             patch[grid_y - min_y, grid_x - min_x] = (
                 base_m + delta_m
             ) * 100.0
+
+    # A capped steep outside corner can still lift the interpolated facet into
+    # asphalt. Lower the other corners of that same facet, sharing only the
+    # measured excess, while retaining the per-vertex 1 m cap. Lowering is
+    # monotonic, so previously cleared samples cannot become penetrations.
+    for row in profile["stations"]:
+        for (x_m, y_m), target_m in zip(row["xy_local_m"], row["candidate_ground_m"], strict=True):
+            gx, gy = x_m / GRID_STEP_M, y_m / GRID_STEP_M
+            ix, iy = math.floor(gx), math.floor(gy)
+            fx, fy = gx - ix, gy - iy
+            corners = (
+                ((ix, iy, 1-fx), (ix+1, iy, fx-fy), (ix+1, iy+1, fy))
+                if fx >= fy else
+                ((ix, iy, 1-fy), (ix, iy+1, fy-fx), (ix+1, iy+1, fx))
+            )
+            for _ in range(4):
+                current = sum(float(patch[y-min_y, x-min_x])/100*w for x,y,w in corners)
+                excess = current - (target_m - CUT_CLEARANCE_M)
+                if excess <= 1e-4:
+                    break
+                available = [(x,y,w) for x,y,w in corners if w > 1e-9 and
+                             float(patch[y-min_y, x-min_x])/100 >
+                             _decode_height_m(terrain[y,x], terrain_manifest)-MAX_CUT_M+1e-4]
+                total_weight = sum(w for _,_,w in available)
+                if total_weight <= 1e-9:
+                    raise ValueError("Cannot clear road facet within the 1.0 m CUT cap")
+                for x,y,w in available:
+                    floor = _decode_height_m(terrain[y,x], terrain_manifest)-MAX_CUT_M
+                    patch[y-min_y, x-min_x] = max(floor, float(patch[y-min_y, x-min_x])/100-excess/total_weight-1e-4)*100
+            else:
+                raise ValueError("Road facet clearance did not converge within its three corners")
+
+    # Recompute metrics after facet correction, rather than reporting only the
+    # initial raster/guard pass.
+    cut_values = []
+    for py in range(height):
+        for px in range(width):
+            base_m = _decode_height_m(terrain[min_y+py,min_x+px], terrain_manifest)
+            floor_cm = (base_m - MAX_CUT_M)*100
+            if float(patch[py,px]) < floor_cm:
+                patch[py,px] = np.nextafter(np.float32(floor_cm), np.float32(np.inf))
+            depth = base_m - float(patch[py,px])/100
+            if depth > 1e-4:
+                cut_values.append(depth)
+    modified = len(cut_values)
 
     if modified == 0:
         raise ValueError("CUT-only patch contains no terrain changes")
@@ -270,7 +329,7 @@ def prepare(prepared, profile_path, output_manifest, output_r16, exact_sha):
         "guard_cells": GUARD_CELLS,
         "max_cut_limit_m": MAX_CUT_M,
         "modified_vertex_count": modified,
-        "skipped_guard_over_cap_count": skipped_guard_over_cap,
+        "clamped_guard_at_cap_count": clamped_guard_at_cap,
         "max_cut_m": max(cut_values),
         "mean_cut_m": float(np.mean(cut_values)),
         "rect": {
