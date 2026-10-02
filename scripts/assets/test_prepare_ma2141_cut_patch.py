@@ -2,9 +2,8 @@ import unittest
 
 from scripts.assets.prepare_ma2141_cut_patch import (
     GRID_STEP_M,
-    NEUTRAL_HEIGHT,
-    _encode_delta_m,
     _inside_triangle,
+    _world_height_cm,
 )
 
 
@@ -14,10 +13,10 @@ class Ma2141CutPatchTests(unittest.TestCase):
         self.assertAlmostEqual(_inside_triangle(0.25, 0.25, tri), 10.75)
         self.assertIsNone(_inside_triangle(0.75, 0.75, tri))
 
-    def test_cut_delta_encoding_is_neutral_at_zero_and_below_neutral_for_cut(self):
-        manifest = {"scale_z": 100.0}
-        self.assertEqual(_encode_delta_m(0.0, manifest), NEUTRAL_HEIGHT)
-        self.assertLess(_encode_delta_m(-0.5, manifest), NEUTRAL_HEIGHT)
+    def test_world_height_patch_uses_centimeters(self):
+        manifest = {"scale_z": 128.0, "location_z_cm": 10000.0}
+        self.assertAlmostEqual(_world_height_cm(32768, manifest), 10000.0)
+        self.assertAlmostEqual(_world_height_cm(32769, manifest), 10100.0)
 
     def test_native_grid_contract_remains_half_meter(self):
         self.assertEqual(GRID_STEP_M, 0.5)
