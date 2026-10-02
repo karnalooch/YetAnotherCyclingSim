@@ -1087,9 +1087,15 @@ construction and learning are later work. The existing profile assessment calls
 This is a read-only extension of the admitted offline assessment and BOB policy,
 not another geometry solver, dependency, terrain writer or PCGEx replacement.
 
-The inspector validates input hashes, source-XY preservation, finite full-width
-samples and complete regular chainage spacing. It recomputes cut/fill sample
-differences, transverse endpoint slope and longitudinal center grade instead of
+The inspector validates declared hash syntax and the source-XY preservation
+flag, not their independent truth. Source identity/XY verification remains an
+explicit unverified check of this inspector; producer admission is separate.
+It requires finite full-width samples and the complete 0–300 m domain at 0.5 m
+spacing (601 sections), including both endpoints. It checks every transverse sample against the candidate-plane contract and
+checks the declared center against the plane-derived center (1 micrometre
+consistency tolerance, not source accuracy). A nonplanar section is unsupported
+evidence and cannot claim inspection completion. It recomputes cut/fill sample
+differences, transverse slope and plane-derived longitudinal grade instead of
 trusting summary metrics or a supplied list of flagged stations. Consecutive
 exceedances become findings with start/end chainage, peak location, peak value,
 units, sample count and the actual experimental review trigger. Disjoint ranges
@@ -2398,3 +2404,27 @@ logs for import/capture, and restricts artifact upload to the current run/attemp
 Old JSON/PNG evidence is not preserved or reused as current proof. Process
 scoping, exact SHA, source/asset retention and authoring gates remain in force.
 See [CI validation tiers](CI_VALIDATION_TIERS.md) for the diagnostic exceptions.
+
+
+#### BOB inspector verification and policy correction
+
+The first inspector audit reproduced four false-completion cases: truncated
+endpoint coverage, a transverse interior bump with flat endpoints, a declared
+center inconsistent with the sampled surface, and candidate-controlled raised
+review triggers. All could yield REVIEW_PENDING with inspection_complete=true,
+although authoring/road/learning permission remained false.
+
+Inspector schema 2 (`ma2141-profile-inspection-v2`) closes these gaps. It owns
+the versioned 0.5 m / 300 m sampling contract and 0.5 m difference, 25% grade,
+12% crossfall review triggers, shared with the profile producer. Conflicting
+parameters, missing domain endpoints, nonplanar cross sections or inconsistent
+centers yield INSPECTION_INCOMPLETE. All 25 points must agree with the candidate
+plane within 1e-6 m; grade uses its independently derived intercept. This tests
+internal consistency, not survey accuracy, road crown or physical acceptance.
+Malformed top-level input and numeric overflow also fail closed. Hash syntax
+checks are explicitly labelled DECLARED_HASH_FORMAT_ONLY, not file verification.
+
+Regression tests reproduce all four cases. Reinspection of the immutable
+`ee9704e` native artifact preserves its 22 finding kinds and chainage ranges.
+The fixes strengthen evidence validation; they do not correct road geometry,
+verify curve smoothness, authorize earthworks or add a learned case.

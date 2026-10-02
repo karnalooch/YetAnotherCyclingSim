@@ -23,14 +23,15 @@ from scripts.assets.prepare_ma2141_road_preview import (  # noqa: E402
     triangle_candidates,
 )
 
-from scripts.worldgen.bob_profile_inspector import inspect_road_profile  # noqa: E402
+from scripts.worldgen.bob_profile_inspector import (  # noqa: E402
+    REVIEW_CROSSFALL,
+    REVIEW_DELTA_M,
+    REVIEW_GRADE,
+    STATION_STEP_M,
+    inspect_road_profile,
+)
 
-STATION_STEP_M = 0.5
 FIT_RADIUS_M = 5.0
-# Review triggers for this experiment, NOT engineering acceptance thresholds.
-REVIEW_DELTA_M = 0.5
-REVIEW_GRADE = 0.25
-REVIEW_CROSSFALL = 0.12
 
 
 def local_linear_fit(stations, values, radius_m):

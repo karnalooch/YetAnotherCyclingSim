@@ -14,6 +14,16 @@ from typing import Any, Mapping
 from scripts.worldgen.adaptive_terrain_solver import BOB_NAME
 
 
+# Versioned inspection contract for the admitted 300 m Ma-2141 experiment.
+# The producer shares these values; a candidate cannot choose its own thresholds.
+STATION_STEP_M = 0.5
+PROFILE_LENGTH_M = 300.0
+REVIEW_DELTA_M = 0.5
+REVIEW_GRADE = 0.25
+REVIEW_CROSSFALL = 0.12
+PLANE_TOLERANCE_M = 1e-6
+
+
 def _number(value):
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ValueError("Expected a finite numeric sample")
@@ -25,15 +35,20 @@ def _number(value):
 def inspect_road_profile(candidate: Mapping[str, Any]) -> dict[str, Any]:
     """Group measured symptoms by contiguous chainage; never issue a road PASS."""
     report = {
-        "schema_version": 1,
+        "schema_version": 2,
+        "inspection_policy_id": "ma2141-profile-inspection-v2",
         "inspector_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "architect": BOB_NAME,
         "role": "INSPECTOR_ONLY",
         "status": "INSPECTION_INCOMPLETE",
         "inspection_complete": False,
-        "exact_sha": candidate.get("exact_sha"),
+        "exact_sha": candidate.get("exact_sha")
+        if isinstance(candidate, Mapping)
+        else None,
+        "provenance_check": "DECLARED_HASH_FORMAT_ONLY",
         "findings": [],
         "unverified_checks": [
+            "source_identity_and_xy_preservation",
             "geographic_pavement_edges",
             "curve_and_edge_smoothness",
             "retaining_structures",
@@ -57,6 +72,8 @@ def inspect_road_profile(candidate: Mapping[str, Any]) -> dict[str, Any]:
         ],
     }
     try:
+        if not isinstance(candidate, Mapping):
+            raise ValueError("Expected a candidate mapping")
         hashes = {}
         for key, size in (
             ("exact_sha", 40),
@@ -77,23 +94,30 @@ def inspect_road_profile(candidate: Mapping[str, Any]) -> dict[str, Any]:
         if candidate.get("source_xy_preserved") is not True:
             raise ValueError("Source XY preservation is not established")
         parameters = candidate["parameters"]
-        step = _number(parameters["station_step_m"])
-        thresholds = {
-            "CUT_DIFFERENCE": _number(parameters["review_delta_m"]),
-            "FILL_DIFFERENCE": _number(parameters["review_delta_m"]),
-            "CROSSFALL": _number(parameters["review_crossfall"]),
-            "GRADE": _number(parameters["review_grade"]),
+        expected = {
+            "station_step_m": STATION_STEP_M,
+            "review_delta_m": REVIEW_DELTA_M,
+            "review_grade": REVIEW_GRADE,
+            "review_crossfall": REVIEW_CROSSFALL,
         }
-        if min(step, *thresholds.values()) <= 0:
-            raise ValueError("Non-positive spacing or review trigger")
+        for key, value in expected.items():
+            if _number(parameters[key]) != value:
+                raise ValueError(f"Candidate conflicts with inspector policy: {key}")
+        step = STATION_STEP_M
+        thresholds = {
+            "CUT_DIFFERENCE": REVIEW_DELTA_M,
+            "FILL_DIFFERENCE": REVIEW_DELTA_M,
+            "CROSSFALL": REVIEW_CROSSFALL,
+            "GRADE": REVIEW_GRADE,
+        }
         rows = candidate["stations"]
-        if len(rows) < 3:
-            raise ValueError("Insufficient station coverage")
+        if len(rows) != int(PROFILE_LENGTH_M / step) + 1:
+            raise ValueError("Expected full 0-300 m coverage at 0.5 m spacing")
         stations, centers = [], []
         values = {key: [] for key in thresholds}
         for row in rows:
             stations.append(_number(row["station_m"]))
-            centers.append(_number(row["candidate_center_m"]))
+            declared_center = _number(row["candidate_center_m"])
             lateral = [_number(x) for x in row["lateral_m"]]
             ground = [_number(x) for x in row["native_ground_m"]]
             target = [_number(x) for x in row["candidate_ground_m"]]
@@ -104,10 +128,22 @@ def inspect_road_profile(candidate: Mapping[str, Any]) -> dict[str, Any]:
             delta = [_number(a - b) for a, b in zip(target, ground)]
             values["CUT_DIFFERENCE"].append(max(0.0, -min(delta)))
             values["FILL_DIFFERENCE"].append(max(0.0, max(delta)))
-            # Recompute crossfall from the candidate plane, not summary metrics.
-            values["CROSSFALL"].append(
-                abs((target[-1] - target[0]) / (lateral[-1] - lateral[0]))
-            )
+            span = _number(lateral[-1] - lateral[0])
+            slope = _number(_number(target[-1] - target[0]) / span)
+            center = _number(target[0] - slope * lateral[0])
+            if any(
+                abs(_number(z - _number(center + slope * offset))) > PLANE_TOLERANCE_M
+                for offset, z in zip(lateral, target)
+            ):
+                raise ValueError(
+                    "Candidate transverse section is not a consistent plane"
+                )
+            if abs(_number(declared_center - center)) > PLANE_TOLERANCE_M:
+                raise ValueError("Declared center conflicts with transverse samples")
+            centers.append(center)
+            values["CROSSFALL"].append(abs(slope))
+        if stations[0] != 0.0 or stations[-1] != PROFILE_LENGTH_M:
+            raise ValueError("Expected full 0-300 m chainage domain")
         if any(
             not math.isclose(b - a, step, abs_tol=1e-7, rel_tol=0)
             for a, b in zip(stations, stations[1:])

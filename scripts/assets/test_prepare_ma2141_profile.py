@@ -98,7 +98,7 @@ class BobProfileInspectorTests(unittest.TestCase):
                     "native_ground_m": [600.0] * 25,
                     "candidate_ground_m": [600.0] * 25,
                 }
-                for i in range(7)
+                for i in range(601)
             ],
         }
 
@@ -147,8 +147,59 @@ class BobProfileInspectorTests(unittest.TestCase):
             {f["kind"] for f in findings}, {"CUT_DIFFERENCE", "CROSSFALL", "GRADE"}
         )
         grade = next(f for f in findings if f["kind"] == "GRADE")
-        self.assertEqual(grade["end_station_m"], 3.0)
-        self.assertEqual(grade["sample_count"], 6)
+        self.assertEqual(grade["end_station_m"], 300.0)
+        self.assertEqual(grade["sample_count"], 600)
+
+    def test_truncated_or_shifted_domain_cannot_claim_complete_coverage(self):
+        for mode in ("start", "end", "shifted"):
+            packet = self.packet()
+            if mode == "start":
+                packet["stations"] = packet["stations"][1:]
+            elif mode == "end":
+                packet["stations"] = packet["stations"][:-1]
+            else:
+                for row in packet["stations"]:
+                    row["station_m"] += 10
+            self.assertEqual(
+                inspect_road_profile(packet)["status"], "INSPECTION_INCOMPLETE"
+            )
+
+    def test_interior_bump_and_false_center_cannot_hide_behind_flat_endpoints(self):
+        for mode in ("bump", "false_center"):
+            packet = self.packet()
+            if mode == "bump":
+                packet["stations"][2]["candidate_ground_m"][12] += 5
+                packet["stations"][2]["native_ground_m"][12] += 5
+            else:
+                for i, row in enumerate(packet["stations"]):
+                    row["candidate_ground_m"] = [600 + i] * 25
+                    row["native_ground_m"] = [600 + i] * 25
+            result = inspect_road_profile(packet)
+            self.assertEqual(result["status"], "INSPECTION_INCOMPLETE")
+            self.assertFalse(result["inspection_complete"])
+
+    def test_candidate_cannot_raise_review_triggers(self):
+        for key in (
+            "review_delta_m",
+            "review_crossfall",
+            "review_grade",
+            "station_step_m",
+        ):
+            packet = self.packet()
+            packet["stations"][2]["native_ground_m"][0] -= 5
+            packet["parameters"][key] = 100
+            self.assertEqual(
+                inspect_road_profile(packet)["status"], "INSPECTION_INCOMPLETE"
+            )
+
+    def test_non_mapping_and_overflow_fail_closed(self):
+        packet = self.packet()
+        packet["stations"][1]["candidate_ground_m"][0] = 1e308
+        packet["stations"][1]["native_ground_m"][0] = -1e308
+        for value in (None, [], packet):
+            self.assertEqual(
+                inspect_road_profile(value)["status"], "INSPECTION_INCOMPLETE"
+            )
 
     def test_missing_nonfinite_boolean_and_gapped_evidence_fail_closed(self):
         packets = []
