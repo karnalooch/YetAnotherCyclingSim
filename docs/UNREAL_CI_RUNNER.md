@@ -153,3 +153,91 @@ Standalone proof wrappers remain self-contained when no prepared-workspace stamp
 The reusable job checks out with clean: true and runs git reset --hard plus
 git clean -ffdx after artifact upload. No source-tree state from a previous job
 is trusted. Build/test logs are retained for seven days.
+
+## Desktop notifications and local diagnostics
+
+Issue #329 adds an optional, read-only desktop companion in `scripts/runner/`.
+This is a local candidate until Windows host acceptance is recorded. The current
+runner execution mode must be inspected on the host; historical notes do not
+prove that a native service is installed or active.
+
+The companion runs as a limited interactive logon task, independently of the
+runner. It uses Windows Forms NotifyIcon (included in Windows PowerShell/.NET;
+no gallery module or additional backend). It reads `_diag/Runner_*.log` final
+job markers, not individual step results. Its parser was checked against
+GitHub Runner `v2.329.0` JobDispatcher terminal messages. Unknown future log
+formats remain unrecognized rather than reporting success. This is best-effort
+local observability, never CI/proof authority.
+
+Features:
+
+- tray status and completion notifications, preserving failed/canceled/abandoned
+  results and distinguishing `SucceededWithIssues` from plain success;
+- one warning after 20 minutes without diagnostic writes during an observed job;
+  silence is not proof of a hang and never triggers a restart;
+- live Worker diagnostics, runner diagnostic folder and GitHub Actions links;
+- RAM/disk/service snapshots every 60 seconds;
+- structured `logs/monitor.jsonl`, rotated at 2 MiB into five archives plus the
+  current file; this retention applies only to companion logs;
+- a test popup, mute control and an exit command that leaves the runner running.
+
+Clicking a popup opens the repository Actions page, not an inferred run URL.
+BOB has no separate semantic result integration in this version. Completion
+means the runner reported a job result, not that a human accepted a visual proof.
+Windows notification settings and Do Not Disturb can suppress popups. Notifications
+require a logged-in desktop. Old results are not replayed at companion startup.
+An interrupted runner may leave the last observed job until another event;
+check GitHub for authoritative state. Raw diagnostics remain local and can contain
+sensitive workload information; the companion never uploads them.
+
+Install from a reviewed checkout in the intended logged-in user's PowerShell 7.4+:
+
+```powershell
+pwsh -NoProfile -File .\scripts\runner\Install-YacsRunnerMonitor.ps1
+```
+
+Defaults: runner `D:\actions-runner-yacs`, installed companion
+`D:\yacs-runner-monitor`. Both paths are configurable. The installer copies only
+companion scripts, registers `YACS Runner Monitor-<user SID>` and starts that
+limited interactive task. It does not change runner credentials, hooks, debug
+variables, services, Unreal or workflow execution. Reinstallation stops/replaces
+only that user's companion task. Installed scripts should remain writable only
+by the intended user/administrators, never by an untrusted workload account.
+
+Remove the task without deleting logs or touching the runner:
+
+```powershell
+pwsh -NoProfile -File .\scripts\runner\Install-YacsRunnerMonitor.ps1 -Uninstall
+```
+
+For an **already registered native runner service**, an administrator may run:
+
+```powershell
+pwsh -NoProfile -File .\scripts\runner\Set-YacsRunnerService.ps1 -WhatIf
+pwsh -NoProfile -File .\scripts\runner\Set-YacsRunnerService.ps1
+```
+
+This configures automatic startup and service recovery delays of 60/120/300
+seconds. It refuses any active Runner.Worker, never restarts a running service,
+and starts an existing stopped service. A missing `.service` file fails with an
+explicit registration prerequisite. It does not convert the visual runner into
+a service or re-register it. Capture the existing service startup/recovery
+settings before applying this administrative change. A restarted service does
+not resume a terminated job.
+
+GPU/visible-editor workloads retain the interactive-session requirement until a
+separate host proof validates service compatibility. The pending unattended
+reboot/GPU acceptance above is not satisfied by installing the companion.
+
+Validation:
+
+```powershell
+pwsh -NoProfile -File .\scripts\runner\Test-RunnerMonitor.ps1
+```
+
+The portable tests cover parser authority, unknown/failure/cancellation results,
+partial lines and UTF-8, truncation, bounded reads, duplicate suppression, log
+rotation and PowerShell syntax. Before rollout completion, verify on Windows:
+tray/menu and test popup, one real green and red job, mute, log rollover, logoff/
+logon startup, task uninstall, permissions and the actual service configuration.
+Do not launch a heavy Unreal build solely to test notification presentation.
