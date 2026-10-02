@@ -324,7 +324,7 @@ jobs:
             $proof.technical_capture_status -ne 'PASS' -or
             $proof.exact_sha -ne '${{ inputs.target_sha }}' -or
             $proof.captures.Count -ne 5 -or
-            $proof.bob_mode -ne 'INSPECTOR_ONLY' -or
+            $proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_CUT_ONLY' -or
             $proof.road_geometry_inspection_required -ne $true
           ) { throw 'Terrain capture proof failed.' }
 
@@ -353,6 +353,33 @@ jobs:
           if ($classified -ne 15025) {
             throw 'BOB terrain-fit classification does not cover every ribbon sample.'
           }
+
+          $cutPath = Join-Path $root 'bob-cut-only-preview-proof.json'
+          if (-not (Test-Path -LiteralPath $cutPath -PathType Leaf)) {
+            throw 'BOB cut-only preview proof is missing.'
+          }
+          $cut = Get-Content $cutPath -Raw | ConvertFrom-Json
+          if (
+            $cut.status -ne 'TECHNICAL_PREVIEW_PASS' -or
+            $cut.mode -ne 'CUT_ONLY_TRANSIENT' -or
+            $cut.role -ne 'INSPECTOR_PLUS_TRANSIENT_CUT_ONLY' -or
+            [int]$cut.input_cut_required_sample_count -ne [int]$fit.class_counts.CUT_REQUIRED -or
+            [int]$cut.ignored_fill_required_sample_count -ne [int]$fit.class_counts.FILL_REQUIRED -or
+            [int]$cut.input_structure_review_sample_count -ne 0 -or
+            [int]$cut.cut_grid_sample_count -le 0 -or
+            [int]$cut.raised_grid_sample_count -ne 0 -or
+            [double]$cut.max_cut_depth_m -gt ([double]$cut.cut_depth_limit_m + 0.000001) -or
+            [int]$cut.remaining_road_penetration_count -ne 0 -or
+            [int]$cut.hidden_landscape_component_count -le 0 -or
+            $cut.saved_baseline_unchanged -ne $true -or
+            $cut.base_dtm_modified -ne $false -or
+            $cut.persistent_road_earthworks_modified -ne $false -or
+            $cut.map_saved -ne $false -or
+            $cut.production_authoring_permitted -ne $false -or
+            $cut.eligible_for_learning -ne $false -or
+            $cut.fill_authored -ne $false -or
+            $cut.structures_authored -ne $false
+          ) { throw 'BOB cut-only construction preview failed.' }
 
           $inspection = @(
             $proof.captures | Where-Object { $_.name -eq 'road-geometry-inspection' }
@@ -473,7 +500,10 @@ jobs:
             $proof.lighting_status -ne 'PASS' -or
             [double]$proof.directional_light_intensity -le 0.0 -or
             [double]$proof.skylight_intensity -le 0.0 -or
-            $proof.bob_mode -ne 'INSPECTOR_ONLY' -or
+            $proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_CUT_ONLY' -or
+            $proof.cut_preview_status -ne 'TECHNICAL_PREVIEW_PASS' -or
+            $proof.cut_preview_map_saved -ne $false -or
+            [int]$proof.cut_preview_remaining_penetration_count -ne 0 -or
             $proof.map_saved -ne $false
           ) { throw 'Owner handoff proof failed.' }
 
