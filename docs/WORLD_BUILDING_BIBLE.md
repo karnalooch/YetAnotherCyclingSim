@@ -174,6 +174,20 @@ AOI instead of moving canonical roads or making one monolithic native-resolution
 8 km Landscape. Multi-window growth should use bounded regeneration and
 streaming/partitioning appropriate to the measured Unreal cost.
 
+The candidate first full-route reference now extends the geographic intent from
+the sea at Sa Calobra through Coll dels Reis and Ma-10 to the public forest
+estates of Menut/Binifaldó, ending at the confirmed paved limit near Coll des
+Pedregaret. Its evidence, visual references, acquisition checklist and
+REFERENCE_ONLY asset candidates live in
+[SA_CALOBRA_MENUT_ROUTE_REFERENCE.md](SA_CALOBRA_MENUT_ROUTE_REFERENCE.md).
+
+This reference does **not** authorize a fictional biome transition. Terrain,
+canopy, forest edge, buildings, walls, roads and infrastructure along that
+corridor must be reconstructed from admitted source coverage. Marketplace
+assets may supply presentation meshes/material variants only after provenance,
+license and performance review; they never decide where a tree, wall or cliff
+exists.
+
 The producer emits a hash-bearing `terrain-import.json` and little-endian R16.
 Raster pixel centres define the local origin: UE X increases east and UE Y
 increases south. The manifest retains the metric origin for later GIS consumers;
