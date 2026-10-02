@@ -300,7 +300,7 @@ jobs:
             --prepared-terrain "$root/Prepared" `
             --profile "$root/ma2141-profile-candidate.json" `
             --output-manifest "$root/ma2141-cut-patch.json" `
-            --output-r16 "$root/ma2141-cut-patch.r16" `
+            --output-f32 "$root/ma2141-cut-patch.f32" `
             --exact-sha '${{ inputs.target_sha }}'
           if ($LASTEXITCODE -ne 0) { throw 'BOB bounded Road_Earthworks CUT patch preparation failed.' }
 
@@ -449,6 +449,7 @@ jobs:
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.json
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.txt
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.png
+            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.f32
           if-no-files-found: error
           retention-days: 14
 
