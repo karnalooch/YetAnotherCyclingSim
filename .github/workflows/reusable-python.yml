@@ -141,6 +141,7 @@ jobs:
           python -m unittest scripts.assets.test_prepare_ma2141_diagnostic -v
           python -m unittest scripts.assets.test_prepare_ma2141_road_preview -v
           python -m unittest scripts.assets.test_prepare_ma2141_profile -v
+          python -m unittest scripts.assets.test_prepare_ma2141_cut_patch -v
           python -m unittest scripts.geometry.test_native_heightfield_pavement -v
           python -m unittest scripts.geometry.test_smooth_road_ribbon -v
           python -m unittest scripts.geometry.test_local_terrain_skin -v
