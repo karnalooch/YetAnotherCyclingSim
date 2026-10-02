@@ -449,6 +449,7 @@ def main():
         p = min(points, key=lambda p: abs(p["station_m"]-s))
         return [p["x_cm"],p["y_cm"],p["z_cm"]]
     focus = at_station(150)
+    moderate = at_station(65)
     start, target = at_station(120), at_station(130)
     _views.extend([
         {
@@ -493,6 +494,16 @@ def main():
             "wireframe_color_rgba": [0.0, 1.0, 1.0, 1.0],
             "force_game_view": False,
             "earthworks_state": "CUT_AND_VERTICAL_SUPPORT",
+        },
+        {
+            "name": "road-curved-edges-plan",
+            "location": [focus[0], focus[1], focus[2]+16000],
+            "target": focus,
+        },
+        {
+            "name": "road-curved-edges-moderate",
+            "location": [moderate[0], moderate[1], moderate[2]+5500],
+            "target": moderate,
         },
         {
             "name": "road-contact-overview",

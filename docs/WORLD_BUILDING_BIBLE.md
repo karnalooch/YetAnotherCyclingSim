@@ -2688,10 +2688,12 @@ instead of remaining completely untouched. All inspected native facets are
 covered; any remaining interpolation excess is removed from available corners
 within that same cap. This must receive fresh native proof. Larger required cuts remain blocked rather than silently relaxing it.
 
-Unreal validation, human visual review and road/earthworks performance are
-pending for this implementation. A terrain-only performance PASS does not
-admit the combined road/support scene. Current scope remains Issue #324 /
-Draft PR #325; the rejected CUT-only evidence is retained in history.
+At the initial implementation checkpoint Unreal validation, human visual
+review and road/earthworks performance were pending. The subsequent native
+result and owner acceptance are recorded below. A terrain-only performance
+PASS does not admit the combined road/support scene. Issue #324 is closed as
+the bounded construction checkpoint; #331 owns curved edges and the remaining
+combined performance review. Rejected CUT-only evidence is retained in history.
 
 
 The first combined native run at `964d99a` produced all seven captures and
@@ -2699,5 +2701,56 @@ The first combined native run at `964d99a` produced all seven captures and
 The requested vertex lay on the texture coverage edge: the native result matched
 leaving that outer vertex unchanged. The patch now includes one neutral native
 texel outside all requested vertices so the cut lies inside texture coverage.
-The 1 m cap and zero-penetration criterion remain unchanged. Fresh native proof
-is required for this correction; the first run is not an accepted construction.
+The 1 m cap and zero-penetration criterion remain unchanged. The corrected
+`c9373cd` native checkpoint passed with zero penetrations in 15,025 samples,
+1,202 successful support traces and 902 wall segments. The owner accepted that
+bounded construction checkpoint on 2026-10-02 and requested merging #325.
+Combined road/support performance and final road admission remain unverified.
+
+## Curved pavement presentation — Issue #331
+
+The owner subsequently identified polygonal asphalt edges in plan view. The
+old `clip.interpolate` sampling and linearly interpolated edge offsets retain
+GIS polyline corners; denser sampling and normal recomputation cannot round
+that silhouette. Height regularization did not smooth XY. This is a confirmed
+presentation defect, not permission to change canonical route/physics data.
+
+Tools-first correction uses Epic's existing `USplineComponent`, not a second
+custom spline evaluator or a replacement mesh framework. Two transient Curve
+splines interpolate paired pavement boundary guides every 2.5 m of source
+chainage. Both use the same input key (`source_station / 2.5`), so matching
+sections cannot drift because the inner and outer edge have different lengths.
+The existing map-preparation boot exports the curves at 0.0625 m source-chainage
+intervals. No spline actor is saved and no additional editor boot is introduced.
+The center of each paired section is derived from these boundaries.
+
+The offline consumer preserves the original XY in `source_xy_local_m`, marks
+`source_xy_preserved=false` for the **derived** profile, and separately records
+`canonical_source_xy_preserved=true`. Legacy source-preserving profiles remain
+supported. The curved recipe requires exact SHA/source/profile/origin identity,
+finite complete samples, no boundary self-intersection, no folded/inverted
+triangles, a maximum 1 m corresponding-edge displacement (the existing inferred
+edge review allowance), and a maximum 2 cm sampled chord error for the new
+0.25 m render sections. The latter is measured at quarter/mid/three-quarter
+samples; it is not an analytic continuous-error proof. A failed bound rejects
+the candidate instead of widening the allowance or silently reverting to the
+angular geometry. Render length is not promoted to canonical chainage.
+
+Terrain heights are resampled under the corrected footprint before the existing
+height/crossfall fit. Asphalt, bounded CUT and support all consume that same
+profile; mixing new XY with old heights or an old CUT patch is prohibited.
+Native-contact diagnostic geometry stays separate and source-preserving.
+The capture bundle includes overhead tight-hairpin and moderate-bend views,
+the existing neutral mesh inspection, oblique view and Lit rider handoff.
+Implementation is a candidate until native execution and human review pass.
+The 1 m CUT cap, Base_DTM preservation and visual/performance admission remain.
+
+Official API references:
+- [Spline component](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/USplineComponent)
+- [Spline point types](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/ESplinePointType__Type)
+- [Spline approximation tolerance](https://dev.epicgames.com/documentation/unreal-engine/BlueprintAPI/Spline/ConvertSplinetoPolyLine)
+
+`USplineMeshComponent` was reviewed but is not required: the existing unified
+DynamicMesh can consume sampled native curves and shares its exact boundaries
+with earthworks. Native spline evaluation does not itself prove geographic
+fidelity, acceptable width, branch clearance, smooth height or rider acceptance.

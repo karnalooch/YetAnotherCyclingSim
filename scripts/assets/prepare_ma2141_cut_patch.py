@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from scripts.worldgen.bob_terrain_fit_inspector import inspect_terrain_fit
+from scripts.geometry.curved_road_plan import profile_plan_valid, STATION_COUNT
 
 GRID_STEP_M = 0.5
 SECTION_POINTS = 25
@@ -50,21 +51,22 @@ def _inside_triangle(px, py, triangle):
 
 def rasterize_profile_grid(profile):
     rows = profile["stations"]
-    if len(rows) != EXPECTED_STATIONS:
-        raise ValueError("CUT patch requires the complete 0-300 m / 601-station profile")
+    expected_count = STATION_COUNT if "presentation_plan" in profile and profile_plan_valid(profile) else EXPECTED_STATIONS
+    if len(rows) != expected_count:
+        raise ValueError("CUT patch requires the complete recipe station domain")
 
     xy = np.asarray([row["xy_local_m"] for row in rows], dtype=float)
     target = np.asarray([row["candidate_ground_m"] for row in rows], dtype=float)
     if (
-        xy.shape != (EXPECTED_STATIONS, SECTION_POINTS, 2)
-        or target.shape != (EXPECTED_STATIONS, SECTION_POINTS)
+        xy.shape != (expected_count, SECTION_POINTS, 2)
+        or target.shape != (expected_count, SECTION_POINTS)
         or not np.isfinite(xy).all()
         or not np.isfinite(target).all()
     ):
         raise ValueError("Invalid finite road-profile grid")
 
     samples: dict[tuple[int, int], float] = {}
-    for station in range(EXPECTED_STATIONS - 1):
+    for station in range(expected_count - 1):
         for lateral in range(SECTION_POINTS - 1):
             p00 = (*xy[station, lateral], target[station, lateral])
             p01 = (*xy[station, lateral + 1], target[station, lateral + 1])
@@ -142,7 +144,7 @@ def prepare(prepared, profile_path, output_manifest, output_r16, exact_sha):
         or profile.get("region_id") != "sa_calobra"
         or profile.get("status") != "REVIEW_REQUIRED"
         or profile.get("heightmap_sha256") != terrain_manifest.get("heightmap_sha256")
-        or profile.get("source_xy_preserved") is not True
+        or not profile_plan_valid(profile)
         or profile.get("terrain_modified") is not False
         or profile.get("road_earthworks_modified") is not False
         or not isinstance(inspection, dict)

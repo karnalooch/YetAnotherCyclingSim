@@ -1,6 +1,7 @@
 """Create the isolated manifest-selected terrain map without deleting assets."""
 import json
 import os
+import sys
 from pathlib import Path
 
 import unreal
@@ -17,4 +18,8 @@ if not levels.new_level(package, is_partitioned_world=False):
 world = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem).get_editor_world()
 if not world or not unreal.EditorLoadingAndSavingUtils.save_map(world, package):
     raise RuntimeError("Failed to save isolated terrain level")
+if os.environ.get("YACS_ROAD_CURVE_GUIDES"):
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from author_ma2141_curved_edges import author
+    author(os.environ["YACS_ROAD_CURVE_GUIDES"])
 unreal.log("[RegionTerrainMap] PASS: isolated Sa Calobra map created")

@@ -271,6 +271,7 @@ jobs:
           ./scripts/ue/Invoke-YacsRegionTerrainImport.ps1 `
             -ExpectedBranch 'HEAD' `
             -ExpectedHead '${{ inputs.target_sha }}' `
+            -PrepareRoadPlan `
             -ArtifactRoot 'Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}'
           if ($LASTEXITCODE -ne 0) { throw 'Sa Calobra native terrain import failed.' }
 
@@ -289,8 +290,16 @@ jobs:
           python scripts/assets/prepare_ma2141_profile.py `
             --prepared-terrain "$root/Prepared" `
             --output "$root/ma2141-profile-candidate.json" `
+            --curved-edges "$root/ma2141-curved-edges.json" `
             --exact-sha '${{ inputs.target_sha }}'
           if ($LASTEXITCODE -ne 0) { throw 'Ma-2141 profile assessment failed.' }
+          $profile = Get-Content "$root/ma2141-profile-candidate.json" -Raw | ConvertFrom-Json
+          if ($profile.presentation_plan.status -ne 'PASS' -or
+              $profile.presentation_plan.recipe -ne 'native-paired-edge-curves-v1' -or
+              $profile.source_xy_preserved -ne $false -or
+              $profile.canonical_source_xy_preserved -ne $true) {
+            throw 'Native curved pavement plan was not validated.'
+          }
           python scripts/assets/prepare_ma2141_road_preview.py `
             --prepared-terrain "$root/Prepared" `
             --output "$root/ma2141-road-preview.json" `
@@ -330,7 +339,7 @@ jobs:
           if (
             $proof.technical_capture_status -ne 'PASS' -or
             $proof.exact_sha -ne '${{ inputs.target_sha }}' -or
-            $proof.captures.Count -ne 7 -or
+            $proof.captures.Count -ne 9 -or
             $proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT' -or
             $proof.road_geometry_inspection_required -ne $true
           ) { throw 'Terrain capture proof failed.' }
@@ -344,8 +353,8 @@ jobs:
             $fit.status -ne 'REVIEW_REQUIRED' -or
             $fit.inspection_complete -ne $true -or
             $fit.role -ne 'INSPECTOR_ONLY' -or
-            $fit.sample_count -ne 15025 -or
-            $fit.evaluated_sample_count -ne 15025 -or
+            $fit.sample_count -ne 30025 -or
+            $fit.evaluated_sample_count -ne 30025 -or
             $fit.trace_miss_count -ne 0 -or
             $fit.geometry_inspection_view -ne 'road-geometry-inspection-before' -or
             $fit.earthworks_authoring_permitted -ne $false -or
@@ -357,7 +366,7 @@ jobs:
             [int]$fit.class_counts.FILL_REQUIRED +
             [int]$fit.class_counts.STRUCTURE_REVIEW
           )
-          if ($classified -ne 15025) {
+          if ($classified -ne 30025) {
             throw 'BOB terrain-fit classification does not cover every ribbon sample.'
           }
 
@@ -396,8 +405,8 @@ jobs:
             $support.recipe_id -ne 'bob-vertical-support-v1' -or
             $support.status -ne 'GEOMETRY_BUILT_VISUAL_REVIEW_PENDING' -or
             $support.shoulder_m -ne 0.5 -or
-            $support.station_count -ne 601 -or
-            $support.ground_trace_count -ne 1202 -or
+            $support.station_count -ne 1201 -or
+            $support.ground_trace_count -ne 2402 -or
             $support.wall_segment_count -le 0 -or
             $support.base_dtm_modified -ne $false -or
             $support.map_saved -ne $false -or
