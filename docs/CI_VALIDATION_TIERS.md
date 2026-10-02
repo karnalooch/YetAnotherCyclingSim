@@ -1,5 +1,23 @@
 # CI Validation Tiers
 
+## Sa Calobra migration import checkpoint
+
+The owner approved the six-step migration on 2026-10-02. During Draft PR #319,
+the existing same-repository Unreal CI lane explicitly requests a native terrain
+import through `region_terrain_import`. Admission is limited to PR #319 and its
+approved `fix/sa-calobra-terrain-import` branch, with the normal same-repository
+guard and exact caller SHA. Other PRs and main runs keep code-only behavior.
+This temporary bootstrap does not change the default-branch Proof Broker trust
+boundary, issue a `proof-m3-terrain` receipt or make SP638 a Spanish proof.
+
+After the verified build/Automation checkpoint, only the profile-selected
+Spanish source TIFF is materialized. The source, topology, transforms and layers
+are validated by the producer/importer. Import logs and manifests are uploaded
+as `sa-calobra-import-<sha>-<attempt>`. Spanish source and generated assets are
+retained outside the mutable worktree before cleanup. Visual/performance and
+road/gameplay acceptance remain separate and pending until actually measured.
+Retire this PR-specific bootstrap after a trusted region proof lane replaces it.
+
 YACS uses staged validation so world/art iteration stays fast without weakening the merge gate.
 
 Sa Calobra terrain preparation is covered by synthetic native-GeoTIFF tests in

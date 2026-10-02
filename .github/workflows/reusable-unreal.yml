@@ -15,6 +15,11 @@ on:
         description: Deterministic identity of code-only Unreal proof/runtime inputs.
         required: true
         type: string
+      region_terrain_import:
+        description: Explicit owner-approved Sa Calobra migration import checkpoint.
+        required: false
+        default: false
+        type: boolean
 
 permissions: {}
 
@@ -189,6 +194,37 @@ jobs:
           Write-Host "Reason: ${{ steps.cache.outputs.reason }}"
           Write-Host "Compile kind: ${{ steps.cache.outputs.compile_kind }}"
 
+      # Bootstrap the approved region migration inside the existing same-repo
+      # CI boundary. This is an import diagnostic, never a broker PASS receipt.
+      - name: Materialize only verified Sa Calobra source and import native terrain
+        if: ${{ inputs.region_terrain_import }}
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $source = 'worldgen/terrain/benchmarks/sa_calobra/sa_calobra_8x8km_mdt50cm_epsg25831.tif'
+          git lfs pull --include="$source" --exclude=''
+          if ($LASTEXITCODE -ne 0) { throw 'Sa Calobra source LFS materialization failed.' }
+          python -m pip install --disable-pip-version-check numpy==2.3.5 rasterio==1.5.2 pyproj==3.8.0 Pillow==12.3.0
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned native terrain dependencies failed to install.' }
+          ./scripts/ue/Invoke-YacsRegionTerrainImport.ps1 `
+            -ExpectedBranch 'HEAD' `
+            -ExpectedHead '${{ inputs.target_sha }}' `
+            -ArtifactRoot 'Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Sa Calobra native terrain import failed.' }
+
+      - name: Upload native Sa Calobra import diagnostic
+        if: ${{ always() && inputs.region_terrain_import }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: sa-calobra-import-${{ inputs.target_sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/**/*.json
+            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/**/*.txt
+            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/**/*.log
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Upload concise Unreal proof
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -211,6 +247,13 @@ jobs:
             Remove-Item -LiteralPath $proof -Recurse -Force
           }
           if (Test-Path -LiteralPath '.git') {
+            if ('${{ inputs.region_terrain_import }}' -eq 'true') {
+              # Preserve newly authored Spanish assets and the source TIFF;
+              # obsolete Italy payload retirement is a separate bounded step.
+              $archive = Join-Path $env:GITHUB_WORKSPACE '_yacs-sa-calobra-assets/${{ github.run_id }}-${{ github.run_attempt }}'
+              python scripts/ci/retain_unreal_assets.py --workspace (Get-Location).Path --archive $archive
+              if ($LASTEXITCODE -ne 0) { throw 'Sa Calobra retention failed; do not reset or clean.' }
+            }
             git reset --hard
             if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree cleanup git reset failed.' }
             git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/'

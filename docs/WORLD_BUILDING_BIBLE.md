@@ -1933,4 +1933,15 @@ If those answers are clear, world building is usually straightforward.
 
 ## Terrain recovery asset retention
 
+Owner update, 2026-10-02: obsolete Italian LFS payloads may now be retired after
+exact-path/hash inventory and dependency review. This supersedes the earlier
+retention directive for those obsolete Italy assets only. Spanish terrain inputs,
+generated Spanish maps and shared/unknown assets remain protected. Removing
+tracked pointers is not proof that runner disk bytes were reclaimed; record both
+operations separately. Do not rewrite history or blanket-prune shared LFS storage.
+
+The PR #319 native-import CI checkpoint preserves the Spanish source/map under
+`_yacs-sa-calobra-assets/<run>-<attempt>/`, with verified size/hash receipts,
+before cleanup. It is a terrain-only diagnostic, not road or visual acceptance.
+
 Owner directive of 2026-10-01 (Issue #308): rebuilding the DTM baseline must preserve downloaded LFS payloads on the runner disk. The trusted terrain workflow uses `_terrain-recovery-worktree`; the earlier `_embark-terrain-worktree` is left untouched. Before checkout and again before final reset/clean, `scripts/ci/retain_unreal_assets.py` moves materialized `.umap`/`.uasset` files into the sibling `_yacs-retained-lfs/<run>-<attempt>/` archive and records verified SHA-256/byte counts in `retention.json`. Git LFS pointers remain valid in the code-only lane, and its local `.git/lfs/objects` cache is never pruned. Archive collisions, unsafe paths or failed verification stop cleanup. Retention is a byte-preservation prerequisite, not acceptance of the current terrain geometry.
