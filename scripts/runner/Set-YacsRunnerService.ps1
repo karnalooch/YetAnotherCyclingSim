@@ -11,6 +11,13 @@ if (-not (Test-Path -LiteralPath $serviceFile)) {
 $name = (Get-Content -LiteralPath $serviceFile -Raw).Trim()
 if ($name -notmatch '^actions\.runner\.[A-Za-z0-9_.-]+$') { throw 'Unexpected runner service name.' }
 $service = Get-Service -Name $name
+if ($service.Status -ne 'Running') {
+    $listenerPath = Join-Path $RunnerRoot 'bin/Runner.Listener.exe'
+    $listeners = @(Get-CimInstance Win32_Process -Filter "Name='Runner.Listener.exe'" | Where-Object {
+        $_.ExecutablePath -and [IO.Path]::GetFullPath($_.ExecutablePath) -ieq [IO.Path]::GetFullPath($listenerPath)
+    })
+    if ($listeners.Count -gt 0) { throw 'This runner is already active outside the stopped service. Refusing a duplicate listener; plan an idle, GPU-validated migration.' }
+}
 # Never change a running workload. This is conservative across all runners on the host.
 if (Get-Process -Name 'Runner.Worker' -ErrorAction SilentlyContinue) { throw 'A runner job is active. Retry after it finishes.' }
 if ($PSCmdlet.ShouldProcess($name, 'Configure automatic startup and service recovery without restart')) {
