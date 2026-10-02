@@ -16,7 +16,8 @@ from scripts.worldgen.bob_terrain_fit_inspector import inspect_terrain_fit
 
 CUT_PROOF = "bob-road-earthworks-cut-proof.json"
 PATCH_MANIFEST = "ma2141-cut-patch.json"
-MAX_CUT_M = 1.0
+from scripts.geometry.curved_road_plan import profile_plan_valid
+from scripts.geometry.road_cut_limits import cut_limits, inspection_within_cut_limits
 
 
 def measure_smooth_terrain_fit(
@@ -93,6 +94,9 @@ def measure_smooth_terrain_fit(
 def apply_cut_patch(world, root, exact_sha, pre_fit):
     manifest_path = root / PATCH_MANIFEST
     patch = json.loads(manifest_path.read_text(encoding="utf-8"))
+    profile = json.loads((root / "ma2141-profile-candidate.json").read_text(encoding="utf-8"))
+    policy = json.loads((ROOT / "worldgen/terrain/adaptive_terrain_policy.json").read_text(encoding="utf-8"))
+    limits = cut_limits(profile.get("presentation_plan", {}), policy)
     counts = pre_fit["class_counts"]
     if (
         patch.get("exact_sha") != exact_sha
@@ -107,7 +111,10 @@ def apply_cut_patch(world, root, exact_sha, pre_fit):
         or pre_fit.get("trace_miss_count") != 0
         or int(counts.get("CUT_REQUIRED", 0)) <= 0
         or int(counts.get("STRUCTURE_REVIEW", 0)) != 0
-        or float(pre_fit.get("max_cut_required_m", 999.0)) > MAX_CUT_M
+        or not profile_plan_valid(profile)
+        or patch.get("cut_limits") != limits
+        or patch.get("max_cut_limit_m") != limits["cliff_m"]
+        or not inspection_within_cut_limits(pre_fit, limits)
     ):
         raise RuntimeError("BOB CUT patch precondition failed closed")
 

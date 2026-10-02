@@ -2857,3 +2857,27 @@ session edits; owner handoff then reapplies the current patch deliberately.
 Do not roll back Git/main or discard retained assets to reset terrain. The open
 owner editor may still show previous transient cuts until explicitly reloaded;
 no claim of live restoration is made by this documentation change.
+
+#### Native cliff-edge CUT integration (PR #332)
+
+Exact `9dd5a052f589d3c53805295157450e828e21b2da` run
+[37069118034](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37069118034)
+passed native spline/width geometry, build/Automation and hosted tests. Native
+reference displacement was 0.989502 m, sampled chord error 0.006700 m, with no
+intersections. Capture was blocked by the previous global 1 m CUT-only cap:
+the new footprint requires up to 3.455924 m lowering at the hairpin; outside
+the evidence-marked 125..165 m span the maximum is 0.630515 m. This is not a
+visual acceptance or performance result.
+
+The anchored preview now selects the existing `retaining_or_cliff` 4 m policy
+ceiling only for CLIFF/MOUNTAIN evidence spans, additionally bounded by the
+unchanged structure-review threshold. Every station outside those half-open
+spans retains the `native_blend` 1 m cap. Native cells touching the marked ribbon
+and its one-cell guard may use the cliff cap; all other cells retain 1 m. Both
+producer and native consumer check station inspection against the same policy.
+The consumer validates the profile proof and recomputes the limits, rather than
+trusting a manifest-supplied number. Structure review, no fill, unchanged
+Base_DTM and transient/no-save restrictions remain mandatory. Native traces
+and screenshots for this integration are still pending. Source-derived grade
+and crossfall remain REVIEW_REQUIRED; this ceiling does not admit engineering
+alignment, structures or riding collision.

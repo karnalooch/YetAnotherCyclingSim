@@ -19,14 +19,18 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
+from scripts.geometry.curved_road_plan import STATION_COUNT, profile_plan_valid
+from scripts.geometry.road_cut_limits import (
+    cut_limits,
+    inspection_within_cut_limits,
+    station_cut_limit,
+)
 from scripts.worldgen.bob_terrain_fit_inspector import inspect_terrain_fit
-from scripts.geometry.curved_road_plan import profile_plan_valid, STATION_COUNT
 
 GRID_STEP_M = 0.5
 SECTION_POINTS = 25
 EXPECTED_STATIONS = 601
 NEUTRAL_HEIGHT = 32768
-MAX_CUT_M = 1.0
 CUT_CLEARANCE_M = 0.01
 GUARD_CELLS = 1
 _EPS = 1e-8
@@ -166,6 +170,7 @@ def prepare(prepared, profile_path, output_manifest, output_r16, exact_sha):
             encoding="utf-8"
         )
     )
+    limits = cut_limits(profile.get("presentation_plan", {}), policy)
     structure_threshold = float(policy["thresholds"]["retaining_cut_fill_m"])
 
     pre_samples = []
@@ -196,7 +201,7 @@ def prepare(prepared, profile_path, output_manifest, output_r16, exact_sha):
         not expected_pre_fit["inspection_complete"]
         or expected_pre_fit["class_counts"]["CUT_REQUIRED"] <= 0
         or expected_pre_fit["class_counts"]["STRUCTURE_REVIEW"] != 0
-        or expected_pre_fit["max_cut_required_m"] > MAX_CUT_M
+        or not inspection_within_cut_limits(expected_pre_fit, limits)
     ):
         raise ValueError("CUT-only precondition is outside the bounded recipe")
 
@@ -235,6 +240,21 @@ def prepare(prepared, profile_path, output_manifest, output_r16, exact_sha):
                     previous = requested.get((gx, gy))
                     requested[(gx, gy)] = target_m if previous is None else min(previous, target_m)
 
+    # Only native cells touching the marked ribbon and its one-cell guard can
+    # use the cliff cap. Everywhere else retains the ordinary 1 m recipe.
+    cliff_keys = set()
+    for row in profile["stations"]:
+        if station_cut_limit(limits, row["station_m"]) <= limits["ordinary_m"]:
+            continue
+        for x_m, y_m in row["xy_local_m"]:
+            ix, iy = math.floor(x_m / GRID_STEP_M), math.floor(y_m / GRID_STEP_M)
+            for gy in range(iy - GUARD_CELLS, iy + 2 + GUARD_CELLS):
+                for gx in range(ix - GUARD_CELLS, ix + 2 + GUARD_CELLS):
+                    cliff_keys.add((gx, gy))
+
+    def vertex_cap(x, y):
+        return limits["cliff_m"] if (x, y) in cliff_keys else limits["ordinary_m"]
+
     min_x, max_x, min_y, max_y = _patch_bounds(requested)
     width = max_x - min_x + 1
     height = max_y - min_y + 1
@@ -255,11 +275,11 @@ def prepare(prepared, profile_path, output_manifest, output_r16, exact_sha):
     for (grid_x, grid_y), target_m in requested.items():
         base_m = _decode_height_m(terrain[grid_y, grid_x], terrain_manifest)
         delta_m = min(0.0, target_m - CUT_CLEARANCE_M - base_m)
-        if delta_m < -MAX_CUT_M - 1e-6:
+        if delta_m < -vertex_cap(grid_x, grid_y) - 1e-6:
             if (grid_x, grid_y) in road_keys:
-                raise ValueError("Road CUT target exceeded the 1.0 m safety cap")
+                raise ValueError("Road CUT target exceeded the spatial CUT safety cap")
             clamped_guard_at_cap += 1
-            delta_m = -MAX_CUT_M
+            delta_m = -vertex_cap(grid_x, grid_y)
         if delta_m < -1e-6:
             modified += 1
             cut_values.append(-delta_m)
@@ -269,7 +289,7 @@ def prepare(prepared, profile_path, output_manifest, output_r16, exact_sha):
 
     # A capped steep outside corner can still lift the interpolated facet into
     # asphalt. Lower the other corners of that same facet, sharing only the
-    # measured excess, while retaining the per-vertex 1 m cap. Lowering is
+    # measured excess, while retaining the spatial per-vertex cap. Lowering is
     # monotonic, so previously cleared samples cannot become penetrations.
     for row in profile["stations"]:
         for (x_m, y_m), target_m in zip(row["xy_local_m"], row["candidate_ground_m"], strict=True):
@@ -288,12 +308,12 @@ def prepare(prepared, profile_path, output_manifest, output_r16, exact_sha):
                     break
                 available = [(x,y,w) for x,y,w in corners if w > 1e-9 and
                              float(patch[y-min_y, x-min_x])/100 >
-                             _decode_height_m(terrain[y,x], terrain_manifest)-MAX_CUT_M+1e-4]
+                             _decode_height_m(terrain[y,x], terrain_manifest)-vertex_cap(x, y)+1e-4]
                 total_weight = sum(w for _,_,w in available)
                 if total_weight <= 1e-9:
-                    raise ValueError("Cannot clear road facet within the 1.0 m CUT cap")
+                    raise ValueError("Cannot clear road facet within the spatial CUT cap")
                 for x,y,w in available:
-                    floor = _decode_height_m(terrain[y,x], terrain_manifest)-MAX_CUT_M
+                    floor = _decode_height_m(terrain[y,x], terrain_manifest)-vertex_cap(x, y)
                     patch[y-min_y, x-min_x] = max(floor, float(patch[y-min_y, x-min_x])/100-excess/total_weight-1e-4)*100
             else:
                 raise ValueError("Road facet clearance did not converge within its three corners")
@@ -304,7 +324,7 @@ def prepare(prepared, profile_path, output_manifest, output_r16, exact_sha):
     for py in range(height):
         for px in range(width):
             base_m = _decode_height_m(terrain[min_y+py,min_x+px], terrain_manifest)
-            floor_cm = (base_m - MAX_CUT_M)*100
+            floor_cm = (base_m - vertex_cap(min_x + px, min_y + py))*100
             if float(patch[py,px]) < floor_cm:
                 patch[py,px] = np.nextafter(np.float32(floor_cm), np.float32(np.inf))
             depth = base_m - float(patch[py,px])/100
@@ -339,7 +359,9 @@ def prepare(prepared, profile_path, output_manifest, output_r16, exact_sha):
         "grid_step_m": GRID_STEP_M,
         "cut_clearance_m": CUT_CLEARANCE_M,
         "guard_cells": GUARD_CELLS,
-        "max_cut_limit_m": MAX_CUT_M,
+        "max_cut_limit_m": limits["cliff_m"],
+        "cut_limits": limits,
+        "cliff_cap_vertex_count": len(cliff_keys.intersection(requested)),
         "modified_vertex_count": modified,
         "clamped_guard_at_cap_count": clamped_guard_at_cap,
         "max_cut_m": max(cut_values),
