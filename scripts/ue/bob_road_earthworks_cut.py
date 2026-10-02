@@ -134,6 +134,11 @@ def apply_cut_patch(world, root, exact_sha, pre_fit):
 def finalize_cut_proof(root, exact_sha, patch, pre_fit, post_fit):
     before = pre_fit["class_counts"]
     after = post_fit["class_counts"]
+    new_fill_required = max(
+        0,
+        int(after.get("FILL_REQUIRED", 0))
+        - int(before.get("FILL_REQUIRED", 0)),
+    )
     passed = (
         post_fit.get("inspection_complete") is True
         and post_fit.get("trace_miss_count") == 0
@@ -141,6 +146,7 @@ def finalize_cut_proof(root, exact_sha, patch, pre_fit, post_fit):
         and int(before.get("STRUCTURE_REVIEW", 0)) == 0
         and int(after.get("CUT_REQUIRED", 0)) == 0
         and int(after.get("STRUCTURE_REVIEW", 0)) == 0
+        and new_fill_required == 0
         and float(post_fit.get("max_cut_required_m", 999.0)) <= 1e-6
     )
     report = {
@@ -159,6 +165,7 @@ def finalize_cut_proof(root, exact_sha, patch, pre_fit, post_fit):
         "map_saved": False,
         "fill_authored": False,
         "structures_authored": False,
+        "new_fill_required_sample_count": new_fill_required,
         "patch_modified_vertex_count": patch["modified_vertex_count"],
         "patch_max_cut_m": patch["max_cut_m"],
         "before": {
