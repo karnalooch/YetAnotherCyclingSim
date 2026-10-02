@@ -4,7 +4,6 @@
 
 #include "Dom/JsonObject.h"
 #include "Landscape.h"
-#include "LandscapeComponent.h"
 #include "LandscapeEdit.h"
 #include "LandscapeEditLayer.h"
 #include "LandscapeInfo.h"
@@ -211,17 +210,11 @@ bool UCyclingLandscapeEarthworksLibrary::ApplyRoadEarthworksPatch(
 		}
 	}
 
+	// FHeightmapAccessor::Flush owns the changed-component update path. Force
+	// the layer stack to evaluate, but do not call component-private collision
+	// internals from this utility.
 	Landscape->ForceLayersFullUpdate();
 	Landscape->PostEditChange();
-	TArray<ULandscapeComponent*> Components;
-	Landscape->GetComponents<ULandscapeComponent>(Components);
-	for (ULandscapeComponent* Component : Components)
-	{
-		if (IsValid(Component))
-		{
-			Component->UpdateCollisionData(true);
-		}
-	}
 
 	UE_LOG(
 		LogCyclingLandscapeEarthworks,
