@@ -220,13 +220,51 @@
     {
       "id": "pnoa_maxima_actualidad_2024",
       "priority": "P0",
-      "status": "acquire",
+      "status": "source_cog_identified_working_extract_acquire",
       "product": "PNOA Maxima Actualidad orthophoto, Illes Balears 2024",
       "product_url": "https://centrodedescargas.cnig.es/CentroDescargas/ortofoto-pnoa-maxima-actualidad",
       "service_url": "https://www.ign.es/wms-inspire/pnoa-ma",
       "expected_native_gsd_m": 0.25,
       "purpose": "dated visible-surface evidence for forest/open ground/rock/bare soil and road-edge cross-check; never ground-Z authority",
-      "files": []
+      "files": [],
+      "identified_records": [
+        {
+          "name": "PNOA-MA-OF-ETRS89-HU31-H25-0643-4.TIF",
+          "sec": 11559062,
+          "size_mb_display": 92.16,
+          "download_mode": "recaptcha_authorized",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=11559062"
+        },
+        {
+          "name": "PNOA-MA-OF-ETRS89-HU31-H25-0644-3.TIF",
+          "sec": 11559065,
+          "size_mb_display": 619.84,
+          "download_mode": "recaptcha_authorized",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=11559065"
+        },
+        {
+          "name": "PNOA-MA-OF-ETRS89-HU31-H25-0670-2.TIF",
+          "sec": 11559080,
+          "size_mb_display": 713.7,
+          "download_mode": "recaptcha_authorized",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=11559080"
+        },
+        {
+          "name": "PNOA-MA-OF-ETRS89-HU31-H25-0671-1.TIF",
+          "sec": 11559083,
+          "size_mb_display": 863.61,
+          "download_mode": "recaptcha_authorized",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=11559083"
+        }
+      ],
+      "identified_total_mb_display": 2289.31,
+      "identification_evidence": {
+        "method": "CNIG public product-page coordinate search executed in headless Chromium",
+        "workflow_run_id": 37079274173,
+        "artifact_id": 11257748165,
+        "source_sha": "b1bc5100b5cba7de128178f0e1067289881c76b1",
+        "note": "Exact source COG records identified. Working-space WMS extract is acquired separately; raw COG binaries require normal CNIG reCAPTCHA download authorization."
+      }
     },
     {
       "id": "btn_vector_context",
