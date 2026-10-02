@@ -175,8 +175,8 @@ jobs:
 
   unreal-code:
     name: Unreal code build and Automation
-    needs: changes
-    if: ${{ needs.changes.outputs.ue_code == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    needs: [changes, python-reference]
+    if: ${{ !cancelled() && needs.changes.result == 'success' && (needs.python-reference.result == 'success' || needs.python-reference.result == 'skipped') && needs.changes.outputs.ue_code == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
     permissions:
       contents: read
     uses: ./.github/workflows/reusable-unreal.yml
@@ -216,13 +216,52 @@ jobs:
 
   stage3g-full-validation:
     name: Stage 3G full validation
-    needs: changes
-    if: ${{ needs.changes.outputs.asset_full == 'true' && (github.event_name != 'pull_request' || (github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository)) }}
+    needs: [changes, python-reference, world-proof-admission]
+    if: ${{ !cancelled() && needs.changes.result == 'success' && needs.world-proof-admission.result == 'success' && (needs.python-reference.result == 'success' || needs.python-reference.result == 'skipped') && needs.changes.outputs.asset_full == 'true' && (github.event_name != 'pull_request' || (github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository)) }}
     permissions:
       contents: read
     uses: ./.github/workflows/reusable-stage3g-full.yml
     with:
       target_sha: ${{ needs.changes.outputs.head_sha }}
+
+  world-proof-admission:
+    name: Exact-world performance evidence
+    needs: changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout exact classified revision without LFS
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.changes.outputs.head_sha }}
+          fetch-depth: 0
+          lfs: false
+          persist-credentials: false
+
+      - name: Verify required exact-world performance receipts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_SHA: ${{ needs.changes.outputs.base_sha }}
+          HEAD_SHA: ${{ needs.changes.outputs.head_sha }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_DRAFT: ${{ github.event.pull_request.draft || false }}
+        run: |
+          python scripts/ci/world_proof_gate.py \
+            --base "$BASE_SHA" --head "$HEAD_SHA" \
+            --event "$EVENT_NAME" --draft "$PR_DRAFT" \
+            --output "${{ runner.temp }}/world-proof-admission.json"
+
+      - name: Retain world proof admission decision
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: world-proof-admission-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/world-proof-admission.json
+          if-no-files-found: error
+          retention-days: 14
 
   aggregate:
     name: Aggregate CI gate
@@ -238,6 +277,7 @@ jobs:
       - unreal-code
       - asset-validation
       - stage3g-full-validation
+      - world-proof-admission
     runs-on: ubuntu-latest
     timeout-minutes: 2
     permissions: {}
@@ -245,6 +285,7 @@ jobs:
       - name: Fail closed unless required lanes passed
         shell: bash
         env:
+          WORLD_PROOF_RESULT: ${{ needs.world-proof-admission.result }}
           CHANGES_RESULT: ${{ needs.changes.result }}
           REPO_POLICY_RESULT: ${{ needs.repo-policy.result }}
           GOVERNANCE_RESULT: ${{ needs.governance.result }}
@@ -319,6 +360,7 @@ jobs:
             fi
           }
 
+          require_success "world-proof-admission" "${WORLD_PROOF_RESULT}"
           require_success "changes" "${CHANGES_RESULT}"
           require_success "repo-policy" "${REPO_POLICY_RESULT}"
           require_success "governance" "${GOVERNANCE_RESULT}"

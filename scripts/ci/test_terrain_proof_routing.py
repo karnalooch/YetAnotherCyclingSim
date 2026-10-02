@@ -133,9 +133,10 @@ class TerrainProofRoutingTests(unittest.TestCase):
             "- name: Clean self-hosted workspace", 1
         )[0]
         self.assertIn(
-            "_embark-terrain-worktree/${{ env.YACS_M3_EVIDENCE_ROOT }}/**", upload
+            "_terrain-recovery-worktree/${{ env.YACS_M3_EVIDENCE_ROOT }}/**", upload
         )
-        self.assertNotIn("_embark-terrain-worktree/Content", upload)
+        self.assertNotIn("_terrain-recovery-worktree/Content", upload)
+        self.assertNotIn("_embark-terrain-worktree/", upload)
         self.assertNotIn("/PCGExCorridor/**", upload)
         self.assertIn("'Saved/BuildCache/PCGEx/compile-state.json'", author)
 

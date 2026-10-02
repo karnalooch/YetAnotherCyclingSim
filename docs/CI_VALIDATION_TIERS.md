@@ -452,3 +452,99 @@ references reviewed for the adapter and derived-media commands:
 - https://ffmpeg.org/ffmpeg.html
 
 The exact UE runner proof, not the API reference alone, establishes compatibility.
+
+## Hosted test completeness and cheap-before-heavy ordering
+
+Issue #320 replaces the hand-maintained script-test subset with
+`scripts/ci/run_script_tests.py`. Every `scripts/**/test_*.py` module runs in an
+isolated Python process; zero-test discovery, all-skipped modules, import errors,
+timeouts and nonzero exits fail the suite. The existing final-architecture
+assertion entrypoint is explicitly supported. Inventory and per-module elapsed
+times/logs are uploaded even after failure. The physics reference suite retains
+its independent minimum-count guard. Hosted PowerShell parsing and LFS smoke
+remain separate checks.
+
+Non-documentation `worldgen/**` inputs and `.gumball/**` policy changes run hosted
+contracts. They do not imply a C++ rebuild. Applicable hosted checks must pass
+before automatic code-only Unreal execution. Full-world authoring additionally
+waits for world-proof admission, avoiding a costly author pass when its required
+performance evidence is missing. Legitimately skipped optional Python checks do
+not block C++-only work.
+
+The geometry broker workflow retains its explicit build-once proof; its previous
+automatic PR/push geometry tests now run in the central discovered suite. All
+script Python receives syntax compilation without importing Unreal modules.
+
+## Exact-world performance admission
+
+The local Aggregate requires `world-proof-admission` success. This hosted,
+read-only job uses `.gumball/world-proof-policy.json` and the existing Proof
+Broker artifact contract; it never launches a GPU job or mutates a map.
+
+| Context | Required behavior |
+|---|---|
+| Draft world PR | List required scenarios as `DEFERRED_DRAFT`; no hardware launch |
+| Ready world PR | Require successful scenario-specific proof for the exact HEAD |
+| Main world push | Require proof for the new exact main SHA; PR-head proof is insufficient |
+| Docs or ordinary CI changes | `NOT_REQUIRED`; no hardware launch |
+| Scheduled/manual static CI sweep | `STATIC_ONLY`; no implicit world benchmark |
+| New unregistered world | Fail readiness rather than substitute an older map |
+
+For an existing broker scenario, request its explicit proof before readiness.
+If admission has already failed, complete that proof and rerun the failed CI
+job/run at the same SHA. On main, use the existing trusted manual performance
+workflow with the exact main SHA and a unique request ID; the broker's open-PR
+command is not a main-branch target selector. No polling job occupies a runner
+while an operator prepares evidence.
+
+The consumer requires a non-expired artifact, successful completed workflow run,
+allow-listed producer workflow, same repository and a workflow definition from
+the default branch. Failed, cancelled, in-progress, other-workflow and
+branch-definition recovery runs cannot satisfy merge admission. Such recovery
+runs remain useful diagnostics. GitHub's token is not forwarded to artifact
+storage redirects. Archives are bounded and read in memory without extraction.
+
+The consumer then recomputes Frame/GPU p95 and the over-budget fraction from raw
+CSV. Missing/non-finite timings, insufficient samples, wrong GPU/resolution,
+relaxed thresholds, wrong SHA, unknown/missing sectors and inconsistent summaries
+fail. Existing 60 FPS thresholds remain unchanged.
+
+`stage3g-environment` accepts the existing fixed-map Stage 3G summary/CSV schema
+and valley/forest/high_alpine sectors. It is legacy regression evidence for
+`L_CyclingTest`, never Sa Calobra acceptance.
+
+### Sa Calobra producer contract
+
+The independent Sa Calobra sampler must register
+`sa-calobra-terrain-performance` with the existing Proof Broker and publish
+`proof-sa-calobra-terrain-performance-<exact-sha>` only after success. An absent
+producer is an explicit blocker, not an optional skip. The archive contains:
+
+- `sa-calobra-terrain-performance-summary.json`;
+- `sa-calobra-terrain-performance.csv`.
+
+The summary reuses the existing performance field names: `Head`, `Result`,
+`EditorExitCode`, `Resolution`, `VSync`, `TargetFps`, `FrameBudgetMs`,
+`P95FrameBudgetMs`, `P95GpuBudgetMs`, `AllowedOverBudgetRatio`,
+`ReferenceGpuMatched`, `GpuNames` and `Sectors`. Each sector reports `Sector`,
+`SampleCount`, `PositiveGpuSampleCount`, `FrameP95Ms`, `GpuP95Ms`,
+`OverBudgetRatio` and `Pass`. CSV columns include `sector`, `frame_ms`, `game_ms`,
+`draw_ms`, `rhi_ms` and `gpu_ms`.
+
+Additional required bindings are `ScenarioId=sa-calobra-terrain`,
+`MapPackage=/Game/Worlds/SaCalobra/L_SaCalobraTerrainBaseline`,
+`ComponentCount=1024`, `TerrainSha256`, `SettingsSha256`,
+`ScreenPercentage=100` and `DynamicResolution=false`. The producer must hash the
+actual generated terrain and effective camera/light/quality settings, not just a
+source filename. Views are `overview`, `rider` and `slope`, each with at least
+120 frame samples and 120 positive GPU samples. Resolution is 1920x1080, VSync is
+disabled, the reference GPU is RTX 2070 SUPER, and all views must satisfy the
+existing Frame/GPU 60 FPS budget and at most 5% over-budget frames.
+
+These are terrain-baseline admission fields, not a new sampler implementation.
+Real hardware evidence and producer-side binding checks remain required. No
+legacy artifact can satisfy this scenario. Human visual acceptance and later
+traversal/package gates remain separate.
+
+The initial audit and retained workflow rationale are recorded in
+[`ci/TEST_AND_PROOF_AUDIT.md`](ci/TEST_AND_PROOF_AUDIT.md).

@@ -378,5 +378,25 @@ class ChangeClassifierTests(unittest.TestCase):
             self.assertIn("head_sha=PATHS_FILE\n", emitted)
 
 
+class HostedConfigurationRoutingTests(unittest.TestCase):
+    def test_policy_and_world_inputs_run_contracts_without_compilation(self):
+        for path in (
+            ".gumball/proof-broker.json",
+            ".gumball/world-proof-policy.json",
+            "worldgen/terrain/adaptive_terrain_policy.json",
+            "worldgen/assets/catalog.json",
+            "worldgen/terrain/benchmarks/sa_calobra/baseline.json",
+        ):
+            with self.subTest(path=path):
+                result = cc.classify_paths([path])
+                self.assertTrue(result.ci)
+                self.assertFalse(result.ue_code)
+                self.assertFalse(result.unreal_compile)
+
+    def test_documentation_in_worldgen_stays_light(self):
+        result = cc.classify_paths(["worldgen/terrain/benchmarks/sa_calobra/README.md"])
+        self.assertTrue(result.docs_only)
+
+
 if __name__ == "__main__":
     unittest.main()

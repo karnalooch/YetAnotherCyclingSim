@@ -29,7 +29,7 @@
     {
       "file": "ci.yml",
       "state": "CURRENT",
-      "reason": "Primary caller-local PR/main CI graph and Aggregate CI gate."
+      "reason": "Primary caller-local PR/main CI graph, cheap-before-heavy ordering, exact-world performance admission and Aggregate CI gate."
     },
     {
       "file": "manual-unreal.yml",
@@ -64,7 +64,7 @@
     {
       "file": "passo-giau-r4-1b3-geometry-probe.yml",
       "state": "BROKER-MANAGED",
-      "reason": "Current Gumball Proof Broker target for r4-1b3-geometry; workflow_dispatch remains recovery fallback."
+      "reason": "Explicit broker/manual legacy geometry regression proof. Automatic geometry and syntax checks run in the central discovered hosted suite; this fixed SP638 proof cannot admit Sa Calobra."
     },
     {
       "file": "passo-giau-road-alignment.yml",
@@ -99,7 +99,7 @@
     {
       "file": "reusable-python.yml",
       "state": "CURRENT",
-      "reason": "Hosted Python and repository contract validation lane."
+      "reason": "Hosted complete script-test discovery, independent physics reference suite, syntax and PowerShell contracts with per-module evidence."
     },
     {
       "file": "reusable-stage3g-full.yml",

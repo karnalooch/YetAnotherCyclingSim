@@ -117,3 +117,21 @@ M3 admission, exact-target handling, separate static/proof concurrency and the
 non-cancelling author-worktree lock are specified in
 [`../CI_VALIDATION_TIERS.md`](../CI_VALIDATION_TIERS.md). Broker reuse requires
 successful technical evidence and never implies human visual acceptance.
+
+## Sa Calobra transition and centralized hosted tests
+
+Issue #320 keeps the historical Passo Giau/SP638 broker workflows executable as
+regression/recovery tools, not as proof of the active Sa Calobra world. `CURRENT`
+or `BROKER-MANAGED` means a tool remains usable; it does not mean its fixed map
+is the current product destination. The two `UNKNOWN` author workflows retain
+that bounded status until equivalent real-world replacement evidence permits
+retirement. No workflow is deleted based solely on a geographic rename.
+
+The geometry capability broker workflow is now explicit-dispatch only. Its two
+automatic geometry suites and Python syntax checks are covered centrally by
+`reusable-python.yml`, eliminating duplicate automatic PR/push runs while keeping
+the complete manual/broker proof. The primary `ci.yml` adds read-only exact-world
+performance admission to Aggregate. No new executable workflow is introduced.
+
+See [the test/proof audit](TEST_AND_PROOF_AUDIT.md) and
+[CI validation tiers](../CI_VALIDATION_TIERS.md#exact-world-performance-admission).
