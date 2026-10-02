@@ -116,21 +116,33 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         capture = self.workflow.split(
             "- name: Capture isolated native Sa Calobra terrain", 1
         )[1].split("- name: Retire owner-approved obsolete Italy payloads", 1)[0]
-        self.assertIn("$env:YACS_KEEP_EDITOR_OPEN = '1'", capture)
-        self.assertIn("RUNNER_TRACKING_ID", capture)
         self.assertIn("$proof.captures.Count -ne 4", capture)
         self.assertIn("$proof.bob_mode -ne 'INSPECTOR_ONLY'", capture)
-        self.assertIn(
-            "$proof.editor_handoff_view -ne 'road-contact-rider'",
-            capture,
-        )
-        self.assertNotIn("WaitForExit(300000)", capture)
+        self.assertIn("WaitForExit(300000)", capture)
+        self.assertNotIn("YACS_KEEP_EDITOR_OPEN", capture)
+        self.assertNotIn("RUNNER_TRACKING_ID", capture)
+
+        handoff = self.workflow.split(
+            "- name: Launch interactive Sa Calobra owner handoff", 1
+        )[1].split(
+            "- name: Clean current-run evidence and non-allow-listed residue", 1
+        )[0]
+        self.assertIn("Content/Python", handoff)
+        self.assertIn("init_unreal.py", handoff)
+        self.assertIn("owner_handoff_startup", handoff)
+        self.assertIn("Remove-Item Env:RUNNER_TRACKING_ID", handoff)
+        self.assertNotIn("-ExecutePythonScript", handoff)
+        self.assertIn("owner-handoff-proof.json", handoff)
+        self.assertIn("road-contact-rider", handoff)
+        self.assertIn("OWNER HANDOFF PASS", handoff)
 
         self.assertIn(
             "if: ${{ always() && !inputs.region_terrain_import }}",
             self.workflow,
         )
-        importer = (ROOT / "scripts/ue/Invoke-YacsRegionTerrainImport.ps1").read_text()
+        importer = (
+            ROOT / "scripts/ue/Invoke-YacsRegionTerrainImport.ps1"
+        ).read_text()
         self.assertIn("-AbsLog=", importer)
         self.assertIn("$LogName + '.engine.log'", importer)
         self.assertIn("Evidence directory already exists", importer)

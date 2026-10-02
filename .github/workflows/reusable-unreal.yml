@@ -311,57 +311,21 @@ jobs:
           $engine = Resolve-YacsUnrealEngine -ProjectPath $project
           $script = Join-Path (Get-Location) 'scripts/ue/capture_region_terrain.py'
           $arguments = @(('"' + $project + '"'), ('-ExecutePythonScript="' + $script + '"'), '-Unattended', '-NoPause', '-NoSplash', '-NoP4', '-windowed', '-ResX=1920', '-ResY=1080', '-NoVSync', '-FixedSeed', '-ScriptErrorsAreFatal', '-stdout', ('-AbsLog="' + (Join-Path $root 'capture.engine.log') + '"'))
-          $env:YACS_KEEP_EDITOR_OPEN = '1'
-          $proofPath = Join-Path $root 'terrain-capture-proof.json'
-
-          # Keep the successful final rider view alive after the Actions step.
-          # The self-hosted runner normally reaps child processes by tracking id,
-          # so this owner-handoff Editor gets a distinct id. The next YACS Unreal
-          # job still closes workspace-scoped stale Editors before checkout/reset.
-          $runnerTrackingId = $env:RUNNER_TRACKING_ID
-          $env:RUNNER_TRACKING_ID = "yacs-region-handoff-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
-          try {
-            $process = Start-Process -FilePath $engine.UnrealEditorPath -ArgumentList $arguments -PassThru -NoNewWindow -RedirectStandardOutput (Join-Path $root 'capture.stdout.log') -RedirectStandardError (Join-Path $root 'capture.stderr.log')
+          $process = Start-Process -FilePath $engine.UnrealEditorPath -ArgumentList $arguments -PassThru -NoNewWindow -RedirectStandardOutput (Join-Path $root 'capture.stdout.log') -RedirectStandardError (Join-Path $root 'capture.stderr.log')
+          if (-not $process.WaitForExit(300000)) {
+            $process | Stop-Process -Force
+            throw 'Sa Calobra terrain capture timed out.'
           }
-          finally {
-            if ([string]::IsNullOrEmpty($runnerTrackingId)) {
-              Remove-Item Env:RUNNER_TRACKING_ID -ErrorAction SilentlyContinue
-            }
-            else {
-              $env:RUNNER_TRACKING_ID = $runnerTrackingId
-            }
+          if ($process.ExitCode -ne 0) {
+            throw "Terrain capture editor exit $($process.ExitCode)."
           }
-
-          $deadline = [DateTime]::UtcNow.AddSeconds(300)
-          while (-not (Test-Path -LiteralPath $proofPath) -and [DateTime]::UtcNow -lt $deadline) {
-            $process.Refresh()
-            if ($process.HasExited) {
-              throw "Terrain capture editor exited before proof with code $($process.ExitCode)."
-            }
-            Start-Sleep -Seconds 2
-          }
-          if (-not (Test-Path -LiteralPath $proofPath)) {
-            if (-not $process.HasExited) { $process | Stop-Process -Force }
-            throw 'Sa Calobra terrain capture proof timed out.'
-          }
-
-          Start-Sleep -Milliseconds 500
-          $proof = Get-Content $proofPath -Raw | ConvertFrom-Json
+          $proof = Get-Content (Join-Path $root 'terrain-capture-proof.json') -Raw | ConvertFrom-Json
           if (
             $proof.technical_capture_status -ne 'PASS' -or
             $proof.exact_sha -ne '${{ inputs.target_sha }}' -or
             $proof.captures.Count -ne 4 -or
-            $proof.bob_mode -ne 'INSPECTOR_ONLY' -or
-            $proof.editor_handoff_requested -ne $true -or
-            $proof.editor_handoff_view -ne 'road-contact-rider'
+            $proof.bob_mode -ne 'INSPECTOR_ONLY'
           ) { throw 'Terrain capture proof failed.' }
-
-          Start-Sleep -Seconds 3
-          $process.Refresh()
-          if ($process.HasExited) {
-            throw "Unreal Editor did not remain open for owner inspection; exit code $($process.ExitCode)."
-          }
-          Write-Host "Sa Calobra handoff PASS; Unreal Editor pid=$($process.Id) remains open on road-contact-rider."
 
       - name: Retire owner-approved obsolete Italy payloads
         if: ${{ inputs.region_terrain_import }}
@@ -404,6 +368,79 @@ jobs:
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/Unreal/**/*.log
           if-no-files-found: error
           retention-days: 7
+
+      - name: Launch interactive Sa Calobra owner handoff
+        if: ${{ success() && inputs.region_terrain_import }}
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}'
+          $proofPath = Join-Path $root 'owner-handoff-proof.json'
+          if (Test-Path -LiteralPath $proofPath) {
+            Remove-Item -LiteralPath $proofPath -Force
+          }
+
+          $pythonDir = Join-Path (Get-Location) 'Content/Python'
+          New-Item -ItemType Directory -Path $pythonDir -Force | Out-Null
+          $bootstrap = @'
+import os
+import sys
+import unreal
+project = unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_dir())
+if project not in sys.path:
+    sys.path.insert(0, project)
+from scripts.ue import owner_handoff_startup
+'@
+          Set-Content -LiteralPath (Join-Path $pythonDir 'init_unreal.py') -Value $bootstrap -Encoding utf8
+
+          $env:YACS_TERRAIN_CAPTURE_ROOT = $root
+          $env:YACS_TERRAIN_SHA = '${{ inputs.target_sha }}'
+          . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
+          $project = Join-Path (Get-Location) 'YetAnotherCyclingSim.uproject'
+          $engine = Resolve-YacsUnrealEngine -ProjectPath $project
+          $arguments = @(('"' + $project + '"'), '-NoP4', '-windowed', '-ResX=1920', '-ResY=1080', '-NoVSync', ('-AbsLog="' + (Join-Path $root 'owner-handoff.engine.log') + '"'))
+
+          $runnerTrackingId = $env:RUNNER_TRACKING_ID
+          Remove-Item Env:RUNNER_TRACKING_ID -ErrorAction SilentlyContinue
+          try {
+            $process = Start-Process -FilePath $engine.UnrealEditorPath -ArgumentList $arguments -PassThru
+          }
+          finally {
+            if (-not [string]::IsNullOrEmpty($runnerTrackingId)) {
+              $env:RUNNER_TRACKING_ID = $runnerTrackingId
+            }
+          }
+
+          $deadline = [DateTime]::UtcNow.AddSeconds(120)
+          while (-not (Test-Path -LiteralPath $proofPath) -and [DateTime]::UtcNow -lt $deadline) {
+            $process.Refresh()
+            if ($process.HasExited) {
+              throw "Owner handoff Editor exited before proof with code $($process.ExitCode)."
+            }
+            Start-Sleep -Seconds 2
+          }
+          if (-not (Test-Path -LiteralPath $proofPath)) {
+            if (-not $process.HasExited) { $process | Stop-Process -Force }
+            throw 'Owner handoff proof timed out.'
+          }
+
+          $proof = Get-Content $proofPath -Raw | ConvertFrom-Json
+          if (
+            $proof.status -ne 'PASS' -or
+            $proof.exact_sha -ne '${{ inputs.target_sha }}' -or
+            $proof.map -ne '/Game/Worlds/SaCalobra/L_SaCalobraTerrainBaseline' -or
+            $proof.view -ne 'road-contact-rider' -or
+            $proof.bob_mode -ne 'INSPECTOR_ONLY' -or
+            $proof.map_saved -ne $false
+          ) { throw 'Owner handoff proof failed.' }
+
+          Start-Sleep -Seconds 3
+          $process.Refresh()
+          if ($process.HasExited) {
+            throw "Owner handoff Editor did not remain open; exit code $($process.ExitCode)."
+          }
+          Write-Host "OWNER HANDOFF PASS: Unreal Editor pid=$($process.Id) remains open on Sa Calobra road-contact-rider."
 
       - name: Clean current-run evidence and non-allow-listed residue
         if: ${{ always() && !inputs.region_terrain_import }}
