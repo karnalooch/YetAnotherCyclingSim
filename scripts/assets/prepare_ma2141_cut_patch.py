@@ -220,12 +220,17 @@ def prepare(prepared, profile_path, output_manifest, output_r16, exact_sha):
     patch = np.full((height, width), NEUTRAL_HEIGHT, dtype="<u2")
 
     modified = 0
+    skipped_guard_over_cap = 0
     cut_values = []
+    road_keys = set(road_targets)
     for (grid_x, grid_y), target_m in requested.items():
         base_m = _decode_height_m(terrain[grid_y, grid_x], terrain_manifest)
         delta_m = min(0.0, target_m - CUT_CLEARANCE_M - base_m)
         if delta_m < -MAX_CUT_M - 1e-6:
-            raise ValueError("CUT-only patch exceeded the 1.0 m safety cap")
+            if (grid_x, grid_y) in road_keys:
+                raise ValueError("Road CUT target exceeded the 1.0 m safety cap")
+            skipped_guard_over_cap += 1
+            continue
         if delta_m < -1e-6:
             modified += 1
             cut_values.append(-delta_m)
@@ -258,6 +263,7 @@ def prepare(prepared, profile_path, output_manifest, output_r16, exact_sha):
         "guard_cells": GUARD_CELLS,
         "max_cut_limit_m": MAX_CUT_M,
         "modified_vertex_count": modified,
+        "skipped_guard_over_cap_count": skipped_guard_over_cap,
         "max_cut_m": max(cut_values),
         "mean_cut_m": float(np.mean(cut_values)),
         "rect": {
