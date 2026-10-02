@@ -22,9 +22,10 @@ Raster contract: 16,000 × 16,000 Float32 pixels, one band, 0.5 m spacing,
 
 ## Current working AOI (2026-10-02)
 
-The source benchmark is 8 km × 8 km, but the active Unreal terrain import is a
-2,016.5 m × 2,016.5 m native-resolution window around Coll dels Reis. This is
-the square currently under review; it is not the final world extent.
+The source benchmark is 8 km × 8 km, but the active Unreal terrain import uses
+a baseline bbox footprint of 2,016.5 m × 2,016.5 m around Coll dels Reis. The
+4033 native samples at 0.5 m spacing span 2,016.0 m from first to last vertex.
+This is the square currently under review; it is not the final world extent.
 
 | Point | EPSG:25831 (E, N) | WGS84 (lat, lon) |
 |---|---:|---:|
