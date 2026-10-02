@@ -75,6 +75,13 @@ class RoadSurfaceTests(unittest.TestCase):
         altered["stations"][1160]["candidate_ground_m"][12] += 0.5
         self.assertFalse(surface_proof_valid(altered))
 
+    def test_stale_receipt_rejects_even_a_change_outside_metric_window(self):
+        z, q, _ = design_profile(self.stations, self.xy, self.center, self.crossfall)
+        rows = self.rows(z, q)
+        profile = {"stations": rows, "surface_inspection": inspect_surface(rows)}
+        profile["stations"][10]["candidate_ground_m"][12] += 0.001
+        self.assertFalse(surface_proof_valid(profile))
+
     def test_nonfinite_surface_fails(self):
         rows = self.rows(self.center, self.crossfall)
         rows[1160]["candidate_ground_m"][0] = float("nan")

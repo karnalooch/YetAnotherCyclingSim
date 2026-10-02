@@ -2968,3 +2968,10 @@ intersections; bounded surface max crossfall 3.9698%, rate 0.004261/m, facet
 angle 4.5439 degrees, edge grade 0.417924. CUT preparation passes the unchanged
 spatial 1/4 m recipe with no structure-review samples. Fresh exact-SHA native
 execution and the same nine cameras are required before a visual conclusion.
+
+The 3D consumer inspection runs using Python's standard library, including inside
+UE embedded Python; no embedded NumPy installation is introduced. NumPy remains
+only in the already-supported offline profile designer. The receipt hashes every
+station/XY/Z coordinate and recomputes metrics, rejecting stale reports even
+when a small change leaves the maximum metrics unchanged. Cross-runtime metric
+comparison tolerates 1e-9 numeric rounding; geometric limits are not relaxed.
