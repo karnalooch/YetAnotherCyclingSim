@@ -137,6 +137,23 @@ require an explicit separate source/mask decision, never implicit median filling
 The 2016 m vertex extent is intentionally smaller than the 8 km source area and
 does not reduce the final world or road-network coverage target.
 
+The current three-scope overview is rendered in
+[the Sa Calobra working-area map](assets/sa_calobra_working_aoi.webp): retained
+8 km source coverage, the bounded ~2 km Unreal import and the active 300 m
+Ma-2141 diagnostic. The image is explanatory only; manifests, source geometry
+and proof artifacts remain authoritative.
+
+Expansion must stay evidence-led. A west / north-west follow-up toward the Sa
+Calobra descent is the first candidate when the objective is additional
+Ma-2141 length and hairpins. When the objective is network richness, subdivide
+the retained source coverage into candidate windows and score source-derived
+road length, distinct road identities, junctions, curvature/hairpins, delivery
+priority, NoData/terrain validity and source confidence. If the retained 8 km
+source area cannot provide enough distinct-road coverage, admit a second source
+AOI instead of moving canonical roads or making one monolithic native-resolution
+8 km Landscape. Multi-window growth should use bounded regeneration and
+streaming/partitioning appropriate to the measured Unreal cost.
+
 The producer emits a hash-bearing `terrain-import.json` and little-endian R16.
 Raster pixel centres define the local origin: UE X increases east and UE Y
 increases south. The manifest retains the metric origin for later GIS consumers;
