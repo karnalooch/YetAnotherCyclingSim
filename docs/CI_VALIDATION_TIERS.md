@@ -54,6 +54,28 @@ Editor remains open for the owner's manual inspection. Final cleanup for that
 region handoff does not reset the inspection state. A later Unreal proof may
 close the previous session before its fresh exact-revision checkout.
 
+The visible-road proof is now split from native contact evidence. The native
+0.5 m facet mesh remains the technical contact sampler; the rider-visible mesh
+is the smooth ribbon built from the inspected candidate profile. CI must never
+accept a smooth-looking road merely because native contact passed, and must
+never accept native contact by forcing the visible ribbon to inherit DTM facet
+roughness.
+
+Current convergence requires three independent receipts:
+
+1. **native contact** — no misses/floating/penetrating on the evidence mesh;
+2. **smooth ribbon topology** — closed/non-folded/non-inverted presentation mesh;
+3. **road-to-terrain fit** — signed residuals classified as `CONTACT_OK`,
+   `CUT_REQUIRED`, `FILL_REQUIRED` or `STRUCTURE_REVIEW`.
+
+Until the third receipt exists and the owner accepts rider-camera evidence,
+terrain fit remains unresolved even if the ribbon looks smooth. BOB stays
+inspector-only and no earthworks are authored automatically.
+
+PR #319 run 37007690564 is explicit failed evidence: native preparation reached
+contact PASS, but capture stopped after two terrain images because the UE
+consumer could not resolve the repository-level smooth-ribbon module. It must
+not be reused as a visual or terrain-fit PASS.
 
 Retire this PR-specific bootstrap after a trusted region proof lane replaces it.
 

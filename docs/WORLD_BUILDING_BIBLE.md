@@ -2507,6 +2507,44 @@ existing 0.5 m stations. The ribbon fails closed on folded/inverted XY topology.
 It does not change `Base_DTM`, `Road_Earthworks`, route authority or physics,
 and remains an unadmitted presentation preview.
 
+##### Road-to-terrain fit contract
+
+The smooth ribbon must **not** be bent back onto every native DTM triangle merely
+to make contact tests pass. The ribbon is the current continuous road-design
+presentation candidate; the native-facet mesh is invisible measurement evidence.
+Neither is canonical road physics or final geographic-width authority yet.
+
+For every inspected station and transverse sample, measure the signed vertical
+residual:
+
+`road_surface_z - Landscape_z`
+
+and preserve that residual as evidence. During the current preview phase the
+existing nominal 80 mm slab band is only a diagnostic contact tolerance, not an
+engineering construction limit:
+
+- residual within the supported slab band -> `CONTACT_OK`;
+- road surface above supported terrain -> `FILL_REQUIRED`;
+- terrain intruding above the road surface -> `CUT_REQUIRED`;
+- large, abrupt or context-sensitive residual near drops, retaining edges,
+  stacked branches or structures -> `STRUCTURE_REVIEW`.
+
+BOB owns this classification as **INSPECTOR_ONLY** in PR #319. It may report
+required cut/fill/structure review but must not author terrain, move canonical
+road XY, distort the visible ribbon to match DTM facets, or promote the preview
+to physics/geographic truth. Later construction lessons may modify only the
+approved `Road_Earthworks`/dedicated-structure presentation layers after the
+technical and human gates are passed; `Base_DTM` remains immutable source
+terrain.
+
+The first smooth-ribbon runtime attempt at `ef15a020`, CI run 37007690564,
+did **not** validate ribbon geometry: capture stopped after the two terrain views
+because `ma2141_road_preview.py` could not import the repository-level
+`scripts.geometry.smooth_road_ribbon` module in the Editor Python path. This is
+an integration/import-path failure, not evidence that the ribbon or terrain-fit
+contract passed or failed. The preceding native-facet preparation still reported
+zero floating and zero penetrating centroids.
+
 #### Inspector-only Sa Calobra handoff
 
 Owner direction, 2026-10-02: PR #319 no longer executes the experimental BOB

@@ -5,6 +5,10 @@ from pathlib import Path
 import sys
 import unreal
 
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from scripts.geometry.smooth_road_ribbon import build_smooth_road_ribbon
 
 
