@@ -69,6 +69,7 @@ flowchart TB
 | Architecture policy | **Embark-first tooling admission + tools-first + evidence ladder + local proof** |
 | Diagram language | **Gumball Blueprint Mermaid style** |
 | Current priority | **import and validate the Sa Calobra 0.5 m DTM baseline, then prove the Ma-2141 road corridor** |
+| Route reference | **sea-level Sa Calobra → Coll dels Reis → Ma-10 → Menut/Binifaldó → Coll des Pedregaret; ~29–30 km planning estimate, exact chainage pending** |
 | Terrain source | **CNIG/IGN MDT50cm Sa Calobra 8 km × 8 km benchmark; bounded native UE import PASS, terrain visual accepted; performance pending** |
 | Road authority | **verified Ma-2141 alignment; do not snap canonical road XY to the Landscape grid** |
 | Acceptance | **rider-camera visual review + exact-SHA technical/performance evidence** |
@@ -83,6 +84,7 @@ The old Stage 3G / R4.1 / B.x vocabulary is historical. Existing workflow names 
 | Product scope and MVP boundaries | [`PRODUCT_REQUIREMENTS.md`](PRODUCT_REQUIREMENTS.md) | **Authoritative** |
 | Delivery order and current milestone | [`ROADMAP.md`](ROADMAP.md) | **Authoritative** |
 | How to build terrain/roads/worlds | [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md) | **Authoritative** |
+| First full-route visual/data reference | [`SA_CALOBRA_MENUT_ROUTE_REFERENCE.md`](SA_CALOBRA_MENUT_ROUTE_REFERENCE.md) | **Evidence / candidate** |
 | Draw architecture/workflow diagrams | [`DIAGRAM_STYLE.md`](DIAGRAM_STYLE.md) | **Authoritative visual convention** |
 | Inspect shipped production world pipelines | [`PRODUCTION_WORLD_ARCHITECTURE_REFERENCES.md`](PRODUCTION_WORLD_ARCHITECTURE_REFERENCES.md) | **Evidence dossier** |
 | Road and cornering physics geometry | [`ROAD_PHYSICS_PROFILE.md`](ROAD_PHYSICS_PROFILE.md) | **Authoritative** |
@@ -112,6 +114,7 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 ### World, terrain and authoring
 
 - [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md) — **authoritative methodology**: source terrain, tools-first/evidence-led architecture, Landscape Edit Layers, roads, earthworks, cliffs, materials, PCG, RVT, streaming and world acceptance.
+- [`SA_CALOBRA_MENUT_ROUTE_REFERENCE.md`](SA_CALOBRA_MENUT_ROUTE_REFERENCE.md) — evidence dossier for the candidate 1:1 sea-to-forest route, visual identity, source acquisition and asset references; not route/physics authority.
 - [`DIAGRAM_STYLE.md`](DIAGRAM_STYLE.md) — Gumball-derived Blueprint Mermaid language for new or substantially revised YACS architecture/workflow diagrams.
 - [`PRODUCTION_WORLD_ARCHITECTURE_REFERENCES.md`](PRODUCTION_WORLD_ARCHITECTURE_REFERENCES.md) — copyright-safe reconstructions of public Far Cry 5 and THE FINALS production pipelines plus direct YACS mappings; evidence, not methodology authority.
 - [`YACS_WORLD_AUTHORING_LIBRARY.md`](YACS_WORLD_AUTHORING_LIBRARY.md) — reusable authoring systems, semantic catalog, presets and generated-output boundary.
