@@ -2,8 +2,9 @@
 
 This module is started from the guarded project Content/Python/init_unreal.py. It keeps
 BOB inspector-only, loads the accepted Base_DTM map, spawns the verified
-native-contact road preview, positions the primary editor viewport at the rider
-view, writes a small proof, and never saves the map.
+native-contact road preview plus deterministic diagnostic sun/sky lighting,
+positions the primary editor viewport at the rider view, writes a small proof,
+and never saves the map.
 """
 
 from __future__ import annotations
@@ -25,7 +26,7 @@ _done = False
 _kept_objects = None
 
 
-def _write_proof(root, exact_sha, status, error=""):
+def _write_proof(root, exact_sha, status, error="", lighting=None):
     payload = {
         "schema_version": 1,
         "exact_sha": exact_sha,
@@ -33,6 +34,12 @@ def _write_proof(root, exact_sha, status, error=""):
         "error": error,
         "map": MAP_PACKAGE,
         "view": "road-contact-rider",
+        "viewmode": lighting.get("viewmode") if lighting else None,
+        "lighting_status": lighting.get("status") if lighting else "NOT_VERIFIED",
+        "directional_light_intensity": (
+            lighting.get("directional_light_intensity") if lighting else None
+        ),
+        "skylight_intensity": lighting.get("skylight_intensity") if lighting else None,
         "bob_mode": "INSPECTOR_ONLY",
         "map_saved": False,
     }
@@ -88,12 +95,57 @@ def _configure():
 
     for command in (
         "viewmode lit",
+        "ShowFlag.Lighting 1",
         "r.AntiAliasingMethod 1",
         "r.PostProcessAAQuality 6",
         "r.ScreenPercentage 100",
         "r.RayTracing.Geometry.Landscape.LODBias -1",
     ):
         unreal.SystemLibrary.execute_console_command(world, command)
+
+    unreal.AutomationLibrary.set_editor_viewport_view_mode(
+        unreal.ViewModeIndex.VMI_LIT
+    )
+    if (
+        unreal.AutomationLibrary.get_editor_active_viewport_view_mode()
+        != unreal.ViewModeIndex.VMI_LIT
+    ):
+        raise RuntimeError("Owner handoff did not enter VMI_LIT")
+
+    actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+    sun = actors.spawn_actor_from_class(
+        unreal.DirectionalLight,
+        unreal.Vector(0, 0, 300000),
+        unreal.Rotator(pitch=-33, yaw=-48, roll=0),
+        transient=True,
+    )
+    if not sun:
+        raise RuntimeError("Owner handoff failed to spawn diagnostic sun")
+    sun_component = sun.get_component_by_class(unreal.DirectionalLightComponent)
+    if not sun_component:
+        raise RuntimeError("Owner handoff diagnostic sun has no light component")
+    sun_component.set_intensity(8.0)
+    sun_component.set_cast_shadows(False)
+
+    sky = actors.spawn_actor_from_class(
+        unreal.SkyLight,
+        unreal.Vector(0, 0, 300000),
+        unreal.Rotator(),
+        transient=True,
+    )
+    if not sky:
+        raise RuntimeError("Owner handoff failed to spawn diagnostic skylight")
+    sky_component = sky.get_component_by_class(unreal.SkyLightComponent)
+    if not sky_component:
+        raise RuntimeError("Owner handoff diagnostic skylight has no light component")
+    sky_component.set_intensity(0.8)
+
+    lighting = {
+        "status": "PASS",
+        "viewmode": "VMI_LIT",
+        "directional_light_intensity": 8.0,
+        "skylight_intensity": 0.8,
+    }
 
     project = Path(
         unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_dir())
@@ -126,11 +178,11 @@ def _configure():
     editor = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem)
     editor.set_level_viewport_camera_info(camera_location, camera_rotation)
 
-    _kept_objects = road
-    _write_proof(root, exact_sha, "PASS")
+    _kept_objects = (road, sun, sky)
+    _write_proof(root, exact_sha, "PASS", lighting=lighting)
     unreal.log(
         "[OwnerHandoff] PASS; Sa Calobra + native-contact road left open "
-        "at road-contact-rider."
+        "at road-contact-rider in VMI_LIT with diagnostic sun + skylight."
     )
 
 
