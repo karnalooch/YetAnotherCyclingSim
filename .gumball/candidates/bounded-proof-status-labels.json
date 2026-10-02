@@ -1,0 +1,1 @@
+{"schema_version":1,"status":"candidate","invariant":"Broker-generated labels must fit provider limits without changing proof or artifact identity; preserve short labels and deterministically disambiguate long labels.","source":"scripts/ops/proof_broker.py","regression":"scripts/ci/test_proof_broker.py"}

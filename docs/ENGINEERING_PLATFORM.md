@@ -320,3 +320,7 @@ requests against an immutable implementation SHA. Registration alone is not
 measured terrain acceptance; the implementation commit must supply its native
 sampler and pass the existing exact-world validator. Materialized assets are
 retained before checkout and after execution in an isolated proof worktree.
+
+Proof-status labels preserve the configured name when it fits GitHub's 50-character
+limit. Longer labels use a readable prefix and a deterministic 12-hex SHA-256
+suffix; proof IDs, artifact names and request identities remain unchanged.
