@@ -78,6 +78,8 @@ def review_pavement_contact_trial(
             actions.append("locate failed triangle interiors; distinguish terrain interpolation from incorrect pavement footprint")
     if failure:
         actions.extend([
+            "inspect dated ground-level references and classified LiDAR; separate pavement, shoulder, hairpin island, rock cut and retaining wall before cut-fill",
+            "treat reference photographs as qualitative evidence; do not infer surveyed widths or wall dimensions from perspective alone",
             "after source review, regularize the presentation road profile within explicit deviation limits",
             "evaluate bounded native spline/patch cut-fill in Road_Earthworks; preserve Base_DTM",
             "reject excessive cut-fill or competing hairpin branches; escalate to retaining geometry when required",

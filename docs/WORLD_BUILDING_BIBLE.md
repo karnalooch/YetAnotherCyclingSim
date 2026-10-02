@@ -2088,3 +2088,47 @@ BOB's repair order remains source/footprint review, bounded road-profile work,
 local `Road_Earthworks` where justified, then renewed full-width and interior
 contact checks. Preserve `Base_DTM`. A promising catalogue entry or photograph
 cannot convert this rejected diagnostic into an accepted road.
+
+
+#### Street View inspection and identified CNIG tile (2026-10-02 follow-up)
+
+The owner made the panorama available after the earlier access block.
+The same session then successfully opened the CNIG catalogue in the browser.
+Street View was visually inspected in three directions at 39.8304352, 2.8136241,
+panorama `ISNWmsDuk5pvjtG_JAUMtQ`, labelled **July 2026**.
+[Inspected panorama](https://www.google.com/maps/@39.8304352,2.8136241,3a,90y,124.22h,90t/data=!3m7!1e1!3m5!1sISNWmsDuk5pvjtG_JAUMtQ!2e0!6shttps:%2F%2Fstreetviewpixels-pa.googleapis.com%2Fv1%2Fthumbnail%3Fcb_client%3Dmaps_sv.tactile%26w%3D900%26h%3D600%26pitch%3D0%26panoid%3DISNWmsDuk5pvjtG_JAUMtQ%26yaw%3D124.21905563141159!7i16384!8i8192?entry=ttu&g_ep=EgoyMDI2MDkyOS4wIKXMDSoASAFQAw%3D%3D).
+
+Observed qualitatively: a rock/gravel/vegetation island between the two hairpin
+arms; a narrow roadside strip outside the painted edge line; an outer guardrail
+beside a steep drop; exposed rock cuts and a masonry wall along the higher slope.
+The painted line is not itself the asphalt boundary. The wall's exact function,
+dimensions and extent are not established from these views. No panorama pixels
+were imported as project assets, and no metric road profile was extracted.
+
+Engineering implication for BOB: classify the two sides and the space between
+hairpin arms before earthworks. Preserve the island; do not merge competing
+branch falloffs across it. Separate an ordinary shoulder transition from a rock
+cut or retaining-structure candidate. Confirm geometry with orthophoto/LiDAR
+before choosing local cut-fill or explicit retaining geometry. This instruction
+now appears in executable contact-review next actions; it is not an automatic
+wall detector or a completed geometric repair.
+
+The CNIG catalogue search `484-4409` returned a Balearic H31 tile and an
+unrelated H30 mainland tile. The verified Balearic record is
+[CNIG file 13021922](https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13021922):
+`PNOA_2024_BAL_484-4409_H31_NPC03.LAZ`, year 2024, nominal 5 points/m²,
+36.74 MB, LAZ, advanced classification NPC03. The product description specifies
+ETRS89/UTM, orthometric heights and 1 km blocks. The listing uses hyphens while
+the detail record uses underscores; retain the actual downloaded filename later.
+
+Download was attempted but browser URL policy blocked a non-HTTP(S) action.
+No LAZ bytes, checksum, header bounds or class distribution were obtained.
+Tile identity is verified in the catalogue; exact clip coverage and point quality
+remain pending file inspection. Do not bypass the browser policy. Continue with
+the already pinned official orthophoto and native DTM while acquisition is blocked.
+Attribution for any later derived LiDAR product: **Obra derivada de
+LiDAR-PNOA-cob3 2022-2025 CC-BY 4.0 scne.es**.
+
+The 2024 LiDAR and July 2026 panorama are different acquisition epochs.
+Their apparent agreement must not be assumed. These observations do not change
+the rejected native-contact result or admit a BOB verified learning case.
