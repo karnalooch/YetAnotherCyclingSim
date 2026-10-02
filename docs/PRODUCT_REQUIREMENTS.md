@@ -87,6 +87,18 @@ Docelowy test wierności może porównywać zsynchronizowany po dystansie przeja
 
 Metodologia źródeł, World Authority, rekonstrukcji proceduralnej i dopuszczalnych uproszczeń pozostaje w [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md).
 
+### 3.4 Referencyjny korytarz pierwszej pełnej trasy
+
+**Kierunek referencyjny właściciela z 2026-10-02.** Aktualnym kandydatem do pierwszej pełnej trasy 1:1 jest ciągły rzeczywisty korytarz:
+
+`Port de Sa Calobra → Ma-2141 → Coll dels Reis → Ma-10 → Menut → Binifaldó → Coll des Pedregaret`
+
+Założeniem jest start **od morza**, przejazd przez rzeczywiste serpentyny i wysokogórski krajobraz Serra de Tramuntana, a następnie naturalne wejście w rzeczywisty kompleks leśny Menut/Binifaldó. Nie wolno zastępować tej zmiany krajobrazu ręcznie zaprojektowanym „biomem”; przejście skała → zarośla → las ma wynikać z danych przestrzennych rzeczywistego miejsca.
+
+Bieżący szacunek długości całego asfaltowego korytarza to około **29–30 km**, ale nie jest to jeszcze kanoniczny dystans produktu. Ostateczna długość, chainage, profil wysokości, nawierzchnia i dostęp rowerowy muszą zostać wyznaczone z dopuszczonej geometrii źródłowej i Road Physics Profile.
+
+Pełny dossier referencyjny, źródła wizualne, dane do pozyskania i kandydaci assetów są zapisani w [`SA_CALOBRA_MENUT_ROUTE_REFERENCE.md`](SA_CALOBRA_MENUT_ROUTE_REFERENCE.md). Dokument ma status **evidence / candidate** i nie oznacza, że trasa jest już zaimplementowana, zaakceptowana ani przejezdna.
+
 ## 4. Sterowanie MVP
 
 Pierwsza wersja będzie testowana bez fizycznego trenażera.
