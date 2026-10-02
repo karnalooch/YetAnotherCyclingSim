@@ -7,6 +7,8 @@ on:
     paths:
       - '.github/workflows/sa-calobra-world-data-cnig-probe.yml'
       - 'scripts/assets/acquire_sa_calobra_world_data.py'
+      - 'scripts/assets/resolve_sa_calobra_cnig_records.py'
+      - 'worldgen/terrain/benchmarks/sa_calobra/world_data/working_space_sources.json'
 
 permissions:
   contents: read
@@ -81,12 +83,25 @@ jobs:
           print(json.dumps(out,indent=2,ensure_ascii=False))
           PY
 
+      - name: Install CNIG resolver dependencies
+        shell: bash
+        run: |
+          python -m pip install --disable-pip-version-check --only-binary=:all: requests==2.32.5 pyproj==3.8.0
+
+      - name: Resolve exact LiDAR and MDS records for current working space
+        shell: bash
+        run: |
+          python scripts/assets/resolve_sa_calobra_cnig_records.py \
+            --manifest worldgen/terrain/benchmarks/sa_calobra/world_data/working_space_sources.json \
+            --output cnig-working-space-records.json
+
       - name: Upload CNIG probe
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: sa-calobra-cnig-probe-${{ github.sha }}
           path: |
             cnig-probe.json
+            cnig-working-space-records.json
             lidar.html
             mds.html
             ortho.html
