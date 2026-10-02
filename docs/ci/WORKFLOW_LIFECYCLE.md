@@ -52,6 +52,7 @@ endpoint is forbidden outside an explicit test fixture.
 | `reusable-python.yml` | CURRENT | Hosted Python and repository contracts |
 | `reusable-stage3g-full.yml` | CURRENT | Exact-head full-world proof used by CI |
 | `reusable-unreal.yml` | CURRENT | Code-only Unreal build + Automation |
+| `runner-monitor.yml` | CURRENT | Owner-only manual main-branch silent desktop companion deployment |
 | `runner-space-recovery.yml` | CURRENT | Owner-only manual main-branch runner recovery |
 | `scorecard.yml` | CURRENT | OpenSSF supply-chain audit |
 | `slack-notify.yml` | CURRENT | High-signal CI/release Slack routing |

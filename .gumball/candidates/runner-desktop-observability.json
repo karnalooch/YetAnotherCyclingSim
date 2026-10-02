@@ -1,0 +1,11 @@
+{
+  "id": "runner-desktop-observability",
+  "source": "karnalooch/YetAnotherCyclingSim",
+  "category": "tooling",
+  "problem": "Unattended runners lack desktop-visible completion and bounded local health diagnostics.",
+  "invariant": "Keep desktop notification consumers outside privileged services and job workspaces; final job results alone determine completion; silence never implies failure or permission to restart.",
+  "evidence": ["Issue #329", "scripts/runner/Test-RunnerMonitor.ps1"],
+  "do_not_copy": ["YACS paths", "repository URL", "host-specific GPU assumptions"],
+  "failure_behavior": "Missing or unknown diagnostics cannot produce success; consumer errors remain visible; log retention is bounded without modifying runner logs.",
+  "status": "candidate"
+}

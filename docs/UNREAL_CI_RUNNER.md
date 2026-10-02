@@ -153,3 +153,110 @@ Standalone proof wrappers remain self-contained when no prepared-workspace stamp
 The reusable job checks out with clean: true and runs git reset --hard plus
 git clean -ffdx after artifact upload. No source-tree state from a previous job
 is trusted. Build/test logs are retained for seven days.
+
+## Silent desktop monitor and local diagnostics
+
+Issue #329 / PR #330 adds a read-only desktop companion in `scripts/runner/`.
+**Owner update, 2026-10-02: no automatic popups.** The tray icon, explicit status
+window, live logs and bounded health records remain. There is no toast/balloon
+call, test-popup menu or automatic notification toggle.
+
+The companion runs as a limited interactive logon task independently of the
+runner, using built-in Windows Forms NotifyIcon without additional dependencies.
+It reads `_diag/Runner_*.log` final job markers, never individual step successes.
+The parser was checked against GitHub Runner v2.329.0 JobDispatcher and deployed
+on v2.337.0. Unknown formats remain unknown; this monitor is not CI/proof authority.
+
+Features:
+
+- tray status/icons for observed jobs and their final results;
+- diagnostic-silence records after 20 minutes during an observed job; silence is
+  not proof of a hang and never triggers a restart;
+- an explicit Status menu, live Worker diagnostics and Actions/diagnostic links;
+- RAM/disk/service snapshots every 60 seconds;
+- local `logs/monitor.jsonl`, rotated at 2 MiB into five archives plus current;
+- Exit stops only the monitor, leaving the runner running.
+
+No BOB semantic/visual acceptance is inferred. Old results are not replayed at
+startup. A crashed listener can leave a last-observed job; GitHub is authoritative.
+Raw diagnostic logs remain local and may contain sensitive workload information.
+
+### Installation
+
+Use PowerShell 7.4+ in the intended logged-in desktop:
+
+```powershell
+pwsh -NoProfile -File .\scripts\runner\Install-YacsRunnerMonitor.ps1 -Verify
+```
+
+Defaults: runner `D:\actions-runner-yacs`, companion `D:\yacs-runner-monitor`.
+The task `YACS Runner Monitor-<user SID>` uses a limited interactive principal.
+The installer copies only companion scripts outside mutable job workspaces.
+It preserves runner credentials, hooks, debug settings, Unreal and service mode.
+The dedicated directory permits the desktop user, Administrators and SYSTEM.
+DACL changes are idempotent and do not modify audit policy/SACL. Installation
+validates the directory before stopping the previous companion.
+
+To remove the task while retaining logs and leaving the runner untouched:
+
+```powershell
+pwsh -NoProfile -File .\scripts\runner\Install-YacsRunnerMonitor.ps1 -Uninstall
+```
+
+### Native service configuration
+
+An administrator can inspect/apply configuration for an already registered service:
+
+```powershell
+pwsh -NoProfile -File .\scripts\runner\Set-YacsRunnerService.ps1 -WhatIf
+pwsh -NoProfile -File .\scripts\runner\Set-YacsRunnerService.ps1
+```
+
+This sets automatic startup and recovery delays of 60/120/300 seconds. It refuses
+active workers and refuses to start a stopped service while its listener already
+runs interactively. It never restarts a running service or re-registers a runner.
+Capture prior startup/recovery settings before applying changes. Service recovery
+does not resume a terminated job. GPU/editor service compatibility and reboot
+acceptance remain separate; installing a tray monitor does not establish either.
+
+### Remote installation and verification
+
+The owner authorized host installation on 2026-10-02. `runner-monitor.yml` uses
+the existing `yacs-home-ue58`, exact SHA, isolated Git config and a separate sparse
+code checkout. It accepts only repository-owner manual dispatch from main. The temporary rollout
+branch push trigger was retired after successful installation.
+No Unreal build or service restart is part of deployment.
+
+`Deploy-YacsRunnerMonitor.ps1` runs portable tests on Windows, resolves the logged-in
+console identity and invokes the installer with `-DesktopUser` and `-Verify`.
+Missing console users, unexpected hosts, SHA mismatches, service identities or
+non-interactive startup fail. No account password is requested or stored.
+Verification requires a running interactive process, running task, fresh health
+record and explicit `popupsEnabled=false` from the current process. Receipts record
+source SHA, file hashes, task/session/process, silent mode and prior-monitor survival.
+They contain no raw runner logs or Windows account names.
+
+Validation:
+
+```powershell
+pwsh -NoProfile -File .\scripts\runner\Test-RunnerMonitor.ps1
+```
+
+Portable tests cover result authority, unknown/failure/cancellation results,
+partial lines/UTF-8, truncation, bounded reads, duplicate suppression, retention
+and syntax. Initial installation run `37051642508` passed on Windows, but a
+repeat install exposed an unnecessary SeSecurityPrivilege requirement in Set-Acl.
+The DACL-only fix passed in run `37052190396`. These historical builds included
+popups and are not evidence of the subsequently requested silent mode.
+The service was observed **Stopped** while the interactive runner executed jobs.
+No service migration was performed. Logoff/reboot behavior and manual menu visual
+inspection remain unverified; do not describe them as tested.
+
+Silent deployment run `37052438001` at `e7be03008b1f64c63472ab0f8f210dc42b1869fc`
+passed on 2026-10-02: task Running, interactive session 1, fresh health and
+`notification=disabled-by-owner`. The prior monitor remained alive between jobs
+and observed a real Failed completion; earlier rollout observed Succeeded.
+Installed runtime script bytes are unchanged by the documentation/workflow
+closeout. Artifacts retain installed script hashes. Reinstallation with the
+DACL fix succeeded, including run `37052190396` attempt 2. No popup API remains
+in the deployed silent companion. Native service mode remains unchanged.

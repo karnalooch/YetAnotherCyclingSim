@@ -320,7 +320,7 @@ This project is developed on two machines: the office PC, which is suitable for 
 
 The following rules apply to every task and do not weaken any earlier rule in this document:
 
-- At most two unmerged implementation branches may exist simultaneously.
+- At most three unmerged implementation branches may exist simultaneously.
 - Parallel implementation is allowed only within the current roadmap stage.
 - Tasks developed in parallel must be independent.
 - A parallel branch must not consume APIs, source files, assets, or behavior introduced only by another unmerged branch.
@@ -336,7 +336,7 @@ The following rules apply to every task and do not weaken any earlier rule in th
 - Work from a future roadmap stage must not begin before the current stage completion criteria are met.
 - Unreal compilation, editor integration, asset validation, and performance validation remain home-PC responsibilities when the office PC lacks Unreal Engine.
 
-Documentation-only branches do not count toward the limit of two implementation branches.
+Documentation-only branches do not count toward the limit of three implementation branches.
 
 ## External tooling architecture policy
 
