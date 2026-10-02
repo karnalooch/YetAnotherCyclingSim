@@ -116,9 +116,7 @@ class UnrealCiCacheContractTests(unittest.TestCase):
             "if: ${{ always() && !inputs.region_terrain_import }}",
             self.workflow,
         )
-        importer = (
-            ROOT / "scripts/ue/Invoke-YacsRegionTerrainImport.ps1"
-        ).read_text()
+        importer = (ROOT / "scripts/ue/Invoke-YacsRegionTerrainImport.ps1").read_text()
         self.assertIn("-AbsLog=", importer)
         self.assertIn("$LogName + '.engine.log'", importer)
         self.assertIn("Evidence directory already exists", importer)
