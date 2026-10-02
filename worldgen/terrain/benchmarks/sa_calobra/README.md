@@ -20,6 +20,27 @@ evidence below.
 Raster contract: 16,000 × 16,000 Float32 pixels, one band, 0.5 m spacing,
 8,000 × 8,000 m bounds, EPSG:25831, NoData `-32767`, tiled ZSTD compression.
 
+## Current working AOI (2026-10-02)
+
+The source benchmark is 8 km × 8 km, but the active Unreal terrain import is a
+2,016.5 m × 2,016.5 m native-resolution window around Coll dels Reis. This is
+the square currently under review; it is not the final world extent.
+
+| Point | EPSG:25831 (E, N) | WGS84 (lat, lon) |
+|---|---:|---:|
+| SW | 483000.0, 4407500.0 | 39.81731356, 2.80137117 |
+| SE | 485016.5, 4407500.0 | 39.81735150, 2.82493195 |
+| NE | 485016.5, 4409516.5 | 39.83552023, 2.82488583 |
+| NW | 483000.0, 4409516.5 | 39.83548226, 2.80131885 |
+| center | 484008.25, 4408508.25 | 39.82641749, 2.81312695 |
+
+Inside that window, the current road work is the bounded 300 m Ma-2141
+diagnostic around source part 3 / vertex 43. Its approximate WGS84 endpoints
+are 39.82963155, 2.81454613 and 39.83101147, 2.81432764, with the focus vertex
+at 39.83040946, 2.81367791. The alignment remains diagnostic-only: road
+physics, final pavement geometry, BOB earthworks and collision/ride acceptance
+are not admitted by these coordinates.
+
 ## Rebuild
 
 Download the 17 CNIG files named and hashed by
