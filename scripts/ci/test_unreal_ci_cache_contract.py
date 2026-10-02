@@ -171,9 +171,7 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         self.assertIn("unreal.DirectionalLight", startup)
         self.assertIn("unreal.SkyLight", startup)
         self.assertIn('"lighting_status"', startup)
-        self.assertIn(
-            '"INSPECTOR_PLUS_TRANSIENT_ROAD_EARTHWORKS_CUT"', startup
-        )
+        self.assertIn('"INSPECTOR_PLUS_TRANSIENT_ROAD_EARTHWORKS_CUT"', startup)
         self.assertIn('"cut_patch_applied"', startup)
         self.assertIn("apply_cut_patch", startup)
 
