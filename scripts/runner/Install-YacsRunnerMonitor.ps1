@@ -83,7 +83,7 @@ $settings = New-ScheduledTaskSettingsSet -MultipleInstances IgnoreNew -Execution
 Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force | Out-Null
 $startedAfter = [DateTime]::UtcNow
 Start-ScheduledTask -TaskName $taskName
-Write-Host "Monitor installed for $user at $InstallRoot. Select Test notification from its tray menu."
+Write-Host "Monitor installed for $user at $InstallRoot. Silent tray mode is active; automatic popups are disabled."
 Write-Host 'No runner restart, hook, credential, debug setting or workload change was made.'
 
 if ($Verify) {
@@ -97,17 +97,17 @@ if ($Verify) {
         })
         $started = $records | Where-Object kind -eq 'monitor_started' | Select-Object -Last 1
         $health = $records | Where-Object kind -eq 'health' | Select-Object -Last 1
-        $notice = $records | Where-Object kind -eq 'notification_requested' | Select-Object -Last 1
         $errorRecord = $records | Where-Object kind -eq 'monitor_error' | Select-Object -Last 1
         if ($errorRecord) { throw "Monitor reported an error: $($errorRecord.type). Inspect the local monitor Status menu." }
-        if ($started -and $health -and $notice) {
+        if ($started -and $health) {
+            if ($started.popupsEnabled -ne $false) { throw 'Silent mode was not confirmed by the running monitor.' }
             $process = Get-Process -Id $started.processId -ErrorAction Stop
             if ($process.SessionId -le 0) { throw 'Monitor started outside an interactive session.' }
             $task = Get-ScheduledTask -TaskName $taskName
             if ($task.State -ne 'Running') { throw 'Monitor task is not running.' }
             if ($task.Principal.LogonType -ne 'Interactive' -or $task.Principal.RunLevel -ne 'Limited') { throw 'Unexpected monitor task security context.' }
             $verified = $true
-            [pscustomobject]@{ task = $taskName; state = [string]$task.State; processId = $process.Id; sessionId = $process.SessionId; health = 'fresh'; notification = 'requested-not-human-confirmed'; installRoot = $InstallRoot }
+            [pscustomobject]@{ task = $taskName; state = [string]$task.State; processId = $process.Id; sessionId = $process.SessionId; health = 'fresh'; notification = 'disabled-by-owner'; installRoot = $InstallRoot }
             break
         }
     }
