@@ -2568,12 +2568,36 @@ does not pretend those contextual checks are complete. It records contiguous
 cut/fill/structure station intervals, maximum required adjustments and the worst
 samples in `ma2141-road-terrain-fit-proof.json`.
 
-BOB owns this classification as **INSPECTOR_ONLY** in PR #319. It may report
-required cut/fill/structure review but must not author terrain, move canonical
-road XY, distort the visible ribbon to match DTM facets, or promote the preview
-to physics/geographic truth. Later construction lessons may modify only the
-approved `Road_Earthworks`/dedicated-structure presentation layers after the
-technical and human gates are passed; `Base_DTM` remains immutable source
+BOB keeps this classification as **INSPECTOR_ONLY**, but PR #319 now
+executes one separate bounded construction capability:
+`bob-cut-only-local-ground-v1`. The inspector still decides where
+`CUT_REQUIRED`, `FILL_REQUIRED` and `STRUCTURE_REVIEW` apply; the builder
+may consume only a complete inspection with zero `STRUCTURE_REVIEW` samples
+and a maximum required cut no deeper than the existing 1.0 m
+`native_blend.max_ground_adjustment_m` policy bound.
+
+The first construction capability is deliberately **CUT ONLY**. It reuses the
+existing local-terrain single-ground-owner kernel rather than
+`LandscapeProxy.editor_apply_spline`: a component-aligned 0.5 m native-DTM
+grid is reconstructed for the bounded road corridor, the road constraint is
+applied with `adjustment_mode=cut_only`, and the matching macro Landscape
+components are hidden only for the current editor session. The local transient
+DynamicMesh becomes the single visible ground owner in that bounded patch.
+
+The builder may lower terrain but may never raise it, fill a void, create a
+retaining structure, move canonical road XY, distort the road ribbon, save the
+map, change verified case memory or grant physics/geographic authority.
+Acceptance requires at least one actually lowered ground sample, zero raised
+samples, maximum cut within the 1.0 m bound, zero remaining road penetration
+across all smooth-ribbon top samples, and an unchanged saved
+`L_SaCalobraTerrainBaseline.umap` hash. The proof is
+`bob-cut-only-preview-proof.json`; it remains
+`production_authoring_permitted=false`, `eligible_for_learning=false`,
+`fill_authored=false` and `structures_authored=false`.
+
+This transient lesson does **not** modify persistent `Base_DTM` or
+`Road_Earthworks`. Durable earthworks remain a later gate after technical and
+human acceptance of the cut-only preview. `Base_DTM` remains immutable source
 terrain.
 
 The first smooth-ribbon runtime attempt at `ef15a020`, CI run 37007690564,
@@ -2584,22 +2608,25 @@ an integration/import-path failure, not evidence that the ribbon or terrain-fit
 contract passed or failed. The preceding native-facet preparation still reported
 zero floating and zero penetrating centroids.
 
-#### Inspector-only Sa Calobra handoff
+#### Inspector plus transient cut-only Sa Calobra handoff
 
-Owner direction, 2026-10-02: PR #319 no longer executes the experimental BOB
-builder in its active visual lane. Keep the builder implementation, study
-library and rejected lesson evidence for future teaching and historical review.
-BOB remains active as the road-profile inspector only.
+Owner direction, 2026-10-02: the active PR #319 lane keeps BOB's profile and
+terrain-fit inspectors and now executes exactly one bounded construction lesson:
+`CUT_ONLY_TRANSIENT`. Historical spline-builder failures and construction-study
+references remain retained, but the old `editor_apply_spline` builder is not
+used.
 
-The current proof uses the accepted Sa Calobra `Base_DTM`, prepares the
-Ma-2141 alignment/profile and BOB inspection, and spawns the verified
-native-contact pavement preview without changing `Road_Earthworks`. It
-captures five required views: two terrain views, a mandatory
-`road-geometry-inspection` diagnostic, a normal road overview and the final
-`road-contact-rider` view.
+The current proof loads the accepted Sa Calobra `Base_DTM`, prepares the
+Ma-2141 alignment/profile, performs the 15,025-sample BOB terrain-fit inspection,
+builds the bounded cut-only local ground owner, then spawns the smooth road
+preview. It captures five required views: two terrain views, mandatory
+`road-geometry-inspection`, normal road overview and final
+`road-contact-rider`.
 
-After a successful final capture, Unreal Editor and the loaded Sa Calobra map
-remain open for owner inspection with the transient road preview still present.
-The map is not saved by this handoff. A later Unreal proof may close the
-previous inspection session before preparing a fresh exact-revision workspace.
+A successful handoff leaves Unreal Editor open with that same transient cut-only
+ground owner and road preview visible in `VMI_LIT`. Covered macro Landscape
+components are hidden only in the current editor session. The map is never
+saved by this handoff, persistent `Base_DTM` and `Road_Earthworks` remain
+unchanged, and a later exact-SHA proof may close the previous session before
+starting fresh.
 
