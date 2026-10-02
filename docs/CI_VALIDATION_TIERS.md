@@ -14,8 +14,15 @@ After the verified build/Automation checkpoint, only the profile-selected
 Spanish source TIFF is materialized. The source, topology, transforms and layers
 are validated by the producer/importer. Import logs and manifests are uploaded
 as `sa-calobra-import-<sha>-<attempt>`. Spanish source and generated assets are
-retained outside the mutable worktree before cleanup. Visual/performance and
-road/gameplay acceptance remain separate and pending until actually measured.
+retained outside the mutable worktree before cleanup. The same job captures terrain-only overview/near-ground PNGs through the existing
+UE screenshot-task pattern, with neutral Lighting Only, no fog and no shadows.
+A completed capture is not human visual acceptance or measured 1080p60 gameplay.
+After successful import/capture, owner-approved Italy retirement inventories and
+hash-checks exact named paths in old terrain worktrees/retention archives before
+deleting their payloads. Its receipt reports reclaimed bytes; shared LFS caches,
+Spanish assets, generic prototype assets and Git history remain untouched.
+Visual/performance and road/gameplay acceptance remain separate and pending
+until actually measured.
 Retire this PR-specific bootstrap after a trusted region proof lane replaces it.
 
 YACS uses staged validation so world/art iteration stays fast without weakening the merge gate.
