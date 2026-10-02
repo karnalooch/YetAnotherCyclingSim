@@ -26,6 +26,7 @@ _views = []
 _proofs = []
 _road_objects = None
 _world = None
+_lesson_objects = None
 _scheduling = False
 
 
@@ -58,6 +59,8 @@ def finish(error=""):
         "performance_status": "PENDING",
         "road_status": "INFERRED_CONTACT_TRIAL" if _road_objects else "NOT_SPAWNED",
         "final_road_status": "NOT_ADMITTED",
+        "builder_lesson_status": _lesson_objects[-1]["status"] if _lesson_objects else "NOT_EXECUTED",
+        "builder_map_saved": False,
     }
     (_root / "terrain-capture-proof.json").write_text(
         json.dumps(result, indent=2) + "\n", encoding="utf-8"
@@ -68,7 +71,7 @@ def finish(error=""):
 
 
 def schedule():
-    global _task, _started, _road_objects, _scheduling
+    global _task, _started, _road_objects, _scheduling, _lesson_objects
     # Geometry creation can pump Slate and re-enter this tick callback while the
     # previous screenshot task is still marked done. Fence the whole transition.
     _scheduling = True
@@ -78,6 +81,12 @@ def schedule():
             sys.path.insert(0, str(Path(unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_dir())) / "scripts/ue"))
             from ma2141_road_preview import spawn_trial
             _road_objects = spawn_trial(_world, _root, os.environ["YACS_TERRAIN_SHA"])
+        if _index == 4:
+            _road_objects[0].set_actor_hidden_in_game(True)
+            _road_objects[0].set_is_temporarily_hidden_in_editor(True)
+        if _index == 5:
+            from bob_native_build_lesson import execute
+            _lesson_objects = execute(_world, _root, os.environ["YACS_TERRAIN_SHA"])
         view = _views[_index]
         location, target = unreal.Vector(*view["location"]), unreal.Vector(*view["target"])
         _camera.set_actor_location(location, False, False)
@@ -218,6 +227,12 @@ def main():
         {"name": "road-contact-overview", "location": [focus[0]-9000,focus[1]+9000,focus[2]+13000], "target": focus},
         {"name": "road-contact-rider", "location": [start[0],start[1],start[2]+170], "target": [target[0],target[1],target[2]+170]},
     ])
+    lesson = json.loads((_root / "bob-build-lesson.json").read_text())
+    center = lesson["points"][20]["center_m"]
+    location = [center[0]*100-1600,center[1]*100+1600,center[2]*100+1500]
+    target = [v*100 for v in center]
+    _views.extend([{"name": "bob-lesson-before", "location": location, "target": target},
+                   {"name": "bob-lesson-after", "location": location, "target": target}])
     _camera = actors.spawn_actor_from_class(
         unreal.CameraActor, unreal.Vector(), unreal.Rotator(), transient=True
     )

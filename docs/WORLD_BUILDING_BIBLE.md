@@ -2428,3 +2428,41 @@ Regression tests reproduce all four cases. Reinspection of the immutable
 `ee9704e` native artifact preserves its 22 finding kinds and chainage ranges.
 The fixes strengthen evidence validation; they do not correct road geometry,
 verify curve smoothness, authorize earthworks or add a learned case.
+
+
+#### First experimental BOB builder lesson — owner authorized
+
+Owner direction, 2026-10-02: begin teaching construction on the present road,
+then assign a subsequent section. The first recipe is deliberately bounded to
+Ma-2141 70–90 m, where revision-4 full-width profile differences are at most
+0.261 m. This does not authorize the unresolved apex/retaining-side cases.
+The planner rejects incomplete profile evidence, differences above 0.5 m,
+crossfall above 8%, widths outside 4–6 m and inconsistent metric XY transects.
+These are experimental recipe limits, not geographic or engineering admission.
+
+Tools-first decision: invoke the existing native Landscape `editor_apply_spline`
+path in the sole named Road_Earthworks layer. No new terrain solver or dependency.
+The lesson uses a pavement-midline presentation spline derived from unchanged
+source transects; canonical route XY is not moved. Width is the maximum half
+width plus 0.25 m, side falloff 1 m, endpoint roll is interpolated, and the native
+spline has 256 subdivisions. Their representational error is measured rather
+than presumed correct. The map is never saved: all construction stays in the
+diagnostic editor session, preserving the saved baseline for the next run.
+
+After native deformation, the existing native-facet mesh kernel's precomputed
+footprint is sampled against Landscape and the existing Geometry Script consumer
+builds its closed nominal 80 mm pavement slab. Before/after full-width traces
+measure target-profile RMS, guard traces outside the section's expanded bounds
+measure unintended changes, and top vertices/triangle centroids test contact.
+Technical trial PASS requires improved RMS at most 0.08 m, contact within the
+nominal slab, guard change at most 2 mm, and unchanged saved map hash. These
+sampled checks do not prove continuous support or complete deformation bounds.
+Base_DTM ownership is checked semantically; no per-layer pixel export is claimed.
+
+CI retains the original four baseline/contact views, then captures the lesson
+before and after from the same camera. The lesson receipt is
+`bob-build-lesson-proof.json`; the plan is `bob-build-lesson.json`. Capture PASS
+means images were produced; a REJECT_LESSON receipt remains a failed experiment.
+`TECHNICAL_TRIAL_PASS` is not a learned recipe or production road admission.
+Human visual, geographic widths, collision, ride and performance remain pending.
+A verified-case ledger entry requires the established acceptance gates.

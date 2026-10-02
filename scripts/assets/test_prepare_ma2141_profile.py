@@ -229,5 +229,46 @@ class BobProfileInspectorTests(unittest.TestCase):
                 self.assertFalse(result["earthworks_authoring_permitted"])
 
 
+class BobBuilderLessonTests(unittest.TestCase):
+    def packet(self):
+        packet = BobProfileInspectorTests().packet()
+        for row in packet["stations"]:
+            row["crossfall"] = 0.0
+            row["xy_local_m"] = [
+                [100 + row["station_m"], 100 + x] for x in row["lateral_m"]
+            ]
+        return packet
+
+    def test_bounded_plan_never_promotes_learning_or_mutates_source(self):
+        from scripts.worldgen.bob_build_lesson import plan_lesson
+
+        p = self.packet()
+        before = copy.deepcopy(p)
+        plan = plan_lesson(p)
+        self.assertEqual(p, before)
+        self.assertEqual(plan["station_range_m"], [70.0, 90.0])
+        self.assertEqual(len(plan["points"]), 41)
+        self.assertFalse(plan["save_map"])
+        self.assertFalse(plan["eligible_for_learning"])
+        self.assertFalse(plan["production_authoring_permitted"])
+
+    def test_large_adjustment_and_inconsistent_xy_refuse_build(self):
+        from scripts.worldgen.bob_build_lesson import plan_lesson
+
+        for mode in ["fill", "xy", "crossfall"]:
+            p = self.packet()
+            row = p["stations"][150]
+            if mode == "fill":
+                row["native_ground_m"][0] -= 1
+            elif mode == "xy":
+                row["xy_local_m"][12][0] += 1
+            else:
+                row["candidate_ground_m"] = [600 + 0.15 * x for x in row["lateral_m"]]
+                row["native_ground_m"] = row["candidate_ground_m"][:]
+                row["crossfall"] = 0  # Cannot hide it in a false scalar.
+            with self.assertRaises(ValueError):
+                plan_lesson(p)
+
+
 if __name__ == "__main__":
     unittest.main()

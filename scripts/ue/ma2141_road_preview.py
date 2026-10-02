@@ -83,10 +83,16 @@ def spawn_trial(world, root, exact_sha):
         trial["contact_diagnostic"], geographic_width_admitted=False, native_contact=report)
     (root / "ma2141-road-contact-proof.json").write_text(
         json.dumps(report, indent=2)+"\n", encoding="utf-8")
+    actor, material = spawn_pavement_mesh(world, vertices, triangles,
+        "Ma-2141 inferred pavement contact trial — not admitted")
+    return actor, material, report
+
+
+def spawn_pavement_mesh(world, vertices, triangles, label):
     actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
     actor = actors.spawn_actor_from_class(unreal.DynamicMeshActor, unreal.Vector(),
                                           unreal.Rotator(), transient=True)
-    actor.set_actor_label("Ma-2141 inferred pavement contact trial — not admitted")
+    actor.set_actor_label(label)
     component = actor.get_dynamic_mesh_component()
     mesh = component.get_dynamic_mesh()
     buffers = unreal.GeometryScriptSimpleMeshBuffers()
@@ -105,4 +111,4 @@ def spawn_trial(world, root, exact_sha):
     component.set_material(0, material)
     component.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
     # Keep UObject references alive until screenshots complete.
-    return actor, material, report
+    return actor, material

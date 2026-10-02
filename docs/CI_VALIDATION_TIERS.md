@@ -523,3 +523,14 @@ region bootstrap reads each allow-listed response directly from the exact HEAD
 Git blob, verifies its pinned SHA-256, and restores those verified bytes. It then
 checks the on-disk hash. A mismatch fails before expensive import/capture. This
 does not normalize or reinterpret external data to make a hash check pass.
+
+
+### BOB native builder lesson
+
+The Sa Calobra lane additionally prepares the bounded experimental BOB recipe
+and executes it after the original four contact/terrain captures. Two additional
+fixed-camera before/after captures make six total. The recipe and native lesson
+receipt are uploaded with the exact current run. Trial status in the lesson
+receipt is independent of technical screenshot success; no production map is
+saved and no learning case is automatically admitted. WORLD_BUILDING_BIBLE owns
+the recipe limits, native API decision and remaining acceptance requirements.
