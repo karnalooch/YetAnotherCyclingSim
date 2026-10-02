@@ -2477,3 +2477,16 @@ polls (0.1 mm tolerance, at least 3 s elapsed, 20 s deadline) before constructin
 and measuring pavement. Timeout rejects the lesson. A capture-transition
 regression prevents sampling/screenshot completion during this yield. The
 lesson camera is overhead to avoid the foreground slope occluding the trial.
+
+Settled native evidence at `6810589` (run 36995294129, lesson artifact
+11221536650) exposed a separate layer-semantics defect: profile RMS 78.143 m
+and maximum measured deformation 81.289 m, despite a sub-0.5 m planned change.
+The default `ULandscapeEditLayer` created by the importer is additive; absolute
+spline elevations must not be sent to that layer. The trial was rejected and
+the map was not saved. Sa Calobra's empty Road_Earthworks is now created as
+Epic's native `ULandscapeEditLayerSplines`, whose purpose is non-destructive
+spline deformation. The consumer requires this exact native layer type and
+also rejects measured changes above 0.5 m. Base_DTM import data, source route,
+legacy Italy layer behavior and all earlier thresholds remain unchanged.
+This correction requires new native proof; it is not a verified learning case.
+API reference: [Epic native spline edit layer](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Landscape/ULandscapeEditLayerSplines).

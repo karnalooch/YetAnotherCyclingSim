@@ -705,7 +705,8 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 
 	const int32 RoadLayerIndex = Landscape->CreateLayer(
 		RoadLayerName,
-		ULandscapeEditLayer::StaticClass(),
+		// Absolute spline elevations require the native spline blend semantics.
+		bManifestImport ? ULandscapeEditLayerSplines::StaticClass() : ULandscapeEditLayer::StaticClass(),
 		false);
 	if (RoadLayerIndex == INDEX_NONE)
 	{

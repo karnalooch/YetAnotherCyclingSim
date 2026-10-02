@@ -57,6 +57,15 @@ def execute(world, root, exact_sha):
     layers = [str(layer.get_name_bp()) for layer in landscape.get_edit_layers_bp()]
     if layers.count("Base_DTM") != 1 or layers.count("Road_Earthworks") != 1:
         raise RuntimeError("Ambiguous semantic layer ownership")
+    road_layer = next(
+        layer
+        for layer in landscape.get_edit_layers_bp()
+        if str(layer.get_name_bp()) == "Road_Earthworks"
+    )
+    if not isinstance(road_layer, unreal.LandscapeEditLayerSplines):
+        raise RuntimeError(
+            "Absolute spline elevations require the native spline edit layer"
+        )
     project = Path(
         unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_dir())
     )
@@ -154,6 +163,7 @@ def execute(world, root, exact_sha):
     guard_change = max(abs(a - b) for a, b in zip(guard_before, guard_after))
     saved_unchanged = baseline_hash == hashlib.sha256(asset.read_bytes()).hexdigest()
     improved = after_error < before_error and after_error <= 0.08
+    max_change = max(abs(a - b) for a, b in zip(before, after))
     contact = all(0 <= v <= 0.08 for v in gaps)
     report = {
         "schema_version": 1,
@@ -166,10 +176,12 @@ def execute(world, root, exact_sha):
         and contact
         and guard_change <= 0.002
         and saved_unchanged
+        and max_change <= 0.5
         else "REJECT_LESSON",
         "station_range_m": plan["station_range_m"],
         "api": "LandscapeProxy.editor_apply_spline",
         "selected_layer": "Road_Earthworks",
+        "selected_layer_class": road_layer.get_class().get_name(),
         "available_layers": layers,
         "execution_scope": "transient editor session; map not saved",
         "saved_baseline_sha256": baseline_hash,
@@ -181,7 +193,8 @@ def execute(world, root, exact_sha):
         "collision_settled": settled,
         "collision_settle_seconds": elapsed,
         "collision_stable_polls": stable_polls,
-        "max_sampled_ground_change_m": max(abs(a - b) for a, b in zip(before, after)),
+        "max_sampled_ground_change_m": max_change,
+        "actual_adjustment_within_recipe": max_change <= 0.5,
         "outside_guard_sample_count": len(guard),
         "outside_guard_max_change_m": guard_change,
         "contact_sample_count": len(gaps),
