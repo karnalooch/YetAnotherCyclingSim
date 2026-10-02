@@ -89,18 +89,36 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         paths = [
             line.strip() for line in block.splitlines() if "/RegionTerrain/" in line
         ]
-        self.assertEqual(len(paths), 7)
-        main, lesson = block.split("- name: Upload bounded BOB construction lesson", 1)
-        self.assertIn("!${{ env.YACS_UNREAL_WORKTREE }}/", main)
-        self.assertIn("/bob-lesson-*.png", main)
-        self.assertIn("/bob-lesson-*.png", lesson)
-        self.assertIn("/bob-build-lesson*.json", lesson)
-        self.assertNotIn("/**/*.png", lesson)
+        self.assertEqual(len(paths), 3)
+        self.assertNotIn("Upload bounded BOB construction lesson", block)
+        self.assertNotIn("bob-build-lesson", block)
+        self.assertNotIn("bob-lesson-", block)
         for path in paths:
             self.assertIn(
-                "/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/", path
+                "/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/",
+                path,
             )
-        importer = (ROOT / "scripts/ue/Invoke-YacsRegionTerrainImport.ps1").read_text()
+
+        capture = self.workflow.split(
+            "- name: Capture isolated native Sa Calobra terrain", 1
+        )[1].split("- name: Retire owner-approved obsolete Italy payloads", 1)[0]
+        self.assertIn("$env:YACS_KEEP_EDITOR_OPEN = '1'", capture)
+        self.assertIn("RUNNER_TRACKING_ID", capture)
+        self.assertIn("$proof.captures.Count -ne 4", capture)
+        self.assertIn("$proof.bob_mode -ne 'INSPECTOR_ONLY'", capture)
+        self.assertIn(
+            "$proof.editor_handoff_view -ne 'road-contact-rider'",
+            capture,
+        )
+        self.assertNotIn("WaitForExit(300000)", capture)
+
+        self.assertIn(
+            "if: ${{ always() && !inputs.region_terrain_import }}",
+            self.workflow,
+        )
+        importer = (
+            ROOT / "scripts/ue/Invoke-YacsRegionTerrainImport.ps1"
+        ).read_text()
         self.assertIn("-AbsLog=", importer)
         self.assertIn("$LogName + '.engine.log'", importer)
         self.assertIn("Evidence directory already exists", importer)

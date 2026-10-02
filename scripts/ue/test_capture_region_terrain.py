@@ -1,5 +1,6 @@
-"""Regression for Slate re-entry while replacing a completed capture task."""
+"""Regression for Sa Calobra inspector-only capture and owner handoff."""
 
+import json
 import os
 from pathlib import Path
 import sys
@@ -10,47 +11,57 @@ from unittest.mock import Mock, patch
 
 
 class CaptureTransitionTests(unittest.TestCase):
-    def test_builder_waits_for_editor_ticks_before_capture(self):
+    def test_active_capture_is_inspector_only(self):
         script = Path(__file__).with_name("capture_region_terrain.py").read_text()
+        self.assertNotIn("bob_native_build_lesson", script)
+        self.assertNotIn("bob-lesson-before", script)
+        self.assertNotIn("bob-lesson-after", script)
+        self.assertIn('"bob_mode": "INSPECTOR_ONLY"', script)
+        self.assertIn('"road-contact-rider"', script)
+
+    def test_successful_finish_keeps_editor_open(self):
+        script = Path(__file__).with_name("capture_region_terrain.py").read_text()
+        marker = "\ntry:\n    main()"
         unreal = Mock()
         ns = {}
         with (
             tempfile.TemporaryDirectory() as folder,
             patch.dict(sys.modules, {"unreal": unreal}),
         ):
-            exec(compile(script.split("\ntry:\n    main()")[0], __file__, "exec"), ns)
+            exec(compile(script.split(marker)[0], str(Path(__file__)), "exec"), ns)
+            root = Path(folder)
             ns.update(
-                _index=5,
-                _root=Path(folder),
-                _camera=Mock(),
-                _world=Mock(),
-                _views=[{}] * 5
-                + [{"name": "after", "location": [0, 0, 0], "target": [1, 0, 0]}],
+                _root=root,
+                _manifest={
+                    "map_package": "/Game/Worlds/SaCalobra/L_SaCalobraTerrainBaseline"
+                },
+                _proofs=[{"name": "road-contact-rider"}],
+                _road_objects=("actor", "material", "report"),
+                _bob_inspection_status="REVIEW_REQUIRED",
+                _views=[{"name": "road-contact-rider"}],
+                _handle=None,
             )
-            result = ("holder", "spline", "actor", "material", {"status": "TRIAL"})
-
-            def execute(*args):
-                yield None
-                ns["tick"](0)  # Native sampling may pump Slate.
-                yield None
-                return result
-
-            with (
-                patch.dict(
-                    sys.modules,
-                    {"bob_native_build_lesson": SimpleNamespace(execute=execute)},
-                ),
-                patch.dict(os.environ, {"YACS_TERRAIN_SHA": "a" * 40}),
+            with patch.dict(
+                os.environ,
+                {
+                    "YACS_TERRAIN_SHA": "a" * 40,
+                    "YACS_KEEP_EDITOR_OPEN": "1",
+                },
             ):
-                ns["schedule"]()
-                unreal.AutomationLibrary.take_high_res_screenshot.assert_not_called()
-                ns["_lesson_next_poll"] = 0
-                ns["tick"](0)
-                unreal.AutomationLibrary.take_high_res_screenshot.assert_not_called()
-                ns["_lesson_next_poll"] = 0
-                ns["tick"](0)
-                self.assertIs(ns["_lesson_objects"], result)
-                unreal.AutomationLibrary.take_high_res_screenshot.assert_called_once()
+                ns["finish"]()
+
+            proof = json.loads((root / "terrain-capture-proof.json").read_text())
+            self.assertEqual(proof["bob_mode"], "INSPECTOR_ONLY")
+            self.assertEqual(proof["bob_inspection_status"], "REVIEW_REQUIRED")
+            self.assertEqual(
+                proof["builder_lesson_status"],
+                "DISABLED_OWNER_INSPECTOR_ONLY",
+            )
+            self.assertTrue(proof["editor_handoff_requested"])
+            self.assertEqual(proof["editor_handoff_view"], "road-contact-rider")
+            unreal.EditorPythonScripting.set_keep_python_script_alive.assert_called_with(
+                True
+            )
 
     def test_geometry_creation_cannot_consume_previous_completed_task(self):
         script = Path(__file__).with_name("capture_region_terrain.py").read_text()
