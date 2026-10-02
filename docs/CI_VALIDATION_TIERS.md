@@ -534,3 +534,11 @@ receipt are uploaded with the exact current run. Trial status in the lesson
 receipt is independent of technical screenshot success; no production map is
 saved and no learning case is automatically admitted. WORLD_BUILDING_BIBLE owns
 the recipe limits, native API decision and remaining acceptance requirements.
+
+The first six-image archive exceeded the connector's 32 MiB local-transfer limit
+(33,963,108 bytes at run 36994612419). Lesson PNGs now live in a separate
+`bob-build-lesson-<sha>-<attempt>` artifact with their recipe and receipt;
+the main import artifact retains the other four PNGs and all JSON/log evidence.
+The small lesson receipt is also printed in the capture job log. Both artifacts
+remain scoped to the exact run/attempt; this packaging change does not alter
+image resolution, sampling or acceptance thresholds.

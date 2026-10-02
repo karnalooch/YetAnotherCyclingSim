@@ -89,7 +89,13 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         paths = [
             line.strip() for line in block.splitlines() if "/RegionTerrain/" in line
         ]
-        self.assertEqual(len(paths), 4)
+        self.assertEqual(len(paths), 7)
+        main, lesson = block.split("- name: Upload bounded BOB construction lesson", 1)
+        self.assertIn("!${{ env.YACS_UNREAL_WORKTREE }}/", main)
+        self.assertIn("/bob-lesson-*.png", main)
+        self.assertIn("/bob-lesson-*.png", lesson)
+        self.assertIn("/bob-build-lesson*.json", lesson)
+        self.assertNotIn("/**/*.png", lesson)
         for path in paths:
             self.assertIn(
                 "/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/", path

@@ -314,6 +314,7 @@ jobs:
           if ($process.ExitCode -ne 0) { throw "Terrain capture editor exit $($process.ExitCode)." }
           $proof = Get-Content (Join-Path $root 'terrain-capture-proof.json') -Raw | ConvertFrom-Json
           if ($proof.technical_capture_status -ne 'PASS' -or $proof.exact_sha -ne '${{ inputs.target_sha }}' -or $proof.captures.Count -ne 6) { throw 'Terrain capture proof failed.' }
+          Get-Content (Join-Path $root 'bob-build-lesson-proof.json') -Raw | Write-Host
 
       - name: Retire owner-approved obsolete Italy payloads
         if: ${{ inputs.region_terrain_import }}
@@ -343,6 +344,18 @@ jobs:
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.txt
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.log
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.png
+            !${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/bob-lesson-*.png
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload bounded BOB construction lesson
+        if: ${{ always() && inputs.region_terrain_import }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: bob-build-lesson-${{ inputs.target_sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/bob-build-lesson*.json
+            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/bob-lesson-*.png
           if-no-files-found: error
           retention-days: 14
 
