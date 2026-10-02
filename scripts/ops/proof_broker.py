@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import hashlib
 import json
 import os
 import re
@@ -284,7 +285,13 @@ def status_label_name(
             "proof-status:$proof:$status",
         )
     )
-    return template.replace("$proof", proof_id).replace("$status", status)
+    label = template.replace("$proof", proof_id).replace("$status", status)
+    if len(label) <= 50:
+        return label
+    # Preserve existing short labels; long configured proof IDs need a stable,
+    # collision-resistant label within GitHub's 50-character API limit.
+    digest = hashlib.sha256(label.encode("utf-8")).hexdigest()[:12]
+    return label[:37] + "-" + digest
 
 
 def make_request_id(proof_id: str, pr_number: int, sha: str) -> str:
