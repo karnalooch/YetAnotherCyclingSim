@@ -66,7 +66,7 @@ flowchart TB
 | Delivery | **M3 — Route & World Foundation** |
 | World method | **World Building Bible is authoritative** |
 | Geographic fidelity | **1:1 real-world scale; no route compression, relocation or invented macro terrain** |
-| Architecture policy | **Embark-first tooling admission + tools-first + evidence ladder + local proof** |
+| Architecture policy | **Embark-first + tools-first + version-matched Epic/PCGEx API evidence + local proof** |
 | Diagram language | **Gumball Blueprint Mermaid style** |
 | Current priority | **prove BOB's bounded transient CUT ONLY local-ground construction against the smooth Ma-2141 ribbon; preserve Base_DTM/road XY, then review unresolved FILL_REQUIRED and future structures separately** |
 | Route reference | **sea-level Sa Calobra → Coll dels Reis → Ma-10 → Menut/Binifaldó → Coll des Pedregaret; ~29–30 km planning estimate, exact chainage pending** |
@@ -186,6 +186,25 @@ Every top-level Markdown document in `docs/` must appear here.
 | [`YACS_REMOTE_EDITOR_AGENT.md`](YACS_REMOTE_EDITOR_AGENT.md) | Remote editor-agent contract |
 | [`YACS_WORLD_AUTHORING_LIBRARY.md`](YACS_WORLD_AUTHORING_LIBRARY.md) | World-authoring implementation library |
 
+## External Unreal / PCGEx technical authority
+
+YACS documentation defines project intent, ownership and acceptance. When a task
+also depends on what Unreal Engine or PCGEx **actually supports**, agents must use
+version-matched primary technical sources rather than memory or secondary summaries.
+
+- Unreal Engine: official Epic documentation and C++ API reference for the exact
+  project/runner engine version.
+- PCGEx: official GitBook for the exact YACS-approved plugin revision/version;
+  agents should start from `llms.txt` / `llms-full.txt`, then read the exact
+  system/node page.
+- If PCGEx documentation and the pinned revision differ or the behavior is not
+  documented, inspect the pinned upstream source/header and mark any remaining
+  uncertainty explicitly.
+- Vendor documentation establishes capability and semantics; it never overrides
+  YACS route/physics/world authority or acceptance criteria.
+
+The enforceable agent workflow is in [`../AGENTS.md`](../AGENTS.md), and the
+world-specific application is in [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md).
 ## Documentation maintenance
 
 When behavior, architecture, CI, assets or acceptance criteria change:

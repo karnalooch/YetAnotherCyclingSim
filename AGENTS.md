@@ -79,6 +79,55 @@ Owner directive, 2026-10-01 (Issue #308): keep downloaded/materialized LFS asset
 - `docs/YACS_WORLD_AUTHORING_LIBRARY.md` defines reusable implementation/catalog systems; it does not override the Bible's world architecture.
 - New or substantially revised architecture/workflow diagrams must follow `docs/DIAGRAM_STYLE.md`, the YACS adoption of the Gumball Blueprint Mermaid language.
 
+### Unreal / PCGEx API-first source policy
+
+For any task that depends on Unreal Engine, native PCG, Landscape, Geometry Script,
+Spline/SplineMesh, DynamicMesh or PCGEx behavior, **do not implement from model
+memory or guessed editor/API behavior**. Establish the exact tool versions first,
+then verify the operation against version-matched primary documentation.
+
+Use this evidence order:
+
+1. use `docs/README.md` to select the current YACS SSOT that defines **what YACS
+   wants and which subsystem owns the truth**;
+2. identify the exact Unreal Engine version used by the project/runner, then read
+   Epic's official documentation and C++ API reference for that version:
+   `https://dev.epicgames.com/documentation/en-us/unreal-engine/` and
+   `https://dev.epicgames.com/documentation/en-us/unreal-engine/API`;
+3. when PCGEx is involved, identify the exact approved/pinned PCGEx revision and
+   plugin version from YACS provenance/bootstrap evidence, then read the official
+   PCGEx GitBook: `https://pcgex.gitbook.io/pcgex`;
+4. for agent research, start from PCGEx's official agent indexes
+   `https://pcgex.gitbook.io/pcgex/llms.txt` and
+   `https://pcgex.gitbook.io/pcgex/llms-full.txt`, then open the exact per-node or
+   system page; use the GitBook Markdown/`ask` interface when a targeted behavior
+   is not explicit on the page;
+5. if official PCGEx documentation is ambiguous, incomplete or newer than the YACS
+   pin, inspect the **pinned upstream source/header at the exact YACS revision**
+   before writing an adapter or graph; source may clarify implementation behavior
+   but does not override YACS authority boundaries;
+6. prove the resulting YACS integration with the smallest relevant build, graph,
+   editor, automation or visual proof required by the current SSOT.
+
+Hard rules:
+
+- Never invent an Unreal/PCGEx class, function, node, pin, property, enum, default,
+  lifecycle rule or editor behavior because it sounds plausible.
+- Never silently apply documentation for a different UE or PCGEx version. If the
+  matching behavior cannot be verified, fail closed and report it as unverified.
+- Search snippets, forums, videos, DeepWiki and secondary tutorials may help locate
+  concepts, but they are **not authority** when Epic/PCGEx primary docs or pinned
+  source are available.
+- For PCGEx path work, verify the path data model and every selected node against
+  the official Paths/node-library documentation before authoring or changing a
+  graph; point order, closure, tangents, normals and segment semantics are part of
+  the contract, not implementation trivia.
+- A vendor API proving that an operation exists does not make it correct for YACS.
+  YACS SSOT still owns route/physics/world authority, architecture and acceptance.
+- In the Issue/PR report for a non-trivial Unreal/PCGEx API decision, record the
+  exact UE version, PCGEx revision/version when applicable, and the primary docs or
+  pinned source consulted so a later agent can reproduce the decision.
+
 ### Passo Giau terrain-recovery guardrails
 
 For Issue #287 / PR #288, Gate B is an established road-authoring baseline, not an
