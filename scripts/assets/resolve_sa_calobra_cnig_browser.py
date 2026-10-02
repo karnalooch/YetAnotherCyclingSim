@@ -29,19 +29,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def wait_ajax(driver: webdriver.Chrome, previous_html: str) -> str:
-    WebDriverWait(driver, 45).until(
-        lambda d: d.execute_script(
-            "return typeof jQuery !== 'undefined' && jQuery.active === 0;"
-        )
-    )
-    WebDriverWait(driver, 45).until(
-        lambda d: d.find_element(By.ID, "divArchivosSerie").get_attribute("innerHTML")
-        != previous_html
-    )
-    return driver.find_element(By.ID, "divArchivosSerie").get_attribute("innerHTML")
-
-
 def query_page(
     driver: webdriver.Chrome,
     product_url: str,
@@ -54,30 +41,68 @@ def query_page(
     WebDriverWait(driver, 45).until(
         lambda d: d.find_element(By.ID, "coordenadas")
     )
-    if subseries:
-        driver.execute_script(
-            """
-            const el = document.getElementById('comboTematica');
-            if (!el) throw new Error('comboTematica missing');
-            el.value = arguments[0];
-            """,
-            subseries,
-        )
+    driver.set_script_timeout(60)
 
     all_records = []
     receipts = []
     for label, lon, lat in queries:
-        before = driver.find_element(By.ID, "divArchivosSerie").get_attribute("innerHTML")
         coords = compact_point(lon, lat)
-        driver.execute_script(
+        result = driver.execute_async_script(
             """
-            document.getElementById('coordenadas').value = arguments[0];
-            document.getElementById('numPagina').value = '1';
-            callArchivosSerie();
+            const coords = arguments[0];
+            const subseries = arguments[1] || '';
+            const done = arguments[arguments.length - 1];
+            if (typeof jQuery === 'undefined') {
+              done({ok:false, error:'jQuery missing'});
+              return;
+            }
+            jQuery.ajax({
+              url: 'archivosSerie',
+              data: {
+                numPagina: '1',
+                codAgr: jQuery('#codAgr').val() || '',
+                codSerie: jQuery('#codSerie').val() || '',
+                coordenadas: coords,
+                series: jQuery('#series').val() || '',
+                codComAutonoma: '',
+                codProvincia: '',
+                codIne: '',
+                codTipoArchivo: '',
+                codIdiomaInf: '',
+                todaEspania: '',
+                todoMundo: '',
+                idProductor: '',
+                rutaNombre: '',
+                numHoja: '',
+                numHoja25: '',
+                totalArchivos: jQuery('#totalArchivos').val() || '',
+                codSubSerie: subseries,
+                contieneArc: '',
+                keySearch: '',
+                referCatastral: '',
+                orderBy: ''
+              },
+              dataType: 'html'
+            }).done(function(html) {
+              done({ok:true, html:html});
+            }).fail(function(xhr, textStatus, errorThrown) {
+              done({
+                ok:false,
+                status:xhr.status,
+                textStatus:textStatus,
+                error:String(errorThrown || ''),
+                response:String(xhr.responseText || '').slice(0, 1000)
+              });
+            });
             """,
             coords,
+            subseries or "",
         )
-        html = wait_ajax(driver, before)
+        if not result or not result.get("ok"):
+            raise RuntimeError(
+                f"CNIG browser search failed for {label}: {json.dumps(result, ensure_ascii=False)}"
+            )
+        html = result["html"]
         rows = parse_rows(html, extension_pattern)
         accepted = [row for row in rows if required_token.lower() in row["name"].lower()]
         for row in accepted:
@@ -95,7 +120,6 @@ def query_page(
         "records": dedupe(all_records),
         "query_receipts": receipts,
     }
-
 
 def main() -> None:
     args = parse_args()
