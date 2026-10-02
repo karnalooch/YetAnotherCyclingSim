@@ -1,0 +1,114 @@
+name: Sa Calobra World Data Acquire
+
+on:
+  workflow_dispatch:
+    inputs:
+      exact_sha:
+        description: Exact commit SHA to acquire sources for
+        required: true
+        type: string
+      force:
+        description: Re-download existing cached source files
+        required: false
+        default: false
+        type: boolean
+  push:
+    branches:
+      - feature/335-world-data-stack
+    paths:
+      - '.github/workflows/sa-calobra-world-data-acquire.yml'
+      - 'scripts/assets/acquire_sa_calobra_world_data.py'
+      - 'scripts/assets/plan_sa_calobra_world_data.py'
+      - 'worldgen/terrain/benchmarks/sa_calobra/world_data/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sa-calobra-world-data-acquire
+  cancel-in-progress: false
+
+jobs:
+  acquire:
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 120
+    env:
+      PYTHONUTF8: '1'
+    steps:
+      - name: Resolve exact source SHA
+        id: source
+        shell: pwsh
+        run: |
+          $sha = if ('${{ github.event_name }}' -eq 'workflow_dispatch') { '${{ inputs.exact_sha }}' } else { '${{ github.sha }}' }
+          if ($sha -notmatch '^[0-9a-f]{40}$') { throw "Invalid exact SHA: $sha" }
+          "sha=$sha" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          Write-Host "exact_sha=$sha"
+
+      - name: Checkout exact acquisition revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.source.outputs.sha }}
+          fetch-depth: 1
+          lfs: false
+          path: _world-data-acquire
+
+      - name: Verify exact checkout
+        shell: pwsh
+        working-directory: _world-data-acquire
+        run: |
+          $actual = git rev-parse HEAD
+          $expected = '${{ steps.source.outputs.sha }}'
+          if ($actual -ne $expected) { throw "World-data checkout mismatch: $actual != $expected" }
+          if (git status --porcelain) { throw 'World-data checkout is dirty before acquisition.' }
+
+      - name: Install lightweight acquisition dependencies
+        shell: pwsh
+        working-directory: _world-data-acquire
+        run: |
+          python -m pip install --disable-pip-version-check --only-binary=:all: requests==2.32.5
+          if ($LASTEXITCODE -ne 0) { throw 'requests install failed' }
+
+      - name: Validate acquisition plan
+        shell: pwsh
+        working-directory: _world-data-acquire
+        run: |
+          python scripts/assets/plan_sa_calobra_world_data.py --json
+          if ($LASTEXITCODE -ne 0) { throw 'World-data plan validation failed.' }
+
+      - name: Acquire bounded working-space source material
+        shell: pwsh
+        working-directory: _world-data-acquire
+        env:
+          ACQUIRE_FORCE: ${{ github.event_name == 'workflow_dispatch' && inputs.force || false }}
+        run: |
+          $persistent = Join-Path $env:RUNNER_WORKSPACE '_yacs-world-data\sa-calobra-working-v1'
+          $receipt = Join-Path $PWD 'Saved\WorldDataAcquisition'
+          New-Item -ItemType Directory -Force -Path $persistent | Out-Null
+          New-Item -ItemType Directory -Force -Path $receipt | Out-Null
+
+          $args = @(
+            'scripts/assets/acquire_sa_calobra_world_data.py',
+            '--manifest', 'worldgen/terrain/benchmarks/sa_calobra/world_data/working_space_sources.json',
+            '--persistent-root', $persistent,
+            '--receipt-out', $receipt
+          )
+          if ($env:ACQUIRE_FORCE -eq 'true') { $args += '--force' }
+          python @args
+          if ($LASTEXITCODE -ne 0) { throw "World-data acquisition failed with exit code $LASTEXITCODE" }
+
+          Write-Host "Persistent source cache: $persistent"
+          Get-ChildItem -Path $persistent -Recurse -File |
+            Select-Object FullName, Length |
+            Sort-Object FullName |
+            Format-Table -AutoSize
+
+      - name: Upload acquisition receipt and CNIG probe evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sa-calobra-world-data-receipt-${{ steps.source.outputs.sha }}
+          path: |
+            _world-data-acquire/Saved/WorldDataAcquisition/**
+          if-no-files-found: warn
+          retention-days: 14
+          compression-level: 6
