@@ -2030,8 +2030,9 @@ unsupported and 203 penetrating vertex samples (-0.884 m to +1.033 m).
 BOB emitted `REJECT_CONTACT`; no verified learning case was created. The
 `__file__` issue was resolved, but the third capture reported no usable PNG.
 The capture transition is now fenced against Slate re-entry, and task completion
-must also await the actual PNG under the existing bounded timeout. This is a
-capture fix candidate until its own Unreal run succeeds, not a geometric fix.
+must also await the actual PNG under the existing bounded timeout. The fix was subsequently verified by run 36975493667 at
+`65cddce9565c102d6c18c548b620f329f27027b1`: all four PNGs were produced.
+This verifies capture tooling, not road geometry.
 
 Magnified review of the pinned PNOA transects identified incorrect initial edge
 interpretations near stations 125 m and 175 m: their inferred footprints extended
@@ -2040,3 +2041,50 @@ and their history. The 13 observations/interpolation remain coarse and unadmitte
 this is not an assertion of survey accuracy. The transferable BOB lesson is to
 recheck the road footprint before compensating for its error with earthworks.
 Do not lower/raise accepted terrain to fit a mistaken pavement boundary.
+
+
+#### Reference acquisition and latest contact evidence (2026-10-02)
+
+Run [36975493667](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/36975493667)
+completed successfully at `65cddce9565c102d6c18c548b620f329f27027b1`.
+Artifact 11212644839 contains the four terrain/road views and contact receipts.
+All 15,025 native traces hit Landscape, but 179 samples were floating and 181
+penetrating (surface-minus-Landscape range -0.515 to +0.303 m).
+R16 triangle-centroid checks independently found 299 unsupported and 581
+penetrating samples, range -0.425 to +0.447 m. BOB remains `REJECT_CONTACT`;
+continuous contact and road collision are unproven, final road is not admitted,
+and no verified learning case is eligible. Neither terrain layer was modified.
+
+The owner supplied the [CNIG catalogue](https://centrodedescargas.cnig.es/CentroDescargas/catalogo)
+and authorized Street View reference inspection. Direct catalogue retrieval
+returned HTTP 502 in this session; official IGN product/status pages were readable.
+Use these sources in this order for the bounded Ma-2141 repair:
+
+- [PNOA LiDAR project status](https://pnoa.ign.es/web/portal/pnoa-lidar/tercera-cobertura):
+  the September 2026 table lists Illes Balears flight March–May 2024, NPC03
+  published and MDT/MDS v1 published. This is regional availability, not a
+  downloaded or verified tile for our clip.
+- [LiDAR products](https://pnoa.ign.es/pnoa-lidar/productos-a-descarga):
+  third-coverage LAZ is distributed in 1 km blocks with nominal 5 points/m².
+  Inspect classified points around both pavement edges and the worst contact
+  failures before deciding whether the cause is footprint error, interpolation,
+  roadside vegetation, or a real retaining structure. Check the downloaded
+  tile's classification level, CRS, vertical reference, flight date and hash.
+- [PNOA imagery](https://centrodedescargas.cnig.es/CentroDescargas/fotos-imagenes-aereas):
+  seek dated rigorous orthophotos to refine independent left/right boundaries.
+  Expedited LiDAR orthophotos can assist interpretation but are less precise;
+  request pixel spacing is never native GSD or an accuracy guarantee.
+- MDS/DSM includes objects and vegetation. Use it as a comparison layer, not
+  a replacement for the accepted ground model or an automatic asphalt height.
+
+Street View was attempted near WGS84 39.83040946, 2.81367791. Google returned
+an unusual-traffic reCAPTCHA before any panorama loaded. **No Street View
+observation, acquisition date, wall geometry or pavement measurement was obtained.**
+When accessible, record panorama location/date and qualitative shoulder,
+drainage and retaining-wall observations separately from surveyed evidence.
+Do not infer metric dimensions from perspective imagery alone.
+
+BOB's repair order remains source/footprint review, bounded road-profile work,
+local `Road_Earthworks` where justified, then renewed full-width and interior
+contact checks. Preserve `Base_DTM`. A promising catalogue entry or photograph
+cannot convert this rejected diagnostic into an accepted road.
