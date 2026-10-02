@@ -11,6 +11,7 @@ if str(ROOT) not in sys.path:
 
 from scripts.geometry.smooth_road_ribbon import build_smooth_road_ribbon
 from scripts.worldgen.bob_terrain_fit_inspector import inspect_terrain_fit
+from scripts.ue.bob_cut_only_preview import spawn_cut_only_preview
 
 
 def spawn_trial(world, root, exact_sha):
@@ -132,6 +133,16 @@ def spawn_trial(world, root, exact_sha):
         encoding="utf-8",
     )
 
+    cut_actor, cut_material, cut_report = spawn_cut_only_preview(
+        world,
+        root,
+        exact_sha,
+        profile,
+        smooth_vertices,
+        smooth_meta,
+        terrain_fit,
+    )
+
     report = {
         "schema_version": 1, "exact_sha": exact_sha,
         "region_id": "sa_calobra", "status": "INFERRED_CONTACT_TRIAL",
@@ -178,6 +189,26 @@ def spawn_trial(world, root, exact_sha):
             ],
         },
         "terrain_fit_proof": "ma2141-road-terrain-fit-proof.json",
+        "bob_cut_only_preview": {
+            "status": cut_report["status"],
+            "mode": cut_report["mode"],
+            "cut_grid_sample_count": cut_report["cut_grid_sample_count"],
+            "raised_grid_sample_count": cut_report["raised_grid_sample_count"],
+            "max_cut_depth_m": cut_report["max_cut_depth_m"],
+            "remaining_road_penetration_count": cut_report[
+                "remaining_road_penetration_count"
+            ],
+            "hidden_landscape_component_count": cut_report[
+                "hidden_landscape_component_count"
+            ],
+            "saved_baseline_unchanged": cut_report[
+                "saved_baseline_unchanged"
+            ],
+            "production_authoring_permitted": cut_report[
+                "production_authoring_permitted"
+            ],
+        },
+        "bob_cut_only_preview_proof": "bob-cut-only-preview-proof.json",
         "attribution": trial["attribution"],
     }
     sys.path.insert(0, str(Path(unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_dir()))))
@@ -192,7 +223,7 @@ def spawn_trial(world, root, exact_sha):
         smooth_triangles,
         "Ma-2141 smooth asphalt ribbon — inspector preview only",
     )
-    return actor, material, report
+    return actor, material, report, cut_actor, cut_material, cut_report
 
 
 def spawn_pavement_mesh(world, vertices, triangles, label):
