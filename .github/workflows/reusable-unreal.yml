@@ -203,6 +203,28 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $source = 'worldgen/terrain/benchmarks/sa_calobra/sa_calobra_8x8km_mdt50cm_epsg25831.tif'
+          # A persistent checkout can retain CRLF bytes created before -text
+          # source attributes were introduced. Rematerialize from the exact
+          # index, then verify before any expensive editor work.
+          $pinnedResponses = @{
+            'worldgen/terrain/benchmarks/sa_calobra/ma2141_cartociudad_source_2026-10-02.json' = '6520b92486b5d1c63353b8253d388ab21d380c78fda119849311be8344d8ae36'
+            'worldgen/terrain/benchmarks/sa_calobra/ma2141_igr_rt_source_2026-10-02.json' = 'ebc7c1c985caae5b7727719856646d52824463803d13095462f8d7ef1fcd7d5f'
+          }
+          foreach ($response in $pinnedResponses.Keys) {
+            $restore = @'
+          import hashlib, pathlib, subprocess, sys
+          path, expected = sys.argv[1:]
+          data = subprocess.check_output(['git', 'show', 'HEAD:' + path])
+          if hashlib.sha256(data).hexdigest() != expected:
+              raise SystemExit('Pinned response Git blob hash mismatch: ' + path)
+          pathlib.Path(path).write_bytes(data)
+          '@
+            python -c $restore "$response" "$($pinnedResponses[$response])"
+            if ($LASTEXITCODE -ne 0) { throw "Pinned response restore failed: $response" }
+            $actual = (Get-FileHash -LiteralPath $response -Algorithm SHA256).Hash.ToLowerInvariant()
+            Write-Host "Pinned response SHA256: $actual ($response)"
+            if ($actual -ne $pinnedResponses[$response]) { throw "Pinned response hash mismatch before editor startup: $response" }
+          }
           $env:GIT_LFS_SKIP_SMUDGE = '0'
           try {
             git lfs install --local --skip-smudge

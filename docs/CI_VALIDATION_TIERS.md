@@ -496,3 +496,13 @@ references reviewed for the adapter and derived-media commands:
 - https://ffmpeg.org/ffmpeg.html
 
 The exact UE runner proof, not the API reference alone, establishes compatibility.
+
+## Byte-pinned GIS responses on persistent Windows worktrees
+
+Raw external source response JSON uses path-scoped `-text` attributes so its
+SHA-256 describes original bytes on all operating systems. A persistent checkout
+can still contain CRLF bytes from an earlier revision. Before editor startup, the
+region bootstrap reads each allow-listed response directly from the exact HEAD
+Git blob, verifies its pinned SHA-256, and restores those verified bytes. It then
+checks the on-disk hash. A mismatch fails before expensive import/capture. This
+does not normalize or reinterpret external data to make a hash check pass.
