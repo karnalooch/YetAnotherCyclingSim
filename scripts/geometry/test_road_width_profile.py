@@ -121,7 +121,7 @@ class CommonAxisAdmissionTests(unittest.TestCase):
                 ]
                 for j in range(25)
             ]
-            for r in packet["stations"][::4]
+            for r in packet["stations"][::2]
         ]
         _, proof = prepare_sections(packet, source, **fixture.kwargs)
         self.assertEqual(proof["recipe"], "native-common-axis-width-v2")

@@ -5,6 +5,8 @@ import math
 import unittest
 
 from scripts.geometry.curved_road_plan import (
+    RENDER_STEP_M,
+    STATION_COUNT,
     boundary_span_metrics,
     prepare_sections,
     profile_plan_valid,
@@ -16,7 +18,7 @@ from scripts.worldgen.bob_profile_inspector import inspect_road_profile
 class CurvedRoadPlanTests(unittest.TestCase):
     def setUp(self):
         self.source = [
-            [[i * 0.25, -3 + j * 0.25] for j in range(25)] for i in range(1201)
+            [[i * RENDER_STEP_M, -3 + j * 0.25] for j in range(25)] for i in range(STATION_COUNT)
         ]
         self.kwargs = {
             "exact_sha": "a" * 40,
@@ -68,7 +70,7 @@ class CurvedRoadPlanTests(unittest.TestCase):
             "presentation_plan": proof,
             "stations": [
                 {
-                    "station_m": i * 0.25,
+                    "station_m": i * RENDER_STEP_M,
                     "xy_local_m": row,
                     "source_xy_local_m": original[i],
                     "candidate_ground_m": [600.0] * 25,
@@ -83,7 +85,7 @@ class CurvedRoadPlanTests(unittest.TestCase):
             imagery_sha256="e" * 64,
             producer_sha256="f" * 64,
             parameters={
-                "station_step_m": 0.25,
+                "station_step_m": RENDER_STEP_M,
                 "review_delta_m": 0.5,
                 "review_grade": 0.25,
                 "review_crossfall": 0.12,
@@ -94,7 +96,7 @@ class CurvedRoadPlanTests(unittest.TestCase):
         self.assertTrue(inspect_road_profile(profile)["inspection_complete"])
         profile["parameters"]["station_step_m"] = 0.5
         self.assertFalse(inspect_road_profile(profile)["inspection_complete"])
-        profile["parameters"]["station_step_m"] = 0.25
+        profile["parameters"]["station_step_m"] = RENDER_STEP_M
         vertices, _, _ = build_smooth_road_ribbon(profile)
         self.assertEqual(vertices[250][:2], xy[10][0])
         profile["stations"][10]["xy_local_m"][0][0] += 0.1

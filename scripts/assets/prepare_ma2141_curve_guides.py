@@ -108,6 +108,7 @@ def reference_guides(guides, width_profile):
         "maximum_observation_radial_error_m": float(
             np.max(abs(np.linalg.norm(observed - center, axis=1) - radius))
         ),
+        "transition_method": "quintic-G2-from-native-endpoints",
         "transitions": [
             {"start_station_m": 127.5, "end_station_m": 135.0},
             {"start_station_m": 155.0, "end_station_m": 165.0},

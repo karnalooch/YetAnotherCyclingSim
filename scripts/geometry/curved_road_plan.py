@@ -10,8 +10,9 @@ import math
 RECIPE = "native-paired-edge-curves-v1"
 ANCHOR_RECIPE = "native-cliff-edge-width-v3"
 COMMON_AXIS_RECIPE = "native-common-axis-width-v2"
-RENDER_STEP_M = 0.25
-STATION_COUNT = 1201
+RENDER_STEP_M = 0.125
+STATION_COUNT = 2401
+NATIVE_STRIDE = int(RENDER_STEP_M / 0.0625)
 MAX_DISPLACEMENT_M = (
     1.0  # Existing inferred edge review allowance, not survey accuracy.
 )
@@ -98,6 +99,10 @@ def profile_plan_valid(profile):
     rows = profile.get("stations", [])
     if not isinstance(plan, dict) or not isinstance(rows, list):
         return False
+    if (plan.get("controlled_width") or {}).get("reference_arc", {}).get("transition_method") == "quintic-G2-from-native-endpoints":
+        from scripts.geometry.road_surface_profile import surface_proof_valid
+        if not surface_proof_valid(profile):
+            return False
     return (
         profile.get("source_xy_preserved") is False
         and profile.get("canonical_source_xy_preserved") is True
@@ -119,7 +124,7 @@ def profile_plan_valid(profile):
 def prepare_sections(
     packet, source_sections, *, exact_sha, source_sha, profile_sha, origin
 ):
-    """Check dense native curves, then emit 1201 paired 25-point sections."""
+    """Check dense native curves, then emit 2401 paired 25-point sections."""
     from shapely.geometry import LineString, Polygon
 
     if (
@@ -140,6 +145,9 @@ def prepare_sections(
         or packet.get("map_modified") is not False
     ):
         raise ValueError("Native curve provenance mismatch")
+    if packet.get("reference_arc", {}).get("transition_method") == "quintic-G2-from-native-endpoints":
+        from scripts.geometry.road_transition import verify_join_proof
+        verify_join_proof(packet.get("transition_join_proof"), packet["reference_arc"]["transitions"])
     rows = packet["stations"]
     if len(rows) != 4801 or len(source_sections) != STATION_COUNT:
         raise ValueError("Incomplete paired curve domain")
@@ -294,8 +302,8 @@ def prepare_sections(
     sections, displacement, chord_error, min_area = [], 0.0, 0.0, math.inf
     side_displacements = [0.0, 0.0]
     for index, row in enumerate(rows):
-        segment = min(index // 4, STATION_COUNT - 2)
-        alpha = (index - segment * 4) / 4
+        segment = min(index // NATIVE_STRIDE, STATION_COUNT - 2)
+        alpha = (index - segment * NATIVE_STRIDE) / NATIVE_STRIDE
         for side, endpoint in ((0, 0), (1, 24)):
             a, b = (
                 source_sections[segment][endpoint],
@@ -307,7 +315,7 @@ def prepare_sections(
             )
             displacement = max(displacement, side_displacements[side])
     for i in range(STATION_COUNT):
-        left, right = rows[i * 4]["edges_xy_m"]
+        left, right = rows[i * NATIVE_STRIDE]["edges_xy_m"]
         width = math.dist(left, right)
         if not 2.0 <= width <= 12.0:
             raise ValueError("Curved pavement width outside preview bounds")
@@ -320,12 +328,12 @@ def prepare_sections(
             # Compare corresponding chainage, not a nearby arm of the hairpin.
             if i < STATION_COUNT - 1:
                 a, b = (
-                    rows[i * 4]["edges_xy_m"][side],
-                    rows[i * 4 + 4]["edges_xy_m"][side],
+                    rows[i * NATIVE_STRIDE]["edges_xy_m"][side],
+                    rows[i * NATIVE_STRIDE + NATIVE_STRIDE]["edges_xy_m"][side],
                 )
-                for sub in (1, 2, 3):
-                    p = rows[i * 4 + sub]["edges_xy_m"][side]
-                    chord = [a[k] + (b[k] - a[k]) * sub / 4 for k in range(2)]
+                for sub in range(1, NATIVE_STRIDE):
+                    p = rows[i * NATIVE_STRIDE + sub]["edges_xy_m"][side]
+                    chord = [a[k] + (b[k] - a[k]) * sub / NATIVE_STRIDE for k in range(2)]
                     chord_error = max(chord_error, math.dist(p, chord))
     constrained_displacement = (
         side_displacements[anchor_edge] if anchor_contract else displacement
@@ -336,7 +344,7 @@ def prepare_sections(
         )
     if chord_error > MAX_CHORD_ERROR_M:
         raise ValueError(
-            f"0.25 m tessellation misses native curve: {chord_error:.6f} m"
+            f"0.125 m tessellation misses native curve: {chord_error:.6f} m"
         )
     for first, second in itertools.pairwise(sections):
         for j in range(24):

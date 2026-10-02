@@ -8,22 +8,21 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
-from scripts.assets.prepare_ma2141_diagnostic import SOURCE_SHA, sha256  # noqa: E402
-from scripts.assets.prepare_ma2141_road_preview import (  # noqa: E402
+from scripts.assets.prepare_ma2141_diagnostic import SOURCE_SHA, sha256
+from scripts.assets.prepare_ma2141_road_preview import (
     PROFILE,
     build_trial,
     read_profile,
     triangle_candidates,
 )
-
-from scripts.worldgen.bob_profile_inspector import (  # noqa: E402
+from scripts.worldgen.bob_profile_inspector import (
     REVIEW_CROSSFALL,
     REVIEW_DELTA_M,
     REVIEW_GRADE,
@@ -95,6 +94,10 @@ def fit_sections(stations, lateral_m, ground_m, radius_m=FIT_RADIUS_M):
     raw = np.asarray(raw)
     center = local_linear_fit(stations, raw[:, 0], radius_m)
     crossfall = local_linear_fit(stations, raw[:, 1], radius_m)
+    return fit_result(stations, lateral_m, ground_m, raw, center, crossfall)
+
+
+def fit_result(stations, lateral_m, ground_m, raw, center, crossfall):
     target = center[:, None] + crossfall[:, None] * lateral_m
     delta = target - ground_m
     grade = np.diff(center) / np.diff(stations)
@@ -176,9 +179,9 @@ def prepare(
     presentation_plan = None
     if curved_edges is not None:
         from scripts.geometry.curved_road_plan import (
-            prepare_sections,
             RENDER_STEP_M,
             STATION_COUNT,
+            prepare_sections,
         )
 
         stations = np.arange(STATION_COUNT) * RENDER_STEP_M
@@ -186,8 +189,8 @@ def prepare(
         # Preserve corresponding source-polyline XY at the denser chainage.
         source_sections = np.array(
             [
-                original_xy[min(i // 2, 599)] * (1 - (i - min(i // 2, 599) * 2) / 2)
-                + original_xy[min(i // 2, 599) + 1] * ((i - min(i // 2, 599) * 2) / 2)
+                original_xy[min(i // 4, 599)] * (1 - (i - min(i // 4, 599) * 4) / 4)
+                + original_xy[min(i // 4, 599) + 1] * ((i - min(i // 4, 599) * 4) / 4)
                 for i in range(STATION_COUNT)
             ]
         ).tolist()
@@ -213,6 +216,8 @@ def prepare(
             )
         ):
             raise ValueError("Native road edge/width contract was not applied")
+        if guides.get("reference_arc", {}).get("transition_method") == "quintic-G2-from-native-endpoints" and packet.get("transition_evaluator") != "quintic-G2-from-native-endpoints":
+            raise ValueError("Native G2 transition evaluator missing")
         spans = packet.get("boundary_spans", [])
         expected = guides.get("boundary_spans", [])
         if len(spans) != len(expected) or any(
@@ -254,6 +259,15 @@ def prepare(
         )
         presentation_plan["native_export_sha256"] = sha256(curved_edges)
     fit = fit_sections(stations, lateral, ground)
+    surface_design = None
+    if presentation_plan is not None and presentation_plan["controlled_width"].get("reference_arc", {}).get("transition_method") == "quintic-G2-from-native-endpoints":
+        from scripts.geometry.road_surface_profile import design_profile
+        apex_roles = next(r["edges"] for r in presentation_plan["edge_role_samples"] if r["station_m"] == 145.0)
+        inner_edge = next(r["edge_index"] for r in apex_roles if r["bend_role"] == "INNER")
+        reference_edge = presentation_plan["controlled_width"]["edge_constraint"]["reference_edge"]
+        center, crossfall, surface_design = design_profile(stations, sections[:, :, :2], fit["center_m"], fit["crossfall"], reference_edge=reference_edge, inner_edge=inner_edge)
+        raw = np.column_stack((fit["raw_center_m"], fit["raw_crossfall"]))
+        fit = fit_result(stations, lateral, ground, raw, center, crossfall)
     rows = []
     for i, s in enumerate(stations):
         rows.append(
@@ -270,6 +284,12 @@ def prepare(
                 "max_fill_m": float(max(0, fit["delta_m"][i].max())),
             }
         )
+    surface_inspection = None
+    if surface_design is not None:
+        from scripts.geometry.road_surface_profile import inspect_surface
+        surface_inspection = inspect_surface(rows)
+        if surface_inspection["status"] != "PASS":
+            raise ValueError(f"Road surface inspection failed: {surface_inspection['metrics']}")
     result = {
         "schema_version": 1,
         "exact_sha": exact_sha,
@@ -313,6 +333,9 @@ def prepare(
         ],
         "attribution": profile["attribution"],
     }
+    if surface_design is not None:
+        result["surface_design"] = surface_design
+        result["surface_inspection"] = surface_inspection
     if presentation_plan is not None:
         result["parameters"]["station_step_m"] = RENDER_STEP_M
         result["source_xy_preserved"] = False

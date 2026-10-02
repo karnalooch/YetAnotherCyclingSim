@@ -200,3 +200,7 @@ When behavior, architecture, CI, assets or acceptance criteria change:
 The documentation-index contract remains:
 
 `python scripts/ci/check_docs_index.py`
+
+Issue #331 closeout also validates hairpin entry/exit curvature and bounded 3D
+road banking/height before regenerating CUT/support; see the World Building
+Bible's Hairpin alignment and surface closeout subsection.

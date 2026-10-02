@@ -2910,3 +2910,61 @@ explicit provisional width redesign for a coherent outline, not a survey or
 vehicle swept-path admission. It does not change source/physics or narrow the
 road secretly to bypass displacement/intersection gates. Fresh native visuals
 are required; inferred geographic widths remain pending metric review.
+
+#### Hairpin alignment and surface closeout — Issue #331
+
+Owner's 2026-10-03 annotated rider/overhead view rejects the remaining ramp and
+entry/exit shape. This supersedes any implication that ba705ee visual inspection
+admitted the complete bend: XY topology PASS did not admit road surface shape.
+
+Engineering basis: FHWA PDDM Chapter 9, sections 9.3.5.2 and 9.3.6, coordinates
+horizontal transitions, gradual cross-slope transitions and vertical alignment:
+https://highways.fhwa.dot.gov/sites/fhwa.dot.gov/files/Chapter_09.pdf . Spain's
+3.1-IC reference remains https://www.boe.es/eli/es/o/2016/02/19/fom273 . These
+principles guide the preview; no claim of statutory compliance, chosen design
+speed, drainage, swept-path validation or measured Ma-2141 banking follows.
+
+The two reference transitions now use quintic Hermite XY evaluated from native
+UE 5.8 spline endpoint positions, tangent directions and one-sided curvature.
+Chord-based parameter speed removes uneven GIS-key acceleration. This is G2
+(geometric tangency/curvature), not C2 equality of source-key derivatives and
+not an exact clothoid. Native cubic approach/circular spans remain in place.
+The exporter records `quintic-G2-from-native-endpoints` honestly; the transition
+polynomial is YACS math evaluated within native authoring, not a native quintic
+USpline type. Each endpoint's position, unit tangent and geometric curvature
+residual must be <=1e-4 in their respective units. Canonical source/physics is
+unchanged; reference displacement <=1 m, width and topology guards remain.
+Epic API consulted for UE 5.8: native GetLocationAtSplineInputKey,
+GetTangentAtSplineInputKey and explicit arrive/leave tangents:
+https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/USplineComponent .
+
+Within source station 110..165 m, road elevation is independently designed in
+sampled midpoint distance. A quintic matches the approach height, grade and
+second derivative. A C2 correction also preserves the inferred reference-edge
+height datum at station 145 m; its value/first/second derivative vanish at both
+ends. The datum comes from the prior regularized road inference, not a verified
+LiDAR asphalt-height observation. The reference edge index and bend-inner edge
+are read independently from semantic proof. Banking blends to a provisional 2%
+toward bend-inner at 135..155 m, then matches the exit value/derivatives.
+Both edge-index choices are supported. Source height observations and raw
+DTM-fit banking remain intact as evidence. Outside the window the old vertical
+profile remains; the constant 8.625 m arc width and observed-width evidence
+remain provisional. Terrain is re-evaluated and CUT/support rebuilt afterward.
+
+The bounded ribbon is now sampled at 0.125 m source keys (2401 sections),
+retaining native 0.0625 m curve samples; this is not uniform physical distance.
+Macro DTM resolution remains 0.5 m. Native inspection requires 60025 road traces
+and 4802 shoulder ground traces. Surface proof is independently recomputed by
+consumers from actual XY/Z, not a freely declared PASS. Preview rejection limits
+in 110..165 m: crossfall 6%, crossfall rate 0.005/m of midpoint distance, adjacent
+facet normal angle 5 degrees, physical edge grade 0.5. These are bounded visual
+experiment gates, not engineering road-design acceptance. Degenerate/nonfinite
+facets or stale/tampered surface receipts fail closed. Slope, metric width,
+collision, contact/support and performance admissions remain separate.
+
+Local mathematical design check (not native proof): reference displacement
+0.989491 m, derived displacement 3.744494 m, chord error 0.004496 m, no
+intersections; bounded surface max crossfall 3.9698%, rate 0.004261/m, facet
+angle 4.5439 degrees, edge grade 0.417924. CUT preparation passes the unchanged
+spatial 1/4 m recipe with no structure-review samples. Fresh exact-SHA native
+execution and the same nine cameras are required before a visual conclusion.

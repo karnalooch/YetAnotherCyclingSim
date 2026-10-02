@@ -353,8 +353,8 @@ jobs:
             $fit.status -ne 'REVIEW_REQUIRED' -or
             $fit.inspection_complete -ne $true -or
             $fit.role -ne 'INSPECTOR_ONLY' -or
-            $fit.sample_count -ne 30025 -or
-            $fit.evaluated_sample_count -ne 30025 -or
+            $fit.sample_count -ne 60025 -or
+            $fit.evaluated_sample_count -ne 60025 -or
             $fit.trace_miss_count -ne 0 -or
             $fit.geometry_inspection_view -ne 'road-geometry-inspection-before' -or
             $fit.earthworks_authoring_permitted -ne $false -or
@@ -366,7 +366,7 @@ jobs:
             [int]$fit.class_counts.FILL_REQUIRED +
             [int]$fit.class_counts.STRUCTURE_REVIEW
           )
-          if ($classified -ne 30025) {
+          if ($classified -ne 60025) {
             throw 'BOB terrain-fit classification does not cover every ribbon sample.'
           }
 
@@ -407,8 +407,8 @@ jobs:
             $support.recipe_id -ne 'bob-vertical-support-v1' -or
             $support.status -ne 'GEOMETRY_BUILT_VISUAL_REVIEW_PENDING' -or
             $support.shoulder_m -ne 0.5 -or
-            $support.station_count -ne 1201 -or
-            $support.ground_trace_count -ne 2402 -or
+            $support.station_count -ne 2401 -or
+            $support.ground_trace_count -ne 4802 -or
             $support.wall_segment_count -le 0 -or
             $support.base_dtm_modified -ne $false -or
             $support.map_saved -ne $false -or
