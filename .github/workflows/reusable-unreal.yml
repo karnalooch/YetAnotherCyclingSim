@@ -277,6 +277,11 @@ jobs:
             --output "$root/ma2141-native-alignment.json" `
             --exact-sha '${{ inputs.target_sha }}'
           if ($LASTEXITCODE -ne 0) { throw 'Ma-2141 native alignment diagnostic failed.' }
+          python scripts/assets/prepare_ma2141_profile.py `
+            --prepared-terrain "$root/Prepared" `
+            --output "$root/ma2141-profile-candidate.json" `
+            --exact-sha '${{ inputs.target_sha }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Ma-2141 profile assessment failed.' }
           python scripts/assets/prepare_ma2141_road_preview.py `
             --prepared-terrain "$root/Prepared" `
             --output "$root/ma2141-road-preview.json" `

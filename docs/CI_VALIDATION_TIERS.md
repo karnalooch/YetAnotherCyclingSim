@@ -34,6 +34,14 @@ explicit bilinear analysis interpretation, and leaves width, surface/access,
 asphalt elevation, earthworks and route/physics admission unresolved. This is
 source-to-DTM analysis evidence, not a BOB or ride PASS.
 
+The same lane emits `ma2141-profile-candidate.json` before the unchanged contact
+trial. This offline inference fits the existing 601 by 25 native-facet samples
+and records full-width cut/fill and profile review triggers. `REVIEW_REQUIRED`
+is an expected diagnostic outcome, never road acceptance; malformed inputs or
+producer errors fail the job. It does not apply the candidate in Unreal. The
+four existing captures continue to show the raw native-contact trial, not the
+regularized candidate. The JSON is included in the existing artifact upload.
+
 Retire this PR-specific bootstrap after a trusted region proof lane replaces it.
 
 YACS uses staged validation so world/art iteration stays fast without weakening the merge gate.

@@ -2216,3 +2216,56 @@ Continuous contact, geographic widths, saved road collision, ride and performanc
 remain unproven. No verified learning case is added. The next geometric task is a
 bounded road profile and justified local Road_Earthworks, retaining this native
 facet/contact comparison as a regression check.
+
+#### Profile assessment before earthworks
+
+The next bounded experiment is implemented by
+`scripts/assets/prepare_ma2141_profile.py`, using the same immutable source XY,
+inferred asymmetric edges, existing corridor kernel and verified A-D native
+heightfield facets. It measures a candidate; it does not author terrain.
+
+Tools-first review: retain the admitted offline producer -> derived data ->
+Unreal consumer boundary. The existing native `EditorApplySpline` path remains
+the first earthworks option to evaluate. It cannot determine whether an inferred
+footprint or proposed profile is geographically sound. NumPy least-squares
+assessment fills that narrow pre-authoring measurement gap; it adds no
+dependency, runtime solver, terrain skin or alternative earthworks writer.
+No Embark road-fitting algorithm is claimed or copied.
+
+At 0.5 m chainage spacing, fit a transverse plane to the central half of the
+inferred pavement width, then locally regularize its center elevation and
+crossfall over a 5 m radius in chainage. A weighted linear fit preserves a
+constant grade at the ends. Spatially adjacent but chainage-distant hairpin arms
+never enter the same fit. This does not infer crown, survey-quality camber or
+drainage. Full-width sample differences, including both edges excluded from the
+fit, report proposed cut/fill without clamping heights or shrinking widths.
+
+Review triggers (0.5 m adjustment, 25% longitudinal grade, 12% crossfall) are
+explicit experimental triage values, not accepted engineering limits. Every
+candidate remains `REVIEW_REQUIRED`, including one below all triggers. No
+result is an earthworks command, physics profile, road admission or learning
+case. A smoother profile cannot excuse a wrong footprint or retaining structure.
+
+The first local candidate on the pinned native source proposed up to 0.923 m
+cut and 3.633 m fill, maximum absolute grade 14.10% and crossfall 28.06%.
+402 of 601 stations triggered review. Centerline second-difference RMS dropped
+from 0.027246 m to 0.001155 m, but that numerical improvement is **not** a road
+quality PASS. The candidate must not be applied to Landscape in this state.
+Largest fill samples occur near stations 290.5 m, 60.5 m and 180.5 m. These are
+proposed profile-minus-DTM differences, not observed construction heights.
+
+Street View was inspected again on 2026-10-02. The July 2026 panorama
+`ISNWmsDuk5pvjtG_JAUMtQ` confirms the separate rock/gravel island. A second July
+2026 panorama, `CC1kFdwcYsGsX58vGXxG5Q`, at 39.8309598, 2.8142707 near the
+largest proposed fill, shows a stone parapet beside a steep drop, an adjoining
+guardrail and exposed rock on the uphill side. This is qualitative reference,
+not a measurement of the wall foundation, height or exact pavement edge. The
+pinned PNOA overlay places the suspect transect beside that outside edge;
+footprint/epoch/DTM representation and structural support remain to be resolved.
+Do not turn the discrepancy into a several-metre ordinary shoulder fill.
+
+The existing CI emits the assessment JSON with exact commit and input hashes.
+Its four UE images still depict the unchanged native-contact trial. No
+regularized-candidate render or `Road_Earthworks` write is claimed. Review the
+flagged transects and source/structure evidence before a bounded native authoring
+trial; preserve `Base_DTM`, the hairpin island and the established contact proof.
