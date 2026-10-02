@@ -370,7 +370,7 @@ jobs:
           retention-days: 7
 
       - name: Launch interactive Sa Calobra owner handoff
-        if: ${{ success() && inputs.region_terrain_import }}
+        if: inputs.region_terrain_import
         shell: pwsh
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
@@ -381,19 +381,6 @@ jobs:
             Remove-Item -LiteralPath $proofPath -Force
           }
 
-          $pythonDir = Join-Path (Get-Location) 'Content/Python'
-          New-Item -ItemType Directory -Path $pythonDir -Force | Out-Null
-          $bootstrap = @'
-          import os
-          import sys
-          import unreal
-          project = unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_dir())
-          if project not in sys.path:
-              sys.path.insert(0, project)
-          from scripts.ue import owner_handoff_startup
-          '@
-          Set-Content -LiteralPath (Join-Path $pythonDir 'init_unreal.py') -Value $bootstrap -Encoding utf8
-
           $env:YACS_TERRAIN_CAPTURE_ROOT = $root
           $env:YACS_TERRAIN_SHA = '${{ inputs.target_sha }}'
           . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
@@ -402,12 +389,17 @@ jobs:
           $arguments = @(('"' + $project + '"'), '-NoP4', '-windowed', '-ResX=1920', '-ResY=1080', '-NoVSync', ('-AbsLog="' + (Join-Path $root 'owner-handoff.engine.log') + '"'))
 
           $runnerTrackingId = $env:RUNNER_TRACKING_ID
-          Remove-Item Env:RUNNER_TRACKING_ID -ErrorAction SilentlyContinue
+          $env:RUNNER_TRACKING_ID = ''
+          $env:YACS_OWNER_HANDOFF = '1'
           try {
             $process = Start-Process -FilePath $engine.UnrealEditorPath -ArgumentList $arguments -PassThru
           }
           finally {
-            if (-not [string]::IsNullOrEmpty($runnerTrackingId)) {
+            Remove-Item Env:YACS_OWNER_HANDOFF -ErrorAction SilentlyContinue
+            if ([string]::IsNullOrEmpty($runnerTrackingId)) {
+              Remove-Item Env:RUNNER_TRACKING_ID -ErrorAction SilentlyContinue
+            }
+            else {
               $env:RUNNER_TRACKING_ID = $runnerTrackingId
             }
           }

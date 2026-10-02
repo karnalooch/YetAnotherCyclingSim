@@ -127,14 +127,19 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         )[1].split(
             "- name: Clean current-run evidence and non-allow-listed residue", 1
         )[0]
-        self.assertIn("Content/Python", handoff)
-        self.assertIn("init_unreal.py", handoff)
-        self.assertIn("owner_handoff_startup", handoff)
-        self.assertIn("Remove-Item Env:RUNNER_TRACKING_ID", handoff)
+        self.assertIn("$env:YACS_OWNER_HANDOFF = '1'", handoff)
+        self.assertIn("$env:RUNNER_TRACKING_ID = ''", handoff)
+        self.assertNotIn("Set-Content", handoff)
         self.assertNotIn("-ExecutePythonScript", handoff)
         self.assertIn("owner-handoff-proof.json", handoff)
         self.assertIn("road-contact-rider", handoff)
         self.assertIn("OWNER HANDOFF PASS", handoff)
+
+        bootstrap = (ROOT / "Content/Python/init_unreal.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('YACS_OWNER_HANDOFF") == "1"', bootstrap)
+        self.assertIn("scripts.ue.owner_handoff_startup", bootstrap)
 
         self.assertIn(
             "if: ${{ always() && !inputs.region_terrain_import }}",

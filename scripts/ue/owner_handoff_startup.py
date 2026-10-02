@@ -1,6 +1,6 @@
 """Prepare the interactive Sa Calobra owner handoff in a normal Unreal Editor.
 
-This module is started from a temporary Content/Python/init_unreal.py. It keeps
+This module is started from the guarded project Content/Python/init_unreal.py. It keeps
 BOB inspector-only, loads the accepted Base_DTM map, spawns the verified
 native-contact road preview, positions the primary editor viewport at the rider
 view, writes a small proof, and never saves the map.
