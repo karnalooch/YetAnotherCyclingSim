@@ -365,6 +365,7 @@ Primary technical references:
 - PCGEx official documentation: https://pcgex.gitbook.io/pcgex
 - PCGEx agent index: https://pcgex.gitbook.io/pcgex/llms.txt
 - PCGEx full agent corpus: https://pcgex.gitbook.io/pcgex/llms-full.txt
+- PCGEx Paths mental model: https://pcgex.gitbook.io/pcgex/working-with-pcgex/paths.md
 
 For PCGEx road/path work specifically, read the official **Paths** mental model and
 the exact node pages before graph authoring. PCGEx paths are ordered point data;
