@@ -48,6 +48,24 @@ The planner fails closed if AOI geometry drifts, 1 km LiDAR cell hints no longer
 match the bbox, raw-cache policy becomes unsafe, duplicate source IDs appear, or
 an acquired/included/derived source lacks exact file identity/hash evidence.
 
+## Exact CNIG source inventory resolved 2026-10-03
+
+The CNIG public product-page coordinate search was executed in headless Chromium
+without attempting download authorization. The current working square resolves to:
+
+- **9 LiDAR NPC03 LAZ files**, 2024 Baleares, ~448.66 MB as displayed by CNIG;
+- **4 MDS50cm COB3 V1 COG files**, ~446.92 MB displayed total;
+- **4 PNOA Máxima Actualidad 2024 source COG files**, ~2,289.31 MB displayed total.
+
+Exact filenames, `sec` identifiers and detail URLs are pinned in
+`working_space_sources.json`. All 17 source binaries currently use CNIG's normal
+`recaptcha_authorized` direct-download path. YACS does not bypass that gate.
+
+For immediate world-authoring work, the acquisition runner separately downloads
+the same-AOI **PNOA WMS orthophoto extract**, BTN vector context, SIOSE cross-check
+and Catastro Buildings WFS data, which are available through official services
+without that binary-download authorization flow.
+
 ## Expansion order
 
 1. acquire and validate the current 2.0165 km working square;
