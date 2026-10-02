@@ -1,6 +1,7 @@
-"""Capture isolated native terrain using the established UE screenshot task pattern.
+"""Capture accepted Sa Calobra terrain and the native-contact Ma-2141 road.
 
-Diagnostic only: no road, material camouflage or gameplay/performance acceptance.
+PR #319 runs BOB as INSPECTOR_ONLY. The experimental builder remains available
+as study/history but is never executed by this active visual lane.
 """
 
 from __future__ import annotations
@@ -26,9 +27,7 @@ _views = []
 _proofs = []
 _road_objects = None
 _world = None
-_lesson_objects = None
-_lesson_runner = None
-_lesson_next_poll = 0.0
+_bob_inspection_status = "NOT_LOADED"
 _scheduling = False
 
 
@@ -49,6 +48,7 @@ def finish(error=""):
     if _handle is not None:
         unreal.unregister_slate_post_tick_callback(_handle)
         _handle = None
+    keep_open = not error and os.environ.get("YACS_KEEP_EDITOR_OPEN") == "1"
     result = {
         "schema_version": 1,
         "exact_sha": os.environ["YACS_TERRAIN_SHA"],
@@ -61,20 +61,29 @@ def finish(error=""):
         "performance_status": "PENDING",
         "road_status": "INFERRED_CONTACT_TRIAL" if _road_objects else "NOT_SPAWNED",
         "final_road_status": "NOT_ADMITTED",
-        "builder_lesson_status": _lesson_objects[-1]["status"] if _lesson_objects else "NOT_EXECUTED",
+        "bob_mode": "INSPECTOR_ONLY",
+        "bob_inspection_status": _bob_inspection_status,
+        "builder_lesson_status": "DISABLED_OWNER_INSPECTOR_ONLY",
         "builder_map_saved": False,
+        "editor_handoff_requested": keep_open,
+        "editor_handoff_map": _manifest["map_package"] if keep_open else None,
+        "editor_handoff_view": _views[-1]["name"] if keep_open and _views else None,
     }
     (_root / "terrain-capture-proof.json").write_text(
         json.dumps(result, indent=2) + "\n", encoding="utf-8"
     )
     if error:
         unreal.log_error("[RegionTerrainCapture] " + error)
-    unreal.EditorPythonScripting.set_keep_python_script_alive(False)
+    elif keep_open:
+        unreal.log(
+            "[RegionTerrainCapture] PASS; leaving Editor open on "
+            + result["editor_handoff_view"]
+        )
+    unreal.EditorPythonScripting.set_keep_python_script_alive(keep_open)
 
 
 def schedule():
-    global _task, _started, _road_objects, _scheduling, _lesson_objects
-    global _lesson_runner, _lesson_next_poll
+    global _task, _started, _road_objects, _scheduling
     # Geometry creation can pump Slate and re-enter this tick callback while the
     # previous screenshot task is still marked done. Fence the whole transition.
     _scheduling = True
@@ -84,15 +93,6 @@ def schedule():
             sys.path.insert(0, str(Path(unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_dir())) / "scripts/ue"))
             from ma2141_road_preview import spawn_trial
             _road_objects = spawn_trial(_world, _root, os.environ["YACS_TERRAIN_SHA"])
-        if _index == 4:
-            _road_objects[0].set_actor_hidden_in_game(True)
-            _road_objects[0].set_is_temporarily_hidden_in_editor(True)
-        if _index == 5 and _lesson_objects is None:
-            from bob_native_build_lesson import execute
-            _lesson_runner = execute(_world, _root, os.environ["YACS_TERRAIN_SHA"])
-            next(_lesson_runner)
-            _lesson_next_poll = time.monotonic() + 0.5
-            return
         view = _views[_index]
         location, target = unreal.Vector(*view["location"]), unreal.Vector(*view["target"])
         _camera.set_actor_location(location, False, False)
@@ -122,26 +122,10 @@ def schedule():
 
 
 def tick(_delta):
-    global _index, _scheduling, _lesson_runner, _lesson_objects, _lesson_next_poll
-    if _scheduling:
+    global _index
+    if _scheduling or _task is None:
         return
     try:
-        if _lesson_runner is not None:
-            if time.monotonic() < _lesson_next_poll:
-                return
-            _scheduling = True
-            try:
-                next(_lesson_runner)
-                _lesson_next_poll = time.monotonic() + 0.5
-            except StopIteration as done:
-                _lesson_objects = done.value
-                _lesson_runner = None
-                schedule()
-            finally:
-                _scheduling = False
-            return
-        if _task is None:
-            return
         if time.monotonic() - _started > 120:
             finish("Screenshot task/file readiness timeout: " + _views[_index]["name"])
         elif _task.is_task_done():
@@ -174,6 +158,7 @@ def tick(_delta):
 
 def main():
     global _manifest, _root, _camera, _views, _handle, _world
+    global _bob_inspection_status
     _root = Path(os.environ["YACS_TERRAIN_CAPTURE_ROOT"])
     _manifest = json.loads(
         (_root / "Prepared/terrain-import.json").read_text(encoding="utf-8")
@@ -184,6 +169,20 @@ def main():
         != "/Game/Worlds/SaCalobra/L_SaCalobraTerrainBaseline"
     ):
         raise RuntimeError("Unadmitted terrain capture identity")
+    profile = json.loads(
+        (_root / "ma2141-profile-candidate.json").read_text(encoding="utf-8")
+    )
+    inspection = profile.get("bob_inspection")
+    if (
+        not isinstance(inspection, dict)
+        or inspection.get("inspection_complete") is not True
+        or inspection.get("role") != "INSPECTOR_ONLY"
+        or inspection.get("earthworks_authoring_permitted") is not False
+        or inspection.get("geometry_repair_executed") is not False
+    ):
+        raise RuntimeError("BOB inspector-only contract is missing or incomplete")
+    _bob_inspection_status = inspection["status"]
+
     world = unreal.EditorLoadingAndSavingUtils.load_map(_manifest["map_package"])
     _world = world
     if not world:
@@ -249,15 +248,10 @@ def main():
         {"name": "road-contact-overview", "location": [focus[0]-9000,focus[1]+9000,focus[2]+13000], "target": focus},
         {"name": "road-contact-rider", "location": [start[0],start[1],start[2]+170], "target": [target[0],target[1],target[2]+170]},
     ])
-    lesson = json.loads((_root / "bob-build-lesson.json").read_text())
-    center = lesson["points"][20]["center_m"]
-    location = [center[0]*100,center[1]*100,center[2]*100+3000]
-    target = [v*100 for v in center]
-    _views.extend([{"name": "bob-lesson-before", "location": location, "target": target},
-                   {"name": "bob-lesson-after", "location": location, "target": target}])
     _camera = actors.spawn_actor_from_class(
         unreal.CameraActor, unreal.Vector(), unreal.Rotator(), transient=True
     )
+    _camera.set_actor_label("YACS owner handoff - road-contact-rider")
     _camera.get_component_by_class(unreal.CameraComponent).set_editor_property(
         "field_of_view", 74.0
     )
