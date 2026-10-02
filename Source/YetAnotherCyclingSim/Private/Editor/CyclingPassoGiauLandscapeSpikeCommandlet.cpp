@@ -705,8 +705,10 @@ int32 UCyclingPassoGiauLandscapeSpikeCommandlet::Main(const FString& Params)
 
 	const int32 RoadLayerIndex = Landscape->CreateLayer(
 		RoadLayerName,
-		// Absolute spline elevations require the native spline blend semantics.
-		bManifestImport ? ULandscapeEditLayerSplines::StaticClass() : ULandscapeEditLayer::StaticClass(),
+		// Sa Calobra uses deterministic direct height deltas on a standard
+		// non-destructive sculpt layer. The rejected spline lesson is retained
+		// as history only and must not own the active Road_Earthworks surface.
+		ULandscapeEditLayer::StaticClass(),
 		false);
 	if (RoadLayerIndex == INDEX_NONE)
 	{
