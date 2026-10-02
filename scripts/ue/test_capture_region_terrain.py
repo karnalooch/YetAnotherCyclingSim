@@ -1,4 +1,4 @@
-"""Regression for Sa Calobra inspection plus transient cut-only owner handoff."""
+"""Regression for Sa Calobra inspection plus direct Road_Earthworks CUT."""
 
 import json
 import os
@@ -11,16 +11,18 @@ from unittest.mock import Mock, patch
 
 
 class CaptureTransitionTests(unittest.TestCase):
-    def test_active_capture_keeps_inspector_and_cut_only_builder(self):
+    def test_active_capture_keeps_inspector_and_direct_cut_builder(self):
         script = Path(__file__).with_name("capture_region_terrain.py").read_text()
         self.assertNotIn("bob_native_build_lesson", script)
         self.assertNotIn("bob-lesson-before", script)
         self.assertNotIn("bob-lesson-after", script)
         self.assertIn(
-            '"bob_mode": "INSPECTOR_PLUS_TRANSIENT_CUT_ONLY"', script
+            '"bob_mode": "INSPECTOR_PLUS_TRANSIENT_ROAD_EARTHWORKS_CUT"',
+            script,
         )
-        self.assertIn('"bob_cut_only_preview_proof"', script)
-        self.assertIn('"road-geometry-inspection"', script)
+        self.assertIn('"bob_road_earthworks_cut_proof"', script)
+        self.assertIn('"road-geometry-inspection-before"', script)
+        self.assertIn('"road-geometry-inspection-after"', script)
         self.assertIn('"road-contact-rider"', script)
         self.assertIn("unreal.ViewModeIndex.VMI_CLAY", script)
         self.assertIn("ShowFlag.MeshEdges 1", script)
@@ -102,13 +104,15 @@ class CaptureTransitionTests(unittest.TestCase):
                             "status": "REVIEW_REQUIRED",
                             "inspection_complete": True,
                         },
-                        "bob_cut_only_preview": {
-                            "status": "TECHNICAL_PREVIEW_PASS",
-                            "max_cut_depth_m": 0.88,
-                            "remaining_road_penetration_count": 0,
-                        },
                     },
+                    {},
                 ),
+                _cut_report={
+                    "status": "TECHNICAL_CUT_PASS",
+                    "patch_modified_vertex_count": 123,
+                    "before": {"class_counts": {"CUT_REQUIRED": 986}},
+                    "after": {"class_counts": {"CUT_REQUIRED": 0}},
+                },
                 _bob_inspection_status="REVIEW_REQUIRED",
                 _views=[{"name": "road-contact-rider"}],
                 _handle=None,
@@ -125,18 +129,16 @@ class CaptureTransitionTests(unittest.TestCase):
             proof = json.loads((root / "terrain-capture-proof.json").read_text())
             self.assertEqual(
                 proof["bob_mode"],
-                "INSPECTOR_PLUS_TRANSIENT_CUT_ONLY",
+                "INSPECTOR_PLUS_TRANSIENT_ROAD_EARTHWORKS_CUT",
             )
             self.assertEqual(proof["bob_inspection_status"], "REVIEW_REQUIRED")
             self.assertEqual(
                 proof["builder_lesson_status"],
-                "TECHNICAL_PREVIEW_PASS",
+                "TECHNICAL_CUT_PASS",
             )
-            self.assertEqual(proof["bob_cut_only_max_depth_m"], 0.88)
-            self.assertEqual(
-                proof["bob_cut_only_remaining_penetration_count"],
-                0,
-            )
+            self.assertEqual(proof["bob_cut_patch_modified_vertex_count"], 123)
+            self.assertEqual(proof["bob_cut_before_count"], 986)
+            self.assertEqual(proof["bob_cut_after_count"], 0)
             self.assertTrue(proof["editor_handoff_requested"])
             self.assertEqual(proof["editor_handoff_view"], "road-contact-rider")
             unreal.EditorPythonScripting.set_keep_python_script_alive.assert_called_with(
@@ -184,7 +186,7 @@ class CaptureTransitionTests(unittest.TestCase):
                 ns["tick"](0)  # A native call pumps Slate before the new task exists.
                 self.assertEqual(ns["_index"], 2)
                 finish.assert_not_called()
-                return (road_actor, Mock(), {"terrain_fit": {}})
+                return (road_actor, Mock(), {"terrain_fit": {}}, {"pre_fit": {}})
 
             helper = SimpleNamespace(spawn_trial=spawn)
             original_path = sys.path[:]
