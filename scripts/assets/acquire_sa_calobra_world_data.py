@@ -742,19 +742,31 @@ def main() -> None:
     for locator in manifest["selection"]["lidar_grid_locator_hints"]:
         e_km, n_km = [int(part) for part in locator.split("-")]
         lidar_points.append((e_km * 1000 + 500.0, n_km * 1000 + 500.0, locator))
-    run(
-        "pnoa_lidar_cob3_npc03",
-        lambda: acquire_cnig_product(
-            s,
-            sources["pnoa_lidar_cob3_npc03"],
-            lidar_points,
-            r"LAZ",
-            "NPC03",
-            persistent_root,
-            receipt_root,
-            args.force,
-        ),
-    )
+    lidar_source = sources["pnoa_lidar_cob3_npc03"]
+    if lidar_source.get("status") == "identified_download_authorization_required":
+        run(
+            "pnoa_lidar_cob3_npc03",
+            lambda: {
+                "status": "authorization_required",
+                "reason": "CNIG direct binary download requires normal reCAPTCHA authorization; automation does not bypass it.",
+                "identified_records": lidar_source.get("identified_records", []),
+                "identified_total_mb_display": lidar_source.get("identified_total_mb_display"),
+            },
+        )
+    else:
+        run(
+            "pnoa_lidar_cob3_npc03",
+            lambda: acquire_cnig_product(
+                s,
+                lidar_source,
+                lidar_points,
+                r"LAZ",
+                "NPC03",
+                persistent_root,
+                receipt_root,
+                args.force,
+            ),
+        )
 
     # MDS/ortho CNIG downloads use center + corners + edge-midpoints to discover every
     # provider sheet intersecting this 2.0165 km square without guessing sheet names.
@@ -770,19 +782,31 @@ def main() -> None:
         ((min_e + max_e) / 2, max_n - 1.0, "north"),
         (min_e + 1.0, (min_n + max_n) / 2, "west"),
     ]
-    run(
-        "mds50cm_cob3_v1",
-        lambda: acquire_cnig_product(
-            s,
-            sources["mds50cm_cob3_v1"],
-            cnig_points,
-            r"TIF|TIFF",
-            "MDS50CM",
-            persistent_root,
-            receipt_root,
-            args.force,
-        ),
-    )
+    mds_source = sources["mds50cm_cob3_v1"]
+    if mds_source.get("status") == "identified_download_authorization_required":
+        run(
+            "mds50cm_cob3_v1",
+            lambda: {
+                "status": "authorization_required",
+                "reason": "CNIG direct binary download requires normal reCAPTCHA authorization; automation does not bypass it.",
+                "identified_records": mds_source.get("identified_records", []),
+                "identified_total_mb_display": mds_source.get("identified_total_mb_display"),
+            },
+        )
+    else:
+        run(
+            "mds50cm_cob3_v1",
+            lambda: acquire_cnig_product(
+                s,
+                mds_source,
+                cnig_points,
+                r"TIF|TIFF",
+                "MDS50CM",
+                persistent_root,
+                receipt_root,
+                args.force,
+            ),
+        )
 
     receipt_path = receipt_root / "world-data-acquisition-receipt.json"
     write_text(receipt_path, json.dumps(receipt, indent=2) + "\n")
