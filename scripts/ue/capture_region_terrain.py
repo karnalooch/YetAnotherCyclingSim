@@ -27,6 +27,8 @@ _proofs = []
 _road_objects = None
 _world = None
 _lesson_objects = None
+_lesson_runner = None
+_lesson_next_poll = 0.0
 _scheduling = False
 
 
@@ -72,6 +74,7 @@ def finish(error=""):
 
 def schedule():
     global _task, _started, _road_objects, _scheduling, _lesson_objects
+    global _lesson_runner, _lesson_next_poll
     # Geometry creation can pump Slate and re-enter this tick callback while the
     # previous screenshot task is still marked done. Fence the whole transition.
     _scheduling = True
@@ -84,9 +87,12 @@ def schedule():
         if _index == 4:
             _road_objects[0].set_actor_hidden_in_game(True)
             _road_objects[0].set_is_temporarily_hidden_in_editor(True)
-        if _index == 5:
+        if _index == 5 and _lesson_objects is None:
             from bob_native_build_lesson import execute
-            _lesson_objects = execute(_world, _root, os.environ["YACS_TERRAIN_SHA"])
+            _lesson_runner = execute(_world, _root, os.environ["YACS_TERRAIN_SHA"])
+            next(_lesson_runner)
+            _lesson_next_poll = time.monotonic() + 0.5
+            return
         view = _views[_index]
         location, target = unreal.Vector(*view["location"]), unreal.Vector(*view["target"])
         _camera.set_actor_location(location, False, False)
@@ -116,10 +122,26 @@ def schedule():
 
 
 def tick(_delta):
-    global _index
-    if _scheduling or _task is None:
+    global _index, _scheduling, _lesson_runner, _lesson_objects, _lesson_next_poll
+    if _scheduling:
         return
     try:
+        if _lesson_runner is not None:
+            if time.monotonic() < _lesson_next_poll:
+                return
+            _scheduling = True
+            try:
+                next(_lesson_runner)
+                _lesson_next_poll = time.monotonic() + 0.5
+            except StopIteration as done:
+                _lesson_objects = done.value
+                _lesson_runner = None
+                schedule()
+            finally:
+                _scheduling = False
+            return
+        if _task is None:
+            return
         if time.monotonic() - _started > 120:
             finish("Screenshot task/file readiness timeout: " + _views[_index]["name"])
         elif _task.is_task_done():
@@ -229,7 +251,7 @@ def main():
     ])
     lesson = json.loads((_root / "bob-build-lesson.json").read_text())
     center = lesson["points"][20]["center_m"]
-    location = [center[0]*100-1600,center[1]*100+1600,center[2]*100+1500]
+    location = [center[0]*100,center[1]*100,center[2]*100+3000]
     target = [v*100 for v in center]
     _views.extend([{"name": "bob-lesson-before", "location": location, "target": target},
                    {"name": "bob-lesson-after", "location": location, "target": target}])

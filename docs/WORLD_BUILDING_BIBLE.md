@@ -2466,3 +2466,14 @@ means images were produced; a REJECT_LESSON receipt remains a failed experiment.
 `TECHNICAL_TRIAL_PASS` is not a learned recipe or production road admission.
 Human visual, geographic widths, collision, ride and performance remain pending.
 A verified-case ledger entry requires the established acceptance gates.
+
+First native execution (`efad49a`, CI 36993912238) produced six captures but
+correctly returned REJECT_LESSON: immediate post-spline collision traces were
+identical to the pre-deformation samples (33.42 mm RMS, zero measured change).
+The later render visibly differed, identifying an asynchronous-update risk;
+that receipt is not valid evidence of final contact. The consumer now yields
+to editor ticks, requires a measured terrain change and three stable collision
+polls (0.1 mm tolerance, at least 3 s elapsed, 20 s deadline) before constructing
+and measuring pavement. Timeout rejects the lesson. A capture-transition
+regression prevents sampling/screenshot completion during this yield. The
+lesson camera is overhead to avoid the foreground slope occluding the trial.

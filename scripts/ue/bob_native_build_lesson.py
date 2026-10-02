@@ -3,6 +3,7 @@
 import hashlib
 import json
 import math
+import time
 from pathlib import Path
 import unreal
 
@@ -114,7 +115,25 @@ def execute(world, root, exact_sha):
         paint_layer=None,
         edit_layer_name="Road_Earthworks",
     )
-    after = [ground(world, *p) for p in samples]
+    # Edit layers and collision update on later editor ticks. Yield to Slate;
+    # measuring in the editor_apply_spline call frame reads stale collision.
+    settle_started = time.monotonic()
+    previous = before
+    stable_polls = 0
+    settled = False
+    while True:
+        yield None
+        after = [ground(world, *p) for p in samples]
+        changed = max(abs(a - b) for a, b in zip(before, after)) > 0.0001
+        stable = max(abs(a - b) for a, b in zip(previous, after)) <= 0.0001
+        stable_polls = stable_polls + 1 if changed and stable else 0
+        previous = after
+        elapsed = time.monotonic() - settle_started
+        if stable_polls >= 3 and elapsed >= 3:
+            settled = True
+            break
+        if elapsed >= 20:
+            break
     guard_after = [ground(world, *p) for p in guard]
     vertices = plan["vertices_local_m"]
     triangles = plan["triangles"]
@@ -142,7 +161,11 @@ def execute(world, root, exact_sha):
         "architect": "BOB",
         "recipe_id": plan["recipe_id"],
         "status": "TECHNICAL_TRIAL_PASS"
-        if improved and contact and guard_change <= 0.002 and saved_unchanged
+        if settled
+        and improved
+        and contact
+        and guard_change <= 0.002
+        and saved_unchanged
         else "REJECT_LESSON",
         "station_range_m": plan["station_range_m"],
         "api": "LandscapeProxy.editor_apply_spline",
@@ -155,6 +178,9 @@ def execute(world, root, exact_sha):
         "profile_error_before_rms_m": before_error,
         "profile_error_after_rms_m": after_error,
         "profile_improved": improved,
+        "collision_settled": settled,
+        "collision_settle_seconds": elapsed,
+        "collision_stable_polls": stable_polls,
         "max_sampled_ground_change_m": max(abs(a - b) for a, b in zip(before, after)),
         "outside_guard_sample_count": len(guard),
         "outside_guard_max_change_m": guard_change,
