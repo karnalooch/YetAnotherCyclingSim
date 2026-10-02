@@ -14,7 +14,7 @@ YetAnotherCyclingSim to realistyczny symulator kolarstwa halowego, łączący:
 - piękne i realistyczne światy 3D;
 - zaawansowaną technikę pokonywania zakrętów;
 - obsługę trenażerów rowerowych;
-- realistyczne trasy inspirowane prawdziwymi miejscami;
+- trasy rekonstruujące rzeczywiste miejsca w rzeczywistej skali, bez kompresji geograficznej;
 - możliwość późniejszej rozbudowy o multiplayer.
 
 Docelową przewagą produktu ma być połączenie realizmu wizualnego, fizyki, pogody oraz techniki jazdy.
@@ -66,6 +66,26 @@ Jazda mieszana korzysta z tego samego deterministycznego silnika i Road Physics 
 Pierwszy rzeczywisty checkpoint obejmie zweryfikowany odcinek mieszany, ciągłe przejścia nawierzchni, poprawne połączenia i profil fizyczny oraz odbiór z kamery kolarza i pomiar wydajności. Może to być ustalona trasa; wybór skrętu na każdym skrzyżowaniu nie jest warunkiem tego testu. Bieżące MVP nadal wymaga jednego kompletnego przejazdu. Nie rozszerza to zamknięcia PR #294 ani nie oznacza, że sieć jest już przejezdna.
 
 Obecny przykład `physics_reference/examples/run_mixed_surface.py` i jego testy są wyłącznie syntetycznym dowodem użycia istniejącego modelu referencyjnego. Współczynniki i 300-metrowa trasa są danymi testowymi, nie pomiarami ani skalibrowanym presetem gravela. Przykład nie aktywuje jazdy w UE, nie dowodzi gravelowego pokonywania zakrętów i nie importuje żadnych rzeczywistych dróg.
+
+### 3.3 Wierność geograficzna 1:1
+
+**Decyzja właściciela z 2026-10-02.** YACS nie tworzy świata „inspirowanego” Majorką. Celem jest rekonstrukcja rzeczywistego miejsca w **rzeczywistej skali 1:1**, w granicach dokładności i rozdzielczości zweryfikowanych źródeł.
+
+Obowiązują następujące zasady:
+
+- **1 metr w terenie odpowiada 1 metrowi w świecie YACS**; nie stosujemy kompresji odległości ani skracania trasy dla wygody produkcji;
+- rzeczywista długość drogi, położenie zakrętów, skrzyżowań i hairpinów oraz dystans pomiędzy nimi muszą wynikać z kanonicznej geometrii źródłowej;
+- makrogeometria gór, dolin, grzbietów i przełęczy pochodzi z przyjętego DTM/DEM/LiDAR i nie może być arbitralnie przesuwana, skalowana ani wygładzana dla kompozycji;
+- droga nie może być przesuwana po Landscape, aby ukryć błąd kontaktu; earthworks i prezentacja mają dopasować się do zweryfikowanej drogi, nie odwrotnie;
+- położenie lasów, pól, zabudowy, murów, infrastruktury i innych geograficznie istotnych obiektów ma wynikać ze zweryfikowanych lub jawnie wyprowadzonych danych przestrzennych;
+- systemy proceduralne służą do **rekonstrukcji i wydajnej prezentacji danych**, a nie do wymyślania alternatywnej geografii;
+- dokładny wariant modelu drzewa, tekstura kory, drobne kamienie, trawa i inne nieistotne geograficznie detale mogą być dobierane proceduralnie w granicach dowodów i regionalnego charakteru.
+
+„1:1” nie oznacza obietnicy centymetrowego skanu całego świata. Oznacza, że **skala, położenie, długości i makrokształt nie są świadomie fałszowane**, a różnice wynikają wyłącznie z ograniczeń źródeł, jawnej niepewności lub technik prezentacyjnych, które nie zmieniają geografii.
+
+Docelowy test wierności może porównywać zsynchronizowany po dystansie przejazd rzeczywisty i YACS: po tej samej liczbie metrów powinny pojawiać się te same zakręty, grzbiety, doliny, granice lasu i inne trwałe punkty orientacyjne w granicach jakości dostępnych danych.
+
+Metodologia źródeł, World Authority, rekonstrukcji proceduralnej i dopuszczalnych uproszczeń pozostaje w [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md).
 
 ## 4. Sterowanie MVP
 
