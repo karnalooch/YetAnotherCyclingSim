@@ -66,7 +66,27 @@ YACS uses a **real-world-first** world-building model:
 
 > **Verified or derived real-world data decides what exists and where it exists. Procedural systems decide mainly how that truth is represented efficiently and believably in Unreal.**
 
-This is not a promise of a literal centimetre-perfect digital twin. The target is a **procedural digital twin optimized for a game**: preserve geographically meaningful structure and measurable dimensions, then use deterministic procedural presentation for the visual detail that source data does not justify.
+This is not a promise of a literal centimetre-perfect scan. The target is a **source-faithful 1:1 geographic reconstruction optimized for a game**: preserve real-world metric scale, positions, route length and macro terrain geometry within the accuracy of admitted sources, then use deterministic procedural presentation only for detail that the source data does not justify.
+
+### 2.1.1 Geographic fidelity contract
+
+Owner decision, 2026-10-02: YACS must reconstruct the real place rather than create a Mallorca-inspired substitute.
+
+**Hard invariants:**
+
+- **1 real-world metre = 1 YACS world metre.** No geographic distance compression, route shortening or horizontal scaling for convenience.
+- Canonical road chainage, junctions, hairpins and spacing come from admitted real-world route geometry. A presentation system may not relocate the route to make terrain authoring easier.
+- Mountain ranges, valleys, ridges, passes and other macro terrain forms come from admitted DTM/DEM/LiDAR. They may be represented at different runtime detail levels, but their geographic position, scale and source-faithful macro shape may not be artistically moved or invented.
+- Road/Earthworks Authority adapts presentation terrain to the verified road where justified. It does not move the road to fit the Landscape.
+- Forest edges, fields, buildings, walls, infrastructure and other geographically meaningful features must come from hard facts or reproducible derived measurements when such sources are available. Procedural placement may not silently invent a different spatial layout.
+- PCG, PCGEx, Houdini, Landscape tools and future generators are **reconstruction executors**, not geographic authorities. They consume World Authority outputs and may vary asset identity or sub-source decorative detail only within explicit confidence bounds.
+- Lower-detail macro terrain, HLOD, World Partition cells, streaming proxies, caches and processing tiles are implementation choices. Their boundaries must not be visible as changes to geography and must not alter metric route distance.
+
+**Allowed presentation freedom** includes exact foliage mesh variants, bark/material variation, grass blades, small scatter rocks and other details that are not asserted as measured geographic facts. Where LiDAR or another source provides a measured object position, canopy structure, building footprint or similar evidence, presentation should preserve that evidence rather than replace it with unconstrained random placement.
+
+Source uncertainty remains explicit. If two sources disagree, YACS records and resolves the conflict according to evidence strength; it does not hide uncertainty by moving terrain or objects until the image looks plausible.
+
+A useful end-state fidelity proof is a distance-synchronized real-world/YACS ride comparison. At the same chainage, the rider should encounter the same durable geographic cues—road bends, ridges, valleys, forest boundaries, structures and other landmarks—within the resolution, acquisition date and accuracy limits of the admitted sources.
 
 #### Responsibility boundaries
 
