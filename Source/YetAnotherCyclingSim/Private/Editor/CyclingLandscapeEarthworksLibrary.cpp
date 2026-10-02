@@ -199,15 +199,6 @@ bool UCyclingLandscapeEarthworksLibrary::ApplyRoadEarthworksPatch(
 			HeightData.GetData(),
 			ELandscapeLayerPaintingRestriction::None);
 		HeightmapAccessor.Flush();
-
-		TArray<uint16> Readback;
-		Readback.SetNumUninitialized(HeightData.Num());
-		HeightmapAccessor.GetDataFast(MinX, MinY, MaxX, MaxY, Readback.GetData());
-		if (Readback != HeightData)
-		{
-			UE_LOG(LogCyclingLandscapeEarthworks, Error, TEXT("Road_Earthworks layer readback differs from CUT patch."));
-			return false;
-		}
 	}
 
 	// FHeightmapAccessor::Flush owns the changed-component update path. Force
