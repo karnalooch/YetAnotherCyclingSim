@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "issue": 335,
+  "aoi": {
+    "id": "ma2141_golden_hairpin_v1",
+    "status": "planning_exact_source_files_pending",
+    "crs": "EPSG:25831",
+    "bounds_m": [
+      483556.3220360138,
+      4408451.208022696,
+      484556.3220360138,
+      4409451.208022696
+    ],
+    "center_m": [
+      484056.3220360138,
+      4408951.208022696
+    ],
+    "center_wgs84_lon_lat": [
+      2.81367791300534,
+      39.830409456831
+    ],
+    "wgs84_corners_lon_lat": {
+      "SW": [2.807847360715489, 39.82589491608882],
+      "SE": [2.8195328068221417, 39.82591368032621],
+      "NE": [2.8195092286404826, 39.83492370277242],
+      "NW": [2.8078222558432477, 39.834904932574126]
+    },
+    "square_half_extent_m": 500.0,
+    "source_anchor": {
+      "kind": "CartoCiudad Ma-2141 source vertex",
+      "source_file": "../ma2141_cartociudad_source_2026-10-02.json",
+      "source_part_index": 3,
+      "source_vertex_index": 43,
+      "note": "AOI anchor only. It does not admit road physics or final pavement geometry."
+    }
+  },
+  "selection": {
+    "current_diagnostic_arc_length_m": 300.0,
+    "lidar_grid_size_m": 1000,
+    "lidar_grid_locator_hints": [
+      "483-4408",
+      "484-4408",
+      "483-4409",
+      "484-4409"
+    ],
+    "locator_hint_rule": "floor(E/1000)-floor(N/1000) for every 1 km cell intersecting the AOI",
+    "locator_warning": "Locator hints are not CNIG filenames, section IDs or proof of availability. Exact provider identities must be verified before acquisition."
+  },
+  "cache": {
+    "raw_root": "ExternalAssets/WorldData/SaCalobra/GoldenHairpinV1",
+    "commit_raw_sources": false,
+    "policy": "Raw provider payloads stay outside Git. Only bounded derived products approved by provenance policy may later be committed."
+  },
+  "sources": [
+    {
+      "id": "pnoa_lidar_cob3_npc03",
+      "priority": "P0",
+      "status": "candidate",
+      "product": "LiDAR-PNOA 3rd coverage 2022-2025",
+      "product_url": "https://centrodedescargas.cnig.es/CentroDescargas/lidar-tercera-cobertura",
+      "technical_reference": "https://pnoa.ign.es/pnoa-lidar/productos-a-descarga",
+      "expected_format": "LAZ",
+      "expected_grid_m": 1000,
+      "expected_density_points_m2": 5,
+      "preferred_classification": "NPC03",
+      "crs_expectation": "ETRS89 / UTM zone 31N for Illes Balears",
+      "height_expectation": "orthometric",
+      "license": "CC BY 4.0 compatible IGN/CNIG general-use terms",
+      "derived_attribution": "Obra derivada de LiDAR-PNOA-cob3 2022-2025 CC-BY 4.0 scne.es",
+      "files": []
+    },
+    {
+      "id": "pnoa_maxima_actualidad_2024",
+      "priority": "P0",
+      "status": "candidate",
+      "product": "PNOA Maxima Actualidad orthophoto",
+      "product_url": "https://centrodedescargas.cnig.es/CentroDescargas/catalogo.do?Serie=PNOAH",
+      "expected_format": "COG GeoTIFF",
+      "expected_native_gsd_m": 0.25,
+      "crs_expectation": "ETRS89 / UTM zone 31N for Illes Balears",
+      "license": "CC BY 4.0 compatible IGN/CNIG general-use terms",
+      "purpose": "dated visible-surface evidence and derived masks; never ground-Z authority",
+      "files": []
+    },
+    {
+      "id": "btn_thematic_context",
+      "priority": "P1",
+      "status": "candidate",
+      "product": "Base Topografica Nacional thematic data",
+      "product_url": "https://centrodedescargas.cnig.es/CentroDescargas/btn",
+      "expected_format": "GeoPackage",
+      "requested_themes": [
+        "Naturaleza y paisaje",
+        "Hidrografia",
+        "Edificios/Construcciones",
+        "Transportes"
+      ],
+      "purpose": "bounded semantic/context evidence only",
+      "files": []
+    },
+    {
+      "id": "siose_classic",
+      "priority": "P2",
+      "status": "reference_only",
+      "product": "SIOSE classic land cover",
+      "product_url": "https://centrodedescargas.cnig.es/CentroDescargas/siose",
+      "purpose": "historical/coarse cross-check only; never override newer LiDAR or orthophoto evidence",
+      "files": []
+    }
+  ],
+  "planned_derived_outputs": [
+    "terrain_slope",
+    "terrain_aspect",
+    "terrain_curvature_or_roughness",
+    "canopy_height",
+    "canopy_density",
+    "lidar_class_occupancy",
+    "visible_surface_class_with_confidence",
+    "building_water_infrastructure_exclusions",
+    "road_distance",
+    "bob_cut_fill_inner_outer_edge"
+  ]
+}
