@@ -2188,3 +2188,31 @@ collision, ride or performance. Raw terrain roughness is intentionally retained;
 profile regularization and justified local earthworks remain later work.
 The repair is unverified in UE until its own immutable run completes. BOB verified
 memory remains unchanged; this is a candidate, not a learned successful solution.
+
+
+#### Verified sampled-contact repair — 10ad3c7
+
+[Full CI 36979234157](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/36979234157)
+succeeded at `10ad3c78584c9ae28b658a8302de3d96585151ba`, artifact
+11214422563. The native-facet repair produced all four captures and passed
+27,552 native traces: 10,412 top vertices and 17,140 triangle centroids, zero
+misses, zero floating and zero penetrating samples. Surface-minus-Landscape
+ranged from 0.039994717 to 0.041401386 m, inside the unchanged nominal 80 mm
+slab. All R16 centroid tests also passed. Base_DTM and Road_Earthworks were
+unmodified. The closed presentation mesh contains 20,824 vertices / 41,644 triangles.
+
+The immutable [native contact receipt](../worldgen/terrain/benchmarks/sa_calobra/ma2141_native_contact_10ad3c7.json)
+is preserved with its original exact SHA; SHA-256 of the original artifact receipt:
+`01386a0b63da4b98cc6153586420c88f271d62d7aa60a722a689681fab693768`.
+It supersedes the preceding candidate's pending native-contact status only.
+BOB correctly changes from REJECT_CONTACT to REVIEW_PENDING. Its
+geometry_repair_executed=false means the review function itself did not author
+the repair; the pavement producer did.
+
+AI inspection of both new road images shows removal of the prior visible
+pavement punctures in the rider view, but the surface retains raw terrain
+roughness and is not accepted as final asphalt. This is not owner visual approval.
+Continuous contact, geographic widths, saved road collision, ride and performance
+remain unproven. No verified learning case is added. The next geometric task is a
+bounded road profile and justified local Road_Earthworks, retaining this native
+facet/contact comparison as a regression check.

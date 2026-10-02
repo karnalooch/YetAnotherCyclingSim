@@ -1,0 +1,348 @@
+{
+  "schema_version": 1,
+  "exact_sha": "10ad3c78584c9ae28b658a8302de3d96585151ba",
+  "region_id": "sa_calobra",
+  "status": "INFERRED_CONTACT_TRIAL",
+  "trace_sample_count": 27552,
+  "trace_miss_count": 0,
+  "requested_vertex_trace_count": 10412,
+  "requested_centroid_trace_count": 17140,
+  "native_mesh": {
+    "footprint_area_m2": 1677.4824521427556,
+    "mesh_area_xy_m2": 1677.482452142755,
+    "native_diagonal": "a_d",
+    "native_cell_size_m": 0.5,
+    "top_vertex_count": 10412,
+    "top_triangle_count": 17140
+  },
+  "missing_sample_indices": [],
+  "triangle_diagonal_comparison": {
+    "a_d": {
+      "max_abs_error_m": 0.001401386261022708,
+      "mean_abs_error_m": 0.00042477619201103037
+    },
+    "b_c": {
+      "max_abs_error_m": 0.7016912768008297,
+      "mean_abs_error_m": 0.004917033206537293
+    }
+  },
+  "worst_native_samples": [
+    {
+      "sample_index": 2500,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1055.5,
+        561.0
+      ],
+      "surface_minus_landscape_m": 0.04140138626105909
+    },
+    {
+      "sample_index": 2396,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1052.5,
+        560.0
+      ],
+      "surface_minus_landscape_m": 0.04140138626098633
+    },
+    {
+      "sample_index": 2543,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1051.5,
+        561.5
+      ],
+      "surface_minus_landscape_m": 0.04140138626098633
+    },
+    {
+      "sample_index": 2653,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1050.5,
+        562.5
+      ],
+      "surface_minus_landscape_m": 0.04140138626098633
+    },
+    {
+      "sample_index": 2822,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1050.0,
+        564.0
+      ],
+      "surface_minus_landscape_m": 0.04140138626098633
+    },
+    {
+      "sample_index": 2673,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1060.5,
+        562.5
+      ],
+      "surface_minus_landscape_m": 0.04138946533203125
+    },
+    {
+      "sample_index": 2726,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1059.5,
+        563.0
+      ],
+      "surface_minus_landscape_m": 0.04138946533203125
+    },
+    {
+      "sample_index": 3026,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1063.0,
+        565.5
+      ],
+      "surface_minus_landscape_m": 0.04137754440314893
+    },
+    {
+      "sample_index": 2485,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1049.0,
+        561.0
+      ],
+      "surface_minus_landscape_m": 0.04137754440307617
+    },
+    {
+      "sample_index": 3058,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1048.0,
+        566.0
+      ],
+      "surface_minus_landscape_m": 0.04137754440307617
+    },
+    {
+      "sample_index": 3120,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1048.0,
+        566.5
+      ],
+      "surface_minus_landscape_m": 0.04137754440307617
+    },
+    {
+      "sample_index": 2307,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1055.5,
+        559.0
+      ],
+      "surface_minus_landscape_m": 0.041365623474193855
+    },
+    {
+      "sample_index": 2352,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1054.5,
+        559.5
+      ],
+      "surface_minus_landscape_m": 0.041365623474193855
+    },
+    {
+      "sample_index": 2399,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1054.0,
+        560.0
+      ],
+      "surface_minus_landscape_m": 0.041365623474193855
+    },
+    {
+      "sample_index": 2769,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1051.5,
+        563.5
+      ],
+      "surface_minus_landscape_m": 0.041365623474193855
+    },
+    {
+      "sample_index": 2942,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1051.0,
+        565.0
+      ],
+      "surface_minus_landscape_m": 0.041365623474193855
+    },
+    {
+      "sample_index": 2457,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1059.5,
+        560.5
+      ],
+      "surface_minus_landscape_m": 0.041353702545166016
+    },
+    {
+      "sample_index": 2458,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1060.0,
+        560.5
+      ],
+      "surface_minus_landscape_m": 0.041353702545166016
+    },
+    {
+      "sample_index": 2610,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1057.0,
+        562.0
+      ],
+      "surface_minus_landscape_m": 0.041353702545166016
+    },
+    {
+      "sample_index": 2832,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1055.0,
+        564.0
+      ],
+      "surface_minus_landscape_m": 0.041353702545166016
+    },
+    {
+      "sample_index": 2263,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1056.5,
+        558.5
+      ],
+      "surface_minus_landscape_m": 0.04134178161621094
+    },
+    {
+      "sample_index": 2644,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1046.5,
+        562.5
+      ],
+      "surface_minus_landscape_m": 0.04134178161621094
+    },
+    {
+      "sample_index": 2491,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1051.0,
+        561.0
+      ],
+      "surface_minus_landscape_m": 0.041341781616138176
+    },
+    {
+      "sample_index": 2706,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1049.5,
+        563.0
+      ],
+      "surface_minus_landscape_m": 0.041341781616138176
+    },
+    {
+      "sample_index": 2843,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1060.5,
+        564.0
+      ],
+      "surface_minus_landscape_m": 0.041341781616138176
+    },
+    {
+      "sample_index": 2844,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1061.0,
+        564.0
+      ],
+      "surface_minus_landscape_m": 0.041341781616138176
+    },
+    {
+      "sample_index": 2845,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1061.5,
+        564.0
+      ],
+      "surface_minus_landscape_m": 0.041341781616138176
+    },
+    {
+      "sample_index": 14933,
+      "sample_kind": "centroid",
+      "local_xy_m": [
+        1061.1666666666667,
+        563.8333333333334
+      ],
+      "surface_minus_landscape_m": 0.04132986068732862
+    },
+    {
+      "sample_index": 2404,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1056.5,
+        560.0
+      ],
+      "surface_minus_landscape_m": 0.04132986068725586
+    },
+    {
+      "sample_index": 2449,
+      "sample_kind": "vertex",
+      "local_xy_m": [
+        1055.5,
+        560.5
+      ],
+      "surface_minus_landscape_m": 0.04132986068725586
+    }
+  ],
+  "surface_minus_landscape_min_m": 0.03999471664421435,
+  "surface_minus_landscape_max_m": 0.04140138626105909,
+  "floating_sample_count": 0,
+  "penetrating_sample_count": 0,
+  "native_sample_contact_status": "PASS",
+  "r16_centroid_contact": {
+    "sample_count": 10412,
+    "triangle_centroid_count": 17140,
+    "surface_minus_dtm_min_m": 0.03999999761060735,
+    "surface_minus_dtm_max_m": 0.040000001890120984,
+    "floating_centroid_count": 0,
+    "penetrating_centroid_count": 0,
+    "native_unreal_contact_status": "PENDING",
+    "r16_contact_status": "PASS",
+    "height_interpolation": "native triangle facets; fixed nominal slab embedding"
+  },
+  "continuous_contact_status": "NOT_PROVEN",
+  "road_collision_status": "NOT_PROVEN",
+  "human_visual_status": "PENDING",
+  "performance_status": "PENDING",
+  "final_road_status": "NOT_ADMITTED",
+  "terrain_modified": false,
+  "road_earthworks_modified": false,
+  "attribution": "Obra derivada de PNOA, consulta 2026-10-02, CC BY 4.0 scne.es",
+  "bob_review": {
+    "architect": "BOB",
+    "status": "REVIEW_PENDING",
+    "sample_proofs_complete": true,
+    "reasons": [
+      "pavement edges remain inferred; symmetric GIS buffers are unsafe"
+    ],
+    "next_actions": [
+      "verify separate left/right pavement edges against pinned imagery and source uncertainty",
+      "remeasure native Landscape contact across road width, edges and triangle interiors",
+      "verify road collision, rider-camera appearance and performance before admission"
+    ],
+    "forbidden_shortcuts": [
+      "arbitrary vertical lift",
+      "global terrain blur",
+      "material camouflage",
+      "inferred widths promoted to survey"
+    ],
+    "geometry_repair_executed": false,
+    "road_admitted": false,
+    "eligible_for_learning": false
+  }
+}
+
