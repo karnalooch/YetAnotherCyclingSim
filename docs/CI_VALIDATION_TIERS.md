@@ -48,8 +48,9 @@ For the active Sa Calobra PR #319 lane, BOB now runs only as the profile
 inspector. The experimental builder remains retained as historical/future
 teaching material but is not prepared or executed by this proof.
 
-The region capture produces four views: two terrain views, road overview and
-final `road-contact-rider`. A successful capture writes its proof while Unreal
+The region capture produces five required views: two terrain views, mandatory
+`road-geometry-inspection`, normal road overview and final
+`road-contact-rider`. A successful capture writes its proof while Unreal
 Editor remains open for the owner's manual inspection. Final cleanup for that
 region handoff does not reset the inspection state. A later Unreal proof may
 close the previous session before its fresh exact-revision checkout.
@@ -60,6 +61,13 @@ is the smooth ribbon built from the inspected candidate profile. CI must never
 accept a smooth-looking road merely because native contact passed, and must
 never accept native contact by forcing the visible ribbon to inherit DTM facet
 roughness.
+
+The Geometry Inspection image is a required review surface, not optional
+debug decoration. CI sets the editor viewport to `VMI_CLAY`, enables
+`ShowFlag.MeshEdges`, selects the transient road actor, captures with editor
+overlays enabled, then restores normal Lit mode before the ordinary overview and
+rider view. The proof fails closed if that named inspection capture or its mode
+metadata is missing.
 
 Current convergence requires three independent receipts:
 

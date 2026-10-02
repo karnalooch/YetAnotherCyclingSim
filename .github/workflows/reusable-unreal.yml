@@ -323,9 +323,23 @@ jobs:
           if (
             $proof.technical_capture_status -ne 'PASS' -or
             $proof.exact_sha -ne '${{ inputs.target_sha }}' -or
-            $proof.captures.Count -ne 4 -or
-            $proof.bob_mode -ne 'INSPECTOR_ONLY'
+            $proof.captures.Count -ne 5 -or
+            $proof.bob_mode -ne 'INSPECTOR_ONLY' -or
+            $proof.road_geometry_inspection_required -ne $true
           ) { throw 'Terrain capture proof failed.' }
+
+          $inspection = @(
+            $proof.captures | Where-Object { $_.name -eq 'road-geometry-inspection' }
+          )
+          if (
+            $inspection.Count -ne 1 -or
+            $inspection[0].viewmode -ne 'geometry-inspection-clay-wireframe' -or
+            $inspection[0].geometry_inspection -ne $true -or
+            $inspection[0].inspection_mode -ne 'VMI_CLAY' -or
+            $inspection[0].mesh_edges -ne $true -or
+            $inspection[0].road_selected -ne $true -or
+            $inspection[0].force_game_view -ne $false
+          ) { throw 'Mandatory road Geometry Inspection proof failed.' }
 
       - name: Retire owner-approved obsolete Italy payloads
         if: ${{ inputs.region_terrain_import }}

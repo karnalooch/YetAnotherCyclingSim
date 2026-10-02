@@ -17,7 +17,51 @@ class CaptureTransitionTests(unittest.TestCase):
         self.assertNotIn("bob-lesson-before", script)
         self.assertNotIn("bob-lesson-after", script)
         self.assertIn('"bob_mode": "INSPECTOR_ONLY"', script)
+        self.assertIn('"road-geometry-inspection"', script)
         self.assertIn('"road-contact-rider"', script)
+        self.assertIn("unreal.ViewModeIndex.VMI_CLAY", script)
+        self.assertIn("ShowFlag.MeshEdges 1", script)
+        self.assertIn("ShowFlag.MeshEdges 0", script)
+
+    def test_geometry_inspection_uses_clay_wireframe_and_selects_road(self):
+        script = Path(__file__).with_name("capture_region_terrain.py").read_text()
+        marker = "\ntry:\n    main()"
+        unreal = Mock()
+        unreal.ViewModeIndex.VMI_CLAY = "clay"
+        unreal.ViewModeIndex.VMI_LIT = "lit"
+        unreal.AutomationLibrary.get_editor_active_viewport_view_mode.return_value = (
+            "clay"
+        )
+        unreal.AutomationLibrary.get_editor_active_viewport_wireframe_opacity.return_value = (
+            1.0
+        )
+        actors = Mock()
+        unreal.get_editor_subsystem.return_value = actors
+        ns = {}
+        with patch.dict(sys.modules, {"unreal": unreal}):
+            exec(compile(script.split(marker)[0], str(Path(__file__)), "exec"), ns)
+
+        road_actor = Mock()
+        ns.update(_road_objects=(road_actor, Mock(), {}), _world=Mock())
+        ns["_apply_capture_view_mode"](
+            {
+                "geometry_inspection": True,
+                "inspection_mode": "VMI_CLAY",
+            }
+        )
+
+        unreal.AutomationLibrary.set_editor_viewport_view_mode.assert_called_with(
+            "clay"
+        )
+        unreal.AutomationLibrary.set_editor_active_viewport_wireframe_opacity.assert_called_with(
+            1.0
+        )
+        actors.set_selected_level_actors.assert_called_with([road_actor])
+        commands = [
+            call.args[1]
+            for call in unreal.SystemLibrary.execute_console_command.call_args_list
+        ]
+        self.assertIn("ShowFlag.MeshEdges 1", commands)
 
     def test_successful_finish_keeps_editor_open(self):
         script = Path(__file__).with_name("capture_region_terrain.py").read_text()

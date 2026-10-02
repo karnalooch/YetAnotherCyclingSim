@@ -2529,6 +2529,15 @@ engineering construction limit:
 - large, abrupt or context-sensitive residual near drops, retaining edges,
   stacked branches or structures -> `STRUCTURE_REVIEW`.
 
+Geometry review must include the dedicated
+`road-geometry-inspection` capture. The capture uses Unreal Engine's Geometry
+Inspection **Clay** view mode (`VMI_CLAY`) with mesh edges enabled and the
+transient road actor selected. It is technical evidence, not an aesthetic
+screenshot: its purpose is to expose folds, terrain penetration, unsupported
+road spans and abrupt road/Landscape disagreement that can be difficult to read
+from the normal Lit rider view. A road-to-terrain review is incomplete when this
+capture is absent, even if the normal overview and rider image look acceptable.
+
 BOB owns this classification as **INSPECTOR_ONLY** in PR #319. It may report
 required cut/fill/structure review but must not author terrain, move canonical
 road XY, distort the visible ribbon to match DTM facets, or promote the preview
@@ -2555,7 +2564,8 @@ BOB remains active as the road-profile inspector only.
 The current proof uses the accepted Sa Calobra `Base_DTM`, prepares the
 Ma-2141 alignment/profile and BOB inspection, and spawns the verified
 native-contact pavement preview without changing `Road_Earthworks`. It
-captures two terrain views, one road overview and a final
+captures five required views: two terrain views, a mandatory
+`road-geometry-inspection` diagnostic, a normal road overview and the final
 `road-contact-rider` view.
 
 After a successful final capture, Unreal Editor and the loaded Sa Calobra map

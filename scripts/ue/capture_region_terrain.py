@@ -65,6 +65,8 @@ def finish(error=""):
         "bob_inspection_status": _bob_inspection_status,
         "builder_lesson_status": "DISABLED_OWNER_INSPECTOR_ONLY",
         "builder_map_saved": False,
+        "road_geometry_inspection_required": True,
+        "road_geometry_inspection_view": "road-geometry-inspection",
         "editor_handoff_requested": keep_open,
         "editor_handoff_map": _manifest["map_package"] if keep_open else None,
         "editor_handoff_view": _views[-1]["name"] if keep_open and _views else None,
@@ -82,6 +84,38 @@ def finish(error=""):
     unreal.EditorPythonScripting.set_keep_python_script_alive(keep_open)
 
 
+def _apply_capture_view_mode(view):
+    """Apply and verify the requested editor diagnostic mode for one capture."""
+    actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+    if view.get("geometry_inspection") is True:
+        if not _road_objects:
+            raise RuntimeError("Geometry inspection requires spawned road geometry")
+        unreal.AutomationLibrary.set_editor_viewport_view_mode(
+            unreal.ViewModeIndex.VMI_CLAY
+        )
+        unreal.AutomationLibrary.set_editor_active_viewport_wireframe_opacity(1.0)
+        unreal.SystemLibrary.execute_console_command(_world, "ShowFlag.MeshEdges 1")
+        unreal.SystemLibrary.execute_console_command(
+            _world, "ShowFlag.SelectionOutline 1"
+        )
+        actors.set_selected_level_actors([_road_objects[0]])
+        actual = unreal.AutomationLibrary.get_editor_active_viewport_view_mode()
+        if actual != unreal.ViewModeIndex.VMI_CLAY:
+            raise RuntimeError("Geometry Inspection Clay view mode did not activate")
+        opacity = (
+            unreal.AutomationLibrary.get_editor_active_viewport_wireframe_opacity()
+        )
+        if opacity < 0.99:
+            raise RuntimeError("Geometry Inspection wireframe opacity did not activate")
+        return
+
+    unreal.AutomationLibrary.set_editor_viewport_view_mode(
+        unreal.ViewModeIndex.VMI_LIT
+    )
+    unreal.SystemLibrary.execute_console_command(_world, "ShowFlag.MeshEdges 0")
+    actors.clear_actor_selection_set()
+
+
 def schedule():
     global _task, _started, _road_objects, _scheduling
     # Geometry creation can pump Slate and re-enter this tick callback while the
@@ -94,6 +128,7 @@ def schedule():
             from ma2141_road_preview import spawn_trial
             _road_objects = spawn_trial(_world, _root, os.environ["YACS_TERRAIN_SHA"])
         view = _views[_index]
+        _apply_capture_view_mode(view)
         location, target = unreal.Vector(*view["location"]), unreal.Vector(*view["target"])
         _camera.set_actor_location(location, False, False)
         _camera.set_actor_rotation(
@@ -112,7 +147,7 @@ def schedule():
             comparison_tolerance=unreal.ComparisonTolerance.LOW,
             comparison_notes="Sa Calobra terrain / inferred pavement contact trial",
             delay=5.0,
-            force_game_view=True,
+            force_game_view=view.get("force_game_view", True),
         )
         if not _task or not _task.is_valid_task():
             raise RuntimeError("Invalid terrain screenshot task")
@@ -141,7 +176,16 @@ def tick(_delta):
                     "screenshot": str(path),
                     "size_bytes": path.stat().st_size,
                     "resolution": [3840, 2160],
-                    "viewmode": "lit-with-neutral-engine-material",
+                    "viewmode": view.get(
+                        "viewmode", "lit-with-neutral-engine-material"
+                    ),
+                    "geometry_inspection": view.get(
+                        "geometry_inspection", False
+                    ),
+                    "inspection_mode": view.get("inspection_mode"),
+                    "mesh_edges": view.get("mesh_edges", False),
+                    "road_selected": view.get("road_selected", False),
+                    "force_game_view": view.get("force_game_view", True),
                     "fov_deg": 74,
                     "fog": False,
                     "shadows": False,
@@ -245,8 +289,27 @@ def main():
     focus = at_station(150)
     start, target = at_station(120), at_station(130)
     _views.extend([
-        {"name": "road-contact-overview", "location": [focus[0]-9000,focus[1]+9000,focus[2]+13000], "target": focus},
-        {"name": "road-contact-rider", "location": [start[0],start[1],start[2]+170], "target": [target[0],target[1],target[2]+170]},
+        {
+            "name": "road-geometry-inspection",
+            "location": [focus[0]-9000,focus[1]+9000,focus[2]+13000],
+            "target": focus,
+            "viewmode": "geometry-inspection-clay-wireframe",
+            "geometry_inspection": True,
+            "inspection_mode": "VMI_CLAY",
+            "mesh_edges": True,
+            "road_selected": True,
+            "force_game_view": False,
+        },
+        {
+            "name": "road-contact-overview",
+            "location": [focus[0]-9000,focus[1]+9000,focus[2]+13000],
+            "target": focus,
+        },
+        {
+            "name": "road-contact-rider",
+            "location": [start[0],start[1],start[2]+170],
+            "target": [target[0],target[1],target[2]+170],
+        },
     ])
     _camera = actors.spawn_actor_from_class(
         unreal.CameraActor, unreal.Vector(), unreal.Rotator(), transient=True

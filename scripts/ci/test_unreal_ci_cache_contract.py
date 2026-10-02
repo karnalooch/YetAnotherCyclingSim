@@ -116,7 +116,10 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         capture = self.workflow.split(
             "- name: Capture isolated native Sa Calobra terrain", 1
         )[1].split("- name: Retire owner-approved obsolete Italy payloads", 1)[0]
-        self.assertIn("$proof.captures.Count -ne 4", capture)
+        self.assertIn("$proof.captures.Count -ne 5", capture)
+        self.assertIn("road-geometry-inspection", capture)
+        self.assertIn("geometry-inspection-clay-wireframe", capture)
+        self.assertIn("Mandatory road Geometry Inspection proof failed.", capture)
         self.assertIn("$proof.bob_mode -ne 'INSPECTOR_ONLY'", capture)
         self.assertIn("WaitForExit(300000)", capture)
         self.assertNotIn("YACS_KEEP_EDITOR_OPEN", capture)
