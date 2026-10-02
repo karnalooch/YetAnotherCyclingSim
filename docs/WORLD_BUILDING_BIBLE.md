@@ -2578,19 +2578,24 @@ components and it does not substitute a local-ground DynamicMesh. The previous
 history, but it is no longer the active proof because it could demonstrate the
 shape without proving that Landscape earthworks were actually written.
 
-The current path prepares a deterministic 0.5 m R16 delta patch from the
-inspected regularized road profile. Neutral edit-layer height is encoded as
-32768; the patch may encode only negative deltas. It refuses any
-`STRUCTURE_REVIEW` sample, refuses a pre-cut depth above 1.0 m, never authors
-fill, never moves canonical road XY and never touches `Base_DTM`. A single
-0.5 m guard ring may be lowered around required road cuts so native Landscape
-triangles at the road edge do not borrow an unchanged high vertex.
+The current path prepares a deterministic 0.5 m float32 texture patch from the
+inspected regularized road profile. Every texel stores an **absolute world-space
+height in centimetres**. Unchanged texels contain the native Base_DTM height;
+cut texels contain the lower road target. It refuses any `STRUCTURE_REVIEW`
+sample, refuses a road cut deeper than 1.0 m, never moves canonical road XY and
+never touches `Base_DTM`. A single 0.5 m guard ring may be lowered around
+required road cuts, but a guard texel that would exceed the same 1.0 m safety
+cap is skipped rather than relaxing the cap.
 
-Unreal applies that patch only to a standard `Road_Earthworks`
-`ULandscapeEditLayer` through `FScopedSetLandscapeEditingLayer` and
-`FHeightmapAccessor`. The map remains unsaved. The writer is therefore a real
-Landscape mutation in the current editor session, not a presentation mesh, but
-it is still not durable production authoring.
+Sa Calobra `Road_Earthworks` is an Epic-native
+`ULandscapePatchEditLayer`. The transient writer creates a
+`ULandscapeTexturePatch` with `WorldUnits` height encoding,
+`WorldZero` zero semantics and **`Min` blend mode**. Epic defines `Min`
+as Alpha Blend limited to only lowering the existing Landscape, so this recipe
+cannot raise terrain into fill. The patch uses no alpha mask or falloff and is
+bound only to `Road_Earthworks`. The map remains unsaved. The writer is
+therefore a real Landscape mutation in the current editor session, not a
+presentation mesh, while remaining non-durable production authoring.
 
 The proof is deliberately measured from the merged Landscape after the write.
 Before the write, all 15,025 smooth-ribbon top samples are traced and classified.
@@ -2598,7 +2603,8 @@ After the write and the second Geometry Inspection capture, the same 15,025
 locations are traced again. `TECHNICAL_CUT_PASS` requires zero trace misses,
 zero remaining `CUT_REQUIRED`, zero `STRUCTURE_REVIEW`, at least one modified
 Road_Earthworks vertex, a maximum patch depth no greater than 1.0 m,
-`base_dtm_modified=false`, `map_saved=false`, no fill and no structures.
+`base_dtm_modified=false`, `map_saved=false`, no authored fill or structures,
+and **no increase in `FILL_REQUIRED` samples after the cut**. Existing
 `FILL_REQUIRED` remains intentionally unresolved by this recipe.
 
 The fourth receipt is now `bob-road-earthworks-cut-proof.json`. Its
