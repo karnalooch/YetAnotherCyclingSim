@@ -241,3 +241,27 @@ rotation and PowerShell syntax. Before rollout completion, verify on Windows:
 tray/menu and test popup, one real green and red job, mute, log rollover, logoff/
 logon startup, task uninstall, permissions and the actual service configuration.
 Do not launch a heavy Unreal build solely to test notification presentation.
+
+### Authorized remote installation
+
+The owner authorized host installation on 2026-10-02. `runner-monitor.yml`
+executes only for the repository owner: a bounded push on
+`feat/runner-desktop-monitor-329` during rollout, or manual dispatch from main.
+It uses the existing `yacs-home-ue58` host, exact event SHA, isolated Git config
+and a separate sparse code-only checkout. It never runs Unreal or restarts the
+runner. Retire the branch push trigger after installation acceptance; retain
+owner-only manual main maintenance.
+
+`Deploy-YacsRunnerMonitor.ps1` runs portable tests on Windows, resolves the
+logged-in console identity, and calls the installer with `-DesktopUser` and
+`-Verify`. Missing console users, unexpected hosts, mismatched SHAs, service
+identities and non-interactive startup fail explicitly. No credential is
+requested or stored. The dedicated installation directory grants access only
+to the intended desktop user, Administrators and SYSTEM.
+
+The installation receipt records installed file hashes, exact SHA, task state,
+interactive process/session, a fresh health record and a notification API
+request. A requested popup is not proof that Windows displayed it or a human
+saw it; Do Not Disturb and notification settings still apply. Reboot/logon
+acceptance and service/GPU migration remain separately unverified. The receipt
+contains no raw runner logs or Windows account names.
