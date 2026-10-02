@@ -149,3 +149,27 @@ class BoundaryDistanceWidthTests(unittest.TestCase):
         self.assertEqual(width_at(mapped, 10), (3, 3))
         self.assertEqual(width_at(mapped, 20), (2, 3))
         self.assertEqual(profile["samples"][1]["station_m"], 5)
+
+
+class CircularWidthTests(unittest.TestCase):
+    def test_mean_plateau_preserves_observations_and_approach_width(self):
+        from scripts.geometry.road_width_profile import circular_width_profile
+        raw = {"evidence": {"class": "Inference"}, "samples": [
+            {"station_m": s, "left_m": w / 2, "right_m": w / 2}
+            for s, w in [(0, 5), (125, 5), (135, 8), (140, 8), (145, 10), (150, 9), (155, 7), (175, 5.75), (300, 5)]
+        ]}
+        fitted = circular_width_profile(raw, 135, 155, 125, 175)
+        self.assertEqual(fitted["evidence"]["raw_width_samples"], raw["samples"])
+        for station in [135, 140, 145, 150, 155]:
+            self.assertAlmostEqual(sum(width_at(fitted, station)), 8.625)
+        self.assertEqual(width_at(fitted, 125), width_at(raw, 125))
+        self.assertEqual(width_at(fitted, 175), width_at(raw, 175))
+        self.assertEqual(sum(width_at(raw, 145)), 10)
+
+    def test_missing_end_observation_fails(self):
+        from scripts.geometry.road_width_profile import circular_width_profile
+        raw = {"evidence": {"class": "Inference"}, "samples": [
+            {"station_m": s, "left_m": 2.5, "right_m": 2.5} for s in [0, 300]
+        ]}
+        with self.assertRaisesRegex(ValueError, "endpoint"):
+            circular_width_profile(raw, 135, 155, 125, 175)

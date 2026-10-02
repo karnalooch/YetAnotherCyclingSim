@@ -1,6 +1,10 @@
 import unittest
 
-from scripts.geometry.road_cut_limits import cut_limits, inspection_within_cut_limits
+from scripts.geometry.road_cut_limits import (
+    cut_limits,
+    inspection_within_cut_limits,
+    receipt_within_cut_limits,
+)
 
 
 class RoadCutLimitsTests(unittest.TestCase):
@@ -39,6 +43,15 @@ class RoadCutLimitsTests(unittest.TestCase):
 
     def test_missing_native_station_evidence_fails(self):
         self.assertFalse(inspection_within_cut_limits({}, cut_limits(self.plan, self.policy)))
+
+    def test_receipt_cannot_supply_its_own_ceiling(self):
+        receipt = {"patch_max_cut_m": 3.5, "patch_cut_limits": cut_limits(self.plan, self.policy)}
+        self.assertTrue(receipt_within_cut_limits(self.plan, receipt, self.policy))
+        receipt["patch_cut_limits"]["cliff_m"] = 6.0
+        self.assertFalse(receipt_within_cut_limits(self.plan, receipt, self.policy))
+        receipt["patch_cut_limits"] = cut_limits(self.plan, self.policy)
+        receipt["patch_max_cut_m"] = 4.01
+        self.assertFalse(receipt_within_cut_limits(self.plan, receipt, self.policy))
 
     def test_structure_threshold_remains_a_bound(self):
         self.policy["strategies"]["retaining_or_cliff"]["max_ground_adjustment_m"] = 6.0

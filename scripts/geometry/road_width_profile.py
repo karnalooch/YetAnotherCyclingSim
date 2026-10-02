@@ -61,6 +61,41 @@ def offset_edges(center, tangent, widths):
     ]
 
 
+def circular_width_profile(observations, start, end, approach_start, approach_end):
+    """One provisional mean width on a circular bend; transitions on approaches.
+
+    Preserve raw observations and expose the design change for metric review.
+    A circle's normal offset stays circular only when its width stays constant.
+    """
+    samples = validate_width_profile(observations)
+    if not samples[0]["station_m"] <= approach_start < start < end < approach_end <= samples[-1]["station_m"]:
+        raise ValueError("Invalid circular width domain")
+    if start not in {r["station_m"] for r in samples} or end not in {r["station_m"] for r in samples}:
+        raise ValueError("Circular width needs explicit endpoint observations")
+    interior = [r for r in samples if start <= r["station_m"] <= end]
+    halves = {
+        key: sum((b["station_m"] - a["station_m"]) * (a[key] + b[key]) / 2
+                 for a, b in pairwise(interior)) / (end - start)
+        for key in ("left_m", "right_m")
+    }
+    new_samples = [dict(r) for r in samples if r["station_m"] <= approach_start or r["station_m"] >= approach_end]
+    for station in (approach_start, approach_end):
+        if station not in {r["station_m"] for r in new_samples}:
+            left, right = width_at(observations, station)
+            new_samples.append({"station_m": station, "left_m": left, "right_m": right})
+    new_samples.extend({"station_m": station, **halves} for station in (start, end))
+    return {
+        "evidence": {
+            **observations["evidence"],
+            "method": "Provisional circular-span mean width; quintic approach transitions; metric re-review pending",
+            "raw_width_samples": [dict(r) for r in samples],
+            "circular_width_domain_m": [start, end],
+            "width_transition_domain_m": [approach_start, approach_end],
+        },
+        "samples": sorted(new_samples, key=lambda r: r["station_m"]),
+    }
+
+
 def boundary_width_profile(source_profile, rows):
     """Reparameterize observations onto sampled boundary distance in metres.
 

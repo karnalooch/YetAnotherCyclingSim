@@ -2881,3 +2881,32 @@ Base_DTM and transient/no-save restrictions remain mandatory. Native traces
 and screenshots for this integration are still pending. Source-derived grade
 and crossfall remain REVIEW_REQUIRED; this ceiling does not admit engineering
 alignment, structures or riding collision.
+
+Native integration at `46d66f3317e180d61e18b03a407d19d51f541269`
+([37070218467](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37070218467))
+produced nine captures, zero missing terrain traces and zero post-cut asphalt
+penetrations. It built 1788 wall segments with 0.5 m shoulders. The CI receipt
+check still contained the historical hardcoded 1 m ceiling; it is replaced by
+recomputed spatial-policy validation from the admitted profile and checked-in
+policy, never a freely supplied receipt ceiling. CUT-only still reports
+REJECT_CUT because lowering creates additional unsupported/contact-band samples;
+this remains recorded honestly. The combined preview uses explicit vertical
+support, whose collision and continuous support are NOT_PROVEN. No CUT-only
+admission is granted by this CI integration fix.
+
+#### Circular-width visual correction
+
+Review of the actual 46d66f3 plan/moderate/rider PNGs exposed an inward scallop
+despite topology/tessellation PASS. The preserved provisional width observations
+8, 8, 10, 9, 7 m across the 135..155 m circular reference varied too quickly
+for a small-radius normal offset. Passing numerical gates did not provide visual
+acceptance. The presentation design now uses one constant 8.625 m width across
+that circle, the station-weighted trapezoidal mean of those observations, with
+quintic transitions on the 125..135 and 155..175 m approaches. This produces a
+circular inner offset of radius 2.675 m on the 11.3 m reference circle. All raw
+observations are retained in evidence; the reference fit/radius still uses the
+unmodified observations and retains its original positional guard. This is an
+explicit provisional width redesign for a coherent outline, not a survey or
+vehicle swept-path admission. It does not change source/physics or narrow the
+road secretly to bypass displacement/intersection gates. Fresh native visuals
+are required; inferred geographic widths remain pending metric review.

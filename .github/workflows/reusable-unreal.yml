@@ -374,6 +374,8 @@ jobs:
           if (-not (Test-Path -LiteralPath $cutPath -PathType Leaf)) {
             throw 'BOB Road_Earthworks CUT proof is missing.'
           }
+          python -m scripts.geometry.road_cut_limits --artifact-root $root
+          if ($LASTEXITCODE -ne 0) { throw 'BOB CUT receipt spatial policy failed.' }
           $cut = Get-Content $cutPath -Raw | ConvertFrom-Json
           if (
             $cut.exact_sha -ne '${{ inputs.target_sha }}' -or
@@ -387,7 +389,7 @@ jobs:
             $cut.fill_authored -ne $false -or
             $cut.structures_authored -ne $false -or
             [int]$cut.patch_modified_vertex_count -le 0 -or
-            [double]$cut.patch_max_cut_m -gt 1.000001 -or
+            [double]$cut.patch_max_cut_m -gt ([double]$cut.patch_cut_limits.cliff_m + 0.000001) -or
             [int]$cut.before.class_counts.CUT_REQUIRED -ne [int]$fit.class_counts.CUT_REQUIRED -or
             [int]$cut.before.class_counts.STRUCTURE_REVIEW -ne 0 -or
             [int]$cut.after.class_counts.CUT_REQUIRED -ne 0 -or

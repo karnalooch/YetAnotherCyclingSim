@@ -15,6 +15,7 @@ from scripts.assets.prepare_ma2141_road_preview import (
     build_trial,
     read_profile,
 )
+from scripts.geometry.road_width_profile import circular_width_profile
 
 # Explicit reviewed-window semantics, not a network-wide terrain assumption.
 # Stored edge 0 is travel-left in the authored direction in UE's X/Y frame.
@@ -148,6 +149,9 @@ def prepare(prepared, output, exact_sha):
         ],
     }
     reference_arc = reference_guides(guides, width_profile)
+    # Keep the reference fit/margin based on unmodified observations. Replace
+    # noisy transverse widening only in the explicit presentation width design.
+    width_profile = circular_width_profile(width_profile, 135.0, 155.0, 125.0, 175.0)
     packet = {
         "schema_version": 1,
         "exact_sha": exact_sha,

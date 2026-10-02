@@ -175,6 +175,7 @@ def finalize_cut_proof(root, exact_sha, patch, pre_fit, post_fit, *, reject_on_f
         "new_fill_required_sample_count": new_fill_required,
         "patch_modified_vertex_count": patch["modified_vertex_count"],
         "patch_max_cut_m": patch["max_cut_m"],
+        "patch_cut_limits": patch["cut_limits"],
         "before": {
             "sample_count": pre_fit["sample_count"],
             "trace_miss_count": pre_fit["trace_miss_count"],
