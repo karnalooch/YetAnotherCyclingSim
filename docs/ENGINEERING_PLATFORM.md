@@ -150,6 +150,7 @@ The enabled broker-managed heavy proof set is:
 /gumball proof m3-h-focus
 /gumball proof world-authoring-sp638
 /gumball proof environment-performance
+/gumball proof sa-calobra-terrain-performance
 /gumball proof source-asset-audit
 ```
 
@@ -313,3 +314,9 @@ tooling, MCP usage or agent workflow:
    the shared platform.
 
 Product-specific jobs remain in YACS.
+
+The Sa Calobra terrain performance workflow is registered for explicit broker
+requests against an immutable implementation SHA. Registration alone is not
+measured terrain acceptance; the implementation commit must supply its native
+sampler and pass the existing exact-world validator. Materialized assets are
+retained before checkout and after execution in an isolated proof worktree.
