@@ -1,7 +1,7 @@
 """Prepare the interactive Sa Calobra owner handoff in a normal Unreal Editor.
 
 This module is started from the guarded project Content/Python/init_unreal.py. It keeps
-BOB inspector-only, loads the accepted Base_DTM map, spawns the verified
+BOB inspection plus one bounded transient cut-only builder, loads the accepted Base_DTM map, spawns the verified
 native-contact road preview plus deterministic diagnostic sun/sky lighting,
 positions the primary editor viewport at the rider view, writes a small proof,
 and never saves the map.
@@ -26,7 +26,14 @@ _done = False
 _kept_objects = None
 
 
-def _write_proof(root, exact_sha, status, error="", lighting=None):
+def _write_proof(
+    root,
+    exact_sha,
+    status,
+    error="",
+    lighting=None,
+    cut_preview=None,
+):
     payload = {
         "schema_version": 1,
         "exact_sha": exact_sha,
@@ -40,7 +47,18 @@ def _write_proof(root, exact_sha, status, error="", lighting=None):
             lighting.get("directional_light_intensity") if lighting else None
         ),
         "skylight_intensity": lighting.get("skylight_intensity") if lighting else None,
-        "bob_mode": "INSPECTOR_ONLY",
+        "bob_mode": "INSPECTOR_PLUS_TRANSIENT_CUT_ONLY",
+        "cut_preview_status": (
+            cut_preview.get("status") if cut_preview else "NOT_VERIFIED"
+        ),
+        "cut_preview_map_saved": (
+            cut_preview.get("map_saved") if cut_preview else None
+        ),
+        "cut_preview_remaining_penetration_count": (
+            cut_preview.get("remaining_road_penetration_count")
+            if cut_preview
+            else None
+        ),
         "map_saved": False,
     }
     (root / "owner-handoff-proof.json").write_text(
@@ -154,6 +172,15 @@ def _configure():
     from ma2141_road_preview import spawn_trial
 
     road = spawn_trial(world, root, exact_sha)
+    cut_preview = road[2].get("bob_cut_only_preview")
+    if (
+        not isinstance(cut_preview, dict)
+        or cut_preview.get("status") != "TECHNICAL_PREVIEW_PASS"
+        or cut_preview.get("remaining_road_penetration_count") != 0
+        or cut_preview.get("saved_baseline_unchanged") is not True
+        or cut_preview.get("production_authoring_permitted") is not False
+    ):
+        raise RuntimeError("Owner handoff cut-only builder contract failed")
 
     alignment = json.loads(
         (root / "ma2141-native-alignment.json").read_text(encoding="utf-8")
@@ -179,7 +206,13 @@ def _configure():
     editor.set_level_viewport_camera_info(camera_location, camera_rotation)
 
     _kept_objects = (road, sun, sky)
-    _write_proof(root, exact_sha, "PASS", lighting=lighting)
+    _write_proof(
+        root,
+        exact_sha,
+        "PASS",
+        lighting=lighting,
+        cut_preview=cut_preview,
+    )
     unreal.log(
         "[OwnerHandoff] PASS; Sa Calobra + native-contact road left open "
         "at road-contact-rider in VMI_LIT with diagnostic sun + skylight."
