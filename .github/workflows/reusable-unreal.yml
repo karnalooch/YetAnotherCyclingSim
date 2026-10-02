@@ -377,6 +377,7 @@ jobs:
             $cut.map_saved -ne $false -or
             $cut.fill_authored -ne $false -or
             $cut.structures_authored -ne $false -or
+            [int]$cut.new_fill_required_sample_count -ne 0 -or
             [int]$cut.patch_modified_vertex_count -le 0 -or
             [double]$cut.patch_max_cut_m -gt 1.000001 -or
             [int]$cut.before.class_counts.CUT_REQUIRED -ne [int]$fit.class_counts.CUT_REQUIRED -or
@@ -404,6 +405,7 @@ jobs:
               $inspection.viewmode -ne 'geometry-inspection-clay-wireframe' -or
               $inspection.geometry_inspection -ne $true -or
               $inspection.inspection_mode -ne 'VMI_CLAY' -or
+              $inspection.actual_viewmode -ne 'VMI_CLAY' -or
               $inspection.mesh_edges -ne $true -or
               $inspection.road_selected -ne $true -or
               $inspection.explicit_road_wireframe -ne $true -or
@@ -421,6 +423,14 @@ jobs:
             $afterInspection.Count -ne 1 -or
             $afterInspection[0].earthworks_state -ne 'AFTER_CUT'
           ) { throw 'BOB Geometry Inspection before/after identity failed.' }
+
+          $rider = @(
+            $proof.captures | Where-Object { $_.name -eq 'road-contact-rider' }
+          )
+          if (
+            $rider.Count -ne 1 -or
+            $rider[0].actual_viewmode -ne 'VMI_LIT'
+          ) { throw 'Final road rider capture did not return to Lit mode.' }
 
       - name: Retire owner-approved obsolete Italy payloads
         if: ${{ inputs.region_terrain_import }}
