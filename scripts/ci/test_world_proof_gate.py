@@ -1,0 +1,245 @@
+from __future__ import annotations
+
+import copy
+import io
+import json
+from pathlib import Path
+import unittest
+from unittest.mock import patch
+import zipfile
+
+from scripts.ci import world_proof_gate as gate
+
+ROOT = Path(__file__).resolve().parents[2]
+POLICY = json.loads((ROOT / ".gumball/world-proof-policy.json").read_text())
+HEAD = "a" * 40
+
+
+def fixture(name="stage3g-environment"):
+    scenario = POLICY["scenarios"][name]
+    summary = {
+        "Head": HEAD,
+        "Result": "PASS",
+        "EditorExitCode": 0,
+        "Resolution": "1920x1080",
+        "VSync": "disabled",
+        "TargetFps": 60,
+        "ReferenceGpuMatched": True,
+        "GpuNames": ["NVIDIA GeForce RTX 2070 SUPER"],
+        "AllowedOverBudgetRatio": 0.05,
+        "FrameBudgetMs": gate.BUDGET_MS,
+        "P95FrameBudgetMs": gate.BUDGET_MS,
+        "P95GpuBudgetMs": gate.BUDGET_MS,
+        "ScenarioId": name,
+        "MapPackage": scenario["map_package"],
+        "ComponentCount": 1024,
+        "TerrainSha256": "b" * 64,
+        "SettingsSha256": "c" * 64,
+        "ScreenPercentage": 100,
+        "DynamicResolution": False,
+        "Sectors": [
+            {
+                "Sector": s,
+                "SampleCount": 120,
+                "PositiveGpuSampleCount": 120,
+                "FrameP95Ms": 10,
+                "GpuP95Ms": 8,
+                "OverBudgetRatio": 0,
+                "Pass": True,
+            }
+            for s in scenario["sectors"]
+        ],
+    }
+    csv = "sector,frame_ms,game_ms,draw_ms,rhi_ms,gpu_ms\n" + "".join(
+        f"{s},10,2,3,1,8\n" * 120 for s in scenario["sectors"]
+    )
+    return summary, csv, scenario
+
+
+class WorldProofTests(unittest.TestCase):
+    def test_worlds_are_distinct_and_docs_do_not_require_gpu(self):
+        self.assertEqual(
+            gate.requirements(["Content/Worlds/SaCalobra/L_Test.umap"], POLICY),
+            ["sa-calobra-terrain"],
+        )
+        self.assertEqual(
+            gate.requirements(["Content/Prototype/Maps/L_CyclingTest.umap"], POLICY),
+            ["stage3g-environment"],
+        )
+        self.assertEqual(
+            gate.requirements(
+                ["worldgen/terrain/benchmarks/sa_calobra/README.md"], POLICY
+            ),
+            [],
+        )
+        self.assertEqual(
+            gate.requirements(["Content/Worlds/NewWorld/map.umap"], POLICY),
+            ["UNMAPPED_WORLD"],
+        )
+
+    def test_only_draft_defers_and_unknown_event_fails_closed(self):
+        self.assertEqual(gate.phase("pull_request", "true"), "DEFERRED_DRAFT")
+        self.assertEqual(gate.phase("pull_request", "false"), "REQUIRED")
+        self.assertEqual(gate.phase("push", "false"), "REQUIRED")
+        self.assertEqual(gate.phase("schedule", "false"), "STATIC_ONLY")
+        for event, draft in (
+            ("issue_comment", "false"),
+            ("pull_request", ""),
+            ("pull_request", "False"),
+        ):
+            with self.assertRaises(ValueError):
+                gate.phase(event, draft)
+
+    def test_valid_raw_samples_are_recomputed_for_each_scenario(self):
+        for name in POLICY["scenarios"]:
+            summary, csv, scenario = fixture(name)
+            result = gate.validate_evidence(summary, csv, scenario, name, HEAD)
+            self.assertEqual(result["result"], "PASS")
+
+    def test_wrong_sha_gpu_resolution_budget_and_result_fail(self):
+        for field, value in (
+            ("Head", "d" * 40),
+            ("GpuNames", ["RTX 4090"]),
+            ("Result", "FAIL"),
+            ("EditorExitCode", 1),
+            ("Resolution", "1280x720"),
+            ("VSync", "enabled"),
+            ("TargetFps", 30),
+            ("AllowedOverBudgetRatio", 0.50),
+            ("FrameBudgetMs", 33.3),
+        ):
+            with self.subTest(field=field):
+                summary, csv, scenario = fixture()
+                summary[field] = value
+                with self.assertRaises(ValueError):
+                    gate.validate_evidence(
+                        summary, csv, scenario, "stage3g-environment", HEAD
+                    )
+
+    def test_forged_summary_cannot_hide_bad_missing_nonfinite_or_short_samples(self):
+        summary, csv, scenario = fixture()
+        for changed in (
+            csv.replace(",10,", ",25,"),
+            csv.replace(",8\n", ",0\n"),
+            csv.replace(",8\n", ",nan\n"),
+            csv.replace(",8\n", ",inf\n"),
+            "\n".join(csv.splitlines()[:50]),
+            csv.replace("forest,", "unknown,"),
+        ):
+            with self.subTest(sample=changed[:80]), self.assertRaises(ValueError):
+                gate.validate_evidence(
+                    summary, changed, scenario, "stage3g-environment", HEAD
+                )
+        bad = copy.deepcopy(summary)
+        bad["Sectors"][0]["FrameP95Ms"] = 2
+        with self.assertRaises(ValueError):
+            gate.validate_evidence(bad, csv, scenario, "stage3g-environment", HEAD)
+
+    def test_sacalobra_requires_map_terrain_identity_and_render_settings(self):
+        for field, value in (
+            ("MapPackage", "/Game/Prototype/Maps/L_CyclingTest"),
+            ("ComponentCount", 256),
+            ("TerrainSha256", ""),
+            ("SettingsSha256", ""),
+            ("ScreenPercentage", 50),
+            ("DynamicResolution", True),
+            ("ScenarioId", "stage3g-environment"),
+        ):
+            summary, csv, scenario = fixture("sa-calobra-terrain")
+            summary[field] = value
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                gate.validate_evidence(
+                    summary, csv, scenario, "sa-calobra-terrain", HEAD
+                )
+
+    def test_unregistered_producer_and_missing_artifact_never_pass(self):
+        scenario = POLICY["scenarios"]["sa-calobra-terrain"]
+        with self.assertRaisesRegex(ValueError, "not registered"):
+            gate.evaluate_remote(
+                "owner/repo",
+                "unused",
+                HEAD,
+                "sa-calobra-terrain",
+                scenario,
+                {"proofs": {}},
+            )
+        broker = {
+            "proofs": {
+                "environment-performance": {
+                    "enabled": True,
+                    "workflow": "perf.yml",
+                    "artifact_name": "proof-$proof-$sha",
+                }
+            }
+        }
+        with (
+            patch.object(gate.proof_broker, "find_artifact", return_value=None),
+            self.assertRaisesRegex(ValueError, "missing/expired"),
+        ):
+            gate.evaluate_remote(
+                "owner/repo",
+                "unused",
+                HEAD,
+                "stage3g-environment",
+                POLICY["scenarios"]["stage3g-environment"],
+                broker,
+            )
+
+    def test_failed_wrong_workflow_or_untrusted_branch_artifact_rejected(self):
+        broker = {
+            "proofs": {
+                "environment-performance": {
+                    "enabled": True,
+                    "workflow": "perf.yml",
+                    "artifact_name": "proof-$proof-$sha",
+                }
+            }
+        }
+        run = {
+            "status": "completed",
+            "conclusion": "success",
+            "path": ".github/workflows/perf.yml",
+            "event": "workflow_dispatch",
+            "head_repository": {"full_name": "owner/repo"},
+            "head_branch": "main",
+        }
+        for key, value in (
+            ("conclusion", "failure"),
+            ("status", "in_progress"),
+            ("path", ".github/workflows/other.yml"),
+            ("head_branch", "untrusted"),
+            ("event", "pull_request"),
+        ):
+            with (
+                patch.object(
+                    gate.proof_broker,
+                    "find_artifact",
+                    return_value={"id": 5, "workflow_run": {"id": 10}},
+                ),
+                patch.object(gate.proof_broker, "default_branch", return_value="main"),
+                patch.object(
+                    gate.github_ops, "request", return_value={**run, key: value}
+                ),
+                self.subTest(key=key),
+                self.assertRaises(ValueError),
+            ):
+                gate.evaluate_remote(
+                    "owner/repo",
+                    "unused",
+                    HEAD,
+                    "stage3g-environment",
+                    POLICY["scenarios"]["stage3g-environment"],
+                    broker,
+                )
+
+    def test_duplicate_receipt_names_are_rejected_without_extracting(self):
+        data = io.BytesIO()
+        with zipfile.ZipFile(data, "w") as archive:
+            archive.writestr("first/summary.json", "{}")
+            archive.writestr("second/summary.json", "{}")
+        with self.assertRaisesRegex(ValueError, "exactly one"):
+            gate.archive_text(data.getvalue(), "summary.json")
+
+
+if __name__ == "__main__":
+    unittest.main()

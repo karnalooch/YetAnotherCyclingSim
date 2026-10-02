@@ -215,9 +215,11 @@ def _is_asset_full(path: str) -> bool:
 
 
 def _is_ci(path: str) -> bool:
-    if path.startswith(".github/") or path.startswith(".circleci/"):
+    if path.startswith((".github/", ".circleci/", ".gumball/")):
         return True
     if path.startswith("scripts/ci/") or path.startswith("scripts/ue/"):
+        return True
+    if path.startswith("worldgen/") and not _is_docs(path):
         return True
     if path in CI_EXACT:
         return True

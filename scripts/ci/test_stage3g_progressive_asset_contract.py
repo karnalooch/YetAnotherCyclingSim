@@ -88,7 +88,14 @@ class Stage3GProgressiveAssetContractTests(unittest.TestCase):
         self.assertIn(
             "ForestCanopyProps->SetStaticMesh(ConiferMesh)", self.terrain_actor
         )
-        self.assertIn("ConiferMeshHeightCm", self.terrain_actor)
+        self.assertIn(
+            "ConiferBounds.Origin.Z - ConiferBounds.BoxExtent.Z", self.terrain_actor
+        )
+        self.assertIn(
+            "(ConiferMeshMinZCm * Candidate.UniformScale)", self.terrain_actor
+        )
+        self.assertIn("FVector(Candidate.UniformScale)", self.terrain_actor)
+        self.assertIn("MakeTargetDensityForestConfig", self.terrain_actor)
         self.assertIn("ConiferMeshMinZCm", self.terrain_actor)
         self.assertNotIn(
             "ApplyOptionalStage3GMaterial(ForestProps, Stage3GFoliageMaterialPath)",
