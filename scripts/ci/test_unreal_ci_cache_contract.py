@@ -116,20 +116,24 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         capture = self.workflow.split(
             "- name: Capture isolated native Sa Calobra terrain", 1
         )[1].split("- name: Retire owner-approved obsolete Italy payloads", 1)[0]
-        self.assertIn("$proof.captures.Count -ne 5", capture)
-        self.assertIn("road-geometry-inspection", capture)
+        self.assertIn("$proof.captures.Count -ne 6", capture)
+        self.assertIn("road-geometry-inspection-before", capture)
+        self.assertIn("road-geometry-inspection-after", capture)
         self.assertIn("geometry-inspection-clay-wireframe", capture)
-        self.assertIn("Mandatory road Geometry Inspection proof failed.", capture)
         self.assertIn(
-            "$proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_CUT_ONLY'",
+            "Mandatory road Geometry Inspection before/after proof failed.",
             capture,
         )
-        self.assertIn("bob-cut-only-preview-proof.json", capture)
-        self.assertIn("BOB cut-only construction preview failed.", capture)
-        self.assertIn("$cut.status -ne 'TECHNICAL_PREVIEW_PASS'", capture)
-        self.assertIn("[int]$cut.raised_grid_sample_count -ne 0", capture)
-        self.assertIn("[int]$cut.remaining_road_penetration_count -ne 0", capture)
-        self.assertIn("$cut.saved_baseline_unchanged -ne $true", capture)
+        self.assertIn(
+            "$proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_ROAD_EARTHWORKS_CUT'",
+            capture,
+        )
+        self.assertIn("bob-road-earthworks-cut-proof.json", capture)
+        self.assertIn("BOB direct Road_Earthworks CUT proof failed.", capture)
+        self.assertIn("$cut.status -ne 'TECHNICAL_CUT_PASS'", capture)
+        self.assertIn("$cut.geometry_repair_executed -ne $true", capture)
+        self.assertIn("$cut.transient_road_earthworks_modified -ne $true", capture)
+        self.assertIn("[int]$cut.after.class_counts.CUT_REQUIRED -ne 0", capture)
         self.assertIn("WaitForExit(300000)", capture)
         self.assertNotIn("YACS_KEEP_EDITOR_OPEN", capture)
         self.assertNotIn("RUNNER_TRACKING_ID", capture)
@@ -150,17 +154,11 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         self.assertIn("[double]$proof.directional_light_intensity -le 0.0", handoff)
         self.assertIn("[double]$proof.skylight_intensity -le 0.0", handoff)
         self.assertIn(
-            "$proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_CUT_ONLY'",
+            "$proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_ROAD_EARTHWORKS_CUT'",
             handoff,
         )
-        self.assertIn(
-            "$proof.cut_preview_status -ne 'TECHNICAL_PREVIEW_PASS'",
-            handoff,
-        )
-        self.assertIn(
-            "[int]$proof.cut_preview_remaining_penetration_count -ne 0",
-            handoff,
-        )
+        self.assertIn("$proof.cut_patch_applied -ne $true", handoff)
+        self.assertIn("$proof.cut_patch_layer -ne 'Road_Earthworks'", handoff)
         self.assertIn("OWNER HANDOFF PASS", handoff)
 
         bootstrap = (ROOT / "Content/Python/init_unreal.py").read_text(encoding="utf-8")
@@ -173,9 +171,11 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         self.assertIn("unreal.DirectionalLight", startup)
         self.assertIn("unreal.SkyLight", startup)
         self.assertIn('"lighting_status"', startup)
-        self.assertIn('"INSPECTOR_PLUS_TRANSIENT_CUT_ONLY"', startup)
-        self.assertIn('"cut_preview_status"', startup)
-        self.assertIn("Owner handoff cut-only builder contract failed", startup)
+        self.assertIn(
+            '"INSPECTOR_PLUS_TRANSIENT_ROAD_EARTHWORKS_CUT"', startup
+        )
+        self.assertIn('"cut_patch_applied"', startup)
+        self.assertIn("apply_cut_patch", startup)
 
         self.assertIn(
             "if: ${{ always() && !inputs.region_terrain_import }}",
