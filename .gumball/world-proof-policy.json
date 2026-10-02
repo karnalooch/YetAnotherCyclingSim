@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "authority": "docs/CI_VALIDATION_TIERS.md",
+  "scenarios": {
+    "stage3g-environment": {
+      "proof_id": "environment-performance",
+      "summary_file": "stage3g_environment_performance_summary.json",
+      "csv_file": "stage3g_environment_performance.csv",
+      "map_package": "/Game/Prototype/Maps/L_CyclingTest",
+      "sectors": ["valley", "forest", "high_alpine"],
+      "minimum_samples": 120,
+      "minimum_gpu_samples": 30,
+      "scope_patterns": ["worldgen/specs/stage3g_*", "scripts/ue/*Stage3GEnvironmentPerformance*", "Source/**/CyclingStage3GEnvironmentPerformanceProof.spec.cpp"]
+    },
+    "sa-calobra-terrain": {
+      "proof_id": "sa-calobra-terrain-performance",
+      "summary_file": "sa-calobra-terrain-performance-summary.json",
+      "csv_file": "sa-calobra-terrain-performance.csv",
+      "map_package": "/Game/Worlds/SaCalobra/L_SaCalobraTerrainBaseline",
+      "sectors": ["overview", "rider", "slope"],
+      "minimum_samples": 120,
+      "minimum_gpu_samples": 120,
+      "component_count": 1024,
+      "scope_patterns": ["Content/Worlds/SaCalobra/*", "worldgen/terrain/benchmarks/sa_calobra/*", "scripts/ue/*region_terrain*", "scripts/ue/*RegionTerrain*", "scripts/ue/*sa_calobra*", "scripts/ue/*SaCalobra*", "scripts/assets/*region_terrain*", "scripts/assets/*ma2141*", "scripts/worldgen/bob_*", "Source/**/CyclingRegionTerrain*", "Source/**/*SaCalobra*"]
+    }
+  },
+  "unmapped_world_patterns": ["Content/Worlds/*"]
+}

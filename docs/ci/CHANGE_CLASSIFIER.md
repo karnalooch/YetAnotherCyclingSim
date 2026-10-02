@@ -224,3 +224,12 @@ only because a documentation, Python, CI or proof-tooling change was pushed.
   automatic code-build trigger by directory name.
 - **Full asset/release lane:** explicit heavy runtime proof.
 - **Aggregate CI gate:** verifies the classifier decision was actually honored.
+
+## Hosted policy and world configuration coverage
+
+Non-documentation `worldgen/**` and `.gumball/**` changes also emit `ci=true`, so
+configuration-only edits cannot bypass script tests. This does not set
+`unreal_compile` or `ue_code`. Existing `asset_full` classification remains
+unchanged. Scenario-specific performance requirements are evaluated separately
+by the read-only world-proof admission job; see
+[CI validation tiers](../CI_VALIDATION_TIERS.md#exact-world-performance-admission).

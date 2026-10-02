@@ -16,7 +16,10 @@ class Ma2141CutPatchTests(unittest.TestCase):
     def test_world_height_patch_uses_centimeters(self):
         manifest = {"scale_z": 128.0, "location_z_cm": 10000.0}
         self.assertAlmostEqual(_world_height_cm(32768, manifest), 10000.0)
-        self.assertAlmostEqual(_world_height_cm(32769, manifest), 10100.0)
+        # UE height decoding is (encoded - 32768) * scale_z / 128 cm.
+        self.assertAlmostEqual(_world_height_cm(32769, manifest), 10001.0)
+        self.assertAlmostEqual(_world_height_cm(32896, manifest), 10128.0)
+        self.assertAlmostEqual(_world_height_cm(32767, manifest), 9999.0)
 
     def test_native_grid_contract_remains_half_meter(self):
         self.assertEqual(GRID_STEP_M, 0.5)
