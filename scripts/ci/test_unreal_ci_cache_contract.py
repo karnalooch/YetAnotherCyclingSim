@@ -136,11 +136,22 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         self.assertNotIn("-ExecutePythonScript", handoff)
         self.assertIn("owner-handoff-proof.json", handoff)
         self.assertIn("road-contact-rider", handoff)
+        self.assertIn("$proof.viewmode -ne 'VMI_LIT'", handoff)
+        self.assertIn("$proof.lighting_status -ne 'PASS'", handoff)
+        self.assertIn("[double]$proof.directional_light_intensity -le 0.0", handoff)
+        self.assertIn("[double]$proof.skylight_intensity -le 0.0", handoff)
         self.assertIn("OWNER HANDOFF PASS", handoff)
 
         bootstrap = (ROOT / "Content/Python/init_unreal.py").read_text(encoding="utf-8")
         self.assertIn('YACS_OWNER_HANDOFF") == "1"', bootstrap)
         self.assertIn("scripts.ue.owner_handoff_startup", bootstrap)
+        startup = (ROOT / "scripts/ue/owner_handoff_startup.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("unreal.ViewModeIndex.VMI_LIT", startup)
+        self.assertIn("unreal.DirectionalLight", startup)
+        self.assertIn("unreal.SkyLight", startup)
+        self.assertIn('"lighting_status"', startup)
 
         self.assertIn(
             "if: ${{ always() && !inputs.region_terrain_import }}",
