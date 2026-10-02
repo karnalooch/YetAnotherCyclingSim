@@ -128,9 +128,15 @@ def validate(manifest: dict[str, Any]) -> dict[str, Any]:
             f"calculated={calculated_hints}"
         )
 
-    raw_root = manifest["cache"]["raw_root"]
+    cache = manifest["cache"]
+    raw_root = cache.get("repository_raw_root") or cache.get("raw_root")
+    if not raw_root:
+        raise ValueError("World Data Stack cache must define repository_raw_root or raw_root")
     if not raw_root.startswith("ExternalAssets/"):
-        raise ValueError("Raw provider cache must remain under ignored ExternalAssets/")
+        raise ValueError("Repository raw-provider cache must remain under ignored ExternalAssets/")
+    persistent_root = cache.get("persistent_raw_root")
+    if manifest.get("schema_version") == 2 and not persistent_root:
+        raise ValueError("Working-space schema v2 requires persistent_raw_root for the self-hosted runner")
 
     sources = manifest["sources"]
     source_ids = [source["id"] for source in sources]
@@ -156,8 +162,9 @@ def validate(manifest: dict[str, Any]) -> dict[str, Any]:
             }
             for source in sources
         ],
-        "raw_cache_root": raw_root,
-        "raw_sources_committed": bool(manifest["cache"]["commit_raw_sources"]),
+        "repository_raw_cache_root": raw_root,
+        "persistent_raw_cache_root": persistent_root,
+        "raw_sources_committed": bool(cache["commit_raw_sources"]),
     }
 
 
