@@ -469,6 +469,10 @@ jobs:
             $proof.exact_sha -ne '${{ inputs.target_sha }}' -or
             $proof.map -ne '/Game/Worlds/SaCalobra/L_SaCalobraTerrainBaseline' -or
             $proof.view -ne 'road-contact-rider' -or
+            $proof.viewmode -ne 'VMI_LIT' -or
+            $proof.lighting_status -ne 'PASS' -or
+            [double]$proof.directional_light_intensity -le 0.0 -or
+            [double]$proof.skylight_intensity -le 0.0 -or
             $proof.bob_mode -ne 'INSPECTOR_ONLY' -or
             $proof.map_saved -ne $false
           ) { throw 'Owner handoff proof failed.' }
@@ -478,7 +482,7 @@ jobs:
           if ($process.HasExited) {
             throw "Owner handoff Editor did not remain open; exit code $($process.ExitCode)."
           }
-          Write-Host "OWNER HANDOFF PASS: Unreal Editor pid=$($process.Id) remains open on Sa Calobra road-contact-rider."
+          Write-Host "OWNER HANDOFF PASS: Unreal Editor pid=$($process.Id) remains open on Sa Calobra road-contact-rider in VMI_LIT with diagnostic lighting."
 
       - name: Clean current-run evidence and non-allow-listed residue
         if: ${{ always() && !inputs.region_terrain_import }}
