@@ -28,7 +28,6 @@ $script:lastActivity = [DateTime]::UtcNow
 $script:lastHealth = [DateTime]::MinValue
 $script:lastError = ''
 $script:lastWorkerWrite = [DateTime]::MinValue
-$script:muted = $false
 $script:initial = $true
 $script:status = 'Waiting for runner activity'
 $script:startupNotice = $false
@@ -37,11 +36,9 @@ $icon.Icon = [Drawing.SystemIcons]::Information
 $icon.Text = 'YACS runner monitor'
 $menu = [Windows.Forms.ContextMenuStrip]::new()
 $context = [Windows.Forms.ApplicationContext]::new()
-function Show-Notice([string]$Title, [string]$Message, [string]$Severity = 'Info') {
-    if (-not $script:muted) {
-        $icon.ShowBalloonTip(8000, $Title, $Message, [Windows.Forms.ToolTipIcon]::$Severity)
-        Write-YacsMonitorRecord $logDirectory @{ kind = 'notification_requested'; title = $Title; severity = $Severity }
-    }
+function Write-Notice([string]$Title, [string]$Message, [string]$Severity = 'Info') {
+    # Owner preference: no automatic desktop popups. Keep local diagnostics only.
+    Write-YacsMonitorRecord $logDirectory @{ kind = 'status_notice'; title = $Title; severity = $Severity }
 }
 $statusItem = $menu.Items.Add('Status')
 $statusItem.add_Click({ [void][Windows.Forms.MessageBox]::Show($script:status, 'YACS runner') })
@@ -57,15 +54,9 @@ $liveItem.add_Click({
 })
 $monitorItem = $menu.Items.Add('Open monitor log')
 $monitorItem.add_Click({ Start-Process notepad.exe -ArgumentList ('"' + (Join-Path $logDirectory 'monitor.jsonl') + '"') })
-$testItem = $menu.Items.Add('Test notification')
-$testItem.add_Click({ Show-Notice 'YACS - test' 'Desktop notifications are available. This is not a build result.' })
-$muteItem = $menu.Items.Add('Mute notifications')
-$muteItem.CheckOnClick = $true
-$muteItem.add_Click({ $script:muted = $muteItem.Checked })
 $exitItem = $menu.Items.Add('Exit monitor')
 $exitItem.add_Click({ $context.ExitThread() })
 $icon.ContextMenuStrip = $menu
-$icon.add_BalloonTipClicked({ Start-Process 'https://github.com/karnalooch/YetAnotherCyclingSim/actions' })
 $icon.Visible = $true
 $timer = [Windows.Forms.Timer]::new()
 $timer.Interval = $PollSeconds * 1000
@@ -99,7 +90,7 @@ $timer.add_Tick({
                     $success = $event.Result -in @('Succeeded', 'SucceededWithIssues')
                     $icon.Icon = if ($success) { [Drawing.SystemIcons]::Information } else { [Drawing.SystemIcons]::Warning }
                     $severity = if ($event.Result -eq 'Succeeded') { 'Info' } else { 'Warning' }
-                    Show-Notice 'YACS - job completed' ($event.Job + ': ' + $event.Result) $severity
+                    Write-Notice 'YACS - job completed' ($event.Job + ': ' + $event.Result) $severity
                 }
             }
         }
@@ -115,7 +106,7 @@ $timer.add_Tick({
         }
         $quiet = ([DateTime]::UtcNow - $script:lastActivity).TotalMinutes
         if ($script:job -and $quiet -ge $QuietMinutes -and -not $script:quietWarned) {
-            Show-Notice 'YACS - check progress' "No diagnostic writes for $QuietMinutes minutes. This does not prove a hang." 'Warning'
+            Write-Notice 'YACS - check progress' "No diagnostic writes for $QuietMinutes minutes. This does not prove a hang." 'Warning'
             Write-YacsMonitorRecord $logDirectory @{ kind = 'quiet'; job = $script:job; quietMinutes = [Math]::Round($quiet, 1) }
             $script:quietWarned = $true
         }
@@ -133,7 +124,7 @@ $timer.add_Tick({
             Write-YacsMonitorRecord $logDirectory @{ kind = 'health'; service = $serviceState; job = $script:job; freeRamGiB = [Math]::Round($os.FreePhysicalMemory / 1MB, 2); freeDiskGiB = [Math]::Round($disk.AvailableFreeSpace / 1GB, 2); quietMinutes = [Math]::Round($quiet, 1) }
             $script:lastHealth = [DateTime]::UtcNow
             if (-not $script:startupNotice) {
-                Show-Notice 'YACS - monitor ready' 'Runner notifications are active. Right-click the tray icon for status and live logs.'
+                Write-Notice 'YACS - monitor ready' 'Silent monitor active. Right-click the tray icon for status and live logs.'
                 $script:startupNotice = $true
             }
         }
@@ -145,14 +136,14 @@ $timer.add_Tick({
         $script:status = 'Monitor error: ' + $_.Exception.Message
         if ($script:lastError -ne $script:status) {
             $script:lastError = $script:status
-            Show-Notice 'YACS - monitor error' 'Unable to read runner status. Open Status from the tray menu.' 'Error'
+            Write-Notice 'YACS - monitor error' 'Unable to read runner status. Open Status from the tray menu.' 'Error'
             # Do not persist arbitrary exception text or raw diagnostic lines.
             try { Write-YacsMonitorRecord $logDirectory @{ kind = 'monitor_error'; type = $_.Exception.GetType().Name } } catch { [Console]::Error.WriteLine('Monitor log unavailable.') }
         }
     }
 })
 try {
-    Write-YacsMonitorRecord $logDirectory @{ kind = 'monitor_started'; runner = $RunnerRoot; processId = $PID; sessionId = (Get-Process -Id $PID).SessionId }
+    Write-YacsMonitorRecord $logDirectory @{ kind = 'monitor_started'; runner = $RunnerRoot; processId = $PID; sessionId = (Get-Process -Id $PID).SessionId; popupsEnabled = $false }
     $timer.Start()
     [Windows.Forms.Application]::Run($context)
 } finally {
