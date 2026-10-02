@@ -2,11 +2,6 @@ name: YACS runner desktop monitor
 
 on:
   workflow_dispatch:
-  push:
-    branches: [feat/runner-desktop-monitor-329]
-    paths:
-      - '.github/workflows/runner-monitor.yml'
-      - 'scripts/runner/**'
 
 permissions:
   contents: read
@@ -21,8 +16,7 @@ jobs:
     if: >-
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
       github.actor == github.repository_owner &&
-      ((github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
-       (github.event_name == 'push' && github.ref == 'refs/heads/feat/runner-desktop-monitor-329'))
+      github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 5
     env:
