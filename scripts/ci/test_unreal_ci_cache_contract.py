@@ -120,7 +120,16 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         self.assertIn("road-geometry-inspection", capture)
         self.assertIn("geometry-inspection-clay-wireframe", capture)
         self.assertIn("Mandatory road Geometry Inspection proof failed.", capture)
-        self.assertIn("$proof.bob_mode -ne 'INSPECTOR_ONLY'", capture)
+        self.assertIn(
+            "$proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_CUT_ONLY'",
+            capture,
+        )
+        self.assertIn("bob-cut-only-preview-proof.json", capture)
+        self.assertIn("BOB cut-only construction preview failed.", capture)
+        self.assertIn("$cut.status -ne 'TECHNICAL_PREVIEW_PASS'", capture)
+        self.assertIn("[int]$cut.raised_grid_sample_count -ne 0", capture)
+        self.assertIn("[int]$cut.remaining_road_penetration_count -ne 0", capture)
+        self.assertIn("$cut.saved_baseline_unchanged -ne $true", capture)
         self.assertIn("WaitForExit(300000)", capture)
         self.assertNotIn("YACS_KEEP_EDITOR_OPEN", capture)
         self.assertNotIn("RUNNER_TRACKING_ID", capture)
@@ -140,6 +149,18 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         self.assertIn("$proof.lighting_status -ne 'PASS'", handoff)
         self.assertIn("[double]$proof.directional_light_intensity -le 0.0", handoff)
         self.assertIn("[double]$proof.skylight_intensity -le 0.0", handoff)
+        self.assertIn(
+            "$proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_CUT_ONLY'",
+            handoff,
+        )
+        self.assertIn(
+            "$proof.cut_preview_status -ne 'TECHNICAL_PREVIEW_PASS'",
+            handoff,
+        )
+        self.assertIn(
+            "[int]$proof.cut_preview_remaining_penetration_count -ne 0",
+            handoff,
+        )
         self.assertIn("OWNER HANDOFF PASS", handoff)
 
         bootstrap = (ROOT / "Content/Python/init_unreal.py").read_text(encoding="utf-8")
@@ -152,6 +173,9 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         self.assertIn("unreal.DirectionalLight", startup)
         self.assertIn("unreal.SkyLight", startup)
         self.assertIn('"lighting_status"', startup)
+        self.assertIn('"INSPECTOR_PLUS_TRANSIENT_CUT_ONLY"', startup)
+        self.assertIn('"cut_preview_status"', startup)
+        self.assertIn("Owner handoff cut-only builder contract failed", startup)
 
         self.assertIn(
             "if: ${{ always() && !inputs.region_terrain_import }}",
