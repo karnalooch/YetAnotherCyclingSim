@@ -2385,3 +2385,16 @@ required for this footprint; earlier 27,552-sample receipts describe revision 3.
 Even a renewed contact PASS will not admit final asphalt, continuous support,
 collision, ride or performance. Next review: the apex and retaining-side residual
 at 180.5 m, including source epoch and native DTM representation.
+
+
+#### Inspector runner recovery — isolated diagnostic logs
+
+The first BOB inspector CI (`9d296f9`, run 36988818574) passed Python checks
+but both native attempts failed before execution: Windows retained locks on
+the canonical UE log and an older run's map-preparation stdout/stderr. No
+native inspection result is claimed for those attempts. The recovery preserves
+only canonical/RegionTerrain diagnostic logs during cleanup, uses per-run engine
+logs for import/capture, and restricts artifact upload to the current run/attempt.
+Old JSON/PNG evidence is not preserved or reused as current proof. Process
+scoping, exact SHA, source/asset retention and authoring gates remain in force.
+See [CI validation tiers](CI_VALIDATION_TIERS.md) for the diagnostic exceptions.

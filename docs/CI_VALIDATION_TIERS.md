@@ -207,7 +207,16 @@ The normal code-only Unreal lane now separates binary work from runtime proof:
 The runner-local warm worktree is serialized by repository-wide Unreal CI
 concurrency. Every run resets tracked files to the requested SHA and removes all
 untracked/ignored residue except the explicit warm-state allow-list: project and
-plugin `Binaries`, `Intermediate`, and `Saved/BuildCache/UnrealCi`. The
+plugin `Binaries`, `Intermediate`, and `Saved/BuildCache/UnrealCi`. Diagnostic-only
+exceptions preserve the exact canonical `Saved/Logs/YetAnotherCyclingSim.log`
+and `Saved/RuntimeProof/CI/RegionTerrain/*/*.log` files. Windows may retain file
+locks even for exited Unreal processes; these logs are neither build cache nor
+reusable proof. The existing scoped process/lock guard still runs before cleanup.
+Other generated files, including old JSON/PNG receipts, remain disposable.
+Sa Calobra import/capture use per-run `-AbsLog` destinations and new evidence
+directories; upload is restricted to the exact run ID and attempt. A failed
+preparation cannot upload old-run diagnostic files under the new commit name.
+This preserves locked diagnostics without suppressing other cleanup failures. The
 code-only LFS contract and exact HEAD are then rechecked. Preserved outputs are
 only candidates for reuse; they are never trusted without fingerprint and
 environment checks. A compile-fingerprint mismatch is **not** cache corruption:

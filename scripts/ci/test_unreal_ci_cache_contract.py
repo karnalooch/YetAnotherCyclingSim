@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 import unittest
+import shlex
+import subprocess
+import tempfile
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -37,6 +40,65 @@ class UnrealCiCacheContractTests(unittest.TestCase):
             "Resolve verified Unreal execution mode",
         ):
             self.assertIn(token, self.workflow)
+
+    def test_cleanup_retains_only_diagnostic_logs_and_admitted_build_surfaces(self):
+        commands = [
+            line.strip()
+            for line in self.workflow.splitlines()
+            if line.strip().startswith("git clean -ffdx")
+        ]
+        self.assertEqual(len(commands), 2)
+        self.assertEqual(commands[0], commands[1])
+        keep = [
+            "Saved/Logs/YetAnotherCyclingSim.log",
+            "Saved/RuntimeProof/CI/RegionTerrain/123-1/map-preparation.stdout.log",
+            "Binaries/build.dll",
+            "Saved/BuildCache/UnrealCi/state.json",
+        ]
+        remove = [
+            "Saved/Logs/unrelated.log",
+            "Saved/RuntimeProof/CI/RegionTerrain/123-1/profile.json",
+            "Saved/RuntimeProof/CI/RegionTerrain/123-1/render.png",
+            "Saved/RuntimeProof/CI/RegionTerrain/123-1/Prepared/terrain.r16",
+            "Saved/unrelated.tmp",
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(["git", "init", "--quiet", str(root)], check=True)
+            for name in keep + remove:
+                target = root / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text("fixture", encoding="utf-8")
+            subprocess.run(
+                shlex.split(commands[0]),
+                cwd=root,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            for name in keep:
+                self.assertTrue((root / name).exists(), name)
+            for name in remove:
+                self.assertFalse((root / name).exists(), name)
+
+    def test_region_artifact_upload_is_current_attempt_only(self):
+        block = self.workflow.split(
+            "- name: Upload native Sa Calobra import diagnostic", 1
+        )[1]
+        block = block.split("- name: Upload concise Unreal proof", 1)[0]
+        paths = [
+            line.strip() for line in block.splitlines() if "/RegionTerrain/" in line
+        ]
+        self.assertEqual(len(paths), 4)
+        for path in paths:
+            self.assertIn(
+                "/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/", path
+            )
+        importer = (ROOT / "scripts/ue/Invoke-YacsRegionTerrainImport.ps1").read_text()
+        self.assertIn("-AbsLog=", importer)
+        self.assertIn("$LogName + '.engine.log'", importer)
+        self.assertIn("Evidence directory already exists", importer)
+        self.assertIn("capture.engine.log", self.workflow)
 
     def test_workflow_has_static_runtime_compile_paths(self):
         for token in (

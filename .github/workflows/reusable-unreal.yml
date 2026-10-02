@@ -85,7 +85,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           git reset --hard '${{ inputs.target_sha }}'
           if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree reset failed.' }
-          git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/'
+          git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/' -e '/Saved/Logs/YetAnotherCyclingSim.log' -e '/Saved/RuntimeProof/CI/RegionTerrain/*/*.log'
           if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree allow-listed clean failed.' }
 
       - name: Enforce code-only checkout
@@ -301,7 +301,7 @@ jobs:
           $project = Join-Path (Get-Location) 'YetAnotherCyclingSim.uproject'
           $engine = Resolve-YacsUnrealEngine -ProjectPath $project
           $script = Join-Path (Get-Location) 'scripts/ue/capture_region_terrain.py'
-          $arguments = @(('"' + $project + '"'), ('-ExecutePythonScript="' + $script + '"'), '-Unattended', '-NoPause', '-NoSplash', '-NoP4', '-windowed', '-ResX=1920', '-ResY=1080', '-NoVSync', '-FixedSeed', '-ScriptErrorsAreFatal', '-stdout')
+          $arguments = @(('"' + $project + '"'), ('-ExecutePythonScript="' + $script + '"'), '-Unattended', '-NoPause', '-NoSplash', '-NoP4', '-windowed', '-ResX=1920', '-ResY=1080', '-NoVSync', '-FixedSeed', '-ScriptErrorsAreFatal', '-stdout', ('-AbsLog="' + (Join-Path $root 'capture.engine.log') + '"'))
           $process = Start-Process -FilePath $engine.UnrealEditorPath -ArgumentList $arguments -PassThru -NoNewWindow -RedirectStandardOutput (Join-Path $root 'capture.stdout.log') -RedirectStandardError (Join-Path $root 'capture.stderr.log')
           if (-not $process.WaitForExit(300000)) {
             $process | Stop-Process -Force
@@ -335,10 +335,10 @@ jobs:
         with:
           name: sa-calobra-import-${{ inputs.target_sha }}-${{ github.run_attempt }}
           path: |
-            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/**/*.json
-            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/**/*.txt
-            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/**/*.log
-            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/**/*.png
+            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.json
+            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.txt
+            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.log
+            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.png
           if-no-files-found: error
           retention-days: 14
 
@@ -373,7 +373,7 @@ jobs:
             }
             git reset --hard
             if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree cleanup git reset failed.' }
-            git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/'
+            git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/' -e '/Saved/Logs/YetAnotherCyclingSim.log' -e '/Saved/RuntimeProof/CI/RegionTerrain/*/*.log'
             if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree cleanup allow-listed clean failed.' }
           }
           else {

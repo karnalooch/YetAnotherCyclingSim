@@ -29,6 +29,7 @@ $env:YACS_TERRAIN_MANIFEST = $manifestPath
 function Invoke-TerrainEditor([string[]] $EditorArguments, [string] $LogName) {
     $stdout = Join-Path $ArtifactRoot ($LogName + '.stdout.log')
     $stderr = Join-Path $ArtifactRoot ($LogName + '.stderr.log')
+    $EditorArguments += ('-AbsLog="' + (Join-Path $ArtifactRoot ($LogName + '.engine.log')) + '"')
     $process = Start-Process -FilePath $Context.UnrealEditorCmdPath -ArgumentList $EditorArguments -WorkingDirectory $RepoRoot -PassThru -NoNewWindow -RedirectStandardOutput $stdout -RedirectStandardError $stderr
     if (-not $process.WaitForExit($TimeoutSec * 1000)) {
         $process | Stop-Process -Force
