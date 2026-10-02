@@ -190,6 +190,22 @@ def main() -> None:
             "record_count": len(mds["records"]),
             "download_boundary": "Search only. Download authorization is not bypassed.",
         }
+
+        ortho = query_page(
+            driver,
+            sources["pnoa_maxima_actualidad_2024"]["product_url"],
+            mds_queries,
+            r"TIF|TIFF",
+            "PNOA",
+        )
+        output["sources"]["pnoa_maxima_actualidad_2024"] = {
+            **ortho,
+            "record_count": len(ortho["records"]),
+            "download_boundary": (
+                "Exact source COG discovery only. WMS working extracts remain separately "
+                "acquirable without bypassing download authorization."
+            ),
+        }
     finally:
         driver.quit()
 
