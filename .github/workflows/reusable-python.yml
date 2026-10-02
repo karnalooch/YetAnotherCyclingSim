@@ -143,6 +143,8 @@ jobs:
           python -m unittest scripts.assets.test_prepare_ma2141_profile -v
           python -m unittest scripts.geometry.test_native_heightfield_pavement -v
           python -m unittest scripts.geometry.test_smooth_road_ribbon -v
+          python -m unittest scripts.geometry.test_local_terrain_skin -v
+          python -m unittest scripts.geometry.test_bob_cut_only_ground -v
           python -m unittest scripts.worldgen.test_adaptive_terrain_solver -v
           python -m unittest scripts.worldgen.test_bob_terrain_fit_inspector -v
           python -m unittest scripts.ue.test_capture_region_terrain -v
