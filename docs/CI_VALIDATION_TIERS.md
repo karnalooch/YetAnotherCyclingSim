@@ -63,10 +63,13 @@ never accept native contact by forcing the visible ribbon to inherit DTM facet
 roughness.
 
 The Geometry Inspection image is a required review surface, not optional
-debug decoration. CI sets the editor viewport to `VMI_CLAY`, enables
-`ShowFlag.MeshEdges`, selects the transient road actor, captures with editor
-overlays enabled, then restores normal Lit mode before the ordinary overview and
-rider view. The proof fails closed if that named inspection capture or its mode
+debug decoration. CI sets the editor viewport to `VMI_CLAY`, enables the
+DynamicMesh road's explicit wireframe render pass with cyan wireframe color,
+keeps editor mesh-edge/selection aids enabled, then restores normal Lit mode and
+disables the explicit road wireframe before the ordinary overview and rider
+view. The explicit DynamicMesh wireframe is required because high-res camera
+capture does not reliably preserve editor-only selection overlays. The proof
+fails closed if that named inspection capture or its explicit-wireframe mode
 metadata is missing.
 
 The road-to-terrain receipt is now machine-enforced. Runtime proof must contain

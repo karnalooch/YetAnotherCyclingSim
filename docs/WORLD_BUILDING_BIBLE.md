@@ -2531,12 +2531,20 @@ engineering construction limit:
 
 Geometry review must include the dedicated
 `road-geometry-inspection` capture. The capture uses Unreal Engine's Geometry
-Inspection **Clay** view mode (`VMI_CLAY`) with mesh edges enabled and the
-transient road actor selected. It is technical evidence, not an aesthetic
-screenshot: its purpose is to expose folds, terrain penetration, unsupported
-road spans and abrupt road/Landscape disagreement that can be difficult to read
-from the normal Lit rider view. A road-to-terrain review is incomplete when this
-capture is absent, even if the normal overview and rider image look acceptable.
+Inspection **Clay** view mode (`VMI_CLAY`). The transient DynamicMesh road also
+enables its **explicit rendered wireframe pass** with cyan
+`wireframe_color=(0,1,1,1)`. This distinction is deliberate: editor selection
+outlines are UI overlays and do not reliably survive a high-resolution camera
+capture, while `UBaseDynamicMeshComponent` wireframe rendering is part of the
+rendered geometry and therefore remains visible in proof evidence. Mesh-edge and
+selection flags stay enabled as interactive aids, but the cyan explicit road
+wireframe is the fail-closed visual contract.
+
+This is technical evidence, not an aesthetic screenshot: its purpose is to
+expose folds, terrain penetration, unsupported road spans and abrupt
+road/Landscape disagreement that can be difficult to read from the normal Lit
+rider view. A road-to-terrain review is incomplete when this capture is absent,
+even if the normal overview and rider image look acceptable.
 
 The implemented inspector is `bob-road-terrain-fit-v1`. It samples every
 smooth-ribbon top vertex against the **actual imported Landscape in Unreal**:

@@ -105,8 +105,14 @@ def finish(error=""):
 def _apply_capture_view_mode(view):
     """Apply and verify the requested editor diagnostic mode for one capture."""
     actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+    road_component = None
+    if _road_objects:
+        road_component = _road_objects[0].get_component_by_class(
+            unreal.DynamicMeshComponent
+        )
+
     if view.get("geometry_inspection") is True:
-        if not _road_objects:
+        if road_component is None:
             raise RuntimeError("Geometry inspection requires spawned road geometry")
         unreal.AutomationLibrary.set_editor_viewport_view_mode(
             unreal.ViewModeIndex.VMI_CLAY
@@ -116,7 +122,19 @@ def _apply_capture_view_mode(view):
         unreal.SystemLibrary.execute_console_command(
             _world, "ShowFlag.SelectionOutline 1"
         )
+
+        # Selection outlines are editor UI and are not guaranteed to survive a
+        # high-res camera capture. DynamicMesh's explicit wireframe pass is real
+        # rendered geometry, so the diagnostic overlay is preserved in evidence.
+        road_component.set_enable_wireframe_render_pass(True)
+        road_component.set_editor_property("explicit_show_wireframe", True)
+        road_component.set_editor_property(
+            "wireframe_color",
+            unreal.LinearColor(0.0, 1.0, 1.0, 1.0),
+        )
+        road_component.set_view_mode_overrides_enabled(True)
         actors.set_selected_level_actors([_road_objects[0]])
+
         actual = unreal.AutomationLibrary.get_editor_active_viewport_view_mode()
         if actual != unreal.ViewModeIndex.VMI_CLAY:
             raise RuntimeError("Geometry Inspection Clay view mode did not activate")
@@ -125,8 +143,13 @@ def _apply_capture_view_mode(view):
         )
         if opacity < 0.99:
             raise RuntimeError("Geometry Inspection wireframe opacity did not activate")
+        if road_component.get_enable_wireframe_render_pass() is not True:
+            raise RuntimeError("Road explicit wireframe render pass did not activate")
         return
 
+    if road_component is not None:
+        road_component.set_enable_wireframe_render_pass(False)
+        road_component.set_editor_property("explicit_show_wireframe", False)
     unreal.AutomationLibrary.set_editor_viewport_view_mode(
         unreal.ViewModeIndex.VMI_LIT
     )
@@ -203,6 +226,10 @@ def tick(_delta):
                     "inspection_mode": view.get("inspection_mode"),
                     "mesh_edges": view.get("mesh_edges", False),
                     "road_selected": view.get("road_selected", False),
+                    "explicit_road_wireframe": view.get(
+                        "explicit_road_wireframe", False
+                    ),
+                    "wireframe_color_rgba": view.get("wireframe_color_rgba"),
                     "force_game_view": view.get("force_game_view", True),
                     "fov_deg": 74,
                     "fog": False,
@@ -316,6 +343,8 @@ def main():
             "inspection_mode": "VMI_CLAY",
             "mesh_edges": True,
             "road_selected": True,
+            "explicit_road_wireframe": True,
+            "wireframe_color_rgba": [0.0, 1.0, 1.0, 1.0],
             "force_game_view": False,
         },
         {

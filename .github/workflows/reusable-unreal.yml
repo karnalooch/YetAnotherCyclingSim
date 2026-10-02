@@ -364,6 +364,12 @@ jobs:
             $inspection[0].inspection_mode -ne 'VMI_CLAY' -or
             $inspection[0].mesh_edges -ne $true -or
             $inspection[0].road_selected -ne $true -or
+            $inspection[0].explicit_road_wireframe -ne $true -or
+            $inspection[0].wireframe_color_rgba.Count -ne 4 -or
+            $inspection[0].wireframe_color_rgba[0] -ne 0.0 -or
+            $inspection[0].wireframe_color_rgba[1] -ne 1.0 -or
+            $inspection[0].wireframe_color_rgba[2] -ne 1.0 -or
+            $inspection[0].wireframe_color_rgba[3] -ne 1.0 -or
             $inspection[0].force_game_view -ne $false
           ) { throw 'Mandatory road Geometry Inspection proof failed.' }
 

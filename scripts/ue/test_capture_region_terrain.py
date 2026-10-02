@@ -42,6 +42,9 @@ class CaptureTransitionTests(unittest.TestCase):
             exec(compile(script.split(marker)[0], str(Path(__file__)), "exec"), ns)
 
         road_actor = Mock()
+        road_component = Mock()
+        road_component.get_enable_wireframe_render_pass.return_value = True
+        road_actor.get_component_by_class.return_value = road_component
         ns.update(_road_objects=(road_actor, Mock(), {}), _world=Mock())
         ns["_apply_capture_view_mode"](
             {
@@ -55,6 +58,14 @@ class CaptureTransitionTests(unittest.TestCase):
         )
         unreal.AutomationLibrary.set_editor_active_viewport_wireframe_opacity.assert_called_with(
             1.0
+        )
+        road_component.set_enable_wireframe_render_pass.assert_called_with(True)
+        road_component.set_editor_property.assert_any_call(
+            "explicit_show_wireframe", True
+        )
+        road_component.set_editor_property.assert_any_call(
+            "wireframe_color",
+            unreal.LinearColor(0.0, 1.0, 1.0, 1.0),
         )
         actors.set_selected_level_actors.assert_called_with([road_actor])
         commands = [
