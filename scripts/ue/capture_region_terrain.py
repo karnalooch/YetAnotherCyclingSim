@@ -55,7 +55,7 @@ def finish(error=""):
         "captures": _proofs,
         "human_visual_status": "PENDING",
         "performance_status": "PENDING",
-        "road_status": "INFERRED_CONTACT_TRIAL",
+        "road_status": "INFERRED_CONTACT_TRIAL" if _road_objects else "NOT_SPAWNED",
         "final_road_status": "NOT_ADMITTED",
     }
     (_root / "terrain-capture-proof.json").write_text(
@@ -69,7 +69,7 @@ def finish(error=""):
 def schedule():
     global _task, _started, _road_objects
     if _index == 2:
-        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        sys.path.insert(0, str(Path(unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_dir())) / "scripts/ue"))
         from ma2141_road_preview import spawn_trial
         _road_objects = spawn_trial(_world, _root, os.environ["YACS_TERRAIN_SHA"])
     view = _views[_index]

@@ -8,6 +8,7 @@ import unittest
 
 from scripts.worldgen.adaptive_terrain_solver import (
     BOB_EXPANSION,
+    review_pavement_contact_trial,
     BOB_NAME,
     BOB_SYSTEM_ID,
     FEATURE_SOURCE_PCGEX,
@@ -269,6 +270,42 @@ class AdaptiveTerrainSolverTests(unittest.TestCase):
         first = choose_terrain_decision(hairpin_features(), self.policy, ())
         second = choose_terrain_decision(hairpin_features(), self.policy, ())
         self.assertEqual(first, second)
+
+
+
+
+
+class BobContactReviewTests(unittest.TestCase):
+    def test_failed_centroids_cannot_be_hidden_by_passing_native_vertices(self):
+        r16 = {"floating_centroid_count":456, "penetrating_centroid_count":712,
+               "triangle_centroid_count":28800, "r16_contact_status":"FAIL"}
+        native = {"floating_sample_count":0, "penetrating_sample_count":0,
+                  "trace_miss_count":0,"trace_sample_count":15025,
+                  "native_sample_contact_status":"PASS"}
+        result = review_pavement_contact_trial(r16, geographic_width_admitted=False, native_contact=native)
+        self.assertEqual(result["status"], "REJECT_CONTACT")
+        self.assertFalse(result["eligible_for_learning"])
+        self.assertFalse(result["geometry_repair_executed"])
+        self.assertIn("Road_Earthworks", " ".join(result["next_actions"]))
+        self.assertIn("verify separate left/right", result["next_actions"][0])
+
+    def test_missing_or_boolean_counts_never_become_success(self):
+        result = review_pavement_contact_trial({"floating_centroid_count":False}, geographic_width_admitted=False)
+        self.assertEqual(result["status"], "REVIEW_PENDING")
+        self.assertFalse(result["sample_proofs_complete"])
+        self.assertFalse(result["road_admitted"])
+
+    def test_sample_pass_still_needs_continuous_contact_and_visual_review(self):
+        r16 = {"floating_centroid_count":0, "penetrating_centroid_count":0,
+               "triangle_centroid_count":28800, "r16_contact_status":"PASS"}
+        native = {"floating_sample_count":0,"penetrating_sample_count":0,
+                  "trace_miss_count":0,"trace_sample_count":15025,
+                  "native_sample_contact_status":"PASS"}
+        result = review_pavement_contact_trial(r16, geographic_width_admitted=True, native_contact=native)
+        self.assertTrue(result["sample_proofs_complete"])
+        self.assertEqual(result["status"], "REVIEW_PENDING")
+        self.assertFalse(result["eligible_for_learning"])
+        self.assertFalse(result["road_admitted"])
 
 
 if __name__ == "__main__":

@@ -1,6 +1,8 @@
 """Bounded inferred pavement trial using the established Geometry Script path."""
 
 import json
+from pathlib import Path
+import sys
 import unreal
 
 
@@ -51,6 +53,10 @@ def spawn_trial(world, root, exact_sha):
         "terrain_modified": False, "road_earthworks_modified": False,
         "attribution": trial["attribution"],
     }
+    sys.path.insert(0, str(Path(unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_dir()))))
+    from scripts.worldgen.adaptive_terrain_solver import review_pavement_contact_trial
+    report["bob_review"] = review_pavement_contact_trial(
+        trial["contact_diagnostic"], geographic_width_admitted=False, native_contact=report)
     (root / "ma2141-road-contact-proof.json").write_text(
         json.dumps(report, indent=2)+"\n", encoding="utf-8")
     actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)

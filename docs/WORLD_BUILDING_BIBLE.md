@@ -1022,6 +1022,28 @@ Learning is review-gated and deterministic:
 7. threshold/model calibration happens offline and produces a reviewed candidate
    config change; runtime/editor generation never rewrites its own policy.
 
+Contact-trial diagnosis is executable in BOB's `review_pavement_contact_trial`.
+It reads both triangle-interior R16 failures and native Landscape trace evidence.
+Passing vertex samples cannot cancel failed triangle interiors. Missing, invalid
+or empty sample evidence stays pending. The review lists source reconciliation,
+profile regularization, bounded native `Road_Earthworks` and escalation checks;
+it does not execute an unvalidated repair or grant road/learning admission.
+
+Keep rejected cases as diagnostic evidence, separate from verified-case memory.
+The first Spanish example is
+[`ma2141_contact_failure_5826507.json`](../worldgen/terrain/benchmarks/sa_calobra/ma2141_contact_failure_5826507.json).
+Its 28,800 R16 triangle centroids contain 456 unsupported and 712 penetrating
+samples; surface-minus-DTM ranges from -1.124 m to +1.506 m. These are measured
+symptoms, not proven root causes or accepted earthwork parameters. The native
+contact test did not run because the capture entrypoint lacked `__file__`.
+That tooling failure is separate from the geometric failure. The capture fix
+resolves scripts through Unreal's project directory; subsequent exact-SHA proof
+must confirm it. Never turn a failed render into evidence that geometry passed.
+
+Update this methodology and the linked work item with each observed failure,
+repair attempt and proof result. Record what remains unknown. The successful
+repair recipe may enter reviewed case memory only after its own acceptance.
+
 Do not auto-promote failed, merely green, or unreviewed visual evidence into the
 learning memory. Do not infer successful terrain behavior from a single hairpin.
 The first route-general policy requires accepted cases for the difficult hairpin,

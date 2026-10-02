@@ -24,6 +24,8 @@ from scripts.geometry.sp638_local_corridor import (  # noqa: E402
     CrossSectionPoint, Vec3, build_corridor_mesh,
 )
 
+from scripts.worldgen.adaptive_terrain_solver import review_pavement_contact_trial  # noqa: E402
+
 PROFILE = SOURCE.with_name("ma2141_pavement_preview_profile.json")
 PAVEMENT_THICKNESS_M = 0.08  # Nominal visual construction parameter, not survey.
 BURIAL_M = 0.04
@@ -89,6 +91,12 @@ def build_trial(samples, height_at, origin):
         "surface_minus_dtm_max_m": max(gaps),
         "floating_centroid_count": sum(g > PAVEMENT_THICKNESS_M for g in gaps),
         "penetrating_centroid_count": sum(g < 0 for g in gaps),
+        "worst_centroids": [
+            {"triangle_index": i, "station_start_m": (i // 48) * 0.5,
+             "lateral_band_index": (i % 48) // 2,
+             "surface_minus_dtm_m": gaps[i]}
+            for i in sorted(range(len(gaps)), key=lambda i: abs(gaps[i]-0.04), reverse=True)[:20]
+        ],
         "native_unreal_contact_status": "PENDING",
         "r16_contact_status": "PASS" if all(0 <= g <= PAVEMENT_THICKNESS_M for g in gaps) else "FAIL",
     }
@@ -125,6 +133,7 @@ def prepare(prepared, output, exact_sha):
         "height_interpretation": "Raw native DTM contact trial; not regularized asphalt or physics profile",
         "vertices_local_m": vertices, "triangles": triangles,
         "contact_diagnostic": contact, "attribution": profile["attribution"],
+        "bob_review": review_pavement_contact_trial(contact, geographic_width_admitted=False),
     }
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, separators=(",", ":")) + "\n", encoding="utf-8")

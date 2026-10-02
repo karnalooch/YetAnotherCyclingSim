@@ -28,6 +28,76 @@ BOB_NAME = "BOB"
 BOB_EXPANSION = "Builder Of Berms"
 BOB_SYSTEM_ID = "bob-terrain-architect-v1"
 
+
+def review_pavement_contact_trial(
+    r16_contact: Mapping[str, Any],
+    *,
+    geographic_width_admitted: bool,
+    native_contact: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Explain a failed contact trial without admitting it to verified memory.
+
+    Contact tests at vertices do not establish support between vertices. Source
+    reconciliation precedes profile regularization and bounded native earthworks.
+    This review prescribes checks, not an unproven automatic geometry repair.
+    """
+    reasons: list[str] = []
+    actions: list[str] = []
+    if geographic_width_admitted is not True:
+        reasons.append("pavement edges remain inferred; symmetric GIS buffers are unsafe")
+        actions.append("verify separate left/right pavement edges against pinned imagery and source uncertainty")
+    failure = False
+    complete = True
+    for name, proof, keys in (
+        ("r16_centroids", r16_contact, ("floating_centroid_count", "penetrating_centroid_count")),
+        ("native_vertices", native_contact, ("floating_sample_count", "penetrating_sample_count", "trace_miss_count")),
+    ):
+        if proof is None:
+            complete = False
+            reasons.append(f"{name}: proof missing")
+            continue
+        for key in keys:
+            value = proof.get(key)
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                complete = False
+                reasons.append(f"{name}: invalid or missing {key}")
+            elif value:
+                failure = True
+                reasons.append(f"{name}: {key}={value}")
+        count_key = "triangle_centroid_count" if name == "r16_centroids" else "trace_sample_count"
+        count = proof.get(count_key)
+        if isinstance(count, bool) or not isinstance(count, int) or count <= 0:
+            complete = False
+            reasons.append(f"{name}: no valid sample coverage")
+        status_key = "r16_contact_status" if name == "r16_centroids" else "native_sample_contact_status"
+        if proof.get(status_key) == "FAIL":
+            failure = True
+        elif proof.get(status_key) != "PASS":
+            complete = False
+        if name == "r16_centroids" and failure:
+            actions.append("locate failed triangle interiors; distinguish terrain interpolation from incorrect pavement footprint")
+    if failure:
+        actions.extend([
+            "after source review, regularize the presentation road profile within explicit deviation limits",
+            "evaluate bounded native spline/patch cut-fill in Road_Earthworks; preserve Base_DTM",
+            "reject excessive cut-fill or competing hairpin branches; escalate to retaining geometry when required",
+        ])
+    actions.extend([
+        "remeasure native Landscape contact across road width, edges and triangle interiors",
+        "verify road collision, rider-camera appearance and performance before admission",
+    ])
+    return {
+        "architect": BOB_NAME,
+        "status": "REJECT_CONTACT" if failure else "REVIEW_PENDING",
+        "sample_proofs_complete": complete,
+        "reasons": reasons,
+        "next_actions": actions,
+        "forbidden_shortcuts": ["arbitrary vertical lift", "global terrain blur", "material camouflage", "inferred widths promoted to survey"],
+        "geometry_repair_executed": False,
+        "road_admitted": False,
+        "eligible_for_learning": False,
+    }
+
 STRATEGY_NATIVE_BLEND = "native_blend"
 STRATEGY_CONSTRAINED_CUT_FILL = "constrained_cut_fill"
 STRATEGY_HAIRPIN_CLEARANCE = "hairpin_clearance"
