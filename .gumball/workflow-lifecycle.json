@@ -250,6 +250,11 @@
       "file": "sa-calobra-terrain-performance.yml",
       "state": "BROKER-MANAGED",
       "reason": "Explicit exact-SHA 1080p60 native Sa Calobra baseline; fixed views and reference RTX 2070 SUPER, retained assets."
+    },
+    {
+      "file": "runner-monitor.yml",
+      "state": "CURRENT",
+      "reason": "Owner-authorized desktop monitor installation; bounded rollout branch push and owner-only main manual maintenance. No Unreal or service restart."
     }
   ]
 }
