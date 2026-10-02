@@ -66,3 +66,11 @@ parts at the same XY. Preserve source vertices and investigate vertical
 separation before road carving; never infer both road levels from a single DTM
 height. This is a source-review candidate, not admitted canonical route or road
 physics. Width, surface and bicycle access remain unknown.
+
+The first bounded alignment diagnostic selects source part 3, vertex 43, with
+150 m of source arc length on either side (300 m total). It lies inside the
+native terrain window and avoids the unresolved closed-loop junction. The
+producer preserves official vertices and linearly densifies only on source XY.
+Its Z samples the native terrain and is explicitly not reconstructed asphalt
+height. Width, surface and bicycle access remain unknown; no earthworks or
+Road Physics Profile admission is granted by this diagnostic.

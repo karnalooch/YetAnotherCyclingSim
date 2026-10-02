@@ -108,7 +108,7 @@ def tick(_delta):
                     "screenshot": str(path),
                     "size_bytes": path.stat().st_size,
                     "resolution": [3840, 2160],
-                    "viewmode": "lightingonly",
+                    "viewmode": "lit-with-neutral-engine-material",
                     "fov_deg": 74,
                     "fog": False,
                     "shadows": False,
@@ -146,11 +146,15 @@ def main():
         or len(landscapes[0].get_components_by_class(unreal.LandscapeComponent)) != 1024
     ):
         raise RuntimeError("Imported terrain topology mismatch")
+    neutral = unreal.load_asset("/Engine/BasicShapes/BasicShapeMaterial")
+    if not neutral:
+        raise RuntimeError("Engine neutral basic-shape material unavailable")
+    landscapes[0].set_editor_property("landscape_material", neutral)
     for component in landscapes[0].get_components_by_class(unreal.LandscapeComponent):
         component.set_forced_lod(0)
         component.set_lod_bias(0)
     for command in [
-        "viewmode lightingonly",
+        "viewmode lit",
         "r.AntiAliasingMethod 1",
         "r.PostProcessAAQuality 6",
         "r.ScreenPercentage 100",

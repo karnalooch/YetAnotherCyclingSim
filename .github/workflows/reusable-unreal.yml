@@ -228,13 +228,26 @@ jobs:
             if ($bytes -ne 389039616) { throw 'Sa Calobra TIFF is still a pointer or has the wrong byte count.' }
           }
           finally { $env:GIT_LFS_SKIP_SMUDGE = '1' }
-          python -m pip install --disable-pip-version-check numpy==2.3.5 rasterio==1.5.2 pyproj==3.8.0 Pillow==12.3.0
+          python -m pip install --disable-pip-version-check numpy==2.3.5 rasterio==1.5.2 pyproj==3.8.0 Pillow==12.3.0 shapely==2.1.1
           if ($LASTEXITCODE -ne 0) { throw 'Pinned native terrain dependencies failed to install.' }
           ./scripts/ue/Invoke-YacsRegionTerrainImport.ps1 `
             -ExpectedBranch 'HEAD' `
             -ExpectedHead '${{ inputs.target_sha }}' `
             -ArtifactRoot 'Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}'
           if ($LASTEXITCODE -ne 0) { throw 'Sa Calobra native terrain import failed.' }
+
+      - name: Prepare bounded official Ma-2141 native alignment diagnostic
+        if: ${{ inputs.region_terrain_import }}
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = 'Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}'
+          python scripts/assets/prepare_ma2141_diagnostic.py `
+            --prepared-terrain "$root/Prepared" `
+            --output "$root/ma2141-native-alignment.json" `
+            --exact-sha '${{ inputs.target_sha }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Ma-2141 native alignment diagnostic failed.' }
 
       - name: Capture isolated native Sa Calobra terrain
         if: ${{ inputs.region_terrain_import }}
