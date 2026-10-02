@@ -23,7 +23,7 @@
   "license": "CC-BY-4.0",
   "attribution": "Obra derivada de PNOA, consulta 2026-10-02, CC BY 4.0 scne.es",
   "license_url": "https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf",
-  "method": "Approximate visible pavement edges manually interpreted on 25 m transects of the pinned CartoCiudad 300 m clip. Tangent uses +/-2 m station window; signed offset follows EPSG left normal (-dy,dx). Linear interpolation between observations is inference, not a boundary survey. Shadows, curbs and imagery date are unresolved.",
+  "method": "Approximate visible pavement edges manually interpreted on 25 m transects, with additional 5 m observations from 130 through 170 m around the apex of the pinned CartoCiudad 300 m clip. Tangent uses +/-2 m station window; signed offset follows EPSG left normal (-dy,dx). Linear interpolation between observations is inference, not a boundary survey. Shadows, curbs and imagery date are unresolved.",
   "edge_uncertainty_m": 1.0,
   "uncertainty_is": "review allowance, not measured statistical accuracy",
   "geographic_width_admitted": false,
@@ -61,9 +61,49 @@
       "max_offset_m": 2
     },
     {
+      "station_m": 130,
+      "min_offset_m": -2,
+      "max_offset_m": 4.5
+    },
+    {
+      "station_m": 135,
+      "min_offset_m": -2.5,
+      "max_offset_m": 5.5
+    },
+    {
+      "station_m": 140,
+      "min_offset_m": -2,
+      "max_offset_m": 6
+    },
+    {
+      "station_m": 145,
+      "min_offset_m": -3,
+      "max_offset_m": 7
+    },
+    {
       "station_m": 150,
       "min_offset_m": -2,
       "max_offset_m": 7
+    },
+    {
+      "station_m": 155,
+      "min_offset_m": -1.5,
+      "max_offset_m": 5.5
+    },
+    {
+      "station_m": 160,
+      "min_offset_m": -2.5,
+      "max_offset_m": 4.5
+    },
+    {
+      "station_m": 165,
+      "min_offset_m": -3,
+      "max_offset_m": 4
+    },
+    {
+      "station_m": 170,
+      "min_offset_m": -2.5,
+      "max_offset_m": 3.5
     },
     {
       "station_m": 175,
@@ -96,13 +136,19 @@
       "max_offset_m": 4.5
     }
   ],
-  "revision": 2,
+  "revision": 3,
   "review_history": [
     {
       "previous_commit": "5826507a84a0dd90998d2fbb7c92b0e6bf492f4a",
       "trigger": "Contact trial rejected; middle-width fit inspection found extreme departures near stations 125-128 and 175-177 m.",
       "review": "Magnified pinned-photo transects show initial estimates at 125 and 175 extended beyond pavement into roadside ground; reinterpreted edges. This is source interpretation correction, not automated narrowing to meet contact thresholds.",
       "remaining_limits": "13 transects and interpolation remain coarse, especially near the hairpin; imagery age, shadows and edge accuracy are unresolved. No width/earthwork/physics admission."
+    },
+    {
+      "previous_commit": "ba702c6ce1028fed69501b23bc663a01a70cc52c",
+      "trigger": "Street View confirms separate hairpin island; coarse edge interpolation around apex requires closer photo review.",
+      "review": "Added independent 5 m transect observations on the same pinned orthophoto at 130,135,140,145,155,160,165,170 m. Read visible asphalt boundary rather than assuming painted edge line or using contact failures to narrow the road.",
+      "remaining_limits": "Manual approximate interpretation; imagery acquisition date and native GSD unresolved; no survey, earthworks or physics admission."
     }
   ]
 }

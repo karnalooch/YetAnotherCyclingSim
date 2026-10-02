@@ -21,6 +21,8 @@ def spawn_trial(world, root, exact_sha):
     # accidentally hit the road itself and declare a floating surface supported.
     deltas = []
     misses = []
+    diagonal_errors = [[], []]
+    worst = []
     for i in range(15025):
         x,y,z = [v*100 for v in vertices[i]]
         hit = unreal.SystemLibrary.line_trace_single(
@@ -35,11 +37,21 @@ def spawn_trial(world, root, exact_sha):
             misses.append(i)
         else:
             deltas.append((z-candidates[0])/100)
+            ground_m = candidates[0]/100
+            for j in range(2):
+                diagonal_errors[j].append(abs(trial["native_triangle_candidates_m"][i][j]-ground_m))
+            worst.append({"vertex_index": i, "station_m": (i//25)*0.5,
+                          "transverse_index": i%25, "surface_minus_landscape_m": deltas[-1]})
     report = {
         "schema_version": 1, "exact_sha": exact_sha,
         "region_id": "sa_calobra", "status": "INFERRED_CONTACT_TRIAL",
         "trace_sample_count": len(deltas), "trace_miss_count": len(misses),
         "missing_sample_indices": misses[:50],
+        "triangle_diagonal_comparison": {
+            name: {"max_abs_error_m": max(errors) if errors else None,
+                   "mean_abs_error_m": sum(errors)/len(errors) if errors else None}
+            for name,errors in zip(("a_d", "b_c"),diagonal_errors)},
+        "worst_native_samples": sorted(worst, key=lambda p: abs(p["surface_minus_landscape_m"]-0.04), reverse=True)[:30],
         "surface_minus_landscape_min_m": min(deltas) if deltas else None,
         "surface_minus_landscape_max_m": max(deltas) if deltas else None,
         "floating_sample_count": sum(d > trial["pavement_thickness_m"] for d in deltas),

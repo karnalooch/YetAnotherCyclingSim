@@ -5,11 +5,19 @@ import unittest
 from collections import Counter
 
 from scripts.assets.prepare_ma2141_road_preview import (
-    PROFILE, build_trial, read_profile,
+    PROFILE, build_trial, read_profile, triangle_candidates,
 )
 
 
 class PavementTrialTests(unittest.TestCase):
+    def test_native_diagonal_probe_distinguishes_nonplanar_quad(self):
+        import numpy as np
+        heights = np.array([[0,0],[0,10000]])
+        manifest = {"origin_epsg_m": [0,0], "scale_z": 128, "location_z_cm": 32768}
+        self.assertEqual(triangle_candidates(heights, manifest, .25, -.25), [50,0])
+        with self.assertRaisesRegex(ValueError, "outside"):
+            triangle_candidates(heights, manifest, .5, -.25)
+
     def test_real_hairpin_solid_is_closed_and_supported_on_plane(self):
         _, samples = read_profile()
         vertices, triangles, contact = build_trial(

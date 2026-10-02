@@ -2149,3 +2149,14 @@ LiDAR-PNOA-cob3 2022-2025 CC-BY 4.0 scne.es**.
 The 2024 LiDAR and July 2026 panorama are different acquisition epochs.
 Their apparent agreement must not be assumed. These observations do not change
 the rejected native-contact result or admit a BOB verified learning case.
+
+
+#### Apex footprint and native interpolation isolation
+
+Preview revision 3 adds eight 5 m transects around stations 130–170 m, bringing
+manual observations to 21. They refine the footprint from the same pinned PNOA
+image; they do not establish surveyed boundaries. Native capture now compares
+both possible R16 quad diagonals against actual Landscape traces and records the
+worst vertex locations. This isolates bilinear sampling error from footprint
+error before changing road geometry. No diagonal is admitted until native proof
+identifies it; terrain layers, road admission and BOB verified memory are unchanged.

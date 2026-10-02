@@ -41,12 +41,34 @@ def read_profile(path=PROFILE):
         raise ValueError("PNOA review image hash mismatch")
     samples = np.array([[p[k] for k in ("station_m", "min_offset_m", "max_offset_m")]
                         for p in data["samples"]], dtype=float)
-    if (samples.shape != (13, 3) or not np.isfinite(samples).all()
-            or not np.array_equal(samples[:, 0], np.arange(0, 301, 25))
+    if (samples.ndim != 2 or samples.shape[1] != 3 or not 13 <= len(samples) <= 121
+            or not np.isfinite(samples).all()
+            or samples[0, 0] != 0 or samples[-1, 0] != 300
+            or (np.diff(samples[:, 0]) <= 0).any()
+            or (np.diff(samples[:, 0]) > 25).any()
             or (samples[:, 1] >= 0).any() or (samples[:, 2] <= 0).any()
             or ((samples[:, 2] - samples[:, 1]) > 12).any()):
         raise ValueError("Invalid bounded edge observations")
     return data, samples
+
+
+def triangle_candidates(heights, manifest, x, y):
+    """Two possible native quad diagonals, to verify against UE collision.
+
+    These are diagnostic candidates, not a guessed native topology contract.
+    """
+    u = (x - manifest["origin_epsg_m"][0]) / 0.5
+    v = (manifest["origin_epsg_m"][1] - y) / 0.5
+    if not (0 <= u < heights.shape[1]-1 and 0 <= v < heights.shape[0]-1):
+        raise ValueError("Triangle probe outside native terrain")
+    c, r = int(u), int(v)
+    u, v = u-c, v-r
+    a,b,c,d = (float(heights[r,c]), float(heights[r,c+1]),
+               float(heights[r+1,c]), float(heights[r+1,c+1]))
+    ad = a+(b-a)*u+(d-b)*v if u >= v else a+(d-c)*u+(c-a)*v
+    bc = a+(b-a)*u+(c-a)*v if u+v <= 1 else d+(c-d)*(1-u)+(b-d)*(1-v)
+    return [((z-32768)*manifest["scale_z"]/128+manifest["location_z_cm"])/100
+            for z in (ad,bc)]
 
 
 def build_trial(samples, height_at, origin):
@@ -132,6 +154,9 @@ def prepare(prepared, output, exact_sha):
         "thickness_evidence_class": "Decorative presentation; nominal, not survey",
         "height_interpretation": "Raw native DTM contact trial; not regularized asphalt or physics profile",
         "vertices_local_m": vertices, "triangles": triangles,
+        "native_triangle_candidates_m": [triangle_candidates(
+            heights, manifest, manifest["origin_epsg_m"][0]+v[0],
+            manifest["origin_epsg_m"][1]-v[1]) for v in vertices[:15025]],
         "contact_diagnostic": contact, "attribution": profile["attribution"],
         "bob_review": review_pavement_contact_trial(contact, geographic_width_admitted=False),
     }
