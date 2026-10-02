@@ -41,6 +41,10 @@ jobs:
       - name: Validate Gumball Proof Broker policy
         run: python scripts/ops/proof_broker.py validate
 
+      - name: Install native terrain test dependencies
+        run: |
+          python -m pip install --disable-pip-version-check --only-binary=:all: numpy==2.3.5 rasterio==1.5.2 pyproj==3.8.0 Pillow==12.3.0 shapely==2.1.2
+
       - name: Run every discovered script test
         run: python scripts/ci/run_script_tests.py --output "${{ runner.temp }}/yacs-script-tests"
 
@@ -75,7 +79,8 @@ jobs:
             'scripts/ue/Invoke-YacsGeometryScriptProbe.ps1',
             'scripts/ue/Invoke-YacsSp638CorridorTopologyProbe.ps1',
             'scripts/ue/Invoke-YacsPassoGiauHairpinCorridorProof.ps1',
-            'scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1'
+            'scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1',
+            'scripts/ue/Invoke-YacsRegionTerrainImport.ps1'
           )) {
             $tokens = $null
             $errors = $null

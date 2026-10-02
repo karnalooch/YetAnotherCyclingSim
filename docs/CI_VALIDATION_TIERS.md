@@ -1,6 +1,78 @@
 # CI Validation Tiers
 
+## Sa Calobra migration import checkpoint
+
+The owner approved the six-step migration on 2026-10-02. During Draft PR #319,
+the existing same-repository Unreal CI lane explicitly requests a native terrain
+import through `region_terrain_import`. Admission is limited to PR #319 and its
+approved `fix/sa-calobra-terrain-import` branch, with the normal same-repository
+guard and exact caller SHA. Other PRs and main runs keep code-only behavior.
+This temporary bootstrap does not change the default-branch Proof Broker trust
+boundary, issue a `proof-m3-terrain` receipt or make SP638 a Spanish proof.
+
+After the verified build/Automation checkpoint, the profile-selected Spanish source TIFF and shared `Content/**` startup assets
+are materialized. Code-only Unreal Automation still runs before materialization.
+The asset registry and prototype constructors cannot treat LFS pointers as UE
+packages, even when the isolated target map uses engine-only shading. The source, topology, transforms and layers
+are validated by the producer/importer. Import logs and manifests are uploaded
+as `sa-calobra-import-<sha>-<attempt>`. Spanish source and generated assets are
+retained outside the mutable worktree before cleanup. The same job captures terrain-only overview/near-ground PNGs through the existing
+UE screenshot-task pattern, with an explicit neutral engine BasicShapeMaterial, no fog and no shadows.
+The initial 05a7e92 capture exposed the default checker material; its metadata
+claimed Lighting Only without reliable viewport evidence. Subsequent diagnostics
+record the actual neutral material method instead of claiming that view mode.
+A completed capture is not human visual acceptance or measured 1080p60 gameplay.
+After successful import/capture, owner-approved Italy retirement inventories and
+hash-checks exact named paths in old terrain worktrees/retention archives before
+deleting their payloads. Its receipt reports reclaimed bytes; shared LFS caches,
+Spanish assets, generic prototype assets and Git history remain untouched.
+Visual/performance and road/gameplay acceptance remain separate and pending
+until actually measured.
+The same checkpoint prepares a 300 m official Ma-2141 alignment away from the
+ambiguous loop. It retains original vertices, samples native height with an
+explicit bilinear analysis interpretation, and leaves width, surface/access,
+asphalt elevation, earthworks and route/physics admission unresolved. This is
+source-to-DTM analysis evidence, not a BOB or ride PASS.
+
+The same lane emits `ma2141-profile-candidate.json` before the unchanged contact
+trial. This offline inference fits the existing 601 by 25 native-facet samples
+and records full-width cut/fill and profile review triggers. `REVIEW_REQUIRED`
+is an expected diagnostic outcome, never road acceptance; malformed inputs or
+producer errors fail the job. It does not apply the candidate in Unreal. The
+four existing captures continue to show the raw native-contact trial, not the
+regularized candidate. The JSON is included in the existing artifact upload.
+
+#### Inspector-only delivery after the owner-approved split
+
+The owner approved separating the rejected CUT experiment on 2026-10-02.
+PR #319 delivers the native terrain, inferred smooth road preview and BOB's
+read-only terrain-fit inspection. Five captures prove two terrain views, one
+cyan Geometry Inspection view, and Lit road overview/rider views. The owner
+handoff remains Lit with a verified sun and sky. No CUT patch is prepared or
+applied by this lane. Earthworks, continuous support, road collision, ride and
+BOB learning admission are not delivered or claimed by this PR.
+
+The experimental CUT branch preserves its complete implementation and original
+no-new-fill / zero-remaining-cut gates. Run 37033558831 at fd234e46 rejected it:
+986 to 3 CUT samples, but 2046 to 13642 FILL samples. This is not a passing
+construction recipe. It must be reviewed independently before activation.
+
+PR #319 run 37007690564 remains explicit failed historical evidence: native
+preparation reached contact PASS, but capture stopped after two terrain images
+because the UE consumer could not resolve the repository-level smooth-ribbon
+module. It must not be reused as a visual, terrain-fit or earthworks PASS.
+
+Retire this PR-specific bootstrap after a trusted region proof lane replaces it.
+
 YACS uses staged validation so world/art iteration stays fast without weakening the merge gate.
+
+Sa Calobra terrain preparation is covered by synthetic native-GeoTIFF tests in
+the lightweight Python lane. Benchmark/profile/BOB policy/case-memory changes
+require render classification without invalidating the C++ compile fingerprint.
+The bounded manifest-driven import in Issue #318 still requires an exact-SHA
+editor build/import and separate visual/performance acceptance; hosted Python
+PASS does not close the terrain milestone. Existing broker `m3-terrain` remains
+the legacy SP638 execution lane until its runner migration is separately proven.
 
 ## Tier 0 — static / lightweight on every PR update
 
@@ -155,7 +227,16 @@ The normal code-only Unreal lane now separates binary work from runtime proof:
 The runner-local warm worktree is serialized by repository-wide Unreal CI
 concurrency. Every run resets tracked files to the requested SHA and removes all
 untracked/ignored residue except the explicit warm-state allow-list: project and
-plugin `Binaries`, `Intermediate`, and `Saved/BuildCache/UnrealCi`. The
+plugin `Binaries`, `Intermediate`, and `Saved/BuildCache/UnrealCi`. Diagnostic-only
+exceptions preserve the exact canonical `Saved/Logs/YetAnotherCyclingSim.log`
+and `Saved/RuntimeProof/CI/RegionTerrain/*/*.log` files. Windows may retain file
+locks even for exited Unreal processes; these logs are neither build cache nor
+reusable proof. The existing scoped process/lock guard still runs before cleanup.
+Other generated files, including old JSON/PNG receipts, remain disposable.
+Sa Calobra import/capture use per-run `-AbsLog` destinations and new evidence
+directories; upload is restricted to the exact run ID and attempt. A failed
+preparation cannot upload old-run diagnostic files under the new commit name.
+This preserves locked diagnostics without suppressing other cleanup failures. The
 code-only LFS contract and exact HEAD are then rechecked. Preserved outputs are
 only candidates for reuse; they are never trusted without fingerprint and
 environment checks. A compile-fingerprint mismatch is **not** cache corruption:
@@ -454,6 +535,35 @@ references reviewed for the adapter and derived-media commands:
 
 The exact UE runner proof, not the API reference alone, establishes compatibility.
 
+## Byte-pinned GIS responses on persistent Windows worktrees
+
+Raw external source response JSON uses path-scoped `-text` attributes so its
+SHA-256 describes original bytes on all operating systems. A persistent checkout
+can still contain CRLF bytes from an earlier revision. Before editor startup, the
+region bootstrap reads each allow-listed response directly from the exact HEAD
+Git blob, verifies its pinned SHA-256, and restores those verified bytes. It then
+checks the on-disk hash. A mismatch fails before expensive import/capture. This
+does not normalize or reinterpret external data to make a hash check pass.
+
+
+### Historical BOB native builder lesson
+
+The historical six-view lesson lane prepared the bounded experimental BOB recipe
+and executes it after the original four contact/terrain captures. Two additional
+fixed-camera before/after captures make six total. The recipe and native lesson
+receipt are uploaded with the exact current run. Trial status in the lesson
+receipt is independent of technical screenshot success; no production map is
+saved and no learning case is automatically admitted. WORLD_BUILDING_BIBLE owns
+the recipe limits, native API decision and remaining acceptance requirements.
+
+The first six-image archive exceeded the connector's 32 MiB local-transfer limit
+(33,963,108 bytes at run 36994612419). Lesson PNGs now live in a separate
+`bob-build-lesson-<sha>-<attempt>` artifact with their recipe and receipt;
+the main import artifact retains the other four PNGs and all JSON/log evidence.
+The small lesson receipt is also printed in the capture job log. Both artifacts
+remain scoped to the exact run/attempt; this packaging change does not alter
+image resolution, sampling or acceptance thresholds.
+
 ## Hosted test completeness and cheap-before-heavy ordering
 
 Issue #320 replaces the hand-maintained script-test subset with
@@ -550,8 +660,45 @@ traversal/package gates remain separate.
 The initial audit and retained workflow rationale are recorded in
 [`ci/TEST_AND_PROOF_AUDIT.md`](ci/TEST_AND_PROOF_AUDIT.md).
 
-The Sa Calobra terrain performance workflow is registered for explicit broker
-requests against an immutable implementation SHA. Registration alone is not
-measured terrain acceptance; the implementation commit must supply its native
-sampler and pass the existing exact-world validator. Materialized assets are
-retained before checkout and after execution in an isolated proof worktree.
+### PR #319 synchronization with hosted discovery
+
+The Sa Calobra branch retains native terrain dependencies before discovered
+script tests (NumPy, Rasterio, pyproj, Pillow and Shapely). Its terrain, road,
+BOB and capture modules are discovered automatically; the old explicit test
+list must not be restored alongside discovery. The height-patch unit contract
+uses Unreal centimeters: at Z scale 128, one R16 unit is one centimeter, not
+one meter. The importer and production patch decoder are unchanged.
+
+Synchronization does not admit the terrain or road. The independent Sa Calobra
+performance producer and exact-head runtime/visual proofs remain required
+before readiness and merge.
+
+The UE 5.8 runner rejected a direct call to
+`ULandscapePatchEditLayer::RequestLandscapeUpdate` with LNK2019 in run
+37025464029. The native CUT adapter now relies on the existing public
+`ALandscape::ForceLayersFullUpdate` and `PostEditChange` after patch binding,
+without that unexported helper. This preserves the full layer-update request;
+exact-head native build and post-cut measurements still establish acceptance.
+
+### Sa Calobra performance producer
+
+`sa-calobra-terrain-performance.yml` is the explicit trusted default-branch
+producer for `/gumball proof sa-calobra-terrain-performance`. Its exact-SHA
+checkout builds the editor, imports the pinned native terrain and executes
+`CyclingRuntime.SaCalobraTerrainPerformanceProof` in a real 1920x1080 standalone
+viewport. The active RHI must identify RTX 2070 SUPER; the map and 1024-component
+topology are checked in the running world. Three fixed overview/rider/slope
+cameras each settle for 5 s and sample for 8 s. VSync, FPS limiting and dynamic
+resolution are off; screen percentage is 100. Lighting is the neutral terrain
+baseline (sun 8, sky 0.8, no shadows), with no road or gameplay acceptance.
+
+The sampler uses the existing frame/thread counters and native GPU frame-time
+history. Raw CSV and p50/p95/p99 summaries are checked by the same world-proof
+validator; each view needs at least 120 frame and 120 positive GPU samples,
+p95 frame/GPU <= 16.667 ms, and at most 5% over-budget frames. Missing timing,
+wrong hardware/map/topology or inconsistent summary fails. Settings and prepared
+terrain hashes are included. Retention runs before checkout and after execution;
+no downloaded Unreal/LFS payload is pruned.
+
+The trusted workflow registration must reach main before requesting this proof
+for the implementation PR. Producer code is loaded from the explicit proof SHA.

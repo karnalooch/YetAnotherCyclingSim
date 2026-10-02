@@ -66,7 +66,27 @@ YACS uses a **real-world-first** world-building model:
 
 > **Verified or derived real-world data decides what exists and where it exists. Procedural systems decide mainly how that truth is represented efficiently and believably in Unreal.**
 
-This is not a promise of a literal centimetre-perfect digital twin. The target is a **procedural digital twin optimized for a game**: preserve geographically meaningful structure and measurable dimensions, then use deterministic procedural presentation for the visual detail that source data does not justify.
+This is not a promise of a literal centimetre-perfect scan. The target is a **source-faithful 1:1 geographic reconstruction optimized for a game**: preserve real-world metric scale, positions, route length and macro terrain geometry within the accuracy of admitted sources, then use deterministic procedural presentation only for detail that the source data does not justify.
+
+### 2.1.1 Geographic fidelity contract
+
+Owner decision, 2026-10-02: YACS must reconstruct the real place rather than create a Mallorca-inspired substitute.
+
+**Hard invariants:**
+
+- **1 real-world metre = 1 YACS world metre.** No geographic distance compression, route shortening or horizontal scaling for convenience.
+- Canonical road chainage, junctions, hairpins and spacing come from admitted real-world route geometry. A presentation system may not relocate the route to make terrain authoring easier.
+- Mountain ranges, valleys, ridges, passes and other macro terrain forms come from admitted DTM/DEM/LiDAR. They may be represented at different runtime detail levels, but their geographic position, scale and source-faithful macro shape may not be artistically moved or invented.
+- Road/Earthworks Authority adapts presentation terrain to the verified road where justified. It does not move the road to fit the Landscape.
+- Forest edges, fields, buildings, walls, infrastructure and other geographically meaningful features must come from hard facts or reproducible derived measurements when such sources are available. Procedural placement may not silently invent a different spatial layout.
+- PCG, PCGEx, Houdini, Landscape tools and future generators are **reconstruction executors**, not geographic authorities. They consume World Authority outputs and may vary asset identity or sub-source decorative detail only within explicit confidence bounds.
+- Lower-detail macro terrain, HLOD, World Partition cells, streaming proxies, caches and processing tiles are implementation choices. Their boundaries must not be visible as changes to geography and must not alter metric route distance.
+
+**Allowed presentation freedom** includes exact foliage mesh variants, bark/material variation, grass blades, small scatter rocks and other details that are not asserted as measured geographic facts. Where LiDAR or another source provides a measured object position, canopy structure, building footprint or similar evidence, presentation should preserve that evidence rather than replace it with unconstrained random placement.
+
+Source uncertainty remains explicit. If two sources disagree, YACS records and resolves the conflict according to evidence strength; it does not hide uncertainty by moving terrain or objects until the image looks plausible.
+
+A useful end-state fidelity proof is a distance-synchronized real-world/YACS ride comparison. At the same chainage, the rider should encounter the same durable geographic cues—road bends, ridges, valleys, forest boundaries, structures and other landmarks—within the resolution, acquisition date and accuracy limits of the admitted sources.
 
 #### Responsibility boundaries
 
@@ -126,6 +146,70 @@ Do not use these terms interchangeably:
 Photogrammetry can be a strong source for hero surfaces or visible structure, but it must not silently replace a validated ground DTM when the required truth is bare-earth elevation.
 
 #### Mallorca / Spain source stack
+
+The initial Sa Calobra import is a **bounded terrain-only diagnostic**, not
+full-area acceptance. `worldgen/terrain/benchmarks/sa_calobra/terrain_import_profile.json`
+pins the source LFS hash, EPSG:25831, 0.5 m spacing, NoData and source/baseline
+bounds. `scripts/assets/prepare_region_terrain.py` reads 4033 x 4033 native samples
+around Coll dels Reis without interpolation. Any masked or non-finite sample
+rejects the window before R16 generation; coastal or other missing-data regions
+require an explicit separate source/mask decision, never implicit median filling.
+The 2016 m vertex extent is intentionally smaller than the 8 km source area and
+does not reduce the final world or road-network coverage target.
+
+The current three-scope overview is rendered in
+[the Sa Calobra working-area map](assets/sa_calobra_working_aoi.webp): retained
+8 km source coverage, the bounded ~2 km Unreal import and the active 300 m
+Ma-2141 diagnostic. The image is explanatory only; manifests, source geometry
+and proof artifacts remain authoritative.
+
+Expansion must stay evidence-led. A west / north-west follow-up toward the Sa
+Calobra descent is the first candidate when the objective is additional
+Ma-2141 length and hairpins. When the objective is network richness, subdivide
+the retained source coverage into candidate windows and score source-derived
+road length, distinct road identities, junctions, curvature/hairpins, delivery
+priority, NoData/terrain validity and source confidence. If the retained 8 km
+source area cannot provide enough distinct-road coverage, admit a second source
+AOI instead of moving canonical roads or making one monolithic native-resolution
+8 km Landscape. Multi-window growth should use bounded regeneration and
+streaming/partitioning appropriate to the measured Unreal cost.
+
+The candidate first full-route reference now extends the geographic intent from
+the sea at Sa Calobra through Coll dels Reis and Ma-10 to the public forest
+estates of Menut/Binifaldó, ending at the confirmed paved limit near Coll des
+Pedregaret. Its evidence, visual references, acquisition checklist and
+REFERENCE_ONLY asset candidates live in
+[SA_CALOBRA_MENUT_ROUTE_REFERENCE.md](SA_CALOBRA_MENUT_ROUTE_REFERENCE.md).
+
+This reference does **not** authorize a fictional biome transition. Terrain,
+canopy, forest edge, buildings, walls, roads and infrastructure along that
+corridor must be reconstructed from admitted source coverage. Marketplace
+assets may supply presentation meshes/material variants only after provenance,
+license and performance review; they never decide where a tree, wall or cliff
+exists.
+
+The producer emits a hash-bearing `terrain-import.json` and little-endian R16.
+Raster pixel centres define the local origin: UE X increases east and UE Y
+increases south. The manifest retains the metric origin for later GIS consumers;
+it does not grant road/physics authority. Height encoding uses the exact inverse
+of Unreal's `(encoded - 32768) / 128` transform to preserve source elevations.
+
+`scripts/ue/Invoke-YacsRegionTerrainImport.ps1` requires a built editor at the
+specified SHA and creates `/Game/Worlds/SaCalobra/L_SaCalobraTerrainBaseline`.
+The existing Landscape commandlet accepts this explicitly admitted manifest
+through `-TerrainManifest=`; the legacy Passo Giau invocation remains historical.
+The new path preserves `Base_DTM` and `Road_Earthworks`, admits no road yet and
+refuses existing evidence/map targets rather than deleting payloads. Technical
+import PASS is separate from human visual and performance acceptance. Exact-SHA runtime evidence is now available: run `36967539981` imported all
+16,265,089 native samples with reader parity PASS, 1024 Landscape components and
+the two named edit layers. Run `36968109437` repeated import and captured two
+3840 x 2160 neutral-engine-material views. Those captures prove execution, not
+human visual or performance acceptance; both remain PENDING. Neither run
+authored a road. The latter run also produced the bounded 300 m official Ma-2141
+alignment diagnostic; its native-DTM Z is not asphalt-height authority.
+
+Terrain benchmark, profile, BOB policy and verified-case changes require render
+classification. They do not by themselves invalidate compiled C++ binaries.
 
 For a Mallorca world slice, the preferred candidate stack is:
 
@@ -988,6 +1072,71 @@ Learning is review-gated and deterministic:
 6. accepted cases enter a versioned repository ledger through normal review;
 7. threshold/model calibration happens offline and produces a reviewed candidate
    config change; runtime/editor generation never rewrites its own policy.
+
+Contact-trial diagnosis is executable in BOB's `review_pavement_contact_trial`.
+It reads both triangle-interior R16 failures and native Landscape trace evidence.
+Passing vertex samples cannot cancel failed triangle interiors. Missing, invalid
+or empty sample evidence stays pending. The review lists source reconciliation,
+profile regularization, bounded native `Road_Earthworks` and escalation checks;
+it does not execute an unvalidated repair or grant road/learning admission.
+
+Owner direction, 2026-10-02: operate BOB as an **inspector now**; autonomous
+construction and learning are later work. The existing profile assessment calls
+`scripts/worldgen/bob_profile_inspector.py` and embeds `bob_inspection` in
+`ma2141-profile-candidate.json`, already uploaded by the native terrain CI.
+This is a read-only extension of the admitted offline assessment and BOB policy,
+not another geometry solver, dependency, terrain writer or PCGEx replacement.
+
+The inspector validates declared hash syntax and the source-XY preservation
+flag, not their independent truth. Source identity/XY verification remains an
+explicit unverified check of this inspector; producer admission is separate.
+It requires finite full-width samples and the complete 0–300 m domain at 0.5 m
+spacing (601 sections), including both endpoints. It checks every transverse sample against the candidate-plane contract and
+checks the declared center against the plane-derived center (1 micrometre
+consistency tolerance, not source accuracy). A nonplanar section is unsupported
+evidence and cannot claim inspection completion. It recomputes cut/fill sample
+differences, transverse slope and plane-derived longitudinal grade instead of
+trusting summary metrics or a supplied list of flagged stations. Consecutive
+exceedances become findings with start/end chainage, peak location, peak value,
+units, sample count and the actual experimental review trigger. Disjoint ranges
+stay separate; grade findings cover both ends of their measured segment.
+Causes remain `UNRESOLVED`: a height discrepancy cannot identify a wall, an
+incorrect footprint or an epoch mismatch by itself.
+
+`INSPECTION_INCOMPLETE` means required evidence is invalid/missing;
+`REVIEW_REQUIRED` means measured symptoms exceed experimental triggers;
+`REVIEW_PENDING` means none exceed them. None means road acceptance.
+`inspection_complete` refers only to these numeric profile checks. Geographic
+edges, curve/edge smoothness, retaining structures, competing-branch clearance,
+continuous contact, native contact of the regularized candidate, collision,
+rider visuals, bounded ride and performance remain explicitly unverified.
+Passing contact of the raw DTM-conforming preview does not prove contact of the
+regularized profile. Inspector source hash and candidate provenance are retained.
+
+Every inspection keeps authoring permission, repair execution, road admission
+and learning eligibility false. It neither calls a construction strategy nor
+changes terrain or verified-case memory. Its work list directs source/structure
+review and plan/rider inspection; it does not prescribe an unmeasured wall or
+ordinary shoulder fill. On the revision-4 benchmark the first local inspection
+finds 22 ranges: 3 cut differences, 15 fill differences and 4 crossfall ranges;
+no grade exceedance. The largest fill difference is 2.477 m at 150.5 m and
+largest crossfall is 14.58% at 142 m. These are diagnostics, not construction
+measurements or acceptance thresholds.
+
+Keep rejected cases as diagnostic evidence, separate from verified-case memory.
+The first Spanish example is
+[`ma2141_contact_failure_5826507.json`](../worldgen/terrain/benchmarks/sa_calobra/ma2141_contact_failure_5826507.json).
+Its 28,800 R16 triangle centroids contain 456 unsupported and 712 penetrating
+samples; surface-minus-DTM ranges from -1.124 m to +1.506 m. These are measured
+symptoms, not proven root causes or accepted earthwork parameters. The native
+contact test did not run because the capture entrypoint lacked `__file__`.
+That tooling failure is separate from the geometric failure. The capture fix
+resolves scripts through Unreal's project directory; subsequent exact-SHA proof
+must confirm it. Never turn a failed render into evidence that geometry passed.
+
+Update this methodology and the linked work item with each observed failure,
+repair attempt and proof result. Record what remains unknown. The successful
+repair recipe may enter reviewed case memory only after its own acceptance.
 
 Do not auto-promote failed, merely green, or unreviewed visual evidence into the
 learning memory. Do not infer successful terrain behavior from a single hairpin.
@@ -1904,4 +2053,597 @@ If those answers are clear, world building is usually straightforward.
 
 ## Terrain recovery asset retention
 
+The official CartoCiudad Ma-2141 source review is pinned under the Sa Calobra
+benchmark. Keep its six multipart lines and source SHA intact. One closed part
+meets two other parts at identical XY; road elevation separation is unknown from
+this 2D service. Do not turn that graph into a flattened DTM-carved route or
+silently discard its loop. A bounded first corridor can be selected away from
+that ambiguity; it still needs native-DTM alignment, width/access/surface review
+and independent Road Physics Profile admission.
+
+Owner update, 2026-10-02: obsolete Italian LFS payloads may now be retired after
+exact-path/hash inventory and dependency review. This supersedes the earlier
+retention directive for those obsolete Italy assets only. Spanish terrain inputs,
+generated Spanish maps and shared/unknown assets remain protected. Removing
+tracked pointers is not proof that runner disk bytes were reclaimed; record both
+operations separately. Do not rewrite history or blanket-prune shared LFS storage.
+
+The PR #319 native-import CI checkpoint preserves the Spanish source/map under
+`_yacs-sa-calobra-assets/<run>-<attempt>/`, with verified size/hash receipts,
+before cleanup. It is a terrain-only diagnostic, not road or visual acceptance.
+
 Owner directive of 2026-10-01 (Issue #308): rebuilding the DTM baseline must preserve downloaded LFS payloads on the runner disk. The trusted terrain workflow uses `_terrain-recovery-worktree`; the earlier `_embark-terrain-worktree` is left untouched. Before checkout and again before final reset/clean, `scripts/ci/retain_unreal_assets.py` moves materialized `.umap`/`.uasset` files into the sibling `_yacs-retained-lfs/<run>-<attempt>/` archive and records verified SHA-256/byte counts in `retention.json`. Git LFS pointers remain valid in the code-only lane, and its local `.git/lfs/objects` cache is never pruned. Archive collisions, unsafe paths or failed verification stop cleanup. Retention is a byte-preservation prerequisite, not acceptance of the current terrain geometry.
+
+The additional IGN IGR-RT source review for the bounded Ma-2141 diagnostic
+provides third coordinates and source claims of two lanes / paved surface.
+Its `fictitious=true` flag, vertical datum and feature-specific accuracy are
+unresolved. The producer compares it numerically with native DTM and preserves
+its source hash; it does not use it to carve terrain, establish asphalt heights
+or authorize physics. Matching CartoCiudad XY is not independent validation.
+
+
+### Sa Calobra owner review and first pavement contact trial
+
+On 2026-10-02 the owner accepted the appearance of the bounded terrain-only
+views from PR #319 commit `f49d877656f452a2d36de1c0acc33dc78fa39806`,
+CI run 36970754781, artifact 11211213434. This closes that terrain visual review
+only; road, earthworks, collision, ride and performance remain separate gates.
+Preserve the accepted `Base_DTM`. Finished at-grade pavement must be supported by
+Landscape across its full width, including both edges and hairpins. Any necessary
+local cuts/fills belong to `Road_Earthworks`; no arbitrary road lift may hide gaps.
+
+The first Ma-2141 pavement contact trial reuses the asymmetric corridor kernel
+and UE Geometry Script consumer. Thirteen approximate edge observations on a
+pinned PNOA image provide an explicitly **inferred preview**, not surveyed widths.
+The 0.125 m WMS request pixel spacing is not native imagery GSD. Acquisition date,
+shadowed edges, access and final surface/profile admission remain unresolved.
+The GIS line stays fixed; distinct left/right offsets avoid assuming it is the
+pavement midpoint. Do not promote these observations into geographic width truth.
+
+The trial samples native DTM across 25 transverse points at 0.5 m longitudinal
+spacing. It is deliberately an unregularized contact diagnostic, not a final
+asphalt profile. The closed 80 mm nominal visual slab is embedded 40 mm in the
+sampled ground; this construction parameter is not a measured pavement thickness.
+It is not an adaptive clearance offset. Source geometry is never raised in
+response to failed support tests. Triangle-centroid R16 tests and native Landscape
+traces report penetration/support failures separately from successful capture.
+Native vertex traces are not proof of continuous triangle contact or road collision.
+
+Capture produces the two original terrain-only views first, then spawns a transient
+road trial and produces overview/rider images. No map, `Base_DTM` or
+`Road_Earthworks` is saved or modified by this trial. Mesh JSON and contact receipts
+are reproducible evidence; they do not make a playable road. Failed contact must
+be resolved before carving, final road admission or BOB verified-case learning.
+
+
+#### Contact-trial follow-up: separate source and tooling defects
+
+Run 36974574263 at `41d90df294480a5b69076c75dac1d967ad5065b9`
+executed all 15,025 native Landscape traces without misses. It measured 232
+unsupported and 203 penetrating vertex samples (-0.884 m to +1.033 m).
+BOB emitted `REJECT_CONTACT`; no verified learning case was created. The
+`__file__` issue was resolved, but the third capture reported no usable PNG.
+The capture transition is now fenced against Slate re-entry, and task completion
+must also await the actual PNG under the existing bounded timeout. The fix was subsequently verified by run 36975493667 at
+`65cddce9565c102d6c18c548b620f329f27027b1`: all four PNGs were produced.
+This verifies capture tooling, not road geometry.
+
+Magnified review of the pinned PNOA transects identified incorrect initial edge
+interpretations near stations 125 m and 175 m: their inferred footprints extended
+into roadside ground. Preview profile revision 2 records the corrected readings
+and their history. The 13 observations/interpolation remain coarse and unadmitted;
+this is not an assertion of survey accuracy. The transferable BOB lesson is to
+recheck the road footprint before compensating for its error with earthworks.
+Do not lower/raise accepted terrain to fit a mistaken pavement boundary.
+
+
+#### Reference acquisition and latest contact evidence (2026-10-02)
+
+Run [36975493667](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/36975493667)
+completed successfully at `65cddce9565c102d6c18c548b620f329f27027b1`.
+Artifact 11212644839 contains the four terrain/road views and contact receipts.
+All 15,025 native traces hit Landscape, but 179 samples were floating and 181
+penetrating (surface-minus-Landscape range -0.515 to +0.303 m).
+R16 triangle-centroid checks independently found 299 unsupported and 581
+penetrating samples, range -0.425 to +0.447 m. BOB remains `REJECT_CONTACT`;
+continuous contact and road collision are unproven, final road is not admitted,
+and no verified learning case is eligible. Neither terrain layer was modified.
+
+The owner supplied the [CNIG catalogue](https://centrodedescargas.cnig.es/CentroDescargas/catalogo)
+and authorized Street View reference inspection. Direct catalogue retrieval
+returned HTTP 502 in this session; official IGN product/status pages were readable.
+Use these sources in this order for the bounded Ma-2141 repair:
+
+- [PNOA LiDAR project status](https://pnoa.ign.es/web/portal/pnoa-lidar/tercera-cobertura):
+  the September 2026 table lists Illes Balears flight March–May 2024, NPC03
+  published and MDT/MDS v1 published. This is regional availability, not a
+  downloaded or verified tile for our clip.
+- [LiDAR products](https://pnoa.ign.es/pnoa-lidar/productos-a-descarga):
+  third-coverage LAZ is distributed in 1 km blocks with nominal 5 points/m².
+  Inspect classified points around both pavement edges and the worst contact
+  failures before deciding whether the cause is footprint error, interpolation,
+  roadside vegetation, or a real retaining structure. Check the downloaded
+  tile's classification level, CRS, vertical reference, flight date and hash.
+- [PNOA imagery](https://centrodedescargas.cnig.es/CentroDescargas/fotos-imagenes-aereas):
+  seek dated rigorous orthophotos to refine independent left/right boundaries.
+  Expedited LiDAR orthophotos can assist interpretation but are less precise;
+  request pixel spacing is never native GSD or an accuracy guarantee.
+- MDS/DSM includes objects and vegetation. Use it as a comparison layer, not
+  a replacement for the accepted ground model or an automatic asphalt height.
+
+Street View was attempted near WGS84 39.83040946, 2.81367791. Google returned
+an unusual-traffic reCAPTCHA before any panorama loaded. **No Street View
+observation, acquisition date, wall geometry or pavement measurement was obtained.**
+When accessible, record panorama location/date and qualitative shoulder,
+drainage and retaining-wall observations separately from surveyed evidence.
+Do not infer metric dimensions from perspective imagery alone.
+
+BOB's repair order remains source/footprint review, bounded road-profile work,
+local `Road_Earthworks` where justified, then renewed full-width and interior
+contact checks. Preserve `Base_DTM`. A promising catalogue entry or photograph
+cannot convert this rejected diagnostic into an accepted road.
+
+
+#### Street View inspection and identified CNIG tile (2026-10-02 follow-up)
+
+The owner made the panorama available after the earlier access block.
+The same session then successfully opened the CNIG catalogue in the browser.
+Street View was visually inspected in three directions at 39.8304352, 2.8136241,
+panorama `ISNWmsDuk5pvjtG_JAUMtQ`, labelled **July 2026**.
+[Inspected panorama](https://www.google.com/maps/@39.8304352,2.8136241,3a,90y,124.22h,90t/data=!3m7!1e1!3m5!1sISNWmsDuk5pvjtG_JAUMtQ!2e0!6shttps:%2F%2Fstreetviewpixels-pa.googleapis.com%2Fv1%2Fthumbnail%3Fcb_client%3Dmaps_sv.tactile%26w%3D900%26h%3D600%26pitch%3D0%26panoid%3DISNWmsDuk5pvjtG_JAUMtQ%26yaw%3D124.21905563141159!7i16384!8i8192?entry=ttu&g_ep=EgoyMDI2MDkyOS4wIKXMDSoASAFQAw%3D%3D).
+
+Observed qualitatively: a rock/gravel/vegetation island between the two hairpin
+arms; a narrow roadside strip outside the painted edge line; an outer guardrail
+beside a steep drop; exposed rock cuts and a masonry wall along the higher slope.
+The painted line is not itself the asphalt boundary. The wall's exact function,
+dimensions and extent are not established from these views. No panorama pixels
+were imported as project assets, and no metric road profile was extracted.
+
+Engineering implication for BOB: classify the two sides and the space between
+hairpin arms before earthworks. Preserve the island; do not merge competing
+branch falloffs across it. Separate an ordinary shoulder transition from a rock
+cut or retaining-structure candidate. Confirm geometry with orthophoto/LiDAR
+before choosing local cut-fill or explicit retaining geometry. This instruction
+now appears in executable contact-review next actions; it is not an automatic
+wall detector or a completed geometric repair.
+
+The CNIG catalogue search `484-4409` returned a Balearic H31 tile and an
+unrelated H30 mainland tile. The verified Balearic record is
+[CNIG file 13021922](https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13021922):
+`PNOA_2024_BAL_484-4409_H31_NPC03.LAZ`, year 2024, nominal 5 points/m²,
+36.74 MB, LAZ, advanced classification NPC03. The product description specifies
+ETRS89/UTM, orthometric heights and 1 km blocks. The listing uses hyphens while
+the detail record uses underscores; retain the actual downloaded filename later.
+
+Download was attempted but browser URL policy blocked a non-HTTP(S) action.
+No LAZ bytes, checksum, header bounds or class distribution were obtained.
+Tile identity is verified in the catalogue; exact clip coverage and point quality
+remain pending file inspection. Do not bypass the browser policy. Continue with
+the already pinned official orthophoto and native DTM while acquisition is blocked.
+Attribution for any later derived LiDAR product: **Obra derivada de
+LiDAR-PNOA-cob3 2022-2025 CC-BY 4.0 scne.es**.
+
+The 2024 LiDAR and July 2026 panorama are different acquisition epochs.
+Their apparent agreement must not be assumed. These observations do not change
+the rejected native-contact result or admit a BOB verified learning case.
+
+
+#### Apex footprint and native interpolation isolation
+
+Preview revision 3 adds eight 5 m transects around stations 130–170 m, bringing
+manual observations to 21. They refine the footprint from the same pinned PNOA
+image; they do not establish surveyed boundaries. Native capture now compares
+both possible R16 quad diagonals against actual Landscape traces and records the
+worst vertex locations. This isolates bilinear sampling error from footprint
+error before changing road geometry. No diagonal is admitted until native proof
+identifies it; terrain layers, road admission and BOB verified memory are unchanged.
+
+
+#### Native-facet pavement contact repair candidate
+
+Run 36978626576, commit `b20463aa52f5f999f6eab9e95848ea4b8ec36295`,
+artifact 11214277220 measured all 15,025 native samples without misses.
+R16 quad diagonal A–D matched Landscape with maximum error 0.001347462 m
+(mean 0.000418253 m); B–C reached 0.533299793 m. The bilinear road still failed
+contact (176 floating, 154 penetrating vertices). This identifies a concrete
+interpolation mismatch in the pavement producer, independently of inferred widths.
+
+The bounded repair candidate retains the established corridor kernel's XY
+footprint and clips its interior against the measured native 0.5 m A–D facets.
+It reuses already-pinned Shapely 2.1 constrained triangulation in offline
+preparation and the existing UE Geometry Script consumer; no dependency, global
+terrain generator, runtime subsystem or alternative terrain skin is introduced.
+A fixed 80 mm nominal slab remains embedded by 40 mm. No adaptive lift, terrain
+smoothing, source XY relocation or edit-layer change occurs.
+
+Coverage checks reject invalid polygons and lost/duplicated area. Tests cover a
+nonplanar cell, both diagonal hypotheses, closed slab winding and a concave
+footprint with an empty hairpin island. Native capture now traces every top
+vertex and every triangle centroid before spawning pavement. Model contact PASS
+does not imply native contact PASS, continuous support, final asphalt quality,
+collision, ride or performance. Raw terrain roughness is intentionally retained;
+profile regularization and justified local earthworks remain later work.
+The repair is unverified in UE until its own immutable run completes. BOB verified
+memory remains unchanged; this is a candidate, not a learned successful solution.
+
+
+#### Verified sampled-contact repair — 10ad3c7
+
+[Full CI 36979234157](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/36979234157)
+succeeded at `10ad3c78584c9ae28b658a8302de3d96585151ba`, artifact
+11214422563. The native-facet repair produced all four captures and passed
+27,552 native traces: 10,412 top vertices and 17,140 triangle centroids, zero
+misses, zero floating and zero penetrating samples. Surface-minus-Landscape
+ranged from 0.039994717 to 0.041401386 m, inside the unchanged nominal 80 mm
+slab. All R16 centroid tests also passed. Base_DTM and Road_Earthworks were
+unmodified. The closed presentation mesh contains 20,824 vertices / 41,644 triangles.
+
+The immutable [native contact receipt](../worldgen/terrain/benchmarks/sa_calobra/ma2141_native_contact_10ad3c7.json)
+is preserved with its original exact SHA; SHA-256 of the original artifact receipt:
+`01386a0b63da4b98cc6153586420c88f271d62d7aa60a722a689681fab693768`.
+It supersedes the preceding candidate's pending native-contact status only.
+BOB correctly changes from REJECT_CONTACT to REVIEW_PENDING. Its
+geometry_repair_executed=false means the review function itself did not author
+the repair; the pavement producer did.
+
+AI inspection of both new road images shows removal of the prior visible
+pavement punctures in the rider view, but the surface retains raw terrain
+roughness and is not accepted as final asphalt. This is not owner visual approval.
+Continuous contact, geographic widths, saved road collision, ride and performance
+remain unproven. No verified learning case is added. The next geometric task is a
+bounded road profile and justified local Road_Earthworks, retaining this native
+facet/contact comparison as a regression check.
+
+#### Profile assessment before earthworks
+
+The next bounded experiment is implemented by
+`scripts/assets/prepare_ma2141_profile.py`, using the same immutable source XY,
+inferred asymmetric edges, existing corridor kernel and verified A-D native
+heightfield facets. It measures a candidate; it does not author terrain.
+
+Tools-first review: retain the admitted offline producer -> derived data ->
+Unreal consumer boundary. The existing native `EditorApplySpline` path remains
+the first earthworks option to evaluate. It cannot determine whether an inferred
+footprint or proposed profile is geographically sound. NumPy least-squares
+assessment fills that narrow pre-authoring measurement gap; it adds no
+dependency, runtime solver, terrain skin or alternative earthworks writer.
+No Embark road-fitting algorithm is claimed or copied.
+
+At 0.5 m chainage spacing, fit a transverse plane to the central half of the
+inferred pavement width, then locally regularize its center elevation and
+crossfall over a 5 m radius in chainage. A weighted linear fit preserves a
+constant grade at the ends. Spatially adjacent but chainage-distant hairpin arms
+never enter the same fit. This does not infer crown, survey-quality camber or
+drainage. Full-width sample differences, including both edges excluded from the
+fit, report proposed cut/fill without clamping heights or shrinking widths.
+
+Review triggers (0.5 m adjustment, 25% longitudinal grade, 12% crossfall) are
+explicit experimental triage values, not accepted engineering limits. Every
+candidate remains `REVIEW_REQUIRED`, including one below all triggers. No
+result is an earthworks command, physics profile, road admission or learning
+case. A smoother profile cannot excuse a wrong footprint or retaining structure.
+
+The first local candidate on the pinned native source proposed up to 0.923 m
+cut and 3.633 m fill, maximum absolute grade 14.10% and crossfall 28.06%.
+402 of 601 stations triggered review. Centerline second-difference RMS dropped
+from 0.027246 m to 0.001155 m, but that numerical improvement is **not** a road
+quality PASS. The candidate must not be applied to Landscape in this state.
+Largest fill samples occur near stations 290.5 m, 60.5 m and 180.5 m. These are
+proposed profile-minus-DTM differences, not observed construction heights.
+
+Street View was inspected again on 2026-10-02. The July 2026 panorama
+`ISNWmsDuk5pvjtG_JAUMtQ` confirms the separate rock/gravel island. A second July
+2026 panorama, `CC1kFdwcYsGsX58vGXxG5Q`, at 39.8309598, 2.8142707 near the
+largest proposed fill, shows a stone parapet beside a steep drop, an adjoining
+guardrail and exposed rock on the uphill side. This is qualitative reference,
+not a measurement of the wall foundation, height or exact pavement edge. The
+pinned PNOA overlay places the suspect transect beside that outside edge;
+footprint/epoch/DTM representation and structural support remain to be resolved.
+Do not turn the discrepancy into a several-metre ordinary shoulder fill.
+
+The existing CI emits the assessment JSON with exact commit and input hashes.
+Its four UE images still depict the unchanged native-contact trial. No
+regularized-candidate render or `Road_Earthworks` write is claimed. Review the
+flagged transects and source/structure evidence before a bounded native authoring
+trial; preserve `Base_DTM`, the hairpin island and the established contact proof.
+
+#### Three-window footprint review — revision 4
+
+After access resumed, the 2026-10-02 Street View review inspected July 2026
+panoramas `4Isp6L1Nh0cNZRdy5VN0yg` (39.8299339, 2.8142938),
+`N2iYXMWUwncrESOlsCmIuw` (39.8302633, 2.8139155), and
+`CC1kFdwcYsGsX58vGXxG5Q` (39.8309598, 2.8142707), near requested stations
+60.5, 180.5 and 290.5 m respectively. They show stone parapets beside drops,
+roadside gravel, and uphill rock/vegetation. Camera positions are nearby, not
+exact transects. These observations do not measure wall heights or boundaries.
+
+Revision 4 of `ma2141_pavement_preview_profile.json` reinterprets both pavement
+edges independently on the pinned PNOA image at 5 m spacing in 50–75, 175–200
+and 275–300 m windows. A station/lateral image strip uses the existing corridor
+transects and the pinned WMS extent; UE signed offsets convert to EPSG left
+normal as `[min,max]=[-UEmax,-UEmin]`. The previous footprint included roadside
+areas at the suspect sections. Corrections shift, narrow or widen the footprint
+according to visible asphalt; they are not fitted to a cut/fill threshold.
+There are now 33 observations. Canonical source XY, fitting method and review
+triggers remain unchanged. Shadows, imagery epoch and the 1 m unmeasured edge
+review allowance remain unresolved; this is still `INFERRED_PREVIEW_ONLY`.
+
+Local assessment of revision 4 reports:
+
+| Requested station | Previous proposed fill | Revised proposed fill |
+| --- | ---: | ---: |
+| 60.5 m | 3.239 m | 0.646 m |
+| 180.5 m | 3.132 m | 1.596 m |
+| 290.5 m | 3.633 m | 0.148 m |
+
+Across all 601 sections, maximum proposed cut is 0.923 m, fill 2.477 m,
+p95 absolute adjustment 0.265 m, RMS adjustment 0.153 m, maximum absolute
+crossfall 14.58% and grade 14.10%; 276 stations still trigger review.
+The largest fill is now at 150.5 m near the apex. These are model differences,
+not observed construction dimensions. The remaining apex and 180.5 m
+structure/footprint/DTM discrepancy prevents earthworks authorization. Do not
+turn a retaining edge into ordinary shoulder fill or tune widths until it passes.
+
+The revision changes only inferred preview edges and their review record.
+`Base_DTM`, `Road_Earthworks`, source alignment, physics authority and BOB
+verified memory remain unchanged. A new native contact/capture receipt is
+required for this footprint; earlier 27,552-sample receipts describe revision 3.
+Even a renewed contact PASS will not admit final asphalt, continuous support,
+collision, ride or performance. Next review: the apex and retaining-side residual
+at 180.5 m, including source epoch and native DTM representation.
+
+
+#### Inspector runner recovery — isolated diagnostic logs
+
+The first BOB inspector CI (`9d296f9`, run 36988818574) passed Python checks
+but both native attempts failed before execution: Windows retained locks on
+the canonical UE log and an older run's map-preparation stdout/stderr. No
+native inspection result is claimed for those attempts. The recovery preserves
+only canonical/RegionTerrain diagnostic logs during cleanup, uses per-run engine
+logs for import/capture, and restricts artifact upload to the current run/attempt.
+Old JSON/PNG evidence is not preserved or reused as current proof. Process
+scoping, exact SHA, source/asset retention and authoring gates remain in force.
+See [CI validation tiers](CI_VALIDATION_TIERS.md) for the diagnostic exceptions.
+
+
+#### BOB inspector verification and policy correction
+
+The first inspector audit reproduced four false-completion cases: truncated
+endpoint coverage, a transverse interior bump with flat endpoints, a declared
+center inconsistent with the sampled surface, and candidate-controlled raised
+review triggers. All could yield REVIEW_PENDING with inspection_complete=true,
+although authoring/road/learning permission remained false.
+
+Inspector schema 2 (`ma2141-profile-inspection-v2`) closes these gaps. It owns
+the versioned 0.5 m / 300 m sampling contract and 0.5 m difference, 25% grade,
+12% crossfall review triggers, shared with the profile producer. Conflicting
+parameters, missing domain endpoints, nonplanar cross sections or inconsistent
+centers yield INSPECTION_INCOMPLETE. All 25 points must agree with the candidate
+plane within 1e-6 m; grade uses its independently derived intercept. This tests
+internal consistency, not survey accuracy, road crown or physical acceptance.
+Malformed top-level input and numeric overflow also fail closed. Hash syntax
+checks are explicitly labelled DECLARED_HASH_FORMAT_ONLY, not file verification.
+
+Regression tests reproduce all four cases. Reinspection of the immutable
+`ee9704e` native artifact preserves its 22 finding kinds and chainage ranges.
+The fixes strengthen evidence validation; they do not correct road geometry,
+verify curve smoothness, authorize earthworks or add a learned case.
+
+
+#### First experimental BOB builder lesson — owner authorized
+
+Owner direction, 2026-10-02: begin teaching construction on the present road,
+then assign a subsequent section. The first recipe is deliberately bounded to
+Ma-2141 70–90 m, where revision-4 full-width profile differences are at most
+0.261 m. This does not authorize the unresolved apex/retaining-side cases.
+The planner rejects incomplete profile evidence, differences above 0.5 m,
+crossfall above 8%, widths outside 4–6 m and inconsistent metric XY transects.
+These are experimental recipe limits, not geographic or engineering admission.
+
+Tools-first decision: invoke the existing native Landscape `editor_apply_spline`
+path in the sole named Road_Earthworks layer. No new terrain solver or dependency.
+The lesson uses a pavement-midline presentation spline derived from unchanged
+source transects; canonical route XY is not moved. Width is the maximum half
+width plus 0.25 m, side falloff 1 m, endpoint roll is interpolated, and the native
+spline has 256 subdivisions. Their representational error is measured rather
+than presumed correct. The map is never saved: all construction stays in the
+diagnostic editor session, preserving the saved baseline for the next run.
+
+After native deformation, the existing native-facet mesh kernel's precomputed
+footprint is sampled against Landscape and the existing Geometry Script consumer
+builds its closed nominal 80 mm pavement slab. Before/after full-width traces
+measure target-profile RMS, guard traces outside the section's expanded bounds
+measure unintended changes, and top vertices/triangle centroids test contact.
+Technical trial PASS requires improved RMS at most 0.08 m, contact within the
+nominal slab, guard change at most 2 mm, and unchanged saved map hash. These
+sampled checks do not prove continuous support or complete deformation bounds.
+Base_DTM ownership is checked semantically; no per-layer pixel export is claimed.
+
+CI retains the original four baseline/contact views, then captures the lesson
+before and after from the same camera. The lesson receipt is
+`bob-build-lesson-proof.json`; the plan is `bob-build-lesson.json`. Capture PASS
+means images were produced; a REJECT_LESSON receipt remains a failed experiment.
+`TECHNICAL_TRIAL_PASS` is not a learned recipe or production road admission.
+Human visual, geographic widths, collision, ride and performance remain pending.
+A verified-case ledger entry requires the established acceptance gates.
+
+First native execution (`efad49a`, CI 36993912238) produced six captures but
+correctly returned REJECT_LESSON: immediate post-spline collision traces were
+identical to the pre-deformation samples (33.42 mm RMS, zero measured change).
+The later render visibly differed, identifying an asynchronous-update risk;
+that receipt is not valid evidence of final contact. The consumer now yields
+to editor ticks, requires a measured terrain change and three stable collision
+polls (0.1 mm tolerance, at least 3 s elapsed, 20 s deadline) before constructing
+and measuring pavement. Timeout rejects the lesson. A capture-transition
+regression prevents sampling/screenshot completion during this yield. The
+lesson camera is overhead to avoid the foreground slope occluding the trial.
+
+Settled native evidence at `6810589` (run 36995294129, lesson artifact
+11221536650) exposed a separate layer-semantics defect: profile RMS 78.143 m
+and maximum measured deformation 81.289 m, despite a sub-0.5 m planned change.
+The default `ULandscapeEditLayer` created by the importer is additive; absolute
+spline elevations must not be sent to that layer. The trial was rejected and
+the map was not saved. Sa Calobra's empty Road_Earthworks is now created as
+Epic's native `ULandscapeEditLayerSplines`, whose purpose is non-destructive
+spline deformation. The consumer requires this exact native layer type and
+also rejects measured changes above 0.5 m. Base_DTM import data, source route,
+legacy Italy layer behavior and all earlier thresholds remain unchanged.
+This correction requires new native proof; it is not a verified learning case.
+API reference: [Epic native spline edit layer](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Landscape/ULandscapeEditLayerSplines).
+
+#### Smooth asphalt ribbon for owner-visible road
+
+Owner review of PR #319 rejected the raw native-facet pavement as a visible road.
+That mesh deliberately follows every 0.5 m Landscape triangle and is useful for
+contact evidence, but it produces a jagged surface that is not an acceptable
+asphalt presentation.
+
+The active preview therefore separates **contact evidence** from **visible
+asphalt**. Native-facet vertices/centroids remain the input to BOB contact review
+and are not rendered. The owner-visible transient road is a separate closed
+ribbon built from the already inspected `ma2141-profile-candidate.json`:
+source-preserving `xy_local_m` plus regularized `candidate_ground_m` at the
+existing 0.5 m stations. The ribbon fails closed on folded/inverted XY topology.
+It does not change `Base_DTM`, `Road_Earthworks`, route authority or physics,
+and remains an unadmitted presentation preview.
+
+##### Road-to-terrain fit contract
+
+The smooth ribbon must **not** be bent back onto every native DTM triangle merely
+to make contact tests pass. The ribbon is the current continuous road-design
+presentation candidate; the native-facet mesh is invisible measurement evidence.
+Neither is canonical road physics or final geographic-width authority yet.
+
+For every inspected station and transverse sample, measure the signed vertical
+residual:
+
+`road_surface_z - Landscape_z`
+
+and preserve that residual as evidence. During the current preview phase the
+existing nominal 80 mm slab band is only a diagnostic contact tolerance, not an
+engineering construction limit:
+
+- residual within the supported slab band -> `CONTACT_OK`;
+- road surface above supported terrain -> `FILL_REQUIRED`;
+- terrain intruding above the road surface -> `CUT_REQUIRED`;
+- large, abrupt or context-sensitive residual near drops, retaining edges,
+  stacked branches or structures -> `STRUCTURE_REVIEW`.
+
+Geometry review must include the dedicated
+`road-geometry-inspection` capture. The capture uses Unreal Engine's Geometry
+Inspection **Clay** view mode (`VMI_CLAY`). The transient DynamicMesh road also
+enables its **explicit rendered wireframe pass** with cyan
+`wireframe_color=(0,1,1,1)`. This distinction is deliberate: editor selection
+outlines are UI overlays and do not reliably survive a high-resolution camera
+capture, while `UBaseDynamicMeshComponent` wireframe rendering is part of the
+rendered geometry and therefore remains visible in proof evidence. Mesh-edge and
+selection flags stay enabled as interactive aids, but the cyan explicit road
+wireframe is the fail-closed visual contract.
+
+This is technical evidence, not an aesthetic screenshot: its purpose is to
+expose folds, terrain penetration, unsupported road spans and abrupt
+road/Landscape disagreement that can be difficult to read from the normal Lit
+rider view. A road-to-terrain review is incomplete when this capture is absent,
+even if the normal overview and rider image look acceptable.
+
+The implemented inspector is `bob-road-terrain-fit-v1`. It samples every
+smooth-ribbon top vertex against the **actual imported Landscape in Unreal**:
+601 stations x 25 transverse samples = 15,025 required traces. The road is not
+spawned until those traces finish, so the inspector cannot accidentally hit the
+preview mesh and certify its own support.
+
+Classification is deterministic:
+
+- `0 <= road_surface_z - Landscape_z <= 0.08 m` -> `CONTACT_OK`;
+- terrain above the road surface -> `CUT_REQUIRED`;
+- road surface more than 0.08 m above terrain -> `FILL_REQUIRED`;
+- required cut/fill reaching the existing
+  `adaptive_terrain_policy.thresholds.retaining_cut_fill_m` (currently 4 m)
+  -> `STRUCTURE_REVIEW`.
+
+The 4 m structure threshold is reused from BOB's existing policy rather than
+inventing another PR-specific constant. Separate branch-clearance/retaining
+context checks may also escalate a location later; this first residual inspector
+does not pretend those contextual checks are complete. It records contiguous
+cut/fill/structure station intervals, maximum required adjustments and the worst
+samples in `ma2141-road-terrain-fit-proof.json`.
+
+BOB keeps the classification itself **INSPECTOR_ONLY**. PR #319 now
+executes one separately bounded construction recipe after the inspection:
+`bob-direct-road-earthworks-cut-v1`.
+
+The active recipe is deliberately **CUT ONLY**. It does not hide Landscape
+components and it does not substitute a local-ground DynamicMesh. The previous
+`bob-cut-only-local-ground-v1` preview remains retained as construction-study
+history, but it is no longer the active proof because it could demonstrate the
+shape without proving that Landscape earthworks were actually written.
+
+The current path prepares a deterministic 0.5 m float32 texture patch from the
+inspected regularized road profile. Every texel stores an **absolute world-space
+height in centimetres**. Unchanged texels contain the native Base_DTM height;
+cut texels contain the lower road target. It refuses any `STRUCTURE_REVIEW`
+sample, refuses a road cut deeper than 1.0 m, never moves canonical road XY and
+never touches `Base_DTM`. A single 0.5 m guard ring may be lowered around
+required road cuts, but a guard texel that would exceed the same 1.0 m safety
+cap is skipped rather than relaxing the cap.
+
+Sa Calobra `Road_Earthworks` is an Epic-native
+`ULandscapePatchEditLayer`. The transient writer creates a
+`ULandscapeTexturePatch` with `WorldUnits` height encoding,
+`WorldZero` zero semantics and **`Min` blend mode**. Epic defines `Min`
+as Alpha Blend limited to only lowering the existing Landscape, so this recipe
+cannot raise terrain into fill. The patch uses no alpha mask or falloff and is
+bound only to `Road_Earthworks`. The map remains unsaved. The writer is
+therefore a real Landscape mutation in the current editor session, not a
+presentation mesh, while remaining non-durable production authoring.
+
+The proof is deliberately measured from the merged Landscape after the write.
+Before the write, all 15,025 smooth-ribbon top samples are traced and classified.
+After the write and the second Geometry Inspection capture, the same 15,025
+locations are traced again. `TECHNICAL_CUT_PASS` requires zero trace misses,
+zero remaining `CUT_REQUIRED`, zero `STRUCTURE_REVIEW`, at least one modified
+Road_Earthworks vertex, a maximum patch depth no greater than 1.0 m,
+`base_dtm_modified=false`, `map_saved=false`, no authored fill or structures,
+and **no increase in `FILL_REQUIRED` samples after the cut**. Existing
+`FILL_REQUIRED` remains intentionally unresolved by this recipe.
+
+The fourth receipt is now `bob-road-earthworks-cut-proof.json`. Its
+`geometry_repair_executed=true` and
+`transient_road_earthworks_modified=true` mean BOB actually changed the named
+Landscape edit layer in the proof session. They do **not** mean the road is
+admitted, learned or saved.
+
+The region capture now produces six required views: two terrain views,
+`road-geometry-inspection-before`, `road-geometry-inspection-after`, normal
+road overview and final `road-contact-rider`. Both Geometry Inspection views
+use the cyan rendered DynamicMesh wireframe in `VMI_CLAY`; the normal views
+return to Lit mode.
+
+The interactive owner handoff reloads the accepted Base_DTM map, respawns the
+smooth road, reapplies the same transient `Road_Earthworks` CUT patch and
+leaves Unreal Editor open at `road-contact-rider`. The handoff is explicitly
+`VMI_LIT` and creates a transient directional light plus skylight, so owner
+review is not left in an unlit diagnostic scene. The handoff never saves the
+map.
+
+The earlier local-ground cut-only preview is retained as rejected/superseded
+active-proof history, not deleted. Historical spline-builder failures and their
+construction-study evidence also remain retained.
+
+
+## Owner-approved Sa Calobra delivery split — 2026-10-02
+
+The owner approved merging the terrain/road-preview/inspector scope separately
+from experimental CUT construction. This decision supersedes earlier statements
+that require the rejected direct CUT recipe in the active PR #319 capture or
+owner handoff. The active lane is INSPECTOR_ONLY; geometry findings remain
+REVIEW_REQUIRED and do not admit road collision, support, rides or learning.
+
+The CUT experiment is preserved on a separate Draft branch with its acceptance
+thresholds intact. Run 37033558831 at fd234e46 builds successfully but rejects
+construction: 986 to 3 remaining CUT samples, and 2046 to 13642 FILL samples.
+No saved Base_DTM was changed. The accepted separation does not authorize
+relaxing the 8 cm contact band or claiming this rejected recipe as learned.
+
+The terrain-only 1080p60 proof remains mandatory for the inspector delivery.
+It does not substitute for future road/earthworks performance or visual proof.

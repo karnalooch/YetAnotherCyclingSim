@@ -136,6 +136,8 @@ performance admission to Aggregate. No new executable workflow is introduced.
 See [the test/proof audit](TEST_AND_PROOF_AUDIT.md) and
 [CI validation tiers](../CI_VALIDATION_TIERS.md#exact-world-performance-admission).
 
-`sa-calobra-terrain-performance.yml` is BROKER-MANAGED: an explicit exact-SHA
-1080p60 native Sa Calobra baseline, with reference RTX 2070 SUPER and persistent
-asset retention. No automatic hardware dispatch or road admission is implied.
+### Sa Calobra terrain performance
+
+`sa-calobra-terrain-performance.yml` is BROKER-MANAGED. It uses the default-branch
+workflow and explicit exact SHA, isolated retained assets and a native rendered
+1080p60 baseline. It never accepts the rejected CUT experiment or admits roads.

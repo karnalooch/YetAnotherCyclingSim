@@ -131,3 +131,45 @@ MIT permission notice are preserved.
 GeoTerrain remains reference-only because the checked revision has unresolved
 license-artifact ambiguity. Its current provenance status is tracked in
 `docs/legal/DEPENDENCY_PROVENANCE.md`.
+
+## CartoCiudad Ma-2141 source geometry
+
+Source: https://www.cartociudad.es/geocoder/api/geocoder/find?q=Ma-2141
+
+CC BY 4.0 www.scne.es/productos.html#CartoCiudad
+
+The immutable response is included for source/topology review. Metric lengths
+and coordinates are derived by projection from service EPSG:4326 to EPSG:25831.
+No road width, access, surface or vertical crossing interpretation is added.
+License/service coordinate evidence: https://www.cartociudad.es/web/portal/faq
+
+## IGN IGR Redes de Transporte Ma-2141 source review
+
+Source: https://api-features.idee.es/collections/roadlink
+
+Obra derivada de IGR Redes de Transporte, consulta 2026-10-02, CC BY 4.0 scne.es
+
+License: https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf
+
+The pinned OGC API response retains four original features. The bounded
+comparison selects `VIAL_TR70190001272`, projects horizontal coordinates into
+EPSG:25831 and compares raw third-coordinate numbers with the native DTM.
+It does not establish a common vertical datum or asphalt-height authority.
+Source `paved`, lane count and `fictitious` attributes remain source claims.
+
+
+## PNOA Ma-2141 bounded pavement review image
+
+- Provider/product: IGN/CNIG PNOA most-recent orthophoto WMS.
+- Source: https://www.ign.es/wms-inspire/pnoa-ma
+- License: CC BY 4.0; https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf
+- Attribution: Obra derivada de PNOA, consulta 2026-10-02, CC BY 4.0 scne.es.
+- Included image: `worldgen/terrain/benchmarks/sa_calobra/ma2141_pnoa_review_2026-10-02.jpg`.
+- SHA-256: `4c896f9e64f9e86aa4005d59bd33d46f6b7619dac84cf0201180f4b79b1f20f9`.
+- Exact request, CRS/bounds, pixel size and inferred edge observations are recorded
+  in the adjacent `ma2141_pavement_preview_profile.json`.
+- Status: admitted for bounded visual source review and an inferred contact trial;
+  not admitted as survey, height, road-width, access or physics authority.
+- Acquisition date and native GSD remain unknown; request date is not flight date.
+  Approximate AI-interpreted edge positions have an explicit review allowance,
+  not measured statistical accuracy. The generated preview is not road acceptance.

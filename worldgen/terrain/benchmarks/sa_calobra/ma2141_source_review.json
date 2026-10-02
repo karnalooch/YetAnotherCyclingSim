@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "source_url": "https://www.cartociudad.es/geocoder/api/geocoder/find?q=Ma-2141",
+  "source_id": "604000000293",
+  "source_sha256": "6520b92486b5d1c63353b8253d388ab21d380c78fda119849311be8344d8ae36",
+  "source_crs": "EPSG:4326",
+  "metric_crs": "EPSG:25831",
+  "attribution": "CC BY 4.0 www.scne.es/productos.html#CartoCiudad",
+  "source_geometry_status": "REVIEW_CANDIDATE",
+  "parts": 6,
+  "vertices": 522,
+  "length_m": 12643.47620504858,
+  "bounds_epsg25831_m": [
+    482379.3100290596,
+    4407256.066033722,
+    484954.33576057263,
+    4411168.667931667
+  ],
+  "closed_parts": [
+    4
+  ],
+  "warnings": [
+    "Part 4 is closed and meets parts 3/5 at the same XY. Do not infer vertical continuity or carve both levels into DTM.",
+    "Tiny multipart endpoint coordinate differences require an explicit topology decision; source XY remains immutable.",
+    "Width, surface, bicycle access and vertical crossing separation are not supplied by this geocoder response."
+  ],
+  "canonical_route_status": "NOT_ADMITTED",
+  "road_physics_status": "NOT_ADMITTED",
+  "ue_authoring_status": "NOT_AUTHORED"
+}

@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 import unittest
+import shlex
+import subprocess
+import tempfile
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -35,8 +38,130 @@ class UnrealCiCacheContractTests(unittest.TestCase):
             "-e '/Plugins/**/Intermediate/'",
             "-e '/Saved/BuildCache/UnrealCi/'",
             "Resolve verified Unreal execution mode",
+            "Retain previous owner-handoff LFS payloads before sanitization",
+            "_yacs-retained-lfs/handoff-${{ github.run_id }}-${{ github.run_attempt }}",
+            "retain_unreal_assets.py",
         ):
             self.assertIn(token, self.workflow)
+
+    def test_handoff_lfs_retention_precedes_code_only_sanitization(self):
+        retain_index = self.workflow.index(
+            "Retain previous owner-handoff LFS payloads before sanitization"
+        )
+        sanitize_index = self.workflow.index(
+            "Sanitize tracked workspace while preserving verified build outputs"
+        )
+        code_only_index = self.workflow.index("Enforce code-only checkout")
+        self.assertLess(retain_index, sanitize_index)
+        self.assertLess(sanitize_index, code_only_index)
+
+    def test_cleanup_retains_only_diagnostic_logs_and_admitted_build_surfaces(self):
+        commands = [
+            line.strip()
+            for line in self.workflow.splitlines()
+            if line.strip().startswith("git clean -ffdx")
+        ]
+        self.assertEqual(len(commands), 2)
+        self.assertEqual(commands[0], commands[1])
+        keep = [
+            "Saved/Logs/YetAnotherCyclingSim.log",
+            "Saved/RuntimeProof/CI/RegionTerrain/123-1/map-preparation.stdout.log",
+            "Binaries/build.dll",
+            "Saved/BuildCache/UnrealCi/state.json",
+        ]
+        remove = [
+            "Saved/Logs/unrelated.log",
+            "Saved/RuntimeProof/CI/RegionTerrain/123-1/profile.json",
+            "Saved/RuntimeProof/CI/RegionTerrain/123-1/render.png",
+            "Saved/RuntimeProof/CI/RegionTerrain/123-1/Prepared/terrain.r16",
+            "Saved/unrelated.tmp",
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(["git", "init", "--quiet", str(root)], check=True)
+            for name in keep + remove:
+                target = root / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text("fixture", encoding="utf-8")
+            subprocess.run(
+                shlex.split(commands[0]),
+                cwd=root,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            for name in keep:
+                self.assertTrue((root / name).exists(), name)
+            for name in remove:
+                self.assertFalse((root / name).exists(), name)
+
+    def test_region_artifact_upload_is_current_attempt_only(self):
+        block = self.workflow.split(
+            "- name: Upload native Sa Calobra import diagnostic", 1
+        )[1]
+        block = block.split("- name: Upload concise Unreal proof", 1)[0]
+        paths = [
+            line.strip() for line in block.splitlines() if "/RegionTerrain/" in line
+        ]
+        self.assertEqual(len(paths), 3)
+        self.assertNotIn("Upload bounded BOB construction lesson", block)
+        self.assertNotIn("bob-build-lesson", block)
+        self.assertNotIn("bob-lesson-", block)
+        for path in paths:
+            self.assertIn(
+                "/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/",
+                path,
+            )
+
+        capture = self.workflow.split(
+            "- name: Capture isolated native Sa Calobra terrain", 1
+        )[1].split("- name: Retire owner-approved obsolete Italy payloads", 1)[0]
+        self.assertIn("$proof.captures.Count -ne 5", capture)
+        self.assertIn("road-geometry-inspection", capture)
+        self.assertIn("geometry-inspection-clay-wireframe", capture)
+        self.assertIn("Mandatory road Geometry Inspection proof failed.", capture)
+        self.assertIn("$proof.bob_mode -ne 'INSPECTOR_ONLY'", capture)
+        self.assertIn("WaitForExit(300000)", capture)
+        self.assertNotIn("YACS_KEEP_EDITOR_OPEN", capture)
+        self.assertNotIn("RUNNER_TRACKING_ID", capture)
+
+        handoff = self.workflow.split(
+            "- name: Launch interactive Sa Calobra owner handoff", 1
+        )[1].split(
+            "- name: Clean current-run evidence and non-allow-listed residue", 1
+        )[0]
+        self.assertIn("$env:YACS_OWNER_HANDOFF = '1'", handoff)
+        self.assertIn("$env:RUNNER_TRACKING_ID = ''", handoff)
+        self.assertNotIn("Set-Content", handoff)
+        self.assertNotIn("-ExecutePythonScript", handoff)
+        self.assertIn("owner-handoff-proof.json", handoff)
+        self.assertIn("road-contact-rider", handoff)
+        self.assertIn("$proof.viewmode -ne 'VMI_LIT'", handoff)
+        self.assertIn("$proof.lighting_status -ne 'PASS'", handoff)
+        self.assertIn("[double]$proof.directional_light_intensity -le 0.0", handoff)
+        self.assertIn("[double]$proof.skylight_intensity -le 0.0", handoff)
+        self.assertIn("OWNER HANDOFF PASS", handoff)
+
+        bootstrap = (ROOT / "Content/Python/init_unreal.py").read_text(encoding="utf-8")
+        self.assertIn('YACS_OWNER_HANDOFF") == "1"', bootstrap)
+        self.assertIn("scripts.ue.owner_handoff_startup", bootstrap)
+        startup = (ROOT / "scripts/ue/owner_handoff_startup.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("unreal.ViewModeIndex.VMI_LIT", startup)
+        self.assertIn("unreal.DirectionalLight", startup)
+        self.assertIn("unreal.SkyLight", startup)
+        self.assertIn('"lighting_status"', startup)
+
+        self.assertIn(
+            "if: ${{ always() && !inputs.region_terrain_import }}",
+            self.workflow,
+        )
+        importer = (ROOT / "scripts/ue/Invoke-YacsRegionTerrainImport.ps1").read_text()
+        self.assertIn("-AbsLog=", importer)
+        self.assertIn("$LogName + '.engine.log'", importer)
+        self.assertIn("Evidence directory already exists", importer)
+        self.assertIn("capture.engine.log", self.workflow)
 
     def test_workflow_has_static_runtime_compile_paths(self):
         for token in (

@@ -2,8 +2,9 @@
 
 This directory contains the selected M3 terrain source for Sa Calobra and Coll
 de Cal Reis, Mallorca. It replaces the retired Passo Giau Landscape map as the
-active world input, but it does not yet represent Unreal import, visual or
-performance acceptance.
+active world input. Actual native import and diagnostic capture have passed;
+human visual and performance acceptance remain pending. See the runtime
+evidence below.
 
 ## Included output
 
@@ -18,6 +19,69 @@ performance acceptance.
 
 Raster contract: 16,000 × 16,000 Float32 pixels, one band, 0.5 m spacing,
 8,000 × 8,000 m bounds, EPSG:25831, NoData `-32767`, tiled ZSTD compression.
+
+## Current working AOI (2026-10-02)
+
+The source benchmark is 8 km × 8 km, but the active Unreal terrain import uses
+a baseline bbox footprint of 2,016.5 m × 2,016.5 m around Coll dels Reis. The
+4033 native samples at 0.5 m spacing span 2,016.0 m from first to last vertex.
+This is the square currently under review; it is not the final world extent.
+
+| Point | EPSG:25831 (E, N) | WGS84 (lat, lon) |
+|---|---:|---:|
+| SW | 483000.0, 4407500.0 | 39.81731356, 2.80137117 |
+| SE | 485016.5, 4407500.0 | 39.81735150, 2.82493195 |
+| NE | 485016.5, 4409516.5 | 39.83552023, 2.82488583 |
+| NW | 483000.0, 4409516.5 | 39.83548226, 2.80131885 |
+| center | 484008.25, 4408508.25 | 39.82641749, 2.81312695 |
+
+Inside that window, the current road work is the bounded 300 m Ma-2141
+diagnostic around source part 3 / vertex 43. Its approximate WGS84 endpoints
+are 39.82963155, 2.81454613 and 39.83101147, 2.81432764, with the focus vertex
+at 39.83040946, 2.81367791. The alignment remains diagnostic-only: road
+physics, final pavement geometry, BOB earthworks and collision/ride acceptance
+are not admitted by these coordinates.
+
+### Working-area map and Google Maps
+
+[![Sa Calobra working AOI: 8 km benchmark, bounded Unreal import and current 300 m Ma-2141 diagnostic](../../../../docs/assets/sa_calobra_working_aoi.webp)](https://www.google.com/maps/search/?api=1&query=39.83040946%2C2.81367791)
+
+The figure is a documentation overview of the three nested work scopes. It is
+not survey evidence and does not replace the metric bounds, pinned source
+geometry or acceptance artifacts above.
+
+- [Imported AOI centre — Google Maps](https://www.google.com/maps/search/?api=1&query=39.82641749%2C2.81312695)
+- [Current Ma-2141 hairpin — Google Maps](https://www.google.com/maps/search/?api=1&query=39.83040946%2C2.81367791)
+- [Current 300 m diagnostic — Google Maps](https://www.google.com/maps/dir/?api=1&origin=39.82963155%2C2.81454613&destination=39.83101147%2C2.81432764&travelmode=driving)
+
+### Next import-window selection
+
+The complete 8 km × 8 km MDT50cm benchmark remains the source coverage. The
+current ~2 km Landscape is only the first admitted window.
+
+For a follow-up window whose goal is **more Ma-2141 road length and hairpins in
+a small area**, the first candidate direction is west / north-west from the
+current Coll dels Reis window, toward the Sa Calobra descent. This is a planning
+candidate, not an admitted next tile.
+
+For a follow-up whose goal is **more distinct roads and junctions**, do not pick
+a window by visual impression alone. Partition the retained 8 km benchmark into
+candidate windows and rank them from source-derived road inventory using at
+least:
+
+- total represented road length;
+- number of distinct routable road/way identities;
+- junction count;
+- curvature and hairpin count;
+- overlap with the delivery-priority route set;
+- source completeness, NoData margin and terrain validity;
+- road-source confidence and unresolved topology.
+
+If the retained 8 km benchmark does not contain enough network diversity, use a
+second source AOI rather than distorting route geometry or inflating the current
+Landscape. Scaling from this diagnostic to multiple windows must keep the
+source DTM and route authority unchanged and should use bounded regeneration /
+streaming rather than one monolithic 8 km native-resolution Landscape.
 
 ## Rebuild
 
@@ -52,3 +116,69 @@ Road inventory source: OpenStreetMap contributors, ODbL 1.0:
 https://www.openstreetmap.org/copyright
 
 The road summary contains no Strava data or derivative heatmap artifact.
+
+## Official Ma-2141 geometry review
+
+The immutable CartoCiudad REST Geocoder response is retained in
+`ma2141_cartociudad_source_2026-10-02.json`; its hash and projected metrics are
+recorded in `ma2141_source_review.json`. Service coordinates are EPSG:4326 and
+metric review uses EPSG:25831. Attribution: CC BY 4.0
+www.scne.es/productos.html#CartoCiudad.
+
+The response has six line parts, including one closed loop that meets other
+parts at the same XY. Preserve source vertices and investigate vertical
+separation before road carving; never infer both road levels from a single DTM
+height. This is a source-review candidate, not admitted canonical route or road
+physics. Width, surface and bicycle access remain unknown.
+
+The first bounded alignment diagnostic selects source part 3, vertex 43, with
+150 m of source arc length on either side (300 m total). It lies inside the
+native terrain window and avoids the unresolved closed-loop junction. The
+producer preserves official vertices and linearly densifies only on source XY.
+Its Z samples the native terrain and is explicitly not reconstructed asphalt
+height. Width, surface and bicycle access remain unknown; no earthworks or
+Road Physics Profile admission is granted by this diagnostic.
+
+## Runtime evidence and remaining admission
+
+- Run `36967539981`, commit `05a7e92eb6d27bc09c19bc68d0d66e78f08ce732`: full
+  CI success, native-reader parity over 16,265,089 samples, 1024 Landscape
+  components, native 0.5 m spacing and two edit layers. Its initial checker
+  material capture is not the neutral visual acceptance record.
+- Run `36968109437`, commit `6bdd8d38357777f7ca97063a3a3cf0fde64e4ef0`: Unreal
+  build/Automation, native import, two neutral 3840 x 2160 captures and 300 m
+  Ma-2141 native alignment all passed. Overall CI failed in Python dependency
+  installation because Shapely 2.1.1 had no Python 3.14 wheel. The follow-up
+  pins Shapely 2.1.2 and requires binary wheels.
+- Bounded runner retirement in the first run removed 15 positively identified
+  Italy payload files totaling 209,775,758 bytes. Its artifact contains the
+  inventory and deletion receipt. Shared LFS object storage and Git history
+  were not pruned. Repeating retirement produced a zero-file receipt.
+
+No Spanish corridor mesh, BOB earthworks, collision/ride, environment placement
+or performance acceptance is established by these artifacts. Human visual
+review remains pending. Source width, asphalt-height profile, surface and
+bicycle access remain unresolved; do not substitute native DTM heights for
+those missing road facts or promote this diagnostic into BOB case memory.
+
+## IGN IGR-RT height and surface candidate
+
+`ma2141_igr_rt_source_2026-10-02.json` preserves the official four-feature OGC
+API response, with license and limitations in `ma2141_igr_rt_source_review.json`.
+Feature `VIAL_TR70190001272` coincides with the selected CartoCiudad XY within
+numerical projection tolerance; this is not independent positional validation.
+Its source attributes indicate two lanes and `paved`, but also `fictitious=true`.
+Neither lane count nor paved class establishes road width or asphalt composition.
+
+The diagnostic producer now emits a hash-verified IGR-RT comparison alongside
+the native alignment. Initial comparison with the captured 300 m diagnostic
+gave raw third-coordinate minus DTM values from -1.117 to +2.897, RMS 1.141,
+and a maximum piecewise-linear source slope of 0.30044. These are numerical
+checks, not measured road/terrain displacement: the third-coordinate datum and
+feature-specific accuracy remain unverified. These values must not drive BOB
+cut/fill or Road Physics Profile admission.
+
+An accessible IDEIB endpoint exposing 3D road and asphalt-edge layers was
+rejected for production inclusion because its service metadata explicitly calls
+it preproduction/test-only. The production endpoint returned HTTP 503.
+No IDEIB geometry was imported.

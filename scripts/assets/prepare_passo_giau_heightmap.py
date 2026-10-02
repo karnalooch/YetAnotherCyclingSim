@@ -135,15 +135,17 @@ def fill_masked_nearest_reasonable(
     data: np.ma.MaskedArray,
     fallback: float,
 ) -> np.ndarray:
-    """Return finite float64 data suitable for preview derivatives.
+    """Reject invalid import samples instead of inventing ground elevations.
 
-    TINITALY AOIs are expected to be fully covered. If a small masked border is
-    present, fill it with the median elevation rather than allowing NaNs to
-    poison gradient calculations. The report records the masked-sample count.
+    The legacy function name/signature remains for existing callers. A preview
+    fallback is not an admitted terrain fill strategy: prepare a valid bounded
+    source window or an explicitly reviewed missing-data product first.
     """
-
-    array = np.ma.filled(data, fill_value=fallback).astype(np.float64)
-    array[~np.isfinite(array)] = fallback
+    if np.ma.count_masked(data):
+        raise ValueError("DEM contains NoData; implicit median terrain filling is forbidden")
+    array = np.asarray(data, dtype=np.float64)
+    if not np.all(np.isfinite(array)):
+        raise ValueError("DEM contains non-finite heights")
     return array
 
 
