@@ -74,6 +74,13 @@ the one-to-one reviewed match; raw files are not renamed. See
 [`manual_cnig_receipt_2026-10-03.json`](manual_cnig_receipt_2026-10-03.json) for
 the complete 17-file inventory.
 
+The repository is public, so these raw files are not published through a normal
+release by default. Issue #335 maintains a private-to-writers **draft release**
+named `data-cnig-sa-calobra-working-v1-2026-10-03` as the remote backup target.
+The cross-project reconciliation and publication boundary are recorded in
+[`docs/legal/USED_ASSET_INVENTORY_2026-10-03.md`](../../../../../docs/legal/USED_ASSET_INVENTORY_2026-10-03.md).
+Publishing that draft requires a separate explicit owner decision.
+
 For immediate world-authoring work, the acquisition runner separately downloads
 the same-AOI **PNOA WMS orthophoto extract**, BTN vector context, SIOSE cross-check
 and Catastro Buildings WFS data, which are available through official services
