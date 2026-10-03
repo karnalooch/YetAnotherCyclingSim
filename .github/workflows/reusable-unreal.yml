@@ -78,19 +78,23 @@ jobs:
           & $bootstrap -Workspace $env:GITHUB_WORKSPACE
           Remove-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup') -Recurse -Force
 
-      - name: Reclaim stale isolated region imports
+      - name: Reclaim stale isolated Unreal worktrees
         if: ${{ inputs.region_terrain_import }}
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          foreach ($stale in @(Get-ChildItem -LiteralPath $env:GITHUB_WORKSPACE -Directory -Filter '_unreal-region-*' -Force)) {
+          $staleWorktrees = @(
+            Get-ChildItem -LiteralPath $env:GITHUB_WORKSPACE -Directory -Force |
+              Where-Object { $_.Name -match '^_unreal-(region|build)-' }
+          )
+          foreach ($stale in $staleWorktrees) {
             if ($stale.Attributes -band [IO.FileAttributes]::ReparsePoint) {
-              throw "Refuse stale region cleanup through a reparse point: $($stale.FullName)"
+              throw "Refuse stale Unreal cleanup through a reparse point: $($stale.FullName)"
             }
             if (-not (Test-Path -LiteralPath (Join-Path $stale.FullName '.git'))) {
-              throw "Refuse non-worktree stale region cleanup: $($stale.FullName)"
+              throw "Refuse non-worktree stale Unreal cleanup: $($stale.FullName)"
             }
-            Write-Host "Removing uploaded stale region import: $($stale.FullName)"
+            Write-Host "Removing stale isolated Unreal worktree: $($stale.FullName)"
             Remove-Item -LiteralPath $stale.FullName -Recurse -Force
           }
           Get-PSDrive -PSProvider FileSystem | Select-Object Name, Used, Free
