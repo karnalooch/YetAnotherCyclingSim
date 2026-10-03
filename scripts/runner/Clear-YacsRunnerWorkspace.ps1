@@ -6,7 +6,8 @@
 .DESCRIPTION
     Preview is the default. Deletion requires -Apply. Only direct children of
     the canonical repository workspace matching versioned `_unreal-build-*` or
-    `_unreal-region-*` output names are eligible. Persistent world data, retained
+    `_unreal-region-*` output names are eligible for inspection. Only their
+    Intermediate and DerivedDataCache subdirectories may be removed. Persistent world data, retained
     LFS payloads, source caches, Git data, runner credentials and unknown paths
     are never candidates.
 #>
@@ -31,6 +32,7 @@ function Get-NormalizedPath {
 function Get-DirectoryInventory {
     param([Parameter(Mandatory = $true)][string] $Path)
 
+    Assert-NoReparsePath $Path
     $Bytes = 0L
     $Files = 0
     $Newest = (Get-Item -LiteralPath $Path -Force -ErrorAction Stop).LastWriteTimeUtc
@@ -46,6 +48,22 @@ function Get-DirectoryInventory {
     return [pscustomobject]@{ Bytes = $Bytes; Files = $Files; NewestUtc = $Newest }
 }
 
+function Assert-NoReparsePath {
+    param([Parameter(Mandatory = $true)][string] $Path)
+    $Component = [System.IO.Path]::GetFullPath($Path)
+    while ($Component) {
+        if (Test-Path -LiteralPath $Component) {
+            $Item = Get-Item -LiteralPath $Component -Force -ErrorAction Stop
+            if (($Item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) {
+                throw "Cleanup path traverses a reparse point: $Component"
+            }
+        }
+        $Parent = [System.IO.Path]::GetDirectoryName($Component)
+        if ($Parent -eq $Component) { break }
+        $Component = $Parent
+    }
+}
+
 $RunnerRoot = Get-NormalizedPath $RunnerRoot
 $DriveRoot = [System.IO.Path]::GetPathRoot($RunnerRoot).TrimEnd('\', '/')
 if ($RunnerRoot -eq $DriveRoot -or $RunnerRoot.Length -le ($DriveRoot.Length + 3)) {
@@ -53,6 +71,7 @@ if ($RunnerRoot -eq $DriveRoot -or $RunnerRoot.Length -le ($DriveRoot.Length + 3
 }
 
 $RepositoryWorkspace = Get-NormalizedPath (Join-Path $RunnerRoot '_work/YetAnotherCyclingSim/YetAnotherCyclingSim')
+Assert-NoReparsePath $RepositoryWorkspace
 if (-not (Test-Path -LiteralPath $RepositoryWorkspace -PathType Container)) {
     throw "Canonical YACS runner workspace does not exist: $RepositoryWorkspace"
 }
@@ -96,16 +115,21 @@ foreach ($Directory in @(Get-ChildItem -LiteralPath $RepositoryWorkspace -Direct
         throw "Cleanup candidate is not a direct workspace child: $Resolved"
     }
 
-    $Inventory = Get-DirectoryInventory $Resolved
-    if ($Inventory.NewestUtc -gt $Cutoff) { continue }
-    [void]$Candidates.Add([pscustomobject]@{
-        Name = $Directory.Name
-        Path = $Resolved
-        Bytes = [int64]$Inventory.Bytes
-        Files = [int]$Inventory.Files
-        NewestUtc = $Inventory.NewestUtc.ToString('o')
-        AgeHours = [math]::Round(([DateTime]::UtcNow - $Inventory.NewestUtc).TotalHours, 2)
-    })
+    foreach ($GeneratedName in @('Intermediate', 'DerivedDataCache')) {
+        $GeneratedPath = Get-NormalizedPath (Join-Path $Resolved $GeneratedName)
+        Assert-NoReparsePath $GeneratedPath
+        if (-not (Test-Path -LiteralPath $GeneratedPath -PathType Container)) { continue }
+        $Inventory = Get-DirectoryInventory $GeneratedPath
+        if ($Inventory.NewestUtc -gt $Cutoff) { continue }
+        [void]$Candidates.Add([pscustomobject]@{
+            Name = $Directory.Name + '/' + $GeneratedName
+            Path = $GeneratedPath
+            Bytes = [int64]$Inventory.Bytes
+            Files = [int]$Inventory.Files
+            NewestUtc = $Inventory.NewestUtc.ToString('o')
+            AgeHours = [math]::Round(([DateTime]::UtcNow - $Inventory.NewestUtc).TotalHours, 2)
+        })
+    }
 }
 
 $Drive = [System.IO.DriveInfo]::new([System.IO.Path]::GetPathRoot($RunnerRoot))
@@ -147,6 +171,7 @@ if ($Apply) {
 
     foreach ($Candidate in $Candidates) {
         $Resolved = Get-NormalizedPath $Candidate.Path
+        Assert-NoReparsePath $Resolved
         if (-not $Resolved.StartsWith($WorkspacePrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
             throw "Candidate escaped the workspace before deletion: $Resolved"
         }

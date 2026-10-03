@@ -196,20 +196,28 @@ fails before deletion if either value changed:
 
 ```powershell
 pwsh -NoProfile -File .\scripts\runner\Clear-YacsRunnerWorkspace.ps1 `
-  -ExpectedCandidateCount 11 `
-  -ExpectedReclaimBytes 14308989232 `
+  -ExpectedCandidateCount $reviewedPreview.candidate_count `
+  -ExpectedReclaimBytes $reviewedPreview.estimated_reclaim_bytes `
   -Apply
 ```
 
-Only direct workspace children matching `_unreal-build-<run>-<attempt>` or
+Set `$reviewedPreview` from a fresh `-Json` preview after inspecting its targets.
+Only `Intermediate` and `DerivedDataCache` subdirectories inside direct workspace
+children matching `_unreal-build-<run>-<attempt>` or
 `_unreal-region-<run>-<attempt>` and older than the configured minimum age are
-eligible. Apply mode refuses an active `Runner.Worker` or workspace-scoped Unreal
+eligible. Entire workspaces are never deletion targets. Path ancestors and
+candidate trees are checked for reparse points before inventory and apply.
+Apply mode refuses an active `Runner.Worker` or workspace-scoped Unreal
 process. It preserves runner registration/credentials, `_yacs-world-data`,
 `_yacs-retained-lfs`, `_yacs-sa-calobra-assets`, Git LFS objects, known terrain
-worktrees, `_unreal-ci-warm`, repository source and all unknown directories.
+worktrees, `_unreal-ci-warm`, repository source, Content, Binaries, Saved/evidence
+and all unknown directories. Byte totals are logical deleted-file sizes;
+free-before/free-after is a separate measured volume observation.
 
 The initial 2026-10-03 preview found 11 allow-listed directories totalling
-14,308,989,232 bytes. That is planning evidence only; no deletion occurred.
+14,308,989,232 bytes under the older whole-directory proposal. That proposal was
+superseded by generated-subdirectory-only cleanup; its count and size must not be
+used for current apply. No real runner deletion was performed for this change.
 
 ## Silent desktop monitor and local diagnostics
 

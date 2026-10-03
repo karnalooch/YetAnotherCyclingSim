@@ -95,7 +95,8 @@ class WindowsHostRecoveryContractTests(unittest.TestCase):
             protected = workspace / "_yacs-retained-lfs"
             candidate.mkdir(parents=True)
             protected.mkdir()
-            (candidate / "build.bin").write_bytes(b"x" * 1024)
+            (candidate / "Intermediate").mkdir()
+            (candidate / "Intermediate" / "build.bin").write_bytes(b"x" * 1024)
             (protected / "keep.bin").write_bytes(b"y" * 1024)
             result = subprocess.run(
                 [
@@ -167,7 +168,12 @@ class WindowsHostRecoveryContractTests(unittest.TestCase):
             protected = workspace / "_yacs-retained-lfs"
             candidate.mkdir(parents=True)
             protected.mkdir()
-            (candidate / "build.bin").write_bytes(b"x" * 1024)
+            (candidate / "Intermediate").mkdir()
+            (candidate / "Intermediate" / "build.bin").write_bytes(b"x" * 1024)
+            (candidate / "Source").mkdir()
+            (candidate / "Source" / "keep.cpp").write_text("source", encoding="utf-8")
+            (candidate / "Saved").mkdir()
+            (candidate / "Saved" / "proof.txt").write_text("evidence", encoding="utf-8")
             (protected / "keep.bin").write_bytes(b"y" * 1024)
             result = subprocess.run(
                 [
@@ -194,8 +200,59 @@ class WindowsHostRecoveryContractTests(unittest.TestCase):
             payload = json.loads(result.stdout)
             self.assertTrue(payload["apply"])
             self.assertEqual(payload["deleted_bytes"], 1024)
-            self.assertFalse(candidate.exists())
+            self.assertTrue(candidate.exists())
+            self.assertFalse((candidate / "Intermediate").exists())
+            self.assertEqual((candidate / "Source" / "keep.cpp").read_text(), "source")
+            self.assertEqual(
+                (candidate / "Saved" / "proof.txt").read_text(), "evidence"
+            )
             self.assertTrue(protected.exists())
+
+    @unittest.skipUnless(sys.platform == "win32", "junction proof is Windows-only")
+    def test_cleanup_rejects_a_junction_in_workspace_ancestry(self) -> None:
+        pwsh = shutil.which("pwsh")
+        if pwsh is None:
+            self.skipTest("pwsh is unavailable")
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            actual = root / "actual-runner"
+            (actual / "_work/YetAnotherCyclingSim/YetAnotherCyclingSim").mkdir(
+                parents=True
+            )
+            alias = root / "linked-runner"
+            created = subprocess.run(
+                [
+                    pwsh,
+                    "-NoProfile",
+                    "-Command",
+                    "New-Item -ItemType Junction -Path '"
+                    + str(alias).replace("'", "''")
+                    + "' -Target '"
+                    + str(actual).replace("'", "''")
+                    + "' | Out-Null",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(created.returncode, 0, created.stderr)
+            result = subprocess.run(
+                [
+                    pwsh,
+                    "-NoProfile",
+                    "-File",
+                    str(CLEANUP),
+                    "-RunnerRoot",
+                    str(alias),
+                    "-Json",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("traverses a reparse point", result.stderr)
+            self.assertTrue(actual.exists())
 
 
 if __name__ == "__main__":
