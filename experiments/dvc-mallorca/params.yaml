@@ -1,0 +1,4 @@
+prepare:
+  size: 129
+  resampling: bilinear
+  producer_version: 1

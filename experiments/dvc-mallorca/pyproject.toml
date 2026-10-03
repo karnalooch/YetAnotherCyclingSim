@@ -1,0 +1,13 @@
+[project]
+name = "yacs-dvc-mallorca-spike"
+version = "0.1.0"
+description = "Isolated DVC proof for YACS issue 339"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "dvc==3.67.1",
+  "numpy==2.2.6",
+  "rasterio==1.4.3",
+]
+
+[tool.uv]
+package = false

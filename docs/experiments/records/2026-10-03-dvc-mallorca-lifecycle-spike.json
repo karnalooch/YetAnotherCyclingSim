@@ -1,0 +1,53 @@
+{
+  "id": "2026-10-03-dvc-mallorca-lifecycle-spike",
+  "date": "2026-10-03",
+  "area": "tooling",
+  "stage": "M3 / Tooling",
+  "title": "DVC Mallorca source lifecycle and reproduction spike",
+  "status": "TECHNICAL_PASS",
+  "issue": 339,
+  "hypothesis": "DVC can manage a real bounded Mallorca terrain source through content-addressed storage, deletion, rehydration, preparation, reuse and deterministic reproduction without changing YACS production paths.",
+  "technical": [
+    "DVC 3.67.1 imported a 99,090-byte official CNIG/IDEE Mallorca MDT05 GeoTIFF and stored it in an isolated local remote.",
+    "After deleting the raw working file and nested local DVC cache, dvc pull restored the source with the same SHA-256.",
+    "DVC restored prepared outputs from the proof remote and a forced dvc repro regenerated the heightfield and report byte-identically.",
+    "The final DVC status reported that data and pipelines were up to date; two deterministic preparation tests passed."
+  ],
+  "visual": [
+    "No visual acceptance was required: this is a storage and reproducibility proof, not an Unreal terrain-quality proof."
+  ],
+  "keep": [
+    "DVC as the candidate raw/prepared storage and pipeline engine for the next Issue #339 architecture step.",
+    "A thin YACS layer for policy, provenance, profiles, diagnostics and SHA-256 verification.",
+    "The isolated uv-locked experiment and fail-closed Windows lifecycle runner."
+  ],
+  "reject": [
+    "Building a custom content-addressed storage engine before DVC is evaluated against a production remote and another provider.",
+    "Treating the experimental heightfield, local proof remote or CNIG sample as production authority.",
+    "Claiming DVC's internal filesystem object key is SHA-256; this proof observed MD5 identities in DVC descriptors/cache."
+  ],
+  "learnings": [
+    "DVC can reuse both raw and derived objects after the working tree and local cache are removed.",
+    "Windows hardlink cache objects are read-only and require bounded attribute handling in destructive lifecycle tests.",
+    "Project-level SHA-256 provenance can coexist with DVC's internal object identity, but must remain an explicit YACS verification contract."
+  ],
+  "next": [
+    "Choose and prove a durable shared DVC remote before integrating DVC behind the future yacs assets/bootstrap UX.",
+    "Integrate one existing provider only after the #339 storage contract and profile semantics are agreed.",
+    "Keep all production code, manifests, downloaders and Unreal Content unchanged until that follow-up scope is approved."
+  ],
+  "evidence": [
+    {
+      "label": "Issue #339",
+      "url": "https://github.com/karnalooch/YetAnotherCyclingSim/issues/339"
+    },
+    {
+      "label": "CNIG/IDEE MDT05 catalog",
+      "url": "https://datos.gob.es/es/catalogo/e00125901-spaignmdt05"
+    },
+    {
+      "label": "DVC experiment lock",
+      "url": "../../../experiments/dvc-mallorca/dvc.lock"
+    }
+  ]
+}

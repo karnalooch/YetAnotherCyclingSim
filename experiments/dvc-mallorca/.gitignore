@@ -1,0 +1,9 @@
+.venv/
+.dvc-storage/
+.dvc-site-cache/
+evidence/latest-run.json
+
+# DVC owns these working-tree artifacts. Their descriptors/lock state are tracked.
+/data/raw/mallorca_mdt05.tif
+/data/prepared/mallorca_mdt05_129.f32
+/data/prepared/mallorca_mdt05_report.json

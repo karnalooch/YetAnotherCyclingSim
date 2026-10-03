@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "id": "cnig-mallorca-mdt05-tramuntana-1km",
+  "provider": "Centro Nacional de Informacion Geografica (CNIG/IDEE)",
+  "dataset": "MDT Iberian Peninsula and Balearic Islands EPSG:4258 5",
+  "coverage_id": "Elevacion4258_5",
+  "request_url": "https://servicios.idee.es/wcs-inspire/mdt?service=WCS&request=GetCoverage&version=2.0.1&coverageId=Elevacion4258_5&format=image%2Ftiff&subset=lat(39.720,39.730)&subset=long(2.800,2.810)",
+  "area": "Mallorca, Serra de Tramuntana; bounded technical sample only",
+  "bbox_epsg_4326": [
+    2.8,
+    39.72,
+    2.81,
+    39.73
+  ],
+  "expected_sha256": "4adfe1be1f4a6751b9376168292e82317da8cdbe0641d81c003aa2b7355fd87a",
+  "license": {
+    "spdx": "CC-BY-4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "attribution": "Contains geographic information supplied by CNIG/IDEE."
+  },
+  "catalog_url": "https://datos.gob.es/es/catalogo/e00125901-spaignmdt05",
+  "metadata_url": "https://www.idee.es/csw-inspire-idee/srv/spa/csw?SERVICE=CSW&VERSION=2.0.2&REQUEST=GetRecordById&outputSchema=http://www.isotc211.org/2005/gmd&ElementSetName=full&ID=spaignMDT05",
+  "production_authority": false,
+  "redistributed_in_git": false
+}

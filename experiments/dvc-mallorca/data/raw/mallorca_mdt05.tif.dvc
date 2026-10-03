@@ -1,0 +1,11 @@
+md5: 97c4e3b52da178f082eb28ca28dc967d
+frozen: true
+deps:
+- checksum: '250437033118854093317886540080323657223'
+  hash: md5
+  path: https://servicios.idee.es/wcs-inspire/mdt?service=WCS&request=GetCoverage&version=2.0.1&coverageId=Elevacion4258_5&format=image%2Ftiff&subset=lat(39.720,39.730)&subset=long(2.800,2.810)
+outs:
+- md5: 6dcda96be0f5d971935530476eae00bc
+  size: 99090
+  hash: md5
+  path: mallorca_mdt05.tif

@@ -1,0 +1,36 @@
+schema: '2.0'
+stages:
+  prepare:
+    cmd: >-
+      python prepare.py --source data/raw/mallorca_mdt05.tif
+      --source-metadata source.json --output
+      data/prepared/mallorca_mdt05_129.f32 --report
+      data/prepared/mallorca_mdt05_report.json --size 129 --resampling bilinear
+      --producer-version 1
+    deps:
+    - path: data/raw/mallorca_mdt05.tif
+      hash: md5
+      md5: 6dcda96be0f5d971935530476eae00bc
+      size: 99090
+    - path: prepare.py
+      hash: md5
+      md5: a6dd506dd4a3422e7b7ae0f061f5f462
+      size: 6521
+    - path: source.json
+      hash: md5
+      md5: e5dde7a1edd45d730d786440118222f2
+      size: 1206
+    params:
+      params.yaml:
+        prepare.producer_version: 1
+        prepare.resampling: bilinear
+        prepare.size: 129
+    outs:
+    - path: data/prepared/mallorca_mdt05_129.f32
+      hash: md5
+      md5: 93de06b455ff2e16695d07ca803e7a96
+      size: 66564
+    - path: data/prepared/mallorca_mdt05_report.json
+      hash: md5
+      md5: c0096a75f16472830b6fdd87c2a8fbeb
+      size: 1201

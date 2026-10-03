@@ -1,0 +1,22 @@
+stages:
+  prepare:
+    cmd: >-
+      python prepare.py
+      --source data/raw/mallorca_mdt05.tif
+      --source-metadata source.json
+      --output data/prepared/mallorca_mdt05_129.f32
+      --report data/prepared/mallorca_mdt05_report.json
+      --size ${prepare.size}
+      --resampling ${prepare.resampling}
+      --producer-version ${prepare.producer_version}
+    deps:
+      - data/raw/mallorca_mdt05.tif
+      - prepare.py
+      - source.json
+    params:
+      - prepare.size
+      - prepare.resampling
+      - prepare.producer_version
+    outs:
+      - data/prepared/mallorca_mdt05_129.f32
+      - data/prepared/mallorca_mdt05_report.json
