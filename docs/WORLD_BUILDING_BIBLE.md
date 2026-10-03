@@ -3132,3 +3132,46 @@ alone cannot admit a silently tapered shoulder. The d439bf3 native run proved
 the no-nose outline but exposed 0.063 m shoulder width at station 187.375 m;
 its support result is superseded by the smooth exit-rejoin correction and
 must not be reported as full shoulder acceptance.
+
+
+#### Remaining current-Landscape asphalt — Issue #337
+
+The owner's 2026-10-03 instruction expands visual road construction on the
+existing ~2 km × 2 km Sa Calobra Landscape, not the whole 8 km source TIFF.
+The frozen IGN OGC RoadLink collection response
+`current_landscape_igr_roads_2026-10-03.json` contains five paved features.
+Source date/property `fictitious=true`, width, access and vertical datum remain
+review limitations; source Z never drives earthworks. IGN geometry was visually
+compared with a fresh PNOA orthophoto for the whole current window.
+
+`scripts/assets/prepare_current_landscape_roads.py` prepares deterministic cubic
+presentation candidates and independently checks both final edges, axis,
+width, source displacement, inner radius and winding. Single-sign source bends
+reject counter-turns on both edges and the axis; real source S-bends remain
+separate, not erased. Source/physics remains immutable. The 5 m constant width
+is an inferred preview assumption, not an all-road pavement survey. No bus
+widening is inferred. Crossfall is a bounded provisional design, attenuated to
+4% and 0.0037/m; grade <=31%. Full acceptance remains pending.
+
+The accepted 300 m footprint and 8 m exclusion buffer stay owned by #332.
+Nudo de la Corbata and its 12 m protection buffer are explicitly blocked for
+structure/vertical-separation review. A 10 m outer-boundary inset preserves
+Landscape/patch coverage. Other candidates are inspected in <=100 m windows;
+failed windows are explicit gaps with original feature IDs and reasons. A
+width-preserving fit is not admitted merely because it renders.
+
+The ordinary CUT cap remains 1 m. The previously reviewed hairpin's scoped 4 m
+cliff exception is NOT copied across the network. CUT is prepared with the
+existing native Min/world-unit float32 patch contract on `Road_Earthworks`;
+`Base_DTM` and saved maps remain untouched. Independent actual Landscape traces
+verify all asphalt section samples after patch evaluation. The existing
+vertical-support builder must retain full 0.5 m shoulders and <=4 m support.
+An incompatible window fails closed; it is not lowered arbitrarily, narrowed or
+claimed imported. No collision, physics or human/performance admission follows.
+
+The existing native capture and Lit owner handoff reconstruct the additional
+transient network. `Network/network.json` records admitted candidate windows,
+blocked windows and protected coverage; `network-native-proof.json` records
+actual imported length and contact/support results. Partial import is explicitly
+reported as `PARTIAL_IMPORTED`, never complete coverage. Current whole-world
+performance and visual acceptance must still be measured after network import.

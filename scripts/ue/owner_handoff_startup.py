@@ -169,6 +169,8 @@ def _configure():
     if len(road) < 4:
         raise RuntimeError("Owner handoff road trial is missing BOB CUT context")
     apply_cut_patch(world, root, exact_sha, road[3]["pre_fit"])
+    from scripts.ue.current_landscape_roads import start as start_network
+    network = start_network(world, root, exact_sha)
 
     alignment = json.loads(
         (root / "ma2141-native-alignment.json").read_text(encoding="utf-8")
@@ -202,7 +204,9 @@ def _configure():
         try:
             from scripts.ue.bob_vertical_support_preview import spawn_support
             support = spawn_support(world, root, exact_sha, road[3])
-            _kept_objects = (road, sun, sky, support)
+            from scripts.ue.current_landscape_roads import finish as finish_network
+            network_objects = finish_network(world, root, exact_sha, network)
+            _kept_objects = (road, sun, sky, support, network_objects)
             _write_proof(root, exact_sha, "PASS", lighting=lighting,
                          cut_patch_applied=True, vertical_support_built=True)
             unreal.log("[OwnerHandoff] CUT + vertical support ready in Lit mode")

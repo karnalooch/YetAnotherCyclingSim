@@ -31,6 +31,8 @@ _bob_inspection_status = "NOT_LOADED"
 _cut_patch = None
 _cut_report = None
 _support_objects = None
+_network_context = None
+_network_objects = None
 _mode_reasserted = False
 _scheduling = False
 
@@ -183,7 +185,7 @@ def _apply_capture_view_mode(view):
 
 def schedule():
     global _task, _started, _road_objects, _cut_patch, _scheduling
-    global _mode_reasserted
+    global _mode_reasserted, _network_context, _network_objects
     # Geometry creation can pump Slate and re-enter this tick callback while the
     # previous screenshot task is still marked done. Fence the whole transition.
     _scheduling = True
@@ -218,6 +220,12 @@ def schedule():
                 os.environ["YACS_TERRAIN_SHA"],
                 _road_objects[3]["pre_fit"],
             )
+        if _index == 5:
+            from scripts.ue.current_landscape_roads import start
+            _network_context = start(_world, _root, os.environ["YACS_TERRAIN_SHA"])
+        if _index == 6:
+            from scripts.ue.current_landscape_roads import finish as finish_network
+            _network_objects = finish_network(_world, _root, os.environ["YACS_TERRAIN_SHA"], _network_context)
         view = _views[_index]
         _apply_capture_view_mode(view)
         location, target = unreal.Vector(*view["location"]), unreal.Vector(*view["target"])
@@ -509,6 +517,11 @@ def main():
             "name": "road-contact-overview",
             "location": [focus[0]-9000,focus[1]+9000,focus[2]+13000],
             "target": focus,
+        },
+        {
+            "name": "network-current-landscape-overview",
+            "location": [*center, _manifest["elevation_max_m"] * 100 + 180000],
+            "target": [*center, height(*center)],
         },
         {
             "name": "road-contact-rider",
