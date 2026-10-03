@@ -8,7 +8,6 @@ import tempfile
 import unittest
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[2]
 HOST_AUDIT = ROOT / "scripts" / "runner" / "Test-YacsWindowsHost.ps1"
 RESTORE = ROOT / "scripts" / "assets" / "Restore-YacsSaCalobraWorldData.ps1"
@@ -153,6 +152,53 @@ class WindowsHostRecoveryContractTests(unittest.TestCase):
             self.assertEqual(payload["candidate_count"], 0)
             self.assertEqual(payload["estimated_reclaim_bytes"], 0)
             self.assertEqual(payload["deleted_bytes"], 0)
+
+    def test_cleanup_protects_active_build_and_blocks_invalid_pointer(self) -> None:
+        pwsh = shutil.which("pwsh")
+        if pwsh is None:
+            self.skipTest("pwsh is unavailable")
+        with tempfile.TemporaryDirectory() as temp:
+            runner = Path(temp) / "actions-runner-yacs"
+            workspace = runner / "_work/YetAnotherCyclingSim/YetAnotherCyclingSim"
+            active = workspace / "_unreal-build-123-1"
+            (active / ".git").mkdir(parents=True)
+            (active / "Intermediate").mkdir()
+            (active / "Intermediate/build.bin").write_bytes(b"verified")
+            pointer = workspace / "_yacs-unreal-ci/active.json"
+            pointer.parent.mkdir()
+            command = [
+                pwsh,
+                "-NoProfile",
+                "-File",
+                str(CLEANUP),
+                "-RunnerRoot",
+                str(runner),
+                "-MinimumAgeHours",
+                "0",
+                "-Json",
+            ]
+            for name, accepted in (
+                (active.name, True),
+                ("../outside", False),
+                ("_unreal-build-999-1", False),
+            ):
+                with self.subTest(worktree=name):
+                    pointer.write_text(
+                        json.dumps({"schema_version": 1, "worktree": name})
+                    )
+                    result = subprocess.run(
+                        command, capture_output=True, text=True, check=False
+                    )
+                    if accepted:
+                        self.assertEqual(
+                            result.returncode, 0, result.stdout + result.stderr
+                        )
+                        self.assertEqual(
+                            json.loads(result.stdout)["candidate_count"], 0
+                        )
+                    else:
+                        self.assertNotEqual(result.returncode, 0)
+                    self.assertTrue((active / "Intermediate/build.bin").exists())
 
     @unittest.skipUnless(sys.platform == "win32", "cleanup apply is Windows-only")
     def test_cleanup_apply_deletes_only_reviewed_candidate(self) -> None:

@@ -337,3 +337,7 @@ still owns environment, fingerprints and binary checks. Publication happens
 after green Automation/state recording and before terrain import, so a later
 terrain failure does not lose successful compile evidence. See the
 [validation-tier contract](CI_VALIDATION_TIERS.md#general-unreal-static--runtime--compile-reuse).
+
+The administrative `Clear-YacsRunnerWorkspace.ps1` preview/apply also protects
+the selected build's generated directories. A malformed/missing active target
+blocks administrative cleanup; a pointer change during apply requires a new preview.

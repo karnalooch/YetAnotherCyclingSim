@@ -92,6 +92,27 @@ $EligiblePatterns = @(
     '^_unreal-build-[0-9]+-[0-9]+$',
     '^_unreal-region-[0-9]+-[0-9]+$'
 )
+function Get-ActiveUnrealCacheName {
+    $PointerPath = Join-Path $RepositoryWorkspace '_yacs-unreal-ci/active.json'
+    Assert-NoReparsePath $PointerPath
+    if (-not (Test-Path -LiteralPath $PointerPath)) { return $null }
+    $Pointer = Get-Content -LiteralPath $PointerPath -Raw | ConvertFrom-Json
+    if (
+        $Pointer.schema_version -ne 1 -or
+        $Pointer.worktree -isnot [string] -or
+        $Pointer.worktree -notmatch '^(_unreal-ci-warm|_unreal-build-[0-9]+-[0-9]+)$'
+    ) {
+        throw 'Invalid active Unreal cache pointer; cleanup is blocked.'
+    }
+    $ActivePath = Join-Path $RepositoryWorkspace $Pointer.worktree
+    Assert-NoReparsePath $ActivePath
+    if (-not (Test-Path -LiteralPath (Join-Path $ActivePath '.git'))) {
+        throw 'Active Unreal cache is missing; cleanup is blocked.'
+    }
+    return $Pointer.worktree
+}
+$ActiveCacheName = Get-ActiveUnrealCacheName
+if ($ActiveCacheName) { $ProtectedNames += $ActiveCacheName }
 $Cutoff = [DateTime]::UtcNow.AddHours(-$MinimumAgeHours)
 $Candidates = [System.Collections.Generic.List[object]]::new()
 $WorkspacePrefix = $RepositoryWorkspace + [System.IO.Path]::DirectorySeparatorChar
@@ -170,6 +191,9 @@ if ($Apply) {
     }
 
     foreach ($Candidate in $Candidates) {
+        if ((Get-ActiveUnrealCacheName) -ne $ActiveCacheName) {
+            throw 'Active Unreal cache changed during apply; run preview again.'
+        }
         $Resolved = Get-NormalizedPath $Candidate.Path
         Assert-NoReparsePath $Resolved
         if (-not $Resolved.StartsWith($WorkspacePrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
