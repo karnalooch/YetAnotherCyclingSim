@@ -1,7 +1,9 @@
 # GitHub Project workflow
 
-Status: **ACTIVE — verified 2026-10-03**  
-Setup issue: #88; freshness correction: #353  
+Status: **ACTIVE — verified 2026-10-03**
+
+Setup issue: #88; freshness correction: #353
+
 Target Project: [**YACS — MVP**](https://github.com/users/karnalooch/projects/5)
 
 ## Purpose
