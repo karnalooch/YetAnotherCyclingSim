@@ -2217,23 +2217,22 @@ When accessible, record panorama location/date and qualitative shoulder,
 drainage and retaining-wall observations separately from surveyed evidence.
 Do not infer metric dimensions from perspective imagery alone.
 
-The owner-only `sa-calobra-street-view-metadata.yml` workflow may locate one
-nearby outdoor panorama before human review. It accepts one WGS84 point, fails
-when Google snaps beyond the requested bound, requests metadata only, and
-retains a sanitized receipt for three days. It never downloads Street View
-pixels and does not turn a panorama into width, height, survey, earthworks or
-physics authority. Reviewers open imagery through an authorized Google surface
-and use it only to classify qualitative roadside context such as exposed rock,
-a wall, guardrail, drop or bridge. PNOA/LiDAR and source-grounded geometry
-remain the metric evidence.
+Do not automate Street View acquisition through repository workflows. For every
+extreme road/terrain anomaly escalated to owner review, provide the diagnostic
+value and station, WGS84 coordinates, a direct link to the exact interactive
+panorama/view, and an owner-visible screenshot or short video when available.
+Classify the observation as `NATURAL_FEATURE_CONFIRMED`, `ALGORITHM_SUSPECT` or
+`UNRESOLVED`; explain the evidence and state what metric question remains open.
+Do not commit panorama pixels. Interactive imagery remains qualitative only;
+PNOA/LiDAR and source-grounded geometry remain the metric evidence.
 
-After a metadata probe admits an exact panorama, the owner-only
-`sa-calobra-street-view-static-image.yml` workflow may make one explicitly
-confirmed Street View Static image request for qualitative review. The request
-is billable, is fixed to one panorama and one camera view, and the diagnostic
-artifact expires after one day. Do not batch, sweep or commit these images.
-The image may classify exposed rock, a wall, guardrail, drop or bridge, but it
-must not provide metric width, height, alignment, earthworks or physics inputs.
+The 2026-10-03 exposed-rock case at WGS84 39.8304442, 2.8167225 is the reference
+packet for this escalation format. [Open the exact panorama and view](https://www.google.com/maps/@?api=1&map_action=pano&pano=Q0IzBsfssGl-EEeEOAGuLA&heading=123.6&pitch=-22&fov=90).
+Manual inspection shows bedrock immediately beside the painted edge, with no
+ordinary shoulder at the camera position, so the qualitative classification is
+`NATURAL_FEATURE_CONFIRMED`. This does not establish a metric cut of 11.62 m or
+admit the generated road; compare the flagged transect with PNOA/LiDAR before
+deciding whether any residual discrepancy is terrain, footprint or algorithm.
 
 BOB's repair order remains source/footprint review, bounded road-profile work,
 local `Road_Earthworks` where justified, then renewed full-width and interior
