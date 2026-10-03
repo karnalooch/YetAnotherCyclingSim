@@ -17,7 +17,7 @@ machine-readable manifests.
 | Storage class | Files/objects | Bytes | Remote state | Decision |
 |---|---:|---:|---|---|
 | Git LFS at the branch snapshot | 58 | 562,918,293 | already remote | keep in Git LFS; do not duplicate in a data release |
-| Persistent runner `manual-cnig` cache | 17 | 3,339,596,438 | remote copy pending at inventory time | upload unchanged to the private draft release `data-cnig-sa-calobra-working-v1-2026-10-03` |
+| Persistent runner `manual-cnig` cache | 17 | 3,339,596,438 | verified in the unpublished draft release | keep the exact snapshot in `data-cnig-sa-calobra-working-v1-2026-10-03`; do not publish without an explicit owner decision |
 | Runner PNOA WMS working extract | 27 | 17,602,749 | local cache only | inventory only; not an admitted raw-source snapshot |
 | Runner Catastro Buildings probe | 14 | 30,911 | local cache only | inventory only; returned 300-byte feature responses require review |
 | Runner SIOSE probe | 1 | 35,101 | local cache only | capabilities-only evidence; not an admitted payload |
@@ -55,7 +55,7 @@ World Data Stack release.
 | MASE PST Passo Giau LiDAR DTM 1x1 | acquired historical Passo Giau source | CC BY 4.0 | published prerelease `data-mase-pst-passo-giau-dtm-2026-09-28` | already remote; no duplicate upload |
 | Regione Veneto LiDAR-derived DTM | used as bounded Passo Giau gap-fill evidence | provider terms recorded by the Passo Giau pipeline | pinned scripts and generated reports | no new upload; historical pipeline only |
 | CNIG/IGN MDT50cm 3rd coverage | acquired source for the current 8 km terrain benchmark | CNIG general-use terms compatible with CC BY 4.0 | 17 source identities pinned by preparation tooling; derived GeoTIFF and report in Git/LFS | derived product already remote; original source tiles are not present in the current runner cache |
-| PNOA LiDAR NPC03, MDS50cm COB3 V1 and PNOA Máxima Actualidad 2024 | 17 acquired World Data Stack v1 sources | CNIG/IGN general-use terms compatible with CC BY 4.0 | `working_space_sources.json` and `manual_cnig_receipt_2026-10-03.json`; 17/17 live SHA-256 verification PASS | upload unchanged to the private draft release |
+| PNOA LiDAR NPC03, MDS50cm COB3 V1 and PNOA Máxima Actualidad 2024 | 17 acquired World Data Stack v1 sources | CNIG/IGN general-use terms compatible with CC BY 4.0 | `working_space_sources.json` and `manual_cnig_receipt_2026-10-03.json`; 17/17 live SHA-256 verification PASS | stored unchanged in the unpublished draft release; remote size and SHA-256 verification PASS |
 | CartoCiudad Ma-2141 response | acquired source-review dataset | CC BY 4.0 | immutable response and review JSON in the repository | already remote in Git |
 | IGN IGR-RT Ma-2141 response | acquired source-review dataset | CC BY 4.0 | immutable response and review JSON in the repository | already remote in Git |
 | OpenStreetMap Sa Calobra road inventory | derived aggregate summary | ODbL 1.0 | aggregate inventory with snapshot/bounds/attribution | already remote in Git; raw geometry intentionally excluded |
@@ -98,3 +98,19 @@ The release must contain exactly:
 
 Upload success is not sufficient. Closeout requires the remote asset count,
 total bytes and GitHub-provided SHA-256 digests to match the local receipt.
+
+## Remote verification
+
+Authenticated GitHub metadata was checked on 2026-10-03 after upload:
+
+- release tag: `data-cnig-sa-calobra-working-v1-2026-10-03`;
+- state: **draft / unpublished**;
+- final payload: 20 assets: 17 raw files, the receipt, the working manifest
+  and this inventory;
+- raw payload: 17 files / 3,339,596,438 bytes;
+- raw sizes and SHA-256: **17/17 match**, zero mismatches;
+- receipt and working-manifest sizes and SHA-256: **2/2 match**;
+- duplicate or unexpected release assets: **0**.
+
+The draft state is intentional. This verification does not authorize publishing
+the release or treating the raw evidence as gameplay/runtime assets.

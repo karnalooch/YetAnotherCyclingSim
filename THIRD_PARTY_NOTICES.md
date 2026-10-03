@@ -89,7 +89,7 @@ Exact file identities, provider records, byte sizes and SHA-256 values:
 `worldgen/terrain/benchmarks/sa_calobra/world_data/working_space_sources.json`
 and `manual_cnig_receipt_2026-10-03.json`.
 
-The raw files remain outside Git. Their remote backup is assigned to the
+The raw files remain outside Git. Their verified remote backup is stored in the
 unpublished draft release `data-cnig-sa-calobra-working-v1-2026-10-03`; the
 public repository does not make that draft an approved public distribution.
 
