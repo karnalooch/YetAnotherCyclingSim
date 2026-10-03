@@ -446,6 +446,12 @@ jobs:
             --output-dir "$root/Network" `
             --exact-sha '${{ inputs.target_sha }}'
           if ($LASTEXITCODE -ne 0) { throw 'Current Landscape network preparation failed.' }
+          python scripts/assets/audit_current_landscape_road_heights.py `
+            --prepared-terrain "$root/Prepared" `
+            --output "$root/Network/source-height-review.json" `
+            --exact-sha '${{ inputs.target_sha }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned road source-height review failed.' }
+
 
       - name: Capture isolated native Sa Calobra terrain
         if: ${{ inputs.region_terrain_import }}

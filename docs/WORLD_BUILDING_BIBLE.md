@@ -3322,3 +3322,30 @@ panorama link. The offline PNG and native `network-extreme-cut.png` show the
 rejected road in red, the least-bad unapplied lateral diagnostic in cyan and the
 deepest CUT marker in yellow. These artifacts satisfy anomaly review/reporting;
 they do not constitute geometry repair or visual admission.
+
+
+#### Whole current-window source-height review — Issue #337
+
+`scripts/assets/audit_current_landscape_road_heights.py` compares only the
+original vertices of the pinned five-feature IGN response with bilinearly
+sampled native ground. The existing terrain/source hashes, CRS, 4033 topology,
+no-data contract and original XYZ finiteness fail closed. Source chainage uses
+projected XY metres, including out-of-window vertices; it never uses Z for
+planar distance or invents interpolated survey observations. Each receipt binds
+exact SHA, road source, manifest and heightmap hashes and keeps all source
+properties and inside/outside counts. Existing region proof emits
+`Network/source-height-review.json`; it never changes road geometry, CUT or
+physics and cannot establish full road coverage.
+
+The 2026-10-03 bounded review found 325 original vertices inside the native
+terrain. Source-minus-ground ranges are -4.679 to +5.775 m on
+`VIAL_TR70190001272` (208 vertices), -1.712 to +1.545 m on
+`VIAL_TR70190001287` (99 vertices), and -3.398 to -0.007 m on
+`VIAL_TR70190001289` (13 vertices). Median offsets are close to zero on these
+features, but local outliers differ in sign. That observation does not support
+a blanket upward shift or prove a vertical datum. The two-vertex
+`VIAL_TR70190001288` is too sparse to resolve Nudo height separation. All five
+features retain `fictitious=true`; source height accuracy, datum and real deck
+cross-sections remain unverified. Numeric agreement with ground is not a road
+survey. Next: acquire source-backed road-deck transects and structure evidence
+before replacing the diagnostic profile or admitting translated intervals.
