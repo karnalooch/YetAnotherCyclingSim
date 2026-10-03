@@ -68,7 +68,7 @@ flowchart TB
 | Geographic fidelity | **1:1 real-world scale; no route compression, relocation or invented macro terrain** |
 | Architecture policy | **Embark-first + tools-first + version-matched Epic/PCGEx API evidence + local proof** |
 | Diagram language | **Gumball Blueprint Mermaid style** |
-| Current priority | **Issue #331: constrain asphalt to the reviewed cliff-side boundary and explicit width; distinguish travel/bend/terrain edge roles, preserve canonical XY and rebuild CUT/shoulders/support from clean DTM** |
+| Current priority | **Issue #337: continue guarded paved-road import on the current Landscape; Issue #349: reconcile official GIS sources for the full road inventory, preserving classes, topology and source evidence** |
 | Route reference | **sea-level Sa Calobra → Coll dels Reis → Ma-10 → Menut/Binifaldó → Coll des Pedregaret; ~29–30 km planning estimate, exact chainage pending** |
 | Terrain source | **CNIG/IGN MDT50cm Sa Calobra 8 km × 8 km benchmark; bounded native UE import PASS, terrain visual accepted; performance pending** |
 | Road authority | **verified Ma-2141 alignment; smooth presentation ribbon is evaluated against Landscape, never snapped/bent to native DTM facets; terrain-fit residuals drive cut/fill/structure review** |
