@@ -3175,3 +3175,17 @@ blocked windows and protected coverage; `network-native-proof.json` records
 actual imported length and contact/support results. Partial import is explicitly
 reported as `PARTIAL_IMPORTED`, never complete coverage. Current whole-world
 performance and visual acceptance must still be measured after network import.
+
+Blocked geometric windows retain a `diagnostics` object with the last attempted
+gate, measured planar metrics, grade/bank rate and 3D receipt when reached. CUT
+failures also retain the actual raster maximum, core support and shoulder wall
+height plus the signed shoulder-to-ground gap. `earthworks_fit` bounds a
+hypothetical **uniform upward translation**: minimum lift is
+`max(0, max_cut - 1 m)`; the support ceiling is the smaller of `4 m - max_core_support` and `4 m - max_shoulder_support`. These are
+diagnostic bounds only. An overlapping interval neither verifies source road
+height nor proves joins, a smooth profile, contact or engineering admission;
+an empty interval rules out that simple translation under the measured bounds.
+No shift is applied, no gate is relaxed, and rejected CUTs write no patch. The
+existing candidate heights and accepted patch bytes remain unchanged. BOB must
+use these measurements plus source-grounded height/structure evidence before
+proposing a fitted profile; new geometry still requires fresh native proof.

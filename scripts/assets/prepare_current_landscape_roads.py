@@ -28,6 +28,7 @@ from scripts.assets.prepare_ma2141_diagnostic import select_alignment
 from scripts.assets.prepare_ma2141_profile import local_linear_fit
 from scripts.assets.prepare_ma2141_road_preview import triangle_candidates
 from scripts.geometry.bob_vertical_support import build_vertical_support
+from scripts.geometry.network_earthworks_diagnostics import height_fit_bounds
 from scripts.geometry.network_pavement import shoulder_sections, surface_inspection
 
 SOURCE = (
@@ -167,7 +168,7 @@ def native_ground(heights, manifest, points):
     return np.asarray(result).reshape(np.asarray(points).shape[:-1])
 
 
-def prepare_patch(sections, terrain, manifest, path):
+def prepare_patch(sections, terrain, manifest, path, *, diagnostics=None):
     samples = {}
     for a, b in itertools.pairwise(sections):
         for j in range(len(a) - 1):
@@ -214,6 +215,14 @@ def prepare_patch(sections, terrain, manifest, path):
     for (x, y), target in samples.items():
         patch[y - miny, x - minx] = min(patch[y - miny, x - minx], target)
     depth = base - patch
+    if diagnostics is not None:
+        diagnostics["earthworks_fit"] = height_fit_bounds(
+            float(depth.max()),
+            diagnostics["max_core_support_m"],
+            diagnostics["max_shoulder_support_m"],
+            cut_cap_m=CUT_CAP,
+            support_cap_m=SUPPORT_CAP,
+        )
     if depth.max() > CUT_CAP:
         raise ValueError(f"Ordinary 1 m CUT cap exceeded ({depth.max():.3f})")
     patch = (patch * 100).astype("<f4")
@@ -352,6 +361,7 @@ def prepare(prepared, output, exact_sha):
                 if end - start < 3:
                     continue
                 ident = f"{feature['id']}-{part_index}-{start}"
+                diagnostics = {"stage": "PLANAR_GEOMETRY"}
                 try:
                     source_window = substring(line, float(s[start]), float(s[end - 1]))
                     part = sections[start:end]
@@ -362,6 +372,14 @@ def prepare(prepared, output, exact_sha):
                             lambda x, y, z=None: (x - origin[0], origin[1] - y),
                             source_window,
                         ),
+                    )
+                    diagnostics.update(metrics)
+                    diagnostics["stage"] = "GRADE_AND_BANK"
+                    diagnostics["max_grade_abs"] = float(
+                        np.max(abs(np.diff(center[start:end]) / np.diff(s[start:end])))
+                    )
+                    diagnostics["max_bank_rate_per_m"] = float(
+                        np.max(abs(np.diff(bank[start:end]) / np.diff(s[start:end])))
                     )
                     if (
                         np.max(abs(np.diff(center[start:end]) / np.diff(s[start:end])))
@@ -374,10 +392,14 @@ def prepare(prepared, output, exact_sha):
                     ):
                         raise ValueError("Banking transition exceeds reviewed rate")
                     delta = ground[start:end] - heights[start:end]
+                    diagnostics["stage"] = "CORE_SUPPORT"
+                    diagnostics["max_core_support_m"] = float(delta.max())
                     if delta.max() > SUPPORT_CAP:
                         raise ValueError("Support height needs structure review")
                     patch_path = output / (ident + "-cut.json")
                     surface = surface_inspection(part.tolist())
+                    diagnostics["stage"] = "SURFACE_3D"
+                    diagnostics["surface_inspection"] = surface
                     if surface["status"] != "PASS":
                         raise ValueError("Accepted 3D road surface limits exceeded")
                     support = shoulder_sections(part.tolist())
@@ -387,10 +409,22 @@ def prepare(prepared, output, exact_sha):
                     _, _, support_proof = build_vertical_support(
                         support, outer_ground.tolist()
                     )
+                    diagnostics["stage"] = "SHOULDER_SUPPORT"
+                    diagnostics["max_shoulder_wall_m"] = support_proof[
+                        "max_wall_height_m"
+                    ]
+                    diagnostics["max_shoulder_support_m"] = float(
+                        np.max(np.asarray(support)[:, [0, -1], 2] - outer_ground)
+                    )
                     if support_proof["max_wall_height_m"] > SUPPORT_CAP:
                         raise ValueError("Shoulder support needs structure review")
+                    diagnostics["stage"] = "RASTER_CUT"
                     patch = prepare_patch(
-                        np.asarray(support), terrain, manifest, patch_path
+                        np.asarray(support),
+                        terrain,
+                        manifest,
+                        patch_path,
+                        diagnostics=diagnostics,
                     )
                     result["approved"].append(
                         {
@@ -402,11 +436,17 @@ def prepare(prepared, output, exact_sha):
                             "cut_manifest": patch_path.name,
                             "cut_sha256": digest(patch_path),
                             "max_cut_m": patch["max_cut_m"],
+                            "earthworks_fit": diagnostics["earthworks_fit"],
                         }
                     )
                 except ValueError as exc:
                     result["blocked"].append(
-                        {"id": ident, "length_m": length, "reason": str(exc)}
+                        {
+                            "id": ident,
+                            "length_m": length,
+                            "reason": str(exc),
+                            "diagnostics": diagnostics,
+                        }
                     )
     result["approved_length_m"] = sum(x["length_m"] for x in result["approved"])
     result["blocked_length_m"] = sum(x["length_m"] for x in result["blocked"])

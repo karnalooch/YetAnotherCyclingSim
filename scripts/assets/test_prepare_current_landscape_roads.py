@@ -1,13 +1,20 @@
 """Regressions for network width, folds, counter-turns and source displacement."""
 
 import math
+import tempfile
 import unittest
 from collections import Counter
+from pathlib import Path
 
 import numpy as np
 from shapely.geometry import LineString
 
-from scripts.assets.prepare_current_landscape_roads import inspect_sections, smooth_axis
+from scripts.assets.prepare_current_landscape_roads import (
+    inspect_sections,
+    prepare_patch,
+    smooth_axis,
+)
+from scripts.geometry.network_earthworks_diagnostics import height_fit_bounds
 from scripts.geometry.network_pavement import (
     pavement_slab,
     shoulder_sections,
@@ -25,6 +32,64 @@ def sections(axis):
 
 
 class NetworkTests(unittest.TestCase):
+    def test_cut_and_support_bounds_expose_incompatible_translation(self):
+        receipt = height_fit_bounds(3.0, 3.0, 3.5, cut_cap_m=1.0, support_cap_m=4.0)
+        self.assertEqual(receipt["minimum_lift_for_cut_m"], 2.0)
+        self.assertEqual(receipt["maximum_lift_for_support_m"], 0.5)
+        self.assertFalse(receipt["bounds_overlap"])
+        self.assertFalse(receipt["height_change_applied"])
+        self.assertFalse(receipt["road_admitted"])
+
+    def test_overlapping_bounds_do_not_admit_or_apply_height_change(self):
+        receipt = height_fit_bounds(1.5, 1.0, 2.0, cut_cap_m=1.0, support_cap_m=4.0)
+        self.assertTrue(receipt["bounds_overlap"])
+        self.assertEqual(receipt["minimum_lift_for_cut_m"], 0.5)
+        self.assertFalse(receipt["source_height_verified"])
+        self.assertFalse(receipt["road_admitted"])
+
+    def test_signed_below_terrain_support_gap_is_not_clipped(self):
+        receipt = height_fit_bounds(5.0, -3.0, -2.0, cut_cap_m=1.0, support_cap_m=4.0)
+        self.assertEqual(receipt["maximum_lift_for_support_m"], 6.0)
+        self.assertTrue(receipt["bounds_overlap"])
+
+    def test_height_diagnostic_rejects_nonfinite_or_invalid_evidence(self):
+        for value in (math.nan, math.inf, True, -1.0):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                height_fit_bounds(value, 0.0, 0.0, cut_cap_m=1.0, support_cap_m=4.0)
+
+    def test_failed_raster_cut_retains_measurement_without_writing_patch(self):
+        mesh = sections([[v, 20] for v in np.linspace(10, 20, 21)])[:, ::-1]
+        original = mesh.copy()
+        terrain = np.full((64, 64), 33792, dtype=np.uint16)
+        manifest = {"scale_z": 100.0, "location_z_cm": 0.0}
+        diagnostics = {"max_core_support_m": 0.0, "max_shoulder_support_m": 0.0}
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "rejected-cut.json"
+            with self.assertRaisesRegex(ValueError, "Ordinary 1 m CUT cap exceeded"):
+                prepare_patch(mesh, terrain, manifest, path, diagnostics=diagnostics)
+            self.assertGreater(diagnostics["earthworks_fit"]["max_cut_m"], 1.0)
+            self.assertEqual(list(Path(directory).iterdir()), [])
+        np.testing.assert_array_equal(mesh, original)
+
+    def test_diagnostic_keeps_accepted_patch_bytes_and_cut_depth_unchanged(self):
+        mesh = sections([[v, 20] for v in np.linspace(10, 20, 21)])[:, ::-1]
+        terrain = np.full((64, 64), 32896, dtype=np.uint16)
+        manifest = {"scale_z": 100.0, "location_z_cm": 0.0}
+        diagnostics = {"max_core_support_m": 0.0, "max_shoulder_support_m": 0.0}
+        with tempfile.TemporaryDirectory() as directory:
+            first = Path(directory) / "baseline.json"
+            second = Path(directory) / "measured.json"
+            a = prepare_patch(mesh, terrain, manifest, first)
+            b = prepare_patch(mesh, terrain, manifest, second, diagnostics=diagnostics)
+            self.assertEqual(
+                first.with_suffix(".f32").read_bytes(),
+                second.with_suffix(".f32").read_bytes(),
+            )
+            self.assertEqual(a["max_cut_m"], b["max_cut_m"])
+            self.assertEqual(
+                diagnostics["earthworks_fit"]["minimum_lift_for_cut_m"], 0.0
+            )
+
     def test_3d_gate_covers_short_network_window(self):
         mesh = sections([[v, 0] for v in np.linspace(0, 30, 61)])
         self.assertEqual(surface_inspection(mesh.tolist())["status"], "PASS")
