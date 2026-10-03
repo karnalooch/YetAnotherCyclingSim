@@ -88,7 +88,7 @@ def validate_full_preview(preview, source_length_m):
 
 
 def source_marker_mesh(points):
-    """A narrow, two-sided ground marker, not a pavement or support mesh."""
+    """A narrow 1 cm annotation slab, not a pavement or support mesh."""
     vertices, triangles = [], []
     for a, b in zip(points, points[1:]):
         if any(len(p) != 3 or not all(math.isfinite(v) for v in p) for p in (a, b)):
@@ -99,16 +99,18 @@ def source_marker_mesh(points):
             raise ValueError("Degenerate source marker")
         nx, ny = -dy / length * MARKER_WIDTH_M / 2, dx / length * MARKER_WIDTH_M / 2
         start = len(vertices)
-        vertices.extend(
-            [
-                [p[0] + sign * nx, p[1] + sign * ny, p[2]]
-                for p in (a, b)
-                for sign in (-1, 1)
-            ]
-        )
-        for face in ((0, 1, 2), (1, 3, 2)):
-            triangle = tuple(start + i for i in face)
-            triangles.extend((triangle, tuple(reversed(triangle))))
+        top = [
+            [p[0] + sign * nx, p[1] + sign * ny, p[2]]
+            for p in (a, b)
+            for sign in (-1, 1)
+        ]
+        vertices.extend(top + [[x, y, z - 0.01] for x, y, z in top])
+        # Separate top/bottom vertices avoid cancelling normals on coincident
+        # reverse-wound triangles when the native mesh recomputes vertex normals.
+        faces = [(0, 1, 2), (1, 3, 2), (6, 5, 4), (6, 7, 5)]
+        for u, v in ((0, 1), (1, 3), (3, 2), (2, 0)):
+            faces.extend(((v, u, u + 4), (v, u + 4, v + 4)))
+        triangles.extend(tuple(start + i for i in face) for face in faces)
     return vertices, triangles
 
 

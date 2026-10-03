@@ -104,11 +104,20 @@ class FullPreviewTests(unittest.TestCase):
         original = copy.deepcopy(points)
         vertices, triangles = source_marker_mesh(points)
         self.assertEqual(points, original)
-        self.assertEqual(len(vertices), 8)
-        self.assertEqual(len(triangles), 8)
+        self.assertEqual(len(vertices), 16)
+        self.assertEqual(len(triangles), 24)
         self.assertAlmostEqual(math.dist(vertices[0], vertices[1]), 0.15)
         for triangle in triangles:
             self.assertTrue(all(0 <= i < len(vertices) for i in triangle))
+        from collections import Counter
+
+        edges = Counter(
+            tuple(sorted((a, b)))
+            for face in triangles
+            for a, b in zip(face, (*face[1:], face[0]))
+        )
+        self.assertTrue(all(count == 2 for count in edges.values()))
+        self.assertAlmostEqual(vertices[0][2] - vertices[4][2], 0.01)
         with self.assertRaises(ValueError):
             source_marker_mesh([[0, 0, 0], [0, 0, 1]])
 
