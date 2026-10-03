@@ -107,7 +107,7 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         paths = [
             line.strip() for line in block.splitlines() if "/RegionTerrain/" in line
         ]
-        self.assertEqual(len(paths), 4)
+        self.assertEqual(len(paths), 5)
         self.assertNotIn("Upload bounded BOB construction lesson", block)
         self.assertNotIn("bob-build-lesson", block)
         self.assertNotIn("bob-lesson-", block)

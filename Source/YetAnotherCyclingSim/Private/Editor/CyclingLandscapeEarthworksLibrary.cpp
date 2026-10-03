@@ -208,7 +208,7 @@ bool UCyclingLandscapeEarthworksLibrary::ApplyRoadEarthworksPatch(
 		Width,
 		Height,
 		PF_R32_FLOAT,
-		TEXT("BOB_RoadEarthworks_MinHeight"));
+		NAME_None);
 	if (!IsValid(HeightTexture) ||
 		HeightTexture->GetPlatformData() == nullptr ||
 		HeightTexture->GetPlatformData()->Mips.IsEmpty())
@@ -240,7 +240,7 @@ bool UCyclingLandscapeEarthworksLibrary::ApplyRoadEarthworksPatch(
 
 	FActorSpawnParameters SpawnParameters;
 	SpawnParameters.OverrideLevel = World->GetCurrentLevel();
-	SpawnParameters.Name = TEXT("BOB_RoadEarthworksCutPatch");
+	// Multiple bounded road windows coexist; let Unreal allocate unique names.
 	SpawnParameters.ObjectFlags |= RF_Transient;
 	SpawnParameters.SpawnCollisionHandlingOverride =
 		ESpawnActorCollisionHandlingMethod::AlwaysSpawn;

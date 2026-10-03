@@ -39,6 +39,16 @@ jobs:
       YACS_UNREAL_WORKTREE: _unreal-ci-warm
 
     steps:
+      - name: Report previous isolated native capture failure
+        if: ${{ inputs.region_terrain_import }}
+        shell: pwsh
+        run: |
+          $logs = @(Get-ChildItem -Path "$env:GITHUB_WORKSPACE/_unreal-region-*/Saved/RuntimeProof/CI/RegionTerrain/*/capture.engine.log" -File -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1)
+          foreach ($log in $logs) {
+            Write-Host "Previous native capture diagnostic: $($log.FullName)"
+            Get-Content -LiteralPath $log.FullName -Tail 120
+          }
+
       - name: Isolate self-hosted Git configuration
         shell: pwsh
         run: |
@@ -532,6 +542,7 @@ jobs:
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.txt
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.png
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.f32
+            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.log
           if-no-files-found: error
           retention-days: 14
 
