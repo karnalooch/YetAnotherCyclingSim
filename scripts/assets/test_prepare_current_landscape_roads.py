@@ -132,6 +132,31 @@ class NetworkTests(unittest.TestCase):
         self.assertEqual(intervals[0]["status"], "PASS")
         self.assertEqual(intervals[0]["length_m"], 250.0)
 
+    def test_adaptive_boundary_sliver_is_never_sent_to_assessor(self):
+        stations = np.arange(0.0, 21.0, 1.0)
+        calls = []
+
+        def assess(start, end):
+            self.assertGreaterEqual(end - start, 2)
+            calls.append((start, end))
+            conflict = start <= 2 <= end
+            return {
+                "status": "BLOCKED" if conflict else "PASS",
+                "failure_station_index": 2 - start if conflict else None,
+                "diagnostics": {},
+                "reason": "synthetic boundary conflict" if conflict else None,
+            }
+
+        intervals = adaptive_conflict_intervals(
+            stations,
+            assess,
+            minimum_conflict_m=2.0,
+            conflict_margin_m=0.0,
+        )
+        self.assertTrue(calls)
+        self.assertAlmostEqual(sum(item["length_m"] for item in intervals), 20.0)
+        self.assertEqual(len([x for x in intervals if x["status"] == "BLOCKED"]), 1)
+
     def test_extreme_cut_diagnostic_writes_reviewable_png(self):
         cut = {
             "max_cut_m": 11.62,

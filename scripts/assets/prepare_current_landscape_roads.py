@@ -109,8 +109,19 @@ def adaptive_conflict_intervals(
         )
         core_start = max(start, pivot - half)
         core_end = min(end, pivot + half)
+        # Never recurse into a one-segment boundary remainder: every road
+        # decision needs at least three stations. Conservatively absorb that
+        # sliver into the failing core instead of creating an unmeasurable
+        # admitted island at an adaptive partition boundary.
+        if 0 < core_start - start < 2:
+            core_start = start
+        if 0 < end - core_end < 2:
+            core_end = end
         if core_start == start and core_end == end:
             split = (start + end) // 2
+            if split - start < 2 or end - split < 2:
+                raw.append({**outcome, "start_index": start, "end_index": end})
+                return
             visit(start, split)
             visit(split, end)
             return
@@ -1490,6 +1501,27 @@ if __name__ == "__main__":
         )
     )
     print("Approved windows:", len(r["approved"]), "Blocked:", len(r["blocked"]))
+    print(
+        "NETWORK_ADAPTIVE_SUMMARY",
+        json.dumps(
+            {
+                key: r[key]
+                for key in (
+                    "continuous_corridor_count",
+                    "decision_interval_count",
+                    "adaptive_conflict_interval_count",
+                    "technical_patch_tile_count",
+                    "approved_length_m",
+                    "blocked_length_m",
+                    "height_profile_candidate_length_m",
+                    "height_profile_candidate_window_count",
+                    "height_profile_incompatible_window_count",
+                )
+            },
+            separators=(",", ":"),
+            allow_nan=False,
+        ),
+    )
     # Keep compact blocked-window evidence available through Actions job logs,
     # independently of the large native image/terrain artifact archive.
     for window in r["blocked"]:
