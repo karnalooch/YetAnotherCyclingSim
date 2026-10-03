@@ -9,6 +9,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 JULKA = ROOT / "tools" / "julka"
@@ -17,8 +18,13 @@ sys.path.insert(0, str(JULKA))
 from julka_core.cli import (
     cmd_audit_root,
     cmd_cleanup,
+    cmd_doctor,
+    cmd_plan,
+    cmd_status,
+    cmd_verify,
     load_catalog_file,
     operation_lock,
+    run,
 )  # noqa: E402
 from julka_core.models import (
     JulkaError,
@@ -226,6 +232,43 @@ class JulkaCatalogContractTests(unittest.TestCase):
         self.assertEqual(
             load_catalog_file()["dataset_id"], "sa-calobra-cnig-working-v1"
         )
+
+    def test_incomplete_layers_cannot_pass_even_with_all_catalog_bytes_present(
+        self,
+    ) -> None:
+        catalog = json.loads(json.dumps(self.catalog))
+        catalog["profiles"]["code"]["incomplete_layers"] = ["ROADS: not admitted"]
+        with tempfile.TemporaryDirectory() as temporary:
+            args = type(
+                "Args",
+                (),
+                {
+                    "root": Path(temporary),
+                    "repo": ROOT,
+                    "profile": "code",
+                    "verify": True,
+                },
+            )()
+            with patch("julka_core.cli.load_catalog_file", return_value=catalog):
+                for operation in (cmd_status, cmd_plan, cmd_verify):
+                    with self.subTest(operation=operation.__name__):
+                        with contextlib.redirect_stdout(io.StringIO()):
+                            self.assertNotEqual(operation(args), 0)
+
+    def test_doctor_reports_missing_tools_without_aborting_remaining_checks(
+        self,
+    ) -> None:
+        with patch(
+            "julka_core.cli.subprocess.run",
+            side_effect=FileNotFoundError("missing executable"),
+        ):
+            self.assertEqual(run(["missing-tool"]).returncode, 127)
+            output = io.StringIO()
+            args = type("Args", (), {"root": ROOT, "project": None})()
+            with contextlib.redirect_stdout(output):
+                self.assertEqual(cmd_doctor(args), 1)
+            self.assertIn("Git LFS", output.getvalue())
+            self.assertIn("GitHub Release access", output.getvalue())
 
 
 if __name__ == "__main__":

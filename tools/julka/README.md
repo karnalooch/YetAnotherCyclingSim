@@ -30,7 +30,7 @@ uv run --project tools/julka python tools/julka/julka.py hydrate --profile sa-ca
 uv run --project tools/julka python tools/julka/julka.py verify --profile sa-calobra-working
 ```
 
-The Release profile restores 17 inputs (4 MDT50 cm GeoTIFFs, 9 LiDAR LAZs,
+The Release profile restores 17 inputs (4 MDS surface-model GeoTIFFs, 9 LiDAR LAZs,
 4 orthophotos): exactly **3,339,596,438 bytes**. SHA-256, byte count, BigTIFF or
 LASF signature, Release asset digest, draft state and the downloaded provider
 receipt are checked in staging before any file is promoted. Each file is
@@ -116,6 +116,12 @@ consumer assets. `sa-calobra-8x8` additionally requires the separate 17 MDT
 source tiles and reports GRID/ROADS/LANDCOVER gaps; it cannot pass while those
 inputs are missing. GIS metadata states which values are uninspected rather
 than inventing CRS/vertical datum/footprints from filenames alone.
+
+Even after all catalog files are present, the incomplete GRID/ROADS/LANDCOVER
+declarations keep `status`, `plan` and `verify` nonzero for `sa-calobra-8x8`.
+MDS describes the surface including objects and vegetation; it is not MDT ground
+authority. The working profile verifies stored bytes, not a clean Windows UE
+setup, independent-host recovery, world regeneration or playable-world acceptance.
 
 For a deliberately scoped read-only audit of an existing local asset root:
 

@@ -83,6 +83,22 @@ is a second-device backup.
 - GIS registry fields preserve unverified CRS, vertical reference, footprint,
   density/resolution, classification and NoData as explicitly uninspected.
 
+## Delivery boundary — Issue #345
+
+PR #346 closes the bounded CLI checkpoint #347 and delivers working-profile
+integrity checks.
+It references, but does not close, the full Julka workstream in Issue #345.
+That issue retains the missing 17 raw MDT inputs, independent-host/clean-OS
+restore, GRID/ROADS/LANDCOVER admission, producer/consumer and Unreal proof,
+and independent backup decisions. Issue #339 is consolidated into #345;
+PR #340 remains a historical isolated DVC experiment, not a Julka dependency.
+Issue #341 tracks the existing Windows host scripts in PR #336, rather than
+a second asset manager.
+
+Incomplete layer declarations produce a nonzero result from `status`, `plan`
+and `verify`, even when every file currently in the catalog verifies correctly.
+The working profile is a byte-integrity checkpoint, not completion of #345.
+
 ## Usage and SSOT
 
 Install/use commands and the 34-item identity catalog (the 17 Release files plus

@@ -60,7 +60,12 @@ SENSITIVE_DIRS = {
 def run(
     command: list[str], *, cwd: Path | None = None
 ) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(command, cwd=cwd, text=True, capture_output=True, check=False)
+    try:
+        return subprocess.run(
+            command, cwd=cwd, text=True, capture_output=True, check=False
+        )
+    except FileNotFoundError as exc:
+        return subprocess.CompletedProcess(command, 127, "", str(exc))
 
 
 def load_catalog_file(path: Path = CATALOG_PATH) -> dict[str, Any]:
@@ -360,6 +365,7 @@ def cmd_status(args: argparse.Namespace) -> int:
         print(f"{receipt_state:28} provider receipt: {receipt.relative_to(root)}")
     if profile.get("incomplete_layers"):
         print("INCOMPLETE LAYERS: " + "; ".join(profile["incomplete_layers"]))
+        failures += len(profile["incomplete_layers"])
     if profile.get("manual_only"):
         print("ARCHIVE STATUS: inventory only; no automatic hydration")
     if any(asset["backend"]["type"] == "github-release" for asset in assets):
@@ -561,7 +567,9 @@ def cmd_plan(args: argparse.Namespace) -> int:
     )
     return (
         3
-        if manual_missing or profile.get("manual_only")
+        if manual_missing
+        or profile.get("manual_only")
+        or profile.get("incomplete_layers")
         else 0
         if free >= required
         else 2
@@ -617,6 +625,7 @@ def cmd_verify(args: argparse.Namespace) -> int:
         failures += not receipt_ok
     if profile.get("incomplete_layers"):
         print("INCOMPLETE LAYERS: " + "; ".join(profile["incomplete_layers"]))
+        failures += len(profile["incomplete_layers"])
     print(f"Verification: {'PASS' if failures == 0 else 'FAIL'} ({failures} issue(s))")
     return 1 if failures else 0
 
