@@ -78,6 +78,23 @@ jobs:
           & $bootstrap -Workspace $env:GITHUB_WORKSPACE
           Remove-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup') -Recurse -Force
 
+      - name: Reclaim stale isolated region imports
+        if: ${{ inputs.region_terrain_import }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          foreach ($stale in @(Get-ChildItem -LiteralPath $env:GITHUB_WORKSPACE -Directory -Filter '_unreal-region-*' -Force)) {
+            if ($stale.Attributes -band [IO.FileAttributes]::ReparsePoint) {
+              throw "Refuse stale region cleanup through a reparse point: $($stale.FullName)"
+            }
+            if (-not (Test-Path -LiteralPath (Join-Path $stale.FullName '.git'))) {
+              throw "Refuse non-worktree stale region cleanup: $($stale.FullName)"
+            }
+            Write-Host "Removing uploaded stale region import: $($stale.FullName)"
+            Remove-Item -LiteralPath $stale.FullName -Recurse -Force
+          }
+          Get-PSDrive -PSProvider FileSystem | Select-Object Name, Used, Free
+
       - name: Checkout exact caller revision without LFS payloads
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -646,6 +663,25 @@ jobs:
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/Unreal/**/*.log
           if-no-files-found: error
           retention-days: 7
+
+      - name: Reclaim uploaded capture evidence before owner handoff
+        if: inputs.region_terrain_import
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}'
+          # The complete diagnostic has already been uploaded. The interactive
+          # editor needs manifests and float buffers, not capture PNGs or logs.
+          Get-ChildItem -LiteralPath $root -Recurse -File |
+            Where-Object { $_.Extension -in @('.png', '.log') } |
+            Remove-Item -Force
+          $driveName = ([System.IO.Path]::GetPathRoot($root)).TrimEnd('\').TrimEnd(':')
+          $drive = Get-PSDrive -Name $driveName
+          Write-Host ("Owner handoff free space: {0:N2} GB" -f ($drive.Free / 1GB))
+          if ($drive.Free -lt 512MB) {
+            throw ("Insufficient disk for owner handoff after uploaded-evidence cleanup: {0:N2} MB" -f ($drive.Free / 1MB))
+          }
 
       - name: Launch interactive Sa Calobra owner handoff
         if: inputs.region_terrain_import

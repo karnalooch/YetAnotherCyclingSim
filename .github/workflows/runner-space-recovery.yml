@@ -36,6 +36,7 @@ jobs:
                   $_.Name -match '^_.*worktree' -or
                   $_.Name -match '^_passo-giau-' -or
                   $_.Name -match '^_unreal-worktree-' -or
+                  $_.Name -match '^_unreal-(region|build)-' -or
                   $_.Name -match '^_remote-editor-'
                 }
             )
