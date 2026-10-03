@@ -3240,7 +3240,13 @@ cliff exception is NOT copied across the network. CUT is prepared with the
 existing native Min/world-unit float32 patch contract on `Road_Earthworks`;
 `Base_DTM` and saved maps remain untouched. Independent actual Landscape traces
 verify all asphalt section samples after patch evaluation. The existing
-vertical-support builder must retain full 0.5 m shoulders and <=4 m support.
+vertical-support builder must retain full 0.5 m shoulders and <=7 m support.
+Owner continuation decision, 2026-10-03: supports up to 7 m may be included
+in the visual preview for owner inspection. The shared preview ceiling applies
+to core and shoulder checks in preparation and actual traced shoulder walls
+in the native consumer. This changes no road height, CUT ceiling or protected
+Nudo boundary. Taller supports remain blocked; visual acceptance, collision
+and engineering admission remain pending.
 An incompatible conflict interval fails closed; it is not lowered arbitrarily,
 narrowed or claimed imported. No collision, physics or human/performance
 admission follows.
@@ -3258,7 +3264,7 @@ gate, measured planar metrics, grade/bank rate and 3D receipt when reached. CUT
 failures also retain the actual raster maximum, core support and shoulder wall
 height plus the signed shoulder-to-ground gap. `earthworks_fit` bounds a
 hypothetical **uniform upward translation**: minimum lift is
-`max(0, max_cut - 1 m)`; the support ceiling is the smaller of `4 m - max_core_support` and `4 m - max_shoulder_support`. These are
+`max(0, max_cut - 1 m)`; the support ceiling is the smaller of `7 m - max_core_support` and `7 m - max_shoulder_support`. These are
 diagnostic bounds only. An overlapping interval neither verifies source road
 height nor proves joins, a smooth profile, contact or engineering admission;
 an empty interval rules out that simple translation under the measured bounds.

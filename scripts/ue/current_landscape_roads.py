@@ -9,6 +9,7 @@ import unreal
 
 from scripts.geometry.bob_vertical_support import build_vertical_support
 from scripts.geometry.network_pavement import (
+    PREVIEW_SUPPORT_CAP_M,
     pavement_slab,
     shoulder_sections,
     surface_inspection,
@@ -243,7 +244,7 @@ def finish(world, root, exact_sha, network):
         if (
             proof["min_shoulder_extent_m"] < 0.4999
             or proof["max_shoulder_extent_m"] > 0.51
-            or proof["max_wall_height_m"] > 4.0
+            or proof["max_wall_height_m"] > PREVIEW_SUPPORT_CAP_M
         ):
             raise RuntimeError("Network support/shoulder admission failed")
         kept.append(

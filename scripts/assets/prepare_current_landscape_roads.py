@@ -34,7 +34,11 @@ from scripts.geometry.network_earthworks_diagnostics import (
     height_fit_bounds,
     uniform_height_candidate,
 )
-from scripts.geometry.network_pavement import shoulder_sections, surface_inspection
+from scripts.geometry.network_pavement import (
+    PREVIEW_SUPPORT_CAP_M,
+    shoulder_sections,
+    surface_inspection,
+)
 
 SOURCE = (
     ROOT
@@ -48,7 +52,7 @@ WIDTH = 5.0
 SHOULDER = 0.5
 STEP = 0.5
 CUT_CAP = 1.0
-SUPPORT_CAP = 4.0
+SUPPORT_CAP = PREVIEW_SUPPORT_CAP_M
 LATERAL_SWEEP_LIMIT_M = 4.0
 LATERAL_SWEEP_STEP_M = 0.25
 WIDTH_SENSITIVITY_M = (3.0, 4.0, 5.0)

@@ -12,6 +12,7 @@ from shapely.geometry import LineString
 from scripts.assets.prepare_current_landscape_roads import (
     adaptive_conflict_intervals,
     assess_lateral_sweep,
+    assess_network_interval,
     build_extreme_review,
     inspect_sections,
     measure_cut_envelopes,
@@ -44,6 +45,44 @@ def sections(axis):
 
 
 class NetworkTests(unittest.TestCase):
+    def test_preview_support_ceiling_keeps_height_and_cut_limit(self):
+        stations = np.linspace(0, 10, 21)
+        terrain = np.full((64, 64), 32768, dtype=np.uint16)
+        manifest = {
+            "scale_z": 100.0,
+            "location_z_cm": 0.0,
+            "origin_epsg_m": [0.0, 0.0],
+        }
+        axis = [[v, 20] for v in np.linspace(10, 20, 21)]
+        for height, expected in (
+            (4.5, "PASS"),
+            (7.0, "PASS"),
+            (7.001, "BLOCKED"),
+            (-1.1, "BLOCKED"),
+        ):
+            with self.subTest(height=height):
+                road = sections(axis).copy()
+                road[:, :, 2] = height
+                original = road.copy()
+                outcome = assess_network_interval(
+                    0,
+                    20,
+                    stations,
+                    road,
+                    np.full(21, height),
+                    np.zeros(21),
+                    LineString([[10, -20], [20, -20]]),
+                    terrain,
+                    manifest,
+                    [0.0, 0.0],
+                )
+                self.assertEqual(outcome["status"], expected, outcome)
+                np.testing.assert_array_equal(road, original)
+                if height > 7:
+                    self.assertEqual(outcome["diagnostics"]["stage"], "CORE_SUPPORT")
+                elif height < 0:
+                    self.assertEqual(outcome["diagnostics"]["stage"], "RASTER_CUT")
+
     def test_fixed_hundred_metre_loop_is_not_an_admission_boundary(self):
         script = Path(__file__).with_name(
             "prepare_current_landscape_roads.py"

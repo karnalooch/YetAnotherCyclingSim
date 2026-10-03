@@ -4,6 +4,9 @@ import math
 
 from scripts.geometry.road_surface_profile import inspect_surface
 
+# Owner-authorized visual preview ceiling; this does not admit riding structures.
+PREVIEW_SUPPORT_CAP_M = 7.0
+
 
 def surface_inspection(sections):
     """Apply the accepted 3D facet/bank/edge gates across a whole new window."""
