@@ -31,8 +31,10 @@ official CNIG WCS source
 - `uv` 0.11 or newer
 - network access to PyPI and the declared CNIG WCS URL for the initial run
 
-The environment is locked in `uv.lock`. DVC, NumPy and Rasterio are scoped to
-this directory and are not added as production project dependencies.
+The deterministic preparation environment is locked in `uv.lock`. NumPy and
+Rasterio are scoped to this directory and are not added as production project
+dependencies. DVC is supplied separately as a pinned experiment tool with
+`uv --with`; its dependency closure is not declared as a YACS dependency.
 
 Experimental tool provenance:
 
@@ -42,8 +44,8 @@ Experimental tool provenance:
 | NumPy | 2.2.6 | BSD-3-Clause | deterministic raster array conversion |
 | Rasterio | 1.4.3 | BSD-3-Clause | bounded GeoTIFF read and resampling |
 
-The packages are resolved from PyPI by `uv`; no third-party source or wheel is
-vendored or redistributed in Git.
+The packages and pinned DVC tool are resolved from PyPI by `uv`; no third-party
+source or wheel is vendored or redistributed in Git.
 
 ## Run the complete proof
 
@@ -51,8 +53,8 @@ From this directory:
 
 ```powershell
 uv sync --locked
-uv run python -m unittest discover -s tests -v
-uv run python run_spike.py
+uv run --locked python -m unittest discover -s tests -v
+uv run --locked --with dvc==3.67.1 python run_spike.py
 ```
 
 `run_spike.py` performs the destructive part only inside this experiment. It
@@ -70,16 +72,16 @@ the prepared bytes and the YACS-facing artifact fingerprint.
 The runner is equivalent to the following high-level sequence:
 
 ```powershell
-uv run dvc update data/raw/mallorca_mdt05.tif.dvc
-uv run dvc push data/raw/mallorca_mdt05.tif.dvc
+uv run --locked --with dvc==3.67.1 dvc update data/raw/mallorca_mdt05.tif.dvc
+uv run --locked --with dvc==3.67.1 dvc push data/raw/mallorca_mdt05.tif.dvc
 # remove the working file and this nested repo's .dvc/cache
-uv run dvc pull data/raw/mallorca_mdt05.tif.dvc
-uv run dvc repro
-uv run dvc push
+uv run --locked --with dvc==3.67.1 dvc pull data/raw/mallorca_mdt05.tif.dvc
+uv run --locked --with dvc==3.67.1 dvc repro
+uv run --locked --with dvc==3.67.1 dvc push
 # remove prepared outputs and this nested repo's .dvc/cache
-uv run dvc pull
-uv run dvc repro --force
-uv run dvc status
+uv run --locked --with dvc==3.67.1 dvc pull
+uv run --locked --with dvc==3.67.1 dvc repro --force
+uv run --locked --with dvc==3.67.1 dvc status
 ```
 
 ## Provenance
