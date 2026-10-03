@@ -235,6 +235,18 @@ def adaptive_conflict_intervals(
                 evidence_range = [start_index, end_index]
         # Expansion is conservative; PASS may become BLOCKED, never vice versa.
         status = "BLOCKED" if is_blocked or outcome["status"] == "BLOCKED" else "PASS"
+        if is_blocked and outcome["status"] == "PASS":
+            # Reassessment cannot erase a conservative conflict margin or an
+            # absorbed short interval. Preserve its distinct blocking reason.
+            outcome = {
+                **outcome,
+                "reason": "Conservative conflict margin or absorbed short interval",
+                "diagnostics": {
+                    **outcome.get("diagnostics", {}),
+                    "blocking_basis": "CONSERVATIVE_INTERVAL_EXPANSION",
+                    "reassessment_status": "PASS",
+                },
+            }
         result.append(
             {
                 **outcome,

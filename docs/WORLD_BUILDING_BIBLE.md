@@ -3232,8 +3232,11 @@ conflict intervals with a 2 m review margin; a conflict crossing a probe seam
 remains one conflict. Only after the decision may clear spans be split into
 <=100 m patch/streaming tiles. Those tiles are not design or admission
 boundaries and reuse the exact globally-authored endpoint samples. Failed
-adaptive intervals retain original feature ownership and reasons. A
-width-preserving fit is not admitted merely because it renders.
+adaptive intervals retain original feature ownership and reasons. A span kept
+blocked only by conservative conflict-margin expansion or absorption of a short
+interval retains an explicit conservative reason even when reassessment passes;
+that PASS never silently changes its admission or erases the reason required by
+the visual-context receipt. A width-preserving fit is not admitted merely because it renders.
 
 The ordinary CUT cap remains 1 m. The previously reviewed hairpin's scoped 4 m
 cliff exception is NOT copied across the network. CUT is prepared with the

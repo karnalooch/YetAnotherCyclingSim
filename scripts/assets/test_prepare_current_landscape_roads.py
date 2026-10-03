@@ -117,6 +117,30 @@ class NetworkTests(unittest.TestCase):
         self.assertGreater(blocked[0]["end_m"], 51.0)
         self.assertLess(blocked[0]["length_m"], 25.0)
 
+    def test_conservative_block_retains_reason_when_reassessment_passes(self):
+        stations = np.arange(0.0, 101.0, 1.0)
+
+        def assess(start, end):
+            conflict = start <= 49 <= end and (end-start <= 8 or end-start >= 40)
+            return {
+                "status": "BLOCKED" if conflict else "PASS",
+                "reason": "Local geometry conflict" if conflict else None,
+                "failure_station_index": 49-start if conflict else None,
+                "diagnostics": {},
+            }
+
+        intervals = adaptive_conflict_intervals(
+            stations, assess, minimum_conflict_m=6.0, conflict_margin_m=2.0,
+        )
+        blocked = [item for item in intervals if item["status"] == "BLOCKED"]
+        self.assertTrue(blocked)
+        conservative = [item for item in blocked if item["diagnostics"].get("reassessment_status") == "PASS"]
+        self.assertTrue(conservative)
+        for item in conservative:
+            self.assertEqual(item["reason"], "Conservative conflict margin or absorbed short interval")
+            self.assertEqual(item["diagnostics"]["blocking_basis"], "CONSERVATIVE_INTERVAL_EXPANSION")
+        self.assertAlmostEqual(sum(item["length_m"] for item in intervals), 100.0)
+
     def test_storage_tiles_do_not_become_admission_boundaries(self):
         stations = np.linspace(0.0, 250.0, 501)
         tiles = technical_patch_tiles(0, len(stations) - 1, stations)
