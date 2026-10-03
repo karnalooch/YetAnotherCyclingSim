@@ -72,7 +72,7 @@ def main() -> int:
         "ue-mcp provenance metadata drifted",
     )
     require(
-        package.get("overrides", {}).get("fast-uri") == "3.1.7",
+        package.get("overrides", {}).get("fast-uri") == "3.1.8",
         "fast-uri security override drifted",
     )
 
@@ -87,7 +87,7 @@ def main() -> int:
         "locked ue-mcp version drifted",
     )
     require(
-        lock["packages"]["node_modules/fast-uri"].get("version") == "3.1.7",
+        lock["packages"]["node_modules/fast-uri"].get("version") == "3.1.8",
         "patched fast-uri lock version drifted",
     )
 
