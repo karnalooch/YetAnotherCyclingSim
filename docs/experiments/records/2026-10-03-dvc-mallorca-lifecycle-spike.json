@@ -6,6 +6,7 @@
   "title": "DVC Mallorca source lifecycle and reproduction spike",
   "status": "TECHNICAL_PASS",
   "issue": 339,
+  "pr": 340,
   "hypothesis": "DVC can manage a real bounded Mallorca terrain source through content-addressed storage, deletion, rehydration, preparation, reuse and deterministic reproduction without changing YACS production paths.",
   "technical": [
     "DVC 3.67.1 imported a 99,090-byte official CNIG/IDEE Mallorca MDT05 GeoTIFF and stored it in an isolated local remote.",
@@ -40,6 +41,10 @@
     {
       "label": "Issue #339",
       "url": "https://github.com/karnalooch/YetAnotherCyclingSim/issues/339"
+    },
+    {
+      "label": "Pull request #340",
+      "url": "https://github.com/karnalooch/YetAnotherCyclingSim/pull/340"
     },
     {
       "label": "CNIG/IDEE MDT05 catalog",
