@@ -64,7 +64,15 @@ class UnrealWorkspaceTests(unittest.TestCase):
         self.summary = self.root / "Saved/RuntimeProof/CI/Unreal/unreal_ci_summary.json"
         self.summary.parent.mkdir(parents=True)
         self.summary.write_text(
-            json.dumps({"Failed": 0, "Errors": 0, "Discovered": 26})
+            json.dumps(
+                {
+                    "Head": self.head,
+                    "ExpectedHead": self.head,
+                    "Failed": 0,
+                    "Errors": 0,
+                    "Discovered": 26,
+                }
+            )
         )
 
     def write_state(self):
@@ -132,13 +140,39 @@ class UnrealWorkspaceTests(unittest.TestCase):
                 self.assertRaises(ValueError),
             ):
                 cache.publish(self.workspace, self.name, head, compile_fp, proof_fp)
-        self.summary.write_text('{"Failed": 1, "Errors": 0, "Discovered": 26}')
+        self.summary.write_text(
+            json.dumps(
+                {
+                    "Head": self.head,
+                    "ExpectedHead": self.head,
+                    "Failed": 1,
+                    "Errors": 0,
+                    "Discovered": 26,
+                }
+            )
+        )
         with self.assertRaisesRegex(ValueError, "green Automation"):
             self.publish()
         (self.root / "Binaries/Win64" / cache.BINARY_NAMES[0]).unlink()
         with self.assertRaisesRegex(ValueError, "binaries missing"):
             self.publish()
         self.assertFalse((self.workspace / cache.POINTER).exists())
+
+    def test_publication_rejects_green_summary_from_another_revision(self):
+        for field in ("Head", "ExpectedHead"):
+            with self.subTest(field=field):
+                summary = {
+                    "Head": self.head,
+                    "ExpectedHead": self.head,
+                    "Failed": 0,
+                    "Errors": 0,
+                    "Discovered": 26,
+                }
+                summary[field] = "older-head"
+                self.summary.write_text(json.dumps(summary))
+                with self.assertRaisesRegex(ValueError, "summary HEAD mismatch"):
+                    self.publish()
+                self.assertFalse((self.workspace / cache.POINTER).exists())
 
     def test_corrupt_pointer_fails_before_cleanup(self):
         path = self.workspace / cache.POINTER

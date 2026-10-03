@@ -156,6 +156,8 @@ def publish(
             encoding="utf-8-sig"
         )
     )
+    if summary.get("Head") != head or summary.get("ExpectedHead") != head:
+        raise ValueError("Unreal publication Automation summary HEAD mismatch")
     if summary["Failed"] != 0 or summary["Errors"] != 0 or summary["Discovered"] <= 0:
         raise ValueError("Unreal publication requires green Automation")
     write_pointer(workspace, name)

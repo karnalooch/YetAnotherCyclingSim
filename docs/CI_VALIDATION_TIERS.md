@@ -251,7 +251,8 @@ cannot leave reusable proof behind.
 Issue #355 keeps a successful isolated build as the active cache worktree.
 `scripts/ci/unreal_ci_workspace.py` publishes only an atomic runner-local
 `_yacs-unreal-ci/active.json` pointer after green Automation and state recording,
-**before** downstream terrain preparation/capture. Binaries, plugin outputs,
+**before** downstream terrain preparation/capture. Both the recorded state and
+Automation summary must name the exact published HEAD. Binaries, plugin outputs,
 intermediates and their state stay together at stable absolute paths. A later
 import failure does not invalidate that successful compile/proof checkpoint.
 The next job selects this candidate before checkout or stale-build cleanup;
