@@ -30,6 +30,8 @@ class CaptureTransitionTests(unittest.TestCase):
         self.assertIn("ShowFlag.MeshEdges 1", script)
         self.assertIn("ShowFlag.MeshEdges 0", script)
         self.assertIn("spawn_mediterranean_atmosphere", script)
+        self.assertIn("from sa_calobra_atmosphere import", script)
+        self.assertNotIn("from scripts.ue.sa_calobra_atmosphere import", script)
         self.assertIn('"atmosphere": _atmosphere_proof', script)
 
     def test_geometry_inspection_uses_clay_wireframe_and_selects_road(self):

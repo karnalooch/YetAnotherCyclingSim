@@ -185,6 +185,7 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         self.assertIn("unreal.DirectionalLight", startup)
         self.assertIn("unreal.SkyLight", startup)
         self.assertIn("spawn_mediterranean_atmosphere", startup)
+        self.assertIn("from sa_calobra_atmosphere import", startup)
         self.assertIn('"lighting_status"', startup)
         self.assertIn('"INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT"', startup)
         self.assertIn('"cut_patch_applied"', startup)
