@@ -89,10 +89,21 @@ controls; there is no custom runtime spline evaluator or new dependency.
     positions = (controls[:-2] + 4*controls[1:-1] + controls[2:]) / 6
     tangents = (controls[2:] - controls[:-2]) / 2
     for i, guide in enumerate(guides):
-        if 110.0 <= guide["station_m"] <= 185.0:
-            guide.update(reference_xy_m=positions[i - 1].tolist(),
-                         arrive_tangent_xy_m=tangents[i - 1].tolist(),
-                         leave_tangent_xy_m=tangents[i - 1].tolist())
+        station = guide["station_m"]
+        if 110.0 <= station <= 195.0:
+            # Rejoin the unchanged road over 175..195 m, rather than abruptly
+            # switching control families at 187.5 m and pinching its shoulder.
+            u = max(0.0, (station - 175.0) / 20.0)
+            weight = 1 - u**3*(10 - 15*u + 6*u*u)
+            derivative = -30*u*u*(1-u)**2 / 20.0
+            old_position = np.array(guide["reference_xy_m"])
+            old_tangent = np.array(guide["leave_tangent_xy_m"])
+            position = old_position + weight*(positions[i - 1] - old_position)
+            tangent = (old_tangent + weight*(tangents[i - 1] - old_tangent)
+                       + 2.5*derivative*(positions[i - 1] - old_position))
+            guide.update(reference_xy_m=position.tolist(),
+                         arrive_tangent_xy_m=tangent.tolist(),
+                         leave_tangent_xy_m=tangent.tolist())
     base_width = sum(width_at(observations, 125.0))
     width_samples = [dict(r) for r in observations["samples"]
                      if r["station_m"] < FIT_DOMAIN[0] or r["station_m"] > FIT_DOMAIN[1]]
@@ -112,6 +123,7 @@ controls; there is no custom runtime spline evaluator or new dependency.
             "turn_sign": 1 if signed_turn > 0 else -1, "base_width_m": base_width, "widening_m": 0.0,
             "base_width_source_station_m": 125.0,
             "fit_domain_m": list(FIT_DOMAIN), "circle_prior_weight": circle_weight,
+            "exit_rejoin_domain_m": [175.0, 195.0],
             "regularization": regularization, "circle_prior": circle_prior,
             "vehicle_swept_path_admitted": False}
     return widths, spec

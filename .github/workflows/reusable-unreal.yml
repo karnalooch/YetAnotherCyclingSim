@@ -407,6 +407,8 @@ jobs:
             $support.recipe_id -ne 'bob-vertical-support-v1' -or
             $support.status -ne 'GEOMETRY_BUILT_VISUAL_REVIEW_PENDING' -or
             $support.shoulder_m -ne 0.5 -or
+            $support.min_shoulder_extent_m -lt 0.4999 -or
+            $support.max_shoulder_extent_m -gt 0.51 -or
             $support.station_count -ne 2401 -or
             $support.ground_trace_count -ne 4802 -or
             $support.wall_segment_count -le 0 -or

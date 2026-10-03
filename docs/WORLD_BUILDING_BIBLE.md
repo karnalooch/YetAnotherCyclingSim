@@ -3045,8 +3045,11 @@ squares fit to dense source positions with a 0.75 circular-fairness prior and
 regularization weight 10, and restores the convex control envelope. The circle
 is a fit prior, not a mandatory circle with separately patched approaches.
 Cardinal cubic B-spline knot values and derivatives become native cubic Hermite
-controls over 110..185 m. Inside the bounded design the curve is C2; adjoining
-unchanged-road segments retain explicit shared tangents. The method does not
+controls starting at 110 m. The 175..195 m exit rejoin blends position and its
+derivative into the unchanged road with a quintic weight; an abrupt control
+family switch at 187.5 m had pinched the shoulder in the first native run.
+Inside the bounded design the curve is C2; adjoining unchanged-road segments
+retain explicit shared tangents. The method does not
 claim a clothoid, surveyed geometry or a universal road-network solver.
 
 The admitted bend domain is 122.5..175 m, with main bend 137.5..155 m. Entry,
@@ -3082,3 +3085,11 @@ stale/missing consumer evidence. Mirrored turn directions and physical edge
 ordering are covered. Fresh exact-SHA Unreal capture and owner review are still
 required; local mathematical checks do not confer native, visual, collision,
 continuous-support, performance or vehicle-clearance acceptance.
+
+The current native CI also requires measured shoulder extents of at least
+0.4999 m and at most 0.51 m across the full 300 m preview, retaining the nominal
+0.5 m shoulder and allowing small convex-corner miters. Declaring `shoulder_m`
+alone cannot admit a silently tapered shoulder. The d439bf3 native run proved
+the no-nose outline but exposed 0.063 m shoulder width at station 187.375 m;
+its support result is superseded by the smooth exit-rejoin correction and
+must not be reported as full shoulder acceptance.
