@@ -2,7 +2,7 @@
 
 Realistic indoor cycling simulator built with Unreal Engine 5.
 
-YACS combines deterministic cycling physics with a real-data-first Unreal Engine world pipeline currently focused on the Passo Giau route.
+YACS combines deterministic cycling physics with a real-data-first Unreal Engine world pipeline currently focused on Sa Calobra / Coll dels Reis, Mallorca. The selected MDT50cm dataset is available; Unreal terrain, Ma-2141 road, visual and performance acceptance remain pending.
 
 ## Documentation
 

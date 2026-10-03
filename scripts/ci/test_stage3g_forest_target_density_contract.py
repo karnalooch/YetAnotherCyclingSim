@@ -87,40 +87,45 @@ class Stage3GForestTargetDensityContractTests(unittest.TestCase):
             UNREAL_WORKFLOW,
         ):
             text = workflow.read_text(encoding="utf-8")
-            self.assertIn(
-                "_bootstrap-cleanup/scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1",
-                text,
-            )
-            self.assertIn(
-                "Bootstrap cleanup helper outside persistent worktree",
-                text,
-            )
-            self.assertIn("path: _bootstrap-cleanup", text)
+            self.assertIn("scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1", text)
+            self.assertIn("Bootstrap cleanup helper outside persistent worktree", text)
             self.assertIn("lfs: false", text)
             self.assertIn("-Workspace $env:GITHUB_WORKSPACE", text)
+            self.assertIn("git clean -ffdx", text)
+            self.assertIn("$LASTEXITCODE -ne 0", text)
+
+        for workflow, workspace in (
+            (AUTHOR_WORKFLOW, "_author-worktree"),
+            (PERF_WORKFLOW, "_perf-worktree"),
+        ):
+            text = workflow.read_text(encoding="utf-8")
+            self.assertIn(f"path: {workspace}", text)
+            self.assertIn("path: _bootstrap-cleanup", text)
             self.assertIn(
-                "git clean -ffdx -e Saved/Logs/YetAnotherCyclingSim.log",
-                text,
+                "git clean -ffdx -e Saved/Logs/YetAnotherCyclingSim.log", text
             )
             self.assertIn("Test-Path -LiteralPath '.git'", text)
 
-        author_text = AUTHOR_WORKFLOW.read_text(encoding="utf-8")
-        self.assertIn("path: _author-worktree", author_text)
-        self.assertIn("clean: true", author_text)
-
-        perf_text = PERF_WORKFLOW.read_text(encoding="utf-8")
-        self.assertIn("path: _perf-worktree", perf_text)
-        self.assertIn("clean: false", perf_text)
-
         full_text = FULL_WORKFLOW.read_text(encoding="utf-8")
-        self.assertIn("path: _stage3g-full-worktree", full_text)
-        self.assertIn("working-directory: _stage3g-full-worktree", full_text)
+        self.assertIn(
+            "STAGE3G_BOOTSTRAP_DIR: _bootstrap-cleanup-${{ github.run_id }}-${{ github.run_attempt }}",
+            full_text,
+        )
+        self.assertIn(
+            "STAGE3G_WORKTREE_DIR: _stage3g-full-${{ github.run_id }}-${{ github.run_attempt }}",
+            full_text,
+        )
+        self.assertIn("path: ${{ env.STAGE3G_WORKTREE_DIR }}", full_text)
+        self.assertIn("working-directory: ${{ env.STAGE3G_WORKTREE_DIR }}", full_text)
         self.assertIn("clean: true", full_text)
+        self.assertIn("Test-Path -LiteralPath (Join-Path $worktree '.git')", full_text)
 
         unreal_text = UNREAL_WORKFLOW.read_text(encoding="utf-8")
-        self.assertIn("path: _unreal-worktree", unreal_text)
-        self.assertIn("working-directory: _unreal-worktree", unreal_text)
-        self.assertIn("clean: true", unreal_text)
+        self.assertIn("YACS_UNREAL_WORKTREE: _unreal-ci-warm", unreal_text)
+        self.assertIn("path: ${{ env.YACS_UNREAL_WORKTREE }}", unreal_text)
+        self.assertIn("working-directory: ${{ env.YACS_UNREAL_WORKTREE }}", unreal_text)
+        self.assertIn("clean: false", unreal_text)
+        self.assertIn("-e '/Saved/BuildCache/UnrealCi/'", unreal_text)
 
         helper = WORKSPACE_CLEANUP.read_text(encoding="utf-8")
         self.assertIn("Get-CimInstance Win32_Process", helper)

@@ -27,3 +27,7 @@
 *.hda filter=lfs diff=lfs merge=lfs -text
 *.hdalc filter=lfs diff=lfs merge=lfs -text
 *.terrain filter=lfs diff=lfs merge=lfs -text
+*.tif filter=lfs diff=lfs merge=lfs -text
+
+# Preserve exact bytes of externally pinned source responses (including on Windows).
+worldgen/terrain/benchmarks/sa_calobra/*_source_*.json -text

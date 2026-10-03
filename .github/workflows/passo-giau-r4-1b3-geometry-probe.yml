@@ -2,42 +2,6 @@ name: Passo Giau R4.1B.3 Geometry Script capability probe
 run-name: Passo Giau R4.1B.3 ${{ inputs.gumball_request_id || github.event_name }}
 
 on:
-  push:
-    branches:
-      - spike/r4-1b3-local-ground-corridor
-    paths:
-      - '.github/workflows/passo-giau-r4-1b3-geometry-probe.yml'
-      - 'scripts/ue/Invoke-YacsGeometryScriptProbe.ps1'
-      - 'scripts/ue/Invoke-YacsR4_1ProofSuite.ps1'
-      - 'scripts/ue/r4_1_editor_session.py'
-      - 'scripts/ue/Test-YacsR4_1PreparedWorkspace.ps1'
-      - 'scripts/ue/Invoke-YacsPassoGiauHairpinCorridorProof.ps1'
-      - 'scripts/ci/test_r4_1_proof_suite_contract.py'
-      - 'scripts/ue/probe_geometry_script_api.py'
-      - 'scripts/ue/probe_sp638_local_corridor_topology.py'
-      - 'scripts/ue/Invoke-YacsSp638CorridorTopologyProbe.ps1'
-      - 'scripts/ue/stage3g_capture_sp638_local_corridor.py'
-      - 'scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1'
-      - 'scripts/geometry/**'
-      - 'YetAnotherCyclingSim.uproject'
-  pull_request:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/passo-giau-r4-1b3-geometry-probe.yml'
-      - 'scripts/ue/Invoke-YacsGeometryScriptProbe.ps1'
-      - 'scripts/ue/Invoke-YacsR4_1ProofSuite.ps1'
-      - 'scripts/ue/r4_1_editor_session.py'
-      - 'scripts/ue/Test-YacsR4_1PreparedWorkspace.ps1'
-      - 'scripts/ue/Invoke-YacsPassoGiauHairpinCorridorProof.ps1'
-      - 'scripts/ci/test_r4_1_proof_suite_contract.py'
-      - 'scripts/ue/probe_geometry_script_api.py'
-      - 'scripts/ue/probe_sp638_local_corridor_topology.py'
-      - 'scripts/ue/Invoke-YacsSp638CorridorTopologyProbe.ps1'
-      - 'scripts/ue/stage3g_capture_sp638_local_corridor.py'
-      - 'scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1'
-      - 'scripts/geometry/**'
-      - 'YetAnotherCyclingSim.uproject'
   workflow_dispatch:
     inputs:
       exact_sha:
@@ -86,7 +50,7 @@ jobs:
           python -m py_compile scripts/ue/stage3g_capture_sp638_local_corridor.py
 
   probe:
-    # Cost-control gate: deterministic kernel checks remain automatic.
+    # Deterministic kernel checks are automatic in reusable-python; this is the explicit proof bundle.
     # The canonical heavy build-once / prove-many UE suite is explicit dispatch.
     if: github.event_name == 'workflow_dispatch'
     needs: kernel-tests

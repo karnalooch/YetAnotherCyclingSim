@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "case_id": "ma2141-native-drape-5826507",
+  "status": "REJECTED_CONTACT_TRIAL",
+  "eligible_for_learning": false,
+  "exact_sha": "5826507a84a0dd90998d2fbb7c92b0e6bf492f4a",
+  "ci_run_id": 36973668319,
+  "artifact_id": 11212289264,
+  "artifact_zip_sha256": "5e2761f1b8cbef5694dcc7e24dbae79eea57d8bb58941db079d1f3e0f22da92f",
+  "producer_receipt_sha256": "510ac44fdf4a2f40150773eaf34f36a13403100f5446accfab1b8fa4a1e76051",
+  "contact": {
+    "sample_count": 15025,
+    "triangle_centroid_count": 28800,
+    "surface_minus_dtm_min_m": -1.1236302540813767,
+    "surface_minus_dtm_max_m": 1.5055473373877248,
+    "floating_centroid_count": 456,
+    "penetrating_centroid_count": 712,
+    "native_unreal_contact_status": "PENDING",
+    "r16_contact_status": "FAIL"
+  },
+  "facts": [
+    "R16 triangle interiors fail although every prepared top vertex is nominally 40 mm above its sampled DTM.",
+    "Native Unreal contact was not executed: screenshot script raised NameError for __file__ after the two terrain-only captures.",
+    "Base_DTM and Road_Earthworks were not modified."
+  ],
+  "unresolved_causes": [
+    "Incorrect inferred pavement edges vs steep roadside terrain",
+    "Bilinear raster interpolation vs triangular road interpolation",
+    "Unregularized source ground is not a reconstructed asphalt profile"
+  ],
+  "prohibited_fixes": [
+    "Increase vertical offset until artifacts disappear",
+    "Blur the whole terrain",
+    "Treat inferred photographic width as surveyed truth",
+    "Promote rejected example into verified_terrain_cases.json"
+  ],
+  "repair_order": [
+    "Verify footprint, separate edge offsets and source uncertainty",
+    "Inspect worst triangle stations and native Landscape contact",
+    "Regularize road profile with explicit deviation bounds",
+    "Evaluate bounded native Road_Earthworks cut/fill; detect excessive fill and neighboring branches",
+    "Repeat contact/collision, rider camera and performance proof",
+    "Only after exact-SHA technical and human visual acceptance consider verified-case memory"
+  ],
+  "solution_validated": false
+}

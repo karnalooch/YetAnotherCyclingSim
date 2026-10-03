@@ -53,6 +53,54 @@ Citation recorded by the YACS downloader:
 > (Version 1.1). Istituto Nazionale di Geofisica e Vulcanologia (INGV).
 > https://doi.org/10.13127/tinitaly/1.1
 
+## CNIG/IGN MDT50cm Sa Calobra terrain benchmark
+
+- Dataset: MDT50 cm — 3ª cobertura, v1 (2022–2025)
+- Provider: Centro Nacional de Información Geográfica / Instituto Geográfico Nacional (CNIG/IGN)
+- Product page: https://centrodedescargas.cnig.es/CentroDescargas/modelo-digital-terreno-mdt50cm
+- License: CNIG general-use license compatible with CC BY 4.0
+- License and attribution reference: https://www.scne.es/
+- Preparation tooling: `scripts/assets/prepare_sa_calobra_mdt50cm.py`
+
+YACS includes a derived 8 km × 8 km, 0.5 m GeoTIFF benchmark covering Sa
+Calobra and Coll de Cal Reis. The 17 original CNIG COG tiles remain outside
+Git; their exact filenames, sizes and SHA-256 values are pinned by the
+preparation tool. The derived GeoTIFF is stored through Git LFS with its
+machine-readable provenance report.
+
+Required attribution retained in the GeoTIFF metadata and report:
+
+> Obra derivada de MDT50cm-cob3 2022-2025 CC-BY 4.0 scne.es
+
+This data is a terrain-research benchmark. Its inclusion is not visual,
+performance or production-world acceptance.
+
+## OpenStreetMap Sa Calobra road inventory
+
+- Provider: OpenStreetMap contributors
+- Copyright and license: https://www.openstreetmap.org/copyright
+- License: Open Data Commons Open Database License 1.0
+- Snapshot timestamp: `2026-10-01T20:46:35Z`
+- Bounds: WGS84 `2.76258,39.80384,2.85626,39.87588`
+- Included summary:
+  `worldgen/terrain/benchmarks/sa_calobra/sa_calobra_road_inventory_2026-10-01.json`
+
+YACS includes aggregate road-class lengths and named-road planning totals. Raw
+OpenStreetMap geometry is not committed by this benchmark. The summary is a
+planning inventory and is not route, physics, surface, access or gameplay
+authority.
+
+## Strava Global Heatmap reference not included
+
+The Strava Global Heatmap was inspected locally as a planning reference. YACS
+does not include Strava tiles, screenshots, sampled intensity values, ranked
+geometry, CSV, GeoJSON or derivative heatmap imagery. The source remains
+blocked from copying or derived-data inclusion under the current Strava Terms
+of Service and API Policy:
+
+- https://www.strava.com/legal/terms
+- https://www.strava.com/legal/api_policy
+
 ## Unreal Engine
 
 YACS is built with Unreal Engine. Unreal Engine itself is not vendored in this
@@ -83,3 +131,45 @@ MIT permission notice are preserved.
 GeoTerrain remains reference-only because the checked revision has unresolved
 license-artifact ambiguity. Its current provenance status is tracked in
 `docs/legal/DEPENDENCY_PROVENANCE.md`.
+
+## CartoCiudad Ma-2141 source geometry
+
+Source: https://www.cartociudad.es/geocoder/api/geocoder/find?q=Ma-2141
+
+CC BY 4.0 www.scne.es/productos.html#CartoCiudad
+
+The immutable response is included for source/topology review. Metric lengths
+and coordinates are derived by projection from service EPSG:4326 to EPSG:25831.
+No road width, access, surface or vertical crossing interpretation is added.
+License/service coordinate evidence: https://www.cartociudad.es/web/portal/faq
+
+## IGN IGR Redes de Transporte Ma-2141 source review
+
+Source: https://api-features.idee.es/collections/roadlink
+
+Obra derivada de IGR Redes de Transporte, consulta 2026-10-02, CC BY 4.0 scne.es
+
+License: https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf
+
+The pinned OGC API response retains four original features. The bounded
+comparison selects `VIAL_TR70190001272`, projects horizontal coordinates into
+EPSG:25831 and compares raw third-coordinate numbers with the native DTM.
+It does not establish a common vertical datum or asphalt-height authority.
+Source `paved`, lane count and `fictitious` attributes remain source claims.
+
+
+## PNOA Ma-2141 bounded pavement review image
+
+- Provider/product: IGN/CNIG PNOA most-recent orthophoto WMS.
+- Source: https://www.ign.es/wms-inspire/pnoa-ma
+- License: CC BY 4.0; https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf
+- Attribution: Obra derivada de PNOA, consulta 2026-10-02, CC BY 4.0 scne.es.
+- Included image: `worldgen/terrain/benchmarks/sa_calobra/ma2141_pnoa_review_2026-10-02.jpg`.
+- SHA-256: `4c896f9e64f9e86aa4005d59bd33d46f6b7619dac84cf0201180f4b79b1f20f9`.
+- Exact request, CRS/bounds, pixel size and inferred edge observations are recorded
+  in the adjacent `ma2141_pavement_preview_profile.json`.
+- Status: admitted for bounded visual source review and an inferred contact trial;
+  not admitted as survey, height, road-width, access or physics authority.
+- Acquisition date and native GSD remain unknown; request date is not flight date.
+  Approximate AI-interpreted edge positions have an explicit review allowance,
+  not measured statistical accuracy. The generated preview is not road acceptance.

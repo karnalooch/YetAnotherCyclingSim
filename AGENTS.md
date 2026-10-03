@@ -54,6 +54,20 @@ Owner reaffirmation, 2026-10-01 (Issue #297): use authorized remote GitHub deliv
 - Distinguish a local candidate, a remote commit, a passing test, a render, a merge and a playable feature. Never promise unattended/background continuation unless an actual supported scheduled mechanism was created.
 - These instructions are durable project memory in this repository. Do not claim to have changed global ChatGPT profile memory without a successful memory-write operation.
 
+### Region migration and LFS retirement
+
+Owner update, 2026-10-02: execute the six-step Sa Calobra migration and retire
+obsolete Italian LFS payloads. This supersedes the 2026-10-01 retention directive
+for positively identified obsolete Italy assets only. Inventory dependencies
+and exact paths/object hashes before removal. Do not blanket-prune shared LFS
+storage, delete Spanish inputs/output, or rewrite Git history. Report actual disk
+reclamation separately from removing tracked pointers. Until bounded retirement
+runs, existing retention guards continue to preserve bytes.
+
+### Historical terrain retention baseline
+
+Owner directive, 2026-10-01 (Issue #308): keep downloaded/materialized LFS assets on disk while rebuilding terrain. Do not prune LFS storage or delete asset payloads during cleanup. The original `_embark-terrain-worktree` remains untouched by the recovery lane. Before checkout/reset/cleanup of `_terrain-recovery-worktree`, move materialized Unreal assets to the sibling `_yacs-retained-lfs/<run>-<attempt>/` archive, verify their SHA-256 and size, and fail before cleanup if retention fails. Code-only checkouts can still use pointers; the retained binary bytes and `.git/lfs/objects` remain on disk.
+
 ### Roadmap and world-building nomenclature
 
 - `docs/ROADMAP.md` uses only product milestones `M0` through `M10`.
@@ -64,6 +78,78 @@ Owner reaffirmation, 2026-10-01 (Issue #297): use authorized remote GitHub deliv
 - Before creating or materially extending a custom world-building subsystem, follow the Bible's tools-first audit and architecture evidence ladder. External production evidence increases confidence but never replaces a bounded YACS proof against YACS inputs.
 - `docs/YACS_WORLD_AUTHORING_LIBRARY.md` defines reusable implementation/catalog systems; it does not override the Bible's world architecture.
 - New or substantially revised architecture/workflow diagrams must follow `docs/DIAGRAM_STYLE.md`, the YACS adoption of the Gumball Blueprint Mermaid language.
+
+### BOB single-direction bend contract
+
+Owner decision, 2026-10-03 (Issue #331): apply this requirement to the current
+Ma-2141 hairpin and future BOB-authored single bends. Read the normative
+[World Building Bible contract](docs/WORLD_BUILDING_BIBLE.md#bob-single-direction-bend-contract)
+before changing a bend.
+
+- Entry and exit have the same explicit base pavement width, constant within
+  each approach. Either approach may be a gentle curve in the bend's direction.
+- The main bend may have a small, explicit widening only where a vehicle
+  swept-path requirement justifies it. Blend to/from that widening inside the
+  main-bend design domain; return to base width before the constant-width exit.
+- Entry, main bend and exit turn in one direction. Check signed curvature and
+  accumulated heading on both final pavement boundaries and the derived axis;
+  reject unintended reverse turns, noses, pinching and local bulges. G2 joins,
+  dense tessellation or green CI alone do not satisfy this requirement.
+- Solve boundary alignment and width together, retaining cliff-reference
+  priority and independent physical-edge/travel/bend/terrain labels. Small
+  approach adjustments stay within the admitted presentation envelope.
+- Treat the 183a30e visual result as rejected against this contract; its green
+  technical run is historical evidence, not visual acceptance. Implement and
+  verify the new invariant before accepting or propagating the bend.
+
+### Unreal / PCGEx API-first source policy
+
+For any task that depends on Unreal Engine, native PCG, Landscape, Geometry Script,
+Spline/SplineMesh, DynamicMesh or PCGEx behavior, **do not implement from model
+memory or guessed editor/API behavior**. Establish the exact tool versions first,
+then verify the operation against version-matched primary documentation.
+
+Use this evidence order:
+
+1. use `docs/README.md` to select the current YACS SSOT that defines **what YACS
+   wants and which subsystem owns the truth**;
+2. identify the exact Unreal Engine version used by the project/runner, then read
+   Epic's official documentation and C++ API reference for that version:
+   `https://dev.epicgames.com/documentation/en-us/unreal-engine/` and
+   `https://dev.epicgames.com/documentation/en-us/unreal-engine/API`;
+3. when PCGEx is involved, identify the exact approved/pinned PCGEx revision and
+   plugin version from YACS provenance/bootstrap evidence, then read the official
+   PCGEx GitBook: `https://pcgex.gitbook.io/pcgex`;
+4. for agent research, start from PCGEx's official agent indexes
+   `https://pcgex.gitbook.io/pcgex/llms.txt` and
+   `https://pcgex.gitbook.io/pcgex/llms-full.txt`, then open the exact per-node or
+   system page; use the GitBook Markdown/`ask` interface when a targeted behavior
+   is not explicit on the page;
+5. if official PCGEx documentation is ambiguous, incomplete or newer than the YACS
+   pin, inspect the **pinned upstream source/header at the exact YACS revision**
+   before writing an adapter or graph; source may clarify implementation behavior
+   but does not override YACS authority boundaries;
+6. prove the resulting YACS integration with the smallest relevant build, graph,
+   editor, automation or visual proof required by the current SSOT.
+
+Hard rules:
+
+- Never invent an Unreal/PCGEx class, function, node, pin, property, enum, default,
+  lifecycle rule or editor behavior because it sounds plausible.
+- Never silently apply documentation for a different UE or PCGEx version. If the
+  matching behavior cannot be verified, fail closed and report it as unverified.
+- Search snippets, forums, videos, DeepWiki and secondary tutorials may help locate
+  concepts, but they are **not authority** when Epic/PCGEx primary docs or pinned
+  source are available.
+- For PCGEx path work, verify the path data model and every selected node against
+  the official Paths/node-library documentation before authoring or changing a
+  graph; point order, closure, tangents, normals and segment semantics are part of
+  the contract, not implementation trivia.
+- A vendor API proving that an operation exists does not make it correct for YACS.
+  YACS SSOT still owns route/physics/world authority, architecture and acceptance.
+- In the Issue/PR report for a non-trivial Unreal/PCGEx API decision, record the
+  exact UE version, PCGEx revision/version when applicable, and the primary docs or
+  pinned source consulted so a later agent can reproduce the decision.
 
 ### Passo Giau terrain-recovery guardrails
 
@@ -306,7 +392,7 @@ This project is developed on two machines: the office PC, which is suitable for 
 
 The following rules apply to every task and do not weaken any earlier rule in this document:
 
-- At most two unmerged implementation branches may exist simultaneously.
+- At most three unmerged implementation branches may exist simultaneously.
 - Parallel implementation is allowed only within the current roadmap stage.
 - Tasks developed in parallel must be independent.
 - A parallel branch must not consume APIs, source files, assets, or behavior introduced only by another unmerged branch.
@@ -322,7 +408,7 @@ The following rules apply to every task and do not weaken any earlier rule in th
 - Work from a future roadmap stage must not begin before the current stage completion criteria are met.
 - Unreal compilation, editor integration, asset validation, and performance validation remain home-PC responsibilities when the office PC lacks Unreal Engine.
 
-Documentation-only branches do not count toward the limit of two implementation branches.
+Documentation-only branches do not count toward the limit of three implementation branches.
 
 ## External tooling architecture policy
 

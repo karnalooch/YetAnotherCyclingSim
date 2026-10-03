@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "provider": "IGN / Sistema Cartografico Nacional",
+  "dataset": "IGR Redes de Transporte",
+  "retrieved_utc": "2026-10-02",
+  "source_file": "ma2141_igr_rt_source_2026-10-02.json",
+  "source_sha256": "ebc7c1c985caae5b7727719856646d52824463803d13095462f8d7ef1fcd7d5f",
+  "source_url": "https://api-features.idee.es/collections/roadlink/items?f=json&bbox=2.812,39.828,2.818,39.832&limit=100",
+  "collection_url": "https://api-features.idee.es/collections/roadlink?f=json",
+  "license": "CC BY 4.0",
+  "license_url": "https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf",
+  "attribution": "Obra derivada de IGR Redes de Transporte, consulta 2026-10-02, CC BY 4.0 scne.es",
+  "feature_id": "VIAL_TR70190001272",
+  "feature_date": "2020-02-28T00:00:00",
+  "horizontal_crs": "OGC:CRS84",
+  "vertical_datum": "UNVERIFIED",
+  "source_properties": {
+    "numberoflanes": 2,
+    "surfacecategory": "paved",
+    "fictitious": "true"
+  },
+  "admission": "SOURCE_REVIEW_ONLY",
+  "limitations": [
+    "Matching source XY is not independent positional validation.",
+    "Paved does not establish asphalt material or calibrated cycling physics.",
+    "Source fictitious=true requires review before admission.",
+    "No source road width or bicycle-access evidence.",
+    "Third-coordinate datum and accuracy require review; never carve road earthworks from it automatically.",
+    "2016 RT specification reports global first-version planimetric RMSE below 5 m and vertical RMSE below 2.5 m; this is not a feature-specific accuracy guarantee."
+  ],
+  "specification_url": "https://www.ign.es/resources/IGR/Transporte/20160316_Espec_RT_V0.5.pdf",
+  "regional_candidate": {
+    "endpoint": "https://ideib.caib.es/pregeoserveis/rest/services/public/GOIB_MapaBase_IB/MapServer",
+    "status": "NOT_IMPORTED",
+    "reason": "Accessible endpoint is explicitly preproduction/test-only. Production endpoint returned HTTP 503."
+  }
+}

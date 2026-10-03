@@ -13,6 +13,10 @@ ROOT = Path(__file__).resolve().parents[2]
 POLICY = ROOT / ".gumball" / "proof-broker.json"
 BROKER_WORKFLOW = ROOT / ".github" / "workflows" / "proof-broker.yml"
 TARGET_WORKFLOWS = {
+    "sa-calobra-terrain-performance": ROOT
+    / ".github"
+    / "workflows"
+    / "sa-calobra-terrain-performance.yml",
     "r4-1b3-geometry": ROOT
     / ".github"
     / "workflows"
@@ -22,6 +26,7 @@ TARGET_WORKFLOWS = {
     / "workflows"
     / "passo-giau-r4-1-hairpin-corridor.yml",
     "m3-terrain": ROOT / ".github" / "workflows" / "passo-giau-embark-terrain.yml",
+    "m3-h-focus": ROOT / ".github" / "workflows" / "passo-giau-embark-terrain.yml",
     "world-authoring-sp638": ROOT
     / ".github"
     / "workflows"
@@ -74,6 +79,20 @@ class YacsProofBrokerContractTests(unittest.TestCase):
                 self.assertFalse(proof["automatic"]["enabled"])
                 self.assertEqual(proof["artifact_name"], "proof-$proof-$sha")
                 self.assertEqual(proof["allowed_write_permissions"], [])
+
+    def test_status_labels_fit_github_limit_without_collisions(self):
+        policy = self.policy()
+        labels = [
+            proof_broker.status_label_name(policy, proof, status)
+            for proof in [*policy["proofs"], "x" * 80, "x" * 79 + "y"]
+            for status in proof_broker.STATUS_COLORS
+        ]
+        self.assertTrue(all(len(label) <= 50 for label in labels))
+        self.assertEqual(len(labels), len(set(labels)))
+        self.assertEqual(
+            proof_broker.status_label_name(policy, "m3-terrain", "passed"),
+            "proof-status:m3-terrain:passed",
+        )
 
     def test_comment_contract_supports_run_retry_and_status(self):
         self.assertEqual(
@@ -230,10 +249,44 @@ class YacsProofBrokerContractTests(unittest.TestCase):
         for proof_id, path in TARGET_WORKFLOWS.items():
             with self.subTest(proof=proof_id):
                 workflow = path.read_text(encoding="utf-8")
-                self.assertIn("if: ${{ success() }}", workflow)
-                self.assertIn("if-no-files-found: error", workflow)
+                # Assert the receipt upload itself, not an unrelated step's guard.
+                uploads = [
+                    block
+                    for block in re.findall(
+                        r"(?ms)^      - name:.*?(?=^      - name:|\Z)", workflow
+                    )
+                    if re.search(r"(?m)^          name: proof-", block)
+                ]
+                if proof_id in {"m3-terrain", "m3-h-focus"}:
+                    expected_name = f"name: proof-{proof_id}-"
+                    matching_uploads = [
+                        block for block in uploads if expected_name in block
+                    ]
+                    self.assertEqual(len(matching_uploads), 1)
+                    upload = matching_uploads[0]
+                else:
+                    self.assertEqual(len(uploads), 1)
+                    upload = uploads[0]
+
                 if proof_id == "m3-terrain":
-                    # M3 validates its input before downstream checkout and keeps
+                    guard = (
+                        "success() && (inputs.ride_probe_mode == 'off' || "
+                        "inputs.ride_probe_mode == '') && "
+                        "!startsWith(inputs.gumball_request_id, 'gb-m3-h-focus-')"
+                    )
+                elif proof_id == "m3-h-focus":
+                    guard = (
+                        "success() && (inputs.ride_probe_mode == 'off' || "
+                        "inputs.ride_probe_mode == '') && "
+                        "startsWith(inputs.gumball_request_id, 'gb-m3-h-focus-')"
+                    )
+                else:
+                    guard = "success()"
+                self.assertIn("if: ${{ " + guard + " }}", upload)
+                self.assertIn("if-no-files-found: error", upload)
+                if proof_id in {"m3-terrain", "m3-h-focus"}:
+                    # Both M3 receipts validate input before downstream checkout
+                    # and keep established diagnostic artifact names separate.
                     # the established internal artifact names as diagnostics.
                     self.assertIn(
                         "proof-m3-terrain-${{ needs.classify.outputs.source_sha }}",

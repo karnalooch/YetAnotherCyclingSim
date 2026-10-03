@@ -1,0 +1,11 @@
+{
+  "id": "complete-hosted-tests-world-proof",
+  "source": "karnalooch/YetAnotherCyclingSim",
+  "category": "ci",
+  "problem": "Manual test lists silently omit new tests and a successful hardware artifact for a different scenario can be mistaken for required merge evidence.",
+  "invariant": "Discover hosted test modules with non-empty execution evidence; run cheap checks before expensive jobs; require exact-revision scenario-specific proof at readiness, independently from hardware dispatch.",
+  "evidence": ["Issue #320", "docs/ci/TEST_AND_PROOF_AUDIT.md", "scripts/ci/test_ci_aggregate_contract.py", "scripts/ci/test_world_proof_gate.py"],
+  "do_not_copy": ["YACS map and sector names", "RTX model or Landscape component count", "product-specific timing budgets"],
+  "failure_behavior": "Missing tests, invalid classification, missing or inconsistent raw evidence, unknown world, expired artifacts or wrong producer fail closed. Draft deferral is never reported as measured PASS.",
+  "status": "candidate"
+}

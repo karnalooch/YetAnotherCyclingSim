@@ -14,14 +14,14 @@ YetAnotherCyclingSim to realistyczny symulator kolarstwa halowego, łączący:
 - piękne i realistyczne światy 3D;
 - zaawansowaną technikę pokonywania zakrętów;
 - obsługę trenażerów rowerowych;
-- realistyczne trasy inspirowane prawdziwymi miejscami;
+- trasy rekonstruujące rzeczywiste miejsca w rzeczywistej skali, bez kompresji geograficznej;
 - możliwość późniejszej rozbudowy o multiplayer.
 
 Docelową przewagą produktu ma być połączenie realizmu wizualnego, fizyki, pogody oraz techniki jazdy.
 
 ## 2. Cel MVP
 
-Pierwsze pełne MVP umożliwia ukończenie jazdy od startu do mety po jednej wybranej trasie w rzeczywistym obszarze Passo Giau. Aktualnym odcinkiem referencyjnym prac drogowych jest SP638; kanoniczna trasa i profil fizyczny pozostają odrębnymi źródłami prawdy.
+Pierwsze pełne MVP umożliwia ukończenie jazdy od startu do mety po jednej wybranej trasie w rzeczywistym obszarze Sa Calobra / Coll dels Reis na Majorce. Aktualnym odcinkiem referencyjnym prac drogowych jest Ma-2141; kanoniczna trasa i profil fizyczny pozostają odrębnymi źródłami prawdy.
 
 Jazda powinna trwać około 20–30 minut i prowadzić od startu do mety bez powtarzania fragmentów trasy.
 
@@ -29,21 +29,21 @@ Jazda powinna trwać około 20–30 minut i prowadzić od startu do mety bez pow
 
 Trasa powinna:
 
-- korzystać ze zweryfikowanej rzeczywistej geometrii drogowej obszaru Passo Giau;
-- zachowywać wiarygodny krajobraz alpejski oparty na danych rzeczywistego obszaru;
+- korzystać ze zweryfikowanej rzeczywistej geometrii drogowej obszaru Sa Calobra / Coll dels Reis;
+- zachowywać wiarygodny wapienny i śródziemnomorski krajobraz Serra de Tramuntana oparty na danych rzeczywistego obszaru;
 - mieć pofałdowany profil z podjazdami i zjazdami;
 - zawierać zakręty o różnej trudności, w tym możliwość banked i off-camber geometry;
 - prowadzić przez trzy główne strefy:
   1. zieloną dolinę i niewielką miejscowość;
   2. gęsty las;
-  3. surowy teren wysokogórski;
+  3. odsłonięty, skalisty teren wapienny Serra de Tramuntana;
 - nie wykorzystywać widocznie powtarzających się fragmentów;
 - zawierać kilka starannie przygotowanych, ożywionych miejsc;
 - poza kluczowymi punktami koncentrować się na naturze i krajobrazie.
 
 ### 3.1 Docelowo wszystkie rzeczywiste drogi obszaru
 
-**Decyzja właściciela z 2026-10-01; zapis wymagań: Issue #295.** Docelowy świat ma odwzorowywać **wszystkie drogi istniejące w rzeczywistości w granicach obszaru Passo Giau objętego projektem**, a nie wyłącznie SP638 lub kilka wybranych tras. SP638 jest pierwszym sprawdzanym wycinkiem, nie docelowym limitem sieci.
+**Decyzja właściciela z 2026-10-01; aktywny benchmark: Issue #312.** Docelowy świat ma odwzorowywać **wszystkie drogi istniejące w rzeczywistości w granicach obszaru Sa Calobra objętego projektem**, a nie wyłącznie Ma-2141 lub kilka wybranych tras. Ma-2141 jest pierwszym sprawdzanym wycinkiem, nie docelowym limitem sieci.
 
 Zakres obejmuje również drogi boczne, lokalne, dojazdowe, serwisowe i nieutwardzone, jeżeli występują w obszarze. Drogi rowerowe i ścieżki należy zachować w inwentaryzacji jako odrębne klasy, nie zamieniać automatycznie w asfalt. Skrzyżowania, odgałęzienia, ślepe zakończenia, mosty i tunele mają zachowywać rzeczywiste połączenia oraz rozdzielenie wysokościowe, gdzie występują.
 
@@ -51,7 +51,7 @@ Kompletność wymaga jawnej, wersjonowanej granicy obszaru oraz daty i pochodzen
 
 Odwzorowanie drogi w świecie i dopuszczenie jej do aktywnej jazdy to osobne stany. Docelowa sieć nie ma być jedynie dekoracją, ale rozszerzanie jazdy wymaga zweryfikowanych połączeń, profilu fizycznego, nawierzchni i zasad dostępu. Nie każda widoczna droga jest automatycznie dozwolonym odcinkiem rowerowym; nieznane dane pozostają jawnie nieznane.
 
-Dostawa jest etapowa: najpierw poprawna integracja SP638 z terenem, następnie inwentaryzacja całego obszaru i kontrolowane rozszerzanie sieci. Bieżące MVP zachowuje jedno kompletne przejście od startu do mety. Pełne pokrycie jest zatwierdzonym celem docelowego świata, a nie dodatkowym warunkiem zamknięcia bieżącego PR naprawy makroterenu #294. Harmonogram rozszerzenia wymaga osobnych zadań po zaakceptowaniu fundamentu; ten zapis nie oznacza, że nowe drogi już zaimplementowano.
+Dostawa jest etapowa: najpierw poprawna integracja Ma-2141 z terenem, następnie inwentaryzacja całego obszaru i kontrolowane rozszerzanie sieci. Bieżące MVP zachowuje jedno kompletne przejście od startu do mety. Pełne pokrycie jest zatwierdzonym celem docelowego świata, a nie dodatkowym warunkiem akceptacji samego benchmarku MDT50cm z Issue #312. Harmonogram rozszerzenia wymaga osobnych zadań po zaakceptowaniu fundamentu; ten zapis nie oznacza, że nowe drogi już zaimplementowano.
 
 Metodologia i kryteria pokrycia: [World Building Bible, sekcja 7.4](WORLD_BUILDING_BIBLE.md#74-full-area-real-road-network-target). Kolejność dostawy: [roadmapa](ROADMAP.md). Road Physics Profile, proweniencja, deterministyczna regeneracja i budżet wydajności nadal obowiązują.
 
@@ -66,6 +66,38 @@ Jazda mieszana korzysta z tego samego deterministycznego silnika i Road Physics 
 Pierwszy rzeczywisty checkpoint obejmie zweryfikowany odcinek mieszany, ciągłe przejścia nawierzchni, poprawne połączenia i profil fizyczny oraz odbiór z kamery kolarza i pomiar wydajności. Może to być ustalona trasa; wybór skrętu na każdym skrzyżowaniu nie jest warunkiem tego testu. Bieżące MVP nadal wymaga jednego kompletnego przejazdu. Nie rozszerza to zamknięcia PR #294 ani nie oznacza, że sieć jest już przejezdna.
 
 Obecny przykład `physics_reference/examples/run_mixed_surface.py` i jego testy są wyłącznie syntetycznym dowodem użycia istniejącego modelu referencyjnego. Współczynniki i 300-metrowa trasa są danymi testowymi, nie pomiarami ani skalibrowanym presetem gravela. Przykład nie aktywuje jazdy w UE, nie dowodzi gravelowego pokonywania zakrętów i nie importuje żadnych rzeczywistych dróg.
+
+### 3.3 Wierność geograficzna 1:1
+
+**Decyzja właściciela z 2026-10-02.** YACS nie tworzy świata „inspirowanego” Majorką. Celem jest rekonstrukcja rzeczywistego miejsca w **rzeczywistej skali 1:1**, w granicach dokładności i rozdzielczości zweryfikowanych źródeł.
+
+Obowiązują następujące zasady:
+
+- **1 metr w terenie odpowiada 1 metrowi w świecie YACS**; nie stosujemy kompresji odległości ani skracania trasy dla wygody produkcji;
+- rzeczywista długość drogi, położenie zakrętów, skrzyżowań i hairpinów oraz dystans pomiędzy nimi muszą wynikać z kanonicznej geometrii źródłowej;
+- makrogeometria gór, dolin, grzbietów i przełęczy pochodzi z przyjętego DTM/DEM/LiDAR i nie może być arbitralnie przesuwana, skalowana ani wygładzana dla kompozycji;
+- droga nie może być przesuwana po Landscape, aby ukryć błąd kontaktu; earthworks i prezentacja mają dopasować się do zweryfikowanej drogi, nie odwrotnie;
+- położenie lasów, pól, zabudowy, murów, infrastruktury i innych geograficznie istotnych obiektów ma wynikać ze zweryfikowanych lub jawnie wyprowadzonych danych przestrzennych;
+- systemy proceduralne służą do **rekonstrukcji i wydajnej prezentacji danych**, a nie do wymyślania alternatywnej geografii;
+- dokładny wariant modelu drzewa, tekstura kory, drobne kamienie, trawa i inne nieistotne geograficznie detale mogą być dobierane proceduralnie w granicach dowodów i regionalnego charakteru.
+
+„1:1” nie oznacza obietnicy centymetrowego skanu całego świata. Oznacza, że **skala, położenie, długości i makrokształt nie są świadomie fałszowane**, a różnice wynikają wyłącznie z ograniczeń źródeł, jawnej niepewności lub technik prezentacyjnych, które nie zmieniają geografii.
+
+Docelowy test wierności może porównywać zsynchronizowany po dystansie przejazd rzeczywisty i YACS: po tej samej liczbie metrów powinny pojawiać się te same zakręty, grzbiety, doliny, granice lasu i inne trwałe punkty orientacyjne w granicach jakości dostępnych danych.
+
+Metodologia źródeł, World Authority, rekonstrukcji proceduralnej i dopuszczalnych uproszczeń pozostaje w [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md).
+
+### 3.4 Referencyjny korytarz pierwszej pełnej trasy
+
+**Kierunek referencyjny właściciela z 2026-10-02.** Aktualnym kandydatem do pierwszej pełnej trasy 1:1 jest ciągły rzeczywisty korytarz:
+
+`Port de Sa Calobra → Ma-2141 → Coll dels Reis → Ma-10 → Menut → Binifaldó → Coll des Pedregaret`
+
+Założeniem jest start **od morza**, przejazd przez rzeczywiste serpentyny i wysokogórski krajobraz Serra de Tramuntana, a następnie naturalne wejście w rzeczywisty kompleks leśny Menut/Binifaldó. Nie wolno zastępować tej zmiany krajobrazu ręcznie zaprojektowanym „biomem”; przejście skała → zarośla → las ma wynikać z danych przestrzennych rzeczywistego miejsca.
+
+Bieżący szacunek długości całego asfaltowego korytarza to około **29–30 km**, ale nie jest to jeszcze kanoniczny dystans produktu. Ostateczna długość, chainage, profil wysokości, nawierzchnia i dostęp rowerowy muszą zostać wyznaczone z dopuszczonej geometrii źródłowej i Road Physics Profile.
+
+Pełny dossier referencyjny, źródła wizualne, dane do pozyskania i kandydaci assetów są zapisani w [`SA_CALOBRA_MENUT_ROUTE_REFERENCE.md`](SA_CALOBRA_MENUT_ROUTE_REFERENCE.md). Dokument ma status **evidence / candidate** i nie oznacza, że trasa jest już zaimplementowana, zaakceptowana ani przejezdna.
 
 ## 4. Sterowanie MVP
 
@@ -1204,4 +1236,3 @@ Po przyjęciu powyższych kontraktów Pack Dynamics v0.1 należy traktować jako
 Nowe pomysły mogą trafiać do backlogu, ale nie powinny rozszerzać v0.1 bez wyraźnej decyzji o zmianie zakresu.
 
 Celem freeze jest powrót do bieżącego MVP i uniknięcie nieskończonego projektowania systemu, który zgodnie z roadmapą jest planowany po MVP.
-

@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "cases": [],
+  "architect": {
+    "name": "BOB",
+    "system_id": "bob-terrain-architect-v1"
+  }
+}

@@ -65,12 +65,14 @@ flowchart TB
 |---|---|
 | Delivery | **M3 — Route & World Foundation** |
 | World method | **World Building Bible is authoritative** |
-| Architecture policy | **Embark-first tooling admission + tools-first + evidence ladder + local proof** |
+| Geographic fidelity | **1:1 real-world scale; no route compression, relocation or invented macro terrain** |
+| Architecture policy | **Embark-first + tools-first + version-matched Epic/PCGEx API evidence + local proof** |
 | Diagram language | **Gumball Blueprint Mermaid style** |
-| Current priority | **freeze proven SP638/PCGEx road path; recover macro/near-field terrain surface ownership** |
-| Terrain source | **canonical real DTM path; presentation remains separate from physics truth** |
-| Road authority | **canonical route / SP638 alignment; do not snap to Landscape grid** |
-| Acceptance | **rider-camera visual review + exact-SHA technical/performance evidence** |
+| Current priority | **Issue #331: constrain asphalt to the reviewed cliff-side boundary and explicit width; distinguish travel/bend/terrain edge roles, preserve canonical XY and rebuild CUT/shoulders/support from clean DTM** |
+| Route reference | **sea-level Sa Calobra → Coll dels Reis → Ma-10 → Menut/Binifaldó → Coll des Pedregaret; ~29–30 km planning estimate, exact chainage pending** |
+| Terrain source | **CNIG/IGN MDT50cm Sa Calobra 8 km × 8 km benchmark; bounded native UE import PASS, terrain visual accepted; performance pending** |
+| Road authority | **verified Ma-2141 alignment; smooth presentation ribbon is evaluated against Landscape, never snapped/bent to native DTM facets; terrain-fit residuals drive cut/fill/structure review** |
+| Acceptance | **exact-SHA terrain-fit + CUT/support geometry proof, mandatory Geometry Inspection, rider-camera human review and performance evidence; transient geometry does not grant durable road admission** |
 | Next product milestone | **M4 Cornering**, after M3 closes |
 
 The old Stage 3G / R4.1 / B.x vocabulary is historical. Existing workflow names and evidence may retain it temporarily, but new planning uses M0-M10 plus named workstreams and GitHub Issues.
@@ -82,6 +84,7 @@ The old Stage 3G / R4.1 / B.x vocabulary is historical. Existing workflow names 
 | Product scope and MVP boundaries | [`PRODUCT_REQUIREMENTS.md`](PRODUCT_REQUIREMENTS.md) | **Authoritative** |
 | Delivery order and current milestone | [`ROADMAP.md`](ROADMAP.md) | **Authoritative** |
 | How to build terrain/roads/worlds | [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md) | **Authoritative** |
+| First full-route visual/data reference | [`SA_CALOBRA_MENUT_ROUTE_REFERENCE.md`](SA_CALOBRA_MENUT_ROUTE_REFERENCE.md) | **Evidence / candidate** |
 | Draw architecture/workflow diagrams | [`DIAGRAM_STYLE.md`](DIAGRAM_STYLE.md) | **Authoritative visual convention** |
 | Inspect shipped production world pipelines | [`PRODUCTION_WORLD_ARCHITECTURE_REFERENCES.md`](PRODUCTION_WORLD_ARCHITECTURE_REFERENCES.md) | **Evidence dossier** |
 | Road and cornering physics geometry | [`ROAD_PHYSICS_PROFILE.md`](ROAD_PHYSICS_PROFILE.md) | **Authoritative** |
@@ -111,6 +114,7 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 ### World, terrain and authoring
 
 - [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md) — **authoritative methodology**: source terrain, tools-first/evidence-led architecture, Landscape Edit Layers, roads, earthworks, cliffs, materials, PCG, RVT, streaming and world acceptance.
+- [`SA_CALOBRA_MENUT_ROUTE_REFERENCE.md`](SA_CALOBRA_MENUT_ROUTE_REFERENCE.md) — evidence dossier for the candidate 1:1 sea-to-forest route, visual identity, source acquisition and asset references; not route/physics authority.
 - [`DIAGRAM_STYLE.md`](DIAGRAM_STYLE.md) — Gumball-derived Blueprint Mermaid language for new or substantially revised YACS architecture/workflow diagrams.
 - [`PRODUCTION_WORLD_ARCHITECTURE_REFERENCES.md`](PRODUCTION_WORLD_ARCHITECTURE_REFERENCES.md) — copyright-safe reconstructions of public Far Cry 5 and THE FINALS production pipelines plus direct YACS mappings; evidence, not methodology authority.
 - [`YACS_WORLD_AUTHORING_LIBRARY.md`](YACS_WORLD_AUTHORING_LIBRARY.md) — reusable authoring systems, semantic catalog, presets and generated-output boundary.
@@ -135,6 +139,7 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 - [`ci/BRANCH_HYGIENE.md`](ci/BRANCH_HYGIENE.md) — branch cleanup and hygiene.
 - [`ci/CHANGE_CLASSIFIER.md`](ci/CHANGE_CLASSIFIER.md) — CI path classification.
 - [`ci/GITHUB_ACTIONS_PLATFORM.md`](ci/GITHUB_ACTIONS_PLATFORM.md) — Actions conventions.
+- [`ci/TEST_AND_PROOF_AUDIT.md`](ci/TEST_AND_PROOF_AUDIT.md) — Issue #320 hosted-test coverage and world-proof convergence audit.
 - [`ci/WORKFLOW_LIFECYCLE.md`](ci/WORKFLOW_LIFECYCLE.md) — current/retired GitHub Actions workflow authority.
 - [`ci/PROJECT_WORKFLOW.md`](ci/PROJECT_WORKFLOW.md) — project automation.
 
@@ -181,6 +186,25 @@ Every top-level Markdown document in `docs/` must appear here.
 | [`YACS_REMOTE_EDITOR_AGENT.md`](YACS_REMOTE_EDITOR_AGENT.md) | Remote editor-agent contract |
 | [`YACS_WORLD_AUTHORING_LIBRARY.md`](YACS_WORLD_AUTHORING_LIBRARY.md) | World-authoring implementation library |
 
+## External Unreal / PCGEx technical authority
+
+YACS documentation defines project intent, ownership and acceptance. When a task
+also depends on what Unreal Engine or PCGEx **actually supports**, agents must use
+version-matched primary technical sources rather than memory or secondary summaries.
+
+- Unreal Engine: official Epic documentation and C++ API reference for the exact
+  project/runner engine version.
+- PCGEx: official GitBook for the exact YACS-approved plugin revision/version;
+  agents should start from `llms.txt` / `llms-full.txt`, then read the exact
+  system/node page.
+- If PCGEx documentation and the pinned revision differ or the behavior is not
+  documented, inspect the pinned upstream source/header and mark any remaining
+  uncertainty explicitly.
+- Vendor documentation establishes capability and semantics; it never overrides
+  YACS route/physics/world authority or acceptance criteria.
+
+The enforceable agent workflow is in [`../AGENTS.md`](../AGENTS.md), and the
+world-specific application is in [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md).
 ## Documentation maintenance
 
 When behavior, architecture, CI, assets or acceptance criteria change:
@@ -195,3 +219,15 @@ When behavior, architecture, CI, assets or acceptance criteria change:
 The documentation-index contract remains:
 
 `python scripts/ci/check_docs_index.py`
+
+Issue #331 closeout also validates hairpin entry/exit curvature and bounded 3D
+road banking/height before regenerating CUT/support; see the World Building
+Bible's Hairpin alignment and surface closeout subsection.
+
+Owner acceptance now also requires the
+[BOB single-direction bend contract](WORLD_BUILDING_BIBLE.md#bob-single-direction-bend-contract):
+constant matching entry/exit widths, justified main-bend widening only, and no
+reverse turns on either final pavement edge. The current 183a30e visual result
+is rejected against that requirement. The native convex-cubic implementation
+below that contract owns the replacement; fresh exact-SHA proof and owner visual
+acceptance are required before admitting it.

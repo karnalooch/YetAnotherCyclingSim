@@ -99,16 +99,21 @@ EMBARK_TERRAIN_HEAVY_EXACT = {
 }
 
 EMBARK_TERRAIN_RENDER_PREFIXES = (
+    "scripts/proof/",
     "scripts/assets/",
     "scripts/geometry/",
     "scripts/houdini/",
     "scripts/worldgen/",
     "worldgen/embark/",
+    "worldgen/terrain/",
 )
 
 EMBARK_TERRAIN_RENDER_EXACT = {
+    "scripts/ue/ride_probe_capture.py",
     "scripts/ue/Invoke-YacsSp638LocalCorridorVisualProof.ps1",
     "scripts/ue/stage3g_capture_sp638_local_corridor.py",
+    "scripts/ue/Invoke-YacsRegionTerrainImport.ps1",
+    "scripts/ue/prepare_region_terrain_map.py",
 }
 
 
@@ -213,9 +218,11 @@ def _is_asset_full(path: str) -> bool:
 
 
 def _is_ci(path: str) -> bool:
-    if path.startswith(".github/") or path.startswith(".circleci/"):
+    if path.startswith((".github/", ".circleci/", ".gumball/")):
         return True
     if path.startswith("scripts/ci/") or path.startswith("scripts/ue/"):
+        return True
+    if path.startswith("worldgen/") and not _is_docs(path):
         return True
     if path in CI_EXACT:
         return True

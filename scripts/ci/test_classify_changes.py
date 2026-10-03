@@ -8,6 +8,18 @@ import classify_changes as cc
 
 
 class ChangeClassifierTests(unittest.TestCase):
+    def test_terrain_data_policy_and_memory_require_render(self):
+        for path in (
+            "worldgen/terrain/benchmarks/sa_calobra/sa_calobra_8x8km_mdt50cm_epsg25831.tif",
+            "worldgen/terrain/benchmarks/sa_calobra/terrain_import_profile.json",
+            "worldgen/terrain/adaptive_terrain_policy.json",
+            "worldgen/terrain/verified_terrain_cases.json",
+            "scripts/ue/Invoke-YacsRegionTerrainImport.ps1",
+            "scripts/ue/prepare_region_terrain_map.py",
+        ):
+            with self.subTest(path=path):
+                self.assertEqual(cc.classify_embark_terrain_proof([path]), "render")
+
     def test_docs_only_is_lightweight(self):
         result = cc.classify_paths(["README.md", "docs/ci/PROJECT_WORKFLOW.md"])
         self.assertTrue(result.docs_only)
@@ -376,6 +388,26 @@ class ChangeClassifierTests(unittest.TestCase):
             self.assertIn("ci_cost_class=heavy\n", emitted)
             self.assertIn("base_sha=PATHS_FILE\n", emitted)
             self.assertIn("head_sha=PATHS_FILE\n", emitted)
+
+
+class HostedConfigurationRoutingTests(unittest.TestCase):
+    def test_policy_and_world_inputs_run_contracts_without_compilation(self):
+        for path in (
+            ".gumball/proof-broker.json",
+            ".gumball/world-proof-policy.json",
+            "worldgen/terrain/adaptive_terrain_policy.json",
+            "worldgen/assets/catalog.json",
+            "worldgen/terrain/benchmarks/sa_calobra/baseline.json",
+        ):
+            with self.subTest(path=path):
+                result = cc.classify_paths([path])
+                self.assertTrue(result.ci)
+                self.assertFalse(result.ue_code)
+                self.assertFalse(result.unreal_compile)
+
+    def test_documentation_in_worldgen_stays_light(self):
+        result = cc.classify_paths(["worldgen/terrain/benchmarks/sa_calobra/README.md"])
+        self.assertTrue(result.docs_only)
 
 
 if __name__ == "__main__":
