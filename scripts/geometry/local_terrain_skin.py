@@ -295,6 +295,7 @@ def apply_corridor_constraints_to_height_grid(
     role_weights: Mapping[str, float] | None = None,
     strong_overlap_weight: float = 0.25,
     overlap_height_tolerance_m: float = 0.10,
+    adjustment_mode: str = "both",
 ) -> tuple[tuple[tuple[float, ...], ...], TerrainConstraintMetrics]:
     """Bake the route-local road/earthwork ribbon into one native-DTM ground grid.
 
@@ -323,6 +324,8 @@ def apply_corridor_constraints_to_height_grid(
         raise ValueError("strong_overlap_weight must be in (0, 1]")
     if overlap_height_tolerance_m <= 0.0:
         raise ValueError("overlap_height_tolerance_m must be positive")
+    if adjustment_mode not in {"both", "cut_only"}:
+        raise ValueError("adjustment_mode must be 'both' or 'cut_only'")
     if len(corridor_profiles) != corridor_mesh.station_count:
         raise ValueError("corridor profile count must match station count")
 
@@ -422,6 +425,11 @@ def apply_corridor_constraints_to_height_grid(
                 candidate_height_m = native_height_m + constraint_weight * (
                     target_height_m - native_height_m
                 )
+                if adjustment_mode == "cut_only":
+                    candidate_height_m = min(
+                        native_height_m,
+                        candidate_height_m,
+                    )
                 key = (row, column)
                 previous = claims.get(key)
                 if previous is not None:

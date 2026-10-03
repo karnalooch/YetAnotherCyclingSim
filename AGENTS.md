@@ -79,6 +79,29 @@ Owner directive, 2026-10-01 (Issue #308): keep downloaded/materialized LFS asset
 - `docs/YACS_WORLD_AUTHORING_LIBRARY.md` defines reusable implementation/catalog systems; it does not override the Bible's world architecture.
 - New or substantially revised architecture/workflow diagrams must follow `docs/DIAGRAM_STYLE.md`, the YACS adoption of the Gumball Blueprint Mermaid language.
 
+### BOB single-direction bend contract
+
+Owner decision, 2026-10-03 (Issue #331): apply this requirement to the current
+Ma-2141 hairpin and future BOB-authored single bends. Read the normative
+[World Building Bible contract](docs/WORLD_BUILDING_BIBLE.md#bob-single-direction-bend-contract)
+before changing a bend.
+
+- Entry and exit have the same explicit base pavement width, constant within
+  each approach. Either approach may be a gentle curve in the bend's direction.
+- The main bend may have a small, explicit widening only where a vehicle
+  swept-path requirement justifies it. Blend to/from that widening inside the
+  main-bend design domain; return to base width before the constant-width exit.
+- Entry, main bend and exit turn in one direction. Check signed curvature and
+  accumulated heading on both final pavement boundaries and the derived axis;
+  reject unintended reverse turns, noses, pinching and local bulges. G2 joins,
+  dense tessellation or green CI alone do not satisfy this requirement.
+- Solve boundary alignment and width together, retaining cliff-reference
+  priority and independent physical-edge/travel/bend/terrain labels. Small
+  approach adjustments stay within the admitted presentation envelope.
+- Treat the 183a30e visual result as rejected against this contract; its green
+  technical run is historical evidence, not visual acceptance. Implement and
+  verify the new invariant before accepting or propagating the bend.
+
 ### Unreal / PCGEx API-first source policy
 
 For any task that depends on Unreal Engine, native PCG, Landscape, Geometry Script,

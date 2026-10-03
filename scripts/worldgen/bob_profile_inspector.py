@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from scripts.worldgen.adaptive_terrain_solver import BOB_NAME
+from scripts.geometry.curved_road_plan import profile_plan_valid, RENDER_STEP_M
 
 
 # Versioned inspection contract for the admitted 300 m Ma-2141 experiment.
@@ -91,11 +92,12 @@ def inspect_road_profile(candidate: Mapping[str, Any]) -> dict[str, Any]:
             ):
                 raise ValueError(f"Invalid {key}")
             hashes[key] = value
-        if candidate.get("source_xy_preserved") is not True:
+        if not profile_plan_valid(candidate):
             raise ValueError("Source XY preservation is not established")
         parameters = candidate["parameters"]
+        step = RENDER_STEP_M if "presentation_plan" in candidate else STATION_STEP_M
         expected = {
-            "station_step_m": STATION_STEP_M,
+            "station_step_m": step,
             "review_delta_m": REVIEW_DELTA_M,
             "review_grade": REVIEW_GRADE,
             "review_crossfall": REVIEW_CROSSFALL,
@@ -103,7 +105,6 @@ def inspect_road_profile(candidate: Mapping[str, Any]) -> dict[str, Any]:
         for key, value in expected.items():
             if _number(parameters[key]) != value:
                 raise ValueError(f"Candidate conflicts with inspector policy: {key}")
-        step = STATION_STEP_M
         thresholds = {
             "CUT_DIFFERENCE": REVIEW_DELTA_M,
             "FILL_DIFFERENCE": REVIEW_DELTA_M,
@@ -112,7 +113,7 @@ def inspect_road_profile(candidate: Mapping[str, Any]) -> dict[str, Any]:
         }
         rows = candidate["stations"]
         if len(rows) != int(PROFILE_LENGTH_M / step) + 1:
-            raise ValueError("Expected full 0-300 m coverage at 0.5 m spacing")
+            raise ValueError("Expected full 0-300 m coverage at the recipe spacing")
         stations, centers = [], []
         values = {key: [] for key in thresholds}
         for row in rows:

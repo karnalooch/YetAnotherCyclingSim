@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections import Counter
 import math
+from scripts.geometry.curved_road_plan import profile_plan_valid
 
 
 PAVEMENT_THICKNESS_M = 0.08
@@ -33,7 +34,7 @@ def build_smooth_road_ribbon(profile):
     if (
         profile.get("region_id") != "sa_calobra"
         or profile.get("status") != "REVIEW_REQUIRED"
-        or profile.get("source_xy_preserved") is not True
+        or not profile_plan_valid(profile)
         or profile.get("terrain_modified") is not False
         or profile.get("road_earthworks_modified") is not False
         or profile.get("earthworks_authoring_permitted") is not False

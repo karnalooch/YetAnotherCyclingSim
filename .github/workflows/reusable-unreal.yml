@@ -271,6 +271,7 @@ jobs:
           ./scripts/ue/Invoke-YacsRegionTerrainImport.ps1 `
             -ExpectedBranch 'HEAD' `
             -ExpectedHead '${{ inputs.target_sha }}' `
+            -PrepareRoadPlan `
             -ArtifactRoot 'Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}'
           if ($LASTEXITCODE -ne 0) { throw 'Sa Calobra native terrain import failed.' }
 
@@ -289,13 +290,28 @@ jobs:
           python scripts/assets/prepare_ma2141_profile.py `
             --prepared-terrain "$root/Prepared" `
             --output "$root/ma2141-profile-candidate.json" `
+            --curved-edges "$root/ma2141-curved-edges.json" `
             --exact-sha '${{ inputs.target_sha }}'
           if ($LASTEXITCODE -ne 0) { throw 'Ma-2141 profile assessment failed.' }
+          $profile = Get-Content "$root/ma2141-profile-candidate.json" -Raw | ConvertFrom-Json
+          if ($profile.presentation_plan.status -ne 'PASS' -or
+              $profile.presentation_plan.recipe -ne 'native-cliff-convex-bend-v4' -or
+              $profile.source_xy_preserved -ne $false -or
+              $profile.canonical_source_xy_preserved -ne $true) {
+            throw 'Native curved pavement plan was not validated.'
+          }
           python scripts/assets/prepare_ma2141_road_preview.py `
             --prepared-terrain "$root/Prepared" `
             --output "$root/ma2141-road-preview.json" `
             --exact-sha '${{ inputs.target_sha }}'
           if ($LASTEXITCODE -ne 0) { throw 'Ma-2141 pavement trial preparation failed.' }
+          python scripts/assets/prepare_ma2141_cut_patch.py `
+            --prepared-terrain "$root/Prepared" `
+            --profile "$root/ma2141-profile-candidate.json" `
+            --output-manifest "$root/ma2141-cut-patch.json" `
+            --output-f32 "$root/ma2141-cut-patch.f32" `
+            --exact-sha '${{ inputs.target_sha }}'
+          if ($LASTEXITCODE -ne 0) { throw 'BOB bounded Road_Earthworks CUT patch preparation failed.' }
 
       - name: Capture isolated native Sa Calobra terrain
         if: ${{ inputs.region_terrain_import }}
@@ -323,8 +339,8 @@ jobs:
           if (
             $proof.technical_capture_status -ne 'PASS' -or
             $proof.exact_sha -ne '${{ inputs.target_sha }}' -or
-            $proof.captures.Count -ne 5 -or
-            $proof.bob_mode -ne 'INSPECTOR_ONLY' -or
+            $proof.captures.Count -ne 9 -or
+            $proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT' -or
             $proof.road_geometry_inspection_required -ne $true
           ) { throw 'Terrain capture proof failed.' }
 
@@ -337,10 +353,10 @@ jobs:
             $fit.status -ne 'REVIEW_REQUIRED' -or
             $fit.inspection_complete -ne $true -or
             $fit.role -ne 'INSPECTOR_ONLY' -or
-            $fit.sample_count -ne 15025 -or
-            $fit.evaluated_sample_count -ne 15025 -or
+            $fit.sample_count -ne 60025 -or
+            $fit.evaluated_sample_count -ne 60025 -or
             $fit.trace_miss_count -ne 0 -or
-            $fit.geometry_inspection_view -ne 'road-geometry-inspection' -or
+            $fit.geometry_inspection_view -ne 'road-geometry-inspection-before' -or
             $fit.earthworks_authoring_permitted -ne $false -or
             $fit.geometry_repair_executed -ne $false
           ) { throw 'BOB road-to-terrain fit inspection failed.' }
@@ -350,32 +366,103 @@ jobs:
             [int]$fit.class_counts.FILL_REQUIRED +
             [int]$fit.class_counts.STRUCTURE_REVIEW
           )
-          if ($classified -ne 15025) {
+          if ($classified -ne 60025) {
             throw 'BOB terrain-fit classification does not cover every ribbon sample.'
           }
 
-          $inspection = @(
-            $proof.captures | Where-Object { $_.name -eq 'road-geometry-inspection' }
+          $cutPath = Join-Path $root 'bob-road-earthworks-cut-proof.json'
+          if (-not (Test-Path -LiteralPath $cutPath -PathType Leaf)) {
+            throw 'BOB Road_Earthworks CUT proof is missing.'
+          }
+          python -m scripts.geometry.road_cut_limits --artifact-root $root
+          if ($LASTEXITCODE -ne 0) { throw 'BOB CUT receipt spatial policy failed.' }
+          $cut = Get-Content $cutPath -Raw | ConvertFrom-Json
+          if (
+            $cut.exact_sha -ne '${{ inputs.target_sha }}' -or
+            $cut.operation -ne 'CUT_ONLY' -or
+            $cut.selected_layer -ne 'Road_Earthworks' -or
+            $cut.base_layer -ne 'Base_DTM' -or
+            $cut.geometry_repair_executed -ne $true -or
+            $cut.transient_road_earthworks_modified -ne $true -or
+            $cut.base_dtm_modified -ne $false -or
+            $cut.map_saved -ne $false -or
+            $cut.fill_authored -ne $false -or
+            $cut.structures_authored -ne $false -or
+            [int]$cut.patch_modified_vertex_count -le 0 -or
+            [double]$cut.patch_max_cut_m -gt ([double]$cut.patch_cut_limits.cliff_m + 0.000001) -or
+            [int]$cut.before.class_counts.CUT_REQUIRED -ne [int]$fit.class_counts.CUT_REQUIRED -or
+            [int]$cut.before.class_counts.STRUCTURE_REVIEW -ne 0 -or
+            [int]$cut.after.class_counts.CUT_REQUIRED -ne 0 -or
+            [int]$cut.after.class_counts.STRUCTURE_REVIEW -ne 0 -or
+            [int]$cut.after.trace_miss_count -ne 0 -or
+            $cut.road_admitted -ne $false -or
+            $cut.eligible_for_learning -ne $false
+          ) { throw 'BOB direct Road_Earthworks CUT proof failed.' }
+
+          # CUT-only remains a historical rejected recipe when it creates fill.
+          # The new visual recipe closes those sides with explicit support mesh.
+          $support = Get-Content (Join-Path $root 'bob-vertical-support-proof.json') -Raw | ConvertFrom-Json
+          if (
+            $support.exact_sha -ne '${{ inputs.target_sha }}' -or
+            $support.recipe_id -ne 'bob-vertical-support-v1' -or
+            $support.status -ne 'GEOMETRY_BUILT_VISUAL_REVIEW_PENDING' -or
+            $support.shoulder_m -ne 0.5 -or
+            $support.min_shoulder_extent_m -lt 0.4999 -or
+            $support.max_shoulder_extent_m -gt 0.51 -or
+            $support.station_count -ne 2401 -or
+            $support.ground_trace_count -ne 4802 -or
+            $support.wall_segment_count -le 0 -or
+            $support.base_dtm_modified -ne $false -or
+            $support.map_saved -ne $false -or
+            $support.road_admitted -ne $false
+          ) { throw 'BOB vertical support geometry proof failed.' }
+          $supportView = @($proof.captures | Where-Object { $_.name -eq 'road-geometry-inspection-support' })
+          if ($supportView.Count -ne 1 -or $supportView[0].actual_viewmode -ne 'VMI_CLAY') {
+            throw 'BOB vertical support neutral capture missing.'
+          }
+
+          $beforeInspection = @(
+            $proof.captures | Where-Object {
+              $_.name -eq 'road-geometry-inspection-before'
+            }
+          )
+          $afterInspection = @(
+            $proof.captures | Where-Object {
+              $_.name -eq 'road-geometry-inspection-after'
+            }
+          )
+          foreach ($inspection in @($beforeInspection[0], $afterInspection[0])) {
+            if (
+              $null -eq $inspection -or
+              $inspection.viewmode -ne 'geometry-inspection-clay-wireframe' -or
+              $inspection.geometry_inspection -ne $true -or
+              $inspection.inspection_mode -ne 'VMI_CLAY' -or
+              $inspection.actual_viewmode -ne 'VMI_CLAY' -or
+              $inspection.mesh_edges -ne $true -or
+              $inspection.road_selected -ne $true -or
+              $inspection.explicit_road_wireframe -ne $true -or
+              $inspection.wireframe_color_rgba.Count -ne 4 -or
+              $inspection.wireframe_color_rgba[0] -ne 0.0 -or
+              $inspection.wireframe_color_rgba[1] -ne 1.0 -or
+              $inspection.wireframe_color_rgba[2] -ne 1.0 -or
+              $inspection.wireframe_color_rgba[3] -ne 1.0 -or
+              $inspection.force_game_view -ne $false
+            ) { throw 'Mandatory road Geometry Inspection before/after proof failed.' }
+          }
+          if (
+            $beforeInspection.Count -ne 1 -or
+            $beforeInspection[0].earthworks_state -ne 'BEFORE_CUT' -or
+            $afterInspection.Count -ne 1 -or
+            $afterInspection[0].earthworks_state -ne 'AFTER_CUT'
+          ) { throw 'BOB Geometry Inspection before/after identity failed.' }
+
+          $rider = @(
+            $proof.captures | Where-Object { $_.name -eq 'road-contact-rider' }
           )
           if (
-            $inspection.Count -ne 1 -or
-            $inspection[0].viewmode -ne 'geometry-inspection-clay-wireframe' -or
-            $inspection[0].geometry_inspection -ne $true -or
-            $inspection[0].inspection_mode -ne 'VMI_CLAY' -or
-            $inspection[0].actual_viewmode -ne 'VMI_CLAY' -or
-            $inspection[0].mesh_edges -ne $true -or
-            $inspection[0].road_selected -ne $true -or
-            $inspection[0].explicit_road_wireframe -ne $true -or
-            $inspection[0].wireframe_color_rgba.Count -ne 4 -or
-            $inspection[0].wireframe_color_rgba[0] -ne 0.0 -or
-            $inspection[0].wireframe_color_rgba[1] -ne 1.0 -or
-            $inspection[0].wireframe_color_rgba[2] -ne 1.0 -or
-            $inspection[0].wireframe_color_rgba[3] -ne 1.0 -or
-            $inspection[0].force_game_view -ne $false
-          ) { throw 'Mandatory road Geometry Inspection proof failed.' }
-          $rider = @($proof.captures | Where-Object { $_.name -eq 'road-contact-rider' })
-          if ($rider.Count -ne 1 -or $rider[0].actual_viewmode -ne 'VMI_LIT') { throw 'Final rider capture is not Lit.' }
-
+            $rider.Count -ne 1 -or
+            $rider[0].actual_viewmode -ne 'VMI_LIT'
+          ) { throw 'Final road rider capture did not return to Lit mode.' }
 
       - name: Retire owner-approved obsolete Italy payloads
         if: ${{ inputs.region_terrain_import }}
@@ -404,6 +491,7 @@ jobs:
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.json
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.txt
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.png
+            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.f32
           if-no-files-found: error
           retention-days: 14
 
@@ -477,7 +565,10 @@ jobs:
             $proof.lighting_status -ne 'PASS' -or
             [double]$proof.directional_light_intensity -le 0.0 -or
             [double]$proof.skylight_intensity -le 0.0 -or
-            $proof.bob_mode -ne 'INSPECTOR_ONLY' -or
+            $proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT' -or
+            $proof.cut_patch_applied -ne $true -or
+            $proof.vertical_support_built -ne $true -or
+            $proof.cut_patch_layer -ne 'Road_Earthworks' -or
             $proof.map_saved -ne $false
           ) { throw 'Owner handoff proof failed.' }
 
@@ -486,7 +577,7 @@ jobs:
           if ($process.HasExited) {
             throw "Owner handoff Editor did not remain open; exit code $($process.ExitCode)."
           }
-          Write-Host "OWNER HANDOFF PASS: Unreal Editor pid=$($process.Id) remains open on Sa Calobra road-contact-rider in VMI_LIT with diagnostic lighting."
+          Write-Host "OWNER HANDOFF PASS: Unreal Editor pid=$($process.Id) remains open on Sa Calobra road-contact-rider in VMI_LIT with transient Road_Earthworks CUT and diagnostic lighting."
 
       - name: Clean current-run evidence and non-allow-listed residue
         if: ${{ always() && !inputs.region_terrain_import }}
