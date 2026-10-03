@@ -339,6 +339,45 @@ A road mesh must never be snapped to Landscape vertices just because that makes 
 
 ## 3. Core technology stack
 
+### API-first authoring rule
+
+World-building tools are allowed to change quickly; YACS architecture must not be
+based on remembered node names or guessed engine behavior. Before selecting or
+implementing an Unreal/PCG/PCGEx operation:
+
+1. resolve the exact Unreal Engine version used by the YACS project/runner;
+2. resolve the exact approved PCGEx revision/version when PCGEx is in the path;
+3. verify Unreal behavior in Epic's version-matched official documentation and API
+   reference;
+4. verify PCGEx behavior in the official GitBook, beginning with its
+   agent-readable `llms.txt` / `llms-full.txt` index and then the exact system or
+   node page;
+5. if the PCGEx docs do not fully describe the behavior of the pinned YACS version,
+   inspect the pinned upstream source/header at that exact revision instead of
+   guessing or substituting a different-version API;
+6. run a bounded YACS proof before promoting the operation into the reusable world
+   pipeline.
+
+Primary technical references:
+
+- Epic Unreal Engine documentation: https://dev.epicgames.com/documentation/en-us/unreal-engine/
+- Epic Unreal Engine C++ API: https://dev.epicgames.com/documentation/en-us/unreal-engine/API
+- PCGEx official documentation: https://pcgex.gitbook.io/pcgex
+- PCGEx agent index: https://pcgex.gitbook.io/pcgex/llms.txt
+- PCGEx full agent corpus: https://pcgex.gitbook.io/pcgex/llms-full.txt
+- PCGEx Paths mental model: https://pcgex.gitbook.io/pcgex/working-with-pcgex/paths.md
+
+For PCGEx road/path work specifically, read the official **Paths** mental model and
+the exact node pages before graph authoring. PCGEx paths are ordered point data;
+reordering points rewrites the path, and node-specific segment/tangent/normal
+semantics affect road continuity. Those semantics must be treated as input
+contracts and proven on YACS data, not inferred from node names.
+
+This source policy does not move architectural authority to vendor documentation.
+The World Building Bible still decides YACS ownership and methodology; official
+vendor docs define what the selected tools actually support; bounded YACS proof
+decides whether the integration is accepted.
+
 ### Required architecture
 
 **GIS / preprocessing**
