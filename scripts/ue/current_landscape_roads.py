@@ -70,6 +70,10 @@ def start(world, root, exact_sha):
         or network["shoulder_m"] != 0.5
         or network["map_saved"]
         or network["base_dtm_modified"]
+        or network.get("segmentation", {}).get("method")
+        != "CONTINUOUS_CORRIDOR_ADAPTIVE_CONFLICT_INTERVALS_V1"
+        or network.get("segmentation", {}).get("fixed_tiles_are_admission_boundaries")
+        is not False
     ):
         raise RuntimeError("Network preview provenance mismatch")
     landscapes = list(
@@ -81,6 +85,11 @@ def start(world, root, exact_sha):
     if labels.count("Base_DTM") != 1 or labels.count("Road_Earthworks") != 1:
         raise RuntimeError("Network Landscape layer ownership is ambiguous")
     for window in network["approved"]:
+        if (
+            window.get("technical_patch_tile") is not True
+            or not isinstance(window.get("decision_interval_id"), str)
+        ):
+            raise RuntimeError("Network patch tile was used as an admission boundary")
         path = directory / window["cut_manifest"]
         if path.name != window["cut_manifest"] or digest(path) != window["cut_sha256"]:
             raise RuntimeError("Network CUT manifest changed")
@@ -268,6 +277,13 @@ def finish(world, root, exact_sha, network):
         else "IMPORTED_REVIEW_REQUIRED",
         "approved_length_m": network["approved_length_m"],
         "blocked_length_m": network["blocked_length_m"],
+        "continuous_corridor_count": network["continuous_corridor_count"],
+        "decision_interval_count": network["decision_interval_count"],
+        "adaptive_conflict_interval_count": network[
+            "adaptive_conflict_interval_count"
+        ],
+        "technical_patch_tile_count": network["technical_patch_tile_count"],
+        "segmentation": network["segmentation"],
         "windows": reports,
         "blocked": network["blocked"],
         "height_profile_candidate_window_count": network[

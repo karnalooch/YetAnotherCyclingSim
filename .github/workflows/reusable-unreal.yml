@@ -470,8 +470,14 @@ jobs:
           if ($network.exact_sha -ne '${{ inputs.target_sha }}' -or
               $network.approved_length_m -le 0 -or $network.base_dtm_modified -ne $false -or
               $network.map_saved -ne $false -or
-              $network.height_profile_candidate_window_count -ne 43 -or
-              $network.height_profile_incompatible_window_count -ne 16 -or
+              $network.segmentation.method -ne 'CONTINUOUS_CORRIDOR_ADAPTIVE_CONFLICT_INTERVALS_V1' -or
+              $network.segmentation.fixed_tiles_are_admission_boundaries -ne $false -or
+              [int]$network.continuous_corridor_count -le 0 -or
+              [int]$network.decision_interval_count -le 0 -or
+              [int]$network.adaptive_conflict_interval_count -le 0 -or
+              [int]$network.technical_patch_tile_count -le 0 -or
+              $network.height_profile_candidate_window_count -le 0 -or
+              $network.height_profile_incompatible_window_count -le 0 -or
               $network.extreme_cut_case.capture -ne 'network-extreme-cut.png' -or
               @($network.windows | Where-Object { $_.asphalt_penetration_count -ne 0 }).Count -ne 0) {
             throw 'Current-Landscape native network proof failed.'

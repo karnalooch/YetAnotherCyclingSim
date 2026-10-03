@@ -1,7 +1,9 @@
-"""Bounded, source-grounded asphalt candidates on the existing Sa Calobra map.
+"""Continuous source-grounded asphalt with local adaptive conflict intervals.
 
 The accepted 300 m recipe keeps ownership of its footprint. Other pavement is
-provisional 5 m. Failed geometry/earthworks windows remain explicit coverage gaps.
+provisional 5 m. A part is designed once as a continuous axis/profile; recursive
+measurement localises only the failing spans. Fixed-size pieces remain technical
+patch/streaming units and never decide whether the road is admitted.
 No canonical source coordinates, physics data or saved Landscape are modified.
 """
 
@@ -50,6 +52,208 @@ SUPPORT_CAP = 4.0
 LATERAL_SWEEP_LIMIT_M = 4.0
 LATERAL_SWEEP_STEP_M = 0.25
 WIDTH_SENSITIVITY_M = (3.0, 4.0, 5.0)
+MIN_CONFLICT_INTERVAL_M = 8.0
+CONFLICT_MARGIN_M = 2.0
+PATCH_TILE_MAX_M = 100.0
+MEASUREMENT_PROBE_MAX_M = 100.0
+
+
+def adaptive_conflict_intervals(
+    stations,
+    assessor,
+    *,
+    minimum_conflict_m=MIN_CONFLICT_INTERVAL_M,
+    conflict_margin_m=CONFLICT_MARGIN_M,
+    measurement_probe_max_m=MEASUREMENT_PROBE_MAX_M,
+):
+    """Localise failing spans while preserving full continuous-part coverage.
+
+    Intervals use inclusive station indices and therefore share exactly one
+    endpoint. The assessor returns ``status`` (PASS/BLOCKED), diagnostics and an
+    optional failure station relative to the inspected interval. Conflict margin
+    is applied to segment coverage after localisation, never to source geometry.
+    """
+    values = np.asarray(stations, dtype=float)
+    if (
+        values.ndim != 1
+        or len(values) < 3
+        or not np.isfinite(values).all()
+        or (np.diff(values) <= 0).any()
+    ):
+        raise ValueError("Adaptive stations must be finite and strictly increasing")
+    if (
+        minimum_conflict_m <= 0
+        or conflict_margin_m < 0
+        or measurement_probe_max_m < minimum_conflict_m
+    ):
+        raise ValueError("Adaptive interval limits are invalid")
+
+    raw = []
+
+    def visit(start, end):
+        outcome = assessor(start, end)
+        if outcome.get("status") not in ("PASS", "BLOCKED"):
+            raise ValueError("Adaptive assessor returned an invalid status")
+        length = float(values[end] - values[start])
+        if outcome["status"] == "PASS" or length <= minimum_conflict_m:
+            raw.append({**outcome, "start_index": start, "end_index": end})
+            return
+        relative = outcome.get("failure_station_index")
+        if not isinstance(relative, int) or isinstance(relative, bool):
+            pivot = (start + end) // 2
+        else:
+            pivot = min(max(start + relative, start + 1), end - 1)
+        half = max(
+            1,
+            int(math.ceil(minimum_conflict_m / np.median(np.diff(values)) / 2)),
+        )
+        core_start = max(start, pivot - half)
+        core_end = min(end, pivot + half)
+        if core_start == start and core_end == end:
+            split = (start + end) // 2
+            visit(start, split)
+            visit(split, end)
+            return
+        if core_start > start:
+            visit(start, core_start)
+        visit(core_start, core_end)
+        if core_end < end:
+            visit(core_end, end)
+
+    # Bound raster memory with measurement probes. Their seams disappear when
+    # segment coverage is rebuilt below, so they are not admission boundaries.
+    cursor = 0
+    while cursor < len(values) - 1:
+        limit = values[cursor] + measurement_probe_max_m
+        stop = int(np.searchsorted(values, limit, side="right") - 1)
+        stop = min(max(stop, cursor + 2), len(values) - 1)
+        remaining = len(values) - 1 - stop
+        if 0 < remaining < 2:
+            stop -= 2 - remaining
+        visit(cursor, stop)
+        cursor = stop
+    raw.sort(key=lambda item: (item["start_index"], item["end_index"]))
+
+    # Classify segment coverage, then expand only blocked segments by the
+    # explicit review margin. This avoids gaps and double-counted length.
+    blocked = np.zeros(len(values) - 1, dtype=bool)
+    for item in raw:
+        if item["status"] == "BLOCKED":
+            blocked[item["start_index"] : item["end_index"]] = True
+    margin_samples = int(math.ceil(conflict_margin_m / np.median(np.diff(values))))
+    if margin_samples and blocked.any():
+        indices = np.flatnonzero(blocked)
+        expanded = blocked.copy()
+        for index in indices:
+            expanded[
+                max(0, index - margin_samples) : min(
+                    len(expanded), index + margin_samples + 1
+                )
+            ] = True
+        blocked = expanded
+
+    def segment_runs(mask):
+        groups = []
+        run_start = 0
+        for index in range(1, len(mask)):
+            if mask[index] != mask[run_start]:
+                groups.append((run_start, index, bool(mask[run_start])))
+                run_start = index
+        groups.append((run_start, len(mask), bool(mask[run_start])))
+        return groups
+
+    # A road check requires at least three stations (two segments). Absorb any
+    # one-segment remainder into conflict evidence instead of inventing a tiny
+    # admitted island at a partition boundary.
+    while True:
+        runs = segment_runs(blocked)
+        short = [(a, b) for a, b, _ in runs if b - a < 2]
+        if not short:
+            break
+        for start_segment, end_segment in short:
+            blocked[
+                max(0, start_segment - 1) : min(len(blocked), end_segment + 1)
+            ] = True
+
+    result = []
+    for start_segment, end_segment, is_blocked in runs:
+        start_index, end_index = start_segment, end_segment
+        run_length = float(values[end_index] - values[start_index])
+        if run_length <= measurement_probe_max_m + 1e-9:
+            outcome = assessor(start_index, end_index)
+            evidence_range = [start_index, end_index]
+        else:
+            components = [
+                item
+                for item in raw
+                if item["end_index"] > start_index
+                and item["start_index"] < end_index
+                and item["status"] == ("BLOCKED" if is_blocked else "PASS")
+            ]
+            if is_blocked and components:
+
+                def severity(item):
+                    diagnostics = item.get("diagnostics", {})
+                    return diagnostics.get("cut_depth", {}).get("max_cut_m", 0.0)
+
+                evidence = max(components, key=severity)
+                outcome = {
+                    **evidence,
+                    "component_interval_count": len(components),
+                }
+                evidence_range = [
+                    evidence["start_index"],
+                    evidence["end_index"],
+                ]
+            else:
+                outcome = {
+                    "status": "PASS",
+                    "reason": None,
+                    "failure_station_index": None,
+                    "diagnostics": {
+                        "stage": "AGGREGATED_CONTINUOUS_PASS",
+                        "component_interval_count": len(components),
+                    },
+                }
+                evidence_range = [start_index, end_index]
+        # Expansion is conservative; PASS may become BLOCKED, never vice versa.
+        status = "BLOCKED" if is_blocked or outcome["status"] == "BLOCKED" else "PASS"
+        result.append(
+            {
+                **outcome,
+                "status": status,
+                "start_index": start_index,
+                "end_index": end_index,
+                "start_m": float(values[start_index]),
+                "end_m": float(values[end_index]),
+                "length_m": float(values[end_index] - values[start_index]),
+                "evidence_station_range": evidence_range,
+                "conflict_margin_m": conflict_margin_m if status == "BLOCKED" else 0.0,
+            }
+        )
+    if not math.isclose(
+        sum(item["length_m"] for item in result),
+        float(values[-1] - values[0]),
+        abs_tol=1e-6,
+    ):
+        raise ValueError("Adaptive intervals do not cover the continuous part")
+    return result
+
+
+def technical_patch_tiles(start_index, end_index, stations):
+    """Split an admitted interval for storage without changing its decision."""
+    tiles = []
+    cursor = start_index
+    while cursor < end_index:
+        limit = float(stations[cursor]) + PATCH_TILE_MAX_M
+        stop = int(np.searchsorted(stations, limit, side="right") - 1)
+        stop = min(max(stop, cursor + 2), end_index)
+        remaining = end_index - stop
+        if 0 < remaining < 2:
+            stop -= 2 - remaining
+        tiles.append((cursor, stop))
+        cursor = stop
+    return tiles
 
 
 def digest(path):
@@ -660,7 +864,9 @@ def build_extreme_review(case, manifest):
         east_m, north_m
     )
     hotspot_wgs84 = [float(lon), float(lat)]
-    reviewed = _reviewed_anomaly(case["id"], hotspot_wgs84)
+    reviewed = _reviewed_anomaly(
+        case.get("review_evidence_id", case["id"]), hotspot_wgs84
+    )
     default_url = (
         "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint="
         f"{lat:.8f}%2C{lon:.8f}"
@@ -825,6 +1031,106 @@ def write_extreme_cut_diagnostic(case, path):
     image.save(path, format="PNG", optimize=False)
 
 
+def assess_network_interval(
+    start, end, s, sections, center, bank, line, terrain, manifest, origin
+):
+    """Measure one interval of an already-authored continuous road part."""
+    if end - start < 2:
+        raise ValueError("Road decision interval needs at least three stations")
+    source_window = substring(line, float(s[start]), float(s[end]))
+    source_window_local = transform(
+        lambda x, y, z=None: (x - origin[0], origin[1] - y),
+        source_window,
+    )
+    part = sections[start : end + 1]
+    diagnostics = {
+        "stage": "PLANAR_GEOMETRY",
+        "continuous_part_station_range": [int(start), int(end)],
+    }
+    failure_station_index = None
+    try:
+        metrics = inspect_sections(part, source_window_local)
+        diagnostics.update(metrics)
+        diagnostics["stage"] = "GRADE_AND_BANK"
+        grades = abs(
+            np.diff(center[start : end + 1]) / np.diff(s[start : end + 1])
+        )
+        bank_rates = abs(
+            np.diff(bank[start : end + 1]) / np.diff(s[start : end + 1])
+        )
+        diagnostics["max_grade_abs"] = float(grades.max())
+        diagnostics["max_bank_rate_per_m"] = float(bank_rates.max())
+        if grades.max() > 0.31:
+            failure_station_index = int(np.argmax(grades))
+            raise ValueError("Road grade exceeds reviewed preview limit")
+        if bank_rates.max() > 0.004:
+            failure_station_index = int(np.argmax(bank_rates))
+            raise ValueError("Banking transition exceeds reviewed rate")
+
+        asphalt_ground = native_ground(terrain, manifest, part[:, :, :2])
+        delta = part[:, :, 2] - asphalt_ground
+        diagnostics["stage"] = "CORE_SUPPORT"
+        diagnostics["max_core_support_m"] = float(delta.max())
+        if delta.max() > SUPPORT_CAP:
+            failure_station_index = int(
+                np.unravel_index(np.argmax(delta), delta.shape)[0]
+            )
+            raise ValueError("Support height needs structure review")
+
+        surface = surface_inspection(part.tolist())
+        diagnostics["stage"] = "SURFACE_3D"
+        diagnostics["surface_inspection"] = surface
+        if surface["status"] != "PASS":
+            raise ValueError("Accepted 3D road surface limits exceeded")
+
+        support = np.asarray(shoulder_sections(part.tolist()), dtype=float)
+        outer_ground = native_ground(terrain, manifest, support[:, [0, -1], :2])
+        _, _, support_proof = build_vertical_support(
+            support.tolist(), outer_ground.tolist()
+        )
+        shoulder_delta = support[:, [0, -1], 2] - outer_ground
+        diagnostics["stage"] = "SHOULDER_SUPPORT"
+        diagnostics["max_shoulder_wall_m"] = support_proof["max_wall_height_m"]
+        diagnostics["max_shoulder_support_m"] = float(shoulder_delta.max())
+        if support_proof["max_wall_height_m"] > SUPPORT_CAP:
+            failure_station_index = int(
+                np.unravel_index(np.argmax(shoulder_delta), shoulder_delta.shape)[0]
+            )
+            raise ValueError("Shoulder support needs structure review")
+
+        diagnostics["stage"] = "RASTER_CUT"
+        measured = measure_patch(support, terrain, manifest)
+        diagnostics["cut_depth"] = measured["cut_depth"]
+        diagnostics["earthworks_fit"] = height_fit_bounds(
+            measured["cut_depth"]["max_cut_m"],
+            diagnostics["max_core_support_m"],
+            diagnostics["max_shoulder_support_m"],
+            cut_cap_m=CUT_CAP,
+            support_cap_m=SUPPORT_CAP,
+        )
+        if measured["cut_depth"]["max_cut_m"] > CUT_CAP:
+            failure_station_index = measured["cut_depth"]["nearest_station_index"]
+            raise ValueError(
+                "Ordinary 1 m CUT cap exceeded "
+                f"({measured['cut_depth']['max_cut_m']:.3f})"
+            )
+        return {
+            "status": "PASS",
+            "reason": None,
+            "failure_station_index": None,
+            "diagnostics": diagnostics,
+        }
+    except ValueError as exc:
+        if failure_station_index is None and "cut_depth" in diagnostics:
+            failure_station_index = diagnostics["cut_depth"]["nearest_station_index"]
+        return {
+            "status": "BLOCKED",
+            "reason": str(exc),
+            "failure_station_index": failure_station_index,
+            "diagnostics": diagnostics,
+        }
+
+
 def prepare(prepared, output, exact_sha):
     if output.exists():
         raise FileExistsError("Preserve previous network evidence")
@@ -872,6 +1178,17 @@ def prepare(prepared, output, exact_sha):
         "road_physics_admitted": False,
         "approved": [],
         "blocked": [],
+        "continuous_corridors": [],
+        "conflict_intervals": [],
+        "segmentation": {
+            "method": "CONTINUOUS_CORRIDOR_ADAPTIVE_CONFLICT_INTERVALS_V1",
+            "station_spacing_m": STEP,
+            "minimum_conflict_interval_m": MIN_CONFLICT_INTERVAL_M,
+            "conflict_margin_m": CONFLICT_MARGIN_M,
+            "technical_patch_tile_max_m": PATCH_TILE_MAX_M,
+            "measurement_probe_max_m": MEASUREMENT_PROBE_MAX_M,
+            "fixed_tiles_are_admission_boundaries": False,
+        },
         "height_profile_candidates": [],
         "extreme_cut_case": None,
         "source_clipped_length_m": 0,
@@ -925,139 +1242,180 @@ def prepare(prepared, output, exact_sha):
             )
             ground = center[:, None] + bank[:, None] * offsets[None, :]
             sections = np.dstack([section_xy, ground + 0.04])
-            for start in range(0, len(s) - 2, 200):
-                end = min(start + 201, len(s))
-                length = float(s[end - 1] - s[start])
-                if end - start < 3:
-                    continue
-                ident = f"{feature['id']}-{part_index}-{start}"
-                diagnostics = {"stage": "PLANAR_GEOMETRY"}
-                try:
-                    source_window = substring(line, float(s[start]), float(s[end - 1]))
-                    source_window_local = transform(
-                        lambda x, y, z=None: (x - origin[0], origin[1] - y),
-                        source_window,
-                    )
-                    part = sections[start:end]
-                    # Reflect section order back only for planar admission.
-                    metrics = inspect_sections(
-                        part,
-                        source_window_local,
-                    )
-                    diagnostics.update(metrics)
-                    diagnostics["stage"] = "GRADE_AND_BANK"
-                    diagnostics["max_grade_abs"] = float(
-                        np.max(abs(np.diff(center[start:end]) / np.diff(s[start:end])))
-                    )
-                    diagnostics["max_bank_rate_per_m"] = float(
-                        np.max(abs(np.diff(bank[start:end]) / np.diff(s[start:end])))
-                    )
-                    if (
-                        np.max(abs(np.diff(center[start:end]) / np.diff(s[start:end])))
-                        > 0.31
+
+            def assess(start, end):
+                return assess_network_interval(
+                    start,
+                    end,
+                    s,
+                    sections,
+                    center,
+                    bank,
+                    line,
+                    terrain,
+                    manifest,
+                    origin,
+                )
+
+            intervals = adaptive_conflict_intervals(s, assess)
+            corridor_id = f"{feature['id']}-{part_index}"
+            corridor = {
+                "id": corridor_id,
+                "feature_id": feature["id"],
+                "part_index": part_index,
+                "length_m": float(s[-1] - s[0]),
+                "station_count": len(s),
+                "continuous_axis_profile": True,
+                "decision_intervals": [],
+                "technical_patch_tiles": [],
+            }
+            for interval_index, interval in enumerate(intervals):
+                start, end = interval["start_index"], interval["end_index"]
+                length = interval["length_m"]
+                decision_id = f"{corridor_id}-interval-{interval_index}"
+                decision = {
+                    "id": decision_id,
+                    "status": interval["status"],
+                    "start_m": interval["start_m"],
+                    "end_m": interval["end_m"],
+                    "length_m": length,
+                    "station_range": [start, end],
+                    "conflict_margin_m": interval["conflict_margin_m"],
+                }
+                corridor["decision_intervals"].append(decision)
+                if interval["status"] == "PASS":
+                    for tile_index, (tile_start, tile_end) in enumerate(
+                        technical_patch_tiles(start, end, s)
                     ):
-                        raise ValueError("Road grade exceeds reviewed preview limit")
-                    if (
-                        np.max(abs(np.diff(bank[start:end]) / np.diff(s[start:end])))
-                        > 0.004
-                    ):
-                        raise ValueError("Banking transition exceeds reviewed rate")
-                    delta = ground[start:end] - heights[start:end]
-                    diagnostics["stage"] = "CORE_SUPPORT"
-                    diagnostics["max_core_support_m"] = float(delta.max())
-                    if delta.max() > SUPPORT_CAP:
-                        raise ValueError("Support height needs structure review")
-                    patch_path = output / (ident + "-cut.json")
-                    surface = surface_inspection(part.tolist())
-                    diagnostics["stage"] = "SURFACE_3D"
-                    diagnostics["surface_inspection"] = surface
-                    if surface["status"] != "PASS":
-                        raise ValueError("Accepted 3D road surface limits exceeded")
-                    support = shoulder_sections(part.tolist())
-                    outer_ground = native_ground(
-                        terrain, manifest, np.asarray(support)[:, [0, -1], :2]
-                    )
-                    _, _, support_proof = build_vertical_support(
-                        support, outer_ground.tolist()
-                    )
-                    diagnostics["stage"] = "SHOULDER_SUPPORT"
-                    diagnostics["max_shoulder_wall_m"] = support_proof[
-                        "max_wall_height_m"
-                    ]
-                    diagnostics["max_shoulder_support_m"] = float(
-                        np.max(np.asarray(support)[:, [0, -1], 2] - outer_ground)
-                    )
-                    if support_proof["max_wall_height_m"] > SUPPORT_CAP:
-                        raise ValueError("Shoulder support needs structure review")
-                    diagnostics["stage"] = "RASTER_CUT"
-                    patch = prepare_patch(
-                        np.asarray(support),
-                        terrain,
-                        manifest,
-                        patch_path,
-                        diagnostics=diagnostics,
-                        asphalt_sections=part,
-                    )
-                    result["approved"].append(
-                        {
-                            "id": ident,
-                            "length_m": length,
-                            "sections": part.tolist(),
-                            "metrics": metrics,
-                            "surface_inspection": surface,
-                            "cut_manifest": patch_path.name,
-                            "cut_sha256": digest(patch_path),
-                            "max_cut_m": patch["max_cut_m"],
-                            "earthworks_fit": diagnostics["earthworks_fit"],
-                        }
-                    )
-                except ValueError as exc:
-                    if "earthworks_fit" in diagnostics:
-                        fit = assess_height_profile_candidate(
-                            part, terrain, manifest, diagnostics
-                        )
-                        diagnostics["height_profile_fit"] = fit
-                        if fit.get("local_numeric_checks_pass"):
-                            result["height_profile_candidates"].append(
-                                {
-                                    "id": ident,
-                                    "length_m": length,
-                                    "fit": fit,
-                                }
+                        tile = assess(tile_start, tile_end)
+                        if tile["status"] != "PASS":
+                            raise ValueError(
+                                "Technical tile contradicted admitted adaptive interval"
                             )
-                        extreme = result["extreme_cut_case"]
-                        if extreme is None or diagnostics["cut_depth"][
-                            "max_cut_m"
-                        ] > extreme["cut_depth"]["max_cut_m"]:
-                            result["extreme_cut_case"] = {
+                        diagnostics = tile["diagnostics"]
+                        part = sections[tile_start : tile_end + 1]
+                        support = np.asarray(
+                            shoulder_sections(part.tolist()), dtype=float
+                        )
+                        ident = f"{decision_id}-tile-{tile_index}"
+                        patch_path = output / (ident + "-cut.json")
+                        patch = prepare_patch(
+                            support,
+                            terrain,
+                            manifest,
+                            patch_path,
+                            diagnostics=diagnostics,
+                            asphalt_sections=part,
+                        )
+                        result["approved"].append(
+                            {
                                 "id": ident,
-                                "length_m": length,
-                                "reason": str(exc),
+                                "decision_interval_id": decision_id,
+                                "technical_patch_tile": True,
+                                "length_m": float(s[tile_end] - s[tile_start]),
                                 "sections": part.tolist(),
-                                "cut_depth": diagnostics["cut_depth"],
-                                "cut_depth_by_envelope": diagnostics[
-                                    "cut_depth_by_envelope"
+                                "metrics": {
+                                    key: diagnostics[key]
+                                    for key in (
+                                        "width_min_m",
+                                        "width_max_m",
+                                        "source_displacement_m",
+                                        "both_edges_checked",
+                                    )
+                                },
+                                "surface_inspection": diagnostics[
+                                    "surface_inspection"
                                 ],
-                                "height_profile_fit": fit,
-                                "source_window_local_xy": [
-                                    list(point[:2])
-                                    for point in source_window_local.coords
-                                ],
-                                "geometry_repair_executed": False,
-                                "height_change_applied": False,
-                                "road_admitted": False,
-                                "visual_status": "CAPTURE_REQUIRED",
+                                "cut_manifest": patch_path.name,
+                                "cut_sha256": digest(patch_path),
+                                "max_cut_m": patch["max_cut_m"],
+                                "earthworks_fit": diagnostics["earthworks_fit"],
                             }
-                    result["blocked"].append(
-                        {
-                            "id": ident,
-                            "length_m": length,
-                            "reason": str(exc),
-                            "diagnostics": diagnostics,
-                        }
+                        )
+                        corridor["technical_patch_tiles"].append(ident)
+                    continue
+
+                diagnostics = interval["diagnostics"]
+                ident = decision_id
+                evidence_start, evidence_end = interval["evidence_station_range"]
+                part = sections[evidence_start : evidence_end + 1]
+                source_window = substring(
+                    line, float(s[evidence_start]), float(s[evidence_end])
+                )
+                source_window_local = transform(
+                    lambda x, y, z=None: (x - origin[0], origin[1] - y),
+                    source_window,
+                )
+                if "earthworks_fit" in diagnostics:
+                    support = np.asarray(
+                        shoulder_sections(part.tolist()), dtype=float
                     )
+                    diagnostics["cut_depth_by_envelope"] = measure_cut_envelopes(
+                        part, support, terrain, manifest
+                    )
+                    fit = assess_height_profile_candidate(
+                        part, terrain, manifest, diagnostics
+                    )
+                    diagnostics["height_profile_fit"] = fit
+                    if fit.get("local_numeric_checks_pass"):
+                        result["height_profile_candidates"].append(
+                            {"id": ident, "length_m": length, "fit": fit}
+                        )
+                    extreme = result["extreme_cut_case"]
+                    if extreme is None or diagnostics["cut_depth"][
+                        "max_cut_m"
+                    ] > extreme["cut_depth"]["max_cut_m"]:
+                        peak_global = (
+                            evidence_start
+                            + diagnostics["cut_depth"]["nearest_station_index"]
+                        )
+                        legacy_start = peak_global // 200 * 200
+                        result["extreme_cut_case"] = {
+                            "id": ident,
+                            "review_evidence_id": (
+                                f"{feature['id']}-{part_index}-{legacy_start}"
+                            ),
+                            "length_m": length,
+                            "reason": interval["reason"],
+                            "sections": part.tolist(),
+                            "cut_depth": diagnostics["cut_depth"],
+                            "cut_depth_by_envelope": diagnostics[
+                                "cut_depth_by_envelope"
+                            ],
+                            "height_profile_fit": fit,
+                            "source_window_local_xy": [
+                                list(point[:2]) for point in source_window_local.coords
+                            ],
+                            "geometry_repair_executed": False,
+                            "height_change_applied": False,
+                            "road_admitted": False,
+                            "visual_status": "CAPTURE_REQUIRED",
+                        }
+                blocked = {
+                    "id": ident,
+                    "corridor_id": corridor_id,
+                    "adaptive_conflict_interval": True,
+                    "start_m": interval["start_m"],
+                    "end_m": interval["end_m"],
+                    "length_m": length,
+                    "evidence_station_range": [evidence_start, evidence_end],
+                    "reason": interval["reason"],
+                    "diagnostics": diagnostics,
+                }
+                result["blocked"].append(blocked)
+                result["conflict_intervals"].append(blocked)
+            result["continuous_corridors"].append(corridor)
     result["approved_length_m"] = sum(x["length_m"] for x in result["approved"])
     result["blocked_length_m"] = sum(x["length_m"] for x in result["blocked"])
+    result["continuous_corridor_count"] = len(result["continuous_corridors"])
+    result["decision_interval_count"] = sum(
+        len(corridor["decision_intervals"])
+        for corridor in result["continuous_corridors"]
+    )
+    result["adaptive_conflict_interval_count"] = len(
+        result["conflict_intervals"]
+    )
+    result["technical_patch_tile_count"] = len(result["approved"])
     result["height_profile_candidate_length_m"] = sum(
         x["length_m"] for x in result["height_profile_candidates"]
     )

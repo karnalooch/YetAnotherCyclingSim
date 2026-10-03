@@ -10,6 +10,7 @@ import numpy as np
 from shapely.geometry import LineString
 
 from scripts.assets.prepare_current_landscape_roads import (
+    adaptive_conflict_intervals,
     assess_lateral_sweep,
     build_extreme_review,
     inspect_sections,
@@ -18,6 +19,7 @@ from scripts.assets.prepare_current_landscape_roads import (
     resize_sections_width,
     shift_sections_laterally,
     smooth_axis,
+    technical_patch_tiles,
     write_extreme_cut_diagnostic,
     write_extreme_cut_review,
 )
@@ -42,6 +44,94 @@ def sections(axis):
 
 
 class NetworkTests(unittest.TestCase):
+    def test_fixed_hundred_metre_loop_is_not_an_admission_boundary(self):
+        script = Path(__file__).with_name(
+            "prepare_current_landscape_roads.py"
+        ).read_text(encoding="utf-8")
+        self.assertNotIn("for start in range(0, len(s) - 2, 200)", script)
+        self.assertIn(
+            "CONTINUOUS_CORRIDOR_ADAPTIVE_CONFLICT_INTERVALS_V1", script
+        )
+        self.assertIn('"fixed_tiles_are_admission_boundaries": False', script)
+
+    def test_adaptive_intervals_localise_conflict_and_cover_continuous_axis(self):
+        stations = np.arange(0.0, 101.0, 1.0)
+
+        def assess(start, end):
+            conflict = [index for index in range(start, end + 1) if 47 <= index <= 51]
+            return {
+                "status": "BLOCKED" if conflict else "PASS",
+                "failure_station_index": conflict[0] - start if conflict else None,
+                "diagnostics": {},
+            }
+
+        intervals = adaptive_conflict_intervals(
+            stations,
+            assess,
+            minimum_conflict_m=6.0,
+            conflict_margin_m=2.0,
+        )
+        self.assertAlmostEqual(sum(item["length_m"] for item in intervals), 100.0)
+        blocked = [item for item in intervals if item["status"] == "BLOCKED"]
+        self.assertEqual(len(blocked), 1)
+        self.assertLess(blocked[0]["start_m"], 47.0)
+        self.assertGreater(blocked[0]["end_m"], 51.0)
+        self.assertLess(blocked[0]["length_m"], 25.0)
+
+    def test_storage_tiles_do_not_become_admission_boundaries(self):
+        stations = np.linspace(0.0, 250.0, 501)
+        tiles = technical_patch_tiles(0, len(stations) - 1, stations)
+        self.assertEqual(tiles[0][0], 0)
+        self.assertEqual(tiles[-1][1], len(stations) - 1)
+        self.assertTrue(all(b - a >= 2 for a, b in tiles))
+        self.assertTrue(
+            all(stations[b] - stations[a] <= 100.0 for a, b in tiles)
+        )
+        self.assertEqual(sum(stations[b] - stations[a] for a, b in tiles), 250.0)
+
+        awkward = np.linspace(0.0, 100.5, 202)
+        awkward_tiles = technical_patch_tiles(0, len(awkward) - 1, awkward)
+        self.assertTrue(all(b - a >= 2 for a, b in awkward_tiles))
+        self.assertTrue(
+            all(awkward[b] - awkward[a] <= 100.0 for a, b in awkward_tiles)
+        )
+
+    def test_measurement_probe_seam_does_not_split_one_conflict(self):
+        stations = np.arange(0.0, 251.0, 1.0)
+
+        def assess(start, end):
+            conflict = [index for index in range(start, end + 1) if 98 <= index <= 103]
+            return {
+                "status": "BLOCKED" if conflict else "PASS",
+                "failure_station_index": conflict[0] - start if conflict else None,
+                "diagnostics": {},
+                "reason": "synthetic conflict" if conflict else None,
+            }
+
+        intervals = adaptive_conflict_intervals(
+            stations,
+            assess,
+            minimum_conflict_m=6.0,
+            conflict_margin_m=2.0,
+            measurement_probe_max_m=100.0,
+        )
+        blocked = [item for item in intervals if item["status"] == "BLOCKED"]
+        self.assertEqual(len(blocked), 1)
+        self.assertLess(blocked[0]["start_m"], 98.0)
+        self.assertGreater(blocked[0]["end_m"], 103.0)
+        self.assertAlmostEqual(sum(item["length_m"] for item in intervals), 250.0)
+
+    def test_clear_measurement_probes_collapse_to_one_decision_interval(self):
+        stations = np.linspace(0.0, 250.0, 501)
+
+        def assess(_start, _end):
+            return {"status": "PASS", "diagnostics": {}, "reason": None}
+
+        intervals = adaptive_conflict_intervals(stations, assess)
+        self.assertEqual(len(intervals), 1)
+        self.assertEqual(intervals[0]["status"], "PASS")
+        self.assertEqual(intervals[0]["length_m"], 250.0)
+
     def test_extreme_cut_diagnostic_writes_reviewable_png(self):
         cut = {
             "max_cut_m": 11.62,

@@ -3176,8 +3176,15 @@ widening is inferred. Crossfall is a bounded provisional design, attenuated to
 The accepted 300 m footprint and 8 m exclusion buffer stay owned by #332.
 Nudo de la Corbata and its 12 m protection buffer are explicitly blocked for
 structure/vertical-separation review. A 10 m outer-boundary inset preserves
-Landscape/patch coverage. Other candidates are inspected in <=100 m windows;
-failed windows are explicit gaps with original feature IDs and reasons. A
+Landscape/patch coverage. Every other source part is authored once as a
+continuous axis, height profile and cross-section field. Constraint measurement
+may use <=100 m probes to bound raster memory, but probe seams are discarded
+before admission. Recursive measurement localises failures into adaptive
+conflict intervals with a 2 m review margin; a conflict crossing a probe seam
+remains one conflict. Only after the decision may clear spans be split into
+<=100 m patch/streaming tiles. Those tiles are not design or admission
+boundaries and reuse the exact globally-authored endpoint samples. Failed
+adaptive intervals retain original feature ownership and reasons. A
 width-preserving fit is not admitted merely because it renders.
 
 The ordinary CUT cap remains 1 m. The previously reviewed hairpin's scoped 4 m
@@ -3186,17 +3193,19 @@ existing native Min/world-unit float32 patch contract on `Road_Earthworks`;
 `Base_DTM` and saved maps remain untouched. Independent actual Landscape traces
 verify all asphalt section samples after patch evaluation. The existing
 vertical-support builder must retain full 0.5 m shoulders and <=4 m support.
-An incompatible window fails closed; it is not lowered arbitrarily, narrowed or
-claimed imported. No collision, physics or human/performance admission follows.
+An incompatible conflict interval fails closed; it is not lowered arbitrarily,
+narrowed or claimed imported. No collision, physics or human/performance
+admission follows.
 
 The existing native capture and Lit owner handoff reconstruct the additional
-transient network. `Network/network.json` records admitted candidate windows,
-blocked windows and protected coverage; `network-native-proof.json` records
+transient network. `Network/network.json` records continuous corridors,
+adaptive conflict intervals, technical patch tiles and protected coverage;
+`network-native-proof.json` records
 actual imported length and contact/support results. Partial import is explicitly
 reported as `PARTIAL_IMPORTED`, never complete coverage. Current whole-world
 performance and visual acceptance must still be measured after network import.
 
-Blocked geometric windows retain a `diagnostics` object with the last attempted
+Blocked adaptive intervals retain a `diagnostics` object with the last attempted
 gate, measured planar metrics, grade/bank rate and 3D receipt when reached. CUT
 failures also retain the actual raster maximum, core support and shoulder wall
 height plus the signed shoulder-to-ground gap. `earthworks_fit` bounds a
@@ -3210,14 +3219,14 @@ existing candidate heights and accepted patch bytes remain unchanged. BOB must
 use these measurements plus source-grounded height/structure evidence before
 proposing a fitted profile; new geometry still requires fresh native proof.
 
-For every CUT window whose uniform bounds overlap, the preparer now selects the
+For every CUT conflict interval whose uniform bounds overlap, the preparer selects the
 midpoint only as a deterministic **local height-profile candidate** and reruns
 the exact raster CUT, core/shoulder support and 3D surface checks against that
 translated geometry. A local numeric PASS remains blocked: the candidate is not
-written to the patch, its absolute source height and adjacent-window joins remain
+written to the patch, its absolute source height and adjacent-interval joins remain
 unverified, and it is not sent to Unreal as imported road. Empty bounds reject
 the candidate without inventing a structure. This bounded screen separates
-windows that merit source/profile/continuity work from windows where height alone
+intervals that merit source/profile/continuity work from intervals where height alone
 cannot satisfy the existing limits.
 
 Every failed CUT also records the peak raster cell, base/target heights, positive
@@ -3232,7 +3241,7 @@ for immediate artifact or chat review before Unreal finishes. Future extreme
 network conflicts should receive the same bounded images (or a more informative
 bounded clip) instead of being reported only as scalar log output.
 
-The preparer's `NETWORK_BLOCKED` JSON lines expose each retained blocked-window
+The preparer's `NETWORK_BLOCKED` JSON lines expose each retained blocked-interval
 receipt in Actions job logs as well as `Network/network.json`, so remote BOB
 diagnosis does not require downloading the full native render/terrain archive.
 
