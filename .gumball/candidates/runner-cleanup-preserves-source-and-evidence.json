@@ -1,0 +1,11 @@
+{
+  "id": "runner-cleanup-preserves-source-and-evidence",
+  "source": "karnalooch/YetAnotherCyclingSim",
+  "category": "tooling",
+  "problem": "A temporary build workspace can contain source and retained proof alongside disposable caches.",
+  "invariant": "Cleanup selects explicitly allow-listed generated leaf directories, preserves checkout and evidence roots, rejects ancestor and nested reparse points, and locks the reviewed inventory before apply.",
+  "evidence": ["Issue #341", "scripts/ci/test_windows_host_recovery_contract.py"],
+  "do_not_copy": ["YACS machine paths", "Unreal-specific workspace names"],
+  "failure_behavior": "Unsafe paths, active consumers or inventory drift reject apply; preview never deletes.",
+  "status": "candidate"
+}
