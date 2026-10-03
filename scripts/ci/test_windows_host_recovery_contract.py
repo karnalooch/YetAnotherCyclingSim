@@ -121,6 +121,38 @@ class WindowsHostRecoveryContractTests(unittest.TestCase):
             self.assertTrue(candidate.exists())
             self.assertTrue(protected.exists())
 
+    def test_cleanup_empty_preview_reports_zero(self) -> None:
+        pwsh = shutil.which("pwsh")
+        if pwsh is None:
+            self.skipTest("pwsh is unavailable")
+        with tempfile.TemporaryDirectory() as temp:
+            runner = Path(temp) / "actions-runner-yacs"
+            workspace = (
+                runner / "_work" / "YetAnotherCyclingSim" / "YetAnotherCyclingSim"
+            )
+            workspace.mkdir(parents=True)
+            result = subprocess.run(
+                [
+                    pwsh,
+                    "-NoProfile",
+                    "-File",
+                    str(CLEANUP),
+                    "-RunnerRoot",
+                    str(runner),
+                    "-MinimumAgeHours",
+                    "0",
+                    "-Json",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["candidate_count"], 0)
+            self.assertEqual(payload["estimated_reclaim_bytes"], 0)
+            self.assertEqual(payload["deleted_bytes"], 0)
+
     @unittest.skipUnless(sys.platform == "win32", "cleanup apply is Windows-only")
     def test_cleanup_apply_deletes_only_reviewed_candidate(self) -> None:
         pwsh = shutil.which("pwsh")

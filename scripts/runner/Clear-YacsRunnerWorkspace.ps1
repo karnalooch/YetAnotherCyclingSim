@@ -110,7 +110,10 @@ foreach ($Directory in @(Get-ChildItem -LiteralPath $RepositoryWorkspace -Direct
 
 $Drive = [System.IO.DriveInfo]::new([System.IO.Path]::GetPathRoot($RunnerRoot))
 $FreeBefore = [int64]$Drive.AvailableFreeSpace
-$EstimatedBytes = [int64](($Candidates | Measure-Object Bytes -Sum).Sum)
+$EstimatedBytes = 0L
+foreach ($Candidate in $Candidates) {
+    $EstimatedBytes += [int64]$Candidate.Bytes
+}
 $DeletedBytes = 0L
 
 if ($Apply) {
