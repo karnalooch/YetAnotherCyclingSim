@@ -2289,6 +2289,23 @@ When accessible, record panorama location/date and qualitative shoulder,
 drainage and retaining-wall observations separately from surveyed evidence.
 Do not infer metric dimensions from perspective imagery alone.
 
+Do not automate Street View acquisition through repository workflows. For every
+extreme road/terrain anomaly escalated to owner review, provide the diagnostic
+value and station, WGS84 coordinates, a direct link to the exact interactive
+panorama/view, and an owner-visible screenshot or short video when available.
+Classify the observation as `NATURAL_FEATURE_CONFIRMED`, `ALGORITHM_SUSPECT` or
+`UNRESOLVED`; explain the evidence and state what metric question remains open.
+Do not commit panorama pixels. Interactive imagery remains qualitative only;
+PNOA/LiDAR and source-grounded geometry remain the metric evidence.
+
+The 2026-10-03 exposed-rock case at WGS84 39.8304442, 2.8167225 is the reference
+packet for this escalation format. [Open the exact panorama and view](https://www.google.com/maps/@?api=1&map_action=pano&pano=Q0IzBsfssGl-EEeEOAGuLA&heading=123.6&pitch=-22&fov=90).
+Manual inspection shows bedrock immediately beside the painted edge, with no
+ordinary shoulder at the camera position, so the qualitative classification is
+`NATURAL_FEATURE_CONFIRMED`. This does not establish a metric cut of 11.62 m or
+admit the generated road; compare the flagged transect with PNOA/LiDAR before
+deciding whether any residual discrepancy is terrain, footprint or algorithm.
+
 BOB's repair order remains source/footprint review, bounded road-profile work,
 local `Road_Earthworks` where justified, then renewed full-width and interior
 contact checks. Preserve `Base_DTM`. A promising catalogue entry or photograph
