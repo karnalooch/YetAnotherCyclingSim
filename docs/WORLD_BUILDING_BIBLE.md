@@ -1543,7 +1543,7 @@ The road presentation may use real cross-section evidence, but noisy LiDAR sampl
 
 ### 7.4 Full-area real-road network target
 
-**Owner-approved destination, 2026-10-01; requirement record: Issue #295.** [Product Requirements section 3.1](PRODUCT_REQUIREMENTS.md#31-docelowo-wszystkie-rzeczywiste-drogi-obszaru) requires every real road within the project's Passo Giau area, not just SP638. SP638 is the first validated producer/consumer slice, not the final world inventory. This section records requirements, not an implemented network subsystem or a new prerequisite for terrain-recovery PR #294.
+**Owner-approved destination, 2026-10-01; requirement record: Issue #295.** [Product Requirements section 3.1](PRODUCT_REQUIREMENTS.md#31-docelowo-wszystkie-rzeczywiste-drogi-obszaru) requires every real road within the project's Sa Calobra area, not just Ma-2141. Ma-2141 is the first validated producer/consumer slice, not the final world inventory. This section records requirements, not an implemented network subsystem or a new prerequisite for terrain-recovery PR #294.
 
 Coverage and source evidence must preserve:
 
@@ -1559,7 +1559,55 @@ Reuse the established pinned, authoring-only PCGEx road/corridor path and Epic-n
 
 Expansion must preserve independent alignment, non-destructive Road_Earthworks, route-local handling of vertically separated roads and one rider-close ground owner. An accepted source edit must regenerate only affected road/earthwork/PCG scope and justified dependencies, with source/config fingerprints and unrelated outputs remaining reusable. Full-area coverage does not require full-detail residency everywhere: spatial streaming and quality budgets must preserve visible roads while respecting the measured 1080p/60 target.
 
-Before claiming the expanded network accepted, require a reviewed full-area coverage ledger and discrepancy resolution, true-junction/grade-separation checks, representative rider-camera proofs (including normal slopes and major earthworks), fresh-load/regeneration evidence and applicable exact-SHA performance proof. A good SP638 hairpin or green build cannot substitute for whole-area coverage.
+Before claiming the expanded network accepted, require a reviewed full-area coverage ledger and discrepancy resolution, true-junction/grade-separation checks, representative rider-camera proofs (including normal slopes and major earthworks), fresh-load/regeneration evidence and applicable exact-SHA performance proof. A good Ma-2141 hairpin or green build cannot substitute for whole-area coverage.
+
+#### GIS acquisition and delivery order — Issue #349, 2026-10-03
+
+The owner reaffirmed complete-road planning and continuation of road work.
+Keep three areas explicit: the existing ~2016.5 m Landscape window used by
+#337, the 8 km source benchmark, and the full approved route/world destination.
+The first source comparison uses the current window; it does not shrink the
+full-area requirement. Pin each boundary, CRS and source epoch before measuring
+coverage. Five fetched paved features are not an all-road inventory.
+
+| Source | Role and acquisition order | Limits / required evidence |
+|---|---|---|
+| [CNIG IGR-RT Illes Balears GeoPackage](https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=11655652) and [IGN OGC RoadLink](https://api-features.idee.es/collections/roadlink) | Primary national network inventory; obtain the complete province package, then clip to each pinned AOI and preserve identifiers and related network tables. OGC is useful for bounded inspection and freshness checks. | Catalogue identifies `RT_ILLES_BALEARS_GPKG.ZIP`, July 2026, 54.69 MB. Package not yet acquired/hashed: table coverage must be inspected before claiming classes or topology complete. RoadLink can include paths and fictitious trajectories; source Z, pavement width and bicycle permission are not established by a line. |
+| [GOIB road axes / RT-VUIB catalogue](https://intranet.caib.es/opendatacataleg/ca/dataset/vial) | Regional comparison for streets, access roads and paths; inspect the local road identifiers, surface/access codes and true nodes against IGR-RT before choosing additional geometry. | Catalogue update 2026-07-07; public GeoJSON endpoint responds but whole-island file is 321,059,468 bytes. Catalogue names CC Attribution without a precise version: candidate pending exact grant and payload receipt, not admitted data. |
+| [GOIB BTIB vector service](https://ideib.caib.es/geoserveis/rest/services/public/GOIB_BTIB_IB/MapServer) | Bounded discrepancy/structure inspection: layer 9 road lines, layer 17 road surfaces, layer 4 road points. Reuse publisher query capability; no custom GIS service is needed. | Metadata says 2018 photogrammetric update on older cartography, not a 2026 survey. Layer 9 has Z and coded `FIRME`, `ACCESO`, `ORIGEN_Z`; decode official specifications and datum before treating values as measured evidence. Map publication does not itself grant redistribution. |
+| Admitted CNIG LiDAR + native MDT50cm + PNOA orthophoto | LiDAR road-deck transects and imagery review constrain width, crossfall, structures and alignment; MDT supplies ground and bounded earthwork evidence. #335 owns the producer/consumer pipeline; #345 owns recovery and GIS registration. | MDS is surface/canopy, not MDT ground. Imagery alone is not metric height or bicycle access. Preserve measured profiles and uncertainty; no synthetic global bank, road relocation or global terrain smoothing. |
+| Existing separately attributed OSM summary | Independent omission/class check after official comparison; useful for detecting possible tracks and paths absent from a national slice. | The current aggregate summary is already recorded in the provenance ledger. No raw OSM geometry or merged database is admitted by this plan; any such acquisition requires its own ODbL provenance review. |
+
+Read-only publisher queries on 2026-10-03 used the same WGS84 envelope
+`[2.8013711714022658, 39.81731355795069, 2.824885825640162, 39.835520226740705]`.
+The frozen IGN response has five features. BTIB layer 9 reports 19 intersecting
+features and returns all 19 without a transfer-limit flag: 14 `FIRME=001`,
+3 `FIRME=003`, 2 `FIRME=ATN`; all have `ORIGEN_Z=002`. These are raw publisher
+codes, not decoded pavement/access claims. Different segmentation, edge
+intersections and dates mean 19 minus 5 is not a missing-road count. No BTIB
+coordinates were added to source or import lists.
+
+Deliver in this order:
+
+1. Acquire and license/hash the two official network packages, decode their
+   schemas and reconcile the same AOI using stable IDs and geometric matches.
+   Account for every class and boundary continuation; report duplicates,
+   unmatched segments, unknown surface/access and uncertain grade separation.
+2. Continue the existing #337 paved-road producer with source-grounded height,
+   width and structure review. Keep the accepted hairpin and protected Nudo
+   footprint intact; do not admit locally translated diagnostic candidates.
+3. Prove a second real road and true junction, then a sourced mixed-surface
+   segment through the existing road/physics contract. Do not turn paths into
+   asphalt or activate riding from a catalogue code alone.
+4. Expand the same inventory to the approved world boundary, with class counts,
+   clipped lengths and represented/pending/uncertain/not-a-road receipts.
+   Only a reconciled ledger, regeneration, native geometry/contact, rider review
+   and measured performance can establish whole-area completion.
+
+This is an acquisition/delivery plan, not a new dependency or road admission.
+No generic GIS framework is justified. The reusable source-comparison invariant
+already exists in this section; the regional source choice is YACS-specific and
+is not a new Gumball candidate.
 
 ### 7.5 Mixed-surface riding destination
 

@@ -68,7 +68,7 @@ flowchart TB
 | Geographic fidelity | **1:1 real-world scale; no route compression, relocation or invented macro terrain** |
 | Architecture policy | **Embark-first + tools-first + version-matched Epic/PCGEx API evidence + local proof** |
 | Diagram language | **Gumball Blueprint Mermaid style** |
-| Current priority | **Issue #337: import the remaining current-Landscape paved network with source/PNOA review, both-edge geometry gates, bounded CUT/support and explicit blocked coverage; preserve the accepted #332 hairpin** |
+| Current priority | **Issue #337: continue source-grounded paved-road import with both-edge/CUT/support gates and preserve #332; Issue #349: GIS acquisition plan delivered, source reconciliation remains in #335/#345** |
 | Route reference | **sea-level Sa Calobra → Coll dels Reis → Ma-10 → Menut/Binifaldó → Coll des Pedregaret; ~29–30 km planning estimate, exact chainage pending** |
 | Terrain source | **CNIG/IGN MDT50cm Sa Calobra 8 km × 8 km benchmark; bounded native UE import PASS, terrain visual accepted; performance pending** |
 | Road authority | **verified Ma-2141 alignment; smooth presentation ribbon is evaluated against Landscape, never snapped/bent to native DTM facets; terrain-fit residuals drive cut/fill/structure review** |
@@ -90,6 +90,7 @@ The old Stage 3G / R4.1 / B.x vocabulary is historical. Existing workflow names 
 | Road and cornering physics geometry | [`ROAD_PHYSICS_PROFILE.md`](ROAD_PHYSICS_PROFILE.md) | **Authoritative** |
 | Reusable world-authoring systems | [`YACS_WORLD_AUTHORING_LIBRARY.md`](YACS_WORLD_AUTHORING_LIBRARY.md) | **Authoritative implementation library** |
 | Asset plan / provenance | [`ASSET_PLAN.md`](ASSET_PLAN.md) | **Authoritative** |
+| Julka asset-manager contract | [`tooling/JULKA.md`](tooling/JULKA.md) | **Active supporting tool** |
 | CI cost / proof cadence | [`CI_VALIDATION_TIERS.md`](CI_VALIDATION_TIERS.md) | **Authoritative** |
 | Shared CI and governance platform | [`ENGINEERING_PLATFORM.md`](ENGINEERING_PLATFORM.md) | **Authoritative** |
 | AI contributor rules | [`../AGENTS.md`](../AGENTS.md) | **Authoritative repository policy** |
@@ -119,6 +120,7 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 - [`PRODUCTION_WORLD_ARCHITECTURE_REFERENCES.md`](PRODUCTION_WORLD_ARCHITECTURE_REFERENCES.md) — copyright-safe reconstructions of public Far Cry 5 and THE FINALS production pipelines plus direct YACS mappings; evidence, not methodology authority.
 - [`YACS_WORLD_AUTHORING_LIBRARY.md`](YACS_WORLD_AUTHORING_LIBRARY.md) — reusable authoring systems, semantic catalog, presets and generated-output boundary.
 - [`ASSET_PLAN.md`](ASSET_PLAN.md) — source/technical asset ledger and provenance expectations.
+- [`tooling/JULKA.md`](tooling/JULKA.md) — Issue #345 asset acquisition, local restore, identity and cleanup contract; subordinate to the asset ledger and World Building Bible.
 - [`UE_MCP_WORLD_GENERATION.md`](UE_MCP_WORLD_GENERATION.md) — UE MCP orchestration workflow.
 - [`YACS_REMOTE_EDITOR_AGENT.md`](YACS_REMOTE_EDITOR_AGENT.md) — remote editor-agent operating contract.
 - [`UNREAL_TOOLING_PLUGIN_PLAN.md`](UNREAL_TOOLING_PLUGIN_PLAN.md) — plugin/tool plan; optional tooling never overrides the Bible.

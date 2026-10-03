@@ -1,0 +1,11 @@
+{
+  "id": "windows-audit-file-identity",
+  "source": "karnalooch/YetAnotherCyclingSim",
+  "category": "tooling",
+  "problem": "Windows DirEntry.stat returns zero file IDs, causing unrelated files to collapse into one deduplicated audit size.",
+  "invariant": "Read volume/file identity through os.stat with follow_symlinks=False; prove distinct files stay distinct and hardlinks share identity. Logical byte totals never authorize deletion or claim physical disk allocation.",
+  "evidence": ["Issue #345", "PR #346", "scripts/ci/test_julka_assets.py", "docs/tooling/JULKA.md"],
+  "do_not_copy": ["local workstation paths", "YACS dataset names and sizes"],
+  "failure_behavior": "Keep unreadable paths unexamined and retain scan errors; never classify source files as deletable from inventory size alone.",
+  "status": "candidate"
+}
