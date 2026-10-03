@@ -88,7 +88,9 @@ class WindowsHostRecoveryContractTests(unittest.TestCase):
             self.skipTest("pwsh is unavailable")
         with tempfile.TemporaryDirectory() as temp:
             runner = Path(temp) / "actions-runner-yacs"
-            workspace = runner / "_work" / "YetAnotherCyclingSim" / "YetAnotherCyclingSim"
+            workspace = (
+                runner / "_work" / "YetAnotherCyclingSim" / "YetAnotherCyclingSim"
+            )
             candidate = workspace / "_unreal-build-123-1"
             protected = workspace / "_yacs-retained-lfs"
             candidate.mkdir(parents=True)
@@ -126,7 +128,9 @@ class WindowsHostRecoveryContractTests(unittest.TestCase):
             self.skipTest("pwsh is unavailable")
         with tempfile.TemporaryDirectory() as temp:
             runner = Path(temp) / "actions-runner-yacs"
-            workspace = runner / "_work" / "YetAnotherCyclingSim" / "YetAnotherCyclingSim"
+            workspace = (
+                runner / "_work" / "YetAnotherCyclingSim" / "YetAnotherCyclingSim"
+            )
             candidate = workspace / "_unreal-build-123-1"
             protected = workspace / "_yacs-retained-lfs"
             candidate.mkdir(parents=True)
