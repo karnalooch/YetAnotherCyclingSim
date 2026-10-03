@@ -184,6 +184,32 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           if ($env:YACS_UNREAL_EXECUTION_MODE -eq 'compile') {
+            if ('${{ inputs.region_terrain_import }}' -eq 'true') {
+              # Exited Windows editors can still leave DLL handles behind.
+              # Build in fresh paths, preserving the old checkout and outputs.
+              $warm = (Get-Location).Path
+              $name = '_unreal-build-${{ github.run_id }}-${{ github.run_attempt }}'
+              $isolated = Join-Path $env:GITHUB_WORKSPACE $name
+              if (Test-Path -LiteralPath $isolated) { throw 'Preserve existing isolated build.' }
+              git worktree add --detach "$isolated" '${{ inputs.target_sha }}'
+              if ($LASTEXITCODE -ne 0) { throw 'Isolated build checkout failed.' }
+              foreach ($relative in @('Binaries', 'Intermediate', 'Saved/BuildCache/UnrealCi')) {
+                $source = Join-Path $warm $relative
+                if (Test-Path -LiteralPath $source) {
+                  $destination = Join-Path $isolated $relative
+                  New-Item -ItemType Directory -Path (Split-Path $destination -Parent) -Force | Out-Null
+                  Copy-Item -LiteralPath $source -Destination $destination -Recurse -Force
+                }
+              }
+              Get-ChildItem -LiteralPath (Join-Path $warm 'Plugins') -Directory -Recurse | Where-Object { $_.Name -in @('Binaries', 'Intermediate') } | ForEach-Object {
+                $relative = $_.FullName.Substring($warm.Length + 1)
+                $destination = Join-Path $isolated $relative
+                New-Item -ItemType Directory -Path (Split-Path $destination -Parent) -Force | Out-Null
+                Copy-Item -LiteralPath $_.FullName -Destination $destination -Recurse -Force
+              }
+              "YACS_UNREAL_WORKTREE=$name" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+              Set-Location -LiteralPath $isolated
+            }
             Write-Host ("Unreal compile path: {0}" -f $env:YACS_UNREAL_COMPILE_KIND) -ForegroundColor Cyan
             ./scripts/ci/Invoke-YacsUnrealCi.ps1 -ExpectedHead '${{ inputs.target_sha }}'
           }
