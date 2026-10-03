@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-CURRENT_GUMBALL_PIN = "03eb6f6bc6cd2260349386489bffb005c44b3236"
+CURRENT_GUMBALL_PIN = "ddc458c223b8020c5f36482415d4405459bd373a"
 CANDIDATE_FIELDS = {
     "id",
     "source",
@@ -52,6 +52,14 @@ class GumballBaselineContractTests(unittest.TestCase):
             ]
             self.assertGreater(len(refs), 0, relative)
             self.assertEqual(set(refs), {CURRENT_GUMBALL_PIN}, relative)
+
+    def test_owner_policy_waives_manual_body_marker(self) -> None:
+        text = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+        governance = text.split("  governance:\n", 1)[1].split(
+            "  python-reference:", 1
+        )[0]
+        self.assertIn("require_manual_merge_marker: false", governance)
+        self.assertIn("additional_high_risk_patterns:", governance)
 
     def test_repository_ops_runs_trusted_default_branch_code(self) -> None:
         text = (ROOT / ".github" / "workflows" / "repository-ops.yml").read_text(
