@@ -16,7 +16,6 @@ sys.path.insert(0, str(JULKA))
 from julka_core.cli import (
     cmd_audit_root,
     cmd_cleanup,
-    cmd_local_store,
     load_catalog_file,
     operation_lock,
 )  # noqa: E402
@@ -187,26 +186,6 @@ class JulkaCatalogContractTests(unittest.TestCase):
                 self.assertEqual(cmd_cleanup(type("Args", (), {"root": root})()), 0)
             self.assertEqual((cache / "generated.bin").read_bytes(), b"cache")
             self.assertEqual(source.read_bytes(), b"source")
-            self.assertIn("plan only", output.getvalue())
-
-    def test_local_dvc_initialization_is_plan_only_without_apply(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary) / "asset-root"
-            output = io.StringIO()
-            args = type(
-                "Args",
-                (),
-                {
-                    "root": root,
-                    "action": "init",
-                    "apply": False,
-                    "path": None,
-                    "asset_id": "local-input",
-                },
-            )()
-            with contextlib.redirect_stdout(output):
-                self.assertEqual(cmd_local_store(args), 0)
-            self.assertFalse(root.exists())
             self.assertIn("plan only", output.getvalue())
 
     def test_mutating_root_operations_are_serialized(self) -> None:

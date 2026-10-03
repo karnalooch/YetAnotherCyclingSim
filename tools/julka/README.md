@@ -87,14 +87,11 @@ never selects a paid upgrade.
 The local asset root is deliberately outside Git and Unreal's generated
 directories. Use `YACS_ASSET_ROOT` to choose a drive. `status`, `plan`, `doctor`,
 `inventory`, and `cleanup` do not remove or download source data. `cleanup` only
-reports Julka/DVC cache sizes; source files, Git LFS objects, prepared outputs,
-evidence and Unreal project data are not cleanup targets.
-
-An optional, pinned DVC CLI can make a *second local copy* of selected files in
-a DVC cache and local remote. It is not enabled by default, duplicates bytes,
-and a second directory on the same disk is not a backup. A second-computer copy
-comes from the GitHub Release/Git LFS provider, not that local DVC remote. DVC
-garbage collection is never invoked.
+reports only the explicitly known `derived-cache` and interrupted Julka staging
+directories. Source files, Git LFS objects, prepared outputs, evidence and
+Unreal project data are not cleanup targets. Data without an authorized remote
+copy remains on the configured local disk; Julka does not manufacture a backup
+or silently duplicate multi-gigabyte source files.
 
 ## Commands
 
@@ -111,8 +108,6 @@ julka hydrate [--profile NAME] [--apply]            verified Release restoration
 julka explain <asset-id>                           show source and GIS metadata status
 julka verify [--profile NAME]                     full size/SHA/signature check
 julka cleanup                                     cache-only size report, no deletion
-julka local-store init [--apply]                   plan/create opt-in local DVC remote
-julka local-store add --path PATH --asset-id ID   plan; add --apply to duplicate/push locally
 ```
 
 The `code` profile has no external data. `sa-calobra-working` includes all 17

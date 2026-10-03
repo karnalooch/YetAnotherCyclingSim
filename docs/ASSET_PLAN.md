@@ -88,10 +88,11 @@ metodologii ani odbioru Unreal.
 - Lokalny asset root jest jawnie wybierany przez `YACS_ASSET_ROOT`. Default jest
   w profilu użytkownika, nie wewnątrz katalogów generowanych Unreal. Nie jest
   synchronizowany ani backupowany samoczynnie.
-- Optional DVC local remote służy wyłącznie do świadomego, dodatkowego
-  snapshotu wskazanego przez użytkownika. Jest lokalną kopią na wybranym
-  nośniku, nie usługą chmurową i nie drugim urządzeniem. DVC GC jest zabronione
-  z Julki.
+- Nie dodajemy DVC ani drugiego lokalnego content store w tej dostawie. DVC
+  pozostaje kandydatem z osobnego Issue #340 i wymaga przyjęcia jego eksperymentu
+  oraz ponownego przeglądu licencji. Dane bez dopuszczonej darmowej kopii remote
+  pozostają na wybranym `YACS_ASSET_ROOT` lub muszą zostać ponownie pozyskane od
+  oficjalnego dostawcy; nie oznacza to backupu na drugim urządzeniu.
 - Cleanup w Julce jedynie raportuje rozmiar cache. Nie usuwa źródeł, LFS,
   outputów, evidence ani `DerivedDataCache`.
 

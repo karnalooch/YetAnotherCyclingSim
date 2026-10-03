@@ -253,7 +253,6 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         ("Git LFS", ["git", "lfs", "version"], None),
         ("uv", ["uv", "--version"], None),
         ("GitHub CLI", ["gh", "--version"], None),
-        ("DVC", ["dvc", "--version"], None),
         (
             "Unreal project",
             None,
@@ -277,7 +276,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
                 if okay
                 else "not installed / unavailable"
             )
-        required = label not in {"DVC", "Unreal project"}
+        required = label != "Unreal project"
         failures += not okay and required
         print(
             f"{'PASS' if okay else 'FAIL' if required else 'INFO':4} {label}: {detail}"
@@ -1119,10 +1118,7 @@ def cmd_cleanup(args: argparse.Namespace) -> int:
         raise JulkaError(
             f"cleanup root is a link/junction and will not be traversed: {root}"
         )
-    candidates = [
-        root / "derived-cache",
-        root / ".julka" / "dvc-workspace" / ".dvc" / "cache",
-    ]
+    candidates = [root / "derived-cache"]
     state = root / ".julka"
     state_is_real_dir = (
         state.is_dir()
@@ -1180,117 +1176,6 @@ def cmd_cleanup(args: argparse.Namespace) -> int:
     return 1 if errors else 0
 
 
-def dvc_workspace(root: Path) -> tuple[Path, Path]:
-    state = root.resolve() / ".julka"
-    return state / "dvc-workspace", state / "dvc-remote"
-
-
-def _cmd_local_store(args: argparse.Namespace) -> int:
-    root = Path(args.root).resolve()
-    workspace, remote = dvc_workspace(root)
-    state = root / ".julka"
-    assert_no_reparse_components(workspace, state)
-    assert_no_reparse_components(remote, state)
-    if args.action == "init":
-        if (workspace / ".dvc").exists():
-            print(f"Already initialized: {workspace}")
-            return 0
-        if not args.apply:
-            print(f"Would create local DVC workspace: {workspace}")
-            print(f"Would create local DVC remote: {remote}")
-            print(
-                "This is a plan only. Add --apply to initialize; this is not a second-device backup."
-            )
-            return 0
-    dvc = run(["dvc", "--version"])
-    if dvc.returncode:
-        raise JulkaError(
-            "DVC optional tool is not installed; install with `uv sync --extra dvc`"
-        )
-    if args.action == "init":
-        workspace.mkdir(parents=True, exist_ok=True)
-        remote.mkdir(parents=True, exist_ok=True)
-        initialized = run(["dvc", "init", "--no-scm"], cwd=workspace)
-        if initialized.returncode:
-            raise JulkaError(f"DVC init failed: {initialized.stderr.strip()}")
-        configured = run(
-            ["dvc", "remote", "add", "--default", "local", remote.as_uri()],
-            cwd=workspace,
-        )
-        if configured.returncode:
-            raise JulkaError(
-                f"DVC local remote configuration failed: {configured.stderr.strip()}"
-            )
-        print(f"Local DVC workspace: {workspace}")
-        print(f"Local DVC remote: {remote}")
-        print("This is a local cache, not a second-device or cloud backup.")
-        return 0
-    if not args.path:
-        raise JulkaError("local-store add requires --path")
-    if not (workspace / ".dvc").exists():
-        raise JulkaError("initialize first: julka local-store init")
-    source = Path(args.path).resolve(strict=True)
-    try:
-        source.relative_to(root)
-    except ValueError as exc:
-        raise JulkaError(
-            "DVC only tracks inputs inside this configured Julka asset root"
-        ) from exc
-    if not args.apply:
-        print(f"Would DVC-track this existing input without moving it: {source}")
-        print(
-            "This duplicates the bytes into DVC cache/remote and consumes additional disk space."
-        )
-        print("Add --apply to stage and push to the local DVC remote.")
-        return 0
-    if not args.asset_id.replace("-", "").replace("_", "").isalnum():
-        raise JulkaError(
-            "asset-id may contain only ASCII letters, digits, hyphens and underscores"
-        )
-    if source.is_dir():
-        source_bytes = sum(
-            item.stat().st_size
-            for item in source.rglob("*")
-            if item.is_file() and not item.is_symlink()
-        )
-    else:
-        source_bytes = source.stat().st_size
-    volume_probe = workspace
-    while not volume_probe.exists() and volume_probe != volume_probe.parent:
-        volume_probe = volume_probe.parent
-    required = (
-        0
-        if source_bytes == 0
-        else source_bytes * 3 + max(256 * 1024 * 1024, source_bytes // 20)
-    )
-    free = shutil.disk_usage(volume_probe).free
-    print(
-        f"DVC add may need up to {required:,} B additional free space (source + cache + local remote); available={free:,} B"
-    )
-    if free < required:
-        raise JulkaError(
-            "insufficient conservative free-space budget for local DVC duplication"
-        )
-    target = workspace / "tracked" / args.asset_id
-    pointer = target.with_suffix(target.suffix + ".dvc")
-    assert_no_reparse_components(target, workspace)
-    assert_no_reparse_components(pointer, workspace)
-    if target.exists() or pointer.exists():
-        raise JulkaError(
-            f"refusing to replace an existing DVC output or pointer: {target}"
-        )
-    pointer.parent.mkdir(parents=True, exist_ok=True)
-    added = run(["dvc", "add", "--out", str(target), str(source)], cwd=workspace)
-    if added.returncode:
-        raise JulkaError(f"DVC add failed: {added.stderr.strip()}")
-    pushed = run(["dvc", "push", "--remote", "local", str(pointer)], cwd=workspace)
-    if pushed.returncode:
-        raise JulkaError(f"DVC push to local remote failed: {pushed.stderr.strip()}")
-    print(f"Tracked source without moving it. DVC pointer: {pointer}")
-    print(f"Local remote copy: {remote}; no cross-device durability is implied.")
-    return 0
-
-
 def _with_root_lock(args: argparse.Namespace, operation: Any) -> int:
     requested_root = Path(args.root).absolute()
     assert_no_reparse_components(requested_root, Path(requested_root.anchor))
@@ -1308,14 +1193,6 @@ def cmd_hydrate(args: argparse.Namespace) -> int:
 
 def cmd_adopt_mdt(args: argparse.Namespace) -> int:
     return _with_root_lock(args, _cmd_adopt_mdt) if args.apply else _cmd_adopt_mdt(args)
-
-
-def cmd_local_store(args: argparse.Namespace) -> int:
-    return (
-        _with_root_lock(args, _cmd_local_store)
-        if args.apply
-        else _cmd_local_store(args)
-    )
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -1410,23 +1287,6 @@ def build_parser() -> argparse.ArgumentParser:
     )
     cleanup.add_argument("--root", type=Path, default=DEFAULT_ROOT)
     cleanup.set_defaults(func=cmd_cleanup)
-    store = sub.add_parser(
-        "local-store", help="opt-in DVC local cache for selected inputs"
-    )
-    store.add_argument("action", choices=["init", "add"])
-    store.add_argument("--root", type=Path, default=DEFAULT_ROOT)
-    store.add_argument(
-        "--path", help="existing file or directory under the configured asset root"
-    )
-    store.add_argument(
-        "--asset-id",
-        default="local-input",
-        help="safe filename stem for the DVC pointer",
-    )
-    store.add_argument(
-        "--apply", action="store_true", help="write the DVC pointer and local cache"
-    )
-    store.set_defaults(func=cmd_local_store)
     return parser
 
 

@@ -35,7 +35,6 @@ UE content.
 | 17 raw CNIG source tiles | Receipt SHA-256 + repository Draft Release | `julka hydrate --profile sa-calobra-working-v1 --apply` | Repository access required; no paid service assumed; Release bytes do not change receipt authority |
 | 17 original MDT50 cm terrain-mosaic inputs | Existing YACS preparation manifest pins size/SHA-256; no copy found in the known runner `manual-cnig` root or the two checked source roots | `julka adopt-mdt --source-dir <folder> --apply` after manual/free CNIG acquisition | Not present in the Draft Release; a full cold-start 8×8 restore remains incomplete until a verified local source set or authorized free remote copy exists |
 | Prepared/native derived outputs | Existing local workspaces until separately catalogued | Explicit local restore/provider plan | Nothing is called available unless exact identity and storage are known |
-| Optional local DVC cache | User-selected `YACS_ASSET_ROOT/.julka` | Same machine/disk only | Duplicate copy; not cloud, not a second-device backup; never garbage-collected by Julka |
 | Unreal DDC / generated directories | Engine-generated disposable data | Regenerate through Unreal | Not a backup and never a source-asset cleanup target |
 
 Each current Release asset is below GitHub's documented 2 GiB per-file limit;
@@ -47,6 +46,13 @@ paid billing. See [GitHub release limits](https://docs.github.com/en/repositorie
 and [Git LFS billing](https://docs.github.com/en/billing/concepts/product-billing/git-lfs)
 for the current provider terms.
 
+Julka intentionally adds no DVC dependency or second local content store. DVC
+remains a candidate from the separate experiment in Issue #340 and needs its
+own accepted evidence and compatible-license review before adoption. If a
+source has no authorized free remote copy, it stays in the selected local asset
+root or is reacquired from the official provider; Julka does not claim that this
+is a second-device backup.
+
 ## Integrity and destructive-action contract
 
 - Catalog paths are relative and rejected if absolute or traversing upward.
@@ -57,17 +63,13 @@ for the current provider terms.
   before promotion. Existing valid files are retained; corrupt files are never
   overwritten. Per-file atomic promotion can resume after interruption. A
   per-root operating-system lock rejects a second simultaneous mutating Julka
-  operation instead of racing over staging or DVC state.
+  operation instead of racing over staging or restore state.
 - Git LFS hydration selects files already tracked by the selected commit and
   limited to Unreal/raster extensions, then checks SHA-256 OID and byte count.
 - `doctor`, `inventory`, `status`, `plan`, and `cleanup` are read-only.
 - `cleanup` is an inventory/space report only. Julka does not delete files,
-  invoke `dvc gc`, remove Git LFS objects, or clear Unreal generated folders.
-- Local DVC tracking copies into an isolated managed workspace, never moves or
-  renames the user's input. Its explicit `--apply` warns that disk use can grow
-  by up to three times the selected source size.
-- Local DVC initialization is also plan-only unless `--apply` is provided;
-  cache creation, copy and push all remain explicit opt-ins.
+  run remote garbage collection, remove Git LFS objects, or clear Unreal
+  generated folders. It scans only explicitly known Julka cache locations.
 - SHA/provenance proof is intentionally distinct from Unreal import/build,
   exact-SHA visual review, performance evidence, or human acceptance.
 - `audit-root` requires a specific user-selected subdirectory, skips credentials

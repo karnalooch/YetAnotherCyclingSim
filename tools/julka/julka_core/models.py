@@ -13,7 +13,7 @@ HEX_SHA256 = re.compile(r"^[0-9a-f]{64}$")
 HEX_MD5 = re.compile(r"^[0-9a-f]{32}$")
 ASSET_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]*$")
 VALID_CLASSES = {"source", "production", "prepared", "evidence", "cache"}
-VALID_BACKENDS = {"git", "git-lfs", "dvc", "github-release", "local", "manual-cnig"}
+VALID_BACKENDS = {"git", "git-lfs", "github-release", "local", "manual-cnig"}
 VALID_STATES = {"acquired", "approved", "candidate", "manual-acquisition-required"}
 
 

@@ -1,1 +1,1 @@
-"""YACS-owned orchestration; storage primitives belong to DVC and Git LFS."""
+"""YACS-owned orchestration over Git LFS and approved provider transports."""
