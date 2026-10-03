@@ -15,6 +15,11 @@ from scripts.geometry.network_pavement import (
     surface_inspection,
 )
 from scripts.ue.ma2141_road_preview import spawn_pavement_mesh
+from scripts.geometry.network_visual_preview import (
+    MARKER_GROUND_OFFSET_M,
+    source_marker_mesh,
+    validate_full_preview,
+)
 
 
 def digest(path):
@@ -77,6 +82,9 @@ def start(world, root, exact_sha):
         is not False
     ):
         raise RuntimeError("Network preview provenance mismatch")
+    proof = validate_full_preview(network["full_preview"], network["source_clipped_length_m"])
+    if proof != network.get("full_preview_proof"):
+        raise RuntimeError("Full network preview receipt mismatch")
     landscapes = list(
         unreal.GameplayStatics.get_all_actors_of_class(world, unreal.Landscape)
     )
@@ -122,19 +130,21 @@ def spawn_extreme_cut_diagnostic(world, network):
     sections = case.get("sections")
     if not isinstance(sections, list) or len(sections) < 3:
         raise RuntimeError("Extreme network CUT geometry is incomplete")
-    vertices, triangles = pavement_slab(sections)
-    road, road_material = spawn_pavement_mesh(
-        world, vertices, triangles, "BOB rejected extreme CUT " + case["id"]
-    )
-    road_material.set_vector_parameter_value(
-        "Color", unreal.LinearColor(0.9, 0.04, 0.01, 1)
-    )
-    component = road.get_component_by_class(unreal.DynamicMeshComponent)
-    component.set_enable_wireframe_render_pass(True)
-    component.set_editor_property("explicit_show_wireframe", True)
-    component.set_editor_property(
-        "wireframe_color", unreal.LinearColor(1.0, 0.8, 0.0, 1.0)
-    )
+    road, road_material = None, None
+    if not network.get("full_context_rendered"):
+        vertices, triangles = pavement_slab(sections)
+        road, road_material = spawn_pavement_mesh(
+            world, vertices, triangles, "BOB rejected extreme CUT " + case["id"]
+        )
+        road_material.set_vector_parameter_value(
+            "Color", unreal.LinearColor(0.9, 0.04, 0.01, 1)
+        )
+        component = road.get_component_by_class(unreal.DynamicMeshComponent)
+        component.set_enable_wireframe_render_pass(True)
+        component.set_editor_property("explicit_show_wireframe", True)
+        component.set_editor_property(
+            "wireframe_color", unreal.LinearColor(1.0, 0.8, 0.0, 1.0)
+        )
 
     lateral = case.get("lateral_sweep")
     if (
@@ -205,6 +215,28 @@ def spawn_extreme_cut_diagnostic(world, network):
     ]
 
 
+def spawn_full_visual_context(world, network):
+    """Render every rejected candidate and full source location without CUT/collision."""
+    preview = network["full_preview"]
+    proof = validate_full_preview(preview, network["source_clipped_length_m"])
+    if proof != network["full_preview_proof"]:
+        raise RuntimeError("Full preview geometry changed")
+    kept = []
+    for item in preview["rejected_surfaces"]:
+        vertices, triangles = pavement_slab(item["sections"])
+        actor, material = spawn_pavement_mesh(world, vertices, triangles, "REVIEW rejected road " + item["id"])
+        material.set_vector_parameter_value("Color", unreal.LinearColor(0.9, 0.04, 0.01, 1))
+        kept.append((actor, material))
+    for marker in preview["source_markers"]:
+        points = [[x, y, trace(world, (x, y, marker["ground_m"][index])) + MARKER_GROUND_OFFSET_M] for index, (x, y) in enumerate(marker["xy_local_m"])]
+        vertices, triangles = source_marker_mesh(points)
+        actor, material = spawn_pavement_mesh(world, vertices, triangles, "SOURCE LOCATION " + marker["id"])
+        material.set_vector_parameter_value("Color", unreal.LinearColor(1.0, 0.55, 0.03, 1))
+        kept.append((actor, material))
+    proof = {**proof, "rendered_source_marker_count": len(preview["source_markers"]), "rendered_rejected_surface_count": len(preview["rejected_surfaces"]), "marker_ground_offset_m": MARKER_GROUND_OFFSET_M, "collision_admitted": False, "terrain_change_applied": False}
+    return kept, proof
+
+
 def finish(world, root, exact_sha, network):
     kept = []
     reports = []
@@ -270,7 +302,11 @@ def finish(world, root, exact_sha, network):
                 "surface_inspection": surface,
             }
         )
+    context_objects, context_proof = spawn_full_visual_context(world, network)
+    kept.extend(context_objects)
+    network["full_context_rendered"] = True
     report = {
+        "full_visual_context": context_proof,
         "schema_version": 1,
         "exact_sha": exact_sha,
         "status": "PARTIAL_IMPORTED"

@@ -510,6 +510,19 @@ jobs:
             throw 'Current-Landscape native network proof failed.'
           }
 
+          $preparedNetwork = Get-Content (Join-Path $root 'Network/network.json') -Raw | ConvertFrom-Json
+          $context = $network.full_visual_context
+          if ($context.status -ne 'FULL_SOURCE_CONTEXT_REVIEW_REQUIRED' -or
+              $context.road_admitted -ne $false -or $context.collision_admitted -ne $false -or
+              $context.terrain_change_applied -ne $false -or
+              $context.fingerprint -ne $preparedNetwork.full_preview_proof.fingerprint -or
+              [int]$context.rendered_source_marker_count -ne @($preparedNetwork.full_preview.source_markers).Count -or
+              [int]$context.rendered_rejected_surface_count -ne @($preparedNetwork.full_preview.rejected_surfaces).Count -or
+              [Math]::Abs([double]$context.source_marker_length_m - [double]$preparedNetwork.source_clipped_length_m) -gt 0.00001 -or
+              -not (Test-Path (Join-Path $root 'Network/network-full-preview-plan.png'))) {
+            throw 'Full-source visual context proof failed.'
+          }
+
           $fitPath = Join-Path $root 'ma2141-road-terrain-fit-proof.json'
           if (-not (Test-Path -LiteralPath $fitPath -PathType Leaf)) {
             throw 'BOB road-to-terrain fit proof is missing.'
@@ -761,7 +774,7 @@ jobs:
             $proof.status -ne 'PASS' -or
             $proof.exact_sha -ne '${{ inputs.target_sha }}' -or
             $proof.map -ne '/Game/Worlds/SaCalobra/L_SaCalobraTerrainBaseline' -or
-            $proof.view -ne 'road-contact-rider' -or
+            $proof.view -ne 'network-current-landscape-overview' -or
             $proof.viewmode -ne 'VMI_LIT' -or
             $proof.lighting_status -ne 'PASS' -or
             [double]$proof.directional_light_intensity -le 0.0 -or

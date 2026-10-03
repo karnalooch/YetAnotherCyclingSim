@@ -3251,6 +3251,27 @@ An incompatible conflict interval fails closed; it is not lowered arbitrarily,
 narrowed or claimed imported. No collision, physics or human/performance
 admission follows.
 
+Full visual context, owner continuation decision 2026-10-03: the existing
+capture and Lit handoff also render every rejected decision interval at its
+unchanged candidate height, in red and without CUT/support/collision. A narrow
+amber location marker preserves every clipped source part, including Nudo,
+short segments and protected regions. The marker follows traced native ground
+with an explicit 0.2 m annotation offset; it is not road-deck or structure
+geometry. It never grants grade-separation or riding admission. The current
+~2 km Landscape window remains explicit; full context does not claim the full
+8 km benchmark or the planned ~30 km destination has been built.
+
+The producer emits `network-full-preview-plan.png` and a full-context receipt.
+Producer and native consumer independently recompute source lengths and the
+complete geometry fingerprint, rejecting gaps, changed evidence and duplicate
+parts. The native proof records actual rendered source-marker and rejected
+surface counts. The existing whole-Landscape view and interactive handoff show
+this context alongside admitted asphalt/support. The overview fits the complete
+source bounds to the existing 74-degree, 16:9 camera with a 10% frame margin;
+the interactive handoff opens at this overview after geometry is reconstructed.
+Red road may still intersect terrain; the amber ground marker keeps its source location visible. No terrain
+lift or extra earthwork is applied to conceal those unresolved conflicts.
+
 The existing native capture and Lit owner handoff reconstruct the additional
 transient network. `Network/network.json` records continuous corridors,
 adaptive conflict intervals, technical patch tiles and protected coverage;

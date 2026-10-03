@@ -472,6 +472,8 @@ def main():
     ]
     alignment = json.loads((_root / "ma2141-native-alignment.json").read_text(encoding="utf-8"))
     network = json.loads((_root / "Network/network.json").read_text(encoding="utf-8"))
+    from scripts.geometry.network_visual_preview import overview_camera
+    full_camera = overview_camera(network["full_preview"])
     extreme = network.get("extreme_cut_case")
     if not isinstance(extreme, dict):
         raise RuntimeError("Extreme network CUT case is missing")
@@ -548,8 +550,13 @@ def main():
         },
         {
             "name": "network-current-landscape-overview",
-            "location": [*center, _manifest["elevation_max_m"] * 100 + 180000],
-            "target": [*center, height(*center)],
+            "location": [v * 100 for v in full_camera["location_m"]],
+            "target": [v * 100 for v in full_camera["target_m"]],
+            "full_source_context": True,
+            "full_context_fingerprint": network["full_preview_proof"]["fingerprint"],
+            "source_location_marker": "amber",
+            "rejected_pavement": "red",
+            "road_admitted": False,
         },
         {
             "name": "network-extreme-cut",

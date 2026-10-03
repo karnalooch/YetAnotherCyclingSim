@@ -157,7 +157,7 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         self.assertNotIn("Set-Content", handoff)
         self.assertNotIn("-ExecutePythonScript", handoff)
         self.assertIn("owner-handoff-proof.json", handoff)
-        self.assertIn("road-contact-rider", handoff)
+        self.assertIn("network-current-landscape-overview", handoff)
         self.assertIn("$proof.viewmode -ne 'VMI_LIT'", handoff)
         self.assertIn("$proof.lighting_status -ne 'PASS'", handoff)
         self.assertIn("[double]$proof.directional_light_intensity -le 0.0", handoff)

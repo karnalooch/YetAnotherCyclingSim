@@ -41,7 +41,7 @@ def _write_proof(
         "status": status,
         "error": error,
         "map": MAP_PACKAGE,
-        "view": "road-contact-rider",
+        "view": "network-current-landscape-overview",
         "viewmode": lighting.get("viewmode") if lighting else None,
         "lighting_status": lighting.get("status") if lighting else "NOT_VERIFIED",
         "directional_light_intensity": (
@@ -219,6 +219,13 @@ def _configure():
             support = spawn_support(world, root, exact_sha, road[3])
             from scripts.ue.current_landscape_roads import finish as finish_network
             network_objects = finish_network(world, root, exact_sha, network)
+            from scripts.geometry.network_visual_preview import overview_camera
+            full_camera = overview_camera(network["full_preview"])
+            location = unreal.Vector(*[v * 100 for v in full_camera["location_m"]])
+            target = unreal.Vector(*[v * 100 for v in full_camera["target_m"]])
+            editor.set_level_viewport_camera_info(
+                location, unreal.MathLibrary.find_look_at_rotation(location, target)
+            )
             _kept_objects = (
                 road, sun, sky, atmosphere_objects, support, network_objects
             )

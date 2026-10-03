@@ -40,6 +40,8 @@ from scripts.geometry.network_pavement import (
     surface_inspection,
 )
 
+from scripts.geometry.network_visual_preview import validate_full_preview
+
 SOURCE = (
     ROOT
     / "worldgen/terrain/benchmarks/sa_calobra/current_landscape_igr_roads_2026-10-03.json"
@@ -1146,6 +1148,66 @@ def assess_network_interval(
         }
 
 
+def write_full_preview_plan(network, path):
+    """Show complete source coverage and admission decisions in one review image."""
+    from PIL import Image, ImageDraw
+
+    image = Image.new("RGB", (1800, 1800), (23, 29, 35))
+    draw = ImageDraw.Draw(image)
+    preview = network["full_preview"]
+    points = [p for marker in preview["source_markers"] for p in marker["xy_local_m"]]
+    minx, miny = np.min(points, axis=0)
+    maxx, maxy = np.max(points, axis=0)
+    scale = min(1600 / max(maxx-minx, 1), 1500 / max(maxy-miny, 1))
+
+    def pixel(p):
+        return (100 + (p[0]-minx)*scale, 200 + (p[1]-miny)*scale)
+
+    draw.text((60, 35), "FULL SOURCE CONTEXT - CURRENT LANDSCAPE", fill="white")
+    draw.text((60, 65), "Green: prepared pavement | Red: rejected pavement | Amber: source location / unresolved structures", fill="white")
+    draw.text((60, 95), "Visual review only. Source markers do not resolve road elevation or Nudo separation.", fill="white")
+    for marker in preview["source_markers"]:
+        draw.line([pixel(p) for p in marker["xy_local_m"]], fill=(255, 184, 53), width=3)
+    for windows, color in ((network["approved"], (76, 210, 123)), (preview["rejected_surfaces"], (250, 62, 49))):
+        for item in windows:
+            for side in (0, -1):
+                draw.line([pixel(row[side]) for row in item["sections"]], fill=color, width=3)
+    image.save(path, format="PNG")
+
+
+def build_full_source_markers(source, area, transformer, origin):
+    """Preserve all clipped source XY, including protected/short/unresolved parts."""
+    markers = []
+    for feature in source["features"]:
+        clipped = transform(transformer, shape(feature["geometry"])).intersection(area)
+        for part_index, line in enumerate(lines(clipped)):
+            points = []
+            coords = list(line.coords)
+            for a, b in itertools.pairwise(coords):
+                length = math.dist(a[:2], b[:2])
+                if length == 0:
+                    continue
+                count = max(1, math.ceil(length / 2.0))
+                for index in range(count):
+                    t = index / count
+                    points.append([
+                        a[0] + (b[0] - a[0]) * t - origin[0],
+                        origin[1] - a[1] - (b[1] - a[1]) * t,
+                    ])
+            if not points:
+                continue
+            points.append([coords[-1][0] - origin[0], origin[1] - coords[-1][1]])
+            markers.append({
+                "id": f"{feature['id']}-source-{part_index}",
+                "feature_id": feature["id"],
+                "length_m": line.length,
+                "xy_local_m": points,
+                "height_evidence": "NATIVE_GROUND_LOCATION_MARKER_ONLY",
+                "structure_review_required": feature["id"] in ("VIAL_TR70190001288", "VIAL_TR70190001289"),
+            })
+    return markers
+
+
 def prepare(prepared, output, exact_sha):
     if output.exists():
         raise FileExistsError("Preserve previous network evidence")
@@ -1191,6 +1253,15 @@ def prepare(prepared, output, exact_sha):
         "map_saved": False,
         "canonical_source_modified": False,
         "road_physics_admitted": False,
+        "full_preview": {
+            "schema_version": 1,
+            "role": "VISUAL_REVIEW_ONLY",
+            "road_admitted": False,
+            "height_change_applied": False,
+            "terrain_change_applied": False,
+            "source_markers": build_full_source_markers(source, area, tf, origin),
+            "rejected_surfaces": [],
+        },
         "approved": [],
         "blocked": [],
         "continuous_corridors": [],
@@ -1350,6 +1421,13 @@ def prepare(prepared, output, exact_sha):
                         corridor["technical_patch_tiles"].append(ident)
                     continue
 
+                result["full_preview"]["rejected_surfaces"].append({
+                    "id": decision_id,
+                    "reason": interval["reason"],
+                    "length_m": length,
+                    "sections": sections[start : end + 1].tolist(),
+                    "road_admitted": False,
+                })
                 diagnostics = interval["diagnostics"]
                 ident = decision_id
                 evidence_start, evidence_end = interval["evidence_station_range"]
@@ -1475,6 +1553,13 @@ def prepare(prepared, output, exact_sha):
         if result["blocked"]
         else "PREVIEW_REQUIRES_NATIVE_PROOF"
     )
+    for marker in result["full_preview"]["source_markers"]:
+        marker["ground_m"] = native_ground(terrain, manifest, marker["xy_local_m"]).tolist()
+    result["full_preview_proof"] = validate_full_preview(
+        result["full_preview"], result["source_clipped_length_m"]
+    )
+    write_full_preview_plan(result, output / "network-full-preview-plan.png")
+    result["full_preview_plan"] = "network-full-preview-plan.png"
     (output / "network.json").write_text(
         json.dumps(result, separators=(",", ":"), allow_nan=False) + "\n"
     )
@@ -1497,6 +1582,7 @@ if __name__ == "__main__":
                 not in (
                     "approved",
                     "blocked",
+                    "full_preview",
                     "height_profile_candidates",
                     "extreme_cut_case",
                 )
