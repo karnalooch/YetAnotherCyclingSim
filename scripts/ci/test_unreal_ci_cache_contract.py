@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from pathlib import Path
-import unittest
 import shlex
 import subprocess
 import tempfile
-
+import unittest
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW = ROOT / ".github" / "workflows" / "reusable-unreal.yml"
@@ -66,12 +65,17 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         keep = [
             "Saved/Logs/YetAnotherCyclingSim.log",
             "Saved/RuntimeProof/CI/RegionTerrain/123-1/map-preparation.stdout.log",
+            "Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log",
+            "Saved/RuntimeProof/CI/Unreal/Proof/automation_run.log",
+            "Saved/RuntimeProof/CI/Unreal/Proof-123-1/automation_editor.log",
             "Binaries/build.dll",
             "Saved/BuildCache/UnrealCi/state.json",
         ]
         remove = [
             "Saved/Logs/unrelated.log",
             "Saved/RuntimeProof/CI/RegionTerrain/123-1/profile.json",
+            "Saved/RuntimeProof/CI/Unreal/Proof-123-1/summary.json",
+            "Saved/RuntimeProof/CI/Unreal/Proof/summary.json",
             "Saved/RuntimeProof/CI/RegionTerrain/123-1/render.png",
             "Saved/RuntimeProof/CI/RegionTerrain/123-1/Prepared/terrain.r16",
             "Saved/unrelated.tmp",

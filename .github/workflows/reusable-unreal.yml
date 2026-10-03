@@ -94,7 +94,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           git reset --hard '${{ inputs.target_sha }}'
           if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree reset failed.' }
-          git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/' -e '/Saved/Logs/YetAnotherCyclingSim.log' -e '/Saved/RuntimeProof/CI/RegionTerrain/*/*.log'
+          git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/' -e '/Saved/Logs/YetAnotherCyclingSim.log' -e '/Saved/RuntimeProof/CI/RegionTerrain/*/*.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof/automation_run.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof-*/automation_editor.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof-*/automation_run.log'
           if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree allow-listed clean failed.' }
 
       - name: Enforce code-only checkout
@@ -124,7 +124,10 @@ jobs:
         run: |
           $proof = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/Unreal'
           if (Test-Path -LiteralPath $proof) {
-            Remove-Item -LiteralPath $proof -Recurse -Force
+            # Retain only diagnostic logs; all reusable receipts are removed.
+            Get-ChildItem -LiteralPath $proof -Recurse -File |
+              Where-Object { $_.Extension -ne ".log" } |
+              Remove-Item -Force
           }
 
       - name: Resolve verified Unreal execution mode
@@ -599,7 +602,10 @@ jobs:
         run: |
           $proof = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/Unreal'
           if (Test-Path -LiteralPath $proof) {
-            Remove-Item -LiteralPath $proof -Recurse -Force
+            # Retain only diagnostic logs; all reusable receipts are removed.
+            Get-ChildItem -LiteralPath $proof -Recurse -File |
+              Where-Object { $_.Extension -ne ".log" } |
+              Remove-Item -Force
           }
           if (Test-Path -LiteralPath '.git') {
             if ('${{ inputs.region_terrain_import }}' -eq 'true') {
@@ -611,7 +617,7 @@ jobs:
             }
             git reset --hard
             if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree cleanup git reset failed.' }
-            git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/' -e '/Saved/Logs/YetAnotherCyclingSim.log' -e '/Saved/RuntimeProof/CI/RegionTerrain/*/*.log'
+            git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/' -e '/Saved/Logs/YetAnotherCyclingSim.log' -e '/Saved/RuntimeProof/CI/RegionTerrain/*/*.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof/automation_run.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof-*/automation_editor.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof-*/automation_run.log'
             if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree cleanup allow-listed clean failed.' }
           }
           else {
