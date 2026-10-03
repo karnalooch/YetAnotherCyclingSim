@@ -10,10 +10,16 @@ import numpy as np
 from shapely.geometry import LineString
 
 from scripts.assets.prepare_current_landscape_roads import (
+    assess_lateral_sweep,
+    build_extreme_review,
     inspect_sections,
+    measure_cut_envelopes,
     prepare_patch,
+    resize_sections_width,
+    shift_sections_laterally,
     smooth_axis,
     write_extreme_cut_diagnostic,
+    write_extreme_cut_review,
 )
 from scripts.geometry.network_earthworks_diagnostics import (
     height_fit_bounds,
@@ -37,15 +43,44 @@ def sections(axis):
 
 class NetworkTests(unittest.TestCase):
     def test_extreme_cut_diagnostic_writes_reviewable_png(self):
+        cut = {
+            "max_cut_m": 11.62,
+            "peak_local_xy_m": [15.0, 2.0],
+            "peak_base_height_m": 701.4,
+            "peak_target_height_m": 689.78,
+            "over_cap_cell_count": 587,
+        }
         case = {
             "id": "road-0-0",
             "sections": sections([[v, 0] for v in np.linspace(0, 30, 61)]).tolist(),
-            "cut_depth": {
-                "max_cut_m": 11.62,
-                "peak_local_xy_m": [15.0, 2.0],
-                "peak_base_height_m": 701.4,
-                "peak_target_height_m": 689.78,
-                "over_cap_cell_count": 587,
+            "cut_depth": cut,
+            "cut_depth_by_envelope": {
+                "asphalt": {"max_cut_m": 10.37},
+                "asphalt_and_shoulders": {"max_cut_m": 10.65},
+                "authored_patch_envelope": cut,
+            },
+            "width_sensitivity": {
+                "candidates": [
+                    {"ordinary_cut_pass": False},
+                    {"ordinary_cut_pass": False},
+                    {"ordinary_cut_pass": False},
+                ]
+            },
+            "lateral_sweep": {
+                "candidate_count": 33,
+                "locally_numeric_pass_count": 0,
+                "best_candidate": {
+                    "shift_m": -1.25,
+                    "status": "REJECT_LOCAL_NUMERIC_LIMITS",
+                },
+            },
+            "review": {
+                "classification": "NATURAL_FEATURE_CONFIRMED",
+                "hotspot_wgs84": [2.8167, 39.8304],
+                "street_view_url": "https://www.google.com/maps/@?api=1&map_action=pano",
+                "peak_distance_from_axis_m": 3.73,
+                "peak_beyond_asphalt_edge_m": 1.23,
+                "peak_beyond_shoulder_edge_m": 0.73,
             },
         }
         with tempfile.TemporaryDirectory() as directory:
@@ -53,6 +88,106 @@ class NetworkTests(unittest.TestCase):
             write_extreme_cut_diagnostic(case, path)
             self.assertEqual(path.read_bytes()[:8], b"\x89PNG\r\n\x1a\n")
             self.assertGreater(path.stat().st_size, 10_000)
+            review = Path(directory) / "review.md"
+            write_extreme_cut_review(case, review)
+            text = review.read_text(encoding="utf-8")
+            self.assertIn("Interactive Street View", text)
+            self.assertIn("No width, height or lateral change was applied", text)
+
+    def test_cut_envelopes_separate_asphalt_shoulders_and_guard(self):
+        asphalt = sections([[v, 20] for v in np.linspace(10, 20, 21)])
+        shoulders = np.asarray(shoulder_sections(asphalt.tolist()))
+        terrain = np.full((64, 64), 32896, dtype=np.uint16)
+        terrain[47, 30] = 33792  # 0.5 m beyond the nominal shoulder edge.
+        manifest = {"scale_z": 100.0, "location_z_cm": 0.0}
+        measured = measure_cut_envelopes(asphalt, shoulders, terrain, manifest)
+        self.assertLess(
+            measured["asphalt"]["max_cut_m"],
+            measured["authored_patch_envelope"]["max_cut_m"],
+        )
+        self.assertLess(
+            measured["asphalt_and_shoulders"]["max_cut_m"],
+            measured["authored_patch_envelope"]["max_cut_m"],
+        )
+        self.assertEqual(measured["admission_envelope"], "authored_patch_envelope")
+
+    def test_width_and_lateral_counterfactuals_preserve_axis_and_do_not_mutate(self):
+        original = sections([[v, 0] for v in np.linspace(0, 30, 61)])
+        narrower = resize_sections_width(original, 3.0)
+        shifted = shift_sections_laterally(original, 1.25)
+        np.testing.assert_allclose(
+            (narrower[:, 0, :2] + narrower[:, -1, :2]) / 2,
+            (original[:, 0, :2] + original[:, -1, :2]) / 2,
+        )
+        np.testing.assert_allclose(
+            np.linalg.norm(narrower[:, -1, :2] - narrower[:, 0, :2], axis=1),
+            3.0,
+        )
+        np.testing.assert_allclose(
+            shifted[:, -1, :2] - shifted[:, 0, :2],
+            original[:, -1, :2] - original[:, 0, :2],
+        )
+        np.testing.assert_allclose(shifted[:, :, 1] - original[:, :, 1], 1.25)
+        np.testing.assert_array_equal(
+            original, sections([[v, 0] for v in np.linspace(0, 30, 61)])
+        )
+
+    def test_lateral_sweep_is_diagnostic_and_respects_source_displacement(self):
+        asphalt = sections([[v, 20] for v in np.linspace(10, 20, 21)])
+        terrain = np.full((64, 64), 32896, dtype=np.uint16)
+        manifest = {
+            "scale_z": 100.0,
+            "location_z_cm": 0.0,
+            "origin_epsg_m": [0.0, 0.0],
+        }
+        result = assess_lateral_sweep(
+            asphalt,
+            LineString([[10, 20], [20, 20]]),
+            terrain,
+            manifest,
+        )
+        self.assertEqual(result["candidate_count"], 33)
+        self.assertGreater(result["locally_numeric_pass_count"], 0)
+        self.assertFalse(result["lateral_change_applied"])
+        self.assertFalse(result["road_admitted"])
+        for candidate in result["candidates"]:
+            self.assertFalse(candidate["lateral_change_applied"])
+            self.assertFalse(candidate["road_admitted"])
+            if abs(candidate["shift_m"]) > 1.0:
+                self.assertFalse(candidate["local_numeric_checks_pass"])
+
+    def test_extreme_review_resolves_manual_panorama_without_metric_admission(self):
+        from pyproj import Transformer
+
+        origin = [483000.25, 4409516.25]
+        east, north = Transformer.from_crs(4326, 25831, always_xy=True).transform(
+            2.8167622, 39.8304238
+        )
+        peak = np.array([east - origin[0], origin[1] - north])
+        bearing = math.radians(77.4)
+        across = np.array([math.sin(bearing), -math.cos(bearing)])
+        axis = peak - across * 3.73
+        rows = []
+        for along in (-0.5, 0.0, 0.5):
+            center = axis + np.array([math.cos(bearing), math.sin(bearing)]) * along
+            xy = center + across * np.linspace(-2.5, 2.5, 25)[:, None]
+            rows.append(np.column_stack([xy, np.ones(25)]))
+        review = build_extreme_review(
+            {
+                "id": "VIAL_TR70190001287-0-4800",
+                "sections": np.asarray(rows).tolist(),
+                "cut_depth": {
+                    "nearest_station_index": 1,
+                    "peak_local_xy_m": peak.tolist(),
+                },
+            },
+            {"origin_epsg_m": origin},
+        )
+        self.assertEqual(review["classification"], "NATURAL_FEATURE_CONFIRMED")
+        self.assertIn("Q0IzBsfssGl-EEeEOAGuLA", review["street_view_url"])
+        self.assertAlmostEqual(review["peak_distance_from_axis_m"], 3.73)
+        self.assertFalse(review["metric_cut_verified_by_street_view"])
+        self.assertFalse(review["road_admitted"])
 
     def test_cut_and_support_bounds_expose_incompatible_translation(self):
         receipt = height_fit_bounds(3.0, 3.0, 3.5, cut_cap_m=1.0, support_cap_m=4.0)
@@ -105,9 +240,20 @@ class NetworkTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "rejected-cut.json"
             with self.assertRaisesRegex(ValueError, "Ordinary 1 m CUT cap exceeded"):
-                prepare_patch(mesh, terrain, manifest, path, diagnostics=diagnostics)
+                prepare_patch(
+                    mesh,
+                    terrain,
+                    manifest,
+                    path,
+                    diagnostics=diagnostics,
+                    asphalt_sections=mesh,
+                )
             self.assertGreater(diagnostics["earthworks_fit"]["max_cut_m"], 1.0)
             self.assertGreater(diagnostics["cut_depth"]["over_cap_cell_count"], 0)
+            self.assertEqual(
+                diagnostics["cut_depth_by_envelope"]["admission_envelope"],
+                "authored_patch_envelope",
+            )
             self.assertGreater(
                 diagnostics["cut_depth"]["peak_base_height_m"],
                 diagnostics["cut_depth"]["peak_target_height_m"],

@@ -39,11 +39,17 @@ SOURCE = (
     / "worldgen/terrain/benchmarks/sa_calobra/current_landscape_igr_roads_2026-10-03.json"
 )
 SOURCE_SHA = "0b959ed9ae741d64721669531edd33fac7fe1f1969cd1be58b77785d6eb05ea5"
+ANOMALY_REVIEWS = SOURCE.with_name(
+    "current_landscape_road_anomaly_reviews_2026-10-03.json"
+)
 WIDTH = 5.0
 SHOULDER = 0.5
 STEP = 0.5
 CUT_CAP = 1.0
 SUPPORT_CAP = 4.0
+LATERAL_SWEEP_LIMIT_M = 4.0
+LATERAL_SWEEP_STEP_M = 0.25
+WIDTH_SENSITIVITY_M = (3.0, 4.0, 5.0)
 
 
 def digest(path):
@@ -95,7 +101,7 @@ def turns(points):
     return np.arctan2(a[:, 0] * b[:, 1] - a[:, 1] * b[:, 0], np.sum(a * b, axis=1))
 
 
-def inspect_sections(sections, source_line):
+def inspect_sections(sections, source_line, *, source_displacement_cap_m=1.0):
     xy = np.asarray(sections)[:, :, :2]
     left, right = xy[:, 0], xy[:, -1]
     axis = (left + right) / 2
@@ -140,8 +146,14 @@ def inspect_sections(sections, source_line):
         if radius.min() < 1.5:
             raise ValueError("Inner radius below accepted minimum")
     displacement = source_line.hausdorff_distance(LineString(axis))
-    if displacement > 1.0:
-        raise ValueError(f"Source displacement exceeds 1 m ({displacement:.3f})")
+    if (
+        source_displacement_cap_m is not None
+        and displacement > source_displacement_cap_m
+    ):
+        raise ValueError(
+            "Source displacement exceeds "
+            f"{source_displacement_cap_m:g} m ({displacement:.3f})"
+        )
     for a, b in itertools.pairwise(xy):
         for j in range(len(a) - 1):
             for p, q, r in ((a[j], a[j + 1], b[j]), (a[j + 1], b[j + 1], b[j])):
@@ -171,8 +183,53 @@ def native_ground(heights, manifest, points):
     return np.asarray(result).reshape(np.asarray(points).shape[:-1])
 
 
-def measure_patch(sections, terrain, manifest):
-    """Measure the exact raster CUT without writing an earthworks patch."""
+def _cut_depth_summary(base, patch, rect, sections):
+    depth = base - patch
+    minx, miny, _, _ = rect
+    peak_y, peak_x = np.unravel_index(np.argmax(depth), depth.shape)
+    grid_x, grid_y = minx + int(peak_x), miny + int(peak_y)
+    section_xy = np.asarray(sections, dtype=float)[:, :, :2]
+    distances = np.linalg.norm(
+        section_xy - np.array([grid_x * STEP, grid_y * STEP]), axis=2
+    )
+    station_index, transverse_index = np.unravel_index(
+        np.argmin(distances), distances.shape
+    )
+    positive = depth[depth > 0]
+    return {
+        "max_cut_m": float(depth[peak_y, peak_x]),
+        "p95_positive_cut_m": float(np.percentile(positive, 95))
+        if positive.size
+        else 0.0,
+        "positive_cut_cell_count": int(positive.size),
+        "over_cap_cell_count": int(np.count_nonzero(depth > CUT_CAP)),
+        "peak_grid_xy": [grid_x, grid_y],
+        "peak_local_xy_m": [grid_x * STEP, grid_y * STEP],
+        "peak_base_height_m": float(base[peak_y, peak_x]),
+        "peak_target_height_m": float(patch[peak_y, peak_x]),
+        "nearest_station_index": int(station_index),
+        "nearest_transverse_index": int(transverse_index),
+        "nearest_section_distance_m": float(
+            distances[station_index, transverse_index]
+        ),
+    }
+
+
+def measure_patch(
+    sections,
+    terrain,
+    manifest,
+    *,
+    include_interpolation_corners=True,
+    guard_cells=1,
+):
+    """Measure raster CUT; defaults reproduce the authored patch envelope."""
+    if (
+        not isinstance(guard_cells, int)
+        or isinstance(guard_cells, bool)
+        or guard_cells < 0
+    ):
+        raise ValueError("CUT guard cell count must be a nonnegative integer")
     samples = {}
     for a, b in itertools.pairwise(sections):
         for j in range(len(a) - 1):
@@ -190,21 +247,24 @@ def measure_patch(sections, terrain, manifest):
                             samples[gx, gy] = min(
                                 samples.get((gx, gy), math.inf), z - 0.05
                             )
-    # Include every interpolation-cell corner, then one neutral border.
-    for row in sections:
-        for x, y, z in row:
-            gx, gy = math.floor(x / STEP), math.floor(y / STEP)
-            for dx in (0, 1):
-                for dy in (0, 1):
+    if include_interpolation_corners:
+        for row in sections:
+            for x, y, z in row:
+                gx, gy = math.floor(x / STEP), math.floor(y / STEP)
+                for dx in (0, 1):
+                    for dy in (0, 1):
+                        samples[gx + dx, gy + dy] = min(
+                            samples.get((gx + dx, gy + dy), math.inf), z - 0.05
+                        )
+    # The authored patch keeps one same-height raster guard around its sampled
+    # pavement/shoulder footprint. The rectangle's outer cell remains neutral.
+    for _ in range(guard_cells):
+        for (gx, gy), z in list(samples.items()):
+            for dx in (-1, 0, 1):
+                for dy in (-1, 0, 1):
                     samples[gx + dx, gy + dy] = min(
-                        samples.get((gx + dx, gy + dy), math.inf), z - 0.05
+                        samples.get((gx + dx, gy + dy), math.inf), z
                     )
-    for (gx, gy), z in list(samples.items()):
-        for dx in (-1, 0, 1):
-            for dy in (-1, 0, 1):
-                samples[gx + dx, gy + dy] = min(
-                    samples.get((gx + dx, gy + dy), math.inf), z
-                )
     minx, miny = min(x for x, y in samples) - 1, min(y for x, y in samples) - 1
     maxx, maxy = max(x for x, y in samples) + 1, max(y for x, y in samples) + 1
     if minx < 0 or miny < 0 or maxx > 4032 or maxy > 4032:
@@ -218,48 +278,54 @@ def measure_patch(sections, terrain, manifest):
     patch = base.copy()
     for (x, y), target in samples.items():
         patch[y - miny, x - minx] = min(patch[y - miny, x - minx], target)
+    rect = (minx, miny, maxx, maxy)
     depth = base - patch
-    peak_y, peak_x = np.unravel_index(np.argmax(depth), depth.shape)
-    grid_x, grid_y = minx + int(peak_x), miny + int(peak_y)
-    section_xy = np.asarray(sections, dtype=float)[:, :, :2]
-    distances = np.linalg.norm(
-        section_xy - np.array([grid_x * STEP, grid_y * STEP]), axis=2
-    )
-    station_index, transverse_index = np.unravel_index(
-        np.argmin(distances), distances.shape
-    )
-    positive = depth[depth > 0]
     return {
         "base": base,
         "patch": patch,
         "depth": depth,
-        "rect": (minx, miny, maxx, maxy),
-        "cut_depth": {
-            "max_cut_m": float(depth[peak_y, peak_x]),
-            "p95_positive_cut_m": float(np.percentile(positive, 95))
-            if positive.size
-            else 0.0,
-            "positive_cut_cell_count": int(positive.size),
-            "over_cap_cell_count": int(np.count_nonzero(depth > CUT_CAP)),
-            "peak_grid_xy": [grid_x, grid_y],
-            "peak_local_xy_m": [grid_x * STEP, grid_y * STEP],
-            "peak_base_height_m": float(base[peak_y, peak_x]),
-            "peak_target_height_m": float(patch[peak_y, peak_x]),
-            "nearest_station_index": int(station_index),
-            "nearest_transverse_index": int(transverse_index),
-            "nearest_section_distance_m": float(
-                distances[station_index, transverse_index]
-            ),
-        },
+        "rect": rect,
+        "cut_depth": _cut_depth_summary(base, patch, rect, sections),
     }
 
 
-def prepare_patch(sections, terrain, manifest, path, *, diagnostics=None):
+def measure_cut_envelopes(asphalt, shoulders, terrain, manifest):
+    """Separate physical footprints from the authored interpolation guard."""
+    strict_asphalt = measure_patch(
+        asphalt,
+        terrain,
+        manifest,
+        include_interpolation_corners=False,
+        guard_cells=0,
+    )["cut_depth"]
+    strict_shoulders = measure_patch(
+        shoulders,
+        terrain,
+        manifest,
+        include_interpolation_corners=False,
+        guard_cells=0,
+    )["cut_depth"]
+    authored = measure_patch(shoulders, terrain, manifest)["cut_depth"]
+    return {
+        "asphalt": strict_asphalt,
+        "asphalt_and_shoulders": strict_shoulders,
+        "authored_patch_envelope": authored,
+        "admission_envelope": "authored_patch_envelope",
+    }
+
+
+def prepare_patch(
+    sections, terrain, manifest, path, *, diagnostics=None, asphalt_sections=None
+):
     measured = measure_patch(sections, terrain, manifest)
     base, patch, depth = measured["base"], measured["patch"], measured["depth"]
     minx, miny, maxx, maxy = measured["rect"]
     if diagnostics is not None:
         diagnostics["cut_depth"] = measured["cut_depth"]
+        if asphalt_sections is not None:
+            diagnostics["cut_depth_by_envelope"] = measure_cut_envelopes(
+                asphalt_sections, sections, terrain, manifest
+            )
         diagnostics["earthworks_fit"] = height_fit_bounds(
             float(depth.max()),
             diagnostics["max_core_support_m"],
@@ -354,6 +420,309 @@ def assess_height_profile_candidate(part, terrain, manifest, diagnostics):
     return candidate
 
 
+def resize_sections_width(sections, width_m):
+    """Create a centred width counterfactual without changing the source axis."""
+    values = np.asarray(sections, dtype=float)
+    if values.ndim != 3 or values.shape[1] < 2 or values.shape[2] != 3:
+        raise ValueError("Road sections must be an NxMx3 array")
+    widths = np.linalg.norm(values[:, -1, :2] - values[:, 0, :2], axis=1)
+    if width_m <= 0 or width_m > float(widths.min()) + 1e-9:
+        raise ValueError("Width counterfactual must fit inside existing pavement")
+    result = np.empty_like(values)
+    sample_t = np.linspace(0.0, 1.0, values.shape[1])
+    target_offset = np.linspace(-width_m / 2, width_m / 2, values.shape[1])
+    for index, row in enumerate(values):
+        axis = (row[0, :2] + row[-1, :2]) / 2
+        across = (row[-1, :2] - row[0, :2]) / widths[index]
+        target_t = 0.5 + target_offset / widths[index]
+        result[index, :, :2] = axis + target_offset[:, None] * across
+        result[index, :, 2] = np.interp(target_t, sample_t, row[:, 2])
+    return result
+
+
+def shift_sections_laterally(sections, shift_m):
+    """Shift a road cross-section toward its stored final transverse edge."""
+    values = np.asarray(sections, dtype=float)
+    result = values.copy()
+    across = values[:, -1, :2] - values[:, 0, :2]
+    lengths = np.linalg.norm(across, axis=1)
+    if (lengths <= 0).any() or not np.isfinite(lengths).all():
+        raise ValueError("Road transverse direction is invalid")
+    result[:, :, :2] += across[:, None, :] / lengths[:, None, None] * shift_m
+    return result
+
+
+def width_sensitivity(sections, terrain, manifest):
+    """Measure whether width alone can clear terrain; never admit a width change."""
+    candidates = []
+    for width_m in WIDTH_SENSITIVITY_M:
+        candidate = resize_sections_width(sections, width_m)
+        cut = measure_patch(
+            candidate,
+            terrain,
+            manifest,
+            include_interpolation_corners=False,
+            guard_cells=0,
+        )["cut_depth"]
+        candidates.append(
+            {
+                "width_m": width_m,
+                "strict_asphalt_cut_depth": cut,
+                "ordinary_cut_pass": cut["max_cut_m"] <= CUT_CAP,
+                "width_change_applied": False,
+                "road_admitted": False,
+            }
+        )
+    return {
+        "method": "CENTRED_WIDTH_COUNTERFACTUAL_DIAGNOSTIC_ONLY",
+        "candidates": candidates,
+        "any_width_passes_ordinary_cut": any(
+            candidate["ordinary_cut_pass"] for candidate in candidates
+        ),
+        "source_width_verified": False,
+        "width_change_applied": False,
+        "road_admitted": False,
+    }
+
+
+def assess_lateral_sweep(sections, source_line, terrain, manifest):
+    """Remeasure bounded XY shifts without applying or admitting a repair."""
+    candidates = []
+    shifts = np.arange(
+        -LATERAL_SWEEP_LIMIT_M,
+        LATERAL_SWEEP_LIMIT_M + LATERAL_SWEEP_STEP_M / 2,
+        LATERAL_SWEEP_STEP_M,
+    )
+    for shift_m in shifts:
+        candidate = {"shift_m": float(round(shift_m, 10))}
+        try:
+            shifted = shift_sections_laterally(sections, shift_m)
+            metrics = inspect_sections(
+                shifted, source_line, source_displacement_cap_m=None
+            )
+            surface = surface_inspection(shifted.tolist())
+            support = np.asarray(shoulder_sections(shifted.tolist()), dtype=float)
+            asphalt_ground = native_ground(
+                terrain, manifest, shifted[:, :, :2]
+            )
+            outer_ground = native_ground(
+                terrain, manifest, support[:, [0, -1], :2]
+            )
+            _, _, support_proof = build_vertical_support(
+                support.tolist(), outer_ground.tolist()
+            )
+            cuts = measure_cut_envelopes(shifted, support, terrain, manifest)
+            max_core_support = float(
+                np.max(shifted[:, :, 2] - asphalt_ground)
+            )
+            max_shoulder_support = float(
+                np.max(support[:, [0, -1], 2] - outer_ground)
+            )
+            violations = {
+                "cut_excess_m": max(
+                    0.0,
+                    cuts["authored_patch_envelope"]["max_cut_m"] - CUT_CAP,
+                ),
+                "core_support_excess_m": max(
+                    0.0, max_core_support - SUPPORT_CAP
+                ),
+                "shoulder_support_excess_m": max(
+                    0.0,
+                    max(
+                        max_shoulder_support,
+                        support_proof["max_wall_height_m"],
+                    )
+                    - SUPPORT_CAP,
+                ),
+                "source_displacement_excess_m": max(
+                    0.0, metrics["source_displacement_m"] - 1.0
+                ),
+            }
+            numeric_pass = (
+                not any(value > 1e-9 for value in violations.values())
+                and surface["status"] == "PASS"
+            )
+            candidate.update(
+                {
+                    "status": "LOCAL_NUMERIC_PASS_EVIDENCE_AND_JOINS_UNVERIFIED"
+                    if numeric_pass
+                    else "REJECT_LOCAL_NUMERIC_LIMITS",
+                    "local_numeric_checks_pass": numeric_pass,
+                    "source_displacement_m": metrics["source_displacement_m"],
+                    "cut_depth_by_envelope": cuts,
+                    "max_core_support_m": max_core_support,
+                    "max_shoulder_support_m": max_shoulder_support,
+                    "support_proof": support_proof,
+                    "surface_inspection": surface,
+                    "violations": violations,
+                }
+            )
+        except ValueError as exc:
+            candidate.update(
+                {
+                    "status": "REJECT_LOCAL_REMEASUREMENT",
+                    "local_numeric_checks_pass": False,
+                    "rejection_reason": str(exc),
+                }
+            )
+        candidate.update(
+            {
+                "lateral_change_applied": False,
+                "source_alignment_verified": False,
+                "adjacent_joins_verified": False,
+                "road_admitted": False,
+            }
+        )
+        candidates.append(candidate)
+
+    def rank(candidate):
+        if "violations" not in candidate:
+            return (1, math.inf, math.inf, math.inf)
+        return (
+            candidate["surface_inspection"]["status"] != "PASS",
+            max(candidate["violations"].values()),
+            candidate["cut_depth_by_envelope"]["asphalt"]["max_cut_m"],
+            abs(candidate["shift_m"]),
+        )
+
+    best = min(candidates, key=rank)
+    return {
+        "method": "BOUNDED_LATERAL_TRANSLATION_DIAGNOSTIC_ONLY",
+        "shift_range_m": [-LATERAL_SWEEP_LIMIT_M, LATERAL_SWEEP_LIMIT_M],
+        "shift_step_m": LATERAL_SWEEP_STEP_M,
+        "positive_direction": "TOWARD_STORED_FINAL_TRANSVERSE_EDGE",
+        "candidate_count": len(candidates),
+        "locally_numeric_pass_count": sum(
+            candidate.get("local_numeric_checks_pass", False)
+            for candidate in candidates
+        ),
+        "best_candidate_selection": "SURFACE_PASS_THEN_MINIMAX_LIMIT_EXCESS_METRES",
+        "best_candidate": best,
+        "candidates": candidates,
+        "lateral_change_applied": False,
+        "source_alignment_verified": False,
+        "adjacent_joins_verified": False,
+        "road_admitted": False,
+    }
+
+
+def _reviewed_anomaly(window_id, hotspot_wgs84):
+    payload = json.loads(ANOMALY_REVIEWS.read_text(encoding="utf-8"))
+    if (
+        payload.get("schema_version") != 1
+        or payload.get("road_source_sha256") != SOURCE_SHA
+        or not isinstance(payload.get("reviews"), list)
+    ):
+        raise ValueError("Road anomaly review evidence is invalid")
+    matches = [
+        review for review in payload["reviews"] if review.get("window_id") == window_id
+    ]
+    if len(matches) > 1:
+        raise ValueError("Road anomaly review evidence is duplicated")
+    if not matches:
+        return None
+    review = matches[0]
+    expected = review.get("hotspot_wgs84")
+    if not isinstance(expected, list) or len(expected) != 2:
+        raise ValueError("Road anomaly hotspot evidence is invalid")
+    to_metric = Transformer.from_crs(4326, 25831, always_xy=True)
+    measured_xy = to_metric.transform(*hotspot_wgs84)
+    expected_xy = to_metric.transform(*expected)
+    if math.dist(measured_xy, expected_xy) > 5.0:
+        raise ValueError("Road anomaly evidence does not match measured hotspot")
+    panorama = review.get("panorama")
+    if (
+        review.get("classification")
+        not in ("NATURAL_FEATURE_CONFIRMED", "ALGORITHM_SUSPECT", "UNRESOLVED")
+        or not isinstance(panorama, dict)
+        or not isinstance(panorama.get("url"), str)
+        or not panorama["url"].startswith("https://www.google.com/maps/")
+        or review.get("metric_width_admitted") is not False
+        or review.get("metric_cut_admitted") is not False
+        or review.get("road_geometry_admitted") is not False
+    ):
+        raise ValueError("Road anomaly qualitative review contract is invalid")
+    return review
+
+
+def build_extreme_review(case, manifest):
+    cut = case["cut_depth"]
+    sections = np.asarray(case["sections"], dtype=float)
+    station = min(cut["nearest_station_index"], len(sections) - 1)
+    axis = (sections[station, 0, :2] + sections[station, -1, :2]) / 2
+    across = sections[station, -1, :2] - sections[station, 0, :2]
+    across /= np.linalg.norm(across)
+    peak = np.asarray(cut["peak_local_xy_m"], dtype=float)
+    signed_offset = float(np.dot(peak - axis, across))
+    east_m = manifest["origin_epsg_m"][0] + peak[0]
+    north_m = manifest["origin_epsg_m"][1] - peak[1]
+    lon, lat = Transformer.from_crs(25831, 4326, always_xy=True).transform(
+        east_m, north_m
+    )
+    hotspot_wgs84 = [float(lon), float(lat)]
+    reviewed = _reviewed_anomaly(case["id"], hotspot_wgs84)
+    default_url = (
+        "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint="
+        f"{lat:.8f}%2C{lon:.8f}"
+    )
+    return {
+        "classification": reviewed["classification"] if reviewed else "UNRESOLVED",
+        "hotspot_wgs84": hotspot_wgs84,
+        "peak_signed_transverse_offset_m": signed_offset,
+        "peak_distance_from_axis_m": abs(signed_offset),
+        "peak_beyond_asphalt_edge_m": abs(signed_offset) - WIDTH / 2,
+        "peak_beyond_shoulder_edge_m": abs(signed_offset) - WIDTH / 2 - SHOULDER,
+        "rock_side": "POSITIVE_TRANSVERSE"
+        if signed_offset >= 0
+        else "NEGATIVE_TRANSVERSE",
+        "away_from_rock_shift_sign": -1 if signed_offset >= 0 else 1,
+        "street_view_url": reviewed["panorama"]["url"]
+        if reviewed
+        else default_url,
+        "manual_evidence": reviewed,
+        "anomaly_reviews_sha256": digest(ANOMALY_REVIEWS),
+        "metric_cut_verified_by_street_view": False,
+        "metric_width_verified_by_street_view": False,
+        "road_admitted": False,
+    }
+
+
+def write_extreme_cut_review(case, path):
+    review = case["review"]
+    cuts = case["cut_depth_by_envelope"]
+    width = case["width_sensitivity"]
+    lateral = case["lateral_sweep"]
+    best = lateral["best_candidate"]
+    lines = [
+        f"# Extreme road/terrain review: `{case['id']}`",
+        "",
+        f"- Classification: `{review['classification']}`",
+        f"- Hotspot WGS84: `{review['hotspot_wgs84'][1]:.8f}, {review['hotspot_wgs84'][0]:.8f}`",
+        f"- [Interactive Street View]({review['street_view_url']})",
+        f"- Authored patch-envelope CUT: `{cuts['authored_patch_envelope']['max_cut_m']:.4f} m`",
+        f"- Strict asphalt CUT: `{cuts['asphalt']['max_cut_m']:.4f} m`",
+        f"- Strict asphalt + shoulders CUT: `{cuts['asphalt_and_shoulders']['max_cut_m']:.4f} m`",
+        f"- Peak distance from axis: `{review['peak_distance_from_axis_m']:.4f} m`",
+        f"- Peak beyond asphalt edge: `{review['peak_beyond_asphalt_edge_m']:.4f} m`",
+        f"- Peak beyond shoulder edge: `{review['peak_beyond_shoulder_edge_m']:.4f} m`",
+        "",
+        "## Counterfactual checks",
+        "",
+        "- Width-only candidates passing the ordinary CUT cap: "
+        f"`{sum(c['ordinary_cut_pass'] for c in width['candidates'])}/"
+        f"{len(width['candidates'])}`",
+        "- Lateral candidates passing all local numeric limits: "
+        f"`{lateral['locally_numeric_pass_count']}/"
+        f"{lateral['candidate_count']}`",
+        f"- Least-bad lateral shift: `{best['shift_m']:.2f} m` (`{best['status']}`)",
+        "",
+        "No width, height or lateral change was applied. Source alignment, "
+        "adjacent joins, collision and road admission remain unverified.",
+        "",
+    ]
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+
 def write_extreme_cut_diagnostic(case, path):
     """Write a deterministic plan/depth image for chat and artifact review."""
     from PIL import Image, ImageDraw
@@ -361,12 +730,23 @@ def write_extreme_cut_diagnostic(case, path):
     width, height = 1600, 900
     image = Image.new("RGB", (width, height), (22, 27, 34))
     draw = ImageDraw.Draw(image)
-    red, yellow = (232, 62, 44), (255, 204, 38)
+    red, yellow, cyan = (232, 62, 44), (255, 204, 38), (45, 210, 230)
     white, muted = (245, 247, 250), (167, 178, 194)
     cut = case["cut_depth"]
     sections = np.asarray(case["sections"], dtype=float)
     left, right = sections[:, 0, :2], sections[:, -1, :2]
-    all_xy = np.vstack([left, right, np.asarray([cut["peak_local_xy_m"]])])
+    best = case["lateral_sweep"]["best_candidate"]
+    shifted = shift_sections_laterally(sections, best["shift_m"])
+    shifted_left, shifted_right = shifted[:, 0, :2], shifted[:, -1, :2]
+    all_xy = np.vstack(
+        [
+            left,
+            right,
+            shifted_left,
+            shifted_right,
+            np.asarray([cut["peak_local_xy_m"]]),
+        ]
+    )
     low, high = all_xy.min(axis=0), all_xy.max(axis=0)
     span = np.maximum(high - low, 1.0)
     plan_box = (70, 150, 960, 820)
@@ -383,12 +763,12 @@ def write_extreme_cut_diagnostic(case, path):
     draw.text((70, 45), "EXTREME CUT - REJECTED", fill=red)
     draw.text(
         (70, 80),
-        f"{case['id']}  required CUT {cut['max_cut_m']:.2f} m",
+        f"{case['id']}  patch-envelope CUT {cut['max_cut_m']:.2f} m",
         fill=white,
     )
     draw.text(
         (70, 108),
-        "Red: rejected asphalt footprint | Yellow: deepest measured raster cell",
+        "Red: rejected asphalt | Cyan: least-bad lateral diagnostic | Yellow: CUT peak",
         fill=muted,
     )
     draw.rectangle(plan_box, outline=(70, 82, 98), width=2)
@@ -398,6 +778,8 @@ def write_extreme_cut_diagnostic(case, path):
     draw.line(
         [plan_point(p) for p in (left + right) / 2], fill=(150, 44, 38), width=2
     )
+    draw.line([plan_point(p) for p in shifted_left], fill=cyan, width=3)
+    draw.line([plan_point(p) for p in shifted_right], fill=cyan, width=3)
     hx, hy = plan_point(cut["peak_local_xy_m"])
     draw.ellipse((hx - 11, hy - 11, hx + 11, hy + 11), fill=yellow)
 
@@ -421,10 +803,24 @@ def write_extreme_cut_diagnostic(case, path):
         f"{cut['max_cut_m']:.2f} m",
         fill=yellow,
     )
+    envelopes = case["cut_depth_by_envelope"]
+    draw.text(
+        (1050, 760),
+        f"Strict asphalt: {envelopes['asphalt']['max_cut_m']:.2f} m",
+        fill=white,
+    )
     draw.text(
         (1050, 790),
-        f"Over-cap cells: {cut['over_cap_cell_count']} | Height-only fit: REJECTED",
+        "Lateral: "
+        f"{case['lateral_sweep']['locally_numeric_pass_count']}/"
+        f"{case['lateral_sweep']['candidate_count']} pass; "
+        f"best {best['shift_m']:+.2f} m",
         fill=white,
+    )
+    draw.text(
+        (1050, 820),
+        f"Class: {case['review']['classification']} | No repair applied",
+        fill=muted,
     )
     image.save(path, format="PNG", optimize=False)
 
@@ -465,6 +861,7 @@ def prepare(prepared, output, exact_sha):
         "exact_sha": exact_sha,
         "region_id": "sa_calobra",
         "source_sha256": digest(SOURCE),
+        "anomaly_reviews_sha256": digest(ANOMALY_REVIEWS),
         "heightmap_sha256": manifest["heightmap_sha256"],
         "width_m": WIDTH,
         "shoulder_m": SHOULDER,
@@ -537,14 +934,15 @@ def prepare(prepared, output, exact_sha):
                 diagnostics = {"stage": "PLANAR_GEOMETRY"}
                 try:
                     source_window = substring(line, float(s[start]), float(s[end - 1]))
+                    source_window_local = transform(
+                        lambda x, y, z=None: (x - origin[0], origin[1] - y),
+                        source_window,
+                    )
                     part = sections[start:end]
                     # Reflect section order back only for planar admission.
                     metrics = inspect_sections(
                         part,
-                        transform(
-                            lambda x, y, z=None: (x - origin[0], origin[1] - y),
-                            source_window,
-                        ),
+                        source_window_local,
                     )
                     diagnostics.update(metrics)
                     diagnostics["stage"] = "GRADE_AND_BANK"
@@ -598,6 +996,7 @@ def prepare(prepared, output, exact_sha):
                         manifest,
                         patch_path,
                         diagnostics=diagnostics,
+                        asphalt_sections=part,
                     )
                     result["approved"].append(
                         {
@@ -636,7 +1035,14 @@ def prepare(prepared, output, exact_sha):
                                 "reason": str(exc),
                                 "sections": part.tolist(),
                                 "cut_depth": diagnostics["cut_depth"],
+                                "cut_depth_by_envelope": diagnostics[
+                                    "cut_depth_by_envelope"
+                                ],
                                 "height_profile_fit": fit,
+                                "source_window_local_xy": [
+                                    list(point[:2])
+                                    for point in source_window_local.coords
+                                ],
                                 "geometry_repair_executed": False,
                                 "height_change_applied": False,
                                 "road_admitted": False,
@@ -667,12 +1073,25 @@ def prepare(prepared, output, exact_sha):
     )
     if result["extreme_cut_case"] is None:
         raise ValueError("Network CUT diagnostics did not retain an extreme case")
-    diagnostic_image = output / "network-extreme-cut-diagnostic.png"
-    write_extreme_cut_diagnostic(result["extreme_cut_case"], diagnostic_image)
-    result["extreme_cut_case"]["diagnostic_image"] = diagnostic_image.name
-    result["extreme_cut_case"]["diagnostic_image_sha256"] = digest(
-        diagnostic_image
+    extreme = result["extreme_cut_case"]
+    extreme["width_sensitivity"] = width_sensitivity(
+        np.asarray(extreme["sections"], dtype=float), terrain, manifest
     )
+    extreme["lateral_sweep"] = assess_lateral_sweep(
+        np.asarray(extreme["sections"], dtype=float),
+        LineString(extreme["source_window_local_xy"]),
+        terrain,
+        manifest,
+    )
+    extreme["review"] = build_extreme_review(extreme, manifest)
+    diagnostic_image = output / "network-extreme-cut-diagnostic.png"
+    write_extreme_cut_diagnostic(extreme, diagnostic_image)
+    extreme["diagnostic_image"] = diagnostic_image.name
+    extreme["diagnostic_image_sha256"] = digest(diagnostic_image)
+    review_path = output / "network-extreme-cut-review.md"
+    write_extreme_cut_review(extreme, review_path)
+    extreme["review_document"] = review_path.name
+    extreme["review_document_sha256"] = digest(review_path)
     result["protected_or_boundary_length_m"] = (
         result["source_clipped_length_m"]
         - result["approved_length_m"]
@@ -720,3 +1139,36 @@ if __name__ == "__main__":
             "NETWORK_BLOCKED",
             json.dumps(window, separators=(",", ":"), allow_nan=False),
         )
+    extreme = r["extreme_cut_case"]
+    print(
+        "NETWORK_EXTREME_REVIEW",
+        json.dumps(
+            {
+                "id": extreme["id"],
+                "review": extreme["review"],
+                "cut_depth_by_envelope": extreme["cut_depth_by_envelope"],
+                "width_sensitivity": {
+                    "candidates": extreme["width_sensitivity"]["candidates"],
+                    "any_width_passes_ordinary_cut": extreme[
+                        "width_sensitivity"
+                    ]["any_width_passes_ordinary_cut"],
+                },
+                "lateral_sweep": {
+                    "candidate_count": extreme["lateral_sweep"][
+                        "candidate_count"
+                    ],
+                    "locally_numeric_pass_count": extreme["lateral_sweep"][
+                        "locally_numeric_pass_count"
+                    ],
+                    "best_candidate": extreme["lateral_sweep"][
+                        "best_candidate"
+                    ],
+                },
+                "diagnostic_image": extreme["diagnostic_image"],
+                "review_document": extreme["review_document"],
+                "road_admitted": False,
+            },
+            separators=(",", ":"),
+            allow_nan=False,
+        ),
+    )

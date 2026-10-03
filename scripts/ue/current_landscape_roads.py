@@ -45,6 +45,22 @@ def trace(world, point):
     return candidates[0]
 
 
+def shifted_sections_laterally(sections, shift_m):
+    """Mirror the offline diagnostic shift using the Python standard library."""
+    shifted = []
+    for row in sections:
+        dx = row[-1][0] - row[0][0]
+        dy = row[-1][1] - row[0][1]
+        length = math.hypot(dx, dy)
+        if length <= 0 or not math.isfinite(length):
+            raise RuntimeError("Extreme CUT transverse direction is invalid")
+        offset_x, offset_y = dx / length * shift_m, dy / length * shift_m
+        shifted.append(
+            [[p[0] + offset_x, p[1] + offset_y, p[2]] for p in row]
+        )
+    return shifted
+
+
 def start(world, root, exact_sha):
     directory = root / "Network"
     network = json.loads((directory / "network.json").read_text())
@@ -110,6 +126,37 @@ def spawn_extreme_cut_diagnostic(world, network):
         "wireframe_color", unreal.LinearColor(1.0, 0.8, 0.0, 1.0)
     )
 
+    lateral = case.get("lateral_sweep")
+    if (
+        not isinstance(lateral, dict)
+        or lateral.get("lateral_change_applied") is not False
+        or lateral.get("road_admitted") is not False
+        or not isinstance(lateral.get("best_candidate"), dict)
+    ):
+        raise RuntimeError("Extreme CUT lateral diagnostic is missing or invalid")
+    shift_m = lateral["best_candidate"].get("shift_m")
+    if not isinstance(shift_m, (int, float)) or not math.isfinite(shift_m):
+        raise RuntimeError("Extreme CUT lateral diagnostic shift is invalid")
+    shifted_sections = shifted_sections_laterally(sections, shift_m)
+    shifted_vertices, shifted_triangles = pavement_slab(shifted_sections)
+    shifted_road, shifted_material = spawn_pavement_mesh(
+        world,
+        shifted_vertices,
+        shifted_triangles,
+        "BOB least-bad lateral diagnostic " + case["id"],
+    )
+    shifted_material.set_vector_parameter_value(
+        "Color", unreal.LinearColor(0.0, 0.75, 0.9, 1)
+    )
+    shifted_component = shifted_road.get_component_by_class(
+        unreal.DynamicMeshComponent
+    )
+    shifted_component.set_enable_wireframe_render_pass(True)
+    shifted_component.set_editor_property("explicit_show_wireframe", True)
+    shifted_component.set_editor_property(
+        "wireframe_color", unreal.LinearColor(0.0, 1.0, 1.0, 1.0)
+    )
+
     cut = case["cut_depth"]
     x_m, y_m = cut["peak_local_xy_m"]
     top_cm = cut["peak_base_height_m"] * 100
@@ -138,7 +185,14 @@ def spawn_extreme_cut_diagnostic(world, network):
     marker_component.set_material(0, marker_material)
     marker_component.set_cast_shadow(False)
     marker.set_actor_scale3d(unreal.Vector(0.2, 0.2, depth_cm / 100))
-    return [road, road_material, marker, marker_material]
+    return [
+        road,
+        road_material,
+        shifted_road,
+        shifted_material,
+        marker,
+        marker_material,
+    ]
 
 
 def finish(world, root, exact_sha, network):
@@ -228,14 +282,26 @@ def finish(world, root, exact_sha, network):
         "extreme_cut_case": {
             "id": network["extreme_cut_case"]["id"],
             "max_cut_m": network["extreme_cut_case"]["cut_depth"]["max_cut_m"],
+            "cut_depth_by_envelope": network["extreme_cut_case"][
+                "cut_depth_by_envelope"
+            ],
             "profile_fit_status": network["extreme_cut_case"][
                 "height_profile_fit"
             ]["status"],
+            "review": network["extreme_cut_case"]["review"],
+            "width_sensitivity": network["extreme_cut_case"][
+                "width_sensitivity"
+            ],
+            "lateral_sweep": network["extreme_cut_case"]["lateral_sweep"],
             "visual_status": "CAPTURE_REQUIRED",
             "capture": "network-extreme-cut.png",
             "diagnostic_image": network["extreme_cut_case"]["diagnostic_image"],
             "diagnostic_image_sha256": network["extreme_cut_case"][
                 "diagnostic_image_sha256"
+            ],
+            "review_document": network["extreme_cut_case"]["review_document"],
+            "review_document_sha256": network["extreme_cut_case"][
+                "review_document_sha256"
             ],
         },
         "map_saved": False,

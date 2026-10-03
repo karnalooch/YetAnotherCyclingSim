@@ -2217,6 +2217,23 @@ When accessible, record panorama location/date and qualitative shoulder,
 drainage and retaining-wall observations separately from surveyed evidence.
 Do not infer metric dimensions from perspective imagery alone.
 
+Do not automate Street View acquisition through repository workflows. For every
+extreme road/terrain anomaly escalated to owner review, provide the diagnostic
+value and station, WGS84 coordinates, a direct link to the exact interactive
+panorama/view, and an owner-visible screenshot or short video when available.
+Classify the observation as `NATURAL_FEATURE_CONFIRMED`, `ALGORITHM_SUSPECT` or
+`UNRESOLVED`; explain the evidence and state what metric question remains open.
+Do not commit panorama pixels. Interactive imagery remains qualitative only;
+PNOA/LiDAR and source-grounded geometry remain the metric evidence.
+
+The 2026-10-03 exposed-rock case at WGS84 39.8304442, 2.8167225 is the reference
+packet for this escalation format. [Open the exact panorama and view](https://www.google.com/maps/@?api=1&map_action=pano&pano=Q0IzBsfssGl-EEeEOAGuLA&heading=123.6&pitch=-22&fov=90).
+Manual inspection shows bedrock immediately beside the painted edge, with no
+ordinary shoulder at the camera position, so the qualitative classification is
+`NATURAL_FEATURE_CONFIRMED`. This does not establish a metric cut of 11.62 m or
+admit the generated road; compare the flagged transect with PNOA/LiDAR before
+deciding whether any residual discrepancy is terrain, footprint or algorithm.
+
 BOB's repair order remains source/footprint review, bounded road-profile work,
 local `Road_Earthworks` where justified, then renewed full-width and interior
 contact checks. Preserve `Base_DTM`. A promising catalogue entry or photograph
@@ -3202,8 +3219,9 @@ cannot satisfy the existing limits.
 
 Every failed CUT also records the peak raster cell, base/target heights, positive
 and over-cap cell counts and nearest road sample. Native proof renders the single
-deepest rejected case as `network-extreme-cut.png`: rejected asphalt is red and
-the measured vertical CUT conflict is marked yellow. The screenshot is mandatory
+deepest rejected case as `network-extreme-cut.png`: rejected asphalt is red, the
+least-bad unapplied lateral diagnostic is cyan and the measured vertical CUT
+conflict is marked yellow. The screenshot is mandatory
 diagnostic evidence, not a repair or visual admission; the terrain and rejected
 road profile are unchanged. The offline preparer also emits
 `network-extreme-cut-diagnostic.png`, a deterministic plan/depth image suitable
@@ -3214,3 +3232,33 @@ bounded clip) instead of being reported only as scalar log output.
 The preparer's `NETWORK_BLOCKED` JSON lines expose each retained blocked-window
 receipt in Actions job logs as well as `Network/network.json`, so remote BOB
 diagnosis does not require downloading the full native render/terrain archive.
+
+Extreme CUT evidence separates three meanings that must not be conflated:
+strict asphalt, strict asphalt plus the full 0.5 m shoulders, and the authored
+patch envelope including interpolation-cell corners and its one-cell raster
+guard. The authored envelope remains the fail-closed admission measurement and
+retains the ordinary 1 m cap; the smaller-footprint values explain where a peak
+comes from but cannot waive it. Existing admitted patch bytes and geometry are
+unchanged. A centred 3/4/5 m width sensitivity check is diagnostic only: it does
+not claim a measured road width, narrow the road, write a patch or admit a
+candidate.
+
+The single deepest conflict also receives a bounded lateral screen from -4 m to
++4 m in 0.25 m increments. Each unchanged-height candidate is independently
+remeasured for strict/as-authored CUT, core and shoulder support, complete
+shoulder wall height, 3D surface limits and the existing 1 m source-displacement
+cap. Even a local numeric PASS remains blocked because imagery/source alignment,
+adjacent joins and native behavior are not thereby verified. No candidate moves
+the source, changes stored geometry or reaches the import list. If every shift
+fails, the result is evidence for a dedicated non-heightfield cliff/structure
+solution, not permission to enlarge the global CUT cap.
+
+Manual anomaly evidence is versioned in
+`current_landscape_road_anomaly_reviews_2026-10-03.json`; it stores links and
+qualitative classifications, never downloaded Google imagery or metric claims.
+The preparer verifies that a reviewed hotspot is within 5 m of the measured
+raster peak and emits `network-extreme-cut-review.md` with its exact interactive
+panorama link. The offline PNG and native `network-extreme-cut.png` show the
+rejected road in red, the least-bad unapplied lateral diagnostic in cyan and the
+deepest CUT marker in yellow. These artifacts satisfy anomaly review/reporting;
+they do not constitute geometry repair or visual admission.

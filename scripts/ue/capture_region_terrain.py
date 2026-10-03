@@ -556,10 +556,17 @@ def main():
             "profile_fit_status": extreme["height_profile_fit"]["status"],
             "diagnostic_colors": {
                 "rejected_asphalt": "red",
+                "least_bad_lateral_diagnostic": "cyan",
                 "deepest_cut_marker": "yellow",
             },
+            "least_bad_lateral_shift_m": extreme["lateral_sweep"][
+                "best_candidate"
+            ]["shift_m"],
+            "street_view_url": extreme["review"]["street_view_url"],
+            "anomaly_classification": extreme["review"]["classification"],
             "geometry_repair_executed": False,
             "height_change_applied": False,
+            "lateral_change_applied": False,
         },
         {
             "name": "road-contact-rider",
