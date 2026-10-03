@@ -1,0 +1,110 @@
+name: Sa Calobra Street View single image
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_billable_request:
+        description: Confirm exactly one Street View Static image request
+        required: true
+        default: false
+        type: boolean
+      pano_id:
+        description: Exact panorama ID admitted by the metadata probe
+        required: true
+        default: "Q0IzBsfssGl-EEeEOAGuLA"
+        type: string
+      heading:
+        description: Camera heading in degrees
+        required: true
+        default: "123.6"
+        type: string
+      pitch:
+        description: Camera pitch in degrees
+        required: true
+        default: "-22"
+        type: string
+      fov:
+        description: Horizontal field of view in degrees
+        required: true
+        default: "90"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yacs-sa-calobra-street-view-static-image
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    name: One explicitly confirmed image request
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.actor == github.repository_owner &&
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main' &&
+      inputs.confirm_billable_request == true
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 5
+    env:
+      GIT_LFS_SKIP_SMUDGE: "1"
+
+    steps:
+      - name: Isolate self-hosted Git configuration
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'yacs-street-view-image.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          'GIT_CONFIG_NOSYSTEM=1' >> $env:GITHUB_ENV
+
+      - name: Checkout trusted image capture without assets
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: _street-view-image
+          persist-credentials: false
+          lfs: false
+          sparse-checkout: scripts/assets/capture_google_street_view_static.py
+
+      - name: Request exactly one Street View image
+        shell: pwsh
+        working-directory: _street-view-image
+        env:
+          GOOGLE_STREET_VIEW_API_KEY: ${{ secrets.GOOGLE_STREET_VIEW_API_KEY }}
+          CAPTURE_PANO_ID: ${{ inputs.pano_id }}
+          CAPTURE_HEADING: ${{ inputs.heading }}
+          CAPTURE_PITCH: ${{ inputs.pitch }}
+          CAPTURE_FOV: ${{ inputs.fov }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ([string]::IsNullOrWhiteSpace($env:GOOGLE_STREET_VIEW_API_KEY)) {
+            throw 'GOOGLE_STREET_VIEW_API_KEY is not configured.'
+          }
+          Write-Output "::add-mask::$env:GOOGLE_STREET_VIEW_API_KEY"
+          $captureDirectory = Join-Path $env:RUNNER_TEMP "yacs-street-view-image-${{ github.run_id }}-${{ github.run_attempt }}"
+          New-Item -ItemType Directory -Force -Path $captureDirectory | Out-Null
+          python ./scripts/assets/capture_google_street_view_static.py `
+            --pano-id $env:CAPTURE_PANO_ID `
+            --width 640 `
+            --height 640 `
+            --scale 2 `
+            --heading $env:CAPTURE_HEADING `
+            --pitch $env:CAPTURE_PITCH `
+            --fov $env:CAPTURE_FOV `
+            --output-image (Join-Path $captureDirectory 'street-view.jpg') `
+            --output-receipt (Join-Path $captureDirectory 'receipt.json')
+          if ($LASTEXITCODE -ne 0) {
+            throw "Street View image capture failed with exit code $LASTEXITCODE."
+          }
+
+      - name: Retain one short-lived diagnostic image
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sa-calobra-street-view-image-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/yacs-street-view-image-${{ github.run_id }}-${{ github.run_attempt }}/
+          if-no-files-found: warn
+          retention-days: 1

@@ -2227,6 +2227,14 @@ and use it only to classify qualitative roadside context such as exposed rock,
 a wall, guardrail, drop or bridge. PNOA/LiDAR and source-grounded geometry
 remain the metric evidence.
 
+After a metadata probe admits an exact panorama, the owner-only
+`sa-calobra-street-view-static-image.yml` workflow may make one explicitly
+confirmed Street View Static image request for qualitative review. The request
+is billable, is fixed to one panorama and one camera view, and the diagnostic
+artifact expires after one day. Do not batch, sweep or commit these images.
+The image may classify exposed rock, a wall, guardrail, drop or bridge, but it
+must not provide metric width, height, alignment, earthworks or physics inputs.
+
 BOB's repair order remains source/footprint review, bounded road-profile work,
 local `Road_Earthworks` where justified, then renewed full-width and interior
 contact checks. Preserve `Base_DTM`. A promising catalogue entry or photograph
