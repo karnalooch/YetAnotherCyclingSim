@@ -3189,3 +3189,6 @@ No shift is applied, no gate is relaxed, and rejected CUTs write no patch. The
 existing candidate heights and accepted patch bytes remain unchanged. BOB must
 use these measurements plus source-grounded height/structure evidence before
 proposing a fitted profile; new geometry still requires fresh native proof.
+The preparer's `NETWORK_BLOCKED` JSON lines expose each retained blocked-window
+receipt in Actions job logs as well as `Network/network.json`, so remote BOB
+diagnosis does not require downloading the full native render/terrain archive.

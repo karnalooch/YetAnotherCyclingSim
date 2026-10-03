@@ -479,3 +479,10 @@ if __name__ == "__main__":
         )
     )
     print("Approved windows:", len(r["approved"]), "Blocked:", len(r["blocked"]))
+    # Keep compact blocked-window evidence available through Actions job logs,
+    # independently of the large native image/terrain artifact archive.
+    for window in r["blocked"]:
+        print(
+            "NETWORK_BLOCKED",
+            json.dumps(window, separators=(",", ":"), allow_nan=False),
+        )
