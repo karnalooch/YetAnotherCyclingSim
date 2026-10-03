@@ -8,7 +8,11 @@ from pathlib import Path
 import unreal
 
 from scripts.geometry.bob_vertical_support import build_vertical_support
-from scripts.geometry.network_pavement import pavement_slab, shoulder_sections
+from scripts.geometry.network_pavement import (
+    pavement_slab,
+    shoulder_sections,
+    surface_inspection,
+)
 from scripts.ue.ma2141_road_preview import spawn_pavement_mesh
 
 
@@ -82,6 +86,9 @@ def finish(world, root, exact_sha, network):
     reports = []
     for window in network["approved"]:
         sections = window["sections"]
+        surface = surface_inspection(sections)
+        if surface["status"] != "PASS" or surface != window["surface_inspection"]:
+            raise RuntimeError("Native network 3D surface receipt mismatch")
         if len(sections) < 3 or any(len(row) != 25 for row in sections):
             raise RuntimeError("Network sections are incomplete")
         ground = []
@@ -136,6 +143,7 @@ def finish(world, root, exact_sha, network):
                 "asphalt_penetration_count": missed_clearance,
                 "maximum_penetration_m": maximum_penetration,
                 "support": proof,
+                "surface_inspection": surface,
             }
         )
     report = {

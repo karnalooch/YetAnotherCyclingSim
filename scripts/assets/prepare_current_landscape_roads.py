@@ -28,7 +28,7 @@ from scripts.assets.prepare_ma2141_diagnostic import select_alignment
 from scripts.assets.prepare_ma2141_profile import local_linear_fit
 from scripts.assets.prepare_ma2141_road_preview import triangle_candidates
 from scripts.geometry.bob_vertical_support import build_vertical_support
-from scripts.geometry.network_pavement import shoulder_sections
+from scripts.geometry.network_pavement import shoulder_sections, surface_inspection
 
 SOURCE = (
     ROOT
@@ -377,6 +377,9 @@ def prepare(prepared, output, exact_sha):
                     if delta.max() > SUPPORT_CAP:
                         raise ValueError("Support height needs structure review")
                     patch_path = output / (ident + "-cut.json")
+                    surface = surface_inspection(part.tolist())
+                    if surface["status"] != "PASS":
+                        raise ValueError("Accepted 3D road surface limits exceeded")
                     support = shoulder_sections(part.tolist())
                     outer_ground = native_ground(
                         terrain, manifest, np.asarray(support)[:, [0, -1], :2]
@@ -395,6 +398,7 @@ def prepare(prepared, output, exact_sha):
                             "length_m": length,
                             "sections": part.tolist(),
                             "metrics": metrics,
+                            "surface_inspection": surface,
                             "cut_manifest": patch_path.name,
                             "cut_sha256": digest(patch_path),
                             "max_cut_m": patch["max_cut_m"],

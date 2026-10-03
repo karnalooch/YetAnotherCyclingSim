@@ -8,7 +8,11 @@ import numpy as np
 from shapely.geometry import LineString
 
 from scripts.assets.prepare_current_landscape_roads import inspect_sections, smooth_axis
-from scripts.geometry.network_pavement import pavement_slab, shoulder_sections
+from scripts.geometry.network_pavement import (
+    pavement_slab,
+    shoulder_sections,
+    surface_inspection,
+)
 
 
 def sections(axis):
@@ -21,6 +25,12 @@ def sections(axis):
 
 
 class NetworkTests(unittest.TestCase):
+    def test_3d_gate_covers_short_network_window(self):
+        mesh = sections([[v, 0] for v in np.linspace(0, 30, 61)])
+        self.assertEqual(surface_inspection(mesh.tolist())["status"], "PASS")
+        mesh[10, :, 2] += 1.0
+        self.assertEqual(surface_inspection(mesh.tolist())["status"], "FAIL")
+
     def test_slab_is_closed_and_directed_edges_cancel(self):
         mesh = sections([[v, 0] for v in np.linspace(0, 30, 61)]).tolist()
         vertices, triangles = pavement_slab(mesh)

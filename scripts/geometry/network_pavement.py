@@ -2,6 +2,28 @@
 
 import math
 
+from scripts.geometry.road_surface_profile import inspect_surface
+
+
+def surface_inspection(sections):
+    """Apply the accepted 3D facet/bank/edge gates across a whole new window."""
+    rows = []
+    station = 0.0
+    previous = None
+    for section in sections:
+        midpoint = [(section[0][k] + section[-1][k]) / 2 for k in (0, 1)]
+        if previous is not None:
+            station += math.dist(previous, midpoint)
+        previous = midpoint
+        rows.append(
+            {
+                "station_m": station,
+                "xy_local_m": [p[:2] for p in section],
+                "candidate_ground_m": [p[2] for p in section],
+            }
+        )
+    return inspect_surface(rows, window_m=(0.0, station))
+
 
 def pavement_slab(sections):
     """Close the 8 cm asphalt slab with consistent perimeter winding."""

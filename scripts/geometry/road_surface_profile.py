@@ -70,8 +70,9 @@ def design_profile(stations, xy, center, crossfall, *, reference_edge=0, inner_e
     }
 
 
-def inspect_surface(rows):
+def inspect_surface(rows, *, window_m=None):
     """Pure stdlib consumer also runs in Unreal's embedded Python."""
+    window = WINDOW if window_m is None else window_m
     points, q, stations = [], [], []
     canonical = []
     for row in rows:
@@ -105,7 +106,7 @@ def inspect_surface(rows):
     previous = None
     evaluated = 0
     for i in range(len(rows) - 1):
-        use = WINDOW[0] <= stations[i] and stations[i + 1] <= WINDOW[1]
+        use = window[0] <= stations[i] and stations[i + 1] <= window[1]
         first, second = points[i], points[i + 1]
         n0, n1 = [], []
         for j in range(24):
@@ -133,7 +134,7 @@ def inspect_surface(rows):
     if evaluated == 0:
         raise ValueError("Missing bounded road surface domain")
     return {"status": "PASS" if all(metrics[k] <= v for k, v in LIMITS.items()) else "FAIL",
-            "window_m": list(WINDOW), "limits": LIMITS.copy(), "metrics": metrics,
+            "window_m": list(window), "limits": LIMITS.copy(), "metrics": metrics,
             "surface_sha256": hashlib.sha256(json.dumps(canonical, separators=(",", ":"), allow_nan=False).encode()).hexdigest(),
             "engineering_admitted": False}
 
