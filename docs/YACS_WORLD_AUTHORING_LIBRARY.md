@@ -77,8 +77,14 @@ In particular:
   must not duplicate its policy or case memory;
 - road-earthwork generation does not belong here unless it is a bounded adapter
   around the chosen Landscape/authoring tool;
-- biome placement should consume terrain/GIS-derived masks and proven PCG
-  patterns before any bespoke biome engine is introduced;
+- biome placement should consume **World Data Stack** outputs (terrain derivatives,
+  verified/derived land-cover masks, LiDAR canopy evidence and deterministic
+  exclusion channels) before any bespoke biome engine is introduced; PCGEx/PCG
+  are consumers of normalized evidence, not ad-hoc raw-provider clients;
+- the World Data Stack source/provenance/normalization contract is owned by the
+  World Building Bible and Issue #335; this library may adapt its outputs to the
+  approved authoring backend but must not reinterpret unknown source evidence as
+  a convenient biome class;
 - asset discovery/selection remains YACS-owned because provenance, license,
   qualification and performance status are project policy rather than renderer
   behavior.

@@ -66,6 +66,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: _bootstrap-cleanup
+          ref: ${{ inputs.target_sha }}
           fetch-depth: 1
           lfs: false
           clean: true
@@ -76,28 +77,20 @@ jobs:
         run: |
           $bootstrap = Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup/scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
           & $bootstrap -Workspace $env:GITHUB_WORKSPACE
-          Remove-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup') -Recurse -Force
 
-      - name: Reclaim stale isolated Unreal worktrees
-        if: ${{ inputs.region_terrain_import }}
+      - name: Select persistent Unreal cache before isolated cleanup
+        shell: pwsh
+        working-directory: _bootstrap-cleanup
+        run: |
+          python -m scripts.ci.unreal_ci_workspace select `
+            --workspace "$env:GITHUB_WORKSPACE" `
+            --run '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Unreal cache selection/retention failed; preserve worktrees.' }
+
+      - name: Remove bootstrap checkout
         shell: pwsh
         run: |
-          $ErrorActionPreference = 'Stop'
-          $staleWorktrees = @(
-            Get-ChildItem -LiteralPath $env:GITHUB_WORKSPACE -Directory -Force |
-              Where-Object { $_.Name -match '^_unreal-(region|build)-' }
-          )
-          foreach ($stale in $staleWorktrees) {
-            if ($stale.Attributes -band [IO.FileAttributes]::ReparsePoint) {
-              throw "Refuse stale Unreal cleanup through a reparse point: $($stale.FullName)"
-            }
-            if (-not (Test-Path -LiteralPath (Join-Path $stale.FullName '.git'))) {
-              throw "Refuse non-worktree stale Unreal cleanup: $($stale.FullName)"
-            }
-            Write-Host "Removing stale isolated Unreal worktree: $($stale.FullName)"
-            Remove-Item -LiteralPath $stale.FullName -Recurse -Force
-          }
-          Get-PSDrive -PSProvider FileSystem | Select-Object Name, Used, Free
+          Remove-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup') -Recurse -Force
 
       - name: Checkout exact caller revision without LFS payloads
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -108,41 +101,6 @@ jobs:
           lfs: false
           clean: false
           persist-credentials: false
-
-      - name: Reclaim superseded generated outputs from this import session
-        if: ${{ inputs.region_terrain_import }}
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          # Only task-created worktrees; Content and proof evidence are retained.
-          foreach ($leaf in @('_unreal-build-37087344754-1', '_unreal-build-37088088925-1')) {
-            $root = Join-Path $env:GITHUB_WORKSPACE $leaf
-            if (-not (Test-Path -LiteralPath (Join-Path $root '.git'))) { continue }
-            $outputs = @((Join-Path $root 'Intermediate'))
-            $outputs += @(Get-ChildItem -LiteralPath (Join-Path $root 'Plugins') -Directory -Recurse -Filter Intermediate | ForEach-Object { $_.FullName })
-            foreach ($output in $outputs) {
-              if (Test-Path -LiteralPath $output) {
-                if ((Get-Item -LiteralPath $output).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Refuse generated-output cleanup through a reparse point.' }
-                Remove-Item -LiteralPath $output -Recurse -Force
-              }
-            }
-          }
-          foreach ($leaf in @('_unreal-build-37087344754-1', '_unreal-build-37088088925-1', '_unreal-region-37086117775-1', '_unreal-region-37087344754-1', '_unreal-region-37088088925-1')) {
-            $root = Join-Path $env:GITHUB_WORKSPACE $leaf
-            if (-not (Test-Path -LiteralPath (Join-Path $root '.git'))) { continue }
-            $binaryRoots = @((Join-Path $root 'Binaries'))
-            $binaryRoots += @(Get-ChildItem -LiteralPath (Join-Path $root 'Plugins') -Directory -Recurse -Filter Binaries | ForEach-Object { $_.FullName })
-            foreach ($binary in $binaryRoots) {
-              if (Test-Path -LiteralPath $binary) {
-                if ((Get-Item -LiteralPath $binary).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Refuse symbol cleanup through a reparse point.' }
-                Get-ChildItem -LiteralPath $binary -Recurse -File -Filter '*.pdb' | ForEach-Object {
-                  try { Remove-Item -LiteralPath $_.FullName -Force }
-                  catch { Write-Warning "Retained locked generated symbol: $($_.Exception.Message)" }
-                }
-              }
-            }
-          }
-          Get-PSDrive -PSProvider FileSystem | Select-Object Name, Used, Free
 
       - name: Retain previous owner-handoff LFS payloads before sanitization
         shell: pwsh
@@ -241,28 +199,28 @@ jobs:
           $ErrorActionPreference = 'Stop'
           if ($env:YACS_UNREAL_EXECUTION_MODE -eq 'compile') {
             if ('${{ inputs.region_terrain_import }}' -eq 'true') {
-              # Exited Windows editors can still leave DLL handles behind.
-              # Build in fresh paths, preserving the old checkout and outputs.
-              $warm = (Get-Location).Path
+              # Keep the previous cache in place; build in fresh DLL paths.
+              $previous = (Get-Location).Path
               $name = '_unreal-build-${{ github.run_id }}-${{ github.run_attempt }}'
               $isolated = Join-Path $env:GITHUB_WORKSPACE $name
               if (Test-Path -LiteralPath $isolated) { throw 'Preserve existing isolated build.' }
               git worktree add --detach "$isolated" '${{ inputs.target_sha }}'
               if ($LASTEXITCODE -ne 0) { throw 'Isolated build checkout failed.' }
               foreach ($relative in @('Binaries', 'Intermediate', 'Saved/BuildCache/UnrealCi')) {
-                $source = Join-Path $warm $relative
+                $source = Join-Path $previous $relative
                 if (Test-Path -LiteralPath $source) {
                   $destination = Join-Path $isolated $relative
                   New-Item -ItemType Directory -Path (Split-Path $destination -Parent) -Force | Out-Null
                   Copy-Item -LiteralPath $source -Destination $destination -Recurse -Force
                 }
               }
-              Get-ChildItem -LiteralPath (Join-Path $warm 'Plugins') -Directory -Recurse | Where-Object { $_.Name -in @('Binaries', 'Intermediate') } | ForEach-Object {
-                $relative = $_.FullName.Substring($warm.Length + 1)
-                $destination = Join-Path $isolated $relative
-                New-Item -ItemType Directory -Path (Split-Path $destination -Parent) -Force | Out-Null
-                Copy-Item -LiteralPath $_.FullName -Destination $destination -Recurse -Force
-              }
+              Get-ChildItem -LiteralPath (Join-Path $previous 'Plugins') -Directory -Recurse |
+                Where-Object { $_.Name -in @('Binaries', 'Intermediate') } | ForEach-Object {
+                  $relative = $_.FullName.Substring($previous.Length + 1)
+                  $destination = Join-Path $isolated $relative
+                  New-Item -ItemType Directory -Path (Split-Path $destination -Parent) -Force | Out-Null
+                  Copy-Item -LiteralPath $_.FullName -Destination $destination -Recurse -Force
+                }
               "YACS_UNREAL_WORKTREE=$name" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
               Set-Location -LiteralPath $isolated
             }
@@ -288,6 +246,20 @@ jobs:
             -ExpectedHead '${{ inputs.target_sha }}' `
             -ExpectedCompileFingerprint '${{ inputs.compile_fingerprint }}' `
             -ExpectedProofFingerprint '${{ inputs.proof_fingerprint }}'
+
+      - name: Publish verified Unreal cache before region preparation
+        if: ${{ steps.cache.outputs.mode != 'static' }}
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          python -m scripts.ci.unreal_ci_workspace publish `
+            --workspace "$env:GITHUB_WORKSPACE" `
+            --run '${{ github.run_id }}-${{ github.run_attempt }}' `
+            --worktree "$env:YACS_UNREAL_WORKTREE" `
+            --head '${{ inputs.target_sha }}' `
+            --compile-fingerprint '${{ inputs.compile_fingerprint }}' `
+            --proof-fingerprint '${{ inputs.proof_fingerprint }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Verified Unreal cache publication failed.' }
 
       - name: Report equivalent exact-head proof reuse
         if: ${{ steps.cache.outputs.mode == 'static' }}

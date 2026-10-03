@@ -20,10 +20,10 @@
     "upstream_commit": "d79a34bb6e7a5883457efe8f33c9f85b1ba3e136",
     "install": "npm ci --ignore-scripts",
     "security_overrides": {
-      "fast-uri": "3.1.7"
+      "fast-uri": "3.1.8"
     }
   },
   "overrides": {
-    "fast-uri": "3.1.7"
+    "fast-uri": "3.1.8"
   }
 }

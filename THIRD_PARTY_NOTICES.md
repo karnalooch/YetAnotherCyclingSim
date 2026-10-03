@@ -75,6 +75,33 @@ Required attribution retained in the GeoTIFF metadata and report:
 This data is a terrain-research benchmark. Its inclusion is not visual,
 performance or production-world acceptance.
 
+## CNIG/IGN Sa Calobra World Data Stack v1 sources
+
+- PNOA LiDAR 3rd coverage, Illes Balears NPC03: 9 LAZ files;
+- MDS50cm 3rd coverage COB3 V1: 4 GeoTIFF files;
+- PNOA Máxima Actualidad 2024, Illes Balears: 4 source COG files.
+
+Provider: Centro Nacional de Información Geográfica / Instituto Geográfico
+Nacional (CNIG/IGN).
+
+License: CNIG/IGN general-use terms compatible with CC BY 4.0.
+Exact file identities, provider records, byte sizes and SHA-256 values:
+`worldgen/terrain/benchmarks/sa_calobra/world_data/working_space_sources.json`
+and `manual_cnig_receipt_2026-10-03.json`.
+
+The raw files remain outside Git. Their verified remote backup is stored in the
+unpublished draft release `data-cnig-sa-calobra-working-v1-2026-10-03`; the
+public repository does not make that draft an approved public distribution.
+
+Required derivative attribution for LiDAR products:
+
+> Obra derivada de LiDAR-PNOA-cob3 2022-2025 CC-BY 4.0 scne.es
+
+PNOA/MDS/orthophoto derivatives must retain source attribution under the
+applicable IGN geographic-data license. These products provide bounded
+surface, canopy, object-height and imagery evidence. They do not replace the
+accepted ground DTM, canonical road geometry or Road Physics Profile.
+
 ## OpenStreetMap Sa Calobra road inventory
 
 - Provider: OpenStreetMap contributors

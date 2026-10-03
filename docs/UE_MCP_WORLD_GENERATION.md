@@ -73,7 +73,7 @@ UE-MCP is an **optional controlled execution/orchestration surface**, not the on
 
 ## 4. Dependency policy
 
-The toolchain pins `ue-mcp` **1.3.9** and records upstream commit `d79a34bb6e7a5883457efe8f33c9f85b1ba3e136`. Do not float `latest`. The npm graph is committed in `tools/ue-mcp/package-lock.json`, and setup must use `npm ci --ignore-scripts`. YACS additionally pins the transitive `fast-uri` security override to **3.1.7** because the upstream 1.3.9 graph resolved 3.1.6, which is blocked by the repository HIGH-severity Dependency Review gate. Upgrades require provenance review, lock refresh and integration proof because UE-MCP has direct write access to the editor project.
+The toolchain pins `ue-mcp` **1.3.9** and records upstream commit `d79a34bb6e7a5883457efe8f33c9f85b1ba3e136`. Do not float `latest`. The npm graph is committed in `tools/ue-mcp/package-lock.json`, and setup must use `npm ci --ignore-scripts`. YACS additionally pins the transitive `fast-uri` security override to **3.1.8**: the upstream 1.3.9 graph resolved 3.1.6 (blocked by the HIGH-severity Dependency Review gate), and 3.1.7 remains affected by GHSA-hrr3-gc8f-f4qj. The 3.1.8 update is verified with encoded-host normalization and Hono request regression checks; it does not change the UE-MCP bridge or editor API. Upgrades require provenance review, lock refresh and integration proof because UE-MCP has direct write access to the editor project.
 
 The upstream repository is MIT licensed. The full upstream repository is not vendored into YACS.
 

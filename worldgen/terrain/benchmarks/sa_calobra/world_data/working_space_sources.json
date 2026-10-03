@@ -1,0 +1,469 @@
+{
+  "schema_version": 2,
+  "issue": 335,
+  "aoi": {
+    "id": "sa_calobra_working_space_v1",
+    "status": "primary_cnig_sources_acquired",
+    "crs": "EPSG:25831",
+    "bounds_m": [
+      483000,
+      4407500,
+      485016.5,
+      4409516.5
+    ],
+    "center_m": [
+      484008.25,
+      4408508.25
+    ],
+    "center_wgs84_lon_lat": [
+      2.813126946845794,
+      39.826417491613824
+    ],
+    "wgs84_corners_lon_lat": {
+      "SW": [
+        2.8013711714022658,
+        39.81731355795069
+      ],
+      "SE": [
+        2.824931945160123,
+        39.81735149865384
+      ],
+      "NE": [
+        2.824885825640162,
+        39.835520226740705
+      ],
+      "NW": [
+        2.801318845180626,
+        39.8354822617286
+      ]
+    },
+    "size_m": [
+      2016.5,
+      2016.5
+    ],
+    "area_km2": 4.06648225,
+    "relationship_to_benchmark": "Current active Unreal working/import square inside the existing 8 km x 8 km Sa Calobra MDT50cm benchmark."
+  },
+  "selection": {
+    "lidar_grid_size_m": 1000,
+    "lidar_grid_locator_hints": [
+      "483-4407",
+      "484-4407",
+      "485-4407",
+      "483-4408",
+      "484-4408",
+      "485-4408",
+      "483-4409",
+      "484-4409",
+      "485-4409"
+    ],
+    "locator_hint_rule": "floor(E/1000)-floor(N/1000) for every 1 km cell intersecting the AOI",
+    "locator_warning": "Locator hints are not CNIG filenames, section IDs or proof of availability. Exact provider identities must be verified before acquisition.",
+    "next_expansion": "Only after this working-space acquisition/proof: extend the same contract to the full 8 km x 8 km benchmark."
+  },
+  "cache": {
+    "persistent_raw_root": "_yacs-world-data/sa-calobra-working-v1",
+    "repository_raw_root": "ExternalAssets/WorldData/SaCalobra/WorkingSpaceV1",
+    "commit_raw_sources": false,
+    "policy": "Large provider payloads persist on the self-hosted runner outside Git. Repository stores only source manifests, hashes, receipts and explicitly admitted bounded derived outputs."
+  },
+  "sources": [
+    {
+      "id": "mdt50cm_cob3_existing",
+      "priority": "P0",
+      "status": "already_acquired",
+      "product": "CNIG/IGN MDT50cm 3rd coverage",
+      "purpose": "existing ground authority; do not redownload unless byte verification fails",
+      "repository_evidence": "../sa_calobra_8x8km_mdt50cm_epsg25831.json"
+    },
+    {
+      "id": "pnoa_lidar_cob3_npc03",
+      "priority": "P0",
+      "status": "acquired",
+      "product": "LiDAR-PNOA 3rd coverage 2022-2025",
+      "product_url": "https://centrodedescargas.cnig.es/CentroDescargas/lidar-tercera-cobertura",
+      "technical_reference": "https://pnoa.ign.es/pnoa-lidar/productos-a-descarga",
+      "expected_format": "LAZ",
+      "expected_grid_m": 1000,
+      "expected_density_points_m2": 5,
+      "required_classification": "NPC03",
+      "crs_expectation": "ETRS89 / UTM zone 31N",
+      "height_expectation": "orthometric",
+      "purpose": "vegetation/canopy/building/object-height evidence plus source-class occupancy",
+      "license": "CC BY 4.0 compatible IGN/CNIG general-use terms",
+      "derived_attribution": "Obra derivada de LiDAR-PNOA-cob3 2022-2025 CC-BY 4.0 scne.es",
+      "files": [
+        {
+          "name": "PNOA_2024_BAL_483-4408_H31_NPC03.laz",
+          "catalog_name": "PNOA-2024-BAL-483-4408-H31-NPC03.laz",
+          "sec": 13022315,
+          "size_bytes": 39247042,
+          "sha256": "9bea9f4effc9868ba399b3ac4fe2f56ec3bf57756dbf1aaea484a2c7921e1dcc",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13022315"
+        },
+        {
+          "name": "PNOA_2024_BAL_483-4409_H31_NPC03.laz",
+          "catalog_name": "PNOA-2024-BAL-483-4409-H31-NPC03.laz",
+          "sec": 13024739,
+          "size_bytes": 38326993,
+          "sha256": "2740ff251615b24e5271191e91f919bc60148859c11c8fbf639079371a3fb653",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13024739"
+        },
+        {
+          "name": "PNOA_2024_BAL_483-4410_H31_NPC03.laz",
+          "catalog_name": "PNOA-2024-BAL-483-4410-H31-NPC03.laz",
+          "sec": 13023037,
+          "size_bytes": 49906963,
+          "sha256": "1a1ce04c32f0449073d8b840cc00a7ca3f1117abbe351a3f48fe57c037a5421b",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13023037"
+        },
+        {
+          "name": "PNOA_2024_BAL_484-4408_H31_NPC03.laz",
+          "catalog_name": "PNOA-2024-BAL-484-4408-H31-NPC03.laz",
+          "sec": 13024455,
+          "size_bytes": 59356962,
+          "sha256": "6b37aee0617df82f5fd1029b1b503651c00307f96a8a392823e0001dfd48bdec",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13024455"
+        },
+        {
+          "name": "PNOA_2024_BAL_484-4409_H31_NPC03.laz",
+          "catalog_name": "PNOA-2024-BAL-484-4409-H31-NPC03.laz",
+          "sec": 13021922,
+          "size_bytes": 38522141,
+          "sha256": "39cfb5cf6b2bf93bd2e9996616ee94d8a830d8df4850ff0bf672183c9043dbdb",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13021922"
+        },
+        {
+          "name": "PNOA_2024_BAL_484-4410_H31_NPC03.laz",
+          "catalog_name": "PNOA-2024-BAL-484-4410-H31-NPC03.laz",
+          "sec": 13022280,
+          "size_bytes": 46764192,
+          "sha256": "af3b790313846225bde04f48b95609963e652d696c0a2edca0d1722eec8ec6d8",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13022280"
+        },
+        {
+          "name": "PNOA_2024_BAL_485-4408_H31_NPC03.laz",
+          "catalog_name": "PNOA-2024-BAL-485-4408-H31-NPC03.laz",
+          "sec": 13021793,
+          "size_bytes": 69266579,
+          "sha256": "e987f1aea01f8672301b0514e249fda33eeef6cf1302e4e3c4dd8428abfbdd50",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13021793"
+        },
+        {
+          "name": "PNOA_2024_BAL_485-4409_H31_NPC03.laz",
+          "catalog_name": "PNOA-2024-BAL-485-4409-H31-NPC03.laz",
+          "sec": 13024710,
+          "size_bytes": 70040345,
+          "sha256": "5c219d8ee12c85c4187095645048943f1d2fc6094c61c290e00a65025afeed3b",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13024710"
+        },
+        {
+          "name": "PNOA_2024_BAL_485-4410_H31_NPC03.laz",
+          "catalog_name": "PNOA-2024-BAL-485-4410-H31-NPC03.laz",
+          "sec": 13021472,
+          "size_bytes": 59014265,
+          "sha256": "fcab9b2e345ab50201cbb4c980c8e7c80d0b51c2d871e218a6607d8e9a643d9a",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13021472"
+        }
+      ],
+      "identified_records": [
+        {
+          "name": "PNOA-2024-BAL-483-4408-H31-NPC03.laz",
+          "sec": 13022315,
+          "size_mb_display": 37.43,
+          "download_mode": "recaptcha_authorized",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13022315"
+        },
+        {
+          "name": "PNOA-2024-BAL-483-4409-H31-NPC03.laz",
+          "sec": 13024739,
+          "size_mb_display": 36.55,
+          "download_mode": "recaptcha_authorized",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13024739"
+        },
+        {
+          "name": "PNOA-2024-BAL-483-4410-H31-NPC03.laz",
+          "sec": 13023037,
+          "size_mb_display": 47.59,
+          "download_mode": "recaptcha_authorized",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13023037"
+        },
+        {
+          "name": "PNOA-2024-BAL-484-4408-H31-NPC03.laz",
+          "sec": 13024455,
+          "size_mb_display": 56.61,
+          "download_mode": "recaptcha_authorized",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13024455"
+        },
+        {
+          "name": "PNOA-2024-BAL-484-4409-H31-NPC03.laz",
+          "sec": 13021922,
+          "size_mb_display": 36.74,
+          "download_mode": "recaptcha_authorized",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13021922"
+        },
+        {
+          "name": "PNOA-2024-BAL-484-4410-H31-NPC03.laz",
+          "sec": 13022280,
+          "size_mb_display": 44.6,
+          "download_mode": "recaptcha_authorized",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13022280"
+        },
+        {
+          "name": "PNOA-2024-BAL-485-4408-H31-NPC03.laz",
+          "sec": 13021793,
+          "size_mb_display": 66.06,
+          "download_mode": "recaptcha_authorized",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13021793"
+        },
+        {
+          "name": "PNOA-2024-BAL-485-4409-H31-NPC03.laz",
+          "sec": 13024710,
+          "size_mb_display": 66.8,
+          "download_mode": "recaptcha_authorized",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13024710"
+        },
+        {
+          "name": "PNOA-2024-BAL-485-4410-H31-NPC03.laz",
+          "sec": 13021472,
+          "size_mb_display": 56.28,
+          "download_mode": "recaptcha_authorized",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13021472"
+        }
+      ],
+      "identified_total_mb_display": 448.66,
+      "identification_evidence": {
+        "method": "CNIG public product-page coordinate search executed in headless Chromium",
+        "workflow_run_id": 37078970330,
+        "artifact_id": 11257832546,
+        "source_sha": "18726b2ee71d7e90af3b3bc75efc23b7af471009",
+        "note": "Exact records identified before acquisition through the provider-authorized bulk download flow."
+      },
+      "acquisition_evidence": {
+        "method": "manual provider-authorized CNIG bulk download via OpenWebStart",
+        "download_batch_id": "LIGW269973002",
+        "verified_date": "2026-10-03",
+        "receipt": "manual_cnig_receipt_2026-10-03.json",
+        "file_count": 9,
+        "total_size_bytes": 470445482
+      }
+    },
+    {
+      "id": "mds50cm_cob3_v1",
+      "priority": "P0",
+      "status": "acquired",
+      "product": "MDS50cm 3rd coverage V1",
+      "product_url": "https://centrodedescargas.cnig.es/CentroDescargas/modelo-digital-superficies-mds50cm-tercera-cobertura",
+      "expected_format": "COG GeoTIFF",
+      "expected_resolution_m": 0.5,
+      "classification_basis": "NPC01 provisional surface model",
+      "purpose": "fast surface-height/canopy/object cross-check; never ground authority",
+      "files": [
+        {
+          "name": "MDS50CM-ETRS89-H31-0643-8-8-COB3-V1.tif",
+          "sec": 13115230,
+          "size_bytes": 117464277,
+          "sha256": "c7fd7b41514c20e587a0e3d147db4a7eb0882b8430d7c41528758dde55d54e56",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13115230"
+        },
+        {
+          "name": "MDS50CM-ETRS89-H31-0644-1-8-COB3-V1.tif",
+          "sec": 13121860,
+          "size_bytes": 118475276,
+          "sha256": "b5c7a7e4ffac28d9c8d6a7864303a5c930e8e4fddb0b3b84ef521b454ac0021d",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13121860"
+        },
+        {
+          "name": "MDS50CM-ETRS89-H31-0670-8-1-COB3-V1.tif",
+          "sec": 13115953,
+          "size_bytes": 117085737,
+          "sha256": "7a500e43b9e00c9e673fe0d6afd8faca90d7939a6ebd99cb30aac9b0c4d8eee2",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13115953"
+        },
+        {
+          "name": "MDS50CM-ETRS89-H31-0671-1-1-COB3-V1.tif",
+          "sec": 13116606,
+          "size_bytes": 115609448,
+          "sha256": "464367e1ce99dc2ca351c1e16d26b0cff20fea0964b809880c7d3903da776961",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13116606"
+        }
+      ],
+      "identified_records": [
+        {
+          "name": "MDS50CM-ETRS89-H31-0643-8-8-COB3-V1.tif",
+          "sec": 13115230,
+          "size_mb_display": 112.02,
+          "download_mode": "recaptcha_authorized",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13115230"
+        },
+        {
+          "name": "MDS50CM-ETRS89-H31-0644-1-8-COB3-V1.tif",
+          "sec": 13121860,
+          "size_mb_display": 112.99,
+          "download_mode": "recaptcha_authorized",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13121860"
+        },
+        {
+          "name": "MDS50CM-ETRS89-H31-0670-8-1-COB3-V1.tif",
+          "sec": 13115953,
+          "size_mb_display": 111.66,
+          "download_mode": "recaptcha_authorized",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13115953"
+        },
+        {
+          "name": "MDS50CM-ETRS89-H31-0671-1-1-COB3-V1.tif",
+          "sec": 13116606,
+          "size_mb_display": 110.25,
+          "download_mode": "recaptcha_authorized",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13116606"
+        }
+      ],
+      "identified_total_mb_display": 446.92,
+      "identification_evidence": {
+        "method": "CNIG public product-page coordinate search executed in headless Chromium",
+        "workflow_run_id": 37078970330,
+        "artifact_id": 11257832546,
+        "source_sha": "18726b2ee71d7e90af3b3bc75efc23b7af471009",
+        "note": "Exact records identified before acquisition through the provider-authorized bulk download flow."
+      },
+      "acquisition_evidence": {
+        "method": "manual provider-authorized CNIG bulk download via OpenWebStart",
+        "download_batch_id": "LIGW269973002",
+        "verified_date": "2026-10-03",
+        "receipt": "manual_cnig_receipt_2026-10-03.json",
+        "file_count": 4,
+        "total_size_bytes": 468634738
+      }
+    },
+    {
+      "id": "pnoa_maxima_actualidad_2024",
+      "priority": "P0",
+      "status": "acquired",
+      "product": "PNOA Maxima Actualidad orthophoto, Illes Balears 2024",
+      "product_url": "https://centrodedescargas.cnig.es/CentroDescargas/ortofoto-pnoa-maxima-actualidad",
+      "service_url": "https://www.ign.es/wms-inspire/pnoa-ma",
+      "expected_native_gsd_m": 0.25,
+      "purpose": "dated visible-surface evidence for forest/open ground/rock/bare soil and road-edge cross-check; never ground-Z authority",
+      "files": [
+        {
+          "name": "PNOA_MA_OF_ETRS89_HU31_h25_0643_4.tif",
+          "catalog_name": "PNOA-MA-OF-ETRS89-HU31-H25-0643-4.TIF",
+          "sec": 11559062,
+          "size_bytes": 96633113,
+          "sha256": "a60b899de95f0cc1b273028e58fb868db8ffbb8e9dd86979c61f02f0067ed940",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=11559062"
+        },
+        {
+          "name": "PNOA_MA_OF_ETRS89_HU31_h25_0644_3.tif",
+          "catalog_name": "PNOA-MA-OF-ETRS89-HU31-H25-0644-3.TIF",
+          "sec": 11559065,
+          "size_bytes": 649949316,
+          "sha256": "24f84b0d6d0d338b0723e81c86375a8d86e6d087d7960cb82e6d1cb77c7fa400",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=11559065"
+        },
+        {
+          "name": "PNOA_MA_OF_ETRS89_HU31_h25_0670_2.tif",
+          "catalog_name": "PNOA-MA-OF-ETRS89-HU31-H25-0670-2.TIF",
+          "sec": 11559080,
+          "size_bytes": 748367875,
+          "sha256": "75ab6f8a4075eff38239f48fc75d055a4f7f7719dc37864828c8c05f713dd2de",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=11559080"
+        },
+        {
+          "name": "PNOA_MA_OF_ETRS89_HU31_h25_0671_1.tif",
+          "catalog_name": "PNOA-MA-OF-ETRS89-HU31-H25-0671-1.TIF",
+          "sec": 11559083,
+          "size_bytes": 905565914,
+          "sha256": "3a6e75d218991a1629422bc5b1b2db8b1bb7324fb0b724d69861ccadae714ca8",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=11559083"
+        }
+      ],
+      "identified_records": [
+        {
+          "name": "PNOA-MA-OF-ETRS89-HU31-H25-0643-4.TIF",
+          "sec": 11559062,
+          "size_mb_display": 92.16,
+          "download_mode": "recaptcha_authorized",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=11559062"
+        },
+        {
+          "name": "PNOA-MA-OF-ETRS89-HU31-H25-0644-3.TIF",
+          "sec": 11559065,
+          "size_mb_display": 619.84,
+          "download_mode": "recaptcha_authorized",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=11559065"
+        },
+        {
+          "name": "PNOA-MA-OF-ETRS89-HU31-H25-0670-2.TIF",
+          "sec": 11559080,
+          "size_mb_display": 713.7,
+          "download_mode": "recaptcha_authorized",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=11559080"
+        },
+        {
+          "name": "PNOA-MA-OF-ETRS89-HU31-H25-0671-1.TIF",
+          "sec": 11559083,
+          "size_mb_display": 863.61,
+          "download_mode": "recaptcha_authorized",
+          "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=11559083"
+        }
+      ],
+      "identified_total_mb_display": 2289.31,
+      "identification_evidence": {
+        "method": "CNIG public product-page coordinate search executed in headless Chromium",
+        "workflow_run_id": 37079274173,
+        "artifact_id": 11257748165,
+        "source_sha": "b1bc5100b5cba7de128178f0e1067289881c76b1",
+        "note": "Exact source COG records identified. Working-space WMS extract is acquired separately; source COGs were acquired through the provider-authorized bulk download flow."
+      },
+      "acquisition_evidence": {
+        "method": "manual provider-authorized CNIG bulk download via OpenWebStart",
+        "download_batch_id": "LIGW269973002",
+        "verified_date": "2026-10-03",
+        "receipt": "manual_cnig_receipt_2026-10-03.json",
+        "file_count": 4,
+        "total_size_bytes": 2400516218
+      }
+    },
+    {
+      "id": "btn_vector_context",
+      "priority": "P1",
+      "status": "acquire",
+      "product": "Base Topografica Nacional",
+      "service_template": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+      "service_zoom": 17,
+      "purpose": "bounded topographic context for nature/hydrology/buildings/constructions/transport; service extract only",
+      "files": []
+    },
+    {
+      "id": "siose_2014_wfs",
+      "priority": "P1",
+      "status": "acquire",
+      "product": "SIOSE 2014 land cover",
+      "service_url": "https://servicios.idee.es/wfs-inspire/ocupacion-suelo",
+      "purpose": "coarse historical land-cover cross-check; never override LiDAR/orthophoto",
+      "files": []
+    },
+    {
+      "id": "catastro_buildings_wfs",
+      "priority": "P1",
+      "status": "acquire",
+      "product": "DG Catastro INSPIRE Buildings",
+      "service_url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx",
+      "purpose": "current building footprint/part/other-construction evidence inside working space",
+      "files": []
+    }
+  ],
+  "planned_derived_outputs": [
+    "terrain_slope",
+    "terrain_aspect",
+    "terrain_curvature_or_roughness",
+    "canopy_height",
+    "canopy_density",
+    "lidar_class_occupancy",
+    "visible_surface_class_with_confidence",
+    "building_water_infrastructure_exclusions",
+    "road_distance",
+    "bob_cut_fill_inner_outer_edge"
+  ]
+}

@@ -89,21 +89,65 @@ This matters to YACS because dry-stone walls, terraces, old paths and water infr
 
 ## 5. Source data still required for the complete corridor
 
-The present 8 km × 8 km Sa Calobra MDT50cm benchmark covers only the first working region. Extending to Menut/Binifaldó requires source coverage for the real corridor, not a manually generated transition.
+The present 8 km × 8 km Sa Calobra MDT50cm benchmark covers only the first working
+region. Extending to Menut/Binifaldó requires source coverage for the real corridor,
+not a manually generated transition. Issue #335 establishes the bounded **World Data
+Stack v1** acquisition contract for the next presentation phase.
 
-| Data | Role | Current reference |
-|---|---|---|
-| PNOA LiDAR third coverage | ground, canopy, buildings, walls and object-height evidence | 5 points/m² minimum; 1 × 1 km tiles; 2022–2025 coverage |
-| MDT50cm / admitted DTM | macro ground geometry | extend source coverage without changing metric scale |
-| PNOA orthophoto | dated visible-surface and road-edge review | reference / derived masks, not ground-Z authority |
-| CartoCiudad + IGR-RT | official road geometry/attributes candidates | route/topology review |
-| Catastro INSPIRE buildings | building footprint authority | footprints, not invented placement |
-| land-cover / vegetation products | forest, shrub, agriculture and open-rock masks | combine with LiDAR/orthophoto; do not replace measured geometry |
-| dated Street View / ground photographs | qualitative roadside review | visual evidence only unless measured independently |
+### 5.1 Immediate acquisition priority for the Golden Hairpin
 
-PNOA third-coverage specifications currently state a minimum density of 5 points/m², 1 × 1 km files, estimated planimetric precision ≤25 cm and orthometric-height products: https://pnoa.ign.es/pnoa-lidar/especificaciones-tecnicas
+| Priority | Data | Role | Admission rule |
+|---|---|---|---|
+| P0 | **PNOA LiDAR 3rd coverage — Illes Balears NPC03** | vegetation/canopy, building/object-height and ground-class cross-check evidence | Illes Balears NPC03 publication was announced 2026-08-18; acquire only the 1 × 1 km LAZ tiles intersecting the bounded AOI plus controlled margin; record exact filenames, classification level, date, CRS/vertical reference and SHA-256 |
+| P0 | **PNOA Máxima Actualidad orthophoto — 2024 Baleares** | dated visible-surface evidence for forest/open ground/rock/bare soil and independent road-edge review | acquire exact COG/MTN25 source covering the AOI; record native product GSD and never confuse request/export pixel spacing with source accuracy |
+| P1 | **BTN thematic GeoPackages** | hydrology, nature/landscape, buildings/constructions and transport context | clip only relevant thematic layers to the AOI; use as semantic/context evidence, not automatic centimeter-precision authority |
+| P2 | **SIOSE** | coarse historical land-cover cross-check | classic CNIG SIOSE editions are 2005/2009/2011/2014; do not treat them as current vegetation truth when LiDAR/orthophoto disagree |
+| existing | **MDT50cm / admitted DTM** | macro ground geometry | keep accepted `Base_DTM`; World Data Stack does not replace ground authority |
+| existing | **CartoCiudad + IGR-RT** | road geometry/attribute source review | preserve current road-authority boundaries |
+| later | **Catastro INSPIRE buildings** | footprint authority | admit exact source separately before building generation |
+| qualitative | **dated ground photography / Street View where accessible** | roadside interpretation | visual evidence only unless measured independently |
 
-The pipeline should download source tiles based on corridor coverage plus a controlled context margin, not because an arbitrary 2 km Unreal Landscape square happens to exist.
+Current official product references:
+
+- PNOA LiDAR 3rd coverage product: https://centrodedescargas.cnig.es/CentroDescargas/lidar-tercera-cobertura
+- PNOA LiDAR 3rd-coverage specifications: https://pnoa.ign.es/pnoa-lidar/especificaciones-tecnicas
+- CNIG LiDAR publication notices (including Illes Balears NPC03): https://centrodedescargas.cnig.es/CentroDescargas/novedades?codSerie=LIDA3
+- PNOA Máxima Actualidad catalogue: https://centrodedescargas.cnig.es/CentroDescargas/catalogo.do?Serie=PNOAH
+- BTN thematic catalogue: https://centrodedescargas.cnig.es/CentroDescargas/btn
+- SIOSE catalogue: https://centrodedescargas.cnig.es/CentroDescargas/siose
+- IGN/CNIG geographic-data license: https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf
+
+PNOA third-coverage specifications state a minimum density of 5 points/m², 1 × 1 km
+files, estimated planimetric precision <=25 cm and orthometric heights. CNIG's
+2026-08-18 notice records the Illes Balears update at NPC03. These are regional/product
+facts only: no tile becomes YACS evidence until its exact identity, hash and local
+coverage have been verified.
+
+### 5.2 First derived products
+
+For the bounded Golden Hairpin AOI, the first deterministic outputs should be:
+
+- DTM-derived slope, aspect, curvature/roughness and local-relief rasters;
+- LiDAR-derived canopy height/density and class occupancy, preserving source classes
+  and unknown/unclassified state;
+- orthophoto-assisted visible-surface masks for vegetation/open ground/rock/bare
+  soil with confidence rather than forced classification;
+- water/building/infrastructure occupancy or exclusion masks where the admitted
+  source supports them;
+- road-distance/protected-corridor plus BOB CUT/FILL/inner-edge/outer-edge channels
+  imported as separate YACS-owned evidence.
+
+The World Data Stack must not bake presentation decisions into source truth. PCGEx
+and Landscape materials consume these outputs; they do not query raw providers
+directly and they do not promote a visual classification to route/physics authority.
+
+### 5.3 Download boundary
+
+The pipeline should download source tiles based on the **Golden Hairpin AOI plus a
+controlled context margin**, not because an arbitrary Unreal Landscape square or
+the whole island happens to exist. The full ~29–30 km route expands only after one
+bounded source edit proves deterministic producer -> derived-data -> consumer
+regeneration.
 
 ## 6. Reference photographs: copyright boundary
 

@@ -154,6 +154,71 @@ The reusable job checks out with clean: true and runs git reset --hard plus
 git clean -ffdx after artifact upload. No source-tree state from a previous job
 is trusted. Build/test logs are retained for seven days.
 
+## Clean Windows host recovery and bounded disk cleanup
+
+Issue #341 adds three local operator tools. They install no third-party software,
+store no credentials and do not change Unreal/world architecture.
+
+After cloning the repository, audit a clean Windows host:
+
+```powershell
+pwsh -NoProfile -File .\scripts\runner\Test-YacsWindowsHost.ps1
+```
+
+The audit requires Windows x64, PowerShell 7.4+, Git/LFS, authenticated GitHub
+CLI, Python 3.12+, Visual Studio C++ tooling, a Windows SDK, UE 5.8.2, an active
+page file, a detected GPU and at least 50 GiB free on the runner drive. It is
+read-only and fails closed when a required capability is absent.
+
+Restore the admitted Sa Calobra CNIG source snapshot after authenticating `gh`:
+
+```powershell
+# Preview local/remote state; download nothing.
+pwsh -NoProfile -File .\scripts\assets\Restore-YacsSaCalobraWorldData.ps1
+
+# Download missing raw files, then verify all 17 files by size and SHA-256.
+pwsh -NoProfile -File .\scripts\assets\Restore-YacsSaCalobraWorldData.ps1 -Apply
+```
+
+Existing files are never overwritten. An unexpected, wrong-sized or hash-invalid
+file fails closed. The restore reads the unpublished draft release and writes only
+the persistent `_yacs-world-data/sa-calobra-working-v1/manual-cnig` cache.
+
+Preview bounded cleanup of versioned build/proof output:
+
+```powershell
+pwsh -NoProfile -File .\scripts\runner\Clear-YacsRunnerWorkspace.ps1
+```
+
+Deletion requires a second, explicit invocation. Copy `candidate_count` and
+`estimated_reclaim_bytes` from the immediately preceding preview; apply mode
+fails before deletion if either value changed:
+
+```powershell
+pwsh -NoProfile -File .\scripts\runner\Clear-YacsRunnerWorkspace.ps1 `
+  -ExpectedCandidateCount $reviewedPreview.candidate_count `
+  -ExpectedReclaimBytes $reviewedPreview.estimated_reclaim_bytes `
+  -Apply
+```
+
+Set `$reviewedPreview` from a fresh `-Json` preview after inspecting its targets.
+Only `Intermediate` and `DerivedDataCache` subdirectories inside direct workspace
+children matching `_unreal-build-<run>-<attempt>` or
+`_unreal-region-<run>-<attempt>` and older than the configured minimum age are
+eligible. Entire workspaces are never deletion targets. Path ancestors and
+candidate trees are checked for reparse points before inventory and apply.
+Apply mode refuses an active `Runner.Worker` or workspace-scoped Unreal
+process. It preserves runner registration/credentials, `_yacs-world-data`,
+`_yacs-retained-lfs`, `_yacs-sa-calobra-assets`, Git LFS objects, known terrain
+worktrees, `_unreal-ci-warm`, repository source, Content, Binaries, Saved/evidence
+and all unknown directories. Byte totals are logical deleted-file sizes;
+free-before/free-after is a separate measured volume observation.
+
+The initial 2026-10-03 preview found 11 allow-listed directories totalling
+14,308,989,232 bytes under the older whole-directory proposal. That proposal was
+superseded by generated-subdirectory-only cleanup; its count and size must not be
+used for current apply. No real runner deletion was performed for this change.
+
 ## Silent desktop monitor and local diagnostics
 
 Issue #329 / PR #330 adds a read-only desktop companion in `scripts/runner/`.
@@ -260,3 +325,34 @@ Installed runtime script bytes are unchanged by the documentation/workflow
 closeout. Artifacts retain installed script hashes. Reinstallation with the
 DACL fix succeeded, including run `37052190396` attempt 2. No popup API remains
 in the deployed silent companion. Native service mode remains unchanged.
+
+## Persistent isolated-build cache (Issue #355)
+
+The serialized Unreal lane selects `_yacs-unreal-ci/active.json` before checkout
+and isolated-build cleanup. It can point to `_unreal-ci-warm` or a verified
+`_unreal-build-<run>-<attempt>`; do not manually delete the active worktree.
+A missing or malformed pointer target fails closed and preserves build
+worktrees for diagnosis. Selection is not cache approval: the normal resolver
+still owns environment, fingerprints and binary checks. Publication happens
+after green Automation/state recording and before terrain import, so a later
+terrain failure does not lose successful compile evidence. See the
+[validation-tier contract](CI_VALIDATION_TIERS.md#general-unreal-static--runtime--compile-reuse).
+
+The administrative `Clear-YacsRunnerWorkspace.ps1` preview/apply also protects
+the selected build's generated directories. A malformed/missing active target
+blocks administrative cleanup; a pointer change during apply requires a new preview.
+
+The Issue #337 current-Landscape road import uses the same cache selection and
+retention path. Its former blanket `_unreal-build-*` / `_unreal-region-*`
+deletion and run-specific Intermediate/symbol removal are retired: neither may
+run after selection and erase the active build. The selector retains assets and
+private LFS objects before reclaiming inactive build worktrees. Region import
+worktrees remain preserved; their cleanup requires a separate bounded retention
+decision. Import/capture and owner visual acceptance still require fresh evidence
+for the current road revision, independently of compile reuse.
+
+On Windows, inactive-build removal retries read-only files inside `.git` after
+clearing that file attribute. Writable-file access failures, locked files and
+other errors still abort cleanup; asset retention must pass before any removal.
+The path audit checks each directory before descending, so Windows junctions
+are rejected without traversing their targets or entering a recursive loop.

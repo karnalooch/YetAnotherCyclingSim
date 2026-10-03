@@ -117,6 +117,16 @@
       "reason": "Owner-only manual main-branch self-hosted runner disk recovery."
     },
     {
+      "file": "sa-calobra-world-data-acquire.yml",
+      "state": "CURRENT",
+      "reason": "Trusted exact-SHA self-hosted acquisition and receipt recovery for the active Issue #335 source contract."
+    },
+    {
+      "file": "sa-calobra-world-data-cnig-probe.yml",
+      "state": "CURRENT",
+      "reason": "Hosted public CNIG catalogue and source-identity probe for the active Issue #335 acquisition branch."
+    },
+    {
       "file": "scorecard.yml",
       "state": "CURRENT",
       "reason": "OpenSSF supply-chain posture audit."

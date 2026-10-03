@@ -1,0 +1,112 @@
+name: Sa Calobra CNIG Probe
+
+on:
+  push:
+    branches:
+      - feature/335-world-data-stack
+    paths:
+      - '.github/workflows/sa-calobra-world-data-cnig-probe.yml'
+      - 'scripts/assets/acquire_sa_calobra_world_data.py'
+      - 'scripts/assets/resolve_sa_calobra_cnig_records.py'
+      - 'scripts/assets/resolve_sa_calobra_cnig_browser.py'
+      - 'worldgen/terrain/benchmarks/sa_calobra/world_data/working_space_sources.json'
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact branch revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          lfs: false
+
+      - name: Probe CNIG product forms
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, re, urllib.request
+          from html.parser import HTMLParser
+
+          URLS = {
+              "lidar": "https://centrodedescargas.cnig.es/CentroDescargas/lidar-tercera-cobertura",
+              "mds": "https://centrodedescargas.cnig.es/CentroDescargas/modelo-digital-superficies-mds50cm-tercera-cobertura",
+              "ortho": "https://centrodedescargas.cnig.es/CentroDescargas/ortofoto-pnoa-maxima-actualidad",
+          }
+
+          class P(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.forms=[]; self.form=None; self.select=None; self.links=[]
+              def handle_starttag(self, tag, attrs):
+                  a={k:(v or "") for k,v in attrs}
+                  if tag=="form":
+                      self.form={"action":a.get("action",""),"method":a.get("method","GET").upper(),"fields":[]}
+                      self.forms.append(self.form)
+                  elif tag=="input" and self.form is not None:
+                      self.form["fields"].append({"tag":"input","name":a.get("name",""),"type":a.get("type","text"),"value":a.get("value","")})
+                  elif tag=="select" and self.form is not None:
+                      self.select={"tag":"select","name":a.get("name",""),"options":[]}
+                      self.form["fields"].append(self.select)
+                  elif tag=="option" and self.select is not None:
+                      self.select["options"].append({"value":a.get("value",""),"selected":"selected" in a})
+                  elif tag=="a" and a.get("href"):
+                      self.links.append(a["href"])
+              def handle_endtag(self, tag):
+                  if tag=="form": self.form=None
+                  elif tag=="select": self.select=None
+
+          opener=urllib.request.build_opener()
+          opener.addheaders=[("User-Agent","YetAnotherCyclingSim/Issue335 CNIG probe")]
+          out={}
+          for name,url in URLS.items():
+              try:
+                  with opener.open(url, timeout=60) as r:
+                      raw=r.read()
+                      text=raw.decode("utf-8","replace")
+                  p=P(); p.feed(text)
+                  open(f"{name}.html","w",encoding="utf-8").write(text)
+                  out[name]={
+                      "url":url,
+                      "bytes":len(raw),
+                      "forms":p.forms,
+                      "interesting_links":[h for h in p.links if any(t in h.lower() for t in ("descarg","buscar","detalle","catalog"))][:200],
+                      "filename_samples":re.findall(r"[A-Za-z0-9_.-]+\.(?:LAZ|laz|TIF|tif|TIFF|tiff|ECW|ecw)", text)[:100],
+                  }
+              except Exception as exc:
+                  out[name]={"url":url,"error":repr(exc)}
+          open("cnig-probe.json","w",encoding="utf-8").write(json.dumps(out,indent=2,ensure_ascii=False)+"\n")
+          print(json.dumps(out,indent=2,ensure_ascii=False))
+          PY
+
+      - name: Install CNIG resolver dependencies
+        shell: bash
+        run: |
+          python -m pip install --disable-pip-version-check --only-binary=:all: requests==2.32.5 pyproj==3.8.0 selenium==4.35.0
+
+      - name: Resolve exact LiDAR and MDS records through CNIG public browser search
+        shell: bash
+        run: |
+          google-chrome --version || true
+          chromedriver --version || true
+          python scripts/assets/resolve_sa_calobra_cnig_browser.py \
+            --manifest worldgen/terrain/benchmarks/sa_calobra/world_data/working_space_sources.json \
+            --output cnig-working-space-records.json
+
+      - name: Upload CNIG probe
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sa-calobra-cnig-probe-${{ github.sha }}
+          path: |
+            cnig-probe.json
+            cnig-working-space-records.json
+            lidar.html
+            mds.html
+            ortho.html
+          if-no-files-found: warn
+          retention-days: 3

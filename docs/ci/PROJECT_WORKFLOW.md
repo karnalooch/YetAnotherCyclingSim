@@ -1,8 +1,10 @@
 # GitHub Project workflow
 
-Status: **SETUP PENDING**  
-Issue: #88  
-Target Project: **YACS — MVP**
+Status: **ACTIVE — verified 2026-10-03**
+
+Setup issue: #88; freshness correction: #353
+
+Target Project: [**YACS — MVP**](https://github.com/users/karnalooch/projects/5)
 
 ## Purpose
 
@@ -32,10 +34,25 @@ movement.
 | Issue closed | `Done` | — |
 | PR closed without merge | unchanged | unchanged |
 
-The copied fifth column is intentionally a human planning state. Automation
-never promotes a Backlog item into that planning column by itself.
+The copied `Ready` and `Blocked` columns are manual planning states. Automation
+never promotes a Backlog item into either planning column by itself.
 
-## One-time setup
+## Verified deployment
+
+On 2026-10-03 the GitHub API confirmed Project `PVT_kwHOABLWOs4BkqmU`,
+number 5, and the six Status options in the documented order. Trusted
+`project-status.yml` synchronization runs are active; run
+[37146784063](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37146784063)
+completed successfully. Issue/PR status readback was checked during repository
+closeout. Setup is complete; the instructions below are retained for recovery
+or a future replacement board, not a current owner action.
+
+Superseded duplicate Issues and closed-unmerged experimental PRs may be archived
+from the planning view after review. Archive is not completion and does not
+delete GitHub history or grant missing validation. Blocked world/source work
+remains open with its missing proofs explicit.
+
+## One-time setup / recovery
 
 The Project is owned by the personal GitHub account. GitHub's built-in
 `GITHUB_TOKEN` cannot perform the required user-owned Project V2 mutations.

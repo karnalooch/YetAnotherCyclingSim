@@ -56,10 +56,11 @@ Gumball, not a second broad automation framework.
 YACS consumes the current reviewed **Gumball v0.6 line** from the immutable
 commit:
 
-`03eb6f6bc6cd2260349386489bffb005c44b3236`
+`ddc458c223b8020c5f36482415d4405459bd373a`
 
 That commit includes the v0.6 Proof Broker generation plus the later reusable
-security-cost routing work. Shared workflow consumers must stay pinned to a
+security-cost routing work and the caller-configurable manual body marker
+(Gumball PR #45). Shared workflow consumers must stay pinned to a
 reviewed 40-character commit SHA; `@main`, moving tags and other mutable refs
 are forbidden.
 
@@ -168,7 +169,8 @@ Reusable improvements discovered in YACS are recorded under
 
 The shared Governance Guard protects rules that should not depend on memory:
 
-- high-risk pull requests require `Auto-merge: manual`;
+- high-risk classification remains active; YACS explicitly sets
+  `require_manual_merge_marker: false`, as authorized by the product owner;
 - external Actions and reusable workflows must use immutable 40-character SHAs;
 - mutable Gumball/engineering-platform refs are rejected;
 - fail-open `continue-on-error: true` is rejected in workflows;
@@ -179,8 +181,11 @@ The shared Governance Guard protects rules that should not depend on memory:
 Current Gumball policy also treats platform/governance surfaces such as
 `AGENTS.md`, `gumball.yaml`, `.gumball/**` and `.github/**` as high-risk.
 
-YACS adds Unreal-specific high-risk surfaces without weakening the platform
-defaults:
+The opt-out removes only the PR-body marker requirement. Merge authorization,
+required evidence and all workflow-safety checks remain mandatory. Other
+consumers retain the default marker requirement.
+
+YACS adds Unreal-specific high-risk surfaces:
 
 - `*.uproject` / `*.uplugin`;
 - module/toolchain files `*.Build.cs` and `*.Target.cs`;
@@ -305,8 +310,10 @@ remain available, with squash the normal YACS delivery method. Enabling scanners
 does not assert that their finding lists are empty or that product vulnerabilities
 are resolved.
 
-CI/security/workflow/toolchain/dependency-policy changes remain manual-merge
-through the Governance Guard's `Auto-merge: manual` contract.
+CI/security/workflow/toolchain/dependency-policy changes require owner-authorized
+closeout after all required checks pass. The owner may delegate that merge to
+the agent; no PR-body marker is required. The trusted auto-merge controller
+continues to apply its independent high-risk restrictions.
 
 ## Downstream -> Gumball feedback
 
