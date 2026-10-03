@@ -277,7 +277,7 @@ commands, environment-specific configuration and proof acceptance.
 
 ## Branch protection
 
-**Current status (2026-09-30): enforced.**
+**Current status (2026-10-03): enforced and reverified for Issue #22.**
 
 Repository ruleset `main protection` (ruleset id `24173006`) targets the
 default branch and currently enforces:
@@ -285,16 +285,25 @@ default branch and currently enforces:
 - pull requests for changes to `main`;
 - strict required-status freshness;
 - exact required status check: `Aggregate CI gate`;
+- exact required status check: `Governance policy / Governance guard`;
+- resolved review conversations before merge;
 - branch deletion protection;
 - non-fast-forward/force-push protection;
 - no configured bypass actors.
 
-The current ruleset does **not** require a positive approval count or resolved
-review threads. Those controls must not be claimed as enforced unless the
-ruleset changes.
+The current ruleset does **not** require a positive approval count. Resolved
+review threads are required. No configured bypass actors exist.
 
-The Governance Guard remains inside the caller-local aggregate proof graph
-rather than being configured as a second standalone required status check.
+The Governance Guard remains inside the caller-local aggregate proof graph and
+is also a standalone required status check for defense in depth.
+
+GitHub administration readback on 2026-10-03 confirmed Dependabot alerts (HTTP
+204), enabled/unpaused Dependabot security updates, secret scanning and push
+protection. Private vulnerability reporting is enabled. Update-branch support
+is enabled; repository automatic merge stays disabled. Merge, squash and rebase
+remain available, with squash the normal YACS delivery method. Enabling scanners
+does not assert that their finding lists are empty or that product vulnerabilities
+are resolved.
 
 CI/security/workflow/toolchain/dependency-policy changes remain manual-merge
 through the Governance Guard's `Auto-merge: manual` contract.
