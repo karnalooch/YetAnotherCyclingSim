@@ -1,0 +1,102 @@
+name: Sa Calobra Street View metadata probe
+
+on:
+  workflow_dispatch:
+    inputs:
+      latitude:
+        description: WGS84 latitude of the diagnostic point
+        required: true
+        default: "39.8304238"
+        type: string
+      longitude:
+        description: WGS84 longitude of the diagnostic point
+        required: true
+        default: "2.8167622"
+        type: string
+      radius_m:
+        description: Panorama search radius in metres (1-50)
+        required: true
+        default: "20"
+        type: string
+      max_snap_m:
+        description: Maximum accepted camera snap distance in metres
+        required: true
+        default: "20"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yacs-sa-calobra-street-view-metadata
+  cancel-in-progress: false
+
+jobs:
+  metadata:
+    name: Metadata only (no image pixels)
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.actor == github.repository_owner &&
+      github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 5
+    env:
+      GIT_LFS_SKIP_SMUDGE: "1"
+
+    steps:
+      - name: Isolate self-hosted Git configuration
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'yacs-street-view.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          'GIT_CONFIG_NOSYSTEM=1' >> $env:GITHUB_ENV
+
+      - name: Checkout trusted metadata probe without assets
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: _street-view-metadata
+          persist-credentials: false
+          lfs: false
+          sparse-checkout: scripts/assets/probe_google_street_view_metadata.py
+
+      - name: Query one Street View metadata point
+        shell: pwsh
+        working-directory: _street-view-metadata
+        env:
+          GOOGLE_STREET_VIEW_API_KEY: ${{ secrets.GOOGLE_STREET_VIEW_API_KEY }}
+          PROBE_LATITUDE: ${{ inputs.latitude }}
+          PROBE_LONGITUDE: ${{ inputs.longitude }}
+          PROBE_RADIUS_M: ${{ inputs.radius_m }}
+          PROBE_MAX_SNAP_M: ${{ inputs.max_snap_m }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ([string]::IsNullOrWhiteSpace($env:GOOGLE_STREET_VIEW_API_KEY)) {
+            throw 'GOOGLE_STREET_VIEW_API_KEY is not configured.'
+          }
+          Write-Output "::add-mask::$env:GOOGLE_STREET_VIEW_API_KEY"
+          $proofDirectory = Join-Path $env:RUNNER_TEMP "yacs-street-view-${{ github.run_id }}-${{ github.run_attempt }}"
+          New-Item -ItemType Directory -Force -Path $proofDirectory | Out-Null
+          $proofPath = Join-Path $proofDirectory 'metadata.json'
+          python ./scripts/assets/probe_google_street_view_metadata.py `
+            --latitude $env:PROBE_LATITUDE `
+            --longitude $env:PROBE_LONGITUDE `
+            --radius-m $env:PROBE_RADIUS_M `
+            --max-snap-m $env:PROBE_MAX_SNAP_M `
+            --source outdoor `
+            --output $proofPath
+          if ($LASTEXITCODE -ne 0) {
+            throw "Street View metadata probe failed with exit code $LASTEXITCODE."
+          }
+          Get-Content -LiteralPath $proofPath
+
+      - name: Retain sanitized metadata receipt
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sa-calobra-street-view-metadata-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/yacs-street-view-${{ github.run_id }}-${{ github.run_attempt }}/metadata.json
+          if-no-files-found: warn
+          retention-days: 3
