@@ -1430,6 +1430,78 @@ Landscape is **not** responsible for:
 
 Those belong to meshes and material/PCG layers.
 
+### 5.3 World Data Stack — spatial evidence before presentation
+
+For geographically faithful routes, YACS must normalize real-world source data into a
+bounded **World Data Stack** before Landscape materials, PCG/PCGEx, building placement
+or other presentation systems consume it. This is an evidence pipeline, not a second
+terrain generator and not simulation authority.
+
+The contract is:
+
+```text
+official/licensed source
+        ↓
+source manifest + immutable identity/hash
+        ↓
+CRS / vertical-reference validation
+        ↓
+bounded AOI normalization
+        ↓
+derived spatial evidence + confidence / unknown state
+        ↓
+World Authority outputs
+        ↓
+Landscape Material / PCGEx / buildings / other presentation consumers
+```
+
+Typical producers are:
+
+- admitted DTM/DEM for ground and deterministic terrain derivatives;
+- classified LiDAR for ground, vegetation, canopy, buildings and object-height evidence;
+- dated orthophoto for visible-surface interpretation and source cross-checks;
+- authoritative thematic/vector layers for land cover, hydrology, buildings and
+  infrastructure where their resolution/date/semantics are fit for the task;
+- YACS-owned road/earthworks outputs such as road distance, protected corridor,
+  CUT/FILL and correctly identified inner/outer road edges.
+
+Typical derived outputs include:
+
+- elevation, slope, aspect, curvature/roughness and local-relief products;
+- forest/grass/shrub/cropland/open-rock/bare-ground masks with explicit confidence;
+- canopy height/density and candidate crown evidence where source density and
+  classification support that inference;
+- building, water, road and infrastructure exclusion/occupancy masks;
+- BOB road-earthworks masks kept as a distinct YACS-owned channel rather than
+  reverse-engineered from imagery.
+
+Hard rules:
+
+1. **Raw providers are not consumed ad hoc by PCGEx graphs.** Acquisition and
+   normalization must record source product, exact tile/file identity, date, CRS,
+   vertical reference where applicable, classification/version, hash, license,
+   attribution and derivation recipe.
+2. **Unknown remains unknown.** NoData, shadows, occlusion, ambiguous classes,
+   stale land-cover products and source disagreement must survive into the derived
+   evidence instead of being silently converted to a convenient biome.
+3. **Geometry authority does not move.** Orthophoto, MDS/DSM and canopy surfaces
+   do not replace accepted ground DTM or canonical road geometry.
+4. **Presentation consumers may vary assets, not geography.** PCGEx may choose
+   deterministic tree/rock/ground-cover variants inside admitted evidence, but it
+   must not silently move a measured forest boundary, building footprint, road or
+   other durable spatial fact.
+5. **Materials and RVT remain presentation.** They may use the same masks to blend
+   grass/dirt/rock/road-edge appearance, but they may not hide a geometry defect.
+6. **Prove one bounded producer → derived-data → consumer path first.** A local
+   source/config change must regenerate only the affected AOI and justified
+   dependencies before the schema is generalized to a full route or region.
+
+For the current Sa Calobra / Ma-2141 M3 slice, Issue #335 instantiates this contract
+with CNIG/IGN PNOA LiDAR 3rd coverage, PNOA Máxima Actualidad orthophoto and selected
+BTN thematic context. Classic SIOSE is historical/coarse context only unless a
+specific proof shows it adds value. The accepted `Base_DTM`, canonical road XY and
+BOB road-earthworks authority remain unchanged.
+
 ---
 
 ## 6. Landscape Edit Layers contract

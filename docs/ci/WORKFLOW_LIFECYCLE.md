@@ -54,6 +54,8 @@ endpoint is forbidden outside an explicit test fixture.
 | `reusable-unreal.yml` | CURRENT | Code-only Unreal build + Automation |
 | `runner-monitor.yml` | CURRENT | Owner-only manual main-branch silent desktop companion deployment |
 | `runner-space-recovery.yml` | CURRENT | Owner-only manual main-branch runner recovery |
+| `sa-calobra-world-data-acquire.yml` | CURRENT | Trusted exact-SHA self-hosted acquisition and receipt recovery for the active Issue #335 source contract |
+| `sa-calobra-world-data-cnig-probe.yml` | CURRENT | Hosted public CNIG catalogue/source-identity probe for the active Issue #335 acquisition branch |
 | `scorecard.yml` | CURRENT | OpenSSF supply-chain audit |
 | `slack-notify.yml` | CURRENT | High-signal CI/release Slack routing |
 | `stage3g-environment-performance.yml` | BROKER-MANAGED | Exact-SHA 1080p60 performance proof; manual dispatch is fallback |
@@ -103,7 +105,8 @@ The surviving Actions surface is intentionally grouped:
 2. **Gumball/repository operations:** governance consumers, Proof Broker,
    Repository Ops, branch hygiene and PR orchestration.
 3. **Explicit recovery/probes:** manual Unreal, Windows probe, runner-space
-   recovery, Project bootstrap and remote-editor command.
+   recovery, Sa Calobra source acquisition/probe, Project bootstrap and
+   remote-editor command.
 4. **Current M3 road/world proof:** broker-managed PCGEx terrain/corridor,
    geometry, hairpin and World Authoring Library SP638 proofs plus SP638 alignment.
    Houdini/Gaea are not prerequisites of the PCGEx-first baseline.
