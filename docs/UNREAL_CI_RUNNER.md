@@ -356,3 +356,10 @@ clearing that file attribute. Writable-file access failures, locked files and
 other errors still abort cleanup; asset retention must pass before any removal.
 The path audit checks each directory before descending, so Windows junctions
 are rejected without traversing their targets or entering a recursive loop.
+
+Current-Landscape capture and interactive handoff register both the exact
+project root and `scripts/ue` on Python's module search path before importing
+the shared overview-camera module. The working directory is not assumed to be
+the repository root. Run `37160081646` passed build/26 Automation tests and
+terrain/network preparation at `6337fde`, but capture failed with
+`ModuleNotFoundError: No module named 'scripts'`; it grants no visual acceptance.

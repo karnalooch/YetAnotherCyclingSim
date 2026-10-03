@@ -452,6 +452,7 @@ def main():
     project = Path(
         unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_dir())
     )
+    sys.path.insert(0, str(project))
     sys.path.insert(0, str(project / "scripts/ue"))
     from sa_calobra_atmosphere import spawn_mediterranean_atmosphere
     _atmosphere_objects, _atmosphere_proof = spawn_mediterranean_atmosphere(

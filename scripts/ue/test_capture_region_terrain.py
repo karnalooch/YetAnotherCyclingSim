@@ -1,9 +1,11 @@
 """Regression for Sa Calobra inspection plus direct Road_Earthworks CUT."""
 
 import json
+import ast
 import os
 from pathlib import Path
 import sys
+import subprocess
 import tempfile
 from types import SimpleNamespace
 import unittest
@@ -11,6 +13,37 @@ from unittest.mock import Mock, patch
 
 
 class CaptureTransitionTests(unittest.TestCase):
+    def test_capture_and_handoff_resolve_camera_module_without_repository_cwd(self):
+        for name in ("capture_region_terrain.py", "owner_handoff_startup.py"):
+            with self.subTest(script=name), tempfile.TemporaryDirectory() as cwd:
+                script = Path(__file__).with_name(name)
+                tree = ast.parse(script.read_text())
+                imports = [
+                    n.lineno for n in ast.walk(tree)
+                    if isinstance(n, ast.ImportFrom)
+                    and n.module == "scripts.geometry.network_visual_preview"
+                ]
+                path_calls = [
+                    n for n in ast.walk(tree)
+                    if isinstance(n, ast.Expr)
+                    and isinstance(n.value, ast.Call)
+                    and ast.unparse(n.value.func) == "sys.path.insert"
+                    and n.lineno < min(imports)
+                    and any(isinstance(child, ast.Name) and child.id == "project"
+                            for child in ast.walk(n.value))
+                ]
+                bootstrap = "\n".join(ast.unparse(n) for n in path_calls)
+                result = subprocess.run(
+                    [sys.executable, "-I", "-c",
+                     "import sys\nfrom pathlib import Path\n"
+                     f"project = Path({str(script.parents[2])!r})\n"
+                     + bootstrap
+                     + "\nfrom scripts.geometry.network_visual_preview import overview_camera\n"
+                     + "assert callable(overview_camera)"],
+                    cwd=cwd, capture_output=True, text=True,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_active_capture_keeps_inspector_and_direct_cut_builder(self):
         script = Path(__file__).with_name("capture_region_terrain.py").read_text()
         self.assertNotIn("bob_native_build_lesson", script)
