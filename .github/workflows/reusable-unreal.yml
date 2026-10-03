@@ -88,6 +88,41 @@ jobs:
           clean: false
           persist-credentials: false
 
+      - name: Reclaim superseded generated outputs from this import session
+        if: ${{ inputs.region_terrain_import }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          # Only task-created worktrees; Content and proof evidence are retained.
+          foreach ($leaf in @('_unreal-build-37087344754-1', '_unreal-build-37088088925-1')) {
+            $root = Join-Path $env:GITHUB_WORKSPACE $leaf
+            if (-not (Test-Path -LiteralPath (Join-Path $root '.git'))) { continue }
+            $outputs = @((Join-Path $root 'Intermediate'))
+            $outputs += @(Get-ChildItem -LiteralPath (Join-Path $root 'Plugins') -Directory -Recurse -Filter Intermediate | ForEach-Object { $_.FullName })
+            foreach ($output in $outputs) {
+              if (Test-Path -LiteralPath $output) {
+                if ((Get-Item -LiteralPath $output).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Refuse generated-output cleanup through a reparse point.' }
+                Remove-Item -LiteralPath $output -Recurse -Force
+              }
+            }
+          }
+          foreach ($leaf in @('_unreal-build-37087344754-1', '_unreal-build-37088088925-1', '_unreal-region-37086117775-1', '_unreal-region-37087344754-1', '_unreal-region-37088088925-1')) {
+            $root = Join-Path $env:GITHUB_WORKSPACE $leaf
+            if (-not (Test-Path -LiteralPath (Join-Path $root '.git'))) { continue }
+            $binaryRoots = @((Join-Path $root 'Binaries'))
+            $binaryRoots += @(Get-ChildItem -LiteralPath (Join-Path $root 'Plugins') -Directory -Recurse -Filter Binaries | ForEach-Object { $_.FullName })
+            foreach ($binary in $binaryRoots) {
+              if (Test-Path -LiteralPath $binary) {
+                if ((Get-Item -LiteralPath $binary).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Refuse symbol cleanup through a reparse point.' }
+                Get-ChildItem -LiteralPath $binary -Recurse -File -Filter '*.pdb' | ForEach-Object {
+                  try { Remove-Item -LiteralPath $_.FullName -Force }
+                  catch { Write-Warning "Retained locked generated symbol: $($_.Exception.Message)" }
+                }
+              }
+            }
+          }
+          Get-PSDrive -PSProvider FileSystem | Select-Object Name, Used, Free
+
       - name: Retain previous owner-handoff LFS payloads before sanitization
         shell: pwsh
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
@@ -257,9 +292,15 @@ jobs:
           git worktree add --detach "$isolated" '${{ inputs.target_sha }}'
           if ($LASTEXITCODE -ne 0) { throw 'Isolated native import checkout failed.' }
           # Reuse only the exact-head binaries already proved by Automation.
-          foreach ($relative in @('Binaries')) {
-            Copy-Item -LiteralPath (Join-Path $warm $relative) -Destination (Join-Path $isolated $relative) -Recurse -Force
+          function Copy-RuntimeBinaries([string] $source) {
+            Get-ChildItem -LiteralPath $source -Recurse -File | Where-Object { $_.Extension -notin @('.pdb', '.lib', '.exp', '.obj') } | ForEach-Object {
+              $relative = $_.FullName.Substring($warm.Length + 1)
+              $destination = Join-Path $isolated $relative
+              New-Item -ItemType Directory -Path (Split-Path $destination -Parent) -Force | Out-Null
+              Copy-Item -LiteralPath $_.FullName -Destination $destination
+            }
           }
+          Copy-RuntimeBinaries (Join-Path $warm 'Binaries')
           $automation = Join-Path $warm 'Saved/RuntimeProof/CI/Unreal'
           Get-ChildItem -LiteralPath $automation -Recurse -File | Where-Object { $_.Extension -in @('.json', '.txt') } | ForEach-Object {
             $relative = $_.FullName.Substring($warm.Length + 1)
@@ -268,10 +309,7 @@ jobs:
             Copy-Item -LiteralPath $_.FullName -Destination $destination
           }
           Get-ChildItem -LiteralPath (Join-Path $warm 'Plugins') -Directory -Recurse -Filter Binaries | ForEach-Object {
-            $relative = $_.FullName.Substring($warm.Length + 1)
-            $destination = Join-Path $isolated $relative
-            New-Item -ItemType Directory -Path (Split-Path $destination -Parent) -Force | Out-Null
-            Copy-Item -LiteralPath $_.FullName -Destination $destination -Recurse -Force
+            Copy-RuntimeBinaries $_.FullName
           }
           "YACS_UNREAL_WORKTREE=$name" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
