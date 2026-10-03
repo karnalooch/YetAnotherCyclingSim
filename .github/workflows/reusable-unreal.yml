@@ -676,6 +676,13 @@ jobs:
           Get-ChildItem -LiteralPath $root -Recurse -File |
             Where-Object { $_.Extension -in @('.png', '.log') } |
             Remove-Item -Force
+          $prepared = Join-Path $root 'Prepared'
+          if (Test-Path -LiteralPath $prepared) {
+            if ((Get-Item -LiteralPath $prepared).Attributes -band [IO.FileAttributes]::ReparsePoint) {
+              throw 'Refuse uploaded Prepared cleanup through a reparse point.'
+            }
+            Remove-Item -LiteralPath $prepared -Recurse -Force
+          }
           $driveName = ([System.IO.Path]::GetPathRoot($root)).TrimEnd('\').TrimEnd(':')
           $drive = Get-PSDrive -Name $driveName
           Write-Host ("Owner handoff free space: {0:N2} GB" -f ($drive.Free / 1GB))
@@ -718,7 +725,9 @@ jobs:
             }
           }
 
-          $deadline = [DateTime]::UtcNow.AddSeconds(120)
+          # Adaptive road tiles take longer to instantiate than the former
+          # coarse fixed windows. Keep this bounded but allow a full startup.
+          $deadline = [DateTime]::UtcNow.AddSeconds(300)
           while (-not (Test-Path -LiteralPath $proofPath) -and [DateTime]::UtcNow -lt $deadline) {
             $process.Refresh()
             if ($process.HasExited) {
@@ -728,6 +737,12 @@ jobs:
           }
           if (-not (Test-Path -LiteralPath $proofPath)) {
             if (-not $process.HasExited) { $process | Stop-Process -Force }
+            $handoffLog = Join-Path $root 'owner-handoff.engine.log'
+            if (Test-Path -LiteralPath $handoffLog) {
+              Write-Host 'Owner handoff engine log tail:'
+              Get-Content -LiteralPath $handoffLog -Tail 200
+            }
+            Get-PSDrive -PSProvider FileSystem | Select-Object Name, Used, Free
             throw 'Owner handoff proof timed out.'
           }
 
