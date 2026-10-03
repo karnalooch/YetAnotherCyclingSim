@@ -257,6 +257,11 @@
       "reason": "Owner-only manual metadata probe on the trusted self-hosted runner; it requests no Street View image pixels and retains only a short-lived sanitized receipt."
     },
     {
+      "file": "sa-calobra-street-view-static-image.yml",
+      "state": "CURRENT",
+      "reason": "Owner-only manual one-image diagnostic capture; it requires explicit billable-request confirmation and retains the qualitative image for one day."
+    },
+    {
       "file": "runner-monitor.yml",
       "state": "CURRENT",
       "reason": "Owner-only manual main-branch desktop monitor deployment. Rollout push trigger retired after verified silent installation. No Unreal or service restart."

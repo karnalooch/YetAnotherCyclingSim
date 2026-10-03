@@ -55,6 +55,7 @@ endpoint is forbidden outside an explicit test fixture.
 | `runner-monitor.yml` | CURRENT | Owner-only manual main-branch silent desktop companion deployment |
 | `runner-space-recovery.yml` | CURRENT | Owner-only manual main-branch runner recovery |
 | `sa-calobra-street-view-metadata.yml` | CURRENT | Owner-only manual metadata lookup for bounded Street View diagnostics; no image pixels requested |
+| `sa-calobra-street-view-static-image.yml` | CURRENT | Owner-only, explicitly confirmed single-image diagnostic capture with one-day retention |
 | `scorecard.yml` | CURRENT | OpenSSF supply-chain audit |
 | `slack-notify.yml` | CURRENT | High-signal CI/release Slack routing |
 | `stage3g-environment-performance.yml` | BROKER-MANAGED | Exact-SHA 1080p60 performance proof; manual dispatch is fallback |
