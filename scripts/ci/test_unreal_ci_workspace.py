@@ -9,6 +9,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from scripts.ci import classify_changes as classifier
 from scripts.ci import unreal_ci_workspace as cache
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -210,6 +211,52 @@ class UnrealWorkspaceTests(unittest.TestCase):
         self.assertEqual(retained.read_bytes(), b"materialized fixture")
         self.assertTrue(self.root.exists())
 
+    def test_cleanup_archives_private_lfs_objects_without_deleting_bytes(self):
+        self.publish()
+        other = self.workspace / "_unreal-build-99-1"
+        shutil.copytree(self.root, other)
+        obj = other / ".git/lfs/objects/ab/cd/payload"
+        obj.parent.mkdir(parents=True)
+        obj.write_bytes(b"private LFS fixture")
+        cache.cleanup(self.workspace, self.name, "101-1")
+        retained = (
+            self.workspace
+            / "_yacs-retained-lfs/cache-101-1-_unreal-build-99-1/git-lfs-objects/ab/cd/payload"
+        )
+        self.assertEqual(retained.read_bytes(), b"private LFS fixture")
+        self.assertFalse(other.exists())
+
+    def test_selection_retains_assets_before_checkout_and_exports_active_path(self):
+        asset = self.root / "Content/fixture.uasset"
+        asset.parent.mkdir()
+        asset.write_bytes(b"owner asset before checkout")
+        env_file = self.workspace / "github-env.txt"
+        subprocess.run(
+            [
+                os.sys.executable,
+                "-m",
+                "scripts.ci.unreal_ci_workspace",
+                "select",
+                "--workspace",
+                str(self.workspace),
+                "--run",
+                "101-1",
+            ],
+            cwd=ROOT,
+            env=dict(os.environ, GITHUB_ENV=str(env_file)),
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        archive = (
+            self.workspace
+            / "_yacs-retained-lfs"
+            / f"checkout-101-1-{self.name}/Content/fixture.uasset"
+        )
+        self.assertEqual(archive.read_bytes(), b"owner asset before checkout")
+        self.assertFalse(asset.exists())
+        self.assertEqual(env_file.read_text(), f"YACS_UNREAL_WORKTREE={self.name}\n")
+
     @unittest.skipUnless(
         shutil.which("pwsh"), "PowerShell 7 required; executed by hosted CI"
     )
@@ -259,6 +306,25 @@ class UnrealWorkspaceTests(unittest.TestCase):
             self.assertEqual(evidence["Mode"], expected)
             self.assertEqual(evidence["Reason"], reason)
             self.assertFalse(evidence["PurgeBuildCache"])
+
+    def test_workspace_helper_change_requires_proof_without_compile_fingerprint_drift(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            helper = root / "scripts/ci/unreal_ci_workspace.py"
+            helper.parent.mkdir(parents=True)
+            helper.write_text("first helper revision")
+            compile_before = classifier.unreal_compile_fingerprint(root)
+            proof_before = classifier.unreal_proof_fingerprint(root)
+            helper.write_text("second helper revision")
+            self.assertEqual(
+                compile_before, classifier.unreal_compile_fingerprint(root)
+            )
+            self.assertNotEqual(proof_before, classifier.unreal_proof_fingerprint(root))
+            result = classifier.classify_paths(["scripts/ci/unreal_ci_workspace.py"])
+            self.assertTrue(result.ue_code)
+            self.assertEqual(result.unreal_execution_class, "runtime")
 
     def test_workflow_publishes_before_import_and_selects_before_checkout(self):
         workflow = (ROOT / ".github/workflows/reusable-unreal.yml").read_text()

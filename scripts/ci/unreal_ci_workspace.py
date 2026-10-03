@@ -16,7 +16,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from scripts.ci.retain_unreal_assets import retain
+from scripts.ci.retain_unreal_assets import digest, retain
 
 WARM = "_unreal-ci-warm"
 POINTER = "_yacs-unreal-ci/active.json"
@@ -208,6 +208,29 @@ def standalone(root: Path) -> None:
         backup.unlink()
 
 
+def retain_local_lfs_objects(root: Path, archive: Path) -> None:
+    """Archive private LFS object bytes; never move a shared linked Git store."""
+    if not (root / ".git").is_dir():
+        return
+    objects = root / ".git/lfs/objects"
+    entries = []
+    for source in sorted(objects.rglob("*")) if objects.exists() else []:
+        if not source.is_file():
+            continue
+        relative = source.relative_to(objects)
+        destination = archive / "git-lfs-objects" / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        sha = digest(source)
+        size = source.stat().st_size
+        source.rename(destination)
+        if destination.stat().st_size != size or digest(destination) != sha:
+            raise RuntimeError("LFS object retention failed; preserve worktree")
+        entries.append({"path": relative.as_posix(), "sha256": sha, "size_bytes": size})
+        (archive / "git-lfs-objects.json").write_text(
+            json.dumps(entries, indent=2) + "\n", encoding="utf-8"
+        )
+
+
 def cleanup(workspace: Path, active: str, run: str) -> None:
     # Re-read before deletion. Publication is serialized by workflow concurrency.
     if active != select(workspace):
@@ -218,7 +241,9 @@ def cleanup(workspace: Path, active: str, run: str) -> None:
             continue
         if not (root / ".git").exists():
             raise ValueError("Refuse non-worktree cleanup")
-        retain(root, workspace / "_yacs-retained-lfs" / f"cache-{run}-{root.name}")
+        archive = workspace / "_yacs-retained-lfs" / f"cache-{run}-{root.name}"
+        retain(root, archive)
+        retain_local_lfs_objects(root, archive)
         shutil.rmtree(root)
 
 
@@ -246,7 +271,14 @@ def main() -> None:
         print(f"UNREAL WORKSPACE: published={args.worktree}")
     else:
         active = select(workspace)
-        standalone(safe_path(workspace, active))
+        root = safe_path(workspace, active)
+        if (root / ".git").exists():
+            # actions/checkout itself can replace tracked assets before the
+            # later sanitization step; retain bytes before entering it.
+            retain(
+                root, workspace / "_yacs-retained-lfs" / f"checkout-{args.run}-{active}"
+            )
+        standalone(root)
         cleanup(workspace, active, args.run)
         with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as stream:
             stream.write(f"YACS_UNREAL_WORKTREE={active}\n")

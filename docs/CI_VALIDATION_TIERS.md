@@ -264,8 +264,11 @@ schema-3 warm/isolated state. Invalidated states remain invalidated; malformed
 pointers or missing active worktrees stop cleanup. Interrupted pointer publication
 leaves the old pointer intact. Cleanup excludes the active worktree, moves and
 hash-verifies materialized LFS assets through the existing retention helper before
-removing stale build worktrees, and does not remove region capture worktrees or
-shared LFS storage. Linked `.git` metadata is converted to an independent local
+removing stale build worktrees. Private standalone Git LFS object bytes are also
+archived and hash-verified before deletion; shared linked Git stores are never
+moved or pruned. Active-worktree materialized assets are retained before entering
+`actions/checkout`, not only before the later sanitization step. Cleanup does not
+remove region capture worktrees or shared LFS storage. Linked `.git` metadata is converted to an independent local
 repository before checkout, without moving assets or build outputs: the pinned
 `actions/checkout` implementation expects a `.git` directory and can discard a
 linked-worktree checkout. Local Git objects are copied without alternates so
