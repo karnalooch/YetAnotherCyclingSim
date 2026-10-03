@@ -248,6 +248,29 @@ requests COLD purge. Before mutable COMPILE/RUNTIME work starts, the
 corresponding previous green state is invalidated so cancellation or failure
 cannot leave reusable proof behind.
 
+Issue #355 keeps a successful isolated build as the active cache worktree.
+`scripts/ci/unreal_ci_workspace.py` publishes only an atomic runner-local
+`_yacs-unreal-ci/active.json` pointer after green Automation and state recording,
+**before** downstream terrain preparation/capture. Binaries, plugin outputs,
+intermediates and their state stay together at stable absolute paths. A later
+import failure does not invalidate that successful compile/proof checkpoint.
+The next job selects this candidate before checkout or stale-build cleanup;
+the existing cache resolver still validates the exact current SHA, environment,
+compile/proof fingerprints and expected DLLs. The pointer never authorizes
+`-SkipBuild` or grants terrain/visual acceptance.
+
+For migration without a pointer, selection recovers the newest complete green
+schema-3 warm/isolated state. Invalidated states remain invalidated; malformed
+pointers or missing active worktrees stop cleanup. Interrupted pointer publication
+leaves the old pointer intact. Cleanup excludes the active worktree, moves and
+hash-verifies materialized LFS assets through the existing retention helper before
+removing stale build worktrees, and does not remove region capture worktrees or
+shared LFS storage. Linked `.git` metadata is converted to an independent local
+repository before checkout, without moving assets or build outputs: the pinned
+`actions/checkout` implementation expects a `.git` directory and can discard a
+linked-worktree checkout. Local Git objects are copied without alternates so
+retiring an older build cannot break the active repository.
+
 The compile fingerprint covers the project descriptor, compiled project/plugin
 inputs and the build/engine-selection orchestration used by the normal Unreal lane.
 `scripts/ci/Resolve-YacsUnrealEngine.ps1` is the single engine-discovery authority

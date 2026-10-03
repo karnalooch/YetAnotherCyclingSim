@@ -325,3 +325,15 @@ Installed runtime script bytes are unchanged by the documentation/workflow
 closeout. Artifacts retain installed script hashes. Reinstallation with the
 DACL fix succeeded, including run `37052190396` attempt 2. No popup API remains
 in the deployed silent companion. Native service mode remains unchanged.
+
+## Persistent isolated-build cache (Issue #355)
+
+The serialized Unreal lane selects `_yacs-unreal-ci/active.json` before checkout
+and isolated-build cleanup. It can point to `_unreal-ci-warm` or a verified
+`_unreal-build-<run>-<attempt>`; do not manually delete the active worktree.
+A missing or malformed pointer target fails closed and preserves build
+worktrees for diagnosis. Selection is not cache approval: the normal resolver
+still owns environment, fingerprints and binary checks. Publication happens
+after green Automation/state recording and before terrain import, so a later
+terrain failure does not lose successful compile evidence. See the
+[validation-tier contract](CI_VALIDATION_TIERS.md#general-unreal-static--runtime--compile-reuse).

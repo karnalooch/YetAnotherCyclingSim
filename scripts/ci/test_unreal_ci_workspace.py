@@ -1,0 +1,284 @@
+from __future__ import annotations
+
+import json
+import os
+import shutil
+import subprocess
+import tempfile
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+from scripts.ci import unreal_ci_workspace as cache
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+class UnrealWorkspaceTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.workspace = Path(self.temporary.name)
+        self.name = "_unreal-build-100-1"
+        self.root = self.workspace / self.name
+        self.root.mkdir()
+        subprocess.run(["git", "init", "-q", str(self.root)], check=True)
+        subprocess.run(
+            [
+                "git",
+                "-c",
+                "user.name=Test",
+                "-c",
+                "user.email=test@example.invalid",
+                "commit",
+                "--allow-empty",
+                "-qm",
+                "fixture",
+            ],
+            cwd=self.root,
+            check=True,
+        )
+        self.head = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=self.root, text=True
+        ).strip()
+        for name in cache.BINARY_NAMES:
+            path = self.root / "Binaries/Win64" / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(b"fixture binary")
+        self.state = {
+            "SchemaVersion": 3,
+            "CompilePassed": True,
+            "ProofPassed": True,
+            "CompileFingerprint": "compile",
+            "ProofFingerprint": "proof",
+            "CompileHead": self.head,
+            "ProofHead": self.head,
+            "EnvironmentIdentity": "environment",
+            "EngineIdentity": "engine",
+            "ToolchainIdentity": "toolchain",
+            "EngineRoot": "fixture-engine",
+            "UpdatedUtc": "2026-10-03T00:00:00Z",
+        }
+        self.write_state()
+        self.summary = self.root / "Saved/RuntimeProof/CI/Unreal/unreal_ci_summary.json"
+        self.summary.parent.mkdir(parents=True)
+        self.summary.write_text(
+            json.dumps({"Failed": 0, "Errors": 0, "Discovered": 26})
+        )
+
+    def write_state(self):
+        path = self.root / cache.STATE
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(self.state), encoding="utf-8")
+
+    def publish(self):
+        cache.publish(self.workspace, self.name, self.head, "compile", "proof")
+
+    def test_migration_recovers_verified_isolated_build_instead_of_stale_warm(self):
+        warm = self.workspace / cache.WARM
+        warm.mkdir()
+        (warm / cache.STATE).parent.mkdir(parents=True)
+        (warm / cache.STATE).write_text('{"CompilePassed": false}')
+        self.assertEqual(cache.select(self.workspace), self.name)
+        self.assertTrue((self.workspace / cache.POINTER).exists())
+
+    def test_publication_survives_downstream_failure_and_cleanup(self):
+        self.publish()
+        other = self.workspace / "_unreal-build-99-1"
+        shutil.copytree(self.root, other)
+        # A downstream preparation failure has no authority over compile state.
+        cache.cleanup(self.workspace, self.name, "101-1")
+        self.assertFalse(other.exists())
+        self.assertEqual(cache.select(self.workspace), self.name)
+        self.assertEqual(cache.verified(self.root)["CompileHead"], self.head)
+        self.assertTrue((self.root / "Binaries/Win64" / cache.BINARY_NAMES[0]).exists())
+
+    def test_interrupted_publication_keeps_previous_pointer_and_binaries(self):
+        self.publish()
+        other_name = "_unreal-build-101-1"
+        other = self.workspace / other_name
+        shutil.copytree(self.root, other)
+        with (
+            patch.object(cache.os, "replace", side_effect=OSError("interrupted")),
+            self.assertRaisesRegex(OSError, "interrupted"),
+        ):
+            cache.publish(self.workspace, other_name, self.head, "compile", "proof")
+        self.assertEqual(cache.select(self.workspace), self.name)
+        self.assertEqual(cache.verified(self.root), self.state)
+
+    def test_failed_or_interrupted_build_never_publishes_green(self):
+        self.publish()
+        self.state["CompilePassed"] = False
+        self.state["ProofPassed"] = False
+        self.write_state()
+        with self.assertRaisesRegex(ValueError, "not verified"):
+            self.publish()
+        # Preserve the invalidated candidate for resolver-driven recovery.
+        self.assertEqual(cache.select(self.workspace), self.name)
+        cache.cleanup(self.workspace, self.name, "101-1")
+        self.assertFalse(cache.read_state(self.root)["CompilePassed"])
+
+    def test_publication_rejects_wrong_head_fingerprints_missing_dll_and_failed_proof(
+        self,
+    ):
+        for head, compile_fp, proof_fp in (
+            ("wrong", "compile", "proof"),
+            (self.head, "wrong", "proof"),
+            (self.head, "compile", "wrong"),
+        ):
+            with (
+                self.subTest(head=head, compile_fp=compile_fp, proof_fp=proof_fp),
+                self.assertRaises(ValueError),
+            ):
+                cache.publish(self.workspace, self.name, head, compile_fp, proof_fp)
+        self.summary.write_text('{"Failed": 1, "Errors": 0, "Discovered": 26}')
+        with self.assertRaisesRegex(ValueError, "green Automation"):
+            self.publish()
+        (self.root / "Binaries/Win64" / cache.BINARY_NAMES[0]).unlink()
+        with self.assertRaisesRegex(ValueError, "binaries missing"):
+            self.publish()
+        self.assertFalse((self.workspace / cache.POINTER).exists())
+
+    def test_corrupt_pointer_fails_before_cleanup(self):
+        path = self.workspace / cache.POINTER
+        path.parent.mkdir()
+        path.write_text('{"schema_version": 1, "worktree": "../escape"}')
+        with self.assertRaises(ValueError):
+            cache.cleanup(self.workspace, self.name, "101-1")
+        self.assertTrue(self.root.exists())
+
+    def test_links_fail_closed_and_unverified_migration_is_not_selected(self):
+        self.state["CompilePassed"] = False
+        self.write_state()
+        self.assertEqual(cache.select(self.workspace), cache.WARM)
+        link = self.root / "Binaries/escape"
+        link.symlink_to(self.workspace, target_is_directory=True)
+        with self.assertRaisesRegex(ValueError, "link/junction"):
+            cache.select(self.workspace)
+
+    def test_linked_metadata_migration_preserves_outputs_and_origin(self):
+        subprocess.run(
+            [
+                "git",
+                "remote",
+                "add",
+                "origin",
+                "https://github.com/karnalooch/YetAnotherCyclingSim",
+            ],
+            cwd=self.root,
+            check=True,
+        )
+        linked = self.workspace / "_unreal-build-102-1"
+        subprocess.run(
+            ["git", "worktree", "add", "--detach", str(linked), self.head],
+            cwd=self.root,
+            check=True,
+            capture_output=True,
+        )
+        binary = linked / "Binaries/fixture.dll"
+        binary.parent.mkdir()
+        binary.write_bytes(b"preserved build")
+        cache.standalone(linked)
+        self.assertTrue((linked / ".git").is_dir())
+        self.assertEqual(binary.read_bytes(), b"preserved build")
+        self.assertEqual(
+            subprocess.check_output(
+                ["git", "rev-parse", "HEAD"], cwd=linked, text=True
+            ).strip(),
+            self.head,
+        )
+        self.assertEqual(
+            subprocess.check_output(
+                ["git", "remote", "get-url", "origin"], cwd=linked, text=True
+            ).strip(),
+            "https://github.com/karnalooch/YetAnotherCyclingSim",
+        )
+        self.assertFalse((linked / ".git/objects/info/alternates").exists())
+
+    def test_cleanup_retains_materialized_assets_before_deletion(self):
+        self.publish()
+        other = self.workspace / "_unreal-build-99-1"
+        shutil.copytree(self.root, other)
+        asset = other / "Content/fixture.uasset"
+        asset.parent.mkdir()
+        asset.write_bytes(b"materialized fixture")
+        cache.cleanup(self.workspace, self.name, "101-1")
+        retained = (
+            self.workspace
+            / "_yacs-retained-lfs/cache-101-1-_unreal-build-99-1/Content/fixture.uasset"
+        )
+        self.assertEqual(retained.read_bytes(), b"materialized fixture")
+        self.assertTrue(self.root.exists())
+
+    @unittest.skipUnless(
+        shutil.which("pwsh"), "PowerShell 7 required; executed by hosted CI"
+    )
+    def test_next_job_resolver_reuses_compile_but_reruns_changed_proof(self):
+        # Execute the real cache resolver against a deterministic environment
+        # fixture; no installed engine or compiler is impersonated as live proof.
+        scripts = self.root / "scripts/ci"
+        scripts.mkdir(parents=True)
+        shutil.copy2(ROOT / "scripts/ci/Resolve-YacsUnrealCiCache.ps1", scripts)
+        (scripts / "Resolve-YacsUnrealBuildEnvironment.ps1").write_text(
+            "function Resolve-YacsUnrealBuildEnvironment { param($ProjectPath) "
+            "[pscustomobject]@{ Engine=[pscustomobject]@{ Identity='engine'; Root='fixture-engine' }; "
+            "Toolchain=[pscustomobject]@{ Identity='toolchain' }; Identity='environment' } }"
+        )
+        self.publish()
+        for compile_fp, proof_fp, expected, reason in (
+            ("compile", "new-proof", "runtime", "proof-fingerprint-mismatch"),
+            ("new-compile", "proof", "compile", "compile-fingerprint-mismatch"),
+        ):
+            self.write_state()
+            name = cache.select(self.workspace)
+            subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-File",
+                    str(scripts / "Resolve-YacsUnrealCiCache.ps1"),
+                    "-RepoRoot",
+                    str(self.workspace / name),
+                    "-ExpectedHead",
+                    self.head,
+                    "-ExpectedCompileFingerprint",
+                    compile_fp,
+                    "-ExpectedProofFingerprint",
+                    proof_fp,
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+                env=os.environ.copy(),
+            )
+            evidence = json.loads(
+                (
+                    self.root / "Saved/RuntimeProof/CI/Unreal/cache_resolution.json"
+                ).read_text(encoding="utf-8-sig")
+            )
+            self.assertEqual(evidence["Mode"], expected)
+            self.assertEqual(evidence["Reason"], reason)
+            self.assertFalse(evidence["PurgeBuildCache"])
+
+    def test_workflow_publishes_before_import_and_selects_before_checkout(self):
+        workflow = (ROOT / ".github/workflows/reusable-unreal.yml").read_text()
+        self.assertLess(
+            workflow.index("Select persistent Unreal cache"),
+            workflow.index("Checkout exact caller revision"),
+        )
+        self.assertLess(
+            workflow.index("Record verified Unreal state"),
+            workflow.index("Publish verified Unreal cache"),
+        )
+        self.assertLess(
+            workflow.index("Publish verified Unreal cache"),
+            workflow.index("Materialize verified Sa Calobra source"),
+        )
+        self.assertIn(
+            "_unreal-build-${{ github.run_id }}-${{ github.run_attempt }}", workflow
+        )
+        self.assertIn("Resolve verified Unreal execution mode", workflow)
+
+
+if __name__ == "__main__":
+    unittest.main()
