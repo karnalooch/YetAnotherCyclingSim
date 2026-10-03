@@ -154,6 +154,63 @@ The reusable job checks out with clean: true and runs git reset --hard plus
 git clean -ffdx after artifact upload. No source-tree state from a previous job
 is trusted. Build/test logs are retained for seven days.
 
+## Clean Windows host recovery and bounded disk cleanup
+
+Issue #341 adds three local operator tools. They install no third-party software,
+store no credentials and do not change Unreal/world architecture.
+
+After cloning the repository, audit a clean Windows host:
+
+```powershell
+pwsh -NoProfile -File .\scripts\runner\Test-YacsWindowsHost.ps1
+```
+
+The audit requires Windows x64, PowerShell 7.4+, Git/LFS, authenticated GitHub
+CLI, Python 3.12+, Visual Studio C++ tooling, a Windows SDK, UE 5.8.2, an active
+page file, a detected GPU and at least 50 GiB free on the runner drive. It is
+read-only and fails closed when a required capability is absent.
+
+Restore the admitted Sa Calobra CNIG source snapshot after authenticating `gh`:
+
+```powershell
+# Preview local/remote state; download nothing.
+pwsh -NoProfile -File .\scripts\assets\Restore-YacsSaCalobraWorldData.ps1
+
+# Download missing raw files, then verify all 17 files by size and SHA-256.
+pwsh -NoProfile -File .\scripts\assets\Restore-YacsSaCalobraWorldData.ps1 -Apply
+```
+
+Existing files are never overwritten. An unexpected, wrong-sized or hash-invalid
+file fails closed. The restore reads the unpublished draft release and writes only
+the persistent `_yacs-world-data/sa-calobra-working-v1/manual-cnig` cache.
+
+Preview bounded cleanup of versioned build/proof output:
+
+```powershell
+pwsh -NoProfile -File .\scripts\runner\Clear-YacsRunnerWorkspace.ps1
+```
+
+Deletion requires a second, explicit invocation. Copy `candidate_count` and
+`estimated_reclaim_bytes` from the immediately preceding preview; apply mode
+fails before deletion if either value changed:
+
+```powershell
+pwsh -NoProfile -File .\scripts\runner\Clear-YacsRunnerWorkspace.ps1 `
+  -ExpectedCandidateCount 11 `
+  -ExpectedReclaimBytes 14308989232 `
+  -Apply
+```
+
+Only direct workspace children matching `_unreal-build-<run>-<attempt>` or
+`_unreal-region-<run>-<attempt>` and older than the configured minimum age are
+eligible. Apply mode refuses an active `Runner.Worker` or workspace-scoped Unreal
+process. It preserves runner registration/credentials, `_yacs-world-data`,
+`_yacs-retained-lfs`, `_yacs-sa-calobra-assets`, Git LFS objects, known terrain
+worktrees, `_unreal-ci-warm`, repository source and all unknown directories.
+
+The initial 2026-10-03 preview found 11 allow-listed directories totalling
+14,308,989,232 bytes. That is planning evidence only; no deletion occurred.
+
 ## Silent desktop monitor and local diagnostics
 
 Issue #329 / PR #330 adds a read-only desktop companion in `scripts/runner/`.

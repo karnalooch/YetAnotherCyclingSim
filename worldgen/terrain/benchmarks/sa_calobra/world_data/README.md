@@ -82,6 +82,19 @@ The cross-project reconciliation and publication boundary are recorded in
 [`docs/legal/USED_ASSET_INVENTORY_2026-10-03.md`](../../../../../docs/legal/USED_ASSET_INVENTORY_2026-10-03.md).
 Publishing that draft requires a separate explicit owner decision.
 
+On a clean trusted Windows host, restore and verify only the 17 raw files with:
+
+```powershell
+# Preview authenticated remote/local state.
+pwsh -NoProfile -File .\scripts\assets\Restore-YacsSaCalobraWorldData.ps1
+
+# Download missing files and require 17/17 matching SHA-256 values.
+pwsh -NoProfile -File .\scripts\assets\Restore-YacsSaCalobraWorldData.ps1 -Apply
+```
+
+The script is idempotent, never overwrites an existing file and fails closed on
+unexpected files, size drift, hash drift or a non-draft release.
+
 For immediate world-authoring work, the acquisition runner separately downloads
 the same-AOI **PNOA WMS orthophoto extract**, BTN vector context, SIOSE cross-check
 and Catastro Buildings WFS data, which are available through official services
