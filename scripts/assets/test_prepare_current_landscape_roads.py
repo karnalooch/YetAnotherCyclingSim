@@ -2,11 +2,13 @@
 
 import math
 import unittest
+from collections import Counter
 
 import numpy as np
 from shapely.geometry import LineString
 
 from scripts.assets.prepare_current_landscape_roads import inspect_sections, smooth_axis
+from scripts.geometry.network_pavement import pavement_slab, shoulder_sections
 
 
 def sections(axis):
@@ -19,6 +21,30 @@ def sections(axis):
 
 
 class NetworkTests(unittest.TestCase):
+    def test_slab_is_closed_and_directed_edges_cancel(self):
+        mesh = sections([[v, 0] for v in np.linspace(0, 30, 61)]).tolist()
+        vertices, triangles = pavement_slab(mesh)
+        edges = Counter((a, b) for t in triangles for a, b in zip(t, (*t[1:], t[0])))
+        for (a, b), count in edges.items():
+            self.assertEqual(count, 1)
+            self.assertEqual(edges[b, a], 1)
+        self.assertAlmostEqual(vertices[0][2] - vertices[len(vertices) // 2][2], 0.08)
+
+    def test_shoulder_miter_preserves_half_metre_perpendicular_extent(self):
+        angle = np.linspace(0, math.pi, 121)
+        axis = np.column_stack([10 * np.cos(angle), 10 * np.sin(angle)])
+        mesh = sections(axis)[:, ::-1].tolist()
+        extended = shoulder_sections(mesh)
+        for side, outer in ((0, 0), (-1, -1)):
+            for i in range(1, len(mesh)):
+                a, b = np.array(mesh[i - 1][side][:2]), np.array(mesh[i][side][:2])
+                tangent = b - a
+                offset = np.array(extended[i][outer][:2]) - b
+                extent = abs(
+                    tangent[0] * offset[1] - tangent[1] * offset[0]
+                ) / np.linalg.norm(tangent)
+                self.assertAlmostEqual(extent, 0.5)
+
     def test_straight_accepts_constant_width(self):
         axis = [[v, 0] for v in np.linspace(0, 30, 61)]
         result = inspect_sections(sections(axis), LineString(axis))

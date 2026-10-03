@@ -8,6 +8,7 @@ from pathlib import Path
 import unreal
 
 from scripts.geometry.bob_vertical_support import build_vertical_support
+from scripts.geometry.network_pavement import pavement_slab, shoulder_sections
 from scripts.ue.ma2141_road_preview import spawn_pavement_mesh
 
 
@@ -84,10 +85,10 @@ def finish(world, root, exact_sha, network):
         if len(sections) < 3 or any(len(row) != 25 for row in sections):
             raise RuntimeError("Network sections are incomplete")
         ground = []
-        support = []
+        support = shoulder_sections(sections)
         missed_clearance = 0
         maximum_penetration = 0.0
-        for row in sections:
+        for row, extended in zip(sections, support, strict=True):
             if any(not math.isfinite(v) for p in row for v in p):
                 raise RuntimeError("Network nonfinite vertex")
             width = math.dist(row[0][:2], row[-1][:2])
@@ -97,34 +98,17 @@ def finish(world, root, exact_sha, network):
                 penetration = trace(world, point) - point[2]
                 maximum_penetration = max(maximum_penetration, penetration)
                 missed_clearance += penetration > 0.005
-            a, b = row[0], row[-1]
-            unit = [(b[k] - a[k]) / width for k in (0, 1)]
-            slope = (b[2] - a[2]) / width
-            left = [
-                a[0] - unit[0] * 0.5,
-                a[1] - unit[1] * 0.5,
-                a[2] - 0.08 - slope * 0.5,
-            ]
-            right = [
-                b[0] + unit[0] * 0.5,
-                b[1] + unit[1] * 0.5,
-                b[2] - 0.08 + slope * 0.5,
-            ]
-            support.append([left, *[[x, y, z - 0.08] for x, y, z in row], right])
-            ground.append([trace(world, left), trace(world, right)])
+            endpoints = [trace(world, extended[0]), trace(world, extended[-1])]
+            if any(
+                g - p[2] > 0.005 for g, p in zip(endpoints, (extended[0], extended[-1]))
+            ):
+                raise RuntimeError("Native network shoulder buried")
+            ground.append(endpoints)
         if missed_clearance:
             raise RuntimeError(
                 f"Network asphalt penetration: {window['id']}: {missed_clearance} samples, {maximum_penetration:.4f} m"
             )
-        vertices = [p for row in sections for p in row]
-        triangles = []
-        for i in range(len(sections) - 1):
-            for j in range(24):
-                a = i * 25 + j
-                b = a + 1
-                c = a + 25
-                d = c + 1
-                triangles.extend(((a, b, c), (b, d, c)))
+        vertices, triangles = pavement_slab(sections)
         sv, st, proof = build_vertical_support(support, ground)
         if (
             proof["min_shoulder_extent_m"] < 0.4999
@@ -148,7 +132,7 @@ def finish(world, root, exact_sha, network):
             {
                 "id": window["id"],
                 "length_m": window["length_m"],
-                "trace_count": len(vertices),
+                "trace_count": len(sections) * 27,
                 "asphalt_penetration_count": missed_clearance,
                 "maximum_penetration_m": maximum_penetration,
                 "support": proof,

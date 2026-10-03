@@ -27,6 +27,8 @@ from scripts.assets.prepare_ma2141_cut_patch import _decode_height_m, _inside_tr
 from scripts.assets.prepare_ma2141_diagnostic import select_alignment
 from scripts.assets.prepare_ma2141_profile import local_linear_fit
 from scripts.assets.prepare_ma2141_road_preview import triangle_candidates
+from scripts.geometry.bob_vertical_support import build_vertical_support
+from scripts.geometry.network_pavement import shoulder_sections
 
 SOURCE = (
     ROOT
@@ -137,7 +139,7 @@ def inspect_sections(sections, source_line):
     if displacement > 1.0:
         raise ValueError(f"Source displacement exceeds 1 m ({displacement:.3f})")
     for a, b in itertools.pairwise(xy):
-        for j in range(24):
+        for j in range(len(a) - 1):
             for p, q, r in ((a[j], a[j + 1], b[j]), (a[j + 1], b[j + 1], b[j])):
                 if (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (
                     r[0] - p[0]
@@ -168,7 +170,7 @@ def native_ground(heights, manifest, points):
 def prepare_patch(sections, terrain, manifest, path):
     samples = {}
     for a, b in itertools.pairwise(sections):
-        for j in range(24):
+        for j in range(len(a) - 1):
             for tri in ((a[j], a[j + 1], b[j]), (a[j + 1], b[j + 1], b[j])):
                 for gy in range(
                     math.floor(min(p[1] for p in tri) / STEP),
@@ -322,7 +324,6 @@ def prepare(prepared, output, exact_sha):
             if line.length < 3:
                 continue
             s, xy = smooth_axis(line)
-            np.array([line.interpolate(v).coords[0][:2] for v in s])
             tangent = np.gradient(xy, s, axis=0)
             norm = np.linalg.norm(tangent, axis=1)
             normals = np.column_stack([-tangent[:, 1], tangent[:, 0]]) / norm[:, None]
@@ -376,7 +377,18 @@ def prepare(prepared, output, exact_sha):
                     if delta.max() > SUPPORT_CAP:
                         raise ValueError("Support height needs structure review")
                     patch_path = output / (ident + "-cut.json")
-                    patch = prepare_patch(part, terrain, manifest, patch_path)
+                    support = shoulder_sections(part.tolist())
+                    outer_ground = native_ground(
+                        terrain, manifest, np.asarray(support)[:, [0, -1], :2]
+                    )
+                    _, _, support_proof = build_vertical_support(
+                        support, outer_ground.tolist()
+                    )
+                    if support_proof["max_wall_height_m"] > SUPPORT_CAP:
+                        raise ValueError("Shoulder support needs structure review")
+                    patch = prepare_patch(
+                        np.asarray(support), terrain, manifest, patch_path
+                    )
                     result["approved"].append(
                         {
                             "id": ident,
