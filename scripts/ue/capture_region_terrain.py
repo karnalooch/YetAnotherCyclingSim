@@ -34,6 +34,8 @@ _support_objects = None
 _network_context = None
 _network_objects = None
 _extreme_objects = None
+_atmosphere_objects = None
+_atmosphere_proof = None
 _mode_reasserted = False
 _scheduling = False
 
@@ -112,6 +114,7 @@ def finish(error=""):
         "road_terrain_fit_proof": (
             "ma2141-road-terrain-fit-proof.json" if terrain_fit else None
         ),
+        "atmosphere": _atmosphere_proof,
         "editor_handoff_requested": keep_open,
         "editor_handoff_map": _manifest["map_package"] if keep_open else None,
         "editor_handoff_view": _views[-1]["name"] if keep_open and _views else None,
@@ -364,7 +367,7 @@ def tick(_delta):
                     "wireframe_color_rgba": view.get("wireframe_color_rgba"),
                     "force_game_view": view.get("force_game_view", True),
                     "fov_deg": 74,
-                    "fog": False,
+                    "fog": _atmosphere_proof is not None,
                     "shadows": False,
                 }
             )
@@ -379,7 +382,7 @@ def tick(_delta):
 
 def main():
     global _manifest, _root, _camera, _views, _handle, _world
-    global _bob_inspection_status
+    global _bob_inspection_status, _atmosphere_objects, _atmosphere_proof
     _root = Path(os.environ["YACS_TERRAIN_CAPTURE_ROOT"])
     _manifest = json.loads(
         (_root / "Prepared/terrain-import.json").read_text(encoding="utf-8")
@@ -444,7 +447,12 @@ def main():
     sky = actors.spawn_actor_from_class(
         unreal.SkyLight, unreal.Vector(0, 0, 300000), unreal.Rotator(), transient=True
     )
-    sky.get_component_by_class(unreal.SkyLightComponent).set_intensity(0.8)
+    sky_component = sky.get_component_by_class(unreal.SkyLightComponent)
+    sky_component.set_intensity(0.8)
+    from scripts.ue.sa_calobra_atmosphere import spawn_mediterranean_atmosphere
+    _atmosphere_objects, _atmosphere_proof = spawn_mediterranean_atmosphere(
+        actors, light, sky_component
+    )
     center = [100800.0, 100800.0]
     _views = [
         {

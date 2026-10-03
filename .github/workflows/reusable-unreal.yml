@@ -699,6 +699,8 @@ jobs:
             $proof.lighting_status -ne 'PASS' -or
             [double]$proof.directional_light_intensity -le 0.0 -or
             [double]$proof.skylight_intensity -le 0.0 -or
+            $proof.atmosphere_status -ne 'PASS' -or
+            $proof.atmosphere_preset -ne 'SA_CALOBRA_MEDITERRANEAN_DAYLIGHT_V1' -or
             $proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT' -or
             $proof.cut_patch_applied -ne $true -or
             $proof.vertical_support_built -ne $true -or
@@ -711,7 +713,7 @@ jobs:
           if ($process.HasExited) {
             throw "Owner handoff Editor did not remain open; exit code $($process.ExitCode)."
           }
-          Write-Host "OWNER HANDOFF PASS: Unreal Editor pid=$($process.Id) remains open on Sa Calobra road-contact-rider in VMI_LIT with transient Road_Earthworks CUT and diagnostic lighting."
+          Write-Host "OWNER HANDOFF PASS: Unreal Editor pid=$($process.Id) remains open on Sa Calobra road-contact-rider in VMI_LIT with transient Road_Earthworks CUT and Mediterranean atmosphere."
 
       - name: Clean current-run evidence and non-allow-listed residue
         if: ${{ always() && !inputs.region_terrain_import }}

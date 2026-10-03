@@ -2678,9 +2678,12 @@ return to Lit mode.
 The interactive owner handoff reloads the accepted Base_DTM map, respawns the
 smooth road, reapplies the same transient `Road_Earthworks` CUT patch and
 leaves Unreal Editor open at `road-contact-rider`. The handoff is explicitly
-`VMI_LIT` and creates a transient directional light plus skylight, so owner
-review is not left in an unlit diagnostic scene. The handoff never saves the
-map.
+`VMI_LIT` and creates transient directional light, skylight, SkyAtmosphere and
+light Exponential Height Fog using the deterministic
+`SA_CALOBRA_MEDITERRANEAN_DAYLIGHT_V1` review preset. The same preset is used
+by native captures, and CI rejects an owner handoff that cannot prove it. This
+is presentation-only evidence: it changes no terrain, road geometry, weather
+state or admission result. The handoff never saves the map.
 
 The earlier local-ground cut-only preview is retained as rejected/superseded
 active-proof history, not deleted. Historical spline-builder failures and their

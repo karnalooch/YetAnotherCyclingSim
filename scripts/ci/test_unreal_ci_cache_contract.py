@@ -162,6 +162,11 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         self.assertIn("$proof.lighting_status -ne 'PASS'", handoff)
         self.assertIn("[double]$proof.directional_light_intensity -le 0.0", handoff)
         self.assertIn("[double]$proof.skylight_intensity -le 0.0", handoff)
+        self.assertIn("$proof.atmosphere_status -ne 'PASS'", handoff)
+        self.assertIn(
+            "$proof.atmosphere_preset -ne 'SA_CALOBRA_MEDITERRANEAN_DAYLIGHT_V1'",
+            handoff,
+        )
         self.assertIn(
             "$proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT'",
             handoff,
@@ -179,6 +184,7 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         self.assertIn("unreal.ViewModeIndex.VMI_LIT", startup)
         self.assertIn("unreal.DirectionalLight", startup)
         self.assertIn("unreal.SkyLight", startup)
+        self.assertIn("spawn_mediterranean_atmosphere", startup)
         self.assertIn('"lighting_status"', startup)
         self.assertIn('"INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT"', startup)
         self.assertIn('"cut_patch_applied"', startup)

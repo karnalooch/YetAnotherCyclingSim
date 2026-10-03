@@ -48,6 +48,12 @@ def _write_proof(
             lighting.get("directional_light_intensity") if lighting else None
         ),
         "skylight_intensity": lighting.get("skylight_intensity") if lighting else None,
+        "atmosphere_status": (
+            lighting.get("atmosphere_status") if lighting else "NOT_VERIFIED"
+        ),
+        "atmosphere_preset": (
+            lighting.get("atmosphere_preset") if lighting else None
+        ),
         "bob_mode": "INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT",
         "cut_patch_applied": cut_patch_applied,
         "vertical_support_built": vertical_support_built,
@@ -151,11 +157,18 @@ def _configure():
         raise RuntimeError("Owner handoff diagnostic skylight has no light component")
     sky_component.set_intensity(0.8)
 
+    from scripts.ue.sa_calobra_atmosphere import spawn_mediterranean_atmosphere
+    atmosphere_objects, atmosphere_proof = spawn_mediterranean_atmosphere(
+        actors, sun_component, sky_component
+    )
+
     lighting = {
         "status": "PASS",
         "viewmode": "VMI_LIT",
         "directional_light_intensity": 8.0,
         "skylight_intensity": 0.8,
+        "atmosphere_status": atmosphere_proof["status"],
+        "atmosphere_preset": atmosphere_proof["preset"],
     }
 
     project = Path(
@@ -206,7 +219,9 @@ def _configure():
             support = spawn_support(world, root, exact_sha, road[3])
             from scripts.ue.current_landscape_roads import finish as finish_network
             network_objects = finish_network(world, root, exact_sha, network)
-            _kept_objects = (road, sun, sky, support, network_objects)
+            _kept_objects = (
+                road, sun, sky, atmosphere_objects, support, network_objects
+            )
             _write_proof(root, exact_sha, "PASS", lighting=lighting,
                          cut_patch_applied=True, vertical_support_built=True)
             unreal.log("[OwnerHandoff] CUT + vertical support ready in Lit mode")
@@ -216,7 +231,7 @@ def _configure():
 
     support_started = time.monotonic()
     support_handle = unreal.register_slate_post_tick_callback(finish_support)
-    _kept_objects = (road, sun, sky)
+    _kept_objects = (road, sun, sky, atmosphere_objects)
 
 
 

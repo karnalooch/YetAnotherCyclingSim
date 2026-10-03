@@ -29,6 +29,8 @@ class CaptureTransitionTests(unittest.TestCase):
         self.assertIn("unreal.ViewModeIndex.VMI_CLAY", script)
         self.assertIn("ShowFlag.MeshEdges 1", script)
         self.assertIn("ShowFlag.MeshEdges 0", script)
+        self.assertIn("spawn_mediterranean_atmosphere", script)
+        self.assertIn('"atmosphere": _atmosphere_proof', script)
 
     def test_geometry_inspection_uses_clay_wireframe_and_selects_road(self):
         script = Path(__file__).with_name("capture_region_terrain.py").read_text()
