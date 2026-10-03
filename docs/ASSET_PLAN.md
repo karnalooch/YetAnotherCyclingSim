@@ -64,6 +64,40 @@ Dla technical UE assets analogicznie: `planned` nie spełnia asset gate'u. Wymag
 
 Jeżeli akceptacja assetu lub technical UE assetu zależy od tego, **jak faktycznie wygląda scena**, wymagany jest również wpis w [`visual-history/`](visual-history/README.md). `validated` nie może wynikać wyłącznie z zielonego CI. Visual History zapisuje ostatni zaakceptowany `BEFORE`, bieżący `NOW`, finalny `AFTER`, dokładny SHA/PR/CI oraz osobne decyzje techniczną i wizualną.
 
+### 1.3 Julka — inventory, transport i lokalny restore
+
+Issue #345 wprowadza izolowane narzędzie `tools/julka/`. Julka zarządza
+identyfikacją, transferem i integralnością danych; nie zastępuje generatora,
+metodologii ani odbioru Unreal.
+
+- `.uasset`, `.umap` i zatwierdzone rastry śledzone przez repozytorium pozostają
+  w Git LFS. Julka potrafi wyliczyć dokładne obiekty dla wybranego commita,
+  wykryć pointer-only i pobrać tylko assety w obsługiwanych klasach.
+- 17 surowych plików CNIG Sa Calobra pozostaje identyfikowanych przez receipt
+  z 3 października 2026 r. Ich istniejąca kopia transportowa jest Draft GitHub
+  Release; manifest Julki sprawdza Release i receipt względem SHA-256 przed
+  restore. Nazwa katalogowa CNIG i nazwa dostarczonego pliku są osobnymi
+  polami, więc oryginały nie są przemianowywane.
+- Ten snapshot zawiera 4 MDS, 9 LAZ i 4 ortofotomapy; **nie zawiera** 17
+  osobnych kafli MDT50cm, z których przygotowano raster 8×8 km. Manifest
+  `prepare_sa_calobra_mdt50cm.py` nadal jest authority dla nazw/rozmiarów/SHA
+  tych wejść. Odczytane lokalnie ścieżki runnera i głównego checkoutu
+  2026-10-03 nie miały osobnego katalogu z tym zestawem, dlatego `sa-calobra-8x8`
+  pozostaje incomplete i wymaga jawnego CNIG acquisition/adopt. To nie oznacza,
+  że pliki nie istnieją na żadnym innym komputerze lub nośniku.
+- Lokalny asset root jest jawnie wybierany przez `YACS_ASSET_ROOT`. Default jest
+  w profilu użytkownika, nie wewnątrz katalogów generowanych Unreal. Nie jest
+  synchronizowany ani backupowany samoczynnie.
+- Nie dodajemy DVC ani drugiego lokalnego content store w tej dostawie. DVC
+  pozostaje kandydatem z osobnego Issue #340 i wymaga przyjęcia jego eksperymentu
+  oraz ponownego przeglądu licencji. Dane bez dopuszczonej darmowej kopii remote
+  pozostają na wybranym `YACS_ASSET_ROOT` lub muszą zostać ponownie pozyskane od
+  oficjalnego dostawcy; nie oznacza to backupu na drugim urządzeniu.
+- Cleanup w Julce jedynie raportuje rozmiar cache. Nie usuwa źródeł, LFS,
+  outputów, evidence ani `DerivedDataCache`.
+
+Pełna komenda, storage/proof boundaries i limitations: [`tooling/JULKA.md`](tooling/JULKA.md).
+
 ## 2. Kolejność pozyskiwania
 
 ### Priorytet A — potrzebne przed lub w trakcie budowy MVP
