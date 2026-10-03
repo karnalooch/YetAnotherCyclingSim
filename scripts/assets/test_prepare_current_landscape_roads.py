@@ -13,8 +13,12 @@ from scripts.assets.prepare_current_landscape_roads import (
     inspect_sections,
     prepare_patch,
     smooth_axis,
+    write_extreme_cut_diagnostic,
 )
-from scripts.geometry.network_earthworks_diagnostics import height_fit_bounds
+from scripts.geometry.network_earthworks_diagnostics import (
+    height_fit_bounds,
+    uniform_height_candidate,
+)
 from scripts.geometry.network_pavement import (
     pavement_slab,
     shoulder_sections,
@@ -32,6 +36,24 @@ def sections(axis):
 
 
 class NetworkTests(unittest.TestCase):
+    def test_extreme_cut_diagnostic_writes_reviewable_png(self):
+        case = {
+            "id": "road-0-0",
+            "sections": sections([[v, 0] for v in np.linspace(0, 30, 61)]).tolist(),
+            "cut_depth": {
+                "max_cut_m": 11.62,
+                "peak_local_xy_m": [15.0, 2.0],
+                "peak_base_height_m": 701.4,
+                "peak_target_height_m": 689.78,
+                "over_cap_cell_count": 587,
+            },
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "extreme.png"
+            write_extreme_cut_diagnostic(case, path)
+            self.assertEqual(path.read_bytes()[:8], b"\x89PNG\r\n\x1a\n")
+            self.assertGreater(path.stat().st_size, 10_000)
+
     def test_cut_and_support_bounds_expose_incompatible_translation(self):
         receipt = height_fit_bounds(3.0, 3.0, 3.5, cut_cap_m=1.0, support_cap_m=4.0)
         self.assertEqual(receipt["minimum_lift_for_cut_m"], 2.0)
@@ -46,6 +68,23 @@ class NetworkTests(unittest.TestCase):
         self.assertEqual(receipt["minimum_lift_for_cut_m"], 0.5)
         self.assertFalse(receipt["source_height_verified"])
         self.assertFalse(receipt["road_admitted"])
+
+    def test_uniform_candidate_uses_middle_of_bounds_but_stays_unapplied(self):
+        bounds = height_fit_bounds(3.0, 0.5, 1.0, cut_cap_m=1.0, support_cap_m=4.0)
+        receipt = uniform_height_candidate(bounds)
+        self.assertEqual(receipt["status"], "CANDIDATE_REQUIRES_LOCAL_REMEASUREMENT")
+        self.assertEqual(receipt["candidate_lift_m"], 2.5)
+        self.assertFalse(receipt["height_change_applied"])
+        self.assertFalse(receipt["source_height_verified"])
+        self.assertFalse(receipt["adjacent_joins_verified"])
+        self.assertFalse(receipt["road_admitted"])
+
+    def test_uniform_candidate_rejects_incompatible_cut_and_support(self):
+        bounds = height_fit_bounds(6.0, 0.5, 1.0, cut_cap_m=1.0, support_cap_m=4.0)
+        receipt = uniform_height_candidate(bounds)
+        self.assertEqual(receipt["status"], "REJECT_INCOMPATIBLE_CUT_SUPPORT_BOUNDS")
+        self.assertIsNone(receipt["candidate_lift_m"])
+        self.assertFalse(receipt["height_change_applied"])
 
     def test_signed_below_terrain_support_gap_is_not_clipped(self):
         receipt = height_fit_bounds(5.0, -3.0, -2.0, cut_cap_m=1.0, support_cap_m=4.0)
@@ -68,6 +107,11 @@ class NetworkTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "Ordinary 1 m CUT cap exceeded"):
                 prepare_patch(mesh, terrain, manifest, path, diagnostics=diagnostics)
             self.assertGreater(diagnostics["earthworks_fit"]["max_cut_m"], 1.0)
+            self.assertGreater(diagnostics["cut_depth"]["over_cap_cell_count"], 0)
+            self.assertGreater(
+                diagnostics["cut_depth"]["peak_base_height_m"],
+                diagnostics["cut_depth"]["peak_target_height_m"],
+            )
             self.assertEqual(list(Path(directory).iterdir()), [])
         np.testing.assert_array_equal(mesh, original)
 

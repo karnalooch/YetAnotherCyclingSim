@@ -33,6 +33,7 @@ _cut_report = None
 _support_objects = None
 _network_context = None
 _network_objects = None
+_extreme_objects = None
 _mode_reasserted = False
 _scheduling = False
 
@@ -185,7 +186,7 @@ def _apply_capture_view_mode(view):
 
 def schedule():
     global _task, _started, _road_objects, _cut_patch, _scheduling
-    global _mode_reasserted, _network_context, _network_objects
+    global _mode_reasserted, _network_context, _network_objects, _extreme_objects
     # Geometry creation can pump Slate and re-enter this tick callback while the
     # previous screenshot task is still marked done. Fence the whole transition.
     _scheduling = True
@@ -226,6 +227,12 @@ def schedule():
         if _index == 6:
             from scripts.ue.current_landscape_roads import finish as finish_network
             _network_objects = finish_network(_world, _root, os.environ["YACS_TERRAIN_SHA"], _network_context)
+        if _views[_index]["name"] == "network-extreme-cut":
+            from scripts.ue.current_landscape_roads import spawn_extreme_cut_diagnostic
+
+            _extreme_objects = spawn_extreme_cut_diagnostic(
+                _world, _network_context
+            )
         view = _views[_index]
         _apply_capture_view_mode(view)
         location, target = unreal.Vector(*view["location"]), unreal.Vector(*view["target"])
@@ -452,6 +459,15 @@ def main():
         },
     ]
     alignment = json.loads((_root / "ma2141-native-alignment.json").read_text(encoding="utf-8"))
+    network = json.loads((_root / "Network/network.json").read_text(encoding="utf-8"))
+    extreme = network.get("extreme_cut_case")
+    if not isinstance(extreme, dict):
+        raise RuntimeError("Extreme network CUT case is missing")
+    extreme_cut = extreme["cut_depth"]
+    extreme_x_cm = extreme_cut["peak_local_xy_m"][0] * 100
+    extreme_y_cm = extreme_cut["peak_local_xy_m"][1] * 100
+    extreme_top_cm = extreme_cut["peak_base_height_m"] * 100
+    extreme_bottom_cm = extreme_cut["peak_target_height_m"] * 100
     points = alignment["points_ue_cm"]
     def at_station(s):
         p = min(points, key=lambda p: abs(p["station_m"]-s))
@@ -522,6 +538,28 @@ def main():
             "name": "network-current-landscape-overview",
             "location": [*center, _manifest["elevation_max_m"] * 100 + 180000],
             "target": [*center, height(*center)],
+        },
+        {
+            "name": "network-extreme-cut",
+            "location": [
+                extreme_x_cm - 6000,
+                extreme_y_cm + 6000,
+                extreme_top_cm + 5000,
+            ],
+            "target": [
+                extreme_x_cm,
+                extreme_y_cm,
+                (extreme_top_cm + extreme_bottom_cm) / 2,
+            ],
+            "extreme_case_id": extreme["id"],
+            "required_cut_m": extreme_cut["max_cut_m"],
+            "profile_fit_status": extreme["height_profile_fit"]["status"],
+            "diagnostic_colors": {
+                "rejected_asphalt": "red",
+                "deepest_cut_marker": "yellow",
+            },
+            "geometry_repair_executed": False,
+            "height_change_applied": False,
         },
         {
             "name": "road-contact-rider",

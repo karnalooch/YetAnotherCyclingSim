@@ -452,15 +452,27 @@ jobs:
           if (
             $proof.technical_capture_status -ne 'PASS' -or
             $proof.exact_sha -ne '${{ inputs.target_sha }}' -or
-            $proof.captures.Count -ne 10 -or
+            $proof.captures.Count -ne 11 -or
             $proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT' -or
             $proof.road_geometry_inspection_required -ne $true
           ) { throw 'Terrain capture proof failed.' }
+
+          $extremeView = @($proof.captures | Where-Object { $_.name -eq 'network-extreme-cut' })
+          if ($extremeView.Count -ne 1 -or
+              [double]$extremeView[0].required_cut_m -le 1.0 -or
+              $extremeView[0].profile_fit_status -ne 'REJECT_INCOMPATIBLE_CUT_SUPPORT_BOUNDS' -or
+              $extremeView[0].geometry_repair_executed -ne $false -or
+              $extremeView[0].height_change_applied -ne $false) {
+            throw 'Extreme network CUT visual evidence failed.'
+          }
 
           $network = Get-Content (Join-Path $root 'network-native-proof.json') -Raw | ConvertFrom-Json
           if ($network.exact_sha -ne '${{ inputs.target_sha }}' -or
               $network.approved_length_m -le 0 -or $network.base_dtm_modified -ne $false -or
               $network.map_saved -ne $false -or
+              $network.height_profile_candidate_window_count -ne 43 -or
+              $network.height_profile_incompatible_window_count -ne 16 -or
+              $network.extreme_cut_case.capture -ne 'network-extreme-cut.png' -or
               @($network.windows | Where-Object { $_.asphalt_penetration_count -ne 0 }).Count -ne 0) {
             throw 'Current-Landscape native network proof failed.'
           }

@@ -23,6 +23,8 @@ class CaptureTransitionTests(unittest.TestCase):
         self.assertIn('"bob_road_earthworks_cut_proof"', script)
         self.assertIn('"road-geometry-inspection-before"', script)
         self.assertIn('"road-geometry-inspection-after"', script)
+        self.assertIn('"network-extreme-cut"', script)
+        self.assertIn("spawn_extreme_cut_diagnostic", script)
         self.assertIn('"road-contact-rider"', script)
         self.assertIn("unreal.ViewModeIndex.VMI_CLAY", script)
         self.assertIn("ShowFlag.MeshEdges 1", script)

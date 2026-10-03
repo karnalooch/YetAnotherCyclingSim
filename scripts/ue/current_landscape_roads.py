@@ -81,6 +81,66 @@ def start(world, root, exact_sha):
     return network
 
 
+def spawn_extreme_cut_diagnostic(world, network):
+    """Render the deepest rejected road/CUT conflict without repairing it."""
+    case = network.get("extreme_cut_case")
+    if (
+        not isinstance(case, dict)
+        or case.get("visual_status") != "CAPTURE_REQUIRED"
+        or case.get("geometry_repair_executed") is not False
+        or case.get("height_change_applied") is not False
+        or case.get("road_admitted") is not False
+        or case.get("cut_depth", {}).get("max_cut_m", 0) <= 1.0
+    ):
+        raise RuntimeError("Extreme network CUT evidence is missing or invalid")
+    sections = case.get("sections")
+    if not isinstance(sections, list) or len(sections) < 3:
+        raise RuntimeError("Extreme network CUT geometry is incomplete")
+    vertices, triangles = pavement_slab(sections)
+    road, road_material = spawn_pavement_mesh(
+        world, vertices, triangles, "BOB rejected extreme CUT " + case["id"]
+    )
+    road_material.set_vector_parameter_value(
+        "Color", unreal.LinearColor(0.9, 0.04, 0.01, 1)
+    )
+    component = road.get_component_by_class(unreal.DynamicMeshComponent)
+    component.set_enable_wireframe_render_pass(True)
+    component.set_editor_property("explicit_show_wireframe", True)
+    component.set_editor_property(
+        "wireframe_color", unreal.LinearColor(1.0, 0.8, 0.0, 1.0)
+    )
+
+    cut = case["cut_depth"]
+    x_m, y_m = cut["peak_local_xy_m"]
+    top_cm = cut["peak_base_height_m"] * 100
+    bottom_cm = cut["peak_target_height_m"] * 100
+    depth_cm = top_cm - bottom_cm
+    actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+    marker = actors.spawn_actor_from_class(
+        unreal.StaticMeshActor,
+        unreal.Vector(x_m * 100, y_m * 100, (top_cm + bottom_cm) / 2),
+        unreal.Rotator(),
+        transient=True,
+    )
+    marker.set_actor_label("BOB deepest rejected CUT marker")
+    marker_component = marker.get_component_by_class(unreal.StaticMeshComponent)
+    cube = unreal.load_asset("/Engine/BasicShapes/Cube.Cube")
+    parent = unreal.load_asset("/Engine/BasicShapes/BasicShapeMaterial")
+    if marker_component is None or cube is None or parent is None:
+        raise RuntimeError("Extreme CUT marker assets are unavailable")
+    marker_component.set_static_mesh(cube)
+    marker_material = unreal.MaterialLibrary.create_dynamic_material_instance(
+        world, parent
+    )
+    marker_material.set_vector_parameter_value(
+        "Color", unreal.LinearColor(1.0, 0.8, 0.0, 1.0)
+    )
+    marker_component.set_material(0, marker_material)
+    marker_component.set_cast_shadow(False)
+    marker.set_actor_scale3d(unreal.Vector(0.2, 0.2, depth_cm / 100))
+    return [road, road_material, marker, marker_material]
+
+
 def finish(world, root, exact_sha, network):
     kept = []
     reports = []
@@ -156,6 +216,28 @@ def finish(world, root, exact_sha, network):
         "blocked_length_m": network["blocked_length_m"],
         "windows": reports,
         "blocked": network["blocked"],
+        "height_profile_candidate_window_count": network[
+            "height_profile_candidate_window_count"
+        ],
+        "height_profile_candidate_length_m": network[
+            "height_profile_candidate_length_m"
+        ],
+        "height_profile_incompatible_window_count": network[
+            "height_profile_incompatible_window_count"
+        ],
+        "extreme_cut_case": {
+            "id": network["extreme_cut_case"]["id"],
+            "max_cut_m": network["extreme_cut_case"]["cut_depth"]["max_cut_m"],
+            "profile_fit_status": network["extreme_cut_case"][
+                "height_profile_fit"
+            ]["status"],
+            "visual_status": "CAPTURE_REQUIRED",
+            "capture": "network-extreme-cut.png",
+            "diagnostic_image": network["extreme_cut_case"]["diagnostic_image"],
+            "diagnostic_image_sha256": network["extreme_cut_case"][
+                "diagnostic_image_sha256"
+            ],
+        },
         "map_saved": False,
         "base_dtm_modified": False,
         "collision_admitted": False,

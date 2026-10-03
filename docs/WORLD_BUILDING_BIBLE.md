@@ -3189,6 +3189,28 @@ No shift is applied, no gate is relaxed, and rejected CUTs write no patch. The
 existing candidate heights and accepted patch bytes remain unchanged. BOB must
 use these measurements plus source-grounded height/structure evidence before
 proposing a fitted profile; new geometry still requires fresh native proof.
+
+For every CUT window whose uniform bounds overlap, the preparer now selects the
+midpoint only as a deterministic **local height-profile candidate** and reruns
+the exact raster CUT, core/shoulder support and 3D surface checks against that
+translated geometry. A local numeric PASS remains blocked: the candidate is not
+written to the patch, its absolute source height and adjacent-window joins remain
+unverified, and it is not sent to Unreal as imported road. Empty bounds reject
+the candidate without inventing a structure. This bounded screen separates
+windows that merit source/profile/continuity work from windows where height alone
+cannot satisfy the existing limits.
+
+Every failed CUT also records the peak raster cell, base/target heights, positive
+and over-cap cell counts and nearest road sample. Native proof renders the single
+deepest rejected case as `network-extreme-cut.png`: rejected asphalt is red and
+the measured vertical CUT conflict is marked yellow. The screenshot is mandatory
+diagnostic evidence, not a repair or visual admission; the terrain and rejected
+road profile are unchanged. The offline preparer also emits
+`network-extreme-cut-diagnostic.png`, a deterministic plan/depth image suitable
+for immediate artifact or chat review before Unreal finishes. Future extreme
+network conflicts should receive the same bounded images (or a more informative
+bounded clip) instead of being reported only as scalar log output.
+
 The preparer's `NETWORK_BLOCKED` JSON lines expose each retained blocked-window
 receipt in Actions job logs as well as `Network/network.json`, so remote BOB
 diagnosis does not require downloading the full native render/terrain archive.

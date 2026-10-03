@@ -45,3 +45,41 @@ def height_fit_bounds(
         "source_height_verified": False,
         "road_admitted": False,
     }
+
+
+def uniform_height_candidate(bounds):
+    """Choose a deterministic local candidate inside measured shift bounds.
+
+    The candidate is deliberately diagnostic.  A constant window translation
+    preserves the already-inspected local grade, bank and facet normals, but it
+    says nothing about the absolute road height or joins to adjacent windows.
+    Callers must remeasure CUT/support using the translated geometry and must
+    not author it from this receipt.
+    """
+    if not isinstance(bounds, dict) or bounds.get("method") != (
+        "UNIFORM_UPWARD_TRANSLATION_DIAGNOSTIC_ONLY"
+    ):
+        raise ValueError("Measured uniform-height bounds required")
+    lower = bounds.get("minimum_lift_for_cut_m")
+    upper = bounds.get("maximum_lift_for_support_m")
+    if any(
+        isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v)
+        for v in (lower, upper)
+    ):
+        raise ValueError("Finite height-fit bounds required")
+    overlap = lower <= upper
+    return {
+        "method": "BOUNDED_UNIFORM_WINDOW_PROFILE_CANDIDATE",
+        "status": "CANDIDATE_REQUIRES_LOCAL_REMEASUREMENT"
+        if overlap
+        else "REJECT_INCOMPATIBLE_CUT_SUPPORT_BOUNDS",
+        "candidate_lift_m": float((lower + upper) / 2) if overlap else None,
+        "minimum_lift_for_cut_m": float(lower),
+        "maximum_lift_for_support_m": float(upper),
+        "bounds_overlap": overlap,
+        "height_change_applied": False,
+        "source_height_verified": False,
+        "adjacent_joins_verified": False,
+        "native_landscape_verified": False,
+        "road_admitted": False,
+    }

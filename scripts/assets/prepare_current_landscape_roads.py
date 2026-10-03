@@ -28,7 +28,10 @@ from scripts.assets.prepare_ma2141_diagnostic import select_alignment
 from scripts.assets.prepare_ma2141_profile import local_linear_fit
 from scripts.assets.prepare_ma2141_road_preview import triangle_candidates
 from scripts.geometry.bob_vertical_support import build_vertical_support
-from scripts.geometry.network_earthworks_diagnostics import height_fit_bounds
+from scripts.geometry.network_earthworks_diagnostics import (
+    height_fit_bounds,
+    uniform_height_candidate,
+)
 from scripts.geometry.network_pavement import shoulder_sections, surface_inspection
 
 SOURCE = (
@@ -168,7 +171,8 @@ def native_ground(heights, manifest, points):
     return np.asarray(result).reshape(np.asarray(points).shape[:-1])
 
 
-def prepare_patch(sections, terrain, manifest, path, *, diagnostics=None):
+def measure_patch(sections, terrain, manifest):
+    """Measure the exact raster CUT without writing an earthworks patch."""
     samples = {}
     for a, b in itertools.pairwise(sections):
         for j in range(len(a) - 1):
@@ -215,7 +219,47 @@ def prepare_patch(sections, terrain, manifest, path, *, diagnostics=None):
     for (x, y), target in samples.items():
         patch[y - miny, x - minx] = min(patch[y - miny, x - minx], target)
     depth = base - patch
+    peak_y, peak_x = np.unravel_index(np.argmax(depth), depth.shape)
+    grid_x, grid_y = minx + int(peak_x), miny + int(peak_y)
+    section_xy = np.asarray(sections, dtype=float)[:, :, :2]
+    distances = np.linalg.norm(
+        section_xy - np.array([grid_x * STEP, grid_y * STEP]), axis=2
+    )
+    station_index, transverse_index = np.unravel_index(
+        np.argmin(distances), distances.shape
+    )
+    positive = depth[depth > 0]
+    return {
+        "base": base,
+        "patch": patch,
+        "depth": depth,
+        "rect": (minx, miny, maxx, maxy),
+        "cut_depth": {
+            "max_cut_m": float(depth[peak_y, peak_x]),
+            "p95_positive_cut_m": float(np.percentile(positive, 95))
+            if positive.size
+            else 0.0,
+            "positive_cut_cell_count": int(positive.size),
+            "over_cap_cell_count": int(np.count_nonzero(depth > CUT_CAP)),
+            "peak_grid_xy": [grid_x, grid_y],
+            "peak_local_xy_m": [grid_x * STEP, grid_y * STEP],
+            "peak_base_height_m": float(base[peak_y, peak_x]),
+            "peak_target_height_m": float(patch[peak_y, peak_x]),
+            "nearest_station_index": int(station_index),
+            "nearest_transverse_index": int(transverse_index),
+            "nearest_section_distance_m": float(
+                distances[station_index, transverse_index]
+            ),
+        },
+    }
+
+
+def prepare_patch(sections, terrain, manifest, path, *, diagnostics=None):
+    measured = measure_patch(sections, terrain, manifest)
+    base, patch, depth = measured["base"], measured["patch"], measured["depth"]
+    minx, miny, maxx, maxy = measured["rect"]
     if diagnostics is not None:
+        diagnostics["cut_depth"] = measured["cut_depth"]
         diagnostics["earthworks_fit"] = height_fit_bounds(
             float(depth.max()),
             diagnostics["max_core_support_m"],
@@ -256,6 +300,133 @@ def prepare_patch(sections, terrain, manifest, path, *, diagnostics=None):
     }
     path.write_text(json.dumps(payload) + "\n")
     return payload
+
+
+def assess_height_profile_candidate(part, terrain, manifest, diagnostics):
+    """Remeasure a bounded Z candidate without authoring or admitting it."""
+    candidate = uniform_height_candidate(diagnostics["earthworks_fit"])
+    if not candidate["bounds_overlap"]:
+        return candidate
+    lift = candidate["candidate_lift_m"]
+    try:
+        shifted = np.asarray(part, dtype=float).copy()
+        shifted[:, :, 2] += lift
+        surface = surface_inspection(shifted.tolist())
+        support = shoulder_sections(shifted.tolist())
+        outer_ground = native_ground(
+            terrain, manifest, np.asarray(support)[:, [0, -1], :2]
+        )
+        _, _, support_proof = build_vertical_support(support, outer_ground.tolist())
+        measured = measure_patch(np.asarray(support), terrain, manifest)
+        max_core_support = diagnostics["max_core_support_m"] + lift
+        max_shoulder_support = float(
+            np.max(np.asarray(support)[:, [0, -1], 2] - outer_ground)
+        )
+    except ValueError as exc:
+        candidate.update(
+            {
+                "status": "REJECT_LOCAL_REMEASUREMENT",
+                "local_numeric_checks_pass": False,
+                "rejection_reason": str(exc),
+            }
+        )
+        return candidate
+    local_pass = (
+        measured["cut_depth"]["max_cut_m"] <= CUT_CAP
+        and max_core_support <= SUPPORT_CAP
+        and max_shoulder_support <= SUPPORT_CAP
+        and support_proof["max_wall_height_m"] <= SUPPORT_CAP
+        and surface["status"] == "PASS"
+    )
+    candidate.update(
+        {
+            "status": "LOCAL_NUMERIC_PASS_SOURCE_AND_JOINS_UNVERIFIED"
+            if local_pass
+            else "REJECT_LOCAL_REMEASUREMENT",
+            "local_numeric_checks_pass": local_pass,
+            "candidate_cut_depth": measured["cut_depth"],
+            "candidate_max_core_support_m": float(max_core_support),
+            "candidate_max_shoulder_support_m": max_shoulder_support,
+            "candidate_support_proof": support_proof,
+            "candidate_surface_inspection": surface,
+        }
+    )
+    return candidate
+
+
+def write_extreme_cut_diagnostic(case, path):
+    """Write a deterministic plan/depth image for chat and artifact review."""
+    from PIL import Image, ImageDraw
+
+    width, height = 1600, 900
+    image = Image.new("RGB", (width, height), (22, 27, 34))
+    draw = ImageDraw.Draw(image)
+    red, yellow = (232, 62, 44), (255, 204, 38)
+    white, muted = (245, 247, 250), (167, 178, 194)
+    cut = case["cut_depth"]
+    sections = np.asarray(case["sections"], dtype=float)
+    left, right = sections[:, 0, :2], sections[:, -1, :2]
+    all_xy = np.vstack([left, right, np.asarray([cut["peak_local_xy_m"]])])
+    low, high = all_xy.min(axis=0), all_xy.max(axis=0)
+    span = np.maximum(high - low, 1.0)
+    plan_box = (70, 150, 960, 820)
+    scale = min(
+        (plan_box[2] - plan_box[0] - 60) / span[0],
+        (plan_box[3] - plan_box[1] - 60) / span[1],
+    )
+
+    def plan_point(point):
+        x = plan_box[0] + 30 + (point[0] - low[0]) * scale
+        y = plan_box[3] - 30 - (point[1] - low[1]) * scale
+        return (float(x), float(y))
+
+    draw.text((70, 45), "EXTREME CUT - REJECTED", fill=red)
+    draw.text(
+        (70, 80),
+        f"{case['id']}  required CUT {cut['max_cut_m']:.2f} m",
+        fill=white,
+    )
+    draw.text(
+        (70, 108),
+        "Red: rejected asphalt footprint | Yellow: deepest measured raster cell",
+        fill=muted,
+    )
+    draw.rectangle(plan_box, outline=(70, 82, 98), width=2)
+    draw.text((plan_box[0] + 15, plan_box[1] + 12), "PLAN", fill=muted)
+    draw.line([plan_point(p) for p in left], fill=red, width=5)
+    draw.line([plan_point(p) for p in right], fill=red, width=5)
+    draw.line(
+        [plan_point(p) for p in (left + right) / 2], fill=(150, 44, 38), width=2
+    )
+    hx, hy = plan_point(cut["peak_local_xy_m"])
+    draw.ellipse((hx - 11, hy - 11, hx + 11, hy + 11), fill=yellow)
+
+    gauge_x, gauge_top, gauge_bottom = 1240, 210, 720
+    draw.text((1050, 155), "MEASURED DEPTH", fill=muted)
+    draw.line((1030, gauge_top, 1450, gauge_top), fill=white, width=4)
+    draw.text(
+        (1050, gauge_top - 30),
+        f"Base terrain {cut['peak_base_height_m']:.2f} m",
+        fill=white,
+    )
+    draw.line((gauge_x, gauge_top, gauge_x, gauge_bottom), fill=yellow, width=18)
+    draw.line((1030, gauge_bottom, 1450, gauge_bottom), fill=red, width=4)
+    draw.text(
+        (1050, gauge_bottom + 18),
+        f"Patch target {cut['peak_target_height_m']:.2f} m",
+        fill=red,
+    )
+    draw.text(
+        (1280, (gauge_top + gauge_bottom) / 2 - 10),
+        f"{cut['max_cut_m']:.2f} m",
+        fill=yellow,
+    )
+    draw.text(
+        (1050, 790),
+        f"Over-cap cells: {cut['over_cap_cell_count']} | Height-only fit: REJECTED",
+        fill=white,
+    )
+    image.save(path, format="PNG", optimize=False)
 
 
 def prepare(prepared, output, exact_sha):
@@ -304,6 +475,8 @@ def prepare(prepared, output, exact_sha):
         "road_physics_admitted": False,
         "approved": [],
         "blocked": [],
+        "height_profile_candidates": [],
+        "extreme_cut_case": None,
         "source_clipped_length_m": 0,
     }
     for feature in source["features"]:
@@ -440,6 +613,35 @@ def prepare(prepared, output, exact_sha):
                         }
                     )
                 except ValueError as exc:
+                    if "earthworks_fit" in diagnostics:
+                        fit = assess_height_profile_candidate(
+                            part, terrain, manifest, diagnostics
+                        )
+                        diagnostics["height_profile_fit"] = fit
+                        if fit.get("local_numeric_checks_pass"):
+                            result["height_profile_candidates"].append(
+                                {
+                                    "id": ident,
+                                    "length_m": length,
+                                    "fit": fit,
+                                }
+                            )
+                        extreme = result["extreme_cut_case"]
+                        if extreme is None or diagnostics["cut_depth"][
+                            "max_cut_m"
+                        ] > extreme["cut_depth"]["max_cut_m"]:
+                            result["extreme_cut_case"] = {
+                                "id": ident,
+                                "length_m": length,
+                                "reason": str(exc),
+                                "sections": part.tolist(),
+                                "cut_depth": diagnostics["cut_depth"],
+                                "height_profile_fit": fit,
+                                "geometry_repair_executed": False,
+                                "height_change_applied": False,
+                                "road_admitted": False,
+                                "visual_status": "CAPTURE_REQUIRED",
+                            }
                     result["blocked"].append(
                         {
                             "id": ident,
@@ -450,6 +652,27 @@ def prepare(prepared, output, exact_sha):
                     )
     result["approved_length_m"] = sum(x["length_m"] for x in result["approved"])
     result["blocked_length_m"] = sum(x["length_m"] for x in result["blocked"])
+    result["height_profile_candidate_length_m"] = sum(
+        x["length_m"] for x in result["height_profile_candidates"]
+    )
+    result["height_profile_candidate_window_count"] = len(
+        result["height_profile_candidates"]
+    )
+    result["height_profile_incompatible_window_count"] = sum(
+        x.get("diagnostics", {})
+        .get("height_profile_fit", {})
+        .get("status")
+        == "REJECT_INCOMPATIBLE_CUT_SUPPORT_BOUNDS"
+        for x in result["blocked"]
+    )
+    if result["extreme_cut_case"] is None:
+        raise ValueError("Network CUT diagnostics did not retain an extreme case")
+    diagnostic_image = output / "network-extreme-cut-diagnostic.png"
+    write_extreme_cut_diagnostic(result["extreme_cut_case"], diagnostic_image)
+    result["extreme_cut_case"]["diagnostic_image"] = diagnostic_image.name
+    result["extreme_cut_case"]["diagnostic_image_sha256"] = digest(
+        diagnostic_image
+    )
     result["protected_or_boundary_length_m"] = (
         result["source_clipped_length_m"]
         - result["approved_length_m"]
@@ -475,7 +698,18 @@ if __name__ == "__main__":
     r = prepare(a.prepared_terrain, a.output_dir, a.exact_sha)
     print(
         json.dumps(
-            {k: v for k, v in r.items() if k not in ("approved", "blocked")}, indent=2
+            {
+                k: v
+                for k, v in r.items()
+                if k
+                not in (
+                    "approved",
+                    "blocked",
+                    "height_profile_candidates",
+                    "extreme_cut_case",
+                )
+            },
+            indent=2,
         )
     )
     print("Approved windows:", len(r["approved"]), "Blocked:", len(r["blocked"]))
