@@ -1,0 +1,11 @@
+{
+  "id": "persistent-verified-build-cache",
+  "source": "karnalooch/YetAnotherCyclingSim",
+  "category": "ci",
+  "problem": "Isolated build outputs and their verified state can be deleted while a persistent checkout retains invalidated state, forcing repeated compilation.",
+  "invariant": "Publish a durable atomic pointer to a complete verified build before independent downstream work; protect that worktree during cleanup and revalidate provenance on every reuse.",
+  "evidence": ["Issue #355", "scripts/ci/unreal_ci_workspace.py", "scripts/ci/test_unreal_ci_workspace.py", "docs/CI_VALIDATION_TIERS.md"],
+  "do_not_copy": ["Unreal DLL names", "YACS directory names", "region import behavior"],
+  "failure_behavior": "Partial publication preserves the old pointer. Invalidated state never becomes green through selection. Malformed pointers block cleanup. Generated outputs and verified metadata remain together.",
+  "status": "candidate"
+}
