@@ -208,6 +208,30 @@ jobs:
 
       # Bootstrap the approved region migration inside the existing same-repo
       # CI boundary. This is an import diagnostic, never a broker PASS receipt.
+      - name: Isolate native import from Automation asset handles
+        if: ${{ inputs.region_terrain_import }}
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $warm = (Get-Location).Path
+          $name = '_unreal-region-${{ github.run_id }}-${{ github.run_attempt }}'
+          $isolated = Join-Path $env:GITHUB_WORKSPACE $name
+          if (Test-Path -LiteralPath $isolated) { throw 'Preserve existing native import worktree.' }
+          git worktree add --detach "$isolated" '${{ inputs.target_sha }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Isolated native import checkout failed.' }
+          # Reuse only the exact-head binaries already proved by Automation.
+          foreach ($relative in @('Binaries')) {
+            Copy-Item -LiteralPath (Join-Path $warm $relative) -Destination (Join-Path $isolated $relative) -Recurse -Force
+          }
+          Get-ChildItem -LiteralPath (Join-Path $warm 'Plugins') -Directory -Recurse -Filter Binaries | ForEach-Object {
+            $relative = $_.FullName.Substring($warm.Length + 1)
+            $destination = Join-Path $isolated $relative
+            New-Item -ItemType Directory -Path (Split-Path $destination -Parent) -Force | Out-Null
+            Copy-Item -LiteralPath $_.FullName -Destination $destination -Recurse -Force
+          }
+          "YACS_UNREAL_WORKTREE=$name" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
       - name: Materialize verified Sa Calobra source and required editor startup assets
         if: ${{ inputs.region_terrain_import }}
         shell: pwsh
