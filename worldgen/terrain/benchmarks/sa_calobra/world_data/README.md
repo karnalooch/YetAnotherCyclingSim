@@ -48,7 +48,7 @@ The planner fails closed if AOI geometry drifts, 1 km LiDAR cell hints no longer
 match the bbox, raw-cache policy becomes unsafe, duplicate source IDs appear, or
 an acquired/included/derived source lacks exact file identity/hash evidence.
 
-## Exact CNIG source inventory resolved 2026-10-03
+## Exact CNIG source inventory acquired and verified 2026-10-03
 
 The CNIG public product-page coordinate search was executed in headless Chromium
 without attempting download authorization. The current working square resolves to:
@@ -57,9 +57,22 @@ without attempting download authorization. The current working square resolves t
 - **4 MDS50cm COB3 V1 COG files**, ~446.92 MB displayed total;
 - **4 PNOA Máxima Actualidad 2024 source COG files**, ~2,289.31 MB displayed total.
 
-Exact filenames, `sec` identifiers and detail URLs are pinned in
-`working_space_sources.json`. All 17 source binaries currently use CNIG's normal
-`recaptcha_authorized` direct-download path. YACS does not bypass that gate.
+Exact provider records, delivered filenames, byte sizes, SHA-256 values, `sec`
+identifiers and detail URLs are pinned in `working_space_sources.json`. The 17
+source binaries were downloaded manually through CNIG's provider-authorized bulk
+download flow and verified read-only in the persistent runner cache:
+
+- 17 files, 3,339,596,438 bytes total;
+- 9 LAZ files with the expected `LASF` signature;
+- 8 TIFF files with the expected little-endian BigTIFF container signature;
+- no missing catalogue records and no unexpected files.
+
+CNIG delivered the nine LAZ and four orthophoto filenames with underscore
+separators (and lowercase `h25` / `.tif` for orthophotos), while the catalogue
+uses hyphens and uppercase tokens. The receipt preserves both names and records
+the one-to-one reviewed match; raw files are not renamed. See
+[`manual_cnig_receipt_2026-10-03.json`](manual_cnig_receipt_2026-10-03.json) for
+the complete 17-file inventory.
 
 For immediate world-authoring work, the acquisition runner separately downloads
 the same-AOI **PNOA WMS orthophoto extract**, BTN vector context, SIOSE cross-check
