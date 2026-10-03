@@ -5,7 +5,8 @@ param(
     [Parameter(Mandatory=$true)] [string] $ExpectedBranch,
     [Parameter(Mandatory=$true)] [string] $ExpectedHead,
     [Parameter(Mandatory=$true)] [string] $ArtifactRoot,
-    [int] $TimeoutSec = 900
+    [int] $TimeoutSec = 900,
+    [switch] $PrepareRoadPlan
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -26,6 +27,12 @@ if ((Get-FileHash -LiteralPath $heightmap -Algorithm SHA256).Hash.ToLowerInvaria
 $mapFile = Join-Path $RepoRoot (($manifest.map_package -replace '^/Game/', 'Content/') + '.umap')
 if (Test-Path -LiteralPath $mapFile) { throw 'Existing terrain asset must be retained before authoring; no asset was deleted.' }
 $env:YACS_TERRAIN_MANIFEST = $manifestPath
+if ($PrepareRoadPlan) {
+    $guides = Join-Path $ArtifactRoot 'ma2141-curve-guides.json'
+    & python (Join-Path $RepoRoot 'scripts/assets/prepare_ma2141_curve_guides.py') --prepared-terrain $prepared --output $guides --exact-sha $ExpectedHead
+    if ($LASTEXITCODE -ne 0) { throw 'Road curve guide preparation failed.' }
+    $env:YACS_ROAD_CURVE_GUIDES = $guides
+}
 function Invoke-TerrainEditor([string[]] $EditorArguments, [string] $LogName) {
     $stdout = Join-Path $ArtifactRoot ($LogName + '.stdout.log')
     $stderr = Join-Path $ArtifactRoot ($LogName + '.stderr.log')
@@ -62,5 +69,6 @@ try {
     } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $ArtifactRoot 'region-terrain-proof.json') -Encoding utf8
 } finally {
     Remove-Item Env:YACS_TERRAIN_MANIFEST -ErrorAction SilentlyContinue
+    Remove-Item Env:YACS_ROAD_CURVE_GUIDES -ErrorAction SilentlyContinue
 }
 Write-Host 'Sa Calobra terrain import PASS; visual and performance acceptance remain pending.'

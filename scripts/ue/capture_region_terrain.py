@@ -1,7 +1,7 @@
 """Capture accepted Sa Calobra terrain and the native-contact Ma-2141 road.
 
-PR #319 runs BOB as INSPECTOR_ONLY. The experimental builder remains available
-as study/history but is never executed by this active visual lane.
+BOB cuts terrain above asphalt and builds simple vertical visual support.
+The builder never saves the map or modifies Base_DTM.
 """
 
 from __future__ import annotations
@@ -9,10 +9,10 @@ from __future__ import annotations
 import array
 import json
 import os
-from pathlib import Path
 import sys
 import time
 import traceback
+from pathlib import Path
 
 import unreal
 
@@ -28,6 +28,10 @@ _proofs = []
 _road_objects = None
 _world = None
 _bob_inspection_status = "NOT_LOADED"
+_cut_patch = None
+_cut_report = None
+_support_objects = None
+_mode_reasserted = False
 _scheduling = False
 
 
@@ -36,7 +40,7 @@ def height(x_cm, y_cm):
     data.frombytes((_root / "Prepared/terrain.r16").read_bytes())
     if sys.byteorder != "little":
         data.byteswap()
-    column, row = int(round(x_cm / 50)), int(round(y_cm / 50))
+    column, row = round(x_cm / 50), round(y_cm / 50)
     if not (0 <= row < 4033 and 0 <= column < 4033):
         raise RuntimeError("Diagnostic camera sample outside native terrain")
     encoded = data[row * 4033 + column]
@@ -68,12 +72,32 @@ def finish(error=""):
         "performance_status": "PENDING",
         "road_status": "INFERRED_CONTACT_TRIAL" if _road_objects else "NOT_SPAWNED",
         "final_road_status": "NOT_ADMITTED",
-        "bob_mode": "INSPECTOR_ONLY",
+        "bob_mode": "INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT",
         "bob_inspection_status": _bob_inspection_status,
-        "builder_lesson_status": "DISABLED_OWNER_INSPECTOR_ONLY",
+        "builder_lesson_status": (
+            _cut_report.get("status") if _cut_report else "NOT_EXECUTED"
+        ),
         "builder_map_saved": False,
+        "vertical_support_proof": ("bob-vertical-support-proof.json" if _support_objects else None),
+        "bob_road_earthworks_cut_proof": (
+            "bob-road-earthworks-cut-proof.json" if _cut_report else None
+        ),
+        "bob_cut_patch_modified_vertex_count": (
+            _cut_report.get("patch_modified_vertex_count") if _cut_report else None
+        ),
+        "bob_cut_before_count": (
+            _cut_report.get("before", {}).get("class_counts", {}).get("CUT_REQUIRED")
+            if _cut_report else None
+        ),
+        "bob_cut_after_count": (
+            _cut_report.get("after", {}).get("class_counts", {}).get("CUT_REQUIRED")
+            if _cut_report else None
+        ),
         "road_geometry_inspection_required": True,
-        "road_geometry_inspection_view": "road-geometry-inspection",
+        "road_geometry_inspection_views": [
+            "road-geometry-inspection-before",
+            "road-geometry-inspection-after",
+        ],
         "road_terrain_fit_status": (
             terrain_fit.get("status") if terrain_fit else "NOT_MEASURED"
         ),
@@ -158,16 +182,42 @@ def _apply_capture_view_mode(view):
 
 
 def schedule():
-    global _task, _started, _road_objects, _scheduling
+    global _task, _started, _road_objects, _cut_patch, _scheduling
+    global _mode_reasserted
     # Geometry creation can pump Slate and re-enter this tick callback while the
     # previous screenshot task is still marked done. Fence the whole transition.
     _scheduling = True
     _task = None
+    _mode_reasserted = False
     try:
         if _index == 2:
-            sys.path.insert(0, str(Path(unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_dir())) / "scripts/ue"))
+            sys.path.insert(
+                0,
+                str(
+                    Path(
+                        unreal.Paths.convert_relative_path_to_full(
+                            unreal.Paths.project_dir()
+                        )
+                    )
+                    / "scripts/ue"
+                ),
+            )
             from ma2141_road_preview import spawn_trial
-            _road_objects = spawn_trial(_world, _root, os.environ["YACS_TERRAIN_SHA"])
+
+            _road_objects = spawn_trial(
+                _world, _root, os.environ["YACS_TERRAIN_SHA"]
+            )
+        if _index == 3:
+            if not _road_objects or len(_road_objects) < 4:
+                raise RuntimeError("BOB CUT patch is missing road trial context")
+            from bob_road_earthworks_cut import apply_cut_patch
+
+            _cut_patch = apply_cut_patch(
+                _world,
+                _root,
+                os.environ["YACS_TERRAIN_SHA"],
+                _road_objects[3]["pre_fit"],
+            )
         view = _views[_index]
         _apply_capture_view_mode(view)
         location, target = unreal.Vector(*view["location"]), unreal.Vector(*view["target"])
@@ -198,34 +248,95 @@ def schedule():
 
 
 def tick(_delta):
-    global _index
+    global _index, _mode_reasserted, _scheduling
     if _scheduling or _task is None:
         return
     try:
-        if time.monotonic() - _started > 120:
+        view = _views[_index]
+        elapsed = time.monotonic() - _started
+        if (
+            view.get("geometry_inspection") is True
+            and not _mode_reasserted
+            and elapsed >= 2.0
+        ):
+            # Procedural Landscape evaluation can reset the editor viewport mode
+            # after the patch is registered. Reassert Clay after that update but
+            # before the 5 s high-res screenshot delay expires.
+            _apply_capture_view_mode(view)
+            _mode_reasserted = True
+        if elapsed > 120:
             finish("Screenshot task/file readiness timeout: " + _views[_index]["name"])
         elif _task.is_task_done():
-            view = _views[_index]
+            global _cut_report, _support_objects
             path = _root / (view["name"] + ".png")
             if not path.is_file() or path.stat().st_size < 100000:
                 # A completed automation task can precede the PNG write. Keep
                 # the existing size requirement and bounded timeout.
                 return
-            actual = unreal.AutomationLibrary.get_editor_active_viewport_view_mode()
-            expected = unreal.ViewModeIndex.VMI_CLAY if view.get("geometry_inspection") else unreal.ViewModeIndex.VMI_LIT
-            if actual != expected:
-                raise RuntimeError("Capture viewport mode drifted: " + view["name"])
-            actual_name = "VMI_CLAY" if actual == unreal.ViewModeIndex.VMI_CLAY else "VMI_LIT"
+            actual_viewmode = (
+                unreal.AutomationLibrary.get_editor_active_viewport_view_mode()
+            )
+            expected_viewmode = (
+                unreal.ViewModeIndex.VMI_CLAY
+                if view.get("geometry_inspection") is True
+                else unreal.ViewModeIndex.VMI_LIT
+            )
+            if actual_viewmode != expected_viewmode:
+                raise RuntimeError(
+                    "Capture viewport mode drifted before evidence acceptance: "
+                    + view["name"]
+                )
+            actual_viewmode_name = (
+                "VMI_CLAY"
+                if actual_viewmode == unreal.ViewModeIndex.VMI_CLAY
+                else "VMI_LIT"
+            )
+            if view.get("verify_cut_after") is True and _cut_report is None:
+                from bob_road_earthworks_cut import (
+                    finalize_cut_proof,
+                    measure_smooth_terrain_fit,
+                )
+
+                _scheduling = True
+                try:
+                    context = _road_objects[3]
+                    post_fit = measure_smooth_terrain_fit(
+                        _world,
+                        context["profile"],
+                        context["smooth_vertices"],
+                        context["smooth_meta"],
+                        exact_sha=os.environ["YACS_TERRAIN_SHA"],
+                        contact_band_max_m=context["pavement_thickness_m"],
+                        geometry_inspection_view="road-geometry-inspection-after",
+                    )
+                    (_root / "ma2141-road-terrain-fit-after-cut-proof.json").write_text(
+                        json.dumps(post_fit, indent=2) + "\n",
+                        encoding="utf-8",
+                    )
+                    _cut_report = finalize_cut_proof(
+                        _root,
+                        os.environ["YACS_TERRAIN_SHA"],
+                        _cut_patch,
+                        context["pre_fit"],
+                        post_fit,
+                        reject_on_failure=False,
+                    )
+                    from scripts.ue.bob_vertical_support_preview import spawn_support
+                    _support_objects = spawn_support(
+                        _world, _root, os.environ["YACS_TERRAIN_SHA"], context
+                    )
+                finally:
+                    _scheduling = False
             _proofs.append(
                 {
                     **view,
                     "screenshot": str(path),
                     "size_bytes": path.stat().st_size,
                     "resolution": [3840, 2160],
-                    "actual_viewmode": actual_name,
                     "viewmode": view.get(
                         "viewmode", "lit-with-neutral-engine-material"
                     ),
+                    "actual_viewmode": actual_viewmode_name,
                     "geometry_inspection": view.get(
                         "geometry_inspection", False
                     ),
@@ -247,7 +358,7 @@ def tick(_delta):
                 finish()
             else:
                 schedule()
-    except Exception:
+    except Exception:  # noqa: BLE001 - report callback failure in proof
         finish(traceback.format_exc())
 
 
@@ -338,10 +449,11 @@ def main():
         p = min(points, key=lambda p: abs(p["station_m"]-s))
         return [p["x_cm"],p["y_cm"],p["z_cm"]]
     focus = at_station(150)
+    moderate = at_station(65)
     start, target = at_station(120), at_station(130)
     _views.extend([
         {
-            "name": "road-geometry-inspection",
+            "name": "road-geometry-inspection-before",
             "location": [focus[0]-9000,focus[1]+9000,focus[2]+13000],
             "target": focus,
             "viewmode": "geometry-inspection-clay-wireframe",
@@ -352,6 +464,46 @@ def main():
             "explicit_road_wireframe": True,
             "wireframe_color_rgba": [0.0, 1.0, 1.0, 1.0],
             "force_game_view": False,
+            "earthworks_state": "BEFORE_CUT",
+        },
+        {
+            "name": "road-geometry-inspection-after",
+            "location": [focus[0]-9000,focus[1]+9000,focus[2]+13000],
+            "target": focus,
+            "viewmode": "geometry-inspection-clay-wireframe",
+            "geometry_inspection": True,
+            "inspection_mode": "VMI_CLAY",
+            "mesh_edges": True,
+            "road_selected": True,
+            "explicit_road_wireframe": True,
+            "wireframe_color_rgba": [0.0, 1.0, 1.0, 1.0],
+            "force_game_view": False,
+            "earthworks_state": "AFTER_CUT",
+            "verify_cut_after": True,
+        },
+        {
+            "name": "road-geometry-inspection-support",
+            "location": [focus[0]-9000,focus[1]+9000,focus[2]+13000],
+            "target": focus,
+            "viewmode": "geometry-inspection-clay-wireframe",
+            "geometry_inspection": True,
+            "inspection_mode": "VMI_CLAY",
+            "mesh_edges": True,
+            "road_selected": True,
+            "explicit_road_wireframe": True,
+            "wireframe_color_rgba": [0.0, 1.0, 1.0, 1.0],
+            "force_game_view": False,
+            "earthworks_state": "CUT_AND_VERTICAL_SUPPORT",
+        },
+        {
+            "name": "road-curved-edges-plan",
+            "location": [focus[0], focus[1], focus[2]+16000],
+            "target": focus,
+        },
+        {
+            "name": "road-curved-edges-moderate",
+            "location": [moderate[0], moderate[1], moderate[2]+5500],
+            "target": moderate,
         },
         {
             "name": "road-contact-overview",

@@ -2758,3 +2758,449 @@ relaxing the 8 cm contact band or claiming this rejected recipe as learned.
 
 The terrain-only 1080p60 proof remains mandatory for the inspector delivery.
 It does not substitute for future road/earthworks performance or visual proof.
+
+
+## Owner-approved default road support — 2026-10-02
+
+The owner explicitly selected one simple presentation rule for BOB across the
+whole route: retain smooth asphalt with its longitudinal grade and crossfall,
+cut terrain protruding above it, extend a nominal 0.5 m shoulder on each side,
+and drop the outer edge vertically to the ground wherever it is unsupported.
+Do not reproduce native DTM bumps in the asphalt. "Flat like a table" means
+smooth pavement, not a geographically level road. The nominal shoulder and
+vertical faces are owner-approved approximations, not surveyed wall dimensions.
+The reviewed Ma-2141 Street View panorama N2iYXMWUwncrESOlsCmIuw shows stone
+masonry and irregular ground around this road edge. It is reference only;
+Google imagery is not copied into shipped materials.
+
+Use the existing Geometry Script consumer for vertical faces; a heightfield
+cannot represent a vertical wall. No new inference engine, dependency or
+per-stone construction is required. Stone dressing follows neutral geometry
+review. The first implementation applies the rule to every station in the
+available 300 m profile. The rule is reusable for subsequent prepared profiles;
+it does not claim that the full ~29–30 km candidate route is already prepared.
+
+The transient recipe now combines the bounded Min Landscape CUT with
+`bob-vertical-support-v1`. Support tops meet the existing slab underside;
+shoulders are therefore 80 mm below asphalt. Outer wall feet are traced against
+actual Landscape after the CUT capture. The support uses no collision and does
+not rewrite route XY, road profile, Base_DTM, or the saved map. Uphill portions
+above the support top have no invented negative-height wall. At tight concave corners only the shoulder tapers locally to avoid a fold;
+asphalt is unchanged. The receipt records the actual minimum/maximum extent.
+Remaining folded extensions and missing ground traces fail closed.
+
+The CUT-only receipt and its zero-new-fill acceptance remain unchanged as a
+separate diagnostic; it may still say REJECT_CUT. The new combined visual proof
+requires zero remaining road penetration, all 1,202 outer-edge traces, geometry
+at all 601 stations, a dedicated neutral support image, overview and rider
+captures. It is not a continuous-support/collision/ride admission. The 1 m CUT
+cap remains in force. Guard vertices that exceed it now lower to the cap
+instead of remaining completely untouched. All inspected native facets are
+covered; any remaining interpolation excess is removed from available corners
+within that same cap. This must receive fresh native proof. Larger required cuts remain blocked rather than silently relaxing it.
+
+At the initial implementation checkpoint Unreal validation, human visual
+review and road/earthworks performance were pending. The subsequent native
+result and owner acceptance are recorded below. A terrain-only performance
+PASS does not admit the combined road/support scene. Issue #324 is closed as
+the bounded construction checkpoint; #331 owns curved edges and the remaining
+combined performance review. Rejected CUT-only evidence is retained in history.
+
+
+The first combined native run at `964d99a` produced all seven captures and
+1,202 support traces, but retained one 0.527 m penetration at station 138.5 m.
+The requested vertex lay on the texture coverage edge: the native result matched
+leaving that outer vertex unchanged. The patch now includes one neutral native
+texel outside all requested vertices so the cut lies inside texture coverage.
+The 1 m cap and zero-penetration criterion remain unchanged. The corrected
+`c9373cd` native checkpoint passed with zero penetrations in 15,025 samples,
+1,202 successful support traces and 902 wall segments. The owner accepted that
+bounded construction checkpoint on 2026-10-02 and requested merging #325.
+Combined road/support performance and final road admission remain unverified.
+
+## Curved pavement presentation — Issue #331
+
+The owner subsequently identified polygonal asphalt edges in plan view. The
+old `clip.interpolate` sampling and linearly interpolated edge offsets retain
+GIS polyline corners; denser sampling and normal recomputation cannot round
+that silhouette. Height regularization did not smooth XY. This is a confirmed
+presentation defect, not permission to change canonical route/physics data.
+
+Current owner requirement (2026-10-02): use the reviewed cliff-side pavement
+boundary as the positional datum. From that one native curve and an explicit
+width W(s), derive the other pavement boundary and the presentation midpoint
+axis. Nominal width may have evidenced local widening with smooth entry/exit.
+This contract applies to Ma-2141 now and subsequent road authoring windows.
+Road plan, grade and crossfall have priority; BOB cuts protruding terrain and
+builds downward support outside the approximately 0.5 m shoulder after the
+pavement is fixed. Terrain/contact failures must not optimize width or shift
+the datum. Vegetation is later dressing, not a geometry repair.
+
+Never conflate the following independently named edge attributes:
+
+| Attribute | Definition |
+|---|---|
+| Physical index | Stable boundary 0 or 1 in authored source order |
+| Travel side | LEFT/RIGHT relative to travel; reverses when riding backward |
+| Bend role | INNER/OUTER from signed presentation-midpoint curvature; STRAIGHT below 0.0001/m |
+| Terrain role | CLIFF/MOUNTAIN/UNKNOWN from explicit bounded evidence; independent of bend role |
+
+In UE's X/Y frame, positive signed XY curvature turns toward the travel-right
+side in authored direction. Edge 0 is authored travel-left, edge 1 travel-right.
+Reversing travel swaps LEFT/RIGHT but preserves physical index, INNER/OUTER and
+terrain identity. A cliff can be either inner or outer. Unknown terrain roles
+remain UNKNOWN; do not classify cliffs by turn sign. The current owner-reviewed
+125–165 m hairpin window labels physical edge 0 CLIFF and edge 1 MOUNTAIN as
+preview interpretation. Other stations remain UNKNOWN. The source boundaries
+are inferred from PNOA and CartoCiudad, not LiDAR-extracted pavement lines; DTM
+height resolution does not prove horizontal asphalt boundaries or vertical walls.
+
+Tools-first implementation uses one transient UE 5.8 USplineComponent with
+CurveCustomTangent controls every 2.5 m of source chainage. The 135–155 m
+reference-edge arc is fitted from that boundary alone; its radius is at least
+maximum intended width plus a provisional 1.3 m offset margin, preventing a
+normal-offset focal singularity. A fixed-radius least-squares center fit refines
+the result. Approach controls reuse the existing local fit with a 7.5 m radius;
+127.5–135 and 155–165 m native cubic transitions match position/tangent direction.
+Circular segments use explicit arriving/leaving handles (4R*tan(delta_angle/4)
+in native cubic tangent units). Reflected bAllowDiscontinuousSpline enables
+unequal magnitudes for uneven source keys; directions still join continuously.
+Native execution verifies the Python property binding and actual geometry.
+The provisional 1.3 m margin is a presentation design control, not a surveyed
+inner radius or vehicle-passage proof.
+Native position/tangent samples determine the horizontal boundary normal; the
+derived edge is offset by W(s). The midpoint comes from those same cross-sections.
+This supersedes the rejected circle fit through inferred pavement midpoints.
+No independent smoothing of the derived edge can change the intended width.
+A different road window may explicitly select reference edge 1; switches between
+windows require a reviewed continuous join rather than guessing by curve sign.
+
+Widths are measured in the authoritative-boundary horizontal normal frame.
+For varying width the derived midpoint tangent need not be perpendicular to
+that frame; do not claim the same numerical width in a different measurement
+frame. The current profile supplies total W(s) from inferred observations;
+left/right source half-widths are not independently admitted centerline offsets
+in this anchored recipe. Width observations are mapped from source stations to
+sampled reference-boundary arc distance before interpolation. This maintains
+geometric width-rate continuity despite differing arriving/leaving key speeds;
+that sampled distance is presentation-only. The consumer recomputes the mapping.
+Quintic interpolation preserves observations without
+overshoot and has zero first/second derivatives at observation joins. The
+provisional 9–10 m observations still require geographic/owner review.
+
+The existing boot exports 4801 samples at 0.0625 m; the consumer builds 1201
+sections at 0.25 m. Recipe `native-cliff-edge-width-v3` verifies exact identity,
+finite complete data, reference edge displacement <=1 m, normal-frame width
+conformity (0.1 mm), reference circle deviation <=2 cm, derived midpoint consistency, semantic side evidence,
+no intersections/folded triangles and sampled tessellation error <=2 cm.
+Both edge displacements are reported. Per owner refinement, movement of the
+inferred derived edge is not capped by the old symmetric 1 m comparison; its
+width/shape/topology remain mandatory. This explicit asymmetry is not an
+increased global allowance. Semantic role samples are hashed and rechecked
+by consumers; stored authored travel direction is explicit. Historical paired
+and common-axis recipes remain supported for evidence, not current authoring.
+Presentation length is not physics length; raw source XY stays separate.
+
+Terrain is resampled under the resulting footprint before height/crossfall fit;
+asphalt, CUT and support all consume that same validated profile. Native
+execution and the same overhead/rider cameras are required. Geographic width,
+vehicle passage, saved collision, ride and combined performance remain pending.
+
+Engineering reference: [Spanish 3.1-IC, section 7.3.5](https://www.boe.es/boe/dias/2016/03/04/pdfs/BOE-A-2016-2217.pdf)
+uses vehicle-envelope analysis for tight-curve widening and gradual transitions.
+It supports the principle, not a claim that these preview dimensions are measured
+Ma-2141 road dimensions or that highway design parameters apply unchanged here.
+
+Official API references:
+- [Spline component](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/USplineComponent)
+- [Spline point types](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/ESplinePointType__Type)
+- [Spline approximation tolerance](https://dev.epicgames.com/documentation/unreal-engine/BlueprintAPI/Spline/ConvertSplinetoPolyLine)
+
+`USplineMeshComponent` was reviewed but is not required: the existing unified
+DynamicMesh can consume sampled native curves and shares its exact boundaries
+with earthworks. Native spline evaluation does not itself prove geographic
+fidelity, acceptable width, branch clearance, smooth height or rider acceptance.
+
+### Historical bounded apex fillet
+
+The first native curved-edge checkpoint (`a5f0ba82`) passed technical CI but
+retained an approximately 0.30 m inner radius at source station 150 m. This
+pinched apex was present in the interpolation controls themselves. The owner
+requested a simple correction of the bend before wider road/PCGEx work.
+
+The previous presentation guide packet specified a bounded inner-edge span from
+140 to 155 m. Within that span a single two-point native `USplineComponent`
+with `CurveCustomTangent` replaces the intermediate controls. Endpoint
+positions and derivatives are taken from the original native boundary;
+derivatives are rescaled for the longer spline segment. Both boundaries still
+share source-chainage correspondence. The outer edge already passes the
+geometric checks and retains its existing controls. The operation is reusable;
+this span is explicit authoring data for the reviewed apex, not a claim of
+automatic whole-network hairpin design.
+
+Native endpoint position and tangent continuity are checked to 0.0001 m (and
+metres per source input key). The dense export must meet a minimum sampled
+inner radius of 1.5 m throughout the repaired span, in addition to the unchanged
+1 m displacement, 2 cm sampled chord-error, width, winding and intersection
+bounds. Existing 0.5 m shoulders, CUT and vertical support are rebuilt from the
+same corrected profile. Canonical route/physics data remain untouched.
+
+API evidence: Epic Unreal Engine **5.8** `USplineComponent` reference above,
+`GetTangentAtSplineInputKey`, `SetTangentAtSplinePoint`, and
+`ESplinePointType::CurveCustomTangent`; the official Python binding reference
+was also consulted. Native execution, the same cameras and human review are
+required before visual acceptance. PCGEx and Blender are not introduced here.
+
+
+Historical common-axis checkpoint `36982be` failed the symmetric comparison:
+2.136358 m inner-edge displacement at 135 m. The subsequent owner refinement
+accepts movement on the mountain side and gives the cliff-side boundary
+positional priority. The v3 anchored producer/validator above implements that
+revised requirement. This does not grant geographic width or visual acceptance.
+
+Owner clarification: when the pavement footprint changes, evaluate and regenerate
+CUT/support from the clean pre-earthworks native DTM, never the last visible
+cut Landscape. The existing Invoke-YacsRegionTerrainImport lane creates an
+isolated map, imports the pinned heightmap into Base_DTM and creates an empty
+Road_Earthworks layer. CUT actors and support are transient and maps are not
+saved by capture/handoff. Reopening the saved clean baseline removes those
+session edits; owner handoff then reapplies the current patch deliberately.
+Do not roll back Git/main or discard retained assets to reset terrain. The open
+owner editor may still show previous transient cuts until explicitly reloaded;
+no claim of live restoration is made by this documentation change.
+
+#### Native cliff-edge CUT integration (PR #332)
+
+Exact `9dd5a052f589d3c53805295157450e828e21b2da` run
+[37069118034](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37069118034)
+passed native spline/width geometry, build/Automation and hosted tests. Native
+reference displacement was 0.989502 m, sampled chord error 0.006700 m, with no
+intersections. Capture was blocked by the previous global 1 m CUT-only cap:
+the new footprint requires up to 3.455924 m lowering at the hairpin; outside
+the evidence-marked 125..165 m span the maximum is 0.630515 m. This is not a
+visual acceptance or performance result.
+
+The anchored preview now selects the existing `retaining_or_cliff` 4 m policy
+ceiling only for CLIFF/MOUNTAIN evidence spans, additionally bounded by the
+unchanged structure-review threshold. Every station outside those half-open
+spans retains the `native_blend` 1 m cap. Native cells touching the marked ribbon
+and its one-cell guard may use the cliff cap; all other cells retain 1 m. Both
+producer and native consumer check station inspection against the same policy.
+The consumer validates the profile proof and recomputes the limits, rather than
+trusting a manifest-supplied number. Structure review, no fill, unchanged
+Base_DTM and transient/no-save restrictions remain mandatory. Native traces
+and screenshots for this integration are still pending. Source-derived grade
+and crossfall remain REVIEW_REQUIRED; this ceiling does not admit engineering
+alignment, structures or riding collision.
+
+Native integration at `46d66f3317e180d61e18b03a407d19d51f541269`
+([37070218467](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37070218467))
+produced nine captures, zero missing terrain traces and zero post-cut asphalt
+penetrations. It built 1788 wall segments with 0.5 m shoulders. The CI receipt
+check still contained the historical hardcoded 1 m ceiling; it is replaced by
+recomputed spatial-policy validation from the admitted profile and checked-in
+policy, never a freely supplied receipt ceiling. CUT-only still reports
+REJECT_CUT because lowering creates additional unsupported/contact-band samples;
+this remains recorded honestly. The combined preview uses explicit vertical
+support, whose collision and continuous support are NOT_PROVEN. No CUT-only
+admission is granted by this CI integration fix.
+
+#### Circular-width visual correction
+
+Review of the actual 46d66f3 plan/moderate/rider PNGs exposed an inward scallop
+despite topology/tessellation PASS. The preserved provisional width observations
+8, 8, 10, 9, 7 m across the 135..155 m circular reference varied too quickly
+for a small-radius normal offset. Passing numerical gates did not provide visual
+acceptance. The presentation design now uses one constant 8.625 m width across
+that circle, the station-weighted trapezoidal mean of those observations, with
+quintic transitions on the 125..135 and 155..175 m approaches. This produces a
+circular inner offset of radius 2.675 m on the 11.3 m reference circle. All raw
+observations are retained in evidence; the reference fit/radius still uses the
+unmodified observations and retains its original positional guard. This is an
+explicit provisional width redesign for a coherent outline, not a survey or
+vehicle swept-path admission. It does not change source/physics or narrow the
+road secretly to bypass displacement/intersection gates. Fresh native visuals
+are required; inferred geographic widths remain pending metric review.
+
+#### Hairpin alignment and surface closeout — Issue #331
+
+Owner's 2026-10-03 annotated rider/overhead view rejects the remaining ramp and
+entry/exit shape. This supersedes any implication that ba705ee visual inspection
+admitted the complete bend: XY topology PASS did not admit road surface shape.
+
+Engineering basis: FHWA PDDM Chapter 9, sections 9.3.5.2 and 9.3.6, coordinates
+horizontal transitions, gradual cross-slope transitions and vertical alignment:
+https://highways.fhwa.dot.gov/sites/fhwa.dot.gov/files/Chapter_09.pdf . Spain's
+3.1-IC reference remains https://www.boe.es/eli/es/o/2016/02/19/fom273 . These
+principles guide the preview; no claim of statutory compliance, chosen design
+speed, drainage, swept-path validation or measured Ma-2141 banking follows.
+
+The two reference transitions now use quintic Hermite XY evaluated from native
+UE 5.8 spline endpoint positions, tangent directions and one-sided curvature.
+Chord-based parameter speed removes uneven GIS-key acceleration. This is G2
+(geometric tangency/curvature), not C2 equality of source-key derivatives and
+not an exact clothoid. Native cubic approach/circular spans remain in place.
+The exporter records `quintic-G2-from-native-endpoints` honestly; the transition
+polynomial is YACS math evaluated within native authoring, not a native quintic
+USpline type. Each endpoint's position, unit tangent and geometric curvature
+residual must be <=1e-4 in their respective units. Canonical source/physics is
+unchanged; reference displacement <=1 m, width and topology guards remain.
+Epic API consulted for UE 5.8: native GetLocationAtSplineInputKey,
+GetTangentAtSplineInputKey and explicit arrive/leave tangents:
+https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/USplineComponent .
+
+Within source station 110..165 m, road elevation is independently designed in
+sampled midpoint distance. A quintic matches the approach height, grade and
+second derivative. A C2 correction also preserves the inferred reference-edge
+height datum at station 145 m; its value/first/second derivative vanish at both
+ends. The datum comes from the prior regularized road inference, not a verified
+LiDAR asphalt-height observation. The reference edge index and bend-inner edge
+are read independently from semantic proof. Banking blends to a provisional 2%
+toward bend-inner at 135..155 m, then matches the exit value/derivatives.
+Both edge-index choices are supported. Source height observations and raw
+DTM-fit banking remain intact as evidence. Outside the window the old vertical
+profile remains; the constant 8.625 m arc width and observed-width evidence
+remain provisional. Terrain is re-evaluated and CUT/support rebuilt afterward.
+
+The bounded ribbon is now sampled at 0.125 m source keys (2401 sections),
+retaining native 0.0625 m curve samples; this is not uniform physical distance.
+Macro DTM resolution remains 0.5 m. Native inspection requires 60025 road traces
+and 4802 shoulder ground traces. Surface proof is independently recomputed by
+consumers from actual XY/Z, not a freely declared PASS. Preview rejection limits
+in 110..165 m: crossfall 6%, crossfall rate 0.005/m of midpoint distance, adjacent
+facet normal angle 5 degrees, physical edge grade 0.5. These are bounded visual
+experiment gates, not engineering road-design acceptance. Degenerate/nonfinite
+facets or stale/tampered surface receipts fail closed. Slope, metric width,
+collision, contact/support and performance admissions remain separate.
+
+Local mathematical design check (not native proof): reference displacement
+0.989491 m, derived displacement 3.744494 m, chord error 0.004496 m, no
+intersections; bounded surface max crossfall 3.9698%, rate 0.004261/m, facet
+angle 4.5439 degrees, edge grade 0.417924. CUT preparation passes the unchanged
+spatial 1/4 m recipe with no structure-review samples. Fresh exact-SHA native
+execution and the same nine cameras are required before a visual conclusion.
+
+The 3D consumer inspection runs using Python's standard library, including inside
+UE embedded Python; no embedded NumPy installation is introduced. NumPy remains
+only in the already-supported offline profile designer. The receipt hashes every
+station/XY/Z coordinate and recomputes metrics, rejecting stale reports even
+when a small change leaves the maximum metrics unchanged. Cross-runtime metric
+comparison tolerates 1e-9 numeric rounding; geometric limits are not relaxed.
+
+#### BOB single-direction bend contract
+
+**Normative owner decision, 2026-10-03; Issue #331 / PR #332.** This applies to
+the current Ma-2141 hairpin and future BOB-authored single bends. It supersedes
+the provisional 8.625 m plateau and approach-widening recipe above as an
+acceptance target. The 183a30e technical proof remains historical; the owner
+rejected its remaining reverse-turn nose. This documentation records required
+behavior, not an implemented solver or passing proof.
+
+1. **Entry:** one explicit base pavement width `W_base`, constant throughout
+   the entry approach. The approach may be straight or gently curved in the
+   same direction as the main bend.
+2. **Main bend:** retain `W_base` unless a documented vehicle swept-path need
+   justifies modest additional pavement width. Record the required vehicle,
+   evidence and bounded width increment; an inferred width maximum or an
+   arbitrary average is not a bus-clearance requirement. Any increase and
+   return belong to the main-bend design domain, have continuous width and
+   width rate, and meet the constant approaches with zero width rate.
+3. **Exit:** return to the same `W_base` before the exit approach, then keep
+   that width constant. The exit may remain a gentle curve in the same turn
+   direction. Do not use approach widening to hide a bad alignment fit.
+4. **One turn direction across all three parts:** the final reference boundary,
+   opposite pavement boundary and derived presentation axis must have no
+   unintended curvature sign reversal. Heading rotates monotonically in the
+   intended turn direction; zero curvature is allowed. Reverse travel reverses
+   the sign convention consistently, not the physical bend identity. This
+   single-bend rule does not erase separately evidenced real S-bends elsewhere.
+5. **Joint solution:** fit entry, main arc and exit together with width, allowing
+   small, explicit approach position/tangent adjustments inside the admitted
+   presentation envelope. Retain cliff-side positional priority and its current
+   guard; derive the opposite edge from the accepted alignment/width. Preserve
+   canonical source and physics. If the constraints are incompatible, report
+   the conflict; do not silently enlarge the envelope, reverse curvature or
+   inflate width to make the endpoints connect.
+6. **Geometry admission:** recompute curvature/heading and actual transverse
+   width on both final boundaries and the derived axis after offsetting and
+   tessellation. Measure width normal to the reference curve, not across a
+   screenshot. Record domain endpoints, intended turn sign, width/rate envelope,
+   minimum inner radius, signed-turn extrema and any counter-turn interval.
+   Use a stated numerical tolerance tied to precision, never one that admits a
+   visible reverse turn. Reject a nose, pinch, self-intersection, unintended
+   local widening or reverse turn even when endpoint G2 and surface gates pass.
+7. **Regeneration and review:** accept the bounded XY/width solution first,
+   then regenerate the road height/banking, CUT and 0.5 m shoulders/downward
+   support from clean `Base_DTM`. Require fresh exact-SHA plan and rider views,
+   owner visual acceptance and the existing independent surface/support,
+   collision and performance admissions before propagation.
+
+The regression case is the owner's red-line/red-arrow review of 183a30e:
+the derived inner boundary accumulated about 90 degrees of turn and then
+about 84 degrees in the opposite direction before the main arc. Constant
+width on a circle and G2 at its joins did not prevent that approach nose.
+Future acceptance must exercise the complete entry -> main bend -> exit and
+both final edges, not only the reference circle or endpoint residuals.
+
+#### Native convex-cubic implementation of the single-bend contract
+
+The replacement recipe is `native-cliff-convex-bend-v4`, authored as ordinary
+UE 5.8 `USplineComponent` cubic points with explicit arrive/leave tangents.
+`scripts/geometry/road_single_bend.py` owns the bounded producer and independent
+stdlib consumer. The authoring API remains Epic's native spline API; no PCGEx,
+custom runtime evaluator or new package is introduced.
+
+The producer jointly fits the reference outline over 115..180 m source keys.
+It builds a convex reference control envelope, performs a regularized least
+squares fit to dense source positions with a 0.75 circular-fairness prior and
+regularization weight 10, and restores the convex control envelope. The circle
+is a fit prior, not a mandatory circle with separately patched approaches.
+Cardinal cubic B-spline knot values and derivatives become native cubic Hermite
+controls starting at 110 m. The 175..195 m exit rejoin blends position and its
+derivative into the unchanged road with a quintic weight; an abrupt control
+family switch at 187.5 m had pinched the shoulder in the first native run.
+Inside the bounded design the curve is C2; adjoining unchanged-road segments
+retain explicit shared tangents. The method does not
+claim a clothoid, surveyed geometry or a universal road-network solver.
+
+The admitted bend domain is 122.5..175 m, with main bend 137.5..155 m. Entry,
+main bend and exit use one provisional 5 m width, obtained from the existing
+station-125 observation. No vehicle-widening requirement has been proved, so
+the width increment is zero; bus swept-path admission remains pending. Raw
+width observations are retained, while the final inner edge is derived from
+the reference normal. Noisy maxima or the rejected 8.625 m mean are not width
+requirements. Original source, physics and the 1 m reference displacement
+guard remain unchanged.
+
+Native export and profile consumers independently check both final edges and
+the derived axis. Every original segment is checked for counter-turns, then a
+0.25 m physical-distance sampling measures signed curvature and heading. The
+angular roundoff allowance is derived from 0.0001 m position precision and
+adjacent segment lengths, not a visual tolerance for reverse bends. The bounded
+width must stay within 0.0001 m of its explicit base width, the sampled inner
+radius must remain at least 1.5 m, and the full bounded station/edge fingerprint
+must match. Missing, stale or unsupported receipts fail closed. Source
+displacement, 0.02 m chord error, winding and intersection gates still apply.
+
+Re-evaluating native terrain beneath the narrower pavement exposed unstable
+hillside-derived bank derivatives near 100..110 m. The vertical/banking design
+therefore starts at the stable 95 m approach and retains the 165 m end and
+135..155 m provisional 2% bank. The inspected surface domain expands from
+110..165 to 95..165 m; crossfall 6%, rate 0.005/m, facet angle 5 degrees and edge
+grade 0.5 limits are unchanged. Road height preserves the inferred reference
+apex datum, and CUT/support are regenerated from clean Base_DTM afterward.
+
+The regression suite rejects a constant-width reverse-turn nose, approach width
+bulges, an unsupported widening claim, wrong turn sign, incomplete domains and
+stale/missing consumer evidence. Mirrored turn directions and physical edge
+ordering are covered. Fresh exact-SHA Unreal capture and owner review are still
+required; local mathematical checks do not confer native, visual, collision,
+continuous-support, performance or vehicle-clearance acceptance.
+
+The current native CI also requires measured shoulder extents of at least
+0.4999 m and at most 0.51 m across the full 300 m preview, retaining the nominal
+0.5 m shoulder and allowing small convex-corner miters. Declaring `shoulder_m`
+alone cannot admit a silently tapered shoulder. The d439bf3 native run proved
+the no-nose outline but exposed 0.063 m shoulder width at station 187.375 m;
+its support result is superseded by the smooth exit-rejoin correction and
+must not be reported as full shoulder acceptance.

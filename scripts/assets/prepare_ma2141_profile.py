@@ -8,22 +8,21 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
-from scripts.assets.prepare_ma2141_diagnostic import SOURCE_SHA, sha256  # noqa: E402
-from scripts.assets.prepare_ma2141_road_preview import (  # noqa: E402
+from scripts.assets.prepare_ma2141_diagnostic import SOURCE_SHA, sha256
+from scripts.assets.prepare_ma2141_road_preview import (
     PROFILE,
     build_trial,
     read_profile,
     triangle_candidates,
 )
-
-from scripts.worldgen.bob_profile_inspector import (  # noqa: E402
+from scripts.worldgen.bob_profile_inspector import (
     REVIEW_CROSSFALL,
     REVIEW_DELTA_M,
     REVIEW_GRADE,
@@ -95,6 +94,10 @@ def fit_sections(stations, lateral_m, ground_m, radius_m=FIT_RADIUS_M):
     raw = np.asarray(raw)
     center = local_linear_fit(stations, raw[:, 0], radius_m)
     crossfall = local_linear_fit(stations, raw[:, 1], radius_m)
+    return fit_result(stations, lateral_m, ground_m, raw, center, crossfall)
+
+
+def fit_result(stations, lateral_m, ground_m, raw, center, crossfall):
     target = center[:, None] + crossfall[:, None] * lateral_m
     delta = target - ground_m
     grade = np.diff(center) / np.diff(stations)
@@ -132,7 +135,9 @@ def fit_sections(stations, lateral_m, ground_m, radius_m=FIT_RADIUS_M):
     }
 
 
-def prepare(prepared: Path, output: Path, exact_sha: str):
+def prepare(
+    prepared: Path, output: Path, exact_sha: str, curved_edges: Path | None = None
+):
     if len(exact_sha) != 40 or any(c not in "0123456789abcdef" for c in exact_sha):
         raise ValueError("Exact lowercase SHA required")
     if output.exists():
@@ -170,7 +175,103 @@ def prepare(prepared: Path, output: Path, exact_sha: str):
             for s in stations
         ]
     )
+    source_sections = sections[:, :, :2].tolist()
+    presentation_plan = None
+    if curved_edges is not None:
+        from scripts.geometry.curved_road_plan import (
+            RENDER_STEP_M,
+            STATION_COUNT,
+            prepare_sections,
+        )
+
+        stations = np.arange(STATION_COUNT) * RENDER_STEP_M
+        original_xy = sections[:, :, :2]
+        # Preserve corresponding source-polyline XY at the denser chainage.
+        source_sections = np.array(
+            [
+                original_xy[min(i // 4, 599)] * (1 - (i - min(i // 4, 599) * 4) / 4)
+                + original_xy[min(i // 4, 599) + 1] * ((i - min(i // 4, 599) * 4) / 4)
+                for i in range(STATION_COUNT)
+            ]
+        ).tolist()
+        packet = json.loads(curved_edges.read_text())
+        if packet.get("guide_sha256") != sha256(
+            curved_edges.with_name("ma2141-curve-guides.json")
+        ) or packet.get("author_sha256") != sha256(
+            ROOT / "scripts/ue/author_ma2141_curved_edges.py"
+        ):
+            raise ValueError("Native curve guide/author identity mismatch")
+        guides = json.loads(
+            curved_edges.with_name("ma2141-curve-guides.json").read_text()
+        )
+        if any(
+            packet.get(key) != guides.get(key)
+            for key in (
+                "geometry_contract",
+                "width_profile",
+                "axis_arc",
+                "axis_transitions",
+                "edge_constraint",
+                "reference_arc",
+                "single_bend",
+            )
+        ):
+            raise ValueError("Native road edge/width contract was not applied")
+        from scripts.geometry.road_single_bend import CONTRACT, METHOD
+        if guides.get("geometry_contract") == CONTRACT and packet.get("transition_evaluator") != METHOD:
+            raise ValueError("Native single bend evaluator missing")
+        if (guides.get("reference_arc") or {}).get("transition_method") == "quintic-G2-from-native-endpoints" and packet.get("transition_evaluator") != "quintic-G2-from-native-endpoints":
+            raise ValueError("Native G2 transition evaluator missing")
+        spans = packet.get("boundary_spans", [])
+        expected = guides.get("boundary_spans", [])
+        if len(spans) != len(expected) or any(
+            any(actual.get(key) != value for key, value in required.items())
+            for actual, required in zip(spans, expected, strict=True)
+        ):
+            raise ValueError("Native boundary span was not applied")
+        xy, presentation_plan = prepare_sections(
+            packet,
+            source_sections,
+            exact_sha=exact_sha,
+            source_sha=SOURCE_SHA,
+            profile_sha=sha256(PROFILE),
+            origin=origin,
+        )
+        sections = np.zeros((STATION_COUNT, 25, 3))
+        sections[:, :, :2] = np.asarray(xy)
+        # Re-evaluate terrain at the new footprint; old-Z/new-XY is invalid.
+        ground = np.array(
+            [
+                [
+                    triangle_candidates(
+                        heights, manifest, origin[0] + x, origin[1] - y
+                    )[0]
+                    for x, y in row
+                ]
+                for row in xy
+            ]
+        )
+        lateral = np.array(
+            [
+                np.linspace(
+                    -np.linalg.norm(np.subtract(row[-1], row[0])) / 2,
+                    np.linalg.norm(np.subtract(row[-1], row[0])) / 2,
+                    25,
+                )
+                for row in xy
+            ]
+        )
+        presentation_plan["native_export_sha256"] = sha256(curved_edges)
     fit = fit_sections(stations, lateral, ground)
+    surface_design = None
+    if presentation_plan is not None and (presentation_plan["controlled_width"].get("single_bend") or (presentation_plan["controlled_width"].get("reference_arc") or {}).get("transition_method") == "quintic-G2-from-native-endpoints"):
+        from scripts.geometry.road_surface_profile import design_profile
+        apex_roles = next(r["edges"] for r in presentation_plan["edge_role_samples"] if r["station_m"] == 145.0)
+        inner_edge = next(r["edge_index"] for r in apex_roles if r["bend_role"] == "INNER")
+        reference_edge = presentation_plan["controlled_width"]["edge_constraint"]["reference_edge"]
+        center, crossfall, surface_design = design_profile(stations, sections[:, :, :2], fit["center_m"], fit["crossfall"], reference_edge=reference_edge, inner_edge=inner_edge)
+        raw = np.column_stack((fit["raw_center_m"], fit["raw_crossfall"]))
+        fit = fit_result(stations, lateral, ground, raw, center, crossfall)
     rows = []
     for i, s in enumerate(stations):
         rows.append(
@@ -187,6 +288,12 @@ def prepare(prepared: Path, output: Path, exact_sha: str):
                 "max_fill_m": float(max(0, fit["delta_m"][i].max())),
             }
         )
+    surface_inspection = None
+    if surface_design is not None:
+        from scripts.geometry.road_surface_profile import inspect_surface
+        surface_inspection = inspect_surface(rows)
+        if surface_inspection["status"] != "PASS":
+            raise ValueError(f"Road surface inspection failed: {surface_inspection['metrics']}")
     result = {
         "schema_version": 1,
         "exact_sha": exact_sha,
@@ -230,6 +337,16 @@ def prepare(prepared: Path, output: Path, exact_sha: str):
         ],
         "attribution": profile["attribution"],
     }
+    if surface_design is not None:
+        result["surface_design"] = surface_design
+        result["surface_inspection"] = surface_inspection
+    if presentation_plan is not None:
+        result["parameters"]["station_step_m"] = RENDER_STEP_M
+        result["source_xy_preserved"] = False
+        result["canonical_source_xy_preserved"] = True
+        result["presentation_plan"] = presentation_plan
+        for row, source in zip(rows, source_sections, strict=True):
+            row["source_xy_local_m"] = source
     result["bob_inspection"] = inspect_road_profile(result)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, separators=(",", ":"), allow_nan=False) + "\n")
@@ -241,6 +358,9 @@ if __name__ == "__main__":
     parser.add_argument("--prepared-terrain", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--exact-sha", required=True)
+    parser.add_argument("--curved-edges", type=Path)
     args = parser.parse_args()
-    result = prepare(args.prepared_terrain, args.output, args.exact_sha)
+    result = prepare(
+        args.prepared_terrain, args.output, args.exact_sha, args.curved_edges
+    )
     print(json.dumps({"status": result["status"], "metrics": result["metrics"]}))
