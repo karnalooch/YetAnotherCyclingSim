@@ -300,7 +300,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
 
 def cmd_status(args: argparse.Namespace) -> int:
     catalog = load_catalog_file()
-    root = Path(args.root)
+    root = Path(args.root).absolute()
     assets = topological_assets(catalog, args.profile)
     missing = 0
     failures = 0
@@ -499,7 +499,7 @@ def cmd_hydrate_lfs(args: argparse.Namespace) -> int:
 
 def cmd_plan(args: argparse.Namespace) -> int:
     catalog = load_catalog_file()
-    root = Path(args.root)
+    root = Path(args.root).absolute()
     assets = topological_assets(catalog, args.profile)
     need = 0
     manual_missing = 0
@@ -578,7 +578,7 @@ def cmd_plan(args: argparse.Namespace) -> int:
 
 def cmd_verify(args: argparse.Namespace) -> int:
     catalog = load_catalog_file()
-    root = Path(args.root)
+    root = Path(args.root).absolute()
     failures = 0
     for asset in topological_assets(catalog, args.profile):
         path = asset_path(root, asset)

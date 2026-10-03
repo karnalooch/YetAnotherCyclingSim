@@ -270,6 +270,29 @@ class JulkaCatalogContractTests(unittest.TestCase):
             self.assertIn("Git LFS", output.getvalue())
             self.assertIn("GitHub Release access", output.getvalue())
 
+    def test_relative_asset_root_reports_missing_files_without_path_error(self) -> None:
+        previous = Path.cwd()
+        with tempfile.TemporaryDirectory() as temporary:
+            try:
+                os.chdir(temporary)
+                args = type(
+                    "Args",
+                    (),
+                    {
+                        "root": Path("assets"),
+                        "repo": ROOT,
+                        "profile": "sa-calobra-working",
+                        "verify": True,
+                    },
+                )()
+                with patch("julka_core.cli.lfs_records", return_value=[]):
+                    for operation in (cmd_status, cmd_plan, cmd_verify):
+                        with self.subTest(operation=operation.__name__):
+                            with contextlib.redirect_stdout(io.StringIO()):
+                                operation(args)
+            finally:
+                os.chdir(previous)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -98,6 +98,8 @@ a second asset manager.
 Incomplete layer declarations produce a nonzero result from `status`, `plan`
 and `verify`, even when every file currently in the catalog verifies correctly.
 The working profile is a byte-integrity checkpoint, not completion of #345.
+Asset-root arguments may be absolute or relative to the current directory;
+reporting normalizes the root before displaying receipt-relative paths.
 
 ## Usage and SSOT
 
