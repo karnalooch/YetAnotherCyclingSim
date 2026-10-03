@@ -76,6 +76,10 @@ is a second-device backup.
   and reparse points, and reports logical sizes; it never claims exact physical
   disk reclaim, deduplicates only where file IDs allow, and does not upload its
   filename inventory.
+- Windows file identity is read through `os.stat(..., follow_symlinks=False)`;
+  `DirEntry.stat()` returns zero volume/file IDs on Windows and must not be
+  used for deduplicating audit sizes. Logical file-ID totals still do not
+  measure physical allocation or justify deletion.
 - GIS registry fields preserve unverified CRS, vertical reference, footprint,
   density/resolution, classification and NoData as explicitly uninspected.
 

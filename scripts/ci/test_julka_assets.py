@@ -4,6 +4,7 @@ import ast
 import contextlib
 import io
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -171,6 +172,31 @@ class JulkaCatalogContractTests(unittest.TestCase):
             self.assertEqual(report["logical_bytes"], 4)
             self.assertFalse(report["hashes_computed"])
             self.assertIsNone(report["physical_disk_recovery_estimate"])
+
+    def test_audit_counts_distinct_files_and_deduplicates_hardlinks(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            first = root / "first.laz"
+            first.write_bytes(b"LASF")
+            (root / "second.tif").write_bytes(b"different")
+            os.link(first, root / "linked.laz")
+            output = io.StringIO()
+            args = type("Args", (), {"root": root, "hash": False, "output": None})()
+            with contextlib.redirect_stdout(output):
+                self.assertEqual(cmd_audit_root(args), 0)
+            report = json.loads(output.getvalue().split("Asset files:", 1)[0])
+            self.assertEqual(report["asset_file_count"], 3)
+            self.assertEqual(report["logical_bytes"], 17)
+            self.assertEqual(report["unique_file_id_logical_bytes"], 13)
+            records = {row["path"]: row for row in report["files"]}
+            self.assertEqual(
+                records["first.laz"]["unique_file_id"],
+                records["linked.laz"]["unique_file_id"],
+            )
+            self.assertNotEqual(
+                records["first.laz"]["unique_file_id"],
+                records["second.tif"]["unique_file_id"],
+            )
 
     def test_cleanup_is_plan_only_and_keeps_source_and_cache_bytes(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

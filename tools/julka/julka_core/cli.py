@@ -1042,7 +1042,9 @@ def cmd_audit_root(args: argparse.Namespace) -> int:
                             or Path(name).suffix.lower() not in AUDIT_EXTENSIONS
                         ):
                             continue
-                        info = entry.stat(follow_symlinks=False)
+                        # DirEntry.stat() zeroes file IDs on Windows; os.stat()
+                        # retains the volume/file identity needed for hardlinks.
+                        info = os.stat(entry.path, follow_symlinks=False)
                         identity = (int(info.st_dev), int(info.st_ino))
                         record: dict[str, Any] = {
                             "path": Path(entry.path).relative_to(root).as_posix(),
