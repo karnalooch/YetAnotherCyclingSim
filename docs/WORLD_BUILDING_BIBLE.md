@@ -2217,6 +2217,16 @@ When accessible, record panorama location/date and qualitative shoulder,
 drainage and retaining-wall observations separately from surveyed evidence.
 Do not infer metric dimensions from perspective imagery alone.
 
+The owner-only `sa-calobra-street-view-metadata.yml` workflow may locate one
+nearby outdoor panorama before human review. It accepts one WGS84 point, fails
+when Google snaps beyond the requested bound, requests metadata only, and
+retains a sanitized receipt for three days. It never downloads Street View
+pixels and does not turn a panorama into width, height, survey, earthworks or
+physics authority. Reviewers open imagery through an authorized Google surface
+and use it only to classify qualitative roadside context such as exposed rock,
+a wall, guardrail, drop or bridge. PNOA/LiDAR and source-grounded geometry
+remain the metric evidence.
+
 BOB's repair order remains source/footprint review, bounded road-profile work,
 local `Road_Earthworks` where justified, then renewed full-width and interior
 contact checks. Preserve `Base_DTM`. A promising catalogue entry or photograph

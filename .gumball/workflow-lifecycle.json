@@ -252,6 +252,11 @@
       "reason": "Explicit exact-SHA 1080p60 native Sa Calobra baseline; fixed views and reference RTX 2070 SUPER, retained assets."
     },
     {
+      "file": "sa-calobra-street-view-metadata.yml",
+      "state": "CURRENT",
+      "reason": "Owner-only manual metadata probe on the trusted self-hosted runner; it requests no Street View image pixels and retains only a short-lived sanitized receipt."
+    },
+    {
       "file": "runner-monitor.yml",
       "state": "CURRENT",
       "reason": "Owner-only manual main-branch desktop monitor deployment. Rollout push trigger retired after verified silent installation. No Unreal or service restart."
