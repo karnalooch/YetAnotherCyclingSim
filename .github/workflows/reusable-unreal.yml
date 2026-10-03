@@ -260,6 +260,13 @@ jobs:
           foreach ($relative in @('Binaries')) {
             Copy-Item -LiteralPath (Join-Path $warm $relative) -Destination (Join-Path $isolated $relative) -Recurse -Force
           }
+          $automation = Join-Path $warm 'Saved/RuntimeProof/CI/Unreal'
+          Get-ChildItem -LiteralPath $automation -Recurse -File | Where-Object { $_.Extension -in @('.json', '.txt') } | ForEach-Object {
+            $relative = $_.FullName.Substring($warm.Length + 1)
+            $destination = Join-Path $isolated $relative
+            New-Item -ItemType Directory -Path (Split-Path $destination -Parent) -Force | Out-Null
+            Copy-Item -LiteralPath $_.FullName -Destination $destination
+          }
           Get-ChildItem -LiteralPath (Join-Path $warm 'Plugins') -Directory -Recurse -Filter Binaries | ForEach-Object {
             $relative = $_.FullName.Substring($warm.Length + 1)
             $destination = Join-Path $isolated $relative
