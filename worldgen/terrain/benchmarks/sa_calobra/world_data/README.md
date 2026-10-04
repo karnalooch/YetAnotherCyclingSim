@@ -102,6 +102,15 @@ without that binary-download authorization flow.
 
 ## Expansion order
 
+P1 acquisition checkpoint of 2026-10-04 is recorded in
+[the detailed report](P1_ACQUISITION_2026-10-04.md) and
+[the portable receipt](p1_context_receipt_2026-10-04.json). BTN is acquired;
+SIOSE 2014 and Catastro are partial/unadmitted. Invoke only the three P1
+sources with `--sources btn_vector_context siose_2014_wfs catastro_buildings_wfs`.
+This option bypasses all ortho/LiDAR/MDS acquisition and exits 2 on partial
+P1 results. WFS exception, unknown/truncated counts, missing typename/metric
+CRS and wrong requested edition fail closed. No geographic axis fallback is used.
+
 1. acquire and validate the current 2.0165 km working square;
 2. generate first World Data Stack derivatives and feed bounded PCGEx/Landscape consumers;
 3. only after that proof, expand the exact same contract to the existing 8 km × 8 km benchmark.
@@ -114,3 +123,11 @@ without that binary-download authorization flow.
 - PCGEx and Landscape materials consume normalized World Data Stack outputs;
 - MDS/orthophoto/canopy products never replace ground-Z truth;
 - unknown or conflicting evidence remains unknown until reviewed.
+
+## Current verified P1 alternatives
+
+The owner-authorized [alternative checkpoint](P1_ALTERNATIVES_2026-10-04.md)
+acquired official Catastro ATOM Escorca and regional IDEIB SIOSE 2014.
+`p1_alternatives_receipt_2026-10-04.json` pins the 8 payloads. Julka profile
+`sa-calobra-p1-inputs` verifies 30 BTN + 8 alternative files. Original WFS
+failures remain inspectable; normalization and full 2A acceptance remain pending.

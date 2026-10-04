@@ -98,6 +98,17 @@ metodologii ani odbioru Unreal.
 
 Pełna komenda, storage/proof boundaries i limitations: [`tooling/JULKA.md`](tooling/JULKA.md).
 
+Checkpoint P1 z 4 października 2026 r.: Julka ma 45 dodatkowych lokalnych
+identities w `p1_context.json`: BTN 30 PBF / 250 386 B / 21 warstw;
+SIOSE capabilities + diagnostyczny GML / 1 434 573 B; Catastro capabilities +
+12 odpowiedzi błędu / 19 782 B. BTN ma status `acquired` jako kontekst usługowy.
+SIOSE 2014 jest `partial`: usługa deklaruje HR 2017, a 244 obiekty mają datę
+obserwacji 2016; nie dopuszczamy ich jako 2014. Catastro jest `partial`:
+`Area of extension out of limits`, 0 dopuszczonych GML. Profil P1 pozostaje
+niekompletny mimo poprawnych hashy wszystkich plików. Raw cache jest poza Git,
+bez zarejestrowanego backupu remote. Pełne evidence i restore/status są w
+[raporcie P1](../worldgen/terrain/benchmarks/sa_calobra/world_data/P1_ACQUISITION_2026-10-04.md).
+
 ## 2. Kolejność pozyskiwania
 
 ### Priorytet A — potrzebne przed lub w trakcie budowy MVP
@@ -619,3 +630,13 @@ Asset pass MVP jest ukończony, gdy:
 - krytyczne PCG/rig/IK/Niagara/MetaSound assets są zapisane w Technical UE Asset Ledger i mają status `validated`;
 - generated outputs można odtworzyć albo ich pochodzenie jest jawnie zapisane; nie ma ręcznie zmodyfikowanych „generated” assetów bez źródła prawdy;
 - większe zmiany wizualne mają wpis w `docs/visual-history/` z baseline `BEFORE`, bieżącym `NOW`, zaakceptowanym `AFTER`, commit/PR/CI provenance oraz osobną decyzją techniczną i wizualną.
+
+## P1 alternative source checkpoint — 2026-10-04
+
+Alternatywne ścieżki zatwierdzone przez właściciela dostarczyły Catastro ATOM
+Escorca (ZIP 127 448 B, 224 budynki / 595 części / 24 inne konstrukcje) oraz
+regionalne SIOSE 2014 (15/15 obiektów AOI, EPSG:25831). Julka rejestruje 8
+dodatkowych identities, profil `sa-calobra-p1-inputs` przechodzi 38/38 hashy.
+Wcześniejsze błędy WFS pozostają jako historyczne evidence. Dane raw nadal poza
+Git, restore lokalny; brak remote backupu. To acquisition, nie normalized masks
+ani dowód kompletnego pokrycia AOI granicą gminy. [Pełny raport](../worldgen/terrain/benchmarks/sa_calobra/world_data/P1_ALTERNATIVES_2026-10-04.md).

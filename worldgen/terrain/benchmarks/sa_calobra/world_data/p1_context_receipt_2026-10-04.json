@@ -1,0 +1,1441 @@
+{
+  "schema_version": 1,
+  "issue": 335,
+  "exact_sha": null,
+  "aoi": {
+    "id": "sa_calobra_working_space_v1",
+    "status": "primary_cnig_sources_acquired",
+    "crs": "EPSG:25831",
+    "bounds_m": [
+      483000,
+      4407500,
+      485016.5,
+      4409516.5
+    ],
+    "center_m": [
+      484008.25,
+      4408508.25
+    ],
+    "center_wgs84_lon_lat": [
+      2.813126946845794,
+      39.826417491613824
+    ],
+    "wgs84_corners_lon_lat": {
+      "SW": [
+        2.8013711714022658,
+        39.81731355795069
+      ],
+      "SE": [
+        2.824931945160123,
+        39.81735149865384
+      ],
+      "NE": [
+        2.824885825640162,
+        39.835520226740705
+      ],
+      "NW": [
+        2.801318845180626,
+        39.8354822617286
+      ]
+    },
+    "size_m": [
+      2016.5,
+      2016.5
+    ],
+    "area_km2": 4.06648225,
+    "relationship_to_benchmark": "Current active Unreal working/import square inside the existing 8 km x 8 km Sa Calobra MDT50cm benchmark."
+  },
+  "persistent_root": "_yacs-world-data/sa-calobra-working-v1",
+  "manifest_path": "worldgen/terrain/benchmarks/sa_calobra/world_data/working_space_sources.json",
+  "selected_sources": [
+    "btn_vector_context",
+    "siose_2014_wfs",
+    "catastro_buildings_wfs"
+  ],
+  "manifest_sha256": "debdacd0631b161041541134f4e7e15f8afaa1f66b9af4c3a79c6e7c8ffac065",
+  "sources": {
+    "btn_vector_context": {
+      "status": "downloaded",
+      "tile_count": 30,
+      "manifest": "p1-2026-10-04/btn_vector_tiles/tiles.json",
+      "source": "Base Topografica Nacional",
+      "service_template": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+      "zoom": 16,
+      "wgs84_bbox_lon_lat": [
+        2.801318845180626,
+        39.81731355795069,
+        2.824931945160123,
+        39.835520226740705
+      ],
+      "tiles": [
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33277/24849.pbf",
+          "size_bytes": 9608,
+          "sha256": "a0e8277f9d6cdeca03fafeba63c7a753345999483168d48d199de7d292ec820b",
+          "reused": true,
+          "z": 16,
+          "x": 33277,
+          "y": 24849,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24849/33277.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 28,
+            "btn0201l_cur_niv": 36,
+            "btn0623l_camino": 1,
+            "btn0605l_carretera": 4,
+            "btn0302l_rio": 1,
+            "btn0107s_zon_pro": 1,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33278/24849.pbf",
+          "size_bytes": 8048,
+          "sha256": "58de3be1dcc57fee6cb9c64e6e4c05d3c8f2bbb22d6bfa2f49a54a9602e0aa2b",
+          "reused": true,
+          "z": 16,
+          "x": 33278,
+          "y": 24849,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24849/33278.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 28,
+            "btn0204p_pun_aco": 8,
+            "btn0618p_kil_carr": 1,
+            "btn0201l_cur_niv": 22,
+            "btn0623l_camino": 1,
+            "btn0605l_carretera": 1,
+            "btn0302l_rio": 2,
+            "btn0107s_zon_pro": 1,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33279/24849.pbf",
+          "size_bytes": 9454,
+          "sha256": "efbd1bab2e7f7e4d25538e8924eaaee5983b6b92f930bd4559d24b171446704f",
+          "reused": true,
+          "z": 16,
+          "x": 33279,
+          "y": 24849,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24849/33279.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 36,
+            "btn0204p_pun_aco": 1,
+            "btn0801p_top_sin_geo": 1,
+            "btn0201l_cur_niv": 60,
+            "btn0107s_zon_pro": 1,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33280/24849.pbf",
+          "size_bytes": 9476,
+          "sha256": "ebcee4ee634095e138d8a54afbb15d84092b55fafd4f2fa2bb8f71178304bde0",
+          "reused": true,
+          "z": 16,
+          "x": 33280,
+          "y": 24849,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24849/33280.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 36,
+            "btn0204p_pun_aco": 9,
+            "btn0201l_cur_niv": 56,
+            "btn0107s_zon_pro": 3,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33281/24849.pbf",
+          "size_bytes": 7910,
+          "sha256": "bbb71ab597e6cef46ba180a7342e5c67cc1a64ba1ee16c8cbbb6ab188d487239",
+          "reused": true,
+          "z": 16,
+          "x": 33281,
+          "y": 24849,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24849/33281.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 28,
+            "btn0204p_pun_aco": 3,
+            "btn0201l_cur_niv": 31,
+            "btn0107s_zon_pro": 3,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33282/24849.pbf",
+          "size_bytes": 9397,
+          "sha256": "374521ab730a00d3f7f7ad9e7c5153db2cb775e20b91b4c1490c9930ecc5a703",
+          "reused": true,
+          "z": 16,
+          "x": 33282,
+          "y": 24849,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24849/33282.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 28,
+            "btn0204p_pun_aco": 9,
+            "btn0801p_top_sin_geo": 1,
+            "btn0201l_cur_niv": 48,
+            "btn0803l_lin_rot": 1,
+            "btn0107s_zon_pro": 2,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33277/24850.pbf",
+          "size_bytes": 7300,
+          "sha256": "425323f718cb43b1c181337ae314b85dd316410dda423a31e8163238ff48de6d",
+          "reused": true,
+          "z": 16,
+          "x": 33277,
+          "y": 24850,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24850/33277.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 28,
+            "btn0204p_pun_aco": 4,
+            "btn0201l_cur_niv": 51,
+            "btn0107s_zon_pro": 1,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33278/24850.pbf",
+          "size_bytes": 8941,
+          "sha256": "53e3d6976d2225067c9e98ac7c70fa8c709de98a2cf853aff4bf6da7670cf819",
+          "reused": true,
+          "z": 16,
+          "x": 33278,
+          "y": 24850,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24850/33278.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 28,
+            "btn0204p_pun_aco": 4,
+            "btn0618p_kil_carr": 1,
+            "btn0201l_cur_niv": 47,
+            "btn0605l_carretera": 1,
+            "btn0302l_rio": 2,
+            "btn0107s_zon_pro": 2,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33279/24850.pbf",
+          "size_bytes": 11688,
+          "sha256": "373fdbfc0c1905fdba5306fa30144c80fd7ac3a4c3d3bbcd6a3dfbfb3c9b9485",
+          "reused": true,
+          "z": 16,
+          "x": 33279,
+          "y": 24850,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24850/33279.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 36,
+            "btn0618p_kil_carr": 1,
+            "btn0201l_cur_niv": 91,
+            "btn0605l_carretera": 1,
+            "btn0302l_rio": 1,
+            "btn0107s_zon_pro": 2,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33280/24850.pbf",
+          "size_bytes": 13001,
+          "sha256": "f2fc52e5e80a48560ee3c2da01a3fc6e64e10f5753524ac0313069538c4dad40",
+          "reused": true,
+          "z": 16,
+          "x": 33280,
+          "y": 24850,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24850/33280.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 36,
+            "btn0204p_pun_aco": 8,
+            "btn0801p_top_sin_geo": 1,
+            "btn0618p_kil_carr": 3,
+            "btn0201l_cur_niv": 78,
+            "btn0543l_tunel_l": 1,
+            "btn0605l_carretera": 5,
+            "btn0546l_pas_ele": 1,
+            "btn0507s_edific": 1,
+            "btn0107s_zon_pro": 2,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33281/24850.pbf",
+          "size_bytes": 6124,
+          "sha256": "3ffe59fdc79e1a6bea30ade49bb24945001340dd8aa01ba27cc1202e15f698b1",
+          "reused": true,
+          "z": 16,
+          "x": 33281,
+          "y": 24850,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24850/33281.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 28,
+            "btn0801p_top_sin_geo": 1,
+            "btn0201l_cur_niv": 38,
+            "btn0803l_lin_rot": 1,
+            "btn0107s_zon_pro": 1,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33282/24850.pbf",
+          "size_bytes": 7785,
+          "sha256": "a28807f3a732ae66796581dced97f4d3a871a8f4661a87203f4e6da95df23c48",
+          "reused": true,
+          "z": 16,
+          "x": 33282,
+          "y": 24850,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24850/33282.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 28,
+            "btn0204p_pun_aco": 6,
+            "btn0201l_cur_niv": 54,
+            "btn0803l_lin_rot": 1,
+            "btn0107s_zon_pro": 2,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33277/24851.pbf",
+          "size_bytes": 8342,
+          "sha256": "560a2943aa38b35a33d64ce5fe30e539e4e20792bc83b1f22e87c8d68923c7b3",
+          "reused": true,
+          "z": 16,
+          "x": 33277,
+          "y": 24851,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24851/33277.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 29,
+            "btn0204p_pun_aco": 6,
+            "btn0201l_cur_niv": 34,
+            "btn0507s_edific": 2,
+            "btn0107s_zon_pro": 2,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33278/24851.pbf",
+          "size_bytes": 8720,
+          "sha256": "fbf6986352138fbddecd478f2d9e6495d3f1e9113967575969fe8ff2becc7011",
+          "reused": true,
+          "z": 16,
+          "x": 33278,
+          "y": 24851,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24851/33278.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 29,
+            "btn0801p_top_sin_geo": 2,
+            "btn0201l_cur_niv": 36,
+            "btn0605l_carretera": 1,
+            "btn0107s_zon_pro": 2,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33279/24851.pbf",
+          "size_bytes": 7111,
+          "sha256": "fbc3fc54cdd3f7fa8e2a189a230965d9675f90ccea634fdd1cb19e9b2f4e986c",
+          "reused": true,
+          "z": 16,
+          "x": 33279,
+          "y": 24851,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24851/33279.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 38,
+            "btn0204p_pun_aco": 1,
+            "btn0201l_cur_niv": 34,
+            "btn0107s_zon_pro": 2,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33280/24851.pbf",
+          "size_bytes": 8526,
+          "sha256": "edf3bfee844d5943e9b56376efb4cb9e3dfea528f149b6d5ee3bcf0e10373c16",
+          "reused": true,
+          "z": 16,
+          "x": 33280,
+          "y": 24851,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24851/33280.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 38,
+            "btn0334p_surgen": 1,
+            "btn0204p_pun_aco": 4,
+            "btn0201l_cur_niv": 30,
+            "btn0803l_lin_rot": 1,
+            "btn0605l_carretera": 2,
+            "btn0328s_alm_agu": 1,
+            "btn0107s_zon_pro": 2,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33281/24851.pbf",
+          "size_bytes": 7186,
+          "sha256": "b178cd4f6563443049ac83fdf7a7ca5b4bec3e96d3b3ba77fa67566300b262cf",
+          "reused": true,
+          "z": 16,
+          "x": 33281,
+          "y": 24851,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24851/33281.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 29,
+            "btn0558p_yac_arq": 1,
+            "btn0204p_pun_aco": 4,
+            "btn0201l_cur_niv": 23,
+            "btn0803l_lin_rot": 1,
+            "btn0605l_carretera": 1,
+            "btn0107s_zon_pro": 3,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33282/24851.pbf",
+          "size_bytes": 10260,
+          "sha256": "cae6c3f6f52d940734f6f21d46552e68d6128086b16405dcd6af699552926610",
+          "reused": true,
+          "z": 16,
+          "x": 33282,
+          "y": 24851,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24851/33282.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 29,
+            "btn0204p_pun_aco": 3,
+            "btn0801p_top_sin_geo": 1,
+            "btn0201l_cur_niv": 35,
+            "btn0302l_rio": 1,
+            "btn0107s_zon_pro": 2,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33277/24852.pbf",
+          "size_bytes": 6636,
+          "sha256": "c6341e5b292938c830b16d58b807db7288b21a04b066bf95a0ed61c6b689899b",
+          "reused": true,
+          "z": 16,
+          "x": 33277,
+          "y": 24852,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24852/33277.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 29,
+            "btn0201l_cur_niv": 27,
+            "btn0302l_rio": 1,
+            "btn0507s_edific": 2,
+            "btn0107s_zon_pro": 2,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33278/24852.pbf",
+          "size_bytes": 7134,
+          "sha256": "d33eeb53591962ac68332596f7498ac260276569b45177b8010914d1bcbc795e",
+          "reused": true,
+          "z": 16,
+          "x": 33278,
+          "y": 24852,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24852/33278.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 29,
+            "btn0204p_pun_aco": 3,
+            "btn0201l_cur_niv": 32,
+            "btn0107s_zon_pro": 2,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33279/24852.pbf",
+          "size_bytes": 7417,
+          "sha256": "87ed5644f2019d2a791dd364ee3dcdd62cc6ed82d8ecdd8caf230a2d34d506ac",
+          "reused": true,
+          "z": 16,
+          "x": 33279,
+          "y": 24852,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24852/33279.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 38,
+            "btn0204p_pun_aco": 2,
+            "btn0801p_top_sin_geo": 1,
+            "btn0201l_cur_niv": 38,
+            "btn0803l_lin_rot": 1,
+            "btn0328s_alm_agu": 1,
+            "btn0107s_zon_pro": 2,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33280/24852.pbf",
+          "size_bytes": 7572,
+          "sha256": "3c0ffe875a3abc1c5702c9a20ba905b3f65f3dd21a3ab83c61bc9af7de456cb0",
+          "reused": true,
+          "z": 16,
+          "x": 33280,
+          "y": 24852,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24852/33280.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 38,
+            "btn0801p_top_sin_geo": 1,
+            "btn0618p_kil_carr": 1,
+            "btn0201l_cur_niv": 28,
+            "btn0803l_lin_rot": 1,
+            "btn0605l_carretera": 1,
+            "btn0302l_rio": 1,
+            "btn0107s_zon_pro": 2,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33281/24852.pbf",
+          "size_bytes": 4935,
+          "sha256": "7f4c6b0945560f80d1218133c54f34b266585827b776ea8c10573919453637f0",
+          "reused": true,
+          "z": 16,
+          "x": 33281,
+          "y": 24852,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24852/33281.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 29,
+            "btn0201l_cur_niv": 19,
+            "btn0302l_rio": 1,
+            "btn0107s_zon_pro": 2,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33282/24852.pbf",
+          "size_bytes": 10619,
+          "sha256": "b66ec254ebca13ef92ed3753de09e866a90f44b0ab03aa62cd5299804db914c4",
+          "reused": true,
+          "z": 16,
+          "x": 33282,
+          "y": 24852,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24852/33282.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 29,
+            "POI_btn0502s_ent_pob_7": 1,
+            "btn0558p_yac_arq": 1,
+            "btn0201l_cur_niv": 25,
+            "btn0623l_camino": 1,
+            "btn0605l_carretera": 2,
+            "btn0302l_rio": 2,
+            "btn0507s_edific": 1,
+            "btn0502s_ent_pob": 1,
+            "btn0107s_zon_pro": 2,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33277/24853.pbf",
+          "size_bytes": 8903,
+          "sha256": "02803f622568597eeb2f981212b4fad78a124ad44577b8f417bf11dc66cbfa8c",
+          "reused": true,
+          "z": 16,
+          "x": 33277,
+          "y": 24853,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24853/33277.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 28,
+            "btn0334p_surgen": 1,
+            "btn0801p_top_sin_geo": 1,
+            "btn0201l_cur_niv": 38,
+            "btn0623l_camino": 1,
+            "btn0302l_rio": 1,
+            "btn0107s_zon_pro": 2,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33278/24853.pbf",
+          "size_bytes": 8434,
+          "sha256": "639c15f9588805d5262849cc16d4d56a89a2a32aba6896d5969e8444b0ab0e2d",
+          "reused": true,
+          "z": 16,
+          "x": 33278,
+          "y": 24853,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24853/33278.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 28,
+            "btn0204p_pun_aco": 4,
+            "btn0201l_cur_niv": 30,
+            "btn0803l_lin_rot": 2,
+            "btn0107s_zon_pro": 3,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33279/24853.pbf",
+          "size_bytes": 8076,
+          "sha256": "e9d5d5a133dce78df416e72a2ef89bfc52af8ca09d9e59e0f63f9dd91ae6d935",
+          "reused": true,
+          "z": 16,
+          "x": 33279,
+          "y": 24853,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24853/33279.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 36,
+            "btn0201l_cur_niv": 45,
+            "btn0803l_lin_rot": 1,
+            "btn0107s_zon_pro": 2,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33280/24853.pbf",
+          "size_bytes": 7462,
+          "sha256": "05a2e34af4c9076e12fa86aad63720bb91fd9ee51921e0b2395825cbc8592b7c",
+          "reused": true,
+          "z": 16,
+          "x": 33280,
+          "y": 24853,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24853/33280.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 36,
+            "btn0618p_kil_carr": 1,
+            "btn0201l_cur_niv": 26,
+            "btn0605l_carretera": 1,
+            "btn0302l_rio": 1,
+            "btn0507s_edific": 3,
+            "btn0328s_alm_agu": 1,
+            "btn0107s_zon_pro": 2,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33281/24853.pbf",
+          "size_bytes": 5171,
+          "sha256": "d2e8741ed514473dbb4152ae3a17b1dfc5002e73670f864f83af0c580c6fda51",
+          "reused": true,
+          "z": 16,
+          "x": 33281,
+          "y": 24853,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24853/33281.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 28,
+            "btn0201l_cur_niv": 15,
+            "btn0605l_carretera": 1,
+            "btn0302l_rio": 2,
+            "btn0107s_zon_pro": 3,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        },
+        {
+          "path": "p1-2026-10-04/btn_vector_tiles/16/33282/24853.pbf",
+          "size_bytes": 9150,
+          "sha256": "747ec66959246a7f8435bf2edd79b4874d269fd2d7e7637b348af892ae1575fe",
+          "reused": true,
+          "z": 16,
+          "x": 33282,
+          "y": 24853,
+          "http": {
+            "url": "https://vt-btn.idee.es/1.0.0/btn/tile/16/24853/33282.pbf",
+            "note": "Existing raw bytes reused; no new HTTP request"
+          },
+          "layers": {
+            "poligonoTile27072026": 28,
+            "btn0204p_pun_aco": 3,
+            "btn0308l_tub_serv": 1,
+            "btn0201l_cur_niv": 14,
+            "btn0623l_camino": 3,
+            "btn0605l_carretera": 2,
+            "btn0302l_rio": 3,
+            "btn0507s_edific": 1,
+            "btn0328s_alm_agu": 3,
+            "btn0107s_zon_pro": 3,
+            "btn0355s_isla": 1,
+            "pais": 1
+          }
+        }
+      ],
+      "layer_count": 21,
+      "layer_feature_counts": {
+        "poligonoTile27072026": 936,
+        "btn0201l_cur_niv": 1141,
+        "btn0623l_camino": 7,
+        "btn0605l_carretera": 23,
+        "btn0302l_rio": 19,
+        "btn0107s_zon_pro": 61,
+        "btn0355s_isla": 30,
+        "pais": 30,
+        "btn0204p_pun_aco": 82,
+        "btn0618p_kil_carr": 8,
+        "btn0801p_top_sin_geo": 10,
+        "btn0803l_lin_rot": 10,
+        "btn0543l_tunel_l": 1,
+        "btn0546l_pas_ele": 1,
+        "btn0507s_edific": 10,
+        "btn0334p_surgen": 2,
+        "btn0328s_alm_agu": 6,
+        "btn0558p_yac_arq": 2,
+        "POI_btn0502s_ent_pob_7": 1,
+        "btn0502s_ent_pob": 1,
+        "btn0308l_tub_serv": 1
+      },
+      "feature_fragment_count": 2382,
+      "admitted_file_count": 30
+    },
+    "siose_2014_wfs": {
+      "status": "partial",
+      "source": "SIOSE 2014 land cover",
+      "capabilities": {
+        "path": "p1-2026-10-04/siose_2014_wfs/GetCapabilities.xml",
+        "size_bytes": 35101,
+        "sha256": "e5e6761c1479a03ae64fe1e2a283b67edce1a2111a430f062fcce46e6cd7b29e",
+        "reused": true
+      },
+      "advertised_feature_types": [
+        "lcv:LandCoverDataset",
+        "lcv:LandCoverUnit",
+        "elu:ExistingLandUseDataSet",
+        "elu:ExistingLandUseObject"
+      ],
+      "selected_feature_types": [
+        "lcv:LandCoverUnit"
+      ],
+      "request_crs": "http://www.opengis.net/def/crs/EPSG/0/25831",
+      "aoi_bounds_epsg25831": [
+        483000.0,
+        4407500.0,
+        485016.5,
+        4409516.5
+      ],
+      "files": [
+        {
+          "typename": "lcv:LandCoverUnit",
+          "quadrant": 0,
+          "bbox_epsg25831": [
+            483000.0,
+            4407500.0,
+            485016.5,
+            4409516.5
+          ],
+          "request": {
+            "SERVICE": "WFS",
+            "VERSION": "2.0.0",
+            "REQUEST": "GetFeature",
+            "TYPENAMES": "lcv:LandCoverUnit",
+            "SRSNAME": "http://www.opengis.net/def/crs/EPSG/0/25831",
+            "BBOX": "483000.0,4407500.0,485016.5,4409516.5,http://www.opengis.net/def/crs/EPSG/0/25831",
+            "COUNT": "10000"
+          },
+          "admitted": false,
+          "path": "p1-2026-10-04/siose_2014_wfs/q0_lcv_LandCoverUnit.gml",
+          "size_bytes": 1399472,
+          "sha256": "369054f4637a0cf97532a9a12328015f2def980e7702aae7e318467bb5974fe8",
+          "reused": true,
+          "feature_count": 244,
+          "number_matched": 244,
+          "number_returned": 244,
+          "error": "Source edition mismatch: expected 2014; advertised abstracts: ['Datos espaciales correspondientes a los temas \"Cubierta terrestre\" del Anexo II de la Directiva Inspire y Anexo I de LISIGE y \"Usos del suelo\" del Anexo III de la Directiva Inspire y Anexo II de LISIGE. Datos procedentes de SIOSE de Alta Resolución 2017 (Sistema de Información sobre Ocupación del Suelo de España) con nomenclatura CODIIGE. Servicio de descarga Inspire de acceso directo conforme con ISO 19142 Web Feature Service e ISO 19143 Filter Encoding.', 'Colecciones de unidades de cubierta terrestre según la nomenclatura CODIIGE para una determinada referencia temporal. Se ofrecen un conjunto de datos: SIOSE del año 2017', 'Elemento individual del conjunto de datos de cubierta terrestre representado por una superficie', 'Un conjunto de datos de uso del suelo existente es una colección de áreas en relación a las cuales se facilita información sobre los usos del suelo (actuales o anteriores) existentes.', 'El objeto de uso del suelo existente es un área caracterizada por una combinación homogénea de tipos de uso.']",
+          "http": {
+            "url": "https://servicios.idee.es/wfs-inspire/ocupacion-suelo?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=lcv%3ALandCoverUnit&SRSNAME=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25831&BBOX=483000.0%2C4407500.0%2C485016.5%2C4409516.5%2Chttp%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25831&COUNT=10000",
+            "status_code": 200,
+            "content_type": "text/xml; subtype=\"gml/3.2.1\";charset=UTF-8",
+            "content_length_header": null,
+            "etag": null,
+            "last_modified": null
+          }
+        }
+      ],
+      "errors": [
+        "Source edition mismatch: expected 2014; advertised abstracts: ['Datos espaciales correspondientes a los temas \"Cubierta terrestre\" del Anexo II de la Directiva Inspire y Anexo I de LISIGE y \"Usos del suelo\" del Anexo III de la Directiva Inspire y Anexo II de LISIGE. Datos procedentes de SIOSE de Alta Resolución 2017 (Sistema de Información sobre Ocupación del Suelo de España) con nomenclatura CODIIGE. Servicio de descarga Inspire de acceso directo conforme con ISO 19142 Web Feature Service e ISO 19143 Filter Encoding.', 'Colecciones de unidades de cubierta terrestre según la nomenclatura CODIIGE para una determinada referencia temporal. Se ofrecen un conjunto de datos: SIOSE del año 2017', 'Elemento individual del conjunto de datos de cubierta terrestre representado por una superficie', 'Un conjunto de datos de uso del suelo existente es una colección de áreas en relación a las cuales se facilita información sobre los usos del suelo (actuales o anteriores) existentes.', 'El objeto de uso del suelo existente es un área caracterizada por una combinación homogénea de tipos de uso.']",
+        "q0 lcv:LandCoverUnit: Source edition mismatch: expected 2014; advertised abstracts: ['Datos espaciales correspondientes a los temas \"Cubierta terrestre\" del Anexo II de la Directiva Inspire y Anexo I de LISIGE y \"Usos del suelo\" del Anexo III de la Directiva Inspire y Anexo II de LISIGE. Datos procedentes de SIOSE de Alta Resolución 2017 (Sistema de Información sobre Ocupación del Suelo de España) con nomenclatura CODIIGE. Servicio de descarga Inspire de acceso directo conforme con ISO 19142 Web Feature Service e ISO 19143 Filter Encoding.', 'Colecciones de unidades de cubierta terrestre según la nomenclatura CODIIGE para una determinada referencia temporal. Se ofrecen un conjunto de datos: SIOSE del año 2017', 'Elemento individual del conjunto de datos de cubierta terrestre representado por una superficie', 'Un conjunto de datos de uso del suelo existente es una colección de áreas en relación a las cuales se facilita información sobre los usos del suelo (actuales o anteriores) existentes.', 'El objeto de uso del suelo existente es un área caracterizada por una combinación homogénea de tipos de uso.']"
+      ],
+      "admitted_file_count": 0
+    },
+    "catastro_buildings_wfs": {
+      "status": "partial",
+      "source": "DG Catastro INSPIRE Buildings",
+      "capabilities": {
+        "path": "p1-2026-10-04/catastro_buildings_wfs/GetCapabilities.xml",
+        "size_bytes": 16182,
+        "sha256": "10b09a742f42362fafe6bd4a6b384574fa458d9ea406278fd5926d723ae441ed",
+        "reused": true
+      },
+      "advertised_feature_types": [
+        "bu:Building",
+        "bu:BuildingPart",
+        "bu:OtherConstruction"
+      ],
+      "selected_feature_types": [
+        "bu:Building",
+        "bu:BuildingPart",
+        "bu:OtherConstruction"
+      ],
+      "request_crs": "urn:ogc:def:crs:EPSG::25831",
+      "aoi_bounds_epsg25831": [
+        483000.0,
+        4407500.0,
+        485016.5,
+        4409516.5
+      ],
+      "files": [
+        {
+          "typename": "bu:Building",
+          "quadrant": 0,
+          "bbox_epsg25831": [
+            483000.0,
+            4407500.0,
+            484008.25,
+            4408508.25
+          ],
+          "request": {
+            "SERVICE": "WFS",
+            "VERSION": "2.0.0",
+            "REQUEST": "GetFeature",
+            "TYPENAMES": "bu:Building",
+            "SRSNAME": "urn:ogc:def:crs:EPSG::25831",
+            "BBOX": "483000.0,4407500.0,484008.25,4408508.25,urn:ogc:def:crs:EPSG::25831",
+            "COUNT": "10000"
+          },
+          "admitted": false,
+          "path": "p1-2026-10-04/catastro_buildings_wfs/q0_bu_Building.gml",
+          "size_bytes": 300,
+          "sha256": "4abfa32fb8968ddb2a4cdee952d936b0ed2f561e02e77e7c81478aa026c2035c",
+          "reused": true,
+          "error": "WFS exception: Area of extension out of limits",
+          "http": {
+            "url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=bu%3ABuilding&SRSNAME=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A25831&BBOX=483000.0%2C4407500.0%2C484008.25%2C4408508.25%2Curn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A25831&COUNT=10000",
+            "status_code": 200,
+            "content_type": "text/xml; charset=utf-8",
+            "content_length_header": "300",
+            "etag": null,
+            "last_modified": null
+          }
+        },
+        {
+          "typename": "bu:BuildingPart",
+          "quadrant": 0,
+          "bbox_epsg25831": [
+            483000.0,
+            4407500.0,
+            484008.25,
+            4408508.25
+          ],
+          "request": {
+            "SERVICE": "WFS",
+            "VERSION": "2.0.0",
+            "REQUEST": "GetFeature",
+            "TYPENAMES": "bu:BuildingPart",
+            "SRSNAME": "urn:ogc:def:crs:EPSG::25831",
+            "BBOX": "483000.0,4407500.0,484008.25,4408508.25,urn:ogc:def:crs:EPSG::25831",
+            "COUNT": "10000"
+          },
+          "admitted": false,
+          "path": "p1-2026-10-04/catastro_buildings_wfs/q0_bu_BuildingPart.gml",
+          "size_bytes": 300,
+          "sha256": "4abfa32fb8968ddb2a4cdee952d936b0ed2f561e02e77e7c81478aa026c2035c",
+          "reused": true,
+          "error": "WFS exception: Area of extension out of limits",
+          "http": {
+            "url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=bu%3ABuildingPart&SRSNAME=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A25831&BBOX=483000.0%2C4407500.0%2C484008.25%2C4408508.25%2Curn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A25831&COUNT=10000",
+            "status_code": 200,
+            "content_type": "text/xml; charset=utf-8",
+            "content_length_header": "300",
+            "etag": null,
+            "last_modified": null
+          }
+        },
+        {
+          "typename": "bu:OtherConstruction",
+          "quadrant": 0,
+          "bbox_epsg25831": [
+            483000.0,
+            4407500.0,
+            484008.25,
+            4408508.25
+          ],
+          "request": {
+            "SERVICE": "WFS",
+            "VERSION": "2.0.0",
+            "REQUEST": "GetFeature",
+            "TYPENAMES": "bu:OtherConstruction",
+            "SRSNAME": "urn:ogc:def:crs:EPSG::25831",
+            "BBOX": "483000.0,4407500.0,484008.25,4408508.25,urn:ogc:def:crs:EPSG::25831",
+            "COUNT": "10000"
+          },
+          "admitted": false,
+          "path": "p1-2026-10-04/catastro_buildings_wfs/q0_bu_OtherConstruction.gml",
+          "size_bytes": 300,
+          "sha256": "4abfa32fb8968ddb2a4cdee952d936b0ed2f561e02e77e7c81478aa026c2035c",
+          "reused": true,
+          "error": "WFS exception: Area of extension out of limits",
+          "http": {
+            "url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=bu%3AOtherConstruction&SRSNAME=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A25831&BBOX=483000.0%2C4407500.0%2C484008.25%2C4408508.25%2Curn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A25831&COUNT=10000",
+            "status_code": 200,
+            "content_type": "text/xml; charset=utf-8",
+            "content_length_header": "300",
+            "etag": null,
+            "last_modified": null
+          }
+        },
+        {
+          "typename": "bu:Building",
+          "quadrant": 1,
+          "bbox_epsg25831": [
+            484008.25,
+            4407500.0,
+            485016.5,
+            4408508.25
+          ],
+          "request": {
+            "SERVICE": "WFS",
+            "VERSION": "2.0.0",
+            "REQUEST": "GetFeature",
+            "TYPENAMES": "bu:Building",
+            "SRSNAME": "urn:ogc:def:crs:EPSG::25831",
+            "BBOX": "484008.25,4407500.0,485016.5,4408508.25,urn:ogc:def:crs:EPSG::25831",
+            "COUNT": "10000"
+          },
+          "admitted": false,
+          "path": "p1-2026-10-04/catastro_buildings_wfs/q1_bu_Building.gml",
+          "size_bytes": 300,
+          "sha256": "4abfa32fb8968ddb2a4cdee952d936b0ed2f561e02e77e7c81478aa026c2035c",
+          "reused": true,
+          "error": "WFS exception: Area of extension out of limits",
+          "http": {
+            "url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=bu%3ABuilding&SRSNAME=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A25831&BBOX=484008.25%2C4407500.0%2C485016.5%2C4408508.25%2Curn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A25831&COUNT=10000",
+            "status_code": 200,
+            "content_type": "text/xml; charset=utf-8",
+            "content_length_header": "300",
+            "etag": null,
+            "last_modified": null
+          }
+        },
+        {
+          "typename": "bu:BuildingPart",
+          "quadrant": 1,
+          "bbox_epsg25831": [
+            484008.25,
+            4407500.0,
+            485016.5,
+            4408508.25
+          ],
+          "request": {
+            "SERVICE": "WFS",
+            "VERSION": "2.0.0",
+            "REQUEST": "GetFeature",
+            "TYPENAMES": "bu:BuildingPart",
+            "SRSNAME": "urn:ogc:def:crs:EPSG::25831",
+            "BBOX": "484008.25,4407500.0,485016.5,4408508.25,urn:ogc:def:crs:EPSG::25831",
+            "COUNT": "10000"
+          },
+          "admitted": false,
+          "path": "p1-2026-10-04/catastro_buildings_wfs/q1_bu_BuildingPart.gml",
+          "size_bytes": 300,
+          "sha256": "4abfa32fb8968ddb2a4cdee952d936b0ed2f561e02e77e7c81478aa026c2035c",
+          "reused": true,
+          "error": "WFS exception: Area of extension out of limits",
+          "http": {
+            "url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=bu%3ABuildingPart&SRSNAME=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A25831&BBOX=484008.25%2C4407500.0%2C485016.5%2C4408508.25%2Curn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A25831&COUNT=10000",
+            "status_code": 200,
+            "content_type": "text/xml; charset=utf-8",
+            "content_length_header": "300",
+            "etag": null,
+            "last_modified": null
+          }
+        },
+        {
+          "typename": "bu:OtherConstruction",
+          "quadrant": 1,
+          "bbox_epsg25831": [
+            484008.25,
+            4407500.0,
+            485016.5,
+            4408508.25
+          ],
+          "request": {
+            "SERVICE": "WFS",
+            "VERSION": "2.0.0",
+            "REQUEST": "GetFeature",
+            "TYPENAMES": "bu:OtherConstruction",
+            "SRSNAME": "urn:ogc:def:crs:EPSG::25831",
+            "BBOX": "484008.25,4407500.0,485016.5,4408508.25,urn:ogc:def:crs:EPSG::25831",
+            "COUNT": "10000"
+          },
+          "admitted": false,
+          "path": "p1-2026-10-04/catastro_buildings_wfs/q1_bu_OtherConstruction.gml",
+          "size_bytes": 300,
+          "sha256": "4abfa32fb8968ddb2a4cdee952d936b0ed2f561e02e77e7c81478aa026c2035c",
+          "reused": true,
+          "error": "WFS exception: Area of extension out of limits",
+          "http": {
+            "url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=bu%3AOtherConstruction&SRSNAME=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A25831&BBOX=484008.25%2C4407500.0%2C485016.5%2C4408508.25%2Curn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A25831&COUNT=10000",
+            "status_code": 200,
+            "content_type": "text/xml; charset=utf-8",
+            "content_length_header": "300",
+            "etag": null,
+            "last_modified": null
+          }
+        },
+        {
+          "typename": "bu:Building",
+          "quadrant": 2,
+          "bbox_epsg25831": [
+            483000.0,
+            4408508.25,
+            484008.25,
+            4409516.5
+          ],
+          "request": {
+            "SERVICE": "WFS",
+            "VERSION": "2.0.0",
+            "REQUEST": "GetFeature",
+            "TYPENAMES": "bu:Building",
+            "SRSNAME": "urn:ogc:def:crs:EPSG::25831",
+            "BBOX": "483000.0,4408508.25,484008.25,4409516.5,urn:ogc:def:crs:EPSG::25831",
+            "COUNT": "10000"
+          },
+          "admitted": false,
+          "path": "p1-2026-10-04/catastro_buildings_wfs/q2_bu_Building.gml",
+          "size_bytes": 300,
+          "sha256": "4abfa32fb8968ddb2a4cdee952d936b0ed2f561e02e77e7c81478aa026c2035c",
+          "reused": true,
+          "error": "WFS exception: Area of extension out of limits",
+          "http": {
+            "url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=bu%3ABuilding&SRSNAME=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A25831&BBOX=483000.0%2C4408508.25%2C484008.25%2C4409516.5%2Curn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A25831&COUNT=10000",
+            "status_code": 200,
+            "content_type": "text/xml; charset=utf-8",
+            "content_length_header": "300",
+            "etag": null,
+            "last_modified": null
+          }
+        },
+        {
+          "typename": "bu:BuildingPart",
+          "quadrant": 2,
+          "bbox_epsg25831": [
+            483000.0,
+            4408508.25,
+            484008.25,
+            4409516.5
+          ],
+          "request": {
+            "SERVICE": "WFS",
+            "VERSION": "2.0.0",
+            "REQUEST": "GetFeature",
+            "TYPENAMES": "bu:BuildingPart",
+            "SRSNAME": "urn:ogc:def:crs:EPSG::25831",
+            "BBOX": "483000.0,4408508.25,484008.25,4409516.5,urn:ogc:def:crs:EPSG::25831",
+            "COUNT": "10000"
+          },
+          "admitted": false,
+          "path": "p1-2026-10-04/catastro_buildings_wfs/q2_bu_BuildingPart.gml",
+          "size_bytes": 300,
+          "sha256": "4abfa32fb8968ddb2a4cdee952d936b0ed2f561e02e77e7c81478aa026c2035c",
+          "reused": true,
+          "error": "WFS exception: Area of extension out of limits",
+          "http": {
+            "url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=bu%3ABuildingPart&SRSNAME=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A25831&BBOX=483000.0%2C4408508.25%2C484008.25%2C4409516.5%2Curn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A25831&COUNT=10000",
+            "status_code": 200,
+            "content_type": "text/xml; charset=utf-8",
+            "content_length_header": "300",
+            "etag": null,
+            "last_modified": null
+          }
+        },
+        {
+          "typename": "bu:OtherConstruction",
+          "quadrant": 2,
+          "bbox_epsg25831": [
+            483000.0,
+            4408508.25,
+            484008.25,
+            4409516.5
+          ],
+          "request": {
+            "SERVICE": "WFS",
+            "VERSION": "2.0.0",
+            "REQUEST": "GetFeature",
+            "TYPENAMES": "bu:OtherConstruction",
+            "SRSNAME": "urn:ogc:def:crs:EPSG::25831",
+            "BBOX": "483000.0,4408508.25,484008.25,4409516.5,urn:ogc:def:crs:EPSG::25831",
+            "COUNT": "10000"
+          },
+          "admitted": false,
+          "path": "p1-2026-10-04/catastro_buildings_wfs/q2_bu_OtherConstruction.gml",
+          "size_bytes": 300,
+          "sha256": "4abfa32fb8968ddb2a4cdee952d936b0ed2f561e02e77e7c81478aa026c2035c",
+          "reused": true,
+          "error": "WFS exception: Area of extension out of limits",
+          "http": {
+            "url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=bu%3AOtherConstruction&SRSNAME=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A25831&BBOX=483000.0%2C4408508.25%2C484008.25%2C4409516.5%2Curn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A25831&COUNT=10000",
+            "status_code": 200,
+            "content_type": "text/xml; charset=utf-8",
+            "content_length_header": "300",
+            "etag": null,
+            "last_modified": null
+          }
+        },
+        {
+          "typename": "bu:Building",
+          "quadrant": 3,
+          "bbox_epsg25831": [
+            484008.25,
+            4408508.25,
+            485016.5,
+            4409516.5
+          ],
+          "request": {
+            "SERVICE": "WFS",
+            "VERSION": "2.0.0",
+            "REQUEST": "GetFeature",
+            "TYPENAMES": "bu:Building",
+            "SRSNAME": "urn:ogc:def:crs:EPSG::25831",
+            "BBOX": "484008.25,4408508.25,485016.5,4409516.5,urn:ogc:def:crs:EPSG::25831",
+            "COUNT": "10000"
+          },
+          "admitted": false,
+          "path": "p1-2026-10-04/catastro_buildings_wfs/q3_bu_Building.gml",
+          "size_bytes": 300,
+          "sha256": "4abfa32fb8968ddb2a4cdee952d936b0ed2f561e02e77e7c81478aa026c2035c",
+          "reused": true,
+          "error": "WFS exception: Area of extension out of limits",
+          "http": {
+            "url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=bu%3ABuilding&SRSNAME=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A25831&BBOX=484008.25%2C4408508.25%2C485016.5%2C4409516.5%2Curn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A25831&COUNT=10000",
+            "status_code": 200,
+            "content_type": "text/xml; charset=utf-8",
+            "content_length_header": "300",
+            "etag": null,
+            "last_modified": null
+          }
+        },
+        {
+          "typename": "bu:BuildingPart",
+          "quadrant": 3,
+          "bbox_epsg25831": [
+            484008.25,
+            4408508.25,
+            485016.5,
+            4409516.5
+          ],
+          "request": {
+            "SERVICE": "WFS",
+            "VERSION": "2.0.0",
+            "REQUEST": "GetFeature",
+            "TYPENAMES": "bu:BuildingPart",
+            "SRSNAME": "urn:ogc:def:crs:EPSG::25831",
+            "BBOX": "484008.25,4408508.25,485016.5,4409516.5,urn:ogc:def:crs:EPSG::25831",
+            "COUNT": "10000"
+          },
+          "admitted": false,
+          "path": "p1-2026-10-04/catastro_buildings_wfs/q3_bu_BuildingPart.gml",
+          "size_bytes": 300,
+          "sha256": "4abfa32fb8968ddb2a4cdee952d936b0ed2f561e02e77e7c81478aa026c2035c",
+          "reused": true,
+          "error": "WFS exception: Area of extension out of limits",
+          "http": {
+            "url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=bu%3ABuildingPart&SRSNAME=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A25831&BBOX=484008.25%2C4408508.25%2C485016.5%2C4409516.5%2Curn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A25831&COUNT=10000",
+            "status_code": 200,
+            "content_type": "text/xml; charset=utf-8",
+            "content_length_header": "300",
+            "etag": null,
+            "last_modified": null
+          }
+        },
+        {
+          "typename": "bu:OtherConstruction",
+          "quadrant": 3,
+          "bbox_epsg25831": [
+            484008.25,
+            4408508.25,
+            485016.5,
+            4409516.5
+          ],
+          "request": {
+            "SERVICE": "WFS",
+            "VERSION": "2.0.0",
+            "REQUEST": "GetFeature",
+            "TYPENAMES": "bu:OtherConstruction",
+            "SRSNAME": "urn:ogc:def:crs:EPSG::25831",
+            "BBOX": "484008.25,4408508.25,485016.5,4409516.5,urn:ogc:def:crs:EPSG::25831",
+            "COUNT": "10000"
+          },
+          "admitted": false,
+          "path": "p1-2026-10-04/catastro_buildings_wfs/q3_bu_OtherConstruction.gml",
+          "size_bytes": 300,
+          "sha256": "4abfa32fb8968ddb2a4cdee952d936b0ed2f561e02e77e7c81478aa026c2035c",
+          "reused": true,
+          "error": "WFS exception: Area of extension out of limits",
+          "http": {
+            "url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=bu%3AOtherConstruction&SRSNAME=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A25831&BBOX=484008.25%2C4408508.25%2C485016.5%2C4409516.5%2Curn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A25831&COUNT=10000",
+            "status_code": 200,
+            "content_type": "text/xml; charset=utf-8",
+            "content_length_header": "300",
+            "etag": null,
+            "last_modified": null
+          }
+        }
+      ],
+      "errors": [
+        "q0 bu:Building: WFS exception: Area of extension out of limits",
+        "q0 bu:BuildingPart: WFS exception: Area of extension out of limits",
+        "q0 bu:OtherConstruction: WFS exception: Area of extension out of limits",
+        "q1 bu:Building: WFS exception: Area of extension out of limits",
+        "q1 bu:BuildingPart: WFS exception: Area of extension out of limits",
+        "q1 bu:OtherConstruction: WFS exception: Area of extension out of limits",
+        "q2 bu:Building: WFS exception: Area of extension out of limits",
+        "q2 bu:BuildingPart: WFS exception: Area of extension out of limits",
+        "q2 bu:OtherConstruction: WFS exception: Area of extension out of limits",
+        "q3 bu:Building: WFS exception: Area of extension out of limits",
+        "q3 bu:BuildingPart: WFS exception: Area of extension out of limits",
+        "q3 bu:OtherConstruction: WFS exception: Area of extension out of limits"
+      ],
+      "admitted_file_count": 0
+    }
+  },
+  "verified_date": "2026-10-04",
+  "raw_sources_committed": false,
+  "acquisition_exit_code": 2,
+  "attempts": [
+    {
+      "operation": "Initial P1 acquisition",
+      "btn_error": "HTTP 404 at z17 after four attempts",
+      "siose_error": "Read timed out (read timeout=30)",
+      "catastro_error": "12/12 WFS exceptions: Area of extension out of limits"
+    },
+    {
+      "operation": "BTN provider-style documented maxzoom=16; SIOSE retry",
+      "btn_status": "downloaded",
+      "siose_status": "transport complete, subsequently rejected by edition check"
+    },
+    {
+      "operation": "Catastro documented lowercase query with EPSG::25831, BBOX without CRS suffix",
+      "status": "rejected",
+      "error": "Area of extension out of limits",
+      "size_bytes": 300
+    }
+  ],
+  "protected_cnig_verification": {
+    "operation": "read-only SHA-256 verification; no download or modification",
+    "files": [
+      {
+        "name": "MDS50CM-ETRS89-H31-0643-8-8-COB3-V1.tif",
+        "size_bytes": 117464277,
+        "sha256": "c7fd7b41514c20e587a0e3d147db4a7eb0882b8430d7c41528758dde55d54e56",
+        "matches": true
+      },
+      {
+        "name": "MDS50CM-ETRS89-H31-0644-1-8-COB3-V1.tif",
+        "size_bytes": 118475276,
+        "sha256": "b5c7a7e4ffac28d9c8d6a7864303a5c930e8e4fddb0b3b84ef521b454ac0021d",
+        "matches": true
+      },
+      {
+        "name": "MDS50CM-ETRS89-H31-0670-8-1-COB3-V1.tif",
+        "size_bytes": 117085737,
+        "sha256": "7a500e43b9e00c9e673fe0d6afd8faca90d7939a6ebd99cb30aac9b0c4d8eee2",
+        "matches": true
+      },
+      {
+        "name": "MDS50CM-ETRS89-H31-0671-1-1-COB3-V1.tif",
+        "size_bytes": 115609448,
+        "sha256": "464367e1ce99dc2ca351c1e16d26b0cff20fea0964b809880c7d3903da776961",
+        "matches": true
+      },
+      {
+        "name": "PNOA_2024_BAL_483-4408_H31_NPC03.laz",
+        "size_bytes": 39247042,
+        "sha256": "9bea9f4effc9868ba399b3ac4fe2f56ec3bf57756dbf1aaea484a2c7921e1dcc",
+        "matches": true
+      },
+      {
+        "name": "PNOA_2024_BAL_483-4409_H31_NPC03.laz",
+        "size_bytes": 38326993,
+        "sha256": "2740ff251615b24e5271191e91f919bc60148859c11c8fbf639079371a3fb653",
+        "matches": true
+      },
+      {
+        "name": "PNOA_2024_BAL_483-4410_H31_NPC03.laz",
+        "size_bytes": 49906963,
+        "sha256": "1a1ce04c32f0449073d8b840cc00a7ca3f1117abbe351a3f48fe57c037a5421b",
+        "matches": true
+      },
+      {
+        "name": "PNOA_2024_BAL_484-4408_H31_NPC03.laz",
+        "size_bytes": 59356962,
+        "sha256": "6b37aee0617df82f5fd1029b1b503651c00307f96a8a392823e0001dfd48bdec",
+        "matches": true
+      },
+      {
+        "name": "PNOA_2024_BAL_484-4409_H31_NPC03.laz",
+        "size_bytes": 38522141,
+        "sha256": "39cfb5cf6b2bf93bd2e9996616ee94d8a830d8df4850ff0bf672183c9043dbdb",
+        "matches": true
+      },
+      {
+        "name": "PNOA_2024_BAL_484-4410_H31_NPC03.laz",
+        "size_bytes": 46764192,
+        "sha256": "af3b790313846225bde04f48b95609963e652d696c0a2edca0d1722eec8ec6d8",
+        "matches": true
+      },
+      {
+        "name": "PNOA_2024_BAL_485-4408_H31_NPC03.laz",
+        "size_bytes": 69266579,
+        "sha256": "e987f1aea01f8672301b0514e249fda33eeef6cf1302e4e3c4dd8428abfbdd50",
+        "matches": true
+      },
+      {
+        "name": "PNOA_2024_BAL_485-4409_H31_NPC03.laz",
+        "size_bytes": 70040345,
+        "sha256": "5c219d8ee12c85c4187095645048943f1d2fc6094c61c290e00a65025afeed3b",
+        "matches": true
+      },
+      {
+        "name": "PNOA_2024_BAL_485-4410_H31_NPC03.laz",
+        "size_bytes": 59014265,
+        "sha256": "fcab9b2e345ab50201cbb4c980c8e7c80d0b51c2d871e218a6607d8e9a643d9a",
+        "matches": true
+      },
+      {
+        "name": "PNOA_MA_OF_ETRS89_HU31_h25_0643_4.tif",
+        "size_bytes": 96633113,
+        "sha256": "a60b899de95f0cc1b273028e58fb868db8ffbb8e9dd86979c61f02f0067ed940",
+        "matches": true
+      },
+      {
+        "name": "PNOA_MA_OF_ETRS89_HU31_h25_0644_3.tif",
+        "size_bytes": 649949316,
+        "sha256": "24f84b0d6d0d338b0723e81c86375a8d86e6d087d7960cb82e6d1cb77c7fa400",
+        "matches": true
+      },
+      {
+        "name": "PNOA_MA_OF_ETRS89_HU31_h25_0670_2.tif",
+        "size_bytes": 748367875,
+        "sha256": "75ab6f8a4075eff38239f48fc75d055a4f7f7719dc37864828c8c05f713dd2de",
+        "matches": true
+      },
+      {
+        "name": "PNOA_MA_OF_ETRS89_HU31_h25_0671_1.tif",
+        "size_bytes": 905565914,
+        "sha256": "3a6e75d218991a1629422bc5b1b2db8b1bb7324fb0b724d69861ccadae714ca8",
+        "matches": true
+      }
+    ]
+  },
+  "btn_style_evidence": {
+    "url": "https://vt-btn.idee.es/files/styles/BTN_Completa.json",
+    "sha256": "15d68fc6ce9249f4432428dcea22ac52e8647c9593d2a51bb5c736e4fc6e8790",
+    "size_bytes": 302481,
+    "maxzoom": 16,
+    "legacy_maxZoom": 14
+  },
+  "acquisition_code_sha256": {
+    "scripts\\assets\\acquire_sa_calobra_world_data.py": "b785f265210afb1412beec0591fb6e2d67a9f841024300e2a8d2bbb5f0298d84",
+    "scripts\\assets\\world_data_service_evidence.py": "2383ed6d2613caf7f87b4515307acc5b90368417779a62f26663c19176b5c37b"
+  }
+}

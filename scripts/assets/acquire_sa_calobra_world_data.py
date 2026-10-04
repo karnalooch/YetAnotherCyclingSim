@@ -18,12 +18,16 @@ import math
 import os
 import re
 import time
+import sys
+import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin
 
 import requests
+
+from world_data_service_evidence import metric_wfs, mvt_layers
 
 
 USER_AGENT = "YetAnotherCyclingSim/WorldDataStack-Issue335 (+https://github.com/karnalooch/YetAnotherCyclingSim)"
@@ -90,6 +94,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--persistent-root", type=Path, required=True)
     parser.add_argument("--receipt-out", type=Path, required=True)
     parser.add_argument("--force", action="store_true")
+    parser.add_argument("--sources", nargs="+", choices=[
+        "btn_vector_context", "siose_2014_wfs", "catastro_buildings_wfs",
+    ], help="Acquire only these P1 sources; never invoke P0/CNIG acquisition")
     return parser.parse_args()
 
 
@@ -270,9 +277,17 @@ def acquire_btn(
     for y in range(y_north, y_south + 1):
         for x in range(x0, x1 + 1):
             url = template.format(z=zoom, x=x, y=y)
-            response = request_with_retry(s, "GET", url)
-            rec = write_bytes(out / str(zoom) / str(x) / f"{y}.pbf", response.content, force)
-            records.append({**rec, "z": zoom, "x": x, "y": y, "http": response_record(response)})
+            path = out / str(zoom) / str(x) / f"{y}.pbf"
+            if path.exists() and not force:
+                rec = {"path": str(path), "size_bytes": path.stat().st_size,
+                       "sha256": sha256(path), "reused": True}
+                http = {"url": url, "note": "Existing raw bytes reused; no new HTTP request"}
+            else:
+                response = request_with_retry(s, "GET", url)
+                rec = write_bytes(path, response.content, force)
+                http = response_record(response)
+            records.append({**rec, "z": zoom, "x": x, "y": y, "http": http,
+                            "layers": mvt_layers(Path(rec["path"]).read_bytes())})
     manifest_path = out / "tiles.json"
     write_text(
         manifest_path,
@@ -292,85 +307,22 @@ def acquire_btn(
 
 
 def xml_feature_type_names(xml_text: str) -> list[str]:
-    return sorted(
-        set(
-            match.group(1).strip()
-            for match in re.finditer(
-                r"<(?:\\w+:)?Name>\\s*([^<]+?)\\s*</(?:\\w+:)?Name>",
-                xml_text,
-                flags=re.IGNORECASE,
-            )
-        )
-    )
+    root = ET.fromstring(xml_text)
+    return sorted({node.text.strip() for node in root.findall(
+        './/{http://www.opengis.net/wfs/2.0}FeatureType/{http://www.opengis.net/wfs/2.0}Name'
+    ) if node.text})
 
 
 def acquire_siose(
     s: requests.Session,
     source: dict[str, Any],
-    corners: dict[str, list[float]],
+    bounds: list[float],
     root: Path,
     force: bool,
 ) -> dict[str, Any]:
-    out = root / "siose_2014"
-    service = source["service_url"]
-    caps = request_with_retry(
-        s,
-        "GET",
-        service,
-        params={"SERVICE": "WFS", "REQUEST": "GetCapabilities", "VERSION": "2.0.0"},
-    )
-    cap_path = out / "GetCapabilities.xml"
-    cap_rec = write_bytes(cap_path, caps.content, force)
-    names = xml_feature_type_names(caps.text)
-    land_names = [name for name in names if "landcover" in name.lower() or "land_cover" in name.lower()]
-    if not land_names:
-        # Preserve capabilities and fail closed rather than guessing a typename.
-        return {
-            "status": "capabilities_only",
-            "capabilities": cap_rec,
-            "feature_type_names": names,
-            "reason": "No LandCover typename discovered automatically",
-        }
-
-    lons = [float(v[0]) for v in corners.values()]
-    lats = [float(v[1]) for v in corners.values()]
-    bbox = [min(lons), min(lats), max(lons), max(lats)]
-    downloads = []
-    for name in land_names:
-        params = {
-            "SERVICE": "WFS",
-            "VERSION": "2.0.0",
-            "REQUEST": "GetFeature",
-            "TYPENAMES": name,
-            "SRSNAME": "EPSG:4258",
-            "BBOX": ",".join(map(str, bbox)) + ",EPSG:4258",
-            "COUNT": "10000",
-        }
-        response = request_with_retry(s, "GET", service, params=params)
-        if "exception" in response.text[:2000].lower():
-            # Axis-order fallback for strict ETRS89 geographic services.
-            swapped = [bbox[1], bbox[0], bbox[3], bbox[2]]
-            params["BBOX"] = ",".join(map(str, swapped)) + ",EPSG:4258"
-            response = request_with_retry(s, "GET", service, params=params)
-        safe = re.sub(r"[^A-Za-z0-9_.-]+", "_", name)
-        rec = write_bytes(out / f"{safe}.gml", response.content, force)
-        downloads.append({**rec, "typename": name, "http": response_record(response)})
-    manifest_path = out / "extract.json"
-    write_text(
-        manifest_path,
-        json.dumps(
-            {
-                "source": source["product"],
-                "capabilities": cap_rec,
-                "feature_types": land_names,
-                "bbox_epsg4258": bbox,
-                "files": downloads,
-            },
-            indent=2,
-        )
-        + "\n",
-    )
-    return {"status": "downloaded", "files": len(downloads), "manifest": str(manifest_path)}
+    # Use the advertised metric CRS; never infer geographic axis order.
+    return metric_wfs(sys.modules[__name__], s, source, bounds, root, force,
+                      ["LandCoverUnit"], [bounds])
 
 
 def split_bbox(bounds: list[float], nx: int, ny: int) -> list[list[float]]:
@@ -393,59 +345,9 @@ def acquire_catastro(
     root: Path,
     force: bool,
 ) -> dict[str, Any]:
-    out = root / "catastro_buildings"
-    service = source["service_url"]
-    caps = request_with_retry(
-        s,
-        "GET",
-        service,
-        params={"service": "WFS", "version": "2.0.0", "request": "GetCapabilities"},
-    )
-    cap_rec = write_bytes(out / "GetCapabilities.xml", caps.content, force)
-    feature_types = ["BU.BUILDING", "BU.BUILDINGPART", "BU.OTHERCONSTRUCTION"]
-    # The service limits BBOX queries to 4 km2. Four subqueries keep us comfortably below.
-    quadrants = split_bbox(bounds, 2, 2)
-    files = []
-    for qi, bbox in enumerate(quadrants):
-        for typename in feature_types:
-            response = request_with_retry(
-                s,
-                "GET",
-                service,
-                params={
-                    "service": "wfs",
-                    "version": "2.0.0",
-                    "request": "getfeature",
-                    "typenames": typename,
-                    "bbox": ",".join(map(str, bbox)),
-                    "srsname": "EPSG::25831",
-                },
-            )
-            safe = typename.replace(".", "_")
-            rec = write_bytes(out / f"q{qi}_{safe}.gml", response.content, force)
-            files.append(
-                {
-                    **rec,
-                    "quadrant": qi,
-                    "bbox_epsg25831": bbox,
-                    "typename": typename,
-                    "http": response_record(response),
-                }
-            )
-    manifest_path = out / "extract.json"
-    write_text(
-        manifest_path,
-        json.dumps(
-            {
-                "source": source["product"],
-                "capabilities": cap_rec,
-                "files": files,
-            },
-            indent=2,
-        )
-        + "\n",
-    )
-    return {"status": "downloaded", "files": len(files), "manifest": str(manifest_path)}
+    return metric_wfs(sys.modules[__name__], s, source, bounds, root, force,
+                      ["Building", "BuildingPart", "OtherConstruction"],
+                      split_bbox(bounds, 2, 2))
 
 
 def parse_forms(html: str) -> dict[str, Any]:
@@ -695,11 +597,14 @@ def main() -> None:
         "aoi": aoi,
         "persistent_root": str(persistent_root),
         "manifest_path": str(manifest_path),
+        "selected_sources": args.sources,
         "manifest_sha256": sha256(manifest_path),
         "sources": {},
     }
 
     def run(name: str, fn: Any) -> None:
+        if args.sources and name not in args.sources:
+            return
         print(f"::group::{name}", flush=True)
         try:
             result = fn()
@@ -727,7 +632,7 @@ def main() -> None:
     run(
         "siose_2014_wfs",
         lambda: acquire_siose(
-            s, sources["siose_2014_wfs"], corners, persistent_root, args.force
+            s, sources["siose_2014_wfs"], bounds, persistent_root, args.force
         ),
     )
     run(
@@ -819,7 +724,7 @@ def main() -> None:
 
     # External-source acquisition is an evidence operation: complete service failures are
     # fatal, while CNIG portal discovery can remain partial with preserved probe evidence.
-    if failed:
+    if failed or (args.sources and partial):
         raise SystemExit(2)
 
 

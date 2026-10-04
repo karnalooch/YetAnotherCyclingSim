@@ -36,6 +36,27 @@ from julka_core.models import (
 
 
 class JulkaCatalogContractTests(unittest.TestCase):
+    def test_p1_context_registry_preserves_fail_closed_admission(self) -> None:
+        catalog = load_catalog_file()
+        registry = catalog["source_registry"]
+        self.assertEqual(registry["btn_vector_context"]["admitted_file_count"], 30)
+        self.assertEqual(registry["siose_2014_wfs"]["admitted_file_count"], 0)
+        self.assertEqual(registry["catastro_buildings_wfs"]["admitted_file_count"], 0)
+        self.assertEqual(len(topological_assets(catalog, "sa-calobra-p1-context")), 45)
+
+    def test_missing_local_context_cannot_pass_restore_plan(self) -> None:
+        import argparse
+
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            contextlib.redirect_stdout(io.StringIO()),
+        ):
+            args = argparse.Namespace(
+                root=Path(directory), repo=ROOT, profile="sa-calobra-btn-context"
+            )
+            self.assertEqual(cmd_plan(args), 3)
+            self.assertEqual(cmd_verify(args), 1)
+
     @classmethod
     def setUpClass(cls) -> None:
         cls.catalog = json.loads(

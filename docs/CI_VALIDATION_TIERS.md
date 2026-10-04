@@ -628,6 +628,18 @@ Broker artifact contract; it never launches a GPU job or mutates a map.
 | Scheduled/manual static CI sweep | `STATIC_ONLY`; no implicit world benchmark |
 | New unregistered world | Fail readiness rather than substitute an older map |
 
+Source acquisition has no running-world performance effect. The policy's
+`source_evidence_paths` lists exact reviewed JSON paths for the working-space
+source catalog and the two 2026-10-04 P1 acquisition receipts. These files serve
+acquisition/planning and Julka identity/provenance, not the UE terrain importer
+or runtime. They use hosted script tests, receipt/hash checks and documentation
+guards; ready PR and main admission report `NOT_REQUIRED` for evidence-only
+changes. This is not a directory/suffix exemption: future receipts, derived
+masks, import settings and other world inputs still require scenario proof.
+A mixed change containing evidence and a runtime/world input retains every
+applicable GPU scenario. If a listed file becomes a runtime/import input,
+remove it from the exact evidence list in the same integration PR.
+
 For an existing broker scenario, request its explicit proof before readiness.
 If admission has already failed, complete that proof and rerun the failed CI
 job/run at the same SHA. On main, use the existing trusted manual performance

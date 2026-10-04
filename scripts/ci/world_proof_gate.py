@@ -34,10 +34,27 @@ def require(condition: bool, message: str) -> None:
 
 def requirements(paths: list[str], policy: dict) -> list[str]:
     require(policy.get("schema_version") == 1, "unsupported world proof policy")
+    evidence_paths = policy.get("source_evidence_paths", [])
+    require(
+        isinstance(evidence_paths, list)
+        and all(
+            isinstance(p, str)
+            and p.startswith("worldgen/")
+            and p.endswith(".json")
+            and not any(c in p for c in "*?[]\\")
+            and ".." not in p.split("/")
+            for p in evidence_paths
+        ),
+        "source evidence paths must be exact repository JSON paths",
+    )
     result = set()
     for path in paths:
         path = path.replace("\\", "/").removeprefix("./")
-        if Path(path).suffix.lower() in {".md", ".rst", ".adoc"}:
+        if path in evidence_paths or Path(path).suffix.lower() in {
+            ".md",
+            ".rst",
+            ".adoc",
+        }:
             continue
         matches = [
             name

@@ -77,6 +77,34 @@ class WorldProofTests(unittest.TestCase):
             ["UNMAPPED_WORLD"],
         )
 
+    def test_only_registered_source_evidence_avoids_gpu(self):
+        evidence = POLICY["source_evidence_paths"]
+        self.assertEqual(gate.requirements(evidence, POLICY), [])
+        for path in (
+            "worldgen/terrain/benchmarks/sa_calobra/world_data/derived_masks.json",
+            "worldgen/terrain/benchmarks/sa_calobra/world_data/new_receipt.json",
+            "worldgen/terrain/benchmarks/sa_calobra/import_manifest.json",
+            "Content/Worlds/SaCalobra/L_Test.umap",
+        ):
+            with self.subTest(path=path):
+                self.assertEqual(
+                    gate.requirements([*evidence, path], POLICY),
+                    ["sa-calobra-terrain"],
+                )
+        self.assertIn(
+            "stage3g-environment",
+            gate.requirements(
+                [*evidence, "Content/Prototype/Maps/L_CyclingTest.umap"], POLICY
+            ),
+        )
+
+    def test_source_evidence_cannot_be_a_wildcard_or_escape_path(self):
+        for path in ("worldgen/*.json", "worldgen/../Content/Worlds/map.json"):
+            policy = copy.deepcopy(POLICY)
+            policy["source_evidence_paths"] = [path]
+            with self.subTest(path=path), self.assertRaisesRegex(ValueError, "exact"):
+                gate.requirements([path], policy)
+
     def test_only_draft_defers_and_unknown_event_fails_closed(self):
         self.assertEqual(gate.phase("pull_request", "true"), "DEFERRED_DRAFT")
         self.assertEqual(gate.phase("pull_request", "false"), "REQUIRED")

@@ -1,0 +1,19 @@
+{
+  "id": "exact-source-evidence-admission",
+  "source": "karnalooch/YetAnotherCyclingSim",
+  "category": "ci",
+  "problem": "A broad world path pattern requests GPU performance proof for acquisition-only source catalogs and receipts.",
+  "invariant": "Separate reviewed exact source-evidence paths from runtime/world inputs; mixed changes retain all applicable performance gates. Reject wildcard and traversal exclusions.",
+  "evidence": [
+    "Issue #335",
+    "PR #359",
+    "scripts/ci/test_world_proof_gate.py",
+    "docs/CI_VALIDATION_TIERS.md"
+  ],
+  "do_not_copy": [
+    "YACS evidence filenames",
+    "world scenario paths"
+  ],
+  "failure_behavior": "Unlisted world inputs and derived masks remain proof-required; reclassify evidence in the same PR if it gains a runtime consumer.",
+  "status": "candidate"
+}
