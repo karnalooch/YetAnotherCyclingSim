@@ -307,7 +307,16 @@ def main():
         unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_dir())
     ) / ("Content/" + package.removeprefix("/Game/") + ".umap")
     state["map_hash"] = digest(state["map_file"])
-    world = unreal.EditorLoadingAndSavingUtils.load_map(package)
+    # Keep transient roads, earthworks and the owner's unsaved edits alive.
+    # A saved baseline does not contain the accepted session-only road scene.
+    import sys
+    repository_root = Path(__file__).resolve().parents[2]
+    if str(repository_root) not in sys.path:
+        sys.path.insert(0, str(repository_root))
+    from scripts.ue.mask_review_world import require_existing_review_world
+    world = require_existing_review_world(
+        unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem), package
+    )
     state["world"] = world
     landscapes = list(
         unreal.GameplayStatics.get_all_actors_of_class(world, unreal.Landscape)

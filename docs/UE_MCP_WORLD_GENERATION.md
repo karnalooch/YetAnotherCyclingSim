@@ -92,6 +92,14 @@ control fails, report the operation/error and use an authorized supported fallba
 Follow the plugin's safety/confirmation requirements; never use UI control to
 bypass a blocked action or execute terminal commands through desktop controls.
 
+The mask reviewer must reuse the expected map already open in the editor. It
+must not call `load_map` to reopen its saved baseline: the accepted road,
+earthworks and supports can exist only as transient session objects and are not
+present in the saved baseline. A different or missing current map is an error,
+not permission to replace the owner's world. Road restoration was explicitly
+authorized on 2026-10-04; it replayed fixed CUT files and existing support recipes
+without saving the map. This does not admit fresh road/earthworks authoring.
+
 For #335, the preview remains session-only: no Save/Save All, terrain sculpting,
 heightmap import, road movement or earthworks generation. Masks fit the frozen
 Landscape/road contract. Sky and diagnostic overlays are review aids. Live review
