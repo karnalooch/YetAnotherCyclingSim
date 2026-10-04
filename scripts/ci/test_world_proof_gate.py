@@ -321,8 +321,15 @@ class OwnerDeferralTests(unittest.TestCase):
             "Source/YACS/MaterialConsumer.cpp",
         ):
             with self.subTest(path=path):
+                target = self.root / path
+                previous = target.read_bytes() if target.exists() else None
                 self.write(path, "2B world change")
                 self.assertIsNone(self.deferred(self.commit()))
+                if previous is None:
+                    target.unlink()
+                else:
+                    target.write_bytes(previous)
+                self.assertIsNotNone(self.deferred(self.commit()))
 
     def test_other_scenarios_and_invalid_or_unrelated_baselines_cannot_defer(self):
         self.assertIsNone(self.deferred(self.baseline, ["UNMAPPED_WORLD"]))
