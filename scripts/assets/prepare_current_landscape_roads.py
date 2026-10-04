@@ -1574,6 +1574,8 @@ def prepare(prepared, output, exact_sha):
     )
     from scripts.assets.prepare_reviewed_network import prepare_reviewed
     prepare_reviewed(result, terrain, manifest, output)
+    from scripts.assets.prepare_nudo_preview import prepare_nudo
+    prepare_nudo(result, terrain, manifest, output)
     write_full_preview_plan(result, output / "network-full-preview-plan.png")
     result["full_preview_plan"] = "network-full-preview-plan.png"
     (output / "network.json").write_text(
@@ -1598,6 +1600,7 @@ if __name__ == "__main__":
                 not in (
                     "approved",
                     "owner_reviewed",
+                    "nudo",
                     "blocked",
                     "full_preview",
                     "height_profile_candidates",

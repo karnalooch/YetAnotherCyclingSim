@@ -53,4 +53,14 @@ def construction_windows(network):
         != preview_fingerprint(network["owner_reviewed"])
     ):
         raise ValueError("Reviewed construction receipt mismatch")
-    return network["approved"] + network["owner_reviewed"]
+    windows = network["approved"] + network["owner_reviewed"]
+    if "nudo" in network:
+        nudo = network["nudo"]
+        replaced = [w["id"] for w in windows if "VIAL_TR70190001178" in w["id"]]
+        if (nudo["replaced_window_ids"] != replaced
+                or not replaced
+                or nudo["construction_sha256"] != preview_fingerprint(nudo["windows"])
+                or nudo["structure_sha256"] != preview_fingerprint([nudo["structure"]])):
+            raise ValueError("Nudo construction receipt mismatch")
+        windows = [w for w in windows if w["id"] not in replaced] + nudo["windows"]
+    return windows

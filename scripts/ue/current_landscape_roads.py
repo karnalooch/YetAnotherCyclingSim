@@ -3,11 +3,13 @@
 import hashlib
 import json
 import math
+import time
 from pathlib import Path
 
 import unreal
 
 from scripts.geometry.bob_vertical_support import build_vertical_support
+from scripts.geometry.nudo_structure import bridge_parapets, build_nudo_support, inspect_underpass
 from scripts.geometry.reviewed_network import construction_windows, validate_slab
 from scripts.geometry.network_pavement import (
     PREVIEW_SUPPORT_CAP_M,
@@ -69,6 +71,7 @@ def shifted_sections_laterally(sections, shift_m):
 
 
 def start(world, root, exact_sha):
+    started = time.perf_counter()
     directory = root / "Network"
     network = json.loads((directory / "network.json").read_text())
     if (
@@ -111,9 +114,13 @@ def start(world, root, exact_sha):
         ):
             raise RuntimeError("Network CUT cap/hash mismatch")
         if not unreal.CyclingLandscapeEarthworksLibrary.apply_road_earthworks_patch(
-            landscapes[0], str(path)
+            landscapes[0], str(path), True
         ):
             raise RuntimeError("Network native CUT patch application failed")
+    if not unreal.CyclingLandscapeEarthworksLibrary.finish_road_earthworks_batch(landscapes[0]):
+        raise RuntimeError("Network native CUT batch flush failed")
+    network["native_timings"] = {"patch_batch_seconds": time.perf_counter()-started,
+                                 "explicit_network_landscape_flush_count": 1}
     return network
 
 
@@ -235,7 +242,7 @@ def spawn_full_visual_context(world, network):
         actor, material = spawn_pavement_mesh(world, vertices, triangles, "REVIEW rejected road " + item["id"])
         material.set_vector_parameter_value("Color", unreal.LinearColor(0.9, 0.04, 0.01, 1))
         kept.append((actor, material))
-    for marker in preview["source_markers"]:
+    for marker in ([] if reviewed else preview["source_markers"]):
         points = [[x, y, trace(world, (x, y, marker["ground_m"][index])) + MARKER_GROUND_OFFSET_M] for index, (x, y) in enumerate(marker["xy_local_m"])]
         vertices, triangles = source_marker_mesh(points)
         actor, material = spawn_pavement_mesh(world, vertices, triangles, "SOURCE LOCATION " + marker["id"])
@@ -243,13 +250,19 @@ def spawn_full_visual_context(world, network):
         kept.append((actor, material))
     proof = {**proof, "rendered_source_marker_count": len(preview["source_markers"]), "rendered_rejected_surface_count": len(preview["rejected_surfaces"]), "marker_ground_offset_m": MARKER_GROUND_OFFSET_M, "collision_admitted": False, "terrain_change_applied": False}
     if reviewed:
+        replaced_surfaces = {w["decision_interval_id"] for w in network.get("owner_reviewed", [])
+                             if w["id"] in network.get("nudo", {}).get("replaced_window_ids", [])}
         proof.update(rendered_rejected_surface_count=0,
-                     rendered_reviewed_surface_count=len(preview["rejected_surfaces"]),
+                     rendered_source_marker_count=0,
+                     source_markers_hidden=True,
+                     rendered_reviewed_surface_count=len(preview["rejected_surfaces"])-len(replaced_surfaces),
+                     reviewed_surfaces_replaced_by_nudo=len(replaced_surfaces),
                      terrain_change_applied=True, material="ASPHALT")
     return kept, proof
 
 
 def finish(world, root, exact_sha, network):
+    started = time.perf_counter()
     kept = []
     reports = []
     for window in construction_windows(network):
@@ -285,11 +298,16 @@ def finish(world, root, exact_sha, network):
                 f"Network asphalt penetration: {window['id']}: {missed_clearance} samples, {maximum_penetration:.4f} m"
             )
         vertices, triangles = pavement_slab(sections)
-        sv, st, proof = build_vertical_support(support, ground)
+        if window.get("nudo_structure"):
+            sv, st, proof = build_nudo_support(support, ground, window["station_start_m"], network["nudo"]["structure"])
+            if proof["arch_soffit_triangle_count"]:
+                proof["underpass_clearance"] = inspect_underpass(sv, st, network["nudo"]["structure"])
+        else:
+            sv, st, proof = build_vertical_support(support, ground)
         if (
             proof["min_shoulder_extent_m"] < 0.4999
             or proof["max_shoulder_extent_m"] > 0.51
-            or proof["max_wall_height_m"] > PREVIEW_SUPPORT_CAP_M
+            or proof["max_wall_height_m"] > (network["nudo"]["structure"]["support_cap_m"] if window.get("nudo_structure") else PREVIEW_SUPPORT_CAP_M)
         ):
             raise RuntimeError("Network support/shoulder admission failed")
         kept.append(
@@ -304,6 +322,12 @@ def finish(world, root, exact_sha, network):
             "Color", unreal.LinearColor(0.34, 0.31, 0.25, 1)
         )
         kept.append((actor, material))
+        if window.get("nudo_structure"):
+            pv, pt = bridge_parapets(support, window["station_start_m"], network["nudo"]["structure"])
+            if pv:
+                parapet, pm = spawn_pavement_mesh(world, pv, pt, "Nudo bridge parapets " + window["id"])
+                pm.set_vector_parameter_value("Color", unreal.LinearColor(0.34, 0.31, 0.25, 1))
+                kept.append((parapet, pm))
         reports.append(
             {
                 "id": window["id"],
@@ -321,9 +345,12 @@ def finish(world, root, exact_sha, network):
     kept.extend(context_objects)
     network["full_context_rendered"] = True
     report = {
+        "native_timings": {**network.get("native_timings", {}), "trace_and_mesh_seconds": time.perf_counter()-started},
         "full_visual_context": context_proof,
         "owner_construction_decision": network.get("owner_construction_decision"),
-        "owner_reviewed_patch_tile_count": len(network.get("owner_reviewed", [])),
+        "nudo": ({k: v for k, v in network["nudo"].items() if k != "windows"} if "nudo" in network else None),
+        "construction_window_count": len(reports),
+        "owner_reviewed_patch_tile_count": sum(w.get("owner_reviewed_geometry", False) and not w.get("nudo_structure", False) for w in construction_windows(network)),
         "constructed_length_m": sum(w["length_m"] for w in reports),
         "surface_review_exception_count": sum(w["surface_inspection"]["status"] != "PASS" for w in reports),
         "schema_version": 1,

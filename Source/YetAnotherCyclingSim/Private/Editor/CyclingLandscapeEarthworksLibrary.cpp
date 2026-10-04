@@ -51,7 +51,8 @@ namespace CyclingLandscapeEarthworksInternal
 
 bool UCyclingLandscapeEarthworksLibrary::ApplyRoadEarthworksPatch(
 	ALandscape* Landscape,
-	const FString& PatchManifestPath)
+	const FString& PatchManifestPath,
+	bool bDeferLandscapeUpdate)
 {
 	using namespace CyclingLandscapeEarthworksInternal;
 
@@ -308,8 +309,10 @@ bool UCyclingLandscapeEarthworksLibrary::ApplyRoadEarthworksPatch(
 	}
 	// Request the full merge through Landscape; the patch-layer helper is not
 	// exported by the installed UE 5.8 binary (LNK2019).
-	Landscape->ForceLayersFullUpdate();
-	Landscape->PostEditChange();
+	if (!bDeferLandscapeUpdate && !FinishRoadEarthworksBatch(Landscape))
+	{
+		return false;
+	}
 
 	UE_LOG(
 		LogCyclingLandscapeEarthworks,
@@ -323,6 +326,18 @@ bool UCyclingLandscapeEarthworksLibrary::ApplyRoadEarthworksPatch(
 		Height,
 		MinHeightCm,
 		MaxHeightCm);
+	return true;
+}
+
+bool UCyclingLandscapeEarthworksLibrary::FinishRoadEarthworksBatch(ALandscape* Landscape)
+{
+	if (!IsValid(Landscape))
+	{
+		UE_LOG(LogCyclingLandscapeEarthworks, Error, TEXT("CUT batch requires one valid Landscape."));
+		return false;
+	}
+	Landscape->ForceLayersFullUpdate();
+	Landscape->PostEditChange();
 	return true;
 }
 

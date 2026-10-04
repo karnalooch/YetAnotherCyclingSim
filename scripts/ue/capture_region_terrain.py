@@ -555,7 +555,7 @@ def main():
             "target": [v * 100 for v in full_camera["target_m"]],
             "full_source_context": True,
             "full_context_fingerprint": network["full_preview_proof"]["fingerprint"],
-            "source_location_marker": "amber",
+            "source_location_marker": "hidden",
             "reviewed_pavement": "asphalt",
             "road_admitted": False,
         },
@@ -604,6 +604,16 @@ def main():
             "reviewed_pavement": "asphalt",
             "shoulder_m": 0.5,
         })
+    nudo = network["nudo"]["structure"]
+    nx, ny = [v*100 for v in nudo["center_xy_m"]]
+    nz = nudo["lower_height_m"]*100
+    tx, ty = nudo["lower_direction_xy"]
+    _views.extend([
+        {"name": "network-nudo-overview", "location": [nx+6500,ny+5500,nz+6500],
+         "target": [nx,ny-1800,nz+450], "nudo_structure_sha256": network["nudo"]["structure_sha256"]},
+        {"name": "network-nudo-underpass", "location": [nx+tx*2000,ny+ty*2000,nz+170],
+         "target": [nx,ny,nz+300], "nudo_structure_sha256": network["nudo"]["structure_sha256"]},
+    ])
     _camera = actors.spawn_actor_from_class(
         unreal.CameraActor, unreal.Vector(), unreal.Rotator(), transient=True
     )

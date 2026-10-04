@@ -3295,8 +3295,9 @@ widening is inferred. Crossfall is a bounded provisional design, attenuated to
 
 The accepted 300 m footprint stays owned by #332. Its original 8 m exclusion
 buffer is closed only by the two endpoint connections authorized below.
-Nudo de la Corbata and its 12 m protection buffer are explicitly blocked for
-structure/vertical-separation review. A 10 m outer-boundary inset preserves
+Nudo de la Corbata and its 12 m protection buffer were originally blocked for
+structure/vertical-separation review; the bounded owner-requested structure
+design below supersedes that visual-construction exclusion. A 10 m outer-boundary inset preserves
 Landscape/patch coverage. Every other source part is authored once as a
 continuous axis, height profile and cross-section field. Constraint measurement
 may use <=100 m probes to bound raster memory, but probe seams are discarded
@@ -3337,7 +3338,7 @@ visual/construction decision: preserve those section coordinates, retain the
 original failed ordinary-policy measurements, and report measured CUT depth
 without the old 1 m construction cap for this exact set. Any changed reviewed
 fingerprint fails closed. Finite vertices, nonfolded triangles, native clearance,
-the 7 m support ceiling, source/physics ownership and protected Nudo remain
+the 7 m ordinary support ceiling and source/physics ownership remain
 mandatory. Do not convert a failed engineering measurement into a PASS.
 
 Close both ends of the same hairpin exclusion gap using the actual 25-vertex
@@ -3355,6 +3356,49 @@ The previously rendered rejected/shifted diagnostic slabs must not overlay the
 adopted asphalt. Erosion remains future work. This decision does not admit
 collision, riding, engineering suitability or performance. Ordinary-policy
 `blocked` records remain diagnostic history, not a count of unrendered roads.
+
+Owner refinement, 2026-10-04: hide the amber source-location annotations in the
+constructed view, but retain their complete coordinates, lengths and immutable
+receipt. Separate asphalt top/end-cap normals using UE 5.8.2 Geometry Script
+`ComputeSplitNormals`, opening angle 15 degrees. This changes shading, not the
+accepted pavement vertices; fresh close-up captures must verify the transverse
+dark stripes have disappeared. The version-matched installed
+`GeometryScript/MeshNormalsFunctions.h` defines the split options and signature.
+
+The same owner request authorizes the Nus de sa Corbata bridge and loop design.
+`prepare_nudo_preview.py` replaces only the two construction tiles of
+`VIAL_TR70190001178`, retaining their old receipts as history, and connects the
+unchanged 25-vertex endpoints of `01287` and `01272` through source paths
+`01178`, `01289` and `01288`. Source XY remains presentation input; source Z is
+not used. A continuous provisional profile connects the existing elevations.
+The 5 m pavement and full 0.5 m shoulders remain explicit inferred dimensions.
+The reference is the owner's Street View at 39.8324306, 2.8161705, heading
+196.97 degrees (July 2026 imagery): upper roadway, masonry arch, lower roadway.
+No Google imagery or texture is redistributed into game assets.
+
+This bounded visual design uses a 7 m wide arch opening, 2.7 m spring height,
+3.5 m rise, >=0.4 m structural depth, and >=4.5 m checked clearance over the
+full lower pavement width, including longitudinal-profile variation. These are
+project dimensions, not surveyed measurements or structural engineering
+admission. The upper 80 m design domain uses an open soffit and 0.30 m by
+0.65 m parapets. Its dedicated support ceiling is 9 m; the ordinary 7 m ceiling
+is unchanged. Actual Landscape traces still check all asphalt and shoulders;
+the actual triangulated upper structure independently checks the underpass.
+The lower road owns terrain height at the crossing. No heightfield is used to
+represent both road decks. New construction/structure hashes and two additional
+native views (`network-nudo-overview`, `network-nudo-underpass`) are mandatory.
+Collision, rideability, human acceptance and performance remain pending.
+
+Network CUT application now defers the explicit Landscape refresh until every
+manifest has passed validation and every native patch has applied successfully.
+`FinishRoadEarthworksBatch` executes the existing full-update/PostEditChange pair
+once, before the unchanged later collision/clearance inspection. Single-patch
+callers retain immediate updates by default. UE 5.8.2 CL 56702186 source
+`LandscapeEditLayers.cpp::ALandscape::ForceLayersFullUpdate` confirms that each
+call waits for asset compilation and resource streaming before merging layers.
+The native receipt records patch-batch and trace/mesh wall time plus the explicit
+refresh count; faster opening must be measured on the final exact-SHA handoff.
+No cache retention or proof gate is weakened by this optimization.
 
 The integration uses the existing UE 5.8.2 (CL 56702186) native LandscapePatch
 path. Version-matched Epic source `LandscapeTexturePatch.h` defines `Min` as

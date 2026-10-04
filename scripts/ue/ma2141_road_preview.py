@@ -256,9 +256,16 @@ def spawn_pavement_mesh(world, vertices, triangles, label):
         material_id=0,
         defer_change_notifications=True,
     )
-    mesh.recompute_normals(
+    # UE 5.8 MeshNormalsFunctions.h: preserve smooth top facets while splitting
+    # the sharp slab perimeter. Per-vertex normals blend the end cap into the
+    # pavement and draw a dark transverse stripe at every technical tile seam.
+    split = unreal.GeometryScriptSplitNormalsOptions()
+    split.set_editor_property("split_by_opening_angle", True)
+    split.set_editor_property("opening_angle_deg", 15.0)
+    split.set_editor_property("split_by_face_group", False)
+    mesh.compute_split_normals(
+        split,
         unreal.GeometryScriptCalculateNormalsOptions(),
-        defer_change_notifications=True,
     )
     component.notify_mesh_modified()
     if (

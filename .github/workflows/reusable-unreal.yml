@@ -451,7 +451,7 @@ jobs:
           if (
             $proof.technical_capture_status -ne 'PASS' -or
             $proof.exact_sha -ne '${{ inputs.target_sha }}' -or
-            $proof.captures.Count -ne 13 -or
+            $proof.captures.Count -ne 15 -or
             $proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT' -or
             $proof.road_geometry_inspection_required -ne $true
           ) { throw 'Terrain capture proof failed.' }
@@ -495,11 +495,16 @@ jobs:
               $context.road_admitted -ne $false -or $context.collision_admitted -ne $false -or
               $context.terrain_change_applied -ne $true -or $context.material -ne 'ASPHALT' -or
               $context.fingerprint -ne $preparedNetwork.full_preview_proof.fingerprint -or
-              [int]$context.rendered_source_marker_count -ne @($preparedNetwork.full_preview.source_markers).Count -or
+              [int]$context.rendered_source_marker_count -ne 0 -or $context.source_markers_hidden -ne $true -or
+              [int]$context.source_marker_count -ne @($preparedNetwork.full_preview.source_markers).Count -or
               [int]$context.rendered_rejected_surface_count -ne 0 -or
-              [int]$context.rendered_reviewed_surface_count -ne @($preparedNetwork.full_preview.rejected_surfaces).Count -or
-              [int]$network.owner_reviewed_patch_tile_count -ne @($preparedNetwork.owner_reviewed).Count -or
-              @($network.windows).Count -ne (@($preparedNetwork.approved).Count + @($preparedNetwork.owner_reviewed).Count) -or
+              ([int]$context.rendered_reviewed_surface_count + [int]$context.reviewed_surfaces_replaced_by_nudo) -ne @($preparedNetwork.full_preview.rejected_surfaces).Count -or
+              [int]$network.owner_reviewed_patch_tile_count -ne @($preparedNetwork.owner_reviewed | Where-Object { $_.id -notin $preparedNetwork.nudo.replaced_window_ids }).Count -or
+              @($network.windows).Count -ne (@($preparedNetwork.approved).Count + @($preparedNetwork.owner_reviewed).Count - @($preparedNetwork.nudo.replaced_window_ids).Count + @($preparedNetwork.nudo.windows).Count) -or
+              $network.nudo.construction_sha256 -ne $preparedNetwork.nudo.construction_sha256 -or
+              $network.nudo.structure_sha256 -ne $preparedNetwork.nudo.structure_sha256 -or
+              @($network.windows | Where-Object { $_.support.PSObject.Properties.Name -contains 'underpass_clearance' -and $_.support.underpass_clearance.status -eq 'PASS' }).Count -ne 1 -or
+              $network.native_timings.explicit_network_landscape_flush_count -ne 1 -or
               @($network.owner_construction_decision.connections).Count -ne 2 -or
               @($network.owner_construction_decision.connections | Where-Object { $_.endpoint_residual_m -ne 0 }).Count -ne 0 -or
               [Math]::Abs([double]$context.source_marker_length_m - [double]$preparedNetwork.source_clipped_length_m) -gt 0.00001 -or

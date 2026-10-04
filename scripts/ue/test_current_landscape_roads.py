@@ -2,9 +2,12 @@
 
 import copy
 import importlib.util
+import hashlib
+import json
 from pathlib import Path
 from types import SimpleNamespace
 import sys
+import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
@@ -43,6 +46,43 @@ def network_fixture():
 
 
 class NativeFullContextTests(unittest.TestCase):
+    def test_network_flushes_once_after_all_patches_and_never_after_failure(self):
+        module, _ = self.load_consumer()
+        network = network_fixture()
+        network.update(exact_sha="a"*40, width_m=5.0, shoulder_m=0.5,
+                       map_saved=False, base_dtm_modified=False,
+                       segmentation={"method": "CONTINUOUS_CORRIDOR_ADAPTIVE_CONFLICT_INTERVALS_V1",
+                                     "fixed_tiles_are_admission_boundaries": False})
+        landscape = Mock()
+        landscape.get_edit_layers_bp.return_value = [Mock(get_name_bp=Mock(return_value=n)) for n in ("Base_DTM", "Road_Earthworks")]
+        library = Mock()
+        library.apply_road_earthworks_patch.return_value = True
+        library.finish_road_earthworks_batch.return_value = True
+        module.unreal = SimpleNamespace(Landscape=object(), GameplayStatics=Mock(), CyclingLandscapeEarthworksLibrary=library)
+        module.unreal.GameplayStatics.get_all_actors_of_class.return_value = [landscape]
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            directory = root / "Network"
+            directory.mkdir()
+            (directory / "height.f32").write_bytes(b"height")
+            payload = {"max_cut_m": 0.5, "patch_file": "height.f32", "patch_sha256": hashlib.sha256(b"height").hexdigest()}
+            manifest = directory / "patch.json"
+            manifest.write_text(json.dumps(payload))
+            window = {"technical_patch_tile": True, "decision_interval_id": "continuous",
+                      "cut_manifest": "patch.json", "cut_sha256": module.digest(manifest)}
+            (directory / "network.json").write_text(json.dumps(network))
+            module.construction_windows = Mock(return_value=[window, window])
+            result = module.start(object(), root, "a"*40)
+            self.assertEqual([c[0] for c in library.method_calls],
+                             ["apply_road_earthworks_patch", "apply_road_earthworks_patch", "finish_road_earthworks_batch"])
+            self.assertTrue(all(c.args[-1] is True for c in library.apply_road_earthworks_patch.call_args_list))
+            self.assertEqual(result["native_timings"]["explicit_network_landscape_flush_count"], 1)
+            library.reset_mock()
+            library.apply_road_earthworks_patch.return_value = False
+            with self.assertRaisesRegex(RuntimeError, "application failed"):
+                module.start(object(), root, "a"*40)
+            library.finish_road_earthworks_batch.assert_not_called()
+
     def load_consumer(self):
         spawn = Mock(side_effect=lambda *args: (Mock(), Mock()))
         spec = importlib.util.spec_from_file_location(
@@ -109,13 +149,16 @@ class NativeFullContextTests(unittest.TestCase):
         # Receipt validation is tested independently with altered coordinates.
         module.construction_windows = Mock(return_value=network["owner_reviewed"])
         kept, proof = module.spawn_full_visual_context(object(), network)
-        self.assertEqual(len(kept), 1)  # The source-location annotation only.
+        self.assertEqual(len(kept), 0)
+        self.assertEqual(proof["rendered_source_marker_count"], 0)
+        self.assertTrue(proof["source_markers_hidden"])
+        module.trace.assert_not_called()
         self.assertEqual(proof["rendered_rejected_surface_count"], 0)
         self.assertEqual(proof["rendered_reviewed_surface_count"], 1)
         self.assertEqual(proof["material"], "ASPHALT")
         self.assertTrue(proof["terrain_change_applied"])
         self.assertEqual(module.spawn_extreme_cut_diagnostic(object(), network), [])
-        self.assertEqual(spawn.call_count, 1)
+        self.assertEqual(spawn.call_count, 0)
 
 
 if __name__ == "__main__":

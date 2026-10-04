@@ -120,7 +120,7 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         capture = self.workflow.split(
             "- name: Capture isolated native Sa Calobra terrain", 1
         )[1].split("- name: Retire owner-approved obsolete Italy payloads", 1)[0]
-        self.assertIn("$proof.captures.Count -ne 13", capture)
+        self.assertIn("$proof.captures.Count -ne 15", capture)
         self.assertIn("'network-hairpin-entry', 'network-hairpin-exit'", capture)
         self.assertIn("network-extreme-cut", capture)
         self.assertIn("Extreme network CUT visual evidence failed.", capture)
