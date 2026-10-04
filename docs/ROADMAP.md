@@ -87,14 +87,18 @@ Produce a believable, deterministic Sa Calobra route/world foundation that can s
 5. Generate the final road mesh independently from the Landscape vertex grid.
 6. Add dedicated cliff/retaining geometry where a heightfield is the wrong representation.
 7. After road geometry and earthworks are stable, execute the **post-road world-finishing sequence** below.
-8. Prove that sequence on a bounded rider-camera vertical slice before broad rollout.
-9. Expand only the accepted systems across the complete playable route.
+8. Validate that sequence on a bounded rider-camera section within the current Landscape before expanding beyond that Landscape; the validation section does not limit the authoring area.
+9. Expand only the accepted systems beyond the current Landscape across the complete playable route.
 10. Run the relevant exact-SHA visual and performance checkpoints.
 11. Close M3 only after the complete route/world foundation is accepted.
 
 ### Post-road world-finishing sequence
 
 This is an ordered M3 delivery sequence, not a new nested milestone hierarchy. Concrete implementation remains tracked by GitHub Issues, while `WORLD_BUILDING_BIBLE.md` remains the methodology authority.
+
+**Owner clarification — 2026-10-04:** the current authoring area is the **entire existing Sa Calobra Landscape**, 2,016.5 m × 2,016.5 m (~4.07 km²), not a 500–1000 m strip. Prepare masks across that full grid and apply the material, biome, foliage, rock and roadside foundations across the current Landscape wherever their source/placement contracts permit. Preserve explicit unknowns and the frozen terrain/road geometry; full-area scope does not authorize invented geography or missing evidence.
+
+The 500–1000 m Golden Kilometer is a representative **visual/performance validation section inside this Landscape**, not an acquisition boundary or a reduced implementation scope. Step 13 concerns subsequent expansion **outside the current Landscape** to the remaining playable route. It does not mean that the current Landscape must wait until step 13 to receive its environment foundation. Keep the full 13-step sequence as the execution scope; prepare the complete baseline mask set before detailed quality refinement.
 
 1. **World Authority inputs and masks** — establish reproducible spatial inputs for road/shoulder domains, route exclusion, terrain classes, slope/elevation/exposure and road-earthworks zones. Real-world source evidence owns geographically meaningful boundaries; procedural systems do not invent replacement geography.
 2. **Landscape material foundation** — produce a coherent terrain material baseline for soil, grass, forest ground, exposed limestone/rock and earthworks transitions without using materials to hide unresolved geometry.
@@ -106,9 +110,9 @@ This is an ordered M3 delivery sequence, not a new nested milestone hierarchy. C
 8. **Foliage system** — place trees, shrubs, grass and understory through deterministic, budgeted instancing/culling/LOD or Nanite policies rather than unconstrained scatter density.
 9. **Roadside procedural foundation** — establish rule-driven placement for the structural roadside layer such as barriers, posts, signs, walls, drainage and bounded rock/vegetation treatment where source evidence or admitted rules justify it. Rich hero dressing, selected buildings and lived-in scenes remain M7.
 10. **Surface and biome blending** — remove hard visual seams between asphalt, shoulders, soil, rock and biome domains through reproducible transition logic; blending may improve presentation but may not conceal geometric disagreement.
-11. **Bounded rider-camera vertical slice** — before full-route generation, prove an approximately **500–1000 m** representative section from the rider camera with the integrated material, PCG/PCGEx, biome, foliage, rock and roadside foundation. This proof strategy is informally the **Golden Kilometer**; its concrete execution belongs in a scoped Issue rather than becoming another roadmap stage.
+11. **Bounded rider-camera vertical slice** — validate an approximately **500–1000 m** representative section within the already authored current Landscape from the rider camera with the integrated material, PCG/PCGEx, biome, foliage, rock and roadside foundation. This proof strategy is informally the **Golden Kilometer**; it is a validation sample, not the extent of Landscape authoring. Its concrete execution belongs in a scoped Issue rather than becoming another roadmap stage.
 12. **Reference-PC performance gate** — the accepted slice must meet the applicable `performance/PERFORMANCE_FRAMEWORK.md` and `performance/BUDGETS.md` gates, including the 1920×1080 / 60 FPS target on the reference RTX 2070 Super system and the relevant frame/GPU/memory/streaming evidence.
-13. **Full-route rollout** — only after the bounded slice is visually accepted and within budget, regenerate/expand the same accepted systems across the complete playable route and verify representative problem areas plus the end-to-end rider-camera experience.
+13. **Full-route rollout** — only after the bounded slice is visually accepted and within budget, expand the same accepted systems **beyond the current Landscape** across the remaining playable route and verify representative problem areas plus the end-to-end rider-camera experience. The entire current Landscape is the preceding authoring area, not a new expansion target at this step.
 
 ### M3 / M7 content boundary
 
