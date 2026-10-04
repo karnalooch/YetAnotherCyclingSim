@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "issue": 337,
+  "pull_request": 338,
+  "accepted_commit_sha": "c5573b3cf545c51ce83ad1fb0a5ca3111f5ad7f6",
+  "tag": "visual/337-road-accepted-2026-10-04",
+  "accepted_date": "2026-10-04",
+  "decision": "Owner accepted the current road and Nudo appearance and requested freezing and protection.",
+  "scope": "Feature-specific visual checkpoint, not full world-stage closeout.",
+  "technical_status": "CI_GREEN",
+  "visual_status": "VISUAL_ACCEPTED",
+  "run_id": 37170332840,
+  "run_number": 1623,
+  "automation": "26/26 PASS",
+  "captures": [
+    {
+      "path": "captures/network-current-landscape-overview.png",
+      "sha256": "ab912d4b2b8cf84f6bf2a6a959084d57afbb1c62afb49f439b3d61fdd79b49d4",
+      "size_bytes": 6013523,
+      "source_commit_sha": "c5573b3cf545c51ce83ad1fb0a5ca3111f5ad7f6"
+    },
+    {
+      "path": "captures/network-extreme-cut.png",
+      "sha256": "cdfecbddb9a97e149bdc1c1a4d6bd766e61d34c80e150cc5c24c714ad873ddfe",
+      "size_bytes": 5802204,
+      "source_commit_sha": "c5573b3cf545c51ce83ad1fb0a5ca3111f5ad7f6"
+    },
+    {
+      "path": "captures/network-hairpin-entry.png",
+      "sha256": "d403efab83335a9d32d10799c2c4a9ed1e3e220cb49eebf6e754f99e35f423da",
+      "size_bytes": 4700655,
+      "source_commit_sha": "c5573b3cf545c51ce83ad1fb0a5ca3111f5ad7f6"
+    },
+    {
+      "path": "captures/network-hairpin-exit.png",
+      "sha256": "012578feb31b0a90115af400b6e4c326d0439399831fe150abf125b971f01e80",
+      "size_bytes": 4782231,
+      "source_commit_sha": "c5573b3cf545c51ce83ad1fb0a5ca3111f5ad7f6"
+    },
+    {
+      "path": "captures/network-nudo-overview.png",
+      "sha256": "f03cef4e7f642e610260c1415d4082358aac33507194f1a26f82e163c153d39e",
+      "size_bytes": 8669098,
+      "source_commit_sha": "c5573b3cf545c51ce83ad1fb0a5ca3111f5ad7f6"
+    },
+    {
+      "path": "captures/network-nudo-underpass.png",
+      "sha256": "76212847da57fa9f5cb20efd4c711ef911ba06863f8129acaca9755afa66b99f",
+      "size_bytes": 2753240,
+      "source_commit_sha": "c5573b3cf545c51ce83ad1fb0a5ca3111f5ad7f6"
+    }
+  ],
+  "pending": [
+    "Gameplay performance budget on accepted SHA",
+    "Collision and rideability validation",
+    "Full stage Visual History stable cameras and triptych closeout"
+  ],
+  "geometry_policy": "Do not change accepted road, shoulders, bridge or terrain appearance without an explicit follow-up scope; retain this tag and evidence permanently."
+}

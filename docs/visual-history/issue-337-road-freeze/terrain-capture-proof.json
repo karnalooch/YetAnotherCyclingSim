@@ -1,0 +1,554 @@
+{
+  "schema_version": 1,
+  "exact_sha": "c5573b3cf545c51ce83ad1fb0a5ca3111f5ad7f6",
+  "region_id": "sa_calobra",
+  "map": "/Game/Worlds/SaCalobra/L_SaCalobraTerrainBaseline",
+  "technical_capture_status": "PASS",
+  "error": "",
+  "captures": [
+    {
+      "name": "terrain-overview",
+      "location": [
+        -35000,
+        100800.0,
+        196061.99951171875
+      ],
+      "target": [
+        100800.0,
+        100800.0,
+        72527.25671937139
+      ],
+      "screenshot": "D:\\actions-runner-yacs\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-region-37170332840-1\\Saved\\RuntimeProof\\CI\\RegionTerrain\\37170332840-1\\terrain-overview.png",
+      "size_bytes": 5947691,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "viewmode": "lit-with-neutral-engine-material",
+      "actual_viewmode": "VMI_LIT",
+      "geometry_inspection": false,
+      "inspection_mode": null,
+      "mesh_edges": false,
+      "road_selected": false,
+      "explicit_road_wireframe": false,
+      "wireframe_color_rgba": null,
+      "force_game_view": true,
+      "fov_deg": 74,
+      "fog": true,
+      "shadows": false
+    },
+    {
+      "name": "terrain-near-ground",
+      "location": [
+        125000,
+        85000,
+        71311.4854974471
+      ],
+      "target": [
+        127000,
+        87000,
+        71748.85515220725
+      ],
+      "screenshot": "D:\\actions-runner-yacs\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-region-37170332840-1\\Saved\\RuntimeProof\\CI\\RegionTerrain\\37170332840-1\\terrain-near-ground.png",
+      "size_bytes": 3770962,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "viewmode": "lit-with-neutral-engine-material",
+      "actual_viewmode": "VMI_LIT",
+      "geometry_inspection": false,
+      "inspection_mode": null,
+      "mesh_edges": false,
+      "road_selected": false,
+      "explicit_road_wireframe": false,
+      "wireframe_color_rgba": null,
+      "force_game_view": true,
+      "fov_deg": 74,
+      "fog": true,
+      "shadows": false
+    },
+    {
+      "name": "road-geometry-inspection-before",
+      "location": [
+        96607.2036013822,
+        65504.19773040339,
+        72655.65673559683
+      ],
+      "target": [
+        105607.2036013822,
+        56504.19773040339,
+        59655.65673559682
+      ],
+      "viewmode": "geometry-inspection-clay-wireframe",
+      "geometry_inspection": true,
+      "inspection_mode": "VMI_CLAY",
+      "mesh_edges": true,
+      "road_selected": true,
+      "explicit_road_wireframe": true,
+      "wireframe_color_rgba": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "force_game_view": false,
+      "earthworks_state": "BEFORE_CUT",
+      "screenshot": "D:\\actions-runner-yacs\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-region-37170332840-1\\Saved\\RuntimeProof\\CI\\RegionTerrain\\37170332840-1\\road-geometry-inspection-before.png",
+      "size_bytes": 9268941,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "actual_viewmode": "VMI_CLAY",
+      "fov_deg": 74,
+      "fog": true,
+      "shadows": false
+    },
+    {
+      "name": "road-geometry-inspection-after",
+      "location": [
+        96607.2036013822,
+        65504.19773040339,
+        72655.65673559683
+      ],
+      "target": [
+        105607.2036013822,
+        56504.19773040339,
+        59655.65673559682
+      ],
+      "viewmode": "geometry-inspection-clay-wireframe",
+      "geometry_inspection": true,
+      "inspection_mode": "VMI_CLAY",
+      "mesh_edges": true,
+      "road_selected": true,
+      "explicit_road_wireframe": true,
+      "wireframe_color_rgba": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "force_game_view": false,
+      "earthworks_state": "AFTER_CUT",
+      "verify_cut_after": true,
+      "screenshot": "D:\\actions-runner-yacs\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-region-37170332840-1\\Saved\\RuntimeProof\\CI\\RegionTerrain\\37170332840-1\\road-geometry-inspection-after.png",
+      "size_bytes": 6904961,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "actual_viewmode": "VMI_CLAY",
+      "fov_deg": 74,
+      "fog": true,
+      "shadows": false
+    },
+    {
+      "name": "road-geometry-inspection-support",
+      "location": [
+        96607.2036013822,
+        65504.19773040339,
+        72655.65673559683
+      ],
+      "target": [
+        105607.2036013822,
+        56504.19773040339,
+        59655.65673559682
+      ],
+      "viewmode": "geometry-inspection-clay-wireframe",
+      "geometry_inspection": true,
+      "inspection_mode": "VMI_CLAY",
+      "mesh_edges": true,
+      "road_selected": true,
+      "explicit_road_wireframe": true,
+      "wireframe_color_rgba": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "force_game_view": false,
+      "earthworks_state": "CUT_AND_VERTICAL_SUPPORT",
+      "screenshot": "D:\\actions-runner-yacs\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-region-37170332840-1\\Saved\\RuntimeProof\\CI\\RegionTerrain\\37170332840-1\\road-geometry-inspection-support.png",
+      "size_bytes": 6914584,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "actual_viewmode": "VMI_CLAY",
+      "fov_deg": 74,
+      "fog": true,
+      "shadows": false
+    },
+    {
+      "name": "road-curved-edges-plan",
+      "location": [
+        105607.2036013822,
+        56504.19773040339,
+        75655.65673559683
+      ],
+      "target": [
+        105607.2036013822,
+        56504.19773040339,
+        59655.65673559682
+      ],
+      "screenshot": "D:\\actions-runner-yacs\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-region-37170332840-1\\Saved\\RuntimeProof\\CI\\RegionTerrain\\37170332840-1\\road-curved-edges-plan.png",
+      "size_bytes": 8761448,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "viewmode": "lit-with-neutral-engine-material",
+      "actual_viewmode": "VMI_LIT",
+      "geometry_inspection": false,
+      "inspection_mode": null,
+      "mesh_edges": false,
+      "road_selected": false,
+      "explicit_road_wireframe": false,
+      "wireframe_color_rgba": null,
+      "force_game_view": true,
+      "fov_deg": 74,
+      "fog": true,
+      "shadows": false
+    },
+    {
+      "name": "road-curved-edges-moderate",
+      "location": [
+        110467.44031802518,
+        61765.96829527989,
+        65917.73206755918
+      ],
+      "target": [
+        110467.44031802518,
+        61765.96829527989,
+        60417.73206755917
+      ],
+      "screenshot": "D:\\actions-runner-yacs\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-region-37170332840-1\\Saved\\RuntimeProof\\CI\\RegionTerrain\\37170332840-1\\road-curved-edges-moderate.png",
+      "size_bytes": 5803868,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "viewmode": "lit-with-neutral-engine-material",
+      "actual_viewmode": "VMI_LIT",
+      "geometry_inspection": false,
+      "inspection_mode": null,
+      "mesh_edges": false,
+      "road_selected": false,
+      "explicit_road_wireframe": false,
+      "wireframe_color_rgba": null,
+      "force_game_view": true,
+      "fov_deg": 74,
+      "fog": true,
+      "shadows": false
+    },
+    {
+      "name": "road-contact-overview",
+      "location": [
+        96607.2036013822,
+        65504.19773040339,
+        72655.65673559683
+      ],
+      "target": [
+        105607.2036013822,
+        56504.19773040339,
+        59655.65673559682
+      ],
+      "screenshot": "D:\\actions-runner-yacs\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-region-37170332840-1\\Saved\\RuntimeProof\\CI\\RegionTerrain\\37170332840-1\\road-contact-overview.png",
+      "size_bytes": 7747488,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "viewmode": "lit-with-neutral-engine-material",
+      "actual_viewmode": "VMI_LIT",
+      "geometry_inspection": false,
+      "inspection_mode": null,
+      "mesh_edges": false,
+      "road_selected": false,
+      "explicit_road_wireframe": false,
+      "wireframe_color_rgba": null,
+      "force_game_view": true,
+      "fov_deg": 74,
+      "fog": true,
+      "shadows": false
+    },
+    {
+      "name": "network-current-landscape-overview",
+      "location": [
+        87924.39321478887,
+        100800.0,
+        331174.54674635374
+      ],
+      "target": [
+        87924.39321478887,
+        100800.0,
+        32364.79142663208
+      ],
+      "full_source_context": true,
+      "full_context_fingerprint": "fc894083cc8f13c2df86a919af0778b246ec263e271a595ad307a188cfc82da5",
+      "source_location_marker": "hidden",
+      "reviewed_pavement": "asphalt",
+      "road_admitted": false,
+      "screenshot": "D:\\actions-runner-yacs\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-region-37170332840-1\\Saved\\RuntimeProof\\CI\\RegionTerrain\\37170332840-1\\network-current-landscape-overview.png",
+      "size_bytes": 6013523,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "viewmode": "lit-with-neutral-engine-material",
+      "actual_viewmode": "VMI_LIT",
+      "geometry_inspection": false,
+      "inspection_mode": null,
+      "mesh_edges": false,
+      "road_selected": false,
+      "explicit_road_wireframe": false,
+      "wireframe_color_rgba": null,
+      "force_game_view": true,
+      "fov_deg": 74,
+      "fog": true,
+      "shadows": false
+    },
+    {
+      "name": "network-extreme-cut",
+      "location": [
+        126000.0,
+        62400.0,
+        75239.12284131034
+      ],
+      "target": [
+        132000.0,
+        56400.0,
+        69658.28464035064
+      ],
+      "extreme_case_id": "VIAL_TR70190001287-0-interval-66",
+      "required_cut_m": 11.616764019193852,
+      "profile_fit_status": "REJECT_INCOMPATIBLE_CUT_SUPPORT_BOUNDS",
+      "diagnostic_colors": {
+        "reviewed_asphalt": "existing_asphalt_material"
+      },
+      "terrain_cut_applied": true,
+      "least_bad_lateral_shift_m": -3.25,
+      "street_view_url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=Q0IzBsfssGl-EEeEOAGuLA&heading=123.6&pitch=-22&fov=90",
+      "anomaly_classification": "NATURAL_FEATURE_CONFIRMED",
+      "geometry_repair_executed": false,
+      "height_change_applied": false,
+      "lateral_change_applied": false,
+      "screenshot": "D:\\actions-runner-yacs\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-region-37170332840-1\\Saved\\RuntimeProof\\CI\\RegionTerrain\\37170332840-1\\network-extreme-cut.png",
+      "size_bytes": 5802204,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "viewmode": "lit-with-neutral-engine-material",
+      "actual_viewmode": "VMI_LIT",
+      "geometry_inspection": false,
+      "inspection_mode": null,
+      "mesh_edges": false,
+      "road_selected": false,
+      "explicit_road_wireframe": false,
+      "wireframe_color_rgba": null,
+      "force_game_view": true,
+      "fov_deg": 74,
+      "fog": true,
+      "shadows": false
+    },
+    {
+      "name": "road-contact-rider",
+      "location": [
+        105909.16227182606,
+        58879.19069118798,
+        60158.43079738964
+      ],
+      "target": [
+        105308.61880817683,
+        58103.25506012887,
+        60063.998966726154
+      ],
+      "screenshot": "D:\\actions-runner-yacs\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-region-37170332840-1\\Saved\\RuntimeProof\\CI\\RegionTerrain\\37170332840-1\\road-contact-rider.png",
+      "size_bytes": 5484894,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "viewmode": "lit-with-neutral-engine-material",
+      "actual_viewmode": "VMI_LIT",
+      "geometry_inspection": false,
+      "inspection_mode": null,
+      "mesh_edges": false,
+      "road_selected": false,
+      "explicit_road_wireframe": false,
+      "wireframe_color_rgba": null,
+      "force_game_view": true,
+      "fov_deg": 74,
+      "fog": true,
+      "shadows": false
+    },
+    {
+      "name": "network-hairpin-entry",
+      "location": [
+        111409.86754932743,
+        66369.17242555434,
+        62839.64972410035
+      ],
+      "target": [
+        112609.86754932743,
+        65169.172425554345,
+        61039.64972410035
+      ],
+      "construction_sha256": "705b2c10b702fbfc05af8f394b9e0c8106789dc93a3ecdef6ba78f3d2ec049cd",
+      "reviewed_pavement": "asphalt",
+      "shoulder_m": 0.5,
+      "screenshot": "D:\\actions-runner-yacs\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-region-37170332840-1\\Saved\\RuntimeProof\\CI\\RegionTerrain\\37170332840-1\\network-hairpin-entry.png",
+      "size_bytes": 4700655,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "viewmode": "lit-with-neutral-engine-material",
+      "actual_viewmode": "VMI_LIT",
+      "geometry_inspection": false,
+      "inspection_mode": null,
+      "mesh_edges": false,
+      "road_selected": false,
+      "explicit_road_wireframe": false,
+      "wireframe_color_rgba": null,
+      "force_game_view": true,
+      "fov_deg": 74,
+      "fog": true,
+      "shadows": false
+    },
+    {
+      "name": "network-hairpin-exit",
+      "location": [
+        110198.31776152807,
+        50687.03535060188,
+        60091.261433227555
+      ],
+      "target": [
+        111398.31776152807,
+        49487.03535060188,
+        58291.261433227555
+      ],
+      "construction_sha256": "705b2c10b702fbfc05af8f394b9e0c8106789dc93a3ecdef6ba78f3d2ec049cd",
+      "reviewed_pavement": "asphalt",
+      "shoulder_m": 0.5,
+      "screenshot": "D:\\actions-runner-yacs\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-region-37170332840-1\\Saved\\RuntimeProof\\CI\\RegionTerrain\\37170332840-1\\network-hairpin-exit.png",
+      "size_bytes": 4782231,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "viewmode": "lit-with-neutral-engine-material",
+      "actual_viewmode": "VMI_LIT",
+      "geometry_inspection": false,
+      "inspection_mode": null,
+      "mesh_edges": false,
+      "road_selected": false,
+      "explicit_road_wireframe": false,
+      "wireframe_color_rgba": null,
+      "force_game_view": true,
+      "fov_deg": 74,
+      "fog": true,
+      "shadows": false
+    },
+    {
+      "name": "network-nudo-overview",
+      "location": [
+        131641.3484961263,
+        44011.813421834006,
+        73164.76401483448
+      ],
+      "target": [
+        125141.34849612629,
+        36711.813421834006,
+        67114.76401483448
+      ],
+      "nudo_structure_sha256": "a554b91e5d90ce36096fa0580e309cbb845c5685d06b81f01ce9058f78426329",
+      "screenshot": "D:\\actions-runner-yacs\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-region-37170332840-1\\Saved\\RuntimeProof\\CI\\RegionTerrain\\37170332840-1\\network-nudo-overview.png",
+      "size_bytes": 8669098,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "viewmode": "lit-with-neutral-engine-material",
+      "actual_viewmode": "VMI_LIT",
+      "geometry_inspection": false,
+      "inspection_mode": null,
+      "mesh_edges": false,
+      "road_selected": false,
+      "explicit_road_wireframe": false,
+      "wireframe_color_rgba": null,
+      "force_game_view": true,
+      "fov_deg": 74,
+      "fog": true,
+      "shadows": false
+    },
+    {
+      "name": "network-nudo-underpass",
+      "location": [
+        123856.89908283818,
+        40044.84626711288,
+        66834.76401483448
+      ],
+      "target": [
+        125141.34849612629,
+        38511.813421834006,
+        66964.76401483448
+      ],
+      "nudo_structure_sha256": "a554b91e5d90ce36096fa0580e309cbb845c5685d06b81f01ce9058f78426329",
+      "screenshot": "D:\\actions-runner-yacs\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-region-37170332840-1\\Saved\\RuntimeProof\\CI\\RegionTerrain\\37170332840-1\\network-nudo-underpass.png",
+      "size_bytes": 2753240,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "viewmode": "lit-with-neutral-engine-material",
+      "actual_viewmode": "VMI_LIT",
+      "geometry_inspection": false,
+      "inspection_mode": null,
+      "mesh_edges": false,
+      "road_selected": false,
+      "explicit_road_wireframe": false,
+      "wireframe_color_rgba": null,
+      "force_game_view": true,
+      "fov_deg": 74,
+      "fog": true,
+      "shadows": false
+    }
+  ],
+  "human_visual_status": "PENDING",
+  "performance_status": "PENDING",
+  "road_status": "INFERRED_CONTACT_TRIAL",
+  "final_road_status": "NOT_ADMITTED",
+  "bob_mode": "INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT",
+  "bob_inspection_status": "REVIEW_REQUIRED",
+  "builder_lesson_status": "REJECT_CUT",
+  "builder_map_saved": false,
+  "vertical_support_proof": "bob-vertical-support-proof.json",
+  "bob_road_earthworks_cut_proof": "bob-road-earthworks-cut-proof.json",
+  "bob_cut_patch_modified_vertex_count": 5352,
+  "bob_cut_before_count": 2313,
+  "bob_cut_after_count": 0,
+  "road_geometry_inspection_required": true,
+  "road_geometry_inspection_views": [
+    "road-geometry-inspection-before",
+    "road-geometry-inspection-after"
+  ],
+  "road_terrain_fit_status": "REVIEW_REQUIRED",
+  "road_terrain_fit_inspection_complete": true,
+  "road_terrain_fit_proof": "ma2141-road-terrain-fit-proof.json",
+  "atmosphere": {
+    "status": "PASS",
+    "preset": "SA_CALOBRA_MEDITERRANEAN_DAYLIGHT_V1",
+    "sky_atmosphere": true,
+    "skylight_real_time_capture": true,
+    "fog_density": 0.0015,
+    "fog_height_falloff": 0.2,
+    "fog_max_opacity": 0.25,
+    "map_saved": false
+  },
+  "editor_handoff_requested": false,
+  "editor_handoff_map": null,
+  "editor_handoff_view": null
+}

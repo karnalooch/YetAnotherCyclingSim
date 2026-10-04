@@ -3400,7 +3400,13 @@ the actual triangulated upper structure independently checks the underpass.
 The lower road owns terrain height at the crossing. No heightfield is used to
 represent both road decks. New construction/structure hashes and two additional
 native views (`network-nudo-overview`, `network-nudo-underpass`) are mandatory.
-Collision, rideability, human acceptance and performance remain pending.
+Owner visual acceptance was granted on 2026-10-04 for commit
+`c5573b3cf545c51ce83ad1fb0a5ca3111f5ad7f6`. The road and Nudo appearance
+are frozen under tag `visual/337-road-accepted-2026-10-04`; retain this reference
+and do not change its geometry without a scoped follow-up review. The
+[durable visual checkpoint](visual-history/issue-337-road-freeze/README.md)
+contains original native captures and their hashes. Collision, rideability and
+measured gameplay performance remain pending; visual acceptance does not waive them.
 
 Network CUT application now defers the explicit Landscape refresh until every
 manifest has passed validation and every native patch has applied successfully.
