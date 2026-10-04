@@ -1,11 +1,17 @@
 """Reject malformed MVT and preserve polygon holes and cursor semantics."""
 
+import sys
 import unittest
+from types import SimpleNamespace
+from unittest.mock import patch
 
-from scripts.assets.prepare_sa_calobra_context_exclusions import (
-    decode_geometry,
-    packed_varints,
-)
+# Geometry tests never request provider data. Match the existing alternative
+# query tests: acquisition's optional requests import is outside this CI lane.
+with patch.dict(sys.modules, {"requests": SimpleNamespace()}):
+    from scripts.assets.prepare_sa_calobra_context_exclusions import (
+        decode_geometry,
+        packed_varints,
+    )
 
 
 class ContextExclusionTests(unittest.TestCase):
