@@ -53,6 +53,30 @@ recording only a moving branch name.
 
 ## 4. Current ledger
 
+### Sa Calobra local LAZ decoder — 2026-10-04
+
+Owner explicitly approved installation of an isolated LAZ decoder for Issue #335.
+`laspy==2.7.0` and `lazrs==0.8.2` are acquired local authoring tools; no package
+source/binary is vendored, no Unreal/runtime dependency is introduced. Existing
+GIS numpy/rasterio/pyproj are reused through a local `--system-site-packages` venv.
+Version pins are in `scripts/assets/requirements-sa-calobra-lidar.txt`.
+
+| Package / upstream | Exact downloaded wheel SHA-256 | Verified license / preserved notice | Use |
+|---|---|---|---|
+| [laspy](https://github.com/laspy/laspy), 2.7.0 | `15f5344c62a1023461996bdf5d1ba5fdd813e96694a524fee712931134f3792f` (py3-none-any) | BSD-2-Clause; installed wheel LICENSE.txt inspected; [full notice](notices/laspy-2.7.0-LICENSE.txt) | import library for read-only LAS headers and chunked decoding; no upstream implementation copied |
+| [lazrs](https://github.com/laz-rs/laz-rs-python), 0.8.2 | `213803fbaaf734d5ff3c886bb4a2d173ea24a31383c3cda5383b9bc16e8f0635` (cp312-win_amd64) | MIT; installed wheel LICENSE.txt inspected; [full notice](notices/lazrs-0.8.2-LICENSE.txt) | compressed LAZ backend; no upstream implementation copied |
+
+Wheel URLs/hashes and install environment are retained in the local pip report;
+package versions are recorded in each derived manifest. Licenses permit this
+local/commercial use; redistribution requires retaining their notices. API
+behavior was checked against the installed 2.7.0 `LasHeader.parse_crs` and
+`LasReader.chunk_iterator` primary source, as online docs identify an older
+version. Provider semantics come from [IGN class definitions](https://pnoa.ign.es/resources/archivos/EspTec/Definicion_Clases_241004-LID3-SPC-LID-00122-IGN_Ed_2.0_NP.pdf)
+and [NPC processing](https://pnoa.ign.es/pnoa-lidar/procesamiento-de-los-datos),
+including advanced building/roof classes; unsupported classes remain separate
+other evidence. Provider orthometric convention is inherited, not independently
+remeasured from the horizontal-only LAZ CRS headers.
+
 | Source | Status | Exact source / revision | License evidence | YACS use | Verification |
 |---|---|---|---|---|---|
 | Embark Studios SkyHook | **candidate / reference** | `EmbarkStudios/skyhook` @ `fa8a44d51518303c0563d03b433b10145af7e51d` | upstream `LICENSE-MIT` and `LICENSE-APACHE`; dual MIT / Apache-2.0 | architecture reference for a small DCC <-> Unreal/game-engine transport and command boundary; no source vendored in YACS | exact revision and license files reviewed 2026-09-30 |

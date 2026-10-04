@@ -686,3 +686,22 @@ brakuje dopuszczonych masek roślinności, drogi/bezpieczeństwa i pozostałych 
 automatycznym zakazem sadzenia. Dwa rastry i manifest są poza Git, w cache
 `placement-handoff-v1-2026-10-04`, z identities, hashami i restore w Julce.
 Przygotowanie kończy się świadomym `BLOCKED_FOR_PLANTING` (exit 2).
+
+## Native LiDAR evidence candidate — 2026-10-04
+
+Po zgodzie właściciela dekoder laspy 2.7.0 + lazrs 0.8.2 działa w odizolowanym
+środowisku authoringowym. Istniejące 9 LAZ odczytano w całości (81 990 059
+punktów), bez ponownego pobierania lub modyfikacji. Dopuszczone próbki w AOI:
+23 588 890. Wszystkie nagłówki: LAS 1.4 / format 8 / EPSG:25831.
+
+Dziewięć produktów (8 rastrów + PNG kontekstu) i manifest pozostają w cache
+`lidar-masks-v1b-2026-10-04`. Zawierają klasy/counts/occupancy, próbki first return,
+kandydata wysokości roślinności, fraction native/5m i review flags. Luki (2 713 728
+cells) i ujemna/invalid normalizacja (341 399 cells) pozostają jawne. To kandydaci
+pomiarów, nie gatunki, footprint nowych budynków ani zgoda na sadzenie. DTM i
+zamrożona geometria pozostają read-only. Licencje narzędzi i notices:
+[dependency provenance](legal/DEPENDENCY_PROVENANCE.md#sa-calobra-local-laz-decoder--2026-10-04).
+
+Podgląd LiDAR korzysta z osobnych przygotowanych obrazów; nowe niebo/słońce w UE
+jest tylko w sesji podglądu i nie zapisuje się w istniejącej mapie. Wykluczenia
+drogi/BOB i dopuszczenie do produkcyjnego PCGEx pozostają osobnymi wymaganiami.

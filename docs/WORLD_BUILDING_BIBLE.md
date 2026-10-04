@@ -1540,7 +1540,8 @@ term is required for exact mask registration; texture edges are at -25 cm and
 
 The fixed Python-only Unreal review loads the existing saved baseline, checks
 its transform/topology/layers and samples native-height agreement before/after.
-Only the session material and transient camera change; no map/assets are saved,
+Only session material, transient camera and explicitly requested review sky/sun
+change; no map/assets are saved,
 no height import occurs, and no road or BOB earthworks are generated. Original
 map bytes, actor transforms and sampled collision heights must stay unchanged.
 Existing compiled modules may be reused for this Python-only proof; record both
@@ -1552,6 +1553,54 @@ colors identify historical polygons only. Uncolored ortho is context, not PASS.
 No red error is fabricated from relief. Road/BOB, current land-cover, LiDAR and
 canopy layers stay explicitly blocked until admitted. Diagnostic consumer proof
 is not production materials/PCG, whole-2A completion or human visual acceptance.
+
+#### Native LiDAR evidence candidate (Issue #335)
+
+The owner approved isolated local `laspy==2.7.0` / `lazrs==0.8.2` tools to decode
+the nine retained NPC03 LAZ files. They are authoring-only tools; their verified
+licenses/notices and exact wheel identities are recorded in
+[dependency provenance](legal/DEPENDENCY_PROVENANCE.md#sa-calobra-local-laz-decoder--2026-10-04).
+No raw CNIG source is downloaded again or modified. All nine LAS 1.4 format 8
+headers must declare EPSG:25831; source bytes and complete point counts are
+verified before any candidate is accepted. Provider orthometric convention is
+inherited, while inspected headers contain horizontal CRS only. Read-only ground
+return versus DTM residuals remain evidence, never a vertical correction.
+
+`scripts/assets/prepare_sa_calobra_lidar_masks.py` streams point chunks into the
+existing 4033×4033 / 0.5 m grid. Withheld, synthetic, overlap flags, classes 7/18
+(noise) and 12 (overlap) are excluded. Six count bands preserve ground (2), low
+(3), medium (4), high (5) vegetation, buildings/roof/facade (6/71/72/73/74), and
+other source classes. Occupancy is a separate bitmask; no accepted samples is
+255 unknown. Zero counts are not real-world absence proof. Water/infrastructure
+in other classes does not imply complete exclusion coverage or road authority.
+
+Vegetation-height candidate is maximum vegetation Z minus the containing native
+DTM pixel; no terrain resampling, smoothing, height import or gap filling occurs.
+Any negative/invalid normalization keeps the cell unknown and sets a review
+flag. Native high relief sets another review flag, not a planting prohibition.
+The first-return vegetation fraction is a sampling proxy, not crown-area cover,
+species evidence or planting density. A second fraction aggregates counts over
+10×10 native cells (5 m support), repeats the value on the unchanged grid and
+clips the last three-cell edge. Repetition grants no 0.5 m density accuracy.
+Counts and unknown/review evidence accompany these candidates; no calibrated
+pixel confidence is invented.
+
+The independent reader checks byte/logical hashes, CRS/grid/dtype/NoData,
+class-count/occupancy consistency and first-return fractions. Clean regeneration
+must reproduce all products and the full manifest. This is LiDAR evidence,
+not admitted current land cover, a complete canopy model or production PCGEx.
+Existing planting readiness remains blocked pending source review, current-cover
+and accepted road/safety/BOB domains.
+
+The no-save diagnostic consumer can display these colors on the frozen Landscape:
+green shades show source vegetation class presence, brown ground-class presence,
+magenta invalid/negative height normalization requiring review. Existing amber
+relief and cyan Catastro priorities remain. Magenta is not a measured Landscape
+error. On owner request, the review session adds native UE 5.8.2 SkyAtmosphere
+and an atmosphere DirectionalLight plus an oblique sky view; these transient
+actors do not alter frozen terrain/road or persist into the map. Source API
+authority: version-matched Epic Sky Atmosphere documentation and installed
+SkyAtmosphereComponent/DirectionalLightComponent headers.
 
 #### Placement evidence handoff candidate (Issue #335)
 

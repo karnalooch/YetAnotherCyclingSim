@@ -2069,6 +2069,700 @@
         "license": "Existing DG Catastro transformed-data terms; raw not redistributed",
         "authority": "Candidate exclusion only; BLOCKED_FOR_PLANTING; no runtime integration"
       }
+    },
+    {
+      "asset_id": "lidar-masks-class-counts",
+      "path": "lidar-masks-v1b-2026-10-04/class-counts.tif",
+      "size_bytes": 14585203,
+      "sha256": "7803c429cc9449f2a9545f3037a425dc41cc98080f83ad1f23089c95be885e51",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "lidar_masks_v1",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-elevation",
+        "normalized-roughness",
+        "lidar-483-4408-working-cache",
+        "lidar-483-4409-working-cache",
+        "lidar-483-4410-working-cache",
+        "lidar-484-4408-working-cache",
+        "lidar-484-4409-working-cache",
+        "lidar-484-4410-working-cache",
+        "lidar-485-4408-working-cache",
+        "lidar-485-4409-working-cache",
+        "lidar-485-4410-working-cache"
+      ],
+      "acquisition": {
+        "restore": "Local copies plus hashes, or pinned producer with approved isolated laspy/lazrs environment; raw sources already retained; no remote derivative backup"
+      },
+      "provenance": {
+        "provider": "CNIG PNOA 2024 Baleares NPC03; source headers/classes independently decoded",
+        "license": "CNIG CC-BY 4.0 compatible terms",
+        "attribution": "Obra derivada de LiDAR-PNOA-cob3 2022-2025 CC-BY 4.0 scne.es",
+        "authority": "LiDAR evidence candidate only; no geometry mutation or planting permission"
+      }
+    },
+    {
+      "asset_id": "lidar-masks-class-occupancy",
+      "path": "lidar-masks-v1b-2026-10-04/class-occupancy.tif",
+      "size_bytes": 5604845,
+      "sha256": "d73a3daccc2df441b0cc0aa18a96d04bea66e5a42812a10ac269c582670a01e6",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "lidar_masks_v1",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-elevation",
+        "normalized-roughness",
+        "lidar-483-4408-working-cache",
+        "lidar-483-4409-working-cache",
+        "lidar-483-4410-working-cache",
+        "lidar-484-4408-working-cache",
+        "lidar-484-4409-working-cache",
+        "lidar-484-4410-working-cache",
+        "lidar-485-4408-working-cache",
+        "lidar-485-4409-working-cache",
+        "lidar-485-4410-working-cache"
+      ],
+      "acquisition": {
+        "restore": "Local copies plus hashes, or pinned producer with approved isolated laspy/lazrs environment; raw sources already retained; no remote derivative backup"
+      },
+      "provenance": {
+        "provider": "CNIG PNOA 2024 Baleares NPC03; source headers/classes independently decoded",
+        "license": "CNIG CC-BY 4.0 compatible terms",
+        "attribution": "Obra derivada de LiDAR-PNOA-cob3 2022-2025 CC-BY 4.0 scne.es",
+        "authority": "LiDAR evidence candidate only; no geometry mutation or planting permission"
+      }
+    },
+    {
+      "asset_id": "lidar-masks-first-return-count",
+      "path": "lidar-masks-v1b-2026-10-04/first-return-count.tif",
+      "size_bytes": 6042168,
+      "sha256": "50007e375bacecb15417e7d95074cc27f457cd34437660a64bc7b82a3ddc341a",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "lidar_masks_v1",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-elevation",
+        "normalized-roughness",
+        "lidar-483-4408-working-cache",
+        "lidar-483-4409-working-cache",
+        "lidar-483-4410-working-cache",
+        "lidar-484-4408-working-cache",
+        "lidar-484-4409-working-cache",
+        "lidar-484-4410-working-cache",
+        "lidar-485-4408-working-cache",
+        "lidar-485-4409-working-cache",
+        "lidar-485-4410-working-cache"
+      ],
+      "acquisition": {
+        "restore": "Local copies plus hashes, or pinned producer with approved isolated laspy/lazrs environment; raw sources already retained; no remote derivative backup"
+      },
+      "provenance": {
+        "provider": "CNIG PNOA 2024 Baleares NPC03; source headers/classes independently decoded",
+        "license": "CNIG CC-BY 4.0 compatible terms",
+        "attribution": "Obra derivada de LiDAR-PNOA-cob3 2022-2025 CC-BY 4.0 scne.es",
+        "authority": "LiDAR evidence candidate only; no geometry mutation or planting permission"
+      }
+    },
+    {
+      "asset_id": "lidar-masks-vegetation-first-return-count",
+      "path": "lidar-masks-v1b-2026-10-04/vegetation-first-return-count.tif",
+      "size_bytes": 5569941,
+      "sha256": "1b477c6e3d364bd4ed65acb172184727af8725cd78b0703efd05363c7f203817",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "lidar_masks_v1",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-elevation",
+        "normalized-roughness",
+        "lidar-483-4408-working-cache",
+        "lidar-483-4409-working-cache",
+        "lidar-483-4410-working-cache",
+        "lidar-484-4408-working-cache",
+        "lidar-484-4409-working-cache",
+        "lidar-484-4410-working-cache",
+        "lidar-485-4408-working-cache",
+        "lidar-485-4409-working-cache",
+        "lidar-485-4410-working-cache"
+      ],
+      "acquisition": {
+        "restore": "Local copies plus hashes, or pinned producer with approved isolated laspy/lazrs environment; raw sources already retained; no remote derivative backup"
+      },
+      "provenance": {
+        "provider": "CNIG PNOA 2024 Baleares NPC03; source headers/classes independently decoded",
+        "license": "CNIG CC-BY 4.0 compatible terms",
+        "attribution": "Obra derivada de LiDAR-PNOA-cob3 2022-2025 CC-BY 4.0 scne.es",
+        "authority": "LiDAR evidence candidate only; no geometry mutation or planting permission"
+      }
+    },
+    {
+      "asset_id": "lidar-masks-canopy-height-candidate",
+      "path": "lidar-masks-v1b-2026-10-04/canopy-height-candidate.tif",
+      "size_bytes": 26996235,
+      "sha256": "a02ede4c4d16521680799ec05bb46edba96579343c892e639ca4395e575dc657",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "lidar_masks_v1",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-elevation",
+        "normalized-roughness",
+        "lidar-483-4408-working-cache",
+        "lidar-483-4409-working-cache",
+        "lidar-483-4410-working-cache",
+        "lidar-484-4408-working-cache",
+        "lidar-484-4409-working-cache",
+        "lidar-484-4410-working-cache",
+        "lidar-485-4408-working-cache",
+        "lidar-485-4409-working-cache",
+        "lidar-485-4410-working-cache"
+      ],
+      "acquisition": {
+        "restore": "Local copies plus hashes, or pinned producer with approved isolated laspy/lazrs environment; raw sources already retained; no remote derivative backup"
+      },
+      "provenance": {
+        "provider": "CNIG PNOA 2024 Baleares NPC03; source headers/classes independently decoded",
+        "license": "CNIG CC-BY 4.0 compatible terms",
+        "attribution": "Obra derivada de LiDAR-PNOA-cob3 2022-2025 CC-BY 4.0 scne.es",
+        "authority": "LiDAR evidence candidate only; no geometry mutation or planting permission"
+      }
+    },
+    {
+      "asset_id": "lidar-masks-vegetation-return-fraction",
+      "path": "lidar-masks-v1b-2026-10-04/vegetation-return-fraction.tif",
+      "size_bytes": 6432438,
+      "sha256": "3fe8f643757797f83631852a86d28da7de81680780429cf82fa645ccf5dde50f",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "lidar_masks_v1",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-elevation",
+        "normalized-roughness",
+        "lidar-483-4408-working-cache",
+        "lidar-483-4409-working-cache",
+        "lidar-483-4410-working-cache",
+        "lidar-484-4408-working-cache",
+        "lidar-484-4409-working-cache",
+        "lidar-484-4410-working-cache",
+        "lidar-485-4408-working-cache",
+        "lidar-485-4409-working-cache",
+        "lidar-485-4410-working-cache"
+      ],
+      "acquisition": {
+        "restore": "Local copies plus hashes, or pinned producer with approved isolated laspy/lazrs environment; raw sources already retained; no remote derivative backup"
+      },
+      "provenance": {
+        "provider": "CNIG PNOA 2024 Baleares NPC03; source headers/classes independently decoded",
+        "license": "CNIG CC-BY 4.0 compatible terms",
+        "attribution": "Obra derivada de LiDAR-PNOA-cob3 2022-2025 CC-BY 4.0 scne.es",
+        "authority": "LiDAR evidence candidate only; no geometry mutation or planting permission"
+      }
+    },
+    {
+      "asset_id": "lidar-masks-vegetation-return-fraction-5m",
+      "path": "lidar-masks-v1b-2026-10-04/vegetation-return-fraction-5m.tif",
+      "size_bytes": 1114078,
+      "sha256": "b9af14b4ac25214f60f3a9d972839a44c99434474dc1bb43ae835f48eae7a0da",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "lidar_masks_v1",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-elevation",
+        "normalized-roughness",
+        "lidar-483-4408-working-cache",
+        "lidar-483-4409-working-cache",
+        "lidar-483-4410-working-cache",
+        "lidar-484-4408-working-cache",
+        "lidar-484-4409-working-cache",
+        "lidar-484-4410-working-cache",
+        "lidar-485-4408-working-cache",
+        "lidar-485-4409-working-cache",
+        "lidar-485-4410-working-cache"
+      ],
+      "acquisition": {
+        "restore": "Local copies plus hashes, or pinned producer with approved isolated laspy/lazrs environment; raw sources already retained; no remote derivative backup"
+      },
+      "provenance": {
+        "provider": "CNIG PNOA 2024 Baleares NPC03; source headers/classes independently decoded",
+        "license": "CNIG CC-BY 4.0 compatible terms",
+        "attribution": "Obra derivada de LiDAR-PNOA-cob3 2022-2025 CC-BY 4.0 scne.es",
+        "authority": "LiDAR evidence candidate only; no geometry mutation or planting permission"
+      }
+    },
+    {
+      "asset_id": "lidar-masks-height-review-flags",
+      "path": "lidar-masks-v1b-2026-10-04/height-review-flags.tif",
+      "size_bytes": 570813,
+      "sha256": "ed46742f64e33db22e2b1646830d382e41b96fca12b09117f6bfbf4b00b37857",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "lidar_masks_v1",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-elevation",
+        "normalized-roughness",
+        "lidar-483-4408-working-cache",
+        "lidar-483-4409-working-cache",
+        "lidar-483-4410-working-cache",
+        "lidar-484-4408-working-cache",
+        "lidar-484-4409-working-cache",
+        "lidar-484-4410-working-cache",
+        "lidar-485-4408-working-cache",
+        "lidar-485-4409-working-cache",
+        "lidar-485-4410-working-cache"
+      ],
+      "acquisition": {
+        "restore": "Local copies plus hashes, or pinned producer with approved isolated laspy/lazrs environment; raw sources already retained; no remote derivative backup"
+      },
+      "provenance": {
+        "provider": "CNIG PNOA 2024 Baleares NPC03; source headers/classes independently decoded",
+        "license": "CNIG CC-BY 4.0 compatible terms",
+        "attribution": "Obra derivada de LiDAR-PNOA-cob3 2022-2025 CC-BY 4.0 scne.es",
+        "authority": "LiDAR evidence candidate only; no geometry mutation or planting permission"
+      }
+    },
+    {
+      "asset_id": "lidar-masks-lidar-class-context",
+      "path": "lidar-masks-v1b-2026-10-04/lidar-class-context.png",
+      "size_bytes": 6012512,
+      "sha256": "d18b8123bc335c7be0478a51c6a7fa509bed66b23ffa75626b64967f71072d24",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "lidar_masks_v1",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-elevation",
+        "normalized-roughness",
+        "lidar-483-4408-working-cache",
+        "lidar-483-4409-working-cache",
+        "lidar-483-4410-working-cache",
+        "lidar-484-4408-working-cache",
+        "lidar-484-4409-working-cache",
+        "lidar-484-4410-working-cache",
+        "lidar-485-4408-working-cache",
+        "lidar-485-4409-working-cache",
+        "lidar-485-4410-working-cache"
+      ],
+      "acquisition": {
+        "restore": "Local copies plus hashes, or pinned producer with approved isolated laspy/lazrs environment; raw sources already retained; no remote derivative backup"
+      },
+      "provenance": {
+        "provider": "CNIG PNOA 2024 Baleares NPC03; source headers/classes independently decoded",
+        "license": "CNIG CC-BY 4.0 compatible terms",
+        "attribution": "Obra derivada de LiDAR-PNOA-cob3 2022-2025 CC-BY 4.0 scne.es",
+        "authority": "LiDAR evidence candidate only; no geometry mutation or planting permission"
+      }
+    },
+    {
+      "asset_id": "lidar-masks-lidar-manifest",
+      "path": "lidar-masks-v1b-2026-10-04/lidar-manifest.json",
+      "size_bytes": 19312,
+      "sha256": "fd14d0725f867759438727f9f7275f15427220ea185b01783c9d616432523e00",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "lidar_masks_v1",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-elevation",
+        "normalized-roughness",
+        "lidar-483-4408-working-cache",
+        "lidar-483-4409-working-cache",
+        "lidar-483-4410-working-cache",
+        "lidar-484-4408-working-cache",
+        "lidar-484-4409-working-cache",
+        "lidar-484-4410-working-cache",
+        "lidar-485-4408-working-cache",
+        "lidar-485-4409-working-cache",
+        "lidar-485-4410-working-cache"
+      ],
+      "acquisition": {
+        "restore": "Local copies plus hashes, or pinned producer with approved isolated laspy/lazrs environment; raw sources already retained; no remote derivative backup"
+      },
+      "provenance": {
+        "provider": "CNIG PNOA 2024 Baleares NPC03; source headers/classes independently decoded",
+        "license": "CNIG CC-BY 4.0 compatible terms",
+        "attribution": "Obra derivada de LiDAR-PNOA-cob3 2022-2025 CC-BY 4.0 scne.es",
+        "authority": "LiDAR evidence candidate only; no geometry mutation or planting permission"
+      }
+    },
+    {
+      "asset_id": "lidar-review-orthophoto",
+      "path": "lidar-review-v1-2026-10-04/orthophoto.png",
+      "size_bytes": 37058260,
+      "sha256": "36eb65995ccd9ff7b8d169a208f97d2f3c6729c97053c5a5fcba4b3a6c62faa5",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "lidar_masks_v1",
+      "depends_on": [
+        "lidar-masks-lidar-manifest",
+        "mask-review-review-manifest"
+      ],
+      "acquisition": {
+        "restore": "Pinned review preparation from retained mask/ortho candidates; native UE proof separate; no remote backup"
+      },
+      "provenance": {
+        "provider": "CNIG NPC03 plus retained ortho/Catastro/SIOSE diagnostic context",
+        "license": "Existing CNIG/SIOSE/Catastro derivative notices apply; raw not redistributed",
+        "authority": "Session-only diagnostic display with native sky; not production PCGEx"
+      }
+    },
+    {
+      "asset_id": "lidar-review-review-overlay",
+      "path": "lidar-review-v1-2026-10-04/review-overlay.png",
+      "size_bytes": 37831009,
+      "sha256": "876551972a65ed34f9588a515b89b5406e82567dba9c137e63b7d5955cbba0f1",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "lidar_masks_v1",
+      "depends_on": [
+        "lidar-masks-lidar-manifest",
+        "mask-review-review-manifest"
+      ],
+      "acquisition": {
+        "restore": "Pinned review preparation from retained mask/ortho candidates; native UE proof separate; no remote backup"
+      },
+      "provenance": {
+        "provider": "CNIG NPC03 plus retained ortho/Catastro/SIOSE diagnostic context",
+        "license": "Existing CNIG/SIOSE/Catastro derivative notices apply; raw not redistributed",
+        "authority": "Session-only diagnostic display with native sky; not production PCGEx"
+      }
+    },
+    {
+      "asset_id": "lidar-review-historical-context",
+      "path": "lidar-review-v1-2026-10-04/historical-context.png",
+      "size_bytes": 121270,
+      "sha256": "4ee4131061ee12ee7a20b4d5c2cccd27a5cb9091fa80f99831029cae81c45d3e",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "lidar_masks_v1",
+      "depends_on": [
+        "lidar-masks-lidar-manifest",
+        "mask-review-review-manifest"
+      ],
+      "acquisition": {
+        "restore": "Pinned review preparation from retained mask/ortho candidates; native UE proof separate; no remote backup"
+      },
+      "provenance": {
+        "provider": "CNIG NPC03 plus retained ortho/Catastro/SIOSE diagnostic context",
+        "license": "Existing CNIG/SIOSE/Catastro derivative notices apply; raw not redistributed",
+        "authority": "Session-only diagnostic display with native sky; not production PCGEx"
+      }
+    },
+    {
+      "asset_id": "lidar-review-review-manifest",
+      "path": "lidar-review-v1-2026-10-04/review-manifest.json",
+      "size_bytes": 11795,
+      "sha256": "d1bef514c2a234813167ac509746e021a4ac407c6e4e3b1800fb3e2873e6a51d",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "lidar_masks_v1",
+      "depends_on": [
+        "lidar-masks-lidar-manifest",
+        "mask-review-review-manifest"
+      ],
+      "acquisition": {
+        "restore": "Pinned review preparation from retained mask/ortho candidates; native UE proof separate; no remote backup"
+      },
+      "provenance": {
+        "provider": "CNIG NPC03 plus retained ortho/Catastro/SIOSE diagnostic context",
+        "license": "Existing CNIG/SIOSE/Catastro derivative notices apply; raw not redistributed",
+        "authority": "Session-only diagnostic display with native sky; not production PCGEx"
+      }
+    },
+    {
+      "asset_id": "lidar-483-4408-working-cache",
+      "path": "manual-cnig/PNOA_2024_BAL_483-4408_H31_NPC03.laz",
+      "sha256": "9bea9f4effc9868ba399b3ac4fe2f56ec3bf57756dbf1aaea484a2c7921e1dcc",
+      "size_bytes": 39247042,
+      "signature_hex": "4c415346",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "depends_on": [],
+      "gis_metadata_profile": "lidar_masks_v1",
+      "provenance": {
+        "provider": "CNIG/IGN PNOA LiDAR 2024 Baleares, NPC03",
+        "license": "CC BY 4.0 / CNIG general-use terms",
+        "attribution": "PNOA LiDAR CNIG/IGN; source tile sec=13022315",
+        "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13022315",
+        "original_catalog_identity": "lidar-483-4408",
+        "source_identity": "Same pinned LAZ bytes as original Release catalog; explicit existing local cache location"
+      },
+      "acquisition": {
+        "restore": "Retained manual-cnig bytes; verify original provider receipt and exact SHA; remote Release transport remains in original catalog; no raw copy or re-download performed"
+      }
+    },
+    {
+      "asset_id": "lidar-483-4409-working-cache",
+      "path": "manual-cnig/PNOA_2024_BAL_483-4409_H31_NPC03.laz",
+      "sha256": "2740ff251615b24e5271191e91f919bc60148859c11c8fbf639079371a3fb653",
+      "size_bytes": 38326993,
+      "signature_hex": "4c415346",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "depends_on": [],
+      "gis_metadata_profile": "lidar_masks_v1",
+      "provenance": {
+        "provider": "CNIG/IGN PNOA LiDAR 2024 Baleares, NPC03",
+        "license": "CC BY 4.0 / CNIG general-use terms",
+        "attribution": "PNOA LiDAR CNIG/IGN; source tile sec=13024739",
+        "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13024739",
+        "original_catalog_identity": "lidar-483-4409",
+        "source_identity": "Same pinned LAZ bytes as original Release catalog; explicit existing local cache location"
+      },
+      "acquisition": {
+        "restore": "Retained manual-cnig bytes; verify original provider receipt and exact SHA; remote Release transport remains in original catalog; no raw copy or re-download performed"
+      }
+    },
+    {
+      "asset_id": "lidar-483-4410-working-cache",
+      "path": "manual-cnig/PNOA_2024_BAL_483-4410_H31_NPC03.laz",
+      "sha256": "1a1ce04c32f0449073d8b840cc00a7ca3f1117abbe351a3f48fe57c037a5421b",
+      "size_bytes": 49906963,
+      "signature_hex": "4c415346",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "depends_on": [],
+      "gis_metadata_profile": "lidar_masks_v1",
+      "provenance": {
+        "provider": "CNIG/IGN PNOA LiDAR 2024 Baleares, NPC03",
+        "license": "CC BY 4.0 / CNIG general-use terms",
+        "attribution": "PNOA LiDAR CNIG/IGN; source tile sec=13023037",
+        "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13023037",
+        "original_catalog_identity": "lidar-483-4410",
+        "source_identity": "Same pinned LAZ bytes as original Release catalog; explicit existing local cache location"
+      },
+      "acquisition": {
+        "restore": "Retained manual-cnig bytes; verify original provider receipt and exact SHA; remote Release transport remains in original catalog; no raw copy or re-download performed"
+      }
+    },
+    {
+      "asset_id": "lidar-484-4408-working-cache",
+      "path": "manual-cnig/PNOA_2024_BAL_484-4408_H31_NPC03.laz",
+      "sha256": "6b37aee0617df82f5fd1029b1b503651c00307f96a8a392823e0001dfd48bdec",
+      "size_bytes": 59356962,
+      "signature_hex": "4c415346",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "depends_on": [],
+      "gis_metadata_profile": "lidar_masks_v1",
+      "provenance": {
+        "provider": "CNIG/IGN PNOA LiDAR 2024 Baleares, NPC03",
+        "license": "CC BY 4.0 / CNIG general-use terms",
+        "attribution": "PNOA LiDAR CNIG/IGN; source tile sec=13024455",
+        "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13024455",
+        "original_catalog_identity": "lidar-484-4408",
+        "source_identity": "Same pinned LAZ bytes as original Release catalog; explicit existing local cache location"
+      },
+      "acquisition": {
+        "restore": "Retained manual-cnig bytes; verify original provider receipt and exact SHA; remote Release transport remains in original catalog; no raw copy or re-download performed"
+      }
+    },
+    {
+      "asset_id": "lidar-484-4409-working-cache",
+      "path": "manual-cnig/PNOA_2024_BAL_484-4409_H31_NPC03.laz",
+      "sha256": "39cfb5cf6b2bf93bd2e9996616ee94d8a830d8df4850ff0bf672183c9043dbdb",
+      "size_bytes": 38522141,
+      "signature_hex": "4c415346",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "depends_on": [],
+      "gis_metadata_profile": "lidar_masks_v1",
+      "provenance": {
+        "provider": "CNIG/IGN PNOA LiDAR 2024 Baleares, NPC03",
+        "license": "CC BY 4.0 / CNIG general-use terms",
+        "attribution": "PNOA LiDAR CNIG/IGN; source tile sec=13021922",
+        "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13021922",
+        "original_catalog_identity": "lidar-484-4409",
+        "source_identity": "Same pinned LAZ bytes as original Release catalog; explicit existing local cache location"
+      },
+      "acquisition": {
+        "restore": "Retained manual-cnig bytes; verify original provider receipt and exact SHA; remote Release transport remains in original catalog; no raw copy or re-download performed"
+      }
+    },
+    {
+      "asset_id": "lidar-484-4410-working-cache",
+      "path": "manual-cnig/PNOA_2024_BAL_484-4410_H31_NPC03.laz",
+      "sha256": "af3b790313846225bde04f48b95609963e652d696c0a2edca0d1722eec8ec6d8",
+      "size_bytes": 46764192,
+      "signature_hex": "4c415346",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "depends_on": [],
+      "gis_metadata_profile": "lidar_masks_v1",
+      "provenance": {
+        "provider": "CNIG/IGN PNOA LiDAR 2024 Baleares, NPC03",
+        "license": "CC BY 4.0 / CNIG general-use terms",
+        "attribution": "PNOA LiDAR CNIG/IGN; source tile sec=13022280",
+        "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13022280",
+        "original_catalog_identity": "lidar-484-4410",
+        "source_identity": "Same pinned LAZ bytes as original Release catalog; explicit existing local cache location"
+      },
+      "acquisition": {
+        "restore": "Retained manual-cnig bytes; verify original provider receipt and exact SHA; remote Release transport remains in original catalog; no raw copy or re-download performed"
+      }
+    },
+    {
+      "asset_id": "lidar-485-4408-working-cache",
+      "path": "manual-cnig/PNOA_2024_BAL_485-4408_H31_NPC03.laz",
+      "sha256": "e987f1aea01f8672301b0514e249fda33eeef6cf1302e4e3c4dd8428abfbdd50",
+      "size_bytes": 69266579,
+      "signature_hex": "4c415346",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "depends_on": [],
+      "gis_metadata_profile": "lidar_masks_v1",
+      "provenance": {
+        "provider": "CNIG/IGN PNOA LiDAR 2024 Baleares, NPC03",
+        "license": "CC BY 4.0 / CNIG general-use terms",
+        "attribution": "PNOA LiDAR CNIG/IGN; source tile sec=13021793",
+        "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13021793",
+        "original_catalog_identity": "lidar-485-4408",
+        "source_identity": "Same pinned LAZ bytes as original Release catalog; explicit existing local cache location"
+      },
+      "acquisition": {
+        "restore": "Retained manual-cnig bytes; verify original provider receipt and exact SHA; remote Release transport remains in original catalog; no raw copy or re-download performed"
+      }
+    },
+    {
+      "asset_id": "lidar-485-4409-working-cache",
+      "path": "manual-cnig/PNOA_2024_BAL_485-4409_H31_NPC03.laz",
+      "sha256": "5c219d8ee12c85c4187095645048943f1d2fc6094c61c290e00a65025afeed3b",
+      "size_bytes": 70040345,
+      "signature_hex": "4c415346",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "depends_on": [],
+      "gis_metadata_profile": "lidar_masks_v1",
+      "provenance": {
+        "provider": "CNIG/IGN PNOA LiDAR 2024 Baleares, NPC03",
+        "license": "CC BY 4.0 / CNIG general-use terms",
+        "attribution": "PNOA LiDAR CNIG/IGN; source tile sec=13024710",
+        "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13024710",
+        "original_catalog_identity": "lidar-485-4409",
+        "source_identity": "Same pinned LAZ bytes as original Release catalog; explicit existing local cache location"
+      },
+      "acquisition": {
+        "restore": "Retained manual-cnig bytes; verify original provider receipt and exact SHA; remote Release transport remains in original catalog; no raw copy or re-download performed"
+      }
+    },
+    {
+      "asset_id": "lidar-485-4410-working-cache",
+      "path": "manual-cnig/PNOA_2024_BAL_485-4410_H31_NPC03.laz",
+      "sha256": "fcab9b2e345ab50201cbb4c980c8e7c80d0b51c2d871e218a6607d8e9a643d9a",
+      "size_bytes": 59014265,
+      "signature_hex": "4c415346",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "depends_on": [],
+      "gis_metadata_profile": "lidar_masks_v1",
+      "provenance": {
+        "provider": "CNIG/IGN PNOA LiDAR 2024 Baleares, NPC03",
+        "license": "CC BY 4.0 / CNIG general-use terms",
+        "attribution": "PNOA LiDAR CNIG/IGN; source tile sec=13021472",
+        "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13021472",
+        "original_catalog_identity": "lidar-485-4410",
+        "source_identity": "Same pinned LAZ bytes as original Release catalog; explicit existing local cache location"
+      },
+      "acquisition": {
+        "restore": "Retained manual-cnig bytes; verify original provider receipt and exact SHA; remote Release transport remains in original catalog; no raw copy or re-download performed"
+      }
     }
   ],
   "profiles": {
@@ -2313,6 +3007,36 @@
         "route_safety_corridor",
         "bob_cut_fill_inner_outer_edge"
       ]
+    },
+    "sa-calobra-lidar-evidence-candidate": {
+      "description": "Pinned decoded LiDAR candidates and source closure; not planting readiness",
+      "extends": [
+        "sa-calobra-mask-review-candidate"
+      ],
+      "requires": [
+        "lidar-masks-class-counts",
+        "lidar-masks-class-occupancy",
+        "lidar-masks-first-return-count",
+        "lidar-masks-vegetation-first-return-count",
+        "lidar-masks-canopy-height-candidate",
+        "lidar-masks-vegetation-return-fraction",
+        "lidar-masks-vegetation-return-fraction-5m",
+        "lidar-masks-height-review-flags",
+        "lidar-masks-lidar-class-context",
+        "lidar-masks-lidar-manifest"
+      ]
+    },
+    "sa-calobra-lidar-review-candidate": {
+      "description": "LiDAR review payloads and source closure; native UE proof separately required",
+      "extends": [
+        "sa-calobra-lidar-evidence-candidate"
+      ],
+      "requires": [
+        "lidar-review-orthophoto",
+        "lidar-review-review-overlay",
+        "lidar-review-historical-context",
+        "lidar-review-review-manifest"
+      ]
     }
   },
   "gis_metadata_profiles": {
@@ -2396,6 +3120,15 @@
       "resolution_or_density": "0.5 m native raster; pixel-center world mapping",
       "classification": "Building exclusion candidate and unresolved placement state; no eligibility emitted",
       "nodata": "255 unknown; placement 0 prohibited, 1 reserved eligible; building 0 not mapped, 1 mapped"
+    },
+    "lidar_masks_v1": {
+      "xy_crs": "EPSG:25831 verified in all nine LAS1.4 format8 headers",
+      "xy_unit": "metres, 0.001 coordinate scale in inspected headers",
+      "vertical_datum": "Provider orthometric convention inherited; horizontal-only header does not independently verify vertical datum; read-only ground residual histogram retained",
+      "footprint": "Current frozen working-space AOI only",
+      "resolution_or_density": "0.5 m native grid; additional return fraction has 5m effective support, not 0.5m accuracy",
+      "classification": "source class return counts/occupancy; vegetation-height and first-return-fraction candidates; no species, current biome or planting admission",
+      "nodata": "float -32767; occupancy255 no accepted samples; counts zero not absence proof; negative normalization remains unknown"
     }
   },
   "source_registry": {
@@ -2680,6 +3413,38 @@
       "restore": "local cache copy plus hashes, or regenerate from pinned normalized candidate; no remote backup",
       "consumer_integration": false,
       "determinism": "Two clean preparations: 2/2 raster byte+logical hashes and full manifest identical"
+    },
+    "lidar_masks_v1": {
+      "status": "LIDAR_EVIDENCE_CANDIDATE",
+      "profile": "sa-calobra-lidar-evidence-candidate",
+      "manifest": "lidar-masks-v1b-2026-10-04/lidar-manifest.json",
+      "counts": {
+        "decoded_all_tiles": 81990059,
+        "accepted_aoi": 23588890,
+        "observed_cells": 13551361,
+        "unobserved_cells": 2713728,
+        "vegetation_cells": 7468196,
+        "building_cells": 1683,
+        "canopy_height_valid_cells": 7126797,
+        "invalid_height_review_cells": 341399
+      },
+      "fingerprint": "cd20611c530a346abaaaf4a35ab3bd27efb6167e74064d39ccc63e31d3c1e3c8",
+      "versions": {
+        "laspy": "2.7.0",
+        "lazrs": "0.8.2",
+        "numpy": "2.3.5",
+        "rasterio": "1.5.2",
+        "pyproj": "3.8.0"
+      },
+      "restore": "Local copy plus exact hashes or pinned regeneration; no remote backup",
+      "geometry_mutation": false,
+      "determinism": "9/9 products plus full manifest byte-identical across clean preparations; independent reader PASS both",
+      "confidence": "source-class evidence plus sample counts/normalization review; no calibrated per-pixel probability; no species or crown location inference",
+      "planting": "BLOCKED: no admitted current cover, safety/road/BOB exclusions or production graph; fraction is not planting density",
+      "review": "lidar-review-v1-2026-10-04: green class context, amber relief unchanged, magenta height-normalization review, session-only native sky; Unreal receipt separately required",
+      "local_source_location": "Nine explicit working-cache aliases resolve existing manual-cnig files; original Release backend and receipt unchanged",
+      "profile_correction": "Initial verification failed 9 source paths plus Release receipt under sources/ layout; registered existing world-data-cache location instead; no bytes duplicated or downloaded",
+      "native_proof": "Read separate lidar-review-v1-2026-10-04/unreal-review-proof.json; completion/hash is not inferred from catalog bytes"
     }
   }
 }

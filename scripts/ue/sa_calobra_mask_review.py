@@ -46,6 +46,7 @@ def record(status, error=""):
         "landscape_before": state.get("before"),
         "landscape_after": snapshot() if "landscape" in state else None,
         "captures": state["captures"],
+        "review_environment": state.get("review_environment", "unchanged"),
         "legend": MANIFEST["legend"],
         "blocked_layers": MANIFEST["blocked_layers"],
         "whole_2a": "INCOMPLETE",
@@ -358,6 +359,32 @@ def main():
         )
     ]
     actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+    if MANIFEST.get("review_atmosphere") is True:
+        sky = actors.spawn_actor_from_class(
+            unreal.SkyAtmosphere, unreal.Vector(), unreal.Rotator(), transient=True
+        )
+        sun = actors.spawn_actor_from_class(
+            unreal.DirectionalLight,
+            unreal.Vector(0, 0, 120000),
+            unreal.Rotator(-35, -35, 0),
+            transient=True,
+        )
+        if sky is None or sun is None:
+            raise RuntimeError("Native review atmosphere/sun spawn failed")
+        sky.set_actor_label("YACS_MASK_REVIEW_SKY_NO_SAVE")
+        sun.set_actor_label("YACS_MASK_REVIEW_SUN_NO_SAVE")
+        light = sun.get_component_by_class(unreal.DirectionalLightComponent)
+        light.set_atmosphere_sun_light(True)
+        light.set_atmosphere_sun_light_index(0)
+        light.set_intensity(10.0)
+        kept.extend([sky, sun])
+        state["review_environment"] = {
+            "type": "native SkyAtmosphere plus DirectionalLight; session only",
+            "sun_rotation_deg": [-35, -35, 0],
+            "sun_intensity": 10.0,
+            "atmosphere_sun_index": 0,
+            "map_saved": False,
+        }
     camera = actors.spawn_actor_from_class(
         unreal.CameraActor, unreal.Vector(), unreal.Rotator(), transient=True
     )
@@ -387,6 +414,15 @@ def main():
             "target": [x, y, z],
         }
     )
+    if MANIFEST.get("review_atmosphere") is True:
+        state["views"].append(
+            {
+                "name": "mask-landscape-sky",
+                "material": 1,
+                "location": [100800, 20000, 125000],
+                "target": [100800, 155000, 75000],
+            }
+        )
     # The overlay uses the existing surface. No heights, road actors, collision or edit layers are authored.
     schedule()
     state["handle"] = unreal.register_slate_post_tick_callback(tick)

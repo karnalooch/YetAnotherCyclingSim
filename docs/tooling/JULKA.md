@@ -183,3 +183,20 @@ placement_handoff_v1` reports prohibited/unknown counts, provenance, fingerprint
 restore and `BLOCKED_FOR_PLANTING`; byte PASS cannot grant planting permission.
 Restore is local copying plus hashes or pinned producer regeneration. No remote
 backup or PCGEx execution is claimed. Source amber relief remains review evidence.
+
+## Native LiDAR evidence candidate — 2026-10-04
+
+`sa-calobra-lidar-evidence-candidate` adds ten pinned prepared/evidence identities
+and their nine raw LAZ dependencies to the existing review closure.
+`sa-calobra-lidar-review-candidate` adds three context PNGs and a review manifest.
+`explain lidar_masks_v1` reports complete decode counts, source-class/height/fraction
+limits, versions, fingerprint, clean regeneration and local restore. A native
+render receipt is separate from these hash checks; the preview sky is transient.
+
+Raw source bytes remain read-only. Derived payloads stay outside Git; a small
+[receipt](../../worldgen/terrain/benchmarks/sa_calobra/world_data/lidar_masks_receipt_2026-10-04.json)
+records hashes/provenance in the repository. Restore is local copying plus
+hashes or pinned regeneration with approved isolated decoder tools; no remote
+derivative backup is registered. Whole-2A/planting readiness stays nonzero:
+candidate data existence is not admission of current cover, canopy, exclusions
+or road/BOB authority. See the [Bible](../WORLD_BUILDING_BIBLE.md#native-lidar-evidence-candidate-issue-335).
