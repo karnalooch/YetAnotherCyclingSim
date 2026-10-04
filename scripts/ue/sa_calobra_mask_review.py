@@ -251,6 +251,10 @@ def tick(delta):
                 after_samples = measure_registration()
                 if after_samples != state["registration"]:
                     raise RuntimeError("Frozen Landscape collision samples changed")
+                state["performance_settings"].set_editor_property(
+                    "throttle_cpu_when_not_foreground",
+                    state["original_background_throttle"],
+                )
                 record("PASS_DIAGNOSTIC_CONSUMER_ONLY")
                 unreal.unregister_slate_post_tick_callback(state["handle"])
                 unreal.log(
@@ -282,6 +286,16 @@ def main():
             raise RuntimeError("Review output identity mismatch")
     if (ROOT / "unreal-review-proof.json").exists():
         raise RuntimeError("Preserve existing Unreal proof")
+    performance = unreal.get_default_object(unreal.EditorPerformanceSettings)
+    state["performance_settings"] = performance
+    state["original_background_throttle"] = performance.get_editor_property(
+        "throttle_cpu_when_not_foreground"
+    )
+    performance.set_editor_property("throttle_cpu_when_not_foreground", False)
+    # Volatile settings only, never SaveConfig. Prevent review assets/material
+    # from being autosaved into the frozen project during this review session.
+    loading = unreal.get_default_object(unreal.EditorLoadingSavingSettings)
+    loading.set_editor_property("auto_save_enable", False)
     expected = MANIFEST["expected_landscape"]
     package = expected["map"]
     state["map_file"] = Path(
@@ -370,7 +384,6 @@ def main():
         }
     )
     # The overlay uses the existing surface. No heights, road actors, collision or edit layers are authored.
-    unreal.EditorPythonScripting.set_keep_python_script_alive(True)
     schedule()
     state["handle"] = unreal.register_slate_post_tick_callback(tick)
 

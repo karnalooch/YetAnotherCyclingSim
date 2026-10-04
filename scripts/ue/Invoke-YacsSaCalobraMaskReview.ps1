@@ -27,7 +27,7 @@ $env:YACS_MASK_COMPILED_PROJECT_SHA=(git -C $projectRoot rev-parse HEAD).Trim()
 $env:YACS_MASK_REVIEW_KEEP_OPEN=if ($KeepOpen) {'1'} else {'0'}
 try {
     $script=Join-Path $PSScriptRoot 'sa_calobra_mask_review.py'
-    $arguments=@(('"'+$ProjectPath+'"'),('-ExecutePythonScript="'+$script+'"'),'-NoP4','-NoSplash','-windowed','-ResX=1920','-ResY=1080',('-AbsLog="'+$ReviewRoot+'\review.engine.log"'))
+    $arguments=@(('"'+$ProjectPath+'"'),('-ExecCmds="py '+$script+'"'),'-NoP4','-NoSplash','-windowed','-ResX=1920','-ResY=1080',('-AbsLog="'+$ReviewRoot+'\review.engine.log"'))
     # This visible session is the explicitly requested interactive mask review.
     $process=Start-Process -FilePath $engine.UnrealEditorPath -ArgumentList $arguments -PassThru
     @{script_commit=$ExpectedHead;compiled_project_commit=$env:YACS_MASK_COMPILED_PROJECT_SHA;process_id=$process.Id;map_sha256_before=(Get-FileHash -LiteralPath $map -Algorithm SHA256).Hash.ToLowerInvariant();existing_map_only=$true;build_executed=$false} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $ReviewRoot 'launch-receipt.json') -Encoding utf8
