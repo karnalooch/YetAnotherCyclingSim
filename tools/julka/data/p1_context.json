@@ -1125,6 +1125,206 @@
         "source_url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx",
         "admitted": false
       }
+    },
+    {
+      "asset_id": "catastro_buildings_atom-000",
+      "path": "p1-alternatives-2026-10-04/catastro-national.atom.xml",
+      "size_bytes": 682565,
+      "sha256": "6b60f42087114a090db59aebba2590102fe840ac205ec1203665d4b49c5e2996",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "depends_on": [],
+      "gis_metadata_profile": "catastro_buildings_atom",
+      "acquisition": {
+        "method": "official ATOM municipality package",
+        "receipt": "p1_alternatives_receipt_2026-10-04.json",
+        "restore": "retained local cache only; verify exact size/SHA-256; no remote snapshot registered"
+      },
+      "provenance": {
+        "provider": "DG Catastro",
+        "license": "DG Catastro INSPIRE v1 July 2016; original redistribution not authorized",
+        "source_url": "https://www.catastro.hacienda.gob.es/INSPIRE/buildings/ES.SDGC.BU.atom.xml",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "catastro_buildings_atom-001",
+      "path": "p1-alternatives-2026-10-04/catastro-baleares.atom.xml",
+      "size_bytes": 117685,
+      "sha256": "9874ae01de8351886e5c49e506e91490d472183c37ca7551dcf190688093f825",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "depends_on": [],
+      "gis_metadata_profile": "catastro_buildings_atom",
+      "acquisition": {
+        "method": "official ATOM municipality package",
+        "receipt": "p1_alternatives_receipt_2026-10-04.json",
+        "restore": "retained local cache only; verify exact size/SHA-256; no remote snapshot registered"
+      },
+      "provenance": {
+        "provider": "DG Catastro",
+        "license": "DG Catastro INSPIRE v1 July 2016; original redistribution not authorized",
+        "source_url": "http://www.catastro.hacienda.gob.es/INSPIRE/buildings/07/ES.SDGC.bu.atom_07.xml",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "catastro_buildings_atom-002",
+      "path": "p1-alternatives-2026-10-04/A.ES.SDGC.BU.07019.zip",
+      "size_bytes": 127448,
+      "sha256": "a5c80a7ba5c82618401550215a1a94ea1470e41d55e92a59c1c3d4d758acd4d4",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "depends_on": [],
+      "gis_metadata_profile": "catastro_buildings_atom",
+      "acquisition": {
+        "method": "official ATOM municipality package",
+        "receipt": "p1_alternatives_receipt_2026-10-04.json",
+        "restore": "retained local cache only; verify exact size/SHA-256; no remote snapshot registered"
+      },
+      "provenance": {
+        "provider": "DG Catastro",
+        "license": "DG Catastro INSPIRE v1 July 2016; original redistribution not authorized",
+        "source_url": "https://www.catastro.hacienda.gob.es/INSPIRE/Buildings/07/07019-ESCORCA/A.ES.SDGC.BU.07019.zip",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "siose_2014_ideib-000",
+      "path": "p1-alternatives-2026-10-04/siose14-service.json",
+      "size_bytes": 6405,
+      "sha256": "81805ab39fe5ce76986d207d0fc19c3cdd54ed6e7d084b33846bc3f7089b1053",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "depends_on": [],
+      "gis_metadata_profile": "siose_2014_ideib",
+      "acquisition": {
+        "method": "official IDEIB SIOSE 2014 bounded REST query",
+        "receipt": "p1_alternatives_receipt_2026-10-04.json",
+        "restore": "retained local cache only; verify exact size/SHA-256; no remote snapshot registered"
+      },
+      "provenance": {
+        "provider": "IGN / SITIBSA / GOIB / ICGIB",
+        "license": "IDEIB service iteminfo: publishing/download allowed with mandatory SIOSE IGN/SITIBSA/GOIB attribution",
+        "source_url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "siose_2014_ideib-001",
+      "path": "p1-alternatives-2026-10-04/siose14-layer.json",
+      "size_bytes": 83253,
+      "sha256": "9cee8105b6e1967b273d51b420869ff41d320b44273e5ffb512a050b6a8ca71b",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "depends_on": [],
+      "gis_metadata_profile": "siose_2014_ideib",
+      "acquisition": {
+        "method": "official IDEIB SIOSE 2014 bounded REST query",
+        "receipt": "p1_alternatives_receipt_2026-10-04.json",
+        "restore": "retained local cache only; verify exact size/SHA-256; no remote snapshot registered"
+      },
+      "provenance": {
+        "provider": "IGN / SITIBSA / GOIB / ICGIB",
+        "license": "IDEIB service iteminfo: publishing/download allowed with mandatory SIOSE IGN/SITIBSA/GOIB attribution",
+        "source_url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer/1",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "siose_2014_ideib-002",
+      "path": "p1-alternatives-2026-10-04/siose14-iteminfo.json",
+      "size_bytes": 3934,
+      "sha256": "74884a00d2fe7aefb439a3044710f9e787e82f65c73a0bbc9724a1c631f398cc",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "depends_on": [],
+      "gis_metadata_profile": "siose_2014_ideib",
+      "acquisition": {
+        "method": "official IDEIB SIOSE 2014 bounded REST query",
+        "receipt": "p1_alternatives_receipt_2026-10-04.json",
+        "restore": "retained local cache only; verify exact size/SHA-256; no remote snapshot registered"
+      },
+      "provenance": {
+        "provider": "IGN / SITIBSA / GOIB / ICGIB",
+        "license": "IDEIB service iteminfo: publishing/download allowed with mandatory SIOSE IGN/SITIBSA/GOIB attribution",
+        "source_url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer/info/iteminfo",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "siose_2014_ideib-003",
+      "path": "p1-alternatives-2026-10-04/siose14-ids.json",
+      "size_bytes": 133,
+      "sha256": "aec9f9b4aeaf4bddfb4b2df535eee2568fdc7a61a4230126e414f00f88dcec01",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "depends_on": [],
+      "gis_metadata_profile": "siose_2014_ideib",
+      "acquisition": {
+        "method": "official IDEIB SIOSE 2014 bounded REST query",
+        "receipt": "p1_alternatives_receipt_2026-10-04.json",
+        "restore": "retained local cache only; verify exact size/SHA-256; no remote snapshot registered"
+      },
+      "provenance": {
+        "provider": "IGN / SITIBSA / GOIB / ICGIB",
+        "license": "IDEIB service iteminfo: publishing/download allowed with mandatory SIOSE IGN/SITIBSA/GOIB attribution",
+        "source_url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer/1/query",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "siose_2014_ideib-004",
+      "path": "p1-alternatives-2026-10-04/siose14-features.json",
+      "size_bytes": 1142878,
+      "sha256": "7b90a7affacea7c8a647bb4cfd0f252d18ab6e673ffecb632084a1d3cb7a0d05",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "depends_on": [],
+      "gis_metadata_profile": "siose_2014_ideib",
+      "acquisition": {
+        "method": "official IDEIB SIOSE 2014 bounded REST query",
+        "receipt": "p1_alternatives_receipt_2026-10-04.json",
+        "restore": "retained local cache only; verify exact size/SHA-256; no remote snapshot registered"
+      },
+      "provenance": {
+        "provider": "IGN / SITIBSA / GOIB / ICGIB",
+        "license": "IDEIB service iteminfo: publishing/download allowed with mandatory SIOSE IGN/SITIBSA/GOIB attribution",
+        "source_url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer/1/query",
+        "admitted": true
+      }
     }
   ],
   "profiles": {
@@ -1247,6 +1447,40 @@
         "SIOSE 2014: service advertises SIOSE HR 2017; 244 observationDate=2016 features rejected",
         "Catastro: 12/12 Area of extension out of limits; 0 admitted GML"
       ]
+    },
+    "sa-calobra-catastro_buildings_atom": {
+      "description": "catastro_buildings_atom local source integrity; not derived-mask admission",
+      "requires": [
+        "catastro_buildings_atom-000",
+        "catastro_buildings_atom-001",
+        "catastro_buildings_atom-002"
+      ]
+    },
+    "sa-calobra-siose_2014_ideib": {
+      "description": "siose_2014_ideib local source integrity; not derived-mask admission",
+      "requires": [
+        "siose_2014_ideib-000",
+        "siose_2014_ideib-001",
+        "siose_2014_ideib-002",
+        "siose_2014_ideib-003",
+        "siose_2014_ideib-004"
+      ]
+    },
+    "sa-calobra-p1-inputs": {
+      "description": "BTN plus verified SIOSE 2014 and Catastro ATOM source snapshots; no normalized masks or municipal-coverage proof",
+      "extends": [
+        "sa-calobra-btn-context"
+      ],
+      "requires": [
+        "catastro_buildings_atom-000",
+        "catastro_buildings_atom-001",
+        "catastro_buildings_atom-002",
+        "siose_2014_ideib-000",
+        "siose_2014_ideib-001",
+        "siose_2014_ideib-002",
+        "siose_2014_ideib-003",
+        "siose_2014_ideib-004"
+      ]
     }
   },
   "gis_metadata_profiles": {
@@ -1276,6 +1510,24 @@
       "resolution_or_density": "z16 BTN context; WFS vector source accuracy not inferred",
       "classification": "context only; rejected source payloads are evidence, not admitted layers",
       "nodata": "missing/rejected evidence remains unknown"
+    },
+    "catastro_buildings_atom": {
+      "xy_crs": "EPSG:25831 inspected",
+      "xy_unit": "metres",
+      "vertical_datum": "not ground authority; uninspected vertical attributes",
+      "footprint": "Escorca municipality package / working-space intersecting SIOSE features",
+      "resolution_or_density": "Catastro vector; SIOSE 2014 reference scale 1:25000; no resampling accuracy claim",
+      "classification": "historical land cover / building footprints and parts",
+      "nodata": "unknown remains unknown; municipality completeness and normalization separate"
+    },
+    "siose_2014_ideib": {
+      "xy_crs": "EPSG:25831 inspected",
+      "xy_unit": "metres",
+      "vertical_datum": "not ground authority; uninspected vertical attributes",
+      "footprint": "Escorca municipality package / working-space intersecting SIOSE features",
+      "resolution_or_density": "Catastro vector; SIOSE 2014 reference scale 1:25000; no resampling accuracy claim",
+      "classification": "historical land cover / building footprints and parts",
+      "nodata": "unknown remains unknown; municipality completeness and normalization separate"
     }
   },
   "source_registry": {
@@ -1319,7 +1571,8 @@
       "feature_count": 244,
       "feature_count_note": "BTN tile fragments may repeat; SIOSE 244 features are rejected for edition mismatch; Catastro feature count unknown",
       "restore": "local-only cache; no remote snapshot; official reacquisition must be separately verified",
-      "receipt": "worldgen/terrain/benchmarks/sa_calobra/world_data/p1_context_receipt_2026-10-04.json"
+      "receipt": "worldgen/terrain/benchmarks/sa_calobra/world_data/p1_context_receipt_2026-10-04.json",
+      "verified_alternative": "siose_2014_ideib"
     },
     "catastro_buildings_wfs": {
       "source_id": "catastro_buildings_wfs",
@@ -1356,7 +1609,73 @@
       "feature_count": 0,
       "feature_count_note": "BTN tile fragments may repeat; SIOSE 244 features are rejected for edition mismatch; Catastro feature count unknown",
       "restore": "local-only cache; no remote snapshot; official reacquisition must be separately verified",
-      "receipt": "worldgen/terrain/benchmarks/sa_calobra/world_data/p1_context_receipt_2026-10-04.json"
+      "receipt": "worldgen/terrain/benchmarks/sa_calobra/world_data/p1_context_receipt_2026-10-04.json",
+      "verified_alternative": "catastro_buildings_atom"
+    },
+    "catastro_buildings_atom": {
+      "status": "acquired",
+      "municipality": "07019-ESCORCA",
+      "provider_updated": "2026-08-21T00:00:00Z",
+      "license": "DG Catastro INSPIRE v1 July 2016; raw original redistribution not authorized",
+      "feature_counts": {
+        "Building": 224,
+        "BuildingPart": 595,
+        "OtherConstruction": 24
+      },
+      "aoi_bbox_candidate_counts": {
+        "Building": 2,
+        "BuildingPart": 8,
+        "OtherConstruction": 0
+      },
+      "members": [
+        {
+          "name": "A.ES.SDGC.BU.07019.building.gml",
+          "size_bytes": 1048175,
+          "sha256": "0d17066139636caa28816d028c60bec2ae41c5e403895cfabd48b4b81c1cb340",
+          "feature_count": 224
+        },
+        {
+          "name": "A.ES.SDGC.BU.07019.buildingpart.gml",
+          "size_bytes": 1475359,
+          "sha256": "95baa3035b04648b1f4f95c86e3f12314c93a1e6752d75da88194af64f24fdb8",
+          "feature_count": 595
+        },
+        {
+          "name": "A.ES.SDGC.BU.07019.otherconstruction.gml",
+          "size_bytes": 52865,
+          "sha256": "f35cc7a4e1462a858d914886586def2feced9a1bd0c1e39472a19206d5f310ed",
+          "feature_count": 24
+        }
+      ],
+      "feature_types": [
+        "Building",
+        "BuildingPart",
+        "OtherConstruction"
+      ],
+      "note": "Municipality package; bbox candidates are not clipped geometry or proof of complete AOI municipal coverage.",
+      "source_id": "catastro_buildings_atom",
+      "file_count": 3,
+      "size_bytes": 927698,
+      "raw_cache_relative": "p1-alternatives-2026-10-04",
+      "receipt": "p1_alternatives_receipt_2026-10-04.json",
+      "restore": "local-only pinned cache; no remote backup registered"
+    },
+    "siose_2014_ideib": {
+      "status": "acquired",
+      "layer_id": 1,
+      "layer_name": "SIOSE 2014",
+      "feature_count": 15,
+      "field_count": 133,
+      "crs": "EPSG:25831",
+      "license_evidence": "siose14-iteminfo.json",
+      "attribution": "SIOSE © INSTITUTO GEOGRÁFICO NACIONAL DE ESPAÑA - SITIBSA - GOIB",
+      "note": "Historical supporting context; intersecting features may extend past AOI. No normalized masks generated.",
+      "source_id": "siose_2014_ideib",
+      "file_count": 5,
+      "size_bytes": 1236603,
+      "raw_cache_relative": "p1-alternatives-2026-10-04",
+      "receipt": "p1_alternatives_receipt_2026-10-04.json",
+      "restore": "local-only pinned cache; no remote backup registered"
     }
   }
 }

@@ -200,3 +200,20 @@ https://ubuntu.com/security/notices/USN-8329-1
 - Acquisition date and native GSD remain unknown; request date is not flight date.
   Approximate AI-interpreted edge positions have an explicit review allowance,
   not measured statistical accuracy. The generated preview is not road acceptance.
+
+## Verified P1 alternative providers — 2026-10-04
+
+- **Catastro Buildings ATOM Escorca — acquired:** official national feed ->
+  Baleares feed -> 07019 Escorca ZIP; provider update 2026-08-21, CRC verified,
+  EPSG:25831 inspected, 224/595/24 features across three types. Existing
+  Catastro INSPIRE license applies; raw original redistribution is not authorized.
+- **IDEIB SIOSE 2014 regional service — acquired:** official
+  `GOIB_SIOSE14_IB/MapServer`, selected named layer 1 `SIOSE 2014`; 15/15 AOI
+  object IDs returned in EPSG:25831. Exact service iteminfo license allows
+  publication/download and requires `SIOSE © INSTITUTO GEOGRÁFICO NACIONAL DE
+  ESPAÑA - SITIBSA - GOIB`. Historical context only; no current vegetation authority.
+- Exact URLs, sizes, SHA-256 and license metadata are pinned in
+  `p1_alternatives_receipt_2026-10-04.json` and Julka's supplemental catalog.
+  Eight raw payloads remain local outside Git, without registered remote backup.
+  Prior WFS failures remain separately recorded. AOI normalization, municipal
+  coverage admission and derived-mask consumer proofs are still pending.

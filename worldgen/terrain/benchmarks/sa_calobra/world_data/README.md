@@ -123,3 +123,11 @@ CRS and wrong requested edition fail closed. No geographic axis fallback is used
 - PCGEx and Landscape materials consume normalized World Data Stack outputs;
 - MDS/orthophoto/canopy products never replace ground-Z truth;
 - unknown or conflicting evidence remains unknown until reviewed.
+
+## Current verified P1 alternatives
+
+The owner-authorized [alternative checkpoint](P1_ALTERNATIVES_2026-10-04.md)
+acquired official Catastro ATOM Escorca and regional IDEIB SIOSE 2014.
+`p1_alternatives_receipt_2026-10-04.json` pins the 8 payloads. Julka profile
+`sa-calobra-p1-inputs` verifies 30 BTN + 8 alternative files. Original WFS
+failures remain inspectable; normalization and full 2A acceptance remain pending.

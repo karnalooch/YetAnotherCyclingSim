@@ -153,3 +153,14 @@ Provider reacquisition is a new snapshot if mutable responses differ.
 
 See the [P1 report](../../worldgen/terrain/benchmarks/sa_calobra/world_data/P1_ACQUISITION_2026-10-04.md)
 for exact file/layer counts, rejected payloads and provider references.
+
+## Verified P1 input alternatives
+
+`sa-calobra-p1-inputs` selects the 30 BTN tiles plus 8 verified alternative
+payloads: Catastro Buildings ATOM for Escorca and IDEIB SIOSE 2014 AOI geometry.
+Use `explain catastro_buildings_atom` and `explain siose_2014_ideib` for counts,
+provenance and local restore status. Select the same parent world-data root;
+the alternative files live under `p1-alternatives-2026-10-04`.
+The historical WFS failure profile remains available as diagnostic evidence.
+See the [alternative acquisition report](../../worldgen/terrain/benchmarks/sa_calobra/world_data/P1_ALTERNATIVES_2026-10-04.md)
+for coverage limitations and the remaining 2A normalization work.

@@ -1,0 +1,194 @@
+{
+  "schema_version": 1,
+  "issue": 335,
+  "verified_date": "2026-10-04",
+  "aoi": {
+    "id": "sa_calobra_working_space_v1",
+    "status": "primary_cnig_sources_acquired",
+    "crs": "EPSG:25831",
+    "bounds_m": [
+      483000,
+      4407500,
+      485016.5,
+      4409516.5
+    ],
+    "center_m": [
+      484008.25,
+      4408508.25
+    ],
+    "center_wgs84_lon_lat": [
+      2.813126946845794,
+      39.826417491613824
+    ],
+    "wgs84_corners_lon_lat": {
+      "SW": [
+        2.8013711714022658,
+        39.81731355795069
+      ],
+      "SE": [
+        2.824931945160123,
+        39.81735149865384
+      ],
+      "NE": [
+        2.824885825640162,
+        39.835520226740705
+      ],
+      "NW": [
+        2.801318845180626,
+        39.8354822617286
+      ]
+    },
+    "size_m": [
+      2016.5,
+      2016.5
+    ],
+    "area_km2": 4.06648225,
+    "relationship_to_benchmark": "Current active Unreal working/import square inside the existing 8 km x 8 km Sa Calobra MDT50cm benchmark."
+  },
+  "raw_sources_committed": false,
+  "sources": {
+    "catastro_buildings_atom": {
+      "status": "acquired",
+      "municipality": "07019-ESCORCA",
+      "provider_updated": "2026-08-21T00:00:00Z",
+      "license": "DG Catastro INSPIRE v1 July 2016; raw original redistribution not authorized",
+      "feature_counts": {
+        "Building": 224,
+        "BuildingPart": 595,
+        "OtherConstruction": 24
+      },
+      "aoi_bbox_candidate_counts": {
+        "Building": 2,
+        "BuildingPart": 8,
+        "OtherConstruction": 0
+      },
+      "members": [
+        {
+          "name": "A.ES.SDGC.BU.07019.building.gml",
+          "size_bytes": 1048175,
+          "sha256": "0d17066139636caa28816d028c60bec2ae41c5e403895cfabd48b4b81c1cb340",
+          "feature_count": 224
+        },
+        {
+          "name": "A.ES.SDGC.BU.07019.buildingpart.gml",
+          "size_bytes": 1475359,
+          "sha256": "95baa3035b04648b1f4f95c86e3f12314c93a1e6752d75da88194af64f24fdb8",
+          "feature_count": 595
+        },
+        {
+          "name": "A.ES.SDGC.BU.07019.otherconstruction.gml",
+          "size_bytes": 52865,
+          "sha256": "f35cc7a4e1462a858d914886586def2feced9a1bd0c1e39472a19206d5f310ed",
+          "feature_count": 24
+        }
+      ],
+      "feature_types": [
+        "Building",
+        "BuildingPart",
+        "OtherConstruction"
+      ],
+      "note": "Municipality package; bbox candidates are not clipped geometry or proof of complete AOI municipal coverage.",
+      "files": [
+        {
+          "name": "catastro-national.atom.xml",
+          "size_bytes": 682565,
+          "sha256": "6b60f42087114a090db59aebba2590102fe840ac205ec1203665d4b49c5e2996",
+          "url": "https://www.catastro.hacienda.gob.es/INSPIRE/buildings/ES.SDGC.BU.atom.xml",
+          "params": null,
+          "reused": true
+        },
+        {
+          "name": "catastro-baleares.atom.xml",
+          "size_bytes": 117685,
+          "sha256": "9874ae01de8351886e5c49e506e91490d472183c37ca7551dcf190688093f825",
+          "url": "http://www.catastro.hacienda.gob.es/INSPIRE/buildings/07/ES.SDGC.bu.atom_07.xml",
+          "params": null,
+          "reused": true
+        },
+        {
+          "name": "A.ES.SDGC.BU.07019.zip",
+          "size_bytes": 127448,
+          "sha256": "a5c80a7ba5c82618401550215a1a94ea1470e41d55e92a59c1c3d4d758acd4d4",
+          "url": "https://www.catastro.hacienda.gob.es/INSPIRE/Buildings/07/07019-ESCORCA/A.ES.SDGC.BU.07019.zip",
+          "params": null,
+          "reused": true
+        }
+      ]
+    },
+    "siose_2014_ideib": {
+      "status": "acquired",
+      "layer_id": 1,
+      "layer_name": "SIOSE 2014",
+      "feature_count": 15,
+      "field_count": 133,
+      "crs": "EPSG:25831",
+      "license_evidence": "siose14-iteminfo.json",
+      "attribution": "SIOSE © INSTITUTO GEOGRÁFICO NACIONAL DE ESPAÑA - SITIBSA - GOIB",
+      "note": "Historical supporting context; intersecting features may extend past AOI. No normalized masks generated.",
+      "files": [
+        {
+          "name": "siose14-service.json",
+          "size_bytes": 6405,
+          "sha256": "81805ab39fe5ce76986d207d0fc19c3cdd54ed6e7d084b33846bc3f7089b1053",
+          "url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer",
+          "params": {
+            "f": "pjson"
+          },
+          "reused": true
+        },
+        {
+          "name": "siose14-layer.json",
+          "size_bytes": 83253,
+          "sha256": "9cee8105b6e1967b273d51b420869ff41d320b44273e5ffb512a050b6a8ca71b",
+          "url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer/1",
+          "params": {
+            "f": "pjson"
+          },
+          "reused": true
+        },
+        {
+          "name": "siose14-iteminfo.json",
+          "size_bytes": 3934,
+          "sha256": "74884a00d2fe7aefb439a3044710f9e787e82f65c73a0bbc9724a1c631f398cc",
+          "url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer/info/iteminfo",
+          "params": {
+            "f": "pjson"
+          },
+          "reused": true
+        },
+        {
+          "name": "siose14-ids.json",
+          "size_bytes": 133,
+          "sha256": "aec9f9b4aeaf4bddfb4b2df535eee2568fdc7a61a4230126e414f00f88dcec01",
+          "url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer/1/query",
+          "params": {
+            "f": "json",
+            "geometry": "483000,4407500,485016.5,4409516.5",
+            "geometryType": "esriGeometryEnvelope",
+            "inSR": "25831",
+            "spatialRel": "esriSpatialRelIntersects",
+            "where": "1=1",
+            "returnIdsOnly": "true"
+          },
+          "reused": true
+        },
+        {
+          "name": "siose14-features.json",
+          "size_bytes": 1142878,
+          "sha256": "7b90a7affacea7c8a647bb4cfd0f252d18ab6e673ffecb632084a1d3cb7a0d05",
+          "url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer/1/query",
+          "params": {
+            "f": "json",
+            "objectIds": "24003,44750,13297,35466,25997,18912,5765,35733,40319,21836,31034,30956,935,22176,29155",
+            "outFields": "*",
+            "returnGeometry": "true",
+            "outSR": "25831"
+          },
+          "reused": true
+        }
+      ]
+    }
+  },
+  "persistent_root": "_yacs-world-data/sa-calobra-working-v1/p1-alternatives-2026-10-04",
+  "acquisition_code_sha256": "ec066f3f1eb36b7fe5dd143fa544dfc902265fb75603b0bea9c3550e69d75ce5"
+}

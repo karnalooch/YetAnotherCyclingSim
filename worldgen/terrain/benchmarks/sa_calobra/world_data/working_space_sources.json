@@ -906,6 +906,151 @@
         "restore": "local-only cache; no remote snapshot; official reacquisition must be separately verified",
         "receipt": "worldgen/terrain/benchmarks/sa_calobra/world_data/p1_context_receipt_2026-10-04.json"
       }
+    },
+    {
+      "id": "catastro_buildings_atom",
+      "priority": "P1",
+      "status": "acquired",
+      "product": "DG Catastro INSPIRE Buildings ATOM Escorca",
+      "service_url": "https://www.catastro.hacienda.gob.es/INSPIRE/buildings/ES.SDGC.BU.atom.xml",
+      "purpose": "verified alternative for catastro_buildings_wfs; context only",
+      "alternative_for": "catastro_buildings_wfs",
+      "acquisition_receipt": "p1_alternatives_receipt_2026-10-04.json",
+      "acquisition_summary": {
+        "status": "acquired",
+        "municipality": "07019-ESCORCA",
+        "provider_updated": "2026-08-21T00:00:00Z",
+        "license": "DG Catastro INSPIRE v1 July 2016; raw original redistribution not authorized",
+        "feature_counts": {
+          "Building": 224,
+          "BuildingPart": 595,
+          "OtherConstruction": 24
+        },
+        "aoi_bbox_candidate_counts": {
+          "Building": 2,
+          "BuildingPart": 8,
+          "OtherConstruction": 0
+        },
+        "members": [
+          {
+            "name": "A.ES.SDGC.BU.07019.building.gml",
+            "size_bytes": 1048175,
+            "sha256": "0d17066139636caa28816d028c60bec2ae41c5e403895cfabd48b4b81c1cb340",
+            "feature_count": 224
+          },
+          {
+            "name": "A.ES.SDGC.BU.07019.buildingpart.gml",
+            "size_bytes": 1475359,
+            "sha256": "95baa3035b04648b1f4f95c86e3f12314c93a1e6752d75da88194af64f24fdb8",
+            "feature_count": 595
+          },
+          {
+            "name": "A.ES.SDGC.BU.07019.otherconstruction.gml",
+            "size_bytes": 52865,
+            "sha256": "f35cc7a4e1462a858d914886586def2feced9a1bd0c1e39472a19206d5f310ed",
+            "feature_count": 24
+          }
+        ],
+        "feature_types": [
+          "Building",
+          "BuildingPart",
+          "OtherConstruction"
+        ],
+        "note": "Municipality package; bbox candidates are not clipped geometry or proof of complete AOI municipal coverage.",
+        "source_id": "catastro_buildings_atom",
+        "file_count": 3,
+        "size_bytes": 927698,
+        "raw_cache_relative": "p1-alternatives-2026-10-04",
+        "receipt": "p1_alternatives_receipt_2026-10-04.json",
+        "restore": "local-only pinned cache; no remote backup registered"
+      },
+      "files": [
+        {
+          "name": "catastro-national.atom.xml",
+          "cache_relative_path": "p1-alternatives-2026-10-04/catastro-national.atom.xml",
+          "size_bytes": 682565,
+          "sha256": "6b60f42087114a090db59aebba2590102fe840ac205ec1203665d4b49c5e2996",
+          "detail_url": "https://www.catastro.hacienda.gob.es/INSPIRE/buildings/ES.SDGC.BU.atom.xml"
+        },
+        {
+          "name": "catastro-baleares.atom.xml",
+          "cache_relative_path": "p1-alternatives-2026-10-04/catastro-baleares.atom.xml",
+          "size_bytes": 117685,
+          "sha256": "9874ae01de8351886e5c49e506e91490d472183c37ca7551dcf190688093f825",
+          "detail_url": "http://www.catastro.hacienda.gob.es/INSPIRE/buildings/07/ES.SDGC.bu.atom_07.xml"
+        },
+        {
+          "name": "A.ES.SDGC.BU.07019.zip",
+          "cache_relative_path": "p1-alternatives-2026-10-04/A.ES.SDGC.BU.07019.zip",
+          "size_bytes": 127448,
+          "sha256": "a5c80a7ba5c82618401550215a1a94ea1470e41d55e92a59c1c3d4d758acd4d4",
+          "detail_url": "https://www.catastro.hacienda.gob.es/INSPIRE/Buildings/07/07019-ESCORCA/A.ES.SDGC.BU.07019.zip"
+        }
+      ]
+    },
+    {
+      "id": "siose_2014_ideib",
+      "priority": "P1",
+      "status": "acquired",
+      "product": "IDEIB SIOSE 2014 regional service",
+      "service_url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer/1",
+      "purpose": "verified alternative for siose_2014_wfs; context only",
+      "alternative_for": "siose_2014_wfs",
+      "acquisition_receipt": "p1_alternatives_receipt_2026-10-04.json",
+      "acquisition_summary": {
+        "status": "acquired",
+        "layer_id": 1,
+        "layer_name": "SIOSE 2014",
+        "feature_count": 15,
+        "field_count": 133,
+        "crs": "EPSG:25831",
+        "license_evidence": "siose14-iteminfo.json",
+        "attribution": "SIOSE © INSTITUTO GEOGRÁFICO NACIONAL DE ESPAÑA - SITIBSA - GOIB",
+        "note": "Historical supporting context; intersecting features may extend past AOI. No normalized masks generated.",
+        "source_id": "siose_2014_ideib",
+        "file_count": 5,
+        "size_bytes": 1236603,
+        "raw_cache_relative": "p1-alternatives-2026-10-04",
+        "receipt": "p1_alternatives_receipt_2026-10-04.json",
+        "restore": "local-only pinned cache; no remote backup registered"
+      },
+      "files": [
+        {
+          "name": "siose14-service.json",
+          "cache_relative_path": "p1-alternatives-2026-10-04/siose14-service.json",
+          "size_bytes": 6405,
+          "sha256": "81805ab39fe5ce76986d207d0fc19c3cdd54ed6e7d084b33846bc3f7089b1053",
+          "detail_url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer"
+        },
+        {
+          "name": "siose14-layer.json",
+          "cache_relative_path": "p1-alternatives-2026-10-04/siose14-layer.json",
+          "size_bytes": 83253,
+          "sha256": "9cee8105b6e1967b273d51b420869ff41d320b44273e5ffb512a050b6a8ca71b",
+          "detail_url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer/1"
+        },
+        {
+          "name": "siose14-iteminfo.json",
+          "cache_relative_path": "p1-alternatives-2026-10-04/siose14-iteminfo.json",
+          "size_bytes": 3934,
+          "sha256": "74884a00d2fe7aefb439a3044710f9e787e82f65c73a0bbc9724a1c631f398cc",
+          "detail_url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer/info/iteminfo"
+        },
+        {
+          "name": "siose14-ids.json",
+          "cache_relative_path": "p1-alternatives-2026-10-04/siose14-ids.json",
+          "size_bytes": 133,
+          "sha256": "aec9f9b4aeaf4bddfb4b2df535eee2568fdc7a61a4230126e414f00f88dcec01",
+          "detail_url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer/1/query"
+        },
+        {
+          "name": "siose14-features.json",
+          "cache_relative_path": "p1-alternatives-2026-10-04/siose14-features.json",
+          "size_bytes": 1142878,
+          "sha256": "7b90a7affacea7c8a647bb4cfd0f252d18ab6e673ffecb632084a1d3cb7a0d05",
+          "detail_url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer/1/query"
+        }
+      ]
     }
   ],
   "planned_derived_outputs": [

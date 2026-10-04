@@ -630,3 +630,13 @@ Asset pass MVP jest ukończony, gdy:
 - krytyczne PCG/rig/IK/Niagara/MetaSound assets są zapisane w Technical UE Asset Ledger i mają status `validated`;
 - generated outputs można odtworzyć albo ich pochodzenie jest jawnie zapisane; nie ma ręcznie zmodyfikowanych „generated” assetów bez źródła prawdy;
 - większe zmiany wizualne mają wpis w `docs/visual-history/` z baseline `BEFORE`, bieżącym `NOW`, zaakceptowanym `AFTER`, commit/PR/CI provenance oraz osobną decyzją techniczną i wizualną.
+
+## P1 alternative source checkpoint — 2026-10-04
+
+Alternatywne ścieżki zatwierdzone przez właściciela dostarczyły Catastro ATOM
+Escorca (ZIP 127 448 B, 224 budynki / 595 części / 24 inne konstrukcje) oraz
+regionalne SIOSE 2014 (15/15 obiektów AOI, EPSG:25831). Julka rejestruje 8
+dodatkowych identities, profil `sa-calobra-p1-inputs` przechodzi 38/38 hashy.
+Wcześniejsze błędy WFS pozostają jako historyczne evidence. Dane raw nadal poza
+Git, restore lokalny; brak remote backupu. To acquisition, nie normalized masks
+ani dowód kompletnego pokrycia AOI granicą gminy. [Pełny raport](../worldgen/terrain/benchmarks/sa_calobra/world_data/P1_ALTERNATIVES_2026-10-04.md).

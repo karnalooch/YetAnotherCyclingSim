@@ -138,3 +138,15 @@ The current authority list in [`../README.md`](../README.md) identifies
 [`WORLD_BUILDING_BIBLE.md`](../WORLD_BUILDING_BIBLE.md) as the world-methodology
 SSOT. Julka changes asset acquisition/management only, so this page and the
 asset ledger are updated while the Bible and production code remain unchanged.
+
+## Verified P1 alternatives — 2026-10-04
+
+Owner-authorized alternative acquisition adds 8 local identities to the P1
+supplement: Catastro ATOM Escorca (2 feeds + ZIP) and regional IDEIB SIOSE 2014
+(service/layer/license metadata, AOI IDs and 15-feature geometry). The
+`sa-calobra-p1-inputs` profile verifies 38 files (30 BTN + 8 alternative files)
+and passes. The historical failed-WFS profile remains nonzero and unchanged.
+`explain` accepts `catastro_buildings_atom` / `siose_2014_ideib`; failed source
+explanations point to those explicit alternatives. Restore stays local-only.
+See the [alternative report](../../worldgen/terrain/benchmarks/sa_calobra/world_data/P1_ALTERNATIVES_2026-10-04.md)
+for exact counts, license, coverage limits and remaining 2A work.
