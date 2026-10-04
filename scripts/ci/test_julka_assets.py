@@ -44,6 +44,21 @@ class JulkaCatalogContractTests(unittest.TestCase):
         self.assertEqual(registry["catastro_buildings_wfs"]["admitted_file_count"], 0)
         self.assertEqual(len(topological_assets(catalog, "sa-calobra-p1-context")), 45)
 
+    def test_normalized_candidate_is_not_whole_world_authority(self) -> None:
+        catalog = load_catalog_file()
+        self.assertEqual(
+            len(topological_assets(catalog, "sa-calobra-2a-context-candidate")), 56
+        )
+        self.assertEqual(
+            catalog["source_registry"]["normalized_context_v1"]["status"], "candidate"
+        )
+        pending = catalog["profiles"]["sa-calobra-2a-world-authority"][
+            "incomplete_layers"
+        ]
+        self.assertIn("canopy_height", pending)
+        self.assertIn("road_footprint", pending)
+        self.assertIn("current_land_cover_with_confidence", pending)
+
     def test_missing_local_context_cannot_pass_restore_plan(self) -> None:
         import argparse
 

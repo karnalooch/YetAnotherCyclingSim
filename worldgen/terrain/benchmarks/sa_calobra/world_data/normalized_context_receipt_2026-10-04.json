@@ -1,0 +1,443 @@
+{
+  "acceptance": "GIS candidate; visual review and remaining layers required before 2A completion",
+  "aoi": {
+    "area_km2": 4.06648225,
+    "bounds_m": [
+      483000,
+      4407500,
+      485016.5,
+      4409516.5
+    ],
+    "center_m": [
+      484008.25,
+      4408508.25
+    ],
+    "center_wgs84_lon_lat": [
+      2.813126946845794,
+      39.826417491613824
+    ],
+    "crs": "EPSG:25831",
+    "id": "sa_calobra_working_space_v1",
+    "relationship_to_benchmark": "Current active Unreal working/import square inside the existing 8 km x 8 km Sa Calobra MDT50cm benchmark.",
+    "size_m": [
+      2016.5,
+      2016.5
+    ],
+    "status": "primary_cnig_sources_acquired",
+    "wgs84_corners_lon_lat": {
+      "NE": [
+        2.824885825640162,
+        39.835520226740705
+      ],
+      "NW": [
+        2.801318845180626,
+        39.8354822617286
+      ],
+      "SE": [
+        2.824931945160123,
+        39.81735149865384
+      ],
+      "SW": [
+        2.8013711714022658,
+        39.81731355795069
+      ]
+    }
+  },
+  "blocked_layers": [
+    "current_land_cover_with_confidence",
+    "lidar_class_occupancy",
+    "canopy_height",
+    "canopy_density",
+    "water_infrastructure_exclusions",
+    "road_footprint",
+    "shoulder",
+    "road_distance",
+    "route_safety_corridor",
+    "bob_cut_fill_inner_outer_edge"
+  ],
+  "coverage": {
+    "catastro_counts": {
+      "Building": {
+        "aoi": 2,
+        "source": 224
+      },
+      "BuildingPart": {
+        "aoi": 8,
+        "source": 595
+      },
+      "OtherConstruction": {
+        "aoi": 0,
+        "source": 24
+      }
+    },
+    "municipality": "07019 Escorca",
+    "siose_overlap_area_m2": 0.0,
+    "siose_uncovered_area_m2": 0.0,
+    "uncovered_municipal_area_m2": 0.0
+  },
+  "derivation_version": "sa-calobra-context-v1",
+  "fingerprint": "73a797481e6d404ee999a211ac0fe224a9cfbf3baf7f3215479b6256dbbccf98",
+  "grid": {
+    "anchor": "AOI upper-left; matches accepted native Base_DTM grid",
+    "crs": "EPSG:25831",
+    "height": 4033,
+    "pixel_rule": "center for SIOSE IDs; all_touched for conservative building candidates",
+    "pixel_size_m": 0.5,
+    "transform": [
+      0.5,
+      0.0,
+      483000.0,
+      0.0,
+      -0.5,
+      4409516.5
+    ],
+    "width": 4033
+  },
+  "inputs": [
+    {
+      "cache_relative_path": "p1-alternatives-2026-10-04/siose14-service.json",
+      "detail_url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer",
+      "name": "siose14-service.json",
+      "sha256": "81805ab39fe5ce76986d207d0fc19c3cdd54ed6e7d084b33846bc3f7089b1053",
+      "size_bytes": 6405,
+      "source_id": "siose_2014_ideib"
+    },
+    {
+      "cache_relative_path": "p1-alternatives-2026-10-04/siose14-layer.json",
+      "detail_url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer/1",
+      "name": "siose14-layer.json",
+      "sha256": "9cee8105b6e1967b273d51b420869ff41d320b44273e5ffb512a050b6a8ca71b",
+      "size_bytes": 83253,
+      "source_id": "siose_2014_ideib"
+    },
+    {
+      "cache_relative_path": "p1-alternatives-2026-10-04/siose14-iteminfo.json",
+      "detail_url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer/info/iteminfo",
+      "name": "siose14-iteminfo.json",
+      "sha256": "74884a00d2fe7aefb439a3044710f9e787e82f65c73a0bbc9724a1c631f398cc",
+      "size_bytes": 3934,
+      "source_id": "siose_2014_ideib"
+    },
+    {
+      "cache_relative_path": "p1-alternatives-2026-10-04/siose14-ids.json",
+      "detail_url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer/1/query",
+      "name": "siose14-ids.json",
+      "sha256": "aec9f9b4aeaf4bddfb4b2df535eee2568fdc7a61a4230126e414f00f88dcec01",
+      "size_bytes": 133,
+      "source_id": "siose_2014_ideib"
+    },
+    {
+      "cache_relative_path": "p1-alternatives-2026-10-04/siose14-features.json",
+      "detail_url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer/1/query",
+      "name": "siose14-features.json",
+      "sha256": "7b90a7affacea7c8a647bb4cfd0f252d18ab6e673ffecb632084a1d3cb7a0d05",
+      "size_bytes": 1142878,
+      "source_id": "siose_2014_ideib"
+    },
+    {
+      "cache_relative_path": "p1-alternatives-2026-10-04/catastro-national.atom.xml",
+      "detail_url": "https://www.catastro.hacienda.gob.es/INSPIRE/buildings/ES.SDGC.BU.atom.xml",
+      "name": "catastro-national.atom.xml",
+      "sha256": "6b60f42087114a090db59aebba2590102fe840ac205ec1203665d4b49c5e2996",
+      "size_bytes": 682565,
+      "source_id": "catastro_buildings_atom"
+    },
+    {
+      "cache_relative_path": "p1-alternatives-2026-10-04/catastro-baleares.atom.xml",
+      "detail_url": "http://www.catastro.hacienda.gob.es/INSPIRE/buildings/07/ES.SDGC.bu.atom_07.xml",
+      "name": "catastro-baleares.atom.xml",
+      "sha256": "9874ae01de8351886e5c49e506e91490d472183c37ca7551dcf190688093f825",
+      "size_bytes": 117685,
+      "source_id": "catastro_buildings_atom"
+    },
+    {
+      "cache_relative_path": "p1-alternatives-2026-10-04/A.ES.SDGC.BU.07019.zip",
+      "detail_url": "https://www.catastro.hacienda.gob.es/INSPIRE/Buildings/07/07019-ESCORCA/A.ES.SDGC.BU.07019.zip",
+      "name": "A.ES.SDGC.BU.07019.zip",
+      "sha256": "a5c80a7ba5c82618401550215a1a94ea1470e41d55e92a59c1c3d4d758acd4d4",
+      "size_bytes": 127448,
+      "source_id": "catastro_buildings_atom"
+    },
+    {
+      "cache_relative_path": "coverage-2026-10-04/service.json",
+      "name": "service.json",
+      "params": {
+        "f": "pjson"
+      },
+      "sha256": "253be69490674fe931f95661530a759f0e1ad682c56ad93076dcc187d4e0962d",
+      "size_bytes": 8012,
+      "source_id": "ideib_municipal_coverage",
+      "url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_UnitAdm_IB/MapServer"
+    },
+    {
+      "cache_relative_path": "coverage-2026-10-04/layer.json",
+      "name": "layer.json",
+      "params": {
+        "f": "pjson"
+      },
+      "sha256": "547066c7cfe9466812b77bce282829373bccaceb93a2068f320f70f3adce2cc6",
+      "size_bytes": 16035,
+      "source_id": "ideib_municipal_coverage",
+      "url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_UnitAdm_IB/MapServer/1"
+    },
+    {
+      "cache_relative_path": "coverage-2026-10-04/iteminfo.json",
+      "name": "iteminfo.json",
+      "params": {
+        "f": "pjson"
+      },
+      "sha256": "7c488cf902adc02f5d31ac11910ea8b55a6c39d58341dcead7b33cbecead2bad",
+      "size_bytes": 5145,
+      "source_id": "ideib_municipal_coverage",
+      "url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_UnitAdm_IB/MapServer/info/iteminfo"
+    },
+    {
+      "cache_relative_path": "coverage-2026-10-04/ids.json",
+      "name": "ids.json",
+      "params": {
+        "f": "json",
+        "geometry": "483000,4407500,485016.5,4409516.5",
+        "geometryType": "esriGeometryEnvelope",
+        "inSR": "25831",
+        "returnIdsOnly": "true",
+        "spatialRel": "esriSpatialRelIntersects",
+        "where": "1=1"
+      },
+      "sha256": "450dda433ad684e84f2caac6ebb69f1735d2f4bca2e7d316cacff11b0653f4d6",
+      "size_bytes": 51,
+      "source_id": "ideib_municipal_coverage",
+      "url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_UnitAdm_IB/MapServer/1/query"
+    },
+    {
+      "cache_relative_path": "coverage-2026-10-04/features.json",
+      "name": "features.json",
+      "params": {
+        "f": "json",
+        "objectIds": "1081",
+        "outFields": "*",
+        "outSR": "25831",
+        "returnGeometry": "true"
+      },
+      "sha256": "b5d1326462b5049b76b9eb0392e17b46242df30758bff7cdfb0b7ba78179947e",
+      "size_bytes": 727128,
+      "source_id": "ideib_municipal_coverage",
+      "url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_UnitAdm_IB/MapServer/1/query"
+    },
+    {
+      "file": "sa_calobra_8x8km_mdt50cm_epsg25831.tif",
+      "sha256": "6092a48a949b7b7e8ccf120cb46d59cfd7fdd3522085e8a55162fd52fe5a139a",
+      "size_bytes": 389039616,
+      "source_id": "accepted_base_dtm"
+    }
+  ],
+  "issue": 335,
+  "outputs": [
+    {
+      "consumers": [
+        "GIS QA",
+        "future presentation consumer adapter; not integrated"
+      ],
+      "dtype": "float32",
+      "layer_id": "elevation",
+      "logical_sha256": "1c101a41df13b52f538e055b5dacaa924ba654a379e7e56d1c4f9a06454f9abb",
+      "nodata": -32767.0,
+      "owner": "World Data Stack spatial evidence",
+      "path": "elevation.tif",
+      "sha256": "c1abe56ce87265416a3c6dc1b0e2fa4668e593a8a4b82d30e2a95e8b01e27791",
+      "size_bytes": 28153872,
+      "valid_cells": 16265089
+    },
+    {
+      "consumers": [
+        "GIS QA",
+        "future presentation consumer adapter; not integrated"
+      ],
+      "dtype": "float32",
+      "layer_id": "slope",
+      "logical_sha256": "0ef37f4e5a1f315dd27923774ca9bcc8bb974c1294e305359057d6a448063be6",
+      "nodata": -32767.0,
+      "owner": "World Data Stack spatial evidence",
+      "path": "slope.tif",
+      "sha256": "0f5721f3d68352d51da52f518f1cc876fd030d28fef17a58e8971f44ddc8c4ab",
+      "size_bytes": 52863521,
+      "valid_cells": 16265089
+    },
+    {
+      "consumers": [
+        "GIS QA",
+        "future presentation consumer adapter; not integrated"
+      ],
+      "dtype": "float32",
+      "layer_id": "aspect",
+      "logical_sha256": "ea86ddc1bcb23d9c9d295552c88201a668bd13e96b6208329ec44bad2fe709f4",
+      "nodata": -32767.0,
+      "owner": "World Data Stack spatial evidence",
+      "path": "aspect.tif",
+      "sha256": "2afb41bde16729b66fa9da500b705037deb2ade258f3463de86ce0578a1c22ed",
+      "size_bytes": 52342068,
+      "valid_cells": 16261302
+    },
+    {
+      "consumers": [
+        "GIS QA",
+        "future presentation consumer adapter; not integrated"
+      ],
+      "dtype": "float32",
+      "layer_id": "roughness",
+      "logical_sha256": "a2dfa42d5a4146b3f1663a7280ef60ba2f01a0b90fffe36c52a835e977f176b5",
+      "nodata": -32767.0,
+      "owner": "World Data Stack spatial evidence",
+      "path": "roughness.tif",
+      "sha256": "7ff4bb951639e453d2b082955d8677c4ea5221951a135e5302d989a94513ac18",
+      "size_bytes": 33402291,
+      "valid_cells": 16265089
+    },
+    {
+      "consumers": [
+        "GIS QA",
+        "future presentation consumer adapter; not integrated"
+      ],
+      "dtype": "uint8",
+      "layer_id": "catastro_mapped_footprint",
+      "logical_sha256": "4a40add3f18af1f466374102769ac1656702f7024dc4b376e4b314d3d58c1b59",
+      "nodata": 255,
+      "owner": "World Data Stack spatial evidence",
+      "path": "catastro_mapped_footprint.tif",
+      "sha256": "efedc86e4e6363cafeb00990f557b6b4330234542e0dc67b26364bb7c6f307d8",
+      "size_bytes": 24481,
+      "valid_cells": 16265089
+    },
+    {
+      "consumers": [
+        "GIS QA",
+        "future presentation consumer adapter; not integrated"
+      ],
+      "dtype": "uint16",
+      "layer_id": "siose_2014_feature_index",
+      "logical_sha256": "8f5ca3f2b99eda594a309755fde4fb83453184fd5152f29d3d5e72676b6e287d",
+      "nodata": 0,
+      "owner": "World Data Stack spatial evidence",
+      "path": "siose_2014_feature_index.tif",
+      "sha256": "fde3838fb44dc578f265a47e1cd0ac9053b7d78cc816c4c5f007d3172591b85a",
+      "size_bytes": 208216,
+      "valid_cells": 16265089
+    },
+    {
+      "layer_id": "siose_2014_aoi",
+      "logical_sha256": "a95ef8dc4d5bf47c8437bf04f10ff07ee3dd57b6c5a754697245e45cee98f6ea",
+      "owner": "historical/provider context evidence",
+      "path": "siose_2014_aoi.json",
+      "sha256": "a95ef8dc4d5bf47c8437bf04f10ff07ee3dd57b6c5a754697245e45cee98f6ea",
+      "size_bytes": 465842
+    },
+    {
+      "layer_id": "catastro_aoi",
+      "logical_sha256": "f4c6abe822130524b87ceff7181bb43dc56099615a6aa1e02741a7ea524d0fd5",
+      "owner": "historical/provider context evidence",
+      "path": "catastro_aoi.json",
+      "sha256": "f4c6abe822130524b87ceff7181bb43dc56099615a6aa1e02741a7ea524d0fd5",
+      "size_bytes": 10203
+    },
+    {
+      "layer_id": "municipal_coverage_aoi",
+      "logical_sha256": "015804626d3d4501d78b0cafb9a38c08f8eccf32b7f4186a48bb2a4b4aee46fb",
+      "owner": "historical/provider context evidence",
+      "path": "municipal_coverage_aoi.json",
+      "sha256": "015804626d3d4501d78b0cafb9a38c08f8eccf32b7f4186a48bb2a4b4aee46fb",
+      "size_bytes": 1020
+    }
+  ],
+  "producer_lf_sha256": "2f1810cf9b12ceba0c172d1622cb1a186e9d49c1256c200e2b97603aacc845a9",
+  "recipe_sha256": "d67b6dbbc7b2baf39df9a6a2980c51ef5ce7f5794fa55c5fafa48a409778c53f",
+  "runtime_integration": false,
+  "schema_version": 1,
+  "semantics": {
+    "aspect": "degrees clockwise from north, downslope; flat/invalid is NoData",
+    "catastro_mapped_footprint": "0 no mapped provider footprint, 1 conservative all-touched candidate, 255 unknown; mapped coverage is not current real-world completeness",
+    "roughness": "3x3 max-minus-min metres; no terrain smoothing",
+    "siose_2014_feature_index": "0 unknown, 1..N sorted OBJECTID context index, 65535 overlapping evidence conflict; attributes in siose_2014_aoi.json; no current biome classification",
+    "slope": "degrees; centered finite difference at 0.5 m; all 3x3 neighbors valid",
+    "terrain": "native accepted Base_DTM; inherited vertical reference, not independently remeasured"
+  },
+  "status": "normalized_candidate",
+  "versions": {
+    "gdal": "3.12.2",
+    "numpy": "2.3.5",
+    "rasterio": "1.5.2",
+    "shapely": "2.1.2"
+  },
+  "cache_relative_root": "normalized-context-v1a-2026-10-04",
+  "determinism": {
+    "result": "PASS",
+    "clean_output_root": "normalized-context-v1a-regenerated-2026-10-04",
+    "manifest_equal": true,
+    "byte_and_logical_hash_matches": 9,
+    "source_restore_result": "PASS",
+    "source_restore_cache_root": "proof-source-restored-2026-10-04",
+    "restored_inputs": 14
+  },
+  "gis_read_proof": {
+    "result": "PASS",
+    "layer_count": 9,
+    "scope": "GIS data contract only; no UE integration proof"
+  },
+  "qa": {
+    "qa": {
+      "path": "visual_qa.png",
+      "size_bytes": 3223519,
+      "sha256": "7fdb04b727be8c108be47c5a7a7688db9b5f63a09e53375869f3149f6a893a3d"
+    },
+    "ortho_inputs": [
+      {
+        "name": "PNOA_MA_OF_ETRS89_HU31_h25_0643_4.tif",
+        "catalog_name": "PNOA-MA-OF-ETRS89-HU31-H25-0643-4.TIF",
+        "sec": 11559062,
+        "size_bytes": 96633113,
+        "sha256": "a60b899de95f0cc1b273028e58fb868db8ffbb8e9dd86979c61f02f0067ed940",
+        "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=11559062"
+      },
+      {
+        "name": "PNOA_MA_OF_ETRS89_HU31_h25_0644_3.tif",
+        "catalog_name": "PNOA-MA-OF-ETRS89-HU31-H25-0644-3.TIF",
+        "sec": 11559065,
+        "size_bytes": 649949316,
+        "sha256": "24f84b0d6d0d338b0723e81c86375a8d86e6d087d7960cb82e6d1cb77c7fa400",
+        "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=11559065"
+      },
+      {
+        "name": "PNOA_MA_OF_ETRS89_HU31_h25_0670_2.tif",
+        "catalog_name": "PNOA-MA-OF-ETRS89-HU31-H25-0670-2.TIF",
+        "sec": 11559080,
+        "size_bytes": 748367875,
+        "sha256": "75ab6f8a4075eff38239f48fc75d055a4f7f7719dc37864828c8c05f713dd2de",
+        "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=11559080"
+      },
+      {
+        "name": "PNOA_MA_OF_ETRS89_HU31_h25_0671_1.tif",
+        "catalog_name": "PNOA-MA-OF-ETRS89-HU31-H25-0671-1.TIF",
+        "sec": 11559083,
+        "size_bytes": 905565914,
+        "sha256": "3a6e75d218991a1629422bc5b1b2db8b1bb7324fb0b724d69861ccadae714ca8",
+        "detail_url": "https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=11559083"
+      }
+    ],
+    "review": "Alignment inspection candidate; not human visual acceptance or UE performance proof",
+    "source_sampling": "Ortho bilinear 2 m thumbnail; scalar/index nearest thumbnail; native masks stay 0.5 m",
+    "plotting_version": "3.11.2"
+  },
+  "review_diagnostics": {
+    "roughness_max_m": 80.969970703125,
+    "roughness_p99_m": 4.989990234375,
+    "roughness_cells_over_10_m": 34996,
+    "siose_unknown_cells": 0,
+    "siose_conflict_cells": 0
+  },
+  "provider_error_history": [
+    {
+      "stage": "initial normalization",
+      "error": "ValueError: Catastro feature without supported polygons",
+      "resolution": "Observed source uses Surface/PolygonPatch; explicit parser support added and tested",
+      "retained_receipt": "normalized-context-v1-2026-10-04/failure_receipt.json"
+    }
+  ]
+}

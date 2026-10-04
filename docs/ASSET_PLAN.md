@@ -640,3 +640,15 @@ dodatkowych identities, profil `sa-calobra-p1-inputs` przechodzi 38/38 hashy.
 Wcześniejsze błędy WFS pozostają jako historyczne evidence. Dane raw nadal poza
 Git, restore lokalny; brak remote backupu. To acquisition, nie normalized masks
 ani dowód kompletnego pokrycia AOI granicą gminy. [Pełny raport](../worldgen/terrain/benchmarks/sa_calobra/world_data/P1_ALTERNATIVES_2026-10-04.md).
+
+## Normalized GIS candidate checkpoint — 2026-10-04
+
+Working-space AOI ma 9 znormalizowanych produktów na natywnej siatce 0,5 m:
+elevation/slope/aspect/local relief, mapped Catastro footprint, historyczny index
+SIOSE i trzy przycięte zbiory geometrii. Dwa niezależne katalogi wyników dają te
+same manifesty i 9/9 byte/logical hashes. Oficjalna geometria IDEIB potwierdza
+pokrycie AOI przez Escorca; nie dowodzi aktualności wszystkich budynków.
+Julka: profil candidate 56/56 hashów PASS; pełny World Authority nadal FAIL dla
+brakujących warstw. Status `candidate`, bez integracji UE i bez human visual
+acceptance. Duże lokalne różnice wysokości DTM pozostają do przeglądu.
+[Raport i provenance](../worldgen/terrain/benchmarks/sa_calobra/world_data/NORMALIZED_CONTEXT_2026-10-04.md).

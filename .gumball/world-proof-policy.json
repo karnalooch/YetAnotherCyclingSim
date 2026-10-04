@@ -4,7 +4,8 @@
   "source_evidence_paths": [
     "worldgen/terrain/benchmarks/sa_calobra/world_data/working_space_sources.json",
     "worldgen/terrain/benchmarks/sa_calobra/world_data/p1_context_receipt_2026-10-04.json",
-    "worldgen/terrain/benchmarks/sa_calobra/world_data/p1_alternatives_receipt_2026-10-04.json"
+    "worldgen/terrain/benchmarks/sa_calobra/world_data/p1_alternatives_receipt_2026-10-04.json",
+    "worldgen/terrain/benchmarks/sa_calobra/world_data/normalized_context_receipt_2026-10-04.json"
   ],
   "scenarios": {
     "stage3g-environment": {

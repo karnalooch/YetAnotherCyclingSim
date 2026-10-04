@@ -1502,6 +1502,35 @@ BTN thematic context. Classic SIOSE is historical/coarse context only unless a
 specific proof shows it adds value. The accepted `Base_DTM`, canonical road XY and
 BOB road-earthworks authority remain unchanged.
 
+
+#### Working-space normalization candidate (Issue #335)
+
+The bounded GIS candidate uses the accepted native Base_DTM grid: EPSG:25831,
+0.5 m pixels, upper-left at `(483000, 4409516.5)`, 4033 × 4033 cells. Bounds are
+unchanged. The producer verifies pinned source bytes and native grid alignment;
+a one-cell DTM halo supports centered derivatives without changing output AOI.
+Elevation keeps native values; slope is centered finite-difference degrees,
+aspect is downslope clockwise from north, and roughness is 3×3 max-minus-min
+metres. Invalid neighbors make derivatives unknown; flat aspect is unknown.
+No smoothing, terrain replacement or independent vertical-datum measurement occurs.
+
+Official municipal geometry verifies Escorca covers this AOI. Catastro mapped
+footprint candidates use conservative all-touched rasterization: 1 mapped,
+0 no mapped provider footprint, 255 unknown. A mapped snapshot does not prove
+absence of real/current buildings. SIOSE 2014 preserves sorted feature identity
+and clipped source attributes; 0 is unknown and 65535 is conflicting overlap.
+It is historical context, not a current vegetation/rock/soil classifier.
+Metric geometry JSON explicitly declares EPSG:25831 and is not RFC7946 GeoJSON.
+
+The normalized manifest pins CRS/grid/NoData, identities, parameters, versions,
+byte/logical hashes, source provenance and output fingerprint. Clean regeneration
+and a GIS reader verify the contract. These are candidate-data proofs, not an
+Unreal Landscape/PCG integration or human visual acceptance. Large native DTM
+local-relief values remain visible diagnostics. LiDAR/canopy/current land cover,
+water/infrastructure and accepted road/BOB masks remain required before 2A closes.
+The external-cache candidate and full World Authority readiness have distinct
+Julka profiles; the full profile fails closed while these layers are missing.
+
 ---
 
 ## 6. Landscape Edit Layers contract

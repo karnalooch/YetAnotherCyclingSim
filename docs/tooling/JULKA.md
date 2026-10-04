@@ -150,3 +150,15 @@ and passes. The historical failed-WFS profile remains nonzero and unchanged.
 explanations point to those explicit alternatives. Restore stays local-only.
 See the [alternative report](../../worldgen/terrain/benchmarks/sa_calobra/world_data/P1_ALTERNATIVES_2026-10-04.md)
 for exact counts, license, coverage limits and remaining 2A work.
+
+## Working-space normalized candidate — 2026-10-04
+
+The supplemental catalog now registers 18 additional municipal/Base_DTM/derived
+identities. `sa-calobra-2a-context-candidate` verifies 56 local files; source-level
+`explain normalized_context_v1` records grid, coverage, fingerprint, clean
+regeneration and candidate status. `explain ideib_municipal_coverage` records
+source/license and exact coverage evidence. `sa-calobra-2a-world-authority`
+remains nonzero for missing current-land-cover, LiDAR/canopy, water/infrastructure
+and road/BOB layers. GIS read/hash PASS is not Unreal or human visual acceptance.
+Restore is local-only copying plus hash verification, or pinned regeneration;
+no remote backup is registered. See the [normalized report](../../worldgen/terrain/benchmarks/sa_calobra/world_data/NORMALIZED_CONTEXT_2026-10-04.md).

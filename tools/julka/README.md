@@ -164,3 +164,9 @@ the alternative files live under `p1-alternatives-2026-10-04`.
 The historical WFS failure profile remains available as diagnostic evidence.
 See the [alternative acquisition report](../../worldgen/terrain/benchmarks/sa_calobra/world_data/P1_ALTERNATIVES_2026-10-04.md)
 for coverage limitations and the remaining 2A normalization work.
+
+`sa-calobra-2a-context-candidate` verifies the pinned normalized GIS candidate,
+its municipal coverage inputs and accepted Base_DTM local copy. It is a selected
+byte-integrity checkpoint. `sa-calobra-2a-world-authority` remains incomplete;
+`explain normalized_context_v1` reports exact remaining layers and restore.
+See the [normalized report](../../worldgen/terrain/benchmarks/sa_calobra/world_data/NORMALIZED_CONTEXT_2026-10-04.md).
