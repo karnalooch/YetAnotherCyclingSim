@@ -2,6 +2,195 @@
   "schema_version": 1,
   "assets": [
     {
+      "asset_id": "land-cover-baseline-000",
+      "path": "land-cover-baseline-v1a-2026-10-04/forest-historical-weight.tif",
+      "size_bytes": 143255,
+      "sha256": "72df85860a70899c114df0d2b11118ceba926a636e90765c925054ffb4613f01",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-siose-2014-aoi",
+        "normalized-siose-2014-feature-index"
+      ],
+      "acquisition": {
+        "receipt": "land_cover_baseline_receipt_2026-10-04.json",
+        "restore": "Pinned producer regeneration from normalized parents; retained local cache, no remote backup"
+      },
+      "provenance": {
+        "provider": "GOIB SIOSE 2014 via verified normalized source ledger",
+        "license": "Inherited source terms and attribution remain binding",
+        "authority": "Historical polygon area-share context only; no current cover or production admission"
+      }
+    },
+    {
+      "asset_id": "land-cover-baseline-001",
+      "path": "land-cover-baseline-v1a-2026-10-04/grass-historical-weight.tif",
+      "size_bytes": 75952,
+      "sha256": "2f8a91864c0574f5ab9b4ca8b306d1706d87f08d0116cadf1ba51cd7b6d16377",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-siose-2014-aoi",
+        "normalized-siose-2014-feature-index"
+      ],
+      "acquisition": {
+        "receipt": "land_cover_baseline_receipt_2026-10-04.json",
+        "restore": "Pinned producer regeneration from normalized parents; retained local cache, no remote backup"
+      },
+      "provenance": {
+        "provider": "GOIB SIOSE 2014 via verified normalized source ledger",
+        "license": "Inherited source terms and attribution remain binding",
+        "authority": "Historical polygon area-share context only; no current cover or production admission"
+      }
+    },
+    {
+      "asset_id": "land-cover-baseline-002",
+      "path": "land-cover-baseline-v1a-2026-10-04/shrub-historical-weight.tif",
+      "size_bytes": 195248,
+      "sha256": "6b8aa22dae15c991d82f0e5429dae2146a1981b2c02641c836365aa655658d37",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-siose-2014-aoi",
+        "normalized-siose-2014-feature-index"
+      ],
+      "acquisition": {
+        "receipt": "land_cover_baseline_receipt_2026-10-04.json",
+        "restore": "Pinned producer regeneration from normalized parents; retained local cache, no remote backup"
+      },
+      "provenance": {
+        "provider": "GOIB SIOSE 2014 via verified normalized source ledger",
+        "license": "Inherited source terms and attribution remain binding",
+        "authority": "Historical polygon area-share context only; no current cover or production admission"
+      }
+    },
+    {
+      "asset_id": "land-cover-baseline-003",
+      "path": "land-cover-baseline-v1a-2026-10-04/cropland-historical-weight.tif",
+      "size_bytes": 85511,
+      "sha256": "3d6b84ecb2f0c3077f7aa0904cc61571098d38f44a97c00d4a1500420e11cdce",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-siose-2014-aoi",
+        "normalized-siose-2014-feature-index"
+      ],
+      "acquisition": {
+        "receipt": "land_cover_baseline_receipt_2026-10-04.json",
+        "restore": "Pinned producer regeneration from normalized parents; retained local cache, no remote backup"
+      },
+      "provenance": {
+        "provider": "GOIB SIOSE 2014 via verified normalized source ledger",
+        "license": "Inherited source terms and attribution remain binding",
+        "authority": "Historical polygon area-share context only; no current cover or production admission"
+      }
+    },
+    {
+      "asset_id": "land-cover-baseline-004",
+      "path": "land-cover-baseline-v1a-2026-10-04/open_rock-historical-weight.tif",
+      "size_bytes": 194994,
+      "sha256": "1fd2c6920b7b31125c809a2c0138dfe964e881ebd65df1d2d965e70b9c71dcf3",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-siose-2014-aoi",
+        "normalized-siose-2014-feature-index"
+      ],
+      "acquisition": {
+        "receipt": "land_cover_baseline_receipt_2026-10-04.json",
+        "restore": "Pinned producer regeneration from normalized parents; retained local cache, no remote backup"
+      },
+      "provenance": {
+        "provider": "GOIB SIOSE 2014 via verified normalized source ledger",
+        "license": "Inherited source terms and attribution remain binding",
+        "authority": "Historical polygon area-share context only; no current cover or production admission"
+      }
+    },
+    {
+      "asset_id": "land-cover-baseline-005",
+      "path": "land-cover-baseline-v1a-2026-10-04/bare_ground-historical-weight.tif",
+      "size_bytes": 75958,
+      "sha256": "5f30c8d62e0fd5f34e4d0782bffceca82b575f239ca0dae9dc5ef51afe77ca79",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-siose-2014-aoi",
+        "normalized-siose-2014-feature-index"
+      ],
+      "acquisition": {
+        "receipt": "land_cover_baseline_receipt_2026-10-04.json",
+        "restore": "Pinned producer regeneration from normalized parents; retained local cache, no remote backup"
+      },
+      "provenance": {
+        "provider": "GOIB SIOSE 2014 via verified normalized source ledger",
+        "license": "Inherited source terms and attribution remain binding",
+        "authority": "Historical polygon area-share context only; no current cover or production admission"
+      }
+    },
+    {
+      "asset_id": "land-cover-baseline-006",
+      "path": "land-cover-baseline-v1a-2026-10-04/land-cover-manifest.json",
+      "size_bytes": 4637,
+      "sha256": "e2ccf1b8b26123873153970be39a9fb55239eec19f8c3e858b9f41c5da063f2f",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-siose-2014-aoi",
+        "normalized-siose-2014-feature-index"
+      ],
+      "acquisition": {
+        "receipt": "land_cover_baseline_receipt_2026-10-04.json",
+        "restore": "Pinned producer regeneration from normalized parents; retained local cache, no remote backup"
+      },
+      "provenance": {
+        "provider": "GOIB SIOSE 2014 via verified normalized source ledger",
+        "license": "Inherited source terms and attribution remain binding",
+        "authority": "Historical polygon area-share context only; no current cover or production admission"
+      }
+    },
+    {
       "asset_id": "mask-review-queue-000",
       "path": "mask-review-queue-v1-2026-10-04/mask-review-queue.json",
       "size_bytes": 51900,
@@ -14158,6 +14347,21 @@
         "mask-transition-review-001",
         "mask-transition-review-002",
         "mask-transition-review-003"
+      ]
+    },
+    "sa-calobra-mask-baseline-candidate": {
+      "description": "Existing mask source closure plus six coarse historical land-cover context weights; refinement pending",
+      "extends": [
+        "sa-calobra-mask-review-queue-candidate"
+      ],
+      "requires": [
+        "land-cover-baseline-000",
+        "land-cover-baseline-001",
+        "land-cover-baseline-002",
+        "land-cover-baseline-003",
+        "land-cover-baseline-004",
+        "land-cover-baseline-005",
+        "land-cover-baseline-006"
       ]
     }
   },

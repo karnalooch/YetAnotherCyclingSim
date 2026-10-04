@@ -1736,6 +1736,28 @@ culverts unverified. Original BOB rectangles, unknown rejection and hard masks
 remain binding. The queue locates review work; it does not grant owner visual
 acceptance, whole-2A completion, material-domain truth or production planting.
 
+#### Complete baseline before refinement (Issue #335)
+
+Owner priority, 2026-10-04: prepare the complete mask baseline before the next
+world-finishing step; refine mask quality later. Do not spend this pass exhaustively
+reviewing stream gaps or polishing transitions. Keep frozen geometry and explicit
+unknowns. Baseline availability and geographic/current-source admission are separate.
+
+`scripts/assets/prepare_sa_calobra_land_cover_baseline.py` adds six separate
+historical context weights: forest, grass, shrub, cropland, open rock and bare
+ground. It verifies normalized source bytes, preserves the native grid, and uses
+explicit component hectares divided by the full provider polygon `SUP_HA`.
+Weights are uniform inside each SIOSE 2014 polygon; they do not locate individual
+components within mixed polygons. They are not current land-cover masks, calibrated
+confidence or production planting/material authorization. Missing/conflicting
+polygon indices remain NoData; unlisted categories are never redistributed.
+
+The current source reports zero grass and bare-ground component weights in this
+AOI. That is historical mapped evidence, not present-day absence; LiDAR low
+vegetation remains separate. The source reference scale is 1:25,000 despite
+native 0.5 m raster registration. Current-cover refinement, measured canopy
+density and exact BOB CUT/FILL/inner/outer edges remain explicit handoff gaps.
+
 #### Placement evidence handoff candidate (Issue #335)
 
 `scripts/assets/prepare_sa_calobra_placement_handoff.py` prepares a separate
