@@ -5,12 +5,17 @@ Issue: #24
 This is the operator guide for the first real Unreal Engine GitHub Actions runner.
 Phase 1 is intentionally manual and trusted-only.
 
+This document retains rollout history. For the current home environment and
+normal startup, use the [local workspace contract](tooling/LOCAL_WORKSPACE.md).
+The runner now lives at `D:\yacs\runner`; the dated proof below records its
+original location, not a second installation to create.
+
 ## Proven baseline — 2026-09-26
 
 The generic runner/build/fail-closed contract is proven on the real home runner:
 
 - runner: `yacs-home-ue58` / label `yacs-ue58`;
-- runner root: `D:\actions-runner-yacs`;
+- runner root at proof time: `D:\actions-runner-yacs` (historical);
 - workflow run: `36240146312`;
 - exact main SHA: `9826b0f82d2a895a0a5d6fbf358aac162e199aa5`;
 - UE: `5.8.2`;
@@ -63,8 +68,8 @@ Choose:
 Use a dedicated folder, for example:
 
 ```powershell
-mkdir D:\actions-runner-yacs
-cd D:\actions-runner-yacs
+New-Item -ItemType Directory -Path D:\yacs\runner -Force
+Set-Location D:\yacs\runner
 ```
 
 Then use the download/extract commands GitHub shows on that page. GitHub also shows a short-lived registration command similar to:

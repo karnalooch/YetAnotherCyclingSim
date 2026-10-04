@@ -16,6 +16,7 @@ Quick links:
 - [Road physics profile](docs/ROAD_PHYSICS_PROFILE.md)
 - [World authoring library](docs/YACS_WORLD_AUTHORING_LIBRARY.md)
 - [CI validation tiers](docs/CI_VALIDATION_TIERS.md)
+- [Local workspace, runner and checkpoints](docs/tooling/LOCAL_WORKSPACE.md) — canonical home environment at `D:\yacs`, with the active repository at `D:\yacs\project`.
 
 Historical Stage 3G / R4.1 documents remain available as execution/proof history, but new planning uses M0-M10 milestones plus named workstreams and GitHub Issues.
 

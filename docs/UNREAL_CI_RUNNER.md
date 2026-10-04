@@ -8,6 +8,11 @@ This defines the GitHub Actions self-hosted runner contract while generic Unreal
 code validation is still being promoted toward a required Aggregate CI gate.
 GitHub is the single CI control plane.
 
+The home environment now lives under `D:\yacs`. Follow the
+[local workspace contract](tooling/LOCAL_WORKSPACE.md) for current paths,
+interactive runner startup, shared caches and isolated CI checkouts. The live
+authoring project is `D:\yacs\project`; CI must never build or clean that checkout.
+
 The generic normal + intentional-red runner canaries are proven. The Stage 3G
 authoring/final-proof **mechanism** is also proven: PR #155 / workflow run
 `36258791131` completed exact trusted full-LFS authoring/final validation,
@@ -254,7 +259,7 @@ Use PowerShell 7.4+ in the intended logged-in desktop:
 pwsh -NoProfile -File .\scripts\runner\Install-YacsRunnerMonitor.ps1 -Verify
 ```
 
-Defaults: runner `D:\actions-runner-yacs`, companion `D:\yacs-runner-monitor`.
+Defaults: runner `D:\yacs\runner`, companion `D:\yacs\runner-monitor`.
 The task `YACS Runner Monitor-<user SID>` uses a limited interactive principal.
 The installer copies only companion scripts outside mutable job workspaces.
 It preserves runner credentials, hooks, debug settings, Unreal and service mode.
