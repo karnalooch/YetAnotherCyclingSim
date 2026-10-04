@@ -148,6 +148,8 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 
 ## Evidence, experiments and history
 
+- [Sa Calobra surface coverage audit — 2026-10-04](experiments/sa-calobra-surface-coverage-2026-10-04.md) — read-only candidate evidence: sampling support, unresolved rock/soil classification and review priorities; no production admission.
+
 These documents remain valuable but no longer define the active roadmap hierarchy:
 
 - [`STAGE3G_R4_1_ALPINE_VISUAL_RECOVERY.md`](STAGE3G_R4_1_ALPINE_VISUAL_RECOVERY.md) — detailed historical/current M3 visual-recovery dossier and proof record.
