@@ -252,7 +252,7 @@ def tick(delta):
                 if after_samples != state["registration"]:
                     raise RuntimeError("Frozen Landscape collision samples changed")
                 state["performance_settings"].set_editor_property(
-                    "throttle_cpu_when_not_foreground",
+                    "bThrottleCPUWhenNotForeground",
                     state["original_background_throttle"],
                 )
                 record("PASS_DIAGNOSTIC_CONSUMER_ONLY")
@@ -291,15 +291,15 @@ def main():
     )
     state["performance_settings"] = performance
     state["original_background_throttle"] = performance.get_editor_property(
-        "throttle_cpu_when_not_foreground"
+        "bThrottleCPUWhenNotForeground"
     )
-    performance.set_editor_property("throttle_cpu_when_not_foreground", False)
+    performance.set_editor_property("bThrottleCPUWhenNotForeground", False)
     # Volatile settings only, never SaveConfig. Prevent review assets/material
     # from being autosaved into the frozen project during this review session.
     loading = unreal.get_default_object(
         unreal.load_class(None, "/Script/UnrealEd.EditorLoadingSavingSettings")
     )
-    loading.set_editor_property("auto_save_enable", False)
+    loading.set_editor_property("bAutoSaveEnable", False)
     expected = MANIFEST["expected_landscape"]
     package = expected["map"]
     state["map_file"] = Path(
