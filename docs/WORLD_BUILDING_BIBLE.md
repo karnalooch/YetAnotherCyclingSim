@@ -1729,6 +1729,24 @@ in the production references supports artist-controlled, independently
 regenerable preparation; these numeric fades and topology rules are YACS
 decisions, not claimed Embark settings.
 
+#### Frozen CUT and FILL authoring evidence (Issue #335)
+
+Frozen CUT-only evidence can be prepared separately with
+`scripts/assets/prepare_sa_calobra_earthworks_masks.py`. The producer verifies
+the normalized parent and the read-only frozen road recipe, then reads all 184
+network patches plus the hairpin patch without running a road/earthworks builder.
+It emits CUT-depth lower bounds and resolved-lowering evidence on the native grid.
+The 7 mm encoding allowance covers native height quantization, rounded import
+metadata and float32 centimetre payload precision; it is not terrain smoothing.
+Overlapping CUT targets use the greatest resolved lowering. Uncovered or unknown
+ground stays NoData, and zero means no lowering resolved beyond the allowance.
+
+The separate FILL authoring-state channel reports `0=NOT_AUTHORED` within verified
+CUT-only patch coverage and `255=unknown` elsewhere. It is not an inferred physical
+nasyp footprint. This is frozen-artifact evidence, not engineering admission or
+exact inner/outer-edge classification. Original BOB rectangles and hard exclusions
+remain unchanged; whole-2A acceptance and production planting remain pending.
+
 #### Unresolved stream review queue (Issue #335)
 
 The unresolved stream queue can be prepared with

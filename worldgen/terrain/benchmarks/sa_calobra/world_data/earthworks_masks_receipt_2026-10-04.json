@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "status": "FROZEN_EARTHWORKS_EVIDENCE_CANDIDATE",
+  "geometry_mutation": false,
+  "grid": {
+    "anchor": "AOI upper-left; matches accepted native Base_DTM grid",
+    "crs": "EPSG:25831",
+    "height": 4033,
+    "pixel_rule": "center for SIOSE IDs; all_touched for conservative building candidates",
+    "pixel_size_m": 0.5,
+    "transform": [
+      0.5,
+      0.0,
+      483000.0,
+      0.0,
+      -0.5,
+      4409516.5
+    ],
+    "width": 4033
+  },
+  "accepted_source_sha": "c5573b3cf545c51ce83ad1fb0a5ca3111f5ad7f6",
+  "source_recipe_sha256": "5e8a0470cf339ca606a92b794abff61bcafeae63391f3a64ab56fad8010b77b9",
+  "normalized_manifest_sha256": "6bbc62c160b292929506cb8aa75b15906706a089fb4b0319add05ad961c4b464",
+  "producer_sha256_lf": "5618c51396e8e45df4036f9f90c4c2c57671a804018d1b01c092cf99336d6ed5",
+  "error_bound_m": 0.007,
+  "patch_count": 185,
+  "counts": {
+    "covered_cells": 843343,
+    "resolved_cut_cells": 199863,
+    "unknown_cells": 15421746,
+    "maximum_cut_lower_bound_m": 11.685965538024902
+  },
+  "semantics": {
+    "cut_depth": "metres; max over overlapping frozen CUT-only targets of max(0, native DTM-target-0.007m); -32767 outside verified patch/ground coverage",
+    "cut_evidence": "1=resolved lowering beyond encoding bound; 0=no resolved lowering, not proof of exactly zero cut; 255=unknown",
+    "fill_authoring": "0=FILL NOT_AUTHORED in source CUT-only patch domain; 255=uncovered/unknown; not a physical fill footprint or safety admission",
+    "limits": "Read-only derivation from frozen visual artifacts, not engineering acceptance; original BOB rectangles and hard exclusions remain unchanged"
+  },
+  "remaining": [
+    "Authoritative FILL geometry",
+    "Inner/outer road-edge semantics",
+    "Current-cover/confidence refinement and whole-2A admission"
+  ],
+  "human_visual_acceptance": "PENDING",
+  "production_planting": "NOT_ADMITTED",
+  "outputs": [
+    {
+      "path": "cut-depth-lower-bound.tif",
+      "sha256": "e3fa6270e10c295d33268430fcd6d6b208b2eff9a35e1522a45e830c03250a4b",
+      "size_bytes": 870268,
+      "logical_sha256": "106ccaf6e6f7ca58a55fda17abfebca14af39f7af07251a94fcb77025c8decfa"
+    },
+    {
+      "path": "cut-evidence.tif",
+      "sha256": "cac98c6f1c409de10681c7f516beb003ec0495c8b444a8785832bcbe6a08a4ff",
+      "size_bytes": 67880,
+      "logical_sha256": "ddb3cc398f3dc688c6ce47b7b1b0fda973b3f327f6311aa95bfbd8db45d38b19"
+    },
+    {
+      "path": "fill-authoring-state.tif",
+      "sha256": "53819003a13fdac18c13fc34f1f54869965ab9b5baaa869f6ec039b942751b96",
+      "size_bytes": 37464,
+      "logical_sha256": "6ab2a1a12519eb572e13858fc6614eb08bb2c59eb8ad7e83c5124e378536bfb4"
+    }
+  ],
+  "manifest_sha256": "d4d4d293300d23778822d3a0a1b1d4b42e8fcdc05a44307b120962ba52be9499",
+  "inventory_raster_count": 39,
+  "validation": {
+    "focused_tests": "28/28 PASS",
+    "ruff": "PASS",
+    "persisted_readback": "All three exact grids/cells/NoData PASS",
+    "determinism": "Independent regeneration: all three TIFFs and manifest byte-identical",
+    "julka": "514/514 PASS; 0 issues",
+    "julka_tests": "19/19 PASS",
+    "docs": "links/i18n/structure/freshness PASS"
+  },
+  "live_editor": {
+    "existing_session_observed": true,
+    "new_masks_imported": false,
+    "map_saved": false,
+    "map_sha256_after": "5eadda8c9dfbed47f9e5dbffd96b354f11baa4549cb1940d56ec7857a90e0ac0"
+  },
+  "whole_2a": "NOT_COMPLETE"
+}

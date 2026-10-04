@@ -2,6 +2,110 @@
   "schema_version": 1,
   "assets": [
     {
+      "asset_id": "earthworks-masks-000",
+      "path": "earthworks-masks-v1-2026-10-04/cut-depth-lower-bound.tif",
+      "size_bytes": 870268,
+      "sha256": "e3fa6270e10c295d33268430fcd6d6b208b2eff9a35e1522a45e830c03250a4b",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "normalized-manifest",
+        "frozen-road-374"
+      ],
+      "acquisition": {
+        "receipt": "earthworks_masks_receipt_2026-10-04.json",
+        "restore": "Pinned producer regeneration from retained verified normalized/frozen parents; no remote payload backup"
+      },
+      "provenance": {
+        "provider": "YACS frozen c5573b3 CUT-only visual artifact evidence",
+        "license": "Inherited source terms and attribution remain binding",
+        "authority": "CUT lower-bound evidence and FILL NOT_AUTHORED state; not engineering or production admission"
+      }
+    },
+    {
+      "asset_id": "earthworks-masks-001",
+      "path": "earthworks-masks-v1-2026-10-04/cut-evidence.tif",
+      "size_bytes": 67880,
+      "sha256": "cac98c6f1c409de10681c7f516beb003ec0495c8b444a8785832bcbe6a08a4ff",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "normalized-manifest",
+        "frozen-road-374"
+      ],
+      "acquisition": {
+        "receipt": "earthworks_masks_receipt_2026-10-04.json",
+        "restore": "Pinned producer regeneration from retained verified normalized/frozen parents; no remote payload backup"
+      },
+      "provenance": {
+        "provider": "YACS frozen c5573b3 CUT-only visual artifact evidence",
+        "license": "Inherited source terms and attribution remain binding",
+        "authority": "CUT lower-bound evidence and FILL NOT_AUTHORED state; not engineering or production admission"
+      }
+    },
+    {
+      "asset_id": "earthworks-masks-002",
+      "path": "earthworks-masks-v1-2026-10-04/fill-authoring-state.tif",
+      "size_bytes": 37464,
+      "sha256": "53819003a13fdac18c13fc34f1f54869965ab9b5baaa869f6ec039b942751b96",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "normalized-manifest",
+        "frozen-road-374"
+      ],
+      "acquisition": {
+        "receipt": "earthworks_masks_receipt_2026-10-04.json",
+        "restore": "Pinned producer regeneration from retained verified normalized/frozen parents; no remote payload backup"
+      },
+      "provenance": {
+        "provider": "YACS frozen c5573b3 CUT-only visual artifact evidence",
+        "license": "Inherited source terms and attribution remain binding",
+        "authority": "CUT lower-bound evidence and FILL NOT_AUTHORED state; not engineering or production admission"
+      }
+    },
+    {
+      "asset_id": "earthworks-masks-003",
+      "path": "earthworks-masks-v1-2026-10-04/earthworks-mask-manifest.json",
+      "size_bytes": 2843,
+      "sha256": "d4d4d293300d23778822d3a0a1b1d4b42e8fcdc05a44307b120962ba52be9499",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "normalized-manifest",
+        "frozen-road-374"
+      ],
+      "acquisition": {
+        "receipt": "earthworks_masks_receipt_2026-10-04.json",
+        "restore": "Pinned producer regeneration from retained verified normalized/frozen parents; no remote payload backup"
+      },
+      "provenance": {
+        "provider": "YACS frozen c5573b3 CUT-only visual artifact evidence",
+        "license": "Inherited source terms and attribution remain binding",
+        "authority": "CUT lower-bound evidence and FILL NOT_AUTHORED state; not engineering or production admission"
+      }
+    },
+    {
       "asset_id": "land-cover-baseline-000",
       "path": "land-cover-baseline-v1a-2026-10-04/forest-historical-weight.tif",
       "size_bytes": 143255,
@@ -14362,6 +14466,18 @@
         "land-cover-baseline-004",
         "land-cover-baseline-005",
         "land-cover-baseline-006"
+      ]
+    },
+    "sa-calobra-earthworks-mask-candidate": {
+      "description": "Whole current Landscape mask closure plus CUT lower bounds and explicit FILL authoring state",
+      "extends": [
+        "sa-calobra-mask-baseline-candidate"
+      ],
+      "requires": [
+        "earthworks-masks-000",
+        "earthworks-masks-001",
+        "earthworks-masks-002",
+        "earthworks-masks-003"
       ]
     }
   },
