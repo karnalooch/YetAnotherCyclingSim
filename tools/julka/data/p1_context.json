@@ -1,0 +1,1362 @@
+{
+  "schema_version": 1,
+  "assets": [
+    {
+      "asset_id": "btn_vector_context-000",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33277/24849.pbf",
+      "size_bytes": 9608,
+      "sha256": "a0e8277f9d6cdeca03fafeba63c7a753345999483168d48d199de7d292ec820b",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-001",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33278/24849.pbf",
+      "size_bytes": 8048,
+      "sha256": "58de3be1dcc57fee6cb9c64e6e4c05d3c8f2bbb22d6bfa2f49a54a9602e0aa2b",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-002",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33279/24849.pbf",
+      "size_bytes": 9454,
+      "sha256": "efbd1bab2e7f7e4d25538e8924eaaee5983b6b92f930bd4559d24b171446704f",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-003",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33280/24849.pbf",
+      "size_bytes": 9476,
+      "sha256": "ebcee4ee634095e138d8a54afbb15d84092b55fafd4f2fa2bb8f71178304bde0",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-004",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33281/24849.pbf",
+      "size_bytes": 7910,
+      "sha256": "bbb71ab597e6cef46ba180a7342e5c67cc1a64ba1ee16c8cbbb6ab188d487239",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-005",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33282/24849.pbf",
+      "size_bytes": 9397,
+      "sha256": "374521ab730a00d3f7f7ad9e7c5153db2cb775e20b91b4c1490c9930ecc5a703",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-006",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33277/24850.pbf",
+      "size_bytes": 7300,
+      "sha256": "425323f718cb43b1c181337ae314b85dd316410dda423a31e8163238ff48de6d",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-007",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33278/24850.pbf",
+      "size_bytes": 8941,
+      "sha256": "53e3d6976d2225067c9e98ac7c70fa8c709de98a2cf853aff4bf6da7670cf819",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-008",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33279/24850.pbf",
+      "size_bytes": 11688,
+      "sha256": "373fdbfc0c1905fdba5306fa30144c80fd7ac3a4c3d3bbcd6a3dfbfb3c9b9485",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-009",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33280/24850.pbf",
+      "size_bytes": 13001,
+      "sha256": "f2fc52e5e80a48560ee3c2da01a3fc6e64e10f5753524ac0313069538c4dad40",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-010",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33281/24850.pbf",
+      "size_bytes": 6124,
+      "sha256": "3ffe59fdc79e1a6bea30ade49bb24945001340dd8aa01ba27cc1202e15f698b1",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-011",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33282/24850.pbf",
+      "size_bytes": 7785,
+      "sha256": "a28807f3a732ae66796581dced97f4d3a871a8f4661a87203f4e6da95df23c48",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-012",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33277/24851.pbf",
+      "size_bytes": 8342,
+      "sha256": "560a2943aa38b35a33d64ce5fe30e539e4e20792bc83b1f22e87c8d68923c7b3",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-013",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33278/24851.pbf",
+      "size_bytes": 8720,
+      "sha256": "fbf6986352138fbddecd478f2d9e6495d3f1e9113967575969fe8ff2becc7011",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-014",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33279/24851.pbf",
+      "size_bytes": 7111,
+      "sha256": "fbc3fc54cdd3f7fa8e2a189a230965d9675f90ccea634fdd1cb19e9b2f4e986c",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-015",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33280/24851.pbf",
+      "size_bytes": 8526,
+      "sha256": "edf3bfee844d5943e9b56376efb4cb9e3dfea528f149b6d5ee3bcf0e10373c16",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-016",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33281/24851.pbf",
+      "size_bytes": 7186,
+      "sha256": "b178cd4f6563443049ac83fdf7a7ca5b4bec3e96d3b3ba77fa67566300b262cf",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-017",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33282/24851.pbf",
+      "size_bytes": 10260,
+      "sha256": "cae6c3f6f52d940734f6f21d46552e68d6128086b16405dcd6af699552926610",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-018",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33277/24852.pbf",
+      "size_bytes": 6636,
+      "sha256": "c6341e5b292938c830b16d58b807db7288b21a04b066bf95a0ed61c6b689899b",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-019",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33278/24852.pbf",
+      "size_bytes": 7134,
+      "sha256": "d33eeb53591962ac68332596f7498ac260276569b45177b8010914d1bcbc795e",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-020",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33279/24852.pbf",
+      "size_bytes": 7417,
+      "sha256": "87ed5644f2019d2a791dd364ee3dcdd62cc6ed82d8ecdd8caf230a2d34d506ac",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-021",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33280/24852.pbf",
+      "size_bytes": 7572,
+      "sha256": "3c0ffe875a3abc1c5702c9a20ba905b3f65f3dd21a3ab83c61bc9af7de456cb0",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-022",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33281/24852.pbf",
+      "size_bytes": 4935,
+      "sha256": "7f4c6b0945560f80d1218133c54f34b266585827b776ea8c10573919453637f0",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-023",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33282/24852.pbf",
+      "size_bytes": 10619,
+      "sha256": "b66ec254ebca13ef92ed3753de09e866a90f44b0ab03aa62cd5299804db914c4",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-024",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33277/24853.pbf",
+      "size_bytes": 8903,
+      "sha256": "02803f622568597eeb2f981212b4fad78a124ad44577b8f417bf11dc66cbfa8c",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-025",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33278/24853.pbf",
+      "size_bytes": 8434,
+      "sha256": "639c15f9588805d5262849cc16d4d56a89a2a32aba6896d5969e8444b0ab0e2d",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-026",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33279/24853.pbf",
+      "size_bytes": 8076,
+      "sha256": "e9d5d5a133dce78df416e72a2ef89bfc52af8ca09d9e59e0f63f9dd91ae6d935",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-027",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33280/24853.pbf",
+      "size_bytes": 7462,
+      "sha256": "05a2e34af4c9076e12fa86aad63720bb91fd9ee51921e0b2395825cbc8592b7c",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-028",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33281/24853.pbf",
+      "size_bytes": 5171,
+      "sha256": "d2e8741ed514473dbb4152ae3a17b1dfc5002e73670f864f83af0c580c6fda51",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "btn_vector_context-029",
+      "path": "p1-2026-10-04/btn_vector_tiles/16/33282/24853.pbf",
+      "size_bytes": 9150,
+      "sha256": "747ec66959246a7f8435bf2edd79b4874d269fd2d7e7637b348af892ae1575fe",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "btn_vector_context",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "Base Topografica Nacional",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://vt-btn.idee.es/1.0.0/btn/tile/{z}/{y}/{x}.pbf",
+        "admitted": true
+      }
+    },
+    {
+      "asset_id": "siose_2014_wfs-000",
+      "path": "p1-2026-10-04/siose_2014_wfs/GetCapabilities.xml",
+      "size_bytes": 35101,
+      "sha256": "e5e6761c1479a03ae64fe1e2a283b67edce1a2111a430f062fcce46e6cd7b29e",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "siose_2014_wfs",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "SIOSE 2014 land cover",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://servicios.idee.es/wfs-inspire/ocupacion-suelo",
+        "admitted": false
+      }
+    },
+    {
+      "asset_id": "siose_2014_wfs-001",
+      "path": "p1-2026-10-04/siose_2014_wfs/q0_lcv_LandCoverUnit.gml",
+      "size_bytes": 1399472,
+      "sha256": "369054f4637a0cf97532a9a12328015f2def980e7702aae7e318467bb5974fe8",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "siose_2014_wfs",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "SIOSE 2014 land cover",
+        "license": "CNIG/IGN terms compatible with CC BY 4.0",
+        "source_url": "https://servicios.idee.es/wfs-inspire/ocupacion-suelo",
+        "admitted": false
+      }
+    },
+    {
+      "asset_id": "catastro_buildings_wfs-000",
+      "path": "p1-2026-10-04/catastro_buildings_wfs/GetCapabilities.xml",
+      "size_bytes": 16182,
+      "sha256": "10b09a742f42362fafe6bd4a6b384574fa458d9ea406278fd5926d723ae441ed",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "catastro_buildings_wfs",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "DG Catastro INSPIRE Buildings",
+        "license": "DG Catastro INSPIRE access/use license v1 July 2016; original redistribution not authorized",
+        "source_url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx",
+        "admitted": false
+      }
+    },
+    {
+      "asset_id": "catastro_buildings_wfs-001",
+      "path": "p1-2026-10-04/catastro_buildings_wfs/q0_bu_Building.gml",
+      "size_bytes": 300,
+      "sha256": "4abfa32fb8968ddb2a4cdee952d936b0ed2f561e02e77e7c81478aa026c2035c",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "catastro_buildings_wfs",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "DG Catastro INSPIRE Buildings",
+        "license": "DG Catastro INSPIRE access/use license v1 July 2016; original redistribution not authorized",
+        "source_url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx",
+        "admitted": false
+      }
+    },
+    {
+      "asset_id": "catastro_buildings_wfs-002",
+      "path": "p1-2026-10-04/catastro_buildings_wfs/q0_bu_BuildingPart.gml",
+      "size_bytes": 300,
+      "sha256": "4abfa32fb8968ddb2a4cdee952d936b0ed2f561e02e77e7c81478aa026c2035c",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "catastro_buildings_wfs",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "DG Catastro INSPIRE Buildings",
+        "license": "DG Catastro INSPIRE access/use license v1 July 2016; original redistribution not authorized",
+        "source_url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx",
+        "admitted": false
+      }
+    },
+    {
+      "asset_id": "catastro_buildings_wfs-003",
+      "path": "p1-2026-10-04/catastro_buildings_wfs/q0_bu_OtherConstruction.gml",
+      "size_bytes": 300,
+      "sha256": "4abfa32fb8968ddb2a4cdee952d936b0ed2f561e02e77e7c81478aa026c2035c",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "catastro_buildings_wfs",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "DG Catastro INSPIRE Buildings",
+        "license": "DG Catastro INSPIRE access/use license v1 July 2016; original redistribution not authorized",
+        "source_url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx",
+        "admitted": false
+      }
+    },
+    {
+      "asset_id": "catastro_buildings_wfs-004",
+      "path": "p1-2026-10-04/catastro_buildings_wfs/q1_bu_Building.gml",
+      "size_bytes": 300,
+      "sha256": "4abfa32fb8968ddb2a4cdee952d936b0ed2f561e02e77e7c81478aa026c2035c",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "catastro_buildings_wfs",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "DG Catastro INSPIRE Buildings",
+        "license": "DG Catastro INSPIRE access/use license v1 July 2016; original redistribution not authorized",
+        "source_url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx",
+        "admitted": false
+      }
+    },
+    {
+      "asset_id": "catastro_buildings_wfs-005",
+      "path": "p1-2026-10-04/catastro_buildings_wfs/q1_bu_BuildingPart.gml",
+      "size_bytes": 300,
+      "sha256": "4abfa32fb8968ddb2a4cdee952d936b0ed2f561e02e77e7c81478aa026c2035c",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "catastro_buildings_wfs",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "DG Catastro INSPIRE Buildings",
+        "license": "DG Catastro INSPIRE access/use license v1 July 2016; original redistribution not authorized",
+        "source_url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx",
+        "admitted": false
+      }
+    },
+    {
+      "asset_id": "catastro_buildings_wfs-006",
+      "path": "p1-2026-10-04/catastro_buildings_wfs/q1_bu_OtherConstruction.gml",
+      "size_bytes": 300,
+      "sha256": "4abfa32fb8968ddb2a4cdee952d936b0ed2f561e02e77e7c81478aa026c2035c",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "catastro_buildings_wfs",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "DG Catastro INSPIRE Buildings",
+        "license": "DG Catastro INSPIRE access/use license v1 July 2016; original redistribution not authorized",
+        "source_url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx",
+        "admitted": false
+      }
+    },
+    {
+      "asset_id": "catastro_buildings_wfs-007",
+      "path": "p1-2026-10-04/catastro_buildings_wfs/q2_bu_Building.gml",
+      "size_bytes": 300,
+      "sha256": "4abfa32fb8968ddb2a4cdee952d936b0ed2f561e02e77e7c81478aa026c2035c",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "catastro_buildings_wfs",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "DG Catastro INSPIRE Buildings",
+        "license": "DG Catastro INSPIRE access/use license v1 July 2016; original redistribution not authorized",
+        "source_url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx",
+        "admitted": false
+      }
+    },
+    {
+      "asset_id": "catastro_buildings_wfs-008",
+      "path": "p1-2026-10-04/catastro_buildings_wfs/q2_bu_BuildingPart.gml",
+      "size_bytes": 300,
+      "sha256": "4abfa32fb8968ddb2a4cdee952d936b0ed2f561e02e77e7c81478aa026c2035c",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "catastro_buildings_wfs",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "DG Catastro INSPIRE Buildings",
+        "license": "DG Catastro INSPIRE access/use license v1 July 2016; original redistribution not authorized",
+        "source_url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx",
+        "admitted": false
+      }
+    },
+    {
+      "asset_id": "catastro_buildings_wfs-009",
+      "path": "p1-2026-10-04/catastro_buildings_wfs/q2_bu_OtherConstruction.gml",
+      "size_bytes": 300,
+      "sha256": "4abfa32fb8968ddb2a4cdee952d936b0ed2f561e02e77e7c81478aa026c2035c",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "catastro_buildings_wfs",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "DG Catastro INSPIRE Buildings",
+        "license": "DG Catastro INSPIRE access/use license v1 July 2016; original redistribution not authorized",
+        "source_url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx",
+        "admitted": false
+      }
+    },
+    {
+      "asset_id": "catastro_buildings_wfs-010",
+      "path": "p1-2026-10-04/catastro_buildings_wfs/q3_bu_Building.gml",
+      "size_bytes": 300,
+      "sha256": "4abfa32fb8968ddb2a4cdee952d936b0ed2f561e02e77e7c81478aa026c2035c",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "catastro_buildings_wfs",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "DG Catastro INSPIRE Buildings",
+        "license": "DG Catastro INSPIRE access/use license v1 July 2016; original redistribution not authorized",
+        "source_url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx",
+        "admitted": false
+      }
+    },
+    {
+      "asset_id": "catastro_buildings_wfs-011",
+      "path": "p1-2026-10-04/catastro_buildings_wfs/q3_bu_BuildingPart.gml",
+      "size_bytes": 300,
+      "sha256": "4abfa32fb8968ddb2a4cdee952d936b0ed2f561e02e77e7c81478aa026c2035c",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "catastro_buildings_wfs",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "DG Catastro INSPIRE Buildings",
+        "license": "DG Catastro INSPIRE access/use license v1 July 2016; original redistribution not authorized",
+        "source_url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx",
+        "admitted": false
+      }
+    },
+    {
+      "asset_id": "catastro_buildings_wfs-012",
+      "path": "p1-2026-10-04/catastro_buildings_wfs/q3_bu_OtherConstruction.gml",
+      "size_bytes": 300,
+      "sha256": "4abfa32fb8968ddb2a4cdee952d936b0ed2f561e02e77e7c81478aa026c2035c",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "catastro_buildings_wfs",
+      "depends_on": [],
+      "acquisition": {
+        "method": "existing bounded P1 acquisition pipeline",
+        "receipt": "p1_context_receipt_2026-10-04.json",
+        "restore": "local-only retained cache; exact SHA-256 required; no remote backup registered"
+      },
+      "provenance": {
+        "provider": "DG Catastro INSPIRE Buildings",
+        "license": "DG Catastro INSPIRE access/use license v1 July 2016; original redistribution not authorized",
+        "source_url": "https://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx",
+        "admitted": false
+      }
+    }
+  ],
+  "profiles": {
+    "sa-calobra-btn-context": {
+      "description": "Base Topografica Nacional local cache byte integrity; not World Authority admission",
+      "requires": [
+        "btn_vector_context-000",
+        "btn_vector_context-001",
+        "btn_vector_context-002",
+        "btn_vector_context-003",
+        "btn_vector_context-004",
+        "btn_vector_context-005",
+        "btn_vector_context-006",
+        "btn_vector_context-007",
+        "btn_vector_context-008",
+        "btn_vector_context-009",
+        "btn_vector_context-010",
+        "btn_vector_context-011",
+        "btn_vector_context-012",
+        "btn_vector_context-013",
+        "btn_vector_context-014",
+        "btn_vector_context-015",
+        "btn_vector_context-016",
+        "btn_vector_context-017",
+        "btn_vector_context-018",
+        "btn_vector_context-019",
+        "btn_vector_context-020",
+        "btn_vector_context-021",
+        "btn_vector_context-022",
+        "btn_vector_context-023",
+        "btn_vector_context-024",
+        "btn_vector_context-025",
+        "btn_vector_context-026",
+        "btn_vector_context-027",
+        "btn_vector_context-028",
+        "btn_vector_context-029"
+      ]
+    },
+    "sa-calobra-siose_2014_wfs-evidence": {
+      "description": "SIOSE 2014 land cover local cache byte integrity; not World Authority admission",
+      "requires": [
+        "siose_2014_wfs-000",
+        "siose_2014_wfs-001"
+      ],
+      "incomplete_layers": [
+        "siose_2014_wfs: partial; see source_registry errors"
+      ]
+    },
+    "sa-calobra-catastro_buildings_wfs-evidence": {
+      "description": "DG Catastro INSPIRE Buildings local cache byte integrity; not World Authority admission",
+      "requires": [
+        "catastro_buildings_wfs-000",
+        "catastro_buildings_wfs-001",
+        "catastro_buildings_wfs-002",
+        "catastro_buildings_wfs-003",
+        "catastro_buildings_wfs-004",
+        "catastro_buildings_wfs-005",
+        "catastro_buildings_wfs-006",
+        "catastro_buildings_wfs-007",
+        "catastro_buildings_wfs-008",
+        "catastro_buildings_wfs-009",
+        "catastro_buildings_wfs-010",
+        "catastro_buildings_wfs-011",
+        "catastro_buildings_wfs-012"
+      ],
+      "incomplete_layers": [
+        "catastro_buildings_wfs: partial; see source_registry errors"
+      ]
+    },
+    "sa-calobra-p1-context": {
+      "description": "Bounded P1 source/evidence cache; SIOSE 2014 and Catastro incomplete",
+      "requires": [
+        "btn_vector_context-000",
+        "btn_vector_context-001",
+        "btn_vector_context-002",
+        "btn_vector_context-003",
+        "btn_vector_context-004",
+        "btn_vector_context-005",
+        "btn_vector_context-006",
+        "btn_vector_context-007",
+        "btn_vector_context-008",
+        "btn_vector_context-009",
+        "btn_vector_context-010",
+        "btn_vector_context-011",
+        "btn_vector_context-012",
+        "btn_vector_context-013",
+        "btn_vector_context-014",
+        "btn_vector_context-015",
+        "btn_vector_context-016",
+        "btn_vector_context-017",
+        "btn_vector_context-018",
+        "btn_vector_context-019",
+        "btn_vector_context-020",
+        "btn_vector_context-021",
+        "btn_vector_context-022",
+        "btn_vector_context-023",
+        "btn_vector_context-024",
+        "btn_vector_context-025",
+        "btn_vector_context-026",
+        "btn_vector_context-027",
+        "btn_vector_context-028",
+        "btn_vector_context-029",
+        "siose_2014_wfs-000",
+        "siose_2014_wfs-001",
+        "catastro_buildings_wfs-000",
+        "catastro_buildings_wfs-001",
+        "catastro_buildings_wfs-002",
+        "catastro_buildings_wfs-003",
+        "catastro_buildings_wfs-004",
+        "catastro_buildings_wfs-005",
+        "catastro_buildings_wfs-006",
+        "catastro_buildings_wfs-007",
+        "catastro_buildings_wfs-008",
+        "catastro_buildings_wfs-009",
+        "catastro_buildings_wfs-010",
+        "catastro_buildings_wfs-011",
+        "catastro_buildings_wfs-012"
+      ],
+      "incomplete_layers": [
+        "SIOSE 2014: service advertises SIOSE HR 2017; 244 observationDate=2016 features rejected",
+        "Catastro: 12/12 Area of extension out of limits; 0 admitted GML"
+      ]
+    }
+  },
+  "gis_metadata_profiles": {
+    "btn_vector_context": {
+      "xy_crs": "EPSG:3857 tile-local coordinates (BTN); EPSG:25831 request/response (WFS)",
+      "xy_unit": "tile units or metres; preserve native raw payload",
+      "vertical_datum": "not applicable/uninspected; not ground Z authority",
+      "footprint": "working-space bbox intersection; tile/feature edges may extend outside AOI",
+      "resolution_or_density": "z16 BTN context; WFS vector source accuracy not inferred",
+      "classification": "context only; rejected source payloads are evidence, not admitted layers",
+      "nodata": "missing/rejected evidence remains unknown"
+    },
+    "siose_2014_wfs": {
+      "xy_crs": "EPSG:3857 tile-local coordinates (BTN); EPSG:25831 request/response (WFS)",
+      "xy_unit": "tile units or metres; preserve native raw payload",
+      "vertical_datum": "not applicable/uninspected; not ground Z authority",
+      "footprint": "working-space bbox intersection; tile/feature edges may extend outside AOI",
+      "resolution_or_density": "z16 BTN context; WFS vector source accuracy not inferred",
+      "classification": "context only; rejected source payloads are evidence, not admitted layers",
+      "nodata": "missing/rejected evidence remains unknown"
+    },
+    "catastro_buildings_wfs": {
+      "xy_crs": "EPSG:3857 tile-local coordinates (BTN); EPSG:25831 request/response (WFS)",
+      "xy_unit": "tile units or metres; preserve native raw payload",
+      "vertical_datum": "not applicable/uninspected; not ground Z authority",
+      "footprint": "working-space bbox intersection; tile/feature edges may extend outside AOI",
+      "resolution_or_density": "z16 BTN context; WFS vector source accuracy not inferred",
+      "classification": "context only; rejected source payloads are evidence, not admitted layers",
+      "nodata": "missing/rejected evidence remains unknown"
+    }
+  },
+  "source_registry": {
+    "btn_vector_context": {
+      "source_id": "btn_vector_context",
+      "status": "downloaded",
+      "raw_cache_relative": "p1-2026-10-04",
+      "file_count": 30,
+      "size_bytes": 250386,
+      "admitted_file_count": 30,
+      "layer_count": 21,
+      "advertised_feature_types": [],
+      "selected_feature_types": [],
+      "errors": [],
+      "feature_count": 2382,
+      "feature_count_note": "BTN tile fragments may repeat; SIOSE 244 features are rejected for edition mismatch; Catastro feature count unknown",
+      "restore": "local-only cache; no remote snapshot; official reacquisition must be separately verified",
+      "receipt": "worldgen/terrain/benchmarks/sa_calobra/world_data/p1_context_receipt_2026-10-04.json"
+    },
+    "siose_2014_wfs": {
+      "source_id": "siose_2014_wfs",
+      "status": "partial",
+      "raw_cache_relative": "p1-2026-10-04",
+      "file_count": 2,
+      "size_bytes": 1434573,
+      "admitted_file_count": 0,
+      "layer_count": null,
+      "advertised_feature_types": [
+        "lcv:LandCoverDataset",
+        "lcv:LandCoverUnit",
+        "elu:ExistingLandUseDataSet",
+        "elu:ExistingLandUseObject"
+      ],
+      "selected_feature_types": [
+        "lcv:LandCoverUnit"
+      ],
+      "errors": [
+        "Source edition mismatch: expected 2014; advertised abstracts: ['Datos espaciales correspondientes a los temas \"Cubierta terrestre\" del Anexo II de la Directiva Inspire y Anexo I de LISIGE y \"Usos del suelo\" del Anexo III de la Directiva Inspire y Anexo II de LISIGE. Datos procedentes de SIOSE de Alta Resolución 2017 (Sistema de Información sobre Ocupación del Suelo de España) con nomenclatura CODIIGE. Servicio de descarga Inspire de acceso directo conforme con ISO 19142 Web Feature Service e ISO 19143 Filter Encoding.', 'Colecciones de unidades de cubierta terrestre según la nomenclatura CODIIGE para una determinada referencia temporal. Se ofrecen un conjunto de datos: SIOSE del año 2017', 'Elemento individual del conjunto de datos de cubierta terrestre representado por una superficie', 'Un conjunto de datos de uso del suelo existente es una colección de áreas en relación a las cuales se facilita información sobre los usos del suelo (actuales o anteriores) existentes.', 'El objeto de uso del suelo existente es un área caracterizada por una combinación homogénea de tipos de uso.']",
+        "q0 lcv:LandCoverUnit: Source edition mismatch: expected 2014; advertised abstracts: ['Datos espaciales correspondientes a los temas \"Cubierta terrestre\" del Anexo II de la Directiva Inspire y Anexo I de LISIGE y \"Usos del suelo\" del Anexo III de la Directiva Inspire y Anexo II de LISIGE. Datos procedentes de SIOSE de Alta Resolución 2017 (Sistema de Información sobre Ocupación del Suelo de España) con nomenclatura CODIIGE. Servicio de descarga Inspire de acceso directo conforme con ISO 19142 Web Feature Service e ISO 19143 Filter Encoding.', 'Colecciones de unidades de cubierta terrestre según la nomenclatura CODIIGE para una determinada referencia temporal. Se ofrecen un conjunto de datos: SIOSE del año 2017', 'Elemento individual del conjunto de datos de cubierta terrestre representado por una superficie', 'Un conjunto de datos de uso del suelo existente es una colección de áreas en relación a las cuales se facilita información sobre los usos del suelo (actuales o anteriores) existentes.', 'El objeto de uso del suelo existente es un área caracterizada por una combinación homogénea de tipos de uso.']"
+      ],
+      "feature_count": 244,
+      "feature_count_note": "BTN tile fragments may repeat; SIOSE 244 features are rejected for edition mismatch; Catastro feature count unknown",
+      "restore": "local-only cache; no remote snapshot; official reacquisition must be separately verified",
+      "receipt": "worldgen/terrain/benchmarks/sa_calobra/world_data/p1_context_receipt_2026-10-04.json"
+    },
+    "catastro_buildings_wfs": {
+      "source_id": "catastro_buildings_wfs",
+      "status": "partial",
+      "raw_cache_relative": "p1-2026-10-04",
+      "file_count": 13,
+      "size_bytes": 19782,
+      "admitted_file_count": 0,
+      "layer_count": null,
+      "advertised_feature_types": [
+        "bu:Building",
+        "bu:BuildingPart",
+        "bu:OtherConstruction"
+      ],
+      "selected_feature_types": [
+        "bu:Building",
+        "bu:BuildingPart",
+        "bu:OtherConstruction"
+      ],
+      "errors": [
+        "q0 bu:Building: WFS exception: Area of extension out of limits",
+        "q0 bu:BuildingPart: WFS exception: Area of extension out of limits",
+        "q0 bu:OtherConstruction: WFS exception: Area of extension out of limits",
+        "q1 bu:Building: WFS exception: Area of extension out of limits",
+        "q1 bu:BuildingPart: WFS exception: Area of extension out of limits",
+        "q1 bu:OtherConstruction: WFS exception: Area of extension out of limits",
+        "q2 bu:Building: WFS exception: Area of extension out of limits",
+        "q2 bu:BuildingPart: WFS exception: Area of extension out of limits",
+        "q2 bu:OtherConstruction: WFS exception: Area of extension out of limits",
+        "q3 bu:Building: WFS exception: Area of extension out of limits",
+        "q3 bu:BuildingPart: WFS exception: Area of extension out of limits",
+        "q3 bu:OtherConstruction: WFS exception: Area of extension out of limits"
+      ],
+      "feature_count": 0,
+      "feature_count_note": "BTN tile fragments may repeat; SIOSE 244 features are rejected for edition mismatch; Catastro feature count unknown",
+      "restore": "local-only cache; no remote snapshot; official reacquisition must be separately verified",
+      "receipt": "worldgen/terrain/benchmarks/sa_calobra/world_data/p1_context_receipt_2026-10-04.json"
+    }
+  }
+}

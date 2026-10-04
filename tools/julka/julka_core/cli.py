@@ -70,6 +70,12 @@ def run(
 
 def load_catalog_file(path: Path = CATALOG_PATH) -> dict[str, Any]:
     catalog = load_json(path)
+    if path == CATALOG_PATH:
+        context = load_json(path.with_name("p1_context.json"))
+        catalog["assets"].extend(context["assets"])
+        catalog["profiles"].update(context["profiles"])
+        catalog["gis_metadata_profiles"].update(context["gis_metadata_profiles"])
+        catalog["source_registry"] = context["source_registry"]
     validate_catalog(catalog)
     return catalog
 
@@ -152,7 +158,8 @@ def assert_no_reparse_components(path: Path, boundary: Path) -> None:
 
 def asset_path(root: Path, asset: dict[str, Any]) -> Path:
     root = root.absolute()
-    path = (root / "sources").joinpath(*asset["path"].split("/"))
+    base = root if asset["backend"].get("layout") == "world-data-cache" else root / "sources"
+    path = base.joinpath(*asset["path"].split("/"))
     assert_no_reparse_components(path, root)
     return path
 
@@ -503,6 +510,7 @@ def cmd_plan(args: argparse.Namespace) -> int:
     assets = topological_assets(catalog, args.profile)
     need = 0
     manual_missing = 0
+    local_missing = 0
     for asset in assets:
         path = asset_path(root, asset)
         already = path.is_file() and path.stat().st_size == asset["size_bytes"]
@@ -510,6 +518,8 @@ def cmd_plan(args: argparse.Namespace) -> int:
             need += asset["size_bytes"]
         if not already and asset["backend"]["type"] == "manual-cnig":
             manual_missing += 1
+        if not already and asset["backend"]["type"] == "local":
+            local_missing += 1
         state = (
             "CHECK"
             if already
@@ -557,6 +567,8 @@ def cmd_plan(args: argparse.Namespace) -> int:
             f"MANUAL ACQUISITION REQUIRED: {manual_missing} raw MDT source tiles are not present under the configured asset root."
         )
     profile = catalog["profiles"][args.profile]
+    if local_missing:
+        print(f"LOCAL RESTORE REQUIRED: {local_missing} pinned context/evidence files; restore from the retained cache and verify SHA-256. Provider reacquisition may have different bytes.")
     if profile.get("incomplete_layers"):
         print(
             "Profile also lacks separately reviewed/acquired layers: "
@@ -568,6 +580,7 @@ def cmd_plan(args: argparse.Namespace) -> int:
     return (
         3
         if manual_missing
+        or local_missing
         or profile.get("manual_only")
         or profile.get("incomplete_layers")
         else 0
@@ -633,6 +646,9 @@ def cmd_verify(args: argparse.Namespace) -> int:
 def _cmd_hydrate(args: argparse.Namespace) -> int:
     catalog = load_catalog_file()
     assets = topological_assets(catalog, args.profile)
+    if any(asset["backend"]["type"] == "local" for asset in assets):
+        print("Local-only context profile: no remote snapshot is registered. Restore the pinned cache files, then run verify.")
+        return cmd_verify(args)
     if catalog["profiles"][args.profile].get("manual_only"):
         raise JulkaError(
             "archive is inventory-only and cannot be automatically hydrated"
@@ -980,6 +996,9 @@ def _cmd_adopt_mdt(args: argparse.Namespace) -> int:
 
 def cmd_explain(args: argparse.Namespace) -> int:
     catalog = load_catalog_file()
+    if args.asset_id in catalog.get("source_registry", {}):
+        print(json.dumps(catalog["source_registry"][args.asset_id], ensure_ascii=False, indent=2))
+        return 0
     for asset in catalog["assets"]:
         if asset["asset_id"] != args.asset_id:
             continue
@@ -993,7 +1012,7 @@ def cmd_explain(args: argparse.Namespace) -> int:
         elif asset_id.startswith("ortho-"):
             metadata_key = "pnoa_ortho"
         else:
-            metadata_key = None
+            metadata_key = asset.get("gis_metadata_profile")
         output = {
             "asset": asset,
             "gis_metadata": catalog["gis_metadata_profiles"].get(metadata_key)

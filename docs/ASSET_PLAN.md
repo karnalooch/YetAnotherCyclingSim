@@ -98,6 +98,17 @@ metodologii ani odbioru Unreal.
 
 Pełna komenda, storage/proof boundaries i limitations: [`tooling/JULKA.md`](tooling/JULKA.md).
 
+Checkpoint P1 z 4 października 2026 r.: Julka ma 45 dodatkowych lokalnych
+identities w `p1_context.json`: BTN 30 PBF / 250 386 B / 21 warstw;
+SIOSE capabilities + diagnostyczny GML / 1 434 573 B; Catastro capabilities +
+12 odpowiedzi błędu / 19 782 B. BTN ma status `acquired` jako kontekst usługowy.
+SIOSE 2014 jest `partial`: usługa deklaruje HR 2017, a 244 obiekty mają datę
+obserwacji 2016; nie dopuszczamy ich jako 2014. Catastro jest `partial`:
+`Area of extension out of limits`, 0 dopuszczonych GML. Profil P1 pozostaje
+niekompletny mimo poprawnych hashy wszystkich plików. Raw cache jest poza Git,
+bez zarejestrowanego backupu remote. Pełne evidence i restore/status są w
+[raporcie P1](../worldgen/terrain/benchmarks/sa_calobra/world_data/P1_ACQUISITION_2026-10-04.md).
+
 ## 2. Kolejność pozyskiwania
 
 ### Priorytet A — potrzebne przed lub w trakcie budowy MVP

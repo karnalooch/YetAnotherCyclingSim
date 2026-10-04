@@ -103,6 +103,30 @@ reporting normalizes the root before displaying receipt-relative paths.
 
 ## Usage and SSOT
 
+### Working-space P1 context checkpoint — 2026-10-04
+
+The separate `tools/julka/data/p1_context.json` supplements the original 34-item
+catalog with 45 local source/evidence identities. `load_catalog_file` merges
+these identities without changing the 17-file Release or MDT profiles.
+Source IDs `btn_vector_context`, `siose_2014_wfs` and `catastro_buildings_wfs`
+are accepted by `explain` and report counts, provenance receipt, errors and
+restore limitations. Local backend `layout=world-data-cache` resolves paths
+directly under the explicitly selected cache root, without copying source bytes.
+
+`sa-calobra-btn-context` verifies 30 BTN tiles (250,386 B, 21 layers).
+`sa-calobra-p1-context` inventories all 45 files but remains incomplete:
+SIOSE's 244 returned objects fail the requested 2014 edition identity, and
+all 12 Catastro GML payloads are provider exceptions. Evidence-byte PASS does
+not admit those geographic sources. `status`, `verify` and `plan` stay nonzero
+for the incomplete profile. Missing local-only files also make `plan` nonzero;
+`hydrate` verifies local bytes and does not fabricate a remote restore source.
+
+Select the parent `sa-calobra-working-v1` cache with `--root`; P1 raw payloads
+are under `p1-2026-10-04`. Restore by copying the retained relative paths and
+verifying pinned size/SHA-256. No independent or remote P1 backup is registered.
+Exact results, official provider evidence and usage are in the
+[P1 acquisition report](../../worldgen/terrain/benchmarks/sa_calobra/world_data/P1_ACQUISITION_2026-10-04.md).
+
 Install/use commands and the 34-item identity catalog (the 17 Release files plus
 the separate 17 MDT mosaic inputs) are in
 [`tools/julka/README.md`](../../tools/julka/README.md) and

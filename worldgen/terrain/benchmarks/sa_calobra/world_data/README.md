@@ -102,6 +102,15 @@ without that binary-download authorization flow.
 
 ## Expansion order
 
+P1 acquisition checkpoint of 2026-10-04 is recorded in
+[the detailed report](P1_ACQUISITION_2026-10-04.md) and
+[the portable receipt](p1_context_receipt_2026-10-04.json). BTN is acquired;
+SIOSE 2014 and Catastro are partial/unadmitted. Invoke only the three P1
+sources with `--sources btn_vector_context siose_2014_wfs catastro_buildings_wfs`.
+This option bypasses all ortho/LiDAR/MDS acquisition and exits 2 on partial
+P1 results. WFS exception, unknown/truncated counts, missing typename/metric
+CRS and wrong requested edition fail closed. No geographic axis fallback is used.
+
 1. acquire and validate the current 2.0165 km working square;
 2. generate first World Data Stack derivatives and feed bounded PCGEx/Landscape consumers;
 3. only after that proof, expand the exact same contract to the existing 8 km × 8 km benchmark.
