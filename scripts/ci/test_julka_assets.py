@@ -15,24 +15,124 @@ ROOT = Path(__file__).resolve().parents[2]
 JULKA = ROOT / "tools" / "julka"
 sys.path.insert(0, str(JULKA))
 
-from julka_core.cli import (
+from julka_core.cli import (  # noqa: E402
+    asset_path,
     cmd_audit_root,
     cmd_cleanup,
     cmd_doctor,
     cmd_plan,
     cmd_status,
     cmd_verify,
+    default_asset_root,
     load_catalog_file,
     operation_lock,
+    receipt_path,
     run,
-)  # noqa: E402
-from julka_core.models import (
+    workspace_asset_root,
+)
+from julka_core.models import (  # noqa: E402
     JulkaError,
     canonical_digest,
     safe_relative_path,
     topological_assets,
     validate_catalog,
-)  # noqa: E402
+)
+
+
+class JulkaWorkspaceTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.workspace = Path(self.temporary.name).resolve()
+        self.repo = self.workspace / "project"
+        self.repo.mkdir()
+        self.config = self.workspace / "workspace.json"
+        self.config.write_text(
+            json.dumps({"schema_version": 1, "data": "data"}), encoding="utf-8-sig"
+        )
+        self.addCleanup(patch.stopall)
+        patch.dict(os.environ, {"YACS_ASSET_ROOT": "", "YACS_WORKSPACE_CONFIG": ""}).start()
+        patch("julka_core.cli.REPO_ROOT", self.repo).start()
+
+    def test_canonical_workspace_is_default_and_uses_existing_raw_bytes(self):
+        root = self.workspace / "data/world-data/sa-calobra-working-v1"
+        self.assertEqual(default_asset_root(), root)
+        asset = {
+            "path": "sa-calobra-working-v1/manual-cnig/tile.laz",
+            "backend": {"type": "github-release"},
+        }
+        self.assertEqual(asset_path(root, asset), root / "manual-cnig/tile.laz")
+        self.assertEqual(
+            receipt_path(
+                root, {"receipt": {"path": "sa-calobra-working-v1/receipt.json"}}
+            ),
+            root / "receipt.json",
+        )
+        asset = {
+            "path": "masks/forest.tif",
+            "backend": {"type": "local", "layout": "world-data-cache"},
+        }
+        self.assertEqual(asset_path(root, asset), root / "masks/forest.tif")
+
+    def test_explicit_asset_root_preserves_legacy_storage_layout(self):
+        root = self.workspace / "separate-assets"
+        with patch.dict(os.environ, {"YACS_ASSET_ROOT": str(root)}):
+            self.assertEqual(default_asset_root(), root)
+            asset = {
+                "path": "sa-calobra-working-v1/manual-cnig/tile.laz",
+                "backend": {"type": "github-release"},
+            }
+            self.assertEqual(
+                asset_path(root, asset),
+                root / "sources/sa-calobra-working-v1/manual-cnig/tile.laz",
+            )
+
+    def test_explicit_cli_root_does_not_evaluate_default(self):
+        from julka_core.cli import main
+
+        root = self.workspace / "explicit"
+        with (
+            patch.object(sys, "argv", ["julka", "cleanup", "--root", str(root)]),
+            patch(
+                "julka_core.cli.default_asset_root",
+                side_effect=AssertionError("default must not be read"),
+            ),
+            patch("julka_core.cli.cmd_cleanup", return_value=0) as command,
+        ):
+            self.assertEqual(main(), 0)
+            self.assertEqual(command.call_args.args[0].root, root)
+
+    def test_missing_explicit_workspace_does_not_silently_fallback(self):
+        with patch.dict(
+            os.environ, {"YACS_WORKSPACE_CONFIG": str(self.workspace / "missing.json")}
+        ):
+            with self.assertRaises(FileNotFoundError):
+                default_asset_root()
+
+    def test_explicit_workspace_config_overrides_checkout_neighbor(self):
+        other = self.workspace / "another-workspace"
+        other.mkdir()
+        config = other / "workspace.json"
+        config.write_text(
+            json.dumps({"schema_version": 1, "data": "external-data"}),
+            encoding="utf-8",
+        )
+        with patch.dict(os.environ, {"YACS_WORKSPACE_CONFIG": str(config)}):
+            self.assertEqual(
+                default_asset_root(),
+                other / "external-data/world-data/sa-calobra-working-v1",
+            )
+
+    def test_workspace_traversal_is_rejected(self):
+        self.config.write_text(
+            json.dumps({"schema_version": 1, "data": "../outside"}), encoding="utf-8"
+        )
+        with self.assertRaises(JulkaError):
+            workspace_asset_root()
+
+    def test_unconfigured_machine_retains_default(self):
+        self.config.unlink()
+        self.assertEqual(default_asset_root(), Path.home() / "YACS-Assets")
 
 
 class JulkaCatalogContractTests(unittest.TestCase):

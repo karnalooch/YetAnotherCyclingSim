@@ -9,9 +9,16 @@ changed or invoked.
 
 The home host's canonical workspace and checkpoint lifecycle are defined in
 [LOCAL_WORKSPACE.md](LOCAL_WORKSPACE.md). Local sources now live under the
-configured `data/world-data` root; pass its `sa-calobra-working-v1` directory to
-Julka. Existing hash identities and remote-availability limitations remain in
-force. Copying files into the new workspace does not create a remote backup.
+configured `data/world-data/sa-calobra-working-v1` root. Julka resolves it from
+the shared `workspace.json`, using `YACS_WORKSPACE_CONFIG` when set or the file
+beside the checkout otherwise. An explicit `--root` takes precedence, followed
+by `YACS_ASSET_ROOT`. Unconfigured machines retain the `~/YACS-Assets` default.
+The canonical root maps the existing CNIG catalog and provider receipt directly
+to `manual-cnig` and its sibling receipt; other explicit asset roots retain the
+legacy `sources/<dataset>` layout. No duplicate source files or junctions are
+created. Existing hash identities and remote-availability limitations remain in
+force. A source snapshot stored in the separate workspace backup is not
+automatically a registered Julka hydration backend.
 
 The public Embark pattern establishes a producer → prepared data → Unreal
 consumer → bounded proof boundary for terrain/world content. Public evidence

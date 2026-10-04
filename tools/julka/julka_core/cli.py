@@ -14,11 +14,16 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from .models import JulkaError, load_json, topological_assets, validate_catalog
+from .models import (
+    JulkaError,
+    load_json,
+    safe_relative_path,
+    topological_assets,
+    validate_catalog,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 CATALOG_PATH = Path(__file__).resolve().parents[1] / "data" / "catalog.json"
-DEFAULT_ROOT = Path(os.environ.get("YACS_ASSET_ROOT", Path.home() / "YACS-Assets"))
 AUDIT_EXTENSIONS = {
     ".uasset",
     ".umap",
@@ -156,21 +161,59 @@ def assert_no_reparse_components(path: Path, boundary: Path) -> None:
             )
 
 
+def workspace_asset_root() -> Path | None:
+    """Read the shared host contract without importing production YACS modules."""
+    explicit = os.environ.get("YACS_WORKSPACE_CONFIG")
+    config_path = Path(explicit) if explicit else REPO_ROOT.parent / "workspace.json"
+    if not explicit and not config_path.exists():
+        return None
+    config_path = config_path.resolve(strict=True)
+    config = json.loads(config_path.read_text(encoding="utf-8-sig"))
+    if not isinstance(config, dict) or config.get("schema_version") != 1:
+        raise JulkaError("unsupported local workspace schema")
+    data = config.get("data")
+    if not isinstance(data, str) or not data:
+        raise JulkaError("workspace requires a relative data directory")
+    relative = Path(data)
+    if relative.is_absolute() or ".." in relative.parts:
+        raise JulkaError("workspace data directory must remain below workspace root")
+    workspace = config_path.parent
+    root = (workspace / relative / "world-data" / "sa-calobra-working-v1").resolve()
+    if not root.is_relative_to(workspace):
+        raise JulkaError("workspace data directory escapes through a link")
+    return root
+
+
+def default_asset_root() -> Path:
+    override = os.environ.get("YACS_ASSET_ROOT")
+    if override:
+        return Path(override)
+    return workspace_asset_root() or Path.home() / "YACS-Assets"
+
+
+def source_path(root: Path, relative: str) -> Path:
+    """Map the existing CNIG catalog to the canonical cache without copying it."""
+    parts = safe_relative_path(relative).parts
+    workspace_root = workspace_asset_root()
+    if root == workspace_root and parts[0] == "sa-calobra-working-v1":
+        return root.joinpath(*parts[1:])
+    return root.joinpath("sources", *parts)
+
+
 def asset_path(root: Path, asset: dict[str, Any]) -> Path:
     root = root.absolute()
-    base = (
-        root
+    path = (
+        root.joinpath(*safe_relative_path(asset["path"]).parts)
         if asset["backend"].get("layout") == "world-data-cache"
-        else root / "sources"
+        else source_path(root, asset["path"])
     )
-    path = base.joinpath(*asset["path"].split("/"))
     assert_no_reparse_components(path, root)
     return path
 
 
 def receipt_path(root: Path, catalog: dict[str, Any]) -> Path:
     root = root.absolute()
-    path = root / "sources" / Path(catalog["receipt"]["path"])
+    path = source_path(root, catalog["receipt"]["path"])
     assert_no_reparse_components(path, root)
     return path
 
@@ -1262,11 +1305,11 @@ def build_parser() -> argparse.ArgumentParser:
     lfs.set_defaults(func=cmd_hydrate_lfs)
     doctor = sub.add_parser("doctor", help="read-only workstation capability audit")
     doctor.add_argument("--project", help="optional .uproject path to inspect")
-    doctor.add_argument("--root", type=Path, default=DEFAULT_ROOT)
+    doctor.add_argument("--root", type=Path)
     doctor.set_defaults(func=cmd_doctor)
     status = sub.add_parser("status", help="show local inventory without downloading")
     status.add_argument("--profile", default="sa-calobra-working")
-    status.add_argument("--root", type=Path, default=DEFAULT_ROOT)
+    status.add_argument("--root", type=Path)
     status.add_argument("--repo", type=Path, default=REPO_ROOT)
     status.add_argument(
         "--verify", action="store_true", help="hash every present file (can take time)"
@@ -1274,19 +1317,19 @@ def build_parser() -> argparse.ArgumentParser:
     status.set_defaults(func=cmd_status)
     plan = sub.add_parser("plan", help="estimate space and transfers without changes")
     plan.add_argument("--profile", default="sa-calobra-working")
-    plan.add_argument("--root", type=Path, default=DEFAULT_ROOT)
+    plan.add_argument("--root", type=Path)
     plan.add_argument("--repo", type=Path, default=REPO_ROOT)
     plan.set_defaults(func=cmd_plan)
     verify = sub.add_parser("verify", help="full size and SHA-256 verification")
     verify.add_argument("--profile", default="sa-calobra-working")
-    verify.add_argument("--root", type=Path, default=DEFAULT_ROOT)
+    verify.add_argument("--root", type=Path)
     verify.add_argument("--repo", type=Path, default=REPO_ROOT)
     verify.set_defaults(func=cmd_verify)
     hydrate = sub.add_parser(
         "hydrate", help="restore exact profile from configured free remote"
     )
     hydrate.add_argument("--profile", default="sa-calobra-working")
-    hydrate.add_argument("--root", type=Path, default=DEFAULT_ROOT)
+    hydrate.add_argument("--root", type=Path)
     hydrate.add_argument("--repo", type=Path, default=REPO_ROOT)
     hydrate.add_argument(
         "--apply", action="store_true", help="perform verified download after preflight"
@@ -1317,7 +1360,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="verify and copy the 17 existing MDT sources without modifying originals",
     )
     adopt.add_argument("--source-dir", required=True, type=Path)
-    adopt.add_argument("--root", type=Path, default=DEFAULT_ROOT)
+    adopt.add_argument("--root", type=Path)
     adopt.add_argument(
         "--apply",
         action="store_true",
@@ -1327,7 +1370,7 @@ def build_parser() -> argparse.ArgumentParser:
     cleanup = sub.add_parser(
         "cleanup", help="show known disposable cache sizes (never deletes)"
     )
-    cleanup.add_argument("--root", type=Path, default=DEFAULT_ROOT)
+    cleanup.add_argument("--root", type=Path)
     cleanup.set_defaults(func=cmd_cleanup)
     return parser
 
@@ -1336,6 +1379,8 @@ def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
     try:
+        if hasattr(args, "root") and args.root is None:
+            args.root = default_asset_root()
         return args.func(args)
     except (JulkaError, OSError, ValueError, json.JSONDecodeError) as exc:
         print(f"julka: error: {exc}", file=sys.stderr)

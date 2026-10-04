@@ -7,6 +7,19 @@ read-only unless an explicit `--apply` flag is supplied.
 
 ## Clean Windows setup
 
+On the consolidated home workspace, run from `D:\yacs\project`. Julka reads
+`D:\yacs\workspace.json` and automatically uses
+`D:\yacs\data\world-data\sa-calobra-working-v1`. The same file can be selected
+with `YACS_WORKSPACE_CONFIG`. No `--root` is needed for the current mask or CNIG
+profiles, and verification uses the existing files without copying them.
+An explicit `--root` wins over `YACS_ASSET_ROOT`, which wins over workspace
+discovery. Only a machine without workspace configuration falls back to
+`~/YACS-Assets`; a malformed configured workspace is reported as an error.
+
+```powershell
+.\.venv\Scripts\python.exe tools/julka/julka.py verify --profile sa-calobra-mask-baseline-candidate
+```
+
 Install Git for Windows with Git LFS, Python 3.12+, `uv`, and GitHub CLI. Clone
 the repository with Git LFS available, then in PowerShell:
 
@@ -24,6 +37,7 @@ Sa Calobra source package. Choose a destination volume with several GiB free;
 the manager estimates exact bytes before writing:
 
 ```powershell
+# For a separate installation without the canonical workspace only:
 $env:YACS_ASSET_ROOT = 'D:\YACS-Assets'
 uv run --project tools/julka python tools/julka/julka.py hydrate-lfs --profile sa-calobra-working --apply
 uv run --project tools/julka python tools/julka/julka.py hydrate --profile sa-calobra-working --apply
@@ -126,7 +140,7 @@ setup, independent-host recovery, world regeneration or playable-world acceptanc
 For a deliberately scoped read-only audit of an existing local asset root:
 
 ```powershell
-uv run --project tools/julka python tools/julka/julka.py audit-root --root 'D:\actions-runner-yacs\_work\YetAnotherCyclingSim'
+uv run --project tools/julka python tools/julka/julka.py audit-root --root 'D:\yacs\data\world-data\sa-calobra-working-v1'
 ```
 
 The audit skips Git metadata, credentials/config roots and reparse points. Its
