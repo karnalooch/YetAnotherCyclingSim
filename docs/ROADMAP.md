@@ -119,6 +119,22 @@ The 500–1000 m Golden Kilometer is an **additional representative check inside
 
 **Issue dependency gate:** steps are separate execution issues in the YACS — MVP Project. Reuse #335 for step 1; each later issue has a native GitHub `blocked_by` dependency on its immediate predecessor. Steps 2–13 remain `Blocked` while that predecessor is open. Do not begin implementation, open an implementation PR or move a step to Ready/In progress until the predecessor is completed with required proof and merged implementation where applicable. Closing as not planned or merely having green CI does not satisfy the gate. Change the order or remove a dependency only with explicit owner authorization. GitHub records the dependency; this execution rule governs agents because the dependency does not itself prevent branch/PR creation.
 
+### Deferred surface-review polish
+
+Owner decision, 2026-10-04: retain the red surface problem-review overlay from
+the merged [coverage audit](experiments/sa-calobra-surface-coverage-2026-10-04.md)
+for the final polish/review pass tracked by #372. Defer loading that overlay
+into the live editor and reviewing P1–P5 / R4C2 / R4C3 until that pass. Keep
+the native overlay, flag raster, manifest and pinned source hashes available;
+uncolored pixels are not independently validated. Unknowns and conservative
+exclusions remain explicit when #363 consumes admitted inputs or documented
+fallbacks. This decision does not promote RGB rock/soil candidates to truth.
+
+The owner authorized 2A baseline merge and progression to #363, and requested
+no GPU performance measurement for the current mask-review/closeout pass.
+Required technical checks and protected CI admission must be resolved before
+the predecessor is represented as completed. Deferred measurement is not PASS.
+
 ### M3 / M7 content boundary
 
 M3 builds the **reproducible world factory and believable baseline**: authority inputs, materials, procedural domains, route exclusion, biome/foliage/rock foundations, structural roadside rules and their visual/performance proof.

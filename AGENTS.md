@@ -131,6 +131,22 @@ and traversal; do not infer area-wide PASS from one selected section. Preserve
 existing budgets, exact-SHA proof, milestone-driven heavy measurement and frozen
 terrain/road geometry. Full-route expansion means going beyond this Landscape.
 
+### Deferred red-overlay review
+
+Owner decision, 2026-10-04: retain the red surface problem-review overlay and
+its P1–P5 / R4C2 / R4C3 queue for the final polish/review pass tracked by #372.
+Do not load or refine that overlay during the current 2A closeout / 2B kickoff.
+Preserve the native registered PNG, flag raster, source hashes and manifest;
+the merged #379 / #380 audit records their meaning and replay procedure.
+Unknowns remain unknown, hard exclusions remain binding, and candidate RGB
+classes are not validated geography or production planting authority.
+
+The owner authorized merging the 2A baseline and starting #363, and explicitly
+requested no performance measurement in the current mask-review/closeout pass.
+This is authorization to progress the baseline, not a fabricated performance
+PASS or permission to bypass protected CI. Resolve required technical admission
+before marking #335 complete or starting its dependent implementation.
+
 ### Region migration and LFS retirement
 
 Owner update, 2026-10-02: execute the six-step Sa Calobra migration and retire
