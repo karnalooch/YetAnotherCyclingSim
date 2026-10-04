@@ -200,3 +200,15 @@ hashes or pinned regeneration with approved isolated decoder tools; no remote
 derivative backup is registered. Whole-2A/planting readiness stays nonzero:
 candidate data existence is not admission of current cover, canopy, exclusions
 or road/BOB authority. See the [Bible](../WORLD_BUILDING_BIBLE.md#native-lidar-evidence-candidate-issue-335).
+
+## Vegetation domains and owner review — 2026-10-04
+
+`sa-calobra-vegetation-domains-candidate` adds two rasters and a manifest to the
+84-file LiDAR review closure. `explain vegetation_domains_v1` records overlapping
+low/medium/high presence, unknown samples, separate review flags, the pink-cell
+audit and scoped owner acceptance of the green preview. Local restore uses
+verified copies or the pinned producer and retained derived LiDAR inputs; no new
+decoder installation, raw download or remote backup is needed. The
+[receipt](../../worldgen/terrain/benchmarks/sa_calobra/world_data/vegetation_domains_receipt_2026-10-04.json)
+records byte/logical hashes and clean regeneration. Neither visual acceptance
+nor this candidate profile admits production planting or complete road safety.

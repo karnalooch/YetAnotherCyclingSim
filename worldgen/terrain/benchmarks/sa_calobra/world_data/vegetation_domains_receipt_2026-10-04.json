@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "status": "VEGETATION_DOMAIN_CANDIDATE",
+  "geometry_mutation": false,
+  "planting": "BLOCKED pending admitted current-cover and road/safety/BOB exclusions",
+  "source_manifest_sha256": "fd14d0725f867759438727f9f7275f15427220ea185b01783c9d616432523e00",
+  "source_fingerprint": "cd20611c530a346abaaaf4a35ab3bd27efb6167e74064d39ccc63e31d3c1e3c8",
+  "grid": {
+    "anchor": "AOI upper-left; matches accepted native Base_DTM grid",
+    "crs": "EPSG:25831",
+    "height": 4033,
+    "pixel_rule": "center for SIOSE IDs; all_touched for conservative building candidates",
+    "pixel_size_m": 0.5,
+    "transform": [
+      0.5,
+      0.0,
+      483000.0,
+      0.0,
+      -0.5,
+      4409516.5
+    ],
+    "width": 4033
+  },
+  "producer_sha256_lf": "7cf2bb58eb3f222a7ae41dbe8c08258b98785ae7806e949d425127dbdf46392c",
+  "semantics": {
+    "presence": "Three overlapping bands: 1=source class present; 0=no return of that class, not proven absence; 255=no accepted samples",
+    "review_flags": "bit1 invalid/negative height; bit2 relief>10m; bit4 source building overlap; 255 unknown; not complete safety exclusions",
+    "height": "Existing unknown heights remain unknown; class presence does not repair normalization",
+    "character": "Low may represent grass/low shrubs; medium/high do not identify species or individual tree positions",
+    "audit": "Overlap counts are not additive; height_review_partition is disjoint"
+  },
+  "counts": {
+    "observed_cells": 13551361,
+    "unknown_cells": 2713728,
+    "low_presence_cells": 6157099,
+    "medium_presence_cells": 1061783,
+    "high_presence_cells": 860548,
+    "height_review_cells": 341399,
+    "height_review_low_overlap": 336036,
+    "height_review_medium_overlap": 30709,
+    "height_review_high_overlap": 13198,
+    "height_review_partition": {
+      "with_high": 13198,
+      "low_or_medium_without_high": 328201,
+      "without_vegetation_class": 0
+    },
+    "height_review_building_overlap": 3,
+    "height_review_relief_overlap": 1326
+  },
+  "attribution": "Obra derivada de LiDAR-PNOA-cob3 2022-2025 CC-BY 4.0 scne.es",
+  "outputs": [
+    {
+      "path": "vegetation-presence.tif",
+      "size_bytes": 6422131,
+      "sha256": "640a901018b66099fc05d7b192d56e60240d43a998f8d53f9e547da573d901b4",
+      "logical_sha256": "fab3ba0eb7e7fb13f137a3d4b8dece181168c0a53fcdf8a5002fc73600328f00",
+      "bands": [
+        "low_source_class_3",
+        "medium_source_class_4",
+        "high_source_class_5"
+      ],
+      "nodata": 255
+    },
+    {
+      "path": "vegetation-review-flags.tif",
+      "size_bytes": 1709365,
+      "sha256": "a17699f2839999182672e3314b7e3022a0c87d685ad36e242a02cc8363813dcc",
+      "logical_sha256": "d0fa9f35eff5873737760bbe6d599d1509eb8805df53bb24e600749e47fa91e7",
+      "bands": [
+        "bit1_height_review_bit2_relief_review_bit4_source_building_overlap"
+      ],
+      "nodata": 255
+    }
+  ],
+  "fingerprint": "0846c33c2e8dfea4749e2d3360866831ea525286572c5f7b10aa94c427c22e69",
+  "manifest_sha256": "fbb59f61848cf86e2600a8817ca462fd0e38a25c3ae098d9a129b64dbdd3d98f",
+  "cache_relative_path": "vegetation-domains-v1a-2026-10-04",
+  "derived_bytes": 8131496,
+  "manifest_bytes": 3072,
+  "validation": "Independent readback PASS grid/dtype/NoData/logical hashes/source class and review consistency; 2/2 rasters plus full manifest byte-identical",
+  "human_visual_acceptance": {
+    "date": "2026-10-04",
+    "scope": "Owner visually accepts green preview vegetation character; pink may be shrubs as art interpretation",
+    "limits": "Does not validate normalized height, species, road safety, production graph or complete 2A",
+    "review_manifest_sha256": "d1bef514c2a234813167ac509746e021a4ac407c6e4e3b1800fb3e2873e6a51d"
+  }
+}

@@ -2763,6 +2763,81 @@
       "acquisition": {
         "restore": "Retained manual-cnig bytes; verify original provider receipt and exact SHA; remote Release transport remains in original catalog; no raw copy or re-download performed"
       }
+    },
+    {
+      "asset_id": "vegetation-domains-vegetation-presence",
+      "path": "vegetation-domains-v1a-2026-10-04/vegetation-presence.tif",
+      "size_bytes": 6422131,
+      "sha256": "640a901018b66099fc05d7b192d56e60240d43a998f8d53f9e547da573d901b4",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "lidar_masks_v1",
+      "depends_on": [
+        "lidar-masks-lidar-manifest"
+      ],
+      "acquisition": {
+        "restore": "Verified local copy or pinned vegetation-domain producer using retained derived LiDAR; no remote backup"
+      },
+      "provenance": {
+        "provider": "CNIG NPC03 retained source-class candidates",
+        "license": "Existing CNIG attribution/terms apply; raw not redistributed",
+        "attribution": "Obra derivada de LiDAR-PNOA-cob3 2022-2025 CC-BY 4.0 scne.es",
+        "authority": "Overlapping vegetation presence and review flags only; no species or planting permission"
+      }
+    },
+    {
+      "asset_id": "vegetation-domains-vegetation-review-flags",
+      "path": "vegetation-domains-v1a-2026-10-04/vegetation-review-flags.tif",
+      "size_bytes": 1709365,
+      "sha256": "a17699f2839999182672e3314b7e3022a0c87d685ad36e242a02cc8363813dcc",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "lidar_masks_v1",
+      "depends_on": [
+        "lidar-masks-lidar-manifest"
+      ],
+      "acquisition": {
+        "restore": "Verified local copy or pinned vegetation-domain producer using retained derived LiDAR; no remote backup"
+      },
+      "provenance": {
+        "provider": "CNIG NPC03 retained source-class candidates",
+        "license": "Existing CNIG attribution/terms apply; raw not redistributed",
+        "attribution": "Obra derivada de LiDAR-PNOA-cob3 2022-2025 CC-BY 4.0 scne.es",
+        "authority": "Overlapping vegetation presence and review flags only; no species or planting permission"
+      }
+    },
+    {
+      "asset_id": "vegetation-domains-vegetation-manifest",
+      "path": "vegetation-domains-v1a-2026-10-04/vegetation-manifest.json",
+      "size_bytes": 3072,
+      "sha256": "fbb59f61848cf86e2600a8817ca462fd0e38a25c3ae098d9a129b64dbdd3d98f",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "lidar_masks_v1",
+      "depends_on": [
+        "lidar-masks-lidar-manifest"
+      ],
+      "acquisition": {
+        "restore": "Verified local copy or pinned vegetation-domain producer using retained derived LiDAR; no remote backup"
+      },
+      "provenance": {
+        "provider": "CNIG NPC03 retained source-class candidates",
+        "license": "Existing CNIG attribution/terms apply; raw not redistributed",
+        "attribution": "Obra derivada de LiDAR-PNOA-cob3 2022-2025 CC-BY 4.0 scne.es",
+        "authority": "Overlapping vegetation presence and review flags only; no species or planting permission"
+      }
     }
   ],
   "profiles": {
@@ -3036,6 +3111,17 @@
         "lidar-review-review-overlay",
         "lidar-review-historical-context",
         "lidar-review-review-manifest"
+      ]
+    },
+    "sa-calobra-vegetation-domains-candidate": {
+      "description": "Separated source low/medium/high vegetation candidates with preserved uncertainty; not planting admission",
+      "extends": [
+        "sa-calobra-lidar-review-candidate"
+      ],
+      "requires": [
+        "vegetation-domains-vegetation-presence",
+        "vegetation-domains-vegetation-review-flags",
+        "vegetation-domains-vegetation-manifest"
       ]
     }
   },
@@ -3444,7 +3530,54 @@
       "review": "lidar-review-v1-2026-10-04: green class context, amber relief unchanged, magenta height-normalization review, session-only native sky; Unreal receipt separately required",
       "local_source_location": "Nine explicit working-cache aliases resolve existing manual-cnig files; original Release backend and receipt unchanged",
       "profile_correction": "Initial verification failed 9 source paths plus Release receipt under sources/ layout; registered existing world-data-cache location instead; no bytes duplicated or downloaded",
-      "native_proof": "Read separate lidar-review-v1-2026-10-04/unreal-review-proof.json; completion/hash is not inferred from catalog bytes"
+      "native_proof": "Read separate lidar-review-v1-2026-10-04/unreal-review-proof.json; completion/hash is not inferred from catalog bytes",
+      "human_visual_acceptance": {
+        "date": "2026-10-04",
+        "scope": "Owner visually accepts green preview vegetation character; pink may be shrubs as art interpretation",
+        "limits": "Does not validate normalized height, species, road safety, production graph or complete 2A",
+        "review_manifest_sha256": "d1bef514c2a234813167ac509746e021a4ac407c6e4e3b1800fb3e2873e6a51d"
+      }
+    },
+    "vegetation_domains_v1": {
+      "status": "VEGETATION_DOMAIN_CANDIDATE",
+      "profile": "sa-calobra-vegetation-domains-candidate",
+      "manifest": "vegetation-domains-v1a-2026-10-04/vegetation-manifest.json",
+      "fingerprint": "0846c33c2e8dfea4749e2d3360866831ea525286572c5f7b10aa94c427c22e69",
+      "counts": {
+        "observed_cells": 13551361,
+        "unknown_cells": 2713728,
+        "low_presence_cells": 6157099,
+        "medium_presence_cells": 1061783,
+        "high_presence_cells": 860548,
+        "height_review_cells": 341399,
+        "height_review_low_overlap": 336036,
+        "height_review_medium_overlap": 30709,
+        "height_review_high_overlap": 13198,
+        "height_review_partition": {
+          "with_high": 13198,
+          "low_or_medium_without_high": 328201,
+          "without_vegetation_class": 0
+        },
+        "height_review_building_overlap": 3,
+        "height_review_relief_overlap": 1326
+      },
+      "semantics": {
+        "presence": "Three overlapping bands: 1=source class present; 0=no return of that class, not proven absence; 255=no accepted samples",
+        "review_flags": "bit1 invalid/negative height; bit2 relief>10m; bit4 source building overlap; 255 unknown; not complete safety exclusions",
+        "height": "Existing unknown heights remain unknown; class presence does not repair normalization",
+        "character": "Low may represent grass/low shrubs; medium/high do not identify species or individual tree positions",
+        "audit": "Overlap counts are not additive; height_review_partition is disjoint"
+      },
+      "geometry_mutation": false,
+      "planting": "BLOCKED pending admitted current-cover and road/safety/BOB exclusions",
+      "human_visual_acceptance": {
+        "date": "2026-10-04",
+        "scope": "Owner visually accepts green preview vegetation character; pink may be shrubs as art interpretation",
+        "limits": "Does not validate normalized height, species, road safety, production graph or complete 2A",
+        "review_manifest_sha256": "d1bef514c2a234813167ac509746e021a4ac407c6e4e3b1800fb3e2873e6a51d"
+      },
+      "restore": "Verified local copies or pinned producer using retained derived LiDAR; no raw download/new dependency; no remote backup",
+      "determinism": "2/2 raster byte+logical identities and full manifest identical across clean preparations; independent readback PASS"
     }
   }
 }

@@ -1602,6 +1602,23 @@ actors do not alter frozen terrain/road or persist into the map. Source API
 authority: version-matched Epic Sky Atmosphere documentation and installed
 SkyAtmosphereComponent/DirectionalLightComponent headers.
 
+Owner follow-up, 2026-10-04: the green vegetation preview is visually accepted;
+pink may be shrubs as an environment-art interpretation. This accepts the broad
+vegetation character, not height normalization, species, planting eligibility,
+collision or whole-2A completion. Keep the existing magenta review legend.
+`scripts/assets/prepare_sa_calobra_vegetation_domains.py` separates overlapping
+low/medium/high source-class presence into three native-grid bands, with unknown
+samples and height/relief/building-overlap review flags preserved separately.
+Class evidence remains usable for domain review even where normalized height is
+unknown; it never repairs that height or emits a planting permission.
+
+Of 341,399 height-review cells, 336,036 contain class 3; 328,201 contain low or
+medium vegetation without class 5, and 13,198 contain class 5. Those last two
+counts partition the review cells. Class-overlap counts must not be added.
+Low vegetation can be grass or low shrubs; high vegetation may also include
+shrubs. Do not infer species or exact tree placement from these classes.
+See the [vegetation-domain receipt](../worldgen/terrain/benchmarks/sa_calobra/world_data/vegetation_domains_receipt_2026-10-04.json).
+
 #### Placement evidence handoff candidate (Issue #335)
 
 `scripts/assets/prepare_sa_calobra_placement_handoff.py` prepares a separate

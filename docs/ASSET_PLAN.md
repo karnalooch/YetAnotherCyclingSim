@@ -705,3 +705,13 @@ zamrożona geometria pozostają read-only. Licencje narzędzi i notices:
 Podgląd LiDAR korzysta z osobnych przygotowanych obrazów; nowe niebo/słońce w UE
 jest tylko w sesji podglądu i nie zapisuje się w istniejącej mapie. Wykluczenia
 drogi/BOB i dopuszczenie do produkcyjnego PCGEx pozostają osobnymi wymaganiami.
+
+Właściciel zaakceptował wizualnie zieloną roślinność i dopuścił krzaki jako
+interpretację różowych obszarów. Osobny kandydat `vegetation-domains-v1a-2026-10-04`
+zachowuje trzy nakładające się domeny klas LiDAR: niską, średnią i wysoką.
+Różowy nadal oznacza niepewną normalizację wysokości; nie zmieniamy go w
+automatycznie potwierdzone krzaki. 328 201 z 341 399 takich cells zawiera niską
+lub średnią roślinność bez wysokiej, a 13 198 także wysoką. Dwa rastry i manifest
+są poza Git, z osobnym receipt, identities i restore w Julce. Brak próbek
+pozostaje unknown, a budynki i relief mają osobne review flags. Nie zmieniono
+terenu, drogi, istniejących masek wysokości ani materiału aktualnego podglądu.
