@@ -1859,6 +1859,141 @@
         "receipt": "normalized_context_receipt_2026-10-04.json",
         "authority": "GIS candidate, no UE integration or whole-2A acceptance"
       }
+    },
+    {
+      "asset_id": "mask-review-historical-context",
+      "path": "mask-review-v1a-2026-10-04/historical-context.png",
+      "size_bytes": 121270,
+      "sha256": "4ee4131061ee12ee7a20b4d5c2cccd27a5cb9091fa80f99831029cae81c45d3e",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "mask_review_v1",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-roughness",
+        "normalized-catastro-mapped-footprint",
+        "normalized-siose-2014-feature-index"
+      ],
+      "acquisition": {
+        "restore": "Retained local paths plus hash verification or pinned mask-review regeneration; no remote backup"
+      },
+      "provenance": {
+        "provider": "Verified PNOA orthophoto / normalized DTM / Catastro / SIOSE context",
+        "license": "Existing IGN/SITIBSA/GOIB/Catastro derivative notices apply; raw remains outside Git",
+        "authority": "Diagnostic mask context on frozen geometry; no current biome or road admission"
+      }
+    },
+    {
+      "asset_id": "mask-review-orthophoto",
+      "path": "mask-review-v1a-2026-10-04/orthophoto.png",
+      "size_bytes": 37058260,
+      "sha256": "36eb65995ccd9ff7b8d169a208f97d2f3c6729c97053c5a5fcba4b3a6c62faa5",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "mask_review_v1",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-roughness",
+        "normalized-catastro-mapped-footprint",
+        "normalized-siose-2014-feature-index"
+      ],
+      "acquisition": {
+        "restore": "Retained local paths plus hash verification or pinned mask-review regeneration; no remote backup"
+      },
+      "provenance": {
+        "provider": "Verified PNOA orthophoto / normalized DTM / Catastro / SIOSE context",
+        "license": "Existing IGN/SITIBSA/GOIB/Catastro derivative notices apply; raw remains outside Git",
+        "authority": "Diagnostic mask context on frozen geometry; no current biome or road admission"
+      }
+    },
+    {
+      "asset_id": "mask-review-review-class",
+      "path": "mask-review-v1a-2026-10-04/review-class.tif",
+      "size_bytes": 118006,
+      "sha256": "fa91d8a778f1da6f418a2736ccbf650aec6a246fd571d908fec62a8289b1904c",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "mask_review_v1",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-roughness",
+        "normalized-catastro-mapped-footprint",
+        "normalized-siose-2014-feature-index"
+      ],
+      "acquisition": {
+        "restore": "Retained local paths plus hash verification or pinned mask-review regeneration; no remote backup"
+      },
+      "provenance": {
+        "provider": "Verified PNOA orthophoto / normalized DTM / Catastro / SIOSE context",
+        "license": "Existing IGN/SITIBSA/GOIB/Catastro derivative notices apply; raw remains outside Git",
+        "authority": "Diagnostic mask context on frozen geometry; no current biome or road admission"
+      }
+    },
+    {
+      "asset_id": "mask-review-review-overlay",
+      "path": "mask-review-v1a-2026-10-04/review-overlay.png",
+      "size_bytes": 37089287,
+      "sha256": "edbda5733c3f137b4ee0b88be0afa48fd24014b8813ac55136e0b4bd0549e586",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "mask_review_v1",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-roughness",
+        "normalized-catastro-mapped-footprint",
+        "normalized-siose-2014-feature-index"
+      ],
+      "acquisition": {
+        "restore": "Retained local paths plus hash verification or pinned mask-review regeneration; no remote backup"
+      },
+      "provenance": {
+        "provider": "Verified PNOA orthophoto / normalized DTM / Catastro / SIOSE context",
+        "license": "Existing IGN/SITIBSA/GOIB/Catastro derivative notices apply; raw remains outside Git",
+        "authority": "Diagnostic mask context on frozen geometry; no current biome or road admission"
+      }
+    },
+    {
+      "asset_id": "mask-review-review-manifest",
+      "path": "mask-review-v1a-2026-10-04/review-manifest.json",
+      "size_bytes": 10645,
+      "sha256": "4d077a75150f2e08d68e2a2687b7079eba2aad35138efb0c6fbd6fc74a39013c",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "mask_review_v1",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-roughness",
+        "normalized-catastro-mapped-footprint",
+        "normalized-siose-2014-feature-index"
+      ],
+      "acquisition": {
+        "restore": "Retained local paths plus hash verification or pinned mask-review regeneration; no remote backup"
+      },
+      "provenance": {
+        "provider": "Verified PNOA orthophoto / normalized DTM / Catastro / SIOSE context",
+        "license": "Existing IGN/SITIBSA/GOIB/Catastro derivative notices apply; raw remains outside Git",
+        "authority": "Diagnostic mask context on frozen geometry; no current biome or road admission"
+      }
     }
   ],
   "profiles": {
@@ -2060,6 +2195,19 @@
         "route_safety_corridor",
         "bob_cut_fill_inner_outer_edge"
       ]
+    },
+    "sa-calobra-mask-review-candidate": {
+      "description": "61 pinned source/context/review files; not whole-2A or human visual acceptance",
+      "extends": [
+        "sa-calobra-2a-context-candidate"
+      ],
+      "requires": [
+        "mask-review-historical-context",
+        "mask-review-orthophoto",
+        "mask-review-review-class",
+        "mask-review-review-overlay",
+        "mask-review-review-manifest"
+      ]
     }
   },
   "gis_metadata_profiles": {
@@ -2125,6 +2273,15 @@
       "resolution_or_density": "official municipal polygon; coastline modified against MTIB 1:5000",
       "classification": "coverage evidence, not terrain or road authority",
       "nodata": "incomplete/mismatched municipality fails closed"
+    },
+    "mask_review_v1": {
+      "xy_crs": "EPSG:25831",
+      "xy_unit": "metres",
+      "vertical_datum": "No new ground heights; existing Base_DTM read-only",
+      "footprint": "Current 4033x4033 working AOI only",
+      "resolution_or_density": "0.5 m native-grid raster; UV includes half-pixel registration",
+      "classification": "Amber relief review, cyan mapped building, gray unknown; historical object identity separate",
+      "nodata": "Diagnostic 3 unknown, raster NoData 255"
     }
   },
   "source_registry": {
@@ -2344,6 +2501,43 @@
       "visual_status": "agent alignment review; human acceptance pending; high local-relief diagnostics retained",
       "restore": "copy retained outputs with exact hashes or regenerate from pinned recipe, sources and versions; no remote backup",
       "receipt": "normalized_context_receipt_2026-10-04.json"
+    },
+    "mask_review_v1": {
+      "status": "diagnostic_candidate",
+      "profile": "sa-calobra-mask-review-candidate",
+      "geometry_mutation": false,
+      "manifest": "mask-review-v1a-2026-10-04/review-manifest.json",
+      "counts": {
+        "0": 16227403,
+        "1": 34995,
+        "2": 2592,
+        "3": 99
+      },
+      "legend": {
+        "amber": "native 3x3 relief >10m; review only, NOT confirmed terrain error",
+        "cyan": "mapped Catastro footprint candidate; NOT freshness/completeness proof",
+        "gray": "unknown evidence / imagery gap",
+        "unchanged_ortho": "source context, NOT an alignment or geometry PASS",
+        "historical_colors": "SIOSE 2014 object identity, NOT current biome classes",
+        "red": "reserved for measured disagreement; none fabricated from relief"
+      },
+      "consumer_proof": "Read separate unreal-review-proof.json under mask-review-v1b-2026-10-04; completion never inferred from byte profile",
+      "frozen_map_sha256": "5eadda8c9dfbed47f9e5dbffd96b354f11baa4549cb1940d56ec7857a90e0ac0",
+      "compiled_project_commit": "fa52453a8818db70e3dbef73fe485f8d55b60247",
+      "restore": "Local copies or producer regeneration; UE captures require existing compiled project and frozen map; no remote backup",
+      "blocked_layers": [
+        "current_land_cover_with_confidence",
+        "lidar_class_occupancy",
+        "canopy_height",
+        "canopy_density",
+        "water_infrastructure_exclusions",
+        "road_footprint",
+        "shoulder",
+        "road_distance",
+        "route_safety_corridor",
+        "bob_cut_fill_inner_outer_edge"
+      ],
+      "human_visual_acceptance": "PENDING"
     }
   }
 }

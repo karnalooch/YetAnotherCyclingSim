@@ -63,7 +63,9 @@ def snapshot():
     return {
         "transform": str(landscape.get_actor_transform()),
         "components": len(landscape.get_components_by_class(unreal.LandscapeComponent)),
-        "layers": [layer.get_name_bp() for layer in landscape.get_edit_layers_bp()],
+        "layers": [
+            str(layer.get_name_bp()) for layer in landscape.get_edit_layers_bp()
+        ],
         "actors": sorted(
             (a.get_path_name(), str(a.get_actor_transform()))
             for a in state["original_actors"]

@@ -666,3 +666,12 @@ ani przesuwania go o 50 cm. Swoboda dekoracyjna respektuje budynki, domeny świa
 i wykluczenia/bezpieczeństwo drogi. Podgląd kolorowych masek służy przeglądowi
 rozbieżności; poprawiamy przetwarzanie i wyrównanie masek, nie zamrożoną geometrię.
 Kontrakt normatywny: [World Building Bible, sekcja 5.3](WORLD_BUILDING_BIBLE.md#53-world-data-stack--spatial-evidence-before-presentation).
+
+## Frozen Landscape mask review candidate — 2026-10-04
+
+Trzy obrazy kontekstu/podglądu, raster klas diagnostycznych i manifest mają
+osobne identities Julki (`sa-calobra-mask-review-candidate`, 61 plików z closure).
+Podgląd w UE używa istniejącej mapy i materiałów tylko w sesji; nie zapisuje
+assetów/mapy ani nie zmienia geometrii. Amber = relief do przeglądu, cyan =
+mapped Catastro candidate, gray = unknown. Kolory SIOSE oznaczają historyczne
+obiekty, nie aktualny biome. Pozostałe maski 2A nadal wymagają dopuszczenia.

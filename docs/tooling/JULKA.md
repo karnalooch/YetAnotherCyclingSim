@@ -162,3 +162,13 @@ remains nonzero for missing current-land-cover, LiDAR/canopy, water/infrastructu
 and road/BOB layers. GIS read/hash PASS is not Unreal or human visual acceptance.
 Restore is local-only copying plus hash verification, or pinned regeneration;
 no remote backup is registered. See the [normalized report](../../worldgen/terrain/benchmarks/sa_calobra/world_data/NORMALIZED_CONTEXT_2026-10-04.md).
+
+## Frozen Landscape mask review candidate — 2026-10-04
+
+`sa-calobra-mask-review-candidate` adds five pinned identities to the existing
+candidate closure: three native-grid context/review PNGs, one diagnostic class
+raster and their manifest (61 total files). `explain mask_review_v1` describes
+colors, pixel-center registration, frozen map identity and remaining blocked
+layers. Restore remains local-only copying and hash verification, or pinned
+producer regeneration; an Unreal render is a separate receipt, never inferred
+from byte PASS. No new terrain, road or current-biome authority is admitted.
