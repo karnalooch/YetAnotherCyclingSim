@@ -251,3 +251,84 @@ for start in range(0,len(samples),4):
 (OUT/'targeted-audit.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf8')
 print(json.dumps(report,indent=2))
 ```
+
+## Saved review-marker recipe
+
+Run after the analysis above: `.venv/Scripts/python.exe D:/yacs/work/surface-coverage-audit-2026-10-04/mark_review.py`. This saves local review imagery and a georeferenced flag raster; it never applies a material in Unreal. The Polish figure captions are owner-facing labels, preserved verbatim in the source. Arial is read from the existing Windows fonts directory.
+
+### `mark_review.py`
+
+Executed file SHA-256: `3419727919b4adcac5de2e28f034c4f07212b119b79284150c8be048226cbfa9`.
+
+```python
+"""Persist diagnostic review colors from measured flags, without class changes."""
+import json
+from pathlib import Path
+import numpy as np
+import rasterio
+from PIL import Image, ImageDraw, ImageFont
+from scipy import ndimage
+from analyze import ROOT, OUT, NAMES, read, digest
+
+surface=read('surface','surface-class-candidate.tif')
+counts=read('lidar','class-counts.tif')
+observed=counts.sum(0,dtype=np.uint64)>0
+distance=ndimage.distance_transform_edt(~observed,sampling=.5)
+report=json.loads((OUT/'audit.json').read_text())
+for row in report['inputs'].values():
+    assert digest(Path(row['manifest']))==row['sha256']
+red=surface==0
+orange=(~observed)&(distance>1.0)
+flags=np.zeros(surface.shape,dtype=np.uint8)
+flags[red]=1
+flags[orange]=2
+ortho_path=ROOT/NAMES['review'][0]/'orthophoto.png'
+surface_path=ROOT/NAMES['surface'][0]/'surface-class-candidate.tif'
+before={str(p):digest(p) for p in [ortho_path,surface_path]}
+rgb=np.asarray(Image.open(ortho_path).convert('RGB')).astype(np.float32)
+rgb[red]=.35*rgb[red]+.65*np.array([240,35,45],np.float32)
+rgb[orange]=.2*rgb[orange]+.8*np.array([255,155,20],np.float32)
+overlay=Image.fromarray(np.rint(rgb).astype(np.uint8))
+overlay.save(OUT/'problem-overlay-native.png')
+with rasterio.open(surface_path) as ds:profile=ds.profile
+with rasterio.open(OUT/'problem-review-flags.tif','w',**{**profile,'dtype':'uint8','count':1,'nodata':None,'compress':'DEFLATE'}) as ds:ds.write(flags,1)
+with rasterio.open(OUT/'problem-review-flags.tif') as ds:
+    assert np.array_equal(ds.read(1),flags)
+    assert ds.transform==profile['transform']
+# A labelled overview is separate from the correctly registered native texture.
+size=1600;left=75;top=140
+board=Image.new('RGB',(1750,1960),'#f5f4f0');draw=ImageDraw.Draw(board)
+font_path='C:/Windows/Fonts/arial.ttf'
+font=ImageFont.truetype(font_path,24);small=ImageFont.truetype(font_path,18);title=ImageFont.truetype(font_path,31)
+draw.text((left,25),'Sa Calobra — miejsca do późniejszego przeglądu',font=title,fill='#17202a')
+draw.text((left,70),'Cały obszar 2016,5 × 2016,5 m • północ u góry • stan 04.10.2026',font=font,fill='#17202a')
+board.paste(overlay.resize((size,size),Image.Resampling.BILINEAR),(left,top))
+for n in range(9):
+    z=round(n*size/8)
+    draw.line((left+z,top,left+z,top+size),fill='#dedbd4',width=1)
+    draw.line((left,top+z,left+size,top+z),fill='#dedbd4',width=1)
+    if n<8:
+        draw.text((left+z+size/16-15,top-29),f'C{n+1}',font=small,fill='#17202a')
+        draw.text((15,top+z+size/16-10),f'R{n+1}',font=small,fill='#17202a')
+markers=[]
+for i,entry in enumerate(report['unresolved_components_8']['largest'][:5],1):
+    r0,r1,c0,c1=entry['bounds_pixels_r0_r1_c0_c1']
+    box=(left+c0/4033*size,top+r0/4033*size,left+c1/4033*size,top+r1/4033*size)
+    draw.rectangle(box,outline='white',width=7)
+    draw.rectangle(box,outline='#e31b2e',width=3)
+    bx,by=box[0],box[1]
+    draw.rectangle((bx,by,bx+49,by+31),fill='#e31b2e')
+    draw.text((bx+6,by+2),f'P{i}',font=font,fill='white')
+    markers.append({'id':f'P{i}',**entry})
+y=1770
+draw.rectangle((left,y,left+24,y+24),fill='#f0232d');draw.text((left+38,y-2),'Czerwony: powierzchnia nierozstrzygnięta mimo próbek LiDAR (20,98%).',font=font,fill='#17202a')
+draw.rectangle((left,y+42,left+24,y+66),fill='#ff9b14');draw.text((left+38,y+40),'Pomarańczowy: brak próbki dalej niż 1 m od najbliższej obserwacji.',font=font,fill='#17202a')
+draw.text((left,y+83),'P1–P5: obwiednie największych skupisk nierozstrzygniętych komórek; nie całe prostokąty.',font=small,fill='#17202a')
+draw.text((left,y+113),'Brak koloru nie oznacza potwierdzonej poprawności. Próg 1 m służy tylko przeglądowi.',font=small,fill='#17202a')
+draw.text((left,y+143),'Źródło: PNOA / LiDAR-PNOA CC-BY 4.0 scne.es. Geometria i klasy źródłowe bez zmian.',font=small,fill='#17202a')
+board.save(OUT/'problem-review-map.png')
+assert before=={p:digest(Path(p)) for p in before}
+receipt={'status':'SAVED_REVIEW_MARKERS_ONLY','script_sha256':digest(Path(__file__)),'grid':report['grid'],'legend':{'0':'not highlighted; not validated','1':'observed unresolved surface; red','2':'no accepted LiDAR return and nearest observed cell center >1m; orange; diagnostic threshold only'},'counts':{str(k):int((flags==k).sum()) for k in [0,1,2]},'source_hashes':before,'source_manifests':report['inputs'],'markers':markers,'geometry_mutation':False,'source_classes_modified':False,'unreal_applied':False,'saved_map_modified':False,'outputs':[{ 'path':p,'sha256':digest(OUT/p),'size_bytes':(OUT/p).stat().st_size} for p in ['problem-overlay-native.png','problem-review-flags.tif','problem-review-map.png']]}
+(OUT/'problem-review-manifest.json').write_text(json.dumps(receipt,indent=2)+'\n',encoding='utf8')
+print(json.dumps({k:v for k,v in receipt.items() if k in ['status','counts','unreal_applied','outputs']},indent=2))
+```

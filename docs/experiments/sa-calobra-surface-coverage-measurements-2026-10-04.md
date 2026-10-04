@@ -151,3 +151,23 @@ The full JSON measurements and source-image comparisons remain under the workspa
 ## Interpretation constraints
 
 The reference input is a candidate, not independent ground truth. No confusion matrix or calibrated accuracy follows from these totals. Raw occupancy and displayed no-LiDAR labels have different counts because other mapped evidence can label empty LiDAR cells. No unknown cell was relabeled in this audit.
+
+## Saved problem-marker identity
+
+The following local outputs preserve the owner-requested red/orange annotations. They are not applied to the Unreal scene.
+
+| Output | SHA-256 | Bytes |
+|---|---|---:|
+| `problem-overlay-native.png` | `405340f4637c120e344c6240f761c6c8d328f3e77baeac039c866455462e9c75` | 40983423 |
+| `problem-review-flags.tif` | `bf008c4815d66a1552e8eb0c91ae7436d21b7d47b8c8500f27c0389067a40526` | 2074003 |
+| `problem-review-map.png` | `006137788a001006e391d3091bf2532b2f2e72bdbd241abbece341eed7c12b22` | 5902012 |
+
+| Marker | Component area (m²) | Bounds E min, N min, E max, N max (m) |
+|---|---:|---|
+| P1 | 33421.0 | 483336.5, 4408446.5, 483651.0, 4408919.0 |
+| P2 | 5136.5 | 483269.5, 4408564.5, 483369.0, 4408860.5 |
+| P3 | 4553.75 | 483155.0, 4408577.0, 483286.0, 4408761.5 |
+| P4 | 4317.5 | 484489.0, 4408677.5, 484780.5, 4408837.0 |
+| P5 | 4195.25 | 483646.0, 4408835.0, 483779.0, 4408972.5 |
+
+Flag values: 0 = not highlighted (not validated); 1 = unresolved surface, red; 2 = no accepted LiDAR return and nearest observed center farther than 1 m, orange. Counts: 12,845,635 / 3,412,576 / 6,878 respectively. Raster readback and source-image/class-raster before/after hashes passed.

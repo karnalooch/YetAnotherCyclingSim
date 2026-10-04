@@ -176,6 +176,30 @@ consistency check, not independent validation. There are no field labels,
 independent dated imagery checks, calibrated confidence, owner visual acceptance,
 new Unreal captures or whole-Landscape performance measurements in this audit.
 
+## Saved problem markers for later owner review
+
+At the owner's request, `work/surface-coverage-audit-2026-10-04` now retains
+`problem-review-map.png`, a labelled full-area map, and
+`problem-overlay-native.png`, an unlabelled 4033-square registered overlay.
+`problem-review-flags.tif` and `problem-review-manifest.json` preserve grid,
+semantics, source identities and marker coordinates for later reopening.
+
+- **Red:** exactly the 3,412,576 observed-but-unresolved surface cells.
+- **Orange:** the 6,878 raw empty cells whose nearest observed cell center is
+  farther than 1 m. This is a review-display choice, not an acceptance threshold.
+- **P1–P5:** bounding rectangles of the five largest eight-connected unresolved
+  components. A rectangle is a navigation aid; its entire interior is not
+  labelled as a problem.
+- Uncolored cells are not certified correct. Rock/soil candidates still need
+  independent validation.
+
+The owner-facing figure has a Polish legend and an 8 × 8 sector grid. The native
+texture has no labels or margins, so its original georegistration is retained.
+Flag raster readback and unchanged input hashes passed; the overview was visually
+inspected. These files are durable **local review artifacts**, not saved Unreal
+assets, remote imagery backups or changes to the live Landscape material. No
+new editor consumer was implemented or applied. The owner deferred joint review.
+
 ## Recommended next bounded action
 
 1. Keep raw 0.5 m occupancy, sampling support at an explicit coarser scale,
