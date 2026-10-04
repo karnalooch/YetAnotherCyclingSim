@@ -19,7 +19,7 @@ $map=Join-Path $projectRoot 'Content/Worlds/SaCalobra/L_SaCalobraTerrainBaseline
 if (-not (Test-Path -LiteralPath $map)) { throw 'Existing frozen map missing; do not generate or import it.' }
 . (Join-Path $repo 'scripts/ci/Resolve-YacsUnrealEngine.ps1')
 $engine=Resolve-YacsUnrealEngine -ProjectPath $ProjectPath
-$version=Get-Content -LiteralPath (Join-Path $engine.EngineRoot 'Engine/Build/Build.version') -Raw | ConvertFrom-Json
+$version=Get-Content -LiteralPath (Join-Path $engine.Root 'Engine/Build/Build.version') -Raw | ConvertFrom-Json
 if ($version.MajorVersion -ne 5 -or $version.MinorVersion -ne 8 -or $version.PatchVersion -ne 2) { throw 'Reviewed engine version must be 5.8.2.' }
 $env:YACS_MASK_REVIEW_ROOT=$ReviewRoot
 $env:YACS_MASK_REVIEW_SHA=$ExpectedHead
