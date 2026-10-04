@@ -652,3 +652,17 @@ Julka: profil candidate 56/56 hashów PASS; pełny World Authority nadal FAIL dl
 brakujących warstw. Status `candidate`, bez integracji UE i bez human visual
 acceptance. Duże lokalne różnice wysokości DTM pozostają do przeglądu.
 [Raport i provenance](../worldgen/terrain/benchmarks/sa_calobra/world_data/NORMALIZED_CONTEXT_2026-10-04.md).
+
+## Frozen geometry and environment fidelity — 2026-10-04
+
+Decyzja właściciela dla Issue #335: istniejący teren i drogi są zamrożone.
+Maski dopasowujemy do obecnego Landscape i kontraktu współrzędnych drogi;
+nie zmieniamy wysokości, geometrii ani earthworks i nie importujemy nowej heightmapy.
+Droga, położenie/obrysy budynków i Landscape zachowują zgodność 1:1 w granicach
+wiarygodności dopuszczonych źródeł. Nieznane lub sprzeczne dane pozostają jawne.
+Otoczenie ma możliwie wiernie oddawać klimat miejsca: domeny roślinności/skał,
+gęstość, charakter koron i ważne widoki. Nie wymagamy kopii pozycji każdego drzewa
+ani przesuwania go o 50 cm. Swoboda dekoracyjna respektuje budynki, domeny świata
+i wykluczenia/bezpieczeństwo drogi. Podgląd kolorowych masek służy przeglądowi
+rozbieżności; poprawiamy przetwarzanie i wyrównanie masek, nie zamrożoną geometrię.
+Kontrakt normatywny: [World Building Bible, sekcja 5.3](WORLD_BUILDING_BIBLE.md#53-world-data-stack--spatial-evidence-before-presentation).

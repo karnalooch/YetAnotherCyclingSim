@@ -82,7 +82,7 @@ Owner decision, 2026-10-02: YACS must reconstruct the real place rather than cre
 - PCG, PCGEx, Houdini, Landscape tools and future generators are **reconstruction executors**, not geographic authorities. They consume World Authority outputs and may vary asset identity or sub-source decorative detail only within explicit confidence bounds.
 - Lower-detail macro terrain, HLOD, World Partition cells, streaming proxies, caches and processing tiles are implementation choices. Their boundaries must not be visible as changes to geography and must not alter metric route distance.
 
-**Allowed presentation freedom** includes exact foliage mesh variants, bark/material variation, grass blades, small scatter rocks and other details that are not asserted as measured geographic facts. Where LiDAR or another source provides a measured object position, canopy structure, building footprint or similar evidence, presentation should preserve that evidence rather than replace it with unconstrained random placement.
+**Allowed presentation freedom** includes exact foliage mesh variants, bark/material variation, grass blades, small scatter rocks and other details that are not asserted as measured geographic facts. Owner clarification, 2026-10-04: roads, building placement/footprints and Landscape preserve 1:1 metric alignment within admitted source accuracy. Surroundings prioritize the character of the real place: meaningful vegetation/open-ground/rock domains, density, canopy character and scenic cues. Individual tree, shrub and small decorative-rock positions are not scan-replication acceptance criteria, even when measured positions exist; a 50 cm tree offset alone does not justify correction work. Placement freedom remains constrained by buildings, road safety/exclusions and meaningful landscape domains.
 
 Source uncertainty remains explicit. If two sources disagree, YACS records and resolves the conflict according to evidence strength; it does not hide uncertainty by moving terrain or objects until the image looks plausible.
 
@@ -1502,6 +1502,31 @@ BTN thematic context. Classic SIOSE is historical/coarse context only unless a
 specific proof shows it adds value. The accepted `Base_DTM`, canonical road XY and
 BOB road-earthworks authority remain unchanged.
 
+
+#### Frozen geometry and mask review (Issue #335)
+
+Owner decision, 2026-10-04: the existing terrain and roads are frozen for this
+2A task. Fit normalized masks to the existing Landscape and road coordinate
+contract. Do not change Base_DTM, Landscape heights/topology, road geometry or
+BOB earthworks; do not reimport a heightmap or add terrain smoothing to make
+source evidence agree. Existing elevation is a read-only input to derivatives,
+not a request to create or replace terrain.
+
+Roads, building placement/footprints and Landscape retain source-faithful 1:1
+metric scale and alignment within admitted source accuracy. Preserve unknown
+or conflicting building evidence for review. Environmental dressing aims to
+retain the real place's character as closely as practical, without reproducing
+each individual tree position. Source-based broad domains, density/canopy
+character and exclusions constrain that freedom; individual foliage offsets
+such as 50 cm are not acceptance defects by themselves.
+
+The bounded consumer-readiness proof may display diagnostic color masks on
+existing geometry. Distinguish source context, measured disagreement and unknown
+or insufficient evidence with an explicit legend. Repair mask derivation,
+CRS/grid/axis/registration errors, not frozen geometry. High native DTM relief
+alone is not evidence of a Landscape error. Unresolved disagreements stay
+visible for owner review. This diagnostic overlay does not implement production
+2B materials or later PCG dressing.
 
 #### Working-space normalization candidate (Issue #335)
 
