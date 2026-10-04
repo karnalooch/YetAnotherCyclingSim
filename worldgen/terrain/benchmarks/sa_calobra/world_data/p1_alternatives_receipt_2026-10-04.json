@@ -190,5 +190,7 @@
     }
   },
   "persistent_root": "_yacs-world-data/sa-calobra-working-v1/p1-alternatives-2026-10-04",
-  "acquisition_code_sha256": "ec066f3f1eb36b7fe5dd143fa544dfc902265fb75603b0bea9c3550e69d75ce5"
+  "acquisition_code_sha256": "ec066f3f1eb36b7fe5dd143fa544dfc902265fb75603b0bea9c3550e69d75ce5",
+  "acquisition_code_git_blob_sha256": "42da03f769b7aafce48a36d9a07e233b61c06db8053b5e46869c85b0bd9b9894",
+  "acquisition_code_hash_note": "acquisition_code_sha256 identifies executed Windows working-copy bytes; acquisition_code_git_blob_sha256 identifies LF-normalized Git source bytes."
 }
