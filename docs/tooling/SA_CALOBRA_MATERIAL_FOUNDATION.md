@@ -95,6 +95,45 @@ review(4)  # Central ground; 0 through 8 select distributed grid views.
 review(restore=True)
 ```
 
+`capture_ground_views(<new output directory>)` captures those nine views
+serially with native editor screenshot tasks and records PNG hashes. It checks
+task completion, a bounded timeout and the current run's engine errors. A
+completed capture is not clean render admission. The first nine-view run
+produced every PNG but logged UE's handled ensure at `RayTracing.cpp:1031`:
+`Dynamic ray tracing instance skipped because geometry 'None' is evicted.`
+The editor remained open; the cause and affected geometry are unverified.
+Retain the diagnostic log, isolate the same camera/material consumer and resolve
+or explicitly triage the renderer issue before runtime admission. Do not infer
+an out-of-memory cause or disable ray tracing to manufacture a passing proof.
+
+`scripts/ue/consume_saved_sa_calobra_material_foundation.py` verifies saved asset,
+recipe, producer and map hashes before loading the saved material onto an
+already loaded map. It verifies all component roots and the frozen scene, without
+authoring another material or saving a map. Its `require_fresh=True` option
+rejects an already resident candidate, so a live reapplication cannot be called
+a fresh-process reload. Run fresh-consumer proof in an isolated verification
+checkout; preserve the owner's existing editor session.
+
+For an A/B comparison in the current authoring session, `baseline=True` selects
+only the original material retained by the authoring cache; `restore=True`
+returns to the material present before that comparison. Both paths verify all
+1024 component roots and the frozen scene. The first same-camera comparison
+showed grid artifacts in the preceding diagnostic material as well as sharp
+rock transitions in the PBR candidate. This is diagnostic evidence, not permission
+to repair frozen geometry or promote deferred cover classes. Missing engine-log
+diagnostics are explicitly reported as unavailable rather than a clean capture.
+
+`verify_saved_sa_calobra_material_foundation.py` is the fresh-process entrypoint.
+It rejects the canonical authoring checkout, an unexpected Git HEAD or existing
+evidence, loads only the pinned saved map and calls the saved consumer with
+`require_fresh=True`. Set `YACS_2B_EXPECTED_HEAD` and `YACS_2B_RELOAD_REPORT` in
+an isolated checkout and execute via UE's Python commandlet. A NullRHI run proves
+saved data consumption and bounded scene invariants, not shaders, a rendered
+frame, GPU performance or a compiled future C++ revision. Reuse binaries only
+under the existing compile-reuse policy; never build the open authoring project.
+Loading follows UE 5.8's installed `FileHelpers.h` and Epic's
+[Python command-line workflow](https://dev.epicgames.com/documentation/en-us/unreal-engine/scripting-the-unreal-editor-using-python).
+
 ## Version-matched tools audit
 
 Verified editor: UE 5.8.2, changelist 56702186. Consulted Epic's
