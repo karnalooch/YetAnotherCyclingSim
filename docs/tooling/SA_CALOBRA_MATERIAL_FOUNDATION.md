@@ -27,6 +27,13 @@ changes source masks nor fills unknown pixels. Quantized RGB sums stay <=255;
 the material uses the remaining weight for neutral ground. The deferred red
 review overlay and unadmitted diagnostic rock/soil candidates are not inputs.
 
+The neutral ground is a configurable decorative PBR fallback reusing
+`sparse_grass`, with separate neutral tint/roughness scale. Its normal and
+roughness detail avoids a flat-color boundary against textured ground. This
+does not assert grass/soil cover in excluded or unknown pixels; their evidence
+and planting weights remain zero. Full source uncertainty is retained in the
+manifests and the deferred diagnostic review, not encoded as a false biome.
+
 An existing output directory is never overwritten. New recipe/input revisions
 retain preceding evidence. Each manifest records producer, sources, bytes,
 logical raster hash, grid and world mapping.
@@ -42,6 +49,9 @@ no geographic admission.
 
 `scripts/ue/inspect_sa_calobra_material_foundation.py` reads the installed
 functions' pins/default descriptions and the current actor inventory.
+It also follows each component material's parent chain to confirm the visible
+consumer, rather than checking only the Landscape actor property. The first
+saved candidate matched all 1024 component roots in the live editor.
 `scripts/ue/sa_calobra_material_foundation.py` runs in the existing editor:
 
 ```python
@@ -66,6 +76,24 @@ Default application saves neither assets nor the map; UE may independently
 autosave recovery copies under ignored `Saved/Autosaves`. Preserve the owner's
 other dirty packages. Asset saving is explicit and limited to the new material
 and packed texture; never use Save All or save the owner's map as a shortcut.
+The portable receipt `worldgen/materials/sa_calobra_foundation_asset.json` pins
+the saved candidate, recipe, producer and input identities. Saved assets and
+live component readback do not establish fresh reload, visual acceptance or
+performance admission; those remain explicitly pending in the receipt.
+
+`scripts/ue/review_sa_calobra_material_foundation.py` moves only the viewport
+to nine distributed grid positions, keeping the camera above a separately
+traced local surface. It uses native Look At rotation, verifies the camera
+readback, completes the native loading barrier and compares the frozen scene.
+These ground views supplement overview and road/rider inspection; they do not
+constitute whole-area acceptance by themselves. Restore the original camera
+with `review(restore=True)`; no actor is spawned or saved.
+
+```python
+review = runpy.run_path('D:/yacs/project/scripts/ue/review_sa_calobra_material_foundation.py')['review']
+review(4)  # Central ground; 0 through 8 select distributed grid views.
+review(restore=True)
+```
 
 ## Version-matched tools audit
 
@@ -74,6 +102,10 @@ Verified editor: UE 5.8.2, changelist 56702186. Consulted Epic's
 [texturing functions](https://dev.epicgames.com/documentation/en-us/unreal-engine/texturing-material-functions-in-unreal-engine),
 and matching installed `MaterialEditingLibrary.h` / material expression headers.
 Native function pins were additionally inspected in that running editor.
+Viewport operations follow UE 5.8's
+[UnrealEditorSubsystem](https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/UnrealEditorSubsystem),
+[MathLibrary](https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/MathLibrary)
+and [AutomationLibrary](https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/AutomationLibrary).
 The installed recompile API returns compiler errors; empty means compilation
 succeeded, but does not establish visual or performance acceptance.
 

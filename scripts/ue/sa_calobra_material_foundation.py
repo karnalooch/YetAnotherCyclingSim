@@ -215,27 +215,9 @@ def create_material(recipe, manifest, input_root, key):
         sampler_type=unreal.MaterialSamplerType.SAMPLERTYPE_LINEAR_COLOR,
     )
     link(divide, "", weights, "")
-    color = vector("NeutralGroundColor", recipe["neutral_ground_color_linear"])
-    roughness = node(
-        unreal.MaterialExpressionScalarParameter,
-        parameter_name="NeutralGroundRoughness",
-        default_value=recipe["neutral_ground_roughness"],
-    )
-    normal = vector("NeutralTangentNormal", [0, 0, 1])
-    sum_weights = node(unreal.MaterialExpressionDotProduct)
-    link(weights, "RGB", sum_weights, "A")
-    link(vector("BlendWeightSum", [1, 1, 1]), "", sum_weights, "B")
-    residual = node(unreal.MaterialExpressionOneMinus)
-    link(sum_weights, "", residual, "")
-    residual_channels = []
-    for base in (color, roughness, normal):
-        product = node(unreal.MaterialExpressionMultiply)
-        link(base, "", product, "A")
-        link(residual, "", product, "B")
-        residual_channels.append(product)
-    color, roughness, normal = residual_channels
     world_space = node(unreal.MaterialExpressionStaticBool, value=False)
-    for layer in recipe["layers"]:
+
+    def project_channels(layer):
         tile_cm = layer["tile_size_m"] * 100
         size = vector(layer["id"] + "TileSizeCm", [tile_cm] * 3)
         projected = {}
@@ -279,6 +261,43 @@ def create_material(recipe, manifest, input_root, key):
                 result,
                 "" if channel == "roughness" else "XYZ Texture",
             )
+        return projected
+
+    neutral = project_channels(recipe["neutral_fallback"])
+    color = node(unreal.MaterialExpressionMultiply)
+    link(*neutral["color"], color, "A")
+    link(
+        vector("NeutralGroundTint", recipe["neutral_ground_color_linear"]),
+        "",
+        color,
+        "B",
+    )
+    roughness = node(unreal.MaterialExpressionMultiply)
+    link(*neutral["roughness"], roughness, "A")
+    roughness_scale = node(
+        unreal.MaterialExpressionScalarParameter,
+        parameter_name="NeutralGroundRoughnessScale",
+        default_value=recipe["neutral_ground_roughness"],
+    )
+    link(roughness_scale, "", roughness, "B")
+    normal = node(
+        unreal.MaterialExpressionComponentMask, r=True, g=True, b=True, a=False
+    )
+    link(*neutral["normal"], normal, "")
+    sum_weights = node(unreal.MaterialExpressionDotProduct)
+    link(weights, "RGB", sum_weights, "A")
+    link(vector("BlendWeightSum", [1, 1, 1]), "", sum_weights, "B")
+    residual = node(unreal.MaterialExpressionOneMinus)
+    link(sum_weights, "", residual, "")
+    residual_channels = []
+    for base in (color, roughness, normal):
+        product = node(unreal.MaterialExpressionMultiply)
+        link(base, "", product, "A")
+        link(residual, "", product, "B")
+        residual_channels.append(product)
+    color, roughness, normal = residual_channels
+    for layer in recipe["layers"]:
+        projected = project_channels(layer)
         blended = []
         for previous, channel in (
             (color, "color"),

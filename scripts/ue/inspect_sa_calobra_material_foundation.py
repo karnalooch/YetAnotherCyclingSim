@@ -57,10 +57,36 @@ def inspect():
     actors = unreal.get_editor_subsystem(
         unreal.EditorActorSubsystem
     ).get_all_level_actors()
+    consumers = []
+    for actor in actors:
+        if isinstance(actor, unreal.Landscape):
+            components = actor.get_components_by_class(unreal.LandscapeComponent)
+            roots = {}
+            for component in components:
+                material = component.get_material(0)
+                seen = set()
+                while isinstance(material, unreal.MaterialInstance):
+                    if material.get_path_name() in seen:
+                        raise RuntimeError("Cyclic component material parent")
+                    seen.add(material.get_path_name())
+                    material = material.get_editor_property("parent")
+                path = material.get_path_name() if material else None
+                roots[path] = roots.get(path, 0) + 1
+            consumers.append(
+                {
+                    "actor": actor.get_path_name(),
+                    "assigned": str(
+                        actor.get_editor_property("landscape_material").get_path_name()
+                    ),
+                    "component_count": len(components),
+                    "component_material_roots": roots,
+                }
+            )
     report = {
         "engine_version": unreal.SystemLibrary.get_engine_version(),
         "world": world.get_path_name(),
         "functions": functions,
+        "landscape_consumers": consumers,
         "actors": [
             {
                 "label": a.get_actor_label(),
