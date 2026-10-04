@@ -675,3 +675,14 @@ Podgląd w UE używa istniejącej mapy i materiałów tylko w sesji; nie zapisuj
 assetów/mapy ani nie zmienia geometrii. Amber = relief do przeglądu, cyan =
 mapped Catastro candidate, gray = unknown. Kolory SIOSE oznaczają historyczne
 obiekty, nie aktualny biome. Pozostałe maski 2A nadal wymagają dopuszczenia.
+
+## Placement evidence handoff candidate — 2026-10-04
+
+Osobna maska wykluczenia budynków zachowuje footprint z Catastro bez arbitralnego
+bufora. Raster stanu sadzenia blokuje mapped footprint (0), a pozostały obszar
+pozostawia nierozstrzygnięty (255). Nie emituje zgody na sadzenie (1), ponieważ
+brakuje dopuszczonych masek roślinności, drogi/bezpieczeństwa i pozostałych domen.
+Żółty relief pozostaje wyłącznie do przeglądu; nie staje się klasą skał ani
+automatycznym zakazem sadzenia. Dwa rastry i manifest są poza Git, w cache
+`placement-handoff-v1-2026-10-04`, z identities, hashami i restore w Julce.
+Przygotowanie kończy się świadomym `BLOCKED_FOR_PLANTING` (exit 2).

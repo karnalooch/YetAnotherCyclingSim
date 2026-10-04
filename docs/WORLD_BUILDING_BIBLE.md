@@ -1553,6 +1553,25 @@ No red error is fabricated from relief. Road/BOB, current land-cover, LiDAR and
 canopy layers stay explicitly blocked until admitted. Diagnostic consumer proof
 is not production materials/PCG, whole-2A completion or human visual acceptance.
 
+#### Placement evidence handoff candidate (Issue #335)
+
+`scripts/assets/prepare_sa_calobra_placement_handoff.py` prepares a separate
+building-exclusion candidate and placement-state raster on the frozen native
+grid. It verifies the normalized manifest and all its pinned output hashes
+before deriving either product. Building exclusion retains 1=mapped footprint,
+0=no mapped footprint (not proven clear), 255=unknown. Placement state uses
+0=prohibited mapped building, 255=unresolved; 1=eligible is reserved and is never
+emitted while current vegetation, road/safety and other required domains are
+missing. No arbitrary building buffer, planting density or slope cutoff is added.
+
+Amber local relief remains review evidence, not an automatic rock class or
+planting exclusion. Historical SIOSE colors do not become current planting
+classes. Preparation exits 2 with `BLOCKED_FOR_PLANTING` after writing the
+hash-bearing candidate manifest; that is deliberate incomplete admission, not a
+claim that a PCGEx graph executed. Julka keeps byte integrity and planting
+readiness in separate profiles. All products remain outside Git; no terrain,
+road, Unreal asset or runtime consumer is changed by this handoff.
+
 #### Working-space normalization candidate (Issue #335)
 
 The bounded GIS candidate uses the accepted native Base_DTM grid: EPSG:25831,

@@ -172,3 +172,14 @@ colors, pixel-center registration, frozen map identity and remaining blocked
 layers. Restore remains local-only copying and hash verification, or pinned
 producer regeneration; an Unreal render is a separate receipt, never inferred
 from byte PASS. No new terrain, road or current-biome authority is admitted.
+
+## Placement evidence handoff candidate — 2026-10-04
+
+`sa-calobra-placement-evidence-candidate` verifies 59 source/context/placement
+identities, including two native-grid rasters and `placement-manifest.json`.
+`sa-calobra-placement-readiness` extends it but retains the ten incomplete
+World Authority layer groups and must return nonzero. `explain
+placement_handoff_v1` reports prohibited/unknown counts, provenance, fingerprint,
+restore and `BLOCKED_FOR_PLANTING`; byte PASS cannot grant planting permission.
+Restore is local copying plus hashes or pinned producer regeneration. No remote
+backup or PCGEx execution is claimed. Source amber relief remains review evidence.

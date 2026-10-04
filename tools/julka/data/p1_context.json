@@ -1994,6 +1994,81 @@
         "license": "Existing IGN/SITIBSA/GOIB/Catastro derivative notices apply; raw remains outside Git",
         "authority": "Diagnostic mask context on frozen geometry; no current biome or road admission"
       }
+    },
+    {
+      "asset_id": "placement-handoff-building-exclusion",
+      "path": "placement-handoff-v1-2026-10-04/building-exclusion.tif",
+      "size_bytes": 24446,
+      "sha256": "01c1542b4fa7366195fd4188500fa932d30e8bfbfea4cf9cb0ca6c7407e55e6e",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "placement_handoff_v1",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-catastro-mapped-footprint"
+      ],
+      "acquisition": {
+        "restore": "Retained local paths and hashes, or pinned producer regeneration; no remote backup"
+      },
+      "provenance": {
+        "provider": "Normalized DG Catastro footprint candidate",
+        "license": "Existing DG Catastro transformed-data terms; raw not redistributed",
+        "authority": "Candidate exclusion only; BLOCKED_FOR_PLANTING; no runtime integration"
+      }
+    },
+    {
+      "asset_id": "placement-handoff-placement-state",
+      "path": "placement-handoff-v1-2026-10-04/placement-state.tif",
+      "size_bytes": 27776,
+      "sha256": "8cca1b28064a3abbee472db1ee158a743fbe6f8d9cf59fd784b1517773fd91c1",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "placement_handoff_v1",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-catastro-mapped-footprint"
+      ],
+      "acquisition": {
+        "restore": "Retained local paths and hashes, or pinned producer regeneration; no remote backup"
+      },
+      "provenance": {
+        "provider": "Normalized DG Catastro footprint candidate",
+        "license": "Existing DG Catastro transformed-data terms; raw not redistributed",
+        "authority": "Candidate exclusion only; BLOCKED_FOR_PLANTING; no runtime integration"
+      }
+    },
+    {
+      "asset_id": "placement-handoff-placement-manifest",
+      "path": "placement-handoff-v1-2026-10-04/placement-manifest.json",
+      "size_bytes": 3135,
+      "sha256": "257c1b47ae02fa35f08e93b9e1d51e73934ac4f33822196eadb0974d6a583abb",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "placement_handoff_v1",
+      "depends_on": [
+        "normalized-manifest",
+        "normalized-catastro-mapped-footprint"
+      ],
+      "acquisition": {
+        "restore": "Retained local paths and hashes, or pinned producer regeneration; no remote backup"
+      },
+      "provenance": {
+        "provider": "Normalized DG Catastro footprint candidate",
+        "license": "Existing DG Catastro transformed-data terms; raw not redistributed",
+        "authority": "Candidate exclusion only; BLOCKED_FOR_PLANTING; no runtime integration"
+      }
     }
   ],
   "profiles": {
@@ -2208,6 +2283,36 @@
         "mask-review-review-overlay",
         "mask-review-review-manifest"
       ]
+    },
+    "sa-calobra-placement-evidence-candidate": {
+      "description": "59 pinned source/context/placement files; byte integrity only; planting remains blocked",
+      "extends": [
+        "sa-calobra-2a-context-candidate"
+      ],
+      "requires": [
+        "placement-handoff-building-exclusion",
+        "placement-handoff-placement-state",
+        "placement-handoff-placement-manifest"
+      ]
+    },
+    "sa-calobra-placement-readiness": {
+      "description": "Planting readiness; missing authoritative domains keep exit nonzero",
+      "extends": [
+        "sa-calobra-placement-evidence-candidate"
+      ],
+      "requires": [],
+      "incomplete_layers": [
+        "current_land_cover_with_confidence",
+        "lidar_class_occupancy",
+        "canopy_height",
+        "canopy_density",
+        "water_infrastructure_exclusions",
+        "road_footprint",
+        "shoulder",
+        "road_distance",
+        "route_safety_corridor",
+        "bob_cut_fill_inner_outer_edge"
+      ]
     }
   },
   "gis_metadata_profiles": {
@@ -2282,6 +2387,15 @@
       "resolution_or_density": "0.5 m native-grid raster; UV includes half-pixel registration",
       "classification": "Amber relief review, cyan mapped building, gray unknown; historical object identity separate",
       "nodata": "Diagnostic 3 unknown, raster NoData 255"
+    },
+    "placement_handoff_v1": {
+      "xy_crs": "EPSG:25831",
+      "xy_unit": "metres",
+      "vertical_datum": "No heights produced or modified",
+      "footprint": "Current 4033x4033 frozen working AOI",
+      "resolution_or_density": "0.5 m native raster; pixel-center world mapping",
+      "classification": "Building exclusion candidate and unresolved placement state; no eligibility emitted",
+      "nodata": "255 unknown; placement 0 prohibited, 1 reserved eligible; building 0 not mapped, 1 mapped"
     }
   },
   "source_registry": {
@@ -2538,6 +2652,34 @@
         "bob_cut_fill_inner_outer_edge"
       ],
       "human_visual_acceptance": "PENDING"
+    },
+    "placement_handoff_v1": {
+      "status": "BLOCKED_FOR_PLANTING",
+      "profile": "sa-calobra-placement-readiness",
+      "manifest": "placement-handoff-v1-2026-10-04/placement-manifest.json",
+      "fingerprint": "dba99e5d99f4d66a221b518266cbe9a84a9df192f044605aa80906f86b67e565",
+      "geometry_mutation": false,
+      "counts": {
+        "0": 2592,
+        "1": 0,
+        "255": 16262497
+      },
+      "blocked_layers": [
+        "current_land_cover_with_confidence",
+        "lidar_class_occupancy",
+        "canopy_height",
+        "canopy_density",
+        "water_infrastructure_exclusions",
+        "road_footprint",
+        "shoulder",
+        "road_distance",
+        "route_safety_corridor",
+        "bob_cut_fill_inner_outer_edge"
+      ],
+      "yellow_relief": "review only; not rock classification, vegetation exclusion or geometry repair",
+      "restore": "local cache copy plus hashes, or regenerate from pinned normalized candidate; no remote backup",
+      "consumer_integration": false,
+      "determinism": "Two clean preparations: 2/2 raster byte+logical hashes and full manifest identical"
     }
   }
 }
