@@ -12,6 +12,13 @@ Before making changes, read:
 
 The product owner is a beginner programmer. Explanations intended for the product owner must be written in clear Polish. Code, identifiers, filenames, commit messages and technical names must be written in English.
 
+Owner language rule, 2026-10-04: all GitHub issue and pull-request titles,
+descriptions, comments, review summaries and review replies must be written
+exclusively in English. This includes progress reports and owner-decision
+summaries published on GitHub. Polish is for direct conversation with the owner,
+not GitHub delivery. Check the language before creating or updating GitHub text;
+preserve exact code, paths, identifiers and source titles where required.
+
 ## Scope control
 
 - Implement only the task explicitly requested.
