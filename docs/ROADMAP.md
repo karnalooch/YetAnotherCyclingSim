@@ -86,10 +86,35 @@ Produce a believable, deterministic Sa Calobra route/world foundation that can s
 4. Author road cut/fill on a non-destructive `Road_Earthworks` layer or equivalent reproducible path.
 5. Generate the final road mesh independently from the Landscape vertex grid.
 6. Add dedicated cliff/retaining geometry where a heightfield is the wrong representation.
-7. Re-apply/refine materials and PCG after geometry is stable.
-8. Validate from the rider camera.
-9. Run the relevant performance checkpoint.
-10. Close M3 only after the complete route/world foundation is accepted.
+7. After road geometry and earthworks are stable, execute the **post-road world-finishing sequence** below.
+8. Prove that sequence on a bounded rider-camera vertical slice before broad rollout.
+9. Expand only the accepted systems across the complete playable route.
+10. Run the relevant exact-SHA visual and performance checkpoints.
+11. Close M3 only after the complete route/world foundation is accepted.
+
+### Post-road world-finishing sequence
+
+This is an ordered M3 delivery sequence, not a new nested milestone hierarchy. Concrete implementation remains tracked by GitHub Issues, while `WORLD_BUILDING_BIBLE.md` remains the methodology authority.
+
+1. **World Authority inputs and masks** — establish reproducible spatial inputs for road/shoulder domains, route exclusion, terrain classes, slope/elevation/exposure and road-earthworks zones. Real-world source evidence owns geographically meaningful boundaries; procedural systems do not invent replacement geography.
+2. **Landscape material foundation** — produce a coherent terrain material baseline for soil, grass, forest ground, exposed limestone/rock and earthworks transitions without using materials to hide unresolved geometry.
+3. **Road surface material system** — establish the asphalt/shoulder presentation foundation, including edge breakup and later wetness compatibility. Visual materials remain presentation only; Road Physics Profile remains physics authority.
+4. **PCG/PCGEx world graph** — consume canonical route and World Authority outputs to derive stable road-adjacent, roadside, terrain and biome domains. PCG/PCGEx executes reconstruction rules; it does not become geographic or physics authority.
+5. **Route exclusion and safety corridor** — protect the rideable road and required clearance from trees, large rocks and incompatible props, with deterministic behavior that can be proven after reload/regeneration.
+6. **Biome generators** — establish source-faithful valley/lower-Mediterranean, forest and exposed-limestone presentation using deterministic generators and real spatial boundaries instead of hand-authored biome replacement.
+7. **Rock, cliff and scree dressing** — use dedicated meshes/procedural dressing where Landscape is not an adequate representation, especially road cuts, steep limestone faces and scree, while preserving one clear visual ground owner.
+8. **Foliage system** — place trees, shrubs, grass and understory through deterministic, budgeted instancing/culling/LOD or Nanite policies rather than unconstrained scatter density.
+9. **Roadside procedural foundation** — establish rule-driven placement for the structural roadside layer such as barriers, posts, signs, walls, drainage and bounded rock/vegetation treatment where source evidence or admitted rules justify it. Rich hero dressing, selected buildings and lived-in scenes remain M7.
+10. **Surface and biome blending** — remove hard visual seams between asphalt, shoulders, soil, rock and biome domains through reproducible transition logic; blending may improve presentation but may not conceal geometric disagreement.
+11. **Bounded rider-camera vertical slice** — before full-route generation, prove an approximately **500–1000 m** representative section from the rider camera with the integrated material, PCG/PCGEx, biome, foliage, rock and roadside foundation. This proof strategy is informally the **Golden Kilometer**; its concrete execution belongs in a scoped Issue rather than becoming another roadmap stage.
+12. **Reference-PC performance gate** — the accepted slice must meet the applicable `performance/PERFORMANCE_FRAMEWORK.md` and `performance/BUDGETS.md` gates, including the 1920×1080 / 60 FPS target on the reference RTX 2070 Super system and the relevant frame/GPU/memory/streaming evidence.
+13. **Full-route rollout** — only after the bounded slice is visually accepted and within budget, regenerate/expand the same accepted systems across the complete playable route and verify representative problem areas plus the end-to-end rider-camera experience.
+
+### M3 / M7 content boundary
+
+M3 builds the **reproducible world factory and believable baseline**: authority inputs, materials, procedural domains, route exclusion, biome/foliage/rock foundations, structural roadside rules and their visual/performance proof.
+
+M7 builds **richer authored content and life** on top of that foundation: stronger vegetation composition, selected buildings, hero roadside dressing and controlled lived-in scenes. M7 may extend and tune the accepted M3 systems, but it must not reinvent the terrain, road, World Authority, material or procedural-world architecture.
 
 ### M3 exit criteria
 
@@ -100,7 +125,10 @@ M3 is complete when:
 - road alignment is real-data-first;
 - road/terrain integration no longer depends on fragile exact seams;
 - the Landscape workflow is non-destructive and reproducible;
-- valley / forest / exposed limestone-upland world foundation remains usable;
+- World Authority-backed masks/domains and generated presentation are reproducible, with route exclusion enforced;
+- valley / forest / exposed limestone-upland material, biome, foliage and rock foundations are usable from the rider camera;
+- the bounded post-road vertical slice is visually accepted and within the applicable reference-PC performance budget before full-route rollout;
+- full-route world generation uses the accepted M3 systems rather than ad-hoc per-location reconstruction;
 - rider-camera proof has no obvious grid, floating-road, black-wedge or major intersection failures;
 - required exact-SHA Unreal proof passes;
 - the relevant 1080p/60 performance budget passes on the reference PC;
