@@ -200,3 +200,14 @@ Source `paved`, lane count and `fictitious` attributes remain source claims.
 - Acquisition date and native GSD remain unknown; request date is not flight date.
   Approximate AI-interpreted edge positions have an explicit review allowance,
   not measured statistical accuracy. The generated preview is not road acceptance.
+
+
+## IGN current-Landscape road network (2026-10-03)
+
+Obra derivada de IGR Redes de Transporte, consulta 2026-10-03, CC BY 4.0 scne.es.
+Frozen five-feature OGC API response: current_landscape_igr_roads_2026-10-03.json.
+License: https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf
+Source XY is retained; generated presentation is modified and provisional.
+
+PNOA image: docs/assets/current_landscape_pnoa_2026-10-03.jpg.
+Obra derivada de PNOA, consulta 2026-10-03, CC BY 4.0 scne.es.

@@ -271,3 +271,9 @@ The long-term preferred workflow is:
 A workflow artifact may be used to move capture bytes between CI and review, but accepted Visual History is incomplete until the selected evidence is committed to the repository.
 
 Automation may prepare the evidence. It must not decide visual quality on behalf of the reviewer.
+
+## Current feature checkpoint
+
+[Issue #337 — accepted road appearance](issue-337-road-freeze/README.md) freezes
+the owner-accepted road and Nudo candidate, with repository-retained native images
+and hashes. Full-stage stable-camera triptych and performance closeout remain pending.

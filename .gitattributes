@@ -31,3 +31,5 @@
 
 # Preserve exact bytes of externally pinned source responses (including on Windows).
 worldgen/terrain/benchmarks/sa_calobra/*_source_*.json -text
+
+worldgen/terrain/benchmarks/sa_calobra/current_landscape_igr_roads_2026-10-03.json -text

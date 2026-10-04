@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "exact_sha": "c5573b3cf545c51ce83ad1fb0a5ca3111f5ad7f6",
+  "status": "PASS",
+  "error": "",
+  "map": "/Game/Worlds/SaCalobra/L_SaCalobraTerrainBaseline",
+  "view": "network-current-landscape-overview",
+  "viewmode": "VMI_LIT",
+  "lighting_status": "PASS",
+  "directional_light_intensity": 8.0,
+  "skylight_intensity": 0.8,
+  "atmosphere_status": "PASS",
+  "atmosphere_preset": "SA_CALOBRA_MEDITERRANEAN_DAYLIGHT_V1",
+  "bob_mode": "INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT",
+  "cut_patch_applied": true,
+  "vertical_support_built": true,
+  "cut_patch_layer": "Road_Earthworks",
+  "map_saved": false
+}

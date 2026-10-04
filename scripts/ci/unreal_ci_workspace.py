@@ -34,13 +34,17 @@ def safe_path(workspace: Path, name: str) -> Path:
     if root.is_symlink() or root.resolve().parent != workspace.resolve():
         raise ValueError("Unreal cache worktree escapes workspace")
     # Windows junctions must not redirect any cache/provenance path either.
-    for path in [root, *root.rglob("*")] if root.exists() else []:
+    pending = [root] if root.exists() else []
+    while pending:
+        path = pending.pop()
         if path.is_symlink() or (
             path.lstat().st_file_attributes & stat.FILE_ATTRIBUTE_REPARSE_POINT
             if hasattr(path.lstat(), "st_file_attributes")
             else False
         ):
             raise ValueError(f"Refuse cache through link/junction: {path}")
+        if path.is_dir():
+            pending.extend(path.iterdir())
     return root
 
 
@@ -233,6 +237,22 @@ def retain_local_lfs_objects(root: Path, archive: Path) -> None:
         )
 
 
+def remove_readonly_git_file(function, path, error) -> None:
+    """Retry only Windows read-only Git files; propagate locks and ACL errors."""
+    target = Path(path)
+    if (
+        os.name != "nt"
+        or not isinstance(error, PermissionError)
+        or function not in (os.unlink, os.remove)
+        or ".git" not in target.parts
+        or not target.is_file()
+        or target.stat().st_mode & stat.S_IWRITE
+    ):
+        raise error
+    target.chmod(target.stat().st_mode | stat.S_IWRITE)
+    function(path)
+
+
 def cleanup(workspace: Path, active: str, run: str) -> None:
     # Re-read before deletion. Publication is serialized by workflow concurrency.
     if active != select(workspace):
@@ -246,7 +266,7 @@ def cleanup(workspace: Path, active: str, run: str) -> None:
         archive = workspace / "_yacs-retained-lfs" / f"cache-{run}-{root.name}"
         retain(root, archive)
         retain_local_lfs_objects(root, archive)
-        shutil.rmtree(root)
+        shutil.rmtree(root, onexc=remove_readonly_git_file)
 
 
 def main() -> None:

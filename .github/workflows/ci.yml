@@ -186,7 +186,7 @@ jobs:
       compile_fingerprint: ${{ needs.changes.outputs.unreal_compile_fingerprint }}
       proof_fingerprint: ${{ needs.changes.outputs.unreal_proof_fingerprint }}
       # Approved migration checkpoint only, never fork or generic art commits.
-      region_terrain_import: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'fix/bob-curved-edges' }}
+      region_terrain_import: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && (github.event.pull_request.head.ref == 'fix/bob-curved-edges' || github.event.pull_request.head.ref == 'feat/337-current-landscape-roads') }}
 
   asset-validation:
     name: Lightweight asset validation
