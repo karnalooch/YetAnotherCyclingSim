@@ -1,7 +1,7 @@
 #requires -Version 7.4
 [CmdletBinding()]
 param(
-    [string]$RunnerRoot = 'D:\actions-runner-yacs',
+    [string]$RunnerRoot = 'D:\yacs\runner',
     [string]$InstallRoot,
     [string]$DesktopUser,
     [switch]$Verify,
@@ -28,7 +28,7 @@ if ($Uninstall) {
 }
 $RunnerRoot = (Resolve-Path -LiteralPath $RunnerRoot).Path
 if (-not (Test-Path -LiteralPath (Join-Path $RunnerRoot '_diag'))) { throw 'Runner _diag directory is missing.' }
-if (-not $InstallRoot) { $InstallRoot = Join-Path (Split-Path $RunnerRoot -Parent) 'yacs-runner-monitor' }
+if (-not $InstallRoot) { $InstallRoot = Join-Path (Split-Path $RunnerRoot -Parent) 'runner-monitor' }
 $InstallRoot = [IO.Path]::GetFullPath($InstallRoot)
 foreach ($path in @($RunnerRoot, $InstallRoot)) {
     if ($path -match '["\r\n]') { throw 'Unsupported quote/newline in installation path.' }

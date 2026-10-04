@@ -1,7 +1,7 @@
 #requires -Version 7.4
 #requires -RunAsAdministrator
 [CmdletBinding(SupportsShouldProcess)]
-param([string]$RunnerRoot = 'D:\actions-runner-yacs')
+param([string]$RunnerRoot = 'D:\yacs\runner')
 $ErrorActionPreference = 'Stop'
 $RunnerRoot = (Resolve-Path -LiteralPath $RunnerRoot).Path
 $serviceFile = Join-Path $RunnerRoot '.service'

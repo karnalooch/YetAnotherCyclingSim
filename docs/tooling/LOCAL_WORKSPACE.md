@@ -6,7 +6,10 @@ road engineering, runtime collision or performance admission.
 
 ## One active project
 
-The local layout is `D:\yacs\project`, `data`, `cache`, `checkpoints`, and `work`.
+The local layout is `D:\yacs\project`, `runner`, `runner-monitor`, `engine`,
+`data`, `cache`, `checkpoints`, `work`, and `archive`. Cyclist mocap source data
+lives at `data/mocap/cyclist-spike`; it remains a research dataset, not imported
+or admitted cycling animation.
 `workspace.json` lives beside the repository and contains machine paths. It is
 not committed. `scripts/workspace.py` resolves it relative to the repository or
 the explicit `YACS_WORKSPACE_CONFIG` environment variable. Production scripts
@@ -14,7 +17,44 @@ belong in the repository, not a Codex conversation's scratch directory.
 
 Unreal and Computer Use operate on this project. CI retains isolated checkouts;
 CI cleanup must never target the live project or external data/cache roots.
-The engine installation remains external. Python uses the workspace `.venv`.
+UE 5.8.2 lives at `engine/UE_5.8`. System Git, Visual Studio and base Python remain
+installed system tools. Python dependencies use the project's `.venv`.
+
+The runner is started by `scripts/runner/Start-YacsRunner.ps1` in the logged-in
+desktop session, with one listener only. It reads `workspace.json`, sets scoped
+temporary/cache paths, and preserves the registered GitHub identity. The monitor
+uses its existing per-user scheduled task with the new installed path. Do not
+silently switch the GPU runner to Windows Session 0.
+
+The owner requested disk-growth protection. `Invoke-YacsJobStarted.ps1` is the
+runner's pre-job hook and requires **50 GiB free** before workflow steps start.
+Unreal checks the same reserve immediately before compilation. These checks
+stop admission when space is low; they are not an operating-system disk quota
+and do not promise a fixed ceiling during an already running job. The monitor
+records remaining space. The existing persistent warm checkout is reused.
+`Clear-YacsRunnerWorkspace.ps1` previews eligible old `Intermediate` and local
+`DerivedDataCache` folders; apply requires the exact reviewed count/byte total,
+an idle worker and unchanged inventory. Source assets, shared caches and active
+build cache remain protected. Never lower the reserve simply to turn CI green.
+The hook uses GitHub's supported
+[pre-job script mechanism](https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/run-scripts).
+
+The engine resolver reads the configured engine for canonical/runner work and
+uses the canonical engine root before legacy discovery on other hosts. Older
+Epic/Windows/Codex registrations may use zero-payload directory junctions into
+the canonical tree. These do not contain independent copies. Update privileged
+registrations before removing their compatibility aliases.
+
+UE 5.8's Live Coding mutex is keyed by the engine executable, so another open
+project can block an isolated CI build. `Invoke-YacsProof.ps1` verifies that the
+target checkout is not open, then uses `-NoHotReloadFromIDE` for its isolated
+build. It never compiles the live authoring checkout through that path.
+
+Everyday iteration updates the owner's existing editor session: supported C++
+changes use Live Coding; mask/material/data changes use their explicit editor
+consumer refresh. Verify the displayed result. CI validates separately and does
+not copy its DLLs or map files over a running authoring session. If a change
+requires a restart, announce it and preserve unsaved work first.
 
 ## Accepted scene checkpoint
 

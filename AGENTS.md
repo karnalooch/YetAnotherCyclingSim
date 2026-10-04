@@ -70,6 +70,15 @@ is not a remote backup. Keep heavy build and editor migration operations serial.
 Never create full hidden pavement copies merely to back up a live GPU scene.
 See `docs/tooling/LOCAL_WORKSPACE.md` for the authoritative host workflow.
 
+Owner expansion, 2026-10-04: consolidate the whole YACS host environment under
+`D:\yacs`, including `runner`, `runner-monitor`, `engine`, external `data/mocap`,
+caches and retained historical worktrees. Remove verified obsolete duplicates
+only after preserving unique bytes and local Git changes. Old-path junctions
+are compatibility aliases, never new authoring roots. Runner credentials and
+local caches stay outside Git. CI owns its isolated `_work` checkout and must
+never compile or clean the open authoring project. Preserve the interactive GPU
+runner mode; changing it to a Windows service requires a separate runtime proof.
+
 Owner preference, 2026-10-04 (Issue #335): combine reproducible scripts with
 visible work in the already open Unreal Editor. Scripts prepare data, validate
 contracts and collect evidence; Computer Use supports navigation, inspection and
@@ -97,6 +106,14 @@ showing the owner the result directly in the editor.
 Operational guidance: [live local editor review](docs/UE_MCP_WORLD_GENERATION.md#live-local-editor-review).
 
 ### Whole-Landscape appearance and performance scope
+
+Owner clarification, 2026-10-04: while the owner explores the open Unreal scene,
+normal authoring iterations must update that same visible session. Use Live
+Coding for supported C++ changes and explicit editor refresh/reimport for
+changed masks, materials and scene consumers. Verify the visible consumer
+actually updated; a green CI build is not delivery to the owner's preview.
+CI remains isolated. Announce required editor restarts before performing them
+and preserve unsaved work. Frozen geometry restrictions still apply.
 
 Owner clarification, 2026-10-04: author, review and optimize the **entire current
 Sa Calobra Landscape**, 2,016.5 m × 2,016.5 m (~4.07 km²). Both appearance and

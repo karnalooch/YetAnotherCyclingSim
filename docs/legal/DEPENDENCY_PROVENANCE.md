@@ -53,6 +53,23 @@ recording only a moving branch name.
 
 ## 4. Current ledger
 
+### Cyclist mocap research archive — 2026-10-04
+
+**Acquired; not imported into Unreal.** The existing local research folder was
+moved intact to `data/mocap/cyclist-spike` in the persistent workspace. Source:
+[Dataset of Motion Capture of Cyclists](https://doi.org/10.5281/zenodo.10668611),
+Zenodo record 10668611, published 2024-02-15, by Panayiotis Kyriakou,
+Yiorgos Chrysanthou and Marios Kyriakou. The retained provider response
+`zenodo_record.json` declares CC BY 4.0. Original `Dataset_cycing_mocap.zip` is
+497,387,739 bytes, provider MD5 `f5188f3088a928502142ed00f06637cc`.
+No dataset bytes are committed to the public repository. The unchanged source
+ZIP and its provider metadata are backed up with the unpublished workspace
+checkpoint; the local migration receipt records SHA-256 verification.
+Preserve the author names, title, DOI and
+[CC BY 4.0 license](https://creativecommons.org/licenses/by/4.0/), and identify
+any future modifications. This storage migration does not admit animation
+quality, retargeting or runtime use.
+
 ### Sa Calobra local LAZ decoder — 2026-10-04
 
 Owner explicitly approved installation of an isolated LAZ decoder for Issue #335.

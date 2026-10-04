@@ -23,7 +23,18 @@ def load_workspace(config_path: Path | None = None) -> dict:
     if config.get("schema_version") != 1:
         raise ValueError("Unsupported workspace schema")
     root = path.parent
-    for key in ("project", "data", "cache", "checkpoints", "work"):
+    for key in (
+        "project",
+        "data",
+        "cache",
+        "checkpoints",
+        "work",
+        "runner",
+        "runner_monitor",
+        "archive",
+    ):
+        if key not in config and key in ("runner", "runner_monitor", "archive"):
+            continue
         relative = Path(config[key])
         if relative.is_absolute() or ".." in relative.parts:
             raise ValueError(f"Workspace path must remain below its root: {key}")

@@ -13,6 +13,7 @@ function Resolve-YacsUnrealEngine {
     param(
         [Parameter(Mandatory=$true)] [string] $ProjectPath,
         [string[]] $SearchRoots = @(
+            'D:\yacs\engine',
             'D:\Epic Games',
             'C:\Program Files\Epic Games',
             'C:\Epic Games',
@@ -21,6 +22,16 @@ function Resolve-YacsUnrealEngine {
             'C:\UE_5.8'
         )
     )
+
+    if (-not $PSBoundParameters.ContainsKey('SearchRoots')) {
+        $workspacePath = $env:YACS_WORKSPACE_CONFIG
+        if (-not $workspacePath) { $workspacePath = Join-Path (Split-Path (Split-Path $ProjectPath -Parent) -Parent) 'workspace.json' }
+        if (Test-Path -LiteralPath $workspacePath -PathType Leaf) {
+            $workspace = Get-Content -LiteralPath $workspacePath -Raw | ConvertFrom-Json
+            if ([int]$workspace.schema_version -ne 1 -or -not $workspace.engine) { throw 'Invalid YACS workspace engine configuration.' }
+            $SearchRoots = @([string]$workspace.engine)
+        }
+    }
 
     if (-not (Test-Path -LiteralPath $ProjectPath -PathType Leaf)) {
         throw "YACS project file does not exist: $ProjectPath"
