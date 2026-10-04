@@ -457,6 +457,17 @@ template has `Backlog`, `Ready`, `In progress`, `In review`, `Blocked`,
 - Project automation setup and security are documented in
   `docs/ci/PROJECT_WORKFLOW.md`.
 
+Owner dependency policy, 2026-10-04: the 13-step M3 world-finishing sequence
+uses existing #335, then #363 through #374. Each successor is natively blocked
+by its immediate predecessor. Before starting implementation, opening its
+implementation PR or moving it to Ready/In progress, verify the predecessor is
+completed with required proof and merged implementation where applicable.
+Closing as not planned, a draft PR or green CI alone does not satisfy the gate.
+Native GitHub dependencies record the relationship but do not prevent PR
+creation; agents must enforce this execution rule. Removing dependencies or
+changing order requires explicit owner authorization. Project Blocked is
+planning metadata and does not replace proof or this dependency check.
+
 ## Office and home workflow
 
 This project is developed on two machines: the office PC, which is suitable for documentation, Git operations, lightweight code, and Python tests, and the home PC, which builds Unreal Engine and runs the full validation cycle.

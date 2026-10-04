@@ -37,6 +37,21 @@ movement.
 The copied `Ready` and `Blocked` columns are manual planning states. Automation
 never promotes a Backlog item into either planning column by itself.
 
+For the 13-step M3 world-finishing sequence, existing #335 is step 1 and #363
+through #374 are steps 2–13. Each successor has a native GitHub `blocked_by`
+relationship to the preceding issue and stays in the manual `Blocked` state
+while that prerequisite is open. Before implementation/PR creation or promotion
+to Ready/In progress, verify completion with required proof and merged
+implementation where applicable; closed-as-not-planned is not completion.
+GitHub dependencies do not themselves disable branch/PR creation, so the agent
+execution rule in AGENTS.md remains binding. Only explicit owner authorization
+can change the order or remove a dependency.
+
+After initial issue-open auto-add/status runs complete, set and read back the
+manual Blocked values; an asynchronous initial Backlog update can otherwise
+overwrite an earlier manual edit. This is a sequencing check, not a new status
+automation or a replacement for native dependencies.
+
 ## Verified deployment
 
 On 2026-10-03 the GitHub API confirmed Project `PVT_kwHOABLWOs4BkqmU`,
