@@ -73,6 +73,33 @@ and the verified checkpoint receipts during host recovery. Native modules must
 be built for the installed engine; their successful build receipt is local
 evidence, not a claim that a future source revision has already been built.
 
+## Restore procedure
+
+For the 2026-10-04 snapshot, retain access to both unpublished GitHub releases:
+`checkpoint-sa-calobra-2026-10-04` and
+`data-cnig-sa-calobra-working-v1-2026-10-03`. Do not publish them: original source
+responses retain redistribution restrictions. The newer `restore-manifest.json`
+identifies 820 source/prepared files and references previously backed-up CNIG
+bytes by exact digest; nine session logs remain local. Its initial status field
+describes archive preparation; a separate remote receipt confirms upload hashes.
+
+1. Restore the recorded Git revision and run `git lfs pull` for map/assets.
+2. Download assets from both draft releases with authenticated `gh release download`
+   into one empty recovery bundle directory. Preserve the manifest and notices.
+3. Run `python scripts/assets/restore_workspace_data.py --manifest <bundle>/restore-manifest.json
+   --bundle <bundle> --destination <workspace>/data/world-data/sa-calobra-working-v1`.
+   This reports missing files without writing. Add `--apply` to restore them.
+   The tool verifies SHA-256/size, rejects escaping paths and never overwrites
+   existing files; corrupt bytes fail before publication.
+4. Restore the local workspace configuration and checkpoint receipts, build the
+   project for the installed UE version, then run fresh-editor verification.
+   Open the verified map through the workspace launcher.
+
+Zen/DDC may be restored from the retained local cache or rebuilt. They are not
+required authoritative inputs. The external-data receipt covers the files in
+this working snapshot; it does not establish that every future Julka source is
+available or that Issue #345 is complete.
+
 ## Evidence and known engine behavior
 
 Validated against installed UE 5.8.2 source: `UDynamicMesh.cpp`,
