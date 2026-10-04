@@ -1505,6 +1505,17 @@ BOB road-earthworks authority remain unchanged.
 
 #### Frozen geometry and mask review (Issue #335)
 
+Owner scope clarification, 2026-10-04: the entire existing Sa Calobra Landscape
+(2,016.5 m × 2,016.5 m, ~4.07 km²) is the authoring, appearance-review and
+performance-validation area. Review its different environments, road/terrain
+transitions and broad views; measure representative traversal and demanding
+views across that full area using the existing performance framework/budgets.
+Keep location-specific evidence. The 500–1000 m Golden Kilometer is an additional
+detailed rider-camera check, not sufficient evidence for whole-Landscape PASS.
+Expand beyond the current Landscape only after its visual/performance gates.
+Heavy measurement remains milestone-driven; frozen geometry and explicit unknowns
+remain binding throughout full-area work.
+
 Owner decision, 2026-10-04: the existing terrain and roads are frozen for this
 2A task. Fit normalized masks to the existing Landscape and road coordinate
 contract. Do not change Base_DTM, Landscape heights/topology, road geometry or

@@ -82,6 +82,17 @@ showing the owner the result directly in the editor.
 
 Operational guidance: [live local editor review](docs/UE_MCP_WORLD_GENERATION.md#live-local-editor-review).
 
+### Whole-Landscape appearance and performance scope
+
+Owner clarification, 2026-10-04: author, review and optimize the **entire current
+Sa Calobra Landscape**, 2,016.5 m × 2,016.5 m (~4.07 km²). Both appearance and
+performance acceptance cover this whole area. The 500–1000 m Golden Kilometer
+is an additional representative check, not a substitute for whole-Landscape
+review or measurement. Cover the area's different environments, demanding views
+and traversal; do not infer area-wide PASS from one selected section. Preserve
+existing budgets, exact-SHA proof, milestone-driven heavy measurement and frozen
+terrain/road geometry. Full-route expansion means going beyond this Landscape.
+
 ### Region migration and LFS retirement
 
 Owner update, 2026-10-02: execute the six-step Sa Calobra migration and retire
