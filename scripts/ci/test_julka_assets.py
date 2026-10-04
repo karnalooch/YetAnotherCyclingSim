@@ -51,7 +51,9 @@ class JulkaWorkspaceTests(unittest.TestCase):
             json.dumps({"schema_version": 1, "data": "data"}), encoding="utf-8-sig"
         )
         self.addCleanup(patch.stopall)
-        patch.dict(os.environ, {"YACS_ASSET_ROOT": "", "YACS_WORKSPACE_CONFIG": ""}).start()
+        patch.dict(
+            os.environ, {"YACS_ASSET_ROOT": "", "YACS_WORKSPACE_CONFIG": ""}
+        ).start()
         patch("julka_core.cli.REPO_ROOT", self.repo).start()
 
     def test_canonical_workspace_is_default_and_uses_existing_raw_bytes(self):
