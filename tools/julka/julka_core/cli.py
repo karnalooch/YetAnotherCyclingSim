@@ -158,7 +158,11 @@ def assert_no_reparse_components(path: Path, boundary: Path) -> None:
 
 def asset_path(root: Path, asset: dict[str, Any]) -> Path:
     root = root.absolute()
-    base = root if asset["backend"].get("layout") == "world-data-cache" else root / "sources"
+    base = (
+        root
+        if asset["backend"].get("layout") == "world-data-cache"
+        else root / "sources"
+    )
     path = base.joinpath(*asset["path"].split("/"))
     assert_no_reparse_components(path, root)
     return path
@@ -568,7 +572,9 @@ def cmd_plan(args: argparse.Namespace) -> int:
         )
     profile = catalog["profiles"][args.profile]
     if local_missing:
-        print(f"LOCAL RESTORE REQUIRED: {local_missing} pinned context/evidence files; restore from the retained cache and verify SHA-256. Provider reacquisition may have different bytes.")
+        print(
+            f"LOCAL RESTORE REQUIRED: {local_missing} pinned context/evidence files; restore from the retained cache and verify SHA-256. Provider reacquisition may have different bytes."
+        )
     if profile.get("incomplete_layers"):
         print(
             "Profile also lacks separately reviewed/acquired layers: "
@@ -647,7 +653,9 @@ def _cmd_hydrate(args: argparse.Namespace) -> int:
     catalog = load_catalog_file()
     assets = topological_assets(catalog, args.profile)
     if any(asset["backend"]["type"] == "local" for asset in assets):
-        print("Local-only context profile: no remote snapshot is registered. Restore the pinned cache files, then run verify.")
+        print(
+            "Local-only context profile: no remote snapshot is registered. Restore the pinned cache files, then run verify."
+        )
         return cmd_verify(args)
     if catalog["profiles"][args.profile].get("manual_only"):
         raise JulkaError(
@@ -997,7 +1005,11 @@ def _cmd_adopt_mdt(args: argparse.Namespace) -> int:
 def cmd_explain(args: argparse.Namespace) -> int:
     catalog = load_catalog_file()
     if args.asset_id in catalog.get("source_registry", {}):
-        print(json.dumps(catalog["source_registry"][args.asset_id], ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                catalog["source_registry"][args.asset_id], ensure_ascii=False, indent=2
+            )
+        )
         return 0
     for asset in catalog["assets"]:
         if asset["asset_id"] != args.asset_id:
