@@ -65,6 +65,40 @@ The Stage 3G spike is stricter: it starts with inspection and transient verifica
 
 **Recovery note (28.09.2026):** PR #155 proved the Stage 3G CI/authoring harness and PR #162 is merged, providing the first real conifer baseline plus persisted `PCG_RouteExclusion` and `PCG_Forest` assets. Issue #230 now builds the YACS World Authoring Library above those assets: semantic presets, approved-provider discovery/acquisition, deterministic layout and a guarded Scene Composer. This does **not** mean persistent MCP-driven generation is already approved. #85 remains the controlled agent-orchestration track.
 
+## Live local editor review
+
+Owner decision, 2026-10-04 (Issue #335): work through both reproducible preparation
+scripts and the already open Unreal Editor. The installed Windows Computer Use
+plugin was verified for window discovery, activation, observation and closing an
+obscuring Content Browser panel. This establishes local UI access only; it does
+not establish PCGEx execution, controller support or persistent authoring admission.
+
+The working loop is:
+
+1. Prepare and verify source/derived data with existing repository tools; keep
+   raw and generated payloads in their contracted cache and record Julka identity.
+2. Read the installed Computer Use skill, discover its runtime and select the
+   actual returned Unreal window. Check the current map, dialogs and unsaved state.
+3. Explain the next meaningful action briefly in Polish. Observe, act once and
+   refresh; use live navigation to inspect masks, source disagreements and close
+   views together with the owner. Reobserve after owner interaction or focus changes.
+4. Record findings and the scope of owner acceptance. Move repeatable production
+   steps into tested repository scripts, then collect required exact-SHA proof.
+
+Prefer the existing editor session; preserve unsaved user work and do not close
+or restart the editor merely to regain control. Check a separate desktop plugin
+before interpreting browser-only limitations as absence of Windows access. If
+control fails, report the operation/error and use an authorized supported fallback.
+Follow the plugin's safety/confirmation requirements; never use UI control to
+bypass a blocked action or execute terminal commands through desktop controls.
+
+For #335, the preview remains session-only: no Save/Save All, terrain sculpting,
+heightmap import, road movement or earthworks generation. Masks fit the frozen
+Landscape/road contract. Sky and diagnostic overlays are review aids. Live review
+does not replace provenance, determinism, CI, trusted performance or human visual
+acceptance. This local workflow does not extend the remote #228 command allowlist
+or the MCP spike's persistent-write boundary.
+
 ## 3. Why UE-MCP
 
 The selected upstream already provides the Unreal Editor bridge, MCP categories for world authoring, YAML flows, retries/rollback, git snapshots, configurable guards and context strategies. We reuse those capabilities rather than creating a second editor automation framework.

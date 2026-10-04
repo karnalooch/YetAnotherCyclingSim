@@ -1672,6 +1672,17 @@ Landscape with session-only sky and no save. Production integration, full-author
 completeness and performance admission remain separate; never run a
 terrain-importing proof for this frozen task.
 
+#### Live mask review with the owner
+
+Use reproducible preparation/validation scripts together with visible inspection
+in the already open Unreal Editor, following the
+[local review workflow](UE_MCP_WORLD_GENERATION.md#live-local-editor-review).
+Explain meaningful actions in Polish, inspect current UI state before acting and
+refresh after each action. Preserve unsaved work; #335 previews remain session-only
+and must not save or alter the frozen Landscape/roads. Record which masks/views
+the owner accepted separately from data integrity and technical proof. Computer
+Use access enables this review loop; it does not admit production PCGEx planting.
+
 #### Mask transitions and stream topology review (Issue #335)
 
 Owner-approved continuation softens mask presentation and density without

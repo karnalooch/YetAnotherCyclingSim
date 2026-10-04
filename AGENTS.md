@@ -54,6 +54,34 @@ Owner reaffirmation, 2026-10-01 (Issue #297): use authorized remote GitHub deliv
 - Distinguish a local candidate, a remote commit, a passing test, a render, a merge and a playable feature. Never promise unattended/background continuation unless an actual supported scheduled mechanism was created.
 - These instructions are durable project memory in this repository. Do not claim to have changed global ChatGPT profile memory without a successful memory-write operation.
 
+### Live editor collaboration with the owner
+
+Owner preference, 2026-10-04 (Issue #335): combine reproducible scripts with
+visible work in the already open Unreal Editor. Scripts prepare data, validate
+contracts and collect evidence; Computer Use supports navigation, inspection and
+showing the owner the result directly in the editor.
+
+- Before declaring desktop control unavailable, read the installed Computer Use
+  skill and discover its supported runtime. Browser-only tool limitations do not
+  establish that a separate Windows Computer Use plugin is unavailable.
+- Select the actual returned Unreal window, observe its current state, perform
+  one UI action and refresh. Never click from stale screenshots or guessed UI.
+- Explain meaningful actions and findings briefly in Polish while the owner
+  watches. Prefer the existing session and preserve their unsaved work.
+- Use direct UI work for bounded visual review; capture reusable multi-step
+  production operations in repository-owned scripts rather than repeated clicks.
+- Existing task authorization covers routine reversible navigation and review;
+  do not repeatedly ask permission. Respect tool safety rules and report exact
+  tool failures instead of claiming success or silently switching mechanisms.
+- UI access does not authorize a wider mutation scope. For Issue #335, keep
+  terrain/roads frozen, fit masks to their existing contract, and keep previews
+  session-only: no Save/Save All, heightmap import or earthworks regeneration.
+- Distinguish live inspection, owner visual acceptance, saved assets, exact-SHA
+  proof and performance admission. A screenshot or successful click proves none
+  of the other gates by itself.
+
+Operational guidance: [live local editor review](docs/UE_MCP_WORLD_GENERATION.md#live-local-editor-review).
+
 ### Region migration and LFS retirement
 
 Owner update, 2026-10-02: execute the six-step Sa Calobra migration and retire
