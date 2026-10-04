@@ -297,6 +297,11 @@ def main():
         raise RuntimeError("Expected one existing Landscape")
     landscape = landscapes[0]
     state["landscape"] = landscape
+    rotation = landscape.get_actor_rotation()
+    if any(abs(v) > 0.000001 for v in (rotation.pitch, rotation.yaw, rotation.roll)):
+        raise RuntimeError(
+            "Rotated Landscape cannot use the admitted world-XY mask mapping"
+        )
     scale = landscape.get_actor_scale3d()
     location = landscape.get_actor_location()
     if any(
