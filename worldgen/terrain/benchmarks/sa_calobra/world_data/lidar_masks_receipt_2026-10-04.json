@@ -1,0 +1,164 @@
+{
+  "status": "PASS_CANDIDATE_INTEGRITY_ONLY",
+  "fingerprint": "cd20611c530a346abaaaf4a35ab3bd27efb6167e74064d39ccc63e31d3c1e3c8",
+  "products": 9,
+  "counts": {
+    "decoded_all_tiles": 81990059,
+    "accepted_aoi": 23588890,
+    "observed_cells": 13551361,
+    "unobserved_cells": 2713728,
+    "vegetation_cells": 7468196,
+    "building_cells": 1683,
+    "canopy_height_valid_cells": 7126797,
+    "invalid_height_review_cells": 341399
+  },
+  "planting": "BLOCKED: no admitted current cover, safety/road/BOB exclusions or production graph; fraction is not planting density",
+  "manifest_sha256": "fd14d0725f867759438727f9f7275f15427220ea185b01783c9d616432523e00",
+  "cache_relative_path": "lidar-masks-v1b-2026-10-04",
+  "derived_bytes": 72928233,
+  "manifest_bytes": 19312,
+  "determinism": "9/9 product byte identities and full manifest identical; reader verifies byte/logical hashes, grid/dtype/NoData, counts/occupancy/fractions on both",
+  "outputs": [
+    {
+      "path": "class-counts.tif",
+      "size_bytes": 14585203,
+      "sha256": "7803c429cc9449f2a9545f3037a425dc41cc98080f83ad1f23089c95be885e51",
+      "logical_sha256": "724212867d0b7c294a6c2d37075d6b14e891119cba5947684282257cf1e2f928",
+      "bands": 6,
+      "dtype": "uint32",
+      "nodata": 4294967295,
+      "semantics": "bands: ground, low/medium/high vegetation, building/roof/facade, other; accepted return counts; zero is not absence proof"
+    },
+    {
+      "path": "class-occupancy.tif",
+      "size_bytes": 5604845,
+      "sha256": "d73a3daccc2df441b0cc0aa18a96d04bea66e5a42812a10ac269c582670a01e6",
+      "logical_sha256": "639b5be7dfb622c2c7243c280b8b5d4ab8b2ffa60718df2660355536df6e2db3",
+      "bands": 1,
+      "dtype": "uint8",
+      "nodata": 255,
+      "semantics": "bits 1 ground,2 low,4 medium,8 high,16 building,32 other;255 no accepted samples"
+    },
+    {
+      "path": "first-return-count.tif",
+      "size_bytes": 6042168,
+      "sha256": "50007e375bacecb15417e7d95074cc27f457cd34437660a64bc7b82a3ddc341a",
+      "logical_sha256": "4da05b9b2295b8e163be2b44804bb478eebc6c2b6219a8f0ec6bf1db87f229fa",
+      "bands": 1,
+      "dtype": "uint32",
+      "nodata": 4294967295,
+      "semantics": "accepted first-return sample count; zero=no observations"
+    },
+    {
+      "path": "vegetation-first-return-count.tif",
+      "size_bytes": 5569941,
+      "sha256": "1b477c6e3d364bd4ed65acb172184727af8725cd78b0703efd05363c7f203817",
+      "logical_sha256": "f61ab99bec79757c8e4d506e0ca65d7069b06172163a4f88413f89b1199575bd",
+      "bands": 1,
+      "dtype": "uint32",
+      "nodata": 4294967295,
+      "semantics": "first returns in source vegetation classes 3/4/5"
+    },
+    {
+      "path": "canopy-height-candidate.tif",
+      "size_bytes": 26996235,
+      "sha256": "a02ede4c4d16521680799ec05bb46edba96579343c892e639ca4395e575dc657",
+      "logical_sha256": "ca679d2c3c53dd4e9059778ce8ce99b8dbb23240207448b68e36c7643b7bc3fc",
+      "bands": 1,
+      "dtype": "float32",
+      "nodata": -32767.0,
+      "semantics": "maximum accepted vegetation Z minus nearest native DTM pixel; not tree positions; no gap filling; suspect negatives unknown"
+    },
+    {
+      "path": "vegetation-return-fraction.tif",
+      "size_bytes": 6432438,
+      "sha256": "3fe8f643757797f83631852a86d28da7de81680780429cf82fa645ccf5dde50f",
+      "logical_sha256": "5feeb94a0ecf4352f2b6a45fae43de6d8a73d4b444919983370aabd73380ebfd",
+      "bands": 1,
+      "dtype": "float32",
+      "nodata": -32767.0,
+      "semantics": "vegetation first returns / accepted first returns; sampling proxy, not crown-area density or planting density"
+    },
+    {
+      "path": "vegetation-return-fraction-5m.tif",
+      "size_bytes": 1114078,
+      "sha256": "b9af14b4ac25214f60f3a9d972839a44c99434474dc1bb43ae835f48eae7a0da",
+      "logical_sha256": "d3f369318e627952878d65c84498101c83d671a388094ad294c06702ec9b5d2b",
+      "bands": 1,
+      "dtype": "float32",
+      "nodata": -32767.0,
+      "semantics": "count-weighted first-return fraction over native 10x10 cells (5m support); repeated on native grid; clipped last 3-cell edge; not 0.5m density accuracy or planting density"
+    },
+    {
+      "path": "height-review-flags.tif",
+      "size_bytes": 570813,
+      "sha256": "ed46742f64e33db22e2b1646830d382e41b96fca12b09117f6bfbf4b00b37857",
+      "logical_sha256": "98989317e80e7e56653353d1270ad331d124d9f053c1496073d40f0c3dbfe321",
+      "bands": 1,
+      "dtype": "uint8",
+      "nodata": 255,
+      "semantics": "bit1 invalid/negative vegetation normalization;bit2 native relief>10m review only;no automatic rock class"
+    },
+    {
+      "path": "lidar-class-context.png",
+      "size_bytes": 6012512,
+      "sha256": "d18b8123bc335c7be0478a51c6a7fa509bed66b23ffa75626b64967f71072d24",
+      "semantics": "class presence context; building>high>medium>low>ground priority;gray other/no samples;not planting eligibility"
+    }
+  ],
+  "source_inputs": [
+    {
+      "path": "sa-calobra-working-v1/manual-cnig/PNOA_2024_BAL_483-4408_H31_NPC03.laz",
+      "size_bytes": 39247042,
+      "sha256": "9bea9f4effc9868ba399b3ac4fe2f56ec3bf57756dbf1aaea484a2c7921e1dcc"
+    },
+    {
+      "path": "sa-calobra-working-v1/manual-cnig/PNOA_2024_BAL_483-4409_H31_NPC03.laz",
+      "size_bytes": 38326993,
+      "sha256": "2740ff251615b24e5271191e91f919bc60148859c11c8fbf639079371a3fb653"
+    },
+    {
+      "path": "sa-calobra-working-v1/manual-cnig/PNOA_2024_BAL_483-4410_H31_NPC03.laz",
+      "size_bytes": 49906963,
+      "sha256": "1a1ce04c32f0449073d8b840cc00a7ca3f1117abbe351a3f48fe57c037a5421b"
+    },
+    {
+      "path": "sa-calobra-working-v1/manual-cnig/PNOA_2024_BAL_484-4408_H31_NPC03.laz",
+      "size_bytes": 59356962,
+      "sha256": "6b37aee0617df82f5fd1029b1b503651c00307f96a8a392823e0001dfd48bdec"
+    },
+    {
+      "path": "sa-calobra-working-v1/manual-cnig/PNOA_2024_BAL_484-4409_H31_NPC03.laz",
+      "size_bytes": 38522141,
+      "sha256": "39cfb5cf6b2bf93bd2e9996616ee94d8a830d8df4850ff0bf672183c9043dbdb"
+    },
+    {
+      "path": "sa-calobra-working-v1/manual-cnig/PNOA_2024_BAL_484-4410_H31_NPC03.laz",
+      "size_bytes": 46764192,
+      "sha256": "af3b790313846225bde04f48b95609963e652d696c0a2edca0d1722eec8ec6d8"
+    },
+    {
+      "path": "sa-calobra-working-v1/manual-cnig/PNOA_2024_BAL_485-4408_H31_NPC03.laz",
+      "size_bytes": 69266579,
+      "sha256": "e987f1aea01f8672301b0514e249fda33eeef6cf1302e4e3c4dd8428abfbdd50"
+    },
+    {
+      "path": "sa-calobra-working-v1/manual-cnig/PNOA_2024_BAL_485-4409_H31_NPC03.laz",
+      "size_bytes": 70040345,
+      "sha256": "5c219d8ee12c85c4187095645048943f1d2fc6094c61c290e00a65025afeed3b"
+    },
+    {
+      "path": "sa-calobra-working-v1/manual-cnig/PNOA_2024_BAL_485-4410_H31_NPC03.laz",
+      "size_bytes": 59014265,
+      "sha256": "fcab9b2e345ab50201cbb4c980c8e7c80d0b51c2d871e218a6607d8e9a643d9a"
+    }
+  ],
+  "versions": {
+    "laspy": "2.7.0",
+    "lazrs": "0.8.2",
+    "numpy": "2.3.5",
+    "rasterio": "1.5.2",
+    "pyproj": "3.8.0"
+  },
+  "authority": "candidate measurement; missing admission/road exclusions remain explicit; does not close 2A"
+}

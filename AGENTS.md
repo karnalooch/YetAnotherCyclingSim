@@ -12,6 +12,13 @@ Before making changes, read:
 
 The product owner is a beginner programmer. Explanations intended for the product owner must be written in clear Polish. Code, identifiers, filenames, commit messages and technical names must be written in English.
 
+Owner language rule, 2026-10-04: all GitHub issue and pull-request titles,
+descriptions, comments, review summaries and review replies must be written
+exclusively in English. This includes progress reports and owner-decision
+summaries published on GitHub. Polish is for direct conversation with the owner,
+not GitHub delivery. Check the language before creating or updating GitHub text;
+preserve exact code, paths, identifiers and source titles where required.
+
 ## Scope control
 
 - Implement only the task explicitly requested.
@@ -53,6 +60,95 @@ Owner reaffirmation, 2026-10-01 (Issue #297): use authorized remote GitHub deliv
 - Within the approved scope, the owner's standing authorization covers choosing necessary proofs and normal protected closeout. Keep cost classification, compile reuse, exact-SHA evidence, required tests and visual/performance gates. Do not launch unnecessary heavy jobs or ask repeatedly for approval already given.
 - Distinguish a local candidate, a remote commit, a passing test, a render, a merge and a playable feature. Never promise unattended/background continuation unless an actual supported scheduled mechanism was created.
 - These instructions are durable project memory in this repository. Do not claim to have changed global ChatGPT profile memory without a successful memory-write operation.
+
+### Live editor collaboration with the owner
+
+Owner checkpoint/workspace decision, 2026-10-04: the canonical home workspace is
+`D:\yacs`, with the live project at `D:\yacs\project`. Resolve data, cache and
+checkpoint paths through `scripts/manage_local_workspace.py` and the local `workspace.json`.
+Do not resume authoring from a chat scratch directory or a CI runner checkout.
+The owner explicitly authorized durable storage of the accepted frozen scene;
+this supersedes the session-only restriction below for that checkpoint and its
+verified reopening. It does not authorize new road design or terrain targets.
+Use persistent actors/materials and persistent float32 CUT textures, retain
+fixed source hashes, and verify a fresh editor reads the saved geometry and
+earthworks. A file-copy receipt is not a scene checkpoint, and a local checkpoint
+is not a remote backup. Keep heavy build and editor migration operations serial.
+Never create full hidden pavement copies merely to back up a live GPU scene.
+See `docs/tooling/LOCAL_WORKSPACE.md` for the authoritative host workflow.
+
+Owner expansion, 2026-10-04: consolidate the whole YACS host environment under
+`D:\yacs`, including `runner`, `runner-monitor`, `engine`, external `data/mocap`,
+caches and retained historical worktrees. Remove verified obsolete duplicates
+only after preserving unique bytes and local Git changes. Old-path junctions
+are compatibility aliases, never new authoring roots. Runner credentials and
+local caches stay outside Git. CI owns its isolated `_work` checkout and must
+never compile or clean the open authoring project. Preserve the interactive GPU
+runner mode; changing it to a Windows service requires a separate runtime proof.
+
+Owner preference, 2026-10-04 (Issue #335): combine reproducible scripts with
+visible work in the already open Unreal Editor. Scripts prepare data, validate
+contracts and collect evidence; Computer Use supports navigation, inspection and
+showing the owner the result directly in the editor.
+
+- Before declaring desktop control unavailable, read the installed Computer Use
+  skill and discover its supported runtime. Browser-only tool limitations do not
+  establish that a separate Windows Computer Use plugin is unavailable.
+- Select the actual returned Unreal window, observe its current state, perform
+  one UI action and refresh. Never click from stale screenshots or guessed UI.
+- Explain meaningful actions and findings briefly in Polish while the owner
+  watches. Prefer the existing session and preserve their unsaved work.
+- Use direct UI work for bounded visual review; capture reusable multi-step
+  production operations in repository-owned scripts rather than repeated clicks.
+- Existing task authorization covers routine reversible navigation and review;
+  do not repeatedly ask permission. Respect tool safety rules and report exact
+  tool failures instead of claiming success or silently switching mechanisms.
+- UI access does not authorize a wider mutation scope. For Issue #335, keep
+  terrain/roads frozen, fit masks to their existing contract, and keep previews
+  session-only: no Save/Save All, heightmap import or earthworks regeneration.
+- Distinguish live inspection, owner visual acceptance, saved assets, exact-SHA
+  proof and performance admission. A screenshot or successful click proves none
+  of the other gates by itself.
+
+Operational guidance: [live local editor review](docs/UE_MCP_WORLD_GENERATION.md#live-local-editor-review).
+
+### Whole-Landscape appearance and performance scope
+
+Owner clarification, 2026-10-04: while the owner explores the open Unreal scene,
+normal authoring iterations must update that same visible session. Use Live
+Coding for supported C++ changes and explicit editor refresh/reimport for
+changed masks, materials and scene consumers. Verify the visible consumer
+actually updated; a green CI build is not delivery to the owner's preview.
+CI remains isolated. Announce required editor restarts before performing them
+and preserve unsaved work. Frozen geometry restrictions still apply.
+
+Owner clarification, 2026-10-04: author, review and optimize the **entire current
+Sa Calobra Landscape**, 2,016.5 m × 2,016.5 m (~4.07 km²). Both appearance and
+performance acceptance cover this whole area. The 500–1000 m Golden Kilometer
+is an additional representative check, not a substitute for whole-Landscape
+review or measurement. Cover the area's different environments, demanding views
+and traversal; do not infer area-wide PASS from one selected section. Preserve
+existing budgets, exact-SHA proof, milestone-driven heavy measurement and frozen
+terrain/road geometry. Full-route expansion means going beyond this Landscape.
+
+### Deferred red-overlay review
+
+Owner decision, 2026-10-04: retain the red surface problem-review overlay and
+its P1–P5 / R4C2 / R4C3 queue for the final polish/review pass tracked by #372.
+Do not load or refine that overlay during the current 2A closeout / 2B kickoff.
+Preserve the native registered PNG, flag raster, source hashes and manifest;
+the merged #379 / #380 audit records their meaning and replay procedure.
+Unknowns remain unknown, hard exclusions remain binding, and candidate RGB
+classes are not validated geography or production planting authority.
+
+The owner authorized merging the 2A baseline and starting #363, and explicitly
+transferred the 2A performance measurement to 2B (#363). Do not dispatch a GPU
+benchmark to close 2A. The narrow frozen-baseline exception is recorded in
+`.gumball/world-proof-policy.json` and reports `DEFERRED_TO_2B`; any material,
+mask, geometry, runtime configuration or producer change ends that exception.
+This is authorization to progress the baseline, not a fabricated performance
+PASS or permission to bypass protected CI. Resolve required technical admission
+before marking #335 complete or starting its dependent implementation.
 
 ### Region migration and LFS retirement
 
@@ -102,6 +198,14 @@ review evidence, not permission to repair geometry.
   for review. Production materials/PCG remain subsequent stages.
 
 The normative world contract is in `docs/WORLD_BUILDING_BIBLE.md`, section 5.3.
+
+Owner exception, 2026-10-04 (Issue #335): this mask task may consume only the
+already frozen, visually accepted road output artifacts from
+`c5573b3cf545c51ce83ad1fb0a5ca3111f5ad7f6` / draft PR #338 as read-only mask
+inputs. Pin source hashes and retain all original admission limits. This narrowly
+overrides the parallel-unmerged dependency rule for those output artifacts only;
+do not adopt that branch's code, execute its road builder, alter geometry or
+claim that PR #338 is merged or engineering/performance-admitted.
 
 ### BOB single-direction bend contract
 
@@ -409,6 +513,17 @@ template has `Backlog`, `Ready`, `In progress`, `In review`, `Blocked`,
   validation, CI, review, LFS or proof.
 - Project automation setup and security are documented in
   `docs/ci/PROJECT_WORKFLOW.md`.
+
+Owner dependency policy, 2026-10-04: the 13-step M3 world-finishing sequence
+uses existing #335, then #363 through #374. Each successor is natively blocked
+by its immediate predecessor. Before starting implementation, opening its
+implementation PR or moving it to Ready/In progress, verify the predecessor is
+completed with required proof and merged implementation where applicable.
+Closing as not planned, a draft PR or green CI alone does not satisfy the gate.
+Native GitHub dependencies record the relationship but do not prevent PR
+creation; agents must enforce this execution rule. Removing dependencies or
+changing order requires explicit owner authorization. Project Blocked is
+planning metadata and does not replace proof or this dependency check.
 
 ## Office and home workflow
 

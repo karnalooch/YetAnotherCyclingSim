@@ -13,7 +13,7 @@
 #>
 [CmdletBinding()]
 param(
-    [string] $RunnerRoot = 'D:\actions-runner-yacs',
+    [string] $RunnerRoot = 'D:\yacs\runner',
     [ValidateRange(0, 8760)][int] $MinimumAgeHours = 1,
     [ValidateRange(-1, 2147483647)][int] $ExpectedCandidateCount = -1,
     [long] $ExpectedReclaimBytes = -1,

@@ -24,7 +24,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Cycling|Editor")
 	static bool ApplyRoadEarthworksPatch(
 		ALandscape* Landscape,
-		const FString& PatchManifestPath);
+		const FString& PatchManifestPath,
+		bool bDeferLandscapeUpdate = false,
+		const FString& PersistentTexturePackage = TEXT(""));
+
+	/** Flush fixed patches once before collision verification and explicit save. */
+	UFUNCTION(BlueprintCallable, Category = "Cycling|Editor")
+	static bool FinishRoadEarthworksBatch(ALandscape* Landscape);
 };
 
 #endif // WITH_EDITOR

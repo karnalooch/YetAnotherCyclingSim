@@ -239,6 +239,10 @@ if ($ConservativeBuild) {
 }
 
 if (-not $SkipBuild) {
+    . (Join-Path $PSScriptRoot '../runner/Assert-YacsDiskReserve.ps1')
+    Assert-YacsDiskReserve -Path $ProjectPath
+    . (Join-Path $PSScriptRoot '../ci/Assert-YacsBuildIsolation.ps1')
+    Assert-YacsBuildIsolation -ProjectPath $ProjectPath
     Write-Host ""
     Write-Host "[2/4] Building YetAnotherCyclingSimEditor (Development)..." -ForegroundColor Cyan
     Write-YacsPhaseStatus -Phase 'build' -Status 'running'
@@ -252,6 +256,7 @@ if (-not $SkipBuild) {
         'Win64',
         'Development',
         '-WaitMutex',
+        '-NoHotReloadFromIDE',
         '-FromMsBuild'
     )
     $BuildProc = Start-Process -FilePath (Join-Path -Path $Context.EngineRoot -ChildPath 'Engine/Build/BatchFiles/Build.bat') `

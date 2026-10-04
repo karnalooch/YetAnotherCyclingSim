@@ -1,0 +1,125 @@
+{
+  "status": "HISTORICAL_COVER_BASELINE_CANDIDATE",
+  "geometry_mutation": false,
+  "baseline": {
+    "path": "land-cover-baseline-v1a-2026-10-04/land-cover-manifest.json",
+    "sha256": "e2ccf1b8b26123873153970be39a9fb55239eec19f8c3e858b9f41c5da063f2f"
+  },
+  "source_manifest_sha256": "6bbc62c160b292929506cb8aa75b15906706a089fb4b0319add05ad961c4b464",
+  "producer_sha256_lf": "4097c116a870c0550f95452310b44408c8a0ae796d27c7a2eb2c0b5103dcc9d4",
+  "outputs": [
+    {
+      "path": "forest-historical-weight.tif",
+      "sha256": "72df85860a70899c114df0d2b11118ceba926a636e90765c925054ffb4613f01",
+      "size_bytes": 143255,
+      "logical_sha256": "c9225b62cce59a6e0271c3d518efbe423330553c6b20e79bddbda69335ffe859",
+      "positive_cells": 3978668,
+      "unknown_cells": 0,
+      "provider_fields": [
+        "CONIFERAS",
+        "FRONDOSAS_CADUCIFOLIAS",
+        "FRONDOSAS_PERENNIFOLIAS"
+      ]
+    },
+    {
+      "path": "grass-historical-weight.tif",
+      "sha256": "2f8a91864c0574f5ab9b4ca8b306d1706d87f08d0116cadf1ba51cd7b6d16377",
+      "size_bytes": 75952,
+      "logical_sha256": "581588d5675e0e299e00971204d9b27ce145effd5968ae40bb8ff495a6fe2af9",
+      "positive_cells": 0,
+      "unknown_cells": 0,
+      "provider_fields": [
+        "PASTIZAL",
+        "ALTA_MONTANA_PASTIZAL"
+      ]
+    },
+    {
+      "path": "shrub-historical-weight.tif",
+      "sha256": "6b8aa22dae15c991d82f0e5429dae2146a1981b2c02641c836365aa655658d37",
+      "size_bytes": 195248,
+      "logical_sha256": "22b8e1263577e3d19cbdf5b4d2b0067d13f9c66332c54478bb906242a52c6a3b",
+      "positive_cells": 16164802,
+      "unknown_cells": 0,
+      "provider_fields": [
+        "MATORRAL"
+      ]
+    },
+    {
+      "path": "cropland-historical-weight.tif",
+      "sha256": "3d6b84ecb2f0c3077f7aa0904cc61571098d38f44a97c00d4a1500420e11cdce",
+      "size_bytes": 85511,
+      "logical_sha256": "8c0dd4b0c7f0a12c1aadfb6fc1cc640f4dacbffed5fd9e0f974aa25735fe9dbe",
+      "positive_cells": 221061,
+      "unknown_cells": 0,
+      "provider_fields": [
+        "CULTIVO_HERBACEO_NO_ARROZ",
+        "FRUTALES_CITRICOS",
+        "FRUTALES_NO_CITRICOS",
+        "OLIVAR",
+        "OTROS_LENOSOS",
+        "VINEDO",
+        "HUERTA_FAMILIAR"
+      ]
+    },
+    {
+      "path": "open_rock-historical-weight.tif",
+      "sha256": "1fd2c6920b7b31125c809a2c0138dfe964e881ebd65df1d2d965e70b9c71dcf3",
+      "size_bytes": 194994,
+      "logical_sha256": "9750caa3c9da2a177dafbfc4d4bdf7fca8893abf3c0d51573873540d4111cffd",
+      "positive_cells": 15437466,
+      "unknown_cells": 0,
+      "provider_fields": [
+        "AFLORA_ROCOSO_Y_ROQUEDO",
+        "CANCHALES",
+        "ACANTILADOS_MARINOS"
+      ]
+    },
+    {
+      "path": "bare_ground-historical-weight.tif",
+      "sha256": "5f30c8d62e0fd5f34e4d0782bffceca82b575f239ca0dae9dc5ef51afe77ca79",
+      "size_bytes": 75958,
+      "logical_sha256": "581588d5675e0e299e00971204d9b27ce145effd5968ae40bb8ff495a6fe2af9",
+      "positive_cells": 0,
+      "unknown_cells": 0,
+      "provider_fields": [
+        "SUELO_DESNUDO",
+        "ROTURADOS_SUELO_DESNUDO",
+        "ZONA_EROSIONADA_DESNUDO"
+      ]
+    }
+  ],
+  "semantics": {
+    "weights": "Provider component hectares / full provider polygon SUP_HA; uniform within the historical polygon; no subpolygon location or calibrated confidence",
+    "zero": "No mapped historical component; not proven present-day absence",
+    "unknown": "-32767 for missing/conflicting polygon index; no gap filling",
+    "resolution": "Native 0.5m registration, source reference scale 1:25000; resampling does not improve thematic accuracy",
+    "authority": "SIOSE 2014 (SPOT5 2014 / PNOA 2015) context only; never replaces current-cover evidence, LiDAR class presence or hard exclusions",
+    "groups": "Explicit field groups are partial thematic context; unlisted components are not redistributed or normalized"
+  },
+  "inventory_raster_count": 36,
+  "remaining_gaps": [
+    "Current land-cover boundaries and calibrated confidence",
+    "Measured crown-area canopy density; return fraction is only sampling proxy",
+    "Exact BOB CUT/FILL and inner/outer edge channels",
+    "Wetness/culverts and unresolved hydro gaps",
+    "Accepted safety corridor and production consumer admission"
+  ],
+  "validation": {
+    "focused_tests": "19/19 PASS",
+    "ruff": "PASS",
+    "persisted_readback": "All six exact grids/cells/NoData PASS",
+    "determinism": "Independent regeneration: all six TIFFs and manifest byte-identical",
+    "julka": "510/510 PASS; 0 issues",
+    "julka_tests": "19/19 PASS",
+    "docs": "links/i18n/structure/freshness PASS"
+  },
+  "live_editor": {
+    "existing_session_observed": true,
+    "new_cover_imported": false,
+    "map_saved": false,
+    "map_sha256_after": "5eadda8c9dfbed47f9e5dbffd96b354f11baa4549cb1940d56ec7857a90e0ac0"
+  },
+  "failed_attempt": "land-cover-baseline-v1-2026-10-04 preserved without manifest after missing attribution field; not registered or consumed",
+  "human_visual_acceptance": "PENDING",
+  "whole_2a": "NOT_COMPLETE"
+}

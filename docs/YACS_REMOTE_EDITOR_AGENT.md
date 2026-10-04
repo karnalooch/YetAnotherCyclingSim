@@ -7,6 +7,14 @@
 **Transport:** GitHub Actions, outbound-only  
 **Initial command:** `smoke-cube`
 
+## Local interactive review is a separate surface
+
+The owner also uses [live local editor review](UE_MCP_WORLD_GENERATION.md#live-local-editor-review)
+through the installed Windows Computer Use plugin. That workflow pairs repository
+scripts with visible navigation in an existing Unreal session; it does not use
+this GitHub Actions transport or expand its command allowlist. Local UI access
+does not prove deployment or admission of this remote bridge.
+
 ## Goal
 
 Allow an approved chat/GitHub operator flow to request a small, named Unreal

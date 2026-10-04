@@ -666,3 +666,90 @@ ani przesuwania go o 50 cm. Swoboda dekoracyjna respektuje budynki, domeny świa
 i wykluczenia/bezpieczeństwo drogi. Podgląd kolorowych masek służy przeglądowi
 rozbieżności; poprawiamy przetwarzanie i wyrównanie masek, nie zamrożoną geometrię.
 Kontrakt normatywny: [World Building Bible, sekcja 5.3](WORLD_BUILDING_BIBLE.md#53-world-data-stack--spatial-evidence-before-presentation).
+
+## Frozen Landscape mask review candidate — 2026-10-04
+
+Trzy obrazy kontekstu/podglądu, raster klas diagnostycznych i manifest mają
+osobne identities Julki (`sa-calobra-mask-review-candidate`, 61 plików z closure).
+Podgląd w UE używa istniejącej mapy i materiałów tylko w sesji; nie zapisuje
+assetów/mapy ani nie zmienia geometrii. Amber = relief do przeglądu, cyan =
+mapped Catastro candidate, gray = unknown. Kolory SIOSE oznaczają historyczne
+obiekty, nie aktualny biome. Pozostałe maski 2A nadal wymagają dopuszczenia.
+
+## Placement evidence handoff candidate — 2026-10-04
+
+Osobna maska wykluczenia budynków zachowuje footprint z Catastro bez arbitralnego
+bufora. Raster stanu sadzenia blokuje mapped footprint (0), a pozostały obszar
+pozostawia nierozstrzygnięty (255). Nie emituje zgody na sadzenie (1), ponieważ
+brakuje dopuszczonych masek roślinności, drogi/bezpieczeństwa i pozostałych domen.
+Żółty relief pozostaje wyłącznie do przeglądu; nie staje się klasą skał ani
+automatycznym zakazem sadzenia. Dwa rastry i manifest są poza Git, w cache
+`placement-handoff-v1-2026-10-04`, z identities, hashami i restore w Julce.
+Przygotowanie kończy się świadomym `BLOCKED_FOR_PLANTING` (exit 2).
+
+## Native LiDAR evidence candidate — 2026-10-04
+
+Po zgodzie właściciela dekoder laspy 2.7.0 + lazrs 0.8.2 działa w odizolowanym
+środowisku authoringowym. Istniejące 9 LAZ odczytano w całości (81 990 059
+punktów), bez ponownego pobierania lub modyfikacji. Dopuszczone próbki w AOI:
+23 588 890. Wszystkie nagłówki: LAS 1.4 / format 8 / EPSG:25831.
+
+Dziewięć produktów (8 rastrów + PNG kontekstu) i manifest pozostają w cache
+`lidar-masks-v1b-2026-10-04`. Zawierają klasy/counts/occupancy, próbki first return,
+kandydata wysokości roślinności, fraction native/5m i review flags. Luki (2 713 728
+cells) i ujemna/invalid normalizacja (341 399 cells) pozostają jawne. To kandydaci
+pomiarów, nie gatunki, footprint nowych budynków ani zgoda na sadzenie. DTM i
+zamrożona geometria pozostają read-only. Licencje narzędzi i notices:
+[dependency provenance](legal/DEPENDENCY_PROVENANCE.md#sa-calobra-local-laz-decoder--2026-10-04).
+
+Podgląd LiDAR korzysta z osobnych przygotowanych obrazów; nowe niebo/słońce w UE
+jest tylko w sesji podglądu i nie zapisuje się w istniejącej mapie. Wykluczenia
+drogi/BOB i dopuszczenie do produkcyjnego PCGEx pozostają osobnymi wymaganiami.
+
+Właściciel zaakceptował wizualnie zieloną roślinność i dopuścił krzaki jako
+interpretację różowych obszarów. Osobny kandydat `vegetation-domains-v1a-2026-10-04`
+zachowuje trzy nakładające się domeny klas LiDAR: niską, średnią i wysoką.
+Różowy nadal oznacza niepewną normalizację wysokości; nie zmieniamy go w
+automatycznie potwierdzone krzaki. 328 201 z 341 399 takich cells zawiera niską
+lub średnią roślinność bez wysokiej, a 13 198 także wysoką. Dwa rastry i manifest
+są poza Git, z osobnym receipt, identities i restore w Julce. Brak próbek
+pozostaje unknown, a budynki i relief mają osobne review flags. Nie zmieniono
+terenu, drogi, istniejących masek wysokości ani materiału aktualnego podglądu.
+
+## Maski do bounded PCGEx — 2026-10-04
+
+Pakiet `pcg-masks-v1-2026-10-04` jest gotowy do odczytu masek z jawnymi fallbackami,
+bez przebudowy terenu lub drogi. Selektory niskiej/średniej/wysokiej roślinności
+uwzględniają asfalt, zachowawcze pobocze 0,51m, budynki, obszary BOB oraz wodę
+i infrastrukturę. Woda: BTN plus 106 odcinków oficjalnej tymczasowej sieci GOIB;
+5m wokół linii/punktów to robocze odsunięcie dekoracji, nie szerokość koryta.
+Dane historyczne i brak próbek pozostają jawne. Nie tworzymy gatunków ani
+dokładnych koron drzew ze zdjęcia. Wysokości unknown pozostają unknown.
+
+Po zgodzie właściciela zatrzymano 375 zamrożonych wyników c5573b3 / draft #338
+plus recipe, bez przyjmowania kodu tej gałęzi i bez uruchamiania buildera.
+17 oryginalnych ciężkich źródeł CNIG nie pobrano ponownie ani nie zmodyfikowano.
+Nowa hydrologia: 7 plików z receipt, 171 059 B, kompletna odpowiedź AOI, jedna
+warstwa polyline. Road masks: 6 plików / 33 594 104 B; context: 4 / 198 439 B;
+pakiet PCG: 5 / 20 245 980 B. Liczby obejmują manifesty. Wszystkie payloady są
+w zewnętrznym world-data cache; w Git wyłącznie skrypty, metadata i receipts.
+
+Kontrakt promienia obiektu, clearance, UV/grid, unknown i fallbacków opisuje
+[World Building Bible](WORLD_BUILDING_BIBLE.md#bounded-pcgex-mask-package-with-explicit-fallbacks-issue-335).
+Julka ma osobne identities/restore/profile. Nie deklarujemy wykonanego grafu
+PCGEx, pełnego zamknięcia 2A lub performance PASS. Nowe odsunięcia mają podgląd
+do przeglądu; fiolet oznacza obszar BOB, a nie wcześniejszy różowy review wysokości.
+
+## Przejścia masek i podgląd koryt — 2026-10-04
+
+Kandydat `mask-transitions-v1a-2026-10-04` dodaje miękkie przejście BOB na
+zewnątrz istniejącego wykluczenia oraz wagi gęstości roślinności. Hard masks
+pozostają wiążące. Niebieski jest pasem odsunięcia, ochra linią źródłową cieku,
+pomarańczowy oznacza większe luki do sprawdzenia. Dziewięć połączeń poniżej 1cm
+ma znaczenie wyłącznie dla podglądu topologii; 43 większych kandydatów nie połączono.
+Próba punktów 200x200m: 60 niskich, 0 średnich i 0 wysokich; to przykładowe
+promienie, bez instancji assetów i bez wykonania grafu PCGEx. Próba 3D wymaga
+przypisanego zestawu assetów i osobnego dowodu konsumenta. Publiczne materiały
+Embark wspierają szybkie iteracje z kontrolą artysty, nie narzucają nam wartości
+buforów ani obowiązku instalacji Houdini. Źródła i granice wnioskowania zapisano
+w [production references](PRODUCTION_WORLD_ARCHITECTURE_REFERENCES.md#embark-research-follow-up-masks-and-dressing--2026-10-04).

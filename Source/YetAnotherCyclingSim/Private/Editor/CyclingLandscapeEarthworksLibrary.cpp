@@ -11,6 +11,9 @@
 #include "LandscapeTexturePatch.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "Misc/PackageName.h"
+#include "UObject/Package.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 
@@ -51,9 +54,20 @@ namespace CyclingLandscapeEarthworksInternal
 
 bool UCyclingLandscapeEarthworksLibrary::ApplyRoadEarthworksPatch(
 	ALandscape* Landscape,
-	const FString& PatchManifestPath)
+	const FString& PatchManifestPath,
+	bool bDeferLandscapeUpdate,
+	const FString& PersistentTexturePackage)
 {
 	using namespace CyclingLandscapeEarthworksInternal;
+	const bool bPersistent = !PersistentTexturePackage.IsEmpty();
+	if (bPersistent && (!PersistentTexturePackage.StartsWith(TEXT("/Game/")) ||
+		!FPackageName::IsValidLongPackageName(PersistentTexturePackage) ||
+		FindPackage(nullptr, *PersistentTexturePackage) != nullptr ||
+		FPackageName::DoesPackageExist(PersistentTexturePackage)))
+	{
+		UE_LOG(LogCyclingLandscapeEarthworks, Error, TEXT("Persistent CUT texture must use a new /Game package."));
+		return false;
+	}
 
 	if (!IsValid(Landscape))
 	{
@@ -208,7 +222,7 @@ bool UCyclingLandscapeEarthworksLibrary::ApplyRoadEarthworksPatch(
 		Width,
 		Height,
 		PF_R32_FLOAT,
-		TEXT("BOB_RoadEarthworks_MinHeight"));
+		NAME_None);
 	if (!IsValid(HeightTexture) ||
 		HeightTexture->GetPlatformData() == nullptr ||
 		HeightTexture->GetPlatformData()->Mips.IsEmpty())
@@ -236,12 +250,26 @@ bool UCyclingLandscapeEarthworksLibrary::ApplyRoadEarthworksPatch(
 		HeightsCm.GetData(),
 		static_cast<SIZE_T>(Bytes.Num()));
 	Mip.BulkData.Unlock();
+	if (bPersistent)
+	{
+		UPackage* Package = CreatePackage(*PersistentTexturePackage);
+		HeightTexture->Rename(*FPackageName::GetLongPackageAssetName(PersistentTexturePackage), Package, REN_DontCreateRedirectors);
+		HeightTexture->ClearFlags(RF_Transient);
+		HeightTexture->SetFlags(RF_Public | RF_Standalone);
+		// Keep float32 precision across editor restart; TC_HDR would quantize heights.
+		HeightTexture->CompressionSettings = TC_SingleFloat;
+		HeightTexture->Source.Init(Width, Height, 1, 1, TSF_R32F, Bytes.GetData());
+		HeightTexture->MarkPackageDirty();
+		FAssetRegistryModule::AssetCreated(HeightTexture);
+	}
 	HeightTexture->UpdateResource();
 
 	FActorSpawnParameters SpawnParameters;
 	SpawnParameters.OverrideLevel = World->GetCurrentLevel();
-	SpawnParameters.Name = TEXT("BOB_RoadEarthworksCutPatch");
-	SpawnParameters.ObjectFlags |= RF_Transient;
+	if (!bPersistent)
+	{
+		SpawnParameters.ObjectFlags |= RF_Transient;
+	}
 	SpawnParameters.SpawnCollisionHandlingOverride =
 		ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	AActor* PatchActor = World->SpawnActor<AActor>(
@@ -253,12 +281,12 @@ bool UCyclingLandscapeEarthworksLibrary::ApplyRoadEarthworksPatch(
 		UE_LOG(LogCyclingLandscapeEarthworks, Error, TEXT("Failed to spawn transient CUT patch actor."));
 		return false;
 	}
-	PatchActor->SetActorLabel(TEXT("BOB Road_Earthworks CUT-only Min patch — transient"));
+	PatchActor->SetActorLabel(bPersistent ? TEXT("YACS_PERSIST_CUT") : TEXT("BOB Road_Earthworks CUT-only Min patch — transient"));
 
 	ULandscapeTexturePatch* Patch = NewObject<ULandscapeTexturePatch>(
 		PatchActor,
 		TEXT("BOB_RoadEarthworks_MinPatch"),
-		RF_Transient | RF_Transactional);
+		bPersistent ? RF_Transactional : (RF_Transient | RF_Transactional));
 	if (!IsValid(Patch))
 	{
 		UE_LOG(LogCyclingLandscapeEarthworks, Error, TEXT("Failed to allocate Landscape Texture Patch component."));
@@ -308,8 +336,10 @@ bool UCyclingLandscapeEarthworksLibrary::ApplyRoadEarthworksPatch(
 	}
 	// Request the full merge through Landscape; the patch-layer helper is not
 	// exported by the installed UE 5.8 binary (LNK2019).
-	Landscape->ForceLayersFullUpdate();
-	Landscape->PostEditChange();
+	if (!bDeferLandscapeUpdate && !FinishRoadEarthworksBatch(Landscape))
+	{
+		return false;
+	}
 
 	UE_LOG(
 		LogCyclingLandscapeEarthworks,
@@ -323,6 +353,17 @@ bool UCyclingLandscapeEarthworksLibrary::ApplyRoadEarthworksPatch(
 		Height,
 		MinHeightCm,
 		MaxHeightCm);
+	return true;
+}
+
+bool UCyclingLandscapeEarthworksLibrary::FinishRoadEarthworksBatch(ALandscape* Landscape)
+{
+	if (!IsValid(Landscape))
+	{
+		return false;
+	}
+	Landscape->ForceLayersFullUpdate();
+	Landscape->PostEditChange();
 	return true;
 }
 

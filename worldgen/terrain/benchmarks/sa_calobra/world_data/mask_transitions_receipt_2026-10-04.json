@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "geometry_mutation": false,
+  "hard_exclusions_modified": false,
+  "source_manifests": [
+    {
+      "path": "pcg-masks-v1-2026-10-04/pcg-mask-manifest.json",
+      "sha256": "465788e5d74cf3eccf59bdddc1480fa4d7dac50d6f22255ca69ac3b9f174b5df"
+    },
+    {
+      "path": "context-exclusions-v2-2026-10-04/context-mask-manifest.json",
+      "sha256": "9be501c31de087479c0844204dbb38d7e1fbcbf39bb38b2195497a20c4941b9a"
+    },
+    {
+      "path": "lidar-masks-v1b-2026-10-04/lidar-manifest.json",
+      "sha256": "fd14d0725f867759438727f9f7275f15427220ea185b01783c9d616432523e00"
+    },
+    {
+      "path": "road-masks-v1a-2026-10-04/road-mask-manifest.json",
+      "sha256": "b9a1891ffe35243dbdf2b3ca9c4e6c67a210cceb4c35123a1a64befb4dff38a9"
+    },
+    {
+      "path": "lidar-review-v1-2026-10-04/review-manifest.json",
+      "sha256": "d1bef514c2a234813167ac509746e021a4ac407c6e4e3b1800fb3e2873e6a51d"
+    }
+  ],
+  "counts": {
+    "subpixel_joins": 9,
+    "unverified_gap_candidates": 43,
+    "example_points_by_band": [
+      60,
+      0,
+      0
+    ]
+  },
+  "proof": {
+    "status": "PASS_TRANSITION_READ_ONLY",
+    "all_original_exclusions_preserved": true,
+    "unknown_preserved": true,
+    "density_bounds_pass": true,
+    "example_points_verified": 60,
+    "pairwise_footprints_separated": true,
+    "graph_executed": false,
+    "determinism": "8/8 products and full manifest byte-identical; raster logical hashes and grid independently verified",
+    "fingerprint": "b18f6fac303a0e83c1f676ab6b0a12ba959bdf0843ff466c15a1d4bde4eb576c"
+  },
+  "groups": {
+    "mask-transitions": {
+      "files": [
+        {
+          "path": "mask-transitions-v1a-2026-10-04/bob-transition-weight.tif",
+          "size_bytes": 199464,
+          "sha256": "ebbe3afd7cffd86d05d862f6f5b6a76051f51d3b61bb5636401e407db89b224c"
+        },
+        {
+          "path": "mask-transitions-v1a-2026-10-04/hydrology-topology-review.json",
+          "size_bytes": 92959,
+          "sha256": "227bb9be27490b0ed52b295cc183830592aa6825a8c6db8bd25a6c99d86b4162"
+        },
+        {
+          "path": "mask-transitions-v1a-2026-10-04/placement-point-review.json",
+          "size_bytes": 21577,
+          "sha256": "d82c05fc051a75ba098768c3bf58751a34d4fe68489c717842be82858252e73c"
+        },
+        {
+          "path": "mask-transitions-v1a-2026-10-04/placement-point-review.png",
+          "size_bytes": 504301,
+          "sha256": "fe2df1ea04a449b69354e8151e41ed920a1fef542fae2124810a7dfeec418229"
+        },
+        {
+          "path": "mask-transitions-v1a-2026-10-04/review-overlay.png",
+          "size_bytes": 38726480,
+          "sha256": "0f99d012c4f144b45c44be87926a8af4c360b0954da09ed8801b06243d770b6a"
+        },
+        {
+          "path": "mask-transitions-v1a-2026-10-04/transition-manifest.json",
+          "size_bytes": 4179,
+          "sha256": "2cb28c018f2ed3562762d8c47976307b64397f06417c5c8efc4221bd92182950"
+        },
+        {
+          "path": "mask-transitions-v1a-2026-10-04/vegetation-density-weight.tif",
+          "size_bytes": 34940804,
+          "sha256": "9a6e590cfe72dd4cd74f2924d01cd1ce13609aa861cce0f428838941ae6dcc09"
+        },
+        {
+          "path": "mask-transitions-v1a-2026-10-04/water-centreline-review.tif",
+          "size_bytes": 51111,
+          "sha256": "d0ba167f087bad2b10b633ee6bc48baf12b9dd1359f9c4dc17ff02399cac8f0e"
+        },
+        {
+          "path": "mask-transitions-v1a-2026-10-04/water-gap-review.tif",
+          "size_bytes": 24396,
+          "sha256": "bfbdf89b3c89b2d74f6928f4c366c16f79a2a387b8111e88f01ed97ef7fc480d"
+        }
+      ],
+      "file_count": 9,
+      "size_bytes": 74565271
+    },
+    "mask-transition-review": {
+      "files": [
+        {
+          "path": "mask-transition-review-v1a-2026-10-04/historical-context.png",
+          "size_bytes": 121270,
+          "sha256": "4ee4131061ee12ee7a20b4d5c2cccd27a5cb9091fa80f99831029cae81c45d3e"
+        },
+        {
+          "path": "mask-transition-review-v1a-2026-10-04/orthophoto.png",
+          "size_bytes": 37058260,
+          "sha256": "36eb65995ccd9ff7b8d169a208f97d2f3c6729c97053c5a5fcba4b3a6c62faa5"
+        },
+        {
+          "path": "mask-transition-review-v1a-2026-10-04/review-manifest.json",
+          "size_bytes": 12401,
+          "sha256": "aed7f8324102750fd898224a3951e10507b27e6878a7c093def723b4c0a5bf14"
+        },
+        {
+          "path": "mask-transition-review-v1a-2026-10-04/review-overlay.png",
+          "size_bytes": 38726480,
+          "sha256": "0f99d012c4f144b45c44be87926a8af4c360b0954da09ed8801b06243d770b6a"
+        }
+      ],
+      "file_count": 4,
+      "size_bytes": 75918411
+    }
+  },
+  "remaining": "Actual mesh/PCGEx graph and trusted performance admission; larger topology gaps and exact BOB footprint review"
+}

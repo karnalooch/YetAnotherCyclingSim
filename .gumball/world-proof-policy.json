@@ -1,6 +1,12 @@
 {
   "schema_version": 1,
   "authority": "docs/CI_VALIDATION_TIERS.md",
+  "owner_deferred_2a_performance": {
+    "issue": 335,
+    "due_issue": 363,
+    "owner_decision_date": "2026-10-04",
+    "baseline_sha": "3087b3ef1b4a47fc56ccddda140a04e8b017b0f7"
+  },
   "source_evidence_paths": [
     "worldgen/terrain/benchmarks/sa_calobra/world_data/working_space_sources.json",
     "worldgen/terrain/benchmarks/sa_calobra/world_data/p1_context_receipt_2026-10-04.json",

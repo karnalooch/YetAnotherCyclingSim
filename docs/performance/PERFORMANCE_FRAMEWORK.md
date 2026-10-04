@@ -34,6 +34,16 @@ After that checkpoint:
 
 This cadence is defined operationally in [`../CI_VALIDATION_TIERS.md`](../CI_VALIDATION_TIERS.md).
 
+For the current Sa Calobra world-finishing work, owner clarification on
+2026-10-04 makes the **entire existing 2,016.5 m × 2,016.5 m Landscape** the
+performance acceptance area. At the frozen visual checkpoint, use the existing
+capture/analyzer path for representative traversal and demanding views across
+its different environments, keeping location-specific results and applicable
+frame/GPU/memory/streaming evidence. A passing 500–1000 m Golden Kilometer alone
+does not establish whole-Landscape PASS. Existing hard/warning/watch budgets and
+the milestone-driven measurement cadence remain unchanged; no new measurement
+framework or arbitrary memory threshold is introduced by this scope clarification.
+
 ## Version roadmap
 
 | Version | Roadmap integration | Primary scope | New evidence |

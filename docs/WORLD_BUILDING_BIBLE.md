@@ -1505,6 +1505,17 @@ BOB road-earthworks authority remain unchanged.
 
 #### Frozen geometry and mask review (Issue #335)
 
+Owner scope clarification, 2026-10-04: the entire existing Sa Calobra Landscape
+(2,016.5 m × 2,016.5 m, ~4.07 km²) is the authoring, appearance-review and
+performance-validation area. Review its different environments, road/terrain
+transitions and broad views; measure representative traversal and demanding
+views across that full area using the existing performance framework/budgets.
+Keep location-specific evidence. The 500–1000 m Golden Kilometer is an additional
+detailed rider-camera check, not sufficient evidence for whole-Landscape PASS.
+Expand beyond the current Landscape only after its visual/performance gates.
+Heavy measurement remains milestone-driven; frozen geometry and explicit unknowns
+remain binding throughout full-area work.
+
 Owner decision, 2026-10-04: the existing terrain and roads are frozen for this
 2A task. Fit normalized masks to the existing Landscape and road coordinate
 contract. Do not change Base_DTM, Landscape heights/topology, road geometry or
@@ -1527,6 +1538,273 @@ CRS/grid/axis/registration errors, not frozen geometry. High native DTM relief
 alone is not evidence of a Landscape error. Unresolved disagreements stay
 visible for owner review. This diagnostic overlay does not implement production
 2B materials or later PCG dressing.
+
+#### Frozen Landscape diagnostic mask consumer (Issue #335)
+
+The bounded review producer reads verified normalized candidates and four pinned
+orthophotos, then emits native-grid context PNGs and a diagnostic class raster
+outside Git. It never emits a heightmap. World-space texture registration is
+`UV = (UE_XY_cm / 50 + 0.5) / 4033`: the admitted Landscape origin is the first
+DTM pixel center `(483000.25, 4409516.25)`, not the AOI corner. This half-pixel
+term is required for exact mask registration; texture edges are at -25 cm and
+201625 cm while Landscape vertices span 0 to 201600 cm.
+
+The fixed Python-only Unreal review loads the existing saved baseline, checks
+its transform/topology/layers and samples native-height agreement before/after.
+Only session material, transient camera and explicitly requested review sky/sun
+change; no map/assets are saved,
+no height import occurs, and no road or BOB earthworks are generated. Original
+map bytes, actor transforms and sampled collision heights must stay unchanged.
+Existing compiled modules may be reused for this Python-only proof; record both
+the script commit and compiled-project commit rather than claiming a rebuild.
+
+Amber means native local relief over 10 m requiring review, cyan means a mapped
+Catastro footprint candidate, gray means unknown evidence/imagery gap. SIOSE
+colors identify historical polygons only. Uncolored ortho is context, not PASS.
+No red error is fabricated from relief. Road/BOB, current land-cover, LiDAR and
+canopy layers stay explicitly blocked until admitted. Diagnostic consumer proof
+is not production materials/PCG, whole-2A completion or human visual acceptance.
+
+#### Native LiDAR evidence candidate (Issue #335)
+
+The owner approved isolated local `laspy==2.7.0` / `lazrs==0.8.2` tools to decode
+the nine retained NPC03 LAZ files. They are authoring-only tools; their verified
+licenses/notices and exact wheel identities are recorded in
+[dependency provenance](legal/DEPENDENCY_PROVENANCE.md#sa-calobra-local-laz-decoder--2026-10-04).
+No raw CNIG source is downloaded again or modified. All nine LAS 1.4 format 8
+headers must declare EPSG:25831; source bytes and complete point counts are
+verified before any candidate is accepted. Provider orthometric convention is
+inherited, while inspected headers contain horizontal CRS only. Read-only ground
+return versus DTM residuals remain evidence, never a vertical correction.
+
+`scripts/assets/prepare_sa_calobra_lidar_masks.py` streams point chunks into the
+existing 4033×4033 / 0.5 m grid. Withheld, synthetic, overlap flags, classes 7/18
+(noise) and 12 (overlap) are excluded. Six count bands preserve ground (2), low
+(3), medium (4), high (5) vegetation, buildings/roof/facade (6/71/72/73/74), and
+other source classes. Occupancy is a separate bitmask; no accepted samples is
+255 unknown. Zero counts are not real-world absence proof. Water/infrastructure
+in other classes does not imply complete exclusion coverage or road authority.
+
+Vegetation-height candidate is maximum vegetation Z minus the containing native
+DTM pixel; no terrain resampling, smoothing, height import or gap filling occurs.
+Any negative/invalid normalization keeps the cell unknown and sets a review
+flag. Native high relief sets another review flag, not a planting prohibition.
+The first-return vegetation fraction is a sampling proxy, not crown-area cover,
+species evidence or planting density. A second fraction aggregates counts over
+10×10 native cells (5 m support), repeats the value on the unchanged grid and
+clips the last three-cell edge. Repetition grants no 0.5 m density accuracy.
+Counts and unknown/review evidence accompany these candidates; no calibrated
+pixel confidence is invented.
+
+The independent reader checks byte/logical hashes, CRS/grid/dtype/NoData,
+class-count/occupancy consistency and first-return fractions. Clean regeneration
+must reproduce all products and the full manifest. This is LiDAR evidence,
+not admitted current land cover, a complete canopy model or production PCGEx.
+Existing planting readiness remains blocked pending source review, current-cover
+and accepted road/safety/BOB domains.
+
+The no-save diagnostic consumer can display these colors on the frozen Landscape:
+green shades show source vegetation class presence, brown ground-class presence,
+magenta invalid/negative height normalization requiring review. Existing amber
+relief and cyan Catastro priorities remain. Magenta is not a measured Landscape
+error. On owner request, the review session adds native UE 5.8.2 SkyAtmosphere
+and an atmosphere DirectionalLight plus an oblique sky view; these transient
+actors do not alter frozen terrain/road or persist into the map. Source API
+authority: version-matched Epic Sky Atmosphere documentation and installed
+SkyAtmosphereComponent/DirectionalLightComponent headers.
+
+Owner follow-up, 2026-10-04: the green vegetation preview is visually accepted;
+pink may be shrubs as an environment-art interpretation. This accepts the broad
+vegetation character, not height normalization, species, planting eligibility,
+collision or whole-2A completion. Keep the existing magenta review legend.
+`scripts/assets/prepare_sa_calobra_vegetation_domains.py` separates overlapping
+low/medium/high source-class presence into three native-grid bands, with unknown
+samples and height/relief/building-overlap review flags preserved separately.
+Class evidence remains usable for domain review even where normalized height is
+unknown; it never repairs that height or emits a planting permission.
+
+Of 341,399 height-review cells, 336,036 contain class 3; 328,201 contain low or
+medium vegetation without class 5, and 13,198 contain class 5. Those last two
+counts partition the review cells. Class-overlap counts must not be added.
+Low vegetation can be grass or low shrubs; high vegetation may also include
+shrubs. Do not infer species or exact tree placement from these classes.
+See the [vegetation-domain receipt](../worldgen/terrain/benchmarks/sa_calobra/world_data/vegetation_domains_receipt_2026-10-04.json).
+
+#### Bounded PCGEx mask package with explicit fallbacks (Issue #335)
+
+The owner authorized read-only reuse of frozen accepted road outputs from
+`c5573b3cf545c51ce83ad1fb0a5ca3111f5ad7f6` / draft PR #338. This exception covers
+artifacts only, not branch code, road/BOB rebuilds or engineering admission.
+The retained 375 inputs plus recipe preserve original PARTIAL_IMPORTED and
+unadmitted engineering/collision flags. Footprints use all 184 constructed
+network windows and the accepted 2,401-station hairpin presentation profile.
+
+`pcg-masks-v1-2026-10-04/pcg-mask-manifest.json` is
+`READY_FOR_BOUNDED_MASK_CONSUMER_WITH_FALLBACKS`: three overlapping low/medium/high
+source-class selectors, exclusion bits, a conservative distance lower bound and
+a linear RGBA data texture. Frozen grid: 4033x4033, 0.5m, EPSG:25831. No terrain,
+road or building relocation occurs. First pixel centre [483000.25,4409516.25]
+is the UE origin, X east/Y south in centimetres; nearest texture sampling uses
+`(XY_cm/50+0.5)/4033`. Never interpolate unknowns into placement permission.
+
+Explicit fallbacks preserve source-class vegetation character without species,
+exact crowns or current-cover probability. Invalid height stays unknown;
+high selectors reject it, observed low/medium classes may retain it. Exclusions
+include frozen pavement, a conservative 0.51m shoulder envelope, Catastro/LiDAR
+building footprints and entire BOB affected rectangles including guards. These
+rectangles do not claim exact CUT/FILL or inner/outer roles. Unknown LiDAR samples
+and other classes are excluded. Yellow relief never becomes a rock label.
+
+Bounded BTN water/infrastructure context is supplemented by GOIB provisional
+hydrography layer 0: 106 AOI features, with `ANY_MTIB` 2010 (81) and 95 (25).
+Do not invent a century or treat catalogue refresh as a new survey. A **5m
+decorative holdback** surrounds mapped lines/points; polygons retain geometry.
+This is not measured channel width, permanent wetness, flood extent, regulatory
+distance or complete water coverage.
+
+Consumers must supply a positive horizontal asset radius plus nonnegative
+additional clearance, keep the footprint inside AOI and check their sum against
+the distance. The distance subtracts half the pixel diagonal and rounds down;
+the reader additionally subtracts the query offset from the cell centre. RGBA
+alone cannot authorize placement. Use nearest, no sRGB/mipmaps; original pinned
+LiDAR density/height remain evidence, not planting counts. The independent
+`read_sa_calobra_pcg_masks.py` proves bounded reads, not an executed PCGEx graph.
+Road/context/package products and full manifests reproduce byte-identically
+across clean output directories. Julka profile `sa-calobra-pcg-masks-candidate`
+checks source closure and outputs; byte PASS does not complete whole 2A.
+See `worldgen/terrain/benchmarks/sa_calobra/world_data/pcg_masks_receipt_2026-10-04.json`.
+Raw, rasters and textures stay outside Git in the world-data cache.
+
+New review colours: white pavement, sand shoulder, cyan buildings, purple BOB
+affected rectangles and blue water holdbacks. Purple here differs from earlier
+pink invalid-height diagnostics. Earlier green acceptance does not automatically
+accept new holdbacks. The existing native reviewer can show this on frozen
+Landscape with session-only sky and no save. Production integration, full-authority
+completeness and performance admission remain separate; never run a
+terrain-importing proof for this frozen task.
+
+#### Live mask review with the owner
+
+Use reproducible preparation/validation scripts together with visible inspection
+in the already open Unreal Editor, following the
+[local review workflow](UE_MCP_WORLD_GENERATION.md#live-local-editor-review).
+Explain meaningful actions in Polish, inspect current UI state before acting and
+refresh after each action. Preserve unsaved work; #335 previews remain session-only
+and must not save or alter the frozen Landscape/roads. Record which masks/views
+the owner accepted separately from data integrity and technical proof. Computer
+Use access enables this review loop; it does not admit production PCGEx planting.
+
+#### Mask transitions and stream topology review (Issue #335)
+
+Owner-approved continuation softens mask presentation and density without
+shrinking hard exclusions. A transition sidecar keeps original PCG selectors
+and distance checks binding. Relative low/medium/high weights use source-class
+return share over 11 cells (5.5m), with authored 3/6/10m clearance fades. These
+are decorative weights, not physical plant density or confidence. Unknown stays
+unknown; smoothing cannot promote prohibited cells into placement permission.
+
+BOB receives an outward-only 6m fade. Original affected rectangles remain fully
+excluded; this does not establish exact earthwork boundaries. Reducing them
+requires a separately admitted footprint. The new review renders faint blue
+water holdbacks and ochre mapped centrelines, without claiming a wet surface.
+
+The GOIB topology audit distinguishes junctions, AOI exits and unverified
+terminals. Display joins require an unambiguous nearest feature within 0.5m
+and must stay inside the original water holdback. The current nine joins are
+below 1cm. Forty-three larger nearest-feature gap candidates remain unjoined,
+marked orange for review. They do not establish errors, flow or culverts;
+not all terminals must connect. Asphalt may visually cover continuous data.
+
+A deterministic 200x200m point trial uses explicit example circles, source
+weights, spacing and seed 335. Current accepted counts are low=60, medium=0,
+high=0. Points satisfy the original clearance reader and pairwise footprint
+separation. This proves bounded point reads, not real meshes, species admission
+or PCGEx graph execution. Legacy vegetation validation does not automatically
+admit a Sa Calobra asset set. Production integration/performance remain open.
+
+`mask-transitions-v1a-2026-10-04` retains weights, topology and point review;
+Julka profile `sa-calobra-mask-transitions-candidate` retains the complete parent
+closure. Earlier receipts and acceptance keep their scope. The Embark research
+in the production references supports artist-controlled, independently
+regenerable preparation; these numeric fades and topology rules are YACS
+decisions, not claimed Embark settings.
+
+#### Frozen CUT and FILL authoring evidence (Issue #335)
+
+Frozen CUT-only evidence can be prepared separately with
+`scripts/assets/prepare_sa_calobra_earthworks_masks.py`. The producer verifies
+the normalized parent and the read-only frozen road recipe, then reads all 184
+network patches plus the hairpin patch without running a road/earthworks builder.
+It emits CUT-depth lower bounds and resolved-lowering evidence on the native grid.
+The 7 mm encoding allowance covers native height quantization, rounded import
+metadata and float32 centimetre payload precision; it is not terrain smoothing.
+Overlapping CUT targets use the greatest resolved lowering. Uncovered or unknown
+ground stays NoData, and zero means no lowering resolved beyond the allowance.
+
+The separate FILL authoring-state channel reports `0=NOT_AUTHORED` within verified
+CUT-only patch coverage and `255=unknown` elsewhere. It is not an inferred physical
+nasyp footprint. This is frozen-artifact evidence, not engineering admission or
+exact inner/outer-edge classification. Original BOB rectangles and hard exclusions
+remain unchanged; whole-2A acceptance and production planting remain pending.
+
+#### Unresolved stream review queue (Issue #335)
+
+The unresolved stream queue can be prepared with
+`scripts/assets/prepare_sa_calobra_mask_review_queue.py`. It independently checks
+the transition and PCG product identities/grid, retains the original candidate
+order, and reports each gap's source IDs, EPSG geometry, frozen UE XY coordinates
+in centimetres and all-touched overlaps with existing exclusion reasons. The
+first native pixel centre is UE `(0,0)`; increasing southward distance increases
+UE Y. Queue output remains outside Git; a small receipt pins its identity.
+
+The current 43 candidates overlap pavement in 14 cases, the conservative BOB
+domain in 37 and unknown LiDAR samples in 11. These overlapping counts are not
+additive and do not prove actual road crossings, missing culverts or topology
+errors. Every larger gap remains `REVIEW_ONLY_KEEP_UNJOINED`, wetness unknown and
+culverts unverified. Original BOB rectangles, unknown rejection and hard masks
+remain binding. The queue locates review work; it does not grant owner visual
+acceptance, whole-2A completion, material-domain truth or production planting.
+
+#### Complete baseline before refinement (Issue #335)
+
+Owner priority, 2026-10-04: prepare the complete mask baseline before the next
+world-finishing step; refine mask quality later. Do not spend this pass exhaustively
+reviewing stream gaps or polishing transitions. Keep frozen geometry and explicit
+unknowns. Baseline availability and geographic/current-source admission are separate.
+
+`scripts/assets/prepare_sa_calobra_land_cover_baseline.py` adds six separate
+historical context weights: forest, grass, shrub, cropland, open rock and bare
+ground. It verifies normalized source bytes, preserves the native grid, and uses
+explicit component hectares divided by the full provider polygon `SUP_HA`.
+Weights are uniform inside each SIOSE 2014 polygon; they do not locate individual
+components within mixed polygons. They are not current land-cover masks, calibrated
+confidence or production planting/material authorization. Missing/conflicting
+polygon indices remain NoData; unlisted categories are never redistributed.
+
+The current source reports zero grass and bare-ground component weights in this
+AOI. That is historical mapped evidence, not present-day absence; LiDAR low
+vegetation remains separate. The source reference scale is 1:25,000 despite
+native 0.5 m raster registration. Current-cover refinement, measured canopy
+density and exact BOB CUT/FILL/inner/outer edges remain explicit handoff gaps.
+
+#### Placement evidence handoff candidate (Issue #335)
+
+`scripts/assets/prepare_sa_calobra_placement_handoff.py` prepares a separate
+building-exclusion candidate and placement-state raster on the frozen native
+grid. It verifies the normalized manifest and all its pinned output hashes
+before deriving either product. Building exclusion retains 1=mapped footprint,
+0=no mapped footprint (not proven clear), 255=unknown. Placement state uses
+0=prohibited mapped building, 255=unresolved; 1=eligible is reserved and is never
+emitted while current vegetation, road/safety and other required domains are
+missing. No arbitrary building buffer, planting density or slope cutoff is added.
+
+Amber local relief remains review evidence, not an automatic rock class or
+planting exclusion. Historical SIOSE colors do not become current planting
+classes. Preparation exits 2 with `BLOCKED_FOR_PLANTING` after writing the
+hash-bearing candidate manifest; that is deliberate incomplete admission, not a
+claim that a PCGEx graph executed. Julka keeps byte integrity and planting
+readiness in separate profiles. All products remain outside Git; no terrain,
+road, Unreal asset or runtime consumer is changed by this handoff.
 
 #### Working-space normalization candidate (Issue #335)
 

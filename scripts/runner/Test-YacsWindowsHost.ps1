@@ -11,7 +11,7 @@
 [CmdletBinding()]
 param(
     [string] $RepoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path,
-    [string] $RunnerRoot = 'D:\actions-runner-yacs',
+    [string] $RunnerRoot = 'D:\yacs\runner',
     [double] $MinimumFreeGiB = 50.0,
     [switch] $SkipGithubAuth,
     [switch] $Json

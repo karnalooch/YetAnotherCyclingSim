@@ -65,6 +65,64 @@ The Stage 3G spike is stricter: it starts with inspection and transient verifica
 
 **Recovery note (28.09.2026):** PR #155 proved the Stage 3G CI/authoring harness and PR #162 is merged, providing the first real conifer baseline plus persisted `PCG_RouteExclusion` and `PCG_Forest` assets. Issue #230 now builds the YACS World Authoring Library above those assets: semantic presets, approved-provider discovery/acquisition, deterministic layout and a guarded Scene Composer. This does **not** mean persistent MCP-driven generation is already approved. #85 remains the controlled agent-orchestration track.
 
+## Live local editor review
+
+Owner decision, 2026-10-04 (Issue #335): work through both reproducible preparation
+scripts and the already open Unreal Editor. The installed Windows Computer Use
+plugin was verified for window discovery, activation, observation and closing an
+obscuring Content Browser panel. This establishes local UI access only; it does
+not establish PCGEx execution, controller support or persistent authoring admission.
+
+The working loop is:
+
+1. Prepare and verify source/derived data with existing repository tools; keep
+   raw and generated payloads in their contracted cache and record Julka identity.
+2. Read the installed Computer Use skill, discover its runtime and select the
+   actual returned Unreal window. Check the current map, dialogs and unsaved state.
+3. Explain the next meaningful action briefly in Polish. Observe, act once and
+   refresh; use live navigation to inspect masks, source disagreements and close
+   views together with the owner. Reobserve after owner interaction or focus changes.
+4. Record findings and the scope of owner acceptance. Move repeatable production
+   steps into tested repository scripts, then collect required exact-SHA proof.
+
+Prefer the existing editor session; preserve unsaved user work and do not close
+or restart the editor merely to regain control. Check a separate desktop plugin
+before interpreting browser-only limitations as absence of Windows access. If
+control fails, report the operation/error and use an authorized supported fallback.
+Follow the plugin's safety/confirmation requirements; never use UI control to
+bypass a blocked action or execute terminal commands through desktop controls.
+
+The mask reviewer must reuse the expected map already open in the editor. It
+must not call `load_map` to reopen its saved baseline: the accepted road,
+earthworks and supports can exist only as transient session objects and are not
+present in the saved baseline. A different or missing current map is an error,
+not permission to replace the owner's world. Road restoration was explicitly
+authorized on 2026-10-04; it replayed fixed CUT files and existing support recipes
+without saving the map. This does not admit fresh road/earthworks authoring.
+
+For #335, the preview remains session-only: no Save/Save All, terrain sculpting,
+heightmap import, road movement or earthworks generation. Masks fit the frozen
+Landscape/road contract. Sky and diagnostic overlays are review aids. Live review
+does not replace provenance, determinism, CI, trusted performance or human visual
+acceptance. This local workflow does not extend the remote #228 command allowlist
+or the MCP spike's persistent-write boundary.
+
+Owner exception, later on 2026-10-04: persist the accepted scene and consolidate
+local work under `D:\yacs`. The explicit checkpoint operation may save the
+existing fixed geometry, CUT assets and diagnostic materials. Ordinary mask
+review remains no-save. Follow [the persistent workspace workflow](tooling/LOCAL_WORKSPACE.md)
+and verify saved state by reopening; never treat transient actors as a backup.
+
+For the unresolved #335 stream candidates, prepare the hash-pinned queue using
+`scripts/assets/prepare_sa_calobra_mask_review_queue.py --transition-manifest
+<transition-manifest.json> --pcg-manifest <pcg-mask-manifest.json> --output
+<external-cache>/mask-review-queue.json`. Its `focus_world_xy_cm` locates each
+gap for closer inspection in the existing session; it deliberately supplies no
+invented elevation or automatic repair. Use a separately verified terrain height
+when setting a 3D camera. Conservative overlaps are review hints, not culvert
+proof. Julka profile `sa-calobra-mask-review-queue-candidate` retains the queue
+and full transition parent closure. Owner acceptance remains pending.
+
 ## 3. Why UE-MCP
 
 The selected upstream already provides the Unreal Editor bridge, MCP categories for world authoring, YAML flows, retries/rollback, git snapshots, configurable guards and context strategies. We reuse those capabilities rather than creating a second editor automation framework.

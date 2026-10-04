@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "status": "REVIEW_QUEUE_ONLY",
+  "geometry_mutation": false,
+  "hard_exclusions_modified": false,
+  "human_visual_acceptance": "PENDING",
+  "whole_2a": "INCOMPLETE",
+  "production_planting": "NOT_ADMITTED",
+  "queue": {
+    "path": "mask-review-queue-v1-2026-10-04/mask-review-queue.json",
+    "size_bytes": 51900,
+    "sha256": "c7c548aa45e64fbea9ac18ab5c4a9f0cb42e918c3034c86753b7ac93d34bb788"
+  },
+  "producer_sha256_lf": "94544718e45ddb043c22968ed6d3426e462530a714ac94a14122fc015886a22d",
+  "source_manifests": [
+    {
+      "path": "mask-transitions-v1a-2026-10-04/transition-manifest.json",
+      "sha256": "2cb28c018f2ed3562762d8c47976307b64397f06417c5c8efc4221bd92182950"
+    },
+    {
+      "path": "pcg-masks-v1-2026-10-04/pcg-mask-manifest.json",
+      "sha256": "465788e5d74cf3eccf59bdddc1480fa4d7dac50d6f22255ca69ac3b9f174b5df"
+    }
+  ],
+  "count": 43,
+  "overlap_candidate_counts": {
+    "pavement": 14,
+    "conservative_shoulder": 19,
+    "conservative_bob": 37,
+    "mapped_building": 0,
+    "decorative_water_holdback": 43,
+    "infrastructure": 0,
+    "other_lidar_class": 10,
+    "unknown_samples": 11
+  },
+  "overlap_semantics": "All-touched cells on unchanged hard masks; overlaps are not additive and do not prove a road crossing, culvert, actual water extent or a topology error",
+  "review_decisions": {
+    "larger_gaps": "Keep all candidates unjoined pending source/visual review",
+    "bob": "Retain original conservative rectangles and outward-only fade",
+    "unknown": "Remain ineligible; no material/species inference"
+  },
+  "determinism": "Two independent preparations yield byte-identical queue JSON; parent products verified each time",
+  "live_review": {
+    "engine_version": "5.8.2-56702186+++UE5+Release-5.8",
+    "compiled_project_commit": "fa52453a8818db70e3dbef73fe485f8d55b60247",
+    "diagnostic_producer_commit": "f57615ceb5dc77e48d003c0dd195e29fdd507c47",
+    "inspected": [
+      "live road/stream/BOB close view",
+      "live existing diagnostic overview camera",
+      "retained native mask-review-plan.png"
+    ],
+    "limits": "Queue candidates have not all been visually inspected; retained captures are prior evidence, not a fresh exact-head proof",
+    "map_saved": false,
+    "assets_saved": false,
+    "map_sha256_after": "5eadda8c9dfbed47f9e5dbffd96b354f11baa4549cb1940d56ec7857a90e0ac0",
+    "ui_problem": "OpenClipboard failed with error code 5. A camera command pointed at sky; a later paste inserted the owner handoff text. Navigation recovered via existing camera menu; no save. Further clipboard execution avoided.",
+    "camera_api_evidence": "Installed UE 5.8.2 UnrealEditorSubsystem.h and KismetMathLibrary.h; web version-matched Python API pages unavailable"
+  },
+  "validation": {
+    "focused_tests": "14/14 PASS",
+    "ruff": "PASS",
+    "docs": {
+      "links": "PASS",
+      "i18n": "PASS",
+      "structure": "PASS",
+      "freshness": "PASS"
+    },
+    "julka_contract_tests": "19/19 PASS",
+    "julka": "503/503 files PASS, 0 issues; sa-calobra-mask-review-queue-candidate"
+  }
+}

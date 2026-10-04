@@ -7,6 +7,19 @@ changed or invoked.
 
 ## Architecture decision
 
+The home host's canonical workspace and checkpoint lifecycle are defined in
+[LOCAL_WORKSPACE.md](LOCAL_WORKSPACE.md). Local sources now live under the
+configured `data/world-data/sa-calobra-working-v1` root. Julka resolves it from
+the shared `workspace.json`, using `YACS_WORKSPACE_CONFIG` when set or the file
+beside the checkout otherwise. An explicit `--root` takes precedence, followed
+by `YACS_ASSET_ROOT`. Unconfigured machines retain the `~/YACS-Assets` default.
+The canonical root maps the existing CNIG catalog and provider receipt directly
+to `manual-cnig` and its sibling receipt; other explicit asset roots retain the
+legacy `sources/<dataset>` layout. No duplicate source files or junctions are
+created. Existing hash identities and remote-availability limitations remain in
+force. A source snapshot stored in the separate workspace backup is not
+automatically a registered Julka hydration backend.
+
 The public Embark pattern establishes a producer → prepared data → Unreal
 consumer → bounded proof boundary for terrain/world content. Public evidence
 does not disclose the internal ARC Raiders recipe, node graph or settings.
@@ -162,3 +175,89 @@ remains nonzero for missing current-land-cover, LiDAR/canopy, water/infrastructu
 and road/BOB layers. GIS read/hash PASS is not Unreal or human visual acceptance.
 Restore is local-only copying plus hash verification, or pinned regeneration;
 no remote backup is registered. See the [normalized report](../../worldgen/terrain/benchmarks/sa_calobra/world_data/NORMALIZED_CONTEXT_2026-10-04.md).
+
+## Frozen Landscape mask review candidate — 2026-10-04
+
+`sa-calobra-mask-review-candidate` adds five pinned identities to the existing
+candidate closure: three native-grid context/review PNGs, one diagnostic class
+raster and their manifest (61 total files). `explain mask_review_v1` describes
+colors, pixel-center registration, frozen map identity and remaining blocked
+layers. Restore remains local-only copying and hash verification, or pinned
+producer regeneration; an Unreal render is a separate receipt, never inferred
+from byte PASS. No new terrain, road or current-biome authority is admitted.
+
+## Placement evidence handoff candidate — 2026-10-04
+
+`sa-calobra-placement-evidence-candidate` verifies 59 source/context/placement
+identities, including two native-grid rasters and `placement-manifest.json`.
+`sa-calobra-placement-readiness` extends it but retains the ten incomplete
+World Authority layer groups and must return nonzero. `explain
+placement_handoff_v1` reports prohibited/unknown counts, provenance, fingerprint,
+restore and `BLOCKED_FOR_PLANTING`; byte PASS cannot grant planting permission.
+Restore is local copying plus hashes or pinned producer regeneration. No remote
+backup or PCGEx execution is claimed. Source amber relief remains review evidence.
+
+## Native LiDAR evidence candidate — 2026-10-04
+
+`sa-calobra-lidar-evidence-candidate` adds ten pinned prepared/evidence identities
+and their nine raw LAZ dependencies to the existing review closure.
+`sa-calobra-lidar-review-candidate` adds three context PNGs and a review manifest.
+`explain lidar_masks_v1` reports complete decode counts, source-class/height/fraction
+limits, versions, fingerprint, clean regeneration and local restore. A native
+render receipt is separate from these hash checks; the preview sky is transient.
+
+Raw source bytes remain read-only. Derived payloads stay outside Git; a small
+[receipt](../../worldgen/terrain/benchmarks/sa_calobra/world_data/lidar_masks_receipt_2026-10-04.json)
+records hashes/provenance in the repository. Restore is local copying plus
+hashes or pinned regeneration with approved isolated decoder tools; no remote
+derivative backup is registered. Whole-2A/planting readiness stays nonzero:
+candidate data existence is not admission of current cover, canopy, exclusions
+or road/BOB authority. See the [Bible](../WORLD_BUILDING_BIBLE.md#native-lidar-evidence-candidate-issue-335).
+
+## Vegetation domains and owner review — 2026-10-04
+
+`sa-calobra-vegetation-domains-candidate` adds two rasters and a manifest to the
+84-file LiDAR review closure. `explain vegetation_domains_v1` records overlapping
+low/medium/high presence, unknown samples, separate review flags, the pink-cell
+audit and scoped owner acceptance of the green preview. Local restore uses
+verified copies or the pinned producer and retained derived LiDAR inputs; no new
+decoder installation, raw download or remote backup is needed. The
+[receipt](../../worldgen/terrain/benchmarks/sa_calobra/world_data/vegetation_domains_receipt_2026-10-04.json)
+records byte/logical hashes and clean regeneration. Neither visual acceptance
+nor this candidate profile admits production planting or complete road safety.
+
+## Bounded PCGEx mask candidate — 2026-10-04
+
+Profile `sa-calobra-pcg-masks-candidate` extends the 87-file vegetation closure
+with 402 retained source/derived/review files (489 total). Its byte PASS is
+separate from native integration, human acceptance or full World Authority.
+Use `verify --profile sa-calobra-pcg-masks-candidate --root <world-data-cache>
+--repo <checkout>`; `explain pcg_masks`, `explain regional_hydrology`,
+`explain frozen_road`, `explain road_masks` and `explain context_exclusions`
+report identity, sizes, source limits and local-only restore. No remote backup
+or automatic road rebuild is registered.
+
+The official GOIB provisional hydrography snapshot has 106 AOI features and
+dataset-specific Creative Commons Attribution evidence; source years remain
+2010 / 95 as delivered. Mask water/infrastructure holdbacks are decorative 5m
+fallbacks, not measured channel widths or regulated distances. Road inputs are
+owner-authorized frozen c5573b3 output artifacts; original PARTIAL_IMPORTED and
+engineering/collision limits remain unchanged. Raw/rasters/PNGs stay outside Git.
+
+The bounded consumer receipt records `PASS_MASK_READ_ONLY`; it does not run a
+PCGEx graph. Radius/clearance are explicit, unknowns reject placement, high
+selectors reject invalid height. Earlier green visual acceptance covers character;
+new holdbacks still need review. Historical blocked profiles keep their original
+scope and point to the successor candidate rather than rewriting old evidence.
+Full-authority readiness continues to fail closed while its admissions are missing.
+
+## Mask transitions candidate — 2026-10-04
+
+`sa-calobra-mask-transitions-candidate` extends the 489-file bounded PCG profile
+with 9 transition files and 4 native-review payloads (502 identities). Source
+closure, local-only restore and earlier admission limits remain explicit.
+`explain mask_transitions` reports hashes, topology-review counts and example
+point scope. Unknowns and all original hard exclusions remain binding.
+Nine subpixel display joins are below 1cm; 43 larger candidates remain unjoined.
+The low-only 60-point trial is not actual asset placement or PCGEx execution.
+Native no-save captures/proof are separate from profile byte integrity.

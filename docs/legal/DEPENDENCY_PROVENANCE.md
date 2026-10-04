@@ -53,6 +53,47 @@ recording only a moving branch name.
 
 ## 4. Current ledger
 
+### Cyclist mocap research archive — 2026-10-04
+
+**Acquired; not imported into Unreal.** The existing local research folder was
+moved intact to `data/mocap/cyclist-spike` in the persistent workspace. Source:
+[Dataset of Motion Capture of Cyclists](https://doi.org/10.5281/zenodo.10668611),
+Zenodo record 10668611, published 2024-02-15, by Panayiotis Kyriakou,
+Yiorgos Chrysanthou and Marios Kyriakou. The retained provider response
+`zenodo_record.json` declares CC BY 4.0. Original `Dataset_cycing_mocap.zip` is
+497,387,739 bytes, provider MD5 `f5188f3088a928502142ed00f06637cc`.
+No dataset bytes are committed to the public repository. The unchanged source
+ZIP and its provider metadata are backed up with the unpublished workspace
+checkpoint; the local migration receipt records SHA-256 verification.
+Preserve the author names, title, DOI and
+[CC BY 4.0 license](https://creativecommons.org/licenses/by/4.0/), and identify
+any future modifications. This storage migration does not admit animation
+quality, retargeting or runtime use.
+
+### Sa Calobra local LAZ decoder — 2026-10-04
+
+Owner explicitly approved installation of an isolated LAZ decoder for Issue #335.
+`laspy==2.7.0` and `lazrs==0.8.2` are acquired local authoring tools; no package
+source/binary is vendored, no Unreal/runtime dependency is introduced. Existing
+GIS numpy/rasterio/pyproj are reused through a local `--system-site-packages` venv.
+Version pins are in `scripts/assets/requirements-sa-calobra-lidar.txt`.
+
+| Package / upstream | Exact downloaded wheel SHA-256 | Verified license / preserved notice | Use |
+|---|---|---|---|
+| [laspy](https://github.com/laspy/laspy), 2.7.0 | `15f5344c62a1023461996bdf5d1ba5fdd813e96694a524fee712931134f3792f` (py3-none-any) | BSD-2-Clause; installed wheel LICENSE.txt inspected; [full notice](notices/laspy-2.7.0-LICENSE.txt) | import library for read-only LAS headers and chunked decoding; no upstream implementation copied |
+| [lazrs](https://github.com/laz-rs/laz-rs-python), 0.8.2 | `213803fbaaf734d5ff3c886bb4a2d173ea24a31383c3cda5383b9bc16e8f0635` (cp312-win_amd64) | MIT; installed wheel LICENSE.txt inspected; [full notice](notices/lazrs-0.8.2-LICENSE.txt) | compressed LAZ backend; no upstream implementation copied |
+
+Wheel URLs/hashes and install environment are retained in the local pip report;
+package versions are recorded in each derived manifest. Licenses permit this
+local/commercial use; redistribution requires retaining their notices. API
+behavior was checked against the installed 2.7.0 `LasHeader.parse_crs` and
+`LasReader.chunk_iterator` primary source, as online docs identify an older
+version. Provider semantics come from [IGN class definitions](https://pnoa.ign.es/resources/archivos/EspTec/Definicion_Clases_241004-LID3-SPC-LID-00122-IGN_Ed_2.0_NP.pdf)
+and [NPC processing](https://pnoa.ign.es/pnoa-lidar/procesamiento-de-los-datos),
+including advanced building/roof classes; unsupported classes remain separate
+other evidence. Provider orthometric convention is inherited, not independently
+remeasured from the horizontal-only LAZ CRS headers.
+
 | Source | Status | Exact source / revision | License evidence | YACS use | Verification |
 |---|---|---|---|---|---|
 | Embark Studios SkyHook | **candidate / reference** | `EmbarkStudios/skyhook` @ `fa8a44d51518303c0563d03b433b10145af7e51d` | upstream `LICENSE-MIT` and `LICENSE-APACHE`; dual MIT / Apache-2.0 | architecture reference for a small DCC <-> Unreal/game-engine transport and command boundary; no source vendored in YACS | exact revision and license files reviewed 2026-09-30 |
@@ -232,3 +273,24 @@ historical SIOSE attribution and Catastro transformed-data terms. Nine products,
 manifest and QA remain outside Git; only hashes/metadata/recipe/receipts enter
 Git. The normalized report records exact inputs, output identities, versions,
 NoData/conflict semantics, reproducibility and remaining acceptance gates.
+
+## GOIB provisional hydrography and BTN geometry — 2026-10-04
+
+Official [Xarxa Hidrogràfica Provisional catalogue](https://intranet.caib.es/opendatacataleg/es/dataset/xarxa-hidrografica-provisional)
+names DG Recursos Hídrics and Creative Commons Attribution (version unspecified).
+This dataset-specific grant applies only to the named provisional network,
+[GOIB service layer 0](https://ideib.caib.es/geoserveis/rest/services/public/GOIB_XarxaHidro_RiscInun_IB/MapServer/0).
+Generic service iteminfo instead asks users to contact the distributor; do not
+extend the dataset-specific grant to other layers. The exact catalogue HTML,
+service/layer metadata, ID inventory and complete 106-feature AOI response are
+pinned outside Git in `regional-hydrology-2026-10-04`; receipt/catalog retain
+size/hash identities and attribution. `ANY_MTIB` 2010/95 stays as delivered;
+no 2026 survey, permanent wetness, measured width or flood extent is inferred.
+
+BTN decoding uses the official [Mapbox vector tile specification 2.1](https://github.com/mapbox/vector-tile-spec/tree/master/2.1)
+and [IGN service documentation](https://www.ign.es/web/estilos-de-los-servicios-de-teselas-vectoriales).
+No third-party decoder/runtime dependency was added. Existing CNIG attribution
+applies to the 30 retained tiles. Only bounded selected water/infrastructure
+layers enter the derived context; duplicate tile fragments are not unique
+entity counts. GOIB/BTN line/point 5m decorative holdbacks are authored fallback
+decisions and are explicitly distinct from geographic/regulatory measurements.

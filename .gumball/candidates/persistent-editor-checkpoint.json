@@ -1,0 +1,11 @@
+{
+  "id": "persistent-editor-checkpoint",
+  "source": "karnalooch/YetAnotherCyclingSim",
+  "category": "tooling",
+  "problem": "Live procedural editor objects and CI-owned checkouts can disappear despite a clean code repository.",
+  "invariant": "Use a single configured authoring checkout, isolate CI, pin external data identities, and verify a saved scene in a fresh editor before declaring a checkpoint recoverable.",
+  "evidence": ["PR #362", "docs/tooling/LOCAL_WORKSPACE.md"],
+  "do_not_copy": ["Machine paths", "Map names", "Product-specific geometry counts"],
+  "failure_behavior": "Do not admit stale or failed reopen proof. Preserve originals and distinguish local recovery from remote backup. Avoid duplicating full GPU scenes to create backups.",
+  "status": "candidate"
+}

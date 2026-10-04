@@ -7,6 +7,10 @@
 
 ## Why now
 
+This plan retains rollout history. Current host paths and startup instructions
+are maintained in the [local workspace contract](tooling/LOCAL_WORKSPACE.md).
+The canonical runner root after the 2026-10-04 migration is `D:\yacs\runner`.
+
 Stage 3G already needs exactly the work that hosted GitHub runners cannot prove
 for this project: a real UE 5.8 Editor build, Unreal Automation, editor
 authoring, map save/reload, Map Check and rendered 1920×1080 captures.
@@ -116,7 +120,7 @@ Canonical proof:
 - workflow run: `36240146312`;
 - exact main SHA: `9826b0f82d2a895a0a5d6fbf358aac162e199aa5`;
 - runner: `yacs-home-ue58`, label `yacs-ue58`;
-- runner root: `D:\actions-runner-yacs`;
+- runner root at proof time: `D:\actions-runner-yacs` (historical);
 - Unreal Engine: `5.8.2`;
 - normal code-only canary: **13 discovered / 13 passed / 0 failed / 0 errors**;
 - intentional-red: expected failure with **0 discovered tests**, verified fail-closed;
@@ -213,7 +217,7 @@ Target setup:
 - run the GitHub runner from Windows Task Scheduler rather than relying on manual
   `run.cmd`;
 - use a dedicated local Windows account for the runner when practical;
-- start at boot/logon with the runner rooted on `D:\actions-runner-yacs`;
+- start at logon in the interactive desktop with the runner rooted on `D:\yacs\runner`;
 - keep the repository-scoped `yacs-ue58` label and existing trust restrictions;
 - do not make a classic Windows service the default for visual/GPU workloads
   unless a separate proof demonstrates that the required UE workload is compatible
