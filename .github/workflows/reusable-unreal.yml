@@ -485,7 +485,7 @@ jobs:
               $network.height_profile_candidate_window_count -le 0 -or
               $network.height_profile_incompatible_window_count -le 0 -or
               $network.extreme_cut_case.capture -ne 'network-extreme-cut.png' -or
-              @($network.windows | Where-Object { $_.asphalt_penetration_count -ne 0 }).Count -ne 0) {
+              @($network.windows | Where-Object { $_.asphalt_penetration_count -ne 0 -and ($_.visual_review_required -ne $true -or $_.pavement_material -ne 'REVIEW_RED') }).Count -ne 0) {
             throw 'Current-Landscape native network proof failed.'
           }
 
@@ -503,7 +503,9 @@ jobs:
               @($network.windows).Count -ne (@($preparedNetwork.approved).Count + @($preparedNetwork.owner_reviewed).Count - @($preparedNetwork.nudo.replaced_window_ids).Count + @($preparedNetwork.nudo.windows).Count) -or
               $network.nudo.construction_sha256 -ne $preparedNetwork.nudo.construction_sha256 -or
               $network.nudo.structure_sha256 -ne $preparedNetwork.nudo.structure_sha256 -or
-              @($network.windows | Where-Object { $_.support.PSObject.Properties.Name -contains 'underpass_clearance' -and $_.support.underpass_clearance.status -eq 'PASS' }).Count -ne 1 -or
+              $network.preview_policy -ne 'RENDER_DEVIATIONS_RED_WIDTH_TOLERANCE_5_PERCENT' -or
+              @($network.windows | Where-Object { $_.id -eq 'nudo-0' -and ($_.visual_review_required -eq $true -or ($_.support.PSObject.Properties.Name -contains 'underpass_clearance' -and $_.support.underpass_clearance.status -eq 'PASS')) }).Count -ne 1 -or
+              @($network.windows | Where-Object { $_.visual_review_required -eq $true -and ($_.pavement_material -ne 'REVIEW_RED' -or @($_.visual_review_reasons).Count -eq 0) }).Count -ne 0 -or
               $network.native_timings.explicit_network_landscape_flush_count -ne 1 -or
               @($network.owner_construction_decision.connections).Count -ne 2 -or
               @($network.owner_construction_decision.connections | Where-Object { $_.endpoint_residual_m -ne 0 }).Count -ne 0 -or

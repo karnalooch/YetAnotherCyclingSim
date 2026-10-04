@@ -26,6 +26,20 @@ The product owner is a beginner programmer. Explanations intended for the produc
 
 ## Working method
 
+### Owner road-preview policy, 2026-10-04
+
+- Do not stop a render for a measurable road-geometry deviation. Render the
+  affected pavement red, record the measured violation, and leave visual
+  acceptance to the owner. Failed measurements must remain failed; rendering
+  is not engineering, collision, rideability or merge admission.
+- Allow local road narrowing and a +/-5% width envelope around the explicit
+  base width (4.75–5.25 m for a 5 m road). Accepted hairpin approaches retain
+  their separately specified base widths. Do not demand exact nominal width
+  merely to permit a preview.
+- Preserve provenance and finite, readable mesh buffers. A missing asset,
+  corrupt receipt or unavailable renderer is a tooling/input failure, not a
+  geometry deviation that can be solved by changing color.
+
 Before editing:
 
 1. Explain in Polish what will change.

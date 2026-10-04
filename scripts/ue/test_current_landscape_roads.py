@@ -46,6 +46,23 @@ def network_fixture():
 
 
 class NativeFullContextTests(unittest.TestCase):
+    def test_geometry_problem_renders_red_instead_of_aborting(self):
+        from scripts.geometry.network_pavement import surface_inspection
+        module, spawn = self.load_consumer()
+        sections = [[[x,4.7*j/24,1] for j in range(25)] for x in range(3)]
+        window = {"id":"narrow", "sections":sections, "length_m":2,
+                  "surface_inspection":surface_inspection(sections)}
+        module.trace = Mock(return_value=1.1)
+        objects, report = module.render_window(object(), window, {})
+        self.assertTrue(objects)
+        self.assertTrue(report["visual_review_required"])
+        self.assertEqual(report["pavement_material"], "REVIEW_RED")
+        self.assertEqual(report["asphalt_penetration_count"], 75)
+        self.assertEqual(report["width_inspection"]["status"], "REVIEW_REQUIRED")
+        self.assertGreaterEqual(len(report["visual_review_reasons"]), 2)
+        self.assertGreater(spawn.call_count, 0)
+        objects[-1][1].set_vector_parameter_value.assert_called_with("Color", (.9,.04,.01,1))
+
     def test_network_flushes_once_after_all_patches_and_never_after_failure(self):
         module, _ = self.load_consumer()
         network = network_fixture()

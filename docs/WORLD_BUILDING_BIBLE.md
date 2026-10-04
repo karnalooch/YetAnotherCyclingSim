@@ -3365,6 +3365,19 @@ accepted pavement vertices; fresh close-up captures must verify the transverse
 dark stripes have disappeared. The version-matched installed
 `GeometryScript/MeshNormalsFunctions.h` defines the split options and signature.
 
+Later owner directive on the same date supersedes preview-blocking geometry
+checks: measurable width, surface, penetration, support or clearance failures
+must produce red pavement with explicit `visual_review_reasons`, rather than
+abort the render or interactive handoff. The owner's width tolerance is +/-5%
+around the explicit base width: 4.75–5.25 m for the nominal 5 m network; local
+narrowing is allowed. Accepted hairpin connections use their explicit 5–5.5 m
+base envelope with the same relative tolerance. This is a presentation policy,
+not permission to relabel failed measurements PASS. Human review and engineering,
+collision and performance admission remain separate. Nonfinite/unreadable
+buffers, provenance mismatch and unavailable native tools remain real failures.
+If a support cannot be built from the supplied geometry, preserve the red
+pavement and report the absent support rather than invent a concealed repair.
+
 The same owner request authorizes the Nus de sa Corbata bridge and loop design.
 `prepare_nudo_preview.py` replaces only the two construction tiles of
 `VIAL_TR70190001178`, retaining their old receipts as history, and connects the

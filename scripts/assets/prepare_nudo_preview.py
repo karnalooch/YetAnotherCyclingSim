@@ -5,9 +5,10 @@ import math
 import numpy as np
 from shapely.geometry import LineString
 
-from scripts.geometry.network_pavement import shoulder_sections, surface_inspection
+from scripts.geometry.network_pavement import shoulder_sections
 from scripts.geometry.network_visual_preview import preview_fingerprint
 from scripts.geometry.reviewed_network import validate_slab
+from scripts.geometry.road_review_policy import review_surface, width_review
 
 
 def design(network):
@@ -81,18 +82,35 @@ def design(network):
             t = distance[i] / 8.0
             view[i] += delta * (1 - 3 * t * t + 2 * t**3)
         view[0] = anchor
+    # Endpoint-normal blending must not interpolate a shorter chord width.
+    # Solve width together with alignment, as on the accepted hairpin joins.
+    widths = np.linalg.norm(rows[:, -1, :2] - rows[:, 0, :2], axis=1)
+    rows[:, :, :2] = (
+        rows[:, 12:13, :2]
+        + (rows[:, :, :2] - rows[:, 12:13, :2]) * (5.0 / widths)[:, None, None]
+    )
+    rows[0], rows[-1] = upper[-1], lower[0]
+    widths = np.linalg.norm(rows[:, -1, :2] - rows[:, 0, :2], axis=1)
     rows = rows.tolist()
-    validate_slab(rows)
+    review_reasons = []
+    if width_review(rows)["status"] != "PASS":
+        review_reasons.append("Nudo width exceeds the owner 5% envelope")
+    try:
+        validate_slab(rows)
+    except ValueError as exc:
+        review_reasons.append(str(exc))
     loop_start = int(np.argmin(np.linalg.norm(xy - paths[1][0], axis=1)))
     loop_end = int(np.argmin(np.linalg.norm(xy - paths[1][-1], axis=1)))
     bend_turns = [
         turns(np.asarray(rows)[loop_start : loop_end + 1, k, :2]) for k in (0, 12, 24)
     ]
     if any(t.min() < -1e-6 or not math.pi < t.sum() < 2 * math.pi for t in bend_turns):
-        raise ValueError("Nudo main bend reverses on an edge or axis")
-    inspection = surface_inspection(rows)
+        review_reasons.append("Nudo main bend reverses on an edge or axis")
+    inspection = review_surface(rows)
     if inspection["status"] != "PASS":
-        raise ValueError("Nudo surface design failed: " + str(inspection))
+        review_reasons.append(
+            "Nudo surface design needs visual review: " + str(inspection)
+        )
     upper_line = LineString([r[12][:2] for r in rows[: len(rows) // 2]])
     lower_line = LineString(paths[-1])
     crossing = upper_line.intersection(lower_line)
@@ -135,6 +153,7 @@ def design(network):
         "main_bend_heading_deg": [float(np.degrees(t.sum())) for t in bend_turns],
         "collision_admitted": False,
         "human_visual_status": "PENDING",
+        "visual_review_reasons": review_reasons,
     }
 
 
@@ -172,7 +191,8 @@ def prepare_nudo(network, terrain, manifest, output):
                 "cut_sha256": digest(path),
                 "max_cut_m": patch["max_cut_m"],
                 "owner_reviewed_geometry": True,
-                "surface_inspection": surface_inspection(part),
+                "surface_inspection": review_surface(part),
+                "visual_review_reasons": structure["visual_review_reasons"],
                 "nudo_structure": True,
             }
         )

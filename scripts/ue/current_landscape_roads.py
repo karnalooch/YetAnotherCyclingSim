@@ -11,11 +11,11 @@ import unreal
 from scripts.geometry.bob_vertical_support import build_vertical_support
 from scripts.geometry.nudo_structure import bridge_parapets, build_nudo_support, inspect_underpass
 from scripts.geometry.reviewed_network import construction_windows, validate_slab
+from scripts.geometry.road_review_policy import review_surface, width_review
 from scripts.geometry.network_pavement import (
     PREVIEW_SUPPORT_CAP_M,
     pavement_slab,
     shoulder_sections,
-    surface_inspection,
 )
 from scripts.ue.ma2141_road_preview import spawn_pavement_mesh
 from scripts.geometry.network_visual_preview import (
@@ -97,6 +97,7 @@ def start(world, root, exact_sha):
     labels = [str(layer.get_name_bp()) for layer in landscapes[0].get_edit_layers_bp()]
     if labels.count("Base_DTM") != 1 or labels.count("Road_Earthworks") != 1:
         raise RuntimeError("Network Landscape layer ownership is ambiguous")
+    network["runtime_review_reasons"] = {}
     for window in construction_windows(network):
         if (
             window.get("technical_patch_tile") is not True
@@ -108,11 +109,13 @@ def start(world, root, exact_sha):
             raise RuntimeError("Network CUT manifest changed")
         patch = json.loads(path.read_text())
         if (
-            (patch["max_cut_m"] > 1.0 and not window.get("owner_reviewed_geometry"))
-            or patch.get("owner_reviewed_geometry", False) != window.get("owner_reviewed_geometry", False)
+            patch.get("owner_reviewed_geometry", False) != window.get("owner_reviewed_geometry", False)
             or digest(directory / patch["patch_file"]) != patch["patch_sha256"]
         ):
             raise RuntimeError("Network CUT cap/hash mismatch")
+        if patch["max_cut_m"] > 1.0 and not window.get("owner_reviewed_geometry"):
+            network["runtime_review_reasons"][window["id"]] = ["Ordinary CUT exceeds 1 m; render for review without applying this patch"]
+            continue
         if not unreal.CyclingLandscapeEarthworksLibrary.apply_road_earthworks_patch(
             landscapes[0], str(path), True
         ):
@@ -261,87 +264,120 @@ def spawn_full_visual_context(world, network):
     return kept, proof
 
 
-def finish(world, root, exact_sha, network):
-    started = time.perf_counter()
+def render_window(world, window, network):
+    """Render valid buffers; mark measured road problems red instead of aborting."""
     kept = []
-    reports = []
-    for window in construction_windows(network):
-        sections = window["sections"]
+    sections = window["sections"]
+    if len(sections) < 3 or any(len(r) != 25 or any(len(p) != 3 or not all(math.isfinite(v) for v in p) for p in r) for r in sections):
+        raise RuntimeError("Network buffers are not renderable")
+    reasons = list(window.get("visual_review_reasons", []))
+    reasons.extend(network.get("runtime_review_reasons", {}).get(window["id"], []))
+    try:
         validate_slab(sections)
-        surface = surface_inspection(sections)
-        if (surface["status"] != "PASS" and not window.get("owner_reviewed_geometry")) or surface != window["surface_inspection"]:
-            raise RuntimeError("Native network 3D surface receipt mismatch")
-        if len(sections) < 3 or any(len(row) != 25 for row in sections):
-            raise RuntimeError("Network sections are incomplete")
-        ground = []
+    except ValueError as exc:
+        reasons.append(str(exc))
+    surface = review_surface(sections)
+    if surface != window["surface_inspection"]:
+        raise RuntimeError("Native network 3D surface receipt mismatch")
+    if surface["status"] != "PASS" and (not window.get("owner_reviewed_geometry") or window.get("nudo_structure")):
+        reasons.append("3D surface parameters require owner review")
+    widths = width_review(sections, window.get("connection", False))
+    if widths["status"] != "PASS":
+        reasons.append("Pavement width outside the owner 5% envelope")
+    support = None
+    ground = []
+    missed_clearance = 0
+    maximum_penetration = 0.0
+    shoulder_penetrations = 0
+    trace_misses = 0
+    def sample(point):
+        nonlocal trace_misses
+        try:
+            return trace(world, point)
+        except RuntimeError as exc:
+            if str(exc) != "Network Landscape trace missed":
+                raise
+            trace_misses += 1
+            return None
+    for row in sections:
+        for point in row:
+            height = sample(point)
+            if height is None:
+                continue
+            penetration = height-point[2]
+            maximum_penetration = max(maximum_penetration, penetration)
+            missed_clearance += penetration > 0.005
+    if missed_clearance:
+        reasons.append(f"Asphalt intersects terrain at {missed_clearance} samples; max {maximum_penetration:.4f} m")
+    proof = {"status": "REVIEW_REQUIRED", "underpass_clearance": {"status": "NOT_BUILT"}}
+    try:
+        if trace_misses:
+            raise ValueError(f"Native ground missing at {trace_misses} asphalt samples; support not built")
         support = shoulder_sections(sections)
-        missed_clearance = 0
-        maximum_penetration = 0.0
-        for row, extended in zip(sections, support, strict=True):
-            if any(not math.isfinite(v) for p in row for v in p):
-                raise RuntimeError("Network nonfinite vertex")
-            width = math.dist(row[0][:2], row[-1][:2])
-            if (not window.get("connection") and abs(width - 5.0) > 0.0001) or (window.get("connection") and not 4.99 <= width <= 5.51):
-                raise RuntimeError("Native network width drift")
-            for point in row:
-                penetration = trace(world, point) - point[2]
-                maximum_penetration = max(maximum_penetration, penetration)
-                missed_clearance += penetration > 0.005
-            endpoints = [trace(world, extended[0]), trace(world, extended[-1])]
-            if any(
-                g - p[2] > 0.005 for g, p in zip(endpoints, (extended[0], extended[-1]))
-            ):
-                raise RuntimeError("Native network shoulder buried")
+        for row in support:
+            endpoints = [sample(row[0]), sample(row[-1])]
+            if None in endpoints:
+                raise ValueError("Native shoulder ground missing; support not built")
+            shoulder_penetrations += sum(g-p[2] > .005 for g,p in zip(endpoints,(row[0],row[-1])))
             ground.append(endpoints)
-        if missed_clearance:
-            raise RuntimeError(
-                f"Network asphalt penetration: {window['id']}: {missed_clearance} samples, {maximum_penetration:.4f} m"
-            )
-        vertices, triangles = pavement_slab(sections)
+        if shoulder_penetrations:
+            reasons.append(f"Shoulders intersect terrain at {shoulder_penetrations} samples")
         if window.get("nudo_structure"):
             sv, st, proof = build_nudo_support(support, ground, window["station_start_m"], network["nudo"]["structure"])
             if proof["arch_soffit_triangle_count"]:
-                proof["underpass_clearance"] = inspect_underpass(sv, st, network["nudo"]["structure"])
+                try:
+                    proof["underpass_clearance"] = inspect_underpass(sv, st, network["nudo"]["structure"])
+                except ValueError as exc:
+                    proof["underpass_clearance"] = {"status": "REVIEW_REQUIRED", "reason": str(exc)}
+                    reasons.append(str(exc))
         else:
             sv, st, proof = build_vertical_support(support, ground)
-        if (
-            proof["min_shoulder_extent_m"] < 0.4999
-            or proof["max_shoulder_extent_m"] > 0.51
-            or proof["max_wall_height_m"] > (network["nudo"]["structure"]["support_cap_m"] if window.get("nudo_structure") else PREVIEW_SUPPORT_CAP_M)
-        ):
-            raise RuntimeError("Network support/shoulder admission failed")
-        kept.append(
-            spawn_pavement_mesh(
-                world, vertices, triangles, "BOB network asphalt " + window["id"]
-            )
-        )
-        actor, material = spawn_pavement_mesh(
-            world, sv, st, "BOB network support " + window["id"]
-        )
-        material.set_vector_parameter_value(
-            "Color", unreal.LinearColor(0.34, 0.31, 0.25, 1)
-        )
-        kept.append((actor, material))
+        cap = network["nudo"]["structure"]["support_cap_m"] if window.get("nudo_structure") else PREVIEW_SUPPORT_CAP_M
+        if proof["min_shoulder_extent_m"] < .4999 or proof["max_shoulder_extent_m"] > .51 or proof["max_wall_height_m"] > cap:
+            reasons.append("Support or shoulder dimensions outside the design envelope")
+        actor, material = spawn_pavement_mesh(world, sv, st, "BOB network support " + window["id"])
+        material.set_vector_parameter_value("Color", unreal.LinearColor(.34,.31,.25,1))
+        kept.append((actor,material))
         if window.get("nudo_structure"):
-            pv, pt = bridge_parapets(support, window["station_start_m"], network["nudo"]["structure"])
+            pv,pt = bridge_parapets(support,window["station_start_m"],network["nudo"]["structure"])
             if pv:
-                parapet, pm = spawn_pavement_mesh(world, pv, pt, "Nudo bridge parapets " + window["id"])
-                pm.set_vector_parameter_value("Color", unreal.LinearColor(0.34, 0.31, 0.25, 1))
-                kept.append((parapet, pm))
-        reports.append(
-            {
-                "id": window["id"],
-                "length_m": window["length_m"],
-                "trace_count": len(sections) * 27,
-                "asphalt_penetration_count": missed_clearance,
-                "maximum_penetration_m": maximum_penetration,
-                "support": proof,
-                "surface_inspection": surface,
-                "owner_reviewed_geometry": window.get("owner_reviewed_geometry", False),
-                "connection": window.get("connection", False),
-            }
-        )
+                parapet,pm = spawn_pavement_mesh(world,pv,pt,"Nudo bridge parapets " + window["id"])
+                pm.set_vector_parameter_value("Color",unreal.LinearColor(.34,.31,.25,1))
+                kept.append((parapet,pm))
+    except ValueError as exc:
+        # A support recipe may reject a folded buffer; keep the actual pavement
+        # visible rather than inventing a different support to conceal it.
+        reasons.append(str(exc))
+        proof = {"status":"REVIEW_REQUIRED", "reason":str(exc)}
+    vertices,triangles = pavement_slab(sections)
+    actor,material = spawn_pavement_mesh(world,vertices,triangles,"BOB network pavement " + window["id"])
+    if reasons:
+        material.set_vector_parameter_value("Color",unreal.LinearColor(.9,.04,.01,1))
+    kept.append((actor,material))
+    return kept, {
+        "id":window["id"], "length_m":window["length_m"],
+        "trace_count":len(sections)*25+len(ground)*2,
+        "asphalt_penetration_count":missed_clearance, "maximum_penetration_m":maximum_penetration,
+        "trace_miss_count":trace_misses,
+        "shoulder_penetration_count":shoulder_penetrations, "support":proof,
+        "surface_inspection":surface, "width_inspection":widths,
+        "visual_review_required":bool(reasons), "visual_review_reasons":reasons,
+        "pavement_material":"REVIEW_RED" if reasons else "ASPHALT",
+        "owner_reviewed_geometry":window.get("owner_reviewed_geometry",False),
+        "connection":window.get("connection",False),
+    }
+
+
+def finish(world, root, exact_sha, network):
+    started = time.perf_counter()
+    kept, reports = [], []
+    for window in construction_windows(network):
+        objects, report = render_window(world, window, network)
+        kept.extend(objects)
+        reports.append(report)
     context_objects, context_proof = spawn_full_visual_context(world, network)
+    review_count = sum(w["visual_review_required"] for w in reports)
+    context_proof["rendered_review_red_window_count"] = review_count
     kept.extend(context_objects)
     network["full_context_rendered"] = True
     report = {
@@ -350,6 +386,8 @@ def finish(world, root, exact_sha, network):
         "owner_construction_decision": network.get("owner_construction_decision"),
         "nudo": ({k: v for k, v in network["nudo"].items() if k != "windows"} if "nudo" in network else None),
         "construction_window_count": len(reports),
+        "visual_review_window_count": review_count,
+        "preview_policy": "RENDER_DEVIATIONS_RED_WIDTH_TOLERANCE_5_PERCENT",
         "owner_reviewed_patch_tile_count": sum(w.get("owner_reviewed_geometry", False) and not w.get("nudo_structure", False) for w in construction_windows(network)),
         "constructed_length_m": sum(w["length_m"] for w in reports),
         "surface_review_exception_count": sum(w["surface_inspection"]["status"] != "PASS" for w in reports),
