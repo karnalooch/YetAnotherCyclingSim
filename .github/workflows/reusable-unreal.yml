@@ -451,10 +451,17 @@ jobs:
           if (
             $proof.technical_capture_status -ne 'PASS' -or
             $proof.exact_sha -ne '${{ inputs.target_sha }}' -or
-            $proof.captures.Count -ne 11 -or
+            $proof.captures.Count -ne 13 -or
             $proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT' -or
             $proof.road_geometry_inspection_required -ne $true
           ) { throw 'Terrain capture proof failed.' }
+          foreach ($connectionView in @('network-hairpin-entry', 'network-hairpin-exit')) {
+            $views = @($proof.captures | Where-Object { $_.name -eq $connectionView })
+            if ($views.Count -ne 1 -or $views[0].reviewed_pavement -ne 'asphalt' -or
+                $views[0].shoulder_m -ne 0.5) {
+              throw "Missing reviewed hairpin connection capture: $connectionView"
+            }
+          }
 
           $extremeView = @($proof.captures | Where-Object { $_.name -eq 'network-extreme-cut' })
           if ($extremeView.Count -ne 1 -or
@@ -486,10 +493,15 @@ jobs:
           $context = $network.full_visual_context
           if ($context.status -ne 'FULL_SOURCE_CONTEXT_REVIEW_REQUIRED' -or
               $context.road_admitted -ne $false -or $context.collision_admitted -ne $false -or
-              $context.terrain_change_applied -ne $false -or
+              $context.terrain_change_applied -ne $true -or $context.material -ne 'ASPHALT' -or
               $context.fingerprint -ne $preparedNetwork.full_preview_proof.fingerprint -or
               [int]$context.rendered_source_marker_count -ne @($preparedNetwork.full_preview.source_markers).Count -or
-              [int]$context.rendered_rejected_surface_count -ne @($preparedNetwork.full_preview.rejected_surfaces).Count -or
+              [int]$context.rendered_rejected_surface_count -ne 0 -or
+              [int]$context.rendered_reviewed_surface_count -ne @($preparedNetwork.full_preview.rejected_surfaces).Count -or
+              [int]$network.owner_reviewed_patch_tile_count -ne @($preparedNetwork.owner_reviewed).Count -or
+              @($network.windows).Count -ne (@($preparedNetwork.approved).Count + @($preparedNetwork.owner_reviewed).Count) -or
+              @($network.owner_construction_decision.connections).Count -ne 2 -or
+              @($network.owner_construction_decision.connections | Where-Object { $_.endpoint_residual_m -ne 0 }).Count -ne 0 -or
               [Math]::Abs([double]$context.source_marker_length_m - [double]$preparedNetwork.source_clipped_length_m) -gt 0.00001 -or
               -not (Test-Path (Join-Path $root 'Network/network-full-preview-plan.png'))) {
             throw 'Full-source visual context proof failed.'

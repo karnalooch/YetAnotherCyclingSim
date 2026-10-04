@@ -3293,7 +3293,8 @@ is an inferred preview assumption, not an all-road pavement survey. No bus
 widening is inferred. Crossfall is a bounded provisional design, attenuated to
 4% and 0.0037/m; grade <=31%. Full acceptance remains pending.
 
-The accepted 300 m footprint and 8 m exclusion buffer stay owned by #332.
+The accepted 300 m footprint stays owned by #332. Its original 8 m exclusion
+buffer is closed only by the two endpoint connections authorized below.
 Nudo de la Corbata and its 12 m protection buffer are explicitly blocked for
 structure/vertical-separation review. A 10 m outer-boundary inset preserves
 Landscape/patch coverage. Every other source part is authored once as a
@@ -3310,7 +3311,8 @@ interval retains an explicit conservative reason even when reassessment passes;
 that PASS never silently changes its admission or erases the reason required by
 the visual-context receipt. A width-preserving fit is not admitted merely because it renders.
 
-The ordinary CUT cap remains 1 m. The previously reviewed hairpin's scoped 4 m
+The ordinary CUT cap remains 1 m except for the exact owner-reviewed construction
+set below. The previously reviewed hairpin's scoped 4 m
 cliff exception is NOT copied across the network. CUT is prepared with the
 existing native Min/world-unit float32 patch contract on `Road_Earthworks`;
 `Base_DTM` and saved maps remain untouched. Independent actual Landscape traces
@@ -3326,7 +3328,34 @@ An incompatible conflict interval fails closed; it is not lowered arbitrarily,
 narrowed or claimed imported. No collision, physics or human/performance
 admission follows.
 
-Full visual context, owner continuation decision 2026-10-03: the existing
+Owner construction decision, 2026-10-04: the owner personally accepted all red
+surfaces in `704203647ff7967ddefdae4d6cb3aa00e0ca1297`, full-preview fingerprint
+`fc894083cc8f13c2df86a919af0778b246ec263e271a595ad307a188cfc82da5`, and instructed
+BOB to cut the terrain above them, add the same 0.5 m shoulders and vertical
+support, and replace red with the existing asphalt material. This is a scoped
+visual/construction decision: preserve those section coordinates, retain the
+original failed ordinary-policy measurements, and report measured CUT depth
+without the old 1 m construction cap for this exact set. Any changed reviewed
+fingerprint fails closed. Finite vertices, nonfolded triangles, native clearance,
+the 7 m support ceiling, source/physics ownership and protected Nudo remain
+mandatory. Do not convert a failed engineering measurement into a PASS.
+
+Close both ends of the same hairpin exclusion gap using the actual 25-vertex
+network and accepted-ribbon endpoint sections. Short connections preserve exact
+endpoint positions and interpolate width between the explicit 5 m network and
+5.25/5.5 m accepted approach widths; the accepted 300 m ribbon is unchanged.
+New connections and resulting CUT/support require fresh exact-SHA native proof.
+The previously rendered rejected/shifted diagnostic slabs must not overlay the
+adopted asphalt. Erosion remains future work. This decision does not admit
+collision, riding, engineering suitability or performance. Ordinary-policy
+`blocked` records remain diagnostic history, not a count of unrendered roads.
+
+The integration uses the existing UE 5.8.2 (CL 56702186) native LandscapePatch
+path. Version-matched Epic source `LandscapeTexturePatch.h` defines `Min` as
+lower-only, `WorldUnits` as direct world heights and `WorldZero` as absolute Z;
+the existing YACS adapter uses these unchanged. No PCGEx API or dependency changes.
+
+Historical full visual context, owner continuation decision 2026-10-03: the existing
 capture and Lit handoff also render every rejected decision interval at its
 unchanged candidate height, in red and without CUT/support/collision. A narrow
 amber location marker preserves every clipped source part, including Nudo,

@@ -101,6 +101,22 @@ class NativeFullContextTests(unittest.TestCase):
             module.spawn_full_visual_context(object(), network_fixture())
         self.assertEqual(spawn.call_count, 1)
 
+    def test_adopted_context_does_not_overlay_red_or_shifted_diagnostic_slabs(self):
+        module, spawn = self.load_consumer()
+        network = network_fixture()
+        network["owner_reviewed"] = [{"id": "reviewed-conflict"}]
+        module.trace = Mock(return_value=0)
+        # Receipt validation is tested independently with altered coordinates.
+        module.construction_windows = Mock(return_value=network["owner_reviewed"])
+        kept, proof = module.spawn_full_visual_context(object(), network)
+        self.assertEqual(len(kept), 1)  # The source-location annotation only.
+        self.assertEqual(proof["rendered_rejected_surface_count"], 0)
+        self.assertEqual(proof["rendered_reviewed_surface_count"], 1)
+        self.assertEqual(proof["material"], "ASPHALT")
+        self.assertTrue(proof["terrain_change_applied"])
+        self.assertEqual(module.spawn_extreme_cut_diagnostic(object(), network), [])
+        self.assertEqual(spawn.call_count, 1)
+
 
 if __name__ == "__main__":
     unittest.main()

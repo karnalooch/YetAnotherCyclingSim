@@ -548,7 +548,8 @@ def measure_cut_envelopes(asphalt, shoulders, terrain, manifest):
 
 
 def prepare_patch(
-    sections, terrain, manifest, path, *, diagnostics=None, asphalt_sections=None
+    sections, terrain, manifest, path, *, diagnostics=None, asphalt_sections=None,
+    reviewed_geometry=False
 ):
     measured = measure_patch(sections, terrain, manifest)
     base, patch, depth = measured["base"], measured["patch"], measured["depth"]
@@ -566,7 +567,7 @@ def prepare_patch(
             cut_cap_m=CUT_CAP,
             support_cap_m=SUPPORT_CAP,
         )
-    if depth.max() > CUT_CAP:
+    if depth.max() > CUT_CAP and not reviewed_geometry:
         raise ValueError(f"Ordinary 1 m CUT cap exceeded ({depth.max():.3f})")
     patch = (patch * 100).astype("<f4")
     patch.tofile(path.with_suffix(".f32"))
@@ -588,6 +589,7 @@ def prepare_patch(
         "patch_file": path.with_suffix(".f32").name,
         "patch_sha256": digest(path.with_suffix(".f32")),
         "max_cut_m": float(depth.max()),
+        "owner_reviewed_geometry": reviewed_geometry,
         "rect": {
             "min_x": minx,
             "min_y": miny,
@@ -1570,6 +1572,8 @@ def prepare(prepared, output, exact_sha):
     result["full_preview_proof"] = validate_full_preview(
         result["full_preview"], result["source_clipped_length_m"]
     )
+    from scripts.assets.prepare_reviewed_network import prepare_reviewed
+    prepare_reviewed(result, terrain, manifest, output)
     write_full_preview_plan(result, output / "network-full-preview-plan.png")
     result["full_preview_plan"] = "network-full-preview-plan.png"
     (output / "network.json").write_text(
@@ -1593,6 +1597,7 @@ if __name__ == "__main__":
                 if k
                 not in (
                     "approved",
+                    "owner_reviewed",
                     "blocked",
                     "full_preview",
                     "height_profile_candidates",

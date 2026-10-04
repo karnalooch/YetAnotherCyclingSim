@@ -8,6 +8,7 @@ from pathlib import Path
 import unreal
 
 from scripts.geometry.bob_vertical_support import build_vertical_support
+from scripts.geometry.reviewed_network import construction_windows, validate_slab
 from scripts.geometry.network_pavement import (
     PREVIEW_SUPPORT_CAP_M,
     pavement_slab,
@@ -93,7 +94,7 @@ def start(world, root, exact_sha):
     labels = [str(layer.get_name_bp()) for layer in landscapes[0].get_edit_layers_bp()]
     if labels.count("Base_DTM") != 1 or labels.count("Road_Earthworks") != 1:
         raise RuntimeError("Network Landscape layer ownership is ambiguous")
-    for window in network["approved"]:
+    for window in construction_windows(network):
         if (
             window.get("technical_patch_tile") is not True
             or not isinstance(window.get("decision_interval_id"), str)
@@ -104,7 +105,8 @@ def start(world, root, exact_sha):
             raise RuntimeError("Network CUT manifest changed")
         patch = json.loads(path.read_text())
         if (
-            patch["max_cut_m"] > 1.0
+            (patch["max_cut_m"] > 1.0 and not window.get("owner_reviewed_geometry"))
+            or patch.get("owner_reviewed_geometry", False) != window.get("owner_reviewed_geometry", False)
             or digest(directory / patch["patch_file"]) != patch["patch_sha256"]
         ):
             raise RuntimeError("Network CUT cap/hash mismatch")
@@ -117,6 +119,9 @@ def start(world, root, exact_sha):
 
 def spawn_extreme_cut_diagnostic(world, network):
     """Render the deepest rejected road/CUT conflict without repairing it."""
+    if "owner_reviewed" in network:
+        construction_windows(network)  # Do not overlay rejected/shifted slabs on adopted asphalt.
+        return []
     case = network.get("extreme_cut_case")
     if (
         not isinstance(case, dict)
@@ -222,7 +227,10 @@ def spawn_full_visual_context(world, network):
     if proof != network["full_preview_proof"]:
         raise RuntimeError("Full preview geometry changed")
     kept = []
-    for item in preview["rejected_surfaces"]:
+    reviewed = "owner_reviewed" in network
+    if reviewed:
+        construction_windows(network)
+    for item in ([] if reviewed else preview["rejected_surfaces"]):
         vertices, triangles = pavement_slab(item["sections"])
         actor, material = spawn_pavement_mesh(world, vertices, triangles, "REVIEW rejected road " + item["id"])
         material.set_vector_parameter_value("Color", unreal.LinearColor(0.9, 0.04, 0.01, 1))
@@ -234,16 +242,21 @@ def spawn_full_visual_context(world, network):
         material.set_vector_parameter_value("Color", unreal.LinearColor(1.0, 0.55, 0.03, 1))
         kept.append((actor, material))
     proof = {**proof, "rendered_source_marker_count": len(preview["source_markers"]), "rendered_rejected_surface_count": len(preview["rejected_surfaces"]), "marker_ground_offset_m": MARKER_GROUND_OFFSET_M, "collision_admitted": False, "terrain_change_applied": False}
+    if reviewed:
+        proof.update(rendered_rejected_surface_count=0,
+                     rendered_reviewed_surface_count=len(preview["rejected_surfaces"]),
+                     terrain_change_applied=True, material="ASPHALT")
     return kept, proof
 
 
 def finish(world, root, exact_sha, network):
     kept = []
     reports = []
-    for window in network["approved"]:
+    for window in construction_windows(network):
         sections = window["sections"]
+        validate_slab(sections)
         surface = surface_inspection(sections)
-        if surface["status"] != "PASS" or surface != window["surface_inspection"]:
+        if (surface["status"] != "PASS" and not window.get("owner_reviewed_geometry")) or surface != window["surface_inspection"]:
             raise RuntimeError("Native network 3D surface receipt mismatch")
         if len(sections) < 3 or any(len(row) != 25 for row in sections):
             raise RuntimeError("Network sections are incomplete")
@@ -255,7 +268,7 @@ def finish(world, root, exact_sha, network):
             if any(not math.isfinite(v) for p in row for v in p):
                 raise RuntimeError("Network nonfinite vertex")
             width = math.dist(row[0][:2], row[-1][:2])
-            if abs(width - 5.0) > 0.0001:
+            if (not window.get("connection") and abs(width - 5.0) > 0.0001) or (window.get("connection") and not 4.99 <= width <= 5.51):
                 raise RuntimeError("Native network width drift")
             for point in row:
                 penetration = trace(world, point) - point[2]
@@ -300,6 +313,8 @@ def finish(world, root, exact_sha, network):
                 "maximum_penetration_m": maximum_penetration,
                 "support": proof,
                 "surface_inspection": surface,
+                "owner_reviewed_geometry": window.get("owner_reviewed_geometry", False),
+                "connection": window.get("connection", False),
             }
         )
     context_objects, context_proof = spawn_full_visual_context(world, network)
@@ -307,6 +322,10 @@ def finish(world, root, exact_sha, network):
     network["full_context_rendered"] = True
     report = {
         "full_visual_context": context_proof,
+        "owner_construction_decision": network.get("owner_construction_decision"),
+        "owner_reviewed_patch_tile_count": len(network.get("owner_reviewed", [])),
+        "constructed_length_m": sum(w["length_m"] for w in reports),
+        "surface_review_exception_count": sum(w["surface_inspection"]["status"] != "PASS" for w in reports),
         "schema_version": 1,
         "exact_sha": exact_sha,
         "status": "PARTIAL_IMPORTED"

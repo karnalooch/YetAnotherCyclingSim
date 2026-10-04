@@ -556,7 +556,7 @@ def main():
             "full_source_context": True,
             "full_context_fingerprint": network["full_preview_proof"]["fingerprint"],
             "source_location_marker": "amber",
-            "rejected_pavement": "red",
+            "reviewed_pavement": "asphalt",
             "road_admitted": False,
         },
         {
@@ -574,11 +574,8 @@ def main():
             "extreme_case_id": extreme["id"],
             "required_cut_m": extreme_cut["max_cut_m"],
             "profile_fit_status": extreme["height_profile_fit"]["status"],
-            "diagnostic_colors": {
-                "rejected_asphalt": "red",
-                "least_bad_lateral_diagnostic": "cyan",
-                "deepest_cut_marker": "yellow",
-            },
+            "diagnostic_colors": {"reviewed_asphalt": "existing_asphalt_material"},
+            "terrain_cut_applied": True,
             "least_bad_lateral_shift_m": extreme["lateral_sweep"][
                 "best_candidate"
             ]["shift_m"],
@@ -594,6 +591,19 @@ def main():
             "target": [target[0],target[1],target[2]+170],
         },
     ])
+    for connection in network["owner_reviewed"]:
+        if not connection.get("connection"):
+            continue
+        row = connection["sections"][len(connection["sections"]) // 2]
+        midpoint = [v * 100 for v in row[12]]
+        _views.append({
+            "name": "network-" + connection["decision_interval_id"],
+            "location": [midpoint[0] - 1200, midpoint[1] + 1200, midpoint[2] + 1800],
+            "target": midpoint,
+            "construction_sha256": network["owner_construction_decision"]["construction_sha256"],
+            "reviewed_pavement": "asphalt",
+            "shoulder_m": 0.5,
+        })
     _camera = actors.spawn_actor_from_class(
         unreal.CameraActor, unreal.Vector(), unreal.Rotator(), transient=True
     )
