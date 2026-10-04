@@ -440,7 +440,7 @@ jobs:
           $script = Join-Path (Get-Location) 'scripts/ue/capture_region_terrain.py'
           $arguments = @(('"' + $project + '"'), ('-ExecutePythonScript="' + $script + '"'), '-Unattended', '-NoPause', '-NoSplash', '-NoP4', '-windowed', '-ResX=1920', '-ResY=1080', '-NoVSync', '-FixedSeed', '-ScriptErrorsAreFatal', '-stdout', ('-AbsLog="' + (Join-Path $root 'capture.engine.log') + '"'))
           $process = Start-Process -FilePath $engine.UnrealEditorPath -ArgumentList $arguments -PassThru -NoNewWindow -RedirectStandardOutput (Join-Path $root 'capture.stdout.log') -RedirectStandardError (Join-Path $root 'capture.stderr.log')
-          if (-not $process.WaitForExit(300000)) {
+          if (-not $process.WaitForExit(600000)) {
             $process | Stop-Process -Force
             throw 'Sa Calobra terrain capture timed out.'
           }
@@ -734,7 +734,7 @@ jobs:
 
           # Adaptive road tiles take longer to instantiate than the former
           # coarse fixed windows. Keep this bounded but allow a full startup.
-          $deadline = [DateTime]::UtcNow.AddSeconds(300)
+          $deadline = [DateTime]::UtcNow.AddSeconds(600)
           while (-not (Test-Path -LiteralPath $proofPath) -and [DateTime]::UtcNow -lt $deadline) {
             $process.Refresh()
             if ($process.HasExited) {

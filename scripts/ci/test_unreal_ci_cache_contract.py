@@ -144,7 +144,7 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         self.assertIn("[int]$cut.after.class_counts.CUT_REQUIRED -ne 0", capture)
         self.assertIn("$inspection.actual_viewmode -ne 'VMI_CLAY'", capture)
         self.assertIn("Final road rider capture did not return to Lit mode.", capture)
-        self.assertIn("WaitForExit(300000)", capture)
+        self.assertIn("WaitForExit(600000)", capture)
         self.assertNotIn("YACS_KEEP_EDITOR_OPEN", capture)
         self.assertNotIn("RUNNER_TRACKING_ID", capture)
 

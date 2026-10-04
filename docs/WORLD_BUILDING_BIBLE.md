@@ -3345,6 +3345,12 @@ network and accepted-ribbon endpoint sections. Short connections preserve exact
 endpoint positions and interpolate width between the explicit 5 m network and
 5.25/5.5 m accepted approach widths; the accepted 300 m ribbon is unchanged.
 New connections and resulting CUT/support require fresh exact-SHA native proof.
+The expanded 183-tile construction uses bounded 600 s capture and interactive
+handoff deadlines. Run `37164282008` at `7ea6734` applied all 183 network patches
+plus the accepted hairpin patch and was still constructing native meshes when
+the historical 300 s capture deadline killed the editor. This is measured
+authoring time, not a relaxed geometry/contact criterion or gameplay performance
+result; a timeout still fails the proof.
 The previously rendered rejected/shifted diagnostic slabs must not overlay the
 adopted asphalt. Erosion remains future work. This decision does not admit
 collision, riding, engineering suitability or performance. Ordinary-policy
