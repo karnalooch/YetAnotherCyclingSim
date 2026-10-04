@@ -15,7 +15,7 @@ class RunnerDiskReserveTests(unittest.TestCase):
                     "pwsh",
                     "-NoProfile",
                     "-Command",
-                    f"$ErrorActionPreference='Stop'; . '{script}'; Assert-YacsDiskReserve -Path '{root}' -AvailableBytes {int(gib * 1024**3)}",
+                    f"$ErrorActionPreference='Stop'; . '{script}'; try {{ Assert-YacsDiskReserve -Path '{root}' -AvailableBytes {int(gib * 1024**3)} }} catch {{ [Console]::Error.WriteLine($_.Exception.Message); exit 1 }}",
                 ],
                 text=True,
                 capture_output=True,

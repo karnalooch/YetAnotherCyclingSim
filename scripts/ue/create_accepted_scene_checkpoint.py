@@ -17,7 +17,7 @@ import unreal
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
-from scripts.workspace import digest, load_workspace  # noqa: E402 - UE does not add the repo root
+from scripts.manage_local_workspace import digest, load_workspace  # noqa: E402 - UE does not add the repo root
 from scripts.geometry.bob_vertical_support import (  # noqa: E402
     build_vertical_support,
     support_sections,

@@ -304,7 +304,7 @@ They contain no raw runner logs or Windows account names.
 Validation:
 
 ```powershell
-pwsh -NoProfile -File .\scripts\runner\Test-RunnerMonitor.ps1
+pwsh -NoProfile -File .\scripts\runner\Test-YacsRunnerMonitor.ps1
 ```
 
 Portable tests cover result authority, unknown/failure/cancellation results,

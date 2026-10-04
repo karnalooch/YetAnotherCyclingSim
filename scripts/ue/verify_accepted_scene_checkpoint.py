@@ -12,7 +12,7 @@ import unreal
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
-from scripts.workspace import load_workspace, digest  # noqa: E402 - UE bootstrap
+from scripts.manage_local_workspace import load_workspace, digest  # noqa: E402 - UE bootstrap
 from scripts.geometry.bob_vertical_support import build_vertical_support  # noqa: E402
 
 config = load_workspace()

@@ -11,7 +11,7 @@ if (-not $desktopUser) { throw 'No console user is logged in. Installation canno
 $workRoot = Split-Path $env:RUNNER_TEMP -Parent
 $runnerRoot = Split-Path $workRoot -Parent
 if (-not (Test-Path (Join-Path $runnerRoot '.runner'))) { throw 'Unable to identify the installed runner root.' }
-& (Join-Path $PSScriptRoot 'Test-RunnerMonitor.ps1')
+& (Join-Path $PSScriptRoot 'Test-YacsRunnerMonitor.ps1')
 $priorLog = Join-Path (Split-Path $runnerRoot -Parent) 'runner-monitor/logs/monitor.jsonl'
 $priorHealth = $null; $priorCompleted = $null; $priorAlive = $false
 if (Test-Path $priorLog) {

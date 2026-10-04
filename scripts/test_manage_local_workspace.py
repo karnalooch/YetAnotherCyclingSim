@@ -5,7 +5,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from scripts.workspace import load_workspace
+from scripts.manage_local_workspace import load_workspace
 
 
 class WorkspaceConfigurationTests(unittest.TestCase):

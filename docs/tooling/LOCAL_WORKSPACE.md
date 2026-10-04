@@ -4,6 +4,9 @@ Owner-approved supporting workflow, 2026-10-04. The World Building Bible remains
 world authority; Julka remains the asset identity/restore catalog. This is not
 road engineering, runtime collision or performance admission.
 
+The [script entry-point index](../../scripts/README.md) lists maintained commands,
+their effects and naming conventions.
+
 ## One active project
 
 The local layout is `D:\yacs\project`, `runner`, `runner-monitor`, `engine`,
@@ -11,7 +14,7 @@ The local layout is `D:\yacs\project`, `runner`, `runner-monitor`, `engine`,
 lives at `data/mocap/cyclist-spike`; it remains a research dataset, not imported
 or admitted cycling animation.
 `workspace.json` lives beside the repository and contains machine paths. It is
-not committed. `scripts/workspace.py` resolves it relative to the repository or
+not committed. `scripts/manage_local_workspace.py` resolves it relative to the repository or
 the explicit `YACS_WORKSPACE_CONFIG` environment variable. Production scripts
 belong in the repository, not a Codex conversation's scratch directory.
 
@@ -58,7 +61,7 @@ requires a restart, announce it and preserve unsaved work first.
 
 ## Accepted scene checkpoint
 
-`scripts/ue/accepted_scene_checkpoint.py` consumes hash-pinned accepted road
+`scripts/ue/create_accepted_scene_checkpoint.py` consumes hash-pinned accepted road
 sections and fixed CUT payloads. It builds one pavement mesh with the accepted
 60-degree split-normal correction, plus 186 support meshes. It preserves road
 coordinates and creates no new CUT targets. Historical support functions are
@@ -101,8 +104,8 @@ Local checkpoint receipts record actual remote-backup status independently.
 Original locations are retained until migration verification; do not blanket
 clean runner assets, shared LFS objects, or cache directories.
 
-Run `python scripts/workspace.py doctor` for the local launch contract and
-`python scripts/workspace.py open` to open the configured saved map. These
+Run `python scripts/manage_local_workspace.py doctor` for the local launch contract and
+`python scripts/manage_local_workspace.py open` to open the configured saved map. These
 commands require the workspace configuration and a successful reopening proof.
 The launcher rejects a map whose bytes changed since that proof and refuses a
 second editor process. `Restore-YacsSaCalobraWorldData.ps1` resolves its default

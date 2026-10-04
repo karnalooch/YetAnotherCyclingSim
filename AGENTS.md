@@ -58,7 +58,7 @@ Owner reaffirmation, 2026-10-01 (Issue #297): use authorized remote GitHub deliv
 
 Owner checkpoint/workspace decision, 2026-10-04: the canonical home workspace is
 `D:\yacs`, with the live project at `D:\yacs\project`. Resolve data, cache and
-checkpoint paths through `scripts/workspace.py` and the local `workspace.json`.
+checkpoint paths through `scripts/manage_local_workspace.py` and the local `workspace.json`.
 Do not resume authoring from a chat scratch directory or a CI runner checkout.
 The owner explicitly authorized durable storage of the accepted frozen scene;
 this supersedes the session-only restriction below for that checkpoint and its
