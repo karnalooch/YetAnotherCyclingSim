@@ -7,6 +7,12 @@ changed or invoked.
 
 ## Architecture decision
 
+The home host's canonical workspace and checkpoint lifecycle are defined in
+[LOCAL_WORKSPACE.md](LOCAL_WORKSPACE.md). Local sources now live under the
+configured `data/world-data` root; pass its `sa-calobra-working-v1` directory to
+Julka. Existing hash identities and remote-availability limitations remain in
+force. Copying files into the new workspace does not create a remote backup.
+
 The public Embark pattern establishes a producer → prepared data → Unreal
 consumer → bounded proof boundary for terrain/world content. Public evidence
 does not disclose the internal ARC Raiders recipe, node graph or settings.

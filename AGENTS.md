@@ -56,6 +56,20 @@ Owner reaffirmation, 2026-10-01 (Issue #297): use authorized remote GitHub deliv
 
 ### Live editor collaboration with the owner
 
+Owner checkpoint/workspace decision, 2026-10-04: the canonical home workspace is
+`D:\yacs`, with the live project at `D:\yacs\project`. Resolve data, cache and
+checkpoint paths through `scripts/workspace.py` and the local `workspace.json`.
+Do not resume authoring from a chat scratch directory or a CI runner checkout.
+The owner explicitly authorized durable storage of the accepted frozen scene;
+this supersedes the session-only restriction below for that checkpoint and its
+verified reopening. It does not authorize new road design or terrain targets.
+Use persistent actors/materials and persistent float32 CUT textures, retain
+fixed source hashes, and verify a fresh editor reads the saved geometry and
+earthworks. A file-copy receipt is not a scene checkpoint, and a local checkpoint
+is not a remote backup. Keep heavy build and editor migration operations serial.
+Never create full hidden pavement copies merely to back up a live GPU scene.
+See `docs/tooling/LOCAL_WORKSPACE.md` for the authoritative host workflow.
+
 Owner preference, 2026-10-04 (Issue #335): combine reproducible scripts with
 visible work in the already open Unreal Editor. Scripts prepare data, validate
 contracts and collect evidence; Computer Use supports navigation, inspection and

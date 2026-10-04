@@ -11,7 +11,7 @@
 [CmdletBinding()]
 param(
     [string] $RepoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path,
-    [string] $Destination = 'D:\actions-runner-yacs\_work\YetAnotherCyclingSim\_yacs-world-data\sa-calobra-working-v1\manual-cnig',
+    [string] $Destination = '',
     [string] $Repository = 'karnalooch/YetAnotherCyclingSim',
     [string] $ReleaseTag = 'data-cnig-sa-calobra-working-v1-2026-10-03',
     [switch] $Apply,
@@ -22,6 +22,19 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $RepoRoot = [System.IO.Path]::GetFullPath($RepoRoot).TrimEnd('\')
+if (-not $Destination) {
+    $WorkspaceConfig = Join-Path (Split-Path -Parent $RepoRoot) 'workspace.json'
+    if ($env:YACS_WORKSPACE_CONFIG) { $WorkspaceConfig = $env:YACS_WORKSPACE_CONFIG }
+    if (-not (Test-Path -LiteralPath $WorkspaceConfig -PathType Leaf)) {
+        throw 'Pass -Destination explicitly on CI, or configure the canonical local workspace.'
+    }
+    $Workspace = Get-Content -LiteralPath $WorkspaceConfig -Raw | ConvertFrom-Json
+    $RelativeData = [string]$Workspace.data
+    if ([int]$Workspace.schema_version -ne 1 -or [IO.Path]::IsPathRooted($RelativeData) -or $RelativeData -match '(^|[\\/])\.\.([\\/]|$)') {
+        throw 'Invalid workspace data path.'
+    }
+    $Destination = Join-Path (Split-Path -Parent $WorkspaceConfig) "$RelativeData/world-data/sa-calobra-working-v1/manual-cnig"
+}
 $Destination = [System.IO.Path]::GetFullPath($Destination).TrimEnd('\')
 $DestinationRoot = [System.IO.Path]::GetPathRoot($Destination).TrimEnd('\')
 if ($Destination -eq $DestinationRoot -or $Destination.Length -le ($DestinationRoot.Length + 3)) {

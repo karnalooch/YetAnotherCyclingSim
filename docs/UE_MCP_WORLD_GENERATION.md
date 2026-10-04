@@ -107,6 +107,12 @@ does not replace provenance, determinism, CI, trusted performance or human visua
 acceptance. This local workflow does not extend the remote #228 command allowlist
 or the MCP spike's persistent-write boundary.
 
+Owner exception, later on 2026-10-04: persist the accepted scene and consolidate
+local work under `D:\yacs`. The explicit checkpoint operation may save the
+existing fixed geometry, CUT assets and diagnostic materials. Ordinary mask
+review remains no-save. Follow [the persistent workspace workflow](tooling/LOCAL_WORKSPACE.md)
+and verify saved state by reopening; never treat transient actors as a backup.
+
 For the unresolved #335 stream candidates, prepare the hash-pinned queue using
 `scripts/assets/prepare_sa_calobra_mask_review_queue.py --transition-manifest
 <transition-manifest.json> --pcg-manifest <pcg-mask-manifest.json> --output
