@@ -1528,6 +1528,31 @@ alone is not evidence of a Landscape error. Unresolved disagreements stay
 visible for owner review. This diagnostic overlay does not implement production
 2B materials or later PCG dressing.
 
+#### Frozen Landscape diagnostic mask consumer (Issue #335)
+
+The bounded review producer reads verified normalized candidates and four pinned
+orthophotos, then emits native-grid context PNGs and a diagnostic class raster
+outside Git. It never emits a heightmap. World-space texture registration is
+`UV = (UE_XY_cm / 50 + 0.5) / 4033`: the admitted Landscape origin is the first
+DTM pixel center `(483000.25, 4409516.25)`, not the AOI corner. This half-pixel
+term is required for exact mask registration; texture edges are at -25 cm and
+201625 cm while Landscape vertices span 0 to 201600 cm.
+
+The fixed Python-only Unreal review loads the existing saved baseline, checks
+its transform/topology/layers and samples native-height agreement before/after.
+Only the session material and transient camera change; no map/assets are saved,
+no height import occurs, and no road or BOB earthworks are generated. Original
+map bytes, actor transforms and sampled collision heights must stay unchanged.
+Existing compiled modules may be reused for this Python-only proof; record both
+the script commit and compiled-project commit rather than claiming a rebuild.
+
+Amber means native local relief over 10 m requiring review, cyan means a mapped
+Catastro footprint candidate, gray means unknown evidence/imagery gap. SIOSE
+colors identify historical polygons only. Uncolored ortho is context, not PASS.
+No red error is fabricated from relief. Road/BOB, current land-cover, LiDAR and
+canopy layers stay explicitly blocked until admitted. Diagnostic consumer proof
+is not production materials/PCG, whole-2A completion or human visual acceptance.
+
 #### Working-space normalization candidate (Issue #335)
 
 The bounded GIS candidate uses the accepted native Base_DTM grid: EPSG:25831,
