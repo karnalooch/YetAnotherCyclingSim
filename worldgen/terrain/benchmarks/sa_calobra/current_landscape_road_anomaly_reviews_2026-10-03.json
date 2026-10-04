@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "road_source_sha256": "0b959ed9ae741d64721669531edd33fac7fe1f1969cd1be58b77785d6eb05ea5",
+  "reviews": [
+    {
+      "window_id": "VIAL_TR70190001287-0-4800",
+      "classification": "NATURAL_FEATURE_CONFIRMED",
+      "hotspot_wgs84": [
+        2.8167622,
+        39.8304238
+      ],
+      "evidence_scope": "Manual qualitative confirmation of exposed bedrock immediately beside the pavement; not a metric width, height or CUT measurement.",
+      "panorama": {
+        "provider": "Google Street View",
+        "panorama_id": "Q0IzBsfssGl-EEeEOAGuLA",
+        "capture_month": "2026-07",
+        "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=Q0IzBsfssGl-EEeEOAGuLA&heading=123.6&pitch=-22&fov=90"
+      },
+      "metric_width_admitted": false,
+      "metric_cut_admitted": false,
+      "road_geometry_admitted": false
+    }
+  ]
+}

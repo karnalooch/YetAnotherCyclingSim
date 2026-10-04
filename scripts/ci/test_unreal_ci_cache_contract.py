@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from pathlib import Path
-import unittest
 import shlex
 import subprocess
 import tempfile
-
+import unittest
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW = ROOT / ".github" / "workflows" / "reusable-unreal.yml"
@@ -66,12 +65,17 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         keep = [
             "Saved/Logs/YetAnotherCyclingSim.log",
             "Saved/RuntimeProof/CI/RegionTerrain/123-1/map-preparation.stdout.log",
+            "Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log",
+            "Saved/RuntimeProof/CI/Unreal/Proof/automation_run.log",
+            "Saved/RuntimeProof/CI/Unreal/Proof-123-1/automation_editor.log",
             "Binaries/build.dll",
             "Saved/BuildCache/UnrealCi/state.json",
         ]
         remove = [
             "Saved/Logs/unrelated.log",
             "Saved/RuntimeProof/CI/RegionTerrain/123-1/profile.json",
+            "Saved/RuntimeProof/CI/Unreal/Proof-123-1/summary.json",
+            "Saved/RuntimeProof/CI/Unreal/Proof/summary.json",
             "Saved/RuntimeProof/CI/RegionTerrain/123-1/render.png",
             "Saved/RuntimeProof/CI/RegionTerrain/123-1/Prepared/terrain.r16",
             "Saved/unrelated.tmp",
@@ -103,7 +107,7 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         paths = [
             line.strip() for line in block.splitlines() if "/RegionTerrain/" in line
         ]
-        self.assertEqual(len(paths), 4)
+        self.assertEqual(len(paths), 5)
         self.assertNotIn("Upload bounded BOB construction lesson", block)
         self.assertNotIn("bob-build-lesson", block)
         self.assertNotIn("bob-lesson-", block)
@@ -116,7 +120,10 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         capture = self.workflow.split(
             "- name: Capture isolated native Sa Calobra terrain", 1
         )[1].split("- name: Retire owner-approved obsolete Italy payloads", 1)[0]
-        self.assertIn("$proof.captures.Count -ne 9", capture)
+        self.assertIn("$proof.captures.Count -ne 15", capture)
+        self.assertIn("'network-hairpin-entry', 'network-hairpin-exit'", capture)
+        self.assertIn("network-extreme-cut", capture)
+        self.assertIn("Extreme network CUT visual evidence failed.", capture)
         self.assertIn("road-geometry-inspection-before", capture)
         self.assertIn("road-geometry-inspection-after", capture)
         self.assertIn("geometry-inspection-clay-wireframe", capture)
@@ -137,7 +144,7 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         self.assertIn("[int]$cut.after.class_counts.CUT_REQUIRED -ne 0", capture)
         self.assertIn("$inspection.actual_viewmode -ne 'VMI_CLAY'", capture)
         self.assertIn("Final road rider capture did not return to Lit mode.", capture)
-        self.assertIn("WaitForExit(300000)", capture)
+        self.assertIn("WaitForExit(600000)", capture)
         self.assertNotIn("YACS_KEEP_EDITOR_OPEN", capture)
         self.assertNotIn("RUNNER_TRACKING_ID", capture)
 
@@ -151,11 +158,16 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         self.assertNotIn("Set-Content", handoff)
         self.assertNotIn("-ExecutePythonScript", handoff)
         self.assertIn("owner-handoff-proof.json", handoff)
-        self.assertIn("road-contact-rider", handoff)
+        self.assertIn("network-current-landscape-overview", handoff)
         self.assertIn("$proof.viewmode -ne 'VMI_LIT'", handoff)
         self.assertIn("$proof.lighting_status -ne 'PASS'", handoff)
         self.assertIn("[double]$proof.directional_light_intensity -le 0.0", handoff)
         self.assertIn("[double]$proof.skylight_intensity -le 0.0", handoff)
+        self.assertIn("$proof.atmosphere_status -ne 'PASS'", handoff)
+        self.assertIn(
+            "$proof.atmosphere_preset -ne 'SA_CALOBRA_MEDITERRANEAN_DAYLIGHT_V1'",
+            handoff,
+        )
         self.assertIn(
             "$proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT'",
             handoff,
@@ -173,6 +185,8 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         self.assertIn("unreal.ViewModeIndex.VMI_LIT", startup)
         self.assertIn("unreal.DirectionalLight", startup)
         self.assertIn("unreal.SkyLight", startup)
+        self.assertIn("spawn_mediterranean_atmosphere", startup)
+        self.assertIn("from sa_calobra_atmosphere import", startup)
         self.assertIn('"lighting_status"', startup)
         self.assertIn('"INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT"', startup)
         self.assertIn('"cut_patch_applied"', startup)

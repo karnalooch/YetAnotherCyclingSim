@@ -2798,9 +2798,12 @@ return to Lit mode.
 The interactive owner handoff reloads the accepted Base_DTM map, respawns the
 smooth road, reapplies the same transient `Road_Earthworks` CUT patch and
 leaves Unreal Editor open at `road-contact-rider`. The handoff is explicitly
-`VMI_LIT` and creates a transient directional light plus skylight, so owner
-review is not left in an unlit diagnostic scene. The handoff never saves the
-map.
+`VMI_LIT` and creates transient directional light, skylight, SkyAtmosphere and
+light Exponential Height Fog using the deterministic
+`SA_CALOBRA_MEDITERRANEAN_DAYLIGHT_V1` review preset. The same preset is used
+by native captures, and CI rejects an owner handoff that cannot prove it. This
+is presentation-only evidence: it changes no terrain, road geometry, weather
+state or admission result. The handoff never saves the map.
 
 The earlier local-ground cut-only preview is retained as rejected/superseded
 active-proof history, not deleted. Historical spline-builder failures and their
@@ -3269,3 +3272,274 @@ alone cannot admit a silently tapered shoulder. The d439bf3 native run proved
 the no-nose outline but exposed 0.063 m shoulder width at station 187.375 m;
 its support result is superseded by the smooth exit-rejoin correction and
 must not be reported as full shoulder acceptance.
+
+
+#### Remaining current-Landscape asphalt — Issue #337
+
+The owner's 2026-10-03 instruction expands visual road construction on the
+existing ~2 km × 2 km Sa Calobra Landscape, not the whole 8 km source TIFF.
+The frozen IGN OGC RoadLink collection response
+`current_landscape_igr_roads_2026-10-03.json` contains five paved features.
+Source date/property `fictitious=true`, width, access and vertical datum remain
+review limitations; source Z never drives earthworks. IGN geometry was visually
+compared with a fresh PNOA orthophoto for the whole current window.
+
+`scripts/assets/prepare_current_landscape_roads.py` prepares deterministic cubic
+presentation candidates and independently checks both final edges, axis,
+width, source displacement, inner radius and winding. Single-sign source bends
+reject counter-turns on both edges and the axis; real source S-bends remain
+separate, not erased. Source/physics remains immutable. The 5 m constant width
+is an inferred preview assumption, not an all-road pavement survey. No bus
+widening is inferred. Crossfall is a bounded provisional design, attenuated to
+4% and 0.0037/m; grade <=31%. Full acceptance remains pending.
+
+The accepted 300 m footprint stays owned by #332. Its original 8 m exclusion
+buffer is closed only by the two endpoint connections authorized below.
+Nudo de la Corbata and its 12 m protection buffer were originally blocked for
+structure/vertical-separation review; the bounded owner-requested structure
+design below supersedes that visual-construction exclusion. A 10 m outer-boundary inset preserves
+Landscape/patch coverage. Every other source part is authored once as a
+continuous axis, height profile and cross-section field. Constraint measurement
+may use <=100 m probes to bound raster memory, but probe seams are discarded
+before admission. Recursive measurement localises failures into adaptive
+conflict intervals with a 2 m review margin; a conflict crossing a probe seam
+remains one conflict. Only after the decision may clear spans be split into
+<=100 m patch/streaming tiles. Those tiles are not design or admission
+boundaries and reuse the exact globally-authored endpoint samples. Failed
+adaptive intervals retain original feature ownership and reasons. A span kept
+blocked only by conservative conflict-margin expansion or absorption of a short
+interval retains an explicit conservative reason even when reassessment passes;
+that PASS never silently changes its admission or erases the reason required by
+the visual-context receipt. A width-preserving fit is not admitted merely because it renders.
+
+The ordinary CUT cap remains 1 m except for the exact owner-reviewed construction
+set below. The previously reviewed hairpin's scoped 4 m
+cliff exception is NOT copied across the network. CUT is prepared with the
+existing native Min/world-unit float32 patch contract on `Road_Earthworks`;
+`Base_DTM` and saved maps remain untouched. Independent actual Landscape traces
+verify all asphalt section samples after patch evaluation. The existing
+vertical-support builder must retain full 0.5 m shoulders and <=7 m support.
+Owner continuation decision, 2026-10-03: supports up to 7 m may be included
+in the visual preview for owner inspection. The shared preview ceiling applies
+to core and shoulder checks in preparation and actual traced shoulder walls
+in the native consumer. This changes no road height, CUT ceiling or protected
+Nudo boundary. Taller supports remain blocked; visual acceptance, collision
+and engineering admission remain pending.
+An incompatible conflict interval fails closed; it is not lowered arbitrarily,
+narrowed or claimed imported. No collision, physics or human/performance
+admission follows.
+
+Owner construction decision, 2026-10-04: the owner personally accepted all red
+surfaces in `704203647ff7967ddefdae4d6cb3aa00e0ca1297`, full-preview fingerprint
+`fc894083cc8f13c2df86a919af0778b246ec263e271a595ad307a188cfc82da5`, and instructed
+BOB to cut the terrain above them, add the same 0.5 m shoulders and vertical
+support, and replace red with the existing asphalt material. This is a scoped
+visual/construction decision: preserve those section coordinates, retain the
+original failed ordinary-policy measurements, and report measured CUT depth
+without the old 1 m construction cap for this exact set. Any changed reviewed
+fingerprint fails closed. Finite vertices, nonfolded triangles, native clearance,
+the 7 m ordinary support ceiling and source/physics ownership remain
+mandatory. Do not convert a failed engineering measurement into a PASS.
+
+Close both ends of the same hairpin exclusion gap using the actual 25-vertex
+network and accepted-ribbon endpoint sections. Short connections preserve exact
+endpoint positions and interpolate width between the explicit 5 m network and
+5.25/5.5 m accepted approach widths; the accepted 300 m ribbon is unchanged.
+New connections and resulting CUT/support require fresh exact-SHA native proof.
+The expanded 183-tile construction uses bounded 600 s capture and interactive
+handoff deadlines. Run `37164282008` at `7ea6734` applied all 183 network patches
+plus the accepted hairpin patch and was still constructing native meshes when
+the historical 300 s capture deadline killed the editor. This is measured
+authoring time, not a relaxed geometry/contact criterion or gameplay performance
+result; a timeout still fails the proof.
+The previously rendered rejected/shifted diagnostic slabs must not overlay the
+adopted asphalt. Erosion remains future work. This decision does not admit
+collision, riding, engineering suitability or performance. Ordinary-policy
+`blocked` records remain diagnostic history, not a count of unrendered roads.
+
+Owner refinement, 2026-10-04: hide the amber source-location annotations in the
+constructed view, but retain their complete coordinates, lengths and immutable
+receipt. Separate asphalt top/end-cap normals using UE 5.8.2 Geometry Script
+`ComputeSplitNormals`, opening angle 15 degrees. This changes shading, not the
+accepted pavement vertices; fresh close-up captures must verify the transverse
+dark stripes have disappeared. The version-matched installed
+`GeometryScript/MeshNormalsFunctions.h` defines the split options and signature.
+
+Later owner directive on the same date supersedes preview-blocking geometry
+checks: measurable width, surface, penetration, support or clearance failures
+must produce red pavement with explicit `visual_review_reasons`, rather than
+abort the render or interactive handoff. The owner's width tolerance is +/-5%
+around the explicit base width: 4.75–5.25 m for the nominal 5 m network; local
+narrowing is allowed. Accepted hairpin connections use their explicit 5–5.5 m
+base envelope with the same relative tolerance. This is a presentation policy,
+not permission to relabel failed measurements PASS. Human review and engineering,
+collision and performance admission remain separate. Nonfinite/unreadable
+buffers, provenance mismatch and unavailable native tools remain real failures.
+If a support cannot be built from the supplied geometry, preserve the red
+pavement and report the absent support rather than invent a concealed repair.
+
+The same owner request authorizes the Nus de sa Corbata bridge and loop design.
+`prepare_nudo_preview.py` replaces only the two construction tiles of
+`VIAL_TR70190001178`, retaining their old receipts as history, and connects the
+unchanged 25-vertex endpoints of `01287` and `01272` through source paths
+`01178`, `01289` and `01288`. Source XY remains presentation input; source Z is
+not used. A continuous provisional profile connects the existing elevations.
+The 5 m pavement and full 0.5 m shoulders remain explicit inferred dimensions.
+The reference is the owner's Street View at 39.8324306, 2.8161705, heading
+196.97 degrees (July 2026 imagery): upper roadway, masonry arch, lower roadway.
+No Google imagery or texture is redistributed into game assets.
+
+This bounded visual design uses a 7 m wide arch opening, 2.7 m spring height,
+3.5 m rise, >=0.4 m structural depth, and >=4.5 m checked clearance over the
+full lower pavement width, including longitudinal-profile variation. These are
+project dimensions, not surveyed measurements or structural engineering
+admission. The upper 80 m design domain uses an open soffit and 0.30 m by
+0.65 m parapets. Its dedicated support ceiling is 9 m; the ordinary 7 m ceiling
+is unchanged. Actual Landscape traces still check all asphalt and shoulders;
+the actual triangulated upper structure independently checks the underpass.
+The lower road owns terrain height at the crossing. No heightfield is used to
+represent both road decks. New construction/structure hashes and two additional
+native views (`network-nudo-overview`, `network-nudo-underpass`) are mandatory.
+Collision, rideability, human acceptance and performance remain pending.
+
+Network CUT application now defers the explicit Landscape refresh until every
+manifest has passed validation and every native patch has applied successfully.
+`FinishRoadEarthworksBatch` executes the existing full-update/PostEditChange pair
+once, before the unchanged later collision/clearance inspection. Single-patch
+callers retain immediate updates by default. UE 5.8.2 CL 56702186 source
+`LandscapeEditLayers.cpp::ALandscape::ForceLayersFullUpdate` confirms that each
+call waits for asset compilation and resource streaming before merging layers.
+The native receipt records patch-batch and trace/mesh wall time plus the explicit
+refresh count; faster opening must be measured on the final exact-SHA handoff.
+No cache retention or proof gate is weakened by this optimization.
+
+The integration uses the existing UE 5.8.2 (CL 56702186) native LandscapePatch
+path. Version-matched Epic source `LandscapeTexturePatch.h` defines `Min` as
+lower-only, `WorldUnits` as direct world heights and `WorldZero` as absolute Z;
+the existing YACS adapter uses these unchanged. No PCGEx API or dependency changes.
+
+Historical full visual context, owner continuation decision 2026-10-03: the existing
+capture and Lit handoff also render every rejected decision interval at its
+unchanged candidate height, in red and without CUT/support/collision. A narrow
+amber location marker preserves every clipped source part, including Nudo,
+short segments and protected regions. The marker follows traced native ground
+with an explicit 0.2 m annotation offset; it is not road-deck or structure
+geometry. It never grants grade-separation or riding admission. The current
+~2 km Landscape window remains explicit; full context does not claim the full
+8 km benchmark or the planned ~30 km destination has been built.
+
+The producer emits `network-full-preview-plan.png` and a full-context receipt.
+Producer and native consumer independently recompute source lengths and the
+complete geometry fingerprint, rejecting gaps, changed evidence and duplicate
+parts. The native proof records actual rendered source-marker and rejected
+surface counts. The existing whole-Landscape view and interactive handoff show
+this context alongside admitted asphalt/support. The overview fits the complete
+source bounds to the existing 74-degree, 16:9 camera with a 10% frame margin;
+the interactive handoff opens at this overview after geometry is reconstructed.
+Red road may still intersect terrain; the amber ground marker keeps its source location visible. No terrain
+lift or extra earthwork is applied to conceal those unresolved conflicts.
+
+The existing native capture and Lit owner handoff reconstruct the additional
+transient network. `Network/network.json` records continuous corridors,
+adaptive conflict intervals, technical patch tiles and protected coverage;
+`network-native-proof.json` records
+actual imported length and contact/support results. Partial import is explicitly
+reported as `PARTIAL_IMPORTED`, never complete coverage. Current whole-world
+performance and visual acceptance must still be measured after network import.
+
+Blocked adaptive intervals retain a `diagnostics` object with the last attempted
+gate, measured planar metrics, grade/bank rate and 3D receipt when reached. CUT
+failures also retain the actual raster maximum, core support and shoulder wall
+height plus the signed shoulder-to-ground gap. `earthworks_fit` bounds a
+hypothetical **uniform upward translation**: minimum lift is
+`max(0, max_cut - 1 m)`; the support ceiling is the smaller of `7 m - max_core_support` and `7 m - max_shoulder_support`. These are
+diagnostic bounds only. An overlapping interval neither verifies source road
+height nor proves joins, a smooth profile, contact or engineering admission;
+an empty interval rules out that simple translation under the measured bounds.
+No shift is applied, no gate is relaxed, and rejected CUTs write no patch. The
+existing candidate heights and accepted patch bytes remain unchanged. BOB must
+use these measurements plus source-grounded height/structure evidence before
+proposing a fitted profile; new geometry still requires fresh native proof.
+
+For every CUT conflict interval whose uniform bounds overlap, the preparer selects the
+midpoint only as a deterministic **local height-profile candidate** and reruns
+the exact raster CUT, core/shoulder support and 3D surface checks against that
+translated geometry. A local numeric PASS remains blocked: the candidate is not
+written to the patch, its absolute source height and adjacent-interval joins remain
+unverified, and it is not sent to Unreal as imported road. Empty bounds reject
+the candidate without inventing a structure. This bounded screen separates
+intervals that merit source/profile/continuity work from intervals where height alone
+cannot satisfy the existing limits.
+
+Every failed CUT also records the peak raster cell, base/target heights, positive
+and over-cap cell counts and nearest road sample. Native proof renders the single
+deepest rejected case as `network-extreme-cut.png`: rejected asphalt is red, the
+least-bad unapplied lateral diagnostic is cyan and the measured vertical CUT
+conflict is marked yellow. The screenshot is mandatory
+diagnostic evidence, not a repair or visual admission; the terrain and rejected
+road profile are unchanged. The offline preparer also emits
+`network-extreme-cut-diagnostic.png`, a deterministic plan/depth image suitable
+for immediate artifact or chat review before Unreal finishes. Future extreme
+network conflicts should receive the same bounded images (or a more informative
+bounded clip) instead of being reported only as scalar log output.
+
+The preparer's `NETWORK_BLOCKED` JSON lines expose each retained blocked-interval
+receipt in Actions job logs as well as `Network/network.json`, so remote BOB
+diagnosis does not require downloading the full native render/terrain archive.
+
+Extreme CUT evidence separates three meanings that must not be conflated:
+strict asphalt, strict asphalt plus the full 0.5 m shoulders, and the authored
+patch envelope including interpolation-cell corners and its one-cell raster
+guard. The authored envelope remains the fail-closed admission measurement and
+retains the ordinary 1 m cap; the smaller-footprint values explain where a peak
+comes from but cannot waive it. Existing admitted patch bytes and geometry are
+unchanged. A centred 3/4/5 m width sensitivity check is diagnostic only: it does
+not claim a measured road width, narrow the road, write a patch or admit a
+candidate.
+
+The single deepest conflict also receives a bounded lateral screen from -4 m to
++4 m in 0.25 m increments. Each unchanged-height candidate is independently
+remeasured for strict/as-authored CUT, core and shoulder support, complete
+shoulder wall height, 3D surface limits and the existing 1 m source-displacement
+cap. Even a local numeric PASS remains blocked because imagery/source alignment,
+adjacent joins and native behavior are not thereby verified. No candidate moves
+the source, changes stored geometry or reaches the import list. If every shift
+fails, the result is evidence for a dedicated non-heightfield cliff/structure
+solution, not permission to enlarge the global CUT cap.
+
+Manual anomaly evidence is versioned in
+`current_landscape_road_anomaly_reviews_2026-10-03.json`; it stores links and
+qualitative classifications, never downloaded Google imagery or metric claims.
+The preparer verifies that a reviewed hotspot is within 5 m of the measured
+raster peak and emits `network-extreme-cut-review.md` with its exact interactive
+panorama link. The offline PNG and native `network-extreme-cut.png` show the
+rejected road in red, the least-bad unapplied lateral diagnostic in cyan and the
+deepest CUT marker in yellow. These artifacts satisfy anomaly review/reporting;
+they do not constitute geometry repair or visual admission.
+
+
+#### Whole current-window source-height review — Issue #337
+
+`scripts/assets/audit_current_landscape_road_heights.py` compares only the
+original vertices of the pinned five-feature IGN response with bilinearly
+sampled native ground. The existing terrain/source hashes, CRS, 4033 topology,
+no-data contract and original XYZ finiteness fail closed. Source chainage uses
+projected XY metres, including out-of-window vertices; it never uses Z for
+planar distance or invents interpolated survey observations. Each receipt binds
+exact SHA, road source, manifest and heightmap hashes and keeps all source
+properties and inside/outside counts. Existing region proof emits
+`Network/source-height-review.json`; it never changes road geometry, CUT or
+physics and cannot establish full road coverage.
+
+The 2026-10-03 bounded review found 325 original vertices inside the native
+terrain. Source-minus-ground ranges are -4.679 to +5.775 m on
+`VIAL_TR70190001272` (208 vertices), -1.712 to +1.545 m on
+`VIAL_TR70190001287` (99 vertices), and -3.398 to -0.007 m on
+`VIAL_TR70190001289` (13 vertices). Median offsets are close to zero on these
+features, but local outliers differ in sign. That observation does not support
+a blanket upward shift or prove a vertical datum. The two-vertex
+`VIAL_TR70190001288` is too sparse to resolve Nudo height separation. All five
+features retain `fictitious=true`; source height accuracy, datum and real deck
+cross-sections remain unverified. Numeric agreement with ground is not a road
+survey. Next: acquire source-backed road-deck transects and structure evidence
+before replacing the diagnostic profile or admitting translated intervals.

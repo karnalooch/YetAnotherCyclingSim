@@ -341,3 +341,25 @@ terrain failure does not lose successful compile evidence. See the
 The administrative `Clear-YacsRunnerWorkspace.ps1` preview/apply also protects
 the selected build's generated directories. A malformed/missing active target
 blocks administrative cleanup; a pointer change during apply requires a new preview.
+
+The Issue #337 current-Landscape road import uses the same cache selection and
+retention path. Its former blanket `_unreal-build-*` / `_unreal-region-*`
+deletion and run-specific Intermediate/symbol removal are retired: neither may
+run after selection and erase the active build. The selector retains assets and
+private LFS objects before reclaiming inactive build worktrees. Region import
+worktrees remain preserved; their cleanup requires a separate bounded retention
+decision. Import/capture and owner visual acceptance still require fresh evidence
+for the current road revision, independently of compile reuse.
+
+On Windows, inactive-build removal retries read-only files inside `.git` after
+clearing that file attribute. Writable-file access failures, locked files and
+other errors still abort cleanup; asset retention must pass before any removal.
+The path audit checks each directory before descending, so Windows junctions
+are rejected without traversing their targets or entering a recursive loop.
+
+Current-Landscape capture and interactive handoff register both the exact
+project root and `scripts/ue` on Python's module search path before importing
+the shared overview-camera module. The working directory is not assumed to be
+the repository root. Run `37160081646` passed build/26 Automation tests and
+terrain/network preparation at `6337fde`, but capture failed with
+`ModuleNotFoundError: No module named 'scripts'`; it grants no visual acceptance.

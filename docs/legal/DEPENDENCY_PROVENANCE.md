@@ -199,3 +199,16 @@ https://ubuntu.com/security/notices/USN-8329-1
 - Acquisition date and native GSD remain unknown; request date is not flight date.
   Approximate AI-interpreted edge positions have an explicit review allowance,
   not measured statistical accuracy. The generated preview is not road acceptance.
+
+
+## IGN current-Landscape road network — Issue #337
+
+- Source: https://api-features.idee.es/collections/roadlink/items?f=json&bbox=2.8013711714022658,39.81731355795069,2.824885825640162,39.835520226740705&limit=1000
+- Acquired: 2026-10-03; five features, all `surfacecategory=paved`.
+- Frozen JSON SHA-256: `0b959ed9ae741d64721669531edd33fac7fe1f1969cd1be58b77785d6eb05ea5`.
+- License: CC BY 4.0; existing IGN license https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf applies to this same IGR collection.
+- Attribution: Obra derivada de IGR Redes de Transporte, consulta 2026-10-03, CC BY 4.0 scne.es.
+- Allowed use: provisional presentation geometry; immutable XY retained. Width/access/asphalt composition are unknown; fictitious flags are explicit. Unverified source Z is ignored. Nudo crossing is blocked.
+- Real-map review: IGN PNOA WMS `OI.OrthoimageCoverage`, EPSG:25831 bounds 483000,4407500,485016.5,4409516.5 at 2048×2048; overlay inspected 2026-10-03. Existing PNOA CC BY 4.0 attribution applies. Screenshot review is evidence, not surveyed pavement boundaries.
+
+- Retained PNOA review image: `docs/assets/current_landscape_pnoa_2026-10-03.jpg`; SHA-256 `90d06dea84e8528d6b7a0d389715f7ae3fef87885e034fa1c7252de7ff6ef4ee`; attribution: Obra derivada de PNOA, consulta 2026-10-03, CC BY 4.0 scne.es.

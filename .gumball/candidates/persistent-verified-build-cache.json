@@ -6,6 +6,6 @@
   "invariant": "Publish a durable atomic pointer to a complete verified build before independent downstream work; protect that worktree during cleanup and revalidate provenance on every reuse.",
   "evidence": ["Issue #355", "scripts/ci/unreal_ci_workspace.py", "scripts/ci/test_unreal_ci_workspace.py", "docs/CI_VALIDATION_TIERS.md"],
   "do_not_copy": ["Unreal DLL names", "YACS directory names", "region import behavior"],
-  "failure_behavior": "Partial publication preserves the old pointer. Invalidated state never becomes green through selection. Malformed pointers block cleanup. Generated outputs and verified metadata remain together.",
+  "failure_behavior": "Partial publication preserves the old pointer. Invalidated state never becomes green through selection. Malformed pointers block cleanup. Generated outputs and verified metadata remain together. Reject links/junctions before descent; retry only read-only Git metadata on Windows and propagate locks/ACL failures.",
   "status": "candidate"
 }

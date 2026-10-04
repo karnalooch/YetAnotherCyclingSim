@@ -31,6 +31,11 @@ _bob_inspection_status = "NOT_LOADED"
 _cut_patch = None
 _cut_report = None
 _support_objects = None
+_network_context = None
+_network_objects = None
+_extreme_objects = None
+_atmosphere_objects = None
+_atmosphere_proof = None
 _mode_reasserted = False
 _scheduling = False
 
@@ -109,6 +114,7 @@ def finish(error=""):
         "road_terrain_fit_proof": (
             "ma2141-road-terrain-fit-proof.json" if terrain_fit else None
         ),
+        "atmosphere": _atmosphere_proof,
         "editor_handoff_requested": keep_open,
         "editor_handoff_map": _manifest["map_package"] if keep_open else None,
         "editor_handoff_view": _views[-1]["name"] if keep_open and _views else None,
@@ -183,7 +189,7 @@ def _apply_capture_view_mode(view):
 
 def schedule():
     global _task, _started, _road_objects, _cut_patch, _scheduling
-    global _mode_reasserted
+    global _mode_reasserted, _network_context, _network_objects, _extreme_objects
     # Geometry creation can pump Slate and re-enter this tick callback while the
     # previous screenshot task is still marked done. Fence the whole transition.
     _scheduling = True
@@ -217,6 +223,18 @@ def schedule():
                 _root,
                 os.environ["YACS_TERRAIN_SHA"],
                 _road_objects[3]["pre_fit"],
+            )
+        if _index == 5:
+            from scripts.ue.current_landscape_roads import start
+            _network_context = start(_world, _root, os.environ["YACS_TERRAIN_SHA"])
+        if _index == 6:
+            from scripts.ue.current_landscape_roads import finish as finish_network
+            _network_objects = finish_network(_world, _root, os.environ["YACS_TERRAIN_SHA"], _network_context)
+        if _views[_index]["name"] == "network-extreme-cut":
+            from scripts.ue.current_landscape_roads import spawn_extreme_cut_diagnostic
+
+            _extreme_objects = spawn_extreme_cut_diagnostic(
+                _world, _network_context
             )
         view = _views[_index]
         _apply_capture_view_mode(view)
@@ -349,7 +367,7 @@ def tick(_delta):
                     "wireframe_color_rgba": view.get("wireframe_color_rgba"),
                     "force_game_view": view.get("force_game_view", True),
                     "fov_deg": 74,
-                    "fog": False,
+                    "fog": _atmosphere_proof is not None,
                     "shadows": False,
                 }
             )
@@ -364,7 +382,7 @@ def tick(_delta):
 
 def main():
     global _manifest, _root, _camera, _views, _handle, _world
-    global _bob_inspection_status
+    global _bob_inspection_status, _atmosphere_objects, _atmosphere_proof
     _root = Path(os.environ["YACS_TERRAIN_CAPTURE_ROOT"])
     _manifest = json.loads(
         (_root / "Prepared/terrain-import.json").read_text(encoding="utf-8")
@@ -429,7 +447,17 @@ def main():
     sky = actors.spawn_actor_from_class(
         unreal.SkyLight, unreal.Vector(0, 0, 300000), unreal.Rotator(), transient=True
     )
-    sky.get_component_by_class(unreal.SkyLightComponent).set_intensity(0.8)
+    sky_component = sky.get_component_by_class(unreal.SkyLightComponent)
+    sky_component.set_intensity(0.8)
+    project = Path(
+        unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_dir())
+    )
+    sys.path.insert(0, str(project))
+    sys.path.insert(0, str(project / "scripts/ue"))
+    from sa_calobra_atmosphere import spawn_mediterranean_atmosphere
+    _atmosphere_objects, _atmosphere_proof = spawn_mediterranean_atmosphere(
+        actors, light, sky_component
+    )
     center = [100800.0, 100800.0]
     _views = [
         {
@@ -444,6 +472,17 @@ def main():
         },
     ]
     alignment = json.loads((_root / "ma2141-native-alignment.json").read_text(encoding="utf-8"))
+    network = json.loads((_root / "Network/network.json").read_text(encoding="utf-8"))
+    from scripts.geometry.network_visual_preview import overview_camera
+    full_camera = overview_camera(network["full_preview"])
+    extreme = network.get("extreme_cut_case")
+    if not isinstance(extreme, dict):
+        raise RuntimeError("Extreme network CUT case is missing")
+    extreme_cut = extreme["cut_depth"]
+    extreme_x_cm = extreme_cut["peak_local_xy_m"][0] * 100
+    extreme_y_cm = extreme_cut["peak_local_xy_m"][1] * 100
+    extreme_top_cm = extreme_cut["peak_base_height_m"] * 100
+    extreme_bottom_cm = extreme_cut["peak_target_height_m"] * 100
     points = alignment["points_ue_cm"]
     def at_station(s):
         p = min(points, key=lambda p: abs(p["station_m"]-s))
@@ -511,10 +550,69 @@ def main():
             "target": focus,
         },
         {
+            "name": "network-current-landscape-overview",
+            "location": [v * 100 for v in full_camera["location_m"]],
+            "target": [v * 100 for v in full_camera["target_m"]],
+            "full_source_context": True,
+            "full_context_fingerprint": network["full_preview_proof"]["fingerprint"],
+            "source_location_marker": "hidden",
+            "reviewed_pavement": "asphalt",
+            "road_admitted": False,
+        },
+        {
+            "name": "network-extreme-cut",
+            "location": [
+                extreme_x_cm - 6000,
+                extreme_y_cm + 6000,
+                extreme_top_cm + 5000,
+            ],
+            "target": [
+                extreme_x_cm,
+                extreme_y_cm,
+                (extreme_top_cm + extreme_bottom_cm) / 2,
+            ],
+            "extreme_case_id": extreme["id"],
+            "required_cut_m": extreme_cut["max_cut_m"],
+            "profile_fit_status": extreme["height_profile_fit"]["status"],
+            "diagnostic_colors": {"reviewed_asphalt": "existing_asphalt_material"},
+            "terrain_cut_applied": True,
+            "least_bad_lateral_shift_m": extreme["lateral_sweep"][
+                "best_candidate"
+            ]["shift_m"],
+            "street_view_url": extreme["review"]["street_view_url"],
+            "anomaly_classification": extreme["review"]["classification"],
+            "geometry_repair_executed": False,
+            "height_change_applied": False,
+            "lateral_change_applied": False,
+        },
+        {
             "name": "road-contact-rider",
             "location": [start[0],start[1],start[2]+170],
             "target": [target[0],target[1],target[2]+170],
         },
+    ])
+    for connection in network["owner_reviewed"]:
+        if not connection.get("connection"):
+            continue
+        row = connection["sections"][len(connection["sections"]) // 2]
+        midpoint = [v * 100 for v in row[12]]
+        _views.append({
+            "name": "network-" + connection["decision_interval_id"],
+            "location": [midpoint[0] - 1200, midpoint[1] + 1200, midpoint[2] + 1800],
+            "target": midpoint,
+            "construction_sha256": network["owner_construction_decision"]["construction_sha256"],
+            "reviewed_pavement": "asphalt",
+            "shoulder_m": 0.5,
+        })
+    nudo = network["nudo"]["structure"]
+    nx, ny = [v*100 for v in nudo["center_xy_m"]]
+    nz = nudo["lower_height_m"]*100
+    tx, ty = nudo["lower_direction_xy"]
+    _views.extend([
+        {"name": "network-nudo-overview", "location": [nx+6500,ny+5500,nz+6500],
+         "target": [nx,ny-1800,nz+450], "nudo_structure_sha256": network["nudo"]["structure_sha256"]},
+        {"name": "network-nudo-underpass", "location": [nx+tx*2000,ny+ty*2000,nz+170],
+         "target": [nx,ny,nz+300], "nudo_structure_sha256": network["nudo"]["structure_sha256"]},
     ])
     _camera = actors.spawn_actor_from_class(
         unreal.CameraActor, unreal.Vector(), unreal.Rotator(), transient=True

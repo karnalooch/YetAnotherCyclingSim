@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import stat
 import subprocess
 import tempfile
 import unittest
@@ -102,6 +103,25 @@ class UnrealWorkspaceTests(unittest.TestCase):
         self.assertEqual(cache.verified(self.root)["CompileHead"], self.head)
         self.assertTrue((self.root / "Binaries/Win64" / cache.BINARY_NAMES[0]).exists())
 
+    def test_cleanup_removes_readonly_git_objects_and_keeps_active_cache(self):
+        self.publish()
+        other = self.workspace / "_unreal-build-99-1"
+        shutil.copytree(self.root, other)
+        obj = other / ".git/objects/readonly-fixture"
+        obj.write_bytes(b"obsolete Git metadata")
+        obj.chmod(stat.S_IREAD)
+        cache.cleanup(self.workspace, self.name, "101-1")
+        self.assertFalse(other.exists())
+        self.assertEqual(cache.verified(self.root), self.state)
+
+    def test_cleanup_does_not_suppress_writable_git_permission_failure(self):
+        target = self.root / ".git/writable-fixture"
+        target.write_bytes(b"fixture")
+        error = PermissionError("locked or denied")
+        with self.assertRaisesRegex(PermissionError, "locked or denied"):
+            cache.remove_readonly_git_file(os.unlink, str(target), error)
+        self.assertTrue(target.exists())
+
     def test_interrupted_publication_keeps_previous_pointer_and_binaries(self):
         self.publish()
         other_name = "_unreal-build-101-1"
@@ -187,7 +207,15 @@ class UnrealWorkspaceTests(unittest.TestCase):
         self.write_state()
         self.assertEqual(cache.select(self.workspace), cache.WARM)
         link = self.root / "Binaries/escape"
-        link.symlink_to(self.workspace, target_is_directory=True)
+        if os.name == "nt":
+            subprocess.run(
+                ["cmd", "/c", "mklink", "/J", str(link), str(self.workspace)],
+                check=True,
+                capture_output=True,
+            )
+            self.addCleanup(link.rmdir)
+        else:
+            link.symlink_to(self.workspace, target_is_directory=True)
         with self.assertRaisesRegex(ValueError, "link/junction"):
             cache.select(self.workspace)
 
@@ -378,6 +406,16 @@ class UnrealWorkspaceTests(unittest.TestCase):
             "_unreal-build-${{ github.run_id }}-${{ github.run_attempt }}", workflow
         )
         self.assertIn("Resolve verified Unreal execution mode", workflow)
+
+    def test_region_import_does_not_delete_selected_build_after_cache_selection(self):
+        workflow = (ROOT / ".github/workflows/reusable-unreal.yml").read_text()
+        selection = workflow.split("- name: Select persistent Unreal cache", 1)[1]
+        selection = selection.split("- name: Checkout exact caller revision", 1)[0]
+        self.assertIn("scripts.ci.unreal_ci_workspace select", selection)
+        self.assertNotIn("_unreal-(region|build)-", workflow)
+        self.assertNotIn("Remove-Item -LiteralPath $stale.FullName", workflow)
+        self.assertNotIn("Reclaim superseded generated outputs", workflow)
+        self.assertNotIn("_unreal-build-37087344754-1", workflow)
 
 
 if __name__ == "__main__":

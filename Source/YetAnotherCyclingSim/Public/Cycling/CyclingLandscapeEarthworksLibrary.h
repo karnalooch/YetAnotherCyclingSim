@@ -24,7 +24,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Cycling|Editor")
 	static bool ApplyRoadEarthworksPatch(
 		ALandscape* Landscape,
-		const FString& PatchManifestPath);
+		const FString& PatchManifestPath,
+		bool bDeferLandscapeUpdate = false);
+
+	/** Flush a successfully applied batch before inspecting merged collision. */
+	UFUNCTION(BlueprintCallable, Category = "Cycling|Editor")
+	static bool FinishRoadEarthworksBatch(ALandscape* Landscape);
 };
 
 #endif // WITH_EDITOR

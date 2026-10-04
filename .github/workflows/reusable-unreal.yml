@@ -39,6 +39,16 @@ jobs:
       YACS_UNREAL_WORKTREE: _unreal-ci-warm
 
     steps:
+      - name: Report previous isolated native capture failure
+        if: ${{ inputs.region_terrain_import }}
+        shell: pwsh
+        run: |
+          $logs = @(Get-ChildItem -Path "$env:GITHUB_WORKSPACE/_unreal-region-*/Saved/RuntimeProof/CI/RegionTerrain/*/capture.engine.log" -File -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1)
+          foreach ($log in $logs) {
+            Write-Host "Previous native capture diagnostic: $($log.FullName)"
+            Get-Content -LiteralPath $log.FullName -Tail 120
+          }
+
       - name: Isolate self-hosted Git configuration
         shell: pwsh
         run: |
@@ -108,7 +118,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           git reset --hard '${{ inputs.target_sha }}'
           if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree reset failed.' }
-          git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/' -e '/Saved/Logs/YetAnotherCyclingSim.log' -e '/Saved/RuntimeProof/CI/RegionTerrain/*/*.log'
+          git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/' -e '/Saved/Logs/YetAnotherCyclingSim.log' -e '/Saved/RuntimeProof/CI/RegionTerrain/*/*.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof/automation_run.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof-*/automation_editor.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof-*/automation_run.log'
           if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree allow-listed clean failed.' }
 
       - name: Enforce code-only checkout
@@ -138,7 +148,10 @@ jobs:
         run: |
           $proof = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/Unreal'
           if (Test-Path -LiteralPath $proof) {
-            Remove-Item -LiteralPath $proof -Recurse -Force
+            # Retain only diagnostic logs; all reusable receipts are removed.
+            Get-ChildItem -LiteralPath $proof -Recurse -File |
+              Where-Object { $_.Extension -ne ".log" } |
+              Remove-Item -Force
           }
 
       - name: Resolve verified Unreal execution mode
@@ -259,6 +272,40 @@ jobs:
 
       # Bootstrap the approved region migration inside the existing same-repo
       # CI boundary. This is an import diagnostic, never a broker PASS receipt.
+      - name: Isolate native import from Automation asset handles
+        if: ${{ inputs.region_terrain_import }}
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $warm = (Get-Location).Path
+          $name = '_unreal-region-${{ github.run_id }}-${{ github.run_attempt }}'
+          $isolated = Join-Path $env:GITHUB_WORKSPACE $name
+          if (Test-Path -LiteralPath $isolated) { throw 'Preserve existing native import worktree.' }
+          git worktree add --detach "$isolated" '${{ inputs.target_sha }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Isolated native import checkout failed.' }
+          # Reuse only the exact-head binaries already proved by Automation.
+          function Copy-RuntimeBinaries([string] $source) {
+            Get-ChildItem -LiteralPath $source -Recurse -File | Where-Object { $_.Extension -notin @('.pdb', '.lib', '.exp', '.obj') } | ForEach-Object {
+              $relative = $_.FullName.Substring($warm.Length + 1)
+              $destination = Join-Path $isolated $relative
+              New-Item -ItemType Directory -Path (Split-Path $destination -Parent) -Force | Out-Null
+              Copy-Item -LiteralPath $_.FullName -Destination $destination
+            }
+          }
+          Copy-RuntimeBinaries (Join-Path $warm 'Binaries')
+          $automation = Join-Path $warm 'Saved/RuntimeProof/CI/Unreal'
+          Get-ChildItem -LiteralPath $automation -Recurse -File | Where-Object { $_.Extension -in @('.json', '.txt') } | ForEach-Object {
+            $relative = $_.FullName.Substring($warm.Length + 1)
+            $destination = Join-Path $isolated $relative
+            New-Item -ItemType Directory -Path (Split-Path $destination -Parent) -Force | Out-Null
+            Copy-Item -LiteralPath $_.FullName -Destination $destination
+          }
+          Get-ChildItem -LiteralPath (Join-Path $warm 'Plugins') -Directory -Recurse -Filter Binaries | ForEach-Object {
+            Copy-RuntimeBinaries $_.FullName
+          }
+          "YACS_UNREAL_WORKTREE=$name" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
       - name: Materialize verified Sa Calobra source and required editor startup assets
         if: ${{ inputs.region_terrain_import }}
         shell: pwsh
@@ -366,6 +413,17 @@ jobs:
             --output-f32 "$root/ma2141-cut-patch.f32" `
             --exact-sha '${{ inputs.target_sha }}'
           if ($LASTEXITCODE -ne 0) { throw 'BOB bounded Road_Earthworks CUT patch preparation failed.' }
+          python scripts/assets/prepare_current_landscape_roads.py `
+            --prepared-terrain "$root/Prepared" `
+            --output-dir "$root/Network" `
+            --exact-sha '${{ inputs.target_sha }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Current Landscape network preparation failed.' }
+          python scripts/assets/audit_current_landscape_road_heights.py `
+            --prepared-terrain "$root/Prepared" `
+            --output "$root/Network/source-height-review.json" `
+            --exact-sha '${{ inputs.target_sha }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned road source-height review failed.' }
+
 
       - name: Capture isolated native Sa Calobra terrain
         if: ${{ inputs.region_terrain_import }}
@@ -382,7 +440,7 @@ jobs:
           $script = Join-Path (Get-Location) 'scripts/ue/capture_region_terrain.py'
           $arguments = @(('"' + $project + '"'), ('-ExecutePythonScript="' + $script + '"'), '-Unattended', '-NoPause', '-NoSplash', '-NoP4', '-windowed', '-ResX=1920', '-ResY=1080', '-NoVSync', '-FixedSeed', '-ScriptErrorsAreFatal', '-stdout', ('-AbsLog="' + (Join-Path $root 'capture.engine.log') + '"'))
           $process = Start-Process -FilePath $engine.UnrealEditorPath -ArgumentList $arguments -PassThru -NoNewWindow -RedirectStandardOutput (Join-Path $root 'capture.stdout.log') -RedirectStandardError (Join-Path $root 'capture.stderr.log')
-          if (-not $process.WaitForExit(300000)) {
+          if (-not $process.WaitForExit(600000)) {
             $process | Stop-Process -Force
             throw 'Sa Calobra terrain capture timed out.'
           }
@@ -393,10 +451,68 @@ jobs:
           if (
             $proof.technical_capture_status -ne 'PASS' -or
             $proof.exact_sha -ne '${{ inputs.target_sha }}' -or
-            $proof.captures.Count -ne 9 -or
+            $proof.captures.Count -ne 15 -or
             $proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT' -or
             $proof.road_geometry_inspection_required -ne $true
           ) { throw 'Terrain capture proof failed.' }
+          foreach ($connectionView in @('network-hairpin-entry', 'network-hairpin-exit')) {
+            $views = @($proof.captures | Where-Object { $_.name -eq $connectionView })
+            if ($views.Count -ne 1 -or $views[0].reviewed_pavement -ne 'asphalt' -or
+                $views[0].shoulder_m -ne 0.5) {
+              throw "Missing reviewed hairpin connection capture: $connectionView"
+            }
+          }
+
+          $extremeView = @($proof.captures | Where-Object { $_.name -eq 'network-extreme-cut' })
+          if ($extremeView.Count -ne 1 -or
+              [double]$extremeView[0].required_cut_m -le 1.0 -or
+              $extremeView[0].profile_fit_status -ne 'REJECT_INCOMPATIBLE_CUT_SUPPORT_BOUNDS' -or
+              $extremeView[0].geometry_repair_executed -ne $false -or
+              $extremeView[0].height_change_applied -ne $false) {
+            throw 'Extreme network CUT visual evidence failed.'
+          }
+
+          $network = Get-Content (Join-Path $root 'network-native-proof.json') -Raw | ConvertFrom-Json
+          if ($network.exact_sha -ne '${{ inputs.target_sha }}' -or
+              $network.approved_length_m -le 0 -or $network.base_dtm_modified -ne $false -or
+              $network.map_saved -ne $false -or
+              $network.segmentation.method -ne 'CONTINUOUS_CORRIDOR_ADAPTIVE_CONFLICT_INTERVALS_V1' -or
+              $network.segmentation.fixed_tiles_are_admission_boundaries -ne $false -or
+              [int]$network.continuous_corridor_count -le 0 -or
+              [int]$network.decision_interval_count -le 0 -or
+              [int]$network.adaptive_conflict_interval_count -le 0 -or
+              [int]$network.technical_patch_tile_count -le 0 -or
+              $network.height_profile_candidate_window_count -le 0 -or
+              $network.height_profile_incompatible_window_count -le 0 -or
+              $network.extreme_cut_case.capture -ne 'network-extreme-cut.png' -or
+              @($network.windows | Where-Object { $_.asphalt_penetration_count -ne 0 -and ($_.visual_review_required -ne $true -or $_.pavement_material -ne 'REVIEW_RED') }).Count -ne 0) {
+            throw 'Current-Landscape native network proof failed.'
+          }
+
+          $preparedNetwork = Get-Content (Join-Path $root 'Network/network.json') -Raw | ConvertFrom-Json
+          $context = $network.full_visual_context
+          if ($context.status -ne 'FULL_SOURCE_CONTEXT_REVIEW_REQUIRED' -or
+              $context.road_admitted -ne $false -or $context.collision_admitted -ne $false -or
+              $context.terrain_change_applied -ne $true -or $context.material -ne 'ASPHALT' -or
+              $context.fingerprint -ne $preparedNetwork.full_preview_proof.fingerprint -or
+              [int]$context.rendered_source_marker_count -ne 0 -or $context.source_markers_hidden -ne $true -or
+              [int]$context.source_marker_count -ne @($preparedNetwork.full_preview.source_markers).Count -or
+              [int]$context.rendered_rejected_surface_count -ne 0 -or
+              ([int]$context.rendered_reviewed_surface_count + [int]$context.reviewed_surfaces_replaced_by_nudo) -ne @($preparedNetwork.full_preview.rejected_surfaces).Count -or
+              [int]$network.owner_reviewed_patch_tile_count -ne @($preparedNetwork.owner_reviewed | Where-Object { $_.id -notin $preparedNetwork.nudo.replaced_window_ids }).Count -or
+              @($network.windows).Count -ne (@($preparedNetwork.approved).Count + @($preparedNetwork.owner_reviewed).Count - @($preparedNetwork.nudo.replaced_window_ids).Count + @($preparedNetwork.nudo.windows).Count) -or
+              $network.nudo.construction_sha256 -ne $preparedNetwork.nudo.construction_sha256 -or
+              $network.nudo.structure_sha256 -ne $preparedNetwork.nudo.structure_sha256 -or
+              $network.preview_policy -ne 'RENDER_DEVIATIONS_RED_WIDTH_TOLERANCE_5_PERCENT' -or
+              @($network.windows | Where-Object { $_.id -eq 'nudo-0' -and ($_.visual_review_required -eq $true -or ($_.support.PSObject.Properties.Name -contains 'underpass_clearance' -and $_.support.underpass_clearance.status -eq 'PASS')) }).Count -ne 1 -or
+              @($network.windows | Where-Object { $_.visual_review_required -eq $true -and ($_.pavement_material -ne 'REVIEW_RED' -or @($_.visual_review_reasons).Count -eq 0) }).Count -ne 0 -or
+              $network.native_timings.explicit_network_landscape_flush_count -ne 1 -or
+              @($network.owner_construction_decision.connections).Count -ne 2 -or
+              @($network.owner_construction_decision.connections | Where-Object { $_.endpoint_residual_m -ne 0 }).Count -ne 0 -or
+              [Math]::Abs([double]$context.source_marker_length_m - [double]$preparedNetwork.source_clipped_length_m) -gt 0.00001 -or
+              -not (Test-Path (Join-Path $root 'Network/network-full-preview-plan.png'))) {
+            throw 'Full-source visual context proof failed.'
+          }
 
           $fitPath = Join-Path $root 'ma2141-road-terrain-fit-proof.json'
           if (-not (Test-Path -LiteralPath $fitPath -PathType Leaf)) {
@@ -546,6 +662,7 @@ jobs:
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.txt
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.png
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.f32
+            ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}/**/*.log
           if-no-files-found: error
           retention-days: 14
 
@@ -560,6 +677,32 @@ jobs:
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/Unreal/**/*.log
           if-no-files-found: error
           retention-days: 7
+
+      - name: Reclaim uploaded capture evidence before owner handoff
+        if: inputs.region_terrain_import
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/RegionTerrain/${{ github.run_id }}-${{ github.run_attempt }}'
+          # The complete diagnostic has already been uploaded. The interactive
+          # editor needs manifests and float buffers, not capture PNGs or logs.
+          Get-ChildItem -LiteralPath $root -Recurse -File |
+            Where-Object { $_.Extension -in @('.png', '.log') } |
+            Remove-Item -Force
+          $prepared = Join-Path $root 'Prepared'
+          if (Test-Path -LiteralPath $prepared) {
+            if ((Get-Item -LiteralPath $prepared).Attributes -band [IO.FileAttributes]::ReparsePoint) {
+              throw 'Refuse uploaded Prepared cleanup through a reparse point.'
+            }
+            Remove-Item -LiteralPath $prepared -Recurse -Force
+          }
+          $driveName = ([System.IO.Path]::GetPathRoot($root)).TrimEnd('\').TrimEnd(':')
+          $drive = Get-PSDrive -Name $driveName
+          Write-Host ("Owner handoff free space: {0:N2} GB" -f ($drive.Free / 1GB))
+          if ($drive.Free -lt 512MB) {
+            throw ("Insufficient disk for owner handoff after uploaded-evidence cleanup: {0:N2} MB" -f ($drive.Free / 1MB))
+          }
 
       - name: Launch interactive Sa Calobra owner handoff
         if: inputs.region_terrain_import
@@ -596,7 +739,9 @@ jobs:
             }
           }
 
-          $deadline = [DateTime]::UtcNow.AddSeconds(120)
+          # Adaptive road tiles take longer to instantiate than the former
+          # coarse fixed windows. Keep this bounded but allow a full startup.
+          $deadline = [DateTime]::UtcNow.AddSeconds(600)
           while (-not (Test-Path -LiteralPath $proofPath) -and [DateTime]::UtcNow -lt $deadline) {
             $process.Refresh()
             if ($process.HasExited) {
@@ -606,6 +751,12 @@ jobs:
           }
           if (-not (Test-Path -LiteralPath $proofPath)) {
             if (-not $process.HasExited) { $process | Stop-Process -Force }
+            $handoffLog = Join-Path $root 'owner-handoff.engine.log'
+            if (Test-Path -LiteralPath $handoffLog) {
+              Write-Host 'Owner handoff engine log tail:'
+              Get-Content -LiteralPath $handoffLog -Tail 200
+            }
+            Get-PSDrive -PSProvider FileSystem | Select-Object Name, Used, Free
             throw 'Owner handoff proof timed out.'
           }
 
@@ -614,11 +765,13 @@ jobs:
             $proof.status -ne 'PASS' -or
             $proof.exact_sha -ne '${{ inputs.target_sha }}' -or
             $proof.map -ne '/Game/Worlds/SaCalobra/L_SaCalobraTerrainBaseline' -or
-            $proof.view -ne 'road-contact-rider' -or
+            $proof.view -ne 'network-current-landscape-overview' -or
             $proof.viewmode -ne 'VMI_LIT' -or
             $proof.lighting_status -ne 'PASS' -or
             [double]$proof.directional_light_intensity -le 0.0 -or
             [double]$proof.skylight_intensity -le 0.0 -or
+            $proof.atmosphere_status -ne 'PASS' -or
+            $proof.atmosphere_preset -ne 'SA_CALOBRA_MEDITERRANEAN_DAYLIGHT_V1' -or
             $proof.bob_mode -ne 'INSPECTOR_PLUS_TRANSIENT_CUT_AND_VERTICAL_SUPPORT' -or
             $proof.cut_patch_applied -ne $true -or
             $proof.vertical_support_built -ne $true -or
@@ -631,7 +784,7 @@ jobs:
           if ($process.HasExited) {
             throw "Owner handoff Editor did not remain open; exit code $($process.ExitCode)."
           }
-          Write-Host "OWNER HANDOFF PASS: Unreal Editor pid=$($process.Id) remains open on Sa Calobra road-contact-rider in VMI_LIT with transient Road_Earthworks CUT and diagnostic lighting."
+          Write-Host "OWNER HANDOFF PASS: Unreal Editor pid=$($process.Id) remains open on Sa Calobra road-contact-rider in VMI_LIT with transient Road_Earthworks CUT and Mediterranean atmosphere."
 
       - name: Clean current-run evidence and non-allow-listed residue
         if: ${{ always() && !inputs.region_terrain_import }}
@@ -640,7 +793,10 @@ jobs:
         run: |
           $proof = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/Unreal'
           if (Test-Path -LiteralPath $proof) {
-            Remove-Item -LiteralPath $proof -Recurse -Force
+            # Retain only diagnostic logs; all reusable receipts are removed.
+            Get-ChildItem -LiteralPath $proof -Recurse -File |
+              Where-Object { $_.Extension -ne ".log" } |
+              Remove-Item -Force
           }
           if (Test-Path -LiteralPath '.git') {
             if ('${{ inputs.region_terrain_import }}' -eq 'true') {
@@ -652,7 +808,7 @@ jobs:
             }
             git reset --hard
             if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree cleanup git reset failed.' }
-            git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/' -e '/Saved/Logs/YetAnotherCyclingSim.log' -e '/Saved/RuntimeProof/CI/RegionTerrain/*/*.log'
+            git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/' -e '/Saved/Logs/YetAnotherCyclingSim.log' -e '/Saved/RuntimeProof/CI/RegionTerrain/*/*.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof/automation_run.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof-*/automation_editor.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof-*/automation_run.log'
             if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree cleanup allow-listed clean failed.' }
           }
           else {

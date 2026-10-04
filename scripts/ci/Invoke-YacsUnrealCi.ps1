@@ -34,6 +34,11 @@ if (-not $ArtifactRoot) {
 }
 New-Item -ItemType Directory -Path $ArtifactRoot -Force | Out-Null
 $ArtifactRoot = (Resolve-Path -LiteralPath $ArtifactRoot).Path
+$ProofLeaf = 'Proof'
+if ($env:GITHUB_RUN_ID -and $env:GITHUB_RUN_ATTEMPT) {
+    $ProofLeaf = 'Proof-{0}-{1}' -f $env:GITHUB_RUN_ID, $env:GITHUB_RUN_ATTEMPT
+}
+
 
 function Write-YacsUnrealFailureContext {
     param(
@@ -49,11 +54,11 @@ function Write-YacsUnrealFailureContext {
 
     $Candidates = @(
         [pscustomobject]@{ Label = 'preflight'; Path = (Join-Path $ArtifactRoot 'Preflight/preflight.txt'); Tail = 120 },
-        [pscustomobject]@{ Label = 'phase_status'; Path = (Join-Path $ArtifactRoot 'Proof/phase_status.json'); Tail = 80 },
-        [pscustomobject]@{ Label = 'build_editor'; Path = (Join-Path $ArtifactRoot 'Proof/build_editor.log'); Tail = 160 },
-        [pscustomobject]@{ Label = 'automation_run'; Path = (Join-Path $ArtifactRoot 'Proof/automation_run.log'); Tail = 160 },
-        [pscustomobject]@{ Label = 'proof_summary'; Path = (Join-Path $ArtifactRoot 'Proof/summary.txt'); Tail = 120 },
-        [pscustomobject]@{ Label = 'automation_index'; Path = (Join-Path $ArtifactRoot 'Proof/AutomationReport/index.json'); Tail = 120 },
+        [pscustomobject]@{ Label = 'phase_status'; Path = (Join-Path $ArtifactRoot ("$ProofLeaf/phase_status.json")); Tail = 80 },
+        [pscustomobject]@{ Label = 'build_editor'; Path = (Join-Path $ArtifactRoot ("$ProofLeaf/build_editor.log")); Tail = 160 },
+        [pscustomobject]@{ Label = 'automation_run'; Path = (Join-Path $ArtifactRoot ("$ProofLeaf/automation_run.log")); Tail = 160 },
+        [pscustomobject]@{ Label = 'proof_summary'; Path = (Join-Path $ArtifactRoot ("$ProofLeaf/summary.txt")); Tail = 120 },
+        [pscustomobject]@{ Label = 'automation_index'; Path = (Join-Path $ArtifactRoot ("$ProofLeaf/AutomationReport/index.json")); Tail = 120 },
         [pscustomobject]@{ Label = 'ci_summary'; Path = (Join-Path $ArtifactRoot 'unreal_ci_summary.json'); Tail = 80 }
     )
 
@@ -148,7 +153,7 @@ try {
         )
     }
 
-    $ProofRoot = Join-Path -Path $ArtifactRoot -ChildPath 'Proof'
+    $ProofRoot = Join-Path -Path $ArtifactRoot -ChildPath $ProofLeaf
     $Proof = Join-Path -Path $RepoRoot -ChildPath 'scripts/ue/Invoke-YacsProof.ps1'
     $ProofArgs = @{
         RepoRoot = $RepoRoot
