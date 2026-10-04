@@ -1063,3 +1063,50 @@ real SP638 + real DTM
 If that proof exposes missing fields or ownership rules, extend the contract from evidence. Do not pre-fill a universal `WorldEnvironmentData` structure merely because future systems might need it.
 
 This dossier should now be treated primarily as **reference evidence during implementation review**, not as an invitation to keep adding architecture before the vertical slice exists.
+
+
+## Embark research follow-up: masks and dressing — 2026-10-04
+
+Scope: published first-party talk descriptions, studio posts/interview and an
+artist's own project description were read. This is not a claim to have viewed
+or transcribed the complete videos or recovered proprietary production graphs.
+
+- [Embark Landscape Creation, Darko Pracic, GDC HIVE 2023](https://www.sidefx.com/learn/talks/embark-landscape-creation/)
+  documents LiDAR/PDG preparation, artist shaping with the Gaea bridge, heightfield
+  utility HDAs and Houdini-to-Unreal exchange. Its central practical benefit is
+  giving artists direct 3D control and fast iteration. The YACS frozen-terrain
+  contract excludes the shaping stage; reuse the preparation/consumer boundary.
+- [Embark Asset Processor, Erik Hallberg, GDC HIVE 2023](https://www.sidefx.com/learn/talks/embark-asset-processor/)
+  describes Blender input controls backed by background Houdini processing.
+  Adopt clear artist inputs and repeatable derived outputs; this does not require
+  installing their tools or duplicating an entire processing framework.
+- [Embark's 2019 environment test](https://medium.com/embarkstudios/an-update-from-embark-5f7a58ff1551)
+  reports scanned real-world data and procedural object placement in a 256km2
+  visual test by three people in three weeks. This was a prototype, not evidence
+  that a complete shipped game's content can be produced on that schedule.
+- [Robert Berg, Wind's Howling](https://pixelgoat.artstation.com/projects/L2nmaA)
+  is the author's own forest experiment while working at Embark: Houdini terrain,
+  World Machine material masks, Unreal Procedural Foliage Volumes with scatter
+  rules, scanned assets and PivotPainter2 wind. He explicitly describes it as a
+  believable-forest experiment, not a gameplay space. It supports mask-driven
+  scattering as a practitioner example, not an ARC Raiders production claim.
+- [Embark/Epic ARC Raiders interview, 2026](https://www.unrealengine.com/developer-interviews/embark-studios-build-the-award-winning-arc-raiders-with-unreal-engine)
+  names World Partition and Runtime Virtual Texturing for scalable worldbuilding,
+  and Unreal Insights for profiling. It does not publish their vegetation graph.
+- [THE FINALS Building Creator, Adrian Bjorkerud](https://www.sidefx.com/community/making-the-procedural-buildings-of-the-finals-using-houdini/)
+  documents modular stages, local recooking, artist viewport controls and durable
+  world-space edits. Applying these principles to vegetation is a YACS inference,
+  not evidence that Embark uses the same building nodes for landscapes.
+
+Application to Issue #335: preserve geographical source evidence and fixed road,
+Landscape and building alignment; derive spatial dressing controls separately.
+Keep hard exclusions distinct from soft density/material transitions. Author
+vegetation character through groups, variants, spacing and explicit local art
+controls, then judge a small native 3D scene and measure cost. This is the next
+step beyond diagnostic colours and example points. Current LiDAR occupancy is
+source evidence, not a prescription to reproduce every individual tree position.
+
+No reviewed source establishes Embark's use of PCGEx, exact river-connectivity
+repair rules, 5m water buffers, 6m BOB fades or our 3/6/10m density settings.
+Those remain explicit YACS choices requiring their own evidence/review. Neither
+mask blur nor RVT supplies missing channel geometry or authorizes terrain edits.

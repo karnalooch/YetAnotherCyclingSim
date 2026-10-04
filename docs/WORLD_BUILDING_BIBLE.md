@@ -1672,6 +1672,41 @@ Landscape with session-only sky and no save. Production integration, full-author
 completeness and performance admission remain separate; never run a
 terrain-importing proof for this frozen task.
 
+#### Mask transitions and stream topology review (Issue #335)
+
+Owner-approved continuation softens mask presentation and density without
+shrinking hard exclusions. A transition sidecar keeps original PCG selectors
+and distance checks binding. Relative low/medium/high weights use source-class
+return share over 11 cells (5.5m), with authored 3/6/10m clearance fades. These
+are decorative weights, not physical plant density or confidence. Unknown stays
+unknown; smoothing cannot promote prohibited cells into placement permission.
+
+BOB receives an outward-only 6m fade. Original affected rectangles remain fully
+excluded; this does not establish exact earthwork boundaries. Reducing them
+requires a separately admitted footprint. The new review renders faint blue
+water holdbacks and ochre mapped centrelines, without claiming a wet surface.
+
+The GOIB topology audit distinguishes junctions, AOI exits and unverified
+terminals. Display joins require an unambiguous nearest feature within 0.5m
+and must stay inside the original water holdback. The current nine joins are
+below 1cm. Forty-three larger nearest-feature gap candidates remain unjoined,
+marked orange for review. They do not establish errors, flow or culverts;
+not all terminals must connect. Asphalt may visually cover continuous data.
+
+A deterministic 200x200m point trial uses explicit example circles, source
+weights, spacing and seed 335. Current accepted counts are low=60, medium=0,
+high=0. Points satisfy the original clearance reader and pairwise footprint
+separation. This proves bounded point reads, not real meshes, species admission
+or PCGEx graph execution. Legacy vegetation validation does not automatically
+admit a Sa Calobra asset set. Production integration/performance remain open.
+
+`mask-transitions-v1a-2026-10-04` retains weights, topology and point review;
+Julka profile `sa-calobra-mask-transitions-candidate` retains the complete parent
+closure. Earlier receipts and acceptance keep their scope. The Embark research
+in the production references supports artist-controlled, independently
+regenerable preparation; these numeric fades and topology rules are YACS
+decisions, not claimed Embark settings.
+
 #### Placement evidence handoff candidate (Issue #335)
 
 `scripts/assets/prepare_sa_calobra_placement_handoff.py` prepares a separate

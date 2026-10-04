@@ -739,3 +739,17 @@ Kontrakt promienia obiektu, clearance, UV/grid, unknown i fallbacków opisuje
 Julka ma osobne identities/restore/profile. Nie deklarujemy wykonanego grafu
 PCGEx, pełnego zamknięcia 2A lub performance PASS. Nowe odsunięcia mają podgląd
 do przeglądu; fiolet oznacza obszar BOB, a nie wcześniejszy różowy review wysokości.
+
+## Przejścia masek i podgląd koryt — 2026-10-04
+
+Kandydat `mask-transitions-v1a-2026-10-04` dodaje miękkie przejście BOB na
+zewnątrz istniejącego wykluczenia oraz wagi gęstości roślinności. Hard masks
+pozostają wiążące. Niebieski jest pasem odsunięcia, ochra linią źródłową cieku,
+pomarańczowy oznacza większe luki do sprawdzenia. Dziewięć połączeń poniżej 1cm
+ma znaczenie wyłącznie dla podglądu topologii; 43 większych kandydatów nie połączono.
+Próba punktów 200x200m: 60 niskich, 0 średnich i 0 wysokich; to przykładowe
+promienie, bez instancji assetów i bez wykonania grafu PCGEx. Próba 3D wymaga
+przypisanego zestawu assetów i osobnego dowodu konsumenta. Publiczne materiały
+Embark wspierają szybkie iteracje z kontrolą artysty, nie narzucają nam wartości
+buforów ani obowiązku instalacji Houdini. Źródła i granice wnioskowania zapisano
+w [production references](PRODUCTION_WORLD_ARCHITECTURE_REFERENCES.md#embark-research-follow-up-masks-and-dressing--2026-10-04).

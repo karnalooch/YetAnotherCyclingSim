@@ -12671,6 +12671,741 @@
         "license": "Parent CNIG/Catastro/SITIBSA terms retained; original raw not redistributed",
         "authority": "Bounded decorative masks only; not complete World Authority or production planting admission"
       }
+    },
+    {
+      "asset_id": "mask-transitions-000",
+      "path": "mask-transitions-v1a-2026-10-04/bob-transition-weight.tif",
+      "size_bytes": 199464,
+      "sha256": "ebbe3afd7cffd86d05d862f6f5b6a76051f51d3b61bb5636401e407db89b224c",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "frozen-road-000",
+        "frozen-road-001",
+        "frozen-road-002",
+        "frozen-road-003",
+        "frozen-road-004",
+        "frozen-road-005",
+        "frozen-road-006",
+        "frozen-road-007",
+        "frozen-road-008",
+        "frozen-road-009",
+        "frozen-road-010",
+        "frozen-road-011",
+        "frozen-road-012",
+        "frozen-road-013",
+        "frozen-road-014",
+        "frozen-road-015",
+        "frozen-road-016",
+        "frozen-road-017",
+        "frozen-road-018",
+        "frozen-road-019",
+        "frozen-road-020",
+        "frozen-road-021",
+        "frozen-road-022",
+        "frozen-road-023",
+        "frozen-road-024",
+        "frozen-road-025",
+        "frozen-road-026",
+        "frozen-road-027",
+        "frozen-road-028",
+        "frozen-road-029",
+        "frozen-road-030",
+        "frozen-road-031",
+        "frozen-road-032",
+        "frozen-road-033",
+        "frozen-road-034",
+        "frozen-road-035",
+        "frozen-road-036",
+        "frozen-road-037",
+        "frozen-road-038",
+        "frozen-road-039",
+        "frozen-road-040",
+        "frozen-road-041",
+        "frozen-road-042",
+        "frozen-road-043",
+        "frozen-road-044",
+        "frozen-road-045",
+        "frozen-road-046",
+        "frozen-road-047",
+        "frozen-road-048",
+        "frozen-road-049",
+        "frozen-road-050",
+        "frozen-road-051",
+        "frozen-road-052",
+        "frozen-road-053",
+        "frozen-road-054",
+        "frozen-road-055",
+        "frozen-road-056",
+        "frozen-road-057",
+        "frozen-road-058",
+        "frozen-road-059",
+        "frozen-road-060",
+        "frozen-road-061",
+        "frozen-road-062",
+        "frozen-road-063",
+        "frozen-road-064",
+        "frozen-road-065",
+        "frozen-road-066",
+        "frozen-road-067",
+        "frozen-road-068",
+        "frozen-road-069",
+        "frozen-road-070",
+        "frozen-road-071",
+        "frozen-road-072",
+        "frozen-road-073",
+        "frozen-road-074",
+        "frozen-road-075",
+        "frozen-road-076",
+        "frozen-road-077",
+        "frozen-road-078",
+        "frozen-road-079",
+        "frozen-road-080",
+        "frozen-road-081",
+        "frozen-road-082",
+        "frozen-road-083",
+        "frozen-road-084",
+        "frozen-road-085",
+        "frozen-road-086",
+        "frozen-road-087",
+        "frozen-road-088",
+        "frozen-road-089",
+        "frozen-road-090",
+        "frozen-road-091",
+        "frozen-road-092",
+        "frozen-road-093",
+        "frozen-road-094",
+        "frozen-road-095",
+        "frozen-road-096",
+        "frozen-road-097",
+        "frozen-road-098",
+        "frozen-road-099",
+        "frozen-road-100",
+        "frozen-road-101",
+        "frozen-road-102",
+        "frozen-road-103",
+        "frozen-road-104",
+        "frozen-road-105",
+        "frozen-road-106",
+        "frozen-road-107",
+        "frozen-road-108",
+        "frozen-road-109",
+        "frozen-road-110",
+        "frozen-road-111",
+        "frozen-road-112",
+        "frozen-road-113",
+        "frozen-road-114",
+        "frozen-road-115",
+        "frozen-road-116",
+        "frozen-road-117",
+        "frozen-road-118",
+        "frozen-road-119",
+        "frozen-road-120",
+        "frozen-road-121",
+        "frozen-road-122",
+        "frozen-road-123",
+        "frozen-road-124",
+        "frozen-road-125",
+        "frozen-road-126",
+        "frozen-road-127",
+        "frozen-road-128",
+        "frozen-road-129",
+        "frozen-road-130",
+        "frozen-road-131",
+        "frozen-road-132",
+        "frozen-road-133",
+        "frozen-road-134",
+        "frozen-road-135",
+        "frozen-road-136",
+        "frozen-road-137",
+        "frozen-road-138",
+        "frozen-road-139",
+        "frozen-road-140",
+        "frozen-road-141",
+        "frozen-road-142",
+        "frozen-road-143",
+        "frozen-road-144",
+        "frozen-road-145",
+        "frozen-road-146",
+        "frozen-road-147",
+        "frozen-road-148",
+        "frozen-road-149",
+        "frozen-road-150",
+        "frozen-road-151",
+        "frozen-road-152",
+        "frozen-road-153",
+        "frozen-road-154",
+        "frozen-road-155",
+        "frozen-road-156",
+        "frozen-road-157",
+        "frozen-road-158",
+        "frozen-road-159",
+        "frozen-road-160",
+        "frozen-road-161",
+        "frozen-road-162",
+        "frozen-road-163",
+        "frozen-road-164",
+        "frozen-road-165",
+        "frozen-road-166",
+        "frozen-road-167",
+        "frozen-road-168",
+        "frozen-road-169",
+        "frozen-road-170",
+        "frozen-road-171",
+        "frozen-road-172",
+        "frozen-road-173",
+        "frozen-road-174",
+        "frozen-road-175",
+        "frozen-road-176",
+        "frozen-road-177",
+        "frozen-road-178",
+        "frozen-road-179",
+        "frozen-road-180",
+        "frozen-road-181",
+        "frozen-road-182",
+        "frozen-road-183",
+        "frozen-road-184",
+        "frozen-road-185",
+        "frozen-road-186",
+        "frozen-road-187",
+        "frozen-road-188",
+        "frozen-road-189",
+        "frozen-road-190",
+        "frozen-road-191",
+        "frozen-road-192",
+        "frozen-road-193",
+        "frozen-road-194",
+        "frozen-road-195",
+        "frozen-road-196",
+        "frozen-road-197",
+        "frozen-road-198",
+        "frozen-road-199",
+        "frozen-road-200",
+        "frozen-road-201",
+        "frozen-road-202",
+        "frozen-road-203",
+        "frozen-road-204",
+        "frozen-road-205",
+        "frozen-road-206",
+        "frozen-road-207",
+        "frozen-road-208",
+        "frozen-road-209",
+        "frozen-road-210",
+        "frozen-road-211",
+        "frozen-road-212",
+        "frozen-road-213",
+        "frozen-road-214",
+        "frozen-road-215",
+        "frozen-road-216",
+        "frozen-road-217",
+        "frozen-road-218",
+        "frozen-road-219",
+        "frozen-road-220",
+        "frozen-road-221",
+        "frozen-road-222",
+        "frozen-road-223",
+        "frozen-road-224",
+        "frozen-road-225",
+        "frozen-road-226",
+        "frozen-road-227",
+        "frozen-road-228",
+        "frozen-road-229",
+        "frozen-road-230",
+        "frozen-road-231",
+        "frozen-road-232",
+        "frozen-road-233",
+        "frozen-road-234",
+        "frozen-road-235",
+        "frozen-road-236",
+        "frozen-road-237",
+        "frozen-road-238",
+        "frozen-road-239",
+        "frozen-road-240",
+        "frozen-road-241",
+        "frozen-road-242",
+        "frozen-road-243",
+        "frozen-road-244",
+        "frozen-road-245",
+        "frozen-road-246",
+        "frozen-road-247",
+        "frozen-road-248",
+        "frozen-road-249",
+        "frozen-road-250",
+        "frozen-road-251",
+        "frozen-road-252",
+        "frozen-road-253",
+        "frozen-road-254",
+        "frozen-road-255",
+        "frozen-road-256",
+        "frozen-road-257",
+        "frozen-road-258",
+        "frozen-road-259",
+        "frozen-road-260",
+        "frozen-road-261",
+        "frozen-road-262",
+        "frozen-road-263",
+        "frozen-road-264",
+        "frozen-road-265",
+        "frozen-road-266",
+        "frozen-road-267",
+        "frozen-road-268",
+        "frozen-road-269",
+        "frozen-road-270",
+        "frozen-road-271",
+        "frozen-road-272",
+        "frozen-road-273",
+        "frozen-road-274",
+        "frozen-road-275",
+        "frozen-road-276",
+        "frozen-road-277",
+        "frozen-road-278",
+        "frozen-road-279",
+        "frozen-road-280",
+        "frozen-road-281",
+        "frozen-road-282",
+        "frozen-road-283",
+        "frozen-road-284",
+        "frozen-road-285",
+        "frozen-road-286",
+        "frozen-road-287",
+        "frozen-road-288",
+        "frozen-road-289",
+        "frozen-road-290",
+        "frozen-road-291",
+        "frozen-road-292",
+        "frozen-road-293",
+        "frozen-road-294",
+        "frozen-road-295",
+        "frozen-road-296",
+        "frozen-road-297",
+        "frozen-road-298",
+        "frozen-road-299",
+        "frozen-road-300",
+        "frozen-road-301",
+        "frozen-road-302",
+        "frozen-road-303",
+        "frozen-road-304",
+        "frozen-road-305",
+        "frozen-road-306",
+        "frozen-road-307",
+        "frozen-road-308",
+        "frozen-road-309",
+        "frozen-road-310",
+        "frozen-road-311",
+        "frozen-road-312",
+        "frozen-road-313",
+        "frozen-road-314",
+        "frozen-road-315",
+        "frozen-road-316",
+        "frozen-road-317",
+        "frozen-road-318",
+        "frozen-road-319",
+        "frozen-road-320",
+        "frozen-road-321",
+        "frozen-road-322",
+        "frozen-road-323",
+        "frozen-road-324",
+        "frozen-road-325",
+        "frozen-road-326",
+        "frozen-road-327",
+        "frozen-road-328",
+        "frozen-road-329",
+        "frozen-road-330",
+        "frozen-road-331",
+        "frozen-road-332",
+        "frozen-road-333",
+        "frozen-road-334",
+        "frozen-road-335",
+        "frozen-road-336",
+        "frozen-road-337",
+        "frozen-road-338",
+        "frozen-road-339",
+        "frozen-road-340",
+        "frozen-road-341",
+        "frozen-road-342",
+        "frozen-road-343",
+        "frozen-road-344",
+        "frozen-road-345",
+        "frozen-road-346",
+        "frozen-road-347",
+        "frozen-road-348",
+        "frozen-road-349",
+        "frozen-road-350",
+        "frozen-road-351",
+        "frozen-road-352",
+        "frozen-road-353",
+        "frozen-road-354",
+        "frozen-road-355",
+        "frozen-road-356",
+        "frozen-road-357",
+        "frozen-road-358",
+        "frozen-road-359",
+        "frozen-road-360",
+        "frozen-road-361",
+        "frozen-road-362",
+        "frozen-road-363",
+        "frozen-road-364",
+        "frozen-road-365",
+        "frozen-road-366",
+        "frozen-road-367",
+        "frozen-road-368",
+        "frozen-road-369",
+        "frozen-road-370",
+        "frozen-road-371",
+        "frozen-road-372",
+        "frozen-road-373",
+        "frozen-road-374",
+        "frozen-road-375",
+        "regional-hydrology-000",
+        "regional-hydrology-001",
+        "regional-hydrology-002",
+        "regional-hydrology-003",
+        "regional-hydrology-004",
+        "regional-hydrology-005",
+        "regional-hydrology-006",
+        "road-masks-000",
+        "road-masks-001",
+        "road-masks-002",
+        "road-masks-003",
+        "road-masks-004",
+        "road-masks-005",
+        "context-exclusions-000",
+        "context-exclusions-001",
+        "context-exclusions-002",
+        "context-exclusions-003",
+        "pcg-masks-000",
+        "pcg-masks-001",
+        "pcg-masks-002",
+        "pcg-masks-003",
+        "pcg-masks-004",
+        "pcg-review-000",
+        "pcg-review-001",
+        "pcg-review-002",
+        "pcg-review-003"
+      ],
+      "acquisition": {
+        "receipt": "mask_transitions_receipt_2026-10-04.json",
+        "restore": "Retained local copy plus exact hashes or pinned producer regeneration; no remote backup"
+      },
+      "provenance": {
+        "provider": "YACS derived from pinned CNIG/GOIB/Catastro/frozen-road inputs",
+        "license": "Parent source terms and attribution remain binding; raw not redistributed",
+        "authority": "Decorative transition/topology/point review only; original hard exclusions remain binding"
+      }
+    },
+    {
+      "asset_id": "mask-transitions-001",
+      "path": "mask-transitions-v1a-2026-10-04/hydrology-topology-review.json",
+      "size_bytes": 92959,
+      "sha256": "227bb9be27490b0ed52b295cc183830592aa6825a8c6db8bd25a6c99d86b4162",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "mask-transitions-000"
+      ],
+      "acquisition": {
+        "receipt": "mask_transitions_receipt_2026-10-04.json",
+        "restore": "Retained local copy plus exact hashes or pinned producer regeneration; no remote backup"
+      },
+      "provenance": {
+        "provider": "YACS derived from pinned CNIG/GOIB/Catastro/frozen-road inputs",
+        "license": "Parent source terms and attribution remain binding; raw not redistributed",
+        "authority": "Decorative transition/topology/point review only; original hard exclusions remain binding"
+      }
+    },
+    {
+      "asset_id": "mask-transitions-002",
+      "path": "mask-transitions-v1a-2026-10-04/placement-point-review.json",
+      "size_bytes": 21577,
+      "sha256": "d82c05fc051a75ba098768c3bf58751a34d4fe68489c717842be82858252e73c",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "mask-transitions-000"
+      ],
+      "acquisition": {
+        "receipt": "mask_transitions_receipt_2026-10-04.json",
+        "restore": "Retained local copy plus exact hashes or pinned producer regeneration; no remote backup"
+      },
+      "provenance": {
+        "provider": "YACS derived from pinned CNIG/GOIB/Catastro/frozen-road inputs",
+        "license": "Parent source terms and attribution remain binding; raw not redistributed",
+        "authority": "Decorative transition/topology/point review only; original hard exclusions remain binding"
+      }
+    },
+    {
+      "asset_id": "mask-transitions-003",
+      "path": "mask-transitions-v1a-2026-10-04/placement-point-review.png",
+      "size_bytes": 504301,
+      "sha256": "fe2df1ea04a449b69354e8151e41ed920a1fef542fae2124810a7dfeec418229",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "mask-transitions-000"
+      ],
+      "acquisition": {
+        "receipt": "mask_transitions_receipt_2026-10-04.json",
+        "restore": "Retained local copy plus exact hashes or pinned producer regeneration; no remote backup"
+      },
+      "provenance": {
+        "provider": "YACS derived from pinned CNIG/GOIB/Catastro/frozen-road inputs",
+        "license": "Parent source terms and attribution remain binding; raw not redistributed",
+        "authority": "Decorative transition/topology/point review only; original hard exclusions remain binding"
+      }
+    },
+    {
+      "asset_id": "mask-transitions-004",
+      "path": "mask-transitions-v1a-2026-10-04/review-overlay.png",
+      "size_bytes": 38726480,
+      "sha256": "0f99d012c4f144b45c44be87926a8af4c360b0954da09ed8801b06243d770b6a",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "mask-transitions-000"
+      ],
+      "acquisition": {
+        "receipt": "mask_transitions_receipt_2026-10-04.json",
+        "restore": "Retained local copy plus exact hashes or pinned producer regeneration; no remote backup"
+      },
+      "provenance": {
+        "provider": "YACS derived from pinned CNIG/GOIB/Catastro/frozen-road inputs",
+        "license": "Parent source terms and attribution remain binding; raw not redistributed",
+        "authority": "Decorative transition/topology/point review only; original hard exclusions remain binding"
+      }
+    },
+    {
+      "asset_id": "mask-transitions-005",
+      "path": "mask-transitions-v1a-2026-10-04/transition-manifest.json",
+      "size_bytes": 4179,
+      "sha256": "2cb28c018f2ed3562762d8c47976307b64397f06417c5c8efc4221bd92182950",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "mask-transitions-000"
+      ],
+      "acquisition": {
+        "receipt": "mask_transitions_receipt_2026-10-04.json",
+        "restore": "Retained local copy plus exact hashes or pinned producer regeneration; no remote backup"
+      },
+      "provenance": {
+        "provider": "YACS derived from pinned CNIG/GOIB/Catastro/frozen-road inputs",
+        "license": "Parent source terms and attribution remain binding; raw not redistributed",
+        "authority": "Decorative transition/topology/point review only; original hard exclusions remain binding"
+      }
+    },
+    {
+      "asset_id": "mask-transitions-006",
+      "path": "mask-transitions-v1a-2026-10-04/vegetation-density-weight.tif",
+      "size_bytes": 34940804,
+      "sha256": "9a6e590cfe72dd4cd74f2924d01cd1ce13609aa861cce0f428838941ae6dcc09",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "mask-transitions-000"
+      ],
+      "acquisition": {
+        "receipt": "mask_transitions_receipt_2026-10-04.json",
+        "restore": "Retained local copy plus exact hashes or pinned producer regeneration; no remote backup"
+      },
+      "provenance": {
+        "provider": "YACS derived from pinned CNIG/GOIB/Catastro/frozen-road inputs",
+        "license": "Parent source terms and attribution remain binding; raw not redistributed",
+        "authority": "Decorative transition/topology/point review only; original hard exclusions remain binding"
+      }
+    },
+    {
+      "asset_id": "mask-transitions-007",
+      "path": "mask-transitions-v1a-2026-10-04/water-centreline-review.tif",
+      "size_bytes": 51111,
+      "sha256": "d0ba167f087bad2b10b633ee6bc48baf12b9dd1359f9c4dc17ff02399cac8f0e",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "mask-transitions-000"
+      ],
+      "acquisition": {
+        "receipt": "mask_transitions_receipt_2026-10-04.json",
+        "restore": "Retained local copy plus exact hashes or pinned producer regeneration; no remote backup"
+      },
+      "provenance": {
+        "provider": "YACS derived from pinned CNIG/GOIB/Catastro/frozen-road inputs",
+        "license": "Parent source terms and attribution remain binding; raw not redistributed",
+        "authority": "Decorative transition/topology/point review only; original hard exclusions remain binding"
+      }
+    },
+    {
+      "asset_id": "mask-transitions-008",
+      "path": "mask-transitions-v1a-2026-10-04/water-gap-review.tif",
+      "size_bytes": 24396,
+      "sha256": "bfbdf89b3c89b2d74f6928f4c366c16f79a2a387b8111e88f01ed97ef7fc480d",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "mask-transitions-000"
+      ],
+      "acquisition": {
+        "receipt": "mask_transitions_receipt_2026-10-04.json",
+        "restore": "Retained local copy plus exact hashes or pinned producer regeneration; no remote backup"
+      },
+      "provenance": {
+        "provider": "YACS derived from pinned CNIG/GOIB/Catastro/frozen-road inputs",
+        "license": "Parent source terms and attribution remain binding; raw not redistributed",
+        "authority": "Decorative transition/topology/point review only; original hard exclusions remain binding"
+      }
+    },
+    {
+      "asset_id": "mask-transition-review-000",
+      "path": "mask-transition-review-v1a-2026-10-04/historical-context.png",
+      "size_bytes": 121270,
+      "sha256": "4ee4131061ee12ee7a20b4d5c2cccd27a5cb9091fa80f99831029cae81c45d3e",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "mask-transitions-000",
+        "mask-transitions-001",
+        "mask-transitions-002",
+        "mask-transitions-003",
+        "mask-transitions-004",
+        "mask-transitions-005",
+        "mask-transitions-006",
+        "mask-transitions-007",
+        "mask-transitions-008",
+        "lidar-review-review-manifest"
+      ],
+      "acquisition": {
+        "receipt": "mask_transitions_receipt_2026-10-04.json",
+        "restore": "Retained local copy plus exact hashes or pinned producer regeneration; no remote backup"
+      },
+      "provenance": {
+        "provider": "YACS derived from pinned CNIG/GOIB/Catastro/frozen-road inputs",
+        "license": "Parent source terms and attribution remain binding; raw not redistributed",
+        "authority": "Decorative transition/topology/point review only; original hard exclusions remain binding"
+      }
+    },
+    {
+      "asset_id": "mask-transition-review-001",
+      "path": "mask-transition-review-v1a-2026-10-04/orthophoto.png",
+      "size_bytes": 37058260,
+      "sha256": "36eb65995ccd9ff7b8d169a208f97d2f3c6729c97053c5a5fcba4b3a6c62faa5",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "mask-transition-review-000"
+      ],
+      "acquisition": {
+        "receipt": "mask_transitions_receipt_2026-10-04.json",
+        "restore": "Retained local copy plus exact hashes or pinned producer regeneration; no remote backup"
+      },
+      "provenance": {
+        "provider": "YACS derived from pinned CNIG/GOIB/Catastro/frozen-road inputs",
+        "license": "Parent source terms and attribution remain binding; raw not redistributed",
+        "authority": "Decorative transition/topology/point review only; original hard exclusions remain binding"
+      }
+    },
+    {
+      "asset_id": "mask-transition-review-002",
+      "path": "mask-transition-review-v1a-2026-10-04/review-manifest.json",
+      "size_bytes": 12401,
+      "sha256": "aed7f8324102750fd898224a3951e10507b27e6878a7c093def723b4c0a5bf14",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "mask-transition-review-000"
+      ],
+      "acquisition": {
+        "receipt": "mask_transitions_receipt_2026-10-04.json",
+        "restore": "Retained local copy plus exact hashes or pinned producer regeneration; no remote backup"
+      },
+      "provenance": {
+        "provider": "YACS derived from pinned CNIG/GOIB/Catastro/frozen-road inputs",
+        "license": "Parent source terms and attribution remain binding; raw not redistributed",
+        "authority": "Decorative transition/topology/point review only; original hard exclusions remain binding"
+      }
+    },
+    {
+      "asset_id": "mask-transition-review-003",
+      "path": "mask-transition-review-v1a-2026-10-04/review-overlay.png",
+      "size_bytes": 38726480,
+      "sha256": "0f99d012c4f144b45c44be87926a8af4c360b0954da09ed8801b06243d770b6a",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "mask-transition-review-000"
+      ],
+      "acquisition": {
+        "receipt": "mask_transitions_receipt_2026-10-04.json",
+        "restore": "Retained local copy plus exact hashes or pinned producer regeneration; no remote backup"
+      },
+      "provenance": {
+        "provider": "YACS derived from pinned CNIG/GOIB/Catastro/frozen-road inputs",
+        "license": "Parent source terms and attribution remain binding; raw not redistributed",
+        "authority": "Decorative transition/topology/point review only; original hard exclusions remain binding"
+      }
     }
   ],
   "profiles": {
@@ -13365,6 +14100,27 @@
         "pcg-review-001",
         "pcg-review-002",
         "pcg-review-003"
+      ]
+    },
+    "sa-calobra-mask-transitions-candidate": {
+      "description": "Transition density/topology/point review source closure; byte PASS is not native or planting admission",
+      "extends": [
+        "sa-calobra-pcg-masks-candidate"
+      ],
+      "requires": [
+        "mask-transitions-000",
+        "mask-transitions-001",
+        "mask-transitions-002",
+        "mask-transitions-003",
+        "mask-transitions-004",
+        "mask-transitions-005",
+        "mask-transitions-006",
+        "mask-transitions-007",
+        "mask-transitions-008",
+        "mask-transition-review-000",
+        "mask-transition-review-001",
+        "mask-transition-review-002",
+        "mask-transition-review-003"
       ]
     }
   },
@@ -16009,6 +16765,89 @@
       "restore": "Local-only retained cache; exact size/SHA required; no remote backup",
       "geometry_mutation": false,
       "production_graph_executed": false
+    },
+    "mask_transitions": {
+      "status": "TRANSITION_AND_TOPOLOGY_REVIEW_CANDIDATE",
+      "profile": "sa-calobra-mask-transitions-candidate",
+      "manifest": "mask-transitions-v1a-2026-10-04/transition-manifest.json",
+      "fingerprint": "b18f6fac303a0e83c1f676ab6b0a12ba959bdf0843ff466c15a1d4bde4eb576c",
+      "counts": {
+        "subpixel_joins": 9,
+        "unverified_gap_candidates": 43,
+        "example_points_by_band": [
+          60,
+          0,
+          0
+        ]
+      },
+      "proof": {
+        "status": "PASS_TRANSITION_READ_ONLY",
+        "all_original_exclusions_preserved": true,
+        "unknown_preserved": true,
+        "density_bounds_pass": true,
+        "example_points_verified": 60,
+        "pairwise_footprints_separated": true,
+        "graph_executed": false,
+        "determinism": "8/8 products and full manifest byte-identical; raster logical hashes and grid independently verified",
+        "fingerprint": "b18f6fac303a0e83c1f676ab6b0a12ba959bdf0843ff466c15a1d4bde4eb576c"
+      },
+      "files": {
+        "files": [
+          {
+            "path": "mask-transitions-v1a-2026-10-04/bob-transition-weight.tif",
+            "size_bytes": 199464,
+            "sha256": "ebbe3afd7cffd86d05d862f6f5b6a76051f51d3b61bb5636401e407db89b224c"
+          },
+          {
+            "path": "mask-transitions-v1a-2026-10-04/hydrology-topology-review.json",
+            "size_bytes": 92959,
+            "sha256": "227bb9be27490b0ed52b295cc183830592aa6825a8c6db8bd25a6c99d86b4162"
+          },
+          {
+            "path": "mask-transitions-v1a-2026-10-04/placement-point-review.json",
+            "size_bytes": 21577,
+            "sha256": "d82c05fc051a75ba098768c3bf58751a34d4fe68489c717842be82858252e73c"
+          },
+          {
+            "path": "mask-transitions-v1a-2026-10-04/placement-point-review.png",
+            "size_bytes": 504301,
+            "sha256": "fe2df1ea04a449b69354e8151e41ed920a1fef542fae2124810a7dfeec418229"
+          },
+          {
+            "path": "mask-transitions-v1a-2026-10-04/review-overlay.png",
+            "size_bytes": 38726480,
+            "sha256": "0f99d012c4f144b45c44be87926a8af4c360b0954da09ed8801b06243d770b6a"
+          },
+          {
+            "path": "mask-transitions-v1a-2026-10-04/transition-manifest.json",
+            "size_bytes": 4179,
+            "sha256": "2cb28c018f2ed3562762d8c47976307b64397f06417c5c8efc4221bd92182950"
+          },
+          {
+            "path": "mask-transitions-v1a-2026-10-04/vegetation-density-weight.tif",
+            "size_bytes": 34940804,
+            "sha256": "9a6e590cfe72dd4cd74f2924d01cd1ce13609aa861cce0f428838941ae6dcc09"
+          },
+          {
+            "path": "mask-transitions-v1a-2026-10-04/water-centreline-review.tif",
+            "size_bytes": 51111,
+            "sha256": "d0ba167f087bad2b10b633ee6bc48baf12b9dd1359f9c4dc17ff02399cac8f0e"
+          },
+          {
+            "path": "mask-transitions-v1a-2026-10-04/water-gap-review.tif",
+            "size_bytes": 24396,
+            "sha256": "bfbdf89b3c89b2d74f6928f4c366c16f79a2a387b8111e88f01ed97ef7fc480d"
+          }
+        ],
+        "file_count": 9,
+        "size_bytes": 74565271
+      },
+      "restore": "Local-only verified copies or pinned regeneration; no remote backup",
+      "geometry_mutation": false,
+      "graph_executed": false,
+      "native_proof": "Read separate mask-transition-review-v1a-2026-10-04/unreal-review-proof.json if present; not inferred from byte profile",
+      "source_confidence": "Subpixel joins display-only; larger gaps, wetness, flow and culverts unverified",
+      "human_visual_acceptance": "Current transitions pending; prior green character acceptance preserved separately"
     }
   }
 }

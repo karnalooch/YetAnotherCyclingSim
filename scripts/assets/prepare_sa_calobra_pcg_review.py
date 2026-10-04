@@ -18,7 +18,7 @@ from prepare_sa_calobra_pcg_masks import verified_manifest
 from verify_sa_calobra_lidar_masks import digest
 
 
-def prepare(pcg_manifest, baseline_manifest, output):
+def prepare(pcg_manifest, baseline_manifest, output, transition_manifest=None):
     if output.exists():
         raise FileExistsError("Preserve previous PCG review")
     pcg = verified_manifest(pcg_manifest)
@@ -58,6 +58,23 @@ def prepare(pcg_manifest, baseline_manifest, output):
         (1, [245, 245, 245]),
     ]:
         image[(reasons & bit) != 0] = color
+    transition = None
+    if transition_manifest is not None:
+        transition = verified_manifest(transition_manifest)
+        if (
+            transition["grid"] != pcg["grid"]
+            or transition["hard_exclusions_modified"] is not False
+            or not any(
+                r["sha256"] == digest(pcg_manifest)
+                for r in transition["source_manifests"]
+            )
+        ):
+            raise ValueError("Transition does not match unchanged PCG authority")
+        image = np.array(
+            Image.open(transition_manifest.parent / "review-overlay.png").convert("RGB")
+        )
+        if image.shape != (pcg["grid"]["height"], pcg["grid"]["width"], 3):
+            raise ValueError("Transition review shape mismatch")
     output.mkdir(parents=True)
     for name in ["orthophoto.png", "historical-context.png"]:
         shutil.copyfile(baseline_manifest.parent / name, output / name)
@@ -92,6 +109,23 @@ def prepare(pcg_manifest, baseline_manifest, output):
         "geometry_mutation": False,
         "admission": "Diagnostic contract review; previous green character acceptance does not automatically accept new holdbacks; no production planting/performance claim",
     }
+    if transition is not None:
+        report["transition_manifest_sha256"] = digest(transition_manifest)
+        report["transition_fingerprint"] = transition["fingerprint"]
+        report["counts"]["transition"] = transition["counts"]
+        report["legend"] = {
+            "green_shades": "Source low/medium/high relative density weights; hard exclusions unchanged; not plant count/confidence",
+            "purple": "Original conservative BOB exclusion with 6m outward soft fade; rectangles remain binding, not exact CUT/FILL",
+            "faint_blue": "Original 5m decorative water holdback, not wet surface or channel width",
+            "ochre": "Mapped stream line/point/surface plus derived subpixel joins; wetness/bed materials unverified",
+            "orange": "Unverified nearest-feature gaps for review only, NOT repaired channels",
+            "white": "Frozen pavement; may visually cover a continuous stream, culverts remain unverified",
+            "cyan": "Unchanged mapped building exclusions",
+            "sand": "Unchanged conservative shoulder envelope",
+            "amber": "Infrastructure holdback",
+            "uncolored_ortho": "Source context only; unknowns/excluded other classes remain non-eligible in hard masks",
+            "sky": "Native session-only atmosphere/sun; no save",
+        }
     (output / "review-manifest.json").write_text(
         json.dumps(report, indent=2) + "\n", encoding="utf-8"
     )
@@ -103,6 +137,9 @@ if __name__ == "__main__":
     parser.add_argument("--pcg-manifest", required=True, type=Path)
     parser.add_argument("--baseline-review", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--transition-manifest", type=Path)
     args = parser.parse_args()
-    result = prepare(args.pcg_manifest, args.baseline_review, args.output)
+    result = prepare(
+        args.pcg_manifest, args.baseline_review, args.output, args.transition_manifest
+    )
     print(json.dumps({"status": result["status"], "outputs": len(result["outputs"])}))

@@ -237,3 +237,14 @@ selectors reject invalid height. Earlier green visual acceptance covers characte
 new holdbacks still need review. Historical blocked profiles keep their original
 scope and point to the successor candidate rather than rewriting old evidence.
 Full-authority readiness continues to fail closed while its admissions are missing.
+
+## Mask transitions candidate — 2026-10-04
+
+`sa-calobra-mask-transitions-candidate` extends the 489-file bounded PCG profile
+with 9 transition files and 4 native-review payloads (502 identities). Source
+closure, local-only restore and earlier admission limits remain explicit.
+`explain mask_transitions` reports hashes, topology-review counts and example
+point scope. Unknowns and all original hard exclusions remain binding.
+Nine subpixel display joins are below 1cm; 43 larger candidates remain unjoined.
+The low-only 60-point trial is not actual asset placement or PCGEx execution.
+Native no-save captures/proof are separate from profile byte integrity.
