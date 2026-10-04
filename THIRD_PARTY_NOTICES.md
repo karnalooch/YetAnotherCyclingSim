@@ -200,3 +200,26 @@ Source `paved`, lane count and `fictitious` attributes remain source claims.
 - Acquisition date and native GSD remain unknown; request date is not flight date.
   Approximate AI-interpreted edge positions have an explicit review allowance,
   not measured statistical accuracy. The generated preview is not road acceptance.
+
+## Bounded BTN / SIOSE / Catastro service evidence
+
+Acquired 2026-10-04 for Issue #335. IGN/CNIG BTN context consists of 30 z16
+vector tiles; attribution: Instituto Geográfico Nacional. IGN/CNIG data terms
+compatible with CC BY 4.0 apply. SIOSE's current endpoint did not establish the
+requested 2014 identity; its diagnostic payload is not admitted geography.
+
+Catastro returned only exception payloads. Its
+[INSPIRE access/use license](https://www.catastro.hacienda.gob.es/webinspire/documentos/Licencia.pdf)
+permits own use and transformed value-added products, including commercial
+use, while disallowing redistribution of the original supplied information.
+Raw service responses remain outside Git. This checkpoint includes provenance,
+receipts and hashes only, not source-geometry redistribution or derived masks.
+
+## Verified P1 alternative source attribution
+
+Official IDEIB regional SIOSE 2014 service permits publishing/download with
+mandatory attribution: SIOSE © INSTITUTO GEOGRÁFICO NACIONAL DE ESPAÑA - SITIBSA - GOIB.
+License evidence is pinned from the exact service `info/iteminfo` response.
+Catastro ATOM retains the existing INSPIRE license restrictions on original
+redistribution. Raw municipal ZIP, GML and regional feature JSON remain outside
+Git. Only identity/provenance evidence is committed in this checkpoint.

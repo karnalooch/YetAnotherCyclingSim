@@ -135,3 +135,32 @@ gigabytes and should be used only when a full byte-integrity audit is desired.
 The report is local; it is never committed or uploaded automatically.
 
 More architecture, limitations, and SSOT links: [`../../docs/tooling/JULKA.md`](../../docs/tooling/JULKA.md).
+
+## P1 context and provider failures
+
+The original 34-item catalog is supplemented by `data/p1_context.json`.
+Use `explain btn_vector_context`, `explain siose_2014_wfs`, or
+`explain catastro_buildings_wfs` for source-level state and provenance.
+`sa-calobra-btn-context` verifies 30 local BTN tiles;
+`sa-calobra-p1-context` verifies all 45 source/evidence files but remains nonzero
+because SIOSE 2014 and Catastro are unadmitted. Select the parent world-data
+`sa-calobra-working-v1` cache via `--root`. This backend uses the existing
+`p1-2026-10-04` relative paths, without duplicating bytes into `sources/`.
+No remote P1 snapshot is registered. `plan` reports local restore requirements;
+`hydrate` verifies local-only files and never downloads an invented backup.
+Copy the retained relative cache paths to the selected root, then verify hashes.
+Provider reacquisition is a new snapshot if mutable responses differ.
+
+See the [P1 report](../../worldgen/terrain/benchmarks/sa_calobra/world_data/P1_ACQUISITION_2026-10-04.md)
+for exact file/layer counts, rejected payloads and provider references.
+
+## Verified P1 input alternatives
+
+`sa-calobra-p1-inputs` selects the 30 BTN tiles plus 8 verified alternative
+payloads: Catastro Buildings ATOM for Escorca and IDEIB SIOSE 2014 AOI geometry.
+Use `explain catastro_buildings_atom` and `explain siose_2014_ideib` for counts,
+provenance and local restore status. Select the same parent world-data root;
+the alternative files live under `p1-alternatives-2026-10-04`.
+The historical WFS failure profile remains available as diagnostic evidence.
+See the [alternative acquisition report](../../worldgen/terrain/benchmarks/sa_calobra/world_data/P1_ALTERNATIVES_2026-10-04.md)
+for coverage limitations and the remaining 2A normalization work.
