@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "derivation_version": "sa-calobra-context-v1",
+  "aoi": {
+    "id": "sa_calobra_working_space_v1",
+    "status": "primary_cnig_sources_acquired",
+    "crs": "EPSG:25831",
+    "bounds_m": [
+      483000,
+      4407500,
+      485016.5,
+      4409516.5
+    ],
+    "center_m": [
+      484008.25,
+      4408508.25
+    ],
+    "center_wgs84_lon_lat": [
+      2.813126946845794,
+      39.826417491613824
+    ],
+    "wgs84_corners_lon_lat": {
+      "SW": [
+        2.8013711714022658,
+        39.81731355795069
+      ],
+      "SE": [
+        2.824931945160123,
+        39.81735149865384
+      ],
+      "NE": [
+        2.824885825640162,
+        39.835520226740705
+      ],
+      "NW": [
+        2.801318845180626,
+        39.8354822617286
+      ]
+    },
+    "size_m": [
+      2016.5,
+      2016.5
+    ],
+    "area_km2": 4.06648225,
+    "relationship_to_benchmark": "Current active Unreal working/import square inside the existing 8 km x 8 km Sa Calobra MDT50cm benchmark."
+  },
+  "grid": {
+    "crs": "EPSG:25831",
+    "pixel_size_m": 0.5,
+    "width": 4033,
+    "height": 4033,
+    "anchor": "AOI upper-left; matches accepted native Base_DTM grid",
+    "pixel_rule": "center for SIOSE IDs; all_touched for conservative building candidates"
+  },
+  "inputs": [
+    {
+      "source_id": "siose_2014_ideib",
+      "name": "siose14-service.json",
+      "cache_relative_path": "p1-alternatives-2026-10-04/siose14-service.json",
+      "size_bytes": 6405,
+      "sha256": "81805ab39fe5ce76986d207d0fc19c3cdd54ed6e7d084b33846bc3f7089b1053",
+      "detail_url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer"
+    },
+    {
+      "source_id": "siose_2014_ideib",
+      "name": "siose14-layer.json",
+      "cache_relative_path": "p1-alternatives-2026-10-04/siose14-layer.json",
+      "size_bytes": 83253,
+      "sha256": "9cee8105b6e1967b273d51b420869ff41d320b44273e5ffb512a050b6a8ca71b",
+      "detail_url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer/1"
+    },
+    {
+      "source_id": "siose_2014_ideib",
+      "name": "siose14-iteminfo.json",
+      "cache_relative_path": "p1-alternatives-2026-10-04/siose14-iteminfo.json",
+      "size_bytes": 3934,
+      "sha256": "74884a00d2fe7aefb439a3044710f9e787e82f65c73a0bbc9724a1c631f398cc",
+      "detail_url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer/info/iteminfo"
+    },
+    {
+      "source_id": "siose_2014_ideib",
+      "name": "siose14-ids.json",
+      "cache_relative_path": "p1-alternatives-2026-10-04/siose14-ids.json",
+      "size_bytes": 133,
+      "sha256": "aec9f9b4aeaf4bddfb4b2df535eee2568fdc7a61a4230126e414f00f88dcec01",
+      "detail_url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer/1/query"
+    },
+    {
+      "source_id": "siose_2014_ideib",
+      "name": "siose14-features.json",
+      "cache_relative_path": "p1-alternatives-2026-10-04/siose14-features.json",
+      "size_bytes": 1142878,
+      "sha256": "7b90a7affacea7c8a647bb4cfd0f252d18ab6e673ffecb632084a1d3cb7a0d05",
+      "detail_url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer/1/query"
+    },
+    {
+      "source_id": "catastro_buildings_atom",
+      "name": "catastro-national.atom.xml",
+      "cache_relative_path": "p1-alternatives-2026-10-04/catastro-national.atom.xml",
+      "size_bytes": 682565,
+      "sha256": "6b60f42087114a090db59aebba2590102fe840ac205ec1203665d4b49c5e2996",
+      "detail_url": "https://www.catastro.hacienda.gob.es/INSPIRE/buildings/ES.SDGC.BU.atom.xml"
+    },
+    {
+      "source_id": "catastro_buildings_atom",
+      "name": "catastro-baleares.atom.xml",
+      "cache_relative_path": "p1-alternatives-2026-10-04/catastro-baleares.atom.xml",
+      "size_bytes": 117685,
+      "sha256": "9874ae01de8351886e5c49e506e91490d472183c37ca7551dcf190688093f825",
+      "detail_url": "http://www.catastro.hacienda.gob.es/INSPIRE/buildings/07/ES.SDGC.bu.atom_07.xml"
+    },
+    {
+      "source_id": "catastro_buildings_atom",
+      "name": "A.ES.SDGC.BU.07019.zip",
+      "cache_relative_path": "p1-alternatives-2026-10-04/A.ES.SDGC.BU.07019.zip",
+      "size_bytes": 127448,
+      "sha256": "a5c80a7ba5c82618401550215a1a94ea1470e41d55e92a59c1c3d4d758acd4d4",
+      "detail_url": "https://www.catastro.hacienda.gob.es/INSPIRE/Buildings/07/07019-ESCORCA/A.ES.SDGC.BU.07019.zip"
+    },
+    {
+      "source_id": "ideib_municipal_coverage",
+      "name": "service.json",
+      "cache_relative_path": "coverage-2026-10-04/service.json",
+      "size_bytes": 8012,
+      "sha256": "253be69490674fe931f95661530a759f0e1ad682c56ad93076dcc187d4e0962d",
+      "url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_UnitAdm_IB/MapServer",
+      "params": {
+        "f": "pjson"
+      }
+    },
+    {
+      "source_id": "ideib_municipal_coverage",
+      "name": "layer.json",
+      "cache_relative_path": "coverage-2026-10-04/layer.json",
+      "size_bytes": 16035,
+      "sha256": "547066c7cfe9466812b77bce282829373bccaceb93a2068f320f70f3adce2cc6",
+      "url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_UnitAdm_IB/MapServer/1",
+      "params": {
+        "f": "pjson"
+      }
+    },
+    {
+      "source_id": "ideib_municipal_coverage",
+      "name": "iteminfo.json",
+      "cache_relative_path": "coverage-2026-10-04/iteminfo.json",
+      "size_bytes": 5145,
+      "sha256": "7c488cf902adc02f5d31ac11910ea8b55a6c39d58341dcead7b33cbecead2bad",
+      "url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_UnitAdm_IB/MapServer/info/iteminfo",
+      "params": {
+        "f": "pjson"
+      }
+    },
+    {
+      "source_id": "ideib_municipal_coverage",
+      "name": "ids.json",
+      "cache_relative_path": "coverage-2026-10-04/ids.json",
+      "size_bytes": 51,
+      "sha256": "450dda433ad684e84f2caac6ebb69f1735d2f4bca2e7d316cacff11b0653f4d6",
+      "url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_UnitAdm_IB/MapServer/1/query",
+      "params": {
+        "f": "json",
+        "where": "1=1",
+        "geometry": "483000,4407500,485016.5,4409516.5",
+        "geometryType": "esriGeometryEnvelope",
+        "inSR": "25831",
+        "spatialRel": "esriSpatialRelIntersects",
+        "returnIdsOnly": "true"
+      }
+    },
+    {
+      "source_id": "ideib_municipal_coverage",
+      "name": "features.json",
+      "cache_relative_path": "coverage-2026-10-04/features.json",
+      "size_bytes": 727128,
+      "sha256": "b5d1326462b5049b76b9eb0392e17b46242df30758bff7cdfb0b7ba78179947e",
+      "url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_UnitAdm_IB/MapServer/1/query",
+      "params": {
+        "f": "json",
+        "objectIds": "1081",
+        "outFields": "*",
+        "returnGeometry": "true",
+        "outSR": "25831"
+      }
+    }
+  ],
+  "municipality": "07019",
+  "coverage_license": "CC BY 4.0; SITIBSA-scne.es",
+  "runtime_integration": false,
+  "blocked_layers": [
+    "current_land_cover_with_confidence",
+    "lidar_class_occupancy",
+    "canopy_height",
+    "canopy_density",
+    "water_infrastructure_exclusions",
+    "road_footprint",
+    "shoulder",
+    "road_distance",
+    "route_safety_corridor",
+    "bob_cut_fill_inner_outer_edge"
+  ]
+}

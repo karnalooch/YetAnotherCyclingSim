@@ -131,3 +131,11 @@ acquired official Catastro ATOM Escorca and regional IDEIB SIOSE 2014.
 `p1_alternatives_receipt_2026-10-04.json` pins the 8 payloads. Julka profile
 `sa-calobra-p1-inputs` verifies 30 BTN + 8 alternative files. Original WFS
 failures remain inspectable; normalization and full 2A acceptance remain pending.
+
+## Bounded normalization candidate
+
+[Normalized context report](NORMALIZED_CONTEXT_2026-10-04.md) and
+[receipt](normalized_context_receipt_2026-10-04.json) describe nine external-cache
+GIS products on the native 0.5 m grid, verified municipal coverage, clean
+regeneration, candidate visual QA and explicit missing 2A layers. No Unreal
+consumer integration or whole-2A acceptance is claimed.

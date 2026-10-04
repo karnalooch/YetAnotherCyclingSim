@@ -630,7 +630,9 @@ Broker artifact contract; it never launches a GPU job or mutates a map.
 
 Source acquisition has no running-world performance effect. The policy's
 `source_evidence_paths` lists exact reviewed JSON paths for the working-space
-source catalog and the two 2026-10-04 P1 acquisition receipts. These files serve
+source catalog, the two 2026-10-04 P1 acquisition receipts and the
+2026-10-04 normalized-context candidate receipt. The latter inventories
+external-cache GIS candidates and validation, without runtime integration. These files serve
 acquisition/planning and Julka identity/provenance, not the UE terrain importer
 or runtime. They use hosted script tests, receipt/hash checks and documentation
 guards; ready PR and main admission report `NOT_REQUIRED` for evidence-only

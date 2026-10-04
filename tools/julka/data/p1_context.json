@@ -1325,6 +1325,540 @@
         "source_url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_SIOSE14_IB/MapServer/1/query",
         "admitted": true
       }
+    },
+    {
+      "asset_id": "ideib-municipal-coverage-0",
+      "path": "coverage-2026-10-04/service.json",
+      "size_bytes": 8012,
+      "sha256": "253be69490674fe931f95661530a759f0e1ad682c56ad93076dcc187d4e0962d",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "ideib_municipal_coverage",
+      "depends_on": [],
+      "acquisition": {
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "restore": "local cache copy with exact hashes; derivatives regenerate from pinned recipe; no remote backup"
+      },
+      "provenance": {
+        "license": "IDEIB service CC BY 4.0; SITIBSA-scne.es; original data distribution has separate request conditions",
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "authority": "GIS candidate, no UE integration or whole-2A acceptance"
+      }
+    },
+    {
+      "asset_id": "ideib-municipal-coverage-1",
+      "path": "coverage-2026-10-04/layer.json",
+      "size_bytes": 16035,
+      "sha256": "547066c7cfe9466812b77bce282829373bccaceb93a2068f320f70f3adce2cc6",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "ideib_municipal_coverage",
+      "depends_on": [],
+      "acquisition": {
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "restore": "local cache copy with exact hashes; derivatives regenerate from pinned recipe; no remote backup"
+      },
+      "provenance": {
+        "license": "IDEIB service CC BY 4.0; SITIBSA-scne.es; original data distribution has separate request conditions",
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "authority": "GIS candidate, no UE integration or whole-2A acceptance"
+      }
+    },
+    {
+      "asset_id": "ideib-municipal-coverage-2",
+      "path": "coverage-2026-10-04/iteminfo.json",
+      "size_bytes": 5145,
+      "sha256": "7c488cf902adc02f5d31ac11910ea8b55a6c39d58341dcead7b33cbecead2bad",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "ideib_municipal_coverage",
+      "depends_on": [],
+      "acquisition": {
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "restore": "local cache copy with exact hashes; derivatives regenerate from pinned recipe; no remote backup"
+      },
+      "provenance": {
+        "license": "IDEIB service CC BY 4.0; SITIBSA-scne.es; original data distribution has separate request conditions",
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "authority": "GIS candidate, no UE integration or whole-2A acceptance"
+      }
+    },
+    {
+      "asset_id": "ideib-municipal-coverage-3",
+      "path": "coverage-2026-10-04/ids.json",
+      "size_bytes": 51,
+      "sha256": "450dda433ad684e84f2caac6ebb69f1735d2f4bca2e7d316cacff11b0653f4d6",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "ideib_municipal_coverage",
+      "depends_on": [],
+      "acquisition": {
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "restore": "local cache copy with exact hashes; derivatives regenerate from pinned recipe; no remote backup"
+      },
+      "provenance": {
+        "license": "IDEIB service CC BY 4.0; SITIBSA-scne.es; original data distribution has separate request conditions",
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "authority": "GIS candidate, no UE integration or whole-2A acceptance"
+      }
+    },
+    {
+      "asset_id": "ideib-municipal-coverage-4",
+      "path": "coverage-2026-10-04/features.json",
+      "size_bytes": 727128,
+      "sha256": "b5d1326462b5049b76b9eb0392e17b46242df30758bff7cdfb0b7ba78179947e",
+      "class": "source",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "ideib_municipal_coverage",
+      "depends_on": [],
+      "acquisition": {
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "restore": "local cache copy with exact hashes; derivatives regenerate from pinned recipe; no remote backup"
+      },
+      "provenance": {
+        "license": "IDEIB service CC BY 4.0; SITIBSA-scne.es; original data distribution has separate request conditions",
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "authority": "GIS candidate, no UE integration or whole-2A acceptance"
+      }
+    },
+    {
+      "asset_id": "accepted-base-dtm-local",
+      "path": "accepted-base-dtm/sa_calobra_8x8km_mdt50cm_epsg25831.tif",
+      "size_bytes": 389039616,
+      "sha256": "6092a48a949b7b7e8ccf120cb46d59cfd7fdd3522085e8a55162fd52fe5a139a",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "acquired",
+      "gis_metadata_profile": "normalized_context_v1",
+      "depends_on": [],
+      "acquisition": {
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "restore": "local cache copy with exact hashes; derivatives regenerate from pinned recipe; no remote backup"
+      },
+      "provenance": {
+        "license": "CNIG/IGN CC BY 4.0; existing prepared MDT50cm provenance",
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "authority": "GIS candidate, no UE integration or whole-2A acceptance"
+      }
+    },
+    {
+      "asset_id": "normalized-elevation",
+      "path": "normalized-context-v1a-2026-10-04/elevation.tif",
+      "size_bytes": 28153872,
+      "sha256": "c1abe56ce87265416a3c6dc1b0e2fa4668e593a8a4b82d30e2a95e8b01e27791",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "normalized_context_v1",
+      "depends_on": [
+        "accepted-base-dtm-local",
+        "ideib-municipal-coverage-0",
+        "ideib-municipal-coverage-1",
+        "ideib-municipal-coverage-2",
+        "ideib-municipal-coverage-3",
+        "ideib-municipal-coverage-4",
+        "catastro_buildings_atom-002",
+        "siose_2014_ideib-003",
+        "siose_2014_ideib-004"
+      ],
+      "acquisition": {
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "restore": "local cache copy with exact hashes; derivatives regenerate from pinned recipe; no remote backup"
+      },
+      "provenance": {
+        "license": "Inherited CNIG/SIOSE attribution and Catastro transformed-data terms; raw not redistributed",
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "authority": "GIS candidate, no UE integration or whole-2A acceptance"
+      }
+    },
+    {
+      "asset_id": "normalized-slope",
+      "path": "normalized-context-v1a-2026-10-04/slope.tif",
+      "size_bytes": 52863521,
+      "sha256": "0f5721f3d68352d51da52f518f1cc876fd030d28fef17a58e8971f44ddc8c4ab",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "normalized_context_v1",
+      "depends_on": [
+        "accepted-base-dtm-local",
+        "ideib-municipal-coverage-0",
+        "ideib-municipal-coverage-1",
+        "ideib-municipal-coverage-2",
+        "ideib-municipal-coverage-3",
+        "ideib-municipal-coverage-4",
+        "catastro_buildings_atom-002",
+        "siose_2014_ideib-003",
+        "siose_2014_ideib-004"
+      ],
+      "acquisition": {
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "restore": "local cache copy with exact hashes; derivatives regenerate from pinned recipe; no remote backup"
+      },
+      "provenance": {
+        "license": "Inherited CNIG/SIOSE attribution and Catastro transformed-data terms; raw not redistributed",
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "authority": "GIS candidate, no UE integration or whole-2A acceptance"
+      }
+    },
+    {
+      "asset_id": "normalized-aspect",
+      "path": "normalized-context-v1a-2026-10-04/aspect.tif",
+      "size_bytes": 52342068,
+      "sha256": "2afb41bde16729b66fa9da500b705037deb2ade258f3463de86ce0578a1c22ed",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "normalized_context_v1",
+      "depends_on": [
+        "accepted-base-dtm-local",
+        "ideib-municipal-coverage-0",
+        "ideib-municipal-coverage-1",
+        "ideib-municipal-coverage-2",
+        "ideib-municipal-coverage-3",
+        "ideib-municipal-coverage-4",
+        "catastro_buildings_atom-002",
+        "siose_2014_ideib-003",
+        "siose_2014_ideib-004"
+      ],
+      "acquisition": {
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "restore": "local cache copy with exact hashes; derivatives regenerate from pinned recipe; no remote backup"
+      },
+      "provenance": {
+        "license": "Inherited CNIG/SIOSE attribution and Catastro transformed-data terms; raw not redistributed",
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "authority": "GIS candidate, no UE integration or whole-2A acceptance"
+      }
+    },
+    {
+      "asset_id": "normalized-roughness",
+      "path": "normalized-context-v1a-2026-10-04/roughness.tif",
+      "size_bytes": 33402291,
+      "sha256": "7ff4bb951639e453d2b082955d8677c4ea5221951a135e5302d989a94513ac18",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "normalized_context_v1",
+      "depends_on": [
+        "accepted-base-dtm-local",
+        "ideib-municipal-coverage-0",
+        "ideib-municipal-coverage-1",
+        "ideib-municipal-coverage-2",
+        "ideib-municipal-coverage-3",
+        "ideib-municipal-coverage-4",
+        "catastro_buildings_atom-002",
+        "siose_2014_ideib-003",
+        "siose_2014_ideib-004"
+      ],
+      "acquisition": {
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "restore": "local cache copy with exact hashes; derivatives regenerate from pinned recipe; no remote backup"
+      },
+      "provenance": {
+        "license": "Inherited CNIG/SIOSE attribution and Catastro transformed-data terms; raw not redistributed",
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "authority": "GIS candidate, no UE integration or whole-2A acceptance"
+      }
+    },
+    {
+      "asset_id": "normalized-catastro-mapped-footprint",
+      "path": "normalized-context-v1a-2026-10-04/catastro_mapped_footprint.tif",
+      "size_bytes": 24481,
+      "sha256": "efedc86e4e6363cafeb00990f557b6b4330234542e0dc67b26364bb7c6f307d8",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "normalized_context_v1",
+      "depends_on": [
+        "accepted-base-dtm-local",
+        "ideib-municipal-coverage-0",
+        "ideib-municipal-coverage-1",
+        "ideib-municipal-coverage-2",
+        "ideib-municipal-coverage-3",
+        "ideib-municipal-coverage-4",
+        "catastro_buildings_atom-002",
+        "siose_2014_ideib-003",
+        "siose_2014_ideib-004"
+      ],
+      "acquisition": {
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "restore": "local cache copy with exact hashes; derivatives regenerate from pinned recipe; no remote backup"
+      },
+      "provenance": {
+        "license": "Inherited CNIG/SIOSE attribution and Catastro transformed-data terms; raw not redistributed",
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "authority": "GIS candidate, no UE integration or whole-2A acceptance"
+      }
+    },
+    {
+      "asset_id": "normalized-siose-2014-feature-index",
+      "path": "normalized-context-v1a-2026-10-04/siose_2014_feature_index.tif",
+      "size_bytes": 208216,
+      "sha256": "fde3838fb44dc578f265a47e1cd0ac9053b7d78cc816c4c5f007d3172591b85a",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "normalized_context_v1",
+      "depends_on": [
+        "accepted-base-dtm-local",
+        "ideib-municipal-coverage-0",
+        "ideib-municipal-coverage-1",
+        "ideib-municipal-coverage-2",
+        "ideib-municipal-coverage-3",
+        "ideib-municipal-coverage-4",
+        "catastro_buildings_atom-002",
+        "siose_2014_ideib-003",
+        "siose_2014_ideib-004"
+      ],
+      "acquisition": {
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "restore": "local cache copy with exact hashes; derivatives regenerate from pinned recipe; no remote backup"
+      },
+      "provenance": {
+        "license": "Inherited CNIG/SIOSE attribution and Catastro transformed-data terms; raw not redistributed",
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "authority": "GIS candidate, no UE integration or whole-2A acceptance"
+      }
+    },
+    {
+      "asset_id": "normalized-siose-2014-aoi",
+      "path": "normalized-context-v1a-2026-10-04/siose_2014_aoi.json",
+      "size_bytes": 465842,
+      "sha256": "a95ef8dc4d5bf47c8437bf04f10ff07ee3dd57b6c5a754697245e45cee98f6ea",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "normalized_context_v1",
+      "depends_on": [
+        "accepted-base-dtm-local",
+        "ideib-municipal-coverage-0",
+        "ideib-municipal-coverage-1",
+        "ideib-municipal-coverage-2",
+        "ideib-municipal-coverage-3",
+        "ideib-municipal-coverage-4",
+        "catastro_buildings_atom-002",
+        "siose_2014_ideib-003",
+        "siose_2014_ideib-004"
+      ],
+      "acquisition": {
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "restore": "local cache copy with exact hashes; derivatives regenerate from pinned recipe; no remote backup"
+      },
+      "provenance": {
+        "license": "Inherited CNIG/SIOSE attribution and Catastro transformed-data terms; raw not redistributed",
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "authority": "GIS candidate, no UE integration or whole-2A acceptance"
+      }
+    },
+    {
+      "asset_id": "normalized-catastro-aoi",
+      "path": "normalized-context-v1a-2026-10-04/catastro_aoi.json",
+      "size_bytes": 10203,
+      "sha256": "f4c6abe822130524b87ceff7181bb43dc56099615a6aa1e02741a7ea524d0fd5",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "normalized_context_v1",
+      "depends_on": [
+        "accepted-base-dtm-local",
+        "ideib-municipal-coverage-0",
+        "ideib-municipal-coverage-1",
+        "ideib-municipal-coverage-2",
+        "ideib-municipal-coverage-3",
+        "ideib-municipal-coverage-4",
+        "catastro_buildings_atom-002",
+        "siose_2014_ideib-003",
+        "siose_2014_ideib-004"
+      ],
+      "acquisition": {
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "restore": "local cache copy with exact hashes; derivatives regenerate from pinned recipe; no remote backup"
+      },
+      "provenance": {
+        "license": "Inherited CNIG/SIOSE attribution and Catastro transformed-data terms; raw not redistributed",
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "authority": "GIS candidate, no UE integration or whole-2A acceptance"
+      }
+    },
+    {
+      "asset_id": "normalized-municipal-coverage-aoi",
+      "path": "normalized-context-v1a-2026-10-04/municipal_coverage_aoi.json",
+      "size_bytes": 1020,
+      "sha256": "015804626d3d4501d78b0cafb9a38c08f8eccf32b7f4186a48bb2a4b4aee46fb",
+      "class": "prepared",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "normalized_context_v1",
+      "depends_on": [
+        "accepted-base-dtm-local",
+        "ideib-municipal-coverage-0",
+        "ideib-municipal-coverage-1",
+        "ideib-municipal-coverage-2",
+        "ideib-municipal-coverage-3",
+        "ideib-municipal-coverage-4",
+        "catastro_buildings_atom-002",
+        "siose_2014_ideib-003",
+        "siose_2014_ideib-004"
+      ],
+      "acquisition": {
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "restore": "local cache copy with exact hashes; derivatives regenerate from pinned recipe; no remote backup"
+      },
+      "provenance": {
+        "license": "Inherited CNIG/SIOSE attribution and Catastro transformed-data terms; raw not redistributed",
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "authority": "GIS candidate, no UE integration or whole-2A acceptance"
+      }
+    },
+    {
+      "asset_id": "normalized-manifest",
+      "path": "normalized-context-v1a-2026-10-04/manifest.json",
+      "size_bytes": 13415,
+      "sha256": "6bbc62c160b292929506cb8aa75b15906706a089fb4b0319add05ad961c4b464",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "normalized_context_v1",
+      "depends_on": [
+        "accepted-base-dtm-local",
+        "ideib-municipal-coverage-0",
+        "ideib-municipal-coverage-1",
+        "ideib-municipal-coverage-2",
+        "ideib-municipal-coverage-3",
+        "ideib-municipal-coverage-4",
+        "catastro_buildings_atom-002",
+        "siose_2014_ideib-003",
+        "siose_2014_ideib-004"
+      ],
+      "acquisition": {
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "restore": "local cache copy with exact hashes; derivatives regenerate from pinned recipe; no remote backup"
+      },
+      "provenance": {
+        "license": "Derived QA; CNIG/IGN, IGN-SITIBSA-GOIB, SITIBSA-scne.es and Catastro provenance retained",
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "authority": "GIS candidate, no UE integration or whole-2A acceptance"
+      }
+    },
+    {
+      "asset_id": "normalized-visual-qa",
+      "path": "normalized-context-v1a-2026-10-04/visual_qa.png",
+      "size_bytes": 3223519,
+      "sha256": "7fdb04b727be8c108be47c5a7a7688db9b5f63a09e53375869f3149f6a893a3d",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "normalized_context_v1",
+      "depends_on": [
+        "accepted-base-dtm-local",
+        "ideib-municipal-coverage-0",
+        "ideib-municipal-coverage-1",
+        "ideib-municipal-coverage-2",
+        "ideib-municipal-coverage-3",
+        "ideib-municipal-coverage-4",
+        "catastro_buildings_atom-002",
+        "siose_2014_ideib-003",
+        "siose_2014_ideib-004"
+      ],
+      "acquisition": {
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "restore": "local cache copy with exact hashes; derivatives regenerate from pinned recipe; no remote backup"
+      },
+      "provenance": {
+        "license": "Derived QA; CNIG/IGN, IGN-SITIBSA-GOIB, SITIBSA-scne.es and Catastro provenance retained",
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "authority": "GIS candidate, no UE integration or whole-2A acceptance"
+      }
+    },
+    {
+      "asset_id": "normalized-qa-receipt",
+      "path": "normalized-context-v1a-2026-10-04/qa_receipt.json",
+      "size_bytes": 1937,
+      "sha256": "5aea4c6e3adc6079eb4349c516110ede0f81c60c0936c89cbd05f75e12dc3071",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "normalized_context_v1",
+      "depends_on": [
+        "accepted-base-dtm-local",
+        "ideib-municipal-coverage-0",
+        "ideib-municipal-coverage-1",
+        "ideib-municipal-coverage-2",
+        "ideib-municipal-coverage-3",
+        "ideib-municipal-coverage-4",
+        "catastro_buildings_atom-002",
+        "siose_2014_ideib-003",
+        "siose_2014_ideib-004"
+      ],
+      "acquisition": {
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "restore": "local cache copy with exact hashes; derivatives regenerate from pinned recipe; no remote backup"
+      },
+      "provenance": {
+        "license": "Derived QA; CNIG/IGN, IGN-SITIBSA-GOIB, SITIBSA-scne.es and Catastro provenance retained",
+        "receipt": "normalized_context_receipt_2026-10-04.json",
+        "authority": "GIS candidate, no UE integration or whole-2A acceptance"
+      }
     }
   ],
   "profiles": {
@@ -1481,6 +2015,51 @@
         "siose_2014_ideib-003",
         "siose_2014_ideib-004"
       ]
+    },
+    "sa-calobra-2a-context-candidate": {
+      "description": "Pinned normalized GIS candidate and source closure; byte PASS is not whole-2A or human visual acceptance",
+      "extends": [
+        "sa-calobra-p1-inputs"
+      ],
+      "requires": [
+        "ideib-municipal-coverage-0",
+        "ideib-municipal-coverage-1",
+        "ideib-municipal-coverage-2",
+        "ideib-municipal-coverage-3",
+        "ideib-municipal-coverage-4",
+        "accepted-base-dtm-local",
+        "normalized-elevation",
+        "normalized-slope",
+        "normalized-aspect",
+        "normalized-roughness",
+        "normalized-catastro-mapped-footprint",
+        "normalized-siose-2014-feature-index",
+        "normalized-siose-2014-aoi",
+        "normalized-catastro-aoi",
+        "normalized-municipal-coverage-aoi",
+        "normalized-manifest",
+        "normalized-visual-qa",
+        "normalized-qa-receipt"
+      ]
+    },
+    "sa-calobra-2a-world-authority": {
+      "description": "Whole 2A readiness; missing layers remain explicit and nonzero",
+      "extends": [
+        "sa-calobra-2a-context-candidate"
+      ],
+      "requires": [],
+      "incomplete_layers": [
+        "current_land_cover_with_confidence",
+        "lidar_class_occupancy",
+        "canopy_height",
+        "canopy_density",
+        "water_infrastructure_exclusions",
+        "road_footprint",
+        "shoulder",
+        "road_distance",
+        "route_safety_corridor",
+        "bob_cut_fill_inner_outer_edge"
+      ]
     }
   },
   "gis_metadata_profiles": {
@@ -1528,6 +2107,24 @@
       "resolution_or_density": "Catastro vector; SIOSE 2014 reference scale 1:25000; no resampling accuracy claim",
       "classification": "historical land cover / building footprints and parts",
       "nodata": "unknown remains unknown; municipality completeness and normalization separate"
+    },
+    "normalized_context_v1": {
+      "xy_crs": "EPSG:25831 verified",
+      "xy_unit": "metres",
+      "vertical_datum": "native accepted Base_DTM inherited provider reference; not independently remeasured; vectors are XY context",
+      "footprint": "working AOI 483000,4407500 to 485016.5,4409516.5",
+      "resolution_or_density": "native 0.5 m grid, 4033 by 4033; 3x3 derivative halo",
+      "classification": "terrain derivatives / provider mapped buildings / historical SIOSE object identity; no current biome claim",
+      "nodata": "float -32767; buildings 255 unknown; SIOSE 0 unknown, 65535 conflict; flat aspect unknown"
+    },
+    "ideib_municipal_coverage": {
+      "xy_crs": "EPSG:25831 verified",
+      "xy_unit": "metres",
+      "vertical_datum": "native accepted Base_DTM inherited provider reference; not independently remeasured; vectors are XY context",
+      "footprint": "working AOI 483000,4407500 to 485016.5,4409516.5",
+      "resolution_or_density": "official municipal polygon; coastline modified against MTIB 1:5000",
+      "classification": "coverage evidence, not terrain or road authority",
+      "nodata": "incomplete/mismatched municipality fails closed"
     }
   },
   "source_registry": {
@@ -1676,6 +2273,77 @@
       "raw_cache_relative": "p1-alternatives-2026-10-04",
       "receipt": "p1_alternatives_receipt_2026-10-04.json",
       "restore": "local-only pinned cache; no remote backup registered"
+    },
+    "ideib_municipal_coverage": {
+      "status": "acquired",
+      "files": 5,
+      "size_bytes": 756371,
+      "source_url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_UnitAdm_IB/MapServer",
+      "selected_layer": "1 Municipis",
+      "municipality": "07019 Escorca",
+      "feature_count": 1,
+      "uncovered_aoi_area_m2": 0,
+      "license": "service CC BY 4.0; SITIBSA-scne.es; separate original data distribution conditions",
+      "restore": "local-only pinned cache; no remote backup",
+      "receipt": "normalized_context_receipt_2026-10-04.json"
+    },
+    "normalized_context_v1": {
+      "status": "candidate",
+      "layer_count": 9,
+      "fingerprint": "73a797481e6d404ee999a211ac0fe224a9cfbf3baf7f3215479b6256dbbccf98",
+      "grid": {
+        "anchor": "AOI upper-left; matches accepted native Base_DTM grid",
+        "crs": "EPSG:25831",
+        "height": 4033,
+        "pixel_rule": "center for SIOSE IDs; all_touched for conservative building candidates",
+        "pixel_size_m": 0.5,
+        "transform": [
+          0.5,
+          0.0,
+          483000.0,
+          0.0,
+          -0.5,
+          4409516.5
+        ],
+        "width": 4033
+      },
+      "coverage": {
+        "catastro_counts": {
+          "Building": {
+            "aoi": 2,
+            "source": 224
+          },
+          "BuildingPart": {
+            "aoi": 8,
+            "source": 595
+          },
+          "OtherConstruction": {
+            "aoi": 0,
+            "source": 24
+          }
+        },
+        "municipality": "07019 Escorca",
+        "siose_overlap_area_m2": 0.0,
+        "siose_uncovered_area_m2": 0.0,
+        "uncovered_municipal_area_m2": 0.0
+      },
+      "determinism": "Clean output and separately restored 14-source cache reproduce identical manifest and 9 byte/logical hashes",
+      "gis_read_proof": "PASS, not UE consumer integration",
+      "blocked_layers": [
+        "current_land_cover_with_confidence",
+        "lidar_class_occupancy",
+        "canopy_height",
+        "canopy_density",
+        "water_infrastructure_exclusions",
+        "road_footprint",
+        "shoulder",
+        "road_distance",
+        "route_safety_corridor",
+        "bob_cut_fill_inner_outer_edge"
+      ],
+      "visual_status": "agent alignment review; human acceptance pending; high local-relief diagnostics retained",
+      "restore": "copy retained outputs with exact hashes or regenerate from pinned recipe, sources and versions; no remote backup",
+      "receipt": "normalized_context_receipt_2026-10-04.json"
     }
   }
 }

@@ -223,3 +223,12 @@ License evidence is pinned from the exact service `info/iteminfo` response.
 Catastro ATOM retains the existing INSPIRE license restrictions on original
 redistribution. Raw municipal ZIP, GML and regional feature JSON remain outside
 Git. Only identity/provenance evidence is committed in this checkpoint.
+
+## Municipal coverage evidence and normalized GIS candidates
+
+IDEIB municipal map service: CC BY 4.0; attribution `SITIBSA-scne.es`.
+Original-data distribution has separate provider request conditions; original
+municipal payload is not redistributed in Git. Native Base_DTM/CNIG derivatives
+retain IGN attribution; SIOSE retains IGN-SITIBSA-GOIB attribution; Catastro
+mapped-footprint derivatives retain INSPIRE transformed-data terms. Receipts
+pin these local candidates without redistributing original source geometry.

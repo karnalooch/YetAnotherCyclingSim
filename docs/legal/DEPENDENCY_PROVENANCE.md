@@ -217,3 +217,18 @@ https://ubuntu.com/security/notices/USN-8329-1
   Eight raw payloads remain local outside Git, without registered remote backup.
   Prior WFS failures remain separately recorded. AOI normalization, municipal
   coverage admission and derived-mask consumer proofs are still pending.
+
+## IDEIB municipal coverage and normalized context candidate — 2026-10-04
+
+Official `GOIB_UnitAdm_IB/MapServer`, named `Municipis` layer 1: complete AOI ID
+inventory and one EPSG:25831 Escorca polygon (07019). Exact service license
+`info/iteminfo` is retained/pinned: CC BY 4.0 map-service use with attribution
+`SITIBSA-scne.es`; separate original-data distribution request conditions apply.
+Original payload stays local outside Git. This is coverage evidence based on
+IGN registry and modified MTIB coastline, not legal-boundary or terrain authority.
+
+Normalized candidates inherit existing Base_DTM, CNIG orthophoto review,
+historical SIOSE attribution and Catastro transformed-data terms. Nine products,
+manifest and QA remain outside Git; only hashes/metadata/recipe/receipts enter
+Git. The normalized report records exact inputs, output identities, versions,
+NoData/conflict semantics, reproducibility and remaining acceptance gates.
