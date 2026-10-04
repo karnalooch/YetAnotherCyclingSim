@@ -333,9 +333,9 @@ class OwnerDeferralTests(unittest.TestCase):
 
     def test_other_scenarios_and_invalid_or_unrelated_baselines_cannot_defer(self):
         self.assertIsNone(self.deferred(self.baseline, ["UNMAPPED_WORLD"]))
-        self.assertIsNone(self.deferred(
-            self.baseline, ["sa-calobra-terrain", "stage3g-environment"]
-        ))
+        self.assertIsNone(
+            self.deferred(self.baseline, ["sa-calobra-terrain", "stage3g-environment"])
+        )
         self.policy["owner_deferred_2a_performance"]["baseline_sha"] = "invalid"
         with self.assertRaisesRegex(ValueError, "invalid owner-approved"):
             self.deferred(self.baseline)

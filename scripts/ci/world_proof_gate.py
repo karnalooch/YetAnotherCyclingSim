@@ -102,15 +102,18 @@ def deferred_2a_performance(
     )
     baseline = decision["baseline_sha"]
     ancestry = subprocess.run(
-        ["git", "merge-base", "--is-ancestor", baseline, head], cwd=root,
-        capture_output=True, text=True,
+        ["git", "merge-base", "--is-ancestor", baseline, head],
+        cwd=root,
+        capture_output=True,
+        text=True,
     )
     require(ancestry.returncode in {0, 1}, "cannot verify frozen 2A baseline")
     if ancestry.returncode == 1:
         return None
     changed = subprocess.check_output(
         ["git", "diff", "--name-only", "--no-renames", baseline, head],
-        cwd=root, text=True,
+        cwd=root,
+        text=True,
     ).splitlines()
     closeout_controls = {
         ".gumball/world-proof-policy.json",
@@ -391,7 +394,8 @@ def main() -> int:
         needed = requirements(paths, policy)
         deferred = (
             deferred_2a_performance(args.head, needed, policy)
-            if admission == "REQUIRED" else None
+            if admission == "REQUIRED"
+            else None
         )
         if deferred is not None:
             admission = "DEFERRED_TO_2B"
