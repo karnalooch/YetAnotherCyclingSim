@@ -2,6 +2,34 @@
   "schema_version": 1,
   "assets": [
     {
+      "asset_id": "mask-review-queue-000",
+      "path": "mask-review-queue-v1-2026-10-04/mask-review-queue.json",
+      "size_bytes": 51900,
+      "sha256": "c7c548aa45e64fbea9ac18ab5c4a9f0cb42e918c3034c86753b7ac93d34bb788",
+      "class": "evidence",
+      "backend": {
+        "type": "local",
+        "layout": "world-data-cache"
+      },
+      "status": "candidate",
+      "gis_metadata_profile": "pcg_mask_context",
+      "depends_on": [
+        "mask-transitions-001",
+        "mask-transitions-005",
+        "pcg-masks-001",
+        "pcg-masks-002"
+      ],
+      "acquisition": {
+        "receipt": "mask_review_queue_receipt_2026-10-04.json",
+        "restore": "Retained local copy or pinned producer regeneration from verified transition/PCG parents; no remote backup"
+      },
+      "provenance": {
+        "provider": "YACS review evidence from pinned GOIB/frozen-grid parent masks",
+        "license": "Parent source terms and attribution remain binding",
+        "authority": "Review locations and overlapping reasons only; no repair, wetness, culvert, visual or planting admission"
+      }
+    },
+    {
       "asset_id": "btn_vector_context-000",
       "path": "p1-2026-10-04/btn_vector_tiles/16/33277/24849.pbf",
       "size_bytes": 9608,
@@ -13409,6 +13437,15 @@
     }
   ],
   "profiles": {
+    "sa-calobra-mask-review-queue-candidate": {
+      "description": "Unresolved stream queue plus verified transition source closure; all larger gaps remain unjoined",
+      "extends": [
+        "sa-calobra-mask-transitions-candidate"
+      ],
+      "requires": [
+        "mask-review-queue-000"
+      ]
+    },
     "sa-calobra-btn-context": {
       "description": "Base Topografica Nacional local cache byte integrity; not World Authority admission",
       "requires": [

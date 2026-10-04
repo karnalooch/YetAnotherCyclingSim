@@ -99,6 +99,16 @@ does not replace provenance, determinism, CI, trusted performance or human visua
 acceptance. This local workflow does not extend the remote #228 command allowlist
 or the MCP spike's persistent-write boundary.
 
+For the unresolved #335 stream candidates, prepare the hash-pinned queue using
+`scripts/assets/prepare_sa_calobra_mask_review_queue.py --transition-manifest
+<transition-manifest.json> --pcg-manifest <pcg-mask-manifest.json> --output
+<external-cache>/mask-review-queue.json`. Its `focus_world_xy_cm` locates each
+gap for closer inspection in the existing session; it deliberately supplies no
+invented elevation or automatic repair. Use a separately verified terrain height
+when setting a 3D camera. Conservative overlaps are review hints, not culvert
+proof. Julka profile `sa-calobra-mask-review-queue-candidate` retains the queue
+and full transition parent closure. Owner acceptance remains pending.
+
 ## 3. Why UE-MCP
 
 The selected upstream already provides the Unreal Editor bridge, MCP categories for world authoring, YAML flows, retries/rollback, git snapshots, configurable guards and context strategies. We reuse those capabilities rather than creating a second editor automation framework.

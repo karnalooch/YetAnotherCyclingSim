@@ -1718,6 +1718,24 @@ in the production references supports artist-controlled, independently
 regenerable preparation; these numeric fades and topology rules are YACS
 decisions, not claimed Embark settings.
 
+#### Unresolved stream review queue (Issue #335)
+
+The unresolved stream queue can be prepared with
+`scripts/assets/prepare_sa_calobra_mask_review_queue.py`. It independently checks
+the transition and PCG product identities/grid, retains the original candidate
+order, and reports each gap's source IDs, EPSG geometry, frozen UE XY coordinates
+in centimetres and all-touched overlaps with existing exclusion reasons. The
+first native pixel centre is UE `(0,0)`; increasing southward distance increases
+UE Y. Queue output remains outside Git; a small receipt pins its identity.
+
+The current 43 candidates overlap pavement in 14 cases, the conservative BOB
+domain in 37 and unknown LiDAR samples in 11. These overlapping counts are not
+additive and do not prove actual road crossings, missing culverts or topology
+errors. Every larger gap remains `REVIEW_ONLY_KEEP_UNJOINED`, wetness unknown and
+culverts unverified. Original BOB rectangles, unknown rejection and hard masks
+remain binding. The queue locates review work; it does not grant owner visual
+acceptance, whole-2A completion, material-domain truth or production planting.
+
 #### Placement evidence handoff candidate (Issue #335)
 
 `scripts/assets/prepare_sa_calobra_placement_handoff.py` prepares a separate
