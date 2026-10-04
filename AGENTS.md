@@ -79,6 +79,30 @@ Owner directive, 2026-10-01 (Issue #308): keep downloaded/materialized LFS asset
 - `docs/YACS_WORLD_AUTHORING_LIBRARY.md` defines reusable implementation/catalog systems; it does not override the Bible's world architecture.
 - New or substantially revised architecture/workflow diagrams must follow `docs/DIAGRAM_STYLE.md`, the YACS adoption of the Gumball Blueprint Mermaid language.
 
+### Frozen geometry and environment fidelity — Issue #335
+
+Owner decision, 2026-10-04: existing terrain and roads are frozen for the current
+2A World Authority / masks task. Fit masks to the existing Landscape and road
+coordinate contract; never modify heights, reimport a heightmap, smooth terrain,
+move roads or regenerate earthworks to make masks fit. Source discrepancies are
+review evidence, not permission to repair geometry.
+
+- Roads, building placement/footprints and Landscape require source-faithful 1:1
+  metric scale and spatial alignment within admitted source accuracy. Unknown or
+  conflicting building evidence must remain explicit, not guessed.
+- Surroundings should preserve the place's character as closely as practical:
+  broad vegetation/open-ground/rock domains, density, canopy character and scenic
+  cues. Individual trees, shrubs and small decorative rocks need not reproduce
+  exact measured positions; do not spend work moving a tree 50 cm for scan fidelity.
+- Decorative freedom must respect road safety/exclusion, buildings, terrain and
+  meaningful landscape domains. It does not authorize arbitrary biome changes.
+- The current consumer proof is a diagnostic color overlay on existing geometry,
+  with separate labels for context, measured disagreement and unknown evidence.
+  Fix mask processing/alignment errors; leave unresolved geometry discrepancies
+  for review. Production materials/PCG remain subsequent stages.
+
+The normative world contract is in `docs/WORLD_BUILDING_BIBLE.md`, section 5.3.
+
 ### BOB single-direction bend contract
 
 Owner decision, 2026-10-03 (Issue #331): apply this requirement to the current
