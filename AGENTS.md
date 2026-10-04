@@ -142,7 +142,10 @@ Unknowns remain unknown, hard exclusions remain binding, and candidate RGB
 classes are not validated geography or production planting authority.
 
 The owner authorized merging the 2A baseline and starting #363, and explicitly
-requested no performance measurement in the current mask-review/closeout pass.
+transferred the 2A performance measurement to 2B (#363). Do not dispatch a GPU
+benchmark to close 2A. The narrow frozen-baseline exception is recorded in
+`.gumball/world-proof-policy.json` and reports `DEFERRED_TO_2B`; any material,
+mask, geometry, runtime configuration or producer change ends that exception.
 This is authorization to progress the baseline, not a fabricated performance
 PASS or permission to bypass protected CI. Resolve required technical admission
 before marking #335 complete or starting its dependent implementation.

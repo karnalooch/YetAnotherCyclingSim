@@ -4,6 +4,8 @@ import copy
 import io
 import json
 from pathlib import Path
+import subprocess
+import tempfile
 import unittest
 from unittest.mock import patch
 import zipfile
@@ -267,6 +269,76 @@ class WorldProofTests(unittest.TestCase):
             archive.writestr("second/summary.json", "{}")
         with self.assertRaisesRegex(ValueError, "exactly one"):
             gate.archive_text(data.getvalue(), "summary.json")
+
+
+class OwnerDeferralTests(unittest.TestCase):
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.root = Path(self.directory.name)
+        self.git("init", "--quiet")
+        self.git("config", "user.name", "World proof test")
+        self.git("config", "user.email", "test@example.invalid")
+        self.write("Content/Worlds/SaCalobra/mask.txt", "frozen mask")
+        self.baseline = self.commit()
+        self.policy = copy.deepcopy(POLICY)
+        self.policy["owner_deferred_2a_performance"]["baseline_sha"] = self.baseline
+
+    def git(self, *args):
+        return subprocess.check_output(
+            ["git", *args], cwd=self.root, text=True, stderr=subprocess.PIPE
+        ).strip()
+
+    def write(self, path, content):
+        target = self.root / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content, encoding="utf-8")
+
+    def commit(self):
+        self.git("add", ".")
+        self.git("commit", "--quiet", "-m", "test fixture")
+        return self.git("rev-parse", "HEAD")
+
+    def deferred(self, head, needed=None):
+        return gate.deferred_2a_performance(
+            head, needed or ["sa-calobra-terrain"], self.policy, self.root
+        )
+
+    def test_frozen_world_with_documented_closeout_is_explicitly_deferred(self):
+        self.write("docs/CI_VALIDATION_TIERS.md", "Owner decision: due in 2B")
+        self.write("scripts/ci/world_proof_gate.py", "closeout control")
+        result = self.deferred(self.commit())
+        self.assertEqual(result["status"], "DEFERRED_TO_2B")
+        self.assertEqual(result["due_issue"], 363)
+        self.assertFalse(result["performance_pass"])
+
+    def test_material_geometry_configuration_and_new_producers_end_deferral(self):
+        for path in (
+            "Content/Worlds/SaCalobra/mask.txt",
+            "Content/Materials/M_Ground.uasset",
+            "Config/DefaultEngine.ini",
+            "scripts/ue/sa_calobra_material.py",
+            "Source/YACS/MaterialConsumer.cpp",
+        ):
+            with self.subTest(path=path):
+                self.write(path, "2B world change")
+                self.assertIsNone(self.deferred(self.commit()))
+
+    def test_other_scenarios_and_invalid_or_unrelated_baselines_cannot_defer(self):
+        self.assertIsNone(self.deferred(self.baseline, ["UNMAPPED_WORLD"]))
+        self.assertIsNone(self.deferred(
+            self.baseline, ["sa-calobra-terrain", "stage3g-environment"]
+        ))
+        self.policy["owner_deferred_2a_performance"]["baseline_sha"] = "invalid"
+        with self.assertRaisesRegex(ValueError, "invalid owner-approved"):
+            self.deferred(self.baseline)
+        self.policy["owner_deferred_2a_performance"]["baseline_sha"] = "b" * 40
+        with self.assertRaisesRegex(ValueError, "cannot verify"):
+            self.deferred(self.baseline)
+        self.policy["owner_deferred_2a_performance"]["baseline_sha"] = self.baseline
+        self.git("checkout", "--quiet", "--orphan", "unrelated")
+        self.write("docs/other.md", "unrelated world")
+        self.assertIsNone(self.deferred(self.commit()))
 
 
 if __name__ == "__main__":

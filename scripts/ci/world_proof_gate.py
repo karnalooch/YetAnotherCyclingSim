@@ -84,6 +84,49 @@ def phase(event: str, draft: str) -> str:
     return "REQUIRED"
 
 
+def deferred_2a_performance(
+    head: str, needed: list[str], policy: dict, root: Path = ROOT
+) -> dict | None:
+    """Recognize the owner's frozen 2A handoff, never a changed 2B world."""
+    decision = policy.get("owner_deferred_2a_performance")
+    if decision is None or needed != ["sa-calobra-terrain"]:
+        return None
+    require(
+        isinstance(decision, dict)
+        and decision.get("issue") == 335
+        and decision.get("due_issue") == 363
+        and decision.get("owner_decision_date") == "2026-10-04"
+        and isinstance(decision.get("baseline_sha"), str)
+        and SHA.fullmatch(decision["baseline_sha"]) is not None,
+        "invalid owner-approved 2A performance deferral",
+    )
+    baseline = decision["baseline_sha"]
+    ancestry = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", baseline, head], cwd=root,
+        capture_output=True, text=True,
+    )
+    require(ancestry.returncode in {0, 1}, "cannot verify frozen 2A baseline")
+    if ancestry.returncode == 1:
+        return None
+    changed = subprocess.check_output(
+        ["git", "diff", "--name-only", "--no-renames", baseline, head],
+        cwd=root, text=True,
+    ).splitlines()
+    closeout_controls = {
+        ".gumball/world-proof-policy.json",
+        "scripts/ci/world_proof_gate.py",
+        "scripts/ci/test_world_proof_gate.py",
+        "AGENTS.md",
+    }
+    if any(
+        path not in closeout_controls
+        and not (path.startswith("docs/") and path.endswith(".md"))
+        for path in changed
+    ):
+        return None
+    return {**decision, "status": "DEFERRED_TO_2B", "performance_pass": False}
+
+
 def number(value, label: str, *, positive: bool = False) -> float:
     require(
         not isinstance(value, bool) and isinstance(value, (int, float)),
@@ -346,6 +389,13 @@ def main() -> int:
                 text=True,
             ).splitlines()
         needed = requirements(paths, policy)
+        deferred = (
+            deferred_2a_performance(args.head, needed, policy)
+            if admission == "REQUIRED" else None
+        )
+        if deferred is not None:
+            admission = "DEFERRED_TO_2B"
+            report["owner_deferral"] = deferred
         report.update(required_scenarios=needed, phase=admission)
         if needed and admission == "REQUIRED":
             require(

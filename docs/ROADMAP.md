@@ -131,7 +131,11 @@ exclusions remain explicit when #363 consumes admitted inputs or documented
 fallbacks. This decision does not promote RGB rock/soil candidates to truth.
 
 The owner authorized 2A baseline merge and progression to #363, and requested
-no GPU performance measurement for the current mask-review/closeout pass.
+that the 2A performance measurement be performed in 2B (#363), not at 2A closeout.
+The frozen-baseline CI exception reports `DEFERRED_TO_2B`, never a performance
+PASS. New material, mask, geometry, runtime configuration or producer changes
+restore normal exact-SHA proof. #363 includes whole-Landscape performance
+measurement after its material foundation is ready for visual review.
 Required technical checks and protected CI admission must be resolved before
 the predecessor is represented as completed. Deferred measurement is not PASS.
 

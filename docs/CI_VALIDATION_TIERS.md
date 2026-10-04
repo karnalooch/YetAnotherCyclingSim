@@ -628,6 +628,30 @@ Broker artifact contract; it never launches a GPU job or mutates a map.
 | Scheduled/manual static CI sweep | `STATIC_ONLY`; no implicit world benchmark |
 | New unregistered world | Fail readiness rather than substitute an older map |
 
+### Owner-approved frozen 2A handoff: measurement due in 2B
+
+On 2026-10-04 the owner explicitly moved the performance measurement for the
+Issue #335 / PR #362 diagnostic-mask baseline to Issue #363 (2B). No GPU job
+is required or dispatched for this closeout. This exception is limited to the
+world frozen at `3087b3ef1b4a47fc56ccddda140a04e8b017b0f7`, recorded in
+`.gumball/world-proof-policy.json`. The read-only gate verifies that baseline
+is an ancestor and that only documentation and the three explicit closeout
+policy/gate/test files have changed since it. Ready PR and merge-commit main
+admission report `DEFERRED_TO_2B`, retain the required Sa Calobra scenario and
+state `performance_pass: false`. Use a normal merge commit to retain the
+baseline ancestry; this is neither a performance PASS nor a fabricated receipt.
+
+Changes to a material, mask, asset, geometry, producer, runtime configuration
+or any other non-allowlisted file restore the ordinary proof requirement.
+Unregistered or additional scenarios cannot use this exception. Build,
+Automation, asset retention/provenance, review and protected Aggregate gates
+remain required. Candidate surface classifications remain candidates; the red
+problem-overlay review is separately deferred to #372. Issue #363 owns the
+whole-current-Landscape measurement after the material foundation is visually
+reviewable; neither a Golden Kilometer sample nor a single view substitutes
+for its 2,016.5 m × 2,016.5 m scope. The existing reference hardware, budgets and
+exact-SHA evidence contract remain unchanged.
+
 Source acquisition has no running-world performance effect. The policy's
 `source_evidence_paths` lists exact reviewed JSON paths for the working-space
 source catalog, the two 2026-10-04 P1 acquisition receipts and the
