@@ -286,7 +286,9 @@ def main():
             raise RuntimeError("Review output identity mismatch")
     if (ROOT / "unreal-review-proof.json").exists():
         raise RuntimeError("Preserve existing Unreal proof")
-    performance = unreal.get_default_object(unreal.EditorPerformanceSettings)
+    performance = unreal.get_default_object(
+        unreal.load_class(None, "/Script/UnrealEd.EditorPerformanceSettings")
+    )
     state["performance_settings"] = performance
     state["original_background_throttle"] = performance.get_editor_property(
         "throttle_cpu_when_not_foreground"
@@ -294,7 +296,9 @@ def main():
     performance.set_editor_property("throttle_cpu_when_not_foreground", False)
     # Volatile settings only, never SaveConfig. Prevent review assets/material
     # from being autosaved into the frozen project during this review session.
-    loading = unreal.get_default_object(unreal.EditorLoadingSavingSettings)
+    loading = unreal.get_default_object(
+        unreal.load_class(None, "/Script/UnrealEd.EditorLoadingSavingSettings")
+    )
     loading.set_editor_property("auto_save_enable", False)
     expected = MANIFEST["expected_landscape"]
     package = expected["map"]

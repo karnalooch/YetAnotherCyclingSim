@@ -2521,7 +2521,7 @@
         "historical_colors": "SIOSE 2014 object identity, NOT current biome classes",
         "red": "reserved for measured disagreement; none fabricated from relief"
       },
-      "consumer_proof": "Read separate unreal-review-proof.json under mask-review-v1d-2026-10-04; completion never inferred from byte profile",
+      "consumer_proof": "Read separate unreal-review-proof.json under mask-review-v1e-2026-10-04; completion never inferred from byte profile",
       "frozen_map_sha256": "5eadda8c9dfbed47f9e5dbffd96b354f11baa4549cb1940d56ec7857a90e0ac0",
       "compiled_project_commit": "fa52453a8818db70e3dbef73fe485f8d55b60247",
       "restore": "Local copies or producer regeneration; UE captures require existing compiled project and frozen map; no remote backup",
