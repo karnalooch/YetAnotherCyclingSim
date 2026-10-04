@@ -212,3 +212,28 @@ decoder installation, raw download or remote backup is needed. The
 [receipt](../../worldgen/terrain/benchmarks/sa_calobra/world_data/vegetation_domains_receipt_2026-10-04.json)
 records byte/logical hashes and clean regeneration. Neither visual acceptance
 nor this candidate profile admits production planting or complete road safety.
+
+## Bounded PCGEx mask candidate — 2026-10-04
+
+Profile `sa-calobra-pcg-masks-candidate` extends the 87-file vegetation closure
+with 402 retained source/derived/review files (489 total). Its byte PASS is
+separate from native integration, human acceptance or full World Authority.
+Use `verify --profile sa-calobra-pcg-masks-candidate --root <world-data-cache>
+--repo <checkout>`; `explain pcg_masks`, `explain regional_hydrology`,
+`explain frozen_road`, `explain road_masks` and `explain context_exclusions`
+report identity, sizes, source limits and local-only restore. No remote backup
+or automatic road rebuild is registered.
+
+The official GOIB provisional hydrography snapshot has 106 AOI features and
+dataset-specific Creative Commons Attribution evidence; source years remain
+2010 / 95 as delivered. Mask water/infrastructure holdbacks are decorative 5m
+fallbacks, not measured channel widths or regulated distances. Road inputs are
+owner-authorized frozen c5573b3 output artifacts; original PARTIAL_IMPORTED and
+engineering/collision limits remain unchanged. Raw/rasters/PNGs stay outside Git.
+
+The bounded consumer receipt records `PASS_MASK_READ_ONLY`; it does not run a
+PCGEx graph. Radius/clearance are explicit, unknowns reject placement, high
+selectors reject invalid height. Earlier green visual acceptance covers character;
+new holdbacks still need review. Historical blocked profiles keep their original
+scope and point to the successor candidate rather than rewriting old evidence.
+Full-authority readiness continues to fail closed while its admissions are missing.

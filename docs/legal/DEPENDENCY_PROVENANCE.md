@@ -256,3 +256,24 @@ historical SIOSE attribution and Catastro transformed-data terms. Nine products,
 manifest and QA remain outside Git; only hashes/metadata/recipe/receipts enter
 Git. The normalized report records exact inputs, output identities, versions,
 NoData/conflict semantics, reproducibility and remaining acceptance gates.
+
+## GOIB provisional hydrography and BTN geometry — 2026-10-04
+
+Official [Xarxa Hidrogràfica Provisional catalogue](https://intranet.caib.es/opendatacataleg/es/dataset/xarxa-hidrografica-provisional)
+names DG Recursos Hídrics and Creative Commons Attribution (version unspecified).
+This dataset-specific grant applies only to the named provisional network,
+[GOIB service layer 0](https://ideib.caib.es/geoserveis/rest/services/public/GOIB_XarxaHidro_RiscInun_IB/MapServer/0).
+Generic service iteminfo instead asks users to contact the distributor; do not
+extend the dataset-specific grant to other layers. The exact catalogue HTML,
+service/layer metadata, ID inventory and complete 106-feature AOI response are
+pinned outside Git in `regional-hydrology-2026-10-04`; receipt/catalog retain
+size/hash identities and attribution. `ANY_MTIB` 2010/95 stays as delivered;
+no 2026 survey, permanent wetness, measured width or flood extent is inferred.
+
+BTN decoding uses the official [Mapbox vector tile specification 2.1](https://github.com/mapbox/vector-tile-spec/tree/master/2.1)
+and [IGN service documentation](https://www.ign.es/web/estilos-de-los-servicios-de-teselas-vectoriales).
+No third-party decoder/runtime dependency was added. Existing CNIG attribution
+applies to the 30 retained tiles. Only bounded selected water/infrastructure
+layers enter the derived context; duplicate tile fragments are not unique
+entity counts. GOIB/BTN line/point 5m decorative holdbacks are authored fallback
+decisions and are explicitly distinct from geographic/regulatory measurements.

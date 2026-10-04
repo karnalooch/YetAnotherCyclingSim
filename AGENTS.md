@@ -103,6 +103,14 @@ review evidence, not permission to repair geometry.
 
 The normative world contract is in `docs/WORLD_BUILDING_BIBLE.md`, section 5.3.
 
+Owner exception, 2026-10-04 (Issue #335): this mask task may consume only the
+already frozen, visually accepted road output artifacts from
+`c5573b3cf545c51ce83ad1fb0a5ca3111f5ad7f6` / draft PR #338 as read-only mask
+inputs. Pin source hashes and retain all original admission limits. This narrowly
+overrides the parallel-unmerged dependency rule for those output artifacts only;
+do not adopt that branch's code, execute its road builder, alter geometry or
+claim that PR #338 is merged or engineering/performance-admitted.
+
 ### BOB single-direction bend contract
 
 Owner decision, 2026-10-03 (Issue #331): apply this requirement to the current

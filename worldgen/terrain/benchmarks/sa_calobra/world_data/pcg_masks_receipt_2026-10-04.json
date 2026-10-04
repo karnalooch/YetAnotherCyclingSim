@@ -1,0 +1,2703 @@
+{
+  "schema_version": 1,
+  "geometry_mutation": false,
+  "cache_root": "D:\\actions-runner-yacs\\_work\\YetAnotherCyclingSim\\_yacs-world-data\\sa-calobra-working-v1",
+  "groups": {
+    "frozen-road": {
+      "file_count": 376,
+      "size_bytes": 49769184,
+      "files": [
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/ma2141-cut-patch.f32",
+          "size_bytes": 256136,
+          "sha256": "cabf471cf108017a1a15624880dd8ca531f880ddfeaf747bd0769b05abb75642"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/ma2141-cut-patch.json",
+          "size_bytes": 1749,
+          "sha256": "5ccfd9ece2c8cdf8140b47b4a771e5a530d7aa4835554771824bf9fd1d23404f"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/ma2141-profile-candidate.json",
+          "size_bytes": 9232773,
+          "sha256": "c0ca612dd5af5a311d1917e41d66f44aa83a9d40eed5e9e784432e06e2a52253"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/network.json",
+          "size_bytes": 35315894,
+          "sha256": "19856ae5b6436a04d5f91af2ffec9d4a9652762c2e49d2fe4ad1cb3b583ead9d"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/nudo-0.f32",
+          "size_bytes": 84500,
+          "sha256": "44c4f06a8c80c647c3ed27f688a72b6481fee7acde1c0fae142e5da9faae42b8"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/nudo-0.json",
+          "size_bytes": 715,
+          "sha256": "849a9f64bc1e73b31f06d5fbee6417ba397f78864714ce2eaaa399b2d13ee6b9"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/nudo-1.f32",
+          "size_bytes": 47260,
+          "sha256": "b5a3d3dfe01826664921c6064e1459b3945b803ab203fd37e7e6d5f12c51446b"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/nudo-1.json",
+          "size_bytes": 714,
+          "sha256": "60308b081959ed9634acc484cdc15bbb69b0e463ed6702601d268117b7fa87de"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/nudo-2.f32",
+          "size_bytes": 2600,
+          "sha256": "c0ee6f895ebaa3320262c713a165dca1929d67d5aa9ccb55201537b57c87730d"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/nudo-2.json",
+          "size_bytes": 713,
+          "sha256": "b5c2be5f748a21ef8438aa331b3946f710096296cbf831001f1a588877c35e52"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-hairpin-entry-0.f32",
+          "size_bytes": 2000,
+          "sha256": "6e7f042a06ddfc8199f07ec59db397152e5c9e3d5abf03e2acab98d0cd32d436"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-hairpin-entry-0.json",
+          "size_bytes": 733,
+          "sha256": "83f8733e910d305ed364119171939acdbcf6a4aa7d02b24cf1052bfee83d80d6"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-hairpin-exit-0.f32",
+          "size_bytes": 2600,
+          "sha256": "3fd1c9128585830387049f87ff91f9000407aef876ac31fd756d0777d7adfcc6"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-hairpin-exit-0.json",
+          "size_bytes": 730,
+          "sha256": "d19317117363547f3d344baae74406c3575486ea0a70c01220bb19b08ee32b4d"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-0-interval-1-0.f32",
+          "size_bytes": 9796,
+          "sha256": "50d56c5a044f35101d426362f849aa344bff8c0592f34c96a256873d45e8ef5e"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-0-interval-1-0.json",
+          "size_bytes": 748,
+          "sha256": "ac6e0586e9f5c2db2921bcea72a790868ab6657cf133ed62f1465451a2bd9e65"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-0-interval-11-0.f32",
+          "size_bytes": 29584,
+          "sha256": "e7fd0108b2467e761da0760aa8233e8058c0473535a1720f15835b149e5d96c0"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-0-interval-11-0.json",
+          "size_bytes": 752,
+          "sha256": "fe522539c4ef3947a955fde57a1c9b3c64188bc129ca4c2fee8f5b9ff5932587"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-0-interval-13-0.f32",
+          "size_bytes": 2784,
+          "sha256": "c1768c11c7f39c3a92be33470fbbc0c3fad9d2e660e714f77a6775fea68840a6"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-0-interval-13-0.json",
+          "size_bytes": 752,
+          "sha256": "f750424af34d787162e689f9244b39554d4188e59b79b20c6b6e4852cfbeee87"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-0-interval-15-0.f32",
+          "size_bytes": 21316,
+          "sha256": "35f3f1b12c9e3b118d1df889020257e6f6edd65db112a315c35486e5ae74ec91"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-0-interval-15-0.json",
+          "size_bytes": 752,
+          "sha256": "be24027072d848d21ba4a5117a654bb4ed3abe2f19eafbae15cee0ea86741d65"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-0-interval-17-0.f32",
+          "size_bytes": 2352,
+          "sha256": "03f24e6d3bcbd890ef0a2277f950583dd64a38212ba5b3937138b484d6f5ca86"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-0-interval-17-0.json",
+          "size_bytes": 752,
+          "sha256": "53827ac59c7a3a20ec8f80e262719e03bf73d4d06f28c19f45d736884a7db7c1"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-0-interval-19-0.f32",
+          "size_bytes": 19360,
+          "sha256": "77c1cbadb4293573990bda1e98446519f53f8a79473921c71fd1496b80b5fc79"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-0-interval-19-0.json",
+          "size_bytes": 751,
+          "sha256": "bec625e93661d57dcde40e143867ab5f43720280d1344c18b3adc4b763694e1a"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-0-interval-3-0.f32",
+          "size_bytes": 31556,
+          "sha256": "bc5d30d334762c4388166afbb659392517dc08406e5931a7cee7f04e996d54f2"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-0-interval-3-0.json",
+          "size_bytes": 751,
+          "sha256": "fd3fee3fe7f5da49ef7e34160317504646052bd9599b45a37b00ffc13728ecbc"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-0-interval-5-0.f32",
+          "size_bytes": 6400,
+          "sha256": "24fb717df6a5beb6ccfa69a29278b92a5ecedede21e462d253fd61ebae64b30a"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-0-interval-5-0.json",
+          "size_bytes": 751,
+          "sha256": "f9ccdb751c40414c53045bb557074a2d22a7f395da051ddc5e2fd855c73d5546"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-0-interval-7-0.f32",
+          "size_bytes": 2576,
+          "sha256": "73a726f27efc9d1d7ae0c5e18ce1de27635f0abd4af130892e1b7a4ec03ec6b6"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-0-interval-7-0.json",
+          "size_bytes": 751,
+          "sha256": "59a24b928d8185f0d642b6340086c69fd41e3ac78613e1c4ace883eb38a02ad0"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-0-interval-8-0.f32",
+          "size_bytes": 17472,
+          "sha256": "ff0d2c4ea85c0d037726351b58cc4e208c58f594bff2c7452a6fbf6bb3e70aef"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-0-interval-8-0.json",
+          "size_bytes": 752,
+          "sha256": "a217dfb6a5956ef14372f2650b1640b1e277a250b8c5538b6f4ab55b8c875b49"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-0-interval-9-0.f32",
+          "size_bytes": 2916,
+          "sha256": "2e480f19c7b4c5a04e0309ff364453f5e99097b09f9b4fa450e5a3c89d4e23e8"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-0-interval-9-0.json",
+          "size_bytes": 749,
+          "sha256": "aeeaaf64957f87eea801580bf3655311786e1b00cc5d507d85786f6511a6dfb9"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-0-0.f32",
+          "size_bytes": 70720,
+          "sha256": "a88ee661ee1b7294c9b23a14ba9935d45e78887905cad6f0d2fa447d4e3a2ded"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-0-0.json",
+          "size_bytes": 750,
+          "sha256": "eb262d2d109dccf5d8fc04990aa2c462543a383e79663c768b8c0e047026fcc9"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-0-1.f32",
+          "size_bytes": 70920,
+          "sha256": "e2eaa8c55115d71fe0421b7b9d4c257d6552b86441f4f20b2029ef2eacd3a93d"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-0-1.json",
+          "size_bytes": 749,
+          "sha256": "aa4ef6aa4b808f309304ab0129ad1d674098448757a4dfd1cde1acd2f83d51da"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-0-2.f32",
+          "size_bytes": 90288,
+          "sha256": "8c1ea9753bfd08890a82eb1742adc3aba49176ae5d2afc6cdbbf6eea1e2ce2ca"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-0-2.json",
+          "size_bytes": 750,
+          "sha256": "2d05f5899deb34bd00c0ddf44dff8a3c02e21b5e7d73b4404ae45d6dc55b8836"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-0-3.f32",
+          "size_bytes": 70560,
+          "sha256": "b73714aa84042cdd32768f2698955ddc1987be79cb629db87d22ae5591bed501"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-0-3.json",
+          "size_bytes": 749,
+          "sha256": "6742fbea7dd104be4ef4c308fb2f7981eee52f61e498fa7541bd2f2eab655da3"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-0-4.f32",
+          "size_bytes": 13020,
+          "sha256": "9e97ee49651c29846d0ad9db696d6593bb768478c8c35540dec042af729116fd"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-0-4.json",
+          "size_bytes": 749,
+          "sha256": "24d65454742ed587358fa38d1f6719a765321bbc13fd7b21962de39225d7f9c6"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-10-0.f32",
+          "size_bytes": 8640,
+          "sha256": "e24abacf9518f9bc8f7dbb79fcd001dbef5d0ad9a5820aac710bf16ec4b2c8f5"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-10-0.json",
+          "size_bytes": 749,
+          "sha256": "480cf819efec85140e57710718f649023ec20ed994c656c83239132815e581f5"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-12-0.f32",
+          "size_bytes": 4576,
+          "sha256": "6cc494de90d9e5d2bf4f0b54d6faf43a491fefa24ff080742362f53fc65a4128"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-12-0.json",
+          "size_bytes": 749,
+          "sha256": "ec2d54da778ffa97ab47c20391617fdfeed0940465dd9b0d718ff9771bf9c9d4"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-14-0.f32",
+          "size_bytes": 37200,
+          "sha256": "4f3bf455b4babaf65cbd17ec17a9789cd3265657a5e946a0413185711d29317d"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-14-0.json",
+          "size_bytes": 750,
+          "sha256": "388fd0d8eea770904bb2716a9593851aa434f8cbad52280abf3d36980b7dbfc8"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-16-0.f32",
+          "size_bytes": 72944,
+          "sha256": "9ddf11b36877b257802824875a54cf682db33f8934a24db590cd72d4e1fc5128"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-16-0.json",
+          "size_bytes": 751,
+          "sha256": "ef3648e7b116df12b19385f9d272daa44be50ae476614c25d46830a0740ea6ce"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-16-1.f32",
+          "size_bytes": 11800,
+          "sha256": "88347cb4f0be96bec3074dfbdc0a979732134f15c869bebad7879c8092d02a8e"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-16-1.json",
+          "size_bytes": 751,
+          "sha256": "47ce29fd93290b02c965d7a122fa2631dfb446c8f34133ec46a5ca5662e2fd84"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-18-0.f32",
+          "size_bytes": 7584,
+          "sha256": "d6c189c0032858442ddc1d5a918b8d9acffb245150ed8677a50cae882bf4695c"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-18-0.json",
+          "size_bytes": 751,
+          "sha256": "641fdc482a7fffd9be6dd62dfa6409879ef534555d79ef1653ffffda5f40f84c"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-2-0.f32",
+          "size_bytes": 17200,
+          "sha256": "fb86ca8f24339b75cd7a50f1400a8ca1f5e7d319227110a8160748fceb4186a1"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-2-0.json",
+          "size_bytes": 748,
+          "sha256": "bbdefe1d1bb1e07912f1774f6df6db150c4bca43b28d0c489293365f80c9abb3"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-20-0.f32",
+          "size_bytes": 67080,
+          "sha256": "c97c67d422c83314b8ad3539f5b3e0396aabcc7d62a66544bd5b557f3c066b03"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-20-0.json",
+          "size_bytes": 753,
+          "sha256": "02dd5267c6839089614fbded9c3d6193f051d70e472d20bc5aa898d6a7b722ae"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-20-1.f32",
+          "size_bytes": 5720,
+          "sha256": "df1370ec58f0d518c4252ecb3260ef674829339a5dffc2d55ed76112c053d1bc"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-20-1.json",
+          "size_bytes": 752,
+          "sha256": "5b788c252957ff1b8ef05207a7f7e1b85739bacb53ed21f898f3ee036c3fe8ed"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-22-0.f32",
+          "size_bytes": 2112,
+          "sha256": "46f1bf5a7c836949ae43650fc5ac7e0aa76930f7cd64b3be8b5aa840eb188c3b"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-22-0.json",
+          "size_bytes": 752,
+          "sha256": "ce58b5f607c312152742203ab686f7b7d70f725011bf2f224a0d170509d21fac"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-23-0.f32",
+          "size_bytes": 24336,
+          "sha256": "da6fd3f4a422470cb9ef61fdd8e95e8744f098f0c23637bc47cf7719ad6d0528"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-23-0.json",
+          "size_bytes": 753,
+          "sha256": "8f0f84d5085321f4719a5da8e8c3016e3fc7bda6fba094ca978b85443f16ede8"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-24-0.f32",
+          "size_bytes": 26880,
+          "sha256": "5e0d538a2a7d1de4294a281a712c4845acdf7e896840294fb40753e23ed6f36f"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-24-0.json",
+          "size_bytes": 752,
+          "sha256": "e49baa2073514c6f4df881daa022a158604a319f99c83932f0dd0ecd47c02506"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-26-0.f32",
+          "size_bytes": 9396,
+          "sha256": "b3c2675cd4aff69fdab80790cd330839c9e96fc1955c688af61abc35c72c7ae0"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-26-0.json",
+          "size_bytes": 750,
+          "sha256": "4e8ef5c803928e93abf6e2345cc4a3a1153ef6b05ea5d8b4d1ad66a384829073"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-28-0.f32",
+          "size_bytes": 3848,
+          "sha256": "cf9c649150108583efd02de1f63f1e85feb7fa605889b3739d420e9f64f64802"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-28-0.json",
+          "size_bytes": 749,
+          "sha256": "8f060dadfa9ee54fd519b1176d3a73b6173a047ca54ddfacf0377ba260225423"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-30-0.f32",
+          "size_bytes": 13064,
+          "sha256": "328b9ff506733b18e311ed461c44bc77033960bcbf9b04c828b01e7a57ea7219"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-30-0.json",
+          "size_bytes": 750,
+          "sha256": "9b7cfe747eb81340339cbf73b3ca91e3d535210cf4b02dc535309920b7c6dde4"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-32-0.f32",
+          "size_bytes": 4480,
+          "sha256": "169bb1adacde11c935515df7a3f0401b00c3e1878583bad382f4af43c8451bf8"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-32-0.json",
+          "size_bytes": 749,
+          "sha256": "d97d9c56de015891475c817a89bebe61fe85ad52f5ac4f10ee8fcffe4a8371ef"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-34-0.f32",
+          "size_bytes": 8464,
+          "sha256": "ed35d7115ab9895684a4f9d70497cf6cb6c8a363d3f34e5895c994194c6bfa1f"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-34-0.json",
+          "size_bytes": 750,
+          "sha256": "eefe38ecefaad57dfd4882a5c3878678589dd5eabaa87ae9472f5e7bb49fce8f"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-36-0.f32",
+          "size_bytes": 22464,
+          "sha256": "f0a253fe9415bfb0f35dbe62e7a92c271df62dde7ac1acd238871591c9ee32db"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-36-0.json",
+          "size_bytes": 749,
+          "sha256": "f0e55af08cf39ceaf99e513e133a96ce7e267d79a4b352d48647acd0778e2cd2"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-38-0.f32",
+          "size_bytes": 55420,
+          "sha256": "477e74d4b5d0ea81783a6869868881aa8edda1a6b1fe56111881d032f9171490"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-38-0.json",
+          "size_bytes": 751,
+          "sha256": "681f577230f81039624ff1f593894fc1ae283ae15d5d29d9f5ba9804a2f9cf01"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-4-0.f32",
+          "size_bytes": 88480,
+          "sha256": "536581672b2690b9cabbd1abc0b46471b428ffe02cb8efc1c82491dfb38aa454"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-4-0.json",
+          "size_bytes": 750,
+          "sha256": "854855a96c4584f283474055842d5eef001bd49aadba6b240fdaf6cdac56d060"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-4-1.f32",
+          "size_bytes": 16068,
+          "sha256": "2124be5bb92457992c934ee82cc9993d3c55da39da89a7f792c03afc2a6917bd"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-4-1.json",
+          "size_bytes": 750,
+          "sha256": "e9c9a81cb5360b47206c8ffc2012dac6dc54bdf1113cbcab060d97519cf890d7"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-40-0.f32",
+          "size_bytes": 16072,
+          "sha256": "91d75c67abd34baaec6ac85a79dfcacd88343d9e590c1af2cad7684e2121e0ee"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-40-0.json",
+          "size_bytes": 750,
+          "sha256": "8b7158a2c2bb2ffe36d604a7d857eb0ca93623c85c685f9bdc0f2bfc28e20193"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-42-0.f32",
+          "size_bytes": 21204,
+          "sha256": "2a12b077e43a3a551f7cf80f491ae347949421d96a276558d5bab728cdc229d7"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-42-0.json",
+          "size_bytes": 749,
+          "sha256": "adcd997e95b818a3fcaedb647e5c8007bdd4d343dfd43ba81036e710706bf5d8"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-44-0.f32",
+          "size_bytes": 86848,
+          "sha256": "7e877beea0374d003c138cd2673e666db34b6c053fb9c837a23d585c94f82d4e"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-44-0.json",
+          "size_bytes": 751,
+          "sha256": "10ff8c6a43bd5674134099d25cecd4f24bf9c3ee8b27b8701272559cd06caaf8"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-44-1.f32",
+          "size_bytes": 69960,
+          "sha256": "4dd3beccdd0fde63e246fef03bb138081a5b54bd02d41176aaec934eb1f30cf0"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-44-1.json",
+          "size_bytes": 751,
+          "sha256": "ed8b80ef57514120b60506c09ad402cb7e1eb0a10a28ba1bc43c7967f0c4632a"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-46-0.f32",
+          "size_bytes": 2160,
+          "sha256": "6a513e8d3efdb9a68d1316914ca7a3bb8aeae96ef4e5aeef74def1aa2b40a328"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-46-0.json",
+          "size_bytes": 750,
+          "sha256": "8aba140756db77292a4b5ffdea7b29566bae3b92f3f6c1f1f5a6fc13dd09ae7d"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-48-0.f32",
+          "size_bytes": 52632,
+          "sha256": "4753573904f7112f09d556381911afcc073e5c95cb4e678becaffe755925e65c"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-48-0.json",
+          "size_bytes": 749,
+          "sha256": "924ed0e7708e988686d9b59dcec3e9cbbcdde96ed1dd29efad4c127a66537052"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-50-0.f32",
+          "size_bytes": 42456,
+          "sha256": "8708ac2a8ffac2208ab3bf628a2a1c02a08201196cd374cb73c9c335880b1a23"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-50-0.json",
+          "size_bytes": 747,
+          "sha256": "f19210d6f2285c8dafc1fe198502dc8b1640a13d921f2793849ba54f6d6b4a38"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-52-0.f32",
+          "size_bytes": 11392,
+          "sha256": "9552bde7dde7deada7865df498bce03999b538c4e299394a1a7cd52674b0b725"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-52-0.json",
+          "size_bytes": 747,
+          "sha256": "a16316e05d6a13253009d65f5ca60760966794cd3bd6ac08ffbe3b0908ec2142"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-54-0.f32",
+          "size_bytes": 45936,
+          "sha256": "3aaf6ebdbfa858bfbab00a8ffc94547fc92f1abf06918d43cdc0ccee5f12b34e"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-54-0.json",
+          "size_bytes": 748,
+          "sha256": "5825ba4b0dbff9fddacaa2b2393e38cc12da781c6fba2bf2360af68fb79b8289"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-54-1.f32",
+          "size_bytes": 1008,
+          "sha256": "034cedd08675a12d6da4e67f547cbf369ad12734f6a3f3053d9047b299e5c132"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-54-1.json",
+          "size_bytes": 748,
+          "sha256": "8e3bed1fd800eff0318e0aa62e99a1fedf65976c2e87599ee43f5e1d727d6fe3"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-56-0.f32",
+          "size_bytes": 61908,
+          "sha256": "aa1f00628b300f6a57c78d09b151a41dd8f77fb6b6171debd3c50ff120b7859c"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-56-0.json",
+          "size_bytes": 749,
+          "sha256": "5c932e1ff1229856f8ab51033d40f2c78660ca233b2d76b5a771b9e8060cf079"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-56-1.f32",
+          "size_bytes": 20800,
+          "sha256": "ce6c72aa45289bc5336ec48f72e6415c74f5da37b632adb823f4faebaa077aba"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-56-1.json",
+          "size_bytes": 749,
+          "sha256": "58c673979c9ea93bd578943205d2f5ffd178fdd885d284a3735a48323a323335"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-58-0.f32",
+          "size_bytes": 11392,
+          "sha256": "592dafc5886f4abf6b6d855fe6503d7193f89a0e1535de809531d1179f030570"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-58-0.json",
+          "size_bytes": 747,
+          "sha256": "17fbc0989341496c36fd05d1b47c2a789e7686cdb5f970ca409ee71e6586e224"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-6-0.f32",
+          "size_bytes": 1976,
+          "sha256": "9b66c64a79a062b5a9cb43330a4b6ec634b8794026a3c8ebdfc0f554360ff215"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-6-0.json",
+          "size_bytes": 749,
+          "sha256": "dfb11480d7ca3bbba76197a72c3722e27965b7869a3aba7d02ccb8537007997f"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-60-0.f32",
+          "size_bytes": 1368,
+          "sha256": "40d3b05ff7c04980266aa55ff061012ade9b18c3459a11f7ec872c5cb996f70e"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-60-0.json",
+          "size_bytes": 745,
+          "sha256": "b25560e81aaed4ec4fc69da9c7e93074d8d94e0f530cf6bb2d0ed918cd1f91a1"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-8-0.f32",
+          "size_bytes": 4176,
+          "sha256": "f43d3fca1579776cdbbae88ff42746ed2ec27f4149e38c3877aa9d36faae5425"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-1-interval-8-0.json",
+          "size_bytes": 749,
+          "sha256": "520ef8a17d8ad5b2f68f50381c979712f25c4270b067cad6cee98d14542ad46d"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-2-interval-0-0.f32",
+          "size_bytes": 54320,
+          "sha256": "7f08d4378932c1890d703a6001d5cb081a1113d2fe041f84463a98ad0ead5d13"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-2-interval-0-0.json",
+          "size_bytes": 746,
+          "sha256": "ae159fc4bb79153ac0d7b1a298d075795c1069c3955f12efd1f23a13370e2ddd"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-2-interval-10-0.f32",
+          "size_bytes": 3608,
+          "sha256": "a6551ba5a9a63e50838c3761cbd0c071a86f34763014adf1d2966bac52c87c2f"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-2-interval-10-0.json",
+          "size_bytes": 745,
+          "sha256": "1eb06ef3ac841a9c12a60215aa2bb3c8abe623938fe970b11feb995fba17ec18"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-2-interval-2-0.f32",
+          "size_bytes": 3360,
+          "sha256": "2f42e6e5b49c1eb90f69677440c7258cebcbe3fed2e8deeab21738f51dbf8399"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-2-interval-2-0.json",
+          "size_bytes": 746,
+          "sha256": "15d6d0043a68b3787ce85546f4bd9bc3e58d2d43a403ddfedf9d2cef155ae215"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-2-interval-4-0.f32",
+          "size_bytes": 42444,
+          "sha256": "c880b18de96e15d66dd42029ca34d11fa5f8c446ed7f12b13e7d7684176fa6ec"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-2-interval-4-0.json",
+          "size_bytes": 748,
+          "sha256": "3b2008fe9e450639807a9af96fb6025f314e5d999bcc6e76ea32c8e227345fff"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-2-interval-6-0.f32",
+          "size_bytes": 7896,
+          "sha256": "3a41122465ab1d4d165df7efffa25939ae3f86111e59345d59dc5401a5aed3bc"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-2-interval-6-0.json",
+          "size_bytes": 746,
+          "sha256": "d2721f48a6475cc0ee4f785a1228f9ce53eae966f00f183919eb755ca8d619ba"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-2-interval-8-0.f32",
+          "size_bytes": 10656,
+          "sha256": "2ea7339f85479b9e9a2e031da41b7ab2891a750882894363a2de1389306e1f58"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001272-2-interval-8-0.json",
+          "size_bytes": 747,
+          "sha256": "37fa01ed909042ded03ab8ae540defe43891c1b65689a384eb0e36c17ee30b75"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-0-0.f32",
+          "size_bytes": 3400,
+          "sha256": "26446b29e0b59fa4daf9bdd30920212214986b0d102bca78bfa7b565d66caffd"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-0-0.json",
+          "size_bytes": 751,
+          "sha256": "77d6d5d113d4881d736ed79adda3f298fb82438eb495fb6960e5213e8446f9df"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-10-0.f32",
+          "size_bytes": 3900,
+          "sha256": "f54d90f9cefcff1786e44fc02daa39e9c7942ed5e2a03c9fe64f07c2f6153ac7"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-10-0.json",
+          "size_bytes": 752,
+          "sha256": "ab7e73eddf088f64b91c768e8f0fe735d914d783ea61309d0309ba9c78a572a4"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-12-0.f32",
+          "size_bytes": 12768,
+          "sha256": "009fee008938902f75026eecbebf6843d0ed03d2c9cf14d9576f296cee0965d7"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-12-0.json",
+          "size_bytes": 753,
+          "sha256": "287fb7458361630b819af98b17f678892425c63304b783ce8c5f5f363af689a0"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-14-0.f32",
+          "size_bytes": 5700,
+          "sha256": "2f99f049d2b634f687cf3409d707f130c1bb74f29192354fd1be80c75735f985"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-14-0.json",
+          "size_bytes": 752,
+          "sha256": "d7d3118c927cd9f8712a65a1641d3611287448ba621e742e5179c6e8f001d9be"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-16-0.f32",
+          "size_bytes": 4608,
+          "sha256": "c1223c41f901ee5b2b378548e42f676b90a1811b8e21864e26fef768589cea07"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-16-0.json",
+          "size_bytes": 752,
+          "sha256": "4aa91670ef775b569dd371b20428033db21264c7101de2908e422a5992440563"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-18-0.f32",
+          "size_bytes": 55680,
+          "sha256": "9a8c81012c336061315e1f305f13297cd29b82a05f14d85681114dc99ede12e6"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-18-0.json",
+          "size_bytes": 754,
+          "sha256": "e743852ccbaedf80cfaa225aea2d5877e69f1b009883ba2579dd00f0a4f1df92"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-2-0.f32",
+          "size_bytes": 11136,
+          "sha256": "a137a4dc995268fed9e6fd7d615b8e143570be2cd344536a2b1c1290fbd12bc2"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-2-0.json",
+          "size_bytes": 750,
+          "sha256": "884fac8bbfa7b479b5b766f68cfa1e002966a007cf55d7297390af643a432716"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-20-0.f32",
+          "size_bytes": 4760,
+          "sha256": "51dbf9bd5304950f0e94beebe59c8ba648d9a9847e29dfdbe95c76b02fd2d001"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-20-0.json",
+          "size_bytes": 752,
+          "sha256": "0ca9f9fc6de6897dc1c4b64e15ead46610c5b7aa0023546d50a83544082aea8d"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-22-0.f32",
+          "size_bytes": 3888,
+          "sha256": "5c1eee2408e34f2e59f8ce74bea6472c233d800e39060cbcc4ac180330bd42b4"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-22-0.json",
+          "size_bytes": 752,
+          "sha256": "428dc00450653c64f5c1b4112ff3f77b9994b05f6316ae6a5a42c5acd5613d55"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-24-0.f32",
+          "size_bytes": 2160,
+          "sha256": "5ca37c2edc8278fe05e8aabcab9d026d9a5dcc045b85263935cb6e6e4909ab29"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-24-0.json",
+          "size_bytes": 752,
+          "sha256": "e410513112705d38bbd69490c308320dd2b14f206c431fd397ee3423697053dd"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-26-0.f32",
+          "size_bytes": 5200,
+          "sha256": "13a14c175edf3f950249aac3338ff41d1e73a711a5387e86f393b6332262f149"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-26-0.json",
+          "size_bytes": 752,
+          "sha256": "8343f1f65ebec7df410352ce598506631707c2327e205632fa4eb56b40458f8b"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-28-0.f32",
+          "size_bytes": 2940,
+          "sha256": "c18549b40c4c8c4019f04fd510d8ff68b7fd5df086cd037361d6855804d0840c"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-28-0.json",
+          "size_bytes": 752,
+          "sha256": "b750a4de348858916526b5c6134cea40ae054b316df91f83e6281c0b85740ccc"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-30-0.f32",
+          "size_bytes": 3744,
+          "sha256": "2d1c4f9637504de72a46717c18ca731ab97db679edba107ac106bd14a23b0a54"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-30-0.json",
+          "size_bytes": 752,
+          "sha256": "bdb55c59674e40dab2bf8864309b6ade42cfeadb38144e9f3ce69dff5006e967"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-32-0.f32",
+          "size_bytes": 4640,
+          "sha256": "d44b38fc3b98b7f69e3d94354f87bf0b113bba36862ea2daffa94831294a26b6"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-32-0.json",
+          "size_bytes": 752,
+          "sha256": "a4c6ed8dff65fd63478ee8c4b3560475222815e99f1d834c661310ea061afeb7"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-34-0.f32",
+          "size_bytes": 11644,
+          "sha256": "94a17ddd1eddabf708a4fb607eaf83a54aac8570a5e88caa62b3333a3350cab9"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-34-0.json",
+          "size_bytes": 751,
+          "sha256": "0b9cd4661b3994bf5bd7a90c56ce626826643968ebf01be80b9da369046febd8"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-36-0.f32",
+          "size_bytes": 32640,
+          "sha256": "c5d1d68f588b5afc42175f801684748241f1b6b70af968019c30d247b987982f"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-36-0.json",
+          "size_bytes": 752,
+          "sha256": "af22dca8663a6ae3461bcd03df6b49468c541e37e26bfc03414c9a4c3e5efb15"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-38-0.f32",
+          "size_bytes": 10980,
+          "sha256": "6be87bb3d58531b8979c804fe546339d9075d2ea51db170899f32c509fa64500"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-38-0.json",
+          "size_bytes": 751,
+          "sha256": "4a727a3d256f5ada5f903a07d8dd2d21eeac875c0235250e0e47be1e09e5edec"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-4-0.f32",
+          "size_bytes": 51600,
+          "sha256": "74593ab1d6bae54ee409372c01027fc08d9fb2801455067548f3e1a7719de834"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-4-0.json",
+          "size_bytes": 751,
+          "sha256": "99d50d800217d1db110354d91e24a340eec285f4644db3213eca55c35793b531"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-40-0.f32",
+          "size_bytes": 13104,
+          "sha256": "462f8499bd466d013645cc25cfec42c8f24ea16175df563f7c087712c702050f"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-40-0.json",
+          "size_bytes": 751,
+          "sha256": "b45665307ab45e198b00625f05227ee3dcfee295e23e282f4f662f7b64a2d06a"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-42-0.f32",
+          "size_bytes": 23120,
+          "sha256": "bf39749fd8d468e0dee45720e73a6bc5f7bea10a0e3b04ea1f6d2991d460dd6d"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-42-0.json",
+          "size_bytes": 751,
+          "sha256": "4c6b8adb5205d54ea0427e1a73ddc0379869e933c891ced0b43f78c30071bf23"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-44-0.f32",
+          "size_bytes": 4608,
+          "sha256": "fcd341ad8ab7b9c748b9fce3642328dc428d30f7653073f5db4c9948ad0df6cc"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-44-0.json",
+          "size_bytes": 752,
+          "sha256": "69f02af4fff294f664efc6d3d86417803930ce143adcd81965be00fdd1b6ce1f"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-46-0.f32",
+          "size_bytes": 19440,
+          "sha256": "fe607ecc7f1dc046ab3d7c1170a58b8f1a7bbb8e746156dd970b38b66a337009"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-46-0.json",
+          "size_bytes": 753,
+          "sha256": "2cd142b57b6b1f3a446cd4216ed7f8b85f0e6fb7d95a1730d3c04295ec43cfbd"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-47-0.f32",
+          "size_bytes": 12600,
+          "sha256": "b64604085a7faa9bc22e7de637e3991a9cb6892408b5e7589366e3bbfe8a22a2"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-47-0.json",
+          "size_bytes": 751,
+          "sha256": "d26c46f0260c2966a682c5d1b09ad3f3d031a35faf81ef5cf25cd231dd0efe76"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-48-0.f32",
+          "size_bytes": 2904,
+          "sha256": "269dd7c854503ea13eb4faae0c68b72eefc251be53c20a34540212bc0941d95a"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-48-0.json",
+          "size_bytes": 752,
+          "sha256": "eea2e1a5604448688e968d615c5728dbe552f22360f0f62a2d92899c466e8b1c"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-50-0.f32",
+          "size_bytes": 17856,
+          "sha256": "7199bf9a01c46de63833c0fa06df782202e9d0ead3c7b224be2d927f2b4193f3"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-50-0.json",
+          "size_bytes": 751,
+          "sha256": "cfa76acabb34f0843fab1e04ec3d28cdecff30df6a1eb172d5c2703a301463e7"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-52-0.f32",
+          "size_bytes": 3024,
+          "sha256": "a873679efdda4c830fc8d1dc538cafbbc95e79437607b2b84015ae8844381ebb"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-52-0.json",
+          "size_bytes": 751,
+          "sha256": "ab99cf345bc8f92725e4a3cff7d0c3f5a256749b58fb9d07674e92693780d2ba"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-54-0.f32",
+          "size_bytes": 2912,
+          "sha256": "36ded32f6027c9741e04ae8a908522e4447c91ea9592be68566125dd548aab77"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-54-0.json",
+          "size_bytes": 752,
+          "sha256": "b982054d20dd4ddbe77f2295020548499a7c96455d8be55d9cffb2137a16f5d1"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-56-0.f32",
+          "size_bytes": 6300,
+          "sha256": "71c32616ea6c7f0d765eecd5b2e903914fed44db463200731539c6b9ccfbfeaf"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-56-0.json",
+          "size_bytes": 752,
+          "sha256": "241681ab56e3ce2c79a7ea8627461ee0b5b721cff5e393051f56b8dc37b8729f"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-58-0.f32",
+          "size_bytes": 6528,
+          "sha256": "7e7627d9fc6aca5082697213e5c8d3c68cff6929152f9fadd792aa6f280e6681"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-58-0.json",
+          "size_bytes": 752,
+          "sha256": "e69db139a48c77b7d09bb38c374d1f914ec765e997223d7d6f166e892ba4a3e5"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-6-0.f32",
+          "size_bytes": 72540,
+          "sha256": "794b487136aff4b39e9d56daa08007c624596d229dca6ec9e48527dcb6ca4aec"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-6-0.json",
+          "size_bytes": 751,
+          "sha256": "5736f84f263d905b1e636be2223b06c409ffbfa312e29761e17415a24833e7bc"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-6-1.f32",
+          "size_bytes": 3500,
+          "sha256": "f62f47a4053e543576dbc9c2a0ebd495002e584cce27c2edb5e4b0f765311595"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-6-1.json",
+          "size_bytes": 750,
+          "sha256": "1776da069b346c1b72429d86e0e1c929ed0833339f8b123112f9c29b6e5a8215"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-60-0.f32",
+          "size_bytes": 3456,
+          "sha256": "eb8125c8512f38ec6092a6e1cb1f578ca1d9f4da51386d9d70fe0ce10af3155b"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-60-0.json",
+          "size_bytes": 751,
+          "sha256": "c7c1ee81a0470835a1d5671d99554b16713d01a142ee5e8c7f8e2bd5eb3494dc"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-62-0.f32",
+          "size_bytes": 44352,
+          "sha256": "d2278d957983adddb7ee898303a777a527e1cc93841b880125eb60ea2ab1c173"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-62-0.json",
+          "size_bytes": 753,
+          "sha256": "f88d7d49f7062479a0a4ea3ce29e25a26c961353b148306295a075c322630373"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-64-0.f32",
+          "size_bytes": 35880,
+          "sha256": "b07033371fdab422a151a071519e5ca447e614531fbfc068549a3882ab18ddb9"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-64-0.json",
+          "size_bytes": 752,
+          "sha256": "16e11d12d38a04634046d7871de87ac5be1ec2d44bfd3663fd1f8f8a72339563"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-66-0.f32",
+          "size_bytes": 34608,
+          "sha256": "461246381c0cbb1fede38df1c9548bc209c1cbb205d1569a4d8e3d7896c93e31"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-66-0.json",
+          "size_bytes": 752,
+          "sha256": "b9fe2e4e2b5ab649f8459fe355a9c33f8f1143b09a93d0cd0518cfeffe701caf"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-66-1.f32",
+          "size_bytes": 63680,
+          "sha256": "71ce8d3ab5e7beb1757739293517fd5c4ce8a7617bc957720a175050777e3e20"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-66-1.json",
+          "size_bytes": 752,
+          "sha256": "72187036e999a757682880635040e3769b797fa2c685c62cf0178a7d2b31c246"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-66-2.f32",
+          "size_bytes": 51408,
+          "sha256": "bf7ece4537df3a187231e84329a93c3e03452349cb3b7f4a4a91fdf42b3e8252"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-66-2.json",
+          "size_bytes": 752,
+          "sha256": "12073ca971a1a9e593967b6391aa9407123b30055e6ab189119e1350fde6e818"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-66-3.f32",
+          "size_bytes": 26884,
+          "sha256": "95a61fb2636a214d5e3e3dece8091f82dae8d0d787384f590ad75bc27ed59819"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-66-3.json",
+          "size_bytes": 750,
+          "sha256": "e264df4185876392d4d3793cbbe23ae233c5bd0102e3a3da72ba11177f9762d5"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-8-0.f32",
+          "size_bytes": 5376,
+          "sha256": "8046ceb8967837db9a8239a7601d4f27a8da8ad6819e6b2a80d4b1b7636bb686"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/reviewed-VIAL_TR70190001287-0-interval-8-0.json",
+          "size_bytes": 750,
+          "sha256": "63d3b8f11225c34537a9f110419fbda5581160f2431a777192aecd42d1005f24"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-0-interval-0-tile-0-cut.f32",
+          "size_bytes": 6000,
+          "sha256": "32cbd3d87b6d90903e6ce8236e2df719a284f511984ffcc132266442d2ab1ec6"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-0-interval-0-tile-0-cut.json",
+          "size_bytes": 750,
+          "sha256": "89f04c865b124c1785a08448afbfd22fa096b941cc7c9df2eff70ea9452f875f"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-0-interval-10-tile-0-cut.f32",
+          "size_bytes": 1444,
+          "sha256": "79e3262b55f687f8c37b8cbe58fa70270eff4103a223bb1ac9cfacb60ee68868"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-0-interval-10-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "535b009b0d7660112dd3faabf1098253c3b439c5b00492092b63a809f29344c3"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-0-interval-12-tile-0-cut.f32",
+          "size_bytes": 6160,
+          "sha256": "e3ec3601d9aca630e0a248b97a73cde81a8d47746bcb3e3a94872db359cf2b2f"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-0-interval-12-tile-0-cut.json",
+          "size_bytes": 752,
+          "sha256": "cb0a63e0e5c00ee7070c13989cec3b20562e05a1c2b4ae5c807cd023fbab5363"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-0-interval-14-tile-0-cut.f32",
+          "size_bytes": 26068,
+          "sha256": "8e3ac27e04922b7580f24bab06d1733ae0448cbd8917e2806c993f0aef64c733"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-0-interval-14-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "74c43b08ffbcc70473319099e1e6f297b9a93596d4d853dc7c86331301ee9252"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-0-interval-16-tile-0-cut.f32",
+          "size_bytes": 21648,
+          "sha256": "270f5dc5a6072a7f1da56af2d90764fc17c8ef11431284458b144a1e0db5e257"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-0-interval-16-tile-0-cut.json",
+          "size_bytes": 752,
+          "sha256": "b9b07fa14faa34b000bf502d4a5da36d3210e69c5615ae6070b916a6132cbff5"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-0-interval-18-tile-0-cut.f32",
+          "size_bytes": 19968,
+          "sha256": "33f948d7fb6eadd8329b62273d36f2d2a348cd8ace9a04baff659af5bfa737f5"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-0-interval-18-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "ed02a4c5e9bd31e620d6495c69c8579b390a2cb368bb9758a7b1814eef4e355e"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-0-interval-2-tile-0-cut.f32",
+          "size_bytes": 3952,
+          "sha256": "12806899517fe2dabb0a227698164ab5bec70d93f85ca0bfbd76233c3fce5aec"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-0-interval-2-tile-0-cut.json",
+          "size_bytes": 750,
+          "sha256": "c81f479efc1b996e83da2e8d6ab6fd3102a10c126227d2a28f1239a632cbf6c7"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-0-interval-4-tile-0-cut.f32",
+          "size_bytes": 1520,
+          "sha256": "da8333c0b0e33af77d92af2b7e5c95ecfb8dcad505e2adcf1cb654efd4501a19"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-0-interval-4-tile-0-cut.json",
+          "size_bytes": 752,
+          "sha256": "7b185c3e8c05671bafa5963a840c49e2c98f91e31c2d3570a5c74b162766ebcc"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-0-interval-6-tile-0-cut.f32",
+          "size_bytes": 4340,
+          "sha256": "00aa08979309439452dbbd097d75dfb9aa3094b128e8daba1ef5d41141fd596a"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-0-interval-6-tile-0-cut.json",
+          "size_bytes": 752,
+          "sha256": "7bb0a1fd8bdca30739912bee97303c5d6ebca4753f36b16b29177c06d0151fb2"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-1-tile-0-cut.f32",
+          "size_bytes": 36600,
+          "sha256": "d1f1459e8db858d23cca8f8cbcd2e955ceeb82fde0c7c996f3bab7c3218d1ac9"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-1-tile-0-cut.json",
+          "size_bytes": 751,
+          "sha256": "0b3d933194b2c304969890eab85379655db28e241b0d096efcf4601c5254d7ac"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-11-tile-0-cut.f32",
+          "size_bytes": 2904,
+          "sha256": "d6436a6ffcb81878e353b10d79bdea2bc3b5c3f8aae3d0e7f5b9473044a5a392"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-11-tile-0-cut.json",
+          "size_bytes": 751,
+          "sha256": "63cdfade53b87cdb0bac65586064b5f9852841778c551a632bd170363c16df05"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-13-tile-0-cut.f32",
+          "size_bytes": 6440,
+          "sha256": "2688a98d54fa602630b6e190ecfc868b249396dd3c8fe0c411087ab0054f3550"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-13-tile-0-cut.json",
+          "size_bytes": 751,
+          "sha256": "97632e9efaf233f51b9683301d76b7066f8bd670e51899370afd8b6ab8b4ed38"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-15-tile-0-cut.f32",
+          "size_bytes": 84216,
+          "sha256": "3e556a5a10d5ef3e46934dadff0891f4c1ca6e13ff207c7b0565035b1365a85b"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-15-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "e5263ca9c9cb7815041171bd25b9ff0325c23449aee997b1d12fbd0cc8268dcc"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-15-tile-1-cut.f32",
+          "size_bytes": 52700,
+          "sha256": "d9c1a5ed602323ca97b978335b30a36f7c1ff157415dca03eed2b7a8dc1de42d"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-15-tile-1-cut.json",
+          "size_bytes": 751,
+          "sha256": "21e39c4aa86def4d64211be771fc622480bb8f1e1fcbc570e231ca34d4587b85"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-17-tile-0-cut.f32",
+          "size_bytes": 5124,
+          "sha256": "d68696f6d2a1ff5a0436d599096ded8c4b26f33b220c9f869ada66ac220d3743"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-17-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "379011f3fe4538e878871fba6d9158b9128e0c257582786408eeaa02b717e81d"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-19-tile-0-cut.f32",
+          "size_bytes": 17784,
+          "sha256": "91fc8e1c6652842421f73d2aac429bb3d05da4ba8103c0a5fdcc16070dab161d"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-19-tile-0-cut.json",
+          "size_bytes": 754,
+          "sha256": "9274ca0d579177475503b038f59ad4154b6ea13e2abdb3a1cdc360ff36d2b62d"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-21-tile-0-cut.f32",
+          "size_bytes": 864,
+          "sha256": "4f801476e73edc9329cd1955eb23f08d9367d5cd7c8baed71be84912ae48eb06"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-21-tile-0-cut.json",
+          "size_bytes": 754,
+          "sha256": "bbf9b061cce793e9bb359999c2bcc71307a588c67b6b208a93a2f289e9143bcf"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-25-tile-0-cut.f32",
+          "size_bytes": 32860,
+          "sha256": "9aef62755b992e5090395e70aa53f856ab2be477fc38535ec372ac9b66ec64a9"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-25-tile-0-cut.json",
+          "size_bytes": 754,
+          "sha256": "4903c990facc6b6d5ab1d09a415b71ec26596118ecb81ebabd59f83ec41e4acd"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-27-tile-0-cut.f32",
+          "size_bytes": 988,
+          "sha256": "3357e693d645908948b7d65d858f0a7bf266b100ee7d21ef6dbc623de14dec6d"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-27-tile-0-cut.json",
+          "size_bytes": 751,
+          "sha256": "37d52b7332f8ba75fe46d561e61c9f3e81c0e633ca1d719cc5d5e5fde261efc8"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-29-tile-0-cut.f32",
+          "size_bytes": 3640,
+          "sha256": "96e87359098e09cb7ebd896c5a05bd8bed58a9116cab1d2f4f470ed14badf2be"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-29-tile-0-cut.json",
+          "size_bytes": 751,
+          "sha256": "53898bf22351b0f6b420a41c64b0984f3078e116292606d4e505c7735a1a160b"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-3-tile-0-cut.f32",
+          "size_bytes": 2112,
+          "sha256": "e1a50a48966f1f37c46f004f12435b81881b9dc546ef5dd3b19d10fc9d82e0a1"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-3-tile-0-cut.json",
+          "size_bytes": 750,
+          "sha256": "eaf0e5b60a18ff83e37516171c8c545c3fa5e96e88afd39f230d35eb5b2328b1"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-31-tile-0-cut.f32",
+          "size_bytes": 65520,
+          "sha256": "e0cb4357407c2a1fc61e8582b10e84217638f5bf377544a8b84a887c80db6c54"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-31-tile-0-cut.json",
+          "size_bytes": 752,
+          "sha256": "c309b7ede7012bc661cef9b118ddbcc1a168ce82d01787e2527a1374817768b7"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-31-tile-1-cut.f32",
+          "size_bytes": 6480,
+          "sha256": "4aed470370f3192cd60729f8297dd5255e361fa1eb53a63d2186ea1d175c618a"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-31-tile-1-cut.json",
+          "size_bytes": 750,
+          "sha256": "57ab0ae27102ed703dc809e239bb6e312a2d2af660397f899989dbf7c0861097"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-33-tile-0-cut.f32",
+          "size_bytes": 35964,
+          "sha256": "31d5f5bf2a7a8ae9844371c30b5028f8ade76d9a015fed0a5d45de7f66cd493b"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-33-tile-0-cut.json",
+          "size_bytes": 751,
+          "sha256": "d22f2014c299e690a1a0a3acfd4f49656198115f4bb5f90e1c6d6602cbc86233"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-35-tile-0-cut.f32",
+          "size_bytes": 3600,
+          "sha256": "9216c3ddb32949ea5318d075dd47fb90677f9c34fa0b8051d81fe9345b9efded"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-35-tile-0-cut.json",
+          "size_bytes": 751,
+          "sha256": "91ff3a1e4dbb3f5af9c5e39da94ed838744564e4d4520b4643277c1baee2b969"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-37-tile-0-cut.f32",
+          "size_bytes": 12784,
+          "sha256": "8f4b6f5da5577832be2741261ea747e1a7ca4fbc201a248c2090f0cab915cc87"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-37-tile-0-cut.json",
+          "size_bytes": 750,
+          "sha256": "0a9985a845ca988b51ee99e6865b4a19395a3d8f0259363a846c9da555270798"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-39-tile-0-cut.f32",
+          "size_bytes": 15876,
+          "sha256": "9022ac585180d870220d7b45ac09ddae6b8b861eefadafa681250d334371d0b4"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-39-tile-0-cut.json",
+          "size_bytes": 752,
+          "sha256": "75081cfa7a007de6f1fa0c5586efdae62ffbb30a17956fd4333c4c08cb44dca8"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-41-tile-0-cut.f32",
+          "size_bytes": 11856,
+          "sha256": "19ac5e603e72471b066861b793f1490ad1edc7a61985c7b10e76f34e6815cb3b"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-41-tile-0-cut.json",
+          "size_bytes": 751,
+          "sha256": "3841e48339dacae31ec96987bf24a192f97525e3c62399c6561c442b316daf8b"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-43-tile-0-cut.f32",
+          "size_bytes": 1440,
+          "sha256": "d8c0fae6a2c4f60ad55455e7f0586cf695ee612b035519793bf957570e0aeae5"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-43-tile-0-cut.json",
+          "size_bytes": 751,
+          "sha256": "5babbd9ec6e10a3fdfd2d0602ebb306776293642bd4b1ff2d54a46ddffeb8bfe"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-45-tile-0-cut.f32",
+          "size_bytes": 1360,
+          "sha256": "0af76355b385c50dc75f1d42e725ea2ba6d6ce221edc16f2d3146bc3e591aec3"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-45-tile-0-cut.json",
+          "size_bytes": 751,
+          "sha256": "9457bcce93acd679fadf087be956c4c16045866b438b38eae91ef1ecc4d64594"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-47-tile-0-cut.f32",
+          "size_bytes": 7360,
+          "sha256": "9811f03138df1e7e5509b5d79867079951b6232d4317c297804144acb2869722"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-47-tile-0-cut.json",
+          "size_bytes": 751,
+          "sha256": "48653e25bc66274ffda2093e09f7f1a2629dd4e4d37714c2d1a5bc497f09d83f"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-49-tile-0-cut.f32",
+          "size_bytes": 1140,
+          "sha256": "b581d42e417069469b1177c775099e63ab560fd0f1d983b80188154c07a0f575"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-49-tile-0-cut.json",
+          "size_bytes": 749,
+          "sha256": "2331a5277d29202c198331bbe4834f6f66d0472c12f19705128efd63dac9dc94"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-5-tile-0-cut.f32",
+          "size_bytes": 1600,
+          "sha256": "5af4ef00bdce3c5a9d5701b840260e3e8a220d8b18b875905f1f5ffbd19464a2"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-5-tile-0-cut.json",
+          "size_bytes": 750,
+          "sha256": "a4a80aecc05c0a0caf8b0dd799d1b079c7cfb169269df13974d3fee061c2aa65"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-51-tile-0-cut.f32",
+          "size_bytes": 792,
+          "sha256": "61862e3f68a5066f218ea5b360691fd0a336f6c5abf522d34281a1670291fcfd"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-51-tile-0-cut.json",
+          "size_bytes": 750,
+          "sha256": "a962601e1a2cc6a8e788129e3e92c589ce1aca444c685fa4ccfd62118937a24e"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-53-tile-0-cut.f32",
+          "size_bytes": 3680,
+          "sha256": "91eb03a4f4aaf0422fe8be4ca1990838bce4e26f275039e1cc9a010fdc9792fc"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-53-tile-0-cut.json",
+          "size_bytes": 749,
+          "sha256": "5662fc4ca1a4d305b674875e02046a280c279675fb2f336fed0ef1c685c974b3"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-55-tile-0-cut.f32",
+          "size_bytes": 36080,
+          "sha256": "a2c5d47234925a6e183d9d1cb226fd840fffad78104bcc606f5a190919d5e5c6"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-55-tile-0-cut.json",
+          "size_bytes": 750,
+          "sha256": "79ad6558dc77ffd16f435fd7d58639603432f3e85efa899b9c15187b60159a63"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-57-tile-0-cut.f32",
+          "size_bytes": 2880,
+          "sha256": "454d36773979adae05f66c7bbecfb31a60afb23273352f1ac2d522872d072b75"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-57-tile-0-cut.json",
+          "size_bytes": 748,
+          "sha256": "d384d743f9f6dbbdc1fc07dd132a74e15664887c8416e788229648ac51b7a131"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-59-tile-0-cut.f32",
+          "size_bytes": 2204,
+          "sha256": "667dd21140acb7d6befbe76b4959e8c9b848d81fc5e22d8ac401d14d67cf6959"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-59-tile-0-cut.json",
+          "size_bytes": 747,
+          "sha256": "66ab7e06100a6fe2de58a053b183aae4a1d8d725a7650b01d30bf0cc59e753bf"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-7-tile-0-cut.f32",
+          "size_bytes": 760,
+          "sha256": "69a19621d75ac850507930cee7bcda190cf47ffd2786387805c54ea8db39ebf6"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-7-tile-0-cut.json",
+          "size_bytes": 750,
+          "sha256": "e0236e14c01bee02f15c0b52e36005aa6fc7d3126fbb0e234b79e1be9e1c3802"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-9-tile-0-cut.f32",
+          "size_bytes": 62976,
+          "sha256": "00b9fda06ce2b49046d99e69245fce2031263610d0b6c21d94115efec3372bcd"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-9-tile-0-cut.json",
+          "size_bytes": 751,
+          "sha256": "6283c2d279a1c7e364fe5c34fb85916f1571f9533b878d205ff3746fe67a0088"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-9-tile-1-cut.f32",
+          "size_bytes": 3444,
+          "sha256": "5d1c9a67637000260ccfd25b86389434fc6f512a2532849ff53ce8d0b7a3ae08"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-1-interval-9-tile-1-cut.json",
+          "size_bytes": 750,
+          "sha256": "a3f12a62ee9efe78e4d10fc0e9586939b7a1f62ae1138a52df2999b60a61f98c"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-2-interval-1-tile-0-cut.f32",
+          "size_bytes": 7400,
+          "sha256": "57c6d2edfb3f0ae1b4cdd816adb2cd87603c6a885e099317a0162d0a28a10f86"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-2-interval-1-tile-0-cut.json",
+          "size_bytes": 748,
+          "sha256": "6e3fe9cad47593a2cdccbd17e63ba2ac0991c9ad00d91582d47af80b64152492"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-2-interval-3-tile-0-cut.f32",
+          "size_bytes": 62964,
+          "sha256": "8175fda97b944ad9ba1c16675ca7a0dbe2d0dd18a5e2388ca71041c1085ed7a2"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-2-interval-3-tile-0-cut.json",
+          "size_bytes": 749,
+          "sha256": "a324f97f0856d1a32d1ee380ce1f11bb806de3e1851def47b2af500e98632279"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-2-interval-5-tile-0-cut.f32",
+          "size_bytes": 7128,
+          "sha256": "ee7c3c03147cf01abc0c7450a703b69d49d9fc0b91193f865070392d77d470d5"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-2-interval-5-tile-0-cut.json",
+          "size_bytes": 748,
+          "sha256": "db29c5174fd1bc0b884992674fa84a8745b88ed23e5b4d761c0b1d04e5bcf87f"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-2-interval-7-tile-0-cut.f32",
+          "size_bytes": 28800,
+          "sha256": "17e79955d80894170c0c9b405963a8899bd540ab29d37e26d1a67e9df4c674b5"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-2-interval-7-tile-0-cut.json",
+          "size_bytes": 746,
+          "sha256": "b630409ea598d6485aa5cf64075378564592ea6bd312ccd257ece399df200bb6"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-2-interval-9-tile-0-cut.f32",
+          "size_bytes": 5568,
+          "sha256": "1a97f952d878a1cab2fdff5deb542d50e716d18d69c180c29913c6b6c8126225"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001272-2-interval-9-tile-0-cut.json",
+          "size_bytes": 748,
+          "sha256": "985677d9041f871c48d441511e90f65709d771cbe50c7a1af11a53344128acec"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-1-tile-0-cut.f32",
+          "size_bytes": 1368,
+          "sha256": "6fc05a1928dde6f125124ef45ec7eca175d50fcefcde2acf35dcef6ff1a9661b"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-1-tile-0-cut.json",
+          "size_bytes": 752,
+          "sha256": "dd03b89780f5009fd18f082a456059ad8b52db848bd1c7343e669a61c6aa7b97"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-11-tile-0-cut.f32",
+          "size_bytes": 1932,
+          "sha256": "d8281ad86a822e179043fdf677b8dc7efffc8e29b2c8fa228a667c7a7d29124e"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-11-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "8f293016040feb827033a374f95293e738baf41ba7de9250dd7e568b72ce51e5"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-13-tile-0-cut.f32",
+          "size_bytes": 1292,
+          "sha256": "51155c52fd0ddd688756222c6c3d9460960b036cad3fa3da2d699357c911c008"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-13-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "482c7c9ca5ed52c888fdbb5bf52d0f4ccbc90bd139ba5c25886c464a602a4bda"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-15-tile-0-cut.f32",
+          "size_bytes": 50904,
+          "sha256": "53ed5b26a0895e1335fe3279b089b825e458efd3838bac31c7cbf34725fec3a5"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-15-tile-0-cut.json",
+          "size_bytes": 754,
+          "sha256": "dce7d25328ccc8a006aac38c301e0eb993577ebc0ef8d54bce5b7d9930bd4d1a"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-15-tile-1-cut.f32",
+          "size_bytes": 26400,
+          "sha256": "86a6edab0b1cfd07fe20bbbf93644500f039753f629a06c7ecde02e085a45ebf"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-15-tile-1-cut.json",
+          "size_bytes": 753,
+          "sha256": "c36305b9df32ddef755bbf5a65054fe87b0711d531bd55f34ad73edc203b170f"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-17-tile-0-cut.f32",
+          "size_bytes": 11200,
+          "sha256": "8a5cd33523e24c527c7f91babb2680efa1cf2f26ee8ba02810219bdd4f65aab4"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-17-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "6c74d10b51fbe9063ae83ccd5dfac09a052c4deb974b152563d0958b1bab4a65"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-19-tile-0-cut.f32",
+          "size_bytes": 1156,
+          "sha256": "5e76a39675c6d66b5fae58713ce61e039228097645affcf0f0aaf47778aa4b18"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-19-tile-0-cut.json",
+          "size_bytes": 752,
+          "sha256": "701fd24551890dacffdfce0d828d808ff77e52643570aedeebfbe107b6d454ab"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-21-tile-0-cut.f32",
+          "size_bytes": 37788,
+          "sha256": "e4408e0e5a3fd9ca78dd31ef87ed223f8fc269c8268009a4fcd9a960468bfc5a"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-21-tile-0-cut.json",
+          "size_bytes": 754,
+          "sha256": "b15330e5a52b8bcb282413e2fd62992cb806dca1a5e86e944161cd3a8975f3b1"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-21-tile-1-cut.f32",
+          "size_bytes": 15616,
+          "sha256": "299cc47b411b523420236164792cfa14b45ab9a60dcc8c31eb0d60adfe66f997"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-21-tile-1-cut.json",
+          "size_bytes": 752,
+          "sha256": "1247afef97a33187d8e2cdc6cdeddc63e2a6050d11a6081a0396b86f17cf7650"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-23-tile-0-cut.f32",
+          "size_bytes": 40500,
+          "sha256": "d7f0a0ae9f49196bfdd6142f08a09ebc18c17e39373d5ae41aef4ec104f04924"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-23-tile-0-cut.json",
+          "size_bytes": 754,
+          "sha256": "ffb380a7b4c508d366f2e8911fa44c52eff6df7336a965c23540202d4294fa79"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-25-tile-0-cut.f32",
+          "size_bytes": 31312,
+          "sha256": "01465d147b69932a847306d6501b991625f2c117c28779eb0ef6868bf68da95a"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-25-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "a59fc5af22b286680f29a3368d635ec9eedb73611efc5eb340cf3fa747d5d039"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-25-tile-1-cut.f32",
+          "size_bytes": 936,
+          "sha256": "9370cf9bd54351adc0c05228daf4fba1d25c9e83af11436c803781b74cfe88ec"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-25-tile-1-cut.json",
+          "size_bytes": 753,
+          "sha256": "5d301e9c4ad1e3e1bdf220bb00c87d1742fa130e0d6c15279ccc2cae175d8390"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-27-tile-0-cut.f32",
+          "size_bytes": 1520,
+          "sha256": "d27237299114d9efa7841f48986708dfe667aa05a1933d0092aacc7be28ca8b1"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-27-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "739d696a547302941fd522790d6fce0165a46e0f69041a235ca8332edc9b5f61"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-29-tile-0-cut.f32",
+          "size_bytes": 12600,
+          "sha256": "18b11963e5511b295cc659f46872e0986acca7063d8a9f0327a6403e4875deb8"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-29-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "613ea8cbd2ba35c1d4aaae602c60e204d8e46e68abd6eed85c89b7eb662be955"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-3-tile-0-cut.f32",
+          "size_bytes": 26688,
+          "sha256": "b16159c9fcbf55df8f09e4f5042d724c49c710f5e95639b2a528f63908c226d7"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-3-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "34418ca45aae581765631410ae57679df94ebf6844259438f3ec4c0c7d6d5780"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-31-tile-0-cut.f32",
+          "size_bytes": 1200,
+          "sha256": "c1015e0b56c5b21ebd07d1a34bf3e8c8ae9e684681ae9c93b131320b6572b40f"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-31-tile-0-cut.json",
+          "size_bytes": 754,
+          "sha256": "9fe859fae83d1c41d5dc4987c81c4f655db87d8fadd3648fafb8479f5101e8f5"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-33-tile-0-cut.f32",
+          "size_bytes": 19952,
+          "sha256": "050387350f7b942f6ec9af651eec59160f8d40f07ebd1b01720a79e9330a222e"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-33-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "7588fab25a22fb7c7b45d555cd8284de4d53598aadfe4db191e941bf01c71150"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-35-tile-0-cut.f32",
+          "size_bytes": 960,
+          "sha256": "f3a9215deb6ec5520ba7a24eac4c8a30eda74a00dda7d25cc1baaa8ae4d9484e"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-35-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "e9682aabb4b40bcaad44eae21f4cb2220607ccee505bfd46b400e88d8db29873"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-37-tile-0-cut.f32",
+          "size_bytes": 6048,
+          "sha256": "f99df9e47084c53d715aa1d2395072127275753bcf8c2c1df913c586003ae945"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-37-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "72665155dd49e552149d80995e06c5e40e706a8b0490d5af62f0287ec996051e"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-39-tile-0-cut.f32",
+          "size_bytes": 3872,
+          "sha256": "d7a979ca27b20104c27505bc99639f0c43ededcc9ee2645f4b8510885b731a41"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-39-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "430483f367aa3d8cee95a82658ea946d4c08bd2577bd8f92f094c3edc5e3ec9e"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-41-tile-0-cut.f32",
+          "size_bytes": 1596,
+          "sha256": "b82d902ed46606d87e82ee1247432d13aa137695c3c368ee0bec216d2b89665a"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-41-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "23764cfb401e5a6bc81ca39ac1b839e6457cbf45e602aa6d00c0b8fe34902b7b"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-43-tile-0-cut.f32",
+          "size_bytes": 60828,
+          "sha256": "4179e2d64f14ec1fdb966e6fb2054a9265dcfdc563af1bceb5e79f30b1ce44b3"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-43-tile-0-cut.json",
+          "size_bytes": 755,
+          "sha256": "ccd9c99c5b3bd4a2529087a4670a01330888d41df40717db624d3b1c40eae234"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-45-tile-0-cut.f32",
+          "size_bytes": 14352,
+          "sha256": "5d6076b78008b31dac351a51a37073e1677f455b406a9382082538d06b8009d2"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-45-tile-0-cut.json",
+          "size_bytes": 752,
+          "sha256": "0e2d447836313333f211480d1b58addc452890e426367b9ffbd90dc8e6644a87"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-49-tile-0-cut.f32",
+          "size_bytes": 1672,
+          "sha256": "44a2452de86061a16da4aa68eeb068907f39d548073e24a09ff7decc6f50b687"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-49-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "af0a38cc40f66c4b68e665aa3936808536d285254a9293c18ce9d2e71621d6f7"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-5-tile-0-cut.f32",
+          "size_bytes": 16848,
+          "sha256": "faeaf08c21373c8e01d5e30648ad7dac681a9ed0aa75c75d3133dd9b4dab33c8"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-5-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "b73d1f0f6e41b2d4018d48dd42fac8cc5833d7642f138d95cb29e8b72a5e2082"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-51-tile-0-cut.f32",
+          "size_bytes": 21900,
+          "sha256": "c41fa67a3d2b516b6e03c50635049379de27b76993d0f815c2f680553123fafb"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-51-tile-0-cut.json",
+          "size_bytes": 752,
+          "sha256": "a17b84086f751ff5b3d61f14b03054ff19e4a012fb57d0e223e90ad3f96adb45"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-53-tile-0-cut.f32",
+          "size_bytes": 1080,
+          "sha256": "e010788c32c96dd944e8676fec9c02531500baa92ee5950f51afa5e7a4da1b50"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-53-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "b1349f6b46ecc3dcd2129f06a20b5b68c497e42e9fd46c44fe9fc98e0090e2b5"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-55-tile-0-cut.f32",
+          "size_bytes": 3348,
+          "sha256": "35979bd7567f790a2698d87fd8539bd9ea354f70fafb3f6a0233b5bf838c59c2"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-55-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "7b8c5137e515fbe22ba5c34d8b7359f8f8e7c92096ddb971dc831c6dea2e76c1"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-57-tile-0-cut.f32",
+          "size_bytes": 3600,
+          "sha256": "3902600d3d54ba6fa9b3006deb0b19302c76c1839df2d7513c61cc71d7ec18a5"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-57-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "528704e259f98b92ec5a5035df287a7bd1e20b2e48f703604b6cb6537f37906f"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-59-tile-0-cut.f32",
+          "size_bytes": 1596,
+          "sha256": "189c27cff5cfa143aca81656793b9953c8bca3bbc36e1f23b086630ce6e0261d"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-59-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "37730e377beba46ca9bed67da787833e24daccb695b215a7271a106b393db4b4"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-61-tile-0-cut.f32",
+          "size_bytes": 5760,
+          "sha256": "14c3e02c68f80fe8442bccfce57d74f16ceed1a79bc0fd210723ae7093d4b8e6"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-61-tile-0-cut.json",
+          "size_bytes": 752,
+          "sha256": "4fd4633314416b60c3586e08ad5d39f7cb8916cf230e3975349dd8d04751ef44"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-63-tile-0-cut.f32",
+          "size_bytes": 6496,
+          "sha256": "d627ba9dda9ece01ce14662dae807e98c7fa6b442ea93a08fdd4cb11ac7b38a7"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-63-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "85c2f3760175ded56ae603d382bd900249df583dbccedbf1c192cfb3a8ac0238"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-65-tile-0-cut.f32",
+          "size_bytes": 44892,
+          "sha256": "6e5019279bd3b08aed65da483847d80299a81f2486f01d465d54180d89d1a207"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-65-tile-0-cut.json",
+          "size_bytes": 753,
+          "sha256": "55bd52ed42f01ad0b186993c39d0c00d64948c08c8ea0540a01574ced6db9a31"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-7-tile-0-cut.f32",
+          "size_bytes": 1140,
+          "sha256": "41fdab66959537197116e9904e6cd4ef104f2a9c5b646fb69bfd1916a43bfbb6"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-7-tile-0-cut.json",
+          "size_bytes": 752,
+          "sha256": "e0427d1a2f39d4d3c526442f851bee59c95d1daddebe974eb97b9c01ea2778c7"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-9-tile-0-cut.f32",
+          "size_bytes": 3600,
+          "sha256": "9b6ff4b67e1cfd333e1a7daeb9bed2db271c4d434115c43c9bcd9756877cba4a"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/Network/VIAL_TR70190001287-0-interval-9-tile-0-cut.json",
+          "size_bytes": 752,
+          "sha256": "0b337ef38a9a7f98ba437de84402951b990d3bad8f8e75f1ef5192cfcb2fa283"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/network-native-proof.json",
+          "size_bytes": 1171439,
+          "sha256": "43d4fc8ba02eb480a48c9fa871c9fd6f0d0d328f1fe5e207cd5c4da65a9b46ba"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/owner-handoff-proof.json",
+          "size_bytes": 656,
+          "sha256": "744eba6f00993dba7c476c7d329239053f9e994b80ae9b0ea37db2f088ef5102"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/source-recipe.json",
+          "size_bytes": 74904,
+          "sha256": "5e8a0470cf339ca606a92b794abff61bcafeae63391f3a64ab56fad8010b77b9"
+        },
+        {
+          "path": "frozen-road-c5573b3-2026-10-04/terrain-import-proof.json",
+          "size_bytes": 1288,
+          "sha256": "2b2d7c7d40229601145ac9a114f356a3866a075ca9564abdca883cc8c3d536a0"
+        }
+      ],
+      "manifest": null,
+      "fingerprint": null,
+      "counts": null,
+      "determinism": "Retained source snapshot / review bytes pinned; no clean reproduction claim"
+    },
+    "regional-hydrology": {
+      "file_count": 7,
+      "size_bytes": 171059,
+      "files": [
+        {
+          "path": "regional-hydrology-2026-10-04/acquisition-receipt.json",
+          "size_bytes": 7661,
+          "sha256": "5f0a957f11bdb8a2bf87d33af2a92902478f70b1b71faebd64b3ce215bc5e418"
+        },
+        {
+          "path": "regional-hydrology-2026-10-04/dataset-license.html",
+          "size_bytes": 25999,
+          "sha256": "7efdac2978fc9b3116a9eba476adff4f8c55dd641f244869533b66d859dad96c"
+        },
+        {
+          "path": "regional-hydrology-2026-10-04/features.json",
+          "size_bytes": 111329,
+          "sha256": "7fc4ad2d1218f072c10397fc8bd93b96b21dc6535bfd796714604f338321c1a3"
+        },
+        {
+          "path": "regional-hydrology-2026-10-04/ids.json",
+          "size_bytes": 628,
+          "sha256": "8ff7d8f134c5a1aaf764e278439c559a036946ed0bcdfa6f746d4084c167f163"
+        },
+        {
+          "path": "regional-hydrology-2026-10-04/iteminfo.json",
+          "size_bytes": 3503,
+          "sha256": "e1af5f1dfafface9faddc82eba868f329ebaed0e96a012f68146b518ae16866f"
+        },
+        {
+          "path": "regional-hydrology-2026-10-04/layer.json",
+          "size_bytes": 9856,
+          "sha256": "1a9804140872cca765b4e2e7c0db495dbbb711f4e3a48ac31ed17c37b489a284"
+        },
+        {
+          "path": "regional-hydrology-2026-10-04/service.json",
+          "size_bytes": 12083,
+          "sha256": "f6bfa187e6efacdeea61d03322f135ecae23ba02e404868068536f31351560f1"
+        }
+      ],
+      "manifest": null,
+      "fingerprint": null,
+      "counts": null,
+      "determinism": "Retained source snapshot / review bytes pinned; no clean reproduction claim"
+    },
+    "road-masks": {
+      "file_count": 6,
+      "size_bytes": 33594104,
+      "files": [
+        {
+          "path": "road-masks-v1a-2026-10-04/bob-affected-domain.tif",
+          "size_bytes": 34143,
+          "sha256": "89031263c231f311264d5ae483009a1c6d65a32058b4b1772d6b29a51e47aef3"
+        },
+        {
+          "path": "road-masks-v1a-2026-10-04/road-distance-lower-bound.tif",
+          "size_bytes": 33345091,
+          "sha256": "ba077cba0fd7c77cf0b9cde62e5e34b5be88bd7ae0d834bb7bc0a65bd58fc006"
+        },
+        {
+          "path": "road-masks-v1a-2026-10-04/road-footprint.tif",
+          "size_bytes": 42813,
+          "sha256": "6583ad551054ae7d258d73d0604583bbe43a2d264335f75de450f820e4450d09"
+        },
+        {
+          "path": "road-masks-v1a-2026-10-04/road-mask-manifest.json",
+          "size_bytes": 78904,
+          "sha256": "b9a1891ffe35243dbdf2b3ca9c4e6c67a210cceb4c35123a1a64befb4dff38a9"
+        },
+        {
+          "path": "road-masks-v1a-2026-10-04/road-protected-footprint.tif",
+          "size_bytes": 43231,
+          "sha256": "c9ccfb1ea5532eb549618f6a1837638f90eace6c680081b19798384441da6be0"
+        },
+        {
+          "path": "road-masks-v1a-2026-10-04/shoulder-exclusion-envelope.tif",
+          "size_bytes": 49922,
+          "sha256": "8c3cf465be054b21ffadfd628d22c40d9bf787b5ec713bc9e57f8d496e1e0976"
+        }
+      ],
+      "manifest": "road-masks-v1a-2026-10-04/road-mask-manifest.json",
+      "fingerprint": "8659d5d0cf1f080b72fd5e65d2c3a9142b3870e44802fcc50e80f057646abd0d",
+      "counts": {
+        "network_windows": 184,
+        "hairpin_stations": 2401,
+        "road_cells": 169739,
+        "shoulder_envelope_cells": 30677,
+        "bob_affected_cells": 843343
+      },
+      "determinism": "All products and full manifest byte-identical across two clean preparations"
+    },
+    "context-exclusions": {
+      "file_count": 4,
+      "size_bytes": 198439,
+      "files": [
+        {
+          "path": "context-exclusions-v2-2026-10-04/context-exclusions.json",
+          "size_bytes": 111911,
+          "sha256": "26f7a3bd478dba370fe2bf44235497a1586992693f8d6631b10cb669b78bc9bd"
+        },
+        {
+          "path": "context-exclusions-v2-2026-10-04/context-mask-manifest.json",
+          "size_bytes": 11286,
+          "sha256": "9be501c31de087479c0844204dbb38d7e1fbcbf39bb38b2195497a20c4941b9a"
+        },
+        {
+          "path": "context-exclusions-v2-2026-10-04/infrastructure-context.tif",
+          "size_bytes": 24196,
+          "sha256": "8553c667cad2766eff520ac9cc4a26fa9e6a2202919b788507868c3c557771d8"
+        },
+        {
+          "path": "context-exclusions-v2-2026-10-04/water-context.tif",
+          "size_bytes": 51046,
+          "sha256": "c099e3ad30b3d1a64b2de02266a6e6a843e6dfb3faa7476fd1d561585bb4664a"
+        }
+      ],
+      "manifest": "context-exclusions-v2-2026-10-04/context-mask-manifest.json",
+      "fingerprint": "52299bd895b40746ebcd3e263901d6b570c5a1c7b6a9e8fdd81bb5d592294b31",
+      "counts": {
+        "btn0302l_rio": {
+          "tile_instances": 19,
+          "clipped_instances": 16
+        },
+        "btn0328s_alm_agu": {
+          "tile_instances": 6,
+          "clipped_instances": 4
+        },
+        "btn0334p_surgen": {
+          "tile_instances": 2,
+          "clipped_instances": 1
+        },
+        "btn0308l_tub_serv": {
+          "tile_instances": 1,
+          "clipped_instances": 0
+        },
+        "btn0543l_tunel_l": {
+          "tile_instances": 1,
+          "clipped_instances": 1
+        },
+        "btn0546l_pas_ele": {
+          "tile_instances": 1,
+          "clipped_instances": 1
+        },
+        "regional_provisional": {
+          "unique_source_features": 106,
+          "clipped_instances": 106
+        }
+      },
+      "determinism": "All products and full manifest byte-identical across two clean preparations"
+    },
+    "pcg-masks": {
+      "file_count": 5,
+      "size_bytes": 20245980,
+      "files": [
+        {
+          "path": "pcg-masks-v1-2026-10-04/exclusion-distance-lower-bound.tif",
+          "size_bytes": 5135714,
+          "sha256": "2f7f1ad4248f7d76c22fc8aee010ee7ea575c40e6f102bcdd23704304d0c4919"
+        },
+        {
+          "path": "pcg-masks-v1-2026-10-04/exclusion-reasons.tif",
+          "size_bytes": 2994730,
+          "sha256": "c74bde6ae8589304fe3d52f4e1e20801b0fe5647de6ffbc268c9b2ca65eaa941"
+        },
+        {
+          "path": "pcg-masks-v1-2026-10-04/pcg-mask-manifest.json",
+          "size_bytes": 5881,
+          "sha256": "465788e5d74cf3eccf59bdddc1480fa4d7dac50d6f22255ca69ac3b9f174b5df"
+        },
+        {
+          "path": "pcg-masks-v1-2026-10-04/vegetation-selectors.png",
+          "size_bytes": 5848901,
+          "sha256": "94ce6440bded7bf11ea7ebf582ea9de48a97245a4f41d631e4e626945f9807f1"
+        },
+        {
+          "path": "pcg-masks-v1-2026-10-04/vegetation-selectors.tif",
+          "size_bytes": 6260754,
+          "sha256": "24f29db741610ea5e750019445f271dd1ad8735eb8cfed1104c1b92a8da5bd37"
+        }
+      ],
+      "manifest": "pcg-masks-v1-2026-10-04/pcg-mask-manifest.json",
+      "fingerprint": "c9191f8dadf21d1820bebc80dd92e91641f4f4b74eb9d90342d7459611473864",
+      "counts": {
+        "selected_low": 5477030,
+        "selected_medium": 907064,
+        "selected_high": 729004,
+        "excluded_cells": 4603235,
+        "unknown_sample_cells": 2713728,
+        "water_holdback_cells": 455043
+      },
+      "determinism": "All products and full manifest byte-identical across two clean preparations"
+    },
+    "pcg-review": {
+      "file_count": 4,
+      "size_bytes": 71964237,
+      "files": [
+        {
+          "path": "pcg-review-v1-2026-10-04/historical-context.png",
+          "size_bytes": 121270,
+          "sha256": "4ee4131061ee12ee7a20b4d5c2cccd27a5cb9091fa80f99831029cae81c45d3e"
+        },
+        {
+          "path": "pcg-review-v1-2026-10-04/orthophoto.png",
+          "size_bytes": 37058260,
+          "sha256": "36eb65995ccd9ff7b8d169a208f97d2f3c6729c97053c5a5fcba4b3a6c62faa5"
+        },
+        {
+          "path": "pcg-review-v1-2026-10-04/review-manifest.json",
+          "size_bytes": 11773,
+          "sha256": "db8adf8fce9bb8a56c997302ab0f262ba86b207478e0c64c947c6c0862962b25"
+        },
+        {
+          "path": "pcg-review-v1-2026-10-04/review-overlay.png",
+          "size_bytes": 34772934,
+          "sha256": "045a4c898c17c47e724217010afdea02a1a24d645aea6319b42a371eefcf3cff"
+        }
+      ],
+      "manifest": "pcg-review-v1-2026-10-04/review-manifest.json",
+      "fingerprint": null,
+      "counts": {
+        "pcg": {
+          "selected_low": 5477030,
+          "selected_medium": 907064,
+          "selected_high": 729004,
+          "excluded_cells": 4603235,
+          "unknown_sample_cells": 2713728,
+          "water_holdback_cells": 455043
+        }
+      },
+      "determinism": "Retained source snapshot / review bytes pinned; no clean reproduction claim"
+    }
+  },
+  "status": "READY_FOR_BOUNDED_MASK_CONSUMER_WITH_FALLBACKS",
+  "production_graph_executed": false,
+  "hydrology": {
+    "feature_count": 106,
+    "feature_types": 1,
+    "survey_years": {
+      "2010": 81,
+      "95": 25
+    },
+    "classification_counts": {
+      "1": 15,
+      "3": 52,
+      "2": 39
+    },
+    "source_url": "https://ideib.caib.es/geoserveis/rest/services/public/GOIB_XarxaHidro_RiscInun_IB/MapServer/0",
+    "license_url": "https://intranet.caib.es/opendatacataleg/es/dataset/xarxa-hidrografica-provisional",
+    "limits": "Provisional hydrography; source date is not catalogue refresh date; dry torrents possible; no measured channel width or complete water coverage inferred"
+  },
+  "fallbacks": [
+    "vegetation source-class character, no species/current-cover probability",
+    "invalid normalized heights stay unknown; rejected for high selector",
+    "shoulder conservative 0.51m envelope",
+    "BOB whole affected rectangles excluded; CUT/FILL and side roles not inferred",
+    "water/infrastructure 5m decorative line/point holdback, not measured width or regulatory/safety distance",
+    "unknown samples excluded; asset radius and additional clearance explicitly required"
+  ],
+  "bounded_consumer_read": {
+    "status": "PASS_MASK_READ_ONLY",
+    "fingerprint": "c9191f8dadf21d1820bebc80dd92e91641f4f4b74eb9d90342d7459611473864",
+    "example_radius_m": 0.5,
+    "example_clearance_m": 0.5,
+    "not_real_asset_admission": true,
+    "samples": [
+      {
+        "band": 0,
+        "world_xy_cm": [
+          185050,
+          40750
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 3.769551992416382
+      },
+      {
+        "band": 0,
+        "world_xy_cm": [
+          199550,
+          49450
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.195956230163574
+      },
+      {
+        "band": 0,
+        "world_xy_cm": [
+          190700,
+          59950
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 3.5515711307525635
+      },
+      {
+        "band": 0,
+        "world_xy_cm": [
+          102750,
+          65700
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.146446466445923
+      },
+      {
+        "band": 0,
+        "world_xy_cm": [
+          65400,
+          70150
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.146446466445923
+      },
+      {
+        "band": 0,
+        "world_xy_cm": [
+          200100,
+          72850
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 3.769551992416382
+      },
+      {
+        "band": 0,
+        "world_xy_cm": [
+          2450,
+          76050
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 4.118582248687744
+      },
+      {
+        "band": 0,
+        "world_xy_cm": [
+          37500,
+          78900
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 3.9184482097625732
+      },
+      {
+        "band": 0,
+        "world_xy_cm": [
+          2650,
+          81850
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.8087239265441895
+      },
+      {
+        "band": 0,
+        "world_xy_cm": [
+          38300,
+          84500
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.339028835296631
+      },
+      {
+        "band": 0,
+        "world_xy_cm": [
+          64250,
+          86800
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 4.146446228027344
+      },
+      {
+        "band": 0,
+        "world_xy_cm": [
+          2750,
+          89450
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 7.0794806480407715
+      },
+      {
+        "band": 0,
+        "world_xy_cm": [
+          41400,
+          92250
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.646446466445923
+      },
+      {
+        "band": 0,
+        "world_xy_cm": [
+          600,
+          95150
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 5.303300380706787
+      },
+      {
+        "band": 0,
+        "world_xy_cm": [
+          45550,
+          98650
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 4.7454657554626465
+      },
+      {
+        "band": 0,
+        "world_xy_cm": [
+          6850,
+          102700
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 3.286501407623291
+      },
+      {
+        "band": 0,
+        "world_xy_cm": [
+          73550,
+          106700
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.561922311782837
+      },
+      {
+        "band": 0,
+        "world_xy_cm": [
+          250,
+          112300
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.339028835296631
+      },
+      {
+        "band": 1,
+        "world_xy_cm": [
+          39800,
+          49000
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 3.4543328285217285
+      },
+      {
+        "band": 1,
+        "world_xy_cm": [
+          63850,
+          59850
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 3.9476089477539062
+      },
+      {
+        "band": 1,
+        "world_xy_cm": [
+          68650,
+          64750
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.146446466445923
+      },
+      {
+        "band": 1,
+        "world_xy_cm": [
+          23250,
+          68750
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.339028835296631
+      },
+      {
+        "band": 1,
+        "world_xy_cm": [
+          110600,
+          71400
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 3.1819803714752197
+      },
+      {
+        "band": 1,
+        "world_xy_cm": [
+          150,
+          74000
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.146446466445923
+      },
+      {
+        "band": 1,
+        "world_xy_cm": [
+          4550,
+          76550
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 5.477397918701172
+      },
+      {
+        "band": 1,
+        "world_xy_cm": [
+          4050,
+          78900
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 7.708703994750977
+      },
+      {
+        "band": 1,
+        "world_xy_cm": [
+          5150,
+          80800
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 12.77085018157959
+      },
+      {
+        "band": 1,
+        "world_xy_cm": [
+          44200,
+          82650
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.848008394241333
+      },
+      {
+        "band": 1,
+        "world_xy_cm": [
+          63050,
+          84550
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 3.646446466445923
+      },
+      {
+        "band": 1,
+        "world_xy_cm": [
+          9150,
+          86800
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 3.769551992416382
+      },
+      {
+        "band": 1,
+        "world_xy_cm": [
+          14050,
+          89050
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.561922311782837
+      },
+      {
+        "band": 1,
+        "world_xy_cm": [
+          63200,
+          94800
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.146446466445923
+      },
+      {
+        "band": 1,
+        "world_xy_cm": [
+          4000,
+          99600
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 5.831104755401611
+      },
+      {
+        "band": 1,
+        "world_xy_cm": [
+          3800,
+          106450
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 9.942075729370117
+      },
+      {
+        "band": 1,
+        "world_xy_cm": [
+          4050,
+          114750
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 5.347323417663574
+      },
+      {
+        "band": 2,
+        "world_xy_cm": [
+          196900,
+          3050
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.146446466445923
+      },
+      {
+        "band": 2,
+        "world_xy_cm": [
+          79050,
+          58350
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.339028835296631
+      },
+      {
+        "band": 2,
+        "world_xy_cm": [
+          26200,
+          66500
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.146446466445923
+      },
+      {
+        "band": 2,
+        "world_xy_cm": [
+          9500,
+          70900
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.8087239265441895
+      },
+      {
+        "band": 2,
+        "world_xy_cm": [
+          8850,
+          74100
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.339028835296631
+      },
+      {
+        "band": 2,
+        "world_xy_cm": [
+          36450,
+          77650
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.6878275871276855
+      },
+      {
+        "band": 2,
+        "world_xy_cm": [
+          9250,
+          80250
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.146446466445923
+      },
+      {
+        "band": 2,
+        "world_xy_cm": [
+          30300,
+          81850
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.339028835296631
+      },
+      {
+        "band": 2,
+        "world_xy_cm": [
+          13100,
+          85850
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 3.146446466445923
+      },
+      {
+        "band": 2,
+        "world_xy_cm": [
+          148100,
+          90750
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.146446466445923
+      },
+      {
+        "band": 2,
+        "world_xy_cm": [
+          1450,
+          98800
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 6.165648460388184
+      },
+      {
+        "band": 2,
+        "world_xy_cm": [
+          4050,
+          100950
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.146446466445923
+      },
+      {
+        "band": 2,
+        "world_xy_cm": [
+          8100,
+          105350
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 3.146446466445923
+      },
+      {
+        "band": 2,
+        "world_xy_cm": [
+          195850,
+          115900
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 3.6775753498077393
+      },
+      {
+        "band": 2,
+        "world_xy_cm": [
+          182650,
+          181500
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.195956230163574
+      },
+      {
+        "band": 2,
+        "world_xy_cm": [
+          105650,
+          190200
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.4748735427856445
+      },
+      {
+        "band": 2,
+        "world_xy_cm": [
+          118100,
+          193900
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.146446466445923
+      },
+      {
+        "band": 2,
+        "world_xy_cm": [
+          131150,
+          198300
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.146446466445923
+      },
+      {
+        "band": 2,
+        "world_xy_cm": [
+          180300,
+          200050
+        ],
+        "selected": true,
+        "reason": "source_domain_and_clearance",
+        "clearance_lower_bound_m": 2.146446466445923
+      }
+    ]
+  }
+}

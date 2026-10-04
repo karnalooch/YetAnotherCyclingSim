@@ -1619,6 +1619,59 @@ Low vegetation can be grass or low shrubs; high vegetation may also include
 shrubs. Do not infer species or exact tree placement from these classes.
 See the [vegetation-domain receipt](../worldgen/terrain/benchmarks/sa_calobra/world_data/vegetation_domains_receipt_2026-10-04.json).
 
+#### Bounded PCGEx mask package with explicit fallbacks (Issue #335)
+
+The owner authorized read-only reuse of frozen accepted road outputs from
+`c5573b3cf545c51ce83ad1fb0a5ca3111f5ad7f6` / draft PR #338. This exception covers
+artifacts only, not branch code, road/BOB rebuilds or engineering admission.
+The retained 375 inputs plus recipe preserve original PARTIAL_IMPORTED and
+unadmitted engineering/collision flags. Footprints use all 184 constructed
+network windows and the accepted 2,401-station hairpin presentation profile.
+
+`pcg-masks-v1-2026-10-04/pcg-mask-manifest.json` is
+`READY_FOR_BOUNDED_MASK_CONSUMER_WITH_FALLBACKS`: three overlapping low/medium/high
+source-class selectors, exclusion bits, a conservative distance lower bound and
+a linear RGBA data texture. Frozen grid: 4033x4033, 0.5m, EPSG:25831. No terrain,
+road or building relocation occurs. First pixel centre [483000.25,4409516.25]
+is the UE origin, X east/Y south in centimetres; nearest texture sampling uses
+`(XY_cm/50+0.5)/4033`. Never interpolate unknowns into placement permission.
+
+Explicit fallbacks preserve source-class vegetation character without species,
+exact crowns or current-cover probability. Invalid height stays unknown;
+high selectors reject it, observed low/medium classes may retain it. Exclusions
+include frozen pavement, a conservative 0.51m shoulder envelope, Catastro/LiDAR
+building footprints and entire BOB affected rectangles including guards. These
+rectangles do not claim exact CUT/FILL or inner/outer roles. Unknown LiDAR samples
+and other classes are excluded. Yellow relief never becomes a rock label.
+
+Bounded BTN water/infrastructure context is supplemented by GOIB provisional
+hydrography layer 0: 106 AOI features, with `ANY_MTIB` 2010 (81) and 95 (25).
+Do not invent a century or treat catalogue refresh as a new survey. A **5m
+decorative holdback** surrounds mapped lines/points; polygons retain geometry.
+This is not measured channel width, permanent wetness, flood extent, regulatory
+distance or complete water coverage.
+
+Consumers must supply a positive horizontal asset radius plus nonnegative
+additional clearance, keep the footprint inside AOI and check their sum against
+the distance. The distance subtracts half the pixel diagonal and rounds down;
+the reader additionally subtracts the query offset from the cell centre. RGBA
+alone cannot authorize placement. Use nearest, no sRGB/mipmaps; original pinned
+LiDAR density/height remain evidence, not planting counts. The independent
+`read_sa_calobra_pcg_masks.py` proves bounded reads, not an executed PCGEx graph.
+Road/context/package products and full manifests reproduce byte-identically
+across clean output directories. Julka profile `sa-calobra-pcg-masks-candidate`
+checks source closure and outputs; byte PASS does not complete whole 2A.
+See `worldgen/terrain/benchmarks/sa_calobra/world_data/pcg_masks_receipt_2026-10-04.json`.
+Raw, rasters and textures stay outside Git in the world-data cache.
+
+New review colours: white pavement, sand shoulder, cyan buildings, purple BOB
+affected rectangles and blue water holdbacks. Purple here differs from earlier
+pink invalid-height diagnostics. Earlier green acceptance does not automatically
+accept new holdbacks. The existing native reviewer can show this on frozen
+Landscape with session-only sky and no save. Production integration, full-authority
+completeness and performance admission remain separate; never run a
+terrain-importing proof for this frozen task.
+
 #### Placement evidence handoff candidate (Issue #335)
 
 `scripts/assets/prepare_sa_calobra_placement_handoff.py` prepares a separate

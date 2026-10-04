@@ -715,3 +715,27 @@ lub średnią roślinność bez wysokiej, a 13 198 także wysoką. Dwa rastry i 
 są poza Git, z osobnym receipt, identities i restore w Julce. Brak próbek
 pozostaje unknown, a budynki i relief mają osobne review flags. Nie zmieniono
 terenu, drogi, istniejących masek wysokości ani materiału aktualnego podglądu.
+
+## Maski do bounded PCGEx — 2026-10-04
+
+Pakiet `pcg-masks-v1-2026-10-04` jest gotowy do odczytu masek z jawnymi fallbackami,
+bez przebudowy terenu lub drogi. Selektory niskiej/średniej/wysokiej roślinności
+uwzględniają asfalt, zachowawcze pobocze 0,51m, budynki, obszary BOB oraz wodę
+i infrastrukturę. Woda: BTN plus 106 odcinków oficjalnej tymczasowej sieci GOIB;
+5m wokół linii/punktów to robocze odsunięcie dekoracji, nie szerokość koryta.
+Dane historyczne i brak próbek pozostają jawne. Nie tworzymy gatunków ani
+dokładnych koron drzew ze zdjęcia. Wysokości unknown pozostają unknown.
+
+Po zgodzie właściciela zatrzymano 375 zamrożonych wyników c5573b3 / draft #338
+plus recipe, bez przyjmowania kodu tej gałęzi i bez uruchamiania buildera.
+17 oryginalnych ciężkich źródeł CNIG nie pobrano ponownie ani nie zmodyfikowano.
+Nowa hydrologia: 7 plików z receipt, 171 059 B, kompletna odpowiedź AOI, jedna
+warstwa polyline. Road masks: 6 plików / 33 594 104 B; context: 4 / 198 439 B;
+pakiet PCG: 5 / 20 245 980 B. Liczby obejmują manifesty. Wszystkie payloady są
+w zewnętrznym world-data cache; w Git wyłącznie skrypty, metadata i receipts.
+
+Kontrakt promienia obiektu, clearance, UV/grid, unknown i fallbacków opisuje
+[World Building Bible](WORLD_BUILDING_BIBLE.md#bounded-pcgex-mask-package-with-explicit-fallbacks-issue-335).
+Julka ma osobne identities/restore/profile. Nie deklarujemy wykonanego grafu
+PCGEx, pełnego zamknięcia 2A lub performance PASS. Nowe odsunięcia mają podgląd
+do przeglądu; fiolet oznacza obszar BOB, a nie wcześniejszy różowy review wysokości.
