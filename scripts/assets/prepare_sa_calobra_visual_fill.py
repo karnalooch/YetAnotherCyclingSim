@@ -62,10 +62,10 @@ def repair(weights, availability, reasons, steps=8):
         provenance[fill] = 1
     # One bounded, low-strength pass. Four-connected neighbors cannot cross a
     # one-cell protected road/building; no wraparound at the AOI boundary.
-    count = convolve(support.astype(np.float32), KERNEL, mode="constant")
+    count = _four_neighbor_sum(support)
     smooth = support & (count > 0)
     for c in range(3):
-        total = convolve(values[..., c], KERNEL, mode="constant")
+        total = _four_neighbor_sum(values[..., c])
         values[..., c][smooth] = (
             0.75 * values[..., c][smooth] + 0.25 * total[smooth] / count[smooth]
         )
