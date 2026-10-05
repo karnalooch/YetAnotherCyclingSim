@@ -116,6 +116,13 @@ UE importer / bounded canary
 The author command refuses an existing output directory. Accepted or reviewed
 material output is never silently overwritten.
 
+## Fingerprint-driven rebuild planning
+
+`plan-rebuild` hashes the YACS Material Forge implementation, the existing
+Material Maker graph builder, family catalog and upstream pins. A run is rebuilt
+only when that source fingerprint changes. Existing reviewed output is never
+silently overwritten.
+
 ## Reproducibility and fingerprinting
 
 Every run records:
@@ -170,6 +177,28 @@ Input masks must already be authoritative PCG/PCGEx products. The packer:
 
 This allows efficient UE control textures without creating a second semantic
 pipeline.
+
+## Controlled world-mask steering
+
+Material Forge supports one derived-mask operation in addition to RGBA packing:
+`modulate_detail_only`.
+
+It multiplies a material-local RGB detail mask by an authoritative grayscale
+PCG/PCGEx world mask. This permits, for example, an authoritative Road mask to
+limit asphalt crack/patch detail to the road domain without Material Forge
+deciding where the road is.
+
+The transform:
+
+- requires `semantic_owner=PCG/PCGEx`;
+- preserves the world-mask SHA;
+- preserves the source detail-mask SHA;
+- requires identical dimensions;
+- does not threshold, blur, grow, erode or classify;
+- records `classification_changed=false`.
+
+The machine-readable operation schema and replay examples live under
+`worldgen/materials/material_forge/`.
 
 ## UE importer
 
@@ -246,7 +275,7 @@ No MaterialPilot or Tool-MaterialMaker-MCP source is copied into YACS.
 Completed before opening the draft:
 
 - Python syntax compilation for the new Python files: PASS;
-- Material Forge CPU unit tests: **6/6 PASS**.
+- Material Forge CPU unit tests: **8/8 PASS**.
 
 Not claimed yet:
 
