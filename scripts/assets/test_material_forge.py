@@ -183,6 +183,46 @@ class MaterialForgeContractTests(unittest.TestCase):
             self.assertFalse(result["deterministic"])
             self.assertEqual(len(result["mismatches"]), 1)
 
+    def test_derived_material_mask_is_gated_by_authoritative_world_mask(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            world = root / "world.png"
+            detail = root / "detail.png"
+            world_data = np.zeros((4, 4), dtype=np.uint8)
+            world_data[:, 2:] = 255
+            detail_data = np.full((4, 4, 3), 200, dtype=np.uint8)
+            _png(world, world_data)
+            _png(detail, detail_data)
+            spec = root / "derive.json"
+            spec.write_text(
+                json.dumps(
+                    {
+                        "semantic_owner": "PCG/PCGEx",
+                        "operation": "modulate_detail_only",
+                        "world_mask": {"name": "Road", "path": str(world)},
+                        "detail_mask": {"path": str(detail)},
+                    }
+                )
+            )
+            output = root / "derived.png"
+            manifest = root / "derived.json"
+            result = forge.derive_material_mask(spec, output, manifest)
+            derived = np.asarray(Image.open(output).convert("RGB"))
+            self.assertTrue(np.all(derived[:, :2] == 0))
+            self.assertTrue(np.all(derived[:, 2:] == 200))
+            self.assertFalse(result["classification_changed"])
+
+    def test_rebuild_plan_is_stable_when_source_fingerprint_matches(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fingerprint = forge.source_fingerprint()
+            (root / "run-manifest.json").write_text(
+                json.dumps({"source_fingerprint": fingerprint})
+            )
+            result = forge.plan_rebuild(root)
+            self.assertFalse(result["rebuild_required"])
+            self.assertEqual(result["reason"], "unchanged")
+
 
 if __name__ == "__main__":
     unittest.main()
