@@ -1,0 +1,18 @@
+# Copy as ue-mcp.yml ONLY into the disposable proof project.
+# The guard module and pinned ue-mcp package must be available at this relative path.
+# Do not merge this with the live project's Stage 3G profile.
+ue-mcp:
+  version: 1
+  contentRoots:
+    - /Game/Generated/YACS/TextureMaterialPrep/
+  context:
+    strategy: lean
+  nativeTools:
+    enabled: false
+guards:
+  yacs_texture_proof:
+    description: Permit only the isolated YACS texture toolset; deny every other call.
+    scope: all
+    order: 1
+    before:
+      class_path: tools/ue-mcp/guards/YacsTextureGuard

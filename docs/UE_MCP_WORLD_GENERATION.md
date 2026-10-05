@@ -171,9 +171,10 @@ Detailed plugin schedule: [`UNREAL_TOOLING_PLUGIN_PLAN.md`](UNREAL_TOOLING_PLUGI
 
 Issue #382 defines an independent
 [Texture Material Prep foundation](tooling/TEXTURE_MATERIAL_PREP.md). Texture
-Graph owns image processing; the proposed YACS Texture MCP Toolset only controls
-validated recipes, render/export and evidence. The initial delivered code is
-offline BaseColor analysis and blocked recipe planning, not registered MCP tools.
+Graph owns image processing; the opt-in YACS Texture MCP Toolset only controls
+validated recipes, render/export and evidence. Delivery includes a disabled
+editor plugin, explicit native tool registration, an isolated guard profile and
+offline diagnostics.
 It does not enable native routing, replace this orchestration surface, extend
 the remote command allowlist or modify world materials/assets. UE activation
 requires the isolated graph/adapter/export proof specified there.

@@ -1,0 +1,16 @@
+{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "0.1.0",
+  "FriendlyName": "YACS Texture Material Prep",
+  "Description": "Opt-in, isolated Texture Graph authoring and proof tools for UE 5.8.2.",
+  "Category": "Editor",
+  "EnabledByDefault": false,
+  "CanContainContent": false,
+  "IsBetaVersion": true,
+  "Modules": [{"Name": "YacsTexturePrep", "Type": "Editor", "LoadingPhase": "PostEngineInit"}],
+  "Plugins": [
+    {"Name": "TextureGraph", "Enabled": true},
+    {"Name": "ToolsetRegistry", "Enabled": true}
+  ]
+}

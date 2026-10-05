@@ -53,7 +53,11 @@ py scripts/assets/download_stage3g_assets.py --max-total-mib 2500
 inputs, writes bounded 2x2/4x4 tiling evidence and seam/luminance metrics, and
 prepares validated draft Texture Graph recipes. It never processes production
 pixels, connects to Unreal or changes existing assets. Recipes explicitly remain
-blocked until the UE adapter is implemented and proved.
+blocked in this offline CLI until a live UE connection binds the execution.
+The opt-in `YacsTexturePrep` plugin implements the separate editor adapter.
+`texture_material_prep_bundle.py` measures its five-map export;
+`texture_material_prep_ue_smoke.py` and `texture_material_prep_ue_reopen.py` run
+only in a marked disposable proof project.
 
 See the [commands and supported subset](../../docs/tooling/TEXTURE_MATERIAL_PREP_EXAMPLES.md)
 and [architecture / limestone proof plan](../../docs/tooling/TEXTURE_MATERIAL_PREP.md).

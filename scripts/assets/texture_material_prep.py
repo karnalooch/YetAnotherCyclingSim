@@ -1,6 +1,6 @@
-"""Read-only BaseColor analysis and blocked Texture Graph recipe planning.
+"""Read-only BaseColor analysis and offline Texture Graph recipe planning.
 
-No UE connection, processing backend, asset import, or MCP server is installed.
+This CLI does not connect to UE; the opt-in editor adapter is a separate plugin.
 Only diagnostic images/JSON are written, into a fresh ignored evidence directory.
 """
 
@@ -66,7 +66,9 @@ def scale_metadata(world_size: list[float] | None, width: int, height: int) -> d
     }
 
 
-def read_source(path: Path) -> tuple[np.ndarray, dict]:
+def read_source(path: Path, *, transfer: str = "srgb") -> tuple[np.ndarray, dict]:
+    if transfer not in ("srgb", "linear"):
+        raise ValueError("unsupported transfer function")
     # Hash exactly the bounded bytes decoded, not a second potentially changed read.
     with path.open("rb") as stream:
         data = stream.read(MAX_BYTES + 1)
@@ -84,15 +86,20 @@ def read_source(path: Path) -> tuple[np.ndarray, dict]:
             raise ValueError(
                 "profiled PNG requires a separately verified color decoder"
             )
-        if "gamma" in im.info and abs(im.info["gamma"] - 0.45455) > 1e-5:
-            raise ValueError("PNG gamma conflicts with the declared sRGB input")
+        expected_gamma = 0.45455 if transfer == "srgb" else 1.0
+        if "gamma" in im.info and abs(im.info["gamma"] - expected_gamma) > 1e-5:
+            raise ValueError("PNG gamma conflicts with the declared input transfer")
         w, h = im.size
         if min(w, h) < 8 or max(w, h) > MAX_SIDE:
             raise ValueError("analysis requires dimensions between 8 and 4096 px")
         if "transparency" in im.info:
             raise ValueError("PNG transparency is unsupported for opaque BaseColor")
         raw = np.array(im)
-        if raw.shape[-1] == 4 and not np.all(raw[:, :, 3] == 255):
+        if (
+            transfer == "srgb"
+            and raw.shape[-1] == 4
+            and not np.all(raw[:, :, 3] == 255)
+        ):
             raise ValueError("non-opaque alpha is unsupported")
         rgb = raw[:, :, :3].copy()
     return rgb, {
@@ -101,8 +108,8 @@ def read_source(path: Path) -> tuple[np.ndarray, dict]:
         "bytes": len(data),
         "resolution": [w, h],
         "bit_depth": 8,
-        "role": "BaseColor",
-        "transfer": "sRGB declared by caller",
+        "role": "BaseColor" if transfer == "srgb" else "linear data RGB; alpha unused",
+        "transfer": f"{transfer} declared by caller",
         "provenance": "unverified",
     }
 
@@ -286,7 +293,7 @@ def prepare_recipe(
         **candidate,
         "draft_recipe_id": digest(canonical(candidate).encode()),
         "status": "blocked",
-        "error_code": "UE_ADAPTER_NOT_IMPLEMENTED",
+        "error_code": "UE_CONNECTION_REQUIRED",
         "execution_identity": None,
         "blockers": [
             "verified graph, engine binding, routing and export/reopen proof required"
@@ -328,7 +335,7 @@ def inspect_capabilities(project: Path, engine: Path) -> dict:
     return {
         "schema_version": 1,
         "status": "blocked",
-        "error_code": "UE_ADAPTER_NOT_IMPLEMENTED",
+        "error_code": "UE_CONNECTION_REQUIRED",
         "engine_build": build,
         "plugins": facts,
         "probe": "filesystem_only",
@@ -380,8 +387,7 @@ def write_previews(run: Path, rgb: np.ndarray, scale: dict) -> None:
         save_panel(
             run / f"tiling-{n}x{n}.png",
             np.tile(small, (n, n, 1)),
-            label
-            + f"\n{n}x{n}; preview tile {im.width}x{im.height}; {sampling}",
+            label + f"\n{n}x{n}; preview tile {im.width}x{im.height}; {sampling}",
         )
     save_panel(
         run / "half-offset-preview.png",

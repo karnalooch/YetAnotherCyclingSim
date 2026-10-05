@@ -2,7 +2,7 @@
 
 **Tracking:** [Issue #382](https://github.com/karnalooch/YetAnotherCyclingSim/issues/382)
 
-**Status:** offline validation/recipe foundation implemented; UE adapter is pseudocode, Unreal validation pending
+**Status:** opt-in UE 5.8.2 editor plugin and six native tool definitions implemented; isolated 128px GPU render/export/reopen proof passed; world activation remains disabled
 
 **Evidence date:** 2026-10-05
 
@@ -35,18 +35,19 @@ is a texture proof, not world or performance admission.
 
 ## Delivery decision and tools-first audit
 
-This PR supplies a version-backed design, implementer runbook, an offline
-BaseColor validator and a recipe planner that explicitly blocks UE execution.
-It installs no plugin, registers no MCP tool and creates no `.uasset`.
-See [commands and adapter pseudocode](TEXTURE_MATERIAL_PREP_EXAMPLES.md) for the
-implemented subset and exact limitations.
+This PR supplies an opt-in editor-only `Plugins/YacsTexturePrep` plugin, a fixed
+native Texture Graph builder, asynchronous named renders and exact-pixel export, explicit Toolset
+Registry definitions, an isolated db-lyon guard profile and offline diagnostics.
+The project descriptor and live MCP configuration remain unchanged. Enabling the
+plugin and registering its tools are explicit proof-project operations.
+See [commands and implementation limits](TEXTURE_MATERIAL_PREP_EXAMPLES.md).
 
 | Candidate | Evidence and decision |
 |---|---|
 | Embark `texture-synthesis` | Public example-based synthesis, tiling and inpainting are useful architectural references. Its repository is archived. No source is copied, vendored or executed; it is not the requested UE processing authority. |
 | Epic Texture Graph | Selected processor: reusable graph, parameters and output settings. Actual seams, wrap behavior, normal convention and successful export still need a YACS proof. |
 | Existing db-lyon `ue-mcp` 1.3.9 | Retain the pinned single orchestration/safety surface. Native routing remains disabled until an isolated integration proof. |
-| Epic Toolset Registry | Selected future tool-definition mechanism behind those guards. No second agent-facing MCP server and no `All Toolsets` enablement. |
+| Epic Toolset Registry | Selected opt-in tool-definition mechanism behind those guards. No second agent-facing MCP server and no `All Toolsets` enablement. |
 | Custom YACS code | Limit to recipe validation, namespace guards, parameter/readback adapters and measurements. No custom pixel-processing backend or generic editor-control framework. |
 
 The repository is not ready for activation. Texture Graph is not explicitly
@@ -55,8 +56,66 @@ descriptor. Neither the graph nor the named limestone source appears in tracked
 main paths. Native MCP/reflection execution is unproven. Open implementation PRs
 #338 and #381 occupied the two-branch limit in `AGENTS.md`. On 2026-10-05 the
 owner explicitly authorized a **third implementation PR for this task**. That
-bounded exception permits this independent offline foundation, not consumption
+bounded exception permits this independent texture foundation and its isolated adapter proof, not consumption
 of unmerged code/assets or changes to the existing world delivery sequence.
+
+## Current adapter limits
+
+- UE **5.8.2 only**, editor-only, disabled by default; 128/256/512/1024 square
+  output, saved opaque BGRA8 sRGB source Texture2D, no virtual textures.
+- Fixed native nodes implement bounded grayscale/blur division toward linear
+  luminance 0.5, optional RGB gain, smooth edge-local mirror blending on X/Y,
+  grayscale height, native wrap-sampled normals, linear roughness remapping and
+  a blurred macro mask. Gaussian blur in this engine clamps: it runs **before**
+  the final seam pass. This is an explicitly limited alternative to the future
+  wrap-filtered, mean-preserving recipe below. It may mirror recognizable detail
+  and drift in brightness; de-light defaults to zero and visual review is required.
+- Five BGRA8 outputs use sRGB only for BaseColor; normal compression for Normal,
+  masks compression for Height/Roughness/MacroMask. Height is an 8-bit artistic
+  preview, not displacement-quality height. No AO, channel packing or random seed.
+- Recipe values bake into a newly authored graph. Connected scalar/color nodes
+  preserve constants when Texture Graph promotes variant pins to texture type.
+  Data outputs use explicit texture-valued grayscale nodes before export.
+- Jobs pin the source data GUID and saved graph package SHA-1; dirty/changed
+  inputs invalidate subsequent operations. Receipts include exact engine build,
+  recipe, named output readback and proposed world scale. Offline PNG evidence
+  uses SHA-256. This is not yet a complete transitive dependency identity.
+- One active job per editor; eight jobs per proof session. A 180-second deadline
+  reports timeout while retaining the lock until the native task completes.
+  Each transient working graph retains exactly one named output; five renders
+  run sequentially. Readback verifies dimensions, BGRA8, normal length and
+  roughness bounds. Roles are never inferred from a multi-output array index.
+  Export uses standard `UTexture2D::Source.Init` serialization of those retained
+  TG-rendered bytes, then verifies byte equality before saving fresh packages.
+  It performs no image processing or re-render. Native TG async export was
+  rejected after isolated UE 5.8.2 trials produced intermittent zero maps even
+  though pre-export render readbacks were valid. This reproducible limitation
+  changes the export adapter, not the Texture Graph processing authority.
+- Analysis remains a read-only Python command. Six C++ operations cover capability
+  inspection, preparation, render, export, readback validation and job status.
+  The isolated guard permits only their exact native tool names through db-lyon
+  `epic.call_tool`. Live routing stays disabled; no remote-command allowlist change.
+- Production gates still include source provenance, physical limestone coverage,
+  visual seam/detail review, DirectX normal-ramp proof and compressed GPU/mip
+  readback. Successful source-mip diagnostics alone never admit a material.
+
+## Reference-host proof (2026-10-05)
+
+The [machine-readable local proof](texture-material-prep-proof.json) records
+line-ending-normalized compiled source hashes, exact UE build, recipe, graph hash and five-map hashes.
+The isolated plugin compiled successfully. A generated 128x128 fixture passed
+named render/readback, exact render-to-export byte comparison, fresh-editor
+settings checks and five-map decoded-pixel equality after reopen. The native
+registry dispatched capability inspection and exposed all six operation schemas.
+25 Python tests, four pinned-package guard tests and the four docs guards passed.
+This is local component evidence, not an exact-SHA full-project CI receipt.
+
+BaseColor seam mean was 0.000431 on X and 0.000176 on Y (linear RGB); both axes
+passed the provisional screen. Normal unit-length error was below 0.000446.
+At DeLightStrength=0.25 the mean luminance drift was **+18.54%**, correctly flagged
+for review; no physical de-light success is claimed. The labelled 2x2 preview was
+inspected: the artificial checker/ramp repeats remain visible, as expected.
+No real limestone asset, material assignment or world acceptance is claimed.
 
 ## Version and API findings
 
@@ -145,9 +204,11 @@ flowchart LR
 
 ## `TG_YACS_MaterialPrep` contract
 
-The names below are **proposed YACS parameters**, not claims about built-in Epic
-nodes or a graph already present. Author one reviewed template from installed
-Texture Graph examples where applicable; do not build arbitrary graphs per call.
+The table is the wider target contract. The current adapter accepts a narrower
+`FYacsTextureRecipe` and builds one fixed, versioned topology in a fresh run;
+callers cannot supply graph code, node types or output paths. A promoted reusable
+`.uasset` template remains deferred. The implementation limits below take
+precedence over proposed future behavior.
 
 | Parameter | Unit / allowed value | Initial candidate |
 |---|---|---|
@@ -158,7 +219,7 @@ Texture Graph examples where applicable; do not build arbitrary graphs per call.
 | `DeLightStrength` | 0..1, bounded illumination correction | 0 baseline, then 0.25 trial |
 | `ColorGain` | per-channel linear multiplier, 0.5..2 | 1,1,1 |
 | `HeightStrength` | 0..1 artistic relief contrast | 0.5, inferred only |
-| `NormalStrength` | 0..4 artistic amplitude | 1; orientation proof required |
+| `NormalStrength` | 0..2 artistic amplitude (installed native node limit) | 1; orientation proof required |
 | `RoughnessMin`, `RoughnessMax` | 0..1 with min <= max | 0.55 / 0.9, uncalibrated |
 | `MacroVariation` | 0..1 mask contrast, not automatic albedo multiplication | 0 |
 | `Seed` | integer 0..2147483647 | 0; deterministic graph binding must be proven |

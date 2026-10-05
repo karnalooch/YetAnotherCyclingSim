@@ -1,7 +1,7 @@
-# Texture Material Prep commands and adapter pseudocode
+# Texture Material Prep commands and isolated UE proof
 
 Companion to the [foundation contract](TEXTURE_MATERIAL_PREP.md), Issue #382.
-This page separates the working offline foundation from the proposed UE adapter.
+This page separates offline diagnostics, the opt-in editor adapter and pending production gates.
 
 ## Implemented commands
 
@@ -64,19 +64,19 @@ Unknown keys, non-finite/bool numbers, out-of-range parameters, reversed roughne
 limits, non-integer seeds and enabled AO are rejected. Draft recipe IDs hash the
 source identity and canonical plan. They are **not execution identities**:
 `graph_hash`, `engine_build` and `execution_identity` are null and the plan
-returns `blocked / UE_ADAPTER_NOT_IMPLEMENTED`. The future adapter must bind the
-actual graph/dependency/engine hashes before creating an executable plan.
+returns `blocked / UE_CONNECTION_REQUIRED`. The editor adapter creates its own run receipt with graph package hash, source
+data GUID, exact engine build and recipe. Offline draft IDs are never accepted
+as executable job IDs. A full transitive dependency identity remains deferred.
 
 ### Supported subset
 
-| Implemented now | Deferred until UE adapter/proof |
+| Implemented now | Still deferred |
 |---|---|
-| Opaque RGB/RGBA **8-bit PNG BaseColor**, 8..4096 px per side, <=64 MiB input | Other formats, HDR, profiled/16-bit color decoding, high-precision height inputs |
-| Explicit sRGB declaration, piecewise linearization, both seam axes, edge mean/p95/max, interior contrast and wrap gradients | TG output extraction, decoded UE compression/mips and normal angular seams |
-| Linear luminance quantiles/clipping, 8x8 low-frequency grid, row/column drift and fitted plane; before/after comparison | Physical albedo recovery or material calibration |
-| 2x2/4x4 bounded labelled previews, half-offset preview, native central seam crops and four-corner junction | Full-image band analysis at all positions, engine material screenshots and visual acceptance |
-| Resolution, source SHA-256 and proposed/unresolved world-scale metadata | Accepted physical scale/provenance and production asset admission |
-| Parameter validation and draft recipes; filesystem capability inventory | MCP registration/routing, graph mutation, processing, render, export, save/reopen |
+| Opaque RGB/RGBA 8-bit PNG BaseColor analysis, 8..4096 px, <=64 MiB | HDR, profiled/16-bit inputs and calibrated displacement |
+| Opt-in UE 5.8.2 fixed native graph, async named renders, exact-pixel serialization and five-map readback | Main project activation and reusable promoted graph template |
+| Seam/luminance metrics, normal unit length and angular seam metrics, 2x2/4x4 previews | Compressed GPU/mip readback, DirectX ramp and visual acceptance |
+| Exact engine build, graph package hash, source GUID/PNG SHA-256, proposed world scale | Full dependency manifest, accepted limestone coverage/provenance |
+| Native Toolset Registry definition, scoped db-lyon guard and isolated profile | End-to-end remote MCP transport admission and texture broker command |
 
 The decoder rejects ICC/chromaticity profiles, conflicting PNG gamma, animation,
 non-opaque alpha, grayscale and 16-bit PNG rather than silently reinterpret or
@@ -105,60 +105,101 @@ runs it without workflow changes. Synthetic cases check sRGB transfer, both axes
 equal-edge gradient defects, zero-denominator JSON, luminance changes, invalid
 inputs/parameters, PNG precision, metadata, no-overwrite and CLI evidence hashes.
 
-## Proposed UE adapter — pseudocode only
+## Implemented opt-in editor adapter
 
-The following is **not executable Python or verified Unreal API syntax**.
-Every lowercase helper is a required future YACS adapter operation, not a claim
-that Epic exposes a method with that name. Exact verified native entry points
-and unresolved reflection/linkage are recorded in the foundation contract.
+The plugin descriptor is disabled by default. Do not add it to the canonical
+project or copy over its live MCP configuration for this test. Reserve at least
+50 GiB free disk under the workspace policy. Use a new proof directory; UAT
+clears an existing packaging destination. Compile only this plugin, not YACS.
+Resolve the engine/work roots from `workspace.json`; these are the reference
+host's paths. Run from the isolated repository checkout:
 
-```text
-prepare_texture(request):
-    require approved source ID, preset ID and strict parameter schema
-    inspect exact engine build + plugin state + reflected signatures
-    require reviewed template and complete dependency hashes
-    require existing YACS guards and selected native routing admitted
-    require all output names, parameter types and precision supported
-    freeze source SHA + graph/dependency SHA + engine + recipe + output contract
-    return immutable execution plan (no source/template mutation)
-
-render_preview(plan_id):
-    acquire single editor job lock, otherwise BUSY
-    verify frozen identities again; reject missing/mismatched evidence
-    create transient graph working copy in the disposable proof context
-    bind source; set typed values; read every value back
-    configure exact output settings and verify role-to-output mapping
-    start verified async TG render; hold graph/task/result references
-    return job ID immediately
-
-on_render_complete(job):
-    reject stale/expired identity or missing outputs
-    read back named outputs; verify dimensions, precision, transfer and ranges
-    create immutable preview receipt; mark preview_ready only after checks
-    release lock only when native task has ended and readback is complete
-
-export_pbr_set(plan_id, preview_receipt):
-    acquire lock; verify plan and preview belong to the same exact identity
-    allocate a fresh server-generated run namespace
-    inspect every output path and pre-existing package before any export
-    bind all selected output settings to that namespace
-    require no hidden/extra outputs; reject any destination collision
-    export through TG: overwrite=false, save=false, export-all=false
-    await actual native completion, not a guessed sleep or void return
-    verify exact asset set, settings, dimensions and decoded pixels
-    compare export to preview (TG export may re-render)
-    save ONLY verified newly owned packages; never Save All
-    reopen in isolated proof context; collect hash + settings + pixel receipt
-    retain any partial/late output as unaccepted evidence on failure
-    release lock after actual completion; never treat timeout as cancellation
-
-validate_texture(run_id):
-    read source, uncompressed TG output, exported textures and mips
-    apply role-specific validation with the recorded policy version
-    produce 2x2/4x4 evidence, seam bands/corners and normal-orientation proof
-    report technical, scale, provenance and human-review statuses separately
-    never assign a material, touch a level or automatically promote assets
+```powershell
+$engineRoot = 'D:/yacs/engine/UE_5.8'
+$repoRoot = (Get-Location).Path
+$proofRoot = Join-Path 'D:/yacs/work' ('texture-prep-proof-' + [Guid]::NewGuid().ToString('N'))
+if (Test-Path -LiteralPath $proofRoot) { throw 'Proof destination must be new' }
+& "$engineRoot/Engine/Build/BatchFiles/RunUAT.bat" BuildPlugin `
+  "-Plugin=$repoRoot/Plugins/YacsTexturePrep/YacsTexturePrep.uplugin" `
+  "-Package=$proofRoot" -TargetPlatforms=Win64 -StrictIncludes -NoDeleteHostProject
+if ($LASTEXITCODE -ne 0) { throw 'Plugin build failed' }
+$proofProject = "$proofRoot/HostProject/HostProject.uproject"
+New-Item "$proofRoot/HostProject/.yacs-texture-prep-proof" -ItemType File | Out-Null
+Start-Process "$engineRoot/Engine/Binaries/Win64/UnrealEditor.exe" -WindowStyle Hidden `
+  -ArgumentList @($proofProject, '-unattended', '-nosplash', '-nosound', '-NoLiveCoding',
+    '-RenderOffscreen', '-ZenDataPath=D:/yacs/cache/Zen', "-ExecutePythonScript=$repoRoot/scripts/assets/texture_material_prep_ue_smoke.py")
 ```
+
+The smoke generates a deliberately discontinuous 128x128 PNG, imports it into a
+new fixture folder, registers only `YacsTexturePrep.YacsTextureTools`, verifies
+its schema and dispatch, then prepares, renders, exports and reads back five
+maps. It owns and quits only the disposable editor. Engine shutdown/exit 0 is
+**not success**: require a `texture-smoke-<uuid>/result.json` under that project's
+Saved directory with `exported_review_required`, no failure receipt, and a
+registry probe. The result contains the bundle evidence directory.
+
+Run diagnostics on that directory with the repository Python environment:
+
+```powershell
+python scripts/assets/texture_material_prep_bundle.py path/to/bundle
+# After the fresh-editor reopen script:
+python scripts/assets/texture_material_prep_bundle.py path/to/bundle --reopen path/to/reopen-evidence
+python -m unittest discover -s scripts/assets -p 'test_texture_material_prep*.py'
+node --test tools/ue-mcp/guards/YacsTextureGuard.test.js
+```
+
+The validator exits 1 on detected degenerate BaseColor, out-of-range roughness or
+non-unit normal vectors. Other seam/de-light screens remain review gates. Linear
+map channels are not sRGB-decoded. All previews are diagnostic; no image is
+processed into a production output by Python.
+
+After diagnostics, launch the **same proof project in a fresh editor process**
+with `texture_material_prep_ue_reopen.py` in place of the smoke script. It verifies
+the graph package hash and reopened texture dimensions/color/compression, then
+exports source-mip PNGs into a new `reopen-<uuid>` directory. The `--reopen` validator compares all five
+decoded PNG arrays to the original bundle; settings success alone does not prove
+pixel durability. It does not rerun the graph or save any asset.
+
+### Tool calls and guarded MCP routing
+
+Explicit registration in the proof editor:
+
+```python
+unreal.ToolsetRegistry.register_toolset_class(unreal.YacsTextureTools)
+```
+
+`InspectCapabilities`, `PrepareTexture`, `RenderPreview`, `ExportPbrSet`,
+`ValidateTexture`, `GetJobStatus` are the six native operations. Their JSON schema
+is generated from the compiled definitions; inputs use camelCase (`jobId`,
+`sourceAssetPath`, `recipe`). Registry results wrap the JSON report in
+`returnValue`. Direct Python methods use snake_case names. `PrepareTexture`
+accepts a saved source object path and `YacsTextureRecipe`; it creates a fixed
+new graph, not arbitrary caller-authored nodes. WorldSizeMeters is required as a
+positive hypothesis, never assumed to be accepted limestone coverage.
+
+For a db-lyon integration test, copy `tools/ue-mcp/texture-proof-profile.yml` as
+`ue-mcp.yml` **only in the disposable project**, with the pinned package and
+`tools/ue-mcp/guards/YacsTextureGuard.js` available at the declared relative path.
+Bind that client to the proof editor, not the open authoring project. Keep
+`nativeTools.enabled: false`: the narrow `epic.call_tool` gateway still works;
+the guard rejects other toolsets, Python, console commands and arbitrary writes.
+Do not enable `All Toolsets` or start an additional native MCP server.
+
+Example gateway payload:
+
+```json
+{
+  "action": "call_tool",
+  "toolset": "YacsTexturePrep.YacsTextureTools",
+  "tool": "YacsTexturePrep.YacsTextureTools.InspectCapabilities",
+  "input": {}
+}
+```
+
+The engine registry's direct `ExecuteTool` API expects the **bare** operation
+name. db-lyon 1.3.9 strips the qualifier before dispatch. Never bypass the guard
+with an alternate `inputJson` channel. Poll job status between phases: a timeout
+means the task is draining, not cancelled. Do not retry a write on the same job.
 
 ### Required negative UE integration cases
 
@@ -174,5 +215,5 @@ validate_texture(run_id):
 | Good metrics but unknown physical coverage or strong baked light | Review/scale gate remains open |
 | Successful export and save but fresh reopen differs | Reject durability proof |
 
-No `/yacs-editor texture-*` command exists. Do not paste pseudocode into a generic
+No `/yacs-editor texture-*` command exists. Do not paste tool calls into a generic
 remote executor or bypass the current `smoke-cube` allowlist.
