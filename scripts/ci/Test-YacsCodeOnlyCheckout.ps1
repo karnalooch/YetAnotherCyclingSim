@@ -16,6 +16,43 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+function ConvertFrom-YacsLfsListing {
+    param(
+        [Parameter(Mandatory=$true)] [string[]] $Lines,
+        [Parameter(Mandatory=$true)] [string] $Context
+    )
+
+    $records = @{}
+    foreach ($rawLine in $Lines) {
+        $line = [string]$rawLine
+        if (-not $line) {
+            continue
+        }
+
+        # git lfs ls-files --long emits:
+        # <64-char oid> <* for materialized | - for pointer> <path>
+        $match = [regex]::Match(
+            $line,
+            '^(?<oid>[0-9a-fA-F]{64}) (?<state>[*-]) (?<path>.+)$'
+        )
+        if (-not $match.Success) {
+            throw "Unexpected Git LFS listing in $Context: $line"
+        }
+
+        $path = $match.Groups['path'].Value
+        if ($records.ContainsKey($path)) {
+            throw "Duplicate Git LFS path in $Context: $path"
+        }
+
+        $records[$path] = [pscustomobject]@{
+            Oid = $match.Groups['oid'].Value.ToLowerInvariant()
+            State = $match.Groups['state'].Value
+        }
+    }
+
+    return $records
+}
+
 $RepoRoot = (Resolve-Path -LiteralPath $RepoRoot).Path
 Push-Location -LiteralPath $RepoRoot
 try {
@@ -24,42 +61,50 @@ try {
         throw 'Git LFS is required to verify the code-only checkout contract.'
     }
 
-    $lfsOutput = @(& git lfs ls-files --name-only)
+    # Enumerate committed pointers once. Supplying HEAD makes the repository tree
+    # the source of truth without spawning one git cat-file / git-lfs process per
+    # asset.
+    $headOutput = @(& git lfs ls-files --long HEAD)
     if ($LASTEXITCODE -ne 0) {
-        throw 'Could not enumerate Git LFS tracked paths.'
+        throw 'Could not enumerate committed Git LFS pointers at HEAD.'
     }
-    $lfsPaths = @(
-        $lfsOutput |
-            ForEach-Object { $_.Trim() } |
-            Where-Object { $_ }
-    )
+    $head = ConvertFrom-YacsLfsListing -Lines $headOutput -Context 'HEAD'
+
+    # Enumerate working-tree state once. Git LFS reports '*' for a materialized
+    # object and '-' for a pointer, so hundreds of per-file pointer checks are
+    # unnecessary.
+    $workOutput = @(& git lfs ls-files --long)
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Could not enumerate working-tree Git LFS state.'
+    }
+    $work = ConvertFrom-YacsLfsListing -Lines $workOutput -Context 'working tree'
 
     $materialized = [System.Collections.Generic.List[string]]::new()
     $pointerOnly = 0
     $lazyMissing = 0
 
-    foreach ($path in $lfsPaths) {
-        # The committed Git blob is the source of truth. A blobless clone may
-        # legitimately leave the working-tree path absent until it is needed,
-        # but HEAD:path must still be a valid Git LFS pointer.
-        & git cat-file blob "HEAD:$path" | & git lfs pointer --check --stdin *> $null
-        if ($LASTEXITCODE -ne 0) {
-            throw "Committed Git blob is not a valid LFS pointer: $path"
-        }
-
+    foreach ($path in @($head.Keys | Sort-Object)) {
         if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
             $lazyMissing += 1
             Write-Host ("CODE-ONLY LFS LAZY: {0}" -f $path)
             continue
         }
 
-        & git lfs pointer --check "--file=$path" *> $null
-        if ($LASTEXITCODE -eq 0) {
-            $pointerOnly += 1
-            continue
+        if (-not $work.ContainsKey($path)) {
+            throw "Working-tree Git LFS state is missing for committed pointer: $path"
         }
 
-        [void]$materialized.Add($path)
+        switch ($work[$path].State) {
+            '-' {
+                $pointerOnly += 1
+            }
+            '*' {
+                [void]$materialized.Add($path)
+            }
+            default {
+                throw "Unsupported Git LFS state for $path: $($work[$path].State)"
+            }
+        }
     }
 
     if ($materialized.Count -gt 0) {
@@ -73,7 +118,7 @@ try {
 
     Write-Host (
         "CODE-ONLY CHECKOUT PASS: tracked={0}; pointerOnly={1}; lazyMissing={2}; materialized=0." -f
-        $lfsPaths.Count,
+        $head.Count,
         $pointerOnly,
         $lazyMissing
     ) -ForegroundColor Green
