@@ -227,9 +227,10 @@ def prepare_checkout_directory(workspace: Path, name: str, run: str) -> None:
     git_dir = root / ".git"
     if not git_dir.is_dir():
         quarantine_root = workspace / "_yacs-unreal-ci" / "quarantine"
-        if quarantine_root.is_symlink() or getattr(
-            quarantine_root, "is_junction", lambda: False
-        )():
+        if (
+            quarantine_root.is_symlink()
+            or getattr(quarantine_root, "is_junction", lambda: False)()
+        ):
             raise ValueError("Unreal quarantine directory is a link/junction")
         quarantine_root.mkdir(parents=True, exist_ok=True)
         target = quarantine_root / f"{run}-{name}"
