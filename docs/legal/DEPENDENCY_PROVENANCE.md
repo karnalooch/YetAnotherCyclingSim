@@ -294,3 +294,21 @@ applies to the 30 retained tiles. Only bounded selected water/infrastructure
 layers enter the derived context; duplicate tile fragments are not unique
 entity counts. GOIB/BTN line/point 5m decorative holdbacks are authored fallback
 decisions and are explicitly distinct from geographic/regulatory measurements.
+
+## Texture prep proof candidates — 2026-10-05
+
+Official ambientCG Rock024, Rock026 and Rock042S 1K PNG packages were acquired
+for separately approved #382 texture-tooling proof only. Source pages:
+[Rock024](https://ambientcg.com/a/Rock024),
+[Rock026](https://ambientcg.com/a/Rock026),
+[Rock042S](https://ambientcg.com/a/Rock042S).
+[Provider license](https://docs.ambientcg.com/license/): CC0-1.0; attribution is
+not required, but source identity is retained. No third-party code is adopted.
+
+Original ZIPs, API metadata, per-file hashes and acquisition receipt are in the
+[authenticated draft backup](https://github.com/karnalooch/YetAnotherCyclingSim/releases/tag/untagged-98fa61b00fe49600cbd1).
+Rock024 was rejected for non-opaque alpha; Rock026 completed a five-map 512px
+proof; Rock042S is acquired only. These are proof-use candidates, not validated
+world assets. Geology, Mallorca origin and physical coverage remain unverified.
+See the [remote report](../tooling/TEXTURE_MATERIAL_PREP_REMOTE_HANDOFF.md) for
+exact input identity, archive hashes, output limits and remaining acceptance.

@@ -2,6 +2,8 @@
 
 Companion to the [foundation contract](TEXTURE_MATERIAL_PREP.md), Issue #382.
 This page separates offline diagnostics, the opt-in editor adapter and pending production gates.
+For the subsequently approved local activation, real-source proof and remote
+backup, read the [remote continuation report](TEXTURE_MATERIAL_PREP_REMOTE_HANDOFF.md).
 
 ## Implemented commands
 

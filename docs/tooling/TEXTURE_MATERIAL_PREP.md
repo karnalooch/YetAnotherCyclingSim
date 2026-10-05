@@ -2,13 +2,15 @@
 
 **Tracking:** [Issue #382](https://github.com/karnalooch/YetAnotherCyclingSim/issues/382)
 
-**Status:** opt-in UE 5.8.2 editor plugin and six native tool definitions implemented; isolated 128px GPU render/export/reopen proof passed; world activation remains disabled
+**Status:** opt-in UE 5.8.2 editor plugin and six native tool definitions implemented; isolated 128px render/export/reopen and real-source 512px render/export completed; local opt-in and remote backup recorded; remote MCP and world assignment remain disabled
 
 **Evidence date:** 2026-10-05
 
 **Inspected main:** `83b5281909c855247335f626ca8698dc06ffc6a8`
 
 **Target:** UE 5.8.2, changelist 56702186, compatible changelist 55116800
+
+See the [remote continuation report](TEXTURE_MATERIAL_PREP_REMOTE_HANDOFF.md) for the exact code/assets, backup hashes, host proof, remaining failures and remote-only recovery procedure.
 
 ## Purpose and authority
 
@@ -41,8 +43,9 @@ is a texture proof, not world or performance admission.
 This PR supplies an opt-in editor-only `Plugins/YacsTexturePrep` plugin, a fixed
 native Texture Graph builder, asynchronous named renders and exact-pixel export, explicit Toolset
 Registry definitions, an isolated db-lyon guard profile and offline diagnostics.
-The project descriptor and live MCP configuration remain unchanged. Enabling the
-plugin and registering its tools are explicit proof-project operations.
+The project descriptor in this PR and live MCP configuration remain unchanged.
+The owner subsequently authorized local descriptor opt-in and a saved-scene
+restart; that host state is backed up separately and documented in the report.
 See [commands and implementation limits](TEXTURE_MATERIAL_PREP_EXAMPLES.md).
 
 | Candidate | Evidence and decision |
@@ -53,10 +56,11 @@ See [commands and implementation limits](TEXTURE_MATERIAL_PREP_EXAMPLES.md).
 | Epic Toolset Registry | Selected opt-in tool-definition mechanism behind those guards. No second agent-facing MCP server and no `All Toolsets` enablement. |
 | Custom YACS code | Limit to recipe validation, namespace guards, parameter/readback adapters and measurements. No custom pixel-processing backend or generic editor-control framework. |
 
-The repository is not ready for activation. Texture Graph is not explicitly
-enabled in the inspected project and is disabled by default in the installed
+At the initial inspection, the repository was not ready for activation. Texture Graph was not explicitly
+enabled in the inspected project and was disabled by default in the installed
 descriptor. Neither the graph nor the named limestone source appears in tracked
-main paths. Native MCP/reflection execution is unproven. Open implementation PRs
+main paths. Native execution was unproven at that point; later proofs below supersede that
+initial gap. Remote MCP transport remains unproven. Open implementation PRs
 #338 and #381 occupied the two-branch limit in `AGENTS.md`. On 2026-10-05 the
 owner explicitly authorized a **third implementation PR for this task**. That
 bounded exception permits this independent texture foundation and its isolated adapter proof, not consumption
