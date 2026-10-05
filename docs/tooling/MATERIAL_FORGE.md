@@ -85,6 +85,17 @@ Phase A requires metallic to remain zero.
 
 These channels are not world-classification masks.
 
+## Material Maker inputs
+
+Material Forge deliberately distinguishes two external inputs:
+
+- **Material Maker 1.7 install directory** — used by `author` to read the shipped `nodes/material.mmg` definition and hash the reviewed executable;
+- **Material Maker source checkout** — used only by the Godot headless render runner.
+
+The author CLI accepts `--material-maker` (with the earlier
+`--material-maker-source` spelling retained as an alias). Provenance records
+the reviewed release/source revisions separately.
+
 ## Authoring pipeline
 
 ```text
