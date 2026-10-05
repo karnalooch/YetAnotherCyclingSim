@@ -38,8 +38,26 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
+      actions: write
       contents: write
     steps:
+      - name: Cancel obsolete texture-proof runs from pre-concurrency revisions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          workflow_id=375367740
+          branch='feat/382-texture-material-prep-foundation'
+          mapfile -t stale < <(
+            gh api "repos/$GITHUB_REPOSITORY/actions/workflows/$workflow_id/runs?branch=$branch&per_page=100" \
+              --jq ".workflow_runs[] | select(.id != $GITHUB_RUN_ID and (.status == \"in_progress\" or .status == \"queued\" or .status == \"pending\")) | .id"
+          )
+          for run_id in "${stale[@]}"; do
+            echo "Cancelling obsolete texture proof run $run_id"
+            gh api --method POST "repos/$GITHUB_REPOSITORY/actions/runs/$run_id/cancel" >/dev/null
+          done
+
       - name: Download only the pinned draft-release assets
         env:
           GH_TOKEN: ${{ github.token }}
