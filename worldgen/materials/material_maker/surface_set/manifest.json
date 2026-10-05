@@ -1,0 +1,51 @@
+{
+  "status": "MAP_CHECKS_PASS_UE_REVIEW_PENDING",
+  "items": [
+    {
+      "profile": "fractured",
+      "role": "ExposedRock",
+      "directory": "fractured",
+      "tile_metres": 2.0,
+      "applied_to_masks": false,
+      "maps_sha256": {
+        "BaseColor": "023482f97ad87059def676cb8d19c645d0972a1c06b6e16d2f67edc188077243",
+        "Normal_DX": "c88ff06885cdaae82a051801a496f0aebf90d1f2ce6c772c67c61d6249d10194",
+        "ORM": "b941f3d3e9e3d93a774f844fe7afe7ad7af318398bb16f7f103d4a6d5c7c3ac9",
+        "Height": "dd915e11a9f93cd91d0ffc9c9e7dbf6b5a69dd743d0d34daec312ab7794e0ca0"
+      }
+    },
+    {
+      "profile": "scree",
+      "role": "Scree",
+      "directory": "scree",
+      "tile_metres": 2.0,
+      "applied_to_masks": false,
+      "maps_sha256": {
+        "BaseColor": "6babc8e49248be89b464605c3c9cf427b63ac51ab42aebc05877359e902256e1",
+        "Normal_DX": "2e75301f9325efb39f37811409bebfd455d9e21bf740ca97d12ed66978290f62",
+        "ORM": "919faf3cbf33250dd100b6c5e13f8036dd6e2222b29c46b7e09fb8a5c6465df1",
+        "Height": "8d350c49fb7efb16f41a229f8f2e6bb614950bd02c0db9abb32ca625c60ad930"
+      }
+    },
+    {
+      "profile": "mineral",
+      "role": "DryMineral",
+      "directory": "mineral",
+      "tile_metres": 2.0,
+      "applied_to_masks": false,
+      "maps_sha256": {
+        "BaseColor": "856bb6f5cbb094299509d3ac558559cfa8c2139fb6447ec378152407b85116f4",
+        "Normal_DX": "e3dd7d56e4f1354eb99950c5889c380e74ff2296553b7fc603e967ee6325a88a",
+        "ORM": "1bb204a3adb7d69b54fc68f8cab0b04c838318c1343af7b2e1ee2f883ac673ac",
+        "Height": "cb4261a6e4bdd2e38ebf49efa941b94d95692d08ecd625488e931e1e5a3079b8"
+      }
+    }
+  ],
+  "mask_contract": {
+    "ExposedRock": "Existing B open-rock weight; fractured is an optional surface variant, not a separately measured geology class",
+    "Scree": "Existing artistic dry-channel A overlay only; no surveyed hillslope scree mask",
+    "DryMineral": "Existing residual presentation weight, not measured fine-soil classification"
+  },
+  "geometry_changed": false,
+  "original_limestone_preserved": true
+}

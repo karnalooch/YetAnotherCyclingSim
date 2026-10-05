@@ -14,6 +14,37 @@ This report is not a surface classification, asset approval or visual admission.
 
 ## Scope and source identities
 
+### Owner locked limestone visual direction
+
+Owner decision, 2026-10-05: exposed rock must read as **light neutral grey,
+weathered limestone**, with restrained local warm stains. Broad brown or ochre
+rock surfaces are rejected. Open slopes form a mosaic of pale rock, olive
+vegetation and straw-coloured grass. Brown remains appropriate for local mineral
+soil and forest litter; do not desaturate every surface into grey.
+
+This direction governs subsequent material choices until the owner explicitly
+changes it. Numeric shader parameters remain review candidates, not measured
+albedo or automatic 9/10 acceptance. Review Base Color and Lit separately.
+
+Regional geological evidence supports carbonate rock:
+
+- [EGU photographic reference of the Sa Calobra road](https://imaggeo.egu.eu/view/1606/)
+  describes the Tramuntana as limestone and dolomite affected by tectonic compression.
+- [Balearic Government geological description](https://intranet.caib.es/geoturfront/en/puntos_interes/42/descripcion.html)
+  identifies Lower Jurassic limestone in the nearby Torrent de Pareis canyon,
+  with karst fractures, karren and dolines. This does not establish the exact
+  formation at the current UE camera coordinate.
+- [CAIB natural monument description](https://www.caib.es/sites/espaisnaturalsprotegits/es/monumento_natural_del_torrent_de_pareis/)
+  describes grey rock walls and vertical dissolution grooves. Vertical grooves
+  alone are not evidence of broken projection; repeated texture streaks still
+  require a separate mapping test.
+
+The Rock024/Rock026 scans remain visual surrogates with unverified geological
+identity and physical coverage. The 2 m rock tile is an artistic trial.
+Use coherent provider Normal/Roughness maps and preserve their registration;
+colour grading cannot establish geological authenticity or fix unsuitable fractures.
+
+
 The owner authorized beginning the reference plan on 2026-10-05. The current
 material remains visually rejected. This checkpoint adds repeatable reference
 plates and observations; it does not import assets or mutate the Unreal scene.
@@ -205,6 +236,61 @@ complete visual shortlist remains subsequent work. No owner visual
 acceptance, clean render/reopening, performance PASS or #364 handoff is claimed.
 Houdini and new PCGEx graphs are not needed for this reference checkpoint.
 
+## Material Maker bounded limestone candidate
+
+The owner approved one procedural limestone trial following the Material Maker
+source review. The current authoring method remains the World Building Bible;
+this experiment adds no world generator or runtime dependency. The pale-grey
+owner direction remains binding. A shared periodic surface field supplies
+fractures, pores, height and colour variation. Native Material Maker derives
+the normal map; the output uses DirectX normals, ORM (R=AO/G=roughness/B=zero
+metallic), sRGB Base Color and an offline EXR height map. Tile size is an artistic
+2 m choice, not a measured source dimension. Height is not connected to UE
+displacement or terrain modification.
+
+Producer: `scripts/assets/build_material_maker_limestone.py`.
+Render and validation: `scripts/assets/render_material_maker_limestone.py`
+and `scripts/assets/check_material_maker_limestone.py`.
+The source-based Godot runner avoids the crashing packaged 1.7 CLI and passes
+2048 explicitly. It verifies native image decoding; Python checks dimensions,
+wrap-boundary steps, normal-vector lengths and zero metallic. Three-by-three
+colour and illustrative diffuse-relief previews support visual review. The
+diffuse preview is not an Unreal screenshot or a full PBR render.
+
+Local candidate artifacts live under `Saved/MaterialMaker/Limestone/candidate`.
+The importer `scripts/ue/preview_sa_calobra_material_maker.py` verifies map and
+texture identities, imports three maps into a unique unsaved asset package and
+changes only `LandscapeComponent_230.override_material`. Re-running restores
+the previous override; an assignment/check failure restores it automatically.
+It does not save the map or change camera, geometry, other components or global
+Landscape material. Imported diagnostic assets remain unsaved after rollback.
+The candidate is pending UE runtime and owner visual review; no 9/10 quality,
+whole-Landscape acceptance, performance result or saved checkpoint is claimed.
+
+The packaged CLI's `0xC0000005` occurred on both Vulkan and D3D12 before exporting
+the bundled example. Source rendering succeeds; upstream Steam initialization
+and resource-cleanup diagnostics remain in the render receipt. They do not
+substitute for image validation and must not be reported as a clean engine run.
+
+Validated locally: all four native-decoded outputs are 2048 x 2048; the EXR is
+floating-point. Two independent exports produced byte-identical map hashes.
+The observed Base Color wrap steps are approximately 0.00118/0.00093 against
+interior steps 0.00098/0.00098 in normalized sRGB, with no excess border jump
+under the bounded validator. This is not proof that repetition is invisible
+at every viewing distance. Injected dark-border and metallic-channel failures
+are rejected by `scripts/assets/test_material_maker_limestone.py` (2 tests).
+Ruff, Python compilation and documentation links/i18n/structure/freshness pass.
+UE script runtime, live rollback, material compilation, lighting and owner
+visual acceptance remain unverified until the owner runs the canary script.
+
+For the existing editor Python command field:
+
+```python
+import runpy; runpy.run_path(r"D:\yacs\project\scripts\ue\preview_sa_calobra_material_maker.py", run_name="__main__")
+```
+
+Run again to restore. Keep the level unsaved during this diagnostic preview.
+
 ## Checkpoint validation
 
 - Python Ruff check: PASS for the new producer.
@@ -224,3 +310,27 @@ Houdini and new PCGEx graphs are not needed for this reference checkpoint.
 
 This is YACS-specific reference evidence, not a new shared engineering contract;
 no Gumball promotion candidate is required.
+
+## Additional limestone-family candidates — 2026-10-06
+
+The owner requested further materials after the first limestone review and
+confirmed the daylight adjustment visually. The next bounded set comprises
+fractured limestone, loose limestone fragments and fine mineral ground.
+Producer: `scripts/assets/build_material_maker_surface_set.py`; artifacts and
+role contract: `worldgen/materials/material_maker/surface_set/manifest.json`.
+Each artistic 2 m tile contains 2048 px Base Color, DirectX normal, ORM and
+floating-point EXR height. The initial paving-like scree was rejected visually;
+the retained version uses separate multi-scale angular fragments.
+
+All twelve maps passed native decoding and the existing wrap/normal/metallic
+checks. CPU tests reject deliberately corrupted tile edges and metallic content.
+Upstream Steam/cleanup diagnostics remain in receipts. No automatic quality
+score, UE shader proof or whole-Landscape acceptance is claimed.
+
+The samples are not applied to the scene. ExposedRock uses the existing B
+open-rock domain; DryMineral is a residual presentation weight. The current
+Scree role uses the artistic A dry-channel overlay, not a surveyed hillslope
+scree class. Fractured limestone is a candidate variation within ExposedRock,
+not a new geographic classification. Placement, terrain, roads and the owner's
+lighting remain unchanged. Unreal visual comparison and mask integration remain
+subsequent work. The existing World Building Bible remains the methodology SSOT.

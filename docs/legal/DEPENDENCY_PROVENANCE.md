@@ -85,6 +85,30 @@ recording only a moving branch name.
 
 ## 4. Current ledger
 
+### Material Maker limestone authoring candidate — 2026-10-05
+
+Owner-approved bounded offline authoring trial. Material Maker is an external
+authoring application, not a YACS runtime plugin. Upstream:
+https://github.com/RodZill4/material-maker, source revision
+`4d29a815489866aae483281cf44b2cfe48d3cc3e`. The MIT licence was inspected;
+its required notice is preserved in [material-maker-MIT.txt](notices/material-maker-MIT.txt)
+and copied alongside each generated graph. The installed 1.7 `nodes/material.mmg`
+PBR output definition is adapted into the local `.ptex` graph; its exact hash,
+installed executable hash and source identity are recorded by
+`scripts/assets/build_material_maker_limestone.py`. Native normal-map nodes are
+referenced by identifier. The limestone recipe is an artistic procedural
+candidate, not a measured geological scan or accepted surface library.
+
+The packaged 1.7 CLI crashed before export on this host, also with its bundled
+rock example. Rendering uses the reviewed source through a small native-API
+runner and portable Godot 4.7.2, matching upstream desktop CI. Official acquisition:
+https://github.com/godotengine/godot-builds/releases/tag/4.7.2-stable.
+The local tool acquisition receipt retains the downloaded archive SHA-256 and
+provider digest; no engine binary or external source is vendored into YACS.
+Graph and image identities plus runtime diagnostics are recorded per render.
+No upstream contribution is part of this task.
+
+
 ### Cyclist mocap research archive — 2026-10-04
 
 **Acquired; not imported into Unreal.** The existing local research folder was

@@ -31,6 +31,7 @@ Trasa powinna:
 
 - korzystać ze zweryfikowanej rzeczywistej geometrii drogowej obszaru Sa Calobra / Coll dels Reis;
 - zachowywać wiarygodny wapienny i śródziemnomorski krajobraz Serra de Tramuntana oparty na danych rzeczywistego obszaru;
+- utrzymywać zatwierdzony przez właściciela kierunek wizualny: jasno szare odsłonięcia skał o wapiennym charakterze, miejscowe ciepłe przebarwienia, oliwkowa roślinność i słomkowe trawy między skałami; brąz należy do lokalnej ziemi i ściółki, nie do dominującego koloru skał. Referencja: [ustalenia materiałowe Sa Calobra](experiments/sa-calobra-material-reference-review-2026-10-05.md#owner-locked-limestone-visual-direction);
 - mieć pofałdowany profil z podjazdami i zjazdami;
 - zawierać zakręty o różnej trudności, w tym możliwość banked i off-camber geometry;
 - prowadzić przez trzy główne strefy:

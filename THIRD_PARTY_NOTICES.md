@@ -10,6 +10,17 @@ code or assets from the licenses listed below.
 For the provenance process and reference-only candidates, see
 [`docs/legal/DEPENDENCY_PROVENANCE.md`](docs/legal/DEPENDENCY_PROVENANCE.md).
 
+## Material Maker authoring output
+
+The bounded limestone graph adapts Material Maker's MIT-licensed PBR output
+definition. Copyright (c) 2018-present Rodolphe Suescun and contributors.
+Upstream: https://github.com/RodZill4/material-maker.
+The complete [MIT notice](docs/legal/notices/material-maker-MIT.txt) is retained.
+Exact source and output hashes are recorded in
+`worldgen/materials/material_maker/limestone_candidate/provenance.json` and the
+adjacent render receipt. Material Maker and Godot executables are not distributed
+with YACS. This is a procedural review candidate, not an accepted geological scan.
+
 ## Poly Haven source assets
 
 Provider: Poly Haven  

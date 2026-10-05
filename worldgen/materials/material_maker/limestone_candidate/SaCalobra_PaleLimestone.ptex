@@ -1,0 +1,661 @@
+{
+  "type": "graph",
+  "name": "SaCalobra Pale Limestone",
+  "parameters": {},
+  "seed_int": 2301,
+  "nodes": [
+    {
+      "name": "Limestone_Form",
+      "type": "shader",
+      "node_position": {
+        "x": 0,
+        "y": 0
+      },
+      "parameters": {
+        "seed": 23,
+        "fractures": 0.85,
+        "pores": 0.8
+      },
+      "shader_model": {
+        "name": "Limestone: fractures and weathering",
+        "inputs": [],
+        "outputs": [
+          {
+            "type": "f",
+            "f": "$(name_uv)_field.r",
+            "shortdesc": "Height"
+          },
+          {
+            "type": "f",
+            "f": "$(name_uv)_field.g",
+            "shortdesc": "Fractures"
+          },
+          {
+            "type": "f",
+            "f": "$(name_uv)_field.b",
+            "shortdesc": "Pores"
+          },
+          {
+            "type": "f",
+            "f": "$(name_uv)_field.a",
+            "shortdesc": "Variation"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "seed",
+            "label": "Seed",
+            "shortdesc": "Seed",
+            "type": "float",
+            "default": 23,
+            "min": 1,
+            "max": 999,
+            "step": 1,
+            "control": "None"
+          },
+          {
+            "name": "fractures",
+            "label": "Fracture depth",
+            "shortdesc": "Fracture depth",
+            "type": "float",
+            "default": 0.85,
+            "min": 0,
+            "max": 2,
+            "step": 0.01,
+            "control": "None"
+          },
+          {
+            "name": "pores",
+            "label": "Pore depth",
+            "shortdesc": "Pore depth",
+            "type": "float",
+            "default": 0.8,
+            "min": 0,
+            "max": 2,
+            "step": 0.01,
+            "control": "None"
+          }
+        ],
+        "code": "vec4 $(name_uv)_field = yacs_limestone($uv,$seed,$fractures,$pores);",
+        "instance": "",
+        "global": "\nfloat yacs_hash(vec2 p, float salt) {\n    return fract(sin(dot(p, vec2(127.13, 311.71)) + salt * 37.19) * 43758.5453);\n}\nvec2 yacs_gradient(vec2 p, float salt) {\n    float angle = 6.28318530718*yacs_hash(p,salt);\n    return vec2(cos(angle),sin(angle));\n}\nfloat yacs_noise(vec2 uv, float cells, float salt) {\n    vec2 p = uv * cells;\n    vec2 i = floor(p);\n    vec2 f = fract(p);\n    vec2 weight = f*f*f*(f*(f*6.0-15.0)+10.0);\n    float a = dot(yacs_gradient(mod(i,cells),salt),f);\n    float b = dot(yacs_gradient(mod(i+vec2(1.0,0.0),cells),salt),f-vec2(1.0,0.0));\n    float c = dot(yacs_gradient(mod(i+vec2(0.0,1.0),cells),salt),f-vec2(0.0,1.0));\n    float d = dot(yacs_gradient(mod(i+vec2(1.0),cells),salt),f-vec2(1.0));\n    return 0.5+0.7*mix(mix(a,b,weight.x),mix(c,d,weight.x),weight.y);\n}\nvec3 yacs_cells(vec2 uv, float count, float salt) {\n    vec2 p = uv*count;\n    vec2 origin = floor(p);\n    vec2 local = fract(p);\n    float first = 100.0;\n    float second = 100.0;\n    float cell_id = 0.0;\n    for (int y=-1; y<=1; y++) {\n        for (int x=-1; x<=1; x++) {\n            vec2 offset = vec2(float(x),float(y));\n            vec2 index = mod(origin+offset,count);\n            vec2 point = vec2(yacs_hash(index,salt),yacs_hash(index,salt+7.0));\n            vec2 delta = offset+0.15+0.7*point-local;\n            float distance2 = dot(delta,delta);\n            if (distance2 < first) {\n                second = first;\n                first = distance2;\n                cell_id = yacs_hash(index,salt+19.0);\n            } else {\n                second = min(second,distance2);\n            }\n        }\n    }\n    return vec3(sqrt(first),sqrt(second)-sqrt(first),cell_id);\n}\nvec4 yacs_limestone(vec2 uv, float seed, float fractures, float pores) {\n    vec2 warp = vec2(yacs_noise(uv,8.0,seed),yacs_noise(uv,8.0,seed+3.0))-0.5;\n    vec2 detail_warp = vec2(yacs_noise(uv,24.0,seed+5.0),yacs_noise(uv,24.0,seed+9.0))-0.5;\n    vec2 q = uv+0.025*warp+0.004*detail_warp;\n    vec3 slab = yacs_cells(q,7.0,seed+11.0);\n    float variation = yacs_noise(q,4.0,seed+31.0);\n    float middle = yacs_noise(q,32.0,seed+41.0);\n    float fine = yacs_noise(q,128.0,seed+47.0);\n    float grain = yacs_noise(q,384.0,seed+51.0);\n    float width = mix(0.013,0.045,yacs_noise(q,16.0,seed+13.0));\n    float crack = 1.0-smoothstep(0.0,width,slab.y);\n    float shoulder = 1.0-smoothstep(0.01,0.16,slab.y);\n    float broken = smoothstep(0.42,0.65,yacs_noise(q,12.0,seed+17.0));\n    crack *= broken;\n    shoulder *= broken;\n    vec3 secondary = yacs_cells(q,19.0,seed+83.0);\n    float small_cracks = (1.0-smoothstep(0.0,0.055,secondary.y));\n    small_cracks *= smoothstep(0.50,0.72,yacs_noise(q,20.0,seed+85.0));\n    vec3 holes = yacs_cells(q,91.0,seed+61.0);\n    float pits = (1.0-smoothstep(0.015,0.15,holes.x))*smoothstep(0.72,0.87,holes.z);\n    float flakes = smoothstep(0.18,0.52,abs(2.0*middle-1.0));\n    float chips = smoothstep(0.18,0.52,abs(2.0*yacs_noise(q,69.0,seed+67.0)-1.0));\n    float height = 0.55 + 0.10*(variation-0.5) + 0.065*(middle-0.5);\n    height += 0.030*(fine-0.5) + 0.011*(grain-0.5);\n    height -= fractures*(0.065*crack+0.04*shoulder+0.024*small_cracks);\n    height -= pores*0.022*pits + 0.042*flakes+0.018*chips;\n    return vec4(clamp(height,0.0,1.0),max(crack,0.45*small_cracks),pits,\n                clamp(0.42*variation+0.35*middle+0.23*fine,0.0,1.0));\n}\n"
+      }
+    },
+    {
+      "name": "Limestone_Color",
+      "type": "shader",
+      "node_position": {
+        "x": 420,
+        "y": -220
+      },
+      "parameters": {
+        "brightness": 0.72
+      },
+      "shader_model": {
+        "name": "Pale neutral limestone",
+        "inputs": [
+          {
+            "name": "crack",
+            "type": "f",
+            "default": "0.0",
+            "label": "crack",
+            "function": true
+          },
+          {
+            "name": "pore",
+            "type": "f",
+            "default": "0.0",
+            "label": "pore",
+            "function": true
+          },
+          {
+            "name": "variation",
+            "type": "f",
+            "default": "0.0",
+            "label": "variation",
+            "function": true
+          }
+        ],
+        "outputs": [
+          {
+            "type": "rgb",
+            "rgb": "vec3($(name_uv)_tone+0.002,$(name_uv)_tone+0.003,$(name_uv)_tone+0.004)",
+            "shortdesc": "Base Color"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "brightness",
+            "label": "Brightness (sRGB)",
+            "shortdesc": "Brightness (sRGB)",
+            "type": "float",
+            "default": 0.72,
+            "min": 0.5,
+            "max": 0.85,
+            "step": 0.01,
+            "control": "None"
+          }
+        ],
+        "code": "float $(name_uv)_tone = clamp($brightness+0.12*($variation($uv)-0.5)-0.055*$crack($uv)-0.016*$pore($uv),0.0,1.0);",
+        "instance": "",
+        "global": ""
+      }
+    },
+    {
+      "name": "Limestone_Response",
+      "type": "shader",
+      "node_position": {
+        "x": 420,
+        "y": 130
+      },
+      "parameters": {},
+      "shader_model": {
+        "name": "Roughness and shallow cavity",
+        "inputs": [
+          {
+            "name": "crack",
+            "type": "f",
+            "default": "0.0",
+            "label": "crack",
+            "function": true
+          },
+          {
+            "name": "pore",
+            "type": "f",
+            "default": "0.0",
+            "label": "pore",
+            "function": true
+          },
+          {
+            "name": "variation",
+            "type": "f",
+            "default": "0.0",
+            "label": "variation",
+            "function": true
+          },
+          {
+            "name": "height",
+            "type": "f",
+            "default": "0.0",
+            "label": "height",
+            "function": true
+          }
+        ],
+        "outputs": [
+          {
+            "type": "f",
+            "f": "clamp(0.74+0.09*$variation($uv)+0.04*$pore($uv),0.0,1.0)",
+            "shortdesc": "Roughness"
+          },
+          {
+            "type": "f",
+            "f": "clamp(1.0-0.16*$crack($uv)-0.12*$pore($uv),0.0,1.0)",
+            "shortdesc": "AO"
+          },
+          {
+            "type": "f",
+            "f": "1.0-$height($uv)",
+            "shortdesc": "Depth"
+          }
+        ],
+        "parameters": [],
+        "code": "",
+        "instance": "",
+        "global": ""
+      }
+    },
+    {
+      "name": "Height_Normal",
+      "type": "normal_map2",
+      "node_position": {
+        "x": 450,
+        "y": 450
+      },
+      "parameters": {
+        "size": 11,
+        "strength": 0.85,
+        "buffer": 1,
+        "param2": 0
+      }
+    },
+    {
+      "export": {},
+      "name": "PBR_Output",
+      "node_position": {
+        "x": 1040,
+        "y": 100
+      },
+      "parameters": {
+        "albedo_color": {
+          "a": 1,
+          "b": 1,
+          "g": 1,
+          "r": 1,
+          "type": "Color"
+        },
+        "ao": 1,
+        "depth_scale": 0,
+        "emission_energy": 1,
+        "flags_transparent": false,
+        "metallic": 0,
+        "normal": 1,
+        "roughness": 1,
+        "size": 11,
+        "sss": 1
+      },
+      "seed_int": 0,
+      "shader_model": {
+        "shortdesc": "Static PBR Material",
+        "longdesc": "PBR material with maps generated as static images",
+        "code": "",
+        "exports": {
+          "YACS/Textures": {
+            "name": "YACS/Textures",
+            "files": [
+              {
+                "type": "texture",
+                "file_name": "$(path_prefix)_BaseColor.png",
+                "output": 0
+              },
+              {
+                "type": "texture",
+                "file_name": "$(path_prefix)_ORM.png",
+                "output": 1
+              },
+              {
+                "type": "texture",
+                "file_name": "$(path_prefix)_Normal_DX.png",
+                "output": 10
+              },
+              {
+                "type": "texture",
+                "file_name": "$(path_prefix)_Height.exr",
+                "output": 8
+              }
+            ]
+          }
+        },
+        "global": "",
+        "inputs": [
+          {
+            "default": "vec3(1.0)",
+            "group_size": 7,
+            "label": "",
+            "name": "albedo_tex",
+            "type": "rgb"
+          },
+          {
+            "default": "$metallic",
+            "label": "",
+            "name": "metallic_tex",
+            "type": "f"
+          },
+          {
+            "default": "1.0",
+            "label": "",
+            "name": "roughness_tex",
+            "type": "f"
+          },
+          {
+            "default": "vec3(0.0)",
+            "label": "",
+            "name": "emission_tex",
+            "type": "rgb"
+          },
+          {
+            "default": "vec3(0.5)",
+            "label": "",
+            "name": "normal_tex",
+            "type": "rgb"
+          },
+          {
+            "default": "1.0",
+            "label": "",
+            "name": "ao_tex",
+            "type": "f"
+          },
+          {
+            "default": "0.0",
+            "label": "",
+            "name": "depth_tex",
+            "type": "f"
+          },
+          {
+            "default": "1.0",
+            "label": "",
+            "name": "opacity_tex",
+            "type": "f"
+          },
+          {
+            "default": "0.0",
+            "label": "",
+            "name": "sss_tex",
+            "type": "f"
+          }
+        ],
+        "instance": "",
+        "name": "Static PBR Material",
+        "outputs": [
+          {
+            "rgba": "vec4($albedo_tex($uv), $opacity_tex($uv))",
+            "type": "rgba"
+          },
+          {
+            "rgb": "vec3($ao_tex($uv), $roughness_tex($uv), $metallic_tex($uv))",
+            "type": "rgb"
+          },
+          {
+            "rgb": "$emission_tex($uv)",
+            "type": "rgb"
+          },
+          {
+            "rgb": "$normal_tex($uv)*vec3(-1.0, 1.0, -1.0)+vec3(1.0, 0.0, 1.0)",
+            "type": "rgb"
+          },
+          {
+            "f": "clamp($depth_tex($uv), 0.0, 1.0)",
+            "type": "f"
+          },
+          {
+            "f": "$sss_tex($uv)",
+            "type": "f"
+          },
+          {
+            "rgba": "vec4(vec3($metallic_tex($uv)), 1.0-$roughness_tex($uv))",
+            "type": "rgba"
+          },
+          {
+            "rgb": "$normal_tex($uv)*vec3(-1.0, 1.0, -1.0)+vec3(1.0, 0.0, 1.0)",
+            "type": "rgb"
+          },
+          {
+            "f": "1.0-$depth_tex($uv)",
+            "type": "f"
+          },
+          {
+            "f": "$ao_tex($uv)",
+            "type": "f"
+          },
+          {
+            "rgb": "$normal_tex($uv)*vec3(-1.0)+vec3(1.0)",
+            "type": "rgb"
+          },
+          {
+            "rgba": "vec4($metallic_tex($uv), $ao_tex($uv), 1.0, 1.0-$roughness_tex($uv))",
+            "type": "rgba"
+          },
+          {
+            "f": "$metallic_tex($uv)",
+            "type": "f"
+          },
+          {
+            "f": "$roughness_tex($uv)",
+            "type": "f"
+          }
+        ],
+        "parameters": [
+          {
+            "default": {
+              "a": 1,
+              "b": 1,
+              "g": 1,
+              "r": 1
+            },
+            "label": "Albedo",
+            "name": "albedo_color",
+            "type": "color"
+          },
+          {
+            "control": "None",
+            "default": 1,
+            "label": "Metallic",
+            "max": 1,
+            "min": 0,
+            "name": "metallic",
+            "step": 0.01,
+            "type": "float"
+          },
+          {
+            "control": "None",
+            "default": 1,
+            "label": "Roughness",
+            "max": 1,
+            "min": 0,
+            "name": "roughness",
+            "step": 0.01,
+            "type": "float"
+          },
+          {
+            "control": "None",
+            "default": 1,
+            "label": "Emission",
+            "max": 1,
+            "min": 0,
+            "name": "emission_energy",
+            "step": 0.01,
+            "type": "float"
+          },
+          {
+            "control": "None",
+            "default": 1,
+            "label": "Normal",
+            "max": 10,
+            "min": 0,
+            "name": "normal",
+            "step": 0.01,
+            "type": "float"
+          },
+          {
+            "control": "None",
+            "default": 1,
+            "label": "Ambient occlusion",
+            "max": 1,
+            "min": 0,
+            "name": "ao",
+            "step": 0.01,
+            "type": "float"
+          },
+          {
+            "control": "None",
+            "default": 0.5,
+            "label": "Depth",
+            "max": 1,
+            "min": 0,
+            "name": "depth_scale",
+            "step": 0.01,
+            "type": "float"
+          },
+          {
+            "default": false,
+            "label": "Transparency",
+            "name": "flags_transparent",
+            "type": "boolean"
+          },
+          {
+            "control": "None",
+            "default": 0,
+            "label": "Subsurf. scatter.",
+            "max": 1,
+            "min": 0,
+            "name": "sss",
+            "step": 0.01,
+            "type": "float"
+          },
+          {
+            "default": 11,
+            "first": 6,
+            "label": "Size",
+            "last": 13,
+            "name": "size",
+            "type": "size"
+          }
+        ],
+        "preview_shader": [
+          "shader_type spatial;",
+          "render_mode blend_mix,cull_back,diffuse_burley,specular_schlick_ggx",
+          "$if $(connected:opacity_tex) and $(param:flags_transparent)",
+          ",depth_prepass_alpha",
+          "$fi",
+          ";",
+          "",
+          "uniform sampler2D texture_albedo : source_color; // $output(0)",
+          "uniform sampler2D texture_emission : hint_default_black; // $output(2)",
+          "uniform sampler2D texture_normal : hint_normal; // $output(3)",
+          "uniform sampler2D texture_orm : hint_default_white; // $output(1)",
+          "uniform sampler2D texture_subsurface_scattering : hint_default_white; // $output(5)",
+          "uniform sampler2D texture_depth : hint_default_black; // $output(4)",
+          "uniform int depth_min_layers = 64;",
+          "uniform int depth_max_layers = 64;",
+          "uniform vec2 depth_flip = vec2(1.0);",
+          "",
+          "uniform vec3 uv1_scale;",
+          "uniform vec3 uv1_offset;",
+          "",
+          "$definitions",
+          "",
+          "void vertex() {",
+          "\tUV=UV*uv1_scale.xy+uv1_offset.xy;",
+          "}",
+          "",
+          "void fragment() {",
+          "\tvec2 base_uv = UV;",
+          "\tint texture_size = textureSize(texture_albedo, 0).x;",
+          "\tif (texture_size < 256) {",
+          "\t\tbase_uv = floor(float(texture_size)*base_uv+0.5)/float(texture_size);",
+          "\t}",
+          "$if $(connected:depth_tex)",
+          "\t{",
+          "$begin_generate",
+          "\t\tfloat depth_scale = 0.2*$depth_scale;",
+          "$end_generate",
+          "\t\tvec3 view_dir = normalize(normalize(-VERTEX)*mat3(TANGENT*depth_flip.x,-BINORMAL*depth_flip.y,NORMAL));",
+          "\t\tfloat num_layers = mix(float(depth_max_layers),float(depth_min_layers), abs(dot(vec3(0.0, 0.0, 1.0), view_dir)));",
+          "\t\tfloat layer_depth = 1.0 / num_layers;",
+          "\t\tfloat current_layer_depth = 0.0;",
+          "\t\tvec2 P = view_dir.xy * depth_scale;",
+          "\t\tvec2 delta = P / num_layers / dot(VIEW, NORMAL);",
+          "\t\tvec2  ofs = base_uv;",
+          "\t\tfloat depth = textureLod(texture_depth, ofs,0.0).r;",
+          "\t\tfloat current_depth = 0.0;",
+          "\t\twhile(current_depth < depth) {",
+          "\t\t\tofs -= delta;",
+          "\t\t\tdepth = textureLod(texture_depth, ofs,0.0).r;",
+          "\t\t\tcurrent_depth += layer_depth;",
+          "\t\t}",
+          "\t\tvec2 prev_ofs = ofs + delta;",
+          "\t\tfloat after_depth  = depth - current_depth;",
+          "\t\tfloat before_depth = textureLod(texture_depth, prev_ofs, 0.0).r - current_depth + layer_depth;",
+          "\t\tfloat weight = after_depth / (after_depth - before_depth);",
+          "\t\tofs = mix(ofs,prev_ofs,weight);",
+          "\t\tbase_uv=ofs;",
+          "\t}",
+          "$fi",
+          "$begin_generate",
+          "\tvec4 albedo_tex = texture(texture_albedo, base_uv);",
+          "\tALBEDO = $albedo_color.rgb * mix(pow((albedo_tex + vec4(0.055))/vec4(1.055), vec4(2.4)), albedo_tex/vec4(12.92), lessThan(albedo_tex, vec4(0.04045))).rgb;",
+          "\tvec4 orm_tex = texture(texture_orm, base_uv);",
+          "\tMETALLIC = $metallic*orm_tex.b;",
+          "\tROUGHNESS = $roughness*orm_tex.g;",
+          "\tSPECULAR = 0.5;",
+          "\tNORMAL_MAP = texture(texture_normal, base_uv).rgb;",
+          "\tNORMAL_MAP_DEPTH = $normal;",
+          "\tvec3 emission_tex = texture(texture_emission, base_uv).rgb;",
+          "\tEMISSION = emission_tex*$emission_energy;",
+          "\tAO = orm_tex.r;",
+          "\tAO_LIGHT_AFFECT = $ao;",
+          "$if $(connected:opacity_tex) and $(param:flags_transparent)",
+          "\tALPHA = albedo_tex.a;",
+          "$fi",
+          "$if $(connected:sss_tex)",
+          "\tfloat sss_tex = texture(texture_subsurface_scattering, base_uv).r;",
+          "\tSSS_STRENGTH=$sss*sss_tex;",
+          "$fi",
+          "$end_generate",
+          "}",
+          ""
+        ]
+      },
+      "type": "material_export"
+    }
+  ],
+  "connections": [
+    {
+      "from": "Limestone_Form",
+      "from_port": 1,
+      "to": "Limestone_Color",
+      "to_port": 0
+    },
+    {
+      "from": "Limestone_Form",
+      "from_port": 1,
+      "to": "Limestone_Response",
+      "to_port": 0
+    },
+    {
+      "from": "Limestone_Form",
+      "from_port": 2,
+      "to": "Limestone_Color",
+      "to_port": 1
+    },
+    {
+      "from": "Limestone_Form",
+      "from_port": 2,
+      "to": "Limestone_Response",
+      "to_port": 1
+    },
+    {
+      "from": "Limestone_Form",
+      "from_port": 3,
+      "to": "Limestone_Color",
+      "to_port": 2
+    },
+    {
+      "from": "Limestone_Form",
+      "from_port": 3,
+      "to": "Limestone_Response",
+      "to_port": 2
+    },
+    {
+      "from": "Limestone_Form",
+      "from_port": 0,
+      "to": "Limestone_Response",
+      "to_port": 3
+    },
+    {
+      "from": "Limestone_Form",
+      "from_port": 0,
+      "to": "Height_Normal",
+      "to_port": 0
+    },
+    {
+      "from": "Limestone_Color",
+      "from_port": 0,
+      "to": "PBR_Output",
+      "to_port": 0
+    },
+    {
+      "from": "Limestone_Response",
+      "from_port": 0,
+      "to": "PBR_Output",
+      "to_port": 2
+    },
+    {
+      "from": "Limestone_Response",
+      "from_port": 1,
+      "to": "PBR_Output",
+      "to_port": 5
+    },
+    {
+      "from": "Limestone_Response",
+      "from_port": 2,
+      "to": "PBR_Output",
+      "to_port": 6
+    },
+    {
+      "from": "Height_Normal",
+      "from_port": 0,
+      "to": "PBR_Output",
+      "to_port": 4
+    }
+  ]
+}
