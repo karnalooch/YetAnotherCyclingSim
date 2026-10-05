@@ -55,7 +55,13 @@ jobs:
           )
           for run_id in "${stale[@]}"; do
             echo "Cancelling obsolete texture proof run $run_id"
-            gh api --method POST "repos/$GITHUB_REPOSITORY/actions/runs/$run_id/cancel" >/dev/null
+            gh api --method POST "repos/$GITHUB_REPOSITORY/actions/runs/$run_id/cancel" >/dev/null || true
+            sleep 2
+            status="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" --jq '.status')"
+            if [[ "$status" != "completed" ]]; then
+              echo "Run $run_id did not respond to normal cancellation; forcing cancellation."
+              gh api --method POST "repos/$GITHUB_REPOSITORY/actions/runs/$run_id/force-cancel" >/dev/null
+            fi
           done
 
       - name: Download only the pinned draft-release assets
