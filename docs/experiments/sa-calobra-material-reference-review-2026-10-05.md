@@ -3,6 +3,10 @@
 Status: **reference brief ready for visual review; no owner acceptance recorded**.
 Work item: [#363](https://github.com/karnalooch/YetAnotherCyclingSim/issues/363),
 draft [#381](https://github.com/karnalooch/YetAnotherCyclingSim/pull/381).
+
+Follow-up: the owner authorized the proposed candidate comparison. See the
+[21-source surface comparison](sa-calobra-surface-candidates-2026-10-05.md)
+for the next checkpoint; discovery leads below retain their earlier context.
 Authority selected through [the documentation index](../README.md):
 [World Building Bible](../WORLD_BUILDING_BIBLE.md),
 [Roadmap](../ROADMAP.md) and [Asset Plan](../ASSET_PLAN.md).
@@ -167,7 +171,7 @@ Sa Calobra suitability. Provider descriptions do not replace visual sample proof
 | Scree/gravel | [Rock Ground](https://polyhaven.com/a/rock_ground), [Rocks Ground 09](https://polyhaven.com/a/rocks_ground_09), [Gravel Ground 01](https://polyhaven.com/a/gravel_ground_01) | Compare angularity, fines and pale-grey continuity; source colour alone is insufficient |
 | Dry mineral ground | Gravel Ground 01; [Gravelly Sand](https://polyhaven.com/a/gravelly_sand); [Dry Ground Rocks](https://polyhaven.com/a/dry_ground_rocks); [Rocky Trail](https://polyhaven.com/a/rocky_trail) | Compare fines versus stones; cracked parched dirt and warm brown colour may conflict with the local reference |
 | Sparse dry grass | Existing `sparse_grass` | Legacy import does not establish dry local appearance; two credible alternatives missing |
-| Forest floor | Existing `forest_ground_03`; [Forest Leaves 04](https://polyhaven.com/a/forest_leaves_04); [Dry Decay Leaves](https://polyhaven.com/a/dry_decay_leaves) | Dense autumn litter may mismatch the observed patchy rock/litter floor; species remain unverified |
+| Forest floor | Existing `forrest_ground_03`; [Forest Leaves 04](https://polyhaven.com/a/forest_leaves_04); [Dry Decay Leaves](https://polyhaven.com/a/dry_decay_leaves) | Dense autumn litter may mismatch the observed patchy rock/litter floor; species remain unverified |
 | Cuts/fills | Reconsider exposed-rock and gravel leads separately | CUT and FILL do not yet each have three fit-for-role comparisons |
 
 Verified on provider pages on 2026-10-05: Rock Ground is 1.5 m wide; Gravel

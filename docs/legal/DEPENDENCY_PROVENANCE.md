@@ -35,6 +35,38 @@ into YACS.
 
 ## 3. Minimum record for a new external source
 
+### Issue #363 surface comparison, 2026-10-05
+
+The owner authorized a visual candidate comparison. Poly Haven CC0 texture
+files are **approved for bounded local review copies only**: one 1K JPEG
+Diffuse channel per candidate, metadata and derived comparison plates, outside
+Git under canonical `work/2b-asset-comparison-20261005`. This is not approval of
+the production material set, full-resolution acquisition or Unreal import.
+Candidate IDs: `rock_face_03`, `rock_face_04`, `dry_riverbed_rock`,
+`seaside_rock`, `rocks_ground_06`, `rocky_terrain`, `rock_ground`,
+`rocks_ground_09`, `gravel_ground_01`, `gravelly_sand`, `dry_ground_rocks`,
+`dry_ground_01`, `grass_ground`, `withered_grass`, `sparse_grass`,
+`forest_floor`, `forrest_ground_03`, `forest_leaves_04`, `dry_decay_leaves`,
+and `excavated_soil_wall`.
+
+Sources: [Poly Haven asset licence](https://polyhaven.com/license),
+[official API](https://polyhaven.com/our-api) and
+[API terms](https://github.com/Poly-Haven/Public-API/blob/master/ToS.md),
+reviewed 2026-10-05. Asset files are CC0-1.0. Website example renders are
+separate protected content and are not copied. API requests identify
+`YACS-SurfaceReview/1.0`; the report credits Poly Haven. Capture exact returned
+URLs, provider MD5/bytes, downloaded SHA-256, authors, metric dimensions and
+metadata hashes in the local review receipt before generating the comparison.
+Production lifecycle and asset approval remain separate; no purchased asset,
+new plugin or runtime dependency is authorized by this review record.
+
+ambientCG `Rock024` is **approved for local review preview only**, under the
+[provider's CC0 licence](https://docs.ambientcg.com/license/), which explicitly
+includes material preview renders. Record returned metadata/preview identity
+and hashes if acquired; no production download/import is approved. Its source
+page is [Rock 024](https://ambientcg.com/view?id=Rock024). Missing scale or
+channel evidence must remain explicit rather than inferred from the thumbnail.
+
 Record, before inclusion:
 
 1. canonical upstream URL/provider;
