@@ -134,6 +134,21 @@ under the existing compile-reuse policy; never build the open authoring project.
 Loading follows UE 5.8's installed `FileHelpers.h` and Epic's
 [Python command-line workflow](https://dev.epicgames.com/documentation/en-us/unreal-engine/scripting-the-unreal-editor-using-python).
 
+Use `Invoke-YacsSaCalobraMaterialReload.ps1 -ExpectedHead <sha> -ArtifactRoot
+<new absolute directory> -WorkspaceConfig <canonical workspace.json>` from that
+isolated checkout after preparing verified reusable modules. The wrapper
+resolves engine/cache paths through the workspace configuration and explicitly
+passes `-ZenDataPath`, matching the normal workspace launcher. Without that
+argument, the first attempted commandlet selected the default user cache and
+restarted Zen with a different run context; it was stopped before Python ran.
+The corrected invocation retains the canonical cache path. Process exit, fresh
+asset consumption and renderer/performance admission remain separate results.
+The next attempt read the candidate and all component roots but exited 1 because
+other mounted Content packages were still LFS pointers (`Invalid value for
+PACKAGE_FILE_TAG`). Hydrate the complete mounted Unreal Content tree, not just
+selected map dependencies. The wrapper rejects those pointers before launch;
+successful consumer JSON from an erroneous process is not reload admission.
+
 ## Version-matched tools audit
 
 Verified editor: UE 5.8.2, changelist 56702186. Consulted Epic's
