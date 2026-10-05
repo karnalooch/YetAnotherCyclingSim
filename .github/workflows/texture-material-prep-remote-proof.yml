@@ -31,7 +31,7 @@ env:
 
 jobs:
   runner-preflight:
-    name: Read-only remote runner preflight
+    name: Scoped remote runner preflight
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 5
     permissions:
@@ -40,7 +40,28 @@ jobs:
       group: yacs-unreal-ci-${{ github.repository }}
       cancel-in-progress: false
     steps:
-      - name: Inspect active Unreal processes without mutation
+      - name: Checkout stale-lock helper only
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        env:
+          GIT_LFS_SKIP_SMUDGE: "1"
+        with:
+          ref: ${{ env.TARGET_SHA }}
+          path: _texture-prep-preflight
+          fetch-depth: 1
+          lfs: false
+          clean: true
+          persist-credentials: false
+          sparse-checkout: scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1
+          sparse-checkout-cone-mode: false
+
+      - name: Release only stale Unreal processes scoped to Actions workspace
+        shell: pwsh
+        working-directory: _texture-prep-preflight
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1 -Workspace $env:GITHUB_WORKSPACE
+
+      - name: Inspect active Unreal processes after scoped cleanup
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
