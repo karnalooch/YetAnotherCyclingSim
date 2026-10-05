@@ -104,7 +104,7 @@ def write_pointer(workspace: Path, name: str) -> None:
     os.replace(temporary, path)
 
 
-def select(workspace: Path) -> str:
+def select(workspace: Path, fallback: str = WARM) -> str:
     path = pointer_path(workspace)
     if path.exists():
         pointer = json.loads(path.read_text(encoding="utf-8"))
@@ -133,7 +133,8 @@ def select(workspace: Path) -> str:
         name = max(candidates)[1]
         write_pointer(workspace, name)
         return name
-    return WARM
+    safe_path(workspace, fallback)
+    return fallback
 
 
 def publish(
@@ -319,7 +320,7 @@ def retain_local_lfs_objects(root: Path, archive: Path) -> None:
 
 def cleanup(workspace: Path, active: str, run: str) -> None:
     # Re-read before deletion. Publication is serialized by workflow concurrency.
-    if active != select(workspace):
+    if active != select(workspace, fallback=active):
         raise ValueError("Active cache changed before cleanup")
     for root in workspace.glob("_unreal-build-*"):
         root = safe_path(workspace, root.name)
@@ -356,7 +357,8 @@ def main() -> None:
         )
         print(f"UNREAL WORKSPACE: published={args.worktree}")
     else:
-        active = select(workspace)
+        fallback = f"_unreal-build-{args.run}"
+        active = select(workspace, fallback=fallback)
         root = safe_path(workspace, active)
         if (root / ".git").exists():
             # actions/checkout itself can replace tracked assets before the
