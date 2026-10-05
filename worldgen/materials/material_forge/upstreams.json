@@ -1,0 +1,36 @@
+{
+  "material_maker": {
+    "role": "producer",
+    "repository": "https://github.com/RodZill4/material-maker",
+    "release": "1.7",
+    "release_commit": "4c6cea67b659e1eb472f91590e06b2b1c5245916",
+    "validated_source_commit": "4d29a815489866aae483281cf44b2cfe48d3cc3e",
+    "license": "MIT",
+    "vendored": false,
+    "notes": "YACS adapts the reviewed MIT PBR output node into generated .ptex graphs; upstream source/binaries remain external."
+  },
+  "godot": {
+    "role": "headless_renderer",
+    "repository": "https://github.com/godotengine/godot",
+    "release": "4.7.2-stable",
+    "commit": "ed1daf0bf001b61586d9930840f2f1394092c079",
+    "license": "MIT",
+    "vendored": false
+  },
+  "materialpilot": {
+    "role": "reference_only",
+    "repository": "https://github.com/SS-360/materialpilot",
+    "reviewed_commit": "e3721eadd042e077f3aa7d472ad83c5594c7ea5b",
+    "license": "Apache-2.0",
+    "code_copied": false,
+    "notes": "Architecture/reference only; not a YACS dependency."
+  },
+  "tool_materialmaker_mcp": {
+    "role": "reference_only",
+    "repository": "https://github.com/graysonchalmers/Tool-MaterialMaker-MCP",
+    "reviewed_commit": "1488b94c02f85e88ef6563e33d753c3bfdfaac5a",
+    "license": "MIT",
+    "code_copied": false,
+    "notes": "Workflow/reference only; not a YACS dependency."
+  }
+}
