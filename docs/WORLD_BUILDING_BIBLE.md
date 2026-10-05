@@ -3638,3 +3638,41 @@ alone cannot admit a silently tapered shoulder. The d439bf3 native run proved
 the no-nose outline but exposed 0.063 m shoulder width at station 187.375 m;
 its support result is superseded by the smooth exit-rejoin correction and
 must not be reported as full shoulder acceptance.
+
+---
+
+## Material Forge ownership contract (Issue #387)
+
+YACS uses Material Forge as an **offline surface-appearance producer**, not as a
+second world-generation system.
+
+Ownership is explicit:
+
+- **BOB** owns road/terrain geometry, cut/fill and earthworks;
+- **PCG/PCGEx** owns world semantics, classification, placement and authoritative
+  spatial masks;
+- **Material Forge** owns PBR surface appearance and material-local detail masks.
+
+The rule is:
+
+> **PCG/PCGEx owns WHO / WHAT / WHERE. Material Forge owns HOW IT LOOKS.**
+
+Material Forge may consume authoritative masks and produce local appearance
+breakup such as asphalt cracks, patches, rock pores or soil pebbles. It may not
+derive authoritative forest/rock/road/soil/snow classification from slope,
+height, curvature, distance-to-road or similar world data.
+
+For runtime delivery, Material Forge may perform a lossless semantic
+**pack-only** operation that copies already-authoritative masks into RGBA control
+textures. The source masks remain canonical, every source hash is retained, and
+the pack receipt must state `classification_changed=false`.
+
+The implementation contract, commands, upstream pins, validation gates and UE
+canary are documented in
+[tooling/MATERIAL_FORGE.md](tooling/MATERIAL_FORGE.md).
+
+Material Maker and Godot remain external offline authoring tools. They are not
+runtime dependencies. No Godot fork or broad Material Maker vendoring is
+admitted without a demonstrated blocker and a separate provenance/architecture
+decision.
+\n
