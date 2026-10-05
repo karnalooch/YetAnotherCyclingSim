@@ -30,6 +30,9 @@ env:
   REMOTE_RECEIPT_SHA256: 4443f39c5e7ea7cc68df26c04e36bcc78dd9eb40d6fe9411ddd45b2ffe344b46
   ROCK026_JOB: 7EE0347149883740027D7DB63B63BD90
   ROCK026_SOURCE_ID: 31edfe9c1bbb4394ad28b12447a76ed5
+  ARCHIVE_ASSET_ID: 612344128
+  MANIFEST_ASSET_ID: 612344125
+  REMOTE_RECEIPT_ASSET_ID: 612346837
 
 jobs:
   backup-audit:
@@ -71,7 +74,15 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$BACKUP_ROOT"
-          gh release download "$BACKUP_TAG" --repo "$GITHUB_REPOSITORY" --dir "$BACKUP_ROOT"
+          api="https://api.github.com/repos/$GITHUB_REPOSITORY/releases/assets"
+          headers=(
+            -H "Accept: application/octet-stream"
+            -H "Authorization: Bearer $GH_TOKEN"
+            -H "X-GitHub-Api-Version: 2022-11-28"
+          )
+          curl -L --fail --silent --show-error "${headers[@]}" "$api/$ARCHIVE_ASSET_ID" -o "$BACKUP_ROOT/texture-prep-checkpoint.zip"
+          curl -L --fail --silent --show-error "${headers[@]}" "$api/$MANIFEST_ASSET_ID" -o "$BACKUP_ROOT/restore-manifest.json"
+          curl -L --fail --silent --show-error "${headers[@]}" "$api/$REMOTE_RECEIPT_ASSET_ID" -o "$BACKUP_ROOT/remote-backup-receipt.json"
           test -f "$BACKUP_ROOT/texture-prep-checkpoint.zip"
           test -f "$BACKUP_ROOT/restore-manifest.json"
           test -f "$BACKUP_ROOT/remote-backup-receipt.json"
@@ -412,12 +423,16 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          if (-not (Get-Command gh.exe -ErrorAction SilentlyContinue)) {
-            throw 'GitHub CLI is not installed on the self-hosted runner; authenticated draft-release download is unavailable.'
-          }
           New-Item -ItemType Directory -Path $env:BACKUP_ROOT -Force | Out-Null
-          gh release download $env:BACKUP_TAG --repo $env:GITHUB_REPOSITORY --dir $env:BACKUP_ROOT
-          if ($LASTEXITCODE -ne 0) { throw 'Authenticated draft-release download failed.' }
+          $headers = @{
+            Accept = 'application/octet-stream'
+            Authorization = "Bearer $env:GH_TOKEN"
+            'X-GitHub-Api-Version' = '2022-11-28'
+          }
+          $api = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/releases/assets"
+          Invoke-WebRequest -Uri "$api/$env:ARCHIVE_ASSET_ID" -Headers $headers -OutFile (Join-Path $env:BACKUP_ROOT 'texture-prep-checkpoint.zip') -MaximumRedirection 10
+          Invoke-WebRequest -Uri "$api/$env:MANIFEST_ASSET_ID" -Headers $headers -OutFile (Join-Path $env:BACKUP_ROOT 'restore-manifest.json') -MaximumRedirection 10
+          Invoke-WebRequest -Uri "$api/$env:REMOTE_RECEIPT_ASSET_ID" -Headers $headers -OutFile (Join-Path $env:BACKUP_ROOT 'remote-backup-receipt.json') -MaximumRedirection 10
 
           $expected = @{
             'texture-prep-checkpoint.zip' = @{ sha = $env:ARCHIVE_SHA256; bytes = 284770805 }
