@@ -68,6 +68,17 @@ jobs:
           $bootstrap = Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup/scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
           & $bootstrap -Workspace $env:GITHUB_WORKSPACE
 
+      - name: Respect shared Unreal host ownership
+        shell: pwsh
+        working-directory: _bootstrap-cleanup
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+          $state | ConvertTo-Json -Depth 8 | Write-Host
+          if ($state.status -ne 'IDLE') {
+            throw "Unreal runner host is already owned; status=$($state.status). Local/unknown Editors always win over remote CI."
+          }
+
       - name: Select persistent Unreal cache before isolated cleanup
         shell: pwsh
         working-directory: _bootstrap-cleanup
@@ -136,6 +147,15 @@ jobs:
         shell: pwsh
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
+          $ErrorActionPreference = 'Stop'
+          $helper = Join-Path (Get-Location) 'scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
+          if (-not (Test-Path -LiteralPath $helper -PathType Leaf)) {
+            $helper = Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup/scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
+          }
+          if (-not (Test-Path -LiteralPath $helper -PathType Leaf)) {
+            throw 'Unreal workspace lock helper is unavailable from both active checkout and bootstrap.'
+          }
+          & $helper -Workspace $env:GITHUB_WORKSPACE
           $proof = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/Unreal'
           if (Test-Path -LiteralPath $proof) {
             Remove-Item -LiteralPath $proof -Recurse -Force
@@ -638,6 +658,15 @@ jobs:
         shell: pwsh
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
+          $ErrorActionPreference = 'Stop'
+          $helper = Join-Path (Get-Location) 'scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
+          if (-not (Test-Path -LiteralPath $helper -PathType Leaf)) {
+            $helper = Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup/scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
+          }
+          if (-not (Test-Path -LiteralPath $helper -PathType Leaf)) {
+            throw 'Unreal workspace lock helper is unavailable from both active checkout and bootstrap.'
+          }
+          & $helper -Workspace $env:GITHUB_WORKSPACE
           $proof = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/Unreal'
           if (Test-Path -LiteralPath $proof) {
             Remove-Item -LiteralPath $proof -Recurse -Force

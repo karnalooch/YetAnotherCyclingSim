@@ -157,6 +157,11 @@
       "reason": "Broker-managed non-mutating source-asset lifecycle/performance audit; manual dispatch remains fallback."
     },
     {
+      "file": "texture-material-prep-remote-proof.yml",
+      "state": "CURRENT",
+      "reason": "Scoped #382/#383 remote-only texture backup audit and disposable UE 5.8.2 Rock026 reopen proof; branch/PR-gated, no world mutation or MCP cutover."
+    },
+    {
       "file": "windows-probe.yml",
       "state": "CURRENT",
       "reason": "Cheap generic manual GitHub-hosted Windows toolchain probe."

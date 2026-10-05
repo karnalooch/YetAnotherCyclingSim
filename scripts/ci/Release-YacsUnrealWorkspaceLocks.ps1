@@ -281,7 +281,8 @@ if ($Remaining.Count -gt 0) {
 $LockedLogCandidates = @(
     (Join-Path $Workspace 'Saved/Logs/YetAnotherCyclingSim.log'),
     (Join-Path $Workspace '_stage3g-full-worktree/Saved/Logs/YetAnotherCyclingSim.log'),
-    (Join-Path $Workspace '_unreal-ci-warm/Saved/Logs/YetAnotherCyclingSim.log')
+    (Join-Path $Workspace '_unreal-ci-warm/Saved/Logs/YetAnotherCyclingSim.log'),
+    (Join-Path $Workspace '_unreal-ci-warm/Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log')
 ) | Select-Object -Unique
 
 foreach ($LockedLog in $LockedLogCandidates) {

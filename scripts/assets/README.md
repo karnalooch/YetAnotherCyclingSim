@@ -47,6 +47,27 @@ py scripts/assets/download_stage3g_assets.py --force
 py scripts/assets/download_stage3g_assets.py --max-total-mib 2500
 ```
 
+## Independent Texture Material Prep foundation
+
+`texture_material_prep.py` analyzes immutable opaque 8-bit sRGB PNG BaseColor
+inputs, writes bounded 2x2/4x4 tiling evidence and seam/luminance metrics, and
+prepares validated draft Texture Graph recipes. It never processes production
+pixels, connects to Unreal or changes existing assets. Recipes explicitly remain
+blocked in this offline CLI until a live UE connection binds the execution.
+The opt-in `YacsTexturePrep` plugin implements the separate editor adapter.
+`texture_material_prep_bundle.py` measures its five-map export;
+`texture_material_prep_ue_smoke.py` and `texture_material_prep_ue_reopen.py` run
+only in a marked disposable proof project. `restore_texture_prep_checkpoint.py`
+verifies the dedicated #382 single-archive recovery manifest (safe member names,
+exact member set, per-file size/SHA-256 and archive identity) and restores only
+to an empty isolated directory; it does not consume the separate workspace-data
+manifest format.
+
+See the [commands and supported subset](../../docs/tooling/TEXTURE_MATERIAL_PREP_EXAMPLES.md)
+and [architecture / limestone proof plan](../../docs/tooling/TEXTURE_MATERIAL_PREP.md).
+Evidence goes to a fresh ignored `Saved/RuntimeProof/TextureMaterialPrep/` run.
+Run `python scripts/assets/test_texture_material_prep.py` for synthetic checks.
+
 ## Safety / validation boundary
 
 The downloader does **not** import anything into Unreal Engine, create `.uasset` files, choose Nanite/LOD settings, modify the Stage 3 map, scatter foliage, or change gameplay/route logic.

@@ -191,6 +191,79 @@ class UnrealWorkspaceTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "link/junction"):
             cache.select(self.workspace)
 
+    def test_fresh_fallback_avoids_incomplete_locked_warm_directory(self):
+        self.state["CompilePassed"] = False
+        self.state["ProofPassed"] = False
+        self.write_state()
+
+        warm = self.workspace / cache.WARM
+        warm.mkdir()
+        payload = warm / "Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log"
+        payload.parent.mkdir(parents=True)
+        payload.write_bytes(b"locked fixture")
+
+        selected = cache.select(self.workspace, fallback="_unreal-build-101-1")
+
+        self.assertEqual(selected, "_unreal-build-101-1")
+        self.assertTrue(warm.exists())
+        self.assertEqual(payload.read_bytes(), b"locked fixture")
+        self.assertFalse((self.workspace / selected).exists())
+
+    def test_incomplete_warm_checkout_is_quarantined_without_deleting_outputs(self):
+        warm = self.workspace / cache.WARM
+        warm.mkdir()
+        payload = warm / "Intermediate/huge-cache.bin"
+        payload.parent.mkdir(parents=True)
+        payload.write_bytes(b"preserve me")
+
+        with patch.dict(
+            os.environ,
+            {
+                "GITHUB_REPOSITORY": "karnalooch/YetAnotherCyclingSim",
+                "GITHUB_SERVER_URL": "https://github.com",
+            },
+        ):
+            cache.prepare_checkout_directory(self.workspace, cache.WARM, "101-1")
+
+        quarantine = (
+            self.workspace / "_yacs-unreal-ci/quarantine" / f"101-1-{cache.WARM}"
+        )
+        self.assertFalse(warm.exists())
+        self.assertEqual(
+            (quarantine / "Intermediate/huge-cache.bin").read_bytes(),
+            b"preserve me",
+        )
+
+    def test_checkout_origin_is_normalized_before_actions_checkout(self):
+        subprocess.run(
+            [
+                "git",
+                "remote",
+                "add",
+                "origin",
+                "https://example.invalid/wrong/repository.git",
+            ],
+            cwd=self.root,
+            check=True,
+        )
+        with patch.dict(
+            os.environ,
+            {
+                "GITHUB_REPOSITORY": "karnalooch/YetAnotherCyclingSim",
+                "GITHUB_SERVER_URL": "https://github.com",
+            },
+        ):
+            cache.prepare_checkout_directory(self.workspace, self.name, "101-1")
+
+        self.assertEqual(
+            subprocess.check_output(
+                ["git", "remote", "get-url", "origin"],
+                cwd=self.root,
+                text=True,
+            ).strip(),
+            "https://github.com/karnalooch/YetAnotherCyclingSim",
+        )
+
     def test_linked_metadata_migration_preserves_outputs_and_origin(self):
         subprocess.run(
             [
