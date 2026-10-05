@@ -42,12 +42,15 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: read
-    env:
-      BACKUP_ROOT: ${{ runner.temp }}/texture-prep-backup
-      RESTORE_ROOT: ${{ runner.temp }}/texture-prep-restored
-      BASELINE_ROOT: ${{ runner.temp }}/rock026-baseline
-
     steps:
+      - name: Initialize isolated proof paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "BACKUP_ROOT=$RUNNER_TEMP/texture-prep-backup" >> "$GITHUB_ENV"
+          echo "RESTORE_ROOT=$RUNNER_TEMP/texture-prep-restored" >> "$GITHUB_ENV"
+          echo "BASELINE_ROOT=$RUNNER_TEMP/rock026-baseline" >> "$GITHUB_ENV"
+
       - name: Checkout exact PR head
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -305,13 +308,16 @@ jobs:
     concurrency:
       group: yacs-unreal-ci-${{ github.repository }}
       cancel-in-progress: false
-    env:
-      BACKUP_ROOT: ${{ runner.temp }}\texture-prep-backup-${{ github.run_id }}-${{ github.run_attempt }}
-      RESTORE_ROOT: ${{ runner.temp }}\texture-prep-restored-${{ github.run_id }}-${{ github.run_attempt }}
-      PROOF_ROOT: ${{ runner.temp }}\texture-prep-plugin-${{ github.run_id }}-${{ github.run_attempt }}
-      EVIDENCE_ROOT: ${{ runner.temp }}\texture-prep-remote-evidence-${{ github.run_id }}-${{ github.run_attempt }}
-
     steps:
+      - name: Initialize isolated proof paths
+        shell: pwsh
+        run: |
+          $suffix = "$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          "BACKUP_ROOT=$(Join-Path $env:RUNNER_TEMP ('texture-prep-backup-' + $suffix))" >> $env:GITHUB_ENV
+          "RESTORE_ROOT=$(Join-Path $env:RUNNER_TEMP ('texture-prep-restored-' + $suffix))" >> $env:GITHUB_ENV
+          "PROOF_ROOT=$(Join-Path $env:RUNNER_TEMP ('texture-prep-plugin-' + $suffix))" >> $env:GITHUB_ENV
+          "EVIDENCE_ROOT=$(Join-Path $env:RUNNER_TEMP ('texture-prep-remote-evidence-' + $suffix))" >> $env:GITHUB_ENV
+
       - name: Checkout exact PR head without LFS payloads
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         env:
