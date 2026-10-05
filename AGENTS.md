@@ -175,6 +175,38 @@ Owner directive, 2026-10-01 (Issue #308): keep downloaded/materialized LFS asset
 - `docs/YACS_WORLD_AUTHORING_LIBRARY.md` defines reusable implementation/catalog systems; it does not override the Bible's world architecture.
 - New or substantially revised architecture/workflow diagrams must follow `docs/DIAGRAM_STYLE.md`, the YACS adoption of the Gumball Blueprint Mermaid language.
 
+### Official Unreal MCP adoption — blocked planning decision
+
+Owner decision, 2026-10-05: #384 is the bounded official Unreal MCP adoption
+workstream, informally "step 2.5", between #363 and #364 inside M3. It is
+**blocked until #363 is fully completed and merged**, with whole-Landscape
+visual acceptance, saved/fresh-rendered consumer proof, deferred 2A/2B
+performance admission and all required technical/review gates. No implementation,
+plugin activation, implementation PR or Ready/In progress promotion before that
+gate. Documentation-only planning (#385) may merge without closing/unblocking #384.
+#364 retains its #363 dependency and also depends on #384; the remaining sequence
+is unchanged. A closed-as-not-planned issue or green CI alone is insufficient.
+
+Read [the current MCP decision and bounded DoD](docs/UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption)
+before MCP work. The official Epic server is the future control-plane target;
+the pinned db-lyon integration remains the current retained baseline until proven
+cutover. The repository already targets UE 5.8; this decision does not migrate it.
+
+MCP is orchestration/interface, never authority. BOB, World Authority,
+route/physics contracts, tests, proof producers and governance keep their
+responsibilities. Native PCG is the foundation; PCGEx is a pinned extension for
+named gaps. Preserve already proven PCGEx work and all current safety boundaries.
+From world-finishing step 3 onward, do not build custom generic Unreal-control
+workarounds when official Epic MCP supports the case within YACS constraints.
+Custom toolsets contain only YACS domain knowledge/contracts. Existing producers,
+CI commandlets and proof collectors remain valid; this is not a blanket rewrite.
+
+The spike proves one map/scene, Actor/UObject read, existing Automation Test and
+real BOB inspection with result/proof/receipt. Prove guard parity before cutover;
+never assume native tools inherit the old guard. After success, **STOP adding
+infrastructure and return to #364**. Missing/unsafe capability is an explicit
+blocker, not permission to create another platform or weaken a gate.
+
 ### Frozen geometry and environment fidelity — Issue #335
 
 Owner decision, 2026-10-04: existing terrain and roads are frozen for the current
