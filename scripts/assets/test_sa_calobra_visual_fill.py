@@ -4,10 +4,19 @@ import unittest
 
 import numpy as np
 
-from scripts.assets.prepare_sa_calobra_visual_fill import repair
+from scripts.assets.prepare_sa_calobra_visual_fill import _four_neighbor_sum, repair
 
 
 class VisualFillTests(unittest.TestCase):
+    def test_four_neighbor_sum_has_no_aoi_wrap(self):
+        values = np.zeros((3, 4), dtype=np.float32)
+        values[1, 0] = 1
+        result = _four_neighbor_sum(values)
+        self.assertEqual(result[1, 1], 1)
+        self.assertEqual(result[1, -1], 0)
+        self.assertEqual(result[0, 0], 1)
+        self.assertEqual(result[2, 0], 1)
+
     def test_gap_filled_without_mutating_evidence(self):
         weights = np.zeros((9, 9, 4), dtype=np.uint8)
         weights[..., 0] = 255
