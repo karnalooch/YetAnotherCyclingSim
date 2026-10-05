@@ -198,9 +198,7 @@ class UnrealWorkspaceTests(unittest.TestCase):
         payload.parent.mkdir(parents=True)
         payload.write_bytes(b"locked fixture")
 
-        selected = cache.select(
-            self.workspace, fallback="_unreal-build-101-1"
-        )
+        selected = cache.select(self.workspace, fallback="_unreal-build-101-1")
 
         self.assertEqual(selected, "_unreal-build-101-1")
         self.assertTrue(warm.exists())
