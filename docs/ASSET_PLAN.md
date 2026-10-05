@@ -14,7 +14,9 @@ Ten dokument odpowiada na cztery pytania:
 3. W którym etapie roadmapy dany asset ma wejść do projektu?
 4. Jak go walidujemy, wersjonujemy i utrzymujemy?
 
-Assety mają wspierać jedną fikcyjną trasę alpejską 20–30 minut. MVP nie jest katalogiem rowerów, postaci ani regionów — priorytetem jest spójna wizualnie, wydajna i grywalna trasa.
+Assety mają wspierać aktualną trasę Sa Calobra zgodnie z wymaganiami produktu i roadmapą. Bieżące zadanie #363 obejmuje cały istniejący Landscape 2016,5 × 2016,5 m; nie rozszerza go na pełną trasę. MVP nie jest katalogiem rowerów, postaci ani regionów — priorytetem jest spójna wizualnie, wydajna i grywalna trasa.
+
+W #363 dobór zaczyna się od [referencji i porównania kandydatów](experiments/sa-calobra-material-reference-review-2026-10-05.md). Obecny materiał jest odrzuconym prototypem. Historyczne wpisy Alpine oraz ich statusy importu i walidacji zachowują znaczenie dla dawnych dowodów; nie zatwierdzają przydatności do Sa Calobra ani aktualnej kolejności zakupów. Sześć wymaganych ról to odsłonięta skała, rumosz/żwir, suche podłoże mineralne, podłoże z rzadką suchą trawą, lokalne podłoże leśne oraz istniejące wykopy/nasypy. Nowe źródła przechodzą pełny cykl opisany poniżej; ten przegląd nie zatwierdza ani nie pozyskuje assetów.
 
 ### 1.1 Dwa typy assetów
 

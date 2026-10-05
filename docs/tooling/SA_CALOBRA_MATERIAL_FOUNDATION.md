@@ -6,6 +6,14 @@ Methodology authority: [World Building Bible](../WORLD_BUILDING_BIBLE.md).
 Delivery order: [Roadmap](../ROADMAP.md). This workflow describes a candidate,
 not completed visual, reload or performance admission.
 
+**2026-10-05 decision:** the current material appearance is rejected. The recipe
+and mechanics below describe the retained prototype, not the accepted target.
+Work has returned to [references and candidate discovery](../experiments/sa-calobra-material-reference-review-2026-10-05.md).
+Unknown ground must receive a deliberately selected, visually approved fallback;
+the prototype's reuse of `sparse_grass` is not that approval. Complete reference
+and surface-library review before acquisition and controlled Unreal samples,
+then admit samples before authoring the replacement whole-Landscape blend.
+
 ## Inputs and evidence boundaries
 
 Resolve project, data, work and map through `scripts/manage_local_workspace.py`

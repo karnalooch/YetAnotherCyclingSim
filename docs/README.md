@@ -149,6 +149,8 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 
 ## Evidence, experiments and history
 
+- [Sa Calobra material reference review — 2026-10-05](experiments/sa-calobra-material-reference-review-2026-10-05.md) — whole-area aerial observations, ground-reference gaps and preliminary asset leads; reference gate remains open.
+
 - [Sa Calobra surface coverage audit — 2026-10-04](experiments/sa-calobra-surface-coverage-2026-10-04.md) — read-only candidate evidence: sampling support, unresolved rock/soil classification and review priorities; no production admission.
 
 These documents remain valuable but no longer define the active roadmap hierarchy:
