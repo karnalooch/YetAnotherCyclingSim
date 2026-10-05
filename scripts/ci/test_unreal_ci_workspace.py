@@ -192,6 +192,10 @@ class UnrealWorkspaceTests(unittest.TestCase):
             cache.select(self.workspace)
 
     def test_fresh_fallback_avoids_incomplete_locked_warm_directory(self):
+        self.state["CompilePassed"] = False
+        self.state["ProofPassed"] = False
+        self.write_state()
+
         warm = self.workspace / cache.WARM
         warm.mkdir()
         payload = warm / "Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log"
