@@ -276,6 +276,7 @@ def prepare_checkout_directory(workspace: Path, name: str, run: str) -> None:
             f"{actual_origin!r} -> {expected_origin!r}"
         )
 
+
 def retain_local_lfs_objects(root: Path, archive: Path) -> None:
     """Archive private LFS object bytes; never move a shared linked Git store."""
     if not (root / ".git").is_dir():
