@@ -1,0 +1,31 @@
+{
+  "issue": 363,
+  "status": "SAVED_CANDIDATE_NOT_ADMITTED",
+  "engine_version": "5.8.2-56702186",
+  "material": "/Game/Generated/YACS/SaCalobra/MaterialFoundation/M_Foundation_312f9bdd499b",
+  "recipe_sha256": "8475d473436674189a5061e701d6a05d50b5ad4a238dd5a3dcbc3a9867fd218d",
+  "producer_sha256": "337ad2716e296fb0f487241f793e27a4fe082fd972ada44ae40bd58e4e0c494e",
+  "input_manifest_sha256": "42237bea4c537c0576d1db71a8cb45d2185d37fd827de25e1cfe07fcb2f3bca3",
+  "input_fingerprint": "27bb905f7de99a7fea8f751d1adc68190f5df0d2bceff79bd314635764eaf3b7",
+  "saved_map_sha256": "276d1621fa083850f6d603b6d115b01b74c9a92c182254d15302e786abfbf29c",
+  "assets": [
+    {
+      "path": "Content/Generated/YACS/SaCalobra/MaterialFoundation/M_Foundation_312f9bdd499b.uasset",
+      "sha256": "f240c54c82ba409c0df5acb347284ed6b91d18c706a106c8a6fb4b6f5f75d469",
+      "size_bytes": 81571
+    },
+    {
+      "path": "Content/Generated/YACS/SaCalobra/MaterialFoundation/T_Weights_312f9bdd499b.uasset",
+      "sha256": "d45321077cd7dcd3159427796c15d54aca6c0d834ad0435949ab94fd4fd2b4dd",
+      "size_bytes": 20459365
+    }
+  ],
+  "live_component_material_roots_matched": 1024,
+  "scene_snapshot_equal": true,
+  "map_saved": false,
+  "fresh_consumer_reload": "PENDING",
+  "visual_acceptance": "PENDING",
+  "performance": "PENDING_2B",
+  "classification_admission": false,
+  "limestone_suitability": "UNVERIFIED_PRESENTATION_PLACEHOLDER"
+}

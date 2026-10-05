@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "issue": 363,
+  "engine": "5.8.2-56702186",
+  "map": "/Game/Worlds/SaCalobra/L_SaCalobraAccepted_20261004",
+  "package": "/Game/Generated/YACS/SaCalobra/MaterialFoundation",
+  "input_manifest_relative": "world-data/sa-calobra-working-v1/material-foundation-v3-2026-10-05/material-input-manifest.json",
+  "functions": {
+    "texture": "/Engine/Functions/Engine_MaterialFunctions01/Texturing/WorldAlignedTexture",
+    "normal": "/Engine/Functions/Engine_MaterialFunctions01/Texturing/WorldAlignedNormal"
+  },
+  "neutral_ground_color_linear": [0.9, 0.9, 0.9],
+  "neutral_ground_roughness": 0.9,
+  "neutral_fallback": {
+    "id": "unclassified_ground_presentation_fallback",
+    "texture_family": "/Game/Prototype/Environment/Stage3G/Imported/Textures/T_Stage3G_Meadow",
+    "source_asset": "sparse_grass",
+    "tile_size_m": 3.0,
+    "admission": "Decorative PBR fallback only; no soil/grass classification or planting authority"
+  },
+  "layers": [
+    {
+      "id": "open_ground_vegetation_fallback",
+      "weight_channel": "R",
+      "texture_family": "/Game/Prototype/Environment/Stage3G/Imported/Textures/T_Stage3G_Meadow",
+      "source_asset": "sparse_grass",
+      "tile_size_m": 3.0
+    },
+    {
+      "id": "forest_floor_fallback",
+      "weight_channel": "G",
+      "texture_family": "/Game/Prototype/Environment/Stage3G/Imported/Textures/T_Stage3G_ForestGround",
+      "source_asset": "forrest_ground_03",
+      "tile_size_m": 3.0
+    },
+    {
+      "id": "historical_rock_fallback",
+      "weight_channel": "B",
+      "texture_family": "/Game/Prototype/Environment/Stage3G/Imported/Textures/T_Stage3G_HighAlpine",
+      "source_asset": "rocky_terrain",
+      "tile_size_m": 4.0,
+      "limestone_suitability": "UNVERIFIED_PRESENTATION_PLACEHOLDER"
+    }
+  ],
+  "displacement": "FORBIDDEN",
+  "source_provenance": "docs/legal/DEPENDENCY_PROVENANCE.md",
+  "limits": "Presentation fallbacks only; no current-cover/species/limestone admission or planting authority. Exact earthworks appearance is a separate consumer of existing geometry; no generated cut/fill masks."
+}
