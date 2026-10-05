@@ -49,9 +49,22 @@ no geographic admission.
 
 `scripts/ue/inspect_sa_calobra_material_foundation.py` reads the installed
 functions' pins/default descriptions and the current actor inventory.
-It also follows each component material's parent chain to confirm the visible
-consumer, rather than checking only the Landscape actor property. The first
-saved candidate matched all 1024 component roots in the live editor.
+It also follows each component's generated `MaterialInstances` parent chains.
+The installed UE 5.8 `GetMaterial(0)` implementation returns the assigned
+Landscape material and cannot by itself establish generated render-instance
+consumption. Earlier GetMaterial-based 1024-component readbacks prove assignment;
+they are not generated-instance or rendered-frame admission. The corrected
+instance readback is required independently of the actor property.
+UE Python's `get_editor_property` rejects these non-editor-visible arrays.
+`UYacsTextureAuditLibrary::DescribeLandscapeMaterialInstances` therefore reads
+their existing reflected native objects without mutation and follows constant
+and dynamic instance parents. It adds no module/plugin dependency. Its source
+contracts are installed UE 5.8.2 `LandscapeComponent.h`, `LandscapeEdit.cpp`,
+`UnrealType.h` and `MaterialInstance.h`. Old authoring binaries can still inspect
+assignment but explicitly report native instance verification unavailable.
+The saved consumer requires the newly built audit and fails before material
+application when it is absent. Build and run in the isolated verification
+checkout; do not substitute Live Coding for new UFUNCTION reflection registration.
 `scripts/ue/sa_calobra_material_foundation.py` runs in the existing editor:
 
 ```python

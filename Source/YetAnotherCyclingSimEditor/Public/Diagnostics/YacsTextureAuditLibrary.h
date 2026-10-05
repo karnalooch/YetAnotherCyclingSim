@@ -5,8 +5,10 @@
 #include "YacsTextureAuditLibrary.generated.h"
 
 class UTexture2D;
+class UActorComponent;
+class UMaterialInterface;
 
-/** Editor-only native texture metadata absent from the Python reflection API. */
+/** Editor-only native rendering metadata absent from the Python reflection API. */
 UCLASS()
 class YETANOTHERCYCLINGSIMEDITOR_API UYacsTextureAuditLibrary : public UBlueprintFunctionLibrary
 {
@@ -16,6 +18,10 @@ public:
 	/** Read derived format/residency without changing source pixels or saving assets. */
 	UFUNCTION(BlueprintCallable, Category = "YACS|Diagnostics")
 	static FString DescribeTexture(UTexture2D* Texture);
+
+	/** Read Landscape render-instance parents absent from Python editor properties. */
+	UFUNCTION(BlueprintCallable, Category = "YACS|Diagnostics")
+	static FString DescribeLandscapeMaterialInstances(UActorComponent* Component, UMaterialInterface* ExpectedMaterial);
 
 	/** Finish only the explicitly selected texture builds; never change source art. */
 	UFUNCTION(BlueprintCallable, Category = "YACS|Diagnostics")

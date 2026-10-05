@@ -58,20 +58,24 @@ def inspect():
         unreal.EditorActorSubsystem
     ).get_all_level_actors()
     consumers = []
+    audit = getattr(
+        unreal.YacsTextureAuditLibrary, "describe_landscape_material_instances", None
+    )
     for actor in actors:
         if isinstance(actor, unreal.Landscape):
             components = actor.get_components_by_class(unreal.LandscapeComponent)
             roots = {}
+            assigned = actor.get_editor_property("landscape_material")
             for component in components:
-                material = component.get_material(0)
-                seen = set()
-                while isinstance(material, unreal.MaterialInstance):
-                    if material.get_path_name() in seen:
-                        raise RuntimeError("Cyclic component material parent")
-                    seen.add(material.get_path_name())
-                    material = material.get_editor_property("parent")
-                path = material.get_path_name() if material else None
-                roots[path] = roots.get(path, 0) + 1
+                if audit is None:
+                    continue
+                observed = json.loads(audit(component, assigned))
+                if not observed.get("all_instances_match"):
+                    raise RuntimeError(
+                        "Native material audit differs: " + str(observed)
+                    )
+                path = assigned.get_path_name()
+                roots[path] = roots.get(path, 0) + observed["render_instance_count"]
             consumers.append(
                 {
                     "actor": actor.get_path_name(),
@@ -80,6 +84,9 @@ def inspect():
                     ),
                     "component_count": len(components),
                     "component_material_roots": roots,
+                    "root_readback": "NATIVE_MATERIAL_INSTANCES_PARENT_CHAINS"
+                    if audit
+                    else "UNAVAILABLE_OLD_BINARY_ASSIGNMENT_ONLY",
                 }
             )
     report = {

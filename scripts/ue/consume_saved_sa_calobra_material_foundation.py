@@ -11,6 +11,13 @@ REPO = Path(__file__).resolve().parents[2]
 
 
 def consume(report_path, *, restore=False, require_fresh=False, baseline=False):
+    audit = getattr(
+        unreal.YacsTextureAuditLibrary, "describe_landscape_material_instances", None
+    )
+    if audit is None:
+        raise RuntimeError(
+            "Native render-instance audit unavailable; build the isolated checkout"
+        )
     if restore and baseline:
         raise ValueError("Choose baseline or restore")
     foundation = runpy.run_path(
@@ -93,16 +100,14 @@ def consume(report_path, *, restore=False, require_fresh=False, baseline=False):
             raise RuntimeError("Frozen Landscape topology differs")
         if landscape.get_editor_property("landscape_material") != material:
             raise RuntimeError("Landscape material property did not update")
+        instance_count = 0
         for component in components:
-            root = component.get_material(0)
-            seen = set()
-            while isinstance(root, unreal.MaterialInstance):
-                if root.get_path_name() in seen:
-                    raise RuntimeError("Cyclic material parent")
-                seen.add(root.get_path_name())
-                root = root.get_editor_property("parent")
-            if root != material:
-                raise RuntimeError("Landscape component did not consume the material")
+            observed = json.loads(audit(component, material))
+            if not observed.get("all_instances_match"):
+                raise RuntimeError(
+                    "Native Landscape render-instance audit differs: " + str(observed)
+                )
+            instance_count += observed["render_instance_count"]
     except Exception:
         landscape.set_editor_property("landscape_material", previous["original"])
         raise
@@ -114,6 +119,7 @@ def consume(report_path, *, restore=False, require_fresh=False, baseline=False):
         "material": material.get_path_name() if material else None,
         "component_count": len(components),
         "component_roots_verified": len(components),
+        "render_instances_verified": instance_count,
         "scene_snapshot_equal": True,
         "engine_version": unreal.SystemLibrary.get_engine_version(),
         "receipt_sha256": digest(receipt_path),

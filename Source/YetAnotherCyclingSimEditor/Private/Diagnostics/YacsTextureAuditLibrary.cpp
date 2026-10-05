@@ -6,6 +6,60 @@
 #include "Serialization/JsonWriter.h"
 #include "PixelFormat.h"
 #include "TextureCompiler.h"
+#include "Components/ActorComponent.h"
+#include "Materials/MaterialInstance.h"
+#include "UObject/UnrealType.h"
+
+FString UYacsTextureAuditLibrary::DescribeLandscapeMaterialInstances(UActorComponent* Component, UMaterialInterface* ExpectedMaterial)
+{
+	if (!IsValid(Component) || !IsValid(ExpectedMaterial) || Component->GetClass()->GetPathName() != TEXT("/Script/Landscape.LandscapeComponent"))
+	{
+		return TEXT("{\"error\":\"invalid Landscape component or expected material\"}");
+	}
+	const TSharedRef<FJsonObject> Report = MakeShared<FJsonObject>();
+	int32 InstanceCount = 0;
+	bool bAllMatch = true;
+	// Both native arrays are UPROPERTY(TextExportTransient), not editor-visible
+	// Python properties. Reflection reads their objects without mutating them.
+	for (const FName Name : {FName(TEXT("MaterialInstances")), FName(TEXT("MaterialInstancesDynamic"))})
+	{
+		FArrayProperty* Property = FindFProperty<FArrayProperty>(Component->GetClass(), Name);
+		const FObjectPropertyBase* Inner = Property ? CastField<FObjectPropertyBase>(Property->Inner) : nullptr;
+		if (!Inner)
+		{
+			return TEXT("{\"error\":\"native Landscape material-array contract unavailable\"}");
+		}
+		FScriptArrayHelper Items(Property, Property->ContainerPtrToValuePtr<void>(Component));
+		Report->SetNumberField(Name.ToString(), Items.Num());
+		if (Name == FName(TEXT("MaterialInstances")) && Items.Num() == 0)
+		{
+			bAllMatch = false;
+		}
+		for (int32 Index = 0; Index < Items.Num(); ++Index)
+		{
+			UMaterialInterface* Root = Cast<UMaterialInterface>(Inner->GetObjectPropertyValue(Items.GetRawPtr(Index)));
+			TSet<UMaterialInterface*> Seen;
+			while (UMaterialInstance* Instance = Cast<UMaterialInstance>(Root))
+			{
+				if (Seen.Contains(Root))
+				{
+					return TEXT("{\"error\":\"cyclic native material parent\"}");
+				}
+				Seen.Add(Root);
+				Root = Instance->Parent;
+			}
+			bAllMatch &= Root == ExpectedMaterial;
+			++InstanceCount;
+		}
+	}
+	Report->SetStringField(TEXT("component"), Component->GetPathName());
+	Report->SetStringField(TEXT("expected_material"), ExpectedMaterial->GetPathName());
+	Report->SetNumberField(TEXT("render_instance_count"), InstanceCount);
+	Report->SetBoolField(TEXT("all_instances_match"), bAllMatch && InstanceCount > 0);
+	FString Json;
+	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&Json);
+	return FJsonSerializer::Serialize(Report, Writer) ? Json : TEXT("{\"error\":\"JSON serialization failed\"}");
+}
 
 FString UYacsTextureAuditLibrary::DescribeTexture(UTexture2D* Texture)
 {
