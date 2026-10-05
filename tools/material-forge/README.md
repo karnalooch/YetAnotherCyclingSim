@@ -46,8 +46,7 @@ DetailMasks.png    material-local R/G/B meanings recorded in provenance
 
 ## Author graphs
 
-The Material Maker source tree is external and must match the pinned/reviewed
-revision recorded in `worldgen/materials/material_forge/upstreams.json`.
+Graph authoring uses the external Material Maker 1.7 **install directory** containing `nodes/material.mmg` and `material_maker.exe`. The separate headless render step uses a reviewed Material Maker **source checkout**. Both revisions are recorded in `worldgen/materials/material_forge/upstreams.json`.
 
 ```powershell
 tools/material-forge/material-forge.ps1 author `
