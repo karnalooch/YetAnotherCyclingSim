@@ -1,0 +1,11 @@
+{
+  "semantic_owner": "PCG/PCGEx",
+  "operation": "modulate_detail_only",
+  "world_mask": {
+    "name": "Road",
+    "path": "D:/proof/masks/road.png"
+  },
+  "detail_mask": {
+    "path": "D:/material-forge/run-001/aged_mountain_asphalt/base/export/YACS_Material_DetailMasks.png"
+  }
+}
