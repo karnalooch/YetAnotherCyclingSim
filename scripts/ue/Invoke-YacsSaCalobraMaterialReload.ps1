@@ -56,7 +56,7 @@ try {
     if ($process.ExitCode -ne 0) { throw ('Saved-consumer process failed with exit '+$process.ExitCode+'; inspect reload.engine.log.') }
     if (-not (Test-Path -LiteralPath $env:YACS_2B_RELOAD_REPORT)) { throw 'Successful process produced no saved-consumer proof.' }
     $proof=Get-Content -LiteralPath $env:YACS_2B_RELOAD_REPORT -Raw | ConvertFrom-Json
-    if ($proof.exact_sha -ne $ExpectedHead -or -not $proof.fresh_material_load -or $proof.component_roots_verified -ne 1024 -or -not $proof.scene_snapshot_equal -or $proof.map_saved) { throw 'Saved-consumer proof contract differs.' }
+    if ($proof.exact_sha -ne $ExpectedHead -or -not $proof.fresh_material_load -or $proof.component_roots_verified -ne 1024 -or $proof.render_instances_verified -lt 1024 -or -not $proof.native_audit_wrong_parent_rejected -or -not $proof.native_audit_invalid_component_rejected -or -not $proof.scene_snapshot_equal -or $proof.map_saved -or $proof.assets_saved -or $proof.render_admission -ne 'NOT_PROVEN') { throw 'Saved-consumer proof contract differs.' }
     Write-Output 'Fresh saved data consumer verified; rendering and performance remain unproven.'
 } finally {
     foreach ($name in $names) { [Environment]::SetEnvironmentVariable($name,$previous[$name],'Process') }

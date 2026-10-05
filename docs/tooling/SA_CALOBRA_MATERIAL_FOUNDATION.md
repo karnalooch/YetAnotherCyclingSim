@@ -147,6 +147,25 @@ under the existing compile-reuse policy; never build the open authoring project.
 Loading follows UE 5.8's installed `FileHelpers.h` and Epic's
 [Python command-line workflow](https://dev.epicgames.com/documentation/en-us/unreal-engine/scripting-the-unreal-editor-using-python).
 
+An isolated project build may use UE 5.8.2's supported `-NoHotReloadFromIDE`
+option. Installed UBT `BuildConfiguration.cs` binds that option and
+`HotReload.cs` otherwise checks a Live Coding mutex for the shared engine
+executable, even when project outputs are separate. First verify that project
+object/DLL outputs belong to the isolated checkout; preserve the authoring DLL
+hash before/after. Never apply this option to build the open authoring project.
+The first local attempt exited 6 at that guard; its retained retry succeeded
+without changing the authoring editor DLL. Existing Stage 3G PCG deprecation
+warnings are outside this material audit and remain unresolved.
+
+At `43fecdbff5bd2cf250808e5153eed3147ba883cb`, the isolated fresh NullRHI
+consumer exited 0, verified 1024 generated instance parent chains and rejected
+both an incorrect expected parent and a null component. The frozen map hash
+and bounded scene snapshot matched. GitHub run `37248459778` also passed its
+Unreal build and 26 Automation tests. These are native integration checks;
+they do not admit rendered frames, owner appearance acceptance or performance.
+External evidence remains under the canonical work directory; the saved asset
+receipt stays an immutable candidate receipt, not a fabricated admission.
+
 Use `Invoke-YacsSaCalobraMaterialReload.ps1 -ExpectedHead <sha> -ArtifactRoot
 <new absolute directory> -WorkspaceConfig <canonical workspace.json>` from that
 isolated checkout after preparing verified reusable modules. The wrapper
