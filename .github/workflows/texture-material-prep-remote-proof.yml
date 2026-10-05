@@ -168,7 +168,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$RESTORE_ROOT"
-          python scripts/assets/restore_workspace_data.py --manifest "$BACKUP_ROOT/restore-manifest.json" --bundle "$BACKUP_ROOT" --destination "$RESTORE_ROOT" --apply | tee "$BACKUP_ROOT/restore-rehearsal.json"
+          python scripts/assets/restore_texture_prep_checkpoint.py --manifest "$BACKUP_ROOT/restore-manifest.json" --archive "$BACKUP_ROOT/texture-prep-checkpoint.zip" --destination "$RESTORE_ROOT" --apply | tee "$BACKUP_ROOT/restore-rehearsal.json"
 
       - name: Isolate archived Rock026 evidence
         shell: bash
@@ -515,8 +515,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Archive safety audit failed.' }
 
           New-Item -ItemType Directory -Path $env:RESTORE_ROOT -Force | Out-Null
-          python scripts/assets/restore_workspace_data.py --manifest (Join-Path $env:BACKUP_ROOT 'restore-manifest.json') --bundle $env:BACKUP_ROOT --destination $env:RESTORE_ROOT --apply | Tee-Object -FilePath (Join-Path $env:EVIDENCE_ROOT 'restore-rehearsal.json')
-          if ($LASTEXITCODE -ne 0) { throw 'Manifest restore rehearsal failed.' }
+          python scripts/assets/restore_texture_prep_checkpoint.py --manifest (Join-Path $env:BACKUP_ROOT 'restore-manifest.json') --archive (Join-Path $env:BACKUP_ROOT 'texture-prep-checkpoint.zip') --destination $env:RESTORE_ROOT --apply | Tee-Object -FilePath (Join-Path $env:EVIDENCE_ROOT 'restore-rehearsal.json')
+          if ($LASTEXITCODE -ne 0) { throw 'Texture checkpoint restore rehearsal failed.' }
 
       - name: Build only the texture plugin for the discovered engine
         shell: pwsh
