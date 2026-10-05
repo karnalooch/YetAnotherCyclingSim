@@ -30,8 +30,67 @@ env:
   REMOTE_RECEIPT_ASSET_ID: 612346837
 
 jobs:
+  runner-preflight:
+    name: Read-only remote runner preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    steps:
+      - name: Inspect active Unreal processes without mutation
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = Join-Path $env:RUNNER_TEMP "texture-prep-preflight-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          New-Item -ItemType Directory -Path $root -Force | Out-Null
+
+          $processes = @(
+            Get-CimInstance Win32_Process -ErrorAction Stop |
+              Where-Object { $_.Name -in @('UnrealEditor.exe','UnrealEditor-Cmd.exe') } |
+              ForEach-Object {
+                [pscustomobject]@{
+                  name = [string]$_.Name
+                  process_id = [int]$_.ProcessId
+                  parent_process_id = [int]$_.ParentProcessId
+                  executable_path = [string]$_.ExecutablePath
+                  command_line = [string]$_.CommandLine
+                  creation_date = if ($_.CreationDate) { ([DateTime]$_.CreationDate).ToUniversalTime().ToString('o') } else { $null }
+                  session_id = try { (Get-Process -Id ([int]$_.ProcessId) -ErrorAction Stop).SessionId } catch { $null }
+                }
+              }
+          )
+          $payload = [ordered]@{
+            status = if ($processes.Count -eq 0) { 'PASS_IDLE' } else { 'BLOCKED_ACTIVE_EDITOR' }
+            exact_sha = $env:GITHUB_SHA
+            runner_name = $env:RUNNER_NAME
+            hostname = $env:COMPUTERNAME
+            active_unreal_count = $processes.Count
+            processes = $processes
+          }
+          $path = Join-Path $root 'active-unreal-processes.json'
+          $payload | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $path -Encoding UTF8
+          Get-Content -LiteralPath $path -Raw | Write-Host
+          "YACS_PREFLIGHT_ROOT=$root" >> $env:GITHUB_ENV
+
+          if ($processes.Count -gt 0) {
+            throw "Remote texture proof requires an idle Unreal host; active Unreal process details were recorded above."
+          }
+
+      - name: Upload runner preflight evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: texture-prep-runner-preflight-${{ env.TARGET_SHA }}-${{ github.run_attempt }}
+          path: ${{ env.YACS_PREFLIGHT_ROOT }}/active-unreal-processes.json
+          if-no-files-found: warn
+          retention-days: 14
+
   draft-backup-stage:
     name: Owner-authenticated draft backup staging
+    needs: runner-preflight
     if: >-
       github.actor == github.repository_owner &&
       github.ref == 'refs/heads/feat/382-texture-material-prep-foundation'
