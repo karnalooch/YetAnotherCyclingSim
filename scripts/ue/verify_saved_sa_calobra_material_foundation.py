@@ -56,15 +56,31 @@ def verify():
     world = unreal.EditorLoadingAndSavingUtils.load_map(str(map_file))
     if world is None or world.get_path_name().split(".")[0] != recipe["map"]:
         raise RuntimeError("Frozen saved map did not load")
+    landscapes = unreal.GameplayStatics.get_all_actors_of_class(world, unreal.Landscape)
+    if len(landscapes) != 1:
+        raise RuntimeError("Expected one frozen Landscape for audit regression")
+    landscape = landscapes[0]
+    original_material = landscape.get_editor_property("landscape_material")
     consume = runpy.run_path(
         str(REPO / "scripts/ue/consume_saved_sa_calobra_material_foundation.py")
     )["consume"]
     report = consume(report_path, require_fresh=True)
+    applied = landscape.get_editor_property("landscape_material")
+    components = landscape.get_components_by_class(unreal.LandscapeComponent)
+    audit = unreal.YacsTextureAuditLibrary.describe_landscape_material_instances
+    if original_material is None or original_material == applied:
+        raise RuntimeError("No distinct frozen material for native audit rejection")
+    wrong = json.loads(audit(components[0], original_material))
+    invalid = json.loads(audit(None, applied))
+    if wrong.get("all_instances_match") is not False or not invalid.get("error"):
+        raise RuntimeError("Native audit accepted a wrong parent or invalid component")
     report.update(
         exact_sha=head,
         verification_checkout=str(REPO),
         verification_script_sha256=foundation["digest"](__file__),
         render_admission="NOT_PROVEN",
+        native_audit_wrong_parent_rejected=True,
+        native_audit_invalid_component_rejected=True,
     )
     report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf8")
     unreal.log("YACS 2B fresh saved consumer verified; no render/performance admission")
