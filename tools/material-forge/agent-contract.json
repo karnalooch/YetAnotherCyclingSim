@@ -41,6 +41,18 @@
       "id": "preview_ue_canary",
       "entrypoint": "scripts/ue/preview_material_forge_canary.py",
       "effect": "ue-bounded-transient"
+    },
+    {
+      "id": "plan_material_rebuild",
+      "entrypoint": "python scripts/assets/material_forge.py plan-rebuild",
+      "effect": "read-only-fingerprint-plan",
+      "deterministic": true
+    },
+    {
+      "id": "derive_material_local_mask",
+      "entrypoint": "python scripts/assets/material_forge.py derive-material-mask",
+      "effect": "presentation-detail-only",
+      "semantic_owner": "PCG/PCGEx"
     }
   ]
 }
