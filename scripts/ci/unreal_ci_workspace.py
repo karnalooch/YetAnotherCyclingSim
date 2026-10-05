@@ -210,7 +210,6 @@ def standalone(root: Path) -> None:
         backup.unlink()
 
 
-
 def prepare_checkout_directory(workspace: Path, name: str, run: str) -> None:
     """Keep actions/checkout away from destructive fallback on warm UE caches.
 
@@ -246,7 +245,9 @@ def prepare_checkout_directory(workspace: Path, name: str, run: str) -> None:
     repository = os.environ.get("GITHUB_REPOSITORY", "").strip()
     server = os.environ.get("GITHUB_SERVER_URL", "https://github.com").rstrip("/")
     if not repository:
-        raise ValueError("GITHUB_REPOSITORY is required to validate Unreal checkout origin")
+        raise ValueError(
+            "GITHUB_REPOSITORY is required to validate Unreal checkout origin"
+        )
     expected_origin = f"{server}/{repository}"
 
     try:
@@ -257,7 +258,9 @@ def prepare_checkout_directory(workspace: Path, name: str, run: str) -> None:
             stderr=subprocess.STDOUT,
         ).strip()
     except subprocess.CalledProcessError as error:
-        raise ValueError("Existing Unreal checkout has unreadable Git metadata") from error
+        raise ValueError(
+            "Existing Unreal checkout has unreadable Git metadata"
+        ) from error
 
     if actual_origin != expected_origin:
         subprocess.run(
