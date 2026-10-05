@@ -1,0 +1,10 @@
+{
+  "semantic_owner": "PCG/PCGEx",
+  "operation": "pack_only",
+  "channels": {
+    "R": {"name": "Rock", "path": "D:/proof/masks/rock.png"},
+    "G": {"name": "Soil", "path": "D:/proof/masks/soil.png"},
+    "B": {"name": "Grass", "path": "D:/proof/masks/grass.png"},
+    "A": {"name": "Road", "path": "D:/proof/masks/road.png"}
+  }
+}
