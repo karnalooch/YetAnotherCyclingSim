@@ -208,9 +208,7 @@ class UnrealWorkspaceTests(unittest.TestCase):
             cache.prepare_checkout_directory(self.workspace, cache.WARM, "101-1")
 
         quarantine = (
-            self.workspace
-            / "_yacs-unreal-ci/quarantine"
-            / f"101-1-{cache.WARM}"
+            self.workspace / "_yacs-unreal-ci/quarantine" / f"101-1-{cache.WARM}"
         )
         self.assertFalse(warm.exists())
         self.assertEqual(
