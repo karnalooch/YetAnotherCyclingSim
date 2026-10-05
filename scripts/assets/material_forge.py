@@ -30,6 +30,8 @@ ALL_CHANNELS = PNG_CHANNELS + ("Height",)
 EXPORT_PREFIX = "YACS_Material"
 EXPECTED_NORMAL_CONVENTION = "DirectX"
 SEMANTIC_OWNER = "PCG/PCGEx"
+GENERATOR_ID = "yacs-material-forge"
+GENERATOR_VERSION = 1
 
 ASPHALT_FUNCTION = r"""
 vec4 yacs_limestone(vec2 uv, float seed, float fractures, float pores) {
@@ -91,6 +93,23 @@ def sha256_path(path: Path) -> str:
 def canonical_hash(payload: Any) -> str:
     raw = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(raw).hexdigest()
+
+
+def source_fingerprint(
+    catalog_path: Path = DEFAULT_CATALOG,
+    upstreams_path: Path = DEFAULT_UPSTREAMS,
+) -> str:
+    payload = {
+        "generator": GENERATOR_ID,
+        "generator_version": GENERATOR_VERSION,
+        "forge_sha256": sha256_path(Path(__file__)),
+        "base_builder_sha256": sha256_path(
+            ROOT / "scripts/assets/build_material_maker_limestone.py"
+        ),
+        "catalog_sha256": sha256_path(catalog_path),
+        "upstreams_sha256": sha256_path(upstreams_path),
+    }
+    return canonical_hash(payload)
 
 
 def _load_base_builder():
@@ -303,6 +322,8 @@ def author_variant(
     provenance_path = destination / "provenance.json"
     provenance = _json(provenance_path)
     provenance.update(
+        generator=GENERATOR_ID,
+        generator_version=GENERATOR_VERSION,
         status="GRAPH_READY_RENDER_PENDING",
         family=family_id,
         family_label=family["label"],
@@ -381,6 +402,9 @@ def author_all(
 
     manifest = {
         "schema_version": 1,
+        "generator": GENERATOR_ID,
+        "generator_version": GENERATOR_VERSION,
+        "source_fingerprint": source_fingerprint(catalog_path, upstreams_path),
         "status": "GRAPHS_READY_RENDER_PENDING",
         "semantic_owner": SEMANTIC_OWNER,
         "world_semantics_generated": False,
@@ -600,6 +624,81 @@ def pack_world_masks(spec_path: Path, output: Path, manifest_path: Path) -> dict
     return result
 
 
+def plan_rebuild(
+    root: Path,
+    catalog_path: Path = DEFAULT_CATALOG,
+    upstreams_path: Path = DEFAULT_UPSTREAMS,
+) -> dict[str, Any]:
+    """Return whether a clean Material Forge rebuild is required."""
+
+    manifest_path = root / "run-manifest.json"
+    current = source_fingerprint(catalog_path, upstreams_path)
+    if not manifest_path.exists():
+        return {
+            "rebuild_required": True,
+            "reason": "run_manifest_missing",
+            "current_source_fingerprint": current,
+            "recorded_source_fingerprint": None,
+        }
+    recorded = _json(manifest_path).get("source_fingerprint")
+    return {
+        "rebuild_required": recorded != current,
+        "reason": "source_fingerprint_changed" if recorded != current else "unchanged",
+        "current_source_fingerprint": current,
+        "recorded_source_fingerprint": recorded,
+    }
+
+
+def derive_material_mask(
+    spec_path: Path,
+    output: Path,
+    manifest_path: Path,
+) -> dict[str, Any]:
+    """Gate material-local detail by an authoritative PCG/PCGEx world mask.
+
+    This is a presentation/detail transform only. It never thresholds, expands,
+    erodes or otherwise reclassifies the authoritative world mask.
+    """
+
+    spec = _json(spec_path)
+    if spec.get("semantic_owner") != SEMANTIC_OWNER:
+        raise ValueError("World mask must remain owned by PCG/PCGEx")
+    if spec.get("operation") != "modulate_detail_only":
+        raise ValueError("Unsupported derived-mask operation")
+    world = Path(spec["world_mask"]["path"])
+    detail = Path(spec["detail_mask"]["path"])
+    with Image.open(world) as image:
+        world_array = np.asarray(image.convert("L"), dtype=np.float32) / 255.0
+        size = image.size
+    with Image.open(detail) as image:
+        if image.size != size:
+            raise ValueError("World/detail mask dimensions must match")
+        detail_array = np.asarray(image.convert("RGB"), dtype=np.float32) / 255.0
+    derived = np.clip(detail_array * world_array[..., None], 0.0, 1.0)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    Image.fromarray(np.uint8(derived * 255.0), mode="RGB").save(output)
+    result = {
+        "schema_version": 1,
+        "operation": "modulate_detail_only",
+        "semantic_owner": SEMANTIC_OWNER,
+        "classification_changed": False,
+        "world_mask": {
+            "name": spec["world_mask"]["name"],
+            "path": str(world),
+            "sha256": sha256_path(world),
+        },
+        "detail_mask": {
+            "path": str(detail),
+            "sha256": sha256_path(detail),
+        },
+        "output": str(output),
+        "output_sha256": sha256_path(output),
+        "size": list(size),
+    }
+    _write_json(manifest_path, result)
+    return result
+
+
 def compare_run_manifests(left: Path, right: Path) -> dict[str, Any]:
     a = _json(left)
     b = _json(right)
@@ -689,6 +788,34 @@ def build_parser() -> argparse.ArgumentParser:
     pack.set_defaults(
         func=lambda args: print(
             json.dumps(pack_world_masks(args.spec, args.output, args.manifest), indent=2)
+        )
+    )
+
+    plan = sub.add_parser(
+        "plan-rebuild",
+        help="Report whether generator/catalog/upstream fingerprints require a rebuild",
+    )
+    plan.add_argument("root", type=Path)
+    plan.add_argument("--catalog", type=Path, default=DEFAULT_CATALOG)
+    plan.add_argument("--upstreams", type=Path, default=DEFAULT_UPSTREAMS)
+    plan.set_defaults(
+        func=lambda args: print(
+            json.dumps(plan_rebuild(args.root, args.catalog, args.upstreams), indent=2)
+        )
+    )
+
+    derive = sub.add_parser(
+        "derive-material-mask",
+        help="Gate material-local detail with an authoritative world mask",
+    )
+    derive.add_argument("--spec", type=Path, required=True)
+    derive.add_argument("--output", type=Path, required=True)
+    derive.add_argument("--manifest", type=Path, required=True)
+    derive.set_defaults(
+        func=lambda args: print(
+            json.dumps(
+                derive_material_mask(args.spec, args.output, args.manifest), indent=2
+            )
         )
     )
 
