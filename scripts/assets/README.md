@@ -57,7 +57,11 @@ blocked in this offline CLI until a live UE connection binds the execution.
 The opt-in `YacsTexturePrep` plugin implements the separate editor adapter.
 `texture_material_prep_bundle.py` measures its five-map export;
 `texture_material_prep_ue_smoke.py` and `texture_material_prep_ue_reopen.py` run
-only in a marked disposable proof project.
+only in a marked disposable proof project. `restore_texture_prep_checkpoint.py`
+verifies the dedicated #382 single-archive recovery manifest (safe member names,
+exact member set, per-file size/SHA-256 and archive identity) and restores only
+to an empty isolated directory; it does not consume the separate workspace-data
+manifest format.
 
 See the [commands and supported subset](../../docs/tooling/TEXTURE_MATERIAL_PREP_EXAMPLES.md)
 and [architecture / limestone proof plan](../../docs/tooling/TEXTURE_MATERIAL_PREP.md).
