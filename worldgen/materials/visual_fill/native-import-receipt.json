@@ -1,0 +1,15 @@
+{
+  "status": "NATIVE_MASK_IMPORTED_NOT_ASSIGNED",
+  "asset": "/Game/Generated/YACS/VisualFill/93a51def042a43f2b76ecdf53f3ae256/T_VisualFillWeights.T_VisualFillWeights",
+  "manifest_sha256": "5995eeaea8ba661c80c7710a2974fa2970a6cdbfeb6b79fbb8776d0b1f8dc299",
+  "map_sha256": "276d1621fa083850f6d603b6d115b01b74c9a92c182254d15302e786abfbf29c",
+  "map_saved": false,
+  "texture_saved": false,
+  "sampling": "bilinear_linear_data",
+  "geometry_mutation": false,
+  "material_integration": "PENDING",
+  "memory_before": {
+    "free_physical": 11030708224,
+    "free_commit": 45644771328
+  }
+}
