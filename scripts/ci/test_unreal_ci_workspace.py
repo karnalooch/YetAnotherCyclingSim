@@ -205,9 +205,7 @@ class UnrealWorkspaceTests(unittest.TestCase):
                 "GITHUB_SERVER_URL": "https://github.com",
             },
         ):
-            cache.prepare_checkout_directory(
-                self.workspace, cache.WARM, "101-1"
-            )
+            cache.prepare_checkout_directory(self.workspace, cache.WARM, "101-1")
 
         quarantine = (
             self.workspace
@@ -239,9 +237,7 @@ class UnrealWorkspaceTests(unittest.TestCase):
                 "GITHUB_SERVER_URL": "https://github.com",
             },
         ):
-            cache.prepare_checkout_directory(
-                self.workspace, self.name, "101-1"
-            )
+            cache.prepare_checkout_directory(self.workspace, self.name, "101-1")
 
         self.assertEqual(
             subprocess.check_output(
