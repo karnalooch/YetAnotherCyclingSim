@@ -561,10 +561,20 @@ jobs:
             throw 'Compatible engine lacks UnrealEditor.exe.'
           }
 
-          $activeEditors = @(Get-Process -Name 'UnrealEditor','UnrealEditor-Cmd' -ErrorAction SilentlyContinue)
+          $activeEditors = [System.Collections.Generic.List[object]]::new()
+          $cimEditors = @(
+            Get-CimInstance Win32_Process -ErrorAction Stop |
+              Where-Object { $_.Name -in @('UnrealEditor.exe','UnrealEditor-Cmd.exe') }
+          )
+          foreach ($candidate in $cimEditors) {
+            $native = Get-Process -Id ([int]$candidate.ProcessId) -ErrorAction SilentlyContinue
+            if ($native -and -not $native.HasExited) {
+              [void]$activeEditors.Add($native)
+            }
+          }
           if ($activeEditors.Count -gt 0) {
             $ids = ($activeEditors | ForEach-Object Id) -join ','
-            throw "Refusing isolated proof while another Unreal Editor process is active: $ids"
+            throw "Refusing isolated proof while another live Unreal Editor process is active: $ids"
           }
 
           $video = @(Get-CimInstance Win32_VideoController | Select-Object Name, DriverVersion, AdapterRAM, PNPDeviceID)
