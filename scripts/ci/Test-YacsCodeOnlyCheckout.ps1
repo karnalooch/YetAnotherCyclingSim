@@ -63,7 +63,8 @@ try {
 
     # Enumerate committed pointers once. Supplying HEAD makes the repository tree
     # the source of truth without spawning one git cat-file / git-lfs process per
-    # asset.
+    # asset. Keep this process-batched: this guard runs on Windows with hundreds
+    # of LFS paths and process startup dominates per-file validation.
     $headOutput = @(& git lfs ls-files --long HEAD)
     if ($LASTEXITCODE -ne 0) {
         throw 'Could not enumerate committed Git LFS pointers at HEAD.'
