@@ -36,12 +36,12 @@ function ConvertFrom-YacsLfsListing {
             '^(?<oid>[0-9a-fA-F]{64}) (?<state>[*-]) (?<path>.+)$'
         )
         if (-not $match.Success) {
-            throw "Unexpected Git LFS listing in $Context: $line"
+            throw "Unexpected Git LFS listing in ${Context}: $line"
         }
 
         $path = $match.Groups['path'].Value
         if ($records.ContainsKey($path)) {
-            throw "Duplicate Git LFS path in $Context: $path"
+            throw "Duplicate Git LFS path in ${Context}: $path"
         }
 
         $records[$path] = [pscustomobject]@{
@@ -102,7 +102,7 @@ try {
                 [void]$materialized.Add($path)
             }
             default {
-                throw "Unsupported Git LFS state for $path: $($work[$path].State)"
+                throw "Unsupported Git LFS state for ${path}: $($work[$path].State)"
             }
         }
     }
