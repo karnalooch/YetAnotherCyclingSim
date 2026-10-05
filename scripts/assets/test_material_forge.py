@@ -1,0 +1,188 @@
+"""Lightweight CPU tests for YACS Material Forge contracts."""
+
+from __future__ import annotations
+
+import importlib.util
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+import numpy as np
+from PIL import Image
+
+
+ROOT = Path(__file__).resolve().parents[2]
+FORGE_PATH = ROOT / "scripts/assets/material_forge.py"
+
+
+def _load_forge():
+    spec = importlib.util.spec_from_file_location("yacs_material_forge_tested", FORGE_PATH)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("Cannot load Material Forge")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+forge = _load_forge()
+
+
+def _png(path: Path, array: np.ndarray) -> None:
+    Image.fromarray(np.asarray(array, dtype=np.uint8)).save(path)
+
+
+def _variant_fixture(root: Path, size: int = 64) -> None:
+    export = root / "export"
+    export.mkdir(parents=True)
+    yy, xx = np.mgrid[0:size, 0:size].astype(np.float32)
+    phase = 2 * np.pi * (xx / size * 4 + yy / size * 3)
+    color_scalar = 0.45 + 0.06 * np.sin(phase)
+    color = np.stack(
+        [color_scalar * 0.97, color_scalar * 0.985, color_scalar], axis=2
+    )
+    nx = 0.08 * np.sin(phase)
+    ny = 0.08 * np.cos(phase)
+    nz = np.sqrt(np.maximum(0, 1 - nx * nx - ny * ny))
+    normal = (np.stack([nx, ny, nz], axis=2) + 1) * 0.5
+    rough = 0.82 + 0.03 * np.sin(phase)
+    orm = np.stack([np.full_like(rough, 0.95), rough, np.zeros_like(rough)], axis=2)
+    detail = np.stack(
+        [
+            0.5 + 0.5 * np.sin(phase),
+            0.5 + 0.5 * np.cos(phase * 2.0),
+            0.5 + 0.5 * np.sin(phase * 3.0),
+        ],
+        axis=2,
+    )
+    for name, array in (
+        ("BaseColor", color),
+        ("Normal_DX", normal),
+        ("ORM", orm),
+        ("DetailMasks", detail),
+    ):
+        _png(export / f"{forge.EXPORT_PREFIX}_{name}.png", np.clip(array * 255, 0, 255))
+    (export / f"{forge.EXPORT_PREFIX}_Height.exr").write_bytes(b"\x76\x2f\x31\x01fixture")
+    (root / "provenance.json").write_text(
+        json.dumps(
+            {
+                "family": "aged_mountain_asphalt",
+                "variant": "base",
+                "semantic_owner": forge.SEMANTIC_OWNER,
+                "world_semantics_generated": False,
+                "normal_convention": "DirectX",
+                "local_mask_channels": {"R": "cracks", "G": "patches", "B": "variation"},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+class MaterialForgeContractTests(unittest.TestCase):
+    def test_catalog_has_three_families_and_three_variants_each(self):
+        catalog = forge.load_catalog()
+        self.assertEqual(len(catalog["families"]), 3)
+        self.assertTrue(all(len(f["variants"]) >= 3 for f in catalog["families"]))
+
+    def test_validator_accepts_periodic_nonmetallic_fixture(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            _variant_fixture(root)
+            result = forge.check_variant(root, expected_resolution=64)
+            self.assertEqual(result["status"], "MAP_CHECKS_PASS_UE_REVIEW_PENDING")
+            self.assertEqual(result["semantic_owner"], "PCG/PCGEx")
+            self.assertFalse(result["world_semantics_generated"])
+
+    def test_validator_rejects_semantic_ownership_violation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            _variant_fixture(root)
+            provenance = json.loads((root / "provenance.json").read_text())
+            provenance["semantic_owner"] = "Material Forge"
+            (root / "provenance.json").write_text(json.dumps(provenance))
+            with self.assertRaisesRegex(ValueError, "world semantics"):
+                forge.check_variant(root, expected_resolution=64)
+
+    def test_world_mask_packer_preserves_channels(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            values = {"R": 11, "G": 77, "B": 143, "A": 231}
+            channels = {}
+            for channel, value in values.items():
+                path = root / f"{channel}.png"
+                _png(path, np.full((8, 8), value, dtype=np.uint8))
+                channels[channel] = {"name": f"Mask{channel}", "path": str(path)}
+            spec = root / "spec.json"
+            spec.write_text(
+                json.dumps(
+                    {
+                        "semantic_owner": "PCG/PCGEx",
+                        "operation": "pack_only",
+                        "channels": channels,
+                    }
+                )
+            )
+            output = root / "packed.png"
+            manifest = root / "packed.json"
+            result = forge.pack_world_masks(spec, output, manifest)
+            rgba = np.asarray(Image.open(output).convert("RGBA"))
+            for index, channel in enumerate(("R", "G", "B", "A")):
+                self.assertTrue(np.all(rgba[..., index] == values[channel]))
+            self.assertFalse(result["classification_changed"])
+
+    def test_world_mask_packer_rejects_reclassification_owner(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / "R.png"
+            _png(path, np.zeros((4, 4), dtype=np.uint8))
+            spec = root / "spec.json"
+            spec.write_text(
+                json.dumps(
+                    {
+                        "semantic_owner": "Material Forge",
+                        "operation": "pack_only",
+                        "channels": {
+                            "R": {"name": "Rock", "path": str(path)},
+                            "G": {"name": "Rock", "path": str(path)},
+                            "B": {"name": "Rock", "path": str(path)},
+                            "A": {"name": "Rock", "path": str(path)},
+                        },
+                    }
+                )
+            )
+            with self.assertRaisesRegex(ValueError, "PCG/PCGEx"):
+                forge.pack_world_masks(spec, root / "packed.png", root / "manifest.json")
+
+    def test_compare_detects_output_drift(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            left = root / "left.json"
+            right = root / "right.json"
+            common = {
+                "variants": [
+                    {
+                        "family": "regional_limestone",
+                        "variant": "base",
+                        "graph_sha256": "a",
+                        "fingerprint": "b",
+                    }
+                ],
+                "validations": [
+                    {
+                        "family": "regional_limestone",
+                        "variant": "base",
+                        "maps": {"BaseColor": "c"},
+                    }
+                ],
+            }
+            left.write_text(json.dumps(common))
+            changed = json.loads(json.dumps(common))
+            changed["validations"][0]["maps"]["BaseColor"] = "d"
+            right.write_text(json.dumps(changed))
+            result = forge.compare_run_manifests(left, right)
+            self.assertFalse(result["deterministic"])
+            self.assertEqual(len(result["mismatches"]), 1)
+
+
+if __name__ == "__main__":
+    unittest.main()
