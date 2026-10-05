@@ -169,6 +169,15 @@ Initial rule:
 
 Detailed plugin schedule: [`UNREAL_TOOLING_PLUGIN_PLAN.md`](UNREAL_TOOLING_PLUGIN_PLAN.md).
 
+Issue #382 defines an independent
+[Texture Material Prep foundation](tooling/TEXTURE_MATERIAL_PREP.md). Texture
+Graph owns image processing; the proposed YACS Texture MCP Toolset only controls
+validated recipes, render/export and evidence. The initial delivered code is
+offline BaseColor analysis and blocked recipe planning, not registered MCP tools.
+It does not enable native routing, replace this orchestration surface, extend
+the remote command allowlist or modify world materials/assets. UE activation
+requires the isolated graph/adapter/export proof specified there.
+
 ## 4.2. Embark-first read/write tooling boundary
 
 World-authoring automation follows the repository-wide Embark-first tooling

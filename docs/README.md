@@ -91,6 +91,7 @@ The old Stage 3G / R4.1 / B.x vocabulary is historical. Existing workflow names 
 | Reusable world-authoring systems | [`YACS_WORLD_AUTHORING_LIBRARY.md`](YACS_WORLD_AUTHORING_LIBRARY.md) | **Authoritative implementation library** |
 | Asset plan / provenance | [`ASSET_PLAN.md`](ASSET_PLAN.md) | **Authoritative** |
 | Julka asset-manager contract | [`tooling/JULKA.md`](tooling/JULKA.md) | **Active supporting tool** |
+| Independent texture preparation | [`tooling/TEXTURE_MATERIAL_PREP.md`](tooling/TEXTURE_MATERIAL_PREP.md) | **Offline foundation; Unreal adapter/proof pending** |
 | Persistent local project and checkpoints | [`tooling/LOCAL_WORKSPACE.md`](tooling/LOCAL_WORKSPACE.md) | **Authoritative host workflow** |
 | CI cost / proof cadence | [`CI_VALIDATION_TIERS.md`](CI_VALIDATION_TIERS.md) | **Authoritative** |
 | Shared CI and governance platform | [`ENGINEERING_PLATFORM.md`](ENGINEERING_PLATFORM.md) | **Authoritative** |
@@ -123,6 +124,8 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 - [`ASSET_PLAN.md`](ASSET_PLAN.md) — source/technical asset ledger and provenance expectations.
 - [`tooling/JULKA.md`](tooling/JULKA.md) — Issue #345 asset acquisition, local restore, identity and cleanup contract; subordinate to the asset ledger and World Building Bible.
 - [`UE_MCP_WORLD_GENERATION.md`](UE_MCP_WORLD_GENERATION.md) — UE MCP orchestration workflow.
+- [`tooling/TEXTURE_MATERIAL_PREP.md`](tooling/TEXTURE_MATERIAL_PREP.md) — independent Texture Graph/MCP design, offline validation and limestone proof contract; no world integration.
+- [`tooling/TEXTURE_MATERIAL_PREP_EXAMPLES.md`](tooling/TEXTURE_MATERIAL_PREP_EXAMPLES.md) — working analysis/recipe commands, limitations and clearly deferred UE adapter pseudocode.
 - [`YACS_REMOTE_EDITOR_AGENT.md`](YACS_REMOTE_EDITOR_AGENT.md) — remote editor-agent operating contract.
 - [`UNREAL_TOOLING_PLUGIN_PLAN.md`](UNREAL_TOOLING_PLUGIN_PLAN.md) — plugin/tool plan; optional tooling never overrides the Bible.
 
