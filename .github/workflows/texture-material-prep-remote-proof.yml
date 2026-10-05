@@ -68,28 +68,39 @@ jobs:
           $root = Join-Path $env:RUNNER_TEMP "texture-prep-preflight-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
           New-Item -ItemType Directory -Path $root -Force | Out-Null
 
-          $processes = @(
+          $cimEditors = @(
             Get-CimInstance Win32_Process -ErrorAction Stop |
-              Where-Object { $_.Name -in @('UnrealEditor.exe','UnrealEditor-Cmd.exe') } |
-              ForEach-Object {
-                [pscustomobject]@{
-                  name = [string]$_.Name
-                  process_id = [int]$_.ProcessId
-                  parent_process_id = [int]$_.ParentProcessId
-                  executable_path = [string]$_.ExecutablePath
-                  command_line = [string]$_.CommandLine
-                  creation_date = if ($_.CreationDate) { ([DateTime]$_.CreationDate).ToUniversalTime().ToString('o') } else { $null }
-                  session_id = try { (Get-Process -Id ([int]$_.ProcessId) -ErrorAction Stop).SessionId } catch { $null }
-                }
-              }
+              Where-Object { $_.Name -in @('UnrealEditor.exe','UnrealEditor-Cmd.exe') }
           )
+          $processes = [System.Collections.Generic.List[object]]::new()
+          $staleCim = [System.Collections.Generic.List[object]]::new()
+          foreach ($candidate in $cimEditors) {
+            $native = Get-Process -Id ([int]$candidate.ProcessId) -ErrorAction SilentlyContinue
+            $record = [pscustomobject]@{
+              name = [string]$candidate.Name
+              process_id = [int]$candidate.ProcessId
+              parent_process_id = [int]$candidate.ParentProcessId
+              executable_path = [string]$candidate.ExecutablePath
+              command_line = [string]$candidate.CommandLine
+              creation_date = if ($candidate.CreationDate) { ([DateTime]$candidate.CreationDate).ToUniversalTime().ToString('o') } else { $null }
+              session_id = if ($native) { $native.SessionId } else { $null }
+            }
+            if ($native -and -not $native.HasExited) {
+              [void]$processes.Add($record)
+            }
+            else {
+              [void]$staleCim.Add($record)
+            }
+          }
           $payload = [ordered]@{
             status = if ($processes.Count -eq 0) { 'PASS_IDLE' } else { 'BLOCKED_ACTIVE_EDITOR' }
             exact_sha = $env:GITHUB_SHA
             runner_name = $env:RUNNER_NAME
             hostname = $env:COMPUTERNAME
             active_unreal_count = $processes.Count
-            processes = $processes
+            processes = @($processes)
+            stale_cim_record_count = $staleCim.Count
+            stale_cim_records = @($staleCim)
           }
           $path = Join-Path $root 'active-unreal-processes.json'
           $payload | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $path -Encoding UTF8
