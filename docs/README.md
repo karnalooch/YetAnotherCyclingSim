@@ -125,9 +125,9 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 - [`YACS_WORLD_AUTHORING_LIBRARY.md`](YACS_WORLD_AUTHORING_LIBRARY.md) — reusable authoring systems, semantic catalog, presets and generated-output boundary.
 - [`ASSET_PLAN.md`](ASSET_PLAN.md) — source/technical asset ledger and provenance expectations.
 - [`tooling/JULKA.md`](tooling/JULKA.md) — Issue #345 asset acquisition, local restore, identity and cleanup contract; subordinate to the asset ledger and World Building Bible.
-- [`UE_MCP_WORLD_GENERATION.md`](UE_MCP_WORLD_GENERATION.md) � current official Epic MCP adoption decision/DoD (#384, blocked by #363), plus the retained db-lyon integration baseline; interface only, not world/proof authority.
-- [`tooling/TEXTURE_MATERIAL_PREP.md`](tooling/TEXTURE_MATERIAL_PREP.md) � independent Texture Graph domain adapter, offline validation and limestone proof contract; no world integration or #384 cutover.
-- [`tooling/TEXTURE_MATERIAL_PREP_EXAMPLES.md`](tooling/TEXTURE_MATERIAL_PREP_EXAMPLES.md) � offline diagnostics, opt-in UE adapter commands, isolated smoke/reopen proof and limitations.
+- [`UE_MCP_WORLD_GENERATION.md`](UE_MCP_WORLD_GENERATION.md) — current official Epic MCP adoption decision/DoD (#384, blocked by #363), plus the retained db-lyon integration baseline; interface only, not world/proof authority.
+- [`tooling/TEXTURE_MATERIAL_PREP.md`](tooling/TEXTURE_MATERIAL_PREP.md) — independent Texture Graph domain adapter, offline validation and limestone proof contract; no world integration or #384 cutover.
+- [`tooling/TEXTURE_MATERIAL_PREP_EXAMPLES.md`](tooling/TEXTURE_MATERIAL_PREP_EXAMPLES.md) — offline diagnostics, opt-in UE adapter commands, isolated smoke/reopen proof and limitations.
 - [`YACS_REMOTE_EDITOR_AGENT.md`](YACS_REMOTE_EDITOR_AGENT.md) — remote editor-agent operating contract.
 - [`UNREAL_TOOLING_PLUGIN_PLAN.md`](UNREAL_TOOLING_PLUGIN_PLAN.md) — plugin/tool plan; optional tooling never overrides the Bible.
 
