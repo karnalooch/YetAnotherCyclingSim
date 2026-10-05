@@ -252,17 +252,34 @@ def prepare_checkout_directory(workspace: Path, name: str, run: str) -> None:
     expected_origin = f"{server}/{repository}"
 
     try:
-        actual_origin = subprocess.check_output(
-            ["git", "remote", "get-url", "origin"],
+        remotes = subprocess.check_output(
+            ["git", "remote"],
             cwd=root,
             text=True,
             stderr=subprocess.STDOUT,
-        ).strip()
+        ).splitlines()
     except subprocess.CalledProcessError as error:
         raise ValueError(
             "Existing Unreal checkout has unreadable Git metadata"
         ) from error
 
+    if "origin" not in remotes:
+        subprocess.run(
+            ["git", "remote", "add", "origin", expected_origin],
+            cwd=root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        print(f"UNREAL WORKSPACE: added canonical origin for {name}: {expected_origin}")
+        return
+
+    actual_origin = subprocess.check_output(
+        ["git", "remote", "get-url", "origin"],
+        cwd=root,
+        text=True,
+        stderr=subprocess.STDOUT,
+    ).strip()
     if actual_origin != expected_origin:
         subprocess.run(
             ["git", "remote", "set-url", "origin", expected_origin],
