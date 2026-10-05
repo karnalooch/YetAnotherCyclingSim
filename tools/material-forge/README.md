@@ -93,6 +93,18 @@ Gates include:
 - per-map SHA-256;
 - semantic ownership guard.
 
+## Fingerprint-driven rebuild planning
+
+Before regenerating an existing run, ask the forge whether its generator,
+base-builder, catalog or upstream pins changed:
+
+```powershell
+tools/material-forge/material-forge.ps1 plan-rebuild D:\\yacs\\material-forge\\run-001
+```
+
+`rebuild_required=false` means those source fingerprints are unchanged.
+Material Forge never silently overwrites an accepted/reviewed run directory.
+
 ## Determinism
 
 Generate/render a second clean directory with the same source revisions and run:
@@ -134,6 +146,25 @@ tools/material-forge/material-forge.ps1 pack-world-masks `
 
 The manifest preserves every source mask SHA and records
 `classification_changed=false`.
+
+## Authoritative world mask -> material-local detail
+
+An authoritative PCG/PCGEx mask may **gate** a local material detail mask without
+becoming a new classification pipeline. The operation is strictly
+`modulate_detail_only`: no threshold, dilation, erosion or semantic rewrite.
+
+```powershell
+tools/material-forge/material-forge.ps1 derive-material-mask `
+  --spec worldgen/materials/material_forge/world-mask-detail.example.json `
+  --output D:\\proof\\road-asphalt-detail.png `
+  --manifest D:\\proof\\road-asphalt-detail.manifest.json
+```
+
+Both world-mask and detail-mask SHA-256 identities are retained and the receipt
+states `classification_changed=false`.
+
+The operation schema is
+`worldgen/materials/material_forge/world-mask-operation.schema.json`.
 
 ## Unreal import and canary
 
