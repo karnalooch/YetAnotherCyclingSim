@@ -10,20 +10,15 @@ on:
       - "scripts/assets/texture_material_prep*.py"
       - "tools/ue-mcp/guards/YacsTextureGuard.js"
       - "tools/ue-mcp/texture-proof-profile.yml"
-  pull_request:
-    types: [opened, reopened, synchronize]
-    paths:
-      - ".github/workflows/texture-material-prep-remote-proof.yml"
-      - "Plugins/YacsTexturePrep/**"
-      - "scripts/assets/texture_material_prep*.py"
-      - "tools/ue-mcp/guards/YacsTextureGuard.js"
-      - "tools/ue-mcp/texture-proof-profile.yml"
-
 permissions:
   contents: read
 
+concurrency:
+  group: texture-material-prep-remote-${{ github.ref_name }}
+  cancel-in-progress: true
+
 env:
-  TARGET_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+  TARGET_SHA: ${{ github.sha }}
   BACKUP_TAG: checkpoint-texture-prep-2026-10-05
   ARCHIVE_SHA256: 7c3392ab7aae44388fc52978489fdb85d329a276c7fcd68723d841d7bfdd08d8
   MANIFEST_SHA256: 03ab3b2b3e0df81694918693c432b17744cdd36e220720a5b7ac5e9b253a18c3
@@ -39,9 +34,7 @@ jobs:
     name: Owner-authenticated draft backup staging
     if: >-
       github.actor == github.repository_owner &&
-      (github.event_name == 'push' ||
-      (github.event.pull_request.number == 383 &&
-      github.head_ref == 'feat/382-texture-material-prep-foundation'))
+      github.ref == 'refs/heads/feat/382-texture-material-prep-foundation'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -87,10 +80,7 @@ jobs:
   backup-audit:
     name: Authenticated backup and baseline audit
     needs: draft-backup-stage
-    if: >-
-      github.event_name == 'push' ||
-      (github.event.pull_request.number == 383 &&
-      github.head_ref == 'feat/382-texture-material-prep-foundation')
+    if: ${{ needs.draft-backup-stage.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -345,10 +335,7 @@ jobs:
   rock026-reopen:
     name: Fresh Rock026 reopen on yacs-ue58
     needs: draft-backup-stage
-    if: >-
-      github.event_name == 'push' ||
-      (github.event.pull_request.number == 383 &&
-      github.head_ref == 'feat/382-texture-material-prep-foundation')
+    if: ${{ needs.draft-backup-stage.result == 'success' }}
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 45
     permissions:
@@ -356,7 +343,22 @@ jobs:
     concurrency:
       group: yacs-unreal-ci-${{ github.repository }}
       cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: _texture-prep-remote
     steps:
+      - name: Checkout exact branch revision without LFS payloads
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        env:
+          GIT_LFS_SKIP_SMUDGE: "1"
+        with:
+          ref: ${{ env.TARGET_SHA }}
+          path: _texture-prep-remote
+          fetch-depth: 1
+          lfs: false
+          clean: true
+          persist-credentials: false
+
       - name: Initialize isolated proof paths
         shell: pwsh
         run: |
@@ -365,17 +367,6 @@ jobs:
           "RESTORE_ROOT=$(Join-Path $env:RUNNER_TEMP ('texture-prep-restored-' + $suffix))" >> $env:GITHUB_ENV
           "PROOF_ROOT=$(Join-Path $env:RUNNER_TEMP ('texture-prep-plugin-' + $suffix))" >> $env:GITHUB_ENV
           "EVIDENCE_ROOT=$(Join-Path $env:RUNNER_TEMP ('texture-prep-remote-evidence-' + $suffix))" >> $env:GITHUB_ENV
-
-      - name: Checkout exact PR head without LFS payloads
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        env:
-          GIT_LFS_SKIP_SMUDGE: "1"
-        with:
-          ref: ${{ env.TARGET_SHA }}
-          fetch-depth: 1
-          lfs: false
-          clean: true
-          persist-credentials: false
 
       - name: Verify remote host, disk, UE and GPU capability
         shell: pwsh
@@ -756,4 +747,4 @@ jobs:
             }
           }
 
-# Branch-local PR #383 proof trigger; intentionally inert outside the scoped pull request.
+# Owner-only branch-local #382 proof trigger; superseded runs are cancelled before heavy work.
