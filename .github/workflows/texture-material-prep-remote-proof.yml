@@ -1,6 +1,15 @@
 name: Texture Material Prep remote proof
 
 on:
+  push:
+    branches:
+      - "feat/382-texture-material-prep-foundation"
+    paths:
+      - ".github/workflows/texture-material-prep-remote-proof.yml"
+      - "Plugins/YacsTexturePrep/**"
+      - "scripts/assets/texture_material_prep*.py"
+      - "tools/ue-mcp/guards/YacsTextureGuard.js"
+      - "tools/ue-mcp/texture-proof-profile.yml"
   pull_request:
     types: [opened, reopened, synchronize]
     paths:
@@ -14,6 +23,7 @@ permissions:
   contents: read
 
 env:
+  TARGET_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
   BACKUP_TAG: checkpoint-texture-prep-2026-10-05
   ARCHIVE_SHA256: 7c3392ab7aae44388fc52978489fdb85d329a276c7fcd68723d841d7bfdd08d8
   MANIFEST_SHA256: 03ab3b2b3e0df81694918693c432b17744cdd36e220720a5b7ac5e9b253a18c3
@@ -25,8 +35,9 @@ jobs:
   backup-audit:
     name: Authenticated backup and baseline audit
     if: >-
-      github.event.pull_request.number == 383 &&
-      github.head_ref == 'feat/382-texture-material-prep-foundation'
+      github.event_name == 'push' ||
+      (github.event.pull_request.number == 383 &&
+      github.head_ref == 'feat/382-texture-material-prep-foundation')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -40,7 +51,7 @@ jobs:
       - name: Checkout exact PR head
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ env.TARGET_SHA }}
           fetch-depth: 1
           lfs: false
           persist-credentials: false
@@ -270,7 +281,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: texture-prep-backup-audit-${{ github.event.pull_request.head.sha }}-${{ github.run_attempt }}
+          name: texture-prep-backup-audit-${{ env.TARGET_SHA }}-${{ github.run_attempt }}
           path: |
             ${{ env.BACKUP_ROOT }}/archive-audit.json
             ${{ env.BACKUP_ROOT }}/restore-rehearsal.json
@@ -284,8 +295,9 @@ jobs:
   rock026-reopen:
     name: Fresh Rock026 reopen on yacs-ue58
     if: >-
-      github.event.pull_request.number == 383 &&
-      github.head_ref == 'feat/382-texture-material-prep-foundation'
+      github.event_name == 'push' ||
+      (github.event.pull_request.number == 383 &&
+      github.head_ref == 'feat/382-texture-material-prep-foundation')
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 45
     permissions:
@@ -305,7 +317,7 @@ jobs:
         env:
           GIT_LFS_SKIP_SMUDGE: "1"
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ env.TARGET_SHA }}
           fetch-depth: 1
           lfs: false
           clean: true
@@ -364,7 +376,7 @@ jobs:
 
           $receipt = [ordered]@{
             status = 'PASS'
-            exact_sha = '${{ github.event.pull_request.head.sha }}'
+            exact_sha = '${{ env.TARGET_SHA }}'
             runner_name = $env:RUNNER_NAME
             runner_os = $env:RUNNER_OS
             runner_arch = $env:RUNNER_ARCH
@@ -653,7 +665,7 @@ jobs:
 
           $summary = [ordered]@{
             status = 'PASS_REOPEN_BASELINE_PRESERVED_REVIEW_REQUIRED'
-            exact_sha = '${{ github.event.pull_request.head.sha }}'
+            exact_sha = '${{ env.TARGET_SHA }}'
             job_id = $env:ROCK026_JOB
             reopen_validation = $report.reopen_validation
             technical_validation = $report.technical_validation
@@ -674,7 +686,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: texture-prep-rock026-reopen-${{ github.event.pull_request.head.sha }}-${{ github.run_attempt }}
+          name: texture-prep-rock026-reopen-${{ env.TARGET_SHA }}-${{ github.run_attempt }}
           path: |
             ${{ env.EVIDENCE_ROOT }}/**/*.json
             ${{ env.EVIDENCE_ROOT }}/**/*.txt
