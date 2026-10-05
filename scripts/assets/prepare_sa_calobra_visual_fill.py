@@ -8,10 +8,20 @@ from pathlib import Path
 import numpy as np
 import rasterio
 from PIL import Image
-from scipy.ndimage import convolve
 
 
-KERNEL = np.array([[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=np.float32)
+def _four_neighbor_sum(values):
+    """Return four-connected neighbor sums with constant-zero AOI boundaries."""
+
+    source = np.asarray(values, dtype=np.float32)
+    if source.ndim != 2:
+        raise ValueError("Expected a 2D array")
+    result = np.zeros_like(source, dtype=np.float32)
+    result[1:, :] += source[:-1, :]
+    result[:-1, :] += source[1:, :]
+    result[:, 1:] += source[:, :-1]
+    result[:, :-1] += source[:, 1:]
+    return result
 
 
 def digest(path):
@@ -41,12 +51,12 @@ def repair(weights, availability, reasons, steps=8):
     provenance = np.where(known, 0, 2).astype(np.uint8)
     provenance[hard] = 3
     for _ in range(steps):
-        count = convolve(support.astype(np.float32), KERNEL, mode="constant")
+        count = _four_neighbor_sum(support)
         fill = ~support & ~hard & (count > 0)
         if not fill.any():
             break
         for c in range(3):
-            total = convolve(values[..., c], KERNEL, mode="constant")
+            total = _four_neighbor_sum(values[..., c])
             values[..., c][fill] = total[fill] / count[fill]
         support[fill] = True
         provenance[fill] = 1
