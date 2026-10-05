@@ -148,7 +148,14 @@ jobs:
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
           $ErrorActionPreference = 'Stop'
-          ./scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1 -Workspace $env:GITHUB_WORKSPACE
+          $helper = Join-Path (Get-Location) 'scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
+          if (-not (Test-Path -LiteralPath $helper -PathType Leaf)) {
+            $helper = Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup/scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
+          }
+          if (-not (Test-Path -LiteralPath $helper -PathType Leaf)) {
+            throw 'Unreal workspace lock helper is unavailable from both active checkout and bootstrap.'
+          }
+          & $helper -Workspace $env:GITHUB_WORKSPACE
           $proof = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/Unreal'
           if (Test-Path -LiteralPath $proof) {
             Remove-Item -LiteralPath $proof -Recurse -Force
@@ -652,7 +659,14 @@ jobs:
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
           $ErrorActionPreference = 'Stop'
-          ./scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1 -Workspace $env:GITHUB_WORKSPACE
+          $helper = Join-Path (Get-Location) 'scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
+          if (-not (Test-Path -LiteralPath $helper -PathType Leaf)) {
+            $helper = Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup/scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
+          }
+          if (-not (Test-Path -LiteralPath $helper -PathType Leaf)) {
+            throw 'Unreal workspace lock helper is unavailable from both active checkout and bootstrap.'
+          }
+          & $helper -Workspace $env:GITHUB_WORKSPACE
           $proof = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/Unreal'
           if (Test-Path -LiteralPath $proof) {
             Remove-Item -LiteralPath $proof -Recurse -Force
