@@ -692,3 +692,5 @@ jobs:
               Remove-Item -LiteralPath $path -Recurse -Force
             }
           }
+
+# Branch-local PR #383 proof trigger; intentionally inert outside the scoped pull request.
