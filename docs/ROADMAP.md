@@ -104,7 +104,7 @@ The 500–1000 m Golden Kilometer is an **additional representative check inside
 
 1. [**World Authority inputs and masks**](https://github.com/karnalooch/YetAnotherCyclingSim/issues/335) — establish reproducible spatial inputs for road/shoulder domains, route exclusion, terrain classes, slope/elevation/exposure and road-earthworks zones. Real-world source evidence owns geographically meaningful boundaries; procedural systems do not invent replacement geography.
 2. [**Landscape material foundation**](https://github.com/karnalooch/YetAnotherCyclingSim/issues/363) — produce a coherent terrain material baseline for soil, grass, forest ground, exposed limestone/rock and earthworks transitions without using materials to hide unresolved geometry.
-3. [**Road surface material system**](https://github.com/karnalooch/YetAnotherCyclingSim/issues/364) — establish the asphalt/shoulder presentation foundation, including edge breakup and later wetness compatibility. Visual materials remain presentation only; Road Physics Profile remains physics authority.
+3. [**Road surface material system**](https://github.com/karnalooch/YetAnotherCyclingSim/issues/364) — after full #363 closeout and the bounded official MCP adoption #384, establish the asphalt/shoulder presentation foundation, including edge breakup and later wetness compatibility. Visual materials remain presentation only; Road Physics Profile remains physics authority.
 4. [**PCG/PCGEx world graph**](https://github.com/karnalooch/YetAnotherCyclingSim/issues/365) — consume canonical route and World Authority outputs to derive stable road-adjacent, roadside, terrain and biome domains. PCG/PCGEx executes reconstruction rules; it does not become geographic or physics authority.
 5. [**Route exclusion and safety corridor**](https://github.com/karnalooch/YetAnotherCyclingSim/issues/366) — protect the rideable road and required clearance from trees, large rocks and incompatible props, with deterministic behavior that can be proven after reload/regeneration.
 6. [**Biome generators**](https://github.com/karnalooch/YetAnotherCyclingSim/issues/367) — establish source-faithful valley/lower-Mediterranean, forest and exposed-limestone presentation using deterministic generators and real spatial boundaries instead of hand-authored biome replacement.
@@ -118,6 +118,35 @@ The 500–1000 m Golden Kilometer is an **additional representative check inside
 
 
 **Issue dependency gate:** steps are separate execution issues in the YACS — MVP Project. Reuse #335 for step 1; each later issue has a native GitHub `blocked_by` dependency on its immediate predecessor. Steps 2–13 remain `Blocked` while that predecessor is open. Do not begin implementation, open an implementation PR or move a step to Ready/In progress until the predecessor is completed with required proof and merged implementation where applicable. Closing as not planned or merely having green CI does not satisfy the gate. Change the order or remove a dependency only with explicit owner authorization. GitHub records the dependency; this execution rule governs agents because the dependency does not itself prevent branch/PR creation.
+
+### Official Unreal MCP adoption between materials and asphalt
+
+Owner decision, 2026-10-05: [#384](https://github.com/karnalooch/YetAnotherCyclingSim/issues/384)
+inserts a bounded adoption checkpoint between #363 and #364. The informal name
+"step 2.5" does not create a new milestone or renumber the 13 delivery steps.
+The order is **#363 fully accepted/merged → #384 → #364 → #365**; #364 retains
+its original #363 dependency and additionally depends on #384.
+
+#384 stays **Blocked** until #363 has whole-Landscape owner visual acceptance,
+saved/fresh-rendered consumer evidence, deferred 2A/2B performance admission,
+required exact-SHA technical/review gates and merged implementation. The current
+prototype's rejection and pending proofs cannot be replaced by a connection
+test or a closed-as-not-planned state. Documentation planning may merge now;
+it does not start MCP implementation, enable plugins or migrate Unreal.
+
+The [MCP decision and DoD](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption)
+cap the spike at one map/scene, one Actor/UObject inspection, one existing
+Automation Test and one real BOB inspection returning result/proof/receipt.
+Prove the restricted surface and safety parity before cutover. After success,
+**STOP infrastructure work and return to #364**. #376 performance tooling,
+#377 buildings and #365 graph authoring remain separately gated work.
+
+From step 3 onward, use official Epic MCP for supported generic editor control
+within YACS constraints; do not add custom generic workarounds. Custom toolsets
+carry only YACS domain knowledge. MCP stays an interface; BOB, World Authority,
+route/physics contracts and tests/proofs keep authority. Native PCG is the
+foundation, with pinned PCGEx extensions for named gaps. The existing Embark-first
+evidence review, producer/consumer contracts and all governance gates remain.
 
 ### Deferred surface-review polish
 

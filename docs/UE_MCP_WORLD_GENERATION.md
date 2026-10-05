@@ -1,10 +1,179 @@
 # YACS UE-MCP world-generation architecture
 
-**Status:** M3 world/asset recovery active; legacy Stage 3G asset/flow identifiers are retained for traceability, while persistent **agent-driven MCP** worldgen still requires its own guarded proof before adoption
-**Tracking:** #85
-**Initial upstream:** `db-lyon/ue-mcp`
-**Reviewed pin:** `v1.3.9`
-**Unreal target:** UE 5.8.2 on the home/reference PC
+**Status:** official Epic MCP direction approved; #384 blocked by full #363 closeout, before #364. Planning only; no MCP activation or engine migration.
+**Tracking:** #384 adoption; #385 documentation; #85 historical integration
+**Retained integration:** `db-lyon/ue-mcp` at reviewed `v1.3.9`; unchanged until proven cutover
+**Engine baseline:** project association 5.8; home engine inspected 2026-10-05: 5.8.2, changelist 56702186. Reverify exact project/runner versions at kickoff.
+
+## Official Unreal MCP adoption
+
+### Decision and status
+
+**BLOCKED by #363 — Landscape material foundation. Planning is authorized; implementation is not started.**
+
+The owner approved a small official Unreal MCP adoption workstream between world-finishing step 2 (#363) and step 3 (#364). "Step 2.5" is a shorthand inside **M3**, not a new product milestone or a renumbering of the existing 13 steps.
+
+**Execution order:** #363 full acceptance and protected merge → this bounded spike → #364 asphalt/shoulder → #365 PCG/PCGEx world graph → the unchanged downstream sequence.
+
+Keep the native GitHub `blocked_by` relationship to #363 and `lifecycle:blocked`; the YACS — MVP Project status must remain **Blocked**. #364 keeps its existing #363 dependency and also depends on this spike. Dependencies and board states do not technically prevent PR creation: agents must enforce the gate below.
+
+### Hard entry gate: what “step 2 complete” means
+
+Before implementation, plugin activation, an implementation PR, or promotion to Ready/In progress, record and verify:
+
+- #363 is closed **as completed**, with its implementation merged; closing as not planned, a draft PR or a green build is insufficient.
+- Explicit owner visual acceptance covers the entire current 2,016.5 m × 2,016.5 m Sa Calobra Landscape (~4.07 km²), including representative environments/traversal and the additional Golden Kilometer check.
+- Saved material/consumer identity and fresh rendered reopening are admitted. NullRHI or a screenshot alone does not establish rendered acceptance.
+- Deferred 2A/2B whole-Landscape performance has passed under the existing exact-SHA policy and canonical budgets; `DEFERRED_TO_2B` is not PASS.
+- Required build, Automation, asset, review, documentation and protected Aggregate CI gates have passed; the handoff pins outputs, versions/hashes, limitations and proof links.
+
+At creation, #363 is OPEN and its current material remains a visually rejected prototype. No admission is implied here. Re-read its latest evidence at kickoff; do not freeze this checkpoint into future truth.
+
+Documentation/issue planning may be delivered now through a separate documentation issue/PR. That PR must **not** close this adoption issue or move it out of Blocked.
+
+### Why the control plane changes
+
+Epic supplies the engine-facing interface that YACS previously had to assemble around bridges, scripts and editor commands. The target is one official, development-time MCP entrypoint into Unreal, with stock Epic tools for generic operations and thin YACS tools for domain operations. This reduces duplicated integration code and makes editor inspection, test invocation and later authoring discoverable through the same interface.
+
+**MCP is orchestration/interface, never authority.** An LLM tool response does not redefine a road, certify an asset, approve a scene or grant a proof PASS.
+
+| Owner | Responsibility retained |
+|---|---|
+| Route/physics contracts | Canonical alignment, distance, profile, fixed-step simulation and ride semantics; Actor/Pawn transforms are presentation. |
+| World Authority | Admitted GIS/DTM/masks, registration, geographic facts, provenance, unknowns and exclusions. |
+| BOB (#303) | Deterministic road/earthworks inspection and domain decisions within its admitted policy; no new construction or verified-case learning authority. |
+| Tests, proof producers and governance | Actual assertions, measured evidence, receipts, exact-SHA admission, review and human visual decisions. MCP requests/collects these; it does not replace them. |
+| Native PCG / PCGEx | Reconstruction and presentation execution. Native PCG is the foundation; pinned PCGEx extends named spatial/path/filter gaps. Neither owns geography or physics. |
+
+
+```mermaid
+flowchart TB
+    AGENT["AGENT<br/>Approved bounded task"] --> MCP["INTERFACE<br/>Official Unreal MCP"]
+    MCP --> EPIC["EPIC TOOLS<br/>Scene · objects · tests · PCG"]
+    MCP --> DOMAIN["YACS TOOLS<br/>Thin domain operations"]
+    DOMAIN --> BOB["AUTHORITY<br/>BOB domain logic"]
+    TRUTH["AUTHORITY<br/>World data · route · physics"] --> BOB
+    TRUTH --> EXEC["EXECUTE<br/>Admitted presentation rules"]
+    EPIC --> EXEC
+    BOB --> EXEC
+    EXEC --> PROOF["EVIDENCE<br/>Tests · results · receipts"]
+    PROOF --> GATE["ADMISSION<br/>CI · review · visual decision"]
+    GATE -.-> AGENT
+
+    classDef input fill:#303846,stroke:#8ea1b8,color:#f7f9fc,stroke-width:2px;
+    classDef exec fill:#123f73,stroke:#49a2ff,color:#ffffff,stroke-width:3px;
+    classDef tool fill:#4b2f69,stroke:#b77cff,color:#ffffff,stroke-width:2px;
+    classDef decision fill:#69470e,stroke:#f0a72f,color:#ffffff,stroke-width:3px;
+    classDef success fill:#1f5736,stroke:#63d889,color:#ffffff,stroke-width:3px;
+    classDef danger fill:#6b2429,stroke:#ff6b73,color:#ffffff,stroke-width:3px;
+    classDef owned fill:#34373d,stroke:#9da4ae,color:#ffffff,stroke-width:2px;
+    classDef evidence fill:#164d5c,stroke:#5bd6ef,color:#ffffff,stroke-width:2px;
+    class AGENT input;
+    class MCP,EPIC,DOMAIN tool;
+    class BOB,TRUTH owned;
+    class EXEC exec;
+    class PROOF evidence;
+    class GATE decision;
+    linkStyle default stroke-width:2px;
+```
+
+This is the future admitted architecture, not an implementation/proof claim.
+The initial spike uses read-only inspection/test operations, not the diagram's
+later world-generation capabilities.
+
+Existing proven PCGEx work stays intact. This is not a road-builder rewrite, a new biome engine or a month-long automation platform.
+
+### Official capabilities to reuse
+
+Epic documentation checked on **2026-10-05**:
+
+- **Unreal MCP** (`ModelContextProtocol`) with **All Toolsets / Toolset Registry**; select only the toolsets needed for the admitted task.
+- **SceneTools / ActorTools / ObjectTools** for scene and object inspection; **MaterialInstanceTools** for later #364 material work.
+- **AutomationTestToolset** for discovery, execution, status and results using the Session Frontend automation backend.
+- **PCGToolset** for later graph work; load **Skill_PCGGraphGeneration** before PCG tasks, inspect existing PCG examples and reuse suitable graphs.
+- The **shape grammar definition skill**, PCG Primitives and City Sample PCG patterns are candidates for #377; verify the exact installed skill identifier instead of inventing one.
+- **Semantic Search** is documented for UE 5.8+ asset discovery. It does not replace Julka approval/provenance. Integrated Terminal is optional convenience.
+
+These are an adoption map, **not a requirement to enable or prove every capability in this spike**. PCG generation, buildings, profiling and asset indexing remain separate work. Epic marks Unreal MCP/PCG tooling Experimental: version-match primary docs and verify the exact installed schemas.
+
+### Current baseline and transition
+
+At main commit `83b5281`, `YetAnotherCyclingSim.uproject` already uses `EngineAssociation: 5.8`. The inspected home engine reports **5.8.2, changelist 56702186**. Reverify the project/runner engine and plugin revisions at kickoff. This decision does not authorize an engine migration.
+
+#85 concerns the older `db-lyon/ue-mcp` integration and is closed. Its code, reviewed `1.3.9` pin, guard configuration and evidence remain unchanged; its closure does not prove the official server works. The older “db-lyon remains the single orchestration surface” target is superseded by this owner decision **for the future admitted path**, not retroactively rewritten as an executed migration.
+
+Do not run two independent agent-facing mutation servers. Before cutover, prove the old safety invariants on the official path. Native MCP must not be assumed to inherit `YacsStage3GGuard`. If the necessary restriction cannot be established with bounded existing mechanisms, stop with a gap report; do not compensate by building a generic gateway.
+
+### Bounded spike
+
+**Scope cap:** one approved local editor/client session, one admitted map, one Actor/UObject inspection, one existing small relevant Automation Test, one real read-only BOB operation and one evidence bundle. No new service, generic transport, universal tool framework or full suite of YACS toolsets.
+
+1. Verify the entry gate and pin the accepted map, source inputs, repository SHA, engine/plugin versions and relevant BOB policy.
+2. Discover the official server and actual tool schemas. Preserve the owner’s live/unsaved editor work. Use a local endpoint and serial calls.
+3. Read the current map/scene identity and a stable Actor/UObject path/class/property; compare them with the admitted checkpoint.
+4. Discover and run one existing relevant YACS Automation Test through `AutomationTestToolset`. Record the exact test name, final result and log/report; zero tests, timeout, unavailable workers or missing results fail the spike.
+5. Expose only one thin YACS-domain operation, for example a proposed `bob.inspect_contact`. That is a candidate interface name, **not a claimed existing API**. Inspect the current implementation and delegate to the real BOB inspector (existing references include `scripts/worldgen/adaptive_terrain_solver.py::review_pavement_contact_trial` and `scripts/worldgen/bob_terrain_fit_inspector.py::inspect_terrain_fit`). Do not reimplement its calculations in MCP or fabricate a success-shaped response.
+6. Return the actual BOB assessment, proof references and a structured receipt. Compare with direct execution on the same pinned inputs and record repeatability. `REJECT_CONTACT`, `REVIEW_PENDING` or `INSPECTOR_ONLY` must retain their meaning; successful orchestration is not road acceptance.
+7. Verify the restricted surface and unchanged persistent content. Unsupported operations, paths outside scope, absent/stale evidence and denied mutations fail closed.
+8. Record the bounded outcome and the handoff to #364. After success, **STOP infrastructure work and return to asphalt/shoulder**. If a capability is absent or unsafe, stop with an explicit blocker; retain the prior guarded workflow without silently treating the new gate as passed.
+
+The receipt should bind repository SHA, actual UE/plugin versions, map/object identity, tool calls/arguments, input hashes, BOB policy/version, Automation test/run/status, domain result, artifact paths/hashes, timestamp and mutation scope. Reuse current proof/receipt conventions. A log claiming success without the referenced evidence is insufficient.
+
+### Safety and preserved governance
+
+- Prove a narrow read/inspect/test surface. Loading All Toolsets is not blanket authorization for every registered operation.
+- Keep the server local; no public/remote exposure, new authentication service or arbitrary caller-supplied Python/shell/console/CVAR execution.
+- Frozen terrain/road geometry, canonical route/core assets and World Authority remain protected. This spike performs no persistent world mutation.
+- Later separately admitted persistent outputs remain under `/Game/Generated/YACS/**`; preserve snapshots/rollback, deterministic seeds and reproducibility.
+- Keep exact-SHA evidence, compile-reuse rules, trusted Proof Broker intent, current performance budgets, serial heavy jobs and isolated CI. A warm editor test is not a substitute for required cold/fresh-load proof.
+- Preserve normal provenance, build/Automation/asset, documentation, review and Aggregate gates. No changes to branch protection, required checks or proof policy.
+- From **step 3 onward**, do not create custom generic Unreal-control workarounds when official Epic MCP supports the case within YACS safety constraints. YACS toolsets contain only YACS domain knowledge/contracts. Existing deterministic producers, CI commandlets and proof collectors keep their jobs; no wholesale rewrite.
+- Any genuinely unsupported case needs primary-source evidence and a bounded, reviewed decision. Do not silently use a new generic bridge as fallback.
+
+### Definition of Done
+
+- [ ] #363 entry gate is verified with completed state, merged implementation and linked visual/render/performance/technical evidence.
+- [ ] Exact environment, one map and the permitted official tool surface are pinned.
+- [ ] Agent sees the admitted map/scene through official Unreal MCP.
+- [ ] Agent reads an actual Actor/UObject and verifies its identity.
+- [ ] One existing relevant Automation Test completes through the official toolset, with real results/logs.
+- [ ] One real BOB inspector executes through a thin domain tool and matches the direct invocation on identical inputs.
+- [ ] Result + proof + receipt are retrievable, hash/identity-bound and explicit about domain FAIL/review states.
+- [ ] Fail-closed behavior and absence of unauthorized persistent/authority changes are verified; guard parity is proven before any cutover.
+- [ ] Required integration/build/Automation, documentation, protected CI and review gates pass for the candidate; implementation is merged.
+- [ ] #364 receives the admitted interface, environment, evidence and limits. Optional #376/#377/#365 work remains deferred. **STOP infrastructure expansion.**
+
+A documentation merge, plugin enablement, connection handshake, mock BOB result or list of tool names alone cannot close this issue.
+
+### Related work
+
+- #363 — sole immediate prerequisite: full Landscape material closeout.
+- #85 — historical controlled MCP integration and safety baseline.
+- #303 — BOB authority and verified-case boundaries.
+- #364 — next delivery: asphalt/shoulder, first real consumer after this spike.
+- #365 — later native-PCG foundation plus PCGEx extensions; preserve its #364 gate.
+- #376 — bounded performance toolset; optional follow-up, not spike scope.
+- #377 — source-faithful procedural buildings; optional follow-up, not spike scope.
+
+### Agent starting context and sources
+
+Start with [the documentation index](README.md), [Roadmap](ROADMAP.md), [World Building Bible](WORLD_BUILDING_BIBLE.md), [plugin plan](UNREAL_TOOLING_PLUGIN_PLAN.md), [CI Validation Tiers](CI_VALIDATION_TIERS.md) and canonical [performance framework](performance/PERFORMANCE_FRAMEWORK.md)/[budgets](performance/BUDGETS.md). Issue #384 is the execution checklist; #385 delivers this planning record without activating MCP.
+
+Primary Epic references:
+
+- [Unreal MCP](https://dev.epicgames.com/documentation/unreal-engine/unreal-mcp-in-unreal-editor)
+- [AutomationTestToolset](https://dev.epicgames.com/documentation/unreal-engine/API/Plugins/AutomationTestToolset/UAutomationTestToolset)
+- [PCGToolset](https://dev.epicgames.com/documentation/unreal-engine/API/PluginIndex/PCGToolset)
+- [PCG and LLM workflow / Skill_PCGGraphGeneration / Semantic Search](https://dev.epicgames.com/documentation/unreal-engine/working-with-pcg-and-llms-using-unreal-mcp-in-unreal-engine)
+- [City Sample PCG and MCP / shape grammar skill](https://dev.epicgames.com/documentation/unreal-engine/city-sample-pcg-and-mcp-server-interaction-in-unreal-engine)
+
+## Retained integration baseline and operating history
+
+The numbered sections below describe the existing db-lyon integration and its
+historical phases, plus independently admitted local/remote workflows. They are
+not permission to execute those phases now or an alternative roadmap to #384.
+The decision above governs future MCP adoption; the Bible, Roadmap and AGENTS
+remain authoritative for methodology, delivery and admission.
 
 ## 1. Purpose
 
@@ -139,33 +308,16 @@ The bridge deployed by `ue-mcp init` is treated as reproducible local developmen
 
 ## 4.1. UE 5.8 native tooling strategy
 
-UE 5.8 also ships an experimental official Unreal MCP implementation whose engine identifier is `ModelContextProtocol`. Its toolsets are exposed through Unreal's Toolset Registry; the experimental `PCGToolset` can create and modify PCG Graphs.
+The 2026-10-05 [official MCP decision](#official-unreal-mcp-adoption) supersedes
+the earlier target of keeping db-lyon as the permanent single orchestration
+surface and routing native tools through it. #384 selects the official server
+after full #363 closeout and bounded proof. This is not an executed cutover.
 
-For YACS this is treated as an **engine capability**, not as a second orchestration stack:
-
-```text
-Kilo / agent
-    |
-    v
-db-lyon ue-mcp
-    |
-    +--> YACS guards / flows / rollback
-    |
-    +--> stock ue-mcp handlers
-    |
-    +--> UE 5.8 Toolset Registry / selected native toolsets
-              |
-              +--> PCGToolset (after smoke validation)
-```
-
-Initial rule:
-
-- do not run db-lyon and the official Unreal MCP as two independent agent-facing servers at the same time;
-- keep db-lyon as the single YACS orchestration/safety surface;
-- keep `nativeTools.enabled: false` during Phase A;
-- after Phase A, enable only selected native toolsets when they solve a concrete gap;
-- `PCGToolset` is the first candidate because it directly supports graph authoring;
-- experimental native toolsets remain development-time tooling and require revalidation after UE upgrades.
+Keep the tracked db-lyon configuration, including `nativeTools.enabled: false`,
+unchanged until admitted implementation. Do not run two independent agent-facing
+mutation servers. Safety/guard parity and exact-SHA evidence remain mandatory;
+Experimental tooling must be reverified after version changes. Do not execute
+the historical Phase A-D schedule below as an alternative to the #384 gate.
 
 Detailed plugin schedule: [`UNREAL_TOOLING_PLUGIN_PLAN.md`](UNREAL_TOOLING_PLUGIN_PLAN.md).
 
