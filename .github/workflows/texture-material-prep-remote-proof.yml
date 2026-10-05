@@ -392,6 +392,12 @@ jobs:
           "PROOF_ROOT=$(Join-Path $env:RUNNER_TEMP ('texture-prep-plugin-' + $suffix))" >> $env:GITHUB_ENV
           "EVIDENCE_ROOT=$(Join-Path $env:RUNNER_TEMP ('texture-prep-remote-evidence-' + $suffix))" >> $env:GITHUB_ENV
 
+      - name: Release stale Unreal processes from the Actions workspace
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1 -Workspace $env:GITHUB_WORKSPACE
+
       - name: Verify remote host, disk, UE and GPU capability
         shell: pwsh
         run: |
