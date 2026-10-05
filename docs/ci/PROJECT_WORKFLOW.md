@@ -47,6 +47,14 @@ GitHub dependencies do not themselves disable branch/PR creation, so the agent
 execution rule in AGENTS.md remains binding. Only explicit owner authorization
 can change the order or remove a dependency.
 
+Owner-authorized insertion, 2026-10-05: official Unreal MCP adoption #384
+(informal "step 2.5") is natively blocked by full #363 completion. #364 retains
+its #363 dependency and additionally depends on #384. Keep #384 in **Blocked**
+until its predecessor's merged implementation and full acceptance evidence are
+verified; the remaining sequence is unchanged. Planning documentation uses #385
+as its closing issue, so merging that documentation must not close, unblock or
+promote #384. See [the bounded adoption contract](../UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption).
+
 After initial issue-open auto-add/status runs complete, set and read back the
 manual Blocked values; an asynchronous initial Backlog update can otherwise
 overwrite an earlier manual edit. This is a sequencing check, not a new status

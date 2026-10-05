@@ -3,6 +3,7 @@
 **Status:** active production plan
 **Applies to:** UE 5.8.2 MVP roadmap
 **Rule:** no plugin is enabled “just in case”.
+**Official MCP decision, 2026-10-05:** #384 is the future official-server adoption path, blocked by complete #363 admission/merge and preceding #364. Planning only; preserve the current engine, plugin list, db-lyon pin and safety model. See [the bounded contract](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption).
 **Current M3 recovery gate:** the core PCG assets with legacy Stage 3G identifiers (`PCG_RouteExclusion`, `PCG_Forest`, `PCG_Valley`, `PCG_HighAlpine`) are validated mainline deliverables. Historical R4/R4.1 names remain only where they identify existing evidence or workflows; current planning uses M3 workstreams. The recovery keeps native PCG and route/physics separation and follows the Embark-first tooling admission policy before any new custom authoring surface.
 
 ## 1. Purpose
@@ -34,7 +35,7 @@ Enabling a tool is not considered complete by itself. If the tool produces persi
 - **Geometry Script** (`GeometryScripting`) — editor-only;
 - **RoadForge Mesh Core** — vendored MIT donor, **editor-only**; not part of the shipping runtime surface.
 
-The official UE `ModelContextProtocol` plugin is not enabled as an independent server. YACS may consume selected native toolsets only through the guarded orchestration policy. The project also uses Enhanced Input in C++, but this document focuses on plugin/tooling decisions rather than every engine module dependency.
+The official UE `ModelContextProtocol` plugin is not enabled as an independent server. #384 plans the official server as the future control-plane entrypoint after its #363 entry gate and guard-parity proof; no activation is performed by this decision. The project already has `EngineAssociation: 5.8`; no engine migration is implied. The project also uses Enhanced Input in C++, but this document focuses on plugin/tooling decisions rather than every engine module dependency.
 
 Any change to the explicit plugin list is an integration change and requires an Unreal editor build plus relevant Automation/proof on the home/reference PC.
 
@@ -46,7 +47,7 @@ Any change to the explicit plugin list is an integration change and requires an 
 | **M3** | **Editor Scripting Utilities** | MUST | safer/simpler editor automation APIs complementing PythonScriptPlugin | active authoring dependency for deterministic editor-time world generation and proof workflows |
 | **M3** | **Geometry Script** | SHOULD | generate/analyze/edit helper geometry, mesh processing and custom world-authoring tools | R4.1 uses it in a bounded continuous/tiled-terrain vertical-slice comparison; keep route physics independent and persist only reproducible results |
 | **M3** | **PCG Geometry Script Interop** | CONDITIONAL | PCG ↔ Dynamic/Static Mesh operations and mesh sampling when a graph actually requires them | enable only on demonstrated graph need |
-| **M3** | **PCGToolset** | EXPERIMENT | agent-driven creation/modification of PCG Graphs through UE 5.8 Toolset Registry | only after MCP smoke; keep behind YACS guard/flow surface |
+| **M3** | **PCGToolset + Skill_PCGGraphGeneration** | EXPERIMENT | official graph authoring with reference examples and skill context | later #365 after #384 admission; not required by the minimal spike; preserve YACS authority/guards |
 | **M3/M7** | **Water + Landmass** | OPTIONAL | lake/river/terrain shaping if water survives art-direction review | leave disabled until composition decision |
 | **6** | **Control Rig** | MUST | procedural cycling posture and in-engine rig control | enable at Stage 6 start |
 | **6** | **IK Rig** | MUST | mocap retargeting, IK goals and retarget chains | enable at Stage 6 start |
@@ -57,12 +58,12 @@ Any change to the explicit plugin list is an integration change and requires an 
 | **6** | **Skeletal Mesh Editing Tools** | OPTIONAL | small mesh/skinning fixes in UE without external round-trip | evaluate only after rider import pain is measured |
 | **6** | **Control Rig Modules** | OPTIONAL/BETA | reusable modular rig blocks | evaluate after minimal YACS Control Rig works |
 | **M7 reference** | **PCG Biome Core / Sample** | REFERENCE / EXPERIMENTAL | study data-driven biome composition for valley/forest/high-Alpine authoring | reference first; production dependency only after a YACS-specific proof |
-| **M7** | **PCGEx** | CONDITIONAL SPIKE / THIRD-PARTY | candidate for spatial/path/filter operations only if native graphs become materially cumbersome | bounded native-vs-PCGEx comparison on one named problem before dependency admission |
+| **M3/M7** | **PCGEx** | PINNED EXTENSION / THIRD-PARTY | extend native PCG for named spatial/path/filter gaps | preserve already proven authoring integrations; new uses require version-matched API evidence and bounded proof; the Bible owns admission |
 | **M7** | **Scriptable Tools Editor Mode** | OPTIONAL | custom “Generate YACS World” editor mode/UI if flows become cumbersome | add only if it clearly beats MCP flows/Editor Utility workflows |
 | **M8** | **Niagara** | MUST | rain, wheel spray, debris/leaves and atmospheric VFX | enable/verify when weather implementation begins |
 | **M8** | **MetaSounds** | SHOULD | parameter-driven drivetrain/freehub/tyres/brakes/wind audio | enable/verify when production audio starts |
-| **M3+ dev tooling** | **db-lyon ue-mcp** | MUST for planned worldgen workflow | single orchestration layer for Kilo: flows, guards, rollback, editor actions and proof | exact `1.3.9` dependency; reviewed upstream commit `d79a34bb6e7a5883457efe8f33c9f85b1ba3e136`; install only from the committed lock with `npm ci --ignore-scripts`; upgrade only after provenance + integration review |
-| **M3+ dev tooling** | **UE ModelContextProtocol / Toolset Registry** | SELECTIVE/EXPERIMENTAL | official UE 5.8 AI-callable toolsets such as PCGToolset | consume selectively through the chosen orchestration path, not as a second uncontrolled server |
+| **M3+ dev tooling** | **db-lyon ue-mcp** | RETAINED BASELINE | historical #85 flows, guards, rollback and editor/proof interface pending #384 cutover | keep exact `1.3.9` / `d79a34bb6e7a5883457efe8f33c9f85b1ba3e136`, committed lock and `npm ci --ignore-scripts`; do not remove before safety-parity proof |
+| **M3+ dev tooling** | **Official Unreal MCP / All Toolsets / Toolset Registry** | PLANNED / EXPERIMENTAL / BLOCKED | #384 official interface with scene/object inspection and AutomationTestToolset; later MaterialInstanceTools for #364 | full #363 admission first; bounded surface, real BOB result/proof/receipt and guard parity; no two independent mutation servers |
 | **M3 editor tooling** | **RoadForge Mesh Core** | INCLUDED / EDITOR-ONLY | vendored MIT road-mesh primitives used only as a bounded presentation-geometry donor | Editor target only; no shipping/runtime dependency; production SP638 adapter still requires its own bounded visual/technical proof and never owns route/physics truth |
 
 ### Embark-first tooling admission rule
@@ -101,7 +102,7 @@ These are tracked candidates, **not current dependencies**:
 
 | Tool / project | Planned role | Earliest decision point | Current status |
 |---|---|---|---|
-| **PCGEx / PCGExtendedToolkit** | advanced PCG spatial/filter/path/asset-staging helpers | after first green stock `PCG_Forest` proof | `spike` |
+| **PCGEx / PCGExtendedToolkit** | additional spatial/filter/path/asset-staging uses beyond the already proven integration | a named gap in native PCG plus bounded proof | `new-use candidate; existing pin/admission retained` |
 | **EssentialUE5PCG** | reference patterns for spline-driven forest/rocks/path and dynamic-mesh authoring | Stage 3G implementation | `reference` |
 | **PCG Biome Core** | reference architecture for data-driven biome definitions, asset sets, filters, exclusions and blending | Stage 3G-R5 / Stage 7 | `reference/optional-experiment` |
 | **Analog Strike** | reference for deterministic offline generation -> UE import/authoring -> capture pipeline | Stage 3G-R5 / Stage 7 | `reference` |
@@ -121,7 +122,9 @@ Adoption policy:
 - do not claim a public Embark repository represents the complete internal ARC Raiders production stack unless Embark documents that explicitly.
 ## 4. M3 world-generation stack (legacy Stage 3G identifiers retained)
 
-Target:
+Retained db-lyon baseline diagram below. The future official-server target and
+authority diagram are in [the #384 decision](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption).
+The old path is not a mandate to build a second generic bridge.
 
 ```text
 WorldSpec + authoritative route geometry
@@ -144,6 +147,18 @@ WorldSpec + authoritative route geometry
 ```
 
 PCG is a **consumer** of the YACS route, never its owner.
+
+Native PCG remains the foundation and PCGEx a pinned extension. Load the official
+PCG graph-generation skill before later graph work; evaluate PCG Primitives and
+the shape grammar definition skill for #377, with exact installed identifiers
+and source/licence checks. Semantic Search and Terminal are optional, not #384
+deliverables. #376 performance tooling is also outside the minimal spike.
+
+From world-finishing step 3 onward, use official Epic MCP for supported generic
+Unreal control within YACS safety constraints. Custom toolsets contain only YACS
+domain knowledge/contracts. Existing producers and proof/CI workflows keep their
+roles. After the bounded #384 DoD succeeds, stop infrastructure work and return
+to #364 asphalt/shoulder; no general platform expansion is authorized.
 
 Allowed PCG inputs can include:
 

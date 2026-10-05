@@ -60,6 +60,43 @@ YACS deliberately separates physical truth from visual presentation.
 | Cliffs / rocks / scree | terrain-derived masks + dedicated meshes / PCG / materials | yes |
 | Weather / lighting | environment systems | yes |
 
+### MCP control plane does not own world truth
+
+Owner decision, 2026-10-05, [#384](https://github.com/karnalooch/YetAnotherCyclingSim/issues/384):
+adopt official Epic Unreal MCP through a bounded spike **only after full #363
+Landscape material acceptance and protected merge**, before #364 asphalt/shoulder.
+This is planning, not plugin activation, implementation or an engine migration.
+See [the MCP decision and DoD](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption)
+and [delivery order](ROADMAP.md#official-unreal-mcp-adoption-between-materials-and-asphalt).
+
+MCP is the agent's orchestration/interface layer. World Authority still owns
+admitted geography, masks, provenance and unknowns; BOB still owns its admitted
+road/earthworks domain decisions; route/physics contracts remain independent.
+Tests, deterministic proof producers, exact-SHA receipts and governance decide
+technical admission, alongside separate human visual acceptance. An MCP response
+cannot manufacture PASS, promote a BOB learning case or turn Actor transforms
+into route truth.
+
+**Native PCG is the procedural foundation; PCGEx is an extension for identified
+spatial/path/filter needs.** Preserve pinned, proven PCGEx work and the existing
+Embark-first evidence ladder. Neither procedural system owns geography. Load
+Epic's PCG graph-generation skill and inspect example graphs before later PCG
+authoring; Primitives/shape grammar remain scoped tools, not source evidence.
+
+From world-finishing step 3 onward, do not create custom generic Unreal-control
+workarounds when the official Epic MCP supports the operation within YACS safety
+constraints. YACS toolsets contain only domain knowledge/contracts, delegating
+to existing producers and validators. Existing scripts, commandlets and trusted
+proof workflows remain valid. Unsupported capability requires an explicit
+bounded gap decision, not a new general automation platform.
+
+The spike proves map/object inspection, one existing Automation Test and one
+real read-only BOB operation with result/proof/receipt. Guard parity must be
+proven; official tools do not automatically inherit the old MCP guard. Keep
+frozen geometry, generated-content boundaries, exact-SHA proof, performance
+budgets and review gates. After success, **STOP infrastructure expansion and
+return to #364**; #365/#376/#377 keep their separate scope and admission.
+
 ### 2.1 Real-world reconstruction and World Authority
 
 YACS uses a **real-world-first** world-building model:
