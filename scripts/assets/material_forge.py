@@ -743,7 +743,14 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     author = sub.add_parser("author", help="Create all 3x3 editable Material Maker graphs")
-    author.add_argument("--material-maker-source", type=Path, required=True)
+    author.add_argument(
+        "--material-maker",
+        "--material-maker-source",
+        dest="material_maker",
+        type=Path,
+        required=True,
+        help="Material Maker 1.7 install directory containing nodes/material.mmg and material_maker.exe",
+    )
     author.add_argument("--output", type=Path, required=True)
     author.add_argument("--catalog", type=Path, default=DEFAULT_CATALOG)
     author.add_argument("--upstreams", type=Path, default=DEFAULT_UPSTREAMS)
@@ -751,7 +758,7 @@ def build_parser() -> argparse.ArgumentParser:
         func=lambda args: print(
             json.dumps(
                 author_all(
-                    args.material_maker_source,
+                    args.material_maker,
                     args.output,
                     args.catalog,
                     args.upstreams,
