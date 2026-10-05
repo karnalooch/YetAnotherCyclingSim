@@ -147,6 +147,8 @@ jobs:
         shell: pwsh
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1 -Workspace $env:GITHUB_WORKSPACE
           $proof = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/Unreal'
           if (Test-Path -LiteralPath $proof) {
             Remove-Item -LiteralPath $proof -Recurse -Force
@@ -649,6 +651,8 @@ jobs:
         shell: pwsh
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1 -Workspace $env:GITHUB_WORKSPACE
           $proof = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/Unreal'
           if (Test-Path -LiteralPath $proof) {
             Remove-Item -LiteralPath $proof -Recurse -Force
