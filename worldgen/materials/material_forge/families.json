@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "output_resolution": 2048,
+  "normal_convention": "DirectX",
+  "semantic_owner": "PCG/PCGEx",
+  "families": [
+    {
+      "id": "aged_mountain_asphalt",
+      "label": "Aged mountain asphalt",
+      "role": "RoadSurfaceAppearance",
+      "semantic_owner": "PCG/PCGEx",
+      "tile_metres": 2.0,
+      "local_masks": {
+        "R": "cracks",
+        "G": "patches",
+        "B": "binder_micro_variation"
+      },
+      "variants": [
+        {
+          "id": "base",
+          "label": "Base aged",
+          "seed": 101,
+          "brightness": 0.245,
+          "surface_a": 0.75,
+          "surface_b": 0.45,
+          "roughness": 0.8,
+          "normal_strength": 0.52
+        },
+        {
+          "id": "worn",
+          "label": "Worn cracked",
+          "seed": 137,
+          "brightness": 0.225,
+          "surface_a": 1.15,
+          "surface_b": 0.35,
+          "roughness": 0.84,
+          "normal_strength": 0.62
+        },
+        {
+          "id": "repaired",
+          "label": "Patched repaired",
+          "seed": 173,
+          "brightness": 0.255,
+          "surface_a": 0.62,
+          "surface_b": 1.05,
+          "roughness": 0.77,
+          "normal_strength": 0.48
+        }
+      ]
+    },
+    {
+      "id": "regional_limestone",
+      "label": "Regional pale limestone",
+      "role": "ExposedRockAppearance",
+      "semantic_owner": "PCG/PCGEx",
+      "tile_metres": 2.0,
+      "local_masks": {
+        "R": "fractures",
+        "G": "pores_pits",
+        "B": "mineral_variation"
+      },
+      "variants": [
+        {
+          "id": "base",
+          "label": "Weathered pale",
+          "seed": 211,
+          "brightness": 0.72,
+          "surface_a": 0.82,
+          "surface_b": 0.72,
+          "roughness": 0.74,
+          "normal_strength": 0.82
+        },
+        {
+          "id": "fractured",
+          "label": "Fractured",
+          "seed": 257,
+          "brightness": 0.7,
+          "surface_a": 1.35,
+          "surface_b": 0.78,
+          "roughness": 0.77,
+          "normal_strength": 0.96
+        },
+        {
+          "id": "karst_weathered",
+          "label": "Karst weathered",
+          "seed": 293,
+          "brightness": 0.715,
+          "surface_a": 0.98,
+          "surface_b": 1.25,
+          "roughness": 0.79,
+          "normal_strength": 0.88
+        }
+      ]
+    },
+    {
+      "id": "mediterranean_soil",
+      "label": "Dry Mediterranean mineral soil",
+      "role": "DryMineralAppearance",
+      "semantic_owner": "PCG/PCGEx",
+      "tile_metres": 2.0,
+      "local_masks": {
+        "R": "pebbles",
+        "G": "dry_crust",
+        "B": "fine_grain_variation"
+      },
+      "variants": [
+        {
+          "id": "fine",
+          "label": "Fine mineral",
+          "seed": 307,
+          "brightness": 0.43,
+          "surface_a": 0.55,
+          "surface_b": 0.45,
+          "roughness": 0.9,
+          "normal_strength": 0.45
+        },
+        {
+          "id": "stony",
+          "label": "Stony mineral",
+          "seed": 353,
+          "brightness": 0.425,
+          "surface_a": 1.15,
+          "surface_b": 0.38,
+          "roughness": 0.88,
+          "normal_strength": 0.62
+        },
+        {
+          "id": "dry_crusted",
+          "label": "Dry crusted",
+          "seed": 389,
+          "brightness": 0.405,
+          "surface_a": 0.72,
+          "surface_b": 1.2,
+          "roughness": 0.93,
+          "normal_strength": 0.5
+        }
+      ]
+    }
+  ]
+}
