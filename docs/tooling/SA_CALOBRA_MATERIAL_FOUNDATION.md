@@ -210,6 +210,26 @@ this material-only step. Embark references do not establish Embark's PCGEx use.
 
 ## Required closeout
 
+`prepare_sa_calobra_material_proof_map.py` prepares the existing isolated
+checkout's map for a later standalone consumer. It first runs the fresh native
+consumer verification, then calls UE 5.8.2 `EditorLoadingAndSavingUtils.save_map`
+only in that checkout. Installed `FileHelpers.h` / `FileHelpers.cpp` define the
+API. Native Landscape instances created in `LandscapeEdit.cpp` belong to the
+saved world; rebuild APIs use editor-only setters and must not be called in
+standalone Game mode.
+
+Set `YACS_2B_PROOF_MAP_ACTION=prepare` or `reload`,
+`YACS_2B_PROOF_MAP_REPORT` to a new absolute report path and the usual workspace,
+exact-SHA and fresh-consumer report variables. Reload additionally requires
+`YACS_2B_PREPARED_MAP_REPORT`. Use separate fresh commandlet processes for both
+actions. Reports bind the original canonical hash and the derived proof-map
+hash separately, plus material asset hashes, instance parents and bounded scene
+invariants. Saving changes proof-map bytes; never describe the derived map as
+byte-identical to the frozen source. It is a test consumer, not a new terrain
+target or authoring map. Preserve its unique bytes before checkout cleanup under
+the existing retention policy. No canonical save, terrain import, road builder,
+ray-tracing change or performance measurement is part of this preparation.
+
 Review different environments, steep surfaces, demanding overviews and rider
 views across the whole Landscape; retain the Golden Kilometer as an additional
 check. Resolve visible material defects before owner visual acceptance.
