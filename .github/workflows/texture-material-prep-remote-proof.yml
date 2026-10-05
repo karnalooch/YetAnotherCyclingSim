@@ -88,18 +88,25 @@ jobs:
                 )
               }
           )
+          $liveCandidateCount = 0
           foreach ($candidate in $candidates) {
             $pidToStop = [int]$candidate.ProcessId
+            $native = Get-Process -Id $pidToStop -ErrorAction SilentlyContinue
+            if (-not $native -or $native.HasExited) {
+              Write-Host ("Ignoring exited CIM record for CI-owned Unreal process {0} pid={1}." -f $candidate.Name, $pidToStop)
+              continue
+            }
+            $liveCandidateCount += 1
             Write-Host ("Stopping orphaned CI-owned Unreal process {0} pid={1}" -f $candidate.Name, $pidToStop)
             & taskkill.exe /PID $pidToStop /T /F | Write-Host
             $exit = $LASTEXITCODE
             Start-Sleep -Milliseconds 250
             $stillAlive = Get-Process -Id $pidToStop -ErrorAction SilentlyContinue
-            if ($stillAlive) {
+            if ($stillAlive -and -not $stillAlive.HasExited) {
               throw "CI-owned Unreal process pid=$pidToStop survived taskkill (exit=$exit)."
             }
           }
-          Write-Host ("Scoped CI orphan cleanup: PASS ({0} candidate(s))." -f $candidates.Count)
+          Write-Host ("Scoped CI orphan cleanup: PASS ({0} live candidate(s), {1} CIM match(es))." -f $liveCandidateCount, $candidates.Count)
 
       - name: Inspect active Unreal processes after scoped cleanup
         shell: pwsh
