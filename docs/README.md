@@ -150,6 +150,7 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 
 ## Evidence, experiments and history
 
+- [Fact-checked external architecture audit — 2026-10-06](experiments/external-audit-fact-check-2026-10-06.md) — repository-grounded review of external AI audit claims; maps surviving risks to #339/#373/#303 and records rejected findings caused by incomplete retrieval. Evidence only; no architecture or milestone authority.
 - [Sa Calobra surface coverage audit — 2026-10-04](experiments/sa-calobra-surface-coverage-2026-10-04.md) — read-only candidate evidence: sampling support, unresolved rock/soil classification and review priorities; no production admission.
 
 These documents remain valuable but no longer define the active roadmap hierarchy:
