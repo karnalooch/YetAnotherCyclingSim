@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       proof_artifact_name:
-        description: Exact render-proof artifact name from the caller run.
+        description: Exact slim canary-input artifact name from the caller run.
         required: true
         type: string
 
@@ -24,6 +24,7 @@ env:
   GIT_LFS_SKIP_SMUDGE: "1"
   YACS_RENDER_PROOF_SHA: ${{ inputs.target_sha }}
   YACS_RENDER_PROOF_ARTIFACT_NAME: ${{ inputs.proof_artifact_name }}
+  YACS_LFS_CACHE_ROOT: 'D:\yacs\cache\git-lfs\YetAnotherCyclingSim'
 
 jobs:
   canary:
@@ -94,9 +95,29 @@ jobs:
             throw "Expected exactly one render proof artifact '$env:YACS_RENDER_PROOF_ARTIFACT_NAME'; found $($matches.Count)."
           }
           $artifact = $matches[0]
+          $fullArtifact = @(
+            $inventory.artifacts |
+              Where-Object {
+                $_.name -like "material-forge-mallorca-$env:YACS_RENDER_PROOF_SHA-*" -and
+                $_.expired -ne $true
+              }
+          ) | Select-Object -First 1
           $zip = Join-Path $root 'render-proof.zip'
+          $downloadWatch = [Diagnostics.Stopwatch]::StartNew()
           & curl.exe -L --fail-with-body -H "Authorization: Bearer $env:GITHUB_TOKEN" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" -o $zip $artifact.archive_download_url
+          $downloadWatch.Stop()
           if ($LASTEXITCODE -ne 0) { throw 'Render proof artifact download failed.' }
+          $transfer = [ordered]@{
+            schema_version = 1
+            artifact_name = $artifact.name
+            artifact_metadata_bytes = [int64]$artifact.size_in_bytes
+            archive_bytes = [int64](Get-Item -LiteralPath $zip).Length
+            full_artifact_metadata_bytes = if ($null -ne $fullArtifact) { [int64]$fullArtifact.size_in_bytes } else { $null }
+            avoided_full_artifact_download = $true
+            elapsed_seconds = [math]::Round($downloadWatch.Elapsed.TotalSeconds, 3)
+          }
+          $transfer | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $root 'proof-transfer-metrics.json') -Encoding utf8
+          $transfer | ConvertTo-Json -Depth 6 | Write-Host
           $digest = (Get-FileHash -Algorithm SHA256 -LiteralPath $zip).Hash.ToLowerInvariant()
           $expectedDigest = [string]$artifact.digest
           if (-not $expectedDigest.StartsWith('sha256:')) {
@@ -108,6 +129,14 @@ jobs:
 
           $proof = Join-Path $root 'render-proof'
           Expand-Archive -LiteralPath $zip -DestinationPath $proof -Force
+          $inputReceipt = Get-Content -LiteralPath (Join-Path $proof 'canary-input-receipt.json') -Raw | ConvertFrom-Json
+          if (
+            $inputReceipt.status -ne 'CANARY_INPUT_READY' -or
+            $inputReceipt.exact_sha -ne $env:YACS_RENDER_PROOF_SHA -or
+            @($inputReceipt.variants).Count -ne 2
+          ) {
+            throw 'Slim canary-input receipt is not admissible.'
+          }
           $summary = Get-Content -LiteralPath (Join-Path $proof 'proof-summary.json') -Raw | ConvertFrom-Json
           $catalog = Get-Content -LiteralPath 'worldgen/materials/material_forge/families.json' -Raw | ConvertFrom-Json
           $expectedVariantCount = 0
@@ -154,22 +183,72 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $env:GIT_LFS_SKIP_SMUDGE = '0'
           try {
+            New-Item -ItemType Directory -Force -Path $env:YACS_LFS_CACHE_ROOT | Out-Null
             git lfs install --local --skip-smudge
             if ($LASTEXITCODE -ne 0) { throw 'Local LFS setup failed.' }
+            git config --local lfs.storage $env:YACS_LFS_CACHE_ROOT
+            if ($LASTEXITCODE -ne 0) { throw 'Persistent LFS storage configuration failed.' }
+
             $lfsInclude = 'Content/**,worldgen/materials/visual_fill/material-weights.png'
+            $inventory = @(git lfs ls-files --long --include=$lfsInclude)
+            if ($LASTEXITCODE -ne 0) { throw 'Unreal Content LFS inventory failed.' }
+
+            $envLines = @(git lfs env)
+            $mediaLine = $envLines | Where-Object { $_ -like 'LocalMediaDir=*' } | Select-Object -First 1
+            if ($null -eq $mediaLine) { throw 'Git LFS LocalMediaDir was not reported.' }
+            $mediaDir = $mediaLine.Substring('LocalMediaDir='.Length)
+            $selected = @()
+            $hits = 0
+            $misses = 0
+            foreach ($line in $inventory) {
+              if ($line -notmatch '^([0-9a-fA-F]{64})\s+[-*]\s+(.+)$') {
+                throw "Cannot parse Git LFS inventory line: $line"
+              }
+              $oid = $Matches[1].ToLowerInvariant()
+              $path = $Matches[2]
+              $object = Join-Path $mediaDir (Join-Path $oid.Substring(0,2) (Join-Path $oid.Substring(2,2) $oid))
+              $hit = Test-Path -LiteralPath $object -PathType Leaf
+              if ($hit) { $hits++ } else { $misses++ }
+              $selected += [pscustomobject]@{ oid=$oid; path=$path; cache_hit=$hit }
+            }
+
+            $fetchWatch = [Diagnostics.Stopwatch]::StartNew()
             git -c "lfs.fetchinclude=$lfsInclude" -c "lfs.fetchexclude=" lfs fetch origin $env:GITHUB_SHA
+            $fetchWatch.Stop()
             if ($LASTEXITCODE -ne 0) { throw 'Unreal Content + visual-fill weight LFS fetch failed.' }
+
+            foreach ($entry in $selected) {
+              $object = Join-Path $mediaDir (Join-Path $entry.oid.Substring(0,2) (Join-Path $entry.oid.Substring(2,2) $entry.oid))
+              if (-not (Test-Path -LiteralPath $object -PathType Leaf)) {
+                throw "Persistent LFS cache is missing fetched object $($entry.oid)."
+              }
+            }
+
             git lfs checkout 'Content/**' 'worldgen/materials/visual_fill/material-weights.png'
             if ($LASTEXITCODE -ne 0) { throw 'Unreal Content + visual-fill weight LFS checkout failed.' }
             $paths = @(git lfs ls-files --name-only --include=$lfsInclude)
-            if ($LASTEXITCODE -ne 0) { throw 'Unreal Content LFS inventory failed.' }
+            if ($LASTEXITCODE -ne 0) { throw 'Materialized LFS inventory failed.' }
             foreach ($path in $paths) {
               if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Missing Unreal LFS package: $path" }
               git lfs pointer --check "--file=$path" *> $null
               if ($LASTEXITCODE -eq 0) { throw "Unmaterialized Unreal LFS pointer: $path" }
             }
+
+            $lfsReceipt = [ordered]@{
+              schema_version = 1
+              cache_root = $env:YACS_LFS_CACHE_ROOT
+              local_media_dir = $mediaDir
+              selected_objects = $selected.Count
+              cache_hits_before_fetch = $hits
+              cache_misses_before_fetch = $misses
+              network_fetch_required = ($misses -gt 0)
+              fetch_elapsed_seconds = [math]::Round($fetchWatch.Elapsed.TotalSeconds, 3)
+              include = $lfsInclude
+            }
+            $lfsReceipt | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $env:YACS_CANARY_ROOT 'lfs-cache-metrics.json') -Encoding utf8
+            $lfsReceipt | ConvertTo-Json -Depth 8 | Write-Host
+
             # pointer --check returns 1 for a correctly materialized non-pointer.
-            # Do not leak that expected probe result as the PowerShell step exit code.
             $global:LASTEXITCODE = 0
           }
           finally { $env:GIT_LFS_SKIP_SMUDGE = '1' }
@@ -234,7 +313,7 @@ jobs:
             }
           }
 
-      - name: Run bounded UE import canary and rollback
+      - name: Run Material Forge UE proofs in one editor session
         shell: pwsh
         working-directory: _material-forge-ue-canary
         run: |
@@ -242,79 +321,46 @@ jobs:
           . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
           $project = Join-Path (Get-Location) 'YetAnotherCyclingSim.uproject'
           $engine = Resolve-YacsUnrealEngine -ProjectPath $project
-          $script = (Resolve-Path 'scripts/ue/run_material_forge_canary_proof.py').Path
-          $stdout = Join-Path $env:YACS_MATERIAL_FORGE_CANARY_ROOT 'unreal.stdout.log'
-          $stderr = Join-Path $env:YACS_MATERIAL_FORGE_CANARY_ROOT 'unreal.stderr.log'
-          $log = Join-Path $env:YACS_MATERIAL_FORGE_CANARY_ROOT 'unreal.engine.log'
+          $script = (Resolve-Path 'scripts/ue/run_material_forge_unified_proof.py').Path
+          $root = $env:YACS_MATERIAL_FORGE_CANARY_ROOT
+          $stdout = Join-Path $root 'unreal.single-session.stdout.log'
+          $stderr = Join-Path $root 'unreal.single-session.stderr.log'
+          $log = Join-Path $root 'unreal.single-session.engine.log'
           $arguments = @(('"' + $project + '"'), ('-ExecutePythonScript="' + $script + '"'), '-Unattended', '-NoPause', '-NoSplash', '-NoP4', '-windowed', '-ResX=1920', '-ResY=1080', '-NoVSync', '-ScriptErrorsAreFatal', '-stdout', ('-AbsLog="' + $log + '"'))
           $process = Start-Process -FilePath $engine.UnrealEditorPath -ArgumentList $arguments -PassThru -NoNewWindow -RedirectStandardOutput $stdout -RedirectStandardError $stderr
-          if (-not $process.WaitForExit(600000)) {
+          if (-not $process.WaitForExit(900000)) {
             $process | Stop-Process -Force
-            throw 'Material Forge UE canary timed out after 600 seconds.'
+            throw 'Material Forge single-session UE proof timed out after 900 seconds.'
           }
           if ($process.ExitCode -ne 0) {
             foreach ($diagnostic in @($stdout, $stderr, $log)) {
               if (Test-Path -LiteralPath $diagnostic -PathType Leaf) {
                 Write-Host "===== TAIL $diagnostic ====="
-                Get-Content -LiteralPath $diagnostic -Tail 200 | Write-Host
+                Get-Content -LiteralPath $diagnostic -Tail 240 | Write-Host
               }
             }
-            throw "Material Forge UE canary editor exited $($process.ExitCode)."
+            throw "Material Forge single-session UE proof exited $($process.ExitCode)."
           }
-          $receiptPath = Join-Path $env:YACS_MATERIAL_FORGE_CANARY_ROOT 'ue-canary-proof.json'
-          if (-not (Test-Path -LiteralPath $receiptPath -PathType Leaf)) { throw 'Material Forge UE canary aggregate receipt is missing.' }
-          $receipt = Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json
-          if ($receipt.status -ne 'UE_CANARY_ASSIGN_ROLLBACK_PASS' -or $receipt.artifact_exact_sha -ne $env:YACS_RENDER_PROOF_SHA -or $receipt.execution_sha -ne $env:GITHUB_SHA -or $receipt.map_saved -ne $false -or $receipt.assets_saved -ne $false -or $receipt.geometry_changed -ne $false -or $receipt.world_semantics_changed -ne $false) {
-            throw 'Material Forge UE canary aggregate receipt failed.'
-          }
-          $receipt | ConvertTo-Json -Depth 12 | Write-Host
 
-      - name: Run refined rock-soil Landscape blend and rollback
-        shell: pwsh
-        working-directory: _material-forge-ue-canary
-        run: |
-          $ErrorActionPreference = 'Stop'
-          . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
-          $project = Join-Path (Get-Location) 'YetAnotherCyclingSim.uproject'
-          $engine = Resolve-YacsUnrealEngine -ProjectPath $project
-          $script = (Resolve-Path 'scripts/ue/run_material_forge_chunked_proof.py').Path
-          $root = $env:YACS_MF_CHUNKED_PROOF_ROOT
-          New-Item -ItemType Directory -Force -Path $root | Out-Null
-          $stdout = Join-Path $root 'unreal.stdout.log'
-          $stderr = Join-Path $root 'unreal.stderr.log'
-          $log = Join-Path $root 'unreal.engine.log'
-          $arguments = @(('"' + $project + '"'), ('-ExecutePythonScript="' + $script + '"'), '-Unattended', '-NoPause', '-NoSplash', '-NoP4', '-windowed', '-ResX=1920', '-ResY=1080', '-NoVSync', '-ScriptErrorsAreFatal', '-stdout', ('-AbsLog="' + $log + '"'))
-          $process = Start-Process -FilePath $engine.UnrealEditorPath -ArgumentList $arguments -PassThru -NoNewWindow -RedirectStandardOutput $stdout -RedirectStandardError $stderr
-          if (-not $process.WaitForExit(600000)) {
-            $process | Stop-Process -Force
-            throw 'Refined Material Forge Landscape blend proof timed out after 600 seconds.'
-          }
-          if ($process.ExitCode -ne 0) {
-            foreach ($diagnostic in @($stdout, $stderr, $log)) {
-              if (Test-Path -LiteralPath $diagnostic -PathType Leaf) {
-                Write-Host "===== TAIL $diagnostic ====="
-                Get-Content -LiteralPath $diagnostic -Tail 200 | Write-Host
-              }
-            }
-            throw "Refined Material Forge Landscape proof exited $($process.ExitCode)."
-          }
-          $receiptPath = Join-Path $root 'landscape-blend-proof.json'
+          $receiptPath = Join-Path $root 'ue-single-session-proof.json'
           if (-not (Test-Path -LiteralPath $receiptPath -PathType Leaf)) {
-            throw 'Refined Landscape blend aggregate receipt is missing.'
+            throw 'Material Forge single-session aggregate receipt is missing.'
           }
           $receipt = Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json
           if (
-            $receipt.status -ne 'UE_LANDSCAPE_BLEND_ASSIGN_ROLLBACK_PASS' -or
+            $receipt.status -ne 'UE_MATERIAL_FORGE_SINGLE_SESSION_PASS' -or
             $receipt.artifact_exact_sha -ne $env:YACS_RENDER_PROOF_SHA -or
             $receipt.execution_sha -ne $env:GITHUB_SHA -or
-            $receipt.rock_variant -ne 'regional_limestone/refined_a' -or
-            $receipt.soil_variant -ne 'mediterranean_soil/refined_a' -or
+            [int]$receipt.editor_process_count -ne 1 -or
+            [int]$receipt.map_load_count -ne 1 -or
+            $receipt.canary_status -ne 'UE_CANARY_ASSIGN_ROLLBACK_PASS' -or
+            $receipt.landscape_status -ne 'UE_LANDSCAPE_BLEND_ASSIGN_ROLLBACK_PASS' -or
             $receipt.map_saved -ne $false -or
             $receipt.assets_saved -ne $false -or
             $receipt.geometry_changed -ne $false -or
             $receipt.world_semantics_changed -ne $false
           ) {
-            throw 'Refined Landscape blend proof failed.'
+            throw 'Material Forge single-session UE aggregate proof failed.'
           }
           $receipt | ConvertTo-Json -Depth 12 | Write-Host
 
@@ -325,6 +371,8 @@ jobs:
           name: material-forge-ue-canary-${{ inputs.target_sha }}-${{ github.run_attempt }}
           path: |
             ${{ runner.temp }}/material-forge-canary-${{ inputs.target_sha }}/carry-forward-plan.json
+            ${{ runner.temp }}/material-forge-canary-${{ inputs.target_sha }}/proof-transfer-metrics.json
+            ${{ runner.temp }}/material-forge-canary-${{ inputs.target_sha }}/lfs-cache-metrics.json
             ${{ runner.temp }}/material-forge-canary-${{ inputs.target_sha }}/variant-revalidation.log
             ${{ runner.temp }}/material-forge-canary-${{ inputs.target_sha }}/soil-variant-revalidation.log
             ${{ runner.temp }}/material-forge-canary-${{ inputs.target_sha }}/ue/**
