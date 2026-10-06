@@ -50,9 +50,9 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         )
         self.assertIn("run_material_forge_unified_proof.py", text)
 
-        unified = (
-            ROOT / "scripts/ue/run_material_forge_unified_proof.py"
-        ).read_text(encoding="utf-8")
+        unified = (ROOT / "scripts/ue/run_material_forge_unified_proof.py").read_text(
+            encoding="utf-8"
+        )
         self.assertIn("canary.main()", unified)
         self.assertIn("chunked.main(load_map=False)", unified)
         self.assertIn('"editor_process_count": 1', unified)
