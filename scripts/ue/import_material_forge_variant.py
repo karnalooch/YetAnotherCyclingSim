@@ -275,6 +275,7 @@ def import_variant(
             }
         )
     )
+    association = unreal.MaterialParameterAssociation.GLOBAL_PARAMETER
     for name, texture in params.items():
         if name not in visible_textures:
             raise RuntimeError(
@@ -283,17 +284,48 @@ def import_variant(
                 + "; visible="
                 + ",".join(sorted(visible_textures))
             )
-        if not LIB.set_material_instance_texture_parameter_value(instance, name, texture):
+        if not LIB.set_material_instance_parameter_override(
+            instance, name, True, association
+        ):
+            raise RuntimeError("Material instance override enable failed: " + name)
+        if not LIB.set_material_instance_texture_parameter_value(
+            instance, name, texture, association
+        ):
             raise RuntimeError("Material instance texture override failed: " + name)
+        actual = LIB.get_material_instance_texture_parameter_value(
+            instance, name, association
+        )
+        if actual is None or actual.get_path_name() != texture.get_path_name():
+            raise RuntimeError(
+                "Material instance texture verification failed: "
+                + name
+                + " expected="
+                + texture.get_path_name()
+                + " actual="
+                + ("<None>" if actual is None else actual.get_path_name())
+            )
+
     if "TileSizeCm" not in visible_scalars:
         raise RuntimeError(
             "Material instance TileSizeCm parameter missing after parent refresh; visible="
             + ",".join(sorted(visible_scalars))
         )
+    if not LIB.set_material_instance_parameter_override(
+        instance, "TileSizeCm", True, association
+    ):
+        raise RuntimeError("Material instance TileSizeCm override enable failed")
+    tile_size_cm = float(provenance["tile_metres"]) * 100.0
     if not LIB.set_material_instance_scalar_parameter_value(
-        instance, "TileSizeCm", float(provenance["tile_metres"]) * 100.0
+        instance, "TileSizeCm", tile_size_cm, association
     ):
         raise RuntimeError("Material instance TileSizeCm override failed")
+    actual_tile = LIB.get_material_instance_scalar_parameter_value(
+        instance, "TileSizeCm", association
+    )
+    if abs(float(actual_tile) - tile_size_cm) > 0.001:
+        raise RuntimeError(
+            f"Material instance TileSizeCm verification failed: {actual_tile} != {tile_size_cm}"
+        )
     LIB.update_material_instance(instance)
 
     assets = {
