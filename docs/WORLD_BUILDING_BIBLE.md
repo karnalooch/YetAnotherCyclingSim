@@ -156,6 +156,32 @@ Every generated world fact that can affect placement should be classified before
 
 A renderer must never promote an **inference** or **decorative** choice into a new hard fact.
 
+#### MCP-assisted building reconstruction
+
+Issue #377 applies the World Authority model to agent-assisted building generation.
+
+The permitted pipeline is:
+
+```text
+admitted cadastral / BTN / LiDAR evidence
+        -> Building Authority record
+        -> guarded YACS Buildings MCP tools
+        -> UE PCG Primitives / Shape Grammar
+        -> /Game/Generated/YACS/Buildings/**
+        -> alignment + visual + performance proof
+```
+
+The **Building Authority** owns whether a structure exists, its source-faithful footprint and admitted measured/derived attributes. MCP/LLM logic may choose or tune an approved presentation grammar, but it may not invent a footprint, relocate a source building, or silently turn uncertain height/roof evidence into a hard fact.
+
+UE 5.8 City Sample PCG is the preferred native reference for implementation mechanics because Epic's PCG Primitive framework is designed for MCP/LLM interaction and includes polygon/shape operations, Shape Grammar Definition authoring and a building primitive that consumes footprint splines and explicit height data. YACS reuses the method only; Mallorca-specific building style, roof, facade and material rules remain YACS-owned presentation content.
+
+Generation must be deterministic from the same admitted source record, grammar/version and seed. Persistent MCP writes stay within the generated-content sandbox, with buildings scoped to `/Game/Generated/YACS/Buildings/**`. Road/safety exclusions, terrain contact, source confidence, visual proof and the reference-PC performance gate remain mandatory before broad rollout.
+
+Official references:
+- https://dev.epicgames.com/documentation/unreal-engine/city-sample-pcg-for-unreal-engine
+- https://dev.epicgames.com/documentation/unreal-engine/city-sample-pcg-and-mcp-server-interaction-in-unreal-engine
+- https://dev.epicgames.com/documentation/unreal-engine/unreal-mcp-in-unreal-editor
+
 #### Required provenance record
 
 Spatial world inputs and important derived products must retain enough metadata to reproduce and challenge the result:
