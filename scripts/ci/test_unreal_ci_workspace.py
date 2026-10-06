@@ -334,7 +334,9 @@ class UnrealWorkspaceTests(unittest.TestCase):
         )
         self.assertFalse(other.exists())
         self.assertEqual(
-            (quarantine / "Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log").read_bytes(),
+            (
+                quarantine / "Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log"
+            ).read_bytes(),
             b"preserve interrupted build",
         )
         self.assertTrue(self.root.exists())
