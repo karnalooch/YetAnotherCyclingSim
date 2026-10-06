@@ -7,12 +7,16 @@ on:
       - "codex/363-landscape-material-foundation"
     paths:
       - ".github/workflows/material-forge-mallorca-proof.yml"
+      - ".github/workflows/material-forge-ue-canary.yml"
       - "scripts/assets/material_forge.py"
       - "scripts/assets/render_material_forge.py"
       - "scripts/assets/render_material_forge.gd"
       - "scripts/assets/build_material_maker_limestone.py"
       - "scripts/assets/material_forge_proof_board.py"
       - "scripts/assets/test_material_forge.py"
+      - "scripts/ue/preview_material_forge_chunked_landscape.py"
+      - "scripts/ue/run_material_forge_canary_proof.py"
+      - "scripts/ue/run_material_forge_chunked_proof.py"
       - "worldgen/materials/material_forge/**"
       - "tools/material-forge/**"
       - "docs/tooling/MATERIAL_FORGE.md"
@@ -205,7 +209,7 @@ jobs:
           & $env:YACS_FORGE_PY scripts/assets/test_material_forge.py
           if ($LASTEXITCODE -ne 0) { throw 'Material Forge contract tests failed.' }
 
-      - name: Author render validate and replay all nine variants
+      - name: Author render validate and replay full catalog
         shell: pwsh
         working-directory: _material-forge-proof-src
         run: |

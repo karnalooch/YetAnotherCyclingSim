@@ -156,11 +156,12 @@ jobs:
           try {
             git lfs install --local --skip-smudge
             if ($LASTEXITCODE -ne 0) { throw 'Local LFS setup failed.' }
-            git -c "lfs.fetchinclude=Content/**" -c "lfs.fetchexclude=" lfs fetch origin $env:GITHUB_SHA
-            if ($LASTEXITCODE -ne 0) { throw 'Unreal Content LFS fetch failed.' }
-            git lfs checkout 'Content/**'
-            if ($LASTEXITCODE -ne 0) { throw 'Unreal Content LFS checkout failed.' }
-            $paths = @(git lfs ls-files --name-only --include='Content/**')
+            $lfsInclude = 'Content/**,worldgen/materials/visual_fill/material-weights.png'
+            git -c "lfs.fetchinclude=$lfsInclude" -c "lfs.fetchexclude=" lfs fetch origin $env:GITHUB_SHA
+            if ($LASTEXITCODE -ne 0) { throw 'Unreal Content + visual-fill weight LFS fetch failed.' }
+            git lfs checkout 'Content/**' 'worldgen/materials/visual_fill/material-weights.png'
+            if ($LASTEXITCODE -ne 0) { throw 'Unreal Content + visual-fill weight LFS checkout failed.' }
+            $paths = @(git lfs ls-files --name-only --include=$lfsInclude)
             if ($LASTEXITCODE -ne 0) { throw 'Unreal Content LFS inventory failed.' }
             foreach ($path in $paths) {
               if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Missing Unreal LFS package: $path" }
