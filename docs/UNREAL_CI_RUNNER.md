@@ -346,3 +346,18 @@ terrain failure does not lose successful compile evidence. See the
 The administrative `Clear-YacsRunnerWorkspace.ps1` preview/apply also protects
 the selected build's generated directories. A malformed/missing active target
 blocks administrative cleanup; a pointer change during apply requires a new preview.
+
+## Long generated-asset paths in isolated CI
+
+The reusable Unreal job enables `core.longpaths=true` in its job-local
+`GIT_CONFIG_GLOBAL` before the bootstrap and persistent-worktree checkouts.
+System/user Git settings remain isolated. This lets Git for Windows check out
+nested generated material packages without changing their Unreal package paths.
+The setting also applies to later Git operations in the job; it does not establish
+that every Unreal or third-party file API supports the same path length.
+
+Run [37420256509](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37420256509)
+failed before compilation on `M_SC_Limestone_ExposedRock.uasset` with
+`Filename too long`. A successful checkout at the corrected revision is required
+before claiming this runner failure resolved. Material Forge render, import,
+visual acceptance and performance remain separate proof gates.
