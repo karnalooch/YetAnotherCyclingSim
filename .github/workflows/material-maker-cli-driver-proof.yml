@@ -1,0 +1,161 @@
+name: Material Maker CLI driver proof
+
+on:
+  push:
+    branches:
+      - "codex/363-landscape-material-foundation"
+    paths:
+      - ".github/workflows/material-maker-cli-driver-proof.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+
+      - name: Run release CLI render-driver matrix
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $toolRoot = 'D:\yacs\tool-cache\material-forge'
+          $mmExe = Get-ChildItem -LiteralPath (Join-Path $toolRoot 'material-maker-1.7') -Filter 'material_maker.exe' -Recurse -ErrorAction Stop | Select-Object -First 1
+          if ($null -eq $mmExe) { throw 'Pinned Material Maker release missing.' }
+          $example = Get-ChildItem -LiteralPath (Join-Path $mmExe.Directory.FullName 'examples') -Filter 'dry_earth.ptex' -ErrorAction Stop | Select-Object -First 1
+          if ($null -eq $example) { throw 'Pinned dry_earth.ptex missing.' }
+          $python = Join-Path $toolRoot 'python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python)) { throw 'Pinned Python venv missing.' }
+
+          $root = Join-Path $env:RUNNER_TEMP "mm-cli-drivers-$env:GITHUB_SHA"
+          Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+
+          # Close only the GUI handoff instance created by our earlier proof.
+          $handoff = @(Get-CimInstance Win32_Process | Where-Object {
+            $_.Name -ieq 'material_maker.exe' -and
+            $_.ExecutablePath -eq $mmExe.FullName -and
+            $_.CommandLine -match '(?i)--no-splash'
+          })
+          $handoff | Select-Object ProcessId,SessionId,CommandLine |
+            ConvertTo-Json -Depth 5 |
+            Set-Content -LiteralPath (Join-Path $root 'closed-handoff.json') -Encoding utf8
+          foreach ($proc in $handoff) {
+            Stop-Process -Id $proc.ProcessId -Force -ErrorAction Stop
+          }
+          Start-Sleep -Seconds 2
+
+          "YACS_DRIVER_ROOT=$root" >> $env:GITHUB_ENV
+          "YACS_MM_EXE=$($mmExe.FullName)" >> $env:GITHUB_ENV
+          "YACS_MM_EXAMPLE=$($example.FullName)" >> $env:GITHUB_ENV
+          "YACS_DRIVER_PY=$python" >> $env:GITHUB_ENV
+          "YACS_DRIVER_STARTED_UTC=$([DateTime]::UtcNow.ToString('o'))" >> $env:GITHUB_ENV
+
+          @'
+          import json
+          import os
+          import shutil
+          import subprocess
+          import time
+          from pathlib import Path
+
+          root = Path(os.environ["YACS_DRIVER_ROOT"])
+          exe = Path(os.environ["YACS_MM_EXE"])
+          example = Path(os.environ["YACS_MM_EXAMPLE"])
+
+          cases = [
+              ("default_vulkan", []),
+              ("headless_vulkan", ["--headless"]),
+              ("d3d12", ["--rendering-driver", "d3d12"]),
+              ("headless_d3d12", ["--headless", "--rendering-driver", "d3d12"]),
+              ("gl_compatibility", ["--rendering-method", "gl_compatibility", "--rendering-driver", "opengl3"]),
+          ]
+          results = []
+          for name, engine_args in cases:
+              case = root / name
+              case.mkdir()
+              shutil.copy2(example, case / "dry_earth.ptex")
+              cmd = [
+                  str(exe),
+                  *engine_args,
+                  "--export-material",
+                  "-o", ".",
+                  "--output-file", "smoke",
+                  "dry_earth.ptex",
+              ]
+              started = time.monotonic()
+              try:
+                  proc = subprocess.run(
+                      cmd,
+                      cwd=case,
+                      stdout=subprocess.PIPE,
+                      stderr=subprocess.STDOUT,
+                      text=True,
+                      timeout=90,
+                  )
+                  code = proc.returncode
+                  output = proc.stdout or ""
+                  timed_out = False
+              except subprocess.TimeoutExpired as exc:
+                  code = None
+                  output = exc.stdout or ""
+                  if isinstance(output, bytes):
+                      output = output.decode("utf-8", errors="replace")
+                  timed_out = True
+              elapsed = round(time.monotonic() - started, 3)
+              (case / "stdout.log").write_text(output, encoding="utf-8")
+              files = [
+                  {"name": p.name, "size": p.stat().st_size}
+                  for p in sorted(case.iterdir())
+                  if p.is_file() and p.name not in {"dry_earth.ptex", "stdout.log"}
+              ]
+              entry = {
+                  "case": name,
+                  "engine_args": engine_args,
+                  "exit_code": code,
+                  "exit_code_hex": None if code is None else hex(code & 0xFFFFFFFF),
+                  "timed_out": timed_out,
+                  "elapsed_s": elapsed,
+                  "files": files,
+                  "stdout_tail": output[-6000:],
+              }
+              results.append(entry)
+              print(json.dumps(entry, indent=2))
+          (root / "matrix.json").write_text(json.dumps(results, indent=2), encoding="utf-8")
+          '@ | & $python -
+          if ($LASTEXITCODE -ne 0) { throw 'Driver matrix harness failed.' }
+
+      - name: Capture Windows crash events
+        if: ${{ always() }}
+        shell: pwsh
+        run: |
+          $root = $env:YACS_DRIVER_ROOT
+          if ([string]::IsNullOrWhiteSpace($root)) { exit 0 }
+          $since = [DateTime]::Parse($env:YACS_DRIVER_STARTED_UTC).ToLocalTime().AddMinutes(-1)
+          $events = @(
+            Get-WinEvent -FilterHashtable @{LogName='Application'; StartTime=$since} -ErrorAction SilentlyContinue |
+              Where-Object {
+                $_.Id -in @(1000,1001) -and
+                $_.Message -match '(?i)material_maker\.exe'
+              } |
+              Select-Object TimeCreated, Id, ProviderName, LevelDisplayName, Message
+          )
+          $events | ConvertTo-Json -Depth 8 |
+            Set-Content -LiteralPath (Join-Path $root 'windows-crash-events.json') -Encoding utf8
+          $events | Format-List | Out-String | Write-Host
+
+      - name: Upload driver evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: material-maker-cli-drivers-${{ github.sha }}
+          path: ${{ runner.temp }}/mm-cli-drivers-${{ github.sha }}
+          if-no-files-found: error
+          retention-days: 7
