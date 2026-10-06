@@ -53,13 +53,16 @@ jobs:
       - name: Checkout exact proof revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          path: _material-forge-proof-src
           ref: ${{ github.sha }}
           fetch-depth: 1
           lfs: false
+          clean: true
           persist-credentials: false
 
       - name: Verify exact SHA and idle shared host
         shell: pwsh
+        working-directory: _material-forge-proof-src
         run: |
           $ErrorActionPreference = 'Stop'
           $actual = (git rev-parse HEAD).Trim()
@@ -74,6 +77,7 @@ jobs:
 
       - name: Prepare proof root
         shell: pwsh
+        working-directory: _material-forge-proof-src
         run: |
           $proof = Join-Path $env:RUNNER_TEMP "material-forge-mallorca-$env:GITHUB_SHA"
           Remove-Item -LiteralPath $proof -Recurse -Force -ErrorAction SilentlyContinue
@@ -83,6 +87,7 @@ jobs:
 
       - name: Provision pinned Material Maker source runtime
         shell: pwsh
+        working-directory: _material-forge-proof-src
         run: |
           $ErrorActionPreference = 'Stop'
           $toolRoot = 'D:\yacs\tool-cache\material-forge'
@@ -163,6 +168,7 @@ jobs:
 
       - name: Prime Godot import and script-class cache
         shell: pwsh
+        working-directory: _material-forge-proof-src
         run: |
           $ErrorActionPreference = 'Stop'
           $prime = Join-Path $env:YACS_FORGE_PROOF 'prime'
@@ -194,12 +200,14 @@ jobs:
 
       - name: Run Material Forge contract tests
         shell: pwsh
+        working-directory: _material-forge-proof-src
         run: |
           & $env:YACS_FORGE_PY scripts/assets/test_material_forge.py
           if ($LASTEXITCODE -ne 0) { throw 'Material Forge contract tests failed.' }
 
       - name: Author render validate and replay all nine variants
         shell: pwsh
+        working-directory: _material-forge-proof-src
         run: |
           $ErrorActionPreference = 'Stop'
           $runA = Join-Path $env:YACS_FORGE_PROOF 'run-a'
