@@ -29,7 +29,7 @@ def _load_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def main():
+def main(*, load_map: bool = True):
     started = time.perf_counter()
     proof_root = Path(os.environ["YACS_MATERIAL_FORGE_CANARY_ROOT"])
     proof_root.mkdir(parents=True, exist_ok=True)
@@ -37,10 +37,19 @@ def main():
     execution_sha = os.environ["YACS_MATERIAL_FORGE_EXECUTION_SHA"]
 
     map_started = time.perf_counter()
-    world = unreal.EditorLoadingAndSavingUtils.load_map(MAP)
+    if load_map:
+        world = unreal.EditorLoadingAndSavingUtils.load_map(MAP)
+        if world is None:
+            raise RuntimeError("Cannot load frozen accepted Sa Calobra map")
+    else:
+        world = unreal.get_editor_subsystem(
+            unreal.UnrealEditorSubsystem
+        ).get_editor_world()
+        if world is None or world.get_path_name().split(".")[0] != MAP:
+            raise RuntimeError(
+                "Single-session import canary expected the accepted Sa Calobra map"
+            )
     map_load_seconds = time.perf_counter() - map_started
-    if world is None:
-        raise RuntimeError("Cannot load frozen accepted Sa Calobra map")
 
     landscapes = unreal.GameplayStatics.get_all_actors_of_class(world, unreal.Landscape)
     if len(landscapes) != 1:
@@ -103,6 +112,7 @@ def main():
         "visual_acceptance": "pending",
         "performance_acceptance": "pending",
         "map_load_seconds": round(map_load_seconds, 3),
+        "map_reloaded": bool(load_map),
         "phase_seconds": round(time.perf_counter() - started, 3),
     }
     (proof_root / "ue-canary-proof.json").write_text(json.dumps(aggregate, indent=2) + "\n", encoding="utf-8")

@@ -247,3 +247,22 @@ reuses the same editor/world, then both phases roll back transient assignments.
 Separate sub-receipts remain available, plus one aggregate single-session
 receipt recording phase timings and `editor_process_count=1`.
 
+### Memory-safe single-session ordering
+
+The first #402 benchmark proved that running the importer-only canary before the
+Landscape blend left only ~4.17 GiB free physical memory, so the existing 8 GiB
+Landscape preparation gate correctly failed closed.
+
+The single-session order is therefore:
+
+```text
+load accepted map once
+  -> real refined rock/soil Landscape blend + rollback
+  -> Unreal garbage collection of unreferenced transient objects
+  -> importer-only refined limestone canary + rollback
+  -> aggregate receipt
+```
+
+The 8 GiB Landscape preparation threshold is not reduced. The importer-only
+check reuses the already loaded accepted map and records `map_reloaded=false`.
+

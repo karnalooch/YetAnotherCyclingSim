@@ -53,8 +53,9 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         unified = (ROOT / "scripts/ue/run_material_forge_unified_proof.py").read_text(
             encoding="utf-8"
         )
-        self.assertIn("canary.main()", unified)
-        self.assertIn("chunked.main(load_map=False)", unified)
+        self.assertIn("chunked.main(load_map=True)", unified)
+        self.assertIn("unreal.collect_garbage()", unified)
+        self.assertIn("canary.main(load_map=False)", unified)
         self.assertIn('"editor_process_count": 1', unified)
         self.assertIn('"map_load_count": 1', unified)
 

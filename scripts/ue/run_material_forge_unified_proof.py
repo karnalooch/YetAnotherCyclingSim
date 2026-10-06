@@ -31,25 +31,35 @@ def main() -> None:
     artifact_sha = os.environ["YACS_MATERIAL_FORGE_ARTIFACT_SHA"]
     execution_sha = os.environ["YACS_MATERIAL_FORGE_EXECUTION_SHA"]
 
-    canary = _load("yacs_material_forge_canary_runner", CANARY_RUNNER)
-    canary_started = time.perf_counter()
-    canary_receipt = canary.main()
-    canary_seconds = time.perf_counter() - canary_started
-
+    # Run the stronger Landscape proof first while the process still has the
+    # full fail-closed memory headroom. The standalone importer canary is
+    # deliberately second because it has no separate 8 GB preparation gate.
     chunked = _load("yacs_material_forge_chunked_runner", CHUNKED_RUNNER)
     landscape_started = time.perf_counter()
-    landscape_receipt = chunked.main(load_map=False)
+    landscape_receipt = chunked.main(load_map=True)
     landscape_seconds = time.perf_counter() - landscape_started
 
-    if canary_receipt.get("status") != "UE_CANARY_ASSIGN_ROLLBACK_PASS":
-        raise RuntimeError("Single-session import canary did not pass")
     if (
         landscape_receipt.get("status")
         != "UE_LANDSCAPE_BLEND_ASSIGN_ROLLBACK_PASS"
     ):
         raise RuntimeError("Single-session Landscape blend did not pass")
-    if landscape_receipt.get("map_reloaded") is not False:
-        raise RuntimeError("Landscape phase reloaded the map in single-session mode")
+    if landscape_receipt.get("map_reloaded") is not True:
+        raise RuntimeError("Landscape phase did not perform the single map load")
+
+    # The Landscape phase has restored all component overrides. Release
+    # unreferenced transient material objects before the importer-only check.
+    unreal.collect_garbage()
+
+    canary = _load("yacs_material_forge_canary_runner", CANARY_RUNNER)
+    canary_started = time.perf_counter()
+    canary_receipt = canary.main(load_map=False)
+    canary_seconds = time.perf_counter() - canary_started
+
+    if canary_receipt.get("status") != "UE_CANARY_ASSIGN_ROLLBACK_PASS":
+        raise RuntimeError("Single-session import canary did not pass")
+    if canary_receipt.get("map_reloaded") is not False:
+        raise RuntimeError("Import canary reloaded the map in single-session mode")
 
     aggregate = {
         "status": "UE_MATERIAL_FORGE_SINGLE_SESSION_PASS",
@@ -59,7 +69,7 @@ def main() -> None:
         "map_load_count": 1,
         "canary_status": canary_receipt["status"],
         "landscape_status": landscape_receipt["status"],
-        "map_load_seconds": canary_receipt.get("map_load_seconds"),
+        "map_load_seconds": landscape_receipt.get("phase_seconds"),
         "canary_seconds": round(canary_seconds, 3),
         "landscape_seconds": round(landscape_seconds, 3),
         "total_seconds": round(time.perf_counter() - started, 3),
