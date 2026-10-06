@@ -1,0 +1,131 @@
+name: Blender Material Forge reference proof
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/blender-material-forge-reference.yml'
+      - '.gumball/workflow-lifecycle.json'
+      - 'scripts/blender/**'
+      - 'docs/tooling/BLENDER_HEADLESS.md'
+      - 'docs/tooling/MATERIAL_FORGE.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yacs-unreal-ci-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  reference:
+    name: Render ground-scale Material Forge references
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 20
+    env:
+      GIT_LFS_SKIP_SMUDGE: "1"
+      YACS_WORKSPACE_CONFIG: D:\\yacs\\workspace.json
+      YACS_MF_PROOF_ROOT: D:\\yacs\\material-forge-v2-final\\run-a
+      YACS_BLENDER_REFERENCE_ROOT: D:\\yacs\\work\\blender\\material-forge-reference
+
+    steps:
+      - name: Checkout exact reference revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: _blender-mf-reference
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+          lfs: false
+          clean: true
+          persist-credentials: false
+
+      - name: Refuse to compete with local Unreal
+        shell: powershell
+        working-directory: _blender-mf-reference
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+          $state | ConvertTo-Json -Depth 8 | Write-Host
+          if ($state.status -ne 'IDLE') {
+            throw "Blender reference proof requires an idle shared host; status=$($state.status)."
+          }
+
+      - name: Validate Material Forge proof inputs
+        shell: powershell
+        working-directory: _blender-mf-reference
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $rock = Join-Path $env:YACS_MF_PROOF_ROOT 'regional_limestone\\base'
+          $soil = Join-Path $env:YACS_MF_PROOF_ROOT 'mediterranean_soil\\fine'
+          foreach ($path in @(
+            (Join-Path $rock 'validation.json'),
+            (Join-Path $rock 'provenance.json'),
+            (Join-Path $soil 'validation.json'),
+            (Join-Path $soil 'provenance.json')
+          )) {
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+              throw "Required Material Forge proof input is missing: $path"
+            }
+          }
+
+      - name: Run pinned Blender 4.5.9 reference job
+        shell: powershell
+        working-directory: _blender-mf-reference
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Remove-Item -LiteralPath $env:YACS_BLENDER_REFERENCE_ROOT -Recurse -Force -ErrorAction SilentlyContinue
+          python scripts/blender/run_headless.py run `
+            --script scripts/blender/material_forge_reference.py `
+            --receipt work/blender/material-forge-reference/host-receipt.json `
+            -- `
+            --rock "$env:YACS_MF_PROOF_ROOT\\regional_limestone\\base" `
+            --soil "$env:YACS_MF_PROOF_ROOT\\mediterranean_soil\\fine" `
+            --output "$env:YACS_BLENDER_REFERENCE_ROOT" `
+            --expected-version 4.5.9
+          if ($LASTEXITCODE -ne 0) {
+            throw "Pinned Blender Material Forge reference job failed with exit $LASTEXITCODE."
+          }
+
+      - name: Verify reference receipts
+        shell: powershell
+        working-directory: _blender-mf-reference
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $hostPath = Join-Path $env:YACS_BLENDER_REFERENCE_ROOT 'host-receipt.json'
+          $referencePath = Join-Path $env:YACS_BLENDER_REFERENCE_ROOT 'reference-receipt.json'
+          $host = Get-Content -LiteralPath $hostPath -Raw | ConvertFrom-Json
+          $reference = Get-Content -LiteralPath $referencePath -Raw | ConvertFrom-Json
+
+          if ($host.status -ne 'PASS' -or $host.actual_blender_version -ne '4.5.9') {
+            throw 'Pinned Blender host receipt failed.'
+          }
+          if (
+            $reference.status -ne 'BLENDER_REFERENCE_PASS_UE_REVIEW_PENDING' -or
+            $reference.blender_version -ne '4.5.9' -or
+            $reference.background -ne $true -or
+            $reference.height_displacement_used -ne $false -or
+            $reference.world_semantics_changed -ne $false -or
+            $reference.geometry_authority_changed -ne $false -or
+            $reference.accepted_map_opened -ne $false -or
+            @($reference.renders).Count -ne 4
+          ) {
+            throw 'Blender Material Forge reference receipt failed.'
+          }
+
+          $reference | ConvertTo-Json -Depth 12 | Write-Host
+          "### Blender Material Forge reference proof" >> $env:GITHUB_STEP_SUMMARY
+          "- Blender: 4.5.9 headless" >> $env:GITHUB_STEP_SUMMARY
+          "- Inputs: regional_limestone/base + mediterranean_soil/fine" >> $env:GITHUB_STEP_SUMMARY
+          "- Views: context, grazing, rock close, soil close" >> $env:GITHUB_STEP_SUMMARY
+          "- Status: BLENDER_REFERENCE_PASS_UE_REVIEW_PENDING" >> $env:GITHUB_STEP_SUMMARY
+
+      - name: Upload Blender reference evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: blender-material-forge-reference-${{ github.run_id }}-${{ github.run_attempt }}
+          path: "D:/yacs/work/blender/material-forge-reference/**"
+          if-no-files-found: error
+          retention-days: 14

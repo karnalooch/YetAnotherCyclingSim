@@ -17,6 +17,11 @@
   },
   "workflows": [
     {
+      "file": "blender-material-forge-reference.yml",
+      "state": "CURRENT",
+      "reason": "Self-hosted Issue #399 pinned-Blender ground-scale Material Forge reference proof; consumes CPU-validated deterministic outputs, refuses active local Unreal ownership and never mutates the accepted world."
+    },
+    {
       "file": "asset-full.yml",
       "state": "CURRENT",
       "reason": "Explicit trusted full asset/release-oriented validation entrypoint."

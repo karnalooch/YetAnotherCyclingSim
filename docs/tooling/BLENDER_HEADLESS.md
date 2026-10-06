@@ -111,3 +111,20 @@ The command-line flags above are verified against the Blender 4.5 LTS manual:
 
 - https://docs.blender.org/manual/en/4.5/advanced/command_line/index.html
 - https://docs.blender.org/manual/en/4.5/advanced/command_line/arguments.html
+## Material Forge ground-scale reference - Issue #399
+
+The first production use of the headless lane is a non-authoritative Material
+Forge reference renderer. The self-hosted workflow invokes
+`scripts/blender/material_forge_reference.py` through the pinned launcher and
+consumes the current deterministic `regional_limestone/base` and
+`mediterranean_soil/fine` proof outputs.
+
+The job revalidates exact Material Forge map hashes, keeps the 4 m physical tile
+scale and renders four fixed views. DirectX normals are converted only for
+Blender preview; Height remains inspection-only and never displaces terrain.
+The receipt explicitly records that world semantics, geometry authority,
+accepted-map state and Unreal assets were not changed.
+
+The workflow refuses to run while a local Unreal Editor owns the shared host.
+A PASS is evidence for human material review, not Unreal integration or
+performance admission.

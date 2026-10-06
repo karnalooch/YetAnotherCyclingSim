@@ -162,3 +162,22 @@ asphalt shader (`patch_mask` is used instead).
 Still required for admission: all nine variants twice, byte determinism, UE
 import/compile, canary assignment/rollback, visual review and later whole-area
 performance.
+## Blender ground-scale reference proof
+
+Issue #399 uses the already-admitted Blender 4.5.9 headless lane as a
+reference renderer only. It consumes the CPU-validated
+`regional_limestone/base` and `mediterranean_soil/fine` outputs from the
+current deterministic Material Forge proof and verifies their recorded hashes
+again before rendering.
+
+The reference scene preserves the catalog's physical 4 m tile scale, converts
+the DirectX normal map convention for Blender preview by flipping the green
+channel, uses BaseColor + Normal + ORM, and deliberately leaves Height out of
+geometry displacement. Fixed context, grazing, rock-close and soil-close views
+are written below `D:\\yacs\\work\\blender\\material-forge-reference` with a
+machine-readable receipt and output hashes.
+
+This stage does not open or save the accepted Sa Calobra map, does not create
+world semantics and does not admit visual quality by itself. Its output is an
+owner-review reference between deterministic Material Forge map validation and
+the bounded Unreal consumer/canary.
