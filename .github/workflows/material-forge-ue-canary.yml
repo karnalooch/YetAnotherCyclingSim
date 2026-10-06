@@ -19,7 +19,7 @@ permissions:
 
 concurrency:
   group: material-forge-ue-canary-${{ github.ref_name }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   GIT_LFS_SKIP_SMUDGE: "1"
@@ -32,6 +32,9 @@ jobs:
     name: Import assign rollback one component
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: _material-forge-ue-canary
     steps:
       - name: Isolate Git configuration
         shell: pwsh
@@ -49,9 +52,11 @@ jobs:
       - name: Checkout exact canary revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          path: _material-forge-ue-canary
           ref: ${{ github.sha }}
           fetch-depth: 0
           lfs: false
+          clean: false
           persist-credentials: false
 
       - name: Verify execution identity and idle host
