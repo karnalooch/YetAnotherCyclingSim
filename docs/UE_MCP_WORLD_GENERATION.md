@@ -1,7 +1,7 @@
 # YACS UE-MCP world-generation architecture
 
 **Status:** official Epic MCP direction approved; #384 blocked by full #363 closeout, before #364. Planning only; no MCP activation or engine migration.
-**Tracking:** #384 adoption; #385 documentation; #85 historical integration
+**Tracking:** #384 adoption; #385 documentation; #85 historical integration; follow-ups #376 (Performance MCP), #377 (Buildings MCP)
 **Retained integration:** `db-lyon/ue-mcp` at reviewed `v1.3.9`; unchanged until proven cutover
 **Engine baseline:** project association 5.8; home engine inspected 2026-10-05: 5.8.2, changelist 56702186. Reverify exact project/runner versions at kickoff.
 
@@ -370,6 +370,62 @@ before the old path is removed.
 Public Embark repositories are architecture references unless explicitly
 adopted through provenance. They must not be represented as the complete
 internal ARC Raiders authoring stack.
+
+## 4.3. Bounded performance engineering through MCP
+
+Issue #376 extends the MCP architecture with a **read-mostly YACS Performance Toolset**. MCP is the orchestration surface, not a replacement for the existing Performance Framework, budgets or exact-SHA evidence.
+
+Preferred escalation path:
+
+```text
+cheap sample
+  -> Frame / Game / Draw / RHI / GPU
+  -> CSV Profiler
+  -> Unreal Insights
+  -> optional PIX / NVIDIA Nsight Graphics
+  -> exact-SHA comparison against YACS budgets
+```
+
+The MCP-facing API should expose named, bounded actions such as quick sampling, scoped CSV/Insights capture, baseline comparison and a canonical performance gate. Heavy vendor tools are opt-in diagnostics for a measured bottleneck, not a per-run dependency. RenderDoc remains useful for frame-level graphics diagnosis; GPU crash tooling such as Nsight Aftermath remains separate from normal admission.
+
+The caller must never provide arbitrary shell, Python, console-command or CVAR text. Repository-owned wrappers select the allowed scenario, checkpoint, resolution and capture mode. Every admitted result records the exact repository SHA plus map/location, resolution, quality preset, hardware identity and relevant world/scenario fingerprint.
+
+The canonical policy remains [`performance/PERFORMANCE_FRAMEWORK.md`](performance/PERFORMANCE_FRAMEWORK.md) and [`performance/BUDGETS.md`](performance/BUDGETS.md). MCP may collect and compare evidence; it may not lower quality automatically or reinterpret a failing budget as PASS.
+
+## 4.4. Source-faithful procedural buildings through MCP
+
+Issue #377 defines a separate **YACS Buildings MCP Toolset**. Its central rule is that the LLM may help author presentation rules, but it does not decide where real buildings exist.
+
+```text
+DG Catastro / BTN / LiDAR / admitted source evidence
+                  |
+                  v
+        Building Authority record
+ footprint / parts / height / confidence
+                  |
+                  v
+        guarded Buildings MCP tools
+                  |
+                  v
+ UE 5.8 PCG Primitives + Shape Grammar
+                  |
+                  v
+ /Game/Generated/YACS/Buildings/**
+                  |
+                  v
+ alignment / visual / performance proof
+```
+
+UE 5.8 City Sample PCG is the primary native reference. Epic documents the PCG Primitive framework as designed to work with Unreal MCP/LLMs, including polygon/shape operations, building-oriented primitives and Shape Grammar Definition skills. The City Sample building primitive accepts footprint splines and can extrude from an explicit height attribute, which matches YACS's source-first authority model well.
+
+YACS must adapt the method, not the City Sample geography or art direction. Mallorca-specific facade, roof and material grammars remain project-owned presentation assets. Footprint XY and other admitted geographic facts remain owned by World Authority; unknown height or roof evidence stays explicit rather than being silently promoted to fact.
+
+The initial tool surface should stay bounded to source inspection, volume preview, approved-style selection, deterministic generation/regeneration of one building or one small cluster, alignment/exclusion validation and proof capture. Persistent writes remain restricted to the generated-content sandbox, with buildings further scoped below `/Game/Generated/YACS/Buildings/**`.
+
+Official references:
+- https://dev.epicgames.com/documentation/unreal-engine/city-sample-pcg-for-unreal-engine
+- https://dev.epicgames.com/documentation/unreal-engine/city-sample-pcg-and-mcp-server-interaction-in-unreal-engine
+- https://dev.epicgames.com/documentation/unreal-engine/unreal-mcp-in-unreal-editor
 
 ## 5. Initial MCP surface
 

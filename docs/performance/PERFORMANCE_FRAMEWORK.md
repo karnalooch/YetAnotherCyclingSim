@@ -44,6 +44,23 @@ does not establish whole-Landscape PASS. Existing hard/warning/watch budgets and
 the milestone-driven measurement cadence remain unchanged; no new measurement
 framework or arbitrary memory threshold is introduced by this scope clarification.
 
+## MCP-assisted profiling and capture
+
+Issue #376 adds a bounded MCP orchestration layer above this framework. It does **not** create a second performance policy.
+
+The intended diagnostic ladder is:
+
+```text
+Frame/Game/Draw/RHI/GPU quick sample
+  -> CSV Profiler
+  -> Unreal Insights
+  -> PIX or NVIDIA Nsight Graphics when a measured bottleneck justifies heavy capture
+```
+
+MCP requests must select repository-owned scenarios and capture modes. Arbitrary shell, Python, console-command and CVAR text are not part of the agent surface. Every capture remains exact-SHA evidence and carries the same scenario, location, resolution, hardware and quality metadata required by this framework.
+
+External GPU profilers are escalation tools, not acceptance authorities. Their findings explain a bottleneck; canonical YACS budgets and the exact-SHA scenario result decide PASS/FAIL. The reference RTX 2070 SUPER path may use NVIDIA Nsight Graphics and PIX where supported. RenderDoc remains a focused frame-debugging option. GPU crash dump tooling is kept separate from ordinary performance regression measurement.
+
 ## Version roadmap
 
 | Version | Roadmap integration | Primary scope | New evidence |

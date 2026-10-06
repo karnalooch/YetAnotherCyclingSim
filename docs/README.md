@@ -157,6 +157,8 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 
 ## Evidence, experiments and history
 
+- [Fact-checked external architecture audit — 2026-10-06](experiments/external-audit-fact-check-2026-10-06.md) — repository-grounded review of external AI audit claims; maps surviving risks to #339/#373/#303 and records rejected findings caused by incomplete retrieval. Evidence only; no architecture or milestone authority.
+
 - [Sa Calobra surface candidate comparison — 2026-10-05](experiments/sa-calobra-surface-candidates-2026-10-05.md) — 21 reviewed sources, six-role visual shortlist and rejection reasons; no production-set approval or Unreal import.
 
 - [Sa Calobra material reference review — 2026-10-05](experiments/sa-calobra-material-reference-review-2026-10-05.md) — whole-area aerial observations, ground-reference gaps and preliminary asset leads; reference gate remains open.
