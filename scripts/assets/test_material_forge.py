@@ -113,8 +113,8 @@ class MaterialForgeContractTests(unittest.TestCase):
         self.assertNotIn("0.012*patch;", forge.ASPHALT_FUNCTION)
         self.assertNotIn("clamp(patch,0.0,1.0)", forge.ASPHALT_FUNCTION)
 
-    def test_visual_v2_uses_family_specific_surface_structures(self):
-        self.assertEqual(forge.GENERATOR_VERSION, 2)
+    def test_visual_v3_uses_family_specific_surface_structures(self):
+        self.assertEqual(forge.GENERATOR_VERSION, 3)
         self.assertIn("yacs_rect_patch", forge.ASPHALT_FUNCTION)
         self.assertIn("yacs_contour_crack", forge.ASPHALT_FUNCTION)
         self.assertNotIn("coarse_cells = yacs_cells(q,23.0", forge.ASPHALT_FUNCTION)
@@ -135,6 +135,24 @@ class MaterialForgeContractTests(unittest.TestCase):
         soil = {v["id"]: v for v in by_id["mediterranean_soil"]["variants"]}
         self.assertGreater(soil["stony"]["surface_a"], soil["fine"]["surface_a"])
         self.assertGreater(soil["dry_crusted"]["surface_b"], soil["fine"]["surface_b"])
+
+        limestone = {v["id"]: v for v in by_id["regional_limestone"]["variants"]}
+        self.assertIn("refined_a", limestone)
+        self.assertIn("refined_a", soil)
+        self.assertLess(limestone["refined_a"]["brightness"], limestone["base"]["brightness"])
+        self.assertGreater(limestone["refined_a"]["surface_a"], limestone["base"]["surface_a"])
+        self.assertGreater(soil["refined_a"]["surface_a"], soil["fine"]["surface_a"])
+        self.assertGreater(soil["refined_a"]["surface_b"], soil["fine"]["surface_b"])
+        self.assertLess(soil["refined_a"]["refinement"]["variation_scale"], 1.0)
+        self.assertGreater(limestone["refined_a"]["refinement"]["crack_color_scale"], 1.0)
+        self.assertNotEqual(
+            forge._color_code("regional_limestone", limestone["base"]),
+            forge._color_code("regional_limestone", limestone["refined_a"]),
+        )
+        self.assertNotEqual(
+            forge._color_code("mediterranean_soil", soil["fine"]),
+            forge._color_code("mediterranean_soil", soil["refined_a"]),
+        )
 
     def test_catalog_has_three_families_and_three_variants_each(self):
         catalog = forge.load_catalog()

@@ -33,6 +33,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--soil", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--expected-version", required=True)
+    parser.add_argument("--rock-family", default="regional_limestone")
+    parser.add_argument("--rock-variant", default="base")
+    parser.add_argument("--soil-family", default="mediterranean_soil")
+    parser.add_argument("--soil-variant", default="fine")
     return parser.parse_args(_tail_args())
 
 
@@ -250,7 +254,14 @@ def main() -> int:
     )
     output.mkdir(parents=True, exist_ok=True)
 
-    plan = build_reference_plan(rock, soil)
+    plan = build_reference_plan(
+        rock,
+        soil,
+        rock_family=args.rock_family,
+        rock_variant=args.rock_variant,
+        soil_family=args.soil_family,
+        soil_variant=args.soil_variant,
+    )
     tile = float(plan["tile_metres"])
 
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -299,8 +310,8 @@ def main() -> int:
         ],
         "input_fingerprint": plan["input_fingerprint"],
         "tile_metres": tile,
-        "left_surface": "regional_limestone/base",
-        "right_surface": "mediterranean_soil/fine",
+        "left_surface": f"{plan['rock']['family']}/{plan['rock']['variant']}",
+        "right_surface": f"{plan['soil']['family']}/{plan['soil']['variant']}",
         "rock": plan["rock"],
         "soil": plan["soil"],
         "renders": renders,

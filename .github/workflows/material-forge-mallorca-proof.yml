@@ -33,7 +33,7 @@ env:
 
 jobs:
   render-determinism:
-    name: Render 3x3 catalog twice
+    name: Render phase-A catalog twice
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 90
     steps:
@@ -218,7 +218,12 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw "Material Forge author failed: $run" }
 
             $manifest = Get-Content -LiteralPath (Join-Path $run 'run-manifest.json') -Raw | ConvertFrom-Json
-            if ($manifest.variants.Count -ne 9) { throw "Expected nine authored variants in $run" }
+            $catalog = Get-Content -LiteralPath 'worldgen/materials/material_forge/families.json' -Raw | ConvertFrom-Json
+            $expectedVariants = 0
+            foreach ($family in $catalog.families) { $expectedVariants += @($family.variants).Count }
+            if ($manifest.variants.Count -ne $expectedVariants) {
+              throw "Expected $expectedVariants authored variants in $run; got $($manifest.variants.Count)"
+            }
             foreach ($entry in $manifest.variants) {
               $relative = $entry.directory.Replace('/', [IO.Path]::DirectorySeparatorChar)
               $variant = Join-Path $run $relative
@@ -242,7 +247,7 @@ jobs:
           $summary = [ordered]@{
             status = 'RENDER_DETERMINISM_PASS_UE_REVIEW_PENDING'
             exact_sha = $env:GITHUB_SHA
-            variant_count = 9
+            variant_count = $expectedVariants
             run_a_manifest_sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $runA 'run-manifest.json')).Hash.ToLowerInvariant()
             run_b_manifest_sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $runB 'run-manifest.json')).Hash.ToLowerInvariant()
             comparison = Get-Content -LiteralPath (Join-Path $env:YACS_FORGE_PROOF 'comparison.json') -Raw | ConvertFrom-Json
@@ -251,6 +256,50 @@ jobs:
             performance_acceptance = 'pending'
           }
           $summary | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath (Join-Path $env:YACS_FORGE_PROOF 'proof-summary.json') -Encoding utf8
+
+      - name: Render refined rock-soil ground-scale reference in pinned Blender
+        shell: pwsh
+        working-directory: _material-forge-proof-src
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $runA = Join-Path $env:YACS_FORGE_PROOF 'run-a'
+          $referenceRoot = Join-Path 'D:\yacs\work\blender\material-forge-reference' $env:GITHUB_SHA
+          Remove-Item -LiteralPath $referenceRoot -Recurse -Force -ErrorAction SilentlyContinue
+          $receipt = "work/blender/material-forge-reference/$env:GITHUB_SHA/host-receipt.json"
+
+          python scripts/blender/run_headless.py run `
+            --script scripts/blender/material_forge_reference.py `
+            --receipt $receipt `
+            -- `
+            --rock (Join-Path $runA 'regional_limestone\refined_a') `
+            --soil (Join-Path $runA 'mediterranean_soil\refined_a') `
+            --output $referenceRoot `
+            --expected-version 4.5.9 `
+            --rock-family regional_limestone `
+            --rock-variant refined_a `
+            --soil-family mediterranean_soil `
+            --soil-variant refined_a
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Refined Blender reference render failed.'
+          }
+
+          $hostReceipt = Get-Content -LiteralPath (Join-Path $referenceRoot 'host-receipt.json') -Raw | ConvertFrom-Json
+          $reference = Get-Content -LiteralPath (Join-Path $referenceRoot 'reference-receipt.json') -Raw | ConvertFrom-Json
+          if (
+            $hostReceipt.status -ne 'PASS' -or
+            $hostReceipt.actual_blender_version -ne '4.5.9' -or
+            $reference.status -ne 'BLENDER_REFERENCE_PASS_UE_REVIEW_PENDING' -or
+            $reference.left_surface -ne 'regional_limestone/refined_a' -or
+            $reference.right_surface -ne 'mediterranean_soil/refined_a' -or
+            @($reference.renders).Count -ne 4
+          ) {
+            throw 'Refined Blender reference receipt failed.'
+          }
+
+          $bundle = Join-Path $env:YACS_FORGE_PROOF 'blender-reference'
+          Remove-Item -LiteralPath $bundle -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path $bundle | Out-Null
+          Copy-Item -Path (Join-Path $referenceRoot '*') -Destination $bundle -Recurse -Force
 
       - name: Upload complete render proof
         if: ${{ always() }}

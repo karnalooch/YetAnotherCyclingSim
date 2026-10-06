@@ -34,13 +34,13 @@ PROOF_ROOT = Path(
 ROCK = Path(
     os.environ.get(
         "YACS_MF_ROCK_VARIANT",
-        str(PROOF_ROOT / "regional_limestone" / "base"),
+        str(PROOF_ROOT / "regional_limestone" / "refined_a"),
     )
 )
 SOIL = Path(
     os.environ.get(
         "YACS_MF_SOIL_VARIANT",
-        str(PROOF_ROOT / "mediterranean_soil" / "fine"),
+        str(PROOF_ROOT / "mediterranean_soil" / "refined_a"),
     )
 )
 MASK_ROOT = ROOT / "worldgen/materials/visual_fill"
@@ -49,7 +49,8 @@ MANIFEST = MASK_ROOT / "material-input-manifest.json"
 
 MAP = "/Game/Worlds/SaCalobra/L_SaCalobraAccepted_20261004"
 STATE = "_yacs_mf_chunked_fix"
-MAX_COMPONENTS = 9
+MAX_COMPONENTS = int(os.environ.get("YACS_MF_MAX_COMPONENTS", "9"))
+TARGET_COMPONENT = os.environ.get("YACS_MF_TARGET_COMPONENT")
 PREPARE_FREE_PHYSICAL_GB = 8
 PREPARE_FREE_COMMIT_GB = 12
 APPLY_FREE_PHYSICAL_GB = 6
@@ -123,20 +124,32 @@ def _context():
 
 
 def _nearest_cluster(editor, components):
-    camera = editor.get_level_viewport_camera_info()
-    if not camera:
-        raise RuntimeError("No active editor viewport camera")
+    if TARGET_COMPONENT:
+        matches = [
+            component
+            for component in components
+            if component.get_name() == TARGET_COMPONENT
+        ]
+        if len(matches) != 1:
+            raise RuntimeError(
+                f"Expected exactly one target Landscape component: {TARGET_COMPONENT}"
+            )
+        center = matches[0]
+    else:
+        camera = editor.get_level_viewport_camera_info()
+        if not camera:
+            raise RuntimeError("No active editor viewport camera")
+        camera_position = camera[0]
 
-    camera_position = camera[0]
+        def camera_distance(component):
+            origin = unreal.SystemLibrary.get_component_bounds(component)[0]
+            return (
+                (origin.x - camera_position.x) ** 2
+                + (origin.y - camera_position.y) ** 2
+            )
 
-    def camera_distance(component):
-        origin = unreal.SystemLibrary.get_component_bounds(component)[0]
-        return (
-            (origin.x - camera_position.x) ** 2
-            + (origin.y - camera_position.y) ** 2
-        )
+        center = min(components, key=camera_distance)
 
-    center = min(components, key=camera_distance)
     center_origin = unreal.SystemLibrary.get_component_bounds(center)[0]
 
     def center_distance(component):
@@ -617,7 +630,7 @@ def prepare():
         memory=_memory(),
         sampling="bilinear + five-tap appearance smoothing",
         projection="WorldAlignedTexture + WorldAlignedNormal",
-        scope="TECHNICAL_ROCK_SOIL_PROJECTION_PILOT",
+        scope="REFINED_A_ROCK_SOIL_LANDSCAPE_BLEND",
     )
 
 

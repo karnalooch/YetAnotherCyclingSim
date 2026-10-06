@@ -64,7 +64,7 @@ def main():
     imported = assigned.get("import", {})
     if imported.get("saved") is not False or imported.get("landscape_mutated") is not False:
         raise RuntimeError("Importer violated transient contract")
-    if imported.get("family") != "regional_limestone" or imported.get("variant") != "base":
+    if imported.get("family") != "regional_limestone" or imported.get("variant") != "refined_a":
         raise RuntimeError("Unexpected canary material identity")
 
     assigned_override = component.get_editor_property("override_material")
@@ -89,7 +89,7 @@ def main():
         "execution_sha": execution_sha,
         "map": MAP,
         "component": CANARY_COMPONENT,
-        "variant": "regional_limestone/base",
+        "variant": "regional_limestone/refined_a",
         "assigned_material": assigned.get("material"),
         "restored_material": restored.get("material"),
         "map_saved": False,

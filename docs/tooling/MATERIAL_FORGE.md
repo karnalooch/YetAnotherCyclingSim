@@ -181,3 +181,39 @@ This stage does not open or save the accepted Sa Calobra map, does not create
 world semantics and does not admit visual quality by itself. Its output is an
 owner-review reference between deterministic Material Forge map validation and
 the bounded Unreal consumer/canary.
+
+## Refinement A — Issue #400
+
+The first Landscape-targeted refinement keeps the existing 4033×4033
+`material-weights.png` as spatial authority. Blue remains the rock appearance
+weight and soil remains `1 - rock`; Material Forge does not create a new world
+classification.
+
+Two new A/B-safe variants are added without replacing the previous baseline:
+
+- `regional_limestone/refined_a` — darker/warmer than the chalky baseline,
+  stronger fracture/mineral separation and stronger roughness/AO response;
+- `mediterranean_soil/refined_a` — more pebble/crust signal, reduced broad
+  albedo waviness and stronger dry granular response.
+
+Generator version 3 adds optional per-variant refinement scales for albedo,
+roughness and AO. Variants without a refinement block retain the baseline
+response.
+
+The exact-SHA proof chain is:
+
+```text
+Material Forge author/render x 2
+        -> dynamic catalog-count determinism
+        -> pinned Blender 4.5.9 refined-pair reference
+        -> UE refined limestone import canary + rollback
+        -> real Landscape rock/soil blend on LandscapeComponent_230
+        -> verify mask/projection/scene invariants
+        -> rollback without saving map or assets
+```
+
+The Landscape proof uses WorldAlignedTexture/WorldAlignedNormal and the existing
+bilinear + five-tap appearance-only smoothing. It changes neither geometry nor
+PCG/PCGEx semantic ownership. Visual and whole-area performance acceptance
+remain separate gates.
+
