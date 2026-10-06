@@ -264,7 +264,7 @@ jobs:
             }
           }
 
-      - name: Run bounded UE import canary and rollback
+      - name: Run Material Forge UE proofs in one editor session
         shell: pwsh
         working-directory: _material-forge-ue-canary
         run: |
@@ -272,79 +272,46 @@ jobs:
           . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
           $project = Join-Path (Get-Location) 'YetAnotherCyclingSim.uproject'
           $engine = Resolve-YacsUnrealEngine -ProjectPath $project
-          $script = (Resolve-Path 'scripts/ue/run_material_forge_canary_proof.py').Path
-          $stdout = Join-Path $env:YACS_MATERIAL_FORGE_CANARY_ROOT 'unreal.stdout.log'
-          $stderr = Join-Path $env:YACS_MATERIAL_FORGE_CANARY_ROOT 'unreal.stderr.log'
-          $log = Join-Path $env:YACS_MATERIAL_FORGE_CANARY_ROOT 'unreal.engine.log'
+          $script = (Resolve-Path 'scripts/ue/run_material_forge_unified_proof.py').Path
+          $root = $env:YACS_MATERIAL_FORGE_CANARY_ROOT
+          $stdout = Join-Path $root 'unreal.single-session.stdout.log'
+          $stderr = Join-Path $root 'unreal.single-session.stderr.log'
+          $log = Join-Path $root 'unreal.single-session.engine.log'
           $arguments = @(('"' + $project + '"'), ('-ExecutePythonScript="' + $script + '"'), '-Unattended', '-NoPause', '-NoSplash', '-NoP4', '-windowed', '-ResX=1920', '-ResY=1080', '-NoVSync', '-ScriptErrorsAreFatal', '-stdout', ('-AbsLog="' + $log + '"'))
           $process = Start-Process -FilePath $engine.UnrealEditorPath -ArgumentList $arguments -PassThru -NoNewWindow -RedirectStandardOutput $stdout -RedirectStandardError $stderr
-          if (-not $process.WaitForExit(600000)) {
+          if (-not $process.WaitForExit(900000)) {
             $process | Stop-Process -Force
-            throw 'Material Forge UE canary timed out after 600 seconds.'
+            throw 'Material Forge single-session UE proof timed out after 900 seconds.'
           }
           if ($process.ExitCode -ne 0) {
             foreach ($diagnostic in @($stdout, $stderr, $log)) {
               if (Test-Path -LiteralPath $diagnostic -PathType Leaf) {
                 Write-Host "===== TAIL $diagnostic ====="
-                Get-Content -LiteralPath $diagnostic -Tail 200 | Write-Host
+                Get-Content -LiteralPath $diagnostic -Tail 240 | Write-Host
               }
             }
-            throw "Material Forge UE canary editor exited $($process.ExitCode)."
+            throw "Material Forge single-session UE proof exited $($process.ExitCode)."
           }
-          $receiptPath = Join-Path $env:YACS_MATERIAL_FORGE_CANARY_ROOT 'ue-canary-proof.json'
-          if (-not (Test-Path -LiteralPath $receiptPath -PathType Leaf)) { throw 'Material Forge UE canary aggregate receipt is missing.' }
-          $receipt = Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json
-          if ($receipt.status -ne 'UE_CANARY_ASSIGN_ROLLBACK_PASS' -or $receipt.artifact_exact_sha -ne $env:YACS_RENDER_PROOF_SHA -or $receipt.execution_sha -ne $env:GITHUB_SHA -or $receipt.map_saved -ne $false -or $receipt.assets_saved -ne $false -or $receipt.geometry_changed -ne $false -or $receipt.world_semantics_changed -ne $false) {
-            throw 'Material Forge UE canary aggregate receipt failed.'
-          }
-          $receipt | ConvertTo-Json -Depth 12 | Write-Host
 
-      - name: Run refined rock-soil Landscape blend and rollback
-        shell: pwsh
-        working-directory: _material-forge-ue-canary
-        run: |
-          $ErrorActionPreference = 'Stop'
-          . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
-          $project = Join-Path (Get-Location) 'YetAnotherCyclingSim.uproject'
-          $engine = Resolve-YacsUnrealEngine -ProjectPath $project
-          $script = (Resolve-Path 'scripts/ue/run_material_forge_chunked_proof.py').Path
-          $root = $env:YACS_MF_CHUNKED_PROOF_ROOT
-          New-Item -ItemType Directory -Force -Path $root | Out-Null
-          $stdout = Join-Path $root 'unreal.stdout.log'
-          $stderr = Join-Path $root 'unreal.stderr.log'
-          $log = Join-Path $root 'unreal.engine.log'
-          $arguments = @(('"' + $project + '"'), ('-ExecutePythonScript="' + $script + '"'), '-Unattended', '-NoPause', '-NoSplash', '-NoP4', '-windowed', '-ResX=1920', '-ResY=1080', '-NoVSync', '-ScriptErrorsAreFatal', '-stdout', ('-AbsLog="' + $log + '"'))
-          $process = Start-Process -FilePath $engine.UnrealEditorPath -ArgumentList $arguments -PassThru -NoNewWindow -RedirectStandardOutput $stdout -RedirectStandardError $stderr
-          if (-not $process.WaitForExit(600000)) {
-            $process | Stop-Process -Force
-            throw 'Refined Material Forge Landscape blend proof timed out after 600 seconds.'
-          }
-          if ($process.ExitCode -ne 0) {
-            foreach ($diagnostic in @($stdout, $stderr, $log)) {
-              if (Test-Path -LiteralPath $diagnostic -PathType Leaf) {
-                Write-Host "===== TAIL $diagnostic ====="
-                Get-Content -LiteralPath $diagnostic -Tail 200 | Write-Host
-              }
-            }
-            throw "Refined Material Forge Landscape proof exited $($process.ExitCode)."
-          }
-          $receiptPath = Join-Path $root 'landscape-blend-proof.json'
+          $receiptPath = Join-Path $root 'ue-single-session-proof.json'
           if (-not (Test-Path -LiteralPath $receiptPath -PathType Leaf)) {
-            throw 'Refined Landscape blend aggregate receipt is missing.'
+            throw 'Material Forge single-session aggregate receipt is missing.'
           }
           $receipt = Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json
           if (
-            $receipt.status -ne 'UE_LANDSCAPE_BLEND_ASSIGN_ROLLBACK_PASS' -or
+            $receipt.status -ne 'UE_MATERIAL_FORGE_SINGLE_SESSION_PASS' -or
             $receipt.artifact_exact_sha -ne $env:YACS_RENDER_PROOF_SHA -or
             $receipt.execution_sha -ne $env:GITHUB_SHA -or
-            $receipt.rock_variant -ne 'regional_limestone/refined_a' -or
-            $receipt.soil_variant -ne 'mediterranean_soil/refined_a' -or
+            [int]$receipt.editor_process_count -ne 1 -or
+            [int]$receipt.map_load_count -ne 1 -or
+            $receipt.canary_status -ne 'UE_CANARY_ASSIGN_ROLLBACK_PASS' -or
+            $receipt.landscape_status -ne 'UE_LANDSCAPE_BLEND_ASSIGN_ROLLBACK_PASS' -or
             $receipt.map_saved -ne $false -or
             $receipt.assets_saved -ne $false -or
             $receipt.geometry_changed -ne $false -or
             $receipt.world_semantics_changed -ne $false
           ) {
-            throw 'Refined Landscape blend proof failed.'
+            throw 'Material Forge single-session UE aggregate proof failed.'
           }
           $receipt | ConvertTo-Json -Depth 12 | Write-Host
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import time
 from pathlib import Path
 
 import unreal
@@ -35,7 +36,8 @@ def _write(path: Path, payload: dict) -> None:
     )
 
 
-def main() -> None:
+def main(*, load_map: bool = True) -> dict:
+    started = time.perf_counter()
     proof_root = Path(os.environ["YACS_MF_CHUNKED_PROOF_ROOT"])
     proof_root.mkdir(parents=True, exist_ok=True)
     artifact_sha = os.environ["YACS_MATERIAL_FORGE_ARTIFACT_SHA"]
@@ -44,9 +46,18 @@ def main() -> None:
     os.environ["YACS_MF_TARGET_COMPONENT"] = TARGET_COMPONENT
     os.environ["YACS_MF_MAX_COMPONENTS"] = "1"
 
-    world = unreal.EditorLoadingAndSavingUtils.load_map(MAP)
-    if world is None:
-        raise RuntimeError("Cannot load accepted Sa Calobra map for blend proof")
+    if load_map:
+        world = unreal.EditorLoadingAndSavingUtils.load_map(MAP)
+        if world is None:
+            raise RuntimeError("Cannot load accepted Sa Calobra map for blend proof")
+    else:
+        world = unreal.get_editor_subsystem(
+            unreal.UnrealEditorSubsystem
+        ).get_editor_world()
+        if world is None or world.get_path_name().split(".")[0] != MAP:
+            raise RuntimeError(
+                "Single-session Landscape blend expected the accepted Sa Calobra map"
+            )
 
     preview = _load_preview()
 
@@ -105,9 +116,12 @@ def main() -> None:
         "world_semantics_changed": False,
         "visual_acceptance": "pending",
         "performance_acceptance": "pending",
+        "map_reloaded": bool(load_map),
+        "phase_seconds": round(time.perf_counter() - started, 3),
     }
     _write(proof_root / "landscape-blend-proof.json", aggregate)
     unreal.log("YACS_MF_LANDSCAPE_BLEND " + json.dumps(aggregate))
+    return aggregate
 
 
 if __name__ == "__main__":

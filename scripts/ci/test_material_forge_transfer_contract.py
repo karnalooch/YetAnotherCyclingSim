@@ -29,6 +29,22 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         self.assertIn("git config --local lfs.storage $env:YACS_LFS_CACHE_ROOT", text)
         self.assertNotIn(r"YACS_LFS_CACHE_ROOT: C:\\", text)
 
+    def test_single_editor_process_runs_both_ue_subproofs(self):
+        text = CANARY.read_text(encoding="utf-8")
+        self.assertEqual(
+            text.count("Start-Process -FilePath $engine.UnrealEditorPath"),
+            1,
+        )
+        self.assertIn("run_material_forge_unified_proof.py", text)
+
+        unified = (
+            ROOT / "scripts/ue/run_material_forge_unified_proof.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn("canary.main()", unified)
+        self.assertIn("chunked.main(load_map=False)", unified)
+        self.assertIn('"editor_process_count": 1', unified)
+        self.assertIn('"map_load_count": 1', unified)
+
     def test_transfer_metrics_are_preserved(self):
         text = CANARY.read_text(encoding="utf-8")
         self.assertIn("proof-transfer-metrics.json", text)

@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import time
 from pathlib import Path
 
 import unreal
@@ -29,12 +30,15 @@ def _load_json(path: Path):
 
 
 def main():
+    started = time.perf_counter()
     proof_root = Path(os.environ["YACS_MATERIAL_FORGE_CANARY_ROOT"])
     proof_root.mkdir(parents=True, exist_ok=True)
     artifact_sha = os.environ["YACS_MATERIAL_FORGE_ARTIFACT_SHA"]
     execution_sha = os.environ["YACS_MATERIAL_FORGE_EXECUTION_SHA"]
 
+    map_started = time.perf_counter()
     world = unreal.EditorLoadingAndSavingUtils.load_map(MAP)
+    map_load_seconds = time.perf_counter() - map_started
     if world is None:
         raise RuntimeError("Cannot load frozen accepted Sa Calobra map")
 
@@ -98,9 +102,12 @@ def main():
         "world_semantics_changed": False,
         "visual_acceptance": "pending",
         "performance_acceptance": "pending",
+        "map_load_seconds": round(map_load_seconds, 3),
+        "phase_seconds": round(time.perf_counter() - started, 3),
     }
     (proof_root / "ue-canary-proof.json").write_text(json.dumps(aggregate, indent=2) + "\n", encoding="utf-8")
     unreal.log("YACS_MATERIAL_FORGE_UE_CANARY " + json.dumps(aggregate))
+    return aggregate
 
 
 if __name__ == "__main__":

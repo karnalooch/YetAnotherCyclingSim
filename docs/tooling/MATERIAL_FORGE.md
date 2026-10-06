@@ -217,3 +217,33 @@ bilinear + five-tap appearance-only smoothing. It changes neither geometry nor
 PCG/PCGEx semantic ownership. Visual and whole-area performance acceptance
 remain separate gates.
 
+## Production-loop transfer optimization — Issue #402
+
+The Material Forge proof keeps two artifact surfaces:
+
+- a complete determinism/archive artifact containing the full catalog, both
+  deterministic runs, Blender review evidence and logs;
+- a slim UE canary artifact containing only the exact-SHA proof summary,
+  run manifest and the two admitted `refined_a` variants required by Unreal.
+
+The UE canary verifies the slim artifact digest and receipt before use and records
+the slim/full artifact sizes plus transfer duration.
+
+Git LFS uses a persistent local object store at
+`D:\yacs\cache\git-lfs\YetAnotherCyclingSim`. Disposable checkouts still
+materialize the required packages, but repeated runs reuse verified LFS objects
+and only fetch missing OIDs from the network. Receipts record selected objects,
+cache hits/misses and fetch duration. Normal checkout cleanup does not own this
+cache.
+
+The canary deliberately retains `Content/**` as the proven editor startup set:
+Unreal's Asset Registry scans Content during startup and LFS pointers are not
+valid packages. Narrowing this set requires a separately proven startup-package
+contract rather than guessing dependencies.
+
+The refined single-material canary and the real rock/soil Landscape blend now
+run in one UnrealEditor process. The accepted map loads once; the second phase
+reuses the same editor/world, then both phases roll back transient assignments.
+Separate sub-receipts remain available, plus one aggregate single-session
+receipt recording phase timings and `editor_process_count=1`.
+
