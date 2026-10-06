@@ -39,7 +39,7 @@ float yacs_rect_patch(vec2 uv, float cells, float salt) {
     vec2 cell = floor(p);
     vec2 local = fract(p);
     vec2 wrapped = mod(cell,cells);
-    float active = smoothstep(0.78,0.94,yacs_hash(wrapped,salt));
+    float cell_gate = smoothstep(0.78,0.94,yacs_hash(wrapped,salt));
     vec2 center = vec2(
         0.5+0.20*(yacs_hash(wrapped,salt+3.0)-0.5),
         0.5+0.20*(yacs_hash(wrapped,salt+5.0)-0.5)
@@ -50,7 +50,7 @@ float yacs_rect_patch(vec2 uv, float cells, float salt) {
     );
     vec2 delta = abs(local-center)-half_size;
     float signed_box = max(delta.x,delta.y);
-    return active*(1.0-smoothstep(-0.015,0.045,signed_box));
+    return cell_gate*(1.0-smoothstep(-0.015,0.045,signed_box));
 }
 float yacs_contour_crack(vec2 uv, float cells, float salt, float level, float width) {
     float field = yacs_noise(uv,cells,salt);
