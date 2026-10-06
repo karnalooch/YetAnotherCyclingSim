@@ -68,9 +68,9 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         self.assertNotIn("'-ResY=1080'", text)
         self.assertIn("YACS_UE_EXECUTION_MODE = 'RenderOffscreen'", text)
 
-        unified = (
-            ROOT / "scripts/ue/run_material_forge_unified_proof.py"
-        ).read_text(encoding="utf-8")
+        unified = (ROOT / "scripts/ue/run_material_forge_unified_proof.py").read_text(
+            encoding="utf-8"
+        )
         self.assertIn('"execution_mode": execution_mode', unified)
         self.assertIn('"after_gc": memory_after_gc', unified)
 
