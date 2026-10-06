@@ -29,12 +29,15 @@ jobs:
       - name: Checkout exact toolchain definition
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          path: _portable-powershell-bootstrap
           fetch-depth: 1
           lfs: false
+          clean: true
           persist-credentials: false
 
       - name: Install official portable PowerShell without pwsh dependency
         shell: powershell
+        working-directory: _portable-powershell-bootstrap
         run: |
           $ErrorActionPreference = 'Stop'
           $config = if ($env:YACS_WORKSPACE_CONFIG) { $env:YACS_WORKSPACE_CONFIG } else { 'D:\yacs\workspace.json' }
