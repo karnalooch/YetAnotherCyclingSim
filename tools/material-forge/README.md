@@ -8,9 +8,6 @@ It deliberately does **not** own world semantics:
 - **PCG/PCGEx** owns classification, placement and authoritative spatial masks.
 - **Material Forge** owns PBR surface appearance and material-local detail masks.
 
-The implementation reuses the already-reviewed Material Maker/Godot path from the
-Sa Calobra material foundation rather than introducing another renderer or service.
-
 ## Entrypoints
 
 Windows:
@@ -25,14 +22,10 @@ Portable:
 python scripts/assets/material_forge.py --help
 ```
 
-The first spike authors exactly three material families with at least three
-deterministic variants each:
+Phase A authors three families with three deterministic variants each: aged
+mountain asphalt, regional pale limestone and dry Mediterranean mineral soil.
 
-- aged mountain asphalt;
-- regional pale limestone;
-- dry Mediterranean mineral soil.
-
-Each rendered variant has this contract:
+Each rendered variant contains:
 
 ```text
 BaseColor.png      sRGB
@@ -46,32 +39,34 @@ DetailMasks.png    material-local R/G/B meanings recorded in provenance
 
 ## Author graphs
 
-Graph authoring uses the external Material Maker 1.7 **install directory** containing `nodes/material.mmg` and `material_maker.exe`. The separate headless render step uses a reviewed Material Maker **source checkout**. Both revisions are recorded in `worldgen/materials/material_forge/upstreams.json`.
+Graph authoring uses the pinned Material Maker 1.7 install directory containing
+`nodes/material.mmg` and `material_maker.exe`.
 
 ```powershell
 tools/material-forge/material-forge.ps1 author `
-  --material-maker-source D:\tools\material-maker `
+  --material-maker D:\tools\material-maker-1.7 `
   --output D:\yacs\material-forge\run-001
 ```
 
-The command is fail-closed and refuses an existing run directory. It emits a
-`run-manifest.json`, editable `.ptex` graphs, per-variant provenance and the
-retained Material Maker MIT notice.
+The command refuses an existing run directory and emits editable `.ptex`
+graphs, provenance and a run manifest.
 
 ## Render one variant
 
-Rendering uses the reviewed Material Maker source plus Godot, not a YACS runtime
-dependency:
+Rendering uses the official Material Maker 1.7 `--export-material` CLI. Godot
+4.7.2 is used separately only to natively decode the five outputs and bind its
+receipt to their exact SHA-256 values.
 
 ```powershell
 python scripts/assets/render_material_forge.py `
-  --godot D:\tools\godot\godot.exe `
-  --source D:\tools\material-maker `
+  --material-maker D:\tools\material-maker-1.7\material_maker.console.exe `
+  --godot D:\tools\godot\Godot_v4.7.2-stable_win64.exe `
   --variant D:\yacs\material-forge\run-001\aged_mountain_asphalt\base
 ```
 
-The source runner exports five maps, verifies native decoding and then runs the
-CPU gates.
+If the release has no console wrapper, `material_maker.exe` is accepted
+directly. Material Maker 1.7's CLI proof is pinned to 2048 output because its
+current exporter does not actually honor another parsed `--size` value.
 
 ## Validate a complete run
 
@@ -80,33 +75,13 @@ tools/material-forge/material-forge.ps1 validate-run `
   D:\yacs\material-forge\run-001
 ```
 
-Gates include:
-
-- required outputs;
-- exact resolution;
-- tile-wrap continuity;
-- non-empty colour/normal/detail signal;
-- non-metallic phase-A contract;
-- DirectX normal metadata and vector sanity;
-- EXR identity;
-- per-map SHA-256;
-- semantic ownership guard.
-
-## Fingerprint-driven rebuild planning
-
-Before regenerating an existing run, ask the forge whether its generator,
-base-builder, catalog or upstream pins changed:
-
-```powershell
-tools/material-forge/material-forge.ps1 plan-rebuild D:\\yacs\\material-forge\\run-001
-```
-
-`rebuild_required=false` means those source fingerprints are unchanged.
-Material Forge never silently overwrites an accepted/reviewed run directory.
+Gates include required outputs, exact dimensions, tile-wrap continuity,
+non-empty signal, non-metallic contract, DirectX normal sanity, EXR identity,
+Godot native decode + exact output hashes, and semantic ownership.
 
 ## Determinism
 
-Generate/render a second clean directory with the same source revisions and run:
+Generate/render a second clean directory and compare:
 
 ```powershell
 tools/material-forge/material-forge.ps1 compare `
@@ -114,94 +89,32 @@ tools/material-forge/material-forge.ps1 compare `
   --right D:\yacs\material-forge\run-002\run-manifest.json
 ```
 
-The compare command fails with exit code 2 on any graph/fingerprint/output hash drift.
+Any graph/fingerprint/output hash drift fails the comparison.
 
-## Authoritative world-mask packing
+## World-mask boundary
 
-Material Forge may pack already-authoritative masks for UE delivery but may not
-derive or reclassify them.
-
-Example spec:
-
-```json
-{
-  "semantic_owner": "PCG/PCGEx",
-  "operation": "pack_only",
-  "channels": {
-    "R": {"name": "Rock", "path": "D:/proof/rock.png"},
-    "G": {"name": "Soil", "path": "D:/proof/soil.png"},
-    "B": {"name": "Grass", "path": "D:/proof/grass.png"},
-    "A": {"name": "Road", "path": "D:/proof/road.png"}
-  }
-}
-```
-
-```powershell
-tools/material-forge/material-forge.ps1 pack-world-masks `
-  --spec D:\proof\control-0.json `
-  --output D:\proof\YACS_Control_0.png `
-  --manifest D:\proof\YACS_Control_0.manifest.json
-```
-
-The manifest preserves every source mask SHA and records
-`classification_changed=false`.
-
-## Authoritative world mask -> material-local detail
-
-An authoritative PCG/PCGEx mask may **gate** a local material detail mask without
-becoming a new classification pipeline. The operation is strictly
-`modulate_detail_only`: no threshold, dilation, erosion or semantic rewrite.
-
-```powershell
-tools/material-forge/material-forge.ps1 derive-material-mask `
-  --spec worldgen/materials/material_forge/world-mask-detail.example.json `
-  --output D:\\proof\\road-asphalt-detail.png `
-  --manifest D:\\proof\\road-asphalt-detail.manifest.json
-```
-
-Both world-mask and detail-mask SHA-256 identities are retained and the receipt
-states `classification_changed=false`.
-
-The operation schema is
-`worldgen/materials/material_forge/world-mask-operation.schema.json`.
+Material Forge may pack already-authoritative PCG/PCGEx masks and may use them
+to gate material-local detail. It may not reclassify the world. Receipts preserve
+input hashes and record `classification_changed=false`.
 
 ## Unreal import and canary
 
-After CPU validation, set:
+After CPU validation, set `YACS_MATERIAL_FORGE_VARIANT_DIR` to one variant and
+run `scripts/ue/import_material_forge_variant.py` inside UE Python. Assets are
+unsaved by default.
 
-```powershell
-$env:YACS_MATERIAL_FORGE_VARIANT_DIR = "D:\yacs\material-forge\run-001\regional_limestone\base"
-```
+`scripts/ue/preview_material_forge_canary.py` toggles only
+`LandscapeComponent_230`, never saves the accepted map and verifies the frozen
+scene snapshot before admitting the assignment.
 
-Inside the UE Python environment:
-
-```python
-import runpy
-runpy.run_path(
-    r"D:\yacs\project\scripts\ue\import_material_forge_variant.py",
-    run_name="__main__",
-)
-```
-
-By default the assets remain unsaved. Set `YACS_MATERIAL_FORGE_SAVE=1` only when
-the exact variant has completed the required UE proof.
-
-For the bounded Sa Calobra consumer proof, use
-`scripts/ue/preview_material_forge_canary.py`. It toggles only
-`LandscapeComponent_230`, does not save the level and verifies the frozen scene
-snapshot before accepting the assignment.
-
-## Tests
+## Tests and heavy proof
 
 Lightweight CPU/unit coverage lives in
-`scripts/assets/test_material_forge.py`.
+`scripts/assets/test_material_forge.py`. Heavy exact-SHA proof consists of:
 
-Heavy work intentionally remains outside the authoring commit:
-
-- Godot/Material Maker render replay on the reference host;
-- UE material compile/import/canary proof;
-- rider-close visual comparison;
-- macro repetition inspection;
-- performance acceptance.
-
-Those proofs require an exact branch SHA and are planned as the next validation step.
+- Material Maker release rendering of all 3x3 variants;
+- Godot decoder-only native read and hash receipts;
+- second clean render + byte determinism comparison;
+- UE material compile/import/canary;
+- rider-close, grazing, 3x3 repetition and wide visual review;
+- later whole-Landscape performance acceptance.

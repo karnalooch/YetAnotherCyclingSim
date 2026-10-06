@@ -1,16 +1,16 @@
 {
   "material_maker": {
-    "role": "producer",
+    "role": "release_cli_producer",
     "repository": "https://github.com/RodZill4/material-maker",
     "release": "1.7",
     "release_commit": "4c6cea67b659e1eb472f91590e06b2b1c5245916",
     "validated_source_commit": "4d29a815489866aae483281cf44b2cfe48d3cc3e",
     "license": "MIT",
     "vendored": false,
-    "notes": "YACS adapts the reviewed MIT PBR output node into generated .ptex graphs; upstream source/binaries remain external."
+    "notes": "The pinned 1.7 release executable renders YACS .ptex through --export-material. The reviewed source commit is provenance/reference evidence only and is not launched by the proof runtime."
   },
   "godot": {
-    "role": "headless_renderer",
+    "role": "native_image_decoder_only",
     "repository": "https://github.com/godotengine/godot",
     "release": "4.7.2-stable",
     "commit": "ed1daf0bf001b61586d9930840f2f1394092c079",
