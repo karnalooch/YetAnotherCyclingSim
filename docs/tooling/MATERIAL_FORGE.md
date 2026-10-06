@@ -1,10 +1,10 @@
 # YACS Material Forge
 
-**Status:** implementation ready for exact-SHA render/UE proof  
+**Status:** exact-SHA render proof in progress  
 **Issue:** #387  
 **Scope:** offline procedural PBR authoring, material-local masks, deterministic validation and bounded UE import
 
-Material Forge exists to answer one question:
+Material Forge answers one question:
 
 > How should a surface look, once YACS already knows what that surface is and where it belongs?
 
@@ -22,44 +22,44 @@ The non-negotiable rule is:
 
 > **PCG/PCGEx owns WHO / WHAT / WHERE. Material Forge owns HOW IT LOOKS.**
 
-Material Forge may consume an authoritative Road/Rock/Soil/Wetness mask and derive
-surface-detail breakup from it. It may not independently decide that a location
-is road, rock, forest, soil, snow or any other world class.
-
 ## Runtime/tool boundary
 
-The proof path deliberately keeps the dependency boundary small:
+Material Forge uses:
 
-- the pinned **Material Maker 1.7 release executable** is the only map producer;
-- the reviewed Material Maker source commit remains provenance/reference evidence,
-  but the clean source tree is not launched as an application;
-- the pinned **Godot 4.7.2** executable is decoder-only: it natively opens the
-  produced PNG/EXR files and emits a hash-bound receipt;
-- no Godot or Material Maker fork is introduced;
-- MaterialPilot and Tool-MaterialMaker-MCP are reference-only evidence;
-- the YACS-owned surface contract is implemented in repository Python/JSON;
-- PCG/PCGEx continues to own world semantics.
+- the pinned Material Maker 1.7 install directory only as reviewed authoring input
+  (`nodes/material.mmg`, executable identity and licence evidence);
+- the reviewed Material Maker source commit
+  `4d29a815489866aae483281cf44b2cfe48d3cc3e` as the render runtime;
+- pinned Godot 4.7.2 to first prime that source project's import/script-class
+  cache and then execute the bounded YACS render adapter;
+- no Godot fork and no Material Maker fork.
 
-The source-tree renderer was rejected during exact-SHA proof because a clean
-checkout lacked the generated Godot class/import cache required by the
-application. Increasing timeouts did not fix that defect.
+A clean Material Maker source checkout is **not render-ready by itself**. Exact-SHA
+proof established that it must first be opened through
+`Godot --headless --path <source> --import`, which creates
+`.godot/global_script_class_cache.cfg` and imported resource cache. Rendering
+before that priming produced unresolved Material Maker classes and timed out.
+
+The alternative Material Maker 1.7 release CLI path was also tested and rejected
+for this automation path: upstream `dry_earth.ptex`, the earlier YACS limestone
+graph and the new Forge asphalt graph all exited with Windows access violation
+`0xC0000005` both from the runner service and from the logged-on desktop
+session. That A/B/C result isolates the crash from Forge graph generation.
 
 ## Phase-A families
 
-The catalog is
-`worldgen/materials/material_forge/families.json`.
+The catalog `worldgen/materials/material_forge/families.json` defines three
+families with three deterministic variants each:
 
-It defines three families and three deterministic variants per family:
+1. aged mountain asphalt — base, worn cracked, patched/repaired;
+2. regional pale limestone — weathered, fractured, karst-weathered;
+3. dry Mediterranean mineral soil — fine, stony, dry-crusted.
 
-1. **Aged mountain asphalt** — base aged, worn cracked, patched repaired.
-2. **Regional pale limestone** — weathered pale, fractured, karst weathered.
-3. **Dry Mediterranean mineral soil** — fine mineral, stony mineral, dry crusted.
-
-Every variant records its seed, tile size and surface parameters.
+Each variant records its seed, physical tile size and surface parameters.
 
 ## Output contract
 
-A rendered variant contains:
+Each rendered variant contains:
 
 | Output | Contract |
 |---|---|
@@ -69,113 +69,96 @@ A rendered variant contains:
 | Height | EXR authoring/inspection height; not Landscape displacement |
 | DetailMasks | material-local RGB detail semantics |
 
-Phase A requires metallic to remain zero. `DetailMasks` remains material-local
-appearance data and never carries authoritative world classification.
+Phase A requires metallic to remain zero. Detail masks never own world
+classification.
 
-## Material Maker inputs
-
-Graph authoring reads the pinned Material Maker 1.7 install directory containing
-`nodes/material.mmg` and `material_maker.exe`. Rendering then invokes that
-same pinned release through its official `--export-material` CLI with the
-YACS-owned `YACS/Textures` export profile embedded in the generated `.ptex`.
-
-Material Maker 1.7 parses `--size`, but its current CLI exporter still passes
-a hard-coded 2048 image size to `export_material`. Material Forge therefore
-fails closed for non-2048 render requests rather than claiming a resolution the
-upstream CLI did not honor.
-
-The reviewed source commit in `upstreams.json` documents the inspected CLI and
-node behavior. It is not a runtime dependency of the proof.
-
-## Authoring pipeline
+## Authoring and render pipeline
 
 ```text
 families.json + upstreams.json
               |
               v
-scripts/assets/material_forge.py author
+material_forge.py author
               |
               v
 editable Material Maker .ptex graphs
               |
               v
-Material Maker 1.7 release --export-material
+pinned Material Maker source checkout
+              |
+      Godot 4.7.2 --import
+              |
+      script/import cache receipt
               |
               v
-5-map YACS/Textures contract
+render_material_forge.py + render_material_forge.gd
               |
               v
-Godot 4.7.2 decoder-only native read + exact byte hashes
+5 maps + native Godot decode/hash receipt
               |
               v
-CPU validation + hashes + run manifest
+CPU validation + run manifest
+              |
+              v
+second clean run -> byte determinism compare
               |
               v
 UE importer / bounded canary
 ```
 
-Accepted or reviewed output directories are never silently overwritten.
+The renderer refuses to run if the source class/import cache is absent.
 
-## Reproducibility and fingerprinting
+## Reproducibility and validation
 
-Every run records catalog/upstream hashes, graph hashes, family/variant seeds,
-canonical variant fingerprints and output hashes. Two clean runs are compared
-with:
+Every run records graph/output SHA-256 values, upstream/catalog fingerprints,
+seeds and validation receipts. Native Godot decode evidence for all five maps is
+bound to the exact output bytes and requested dimensions.
+
+Two complete runs are compared with:
 
 ```text
 python scripts/assets/material_forge.py compare --left <run-a> --right <run-b>
 ```
 
-Any graph or output hash drift fails determinism.
+Any graph/fingerprint/output drift fails determinism.
 
-## Validation gates
+CPU gates reject missing outputs, wrong dimensions, wrap discontinuities, blank
+signals, non-zero metallic, invalid normal vectors, non-DirectX metadata, missing
+Height EXR, stale decode receipts or semantic-ownership violations.
 
-The CPU validator rejects missing/wrong-size outputs, discontinuous tile
-boundaries, blank signals, non-zero metallic, invalid normal vectors,
-non-DirectX metadata, missing EXR Height, semantic-ownership violations, and
-missing/invalid native Godot receipts. All five receipt entries must match the
-requested 2048 dimensions and SHA-256 of the exact produced bytes.
+Visual quality remains a separate exact-SHA human gate.
 
-Visual quality still requires exact-SHA human proof. A numeric PASS is not a
-claim that repetition, scale or regional appearance is accepted.
+## World-mask boundary
 
-## Authoritative world-mask operations
-
-Material Forge may pack already-authoritative PCG/PCGEx masks into RGBA and may
-modulate material-local detail by an authoritative world mask. Both operations
-preserve source hashes, keep `semantic_owner=PCG/PCGEx`, record
-`classification_changed=false`, and may not threshold, grow, erode or invent
-world classes.
+Material Forge may pack already-authoritative PCG/PCGEx masks and may gate local
+surface detail with them. It may not threshold, grow, erode or invent world
+classes. Receipts preserve input hashes and record
+`classification_changed=false`.
 
 ## UE importer and bounded canary
 
-`scripts/ue/import_material_forge_variant.py` accepts only a CPU-validated
-variant, verifies map hashes again, imports BaseColor/Normal/ORM/DetailMasks with
-the required UE settings, creates a parameterized master + instance, keeps
-Height offline, and defaults to unsaved assets.
+`scripts/ue/import_material_forge_variant.py` accepts only CPU-validated
+variants, verifies hashes again, imports BaseColor/Normal/ORM/DetailMasks with
+the required UE settings and defaults to unsaved assets.
 
 `scripts/ue/preview_material_forge_canary.py` targets only
-`LandscapeComponent_230` on the frozen accepted Sa Calobra map, verifies the
-scene snapshot, never saves the level, and restores the original override on the
-second invocation. It is a presentation canary, not whole-Landscape admission.
+`LandscapeComponent_230`, verifies the frozen accepted Sa Calobra map, never
+saves the level and restores the original component override on replay.
 
-## Upstream pins and licences
+## Current proof evidence
 
-`worldgen/materials/material_forge/upstreams.json` records exact evidence:
+The source-cache-prime proof on commit
+`0ac2afe2d6f929a3f9911e1f4fc8c0f4378b326b` passed:
 
-- Material Maker 1.7 release commit
-  `4c6cea67b659e1eb472f91590e06b2b1c5245916`, MIT;
-- reviewed Material Maker source commit
-  `4d29a815489866aae483281cf44b2cfe48d3cc3e`, reference/provenance only;
-- Godot 4.7.2-stable commit
-  `ed1daf0bf001b61586d9930840f2f1394092c079`, MIT, decoder-only;
-- MaterialPilot and Tool-MaterialMaker-MCP remain reference-only.
+- pinned source checkout: PASS;
+- Godot import/script-class cache creation: PASS;
+- Forge authoring: PASS;
+- first `aged_mountain_asphalt/base` render: PASS;
+- CPU validation of that rendered variant: PASS.
 
-No upstream source tree is vendored into YACS.
+The same commit also removes the reserved GLSL identifier `patch` from the
+asphalt shader (`patch_mask` is used instead).
 
-## Admission state
-
-The implementation has lightweight contract coverage and exact-SHA CI support.
-Still required before PR admission: fresh 3x3 render, two-run byte determinism,
-UE 5.8 import/compile, canary assignment + rollback, rider-close/grazing/3x3/wide
-visual review, then whole-Landscape/performance acceptance.
+Still required for admission: all nine variants twice, byte determinism, UE
+import/compile, canary assignment/rollback, visual review and later whole-area
+performance.

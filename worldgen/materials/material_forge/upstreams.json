@@ -1,16 +1,16 @@
 {
   "material_maker": {
-    "role": "release_cli_producer",
+    "role": "source_runtime_and_authoring_reference",
     "repository": "https://github.com/RodZill4/material-maker",
     "release": "1.7",
     "release_commit": "4c6cea67b659e1eb472f91590e06b2b1c5245916",
     "validated_source_commit": "4d29a815489866aae483281cf44b2cfe48d3cc3e",
     "license": "MIT",
     "vendored": false,
-    "notes": "The pinned 1.7 release executable renders YACS .ptex through --export-material. The reviewed source commit is provenance/reference evidence only and is not launched by the proof runtime."
+    "notes": "YACS reads the pinned 1.7 install node definition for graph authoring and renders through the reviewed source checkout after a pinned Godot import/script-class cache prime. Standalone release CLI automation was rejected after 0xC0000005 A/B/C failures including an upstream example."
   },
   "godot": {
-    "role": "native_image_decoder_only",
+    "role": "primed_material_maker_source_renderer",
     "repository": "https://github.com/godotengine/godot",
     "release": "4.7.2-stable",
     "commit": "ed1daf0bf001b61586d9930840f2f1394092c079",
