@@ -161,7 +161,8 @@ def _nearest_cluster(editor, components):
             + (origin.y - center_origin.y) ** 2
         )
 
-    return sorted(components, key=center_distance)[:ACTIVE_COMPONENTS]
+    capped = sorted(components, key=center_distance)[:MAX_COMPONENTS]
+    return capped[:ACTIVE_COMPONENTS]
 
 
 def _validate_visual_fill():
