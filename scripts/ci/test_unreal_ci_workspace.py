@@ -342,6 +342,29 @@ class UnrealWorkspaceTests(unittest.TestCase):
         self.assertTrue(self.root.exists())
         self.assertEqual(cache.select(self.workspace), self.name)
 
+    def test_cleanup_preserves_locked_incomplete_old_build(self):
+        self.publish()
+        other = self.workspace / "_unreal-build-99-1"
+        other.mkdir()
+        payload = other / "Intermediate/locked.bin"
+        payload.parent.mkdir(parents=True)
+        payload.write_bytes(b"locked fixture")
+
+        real_replace = cache.os.replace
+
+        def locked_replace(source, destination):
+            if Path(source) == other:
+                raise PermissionError("fixture lock")
+            return real_replace(source, destination)
+
+        with patch.object(cache.os, "replace", side_effect=locked_replace):
+            cache.cleanup(self.workspace, self.name, "101-1")
+
+        self.assertTrue(other.exists())
+        self.assertEqual(payload.read_bytes(), b"locked fixture")
+        self.assertTrue(self.root.exists())
+        self.assertEqual(cache.select(self.workspace), self.name)
+
     def test_cleanup_archives_private_lfs_objects_without_deleting_bytes(self):
         self.publish()
         other = self.workspace / "_unreal-build-99-1"

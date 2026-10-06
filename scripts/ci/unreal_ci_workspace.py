@@ -339,7 +339,14 @@ def cleanup(workspace: Path, active: str, run: str) -> None:
                 raise ValueError(
                     f"Unreal cleanup quarantine destination already exists: {target}"
                 )
-            os.replace(root, target)
+            try:
+                os.replace(root, target)
+            except PermissionError as error:
+                print(
+                    "UNREAL WORKSPACE: preserve locked incomplete old build "
+                    f"{root.name}; quarantine deferred: {error}"
+                )
+                continue
             print(
                 f"UNREAL WORKSPACE: quarantined incomplete old build {root.name} -> "
                 f"{target.relative_to(workspace)}"
