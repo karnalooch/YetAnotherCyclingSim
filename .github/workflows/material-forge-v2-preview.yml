@@ -96,7 +96,14 @@ jobs:
             $variant = Join-Path $run ($entry.directory.Replace('/', [IO.Path]::DirectorySeparatorChar))
             Write-Host "V2 rendering $($entry.family)/$($entry.variant)"
             & $env:YACS_V2_PY scripts/assets/render_material_forge.py --godot $env:YACS_V2_GODOT --source $env:YACS_V2_SOURCE --variant $variant --resolution 2048 --timeout-seconds 300
-            if ($LASTEXITCODE -ne 0) { throw "V2 render failed: $($entry.family)/$($entry.variant)" }
+            if ($LASTEXITCODE -ne 0) {
+              $renderLog = Join-Path $variant 'source-runner.log'
+              if (Test-Path -LiteralPath $renderLog -PathType Leaf) {
+                Write-Host "===== V2 RENDER LOG $($entry.family)/$($entry.variant) ====="
+                Get-Content -LiteralPath $renderLog -Tail 240 | Write-Host
+              }
+              throw "V2 render failed: $($entry.family)/$($entry.variant)"
+            }
           }
           & $env:YACS_V2_PY scripts/assets/material_forge.py validate-run $run
           if ($LASTEXITCODE -ne 0) { throw 'V2 validate-run failed.' }
@@ -120,5 +127,6 @@ jobs:
             ${{ runner.temp }}/mf-v2-preview-${{ github.sha }}/run-manifest.json
             ${{ runner.temp }}/mf-v2-preview-${{ github.sha }}/*validation.json
             ${{ runner.temp }}/mf-v2-preview-${{ github.sha }}/*.log
+            ${{ runner.temp }}/mf-v2-preview-${{ github.sha }}/run/**/source-runner.log
           if-no-files-found: warn
           retention-days: 7
