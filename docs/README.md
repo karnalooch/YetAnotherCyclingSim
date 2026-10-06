@@ -94,6 +94,7 @@ The old Stage 3G / R4.1 / B.x vocabulary is historical. Existing workflow names 
 | Asset plan / provenance | [`ASSET_PLAN.md`](ASSET_PLAN.md) | **Authoritative** |
 | Julka asset-manager contract | [`tooling/JULKA.md`](tooling/JULKA.md) | **Active supporting tool** |
 | Persistent local project and checkpoints | [`tooling/LOCAL_WORKSPACE.md`](tooling/LOCAL_WORKSPACE.md) | **Authoritative host workflow** |
+| Blender headless producer contract | [`tooling/BLENDER_HEADLESS.md`](tooling/BLENDER_HEADLESS.md) | **Active supporting tool** |
 | CI cost / proof cadence | [`CI_VALIDATION_TIERS.md`](CI_VALIDATION_TIERS.md) | **Authoritative** |
 | Shared CI and governance platform | [`ENGINEERING_PLATFORM.md`](ENGINEERING_PLATFORM.md) | **Authoritative** |
 | AI contributor rules | [`../AGENTS.md`](../AGENTS.md) | **Authoritative repository policy** |
@@ -141,6 +142,7 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 - [`CI_VALIDATION_TIERS.md`](CI_VALIDATION_TIERS.md) — lightweight, visual, performance and heavy-proof cadence.
 - [`ENGINEERING_PLATFORM.md`](ENGINEERING_PLATFORM.md) — shared governance/security/CI contract.
 - [`UNREAL_CI_RUNNER.md`](UNREAL_CI_RUNNER.md) — current Unreal runner operations.
+- [`tooling/BLENDER_HEADLESS.md`](tooling/BLENDER_HEADLESS.md) — pinned Blender 4.5.9 headless DCC producer and proof boundary.
 - [`ci/BRANCH_HYGIENE.md`](ci/BRANCH_HYGIENE.md) — branch cleanup and hygiene.
 - [`ci/CHANGE_CLASSIFIER.md`](ci/CHANGE_CLASSIFIER.md) — CI path classification.
 - [`ci/GITHUB_ACTIONS_PLATFORM.md`](ci/GITHUB_ACTIONS_PLATFORM.md) — Actions conventions.

@@ -112,6 +112,28 @@ showing the owner the result directly in the editor.
 
 Operational guidance: [live local editor review](docs/UE_MCP_WORLD_GENERATION.md#live-local-editor-review).
 
+### Blender headless DCC producer — Issue #391
+
+Owner decision, 2026-10-06: the canonical portable Blender toolchain is pinned
+to **4.5.9** at `D:\yacs\tools\blender-4.5.9-windows-x64\blender.exe`.
+Use `scripts/blender/run_headless.py` and
+`docs/tooling/BLENDER_HEADLESS.md`; do not rely on a system Blender, PATH
+discovery or a copy committed inside the repository.
+
+- Blender is a deterministic DCC producer, not road, terrain, BOB, World
+  Authority, route/physics or Unreal authority.
+- Headless jobs must use the pinned exact version, repository-owned Python and
+  the launcher safety boundary: background mode, factory startup, automatic
+  .blend script execution disabled and non-zero Python exception exit.
+- Keep default intermediates/proofs below the persistent workspace `work` tree.
+  Promotion into source assets or Unreal content requires the relevant existing
+  provenance/consumer/proof contract.
+- A successful Blender receipt proves only that the named headless job ran on
+  the recorded inputs. It is not Unreal integration, visual acceptance or
+  performance admission.
+- Do not use Blender work under #391 to mutate the currently frozen Sa Calobra
+  road/terrain geometry or to bypass the staged world-authoring dependency gates.
+
 ### Whole-Landscape appearance and performance scope
 
 Owner clarification, 2026-10-04: while the owner explores the open Unreal scene,
