@@ -305,6 +305,58 @@ jobs:
           New-Item -ItemType Directory -Force -Path $bundle | Out-Null
           Copy-Item -Path (Join-Path $referenceRoot '*') -Destination $bundle -Recurse -Force
 
+      - name: Prepare slim UE canary input
+        shell: pwsh
+        working-directory: _material-forge-proof-src
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $bundle = Join-Path $env:YACS_FORGE_PROOF 'canary-input'
+          Remove-Item -LiteralPath $bundle -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path (Join-Path $bundle 'run-a') | Out-Null
+
+          Copy-Item -LiteralPath (Join-Path $env:YACS_FORGE_PROOF 'proof-summary.json') -Destination (Join-Path $bundle 'proof-summary.json')
+          Copy-Item -LiteralPath (Join-Path $env:YACS_FORGE_PROOF 'run-a\run-manifest.json') -Destination (Join-Path $bundle 'run-a\run-manifest.json')
+
+          foreach ($relative in @(
+            'regional_limestone\refined_a',
+            'mediterranean_soil\refined_a'
+          )) {
+            $source = Join-Path (Join-Path $env:YACS_FORGE_PROOF 'run-a') $relative
+            $destination = Join-Path (Join-Path $bundle 'run-a') $relative
+            New-Item -ItemType Directory -Force -Path (Split-Path $destination -Parent) | Out-Null
+            Copy-Item -LiteralPath $source -Destination $destination -Recurse -Force
+          }
+
+          $summary = Get-Content -LiteralPath (Join-Path $bundle 'proof-summary.json') -Raw | ConvertFrom-Json
+          if ($summary.exact_sha -ne $env:GITHUB_SHA -or $summary.comparison.deterministic -ne $true) {
+            throw 'Slim canary input is not bound to the exact deterministic proof.'
+          }
+
+          $receipt = [ordered]@{
+            schema_version = 1
+            status = 'CANARY_INPUT_READY'
+            exact_sha = $env:GITHUB_SHA
+            proof_summary_sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $bundle 'proof-summary.json')).Hash.ToLowerInvariant()
+            run_manifest_sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $bundle 'run-a\run-manifest.json')).Hash.ToLowerInvariant()
+            variants = @(
+              'regional_limestone/refined_a',
+              'mediterranean_soil/refined_a'
+            )
+            file_count = @(Get-ChildItem -LiteralPath $bundle -File -Recurse).Count
+            uncompressed_bytes = [int64]((Get-ChildItem -LiteralPath $bundle -File -Recurse | Measure-Object -Property Length -Sum).Sum)
+          }
+          $receipt | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $bundle 'canary-input-receipt.json') -Encoding utf8
+          $receipt | ConvertTo-Json -Depth 8 | Write-Host
+
+      - name: Upload slim UE canary input
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: material-forge-canary-input-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/material-forge-mallorca-${{ github.sha }}/canary-input
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
       - name: Upload complete render proof
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
@@ -324,4 +376,4 @@ jobs:
     uses: ./.github/workflows/material-forge-ue-canary.yml
     with:
       target_sha: ${{ github.sha }}
-      proof_artifact_name: material-forge-mallorca-${{ github.sha }}-${{ github.run_attempt }}
+      proof_artifact_name: material-forge-canary-input-${{ github.sha }}-${{ github.run_attempt }}
