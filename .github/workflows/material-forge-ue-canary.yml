@@ -126,6 +126,9 @@ jobs:
               git lfs pointer --check "--file=$path" *> $null
               if ($LASTEXITCODE -eq 0) { throw "Unmaterialized Unreal LFS pointer: $path" }
             }
+            # pointer --check returns 1 for a correctly materialized non-pointer.
+            # Do not leak that expected probe result as the PowerShell step exit code.
+            $global:LASTEXITCODE = 0
           }
           finally { $env:GIT_LFS_SKIP_SMUDGE = '1' }
 
