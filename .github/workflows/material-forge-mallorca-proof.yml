@@ -170,6 +170,7 @@ jobs:
           $runA = Join-Path $proof 'run-a'
           $runB = Join-Path $proof 'run-b'
 
+          $renderIndex = 0
           foreach ($run in @($runA, $runB)) {
             & $env:YACS_FORGE_PY scripts/assets/material_forge.py author --material-maker $env:YACS_MM_INSTALL --output $run
             if ($LASTEXITCODE -ne 0) { throw "Material Forge author failed: $run" }
@@ -179,9 +180,11 @@ jobs:
             foreach ($entry in $manifest.variants) {
               $relative = $entry.directory.Replace('/', [IO.Path]::DirectorySeparatorChar)
               $variant = Join-Path $run $relative
-              Write-Host "Rendering $($entry.family)/$($entry.variant) -> $variant"
-              & $env:YACS_FORGE_PY scripts/assets/render_material_forge.py --godot $env:YACS_GODOT --source $env:YACS_MM_SOURCE --variant $variant --resolution 2048
+              $timeoutSeconds = if ($renderIndex -eq 0) { 600 } else { 300 }
+              Write-Host "Rendering $($entry.family)/$($entry.variant) -> $variant (timeout=$timeoutSeconds s)"
+              & $env:YACS_FORGE_PY scripts/assets/render_material_forge.py --godot $env:YACS_GODOT --source $env:YACS_MM_SOURCE --variant $variant --resolution 2048 --timeout-seconds $timeoutSeconds
               if ($LASTEXITCODE -ne 0) { throw "Material Forge render failed: $($entry.family)/$($entry.variant)" }
+              $renderIndex += 1
             }
 
             & $env:YACS_FORGE_PY scripts/assets/material_forge.py validate-run $run

@@ -29,7 +29,15 @@ def main() -> None:
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--variant", type=Path, required=True)
     parser.add_argument("--resolution", type=int, default=2048)
+    parser.add_argument(
+        "--timeout-seconds",
+        type=int,
+        default=180,
+        help="Maximum render process duration; cold source checkouts may need a larger value.",
+    )
     args = parser.parse_args()
+    if args.timeout_seconds < 1:
+        raise ValueError("--timeout-seconds must be positive")
 
     forge = _load_forge()
     graph = args.variant / "Material.ptex"
@@ -59,11 +67,25 @@ def main() -> None:
         "stdout": subprocess.PIPE,
         "stderr": subprocess.STDOUT,
         "text": True,
-        "timeout": 180,
+        "timeout": args.timeout_seconds,
     }
     if hasattr(subprocess, "CREATE_NO_WINDOW"):
         kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
-    result = subprocess.run(command, **kwargs)
+    try:
+        result = subprocess.run(command, **kwargs)
+    except subprocess.TimeoutExpired as exc:
+        partial = exc.stdout or ""
+        if isinstance(partial, bytes):
+            partial = partial.decode("utf-8", errors="replace")
+        log_path.write_text(
+            partial
+            + f"\nYACS_RENDER_TIMEOUT seconds={args.timeout_seconds}\n",
+            encoding="utf-8",
+        )
+        raise RuntimeError(
+            f"Material Forge render timed out after {args.timeout_seconds}s; "
+            f"inspect {log_path}"
+        ) from exc
     log_path.write_text(result.stdout or "", encoding="utf-8")
     log = result.stdout or ""
 
