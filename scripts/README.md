@@ -13,35 +13,12 @@ Use the project Python environment (`.venv\Scripts\python.exe`) and PowerShell
 | Open the accepted scene | `python scripts/manage_local_workspace.py open` or `D:\yacs\Open-YACS.cmd` | Opens the configured map; refuses a second editor |
 | Start the GitHub runner | `pwsh -File scripts/runner/Start-YacsRunner.ps1` | Reuses an existing runner identity or starts one interactive listener |
 | Check the Windows build host | `pwsh -File scripts/runner/Test-YacsWindowsHost.ps1` | Read-only host/toolchain and 50 GiB reserve checks |
+| Verify pinned Blender headless lane | `python scripts/blender/run_headless.py smoke` | Runs the Blender 4.5.9 bpy smoke job and emits workspace proof receipts |
 | Inspect disposable runner outputs | `pwsh -File scripts/runner/Clear-YacsRunnerWorkspace.ps1` | Preview only; applying requires the exact inspected plan and an idle worker |
 | Install/update the runner tray monitor | `pwsh -File scripts/runner/Install-YacsRunnerMonitor.ps1 -Verify` | Installs the per-user task and verifies fresh monitor health |
 
 Everyday scene changes update the existing UE session through Live Coding or
 the appropriate data/material consumer. Opening a map is not rebuilding roads.
-
-## Bounded Material Forge Landscape preview
-
-For the current #363 technical repair pilot, use
-`scripts/ue/preview_material_forge_chunked_landscape.py` from an already open
-accepted Sa Calobra editor. It is session-only, caps scope at nine nearby
-Landscape components, applies one component per explicit `apply`, checks memory
-headroom before preparation and each application, and never saves the map or
-generated assets.
-
-The Material Forge render artifact defaults to
-`D:\\yacs\\material-forge-v2-final\\run-a`; override it with
-`YACS_MF_PROOF_ROOT`, `YACS_MF_ROCK_VARIANT`, or `YACS_MF_SOIL_VARIANT`.
-The intended sequence is `cleanup -> probe -> prepare -> apply -> status`; repeat
-`apply` only after reviewing the previous component. `restore` rolls back all
-components changed by the active pilot. Each action logs a
-`YACS_MF_CHUNK {"ok": ...}` receipt and writes
-`Saved/RuntimeProof/MaterialForgeChunked/latest.json`.
-
-The pilot intentionally tests only the immediate visual defects: bilinear
-appearance-mask sampling (plus a bounded five-tap presentation average) and
-world-aligned rock/soil projection. It does not alter source mask bytes, world
-semantics, terrain geometry, PCG/PCGEx authority, or constitute final
-whole-Landscape visual/performance admission.
 
 ## Checkpoint and recovery tools
 
@@ -64,7 +41,7 @@ One-off migration scripts and old experiments belong in the local
 | `ci` | Workflow admission, isolated build/cache handling and CI tests |
 | `ue` | Unreal editor consumers, authoring and runtime proof scripts |
 | `assets` | External source acquisition, provenance, preparation and restore |
-| `geometry`, `worldgen`, `houdini` | Geometry calculations and world-data producers |
+| `geometry`, `worldgen`, `houdini`, `blender` | Geometry calculations and deterministic DCC/world-data producers |
 | `proof`, `evidence` | Proof collection and durable evidence utilities |
 | `ops` | Repository operations |
 

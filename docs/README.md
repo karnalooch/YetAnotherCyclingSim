@@ -96,6 +96,7 @@ The old Stage 3G / R4.1 / B.x vocabulary is historical. Existing workflow names 
 | Independent texture preparation | [`tooling/TEXTURE_MATERIAL_PREP.md`](tooling/TEXTURE_MATERIAL_PREP.md) | **Opt-in adapter proved; remote backup verified; admission pending** |
 | Resume texture work remotely | [`tooling/TEXTURE_MATERIAL_PREP_REMOTE_HANDOFF.md`](tooling/TEXTURE_MATERIAL_PREP_REMOTE_HANDOFF.md) | **2026-10-05 evidence and recovery procedure** |
 | Persistent local project and checkpoints | [`tooling/LOCAL_WORKSPACE.md`](tooling/LOCAL_WORKSPACE.md) | **Authoritative host workflow** |
+| Blender headless producer contract | [`tooling/BLENDER_HEADLESS.md`](tooling/BLENDER_HEADLESS.md) | **Active supporting tool** |
 | Sa Calobra material foundation | [`tooling/SA_CALOBRA_MATERIAL_FOUNDATION.md`](tooling/SA_CALOBRA_MATERIAL_FOUNDATION.md) | **Active candidate workflow; Bible owns methodology** |
 | Sa Calobra material repair sequence | [`tooling/SA_CALOBRA_MATERIAL_REPAIR_PLAN.md`](tooling/SA_CALOBRA_MATERIAL_REPAIR_PLAN.md) | **Documentation-only plan; implementation and acceptance pending** |
 | CI cost / proof cadence | [`CI_VALIDATION_TIERS.md`](CI_VALIDATION_TIERS.md) | **Authoritative** |
@@ -148,6 +149,7 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 - [`CI_VALIDATION_TIERS.md`](CI_VALIDATION_TIERS.md) — lightweight, visual, performance and heavy-proof cadence.
 - [`ENGINEERING_PLATFORM.md`](ENGINEERING_PLATFORM.md) — shared governance/security/CI contract.
 - [`UNREAL_CI_RUNNER.md`](UNREAL_CI_RUNNER.md) — current Unreal runner operations.
+- [`tooling/BLENDER_HEADLESS.md`](tooling/BLENDER_HEADLESS.md) — pinned Blender 4.5.9 headless DCC producer and proof boundary.
 - [`ci/BRANCH_HYGIENE.md`](ci/BRANCH_HYGIENE.md) — branch cleanup and hygiene.
 - [`ci/CHANGE_CLASSIFIER.md`](ci/CHANGE_CLASSIFIER.md) — CI path classification.
 - [`ci/GITHUB_ACTIONS_PLATFORM.md`](ci/GITHUB_ACTIONS_PLATFORM.md) — Actions conventions.

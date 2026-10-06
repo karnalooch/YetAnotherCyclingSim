@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "name": "Blender",
+  "version": "4.5.9",
+  "distribution": "portable-windows-x64",
+  "workspace_executable": "tools/blender-4.5.9-windows-x64/blender.exe",
+  "python_exit_code": 20
+}
