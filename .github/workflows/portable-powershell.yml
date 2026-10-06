@@ -1,0 +1,59 @@
+name: Portable PowerShell toolchain
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/portable-powershell.yml'
+      - 'scripts/runner/Install-YacsPortablePowerShell.ps1'
+      - 'scripts/runner/powershell-toolchain.json'
+      - 'scripts/runner/Start-YacsRunner.ps1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yacs-portable-powershell-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  install:
+    name: Install pinned PowerShell on yacs-ue58
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 10
+    env:
+      GIT_LFS_SKIP_SMUDGE: "1"
+
+    steps:
+      - name: Checkout exact toolchain definition
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+
+      - name: Install official portable PowerShell without pwsh dependency
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $config = if ($env:YACS_WORKSPACE_CONFIG) { $env:YACS_WORKSPACE_CONFIG } else { 'D:\yacs\workspace.json' }
+          ./scripts/runner/Install-YacsPortablePowerShell.ps1 -WorkspaceConfig $config -Json
+          $root = Split-Path -Parent (Resolve-Path -LiteralPath $config).Path
+          $toolRoot = Join-Path $root 'tools\powershell-7.6.6-win-x64'
+          $toolRoot | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Prove subsequent pwsh resolves to the pinned toolchain
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $expected = 'D:\yacs\tools\powershell-7.6.6-win-x64\pwsh.exe'
+          $actual = (Get-Command pwsh -ErrorAction Stop).Source
+          $version = $PSVersionTable.PSVersion.ToString()
+          Write-Host "pwsh=$actual version=$version"
+          if (-not $actual.Equals($expected, [StringComparison]::OrdinalIgnoreCase)) {
+            throw "Expected pinned pwsh at '$expected', got '$actual'."
+          }
+          if ($version -ne '7.6.6') {
+            throw "Expected PowerShell 7.6.6, got '$version'."
+          }
