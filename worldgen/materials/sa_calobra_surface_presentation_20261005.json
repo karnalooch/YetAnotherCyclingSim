@@ -1,0 +1,16 @@
+{
+  "source_map": "/Game/Worlds/SaCalobra/L_SaCalobraGeneratedSurfaces_9970b3cdfd46",
+  "source_sha256": "a1b798ef91799f16156d3c308c8c69c89e83257fca9234ed7aed10bd7bcdb30e",
+  "grass_contribution": 0.35,
+  "grass_patch_size_cm": 1200,
+  "grass_patch_threshold": 0.35,
+  "grass_patch_width": 0.3,
+  "color_tuning": {
+    "DryMineral": {"desaturation": 0.95, "gain": [0.94, 0.98, 1.06]},
+    "ExposedRock": {"desaturation": 0.9, "gain": [1.04, 1.08, 1.14]},
+    "DryGrass": {"desaturation": 0.25, "gain": [0.92, 0.94, 0.9]},
+    "ForestLitter": {"desaturation": 0.3, "gain": [0.85, 0.9, 0.86]}
+  },
+  "reference": "Owner-provided Street View screenshots; artistic palette reference, not calibrated albedo or seasonal land-cover authority",
+  "scope": "Native material color correction and bounded decorative DryGrass macro modulation; existing geographic weights, geometry and physical detail scale retained"
+}

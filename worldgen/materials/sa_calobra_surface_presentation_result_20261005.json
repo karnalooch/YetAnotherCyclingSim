@@ -1,0 +1,130 @@
+{
+  "status": "GENERATED_SURFACES_APPLIED_REVIEW_MAP_SAVED",
+  "material": "/Game/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Landscape/9992abd220444900a404703ffd4e92f6/M_SaCalobraGeneratedSurfaces.M_SaCalobraGeneratedSurfaces",
+  "review_map": "/Game/Worlds/SaCalobra/L_SaCalobraGeneratedSurfaces_9992abd22044",
+  "source_checkpoint": "/Game/Worlds/SaCalobra/L_SaCalobraGeneratedSurfaces_9970b3cdfd46",
+  "source_checkpoint_sha256": "a1b798ef91799f16156d3c308c8c69c89e83257fca9234ed7aed10bd7bcdb30e",
+  "source_checkpoint_saved": false,
+  "geometry_snapshot_equal": true,
+  "component_count": 1024,
+  "render_instances_verified": "unavailable",
+  "applied_roles": [
+    "DryGrass",
+    "ForestLitter",
+    "ExposedRock",
+    "DryMineral"
+  ],
+  "unmapped_roles": [
+    "Scree",
+    "RockCut",
+    "FillGravel"
+  ],
+  "unmapped_reason": "No dedicated admitted geographic masks; no invented assignment",
+  "weights_manifest_sha256": "42237bea4c537c0576d1db71a8cb45d2185d37fd827de25e1cfe07fcb2f3bca3",
+  "producer_sha256": "957f6afa9010c8a56d8c730ada5eb950bd15ee155471338badbbb0a31f0d11f4",
+  "physical_scale": "provider tile dimensions, native world-aligned projection",
+  "visual_acceptance": "pending",
+  "performance": "not measured",
+  "fresh_editor_reopen": "pending",
+  "presentation": {
+    "source_map": "/Game/Worlds/SaCalobra/L_SaCalobraGeneratedSurfaces_9970b3cdfd46",
+    "source_sha256": "a1b798ef91799f16156d3c308c8c69c89e83257fca9234ed7aed10bd7bcdb30e",
+    "grass_contribution": 0.35,
+    "grass_patch_size_cm": 1200,
+    "grass_patch_threshold": 0.35,
+    "grass_patch_width": 0.3,
+    "color_tuning": {
+      "DryMineral": {
+        "desaturation": 0.95,
+        "gain": [
+          0.94,
+          0.98,
+          1.06
+        ]
+      },
+      "ExposedRock": {
+        "desaturation": 0.9,
+        "gain": [
+          1.04,
+          1.08,
+          1.14
+        ]
+      },
+      "DryGrass": {
+        "desaturation": 0.25,
+        "gain": [
+          0.92,
+          0.94,
+          0.9
+        ]
+      },
+      "ForestLitter": {
+        "desaturation": 0.3,
+        "gain": [
+          0.85,
+          0.9,
+          0.86
+        ]
+      }
+    },
+    "reference": "Owner-provided Street View screenshots; artistic palette reference, not calibrated albedo or seasonal land-cover authority",
+    "scope": "Native material color correction and bounded decorative DryGrass macro modulation; existing geographic weights, geometry and physical detail scale retained"
+  },
+  "evidence_directory": "D:\\yacs\\project\\Saved\\RuntimeProof\\TextureLandscape\\9992abd220444900a404703ffd4e92f6",
+  "same_editor_reload": "SAME_EDITOR_RELOAD_VERIFIED",
+  "review_map_sha256": "f7c49a9f978eeb3bedc41feed41cc03cce29045a05bc8cf790ff3c37bc0c219f",
+  "actor_count": 375,
+  "visual_review": "BaseColor and Lit inspected at same camera; yellow cast reduced; distant terrain remains broad and smooth; owner acceptance pending",
+  "lighting": {
+    "map": "/Game/Worlds/SaCalobra/L_SaCalobraGeneratedSurfaces_9992abd22044.L_SaCalobraGeneratedSurfaces_9992abd22044",
+    "lights": [
+      {
+        "actor": "/Game/Worlds/SaCalobra/L_SaCalobraGeneratedSurfaces_9992abd22044.L_SaCalobraGeneratedSurfaces_9992abd22044:PersistentLevel.DirectionalLight_0",
+        "class": "DirectionalLight",
+        "color": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "use_temperature": false,
+        "temperature_kelvin": 6500.0,
+        "intensity": 10.0
+      }
+    ],
+    "scene_modified": false
+  },
+  "gpu_timeout": {
+    "observed": true,
+    "recovered": true,
+    "root_cause": "not established",
+    "log": "Saved/Logs/YetAnotherCyclingSim.log at 2026.10.05-15.36.11"
+  },
+  "failed_attempt": "f6344bc52fab47f187e6baae4f8f2033: connection failure before Landscape assignment",
+  "original_texture_checkpoint_sha256": "0eef66dc1f404c7d48a84d2254d4fd09ba0842f749445dd974d83b7b4e1889a0",
+  "failed_attempt_retention": {
+    "status": "FAILED_UNAPPLIED_ATTEMPT_RETAINED",
+    "failure": "Desaturation connection used Input instead of unnamed first pin",
+    "landscape_assignment_reached": false,
+    "package": "/Game/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Landscape/f6344bc52fab47f187e6baae4f8f2033"
+  },
+  "changed_files_this_palette_pass": [
+    "D:\\yacs\\project\\scripts\\ue\\apply_sa_calobra_generated_surfaces.py",
+    "D:\\yacs\\project\\scripts\\ue\\apply_sa_calobra_surface_presentation.py",
+    "D:\\yacs\\project\\scripts\\ue\\inspect_sa_calobra_surface_presentation.py",
+    "D:\\yacs\\project\\scripts\\ue\\retain_sa_calobra_failed_presentation_attempt.py",
+    "D:\\yacs\\project\\worldgen\\materials\\sa_calobra_surface_presentation_20261005.json",
+    "D:\\yacs\\project\\worldgen\\materials\\sa_calobra_surface_presentation_result_20261005.json",
+    "D:\\yacs\\project\\docs\\tooling\\TEXTURE_MATERIAL_PREP_EXAMPLES.md"
+  ],
+  "validation": [
+    "native material compile passed",
+    "same-editor map reload passed",
+    "375 actor transforms and 1024 components, edit layers, nine traces unchanged",
+    "previous review and texture-checkpoint SHA256 unchanged",
+    "Ruff passed",
+    "docs index passed",
+    "git diff --check passed"
+  ],
+  "suggested_commit": "feat(materials): add cooler Sa Calobra surface presentation variant"
+}

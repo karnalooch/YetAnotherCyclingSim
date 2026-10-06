@@ -1,0 +1,21 @@
+{
+  "status": "NATIVE_ATTEMPT_FAILED_MEMORY_EXHAUSTION",
+  "failed_attempt": "7130b3a81d29415d8fc8d239d66b4a21",
+  "cause_evidence": [
+    "D3D12 E_OUTOFMEMORY",
+    "available virtual memory zero",
+    "Windows page file too small"
+  ],
+  "exact_allocation_owner": "not established",
+  "data_masks_saved": true,
+  "restored_rgb_cells": 1883226,
+  "unknown_sample_cells": 2713728,
+  "prior_map_sha256": "98f9440961019ebc237e4a3c702bd17d771efaaf8bb7c8c40f08e89066141582",
+  "prior_map_unchanged": true,
+  "new_map_completion_receipt": false,
+  "revised_native_path": "prepare_only; four roles; no channel overlay or new macro samples",
+  "revised_native_execution": "NOT_EXECUTED",
+  "tests": "8 PASS; Ruff PASS",
+  "restart_performed": false,
+  "system_settings_changed": false
+}

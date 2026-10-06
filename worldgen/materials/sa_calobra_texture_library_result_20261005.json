@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "status": "generated_review_required",
+  "library": "/Game/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9",
+  "material_count": 7,
+  "texture_count": 35,
+  "resolution": [
+    1024,
+    1024
+  ],
+  "world_unchanged": true,
+  "map_sha256": "0eef66dc1f404c7d48a84d2254d4fd09ba0842f749445dd974d83b7b4e1889a0",
+  "items": [
+    {
+      "role": "ExposedRock",
+      "job_id": "05DEE137422ECB5E7D666AB6AA792AA8",
+      "material": "/Game/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Materials/M_SC_ExposedRock.M_SC_ExposedRock",
+      "technical_validation": "diagnostics_complete",
+      "diagnostics": "D:/yacs/project/Saved/RuntimeProof/TextureMaterialPrep/b1234c147c23445b8d9dfb31648d6844/bundle-validation.json",
+      "flags": []
+    },
+    {
+      "role": "Scree",
+      "job_id": "647E75A94359E532DAA8FD83E46E639B",
+      "material": "/Game/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Materials/M_SC_Scree.M_SC_Scree",
+      "technical_validation": "diagnostics_complete",
+      "diagnostics": "D:/yacs/project/Saved/RuntimeProof/TextureMaterialPrep/2f8b96a2ad15449bbbc455d725fa56d8/bundle-validation.json",
+      "flags": []
+    },
+    {
+      "role": "DryMineral",
+      "job_id": "40F6DF3D4A65C6AC4280AD99D12C8021",
+      "material": "/Game/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Materials/M_SC_DryMineral.M_SC_DryMineral",
+      "technical_validation": "diagnostics_complete",
+      "diagnostics": "D:/yacs/project/Saved/RuntimeProof/TextureMaterialPrep/b1d8a900ca504575b4f261a486f149a0/bundle-validation.json",
+      "flags": []
+    },
+    {
+      "role": "DryGrass",
+      "job_id": "B348B15A4DEA9F1E4A2E3AB5F7AA3388",
+      "material": "/Game/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Materials/M_SC_DryGrass.M_SC_DryGrass",
+      "technical_validation": "diagnostics_complete",
+      "diagnostics": "D:/yacs/project/Saved/RuntimeProof/TextureMaterialPrep/20481b1f3bd948e1a1a8ea93e3b49763/bundle-validation.json",
+      "flags": []
+    },
+    {
+      "role": "ForestLitter",
+      "job_id": "71564A1346209BD22617C3B1CF15EF1F",
+      "material": "/Game/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Materials/M_SC_ForestLitter.M_SC_ForestLitter",
+      "technical_validation": "diagnostics_complete",
+      "diagnostics": "D:/yacs/project/Saved/RuntimeProof/TextureMaterialPrep/2f530921e603453c879d2c3608775b2d/bundle-validation.json",
+      "flags": []
+    },
+    {
+      "role": "RockCut",
+      "job_id": "65397DD741645600C933C2978C4204BA",
+      "material": "/Game/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Materials/M_SC_RockCut.M_SC_RockCut",
+      "technical_validation": "diagnostics_complete",
+      "diagnostics": "D:/yacs/project/Saved/RuntimeProof/TextureMaterialPrep/beff026451da4c818556b1c94c405bd7/bundle-validation.json",
+      "flags": []
+    },
+    {
+      "role": "FillGravel",
+      "job_id": "15F3BD2242F17132140B06A112519AB9",
+      "material": "/Game/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Materials/M_SC_FillGravel.M_SC_FillGravel",
+      "technical_validation": "diagnostics_complete",
+      "diagnostics": "D:/yacs/project/Saved/RuntimeProof/TextureMaterialPrep/a84168681adf468bbea1f35c9385918f/bundle-validation.json",
+      "flags": []
+    }
+  ],
+  "visual_acceptance": "pending",
+  "fresh_editor_reopen": "pending",
+  "compressed_gpu_sampling": "pending",
+  "height_normal_roughness": "image-derived artistic estimates, not measured PBR",
+  "generation_receipt": "D:/yacs/project/Saved/RuntimeProof/TextureLibraries/3fb8a9508ac141a396189f4a0c3438f9/result.json",
+  "regression_tests": "3 passed"
+}

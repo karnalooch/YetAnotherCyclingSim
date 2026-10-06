@@ -349,3 +349,11 @@ by public documentation:
   projection orientation, world-unit scale and normal projection.
 - [Epic coordinate expressions](https://dev.epicgames.com/documentation/en-us/unreal-engine/coordinates-material-expressions-in-unreal-engine):
   world position and normal-dependent coordinate expressions.
+
+## Execution checkpoint: 2026-10-06 editor crash
+
+The live full-Landscape material iteration failed. At 04:58:31 UTC Unreal terminated in D3D12RHI with `Out of video memory trying to allocate a rendering resource`. The final in-memory rebuild was not saved and must not be represented as a delivered material. An earlier saved candidate remains a diagnostic draft; visual acceptance, fresh-process material-instance verification and performance acceptance are pending.
+
+Recovery checks verified all 17 saved asset hashes against `worldgen/materials/sa_calobra_repair_asset.json`. The accepted map SHA-256 remains `276d1621fa083850f6d603b6d115b01b74c9a92c182254d15302e786abfbf29c`. Crash logs, crash reports and autosaves were copied to `D:/yacs/work/material-repair-20261006/crash-20261006-045831` before reopening. The accepted map was not overwritten. The script now rejects `rebuild_candidate`, `surface_review` and `bounded_residency` before accessing the scene.
+
+The next implementation gate is isolated preparation of one material, with measured memory headroom and successful shader completion before any full-Landscape application. Do not repeat a sequence of graph rebuilds in the owner's editor or force non-streaming textures as a sharpness workaround. Reopen the saved candidate in a fresh isolated process, verify its exact asset hashes and material parent chains, and establish a memory/performance baseline before progressing to visual tuning. Preserve the accepted map and all geometry/collision constraints. No visual or performance PASS is claimed by this checkpoint.

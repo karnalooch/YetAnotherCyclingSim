@@ -1,0 +1,25 @@
+[2026.10.06-05.04.38:169][  0]LogContentStreaming: Texture pool size now 600 MB
+[2026.10.06-05.14.25:733][ 96]LogPython: YACS_REPAIR_PATCH_ASSIGNED
+[2026.10.06-05.18.43:220][282]LogPython: YACS_REPAIR_PATCH_RESIDENCY_CAPTURED
+[2026.10.06-05.20.03:011][246]LogPython: YACS_REPAIR_PATCH_TUNED
+[2026.10.06-05.22.45:293][982]Texture Streaming Stats:
+[2026.10.06-05.22.45:293][982]Total Pool Size (aka RenderAssetPool) = 600.00 MB
+[2026.10.06-05.22.45:293][982]Non-Streaming Mips = 336.07 MB
+[2026.10.06-05.22.45:293][982]Remaining Streaming Pool Size = 600.00 MB
+[2026.10.06-05.22.45:293][982]Streaming Assets, Current/Pool = 190.36 / 600.00 MB (32%)
+[2026.10.06-05.22.45:293][982]Streaming Assets, Target/Pool =  190.36 / 600.00 MB (32%)
+[2026.10.06-05.24.01:850][399]LogContentStreaming: Texture: Texture2D /Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_grass_rock_diff.T_aerial_grass_rock_diff
+[2026.10.06-05.24.01:850][399]LogContentStreaming:   LOD group:       TEXTUREGROUP_World [Bucket=Largest]
+[2026.10.06-05.24.01:850][399]LogContentStreaming:   Format:          DXT1
+[2026.10.06-05.24.01:850][399]LogContentStreaming:   Current size [2D Mips]: 4096x4096 [13]
+[2026.10.06-05.24.01:850][399]LogContentStreaming:   Wanted size [2D Mips]:  4096x4096 [13]
+[2026.10.06-05.24.01:850][399]LogContentStreaming:   Allowed mips:        7-13 [13]
+[2026.10.06-05.24.01:850][399]LogContentStreaming:   LoadOrder Priority:  0
+[2026.10.06-05.24.01:850][399]LogContentStreaming:   Retention Priority:  1024
+[2026.10.06-05.24.01:850][399]LogContentStreaming:   Boost factor:        0.7
+[2026.10.06-05.24.01:850][399]LogContentStreaming:   Mip bias:			  0
+[2026.10.06-05.24.01:850][399]LogContentStreaming:   View0: Position=(X=28156.824 Y=53228.502 Z=41105.858) ScreenSize=408.000000 MaxEffectiveScreenSize=0.000000 Boost=1.000000
+[2026.10.06-05.24.01:850][399]LogContentStreaming:   DynamicReference= LandscapeComponent /Game/Worlds/SaCalobra/L_SaCalobraAccepted_20261004.L_SaCalobraAccepted_20261004:PersistentLevel.SaCalobraLandscape.LandscapeComponent_260
+[2026.10.06-05.24.01:850][399]LogContentStreaming:     Size=963900.000000, BoundIndex=0
+[2026.10.06-05.24.01:850][399]LogContentStreaming:     Origin=(X=28350.000 Y=53550.000 Z=40245.923), BoxExtent=(X=3150.000 Y=3150.000 Z=1102.632), TexelSize=4725.000000
+[2026.10.06-05.31.01:539][659]LogPython: YACS_REPAIR_PATCH_INSTANCE_SAVED

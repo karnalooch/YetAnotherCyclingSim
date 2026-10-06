@@ -1,0 +1,44 @@
+{
+  "status": "GENERATED_SURFACES_APPLIED_REVIEW_MAP_SAVED",
+  "material": "/Game/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Landscape/9970b3cdfd464d619eb7f8fc873b23d7/M_SaCalobraGeneratedSurfaces.M_SaCalobraGeneratedSurfaces",
+  "review_map": "/Game/Worlds/SaCalobra/L_SaCalobraGeneratedSurfaces_9970b3cdfd46",
+  "source_checkpoint": "/Game/Worlds/SaCalobra/L_SaCalobraTextureCheckpoint_20261005",
+  "source_checkpoint_sha256": "0eef66dc1f404c7d48a84d2254d4fd09ba0842f749445dd974d83b7b4e1889a0",
+  "source_checkpoint_saved": false,
+  "geometry_snapshot_equal": true,
+  "component_count": 1024,
+  "render_instances_verified": "unavailable",
+  "applied_roles": [
+    "DryGrass",
+    "ForestLitter",
+    "ExposedRock",
+    "DryMineral"
+  ],
+  "unmapped_roles": [
+    "Scree",
+    "RockCut",
+    "FillGravel"
+  ],
+  "unmapped_reason": "No dedicated admitted geographic masks; no invented assignment",
+  "weights_manifest_sha256": "42237bea4c537c0576d1db71a8cb45d2185d37fd827de25e1cfe07fcb2f3bca3",
+  "producer_sha256": "5ae5fa320ebb79a0df1811a734294783d6b8bcb5a7e70ec7130fa3ee8a5b08d0",
+  "physical_scale": "provider tile dimensions, native world-aligned projection",
+  "visual_acceptance": "pending",
+  "performance": "not measured",
+  "fresh_editor_reopen": "FRESH_EDITOR_GEOMETRY_AND_MATERIAL_VERIFIED",
+  "review_map_sha256": "a1b798ef91799f16156d3c308c8c69c89e83257fca9234ed7aed10bd7bcdb30e",
+  "fresh_process_id": 36744,
+  "previous_process_id": 32184,
+  "evidence_directory": "D:/yacs/project/Saved/RuntimeProof/TextureLandscape/9970b3cdfd464d619eb7f8fc873b23d7",
+  "shutdown_crash": {
+    "module": "TextureGraph",
+    "error": "EXCEPTION_ACCESS_VIOLATION reading address 0xffffffffffffffff",
+    "phase": "after normal Editor shutdown and verified map save",
+    "evidence": "Saved/Crashes/UECC-Windows-803F9C8B492DBDB6E22AE4A95832F6AD_0000",
+    "root_cause": "not established",
+    "report_sent": false
+  },
+  "normal_editor_start_seconds": 31.17,
+  "startup_python_notification": "absent in new normal editor; no generation batch running",
+  "fresh_verifier_sha256": "f6474e37f21a64571ef1482578a6461f0c09bcf83780fbe4b1d7e629c4459fd5"
+}

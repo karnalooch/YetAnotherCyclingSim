@@ -1,0 +1,63 @@
+{
+  "status": "PREPARED_NOT_RENDER_VERIFIED",
+  "material": "/Game/Generated/YACS/MaterialRepair/5e717564dbc449a89b766ff75949037e/M_SaCalobraRepair_candidate.M_SaCalobraRepair_candidate",
+  "asset": "Content/Generated/YACS/MaterialRepair/5e717564dbc449a89b766ff75949037e/M_SaCalobraRepair_candidate.uasset",
+  "sha256": "cdb65133c1c516e59ecda27b3ff64942d11e89d99323a451be1cf1aa1ea06ae5",
+  "input_receipt_sha256": "0df676106b3bc2db88a19da93b18cbc6670682606285b47ea945b6dab4a90ecd",
+  "producer_sha256": "92976cbd9afb10334cc20848049c068c15d848d09a5c0f8d9c66e146c85fba07",
+  "parameters": {
+    "WeightExponent": {
+      "default": 1.0,
+      "minimum": 1.0,
+      "maximum": 2.0
+    },
+    "SlopeRockStrength": {
+      "default": 0,
+      "minimum": 0,
+      "maximum": 0.35
+    },
+    "RockMacroMetres": {
+      "default": 50,
+      "minimum": 30,
+      "maximum": 100
+    },
+    "RockMesoMetres": {
+      "default": 12,
+      "minimum": 4,
+      "maximum": 30
+    },
+    "MacroVariation": {
+      "default": 0.18,
+      "minimum": 0,
+      "maximum": 0.3
+    },
+    "GroundMetres": {
+      "default": 15,
+      "minimum": 3,
+      "maximum": 30
+    },
+    "MicroMetres": {
+      "default": 2,
+      "minimum": 0.5,
+      "maximum": 4
+    },
+    "DebugRockOnly": {
+      "default": 0,
+      "minimum": 0,
+      "maximum": 1
+    },
+    "MicroNormalMix": {
+      "default": 0.25,
+      "minimum": 0,
+      "maximum": 0.5
+    },
+    "NormalStrength": {
+      "default": 0.35,
+      "minimum": 0,
+      "maximum": 0.65
+    }
+  },
+  "map_loaded_or_saved": false,
+  "render_validation": "PENDING",
+  "performance": "NOT_MEASURED"
+}
