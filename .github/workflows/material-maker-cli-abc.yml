@@ -37,19 +37,18 @@ jobs:
           }
           if ($null -eq $example) { throw 'No upstream release example .ptex found.' }
 
-          $venv = Join-Path $toolRoot 'python'
-          $python = Join-Path $venv 'Scripts\python.exe'
+          $python = Join-Path $toolRoot 'python\Scripts\python.exe'
           if (-not (Test-Path -LiteralPath $python)) { throw 'Material Forge Python venv missing.' }
           & $python -m pip install --disable-pip-version-check --only-binary=:all: numpy==2.3.5 Pillow==12.3.0
           if ($LASTEXITCODE -ne 0) { throw 'Python deps unavailable.' }
 
-          $root = Join-Path $env:RUNNER_TEMP "mm-cli-abc-$env:GITHUB_SHA"
+          $root = Join-Path $env:RUNNER_TEMP "mm-cli-interactive-$env:GITHUB_SHA"
           Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue
           New-Item -ItemType Directory -Force -Path $root | Out-Null
 
           $forge = Join-Path $root 'forge'
           & $python scripts/assets/material_forge.py author --material-maker $mmInstall --output $forge *> (Join-Path $root 'author.log')
-          if ($LASTEXITCODE -ne 0) { throw 'Forge authoring failed before CLI A-B-C proof.' }
+          if ($LASTEXITCODE -ne 0) { throw 'Forge authoring failed before interactive CLI proof.' }
 
           $old = Resolve-Path 'worldgen/materials/material_maker/limestone_candidate/SaCalobra_PaleLimestone.ptex'
           $new = Resolve-Path (Join-Path $forge 'aged_mountain_asphalt/base/Material.ptex')
@@ -60,89 +59,106 @@ jobs:
           "YACS_MM_UPSTREAM=$($example.FullName)" >> $env:GITHUB_ENV
           "YACS_MM_OLD=$($old.Path)" >> $env:GITHUB_ENV
           "YACS_MM_NEW=$($new.Path)" >> $env:GITHUB_ENV
-          "YACS_FORGE_PY=$python" >> $env:GITHUB_ENV
 
-      - name: Run upstream old-YACS new-Forge CLI matrix
+      - name: Run A-B-C in logged-on desktop session
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          @'
-          import json
-          import os
-          import subprocess
-          import time
-          from pathlib import Path
 
-          root = Path(os.environ["YACS_ABC_ROOT"])
-          exe = Path(os.environ["YACS_MM_EXE"])
-          cwd = Path(os.environ["YACS_MM_INSTALL"])
+          $explorers = @(Get-CimInstance Win32_Process -Filter "Name='explorer.exe'")
+          if ($explorers.Count -eq 0) { throw 'No logged-on Windows desktop session.' }
+          $explorer = $explorers | Sort-Object SessionId -Descending | Select-Object -First 1
+          $owner = Invoke-CimMethod -InputObject $explorer -MethodName GetOwner
+          if ($owner.ReturnValue -ne 0 -or [string]::IsNullOrWhiteSpace($owner.User)) {
+            throw 'Cannot resolve interactive desktop owner.'
+          }
+          $userId = if ([string]::IsNullOrWhiteSpace($owner.Domain)) { $owner.User } else { "$($owner.Domain)\$($owner.User)" }
 
-          cases = [
-              ("A_upstream_example", Path(os.environ["YACS_MM_UPSTREAM"]), None),
-              ("B_old_yacs_limestone", Path(os.environ["YACS_MM_OLD"]), "YACS/Textures"),
-              ("C_new_forge_asphalt", Path(os.environ["YACS_MM_NEW"]), "YACS/Textures"),
-          ]
-          summary = []
-          for name, graph, target in cases:
-              out = root / name
-              out.mkdir()
-              command = [str(exe), "--export-material", "-o", str(out), "--output-file", name]
-              if target:
-                  command += ["--target", target]
-              command += [str(graph)]
-              started = time.monotonic()
-              try:
-                  result = subprocess.run(
-                      command,
-                      cwd=cwd,
-                      stdout=subprocess.PIPE,
-                      stderr=subprocess.STDOUT,
-                      text=True,
-                      timeout=120,
-                  )
-                  code = result.returncode
-                  text = result.stdout or ""
-                  timed_out = False
-              except subprocess.TimeoutExpired as exc:
-                  code = None
-                  text = exc.stdout or ""
-                  if isinstance(text, bytes):
-                      text = text.decode("utf-8", errors="replace")
-                  timed_out = True
-              elapsed = time.monotonic() - started
-              (out / "stdout.log").write_text(text, encoding="utf-8")
-              files = sorted(
-                  {
-                      "name": p.name,
-                      "size": p.stat().st_size,
-                  }
-                  for p in out.iterdir()
-                  if p.is_file() and p.name != "stdout.log"
-              )
-              entry = {
-                  "case": name,
-                  "graph": str(graph),
-                  "target": target,
-                  "exit_code": code,
-                  "timed_out": timed_out,
-                  "elapsed_s": round(elapsed, 3),
-                  "files": files,
-                  "stdout_tail": text[-4000:],
-              }
-              summary.append(entry)
-              print(json.dumps(entry, indent=2))
-          (root / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+          $existing = @(Get-CimInstance Win32_Process | Where-Object {
+            $_.Name -ieq 'material_maker.exe'
+          } | Select-Object ProcessId, SessionId, CommandLine)
+          $existing | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $env:YACS_ABC_ROOT 'preexisting-processes.json') -Encoding utf8
 
-          # Diagnostic job itself passes even when candidates fail; interpretation
-          # happens from the retained matrix instead of stopping at case A.
-          '@ | & $env:YACS_FORGE_PY -
-          if ($LASTEXITCODE -ne 0) { throw 'CLI A-B-C diagnostic harness failed.' }
+          $cases = @(
+            @{
+              Name = 'A_upstream_example'
+              Graph = $env:YACS_MM_UPSTREAM
+              Target = $null
+            },
+            @{
+              Name = 'B_old_yacs_limestone'
+              Graph = $env:YACS_MM_OLD
+              Target = 'YACS/Textures'
+            },
+            @{
+              Name = 'C_new_forge_asphalt'
+              Graph = $env:YACS_MM_NEW
+              Target = 'YACS/Textures'
+            }
+          )
 
-      - name: Upload A-B-C evidence
+          $results = @()
+          foreach ($case in $cases) {
+            $out = Join-Path $env:YACS_ABC_ROOT $case.Name
+            New-Item -ItemType Directory -Force -Path $out | Out-Null
+            $parts = @(
+              '--export-material',
+              '-o', ('"' + $out + '"'),
+              '--output-file', $case.Name
+            )
+            if ($null -ne $case.Target) {
+              $parts += @('--target', ('"' + $case.Target + '"'))
+            }
+            $parts += ('"' + $case.Graph + '"')
+            $arguments = $parts -join ' '
+
+            $taskName = "YACS-MM-CLI-$($case.Name)"
+            Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
+            $action = New-ScheduledTaskAction -Execute $env:YACS_MM_EXE -Argument $arguments -WorkingDirectory $env:YACS_MM_INSTALL
+            $principal = New-ScheduledTaskPrincipal -UserId $userId -LogonType Interactive -RunLevel Limited
+            Register-ScheduledTask -TaskName $taskName -Action $action -Principal $principal -Force | Out-Null
+
+            $started = [DateTime]::UtcNow
+            Start-ScheduledTask -TaskName $taskName
+            $deadline = [DateTime]::UtcNow.AddSeconds(120)
+            do {
+              Start-Sleep -Milliseconds 500
+              $state = (Get-ScheduledTask -TaskName $taskName).State
+            } while ($state -eq 'Running' -and [DateTime]::UtcNow -lt $deadline)
+
+            if ($state -eq 'Running') {
+              Stop-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+              $timedOut = $true
+            } else {
+              $timedOut = $false
+            }
+            $info = Get-ScheduledTaskInfo -TaskName $taskName
+            $files = @(
+              Get-ChildItem -LiteralPath $out -File -ErrorAction SilentlyContinue |
+                Select-Object Name, Length
+            )
+            $results += [ordered]@{
+              case = $case.Name
+              graph = $case.Graph
+              target = $case.Target
+              interactive_user = $userId
+              interactive_session = $explorer.SessionId
+              timed_out = $timedOut
+              last_task_result = [uint32]$info.LastTaskResult
+              elapsed_s = [math]::Round(([DateTime]::UtcNow - $started).TotalSeconds, 3)
+              files = $files
+            }
+            Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
+          }
+
+          $results | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $env:YACS_ABC_ROOT 'interactive-summary.json') -Encoding utf8
+          $results | ConvertTo-Json -Depth 8 | Write-Host
+
+      - name: Upload interactive A-B-C evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: material-maker-cli-abc-${{ github.sha }}
-          path: ${{ runner.temp }}/mm-cli-abc-${{ github.sha }}
+          name: material-maker-cli-interactive-${{ github.sha }}
+          path: ${{ runner.temp }}/mm-cli-interactive-${{ github.sha }}
           if-no-files-found: error
           retention-days: 7
