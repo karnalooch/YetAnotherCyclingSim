@@ -380,6 +380,25 @@ class UnrealWorkspaceTests(unittest.TestCase):
         self.assertEqual(retained.read_bytes(), b"private LFS fixture")
         self.assertFalse(other.exists())
 
+    def test_cleanup_preserves_locked_retired_verified_build(self):
+        self.publish()
+        other = self.workspace / "_unreal-build-99-1"
+        shutil.copytree(self.root, other)
+
+        real_rmtree = cache.shutil.rmtree
+
+        def locked_rmtree(path, *args, **kwargs):
+            if Path(path) == other:
+                raise PermissionError("fixture locked pack")
+            return real_rmtree(path, *args, **kwargs)
+
+        with patch.object(cache.shutil, "rmtree", side_effect=locked_rmtree):
+            cache.cleanup(self.workspace, self.name, "101-1")
+
+        self.assertTrue(other.exists())
+        self.assertTrue(self.root.exists())
+        self.assertEqual(cache.select(self.workspace), self.name)
+
     def test_selection_retains_assets_before_checkout_and_exports_active_path(self):
         asset = self.root / "Content/fixture.uasset"
         asset.parent.mkdir()

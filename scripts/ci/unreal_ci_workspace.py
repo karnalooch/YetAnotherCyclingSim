@@ -355,7 +355,13 @@ def cleanup(workspace: Path, active: str, run: str) -> None:
         archive = workspace / "_yacs-retained-lfs" / f"cache-{run}-{root.name}"
         retain(root, archive)
         retain_local_lfs_objects(root, archive)
-        shutil.rmtree(root)
+        try:
+            shutil.rmtree(root)
+        except PermissionError as error:
+            print(
+                "UNREAL WORKSPACE: preserve locked retired build "
+                f"{root.name}; deletion deferred: {error}"
+            )
 
 
 def main() -> None:
