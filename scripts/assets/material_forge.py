@@ -31,7 +31,7 @@ EXPORT_PREFIX = "YACS_Material"
 EXPECTED_NORMAL_CONVENTION = "DirectX"
 SEMANTIC_OWNER = "PCG/PCGEx"
 GENERATOR_ID = "yacs-material-forge"
-GENERATOR_VERSION = 2
+GENERATOR_VERSION = 3
 
 ASPHALT_FUNCTION = r"""
 float yacs_rect_patch(vec2 uv, float cells, float salt) {
@@ -230,6 +230,20 @@ def load_catalog(path: Path = DEFAULT_CATALOG) -> dict[str, Any]:
             raise ValueError(f"Duplicate variant id in {family['id']}")
         if family.get("semantic_owner") != SEMANTIC_OWNER:
             raise ValueError(f"{family['id']} must preserve PCG/PCGEx semantic ownership")
+        for variant in variants:
+            profile = _refinement_profile(variant)
+            for key in (
+                "variation_scale",
+                "crack_color_scale",
+                "pore_color_scale",
+                "roughness_variation_scale",
+                "roughness_crack_scale",
+                "roughness_pore_scale",
+                "ao_crack_scale",
+                "ao_pore_scale",
+            ):
+                _profile_scale(profile, key)
+            _profile_color_gain(profile)
     return data
 
 
@@ -269,61 +283,133 @@ def _detail_expression(family_id: str) -> str:
     raise ValueError(family_id)
 
 
-def _color_output(family_id: str) -> str:
+def _refinement_profile(variant: dict[str, Any] | None) -> dict[str, Any]:
+    if not variant:
+        return {}
+    raw = variant.get("refinement", {})
+    if raw is None:
+        return {}
+    if not isinstance(raw, dict):
+        raise ValueError("Material Forge refinement profile must be an object")
+    return raw
+
+
+def _profile_scale(
+    profile: dict[str, Any],
+    key: str,
+    default: float = 1.0,
+) -> float:
+    value = float(profile.get(key, default))
+    if not 0.0 <= value <= 3.0:
+        raise ValueError(f"Material Forge refinement scale out of range: {key}")
+    return value
+
+
+def _profile_color_gain(profile: dict[str, Any]) -> tuple[float, float, float]:
+    raw = profile.get("color_gain", [1.0, 1.0, 1.0])
+    if not isinstance(raw, list) or len(raw) != 3:
+        raise ValueError("Material Forge color_gain must contain three values")
+    gains = tuple(float(value) for value in raw)
+    if any(value < 0.5 or value > 1.5 for value in gains):
+        raise ValueError("Material Forge color_gain values must be in 0.5..1.5")
+    return gains
+
+
+def _signed_term(coefficient: float, expression: str) -> str:
+    return f"{coefficient:+.6f}*{expression}"
+
+
+def _color_output(
+    family_id: str,
+    variant: dict[str, Any] | None = None,
+) -> str:
+    profile = _refinement_profile(variant)
+    gains = _profile_color_gain(profile)
     if family_id == "aged_mountain_asphalt":
-        return "vec3($(name_uv)_tone*0.97,$(name_uv)_tone*0.985,$(name_uv)_tone)"
-    if family_id == "regional_limestone":
-        return (
-            "vec3($(name_uv)_tone*1.020+0.025*$variation($uv),"
-            "$(name_uv)_tone*0.990+0.008*$variation($uv),"
-            "$(name_uv)_tone*0.920)"
+        channels = (
+            "$(name_uv)_tone*0.97",
+            "$(name_uv)_tone*0.985",
+            "$(name_uv)_tone",
         )
-    if family_id == "mediterranean_soil":
-        return "vec3($(name_uv)_tone*1.08,$(name_uv)_tone*0.98,$(name_uv)_tone*0.86)"
-    raise ValueError(family_id)
+    elif family_id == "regional_limestone":
+        channels = (
+            "$(name_uv)_tone*1.020+0.025*$variation($uv)",
+            "$(name_uv)_tone*0.990+0.008*$variation($uv)",
+            "$(name_uv)_tone*0.920",
+        )
+    elif family_id == "mediterranean_soil":
+        channels = (
+            "$(name_uv)_tone*1.08",
+            "$(name_uv)_tone*0.98",
+            "$(name_uv)_tone*0.86",
+        )
+    else:
+        raise ValueError(family_id)
+    return "vec3(" + ",".join(
+        f"({channel})*{gain:.6f}"
+        for channel, gain in zip(channels, gains)
+    ) + ")"
 
 
-def _color_code(family_id: str) -> str:
+def _color_code(
+    family_id: str,
+    variant: dict[str, Any] | None = None,
+) -> str:
+    profile = _refinement_profile(variant)
+    variation_scale = _profile_scale(profile, "variation_scale")
+    crack_scale = _profile_scale(profile, "crack_color_scale")
+    pore_scale = _profile_scale(profile, "pore_color_scale")
     if family_id == "aged_mountain_asphalt":
-        return (
-            "float $(name_uv)_tone = clamp($brightness"
-            "+0.085*($variation($uv)-0.5)-0.060*$crack($uv)"
-            "-0.030*$pore($uv),0.0,1.0);"
-        )
-    if family_id == "regional_limestone":
-        return (
-            "float $(name_uv)_tone = clamp($brightness"
-            "+0.105*($variation($uv)-0.5)-0.052*$crack($uv)"
-            "-0.030*$pore($uv),0.0,1.0);"
-        )
-    if family_id == "mediterranean_soil":
-        return (
-            "float $(name_uv)_tone = clamp($brightness"
-            "+0.13*($variation($uv)-0.5)+0.055*$crack($uv)"
-            "-0.045*$pore($uv),0.0,1.0);"
-        )
-    raise ValueError(family_id)
+        variation, crack, pore = 0.085, -0.060, -0.030
+    elif family_id == "regional_limestone":
+        variation, crack, pore = 0.105, -0.052, -0.030
+    elif family_id == "mediterranean_soil":
+        variation, crack, pore = 0.130, 0.055, -0.045
+    else:
+        raise ValueError(family_id)
+    return (
+        "float $(name_uv)_tone = clamp($brightness"
+        + _signed_term(variation * variation_scale, "($variation($uv)-0.5)")
+        + _signed_term(crack * crack_scale, "$crack($uv)")
+        + _signed_term(pore * pore_scale, "$pore($uv)")
+        + ",0.0,1.0);"
+    )
 
 
-def _response_expressions(family_id: str, roughness: float) -> tuple[str, str]:
+def _response_expressions(
+    family_id: str,
+    roughness: float,
+    variant: dict[str, Any] | None = None,
+) -> tuple[str, str]:
+    profile = _refinement_profile(variant)
+    rv = _profile_scale(profile, "roughness_variation_scale")
+    rc = _profile_scale(profile, "roughness_crack_scale")
+    rp = _profile_scale(profile, "roughness_pore_scale")
+    ac = _profile_scale(profile, "ao_crack_scale")
+    ap = _profile_scale(profile, "ao_pore_scale")
     r = f"{roughness:.6f}"
     if family_id == "aged_mountain_asphalt":
-        return (
-            f"clamp({r}+0.07*$variation($uv)+0.03*$crack($uv)-0.06*$pore($uv),0.0,1.0)",
-            "clamp(1.0-0.13*$crack($uv)-0.04*$pore($uv),0.0,1.0)",
-        )
-    if family_id == "regional_limestone":
-        return (
-            f"clamp({r}+0.08*$variation($uv)+0.04*$pore($uv),0.0,1.0)",
-            "clamp(1.0-0.16*$crack($uv)-0.12*$pore($uv),0.0,1.0)",
-        )
-    if family_id == "mediterranean_soil":
-        return (
-            f"clamp({r}+0.05*$variation($uv)+0.03*$pore($uv),0.0,1.0)",
-            "clamp(1.0-0.08*$crack($uv)-0.07*$pore($uv),0.0,1.0)",
-        )
-    raise ValueError(family_id)
-
+        variation, crack, pore, ao_crack, ao_pore = 0.070, 0.030, -0.060, 0.130, 0.040
+    elif family_id == "regional_limestone":
+        variation, crack, pore, ao_crack, ao_pore = 0.080, 0.000, 0.040, 0.160, 0.120
+    elif family_id == "mediterranean_soil":
+        variation, crack, pore, ao_crack, ao_pore = 0.050, 0.000, 0.030, 0.080, 0.070
+    else:
+        raise ValueError(family_id)
+    rough = (
+        f"clamp({r}"
+        + _signed_term(variation * rv, "$variation($uv)")
+        + _signed_term(crack * rc, "$crack($uv)")
+        + _signed_term(pore * rp, "$pore($uv)")
+        + ",0.0,1.0)"
+    )
+    ao = (
+        "clamp(1.0"
+        + _signed_term(-ao_crack * ac, "$crack($uv)")
+        + _signed_term(-ao_pore * ap, "$pore($uv)")
+        + ",0.0,1.0)"
+    )
+    return rough, ao
 
 def author_variant(
     material_maker_source: Path,
@@ -364,11 +450,13 @@ def author_variant(
 
     color["parameters"]["brightness"] = float(variant["brightness"])
     color["shader_model"]["name"] = f"{family['label']} albedo"
-    color["shader_model"]["code"] = _color_code(family_id)
-    color["shader_model"]["outputs"][0]["rgb"] = _color_output(family_id)
+    color["shader_model"]["code"] = _color_code(family_id, variant)
+    color["shader_model"]["outputs"][0]["rgb"] = _color_output(family_id, variant)
 
     roughness_expr, ao_expr = _response_expressions(
-        family_id, float(variant["roughness"])
+        family_id,
+        float(variant["roughness"]),
+        variant,
     )
     response["shader_model"]["name"] = f"{family['label']} surface response"
     response["shader_model"]["outputs"][0]["f"] = roughness_expr
@@ -439,6 +527,7 @@ def author_variant(
             "surface_b": float(variant["surface_b"]),
             "roughness": float(variant["roughness"]),
             "normal_strength": float(variant["normal_strength"]),
+            "refinement": _refinement_profile(variant),
         },
         upstreams=upstreams,
         expected_maps=[

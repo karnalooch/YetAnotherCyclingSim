@@ -153,16 +153,21 @@ def load_variant(
 def build_reference_plan(
     rock_directory: Path,
     soil_directory: Path,
+    *,
+    rock_family: str = "regional_limestone",
+    rock_variant: str = "base",
+    soil_family: str = "mediterranean_soil",
+    soil_variant: str = "fine",
 ) -> dict[str, Any]:
     rock = load_variant(
         rock_directory,
-        expected_family="regional_limestone",
-        expected_variant="base",
+        expected_family=rock_family,
+        expected_variant=rock_variant,
     )
     soil = load_variant(
         soil_directory,
-        expected_family="mediterranean_soil",
-        expected_variant="fine",
+        expected_family=soil_family,
+        expected_variant=soil_variant,
     )
     if rock["tile_metres"] != soil["tile_metres"]:
         raise ValueError("Reference pair must use the same physical tile scale")
