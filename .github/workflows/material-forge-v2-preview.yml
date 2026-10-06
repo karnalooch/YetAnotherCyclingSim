@@ -6,6 +6,9 @@ on:
       - "feat/387-material-forge-visual-v2"
     paths:
       - ".github/workflows/material-forge-v2-preview.yml"
+      - "scripts/assets/material_forge.py"
+      - "scripts/assets/test_material_forge.py"
+      - "worldgen/materials/material_forge/families.json"
 
 permissions:
   contents: read
