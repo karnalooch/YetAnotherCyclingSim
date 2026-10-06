@@ -318,6 +318,28 @@ class UnrealWorkspaceTests(unittest.TestCase):
         self.assertEqual(retained.read_bytes(), b"materialized fixture")
         self.assertTrue(self.root.exists())
 
+    def test_cleanup_quarantines_incomplete_old_build_without_deleting_outputs(self):
+        self.publish()
+        other = self.workspace / "_unreal-build-99-1"
+        other.mkdir()
+        payload = other / "Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log"
+        payload.parent.mkdir(parents=True)
+        payload.write_bytes(b"preserve interrupted build")
+
+        cache.cleanup(self.workspace, self.name, "101-1")
+
+        quarantine = (
+            self.workspace
+            / "_yacs-unreal-ci/quarantine/101-1-_unreal-build-99-1-cleanup"
+        )
+        self.assertFalse(other.exists())
+        self.assertEqual(
+            (quarantine / "Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log").read_bytes(),
+            b"preserve interrupted build",
+        )
+        self.assertTrue(self.root.exists())
+        self.assertEqual(cache.select(self.workspace), self.name)
+
     def test_cleanup_archives_private_lfs_objects_without_deleting_bytes(self):
         self.publish()
         other = self.workspace / "_unreal-build-99-1"

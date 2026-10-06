@@ -327,7 +327,24 @@ def cleanup(workspace: Path, active: str, run: str) -> None:
         if root.name == active:
             continue
         if not (root / ".git").exists():
-            raise ValueError("Refuse non-worktree cleanup")
+            quarantine_root = workspace / "_yacs-unreal-ci" / "quarantine"
+            if (
+                quarantine_root.is_symlink()
+                or getattr(quarantine_root, "is_junction", lambda: False)()
+            ):
+                raise ValueError("Unreal quarantine directory is a link/junction")
+            quarantine_root.mkdir(parents=True, exist_ok=True)
+            target = quarantine_root / f"{run}-{root.name}-cleanup"
+            if target.exists():
+                raise ValueError(
+                    f"Unreal cleanup quarantine destination already exists: {target}"
+                )
+            os.replace(root, target)
+            print(
+                f"UNREAL WORKSPACE: quarantined incomplete old build {root.name} -> "
+                f"{target.relative_to(workspace)}"
+            )
+            continue
         archive = workspace / "_yacs-retained-lfs" / f"cache-{run}-{root.name}"
         retain(root, archive)
         retain_local_lfs_objects(root, archive)
