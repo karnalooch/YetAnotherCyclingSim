@@ -65,3 +65,29 @@ Method references: [SideFX masking](https://www.sidefx.com/docs/houdini/heightfi
 and [Epic Landscape materials](https://dev.epicgames.com/documentation/unreal-engine/landscape-materials-in-unreal-engine).
 Named-purpose layers and bounded smoothing follow the documented pattern;
 propagation settings are YACS artistic decisions, not SideFX defaults.
+
+## Slope and palette follow-up, 2026-10-06
+
+`scripts/ue/tune_sa_calobra_masked_materials.py` defaults to `main('correct')`
+after the preview above is applied. It clones the baseline material and preserves
+it in session state. `main('restore')` returns to that baseline; the preview
+script's restore still returns to the original review material and overrides.
+These generated assets and the Landscape assignment remain session-only.
+
+The correction restores the full R contribution, gives existing vegetation
+textures muted olive linear-albedo multipliers, and reduces mineral albedo by
+0.55. A continuous slope gate replaces ground weights with limestone between
+about 41 and 66 degrees, preserving the total weight. This is an artistic shading
+rule, not a change to source masks, PCG authority or verified terrain geometry.
+Rock gains an 8 m world-aligned variation using its existing color texture;
+detail normal strength is 0.85. Lighting is unchanged.
+
+A flat-normal A/B retained the large vertical bands. Two palette iterations
+were inspected in the existing close camera, then the second in a broad view.
+Brown wall streaks are reduced and olive ground is visible; soft transitions,
+vertical shading bands and overall pale appearance still need visual refinement.
+This is a verified improvement checkpoint, not final visual acceptance.
+All 1024 component bindings and frozen scene snapshots passed. Native material
+instance auditing, fresh-editor persistence and performance remain unverified.
+The macro projection adds sampling work. The live receipt is
+`native-material-tuning-receipt.json`; local legacy assets/receipts remain required.
