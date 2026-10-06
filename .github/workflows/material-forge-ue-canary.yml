@@ -132,6 +132,65 @@ jobs:
           }
           finally { $env:GIT_LFS_SKIP_SMUDGE = '1' }
 
+      - name: Build YetAnotherCyclingSimEditor for canary
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
+          . ./scripts/runner/Assert-YacsDiskReserve.ps1
+          . ./scripts/ci/Assert-YacsBuildIsolation.ps1
+
+          $project = Join-Path (Get-Location) 'YetAnotherCyclingSim.uproject'
+          $engine = Resolve-YacsUnrealEngine -ProjectPath $project
+          Assert-YacsDiskReserve -Path $project
+          Assert-YacsBuildIsolation -ProjectPath $project
+
+          $ubtConfigDir = Join-Path (Get-Location) 'Saved/UnrealBuildTool'
+          New-Item -ItemType Directory -Force -Path $ubtConfigDir | Out-Null
+          @'
+          <?xml version="1.0" encoding="utf-8" ?>
+          <Configuration xmlns="https://www.unrealengine.com/BuildConfiguration">
+            <BuildConfiguration>
+              <bAllowUBAExecutor>false</bAllowUBAExecutor>
+              <bAllowUBALocalExecutor>false</bAllowUBALocalExecutor>
+              <MaxParallelActions>4</MaxParallelActions>
+            </BuildConfiguration>
+          </Configuration>
+          '@ | Set-Content -LiteralPath (Join-Path $ubtConfigDir 'BuildConfiguration.xml') -Encoding utf8
+
+          $buildLog = Join-Path $env:YACS_MATERIAL_FORGE_CANARY_ROOT 'build_editor.log'
+          $buildBat = Join-Path $engine.Root 'Engine/Build/BatchFiles/Build.bat'
+          $buildArgs = @(
+            $project,
+            'YetAnotherCyclingSimEditor',
+            'Win64',
+            'Development',
+            '-WaitMutex',
+            '-NoHotReloadFromIDE',
+            '-FromMsBuild'
+          )
+          $process = Start-Process -FilePath $buildBat -ArgumentList $buildArgs -WorkingDirectory (Split-Path $buildBat -Parent) -PassThru -NoNewWindow -RedirectStandardOutput $buildLog
+          if (-not $process.WaitForExit(900000)) {
+            $process | Stop-Process -Force
+            throw 'YetAnotherCyclingSimEditor build timed out after 900 seconds.'
+          }
+          $exitCode = $process.ExitCode
+          if ($null -eq $exitCode -and (Test-Path -LiteralPath $buildLog)) {
+            $text = Get-Content -LiteralPath $buildLog -Raw -ErrorAction SilentlyContinue
+            if ($text -match 'Result: Succeeded') { $exitCode = 0 }
+          }
+          Get-Content -LiteralPath $buildLog -Tail 80 -ErrorAction SilentlyContinue | Write-Host
+          if ($exitCode -ne 0) { throw "YetAnotherCyclingSimEditor build failed with exit $exitCode." }
+
+          foreach ($dll in @(
+            'Binaries/Win64/UnrealEditor-YetAnotherCyclingSim.dll',
+            'Binaries/Win64/UnrealEditor-YetAnotherCyclingSimEditor.dll'
+          )) {
+            if (-not (Test-Path -LiteralPath $dll -PathType Leaf)) {
+              throw "Expected editor binary missing after build: $dll"
+            }
+          }
+
       - name: Run bounded UE import canary and rollback
         shell: pwsh
         run: |
