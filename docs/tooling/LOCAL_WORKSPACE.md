@@ -28,6 +28,16 @@ currently admitted Blender toolchain is `blender-4.5.9-windows-x64`; repository
 code pins and invokes it through `scripts/blender/run_headless.py`, never PATH or
 a system install. See [Blender headless producer](BLENDER_HEADLESS.md).
 
+Portable PowerShell is also workspace-owned rather than installed system-wide.
+The pinned runner shell is `D:\yacs\tools\powershell-7.6.6-win-x64\pwsh.exe`.
+`scripts/runner/Install-YacsPortablePowerShell.ps1` downloads the official
+Microsoft ZIP, verifies its exact SHA-256, validates version 7.6.6 and publishes
+it atomically. `Start-YacsRunner.ps1` prepends that directory to the runner
+process PATH, while `portable-powershell.yml` can bootstrap the tool even when
+only Windows PowerShell 5.1 is initially available. An already-running runner
+keeps its inherited process environment until restarted; a workflow that
+bootstraps the tool may use `GITHUB_PATH` for later steps in that same job.
+
 The runner is started by `scripts/runner/Start-YacsRunner.ps1` in the logged-in
 desktop session, with one listener only. It reads `workspace.json`, sets scoped
 temporary/cache paths, and preserves the registered GitHub identity. The monitor

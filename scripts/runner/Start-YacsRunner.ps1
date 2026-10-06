@@ -3,6 +3,16 @@
 param([string]$WorkspaceConfig = (Join-Path $PSScriptRoot '../../../workspace.json'))
 $ErrorActionPreference = 'Stop'
 $WorkspaceConfig = (Resolve-Path -LiteralPath $WorkspaceConfig).Path
+$installer = Join-Path $PSScriptRoot 'Install-YacsPortablePowerShell.ps1'
+if (-not (Test-Path -LiteralPath $installer -PathType Leaf)) { throw 'Portable PowerShell installer is missing.' }
+& $installer -WorkspaceConfig $WorkspaceConfig | Out-Host
+$workspaceRoot = Split-Path -Parent $WorkspaceConfig
+$pinnedPwshRoot = Join-Path $workspaceRoot 'tools\powershell-7.6.6-win-x64'
+$pinnedPwsh = Join-Path $pinnedPwshRoot 'pwsh.exe'
+if (-not (Test-Path -LiteralPath $pinnedPwsh -PathType Leaf)) { throw 'Pinned portable PowerShell is unavailable after bootstrap.' }
+$pinnedVersion = (& $pinnedPwsh -NoLogo -NoProfile -NonInteractive -Command '$PSVersionTable.PSVersion.ToString()' 2>&1 | Out-String).Trim()
+if ($LASTEXITCODE -ne 0 -or $pinnedVersion -ne '7.6.6') { throw "Pinned PowerShell version check failed: '$pinnedVersion'." }
+$env:PATH = "$pinnedPwshRoot;$env:PATH"
 $config = Get-Content -LiteralPath $WorkspaceConfig -Raw | ConvertFrom-Json
 $root = Split-Path -Parent $WorkspaceConfig
 $relative = [string]$config.runner

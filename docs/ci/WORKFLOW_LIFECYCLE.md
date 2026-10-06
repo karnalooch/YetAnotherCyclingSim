@@ -44,6 +44,7 @@ endpoint is forbidden outside an explicit test fixture.
 | `passo-giau-r4-1-roadside-house.yml` | BROKER-MANAGED | World Authoring Library SP638 proof; manual dispatch is fallback |
 | `passo-giau-r4-1b3-geometry-probe.yml` | BROKER-MANAGED | Gumball proof target for `r4-1b3-geometry` |
 | `passo-giau-road-alignment.yml` | CURRENT | Current official SP638 GIS preparation/alignment proof |
+| `portable-powershell.yml` | CURRENT | Pinned portable PowerShell bootstrap for the self-hosted Windows runner; exact ZIP hash/version verification and same-job `pwsh` resolution proof |
 | `pr-orchestrator.yml` | CURRENT | Trusted PR orchestration |
 | `project-bootstrap.yml` | CURRENT | Manual Project bootstrap/recovery |
 | `project-status.yml` | CURRENT | YACS-specific Project lifecycle synchronization |
@@ -104,9 +105,9 @@ The surviving Actions surface is intentionally grouped:
 1. **Main CI:** `ci.yml` + reusable Python/Unreal/full-world workflows.
 2. **Gumball/repository operations:** governance consumers, Proof Broker,
    Repository Ops, branch hygiene and PR orchestration.
-3. **Explicit recovery/probes:** manual Unreal, Windows probe, runner-space
-   recovery, Sa Calobra source acquisition/probe, Project bootstrap and
-   remote-editor command.
+3. **Explicit recovery/probes:** manual Unreal, Windows probe, pinned portable
+   PowerShell bootstrap, runner-space recovery, Sa Calobra source
+   acquisition/probe, Project bootstrap and remote-editor command.
 4. **Current M3 road/world proof:** broker-managed PCGEx terrain/corridor,
    geometry, hairpin and World Authoring Library SP638 proofs plus SP638 alignment.
    Houdini/Gaea are not prerequisites of the PCGEx-first baseline.
