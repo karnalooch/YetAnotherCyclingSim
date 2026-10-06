@@ -28,9 +28,9 @@ class PortablePowerShellContractTests(unittest.TestCase):
         )
 
     def test_installer_is_windows_powershell_compatible_and_hash_gated(self):
-        text = (
-            ROOT / "scripts/runner/Install-YacsPortablePowerShell.ps1"
-        ).read_text(encoding="utf-8")
+        text = (ROOT / "scripts/runner/Install-YacsPortablePowerShell.ps1").read_text(
+            encoding="utf-8"
+        )
         self.assertIn("#requires -Version 5.1", text)
         self.assertIn("Get-FileHash", text)
         self.assertIn("Expand-Archive", text)
@@ -39,9 +39,9 @@ class PortablePowerShellContractTests(unittest.TestCase):
         self.assertNotIn("Program Files", text)
 
     def test_bootstrap_workflow_does_not_require_pwsh_to_install_pwsh(self):
-        text = (
-            ROOT / ".github/workflows/portable-powershell.yml"
-        ).read_text(encoding="utf-8")
+        text = (ROOT / ".github/workflows/portable-powershell.yml").read_text(
+            encoding="utf-8"
+        )
         self.assertIn("shell: powershell", text)
         self.assertIn("Install-YacsPortablePowerShell.ps1", text)
         self.assertIn("$env:GITHUB_PATH", text)
@@ -51,9 +51,9 @@ class PortablePowerShellContractTests(unittest.TestCase):
         self.assertLess(install, verify)
 
     def test_runner_startup_prefers_portable_toolchain(self):
-        text = (
-            ROOT / "scripts/runner/Start-YacsRunner.ps1"
-        ).read_text(encoding="utf-8")
+        text = (ROOT / "scripts/runner/Start-YacsRunner.ps1").read_text(
+            encoding="utf-8"
+        )
         self.assertIn("Install-YacsPortablePowerShell.ps1", text)
         self.assertIn("powershell-7.6.6-win-x64", text)
         self.assertIn("$env:PATH", text)
