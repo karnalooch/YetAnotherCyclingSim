@@ -10,7 +10,7 @@ their effects and naming conventions.
 ## One active project
 
 The local layout is `D:\yacs\project`, `runner`, `runner-monitor`, `engine`,
-`data`, `cache`, `checkpoints`, `work`, and `archive`. Cyclist mocap source data
+`data`, `cache`, `checkpoints`, `work`, `tools`, and `archive`. Cyclist mocap source data
 lives at `data/mocap/cyclist-spike`; it remains a research dataset, not imported
 or admitted cycling animation.
 `workspace.json` lives beside the repository and contains machine paths. It is
@@ -22,6 +22,11 @@ Unreal and Computer Use operate on this project. CI retains isolated checkouts;
 CI cleanup must never target the live project or external data/cache roots.
 UE 5.8.2 lives at `engine/UE_5.8`. System Git, Visual Studio and base Python remain
 installed system tools. Python dependencies use the project's `.venv`.
+
+Portable DCC binaries live outside the repository under `D:\yacs\tools`. The
+currently admitted Blender toolchain is `blender-4.5.9-windows-x64`; repository
+code pins and invokes it through `scripts/blender/run_headless.py`, never PATH or
+a system install. See [Blender headless producer](BLENDER_HEADLESS.md).
 
 The runner is started by `scripts/runner/Start-YacsRunner.ps1` in the logged-in
 desktop session, with one listener only. It reads `workspace.json`, sets scoped
