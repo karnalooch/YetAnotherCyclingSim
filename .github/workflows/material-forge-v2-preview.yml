@@ -22,12 +22,17 @@ jobs:
   preview:
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: _v2-src
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          path: _v2-src
           ref: ${{ github.sha }}
           fetch-depth: 1
           lfs: false
+          clean: true
           persist-credentials: false
 
       - name: Prepare pinned renderer
