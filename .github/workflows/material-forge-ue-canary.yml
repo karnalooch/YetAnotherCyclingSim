@@ -149,7 +149,15 @@ jobs:
             $process | Stop-Process -Force
             throw 'Material Forge UE canary timed out after 600 seconds.'
           }
-          if ($process.ExitCode -ne 0) { throw "Material Forge UE canary editor exited $($process.ExitCode)." }
+          if ($process.ExitCode -ne 0) {
+            foreach ($diagnostic in @($stdout, $stderr, $log)) {
+              if (Test-Path -LiteralPath $diagnostic -PathType Leaf) {
+                Write-Host "===== TAIL $diagnostic ====="
+                Get-Content -LiteralPath $diagnostic -Tail 200 | Write-Host
+              }
+            }
+            throw "Material Forge UE canary editor exited $($process.ExitCode)."
+          }
           $receiptPath = Join-Path $env:YACS_MATERIAL_FORGE_CANARY_ROOT 'ue-canary-proof.json'
           if (-not (Test-Path -LiteralPath $receiptPath -PathType Leaf)) { throw 'Material Forge UE canary aggregate receipt is missing.' }
           $receipt = Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json
@@ -163,6 +171,9 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
         with:
           name: material-forge-ue-canary-${{ github.sha }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/material-forge-canary-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/material-forge-canary-${{ github.sha }}/carry-forward-plan.json
+            ${{ runner.temp }}/material-forge-canary-${{ github.sha }}/variant-revalidation.log
+            ${{ runner.temp }}/material-forge-canary-${{ github.sha }}/ue/**
           if-no-files-found: warn
           retention-days: 7
