@@ -266,3 +266,11 @@ load accepted map once
 The 8 GiB Landscape preparation threshold is not reduced. The importer-only
 check reuses the already loaded accepted map and records `map_reloaded=false`.
 
+## Interrupted self-hosted proof recovery
+
+If a self-hosted Material Forge worker disappears mid-run while GitHub still
+shows the job as `in_progress`, treat that run as stale evidence. Start a new
+exact-SHA proof from the branch rather than reusing partial outputs; the workflow
+concurrency contract will supersede the stale run when GitHub accepts the new
+job. Never promote partial render/proof directories after a runner interruption.
+
