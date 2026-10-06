@@ -59,6 +59,21 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         self.assertIn('"editor_process_count": 1', unified)
         self.assertIn('"map_load_count": 1', unified)
 
+    def test_offscreen_ue_canary_has_no_window_contract(self):
+        text = CANARY.read_text(encoding="utf-8")
+        self.assertIn("'-RenderOffscreen'", text)
+        self.assertIn("'-NoSound'", text)
+        self.assertNotIn("'-windowed'", text)
+        self.assertNotIn("'-ResX=1920'", text)
+        self.assertNotIn("'-ResY=1080'", text)
+        self.assertIn("YACS_UE_EXECUTION_MODE = 'RenderOffscreen'", text)
+
+        unified = (
+            ROOT / "scripts/ue/run_material_forge_unified_proof.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn('"execution_mode": execution_mode', unified)
+        self.assertIn('"after_gc": memory_after_gc', unified)
+
     def test_transfer_metrics_are_preserved(self):
         text = CANARY.read_text(encoding="utf-8")
         self.assertIn("proof-transfer-metrics.json", text)

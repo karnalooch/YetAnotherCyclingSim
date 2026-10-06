@@ -326,7 +326,21 @@ jobs:
           $stdout = Join-Path $root 'unreal.single-session.stdout.log'
           $stderr = Join-Path $root 'unreal.single-session.stderr.log'
           $log = Join-Path $root 'unreal.single-session.engine.log'
-          $arguments = @(('"' + $project + '"'), ('-ExecutePythonScript="' + $script + '"'), '-Unattended', '-NoPause', '-NoSplash', '-NoP4', '-windowed', '-ResX=1920', '-ResY=1080', '-NoVSync', '-ScriptErrorsAreFatal', '-stdout', ('-AbsLog="' + $log + '"'))
+          $env:YACS_UE_EXECUTION_MODE = 'RenderOffscreen'
+          $arguments = @(
+            ('"' + $project + '"'),
+            ('-ExecutePythonScript="' + $script + '"'),
+            '-RenderOffscreen',
+            '-Unattended',
+            '-NoPause',
+            '-NoSplash',
+            '-NoSound',
+            '-NoP4',
+            '-NoVSync',
+            '-ScriptErrorsAreFatal',
+            '-stdout',
+            ('-AbsLog="' + $log + '"')
+          )
           $process = Start-Process -FilePath $engine.UnrealEditorPath -ArgumentList $arguments -PassThru -NoNewWindow -RedirectStandardOutput $stdout -RedirectStandardError $stderr
           if (-not $process.WaitForExit(900000)) {
             $process | Stop-Process -Force
@@ -353,6 +367,7 @@ jobs:
             $receipt.execution_sha -ne $env:GITHUB_SHA -or
             [int]$receipt.editor_process_count -ne 1 -or
             [int]$receipt.map_load_count -ne 1 -or
+            $receipt.execution_mode -ne 'RenderOffscreen' -or
             $receipt.canary_status -ne 'UE_CANARY_ASSIGN_ROLLBACK_PASS' -or
             $receipt.landscape_status -ne 'UE_LANDSCAPE_BLEND_ASSIGN_ROLLBACK_PASS' -or
             $receipt.map_saved -ne $false -or
