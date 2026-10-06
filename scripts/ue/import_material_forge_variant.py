@@ -276,6 +276,8 @@ def import_variant(
         )
     )
     association = unreal.MaterialParameterAssociation.GLOBAL_PARAMETER
+    inherited_exact = []
+    explicit_overrides = []
     for name, texture in params.items():
         if name not in visible_textures:
             raise RuntimeError(
@@ -284,48 +286,71 @@ def import_variant(
                 + "; visible="
                 + ",".join(sorted(visible_textures))
             )
-        if not LIB.set_material_instance_parameter_override(
-            instance, name, True, association
-        ):
-            raise RuntimeError("Material instance override enable failed: " + name)
-        if not LIB.set_material_instance_texture_parameter_value(
-            instance, name, texture, association
-        ):
-            raise RuntimeError("Material instance texture override failed: " + name)
+        expected_path = texture.get_path_name()
         actual = LIB.get_material_instance_texture_parameter_value(
             instance, name, association
         )
-        if actual is None or actual.get_path_name() != texture.get_path_name():
+        if actual is not None and actual.get_path_name() == expected_path:
+            inherited_exact.append(name)
+            continue
+
+        # Only create an explicit override when inheritance does not already
+        # produce the exact imported texture. Setter return values differ
+        # between UE Python wrappers/builds; the read-back below is authoritative.
+        LIB.set_material_instance_parameter_override(instance, name, True, association)
+        LIB.set_material_instance_texture_parameter_value(
+            instance, name, texture, association
+        )
+        LIB.update_material_instance(instance)
+        actual = LIB.get_material_instance_texture_parameter_value(
+            instance, name, association
+        )
+        if actual is None or actual.get_path_name() != expected_path:
             raise RuntimeError(
                 "Material instance texture verification failed: "
                 + name
                 + " expected="
-                + texture.get_path_name()
+                + expected_path
                 + " actual="
                 + ("<None>" if actual is None else actual.get_path_name())
             )
+        explicit_overrides.append(name)
 
     if "TileSizeCm" not in visible_scalars:
         raise RuntimeError(
             "Material instance TileSizeCm parameter missing after parent refresh; visible="
             + ",".join(sorted(visible_scalars))
         )
-    if not LIB.set_material_instance_parameter_override(
-        instance, "TileSizeCm", True, association
-    ):
-        raise RuntimeError("Material instance TileSizeCm override enable failed")
     tile_size_cm = float(provenance["tile_metres"]) * 100.0
-    if not LIB.set_material_instance_scalar_parameter_value(
-        instance, "TileSizeCm", tile_size_cm, association
-    ):
-        raise RuntimeError("Material instance TileSizeCm override failed")
     actual_tile = LIB.get_material_instance_scalar_parameter_value(
         instance, "TileSizeCm", association
     )
     if abs(float(actual_tile) - tile_size_cm) > 0.001:
+        LIB.set_material_instance_parameter_override(
+            instance, "TileSizeCm", True, association
+        )
+        LIB.set_material_instance_scalar_parameter_value(
+            instance, "TileSizeCm", tile_size_cm, association
+        )
+        LIB.update_material_instance(instance)
+        actual_tile = LIB.get_material_instance_scalar_parameter_value(
+            instance, "TileSizeCm", association
+        )
+    if abs(float(actual_tile) - tile_size_cm) > 0.001:
         raise RuntimeError(
             f"Material instance TileSizeCm verification failed: {actual_tile} != {tile_size_cm}"
         )
+
+    unreal.log(
+        "YACS_MATERIAL_FORGE_INSTANCE_VALUES "
+        + json.dumps(
+            {
+                "inherited_exact": inherited_exact,
+                "explicit_overrides": explicit_overrides,
+                "tile_size_cm": float(actual_tile),
+            }
+        )
+    )
     LIB.update_material_instance(instance)
 
     assets = {
