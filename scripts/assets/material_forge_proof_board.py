@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageOps
@@ -30,7 +31,8 @@ def _label(entry: dict) -> str:
 def _contact_sheet(root: Path, entries: list[dict], channel: str, output: Path) -> None:
     cell_w, cell_h = 420, 450
     image_size = 396
-    canvas = Image.new("RGB", (cell_w * 3, cell_h * 3), "white")
+    rows = math.ceil(len(entries) / 3)
+    canvas = Image.new("RGB", (cell_w * 3, cell_h * rows), "white")
     draw = ImageDraw.Draw(canvas)
     for index, entry in enumerate(entries):
         source = _entry_image(root, entry, channel)
@@ -45,7 +47,8 @@ def _contact_sheet(root: Path, entries: list[dict], channel: str, output: Path) 
 def _tiling_sheet(root: Path, entries: list[dict], output: Path) -> None:
     cell_w, cell_h = 420, 450
     tile_size = 132
-    canvas = Image.new("RGB", (cell_w * 3, cell_h * 3), "white")
+    rows = math.ceil(len(entries) / 3)
+    canvas = Image.new("RGB", (cell_w * 3, cell_h * rows), "white")
     draw = ImageDraw.Draw(canvas)
     for index, entry in enumerate(entries):
         source = ImageOps.fit(_entry_image(root, entry, "BaseColor"), (tile_size, tile_size))
@@ -66,8 +69,8 @@ def main() -> None:
 
     manifest = json.loads((args.run / "run-manifest.json").read_text(encoding="utf-8"))
     entries = manifest["variants"]
-    if len(entries) != 9:
-        raise RuntimeError(f"Expected nine variants, found {len(entries)}")
+    if not entries:
+        raise RuntimeError("Material Forge proof board requires at least one variant")
 
     args.output.mkdir(parents=True, exist_ok=False)
     boards = []
