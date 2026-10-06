@@ -109,7 +109,16 @@ jobs:
           $proof = Join-Path $root 'render-proof'
           Expand-Archive -LiteralPath $zip -DestinationPath $proof -Force
           $summary = Get-Content -LiteralPath (Join-Path $proof 'proof-summary.json') -Raw | ConvertFrom-Json
-          if ($summary.status -ne 'RENDER_DETERMINISM_PASS_UE_REVIEW_PENDING' -or $summary.exact_sha -ne $env:YACS_RENDER_PROOF_SHA -or [int]$summary.variant_count -ne 9 -or $summary.comparison.deterministic -ne $true -or @($summary.comparison.mismatches).Count -ne 0) {
+          $catalog = Get-Content -LiteralPath 'worldgen/materials/material_forge/families.json' -Raw | ConvertFrom-Json
+          $expectedVariantCount = 0
+          foreach ($family in $catalog.families) { $expectedVariantCount += @($family.variants).Count }
+          if (
+            $summary.status -ne 'RENDER_DETERMINISM_PASS_UE_REVIEW_PENDING' -or
+            $summary.exact_sha -ne $env:YACS_RENDER_PROOF_SHA -or
+            [int]$summary.variant_count -ne $expectedVariantCount -or
+            $summary.comparison.deterministic -ne $true -or
+            @($summary.comparison.mismatches).Count -ne 0
+          ) {
             throw 'Render proof summary is not admissible for UE canary.'
           }
 
@@ -119,15 +128,22 @@ jobs:
           $plan | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $root 'carry-forward-plan.json') -Encoding utf8
           if ($plan.rebuild_required -ne $false -or $plan.reason -ne 'unchanged') { throw 'Current Material Forge source fingerprint drifted from render proof.' }
 
-          $variant = Join-Path $proof 'run-a\regional_limestone\base'
+          $variant = Join-Path $proof 'run-a\regional_limestone\refined_a'
+          $soilVariant = Join-Path $proof 'run-a\mediterranean_soil\refined_a'
           python scripts/assets/material_forge.py validate $variant --resolution 2048 *> (Join-Path $root 'variant-revalidation.log')
-          if ($LASTEXITCODE -ne 0) { throw 'Chosen UE canary variant failed current CPU validation.' }
+          if ($LASTEXITCODE -ne 0) { throw 'Refined limestone UE canary variant failed current CPU validation.' }
+          python scripts/assets/material_forge.py validate $soilVariant --resolution 2048 *> (Join-Path $root 'soil-variant-revalidation.log')
+          if ($LASTEXITCODE -ne 0) { throw 'Refined soil Landscape variant failed current CPU validation.' }
 
           $canaryProof = Join-Path $root 'ue'
           New-Item -ItemType Directory -Force -Path $canaryProof | Out-Null
           "YACS_CANARY_ROOT=$root" >> $env:GITHUB_ENV
           "YACS_MATERIAL_FORGE_VARIANT_DIR=$variant" >> $env:GITHUB_ENV
           "YACS_MATERIAL_FORGE_CANARY_ROOT=$canaryProof" >> $env:GITHUB_ENV
+          "YACS_MF_PROOF_ROOT=$(Join-Path $proof 'run-a')" >> $env:GITHUB_ENV
+          "YACS_MF_ROCK_VARIANT=$variant" >> $env:GITHUB_ENV
+          "YACS_MF_SOIL_VARIANT=$soilVariant" >> $env:GITHUB_ENV
+          "YACS_MF_CHUNKED_PROOF_ROOT=$(Join-Path $canaryProof 'landscape-blend')" >> $env:GITHUB_ENV
           "YACS_MATERIAL_FORGE_ARTIFACT_SHA=$env:YACS_RENDER_PROOF_SHA" >> $env:GITHUB_ENV
           "YACS_MATERIAL_FORGE_EXECUTION_SHA=$env:YACS_RENDER_PROOF_SHA" >> $env:GITHUB_ENV
 
@@ -252,6 +268,55 @@ jobs:
           }
           $receipt | ConvertTo-Json -Depth 12 | Write-Host
 
+      - name: Run refined rock-soil Landscape blend and rollback
+        shell: pwsh
+        working-directory: _material-forge-ue-canary
+        run: |
+          $ErrorActionPreference = 'Stop'
+          . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
+          $project = Join-Path (Get-Location) 'YetAnotherCyclingSim.uproject'
+          $engine = Resolve-YacsUnrealEngine -ProjectPath $project
+          $script = (Resolve-Path 'scripts/ue/run_material_forge_chunked_proof.py').Path
+          $root = $env:YACS_MF_CHUNKED_PROOF_ROOT
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+          $stdout = Join-Path $root 'unreal.stdout.log'
+          $stderr = Join-Path $root 'unreal.stderr.log'
+          $log = Join-Path $root 'unreal.engine.log'
+          $arguments = @(('"' + $project + '"'), ('-ExecutePythonScript="' + $script + '"'), '-Unattended', '-NoPause', '-NoSplash', '-NoP4', '-windowed', '-ResX=1920', '-ResY=1080', '-NoVSync', '-ScriptErrorsAreFatal', '-stdout', ('-AbsLog="' + $log + '"'))
+          $process = Start-Process -FilePath $engine.UnrealEditorPath -ArgumentList $arguments -PassThru -NoNewWindow -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          if (-not $process.WaitForExit(600000)) {
+            $process | Stop-Process -Force
+            throw 'Refined Material Forge Landscape blend proof timed out after 600 seconds.'
+          }
+          if ($process.ExitCode -ne 0) {
+            foreach ($diagnostic in @($stdout, $stderr, $log)) {
+              if (Test-Path -LiteralPath $diagnostic -PathType Leaf) {
+                Write-Host "===== TAIL $diagnostic ====="
+                Get-Content -LiteralPath $diagnostic -Tail 200 | Write-Host
+              }
+            }
+            throw "Refined Material Forge Landscape proof exited $($process.ExitCode)."
+          }
+          $receiptPath = Join-Path $root 'landscape-blend-proof.json'
+          if (-not (Test-Path -LiteralPath $receiptPath -PathType Leaf)) {
+            throw 'Refined Landscape blend aggregate receipt is missing.'
+          }
+          $receipt = Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json
+          if (
+            $receipt.status -ne 'UE_LANDSCAPE_BLEND_ASSIGN_ROLLBACK_PASS' -or
+            $receipt.artifact_exact_sha -ne $env:YACS_RENDER_PROOF_SHA -or
+            $receipt.execution_sha -ne $env:GITHUB_SHA -or
+            $receipt.rock_variant -ne 'regional_limestone/refined_a' -or
+            $receipt.soil_variant -ne 'mediterranean_soil/refined_a' -or
+            $receipt.map_saved -ne $false -or
+            $receipt.assets_saved -ne $false -or
+            $receipt.geometry_changed -ne $false -or
+            $receipt.world_semantics_changed -ne $false
+          ) {
+            throw 'Refined Landscape blend proof failed.'
+          }
+          $receipt | ConvertTo-Json -Depth 12 | Write-Host
+
       - name: Upload UE canary evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
@@ -260,6 +325,7 @@ jobs:
           path: |
             ${{ runner.temp }}/material-forge-canary-${{ inputs.target_sha }}/carry-forward-plan.json
             ${{ runner.temp }}/material-forge-canary-${{ inputs.target_sha }}/variant-revalidation.log
+            ${{ runner.temp }}/material-forge-canary-${{ inputs.target_sha }}/soil-variant-revalidation.log
             ${{ runner.temp }}/material-forge-canary-${{ inputs.target_sha }}/ue/**
           if-no-files-found: warn
           retention-days: 7
