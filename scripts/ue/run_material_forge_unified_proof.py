@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import runpy
 import time
 from pathlib import Path
 
@@ -24,12 +25,24 @@ def _load(name: str, path: Path):
     return module
 
 
+def _memory_snapshot() -> dict:
+    available = runpy.run_path(
+        str(ROOT / "scripts/ue/sa_calobra_material_waves.py")
+    )["available_memory"]()
+    return {
+        "free_physical_gb": round(available["free_physical"] / 1024**3, 2),
+        "free_commit_gb": round(available["free_commit"] / 1024**3, 2),
+    }
+
+
 def main() -> None:
     started = time.perf_counter()
     proof_root = Path(os.environ["YACS_MATERIAL_FORGE_CANARY_ROOT"])
     proof_root.mkdir(parents=True, exist_ok=True)
     artifact_sha = os.environ["YACS_MATERIAL_FORGE_ARTIFACT_SHA"]
     execution_sha = os.environ["YACS_MATERIAL_FORGE_EXECUTION_SHA"]
+    execution_mode = os.environ.get("YACS_UE_EXECUTION_MODE", "unspecified")
+    memory_before = _memory_snapshot()
 
     # Run the stronger Landscape proof first while the process still has the
     # full fail-closed memory headroom. The standalone importer canary is
@@ -38,6 +51,7 @@ def main() -> None:
     landscape_started = time.perf_counter()
     landscape_receipt = chunked.main(load_map=True)
     landscape_seconds = time.perf_counter() - landscape_started
+    memory_after_landscape = _memory_snapshot()
 
     if (
         landscape_receipt.get("status")
@@ -50,11 +64,13 @@ def main() -> None:
     # The Landscape phase has restored all component overrides. Release
     # unreferenced transient material objects before the importer-only check.
     unreal.collect_garbage()
+    memory_after_gc = _memory_snapshot()
 
     canary = _load("yacs_material_forge_canary_runner", CANARY_RUNNER)
     canary_started = time.perf_counter()
     canary_receipt = canary.main(load_map=False)
     canary_seconds = time.perf_counter() - canary_started
+    memory_after_canary = _memory_snapshot()
 
     if canary_receipt.get("status") != "UE_CANARY_ASSIGN_ROLLBACK_PASS":
         raise RuntimeError("Single-session import canary did not pass")
@@ -67,12 +83,19 @@ def main() -> None:
         "execution_sha": execution_sha,
         "editor_process_count": 1,
         "map_load_count": 1,
+        "execution_mode": execution_mode,
         "canary_status": canary_receipt["status"],
         "landscape_status": landscape_receipt["status"],
         "map_load_seconds": landscape_receipt.get("phase_seconds"),
         "canary_seconds": round(canary_seconds, 3),
         "landscape_seconds": round(landscape_seconds, 3),
         "total_seconds": round(time.perf_counter() - started, 3),
+        "memory": {
+            "before": memory_before,
+            "after_landscape": memory_after_landscape,
+            "after_gc": memory_after_gc,
+            "after_canary": memory_after_canary,
+        },
         "map_saved": False,
         "assets_saved": False,
         "geometry_changed": False,
