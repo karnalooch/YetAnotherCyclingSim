@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "policy": {
+    "world_semantics_owner": "PCG/PCGEx",
+    "geometry_owner": "BOB",
+    "surface_appearance_owner": "Material Forge",
+    "allow_world_classification": false,
+    "allow_persistent_ue_mutation_by_default": false
+  },
+  "operations": [
+    {
+      "id": "author_material_families",
+      "entrypoint": "python scripts/assets/material_forge.py author",
+      "effect": "filesystem",
+      "deterministic": true
+    },
+    {
+      "id": "render_material_variant",
+      "entrypoint": "python scripts/assets/render_material_forge.py",
+      "effect": "external-authoring-runtime",
+      "deterministic": true
+    },
+    {
+      "id": "validate_material_run",
+      "entrypoint": "python scripts/assets/material_forge.py validate-run",
+      "effect": "filesystem",
+      "deterministic": true
+    },
+    {
+      "id": "pack_authoritative_world_masks",
+      "entrypoint": "python scripts/assets/material_forge.py pack-world-masks",
+      "effect": "pack-only",
+      "semantic_owner": "PCG/PCGEx"
+    },
+    {
+      "id": "import_ue_variant",
+      "entrypoint": "scripts/ue/import_material_forge_variant.py",
+      "effect": "ue-transient-by-default"
+    },
+    {
+      "id": "preview_ue_canary",
+      "entrypoint": "scripts/ue/preview_material_forge_canary.py",
+      "effect": "ue-bounded-transient"
+    },
+    {
+      "id": "plan_material_rebuild",
+      "entrypoint": "python scripts/assets/material_forge.py plan-rebuild",
+      "effect": "read-only-fingerprint-plan",
+      "deterministic": true
+    },
+    {
+      "id": "derive_material_local_mask",
+      "entrypoint": "python scripts/assets/material_forge.py derive-material-mask",
+      "effect": "presentation-detail-only",
+      "semantic_owner": "PCG/PCGEx"
+    }
+  ]
+}

@@ -368,3 +368,53 @@ proof; Rock042S is acquired only. These are proof-use candidates, not validated
 world assets. Geology, Mallorca origin and physical coverage remain unverified.
 See the [remote report](../tooling/TEXTURE_MATERIAL_PREP_REMOTE_HANDOFF.md) for
 exact input identity, archive hashes, output limits and remaining acceptance.
+
+## Material Forge upstream evidence — Issue #387
+
+Material Forge extends the previously approved bounded Material Maker limestone
+trial into a YACS-owned orchestration/validation layer. External applications
+remain outside the repository and are not YACS runtime dependencies.
+
+### Material Maker
+
+- Repository: https://github.com/RodZill4/material-maker
+- Release: `1.7`
+- Release tag commit: `4c6cea67b659e1eb472f91590e06b2b1c5245916`
+- Previously validated source revision:
+  `4d29a815489866aae483281cf44b2cfe48d3cc3e`
+- Licence: MIT.
+- Use: offline graph authoring/render source; YACS adapts the reviewed PBR output
+  definition into generated `.ptex` graphs.
+- Distribution: no Material Maker source tree or executable is vendored by #387.
+- Required MIT notice remains in
+  `docs/legal/notices/material-maker-MIT.txt` and generated graph directories.
+
+### Godot
+
+- Repository: https://github.com/godotengine/godot
+- Release: `4.7.2-stable`
+- Commit: `ed1daf0bf001b61586d9930840f2f1394092c079`
+- Licence: MIT.
+- Use: external headless renderer for the reviewed Material Maker source runner.
+- Distribution: no Godot binary or source is vendored by #387.
+
+### MaterialPilot reference
+
+- Repository: https://github.com/SS-360/materialpilot
+- Reviewed commit: `e3721eadd042e077f3aa7d472ad83c5594c7ea5b`
+- Licence: Apache-2.0; upstream NOTICE inspected.
+- Status: **reference only**.
+- No source copied, vendored or linked into YACS.
+
+### Tool-MaterialMaker-MCP reference
+
+- Repository: https://github.com/graysonchalmers/Tool-MaterialMaker-MCP
+- Reviewed commit: `1488b94c02f85e88ef6563e33d753c3bfdfaac5a`
+- Licence: MIT.
+- Status: **reference only**.
+- No source copied, vendored or linked into YACS.
+
+The machine-readable counterpart is
+`worldgen/materials/material_forge/upstreams.json`. If any external source
+revision changes, the pin, licence review and deterministic material proof must
+be repeated before the new revision is admitted.
