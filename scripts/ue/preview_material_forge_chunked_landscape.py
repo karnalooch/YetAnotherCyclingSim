@@ -49,7 +49,9 @@ MANIFEST = MASK_ROOT / "material-input-manifest.json"
 
 MAP = "/Game/Worlds/SaCalobra/L_SaCalobraAccepted_20261004"
 STATE = "_yacs_mf_chunked_fix"
-MAX_COMPONENTS = int(os.environ.get("YACS_MF_MAX_COMPONENTS", "9"))
+MAX_COMPONENTS = 9
+REQUESTED_COMPONENTS = int(os.environ.get("YACS_MF_MAX_COMPONENTS", str(MAX_COMPONENTS)))
+ACTIVE_COMPONENTS = max(1, min(MAX_COMPONENTS, REQUESTED_COMPONENTS))
 TARGET_COMPONENT = os.environ.get("YACS_MF_TARGET_COMPONENT")
 PREPARE_FREE_PHYSICAL_GB = 8
 PREPARE_FREE_COMMIT_GB = 12
@@ -159,7 +161,7 @@ def _nearest_cluster(editor, components):
             + (origin.y - center_origin.y) ** 2
         )
 
-    return sorted(components, key=center_distance)[:MAX_COMPONENTS]
+    return sorted(components, key=center_distance)[:ACTIVE_COMPONENTS]
 
 
 def _validate_visual_fill():
