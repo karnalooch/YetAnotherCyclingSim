@@ -22,92 +22,97 @@ jobs:
           lfs: false
           persist-credentials: false
 
-      - name: Run release CLI render-driver matrix
+      - name: Run absolute-path release CLI A-B-C proof
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
           $toolRoot = 'D:\yacs\tool-cache\material-forge'
           $mmExe = Get-ChildItem -LiteralPath (Join-Path $toolRoot 'material-maker-1.7') -Filter 'material_maker.exe' -Recurse -ErrorAction Stop | Select-Object -First 1
           if ($null -eq $mmExe) { throw 'Pinned Material Maker release missing.' }
-          $example = Get-ChildItem -LiteralPath (Join-Path $mmExe.Directory.FullName 'examples') -Filter 'dry_earth.ptex' -ErrorAction Stop | Select-Object -First 1
+          $install = $mmExe.Directory.FullName
+          $example = Get-ChildItem -LiteralPath (Join-Path $install 'examples') -Filter 'dry_earth.ptex' -ErrorAction Stop | Select-Object -First 1
           if ($null -eq $example) { throw 'Pinned dry_earth.ptex missing.' }
           $python = Join-Path $toolRoot 'python\Scripts\python.exe'
           if (-not (Test-Path -LiteralPath $python)) { throw 'Pinned Python venv missing.' }
 
-          $root = Join-Path $env:RUNNER_TEMP "mm-cli-drivers-$env:GITHUB_SHA"
-          Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue
-          New-Item -ItemType Directory -Force -Path $root | Out-Null
-
-          # Close only the GUI handoff instance created by our earlier proof.
+          # The release CLI is not safe to run beside another Material Maker process.
           $handoff = @(Get-CimInstance Win32_Process | Where-Object {
             $_.Name -ieq 'material_maker.exe' -and
             $_.ExecutablePath -eq $mmExe.FullName -and
             $_.CommandLine -match '(?i)--no-splash'
           })
-          $handoff | Select-Object ProcessId,SessionId,CommandLine |
-            ConvertTo-Json -Depth 5 |
-            Set-Content -LiteralPath (Join-Path $root 'closed-handoff.json') -Encoding utf8
           foreach ($proc in $handoff) {
             Stop-Process -Id $proc.ProcessId -Force -ErrorAction Stop
           }
-          Start-Sleep -Seconds 2
+          Start-Sleep -Seconds 1
+          $remaining = @(Get-CimInstance Win32_Process | Where-Object {
+            $_.Name -ieq 'material_maker.exe' -and $_.ExecutablePath -eq $mmExe.FullName
+          })
+          if ($remaining.Count -gt 0) {
+            throw "Material Maker is already running; refuse CLI proof beside pid(s): $($remaining.ProcessId -join ',')"
+          }
 
-          $startedUtc = [DateTime]::UtcNow.ToString('o')
-          $env:YACS_DRIVER_ROOT = $root
+          $root = Join-Path $env:RUNNER_TEMP "mm-cli-absolute-$env:GITHUB_SHA"
+          Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+
+          $forge = Join-Path $root 'forge'
+          & $python scripts/assets/material_forge.py author --material-maker $install --output $forge *> (Join-Path $root 'author.log')
+          if ($LASTEXITCODE -ne 0) { throw 'Forge authoring failed before CLI proof.' }
+
+          $old = (Resolve-Path 'worldgen/materials/material_maker/limestone_candidate/SaCalobra_PaleLimestone.ptex').Path
+          $new = (Resolve-Path (Join-Path $forge 'aged_mountain_asphalt/base/Material.ptex')).Path
+
+          $env:YACS_ABS_ROOT = $root
           $env:YACS_MM_EXE = $mmExe.FullName
-          $env:YACS_MM_EXAMPLE = $example.FullName
-          $env:YACS_DRIVER_PY = $python
-          $env:YACS_DRIVER_STARTED_UTC = $startedUtc
-          "YACS_DRIVER_ROOT=$root" >> $env:GITHUB_ENV
-          "YACS_MM_EXE=$($mmExe.FullName)" >> $env:GITHUB_ENV
-          "YACS_MM_EXAMPLE=$($example.FullName)" >> $env:GITHUB_ENV
-          "YACS_DRIVER_PY=$python" >> $env:GITHUB_ENV
-          "YACS_DRIVER_STARTED_UTC=$startedUtc" >> $env:GITHUB_ENV
+          $env:YACS_MM_INSTALL = $install
+          $env:YACS_MM_UPSTREAM = $example.FullName
+          $env:YACS_MM_OLD = $old
+          $env:YACS_MM_NEW = $new
+          "YACS_ABS_ROOT=$root" >> $env:GITHUB_ENV
 
           @'
           import json
           import os
-          import shutil
           import subprocess
           import time
           from pathlib import Path
 
-          root = Path(os.environ["YACS_DRIVER_ROOT"])
-          exe = Path(os.environ["YACS_MM_EXE"])
-          example = Path(os.environ["YACS_MM_EXAMPLE"])
-
+          root = Path(os.environ["YACS_ABS_ROOT"]).resolve()
+          exe = Path(os.environ["YACS_MM_EXE"]).resolve()
+          install = Path(os.environ["YACS_MM_INSTALL"]).resolve()
           cases = [
-              ("default_vulkan", []),
-              ("headless_vulkan", ["--headless"]),
-              ("d3d12", ["--rendering-driver", "d3d12"]),
-              ("headless_d3d12", ["--headless", "--rendering-driver", "d3d12"]),
-              ("gl_compatibility", ["--rendering-method", "gl_compatibility", "--rendering-driver", "opengl3"]),
+              ("A_upstream_example", Path(os.environ["YACS_MM_UPSTREAM"]).resolve(), None),
+              ("B_old_yacs_limestone", Path(os.environ["YACS_MM_OLD"]).resolve(), "YACS/Textures"),
+              ("C_new_forge_asphalt", Path(os.environ["YACS_MM_NEW"]).resolve(), "YACS/Textures"),
           ]
-          results = []
-          for name, engine_args in cases:
-              case = root / name
-              case.mkdir()
-              shutil.copy2(example, case / "dry_earth.ptex")
-              cmd = [
+
+          summary = []
+          for name, graph, target in cases:
+              out = (root / name).resolve()
+              out.mkdir()
+              command = [
                   str(exe),
-                  *engine_args,
                   "--export-material",
-                  "-o", ".",
-                  "--output-file", "smoke",
-                  "dry_earth.ptex",
+                  "-o", str(out),
+                  "--output-file", name,
               ]
+              if target is not None:
+                  command += ["--target", target]
+              command += [str(graph)]
+
               started = time.monotonic()
               try:
-                  proc = subprocess.run(
-                      cmd,
-                      cwd=case,
+                  result = subprocess.run(
+                      command,
+                      cwd=install,
                       stdout=subprocess.PIPE,
                       stderr=subprocess.STDOUT,
                       text=True,
-                      timeout=90,
+                      timeout=180,
                   )
-                  code = proc.returncode
-                  output = proc.stdout or ""
+                  code = result.returncode
+                  output = result.stdout or ""
                   timed_out = False
               except subprocess.TimeoutExpired as exc:
                   code = None
@@ -115,16 +120,18 @@ jobs:
                   if isinstance(output, bytes):
                       output = output.decode("utf-8", errors="replace")
                   timed_out = True
+
               elapsed = round(time.monotonic() - started, 3)
-              (case / "stdout.log").write_text(output, encoding="utf-8")
+              (out / "stdout.log").write_text(output, encoding="utf-8")
               files = [
                   {"name": p.name, "size": p.stat().st_size}
-                  for p in sorted(case.iterdir())
-                  if p.is_file() and p.name not in {"dry_earth.ptex", "stdout.log"}
+                  for p in sorted(out.iterdir())
+                  if p.is_file() and p.name != "stdout.log"
               ]
               entry = {
                   "case": name,
-                  "engine_args": engine_args,
+                  "graph": str(graph),
+                  "target": target,
                   "exit_code": code,
                   "exit_code_hex": None if code is None else hex(code & 0xFFFFFFFF),
                   "timed_out": timed_out,
@@ -132,36 +139,22 @@ jobs:
                   "files": files,
                   "stdout_tail": output[-6000:],
               }
-              results.append(entry)
+              summary.append(entry)
               print(json.dumps(entry, indent=2))
-          (root / "matrix.json").write_text(json.dumps(results, indent=2), encoding="utf-8")
+
+          (root / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+
+          upstream = summary[0]
+          if upstream["exit_code"] != 0 or not upstream["files"]:
+              raise SystemExit("Pinned Material Maker release CLI cannot export its own upstream example with absolute paths.")
           '@ | & $python -
-          if ($LASTEXITCODE -ne 0) { throw 'Driver matrix harness failed.' }
+          if ($LASTEXITCODE -ne 0) { throw 'Absolute-path Material Maker CLI proof failed.' }
 
-      - name: Capture Windows crash events
-        if: ${{ always() }}
-        shell: pwsh
-        run: |
-          $root = $env:YACS_DRIVER_ROOT
-          if ([string]::IsNullOrWhiteSpace($root)) { exit 0 }
-          $since = [DateTime]::Parse($env:YACS_DRIVER_STARTED_UTC).ToLocalTime().AddMinutes(-1)
-          $events = @(
-            Get-WinEvent -FilterHashtable @{LogName='Application'; StartTime=$since} -ErrorAction SilentlyContinue |
-              Where-Object {
-                $_.Id -in @(1000,1001) -and
-                $_.Message -match '(?i)material_maker\.exe'
-              } |
-              Select-Object TimeCreated, Id, ProviderName, LevelDisplayName, Message
-          )
-          $events | ConvertTo-Json -Depth 8 |
-            Set-Content -LiteralPath (Join-Path $root 'windows-crash-events.json') -Encoding utf8
-          $events | Format-List | Out-String | Write-Host
-
-      - name: Upload driver evidence
+      - name: Upload absolute-path evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: material-maker-cli-drivers-${{ github.sha }}
-          path: ${{ runner.temp }}/mm-cli-drivers-${{ github.sha }}
+          name: material-maker-cli-absolute-${{ github.sha }}
+          path: ${{ runner.temp }}/mm-cli-absolute-${{ github.sha }}
           if-no-files-found: error
           retention-days: 7
