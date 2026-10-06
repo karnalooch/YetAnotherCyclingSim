@@ -6,6 +6,8 @@ on:
       - "codex/363-landscape-material-foundation"
     paths:
       - ".github/workflows/material-forge-source-prime.yml"
+      - "scripts/assets/material_forge.py"
+      - "scripts/assets/test_material_forge.py"
 
 permissions:
   contents: read

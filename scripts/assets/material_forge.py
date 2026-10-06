@@ -43,17 +43,17 @@ vec4 yacs_limestone(vec2 uv, float seed, float fractures, float pores) {
     float crack = (1.0-smoothstep(0.0,crack_width,coarse_cells.y))*crack_gate;
     float patch_field = yacs_noise(q,5.0,seed+31.0);
     float patch_edge = abs(yacs_noise(q,17.0,seed+37.0)-0.5);
-    float patch = smoothstep(0.58,0.78,patch_field) *
-                  (1.0-smoothstep(0.10,0.30,patch_edge));
+    float patch_mask = smoothstep(0.58,0.78,patch_field) *
+                       (1.0-smoothstep(0.10,0.30,patch_edge));
     float aggregate = yacs_noise(q,181.0,seed+43.0);
     float micro = yacs_noise(q,421.0,seed+47.0);
     float oxidation = yacs_noise(q,13.0,seed+53.0);
     float height = 0.50 + 0.020*(aggregate-0.5) + 0.008*(micro-0.5);
-    height += 0.010*(oxidation-0.5) + 0.012*patch;
-    height -= fractures*0.060*crack + pores*0.012*patch;
+    height += 0.010*(oxidation-0.5) + 0.012*patch_mask;
+    height -= fractures*0.060*crack + pores*0.012*patch_mask;
     float variation = clamp(0.52*oxidation + 0.30*aggregate + 0.18*micro,0.0,1.0);
     return vec4(clamp(height,0.0,1.0),clamp(crack,0.0,1.0),
-                clamp(patch,0.0,1.0),variation);
+                clamp(patch_mask,0.0,1.0),variation);
 }
 """
 

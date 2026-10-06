@@ -105,6 +105,12 @@ def _variant_fixture(root: Path, size: int = 64) -> None:
 
 
 class MaterialForgeContractTests(unittest.TestCase):
+    def test_asphalt_shader_avoids_reserved_glsl_patch_identifier(self):
+        self.assertNotIn("float patch =", forge.ASPHALT_FUNCTION)
+        self.assertIn("float patch_mask =", forge.ASPHALT_FUNCTION)
+        self.assertNotIn("0.012*patch;", forge.ASPHALT_FUNCTION)
+        self.assertNotIn("clamp(patch,0.0,1.0)", forge.ASPHALT_FUNCTION)
+
     def test_catalog_has_three_families_and_three_variants_each(self):
         catalog = forge.load_catalog()
         self.assertEqual(len(catalog["families"]), 3)
