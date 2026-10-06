@@ -508,25 +508,26 @@ def check_variant(directory: Path, expected_resolution: int = 2048) -> dict[str,
     }
 
     native = export / f"{EXPORT_PREFIX}_native-check.json"
-    if native.exists():
-        native_check = _json(native)
-        if not native_check.get("valid"):
-            raise ValueError("Godot native image decoding failed")
-        for suffix in (
-            "BaseColor.png",
-            "Normal_DX.png",
-            "ORM.png",
-            "Height.exr",
-            "DetailMasks.png",
-        ):
-            image = native_check.get("images", {}).get(suffix)
-            if image is None:
-                raise ValueError(f"Native decode missing: {suffix}")
-            if [image["width"], image["height"]] != [
-                expected_resolution,
-                expected_resolution,
-            ]:
-                raise ValueError(f"Native resolution mismatch: {suffix}")
+    if not native.is_file():
+        raise ValueError("Missing Godot native decode receipt")
+    native_check = _json(native)
+    if native_check.get("valid") is not True:
+        raise ValueError("Godot native image decoding failed")
+    for suffix in (
+        "BaseColor.png",
+        "Normal_DX.png",
+        "ORM.png",
+        "Height.exr",
+        "DetailMasks.png",
+    ):
+        image = native_check.get("images", {}).get(suffix)
+        if image is None:
+            raise ValueError(f"Native decode missing: {suffix}")
+        if [image["width"], image["height"]] != [
+            expected_resolution,
+            expected_resolution,
+        ]:
+            raise ValueError(f"Native resolution mismatch: {suffix}")
 
     result = {
         "status": "MAP_CHECKS_PASS_UE_REVIEW_PENDING",

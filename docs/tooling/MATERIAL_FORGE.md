@@ -166,7 +166,8 @@ The CPU validator rejects:
 - invalid normal-vector lengths;
 - non-DirectX normal metadata;
 - missing EXR height;
-- invalid native Godot decode receipts;
+- missing or invalid native Godot decode receipts (all five outputs, including
+  Height, must have a successful decode at the requested resolution);
 - semantic ownership that is not PCG/PCGEx.
 
 Visual quality still requires exact-SHA human proof. A numeric pass is not a

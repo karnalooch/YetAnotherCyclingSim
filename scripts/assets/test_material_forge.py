@@ -63,6 +63,20 @@ def _variant_fixture(root: Path, size: int = 64) -> None:
     ):
         _png(export / f"{forge.EXPORT_PREFIX}_{name}.png", np.clip(array * 255, 0, 255))
     (export / f"{forge.EXPORT_PREFIX}_Height.exr").write_bytes(b"\x76\x2f\x31\x01fixture")
+    # Stub the external decoder at its JSON boundary; this is not a real EXR render.
+    (export / f"{forge.EXPORT_PREFIX}_native-check.json").write_text(
+        json.dumps({
+            "valid": True,
+            "images": {
+                suffix: {"width": size, "height": size}
+                for suffix in (
+                    "BaseColor.png", "Normal_DX.png", "ORM.png",
+                    "Height.exr", "DetailMasks.png",
+                )
+            },
+        }),
+        encoding="utf-8",
+    )
     (root / "provenance.json").write_text(
         json.dumps(
             {
@@ -92,6 +106,27 @@ class MaterialForgeContractTests(unittest.TestCase):
             self.assertEqual(result["status"], "MAP_CHECKS_PASS_UE_REVIEW_PENDING")
             self.assertEqual(result["semantic_owner"], "PCG/PCGEx")
             self.assertFalse(result["world_semantics_generated"])
+
+    def test_validator_requires_native_decode_evidence(self):
+        for failure in ("missing", "invalid", "missing_height", "wrong_height_size"):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                _variant_fixture(root)
+                native = root / "export" / f"{forge.EXPORT_PREFIX}_native-check.json"
+                receipt = json.loads(native.read_text())
+                if failure == "missing":
+                    native.unlink()
+                else:
+                    if failure == "invalid":
+                        receipt["valid"] = "true"
+                    elif failure == "missing_height":
+                        del receipt["images"]["Height.exr"]
+                    else:
+                        receipt["images"]["Height.exr"]["width"] = 32
+                    native.write_text(json.dumps(receipt))
+                with self.assertRaises(ValueError):
+                    forge.check_variant(root, expected_resolution=64)
+                self.assertFalse((root / "validation.json").exists())
 
     def test_validator_rejects_semantic_ownership_violation(self):
         with tempfile.TemporaryDirectory() as directory:
