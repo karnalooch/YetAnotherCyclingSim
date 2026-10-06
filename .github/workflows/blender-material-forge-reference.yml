@@ -104,10 +104,10 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $hostPath = Join-Path $env:YACS_BLENDER_REFERENCE_ROOT 'host-receipt.json'
           $referencePath = Join-Path $env:YACS_BLENDER_REFERENCE_ROOT 'reference-receipt.json'
-          $host = Get-Content -LiteralPath $hostPath -Raw | ConvertFrom-Json
+          $hostReceipt = Get-Content -LiteralPath $hostPath -Raw | ConvertFrom-Json
           $reference = Get-Content -LiteralPath $referencePath -Raw | ConvertFrom-Json
 
-          if ($host.status -ne 'PASS' -or $host.actual_blender_version -ne '4.5.9') {
+          if ($hostReceipt.status -ne 'PASS' -or $hostReceipt.actual_blender_version -ne '4.5.9') {
             throw 'Pinned Blender host receipt failed.'
           }
           if (
