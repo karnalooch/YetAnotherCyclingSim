@@ -1,17 +1,18 @@
 # Sa Calobra material repair plan
 
-**Status:** documentation-only repair plan; implementation not started by this update  
+**Status:** implementation checkpoint retained; visual/performance acceptance pending
 **Recorded:** 2026-10-06  
 **Work item:** [#363 — Landscape material foundation](https://github.com/karnalooch/YetAnotherCyclingSim/issues/363)  
 **Delivery lane:** existing draft [PR #381](https://github.com/karnalooch/YetAnotherCyclingSim/pull/381)
 
 ## Authority, scope and execution boundary
 
-The owner requested a detailed repair plan, explicitly without implementation,
-then requested its inclusion in project documentation and the issue description.
-This record authorizes documentation delivery only. No material application,
-import, scene mutation, build, GPU benchmark, visual acceptance, issue completion
-or successor unblock is performed or implied by this update.
+The initial request covered documentation only. The owner subsequently authorized
+implementation, then requested remote retention of all work and a detailed report.
+The [implementation and recovery report](../experiments/sa-calobra-material-repair-20261006-report.md)
+records completed experiments, the editor crash, saved candidates and remaining gates.
+The original planning evidence below is historical; it is not the latest execution
+status. No visual/performance acceptance, issue completion or successor unblock is claimed.
 
 [World Building Bible](../WORLD_BUILDING_BIBLE.md) remains the methodology
 authority selected through [the documentation index](../README.md).
