@@ -52,11 +52,17 @@ jobs:
           }
           Start-Sleep -Seconds 2
 
+          $startedUtc = [DateTime]::UtcNow.ToString('o')
+          $env:YACS_DRIVER_ROOT = $root
+          $env:YACS_MM_EXE = $mmExe.FullName
+          $env:YACS_MM_EXAMPLE = $example.FullName
+          $env:YACS_DRIVER_PY = $python
+          $env:YACS_DRIVER_STARTED_UTC = $startedUtc
           "YACS_DRIVER_ROOT=$root" >> $env:GITHUB_ENV
           "YACS_MM_EXE=$($mmExe.FullName)" >> $env:GITHUB_ENV
           "YACS_MM_EXAMPLE=$($example.FullName)" >> $env:GITHUB_ENV
           "YACS_DRIVER_PY=$python" >> $env:GITHUB_ENV
-          "YACS_DRIVER_STARTED_UTC=$([DateTime]::UtcNow.ToString('o'))" >> $env:GITHUB_ENV
+          "YACS_DRIVER_STARTED_UTC=$startedUtc" >> $env:GITHUB_ENV
 
           @'
           import json
