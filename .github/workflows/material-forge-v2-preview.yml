@@ -1,0 +1,119 @@
+name: Material Forge visual v2 preview
+
+on:
+  push:
+    branches:
+      - "feat/387-material-forge-visual-v2"
+    paths:
+      - ".github/workflows/material-forge-v2-preview.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: material-forge-v2-preview
+  cancel-in-progress: true
+
+env:
+  GIT_LFS_SKIP_SMUDGE: "1"
+  MM_SOURCE_SHA: 4d29a815489866aae483281cf44b2cfe48d3cc3e
+
+jobs:
+  preview:
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+
+      - name: Prepare pinned renderer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $toolRoot = 'D:\yacs\tool-cache\material-forge'
+          $godot = Get-ChildItem -LiteralPath (Join-Path $toolRoot 'godot-4.7.2-stable') -Filter 'Godot_v4.7.2-stable_win64.exe' -Recurse -ErrorAction Stop | Select-Object -First 1
+          $mmExe = Get-ChildItem -LiteralPath (Join-Path $toolRoot 'material-maker-1.7') -Filter 'material_maker.exe' -Recurse -ErrorAction Stop | Select-Object -First 1
+          if ($null -eq $godot -or $null -eq $mmExe) { throw 'Pinned Material Forge tools missing.' }
+          $source = Join-Path $toolRoot "material-maker-source-$env:MM_SOURCE_SHA"
+          if (-not (Test-Path -LiteralPath (Join-Path $source '.git'))) {
+            git clone --no-checkout https://github.com/RodZill4/material-maker.git $source
+            if ($LASTEXITCODE -ne 0) { throw 'Material Maker source clone failed.' }
+          }
+          git -C $source fetch --force --depth=1 origin $env:MM_SOURCE_SHA
+          if ($LASTEXITCODE -ne 0) { throw 'Material Maker source fetch failed.' }
+          git -C $source checkout --detach --force $env:MM_SOURCE_SHA
+          if ($LASTEXITCODE -ne 0) { throw 'Material Maker source checkout failed.' }
+          git -C $source clean -ffdx
+          if ($LASTEXITCODE -ne 0) { throw 'Material Maker source cleanup failed.' }
+          Set-Content -LiteralPath (Join-Path $source 'steam_appid.txt') -Value '4110830' -Encoding ascii
+
+          $python = Join-Path $toolRoot 'python\Scripts\python.exe'
+          & $python -m pip install --disable-pip-version-check --only-binary=:all: numpy==2.3.5 Pillow==12.3.0
+          if ($LASTEXITCODE -ne 0) { throw 'Python deps unavailable.' }
+
+          $root = Join-Path $env:RUNNER_TEMP "mf-v2-preview-$env:GITHUB_SHA"
+          Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+
+          "YACS_V2_ROOT=$root" >> $env:GITHUB_ENV
+          "YACS_V2_SOURCE=$source" >> $env:GITHUB_ENV
+          "YACS_V2_GODOT=$($godot.FullName)" >> $env:GITHUB_ENV
+          "YACS_V2_MM_INSTALL=$($mmExe.Directory.FullName)" >> $env:GITHUB_ENV
+          "YACS_V2_PY=$python" >> $env:GITHUB_ENV
+
+      - name: Prime Material Maker source cache
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $stdout = Join-Path $env:YACS_V2_ROOT 'prime.stdout.log'
+          $stderr = Join-Path $env:YACS_V2_ROOT 'prime.stderr.log'
+          $args = @('--headless','--path',$env:YACS_V2_SOURCE,'--import')
+          $p = Start-Process -FilePath $env:YACS_V2_GODOT -ArgumentList $args -PassThru -NoNewWindow -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          if (-not $p.WaitForExit(300000)) { $p | Stop-Process -Force; throw 'Prime timed out.' }
+          if ($p.ExitCode -ne 0) { throw "Prime failed: $($p.ExitCode)" }
+          if (-not (Test-Path -LiteralPath (Join-Path $env:YACS_V2_SOURCE '.godot\global_script_class_cache.cfg'))) {
+            throw 'Prime class cache missing.'
+          }
+
+      - name: Render visual v2 catalog once
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $run = Join-Path $env:YACS_V2_ROOT 'run'
+          & $env:YACS_V2_PY scripts/assets/material_forge.py author --material-maker $env:YACS_V2_MM_INSTALL --output $run
+          if ($LASTEXITCODE -ne 0) { throw 'Author failed.' }
+          $manifest = Get-Content -LiteralPath (Join-Path $run 'run-manifest.json') -Raw | ConvertFrom-Json
+          foreach ($entry in $manifest.variants) {
+            $variant = Join-Path $run ($entry.directory.Replace('/', [IO.Path]::DirectorySeparatorChar))
+            Write-Host "V2 rendering $($entry.family)/$($entry.variant)"
+            & $env:YACS_V2_PY scripts/assets/render_material_forge.py --godot $env:YACS_V2_GODOT --source $env:YACS_V2_SOURCE --variant $variant --resolution 2048 --timeout-seconds 300
+            if ($LASTEXITCODE -ne 0) { throw "V2 render failed: $($entry.family)/$($entry.variant)" }
+          }
+          & $env:YACS_V2_PY scripts/assets/material_forge.py validate-run $run
+          if ($LASTEXITCODE -ne 0) { throw 'V2 validate-run failed.' }
+          $review = Join-Path $env:YACS_V2_ROOT 'review'
+          & $env:YACS_V2_PY scripts/assets/material_forge_proof_board.py --run $run --output $review
+          if ($LASTEXITCODE -ne 0) { throw 'V2 proof board failed.' }
+          Copy-Item -LiteralPath (Join-Path $run 'run-manifest.json') -Destination (Join-Path $env:YACS_V2_ROOT 'run-manifest.json')
+          Get-ChildItem -LiteralPath $run -Filter 'validation.json' -Recurse | ForEach-Object {
+            $relative = $_.FullName.Substring($run.Length).TrimStart('\')
+            $safe = $relative.Replace('\','__')
+            Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $env:YACS_V2_ROOT $safe)
+          }
+
+      - name: Upload visual v2 review only
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: material-forge-v2-preview-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/mf-v2-preview-${{ github.sha }}/review/**
+            ${{ runner.temp }}/mf-v2-preview-${{ github.sha }}/run-manifest.json
+            ${{ runner.temp }}/mf-v2-preview-${{ github.sha }}/*validation.json
+            ${{ runner.temp }}/mf-v2-preview-${{ github.sha }}/*.log
+          if-no-files-found: warn
+          retention-days: 7
