@@ -240,7 +240,6 @@ def import_variant(
     LIB.layout_material_expressions(master)
 
     factory = unreal.MaterialInstanceConstantFactoryNew()
-    factory.set_editor_property("initial_parent", master)
     instance = asset_tools.create_asset(
         "MI_MaterialForge",
         package,
@@ -249,6 +248,10 @@ def import_variant(
     )
     if instance is None:
         raise RuntimeError("Material Forge instance creation failed")
+
+    # UE 5.8 exposes parent assignment through MaterialEditingLibrary.
+    # MaterialInstanceConstantFactoryNew.InitialParent exists in C++, but is
+    # not exposed as an editor property in Python on the pinned 5.8 build.
     LIB.set_material_instance_parent(instance, master)
 
     params = {
