@@ -111,6 +111,29 @@ class MaterialForgeContractTests(unittest.TestCase):
         self.assertNotIn("0.012*patch;", forge.ASPHALT_FUNCTION)
         self.assertNotIn("clamp(patch,0.0,1.0)", forge.ASPHALT_FUNCTION)
 
+    def test_visual_v2_uses_family_specific_surface_structures(self):
+        self.assertEqual(forge.GENERATOR_VERSION, 2)
+        self.assertIn("yacs_rect_patch", forge.ASPHALT_FUNCTION)
+        self.assertIn("yacs_contour_crack", forge.ASPHALT_FUNCTION)
+        self.assertNotIn("coarse_cells = yacs_cells(q,23.0", forge.ASPHALT_FUNCTION)
+        self.assertIn("karst_channel", forge.LIMESTONE_FUNCTION)
+        self.assertIn("pore_mask", forge.LIMESTONE_FUNCTION)
+        self.assertIn("coarse_pebble", forge.SOIL_FUNCTION)
+        self.assertIn("crust_crack", forge.SOIL_FUNCTION)
+
+    def test_visual_v2_variants_are_physically_distinct(self):
+        catalog = forge.load_catalog()
+        by_id = {family["id"]: family for family in catalog["families"]}
+        self.assertEqual(by_id["aged_mountain_asphalt"]["tile_metres"], 4.0)
+        self.assertEqual(by_id["regional_limestone"]["tile_metres"], 4.0)
+        self.assertEqual(by_id["mediterranean_soil"]["tile_metres"], 4.0)
+        asphalt = {v["id"]: v for v in by_id["aged_mountain_asphalt"]["variants"]}
+        self.assertGreater(asphalt["worn"]["surface_a"], asphalt["base"]["surface_a"])
+        self.assertGreater(asphalt["repaired"]["surface_b"], asphalt["base"]["surface_b"])
+        soil = {v["id"]: v for v in by_id["mediterranean_soil"]["variants"]}
+        self.assertGreater(soil["stony"]["surface_a"], soil["fine"]["surface_a"])
+        self.assertGreater(soil["dry_crusted"]["surface_b"], soil["fine"]["surface_b"])
+
     def test_catalog_has_three_families_and_three_variants_each(self):
         catalog = forge.load_catalog()
         self.assertEqual(len(catalog["families"]), 3)
