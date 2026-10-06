@@ -92,6 +92,11 @@
       "reason": "Current official SP638 GIS preparation/alignment proof using the active terrain-source path."
     },
     {
+      "file": "portable-powershell.yml",
+      "state": "CURRENT",
+      "reason": "Self-hosted Windows bootstrap for the pinned portable PowerShell runner shell under the persistent YACS tools directory; push runs only when its toolchain contract changes and manual dispatch remains recovery."
+    },
+    {
       "file": "pr-orchestrator.yml",
       "state": "CURRENT",
       "reason": "Trusted PR orchestration control."

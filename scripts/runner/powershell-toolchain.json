@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "name": "PowerShell",
+  "version": "7.6.6",
+  "distribution": "win-x64-zip",
+  "workspace_directory": "tools/powershell-7.6.6-win-x64",
+  "executable": "pwsh.exe",
+  "archive_name": "PowerShell-7.6.6-win-x64.zip",
+  "download_url": "https://github.com/PowerShell/PowerShell/releases/download/v7.6.6/PowerShell-7.6.6-win-x64.zip",
+  "sha256": "02fe458be20493fbdf43f61ea20610b811ee6c738ab1676c61b9cfcd1a33c860"
+}

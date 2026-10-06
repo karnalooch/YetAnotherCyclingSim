@@ -68,6 +68,16 @@ $PwshPath = Get-CommandPath 'pwsh'
 $PwshPassed = $PSVersionTable.PSVersion -ge [version]'7.4.0'
 Add-Check 'PowerShell 7.4+' $PwshPassed ("{0} ({1})" -f $PSVersionTable.PSVersion, $(if ($PwshPath) { $PwshPath } else { 'current host' }))
 
+$WorkspaceConfig = if ($env:YACS_WORKSPACE_CONFIG) { $env:YACS_WORKSPACE_CONFIG } else { 'D:\yacs\workspace.json' }
+$PortablePwsh = 'D:\yacs\tools\powershell-7.6.6-win-x64\pwsh.exe'
+$PortableVersion = ''
+$PortablePassed = $false
+if (Test-Path -LiteralPath $PortablePwsh -PathType Leaf) {
+    $PortableVersion = (& $PortablePwsh -NoLogo -NoProfile -NonInteractive -Command '$PSVersionTable.PSVersion.ToString()' 2>&1 | Out-String).Trim()
+    $PortablePassed = ($LASTEXITCODE -eq 0 -and $PortableVersion -eq '7.6.6')
+}
+Add-Check 'Pinned portable PowerShell 7.6.6' $PortablePassed $(if ($PortableVersion) { "$PortableVersion ($PortablePwsh)" } else { "missing: $PortablePwsh" })
+
 $GhPath = Get-CommandPath 'gh'
 Add-Check 'GitHub CLI' (-not [string]::IsNullOrWhiteSpace($GhPath)) $(if ($GhPath) { $GhPath } else { 'not found in PATH' })
 
