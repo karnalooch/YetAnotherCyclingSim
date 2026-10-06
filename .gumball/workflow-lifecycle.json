@@ -37,6 +37,21 @@
       "reason": "Explicit trusted manual Unreal validation and recovery entrypoint."
     },
     {
+      "file": "material-forge-mallorca-proof.yml",
+      "state": "CURRENT",
+      "reason": "Branch-scoped exact-SHA Material Forge 3x3 two-run render/determinism proof; primes the reviewed Material Maker source runtime and does not mutate the accepted world."
+    },
+    {
+      "file": "material-maker-cli-driver-proof.yml",
+      "state": "CURRENT",
+      "reason": "Bounded Issue #387 diagnostic for the pinned Material Maker 1.7 Windows command-line export crash across rendering-driver controls; evidence-only and non-mutating."
+    },
+    {
+      "file": "material-maker-cli-session-proof.yml",
+      "state": "CURRENT",
+      "reason": "Bounded Issue #387 Windows session/context diagnostic for Material Maker command-line export; evidence-only and non-mutating."
+    },
+    {
       "file": "passo-giau-embark-terrain.yml",
       "state": "BROKER-MANAGED",
       "reason": "Explicit exact-SHA PCGEx-first M3 terrain/corridor proof; pushes run hosted contracts only, Gumball m3-terrain requests the full existing evidence bundle, and non-cancelling author concurrency protects the persistent compile-cache worktree. Houdini/Gaea are not required."
@@ -112,9 +127,19 @@
       "reason": "Current code-only Unreal build and Automation reusable lane."
     },
     {
+      "file": "runner-monitor.yml",
+      "state": "CURRENT",
+      "reason": "Owner-only manual main-branch desktop monitor deployment. Rollout push trigger retired after verified silent installation. No Unreal or service restart."
+    },
+    {
       "file": "runner-space-recovery.yml",
       "state": "CURRENT",
       "reason": "Owner-only manual main-branch self-hosted runner disk recovery."
+    },
+    {
+      "file": "sa-calobra-terrain-performance.yml",
+      "state": "BROKER-MANAGED",
+      "reason": "Explicit exact-SHA 1080p60 native Sa Calobra baseline; fixed views and reference RTX 2070 SUPER, retained assets."
     },
     {
       "file": "sa-calobra-world-data-acquire.yml",
@@ -260,16 +285,6 @@
       "file": "stage3g-r4-terrain-coherence-author.yml",
       "state": "HISTORICAL/RETIRED",
       "reason": "Dedicated R4 mutating author workflow targeted a deleted branch; reusable terrain-coherence harness remains contract-tested."
-    },
-    {
-      "file": "sa-calobra-terrain-performance.yml",
-      "state": "BROKER-MANAGED",
-      "reason": "Explicit exact-SHA 1080p60 native Sa Calobra baseline; fixed views and reference RTX 2070 SUPER, retained assets."
-    },
-    {
-      "file": "runner-monitor.yml",
-      "state": "CURRENT",
-      "reason": "Owner-only manual main-branch desktop monitor deployment. Rollout push trigger retired after verified silent installation. No Unreal or service restart."
     }
   ]
 }
