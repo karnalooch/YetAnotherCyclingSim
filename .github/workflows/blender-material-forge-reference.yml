@@ -46,7 +46,16 @@ jobs:
         working-directory: _blender-mf-reference
         run: |
           $ErrorActionPreference = 'Stop'
-          $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+          $pwsh = 'D:\yacs\tools\powershell-7.6.6-win-x64\pwsh.exe'
+          if (-not (Test-Path -LiteralPath $pwsh -PathType Leaf)) {
+            throw "Pinned portable PowerShell is missing: $pwsh"
+          }
+          $command = '& ./scripts/runner/Get-YacsUnrealHostState.ps1 | ConvertTo-Json -Depth 8 -Compress'
+          $json = & $pwsh -NoLogo -NoProfile -NonInteractive -Command $command
+          if ($LASTEXITCODE -ne 0) {
+            throw "Pinned PowerShell host-ownership probe failed with exit $LASTEXITCODE."
+          }
+          $state = ($json -join [Environment]::NewLine) | ConvertFrom-Json
           $state | ConvertTo-Json -Depth 8 | Write-Host
           if ($state.status -ne 'IDLE') {
             throw "Blender reference proof requires an idle shared host; status=$($state.status)."
@@ -127,5 +136,5 @@ jobs:
         with:
           name: blender-material-forge-reference-${{ github.run_id }}-${{ github.run_attempt }}
           path: "D:/yacs/work/blender/material-forge-reference/**"
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 14
