@@ -1,0 +1,31 @@
+{
+  "status": "SAVED_DIAGNOSTIC_INSTANCE",
+  "asset": "Content/Generated/YACS/MaterialRepair/17d28e1f422743b5b381fc0d8a994172/MI_SaCalobraRepairPreview.uasset",
+  "sha256": "b073a9324697754c52aac50a7a670013e2dafb6691c6cadfaeaa0a31ff995511",
+  "instance": "/Game/Generated/YACS/MaterialRepair/17d28e1f422743b5b381fc0d8a994172/MI_SaCalobraRepairPreview.MI_SaCalobraRepairPreview",
+  "map_saved": false,
+  "tints": {
+    "GrassTint": [
+      0.32,
+      0.42,
+      0.2
+    ],
+    "ForestTint": [
+      0.19,
+      0.25,
+      0.13
+    ],
+    "RockTint": [
+      0.72,
+      0.73,
+      0.7
+    ],
+    "RockLift": [
+      0.05,
+      0.05,
+      0.048
+    ]
+  },
+  "visual_acceptance": "PENDING",
+  "performance": "NOT_MEASURED"
+}

@@ -1,0 +1,48 @@
+"""Reject corrupted candidate maps before they can enter the UE preview."""
+
+import shutil
+import tempfile
+import unittest
+from pathlib import Path
+
+import numpy as np
+from PIL import Image
+
+from check_material_maker_limestone import check
+
+
+SOURCE = (
+    Path(__file__).resolve().parents[2]
+    / "Saved/MaterialMaker/Limestone/candidate/export"
+)
+
+
+@unittest.skipUnless(SOURCE.exists(), "Render the bounded candidate first")
+class CandidateGuards(unittest.TestCase):
+    def test_dark_tile_border_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            shutil.copytree(SOURCE, root / "export")
+            image = root / "export/SaCalobra_PaleLimestone_BaseColor.png"
+            data = np.array(Image.open(image))
+            data[:, 0, :3] = 0
+            Image.fromarray(data).save(image)
+            with self.assertRaisesRegex(ValueError, "wrap boundary"):
+                check(root)
+            self.assertFalse((root / "validation.json").exists())
+
+    def test_metallic_limestone_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            shutil.copytree(SOURCE, root / "export")
+            image = root / "export/SaCalobra_PaleLimestone_ORM.png"
+            data = np.array(Image.open(image))
+            data[..., 2] = 128
+            Image.fromarray(data).save(image)
+            with self.assertRaisesRegex(ValueError, "not be metallic"):
+                check(root)
+            self.assertFalse((root / "validation.json").exists())
+
+
+if __name__ == "__main__":
+    unittest.main()

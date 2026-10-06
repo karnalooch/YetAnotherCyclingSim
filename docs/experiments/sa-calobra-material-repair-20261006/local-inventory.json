@@ -1,0 +1,1647 @@
+[
+  {
+    "path": "Config/DefaultLocoHelperAI.ini",
+    "sha256": "a4e23096e18d9b66361e49976b22f290bbc10241995ab3d841a3b8a9614307c6",
+    "size": 2369
+  },
+  {
+    "path": "Content/Generated/YACS/MaskDiagnostic/2d9c7cca433a4722889ad82446af8876/M_Mask_A.uasset",
+    "sha256": "588fc114e931786e0e8140a28b373f5ae293795907f5dc3c4a68040231ed0a59",
+    "size": 12696
+  },
+  {
+    "path": "Content/Generated/YACS/MaskDiagnostic/2d9c7cca433a4722889ad82446af8876/M_Mask_B.uasset",
+    "sha256": "c39c7b84e7d2dd5e3a07c304d7b28f3d49a56a59e6a4d852dd5af510ad0295a6",
+    "size": 11426
+  },
+  {
+    "path": "Content/Generated/YACS/MaskDiagnostic/2d9c7cca433a4722889ad82446af8876/M_Mask_G.uasset",
+    "sha256": "796ec2f5dc8cfb03bc420dd1711b9dd35ce7a7701cc428ec80be1580f393388b",
+    "size": 11232
+  },
+  {
+    "path": "Content/Generated/YACS/MaskDiagnostic/2d9c7cca433a4722889ad82446af8876/M_Mask_R.uasset",
+    "sha256": "c56ac9f1788f59341c33a5f799351fa589cbb1ecb4554e7c13e6359d75aac177",
+    "size": 12710
+  },
+  {
+    "path": "Content/Generated/YACS/MaskDiagnostic/2d9c7cca433a4722889ad82446af8876/M_Mask_RGB.uasset",
+    "sha256": "aa937db1d394a3e5eed15fa49f9d92c5579a59a92bdb648882c5ce20308456fc",
+    "size": 11922
+  },
+  {
+    "path": "Content/Generated/YACS/MaskDiagnostic/615cb1c66d11410384393ee80f87019e/M_Mask_A.uasset",
+    "sha256": "58635fb25bb99b5e42ce05dcafdd6ecb5110af530686073414fc1d22f563f785",
+    "size": 12800
+  },
+  {
+    "path": "Content/Generated/YACS/MaskDiagnostic/615cb1c66d11410384393ee80f87019e/M_Mask_B.uasset",
+    "sha256": "294f6d2194df788ae9ad19913e23e6d683dfbdbe1ff9edf9d6885ef147a4f1fb",
+    "size": 11426
+  },
+  {
+    "path": "Content/Generated/YACS/MaskDiagnostic/615cb1c66d11410384393ee80f87019e/M_Mask_G.uasset",
+    "sha256": "7b1434078f66aa5d3665ab36374c5cb990219c945016fc3f439998e97eea8382",
+    "size": 11232
+  },
+  {
+    "path": "Content/Generated/YACS/MaskDiagnostic/615cb1c66d11410384393ee80f87019e/M_Mask_R.uasset",
+    "sha256": "9309b95a96728faa3859704dd8a8ba5019191e2292e8d62d4766e935dc3d01e1",
+    "size": 12710
+  },
+  {
+    "path": "Content/Generated/YACS/MaskDiagnostic/615cb1c66d11410384393ee80f87019e/M_Mask_RGB.uasset",
+    "sha256": "f3b9e7a82e7f56857bf7885fe4edec699a9197c7ceaa06046e3847f7793d1c64",
+    "size": 11922
+  },
+  {
+    "path": "Content/Generated/YACS/MaskReview/M_MaskReview_3350401.uasset",
+    "sha256": "93f266b74e3af22a08989f4bffb9e2a22b700a440593a4e05365ee8c17a909ef",
+    "size": 12228
+  },
+  {
+    "path": "Content/Generated/YACS/MaskReview/T_MaskReview_3350401.uasset",
+    "sha256": "3a0f7c8f45a413269a7def0a74c01a1c806a6eccc84650805f1fba889704cce2",
+    "size": 29977299
+  },
+  {
+    "path": "Content/Generated/YACS/MaterialRepair/5e717564dbc449a89b766ff75949037e/M_SaCalobraRepair_candidate.uasset",
+    "sha256": "cdb65133c1c516e59ecda27b3ff64942d11e89d99323a451be1cf1aa1ea06ae5",
+    "size": 139441
+  },
+  {
+    "path": "Content/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_DryMineral_arm.uasset",
+    "sha256": "8d99bab7abd92e50b706b6d557760b3cc84564347f657addc8cf34465cb61be1",
+    "size": 412748
+  },
+  {
+    "path": "Content/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_DryMineral_diff.uasset",
+    "sha256": "306e14bd73f6ce1ab88265058799637a91cf16cc3da86585ef0d90bf8242eb9d",
+    "size": 1683866
+  },
+  {
+    "path": "Content/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_DryMineral_nor_dx.uasset",
+    "sha256": "ffad0a6f5c2d569990e86c11ea1e49328bec7087e49fc4a2e522b1ae4f23f8da",
+    "size": 7303159
+  },
+  {
+    "path": "Content/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_ExposedRock_arm.uasset",
+    "sha256": "07fd2625134ad93fddd4e7d8aacd94598f2bb02934f229c3b42c10cd460f09a8",
+    "size": 1200344
+  },
+  {
+    "path": "Content/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_ExposedRock_diff.uasset",
+    "sha256": "62e3a2e8fc9ed0e2c5fcf8bd2b676be1c06dbd9b4a19105bff41157ad72c010b",
+    "size": 2618884
+  },
+  {
+    "path": "Content/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_ExposedRock_nor_dx.uasset",
+    "sha256": "9016b74c1f2938ca5692e74d5bd453160a0ea699f26bc3840f2278e24e7dfb11",
+    "size": 9506391
+  },
+  {
+    "path": "Content/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_Scree_arm.uasset",
+    "sha256": "633be24a423bf06b958e4a450bc367069b819c1194cc1984b45a1f1ca52c481f",
+    "size": 957123
+  },
+  {
+    "path": "Content/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_Scree_diff.uasset",
+    "sha256": "49c0b75381bbe35ca24cca92a81280a5e6e25fb8e9e3079f7f72dbc36bcd7716",
+    "size": 1314411
+  },
+  {
+    "path": "Content/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_Scree_nor_dx.uasset",
+    "sha256": "a32172415a29361e5a25787eb2c99726e16133e922488d4bc9568c3b676448c1",
+    "size": 9099179
+  },
+  {
+    "path": "Content/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_grass_rock_arm.uasset",
+    "sha256": "b3d828d6b815129ea706e52e127e957bb449a88448d4c654af3a5a37840efb9b",
+    "size": 66479907
+  },
+  {
+    "path": "Content/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_grass_rock_diff.uasset",
+    "sha256": "7ef40931e90a4e9dbbfa81e875f097a9ac0bd0a7c8ebd9566052259722730dff",
+    "size": 99760153
+  },
+  {
+    "path": "Content/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_grass_rock_nor_dx.uasset",
+    "sha256": "8f08a3698faa652278300e468f2d532fcba04b4be07c2136ebf401050d463f4d",
+    "size": 97871935
+  },
+  {
+    "path": "Content/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_rocks_02_arm.uasset",
+    "sha256": "bf212ff56aedf9374d6b44271fc7b5d204116a10bbbd93052548d5f0914891e1",
+    "size": 26229670
+  },
+  {
+    "path": "Content/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_rocks_02_diff.uasset",
+    "sha256": "917191c2e00d8298f7ac832af91362e12a0ee4a6c9e360d1459c38d47a8562c9",
+    "size": 32394340
+  },
+  {
+    "path": "Content/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_rocks_02_nor_dx.uasset",
+    "sha256": "40c93fa694606de2c8a2b4466fc1c9b0aedc8fc6ce6f0b129b923d2f0c1d4ae7",
+    "size": 39654044
+  },
+  {
+    "path": "Content/Generated/YACS/MaterialRepair/a941b778c0474e3b8faaf4ac5cca215f/M_SaCalobraRepair_candidate.uasset",
+    "sha256": "4282e0a8ade091194d5346e25fe70b8adf3cdd31382b98a0be5149ae1b074560",
+    "size": 126394
+  },
+  {
+    "path": "Content/Generated/YACS/SaCalobra/MaterialFoundation/M_Foundation_4354b27be3fe.uasset",
+    "sha256": "4fda149abbf41d778699d8381b3c5c82fbe595894dd8f31f0e0c1e7d0b6f40e1",
+    "size": 67040
+  },
+  {
+    "path": "Content/Generated/YACS/SaCalobra/MaterialFoundation/M_Foundation_6449a27b55ae.uasset",
+    "sha256": "c849f70ba7c8922cb33ba73e09328616727f1ad321972a7f9f365cbc286f275c",
+    "size": 61007
+  },
+  {
+    "path": "Content/Generated/YACS/SaCalobra/MaterialFoundation/T_Weights_4354b27be3fe.uasset",
+    "sha256": "1e29aa5ac1b9988a32d7455d9e8c4e50623192bf87b0a61f8f311a20713e123c",
+    "size": 20459365
+  },
+  {
+    "path": "Content/Generated/YACS/SaCalobra/MaterialFoundation/T_Weights_6449a27b55ae.uasset",
+    "sha256": "ac36b3629e101be93067717105d356449e59556d15dfb977013cab957a59ac0d",
+    "size": 7500697
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/LimestonePalette/1b3d9c45b1e24d6085bfcc8859390c19/M_SC_Limestone_DryMineral.uasset",
+    "sha256": "52b3601a4db8e59d845e658fe2d92d2b869fc691dc1a76a0b2702fb599957ad1",
+    "size": 16825
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/LimestonePalette/1b3d9c45b1e24d6085bfcc8859390c19/M_SC_Limestone_ExposedRock.uasset",
+    "sha256": "9f26da3cfecf5fbc35444d9fadf4e64aff9466f517c399bcd7e39e373e585c18",
+    "size": 19608
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/LimestonePalette/1b3d9c45b1e24d6085bfcc8859390c19/M_SC_Limestone_FillGravel.uasset",
+    "sha256": "e612b87275d9c008a424451f3844159420f6f597ed466d57b6e937a72e5d6dd4",
+    "size": 20345
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/LimestonePalette/1b3d9c45b1e24d6085bfcc8859390c19/M_SC_Limestone_RockCut.uasset",
+    "sha256": "e9619e8000b28f56b9c5e52e608785e1d153fc094695afc91c41ae18958b502e",
+    "size": 20582
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/LimestonePalette/1b3d9c45b1e24d6085bfcc8859390c19/M_SC_Limestone_Scree.uasset",
+    "sha256": "513f2bfc0821cb31b885e8227c6718fb70dd680e2d762c67a6e0abf733d595b0",
+    "size": 17410
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/Materials/M_SC_DryGrass.uasset",
+    "sha256": "7aa4fa83190fcd32d6e25b89a35e049a5001b5656c1c169ea307ee48c1689883",
+    "size": 12916
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/Materials/M_SC_DryMineral.uasset",
+    "sha256": "8743c33933bac13fbd284652f75785f9936a5530b2e8463b51dc947acec1874f",
+    "size": 14555
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/Materials/M_SC_ExposedRock.uasset",
+    "sha256": "ba59174c1ff2f57f34ae10b8632ab5f3bec73375f92e566ebcfe3e9d21d0cdaa",
+    "size": 13553
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/Materials/M_SC_FillGravel.uasset",
+    "sha256": "294d55eda412b20459589a71d51beafb86eb5e1732342edd01ed87ffd2f161c0",
+    "size": 13406
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/Materials/M_SC_ForestLitter.uasset",
+    "sha256": "e85e06006b6797287393eb00cd2a3a2fe0c3346503d594aa46641c54ae6d978d",
+    "size": 13331
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/Materials/M_SC_RockCut.uasset",
+    "sha256": "5682b4f844478b6f126d18fe59ac5cbcbf86ac33467118febf0f0de13467d94e",
+    "size": 14311
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/Materials/M_SC_Scree.uasset",
+    "sha256": "ad450f20326844654a17e01c1884adfdc2aa5c8d0109cc1d06490bbb45f8c78a",
+    "size": 15010
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/DryGrass/T_Height.uasset",
+    "sha256": "281b567d6d828f9ce265d4a6de89d298fa5047614e78b48a37f4207419bd2cc1",
+    "size": 1916903
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/DryGrass/T_Normal.uasset",
+    "sha256": "b54bd273e99b61a3f51ed700db015cc13d431c42739c06b9bbdfe306d4885a32",
+    "size": 6533124
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/DryGrass/T_Roughness.uasset",
+    "sha256": "f87ca3cf59e9af43ac29955711815cebd8ad3599e16a0cfde9e3ca6d5e63b9b6",
+    "size": 3713693
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/DryMineral/T_Height.uasset",
+    "sha256": "1e28800c46b45504da7e1f0a47079fd32cdc760994287076feec09a1ea7a5c30",
+    "size": 2644070
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/DryMineral/T_Normal.uasset",
+    "sha256": "2b5265fd3397e779613355e9978af8f8dbc61406d968bbfa190e4be6aae8f853",
+    "size": 2963121
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/DryMineral/T_Roughness.uasset",
+    "sha256": "0c01ac9a6647852bf18e10603f57eefa2aeb96b478b7fa6c4dd33eca27699c37",
+    "size": 668833
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/ExposedRock/T_Height.uasset",
+    "sha256": "a6915ae22f4c56d28db4254954885d305dd1a5c61930213fbc51a8c9dc2d1464",
+    "size": 1449568
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/ExposedRock/T_Normal.uasset",
+    "sha256": "6b99c94d4679c99df5fc175a02f2da724bb802a7497035c35669ffacb860d747",
+    "size": 6166243
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/ExposedRock/T_Roughness.uasset",
+    "sha256": "21d3ca42e449d830b079759ff77dd3bb2bd082cb39dace7372cc0d0f78fcc751",
+    "size": 556431
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/FillGravel/T_Height.uasset",
+    "sha256": "e41a24af55459c9b862195fec2cc750aff1ca100cb9a0f3c38b2a65a10ef6440",
+    "size": 2484265
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/FillGravel/T_Normal.uasset",
+    "sha256": "e0e342641c0fd035f7a94f85daa60fae191293233014de4a89e0b370ec177fa7",
+    "size": 6358514
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/FillGravel/T_Roughness.uasset",
+    "sha256": "51645d47b297415378c5a5539b3009dd2c8f180fa1f55271f02a808884183f56",
+    "size": 3805695
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/ForestLitter/T_Height.uasset",
+    "sha256": "36fb9fc096c53f7ae5d34c32e3440fbd3ce23060c3260745c00101f7ad5e8e60",
+    "size": 2813622
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/ForestLitter/T_Normal.uasset",
+    "sha256": "2c0bf480850798e0b9c98af18b16cd3c4b8b4225eb0c9ccf9c0f39dfa8a75463",
+    "size": 3239923
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/ForestLitter/T_Roughness.uasset",
+    "sha256": "d88135f11c69c288d24c8fb7c4d1eeda9311d399407b510f926b807ec33f97dc",
+    "size": 1919529
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/RockCut/T_Height.uasset",
+    "sha256": "527ca430be647ee0a1daf2a0cc3e3455e6c711a237948462dfcf16d1a2eb8738",
+    "size": 1389509
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/RockCut/T_Normal.uasset",
+    "sha256": "c6db96bdc3ea9d980f76ede8367412ca46d4ba9cabb023c9f157fe74285d0e6a",
+    "size": 6201247
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/RockCut/T_Roughness.uasset",
+    "sha256": "a5e2894d61a1e796e5e348dbeb5e9262dc2e50725dc010b7cb048b22b815034c",
+    "size": 398936
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/Scree/T_Height.uasset",
+    "sha256": "569eda7b43cc3710ab5c1d8de9f396bd85b2fe648169e89709f045ee2112ab3e",
+    "size": 2317411
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/Scree/T_Normal.uasset",
+    "sha256": "05d06202ef0d127cb08e16df442f96e901e568d34db1adb87af2b3df4679ecb4",
+    "size": 2888628
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/Scree/T_Roughness.uasset",
+    "sha256": "f3fe8badc54f331a0f502285080cd1de2c0023a31b0cf42f8d23681cb88094bc",
+    "size": 735038
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/Sources/T_Source_DryGrass.uasset",
+    "sha256": "13ec5f0be03f849515c1136268750a9e1c5576961d97f147dbf616e653ccaa2f",
+    "size": 1153614
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/Sources/T_Source_DryMineral.uasset",
+    "sha256": "fab7494f3e7d209b33f3afd031ff3dd1035404777cd8883489d19d1a0238c73a",
+    "size": 969347
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/Sources/T_Source_ExposedRock.uasset",
+    "sha256": "a754df8989666b2c2146346cc66cd2461bdefe74c2146f356fe0ab1de5b0ab2d",
+    "size": 1433833
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/Sources/T_Source_FillGravel.uasset",
+    "sha256": "a0c15b96a2b4f01c0d87429084f9d2b26f1ebc55876b60dfdcfb028511a1c0aa",
+    "size": 834004
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/Sources/T_Source_ForestLitter.uasset",
+    "sha256": "ae5276d75d1362f4df9803f41f2b0fc1626a2506c5930c2e42461dc3b4487861",
+    "size": 835692
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/Sources/T_Source_RockCut.uasset",
+    "sha256": "c868a2b749b312d316c2f7e7ef295271d8f5e8740c64bd728ecd06db18653cc0",
+    "size": 2071750
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/Sources/T_Source_Scree.uasset",
+    "sha256": "1bc24bb30053875f8f47b0fbc6e6fdaf97629598c9670a217034ba72470d6933",
+    "size": 936623
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Landscape/24761d13ffbd4c7a9ba8b198f68c7cbf/M_SaCalobraGeneratedSurfaces.uasset",
+    "sha256": "7701e4064bebc5176b373bb8f11143f7206135271eb2cb765516711bac242102",
+    "size": 104715
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Landscape/24761d13ffbd4c7a9ba8b198f68c7cbf/T_SurfaceWeights.uasset",
+    "sha256": "8c01b277a947819482b8eb467b9716c12629a94c931a319f83551dd924095056",
+    "size": 20459597
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Landscape/67ae6e240c6b4186b0db9bcc597c32e7/M_SaCalobraGeneratedSurfaces.uasset",
+    "sha256": "a1b90c5d5c1df6d63af285394f9da4be4f26907a89de84033bdeeddbe1b5ecff",
+    "size": 79160
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Landscape/67ae6e240c6b4186b0db9bcc597c32e7/T_SurfaceWeights.uasset",
+    "sha256": "33c117fac50dfdf3c3404f15b59603ccd0011bb8311a624c1dee85ebca515a57",
+    "size": 20459598
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Landscape/7647e3a363f9472d94ab8c2cfa7ada2b/M_SaCalobraSmoothTransitions.uasset",
+    "sha256": "b2fb7522d3e44a744c315b9a0c859ef09cddeedea8065ebf9382ccf008b677b2",
+    "size": 104715
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Landscape/7647e3a363f9472d94ab8c2cfa7ada2b/T_SmoothSurfaceWeights.uasset",
+    "sha256": "4b1d3fa6634ff7bcc2d61c457c5f7e16dd20f3c99813430002cb64650f690ac7",
+    "size": 18889754
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Landscape/9970b3cdfd464d619eb7f8fc873b23d7/M_SaCalobraGeneratedSurfaces.uasset",
+    "sha256": "103a80e23f484030153cdb2f5d28f73e81793a1f8bfd4a3756ef8d46708fa691",
+    "size": 80106
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Landscape/9970b3cdfd464d619eb7f8fc873b23d7/T_SurfaceWeights.uasset",
+    "sha256": "e6c45ae4b6336a5991ca075fc6dec56a34171df89811f82177cab3fcd4b0befe",
+    "size": 20459598
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Landscape/9992abd220444900a404703ffd4e92f6/M_SaCalobraGeneratedSurfaces.uasset",
+    "sha256": "6ea8351563450591eb21dbb648e80bca9e62d593d27788263acb5b73eb1bd3e1",
+    "size": 96294
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Landscape/9992abd220444900a404703ffd4e92f6/T_SurfaceWeights.uasset",
+    "sha256": "ba5ad90f7e06e54a3b703249dac679ae03addb5a99b185756e322f042e44a52f",
+    "size": 20459597
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Landscape/c73151db58b34971b70d2bd74e6f4795/M_SaCalobraGeneratedSurfaces.uasset",
+    "sha256": "fb565139f8c031ec9eb019e4e70dff3c5e4851179ce54fac366092f8ad7f6562",
+    "size": 104076
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Landscape/c73151db58b34971b70d2bd74e6f4795/T_SurfaceWeights.uasset",
+    "sha256": "c333811a5d2c40c93c6ee39cd62990b7fec66a51d695dde5b519c67c0aa37fa4",
+    "size": 18892391
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Landscape/f6344bc52fab47f187e6baae4f8f2033/M_SaCalobraGeneratedSurfaces.uasset",
+    "sha256": "7f7bbf27026f787a7e1e11596de9b2907e9b0d48215f5647faec90fe783dcb08",
+    "size": 27939
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Landscape/f6344bc52fab47f187e6baae4f8f2033/T_SurfaceWeights.uasset",
+    "sha256": "a03a4baa855d24edb18bb9d980cb0c7801c1483501866f2232fd430d605780fc",
+    "size": 20459597
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Materials/M_SC_DryGrass.uasset",
+    "sha256": "d2d8d542f03f8680c9e21dd217f6dfb4b60f622fbeeae51ce788a3c75937b4bc",
+    "size": 12692
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Materials/M_SC_DryMineral.uasset",
+    "sha256": "6aa8734c861a058f6cf0c4c0072bb434a8d22d465d221c323eba8b3aa27e0f20",
+    "size": 12537
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Materials/M_SC_ExposedRock.uasset",
+    "sha256": "999eb4437e9ba6a0a09afd98b7517d8db49f1b91f9a7fa999785b96268e60584",
+    "size": 12848
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Materials/M_SC_FillGravel.uasset",
+    "sha256": "8ea707d02e028fddc6df1cc6184647198029114d79728a2a107f4a4d0e12ddaa",
+    "size": 13127
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Materials/M_SC_ForestLitter.uasset",
+    "sha256": "051373feef6c67da2ed9713373884491ecc488960994c2f7161a724e49f49980",
+    "size": 12483
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Materials/M_SC_RockCut.uasset",
+    "sha256": "1536a1a8b8241d224a6bdc6679a25c7c278af15fd4734fd1ffeaf81ec9433c84",
+    "size": 13234
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Materials/M_SC_Scree.uasset",
+    "sha256": "083ee3ccb435899ff451c1bd15aa455989b5120f5000e5e02b4d3e07b2222e90",
+    "size": 13092
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Sources/T_Source_DryGrass.uasset",
+    "sha256": "9be8635f94eeb7863baf610bb4d70ddc6821860331fce97f493ed0b445b136ca",
+    "size": 1153359
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Sources/T_Source_DryMineral.uasset",
+    "sha256": "3a74922eba104639b729b514bf730eec9fd364982c13839f3a4569df0b45afae",
+    "size": 969073
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Sources/T_Source_ExposedRock.uasset",
+    "sha256": "19ca09f97ed9f28996a89f23169a1bef7040aa96472fa0bf05a16c094ea7e481",
+    "size": 798721
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Sources/T_Source_FillGravel.uasset",
+    "sha256": "6c071f765a4f1e8cbf38293c400c6c1be27eeb2507bd2225b2944cce442c475d",
+    "size": 833844
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Sources/T_Source_ForestLitter.uasset",
+    "sha256": "23b1619e54b18c36fb27b3f82871b601b6f9ddf5412c2b9e9d3c7ef052ca2146",
+    "size": 771409
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Sources/T_Source_RockCut.uasset",
+    "sha256": "3b1010b26131d1152c6efd591cfba47cd89e67861c02919825e6dd148f78627e",
+    "size": 798666
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Sources/T_Source_Scree.uasset",
+    "sha256": "1c4658bb7bc036146f5af9a0b79ca1eb57bcbfbee9edbce1081be034fb3bfac9",
+    "size": 936347
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/4e0cd888622041a7a7a80de948316d4e/Sources/T_Source_ExposedRock.uasset",
+    "sha256": "fb029859eb27f136022f3d79fee17995a12be454f67cf96b29fe546b47c68f8d",
+    "size": 2036075
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/d06213d4758a492f912b037d1fd41eb1/Sources/T_Source_ExposedRock.uasset",
+    "sha256": "aab75be3a44ed556ad9ecb39d1fef91f82cc4ba47594088c5e3e876c58c6004f",
+    "size": 798722
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/e7da88a69cd04a7db70e8add869fcf85/Sources/T_Source_ExposedRock.uasset",
+    "sha256": "900a8a2c05fbec430697141fe4e709df31d70ce30cc8862d07e27b4a88fc69f1",
+    "size": 798721
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/05DEE137422ECB5E7D666AB6AA792AA8/BaseColor.uasset",
+    "sha256": "5a9e9dd223dda1721eac7fcfb7e2270577ddde8a4ed7e06ca75c13b6e2f4836e",
+    "size": 2410167
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/05DEE137422ECB5E7D666AB6AA792AA8/Height.uasset",
+    "sha256": "120ef936ec9d1519e273d98778af0b177977f27bb3b8189ccb0d5f5f5ec402ef",
+    "size": 945385
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/05DEE137422ECB5E7D666AB6AA792AA8/MacroMask.uasset",
+    "sha256": "92a528f3114c019e6044f603291bbabbf47f477f56bb3854c7e7d5615793bbc8",
+    "size": 154800
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/05DEE137422ECB5E7D666AB6AA792AA8/Normal.uasset",
+    "sha256": "c34087baa08ed047bbd0719592d5ca580eb4e7d067bd47ae2dbe85df0037f5b9",
+    "size": 1384269
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/05DEE137422ECB5E7D666AB6AA792AA8/Roughness.uasset",
+    "sha256": "84b52a3286507bd0e3a1dff9244dfba8d7ad71f150c8aa54ac3202f51b1150ff",
+    "size": 825069
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/05DEE137422ECB5E7D666AB6AA792AA8/TG_YACS_MaterialPrep.uasset",
+    "sha256": "cc875e585d219c6f934027874b74e0ced22e26d06e0161ea820d42a5454474ec",
+    "size": 96449
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/15F3BD2242F17132140B06A112519AB9/BaseColor.uasset",
+    "sha256": "fdc25dfff32775e39202adda6631f8da49a40cc9687c1f4bf1c8c99aaf1ff2aa",
+    "size": 2381401
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/15F3BD2242F17132140B06A112519AB9/Height.uasset",
+    "sha256": "60a9219381ad8614f9dbd659aa1f2f498cf91f0dd881eb1fe778d3dfc5ff0bb6",
+    "size": 925456
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/15F3BD2242F17132140B06A112519AB9/MacroMask.uasset",
+    "sha256": "249e5a79680fc9ed77b4ef5da85ea7ad7eca79632151c51f34979bc4943fa705",
+    "size": 97655
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/15F3BD2242F17132140B06A112519AB9/Normal.uasset",
+    "sha256": "f42f40b10257d7e7b085e5c9d45405815d00d1e5f0a4863c0abde5fdb86063c5",
+    "size": 1399825
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/15F3BD2242F17132140B06A112519AB9/Roughness.uasset",
+    "sha256": "8695155d2b31283ad186ef3a15b8ab4dcd30e1d2abd13560016412404c804725",
+    "size": 803465
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/15F3BD2242F17132140B06A112519AB9/TG_YACS_MaterialPrep.uasset",
+    "sha256": "49bbda2c281eee0820d3e7ac7c36cba89504d35a1656a35a7b0a30b4fb7e55b7",
+    "size": 96447
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/40F6DF3D4A65C6AC4280AD99D12C8021/BaseColor.uasset",
+    "sha256": "ea583f7a95f57e4178ca8c7f4ccbaf247db9d67969359ad2a8f365bc14afb973",
+    "size": 2864076
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/40F6DF3D4A65C6AC4280AD99D12C8021/Height.uasset",
+    "sha256": "adcae7b5db21e0ea719a570f9ead5ee96e6f050f574859f422f9ef316238d6ca",
+    "size": 996029
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/40F6DF3D4A65C6AC4280AD99D12C8021/MacroMask.uasset",
+    "sha256": "66daa9e74f0334fccd77b996e012e68879d49c7d66073ef4686edc35ae7a3e89",
+    "size": 84293
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/40F6DF3D4A65C6AC4280AD99D12C8021/Normal.uasset",
+    "sha256": "2bf2e5c2e75b3c02a5a845c32f801558bcdc76a35d592851c82371baa0f3001d",
+    "size": 1525513
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/40F6DF3D4A65C6AC4280AD99D12C8021/Roughness.uasset",
+    "sha256": "77773607ad7a5f2ed74b0d879d53f4c4f3903a9db8961a52f1fc72361ddace85",
+    "size": 876828
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/40F6DF3D4A65C6AC4280AD99D12C8021/TG_YACS_MaterialPrep.uasset",
+    "sha256": "adfd42bb252502547d91e78fd9e0f6d1c095c99503aa51b7263fa7f3a9cb5987",
+    "size": 96447
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/512B06D34C05E1D63BF0D294C4A1E20C/BaseColor.uasset",
+    "sha256": "53ab54099a39883386bd9d9c636617bfde7b508800a4e4867fec42beb53cb003",
+    "size": 2184613
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/512B06D34C05E1D63BF0D294C4A1E20C/Height.uasset",
+    "sha256": "4db0d9e6adbb6eee19aadf6ca887e2b0e504c5adc50ed224f83a7b7309efe73c",
+    "size": 1005651
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/512B06D34C05E1D63BF0D294C4A1E20C/MacroMask.uasset",
+    "sha256": "a41ffd2f99850e4ffecc6faa149be40887665936e6c28b2cc95f1043c6095b21",
+    "size": 62962
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/512B06D34C05E1D63BF0D294C4A1E20C/Normal.uasset",
+    "sha256": "45c2eae5e365f66903eb7443a06f639ca80fd18811265a969d6fc5cf7a72779c",
+    "size": 1516026
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/512B06D34C05E1D63BF0D294C4A1E20C/Roughness.uasset",
+    "sha256": "ef7d521538267e8e647ffa76062adfc90cbd3499e94dddc5b3a3a9f1173e4a32",
+    "size": 1178467
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/512B06D34C05E1D63BF0D294C4A1E20C/TG_YACS_MaterialPrep.uasset",
+    "sha256": "519580af79163001caf16f7fc17e41649bebd7d37e682589ffcfb80dbe126915",
+    "size": 96360
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/592C25C14E1932C915E29E84BA543B38/TG_YACS_MaterialPrep.uasset",
+    "sha256": "01dabddb427bcbfcaf63a405d950e1d58683ff0e01c7e31b05aaeb2325c29b8f",
+    "size": 96449
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/5A889F494B626F2CEDFF0884890E07C6/BaseColor.uasset",
+    "sha256": "48b09543fc3a8c8efa40836bfbb311a9e1e89953c3ce862be56ed90f0d797675",
+    "size": 2886041
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/5A889F494B626F2CEDFF0884890E07C6/Height.uasset",
+    "sha256": "7734e1b6092923db6c69ed3959cd1ab5850bc35591b470a38378b0889c95a232",
+    "size": 984410
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/5A889F494B626F2CEDFF0884890E07C6/MacroMask.uasset",
+    "sha256": "57a8b6ac76e80271ea485e10604957a0ceb506d84c3b49aa258e891d616a7727",
+    "size": 50017
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/5A889F494B626F2CEDFF0884890E07C6/Normal.uasset",
+    "sha256": "8669b83eee43e00fb1fb5e547456f0d14f6946423bcab290000931c25e4101d9",
+    "size": 1498894
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/5A889F494B626F2CEDFF0884890E07C6/Roughness.uasset",
+    "sha256": "01e733530df93988fc58322813609aa872bc4dd934d7fc3db9f1f9c4e409be61",
+    "size": 1157796
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/5A889F494B626F2CEDFF0884890E07C6/TG_YACS_MaterialPrep.uasset",
+    "sha256": "463a3faa36f0346b2b5a6dfaec6e03e6606db48c9b0a89e7e64e9ebf150d22fe",
+    "size": 96364
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/647E75A94359E532DAA8FD83E46E639B/BaseColor.uasset",
+    "sha256": "a66b2a1a7aabf387cbd4c3a034b962538125c35c8b3f637b8df6dd807248b988",
+    "size": 2722268
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/647E75A94359E532DAA8FD83E46E639B/Height.uasset",
+    "sha256": "a35e20dd22a498a1d27e90e968a3058e6c6bc65603e0b50998f863b9aad9bb29",
+    "size": 1038384
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/647E75A94359E532DAA8FD83E46E639B/MacroMask.uasset",
+    "sha256": "d42b38bc06f910dd1614b61d6c44b96941f393709f433000b4e8e7e04a16b0b9",
+    "size": 116904
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/647E75A94359E532DAA8FD83E46E639B/Normal.uasset",
+    "sha256": "170b61d3aac2efa9a513ff5cc97f579501f26b2f1a74eed246213277d523706a",
+    "size": 1613628
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/647E75A94359E532DAA8FD83E46E639B/Roughness.uasset",
+    "sha256": "a8f27c5f0066518f9d5221e0e0d17d514383cef97278a626e58c8e9e2177eb57",
+    "size": 916278
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/647E75A94359E532DAA8FD83E46E639B/TG_YACS_MaterialPrep.uasset",
+    "sha256": "666fc2e7e4ebd3f7db932fc186879c4c46fe1fcf6241bef284eb4d1a928ba661",
+    "size": 96437
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/65397DD741645600C933C2978C4204BA/BaseColor.uasset",
+    "sha256": "038f0ef8fe1cd2e193dc089eda445d2a0276ae219dc9c8613f085c85f4c262fc",
+    "size": 2410167
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/65397DD741645600C933C2978C4204BA/Height.uasset",
+    "sha256": "d27fbf8617e1e00df15a8901711ee00daf889276984a4fc6a959c76ea9ff5d2a",
+    "size": 945385
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/65397DD741645600C933C2978C4204BA/MacroMask.uasset",
+    "sha256": "afc7e94d9ca601d42f9e34be80136426939848a76c04fd80cd624d77c8d224ad",
+    "size": 154800
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/65397DD741645600C933C2978C4204BA/Normal.uasset",
+    "sha256": "67f6705420348e39e2475909e82514a6d79b505bc6470851fb9bc6cf96d7528e",
+    "size": 1613376
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/65397DD741645600C933C2978C4204BA/Roughness.uasset",
+    "sha256": "24439306fe71672d524630084f07f685e76bc302fd4c369e480f243219f3297c",
+    "size": 825069
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/65397DD741645600C933C2978C4204BA/TG_YACS_MaterialPrep.uasset",
+    "sha256": "0f02047130129cd7b9b61c82130e3f3fa477a4623bbb19f03f914615d725ff81",
+    "size": 96470
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/71564A1346209BD22617C3B1CF15EF1F/BaseColor.uasset",
+    "sha256": "1d07ed6e672066c910983f1ac15ef98991e36a3377bcec4233d450227ca6722a",
+    "size": 1691101
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/71564A1346209BD22617C3B1CF15EF1F/Height.uasset",
+    "sha256": "9af93816520a6410cac25cf195f506992e251b8d6ad632c29ff3e430b236a626",
+    "size": 556092
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/71564A1346209BD22617C3B1CF15EF1F/MacroMask.uasset",
+    "sha256": "c56d163cce310962671214b9e46ed967fac90a631c8fe1344cecb60bb2160a7d",
+    "size": 63489
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/71564A1346209BD22617C3B1CF15EF1F/Normal.uasset",
+    "sha256": "89bcb5eaffdab99d0fe11ec7efadec1596a0bf712bcb7ce5c8baa1a1561a05e8",
+    "size": 705313
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/71564A1346209BD22617C3B1CF15EF1F/Roughness.uasset",
+    "sha256": "0e511d31650d12f3ba7f80947a37e5e8ae6dad2aa3263aae27b0833b2d717799",
+    "size": 450208
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/71564A1346209BD22617C3B1CF15EF1F/TG_YACS_MaterialPrep.uasset",
+    "sha256": "0ff609e631246aac908245839fee5d5e314469a962e0e92cb72333d02b548735",
+    "size": 96451
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/7EE0347149883740027D7DB63B63BD90/BaseColor.uasset",
+    "sha256": "4fef9c5fdc142f733d4ce96de6595398f0023e325a379ba7b30139c4ea466634",
+    "size": 570132
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/7EE0347149883740027D7DB63B63BD90/Height.uasset",
+    "sha256": "8abe75de1080bf3eb79814bfd0a75757c4617135eb5374b9343d9b6b0912a772",
+    "size": 259981
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/7EE0347149883740027D7DB63B63BD90/MacroMask.uasset",
+    "sha256": "89af231fbe3b63fcd8696bd03efe58972c555ec5cb011feaff547990852d079e",
+    "size": 71540
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/7EE0347149883740027D7DB63B63BD90/Normal.uasset",
+    "sha256": "04baf6aefeb0e81e13050d6383a644728d6ba01d940f8609255ef27e04458ab2",
+    "size": 379395
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/7EE0347149883740027D7DB63B63BD90/Roughness.uasset",
+    "sha256": "3b8eac725d7cba4083f8f97c3493aec0caa68568f6dced79d82b5a2039a931c9",
+    "size": 238793
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/7EE0347149883740027D7DB63B63BD90/TG_YACS_MaterialPrep.uasset",
+    "sha256": "9239e0598c93e6eb21b13581b90e4cd102b755a27666fc5a647b7698b000c056",
+    "size": 253363
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/94406E0247C9822CFD006CAB8B20545E/BaseColor.uasset",
+    "sha256": "51cc850e78b7ff2e9be0a05917612a7586c4dffd064261967406a0bf6e4328a0",
+    "size": 2722268
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/94406E0247C9822CFD006CAB8B20545E/Height.uasset",
+    "sha256": "b166f11e0489a50ae4433a92524af30d5f9e1f1ea9d7f47a62c95c00111c8945",
+    "size": 1038384
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/94406E0247C9822CFD006CAB8B20545E/MacroMask.uasset",
+    "sha256": "4c83e2a5c23bb4b959024efe5c646065d1805ca7b0b11efa0dc4ff94aecab0cd",
+    "size": 72446
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/94406E0247C9822CFD006CAB8B20545E/Normal.uasset",
+    "sha256": "ab769b90f778defa13556ffdc25c0b234e580d1e71ea71fe64b501a02850c951",
+    "size": 1613628
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/94406E0247C9822CFD006CAB8B20545E/Roughness.uasset",
+    "sha256": "2e593107dd3de161d07e891dbbaff613364eba0ccbab41ce22582d114f3abf17",
+    "size": 1213890
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/94406E0247C9822CFD006CAB8B20545E/TG_YACS_MaterialPrep.uasset",
+    "sha256": "8d72c2a99070976e0a3bef1fba5abbde17d5f71d2fe16f022b30229853b5c4cf",
+    "size": 96354
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/9D08A8D04D99A87CFBE01A9C267FEC91/TG_YACS_MaterialPrep.uasset",
+    "sha256": "bbc8ff1c422cbff3b88033643794b8710507532be6fedf4df8886a032448004c",
+    "size": 96449
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/B348B15A4DEA9F1E4A2E3AB5F7AA3388/BaseColor.uasset",
+    "sha256": "d9bf9858a26f7fc42d20c4e87027fa5627730b2281440ba816244dc1a80d821c",
+    "size": 2024624
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/B348B15A4DEA9F1E4A2E3AB5F7AA3388/Height.uasset",
+    "sha256": "f8dc1a89282f7b03a4992a57a5731d1cb974c9ad8e8e9beb51f38e2815408246",
+    "size": 1010115
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/B348B15A4DEA9F1E4A2E3AB5F7AA3388/MacroMask.uasset",
+    "sha256": "3ec6435de50c1c26ac09c0a06db87f18fbf552104ba67d51a3a817d6f61beb06",
+    "size": 103138
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/B348B15A4DEA9F1E4A2E3AB5F7AA3388/Normal.uasset",
+    "sha256": "0e71a8a2e67680ec457258da58fbf9c27223ebb466f098a74bb9a2ae6437b65c",
+    "size": 1526566
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/B348B15A4DEA9F1E4A2E3AB5F7AA3388/Roughness.uasset",
+    "sha256": "f9d11897b23626dd0207ab4387bda6ed587a5a5d3e00952b0e6622f396d1cd51",
+    "size": 890222
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/B348B15A4DEA9F1E4A2E3AB5F7AA3388/TG_YACS_MaterialPrep.uasset",
+    "sha256": "154e8b1db4b6f927fec095d74f919063eae62a49952dae6083c96e44daeb0102",
+    "size": 96443
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/BFBDA7504D3C104AF02F9BBAD0EACA5E/BaseColor.uasset",
+    "sha256": "0961a3f2e5ff876ef5cb640533b0459ee701d8f25a9b7d96315be917add153a0",
+    "size": 2381401
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/BFBDA7504D3C104AF02F9BBAD0EACA5E/Height.uasset",
+    "sha256": "b504aa2e638d53509a4891f974bda519df1302d5f1823a0c31175c57217019a9",
+    "size": 925456
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/BFBDA7504D3C104AF02F9BBAD0EACA5E/MacroMask.uasset",
+    "sha256": "2c973117d5ce0125bcb6b143a3c981f523a512d33b2695f642884e0f6d75c70e",
+    "size": 60565
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/BFBDA7504D3C104AF02F9BBAD0EACA5E/Normal.uasset",
+    "sha256": "38fef157f106ff91afe3dd61993e7bc893f0752fa6e99b1b84d072163b22d745",
+    "size": 1399825
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/BFBDA7504D3C104AF02F9BBAD0EACA5E/Roughness.uasset",
+    "sha256": "bc6d44be2912d5795192e695d2ce0898f3c7fb4c6751a8bbfbf6ae6724c28245",
+    "size": 1098868
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/BFBDA7504D3C104AF02F9BBAD0EACA5E/TG_YACS_MaterialPrep.uasset",
+    "sha256": "b35ddf8afb4e459f8ca9d24300902fa70eca2dccbd78363fd76b9fae0dbfaf90",
+    "size": 96364
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/C0E96CB24BBE124576D50B9F5C4EB063/BaseColor.uasset",
+    "sha256": "9f4b99cd2e2aa3106a63215dede71c7ede6eb313668063bf736af7f830d1aad6",
+    "size": 2057734
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/C0E96CB24BBE124576D50B9F5C4EB063/Height.uasset",
+    "sha256": "f6555fdf306fddaab57fb43f43f1067a3e804ece431b5053499e604a68dabf09",
+    "size": 928234
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/C0E96CB24BBE124576D50B9F5C4EB063/MacroMask.uasset",
+    "sha256": "2fa03261320c71c1bb9f797fb6c87817ca50cd6d27fee41154f643986f53b674",
+    "size": 146577
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/C0E96CB24BBE124576D50B9F5C4EB063/Normal.uasset",
+    "sha256": "4641d2258bb0aa0ca2d4cda7178a3d4360cc3d9ba0d2ef1936b622cebadcdce2",
+    "size": 1360321
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/C0E96CB24BBE124576D50B9F5C4EB063/Roughness.uasset",
+    "sha256": "39c9a02fed2a56ac3deab658c30ab159850d712cacefdabf8e1c19bde9e44f53",
+    "size": 1100904
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/C0E96CB24BBE124576D50B9F5C4EB063/TG_YACS_MaterialPrep.uasset",
+    "sha256": "9a6c14b21771834307106c765b6cd31a790cb1771858640e5f45fe7466d72cda",
+    "size": 96358
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/C414EA4B402723D66FCB689E49EEB02D/BaseColor.uasset",
+    "sha256": "881ef8aeae3249cacab655497a74aefeeeff08b9c407798587b00fb4299920ee",
+    "size": 2156184
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/C414EA4B402723D66FCB689E49EEB02D/Height.uasset",
+    "sha256": "e86f52cdc039f7ea7c56a8e0c20e6f06ff5e3502ee706de9e13b9545a4f42a0f",
+    "size": 783193
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/C414EA4B402723D66FCB689E49EEB02D/MacroMask.uasset",
+    "sha256": "3f08c28567bb1e887086db351b985e890fdb6cf8d8c7d8329df71677d94b6ed1",
+    "size": 52682
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/C414EA4B402723D66FCB689E49EEB02D/Normal.uasset",
+    "sha256": "781089757f72fc7b5c790465880091b848636590bbe08c15c73968700c037a7f",
+    "size": 1055577
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/C414EA4B402723D66FCB689E49EEB02D/Roughness.uasset",
+    "sha256": "68673607a98f96703984308f81c76eafcd0280e798763b9925cdbef8bb4d2b86",
+    "size": 946953
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/C414EA4B402723D66FCB689E49EEB02D/TG_YACS_MaterialPrep.uasset",
+    "sha256": "4408a367288a020ed22fd4f6c843a42ad0438560f5f5d09e8e8bda027e79de05",
+    "size": 96366
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/D8EFE55C4226C2B0E51E7C9218B95386/BaseColor.uasset",
+    "sha256": "00d854b877586d1e44559a9da95dcca35b487663d18deef16d9d8e1f697d9ec7",
+    "size": 2542871
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/D8EFE55C4226C2B0E51E7C9218B95386/Height.uasset",
+    "sha256": "1730b8a7024063805101fbe8d284f32fcedc0eaf1de1b883ff09778c67bb77cb",
+    "size": 1010405
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/D8EFE55C4226C2B0E51E7C9218B95386/MacroMask.uasset",
+    "sha256": "c0ba1b764f81529232ae8b0682f9cdf0c8e787ac60de7b3acfb3aeab767e64c3",
+    "size": 40288
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/D8EFE55C4226C2B0E51E7C9218B95386/Normal.uasset",
+    "sha256": "bb17212183e7a975a76eedd18e4b158575fd6b56555af7a76218d73cd5c3757d",
+    "size": 1553294
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/D8EFE55C4226C2B0E51E7C9218B95386/Roughness.uasset",
+    "sha256": "57cbb44b3268bb32dc7b4a354986b79d2711f8ca1ab6a81b9ef6971a380120af",
+    "size": 1184370
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Runs/D8EFE55C4226C2B0E51E7C9218B95386/TG_YACS_MaterialPrep.uasset",
+    "sha256": "e3b9b9a0d947db4141050caf32d40eff6f87393f02528b0336ad885a87e50dbf",
+    "size": 96368
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Sources/31edfe9c1bbb4394ad28b12447a76ed5/YACS_SC_Limestone_01_BaseColor.uasset",
+    "sha256": "afe5fbfbc7c7056f14cb3e56b98ec9e1d09857a30ccd15f74a2b59db709208c6",
+    "size": 2071878
+  },
+  {
+    "path": "Content/Generated/YACS/TextureMaterialPrep/Sources/9c843462b20f4e4f88d345014f1783a5/YACS_SC_Limestone_01_BaseColor.uasset",
+    "sha256": "51554c18be0f5e0152e016b673e8fda1aba4aba365feb86d50ed6c3791888df7",
+    "size": 2036165
+  },
+  {
+    "path": "Content/Generated/YACS/VisualFill/c1b9b4341d5a4a3681aca07e4fc8fd7b/T_VisualFillWeights.uasset",
+    "sha256": "d09fafd5d5977d3df8f2458f541e8c3e466ea503f33e654f52b7d143d48a815f",
+    "size": 28165728
+  },
+  {
+    "path": "Content/Tests/CyclistPreview/test_cyclist/Materials/Accent.uasset",
+    "sha256": "af90d3968e51828e1e18a97a1deb90f91ac664fbd2a0e961a64f01c28aad3321",
+    "size": 66508
+  },
+  {
+    "path": "Content/Tests/CyclistPreview/test_cyclist/Materials/Dark.uasset",
+    "sha256": "fc51e53d9b04a1d13eab96a4cd3f0a42a182a08af45c9d4bd42058fb51d9c80b",
+    "size": 65123
+  },
+  {
+    "path": "Content/Tests/CyclistPreview/test_cyclist/Materials/Frame.uasset",
+    "sha256": "0ad59151b7e419d5d202188debd80339406dd87aaa5bef3339fb0b5db4825df7",
+    "size": 65952
+  },
+  {
+    "path": "Content/Tests/CyclistPreview/test_cyclist/Materials/Jersey.uasset",
+    "sha256": "187ed7c6cb3012f6dcba57ad66bec568513ca07481ce8e544cff70ec1b3a131f",
+    "size": 66320
+  },
+  {
+    "path": "Content/Tests/CyclistPreview/test_cyclist/Materials/Lens.uasset",
+    "sha256": "88f0756c780edc52bcc3ceb68f33a3d34d5bc0f8900df7e37425d6cff4dd8a70",
+    "size": 66335
+  },
+  {
+    "path": "Content/Tests/CyclistPreview/test_cyclist/Materials/Metal.uasset",
+    "sha256": "4828e9e922937a2c09af3d5d60a16d0d520634f1b6fb9f31b3e5bd8cace28480",
+    "size": 66101
+  },
+  {
+    "path": "Content/Tests/CyclistPreview/test_cyclist/Materials/Skin.uasset",
+    "sha256": "011da10c340d901a3d2eb4f509a184252facabf66a365ffaf54decf2c3b0ba7e",
+    "size": 66078
+  },
+  {
+    "path": "Content/Tests/CyclistPreview/test_cyclist/Materials/White.uasset",
+    "sha256": "0c86a50ee1bef0982d1edcd383998734248d955300b1aa36d44ced2641491baa",
+    "size": 66014
+  },
+  {
+    "path": "Content/Tests/CyclistPreview/test_cyclist/SkeletalMeshes/test_cyclist.uasset",
+    "sha256": "63f9eeacfc3609cfa1d1528eef24ca598951416e856702b04d7e0424ce042f8d",
+    "size": 2762081
+  },
+  {
+    "path": "Content/Tests/CyclistPreview/test_cyclist/SkeletalMeshes/test_cyclist_Anim.uasset",
+    "sha256": "dee9912dd24e1521e6d3209bdd44c72a5327c48c2e5fa0a86b6af2645e57be54",
+    "size": 212923
+  },
+  {
+    "path": "Content/Tests/CyclistPreview/test_cyclist/SkeletalMeshes/test_cyclist_PhysicsAsset.uasset",
+    "sha256": "820e1034eeb329e47e5f8b573e891281c0c0d96883b61b80523981f6c2e11027",
+    "size": 24979
+  },
+  {
+    "path": "Content/Tests/CyclistPreview/test_cyclist/SkeletalMeshes/test_cyclist_Skeleton.uasset",
+    "sha256": "1b832e2a7a6cecf845dad0f6c789183da14ccdfbb8e197f1d657aa6314274a8c",
+    "size": 11634
+  },
+  {
+    "path": "Content/Worlds/SaCalobra/L_SaCalobraGeneratedSurfaces_24761d13ffbd.umap",
+    "sha256": "98f9440961019ebc237e4a3c702bd17d771efaaf8bb7c8c40f08e89066141582",
+    "size": 185238639
+  },
+  {
+    "path": "Content/Worlds/SaCalobra/L_SaCalobraGeneratedSurfaces_9970b3cdfd46.umap",
+    "sha256": "a1b798ef91799f16156d3c308c8c69c89e83257fca9234ed7aed10bd7bcdb30e",
+    "size": 185222135
+  },
+  {
+    "path": "Content/Worlds/SaCalobra/L_SaCalobraGeneratedSurfaces_9992abd22044.umap",
+    "sha256": "f7c49a9f978eeb3bedc41feed41cc03cce29045a05bc8cf790ff3c37bc0c219f",
+    "size": 185238639
+  },
+  {
+    "path": "Content/Worlds/SaCalobra/L_SaCalobraMaskDiagnostic_615cb1c66d11.umap",
+    "sha256": "d6b904f4e951e0ff8ea4129fb956266407659ae3895c3e9d3b88d9e7d1c8b3b3",
+    "size": 184984182
+  },
+  {
+    "path": "Content/Worlds/SaCalobra/L_SaCalobraTextureCheckpoint_20261005.umap",
+    "sha256": "0eef66dc1f404c7d48a84d2254d4fd09ba0842f749445dd974d83b7b4e1889a0",
+    "size": 185169762
+  },
+  {
+    "path": "YetAnotherCyclingSim.uproject",
+    "sha256": "14fdcd44f2f9616240afa9857d59c3ff402d02693b82ae92d1b32812257be794",
+    "size": 1337
+  },
+  {
+    "path": "docs/PRODUCT_REQUIREMENTS.md",
+    "sha256": "d2436e23dd8f1d7fa6d767eb507acf5dbf36cdb7a1cab89c3dca597a653f6194",
+    "size": 57587
+  },
+  {
+    "path": "docs/README.md",
+    "sha256": "190acaec57554161ca33db95746a7b733b4ddc813e65e9f1b97528d5fc6ed9aa",
+    "size": 18099
+  },
+  {
+    "path": "docs/experiments/sa-calobra-material-reference-review-2026-10-05.md",
+    "sha256": "29e0807d0dfc050117095f380ce21520f03a9b51c95a2706882ffdbe2a6b2152",
+    "size": 25273
+  },
+  {
+    "path": "docs/legal/DEPENDENCY_PROVENANCE.md",
+    "sha256": "bcc1226aed533e1bd1c035357ff87c6aaa0378b0bdb767807998631f16908054",
+    "size": 38381
+  },
+  {
+    "path": "docs/legal/notices/material-maker-MIT.txt",
+    "sha256": "ea44720e24dfc4f2d5f2514d06b989ea460a1b1d4ad156a1b92a63eac48e9cdb",
+    "size": 1098
+  },
+  {
+    "path": "docs/tooling/SA_CALOBRA_MATERIAL_FOUNDATION.md",
+    "sha256": "a29d1b07aa3b58beb4e3c78c3793e3ddae0409209884202b2aaed993ab76f0e1",
+    "size": 16907
+  },
+  {
+    "path": "docs/tooling/SA_CALOBRA_MATERIAL_REPAIR_PLAN.md",
+    "sha256": "9d25dc0072e7ccf374d542d8153121325fa25bbefe5001367c31d63648441fb9",
+    "size": 21180
+  },
+  {
+    "path": "docs/tooling/TEXTURE_MATERIAL_PREP_EXAMPLES.md",
+    "sha256": "88e13d84fc6d3345be701c58ee6fab0b6e88697cdacd83957eb569f9652f3a2a",
+    "size": 27081
+  },
+  {
+    "path": "scripts/assets/build_material_maker_limestone.py",
+    "sha256": "e0233cf2fc68e66de958f5eee36e18ec6dead5da2a8255a8eb048f178aaa68d2",
+    "size": 10374
+  },
+  {
+    "path": "scripts/assets/build_material_maker_surface_set.py",
+    "sha256": "c3a4db2c2e028286b64cefdc4e390a3a16fb86e6d5c29fbd879cd8b1def6c56d",
+    "size": 5901
+  },
+  {
+    "path": "scripts/assets/check_material_maker_limestone.py",
+    "sha256": "bb0992984fe63c8d4347cb92d225923c7b4338cf10df55cab14e1fbfe47b1fee",
+    "size": 4933
+  },
+  {
+    "path": "scripts/assets/generate_sa_calobra_texture_library_ue.py",
+    "sha256": "40476839dab7d0620fe62fe759e585fcd121e86ad02d7503f37381ca4c6573d8",
+    "size": 11305
+  },
+  {
+    "path": "scripts/assets/prepare_sa_calobra_surface_domains.py",
+    "sha256": "07d5eb74ddb7c0ec260255ffa3a214eb969b4118f5ddecb9c79f389f1d6d599a",
+    "size": 8764
+  },
+  {
+    "path": "scripts/assets/prepare_sa_calobra_visual_fill.py",
+    "sha256": "3d5b9366d0d203ef1f8a34d312c85f4361631731baf7daa11badb9067ef2be10",
+    "size": 8316
+  },
+  {
+    "path": "scripts/assets/render_material_maker_limestone.gd",
+    "sha256": "21a958229ac6605960c67b48a27a3f7995881c3656127acee2aae624721f1390",
+    "size": 1710
+  },
+  {
+    "path": "scripts/assets/render_material_maker_limestone.py",
+    "sha256": "c1b5a95ca89c2eb2ece78d7e32d417a9710984a34d1d20dee425bf6d52248e4f",
+    "size": 2796
+  },
+  {
+    "path": "scripts/assets/sa_calobra_material_weights.py",
+    "sha256": "ff61c84de51993c65be62bc3efccc25d24dfd94cf733406e98644f12aba85be7",
+    "size": 1893
+  },
+  {
+    "path": "scripts/assets/test_generate_sa_calobra_texture_library.py",
+    "sha256": "c779eaff3c1556bc821daf48b6408fc51b0b861c8d0cfe1cdc41b0d5716f9ae2",
+    "size": 2039
+  },
+  {
+    "path": "scripts/assets/test_material_maker_limestone.py",
+    "sha256": "692dbe4973d29ed7c5d67865120751d3cfb558c8defb03a0e681ea36865ba34b",
+    "size": 1630
+  },
+  {
+    "path": "scripts/assets/test_quality_library_auto.py",
+    "sha256": "372bcefefcee41188142045c42db59497817eeab2b73222b2b4937b8cb904271",
+    "size": 2260
+  },
+  {
+    "path": "scripts/assets/test_sa_calobra_material_waves.py",
+    "sha256": "0985059941014f14ef5cb508b651474ee0ec120763ddd14eb96f05b4687761ce",
+    "size": 1816
+  },
+  {
+    "path": "scripts/assets/test_sa_calobra_material_weights.py",
+    "sha256": "d9d653f4a19feab66bd595cb05842e4c2ce70d2b9b2769a1098eff6909bc077c",
+    "size": 2817
+  },
+  {
+    "path": "scripts/assets/test_sa_calobra_surface_domains.py",
+    "sha256": "a524db79e2717aafdae571c4a149cd5eb87be773f7c0fc7164f420fc56eb9ae2",
+    "size": 1896
+  },
+  {
+    "path": "scripts/assets/test_sa_calobra_visual_fill.py",
+    "sha256": "58a42ac46d549d573fa58533d4fa7037d94671868706703f0befcfe6fe3e8d61",
+    "size": 2561
+  },
+  {
+    "path": "scripts/ue/apply_sa_calobra_generated_surfaces.py",
+    "sha256": "d99ca420f7bdf4b0b2ddd40714546059757af2aa06dcda3c8f81fc236cc2c157",
+    "size": 24191
+  },
+  {
+    "path": "scripts/ue/apply_sa_calobra_inferred_gap_fill.py",
+    "sha256": "cd82ee1f42ff3e19b9ca00320175699d80e4fe42a7d1c806fc4591c1ce35b6b5",
+    "size": 2409
+  },
+  {
+    "path": "scripts/ue/apply_sa_calobra_surface_domains.py",
+    "sha256": "867a76fe1dcc870ea9d0317164f6d121d003f3703317fc581864b322908ec18d",
+    "size": 3047
+  },
+  {
+    "path": "scripts/ue/apply_sa_calobra_surface_presentation.py",
+    "sha256": "fd12cdd8ea96fe5a6d794b7218679ee761f054b67acdd6e42089b6e1f3d81d97",
+    "size": 706
+  },
+  {
+    "path": "scripts/ue/build_sa_calobra_repaired_surface.py",
+    "sha256": "92976cbd9afb10334cc20848049c068c15d848d09a5c0f8d9c66e146c85fba07",
+    "size": 14508
+  },
+  {
+    "path": "scripts/ue/export_sa_calobra_camera.py",
+    "sha256": "9b3061443b107e9a9300c7dc040a3967a4fca82f66d07b7a68e0aa3dc4a0bc86",
+    "size": 1125
+  },
+  {
+    "path": "scripts/ue/generate_sa_calobra_quality_library.py",
+    "sha256": "9cd8a2fec15d2b9213857d87d80372e26158b6acf67d72ab64d87a442577de90",
+    "size": 8119
+  },
+  {
+    "path": "scripts/ue/generate_sa_calobra_quality_library_all.py",
+    "sha256": "db083eb4bb6e962ee18542898db95d49156b50885b06c349e0e1ae324d92ff90",
+    "size": 3841
+  },
+  {
+    "path": "scripts/ue/inspect_sa_calobra_live_materials.py",
+    "sha256": "02da71bceb21cff868f27a8fe5b8e75271812109d26eab56edb3c2ea2206a55c",
+    "size": 1284
+  },
+  {
+    "path": "scripts/ue/inspect_sa_calobra_mask_channels.py",
+    "sha256": "bb97960339544f4fb9c0f4305b7a03a14b07f6af701e8347a86cac1f802da827",
+    "size": 8536
+  },
+  {
+    "path": "scripts/ue/inspect_sa_calobra_material_projection.py",
+    "sha256": "68073b5133904460f08b035ed230224f40073fc75d94c68f738c493a61581443",
+    "size": 4208
+  },
+  {
+    "path": "scripts/ue/inspect_sa_calobra_repair_residency.py",
+    "sha256": "492b758b2511d6b3e6eca618082c4cff8980705d2151326c4812f134ae454f30",
+    "size": 2021
+  },
+  {
+    "path": "scripts/ue/inspect_sa_calobra_surface_presentation.py",
+    "sha256": "ecb11de4be26ce4e4621017ec2068c1d74b4b843c75f3a541639141e30dda186",
+    "size": 1587
+  },
+  {
+    "path": "scripts/ue/inspect_world_aligned_functions.py",
+    "sha256": "9704a50213a439ef63da229e17e1198911e831e6dbfd466d2f6816a2fc0c6f83",
+    "size": 1020
+  },
+  {
+    "path": "scripts/ue/prepare_sa_calobra_repair_offline.py",
+    "sha256": "6e03afe16816c68e565b300b2e4943b174e81f774aadfbb582077b394fbf5d2b",
+    "size": 3323
+  },
+  {
+    "path": "scripts/ue/prepare_sa_calobra_visual_fill.py",
+    "sha256": "79ecea6dd380a1e6590b243f5ddfced9e3419571e39322eb8d0b4ad62881e36b",
+    "size": 4524
+  },
+  {
+    "path": "scripts/ue/preview_sa_calobra_continuous_limestone.py",
+    "sha256": "2522e3a678b37d3ac39f035ce7a7fdcd96666d0bc9969be179235cc9ff785dc3",
+    "size": 6362
+  },
+  {
+    "path": "scripts/ue/preview_sa_calobra_flat_normal.py",
+    "sha256": "606690e799c8f7845789d2abc0083ee4c0b5487d99357ba61f758e47a3cb4224",
+    "size": 5632
+  },
+  {
+    "path": "scripts/ue/preview_sa_calobra_limestone_microdetail.py",
+    "sha256": "c5f335529ca34d6faf7d588baea1a5f3c6abebc2c0b30b37c5d2b71e60b6313a",
+    "size": 6595
+  },
+  {
+    "path": "scripts/ue/preview_sa_calobra_limestone_palette.py",
+    "sha256": "7a9fee63862e010ae5d5551600333c5d165eb526e9a7056964ec8e1854415185",
+    "size": 4573
+  },
+  {
+    "path": "scripts/ue/preview_sa_calobra_masked_materials.py",
+    "sha256": "1ba29f22e9c0d9a97140a6cbdf8e284da878dae7508786c0ccbfac2b93d4eaea",
+    "size": 17231
+  },
+  {
+    "path": "scripts/ue/preview_sa_calobra_material_maker.py",
+    "sha256": "88c4925fafebdf818910610be15d011f85d116243e8ea3aa1fda0742324bfe4d",
+    "size": 10597
+  },
+  {
+    "path": "scripts/ue/preview_sa_calobra_neutral_color.py",
+    "sha256": "730a8b44b8445474cdae8049f87afff495856f70662b8140a5f82ac80013feb4",
+    "size": 5646
+  },
+  {
+    "path": "scripts/ue/preview_sa_calobra_projection_checker.py",
+    "sha256": "21ae7ae9d72c90c65eea47588cb3348fca442a81413f1701bf425e310f30d822",
+    "size": 8547
+  },
+  {
+    "path": "scripts/ue/preview_sa_calobra_projection_contrast.py",
+    "sha256": "172fbd55ed0c658a2a11efee33f83f21c4571aea0dcdd24b2b2c6358368362f5",
+    "size": 8893
+  },
+  {
+    "path": "scripts/ue/preview_sa_calobra_pure_rock.py",
+    "sha256": "230a613cc91d895e1e77a4d5271712c16fb5ddf7fa7af2bdae8406fe4c9200a6",
+    "size": 8220
+  },
+  {
+    "path": "scripts/ue/preview_sa_calobra_quality_rock.py",
+    "sha256": "c679e132672a31f4a4a91e9c523376ef6d826e559d8f31334de0c92d895e970e",
+    "size": 7983
+  },
+  {
+    "path": "scripts/ue/preview_sa_calobra_repair_patch.py",
+    "sha256": "28e5aea2a706d66f2efbb8395527feabd8bb045df2de24852fbf5e8a9d252c54",
+    "size": 8135
+  },
+  {
+    "path": "scripts/ue/preview_sa_calobra_rock_contrast.py",
+    "sha256": "32f23ea7d42fd8b71a7171edf92b3f74f706d338f5ade0285e8f7af4289fc477",
+    "size": 8710
+  },
+  {
+    "path": "scripts/ue/preview_sa_calobra_scanned_surfaces.py",
+    "sha256": "e6e151c83a73d048c6f4abb37f33a6f91d9500cff8d3d7d82c5f20d9a8caed41",
+    "size": 14233
+  },
+  {
+    "path": "scripts/ue/preview_sa_calobra_surface_component.py",
+    "sha256": "e3b9d664328cf4e79c91560266248a02b61a58eb6f9b8a2dd984fc231070ab3e",
+    "size": 6332
+  },
+  {
+    "path": "scripts/ue/preview_sa_calobra_uniform_limestone.py",
+    "sha256": "b30366b06755a17e3578f9fe94863d1fd41692a34c20f240dad9346c73bd4d3a",
+    "size": 5431
+  },
+  {
+    "path": "scripts/ue/repair_sa_calobra_surface_transitions.py",
+    "sha256": "4a28e96f5ad8371d3c772bcaa680adc102dd58ef240cc95da852e6f7fb49fff8",
+    "size": 8682
+  },
+  {
+    "path": "scripts/ue/retain_sa_calobra_failed_presentation_attempt.py",
+    "sha256": "26f242af23ce9c807e5b17b2884de83f8852d60c15830fa8bf0db2ef357916e4",
+    "size": 1259
+  },
+  {
+    "path": "scripts/ue/review_sa_calobra_masked_materials.py",
+    "sha256": "7d1d523cce15ad22c459252612a05c2cd7f4200631fa8d5d16b0a86f7b30cb80",
+    "size": 1035
+  },
+  {
+    "path": "scripts/ue/sa_calobra_limestone_palette.py",
+    "sha256": "cd7d4c2346b73c9d7b569771d981da37d17fdb0d68430c0d0bedfcb00676c55e",
+    "size": 4702
+  },
+  {
+    "path": "scripts/ue/sa_calobra_material_foundation.py",
+    "sha256": "2d9195682f3c3fa38b22e5dc5bce36b7e0e29fb1e6c5b238d1890443ee5a5bff",
+    "size": 17249
+  },
+  {
+    "path": "scripts/ue/sa_calobra_material_repair.py",
+    "sha256": "3fecffd38be1e432aa4e463a7e7fc80684d2d908ea327c5a12de507faa32e47f",
+    "size": 19299
+  },
+  {
+    "path": "scripts/ue/sa_calobra_material_waves.py",
+    "sha256": "b36c76b0a03a115b8c062408b4f40061b9e7bb612453c73a816d28ac358fc52a",
+    "size": 2525
+  },
+  {
+    "path": "scripts/ue/tune_sa_calobra_masked_materials.py",
+    "sha256": "7cf83dae74525ea298631c3470cc6df11368d3436415fb92247eb6994f163e02",
+    "size": 11677
+  },
+  {
+    "path": "scripts/ue/verify_sa_calobra_generated_surface_map.py",
+    "sha256": "f6474e37f21a64571ef1482578a6461f0c09bcf83780fbe4b1d7e629c4459fd5",
+    "size": 7298
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/fractured/SaCalobra_PaleLimestone.ptex",
+    "sha256": "b2e9504d27d498d77e032c78c688a5c0736035fdecd41442fb3e7b33f1785bf7",
+    "size": 21804
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/fractured/export/SaCalobra_PaleLimestone_BaseColor.png",
+    "sha256": "023482f97ad87059def676cb8d19c645d0972a1c06b6e16d2f67edc188077243",
+    "size": 2275880
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/fractured/export/SaCalobra_PaleLimestone_Height.exr",
+    "sha256": "dd915e11a9f93cd91d0ffc9c9e7dbf6b5a69dd743d0d34daec312ab7794e0ca0",
+    "size": 8069395
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/fractured/export/SaCalobra_PaleLimestone_Normal_DX.png",
+    "sha256": "c88ff06885cdaae82a051801a496f0aebf90d1f2ce6c772c67c61d6249d10194",
+    "size": 7989286
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/fractured/export/SaCalobra_PaleLimestone_ORM.png",
+    "sha256": "b941f3d3e9e3d93a774f844fe7afe7ad7af318398bb16f7f103d4a6d5c7c3ac9",
+    "size": 1163043
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/fractured/export/SaCalobra_PaleLimestone_native-check.json",
+    "sha256": "1be91af9dda43edc0994f753942236f6be4850ba55fadecbe08315dfc61db246",
+    "size": 569
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/fractured/provenance.json",
+    "sha256": "0af67f5baa78fc76e751e81f485f8ebf834241da58e3806790dcc3dfcb0fd483",
+    "size": 1080
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/fractured/render-receipt.json",
+    "sha256": "2597cb98ac6d90d309da4654e05e8fdbecc6c890442baae3606d35112410ce2a",
+    "size": 964
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/fractured/validation.json",
+    "sha256": "3b9dd948799923b6ec8fd2e221fcb799147247c44e0136613c334b2a93e33ce3",
+    "size": 1693
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/manifest.json",
+    "sha256": "5127e5bcc54d77d3f3c6b71975cb7b18e0e160aea70d8fa0c39893cf4f77ca1e",
+    "size": 2141
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/mineral/SaCalobra_PaleLimestone.ptex",
+    "sha256": "6d83e816c764049935d945a16c08ba33ad2e225b48b4511bf29b1df78afc7450",
+    "size": 20910
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/mineral/export/SaCalobra_PaleLimestone_BaseColor.png",
+    "sha256": "856bb6f5cbb094299509d3ac558559cfa8c2139fb6447ec378152407b85116f4",
+    "size": 1407708
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/mineral/export/SaCalobra_PaleLimestone_Height.exr",
+    "sha256": "cb4261a6e4bdd2e38ebf49efa941b94d95692d08ecd625488e931e1e5a3079b8",
+    "size": 7627987
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/mineral/export/SaCalobra_PaleLimestone_Normal_DX.png",
+    "sha256": "e3dd7d56e4f1354eb99950c5889c380e74ff2296553b7fc603e967ee6325a88a",
+    "size": 6501236
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/mineral/export/SaCalobra_PaleLimestone_ORM.png",
+    "sha256": "1bb204a3adb7d69b54fc68f8cab0b04c838318c1343af7b2e1ee2f883ac673ac",
+    "size": 415290
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/mineral/export/SaCalobra_PaleLimestone_native-check.json",
+    "sha256": "1be91af9dda43edc0994f753942236f6be4850ba55fadecbe08315dfc61db246",
+    "size": 569
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/mineral/provenance.json",
+    "sha256": "ca38b0b215edccb6ada70b0409f6bbf959bd75a61feca8709cf111be01fdf8a4",
+    "size": 1078
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/mineral/render-receipt.json",
+    "sha256": "756c309bc23f27374393235cc428063963f4184c7caf36f4b3216b9281218e12",
+    "size": 964
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/mineral/validation.json",
+    "sha256": "c8b23bd1412187e12aae9259be8ece0427ed6532fed3176c3e59558e2805f89e",
+    "size": 1694
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/scree/SaCalobra_PaleLimestone.ptex",
+    "sha256": "823eac11e08440d091218475dcc05749d8f14d56867926fe56eaf1496202b637",
+    "size": 22109
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/scree/export/SaCalobra_PaleLimestone_BaseColor.png",
+    "sha256": "6babc8e49248be89b464605c3c9cf427b63ac51ab42aebc05877359e902256e1",
+    "size": 1273397
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/scree/export/SaCalobra_PaleLimestone_Height.exr",
+    "sha256": "8d350c49fb7efb16f41a229f8f2e6bb614950bd02c0db9abb32ca625c60ad930",
+    "size": 8960786
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/scree/export/SaCalobra_PaleLimestone_Normal_DX.png",
+    "sha256": "2e75301f9325efb39f37811409bebfd455d9e21bf740ca97d12ed66978290f62",
+    "size": 7872034
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/scree/export/SaCalobra_PaleLimestone_ORM.png",
+    "sha256": "919faf3cbf33250dd100b6c5e13f8036dd6e2222b29c46b7e09fb8a5c6465df1",
+    "size": 957684
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/scree/export/SaCalobra_PaleLimestone_native-check.json",
+    "sha256": "1be91af9dda43edc0994f753942236f6be4850ba55fadecbe08315dfc61db246",
+    "size": 569
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/scree/provenance.json",
+    "sha256": "bd5bc2becab83fb0599fb82b811c6bd09ab6ca48fd994dbd746ed0b9fc326d30",
+    "size": 1082
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/scree/render-receipt.json",
+    "sha256": "9cbc2e02b17f1de6bb43d5bd436223fc405db807e16e8c44db9cbd30991f1c8a",
+    "size": 964
+  },
+  {
+    "path": "worldgen/materials/material_maker/surface_set/scree/validation.json",
+    "sha256": "9ae177808fe786b98882fa78a1fd8ac30f8638f8168076b4e2687a4310098f74",
+    "size": 1695
+  },
+  {
+    "path": "worldgen/materials/sa_calobra_generated_landscape_result_20261005.json",
+    "sha256": "d04479c1176333602419b53e1f98a8fd8680bab2b3e74a63dd4b3f433e544c7c",
+    "size": 2180
+  },
+  {
+    "path": "worldgen/materials/sa_calobra_inferred_gap_fill_result_20261005.json",
+    "sha256": "21ea257df8c3562fde61375496db8c8502f813ccd65507cc620445929fa23ed2",
+    "size": 4712
+  },
+  {
+    "path": "worldgen/materials/sa_calobra_limestone_palette_20261005.json",
+    "sha256": "accca1e919579daa099071a359065802f01edeeeff19cfa4dd1f45d56b4e8236",
+    "size": 1567
+  },
+  {
+    "path": "worldgen/materials/sa_calobra_mask_statistics_20261005.json",
+    "sha256": "bd4b9d50bd88f65de9aa102b6da4ba56d3b041f7f7f8c189219afd7c0e02bea8",
+    "size": 2811
+  },
+  {
+    "path": "worldgen/materials/sa_calobra_repair_asset.json",
+    "sha256": "0df676106b3bc2db88a19da93b18cbc6670682606285b47ea945b6dab4a90ecd",
+    "size": 10311
+  },
+  {
+    "path": "worldgen/materials/sa_calobra_surface_domains_interrupted_20261005.json",
+    "sha256": "b66006ca2f6bd3ab0e31d6ea73bd680f38f07d99e7c69e22ab7a45f4a1d37c1e",
+    "size": 801
+  },
+  {
+    "path": "worldgen/materials/sa_calobra_surface_domains_presentation_20261005.json",
+    "sha256": "0772dadedf73f2935f0186dfa19e3ef25ac814168585b8d6131fe00bda9d51e5",
+    "size": 2236
+  },
+  {
+    "path": "worldgen/materials/sa_calobra_surface_presentation_20261005.json",
+    "sha256": "63647ff9bed1cbaed86d8a6a5c77f1107c5183a44df204cfe52fd306da81d956",
+    "size": 908
+  },
+  {
+    "path": "worldgen/materials/sa_calobra_surface_presentation_result_20261005.json",
+    "sha256": "322996d18db3b54b9e7f0f58f91fd7968b0e97c075bf4f03322c7553e8f9722c",
+    "size": 5484
+  },
+  {
+    "path": "worldgen/materials/sa_calobra_texture_library_20261005.json",
+    "sha256": "78ae0ba46ae8fa97db6bc2c79fc2a7d0475feab0bda4435ff65cf5562cb7383b",
+    "size": 3997
+  },
+  {
+    "path": "worldgen/materials/sa_calobra_texture_library_result_20261005.json",
+    "sha256": "d67cfa4429543690e7e3d198116720573e031689e4cd12e07aa89bb817c43e40",
+    "size": 3842
+  },
+  {
+    "path": "worldgen/materials/sa_calobra_texture_library_v2_20261005.json",
+    "sha256": "a2e2fccfd1bca73ba28c17a81e11c31ed5d2a3877824e36269c58f0de9e218fb",
+    "size": 18229
+  },
+  {
+    "path": "worldgen/materials/scanned_refinement/manifest.json",
+    "sha256": "287e27833967de065d5fc264496784d4fcf185d3824e022c6134a8ae8b03c807",
+    "size": 2838
+  },
+  {
+    "path": "worldgen/materials/visual_fill/README.md",
+    "sha256": "79179c3db625e7fa72082c557c246e3f5ef583fe3263d0ebdfeb3ae5fec7e3cc",
+    "size": 2407
+  },
+  {
+    "path": "worldgen/materials/visual_fill/inference-kind.png",
+    "sha256": "cc3bc3490878c5a96c20586cd28b0cd3cc812c5506ae97a7110c59e6ed3a3176",
+    "size": 879841
+  },
+  {
+    "path": "worldgen/materials/visual_fill/material-input-manifest.json",
+    "sha256": "5995eeaea8ba661c80c7710a2974fa2970a6cdbfeb6b79fbb8776d0b1f8dc299",
+    "size": 4336
+  },
+  {
+    "path": "worldgen/materials/visual_fill/material-weights.png",
+    "sha256": "af16fc7c43ec8a3a3b2e000fe716232a3229fe0ac6b4e9708baae5842ef99f6c",
+    "size": 28497885
+  },
+  {
+    "path": "worldgen/materials/visual_fill/sample-availability.png",
+    "sha256": "9c9906268977a8f49ba20c194cecb101e8bb8c25c44b51ee30f66e7e88a7522a",
+    "size": 861726
+  }
+]

@@ -6,6 +6,15 @@ Methodology authority: [World Building Bible](../WORLD_BUILDING_BIBLE.md).
 Delivery order: [Roadmap](../ROADMAP.md). This workflow describes a candidate,
 not completed visual, reload or performance admission.
 
+**2026-10-06 repair planning:** the owner requested documentation only, with no
+implementation. The [material repair plan](SA_CALOBRA_MATERIAL_REPAIR_PLAN.md)
+defines the next diagnostic order: projection, normal spaces, final layer
+weights, limestone appearance, actual consumers, whole-area proof and persistence.
+It records the local scan candidate separately from admitted production assets
+and distinguishes its dry-channel alpha from the historical availability alpha
+described below. Reference/licence/sample gates remain binding; no visual or
+performance acceptance, issue completion or successor unblock is implied.
+
 **2026-10-05 decision:** the current material appearance is rejected. The recipe
 and mechanics below describe the retained prototype, not the accepted target.
 Work has returned to [references and candidate discovery](../experiments/sa-calobra-material-reference-review-2026-10-05.md).

@@ -1,0 +1,13 @@
+{
+  "status": "APPLIED_SESSION_ONLY",
+  "material": "/Game/Generated/YACS/MaskedMaterials/85dd7892a8b44383961213846d44eb07/M_SaCalobraMaskedSurfaces.M_SaCalobraMaskedSurfaces",
+  "weights_manifest_sha256": "5995eeaea8ba661c80c7710a2974fa2970a6cdbfeb6b79fbb8776d0b1f8dc299",
+  "map_saved": false,
+  "geometry_mutation": false,
+  "whole_landscape_components": 1024,
+  "visual_acceptance": "pending",
+  "performance": "not measured",
+  "geometry_snapshot_equal": true,
+  "render_instances_verified": "PENDING_NATIVE_AUDIT_UNAVAILABLE",
+  "component_bindings_verified": 1024
+}

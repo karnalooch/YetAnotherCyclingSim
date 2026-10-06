@@ -418,4 +418,3 @@ The machine-readable counterpart is
 `worldgen/materials/material_forge/upstreams.json`. If any external source
 revision changes, the pin, licence review and deterministic material proof must
 be repeated before the new revision is admitted.
-\n

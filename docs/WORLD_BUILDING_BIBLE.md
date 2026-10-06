@@ -3675,4 +3675,3 @@ Material Maker and Godot remain external offline authoring tools. They are not
 runtime dependencies. No Godot fork or broad Material Maker vendoring is
 admitted without a demonstrated blocker and a separate provenance/architecture
 decision.
-\n

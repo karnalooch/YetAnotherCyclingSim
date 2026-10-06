@@ -1,0 +1,3277 @@
+{
+  "engine": "5.8.2-56702186+++UE5+Release-5.8",
+  "world": "/Game/Worlds/SaCalobra/L_SaCalobraAccepted_20261004.L_SaCalobraAccepted_20261004",
+  "consumers": [
+    {
+      "actor": "/Game/Worlds/SaCalobra/L_SaCalobraAccepted_20261004.L_SaCalobraAccepted_20261004:PersistentLevel.SaCalobraLandscape",
+      "material": "/Game/Generated/YACS/MaskReview/M_MaskReview_1.M_MaskReview_1",
+      "components": 1024,
+      "tangent_space_normal": true
+    }
+  ],
+  "camera": {
+    "position": [
+      25526.330344,
+      50676.048602,
+      45189.109182
+    ],
+    "rotation": [
+      -0.399896,
+      -1327.86993,
+      0.0
+    ]
+  },
+  "native_audit_available": false,
+  "functions": {
+    "/Engine/Functions/Engine_MaterialFunctions01/Texturing/WorldAlignedTexture": [
+      {
+        "name": "MaterialExpressionFunctionOutput_0",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionLinearInterpolate_1"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "XYZ Texture",
+        "description": ""
+      },
+      {
+        "name": "MaterialExpressionLinearInterpolate_1",
+        "class": "MaterialExpressionLinearInterpolate",
+        "inputs": {
+          "A": "MaterialExpressionLinearInterpolate_0",
+          "B": "MaterialExpressionStaticSwitch_4",
+          "Alpha": "MaterialExpressionComponentMask_29"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0",
+        "const_alpha": "0.5"
+      },
+      {
+        "name": "MaterialExpressionMaterialFunctionCall_2",
+        "class": "MaterialExpressionMaterialFunctionCall",
+        "inputs": {
+          "In": "MaterialExpressionAbs_3",
+          "Contrast": "MaterialExpressionFunctionInput_6"
+        },
+        "outputs": [
+          "Result"
+        ],
+        "function": "/Engine/Functions/Engine_MaterialFunctions01/ImageAdjustment/CheapContrast.CheapContrast"
+      },
+      {
+        "name": "MaterialExpressionAbs_3",
+        "class": "MaterialExpressionAbs",
+        "inputs": {
+          "None": "MaterialExpressionComponentMask_7"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionComponentMask_7",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionFunctionInput_2"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "False",
+        "g": "False",
+        "b": "True",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_2",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": "MaterialExpressionVertexNormalWS_0"
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "World Space Normal",
+        "description": "",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionTextureSample_5",
+        "class": "MaterialExpressionTextureSample",
+        "inputs": {
+          "UVs": "MaterialExpressionComponentMask_0",
+          "Tex": "MaterialExpressionFunctionInput_0",
+          "Apply View MipBias": null
+        },
+        "outputs": [
+          "RGB",
+          "R",
+          "G",
+          "B",
+          "A",
+          "RGBA"
+        ]
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_0",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": "MaterialExpressionTextureObject_0"
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "TextureObject",
+        "description": "",
+        "use_preview_value_as_default": "False"
+      },
+      {
+        "name": "MaterialExpressionTextureObject_0",
+        "class": "MaterialExpressionTextureObject",
+        "inputs": {},
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionComponentMask_0",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionDivide_0"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "True",
+        "g": "True",
+        "b": "False",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionDivide_0",
+        "class": "MaterialExpressionDivide",
+        "inputs": {
+          "A": "MaterialExpressionFunctionInput_3",
+          "B": "MaterialExpressionMultiply_13"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "1.0",
+        "const_b": "2.0"
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_1",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": null
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "TextureSize",
+        "description": "Size of texture in worldspace units",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_3",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": "MaterialExpressionWorldPosition_0"
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "WorldPosition",
+        "description": "",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionWorldPosition_0",
+        "class": "MaterialExpressionWorldPosition",
+        "inputs": {},
+        "outputs": [
+          "XYZ",
+          "XY",
+          "Z"
+        ]
+      },
+      {
+        "name": "MaterialExpressionLinearInterpolate_0",
+        "class": "MaterialExpressionLinearInterpolate",
+        "inputs": {
+          "A": "MaterialExpressionStaticSwitch_2",
+          "B": "MaterialExpressionStaticSwitch_0",
+          "Alpha": "MaterialExpressionComponentMask_27"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0",
+        "const_alpha": "0.5"
+      },
+      {
+        "name": "MaterialExpressionMaterialFunctionCall_0",
+        "class": "MaterialExpressionMaterialFunctionCall",
+        "inputs": {
+          "In": "MaterialExpressionAbs_0",
+          "Contrast": "MaterialExpressionFunctionInput_6"
+        },
+        "outputs": [
+          "Result"
+        ],
+        "function": "/Engine/Functions/Engine_MaterialFunctions01/ImageAdjustment/CheapContrast.CheapContrast"
+      },
+      {
+        "name": "MaterialExpressionAbs_0",
+        "class": "MaterialExpressionAbs",
+        "inputs": {
+          "None": "MaterialExpressionComponentMask_5"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionComponentMask_5",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionFunctionInput_2"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "True",
+        "g": "False",
+        "b": "False",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionTextureSample_0",
+        "class": "MaterialExpressionTextureSample",
+        "inputs": {
+          "UVs": "MaterialExpressionComponentMask_2",
+          "Tex": "MaterialExpressionFunctionInput_0",
+          "Apply View MipBias": null
+        },
+        "outputs": [
+          "RGB",
+          "R",
+          "G",
+          "B",
+          "A",
+          "RGBA"
+        ]
+      },
+      {
+        "name": "MaterialExpressionComponentMask_2",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionDivide_0"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "False",
+        "g": "True",
+        "b": "True",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionTextureSample_3",
+        "class": "MaterialExpressionTextureSample",
+        "inputs": {
+          "UVs": "MaterialExpressionComponentMask_4",
+          "Tex": "MaterialExpressionFunctionInput_0",
+          "Apply View MipBias": null
+        },
+        "outputs": [
+          "RGB",
+          "R",
+          "G",
+          "B",
+          "A",
+          "RGBA"
+        ]
+      },
+      {
+        "name": "MaterialExpressionComponentMask_4",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionDivide_0"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "True",
+        "g": "False",
+        "b": "True",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionFunctionOutput_2",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionLinearInterpolate_0"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "XY Texture",
+        "description": ""
+      },
+      {
+        "name": "MaterialExpressionFunctionOutput_3",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionStaticSwitch_4"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "Z Texture",
+        "description": ""
+      },
+      {
+        "name": "MaterialExpressionAppendVector_9",
+        "class": "MaterialExpressionAppendVector",
+        "inputs": {
+          "A": "MaterialExpressionTextureSample_0",
+          "B": "MaterialExpressionTextureSample_0"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionAppendVector_11",
+        "class": "MaterialExpressionAppendVector",
+        "inputs": {
+          "A": "MaterialExpressionTextureSample_3",
+          "B": "MaterialExpressionTextureSample_3"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionAppendVector_13",
+        "class": "MaterialExpressionAppendVector",
+        "inputs": {
+          "A": "MaterialExpressionTextureSample_5",
+          "B": "MaterialExpressionTextureSample_5"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionStaticSwitch_0",
+        "class": "MaterialExpressionStaticSwitch",
+        "inputs": {
+          "True": "MaterialExpressionAppendVector_9",
+          "False": "MaterialExpressionTextureSample_0",
+          "Value": "MaterialExpressionFunctionInput_4"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionStaticSwitch_2",
+        "class": "MaterialExpressionStaticSwitch",
+        "inputs": {
+          "True": "MaterialExpressionAppendVector_11",
+          "False": "MaterialExpressionTextureSample_3",
+          "Value": "MaterialExpressionFunctionInput_4"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionStaticSwitch_4",
+        "class": "MaterialExpressionStaticSwitch",
+        "inputs": {
+          "True": "MaterialExpressionAppendVector_13",
+          "False": "MaterialExpressionTextureSample_5",
+          "Value": "MaterialExpressionFunctionInput_4"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_4",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": "MaterialExpressionStaticBool_0"
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "Export Float 4",
+        "description": "Default = False",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionStaticBool_0",
+        "class": "MaterialExpressionStaticBool",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "value": "False"
+      },
+      {
+        "name": "MaterialExpressionComponentMask_27",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionMaterialFunctionCall_0"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "True",
+        "g": "False",
+        "b": "False",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionComponentMask_29",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionMaterialFunctionCall_2"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "True",
+        "g": "False",
+        "b": "False",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_6",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": null
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "ProjectionTransitionContrast",
+        "description": "",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionVertexNormalWS_0",
+        "class": "MaterialExpressionVertexNormalWS",
+        "inputs": {},
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionAbs_7",
+        "class": "MaterialExpressionAbs",
+        "inputs": {
+          "None": "MaterialExpressionFunctionInput_1"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionMultiply_13",
+        "class": "MaterialExpressionMultiply",
+        "inputs": {
+          "A": "MaterialExpressionAbs_7",
+          "B": null
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "-1.0"
+      }
+    ],
+    "/Engine/Functions/Engine_MaterialFunctions01/ImageAdjustment/CheapContrast.CheapContrast": [
+      {
+        "name": "MaterialExpressionFunctionOutput_3",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionComponentMask_21"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "Result",
+        "description": ""
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_3",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": "MaterialExpressionOneMinus_7"
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "In",
+        "description": "",
+        "use_preview_value_as_default": "False"
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_4",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": null
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "Contrast",
+        "description": "0 is default contrast",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionClamp_1",
+        "class": "MaterialExpressionClamp",
+        "inputs": {
+          "None": "MaterialExpressionLinearInterpolate_20",
+          "Min": null,
+          "Max": null
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionComponentMask_21",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionClamp_1"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "True",
+        "g": "False",
+        "b": "False",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionMaterialFunctionCall_15",
+        "class": "MaterialExpressionMaterialFunctionCall",
+        "inputs": {
+          "UV Channel": null
+        },
+        "outputs": [
+          "UGradient",
+          "VGradient"
+        ],
+        "function": "/Engine/Functions/Engine_MaterialFunctions01/Gradient/LinearGradient.LinearGradient"
+      },
+      {
+        "name": "MaterialExpressionOneMinus_7",
+        "class": "MaterialExpressionOneMinus",
+        "inputs": {
+          "None": "MaterialExpressionMaterialFunctionCall_15"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionLinearInterpolate_20",
+        "class": "MaterialExpressionLinearInterpolate",
+        "inputs": {
+          "A": "MaterialExpressionSubtract_2",
+          "B": "MaterialExpressionAdd_8",
+          "Alpha": "MaterialExpressionFunctionInput_3"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0",
+        "const_alpha": "0.5"
+      },
+      {
+        "name": "MaterialExpressionAdd_8",
+        "class": "MaterialExpressionAdd",
+        "inputs": {
+          "A": "MaterialExpressionFunctionInput_4",
+          "B": null
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0"
+      },
+      {
+        "name": "MaterialExpressionSubtract_2",
+        "class": "MaterialExpressionSubtract",
+        "inputs": {
+          "A": null,
+          "B": "MaterialExpressionFunctionInput_4"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0"
+      }
+    ],
+    "/Engine/Functions/Engine_MaterialFunctions01/Gradient/LinearGradient.LinearGradient": [
+      {
+        "name": "MaterialExpressionFunctionOutput_3",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionComponentMask_8"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "VGradient",
+        "description": "Gradient along V axis of UV0"
+      },
+      {
+        "name": "MaterialExpressionComponentMask_8",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionFunctionInput_0"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "False",
+        "g": "True",
+        "b": "False",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionTextureCoordinate_4",
+        "class": "MaterialExpressionTextureCoordinate",
+        "inputs": {},
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionFunctionOutput_0",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionComponentMask_4"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "UGradient",
+        "description": "Gradient along U axis of UV0"
+      },
+      {
+        "name": "MaterialExpressionComponentMask_4",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionFunctionInput_0"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "True",
+        "g": "False",
+        "b": "False",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_0",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": "MaterialExpressionTextureCoordinate_4"
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "UV Channel",
+        "description": "",
+        "use_preview_value_as_default": "True"
+      }
+    ],
+    "/Engine/Functions/Engine_MaterialFunctions01/Texturing/WorldAlignedNormal": [
+      {
+        "name": "MaterialExpressionFunctionOutput_3",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionStaticSwitch_6"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "Z Texture",
+        "description": ""
+      },
+      {
+        "name": "MaterialExpressionTransform_5",
+        "class": "MaterialExpressionTransform",
+        "inputs": {
+          "None": "MaterialExpressionStaticSwitch_1"
+        },
+        "outputs": [
+          ""
+        ],
+        "transform_source_type": "<MaterialVectorCoordTransformSource.TRANSFORMSOURCE_WORLD: 2>",
+        "transform_type": "<MaterialVectorCoordTransform.TRANSFORM_TANGENT: 0>"
+      },
+      {
+        "name": "MaterialExpressionNormalize_7",
+        "class": "MaterialExpressionNormalize",
+        "inputs": {
+          "VectorInput": "MaterialExpressionAppendVector_12"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionAppendVector_12",
+        "class": "MaterialExpressionAppendVector",
+        "inputs": {
+          "A": "MaterialExpressionComponentMask_3",
+          "B": "MaterialExpressionMultiply_10"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionMultiply_10",
+        "class": "MaterialExpressionMultiply",
+        "inputs": {
+          "A": "MaterialExpressionTextureSample_5",
+          "B": "MaterialExpressionComponentMask_7"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0"
+      },
+      {
+        "name": "MaterialExpressionComponentMask_7",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionMultiply_12"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "False",
+        "g": "False",
+        "b": "True",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionMultiply_12",
+        "class": "MaterialExpressionMultiply",
+        "inputs": {
+          "A": "MaterialExpressionReroute_1",
+          "B": "MaterialExpressionConstant_9"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0"
+      },
+      {
+        "name": "MaterialExpressionConstant_9",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "1.0"
+      },
+      {
+        "name": "MaterialExpressionTransform_0",
+        "class": "MaterialExpressionTransform",
+        "inputs": {
+          "None": "MaterialExpressionFunctionInput_2"
+        },
+        "outputs": [
+          ""
+        ],
+        "transform_source_type": "<MaterialVectorCoordTransformSource.TRANSFORMSOURCE_TANGENT: 0>",
+        "transform_type": "<MaterialVectorCoordTransform.TRANSFORM_WORLD: 2>"
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_2",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": null
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "Normal",
+        "description": "",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionTextureSample_5",
+        "class": "MaterialExpressionTextureSample",
+        "inputs": {
+          "UVs": "MaterialExpressionComponentMask_0",
+          "Tex": "MaterialExpressionFunctionInput_0",
+          "Apply View MipBias": null
+        },
+        "outputs": [
+          "RGB",
+          "R",
+          "G",
+          "B",
+          "A",
+          "RGBA"
+        ]
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_0",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": "MaterialExpressionTextureObject_0"
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "TextureObject",
+        "description": "",
+        "use_preview_value_as_default": "False"
+      },
+      {
+        "name": "MaterialExpressionTextureObject_0",
+        "class": "MaterialExpressionTextureObject",
+        "inputs": {},
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionComponentMask_0",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionDivide_0"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "True",
+        "g": "True",
+        "b": "False",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionDivide_0",
+        "class": "MaterialExpressionDivide",
+        "inputs": {
+          "A": "MaterialExpressionFunctionInput_3",
+          "B": "MaterialExpressionMultiply_0"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "1.0",
+        "const_b": "2.0"
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_1",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": null
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "TextureSize",
+        "description": "Size of texture in worldspace units",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionWorldPosition_0",
+        "class": "MaterialExpressionWorldPosition",
+        "inputs": {},
+        "outputs": [
+          "XYZ",
+          "XY",
+          "Z"
+        ]
+      },
+      {
+        "name": "MaterialExpressionComponentMask_3",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionMultiply_2"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "True",
+        "g": "True",
+        "b": "False",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionFunctionOutput_2",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionStaticSwitch_4"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "XY Texture",
+        "description": ""
+      },
+      {
+        "name": "MaterialExpressionTransform_3",
+        "class": "MaterialExpressionTransform",
+        "inputs": {
+          "None": "MaterialExpressionStaticSwitch_5"
+        },
+        "outputs": [
+          ""
+        ],
+        "transform_source_type": "<MaterialVectorCoordTransformSource.TRANSFORMSOURCE_WORLD: 2>",
+        "transform_type": "<MaterialVectorCoordTransform.TRANSFORM_TANGENT: 0>"
+      },
+      {
+        "name": "MaterialExpressionNormalize_4",
+        "class": "MaterialExpressionNormalize",
+        "inputs": {
+          "VectorInput": "MaterialExpressionLinearInterpolate_2"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionLinearInterpolate_2",
+        "class": "MaterialExpressionLinearInterpolate",
+        "inputs": {
+          "A": "MaterialExpressionAppendVector_9",
+          "B": "MaterialExpressionAppendVector_10",
+          "Alpha": "MaterialExpressionMaterialFunctionCall_0"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0",
+        "const_alpha": "0.5"
+      },
+      {
+        "name": "MaterialExpressionMaterialFunctionCall_0",
+        "class": "MaterialExpressionMaterialFunctionCall",
+        "inputs": {
+          "In": "MaterialExpressionAbs_0",
+          "Contrast": "MaterialExpressionFunctionInput_6"
+        },
+        "outputs": [
+          "Result"
+        ],
+        "function": "/Engine/Functions/Engine_MaterialFunctions01/ImageAdjustment/CheapContrast.CheapContrast"
+      },
+      {
+        "name": "MaterialExpressionConstant_4",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "0.0"
+      },
+      {
+        "name": "MaterialExpressionAbs_0",
+        "class": "MaterialExpressionAbs",
+        "inputs": {
+          "None": "MaterialExpressionComponentMask_5"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionComponentMask_5",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionMultiply_12"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "True",
+        "g": "False",
+        "b": "False",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionAppendVector_10",
+        "class": "MaterialExpressionAppendVector",
+        "inputs": {
+          "A": "MaterialExpressionAppendVector_11",
+          "B": "MaterialExpressionMultiply_3"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionTextureSample_0",
+        "class": "MaterialExpressionTextureSample",
+        "inputs": {
+          "UVs": "MaterialExpressionComponentMask_2",
+          "Tex": "MaterialExpressionFunctionInput_0",
+          "Apply View MipBias": null
+        },
+        "outputs": [
+          "RGB",
+          "R",
+          "G",
+          "B",
+          "A",
+          "RGBA"
+        ]
+      },
+      {
+        "name": "MaterialExpressionComponentMask_2",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionDivide_0"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "False",
+        "g": "True",
+        "b": "True",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionAppendVector_11",
+        "class": "MaterialExpressionAppendVector",
+        "inputs": {
+          "A": "MaterialExpressionMultiply_9",
+          "B": "MaterialExpressionMultiply_5"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionMultiply_9",
+        "class": "MaterialExpressionMultiply",
+        "inputs": {
+          "A": "MaterialExpressionComponentMask_5",
+          "B": "MaterialExpressionTextureSample_0"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0"
+      },
+      {
+        "name": "MaterialExpressionAppendVector_9",
+        "class": "MaterialExpressionAppendVector",
+        "inputs": {
+          "A": "MaterialExpressionAppendVector_8",
+          "B": "MaterialExpressionMultiply_13"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionTextureSample_3",
+        "class": "MaterialExpressionTextureSample",
+        "inputs": {
+          "UVs": "MaterialExpressionComponentMask_4",
+          "Tex": "MaterialExpressionFunctionInput_0",
+          "Apply View MipBias": null
+        },
+        "outputs": [
+          "RGB",
+          "R",
+          "G",
+          "B",
+          "A",
+          "RGBA"
+        ]
+      },
+      {
+        "name": "MaterialExpressionComponentMask_4",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionDivide_0"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "True",
+        "g": "False",
+        "b": "True",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionAppendVector_8",
+        "class": "MaterialExpressionAppendVector",
+        "inputs": {
+          "A": "MaterialExpressionMultiply_7",
+          "B": "MaterialExpressionMultiply_8"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionMultiply_8",
+        "class": "MaterialExpressionMultiply",
+        "inputs": {
+          "A": "MaterialExpressionTextureSample_3",
+          "B": "MaterialExpressionComponentMask_9"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0"
+      },
+      {
+        "name": "MaterialExpressionComponentMask_9",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionMultiply_12"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "False",
+        "g": "True",
+        "b": "False",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionFunctionOutput_0",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionStaticSwitch_0"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "XYZ Texture",
+        "description": ""
+      },
+      {
+        "name": "MaterialExpressionTransform_1",
+        "class": "MaterialExpressionTransform",
+        "inputs": {
+          "None": "MaterialExpressionStaticSwitch_10"
+        },
+        "outputs": [
+          ""
+        ],
+        "transform_source_type": "<MaterialVectorCoordTransformSource.TRANSFORMSOURCE_WORLD: 2>",
+        "transform_type": "<MaterialVectorCoordTransform.TRANSFORM_TANGENT: 0>"
+      },
+      {
+        "name": "MaterialExpressionNormalize_0",
+        "class": "MaterialExpressionNormalize",
+        "inputs": {
+          "VectorInput": "MaterialExpressionLinearInterpolate_3"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionLinearInterpolate_3",
+        "class": "MaterialExpressionLinearInterpolate",
+        "inputs": {
+          "A": "MaterialExpressionLinearInterpolate_2",
+          "B": "MaterialExpressionAppendVector_12",
+          "Alpha": "MaterialExpressionMaterialFunctionCall_2"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0",
+        "const_alpha": "0.5"
+      },
+      {
+        "name": "MaterialExpressionMaterialFunctionCall_2",
+        "class": "MaterialExpressionMaterialFunctionCall",
+        "inputs": {
+          "In": "MaterialExpressionAbs_3",
+          "Contrast": "MaterialExpressionFunctionInput_6"
+        },
+        "outputs": [
+          "Result"
+        ],
+        "function": "/Engine/Functions/Engine_MaterialFunctions01/ImageAdjustment/CheapContrast.CheapContrast"
+      },
+      {
+        "name": "MaterialExpressionAbs_3",
+        "class": "MaterialExpressionAbs",
+        "inputs": {
+          "None": "MaterialExpressionComponentMask_7"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionLinearInterpolate_8",
+        "class": "MaterialExpressionLinearInterpolate",
+        "inputs": {
+          "A": "MaterialExpressionLinearInterpolate_2",
+          "B": "MaterialExpressionReroute_2",
+          "Alpha": "MaterialExpressionMaterialFunctionCall_2"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0",
+        "const_alpha": "0.5"
+      },
+      {
+        "name": "MaterialExpressionTransform_6",
+        "class": "MaterialExpressionTransform",
+        "inputs": {
+          "None": "MaterialExpressionStaticSwitch_8"
+        },
+        "outputs": [
+          ""
+        ],
+        "transform_source_type": "<MaterialVectorCoordTransformSource.TRANSFORMSOURCE_WORLD: 2>",
+        "transform_type": "<MaterialVectorCoordTransform.TRANSFORM_TANGENT: 0>"
+      },
+      {
+        "name": "MaterialExpressionFunctionOutput_5",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionStaticSwitch_2"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "XYZFlatTop",
+        "description": ""
+      },
+      {
+        "name": "MaterialExpressionMultiply_0",
+        "class": "MaterialExpressionMultiply",
+        "inputs": {
+          "A": "MaterialExpressionAbs_1",
+          "B": null
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "-1.0",
+        "const_b": "-1.0"
+      },
+      {
+        "name": "MaterialExpressionMultiply_2",
+        "class": "MaterialExpressionMultiply",
+        "inputs": {
+          "A": "MaterialExpressionTextureSample_5",
+          "B": "MaterialExpressionConstant3Vector_3"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0"
+      },
+      {
+        "name": "MaterialExpressionConstant3Vector_3",
+        "class": "MaterialExpressionConstant3Vector",
+        "inputs": {},
+        "outputs": [
+          "",
+          "R",
+          "G",
+          "B"
+        ]
+      },
+      {
+        "name": "MaterialExpressionMultiply_3",
+        "class": "MaterialExpressionMultiply",
+        "inputs": {
+          "A": "MaterialExpressionTextureSample_0",
+          "B": null
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "-1.0"
+      },
+      {
+        "name": "MaterialExpressionMultiply_5",
+        "class": "MaterialExpressionMultiply",
+        "inputs": {
+          "A": "MaterialExpressionTextureSample_0",
+          "B": null
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "-1.0"
+      },
+      {
+        "name": "MaterialExpressionMultiply_7",
+        "class": "MaterialExpressionMultiply",
+        "inputs": {
+          "A": "MaterialExpressionTextureSample_3",
+          "B": null
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "-1.0"
+      },
+      {
+        "name": "MaterialExpressionMultiply_13",
+        "class": "MaterialExpressionMultiply",
+        "inputs": {
+          "A": "MaterialExpressionTextureSample_3",
+          "B": null
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "-1.0"
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_3",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": "MaterialExpressionWorldPosition_0"
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "WorldPosition",
+        "description": "",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_4",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": "MaterialExpressionStaticBool_0"
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "WorldSpace",
+        "description": "This switch defaults to false.",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionStaticSwitch_0",
+        "class": "MaterialExpressionStaticSwitch",
+        "inputs": {
+          "True": "MaterialExpressionStaticSwitch_10",
+          "False": "MaterialExpressionTransform_1",
+          "Value": "MaterialExpressionFunctionInput_4"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionStaticBool_0",
+        "class": "MaterialExpressionStaticBool",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "value": "False"
+      },
+      {
+        "name": "MaterialExpressionStaticSwitch_2",
+        "class": "MaterialExpressionStaticSwitch",
+        "inputs": {
+          "True": "MaterialExpressionStaticSwitch_8",
+          "False": "MaterialExpressionTransform_6",
+          "Value": "MaterialExpressionFunctionInput_4"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionStaticSwitch_4",
+        "class": "MaterialExpressionStaticSwitch",
+        "inputs": {
+          "True": "MaterialExpressionStaticSwitch_5",
+          "False": "MaterialExpressionTransform_3",
+          "Value": "MaterialExpressionFunctionInput_4"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionStaticSwitch_6",
+        "class": "MaterialExpressionStaticSwitch",
+        "inputs": {
+          "True": "MaterialExpressionStaticSwitch_1",
+          "False": "MaterialExpressionTransform_5",
+          "Value": "MaterialExpressionFunctionInput_4"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionNormalize_2",
+        "class": "MaterialExpressionNormalize",
+        "inputs": {
+          "VectorInput": "MaterialExpressionLinearInterpolate_8"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionAbs_1",
+        "class": "MaterialExpressionAbs",
+        "inputs": {
+          "None": "MaterialExpressionFunctionInput_1"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionMaterialFunctionCall_39",
+        "class": "MaterialExpressionMaterialFunctionCall",
+        "inputs": {
+          "Negative World Position Divisor": "MaterialExpressionMultiply_0",
+          "World Position": "MaterialExpressionFunctionInput_3",
+          "Texture": "MaterialExpressionFunctionInput_0",
+          "Z lerp Alpha": "MaterialExpressionMaterialFunctionCall_2",
+          "WorldNormal": null,
+          "X lerp alpha": "MaterialExpressionMaterialFunctionCall_0"
+        },
+        "outputs": [
+          "World Space Normals XYZ",
+          "XY Flat Top Projection World Space Normals",
+          "XY Projection World Space Normals",
+          "Z Projection World Space Normals"
+        ],
+        "function": "/Engine/Functions/Engine_MaterialFunctions02/WorldAlignedNormals_HighQuality.WorldAlignedNormals_HighQuality"
+      },
+      {
+        "name": "MaterialExpressionStaticBool_1",
+        "class": "MaterialExpressionStaticBool",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "value": "True"
+      },
+      {
+        "name": "MaterialExpressionStaticSwitch_1",
+        "class": "MaterialExpressionStaticSwitch",
+        "inputs": {
+          "True": "MaterialExpressionMaterialFunctionCall_39",
+          "False": "MaterialExpressionNormalize_7",
+          "Value": "MaterialExpressionFunctionInput_5"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionStaticSwitch_5",
+        "class": "MaterialExpressionStaticSwitch",
+        "inputs": {
+          "True": "MaterialExpressionMaterialFunctionCall_39",
+          "False": "MaterialExpressionNormalize_4",
+          "Value": "MaterialExpressionFunctionInput_5"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionStaticSwitch_8",
+        "class": "MaterialExpressionStaticSwitch",
+        "inputs": {
+          "True": "MaterialExpressionMaterialFunctionCall_39",
+          "False": "MaterialExpressionNormalize_2",
+          "Value": "MaterialExpressionFunctionInput_5"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionStaticSwitch_10",
+        "class": "MaterialExpressionStaticSwitch",
+        "inputs": {
+          "True": "MaterialExpressionMaterialFunctionCall_39",
+          "False": "MaterialExpressionNormalize_0",
+          "Value": "MaterialExpressionFunctionInput_5"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_5",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": "MaterialExpressionStaticBool_1"
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "Use High Quality Normals",
+        "description": "Default is true. Adds ~ 20 instructions.",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionReroute_1",
+        "class": "MaterialExpressionReroute",
+        "inputs": {
+          "None": "MaterialExpressionTransform_0"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionReroute_2",
+        "class": "MaterialExpressionReroute",
+        "inputs": {
+          "None": "MaterialExpressionTransform_0"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_6",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": null
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "ProjectionTransitionContrast",
+        "description": "",
+        "use_preview_value_as_default": "True"
+      }
+    ],
+    "/Engine/Functions/Engine_MaterialFunctions02/WorldAlignedNormals_HighQuality.WorldAlignedNormals_HighQuality": [
+      {
+        "name": "MaterialExpressionFunctionOutput_16",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionLinearInterpolate_7"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "World Space Normals XYZ",
+        "description": ""
+      },
+      {
+        "name": "MaterialExpressionTextureSample_5",
+        "class": "MaterialExpressionTextureSample",
+        "inputs": {
+          "UVs": "MaterialExpressionComponentMask_3",
+          "Tex": "MaterialExpressionFunctionInput_0",
+          "Apply View MipBias": null
+        },
+        "outputs": [
+          "RGB",
+          "R",
+          "G",
+          "B",
+          "A",
+          "RGBA"
+        ]
+      },
+      {
+        "name": "MaterialExpressionMultiply_4",
+        "class": "MaterialExpressionMultiply",
+        "inputs": {
+          "A": "MaterialExpressionTextureSample_5",
+          "B": "MaterialExpressionMaterialFunctionCall_13"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0"
+      },
+      {
+        "name": "MaterialExpressionLinearInterpolate_6",
+        "class": "MaterialExpressionLinearInterpolate",
+        "inputs": {
+          "A": "MaterialExpressionMultiply_5",
+          "B": "MaterialExpressionMultiply_4",
+          "Alpha": "MaterialExpressionFunctionInput_5"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0",
+        "const_alpha": "0.5"
+      },
+      {
+        "name": "MaterialExpressionDotProduct_3",
+        "class": "MaterialExpressionDotProduct",
+        "inputs": {
+          "A": "MaterialExpressionFunctionInput_3",
+          "B": "MaterialExpressionConstant3Vector_6"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionMaterialFunctionCall_53",
+        "class": "MaterialExpressionMaterialFunctionCall",
+        "inputs": {
+          "VectorToTransform": "MaterialExpressionLinearInterpolate_6",
+          "BasisX": "MaterialExpressionMaterialFunctionCall_41",
+          "BasisY": "MaterialExpressionMaterialFunctionCall_41",
+          "BasisZ": "MaterialExpressionMaterialFunctionCall_41",
+          "BasisPosition": null
+        },
+        "outputs": [
+          "Transformed Vector"
+        ],
+        "function": "/Engine/Functions/Engine_MaterialFunctions02/Math/Transform3x3Matrix.Transform3x3Matrix"
+      },
+      {
+        "name": "MaterialExpressionMaterialFunctionCall_41",
+        "class": "MaterialExpressionMaterialFunctionCall",
+        "inputs": {
+          "Vector1": "MaterialExpressionFunctionInput_3",
+          "Vector2": "MaterialExpressionConstant3Vector_7"
+        },
+        "outputs": [
+          "Vector1",
+          "Vector2",
+          "Vector3"
+        ],
+        "function": "/Engine/Functions/Engine_MaterialFunctions02/Math/CreateThirdOrthogonalVector.CreateThirdOrthogonalVector"
+      },
+      {
+        "name": "MaterialExpressionMaterialFunctionCall_13",
+        "class": "MaterialExpressionMaterialFunctionCall",
+        "inputs": {
+          "X": "MaterialExpressionIf_8",
+          "Y": "MaterialExpressionConstant_7",
+          "Z": "MaterialExpressionConstant_8"
+        },
+        "outputs": [
+          "Result"
+        ],
+        "function": "/Engine/Functions/Engine_MaterialFunctions02/Utility/MakeFloat3.MakeFloat3"
+      },
+      {
+        "name": "MaterialExpressionConstant3Vector_6",
+        "class": "MaterialExpressionConstant3Vector",
+        "inputs": {},
+        "outputs": [
+          "",
+          "R",
+          "G",
+          "B"
+        ]
+      },
+      {
+        "name": "MaterialExpressionMaterialFunctionCall_14",
+        "class": "MaterialExpressionMaterialFunctionCall",
+        "inputs": {
+          "In": "MaterialExpressionMaterialFunctionCall_15",
+          "Contrast": "MaterialExpressionConstant_9"
+        },
+        "outputs": [
+          "Result"
+        ],
+        "function": "/Engine/Functions/Engine_MaterialFunctions01/ImageAdjustment/CheapContrast.CheapContrast"
+      },
+      {
+        "name": "MaterialExpressionConstant_7",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "-1.0"
+      },
+      {
+        "name": "MaterialExpressionMaterialFunctionCall_15",
+        "class": "MaterialExpressionMaterialFunctionCall",
+        "inputs": {
+          "Float3": "MaterialExpressionAbs_1"
+        },
+        "outputs": [
+          "R",
+          "G",
+          "B"
+        ],
+        "function": "/Engine/Functions/Engine_MaterialFunctions02/Utility/BreakOutFloat3Components.BreakOutFloat3Components"
+      },
+      {
+        "name": "MaterialExpressionConstant3Vector_7",
+        "class": "MaterialExpressionConstant3Vector",
+        "inputs": {},
+        "outputs": [
+          "",
+          "R",
+          "G",
+          "B"
+        ]
+      },
+      {
+        "name": "MaterialExpressionAbs_1",
+        "class": "MaterialExpressionAbs",
+        "inputs": {
+          "None": "MaterialExpressionFunctionInput_3"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionConstant_8",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "1.0"
+      },
+      {
+        "name": "MaterialExpressionConstant_9",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "2.0"
+      },
+      {
+        "name": "MaterialExpressionLinearInterpolate_7",
+        "class": "MaterialExpressionLinearInterpolate",
+        "inputs": {
+          "A": "MaterialExpressionMaterialFunctionCall_53",
+          "B": "MaterialExpressionMaterialFunctionCall_17",
+          "Alpha": "MaterialExpressionFunctionInput_7"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0",
+        "const_alpha": "0.5"
+      },
+      {
+        "name": "MaterialExpressionMaterialFunctionCall_16",
+        "class": "MaterialExpressionMaterialFunctionCall",
+        "inputs": {
+          "In": "MaterialExpressionMaterialFunctionCall_15",
+          "Contrast": "MaterialExpressionConstant_9"
+        },
+        "outputs": [
+          "Result"
+        ],
+        "function": "/Engine/Functions/Engine_MaterialFunctions01/ImageAdjustment/CheapContrast.CheapContrast"
+      },
+      {
+        "name": "MaterialExpressionComponentMask_3",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionDivide_1"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "False",
+        "g": "True",
+        "b": "True",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionTextureSample_6",
+        "class": "MaterialExpressionTextureSample",
+        "inputs": {
+          "UVs": "MaterialExpressionComponentMask_4",
+          "Tex": "MaterialExpressionFunctionInput_0",
+          "Apply View MipBias": null
+        },
+        "outputs": [
+          "RGB",
+          "R",
+          "G",
+          "B",
+          "A",
+          "RGBA"
+        ]
+      },
+      {
+        "name": "MaterialExpressionWorldPosition_1",
+        "class": "MaterialExpressionWorldPosition",
+        "inputs": {},
+        "outputs": [
+          "XYZ",
+          "XY",
+          "Z"
+        ]
+      },
+      {
+        "name": "MaterialExpressionDivide_1",
+        "class": "MaterialExpressionDivide",
+        "inputs": {
+          "A": "MaterialExpressionFunctionInput_4",
+          "B": "MaterialExpressionFunctionInput_1"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "1.0",
+        "const_b": "-512.0"
+      },
+      {
+        "name": "MaterialExpressionComponentMask_4",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionDivide_1"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "True",
+        "g": "False",
+        "b": "True",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionDotProduct_4",
+        "class": "MaterialExpressionDotProduct",
+        "inputs": {
+          "A": "MaterialExpressionFunctionInput_3",
+          "B": "MaterialExpressionConstant3Vector_9"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionMaterialFunctionCall_17",
+        "class": "MaterialExpressionMaterialFunctionCall",
+        "inputs": {
+          "VectorToTransform": "MaterialExpressionMultiply_6",
+          "BasisX": "MaterialExpressionMaterialFunctionCall_43",
+          "BasisY": "MaterialExpressionMaterialFunctionCall_43",
+          "BasisZ": "MaterialExpressionMaterialFunctionCall_43",
+          "BasisPosition": null
+        },
+        "outputs": [
+          "Transformed Vector"
+        ],
+        "function": "/Engine/Functions/Engine_MaterialFunctions02/Math/Transform3x3Matrix.Transform3x3Matrix"
+      },
+      {
+        "name": "MaterialExpressionMultiply_5",
+        "class": "MaterialExpressionMultiply",
+        "inputs": {
+          "A": "MaterialExpressionTextureSample_6",
+          "B": "MaterialExpressionMaterialFunctionCall_19"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0"
+      },
+      {
+        "name": "MaterialExpressionComponentMask_5",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionDivide_1"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "True",
+        "g": "True",
+        "b": "False",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionMaterialFunctionCall_43",
+        "class": "MaterialExpressionMaterialFunctionCall",
+        "inputs": {
+          "Vector1": "MaterialExpressionFunctionInput_3",
+          "Vector2": "MaterialExpressionConstant3Vector_26"
+        },
+        "outputs": [
+          "Vector1",
+          "Vector2",
+          "Vector3"
+        ],
+        "function": "/Engine/Functions/Engine_MaterialFunctions02/Math/CreateThirdOrthogonalVector.CreateThirdOrthogonalVector"
+      },
+      {
+        "name": "MaterialExpressionVertexNormalWS_6",
+        "class": "MaterialExpressionVertexNormalWS",
+        "inputs": {},
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionMaterialFunctionCall_19",
+        "class": "MaterialExpressionMaterialFunctionCall",
+        "inputs": {
+          "X": "MaterialExpressionIf_5",
+          "Y": "MaterialExpressionConstant_10",
+          "Z": "MaterialExpressionConstant_11"
+        },
+        "outputs": [
+          "Result"
+        ],
+        "function": "/Engine/Functions/Engine_MaterialFunctions02/Utility/MakeFloat3.MakeFloat3"
+      },
+      {
+        "name": "MaterialExpressionConstant3Vector_9",
+        "class": "MaterialExpressionConstant3Vector",
+        "inputs": {},
+        "outputs": [
+          "",
+          "R",
+          "G",
+          "B"
+        ]
+      },
+      {
+        "name": "MaterialExpressionConstant_10",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "-1.0"
+      },
+      {
+        "name": "MaterialExpressionConstant3Vector_26",
+        "class": "MaterialExpressionConstant3Vector",
+        "inputs": {},
+        "outputs": [
+          "",
+          "R",
+          "G",
+          "B"
+        ]
+      },
+      {
+        "name": "MaterialExpressionConstant_11",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "1.0"
+      },
+      {
+        "name": "MaterialExpressionTextureSample_7",
+        "class": "MaterialExpressionTextureSample",
+        "inputs": {
+          "UVs": "MaterialExpressionComponentMask_5",
+          "Tex": "MaterialExpressionFunctionInput_0",
+          "Apply View MipBias": null
+        },
+        "outputs": [
+          "RGB",
+          "R",
+          "G",
+          "B",
+          "A",
+          "RGBA"
+        ]
+      },
+      {
+        "name": "MaterialExpressionDotProduct_5",
+        "class": "MaterialExpressionDotProduct",
+        "inputs": {
+          "A": "MaterialExpressionFunctionInput_3",
+          "B": "MaterialExpressionConstant3Vector_11"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionMultiply_6",
+        "class": "MaterialExpressionMultiply",
+        "inputs": {
+          "A": "MaterialExpressionTextureSample_7",
+          "B": "MaterialExpressionMaterialFunctionCall_20"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0"
+      },
+      {
+        "name": "MaterialExpressionMaterialFunctionCall_20",
+        "class": "MaterialExpressionMaterialFunctionCall",
+        "inputs": {
+          "X": "MaterialExpressionIf_9",
+          "Y": "MaterialExpressionConstant_20",
+          "Z": "MaterialExpressionConstant_13"
+        },
+        "outputs": [
+          "Result"
+        ],
+        "function": "/Engine/Functions/Engine_MaterialFunctions02/Utility/MakeFloat3.MakeFloat3"
+      },
+      {
+        "name": "MaterialExpressionConstant3Vector_11",
+        "class": "MaterialExpressionConstant3Vector",
+        "inputs": {},
+        "outputs": [
+          "",
+          "R",
+          "G",
+          "B"
+        ]
+      },
+      {
+        "name": "MaterialExpressionConstant_13",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "1.0"
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_0",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": "MaterialExpressionTextureObject_1"
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "Texture",
+        "description": "",
+        "use_preview_value_as_default": "False"
+      },
+      {
+        "name": "MaterialExpressionTextureObject_1",
+        "class": "MaterialExpressionTextureObject",
+        "inputs": {},
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_1",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": null
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "Negative World Position Divisor",
+        "description": "All inputs need to be negative. For example: (-512,-256,-1024)",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_4",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": "MaterialExpressionWorldPosition_1"
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "World Position",
+        "description": "",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionConstant_20",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "-1.0"
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_5",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": "MaterialExpressionMaterialFunctionCall_14"
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "X lerp alpha",
+        "description": "",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_7",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": "MaterialExpressionMaterialFunctionCall_16"
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "Z lerp Alpha",
+        "description": "",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionFunctionOutput_17",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionMaterialFunctionCall_17"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "Z Projection World Space Normals",
+        "description": ""
+      },
+      {
+        "name": "MaterialExpressionFunctionOutput_18",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionMaterialFunctionCall_53"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "XY Projection World Space Normals",
+        "description": ""
+      },
+      {
+        "name": "MaterialExpressionFunctionOutput_9",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionLinearInterpolate_14"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "XY Flat Top Projection World Space Normals",
+        "description": ""
+      },
+      {
+        "name": "MaterialExpressionLinearInterpolate_14",
+        "class": "MaterialExpressionLinearInterpolate",
+        "inputs": {
+          "A": "MaterialExpressionMaterialFunctionCall_53",
+          "B": "MaterialExpressionFunctionInput_3",
+          "Alpha": "MaterialExpressionFunctionInput_7"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0",
+        "const_alpha": "0.5"
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_3",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": "MaterialExpressionVertexNormalWS_6"
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "WorldNormal",
+        "description": "All inputs need to be negative. For example: (-512,-256,-1024)",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionTextureCoordinate_41",
+        "class": "MaterialExpressionTextureCoordinate",
+        "inputs": {},
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionMaterialFunctionCall_101",
+        "class": "MaterialExpressionMaterialFunctionCall",
+        "inputs": {
+          "Float2": "MaterialExpressionTextureCoordinate_41"
+        },
+        "outputs": [
+          "R",
+          "G"
+        ],
+        "function": "/Engine/Functions/Engine_MaterialFunctions02/Utility/BreakOutFloat2Components.BreakOutFloat2Components"
+      },
+      {
+        "name": "MaterialExpressionAbs_7",
+        "class": "MaterialExpressionAbs",
+        "inputs": {
+          "None": "MaterialExpressionMaterialFunctionCall_101"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionConstantBiasScale_7",
+        "class": "MaterialExpressionConstantBiasScale",
+        "inputs": {
+          "None": "MaterialExpressionAbs_7"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionAppendVector_21",
+        "class": "MaterialExpressionAppendVector",
+        "inputs": {
+          "A": "MaterialExpressionConstantBiasScale_7",
+          "B": "MaterialExpressionMaterialFunctionCall_101"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionDeriveNormalZ_11",
+        "class": "MaterialExpressionDeriveNormalZ",
+        "inputs": {
+          "InXY": "MaterialExpressionAppendVector_21"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionMaterialFunctionCall_102",
+        "class": "MaterialExpressionMaterialFunctionCall",
+        "inputs": {
+          "X": "MaterialExpressionConstant_38",
+          "Y": "MaterialExpressionConstant_38",
+          "Z": "MaterialExpressionIf_7"
+        },
+        "outputs": [
+          "Result"
+        ],
+        "function": "/Engine/Functions/Engine_MaterialFunctions02/Utility/MakeFloat3.MakeFloat3"
+      },
+      {
+        "name": "MaterialExpressionConstant_38",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "0.0"
+      },
+      {
+        "name": "MaterialExpressionIf_7",
+        "class": "MaterialExpressionIf",
+        "inputs": {
+          "A": "MaterialExpressionMaterialFunctionCall_101",
+          "B": "MaterialExpressionConstant_41",
+          "A > B": "MaterialExpressionConstant_39",
+          "A == B": "MaterialExpressionConstant_39",
+          "A < B": "MaterialExpressionConstant_40"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_b": "0.0"
+      },
+      {
+        "name": "MaterialExpressionConstant_39",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "1.0"
+      },
+      {
+        "name": "MaterialExpressionConstant_40",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "-1.0"
+      },
+      {
+        "name": "MaterialExpressionConstant_41",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "0.0"
+      },
+      {
+        "name": "MaterialExpressionMultiply_8",
+        "class": "MaterialExpressionMultiply",
+        "inputs": {
+          "A": "MaterialExpressionMaterialFunctionCall_102",
+          "B": "MaterialExpressionDeriveNormalZ_11"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0"
+      },
+      {
+        "name": "MaterialExpressionTextureCoordinate_42",
+        "class": "MaterialExpressionTextureCoordinate",
+        "inputs": {},
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionMaterialFunctionCall_103",
+        "class": "MaterialExpressionMaterialFunctionCall",
+        "inputs": {
+          "Float2": "MaterialExpressionTextureCoordinate_41"
+        },
+        "outputs": [
+          "R",
+          "G"
+        ],
+        "function": "/Engine/Functions/Engine_MaterialFunctions02/Utility/BreakOutFloat2Components.BreakOutFloat2Components"
+      },
+      {
+        "name": "MaterialExpressionMaterialFunctionCall_104",
+        "class": "MaterialExpressionMaterialFunctionCall",
+        "inputs": {
+          "X": "MaterialExpressionMaterialFunctionCall_103",
+          "Y": "MaterialExpressionMaterialFunctionCall_103",
+          "Z": "MaterialExpressionMaterialFunctionCall_105"
+        },
+        "outputs": [
+          "Result"
+        ],
+        "function": "/Engine/Functions/Engine_MaterialFunctions02/Utility/MakeFloat3.MakeFloat3"
+      },
+      {
+        "name": "MaterialExpressionMaterialFunctionCall_105",
+        "class": "MaterialExpressionMaterialFunctionCall",
+        "inputs": {
+          "Float2": "MaterialExpressionTextureCoordinate_42"
+        },
+        "outputs": [
+          "R",
+          "G"
+        ],
+        "function": "/Engine/Functions/Engine_MaterialFunctions02/Utility/BreakOutFloat2Components.BreakOutFloat2Components"
+      },
+      {
+        "name": "MaterialExpressionIf_5",
+        "class": "MaterialExpressionIf",
+        "inputs": {
+          "A": "MaterialExpressionDotProduct_4",
+          "B": "MaterialExpressionConstant_23",
+          "A > B": "MaterialExpressionConstant_24",
+          "A == B": null,
+          "A < B": "MaterialExpressionConstant_25"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_b": "0.0"
+      },
+      {
+        "name": "MaterialExpressionConstant_23",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "0.0"
+      },
+      {
+        "name": "MaterialExpressionConstant_1",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "1.0"
+      },
+      {
+        "name": "MaterialExpressionConstant_24",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "-1.0"
+      },
+      {
+        "name": "MaterialExpressionConstant_25",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "1.0"
+      },
+      {
+        "name": "MaterialExpressionConstant_34",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "1.0"
+      },
+      {
+        "name": "MaterialExpressionConstant_33",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "-1.0"
+      },
+      {
+        "name": "MaterialExpressionConstant_32",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "0.0"
+      },
+      {
+        "name": "MaterialExpressionIf_8",
+        "class": "MaterialExpressionIf",
+        "inputs": {
+          "A": "MaterialExpressionDotProduct_3",
+          "B": "MaterialExpressionConstant_32",
+          "A > B": "MaterialExpressionConstant_34",
+          "A == B": null,
+          "A < B": "MaterialExpressionConstant_33"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_b": "0.0"
+      },
+      {
+        "name": "MaterialExpressionConstant_37",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "1.0"
+      },
+      {
+        "name": "MaterialExpressionConstant_36",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "-1.0"
+      },
+      {
+        "name": "MaterialExpressionConstant_35",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "0.0"
+      },
+      {
+        "name": "MaterialExpressionIf_9",
+        "class": "MaterialExpressionIf",
+        "inputs": {
+          "A": "MaterialExpressionDotProduct_5",
+          "B": "MaterialExpressionConstant_35",
+          "A > B": "MaterialExpressionConstant_37",
+          "A == B": null,
+          "A < B": "MaterialExpressionConstant_36"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_b": "0.0"
+      }
+    ],
+    "/Engine/Functions/Engine_MaterialFunctions02/Math/Transform3x3Matrix.Transform3x3Matrix": [
+      {
+        "name": "MaterialExpressionFunctionOutput_0",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionAdd_40"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "Transformed Vector",
+        "description": ""
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_0",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": null
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "BasisX",
+        "description": "",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_2",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": null
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "BasisY",
+        "description": "",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_4",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": null
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "BasisZ",
+        "description": "",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_3",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": null
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "BasisPosition",
+        "description": "",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionMultiply_56",
+        "class": "MaterialExpressionMultiply",
+        "inputs": {
+          "A": "MaterialExpressionFunctionInput_0",
+          "B": "MaterialExpressionMaterialFunctionCall_28"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0"
+      },
+      {
+        "name": "MaterialExpressionMultiply_58",
+        "class": "MaterialExpressionMultiply",
+        "inputs": {
+          "A": "MaterialExpressionFunctionInput_2",
+          "B": "MaterialExpressionMaterialFunctionCall_28"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0"
+      },
+      {
+        "name": "MaterialExpressionMultiply_59",
+        "class": "MaterialExpressionMultiply",
+        "inputs": {
+          "A": "MaterialExpressionFunctionInput_4",
+          "B": "MaterialExpressionMaterialFunctionCall_28"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0"
+      },
+      {
+        "name": "MaterialExpressionAdd_38",
+        "class": "MaterialExpressionAdd",
+        "inputs": {
+          "A": "MaterialExpressionMultiply_56",
+          "B": "MaterialExpressionMultiply_58"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0"
+      },
+      {
+        "name": "MaterialExpressionAdd_39",
+        "class": "MaterialExpressionAdd",
+        "inputs": {
+          "A": "MaterialExpressionMultiply_59",
+          "B": "MaterialExpressionFunctionInput_3"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0"
+      },
+      {
+        "name": "MaterialExpressionAdd_40",
+        "class": "MaterialExpressionAdd",
+        "inputs": {
+          "A": "MaterialExpressionAdd_38",
+          "B": "MaterialExpressionAdd_39"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_a": "0.0",
+        "const_b": "1.0"
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_10",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": null
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "VectorToTransform",
+        "description": "The alpha can be a 1 if the vector contains a position and a 0 if the basis contains direction. ",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionMaterialFunctionCall_28",
+        "class": "MaterialExpressionMaterialFunctionCall",
+        "inputs": {
+          "Float3": "MaterialExpressionFunctionInput_10"
+        },
+        "outputs": [
+          "R",
+          "G",
+          "B"
+        ],
+        "function": "/Engine/Functions/Engine_MaterialFunctions02/Utility/BreakOutFloat3Components.BreakOutFloat3Components"
+      }
+    ],
+    "/Engine/Functions/Engine_MaterialFunctions02/Utility/BreakOutFloat3Components.BreakOutFloat3Components": [
+      {
+        "name": "MaterialExpressionFunctionOutput_0",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionComponentMask_42"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "R",
+        "description": ""
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_11",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": null
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "Float3",
+        "description": "",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionComponentMask_42",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionFunctionInput_11"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "True",
+        "g": "False",
+        "b": "False",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionComponentMask_43",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionFunctionInput_11"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "False",
+        "g": "True",
+        "b": "False",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionComponentMask_44",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionFunctionInput_11"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "False",
+        "g": "False",
+        "b": "True",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionFunctionOutput_2",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionComponentMask_43"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "G",
+        "description": ""
+      },
+      {
+        "name": "MaterialExpressionFunctionOutput_4",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionComponentMask_44"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "B",
+        "description": ""
+      }
+    ],
+    "/Engine/Functions/Engine_MaterialFunctions02/Math/CreateThirdOrthogonalVector.CreateThirdOrthogonalVector": [
+      {
+        "name": "MaterialExpressionFunctionOutput_0",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionNormalize_14"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "Vector1",
+        "description": ""
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_2",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": null
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "Vector1",
+        "description": "",
+        "use_preview_value_as_default": "False"
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_3",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": null
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "Vector2",
+        "description": "",
+        "use_preview_value_as_default": "False"
+      },
+      {
+        "name": "MaterialExpressionCrossProduct_35",
+        "class": "MaterialExpressionCrossProduct",
+        "inputs": {
+          "A": "MaterialExpressionNormalize_14",
+          "B": "MaterialExpressionNormalize_5"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionNormalize_14",
+        "class": "MaterialExpressionNormalize",
+        "inputs": {
+          "VectorInput": "MaterialExpressionFunctionInput_2"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionNormalize_5",
+        "class": "MaterialExpressionNormalize",
+        "inputs": {
+          "VectorInput": "MaterialExpressionFunctionInput_3"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionCrossProduct_36",
+        "class": "MaterialExpressionCrossProduct",
+        "inputs": {
+          "A": "MaterialExpressionCrossProduct_35",
+          "B": "MaterialExpressionNormalize_14"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionFunctionOutput_2",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionMaterialFunctionCall_2"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "Vector2",
+        "description": ""
+      },
+      {
+        "name": "MaterialExpressionFunctionOutput_4",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionMaterialFunctionCall_1"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "Vector3",
+        "description": ""
+      },
+      {
+        "name": "MaterialExpressionNormalize_8",
+        "class": "MaterialExpressionNormalize",
+        "inputs": {
+          "VectorInput": "MaterialExpressionCrossProduct_36"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionNormalize_9",
+        "class": "MaterialExpressionNormalize",
+        "inputs": {
+          "VectorInput": "MaterialExpressionCrossProduct_35"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionMaterialFunctionCall_1",
+        "class": "MaterialExpressionMaterialFunctionCall",
+        "inputs": {
+          "Vector": "MaterialExpressionCrossProduct_35",
+          "Default": null
+        },
+        "outputs": [
+          "Result",
+          "Length==0"
+        ],
+        "function": "/Engine/Functions/Engine_MaterialFunctions02/SafeNormalize.SafeNormalize"
+      },
+      {
+        "name": "MaterialExpressionMaterialFunctionCall_2",
+        "class": "MaterialExpressionMaterialFunctionCall",
+        "inputs": {
+          "Vector": "MaterialExpressionCrossProduct_36",
+          "Default": null
+        },
+        "outputs": [
+          "Result",
+          "Length==0"
+        ],
+        "function": "/Engine/Functions/Engine_MaterialFunctions02/SafeNormalize.SafeNormalize"
+      }
+    ],
+    "/Engine/Functions/Engine_MaterialFunctions02/SafeNormalize.SafeNormalize": [
+      {
+        "name": "MaterialExpressionFunctionOutput_0",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionComponentMask_0"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "Result",
+        "description": ""
+      },
+      {
+        "name": "MaterialExpressionDotProduct_23",
+        "class": "MaterialExpressionDotProduct",
+        "inputs": {
+          "A": "MaterialExpressionFunctionInput_0",
+          "B": "MaterialExpressionFunctionInput_0"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionIf_2",
+        "class": "MaterialExpressionIf",
+        "inputs": {
+          "A": "MaterialExpressionDotProduct_23",
+          "B": "MaterialExpressionConstant_59",
+          "A > B": "MaterialExpressionAppendVector_0",
+          "A == B": "MaterialExpressionAppendVector_1",
+          "A < B": "MaterialExpressionAppendVector_1"
+        },
+        "outputs": [
+          ""
+        ],
+        "const_b": "0.0"
+      },
+      {
+        "name": "MaterialExpressionConstant_59",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "9.999999974752427e-07"
+      },
+      {
+        "name": "MaterialExpressionNormalize_4",
+        "class": "MaterialExpressionNormalize",
+        "inputs": {
+          "VectorInput": "MaterialExpressionFunctionInput_0"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_0",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": null
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "Vector",
+        "description": "",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_41",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": null
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "Default",
+        "description": "Vector to be used when the normalized vector reaches 0 in length.",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionFunctionOutput_1",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionComponentMask_1"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "Length==0",
+        "description": "Returns 1 if the vector's length was 0. Otherwise, this output returns 0."
+      },
+      {
+        "name": "MaterialExpressionComponentMask_0",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionIf_2"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "True",
+        "g": "True",
+        "b": "True",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionComponentMask_1",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionIf_2"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "False",
+        "g": "False",
+        "b": "False",
+        "a": "True"
+      },
+      {
+        "name": "MaterialExpressionAppendVector_0",
+        "class": "MaterialExpressionAppendVector",
+        "inputs": {
+          "A": "MaterialExpressionNormalize_4",
+          "B": "MaterialExpressionConstant_1"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionConstant_1",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "0.0"
+      },
+      {
+        "name": "MaterialExpressionAppendVector_1",
+        "class": "MaterialExpressionAppendVector",
+        "inputs": {
+          "A": "MaterialExpressionFunctionInput_41",
+          "B": "MaterialExpressionConstant_2"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionConstant_2",
+        "class": "MaterialExpressionConstant",
+        "inputs": {},
+        "outputs": [
+          ""
+        ],
+        "r": "1.0"
+      }
+    ],
+    "/Engine/Functions/Engine_MaterialFunctions02/Utility/MakeFloat3.MakeFloat3": [
+      {
+        "name": "MaterialExpressionFunctionOutput_12",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionAppendVector_25"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "Result",
+        "description": ""
+      },
+      {
+        "name": "MaterialExpressionAppendVector_24",
+        "class": "MaterialExpressionAppendVector",
+        "inputs": {
+          "A": "MaterialExpressionFunctionInput_29",
+          "B": "MaterialExpressionFunctionInput_31"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionAppendVector_25",
+        "class": "MaterialExpressionAppendVector",
+        "inputs": {
+          "A": "MaterialExpressionAppendVector_24",
+          "B": "MaterialExpressionFunctionInput_34"
+        },
+        "outputs": [
+          ""
+        ]
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_29",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": null
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "X",
+        "description": "",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_31",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": null
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "Y",
+        "description": "",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_34",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": null
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "Z",
+        "description": "",
+        "use_preview_value_as_default": "True"
+      }
+    ],
+    "/Engine/Functions/Engine_MaterialFunctions02/Utility/BreakOutFloat2Components.BreakOutFloat2Components": [
+      {
+        "name": "MaterialExpressionFunctionOutput_0",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionComponentMask_42"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "R",
+        "description": ""
+      },
+      {
+        "name": "MaterialExpressionFunctionInput_11",
+        "class": "MaterialExpressionFunctionInput",
+        "inputs": {
+          "Preview": null
+        },
+        "outputs": [
+          ""
+        ],
+        "input_name": "Float2",
+        "description": "",
+        "use_preview_value_as_default": "True"
+      },
+      {
+        "name": "MaterialExpressionComponentMask_42",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionFunctionInput_11"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "True",
+        "g": "False",
+        "b": "False",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionComponentMask_43",
+        "class": "MaterialExpressionComponentMask",
+        "inputs": {
+          "None": "MaterialExpressionFunctionInput_11"
+        },
+        "outputs": [
+          ""
+        ],
+        "r": "False",
+        "g": "True",
+        "b": "False",
+        "a": "False"
+      },
+      {
+        "name": "MaterialExpressionFunctionOutput_2",
+        "class": "MaterialExpressionFunctionOutput",
+        "inputs": {
+          "None": "MaterialExpressionComponentMask_43"
+        },
+        "outputs": [
+          ""
+        ],
+        "output_name": "G",
+        "description": ""
+      }
+    ]
+  },
+  "scene_changed": false
+}

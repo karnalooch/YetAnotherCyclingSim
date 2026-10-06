@@ -1,0 +1,110 @@
+{
+  "status": "PRESENTATION_VISUAL_FILL_CANDIDATE",
+  "geometry_mutation": false,
+  "production_planting": "NOT_ADMITTED",
+  "current_cover_admitted": false,
+  "grid": {
+    "anchor": "AOI upper-left; matches accepted native Base_DTM grid",
+    "crs": "EPSG:25831",
+    "height": 4033,
+    "pixel_rule": "center for SIOSE IDs; all_touched for conservative building candidates",
+    "pixel_size_m": 0.5,
+    "transform": [
+      0.5,
+      0.0,
+      483000.0,
+      0.0,
+      -0.5,
+      4409516.5
+    ],
+    "width": 4033
+  },
+  "world_mapping": {
+    "origin_epsg_m": [
+      483000.25,
+      4409516.25
+    ],
+    "world_unit": "centimetres",
+    "axis": "X east;Y south",
+    "uv": "(UE_XY_cm/50+0.5)/4033",
+    "footprint_world_bounds_cm": [
+      -25,
+      -25,
+      201625,
+      201625
+    ]
+  },
+  "sources": [
+    {
+      "path": "D:\\yacs\\data\\world-data\\sa-calobra-working-v1\\surface-domains-v1-2026-10-05\\material-input-manifest.json",
+      "sha256": "ccdd3c40196a79687ac3f58eca85e2c010a7ef16528947773ca99cf194f316d2"
+    },
+    {
+      "path": "D:\\yacs\\data\\world-data\\sa-calobra-working-v1\\pcg-masks-v1-2026-10-04\\pcg-mask-manifest.json",
+      "sha256": "465788e5d74cf3eccf59bdddc1480fa4d7dac50d6f22255ca69ac3b9f174b5df"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "material-weights.png",
+      "sha256": "af16fc7c43ec8a3a3b2e000fe716232a3229fe0ac6b4e9708baae5842ef99f6c",
+      "size_bytes": 28497885
+    },
+    {
+      "path": "sample-availability.png",
+      "sha256": "9c9906268977a8f49ba20c194cecb101e8bb8c25c44b51ee30f66e7e88a7522a",
+      "size_bytes": 861726
+    },
+    {
+      "path": "inference-kind.png",
+      "sha256": "cc3bc3490878c5a96c20586cd28b0cd3cc812c5506ae97a7110c59e6ed3a3176",
+      "size_bytes": 879841
+    }
+  ],
+  "source_semantics": {
+    "R": "Observed low LiDAR class shading fallback, not planting permission",
+    "G": "Observed medium/high class forest-floor shading fallback; invalid high rejected",
+    "B": "Dated polygon open-rock share, not measured fine ground cover",
+    "A": "Artistic dry-channel appearance along mapped water lines; NOT sample availability or water presence",
+    "availability": "Separate sample-availability.png: accepted samples 255, unknown 0",
+    "placement": "Original PCG selectors, reasons and clearance remain byte-identical and binding",
+    "neutral": "Mineral remainder; slope fallback for zero RGB is artistic only",
+    "water": "1m half-width plus radius-2 pixel soft edge; excludes road/building pixels; not surveyed bed width, flow or flood extent"
+  },
+  "semantics": {
+    "R": "Low vegetation appearance, including bounded neighbor inference; no planting authority",
+    "G": "Forest-floor appearance, including bounded neighbor inference; no planting authority",
+    "B": "Rock appearance, including bounded neighbor inference; no new geology classification",
+    "A": "Retained artistic dry-channel appearance, zero over pavement/buildings",
+    "neutral": "Mineral residual 1-sum(RGB); all-zero RGB means mineral, not a hole",
+    "availability": "Unchanged original observations; inferred pixels remain unknown",
+    "inference_kind": "0 observed, 1 neighbor fill, 2 neutral fallback, 3 protected road/building"
+  },
+  "recipe": {
+    "neighbor_steps": 8,
+    "maximum_path_m": 4,
+    "smoothing_fraction": 0.25,
+    "hard_barrier_bits": [
+      1,
+      8
+    ],
+    "far_fallback": "neutral mineral residual",
+    "unknown_evidence": "retained; inference is appearance only",
+    "sampling": "linear data, bilinear for appearance only; placement remains nearest"
+  },
+  "counts": {
+    "observed": 13405515,
+    "neighbor_filled": 2686632,
+    "neutral_fallback": 357,
+    "protected_road_building": 172585,
+    "original_unknown": 2713728,
+    "rgb_sum_max": 255
+  },
+  "producer_file": "scripts/assets/prepare_sa_calobra_visual_fill.py",
+  "producer_sha256_lf": "3d5b9366d0d203ef1f8a34d312c85f4361631731baf7daa11badb9067ef2be10",
+  "references": [
+    "https://www.sidefx.com/docs/houdini/heightfields/masking.html",
+    "https://dev.epicgames.com/documentation/unreal-engine/landscape-materials-in-unreal-engine"
+  ],
+  "fingerprint": "45fee07de3e0ebbb40f46cc3ef297e8b5f4b84e8c1d598539964527261d2ee50"
+}

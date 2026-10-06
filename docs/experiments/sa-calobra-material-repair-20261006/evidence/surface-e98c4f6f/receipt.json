@@ -1,0 +1,22 @@
+[
+  {
+    "mode": "weights",
+    "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\MaterialRepair\\surface-e98c4f6f\\weights.png",
+    "sha256": "790f53eec32373232539ec0fb1940ce4d0964f210fc0142a0bd3211126bf89ae"
+  },
+  {
+    "mode": "neutral",
+    "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\MaterialRepair\\surface-e98c4f6f\\neutral.png",
+    "sha256": "d69115ede50741971598a0f5e4e847ca8df4ebea3a5461be1e0891820389015b"
+  },
+  {
+    "mode": "flat",
+    "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\MaterialRepair\\surface-e98c4f6f\\flat.png",
+    "sha256": "8b53f0d3124ef8b00abe1a93ed399662589834f9e61e87f72388229b44c9541a"
+  },
+  {
+    "mode": "candidate",
+    "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\MaterialRepair\\surface-e98c4f6f\\candidate.png",
+    "sha256": "0193c13660ef4d9b1ba2f8a69b4c131e682f7e6d9654ba68ec85c531a3346726"
+  }
+]

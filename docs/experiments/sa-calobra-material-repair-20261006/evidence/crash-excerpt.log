@@ -1,0 +1,5 @@
+[2026.10.06-04.58.27:712][664]LogWindows: Error: appError called: Fatal error: [File:D:\build\++UE5\Sync\Engine\Source\Runtime\D3D12RHI\Private\D3D12Util.cpp] [Line: 815]
+Out of video memory trying to allocate a rendering resource
+[2026.10.06-04.58.31:630][664]LogWindows: Error: === Critical error: ===
+[2026.10.06-04.58.31:630][664]LogWindows: Error: Fatal error: [File:D:\build\++UE5\Sync\Engine\Source\Runtime\D3D12RHI\Private\D3D12Util.cpp] [Line: 815]
+[2026.10.06-04.58.31:630][664]LogWindows: Error: Out of video memory trying to allocate a rendering resource

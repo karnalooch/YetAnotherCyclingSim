@@ -1,0 +1,11 @@
+{
+  "variant": "checker_geometric",
+  "material": "/Game/Generated/YACS/MaterialRepair/ec136729be844ddaba9c887d7f00c55b/M_ProjectionChecker_geometric.M_ProjectionChecker_geometric",
+  "component_assignment_count": 1024,
+  "geometry_snapshot_equal": true,
+  "map_saved": false,
+  "native_instance_audit": "PENDING",
+  "owner_visual_acceptance": "PENDING",
+  "performance": "NOT_MEASURED",
+  "script_sha256": "59053838adf0ccbf33e5552d8086413791bbe7506b8946a38910e9176819a551"
+}

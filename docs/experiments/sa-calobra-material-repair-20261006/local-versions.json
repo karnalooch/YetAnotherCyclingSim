@@ -1,0 +1,57 @@
+[
+  {
+    "original": "YetAnotherCyclingSim.uproject",
+    "retained_at": "docs/experiments/sa-calobra-material-repair-20261006/local-versions/YetAnotherCyclingSim.uproject.snapshot",
+    "reason": "Preserve published version; local variant retained without activation"
+  },
+  {
+    "original": "docs/experiments/sa-calobra-material-reference-review-2026-10-05.md",
+    "retained_at": "docs/experiments/sa-calobra-material-repair-20261006/local-versions/docs/experiments/sa-calobra-material-reference-review-2026-10-05.md.snapshot",
+    "reason": "Preserve published version; local variant retained without activation"
+  },
+  {
+    "original": "docs/legal/DEPENDENCY_PROVENANCE.md",
+    "retained_at": "docs/experiments/sa-calobra-material-repair-20261006/local-versions/docs/legal/DEPENDENCY_PROVENANCE.md.snapshot",
+    "reason": "Preserve published version; local variant retained without activation"
+  },
+  {
+    "original": "docs/tooling/TEXTURE_MATERIAL_PREP_EXAMPLES.md",
+    "retained_at": "docs/experiments/sa-calobra-material-repair-20261006/local-versions/docs/tooling/TEXTURE_MATERIAL_PREP_EXAMPLES.md.snapshot",
+    "reason": "Preserve published version; local variant retained without activation"
+  },
+  {
+    "original": "scripts/assets/prepare_sa_calobra_visual_fill.py",
+    "retained_at": "docs/experiments/sa-calobra-material-repair-20261006/local-versions/scripts/assets/prepare_sa_calobra_visual_fill.py.snapshot",
+    "reason": "Preserve published version; local variant retained without activation"
+  },
+  {
+    "original": "scripts/assets/test_material_maker_limestone.py",
+    "retained_at": "docs/experiments/sa-calobra-material-repair-20261006/local-versions/scripts/assets/test_material_maker_limestone.py.snapshot",
+    "reason": "Preserve published version; local variant retained without activation"
+  },
+  {
+    "original": "scripts/assets/test_sa_calobra_visual_fill.py",
+    "retained_at": "docs/experiments/sa-calobra-material-repair-20261006/local-versions/scripts/assets/test_sa_calobra_visual_fill.py.snapshot",
+    "reason": "Preserve published version; local variant retained without activation"
+  },
+  {
+    "original": "scripts/ue/preview_sa_calobra_material_maker.py",
+    "retained_at": "docs/experiments/sa-calobra-material-repair-20261006/local-versions/scripts/ue/preview_sa_calobra_material_maker.py.snapshot",
+    "reason": "Preserve published version; local variant retained without activation"
+  },
+  {
+    "original": "scripts/ue/sa_calobra_material_foundation.py",
+    "retained_at": "docs/experiments/sa-calobra-material-repair-20261006/local-versions/scripts/ue/sa_calobra_material_foundation.py.snapshot",
+    "reason": "Preserve published version; local variant retained without activation"
+  },
+  {
+    "original": "worldgen/materials/visual_fill/README.md",
+    "retained_at": "docs/experiments/sa-calobra-material-repair-20261006/local-versions/worldgen/materials/visual_fill/README.md.snapshot",
+    "reason": "Preserve published version; local variant retained without activation"
+  },
+  {
+    "original": "Config/DefaultLocoHelperAI.ini",
+    "retained_at": "docs/experiments/sa-calobra-material-repair-20261006/local-versions/Config/DefaultLocoHelperAI.ini.snapshot",
+    "reason": "Local editor preferences archived without applying to other machines"
+  }
+]

@@ -1,0 +1,19 @@
+{
+  "status": "ONE_COMPONENT_PREVIEW_ASSIGNED",
+  "component": "/Game/Worlds/SaCalobra/L_SaCalobraAccepted_20261004.L_SaCalobraAccepted_20261004:PersistentLevel.SaCalobraLandscape.LandscapeComponent_260",
+  "parent": "/Game/Generated/YACS/MaterialRepair/5e717564dbc449a89b766ff75949037e/M_SaCalobraRepair_candidate.M_SaCalobraRepair_candidate",
+  "parameters": {
+    "GroundMetres": 3.0,
+    "RockMesoMetres": 8.0,
+    "NormalStrength": 0.25
+  },
+  "geometry_snapshot_equal": true,
+  "changed_component_count": 1,
+  "map_saved": false,
+  "visual_acceptance": "PENDING",
+  "performance": "NOT_MEASURED",
+  "memory_before": {
+    "free_physical": 12603121664,
+    "free_commit": 70913753088
+  }
+}

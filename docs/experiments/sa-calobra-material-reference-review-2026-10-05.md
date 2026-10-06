@@ -334,3 +334,14 @@ scree class. Fractured limestone is a candidate variation within ExposedRock,
 not a new geographic classification. Placement, terrain, roads and the owner's
 lighting remain unchanged. Unreal visual comparison and mask integration remain
 subsequent work. The existing World Building Bible remains the methodology SSOT.
+
+## Appearance-only gap fill — 2026-10-06
+
+The owner authorized pragmatic visual filling while retaining measured unknowns
+and placement constraints. The reproducible package is documented in
+[the visual-fill README](../../worldgen/materials/visual_fill/README.md).
+It fills 2,686,632 cells from bounded neighbors and leaves only 357 unprotected
+cells on neutral mineral fallback. Original availability and PCG exclusions are
+preserved. Five CPU tests, independent byte-identical replay and native UE mask
+import passed. The imported texture is unsaved and not assigned; full material
+integration, whole-area visual review and performance remain pending.

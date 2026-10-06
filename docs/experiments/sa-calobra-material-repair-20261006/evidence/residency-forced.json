@@ -1,0 +1,263 @@
+{
+  "textures": [
+    {
+      "texture": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_grass_rock_nor_dx.T_aerial_grass_rock_nor_dx",
+      "srgb": "False",
+      "never_stream": "False",
+      "lod_bias": "0",
+      "max_texture_size": "0",
+      "compression_settings": "<TextureCompressionSettings.TC_NORMALMAP: 1>",
+      "mip_gen_settings": "<TextureMipGenSettings.TMGS_FROM_TEXTURE_GROUP: 0>",
+      "native": {
+        "texture": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_grass_rock_nor_dx.T_aerial_grass_rock_nor_dx",
+        "description": "Streamed 4096x4096 [BC5]",
+        "pixel_format": "BC5",
+        "size_x": 4096,
+        "size_y": 4096,
+        "mips": 13,
+        "resident_mips": 9,
+        "source_mips": 1,
+        "is_default_texture": false,
+        "is_compiling": false,
+        "srgb": false,
+        "virtual_texture": false
+      }
+    },
+    {
+      "texture": "/Game/Generated/YACS/VisualFill/c1b9b4341d5a4a3681aca07e4fc8fd7b/T_VisualFillWeights.T_VisualFillWeights",
+      "srgb": "False",
+      "never_stream": "True",
+      "lod_bias": "0",
+      "max_texture_size": "0",
+      "compression_settings": "<TextureCompressionSettings.TC_VECTOR_DISPLACEMENTMAP: 5>",
+      "mip_gen_settings": "<TextureMipGenSettings.TMGS_NO_MIPMAPS: 13>",
+      "native": {
+        "texture": "/Game/Generated/YACS/VisualFill/c1b9b4341d5a4a3681aca07e4fc8fd7b/T_VisualFillWeights.T_VisualFillWeights",
+        "description": "NeverStreamed 4033x4033 [B8G8R8A8]",
+        "pixel_format": "B8G8R8A8",
+        "size_x": 4033,
+        "size_y": 4033,
+        "mips": 1,
+        "resident_mips": 1,
+        "source_mips": 1,
+        "is_default_texture": false,
+        "is_compiling": false,
+        "srgb": false,
+        "virtual_texture": false
+      }
+    },
+    {
+      "texture": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_rocks_02_nor_dx.T_aerial_rocks_02_nor_dx",
+      "srgb": "False",
+      "never_stream": "False",
+      "lod_bias": "0",
+      "max_texture_size": "0",
+      "compression_settings": "<TextureCompressionSettings.TC_NORMALMAP: 1>",
+      "mip_gen_settings": "<TextureMipGenSettings.TMGS_FROM_TEXTURE_GROUP: 0>",
+      "native": {
+        "texture": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_rocks_02_nor_dx.T_aerial_rocks_02_nor_dx",
+        "description": "Streamed 4096x4096 [BC5]",
+        "pixel_format": "BC5",
+        "size_x": 4096,
+        "size_y": 4096,
+        "mips": 13,
+        "resident_mips": 9,
+        "source_mips": 1,
+        "is_default_texture": false,
+        "is_compiling": false,
+        "srgb": false,
+        "virtual_texture": false
+      }
+    },
+    {
+      "texture": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_ExposedRock_nor_dx.T_ExposedRock_nor_dx",
+      "srgb": "False",
+      "never_stream": "False",
+      "lod_bias": "0",
+      "max_texture_size": "0",
+      "compression_settings": "<TextureCompressionSettings.TC_NORMALMAP: 1>",
+      "mip_gen_settings": "<TextureMipGenSettings.TMGS_FROM_TEXTURE_GROUP: 0>",
+      "native": {
+        "texture": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_ExposedRock_nor_dx.T_ExposedRock_nor_dx",
+        "description": "Streamed 2048x2048 [BC5]",
+        "pixel_format": "BC5",
+        "size_x": 2048,
+        "size_y": 2048,
+        "mips": 12,
+        "resident_mips": 9,
+        "source_mips": 1,
+        "is_default_texture": false,
+        "is_compiling": false,
+        "srgb": false,
+        "virtual_texture": false
+      }
+    },
+    {
+      "texture": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_Scree_nor_dx.T_Scree_nor_dx",
+      "srgb": "False",
+      "never_stream": "False",
+      "lod_bias": "0",
+      "max_texture_size": "0",
+      "compression_settings": "<TextureCompressionSettings.TC_NORMALMAP: 1>",
+      "mip_gen_settings": "<TextureMipGenSettings.TMGS_FROM_TEXTURE_GROUP: 0>",
+      "native": {
+        "texture": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_Scree_nor_dx.T_Scree_nor_dx",
+        "description": "Streamed 2048x2048 [BC5]",
+        "pixel_format": "BC5",
+        "size_x": 2048,
+        "size_y": 2048,
+        "mips": 12,
+        "resident_mips": 9,
+        "source_mips": 1,
+        "is_default_texture": false,
+        "is_compiling": false,
+        "srgb": false,
+        "virtual_texture": false
+      }
+    },
+    {
+      "texture": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_grass_rock_diff.T_aerial_grass_rock_diff",
+      "srgb": "True",
+      "never_stream": "False",
+      "lod_bias": "0",
+      "max_texture_size": "0",
+      "compression_settings": "<TextureCompressionSettings.TC_DEFAULT: 0>",
+      "mip_gen_settings": "<TextureMipGenSettings.TMGS_FROM_TEXTURE_GROUP: 0>",
+      "native": {
+        "texture": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_grass_rock_diff.T_aerial_grass_rock_diff",
+        "description": "Streamed 4096x4096 [DXT1]",
+        "pixel_format": "DXT1",
+        "size_x": 4096,
+        "size_y": 4096,
+        "mips": 13,
+        "resident_mips": 9,
+        "source_mips": 1,
+        "is_default_texture": false,
+        "is_compiling": false,
+        "srgb": true,
+        "virtual_texture": false
+      }
+    },
+    {
+      "texture": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_rocks_02_diff.T_aerial_rocks_02_diff",
+      "srgb": "True",
+      "never_stream": "False",
+      "lod_bias": "0",
+      "max_texture_size": "0",
+      "compression_settings": "<TextureCompressionSettings.TC_DEFAULT: 0>",
+      "mip_gen_settings": "<TextureMipGenSettings.TMGS_FROM_TEXTURE_GROUP: 0>",
+      "native": {
+        "texture": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_rocks_02_diff.T_aerial_rocks_02_diff",
+        "description": "Streamed 4096x4096 [DXT1]",
+        "pixel_format": "DXT1",
+        "size_x": 4096,
+        "size_y": 4096,
+        "mips": 13,
+        "resident_mips": 9,
+        "source_mips": 1,
+        "is_default_texture": false,
+        "is_compiling": false,
+        "srgb": true,
+        "virtual_texture": false
+      }
+    },
+    {
+      "texture": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_DryMineral_diff.T_DryMineral_diff",
+      "srgb": "True",
+      "never_stream": "False",
+      "lod_bias": "0",
+      "max_texture_size": "0",
+      "compression_settings": "<TextureCompressionSettings.TC_DEFAULT: 0>",
+      "mip_gen_settings": "<TextureMipGenSettings.TMGS_FROM_TEXTURE_GROUP: 0>",
+      "native": {
+        "texture": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_DryMineral_diff.T_DryMineral_diff",
+        "description": "Streamed 2048x2048 [DXT1]",
+        "pixel_format": "DXT1",
+        "size_x": 2048,
+        "size_y": 2048,
+        "mips": 12,
+        "resident_mips": 9,
+        "source_mips": 1,
+        "is_default_texture": false,
+        "is_compiling": false,
+        "srgb": true,
+        "virtual_texture": false
+      }
+    },
+    {
+      "texture": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_Scree_diff.T_Scree_diff",
+      "srgb": "True",
+      "never_stream": "False",
+      "lod_bias": "0",
+      "max_texture_size": "0",
+      "compression_settings": "<TextureCompressionSettings.TC_DEFAULT: 0>",
+      "mip_gen_settings": "<TextureMipGenSettings.TMGS_FROM_TEXTURE_GROUP: 0>",
+      "native": {
+        "texture": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_Scree_diff.T_Scree_diff",
+        "description": "Streamed 2048x2048 [DXT1]",
+        "pixel_format": "DXT1",
+        "size_x": 2048,
+        "size_y": 2048,
+        "mips": 12,
+        "resident_mips": 9,
+        "source_mips": 1,
+        "is_default_texture": false,
+        "is_compiling": false,
+        "srgb": true,
+        "virtual_texture": false
+      }
+    },
+    {
+      "texture": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_grass_rock_arm.T_aerial_grass_rock_arm",
+      "srgb": "False",
+      "never_stream": "False",
+      "lod_bias": "0",
+      "max_texture_size": "0",
+      "compression_settings": "<TextureCompressionSettings.TC_MASKS: 2>",
+      "mip_gen_settings": "<TextureMipGenSettings.TMGS_FROM_TEXTURE_GROUP: 0>",
+      "native": {
+        "texture": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_grass_rock_arm.T_aerial_grass_rock_arm",
+        "description": "Streamed 4096x4096 [DXT1]",
+        "pixel_format": "DXT1",
+        "size_x": 4096,
+        "size_y": 4096,
+        "mips": 13,
+        "resident_mips": 9,
+        "source_mips": 1,
+        "is_default_texture": false,
+        "is_compiling": false,
+        "srgb": false,
+        "virtual_texture": false
+      }
+    },
+    {
+      "texture": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_rocks_02_arm.T_aerial_rocks_02_arm",
+      "srgb": "False",
+      "never_stream": "False",
+      "lod_bias": "0",
+      "max_texture_size": "0",
+      "compression_settings": "<TextureCompressionSettings.TC_MASKS: 2>",
+      "mip_gen_settings": "<TextureMipGenSettings.TMGS_FROM_TEXTURE_GROUP: 0>",
+      "native": {
+        "texture": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_rocks_02_arm.T_aerial_rocks_02_arm",
+        "description": "Streamed 4096x4096 [DXT1]",
+        "pixel_format": "DXT1",
+        "size_x": 4096,
+        "size_y": 4096,
+        "mips": 13,
+        "resident_mips": 9,
+        "source_mips": 1,
+        "is_default_texture": false,
+        "is_compiling": false,
+        "srgb": false,
+        "virtual_texture": false
+      }
+    }
+  ],
+  "cvars": {
+    "r.Streaming.PoolSize": 600,
+    "r.Streaming.MipBias": 1,
+    "sg.TextureQuality": 1,
+    "r.ScreenPercentage": 71
+  }
+}
