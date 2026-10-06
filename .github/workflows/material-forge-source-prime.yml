@@ -64,8 +64,15 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $log = Join-Path $env:YACS_PRIME_ROOT 'godot-import.log'
-          & $env:YACS_PRIME_GODOT --headless --path $env:YACS_PRIME_SOURCE --import --log-file $log
-          $code = $LASTEXITCODE
+          $stdout = Join-Path $env:YACS_PRIME_ROOT 'godot-import.stdout.log'
+          $stderr = Join-Path $env:YACS_PRIME_ROOT 'godot-import.stderr.log'
+          $args = @('--headless','--path',$env:YACS_PRIME_SOURCE,'--import','--log-file',$log)
+          $process = Start-Process -FilePath $env:YACS_PRIME_GODOT -ArgumentList $args -PassThru -NoNewWindow -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          if (-not $process.WaitForExit(300000)) {
+            $process | Stop-Process -Force
+            throw 'Godot import timed out after 300 seconds.'
+          }
+          $code = $process.ExitCode
           [ordered]@{
             exit_code = $code
             class_cache = Test-Path -LiteralPath (Join-Path $env:YACS_PRIME_SOURCE '.godot\global_script_class_cache.cfg')
