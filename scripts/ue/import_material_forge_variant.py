@@ -253,6 +253,10 @@ def import_variant(
     # MaterialInstanceConstantFactoryNew.InitialParent exists in C++, but is
     # not exposed as an editor property in Python on the pinned 5.8 build.
     LIB.set_material_instance_parent(instance, master)
+    # Refresh inherited parameter metadata immediately after parent assignment.
+    # UE 5.8 may otherwise report inherited parameters as missing on a freshly
+    # created MaterialInstanceConstant.
+    LIB.update_material_instance(instance)
 
     params = {
         "BaseColorTex": textures["BaseColor"],
@@ -260,13 +264,36 @@ def import_variant(
         "ORMTex": textures["ORM"],
         "DetailMasksTex": textures["DetailMasks"],
     }
+    visible_textures = {str(name) for name in LIB.get_texture_parameter_names(instance)}
+    visible_scalars = {str(name) for name in LIB.get_scalar_parameter_names(instance)}
+    unreal.log(
+        "YACS_MATERIAL_FORGE_PARAMETERS "
+        + json.dumps(
+            {
+                "texture_parameters": sorted(visible_textures),
+                "scalar_parameters": sorted(visible_scalars),
+            }
+        )
+    )
     for name, texture in params.items():
+        if name not in visible_textures:
+            raise RuntimeError(
+                "Material instance parameter missing after parent refresh: "
+                + name
+                + "; visible="
+                + ",".join(sorted(visible_textures))
+            )
         if not LIB.set_material_instance_texture_parameter_value(instance, name, texture):
-            raise RuntimeError("Material instance parameter missing: " + name)
+            raise RuntimeError("Material instance texture override failed: " + name)
+    if "TileSizeCm" not in visible_scalars:
+        raise RuntimeError(
+            "Material instance TileSizeCm parameter missing after parent refresh; visible="
+            + ",".join(sorted(visible_scalars))
+        )
     if not LIB.set_material_instance_scalar_parameter_value(
         instance, "TileSizeCm", float(provenance["tile_metres"]) * 100.0
     ):
-        raise RuntimeError("Material instance TileSizeCm parameter missing")
+        raise RuntimeError("Material instance TileSizeCm override failed")
     LIB.update_material_instance(instance)
 
     assets = {
