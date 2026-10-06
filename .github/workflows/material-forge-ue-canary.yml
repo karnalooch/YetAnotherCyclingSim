@@ -32,9 +32,6 @@ jobs:
     name: Import assign rollback one component
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 45
-    defaults:
-      run:
-        working-directory: _material-forge-ue-canary
     steps:
       - name: Isolate Git configuration
         shell: pwsh
@@ -61,6 +58,7 @@ jobs:
 
       - name: Verify execution identity and idle host
         shell: pwsh
+        working-directory: _material-forge-ue-canary
         run: |
           $ErrorActionPreference = 'Stop'
           $actual = (git rev-parse HEAD).Trim()
@@ -73,6 +71,7 @@ jobs:
 
       - name: Download and verify exact render proof
         shell: pwsh
+        working-directory: _material-forge-ue-canary
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
@@ -114,6 +113,7 @@ jobs:
 
       - name: Materialize Unreal LFS content
         shell: pwsh
+        working-directory: _material-forge-ue-canary
         run: |
           $ErrorActionPreference = 'Stop'
           $env:GIT_LFS_SKIP_SMUDGE = '0'
@@ -139,6 +139,7 @@ jobs:
 
       - name: Build YetAnotherCyclingSimEditor for canary
         shell: pwsh
+        working-directory: _material-forge-ue-canary
         run: |
           $ErrorActionPreference = 'Stop'
           . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
@@ -198,6 +199,7 @@ jobs:
 
       - name: Run bounded UE import canary and rollback
         shell: pwsh
+        working-directory: _material-forge-ue-canary
         run: |
           $ErrorActionPreference = 'Stop'
           . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
