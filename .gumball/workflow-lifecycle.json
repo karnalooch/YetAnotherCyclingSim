@@ -42,6 +42,11 @@
       "reason": "Branch-scoped exact-SHA Material Forge 3x3 two-run render/determinism proof; primes the reviewed Material Maker source runtime and does not mutate the accepted world."
     },
     {
+      "file": "material-forge-ue-canary.yml",
+      "state": "CURRENT",
+      "reason": "Branch-scoped bounded Material Forge UE import/assignment/rollback proof; consumes an admitted deterministic render artifact only when the current Material Forge source fingerprint is unchanged, never saves the map or imported assets."
+    },
+    {
       "file": "material-maker-cli-driver-proof.yml",
       "state": "CURRENT",
       "reason": "Bounded Issue #387 diagnostic for the pinned Material Maker 1.7 Windows command-line export crash across rendering-driver controls; evidence-only and non-mutating."

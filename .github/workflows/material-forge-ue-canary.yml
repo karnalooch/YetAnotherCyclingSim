@@ -1,0 +1,165 @@
+name: Material Forge UE canary
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "codex/363-landscape-material-foundation"
+    paths:
+      - ".github/workflows/material-forge-ue-canary.yml"
+      - "scripts/ue/run_material_forge_canary_proof.py"
+      - "scripts/ue/import_material_forge_variant.py"
+      - "scripts/ue/preview_material_forge_canary.py"
+      - "scripts/assets/material_forge.py"
+      - "worldgen/materials/material_forge/**"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: material-forge-ue-canary-${{ github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  GIT_LFS_SKIP_SMUDGE: "1"
+  YACS_RENDER_PROOF_SHA: 2598abc562c110434469e1be63c7e626b12ba80c
+  YACS_RENDER_PROOF_ARTIFACT_ID: "11396409993"
+  YACS_RENDER_PROOF_ARTIFACT_SHA256: bc39d7fe2243ab34c8e71a8f0016962ff8877569fa15819387c5af318a93146b
+
+jobs:
+  canary:
+    name: Import assign rollback one component
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 45
+    steps:
+      - name: Isolate Git configuration
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'material-forge-canary.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          $env:GIT_CONFIG_GLOBAL = $isolated
+          $env:GIT_CONFIG_NOSYSTEM = '1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot enable long paths.' }
+
+      - name: Checkout exact canary revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          lfs: false
+          persist-credentials: false
+
+      - name: Verify execution identity and idle host
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $actual = (git rev-parse HEAD).Trim()
+          if ($actual -ne $env:GITHUB_SHA) { throw "checkout HEAD '$actual' != event SHA '$env:GITHUB_SHA'" }
+          git merge-base --is-ancestor $env:YACS_RENDER_PROOF_SHA HEAD
+          if ($LASTEXITCODE -ne 0) { throw "Render proof SHA is not an ancestor of execution SHA." }
+          $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+          $state | ConvertTo-Json -Depth 8 | Write-Host
+          if ($state.status -ne 'IDLE') { throw "Shared Unreal host is already owned; status=$($state.status)." }
+
+      - name: Download and verify exact render proof
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = Join-Path $env:RUNNER_TEMP "material-forge-canary-$env:GITHUB_SHA"
+          Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+          $zip = Join-Path $root 'render-proof.zip'
+          $url = "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/$env:YACS_RENDER_PROOF_ARTIFACT_ID/zip"
+          & curl.exe -L --fail-with-body -H "Authorization: Bearer $env:GITHUB_TOKEN" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" -o $zip $url
+          if ($LASTEXITCODE -ne 0) { throw 'Render proof artifact download failed.' }
+          $digest = (Get-FileHash -Algorithm SHA256 -LiteralPath $zip).Hash.ToLowerInvariant()
+          if ($digest -ne $env:YACS_RENDER_PROOF_ARTIFACT_SHA256) { throw "Render proof archive digest mismatch: $digest" }
+
+          $proof = Join-Path $root 'render-proof'
+          Expand-Archive -LiteralPath $zip -DestinationPath $proof -Force
+          $summary = Get-Content -LiteralPath (Join-Path $proof 'proof-summary.json') -Raw | ConvertFrom-Json
+          if ($summary.status -ne 'RENDER_DETERMINISM_PASS_UE_REVIEW_PENDING' -or $summary.exact_sha -ne $env:YACS_RENDER_PROOF_SHA -or [int]$summary.variant_count -ne 9 -or $summary.comparison.deterministic -ne $true -or @($summary.comparison.mismatches).Count -ne 0) {
+            throw 'Render proof summary is not admissible for UE canary.'
+          }
+
+          $planText = python scripts/assets/material_forge.py plan-rebuild (Join-Path $proof 'run-a')
+          if ($LASTEXITCODE -ne 0) { throw 'Material Forge rebuild plan failed.' }
+          $plan = ($planText -join [Environment]::NewLine) | ConvertFrom-Json
+          $plan | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $root 'carry-forward-plan.json') -Encoding utf8
+          if ($plan.rebuild_required -ne $false -or $plan.reason -ne 'unchanged') { throw 'Current Material Forge source fingerprint drifted from render proof.' }
+
+          $variant = Join-Path $proof 'run-a\regional_limestone\base'
+          python scripts/assets/material_forge.py validate $variant --resolution 2048 *> (Join-Path $root 'variant-revalidation.log')
+          if ($LASTEXITCODE -ne 0) { throw 'Chosen UE canary variant failed current CPU validation.' }
+
+          $canaryProof = Join-Path $root 'ue'
+          New-Item -ItemType Directory -Force -Path $canaryProof | Out-Null
+          "YACS_CANARY_ROOT=$root" >> $env:GITHUB_ENV
+          "YACS_MATERIAL_FORGE_VARIANT_DIR=$variant" >> $env:GITHUB_ENV
+          "YACS_MATERIAL_FORGE_CANARY_ROOT=$canaryProof" >> $env:GITHUB_ENV
+          "YACS_MATERIAL_FORGE_ARTIFACT_SHA=$env:YACS_RENDER_PROOF_SHA" >> $env:GITHUB_ENV
+          "YACS_MATERIAL_FORGE_EXECUTION_SHA=$env:GITHUB_SHA" >> $env:GITHUB_ENV
+
+      - name: Materialize Unreal LFS content
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $env:GIT_LFS_SKIP_SMUDGE = '0'
+          try {
+            git lfs install --local --skip-smudge
+            if ($LASTEXITCODE -ne 0) { throw 'Local LFS setup failed.' }
+            git -c "lfs.fetchinclude=Content/**" -c "lfs.fetchexclude=" lfs fetch origin $env:GITHUB_SHA
+            if ($LASTEXITCODE -ne 0) { throw 'Unreal Content LFS fetch failed.' }
+            git lfs checkout 'Content/**'
+            if ($LASTEXITCODE -ne 0) { throw 'Unreal Content LFS checkout failed.' }
+            $paths = @(git lfs ls-files --name-only --include='Content/**')
+            if ($LASTEXITCODE -ne 0) { throw 'Unreal Content LFS inventory failed.' }
+            foreach ($path in $paths) {
+              if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Missing Unreal LFS package: $path" }
+              git lfs pointer --check "--file=$path" *> $null
+              if ($LASTEXITCODE -eq 0) { throw "Unmaterialized Unreal LFS pointer: $path" }
+            }
+          }
+          finally { $env:GIT_LFS_SKIP_SMUDGE = '1' }
+
+      - name: Run bounded UE import canary and rollback
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
+          $project = Join-Path (Get-Location) 'YetAnotherCyclingSim.uproject'
+          $engine = Resolve-YacsUnrealEngine -ProjectPath $project
+          $script = (Resolve-Path 'scripts/ue/run_material_forge_canary_proof.py').Path
+          $stdout = Join-Path $env:YACS_MATERIAL_FORGE_CANARY_ROOT 'unreal.stdout.log'
+          $stderr = Join-Path $env:YACS_MATERIAL_FORGE_CANARY_ROOT 'unreal.stderr.log'
+          $log = Join-Path $env:YACS_MATERIAL_FORGE_CANARY_ROOT 'unreal.engine.log'
+          $arguments = @(('"' + $project + '"'), ('-ExecutePythonScript="' + $script + '"'), '-Unattended', '-NoPause', '-NoSplash', '-NoP4', '-windowed', '-ResX=1920', '-ResY=1080', '-NoVSync', '-ScriptErrorsAreFatal', '-stdout', ('-AbsLog="' + $log + '"'))
+          $process = Start-Process -FilePath $engine.UnrealEditorPath -ArgumentList $arguments -PassThru -NoNewWindow -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          if (-not $process.WaitForExit(600000)) {
+            $process | Stop-Process -Force
+            throw 'Material Forge UE canary timed out after 600 seconds.'
+          }
+          if ($process.ExitCode -ne 0) { throw "Material Forge UE canary editor exited $($process.ExitCode)." }
+          $receiptPath = Join-Path $env:YACS_MATERIAL_FORGE_CANARY_ROOT 'ue-canary-proof.json'
+          if (-not (Test-Path -LiteralPath $receiptPath -PathType Leaf)) { throw 'Material Forge UE canary aggregate receipt is missing.' }
+          $receipt = Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json
+          if ($receipt.status -ne 'UE_CANARY_ASSIGN_ROLLBACK_PASS' -or $receipt.artifact_exact_sha -ne $env:YACS_RENDER_PROOF_SHA -or $receipt.execution_sha -ne $env:GITHUB_SHA -or $receipt.map_saved -ne $false -or $receipt.assets_saved -ne $false -or $receipt.geometry_changed -ne $false -or $receipt.world_semantics_changed -ne $false) {
+            throw 'Material Forge UE canary aggregate receipt failed.'
+          }
+          $receipt | ConvertTo-Json -Depth 12 | Write-Host
+
+      - name: Upload UE canary evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: material-forge-ue-canary-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/material-forge-canary-${{ github.sha }}
+          if-no-files-found: warn
+          retention-days: 7
