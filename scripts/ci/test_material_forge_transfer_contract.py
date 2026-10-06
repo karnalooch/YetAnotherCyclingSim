@@ -40,7 +40,7 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
             "git config --local lfs.storage $env:YACS_LFS_CACHE_ROOT",
             text,
         )
-        self.assertNotIn(r"YACS_LFS_CACHE_ROOT: 'C:\", text)
+        self.assertNotIn("YACS_LFS_CACHE_ROOT: 'C:\\", text)
 
     def test_single_editor_process_runs_both_ue_subproofs(self):
         text = CANARY.read_text(encoding="utf-8")
