@@ -1,0 +1,148 @@
+name: Material Maker CLI A-B-C proof
+
+on:
+  push:
+    branches:
+      - "codex/363-landscape-material-foundation"
+    paths:
+      - ".github/workflows/material-maker-cli-abc.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+
+      - name: Prepare pinned tools and three candidates
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $toolRoot = 'D:\yacs\tool-cache\material-forge'
+          $mmRoot = Join-Path $toolRoot 'material-maker-1.7'
+          $mmExe = Get-ChildItem -LiteralPath $mmRoot -Filter 'material_maker.exe' -Recurse -ErrorAction Stop | Select-Object -First 1
+          if ($null -eq $mmExe) { throw 'Pinned Material Maker release is missing.' }
+          $mmInstall = $mmExe.Directory.FullName
+          $example = Get-ChildItem -LiteralPath (Join-Path $mmInstall 'examples') -Filter 'dry_earth.ptex' -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($null -eq $example) {
+            $example = Get-ChildItem -LiteralPath (Join-Path $mmInstall 'examples') -Filter '*.ptex' -ErrorAction Stop | Select-Object -First 1
+          }
+          if ($null -eq $example) { throw 'No upstream release example .ptex found.' }
+
+          $venv = Join-Path $toolRoot 'python'
+          $python = Join-Path $venv 'Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python)) { throw 'Material Forge Python venv missing.' }
+          & $python -m pip install --disable-pip-version-check --only-binary=:all: numpy==2.3.5 Pillow==12.3.0
+          if ($LASTEXITCODE -ne 0) { throw 'Python deps unavailable.' }
+
+          $root = Join-Path $env:RUNNER_TEMP "mm-cli-abc-$env:GITHUB_SHA"
+          Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+
+          $forge = Join-Path $root 'forge'
+          & $python scripts/assets/material_forge.py author --material-maker $mmInstall --output $forge *> (Join-Path $root 'author.log')
+          if ($LASTEXITCODE -ne 0) { throw 'Forge authoring failed before CLI A-B-C proof.' }
+
+          $old = Resolve-Path 'worldgen/materials/material_maker/limestone_candidate/SaCalobra_PaleLimestone.ptex'
+          $new = Resolve-Path (Join-Path $forge 'aged_mountain_asphalt/base/Material.ptex')
+
+          "YACS_ABC_ROOT=$root" >> $env:GITHUB_ENV
+          "YACS_MM_EXE=$($mmExe.FullName)" >> $env:GITHUB_ENV
+          "YACS_MM_INSTALL=$mmInstall" >> $env:GITHUB_ENV
+          "YACS_MM_UPSTREAM=$($example.FullName)" >> $env:GITHUB_ENV
+          "YACS_MM_OLD=$($old.Path)" >> $env:GITHUB_ENV
+          "YACS_MM_NEW=$($new.Path)" >> $env:GITHUB_ENV
+          "YACS_FORGE_PY=$python" >> $env:GITHUB_ENV
+
+      - name: Run upstream old-YACS new-Forge CLI matrix
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          @'
+          import json
+          import os
+          import subprocess
+          import time
+          from pathlib import Path
+
+          root = Path(os.environ["YACS_ABC_ROOT"])
+          exe = Path(os.environ["YACS_MM_EXE"])
+          cwd = Path(os.environ["YACS_MM_INSTALL"])
+
+          cases = [
+              ("A_upstream_example", Path(os.environ["YACS_MM_UPSTREAM"]), None),
+              ("B_old_yacs_limestone", Path(os.environ["YACS_MM_OLD"]), "YACS/Textures"),
+              ("C_new_forge_asphalt", Path(os.environ["YACS_MM_NEW"]), "YACS/Textures"),
+          ]
+          summary = []
+          for name, graph, target in cases:
+              out = root / name
+              out.mkdir()
+              command = [str(exe), "--export-material", "-o", str(out), "--output-file", name]
+              if target:
+                  command += ["--target", target]
+              command += [str(graph)]
+              started = time.monotonic()
+              try:
+                  result = subprocess.run(
+                      command,
+                      cwd=cwd,
+                      stdout=subprocess.PIPE,
+                      stderr=subprocess.STDOUT,
+                      text=True,
+                      timeout=120,
+                  )
+                  code = result.returncode
+                  text = result.stdout or ""
+                  timed_out = False
+              except subprocess.TimeoutExpired as exc:
+                  code = None
+                  text = exc.stdout or ""
+                  if isinstance(text, bytes):
+                      text = text.decode("utf-8", errors="replace")
+                  timed_out = True
+              elapsed = time.monotonic() - started
+              (out / "stdout.log").write_text(text, encoding="utf-8")
+              files = sorted(
+                  {
+                      "name": p.name,
+                      "size": p.stat().st_size,
+                  }
+                  for p in out.iterdir()
+                  if p.is_file() and p.name != "stdout.log"
+              )
+              entry = {
+                  "case": name,
+                  "graph": str(graph),
+                  "target": target,
+                  "exit_code": code,
+                  "timed_out": timed_out,
+                  "elapsed_s": round(elapsed, 3),
+                  "files": files,
+                  "stdout_tail": text[-4000:],
+              }
+              summary.append(entry)
+              print(json.dumps(entry, indent=2))
+          (root / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+
+          # Diagnostic job itself passes even when candidates fail; interpretation
+          # happens from the retained matrix instead of stopping at case A.
+          '@ | & $env:YACS_FORGE_PY -
+          if ($LASTEXITCODE -ne 0) { throw 'CLI A-B-C diagnostic harness failed.' }
+
+      - name: Upload A-B-C evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: material-maker-cli-abc-${{ github.sha }}
+          path: ${{ runner.temp }}/mm-cli-abc-${{ github.sha }}
+          if-no-files-found: error
+          retention-days: 7
