@@ -19,6 +19,30 @@ Use the project Python environment (`.venv\Scripts\python.exe`) and PowerShell
 Everyday scene changes update the existing UE session through Live Coding or
 the appropriate data/material consumer. Opening a map is not rebuilding roads.
 
+## Bounded Material Forge Landscape preview
+
+For the current #363 technical repair pilot, use
+`scripts/ue/preview_material_forge_chunked_landscape.py` from an already open
+accepted Sa Calobra editor. It is session-only, caps scope at nine nearby
+Landscape components, applies one component per explicit `apply`, checks memory
+headroom before preparation and each application, and never saves the map or
+generated assets.
+
+The Material Forge render artifact defaults to
+`D:\\yacs\\material-forge-v2-final\\run-a`; override it with
+`YACS_MF_PROOF_ROOT`, `YACS_MF_ROCK_VARIANT`, or `YACS_MF_SOIL_VARIANT`.
+The intended sequence is `cleanup -> probe -> prepare -> apply -> status`; repeat
+`apply` only after reviewing the previous component. `restore` rolls back all
+components changed by the active pilot. Each action logs a
+`YACS_MF_CHUNK {"ok": ...}` receipt and writes
+`Saved/RuntimeProof/MaterialForgeChunked/latest.json`.
+
+The pilot intentionally tests only the immediate visual defects: bilinear
+appearance-mask sampling (plus a bounded five-tap presentation average) and
+world-aligned rock/soil projection. It does not alter source mask bytes, world
+semantics, terrain geometry, PCG/PCGEx authority, or constitute final
+whole-Landscape visual/performance admission.
+
 ## Checkpoint and recovery tools
 
 | Tool | Purpose |

@@ -152,7 +152,7 @@ def create_material(recipe, manifest, input_root, key):
     texture = load_required(paths[0])
     for prop, value in {
         "srgb": False,
-        "filter": unreal.TextureFilter.TF_NEAREST,
+        "filter": unreal.TextureFilter.TF_BILINEAR,
         "address_x": unreal.TextureAddress.TA_CLAMP,
         "address_y": unreal.TextureAddress.TA_CLAMP,
         "mip_gen_settings": unreal.TextureMipGenSettings.TMGS_NO_MIPMAPS,
