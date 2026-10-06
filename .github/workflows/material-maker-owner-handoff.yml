@@ -1,0 +1,91 @@
+name: Material Maker owner handoff
+
+on:
+  push:
+    branches:
+      - "codex/363-landscape-material-foundation"
+    paths:
+      - ".github/workflows/material-maker-owner-handoff.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  launch:
+    name: Launch Material Maker UI
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+
+      - name: Launch Material Maker in logged-on desktop session
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+          $state | ConvertTo-Json -Depth 8 | Write-Host
+          if ($state.status -ne 'IDLE') {
+            throw "Unreal host is not idle; status=$($state.status). Refusing GUI handoff."
+          }
+
+          $existing = @(Get-CimInstance Win32_Process | Where-Object {
+            $_.Name -ieq 'material_maker.exe'
+          })
+          if ($existing.Count -gt 0) {
+            Write-Host "MATERIAL MAKER ALREADY RUNNING: pid=$($existing[0].ProcessId) session=$($existing[0].SessionId)"
+            exit 0
+          }
+
+          $root = 'D:\yacs\tool-cache\material-forge\material-maker-1.7'
+          $exe = Get-ChildItem -LiteralPath $root -Filter 'material_maker.exe' -Recurse -ErrorAction Stop | Select-Object -First 1
+          if ($null -eq $exe) {
+            throw "Material Maker 1.7 executable not found under $root"
+          }
+
+          $explorers = @(Get-CimInstance Win32_Process -Filter "Name='explorer.exe'")
+          if ($explorers.Count -eq 0) {
+            throw 'No logged-on Windows desktop session found (explorer.exe absent).'
+          }
+
+          $explorer = $explorers | Sort-Object SessionId -Descending | Select-Object -First 1
+          $owner = Invoke-CimMethod -InputObject $explorer -MethodName GetOwner
+          if ($owner.ReturnValue -ne 0 -or [string]::IsNullOrWhiteSpace($owner.User)) {
+            throw 'Cannot resolve owner of logged-on desktop session.'
+          }
+          $userId = if ([string]::IsNullOrWhiteSpace($owner.Domain)) {
+            $owner.User
+          } else {
+            "$($owner.Domain)\$($owner.User)"
+          }
+
+          $taskName = 'YACS-MaterialMaker-OwnerHandoff'
+          Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
+
+          $action = New-ScheduledTaskAction -Execute $exe.FullName -Argument '--no-splash' -WorkingDirectory $exe.Directory.FullName
+          $principal = New-ScheduledTaskPrincipal -UserId $userId -LogonType Interactive -RunLevel Limited
+          Register-ScheduledTask -TaskName $taskName -Action $action -Principal $principal -Force | Out-Null
+          Start-ScheduledTask -TaskName $taskName
+
+          $deadline = [DateTime]::UtcNow.AddSeconds(45)
+          $process = $null
+          while ($null -eq $process -and [DateTime]::UtcNow -lt $deadline) {
+            Start-Sleep -Seconds 1
+            $process = @(Get-CimInstance Win32_Process | Where-Object {
+              $_.Name -ieq 'material_maker.exe' -and $_.SessionId -eq $explorer.SessionId
+            }) | Select-Object -First 1
+          }
+
+          Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
+
+          if ($null -eq $process) {
+            throw "Material Maker did not appear in interactive session $($explorer.SessionId)."
+          }
+
+          Write-Host "MATERIAL MAKER OWNER HANDOFF PASS: pid=$($process.ProcessId) session=$($process.SessionId) user=$userId exe=$($exe.FullName)"
