@@ -31,51 +31,143 @@ EXPORT_PREFIX = "YACS_Material"
 EXPECTED_NORMAL_CONVENTION = "DirectX"
 SEMANTIC_OWNER = "PCG/PCGEx"
 GENERATOR_ID = "yacs-material-forge"
-GENERATOR_VERSION = 1
+GENERATOR_VERSION = 2
 
 ASPHALT_FUNCTION = r"""
+float yacs_rect_patch(vec2 uv, float cells, float salt) {
+    vec2 p = uv*cells;
+    vec2 cell = floor(p);
+    vec2 local = fract(p);
+    vec2 wrapped = mod(cell,cells);
+    float cell_gate = smoothstep(0.78,0.94,yacs_hash(wrapped,salt));
+    vec2 center = vec2(
+        0.5+0.20*(yacs_hash(wrapped,salt+3.0)-0.5),
+        0.5+0.20*(yacs_hash(wrapped,salt+5.0)-0.5)
+    );
+    vec2 half_size = vec2(
+        mix(0.18,0.36,yacs_hash(wrapped,salt+7.0)),
+        mix(0.10,0.25,yacs_hash(wrapped,salt+11.0))
+    );
+    vec2 delta = abs(local-center)-half_size;
+    float signed_box = max(delta.x,delta.y);
+    return cell_gate*(1.0-smoothstep(-0.015,0.045,signed_box));
+}
+float yacs_contour_crack(vec2 uv, float cells, float salt, float level, float width) {
+    float field = yacs_noise(uv,cells,salt);
+    return 1.0-smoothstep(width,width*2.6,abs(field-level));
+}
 vec4 yacs_limestone(vec2 uv, float seed, float fractures, float pores) {
-    vec2 warp = vec2(yacs_noise(uv,7.0,seed), yacs_noise(uv,7.0,seed+3.0))-0.5;
-    vec2 q = uv + 0.018*warp;
-    vec3 coarse_cells = yacs_cells(q,23.0,seed+11.0);
-    float crack_gate = smoothstep(0.50,0.72,yacs_noise(q,8.0,seed+17.0));
-    float crack_width = mix(0.010,0.032,yacs_noise(q,31.0,seed+21.0));
-    float crack = (1.0-smoothstep(0.0,crack_width,coarse_cells.y))*crack_gate;
-    float patch_field = yacs_noise(q,5.0,seed+31.0);
-    float patch_edge = abs(yacs_noise(q,17.0,seed+37.0)-0.5);
-    float patch_mask = smoothstep(0.58,0.78,patch_field) *
-                       (1.0-smoothstep(0.10,0.30,patch_edge));
-    float aggregate = yacs_noise(q,181.0,seed+43.0);
-    float micro = yacs_noise(q,421.0,seed+47.0);
-    float oxidation = yacs_noise(q,13.0,seed+53.0);
-    float height = 0.50 + 0.020*(aggregate-0.5) + 0.008*(micro-0.5);
-    height += 0.010*(oxidation-0.5) + 0.012*patch_mask;
-    height -= fractures*0.060*crack + pores*0.012*patch_mask;
-    float variation = clamp(0.52*oxidation + 0.30*aggregate + 0.18*micro,0.0,1.0);
-    return vec4(clamp(height,0.0,1.0),clamp(crack,0.0,1.0),
-                clamp(patch_mask,0.0,1.0),variation);
+    vec2 warp = vec2(yacs_noise(uv,13.0,seed),yacs_noise(uv,13.0,seed+3.0))-0.5;
+    vec2 q = uv+0.012*warp;
+    float fatigue_gate = smoothstep(
+        0.60-0.08*clamp(fractures,0.0,1.5),
+        0.76-0.06*clamp(fractures,0.0,1.5),
+        yacs_noise(q,11.0,seed+17.0)
+    );
+    float primary_crack = yacs_contour_crack(q,23.0,seed+19.0,0.50,0.011);
+    float secondary_crack = yacs_contour_crack(q,41.0,seed+23.0,0.46,0.008);
+    float crack = clamp(
+        primary_crack*fatigue_gate+
+        0.42*secondary_crack*smoothstep(0.58,0.74,yacs_noise(q,19.0,seed+29.0)),
+        0.0,1.0
+    );
+    float repair_a = yacs_rect_patch(q,9.0,seed+31.0);
+    float repair_b = yacs_rect_patch(q+vec2(0.173,0.319),13.0,seed+37.0);
+    float patch_mask = clamp(
+        (repair_a+0.55*repair_b)*clamp(0.22+0.72*pores,0.0,1.0),
+        0.0,1.0
+    );
+    float aggregate = 0.58*yacs_noise(q,257.0,seed+43.0)
+                    + 0.42*yacs_noise(q,521.0,seed+47.0);
+    float binder = yacs_noise(q,47.0,seed+53.0);
+    float micro = yacs_noise(q,733.0,seed+59.0);
+    float height = 0.50+0.017*(aggregate-0.5)+0.006*(micro-0.5);
+    height += 0.008*(binder-0.5)+0.009*patch_mask;
+    height -= clamp(fractures,0.0,1.6)*0.046*crack;
+    float variation = clamp(0.46*binder+0.34*aggregate+0.20*micro,0.0,1.0);
+    return vec4(clamp(height,0.0,1.0),crack,patch_mask,variation);
+}
+"""
+
+LIMESTONE_FUNCTION = r"""
+vec4 yacs_limestone(vec2 uv, float seed, float fractures, float pores) {
+    vec2 warp = vec2(yacs_noise(uv,11.0,seed),yacs_noise(uv,11.0,seed+3.0))-0.5;
+    vec2 detail_warp = vec2(yacs_noise(uv,31.0,seed+5.0),yacs_noise(uv,31.0,seed+9.0))-0.5;
+    vec2 q = uv+0.020*warp+0.004*detail_warp;
+    vec3 major = yacs_cells(q,13.0,seed+11.0);
+    float macro = yacs_noise(q,9.0,seed+31.0);
+    float middle = yacs_noise(q,43.0,seed+41.0);
+    float fine = yacs_noise(q,149.0,seed+47.0);
+    float grain = yacs_noise(q,431.0,seed+51.0);
+
+    float fracture_width = mix(0.010,0.036,yacs_noise(q,29.0,seed+13.0));
+    float fracture = 1.0-smoothstep(0.0,fracture_width,major.y);
+    fracture *= smoothstep(0.46,0.64,yacs_noise(q,17.0,seed+17.0));
+
+    vec3 secondary = yacs_cells(q,37.0,seed+83.0);
+    float fissure = (1.0-smoothstep(0.0,0.040,secondary.y));
+    fissure *= smoothstep(0.54,0.72,yacs_noise(q,23.0,seed+85.0));
+
+    vec3 cavities = yacs_cells(q,71.0,seed+61.0);
+    float pit = (1.0-smoothstep(0.018,0.24,cavities.x));
+    pit *= smoothstep(0.62,0.82,cavities.z);
+
+    float karst_channel = 1.0-smoothstep(
+        0.020,0.070,abs(yacs_noise(q,27.0,seed+67.0)-0.48)
+    );
+    karst_channel *= smoothstep(0.58,0.75,yacs_noise(q,13.0,seed+71.0));
+    float pore_mask = clamp(max(pit,0.55*karst_channel),0.0,1.0);
+
+    float height = 0.55+0.072*(macro-0.5)+0.047*(middle-0.5);
+    height += 0.024*(fine-0.5)+0.009*(grain-0.5);
+    height -= clamp(fractures,0.0,1.7)*(0.070*fracture+0.024*fissure);
+    height -= clamp(pores,0.0,1.6)*(0.042*pit+0.022*karst_channel);
+
+    float fracture_mask = clamp(max(fracture,0.48*fissure),0.0,1.0);
+    float variation = clamp(0.40*macro+0.34*middle+0.26*fine,0.0,1.0);
+    return vec4(clamp(height,0.0,1.0),fracture_mask,pore_mask,variation);
 }
 """
 
 SOIL_FUNCTION = r"""
 vec4 yacs_limestone(vec2 uv, float seed, float fractures, float pores) {
-    vec2 warp = vec2(yacs_noise(uv,9.0,seed), yacs_noise(uv,9.0,seed+3.0))-0.5;
-    vec2 q = uv + 0.014*warp;
-    vec3 pebble_cells = yacs_cells(q,67.0,seed+11.0);
-    float pebble = (1.0-smoothstep(0.03,0.31,pebble_cells.x));
-    pebble *= smoothstep(0.63,0.82,pebble_cells.z);
-    float crust = smoothstep(0.57,0.77,yacs_noise(q,12.0,seed+23.0));
-    float fines = yacs_noise(q,157.0,seed+31.0);
-    float grain = yacs_noise(q,433.0,seed+37.0);
-    float broad = yacs_noise(q,6.0,seed+41.0);
-    float height = 0.47 + fractures*0.050*pebble + 0.017*(fines-0.5);
-    height += 0.008*(grain-0.5) - pores*0.010*crust;
-    float variation = clamp(0.48*broad + 0.30*fines + 0.22*grain,0.0,1.0);
-    return vec4(clamp(height,0.0,1.0),clamp(pebble,0.0,1.0),
-                clamp(crust,0.0,1.0),variation);
+    vec2 warp = vec2(yacs_noise(uv,13.0,seed),yacs_noise(uv,13.0,seed+3.0))-0.5;
+    vec2 q = uv+0.010*warp;
+
+    vec3 coarse_cells = yacs_cells(q,43.0,seed+11.0);
+    float coarse_pebble = 1.0-smoothstep(0.030,0.30,coarse_cells.x);
+    coarse_pebble *= smoothstep(0.55,0.80,coarse_cells.z);
+
+    vec3 small_cells = yacs_cells(q,97.0,seed+17.0);
+    float small_pebble = 1.0-smoothstep(0.020,0.22,small_cells.x);
+    small_pebble *= smoothstep(0.68,0.86,small_cells.z);
+
+    float pebble = clamp(
+        clamp(fractures,0.0,1.5)*(coarse_pebble+0.48*small_pebble),
+        0.0,1.0
+    );
+
+    vec3 crust_cells = yacs_cells(q,29.0,seed+23.0);
+    float crust_crack = 1.0-smoothstep(0.0,0.032,crust_cells.y);
+    crust_crack *= smoothstep(0.48,0.68,yacs_noise(q,17.0,seed+27.0));
+    float crust_plate = smoothstep(0.58,0.76,yacs_noise(q,23.0,seed+29.0));
+    float crust = clamp(
+        clamp(pores,0.0,1.5)*(crust_crack+0.28*crust_plate),
+        0.0,1.0
+    );
+
+    float fines = yacs_noise(q,173.0,seed+31.0);
+    float grain = yacs_noise(q,487.0,seed+37.0);
+    float mineral = yacs_noise(q,17.0,seed+41.0);
+    float height = 0.47+0.055*coarse_pebble*clamp(fractures,0.0,1.5);
+    height += 0.024*small_pebble*clamp(fractures,0.0,1.5);
+    height += 0.014*(fines-0.5)+0.006*(grain-0.5);
+    height -= 0.040*crust_crack*clamp(pores,0.0,1.5);
+    height -= 0.006*crust_plate*clamp(pores,0.0,1.5);
+    float variation = clamp(0.42*mineral+0.34*fines+0.24*grain,0.0,1.0);
+    return vec4(clamp(height,0.0,1.0),pebble,crust,variation);
 }
 """
-
 
 def _json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
@@ -157,7 +249,7 @@ def _replace_surface_function(base_module, family_id: str) -> str:
     if family_id == "mediterranean_soil":
         return helpers + SOIL_FUNCTION
     if family_id == "regional_limestone":
-        return base_module.FIELD
+        return helpers + LIMESTONE_FUNCTION
     raise ValueError(f"Unknown family: {family_id}")
 
 
@@ -181,7 +273,11 @@ def _color_output(family_id: str) -> str:
     if family_id == "aged_mountain_asphalt":
         return "vec3($(name_uv)_tone*0.97,$(name_uv)_tone*0.985,$(name_uv)_tone)"
     if family_id == "regional_limestone":
-        return "vec3($(name_uv)_tone+0.002,$(name_uv)_tone+0.003,$(name_uv)_tone+0.004)"
+        return (
+            "vec3($(name_uv)_tone*1.020+0.025*$variation($uv),"
+            "$(name_uv)_tone*0.990+0.008*$variation($uv),"
+            "$(name_uv)_tone*0.920)"
+        )
     if family_id == "mediterranean_soil":
         return "vec3($(name_uv)_tone*1.08,$(name_uv)_tone*0.98,$(name_uv)_tone*0.86)"
     raise ValueError(family_id)
@@ -191,20 +287,20 @@ def _color_code(family_id: str) -> str:
     if family_id == "aged_mountain_asphalt":
         return (
             "float $(name_uv)_tone = clamp($brightness"
-            "+0.11*($variation($uv)-0.5)-0.055*$crack($uv)"
-            "+0.035*$pore($uv),0.0,1.0);"
+            "+0.085*($variation($uv)-0.5)-0.060*$crack($uv)"
+            "-0.030*$pore($uv),0.0,1.0);"
         )
     if family_id == "regional_limestone":
         return (
             "float $(name_uv)_tone = clamp($brightness"
-            "+0.14*($variation($uv)-0.5)-0.048*$crack($uv)"
-            "-0.016*$pore($uv),0.0,1.0);"
+            "+0.105*($variation($uv)-0.5)-0.052*$crack($uv)"
+            "-0.030*$pore($uv),0.0,1.0);"
         )
     if family_id == "mediterranean_soil":
         return (
             "float $(name_uv)_tone = clamp($brightness"
-            "+0.18*($variation($uv)-0.5)+0.045*$crack($uv)"
-            "-0.030*$pore($uv),0.0,1.0);"
+            "+0.13*($variation($uv)-0.5)+0.055*$crack($uv)"
+            "-0.045*$pore($uv),0.0,1.0);"
         )
     raise ValueError(family_id)
 

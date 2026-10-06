@@ -19,6 +19,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: material-forge-mallorca-${{ github.ref_name }}
@@ -252,3 +253,14 @@ jobs:
           if-no-files-found: warn
           compression-level: 0
           retention-days: 7
+
+  ue-canary:
+    name: UE canary
+    needs: render-determinism
+    permissions:
+      contents: read
+      actions: read
+    uses: ./.github/workflows/material-forge-ue-canary.yml
+    with:
+      target_sha: ${{ github.sha }}
+      proof_artifact_name: material-forge-mallorca-${{ github.sha }}-${{ github.run_attempt }}

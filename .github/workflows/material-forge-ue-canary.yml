@@ -1,31 +1,29 @@
 name: Material Forge UE canary
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - "codex/363-landscape-material-foundation"
-    paths:
-      - ".github/workflows/material-forge-ue-canary.yml"
-      - "scripts/ue/run_material_forge_canary_proof.py"
-      - "scripts/ue/import_material_forge_variant.py"
-      - "scripts/ue/preview_material_forge_canary.py"
-      - "scripts/assets/material_forge.py"
-      - "worldgen/materials/material_forge/**"
+  workflow_call:
+    inputs:
+      target_sha:
+        description: Exact Material Forge source revision proved by the render job.
+        required: true
+        type: string
+      proof_artifact_name:
+        description: Exact render-proof artifact name from the caller run.
+        required: true
+        type: string
 
 permissions:
   contents: read
   actions: read
 
 concurrency:
-  group: material-forge-ue-canary-${{ github.ref_name }}
+  group: material-forge-ue-canary-${{ inputs.target_sha }}
   cancel-in-progress: true
 
 env:
   GIT_LFS_SKIP_SMUDGE: "1"
-  YACS_RENDER_PROOF_SHA: 2598abc562c110434469e1be63c7e626b12ba80c
-  YACS_RENDER_PROOF_ARTIFACT_ID: "11396409993"
-  YACS_RENDER_PROOF_ARTIFACT_SHA256: bc39d7fe2243ab34c8e71a8f0016962ff8877569fa15819387c5af318a93146b
+  YACS_RENDER_PROOF_SHA: ${{ inputs.target_sha }}
+  YACS_RENDER_PROOF_ARTIFACT_NAME: ${{ inputs.proof_artifact_name }}
 
 jobs:
   canary:
@@ -50,7 +48,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: _material-forge-ue-canary
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.target_sha }}
           fetch-depth: 0
           lfs: false
           clean: false
@@ -62,9 +60,9 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $actual = (git rev-parse HEAD).Trim()
-          if ($actual -ne $env:GITHUB_SHA) { throw "checkout HEAD '$actual' != event SHA '$env:GITHUB_SHA'" }
-          git merge-base --is-ancestor $env:YACS_RENDER_PROOF_SHA HEAD
-          if ($LASTEXITCODE -ne 0) { throw "Render proof SHA is not an ancestor of execution SHA." }
+          if ($actual -ne $env:YACS_RENDER_PROOF_SHA) {
+            throw "checkout HEAD '$actual' != proved SHA '$env:YACS_RENDER_PROOF_SHA'"
+          }
           $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
           $state | ConvertTo-Json -Depth 8 | Write-Host
           if ($state.status -ne 'IDLE') { throw "Shared Unreal host is already owned; status=$($state.status)." }
@@ -76,15 +74,37 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           $ErrorActionPreference = 'Stop'
-          $root = Join-Path $env:RUNNER_TEMP "material-forge-canary-$env:GITHUB_SHA"
+          $root = Join-Path $env:RUNNER_TEMP "material-forge-canary-$env:YACS_RENDER_PROOF_SHA"
           Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue
           New-Item -ItemType Directory -Force -Path $root | Out-Null
+
+          $inventoryPath = Join-Path $root 'artifact-inventory.json'
+          $inventoryUrl = "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts?per_page=100"
+          & curl.exe -L --fail-with-body -H "Authorization: Bearer $env:GITHUB_TOKEN" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" -o $inventoryPath $inventoryUrl
+          if ($LASTEXITCODE -ne 0) { throw 'Render proof artifact inventory failed.' }
+          $inventory = Get-Content -LiteralPath $inventoryPath -Raw | ConvertFrom-Json
+          $matches = @(
+            $inventory.artifacts |
+              Where-Object {
+                $_.name -eq $env:YACS_RENDER_PROOF_ARTIFACT_NAME -and
+                $_.expired -ne $true
+              }
+          )
+          if ($matches.Count -ne 1) {
+            throw "Expected exactly one render proof artifact '$env:YACS_RENDER_PROOF_ARTIFACT_NAME'; found $($matches.Count)."
+          }
+          $artifact = $matches[0]
           $zip = Join-Path $root 'render-proof.zip'
-          $url = "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/$env:YACS_RENDER_PROOF_ARTIFACT_ID/zip"
-          & curl.exe -L --fail-with-body -H "Authorization: Bearer $env:GITHUB_TOKEN" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" -o $zip $url
+          & curl.exe -L --fail-with-body -H "Authorization: Bearer $env:GITHUB_TOKEN" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" -o $zip $artifact.archive_download_url
           if ($LASTEXITCODE -ne 0) { throw 'Render proof artifact download failed.' }
           $digest = (Get-FileHash -Algorithm SHA256 -LiteralPath $zip).Hash.ToLowerInvariant()
-          if ($digest -ne $env:YACS_RENDER_PROOF_ARTIFACT_SHA256) { throw "Render proof archive digest mismatch: $digest" }
+          $expectedDigest = [string]$artifact.digest
+          if (-not $expectedDigest.StartsWith('sha256:')) {
+            throw "Render proof artifact metadata lacks SHA256 digest: '$expectedDigest'"
+          }
+          if ($digest -ne $expectedDigest.Substring(7).ToLowerInvariant()) {
+            throw "Render proof archive digest mismatch: $digest != $expectedDigest"
+          }
 
           $proof = Join-Path $root 'render-proof'
           Expand-Archive -LiteralPath $zip -DestinationPath $proof -Force
@@ -109,7 +129,7 @@ jobs:
           "YACS_MATERIAL_FORGE_VARIANT_DIR=$variant" >> $env:GITHUB_ENV
           "YACS_MATERIAL_FORGE_CANARY_ROOT=$canaryProof" >> $env:GITHUB_ENV
           "YACS_MATERIAL_FORGE_ARTIFACT_SHA=$env:YACS_RENDER_PROOF_SHA" >> $env:GITHUB_ENV
-          "YACS_MATERIAL_FORGE_EXECUTION_SHA=$env:GITHUB_SHA" >> $env:GITHUB_ENV
+          "YACS_MATERIAL_FORGE_EXECUTION_SHA=$env:YACS_RENDER_PROOF_SHA" >> $env:GITHUB_ENV
 
       - name: Materialize Unreal LFS content
         shell: pwsh
@@ -236,10 +256,10 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
         with:
-          name: material-forge-ue-canary-${{ github.sha }}-${{ github.run_attempt }}
+          name: material-forge-ue-canary-${{ inputs.target_sha }}-${{ github.run_attempt }}
           path: |
-            ${{ runner.temp }}/material-forge-canary-${{ github.sha }}/carry-forward-plan.json
-            ${{ runner.temp }}/material-forge-canary-${{ github.sha }}/variant-revalidation.log
-            ${{ runner.temp }}/material-forge-canary-${{ github.sha }}/ue/**
+            ${{ runner.temp }}/material-forge-canary-${{ inputs.target_sha }}/carry-forward-plan.json
+            ${{ runner.temp }}/material-forge-canary-${{ inputs.target_sha }}/variant-revalidation.log
+            ${{ runner.temp }}/material-forge-canary-${{ inputs.target_sha }}/ue/**
           if-no-files-found: warn
           retention-days: 7
