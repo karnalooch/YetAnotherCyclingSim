@@ -42,14 +42,19 @@ func render_variant():
 		"Height.exr",
 		"DetailMasks.png",
 	]:
-		var image = Image.load_from_file(output_prefix + "_" + suffix)
+		var output_path = output_prefix + "_" + suffix
+		var image = Image.load_from_file(output_path)
 		if image == null or image.is_empty():
 			valid = false
 			continue
+		var output_sha256 = FileAccess.get_sha256(output_path)
+		if output_sha256.is_empty():
+			valid = false
 		checks[suffix] = {
 			"width": image.get_width(),
 			"height": image.get_height(),
 			"format": image.get_format(),
+			"sha256": output_sha256,
 		}
 		valid = valid and image.get_width() == resolution and image.get_height() == resolution
 	var report = FileAccess.open(output_prefix + "_native-check.json", FileAccess.WRITE)

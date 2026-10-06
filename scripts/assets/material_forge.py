@@ -528,6 +528,9 @@ def check_variant(directory: Path, expected_resolution: int = 2048) -> dict[str,
             expected_resolution,
         ]:
             raise ValueError(f"Native resolution mismatch: {suffix}")
+        output_path = export / f"{EXPORT_PREFIX}_{suffix}"
+        if image.get("sha256") != sha256_path(output_path):
+            raise ValueError(f"Native decode hash mismatch: {suffix}")
 
     result = {
         "status": "MAP_CHECKS_PASS_UE_REVIEW_PENDING",

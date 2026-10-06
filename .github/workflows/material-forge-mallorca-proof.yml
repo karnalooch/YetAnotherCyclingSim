@@ -1,0 +1,221 @@
+name: Material Forge Mallorca proof
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "codex/363-landscape-material-foundation"
+    paths:
+      - ".github/workflows/material-forge-mallorca-proof.yml"
+      - "scripts/assets/material_forge.py"
+      - "scripts/assets/render_material_forge.py"
+      - "scripts/assets/render_material_forge.gd"
+      - "scripts/assets/build_material_maker_limestone.py"
+      - "scripts/assets/material_forge_proof_board.py"
+      - "scripts/assets/test_material_forge.py"
+      - "worldgen/materials/material_forge/**"
+      - "tools/material-forge/**"
+      - "docs/tooling/MATERIAL_FORGE.md"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: material-forge-mallorca-${{ github.ref_name }}
+  cancel-in-progress: true
+
+env:
+  GIT_LFS_SKIP_SMUDGE: "1"
+  MM_ARCHIVE_SHA256: deb4416bc939861d48097a866a8b2bf0363c29ff64874f2e04478658ff900808
+  GODOT_ARCHIVE_SHA256: 731980f9608d61333e5baf54a2ef17210acc7a538446c0cb9969f002aca1e953
+  MM_SOURCE_SHA: 4d29a815489866aae483281cf44b2cfe48d3cc3e
+
+jobs:
+  render-determinism:
+    name: Render 3x3 catalog twice
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 90
+    steps:
+      - name: Isolate Git configuration
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'material-forge.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          $env:GIT_CONFIG_GLOBAL = $isolated
+          $env:GIT_CONFIG_NOSYSTEM = '1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot enable long paths.' }
+
+      - name: Checkout exact proof revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+
+      - name: Verify exact SHA and idle shared host
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $actual = (git rev-parse HEAD).Trim()
+          if ($actual -ne $env:GITHUB_SHA) {
+            throw "checkout HEAD '$actual' != event SHA '$env:GITHUB_SHA'"
+          }
+          $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+          $state | ConvertTo-Json -Depth 8 | Write-Host
+          if ($state.status -ne 'IDLE') {
+            throw "Shared Unreal host is already owned; status=$($state.status). Local/unknown Editors win."
+          }
+
+      - name: Provision pinned authoring tools on D drive
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $toolRoot = 'D:\yacs\tool-cache\material-forge'
+          New-Item -ItemType Directory -Force -Path $toolRoot | Out-Null
+
+          function Assert-Sha256([string]$Path, [string]$Expected) {
+            $actual = (Get-FileHash -Algorithm SHA256 -LiteralPath $Path).Hash.ToLowerInvariant()
+            if ($actual -ne $Expected.ToLowerInvariant()) {
+              throw "SHA256 mismatch for $Path : $actual != $Expected"
+            }
+          }
+
+          $mmZip = Join-Path $toolRoot 'material_maker_1_7_windows.zip'
+          if (-not (Test-Path -LiteralPath $mmZip)) {
+            Invoke-WebRequest -Uri 'https://github.com/RodZill4/material-maker/releases/download/1.7/material_maker_1_7_windows.zip' -OutFile $mmZip
+          }
+          Assert-Sha256 $mmZip $env:MM_ARCHIVE_SHA256
+          $mmRoot = Join-Path $toolRoot 'material-maker-1.7'
+          $mmExe = Get-ChildItem -LiteralPath $mmRoot -Filter 'material_maker.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($null -eq $mmExe) {
+            Remove-Item -LiteralPath $mmRoot -Recurse -Force -ErrorAction SilentlyContinue
+            New-Item -ItemType Directory -Force -Path $mmRoot | Out-Null
+            Expand-Archive -LiteralPath $mmZip -DestinationPath $mmRoot -Force
+            $mmExe = Get-ChildItem -LiteralPath $mmRoot -Filter 'material_maker.exe' -Recurse | Select-Object -First 1
+          }
+          if ($null -eq $mmExe) { throw 'Material Maker 1.7 executable missing after extraction.' }
+          $mmInstall = $mmExe.Directory.FullName
+          if (-not (Test-Path -LiteralPath (Join-Path $mmInstall 'nodes\material.mmg'))) {
+            throw "Material Maker install lacks nodes/material.mmg: $mmInstall"
+          }
+
+          $godotZip = Join-Path $toolRoot 'Godot_v4.7.2-stable_win64.exe.zip'
+          if (-not (Test-Path -LiteralPath $godotZip)) {
+            Invoke-WebRequest -Uri 'https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_win64.exe.zip' -OutFile $godotZip
+          }
+          Assert-Sha256 $godotZip $env:GODOT_ARCHIVE_SHA256
+          $godotRoot = Join-Path $toolRoot 'godot-4.7.2-stable'
+          $godotExe = Get-ChildItem -LiteralPath $godotRoot -Filter 'Godot_v4.7.2-stable_win64.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($null -eq $godotExe) {
+            Remove-Item -LiteralPath $godotRoot -Recurse -Force -ErrorAction SilentlyContinue
+            New-Item -ItemType Directory -Force -Path $godotRoot | Out-Null
+            Expand-Archive -LiteralPath $godotZip -DestinationPath $godotRoot -Force
+            $godotExe = Get-ChildItem -LiteralPath $godotRoot -Filter 'Godot_v4.7.2-stable_win64.exe' -Recurse | Select-Object -First 1
+          }
+          if ($null -eq $godotExe) { throw 'Godot 4.7.2 executable missing after extraction.' }
+
+          $source = Join-Path $toolRoot "material-maker-source-$($env:MM_SOURCE_SHA)"
+          if (-not (Test-Path -LiteralPath (Join-Path $source '.git'))) {
+            Remove-Item -LiteralPath $source -Recurse -Force -ErrorAction SilentlyContinue
+            git clone --no-checkout https://github.com/RodZill4/material-maker.git $source
+            if ($LASTEXITCODE -ne 0) { throw 'Material Maker source clone failed.' }
+          }
+          git -C $source fetch --force --depth=1 origin $env:MM_SOURCE_SHA
+          if ($LASTEXITCODE -ne 0) { throw 'Material Maker source fetch failed.' }
+          git -C $source checkout --detach --force $env:MM_SOURCE_SHA
+          if ($LASTEXITCODE -ne 0) { throw 'Material Maker source checkout failed.' }
+          git -C $source clean -ffdx
+          if ($LASTEXITCODE -ne 0) { throw 'Material Maker source cleanup failed.' }
+          $sourceHead = (git -C $source rev-parse HEAD).Trim()
+          if ($sourceHead -ne $env:MM_SOURCE_SHA) {
+            throw "Material Maker source HEAD '$sourceHead' != '$env:MM_SOURCE_SHA'"
+          }
+          Set-Content -LiteralPath (Join-Path $source 'steam_appid.txt') -Value '4110830' -Encoding ascii
+          if (-not (Test-Path -LiteralPath (Join-Path $source 'project.godot'))) {
+            throw 'Material Maker source checkout lacks project.godot.'
+          }
+
+          $venv = Join-Path $toolRoot 'python'
+          $venvPython = Join-Path $venv 'Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $venvPython)) {
+            python -m venv $venv
+            if ($LASTEXITCODE -ne 0) { throw 'Material Forge venv creation failed.' }
+          }
+          & $venvPython -m pip install --disable-pip-version-check --only-binary=:all: numpy==2.3.5 Pillow==12.3.0
+          if ($LASTEXITCODE -ne 0) { throw 'Material Forge Python dependency install failed.' }
+
+          "YACS_MM_INSTALL=$mmInstall" >> $env:GITHUB_ENV
+          "YACS_MM_SOURCE=$source" >> $env:GITHUB_ENV
+          "YACS_GODOT=$($godotExe.FullName)" >> $env:GITHUB_ENV
+          "YACS_FORGE_PY=$venvPython" >> $env:GITHUB_ENV
+
+      - name: Run Material Forge contract tests
+        shell: pwsh
+        run: |
+          & $env:YACS_FORGE_PY scripts/assets/test_material_forge.py
+          if ($LASTEXITCODE -ne 0) { throw 'Material Forge contract tests failed.' }
+
+      - name: Author render validate and replay all nine variants
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $proof = Join-Path $env:RUNNER_TEMP "material-forge-mallorca-$env:GITHUB_SHA"
+          Remove-Item -LiteralPath $proof -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path $proof | Out-Null
+          $runA = Join-Path $proof 'run-a'
+          $runB = Join-Path $proof 'run-b'
+
+          foreach ($run in @($runA, $runB)) {
+            & $env:YACS_FORGE_PY scripts/assets/material_forge.py author --material-maker $env:YACS_MM_INSTALL --output $run
+            if ($LASTEXITCODE -ne 0) { throw "Material Forge author failed: $run" }
+
+            $manifest = Get-Content -LiteralPath (Join-Path $run 'run-manifest.json') -Raw | ConvertFrom-Json
+            if ($manifest.variants.Count -ne 9) { throw "Expected nine authored variants in $run" }
+            foreach ($entry in $manifest.variants) {
+              $relative = $entry.directory.Replace('/', [IO.Path]::DirectorySeparatorChar)
+              $variant = Join-Path $run $relative
+              Write-Host "Rendering $($entry.family)/$($entry.variant) -> $variant"
+              & $env:YACS_FORGE_PY scripts/assets/render_material_forge.py --godot $env:YACS_GODOT --source $env:YACS_MM_SOURCE --variant $variant --resolution 2048
+              if ($LASTEXITCODE -ne 0) { throw "Material Forge render failed: $($entry.family)/$($entry.variant)" }
+            }
+
+            & $env:YACS_FORGE_PY scripts/assets/material_forge.py validate-run $run
+            if ($LASTEXITCODE -ne 0) { throw "Material Forge run validation failed: $run" }
+          }
+
+          $comparison = & $env:YACS_FORGE_PY scripts/assets/material_forge.py compare --left (Join-Path $runA 'run-manifest.json') --right (Join-Path $runB 'run-manifest.json')
+          if ($LASTEXITCODE -ne 0) { throw 'Material Forge two-run determinism comparison failed.' }
+          $comparison | Set-Content -LiteralPath (Join-Path $proof 'comparison.json') -Encoding utf8
+
+          $review = Join-Path $proof 'review'
+          & $env:YACS_FORGE_PY scripts/assets/material_forge_proof_board.py --run $runA --output $review
+          if ($LASTEXITCODE -ne 0) { throw 'Material Forge visual-board generation failed.' }
+
+          $summary = [ordered]@{
+            status = 'RENDER_DETERMINISM_PASS_UE_REVIEW_PENDING'
+            exact_sha = $env:GITHUB_SHA
+            variant_count = 9
+            run_a_manifest_sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $runA 'run-manifest.json')).Hash.ToLowerInvariant()
+            run_b_manifest_sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $runB 'run-manifest.json')).Hash.ToLowerInvariant()
+            comparison = Get-Content -LiteralPath (Join-Path $proof 'comparison.json') -Raw | ConvertFrom-Json
+            ue_canary = 'pending'
+            visual_acceptance = 'pending'
+            performance_acceptance = 'pending'
+          }
+          $summary | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath (Join-Path $proof 'proof-summary.json') -Encoding utf8
+          "YACS_FORGE_PROOF=$proof" >> $env:GITHUB_ENV
+
+      - name: Upload complete render proof
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: material-forge-mallorca-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/material-forge-mallorca-${{ github.sha }}
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 7

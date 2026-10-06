@@ -64,17 +64,29 @@ def _variant_fixture(root: Path, size: int = 64) -> None:
         _png(export / f"{forge.EXPORT_PREFIX}_{name}.png", np.clip(array * 255, 0, 255))
     (export / f"{forge.EXPORT_PREFIX}_Height.exr").write_bytes(b"\x76\x2f\x31\x01fixture")
     # Stub the external decoder at its JSON boundary; this is not a real EXR render.
+    suffixes = (
+        "BaseColor.png",
+        "Normal_DX.png",
+        "ORM.png",
+        "Height.exr",
+        "DetailMasks.png",
+    )
     (export / f"{forge.EXPORT_PREFIX}_native-check.json").write_text(
-        json.dumps({
-            "valid": True,
-            "images": {
-                suffix: {"width": size, "height": size}
-                for suffix in (
-                    "BaseColor.png", "Normal_DX.png", "ORM.png",
-                    "Height.exr", "DetailMasks.png",
-                )
-            },
-        }),
+        json.dumps(
+            {
+                "valid": True,
+                "images": {
+                    suffix: {
+                        "width": size,
+                        "height": size,
+                        "sha256": forge.sha256_path(
+                            export / f"{forge.EXPORT_PREFIX}_{suffix}"
+                        ),
+                    }
+                    for suffix in suffixes
+                },
+            }
+        ),
         encoding="utf-8",
     )
     (root / "provenance.json").write_text(
@@ -127,6 +139,16 @@ class MaterialForgeContractTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     forge.check_variant(root, expected_resolution=64)
                 self.assertFalse((root / "validation.json").exists())
+
+    def test_validator_rejects_stale_native_decode_receipt(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            _variant_fixture(root)
+            height = root / "export" / f"{forge.EXPORT_PREFIX}_Height.exr"
+            height.write_bytes(height.read_bytes() + b"changed-after-native-decode")
+            with self.assertRaisesRegex(ValueError, "Native decode hash mismatch"):
+                forge.check_variant(root, expected_resolution=64)
+            self.assertFalse((root / "validation.json").exists())
 
     def test_validator_rejects_semantic_ownership_violation(self):
         with tempfile.TemporaryDirectory() as directory:
