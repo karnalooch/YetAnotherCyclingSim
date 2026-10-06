@@ -43,6 +43,8 @@ class PortablePowerShellContractTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn("shell: powershell", text)
+        self.assertIn("path: _portable-powershell-bootstrap", text)
+        self.assertIn("working-directory: _portable-powershell-bootstrap", text)
         self.assertIn("Install-YacsPortablePowerShell.ps1", text)
         self.assertIn("$env:GITHUB_PATH", text)
         self.assertIn("shell: pwsh", text)
