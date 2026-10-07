@@ -255,6 +255,16 @@ function Invoke-Phase2CCommandlet {
     if ([int]$Data.vertex_count -le 0 -or [int]$Data.triangle_count -le 0) {
         throw 'Phase 2C mesh receipt is empty.'
     }
+    if (
+        [int]$Data.pcgex_union_outer_count -ne 19 -or
+        [int]$Data.pcgex_union_hole_count -ne 19
+    ) {
+        throw (
+            "Phase 2C PCGEx PolyTree authority drift: outer={0}/19 holes={1}/19." -f
+                [int]$Data.pcgex_union_outer_count,
+                [int]$Data.pcgex_union_hole_count
+        )
+    }
     if ([double]$Data.max_edge_cm_after -gt 157.5) {
         throw "Phase 2C post-tessellation edge gate failed: $($Data.max_edge_cm_after) cm."
     }
@@ -336,6 +346,8 @@ $Proof = [ordered]@{
     generator = [ordered]@{
         pipeline = [string]$DataA.pipeline
         source_skin_cell_count = [int]$DataA.source_skin_cell_count
+        pcgex_union_outer_count = [int]$DataA.pcgex_union_outer_count
+        pcgex_union_hole_count = [int]$DataA.pcgex_union_hole_count
         mesh_count = [int]$DataA.mesh_count
         vertex_count = [int]$DataA.vertex_count
         triangle_count = [int]$DataA.triangle_count
