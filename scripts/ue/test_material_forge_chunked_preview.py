@@ -75,6 +75,14 @@ class MaterialForgeChunkedPreviewTests(unittest.TestCase):
         self.assertNotIn("TextureSample lacks TextureObject input", builder)
         self.assertNotIn('_link(weight_object, "", sample, "TextureObject")', builder)
 
+    def test_refinement_b_uses_detail_mask_macro_contract(self):
+        self.assertIn('"refined_b"', self.source)
+        self.assertIn('"DetailMasks"', self.source)
+        self.assertIn('"RockMacroTileSizeCm"', self.source)
+        self.assertIn('"SoilMacroTileSizeCm"', self.source)
+        self.assertIn('"RockMacroStrength"', self.source)
+        self.assertIn("8.0 <= macro_tile_metres <= 30.0", self.source)
+
     def test_fixed_master_orm_defaults_use_mask_compatible_placeholder(self):
         builder = (
             ROOT / "scripts/ue/build_material_forge_landscape_master.py"
