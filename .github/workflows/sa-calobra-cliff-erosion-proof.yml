@@ -1,0 +1,102 @@
+name: Sa Calobra Cliff Erosion Selector Proof
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "feat/429-cliff-erosion-selector-foundation"
+      - "codex/363-landscape-material-foundation"
+    paths:
+      - ".github/workflows/sa-calobra-cliff-erosion-proof.yml"
+      - "scripts/assets/prepare_sa_calobra_cliff_erosion.py"
+      - "scripts/assets/test_sa_calobra_cliff_erosion.py"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sa-calobra-cliff-erosion-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  selector-proof:
+    name: Frozen-grid cliff and scree selectors
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 20
+    env:
+      PYTHONUTF8: "1"
+    steps:
+      - name: Checkout exact selector revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+
+      - name: Verify exact checkout
+        shell: pwsh
+        run: |
+          $actual = (git rev-parse HEAD).Trim()
+          if ($actual -ne '${{ github.sha }}') {
+            throw "Cliff selector checkout mismatch: $actual != ${{ github.sha }}"
+          }
+
+      - name: Install pinned GIS proof dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check --only-binary=:all: numpy==2.3.5 rasterio==1.5.2 shapely==2.1.2 pillow==12.0.0
+          if ($LASTEXITCODE -ne 0) { throw 'Cliff selector GIS dependency install failed.' }
+
+      - name: Resolve retained frozen-grid inputs
+        shell: pwsh
+        run: |
+          $root = Join-Path $env:RUNNER_WORKSPACE '_yacs-world-data\sa-calobra-working-v1'
+          $normalized = Join-Path $root 'normalized-context-v1a-2026-10-04\manifest.json'
+          $pcg = Join-Path $root 'pcg-masks-v1-2026-10-04\pcg-mask-manifest.json'
+          foreach ($path in @($normalized, $pcg)) {
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+              throw "Required retained cliff-selector input missing: $path"
+            }
+          }
+          $out = Join-Path $env:RUNNER_TEMP "sa-calobra-cliff-erosion-${{ github.sha }}"
+          Remove-Item -LiteralPath $out -Recurse -Force -ErrorAction SilentlyContinue
+          "YACS_CLIFF_NORMALIZED=$normalized" >> $env:GITHUB_ENV
+          "YACS_CLIFF_PCG=$pcg" >> $env:GITHUB_ENV
+          "YACS_CLIFF_OUTPUT=$out" >> $env:GITHUB_ENV
+
+      - name: Run focused selector tests
+        shell: pwsh
+        run: |
+          python -m unittest scripts.assets.test_sa_calobra_cliff_erosion -v
+          if ($LASTEXITCODE -ne 0) { throw 'Cliff selector focused tests failed.' }
+
+      - name: Build whole-area selectors
+        shell: pwsh
+        run: |
+          python scripts/assets/prepare_sa_calobra_cliff_erosion.py --normalized-manifest $env:YACS_CLIFF_NORMALIZED --pcg-manifest $env:YACS_CLIFF_PCG --output $env:YACS_CLIFF_OUTPUT
+          if ($LASTEXITCODE -ne 0) { throw 'Cliff selector preparation failed.' }
+
+          $manifest = Get-Content -LiteralPath (Join-Path $env:YACS_CLIFF_OUTPUT 'cliff-erosion-manifest.json') -Raw | ConvertFrom-Json
+          if (
+            $manifest.status -ne 'CLIFF_EROSION_PRESENTATION_SELECTOR_CANDIDATE' -or
+            $manifest.geometry_mutation -ne $false -or
+            $manifest.canonical_landscape_mutation -ne $false -or
+            [int]$manifest.counts.cliff_candidate_cells -le 0 -or
+            [int]$manifest.counts.scree_candidate_cells -le 0 -or
+            [int]$manifest.counts.protected_cells -le 0
+          ) {
+            throw 'Cliff selector manifest contract failed.'
+          }
+          $manifest | ConvertTo-Json -Depth 12 | Write-Host
+
+      - name: Upload selector evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: sa-calobra-cliff-erosion-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/sa-calobra-cliff-erosion-${{ github.sha }}/**
+          if-no-files-found: warn
+          compression-level: 6
+          retention-days: 14
