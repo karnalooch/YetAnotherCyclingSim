@@ -42,10 +42,19 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         )
         self.assertNotIn("YACS_LFS_CACHE_ROOT: 'C:\\", text)
 
-    def test_single_editor_process_runs_both_ue_subproofs(self):
+    def test_fixed_master_bootstrap_isolated_from_canary_process(self):
         text = CANARY.read_text(encoding="utf-8")
         self.assertEqual(
             text.count("Start-Process -FilePath $engine.UnrealEditorPath"),
+            2,
+        )
+        self.assertIn("build_material_forge_landscape_master.py", text)
+        self.assertIn("YACS_MF_TEMPLATE_BUILDER_PROCESS_COUNT=1", text)
+
+    def test_single_editor_process_runs_both_ue_subproofs(self):
+        text = CANARY.read_text(encoding="utf-8")
+        self.assertEqual(
+            text.count("run_material_forge_unified_proof.py"),
             1,
         )
         self.assertIn("run_material_forge_unified_proof.py", text)
