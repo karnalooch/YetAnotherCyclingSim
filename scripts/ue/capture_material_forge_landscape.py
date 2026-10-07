@@ -44,6 +44,8 @@ _before_map_hash = None
 _instance = None
 _camera = None
 _transient_lights = []
+_transient_environment = []
+_recaptured_existing_skylights = []
 _task = None
 _handle = None
 _started = 0.0
@@ -240,6 +242,24 @@ def _ensure_lighting():
     skylights = list(
         unreal.GameplayStatics.get_all_actors_of_class(_world, unreal.SkyLight)
     )
+    atmospheres = list(
+        unreal.GameplayStatics.get_all_actors_of_class(_world, unreal.SkyAtmosphere)
+    )
+
+    spawned_atmosphere = False
+    if not atmospheres:
+        atmosphere = actors.spawn_actor_from_class(
+            unreal.SkyAtmosphere,
+            unreal.Vector(),
+            unreal.Rotator(),
+            transient=True,
+        )
+        if atmosphere is None:
+            raise RuntimeError("Transient SkyAtmosphere fallback creation failed")
+        _transient_environment.append(atmosphere)
+        atmospheres.append(atmosphere)
+        spawned_atmosphere = True
+
     if not directional:
         sun = actors.spawn_actor_from_class(
             unreal.DirectionalLight,
@@ -247,9 +267,15 @@ def _ensure_lighting():
             unreal.Rotator(pitch=-36.0, yaw=-52.0, roll=0.0),
             transient=True,
         )
-        sun.get_component_by_class(unreal.DirectionalLightComponent).set_intensity(6.0)
+        if sun is None:
+            raise RuntimeError("Transient DirectionalLight fallback creation failed")
+        sun_component = sun.get_component_by_class(unreal.DirectionalLightComponent)
+        sun_component.set_intensity(6.0)
+        sun_component.set_atmosphere_sun_light(True)
         _transient_lights.append(sun)
         directional.append(sun)
+
+    spawned_skylight = False
     if not skylights:
         sky = actors.spawn_actor_from_class(
             unreal.SkyLight,
@@ -257,13 +283,35 @@ def _ensure_lighting():
             unreal.Rotator(),
             transient=True,
         )
-        sky.get_component_by_class(unreal.SkyLightComponent).set_intensity(0.8)
+        if sky is None:
+            raise RuntimeError("Transient SkyLight fallback creation failed")
+        sky_component = sky.get_component_by_class(unreal.SkyLightComponent)
+        sky_component.set_intensity(1.35)
         _transient_lights.append(sky)
         skylights.append(sky)
+        spawned_skylight = True
+
+    recaptured = []
+    for sky in skylights:
+        sky_component = sky.get_component_by_class(unreal.SkyLightComponent)
+        if sky_component is None:
+            raise RuntimeError("SkyLight actor has no SkyLightComponent")
+        sky_component.recapture_sky()
+        recaptured.append(sky.get_path_name())
+        if sky not in _transient_lights:
+            _recaptured_existing_skylights.append(sky_component)
+
+    unreal.AutomationLibrary.finish_loading_before_screenshot()
     return {
         "directional_lights": len(directional),
         "skylights": len(skylights),
+        "sky_atmospheres": len(atmospheres),
+        "spawned_sky_atmosphere": spawned_atmosphere,
+        "spawned_skylight": spawned_skylight,
+        "skylight_recaptured": True,
+        "skylight_recapture_targets": recaptured,
         "transient_fallback_lights": len(_transient_lights),
+        "transient_environment_actors": len(_transient_environment),
     }
 
 
@@ -316,6 +364,12 @@ def _restore():
         for light in list(_transient_lights):
             actors.destroy_actor(light)
         _transient_lights.clear()
+        for actor in list(_transient_environment):
+            actors.destroy_actor(actor)
+        _transient_environment.clear()
+        for sky_component in list(_recaptured_existing_skylights):
+            sky_component.recapture_sky()
+        _recaptured_existing_skylights.clear()
     except Exception as exc:
         errors.append("transient actor cleanup: " + str(exc))
 

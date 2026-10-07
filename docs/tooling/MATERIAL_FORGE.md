@@ -396,3 +396,27 @@ Material Forge deterministic render x2
 
 Until that proof and owner review are green, PR #381 stays draft.
 
+## Cliff lighting response pass
+
+The three fixed-camera cliff diagnostics establish that the near-black cavities
+are a lighting/geometry response, not a BaseColor defect: they disappear in
+Unlit, remain in Lighting Only, and Detail Lighting only adds fine normal-map
+structure.
+
+The owner-review capture therefore uses a bounded, session-only outdoor lighting
+stack before judging the material:
+
+- ensure a Sky Atmosphere exists for the review session;
+- preserve the existing Directional Light, or create the existing fallback sun
+  only when the map has none;
+- preserve an existing Sky Light, or create a transient fallback Sky Light at
+  intensity 1.35;
+- explicitly call `RecaptureSky` after the atmosphere/light stack is ready;
+- capture the same four acceptance views and three diagnostics;
+- destroy all transient environment actors and recapture any pre-existing
+  Sky Light during rollback.
+
+This follows the UE 5.8 outdoor-lighting model rather than compensating with
+BaseColor. The accepted map is still never saved, Material Forge does not own
+lighting semantics, and geometry remains unchanged by this proof.
+
