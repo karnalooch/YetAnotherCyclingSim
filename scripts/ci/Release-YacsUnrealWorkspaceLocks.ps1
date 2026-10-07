@@ -278,12 +278,27 @@ if ($Remaining.Count -gt 0) {
 # The reusable Stage 3G proof keeps its checkout in a persistent child
 # directory. A cancelled Unreal process can therefore leave the default UE log
 # locked below that child even when the outer workspace log is clear.
+$DynamicAutomationLogs = @()
+foreach ($Worktree in @(
+    Get-ChildItem -LiteralPath $Workspace -Directory -Force -ErrorAction SilentlyContinue |
+        Where-Object {
+            $_.Name -eq '_unreal-ci-warm' -or
+            $_.Name -like '_unreal-build-*'
+        }
+)) {
+    foreach ($Relative in @(
+        'Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log',
+        'Saved/RuntimeProof/CI/Unreal/Proof/automation_run.log'
+    )) {
+        $DynamicAutomationLogs += (Join-Path $Worktree.FullName $Relative)
+    }
+}
+
 $LockedLogCandidates = @(
     (Join-Path $Workspace 'Saved/Logs/YetAnotherCyclingSim.log'),
     (Join-Path $Workspace '_stage3g-full-worktree/Saved/Logs/YetAnotherCyclingSim.log'),
-    (Join-Path $Workspace '_unreal-ci-warm/Saved/Logs/YetAnotherCyclingSim.log'),
-    (Join-Path $Workspace '_unreal-ci-warm/Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log')
-) | Select-Object -Unique
+    (Join-Path $Workspace '_unreal-ci-warm/Saved/Logs/YetAnotherCyclingSim.log')
+) + $DynamicAutomationLogs | Select-Object -Unique
 
 foreach ($LockedLog in $LockedLogCandidates) {
 if (Test-Path -LiteralPath $LockedLog -PathType Leaf) {
