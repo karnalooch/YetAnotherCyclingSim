@@ -28,8 +28,9 @@ public:
 	static bool FinishTextureCompilation(const TArray<UTexture2D*>& Textures);
 
 	/**
-	 * Drain all in-flight asset/shader compilation, then run full GC.
-	 * Returns a JSON receipt so Python proofs can verify the drain and memory recovery.
+	 * Drain all in-flight asset and shader compilation, then run full GC.
+	 * Returns a JSON receipt with shader-job/worker memory so Python proofs can
+	 * distinguish retained material memory from external compile-worker memory.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "YACS|Diagnostics")
 	static FString DrainAssetCompilationAndCollectGarbage();
