@@ -35,6 +35,12 @@ def main(*, load_map: bool = True):
     proof_root.mkdir(parents=True, exist_ok=True)
     artifact_sha = os.environ["YACS_MATERIAL_FORGE_ARTIFACT_SHA"]
     execution_sha = os.environ["YACS_MATERIAL_FORGE_EXECUTION_SHA"]
+    variant_dir = Path(os.environ["YACS_MATERIAL_FORGE_VARIANT_DIR"])
+    expected_provenance = _load_json(variant_dir / "provenance.json")
+    expected_family = expected_provenance.get("family")
+    expected_variant = expected_provenance.get("variant")
+    if expected_family != "regional_limestone" or not expected_variant:
+        raise RuntimeError("Unexpected canary input provenance")
 
     map_started = time.perf_counter()
     if load_map:
@@ -77,7 +83,10 @@ def main(*, load_map: bool = True):
     imported = assigned.get("import", {})
     if imported.get("saved") is not False or imported.get("landscape_mutated") is not False:
         raise RuntimeError("Importer violated transient contract")
-    if imported.get("family") != "regional_limestone" or imported.get("variant") != "refined_a":
+    if (
+        imported.get("family") != expected_family
+        or imported.get("variant") != expected_variant
+    ):
         raise RuntimeError("Unexpected canary material identity")
 
     assigned_override = component.get_editor_property("override_material")
@@ -102,7 +111,7 @@ def main(*, load_map: bool = True):
         "execution_sha": execution_sha,
         "map": MAP,
         "component": CANARY_COMPONENT,
-        "variant": "regional_limestone/refined_a",
+        "variant": f"{expected_family}/{expected_variant}",
         "assigned_material": assigned.get("material"),
         "restored_material": restored.get("material"),
         "map_saved": False,
