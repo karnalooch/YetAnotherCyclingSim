@@ -232,9 +232,7 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         self.assertIn("def _reclaim_post_builder_memory():", visual)
         self.assertIn("python_collected = gc.collect()", visual)
         self.assertIn("post_builder_memory_reclaimed", visual)
-        self.assertIn(
-            "_reclaim_post_builder_memory()\n    _assert_memory(", visual
-        )
+        self.assertIn("_reclaim_post_builder_memory()\n    _assert_memory(", visual)
         self.assertIn("rock_color_gain:", fast)
         self.assertIn("soil_color_gain:", fast)
         self.assertIn("FAST color-gain receipt contract failed.", fast)
