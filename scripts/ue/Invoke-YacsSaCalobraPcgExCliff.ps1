@@ -79,9 +79,9 @@ if ([bool]$BootstrapData.shipping_runtime_dependency -ne $false) {
     throw 'PCGEx unexpectedly became a shipping runtime dependency.'
 }
 if (
-    [string]$BootstrapData.compatibility_patch -ne 'yacs-pcgex-0.79-triangulate-hole-winding-v1' -or
+    [string]$BootstrapData.compatibility_patch -ne 'yacs-pcgex-0.79-horizontal-boundary-v2' -or
     [string]$BootstrapData.compatibility_patch_state -ne 'applied' -or
-    [string]$BootstrapData.compatibility_patch_sha256 -ne '962065a8ef0550d1409e1a9d492a1106f015d87bd470dd9f16b4b7a6d00f9b5d'
+    [string]$BootstrapData.compatibility_patch_sha256 -ne '8182824990670e560d1a1f0d052288cc8a98dc5cdb370bdbf63f2666f9593d89'
 ) {
     throw 'PCGEx compatibility patch provenance drift.'
 }
