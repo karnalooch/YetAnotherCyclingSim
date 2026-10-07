@@ -14,6 +14,8 @@ on:
       - "scripts/assets/prepare_sa_calobra_component230_cliff_visual.py"
       - "scripts/assets/test_sa_calobra_component230_cliff_visual.py"
       - "scripts/assets/analyze_sa_calobra_component230_cliff_visual.py"
+      - "scripts/assets/analyze_sa_calobra_component230_pcgex_topology.py"
+      - "scripts/assets/test_analyze_sa_calobra_component230_pcgex_topology.py"
       - "Source/YetAnotherCyclingSimEditor/Private/PCG/YacsSaCalobraCliffCellsSettings.cpp"
       - "Source/YetAnotherCyclingSimEditor/Public/PCG/YacsSaCalobraCliffCellsSettings.h"
       - "Source/YetAnotherCyclingSimEditor/Private/PCG/YacsSaCalobraPcgExCliffCommandlet.cpp"
@@ -179,11 +181,11 @@ jobs:
         working-directory: _phase2c-pcgex-cliff
         run: |
           $ErrorActionPreference = 'Stop'
-          python -m py_compile scripts/assets/prepare_sa_calobra_component230_cliff_visual.py scripts/assets/analyze_sa_calobra_component230_cliff_visual.py scripts/ue/capture_sa_calobra_component230_cliff.py
+          python -m py_compile scripts/assets/prepare_sa_calobra_component230_cliff_visual.py scripts/assets/analyze_sa_calobra_component230_cliff_visual.py scripts/assets/analyze_sa_calobra_component230_pcgex_topology.py scripts/ue/capture_sa_calobra_component230_cliff.py
           if ($LASTEXITCODE -ne 0) { throw 'Phase 2C Python compile failed.' }
 
-          python -m unittest scripts.assets.test_sa_calobra_component230_cliff_visual -v
-          if ($LASTEXITCODE -ne 0) { throw 'Phase 2C cliff plan tests failed.' }
+          python -m unittest scripts.assets.test_sa_calobra_component230_cliff_visual scripts.assets.test_analyze_sa_calobra_component230_pcgex_topology -v
+          if ($LASTEXITCODE -ne 0) { throw 'Phase 2C cliff plan/topology audit tests failed.' }
 
           python scripts/assets/prepare_sa_calobra_component230_cliff_visual.py --normalized-manifest $env:YACS_CLIFF_NORMALIZED --pcg-manifest $env:YACS_CLIFF_PCG --context-manifest $env:YACS_CLIFF_CONTEXT --output $env:YACS_CLIFF_VISUAL_PLAN_ROOT
           if ($LASTEXITCODE -ne 0) { throw 'Phase 2C cliff plan preparation failed.' }
@@ -221,6 +223,24 @@ jobs:
             throw 'Phase 2C topology proof receipt contract failed.'
           }
           $proof | ConvertTo-Json -Depth 10 | Write-Host
+
+          $topologyAudit = Join-Path $env:YACS_CLIFF_PCGEX_PROOF_ROOT 'phase2c-pcgex-topology-audit.json'
+          python scripts/assets/analyze_sa_calobra_component230_pcgex_topology.py --plan $env:YACS_CLIFF_VISUAL_PLAN --mesh $env:YACS_CLIFF_PCGEX_MESH --output $topologyAudit --min-area-retention 0.90
+          if ($LASTEXITCODE -ne 0) { throw 'Independent Phase 2C topology authority audit failed.' }
+          $audit = Get-Content -LiteralPath $topologyAudit -Raw | ConvertFrom-Json
+          if (
+            $audit.status -ne 'PASS' -or
+            [int]$audit.mesh.connected_components -ne 14 -or
+            [int]$audit.mesh.outside_vertices -ne 0 -or
+            [int]$audit.mesh.outside_triangle_centroids -ne 0 -or
+            [int]$audit.mesh.nonmanifold_edges -ne 0 -or
+            [int]$audit.mesh.degenerate_triangles -ne 0 -or
+            [double]$audit.mesh.area_retention -lt 0.90 -or
+            [double]$audit.mesh.area_retention -gt 1.001
+          ) {
+            throw 'Independent Phase 2C topology audit receipt contract failed.'
+          }
+          $audit | ConvertTo-Json -Depth 10 | Write-Host
 
       - name: Capture custom benchmark A and PCGEx candidate B
         shell: pwsh
