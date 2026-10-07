@@ -103,12 +103,6 @@ def main() -> None:
         unreal.MaterialShadingModel.MSM_DEFAULT_LIT,
     )
 
-    weight_object = _texture_object(
-        material,
-        "WeightTex",
-        unreal.MaterialSamplerType.SAMPLERTYPE_LINEAR_COLOR,
-    )
-
     world_position = _node(material, unreal.MaterialExpressionWorldPosition)
     xy = _node(
         material,
@@ -148,15 +142,12 @@ def main() -> None:
             coordinate = shifted
         sample = _node(
             material,
-            unreal.MaterialExpressionTextureSample,
+            unreal.MaterialExpressionTextureSampleParameter2D,
             texture=_load(DEFAULTS["WeightTex"]),
             sampler_type=unreal.MaterialSamplerType.SAMPLERTYPE_LINEAR_COLOR,
+            parameter_name="WeightTex",
+            group="Material Forge Landscape",
         )
-        if "TextureObject" not in {
-            str(name) for name in LIB.get_material_expression_input_names(sample)
-        }:
-            raise RuntimeError("UE 5.8 TextureSample lacks TextureObject input")
-        _link(weight_object, "", sample, "TextureObject")
         _link(coordinate, "", sample, "")
         blue = _node(
             material,

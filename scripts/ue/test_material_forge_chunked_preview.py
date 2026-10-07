@@ -66,6 +66,15 @@ class MaterialForgeChunkedPreviewTests(unittest.TestCase):
         self.assertIn('"material_instance_updated"', self.source)
         self.assertIn('"fixed_master_instance_drained"', self.source)
 
+    def test_fixed_master_uses_ue58_compatible_weight_sampler(self):
+        builder = (
+            ROOT / "scripts/ue/build_material_forge_landscape_master.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn("MaterialExpressionTextureSampleParameter2D", builder)
+        self.assertIn('parameter_name="WeightTex"', builder)
+        self.assertNotIn("TextureSample lacks TextureObject input", builder)
+        self.assertNotIn('_link(weight_object, "", sample, "TextureObject")', builder)
+
     def test_memory_gates_and_rollback_exist(self):
         for token in (
             "PREPARE_FREE_PHYSICAL_GB = 8",
