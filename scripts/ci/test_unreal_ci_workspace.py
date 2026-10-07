@@ -91,6 +91,52 @@ class UnrealWorkspaceTests(unittest.TestCase):
         self.assertEqual(cache.select(self.workspace), self.name)
         self.assertTrue((self.workspace / cache.POINTER).exists())
 
+    def test_binary_probe_preserves_bytes_and_verified_pointer(self):
+        self.publish()
+        before = {
+            name: (self.root / "Binaries/Win64" / name).read_bytes()
+            for name in cache.BINARY_NAMES
+        }
+        self.assertFalse(cache.has_unwritable_binary(self.root))
+        for name, data in before.items():
+            self.assertEqual((self.root / "Binaries/Win64" / name).read_bytes(), data)
+        self.assertEqual(cache.select(self.workspace), self.name)
+
+    def test_locked_binary_selects_fresh_checkout_without_retiring_old_cache(self):
+        self.publish()
+        env_file = self.workspace / "github-env"
+        original_open = Path.open
+        locked = self.root / "Binaries/Win64" / cache.BINARY_NAMES[1]
+
+        def open_with_lock(path, mode="r", *args, **kwargs):
+            if path == locked and mode == "r+b":
+                raise PermissionError("DLL is mapped by an exited Windows process")
+            return original_open(path, mode, *args, **kwargs)
+
+        with (
+            patch.object(Path, "open", open_with_lock),
+            patch.dict(os.environ, {"GITHUB_ENV": str(env_file)}),
+            patch(
+                "sys.argv",
+                [
+                    "workspace",
+                    "select",
+                    "--workspace",
+                    str(self.workspace),
+                    "--run",
+                    "101-1",
+                ],
+            ),
+            patch.object(cache, "cleanup") as cleanup,
+        ):
+            cache.main()
+        cleanup.assert_not_called()
+        self.assertEqual(
+            env_file.read_text(), "YACS_UNREAL_WORKTREE=_unreal-build-101-1\n"
+        )
+        self.assertEqual(cache.select(self.workspace), self.name)
+        self.assertEqual(cache.verified(self.root), self.state)
+
     def test_publication_survives_downstream_failure_and_cleanup(self):
         self.publish()
         other = self.workspace / "_unreal-build-99-1"

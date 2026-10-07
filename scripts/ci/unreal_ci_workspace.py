@@ -164,6 +164,21 @@ def publish(
     write_pointer(workspace, name)
 
 
+def has_unwritable_binary(root: Path) -> bool:
+    """Probe existing DLLs without changing bytes, including stale Windows locks."""
+    for name in BINARY_NAMES:
+        path = root / "Binaries/Win64" / name
+        if not path.exists():
+            continue
+        try:
+            with path.open("r+b"):
+                pass
+        except PermissionError as error:
+            print(f"UNREAL WORKSPACE: preserve unavailable binary {path}: {error}")
+            return True
+    return False
+
+
 def standalone(root: Path) -> None:
     """Preserve outputs when actions/checkout expects a .git directory.
 
@@ -390,6 +405,15 @@ def main() -> None:
         fallback = f"_unreal-build-{args.run}"
         active = select(workspace, fallback=fallback)
         root = safe_path(workspace, active)
+        preserve_locked_cache = has_unwritable_binary(root)
+        if preserve_locked_cache:
+            # Do not rewrite the verified pointer or copy stale absolute-path
+            # build outputs. Publish this fresh worktree only after real proof.
+            active = fallback
+            root = safe_path(workspace, active)
+            if root.exists():
+                raise ValueError("Fresh Unreal build destination already exists")
+            print(f"UNREAL WORKSPACE: locked cache retained; fresh build={active}")
         if (root / ".git").exists():
             # actions/checkout itself can replace tracked assets before the
             # later sanitization step; retain bytes before entering it.
@@ -398,7 +422,8 @@ def main() -> None:
             )
         standalone(root)
         prepare_checkout_directory(workspace, active, args.run)
-        cleanup(workspace, active, args.run)
+        if not preserve_locked_cache:
+            cleanup(workspace, active, args.run)
         with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as stream:
             stream.write(f"YACS_UNREAL_WORKTREE={active}\n")
         print(f"UNREAL WORKSPACE: selected={active}; provenance validation pending")
