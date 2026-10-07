@@ -316,6 +316,13 @@ exception and the workflow requires successful restoration. The accepted
 checkpoint's Unlit review mask is unsuitable for evaluating physical shadows.
 No heightfield, classifier, footprint, exclusion or saved asset is changed.
 
+The PCGEx renderer uses a fixed plane-gradient UV frame per physical island,
+matching the custom generator's projection policy. A vertex-varying frame
+created large UV discontinuities despite unchanged geometry. Capture warm-up
+uses the proof camera in the viewport before screenshots, LOD 0, fully loaded
+used textures and 64 high-resolution warm-up frames for both generators.
+Image equality and dark-region gates are unchanged.
+
 ## Phase 2B direction
 
 Only after Phase 2A handoff review:

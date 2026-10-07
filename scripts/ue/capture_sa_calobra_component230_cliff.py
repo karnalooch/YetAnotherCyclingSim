@@ -37,7 +37,8 @@ PCGEX_MESH = (
     else None
 )
 RESOLUTION = (1920, 1080)
-CAPTURE_DELAY_SECONDS = 1.0
+CAPTURE_DELAY_SECONDS = 3.0
+CAPTURE_WARMUP_FRAMES = 64
 NEUTRAL_LANDSCAPE = os.environ.get("YACS_CLIFF_NEUTRAL_LANDSCAPE") == "1"
 NEUTRAL_MATERIAL = "/Engine/BasicShapes/BasicShapeMaterial"
 PIXEL_SIZE_M = 0.5
@@ -608,6 +609,7 @@ def _append_pcgex_cliff_mesh(
     """
     raw_xy: list[tuple[float, float]] = []
     triangles_raw: list[tuple[int, int, int]] = []
+    mesh_ranges: list[tuple[int, int]] = []
 
     for mesh in mesh_receipt["meshes"]:
         base = len(raw_xy)
@@ -624,6 +626,8 @@ def _append_pcgex_cliff_mesh(
                     "PCGEx topology must remain flat before Landscape projection"
                 )
             raw_xy.append((x_cm / 100.0, y_cm / 100.0))
+
+        mesh_ranges.append((base, len(raw_xy)))
 
         for row in mesh["triangles"]:
             if len(row) != 3:
@@ -665,6 +669,21 @@ def _append_pcgex_cliff_mesh(
     trace_min = min(original) * 100.0
     trace_max = max(original) * 100.0
     smoothed = list(original)
+    # Match the custom benchmark's fixed projection per connected island.
+    # Rotating the UV frame per vertex multiplies local normal noise by the
+    # absolute world coordinates, creating large UV jumps across short edges.
+    uv_frames = []
+    for first, last in mesh_ranges:
+        gx, gy = _fit_plane_gradient(
+            [(raw_xy[i][0], raw_xy[i][1], original[i]) for i in range(first, last)]
+        )
+        horizontal = math.hypot(gx, gy)
+        downhill = (
+            (-gx / horizontal, -gy / horizontal)
+            if horizontal > 1.0e-6
+            else (0.0, 1.0)
+        )
+        uv_frames.extend([(horizontal, *downhill)] * (last - first))
 
     plates = list(_plan["plates"])
     smoothing_passes = max(
@@ -749,13 +768,8 @@ def _append_pcgex_cliff_mesh(
             )
         )
 
-        horizontal = math.hypot(gx, gy)
-        if horizontal > 1.0e-6:
-            downhill_x, downhill_y = -gx / horizontal, -gy / horizontal
-            tangent_x, tangent_y = -downhill_y, downhill_x
-        else:
-            downhill_x, downhill_y = 0.0, 1.0
-            tangent_x, tangent_y = 1.0, 0.0
+        horizontal, downhill_x, downhill_y = uv_frames[index]
+        tangent_x, tangent_y = -downhill_y, downhill_x
         u = (x_m * tangent_x + y_m * tangent_y) / uv_scale
         if horizontal > 0.65:
             v = z_m / uv_scale
@@ -788,6 +802,7 @@ def _append_pcgex_cliff_mesh(
         "smoothing_clamp_m": smoothing_clamp,
         "boundary_underlap_m": underlap,
         "normal_offset_m": normal_offset,
+        "uv_projection": "fixed plane-gradient frame per physical island",
     }
 
 
@@ -1080,6 +1095,12 @@ def _write_receipt(status: str, error: str | None):
         "captures": _captures,
         "dynamic_shadows": True,
         "shadow_bias_changed": False,
+        "capture_protocol": {
+            "delay_seconds": CAPTURE_DELAY_SECONDS,
+            "high_res_warmup_frames": CAPTURE_WARMUP_FRAMES,
+            "force_lod": 0,
+            "fully_load_used_textures": True,
+        },
         "visual_acceptance": "PENDING_OWNER",
         "error": error,
     }
@@ -1314,10 +1335,22 @@ def main():
     camera_component = _camera.get_component_by_class(unreal.CameraComponent)
     camera_component.set_editor_property("field_of_view", 50.0)
     _camera.set_actor_label("YACS Component230 Cliff Proof Camera")
+    unreal.get_editor_subsystem(
+        unreal.UnrealEditorSubsystem
+    ).set_level_viewport_camera_info(
+        _camera.get_actor_location(), _camera.get_actor_rotation()
+    )
 
     unreal.SystemLibrary.execute_console_command(_world, "r.ScreenPercentage 100")
     unreal.SystemLibrary.execute_console_command(_world, "r.PostProcessAAQuality 6")
     unreal.SystemLibrary.execute_console_command(_world, "showflag.DynamicShadows 1")
+    unreal.SystemLibrary.execute_console_command(_world, "r.ForceLOD 0")
+    unreal.SystemLibrary.execute_console_command(
+        _world, "r.Streaming.FullyLoadUsedTextures 1"
+    )
+    unreal.SystemLibrary.execute_console_command(
+        _world, f"r.HighResScreenshotDelay {CAPTURE_WARMUP_FRAMES}"
+    )
 
     _views = [
         {"name": "01-baseline-lit", "candidate": False, "viewmode": "lit"},
