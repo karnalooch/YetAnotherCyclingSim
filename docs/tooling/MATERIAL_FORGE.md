@@ -411,6 +411,9 @@ stack before judging the material:
   only when the map has none;
 - preserve an existing Sky Light, or create a transient fallback Sky Light at
   intensity 1.35;
+- configure the transient fallback Sky Light at intensity 1.15 and disable the
+  black lower hemisphere so the movable review light approximates sky/ground
+  bounce instead of producing cut-out black cavities;
 - explicitly call `RecaptureSky` after the atmosphere/light stack is ready;
 - capture the same four acceptance views and three diagnostics;
 - destroy all transient environment actors and recapture any pre-existing

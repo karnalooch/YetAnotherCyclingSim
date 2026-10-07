@@ -286,7 +286,8 @@ def _ensure_lighting():
         if sky is None:
             raise RuntimeError("Transient SkyLight fallback creation failed")
         sky_component = sky.get_component_by_class(unreal.SkyLightComponent)
-        sky_component.set_intensity(1.35)
+        sky_component.set_intensity(1.15)
+        sky_component.set_editor_property("lower_hemisphere_is_black", False)
         _transient_lights.append(sky)
         skylights.append(sky)
         spawned_skylight = True
@@ -308,6 +309,8 @@ def _ensure_lighting():
         "sky_atmospheres": len(atmospheres),
         "spawned_sky_atmosphere": spawned_atmosphere,
         "spawned_skylight": spawned_skylight,
+        "fallback_skylight_intensity": 1.15 if spawned_skylight else None,
+        "fallback_lower_hemisphere_is_black": False if spawned_skylight else None,
         "skylight_recaptured": True,
         "skylight_recapture_targets": recaptured,
         "transient_fallback_lights": len(_transient_lights),

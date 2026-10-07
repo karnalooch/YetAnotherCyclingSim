@@ -100,8 +100,9 @@ class MaterialForgeChunkedPreviewTests(unittest.TestCase):
         self.assertIn('"capture_count"', capture_source)
         self.assertIn("unreal.SkyAtmosphere", capture_source)
         self.assertIn("recapture_sky()", capture_source)
-        self.assertIn("set_intensity(1.35)", capture_source)
+        self.assertIn("set_intensity(1.15)", capture_source)
         self.assertIn('"skylight_recaptured": True', capture_source)
+        self.assertIn('"lower_hemisphere_is_black", False', capture_source)
 
     def test_fixed_master_orm_defaults_use_mask_compatible_placeholder(self):
         builder = (
