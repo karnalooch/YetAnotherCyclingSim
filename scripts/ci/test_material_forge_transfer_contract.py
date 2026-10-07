@@ -130,6 +130,17 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         self.assertIn("$diagnosticModes -notcontains 'lightingonly'", canary)
         self.assertIn("$diagnosticModes -notcontains 'lit_detaillighting'", canary)
 
+    def test_canary_identity_follows_exact_variant_provenance(self):
+        runner = (
+            ROOT / "scripts/ue/run_material_forge_canary_proof.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn('variant_dir / "provenance.json"', runner)
+        self.assertIn('expected_family != "regional_limestone"', runner)
+        self.assertIn('imported.get("variant") != expected_variant', runner)
+        self.assertIn('f"{expected_family}/{expected_variant}"', runner)
+        self.assertNotIn('"regional_limestone/refined_a"', runner)
+        self.assertNotIn('imported.get("variant") != "refined_a"', runner)
+
     def test_transfer_metrics_are_preserved(self):
         text = CANARY.read_text(encoding="utf-8")
         self.assertIn("proof-transfer-metrics.json", text)
