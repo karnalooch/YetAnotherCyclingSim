@@ -33,7 +33,7 @@ namespace
             return false;
         }
         const double Rounded = FMath::RoundToDouble(Value);
-        if (!FMath::IsNearlyEqual(Value, Rounded, UE_DOUBLE_SMALL_NUMBER))
+        if (!FMath::IsNearlyEqual(Value, Rounded, 1.0e-9))
         {
             return false;
         }
