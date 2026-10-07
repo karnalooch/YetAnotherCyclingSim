@@ -449,6 +449,12 @@ SHA, and marks its receipt `NON_PRODUCTION_FAST_VISUAL` with
 `full_production_proof_required=true`. The entire FAST pack must still finish
 within the 240 second target.
 
+The visual receipt also records the exact Unreal world-space origin, extent,
+radius and min/max bounds of canonical `LandscapeComponent_230`. This metadata
+is read-only and gives downstream frozen-grid diagnostics (including the
+Cliff/Erosion Pass) an exact reviewed footprint without assuming component-name
+ordering or mutating the accepted Landscape.
+
 ### Session-only color-grade controls
 
 Issue #423 adds neutral vector parameters to the fixed Landscape master:
