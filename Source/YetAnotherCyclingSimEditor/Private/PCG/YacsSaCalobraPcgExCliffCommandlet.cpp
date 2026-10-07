@@ -175,7 +175,23 @@ namespace
             }
         }
 
-        return Vertices.Num() >= 3;
+        if (Vertices.Num() < 3)
+        {
+            return false;
+        }
+
+        double TwiceSignedArea = 0.0;
+        for (int32 Index = 0; Index < Vertices.Num(); ++Index)
+        {
+            const FVector2d& A = Vertices[Index];
+            const FVector2d& B = Vertices[(Index + 1) % Vertices.Num()];
+            TwiceSignedArea += A.X * B.Y - B.X * A.Y;
+        }
+
+        // A mathematically zero-area contour carries no authoritative
+        // footprint. Reject it as contour hygiene before it can become a
+        // degenerate hole/outer in UE's constrained triangulator.
+        return FMath::Abs(TwiceSignedArea) > 1.e-8;
     }
 
     bool ExecuteGraph(
@@ -512,13 +528,16 @@ namespace
             FPolygonGroup& Group = PolygonGroups[GroupIndex];
             UE::Geometry::TGeneralPolygon2<double> GeneralPolygon(Group.Outer);
 
-            for (UE::Geometry::TPolygon2<double>& Hole : Group.Holes)
+            for (const UE::Geometry::TPolygon2<double>& Hole : Group.Holes)
             {
-                if (!GeneralPolygon.AddHole(MoveTemp(Hole), true, true))
+                UE::Geometry::TPolygon2<double> HoleCopy = Hole;
+                if (!GeneralPolygon.AddHole(MoveTemp(HoleCopy), true, true))
                 {
                     OutError = FString::Printf(
-                        TEXT("UE general polygon rejected PCGEx hole for outer %d."),
-                        GroupIndex);
+                        TEXT("UE general polygon rejected PCGEx hole for outer %d: %dv/%.3fcm2."),
+                        GroupIndex,
+                        Hole.VertexCount(),
+                        FMath::Abs(Hole.SignedArea()));
                     return false;
                 }
             }
