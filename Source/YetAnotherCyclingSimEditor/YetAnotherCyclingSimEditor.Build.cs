@@ -37,7 +37,9 @@ public class YetAnotherCyclingSimEditor : ModuleRules
 				"PCGExElementsPaths",
 				"PCGExElementsSampling",
 				"PCGExElementsTopology",
-				"PCGExElementsClipper2"
+				"PCGExElementsClipper2",
+				"GeometryFramework",
+				"GeometryScriptingCore"
 			});
 		}
 	}
