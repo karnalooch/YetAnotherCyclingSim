@@ -624,7 +624,11 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
         || !Connect(
             Graph, DecomposeNode, FName(TEXT("Edges")),
             SurfaceNode, FName(TEXT("Edges")),
-            TEXT("Decompose triangulation edges -> Cluster Surface")))
+            TEXT("Decompose triangulation edges -> Cluster Surface"))
+        || !Connect(
+            Graph, SourceNode, FName(TEXT("Holes")),
+            SurfaceNode, FName(TEXT("Holes")),
+            TEXT("YACS authoritative hole seeds -> Cluster Surface")))
     {
         return 19;
     }
@@ -685,11 +689,12 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     Root->SetStringField(TEXT("pcgex_commit"), PcgExCommit);
     Root->SetStringField(
         TEXT("pipeline"),
-        TEXT("YACS cliff cells -> Clipper2 Union -> Path Subdivide -> "
-             "Clipper2 Decompose(Auto outer+hole grouping, raw constrained triangles) -> "
-             "Topology Cluster Surface -> connected-component-aware deterministic "
-             "UE Uniform Tessellation; boundary smoothing is deferred until post-drape "
-             "presentation so hard exclusions remain exact"));
+        TEXT("YACS cliff cells + authoritative hole seeds -> Clipper2 Union -> "
+             "Path Subdivide -> Clipper2 Decompose(Auto outer+hole grouping, raw "
+             "constrained triangles) -> Topology Cluster Surface(hole seeds) -> "
+             "connected-component-aware deterministic UE Uniform Tessellation; "
+             "boundary smoothing is deferred until post-drape presentation so hard "
+             "exclusions remain exact"));
     Root->SetBoolField(TEXT("canonical_landscape_mutation"), false);
     Root->SetBoolField(TEXT("assets_saved"), false);
     Root->SetBoolField(TEXT("graph_saved"), false);
