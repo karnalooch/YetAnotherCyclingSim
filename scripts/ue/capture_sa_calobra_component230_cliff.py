@@ -1,4 +1,8 @@
-"""Capture the Phase 2B Component_230 transient cliff visual spike.
+"""Capture the Component_230 transient cliff visual A/B proof.
+
+Without YACS_CLIFF_PCGEX_MESH this is the Phase 2B custom connected-skin
+benchmark. With that variable set it renders the Phase 2C PCGEx topology using
+the same map, camera, lighting, material, scree and acceptance metrics.
 
 Loads the accepted Sa Calobra map, captures baseline Lit / Lighting Only,
 spawns deterministic visual-only DynamicMesh cliff plates and bounded scree,
@@ -27,6 +31,11 @@ MAP_FILE = ROOT / "Content/Worlds/SaCalobra/L_SaCalobraAccepted_20261004.umap"
 PLAN = Path(os.environ["YACS_CLIFF_VISUAL_PLAN"]).resolve()
 OUTPUT = Path(os.environ["YACS_CLIFF_VISUAL_OUTPUT"]).resolve()
 EXPECTED_SHA = os.environ["YACS_CLIFF_VISUAL_EXPECTED_SHA"].strip()
+PCGEX_MESH = (
+    Path(os.environ["YACS_CLIFF_PCGEX_MESH"]).resolve()
+    if os.environ.get("YACS_CLIFF_PCGEX_MESH")
+    else None
+)
 RESOLUTION = (1920, 1080)
 CAPTURE_DELAY_SECONDS = 1.0
 PIXEL_SIZE_M = 0.5
@@ -60,6 +69,7 @@ _recaptured_skylights = []
 _before_hash = None
 _before_scene = None
 _plan = None
+_pcgex_mesh = None
 _mesh_receipt = {}
 
 
@@ -544,6 +554,200 @@ def _append_skin_cluster(
         "base_vertex": base,
     }
 
+def _append_pcgex_cliff_mesh(
+    mesh_receipt: dict[str, object],
+) -> tuple[
+    list[unreal.Vector],
+    list[unreal.IntVector],
+    list[unreal.Vector2D],
+    dict[str, object],
+]:
+    """Drape PCGEx topology onto the real accepted Landscape.
+
+    PCGEx owns polygon union/path refinement/constrained-Delaunay topology.
+    This renderer only projects the resulting XY vertices onto Landscape and
+    applies the same bounded presentation-layer Z/normal policy used by the
+    custom benchmark. The accepted Landscape remains untouched.
+    """
+    raw_xy: list[tuple[float, float]] = []
+    triangles_raw: list[tuple[int, int, int]] = []
+
+    for mesh in mesh_receipt["meshes"]:
+        base = len(raw_xy)
+        vertices_cm = mesh["vertices_cm"]
+        local_count = len(vertices_cm)
+        for row in vertices_cm:
+            if len(row) != 3:
+                raise RuntimeError("PCGEx mesh vertex must contain XYZ")
+            x_cm, y_cm, z_cm = [float(value) for value in row]
+            if not all(math.isfinite(value) for value in (x_cm, y_cm, z_cm)):
+                raise RuntimeError("PCGEx mesh contains non-finite vertex")
+            if abs(z_cm) > 1.0:
+                raise RuntimeError(
+                    "PCGEx topology must remain flat before Landscape projection"
+                )
+            raw_xy.append((x_cm / 100.0, y_cm / 100.0))
+
+        for row in mesh["triangles"]:
+            if len(row) != 3:
+                raise RuntimeError("PCGEx mesh triangle must contain three indices")
+            a, b, c_ = [int(value) for value in row]
+            if min(a, b, c_) < 0 or max(a, b, c_) >= local_count:
+                raise RuntimeError("PCGEx mesh triangle index is out of bounds")
+            if len({a, b, c_}) != 3:
+                raise RuntimeError("PCGEx mesh contains degenerate index triangle")
+            triangles_raw.append((base + a, base + b, base + c_))
+
+    if len(raw_xy) != int(mesh_receipt["vertex_count"]):
+        raise RuntimeError("PCGEx mesh vertex receipt drift")
+    if len(triangles_raw) != int(mesh_receipt["triangle_count"]):
+        raise RuntimeError("PCGEx mesh triangle receipt drift")
+    if not raw_xy or not triangles_raw:
+        raise RuntimeError("PCGEx topology is empty")
+
+    adjacency: dict[int, set[int]] = {index: set() for index in range(len(raw_xy))}
+    edge_counts: dict[tuple[int, int], int] = {}
+    for a, b, c_ in triangles_raw:
+        for left, right in ((a, b), (b, c_), (c_, a)):
+            adjacency[left].add(right)
+            adjacency[right].add(left)
+            edge = (min(left, right), max(left, right))
+            edge_counts[edge] = edge_counts.get(edge, 0) + 1
+
+    boundary = {
+        vertex
+        for edge, count in edge_counts.items()
+        if count == 1
+        for vertex in edge
+    }
+
+    original = [
+        _trace_landscape_z(x_m, y_m) / 100.0
+        for x_m, y_m in raw_xy
+    ]
+    trace_min = min(original) * 100.0
+    trace_max = max(original) * 100.0
+    smoothed = list(original)
+
+    plates = list(_plan["plates"])
+    smoothing_passes = max(
+        int(row["smoothing_passes"]) for row in plates
+    )
+    smoothing_blend = sum(
+        float(row["smoothing_blend"]) for row in plates
+    ) / len(plates)
+    smoothing_clamp = max(
+        float(row["smoothing_clamp_m"]) for row in plates
+    )
+    lift = sum(float(row["interior_lift_m"]) for row in plates) / len(plates)
+    underlap = sum(
+        float(row["boundary_underlap_m"]) for row in plates
+    ) / len(plates)
+    normal_offset = sum(
+        float(row["normal_offset_m"]) for row in plates
+    ) / len(plates)
+
+    for _ in range(smoothing_passes):
+        next_values = list(smoothed)
+        for index, value in enumerate(smoothed):
+            if index in boundary:
+                continue
+            neighbours = adjacency[index]
+            if not neighbours:
+                continue
+            mean = sum(smoothed[n] for n in neighbours) / len(neighbours)
+            candidate = value * (1.0 - smoothing_blend) + mean * smoothing_blend
+            base = original[index]
+            next_values[index] = max(
+                base - smoothing_clamp,
+                min(base + smoothing_clamp, candidate),
+            )
+        smoothed = next_values
+
+    def local_gradient(index: int) -> tuple[float, float]:
+        x0, y0 = raw_xy[index]
+        z0 = original[index]
+        sxx = syy = sxy = sxz = syz = 0.0
+        for neighbour in adjacency[index]:
+            x1, y1 = raw_xy[neighbour]
+            dx, dy = x1 - x0, y1 - y0
+            dz = original[neighbour] - z0
+            sxx += dx * dx
+            syy += dy * dy
+            sxy += dx * dy
+            sxz += dx * dz
+            syz += dy * dz
+        determinant = sxx * syy - sxy * sxy
+        if abs(determinant) <= 1.0e-9:
+            return 0.0, 0.0
+        return (
+            (sxz * syy - syz * sxy) / determinant,
+            (syz * sxx - sxz * sxy) / determinant,
+        )
+
+    uv_scale = float(_plan["skin_contract"]["uv_world_size_m"])
+    vertices: list[unreal.Vector] = []
+    uvs: list[unreal.Vector2D] = []
+    for index, (x_m, y_m) in enumerate(raw_xy):
+        is_boundary = index in boundary
+        factor = 0.0 if is_boundary else 1.0
+        z_m = (
+            original[index] - underlap
+            if is_boundary
+            else smoothed[index] + lift
+        )
+        gx, gy = local_gradient(index)
+        normal_length = math.sqrt(gx * gx + gy * gy + 1.0)
+        normal_x = -gx / normal_length
+        normal_y = -gy / normal_length
+        normal_z = 1.0 / normal_length
+        x_render = x_m + normal_x * normal_offset * factor
+        y_render = y_m + normal_y * normal_offset * factor
+        z_render = z_m + normal_z * normal_offset * factor
+        vertices.append(
+            unreal.Vector(
+                x_render * 100.0,
+                y_render * 100.0,
+                z_render * 100.0,
+            )
+        )
+
+        horizontal = math.hypot(gx, gy)
+        if horizontal > 1.0e-6:
+            downhill_x, downhill_y = -gx / horizontal, -gy / horizontal
+            tangent_x, tangent_y = -downhill_y, downhill_x
+        else:
+            downhill_x, downhill_y = 0.0, 1.0
+            tangent_x, tangent_y = 1.0, 0.0
+        u = (x_m * tangent_x + y_m * tangent_y) / uv_scale
+        if horizontal > 0.65:
+            v = z_m / uv_scale
+        else:
+            v = (x_m * downhill_x + y_m * downhill_y) / uv_scale
+        uvs.append(unreal.Vector2D(u, v))
+
+    triangles = [
+        unreal.IntVector(a, b, c_) for a, b, c_ in triangles_raw
+    ]
+    return vertices, triangles, uvs, {
+        "generator": "PCGEx",
+        "pcgex_commit": mesh_receipt["pcgex_commit"],
+        "pipeline": mesh_receipt["pipeline"],
+        "source_skin_cell_count": int(mesh_receipt["source_skin_cell_count"]),
+        "mesh_count": int(mesh_receipt["mesh_count"]),
+        "front_vertices": len(vertices),
+        "front_triangles": len(triangles),
+        "boundary_vertices": len(boundary),
+        "interior_vertices": len(vertices) - len(boundary),
+        "trace_z_range_cm": [trace_min, trace_max],
+        "smoothing_passes": smoothing_passes,
+        "smoothing_blend": smoothing_blend,
+        "smoothing_clamp_m": smoothing_clamp,
+        "boundary_underlap_m": underlap,
+        "normal_offset_m": normal_offset,
+    }
+
+
 def _append_scree_rock(
     vertices: list[unreal.Vector],
     triangles: list[unreal.IntVector],
@@ -650,26 +854,50 @@ def _spawn_candidate():
     for row in _plan["skin_cells"]:
         cells_by_cluster.setdefault(str(row["cluster_id"]), []).append(row)
 
-    cliff_vertices: list[unreal.Vector] = []
-    cliff_triangles: list[unreal.IntVector] = []
-    cliff_uvs: list[unreal.Vector2D] = []
     cluster_receipts = []
+    pcgex_receipt = None
     trace_min = float("inf")
     trace_max = float("-inf")
-    for cluster in _plan["plates"]:
-        cluster_id = str(cluster["cluster_id"])
-        receipt = _append_skin_cluster(
+
+    if _pcgex_mesh is not None:
+        (
             cliff_vertices,
             cliff_triangles,
             cliff_uvs,
-            cluster,
-            cells_by_cluster.get(cluster_id, []),
+            pcgex_receipt,
+        ) = _append_pcgex_cliff_mesh(_pcgex_mesh)
+        trace_min = min(
+            trace_min,
+            float(pcgex_receipt["trace_z_range_cm"][0]),
         )
-        if receipt is None:
-            continue
-        cluster_receipts.append(receipt)
-        trace_min = min(trace_min, float(receipt["trace_z_range_cm"][0]))
-        trace_max = max(trace_max, float(receipt["trace_z_range_cm"][1]))
+        trace_max = max(
+            trace_max,
+            float(pcgex_receipt["trace_z_range_cm"][1]),
+        )
+    else:
+        cliff_vertices: list[unreal.Vector] = []
+        cliff_triangles: list[unreal.IntVector] = []
+        cliff_uvs: list[unreal.Vector2D] = []
+        for cluster in _plan["plates"]:
+            cluster_id = str(cluster["cluster_id"])
+            receipt = _append_skin_cluster(
+                cliff_vertices,
+                cliff_triangles,
+                cliff_uvs,
+                cluster,
+                cells_by_cluster.get(cluster_id, []),
+            )
+            if receipt is None:
+                continue
+            cluster_receipts.append(receipt)
+            trace_min = min(
+                trace_min,
+                float(receipt["trace_z_range_cm"][0]),
+            )
+            trace_max = max(
+                trace_max,
+                float(receipt["trace_z_range_cm"][1]),
+            )
 
     # Cliff skins are presentation surfaces viewed from highly oblique angles.
     # Duplicate the connected front surface with reversed winding so an
@@ -706,7 +934,11 @@ def _spawn_candidate():
         )
 
     cliff_counts = _spawn_mesh(
-        "YACS_Component230_ConnectedCliffSkin",
+        (
+            "YACS_Component230_PCGExCliffSkin"
+            if _pcgex_mesh is not None
+            else "YACS_Component230_ConnectedCliffSkin"
+        ),
         cliff_vertices,
         cliff_triangles,
         cliff_uvs,
@@ -722,13 +954,19 @@ def _spawn_candidate():
     lighting = _mesh_receipt.get("lighting")
     _mesh_receipt = {
         "lighting": lighting,
+        "generator": (
+            "pcgex-clipper2"
+            if _pcgex_mesh is not None
+            else "yacs-connected-skin"
+        ),
         "cliff": cliff_counts,
         "scree": scree_counts,
-        "skin_cluster_count": len(cluster_receipts),
+        "skin_cluster_count": int(_plan["counts"]["skin_cluster_count"]),
         "skin_cell_count": len(_plan["skin_cells"]),
-        "plate_count": len(cluster_receipts),
+        "plate_count": int(_plan["counts"]["skin_cluster_count"]),
         "scree_rock_count": len(_plan["scree_rocks"]),
         "clusters": cluster_receipts,
+        "pcgex_topology": pcgex_receipt,
         "trace_z_range_cm": [trace_min, trace_max],
         "collision_enabled": False,
         "cast_dynamic_shadows": True,
@@ -871,7 +1109,11 @@ def schedule():
         mask_enabled=False,
         capture_hdr=False,
         comparison_tolerance=unreal.ComparisonTolerance.LOW,
-        comparison_notes="YACS Component_230 cliff Phase 2B visual spike",
+        comparison_notes=(
+            "YACS Component_230 cliff Phase 2C PCGEx A/B"
+            if _pcgex_mesh is not None
+            else "YACS Component_230 cliff Phase 2B visual spike"
+        ),
         delay=CAPTURE_DELAY_SECONDS,
         force_game_view=True,
     )
@@ -916,7 +1158,7 @@ def tick(_delta):
 
 def main():
     global _world, _landscape, _target_component, _camera, _views
-    global _handle, _before_hash, _before_scene, _plan
+    global _handle, _before_hash, _before_scene, _plan, _pcgex_mesh
 
     if _git_head() != EXPECTED_SHA:
         raise RuntimeError("Cliff visual exact SHA mismatch")
@@ -937,6 +1179,27 @@ def main():
         raise RuntimeError("Phase 2B narrow hard-policy drift")
     if int(_plan["counts"]["component_cliff_cells"]) != 2611:
         raise RuntimeError("Phase 2B cliff count drift")
+
+    if PCGEX_MESH is not None:
+        if not PCGEX_MESH.is_file():
+            raise RuntimeError("Phase 2C PCGEx mesh receipt is missing")
+        _pcgex_mesh = json.loads(PCGEX_MESH.read_text(encoding="utf-8"))
+        if _pcgex_mesh.get("status") != "YACS_SA_CALOBRA_PCGEX_CLIFF_MESH_PASS":
+            raise RuntimeError("Invalid Phase 2C PCGEx mesh receipt")
+        if _pcgex_mesh.get("pcgex_commit") != (
+            "39a8f1bdc65b2c4613a1e87b71d93b4576db0a66"
+        ):
+            raise RuntimeError("Phase 2C PCGEx dependency drift")
+        if bool(_pcgex_mesh.get("canonical_landscape_mutation")):
+            raise RuntimeError("PCGEx mesh receipt claims Landscape mutation")
+        if bool(_pcgex_mesh.get("assets_saved")) or bool(
+            _pcgex_mesh.get("graph_saved")
+        ):
+            raise RuntimeError("PCGEx topology proof must be transient")
+        if int(_pcgex_mesh["source_skin_cell_count"]) != len(
+            _plan["skin_cells"]
+        ):
+            raise RuntimeError("PCGEx source cell count does not match Phase 2B plan")
 
     OUTPUT.mkdir(parents=True, exist_ok=True)
     if any(OUTPUT.iterdir()):
