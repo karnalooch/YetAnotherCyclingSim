@@ -157,6 +157,11 @@
       "reason": "Owner-only manual main-branch self-hosted runner disk recovery."
     },
     {
+      "file": "sa-calobra-cliff-component230-pcgex.yml",
+      "state": "CURRENT",
+      "reason": "Issue #445 Phase 2C exact-SHA PCGEx Component_230 cliff-topology A/B proof; pins PCGEx 0.79, proves two-run mesh determinism, real limestone material integrity, custom-vs-PCGEx Lit/Lighting-Only metrics, topology density/performance, no collision, and no canonical map/asset mutation."
+    },
+    {
       "file": "sa-calobra-cliff-erosion-proof.yml",
       "state": "CURRENT",
       "reason": "Issue #429 non-destructive self-hosted frozen-grid cliff/scree selector proof; consumes pinned normalized terrain and conservative presentation exclusions, publishes diagnostic selectors only, and never mutates the canonical Landscape or source DTM."
