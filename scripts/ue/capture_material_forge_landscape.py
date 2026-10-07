@@ -55,6 +55,7 @@ _camera = None
 _transient_lights = []
 _transient_environment = []
 _recaptured_existing_skylights = []
+_directional_shadow_state = []
 _task = None
 _handle = None
 _started = 0.0
@@ -349,6 +350,16 @@ def _build_views():
             fast["purpose"] = purpose
             fast["dynamic_shadows"] = dynamic_shadows
             fast_views.append(fast)
+
+        slope_bias_probe = dict(views[5])
+        slope_bias_probe["name"] = "fast-cliff-lighting-slope-bias-1"
+        slope_bias_probe["purpose"] = (
+            "fast cliff diagnostic: Lighting Only with dynamic shadows on and "
+            "ShadowSlopeBias forced to 1.0"
+        )
+        slope_bias_probe["dynamic_shadows"] = True
+        slope_bias_probe["shadow_slope_bias"] = 1.0
+        fast_views.insert(3, slope_bias_probe)
         return fast_views
     return views
 
@@ -421,9 +432,35 @@ def _ensure_lighting():
         if sky not in _transient_lights:
             _recaptured_existing_skylights.append(sky_component)
 
+    _directional_shadow_state.clear()
+    for light in directional:
+        component = light.get_component_by_class(unreal.DirectionalLightComponent)
+        if component is None:
+            raise RuntimeError("DirectionalLight actor has no DirectionalLightComponent")
+        _directional_shadow_state.append(
+            {
+                "actor": light.get_path_name(),
+                "component": component,
+                "shadow_bias": float(component.get_editor_property("shadow_bias")),
+                "shadow_slope_bias": float(
+                    component.get_editor_property("shadow_slope_bias")
+                ),
+            }
+        )
+    if not _directional_shadow_state:
+        raise RuntimeError("No Directional Light shadow state available")
+
     unreal.AutomationLibrary.finish_loading_before_screenshot()
     return {
         "directional_lights": len(directional),
+        "directional_shadow_bias_baseline": [
+            {
+                "actor": state["actor"],
+                "shadow_bias": state["shadow_bias"],
+                "shadow_slope_bias": state["shadow_slope_bias"],
+            }
+            for state in _directional_shadow_state
+        ],
         "skylights": len(skylights),
         "sky_atmospheres": len(atmospheres),
         "spawned_sky_atmosphere": spawned_atmosphere,
@@ -435,6 +472,55 @@ def _ensure_lighting():
         "transient_fallback_lights": len(_transient_lights),
         "transient_environment_actors": len(_transient_environment),
     }
+
+
+def _directional_shadow_bias_readback():
+    result = []
+    for state in _directional_shadow_state:
+        component = state["component"]
+        result.append(
+            {
+                "actor": state["actor"],
+                "shadow_bias": float(component.get_editor_property("shadow_bias")),
+                "shadow_slope_bias": float(
+                    component.get_editor_property("shadow_slope_bias")
+                ),
+            }
+        )
+    return result
+
+
+def _restore_directional_shadow_bias():
+    for state in _directional_shadow_state:
+        component = state["component"]
+        component.set_shadow_bias(float(state["shadow_bias"]))
+        component.set_shadow_slope_bias(float(state["shadow_slope_bias"]))
+    readback = _directional_shadow_bias_readback()
+    for expected, actual in zip(_directional_shadow_state, readback):
+        if (
+            abs(float(actual["shadow_bias"]) - float(expected["shadow_bias"])) > 0.001
+            or abs(
+                float(actual["shadow_slope_bias"])
+                - float(expected["shadow_slope_bias"])
+            )
+            > 0.001
+        ):
+            raise RuntimeError(
+                "Directional Light shadow bias rollback readback mismatch: "
+                + str(expected["actor"])
+            )
+    return readback
+
+
+def _apply_directional_shadow_slope_bias(value: float):
+    if value < 0.0 or value > 1.0:
+        raise RuntimeError("ShadowSlopeBias probe must stay within 0.0..1.0")
+    for state in _directional_shadow_state:
+        state["component"].set_shadow_slope_bias(value)
+    readback = _directional_shadow_bias_readback()
+    if any(abs(float(item["shadow_slope_bias"]) - value) > 0.001 for item in readback):
+        raise RuntimeError("Directional Light ShadowSlopeBias probe readback mismatch")
+    return readback
 
 
 def _force_material_textures_resident():
@@ -473,6 +559,12 @@ def _restore():
             )
     except Exception as exc:
         errors.append("dynamic-shadow show flag restore: " + str(exc))
+
+    try:
+        if _directional_shadow_state:
+            _restore_directional_shadow_bias()
+    except Exception as exc:
+        errors.append("directional shadow bias restore: " + str(exc))
 
     try:
         if _landscape is not None:
@@ -653,6 +745,11 @@ def schedule():
             raise RuntimeError("Unsupported diagnostic view mode: " + mode)
         unreal.SystemLibrary.execute_console_command(_world, "viewmode " + mode)
         unreal.AutomationLibrary.set_editor_viewport_view_mode(view_modes[mode])
+        _restore_directional_shadow_bias()
+        requested_slope_bias = view.get("shadow_slope_bias")
+        if requested_slope_bias is not None:
+            _apply_directional_shadow_slope_bias(float(requested_slope_bias))
+        view["directional_shadow_bias"] = _directional_shadow_bias_readback()
         dynamic_shadows = bool(view.get("dynamic_shadows", True))
         unreal.SystemLibrary.execute_console_command(
             _world, "showflag.DynamicShadows 1"
@@ -712,6 +809,8 @@ def tick(_delta):
                 "viewmode": view.get("viewmode", "lit"),
                 "kind": view.get("kind", "acceptance"),
                 "dynamic_shadows": bool(view.get("dynamic_shadows", True)),
+                "directional_shadow_bias": view.get("directional_shadow_bias", []),
+                "requested_shadow_slope_bias": view.get("shadow_slope_bias"),
                 "fov": view["fov"],
             }
         )
