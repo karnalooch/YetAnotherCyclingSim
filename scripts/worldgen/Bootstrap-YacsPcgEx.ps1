@@ -23,6 +23,9 @@ $ExpectedCommit = '39a8f1bdc65b2c4613a1e87b71d93b4576db0a66'
 $ExpectedVersion = '0.79'
 $ExpectedEngineVersion = '5.8.0'
 $ExpectedLicenseFirstLine = 'MIT License'
+$CompatibilityPatchId = 'yacs-pcgex-0.79-triangulate-hole-winding-v1'
+$CompatibilityPatchRelative = 'scripts/worldgen/patches/pcgex-0.79-triangulate-holes-winding.patch'
+$CompatibilityTargetRelative = 'Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp'
 
 $RepoRoot = (Resolve-Path -LiteralPath $RepoRoot).Path
 if (-not $PluginRoot) { $PluginRoot = Join-Path $RepoRoot 'Plugins/PCGExtendedToolkit' }
@@ -53,6 +56,30 @@ if ($Mode -eq 'Install' -and -not (Test-Path -LiteralPath (Join-Path $PluginRoot
     if ($LASTEXITCODE -ne 0) { throw "Failed to fetch pinned PCGEx commit $ExpectedCommit." }
     & git -C $PluginRoot checkout --detach FETCH_HEAD
     if ($LASTEXITCODE -ne 0) { throw 'Failed to checkout pinned PCGEx revision.' }
+}
+
+$CompatibilityPatchPath = Join-Path $RepoRoot $CompatibilityPatchRelative
+if (-not (Test-Path -LiteralPath $CompatibilityPatchPath -PathType Leaf)) {
+    throw "PCGEx compatibility patch is missing: $CompatibilityPatchPath"
+}
+
+$PatchApplied = $false
+if (Test-Path -LiteralPath (Join-Path $PluginRoot '.git')) {
+    & git -C $PluginRoot apply --reverse --check $CompatibilityPatchPath *> $null
+    $PatchApplied = ($LASTEXITCODE -eq 0)
+
+    if (-not $PatchApplied -and $Mode -eq 'Install') {
+        & git -C $PluginRoot apply --check $CompatibilityPatchPath
+        if ($LASTEXITCODE -ne 0) {
+            throw 'Pinned PCGEx source does not accept the reviewed YACS compatibility patch.'
+        }
+        & git -C $PluginRoot apply --whitespace=nowarn $CompatibilityPatchPath
+        if ($LASTEXITCODE -ne 0) {
+            throw 'Failed to apply the reviewed YACS PCGEx compatibility patch.'
+        }
+        & git -C $PluginRoot apply --reverse --check $CompatibilityPatchPath *> $null
+        $PatchApplied = ($LASTEXITCODE -eq 0)
+    }
 }
 
 $Checks = [System.Collections.Generic.List[object]]::new()
@@ -89,10 +116,21 @@ if (Test-Path -LiteralPath $LicensePath -PathType Leaf) {
 }
 
 $Dirty = $null
+$ChangedPaths = @()
+$UntrackedPaths = @()
 if (Test-Path -LiteralPath $GitDir) {
     $Dirty = (& git -C $PluginRoot status --porcelain --untracked-files=all) -join [Environment]::NewLine
+    $ChangedPaths = @(& git -C $PluginRoot diff --name-only)
+    $UntrackedPaths = @(& git -C $PluginRoot ls-files --others --exclude-standard)
 }
-Add-Check 'clean_checkout' ([string]::IsNullOrWhiteSpace($Dirty)) ([string]$Dirty)
+$ExpectedPatchOnly = (
+    $PatchApplied -and
+    $ChangedPaths.Count -eq 1 -and
+    $ChangedPaths[0] -eq $CompatibilityTargetRelative -and
+    $UntrackedPaths.Count -eq 0
+)
+Add-Check 'compatibility_patch' $PatchApplied $CompatibilityPatchId
+Add-Check 'expected_patch_only' $ExpectedPatchOnly ([string]$Dirty)
 
 $Failed = @($Checks | Where-Object { $_.status -ne 'PASS' })
 $Report = [ordered]@{
@@ -103,6 +141,9 @@ $Report = [ordered]@{
     repository = $ExpectedRepository
     expected_commit = $ExpectedCommit
     actual_commit = $Head
+    compatibility_patch = $CompatibilityPatchId
+    compatibility_patch_sha256 = (Get-FileHash -LiteralPath $CompatibilityPatchPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    compatibility_target = $CompatibilityTargetRelative
     plugin_root = $PluginRoot
     status = $(if ($Failed.Count -eq 0) {'PASS'} else {'FAIL'})
     checks = $Checks
