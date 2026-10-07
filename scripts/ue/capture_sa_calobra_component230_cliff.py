@@ -38,6 +38,8 @@ PCGEX_MESH = (
 )
 RESOLUTION = (1920, 1080)
 CAPTURE_DELAY_SECONDS = 1.0
+NEUTRAL_LANDSCAPE = os.environ.get("YACS_CLIFF_NEUTRAL_LANDSCAPE") == "1"
+NEUTRAL_MATERIAL = "/Engine/BasicShapes/BasicShapeMaterial"
 PIXEL_SIZE_M = 0.5
 CLIFF_MATERIAL = (
     "/Game/Generated/YACS/TextureMaterialPrep/Libraries/"
@@ -71,6 +73,41 @@ _before_scene = None
 _plan = None
 _pcgex_mesh = None
 _mesh_receipt = {}
+_material_override_state = None
+_material_override_receipt = {"enabled": False}
+
+
+def _apply_neutral_landscape_material():
+    global _material_override_state, _material_override_receipt
+    if not NEUTRAL_LANDSCAPE:
+        return
+    material = _load_surface_material(NEUTRAL_MATERIAL, "neutral Landscape")
+    previous = _target_component.get_editor_property("override_material")
+    # Retain rollback state before the setter, including a failed setter.
+    _material_override_state = (_target_component, previous)
+    _material_override_receipt = {
+        "enabled": True,
+        "component": _target_component.get_name(),
+        "material": material.get_path_name(),
+        "previous_override": previous.get_path_name() if previous else None,
+        "restored": False,
+        "scope": "owner-approved isolated A/B presentation only",
+    }
+    _target_component.set_editor_property("override_material", material)
+    if _target_component.get_editor_property("override_material") != material:
+        raise RuntimeError("Neutral Landscape material override did not apply")
+
+
+def _restore_landscape_material():
+    global _material_override_state
+    if _material_override_state is None:
+        return
+    component, previous = _material_override_state
+    component.set_editor_property("override_material", previous)
+    if component.get_editor_property("override_material") != previous:
+        raise RuntimeError("Original Landscape material override did not restore")
+    _material_override_receipt["restored"] = True
+    _material_override_state = None
 
 
 def _digest(path: Path) -> str:
@@ -987,6 +1024,10 @@ def _spawn_candidate():
 
 def _destroy_transient():
     errors = []
+    try:
+        _restore_landscape_material()
+    except Exception as exc:
+        errors.append("Landscape presentation material rollback: " + str(exc))
     actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
     for actor in list(_candidate_actors):
         try:
@@ -1030,6 +1071,7 @@ def _write_receipt(status: str, error: str | None):
         "assets_saved": False,
         "canonical_landscape_mutation": False,
         "selector_policy_mutation": False,
+        "landscape_presentation_material": _material_override_receipt,
         "component": _component_bounds() if _target_component else None,
         "plan_fingerprint": None if _plan is None else _plan.get("fingerprint"),
         "plan_counts": None if _plan is None else _plan.get("counts"),
@@ -1238,6 +1280,7 @@ def main():
 
     _before_hash = _digest(MAP_FILE)
     _before_scene = _scene_snapshot()
+    _apply_neutral_landscape_material()
     lighting = _ensure_lighting()
     bounds = _component_bounds()
     origin = unreal.Vector(*bounds["origin_cm"])

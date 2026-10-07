@@ -31,6 +31,7 @@ concurrency:
 
 env:
   GIT_LFS_SKIP_SMUDGE: "1"
+  YACS_CLIFF_NEUTRAL_LANDSCAPE: "1"
   YACS_LFS_CACHE_ROOT: 'D:\yacs\cache\git-lfs\YetAnotherCyclingSim'
 
 jobs:
@@ -351,6 +352,10 @@ jobs:
               $receipt.assets_saved -ne $false -or
               $receipt.canonical_landscape_mutation -ne $false -or
               $receipt.selector_policy_mutation -ne $false -or
+              $receipt.landscape_presentation_material.enabled -ne $true -or
+              $receipt.landscape_presentation_material.restored -ne $true -or
+              $receipt.landscape_presentation_material.component -ne 'LandscapeComponent_230' -or
+              $receipt.landscape_presentation_material.material -ne '/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial' -or
               [int]@($receipt.captures).Count -ne 4 -or
               [bool]$receipt.mesh.collision_enabled -ne $false -or
               [bool]$receipt.mesh.cast_dynamic_shadows -ne $true

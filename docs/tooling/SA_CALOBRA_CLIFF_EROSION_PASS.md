@@ -294,6 +294,28 @@ captures, existing dark-region gates and human visual acceptance. No map,
 graph or asset save and no canonical Landscape mutation are permitted.
 PR #446 remains Draft pending proof; merge requires explicit owner approval.
 
+The first native topology proof passed at `f3bb3ea33a90bf18267274ca06fd31fa4299244e`
+(Actions run `37688447292`): 28,640 triangles, 19 physical components,
+1,017 m2 retained, 150 cm maximum edge and zero outside vertices/centroids,
+degenerate triangles or nonmanifold edges. Two commandlet runs produced the
+same canonical SHA-256, `77372ed6a4a71508ef90606568892b17e4144483624b0546363e1a51544af367`.
+The overall workflow failed baseline image equality; visual acceptance is not
+claimed. Its logs also exposed omitted accepted-scene LFS dependencies:
+CheckpointMaterials, 185 CheckpointEarthworks textures and the Landscape's
+M_MaskReview_1 / T_MaskReview_1 pair. The capture workflow now materializes
+these existing packages and rejects their load errors before image admission.
+This does not re-author or save the accepted map or its assets.
+
+Owner approval on 2026-10-07 permits a temporary neutral Default Lit material
+override on Component 230 in the isolated A/B sessions. The workflow enables
+`YACS_CLIFF_NEUTRAL_LANDSCAPE=1` for both generators. The capture uses the existing
+`/Engine/BasicShapes/BasicShapeMaterial`, retains the original component override
+before applying it, restores it during cleanup (also after a partial failure),
+and verifies identity on readback. The receipt records this presentation-only
+exception and the workflow requires successful restoration. The accepted
+checkpoint's Unlit review mask is unsuitable for evaluating physical shadows.
+No heightfield, classifier, footprint, exclusion or saved asset is changed.
+
 ## Phase 2B direction
 
 Only after Phase 2A handoff review:
