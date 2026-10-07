@@ -1,7 +1,39 @@
 diff --git a/Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp b/Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp
 --- a/Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp
 +++ b/Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp
-@@ -1699,9 +1699,9 @@
+@@ -944,18 +944,19 @@
+ 			r = v2->pt.x;
+ 		}
+ 
+-		Edge* res = firstActive;
+-		while (res)
+-		{
+-			if (res->vL->pt.y == y && res->vR->pt.y == y &&
+-				res->vL->pt.x >= l && res->vR->pt.x <= r &&
+-				(res->vL->pt.x != l || res->vL->pt.x != r))
+-			{
+-				break;
+-			}
+-			res = res->nextE;
+-		}
+-		return res;
++		// A fixed horizontal later on this scanline may not be active yet.
++		// It still constrains a new diagonal; never bridge across that boundary.
++		for (Edge* edge : allEdges)
++		{
++			if (!IsLooseEdge(*edge) &&
++				edge->vL->pt.y == y && edge->vR->pt.y == y &&
++				edge->vL->pt.x >= l && edge->vR->pt.x <= r &&
++				(edge->vL->pt.x != l || edge->vR->pt.x != r))
++			{
++				return edge;
++			}
++		}
++		return nullptr;
+ 	}
+ 
+ 	void Delaunay::DoTriangulateLeft(Edge* edge, Vertex2* pivot, int64_t minY)
+@@ -1699,9 +1700,9 @@
  			return TriangulateResult::no_polygons;
  		}
  
@@ -14,7 +46,7 @@ diff --git a/Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulat
  		Clipper64 clipper;
  		if (zCallback)
  		{
-@@ -1710,13 +1710,12 @@
+@@ -1710,13 +1711,12 @@
  		clipper.AddSubject(pp);
  
  		Paths64 openPaths; // We don't use open paths for triangulation

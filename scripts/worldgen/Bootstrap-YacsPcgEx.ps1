@@ -23,10 +23,10 @@ $ExpectedCommit = '39a8f1bdc65b2c4613a1e87b71d93b4576db0a66'
 $ExpectedVersion = '0.79'
 $ExpectedEngineVersion = '5.8.0'
 $ExpectedLicenseFirstLine = 'MIT License'
-$CompatibilityPatchId = 'yacs-pcgex-0.79-triangulate-flat-union-v1'
+$CompatibilityPatchId = 'yacs-pcgex-0.79-horizontal-boundary-v2'
 $CompatibilityPatchRelative = 'scripts/worldgen/patches/pcgex-0.79-triangulate-holes-flat-union.patch'
 $CompatibilityTargetRelative = 'Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp'
-$ExpectedCompatibilityPatchSha256 = '46b67a8517e3cac7e4a15ec7aaeb6af83b97c6c418aa67adbb81592010d01290'
+$ExpectedCompatibilityPatchSha256 = '8182824990670e560d1a1f0d052288cc8a98dc5cdb370bdbf63f2666f9593d89'
 
 $RepoRoot = (Resolve-Path -LiteralPath $RepoRoot).Path
 if (-not $PluginRoot) { $PluginRoot = Join-Path $RepoRoot 'Plugins/PCGExtendedToolkit' }
@@ -99,7 +99,7 @@ function Test-YacsPcgExCompatibilityPatchApplied {
     $Hash = [Convert]::ToHexString(
         [System.Security.Cryptography.SHA256]::HashData($Bytes)
     ).ToLowerInvariant()
-    return $Hash -eq 'f7011d0e971411b3411bd4962eb6f0a4a6468cc7932ce662027a0c8579e9f9f5'
+    return $Hash -eq '68614ae15d6bb03f2e58b0fb1dfa33e8eeebbfd31da08bd94ebfb378aeb63977'
 }
 
 $CompatibilityTargetPath = Join-Path $PluginRoot $CompatibilityTargetRelative

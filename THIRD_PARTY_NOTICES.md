@@ -18,8 +18,8 @@ copyright 2025 Timothé Lapetite. The targeted Clipper2 triangulation source
 is copyright Angus Johnson 2010-2025 under the Boost Software License 1.0:
 https://www.boost.org/LICENSE_1_0.txt.
 The plugin is fetched by the authoring bootstrap; original license headers
-remain intact. The patch changes only the Union output representation passed
-to the existing triangulator. PCGEx is not a shipping runtime dependency.
+remain intact. The patch changes the Union output representation and corrects horizontal
+boundary lookup inside the existing triangulator. PCGEx is not a shipping runtime dependency.
 
 ## Material Maker authoring output
 

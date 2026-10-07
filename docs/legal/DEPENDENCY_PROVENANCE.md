@@ -15,7 +15,9 @@ header; this embedded component's license is distinct from PCGEx's root MIT
 license. See the attribution in `THIRD_PARTY_NOTICES.md`.
 
 The reviewed flat-union patch replaces the failed winding experiment, preserves
-the upstream pin and changes only the integer TriangulateWithHoles wrapper.
+the upstream pin and changes the integer TriangulateWithHoles wrapper plus the same file's
+horizontal-boundary lookup. A reduced concave-footprint regression and the
+frozen Component 230 input demonstrate the scanline boundary defect.
 Bootstrap verifies the patch and resulting source hashes. Scope remains
 authoring-only; topology, deterministic UE execution and visual acceptance
 remain required before admission. License/header and overloads checked against

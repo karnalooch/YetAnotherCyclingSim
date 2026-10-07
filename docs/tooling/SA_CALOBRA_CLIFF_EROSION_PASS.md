@@ -266,8 +266,11 @@ component independently with ceil(maxEdge / 150 cm) - 1.
 
 PCGEx remains authoring-only at revision
 `39a8f1bdc65b2c4613a1e87b71d93b4576db0a66`. The bounded compatibility experiment
-replaces only the integer TriangulateWithHoles wrapper's PolyTree regrouping
-with Union into oriented flat contours followed by standard Triangulate.
+uses Union into oriented flat contours followed by standard Triangulate, and
+fixes HorizontalBetween to inspect every fixed horizontal boundary, including
+ones not yet activated on the current scanline. Checking active edges alone
+allows a diagonal to cross a later boundary. The flat-union change alone did
+not fix the real input: it still returned 1,088 m2 instead of 1,017 m2.
 The fill rule, Z callback and Delaunay setting remain unchanged.
 The failed reversed-winding experiment is retired. Bootstrap verifies the
 patch SHA-256 and complete normalized patched-source SHA-256, allowing only
@@ -275,7 +278,12 @@ that source file to differ from the pinned revision.
 
 Standalone C++ probes pass for two holes, a nested island and a cell union with
 holes, using the pinned Clipper implementation with minimal Unreal macro stubs.
-These are not UE integration or Component 230 acceptance proofs.
+The reduced 14-cell concave regression returned 175,000 cm2 instead of
+140,000 cm2 before the horizontal-boundary fix. The corrected real 1,017-cell
+probe produces 622 triangles and 19 islands, exactly 1,017 m2, zero missing or
+outside area and zero overlapping triangle area (independent polygon audit).
+The commandlet tests the reduced regression with Delaunay both enabled and
+disabled before executing the graph. These are not visual acceptance proofs.
 The dedicated exact-head workflow must prove correct components, zero outside
 vertices/centroids, zero degenerate/nonmanifold triangles, retention 0.90..1.001,
 edge length <=157.5 cm, <=60,000 triangles per mesh and <=120,000 total, plus

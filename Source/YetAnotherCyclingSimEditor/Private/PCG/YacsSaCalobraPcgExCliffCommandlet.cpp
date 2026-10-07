@@ -24,6 +24,7 @@
 #include "WorldPartition/WorldPartitionHelpers.h"
 
 #if YACS_WITH_PCGEX
+#include "Clipper2Lib/clipper.triangulation.h"
 #include "Data/PCGDynamicMeshData.h"
 #include "Elements/PCGExClipper2Triangulate.h"
 #include "UDynamicMesh.h"
@@ -37,6 +38,50 @@ DEFINE_LOG_CATEGORY_STATIC(LogYacsSaCalobraPcgExCliff, Log, All);
 
 namespace
 {
+#if YACS_WITH_PCGEX
+    bool VerifyPcgExHorizontalBoundaryRegression()
+    {
+        // Reduced from the frozen 1017-cell plan. The upstream scanline only
+        // checked active horizontals, crossing a later fixed boundary and
+        // returning 175000 cm2 for this 140000 cm2 concave footprint.
+        using namespace PCGExClipper2Lib;
+        const FIntPoint Cells[] = {
+            {0, 0}, {1, 0}, {3, 0}, {10, 0},
+            {1, 1}, {2, 1}, {3, 1}, {4, 1}, {5, 1},
+            {6, 1}, {7, 1}, {8, 1}, {9, 1}, {10, 1}
+        };
+        Paths64 Paths;
+        for (const FIntPoint& Cell : Cells)
+        {
+            const int64 X = Cell.X * 100;
+            const int64 Y = Cell.Y * 100;
+            Paths.push_back({{X, Y}, {X + 100, Y},
+                             {X + 100, Y + 100}, {X, Y + 100}});
+        }
+        for (const bool bDelaunay : {false, true})
+        {
+            Paths64 Triangles;
+            const TriangulateResult Result = TriangulateWithHoles(
+                Paths, Triangles, FillRule::EvenOdd, bDelaunay);
+            double TriangleArea = 0.0;
+            for (const Path64& Triangle : Triangles)
+            {
+                TriangleArea += FMath::Abs(Area(Triangle));
+            }
+            if (Result != TriangulateResult::success
+                || FMath::Abs(TriangleArea - 140000.0) > 0.001)
+            {
+                UE_LOG(LogYacsSaCalobraPcgExCliff, Error,
+                    TEXT("PCGEx horizontal boundary regression: Delaunay=%d area=%.3f expected=140000 cm2."),
+                    bDelaunay, TriangleArea);
+                return false;
+            }
+        }
+        UE_LOG(LogYacsSaCalobraPcgExCliff, Display,
+            TEXT("PCGEx horizontal boundary regression: PASS (both Delaunay modes)."));
+        return true;
+    }
+#endif
     constexpr TCHAR PathPinName[] = TEXT("Paths");
     constexpr TCHAR PcgExCommit[] =
         TEXT("39a8f1bdc65b2c4613a1e87b71d93b4576db0a66");
@@ -487,6 +532,11 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
         OutputPath = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir(), OutputPath);
     }
 
+    if (!VerifyPcgExHorizontalBoundaryRegression())
+    {
+        return 26;
+    }
+
     const int32 ExpectedSkinCells = ReadExpectedSkinCellCount(PlanPath);
     if (ExpectedSkinCells <= 0)
     {
@@ -541,7 +591,7 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
 
     // Feed the exact YACS-authoritative 1 m cell loops straight into
     // PCGEx's constrained triangulator. TriangulateWithHoles performs its own
-    // Clipper2 Union into a PolyTree before Delaunay triangulation, so an
+    // Clipper2 Union into oriented contours before Delaunay triangulation, so an
     // explicit Union -> path reserialization -> Subdivide chain is both
     // redundant and harmful to the fail-closed footprint contract.
     UPCGExClipper2TriangulateSettings* Triangulate = nullptr;
@@ -674,3 +724,4 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     return 0;
 #endif
 }
+

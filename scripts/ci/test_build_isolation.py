@@ -67,4 +67,3 @@ try {{
                 ["pwsh", "-NoProfile", "-Command", code], capture_output=True, text=True
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-
