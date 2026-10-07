@@ -27,7 +27,6 @@
 #include "Data/PCGDynamicMeshData.h"
 #include "Elements/PCGExClipper2Boolean.h"
 #include "Elements/PCGExClipper2Triangulate.h"
-#include "Elements/PCGExSmooth.h"
 #include "Elements/PCGExSubdivide.h"
 #include "UDynamicMesh.h"
 #include "DynamicMesh/DynamicMesh3.h"
@@ -542,26 +541,12 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     Union->bSimplifyPaths = true;
     Union->bPreserveCollinear = false;
 
-    UPCGExSmoothSettings* Smooth = nullptr;
-    UPCGNode* SmoothNode = Graph->AddNodeOfType<UPCGExSmoothSettings>(Smooth);
-    if (!SmoothNode || !Smooth)
-    {
-        return 16;
-    }
-    Smooth->bPreserveStart = false;
-    Smooth->bPreserveEnd = false;
-    Smooth->BlendingInterface = EPCGExBlendingInterface::Monolithic;
-    Smooth->BlendingSettings =
-        FPCGExBlendingDetails(EPCGExBlendingType::Average);
-    Smooth->Influence.Constant = 0.35;
-    Smooth->SmoothingAmount.Constant = 2.0;
-
     UPCGExSubdivideSettings* Subdivide = nullptr;
     UPCGNode* SubdivideNode =
         Graph->AddNodeOfType<UPCGExSubdivideSettings>(Subdivide);
     if (!SubdivideNode || !Subdivide)
     {
-        return 17;
+        return 16;
     }
     Subdivide->SubdivideMethod = EPCGExSubdivideMode::Distance;
     Subdivide->AmountInput = EPCGExInputValueType::Constant;
@@ -575,7 +560,7 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
         Graph->AddNodeOfType<UPCGExClipper2BooleanSettings>(HardClip);
     if (!HardClipNode || !HardClip)
     {
-        return 18;
+        return 17;
     }
     HardClip->Operation = EPCGExClipper2BooleanOp::Intersection;
     HardClip->FillRule = EPCGExClipper2FillRule::NonZero;
@@ -590,7 +575,7 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
         Graph->AddNodeOfType<UPCGExClipper2TriangulateSettings>(Triangulate);
     if (!TriangulateNode || !Triangulate)
     {
-        return 19;
+        return 18;
     }
     Triangulate->MainInputGroupingPolicy = EPCGExGroupingPolicy::Consolidate;
     Triangulate->bSkipOpenPaths = true;
@@ -608,11 +593,8 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
             Graph, SourceNode, PathsPin, UnionNode, PathsPin,
             TEXT("YACS cells -> Clipper2 Union"))
         || !Connect(
-            Graph, UnionNode, PathsPin, SmoothNode, PathsPin,
-            TEXT("Clipper2 Union -> Smooth"))
-        || !Connect(
-            Graph, SmoothNode, PathsPin, SubdivideNode, PathsPin,
-            TEXT("Smooth -> Subdivide"))
+            Graph, UnionNode, PathsPin, SubdivideNode, PathsPin,
+            TEXT("Clipper2 Union -> Subdivide"))
         || !Connect(
             Graph, SubdivideNode, PathsPin, HardClipNode, PathsPin,
             TEXT("Subdivide -> hard-policy intersection subjects"))
@@ -623,13 +605,13 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
             Graph, HardClipNode, PathsPin, TriangulateNode, PathsPin,
             TEXT("Hard-policy intersection -> Clipper2 Triangulate")))
     {
-        return 20;
+        return 19;
     }
 
     UPCGNode* OutputNode = Graph->GetOutputNode();
     if (!OutputNode || OutputNode->GetInputPins().IsEmpty())
     {
-        return 21;
+        return 20;
     }
     const FName GraphOutputPin = OutputNode->GetInputPins()[0]->Properties.Label;
     Graph->AddLabeledEdge(
@@ -682,10 +664,11 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     Root->SetStringField(TEXT("pcgex_commit"), PcgExCommit);
     Root->SetStringField(
         TEXT("pipeline"),
-        TEXT("YACS cliff cells -> Clipper2 Union -> Path Smooth -> "
-             "Path Subdivide -> Clipper2 Intersection(original YACS union) -> "
+        TEXT("YACS cliff cells -> Clipper2 Union -> Path Subdivide -> "
+             "Clipper2 Intersection(original YACS union) -> "
              "Clipper2 Triangulate -> connected-component-aware deterministic "
-             "UE Uniform Tessellation"));
+             "UE Uniform Tessellation; boundary smoothing is deferred until "
+             "post-drape presentation so hard exclusions remain exact"));
     Root->SetBoolField(TEXT("canonical_landscape_mutation"), false);
     Root->SetBoolField(TEXT("assets_saved"), false);
     Root->SetBoolField(TEXT("graph_saved"), false);
