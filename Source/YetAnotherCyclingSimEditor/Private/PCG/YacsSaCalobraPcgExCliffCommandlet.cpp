@@ -153,14 +153,19 @@ namespace
                 const FVector2d Outgoing = Next - Current;
                 const double Cross =
                     Incoming.X * Outgoing.Y - Incoming.Y * Outgoing.X;
+                const double IncomingLengthSq =
+                    Incoming.X * Incoming.X + Incoming.Y * Incoming.Y;
+                const double OutgoingLengthSq =
+                    Outgoing.X * Outgoing.X + Outgoing.Y * Outgoing.Y;
                 const double Scale = FMath::Max(
                     1.0,
-                    FMath::Sqrt(Incoming.SquaredLength() * Outgoing.SquaredLength()));
-                const double Dot = Incoming.Dot(Outgoing);
+                    FMath::Sqrt(IncomingLengthSq * OutgoingLengthSq));
+                const double Dot =
+                    Incoming.X * Outgoing.X + Incoming.Y * Outgoing.Y;
 
                 if (
-                    Incoming.SquaredLength() <= DuplicateToleranceSq
-                    || Outgoing.SquaredLength() <= DuplicateToleranceSq
+                    IncomingLengthSq <= DuplicateToleranceSq
+                    || OutgoingLengthSq <= DuplicateToleranceSq
                     || (FMath::Abs(Cross) <= CollinearTolerance * Scale
                         && Dot >= 0.0))
                 {
