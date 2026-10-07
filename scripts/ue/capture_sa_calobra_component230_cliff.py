@@ -42,6 +42,7 @@ CAPTURE_DELAY_SECONDS = 0.0
 CAPTURE_WARMUP_FRAMES = 64
 NEUTRAL_LANDSCAPE = os.environ.get("YACS_CLIFF_NEUTRAL_LANDSCAPE") == "1"
 NEUTRAL_MATERIAL = "/Engine/BasicShapes/BasicShapeMaterial"
+MATCH_LANDSCAPE_MATERIAL = os.environ.get("YACS_CLIFF_MATCH_LANDSCAPE_MATERIAL") == "1"
 PIXEL_SIZE_M = 0.5
 CLIFF_MATERIAL = (
     "/Game/Generated/YACS/TextureMaterialPrep/Libraries/"
@@ -990,6 +991,15 @@ def _spawn_candidate():
         return
 
     limestone = _load_surface_material(CLIFF_MATERIAL, "limestone")
+    if MATCH_LANDSCAPE_MATERIAL:
+        if not NEUTRAL_LANDSCAPE or not _material_override_receipt["enabled"]:
+            raise RuntimeError("Same-material diagnostic requires neutral Landscape")
+        limestone = _target_component.get_editor_property("override_material")
+        if (
+            limestone is None
+            or limestone.get_path_name() != _material_override_receipt["material"]
+        ):
+            raise RuntimeError("Same-material diagnostic Landscape identity mismatch")
     scree_material = _load_surface_material(SCREE_MATERIAL, "scree")
 
     cells_by_cluster: dict[str, list[dict[str, object]]] = {}
@@ -1117,7 +1127,9 @@ def _spawn_candidate():
         "cast_dynamic_shadows": True,
         "double_sided_cliff_geometry": True,
         "material": {
-            "cliff": CLIFF_MATERIAL,
+            "cliff": limestone.get_path_name(),
+            "matches_landscape": MATCH_LANDSCAPE_MATERIAL,
+            "diagnostic_only": MATCH_LANDSCAPE_MATERIAL,
             "scree": SCREE_MATERIAL,
             "uv_world_size_m": _plan["skin_contract"]["uv_world_size_m"],
         },

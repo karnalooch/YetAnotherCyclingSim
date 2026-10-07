@@ -389,6 +389,24 @@ jobs:
           $env:YACS_CLIFF_PCGEX_MESH = Join-Path $env:YACS_CLIFF_PCGEX_PROOF_ROOT 'phase2c-pcgex-cliff-a.json'
           Invoke-CliffCapture -Label 'pcgex' -Output $env:YACS_CLIFF_PCGEX_OUTPUT -UsePcgEx $true
 
+          # Additional owner-requested diagnostic; original A/B inputs stay intact.
+          $env:YACS_CLIFF_MATCH_LANDSCAPE_MATERIAL = '1'
+          try {
+            $sameRoot = Join-Path $env:YACS_CLIFF_PHASE2C_ROOT 'same-material'
+            Invoke-CliffCapture -Label 'same-material' -Output $sameRoot -UsePcgEx $true
+            $same = Get-Content -LiteralPath (Join-Path $sameRoot 'component230-cliff-visual-receipt.json') -Raw | ConvertFrom-Json
+            if (
+              $same.mesh.material.matches_landscape -ne $true -or
+              $same.mesh.material.diagnostic_only -ne $true -or
+              $same.mesh.material.cliff -ne $same.landscape_presentation_material.material
+            ) {
+              throw 'Same-material diagnostic did not use the Landscape material.'
+            }
+          }
+          finally {
+            Remove-Item Env:YACS_CLIFF_MATCH_LANDSCAPE_MATERIAL -ErrorAction SilentlyContinue
+          }
+
       - name: Measure A/B and enforce 8-of-10 lighting gate
         shell: pwsh
         working-directory: _phase2c-pcgex-cliff

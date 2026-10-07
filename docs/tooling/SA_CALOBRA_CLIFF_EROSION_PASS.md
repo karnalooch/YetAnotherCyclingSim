@@ -343,6 +343,18 @@ Both A/B editor sessions use UE 5.8 `-Deterministic` (the documented shortcut
 for `-UseFixedTimeStep -FixedSeed`). Strict baseline-image equality remains
 binding; this setting is an experiment, not a claim of reproducible rendering.
 
+### Same-material contact diagnostic
+
+Owner request, 2026-10-08: capture an additional PCGEx presentation using the
+exact material currently assigned to the isolated Component 230 Landscape.
+`YACS_CLIFF_MATCH_LANDSCAPE_MATERIAL=1` requires the neutral Landscape override
+and reads that same material object for the cliff mesh. The workflow retains
+ordinary custom/PCGEx A/B captures and adds `same-material/` Lit and Lighting Only
+captures with unchanged geometry, camera, lighting and scree. Material identity
+and diagnostic-only scope are recorded and checked. Original A/B image and
+lighting gates remain binding. This test is not limestone material acceptance,
+a geometry fix, or permission to save the map/assets. Runtime proof is pending.
+
 ## Phase 2B direction
 
 Only after Phase 2A handoff review:
