@@ -322,7 +322,7 @@ def build_plan(
                 ),
                 "interior_lift_m": round(0.025 + jitter * 0.015, 4),
                 "boundary_underlap_m": round(0.035 + jitter * 0.020, 4),
-                "normal_offset_m": round(0.18 + jitter * 0.10, 4),
+                "normal_offset_m": round(0.035 + jitter * 0.025, 4),
                 "smoothing_passes": 2,
                 "smoothing_blend": 0.52,
                 "smoothing_clamp_m": 0.75,
