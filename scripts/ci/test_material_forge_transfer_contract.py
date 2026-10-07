@@ -213,11 +213,15 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         self.assertIn("Fixed-master vector readback failed", preview)
         self.assertIn("color_gain_values=None", preview)
         self.assertIn("vector_values = dict(color_gain_values)", preview)
+        self.assertIn('"inherited_master_default"', preview)
+        self.assertIn('"explicit_instance_override"', preview)
+        self.assertIn("if neutral:", preview)
         self.assertIn("COLOR_GAIN_MIN = 0.65", visual)
         self.assertIn("COLOR_GAIN_MAX = 1.35", visual)
         self.assertIn("YACS_MF_ROCK_COLOR_GAIN", visual)
         self.assertIn("YACS_MF_SOIL_COLOR_GAIN", visual)
         self.assertIn("Fixed-master color gain readback failed", visual)
+        self.assertIn('"binding": {', visual)
         self.assertIn("color_gain_values=requested_color_gains", visual)
         self.assertIn(
             "_verify_color_gain_readback(_instance, requested_color_gains)", visual

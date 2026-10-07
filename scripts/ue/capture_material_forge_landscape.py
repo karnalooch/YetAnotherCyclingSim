@@ -118,9 +118,20 @@ def _requested_color_gains():
         "SoilColorGain": _parse_color_gain("YACS_MF_SOIL_COLOR_GAIN"),
     }
     values = {name: value for name, (value, _normalized) in parsed.items()}
+    def binding_mode(normalized):
+        return (
+            "inherited_master_default"
+            if all(abs(float(value) - 1.0) <= 0.0001 for value in normalized)
+            else "explicit_instance_override"
+        )
+
     receipt = {
         "rock": parsed["RockColorGain"][1],
         "soil": parsed["SoilColorGain"][1],
+        "binding": {
+            "rock": binding_mode(parsed["RockColorGain"][1]),
+            "soil": binding_mode(parsed["SoilColorGain"][1]),
+        },
         "rgb_bounds": [COLOR_GAIN_MIN, COLOR_GAIN_MAX],
         "alpha": 1.0,
     }
