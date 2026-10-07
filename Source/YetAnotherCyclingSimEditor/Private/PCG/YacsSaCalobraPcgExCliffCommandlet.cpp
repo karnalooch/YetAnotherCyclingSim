@@ -25,9 +25,7 @@
 
 #if YACS_WITH_PCGEX
 #include "Data/PCGDynamicMeshData.h"
-#include "Elements/PCGExClipper2Boolean.h"
 #include "Elements/PCGExClipper2Triangulate.h"
-#include "Elements/PCGExSubdivide.h"
 #include "UDynamicMesh.h"
 #include "DynamicMesh/DynamicMesh3.h"
 #include "DynamicSubmesh3.h"
@@ -541,48 +539,17 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     }
     Source->PlanJsonPath = PlanPath;
 
-    UPCGExClipper2BooleanSettings* Union = nullptr;
-    UPCGNode* UnionNode =
-        Graph->AddNodeOfType<UPCGExClipper2BooleanSettings>(Union);
-    if (!UnionNode || !Union)
-    {
-        return 15;
-    }
-    Union->Operation = EPCGExClipper2BooleanOp::Union;
-    Union->FillRule = EPCGExClipper2FillRule::NonZero;
-    Union->bUseOperandPin = false;
-    Union->MainInputGroupingPolicy = EPCGExGroupingPolicy::Consolidate;
-    Union->bSkipOpenPaths = true;
-    Union->OpenPathsOutput = EPCGExClipper2OpenPathOutput::Ignore;
-    Union->bSimplifyPaths = true;
-    Union->bPreserveCollinear = false;
-
-    UPCGExSubdivideSettings* Subdivide = nullptr;
-    UPCGNode* SubdivideNode =
-        Graph->AddNodeOfType<UPCGExSubdivideSettings>(Subdivide);
-    if (!SubdivideNode || !Subdivide)
-    {
-        return 16;
-    }
-    Subdivide->SubdivideMethod = EPCGExSubdivideMode::Distance;
-    Subdivide->AmountInput = EPCGExInputValueType::Constant;
-    Subdivide->Distance = 100.0;
-    Subdivide->bRedistributeEvenly = true;
-
-    // With boundary smoothing deferred to the post-drape presentation stage,
-    // Path Subdivide preserves the exact Clipper2 union boundary.
-    //
-    // Consume that union directly with PCGEx's own constrained triangulator.
-    // TriangulateWithHoles accepts the consolidated set of disjoint outer rings
-    // plus nested rings and applies the requested EvenOdd fill rule. This avoids
-    // the lossy Decompose -> Cluster Surface reconstruction that duplicated
-    // planar faces, dropped thin corridors and introduced overlap.
+    // Feed the exact YACS-authoritative 1 m cell loops straight into
+    // PCGEx's constrained triangulator. TriangulateWithHoles performs its own
+    // Clipper2 Union into a PolyTree before Delaunay triangulation, so an
+    // explicit Union -> path reserialization -> Subdivide chain is both
+    // redundant and harmful to the fail-closed footprint contract.
     UPCGExClipper2TriangulateSettings* Triangulate = nullptr;
     UPCGNode* TriangulateNode =
         Graph->AddNodeOfType<UPCGExClipper2TriangulateSettings>(Triangulate);
     if (!TriangulateNode || !Triangulate)
     {
-        return 17;
+        return 15;
     }
     Triangulate->MainInputGroupingPolicy = EPCGExGroupingPolicy::Consolidate;
     Triangulate->FillRule = EPCGExClipper2FillRule::EvenOdd;
@@ -593,14 +560,8 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
 
     const FName PathsPin(PathPinName);
     if (!Connect(
-            Graph, SourceNode, PathsPin, UnionNode, PathsPin,
-            TEXT("YACS cells -> Clipper2 Union"))
-        || !Connect(
-            Graph, UnionNode, PathsPin, SubdivideNode, PathsPin,
-            TEXT("Clipper2 Union -> Subdivide"))
-        || !Connect(
-            Graph, SubdivideNode, PathsPin, TriangulateNode, PathsPin,
-            TEXT("Exact union paths -> Clipper2 constrained triangulation")))
+            Graph, SourceNode, PathsPin, TriangulateNode, PathsPin,
+            TEXT("Exact YACS cells -> PCGEx Clipper2 Union + constrained triangulation")))
     {
         return 19;
     }
@@ -661,11 +622,11 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     Root->SetStringField(TEXT("pcgex_commit"), PcgExCommit);
     Root->SetStringField(
         TEXT("pipeline"),
-        TEXT("YACS cliff cells -> Clipper2 Union -> Path Subdivide -> "
-             "Clipper2 Triangulate(Consolidate, EvenOdd, constrained Delaunay) -> "
+        TEXT("YACS exact cliff cells -> PCGEx Clipper2 Triangulate("
+             "internal Union/PolyTree, EvenOdd, constrained Delaunay) -> "
              "connected-component-aware deterministic UE Uniform Tessellation; "
-             "boundary smoothing is deferred until post-drape presentation so hard "
-             "exclusions remain exact"));
+             "no intermediate boundary rewrite; presentation smoothing is deferred "
+             "until post-drape rendering so hard exclusions remain exact"));
     Root->SetBoolField(TEXT("canonical_landscape_mutation"), false);
     Root->SetBoolField(TEXT("assets_saved"), false);
     Root->SetBoolField(TEXT("graph_saved"), false);
