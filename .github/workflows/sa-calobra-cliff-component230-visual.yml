@@ -175,6 +175,12 @@ jobs:
             foreach ($asset in @(
               "$library/LimestonePalette/1b3d9c45b1e24d6085bfcc8859390c19/M_SC_Limestone_ExposedRock.uasset",
               "$library/LimestonePalette/1b3d9c45b1e24d6085bfcc8859390c19/M_SC_Limestone_Scree.uasset",
+              "$library/ProviderData/ExposedRock/T_Height.uasset",
+              "$library/ProviderData/ExposedRock/T_Normal.uasset",
+              "$library/ProviderData/ExposedRock/T_Roughness.uasset",
+              "$library/ProviderData/Scree/T_Height.uasset",
+              "$library/ProviderData/Scree/T_Normal.uasset",
+              "$library/ProviderData/Scree/T_Roughness.uasset",
               "$library/Sources/T_Source_ExposedRock.uasset",
               "$library/Sources/T_Source_Scree.uasset"
             )) {
@@ -288,6 +294,29 @@ jobs:
             }
             throw "Component230 cliff visual Unreal capture exited $($process.ExitCode)."
           }
+
+          # Material acceptance is fail-closed. A loadable Material asset is not
+          # sufficient: UE must not silently compile it with missing textures or
+          # substitute Default Material during the visual proof.
+          $materialFallback = @()
+          foreach ($diagnostic in @($stdout, $stderr, $log)) {
+            if (Test-Path -LiteralPath $diagnostic -PathType Leaf) {
+              $materialFallback += @(
+                Select-String -LiteralPath $diagnostic -SimpleMatch -Pattern @(
+                  'Texture Sample > Missing input texture',
+                  'Default Material will be used'
+                ) -ErrorAction SilentlyContinue
+              )
+            }
+          }
+          if ($materialFallback.Count -gt 0) {
+            Write-Host '===== MATERIAL PROOF FAIL-CLOSED DIAGNOSTICS ====='
+            $materialFallback |
+              ForEach-Object { "$($_.Path):$($_.LineNumber): $($_.Line.Trim())" } |
+              Write-Host
+            throw 'Component230 limestone material proof detected missing texture input or Default Material fallback.'
+          }
+
           $receiptPath = Join-Path $env:YACS_CLIFF_VISUAL_OUTPUT 'component230-cliff-visual-receipt.json'
           if (-not (Test-Path -LiteralPath $receiptPath -PathType Leaf)) {
             throw 'Component230 cliff visual receipt is missing.'
