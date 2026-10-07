@@ -57,6 +57,9 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         )
         self.assertIn("build_material_forge_landscape_master.py", text)
         self.assertIn("YACS_MF_TEMPLATE_BUILDER_PROCESS_COUNT=1", text)
+        self.assertIn("Refusing to delete tracked fixed-master bootstrap asset", text)
+        self.assertIn("M_MaterialForgeLandscapeBlend", text)
+        self.assertIn("T_MF_ORMPlaceholder", text)
 
     def test_single_editor_process_runs_both_ue_subproofs(self):
         text = CANARY.read_text(encoding="utf-8")
