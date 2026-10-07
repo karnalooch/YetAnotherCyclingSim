@@ -64,13 +64,18 @@ if (-not (Test-Path -LiteralPath $CompatibilityPatchPath -PathType Leaf)) {
 }
 
 $PatchApplied = $false
+$PatchApplicable = $false
 if (Test-Path -LiteralPath (Join-Path $PluginRoot '.git')) {
     & git -C $PluginRoot apply --reverse --check $CompatibilityPatchPath *> $null
     $PatchApplied = ($LASTEXITCODE -eq 0)
 
+    if (-not $PatchApplied) {
+        & git -C $PluginRoot apply --check $CompatibilityPatchPath *> $null
+        $PatchApplicable = ($LASTEXITCODE -eq 0)
+    }
+
     if (-not $PatchApplied -and $Mode -eq 'Install') {
-        & git -C $PluginRoot apply --check $CompatibilityPatchPath
-        if ($LASTEXITCODE -ne 0) {
+        if (-not $PatchApplicable) {
             throw 'Pinned PCGEx source does not accept the reviewed YACS compatibility patch.'
         }
         & git -C $PluginRoot apply --whitespace=nowarn $CompatibilityPatchPath
@@ -79,6 +84,7 @@ if (Test-Path -LiteralPath (Join-Path $PluginRoot '.git')) {
         }
         & git -C $PluginRoot apply --reverse --check $CompatibilityPatchPath *> $null
         $PatchApplied = ($LASTEXITCODE -eq 0)
+        $PatchApplicable = $false
     }
 }
 
@@ -123,14 +129,26 @@ if (Test-Path -LiteralPath $GitDir) {
     $ChangedPaths = @(& git -C $PluginRoot diff --name-only)
     $UntrackedPaths = @(& git -C $PluginRoot ls-files --others --exclude-standard)
 }
+$UpstreamClean = (
+    $ChangedPaths.Count -eq 0 -and
+    $UntrackedPaths.Count -eq 0
+)
 $ExpectedPatchOnly = (
     $PatchApplied -and
     $ChangedPaths.Count -eq 1 -and
     $ChangedPaths[0] -eq $CompatibilityTargetRelative -and
     $UntrackedPaths.Count -eq 0
 )
-Add-Check 'compatibility_patch' $PatchApplied $CompatibilityPatchId
-Add-Check 'expected_patch_only' $ExpectedPatchOnly ([string]$Dirty)
+$CompatibilityReady = $PatchApplied -or $PatchApplicable
+$CheckoutPolicyOk = if ($Mode -eq 'Install') {
+    $ExpectedPatchOnly
+}
+else {
+    $UpstreamClean -and $PatchApplicable
+}
+Add-Check 'clean_checkout' $CheckoutPolicyOk ([string]$Dirty)
+Add-Check 'compatibility_patch' $CompatibilityReady $CompatibilityPatchId
+Add-Check 'expected_patch_only' ($(if ($Mode -eq 'Install') { $ExpectedPatchOnly } else { $PatchApplicable })) ([string]$Dirty)
 
 $Failed = @($Checks | Where-Object { $_.status -ne 'PASS' })
 $Report = [ordered]@{
@@ -142,6 +160,7 @@ $Report = [ordered]@{
     expected_commit = $ExpectedCommit
     actual_commit = $Head
     compatibility_patch = $CompatibilityPatchId
+    compatibility_patch_state = $(if ($PatchApplied) {'applied'} elseif ($PatchApplicable) {'applicable'} else {'invalid'})
     compatibility_patch_sha256 = (Get-FileHash -LiteralPath $CompatibilityPatchPath -Algorithm SHA256).Hash.ToLowerInvariant()
     compatibility_target = $CompatibilityTargetRelative
     plugin_root = $PluginRoot
