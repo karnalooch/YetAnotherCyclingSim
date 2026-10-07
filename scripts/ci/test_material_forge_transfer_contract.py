@@ -102,7 +102,7 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         )
         self.assertIn("Capture production Landscape visual proof", canary)
         self.assertIn("material-forge-landscape-visual-", canary)
-        self.assertNotIn('"scripts/ue/capture_material_forge_landscape.py"', mallorca)
+        self.assertIn('"scripts/ue/capture_material_forge_landscape.py"', mallorca)
         self.assertIn("FULL_CAPTURE_RESOLUTION = [3840, 2160]", visual)
         self.assertIn("whole_landscape_components", visual)
         self.assertIn("MF_LANDSCAPE_VISUAL_PROOF_PASS", visual)
@@ -239,6 +239,7 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         self.assertIn(
             '"scripts/ue/preview_material_forge_chunked_landscape.py"', mallorca
         )
+        self.assertIn('"scripts/ue/capture_material_forge_landscape.py"', mallorca)
         self.assertIn('"scripts/ue/build_material_forge_landscape_master.py"', mallorca)
 
     def test_transfer_metrics_are_preserved(self):
