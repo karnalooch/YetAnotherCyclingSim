@@ -24,14 +24,13 @@
 #include "WorldPartition/WorldPartitionHelpers.h"
 
 #if YACS_WITH_PCGEX
-#include "CompGeom/Delaunay2.h"
-#include "Curve/GeneralPolygon2.h"
-#include "Data/PCGBasePointData.h"
-#include "Clipper2Lib/clipper.h"
-#include "Polygon2.h"
+#include "Data/PCGDynamicMeshData.h"
+#include "Elements/PCGExClipper2Triangulate.h"
 #include "UDynamicMesh.h"
 #include "DynamicMesh/DynamicMesh3.h"
+#include "DynamicSubmesh3.h"
 #include "GeometryScript/MeshSubdivideFunctions.h"
+#include "Selections/MeshConnectedComponents.h"
 #endif
 
 DEFINE_LOG_CATEGORY_STATIC(LogYacsSaCalobraPcgExCliff, Log, All);
@@ -101,99 +100,6 @@ namespace
         return MaxEdge;
     }
 
-    bool SanitizePlanarLoop(TArray<FVector2d>& Vertices)
-    {
-        constexpr double DuplicateToleranceSq = 1.e-12;
-        constexpr double CollinearTolerance = 1.e-10;
-
-        if (Vertices.Num() < 3)
-        {
-            return false;
-        }
-
-        // Remove consecutive duplicates, including a repeated closing point.
-        TArray<FVector2d> Deduplicated;
-        Deduplicated.Reserve(Vertices.Num());
-        for (const FVector2d& Vertex : Vertices)
-        {
-            if (
-                Deduplicated.IsEmpty()
-                || FVector2d::DistSquared(Deduplicated.Last(), Vertex)
-                    > DuplicateToleranceSq)
-            {
-                Deduplicated.Add(Vertex);
-            }
-        }
-        if (
-            Deduplicated.Num() > 1
-            && FVector2d::DistSquared(Deduplicated[0], Deduplicated.Last())
-                <= DuplicateToleranceSq)
-        {
-            Deduplicated.Pop();
-        }
-        Vertices = MoveTemp(Deduplicated);
-
-        // Remove only mathematically redundant collinear/spike vertices. This
-        // is contour hygiene, not simplification: every removed point lies on
-        // the exact segment between its two neighbours.
-        bool bRemoved = true;
-        while (bRemoved && Vertices.Num() >= 3)
-        {
-            bRemoved = false;
-            for (int32 Index = 0; Index < Vertices.Num(); ++Index)
-            {
-                const FVector2d& Previous =
-                    Vertices[(Index + Vertices.Num() - 1) % Vertices.Num()];
-                const FVector2d& Current = Vertices[Index];
-                const FVector2d& Next =
-                    Vertices[(Index + 1) % Vertices.Num()];
-
-                const FVector2d Incoming = Current - Previous;
-                const FVector2d Outgoing = Next - Current;
-                const double Cross =
-                    Incoming.X * Outgoing.Y - Incoming.Y * Outgoing.X;
-                const double IncomingLengthSq =
-                    Incoming.X * Incoming.X + Incoming.Y * Incoming.Y;
-                const double OutgoingLengthSq =
-                    Outgoing.X * Outgoing.X + Outgoing.Y * Outgoing.Y;
-                const double Scale = FMath::Max(
-                    1.0,
-                    FMath::Sqrt(IncomingLengthSq * OutgoingLengthSq));
-                const double Dot =
-                    Incoming.X * Outgoing.X + Incoming.Y * Outgoing.Y;
-
-                if (
-                    IncomingLengthSq <= DuplicateToleranceSq
-                    || OutgoingLengthSq <= DuplicateToleranceSq
-                    || (FMath::Abs(Cross) <= CollinearTolerance * Scale
-                        && Dot >= 0.0))
-                {
-                    Vertices.RemoveAt(Index);
-                    bRemoved = true;
-                    break;
-                }
-            }
-        }
-
-        if (Vertices.Num() < 3)
-        {
-            return false;
-        }
-
-        double TwiceSignedArea = 0.0;
-        for (int32 Index = 0; Index < Vertices.Num(); ++Index)
-        {
-            const FVector2d& A = Vertices[Index];
-            const FVector2d& B = Vertices[(Index + 1) % Vertices.Num()];
-            TwiceSignedArea += A.X * B.Y - B.X * A.Y;
-        }
-
-        // A mathematically zero-area contour carries no authoritative
-        // footprint. Reject it as contour hygiene before it can become a
-        // degenerate hole/outer in UE's constrained triangulator.
-        return FMath::Abs(TwiceSignedArea) > 1.e-8;
-    }
-
     bool ExecuteGraph(
         UPCGGraph* Graph,
         TArray<TSharedPtr<FJsonValue>>& OutMeshes,
@@ -202,8 +108,6 @@ namespace
         double& OutMaxEdgeBeforeCm,
         double& OutMaxEdgeAfterCm,
         int32& OutMaxTessellation,
-        int32& OutUnionOuterCount,
-        int32& OutUnionHoleCount,
         FString& OutError)
     {
         if (!Graph)
@@ -292,410 +196,250 @@ namespace
         constexpr int32 MaxTessellation = 12;
         constexpr int32 MaxTriangleCountPerMesh = 60000;
 
-        constexpr int32 ClipperPrecision = 100;
-        constexpr double InvClipperPrecision =
-            1.0 / static_cast<double>(ClipperPrecision);
-
-        PCGExClipper2Lib::Paths64 SourcePaths;
-        SourcePaths.reserve(Generated.TaggedData.Num());
-
         for (const FPCGTaggedData& Tagged : Generated.TaggedData)
         {
-            const UPCGBasePointData* PointData =
-                Cast<const UPCGBasePointData>(Tagged.Data);
-            if (!PointData)
+            const UPCGDynamicMeshData* MeshData =
+                Cast<const UPCGDynamicMeshData>(Tagged.Data);
+            if (!MeshData || !MeshData->GetDynamicMesh())
             {
                 continue;
             }
 
-            const auto Transforms = PointData->GetConstTransformValueRange();
-            if (Transforms.Num() < 3)
+            const UE::Geometry::FDynamicMesh3& SourceMesh =
+                MeshData->GetDynamicMesh()->GetMeshRef();
+            if (SourceMesh.VertexCount() <= 0 || SourceMesh.TriangleCount() <= 0)
             {
                 continue;
             }
 
-            PCGExClipper2Lib::Path64 Path;
-            Path.reserve(Transforms.Num());
-            for (int32 PointIndex = 0; PointIndex < Transforms.Num(); ++PointIndex)
+            // PCGEx currently emits the consolidated admitted footprint as one
+            // DynamicMesh containing the disconnected cliff islands. A single
+            // longest edge must not force every island to the same uniform
+            // tessellation level. Split by real triangle connectivity first,
+            // then densify each component independently.
+            UE::Geometry::FMeshConnectedComponents Components(&SourceMesh);
+            Components.FindConnectedTriangles();
+            if (Components.Num() <= 0)
             {
-                const FVector Position = Transforms[PointIndex].GetLocation();
-                Path.emplace_back(
-                    FMath::RoundToInt64(Position.X * ClipperPrecision),
-                    FMath::RoundToInt64(Position.Y * ClipperPrecision));
+                continue;
             }
-            SourcePaths.push_back(MoveTemp(Path));
-        }
 
-        if (SourcePaths.size() != 1017)
-        {
-            OutError = FString::Printf(
-                TEXT("Phase 2C source graph returned %d closed paths; expected 1017."),
-                static_cast<int32>(SourcePaths.size()));
-            return false;
-        }
-
-        // IMPORTANT: do not consume the PCG Boolean node's flattened path
-        // output here. PCGEx 0.79's point-data restoration path drops small
-        // nested rings. Use the same pinned PCGEx/Clipper2 implementation
-        // directly and retain its PolyTree hierarchy losslessly.
-        PCGExClipper2Lib::Clipper64 Clipper;
-        Clipper.AddSubject(SourcePaths);
-        PCGExClipper2Lib::PolyTree64 UnionTree;
-        if (!Clipper.Execute(
-                PCGExClipper2Lib::ClipType::Union,
-                PCGExClipper2Lib::FillRule::NonZero,
-                UnionTree))
-        {
-            OutError = TEXT("PCGEx embedded Clipper2 failed to union authoritative cliff cells.");
-            return false;
-        }
-
-        struct FPolygonGroup
-        {
-            UE::Geometry::TPolygon2<double> Outer;
-            TArray<UE::Geometry::TPolygon2<double>> Holes;
-        };
-
-        TArray<FPolygonGroup> PolygonGroups;
-        OutUnionOuterCount = 0;
-        OutUnionHoleCount = 0;
-
-        auto ConvertClipperPath =
-            [InvClipperPrecision](
-                const PCGExClipper2Lib::Path64& InPath,
-                TArray<FVector2d>& OutVertices) -> bool
+            TArray<int32> ComponentOrder;
+            ComponentOrder.Reserve(Components.Num());
+            for (int32 ComponentIndex = 0; ComponentIndex < Components.Num(); ++ComponentIndex)
             {
-                OutVertices.Reset();
-                OutVertices.Reserve(static_cast<int32>(InPath.size()));
-                for (const PCGExClipper2Lib::Point64& Point : InPath)
+                ComponentOrder.Add(ComponentIndex);
+            }
+            ComponentOrder.Sort(
+                [&Components](const int32 Left, const int32 Right)
                 {
-                    OutVertices.Add(
-                        FVector2d(
-                            static_cast<double>(Point.x) * InvClipperPrecision,
-                            static_cast<double>(Point.y) * InvClipperPrecision));
-                }
-                return SanitizePlanarLoop(OutVertices);
-            };
-
-        TFunction<bool(const PCGExClipper2Lib::PolyPath64*)> CollectOuter;
-        CollectOuter =
-            [&](
-                const PCGExClipper2Lib::PolyPath64* OuterNode) -> bool
-            {
-                if (!OuterNode)
-                {
-                    return true;
-                }
-
-                const PCGExClipper2Lib::Path64& OuterPath =
-                    OuterNode->Polygon();
-                if (OuterPath.empty())
-                {
-                    for (size_t ChildIndex = 0;
-                         ChildIndex < OuterNode->Count();
-                         ++ChildIndex)
+                    const TArray<int>& LeftTriangles =
+                        Components.GetComponent(Left).Indices;
+                    const TArray<int>& RightTriangles =
+                        Components.GetComponent(Right).Indices;
+                    int32 LeftMin = MAX_int32;
+                    for (const int32 TriangleId : LeftTriangles)
                     {
-                        if (!CollectOuter(OuterNode->Child(ChildIndex)))
-                        {
-                            return false;
-                        }
+                        LeftMin = FMath::Min(LeftMin, TriangleId);
                     }
-                    return true;
-                }
-
-                TArray<FVector2d> OuterVertices;
-                if (!ConvertClipperPath(OuterPath, OuterVertices))
-                {
-                    OutError = TEXT("PCGEx PolyTree produced an invalid outer contour.");
-                    return false;
-                }
-
-                FPolygonGroup& Group = PolygonGroups.AddDefaulted_GetRef();
-                Group.Outer =
-                    UE::Geometry::TPolygon2<double>(MoveTemp(OuterVertices));
-                if (Group.Outer.SignedArea() < 0.0)
-                {
-                    Group.Outer.Reverse();
-                }
-                ++OutUnionOuterCount;
-
-                for (size_t HoleIndex = 0;
-                     HoleIndex < OuterNode->Count();
-                     ++HoleIndex)
-                {
-                    const PCGExClipper2Lib::PolyPath64* HoleNode =
-                        OuterNode->Child(HoleIndex);
-                    if (!HoleNode)
+                    int32 RightMin = MAX_int32;
+                    for (const int32 TriangleId : RightTriangles)
                     {
-                        continue;
+                        RightMin = FMath::Min(RightMin, TriangleId);
                     }
+                    return LeftMin < RightMin;
+                });
 
-                    TArray<FVector2d> HoleVertices;
-                    if (!ConvertClipperPath(
-                            HoleNode->Polygon(),
-                            HoleVertices))
-                    {
-                        OutError = TEXT("PCGEx PolyTree produced an invalid hole contour.");
-                        return false;
-                    }
-
-                    UE::Geometry::TPolygon2<double> Hole(
-                        MoveTemp(HoleVertices));
-                    if (Hole.SignedArea() > 0.0)
-                    {
-                        Hole.Reverse();
-                    }
-                    Group.Holes.Add(MoveTemp(Hole));
-                    ++OutUnionHoleCount;
-
-                    // Children of a hole are solid islands and must restart
-                    // as independent outer polygons.
-                    for (size_t IslandIndex = 0;
-                         IslandIndex < HoleNode->Count();
-                         ++IslandIndex)
-                    {
-                        if (!CollectOuter(HoleNode->Child(IslandIndex)))
-                        {
-                            return false;
-                        }
-                    }
-                }
-
-                return true;
-            };
-
-        for (size_t RootIndex = 0;
-             RootIndex < UnionTree.Count();
-             ++RootIndex)
-        {
-            if (!CollectOuter(UnionTree.Child(RootIndex)))
+            for (const int32 ComponentIndex : ComponentOrder)
             {
-                return false;
-            }
-        }
-
-        UE_LOG(
-            LogYacsSaCalobraPcgExCliff,
-            Display,
-            TEXT("Phase 2C PCGEx PolyTree Union: outer_paths=%d hole_paths=%d."),
-            OutUnionOuterCount,
-            OutUnionHoleCount);
-
-        if (OutUnionOuterCount != 19 || OutUnionHoleCount != 19)
-        {
-            OutError = FString::Printf(
-                TEXT("PCGEx PolyTree authority mismatch: outer=%d/19 holes=%d/19."),
-                OutUnionOuterCount,
-                OutUnionHoleCount);
-            return false;
-        }
-
-        for (int32 GroupIndex = 0; GroupIndex < PolygonGroups.Num(); ++GroupIndex)
-        {
-            FPolygonGroup& Group = PolygonGroups[GroupIndex];
-            UE::Geometry::TGeneralPolygon2<double> GeneralPolygon(Group.Outer);
-
-            for (const UE::Geometry::TPolygon2<double>& Hole : Group.Holes)
-            {
-                UE::Geometry::TPolygon2<double> HoleCopy = Hole;
-                if (!GeneralPolygon.AddHole(MoveTemp(HoleCopy), true, true))
-                {
-                    OutError = FString::Printf(
-                        TEXT("UE general polygon rejected PCGEx hole for outer %d: %dv/%.3fcm2."),
-                        GroupIndex,
-                        Hole.VertexCount(),
-                        FMath::Abs(Hole.SignedArea()));
-                    return false;
-                }
-            }
-
-            UE::Geometry::FDelaunay2 Delaunay;
-            TArray<UE::Geometry::FIndex3i> SurfaceTriangles;
-            TArray<FVector2d> SurfaceVertices;
-            if (!Delaunay.Triangulate(
-                    GeneralPolygon,
-                    &SurfaceTriangles,
-                    &SurfaceVertices,
-                    true)
-                || SurfaceTriangles.IsEmpty()
-                || SurfaceVertices.IsEmpty())
-            {
-                FString HoleSummary;
-                for (int32 HoleIndex = 0; HoleIndex < Group.Holes.Num(); ++HoleIndex)
-                {
-                    HoleSummary += FString::Printf(
-                        TEXT("%s%dv/%.3fcm2"),
-                        HoleIndex == 0 ? TEXT("") : TEXT(","),
-                        Group.Holes[HoleIndex].VertexCount(),
-                        FMath::Abs(Group.Holes[HoleIndex].SignedArea()));
-                }
-                OutError = FString::Printf(
-                    TEXT("UE 5.8 constrained Delaunay failed for PCGEx outer %d: outer=%dv/%.3fcm2 holes=%d [%s]."),
-                    GroupIndex,
-                    Group.Outer.VertexCount(),
-                    FMath::Abs(Group.Outer.SignedArea()),
-                    Group.Holes.Num(),
-                    *HoleSummary);
-                return false;
-            }
-
-            UE::Geometry::FDynamicMesh3 SurfaceMesh;
-            TArray<int32> VertexIds;
-            VertexIds.Reserve(SurfaceVertices.Num());
-            for (const FVector2d& Position : SurfaceVertices)
-            {
-                VertexIds.Add(
-                    SurfaceMesh.AppendVertex(FVector(Position.X, Position.Y, 0.0)));
-            }
-
-            for (const UE::Geometry::FIndex3i& Triangle : SurfaceTriangles)
-            {
-                if (
-                    !VertexIds.IsValidIndex(Triangle.A)
-                    || !VertexIds.IsValidIndex(Triangle.B)
-                    || !VertexIds.IsValidIndex(Triangle.C))
-                {
-                    OutError = TEXT("UE constrained Delaunay returned an invalid vertex index.");
-                    return false;
-                }
-
-                if (SurfaceMesh.AppendTriangle(
-                        VertexIds[Triangle.A],
-                        VertexIds[Triangle.B],
-                        VertexIds[Triangle.C]) < 0)
-                {
-                    OutError = TEXT("Could not append UE constrained-Delaunay triangle.");
-                    return false;
-                }
-            }
-
-            UDynamicMesh* DynamicMesh =
-                NewObject<UDynamicMesh>(GetTransientPackage());
-            if (!DynamicMesh)
-            {
-                OutError = TEXT("Could not allocate transient tessellation mesh.");
-                return false;
-            }
-            DynamicMesh->InitializeMesh();
-            DynamicMesh->SetMesh(MoveTemp(SurfaceMesh));
-
-            const UE::Geometry::FDynamicMesh3& BeforeMesh = DynamicMesh->GetMeshRef();
-            const int32 PreTessVertices = BeforeMesh.VertexCount();
-            const int32 PreTessTriangles = BeforeMesh.TriangleCount();
-            const double MaxEdgeBefore = ComputeMaxEdgeLengthCm(BeforeMesh);
-            OutMaxEdgeBeforeCm = FMath::Max(OutMaxEdgeBeforeCm, MaxEdgeBefore);
-
-            const int32 RequiredSegments = FMath::Max(
-                1,
-                FMath::CeilToInt(MaxEdgeBefore / TargetEdgeCm));
-            const int32 Tessellation = FMath::Clamp(
-                RequiredSegments - 1,
-                0,
-                MaxTessellation);
-            OutMaxTessellation = FMath::Max(OutMaxTessellation, Tessellation);
-
-            if (Tessellation > 0)
-            {
-                UDynamicMesh* Result =
-                    UGeometryScriptLibrary_MeshSubdivideFunctions::ApplyUniformTessellation(
-                        DynamicMesh,
-                        Tessellation,
-                        nullptr);
-                if (Result != DynamicMesh)
-                {
-                    OutError = TEXT("GeometryScript uniform tessellation failed.");
-                    return false;
-                }
-            }
-
-            const UE::Geometry::FDynamicMesh3& Mesh = DynamicMesh->GetMeshRef();
-            const double MaxEdgeAfter = ComputeMaxEdgeLengthCm(Mesh);
-            OutMaxEdgeAfterCm = FMath::Max(OutMaxEdgeAfterCm, MaxEdgeAfter);
-
-            if (MaxEdgeAfter > TargetEdgeCm * 1.05)
-            {
-                OutError = FString::Printf(
-                    TEXT("Phase 2C topology remains too coarse after deterministic tessellation: %.3f cm > %.3f cm."),
-                    MaxEdgeAfter,
-                    TargetEdgeCm * 1.05);
-                return false;
-            }
-            if (Mesh.TriangleCount() > MaxTriangleCountPerMesh)
-            {
-                OutError = FString::Printf(
-                    TEXT("Phase 2C topology exceeds per-mesh triangle budget: %d > %d."),
-                    Mesh.TriangleCount(),
-                    MaxTriangleCountPerMesh);
-                return false;
-            }
-
-            TMap<int32, int32> Remap;
-            TArray<TSharedPtr<FJsonValue>> Vertices;
-            Vertices.Reserve(Mesh.VertexCount());
-            int32 DenseIndex = 0;
-            for (const int32 VertexId : Mesh.VertexIndicesItr())
-            {
-                Remap.Add(VertexId, DenseIndex++);
-                const FVector Position = Mesh.GetVertex(VertexId);
-                TArray<TSharedPtr<FJsonValue>> Values;
-                Values.Add(MakeShared<FJsonValueNumber>(Position.X));
-                Values.Add(MakeShared<FJsonValueNumber>(Position.Y));
-                Values.Add(MakeShared<FJsonValueNumber>(Position.Z));
-                Vertices.Add(MakeShared<FJsonValueArray>(MoveTemp(Values)));
-            }
-
-            TArray<TSharedPtr<FJsonValue>> Triangles;
-            Triangles.Reserve(Mesh.TriangleCount());
-            for (const int32 TriangleId : Mesh.TriangleIndicesItr())
-            {
-                const UE::Geometry::FIndex3i Triangle = Mesh.GetTriangle(TriangleId);
-                const int32* A = Remap.Find(Triangle.A);
-                const int32* B = Remap.Find(Triangle.B);
-                const int32* C = Remap.Find(Triangle.C);
-                if (!A || !B || !C)
+                const TArray<int>& TriangleIds =
+                    Components.GetComponent(ComponentIndex).Indices;
+                if (TriangleIds.IsEmpty())
                 {
                     continue;
                 }
-                TArray<TSharedPtr<FJsonValue>> Values;
-                Values.Add(MakeShared<FJsonValueNumber>(*A));
-                Values.Add(MakeShared<FJsonValueNumber>(*B));
-                Values.Add(MakeShared<FJsonValueNumber>(*C));
-                Triangles.Add(MakeShared<FJsonValueArray>(MoveTemp(Values)));
+
+                UE::Geometry::FDynamicSubmesh3 Submesh(
+                    &SourceMesh,
+                    TriangleIds,
+                    static_cast<int>(UE::Geometry::EMeshComponents::None),
+                    false);
+                UE::Geometry::FDynamicMesh3 ComponentMesh =
+                    MoveTemp(Submesh.GetSubmesh());
+                if (ComponentMesh.VertexCount() <= 0 || ComponentMesh.TriangleCount() <= 0)
+                {
+                    continue;
+                }
+
+                UDynamicMesh* DynamicMesh =
+                    NewObject<UDynamicMesh>(GetTransientPackage());
+                if (!DynamicMesh)
+                {
+                    OutError = TEXT("Could not allocate transient component tessellation mesh.");
+                    return false;
+                }
+                DynamicMesh->InitializeMesh();
+                DynamicMesh->SetMesh(MoveTemp(ComponentMesh));
+
+                const UE::Geometry::FDynamicMesh3& BeforeMesh =
+                    DynamicMesh->GetMeshRef();
+                const int32 PreTessVertices = BeforeMesh.VertexCount();
+                const int32 PreTessTriangles = BeforeMesh.TriangleCount();
+                const double MaxEdgeBefore = ComputeMaxEdgeLengthCm(BeforeMesh);
+                OutMaxEdgeBeforeCm =
+                    FMath::Max(OutMaxEdgeBeforeCm, MaxEdgeBefore);
+
+                // FUniformTessellate inserts TessellationNum points along each
+                // original edge, yielding TessellationNum + 1 edge segments.
+                // Therefore the minimum level that satisfies TargetEdgeCm is
+                // ceil(edge/target) - 1, not ceil(edge/target).
+                const int32 RequiredSegments = FMath::Max(
+                    1,
+                    FMath::CeilToInt(MaxEdgeBefore / TargetEdgeCm));
+                const int32 Tessellation = FMath::Clamp(
+                    RequiredSegments - 1,
+                    0,
+                    MaxTessellation);
+                OutMaxTessellation =
+                    FMath::Max(OutMaxTessellation, Tessellation);
+
+                if (Tessellation > 0)
+                {
+                    UDynamicMesh* Result =
+                        UGeometryScriptLibrary_MeshSubdivideFunctions::ApplyUniformTessellation(
+                            DynamicMesh,
+                            Tessellation,
+                            nullptr);
+                    if (Result != DynamicMesh)
+                    {
+                        OutError = TEXT("GeometryScript uniform tessellation failed.");
+                        return false;
+                    }
+                }
+
+                const UE::Geometry::FDynamicMesh3& Mesh =
+                    DynamicMesh->GetMeshRef();
+                const double MaxEdgeAfter = ComputeMaxEdgeLengthCm(Mesh);
+                OutMaxEdgeAfterCm =
+                    FMath::Max(OutMaxEdgeAfterCm, MaxEdgeAfter);
+
+                if (MaxEdgeAfter > TargetEdgeCm * 1.05)
+                {
+                    OutError = FString::Printf(
+                        TEXT("Phase 2C component topology remains too coarse after deterministic tessellation: %.3f cm > %.3f cm."),
+                        MaxEdgeAfter,
+                        TargetEdgeCm * 1.05);
+                    return false;
+                }
+                if (Mesh.TriangleCount() > MaxTriangleCountPerMesh)
+                {
+                    OutError = FString::Printf(
+                        TEXT("Phase 2C component topology exceeds per-mesh triangle budget: %d > %d."),
+                        Mesh.TriangleCount(),
+                        MaxTriangleCountPerMesh);
+                    return false;
+                }
+
+                TMap<int32, int32> Remap;
+                TArray<TSharedPtr<FJsonValue>> Vertices;
+                Vertices.Reserve(Mesh.VertexCount());
+                int32 DenseIndex = 0;
+                for (const int32 VertexId : Mesh.VertexIndicesItr())
+                {
+                    Remap.Add(VertexId, DenseIndex++);
+                    const FVector Position = Mesh.GetVertex(VertexId);
+                    TArray<TSharedPtr<FJsonValue>> Values;
+                    Values.Add(MakeShared<FJsonValueNumber>(Position.X));
+                    Values.Add(MakeShared<FJsonValueNumber>(Position.Y));
+                    Values.Add(MakeShared<FJsonValueNumber>(Position.Z));
+                    Vertices.Add(MakeShared<FJsonValueArray>(MoveTemp(Values)));
+                }
+
+                TArray<TSharedPtr<FJsonValue>> Triangles;
+                Triangles.Reserve(Mesh.TriangleCount());
+                for (const int32 TriangleId : Mesh.TriangleIndicesItr())
+                {
+                    const UE::Geometry::FIndex3i Triangle =
+                        Mesh.GetTriangle(TriangleId);
+                    const int32* A = Remap.Find(Triangle.A);
+                    const int32* B = Remap.Find(Triangle.B);
+                    const int32* C = Remap.Find(Triangle.C);
+                    if (!A || !B || !C)
+                    {
+                        continue;
+                    }
+                    TArray<TSharedPtr<FJsonValue>> Values;
+                    Values.Add(MakeShared<FJsonValueNumber>(*A));
+                    Values.Add(MakeShared<FJsonValueNumber>(*B));
+                    Values.Add(MakeShared<FJsonValueNumber>(*C));
+                    Triangles.Add(MakeShared<FJsonValueArray>(MoveTemp(Values)));
+                }
+
+                if (Vertices.IsEmpty() || Triangles.IsEmpty())
+                {
+                    continue;
+                }
+
+                OutVertexCount += Vertices.Num();
+                OutTriangleCount += Triangles.Num();
+                TSharedRef<FJsonObject> MeshObject =
+                    MakeShared<FJsonObject>();
+                MeshObject->SetNumberField(
+                    TEXT("source_component_index"),
+                    ComponentIndex);
+                MeshObject->SetNumberField(
+                    TEXT("pre_tessellation_vertex_count"),
+                    PreTessVertices);
+                MeshObject->SetNumberField(
+                    TEXT("pre_tessellation_triangle_count"),
+                    PreTessTriangles);
+                MeshObject->SetNumberField(
+                    TEXT("tessellation"),
+                    Tessellation);
+                MeshObject->SetNumberField(
+                    TEXT("target_edge_cm"),
+                    TargetEdgeCm);
+                MeshObject->SetNumberField(
+                    TEXT("max_edge_cm_before"),
+                    MaxEdgeBefore);
+                MeshObject->SetNumberField(
+                    TEXT("max_edge_cm_after"),
+                    MaxEdgeAfter);
+                MeshObject->SetArrayField(
+                    TEXT("vertices_cm"),
+                    MoveTemp(Vertices));
+                MeshObject->SetArrayField(
+                    TEXT("triangles"),
+                    MoveTemp(Triangles));
+
+                // PCGEx cluster-pair IDs are execution-local bookkeeping
+                // (e.g. PCGEx/Cluster:65279). Their numeric suffix can differ
+                // between otherwise identical runs, so they are not geometry
+                // evidence. Exclude only that transient pairing tag and sort
+                // the remaining semantic tags before serialization.
+                TArray<FString> StableTags;
+                for (const FString& Tag : Tagged.Tags)
+                {
+                    if (!Tag.StartsWith(TEXT("PCGEx/Cluster:")))
+                    {
+                        StableTags.Add(Tag);
+                    }
+                }
+                StableTags.Sort();
+
+                TArray<TSharedPtr<FJsonValue>> TagValues;
+                TagValues.Reserve(StableTags.Num());
+                for (const FString& Tag : StableTags)
+                {
+                    TagValues.Add(
+                        MakeShared<FJsonValueString>(Tag));
+                }
+                MeshObject->SetArrayField(
+                    TEXT("tags"),
+                    MoveTemp(TagValues));
+                OutMeshes.Add(
+                    MakeShared<FJsonValueObject>(MeshObject));
             }
-
-            if (Vertices.IsEmpty() || Triangles.IsEmpty())
-            {
-                continue;
-            }
-
-            OutVertexCount += Vertices.Num();
-            OutTriangleCount += Triangles.Num();
-
-            TSharedRef<FJsonObject> MeshObject = MakeShared<FJsonObject>();
-            MeshObject->SetNumberField(TEXT("source_component_index"), GroupIndex);
-            MeshObject->SetNumberField(TEXT("hole_count"), Group.Holes.Num());
-            MeshObject->SetNumberField(
-                TEXT("pre_tessellation_vertex_count"),
-                PreTessVertices);
-            MeshObject->SetNumberField(
-                TEXT("pre_tessellation_triangle_count"),
-                PreTessTriangles);
-            MeshObject->SetNumberField(TEXT("tessellation"), Tessellation);
-            MeshObject->SetNumberField(TEXT("target_edge_cm"), TargetEdgeCm);
-            MeshObject->SetNumberField(TEXT("max_edge_cm_before"), MaxEdgeBefore);
-            MeshObject->SetNumberField(TEXT("max_edge_cm_after"), MaxEdgeAfter);
-            MeshObject->SetArrayField(TEXT("vertices_cm"), MoveTemp(Vertices));
-            MeshObject->SetArrayField(TEXT("triangles"), MoveTemp(Triangles));
-
-            TArray<TSharedPtr<FJsonValue>> TagValues;
-            TagValues.Add(MakeShared<FJsonValueString>(
-                TEXT("YACS.Component230.CliffCandidate")));
-            TagValues.Add(MakeShared<FJsonValueString>(
-                TEXT("YACS.PCGEx.Clipper2Union")));
-            TagValues.Add(MakeShared<FJsonValueString>(
-                TEXT("YACS.UE58.ConstrainedDelaunay")));
-            MeshObject->SetArrayField(TEXT("tags"), MoveTemp(TagValues));
-            OutMeshes.Add(MakeShared<FJsonValueObject>(MeshObject));
         }
 
         Component->CleanupLocalImmediate(true);
@@ -795,12 +539,32 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     }
     Source->PlanJsonPath = PlanPath;
 
-    // Materialize only the exact YACS cell paths through stock PCG. The
-    // topology operation itself is performed immediately after graph execution
-    // with the pinned PCGEx-embedded Clipper2 PolyTree API, avoiding the
-    // lossy PCG point-data restoration layer while keeping PCGEx as the
-    // authoritative footprint topology implementation.
+    // Feed the exact YACS-authoritative 1 m cell loops straight into
+    // PCGEx's constrained triangulator. TriangulateWithHoles performs its own
+    // Clipper2 Union into a PolyTree before Delaunay triangulation, so an
+    // explicit Union -> path reserialization -> Subdivide chain is both
+    // redundant and harmful to the fail-closed footprint contract.
+    UPCGExClipper2TriangulateSettings* Triangulate = nullptr;
+    UPCGNode* TriangulateNode =
+        Graph->AddNodeOfType<UPCGExClipper2TriangulateSettings>(Triangulate);
+    if (!TriangulateNode || !Triangulate)
+    {
+        return 15;
+    }
+    Triangulate->MainInputGroupingPolicy = EPCGExGroupingPolicy::Consolidate;
+    Triangulate->FillRule = EPCGExClipper2FillRule::EvenOdd;
+    Triangulate->bUseDelaunay = true;
+    Triangulate->bAttemptRepair = false;
+    Triangulate->Topology.bWeldEdges = true;
+    Triangulate->Topology.bComputeNormals = true;
+
     const FName PathsPin(PathPinName);
+    if (!Connect(
+            Graph, SourceNode, PathsPin, TriangulateNode, PathsPin,
+            TEXT("Exact YACS cells -> PCGEx Clipper2 Union + constrained triangulation")))
+    {
+        return 19;
+    }
 
     UPCGNode* OutputNode = Graph->GetOutputNode();
     if (!OutputNode || OutputNode->GetInputPins().IsEmpty())
@@ -809,8 +573,8 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     }
     const FName GraphOutputPin = OutputNode->GetInputPins()[0]->Properties.Label;
     Graph->AddLabeledEdge(
-        SourceNode,
-        PathsPin,
+        TriangulateNode,
+        FName(TEXT("Mesh")),
         OutputNode,
         GraphOutputPin);
 
@@ -820,8 +584,6 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     double MaxEdgeBeforeCm = 0.0;
     double MaxEdgeAfterCm = 0.0;
     int32 MaxTessellation = 1;
-    int32 UnionOuterCount = 0;
-    int32 UnionHoleCount = 0;
     FString ExecutionError;
     if (!ExecuteGraph(
             Graph,
@@ -831,8 +593,6 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
             MaxEdgeBeforeCm,
             MaxEdgeAfterCm,
             MaxTessellation,
-            UnionOuterCount,
-            UnionHoleCount,
             ExecutionError))
     {
         UE_LOG(
@@ -862,18 +622,15 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     Root->SetStringField(TEXT("pcgex_commit"), PcgExCommit);
     Root->SetStringField(
         TEXT("pipeline"),
-        TEXT("YACS exact cliff cells -> pinned PCGEx embedded Clipper2 "
-             "PolyTree Union(NonZero, lossless outer+hole hierarchy) -> "
-             "UE 5.8 FDelaunay2(TGeneralPolygon2 holes) -> deterministic "
-             "UE Uniform Tessellation; PCGEx owns admitted footprint topology, "
-             "UE owns only surface triangulation; presentation smoothing remains "
-             "post-drape so hard exclusions stay exact"));
+        TEXT("YACS exact cliff cells -> PCGEx Clipper2 Triangulate("
+             "internal Union/PolyTree, EvenOdd, constrained Delaunay) -> "
+             "connected-component-aware deterministic UE Uniform Tessellation; "
+             "no intermediate boundary rewrite; presentation smoothing is deferred "
+             "until post-drape rendering so hard exclusions remain exact"));
     Root->SetBoolField(TEXT("canonical_landscape_mutation"), false);
     Root->SetBoolField(TEXT("assets_saved"), false);
     Root->SetBoolField(TEXT("graph_saved"), false);
     Root->SetNumberField(TEXT("source_skin_cell_count"), ExpectedSkinCells);
-    Root->SetNumberField(TEXT("pcgex_union_outer_count"), UnionOuterCount);
-    Root->SetNumberField(TEXT("pcgex_union_hole_count"), UnionHoleCount);
     Root->SetNumberField(TEXT("mesh_count"), Meshes.Num());
     Root->SetNumberField(TEXT("vertex_count"), VertexCount);
     Root->SetNumberField(TEXT("triangle_count"), TriangleCount);

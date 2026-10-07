@@ -31,6 +31,15 @@ class BuildIsolationTests(unittest.TestCase):
     def test_unknown_project_is_rejected(self):
         self.check("editor.exe", False)
 
+
+    def test_auto_discovery_filters_stale_cim_records_by_native_pid(self):
+        script = Path(__file__).with_name("Assert-YacsBuildIsolation.ps1").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("$AutoDiscovered", script)
+        self.assertIn("Get-Process -Id ([int]$_.ProcessId)", script)
+        self.assertIn("'UnrealEditor-Cmd'", script)
+
     @unittest.skipUnless(os.name == "nt", "Windows junction test")
     def test_junction_alias_of_open_project_is_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:
