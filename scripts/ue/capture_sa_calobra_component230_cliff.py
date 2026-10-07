@@ -488,7 +488,9 @@ def _spawn_candidate():
         scree_triangles,
         scree_material,
     )
+    lighting = _mesh_receipt.get("lighting")
     _mesh_receipt = {
+        "lighting": lighting,
         "cliff": cliff_counts,
         "scree": scree_counts,
         "plate_count": len(_plan["plates"]),
@@ -736,7 +738,6 @@ def main():
     surface_z = origin.z + extent.z * 0.35
 
     actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
-    global _camera
     _camera = actors.spawn_actor_from_class(
         unreal.CameraActor,
         unreal.Vector(
