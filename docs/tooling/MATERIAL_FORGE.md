@@ -224,7 +224,7 @@ The Material Forge proof keeps two artifact surfaces:
 - a complete determinism/archive artifact containing the full catalog, both
   deterministic runs, Blender review evidence and logs;
 - a slim UE canary artifact containing only the exact-SHA proof summary,
-  run manifest and the two admitted `refined_a` variants required by Unreal.
+  run manifest and the two selected `refined_b` variants required by Unreal.
 
 The UE canary verifies the slim artifact digest and receipt before use and records
 the slim/full artifact sizes plus transfer duration.
@@ -280,8 +280,9 @@ The refined Landscape proof must not overlap asynchronous texture compilation
 with material/shader compilation. The editor diagnostics library now exposes two
 explicit drains:
 
-1. `FinishTextureCompilation` for the six imported refined rock/soil texture
-   objects before constructing the blended material graph.
+1. `FinishTextureCompilation` for the eight imported refined rock/soil texture
+   objects (BaseColor, Normal, ORM and DetailMasks for both surfaces) before
+   constructing the blended material graph.
 2. `DrainAssetCompilationAndCollectGarbage` after material recompilation. It
    calls UE's `FAssetCompilingManager::FinishAllCompilation()`, runs full
    garbage collection and returns a JSON receipt containing outstanding compile
@@ -364,8 +365,17 @@ fixed-master canary and whole-Landscape 4K capture from `refined_a` to
 Cliff cavities and vertical streaking are **not** considered solved by the color
 pass. Their suspected sources remain geometry, normal response, AO/shadowing and
 projection. Refinement B deliberately avoids hiding those defects with an
-arbitrary albedo lift; they remain a separate diagnostic/acceptance item before
-production visual approval.
+arbitrary albedo lift.
+
+The same close camera therefore emits two additional diagnostic captures in the
+whole-Landscape proof: `Unlit` and `Lighting Only`. Unreal 5.8 defines Unlit
+as Base Color without scene lighting, while Lighting Only uses a neutral
+material affected by lighting. The pair therefore separates likely
+BaseColor/projection defects from lighting/geometry response without changing
+the production material.
+
+These two debug images are recorded separately from the four owner-acceptance
+views and do not change the visual gate.
 
 Admission is unchanged:
 
