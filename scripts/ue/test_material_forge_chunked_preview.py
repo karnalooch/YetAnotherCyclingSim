@@ -59,6 +59,13 @@ class MaterialForgeChunkedPreviewTests(unittest.TestCase):
             self.source.index("def prepare()"),
         )
 
+    def test_fixed_master_path_bypasses_live_graph_authoring(self):
+        self.assertIn("YACS_MF_FIXED_MASTER_PATH", self.source)
+        self.assertIn("_create_fixed_master_instance", self.source)
+        self.assertIn('"fixed_master_instance"', self.source)
+        self.assertIn('"material_instance_updated"', self.source)
+        self.assertIn('"fixed_master_instance_drained"', self.source)
+
     def test_memory_gates_and_rollback_exist(self):
         for token in (
             "PREPARE_FREE_PHYSICAL_GB = 8",

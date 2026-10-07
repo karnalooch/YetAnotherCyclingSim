@@ -330,6 +330,157 @@ def _import_weight(package: str):
     return texture
 
 
+def _create_fixed_master_instance(package: str, weights, checkpoints):
+    master_path = os.environ.get("YACS_MF_FIXED_MASTER_PATH")
+    if not master_path:
+        raise RuntimeError("YACS_MF_FIXED_MASTER_PATH is required for fixed-master proof")
+    master = unreal.load_asset(master_path)
+    if master is None:
+        raise RuntimeError("Fixed Material Forge Landscape master could not be loaded")
+    checkpoints.append({"stage": "fixed_master_loaded", "memory": _memory()})
+
+    importer, rock_validation, rock_provenance = _validate_variant(ROCK)
+    _same_importer, soil_validation, soil_provenance = _validate_variant(SOIL)
+
+    surfaces = {}
+    for key, directory, validation, provenance in (
+        ("rock", ROCK, rock_validation, rock_provenance),
+        ("soil", SOIL, soil_validation, soil_provenance),
+    ):
+        textures = {}
+        for channel in ("BaseColor", "Normal_DX", "ORM"):
+            source = importer["_verified_map"](directory, validation, channel)
+            texture = importer["_import_texture"](
+                package,
+                f"T_{key}_{channel.replace('_', '')}",
+                source,
+                channel,
+            )
+            texture.set_editor_property("filter", unreal.TextureFilter.TF_BILINEAR)
+            texture.set_editor_property("never_stream", False)
+            textures[channel] = texture
+        surfaces[key] = {
+            "textures": textures,
+            "tile_cm": float(provenance["tile_metres"]) * 100.0,
+        }
+        checkpoints.append(
+            {
+                "stage": f"{key}_textures_imported",
+                "memory": _memory(),
+            }
+        )
+
+    imported_textures = [weights] + [
+        texture
+        for surface in surfaces.values()
+        for texture in surface["textures"].values()
+    ]
+    if not unreal.YacsTextureAuditLibrary.finish_texture_compilation(
+        imported_textures
+    ):
+        raise RuntimeError("Fixed-master texture compilation did not drain cleanly")
+    checkpoints.append(
+        {
+            "stage": "texture_compilation_drained",
+            "memory": _memory(),
+        }
+    )
+
+    instance = unreal.AssetToolsHelpers.get_asset_tools().create_asset(
+        "MI_MF_ChunkedRockSoil",
+        package,
+        unreal.MaterialInstanceConstant,
+        unreal.MaterialInstanceConstantFactoryNew(),
+    )
+    if instance is None:
+        raise RuntimeError("Fixed-master Material Instance creation failed")
+    LIB.set_material_instance_parent(instance, master)
+    LIB.update_material_instance(instance)
+    checkpoints.append({"stage": "material_instance_created", "memory": _memory()})
+
+    texture_values = {
+        "WeightTex": weights,
+        "RockBaseColorTex": surfaces["rock"]["textures"]["BaseColor"],
+        "RockNormalTex": surfaces["rock"]["textures"]["Normal_DX"],
+        "RockORMTex": surfaces["rock"]["textures"]["ORM"],
+        "SoilBaseColorTex": surfaces["soil"]["textures"]["BaseColor"],
+        "SoilNormalTex": surfaces["soil"]["textures"]["Normal_DX"],
+        "SoilORMTex": surfaces["soil"]["textures"]["ORM"],
+    }
+    scalar_values = {
+        "RockTileSizeCm": surfaces["rock"]["tile_cm"],
+        "SoilTileSizeCm": surfaces["soil"]["tile_cm"],
+    }
+    visible_textures = {str(name) for name in LIB.get_texture_parameter_names(instance)}
+    visible_scalars = {str(name) for name in LIB.get_scalar_parameter_names(instance)}
+    if set(texture_values) - visible_textures:
+        raise RuntimeError(
+            "Fixed-master texture parameter contract missing: "
+            + ",".join(sorted(set(texture_values) - visible_textures))
+        )
+    if set(scalar_values) - visible_scalars:
+        raise RuntimeError(
+            "Fixed-master scalar parameter contract missing: "
+            + ",".join(sorted(set(scalar_values) - visible_scalars))
+        )
+
+    association = unreal.MaterialParameterAssociation.GLOBAL_PARAMETER
+    for name, texture in texture_values.items():
+        LIB.set_material_instance_parameter_override(instance, name, True, association)
+        LIB.set_material_instance_texture_parameter_value(
+            instance,
+            name,
+            texture,
+            association,
+        )
+    for name, value in scalar_values.items():
+        LIB.set_material_instance_parameter_override(instance, name, True, association)
+        LIB.set_material_instance_scalar_parameter_value(
+            instance,
+            name,
+            float(value),
+            association,
+        )
+    LIB.update_material_instance(instance)
+    checkpoints.append({"stage": "material_instance_updated", "memory": _memory()})
+
+    for name, expected in texture_values.items():
+        actual = LIB.get_material_instance_texture_parameter_value(
+            instance,
+            name,
+            association,
+        )
+        if actual is None or actual.get_path_name() != expected.get_path_name():
+            raise RuntimeError("Fixed-master texture readback failed: " + name)
+    for name, expected in scalar_values.items():
+        actual = LIB.get_material_instance_scalar_parameter_value(
+            instance,
+            name,
+            association,
+        )
+        if abs(float(actual) - float(expected)) > 0.001:
+            raise RuntimeError("Fixed-master scalar readback failed: " + name)
+
+    drain_raw = (
+        unreal.YacsTextureAuditLibrary.drain_asset_compilation_and_collect_garbage()
+    )
+    drain = json.loads(drain_raw)
+    if (
+        not drain.get("ok")
+        or int(drain.get("remaining_after", -1)) != 0
+        or int(drain.get("shader_jobs_after", -1)) != 0
+    ):
+        raise RuntimeError("Fixed-master compile drain failed: " + drain_raw)
+    checkpoints.append(
+        {
+            "stage": "fixed_master_instance_drained",
+            "memory": _memory(),
+            "compile_drain": drain,
+        }
+    )
+    return instance, drain
+
+
 def _build_surface_material(package: str, weights, checkpoints):
     importer, rock_validation, rock_provenance = _validate_variant(ROCK)
     _same_importer, soil_validation, soil_provenance = _validate_variant(SOIL)
@@ -667,11 +818,20 @@ def prepare():
             "memory": _memory(),
         }
     )
-    material, compile_drain = _build_surface_material(
-        package,
-        weights,
-        checkpoints,
-    )
+    if os.environ.get("YACS_MF_FIXED_MASTER_PATH"):
+        material, compile_drain = _create_fixed_master_instance(
+            package,
+            weights,
+            checkpoints,
+        )
+        material_mode = "fixed_master_instance"
+    else:
+        material, compile_drain = _build_surface_material(
+            package,
+            weights,
+            checkpoints,
+        )
+        material_mode = "dynamic_graph_legacy"
     memory_after_compile_drain = _memory()
 
     foundation = runpy.run_path(
@@ -697,6 +857,7 @@ def prepare():
         "map_file": map_file,
         "package": package,
         "compile_drain": compile_drain,
+        "material_mode": material_mode,
         "memory_checkpoints": checkpoints,
         "memory_after_compile_drain": memory_after_compile_drain,
     }
@@ -711,6 +872,7 @@ def prepare():
         material=material.get_path_name(),
         package=package,
         compile_drain=compile_drain,
+        material_mode=material_mode,
         memory_checkpoints=checkpoints,
         memory=memory_after_compile_drain,
         sampling="bilinear + five-tap appearance smoothing",

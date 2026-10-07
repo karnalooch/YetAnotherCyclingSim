@@ -313,6 +313,65 @@ jobs:
             }
           }
 
+      - name: Build fixed Material Forge Landscape master in isolated editor process
+        shell: pwsh
+        working-directory: _material-forge-ue-canary
+        run: |
+          $ErrorActionPreference = 'Stop'
+          . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
+          $project = Join-Path (Get-Location) 'YetAnotherCyclingSim.uproject'
+          $engine = Resolve-YacsUnrealEngine -ProjectPath $project
+          $script = (Resolve-Path 'scripts/ue/build_material_forge_landscape_master.py').Path
+          $root = $env:YACS_MATERIAL_FORGE_CANARY_ROOT
+          $receipt = Join-Path $root 'fixed-master-bootstrap.json'
+          $stdout = Join-Path $root 'fixed-master-bootstrap.stdout.log'
+          $stderr = Join-Path $root 'fixed-master-bootstrap.stderr.log'
+          $log = Join-Path $root 'fixed-master-bootstrap.engine.log'
+          $env:YACS_MF_TEMPLATE_RECEIPT = $receipt
+          $arguments = @(
+            ('"' + $project + '"'),
+            ('-ExecutePythonScript="' + $script + '"'),
+            '-RenderOffscreen',
+            '-Unattended',
+            '-NoPause',
+            '-NoSplash',
+            '-NoSound',
+            '-NoP4',
+            '-NoVSync',
+            '-ScriptErrorsAreFatal',
+            '-stdout',
+            ('-AbsLog="' + $log + '"')
+          )
+          $process = Start-Process -FilePath $engine.UnrealEditorPath -ArgumentList $arguments -PassThru -NoNewWindow -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          if (-not $process.WaitForExit(900000)) {
+            $process | Stop-Process -Force
+            throw 'Fixed Material Forge master bootstrap timed out after 900 seconds.'
+          }
+          if ($process.ExitCode -ne 0) {
+            foreach ($diagnostic in @($stdout, $stderr, $log)) {
+              if (Test-Path -LiteralPath $diagnostic -PathType Leaf) {
+                Write-Host "===== TAIL $diagnostic ====="
+                Get-Content -LiteralPath $diagnostic -Tail 240 | Write-Host
+              }
+            }
+            throw "Fixed Material Forge master bootstrap exited $($process.ExitCode)."
+          }
+          if (-not (Test-Path -LiteralPath $receipt -PathType Leaf)) {
+            throw 'Fixed Material Forge master bootstrap receipt is missing.'
+          }
+          $row = Get-Content -LiteralPath $receipt -Raw | ConvertFrom-Json
+          if (
+            $row.status -ne 'MF_LANDSCAPE_FIXED_MASTER_SAVED' -or
+            $row.map_saved -ne $false -or
+            $row.geometry_changed -ne $false -or
+            $row.world_semantics_changed -ne $false
+          ) {
+            throw 'Fixed Material Forge master bootstrap receipt failed.'
+          }
+          "YACS_MF_FIXED_MASTER_PATH=/Game/Generated/YACS/MaterialForge/Templates/M_MaterialForgeLandscapeBlend" >> $env:GITHUB_ENV
+          "YACS_MF_TEMPLATE_BUILDER_PROCESS_COUNT=1" >> $env:GITHUB_ENV
+          $row | ConvertTo-Json -Depth 8 | Write-Host
+
       - name: Run Material Forge UE proofs in one editor session
         shell: pwsh
         working-directory: _material-forge-ue-canary
@@ -365,7 +424,9 @@ jobs:
             $receipt.status -ne 'UE_MATERIAL_FORGE_SINGLE_SESSION_PASS' -or
             $receipt.artifact_exact_sha -ne $env:YACS_RENDER_PROOF_SHA -or
             $receipt.execution_sha -ne $env:GITHUB_SHA -or
-            [int]$receipt.editor_process_count -ne 1 -or
+            [int]$receipt.editor_process_count -ne 2 -or
+            [int]$receipt.template_builder_process_count -ne 1 -or
+            [int]$receipt.canary_process_count -ne 1 -or
             [int]$receipt.map_load_count -ne 1 -or
             $receipt.execution_mode -ne 'RenderOffscreen' -or
             $receipt.canary_status -ne 'UE_CANARY_ASSIGN_ROLLBACK_PASS' -or

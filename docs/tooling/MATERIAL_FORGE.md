@@ -309,3 +309,25 @@ graph construction, material recompilation and final asset/shader drain. These
 measurements are diagnostic only and do not weaken the 8 GiB prepare / 6 GiB
 apply fail-closed gates.
 
+### Fixed-master bootstrap A/B proof
+
+Run #16 isolated the catastrophic memory cliff to live
+`MaterialEditingLibrary` graph authoring: free physical memory fell from about
+12.35 GiB after texture compilation to about 0.95 GiB immediately after the
+rock/soil graph was constructed, while shader jobs and external shader-worker
+memory were both zero.
+
+The next bounded proof therefore separates master authoring from Landscape
+consumption. A first offscreen editor process builds and saves the exact
+parameterized `M_MaterialForgeLandscapeBlend` master inside the disposable CI
+checkout, then exits. A fresh second editor process loads that compiled master,
+imports the exact refined rock/soil maps and appearance mask, creates only a
+Material Instance, assigns it to the one-component Landscape canary and rolls
+back.
+
+This two-process form is temporary bootstrap evidence, not the final #402
+single-session architecture. If it restores safe memory headroom and the
+Landscape proof passes, promote the compiled master as a normal Git-LFS technical
+UE asset and remove the bootstrap editor process so the production canary returns
+to one editor process and one map load.
+

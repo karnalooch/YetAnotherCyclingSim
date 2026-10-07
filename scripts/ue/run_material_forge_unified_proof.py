@@ -42,6 +42,9 @@ def main() -> None:
     artifact_sha = os.environ["YACS_MATERIAL_FORGE_ARTIFACT_SHA"]
     execution_sha = os.environ["YACS_MATERIAL_FORGE_EXECUTION_SHA"]
     execution_mode = os.environ.get("YACS_UE_EXECUTION_MODE", "unspecified")
+    template_builder_process_count = int(
+        os.environ.get("YACS_MF_TEMPLATE_BUILDER_PROCESS_COUNT", "0")
+    )
     memory_before = _memory_snapshot()
 
     # Run the stronger Landscape proof first while the process still has the
@@ -81,7 +84,9 @@ def main() -> None:
         "status": "UE_MATERIAL_FORGE_SINGLE_SESSION_PASS",
         "artifact_exact_sha": artifact_sha,
         "execution_sha": execution_sha,
-        "editor_process_count": 1,
+        "editor_process_count": 1 + template_builder_process_count,
+        "template_builder_process_count": template_builder_process_count,
+        "canary_process_count": 1,
         "map_load_count": 1,
         "execution_mode": execution_mode,
         "canary_status": canary_receipt["status"],
