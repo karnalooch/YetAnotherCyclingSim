@@ -36,6 +36,21 @@ class MaterialForgeChunkedPreviewTests(unittest.TestCase):
         self.assertNotIn("save_loaded_asset(", self.source)
         self.assertNotIn('set_editor_property("landscape_material"', self.source)
 
+    def test_compile_work_is_drained_before_landscape_assignment(self):
+        self.assertIn(
+            "YacsTextureAuditLibrary.finish_texture_compilation",
+            self.source,
+        )
+        self.assertIn(
+            "drain_asset_compilation_and_collect_garbage",
+            self.source,
+        )
+        self.assertIn("remaining_after", self.source)
+        self.assertLess(
+            self.source.index("drain_asset_compilation_and_collect_garbage"),
+            self.source.index("def prepare()"),
+        )
+
     def test_memory_gates_and_rollback_exist(self):
         for token in (
             "PREPARE_FREE_PHYSICAL_GB = 8",

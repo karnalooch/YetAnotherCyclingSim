@@ -26,4 +26,11 @@ public:
 	/** Finish only the explicitly selected texture builds; never change source art. */
 	UFUNCTION(BlueprintCallable, Category = "YACS|Diagnostics")
 	static bool FinishTextureCompilation(const TArray<UTexture2D*>& Textures);
+
+	/**
+	 * Drain all in-flight asset/shader compilation, then run full GC.
+	 * Returns a JSON receipt so Python proofs can verify the drain and memory recovery.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "YACS|Diagnostics")
+	static FString DrainAssetCompilationAndCollectGarbage();
 };
