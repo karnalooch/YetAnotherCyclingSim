@@ -266,7 +266,16 @@ def _build_views():
             fast = dict(source)
             fast["name"] = name
             fast["purpose"] = purpose
+            fast["dynamic_shadows"] = True
             fast_views.append(fast)
+
+        shadowless = dict(views[5])
+        shadowless["name"] = "fast-cliff-lighting-only-no-dynamic-shadows"
+        shadowless["purpose"] = (
+            "fast cliff diagnostic: lighting-only geometry response with dynamic shadows disabled"
+        )
+        shadowless["dynamic_shadows"] = False
+        fast_views.append(shadowless)
         return fast_views
     return views
 
@@ -384,6 +393,13 @@ def _force_material_textures_resident():
 def _restore():
     global _camera
     errors = []
+    try:
+        if _world is not None:
+            unreal.SystemLibrary.execute_console_command(
+                _world, "showflag.DynamicShadows 1"
+            )
+    except Exception as exc:
+        errors.append("dynamic shadow show-flag restore: " + str(exc))
     try:
         if _landscape is not None:
             _landscape.set_editor_property("landscape_material", _original_global)
@@ -562,6 +578,11 @@ def schedule():
             raise RuntimeError("Unsupported diagnostic view mode: " + mode)
         unreal.SystemLibrary.execute_console_command(_world, "viewmode " + mode)
         unreal.AutomationLibrary.set_editor_viewport_view_mode(view_modes[mode])
+        dynamic_shadows = bool(view.get("dynamic_shadows", True))
+        unreal.SystemLibrary.execute_console_command(
+            _world,
+            "showflag.DynamicShadows " + ("1" if dynamic_shadows else "0"),
+        )
         unreal.AutomationLibrary.finish_loading_before_screenshot()
         path = OUTPUT / (view["name"] + ".png")
         if path.exists():
@@ -612,6 +633,7 @@ def tick(_delta):
                 "resolution": CAPTURE_RESOLUTION,
                 "viewmode": view.get("viewmode", "lit"),
                 "kind": view.get("kind", "acceptance"),
+                "dynamic_shadows": bool(view.get("dynamic_shadows", True)),
                 "fov": view["fov"],
             }
         )
