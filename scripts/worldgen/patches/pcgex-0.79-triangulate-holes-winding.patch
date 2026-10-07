@@ -1,0 +1,40 @@
+diff --git a/Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp b/Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp
+--- a/Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp
++++ b/Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp
+@@ -1220,7 +1220,7 @@ static TriangulateResult TriangulatePolyPathNode(
+ 
+ 		// Add outer polygon (ensure correct orientation: CW for outer)
+ 		Path64 outer = outerPath;
+-		if (Area(outer) < 0) // If CCW, reverse to CW
++		if (Area(outer) > 0) // If CCW, reverse to CW
+ 		{
+ 			std::reverse(outer.begin(), outer.end());
+ 		}
+@@ -1233,7 +1233,7 @@ static TriangulateResult TriangulatePolyPathNode(
+ 			Path64 hole = child->Polygon();
+ 			if (!hole.empty())
+ 			{
+-				if (Area(hole) > 0) // If CW, reverse to CCW for holes
++				if (Area(hole) < 0) // If CW, reverse to CCW for holes
+ 				{
+ 					std::reverse(hole.begin(), hole.end());
+ 				}
+@@ -1352,7 +1352,7 @@ static TriangulateResult TriangulatePolyPathNodeD(
+ 		Paths64 pathsToTriangulate;
+ 		pathsToTriangulate.reserve(1 + node->Count());
+ 
+ 		Path64 outer = ScalePath<int64_t, double>(outerPath, scale, ec);
+-		if (Area(outer) < 0)
++		if (Area(outer) > 0)
+ 		{
+ 			std::reverse(outer.begin(), outer.end());
+ 		}
+@@ -1364,7 +1364,7 @@ static TriangulateResult TriangulatePolyPathNodeD(
+ 			Path64 hole = ScalePath<int64_t, double>(child->Polygon(), scale, ec);
+ 			if (!hole.empty())
+ 			{
+-				if (Area(hole) > 0)
++				if (Area(hole) < 0)
+ 				{
+ 					std::reverse(hole.begin(), hole.end());
+ 				}
