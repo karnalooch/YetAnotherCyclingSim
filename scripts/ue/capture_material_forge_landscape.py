@@ -8,6 +8,7 @@ never saved.
 
 from __future__ import annotations
 
+import gc
 import importlib.util
 import json
 import math
@@ -160,6 +161,31 @@ def _verify_color_gain_readback(instance, expected_values):
             for channel in channels
         ):
             raise RuntimeError("Fixed-master color gain readback failed: " + name)
+
+
+def _reclaim_post_builder_memory():
+    before = _memory()
+    python_collected = gc.collect()
+    drain = json.loads(
+        unreal.YacsTextureAuditLibrary.drain_asset_compilation_and_collect_garbage()
+    )
+    if (
+        not drain.get("ok")
+        or int(drain.get("remaining_after", -1)) != 0
+        or int(drain.get("shader_jobs_after", -1)) != 0
+    ):
+        raise RuntimeError("Post-builder memory reclamation compile drain failed")
+    after = _memory()
+    _checkpoints.append(
+        {
+            "stage": "post_builder_memory_reclaimed",
+            "python_collected": int(python_collected),
+            "memory_before": before,
+            "memory_after": after,
+            "compile_drain": drain,
+        }
+    )
+    return after
 
 
 def _assert_memory(stage: str, physical_gb: int = MIN_FREE_PHYSICAL_GB):
@@ -938,6 +964,7 @@ def main():
             "memory": _memory(),
         }
     )
+    _reclaim_post_builder_memory()
     _assert_memory(
         "fixed_master_instance_ready",
         physical_gb=(
