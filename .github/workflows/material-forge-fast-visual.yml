@@ -1,3 +1,4 @@
+# Issue #417: non-production FAST lane; FULL remains production authority.
 name: Material Forge FAST cliff visual
 
 on:

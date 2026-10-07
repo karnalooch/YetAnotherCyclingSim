@@ -107,7 +107,8 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         self.assertIn("whole_landscape_components", visual)
         self.assertIn("MF_LANDSCAPE_VISUAL_PROOF_PASS", visual)
         self.assertIn("rollback_complete", visual)
-        self.assertIn('human_visual_status": "PENDING_OWNER"', visual)
+        self.assertIn('"PENDING_OWNER"', visual)
+        self.assertIn('"FAST_REVIEW_ONLY"', visual)
         self.assertIn("set_keep_python_script_alive(True)", visual)
         self.assertIn("take_high_res_screenshot", visual)
 

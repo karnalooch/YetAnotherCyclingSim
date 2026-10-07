@@ -42,6 +42,11 @@
       "reason": "Explicit trusted manual Unreal validation and recovery entrypoint."
     },
     {
+      "file": "material-forge-fast-visual.yml",
+      "state": "CURRENT",
+      "reason": "Issue #417 non-production warm-cache 1080p cliff iteration lane; carries forward only unchanged Material Forge inputs, applies one canonical Landscape component, fails closed without verified FULL warm state, and never replaces production evidence."
+    },
+    {
       "file": "material-forge-mallorca-proof.yml",
       "state": "CURRENT",
       "reason": "Branch-scoped exact-SHA Material Forge 3x3 two-run render/determinism proof; primes the reviewed Material Maker source runtime and does not mutate the accepted world."
