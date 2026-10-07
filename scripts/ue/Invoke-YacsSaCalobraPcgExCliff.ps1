@@ -160,6 +160,7 @@ function Invoke-Phase2CCommandlet {
         '-NullRHI',
         '-SkipAssetScan',
         '-AssetGatherAll=false',
+        '-YacsPhase2CTopologyProof',
         '-NoSplash',
         '-NoP4',
         '-stdout',
