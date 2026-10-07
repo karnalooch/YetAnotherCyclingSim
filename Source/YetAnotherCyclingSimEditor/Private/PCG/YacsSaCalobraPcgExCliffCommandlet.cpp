@@ -102,6 +102,78 @@ namespace
         return MaxEdge;
     }
 
+    bool SanitizePlanarLoop(TArray<FVector2d>& Vertices)
+    {
+        constexpr double DuplicateToleranceSq = 1.e-12;
+        constexpr double CollinearTolerance = 1.e-10;
+
+        if (Vertices.Num() < 3)
+        {
+            return false;
+        }
+
+        // Remove consecutive duplicates, including a repeated closing point.
+        TArray<FVector2d> Deduplicated;
+        Deduplicated.Reserve(Vertices.Num());
+        for (const FVector2d& Vertex : Vertices)
+        {
+            if (
+                Deduplicated.IsEmpty()
+                || FVector2d::DistSquared(Deduplicated.Last(), Vertex)
+                    > DuplicateToleranceSq)
+            {
+                Deduplicated.Add(Vertex);
+            }
+        }
+        if (
+            Deduplicated.Num() > 1
+            && FVector2d::DistSquared(Deduplicated[0], Deduplicated.Last())
+                <= DuplicateToleranceSq)
+        {
+            Deduplicated.Pop();
+        }
+        Vertices = MoveTemp(Deduplicated);
+
+        // Remove only mathematically redundant collinear/spike vertices. This
+        // is contour hygiene, not simplification: every removed point lies on
+        // the exact segment between its two neighbours.
+        bool bRemoved = true;
+        while (bRemoved && Vertices.Num() >= 3)
+        {
+            bRemoved = false;
+            for (int32 Index = 0; Index < Vertices.Num(); ++Index)
+            {
+                const FVector2d& Previous =
+                    Vertices[(Index + Vertices.Num() - 1) % Vertices.Num()];
+                const FVector2d& Current = Vertices[Index];
+                const FVector2d& Next =
+                    Vertices[(Index + 1) % Vertices.Num()];
+
+                const FVector2d Incoming = Current - Previous;
+                const FVector2d Outgoing = Next - Current;
+                const double Cross =
+                    Incoming.X * Outgoing.Y - Incoming.Y * Outgoing.X;
+                const double Scale = FMath::Max(
+                    1.0,
+                    FMath::Sqrt(Incoming.SquaredLength() * Outgoing.SquaredLength()));
+                const double Dot = Incoming.Dot(Outgoing);
+
+                if (
+                    Incoming.SquaredLength() <= DuplicateToleranceSq
+                    || Outgoing.SquaredLength() <= DuplicateToleranceSq
+                    || (FMath::Abs(Cross) <= CollinearTolerance * Scale
+                        && Dot >= 0.0))
+                {
+                    Vertices.RemoveAt(Index);
+                    bRemoved = true;
+                    break;
+                }
+            }
+        }
+
+        return Vertices.Num() >= 3;
+    }
+
     bool ExecuteGraph(
         UPCGGraph* Graph,
         TArray<TSharedPtr<FJsonValue>>& OutMeshes,
@@ -228,13 +300,7 @@ namespace
                 Loop.Vertices.Add(FVector2d(Position.X, Position.Y));
             }
 
-            if (
-                Loop.Vertices.Num() > 3
-                && Loop.Vertices[0].Equals(Loop.Vertices.Last(), 1.e-6))
-            {
-                Loop.Vertices.Pop();
-            }
-            if (Loop.Vertices.Num() < 3)
+            if (!SanitizePlanarLoop(Loop.Vertices))
             {
                 continue;
             }
@@ -356,9 +422,22 @@ namespace
                 || SurfaceTriangles.IsEmpty()
                 || SurfaceVertices.IsEmpty())
             {
+                FString HoleSummary;
+                for (int32 HoleIndex = 0; HoleIndex < Group.Holes.Num(); ++HoleIndex)
+                {
+                    HoleSummary += FString::Printf(
+                        TEXT("%s%dv/%.3fcm2"),
+                        HoleIndex == 0 ? TEXT("") : TEXT(","),
+                        Group.Holes[HoleIndex].VertexCount(),
+                        FMath::Abs(Group.Holes[HoleIndex].SignedArea()));
+                }
                 OutError = FString::Printf(
-                    TEXT("UE 5.8 constrained Delaunay failed for PCGEx outer %d."),
-                    GroupIndex);
+                    TEXT("UE 5.8 constrained Delaunay failed for PCGEx outer %d: outer=%dv/%.3fcm2 holes=%d [%s]."),
+                    GroupIndex,
+                    Group.Outer.VertexCount(),
+                    FMath::Abs(Group.Outer.SignedArea()),
+                    Group.Holes.Num(),
+                    *HoleSummary);
                 return false;
             }
 
