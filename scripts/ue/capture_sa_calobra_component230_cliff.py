@@ -671,6 +671,25 @@ def _spawn_candidate():
         trace_min = min(trace_min, float(receipt["trace_z_range_cm"][0]))
         trace_max = max(trace_max, float(receipt["trace_z_range_cm"][1]))
 
+    # Cliff skins are presentation surfaces viewed from highly oblique angles.
+    # Duplicate the connected front surface with reversed winding so an
+    # orientation change cannot become a pitch-black backface hole. Vertices
+    # are duplicated intentionally so per-vertex normals do not cancel.
+    front_vertex_count = len(cliff_vertices)
+    front_vertices = list(cliff_vertices)
+    front_uvs = list(cliff_uvs)
+    front_triangles = list(cliff_triangles)
+    cliff_vertices.extend(front_vertices)
+    cliff_uvs.extend(front_uvs)
+    for triangle in front_triangles:
+        cliff_triangles.append(
+            unreal.IntVector(
+                front_vertex_count + int(triangle.z),
+                front_vertex_count + int(triangle.y),
+                front_vertex_count + int(triangle.x),
+            )
+        )
+
     scree_vertices: list[unreal.Vector] = []
     scree_triangles: list[unreal.IntVector] = []
     scree_uvs: list[unreal.Vector2D] = []
@@ -713,6 +732,7 @@ def _spawn_candidate():
         "trace_z_range_cm": [trace_min, trace_max],
         "collision_enabled": False,
         "cast_dynamic_shadows": True,
+        "double_sided_cliff_geometry": True,
         "material": {
             "cliff": CLIFF_MATERIAL,
             "scree": SCREE_MATERIAL,
