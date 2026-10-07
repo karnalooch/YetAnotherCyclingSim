@@ -483,7 +483,16 @@ def _create_fixed_master_instance(
             float(value),
             association,
         )
+    color_gain_binding = {}
     for name, value in vector_values.items():
+        channels = ("r", "g", "b", "a")
+        neutral = all(
+            abs(float(getattr(value, channel)) - 1.0) <= 0.0001
+            for channel in channels
+        )
+        if neutral:
+            color_gain_binding[name] = "inherited_master_default"
+            continue
         LIB.set_material_instance_parameter_override(instance, name, True, association)
         LIB.set_material_instance_vector_parameter_value(
             instance,
@@ -491,6 +500,14 @@ def _create_fixed_master_instance(
             value,
             association,
         )
+        color_gain_binding[name] = "explicit_instance_override"
+    checkpoints.append(
+        {
+            "stage": "color_gain_binding_policy",
+            "bindings": color_gain_binding,
+            "memory": _memory(),
+        }
+    )
     LIB.update_material_instance(instance)
     checkpoints.append({"stage": "material_instance_updated", "memory": _memory()})
 
