@@ -55,6 +55,27 @@ if ($Mode -eq 'Install' -and -not (Test-Path -LiteralPath (Join-Path $PluginRoot
     if ($LASTEXITCODE -ne 0) { throw 'Failed to checkout pinned PCGEx revision.' }
 }
 
+# Install is an idempotent normalization operation. A persistent self-hosted
+# runner can retain tracked edits from an interrupted experiment; never build
+# against that unknown state. Validate remains check-only, while Install first
+# restores the reviewed upstream revision and lets the normal checks below prove
+# the exact SHA/origin/clean-worktree contract.
+if ($Mode -eq 'Install' -and (Test-Path -LiteralPath (Join-Path $PluginRoot '.git'))) {
+    $InstallOrigin = (& git -C $PluginRoot remote get-url origin).Trim()
+    if ($InstallOrigin -ne $ExpectedRepository) {
+        throw "Existing PCGEx checkout has unexpected origin: $InstallOrigin"
+    }
+
+    & git -C $PluginRoot config core.autocrlf false
+    if ($LASTEXITCODE -ne 0) { throw 'Failed to normalize PCGEx line-ending policy.' }
+
+    & git -C $PluginRoot fetch --depth 1 origin $ExpectedCommit
+    if ($LASTEXITCODE -ne 0) { throw "Failed to refresh pinned PCGEx commit $ExpectedCommit." }
+
+    & git -C $PluginRoot reset --hard $ExpectedCommit
+    if ($LASTEXITCODE -ne 0) { throw 'Failed to normalize PCGEx tracked source to the pinned revision.' }
+}
+
 $Checks = [System.Collections.Generic.List[object]]::new()
 function Add-Check([string] $Name, [bool] $Ok, [string] $Detail) {
     $Checks.Add([ordered]@{ name=$Name; status=$(if ($Ok) {'PASS'} else {'FAIL'}); detail=$Detail })
