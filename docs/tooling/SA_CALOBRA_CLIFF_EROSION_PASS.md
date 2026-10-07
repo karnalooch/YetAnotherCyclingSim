@@ -199,6 +199,39 @@ The handoff package contains:
 The JSONL files are ordered deterministically. Durable consumers persist
 patch_id / sample_id, never ordinal indices.
 
+## Phase 2A observed proof result
+
+Exact-head Phase 2A proof on the implementation produced the following
+deterministic handoff identity:
+
+- handoff fingerprint:
+  `400353b34a2e5310e9acce984efb95863d95dfe0286afdb8b6b64de9331428ef`;
+- 52,262 cliff patches over the 1,472,939 admitted cliff cells;
+- patch classes:
+  - micro: 48,516;
+  - small: 2,962;
+  - medium: 623;
+  - large: 126;
+  - massif: 35;
+- 269,250 deterministic Phase 2A scree seed candidates over 508,659 admitted
+  scree cells;
+- `LandscapeComponent_230`: 97 intersecting cliff patches and 521 scree seed
+  candidates, while retaining the exact 2,522 cliff / 1,175 scree / 1,236
+  protected / 0 invalid source-cell checkpoint;
+- replay A/B produced the same handoff fingerprint and logical output hashes.
+
+The distribution is intentionally treated as evidence, not an asset count.
+48,516 of 52,262 cliff patches (about 92.8%) are micro patches. A Phase 2B
+consumer must therefore classify, thin, merge visually or treat micro patches
+as small outcrops/material-breakup hints. It must **not** instantiate one
+full-size cliff mesh per patch. Likewise, 269,250 scree seeds are an
+authoring/sampling handoff, not a request for 269,250 rendered rocks.
+
+The exact proof artifact was about 79 MiB compressed and includes the Phase 1
+selector package plus Phase 2A label/JSONL evidence. This is acceptable for the
+bounded engineering proof, but later production handoff formats should avoid
+shipping the proof archive as runtime content.
+
 ## Proof
 
 .github/workflows/sa-calobra-cliff-erosion-proof.yml now proves both phases on
