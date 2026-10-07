@@ -48,9 +48,9 @@ COMPONENT = {
     "y_min_m": 441.0,
     "y_max_m": 504.0,
 }
-CLIFF_BLOCK_CELLS = 4
-SCREE_BLOCK_CELLS = 4
-MAX_SCREE_ROCKS = 160
+CLIFF_BLOCK_CELLS = 8
+SCREE_BLOCK_CELLS = 6
+MAX_SCREE_ROCKS = 80
 
 
 def _grid_tuple(manifest: dict[str, object]) -> tuple[object, ...]:
@@ -202,7 +202,7 @@ def build_plan(
             if representative is None:
                 continue
             row, col, occupancy = representative
-            if occupancy < 2:
+            if occupancy < 4:
                 continue
 
             gx = float(gradient_x[row, col])
@@ -222,21 +222,25 @@ def build_plan(
             occupancy_fraction = occupancy / float(
                 (row1 - row0) * (col1 - col0)
             )
-            width_m = min(2.8, 1.25 + occupancy_fraction * 1.1 + jitter * 0.45)
+            width_m = min(
+                5.4,
+                max(2.8, 3.2 + occupancy_fraction * 1.6 + jitter * 0.5),
+            )
             step_m = max(0.0, float(step[row, col]))
-            height_m = min(
-                4.5,
+            run_m = min(
+                4.4,
                 max(
-                    1.6,
-                    1.35
-                    + step_m * 1.15
-                    + max(0.0, float(slope[row, col]) - 50.0) * 0.025
-                    + jitter * 0.45,
+                    2.2,
+                    2.4
+                    + step_m * 0.35
+                    + max(0.0, float(slope[row, col]) - 50.0) * 0.018
+                    + jitter * 0.35,
                 ),
             )
-            thickness_m = 0.34 + jitter * 0.28
+            thickness_m = 0.10 + jitter * 0.08
+            lift_m = 0.04 + jitter * 0.025
             footprint_radius_m = (
-                math.hypot(width_m * 0.5, thickness_m * 0.5) + 0.25
+                math.hypot(width_m * 0.5, run_m * 0.5) + 0.20
             )
             x_m, y_m = col * PIXEL_SIZE_M, row * PIXEL_SIZE_M
             if not _inside_component(x_m, y_m, footprint_radius_m):
@@ -265,11 +269,9 @@ def build_plan(
                         round(tangent_y, 7),
                     ],
                     "width_m": round(width_m, 4),
-                    "height_m": round(height_m, 4),
+                    "run_m": round(run_m, 4),
                     "thickness_m": round(thickness_m, 4),
-                    "underlap_m": 0.45,
-                    "top_inset_m": round(0.12 + jitter * 0.15, 4),
-                    "outward_offset_m": round(0.16 + jitter * 0.12, 4),
+                    "lift_m": round(lift_m, 4),
                     "clearance_lower_bound_m": round(float(clearance[row, col]), 4),
                     "slope_deg": round(float(slope[row, col]), 4),
                     "roughness_m": round(float(roughness[row, col]), 4),
