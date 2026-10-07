@@ -708,7 +708,19 @@ jobs:
 
           $proof = Join-Path $worktree 'Saved/RuntimeProof/CI/Unreal'
           if (Test-Path -LiteralPath $proof) {
-            Remove-Item -LiteralPath $proof -Recurse -Force
+            $proofPayload = Join-Path $proof 'Proof'
+            Get-ChildItem -LiteralPath $proof -Force | ForEach-Object {
+              if ($_.FullName -eq $proofPayload) {
+                Get-ChildItem -LiteralPath $proofPayload -Force | ForEach-Object {
+                  if ($_.Name -notin @('automation_editor.log', 'automation_run.log')) {
+                    Remove-Item -LiteralPath $_.FullName -Recurse -Force
+                  }
+                }
+              }
+              else {
+                Remove-Item -LiteralPath $_.FullName -Recurse -Force
+              }
+            }
           }
 
           $gitMarker = Join-Path $worktree '.git'
