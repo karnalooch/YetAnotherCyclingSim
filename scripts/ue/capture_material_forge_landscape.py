@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import math
 import os
 import subprocess
 import time
@@ -35,6 +36,8 @@ FAST_CAPTURE_RESOLUTION = [1920, 1080]
 FAST_VISUAL = os.environ.get("YACS_MF_FAST_VISUAL", "0") == "1"
 CAPTURE_RESOLUTION = FAST_CAPTURE_RESOLUTION if FAST_VISUAL else FULL_CAPTURE_RESOLUTION
 CAPTURE_DELAY_SECONDS = 1.0 if FAST_VISUAL else 4.0
+COLOR_GAIN_MIN = 0.65
+COLOR_GAIN_MAX = 1.35
 LIB = unreal.MaterialEditingLibrary
 
 _preview = None
@@ -59,6 +62,10 @@ _index = 0
 _views = []
 _captures = []
 _checkpoints = []
+_color_gains = {
+    "rock": [1.0, 1.0, 1.0, 1.0],
+    "soil": [1.0, 1.0, 1.0, 1.0],
+}
 _scheduling = False
 _finished = False
 _proof_started = time.monotonic()
@@ -81,6 +88,70 @@ def _git_head() -> str:
 
 def _memory():
     return _preview._memory()
+
+
+def _parse_color_gain(env_name: str):
+    raw = os.environ.get(env_name, "1,1,1,1").strip()
+    parts = [part.strip() for part in raw.split(",")]
+    if len(parts) != 4:
+        raise RuntimeError(env_name + " must contain exactly four comma-separated values")
+    try:
+        values = [float(part) for part in parts]
+    except ValueError as exc:
+        raise RuntimeError(env_name + " contains a non-numeric value") from exc
+    if not all(math.isfinite(value) for value in values):
+        raise RuntimeError(env_name + " contains a non-finite value")
+    if any(value < COLOR_GAIN_MIN or value > COLOR_GAIN_MAX for value in values[:3]):
+        raise RuntimeError(
+            f"{env_name} RGB values must stay within "
+            f"{COLOR_GAIN_MIN:.2f}..{COLOR_GAIN_MAX:.2f}"
+        )
+    if abs(values[3] - 1.0) > 0.0001:
+        raise RuntimeError(env_name + " alpha must remain exactly 1.0")
+    return unreal.LinearColor(*values), values
+
+
+def _apply_color_gains(instance):
+    requested = {
+        "RockColorGain": _parse_color_gain("YACS_MF_ROCK_COLOR_GAIN"),
+        "SoilColorGain": _parse_color_gain("YACS_MF_SOIL_COLOR_GAIN"),
+    }
+    visible = {str(name) for name in LIB.get_vector_parameter_names(instance)}
+    missing = sorted(set(requested) - visible)
+    if missing:
+        raise RuntimeError(
+            "Fixed-master color gain parameter contract missing: " + ",".join(missing)
+        )
+
+    association = unreal.MaterialParameterAssociation.GLOBAL_PARAMETER
+    result = {}
+    for name, (value, normalized) in requested.items():
+        LIB.set_material_instance_parameter_override(instance, name, True, association)
+        LIB.set_material_instance_vector_parameter_value(
+            instance,
+            name,
+            value,
+            association,
+        )
+        result["rock" if name.startswith("Rock") else "soil"] = normalized
+
+    LIB.update_material_instance(instance)
+    for name, (expected, _normalized) in requested.items():
+        actual = LIB.get_material_instance_vector_parameter_value(
+            instance,
+            name,
+            association,
+        )
+        channels = ("r", "g", "b", "a")
+        if any(
+            abs(float(getattr(actual, channel)) - float(getattr(expected, channel)))
+            > 0.001
+            for channel in channels
+        ):
+            raise RuntimeError("Fixed-master color gain readback failed: " + name)
+    result["rgb_bounds"] = [COLOR_GAIN_MIN, COLOR_GAIN_MAX]
+    result["alpha"] = 1.0
+    return result
 
 
 def _assert_memory(stage: str, physical_gb: int = MIN_FREE_PHYSICAL_GB):
@@ -486,6 +557,7 @@ def _write_receipt(status: str, error: str = ""):
         "fixed_master": os.environ.get("YACS_MF_FIXED_MASTER_PATH"),
         "rock": "regional_limestone/refined_c",
         "soil": "mediterranean_soil/refined_c",
+        "color_gains": _color_gains,
         "mask_contract": "4033x4033; B=rock; soil=1-rock",
         "resolution": CAPTURE_RESOLUTION,
         "captures": [
@@ -655,7 +727,7 @@ def tick(_delta):
 def main():
     global _preview, _foundation, _world, _landscape, _components, _applied_components
     global _original_global, _original_overrides, _before_snapshot, _before_map_hash
-    global _instance, _camera, _views, _handle
+    global _instance, _camera, _views, _handle, _color_gains
 
     if _git_head() != EXPECTED_SHA:
         raise RuntimeError("Visual proof exact SHA differs from checkout")
@@ -698,6 +770,14 @@ def main():
     _checkpoints.append({"stage": "weight_imported", "memory": _memory()})
     _instance, _drain = _preview._create_fixed_master_instance(
         package, weights, _checkpoints
+    )
+    _color_gains = _apply_color_gains(_instance)
+    _checkpoints.append(
+        {
+            "stage": "color_gains_applied",
+            "color_gains": _color_gains,
+            "memory": _memory(),
+        }
     )
     _assert_memory(
         "fixed_master_instance_ready",
