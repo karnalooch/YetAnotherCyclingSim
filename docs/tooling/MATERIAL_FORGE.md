@@ -423,3 +423,33 @@ This follows the UE 5.8 outdoor-lighting model rather than compensating with
 BaseColor. The accepted map is still never saved, Material Forge does not own
 lighting semantics, and geometry remains unchanged by this proof.
 
+## FAST cliff visual loop
+
+Issue #417 splits Material Forge review into two lanes.
+
+**FAST** is an iterative, non-production lane for lighting/material review. It
+reuses the latest successful `refined_c` slim canary input only when
+`plan-rebuild` proves the current Material Forge fingerprint is unchanged and
+the source-to-execution Git diff is limited to the approved visual-loop files.
+It requires the warm verified editor binaries, fixed master and LFS cache from
+the latest FULL proof; missing warm state fails closed as
+`FAST_VISUAL_WARM_CACHE_REQUIRED`.
+
+FAST applies the fixed-master instance only to canonical
+`LandscapeComponent_230`, captures one 1920x1080 close cliff view, rolls back
+the component override and transient lighting, records both artifact source SHA
+and execution SHA, and marks its receipt `NON_PRODUCTION_FAST_VISUAL` with
+`full_production_proof_required=true`.
+
+**FULL** remains the production authority: deterministic catalog render x2,
+Blender reference, exact-SHA UE proof, whole-Landscape 1024-component
+assignment, four 4K acceptance views, three diagnostics and rollback.
+
+The FULL artifact is also compacted. Raw `run-a` and `run-b` texture trees
+are no longer uploaded twice after determinism is proven. The retained
+`material-forge-mallorca-*` evidence contains both run manifests,
+`comparison.json`, `proof-summary.json`, review evidence, Blender evidence
+and a compact-evidence receipt. The two selected UE variants remain in the
+separate slim canary artifact. Compact FULL evidence is fail-closed above
+200 MiB uncompressed.
+

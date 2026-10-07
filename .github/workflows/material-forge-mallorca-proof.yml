@@ -14,16 +14,13 @@ on:
       - "scripts/assets/build_material_maker_limestone.py"
       - "scripts/assets/material_forge_proof_board.py"
       - "scripts/assets/test_material_forge.py"
-      - "scripts/ci/test_material_forge_transfer_contract.py"
       - "scripts/ue/preview_material_forge_chunked_landscape.py"
-      - "scripts/ue/capture_material_forge_landscape.py"
       - "scripts/ue/build_material_forge_landscape_master.py"
       - "scripts/ue/run_material_forge_canary_proof.py"
       - "scripts/ue/run_material_forge_chunked_proof.py"
       - "scripts/ue/run_material_forge_unified_proof.py"
       - "worldgen/materials/material_forge/**"
       - "tools/material-forge/**"
-      - "docs/tooling/MATERIAL_FORGE.md"
 
 permissions:
   contents: read
@@ -352,6 +349,51 @@ jobs:
           $receipt | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $bundle 'canary-input-receipt.json') -Encoding utf8
           $receipt | ConvertTo-Json -Depth 8 | Write-Host
 
+      - name: Prepare compact render evidence
+        shell: pwsh
+        working-directory: _material-forge-proof-src
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $evidence = Join-Path $env:YACS_FORGE_PROOF 'compact-evidence'
+          Remove-Item -LiteralPath $evidence -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path $evidence | Out-Null
+          New-Item -ItemType Directory -Force -Path (Join-Path $evidence 'run-a') | Out-Null
+          New-Item -ItemType Directory -Force -Path (Join-Path $evidence 'run-b') | Out-Null
+
+          foreach ($name in @('proof-summary.json', 'comparison.json')) {
+            Copy-Item -LiteralPath (Join-Path $env:YACS_FORGE_PROOF $name) -Destination (Join-Path $evidence $name)
+          }
+          Copy-Item -LiteralPath (Join-Path $env:YACS_FORGE_PROOF 'run-a\run-manifest.json') -Destination (Join-Path $evidence 'run-a\run-manifest.json')
+          Copy-Item -LiteralPath (Join-Path $env:YACS_FORGE_PROOF 'run-b\run-manifest.json') -Destination (Join-Path $evidence 'run-b\run-manifest.json')
+          Copy-Item -LiteralPath (Join-Path $env:YACS_FORGE_PROOF 'canary-input\canary-input-receipt.json') -Destination (Join-Path $evidence 'canary-input-receipt.json')
+
+          foreach ($name in @('review', 'blender-reference')) {
+            $source = Join-Path $env:YACS_FORGE_PROOF $name
+            if (Test-Path -LiteralPath $source -PathType Container) {
+              Copy-Item -LiteralPath $source -Destination (Join-Path $evidence $name) -Recurse -Force
+            }
+          }
+
+          $files = @(Get-ChildItem -LiteralPath $evidence -File -Recurse)
+          $bytes = [int64](($files | Measure-Object -Property Length -Sum).Sum)
+          $limit = [int64](200MB)
+          if ($bytes -gt $limit) {
+            throw "Compact Material Forge evidence exceeded 200 MiB: $bytes bytes."
+          }
+          $receipt = [ordered]@{
+            schema_version = 1
+            status = 'COMPACT_RENDER_EVIDENCE_READY'
+            exact_sha = $env:GITHUB_SHA
+            raw_run_payloads_retained = $false
+            determinism_retained_as = @('run-a/run-manifest.json','run-b/run-manifest.json','comparison.json','proof-summary.json')
+            ue_payload_retained_separately = $true
+            file_count = $files.Count
+            uncompressed_bytes = $bytes
+            max_uncompressed_bytes = $limit
+          }
+          $receipt | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $evidence 'compact-evidence-receipt.json') -Encoding utf8
+          $receipt | ConvertTo-Json -Depth 8 | Write-Host
+
       - name: Upload slim UE canary input
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
         with:
@@ -361,14 +403,14 @@ jobs:
           compression-level: 0
           retention-days: 7
 
-      - name: Upload complete render proof
+      - name: Upload compact render proof evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
         with:
           name: material-forge-mallorca-${{ github.sha }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/material-forge-mallorca-${{ github.sha }}
+          path: ${{ runner.temp }}/material-forge-mallorca-${{ github.sha }}/compact-evidence
           if-no-files-found: warn
-          compression-level: 0
+          compression-level: 6
           retention-days: 7
 
   ue-canary:

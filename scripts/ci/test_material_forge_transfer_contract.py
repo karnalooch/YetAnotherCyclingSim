@@ -6,6 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 MALLORCA = ROOT / ".github/workflows/material-forge-mallorca-proof.yml"
 CANARY = ROOT / ".github/workflows/material-forge-ue-canary.yml"
+FAST = ROOT / ".github/workflows/material-forge-fast-visual.yml"
 
 
 class MaterialForgeTransferContractTests(unittest.TestCase):
@@ -16,7 +17,7 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
             "material-forge-canary-input-${{ github.sha }}-${{ github.run_attempt }}",
             text,
         )
-        self.assertIn("Upload complete render proof", text)
+        self.assertIn("Upload compact render proof evidence", text)
         self.assertIn(
             "material-forge-mallorca-${{ github.sha }}-${{ github.run_attempt }}",
             text,
@@ -101,8 +102,8 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         )
         self.assertIn("Capture production Landscape visual proof", canary)
         self.assertIn("material-forge-landscape-visual-", canary)
-        self.assertIn('"scripts/ue/capture_material_forge_landscape.py"', mallorca)
-        self.assertIn("CAPTURE_RESOLUTION = [3840, 2160]", visual)
+        self.assertNotIn('"scripts/ue/capture_material_forge_landscape.py"', mallorca)
+        self.assertIn("FULL_CAPTURE_RESOLUTION = [3840, 2160]", visual)
         self.assertIn("whole_landscape_components", visual)
         self.assertIn("MF_LANDSCAPE_VISUAL_PROOF_PASS", visual)
         self.assertIn("rollback_complete", visual)
@@ -140,6 +141,28 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         self.assertIn('f"{expected_family}/{expected_variant}"', runner)
         self.assertNotIn('"regional_limestone/refined_a"', runner)
         self.assertNotIn('imported.get("variant") != "refined_a"', runner)
+
+    def test_compact_full_evidence_drops_duplicate_raw_runs(self):
+        text = MALLORCA.read_text(encoding="utf-8")
+        self.assertIn("Prepare compact render evidence", text)
+        self.assertIn("raw_run_payloads_retained = $false", text)
+        self.assertIn("Compact Material Forge evidence exceeded 200 MiB", text)
+        self.assertIn("compact-evidence-receipt.json", text)
+        self.assertIn("compression-level: 6", text)
+
+    def test_fast_visual_loop_is_non_production_and_fail_closed(self):
+        fast = FAST.read_text(encoding="utf-8")
+        visual = (
+            ROOT / "scripts/ue/capture_material_forge_landscape.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn("Material Forge FAST cliff visual", fast)
+        self.assertIn("plan-rebuild", fast)
+        self.assertIn("FAST_VISUAL_WARM_CACHE_REQUIRED", fast)
+        self.assertIn("YACS_MF_FAST_VISUAL=1", fast)
+        self.assertIn("material-forge-canary-input-", fast)
+        self.assertIn("NON_PRODUCTION_FAST_VISUAL", visual)
+        self.assertIn("full_production_proof_required", visual)
+        self.assertIn("FAST_CAPTURE_RESOLUTION = [1920, 1080]", visual)
 
     def test_transfer_metrics_are_preserved(self):
         text = CANARY.read_text(encoding="utf-8")

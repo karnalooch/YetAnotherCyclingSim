@@ -28,8 +28,11 @@ OUTPUT = Path(os.environ["YACS_MF_VISUAL_ROOT"])
 EXPECTED_SHA = os.environ["YACS_MATERIAL_FORGE_EXECUTION_SHA"]
 MIN_FREE_PHYSICAL_GB = 10
 MIN_FREE_COMMIT_GB = 16
-CAPTURE_RESOLUTION = [3840, 2160]
-CAPTURE_DELAY_SECONDS = 4.0
+FULL_CAPTURE_RESOLUTION = [3840, 2160]
+FAST_CAPTURE_RESOLUTION = [1920, 1080]
+FAST_VISUAL = os.environ.get("YACS_MF_FAST_VISUAL", "0") == "1"
+CAPTURE_RESOLUTION = FAST_CAPTURE_RESOLUTION if FAST_VISUAL else FULL_CAPTURE_RESOLUTION
+CAPTURE_DELAY_SECONDS = 1.0 if FAST_VISUAL else 4.0
 LIB = unreal.MaterialEditingLibrary
 
 _preview = None
@@ -37,6 +40,7 @@ _foundation = None
 _world = None
 _landscape = None
 _components = []
+_applied_components = []
 _original_global = None
 _original_overrides = {}
 _before_snapshot = None
@@ -55,6 +59,7 @@ _captures = []
 _checkpoints = []
 _scheduling = False
 _finished = False
+_proof_started = time.monotonic()
 
 
 def _load(name: str, path: Path):
@@ -123,7 +128,7 @@ def _build_views():
     )
     surface_z = origin.z + extent.z * 0.35
     target_center = unreal.Vector(origin.x, origin.y, surface_z)
-    return [
+    views = [
         {
             "name": "01-sa-calobra-overview",
             "location": unreal.Vector(
@@ -232,6 +237,12 @@ def _build_views():
             "viewmode": "lit_detaillighting",
         },
     ]
+    if FAST_VISUAL:
+        fast = dict(views[3])
+        fast["name"] = "fast-cliff-lit"
+        fast["purpose"] = "non-production fast cliff lighting/material iteration"
+        return [fast]
+    return views
 
 
 def _ensure_lighting():
@@ -414,6 +425,17 @@ def _write_receipt(status: str, error: str = ""):
         "schema_version": 1,
         "status": status,
         "exact_sha": EXPECTED_SHA,
+        "execution_sha": EXPECTED_SHA,
+        "artifact_source_sha": os.environ.get(
+            "YACS_MATERIAL_FORGE_ARTIFACT_SHA", EXPECTED_SHA
+        ),
+        "visual_mode": "FAST" if FAST_VISUAL else "FULL",
+        "evidence_authority": (
+            "NON_PRODUCTION_FAST_VISUAL"
+            if FAST_VISUAL
+            else "PRODUCTION_VISUAL_PROOF"
+        ),
+        "full_production_proof_required": bool(FAST_VISUAL),
         "map": MAP,
         "material": None if _instance is None else _instance.get_path_name(),
         "fixed_master": os.environ.get("YACS_MF_FIXED_MASTER_PATH"),
@@ -434,12 +456,20 @@ def _write_receipt(status: str, error: str = ""):
             [item for item in _captures if item.get("kind") == "diagnostic"]
         ),
         "whole_landscape_components": len(_components),
+        "applied_component_count": len(_applied_components),
+        "applied_scope": "CANONICAL_COMPONENT_230" if FAST_VISUAL else "WHOLE_LANDSCAPE",
         "map_saved": False,
         "assets_saved": False,
         "geometry_changed": False,
         "world_semantics_changed": False,
-        "rollback_complete": status == "MF_LANDSCAPE_VISUAL_PROOF_PASS",
-        "human_visual_status": "PENDING_OWNER",
+        "rollback_complete": status in {
+            "MF_LANDSCAPE_VISUAL_PROOF_PASS",
+            "MF_FAST_VISUAL_PASS",
+        },
+        "human_visual_status": (
+            "FAST_REVIEW_ONLY" if FAST_VISUAL else "PENDING_OWNER"
+        ),
+        "elapsed_seconds": round(time.monotonic() - _proof_started, 3),
         "performance_acceptance": "PENDING",
         "memory_checkpoints": _checkpoints,
         "error": error or None,
@@ -463,7 +493,14 @@ def finish(error: str = ""):
     restore_errors = _restore()
     if restore_errors:
         error = (error + "\n" if error else "") + "\n".join(restore_errors)
-    status = "MF_LANDSCAPE_VISUAL_PROOF_FAIL" if error else "MF_LANDSCAPE_VISUAL_PROOF_PASS"
+    if FAST_VISUAL:
+        status = "MF_FAST_VISUAL_FAIL" if error else "MF_FAST_VISUAL_PASS"
+    else:
+        status = (
+            "MF_LANDSCAPE_VISUAL_PROOF_FAIL"
+            if error
+            else "MF_LANDSCAPE_VISUAL_PROOF_PASS"
+        )
     payload = _write_receipt(status, error)
     if error:
         unreal.log_error("YACS_MF_VISUAL " + json.dumps(payload, default=str))
@@ -511,7 +548,11 @@ def schedule():
             mask_enabled=False,
             capture_hdr=False,
             comparison_tolerance=unreal.ComparisonTolerance.LOW,
-            comparison_notes="YACS Material Forge production Landscape visual proof",
+            comparison_notes=(
+                "YACS Material Forge FAST cliff visual review"
+                if FAST_VISUAL
+                else "YACS Material Forge production Landscape visual proof"
+            ),
             delay=CAPTURE_DELAY_SECONDS,
             force_game_view=True,
         )
@@ -558,7 +599,7 @@ def tick(_delta):
 
 
 def main():
-    global _preview, _foundation, _world, _landscape, _components
+    global _preview, _foundation, _world, _landscape, _components, _applied_components
     global _original_global, _original_overrides, _before_snapshot, _before_map_hash
     global _instance, _camera, _views, _handle
 
@@ -606,9 +647,24 @@ def main():
     )
     _assert_memory("fixed_master_instance_ready")
 
-    _landscape.set_editor_property("landscape_material", _instance)
-    for component in _components:
-        component.set_editor_property("override_material", None)
+    if FAST_VISUAL:
+        target = next(
+            (
+                component
+                for component in _components
+                if component.get_name() == "LandscapeComponent_230"
+            ),
+            None,
+        )
+        if target is None:
+            raise RuntimeError("FAST visual target LandscapeComponent_230 is missing")
+        target.set_editor_property("override_material", _instance)
+        _applied_components = [target]
+    else:
+        _landscape.set_editor_property("landscape_material", _instance)
+        for component in _components:
+            component.set_editor_property("override_material", None)
+        _applied_components = list(_components)
 
     compile_drain = json.loads(
         unreal.YacsTextureAuditLibrary.drain_asset_compilation_and_collect_garbage()
@@ -630,9 +686,12 @@ def main():
 
     mismatch = [
         component.get_name()
-        for component in _components
-        if component.get_editor_property("override_material") is not None
-        or component.get_material(0) != _instance
+        for component in _applied_components
+        if (
+            (FAST_VISUAL and component.get_editor_property("override_material") != _instance)
+            or (not FAST_VISUAL and component.get_editor_property("override_material") is not None)
+            or component.get_material(0) != _instance
+        )
     ]
     if mismatch:
         raise RuntimeError(
