@@ -25,7 +25,7 @@ env:
 
 jobs:
   fast-visual:
-    name: One 1080p cliff capture
+    name: One 1080p cliff diagnostic pack
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 12
     steps:
@@ -202,7 +202,7 @@ jobs:
           "YACS_MATERIAL_FORGE_ARTIFACT_SHA=$sourceSha" >> $env:GITHUB_ENV
           "YACS_MF_FAST_VISUAL=1" >> $env:GITHUB_ENV
 
-      - name: Capture one FAST cliff view
+      - name: Capture FAST cliff diagnostic pack
         shell: pwsh
         working-directory: _material-forge-ue-canary
         run: |
@@ -256,7 +256,7 @@ jobs:
             $receipt.evidence_authority -ne 'NON_PRODUCTION_FAST_VISUAL' -or
             $receipt.full_production_proof_required -ne $true -or
             [int]$receipt.capture_count -ne 1 -or
-            [int]$receipt.diagnostic_count -ne 0 -or
+            [int]$receipt.diagnostic_count -ne 3 -or
             [int]$receipt.applied_component_count -ne 1 -or
             $receipt.applied_scope -ne 'CANONICAL_COMPONENT_230' -or
             $receipt.rollback_complete -ne $true -or
@@ -269,6 +269,17 @@ jobs:
             throw 'FAST visual execution SHA mismatch.'
           }
 
+          $diagnosticModes = @($receipt.diagnostics | ForEach-Object { [string]$_.viewmode })
+          $requiredDiagnosticModes = @('unlit', 'lightingonly', 'lit_detaillighting')
+          foreach ($requiredMode in $requiredDiagnosticModes) {
+            if ($diagnosticModes -notcontains $requiredMode) {
+              throw "FAST diagnostic pack is missing view mode '$requiredMode'."
+            }
+          }
+          if (@($diagnosticModes | Sort-Object -Unique).Count -ne 3) {
+            throw "FAST diagnostic pack must contain exactly three unique diagnostic view modes: $($diagnosticModes -join ', ')."
+          }
+
           $started = [DateTime]::Parse($env:YACS_FAST_STARTED_UTC).ToUniversalTime()
           $elapsed = ([DateTime]::UtcNow - $started).TotalSeconds
           $jobReceipt = [ordered]@{
@@ -276,6 +287,9 @@ jobs:
             status = 'FAST_VISUAL_LOOP_PASS'
             artifact_source_sha = $receipt.artifact_source_sha
             execution_sha = $receipt.execution_sha
+            capture_count = [int]$receipt.capture_count
+            diagnostic_count = [int]$receipt.diagnostic_count
+            diagnostic_modes = $diagnosticModes
             elapsed_seconds = [math]::Round($elapsed, 3)
             target_seconds = 240
             target_met = ($elapsed -le 240)
