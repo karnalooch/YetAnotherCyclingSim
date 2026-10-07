@@ -334,6 +334,70 @@ def _fit_plane_gradient(
     return gx, gy
 
 
+def _local_trace_gradient(
+    key: tuple[int, int],
+    traced: dict[tuple[int, int], float],
+    adjacency: dict[tuple[int, int], set[tuple[int, int]]],
+    fallback: tuple[float, float],
+) -> tuple[float, float]:
+    row, col = key
+    neighbours = adjacency.get(key, set())
+
+    left = max(
+        (n for n in neighbours if n[0] == row and n[1] < col),
+        key=lambda n: n[1],
+        default=None,
+    )
+    right = min(
+        (n for n in neighbours if n[0] == row and n[1] > col),
+        key=lambda n: n[1],
+        default=None,
+    )
+    up = max(
+        (n for n in neighbours if n[1] == col and n[0] < row),
+        key=lambda n: n[0],
+        default=None,
+    )
+    down = min(
+        (n for n in neighbours if n[1] == col and n[0] > row),
+        key=lambda n: n[0],
+        default=None,
+    )
+
+    gx = None
+    if left is not None and right is not None:
+        dx = (right[1] - left[1]) * PIXEL_SIZE_M
+        if dx > 0:
+            gx = (traced[right] - traced[left]) / dx
+    elif right is not None:
+        dx = (right[1] - col) * PIXEL_SIZE_M
+        if dx > 0:
+            gx = (traced[right] - traced[key]) / dx
+    elif left is not None:
+        dx = (col - left[1]) * PIXEL_SIZE_M
+        if dx > 0:
+            gx = (traced[key] - traced[left]) / dx
+
+    gy = None
+    if up is not None and down is not None:
+        dy = (down[0] - up[0]) * PIXEL_SIZE_M
+        if dy > 0:
+            gy = (traced[down] - traced[up]) / dy
+    elif down is not None:
+        dy = (down[0] - row) * PIXEL_SIZE_M
+        if dy > 0:
+            gy = (traced[down] - traced[key]) / dy
+    elif up is not None:
+        dy = (row - up[0]) * PIXEL_SIZE_M
+        if dy > 0:
+            gy = (traced[key] - traced[up]) / dy
+
+    return (
+        fallback[0] if gx is None else gx,
+        fallback[1] if gy is None else gy,
+    )
+
+
 def _append_skin_cluster(
     vertices: list[unreal.Vector],
     triangles: list[unreal.IntVector],
@@ -405,12 +469,6 @@ def _append_skin_cluster(
         downhill_x, downhill_y = 0.0, 1.0
     tangent_x, tangent_y = -downhill_y, downhill_x
 
-    normal_length = math.sqrt(
-        gradient_x * gradient_x + gradient_y * gradient_y + 1.0
-    )
-    normal_x = -gradient_x / normal_length
-    normal_y = -gradient_y / normal_length
-    normal_z = 1.0 / normal_length
     normal_offset = float(cluster["normal_offset_m"])
     uv_scale = float(_plan["skin_contract"]["uv_world_size_m"])
 
@@ -434,6 +492,19 @@ def _append_skin_cluster(
             + smooth_target * offset_factor
             - underlap * (1.0 - offset_factor)
         )
+        local_gx, local_gy = _local_trace_gradient(
+            key,
+            original,
+            adjacency,
+            (gradient_x, gradient_y),
+        )
+        local_normal_length = math.sqrt(
+            local_gx * local_gx + local_gy * local_gy + 1.0
+        )
+        normal_x = -local_gx / local_normal_length
+        normal_y = -local_gy / local_normal_length
+        normal_z = 1.0 / local_normal_length
+
         x_render = x_m + normal_x * normal_offset * offset_factor
         y_render = y_m + normal_y * normal_offset * offset_factor
         z_render = z_m + normal_z * normal_offset * offset_factor
