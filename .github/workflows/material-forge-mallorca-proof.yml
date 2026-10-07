@@ -278,14 +278,14 @@ jobs:
             --script scripts/blender/material_forge_reference.py `
             --receipt $receipt `
             -- `
-            --rock (Join-Path $runA 'regional_limestone\refined_a') `
-            --soil (Join-Path $runA 'mediterranean_soil\refined_a') `
+            --rock (Join-Path $runA 'regional_limestone\refined_b') `
+            --soil (Join-Path $runA 'mediterranean_soil\refined_b') `
             --output $referenceRoot `
             --expected-version 4.5.9 `
             --rock-family regional_limestone `
-            --rock-variant refined_a `
+            --rock-variant refined_b `
             --soil-family mediterranean_soil `
-            --soil-variant refined_a
+            --soil-variant refined_b
           if ($LASTEXITCODE -ne 0) {
             throw 'Refined Blender reference render failed.'
           }
@@ -296,8 +296,8 @@ jobs:
             $hostReceipt.status -ne 'PASS' -or
             $hostReceipt.actual_blender_version -ne '4.5.9' -or
             $reference.status -ne 'BLENDER_REFERENCE_PASS_UE_REVIEW_PENDING' -or
-            $reference.left_surface -ne 'regional_limestone/refined_a' -or
-            $reference.right_surface -ne 'mediterranean_soil/refined_a' -or
+            $reference.left_surface -ne 'regional_limestone/refined_b' -or
+            $reference.right_surface -ne 'mediterranean_soil/refined_b' -or
             @($reference.renders).Count -ne 4
           ) {
             throw 'Refined Blender reference receipt failed.'
@@ -321,8 +321,8 @@ jobs:
           Copy-Item -LiteralPath (Join-Path $env:YACS_FORGE_PROOF 'run-a\run-manifest.json') -Destination (Join-Path $bundle 'run-a\run-manifest.json')
 
           foreach ($relative in @(
-            'regional_limestone\refined_a',
-            'mediterranean_soil\refined_a'
+            'regional_limestone\refined_b',
+            'mediterranean_soil\refined_b'
           )) {
             $source = Join-Path (Join-Path $env:YACS_FORGE_PROOF 'run-a') $relative
             $destination = Join-Path (Join-Path $bundle 'run-a') $relative
@@ -342,8 +342,8 @@ jobs:
             proof_summary_sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $bundle 'proof-summary.json')).Hash.ToLowerInvariant()
             run_manifest_sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $bundle 'run-a\run-manifest.json')).Hash.ToLowerInvariant()
             variants = @(
-              'regional_limestone/refined_a',
-              'mediterranean_soil/refined_a'
+              'regional_limestone/refined_b',
+              'mediterranean_soil/refined_b'
             )
             file_count = @(Get-ChildItem -LiteralPath $bundle -File -Recurse).Count
             uncompressed_bytes = [int64]((Get-ChildItem -LiteralPath $bundle -File -Recurse | Measure-Object -Property Length -Sum).Sum)
