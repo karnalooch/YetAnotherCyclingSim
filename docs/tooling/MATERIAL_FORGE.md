@@ -483,6 +483,15 @@ redundant Material Instance vector overrides. Non-neutral FAST tuning still uses
 explicit instance overrides. Both paths retain exact readback and record the
 binding mode in evidence; the memory gate remains unchanged.
 
+FULL #32 improved pre-capture free physical memory to about 9.35 GiB but still
+failed the same unchanged 10 GiB gate. Issue #435 therefore adds one explicit
+post-builder reclamation point after `_create_fixed_master_instance` returns:
+Python GC first, then the existing native asset/shader drain and Unreal full GC.
+The receipt records memory before/after plus the native drain result. The 10 GiB
+FULL gate remains authoritative; if this reclamation is insufficient, the next
+step is a two-process build/import -> capture split rather than lowering the
+threshold or relying on pagefile pressure.
+
 A master-capability change is not eligible for stale FAST carry-forward. The
 neutral parameterized master must first pass the normal FULL proof and establish
 a compatible warm fixed master. Only then may FAST be used for sub-two-minute
