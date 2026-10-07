@@ -53,7 +53,7 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         text = CANARY.read_text(encoding="utf-8")
         self.assertEqual(
             text.count("Start-Process -FilePath $engine.UnrealEditorPath"),
-            2,
+            3,
         )
         self.assertIn("build_material_forge_landscape_master.py", text)
         self.assertIn("YACS_MF_TEMPLATE_BUILDER_PROCESS_COUNT=1", text)
@@ -89,6 +89,23 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         )
         self.assertIn('"execution_mode": execution_mode', unified)
         self.assertIn('"after_gc": memory_after_gc', unified)
+
+    def test_owner_visual_capture_is_whole_landscape_and_rollback_safe(self):
+        canary = CANARY.read_text(encoding="utf-8")
+        mallorca = MALLORCA.read_text(encoding="utf-8")
+        visual = (ROOT / "scripts/ue/capture_material_forge_landscape.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("Capture production Landscape visual proof", canary)
+        self.assertIn("material-forge-landscape-visual-", canary)
+        self.assertIn('"scripts/ue/capture_material_forge_landscape.py"', mallorca)
+        self.assertIn("CAPTURE_RESOLUTION = [3840, 2160]", visual)
+        self.assertIn("whole_landscape_components", visual)
+        self.assertIn("MF_LANDSCAPE_VISUAL_PROOF_PASS", visual)
+        self.assertIn("rollback_complete", visual)
+        self.assertIn('human_visual_status": "PENDING_OWNER"', visual)
+        self.assertIn("set_keep_python_script_alive(True)", visual)
+        self.assertIn("take_high_res_screenshot", visual)
 
     def test_transfer_metrics_are_preserved(self):
         text = CANARY.read_text(encoding="utf-8")
