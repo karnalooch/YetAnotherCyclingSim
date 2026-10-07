@@ -14,6 +14,7 @@ on:
       - "scripts/assets/build_material_maker_limestone.py"
       - "scripts/assets/material_forge_proof_board.py"
       - "scripts/assets/test_material_forge.py"
+      - "scripts/ci/test_material_forge_transfer_contract.py"
       - "scripts/ue/preview_material_forge_chunked_landscape.py"
       - "scripts/ue/capture_material_forge_landscape.py"
       - "scripts/ue/build_material_forge_landscape_master.py"
