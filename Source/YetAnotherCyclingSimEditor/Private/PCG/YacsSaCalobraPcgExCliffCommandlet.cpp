@@ -415,8 +415,24 @@ namespace
                     TEXT("triangles"),
                     MoveTemp(Triangles));
 
-                TArray<TSharedPtr<FJsonValue>> TagValues;
+                // PCGEx cluster-pair IDs are execution-local bookkeeping
+                // (e.g. PCGEx/Cluster:65279). Their numeric suffix can differ
+                // between otherwise identical runs, so they are not geometry
+                // evidence. Exclude only that transient pairing tag and sort
+                // the remaining semantic tags before serialization.
+                TArray<FString> StableTags;
                 for (const FString& Tag : Tagged.Tags)
+                {
+                    if (!Tag.StartsWith(TEXT("PCGEx/Cluster:")))
+                    {
+                        StableTags.Add(Tag);
+                    }
+                }
+                StableTags.Sort();
+
+                TArray<TSharedPtr<FJsonValue>> TagValues;
+                TagValues.Reserve(StableTags.Num());
+                for (const FString& Tag : StableTags)
                 {
                     TagValues.Add(
                         MakeShared<FJsonValueString>(Tag));
