@@ -714,9 +714,10 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     {
         return 15;
     }
+    Union->MainDataMatching.Mode = EPCGExMapMatchMode::Disabled;
     Union->MainInputGroupingPolicy = EPCGExGroupingPolicy::Consolidate;
     Union->Operation = EPCGExClipper2BooleanOp::Union;
-    Union->FillRule = EPCGExClipper2FillRule::EvenOdd;
+    Union->FillRule = EPCGExClipper2FillRule::NonZero;
     Union->bUseOperandPin = false;
     Union->bSimplifyPaths = false;
     Union->bPreserveCollinear = true;
@@ -792,7 +793,7 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     Root->SetStringField(
         TEXT("pipeline"),
         TEXT("YACS exact cliff cells -> PCGEx Clipper2 Boolean Union("
-             "EvenOdd, explicit outer+hole contours) -> UE 5.8 FDelaunay2("
+             "global Consolidate, matching disabled, NonZero, explicit outer+hole contours) -> UE 5.8 FDelaunay2("
              "TGeneralPolygon2 holes) -> deterministic UE Uniform Tessellation; "
              "PCGEx owns admitted footprint topology, UE owns only surface triangulation; "
              "presentation smoothing remains post-drape so hard exclusions stay exact"));
