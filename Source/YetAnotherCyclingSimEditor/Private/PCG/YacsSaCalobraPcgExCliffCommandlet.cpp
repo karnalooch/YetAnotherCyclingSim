@@ -31,7 +31,9 @@
 #include "Elements/PCGExSubdivide.h"
 #include "UDynamicMesh.h"
 #include "DynamicMesh/DynamicMesh3.h"
+#include "DynamicSubmesh3.h"
 #include "GeometryScript/MeshSubdivideFunctions.h"
+#include "Selections/MeshConnectedComponents.h"
 #endif
 
 DEFINE_LOG_CATEGORY_STATIC(LogYacsSaCalobraPcgExCliff, Log, All);
@@ -206,128 +208,219 @@ namespace
                 continue;
             }
 
-            // PCG generated output is intentionally immutable. Tessellate a
-            // transient duplicate instead of const-casting or mutating the
-            // connector-owned PCGEx DynamicMesh.
-            UDynamicMesh* DynamicMesh = DuplicateObject<UDynamicMesh>(
-                MeshData->GetDynamicMesh(),
-                GetTransientPackage());
-            if (!DynamicMesh)
-            {
-                OutError = TEXT("Could not duplicate PCGEx DynamicMesh for deterministic tessellation.");
-                return false;
-            }
-
-            const UE::Geometry::FDynamicMesh3& BeforeMesh = DynamicMesh->GetMeshRef();
-            if (BeforeMesh.VertexCount() <= 0 || BeforeMesh.TriangleCount() <= 0)
+            const UE::Geometry::FDynamicMesh3& SourceMesh =
+                MeshData->GetDynamicMesh()->GetMeshRef();
+            if (SourceMesh.VertexCount() <= 0 || SourceMesh.TriangleCount() <= 0)
             {
                 continue;
             }
 
-            const int32 PreTessVertices = BeforeMesh.VertexCount();
-            const int32 PreTessTriangles = BeforeMesh.TriangleCount();
-            const double MaxEdgeBefore = ComputeMaxEdgeLengthCm(BeforeMesh);
-            OutMaxEdgeBeforeCm = FMath::Max(OutMaxEdgeBeforeCm, MaxEdgeBefore);
-
-            const int32 Tessellation = FMath::Clamp(
-                FMath::CeilToInt(MaxEdgeBefore / TargetEdgeCm),
-                1,
-                MaxTessellation);
-            OutMaxTessellation = FMath::Max(OutMaxTessellation, Tessellation);
-
-            if (Tessellation > 1)
+            // PCGEx currently emits the consolidated admitted footprint as one
+            // DynamicMesh containing the disconnected cliff islands. A single
+            // longest edge must not force every island to the same uniform
+            // tessellation level. Split by real triangle connectivity first,
+            // then densify each component independently.
+            UE::Geometry::FMeshConnectedComponents Components(&SourceMesh);
+            Components.FindConnectedTriangles();
+            if (Components.Num() <= 0)
             {
-                UDynamicMesh* Result =
-                    UGeometryScriptLibrary_MeshSubdivideFunctions::ApplyUniformTessellation(
-                        DynamicMesh,
-                        Tessellation,
-                        nullptr);
-                if (Result != DynamicMesh)
+                continue;
+            }
+
+            TArray<int32> ComponentOrder;
+            ComponentOrder.Reserve(Components.Num());
+            for (int32 ComponentIndex = 0; ComponentIndex < Components.Num(); ++ComponentIndex)
+            {
+                ComponentOrder.Add(ComponentIndex);
+            }
+            ComponentOrder.Sort(
+                [&Components](const int32 Left, const int32 Right)
                 {
-                    OutError = TEXT("GeometryScript uniform tessellation failed.");
-                    return false;
-                }
-            }
+                    const TArray<int>& LeftTriangles =
+                        Components.GetComponent(Left).Indices;
+                    const TArray<int>& RightTriangles =
+                        Components.GetComponent(Right).Indices;
+                    const int32 LeftMin =
+                        LeftTriangles.IsEmpty() ? MAX_int32 : Algo::Min(LeftTriangles);
+                    const int32 RightMin =
+                        RightTriangles.IsEmpty() ? MAX_int32 : Algo::Min(RightTriangles);
+                    return LeftMin < RightMin;
+                });
 
-            const UE::Geometry::FDynamicMesh3& Mesh = DynamicMesh->GetMeshRef();
-            const double MaxEdgeAfter = ComputeMaxEdgeLengthCm(Mesh);
-            OutMaxEdgeAfterCm = FMath::Max(OutMaxEdgeAfterCm, MaxEdgeAfter);
-
-            if (MaxEdgeAfter > TargetEdgeCm * 1.05)
+            for (const int32 ComponentIndex : ComponentOrder)
             {
-                OutError = FString::Printf(
-                    TEXT("Phase 2C topology remains too coarse after deterministic tessellation: %.3f cm > %.3f cm."),
-                    MaxEdgeAfter,
-                    TargetEdgeCm * 1.05);
-                return false;
-            }
-            if (Mesh.TriangleCount() > MaxTriangleCountPerMesh)
-            {
-                OutError = FString::Printf(
-                    TEXT("Phase 2C topology exceeds per-mesh triangle budget: %d > %d."),
-                    Mesh.TriangleCount(),
-                    MaxTriangleCountPerMesh);
-                return false;
-            }
-
-            TMap<int32, int32> Remap;
-            TArray<TSharedPtr<FJsonValue>> Vertices;
-            Vertices.Reserve(Mesh.VertexCount());
-            int32 DenseIndex = 0;
-            for (const int32 VertexId : Mesh.VertexIndicesItr())
-            {
-                Remap.Add(VertexId, DenseIndex++);
-                const FVector Position = Mesh.GetVertex(VertexId);
-                TArray<TSharedPtr<FJsonValue>> Values;
-                Values.Add(MakeShared<FJsonValueNumber>(Position.X));
-                Values.Add(MakeShared<FJsonValueNumber>(Position.Y));
-                Values.Add(MakeShared<FJsonValueNumber>(Position.Z));
-                Vertices.Add(MakeShared<FJsonValueArray>(MoveTemp(Values)));
-            }
-
-            TArray<TSharedPtr<FJsonValue>> Triangles;
-            Triangles.Reserve(Mesh.TriangleCount());
-            for (const int32 TriangleId : Mesh.TriangleIndicesItr())
-            {
-                const UE::Geometry::FIndex3i Triangle = Mesh.GetTriangle(TriangleId);
-                const int32* A = Remap.Find(Triangle.A);
-                const int32* B = Remap.Find(Triangle.B);
-                const int32* C = Remap.Find(Triangle.C);
-                if (!A || !B || !C)
+                const TArray<int>& TriangleIds =
+                    Components.GetComponent(ComponentIndex).Indices;
+                if (TriangleIds.IsEmpty())
                 {
                     continue;
                 }
-                TArray<TSharedPtr<FJsonValue>> Values;
-                Values.Add(MakeShared<FJsonValueNumber>(*A));
-                Values.Add(MakeShared<FJsonValueNumber>(*B));
-                Values.Add(MakeShared<FJsonValueNumber>(*C));
-                Triangles.Add(MakeShared<FJsonValueArray>(MoveTemp(Values)));
-            }
 
-            if (Vertices.IsEmpty() || Triangles.IsEmpty())
-            {
-                continue;
-            }
+                UE::Geometry::FDynamicSubmesh3 Submesh(
+                    &SourceMesh,
+                    TriangleIds,
+                    static_cast<int>(UE::Geometry::EMeshComponents::None),
+                    false);
+                UE::Geometry::FDynamicMesh3 ComponentMesh =
+                    MoveTemp(Submesh.GetSubmesh());
+                if (ComponentMesh.VertexCount() <= 0 || ComponentMesh.TriangleCount() <= 0)
+                {
+                    continue;
+                }
 
-            OutVertexCount += Vertices.Num();
-            OutTriangleCount += Triangles.Num();
-            TSharedRef<FJsonObject> MeshObject = MakeShared<FJsonObject>();
-            MeshObject->SetNumberField(TEXT("pre_tessellation_vertex_count"), PreTessVertices);
-            MeshObject->SetNumberField(TEXT("pre_tessellation_triangle_count"), PreTessTriangles);
-            MeshObject->SetNumberField(TEXT("tessellation"), Tessellation);
-            MeshObject->SetNumberField(TEXT("target_edge_cm"), TargetEdgeCm);
-            MeshObject->SetNumberField(TEXT("max_edge_cm_before"), MaxEdgeBefore);
-            MeshObject->SetNumberField(TEXT("max_edge_cm_after"), MaxEdgeAfter);
-            MeshObject->SetArrayField(TEXT("vertices_cm"), MoveTemp(Vertices));
-            MeshObject->SetArrayField(TEXT("triangles"), MoveTemp(Triangles));
+                UDynamicMesh* DynamicMesh =
+                    NewObject<UDynamicMesh>(GetTransientPackage());
+                if (!DynamicMesh)
+                {
+                    OutError = TEXT("Could not allocate transient component tessellation mesh.");
+                    return false;
+                }
+                DynamicMesh->InitializeMesh();
+                DynamicMesh->SetMesh(MoveTemp(ComponentMesh));
 
-            TArray<TSharedPtr<FJsonValue>> TagValues;
-            for (const FString& Tag : Tagged.Tags)
-            {
-                TagValues.Add(MakeShared<FJsonValueString>(Tag));
+                const UE::Geometry::FDynamicMesh3& BeforeMesh =
+                    DynamicMesh->GetMeshRef();
+                const int32 PreTessVertices = BeforeMesh.VertexCount();
+                const int32 PreTessTriangles = BeforeMesh.TriangleCount();
+                const double MaxEdgeBefore = ComputeMaxEdgeLengthCm(BeforeMesh);
+                OutMaxEdgeBeforeCm =
+                    FMath::Max(OutMaxEdgeBeforeCm, MaxEdgeBefore);
+
+                // FUniformTessellate inserts TessellationNum points along each
+                // original edge, yielding TessellationNum + 1 edge segments.
+                // Therefore the minimum level that satisfies TargetEdgeCm is
+                // ceil(edge/target) - 1, not ceil(edge/target).
+                const int32 RequiredSegments = FMath::Max(
+                    1,
+                    FMath::CeilToInt(MaxEdgeBefore / TargetEdgeCm));
+                const int32 Tessellation = FMath::Clamp(
+                    RequiredSegments - 1,
+                    0,
+                    MaxTessellation);
+                OutMaxTessellation =
+                    FMath::Max(OutMaxTessellation, Tessellation);
+
+                if (Tessellation > 0)
+                {
+                    UDynamicMesh* Result =
+                        UGeometryScriptLibrary_MeshSubdivideFunctions::ApplyUniformTessellation(
+                            DynamicMesh,
+                            Tessellation,
+                            nullptr);
+                    if (Result != DynamicMesh)
+                    {
+                        OutError = TEXT("GeometryScript uniform tessellation failed.");
+                        return false;
+                    }
+                }
+
+                const UE::Geometry::FDynamicMesh3& Mesh =
+                    DynamicMesh->GetMeshRef();
+                const double MaxEdgeAfter = ComputeMaxEdgeLengthCm(Mesh);
+                OutMaxEdgeAfterCm =
+                    FMath::Max(OutMaxEdgeAfterCm, MaxEdgeAfter);
+
+                if (MaxEdgeAfter > TargetEdgeCm * 1.05)
+                {
+                    OutError = FString::Printf(
+                        TEXT("Phase 2C component topology remains too coarse after deterministic tessellation: %.3f cm > %.3f cm."),
+                        MaxEdgeAfter,
+                        TargetEdgeCm * 1.05);
+                    return false;
+                }
+                if (Mesh.TriangleCount() > MaxTriangleCountPerMesh)
+                {
+                    OutError = FString::Printf(
+                        TEXT("Phase 2C component topology exceeds per-mesh triangle budget: %d > %d."),
+                        Mesh.TriangleCount(),
+                        MaxTriangleCountPerMesh);
+                    return false;
+                }
+
+                TMap<int32, int32> Remap;
+                TArray<TSharedPtr<FJsonValue>> Vertices;
+                Vertices.Reserve(Mesh.VertexCount());
+                int32 DenseIndex = 0;
+                for (const int32 VertexId : Mesh.VertexIndicesItr())
+                {
+                    Remap.Add(VertexId, DenseIndex++);
+                    const FVector Position = Mesh.GetVertex(VertexId);
+                    TArray<TSharedPtr<FJsonValue>> Values;
+                    Values.Add(MakeShared<FJsonValueNumber>(Position.X));
+                    Values.Add(MakeShared<FJsonValueNumber>(Position.Y));
+                    Values.Add(MakeShared<FJsonValueNumber>(Position.Z));
+                    Vertices.Add(MakeShared<FJsonValueArray>(MoveTemp(Values)));
+                }
+
+                TArray<TSharedPtr<FJsonValue>> Triangles;
+                Triangles.Reserve(Mesh.TriangleCount());
+                for (const int32 TriangleId : Mesh.TriangleIndicesItr())
+                {
+                    const UE::Geometry::FIndex3i Triangle =
+                        Mesh.GetTriangle(TriangleId);
+                    const int32* A = Remap.Find(Triangle.A);
+                    const int32* B = Remap.Find(Triangle.B);
+                    const int32* C = Remap.Find(Triangle.C);
+                    if (!A || !B || !C)
+                    {
+                        continue;
+                    }
+                    TArray<TSharedPtr<FJsonValue>> Values;
+                    Values.Add(MakeShared<FJsonValueNumber>(*A));
+                    Values.Add(MakeShared<FJsonValueNumber>(*B));
+                    Values.Add(MakeShared<FJsonValueNumber>(*C));
+                    Triangles.Add(MakeShared<FJsonValueArray>(MoveTemp(Values)));
+                }
+
+                if (Vertices.IsEmpty() || Triangles.IsEmpty())
+                {
+                    continue;
+                }
+
+                OutVertexCount += Vertices.Num();
+                OutTriangleCount += Triangles.Num();
+                TSharedRef<FJsonObject> MeshObject =
+                    MakeShared<FJsonObject>();
+                MeshObject->SetNumberField(
+                    TEXT("source_component_index"),
+                    ComponentIndex);
+                MeshObject->SetNumberField(
+                    TEXT("pre_tessellation_vertex_count"),
+                    PreTessVertices);
+                MeshObject->SetNumberField(
+                    TEXT("pre_tessellation_triangle_count"),
+                    PreTessTriangles);
+                MeshObject->SetNumberField(
+                    TEXT("tessellation"),
+                    Tessellation);
+                MeshObject->SetNumberField(
+                    TEXT("target_edge_cm"),
+                    TargetEdgeCm);
+                MeshObject->SetNumberField(
+                    TEXT("max_edge_cm_before"),
+                    MaxEdgeBefore);
+                MeshObject->SetNumberField(
+                    TEXT("max_edge_cm_after"),
+                    MaxEdgeAfter);
+                MeshObject->SetArrayField(
+                    TEXT("vertices_cm"),
+                    MoveTemp(Vertices));
+                MeshObject->SetArrayField(
+                    TEXT("triangles"),
+                    MoveTemp(Triangles));
+
+                TArray<TSharedPtr<FJsonValue>> TagValues;
+                for (const FString& Tag : Tagged.Tags)
+                {
+                    TagValues.Add(
+                        MakeShared<FJsonValueString>(Tag));
+                }
+                MeshObject->SetArrayField(
+                    TEXT("tags"),
+                    MoveTemp(TagValues));
+                OutMeshes.Add(
+                    MakeShared<FJsonValueObject>(MeshObject));
             }
-            MeshObject->SetArrayField(TEXT("tags"), MoveTemp(TagValues));
-            OutMeshes.Add(MakeShared<FJsonValueObject>(MeshObject));
         }
 
         Component->CleanupLocalImmediate(true);
@@ -585,7 +678,8 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
         TEXT("pipeline"),
         TEXT("YACS cliff cells -> Clipper2 Union -> Path Smooth -> "
              "Path Subdivide -> Clipper2 Intersection(original YACS union) -> "
-             "Clipper2 Triangulate -> deterministic UE Uniform Tessellation"));
+             "Clipper2 Triangulate -> connected-component-aware deterministic "
+             "UE Uniform Tessellation"));
     Root->SetBoolField(TEXT("canonical_landscape_mutation"), false);
     Root->SetBoolField(TEXT("assets_saved"), false);
     Root->SetBoolField(TEXT("graph_saved"), false);
