@@ -18,6 +18,8 @@
 #include "PCGGraph.h"
 #include "PCGNode.h"
 #include "PCGPin.h"
+#include "PCGContext.h"
+#include "PCGSubsystem.h"
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
 #include "UObject/Package.h"
@@ -163,15 +165,63 @@ namespace
         Component->RegisterComponent();
         Component->SetGraphLocal(Graph);
 
-        Component->GenerateLocal(true);
-        FWorldPartitionHelpers::FakeEngineTick(World);
+        // This proof graph is intentionally transient. Do not route it through
+        // UPCGComponent::GenerateLocal(), whose component scheduler performs
+        // generation-grid/component bookkeeping intended for authored graph
+        // assets. Schedule the exact in-memory graph directly through the
+        // public PCG subsystem API instead.
+        UPCGSubsystem* Subsystem = World->GetSubsystem<UPCGSubsystem>();
+        if (!Subsystem || !Subsystem->IsInitialized())
+        {
+            OutError = TEXT("Phase 2C PCG subsystem is unavailable.");
+            return false;
+        }
+
+        const FPCGTaskId GraphTask = Subsystem->ScheduleGraph(
+            Graph,
+            Component,
+            nullptr,
+            nullptr,
+            {},
+            nullptr,
+            false);
+        if (GraphTask == InvalidPCGTaskId)
+        {
+            OutError = TEXT("PCGEx Phase 2C graph could not be scheduled.");
+            return false;
+        }
+
+        FPCGDataCollection Generated;
+        bool bCapturedOutput = false;
+        FPCGScheduleGenericParams CaptureParams(
+            [&Generated, &bCapturedOutput](FPCGContext* Context) -> bool
+            {
+                if (!Context)
+                {
+                    return false;
+                }
+                Generated = Context->InputData;
+                bCapturedOutput = true;
+                return true;
+            },
+            Component,
+            {},
+            {GraphTask},
+            true);
+        const FPCGTaskId CaptureTask = Subsystem->ScheduleGeneric(CaptureParams);
+        if (CaptureTask == InvalidPCGTaskId)
+        {
+            OutError = TEXT("PCGEx Phase 2C output capture could not be scheduled.");
+            return false;
+        }
 
         constexpr double TimeoutSeconds = 120.0;
         const double StartedAt = FPlatformTime::Seconds();
-        while (Component->IsGenerating())
+        while (!bCapturedOutput)
         {
             if ((FPlatformTime::Seconds() - StartedAt) > TimeoutSeconds)
             {
+                Subsystem->CancelGeneration(Graph);
                 OutError = TEXT("PCGEx Phase 2C graph timed out.");
                 return false;
             }
@@ -180,7 +230,11 @@ namespace
         }
         FWorldPartitionHelpers::FakeEngineTick(World);
 
-        const FPCGDataCollection& Generated = Component->GetGeneratedGraphOutput();
+        if (Generated.TaggedData.IsEmpty())
+        {
+            OutError = TEXT("PCGEx Phase 2C graph produced no output data.");
+            return false;
+        }
         constexpr double TargetEdgeCm = 150.0;
         constexpr int32 MaxTessellation = 12;
         constexpr int32 MaxTriangleCountPerMesh = 60000;
