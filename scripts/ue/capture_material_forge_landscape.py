@@ -185,6 +185,54 @@ def _landscape_bounds():
     return (min_x, max_x, min_y, max_y, min_z, max_z), target
 
 
+def _canonical_component_bounds():
+    target = next(
+        (
+            component
+            for component in _components
+            if component.get_name() == "LandscapeComponent_230"
+        ),
+        None,
+    )
+    if target is None:
+        raise RuntimeError("Canonical material review component 230 is missing")
+    origin, extent, radius = unreal.SystemLibrary.get_component_bounds(target)
+    values = [
+        float(origin.x),
+        float(origin.y),
+        float(origin.z),
+        float(extent.x),
+        float(extent.y),
+        float(extent.z),
+        float(radius),
+    ]
+    if not all(math.isfinite(value) for value in values):
+        raise RuntimeError("Canonical component 230 bounds contain non-finite values")
+    if extent.x <= 0.0 or extent.y <= 0.0 or extent.z < 0.0 or radius <= 0.0:
+        raise RuntimeError("Canonical component 230 bounds are invalid")
+    return {
+        "name": target.get_name(),
+        "origin_cm": [float(origin.x), float(origin.y), float(origin.z)],
+        "extent_cm": [float(extent.x), float(extent.y), float(extent.z)],
+        "radius_cm": float(radius),
+        "min_cm": [
+            float(origin.x - extent.x),
+            float(origin.y - extent.y),
+            float(origin.z - extent.z),
+        ],
+        "max_cm": [
+            float(origin.x + extent.x),
+            float(origin.y + extent.y),
+            float(origin.z + extent.z),
+        ],
+        "world_grid_mapping": {
+            "cell_size_cm": 50.0,
+            "axis": "X east;Y south",
+            "first_sample_center_cm": [0.0, 0.0],
+        },
+    }
+
+
 def _build_views():
     bounds, target = _landscape_bounds()
     min_x, max_x, min_y, max_y, min_z, max_z = bounds
@@ -661,6 +709,7 @@ def _write_receipt(status: str, error: str = ""):
             [item for item in _captures if item.get("kind") == "diagnostic"]
         ),
         "whole_landscape_components": len(_components),
+        "canonical_component_bounds": _canonical_component_bounds(),
         "applied_component_count": len(_applied_components),
         "applied_scope": "CANONICAL_COMPONENT_230" if FAST_VISUAL else "WHOLE_LANDSCAPE",
         "map_saved": False,
