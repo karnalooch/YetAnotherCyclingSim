@@ -331,3 +331,51 @@ Landscape proof passes, promote the compiled master as a normal Git-LFS technica
 UE asset and remove the bootstrap editor process so the production canary returns
 to one editor process and one map load.
 
+## Refinement B — Issue #413 owner visual pass
+
+Refinement B is a visual-only follow-up to the technically admitted fixed-master
+pipeline. It does not alter BOB geometry, the accepted map, or the PCG/PCGEx
+semantic mask contract.
+
+The selected pair is:
+
+- `regional_limestone/refined_b` — neutralizes the warm cream/yellow bias and
+  keeps limestone in a light mineral grey/cream family;
+- `mediterranean_soil/refined_b` — lowers luminance and keeps a warmer
+  ochre-brown mineral response so soil remains readable from medium and overview
+  distances.
+
+The earlier Refinement A variation mostly lived inside the 4 m surface tile.
+Refinement B adds a second, deliberately larger appearance scale in the fixed
+Landscape master. The existing material-local `DetailMasks.B` signal is sampled
+again at a per-surface macro tile size and used only as a subtle BaseColor gain:
+
+- rock: 24 m macro tile, 0.14 gain strength;
+- soil: 12 m macro tile, 0.16 gain strength.
+
+Both values are fail-closed to the 8–30 m range requested by visual review.
+This remains a material-local appearance signal: it cannot classify, grow,
+erode, or replace the authoritative 4033×4033 world mask.
+
+The exact-SHA proof chain switches its Blender reference, slim UE input,
+fixed-master canary and whole-Landscape 4K capture from `refined_a` to
+`refined_b`. The same four cameras remain the owner-facing comparison surface.
+
+Cliff cavities and vertical streaking are **not** considered solved by the color
+pass. Their suspected sources remain geometry, normal response, AO/shadowing and
+projection. Refinement B deliberately avoids hiding those defects with an
+arbitrary albedo lift; they remain a separate diagnostic/acceptance item before
+production visual approval.
+
+Admission is unchanged:
+
+```text
+Material Forge deterministic render x2
+        -> Blender quick reference
+        -> fixed-master UE canary + rollback
+        -> whole-Landscape 4K four-camera capture
+        -> owner A/B visual acceptance
+```
+
+Until that proof and owner review are green, PR #381 stays draft.
+
