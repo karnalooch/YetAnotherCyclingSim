@@ -82,27 +82,61 @@ if ($ActualCompatibilityPatchSha256 -ne $ExpectedCompatibilityPatchSha256) {
     throw "PCGEx compatibility patch hash drift: $ActualCompatibilityPatchSha256"
 }
 
-$PatchApplied = $false
-$PatchApplicable = $false
-if (Test-Path -LiteralPath (Join-Path $PluginRoot '.git')) {
-    & git -C $PluginRoot apply --reverse --check --ignore-space-change --ignore-whitespace $CompatibilityPatchPath *> $null
-    $PatchApplied = ($LASTEXITCODE -eq 0)
+function Test-YacsPcgExCompatibilityPatchApplied {
+    param([Parameter(Mandatory=$true)] [string] $TargetPath)
 
-    if (-not $PatchApplied) {
-        & git -C $PluginRoot apply --check --ignore-space-change --ignore-whitespace $CompatibilityPatchPath *> $null
-        $PatchApplicable = ($LASTEXITCODE -eq 0)
+    if (-not (Test-Path -LiteralPath $TargetPath -PathType Leaf)) {
+        return $false
     }
 
-    if (-not $PatchApplied -and $Mode -eq 'Install') {
+    $Text = Get-Content -LiteralPath $TargetPath -Raw
+    $OuterFixed = [regex]::Matches(
+        $Text,
+        'if\s*\(Area\(outer\)\s*>\s*0\)'
+    ).Count
+    $HoleFixed = [regex]::Matches(
+        $Text,
+        'if\s*\(Area\(hole\)\s*<\s*0\)'
+    ).Count
+    $OuterLegacy = [regex]::Matches(
+        $Text,
+        'if\s*\(Area\(outer\)\s*<\s*0\)'
+    ).Count
+    $HoleLegacy = [regex]::Matches(
+        $Text,
+        'if\s*\(Area\(hole\)\s*>\s*0\)'
+    ).Count
+
+    return (
+        $OuterFixed -eq 2 -and
+        $HoleFixed -eq 2 -and
+        $OuterLegacy -eq 0 -and
+        $HoleLegacy -eq 0
+    )
+}
+
+$CompatibilityTargetPath = Join-Path $PluginRoot $CompatibilityTargetRelative
+$PatchApplied = Test-YacsPcgExCompatibilityPatchApplied -TargetPath $CompatibilityTargetPath
+$PatchApplicable = $false
+
+if ((Test-Path -LiteralPath (Join-Path $PluginRoot '.git')) -and -not $PatchApplied) {
+    & git -C $PluginRoot apply --check --ignore-space-change --ignore-whitespace $CompatibilityPatchPath *> $null
+    $PatchApplicable = ($LASTEXITCODE -eq 0)
+
+    if ($Mode -eq 'Install') {
         if (-not $PatchApplicable) {
             throw 'Pinned PCGEx source does not accept the reviewed YACS compatibility patch.'
         }
+
         & git -C $PluginRoot apply --whitespace=nowarn --ignore-space-change --ignore-whitespace $CompatibilityPatchPath
         if ($LASTEXITCODE -ne 0) {
             throw 'Failed to apply the reviewed YACS PCGEx compatibility patch.'
         }
-        & git -C $PluginRoot apply --reverse --check $CompatibilityPatchPath *> $null
-        $PatchApplied = ($LASTEXITCODE -eq 0)
+
+        $PatchApplied = Test-YacsPcgExCompatibilityPatchApplied -TargetPath $CompatibilityTargetPath
+        if (-not $PatchApplied) {
+            throw 'PCGEx compatibility patch applied but semantic winding verification failed.'
+        }
         $PatchApplicable = $false
     }
 }
