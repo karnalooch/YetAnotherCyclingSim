@@ -29,6 +29,18 @@ OUTPUT = Path(os.environ["YACS_CLIFF_VISUAL_OUTPUT"]).resolve()
 EXPECTED_SHA = os.environ["YACS_CLIFF_VISUAL_EXPECTED_SHA"].strip()
 RESOLUTION = (1920, 1080)
 CAPTURE_DELAY_SECONDS = 1.0
+PIXEL_SIZE_M = 0.5
+CLIFF_MATERIAL = (
+    "/Game/Generated/YACS/TextureMaterialPrep/Libraries/"
+    "3d53743e48394f31beb35e4030dc8a87/LimestonePalette/"
+    "1b3d9c45b1e24d6085bfcc8859390c19/M_SC_Limestone_ExposedRock"
+)
+SCREE_MATERIAL = (
+    "/Game/Generated/YACS/TextureMaterialPrep/Libraries/"
+    "3d53743e48394f31beb35e4030dc8a87/LimestonePalette/"
+    "1b3d9c45b1e24d6085bfcc8859390c19/M_SC_Limestone_Scree"
+)
+_trace_cache: dict[tuple[float, float], float] = {}
 
 _task = None
 _handle = None
@@ -204,20 +216,15 @@ def _ensure_lighting():
     }
 
 
-def _make_color_material(
-    color: unreal.LinearColor,
-) -> unreal.MaterialInstanceDynamic:
-    parent = unreal.load_asset(
-        "/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"
-    )
-    if parent is None:
-        raise RuntimeError("BasicShapeMaterial is unavailable")
-    material = unreal.MaterialLibrary.create_dynamic_material_instance(
-        _world, parent
-    )
-    material.set_vector_parameter_value("Color", color)
+def _load_surface_material(path: str, label: str):
+    material = unreal.load_asset(path)
+    if material is None:
+        raise RuntimeError(f"{label} material is unavailable: {path}")
+    if not isinstance(material, unreal.MaterialInterface):
+        raise RuntimeError(
+            f"{label} asset is not a MaterialInterface: {material.get_class().get_name()}"
+        )
     return material
-
 
 def _extract_trace_z(
     hit,
@@ -263,6 +270,9 @@ def _extract_trace_z(
 
 
 def _trace_landscape_z(x_m: float, y_m: float) -> float:
+    key = (round(float(x_m), 4), round(float(y_m), 4))
+    if key in _trace_cache:
+        return _trace_cache[key]
     origin, extent, _radius = unreal.SystemLibrary.get_component_bounds(
         _target_component
     )
@@ -289,85 +299,159 @@ def _trace_landscape_z(x_m: float, y_m: float) -> float:
         raise RuntimeError(
             f"Landscape trace missed for x={x_m:.3f} y={y_m:.3f}"
         )
-    return _extract_trace_z(
+    value = _extract_trace_z(
         hit,
         x_cm=x_cm,
         y_cm=y_cm,
         bottom_z_cm=bottom,
         top_z_cm=top,
     )
+    _trace_cache[key] = value
+    return value
 
 
-def _append_box_plate(
+def _fit_plane_gradient(
+    points: list[tuple[float, float, float]],
+) -> tuple[float, float]:
+    if len(points) < 3:
+        return 0.0, 0.0
+    mean_x = sum(row[0] for row in points) / len(points)
+    mean_y = sum(row[1] for row in points) / len(points)
+    mean_z = sum(row[2] for row in points) / len(points)
+    sxx = syy = sxy = sxz = syz = 0.0
+    for x, y, z in points:
+        dx, dy, dz = x - mean_x, y - mean_y, z - mean_z
+        sxx += dx * dx
+        syy += dy * dy
+        sxy += dx * dy
+        sxz += dx * dz
+        syz += dy * dz
+    determinant = sxx * syy - sxy * sxy
+    if abs(determinant) <= 1e-9:
+        return 0.0, 0.0
+    gx = (sxz * syy - syz * sxy) / determinant
+    gy = (syz * sxx - sxz * sxy) / determinant
+    return gx, gy
+
+
+def _append_skin_cluster(
     vertices: list[unreal.Vector],
     triangles: list[unreal.IntVector],
-    row: dict[str, object],
+    uvs: list[unreal.Vector2D],
+    cluster: dict[str, object],
+    cells: list[dict[str, object]],
 ):
-    """Append a thin terrain-draped cliff skin instead of an upright plate.
+    """Append one connected, smoothed presentation skin.
 
-    The four top corners sample the accepted Landscape on the high/low sides
-    of the local DTM gradient. The resulting quad bridges stair-step geometry
-    with no artificial upward extrusion. A thin underside only makes the mesh
-    robust from oblique views.
+    Every mesh vertex starts from an exact Landscape trace. Interior vertices
+    receive two bounded Laplacian smoothing passes to suppress sub-grid
+    stair-step wedges; boundary vertices keep the real trace and are tucked
+    slightly below it so there is no floating white seam.
     """
-    x_m, y_m = [float(value) for value in row["center_xy_m"]]
-    dx, dy = [float(value) for value in row["downhill_xy"]]
-    tx, ty = [float(value) for value in row["tangent_xy"]]
-    width = float(row["width_m"])
-    run = float(row["run_m"])
-    thickness = float(row["thickness_m"])
-    lift = float(row["lift_m"])
+    if not cells:
+        return None
 
-    half_width = width * 0.5
-    half_run = run * 0.5
-    high_x = x_m - dx * half_run
-    high_y = y_m - dy * half_run
-    low_x = x_m + dx * half_run
-    low_y = y_m + dy * half_run
+    cell_corners = []
+    adjacency: dict[tuple[int, int], set[tuple[int, int]]] = {}
+    touch_count: dict[tuple[int, int], int] = {}
+    for row in cells:
+        r0, r1 = int(row["row0"]), int(row["row1"])
+        c0, c1 = int(row["col0"]), int(row["col1"])
+        nw, ne, se, sw = (r0, c0), (r0, c1), (r1, c1), (r1, c0)
+        corners = (nw, ne, se, sw)
+        cell_corners.append(corners)
+        for key in corners:
+            touch_count[key] = touch_count.get(key, 0) + 1
+            adjacency.setdefault(key, set())
+        for left, right in ((nw, ne), (ne, se), (se, sw), (sw, nw)):
+            adjacency[left].add(right)
+            adjacency[right].add(left)
 
-    xy = [
-        (high_x - tx * half_width, high_y - ty * half_width),
-        (high_x + tx * half_width, high_y + ty * half_width),
-        (low_x + tx * half_width, low_y + ty * half_width),
-        (low_x - tx * half_width, low_y - ty * half_width),
-    ]
-    top_points = []
-    trace_values_cm = []
-    for px, py in xy:
-        z_cm = _trace_landscape_z(px, py)
-        trace_values_cm.append(z_cm)
-        top_points.append((px, py, z_cm / 100.0 + lift))
+    traced: dict[tuple[int, int], float] = {}
+    xyz_points = []
+    for row, col in sorted(adjacency):
+        x_m, y_m = col * PIXEL_SIZE_M, row * PIXEL_SIZE_M
+        z_m = _trace_landscape_z(x_m, y_m) / 100.0
+        traced[(row, col)] = z_m
+        xyz_points.append((x_m, y_m, z_m))
 
-    bottom_points = [
-        (px, py, pz - thickness)
-        for px, py, pz in top_points
-    ]
-    points = top_points + bottom_points
+    original = dict(traced)
+    smoothed = dict(traced)
+    passes = int(cluster["smoothing_passes"])
+    blend = float(cluster["smoothing_blend"])
+    clamp_m = float(cluster["smoothing_clamp_m"])
+    for _ in range(passes):
+        next_values = dict(smoothed)
+        for key, value in smoothed.items():
+            if touch_count.get(key, 0) < 4:
+                continue
+            neighbours = adjacency.get(key, set())
+            if not neighbours:
+                continue
+            mean = sum(smoothed[n] for n in neighbours) / len(neighbours)
+            candidate = value * (1.0 - blend) + mean * blend
+            base = original[key]
+            next_values[key] = max(
+                base - clamp_m,
+                min(base + clamp_m, candidate),
+            )
+        smoothed = next_values
+
+    gradient_x, gradient_y = _fit_plane_gradient(xyz_points)
+    horizontal = math.hypot(gradient_x, gradient_y)
+    if horizontal > 1e-6:
+        downhill_x, downhill_y = -gradient_x / horizontal, -gradient_y / horizontal
+    else:
+        downhill_x, downhill_y = 0.0, 1.0
+    tangent_x, tangent_y = -downhill_y, downhill_x
+    uv_scale = float(_plan["skin_contract"]["uv_world_size_m"])
+
     base = len(vertices)
-    vertices.extend(
-        unreal.Vector(px * 100.0, py * 100.0, pz * 100.0)
-        for px, py, pz in points
-    )
-    faces = [
-        # Smooth presentation surface, upward-facing.
-        (0, 3, 2), (0, 2, 1),
-        # Thin underside.
-        (4, 6, 7), (4, 5, 6),
-        # Perimeter.
-        (0, 1, 5), (0, 5, 4),
-        (1, 2, 6), (1, 6, 5),
-        (2, 3, 7), (2, 7, 6),
-        (3, 0, 4), (3, 4, 7),
-    ]
-    triangles.extend(
-        unreal.IntVector(base + ia, base + ib, base + ic)
-        for ia, ib, ic in faces
-    )
-    return min(trace_values_cm), max(trace_values_cm)
+    local_index: dict[tuple[int, int], int] = {}
+    trace_min = float("inf")
+    trace_max = float("-inf")
+    lift = float(cluster["interior_lift_m"])
+    underlap = float(cluster["boundary_underlap_m"])
+    for key in sorted(adjacency):
+        row, col = key
+        x_m, y_m = col * PIXEL_SIZE_M, row * PIXEL_SIZE_M
+        raw_z = original[key]
+        trace_min = min(trace_min, raw_z * 100.0)
+        trace_max = max(trace_max, raw_z * 100.0)
+        boundary = touch_count.get(key, 0) < 4
+        z_m = raw_z - underlap if boundary else smoothed[key] + lift
+        local_index[key] = len(vertices)
+        vertices.append(unreal.Vector(x_m * 100.0, y_m * 100.0, z_m * 100.0))
+
+        # Rock texture uses a 3 m physical scale. U follows the local cliff
+        # tangent, V follows elevation so steep faces do not vertically smear.
+        u = (x_m * tangent_x + y_m * tangent_y) / uv_scale
+        if horizontal > 0.65:
+            v = z_m / uv_scale
+        else:
+            v = (x_m * downhill_x + y_m * downhill_y) / uv_scale
+        uvs.append(unreal.Vector2D(u, v))
+
+    for nw, ne, se, sw in cell_corners:
+        ia, ib = local_index[nw], local_index[ne]
+        ic, id_ = local_index[se], local_index[sw]
+        # World X/Y winding chosen for upward/outward-facing normals.
+        triangles.append(unreal.IntVector(ia, ib, ic))
+        triangles.append(unreal.IntVector(ia, ic, id_))
+
+    return {
+        "cluster_id": cluster["cluster_id"],
+        "vertices": len(local_index),
+        "triangles": len(cell_corners) * 2,
+        "trace_z_range_cm": [trace_min, trace_max],
+        "plane_gradient": [gradient_x, gradient_y],
+        "base_vertex": base,
+    }
 
 def _append_scree_rock(
     vertices: list[unreal.Vector],
     triangles: list[unreal.IntVector],
+    uvs: list[unreal.Vector2D],
     row: dict[str, object],
     surface_z_cm: float,
 ):
@@ -394,6 +478,8 @@ def _append_scree_rock(
         unreal.Vector(px * 100.0, py * 100.0, pz * 100.0)
         for px, py, pz in points
     )
+    for px, py, _pz in points:
+        uvs.append(unreal.Vector2D(px / 3.0, py / 3.0))
     for index in range(4):
         nxt = (index + 1) % 4
         triangles.append(unreal.IntVector(base + index, base + nxt, base + 4))
@@ -404,6 +490,7 @@ def _spawn_mesh(
     label: str,
     vertices: list[unreal.Vector],
     triangles: list[unreal.IntVector],
+    uvs: list[unreal.Vector2D],
     material,
 ):
     actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
@@ -421,6 +508,11 @@ def _spawn_mesh(
     buffers = unreal.GeometryScriptSimpleMeshBuffers()
     buffers.set_editor_property("vertices", vertices)
     buffers.set_editor_property("triangles", triangles)
+    if len(uvs) != len(vertices):
+        raise RuntimeError(
+            f"{label} UV count mismatch: {len(uvs)} != {len(vertices)}"
+        )
+    buffers.set_editor_property("uv0", uvs)
     dynamic_mesh.reset()
     dynamic_mesh.append_buffers_to_mesh(
         buffers,
@@ -455,44 +547,61 @@ def _spawn_candidate():
     if _candidate_actors:
         return
 
-    limestone = _make_color_material(
-        unreal.LinearColor(0.54, 0.55, 0.52, 1.0)
-    )
-    scree_material = _make_color_material(
-        unreal.LinearColor(0.43, 0.43, 0.40, 1.0)
-    )
+    limestone = _load_surface_material(CLIFF_MATERIAL, "limestone")
+    scree_material = _load_surface_material(SCREE_MATERIAL, "scree")
+
+    cells_by_cluster: dict[str, list[dict[str, object]]] = {}
+    for row in _plan["skin_cells"]:
+        cells_by_cluster.setdefault(str(row["cluster_id"]), []).append(row)
 
     cliff_vertices: list[unreal.Vector] = []
     cliff_triangles: list[unreal.IntVector] = []
+    cliff_uvs: list[unreal.Vector2D] = []
+    cluster_receipts = []
     trace_min = float("inf")
     trace_max = float("-inf")
-    for row in _plan["plates"]:
-        local_min, local_max = _append_box_plate(
+    for cluster in _plan["plates"]:
+        cluster_id = str(cluster["cluster_id"])
+        receipt = _append_skin_cluster(
             cliff_vertices,
             cliff_triangles,
-            row,
+            cliff_uvs,
+            cluster,
+            cells_by_cluster.get(cluster_id, []),
         )
-        trace_min = min(trace_min, local_min)
-        trace_max = max(trace_max, local_max)
+        if receipt is None:
+            continue
+        cluster_receipts.append(receipt)
+        trace_min = min(trace_min, float(receipt["trace_z_range_cm"][0]))
+        trace_max = max(trace_max, float(receipt["trace_z_range_cm"][1]))
 
     scree_vertices: list[unreal.Vector] = []
     scree_triangles: list[unreal.IntVector] = []
+    scree_uvs: list[unreal.Vector2D] = []
     for row in _plan["scree_rocks"]:
         z = _trace_landscape_z(*[float(v) for v in row["center_xy_m"]])
         trace_min = min(trace_min, z)
         trace_max = max(trace_max, z)
-        _append_scree_rock(scree_vertices, scree_triangles, row, z)
+        _append_scree_rock(
+            scree_vertices,
+            scree_triangles,
+            scree_uvs,
+            row,
+            z,
+        )
 
     cliff_counts = _spawn_mesh(
-        "YACS_Component230_CliffSheets",
+        "YACS_Component230_ConnectedCliffSkin",
         cliff_vertices,
         cliff_triangles,
+        cliff_uvs,
         limestone,
     )
     scree_counts = _spawn_mesh(
         "YACS_Component230_Scree",
         scree_vertices,
         scree_triangles,
+        scree_uvs,
         scree_material,
     )
     lighting = _mesh_receipt.get("lighting")
@@ -500,15 +609,21 @@ def _spawn_candidate():
         "lighting": lighting,
         "cliff": cliff_counts,
         "scree": scree_counts,
-        "plate_count": len(_plan["plates"]),
+        "skin_cluster_count": len(cluster_receipts),
+        "skin_cell_count": len(_plan["skin_cells"]),
+        "plate_count": len(cluster_receipts),
         "scree_rock_count": len(_plan["scree_rocks"]),
+        "clusters": cluster_receipts,
         "trace_z_range_cm": [trace_min, trace_max],
         "collision_enabled": False,
         "cast_dynamic_shadows": True,
-        "material": "transient pale-limestone draped-skin proof proxy",
+        "material": {
+            "cliff": CLIFF_MATERIAL,
+            "scree": SCREE_MATERIAL,
+            "uv_world_size_m": _plan["skin_contract"]["uv_world_size_m"],
+        },
     }
     unreal.AutomationLibrary.finish_loading_before_screenshot()
-
 
 def _destroy_transient():
     errors = []
