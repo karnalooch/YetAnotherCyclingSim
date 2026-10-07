@@ -592,6 +592,21 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      - name: Stage run-scoped Unreal logs for artifact upload
+        if: ${{ always() }}
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $destination = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/Unreal/RunLogs/${{ github.run_id }}-${{ github.run_attempt }}'
+          if (Test-Path -LiteralPath $env:YACS_UNREAL_LOG_ROOT -PathType Container) {
+            New-Item -ItemType Directory -Path $destination -Force | Out-Null
+            Get-ChildItem -LiteralPath $env:YACS_UNREAL_LOG_ROOT -File -Filter '*.log' |
+              ForEach-Object {
+                Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $destination $_.Name) -Force
+              }
+          }
+
       - name: Upload concise Unreal proof
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -601,7 +616,6 @@ jobs:
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/Unreal/**/*.json
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/Unreal/**/*.txt
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/Unreal/**/*.log
-            ${{ runner.temp }}/yacs-unreal-${{ github.run_id }}-${{ github.run_attempt }}/*.log
           if-no-files-found: warn
           retention-days: 7
 
@@ -710,7 +724,7 @@ jobs:
               }
               git reset --hard
               if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree cleanup git reset failed.' }
-              git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/' -e '/Saved/Logs/YetAnotherCyclingSim.log' -e '/Saved/RuntimeProof/CI/RegionTerrain/*/*.log'
+          git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/' -e '/Saved/Logs/YetAnotherCyclingSim.log' -e '/Saved/RuntimeProof/CI/RegionTerrain/*/*.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof/automation_run.log'
               if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree cleanup allow-listed clean failed.' }
             }
             finally {
