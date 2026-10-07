@@ -132,6 +132,8 @@ def _build_views():
             "target": center,
             "fov": 58.0,
             "purpose": "whole-area material distribution",
+            "kind": "acceptance",
+            "viewmode": "lit",
         },
         {
             "name": "02-refined-material-oblique",
@@ -143,6 +145,8 @@ def _build_views():
             "target": target_center,
             "fov": 60.0,
             "purpose": "rock-soil readability and macro repetition",
+            "kind": "acceptance",
+            "viewmode": "lit",
         },
         {
             "name": "03-refined-material-medium",
@@ -154,6 +158,8 @@ def _build_views():
             "target": target_center,
             "fov": 55.0,
             "purpose": "component-scale projection and blend quality",
+            "kind": "acceptance",
+            "viewmode": "lit",
         },
         {
             "name": "04-refined-material-close",
@@ -169,6 +175,59 @@ def _build_views():
             ),
             "fov": 50.0,
             "purpose": "surface scale, normal response and transition quality",
+            "kind": "acceptance",
+            "viewmode": "lit",
+        },
+        {
+            "name": "05-cliff-unlit",
+            "location": unreal.Vector(
+                origin.x - 2300.0,
+                origin.y - 1700.0,
+                surface_z + 1350.0,
+            ),
+            "target": unreal.Vector(
+                origin.x + 550.0,
+                origin.y + 450.0,
+                surface_z,
+            ),
+            "fov": 50.0,
+            "purpose": "cliff diagnostic: albedo/projection without lighting response",
+            "kind": "diagnostic",
+            "viewmode": "unlit",
+        },
+        {
+            "name": "06-cliff-lighting-only",
+            "location": unreal.Vector(
+                origin.x - 2300.0,
+                origin.y - 1700.0,
+                surface_z + 1350.0,
+            ),
+            "target": unreal.Vector(
+                origin.x + 550.0,
+                origin.y + 450.0,
+                surface_z,
+            ),
+            "fov": 50.0,
+            "purpose": "cliff diagnostic: lighting and geometry without BaseColor or normal maps",
+            "kind": "diagnostic",
+            "viewmode": "lightingonly",
+        },
+        {
+            "name": "07-cliff-detail-lighting",
+            "location": unreal.Vector(
+                origin.x - 2300.0,
+                origin.y - 1700.0,
+                surface_z + 1350.0,
+            ),
+            "target": unreal.Vector(
+                origin.x + 550.0,
+                origin.y + 450.0,
+                surface_z,
+            ),
+            "fov": 50.0,
+            "purpose": "cliff diagnostic: neutral material with original normal maps",
+            "kind": "diagnostic",
+            "viewmode": "lit_detaillighting",
         },
     ]
 
@@ -214,9 +273,11 @@ def _force_material_textures_resident():
         "RockBaseColorTex",
         "RockNormalTex",
         "RockORMTex",
+        "RockDetailTex",
         "SoilBaseColorTex",
         "SoilNormalTex",
         "SoilORMTex",
+        "SoilDetailTex",
     )
     association = unreal.MaterialParameterAssociation.GLOBAL_PARAMETER
     textures = []
@@ -299,12 +360,22 @@ def _write_receipt(status: str, error: str = ""):
         "map": MAP,
         "material": None if _instance is None else _instance.get_path_name(),
         "fixed_master": os.environ.get("YACS_MF_FIXED_MASTER_PATH"),
-        "rock": "regional_limestone/refined_a",
-        "soil": "mediterranean_soil/refined_a",
+        "rock": "regional_limestone/refined_b",
+        "soil": "mediterranean_soil/refined_b",
         "mask_contract": "4033x4033; B=rock; soil=1-rock",
         "resolution": CAPTURE_RESOLUTION,
-        "captures": _captures,
-        "capture_count": len(_captures),
+        "captures": [
+            item for item in _captures if item.get("kind") == "acceptance"
+        ],
+        "capture_count": len(
+            [item for item in _captures if item.get("kind") == "acceptance"]
+        ),
+        "diagnostics": [
+            item for item in _captures if item.get("kind") == "diagnostic"
+        ],
+        "diagnostic_count": len(
+            [item for item in _captures if item.get("kind") == "diagnostic"]
+        ),
         "whole_landscape_components": len(_components),
         "map_saved": False,
         "assets_saved": False,
@@ -360,9 +431,17 @@ def schedule():
         _camera.get_component_by_class(unreal.CameraComponent).set_editor_property(
             "field_of_view", view["fov"]
         )
-        unreal.AutomationLibrary.set_editor_viewport_view_mode(
-            unreal.ViewModeIndex.VMI_LIT
-        )
+        mode = view.get("viewmode", "lit")
+        view_modes = {
+            "lit": unreal.ViewModeIndex.VMI_LIT,
+            "unlit": unreal.ViewModeIndex.VMI_UNLIT,
+            "lightingonly": unreal.ViewModeIndex.VMI_LIGHTING_ONLY,
+            "lit_detaillighting": unreal.ViewModeIndex.VMI_LIT_DETAIL_LIGHTING,
+        }
+        if mode not in view_modes:
+            raise RuntimeError("Unsupported diagnostic view mode: " + mode)
+        unreal.SystemLibrary.execute_console_command(_world, "viewmode " + mode)
+        unreal.AutomationLibrary.set_editor_viewport_view_mode(view_modes[mode])
         unreal.AutomationLibrary.finish_loading_before_screenshot()
         path = OUTPUT / (view["name"] + ".png")
         if path.exists():
@@ -407,7 +486,8 @@ def tick(_delta):
                 "path": str(path),
                 "size_bytes": path.stat().st_size,
                 "resolution": CAPTURE_RESOLUTION,
-                "viewmode": "VMI_LIT",
+                "viewmode": view.get("viewmode", "lit"),
+                "kind": view.get("kind", "acceptance"),
                 "fov": view["fov"],
             }
         )

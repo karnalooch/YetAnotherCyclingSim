@@ -157,8 +157,8 @@ jobs:
           $plan | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $root 'carry-forward-plan.json') -Encoding utf8
           if ($plan.rebuild_required -ne $false -or $plan.reason -ne 'unchanged') { throw 'Current Material Forge source fingerprint drifted from render proof.' }
 
-          $variant = Join-Path $proof 'run-a\regional_limestone\refined_a'
-          $soilVariant = Join-Path $proof 'run-a\mediterranean_soil\refined_a'
+          $variant = Join-Path $proof 'run-a\regional_limestone\refined_b'
+          $soilVariant = Join-Path $proof 'run-a\mediterranean_soil\refined_b'
           python scripts/assets/material_forge.py validate $variant --resolution 2048 *> (Join-Path $root 'variant-revalidation.log')
           if ($LASTEXITCODE -ne 0) { throw 'Refined limestone UE canary variant failed current CPU validation.' }
           python scripts/assets/material_forge.py validate $soilVariant --resolution 2048 *> (Join-Path $root 'soil-variant-revalidation.log')
@@ -511,6 +511,7 @@ jobs:
             $receipt.status -ne 'MF_LANDSCAPE_VISUAL_PROOF_PASS' -or
             $receipt.exact_sha -ne $env:GITHUB_SHA -or
             [int]$receipt.capture_count -ne 4 -or
+            [int]$receipt.diagnostic_count -ne 3 -or
             [int]$receipt.whole_landscape_components -ne 1024 -or
             $receipt.rollback_complete -ne $true -or
             $receipt.map_saved -ne $false -or
@@ -528,6 +529,24 @@ jobs:
               -not (Test-Path -LiteralPath $capture.path -PathType Leaf)
             ) {
               throw 'Material Forge Landscape visual capture is incomplete.'
+            }
+          }
+          $diagnosticModes = @($receipt.diagnostics | ForEach-Object { $_.viewmode })
+          if (
+            @($diagnosticModes).Count -ne 3 -or
+            $diagnosticModes -notcontains 'unlit' -or
+            $diagnosticModes -notcontains 'lightingonly' -or
+            $diagnosticModes -notcontains 'lit_detaillighting'
+          ) {
+            throw 'Material Forge cliff diagnostic modes are incomplete.'
+          }
+          foreach ($diagnostic in $receipt.diagnostics) {
+            if (
+              @($diagnostic.resolution)[0] -ne 3840 -or
+              @($diagnostic.resolution)[1] -ne 2160 -or
+              -not (Test-Path -LiteralPath $diagnostic.path -PathType Leaf)
+            ) {
+              throw 'Material Forge cliff diagnostic capture is incomplete.'
             }
           }
           $receipt | ConvertTo-Json -Depth 12 | Write-Host

@@ -31,7 +31,7 @@ EXPORT_PREFIX = "YACS_Material"
 EXPECTED_NORMAL_CONVENTION = "DirectX"
 SEMANTIC_OWNER = "PCG/PCGEx"
 GENERATOR_ID = "yacs-material-forge"
-GENERATOR_VERSION = 3
+GENERATOR_VERSION = 4
 
 ASPHALT_FUNCTION = r"""
 float yacs_rect_patch(vec2 uv, float cells, float salt) {
@@ -244,6 +244,14 @@ def load_catalog(path: Path = DEFAULT_CATALOG) -> dict[str, Any]:
             ):
                 _profile_scale(profile, key)
             _profile_color_gain(profile)
+            landscape = _landscape_profile(variant)
+            if landscape:
+                _profile_number(
+                    landscape, "macro_tile_metres", 16.0, 8.0, 30.0
+                )
+                _profile_number(
+                    landscape, "macro_strength", 0.0, 0.0, 0.30
+                )
     return data
 
 
@@ -292,6 +300,32 @@ def _refinement_profile(variant: dict[str, Any] | None) -> dict[str, Any]:
     if not isinstance(raw, dict):
         raise ValueError("Material Forge refinement profile must be an object")
     return raw
+
+
+def _landscape_profile(variant: dict[str, Any] | None) -> dict[str, Any]:
+    if not variant:
+        return {}
+    raw = variant.get("landscape", {})
+    if raw is None:
+        return {}
+    if not isinstance(raw, dict):
+        raise ValueError("Material Forge landscape profile must be an object")
+    return raw
+
+
+def _profile_number(
+    profile: dict[str, Any],
+    key: str,
+    default: float,
+    minimum: float,
+    maximum: float,
+) -> float:
+    value = float(profile.get(key, default))
+    if not minimum <= value <= maximum:
+        raise ValueError(
+            f"Material Forge profile value out of range: {key}={value}"
+        )
+    return value
 
 
 def _profile_scale(
@@ -528,6 +562,7 @@ def author_variant(
             "roughness": float(variant["roughness"]),
             "normal_strength": float(variant["normal_strength"]),
             "refinement": _refinement_profile(variant),
+            "landscape": _landscape_profile(variant),
         },
         upstreams=upstreams,
         expected_maps=[

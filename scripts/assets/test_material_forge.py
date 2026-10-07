@@ -114,7 +114,7 @@ class MaterialForgeContractTests(unittest.TestCase):
         self.assertNotIn("clamp(patch,0.0,1.0)", forge.ASPHALT_FUNCTION)
 
     def test_visual_v3_uses_family_specific_surface_structures(self):
-        self.assertEqual(forge.GENERATOR_VERSION, 3)
+        self.assertEqual(forge.GENERATOR_VERSION, 4)
         self.assertIn("yacs_rect_patch", forge.ASPHALT_FUNCTION)
         self.assertIn("yacs_contour_crack", forge.ASPHALT_FUNCTION)
         self.assertNotIn("coarse_cells = yacs_cells(q,23.0", forge.ASPHALT_FUNCTION)
@@ -139,6 +139,8 @@ class MaterialForgeContractTests(unittest.TestCase):
         limestone = {v["id"]: v for v in by_id["regional_limestone"]["variants"]}
         self.assertIn("refined_a", limestone)
         self.assertIn("refined_a", soil)
+        self.assertIn("refined_b", limestone)
+        self.assertIn("refined_b", soil)
         self.assertLess(limestone["refined_a"]["brightness"], limestone["base"]["brightness"])
         self.assertGreater(limestone["refined_a"]["surface_a"], limestone["base"]["surface_a"])
         self.assertGreater(soil["refined_a"]["surface_a"], soil["fine"]["surface_a"])
@@ -152,6 +154,27 @@ class MaterialForgeContractTests(unittest.TestCase):
         self.assertNotEqual(
             forge._color_code("mediterranean_soil", soil["fine"]),
             forge._color_code("mediterranean_soil", soil["refined_a"]),
+        )
+        self.assertLess(
+            soil["refined_b"]["brightness"],
+            soil["refined_a"]["brightness"],
+        )
+        self.assertGreater(
+            limestone["refined_b"]["refinement"]["color_gain"][2],
+            limestone["refined_b"]["refinement"]["color_gain"][0],
+        )
+        self.assertGreaterEqual(
+            limestone["refined_b"]["landscape"]["macro_tile_metres"], 8.0
+        )
+        self.assertLessEqual(
+            limestone["refined_b"]["landscape"]["macro_tile_metres"], 30.0
+        )
+        self.assertGreater(
+            soil["refined_b"]["landscape"]["macro_strength"], 0.0
+        )
+        self.assertEqual(
+            forge._landscape_profile(limestone["refined_b"]),
+            limestone["refined_b"]["landscape"],
         )
 
     def test_catalog_has_three_families_and_three_variants_each(self):

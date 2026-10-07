@@ -34,13 +34,13 @@ PROOF_ROOT = Path(
 ROCK = Path(
     os.environ.get(
         "YACS_MF_ROCK_VARIANT",
-        str(PROOF_ROOT / "regional_limestone" / "refined_a"),
+        str(PROOF_ROOT / "regional_limestone" / "refined_b"),
     )
 )
 SOIL = Path(
     os.environ.get(
         "YACS_MF_SOIL_VARIANT",
-        str(PROOF_ROOT / "mediterranean_soil" / "refined_a"),
+        str(PROOF_ROOT / "mediterranean_soil" / "refined_b"),
     )
 )
 MASK_ROOT = ROOT / "worldgen/materials/visual_fill"
@@ -348,7 +348,7 @@ def _create_fixed_master_instance(package: str, weights, checkpoints):
         ("soil", SOIL, soil_validation, soil_provenance),
     ):
         textures = {}
-        for channel in ("BaseColor", "Normal_DX", "ORM"):
+        for channel in ("BaseColor", "Normal_DX", "ORM", "DetailMasks"):
             source = importer["_verified_map"](directory, validation, channel)
             texture = importer["_import_texture"](
                 package,
@@ -359,9 +359,22 @@ def _create_fixed_master_instance(package: str, weights, checkpoints):
             texture.set_editor_property("filter", unreal.TextureFilter.TF_BILINEAR)
             texture.set_editor_property("never_stream", False)
             textures[channel] = texture
+        landscape_profile = (
+            provenance.get("parameters", {}).get("landscape", {}) or {}
+        )
+        macro_tile_metres = float(
+            landscape_profile.get("macro_tile_metres", 16.0)
+        )
+        macro_strength = float(landscape_profile.get("macro_strength", 0.0))
+        if not 8.0 <= macro_tile_metres <= 30.0:
+            raise RuntimeError("Material Forge macro tile must stay within 8..30 m")
+        if not 0.0 <= macro_strength <= 0.30:
+            raise RuntimeError("Material Forge macro strength must stay within 0..0.30")
         surfaces[key] = {
             "textures": textures,
             "tile_cm": float(provenance["tile_metres"]) * 100.0,
+            "macro_tile_cm": macro_tile_metres * 100.0,
+            "macro_strength": macro_strength,
         }
         checkpoints.append(
             {
@@ -403,13 +416,19 @@ def _create_fixed_master_instance(package: str, weights, checkpoints):
         "RockBaseColorTex": surfaces["rock"]["textures"]["BaseColor"],
         "RockNormalTex": surfaces["rock"]["textures"]["Normal_DX"],
         "RockORMTex": surfaces["rock"]["textures"]["ORM"],
+        "RockDetailTex": surfaces["rock"]["textures"]["DetailMasks"],
         "SoilBaseColorTex": surfaces["soil"]["textures"]["BaseColor"],
         "SoilNormalTex": surfaces["soil"]["textures"]["Normal_DX"],
         "SoilORMTex": surfaces["soil"]["textures"]["ORM"],
+        "SoilDetailTex": surfaces["soil"]["textures"]["DetailMasks"],
     }
     scalar_values = {
         "RockTileSizeCm": surfaces["rock"]["tile_cm"],
         "SoilTileSizeCm": surfaces["soil"]["tile_cm"],
+        "RockMacroTileSizeCm": surfaces["rock"]["macro_tile_cm"],
+        "SoilMacroTileSizeCm": surfaces["soil"]["macro_tile_cm"],
+        "RockMacroStrength": surfaces["rock"]["macro_strength"],
+        "SoilMacroStrength": surfaces["soil"]["macro_strength"],
     }
     visible_textures = {str(name) for name in LIB.get_texture_parameter_names(instance)}
     visible_scalars = {str(name) for name in LIB.get_scalar_parameter_names(instance)}
@@ -877,7 +896,7 @@ def prepare():
         memory=memory_after_compile_drain,
         sampling="bilinear + five-tap appearance smoothing",
         projection="WorldAlignedTexture + WorldAlignedNormal",
-        scope="REFINED_A_ROCK_SOIL_LANDSCAPE_BLEND",
+        scope="REFINEMENT_B_ROCK_SOIL_LANDSCAPE_BLEND",
     )
 
 
