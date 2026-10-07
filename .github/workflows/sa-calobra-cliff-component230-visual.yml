@@ -159,16 +159,31 @@ jobs:
             git config --local lfs.storage $env:YACS_LFS_CACHE_ROOT
             if ($LASTEXITCODE -ne 0) { throw 'Persistent LFS storage configuration failed.' }
             $map = 'Content/Worlds/SaCalobra/L_SaCalobraAccepted_20261004.umap'
-            git lfs pull --include=$map --exclude=''
-            if ($LASTEXITCODE -ne 0) { throw 'Accepted map LFS pull failed.' }
-            git lfs checkout $map
-            if ($LASTEXITCODE -ne 0) { throw 'Accepted map LFS checkout failed.' }
+            $library = 'Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87'
+            $include = "$map,$library/**"
+            git lfs pull --include=$include --exclude=''
+            if ($LASTEXITCODE -ne 0) { throw 'Accepted map / limestone library LFS pull failed.' }
+            git lfs checkout $map $library
+            if ($LASTEXITCODE -ne 0) { throw 'Accepted map / limestone library LFS checkout failed.' }
             if (-not (Test-Path -LiteralPath $map -PathType Leaf)) {
               throw 'Accepted map is missing after LFS checkout.'
             }
             $bytes = (Get-Item -LiteralPath $map).Length
             if ($bytes -lt 100000000) {
               throw "Accepted map still looks like an LFS pointer (bytes=$bytes)."
+            }
+            foreach ($asset in @(
+              "$library/LimestonePalette/1b3d9c45b1e24d6085bfcc8859390c19/M_SC_Limestone_ExposedRock.uasset",
+              "$library/LimestonePalette/1b3d9c45b1e24d6085bfcc8859390c19/M_SC_Limestone_Scree.uasset",
+              "$library/Sources/T_Source_ExposedRock.uasset",
+              "$library/Sources/T_Source_Scree.uasset"
+            )) {
+              if (-not (Test-Path -LiteralPath $asset -PathType Leaf)) {
+                throw "Required limestone proof asset missing: $asset"
+              }
+              if ((Get-Item -LiteralPath $asset).Length -lt 1024) {
+                throw "Required limestone proof asset is still an LFS pointer: $asset"
+              }
             }
           }
           finally {
