@@ -2,18 +2,26 @@
 
 #include "PCG/YacsSaCalobraCliffCellsSettings.h"
 
+#include "Components/BoxComponent.h"
 #include "Dom/JsonObject.h"
+#include "Engine/World.h"
+#include "FileHelpers.h"
+#include "GameFramework/Actor.h"
+#include "HAL/FileManager.h"
 #include "HAL/PlatformProcess.h"
-#include "Misc/CommandLine.h"
+#include "HAL/PlatformTime.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Parse.h"
 #include "Misc/Paths.h"
 #include "PCGComponent.h"
+#include "PCGData.h"
 #include "PCGGraph.h"
-#include "PCGGraphInputOutputSettings.h"
-#include "PCGManagedResource.h"
+#include "PCGNode.h"
+#include "PCGPin.h"
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
+#include "UObject/Package.h"
+#include "WorldPartition/WorldPartitionHelpers.h"
 
 #if YACS_WITH_PCGEX
 #include "Data/PCGDynamicMeshData.h"
@@ -22,31 +30,36 @@
 #include "Elements/PCGExSmooth.h"
 #include "Elements/PCGExSubdivide.h"
 #include "UDynamicMesh.h"
+#include "DynamicMesh/DynamicMesh3.h"
 #endif
 
-#include "DynamicMesh/DynamicMesh3.h"
-#include "Engine/World.h"
-#include "GameFramework/Actor.h"
-#include "WorldPartition/WorldPartitionHelpers.h"
+DEFINE_LOG_CATEGORY_STATIC(LogYacsSaCalobraPcgExCliff, Log, All);
 
 namespace
 {
-    constexpr TCHAR SourcePin[] = TEXT("Paths");
-    constexpr TCHAR MeshPin[] = TEXT("Mesh");
+    constexpr TCHAR PathPinName[] = TEXT("Paths");
     constexpr TCHAR PcgExCommit[] =
         TEXT("39a8f1bdc65b2c4613a1e87b71d93b4576db0a66");
 
-    bool AddEdge(
+    bool Connect(
         UPCGGraph* Graph,
         UPCGNode* From,
         const FName FromPin,
         UPCGNode* To,
-        const FName ToPin)
+        const FName ToPin,
+        const TCHAR* Description)
     {
-        return Graph
-            && From
-            && To
-            && Graph->AddEdge(From, FromPin, To, ToPin);
+        if (!Graph || !From || !To)
+        {
+            UE_LOG(
+                LogYacsSaCalobraPcgExCliff,
+                Error,
+                TEXT("Phase 2C graph: null node while connecting %s."),
+                Description);
+            return false;
+        }
+        Graph->AddLabeledEdge(From, FromPin, To, ToPin);
+        return true;
     }
 
     int32 ReadExpectedSkinCellCount(const FString& PlanPath)
@@ -73,121 +86,153 @@ namespace
 #if YACS_WITH_PCGEX
     bool ExecuteGraph(
         UPCGGraph* Graph,
-        TArray<FPCGTaggedData>& OutData,
+        TArray<TSharedPtr<FJsonValue>>& OutMeshes,
+        int32& OutVertexCount,
+        int32& OutTriangleCount,
         FString& OutError)
     {
-        UWorld* World = UWorld::CreateWorld(EWorldType::Editor, false, FName(TEXT("YacsSaCalobraPhase2C")));
-        if (!World)
+        if (!Graph)
         {
-            OutError = TEXT("Could not create transient execution world.");
+            OutError = TEXT("Transient PCGEx graph is null.");
             return false;
         }
 
-        bool bSuccess = false;
+        UWorld* World = UEditorLoadingAndSavingUtils::NewBlankMap(false);
+        if (!World)
         {
-            FWorldContext& WorldContext =
-                GEngine->CreateNewWorldContext(EWorldType::Editor);
-            WorldContext.SetCurrentWorld(World);
-            World->InitializeNewWorld(
-                UWorld::InitializationValues()
-                    .AllowAudioPlayback(false)
-                    .CreatePhysicsScene(false)
-                    .RequiresHitProxies(false)
-                    .CreateNavigation(false)
-                    .CreateAISystem(false)
-                    .ShouldSimulatePhysics(false)
-                    .EnableTraceCollision(false));
+            OutError = TEXT("Could not create transient Phase 2C editor world.");
+            return false;
+        }
 
-            AActor* Owner = World->SpawnActor<AActor>();
-            UPCGComponent* Component = NewObject<UPCGComponent>(Owner, TEXT("YacsPhase2CPCG"));
-            Component->RegisterComponent();
-            Component->SetGraphLocal(Graph);
-            Component->GenerateLocal(true);
+        FActorSpawnParameters SpawnParameters;
+        SpawnParameters.Name = TEXT("YacsSaCalobraPhase2CHost");
+        AActor* Host = World->SpawnActor<AActor>(
+            AActor::StaticClass(),
+            FVector::ZeroVector,
+            FRotator::ZeroRotator,
+            SpawnParameters);
+        if (!Host)
+        {
+            OutError = TEXT("Could not spawn Phase 2C scheduler host.");
+            return false;
+        }
 
-            constexpr double TimeoutSeconds = 120.0;
-            const double Start = FPlatformTime::Seconds();
-            while (Component->IsGenerating())
+        UBoxComponent* SchedulerBounds = NewObject<UBoxComponent>(
+            Host,
+            TEXT("YacsSaCalobraPhase2CSchedulerBounds"));
+        if (!SchedulerBounds)
+        {
+            OutError = TEXT("Could not allocate Phase 2C scheduler bounds.");
+            return false;
+        }
+        SchedulerBounds->InitBoxExtent(FVector(50.0));
+        SchedulerBounds->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        SchedulerBounds->SetHiddenInGame(true);
+        Host->SetRootComponent(SchedulerBounds);
+        Host->AddInstanceComponent(SchedulerBounds);
+        SchedulerBounds->RegisterComponent();
+
+        UPCGComponent* Component =
+            NewObject<UPCGComponent>(Host, TEXT("YacsSaCalobraPhase2CPCG"));
+        if (!Component)
+        {
+            OutError = TEXT("Could not allocate Phase 2C PCG component.");
+            return false;
+        }
+        Host->AddInstanceComponent(Component);
+        Component->RegisterComponent();
+        Component->SetGraphLocal(Graph);
+
+        Component->GenerateLocal(true);
+        FWorldPartitionHelpers::FakeEngineTick(World);
+
+        constexpr double TimeoutSeconds = 120.0;
+        const double StartedAt = FPlatformTime::Seconds();
+        while (Component->IsGenerating())
+        {
+            if ((FPlatformTime::Seconds() - StartedAt) > TimeoutSeconds)
             {
-                FWorldPartitionHelpers::FakeEngineTick(World);
-                FPlatformProcess::Sleep(0.01f);
-                if (FPlatformTime::Seconds() - Start > TimeoutSeconds)
-                {
-                    OutError = TEXT("PCGEx Phase 2C graph timed out.");
-                    break;
-                }
+                OutError = TEXT("PCGEx Phase 2C graph timed out.");
+                return false;
             }
-
-            if (!Component->IsGenerating() && OutError.IsEmpty())
-            {
-                OutData = Component->GetGeneratedGraphOutput().TaggedData;
-                bSuccess = !OutData.IsEmpty();
-                if (!bSuccess)
-                {
-                    OutError = TEXT("PCGEx Phase 2C graph returned no output.");
-                }
-            }
-
-            Component->CleanupLocalImmediate(true);
-            World->DestroyWorld(false);
-            GEngine->DestroyWorldContext(World);
+            FWorldPartitionHelpers::FakeEngineTick(World);
+            FPlatformProcess::Sleep(0.01f);
         }
-        return bSuccess;
-    }
+        FWorldPartitionHelpers::FakeEngineTick(World);
 
-    TSharedPtr<FJsonObject> MeshToJson(
-        const UPCGDynamicMeshData* MeshData,
-        int32& OutVertices,
-        int32& OutTriangles)
-    {
-        if (!MeshData || !MeshData->GetDynamicMesh())
+        const FPCGDataCollection& Generated = Component->GetGeneratedGraphOutput();
+        for (const FPCGTaggedData& Tagged : Generated.TaggedData)
         {
-            return nullptr;
-        }
-
-        const UE::Geometry::FDynamicMesh3& Mesh =
-            MeshData->GetDynamicMesh()->GetMeshRef();
-
-        TMap<int32, int32> Remap;
-        TArray<TSharedPtr<FJsonValue>> Vertices;
-        Vertices.Reserve(Mesh.VertexCount());
-        int32 DenseIndex = 0;
-        for (const int32 VertexId : Mesh.VertexIndicesItr())
-        {
-            Remap.Add(VertexId, DenseIndex++);
-            const FVector Position = Mesh.GetVertex(VertexId);
-            TArray<TSharedPtr<FJsonValue>> Values;
-            Values.Add(MakeShared<FJsonValueNumber>(Position.X));
-            Values.Add(MakeShared<FJsonValueNumber>(Position.Y));
-            Values.Add(MakeShared<FJsonValueNumber>(Position.Z));
-            Vertices.Add(MakeShared<FJsonValueArray>(MoveTemp(Values)));
-        }
-
-        TArray<TSharedPtr<FJsonValue>> Triangles;
-        Triangles.Reserve(Mesh.TriangleCount());
-        for (const int32 TriangleId : Mesh.TriangleIndicesItr())
-        {
-            const UE::Geometry::FIndex3i Triangle = Mesh.GetTriangle(TriangleId);
-            const int32* A = Remap.Find(Triangle.A);
-            const int32* B = Remap.Find(Triangle.B);
-            const int32* C = Remap.Find(Triangle.C);
-            if (!A || !B || !C)
+            const UPCGDynamicMeshData* MeshData =
+                Cast<const UPCGDynamicMeshData>(Tagged.Data);
+            if (!MeshData || !MeshData->GetDynamicMesh())
             {
                 continue;
             }
-            TArray<TSharedPtr<FJsonValue>> Values;
-            Values.Add(MakeShared<FJsonValueNumber>(*A));
-            Values.Add(MakeShared<FJsonValueNumber>(*B));
-            Values.Add(MakeShared<FJsonValueNumber>(*C));
-            Triangles.Add(MakeShared<FJsonValueArray>(MoveTemp(Values)));
+
+            const UE::Geometry::FDynamicMesh3& Mesh =
+                MeshData->GetDynamicMesh()->GetMeshRef();
+            if (Mesh.VertexCount() <= 0 || Mesh.TriangleCount() <= 0)
+            {
+                continue;
+            }
+
+            TMap<int32, int32> Remap;
+            TArray<TSharedPtr<FJsonValue>> Vertices;
+            Vertices.Reserve(Mesh.VertexCount());
+            int32 DenseIndex = 0;
+            for (const int32 VertexId : Mesh.VertexIndicesItr())
+            {
+                Remap.Add(VertexId, DenseIndex++);
+                const FVector Position = Mesh.GetVertex(VertexId);
+                TArray<TSharedPtr<FJsonValue>> Values;
+                Values.Add(MakeShared<FJsonValueNumber>(Position.X));
+                Values.Add(MakeShared<FJsonValueNumber>(Position.Y));
+                Values.Add(MakeShared<FJsonValueNumber>(Position.Z));
+                Vertices.Add(MakeShared<FJsonValueArray>(MoveTemp(Values)));
+            }
+
+            TArray<TSharedPtr<FJsonValue>> Triangles;
+            Triangles.Reserve(Mesh.TriangleCount());
+            for (const int32 TriangleId : Mesh.TriangleIndicesItr())
+            {
+                const UE::Geometry::FIndex3i Triangle = Mesh.GetTriangle(TriangleId);
+                const int32* A = Remap.Find(Triangle.A);
+                const int32* B = Remap.Find(Triangle.B);
+                const int32* C = Remap.Find(Triangle.C);
+                if (!A || !B || !C)
+                {
+                    continue;
+                }
+                TArray<TSharedPtr<FJsonValue>> Values;
+                Values.Add(MakeShared<FJsonValueNumber>(*A));
+                Values.Add(MakeShared<FJsonValueNumber>(*B));
+                Values.Add(MakeShared<FJsonValueNumber>(*C));
+                Triangles.Add(MakeShared<FJsonValueArray>(MoveTemp(Values)));
+            }
+
+            if (Vertices.IsEmpty() || Triangles.IsEmpty())
+            {
+                continue;
+            }
+
+            OutVertexCount += Vertices.Num();
+            OutTriangleCount += Triangles.Num();
+            TSharedRef<FJsonObject> MeshObject = MakeShared<FJsonObject>();
+            MeshObject->SetArrayField(TEXT("vertices_cm"), MoveTemp(Vertices));
+            MeshObject->SetArrayField(TEXT("triangles"), MoveTemp(Triangles));
+
+            TArray<TSharedPtr<FJsonValue>> TagValues;
+            for (const FString& Tag : Tagged.Tags)
+            {
+                TagValues.Add(MakeShared<FJsonValueString>(Tag));
+            }
+            MeshObject->SetArrayField(TEXT("tags"), MoveTemp(TagValues));
+            OutMeshes.Add(MakeShared<FJsonValueObject>(MeshObject));
         }
 
-        OutVertices += Vertices.Num();
-        OutTriangles += Triangles.Num();
-
-        TSharedPtr<FJsonObject> Object = MakeShared<FJsonObject>();
-        Object->SetArrayField(TEXT("vertices_cm"), MoveTemp(Vertices));
-        Object->SetArrayField(TEXT("triangles"), MoveTemp(Triangles));
-        return Object;
+        Component->CleanupLocalImmediate(true);
+        return !OutMeshes.IsEmpty();
     }
 #endif
 }
@@ -204,9 +249,10 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
 {
 #if !YACS_WITH_PCGEX
     UE_LOG(
-        LogTemp,
+        LogYacsSaCalobraPcgExCliff,
         Error,
-        TEXT("Phase 2C requires the pinned PCGEx checkout. Run Bootstrap-YacsPcgEx.ps1 first."));
+        TEXT("Phase 2C requires the pinned PCGEx checkout. "
+             "Run Bootstrap-YacsPcgEx.ps1 -Mode Install first."));
     return 10;
 #else
     FString PlanPath;
@@ -215,18 +261,25 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
         || !FParse::Value(*Params, TEXT("ExecutionOutput="), OutputPath))
     {
         UE_LOG(
-            LogTemp,
+            LogYacsSaCalobraPcgExCliff,
             Error,
-            TEXT("Usage: -run=YacsSaCalobraPcgExCliff -Plan=<plan.json> -ExecutionOutput=<mesh.json>"));
+            TEXT("Usage: -run=YacsSaCalobraPcgExCliff "
+                 "-Plan=<plan.json> -ExecutionOutput=<mesh.json>"));
         return 11;
     }
+    if (FPaths::IsRelative(PlanPath))
+    {
+        PlanPath = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir(), PlanPath);
+    }
+    if (FPaths::IsRelative(OutputPath))
+    {
+        OutputPath = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir(), OutputPath);
+    }
 
-    PlanPath = FPaths::ConvertRelativePathToFull(PlanPath);
-    OutputPath = FPaths::ConvertRelativePathToFull(OutputPath);
     const int32 ExpectedSkinCells = ReadExpectedSkinCellCount(PlanPath);
     if (ExpectedSkinCells <= 0)
     {
-        UE_LOG(LogTemp, Error, TEXT("Invalid Phase 2C plan: %s"), *PlanPath);
+        UE_LOG(LogYacsSaCalobraPcgExCliff, Error, TEXT("Invalid Phase 2C plan: %s"), *PlanPath);
         return 12;
     }
 
@@ -239,19 +292,22 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
         return 13;
     }
 
-    UPCGNode* SourceNode = Graph->AddNodeOfType<UYacsSaCalobraCliffCellsSettings>();
+    UPCGSettings* SourceBase = nullptr;
+    UPCGNode* SourceNode = Graph->AddNodeOfType(
+        UYacsSaCalobraCliffCellsSettings::StaticClass(),
+        SourceBase);
     UYacsSaCalobraCliffCellsSettings* Source =
-        SourceNode ? Cast<UYacsSaCalobraCliffCellsSettings>(SourceNode->GetSettings()) : nullptr;
-    if (!Source)
+        Cast<UYacsSaCalobraCliffCellsSettings>(SourceBase);
+    if (!SourceNode || !Source)
     {
         return 14;
     }
     Source->PlanJsonPath = PlanPath;
 
-    UPCGNode* UnionNode = Graph->AddNodeOfType<UPCGExClipper2BooleanSettings>();
-    UPCGExClipper2BooleanSettings* Union =
-        UnionNode ? Cast<UPCGExClipper2BooleanSettings>(UnionNode->GetSettings()) : nullptr;
-    if (!Union)
+    UPCGExClipper2BooleanSettings* Union = nullptr;
+    UPCGNode* UnionNode =
+        Graph->AddNodeOfType<UPCGExClipper2BooleanSettings>(Union);
+    if (!UnionNode || !Union)
     {
         return 15;
     }
@@ -264,24 +320,24 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     Union->bSimplifyPaths = true;
     Union->bPreserveCollinear = false;
 
-    UPCGNode* SmoothNode = Graph->AddNodeOfType<UPCGExSmoothSettings>();
-    UPCGExSmoothSettings* Smooth =
-        SmoothNode ? Cast<UPCGExSmoothSettings>(SmoothNode->GetSettings()) : nullptr;
-    if (!Smooth)
+    UPCGExSmoothSettings* Smooth = nullptr;
+    UPCGNode* SmoothNode = Graph->AddNodeOfType<UPCGExSmoothSettings>(Smooth);
+    if (!SmoothNode || !Smooth)
     {
         return 16;
     }
     Smooth->bPreserveStart = false;
     Smooth->bPreserveEnd = false;
     Smooth->BlendingInterface = EPCGExBlendingInterface::Monolithic;
-    Smooth->BlendingSettings = FPCGExBlendingDetails(EPCGExBlendingType::Average);
+    Smooth->BlendingSettings =
+        FPCGExBlendingDetails(EPCGExBlendingType::Average);
     Smooth->Influence.Constant = 0.35;
     Smooth->SmoothingAmount.Constant = 2.0;
 
-    UPCGNode* SubdivideNode = Graph->AddNodeOfType<UPCGExSubdivideSettings>();
-    UPCGExSubdivideSettings* Subdivide =
-        SubdivideNode ? Cast<UPCGExSubdivideSettings>(SubdivideNode->GetSettings()) : nullptr;
-    if (!Subdivide)
+    UPCGExSubdivideSettings* Subdivide = nullptr;
+    UPCGNode* SubdivideNode =
+        Graph->AddNodeOfType<UPCGExSubdivideSettings>(Subdivide);
+    if (!SubdivideNode || !Subdivide)
     {
         return 17;
     }
@@ -290,12 +346,10 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     Subdivide->Distance = 100.0;
     Subdivide->bRedistributeEvenly = true;
 
-    UPCGNode* TriangulateNode = Graph->AddNodeOfType<UPCGExClipper2TriangulateSettings>();
-    UPCGExClipper2TriangulateSettings* Triangulate =
-        TriangulateNode
-            ? Cast<UPCGExClipper2TriangulateSettings>(TriangulateNode->GetSettings())
-            : nullptr;
-    if (!Triangulate)
+    UPCGExClipper2TriangulateSettings* Triangulate = nullptr;
+    UPCGNode* TriangulateNode =
+        Graph->AddNodeOfType<UPCGExClipper2TriangulateSettings>(Triangulate);
+    if (!TriangulateNode || !Triangulate)
     {
         return 18;
     }
@@ -310,60 +364,65 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     Triangulate->Topology.bWeldEdges = true;
     Triangulate->Topology.bComputeNormals = true;
 
-    if (!AddEdge(Graph, SourceNode, FName(SourcePin), UnionNode, FName(SourcePin))
-        || !AddEdge(Graph, UnionNode, FName(SourcePin), SmoothNode, FName(SourcePin))
-        || !AddEdge(Graph, SmoothNode, FName(SourcePin), SubdivideNode, FName(SourcePin))
-        || !AddEdge(Graph, SubdivideNode, FName(SourcePin), TriangulateNode, FName(SourcePin))
-        || !AddEdge(Graph, TriangulateNode, FName(MeshPin), Graph->GetOutputNode(), FName(MeshPin)))
+    const FName PathsPin(PathPinName);
+    if (!Connect(
+            Graph, SourceNode, PathsPin, UnionNode, PathsPin,
+            TEXT("YACS cells -> Clipper2 Union"))
+        || !Connect(
+            Graph, UnionNode, PathsPin, SmoothNode, PathsPin,
+            TEXT("Clipper2 Union -> Smooth"))
+        || !Connect(
+            Graph, SmoothNode, PathsPin, SubdivideNode, PathsPin,
+            TEXT("Smooth -> Subdivide"))
+        || !Connect(
+            Graph, SubdivideNode, PathsPin, TriangulateNode, PathsPin,
+            TEXT("Subdivide -> Clipper2 Triangulate")))
     {
-        UE_LOG(LogTemp, Error, TEXT("Could not wire the transient Phase 2C PCGEx graph."));
         return 19;
     }
 
-    TArray<FPCGTaggedData> Generated;
-    FString ExecutionError;
-    if (!ExecuteGraph(Graph, Generated, ExecutionError))
+    UPCGNode* OutputNode = Graph->GetOutputNode();
+    if (!OutputNode || OutputNode->GetInputPins().IsEmpty())
     {
-        UE_LOG(LogTemp, Error, TEXT("Phase 2C PCGEx execution failed: %s"), *ExecutionError);
         return 20;
     }
+    const FName GraphOutputPin = OutputNode->GetInputPins()[0]->Properties.Label;
+    Graph->AddLabeledEdge(
+        TriangulateNode,
+        FName(TEXT("Mesh")),
+        OutputNode,
+        GraphOutputPin);
 
     TArray<TSharedPtr<FJsonValue>> Meshes;
     int32 VertexCount = 0;
     int32 TriangleCount = 0;
-    for (const FPCGTaggedData& Tagged : Generated)
+    FString ExecutionError;
+    if (!ExecuteGraph(
+            Graph,
+            Meshes,
+            VertexCount,
+            TriangleCount,
+            ExecutionError))
     {
-        if (Tagged.Pin != FName(MeshPin))
-        {
-            continue;
-        }
-        const UPCGDynamicMeshData* MeshData = Cast<UPCGDynamicMeshData>(Tagged.Data);
-        if (!MeshData)
-        {
-            continue;
-        }
-        TSharedPtr<FJsonObject> MeshJson =
-            MeshToJson(MeshData, VertexCount, TriangleCount);
-        if (MeshJson.IsValid())
-        {
-            Meshes.Add(MakeShared<FJsonValueObject>(MeshJson));
-        }
-    }
-
-    if (Meshes.IsEmpty() || VertexCount <= 0 || TriangleCount <= 0)
-    {
-        UE_LOG(LogTemp, Error, TEXT("Phase 2C produced no triangulated DynamicMesh."));
+        UE_LOG(
+            LogYacsSaCalobraPcgExCliff,
+            Error,
+            TEXT("Phase 2C PCGEx execution failed: %s"),
+            *ExecutionError);
         return 21;
     }
 
-    TSharedPtr<FJsonObject> Root = MakeShared<FJsonObject>();
+    TSharedRef<FJsonObject> Root = MakeShared<FJsonObject>();
     Root->SetNumberField(TEXT("schema_version"), 1);
-    Root->SetStringField(TEXT("status"), TEXT("YACS_SA_CALOBRA_PCGEX_CLIFF_MESH_PASS"));
+    Root->SetStringField(
+        TEXT("status"),
+        TEXT("YACS_SA_CALOBRA_PCGEX_CLIFF_MESH_PASS"));
     Root->SetStringField(TEXT("generator"), TEXT("PCGEx"));
     Root->SetStringField(TEXT("pcgex_commit"), PcgExCommit);
     Root->SetStringField(
         TEXT("pipeline"),
-        TEXT("YACS cliff cells -> Clipper2 Union -> Path Smooth -> Path Subdivide -> Clipper2 Triangulate"));
+        TEXT("YACS cliff cells -> Clipper2 Union -> Path Smooth -> "
+             "Path Subdivide -> Clipper2 Triangulate"));
     Root->SetBoolField(TEXT("canonical_landscape_mutation"), false);
     Root->SetBoolField(TEXT("assets_saved"), false);
     Root->SetBoolField(TEXT("graph_saved"), false);
@@ -374,26 +433,33 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     Root->SetArrayField(TEXT("meshes"), MoveTemp(Meshes));
 
     FString JsonText;
-    const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&JsonText);
-    if (!FJsonSerializer::Serialize(Root.ToSharedRef(), Writer))
+    const TSharedRef<TJsonWriter<>> Writer =
+        TJsonWriterFactory<>::Create(&JsonText);
+    if (!FJsonSerializer::Serialize(Root, Writer))
     {
         return 22;
     }
+    IFileManager::Get().MakeDirectory(*FPaths::GetPath(OutputPath), true);
     if (!FFileHelper::SaveStringToFile(
             JsonText + LINE_TERMINATOR,
             *OutputPath,
             FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))
     {
-        UE_LOG(LogTemp, Error, TEXT("Could not write Phase 2C mesh receipt: %s"), *OutputPath);
+        UE_LOG(
+            LogYacsSaCalobraPcgExCliff,
+            Error,
+            TEXT("Could not write Phase 2C mesh receipt: %s"),
+            *OutputPath);
         return 23;
     }
 
     UE_LOG(
-        LogTemp,
+        LogYacsSaCalobraPcgExCliff,
         Display,
-        TEXT("YACS Phase 2C PCGEx PASS: cells=%d meshes=%d vertices=%d triangles=%d output=%s"),
+        TEXT("YACS Phase 2C PCGEx PASS: cells=%d meshes=%d "
+             "vertices=%d triangles=%d output=%s"),
         ExpectedSkinCells,
-        Root->GetIntegerField(TEXT("mesh_count")),
+        Root->GetArrayField(TEXT("meshes")).Num(),
         VertexCount,
         TriangleCount,
         *OutputPath);
