@@ -159,6 +159,7 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         self.assertIn("Material Forge FAST cliff visual", fast)
         self.assertIn("plan-rebuild", fast)
         self.assertIn("FAST_VISUAL_WARM_CACHE_REQUIRED", fast)
+        self.assertIn(".gumball/workflow-lifecycle.json", fast)
         self.assertIn("YACS_MF_FAST_VISUAL=1", fast)
         self.assertIn("material-forge-canary-input-", fast)
         self.assertIn("NON_PRODUCTION_FAST_VISUAL", visual)

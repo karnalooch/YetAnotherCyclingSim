@@ -114,6 +114,7 @@ jobs:
           $allowed = @(
             '.github/workflows/material-forge-fast-visual.yml',
             '.github/workflows/material-forge-mallorca-proof.yml',
+            '.gumball/workflow-lifecycle.json',
             'scripts/ue/capture_material_forge_landscape.py',
             'scripts/ue/test_material_forge_chunked_preview.py',
             'scripts/ci/test_material_forge_transfer_contract.py',
