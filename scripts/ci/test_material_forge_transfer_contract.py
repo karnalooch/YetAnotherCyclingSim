@@ -131,9 +131,9 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         self.assertIn("$diagnosticModes -notcontains 'lit_detaillighting'", canary)
 
     def test_canary_identity_follows_exact_variant_provenance(self):
-        runner = (
-            ROOT / "scripts/ue/run_material_forge_canary_proof.py"
-        ).read_text(encoding="utf-8")
+        runner = (ROOT / "scripts/ue/run_material_forge_canary_proof.py").read_text(
+            encoding="utf-8"
+        )
         self.assertIn('variant_dir / "provenance.json"', runner)
         self.assertIn('expected_family != "regional_limestone"', runner)
         self.assertIn('imported.get("variant") != expected_variant', runner)
