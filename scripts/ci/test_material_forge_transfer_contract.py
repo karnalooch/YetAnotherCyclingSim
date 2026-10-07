@@ -30,6 +30,13 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
             text,
         )
 
+    def test_fixed_master_builder_change_triggers_material_forge_proof(self):
+        text = MALLORCA.read_text(encoding="utf-8")
+        self.assertIn(
+            '"scripts/ue/build_material_forge_landscape_master.py"',
+            text,
+        )
+
     def test_persistent_lfs_cache_is_on_workspace_drive(self):
         text = CANARY.read_text(encoding="utf-8")
         self.assertIn(

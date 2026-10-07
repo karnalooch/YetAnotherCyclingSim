@@ -15,6 +15,7 @@ on:
       - "scripts/assets/material_forge_proof_board.py"
       - "scripts/assets/test_material_forge.py"
       - "scripts/ue/preview_material_forge_chunked_landscape.py"
+      - "scripts/ue/build_material_forge_landscape_master.py"
       - "scripts/ue/run_material_forge_canary_proof.py"
       - "scripts/ue/run_material_forge_chunked_proof.py"
       - "scripts/ue/run_material_forge_unified_proof.py"
