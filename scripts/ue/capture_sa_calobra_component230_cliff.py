@@ -302,64 +302,68 @@ def _append_box_plate(
     vertices: list[unreal.Vector],
     triangles: list[unreal.IntVector],
     row: dict[str, object],
-    surface_z_cm: float,
 ):
+    """Append a thin terrain-draped cliff skin instead of an upright plate.
+
+    The four top corners sample the accepted Landscape on the high/low sides
+    of the local DTM gradient. The resulting quad bridges stair-step geometry
+    with no artificial upward extrusion. A thin underside only makes the mesh
+    robust from oblique views.
+    """
     x_m, y_m = [float(value) for value in row["center_xy_m"]]
     dx, dy = [float(value) for value in row["downhill_xy"]]
     tx, ty = [float(value) for value in row["tangent_xy"]]
     width = float(row["width_m"])
-    height = float(row["height_m"])
+    run = float(row["run_m"])
     thickness = float(row["thickness_m"])
-    underlap = float(row["underlap_m"])
-    inset = float(row["top_inset_m"])
-    outward = float(row["outward_offset_m"])
+    lift = float(row["lift_m"])
 
-    cx = x_m + dx * outward
-    cy = y_m + dy * outward
-    bottom_z = surface_z_cm / 100.0 - underlap
-    top_z = bottom_z + height
+    half_width = width * 0.5
+    half_run = run * 0.5
+    high_x = x_m - dx * half_run
+    high_y = y_m - dy * half_run
+    low_x = x_m + dx * half_run
+    low_y = y_m + dy * half_run
 
-    front_bottom = (cx, cy)
-    front_top = (cx - dx * inset, cy - dy * inset)
-    back_bottom = (
-        front_bottom[0] - dx * thickness,
-        front_bottom[1] - dy * thickness,
-    )
-    back_top = (
-        front_top[0] - dx * thickness,
-        front_top[1] - dy * thickness,
-    )
-    half = width * 0.5
-    top_half = half * 0.92
-
-    points = [
-        (front_bottom[0] - tx * half, front_bottom[1] - ty * half, bottom_z),
-        (front_bottom[0] + tx * half, front_bottom[1] + ty * half, bottom_z),
-        (front_top[0] - tx * top_half, front_top[1] - ty * top_half, top_z),
-        (front_top[0] + tx * top_half, front_top[1] + ty * top_half, top_z),
-        (back_bottom[0] - tx * half, back_bottom[1] - ty * half, bottom_z),
-        (back_bottom[0] + tx * half, back_bottom[1] + ty * half, bottom_z),
-        (back_top[0] - tx * top_half, back_top[1] - ty * top_half, top_z),
-        (back_top[0] + tx * top_half, back_top[1] + ty * top_half, top_z),
+    xy = [
+        (high_x - tx * half_width, high_y - ty * half_width),
+        (high_x + tx * half_width, high_y + ty * half_width),
+        (low_x + tx * half_width, low_y + ty * half_width),
+        (low_x - tx * half_width, low_y - ty * half_width),
     ]
+    top_points = []
+    trace_values_cm = []
+    for px, py in xy:
+        z_cm = _trace_landscape_z(px, py)
+        trace_values_cm.append(z_cm)
+        top_points.append((px, py, z_cm / 100.0 + lift))
+
+    bottom_points = [
+        (px, py, pz - thickness)
+        for px, py, pz in top_points
+    ]
+    points = top_points + bottom_points
     base = len(vertices)
     vertices.extend(
         unreal.Vector(px * 100.0, py * 100.0, pz * 100.0)
         for px, py, pz in points
     )
     faces = [
-        (0, 1, 2), (1, 3, 2),
-        (5, 4, 6), (7, 5, 6),
-        (4, 0, 6), (0, 2, 6),
-        (1, 5, 7), (1, 7, 3),
-        (2, 3, 6), (3, 7, 6),
-        (4, 5, 0), (5, 1, 0),
+        # Smooth presentation surface, upward-facing.
+        (0, 3, 2), (0, 2, 1),
+        # Thin underside.
+        (4, 6, 7), (4, 5, 6),
+        # Perimeter.
+        (0, 1, 5), (0, 5, 4),
+        (1, 2, 6), (1, 6, 5),
+        (2, 3, 7), (2, 7, 6),
+        (3, 0, 4), (3, 4, 7),
     ]
     triangles.extend(
-        unreal.IntVector(base + a, base + b, base + c)
-        for a, b, c in faces
+        unreal.IntVector(base + ia, base + ib, base + ic)
+        for ia, ib, ic in faces
     )
-
+    return min(trace_values_cm), max(trace_values_cm)
 
 def _append_scree_rock(
     vertices: list[unreal.Vector],
@@ -463,10 +467,13 @@ def _spawn_candidate():
     trace_min = float("inf")
     trace_max = float("-inf")
     for row in _plan["plates"]:
-        z = _trace_landscape_z(*[float(v) for v in row["center_xy_m"]])
-        trace_min = min(trace_min, z)
-        trace_max = max(trace_max, z)
-        _append_box_plate(cliff_vertices, cliff_triangles, row, z)
+        local_min, local_max = _append_box_plate(
+            cliff_vertices,
+            cliff_triangles,
+            row,
+        )
+        trace_min = min(trace_min, local_min)
+        trace_max = max(trace_max, local_max)
 
     scree_vertices: list[unreal.Vector] = []
     scree_triangles: list[unreal.IntVector] = []
@@ -498,7 +505,7 @@ def _spawn_candidate():
         "trace_z_range_cm": [trace_min, trace_max],
         "collision_enabled": False,
         "cast_dynamic_shadows": True,
-        "material": "transient pale-limestone proof proxy",
+        "material": "transient pale-limestone draped-skin proof proxy",
     }
     unreal.AutomationLibrary.finish_loading_before_screenshot()
 
