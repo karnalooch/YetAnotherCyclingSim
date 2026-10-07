@@ -323,6 +323,14 @@ uses the proof camera in the viewport before screenshots, LOD 0, fully loaded
 used textures and 64 high-resolution warm-up frames for both generators.
 Image equality and dark-region gates are unchanged.
 
+The isolated renderer verifies `r.Test.FreezeTemporalSequences=1` at runtime
+and records it. Screenshot delay is zero seconds: the 64-frame high-resolution
+warm-up supplies the settling period without a hardware-dependent number of
+extra frames. Presentation offsets preserve source XY exactly; normal clearance
+is converted to a bounded vertical lift. Interior smoothing cannot lower a
+vertex below its traced source height, while boundary underlap remains active.
+The final presentation receipt measures XY displacement and requires zero.
+
 ## Phase 2B direction
 
 Only after Phase 2A handoff review:

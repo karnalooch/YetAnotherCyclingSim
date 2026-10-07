@@ -365,6 +365,7 @@ jobs:
             if ($UsePcgEx) {
               if (
                 $receipt.mesh.generator -ne 'pcgex-clipper2' -or
+                $receipt.mesh.pcgex_topology.max_xy_shift_cm -ne 0.0 -or
                 [int]$receipt.mesh.pcgex_topology.interior_vertices -le 0 -or
                 [double]$receipt.mesh.pcgex_topology.max_edge_cm_after -gt 157.5 -or
                 [int]$receipt.mesh.pcgex_topology.pcgex_triangle_count -gt 120000

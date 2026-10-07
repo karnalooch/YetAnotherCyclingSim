@@ -37,7 +37,8 @@ PCGEX_MESH = (
     else None
 )
 RESOLUTION = (1920, 1080)
-CAPTURE_DELAY_SECONDS = 3.0
+# Warm-up is counted in rendered frames below, never variable wall-clock time.
+CAPTURE_DELAY_SECONDS = 0.0
 CAPTURE_WARMUP_FRAMES = 64
 NEUTRAL_LANDSCAPE = os.environ.get("YACS_CLIFF_NEUTRAL_LANDSCAPE") == "1"
 NEUTRAL_MATERIAL = "/Engine/BasicShapes/BasicShapeMaterial"
@@ -550,7 +551,7 @@ def _append_skin_cluster(
         trace_max = max(trace_max, raw_z * 100.0)
         touches = touch_count.get(key, 0)
         offset_factor = max(0.0, min(1.0, (touches - 1.0) / 3.0))
-        smooth_target = smoothed[key] + lift
+        smooth_target = max(raw_z, smoothed[key]) + lift
         z_m = (
             raw_z * (1.0 - offset_factor)
             + smooth_target * offset_factor
@@ -565,13 +566,11 @@ def _append_skin_cluster(
         local_normal_length = math.sqrt(
             local_gx * local_gx + local_gy * local_gy + 1.0
         )
-        normal_x = -local_gx / local_normal_length
-        normal_y = -local_gy / local_normal_length
-        normal_z = 1.0 / local_normal_length
-
-        x_render = x_m + normal_x * normal_offset * offset_factor
-        y_render = y_m + normal_y * normal_offset * offset_factor
-        z_render = z_m + normal_z * normal_offset * offset_factor
+        # A vertical displacement gives the same local normal clearance while
+        # preserving the authoritative XY footprint. Bound it on steep faces.
+        normal_clearance_z = min(clamp_m, normal_offset * local_normal_length)
+        x_render, y_render = x_m, y_m
+        z_render = z_m + normal_clearance_z * offset_factor
 
         local_index[key] = len(vertices)
         vertices.append(
@@ -766,16 +765,13 @@ def _append_pcgex_cliff_mesh(
         z_m = (
             original[index] - underlap
             if is_boundary
-            else smoothed[index] + lift
+            else max(original[index], smoothed[index]) + lift
         )
         gx, gy = local_gradient(index)
         normal_length = math.sqrt(gx * gx + gy * gy + 1.0)
-        normal_x = -gx / normal_length
-        normal_y = -gy / normal_length
-        normal_z = 1.0 / normal_length
-        x_render = x_m + normal_x * normal_offset * factor
-        y_render = y_m + normal_y * normal_offset * factor
-        z_render = z_m + normal_z * normal_offset * factor
+        normal_clearance_z = min(smoothing_clamp, normal_offset * normal_length)
+        x_render, y_render = x_m, y_m
+        z_render = z_m + normal_clearance_z * factor
         vertices.append(
             unreal.Vector(
                 x_render * 100.0,
@@ -819,6 +815,11 @@ def _append_pcgex_cliff_mesh(
         "boundary_underlap_m": underlap,
         "normal_offset_m": normal_offset,
         "uv_projection": "fixed plane-gradient frame per physical island",
+        "max_xy_shift_cm": max(
+            math.hypot(vertex.x - xy[0] * 100.0, vertex.y - xy[1] * 100.0)
+            for vertex, xy in zip(vertices, raw_xy, strict=True)
+        ),
+        "interior_smoothing_policy": "nonnegative displacement from traced surface",
     }
 
 
