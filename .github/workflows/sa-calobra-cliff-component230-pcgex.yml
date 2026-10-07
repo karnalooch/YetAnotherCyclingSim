@@ -362,7 +362,16 @@ jobs:
             ) {
               throw "$Label visual receipt contract failed."
             }
-            if ($UsePcgEx) {
+            if ($env:YACS_LANDSCAPE_MESH_DIAGNOSTIC -eq '1') {
+              if (
+                $receipt.mesh.generator -ne 'native-landscape-export' -or
+                $receipt.landscape_mesh_diagnostic.restored -ne $true -or
+                $receipt.landscape_mesh_diagnostic.pcgex_overlay -ne $false -or
+                $receipt.mesh.material.cliff -ne $receipt.landscape_presentation_material.material -or
+                $receipt.landscape_mesh_diagnostic.export.max_conversion_error_cm -gt 0.001
+              ) { throw 'Native Landscape mesh diagnostic receipt failed.' }
+            }
+            elseif ($UsePcgEx) {
               if (
                 $receipt.mesh.generator -ne 'pcgex-clipper2' -or
                 $receipt.mesh.pcgex_topology.max_xy_shift_cm -ne 0.0 -or
@@ -383,6 +392,16 @@ jobs:
               generator = [string]$receipt.mesh.generator
               cliff_triangles = [int]$receipt.mesh.cliff.triangles
             } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $Output 'capture-performance.json') -Encoding UTF8
+          }
+
+          # Owner-approved replacement diagnostic runs before existing A/B proofs.
+          $env:YACS_LANDSCAPE_MESH_DIAGNOSTIC = '1'
+          try {
+            $terrainRoot = Join-Path $env:YACS_CLIFF_PHASE2C_ROOT 'landscape-mesh'
+            Invoke-CliffCapture -Label 'landscape-mesh' -Output $terrainRoot -UsePcgEx $false
+          }
+          finally {
+            Remove-Item Env:YACS_LANDSCAPE_MESH_DIAGNOSTIC -ErrorAction SilentlyContinue
           }
 
           Invoke-CliffCapture -Label 'custom' -Output $env:YACS_CLIFF_CUSTOM_OUTPUT -UsePcgEx $false

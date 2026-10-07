@@ -355,6 +355,34 @@ and diagnostic-only scope are recorded and checked. Original A/B image and
 lighting gates remain binding. This test is not limestone material acceptance,
 a geometry fix, or permission to save the map/assets. Runtime proof is pending.
 
+### Native Landscape mesh replacement diagnostic
+
+Owner approval, 2026-10-08: temporarily replace only Component 230's visible
+surface with its native LOD0 mesh, without cliff overlays or scree. This narrowly
+permits hiding that component during an isolated capture; it does not authorize
+Landscape height/visibility-mask edits or persistence. Baseline frames retain
+the original Landscape. Candidate frames use the exported mesh and hide only
+the original component, including hidden-shadow participation. Cleanup restores
+the component visibility, shadow flag and material and destroys the transient
+mesh actor. The accepted map hash and existing scene snapshot remain checked.
+
+UE 5.8 API evidence:
+[Landscape export parameters](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Landscape/ALandscapeProxy/FRawMeshExportParams)
+support an explicit component list, LOD0 and absolute coordinates;
+[mesh conversion](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/MeshConversion/FMeshDescriptionToDynamicMesh)
+preserves native attributes and exposes vertex correspondence. The editor-only
+adapter uses these native operations without resampling, smoothing or skirts.
+It checks triangle counts and conversion position error <= 0.001 cm. This checks
+conversion fidelity, not equality of lighting between different render paths.
+Nanite Landscape proxies are rejected because they require separate visibility
+handling. The ordinary cliff authority and A/B gates are unchanged.
+
+Enable with `YACS_LANDSCAPE_MESH_DIAGNOSTIC=1`; the dedicated workflow writes
+four frames and a rollback/export receipt under `landscape-mesh/`.
+The receipt marks `NON_PRODUCTION_NATIVE_LANDSCAPE_MESH_DIAGNOSTIC`.
+Runtime/build proof is pending; this experiment is not a world representation
+migration, a cliff fix, a performance admission or a merge approval.
+
 ## Phase 2B direction
 
 Only after Phase 2A handoff review:

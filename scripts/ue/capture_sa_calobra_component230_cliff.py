@@ -43,6 +43,9 @@ CAPTURE_WARMUP_FRAMES = 64
 NEUTRAL_LANDSCAPE = os.environ.get("YACS_CLIFF_NEUTRAL_LANDSCAPE") == "1"
 NEUTRAL_MATERIAL = "/Engine/BasicShapes/BasicShapeMaterial"
 MATCH_LANDSCAPE_MATERIAL = os.environ.get("YACS_CLIFF_MATCH_LANDSCAPE_MATERIAL") == "1"
+LANDSCAPE_MESH_DIAGNOSTIC = os.environ.get("YACS_LANDSCAPE_MESH_DIAGNOSTIC") == "1"
+_landscape_visibility_state = None
+_landscape_mesh_diagnostic = {"enabled": False}
 PIXEL_SIZE_M = 0.5
 CLIFF_MATERIAL = (
     "/Game/Generated/YACS/TextureMaterialPrep/Libraries/"
@@ -985,9 +988,81 @@ def _spawn_mesh(
     return counts
 
 
+
+def _spawn_landscape_mesh_diagnostic():
+    global _landscape_visibility_state, _mesh_receipt
+    if not NEUTRAL_LANDSCAPE or not _material_override_receipt["enabled"]:
+        raise RuntimeError("Landscape mesh diagnostic requires common neutral material")
+    actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+    actor = actors.spawn_actor_from_class(
+        unreal.DynamicMeshActor, unreal.Vector(), unreal.Rotator(), transient=True
+    )
+    if actor is None:
+        raise RuntimeError("Cannot spawn Landscape mesh diagnostic")
+    _candidate_actors.append(actor)
+    actor.set_actor_label("YACS_Component230_NativeLandscapeMesh")
+    component = actor.get_dynamic_mesh_component()
+    mesh = component.get_dynamic_mesh()
+    export = json.loads(
+        unreal.YacsLandscapeMeshDiagnosticLibrary.copy_component230(_target_component, mesh)
+    )
+    if export.get("status") != "NATIVE_LANDSCAPE_COMPONENT_MESH":
+        raise RuntimeError("Native Landscape export: " + json.dumps(export))
+    material = _target_component.get_editor_property("override_material")
+    component.set_material(0, material)
+    component.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
+    component.set_cast_shadow(True)
+    component.notify_mesh_modified()
+    if mesh.get_triangle_count() != export["triangles"]:
+        raise RuntimeError("Native Landscape mesh triangle count drifted")
+    if component.get_material(0) != material:
+        raise RuntimeError("Native Landscape mesh material identity mismatch")
+    _landscape_visibility_state = (
+        _target_component.get_editor_property("visible"),
+        _target_component.get_editor_property("cast_hidden_shadow"),
+    )
+    _landscape_mesh_diagnostic.update(
+        enabled=True, export=export, original_visibility=_landscape_visibility_state[0],
+        restored=False, pcgex_overlay=False, scree_spawned=False,
+        scope="NON_PRODUCTION_NATIVE_LANDSCAPE_MESH_DIAGNOSTIC",
+    )
+    _target_component.set_editor_property("cast_hidden_shadow", False)
+    _target_component.set_visibility(False, False)
+    if _target_component.get_editor_property("visible"):
+        raise RuntimeError("Original Landscape component did not hide")
+    _mesh_receipt = {
+        "lighting": _mesh_receipt.get("lighting"),
+        "generator": "native-landscape-export",
+        "cliff": {"vertices": export["vertices"], "triangles": export["triangles"]},
+        "collision_enabled": False,
+        "cast_dynamic_shadows": True,
+        "material": {"cliff": material.get_path_name(), "diagnostic_only": True},
+    }
+
+
+def _restore_landscape_visibility():
+    global _landscape_visibility_state
+    if _landscape_visibility_state is None:
+        return
+    visible, hidden_shadow = _landscape_visibility_state
+    _target_component.set_visibility(visible, False)
+    _target_component.set_editor_property("cast_hidden_shadow", hidden_shadow)
+    if (
+        _target_component.get_editor_property("visible") != visible
+        or _target_component.get_editor_property("cast_hidden_shadow") != hidden_shadow
+    ):
+        raise RuntimeError("Landscape visibility/shadow rollback failed")
+    _landscape_mesh_diagnostic["restored"] = True
+    _landscape_visibility_state = None
+
+
 def _spawn_candidate():
     global _mesh_receipt
     if _candidate_actors:
+        return
+
+    if LANDSCAPE_MESH_DIAGNOSTIC:
+        _spawn_landscape_mesh_diagnostic()
         return
 
     limestone = _load_surface_material(CLIFF_MATERIAL, "limestone")
@@ -1139,6 +1214,10 @@ def _spawn_candidate():
 def _destroy_transient():
     errors = []
     try:
+        _restore_landscape_visibility()
+    except Exception as exc:
+        errors.append("Landscape visibility rollback: " + str(exc))
+    try:
         _restore_landscape_material()
     except Exception as exc:
         errors.append("Landscape presentation material rollback: " + str(exc))
@@ -1186,6 +1265,7 @@ def _write_receipt(status: str, error: str | None):
         "canonical_landscape_mutation": False,
         "selector_policy_mutation": False,
         "landscape_presentation_material": _material_override_receipt,
+        "landscape_mesh_diagnostic": _landscape_mesh_diagnostic,
         "component": _component_bounds() if _target_component else None,
         "plan_fingerprint": None if _plan is None else _plan.get("fingerprint"),
         "plan_counts": None if _plan is None else _plan.get("counts"),

@@ -16,6 +16,12 @@ public class YetAnotherCyclingSimEditor : ModuleRules
 			"PCG",
 			"Json",
 			"AssetRegistry",
+            "Landscape",
+            "MeshDescription",
+            "StaticMeshDescription",
+            "MeshConversion",
+            "GeometryCore",
+            "GeometryFramework",
 			"YetAnotherCyclingSim"
 		});
 
