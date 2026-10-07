@@ -59,9 +59,9 @@ class Component230CliffVisualPlanTests(unittest.TestCase):
 
         r0 = COMPONENT["row_min"] + 16
         c0 = COMPONENT["col_min"] + 16
-        cliff[r0 : r0 + 13, c0 : c0 + 13] = True
+        cliff[r0 : r0 + 25, c0 : c0 + 25] = True
         # One 2 m cell inside the cliff is hard-protected and must not appear.
-        protected[r0 + 4 : r0 + 9, c0 + 4 : c0 + 9] = True
+        protected[r0 + 8 : r0 + 13, c0 + 8 : c0 + 13] = True
 
         cells, occupancy = _coarse_skin_cells(cliff, protected)
 
