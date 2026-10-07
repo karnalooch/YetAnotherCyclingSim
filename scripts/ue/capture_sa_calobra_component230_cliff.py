@@ -823,6 +823,73 @@ def _append_pcgex_cliff_mesh(
     }
 
 
+def _audit_surface_contact(vertices, triangles):
+    """Measure signed vertical clearance; sampling is not continuous proof."""
+    xyz = [[float(v.x), float(v.y), float(v.z)] for v in vertices]
+    faces = [(int(t.x), int(t.y), int(t.z)) for t in triangles]
+    edge_counts = {}
+    for a, b, c in faces:
+        for edge in ((a, b), (b, c), (c, a)):
+            key = tuple(sorted(edge))
+            edge_counts[key] = edge_counts.get(key, 0) + 1
+    boundary = {v for edge, count in edge_counts.items() if count == 1 for v in edge}
+    weights = ((1 / 3, 1 / 3, 1 / 3), (0.5, 0.5, 0), (0, 0.5, 0.5), (0.5, 0, 0.5))
+    groups = {
+        name: {
+            "samples": 0,
+            "below_minus_1cm": 0,
+            "min_clearance_cm": None,
+            "max_clearance_cm": None,
+        }
+        for name in ("interior", "boundary_incident")
+    }
+    clearances = []
+    for face in faces:
+        group = groups[
+            "boundary_incident" if any(v in boundary for v in face) else "interior"
+        ]
+        gaps = []
+        for weight in weights:
+            point = [
+                sum(weight[k] * xyz[face[k]][axis] for k in range(3))
+                for axis in range(3)
+            ]
+            gap = point[2] - _trace_landscape_z(point[0] / 100.0, point[1] / 100.0)
+            if not math.isfinite(gap):
+                raise RuntimeError("Nonfinite cliff/Landscape contact sample")
+            gaps.append(gap)
+            group["samples"] += 1
+            group["below_minus_1cm"] += int(gap < -1.0)
+            low, high = group["min_clearance_cm"], group["max_clearance_cm"]
+            group["min_clearance_cm"] = gap if low is None else min(low, gap)
+            group["max_clearance_cm"] = gap if high is None else max(high, gap)
+        clearances.append(gaps)
+    report = {
+        "schema_version": 1,
+        "exact_sha": EXPECTED_SHA,
+        "status": "DIAGNOSTIC_ONLY",
+        "units": "cm",
+        "sample_order": ["centroid", "edge_ab", "edge_bc", "edge_ca"],
+        "positive_clearance": "mesh above Landscape",
+        "groups": groups,
+        "vertices_xyz_cm": xyz,
+        "triangles": faces,
+        "boundary_vertices": sorted(boundary),
+        "sample_clearances_cm": clearances,
+    }
+    path = OUTPUT / "component230-cliff-contact-samples.json"
+    path.write_text(
+        json.dumps(report, separators=(",", ":"), allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
+    return {
+        "status": "DIAGNOSTIC_ONLY",
+        "groups": groups,
+        "samples_file": path.name,
+        "sha256": _digest(path),
+    }
+
+
 def _append_scree_rock(
     vertices: list[unreal.Vector],
     triangles: list[unreal.IntVector],
@@ -974,6 +1041,8 @@ def _spawn_candidate():
                 float(receipt["trace_z_range_cm"][1]),
             )
 
+    contact = _audit_surface_contact(cliff_vertices, cliff_triangles)
+
     # Cliff skins are presentation surfaces viewed from highly oblique angles.
     # Duplicate the connected front surface with reversed winding so an
     # orientation change cannot become a pitch-black backface hole. Vertices
@@ -1042,6 +1111,7 @@ def _spawn_candidate():
         "scree_rock_count": len(_plan["scree_rocks"]),
         "clusters": cluster_receipts,
         "pcgex_topology": pcgex_receipt,
+        "surface_contact": contact,
         "trace_z_range_cm": [trace_min, trace_max],
         "collision_enabled": False,
         "cast_dynamic_shadows": True,

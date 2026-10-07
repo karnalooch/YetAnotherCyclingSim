@@ -293,7 +293,7 @@ jobs:
               '-NoSound',
               '-NoP4',
               '-NoVSync',
-              '-FixedSeed',
+              '-Deterministic',
               '-ScriptErrorsAreFatal',
               '-stdout',
               ('-AbsLog="' + $log + '"')

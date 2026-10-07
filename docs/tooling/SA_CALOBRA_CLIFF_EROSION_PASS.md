@@ -331,6 +331,18 @@ is converted to a bounded vertical lift. Interior smoothing cannot lower a
 vertex below its traced source height, while boundary underlap remains active.
 The final presentation receipt measures XY displacement and requires zero.
 
+The next diagnostic measures signed vertical clearance against the accepted
+Landscape at every front-face centroid and edge midpoint, before spawning the
+candidate. `component230-cliff-contact-samples.json` retains front vertices,
+triangles and all four clearances per triangle for reproducible diagnosis.
+Interior triangles and triangles incident to boundary vertices are reported
+separately because the latter include intentional underlap. Negative values
+mean penetration; the count below -1 cm is diagnostic, not a new admission
+tolerance. Sampling does not prove continuous contact and changes no geometry.
+Both A/B editor sessions use UE 5.8 `-Deterministic` (the documented shortcut
+for `-UseFixedTimeStep -FixedSeed`). Strict baseline-image equality remains
+binding; this setting is an experiment, not a claim of reproducible rendering.
+
 ## Phase 2B direction
 
 Only after Phase 2A handoff review:
