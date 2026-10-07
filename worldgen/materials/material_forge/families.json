@@ -113,6 +113,34 @@
             "ao_crack_scale": 1.25,
             "ao_pore_scale": 1.15
           }
+        },
+        {
+          "id": "refined_b",
+          "label": "Refinement B neutral mineral limestone",
+          "seed": 367,
+          "brightness": 0.64,
+          "surface_a": 1.12,
+          "surface_b": 0.96,
+          "roughness": 0.82,
+          "normal_strength": 1.02,
+          "refinement": {
+            "variation_scale": 0.82,
+            "crack_color_scale": 1.18,
+            "pore_color_scale": 1.08,
+            "color_gain": [
+              0.95,
+              1,
+              1.07
+            ],
+            "roughness_variation_scale": 1.15,
+            "roughness_pore_scale": 1.12,
+            "ao_crack_scale": 1.15,
+            "ao_pore_scale": 1.05
+          },
+          "landscape": {
+            "macro_tile_metres": 24,
+            "macro_strength": 0.14
+          }
         }
       ]
     },
@@ -180,6 +208,34 @@
             "roughness_pore_scale": 1.35,
             "ao_crack_scale": 1.3,
             "ao_pore_scale": 1.25
+          }
+        },
+        {
+          "id": "refined_b",
+          "label": "Refinement B darker ochre mineral soil",
+          "seed": 467,
+          "brightness": 0.36,
+          "surface_a": 1.08,
+          "surface_b": 0.78,
+          "roughness": 0.93,
+          "normal_strength": 0.72,
+          "refinement": {
+            "variation_scale": 0.42,
+            "crack_color_scale": 1.45,
+            "pore_color_scale": 1.18,
+            "color_gain": [
+              1.03,
+              0.98,
+              0.93
+            ],
+            "roughness_variation_scale": 1,
+            "roughness_pore_scale": 1.3,
+            "ao_crack_scale": 1.2,
+            "ao_pore_scale": 1.15
+          },
+          "landscape": {
+            "macro_tile_metres": 12,
+            "macro_strength": 0.16
           }
         }
       ]
