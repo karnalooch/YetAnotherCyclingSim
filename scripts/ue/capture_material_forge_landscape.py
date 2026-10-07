@@ -214,9 +214,11 @@ def _force_material_textures_resident():
         "RockBaseColorTex",
         "RockNormalTex",
         "RockORMTex",
+        "RockDetailTex",
         "SoilBaseColorTex",
         "SoilNormalTex",
         "SoilORMTex",
+        "SoilDetailTex",
     )
     association = unreal.MaterialParameterAssociation.GLOBAL_PARAMETER
     textures = []
@@ -299,8 +301,8 @@ def _write_receipt(status: str, error: str = ""):
         "map": MAP,
         "material": None if _instance is None else _instance.get_path_name(),
         "fixed_master": os.environ.get("YACS_MF_FIXED_MASTER_PATH"),
-        "rock": "regional_limestone/refined_a",
-        "soil": "mediterranean_soil/refined_a",
+        "rock": "regional_limestone/refined_b",
+        "soil": "mediterranean_soil/refined_b",
         "mask_contract": "4033x4033; B=rock; soil=1-rock",
         "resolution": CAPTURE_RESOLUTION,
         "captures": _captures,
