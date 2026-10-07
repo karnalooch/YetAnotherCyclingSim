@@ -26,7 +26,7 @@ $ExpectedLicenseFirstLine = 'MIT License'
 $CompatibilityPatchId = 'yacs-pcgex-0.79-triangulate-hole-winding-v1'
 $CompatibilityPatchRelative = 'scripts/worldgen/patches/pcgex-0.79-triangulate-holes-winding.patch'
 $CompatibilityTargetRelative = 'Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp'
-$ExpectedCompatibilityPatchSha256 = '3dd26b728c3ddcfc0066dd33ca402c13e426947d38a93a6a4e5fa08d5206025c'
+$ExpectedCompatibilityPatchSha256 = '962065a8ef0550d1409e1a9d492a1106f015d87bd470dd9f16b4b7a6d00f9b5d'
 
 $RepoRoot = (Resolve-Path -LiteralPath $RepoRoot).Path
 if (-not $PluginRoot) { $PluginRoot = Join-Path $RepoRoot 'Plugins/PCGExtendedToolkit' }
