@@ -404,6 +404,14 @@ def _append_skin_cluster(
     else:
         downhill_x, downhill_y = 0.0, 1.0
     tangent_x, tangent_y = -downhill_y, downhill_x
+
+    normal_length = math.sqrt(
+        gradient_x * gradient_x + gradient_y * gradient_y + 1.0
+    )
+    normal_x = -gradient_x / normal_length
+    normal_y = -gradient_y / normal_length
+    normal_z = 1.0 / normal_length
+    normal_offset = float(cluster["normal_offset_m"])
     uv_scale = float(_plan["skin_contract"]["uv_world_size_m"])
 
     base = len(vertices)
@@ -418,10 +426,26 @@ def _append_skin_cluster(
         raw_z = original[key]
         trace_min = min(trace_min, raw_z * 100.0)
         trace_max = max(trace_max, raw_z * 100.0)
-        boundary = touch_count.get(key, 0) < 4
-        z_m = raw_z - underlap if boundary else smoothed[key] + lift
+        touches = touch_count.get(key, 0)
+        offset_factor = max(0.0, min(1.0, (touches - 1.0) / 3.0))
+        smooth_target = smoothed[key] + lift
+        z_m = (
+            raw_z * (1.0 - offset_factor)
+            + smooth_target * offset_factor
+            - underlap * (1.0 - offset_factor)
+        )
+        x_render = x_m + normal_x * normal_offset * offset_factor
+        y_render = y_m + normal_y * normal_offset * offset_factor
+        z_render = z_m + normal_z * normal_offset * offset_factor
+
         local_index[key] = len(vertices)
-        vertices.append(unreal.Vector(x_m * 100.0, y_m * 100.0, z_m * 100.0))
+        vertices.append(
+            unreal.Vector(
+                x_render * 100.0,
+                y_render * 100.0,
+                z_render * 100.0,
+            )
+        )
 
         # Rock texture uses a 3 m physical scale. U follows the local cliff
         # tangent, V follows elevation so steep faces do not vertically smear.
@@ -445,6 +469,7 @@ def _append_skin_cluster(
         "triangles": len(cell_corners) * 2,
         "trace_z_range_cm": [trace_min, trace_max],
         "plane_gradient": [gradient_x, gradient_y],
+        "normal_offset_m": normal_offset,
         "base_vertex": base,
     }
 
@@ -519,9 +544,9 @@ def _spawn_mesh(
         material_id=0,
         defer_change_notifications=True,
     )
-    dynamic_mesh.recompute_normals(
-        unreal.GeometryScriptCalculateNormalsOptions(),
-        defer_change_notifications=True,
+    unreal.GeometryScript_Normals.set_per_vertex_normals(dynamic_mesh)
+    component.set_tangents_type(
+        unreal.DynamicMeshComponentTangentsMode.AUTO_CALCULATED
     )
     component.notify_mesh_modified()
     component.set_material(0, material)
