@@ -182,6 +182,9 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         self.assertIn("requested_shadow_slope_bias", visual)
         self.assertIn("FAST shadow-slope-bias probe frame contract failed.", fast)
         self.assertIn("FAST ShadowSlopeBias=1.0 readback failed.", fast)
+        self.assertIn("def _canonical_component_bounds():", visual)
+        self.assertIn('"canonical_component_bounds": _canonical_component_bounds()', visual)
+        self.assertIn("FAST canonical component bounds receipt contract failed.", fast)
         self.assertIn(
             "FAST shadow-slope-bias probe was a no-op at the current baseline.", fast
         )
