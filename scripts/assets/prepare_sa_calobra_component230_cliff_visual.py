@@ -53,7 +53,7 @@ COMPONENT = {
 # A skin cell spans 4 source-grid intervals = 2 m. This is coarse enough to
 # bridge native heightfield stair-step noise but still follows the real cliff.
 SKIN_STEP_CELLS = 4
-SKIN_MIN_SOURCE_CLIFF_SAMPLES = 4
+SKIN_MIN_SOURCE_CLIFF_SAMPLES = 7
 SKIN_MIN_CLUSTER_CELLS = 2
 SKIN_MAX_CLUSTERS = 24
 SCREE_BLOCK_CELLS = 8
@@ -146,7 +146,7 @@ def _neighbour_count(mask: np.ndarray) -> np.ndarray:
 def _supported_bridge(seed: np.ndarray, support: np.ndarray) -> np.ndarray:
     """Join one-cell gaps only where source cliff evidence still exists."""
     result = seed.copy()
-    for _ in range(2):
+    for _ in range(1):
         neighbours = _neighbour_count(result)
         horizontal = np.zeros_like(result)
         vertical = np.zeros_like(result)
@@ -190,7 +190,7 @@ def _coarse_skin_cells(
             protected_block = protected[row0 : row1 + 1, col0 : col1 + 1]
             count = int(block.sum())
             occupancy[grid_r, grid_c] = count
-            support[grid_r, grid_c] = count > 0
+            support[grid_r, grid_c] = count >= 2
             # Hard authority stays fail-closed for each 2 m skin cell.
             allowed = not bool(protected_block.any())
             allowed_grid[grid_r, grid_c] = allowed
@@ -321,10 +321,11 @@ def build_plan(
                     float(np.min(local_clearance)), 4
                 ),
                 "interior_lift_m": round(0.025 + jitter * 0.015, 4),
-                "boundary_underlap_m": round(0.045 + jitter * 0.025, 4),
+                "boundary_underlap_m": round(0.035 + jitter * 0.020, 4),
+                "normal_offset_m": round(0.12 + jitter * 0.08, 4),
                 "smoothing_passes": 2,
-                "smoothing_blend": 0.55,
-                "smoothing_clamp_m": 0.85,
+                "smoothing_blend": 0.52,
+                "smoothing_clamp_m": 0.75,
             }
         )
 
@@ -402,7 +403,7 @@ def build_plan(
             "source_grid_step_m": SKIN_STEP_CELLS * PIXEL_SIZE_M,
             "minimum_source_cliff_samples": SKIN_MIN_SOURCE_CLIFF_SAMPLES,
             "minimum_cluster_cells": SKIN_MIN_CLUSTER_CELLS,
-            "supported_bridge_passes": 2,
+            "supported_bridge_passes": 1,
             "boundary_policy": "underlap-real-landscape",
             "interior_policy": "smoothed-real-landscape-traces",
             "uv_world_size_m": 3.0,
