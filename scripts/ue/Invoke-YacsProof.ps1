@@ -293,8 +293,16 @@ Write-Host ""
 Write-Host "[3/4] Running Automation tests..." -ForegroundColor Cyan
 Write-YacsPhaseStatus -Phase 'automation' -Status 'running'
 
-$RunLog = Join-Path -Path $ArtifactRoot -ChildPath 'automation_run.log'
-$EditorLog = Join-Path -Path $ArtifactRoot -ChildPath 'automation_editor.log'
+$AutomationLogRoot = if ($env:YACS_UNREAL_LOG_ROOT) {
+    [System.IO.Path]::GetFullPath($env:YACS_UNREAL_LOG_ROOT)
+}
+else {
+    $ArtifactRoot
+}
+New-Item -ItemType Directory -Path $AutomationLogRoot -Force | Out-Null
+
+$RunLog = Join-Path -Path $AutomationLogRoot -ChildPath 'automation_run.log'
+$EditorLog = Join-Path -Path $AutomationLogRoot -ChildPath 'automation_editor.log'
 $ReportJson = Join-Path -Path $ArtifactRoot -ChildPath 'index.json'
 $ReportExportPath = Join-Path -Path $ArtifactRoot -ChildPath 'AutomationReport'
 
