@@ -285,6 +285,18 @@ jobs:
           if ($receipt.execution_sha -ne $env:YACS_MATERIAL_FORGE_EXECUTION_SHA) {
             throw 'FAST visual execution SHA mismatch.'
           }
+          $componentBounds = $receipt.canonical_component_bounds
+          if (
+            $null -eq $componentBounds -or
+            [string]$componentBounds.name -ne 'LandscapeComponent_230' -or
+            @($componentBounds.origin_cm).Count -ne 3 -or
+            @($componentBounds.extent_cm).Count -ne 3 -or
+            @($componentBounds.min_cm).Count -ne 3 -or
+            @($componentBounds.max_cm).Count -ne 3 -or
+            [double]$componentBounds.world_grid_mapping.cell_size_cm -ne 50.0
+          ) {
+            throw 'FAST canonical component bounds receipt contract failed.'
+          }
           if (
             $null -eq $receipt.color_gains -or
             @($receipt.color_gains.rock).Count -ne 4 -or
@@ -376,6 +388,7 @@ jobs:
             status = 'FAST_VISUAL_LOOP_PASS'
             artifact_source_sha = $receipt.artifact_source_sha
             execution_sha = $receipt.execution_sha
+            canonical_component_bounds = $componentBounds
             capture_count = [int]$receipt.capture_count
             diagnostic_count = [int]$receipt.diagnostic_count
             diagnostic_modes = $diagnosticModes
