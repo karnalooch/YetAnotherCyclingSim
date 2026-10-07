@@ -43,13 +43,17 @@ buildings, mapped water holdback and infrastructure holdback.
 The first explicit presentation hypothesis is:
 
 - cliff candidate: slope >= 50° and 3×3 roughness >= 0.75 m;
-- scree candidate: slope 24–42°, roughness >= 0.35 m and within 20 m of an
-  admitted cliff candidate;
+- scree candidate: slope 24–42°, roughness >= 0.35 m, local cardinal-step
+  proxy >= 0.5 m and within 8 m of an admitted cliff candidate;
 - invalid terrain neighborhoods remain unknown;
 - protected cells can never become cliff or scree candidates.
 
 These thresholds are versioned art-selection parameters, not a geology claim.
-They are intentionally reviewable before any mesh placement.
+The first whole-area proof showed that proximity+slope alone selected about
+1.325 km² as scree, which was too broad for a conservative presentation
+selector. The 0.5 m local-step gate and 8 m proximity bound were therefore added
+before any mesh placement. They are intentionally reviewable and remain
+candidate thresholds.
 
 Two additional diagnostics are retained but do not themselves grant selection:
 
