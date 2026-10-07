@@ -226,6 +226,20 @@ def main() -> None:
             group="Material Forge Landscape",
             default_value=400.0 if key == "rock" else 300.0,
         )
+        macro_tile = _node(
+            material,
+            unreal.MaterialExpressionScalarParameter,
+            parameter_name=prefix + "MacroTileSizeCm",
+            group="Material Forge Landscape",
+            default_value=2400.0 if key == "rock" else 1200.0,
+        )
+        macro_strength = _node(
+            material,
+            unreal.MaterialExpressionScalarParameter,
+            parameter_name=prefix + "MacroStrength",
+            group="Material Forge Landscape",
+            default_value=0.0,
+        )
         objects = {
             "BaseColor": _texture_object(
                 material,
@@ -243,10 +257,45 @@ def main() -> None:
                 unreal.MaterialSamplerType.SAMPLERTYPE_MASKS,
                 texture=orm_placeholder,
             ),
+            "Detail": _texture_object(
+                material,
+                prefix + "DetailTex",
+                unreal.MaterialSamplerType.SAMPLERTYPE_MASKS,
+                texture=orm_placeholder,
+            ),
         }
         base_color = _project(material, objects["BaseColor"], tile, normal=False)
         normal = _project(material, objects["Normal"], tile, normal=True)
         orm = _project(material, objects["ORM"], tile, normal=False)
+        macro_detail = _project(material, objects["Detail"], macro_tile, normal=False)
+
+        macro_b = _node(
+            material,
+            unreal.MaterialExpressionComponentMask,
+            r=False,
+            g=False,
+            b=True,
+            a=False,
+        )
+        _link(macro_detail, "XYZ Texture", macro_b, "")
+        centered_macro = _node(
+            material,
+            unreal.MaterialExpressionSubtract,
+            const_b=0.5,
+        )
+        _link(macro_b, "", centered_macro, "A")
+        scaled_macro = _node(material, unreal.MaterialExpressionMultiply)
+        _link(centered_macro, "", scaled_macro, "A")
+        _link(macro_strength, "", scaled_macro, "B")
+        macro_gain = _node(
+            material,
+            unreal.MaterialExpressionAdd,
+            const_a=1.0,
+        )
+        _link(scaled_macro, "", macro_gain, "B")
+        macro_base_color = _node(material, unreal.MaterialExpressionMultiply)
+        _link(base_color, "XYZ Texture", macro_base_color, "A")
+        _link(macro_gain, "", macro_base_color, "B")
 
         roughness = _node(
             material,
@@ -267,7 +316,7 @@ def main() -> None:
         )
         _link(orm, "XYZ Texture", ao, "")
         projected[key] = {
-            "BaseColor": (base_color, "XYZ Texture"),
+            "BaseColor": (macro_base_color, ""),
             "Normal": (normal, "XYZ Texture"),
             "Roughness": (roughness, ""),
             "AO": (ao, ""),
@@ -336,11 +385,20 @@ def main() -> None:
             "RockBaseColorTex",
             "RockNormalTex",
             "RockORMTex",
+            "RockDetailTex",
             "SoilBaseColorTex",
             "SoilNormalTex",
             "SoilORMTex",
+            "SoilDetailTex",
         ],
-        "scalar_parameters": ["RockTileSizeCm", "SoilTileSizeCm"],
+        "scalar_parameters": [
+            "RockTileSizeCm",
+            "SoilTileSizeCm",
+            "RockMacroTileSizeCm",
+            "SoilMacroTileSizeCm",
+            "RockMacroStrength",
+            "SoilMacroStrength",
+        ],
         "mask_contract": "five-tap B=rock; soil=1-rock",
         "projection": "WorldAlignedTexture + WorldAlignedNormal",
         "orm_placeholder": ORM_PLACEHOLDER_PATH,
