@@ -330,7 +330,9 @@ def _import_weight(package: str):
     return texture
 
 
-def _create_fixed_master_instance(package: str, weights, checkpoints):
+def _create_fixed_master_instance(
+    package: str, weights, checkpoints, color_gain_values=None
+):
     master_path = os.environ.get("YACS_MF_FIXED_MASTER_PATH")
     if not master_path:
         raise RuntimeError("YACS_MF_FIXED_MASTER_PATH is required for fixed-master proof")
@@ -434,6 +436,17 @@ def _create_fixed_master_instance(package: str, weights, checkpoints):
         "RockColorGain": unreal.LinearColor(1.0, 1.0, 1.0, 1.0),
         "SoilColorGain": unreal.LinearColor(1.0, 1.0, 1.0, 1.0),
     }
+    if color_gain_values is not None:
+        expected_gain_names = set(vector_values)
+        supplied_gain_names = set(color_gain_values)
+        if supplied_gain_names != expected_gain_names:
+            missing = sorted(expected_gain_names - supplied_gain_names)
+            unexpected = sorted(supplied_gain_names - expected_gain_names)
+            raise RuntimeError(
+                "Fixed-master color gain override contract mismatch: "
+                f"missing={missing}; unexpected={unexpected}"
+            )
+        vector_values = dict(color_gain_values)
     visible_textures = {str(name) for name in LIB.get_texture_parameter_names(instance)}
     visible_scalars = {str(name) for name in LIB.get_scalar_parameter_names(instance)}
     visible_vectors = {str(name) for name in LIB.get_vector_parameter_names(instance)}
