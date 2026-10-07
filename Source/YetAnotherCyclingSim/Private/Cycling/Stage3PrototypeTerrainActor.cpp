@@ -8,6 +8,8 @@
 #include "Materials/Material.h"
 #include "Materials/MaterialInterface.h"
 #include "Math/RotationMatrix.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 #include "UObject/ConstructorHelpers.h"
 #include "UObject/UObjectGlobals.h"
 
@@ -464,12 +466,27 @@ AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 	const ConstructorHelpers::FObjectFinder<UStaticMesh> ConeMesh(
 		TEXT("/Engine/BasicShapes/Cone.Cone"));
 
+	const bool bPhase2CTopologyProof =
+		IsRunningCommandlet()
+		&& FParse::Param(
+			FCommandLine::Get(),
+			TEXT("YacsPhase2CTopologyProof"));
+	const TCHAR* RoadAsphaltLookupPath = bPhase2CTopologyProof
+		? TEXT("/Engine/EngineMaterials/WorldGridMaterial.WorldGridMaterial")
+		: RoadAsphaltMaterialPath;
+	const TCHAR* RoadEdgeLookupPath = bPhase2CTopologyProof
+		? TEXT("/Engine/EngineMaterials/WorldGridMaterial.WorldGridMaterial")
+		: RoadEdgeLineMaterialPath;
+	const TCHAR* TerrainLookupPath = bPhase2CTopologyProof
+		? TEXT("/Engine/EngineMaterials/WorldGridMaterial.WorldGridMaterial")
+		: TerrainMaterialPath;
+
 	const ConstructorHelpers::FObjectFinder<UMaterialInterface> RoadAsphaltMat(
-		RoadAsphaltMaterialPath);
+		RoadAsphaltLookupPath);
 	const ConstructorHelpers::FObjectFinder<UMaterialInterface> RoadEdgeMat(
-		RoadEdgeLineMaterialPath);
+		RoadEdgeLookupPath);
 	const ConstructorHelpers::FObjectFinder<UMaterialInterface> TerrainMat(
-		TerrainMaterialPath);
+		TerrainLookupPath);
 
 	if (CubeMesh.Succeeded())
 	{
@@ -535,48 +552,59 @@ AStage3PrototypeTerrainActor::AStage3PrototypeTerrainActor()
 		}
 	}
 
-	if (UStaticMesh* BoulderMesh = LoadObject<UStaticMesh>(nullptr, Stage3GBoulderMeshPath))
+	if (!bPhase2CTopologyProof)
 	{
-		// R3 reuses the validated project-owned boulder mesh for valley and
-		// high-Alpine massing so the persisted reference map no longer falls
-		// back to Engine Cone silhouettes outside the forest sector.
-		ValleyRidgeProps->SetStaticMesh(BoulderMesh);
-		MountainProps->SetStaticMesh(BoulderMesh);
-		DistantMountainProps->SetStaticMesh(BoulderMesh);
-		RockProps->SetStaticMesh(BoulderMesh);
-	}
-	if (UStaticMesh* ConiferMesh = LoadObject<UStaticMesh>(nullptr, Stage3GConiferMeshPath))
-	{
-		ForestProps->SetStaticMesh(ConiferMesh);
-		ForestCanopyProps->SetStaticMesh(ConiferMesh);
-	}
-
-	UMaterialInterface* TerrainFallback = TerrainTiles->GetMaterial(0);
-	auto ApplyOptionalStage3GMaterial =
-		[TerrainFallback](UHierarchicalInstancedStaticMeshComponent* Component, const TCHAR* Path)
+		if (UStaticMesh* BoulderMesh = LoadObject<UStaticMesh>(nullptr, Stage3GBoulderMeshPath))
 		{
-			if (UMaterialInterface* Material = LoadObject<UMaterialInterface>(nullptr, Path))
-			{
-				Component->SetMaterial(0, Material);
-			}
-			else if (IsValid(TerrainFallback))
-			{
-				Component->SetMaterial(0, TerrainFallback);
-			}
-		};
+			// R3 reuses the validated project-owned boulder mesh for valley and
+			// high-Alpine massing so the persisted reference map no longer falls
+			// back to Engine Cone silhouettes outside the forest sector.
+			ValleyRidgeProps->SetStaticMesh(BoulderMesh);
+			MountainProps->SetStaticMesh(BoulderMesh);
+			DistantMountainProps->SetStaticMesh(BoulderMesh);
+			RockProps->SetStaticMesh(BoulderMesh);
+		}
+		if (UStaticMesh* ConiferMesh = LoadObject<UStaticMesh>(nullptr, Stage3GConiferMeshPath))
+		{
+			ForestProps->SetStaticMesh(ConiferMesh);
+			ForestCanopyProps->SetStaticMesh(ConiferMesh);
+		}
 
-	ApplyOptionalStage3GMaterial(TerrainTiles, Stage3GGrassMaterialPath);
-	ApplyOptionalStage3GMaterial(ForestTerrainTiles, Stage3GForestMaterialPath);
-	ApplyOptionalStage3GMaterial(HighAlpineTerrainTiles, Stage3GDistantRockMaterialPath);
-	ApplyOptionalStage3GMaterial(ValleyRidgeProps, Stage3GGrassMaterialPath);
-	// ForestProps / ForestCanopyProps intentionally keep the validated conifer's
-	// authored branch + masked-twig material slots. Overriding slot 0 with the
-	// legacy generic foliage material would turn the real mesh back into a
-	// presentation placeholder in the 4900 m acceptance capture.
-	ApplyOptionalStage3GMaterial(MountainProps, Stage3GRockMaterialPath);
-	ApplyOptionalStage3GMaterial(RockProps, Stage3GRockMaterialPath);
-	ApplyOptionalStage3GMaterial(DistantMountainProps, Stage3GDistantRockMaterialPath);
-	ApplyOptionalStage3GMaterial(WaterTiles, Stage3GWaterMaterialPath);
+		UMaterialInterface* TerrainFallback = TerrainTiles->GetMaterial(0);
+		auto ApplyOptionalStage3GMaterial =
+			[TerrainFallback](UHierarchicalInstancedStaticMeshComponent* Component, const TCHAR* Path)
+			{
+				if (UMaterialInterface* Material = LoadObject<UMaterialInterface>(nullptr, Path))
+				{
+					Component->SetMaterial(0, Material);
+				}
+				else if (IsValid(TerrainFallback))
+				{
+					Component->SetMaterial(0, TerrainFallback);
+				}
+			};
+
+		ApplyOptionalStage3GMaterial(TerrainTiles, Stage3GGrassMaterialPath);
+		ApplyOptionalStage3GMaterial(ForestTerrainTiles, Stage3GForestMaterialPath);
+		ApplyOptionalStage3GMaterial(HighAlpineTerrainTiles, Stage3GDistantRockMaterialPath);
+		ApplyOptionalStage3GMaterial(ValleyRidgeProps, Stage3GGrassMaterialPath);
+		// ForestProps / ForestCanopyProps intentionally keep the validated conifer's
+		// authored branch + masked-twig material slots. Overriding slot 0 with the
+		// legacy generic foliage material would turn the real mesh back into a
+		// presentation placeholder in the 4900 m acceptance capture.
+		ApplyOptionalStage3GMaterial(MountainProps, Stage3GRockMaterialPath);
+		ApplyOptionalStage3GMaterial(RockProps, Stage3GRockMaterialPath);
+		ApplyOptionalStage3GMaterial(DistantMountainProps, Stage3GDistantRockMaterialPath);
+		ApplyOptionalStage3GMaterial(WaterTiles, Stage3GWaterMaterialPath);
+
+	}
+	else
+	{
+		UE_LOG(
+			LogTemp,
+			Verbose,
+			TEXT("Stage3PrototypeTerrainActor: skipping project presentation assets for Phase2C topology commandlet."));
+	}
 
 	UHierarchicalInstancedStaticMeshComponent* Components[] = {
 		RoadTiles,
