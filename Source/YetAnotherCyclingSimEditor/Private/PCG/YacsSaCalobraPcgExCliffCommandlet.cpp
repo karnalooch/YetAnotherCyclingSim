@@ -491,39 +491,6 @@ namespace
         }
 
         for (int32 GroupIndex = 0; GroupIndex < PolygonGroups.Num(); ++GroupIndex)
-            {
-                if (!PolygonGroups[GroupIndex].Outer.Contains(Hole))
-                {
-                    continue;
-                }
-
-                const double CandidateArea =
-                    FMath::Abs(PolygonGroups[GroupIndex].Outer.SignedArea());
-                if (CandidateArea < BestOuterArea)
-                {
-                    BestOuterArea = CandidateArea;
-                    BestOuter = GroupIndex;
-                }
-            }
-
-            if (BestOuter == INDEX_NONE)
-            {
-                OutError = TEXT("PCGEx emitted a hole path with no containing outer footprint.");
-                return false;
-            }
-
-            PolygonGroups[BestOuter].Holes.Add(MoveTemp(Hole));
-            ++HoleCount;
-        }
-
-        UE_LOG(
-            LogYacsSaCalobraPcgExCliff,
-            Display,
-            TEXT("Phase 2C PCGEx Union: outer_paths=%d hole_paths=%d."),
-            PolygonGroups.Num(),
-            HoleCount);
-
-        for (int32 GroupIndex = 0; GroupIndex < PolygonGroups.Num(); ++GroupIndex)
         {
             FPolygonGroup& Group = PolygonGroups[GroupIndex];
             UE::Geometry::TGeneralPolygon2<double> GeneralPolygon(Group.Outer);
