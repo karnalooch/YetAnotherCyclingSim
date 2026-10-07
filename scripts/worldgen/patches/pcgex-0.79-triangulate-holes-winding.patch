@@ -1,8 +1,11 @@
 diff --git a/Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp b/Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp
-index 0000000..1111111 100644
 --- a/Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp
 +++ b/Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp
-@@ -1608,7 +1608,7 @@
+@@ -1604,27 +1604,27 @@
+ 
+ 		// Collect this outer polygon and its direct children (holes)
+ 		Paths64 pathsToTriangulate;
+ 		pathsToTriangulate.reserve(1 + node->Count());
  
  		// Add outer polygon (ensure correct orientation: CW for outer)
  		Path64 outer = outerPath;
@@ -11,7 +14,12 @@ index 0000000..1111111 100644
  		{
  			std::reverse(outer.begin(), outer.end());
  		}
-@@ -1621,7 +1621,7 @@
+ 		pathsToTriangulate.push_back(outer);
+ 
+ 		// Add holes (direct children, ensure CCW orientation)
+ 		for (size_t i = 0; i < node->Count(); ++i)
+ 		{
+ 			const PolyPath64* child = node->Child(i);
  			Path64 hole = child->Polygon();
  			if (!hole.empty())
  			{
@@ -20,7 +28,14 @@ index 0000000..1111111 100644
  				{
  					std::reverse(hole.begin(), hole.end());
  				}
-@@ -1794,7 +1794,7 @@
+ 				pathsToTriangulate.push_back(hole);
+ 			}
+ 		}
+@@ -1790,26 +1790,26 @@
+ 
+ 		// Convert to int64 for triangulation
+ 		int ec = 0;
+ 		Paths64 pathsToTriangulate;
  		pathsToTriangulate.reserve(1 + node->Count());
  
  		Path64 outer = ScalePath<int64_t, double>(outerPath, scale, ec);
@@ -29,7 +44,11 @@ index 0000000..1111111 100644
  		{
  			std::reverse(outer.begin(), outer.end());
  		}
-@@ -1806,7 +1806,7 @@
+ 		pathsToTriangulate.push_back(outer);
+ 
+ 		for (size_t i = 0; i < node->Count(); ++i)
+ 		{
+ 			const PolyPathD* child = node->Child(i);
  			Path64 hole = ScalePath<int64_t, double>(child->Polygon(), scale, ec);
  			if (!hole.empty())
  			{
@@ -38,3 +57,6 @@ index 0000000..1111111 100644
  				{
  					std::reverse(hole.begin(), hole.end());
  				}
+ 				pathsToTriangulate.push_back(hole);
+ 			}
+ 		}
