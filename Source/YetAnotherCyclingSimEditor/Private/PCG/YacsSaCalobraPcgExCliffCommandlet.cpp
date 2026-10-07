@@ -18,8 +18,6 @@
 #include "PCGGraph.h"
 #include "PCGNode.h"
 #include "PCGPin.h"
-#include "PCGContext.h"
-#include "PCGSubsystem.h"
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
 #include "UObject/Package.h"
@@ -165,63 +163,21 @@ namespace
         Component->RegisterComponent();
         Component->SetGraphLocal(Graph);
 
-        // This proof graph is intentionally transient. Do not route it through
-        // UPCGComponent::GenerateLocal(), whose component scheduler performs
-        // generation-grid/component bookkeeping intended for authored graph
-        // assets. Schedule the exact in-memory graph directly through the
-        // public PCG subsystem API instead.
-        UPCGSubsystem* Subsystem = World->GetSubsystem<UPCGSubsystem>();
-        if (!Subsystem || !Subsystem->IsInitialized())
-        {
-            OutError = TEXT("Phase 2C PCG subsystem is unavailable.");
-            return false;
-        }
-
-        const FPCGTaskId GraphTask = Subsystem->ScheduleGraph(
-            Graph,
-            Component,
-            nullptr,
-            nullptr,
-            {},
-            nullptr,
-            false);
-        if (GraphTask == InvalidPCGTaskId)
-        {
-            OutError = TEXT("PCGEx Phase 2C graph could not be scheduled.");
-            return false;
-        }
-
-        FPCGDataCollection Generated;
-        bool bCapturedOutput = false;
-        FPCGScheduleGenericParams CaptureParams(
-            [&Generated, &bCapturedOutput](FPCGContext* Context) -> bool
-            {
-                if (!Context)
-                {
-                    return false;
-                }
-                Generated = Context->InputData;
-                bCapturedOutput = true;
-                return true;
-            },
-            Component,
-            {},
-            {GraphTask},
-            true);
-        const FPCGTaskId CaptureTask = Subsystem->ScheduleGeneric(CaptureParams);
-        if (CaptureTask == InvalidPCGTaskId)
-        {
-            OutError = TEXT("PCGEx Phase 2C output capture could not be scheduled.");
-            return false;
-        }
+        // Execute through the same stock component path already proven by the
+        // Passo Giau PCGEx authoring proof. The graph itself lives in a named
+        // transient package (not GetTransientPackage), which gives PCG's graph
+        // compiler a normal asset-style object lifecycle without ever writing
+        // a package to disk.
+        UE_LOG(LogYacsSaCalobraPcgExCliff, Display, TEXT("Phase 2C PCG: scheduling packaged transient graph."));
+        Component->GenerateLocal(true);
+        FWorldPartitionHelpers::FakeEngineTick(World);
 
         constexpr double TimeoutSeconds = 120.0;
         const double StartedAt = FPlatformTime::Seconds();
-        while (!bCapturedOutput)
+        while (Component->IsGenerating())
         {
             if ((FPlatformTime::Seconds() - StartedAt) > TimeoutSeconds)
             {
-                Subsystem->CancelGeneration(Graph);
                 OutError = TEXT("PCGEx Phase 2C graph timed out.");
                 return false;
             }
@@ -229,7 +185,9 @@ namespace
             FPlatformProcess::Sleep(0.01f);
         }
         FWorldPartitionHelpers::FakeEngineTick(World);
+        UE_LOG(LogYacsSaCalobraPcgExCliff, Display, TEXT("Phase 2C PCG: generation completed."));
 
+        const FPCGDataCollection& Generated = Component->GetGeneratedGraphOutput();
         if (Generated.TaggedData.IsEmpty())
         {
             OutError = TEXT("PCGEx Phase 2C graph produced no output data.");
@@ -424,10 +382,34 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
         return 12;
     }
 
+    constexpr TCHAR GraphPackageName[] =
+        TEXT("/Game/WorldGen/PCGEx/Transient/PCG_SaCalobra_Component230_Phase2C");
+    constexpr TCHAR GraphAssetName[] =
+        TEXT("PCG_SaCalobra_Component230_Phase2C");
+    const FString GraphFilename = FPackageName::LongPackageNameToFilename(
+        GraphPackageName,
+        FPackageName::GetAssetPackageExtension());
+    if (IFileManager::Get().FileExists(*GraphFilename))
+    {
+        UE_LOG(
+            LogYacsSaCalobraPcgExCliff,
+            Error,
+            TEXT("Phase 2C transient graph unexpectedly exists on disk: %s"),
+            *GraphFilename);
+        return 13;
+    }
+
+    UPackage* GraphPackage = CreatePackage(GraphPackageName);
+    if (!GraphPackage)
+    {
+        return 13;
+    }
+    GraphPackage->SetFlags(RF_Transient);
+
     UPCGGraph* Graph = NewObject<UPCGGraph>(
-        GetTransientPackage(),
-        FName(TEXT("YacsSaCalobraComponent230Phase2C")),
-        RF_Transient);
+        GraphPackage,
+        GraphAssetName,
+        RF_Public | RF_Standalone | RF_Transient);
     if (!Graph)
     {
         return 13;
@@ -579,6 +561,16 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
             Error,
             TEXT("Phase 2C PCGEx execution failed: %s"),
             *ExecutionError);
+        return 22;
+    }
+
+    if (IFileManager::Get().FileExists(*GraphFilename))
+    {
+        UE_LOG(
+            LogYacsSaCalobraPcgExCliff,
+            Error,
+            TEXT("Phase 2C transient PCG graph was persisted unexpectedly: %s"),
+            *GraphFilename);
         return 22;
     }
 
