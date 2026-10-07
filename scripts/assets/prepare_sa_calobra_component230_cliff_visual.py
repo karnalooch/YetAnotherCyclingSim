@@ -176,6 +176,7 @@ def _coarse_skin_cells(
     shape_ = (len(row_nodes), len(col_nodes))
     occupancy = np.zeros(shape_, dtype=np.int16)
     support = np.zeros(shape_, dtype=bool)
+    allowed_grid = np.zeros(shape_, dtype=bool)
     seed = np.zeros(shape_, dtype=bool)
     metadata: dict[tuple[int, int], dict[str, int]] = {}
 
@@ -192,6 +193,7 @@ def _coarse_skin_cells(
             support[grid_r, grid_c] = count > 0
             # Hard authority stays fail-closed for each 2 m skin cell.
             allowed = not bool(protected_block.any())
+            allowed_grid[grid_r, grid_c] = allowed
             seed[grid_r, grid_c] = (
                 allowed and count >= SKIN_MIN_SOURCE_CLIFF_SAMPLES
             )
@@ -205,7 +207,8 @@ def _coarse_skin_cells(
                 "protected_samples": int(protected_block.sum()),
             }
 
-    joined = _supported_bridge(seed, support)
+    joined = _supported_bridge(seed, support & allowed_grid)
+    joined &= allowed_grid
     labels = label_components_8(joined)
     cells: list[dict[str, object]] = []
 
