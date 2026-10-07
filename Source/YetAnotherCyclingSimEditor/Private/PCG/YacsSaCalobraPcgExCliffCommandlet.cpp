@@ -553,36 +553,25 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     Subdivide->Distance = 100.0;
     Subdivide->bRedistributeEvenly = true;
 
-    // Smooth may never weaken YACS hard exclusions. Intersect the refined
-    // boundary back with the original admitted union before triangulation.
-    UPCGExClipper2BooleanSettings* HardClip = nullptr;
-    UPCGNode* HardClipNode =
-        Graph->AddNodeOfType<UPCGExClipper2BooleanSettings>(HardClip);
-    if (!HardClipNode || !HardClip)
-    {
-        return 17;
-    }
-    HardClip->Operation = EPCGExClipper2BooleanOp::Intersection;
-    HardClip->FillRule = EPCGExClipper2FillRule::NonZero;
-    HardClip->MainInputGroupingPolicy = EPCGExGroupingPolicy::Consolidate;
-    HardClip->bSkipOpenPaths = true;
-    HardClip->OpenPathsOutput = EPCGExClipper2OpenPathOutput::Ignore;
-    HardClip->bSimplifyPaths = true;
-    HardClip->bPreserveCollinear = false;
+    // With boundary smoothing deferred to the post-drape presentation stage,
+    // Path Subdivide preserves the exact Clipper2 union boundary. A second
+    // Boolean Intersection here would be redundant and can perturb positions
+    // through Boolean source-transform restoration, so the authoritative
+    // topology proceeds directly to constrained triangulation.
 
     UPCGExClipper2TriangulateSettings* Triangulate = nullptr;
     UPCGNode* TriangulateNode =
         Graph->AddNodeOfType<UPCGExClipper2TriangulateSettings>(Triangulate);
     if (!TriangulateNode || !Triangulate)
     {
-        return 18;
+        return 17;
     }
     Triangulate->MainInputGroupingPolicy = EPCGExGroupingPolicy::Consolidate;
     Triangulate->bSkipOpenPaths = true;
     Triangulate->OpenPathsOutput = EPCGExClipper2OpenPathOutput::Ignore;
     Triangulate->bSimplifyPaths = true;
     Triangulate->bPreserveCollinear = false;
-    Triangulate->FillRule = EPCGExClipper2FillRule::NonZero;
+    Triangulate->FillRule = EPCGExClipper2FillRule::EvenOdd;
     Triangulate->bUseDelaunay = true;
     Triangulate->bAttemptRepair = true;
     Triangulate->Topology.bWeldEdges = true;
@@ -596,22 +585,16 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
             Graph, UnionNode, PathsPin, SubdivideNode, PathsPin,
             TEXT("Clipper2 Union -> Subdivide"))
         || !Connect(
-            Graph, SubdivideNode, PathsPin, HardClipNode, PathsPin,
-            TEXT("Subdivide -> hard-policy intersection subjects"))
-        || !Connect(
-            Graph, UnionNode, PathsPin, HardClipNode, FName(TEXT("Operands")),
-            TEXT("Original YACS union -> hard-policy intersection operands"))
-        || !Connect(
-            Graph, HardClipNode, PathsPin, TriangulateNode, PathsPin,
-            TEXT("Hard-policy intersection -> Clipper2 Triangulate")))
+            Graph, SubdivideNode, PathsPin, TriangulateNode, PathsPin,
+            TEXT("Subdivide exact union boundary -> Clipper2 Triangulate")))
     {
-        return 19;
+        return 18;
     }
 
     UPCGNode* OutputNode = Graph->GetOutputNode();
     if (!OutputNode || OutputNode->GetInputPins().IsEmpty())
     {
-        return 20;
+        return 19;
     }
     const FName GraphOutputPin = OutputNode->GetInputPins()[0]->Properties.Label;
     Graph->AddLabeledEdge(
@@ -665,10 +648,9 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     Root->SetStringField(
         TEXT("pipeline"),
         TEXT("YACS cliff cells -> Clipper2 Union -> Path Subdivide -> "
-             "Clipper2 Intersection(original YACS union) -> "
-             "Clipper2 Triangulate -> connected-component-aware deterministic "
-             "UE Uniform Tessellation; boundary smoothing is deferred until "
-             "post-drape presentation so hard exclusions remain exact"));
+             "Clipper2 Triangulate(EvenOdd holes) -> connected-component-aware "
+             "deterministic UE Uniform Tessellation; boundary smoothing is "
+             "deferred until post-drape presentation so hard exclusions remain exact"));
     Root->SetBoolField(TEXT("canonical_landscape_mutation"), false);
     Root->SetBoolField(TEXT("assets_saved"), false);
     Root->SetBoolField(TEXT("graph_saved"), false);
