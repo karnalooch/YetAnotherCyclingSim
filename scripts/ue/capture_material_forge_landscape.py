@@ -240,10 +240,34 @@ def _build_views():
         },
     ]
     if FAST_VISUAL:
-        fast = dict(views[3])
-        fast["name"] = "fast-cliff-lit"
-        fast["purpose"] = "non-production fast cliff lighting/material iteration"
-        return [fast]
+        fast_views = []
+        for source, name, purpose in (
+            (
+                views[3],
+                "fast-cliff-lit",
+                "non-production fast cliff lighting/material iteration",
+            ),
+            (
+                views[4],
+                "fast-cliff-unlit",
+                "fast cliff diagnostic: albedo/projection without lighting response",
+            ),
+            (
+                views[5],
+                "fast-cliff-lighting-only",
+                "fast cliff diagnostic: geometry/self-shadowing without BaseColor or normal maps",
+            ),
+            (
+                views[6],
+                "fast-cliff-detail-lighting",
+                "fast cliff diagnostic: geometry/self-shadowing with material normal response",
+            ),
+        ):
+            fast = dict(source)
+            fast["name"] = name
+            fast["purpose"] = purpose
+            fast_views.append(fast)
+        return fast_views
     return views
 
 
