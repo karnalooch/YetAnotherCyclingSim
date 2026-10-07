@@ -166,11 +166,16 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         self.assertIn("full_production_proof_required", visual)
         self.assertIn("FAST_CAPTURE_RESOLUTION = [1920, 1080]", visual)
         self.assertIn("[int]$receipt.capture_count -ne 1", fast)
-        self.assertIn("[int]$receipt.diagnostic_count -ne 3", fast)
+        self.assertIn("[int]$receipt.diagnostic_count -ne 4", fast)
         self.assertIn("$diagnosticModes -notcontains $requiredMode", fast)
         self.assertIn('"fast-cliff-unlit"', visual)
         self.assertIn('"fast-cliff-lighting-only"', visual)
         self.assertIn('"fast-cliff-detail-lighting"', visual)
+        self.assertIn('"fast-cliff-lighting-only-no-dynamic-shadows"', visual)
+        self.assertIn('"showflag.DynamicShadows 1"', visual)
+        self.assertIn('"showflag.DynamicShadows " + ("1" if dynamic_shadows else "0")', visual)
+        self.assertIn("shadow-disabled Lighting Only probe", fast)
+        self.assertIn("shadow-enabled Lighting Only baseline", fast)
 
     def test_transfer_metrics_are_preserved(self):
         text = CANARY.read_text(encoding="utf-8")
