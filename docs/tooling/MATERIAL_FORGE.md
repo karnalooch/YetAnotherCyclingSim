@@ -463,6 +463,13 @@ either vector parameter is absent or if Material Instance readback differs from
 the requested value, and the normalized gains are recorded in the visual
 receipt.
 
+Issue #427 folds those requested gains into the existing fixed-master Material
+Instance parameter batch before its single final `update_material_instance`.
+The visual capture may validate readback, but must not trigger a second Material
+Instance update just for color grading. This preserves the same fail-closed
+parameter contract while avoiding the redundant compile/memory spike observed
+in FULL #30.
+
 A master-capability change is not eligible for stale FAST carry-forward. The
 neutral parameterized master must first pass the normal FULL proof and establish
 a compatible warm fixed master. Only then may FAST be used for sub-two-minute
