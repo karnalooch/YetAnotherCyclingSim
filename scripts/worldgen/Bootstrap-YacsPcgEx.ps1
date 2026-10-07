@@ -75,9 +75,12 @@ $CompatibilityPatchPath = Join-Path $RepoRoot $CompatibilityPatchRelative
 if (-not (Test-Path -LiteralPath $CompatibilityPatchPath -PathType Leaf)) {
     throw "PCGEx compatibility patch is missing: $CompatibilityPatchPath"
 }
-$ActualCompatibilityPatchSha256 = (
-    Get-FileHash -LiteralPath $CompatibilityPatchPath -Algorithm SHA256
-).Hash.ToLowerInvariant()
+$PatchText = [System.IO.File]::ReadAllText($CompatibilityPatchPath).Replace("`r`n", "`n")
+$ActualCompatibilityPatchSha256 = [Convert]::ToHexString(
+    [System.Security.Cryptography.SHA256]::HashData(
+        [System.Text.Encoding]::UTF8.GetBytes($PatchText)
+    )
+).ToLowerInvariant()
 if ($ActualCompatibilityPatchSha256 -ne $ExpectedCompatibilityPatchSha256) {
     throw "PCGEx compatibility patch hash drift: $ActualCompatibilityPatchSha256"
 }
