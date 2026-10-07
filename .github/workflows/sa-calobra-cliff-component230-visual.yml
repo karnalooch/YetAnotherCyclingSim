@@ -70,11 +70,75 @@ jobs:
           if ($state.status -ne 'IDLE') {
             throw "Shared Unreal host is already owned; status=$($state.status)."
           }
-          $binary = 'Binaries/Win64/UnrealEditor-YetAnotherCyclingSim.dll'
-          if (-not (Test-Path -LiteralPath $binary -PathType Leaf)) {
-            throw "COMPONENT230_WARM_CACHE_REQUIRED: missing $binary"
+          $requiredDlls = @(
+            'Binaries/Win64/UnrealEditor-YetAnotherCyclingSim.dll',
+            'Binaries/Win64/UnrealEditor-YetAnotherCyclingSimEditor.dll'
+          )
+          $missingDlls = @($requiredDlls | Where-Object { -not (Test-Path -LiteralPath $_ -PathType Leaf) })
+          if ($missingDlls.Count -gt 0) {
+            Write-Host "Warm Editor DLLs missing; exact-head fallback build required: $($missingDlls -join ', ')" -ForegroundColor Yellow
+            "YACS_COMPONENT230_BUILD_REQUIRED=1" >> $env:GITHUB_ENV
+          }
+          else {
+            "YACS_COMPONENT230_BUILD_REQUIRED=0" >> $env:GITHUB_ENV
           }
 
+      - name: Build exact-head Editor when warm cache is unavailable
+        if: ${{ env.YACS_COMPONENT230_BUILD_REQUIRED == '1' }}
+        shell: pwsh
+        working-directory: _material-forge-ue-canary
+        run: |
+          $ErrorActionPreference = 'Stop'
+          . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
+          . ./scripts/runner/Assert-YacsDiskReserve.ps1
+          . ./scripts/ci/Assert-YacsBuildIsolation.ps1
+          $project = Join-Path (Get-Location) 'YetAnotherCyclingSim.uproject'
+          $engine = Resolve-YacsUnrealEngine -ProjectPath $project
+          Assert-YacsDiskReserve -Path $project
+          Assert-YacsBuildIsolation -ProjectPath $project
+          $ubtConfigDir = Join-Path (Get-Location) 'Saved/UnrealBuildTool'
+          New-Item -ItemType Directory -Force -Path $ubtConfigDir | Out-Null
+          @'
+          <?xml version="1.0" encoding="utf-8" ?>
+          <Configuration xmlns="https://www.unrealengine.com/BuildConfiguration">
+            <BuildConfiguration>
+              <bAllowUBAExecutor>false</bAllowUBAExecutor>
+              <bAllowUBALocalExecutor>false</bAllowUBALocalExecutor>
+              <MaxParallelActions>4</MaxParallelActions>
+            </BuildConfiguration>
+          </Configuration>
+          '@ | Set-Content -LiteralPath (Join-Path $ubtConfigDir 'BuildConfiguration.xml') -Encoding utf8
+          $buildLog = Join-Path $env:RUNNER_TEMP "component230-build-$env:YACS_CLIFF_VISUAL_EXPECTED_SHA.log"
+          $buildBat = Join-Path $engine.Root 'Engine/Build/BatchFiles/Build.bat'
+          $buildArgs = @(
+            $project,
+            'YetAnotherCyclingSimEditor',
+            'Win64',
+            'Development',
+            '-WaitMutex',
+            '-NoHotReloadFromIDE',
+            '-FromMsBuild'
+          )
+          $process = Start-Process -FilePath $buildBat -ArgumentList $buildArgs -WorkingDirectory (Split-Path $buildBat -Parent) -PassThru -NoNewWindow -RedirectStandardOutput $buildLog
+          if (-not $process.WaitForExit(900000)) {
+            $process | Stop-Process -Force
+            throw 'Component230 exact-head Editor build timed out after 900 seconds.'
+          }
+          $exitCode = $process.ExitCode
+          if ($null -eq $exitCode -and (Test-Path -LiteralPath $buildLog)) {
+            $text = Get-Content -LiteralPath $buildLog -Raw -ErrorAction SilentlyContinue
+            if ($text -match 'Result: Succeeded') { $exitCode = 0 }
+          }
+          Get-Content -LiteralPath $buildLog -Tail 100 -ErrorAction SilentlyContinue | Write-Host
+          if ($exitCode -ne 0) { throw "Component230 exact-head Editor build failed with exit $exitCode." }
+          foreach ($dll in @(
+            'Binaries/Win64/UnrealEditor-YetAnotherCyclingSim.dll',
+            'Binaries/Win64/UnrealEditor-YetAnotherCyclingSimEditor.dll'
+          )) {
+            if (-not (Test-Path -LiteralPath $dll -PathType Leaf)) {
+              throw "Expected Editor binary missing after build: $dll"
+            }
+          }
       - name: Install pinned GIS/image dependencies
         shell: pwsh
         working-directory: _material-forge-ue-canary
