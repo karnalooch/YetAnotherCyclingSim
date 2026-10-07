@@ -208,9 +208,26 @@ def _build_views():
                 surface_z,
             ),
             "fov": 50.0,
-            "purpose": "cliff diagnostic: lighting/normal/geometry without BaseColor",
+            "purpose": "cliff diagnostic: lighting and geometry without BaseColor or normal maps",
             "kind": "diagnostic",
             "viewmode": "lightingonly",
+        },
+        {
+            "name": "07-cliff-detail-lighting",
+            "location": unreal.Vector(
+                origin.x - 2300.0,
+                origin.y - 1700.0,
+                surface_z + 1350.0,
+            ),
+            "target": unreal.Vector(
+                origin.x + 550.0,
+                origin.y + 450.0,
+                surface_z,
+            ),
+            "fov": 50.0,
+            "purpose": "cliff diagnostic: neutral material with original normal maps",
+            "kind": "diagnostic",
+            "viewmode": "lit_detaillighting",
         },
     ]
 
@@ -419,6 +436,7 @@ def schedule():
             "lit": unreal.ViewModeIndex.VMI_LIT,
             "unlit": unreal.ViewModeIndex.VMI_UNLIT,
             "lightingonly": unreal.ViewModeIndex.VMI_LIGHTING_ONLY,
+            "lit_detaillighting": unreal.ViewModeIndex.VMI_LIT_DETAIL_LIGHTING,
         }
         if mode not in view_modes:
             raise RuntimeError("Unsupported diagnostic view mode: " + mode)
