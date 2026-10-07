@@ -26,8 +26,9 @@
 #if YACS_WITH_PCGEX
 #include "Data/PCGDynamicMeshData.h"
 #include "Elements/PCGExClipper2Boolean.h"
-#include "Elements/PCGExClipper2Triangulate.h"
+#include "Elements/PCGExClipper2Decompose.h"
 #include "Elements/PCGExSubdivide.h"
+#include "Elements/PCGExTopologyClusterSurface.h"
 #include "UDynamicMesh.h"
 #include "DynamicMesh/DynamicMesh3.h"
 #include "DynamicSubmesh3.h"
@@ -559,23 +560,36 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     // through Boolean source-transform restoration, so the authoritative
     // topology proceeds directly to constrained triangulation.
 
-    UPCGExClipper2TriangulateSettings* Triangulate = nullptr;
-    UPCGNode* TriangulateNode =
-        Graph->AddNodeOfType<UPCGExClipper2TriangulateSettings>(Triangulate);
-    if (!TriangulateNode || !Triangulate)
+    // The generic Clipper2 Triangulate node only exposes Split/Consolidate
+    // grouping. Component_230 contains unrelated outer rings plus nested holes,
+    // so Consolidate can triangulate ring sets as overlapping disconnected
+    // surfaces. Clipper2 : Decompose has the exact topology contract we need:
+    // Auto grouping keeps each outer ring with its nested holes while separating
+    // unrelated footprints. Keep raw triangles (no convex merge), then let
+    // Cluster Surface materialize those already-authored triangular faces.
+    UPCGExClipper2DecomposeSettings* Decompose = nullptr;
+    UPCGNode* DecomposeNode =
+        Graph->AddNodeOfType<UPCGExClipper2DecomposeSettings>(Decompose);
+    if (!DecomposeNode || !Decompose)
     {
         return 17;
     }
-    Triangulate->MainInputGroupingPolicy = EPCGExGroupingPolicy::Consolidate;
-    Triangulate->bSkipOpenPaths = true;
-    Triangulate->OpenPathsOutput = EPCGExClipper2OpenPathOutput::Ignore;
-    Triangulate->bSimplifyPaths = true;
-    Triangulate->bPreserveCollinear = false;
-    Triangulate->FillRule = EPCGExClipper2FillRule::EvenOdd;
-    Triangulate->bUseDelaunay = true;
-    Triangulate->bAttemptRepair = true;
-    Triangulate->Topology.bWeldEdges = true;
-    Triangulate->Topology.bComputeNormals = true;
+    Decompose->MainInputGroupingPolicy = EPCGExGroupingPolicy::Auto;
+    Decompose->FillRule = EPCGExClipper2FillRule::EvenOdd;
+    Decompose->bMergeConvexPieces = false;
+    Decompose->MaxConvexPieces = 8192;
+
+    UPCGExTopologyClusterSurfaceSettings* Surface = nullptr;
+    UPCGNode* SurfaceNode =
+        Graph->AddNodeOfType<UPCGExTopologyClusterSurfaceSettings>(Surface);
+    if (!SurfaceNode || !Surface)
+    {
+        return 18;
+    }
+    Surface->Constraints.bOmitWrappingBounds = true;
+    Surface->Constraints.bKeepWrapperIfSolePath = false;
+    Surface->Topology.bWeldEdges = true;
+    Surface->Topology.bComputeNormals = true;
 
     const FName PathsPin(PathPinName);
     if (!Connect(
@@ -585,20 +599,28 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
             Graph, UnionNode, PathsPin, SubdivideNode, PathsPin,
             TEXT("Clipper2 Union -> Subdivide"))
         || !Connect(
-            Graph, SubdivideNode, PathsPin, TriangulateNode, PathsPin,
-            TEXT("Subdivide exact union boundary -> Clipper2 Triangulate")))
+            Graph, SubdivideNode, PathsPin, DecomposeNode, PathsPin,
+            TEXT("Subdivide exact union boundary -> Clipper2 Decompose"))
+        || !Connect(
+            Graph, DecomposeNode, FName(TEXT("Vtx")),
+            SurfaceNode, FName(TEXT("Vtx")),
+            TEXT("Decompose vertices -> Cluster Surface"))
+        || !Connect(
+            Graph, DecomposeNode, FName(TEXT("Edges")),
+            SurfaceNode, FName(TEXT("Edges")),
+            TEXT("Decompose triangulation edges -> Cluster Surface")))
     {
-        return 18;
+        return 19;
     }
 
     UPCGNode* OutputNode = Graph->GetOutputNode();
     if (!OutputNode || OutputNode->GetInputPins().IsEmpty())
     {
-        return 19;
+        return 20;
     }
     const FName GraphOutputPin = OutputNode->GetInputPins()[0]->Properties.Label;
     Graph->AddLabeledEdge(
-        TriangulateNode,
+        SurfaceNode,
         FName(TEXT("Mesh")),
         OutputNode,
         GraphOutputPin);
@@ -648,9 +670,10 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     Root->SetStringField(
         TEXT("pipeline"),
         TEXT("YACS cliff cells -> Clipper2 Union -> Path Subdivide -> "
-             "Clipper2 Triangulate(EvenOdd holes) -> connected-component-aware "
-             "deterministic UE Uniform Tessellation; boundary smoothing is "
-             "deferred until post-drape presentation so hard exclusions remain exact"));
+             "Clipper2 Decompose(Auto outer+hole grouping, raw constrained triangles) -> "
+             "Topology Cluster Surface -> connected-component-aware deterministic "
+             "UE Uniform Tessellation; boundary smoothing is deferred until post-drape "
+             "presentation so hard exclusions remain exact"));
     Root->SetBoolField(TEXT("canonical_landscape_mutation"), false);
     Root->SetBoolField(TEXT("assets_saved"), false);
     Root->SetBoolField(TEXT("graph_saved"), false);
