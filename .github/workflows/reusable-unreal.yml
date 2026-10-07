@@ -37,6 +37,7 @@ jobs:
     env:
       GIT_LFS_SKIP_SMUDGE: "1"
       YACS_UNREAL_WORKTREE: _unreal-ci-warm
+      YACS_UNREAL_LOG_ROOT: ${{ runner.temp }}/yacs-unreal-${{ github.run_id }}-${{ github.run_attempt }}
 
     steps:
       - name: Isolate self-hosted Git configuration
@@ -123,7 +124,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           git reset --hard '${{ inputs.target_sha }}'
           if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree reset failed.' }
-          git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/' -e '/Saved/Logs/YetAnotherCyclingSim.log' -e '/Saved/RuntimeProof/CI/RegionTerrain/*/*.log'
+          git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/' -e '/Saved/Logs/YetAnotherCyclingSim.log' -e '/Saved/RuntimeProof/CI/RegionTerrain/*/*.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof/automation_run.log'
           if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree allow-listed clean failed.' }
 
       - name: Enforce code-only checkout
@@ -162,8 +163,25 @@ jobs:
           & $helper -Workspace $env:GITHUB_WORKSPACE
           $proof = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/Unreal'
           if (Test-Path -LiteralPath $proof) {
-            Remove-Item -LiteralPath $proof -Recurse -Force
+            # Two legacy fixed-name Automation logs can remain locked by a stale
+            # Windows CIM record even after the native process is gone. New runs
+            # write logs to the run-scoped RUNNER_TEMP path below, so preserve only
+            # those exact legacy residues and clear every other proof artifact.
+            $proofPayload = Join-Path $proof 'Proof'
+            Get-ChildItem -LiteralPath $proof -Force | ForEach-Object {
+              if ($_.FullName -eq $proofPayload) {
+                Get-ChildItem -LiteralPath $proofPayload -Force | ForEach-Object {
+                  if ($_.Name -notin @('automation_editor.log', 'automation_run.log')) {
+                    Remove-Item -LiteralPath $_.FullName -Recurse -Force
+                  }
+                }
+              }
+              else {
+                Remove-Item -LiteralPath $_.FullName -Recurse -Force
+              }
+            }
           }
+          New-Item -ItemType Directory -Path $env:YACS_UNREAL_LOG_ROOT -Force | Out-Null
 
       - name: Resolve verified Unreal execution mode
         id: cache
@@ -582,6 +600,7 @@ jobs:
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/Unreal/**/*.json
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/Unreal/**/*.txt
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/Unreal/**/*.log
+            ${{ env.YACS_UNREAL_LOG_ROOT }}/*.log
           if-no-files-found: warn
           retention-days: 7
 
