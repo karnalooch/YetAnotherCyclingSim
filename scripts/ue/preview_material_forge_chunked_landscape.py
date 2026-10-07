@@ -356,6 +356,16 @@ def _build_surface_material(package: str, weights):
             "tile_cm": float(provenance["tile_metres"]) * 100.0,
         }
 
+    imported_textures = [
+        texture
+        for surface in surfaces.values()
+        for texture in surface["textures"].values()
+    ]
+    if not unreal.YacsTextureAuditLibrary.finish_texture_compilation(
+        imported_textures
+    ):
+        raise RuntimeError("Material Forge texture compilation did not drain cleanly")
+
     material = unreal.AssetToolsHelpers.get_asset_tools().create_asset(
         "M_MF_ChunkedRockSoil",
         package,
@@ -563,7 +573,22 @@ def _build_surface_material(package: str, weights):
     if errors:
         raise RuntimeError("Chunked preview material compile failed: " + str(errors))
     LIB.layout_material_expressions(material)
-    return material
+
+    drain_raw = (
+        unreal.YacsTextureAuditLibrary.drain_asset_compilation_and_collect_garbage()
+    )
+    try:
+        drain = json.loads(drain_raw)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(
+            "Material Forge compile-drain receipt was not valid JSON"
+        ) from exc
+    if not drain.get("ok") or int(drain.get("remaining_after", -1)) != 0:
+        raise RuntimeError(
+            "Material Forge asset/shader compilation did not drain cleanly: "
+            + drain_raw
+        )
+    return material, drain
 
 
 def prepare():
@@ -595,7 +620,8 @@ def prepare():
 
     package = "/Game/Generated/YACS/MFChunkedPreview/" + uuid.uuid4().hex
     weights = _import_weight(package)
-    material = _build_surface_material(package, weights)
+    material, compile_drain = _build_surface_material(package, weights)
+    memory_after_compile_drain = _memory()
 
     foundation = runpy.run_path(
         str(ROOT / "scripts/ue/sa_calobra_material_foundation.py")
@@ -619,6 +645,8 @@ def prepare():
         "foundation": foundation,
         "map_file": map_file,
         "package": package,
+        "compile_drain": compile_drain,
+        "memory_after_compile_drain": memory_after_compile_drain,
     }
     setattr(unreal, STATE, state)
 
@@ -630,7 +658,8 @@ def prepare():
         total=len(cluster),
         material=material.get_path_name(),
         package=package,
-        memory=_memory(),
+        compile_drain=compile_drain,
+        memory=memory_after_compile_drain,
         sampling="bilinear + five-tap appearance smoothing",
         projection="WorldAlignedTexture + WorldAlignedNormal",
         scope="REFINED_A_ROCK_SOIL_LANDSCAPE_BLEND",

@@ -1,6 +1,8 @@
 #include "Diagnostics/YacsTextureAuditLibrary.h"
 
 #include "Engine/Texture2D.h"
+#include "AssetCompilingManager.h"
+#include "HAL/PlatformMemory.h"
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
@@ -9,6 +11,7 @@
 #include "Components/ActorComponent.h"
 #include "Materials/MaterialInstance.h"
 #include "UObject/UnrealType.h"
+#include "UObject/GarbageCollection.h"
 
 FString UYacsTextureAuditLibrary::DescribeLandscapeMaterialInstances(UActorComponent* Component, UMaterialInterface* ExpectedMaterial)
 {
@@ -117,4 +120,38 @@ bool UYacsTextureAuditLibrary::FinishTextureCompilation(const TArray<UTexture2D*
 		}
 	}
 	return true;
+}
+
+
+FString UYacsTextureAuditLibrary::DrainAssetCompilationAndCollectGarbage()
+{
+	if (!IsInGameThread())
+	{
+		return TEXT("{\"ok\":false,\"error\":\"must run on game thread\"}");
+	}
+
+	FAssetCompilingManager& Manager = FAssetCompilingManager::Get();
+	const int32 RemainingBefore = Manager.GetNumRemainingAssets();
+	const FPlatformMemoryStats MemoryBefore = FPlatformMemory::GetStats();
+
+	Manager.FinishAllCompilation();
+	CollectGarbage(RF_NoFlags, true);
+
+	const int32 RemainingAfter = Manager.GetNumRemainingAssets();
+	const FPlatformMemoryStats MemoryAfter = FPlatformMemory::GetStats();
+
+	const TSharedRef<FJsonObject> Report = MakeShared<FJsonObject>();
+	Report->SetBoolField(TEXT("ok"), RemainingAfter == 0);
+	Report->SetNumberField(TEXT("remaining_before"), RemainingBefore);
+	Report->SetNumberField(TEXT("remaining_after"), RemainingAfter);
+	Report->SetNumberField(TEXT("available_physical_before"), static_cast<double>(MemoryBefore.AvailablePhysical));
+	Report->SetNumberField(TEXT("available_physical_after"), static_cast<double>(MemoryAfter.AvailablePhysical));
+	Report->SetNumberField(TEXT("available_virtual_before"), static_cast<double>(MemoryBefore.AvailableVirtual));
+	Report->SetNumberField(TEXT("available_virtual_after"), static_cast<double>(MemoryAfter.AvailableVirtual));
+
+	FString Json;
+	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&Json);
+	return FJsonSerializer::Serialize(Report, Writer)
+		? Json
+		: TEXT("{\"ok\":false,\"error\":\"JSON serialization failed\"}");
 }

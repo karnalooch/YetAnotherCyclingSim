@@ -274,3 +274,20 @@ exact-SHA proof from the branch rather than reusing partial outputs; the workflo
 concurrency contract will supersede the stale run when GitHub accepts the new
 job. Never promote partial render/proof directories after a runner interruption.
 
+### Compile-drain memory control
+
+The refined Landscape proof must not overlap asynchronous texture compilation
+with material/shader compilation. The editor diagnostics library now exposes two
+explicit drains:
+
+1. `FinishTextureCompilation` for the six imported refined rock/soil texture
+   objects before constructing the blended material graph.
+2. `DrainAssetCompilationAndCollectGarbage` after material recompilation. It
+   calls UE's `FAssetCompilingManager::FinishAllCompilation()`, runs full
+   garbage collection and returns a JSON receipt containing outstanding compile
+   counts and available memory before/after the drain.
+
+The existing 8 GiB prepare and 6 GiB apply physical-memory gates remain
+unchanged. The Landscape assignment is allowed only after all compilation has
+drained and the post-drain memory measurement is recorded.
+
