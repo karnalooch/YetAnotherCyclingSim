@@ -449,6 +449,29 @@ SHA, and marks its receipt `NON_PRODUCTION_FAST_VISUAL` with
 `full_production_proof_required=true`. The entire FAST pack must still finish
 within the 240 second target.
 
+### Session-only color-grade controls
+
+Issue #423 adds neutral vector parameters to the fixed Landscape master:
+`RockColorGain` and `SoilColorGain`, both defaulting to `(1,1,1,1)`.
+Only each surface's BaseColor branch is multiplied; normals, ORM, world masks,
+geometry, BOB and PCG/PCGEx semantics are untouched.
+
+FAST workflow dispatch may override the gains for owner review without saving
+the map or generated Material Instance. RGB channels are bounded to
+`0.65..1.35`; alpha must remain exactly `1.0`. The capture fails closed if
+either vector parameter is absent or if Material Instance readback differs from
+the requested value, and the normalized gains are recorded in the visual
+receipt.
+
+A master-capability change is not eligible for stale FAST carry-forward. The
+neutral parameterized master must first pass the normal FULL proof and establish
+a compatible warm fixed master. Only then may FAST be used for sub-two-minute
+color tuning. Accepted values must eventually move into canonical production
+material/provenance rather than remain workflow-only tuning.
+
+The dynamic-shadow diagnostic from #420 is deliberately separate: color gains
+must not be used to hide cliff cavities or frozen-geometry defects.
+
 **FULL** remains the production authority: deterministic catalog render x2,
 Blender reference, exact-SHA UE proof, whole-Landscape 1024-component
 assignment, four 4K acceptance views, three diagnostics and rollback.
