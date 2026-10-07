@@ -511,7 +511,7 @@ jobs:
             $receipt.status -ne 'MF_LANDSCAPE_VISUAL_PROOF_PASS' -or
             $receipt.exact_sha -ne $env:GITHUB_SHA -or
             [int]$receipt.capture_count -ne 4 -or
-            [int]$receipt.diagnostic_count -ne 2 -or
+            [int]$receipt.diagnostic_count -ne 3 -or
             [int]$receipt.whole_landscape_components -ne 1024 -or
             $receipt.rollback_complete -ne $true -or
             $receipt.map_saved -ne $false -or
@@ -533,9 +533,10 @@ jobs:
           }
           $diagnosticModes = @($receipt.diagnostics | ForEach-Object { $_.viewmode })
           if (
-            @($diagnosticModes).Count -ne 2 -or
+            @($diagnosticModes).Count -ne 3 -or
             $diagnosticModes -notcontains 'unlit' -or
-            $diagnosticModes -notcontains 'lightingonly'
+            $diagnosticModes -notcontains 'lightingonly' -or
+            $diagnosticModes -notcontains 'lit_detaillighting'
           ) {
             throw 'Material Forge cliff diagnostic modes are incomplete.'
           }
