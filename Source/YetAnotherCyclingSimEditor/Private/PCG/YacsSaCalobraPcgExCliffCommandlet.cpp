@@ -240,10 +240,16 @@ namespace
                         Components.GetComponent(Left).Indices;
                     const TArray<int>& RightTriangles =
                         Components.GetComponent(Right).Indices;
-                    const int32 LeftMin =
-                        LeftTriangles.IsEmpty() ? MAX_int32 : Algo::Min(LeftTriangles);
-                    const int32 RightMin =
-                        RightTriangles.IsEmpty() ? MAX_int32 : Algo::Min(RightTriangles);
+                    int32 LeftMin = MAX_int32;
+                    for (const int32 TriangleId : LeftTriangles)
+                    {
+                        LeftMin = FMath::Min(LeftMin, TriangleId);
+                    }
+                    int32 RightMin = MAX_int32;
+                    for (const int32 TriangleId : RightTriangles)
+                    {
+                        RightMin = FMath::Min(RightMin, TriangleId);
+                    }
                     return LeftMin < RightMin;
                 });
 
