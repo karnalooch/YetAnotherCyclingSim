@@ -256,7 +256,7 @@ jobs:
             $receipt.evidence_authority -ne 'NON_PRODUCTION_FAST_VISUAL' -or
             $receipt.full_production_proof_required -ne $true -or
             [int]$receipt.capture_count -ne 1 -or
-            [int]$receipt.diagnostic_count -ne 3 -or
+            [int]$receipt.diagnostic_count -ne 4 -or
             [int]$receipt.applied_component_count -ne 1 -or
             $receipt.applied_scope -ne 'CANONICAL_COMPONENT_230' -or
             $receipt.rollback_complete -ne $true -or
@@ -280,6 +280,21 @@ jobs:
             throw "FAST diagnostic pack must contain exactly three unique diagnostic view modes: $($diagnosticModes -join ', ')."
           }
 
+          $diagnosticNames = @($receipt.diagnostics | ForEach-Object { [string]$_.name })
+          $shadowProbe = @(
+            $receipt.diagnostics |
+              Where-Object { [string]$_.name -eq 'fast-cliff-lighting-no-dynamic-shadows' }
+          )
+          if ($shadowProbe.Count -ne 1) {
+            throw 'FAST diagnostic pack must contain exactly one dynamic-shadow isolation probe.'
+          }
+          if (
+            [string]$shadowProbe[0].viewmode -ne 'lightingonly' -or
+            [bool]$shadowProbe[0].dynamic_shadows -ne $false
+          ) {
+            throw 'FAST dynamic-shadow isolation probe contract failed.'
+          }
+
           $started = [DateTime]::Parse($env:YACS_FAST_STARTED_UTC).ToUniversalTime()
           $elapsed = ([DateTime]::UtcNow - $started).TotalSeconds
           $jobReceipt = [ordered]@{
@@ -290,6 +305,12 @@ jobs:
             capture_count = [int]$receipt.capture_count
             diagnostic_count = [int]$receipt.diagnostic_count
             diagnostic_modes = $diagnosticModes
+            diagnostic_names = $diagnosticNames
+            dynamic_shadow_probe = [ordered]@{
+              name = [string]$shadowProbe[0].name
+              viewmode = [string]$shadowProbe[0].viewmode
+              dynamic_shadows = [bool]$shadowProbe[0].dynamic_shadows
+            }
             elapsed_seconds = [math]::Round($elapsed, 3)
             target_seconds = 240
             target_met = ($elapsed -le 240)

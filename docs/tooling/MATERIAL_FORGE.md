@@ -437,10 +437,12 @@ the latest FULL proof; missing warm state fails closed as
 
 FAST applies the fixed-master instance only to canonical
 `LandscapeComponent_230`. The default review pack stays at 1920x1080 and uses
-one camera for four frames: Lit for the iterative owner-facing comparison plus
-Unlit, Lighting Only and Detail Lighting diagnostics. The diagnostic trio is
-non-production evidence used to separate BaseColor/projection, geometry or
-self-shadowing, and material-normal contribution without paying for the FULL
+one camera for five frames: Lit for the iterative owner-facing comparison plus
+Unlit, Lighting Only, Lighting Only with dynamic shadows disabled, and Detail
+Lighting diagnostics. The shadow-off frame is diagnostic only; the show flag is
+reset before every capture and during rollback so state cannot leak. The pack
+separates BaseColor/projection, geometry or lighting response, dynamic
+shadowing, and material-normal contribution without paying for the FULL
 whole-Landscape proof on every hypothesis. FAST still rolls back the component
 override and transient lighting, records both artifact source SHA and execution
 SHA, and marks its receipt `NON_PRODUCTION_FAST_VISUAL` with

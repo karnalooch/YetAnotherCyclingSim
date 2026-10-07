@@ -241,31 +241,42 @@ def _build_views():
     ]
     if FAST_VISUAL:
         fast_views = []
-        for source, name, purpose in (
+        for source, name, purpose, dynamic_shadows in (
             (
                 views[3],
                 "fast-cliff-lit",
                 "non-production fast cliff lighting/material iteration",
+                True,
             ),
             (
                 views[4],
                 "fast-cliff-unlit",
                 "fast cliff diagnostic: albedo/projection without lighting response",
+                True,
             ),
             (
                 views[5],
                 "fast-cliff-lighting-only",
                 "fast cliff diagnostic: geometry/self-shadowing without BaseColor or normal maps",
+                True,
+            ),
+            (
+                views[5],
+                "fast-cliff-lighting-no-dynamic-shadows",
+                "fast cliff diagnostic: Lighting Only with dynamic shadows disabled",
+                False,
             ),
             (
                 views[6],
                 "fast-cliff-detail-lighting",
                 "fast cliff diagnostic: geometry/self-shadowing with material normal response",
+                True,
             ),
         ):
             fast = dict(source)
             fast["name"] = name
             fast["purpose"] = purpose
+            fast["dynamic_shadows"] = dynamic_shadows
             fast_views.append(fast)
         return fast_views
     return views
@@ -384,6 +395,14 @@ def _force_material_textures_resident():
 def _restore():
     global _camera
     errors = []
+    try:
+        if _world is not None:
+            unreal.SystemLibrary.execute_console_command(
+                _world, "showflag.DynamicShadows 1"
+            )
+    except Exception as exc:
+        errors.append("dynamic-shadow show flag restore: " + str(exc))
+
     try:
         if _landscape is not None:
             _landscape.set_editor_property("landscape_material", _original_global)
@@ -562,6 +581,14 @@ def schedule():
             raise RuntimeError("Unsupported diagnostic view mode: " + mode)
         unreal.SystemLibrary.execute_console_command(_world, "viewmode " + mode)
         unreal.AutomationLibrary.set_editor_viewport_view_mode(view_modes[mode])
+        dynamic_shadows = bool(view.get("dynamic_shadows", True))
+        unreal.SystemLibrary.execute_console_command(
+            _world, "showflag.DynamicShadows 1"
+        )
+        if not dynamic_shadows:
+            unreal.SystemLibrary.execute_console_command(
+                _world, "showflag.DynamicShadows 0"
+            )
         unreal.AutomationLibrary.finish_loading_before_screenshot()
         path = OUTPUT / (view["name"] + ".png")
         if path.exists():
@@ -612,6 +639,7 @@ def tick(_delta):
                 "resolution": CAPTURE_RESOLUTION,
                 "viewmode": view.get("viewmode", "lit"),
                 "kind": view.get("kind", "acceptance"),
+                "dynamic_shadows": bool(view.get("dynamic_shadows", True)),
                 "fov": view["fov"],
             }
         )
