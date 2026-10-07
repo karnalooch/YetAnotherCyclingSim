@@ -187,17 +187,23 @@ namespace
 
         for (const FPCGTaggedData& Tagged : Generated.TaggedData)
         {
-            UPCGDynamicMeshData* MeshData =
-                Cast<UPCGDynamicMeshData>(Tagged.Data);
+            const UPCGDynamicMeshData* MeshData =
+                Cast<const UPCGDynamicMeshData>(Tagged.Data);
             if (!MeshData || !MeshData->GetDynamicMesh())
             {
                 continue;
             }
 
-            UDynamicMesh* DynamicMesh = MeshData->GetMutableDynamicMesh();
+            // PCG generated output is intentionally immutable. Tessellate a
+            // transient duplicate instead of const-casting or mutating the
+            // connector-owned PCGEx DynamicMesh.
+            UDynamicMesh* DynamicMesh = DuplicateObject<UDynamicMesh>(
+                MeshData->GetDynamicMesh(),
+                GetTransientPackage());
             if (!DynamicMesh)
             {
-                continue;
+                OutError = TEXT("Could not duplicate PCGEx DynamicMesh for deterministic tessellation.");
+                return false;
             }
 
             const UE::Geometry::FDynamicMesh3& BeforeMesh = DynamicMesh->GetMeshRef();
