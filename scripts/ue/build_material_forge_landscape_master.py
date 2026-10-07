@@ -297,6 +297,26 @@ def main() -> None:
         _link(base_color, "XYZ Texture", macro_base_color, "A")
         _link(macro_gain, "", macro_base_color, "B")
 
+        color_gain = _node(
+            material,
+            unreal.MaterialExpressionVectorParameter,
+            parameter_name=prefix + "ColorGain",
+            group="Material Forge Landscape",
+            default_value=unreal.LinearColor(1.0, 1.0, 1.0, 1.0),
+        )
+        color_gain_rgb = _node(
+            material,
+            unreal.MaterialExpressionComponentMask,
+            r=True,
+            g=True,
+            b=True,
+            a=False,
+        )
+        _link(color_gain, "", color_gain_rgb, "")
+        graded_base_color = _node(material, unreal.MaterialExpressionMultiply)
+        _link(macro_base_color, "", graded_base_color, "A")
+        _link(color_gain_rgb, "", graded_base_color, "B")
+
         roughness = _node(
             material,
             unreal.MaterialExpressionComponentMask,
@@ -316,7 +336,7 @@ def main() -> None:
         )
         _link(orm, "XYZ Texture", ao, "")
         projected[key] = {
-            "BaseColor": (macro_base_color, ""),
+            "BaseColor": (graded_base_color, ""),
             "Normal": (normal, "XYZ Texture"),
             "Roughness": (roughness, ""),
             "AO": (ao, ""),
@@ -399,6 +419,14 @@ def main() -> None:
             "RockMacroStrength",
             "SoilMacroStrength",
         ],
+        "vector_parameters": [
+            "RockColorGain",
+            "SoilColorGain",
+        ],
+        "color_gain_defaults": {
+            "RockColorGain": [1.0, 1.0, 1.0, 1.0],
+            "SoilColorGain": [1.0, 1.0, 1.0, 1.0],
+        },
         "mask_contract": "five-tap B=rock; soil=1-rock",
         "projection": "WorldAlignedTexture + WorldAlignedNormal",
         "orm_placeholder": ORM_PLACEHOLDER_PATH,
