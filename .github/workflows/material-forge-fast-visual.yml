@@ -3,6 +3,17 @@ name: Material Forge FAST cliff visual
 
 on:
   workflow_dispatch:
+    inputs:
+      rock_color_gain:
+        description: "Session-only RockColorGain RGBA, each RGB 0.65..1.35; alpha=1"
+        required: false
+        default: "1,1,1,1"
+        type: string
+      soil_color_gain:
+        description: "Session-only SoilColorGain RGBA, each RGB 0.65..1.35; alpha=1"
+        required: false
+        default: "1,1,1,1"
+        type: string
   push:
     branches:
       - "codex/363-landscape-material-foundation"
@@ -201,6 +212,12 @@ jobs:
           "YACS_MF_FIXED_MASTER_PATH=/Game/Generated/YACS/MaterialForge/Templates/M_MaterialForgeLandscapeBlend" >> $env:GITHUB_ENV
           "YACS_MATERIAL_FORGE_ARTIFACT_SHA=$sourceSha" >> $env:GITHUB_ENV
           "YACS_MF_FAST_VISUAL=1" >> $env:GITHUB_ENV
+          $rockGain = '${{ github.event.inputs.rock_color_gain }}'
+          if ([string]::IsNullOrWhiteSpace($rockGain)) { $rockGain = '1,1,1,1' }
+          $soilGain = '${{ github.event.inputs.soil_color_gain }}'
+          if ([string]::IsNullOrWhiteSpace($soilGain)) { $soilGain = '1,1,1,1' }
+          "YACS_MF_ROCK_COLOR_GAIN=$rockGain" >> $env:GITHUB_ENV
+          "YACS_MF_SOIL_COLOR_GAIN=$soilGain" >> $env:GITHUB_ENV
 
       - name: Capture FAST cliff diagnostic pack
         shell: pwsh
@@ -268,6 +285,14 @@ jobs:
           if ($receipt.execution_sha -ne $env:YACS_MATERIAL_FORGE_EXECUTION_SHA) {
             throw 'FAST visual execution SHA mismatch.'
           }
+          if (
+            $null -eq $receipt.color_gains -or
+            @($receipt.color_gains.rock).Count -ne 4 -or
+            @($receipt.color_gains.soil).Count -ne 4 -or
+            [double]$receipt.color_gains.alpha -ne 1.0
+          ) {
+            throw 'FAST color-gain receipt contract failed.'
+          }
 
           $diagnosticModes = @($receipt.diagnostics | ForEach-Object { [string]$_.viewmode })
           $requiredDiagnosticModes = @('unlit', 'lightingonly', 'lit_detaillighting')
@@ -311,6 +336,7 @@ jobs:
               viewmode = [string]$shadowProbe[0].viewmode
               dynamic_shadows = [bool]$shadowProbe[0].dynamic_shadows
             }
+            color_gains = $receipt.color_gains
             elapsed_seconds = [math]::Round($elapsed, 3)
             target_seconds = 240
             target_met = ($elapsed -le 240)
