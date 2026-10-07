@@ -1,0 +1,126 @@
+name: Sa Calobra Cliff Road Water Audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "diag/442-road-water-cliff-exclusions"
+    paths:
+      - ".github/workflows/sa-calobra-cliff-road-water-audit.yml"
+      - "scripts/assets/analyze_sa_calobra_cliff_road_water.py"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sa-calobra-cliff-road-water-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: Road and hydrology exclusion diagnostic
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 30
+    env:
+      PYTHONUTF8: "1"
+
+    steps:
+      - name: Checkout exact diagnostic revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+
+      - name: Verify exact checkout
+        shell: pwsh
+        run: |
+          $actual = (git rev-parse HEAD).Trim()
+          if ($actual -ne '${{ github.sha }}') {
+            throw "Road/water audit checkout mismatch: $actual != ${{ github.sha }}"
+          }
+
+      - name: Install pinned GIS diagnostic dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check --only-binary=:all: numpy==2.3.5 rasterio==1.5.2 shapely==2.1.2 pillow==12.0.0
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Road/water audit GIS dependency install failed.'
+          }
+
+      - name: Resolve retained frozen inputs
+        shell: pwsh
+        run: |
+          $root = Join-Path $env:RUNNER_WORKSPACE '_yacs-world-data\sa-calobra-working-v1'
+          $normalized = Join-Path $root 'normalized-context-v1a-2026-10-04\manifest.json'
+          $pcg = Join-Path $root 'pcg-masks-v1-2026-10-04\pcg-mask-manifest.json'
+          $context = Join-Path $root 'context-exclusions-v2-2026-10-04\context-mask-manifest.json'
+          foreach ($path in @($normalized, $pcg, $context)) {
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+              throw "Required retained road/water input missing: $path"
+            }
+          }
+          $out = Join-Path $env:RUNNER_TEMP "sa-calobra-road-water-${{ github.sha }}"
+          $replay = Join-Path $env:RUNNER_TEMP "sa-calobra-road-water-replay-${{ github.sha }}"
+          Remove-Item -LiteralPath $out -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -LiteralPath $replay -Recurse -Force -ErrorAction SilentlyContinue
+          "YACS_RW_NORMALIZED=$normalized" >> $env:GITHUB_ENV
+          "YACS_RW_PCG=$pcg" >> $env:GITHUB_ENV
+          "YACS_RW_CONTEXT=$context" >> $env:GITHUB_ENV
+          "YACS_RW_OUTPUT=$out" >> $env:GITHUB_ENV
+          "YACS_RW_REPLAY=$replay" >> $env:GITHUB_ENV
+
+      - name: Compile diagnostic
+        shell: pwsh
+        run: |
+          python -m py_compile scripts/assets/analyze_sa_calobra_cliff_road_water.py
+          if ($LASTEXITCODE -ne 0) { throw 'Road/water diagnostic compile failed.' }
+
+      - name: Run road and hydrology audit twice
+        shell: pwsh
+        run: |
+          foreach ($target in @($env:YACS_RW_OUTPUT, $env:YACS_RW_REPLAY)) {
+            python scripts/assets/analyze_sa_calobra_cliff_road_water.py --normalized-manifest $env:YACS_RW_NORMALIZED --pcg-manifest $env:YACS_RW_PCG --context-manifest $env:YACS_RW_CONTEXT --output $target
+            if ($LASTEXITCODE -ne 0) {
+              throw "Road/water diagnostic failed for $target"
+            }
+          }
+
+      - name: Verify deterministic receipt and narrow scope
+        shell: pwsh
+        run: |
+          $a = Get-Content -LiteralPath (Join-Path $env:YACS_RW_OUTPUT 'road-water-cliff-audit.json') -Raw | ConvertFrom-Json
+          $b = Get-Content -LiteralPath (Join-Path $env:YACS_RW_REPLAY 'road-water-cliff-audit.json') -Raw | ConvertFrom-Json
+          if (
+            $a.status -ne 'CLIFF_ROAD_WATER_EXCLUSION_DIAGNOSTIC' -or
+            $a.geometry_mutation -ne $false -or
+            $a.canonical_landscape_mutation -ne $false -or
+            $a.selector_policy_mutation -ne $false -or
+            $a.fingerprint -ne $b.fingerprint
+          ) {
+            throw 'Road/water deterministic diagnostic contract failed.'
+          }
+          if (
+            [int64]$a.roads.pavement_cells -ne 169739 -or
+            [int64]$a.roads.shoulder_cells -ne 30677 -or
+            [int64]$a.scenarios.current_broad_protected_union.cliff_candidate_cells -ne 1472939 -or
+            [int64]$a.scenarios.current_broad_protected_union.scree_candidate_cells -ne 508659 -or
+            [int]$a.scenarios.current_broad_protected_union.component_230.cliff_candidate_cells -ne 2522 -or
+            [int]$a.scenarios.current_broad_protected_union.component_230.scree_candidate_cells -ne 1175
+          ) {
+            throw 'Road/water audit source checkpoint drifted.'
+          }
+          $a | ConvertTo-Json -Depth 16 | Write-Host
+          Remove-Item -LiteralPath $env:YACS_RW_REPLAY -Recurse -Force
+
+      - name: Upload road/water diagnostic evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: sa-calobra-road-water-audit-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/sa-calobra-road-water-${{ github.sha }}/**
+          if-no-files-found: warn
+          compression-level: 6
+          retention-days: 14
