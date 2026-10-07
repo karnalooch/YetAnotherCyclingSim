@@ -1,15 +1,19 @@
-name: Sa Calobra Cliff Erosion Selector Proof
+name: Sa Calobra Cliff Erosion Phase 2A Proof
 
 on:
   workflow_dispatch:
   push:
     branches:
       - "feat/429-cliff-erosion-selector-foundation"
+      - "feat/440-cliff-erosion-handoff"
       - "codex/363-landscape-material-foundation"
     paths:
       - ".github/workflows/sa-calobra-cliff-erosion-proof.yml"
       - "scripts/assets/prepare_sa_calobra_cliff_erosion.py"
       - "scripts/assets/test_sa_calobra_cliff_erosion.py"
+      - "scripts/assets/prepare_sa_calobra_cliff_erosion_handoff.py"
+      - "scripts/assets/test_sa_calobra_cliff_erosion_handoff.py"
+      - "docs/tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md"
 
 permissions:
   contents: read
@@ -20,13 +24,14 @@ concurrency:
 
 jobs:
   selector-proof:
-    name: Frozen-grid cliff and scree selectors
+    name: Frozen-grid selectors and Phase 2A handoff
     runs-on: [self-hosted, yacs-ue58]
-    timeout-minutes: 20
+    timeout-minutes: 30
     env:
       PYTHONUTF8: "1"
+
     steps:
-      - name: Checkout exact selector revision
+      - name: Checkout exact handoff revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
@@ -39,14 +44,16 @@ jobs:
         run: |
           $actual = (git rev-parse HEAD).Trim()
           if ($actual -ne '${{ github.sha }}') {
-            throw "Cliff selector checkout mismatch: $actual != ${{ github.sha }}"
+            throw "Cliff handoff checkout mismatch: $actual != ${{ github.sha }}"
           }
 
       - name: Install pinned GIS proof dependencies
         shell: pwsh
         run: |
           python -m pip install --disable-pip-version-check --only-binary=:all: numpy==2.3.5 rasterio==1.5.2 shapely==2.1.2 pillow==12.0.0
-          if ($LASTEXITCODE -ne 0) { throw 'Cliff selector GIS dependency install failed.' }
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Cliff Phase 2A GIS dependency install failed.'
+          }
 
       - name: Resolve retained frozen-grid inputs
         shell: pwsh
@@ -56,47 +63,131 @@ jobs:
           $pcg = Join-Path $root 'pcg-masks-v1-2026-10-04\pcg-mask-manifest.json'
           foreach ($path in @($normalized, $pcg)) {
             if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
-              throw "Required retained cliff-selector input missing: $path"
+              throw "Required retained cliff handoff input missing: $path"
             }
           }
-          $out = Join-Path $env:RUNNER_TEMP "sa-calobra-cliff-erosion-${{ github.sha }}"
-          Remove-Item -LiteralPath $out -Recurse -Force -ErrorAction SilentlyContinue
+
+          $selector = Join-Path $env:RUNNER_TEMP "sa-calobra-cliff-erosion-${{ github.sha }}"
+          $handoff = Join-Path $env:RUNNER_TEMP "sa-calobra-cliff-erosion-phase2a-${{ github.sha }}"
+          $replay = Join-Path $env:RUNNER_TEMP "sa-calobra-cliff-erosion-phase2a-replay-${{ github.sha }}"
+          foreach ($path in @($selector, $handoff, $replay)) {
+            Remove-Item -LiteralPath $path -Recurse -Force -ErrorAction SilentlyContinue
+          }
+
           "YACS_CLIFF_NORMALIZED=$normalized" >> $env:GITHUB_ENV
           "YACS_CLIFF_PCG=$pcg" >> $env:GITHUB_ENV
-          "YACS_CLIFF_OUTPUT=$out" >> $env:GITHUB_ENV
+          "YACS_CLIFF_OUTPUT=$selector" >> $env:GITHUB_ENV
+          "YACS_CLIFF_HANDOFF=$handoff" >> $env:GITHUB_ENV
+          "YACS_CLIFF_HANDOFF_REPLAY=$replay" >> $env:GITHUB_ENV
 
-      - name: Run focused selector tests
+      - name: Run focused selector and handoff tests
         shell: pwsh
         run: |
-          python -m unittest scripts.assets.test_sa_calobra_cliff_erosion -v
-          if ($LASTEXITCODE -ne 0) { throw 'Cliff selector focused tests failed.' }
+          python -m unittest scripts.assets.test_sa_calobra_cliff_erosion scripts.assets.test_sa_calobra_cliff_erosion_handoff -v
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Cliff selector / Phase 2A focused tests failed.'
+          }
 
-      - name: Build whole-area selectors
+      - name: Build whole-area Phase 1 selectors
         shell: pwsh
         run: |
           python scripts/assets/prepare_sa_calobra_cliff_erosion.py --normalized-manifest $env:YACS_CLIFF_NORMALIZED --pcg-manifest $env:YACS_CLIFF_PCG --output $env:YACS_CLIFF_OUTPUT
-          if ($LASTEXITCODE -ne 0) { throw 'Cliff selector preparation failed.' }
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Cliff selector preparation failed.'
+          }
 
           $manifest = Get-Content -LiteralPath (Join-Path $env:YACS_CLIFF_OUTPUT 'cliff-erosion-manifest.json') -Raw | ConvertFrom-Json
           if (
             $manifest.status -ne 'CLIFF_EROSION_PRESENTATION_SELECTOR_CANDIDATE' -or
             $manifest.geometry_mutation -ne $false -or
             $manifest.canonical_landscape_mutation -ne $false -or
-            [int]$manifest.counts.cliff_candidate_cells -le 0 -or
-            [int]$manifest.counts.scree_candidate_cells -le 0 -or
-            [int]$manifest.counts.protected_cells -le 0
+            [int64]$manifest.counts.cliff_candidate_cells -ne 1472939 -or
+            [int64]$manifest.counts.scree_candidate_cells -ne 508659 -or
+            [int64]$manifest.counts.protected_cells -le 0
           ) {
-            throw 'Cliff selector manifest contract failed.'
+            throw 'Frozen Phase 1 selector identity/count contract failed.'
           }
-          $manifest | ConvertTo-Json -Depth 12 | Write-Host
 
-      - name: Upload selector evidence
+      - name: Build Phase 2A handoff and deterministic replay
+        shell: pwsh
+        run: |
+          $selectorManifest = Join-Path $env:YACS_CLIFF_OUTPUT 'cliff-erosion-manifest.json'
+          foreach ($target in @($env:YACS_CLIFF_HANDOFF, $env:YACS_CLIFF_HANDOFF_REPLAY)) {
+            python scripts/assets/prepare_sa_calobra_cliff_erosion_handoff.py --normalized-manifest $env:YACS_CLIFF_NORMALIZED --pcg-manifest $env:YACS_CLIFF_PCG --selector-manifest $selectorManifest --output $target
+            if ($LASTEXITCODE -ne 0) {
+              throw "Cliff Phase 2A handoff failed for $target"
+            }
+          }
+
+      - name: Verify replay, exact Component 230 and no-mutation contract
+        shell: pwsh
+        run: |
+          $aPath = Join-Path $env:YACS_CLIFF_HANDOFF 'cliff-erosion-handoff-manifest.json'
+          $bPath = Join-Path $env:YACS_CLIFF_HANDOFF_REPLAY 'cliff-erosion-handoff-manifest.json'
+          $a = Get-Content -LiteralPath $aPath -Raw | ConvertFrom-Json
+          $b = Get-Content -LiteralPath $bPath -Raw | ConvertFrom-Json
+
+          if (
+            $a.status -ne 'CLIFF_EROSION_PHASE2A_PLACEMENT_HANDOFF' -or
+            $a.geometry_mutation -ne $false -or
+            $a.canonical_landscape_mutation -ne $false -or
+            [int64]$a.counts.cliff_candidate_cells -ne 1472939 -or
+            [int64]$a.counts.scree_candidate_cells -ne 508659 -or
+            [int]$a.counts.cliff_patch_count -le 0 -or
+            [int]$a.counts.scree_sample_count -le 0
+          ) {
+            throw 'Phase 2A whole-area handoff contract failed.'
+          }
+
+          $component = $a.component_230
+          if (
+            [int]$component.window_cells -ne 16129 -or
+            [int]$component.cliff_candidate_cells -ne 2522 -or
+            [double]$component.cliff_candidate_area_m2 -ne 630.5 -or
+            [int]$component.scree_candidate_cells -ne 1175 -or
+            [double]$component.scree_candidate_area_m2 -ne 293.75 -or
+            [int]$component.protected_cells -ne 1236 -or
+            [int]$component.invalid_selector_cells -ne 0 -or
+            [int]$component.cliff_patch_count_intersecting -le 0 -or
+            [int]$component.scree_sample_count -le 0
+          ) {
+            throw 'LandscapeComponent_230 exact Phase 2A checkpoint failed.'
+          }
+
+          if ($a.fingerprint -ne $b.fingerprint) {
+            throw "Phase 2A replay fingerprint mismatch: $($a.fingerprint) != $($b.fingerprint)"
+          }
+
+          $logicalA = @{}
+          foreach ($row in $a.outputs) {
+            $value = "$($row.logical_sha256)"
+            if ([string]::IsNullOrWhiteSpace($value)) {
+              $value = "$($row.sha256)"
+            }
+            $logicalA["$($row.path)"] = $value
+          }
+          foreach ($row in $b.outputs) {
+            $key = "$($row.path)"
+            $value = "$($row.logical_sha256)"
+            if ([string]::IsNullOrWhiteSpace($value)) {
+              $value = "$($row.sha256)"
+            }
+            if (-not $logicalA.ContainsKey($key) -or $logicalA[$key] -ne $value) {
+              throw "Phase 2A logical replay mismatch for $key"
+            }
+          }
+
+          $a | ConvertTo-Json -Depth 14 | Write-Host
+          Remove-Item -LiteralPath $env:YACS_CLIFF_HANDOFF_REPLAY -Recurse -Force
+
+      - name: Upload selector and Phase 2A evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
         with:
-          name: sa-calobra-cliff-erosion-${{ github.sha }}-${{ github.run_attempt }}
+          name: sa-calobra-cliff-erosion-phase2a-${{ github.sha }}-${{ github.run_attempt }}
           path: |
             ${{ runner.temp }}/sa-calobra-cliff-erosion-${{ github.sha }}/**
+            ${{ runner.temp }}/sa-calobra-cliff-erosion-phase2a-${{ github.sha }}/**
           if-no-files-found: warn
           compression-level: 6
           retention-days: 14
