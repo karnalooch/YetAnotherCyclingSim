@@ -27,7 +27,7 @@
 #include "CompGeom/Delaunay2.h"
 #include "Curve/GeneralPolygon2.h"
 #include "Data/PCGBasePointData.h"
-#include "Elements/PCGExClipper2Boolean.h"
+#include "Clipper2Lib/clipper.h"
 #include "Polygon2.h"
 #include "UDynamicMesh.h"
 #include "DynamicMesh/DynamicMesh3.h"
@@ -39,7 +39,6 @@ DEFINE_LOG_CATEGORY_STATIC(LogYacsSaCalobraPcgExCliff, Log, All);
 namespace
 {
     constexpr TCHAR PathPinName[] = TEXT("Paths");
-    constexpr TCHAR HoleTagName[] = TEXT("YACS.Phase2C.Hole");
     constexpr TCHAR PcgExCommit[] =
         TEXT("39a8f1bdc65b2c4613a1e87b71d93b4576db0a66");
 
@@ -187,6 +186,8 @@ namespace
         double& OutMaxEdgeBeforeCm,
         double& OutMaxEdgeAfterCm,
         int32& OutMaxTessellation,
+        int32& OutUnionOuterCount,
+        int32& OutUnionHoleCount,
         FString& OutError)
     {
         if (!Graph)
@@ -275,13 +276,13 @@ namespace
         constexpr int32 MaxTessellation = 12;
         constexpr int32 MaxTriangleCountPerMesh = 60000;
 
-        struct FUnionLoop
-        {
-            TArray<FVector2d> Vertices;
-            bool bHole = false;
-        };
+        constexpr int32 ClipperPrecision = 100;
+        constexpr double InvClipperPrecision =
+            1.0 / static_cast<double>(ClipperPrecision);
 
-        TArray<FUnionLoop> UnionLoops;
+        PCGExClipper2Lib::Paths64 SourcePaths;
+        SourcePaths.reserve(Generated.TaggedData.Num());
+
         for (const FPCGTaggedData& Tagged : Generated.TaggedData)
         {
             const UPCGBasePointData* PointData =
@@ -297,26 +298,39 @@ namespace
                 continue;
             }
 
-            FUnionLoop Loop;
-            Loop.Vertices.Reserve(Transforms.Num());
+            PCGExClipper2Lib::Path64 Path;
+            Path.reserve(Transforms.Num());
             for (int32 PointIndex = 0; PointIndex < Transforms.Num(); ++PointIndex)
             {
                 const FVector Position = Transforms[PointIndex].GetLocation();
-                Loop.Vertices.Add(FVector2d(Position.X, Position.Y));
+                Path.emplace_back(
+                    FMath::RoundToInt64(Position.X * ClipperPrecision),
+                    FMath::RoundToInt64(Position.Y * ClipperPrecision));
             }
-
-            if (!SanitizePlanarLoop(Loop.Vertices))
-            {
-                continue;
-            }
-
-            Loop.bHole = Tagged.Tags.Contains(FString(HoleTagName));
-            UnionLoops.Add(MoveTemp(Loop));
+            SourcePaths.push_back(MoveTemp(Path));
         }
 
-        if (UnionLoops.IsEmpty())
+        if (SourcePaths.size() != 1017)
         {
-            OutError = TEXT("PCGEx Clipper2 Union produced no closed footprint paths.");
+            OutError = FString::Printf(
+                TEXT("Phase 2C source graph returned %d closed paths; expected 1017."),
+                static_cast<int32>(SourcePaths.size()));
+            return false;
+        }
+
+        // IMPORTANT: do not consume the PCG Boolean node's flattened path
+        // output here. PCGEx 0.79's point-data restoration path drops small
+        // nested rings. Use the same pinned PCGEx/Clipper2 implementation
+        // directly and retain its PolyTree hierarchy losslessly.
+        PCGExClipper2Lib::Clipper64 Clipper;
+        Clipper.AddSubject(SourcePaths);
+        PCGExClipper2Lib::PolyTree64 UnionTree;
+        if (!Clipper.Execute(
+                PCGExClipper2Lib::ClipType::Union,
+                PCGExClipper2Lib::FillRule::NonZero,
+                UnionTree))
+        {
+            OutError = TEXT("PCGEx embedded Clipper2 failed to union authoritative cliff cells.");
             return false;
         }
 
@@ -327,47 +341,140 @@ namespace
         };
 
         TArray<FPolygonGroup> PolygonGroups;
-        for (const FUnionLoop& Loop : UnionLoops)
-        {
-            if (Loop.bHole)
-            {
-                continue;
-            }
+        OutUnionOuterCount = 0;
+        OutUnionHoleCount = 0;
 
-            FPolygonGroup& Group = PolygonGroups.AddDefaulted_GetRef();
-            Group.Outer = UE::Geometry::TPolygon2<double>(Loop.Vertices);
-            // Canonical orientation: outer CCW, holes CW. UE's general-polygon
-            // Delaunay path understands either outer orientation, but explicit
-            // normalization makes the receipt independent of PCGEx path winding.
-            if (Group.Outer.SignedArea() < 0.0)
+        auto ConvertClipperPath =
+            [InvClipperPrecision](
+                const PCGExClipper2Lib::Path64& InPath,
+                TArray<FVector2d>& OutVertices) -> bool
             {
-                Group.Outer.Reverse();
+                OutVertices.Reset();
+                OutVertices.Reserve(static_cast<int32>(InPath.size()));
+                for (const PCGExClipper2Lib::Point64& Point : InPath)
+                {
+                    OutVertices.Add(
+                        FVector2d(
+                            static_cast<double>(Point.x) * InvClipperPrecision,
+                            static_cast<double>(Point.y) * InvClipperPrecision));
+                }
+                return SanitizePlanarLoop(OutVertices);
+            };
+
+        TFunction<bool(const PCGExClipper2Lib::PolyPath64*)> CollectOuter;
+        CollectOuter =
+            [&](
+                const PCGExClipper2Lib::PolyPath64* OuterNode) -> bool
+            {
+                if (!OuterNode)
+                {
+                    return true;
+                }
+
+                const PCGExClipper2Lib::Path64& OuterPath =
+                    OuterNode->Polygon();
+                if (OuterPath.empty())
+                {
+                    for (size_t ChildIndex = 0;
+                         ChildIndex < OuterNode->Count();
+                         ++ChildIndex)
+                    {
+                        if (!CollectOuter(OuterNode->Child(ChildIndex)))
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+
+                TArray<FVector2d> OuterVertices;
+                if (!ConvertClipperPath(OuterPath, OuterVertices))
+                {
+                    OutError = TEXT("PCGEx PolyTree produced an invalid outer contour.");
+                    return false;
+                }
+
+                FPolygonGroup& Group = PolygonGroups.AddDefaulted_GetRef();
+                Group.Outer =
+                    UE::Geometry::TPolygon2<double>(MoveTemp(OuterVertices));
+                if (Group.Outer.SignedArea() < 0.0)
+                {
+                    Group.Outer.Reverse();
+                }
+                ++OutUnionOuterCount;
+
+                for (size_t HoleIndex = 0;
+                     HoleIndex < OuterNode->Count();
+                     ++HoleIndex)
+                {
+                    const PCGExClipper2Lib::PolyPath64* HoleNode =
+                        OuterNode->Child(HoleIndex);
+                    if (!HoleNode)
+                    {
+                        continue;
+                    }
+
+                    TArray<FVector2d> HoleVertices;
+                    if (!ConvertClipperPath(
+                            HoleNode->Polygon(),
+                            HoleVertices))
+                    {
+                        OutError = TEXT("PCGEx PolyTree produced an invalid hole contour.");
+                        return false;
+                    }
+
+                    UE::Geometry::TPolygon2<double> Hole(
+                        MoveTemp(HoleVertices));
+                    if (Hole.SignedArea() > 0.0)
+                    {
+                        Hole.Reverse();
+                    }
+                    Group.Holes.Add(MoveTemp(Hole));
+                    ++OutUnionHoleCount;
+
+                    // Children of a hole are solid islands and must restart
+                    // as independent outer polygons.
+                    for (size_t IslandIndex = 0;
+                         IslandIndex < HoleNode->Count();
+                         ++IslandIndex)
+                    {
+                        if (!CollectOuter(HoleNode->Child(IslandIndex)))
+                        {
+                            return false;
+                        }
+                    }
+                }
+
+                return true;
+            };
+
+        for (size_t RootIndex = 0;
+             RootIndex < UnionTree.Count();
+             ++RootIndex)
+        {
+            if (!CollectOuter(UnionTree.Child(RootIndex)))
+            {
+                return false;
             }
         }
 
-        if (PolygonGroups.IsEmpty())
+        UE_LOG(
+            LogYacsSaCalobraPcgExCliff,
+            Display,
+            TEXT("Phase 2C PCGEx PolyTree Union: outer_paths=%d hole_paths=%d."),
+            OutUnionOuterCount,
+            OutUnionHoleCount);
+
+        if (OutUnionOuterCount != 19 || OutUnionHoleCount != 19)
         {
-            OutError = TEXT("PCGEx Clipper2 Union produced no outer footprint paths.");
+            OutError = FString::Printf(
+                TEXT("PCGEx PolyTree authority mismatch: outer=%d/19 holes=%d/19."),
+                OutUnionOuterCount,
+                OutUnionHoleCount);
             return false;
         }
 
-        int32 HoleCount = 0;
-        for (const FUnionLoop& Loop : UnionLoops)
-        {
-            if (!Loop.bHole)
-            {
-                continue;
-            }
-
-            UE::Geometry::TPolygon2<double> Hole(Loop.Vertices);
-            if (Hole.SignedArea() > 0.0)
-            {
-                Hole.Reverse();
-            }
-
-            int32 BestOuter = INDEX_NONE;
-            double BestOuterArea = TNumericLimits<double>::Max();
-            for (int32 GroupIndex = 0; GroupIndex < PolygonGroups.Num(); ++GroupIndex)
+        for (int32 GroupIndex = 0; GroupIndex < PolygonGroups.Num(); ++GroupIndex)
             {
                 if (!PolygonGroups[GroupIndex].Outer.Contains(Hole))
                 {
@@ -702,39 +809,12 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     }
     Source->PlanJsonPath = PlanPath;
 
-    // PCGEx owns the authoritative topology stage: exact YACS 1 m cells are
-    // consolidated through Clipper2 Boolean Union, which emits explicit outer
-    // and hole contours. UE 5.8 then triangulates those already-resolved
-    // contours; this avoids PCGEx 0.79's known-bad triangulation wrapper while
-    // keeping classification and footprint construction entirely in PCGEx.
-    UPCGExClipper2BooleanSettings* Union = nullptr;
-    UPCGNode* UnionNode =
-        Graph->AddNodeOfType<UPCGExClipper2BooleanSettings>(Union);
-    if (!UnionNode || !Union)
-    {
-        return 15;
-    }
-    Union->MainDataMatching.Mode = EPCGExMapMatchMode::Disabled;
-    Union->MainInputGroupingPolicy = EPCGExGroupingPolicy::Consolidate;
-    Union->Operation = EPCGExClipper2BooleanOp::Union;
-    Union->FillRule = EPCGExClipper2FillRule::NonZero;
-    Union->bUseOperandPin = false;
-    Union->bSimplifyPaths = false;
-    Union->bPreserveCollinear = true;
-    Union->bTagHoles = true;
-    Union->HoleTag = FString(HoleTagName);
-
+    // Materialize only the exact YACS cell paths through stock PCG. The
+    // topology operation itself is performed immediately after graph execution
+    // with the pinned PCGEx-embedded Clipper2 PolyTree API, avoiding the
+    // lossy PCG point-data restoration layer while keeping PCGEx as the
+    // authoritative footprint topology implementation.
     const FName PathsPin(PathPinName);
-    if (!Connect(
-            Graph,
-            SourceNode,
-            PathsPin,
-            UnionNode,
-            PathsPin,
-            TEXT("Exact YACS cells -> PCGEx Clipper2 Boolean Union")))
-    {
-        return 19;
-    }
 
     UPCGNode* OutputNode = Graph->GetOutputNode();
     if (!OutputNode || OutputNode->GetInputPins().IsEmpty())
@@ -743,7 +823,7 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     }
     const FName GraphOutputPin = OutputNode->GetInputPins()[0]->Properties.Label;
     Graph->AddLabeledEdge(
-        UnionNode,
+        SourceNode,
         PathsPin,
         OutputNode,
         GraphOutputPin);
@@ -754,6 +834,8 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     double MaxEdgeBeforeCm = 0.0;
     double MaxEdgeAfterCm = 0.0;
     int32 MaxTessellation = 1;
+    int32 UnionOuterCount = 0;
+    int32 UnionHoleCount = 0;
     FString ExecutionError;
     if (!ExecuteGraph(
             Graph,
@@ -763,6 +845,8 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
             MaxEdgeBeforeCm,
             MaxEdgeAfterCm,
             MaxTessellation,
+            UnionOuterCount,
+            UnionHoleCount,
             ExecutionError))
     {
         UE_LOG(
@@ -792,15 +876,18 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     Root->SetStringField(TEXT("pcgex_commit"), PcgExCommit);
     Root->SetStringField(
         TEXT("pipeline"),
-        TEXT("YACS exact cliff cells -> PCGEx Clipper2 Boolean Union("
-             "global Consolidate, matching disabled, NonZero, explicit outer+hole contours) -> UE 5.8 FDelaunay2("
-             "TGeneralPolygon2 holes) -> deterministic UE Uniform Tessellation; "
-             "PCGEx owns admitted footprint topology, UE owns only surface triangulation; "
-             "presentation smoothing remains post-drape so hard exclusions stay exact"));
+        TEXT("YACS exact cliff cells -> pinned PCGEx embedded Clipper2 "
+             "PolyTree Union(NonZero, lossless outer+hole hierarchy) -> "
+             "UE 5.8 FDelaunay2(TGeneralPolygon2 holes) -> deterministic "
+             "UE Uniform Tessellation; PCGEx owns admitted footprint topology, "
+             "UE owns only surface triangulation; presentation smoothing remains "
+             "post-drape so hard exclusions stay exact"));
     Root->SetBoolField(TEXT("canonical_landscape_mutation"), false);
     Root->SetBoolField(TEXT("assets_saved"), false);
     Root->SetBoolField(TEXT("graph_saved"), false);
     Root->SetNumberField(TEXT("source_skin_cell_count"), ExpectedSkinCells);
+    Root->SetNumberField(TEXT("pcgex_union_outer_count"), UnionOuterCount);
+    Root->SetNumberField(TEXT("pcgex_union_hole_count"), UnionHoleCount);
     Root->SetNumberField(TEXT("mesh_count"), Meshes.Num());
     Root->SetNumberField(TEXT("vertex_count"), VertexCount);
     Root->SetNumberField(TEXT("triangle_count"), TriangleCount);
