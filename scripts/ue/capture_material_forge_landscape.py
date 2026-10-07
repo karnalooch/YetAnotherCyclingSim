@@ -112,32 +112,31 @@ def _parse_color_gain(env_name: str):
     return unreal.LinearColor(*values), values
 
 
-def _apply_color_gains(instance):
-    requested = {
+def _requested_color_gains():
+    parsed = {
         "RockColorGain": _parse_color_gain("YACS_MF_ROCK_COLOR_GAIN"),
         "SoilColorGain": _parse_color_gain("YACS_MF_SOIL_COLOR_GAIN"),
     }
+    values = {name: value for name, (value, _normalized) in parsed.items()}
+    receipt = {
+        "rock": parsed["RockColorGain"][1],
+        "soil": parsed["SoilColorGain"][1],
+        "rgb_bounds": [COLOR_GAIN_MIN, COLOR_GAIN_MAX],
+        "alpha": 1.0,
+    }
+    return values, receipt
+
+
+def _verify_color_gain_readback(instance, expected_values):
     visible = {str(name) for name in LIB.get_vector_parameter_names(instance)}
-    missing = sorted(set(requested) - visible)
+    missing = sorted(set(expected_values) - visible)
     if missing:
         raise RuntimeError(
             "Fixed-master color gain parameter contract missing: " + ",".join(missing)
         )
 
     association = unreal.MaterialParameterAssociation.GLOBAL_PARAMETER
-    result = {}
-    for name, (value, normalized) in requested.items():
-        LIB.set_material_instance_parameter_override(instance, name, True, association)
-        LIB.set_material_instance_vector_parameter_value(
-            instance,
-            name,
-            value,
-            association,
-        )
-        result["rock" if name.startswith("Rock") else "soil"] = normalized
-
-    LIB.update_material_instance(instance)
-    for name, (expected, _normalized) in requested.items():
+    for name, expected in expected_values.items():
         actual = LIB.get_material_instance_vector_parameter_value(
             instance,
             name,
@@ -150,9 +149,6 @@ def _apply_color_gains(instance):
             for channel in channels
         ):
             raise RuntimeError("Fixed-master color gain readback failed: " + name)
-    result["rgb_bounds"] = [COLOR_GAIN_MIN, COLOR_GAIN_MAX]
-    result["alpha"] = 1.0
-    return result
 
 
 def _assert_memory(stage: str, physical_gb: int = MIN_FREE_PHYSICAL_GB):
@@ -867,13 +863,17 @@ def main():
     package = "/Game/Generated/YACS/MFVisualAcceptance/" + uuid.uuid4().hex
     weights = _preview._import_weight(package)
     _checkpoints.append({"stage": "weight_imported", "memory": _memory()})
+    requested_color_gains, _color_gains = _requested_color_gains()
     _instance, _drain = _preview._create_fixed_master_instance(
-        package, weights, _checkpoints
+        package,
+        weights,
+        _checkpoints,
+        color_gain_values=requested_color_gains,
     )
-    _color_gains = _apply_color_gains(_instance)
+    _verify_color_gain_readback(_instance, requested_color_gains)
     _checkpoints.append(
         {
-            "stage": "color_gains_applied",
+            "stage": "color_gains_bound_in_fixed_master_update",
             "color_gains": _color_gains,
             "memory": _memory(),
         }
