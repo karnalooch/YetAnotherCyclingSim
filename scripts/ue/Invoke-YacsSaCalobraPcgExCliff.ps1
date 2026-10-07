@@ -158,6 +158,7 @@ function Invoke-Phase2CCommandlet {
         '-Unattended',
         '-NoPause',
         '-NullRHI',
+        '-SkipAssetScan',
         '-NoSplash',
         '-NoP4',
         '-stdout',
