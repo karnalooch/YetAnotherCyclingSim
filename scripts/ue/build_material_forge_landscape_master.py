@@ -21,15 +21,19 @@ LIB = unreal.MaterialEditingLibrary
 MASTER_PACKAGE = "/Game/Generated/YACS/MaterialForge/Templates"
 MASTER_NAME = "M_MaterialForgeLandscapeBlend"
 MASTER_PATH = f"{MASTER_PACKAGE}/{MASTER_NAME}"
+ORM_PLACEHOLDER_NAME = "T_MF_ORMPlaceholder"
+ORM_PLACEHOLDER_PATH = f"{MASTER_PACKAGE}/{ORM_PLACEHOLDER_NAME}"
+ORM_PLACEHOLDER_SOURCE = (
+    "/Game/Prototype/Environment/Stage3G/Imported/Textures/"
+    "T_Stage3G_HighAlpine_Roughness"
+)
 
 DEFAULTS = {
     "WeightTex": "/Game/Generated/YACS/SaCalobra/MaterialFoundation/T_Weights_312f9bdd499b",
     "SoilBaseColorTex": "/Game/Prototype/Environment/Stage3G/Imported/Textures/T_Stage3G_Meadow_BaseColor",
     "SoilNormalTex": "/Game/Prototype/Environment/Stage3G/Imported/Textures/T_Stage3G_Meadow_Normal",
-    "SoilORMTex": "/Game/Prototype/Environment/Stage3G/Imported/Textures/T_Stage3G_Meadow_Roughness",
     "RockBaseColorTex": "/Game/Prototype/Environment/Stage3G/Imported/Textures/T_Stage3G_HighAlpine_BaseColor",
     "RockNormalTex": "/Game/Prototype/Environment/Stage3G/Imported/Textures/T_Stage3G_HighAlpine_Normal",
-    "RockORMTex": "/Game/Prototype/Environment/Stage3G/Imported/Textures/T_Stage3G_HighAlpine_Roughness",
 }
 
 
@@ -59,15 +63,45 @@ def _output(source, output, prop):
         raise RuntimeError("Material output connection failed: " + str(prop))
 
 
-def _texture_object(material, name, sampler):
+def _texture_object(material, name, sampler, *, texture=None):
     return _node(
         material,
         unreal.MaterialExpressionTextureObjectParameter,
-        texture=_load(DEFAULTS[name]),
+        texture=texture if texture is not None else _load(DEFAULTS[name]),
         sampler_type=sampler,
         parameter_name=name,
         group="Material Forge Landscape",
     )
+
+
+def _create_orm_placeholder():
+    if unreal.EditorAssetLibrary.does_asset_exist(ORM_PLACEHOLDER_PATH):
+        raise RuntimeError("Fixed Material Forge ORM placeholder already exists")
+
+    source = _load(ORM_PLACEHOLDER_SOURCE)
+    placeholder = unreal.AssetToolsHelpers.get_asset_tools().duplicate_asset(
+        ORM_PLACEHOLDER_NAME,
+        MASTER_PACKAGE,
+        source,
+    )
+    if placeholder is None:
+        raise RuntimeError("Fixed Material Forge ORM placeholder duplication failed")
+
+    placeholder.set_editor_property("srgb", False)
+    placeholder.set_editor_property(
+        "compression_settings",
+        unreal.TextureCompressionSettings.TC_MASKS,
+    )
+    placeholder.set_editor_property("filter", unreal.TextureFilter.TF_BILINEAR)
+
+    if not unreal.YacsTextureAuditLibrary.finish_texture_compilation([placeholder]):
+        raise RuntimeError("Fixed Material Forge ORM placeholder compilation failed")
+    if not unreal.EditorAssetLibrary.save_loaded_asset(
+        placeholder,
+        only_if_is_dirty=False,
+    ):
+        raise RuntimeError("Fixed Material Forge ORM placeholder save failed")
+    return placeholder
 
 
 def _project(material, texture, tile, *, normal=False):
@@ -89,6 +123,8 @@ def _project(material, texture, tile, *, normal=False):
 def main() -> None:
     if unreal.EditorAssetLibrary.does_asset_exist(MASTER_PATH):
         raise RuntimeError("Fixed Material Forge master already exists in bootstrap checkout")
+
+    orm_placeholder = _create_orm_placeholder()
 
     material = unreal.AssetToolsHelpers.get_asset_tools().create_asset(
         MASTER_NAME,
@@ -205,6 +241,7 @@ def main() -> None:
                 material,
                 prefix + "ORMTex",
                 unreal.MaterialSamplerType.SAMPLERTYPE_MASKS,
+                texture=orm_placeholder,
             ),
         }
         base_color = _project(material, objects["BaseColor"], tile, normal=False)
@@ -306,6 +343,8 @@ def main() -> None:
         "scalar_parameters": ["RockTileSizeCm", "SoilTileSizeCm"],
         "mask_contract": "five-tap B=rock; soil=1-rock",
         "projection": "WorldAlignedTexture + WorldAlignedNormal",
+        "orm_placeholder": ORM_PLACEHOLDER_PATH,
+        "orm_placeholder_compression": "TC_MASKS",
         "map_saved": False,
         "geometry_changed": False,
         "world_semantics_changed": False,
