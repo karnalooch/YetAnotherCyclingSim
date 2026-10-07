@@ -230,7 +230,8 @@ jobs:
           $audit = Get-Content -LiteralPath $topologyAudit -Raw | ConvertFrom-Json
           if (
             $audit.status -ne 'PASS' -or
-            [int]$audit.mesh.connected_components -ne 14 -or
+            [int]$audit.source.semantic_cluster_count -ne 14 -or
+            [int]$audit.mesh.connected_components -ne [int]$audit.gate.expected_connected_components -or
             [int]$audit.mesh.outside_vertices -ne 0 -or
             [int]$audit.mesh.outside_triangle_centroids -ne 0 -or
             [int]$audit.mesh.nonmanifold_edges -ne 0 -or
