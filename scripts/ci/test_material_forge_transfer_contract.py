@@ -166,7 +166,7 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         self.assertIn("full_production_proof_required", visual)
         self.assertIn("FAST_CAPTURE_RESOLUTION = [1920, 1080]", visual)
         self.assertIn("[int]$receipt.capture_count -ne 1", fast)
-        self.assertIn("[int]$receipt.diagnostic_count -ne 4", fast)
+        self.assertIn("[int]$receipt.diagnostic_count -ne 5", fast)
         self.assertIn("$diagnosticModes -notcontains $requiredMode", fast)
         self.assertIn('"fast-cliff-unlit"', visual)
         self.assertIn('"fast-cliff-lighting-only"', visual)
@@ -176,6 +176,15 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         self.assertGreaterEqual(visual.count('"showflag.DynamicShadows 1"'), 2)
         self.assertIn("dynamic_shadows", visual)
         self.assertIn("FAST dynamic-shadow isolation probe contract failed.", fast)
+        self.assertIn('"fast-cliff-lighting-slope-bias-1"', visual)
+        self.assertIn("set_shadow_slope_bias", visual)
+        self.assertIn("directional_shadow_bias", visual)
+        self.assertIn("requested_shadow_slope_bias", visual)
+        self.assertIn("FAST shadow-slope-bias probe frame contract failed.", fast)
+        self.assertIn("FAST ShadowSlopeBias=1.0 readback failed.", fast)
+        self.assertIn(
+            "FAST shadow-slope-bias probe was a no-op at the current baseline.", fast
+        )
 
     def test_fast_color_grade_controls_are_neutral_bounded_and_recorded(self):
         builder = (
