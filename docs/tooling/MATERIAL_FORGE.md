@@ -367,14 +367,21 @@ pass. Their suspected sources remain geometry, normal response, AO/shadowing and
 projection. Refinement B deliberately avoids hiding those defects with an
 arbitrary albedo lift.
 
-The same close camera therefore emits two additional diagnostic captures in the
-whole-Landscape proof: `Unlit` and `Lighting Only`. Unreal 5.8 defines Unlit
-as Base Color without scene lighting, while Lighting Only uses a neutral
-material affected by lighting. The pair therefore separates likely
-BaseColor/projection defects from lighting/geometry response without changing
-the production material.
+The same close camera therefore emits three additional diagnostic captures in
+the whole-Landscape proof: `Unlit`, `Lighting Only` and `Detail Lighting`.
+In Unreal 5.8, Unlit exposes Base Color without scene lighting; Lighting Only
+uses a neutral material and omits material normal maps; Detail Lighting uses a
+neutral material while retaining the original normal maps.
 
-These two debug images are recorded separately from the four owner-acceptance
+Interpretation is therefore explicit:
+
+- defect persists in Unlit -> inspect BaseColor/projection;
+- defect disappears in Unlit but remains in Lighting Only -> inspect scene
+  lighting, geometry and self-shadowing;
+- Detail Lighting is materially worse than Lighting Only -> normal-map response
+  is contributing.
+
+These three debug images are recorded separately from the four owner-acceptance
 views and do not change the visual gate.
 
 Admission is unchanged:
