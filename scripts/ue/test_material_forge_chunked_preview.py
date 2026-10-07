@@ -85,6 +85,20 @@ class MaterialForgeChunkedPreviewTests(unittest.TestCase):
         self.assertIn('landscape_profile.get("macro_tile_metres", 16.0)', self.source)
         self.assertIn('landscape_profile.get("macro_strength", 0.0)', self.source)
 
+    def test_visual_capture_has_three_way_cliff_diagnostics(self):
+        capture_source = (
+            ROOT / "scripts/ue/capture_material_forge_landscape.py"
+        ).read_text(encoding="utf-8")
+        self.assertIsInstance(ast.parse(capture_source), ast.Module)
+        self.assertIn('"viewmode": "unlit"', capture_source)
+        self.assertIn('"viewmode": "lightingonly"', capture_source)
+        self.assertIn('"viewmode": "lit_detaillighting"', capture_source)
+        self.assertIn("VMI_UNLIT", capture_source)
+        self.assertIn("VMI_LIGHTING_ONLY", capture_source)
+        self.assertIn("VMI_LIT_DETAIL_LIGHTING", capture_source)
+        self.assertIn('"diagnostic_count"', capture_source)
+        self.assertIn('"capture_count"', capture_source)
+
     def test_fixed_master_orm_defaults_use_mask_compatible_placeholder(self):
         builder = (
             ROOT / "scripts/ue/build_material_forge_landscape_master.py"
