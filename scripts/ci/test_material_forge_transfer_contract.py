@@ -152,9 +152,9 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
 
     def test_fast_visual_loop_is_non_production_and_fail_closed(self):
         fast = FAST.read_text(encoding="utf-8")
-        visual = (
-            ROOT / "scripts/ue/capture_material_forge_landscape.py"
-        ).read_text(encoding="utf-8")
+        visual = (ROOT / "scripts/ue/capture_material_forge_landscape.py").read_text(
+            encoding="utf-8"
+        )
         self.assertIn("Material Forge FAST cliff visual", fast)
         self.assertIn("plan-rebuild", fast)
         self.assertIn("FAST_VISUAL_WARM_CACHE_REQUIRED", fast)
