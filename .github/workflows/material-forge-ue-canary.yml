@@ -328,6 +328,23 @@ jobs:
           $stderr = Join-Path $root 'fixed-master-bootstrap.stderr.log'
           $log = Join-Path $root 'fixed-master-bootstrap.engine.log'
           $env:YACS_MF_TEMPLATE_RECEIPT = $receipt
+
+          # The self-hosted checkout is warm across jobs. Fixed-master assets are
+          # disposable proof outputs and must never leak from a previous run.
+          $bootstrapDir = Join-Path (Get-Location) 'Content/Generated/YACS/MaterialForge/Templates'
+          foreach ($stem in @('M_MaterialForgeLandscapeBlend', 'T_MF_ORMPlaceholder')) {
+            $tracked = Join-Path $bootstrapDir ($stem + '.uasset')
+            git ls-files --error-unmatch -- $tracked *> $null
+            $isTracked = ($LASTEXITCODE -eq 0)
+            $global:LASTEXITCODE = 0
+            if ($isTracked) {
+              throw "Refusing to delete tracked fixed-master bootstrap asset: $tracked"
+            }
+            foreach ($ext in @('.uasset', '.uexp', '.ubulk')) {
+              Remove-Item -LiteralPath (Join-Path $bootstrapDir ($stem + $ext)) -Force -ErrorAction SilentlyContinue
+            }
+          }
+
           $arguments = @(
             ('"' + $project + '"'),
             ('-ExecutePythonScript="' + $script + '"'),
