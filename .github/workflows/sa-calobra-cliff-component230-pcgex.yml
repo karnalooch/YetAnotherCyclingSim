@@ -203,7 +203,7 @@ jobs:
         working-directory: _phase2c-pcgex-cliff
         run: |
           $ErrorActionPreference = 'Stop'
-          ./scripts/ue/Invoke-YacsSaCalobraPcgExCliff.ps1 -ExpectedBranch HEAD -ExpectedHead $env:YACS_CLIFF_VISUAL_EXPECTED_SHA -PlanPath $env:YACS_CLIFF_VISUAL_PLAN -ArtifactRoot $env:YACS_CLIFF_PCGEX_PROOF_ROOT
+          ./scripts/ue/Invoke-YacsSaCalobraPcgExCliff.ps1 -ExpectedBranch $env:GITHUB_REF_NAME -ExpectedHead $env:YACS_CLIFF_VISUAL_EXPECTED_SHA -PlanPath $env:YACS_CLIFF_VISUAL_PLAN -ArtifactRoot $env:YACS_CLIFF_PCGEX_PROOF_ROOT
           if ($LASTEXITCODE -ne 0) { throw 'Phase 2C topology proof failed.' }
 
           $proof = Get-Content -LiteralPath (Join-Path $env:YACS_CLIFF_PCGEX_PROOF_ROOT 'phase2c-pcgex-topology-proof.json') -Raw | ConvertFrom-Json
