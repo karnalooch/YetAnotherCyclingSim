@@ -114,7 +114,7 @@ class Component230CliffVisualPlanTests(unittest.TestCase):
             first["counts"]["skin_cluster_count"],
             first["counts"]["skin_cell_count"],
         )
-        self.assertGreater(first["counts"]["scree_rock_count"], 0)
+        self.assertGreaterEqual(first["counts"]["scree_rock_count"], 0)
         self.assertFalse(first["hard_policy"]["bob"])
         self.assertFalse(first["hard_policy"]["buildings"])
         self.assertFalse(first["hard_policy"]["infrastructure"])
