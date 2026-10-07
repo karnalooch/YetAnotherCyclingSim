@@ -361,10 +361,35 @@ def _build_surface_material(package: str, weights):
         for surface in surfaces.values()
         for texture in surface["textures"].values()
     ]
+    proof_textures = [weights, *imported_textures]
+    memory_after_import = _memory()
     if not unreal.YacsTextureAuditLibrary.finish_texture_compilation(
-        imported_textures
+        proof_textures
     ):
         raise RuntimeError("Material Forge texture compilation did not drain cleanly")
+    memory_after_texture_compile = _memory()
+
+    source_release_raw = (
+        unreal.YacsTextureAuditLibrary.release_texture_source_memory(
+            proof_textures
+        )
+    )
+    try:
+        source_release = json.loads(source_release_raw)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(
+            "Material Forge texture source-release receipt was not valid JSON"
+        ) from exc
+    if (
+        not source_release.get("ok")
+        or int(source_release.get("source_bulk_loaded_after", -1)) != 0
+    ):
+        raise RuntimeError(
+            "Material Forge texture source memory did not release cleanly: "
+            + source_release_raw
+        )
+    unreal.collect_garbage()
+    memory_after_source_release = _memory()
 
     material = unreal.AssetToolsHelpers.get_asset_tools().create_asset(
         "M_MF_ChunkedRockSoil",
@@ -588,7 +613,13 @@ def _build_surface_material(package: str, weights):
             "Material Forge asset/shader compilation did not drain cleanly: "
             + drain_raw
         )
-    return material, drain
+    return material, {
+        "memory_after_import": memory_after_import,
+        "memory_after_texture_compile": memory_after_texture_compile,
+        "source_release": source_release,
+        "memory_after_source_release": memory_after_source_release,
+        "compile_drain": drain,
+    }
 
 
 def prepare():
@@ -620,7 +651,8 @@ def prepare():
 
     package = "/Game/Generated/YACS/MFChunkedPreview/" + uuid.uuid4().hex
     weights = _import_weight(package)
-    material, compile_drain = _build_surface_material(package, weights)
+    material, memory_stages = _build_surface_material(package, weights)
+    compile_drain = memory_stages["compile_drain"]
     memory_after_compile_drain = _memory()
 
     foundation = runpy.run_path(
@@ -645,6 +677,7 @@ def prepare():
         "foundation": foundation,
         "map_file": map_file,
         "package": package,
+        "memory_stages": memory_stages,
         "compile_drain": compile_drain,
         "memory_after_compile_drain": memory_after_compile_drain,
     }
@@ -658,6 +691,7 @@ def prepare():
         total=len(cluster),
         material=material.get_path_name(),
         package=package,
+        memory_stages=memory_stages,
         compile_drain=compile_drain,
         memory=memory_after_compile_drain,
         sampling="bilinear + five-tap appearance smoothing",

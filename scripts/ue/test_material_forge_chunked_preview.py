@@ -42,9 +42,15 @@ class MaterialForgeChunkedPreviewTests(unittest.TestCase):
             self.source,
         )
         self.assertIn(
+            "release_texture_source_memory",
+            self.source,
+        )
+        self.assertIn(
             "drain_asset_compilation_and_collect_garbage",
             self.source,
         )
+        self.assertIn("source_bulk_loaded_after", self.source)
+        self.assertIn("memory_after_source_release", self.source)
         self.assertIn("remaining_after", self.source)
         self.assertLess(
             self.source.index("drain_asset_compilation_and_collect_garbage"),

@@ -28,6 +28,13 @@ public:
 	static bool FinishTextureCompilation(const TArray<UTexture2D*>& Textures);
 
 	/**
+	 * Release loaded editor source-pixel memory after platform texture data exists.
+	 * This never removes source bulk data or saves the transient texture assets.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "YACS|Diagnostics")
+	static FString ReleaseTextureSourceMemory(const TArray<UTexture2D*>& Textures);
+
+	/**
 	 * Drain all in-flight asset/shader compilation, then run full GC.
 	 * Returns a JSON receipt so Python proofs can verify the drain and memory recovery.
 	 */

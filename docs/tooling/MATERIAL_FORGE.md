@@ -291,3 +291,17 @@ The existing 8 GiB prepare and 6 GiB apply physical-memory gates remain
 unchanged. The Landscape assignment is allowed only after all compilation has
 drained and the post-drain memory measurement is recorded.
 
+### Transient texture source-memory release
+
+The real Landscape canary imports seven transient textures for the blended
+preview: the 4033² appearance-weight mask plus three refined maps for limestone
+and three for soil. After all seven texture builds finish and platform data is
+available, the editor proof calls `FTextureSource::ReleaseSourceMemory()` for
+those transient textures, flushes render commands and runs GC before constructing
+the blended material graph.
+
+The proof records memory after import, after texture compilation, after source
+release, and after material compilation/drain. It does not call
+`RemoveBulkData()`, does not save any transient assets, and does not weaken the
+existing 8 GiB prepare / 6 GiB apply fail-closed gates.
+

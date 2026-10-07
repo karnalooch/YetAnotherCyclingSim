@@ -12,6 +12,7 @@
 #include "Materials/MaterialInstance.h"
 #include "UObject/UnrealType.h"
 #include "UObject/GarbageCollection.h"
+#include "RenderingThread.h"
 
 FString UYacsTextureAuditLibrary::DescribeLandscapeMaterialInstances(UActorComponent* Component, UMaterialInterface* ExpectedMaterial)
 {
@@ -120,6 +121,61 @@ bool UYacsTextureAuditLibrary::FinishTextureCompilation(const TArray<UTexture2D*
 		}
 	}
 	return true;
+}
+
+
+FString UYacsTextureAuditLibrary::ReleaseTextureSourceMemory(const TArray<UTexture2D*>& Textures)
+{
+	if (!IsInGameThread() || Textures.IsEmpty())
+	{
+		return TEXT("{\"ok\":false,\"error\":\"invalid thread or empty texture list\"}");
+	}
+
+	FlushRenderingCommands();
+
+	int32 LoadedBefore = 0;
+	int32 LoadedAfter = 0;
+	double SourceBytes = 0.0;
+	const FPlatformMemoryStats MemoryBefore = FPlatformMemory::GetStats();
+
+	for (UTexture2D* Texture : Textures)
+	{
+		if (!IsValid(Texture) ||
+			Texture->IsDefaultTexture() ||
+			FTextureCompilingManager::Get().IsCompilingTexture(Texture) ||
+			Texture->GetPlatformData() == nullptr)
+		{
+			return TEXT("{\"ok\":false,\"error\":\"texture not ready for source-memory release\"}");
+		}
+		if (Texture->Source.IsBulkDataLoaded())
+		{
+			++LoadedBefore;
+		}
+		SourceBytes += static_cast<double>(Texture->Source.GetSizeOnDisk());
+		Texture->Source.ReleaseSourceMemory();
+		if (Texture->Source.IsBulkDataLoaded())
+		{
+			++LoadedAfter;
+		}
+	}
+
+	const FPlatformMemoryStats MemoryAfter = FPlatformMemory::GetStats();
+	const TSharedRef<FJsonObject> Report = MakeShared<FJsonObject>();
+	Report->SetBoolField(TEXT("ok"), LoadedAfter == 0);
+	Report->SetNumberField(TEXT("textures"), Textures.Num());
+	Report->SetNumberField(TEXT("source_bulk_loaded_before"), LoadedBefore);
+	Report->SetNumberField(TEXT("source_bulk_loaded_after"), LoadedAfter);
+	Report->SetNumberField(TEXT("source_bytes_on_disk"), SourceBytes);
+	Report->SetNumberField(TEXT("available_physical_before"), static_cast<double>(MemoryBefore.AvailablePhysical));
+	Report->SetNumberField(TEXT("available_physical_after"), static_cast<double>(MemoryAfter.AvailablePhysical));
+	Report->SetNumberField(TEXT("available_virtual_before"), static_cast<double>(MemoryBefore.AvailableVirtual));
+	Report->SetNumberField(TEXT("available_virtual_after"), static_cast<double>(MemoryAfter.AvailableVirtual));
+
+	FString Json;
+	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&Json);
+	return FJsonSerializer::Serialize(Report, Writer)
+		? Json
+		: TEXT("{\"ok\":false,\"error\":\"JSON serialization failed\"}");
 }
 
 
