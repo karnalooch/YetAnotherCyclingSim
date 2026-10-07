@@ -553,7 +553,7 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     }
     Triangulate->MainInputGroupingPolicy = EPCGExGroupingPolicy::Consolidate;
     Triangulate->FillRule = EPCGExClipper2FillRule::EvenOdd;
-    Triangulate->bUseDelaunay = true;
+    Triangulate->bUseDelaunay = false;
     Triangulate->bAttemptRepair = false;
     Triangulate->Topology.bWeldEdges = true;
     Triangulate->Topology.bComputeNormals = true;
@@ -623,7 +623,7 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     Root->SetStringField(
         TEXT("pipeline"),
         TEXT("YACS exact cliff cells -> PCGEx Clipper2 Triangulate("
-             "internal Union/PolyTree, EvenOdd, constrained Delaunay) -> "
+             "internal Union/PolyTree, EvenOdd, constrained triangulation without Delaunay legalization) -> "
              "connected-component-aware deterministic UE Uniform Tessellation; "
              "no intermediate boundary rewrite; presentation smoothing is deferred "
              "until post-drape rendering so hard exclusions remain exact"));
