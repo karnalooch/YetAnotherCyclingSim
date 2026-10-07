@@ -37,7 +37,6 @@ jobs:
     env:
       GIT_LFS_SKIP_SMUDGE: "1"
       YACS_UNREAL_WORKTREE: _unreal-ci-warm
-      YACS_UNREAL_LOG_ROOT: ${{ runner.temp }}/yacs-unreal-${{ github.run_id }}-${{ github.run_attempt }}
 
     steps:
       - name: Isolate self-hosted Git configuration
@@ -50,6 +49,8 @@ jobs:
           $env:GIT_CONFIG_NOSYSTEM = '1'
           "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
           "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+          $unrealLogRoot = Join-Path $env:RUNNER_TEMP 'yacs-unreal-${{ github.run_id }}-${{ github.run_attempt }}'
+          "YACS_UNREAL_LOG_ROOT=$unrealLogRoot" >> $env:GITHUB_ENV
           # Generated material packages can exceed MAX_PATH in nested runner checkouts.
           # Configure the job-local file before either actions/checkout invocation.
           git config --global core.longpaths true
@@ -600,7 +601,7 @@ jobs:
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/Unreal/**/*.json
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/Unreal/**/*.txt
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/Unreal/**/*.log
-            ${{ env.YACS_UNREAL_LOG_ROOT }}/*.log
+            ${{ runner.temp }}/yacs-unreal-${{ github.run_id }}-${{ github.run_attempt }}/*.log
           if-no-files-found: warn
           retention-days: 7
 
