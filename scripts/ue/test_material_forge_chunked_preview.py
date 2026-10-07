@@ -103,6 +103,8 @@ class MaterialForgeChunkedPreviewTests(unittest.TestCase):
         self.assertIn('"NON_PRODUCTION_FAST_VISUAL"', capture_source)
         self.assertIn('"fast-cliff-lit"', capture_source)
         self.assertIn('"CANONICAL_COMPONENT_230"', capture_source)
+        self.assertIn("FAST_MIN_FREE_PHYSICAL_GB = 6", capture_source)
+        self.assertIn("FAST_READY_FREE_PHYSICAL_GB = 4", capture_source)
         self.assertIn("unreal.SkyAtmosphere", capture_source)
         self.assertIn("recapture_sky()", capture_source)
         self.assertIn("set_intensity(1.15)", capture_source)

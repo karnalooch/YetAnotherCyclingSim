@@ -27,6 +27,8 @@ PREVIEW = ROOT / "scripts/ue/preview_material_forge_chunked_landscape.py"
 OUTPUT = Path(os.environ["YACS_MF_VISUAL_ROOT"])
 EXPECTED_SHA = os.environ["YACS_MATERIAL_FORGE_EXECUTION_SHA"]
 MIN_FREE_PHYSICAL_GB = 10
+FAST_MIN_FREE_PHYSICAL_GB = 6
+FAST_READY_FREE_PHYSICAL_GB = 4
 MIN_FREE_COMMIT_GB = 16
 FULL_CAPTURE_RESOLUTION = [3840, 2160]
 FAST_CAPTURE_RESOLUTION = [1920, 1080]
@@ -645,7 +647,14 @@ def main():
     _instance, _drain = _preview._create_fixed_master_instance(
         package, weights, _checkpoints
     )
-    _assert_memory("fixed_master_instance_ready")
+    _assert_memory(
+        "fixed_master_instance_ready",
+        physical_gb=(
+            FAST_MIN_FREE_PHYSICAL_GB
+            if FAST_VISUAL
+            else MIN_FREE_PHYSICAL_GB
+        ),
+    )
 
     if FAST_VISUAL:
         target = next(
@@ -682,7 +691,10 @@ def main():
             "compile_drain": compile_drain,
         }
     )
-    _assert_memory("whole_landscape_ready", physical_gb=6)
+    _assert_memory(
+        "fast_component_ready" if FAST_VISUAL else "whole_landscape_ready",
+        physical_gb=FAST_READY_FREE_PHYSICAL_GB if FAST_VISUAL else 6,
+    )
 
     mismatch = [
         component.get_name()
