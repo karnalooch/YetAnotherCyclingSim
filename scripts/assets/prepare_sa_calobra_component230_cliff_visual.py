@@ -1,9 +1,14 @@
 """Prepare deterministic Component_230 cliff/scree visual placement plan.
 
-Diagnostic Phase 2B only. The hard exclusion policy is intentionally narrow:
+Phase 2B visual proof only. The hard exclusion policy is intentionally narrow:
 pavement + conservative shoulder + mapped water buffered by 0.5 m. BOB,
 buildings, infrastructure and other/unknown LiDAR exclusions remain deferred.
-No canonical terrain or selector package is mutated.
+
+Attempt 3 builds a small number of connected coarse cliff-skin clusters instead
+of one independent plate per local block. The UE consumer drapes each cluster
+over real Landscape heights, smooths only the presentation skin, and tucks its
+boundary back under the canonical terrain. No canonical selector or Landscape
+geometry is modified.
 """
 
 from __future__ import annotations
@@ -11,7 +16,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import math
 import sys
 from pathlib import Path
 
@@ -22,10 +26,7 @@ from shapely.geometry import shape
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from prepare_sa_calobra_cliff_erosion import GRID, classify  # noqa: E402
-from prepare_sa_calobra_cliff_erosion_handoff import (  # noqa: E402
-    label_components_8,
-    surface_gradients,
-)
+from prepare_sa_calobra_cliff_erosion_handoff import label_components_8  # noqa: E402
 from prepare_sa_calobra_pcg_masks import verified_manifest  # noqa: E402
 from prepare_sa_calobra_road_masks import distance_lower_bound  # noqa: E402
 from verify_normalized_context import verify as verify_normalized  # noqa: E402
@@ -48,9 +49,15 @@ COMPONENT = {
     "y_min_m": 441.0,
     "y_max_m": 504.0,
 }
-CLIFF_BLOCK_CELLS = 8
-SCREE_BLOCK_CELLS = 6
-MAX_SCREE_ROCKS = 80
+
+# A skin cell spans 4 source-grid intervals = 2 m. This is coarse enough to
+# bridge native heightfield stair-step noise but still follows the real cliff.
+SKIN_STEP_CELLS = 4
+SKIN_MIN_SOURCE_CLIFF_SAMPLES = 4
+SKIN_MIN_CLUSTER_CELLS = 2
+SKIN_MAX_CLUSTERS = 24
+SCREE_BLOCK_CELLS = 8
+MAX_SCREE_ROCKS = 40
 
 
 def _grid_tuple(manifest: dict[str, object]) -> tuple[object, ...]:
@@ -71,37 +78,6 @@ def _read(root: Path, name: str, band: int = 1):
 def _unit_interval(key: str) -> float:
     value = int.from_bytes(hashlib.sha256(key.encode()).digest()[:8], "big")
     return value / float((1 << 64) - 1)
-
-
-def _rotate(x: float, y: float, degrees: float) -> tuple[float, float]:
-    angle = math.radians(degrees)
-    c, s = math.cos(angle), math.sin(angle)
-    return x * c - y * s, x * s + y * c
-
-
-def _patch_ids(labels: np.ndarray) -> dict[int, str]:
-    flat = labels.ravel()
-    active = flat > 0
-    if not bool(active.any()):
-        return {}
-    live_labels = flat[active].astype(np.int32, copy=False)
-    positions = np.flatnonzero(active).astype(np.int64)
-    maximum = np.iinfo(np.int64).max
-    anchors = np.full(int(labels.max()) + 1, maximum, dtype=np.int64)
-    np.minimum.at(anchors, live_labels, positions)
-    result = {}
-    width = labels.shape[1]
-    for label in range(1, len(anchors)):
-        if anchors[label] == maximum:
-            continue
-        row = int(anchors[label] // width)
-        col = int(anchors[label] % width)
-        payload = (
-            "sa-calobra-cliff-patch-v1|EPSG:25831|4033x4033|0.5m|"
-            f"r={row}|c={col}"
-        )
-        result[label] = "cliff-" + hashlib.sha256(payload.encode()).hexdigest()[:12]
-    return result
 
 
 def mapped_water_mask(
@@ -156,11 +132,135 @@ def _representative(
     return int(world_rows[index]), int(world_cols[index]), int(len(rows))
 
 
-def _inside_component(x_m: float, y_m: float, radius_m: float) -> bool:
-    return (
-        COMPONENT["x_min_m"] + radius_m <= x_m <= COMPONENT["x_max_m"] - radius_m
-        and COMPONENT["y_min_m"] + radius_m <= y_m <= COMPONENT["y_max_m"] - radius_m
+def _neighbour_count(mask: np.ndarray) -> np.ndarray:
+    padded = np.pad(mask.astype(np.uint8), 1)
+    result = np.zeros(mask.shape, dtype=np.uint8)
+    for dr in range(3):
+        for dc in range(3):
+            if dr == 1 and dc == 1:
+                continue
+            result += padded[dr : dr + mask.shape[0], dc : dc + mask.shape[1]]
+    return result
+
+
+def _supported_bridge(seed: np.ndarray, support: np.ndarray) -> np.ndarray:
+    """Join one-cell gaps only where source cliff evidence still exists."""
+    result = seed.copy()
+    for _ in range(2):
+        neighbours = _neighbour_count(result)
+        horizontal = np.zeros_like(result)
+        vertical = np.zeros_like(result)
+        horizontal[:, 1:-1] = result[:, :-2] & result[:, 2:]
+        vertical[1:-1, :] = result[:-2, :] & result[2:, :]
+        fill = support & (~result) & (
+            (neighbours >= 4) | horizontal | vertical
+        )
+        result |= fill
+
+    # Remove unsupported singletons, but keep every multi-cell chain.
+    neighbours = _neighbour_count(result)
+    result &= neighbours > 0
+    return result
+
+
+def _coarse_skin_cells(
+    cliff: np.ndarray,
+    protected: np.ndarray,
+) -> tuple[list[dict[str, object]], np.ndarray]:
+    row_nodes = list(
+        range(COMPONENT["row_min"], COMPONENT["row_max"], SKIN_STEP_CELLS)
     )
+    col_nodes = list(
+        range(COMPONENT["col_min"], COMPONENT["col_max"], SKIN_STEP_CELLS)
+    )
+    shape_ = (len(row_nodes), len(col_nodes))
+    occupancy = np.zeros(shape_, dtype=np.int16)
+    support = np.zeros(shape_, dtype=bool)
+    seed = np.zeros(shape_, dtype=bool)
+    metadata: dict[tuple[int, int], dict[str, int]] = {}
+
+    for grid_r, row0 in enumerate(row_nodes):
+        row1 = min(row0 + SKIN_STEP_CELLS, COMPONENT["row_max"])
+        for grid_c, col0 in enumerate(col_nodes):
+            col1 = min(col0 + SKIN_STEP_CELLS, COMPONENT["col_max"])
+            # Include both end samples so neighbouring skin cells share evidence
+            # along their common edge.
+            block = cliff[row0 : row1 + 1, col0 : col1 + 1]
+            protected_block = protected[row0 : row1 + 1, col0 : col1 + 1]
+            count = int(block.sum())
+            occupancy[grid_r, grid_c] = count
+            support[grid_r, grid_c] = count > 0
+            # Hard authority stays fail-closed for each 2 m skin cell.
+            allowed = not bool(protected_block.any())
+            seed[grid_r, grid_c] = (
+                allowed and count >= SKIN_MIN_SOURCE_CLIFF_SAMPLES
+            )
+            metadata[(grid_r, grid_c)] = {
+                "row0": row0,
+                "row1": row1,
+                "col0": col0,
+                "col1": col1,
+                "source_cliff_samples": count,
+                "source_sample_count": int(block.size),
+                "protected_samples": int(protected_block.sum()),
+            }
+
+    joined = _supported_bridge(seed, support)
+    labels = label_components_8(joined)
+    cells: list[dict[str, object]] = []
+
+    counts = np.bincount(labels.ravel())
+    accepted_labels = {
+        label
+        for label in range(1, len(counts))
+        if int(counts[label]) >= SKIN_MIN_CLUSTER_CELLS
+    }
+
+    for grid_r in range(joined.shape[0]):
+        for grid_c in range(joined.shape[1]):
+            label = int(labels[grid_r, grid_c])
+            if label not in accepted_labels:
+                continue
+            row = metadata[(grid_r, grid_c)]
+            cluster_id = "skin-" + hashlib.sha256(
+                (
+                    "component230-skin-v1|"
+                    f"label={label}|r={grid_r}|c={grid_c}"
+                ).encode()
+            ).hexdigest()[:10]
+            cells.append(
+                {
+                    "grid_rc": [grid_r, grid_c],
+                    "cluster_label": label,
+                    "cluster_cell_id": cluster_id,
+                    **row,
+                }
+            )
+
+    # Relabel clusters by deterministic top-left cell, not scipy/union order.
+    by_label: dict[int, list[dict[str, object]]] = {}
+    for row in cells:
+        by_label.setdefault(int(row["cluster_label"]), []).append(row)
+    stable_ids: dict[int, str] = {}
+    for label, rows in by_label.items():
+        anchor = min(
+            (int(row["row0"]), int(row["col0"])) for row in rows
+        )
+        stable_ids[label] = "cluster-" + hashlib.sha256(
+            f"component230-cliff-skin|r={anchor[0]}|c={anchor[1]}".encode()
+        ).hexdigest()[:12]
+    for row in cells:
+        row["cluster_id"] = stable_ids[int(row["cluster_label"])]
+        row.pop("cluster_label")
+        row.pop("cluster_cell_id")
+
+    cluster_labels = sorted(stable_ids)
+    if len(cluster_labels) > SKIN_MAX_CLUSTERS:
+        raise ValueError(
+            "Connected skin clustering is still too fragmented: "
+            f"{len(cluster_labels)} > {SKIN_MAX_CLUSTERS}"
+        )
+    return cells, occupancy
 
 
 def build_plan(
@@ -181,123 +281,85 @@ def build_plan(
     cliff = np.asarray(classified["cliff_selector"]) == 1
     scree = np.asarray(classified["scree_selector"]) == 1
     step = np.asarray(classified["step_proxy_m"])
-    labels = label_components_8(cliff)
-    patch_ids = _patch_ids(labels)
-    gradient_x, gradient_y = surface_gradients(elevation)
     clearance = distance_lower_bound(protected, PIXEL_SIZE_M)
 
     view = (
         slice(COMPONENT["row_min"], COMPONENT["row_max"] + 1),
         slice(COMPONENT["col_min"], COMPONENT["col_max"] + 1),
     )
-    score = slope.astype(np.float64) + roughness.astype(np.float64) * 4.0
-    score += np.where(np.isfinite(step), step, 0.0).astype(np.float64) * 12.0
+    skin_cells, coarse_occupancy = _coarse_skin_cells(cliff, protected)
+    cluster_ids = sorted({str(row["cluster_id"]) for row in skin_cells})
 
-    plates: list[dict[str, object]] = []
-    for row0 in range(COMPONENT["row_min"], COMPONENT["row_max"] + 1, CLIFF_BLOCK_CELLS):
-        row1 = min(row0 + CLIFF_BLOCK_CELLS, COMPONENT["row_max"] + 1)
-        for col0 in range(COMPONENT["col_min"], COMPONENT["col_max"] + 1, CLIFF_BLOCK_CELLS):
-            col1 = min(col0 + CLIFF_BLOCK_CELLS, COMPONENT["col_max"] + 1)
-            representative = _representative(cliff, score, row0, row1, col0, col1)
-            if representative is None:
-                continue
-            row, col, occupancy = representative
-            if occupancy < 4:
-                continue
-
-            gx = float(gradient_x[row, col])
-            gy = float(gradient_y[row, col])
-            horizontal = math.hypot(gx, gy)
-            if not math.isfinite(horizontal) or horizontal <= 1e-6:
-                continue
-
-            downhill_x, downhill_y = -gx / horizontal, -gy / horizontal
-            jitter = _unit_interval(f"plate:{row}:{col}")
-            yaw_jitter = (jitter - 0.5) * 14.0
-            downhill_x, downhill_y = _rotate(
-                downhill_x, downhill_y, yaw_jitter
-            )
-            tangent_x, tangent_y = -downhill_y, downhill_x
-
-            occupancy_fraction = occupancy / float(
-                (row1 - row0) * (col1 - col0)
-            )
-            width_m = min(
-                5.4,
-                max(2.8, 3.2 + occupancy_fraction * 1.6 + jitter * 0.5),
-            )
-            step_m = max(0.0, float(step[row, col]))
-            run_m = min(
-                4.4,
-                max(
-                    2.2,
-                    2.4
-                    + step_m * 0.35
-                    + max(0.0, float(slope[row, col]) - 50.0) * 0.018
-                    + jitter * 0.35,
+    # Cluster receipts provide aggregate source severity and conservative
+    # clearance, but UE derives actual vertex heights from Landscape traces.
+    clusters: list[dict[str, object]] = []
+    for cluster_id in cluster_ids:
+        rows = [row for row in skin_cells if row["cluster_id"] == cluster_id]
+        source_rows = []
+        source_cols = []
+        for row in rows:
+            source_rows.extend(range(int(row["row0"]), int(row["row1"]) + 1))
+            source_cols.extend(range(int(row["col0"]), int(row["col1"]) + 1))
+        r0 = min(int(row["row0"]) for row in rows)
+        r1 = max(int(row["row1"]) for row in rows)
+        c0 = min(int(row["col0"]) for row in rows)
+        c1 = max(int(row["col1"]) for row in rows)
+        local = cliff[r0 : r1 + 1, c0 : c1 + 1]
+        local_slope = slope[r0 : r1 + 1, c0 : c1 + 1][local]
+        local_rough = roughness[r0 : r1 + 1, c0 : c1 + 1][local]
+        local_step = step[r0 : r1 + 1, c0 : c1 + 1][local]
+        local_clearance = clearance[r0 : r1 + 1, c0 : c1 + 1]
+        jitter = _unit_interval(cluster_id)
+        clusters.append(
+            {
+                "cluster_id": cluster_id,
+                "cell_count": len(rows),
+                "bounds_rc": [r0, r1, c0, c1],
+                "mean_slope_deg": round(float(np.mean(local_slope)), 4),
+                "max_slope_deg": round(float(np.max(local_slope)), 4),
+                "mean_roughness_m": round(float(np.mean(local_rough)), 4),
+                "max_step_proxy_m": round(float(np.max(local_step)), 4),
+                "clearance_lower_bound_m": round(
+                    float(np.min(local_clearance)), 4
                 ),
-            )
-            thickness_m = 0.10 + jitter * 0.08
-            lift_m = 0.04 + jitter * 0.025
-            footprint_radius_m = (
-                math.hypot(width_m * 0.5, run_m * 0.5) + 0.20
-            )
-            x_m, y_m = col * PIXEL_SIZE_M, row * PIXEL_SIZE_M
-            if not _inside_component(x_m, y_m, footprint_radius_m):
-                continue
-            if float(clearance[row, col]) < footprint_radius_m:
-                continue
+                "interior_lift_m": round(0.025 + jitter * 0.015, 4),
+                "boundary_underlap_m": round(0.045 + jitter * 0.025, 4),
+                "smoothing_passes": 2,
+                "smoothing_blend": 0.55,
+                "smoothing_clamp_m": 0.85,
+            }
+        )
 
-            label = int(labels[row, col])
-            if label <= 0 or label not in patch_ids:
-                raise ValueError("Cliff representative lost patch identity")
-            plate_id = "plate-" + hashlib.sha256(
-                f"component230:{row}:{col}".encode()
-            ).hexdigest()[:12]
-            plates.append(
-                {
-                    "plate_id": plate_id,
-                    "patch_id": patch_ids[label],
-                    "source_rc": [row, col],
-                    "center_xy_m": [round(x_m, 4), round(y_m, 4)],
-                    "downhill_xy": [
-                        round(downhill_x, 7),
-                        round(downhill_y, 7),
-                    ],
-                    "tangent_xy": [
-                        round(tangent_x, 7),
-                        round(tangent_y, 7),
-                    ],
-                    "width_m": round(width_m, 4),
-                    "run_m": round(run_m, 4),
-                    "thickness_m": round(thickness_m, 4),
-                    "lift_m": round(lift_m, 4),
-                    "clearance_lower_bound_m": round(float(clearance[row, col]), 4),
-                    "slope_deg": round(float(slope[row, col]), 4),
-                    "roughness_m": round(float(roughness[row, col]), 4),
-                    "step_proxy_m": round(step_m, 4),
-                    "block_occupancy_cells": occupancy,
-                    "yaw_jitter_deg": round(yaw_jitter, 4),
-                }
-            )
-
-    rock_candidates: list[dict[str, object]] = []
     scree_score = roughness.astype(np.float64) * 4.0 + np.where(
         np.isfinite(step), step, 0.0
     ).astype(np.float64) * 8.0
-    for row0 in range(COMPONENT["row_min"], COMPONENT["row_max"] + 1, SCREE_BLOCK_CELLS):
+    rock_candidates: list[dict[str, object]] = []
+    for row0 in range(
+        COMPONENT["row_min"], COMPONENT["row_max"] + 1, SCREE_BLOCK_CELLS
+    ):
         row1 = min(row0 + SCREE_BLOCK_CELLS, COMPONENT["row_max"] + 1)
-        for col0 in range(COMPONENT["col_min"], COMPONENT["col_max"] + 1, SCREE_BLOCK_CELLS):
+        for col0 in range(
+            COMPONENT["col_min"], COMPONENT["col_max"] + 1, SCREE_BLOCK_CELLS
+        ):
             col1 = min(col0 + SCREE_BLOCK_CELLS, COMPONENT["col_max"] + 1)
-            representative = _representative(scree, scree_score, row0, row1, col0, col1)
+            representative = _representative(
+                scree, scree_score, row0, row1, col0, col1
+            )
             if representative is None:
                 continue
             row, col, occupancy = representative
             jitter = _unit_interval(f"scree:{row}:{col}")
-            radius_m = 0.22 + jitter * 0.24
-            required_clearance_m = radius_m + 0.20
+            radius_m = 0.20 + jitter * 0.22
+            required_clearance_m = radius_m + 0.25
             x_m, y_m = col * PIXEL_SIZE_M, row * PIXEL_SIZE_M
-            if not _inside_component(x_m, y_m, required_clearance_m):
+            if not (
+                COMPONENT["x_min_m"] + required_clearance_m
+                <= x_m
+                <= COMPONENT["x_max_m"] - required_clearance_m
+                and COMPONENT["y_min_m"] + required_clearance_m
+                <= y_m
+                <= COMPONENT["y_max_m"] - required_clearance_m
+            ):
                 continue
             if float(clearance[row, col]) < required_clearance_m:
                 continue
@@ -309,9 +371,11 @@ def build_plan(
                     "source_rc": [row, col],
                     "center_xy_m": [round(x_m, 4), round(y_m, 4)],
                     "radius_m": round(radius_m, 4),
-                    "height_m": round(0.18 + jitter * 0.34, 4),
+                    "height_m": round(0.16 + jitter * 0.30, 4),
                     "yaw_deg": round(jitter * 360.0, 4),
-                    "clearance_lower_bound_m": round(float(clearance[row, col]), 4),
+                    "clearance_lower_bound_m": round(
+                        float(clearance[row, col]), 4
+                    ),
                     "block_occupancy_cells": occupancy,
                     "_priority": _unit_interval(f"scree-priority:{row}:{col}"),
                 }
@@ -324,8 +388,6 @@ def build_plan(
     for row in rock_candidates:
         row.pop("_priority", None)
 
-    component_labels = labels[view]
-    intersecting_labels = np.unique(component_labels[component_labels > 0])
     return {
         "hard_policy": {
             "pavement": True,
@@ -337,17 +399,31 @@ def build_plan(
             "other_unknown_lidar": False,
         },
         "component": COMPONENT,
+        "skin_contract": {
+            "source_grid_step_cells": SKIN_STEP_CELLS,
+            "source_grid_step_m": SKIN_STEP_CELLS * PIXEL_SIZE_M,
+            "minimum_source_cliff_samples": SKIN_MIN_SOURCE_CLIFF_SAMPLES,
+            "minimum_cluster_cells": SKIN_MIN_CLUSTER_CELLS,
+            "supported_bridge_passes": 2,
+            "boundary_policy": "underlap-real-landscape",
+            "interior_policy": "smoothed-real-landscape-traces",
+            "uv_world_size_m": 3.0,
+        },
         "counts": {
             "component_cliff_cells": int(cliff[view].sum()),
             "component_cliff_area_m2": float(cliff[view].sum()) * 0.25,
             "component_scree_cells": int(scree[view].sum()),
             "component_scree_area_m2": float(scree[view].sum()) * 0.25,
-            "intersecting_patch_count": int(len(intersecting_labels)),
-            "plate_count": len(plates),
+            "skin_cluster_count": len(clusters),
+            "skin_cell_count": len(skin_cells),
+            # Compatibility alias used by the current proof workflow.
+            "plate_count": len(clusters),
             "scree_rock_count": len(rock_candidates),
             "hard_protected_cells_component": int(protected[view].sum()),
+            "coarse_source_occupied_cells": int((coarse_occupancy > 0).sum()),
         },
-        "plates": plates,
+        "plates": clusters,
+        "skin_cells": skin_cells,
         "scree_rocks": rock_candidates,
     }
 
@@ -396,11 +472,13 @@ def prepare(
             "Narrow road+shoulder+water0.5 scree checkpoint drifted: "
             + str(plan["counts"]["component_scree_cells"])
         )
-    if plan["counts"]["plate_count"] <= 0:
-        raise ValueError("Component_230 visual plan produced no cliff plates")
+    if plan["counts"]["skin_cluster_count"] <= 0:
+        raise ValueError("Component_230 visual plan produced no cliff skins")
+    if plan["counts"]["skin_cluster_count"] > SKIN_MAX_CLUSTERS:
+        raise ValueError("Component_230 visual plan is still too fragmented")
 
     report = {
-        "schema_version": 1,
+        "schema_version": 2,
         "status": "COMPONENT230_CLIFF_VISUAL_PLAN",
         "geometry_mutation": False,
         "canonical_landscape_mutation": False,
