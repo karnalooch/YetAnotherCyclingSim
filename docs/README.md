@@ -99,6 +99,7 @@ The old Stage 3G / R4.1 / B.x vocabulary is historical. Existing workflow names 
 | Blender headless producer contract | [`tooling/BLENDER_HEADLESS.md`](tooling/BLENDER_HEADLESS.md) | **Active supporting tool** |
 | Sa Calobra material foundation | [`tooling/SA_CALOBRA_MATERIAL_FOUNDATION.md`](tooling/SA_CALOBRA_MATERIAL_FOUNDATION.md) | **Active candidate workflow; Bible owns methodology** |
 | Sa Calobra material repair sequence | [`tooling/SA_CALOBRA_MATERIAL_REPAIR_PLAN.md`](tooling/SA_CALOBRA_MATERIAL_REPAIR_PLAN.md) | **Documentation-only plan; implementation and acceptance pending** |
+| Sa Calobra cliff / erosion presentation pass | [`tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md`](tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md) | **Active #429 non-destructive selector foundation; production dressing pending** |
 | CI cost / proof cadence | [`CI_VALIDATION_TIERS.md`](CI_VALIDATION_TIERS.md) | **Authoritative** |
 | Shared CI and governance platform | [`ENGINEERING_PLATFORM.md`](ENGINEERING_PLATFORM.md) | **Authoritative** |
 | AI contributor rules | [`../AGENTS.md`](../AGENTS.md) | **Authoritative repository policy** |
