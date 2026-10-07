@@ -29,38 +29,55 @@ def _cell_bounds(plan: dict) -> tuple[list[tuple[float, float, float, float]], f
 
 
 def _edge_connected_cell_components(plan: dict) -> int:
-    """Count physical polygon islands using shared-edge (4-neighbour) cells.
+    """Count physical polygon islands using shared-edge connectivity.
 
     Phase 2B semantic clusters use 8-neighbour connectivity so diagonal source
     evidence can stay in one logical cliff cluster. A triangulated polygon mesh,
-    however, is connected only across shared edges; point-touching cells remain
-    separate manifold islands. The topology gate must compare like with like.
+    however, is connected only when cells share a non-zero-length edge. Derive
+    that relation from authoritative row/column bounds rather than auxiliary
+    grid_rc metadata so the audit contract is self-contained.
     """
-    cells = {
-        (int(cell["grid_rc"][0]), int(cell["grid_rc"][1]))
+    cells = [
+        (
+            int(cell["row0"]),
+            int(cell["row1"]),
+            int(cell["col0"]),
+            int(cell["col1"]),
+        )
         for cell in plan["skin_cells"]
-    }
-    seen: set[tuple[int, int]] = set()
+    ]
+    adjacency: list[list[int]] = [[] for _ in cells]
+    for left in range(len(cells)):
+        ar0, ar1, ac0, ac1 = cells[left]
+        for right in range(left + 1, len(cells)):
+            br0, br1, bc0, bc1 = cells[right]
+            vertical_overlap = max(ar0, br0) < min(ar1, br1)
+            horizontal_overlap = max(ac0, bc0) < min(ac1, bc1)
+            shares_vertical_edge = (
+                (ac1 == bc0 or bc1 == ac0) and vertical_overlap
+            )
+            shares_horizontal_edge = (
+                (ar1 == br0 or br1 == ar0) and horizontal_overlap
+            )
+            if shares_vertical_edge or shares_horizontal_edge:
+                adjacency[left].append(right)
+                adjacency[right].append(left)
+
+    seen: set[int] = set()
     components = 0
-    for seed in sorted(cells):
+    for seed in range(len(cells)):
         if seed in seen:
             continue
         components += 1
         stack = [seed]
         seen.add(seed)
         while stack:
-            row, col = stack.pop()
-            for neighbour in (
-                (row - 1, col),
-                (row + 1, col),
-                (row, col - 1),
-                (row, col + 1),
-            ):
-                if neighbour in cells and neighbour not in seen:
+            current = stack.pop()
+            for neighbour in adjacency[current]:
+                if neighbour not in seen:
                     seen.add(neighbour)
                     stack.append(neighbour)
     return components
-
 
 def _spatial_index(
     bounds: list[tuple[float, float, float, float]],
