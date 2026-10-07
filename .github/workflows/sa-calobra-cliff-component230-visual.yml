@@ -160,11 +160,13 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw 'Persistent LFS storage configuration failed.' }
             $map = 'Content/Worlds/SaCalobra/L_SaCalobraAccepted_20261004.umap'
             $library = 'Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87'
-            $include = "$map,$library/**"
+            $exposedBaseColor = 'Content/Generated/YACS/TextureMaterialPrep/Runs/C414EA4B402723D66FCB689E49EEB02D/BaseColor.uasset'
+            $screeBaseColor = 'Content/Generated/YACS/TextureMaterialPrep/Runs/94406E0247C9822CFD006CAB8B20545E/BaseColor.uasset'
+            $include = "$map,$library/**,$exposedBaseColor,$screeBaseColor"
             git lfs pull --include=$include --exclude=''
-            if ($LASTEXITCODE -ne 0) { throw 'Accepted map / limestone library LFS pull failed.' }
-            git lfs checkout $map $library
-            if ($LASTEXITCODE -ne 0) { throw 'Accepted map / limestone library LFS checkout failed.' }
+            if ($LASTEXITCODE -ne 0) { throw 'Accepted map / limestone transitive LFS pull failed.' }
+            git lfs checkout $map $library $exposedBaseColor $screeBaseColor
+            if ($LASTEXITCODE -ne 0) { throw 'Accepted map / limestone transitive LFS checkout failed.' }
             if (-not (Test-Path -LiteralPath $map -PathType Leaf)) {
               throw 'Accepted map is missing after LFS checkout.'
             }
@@ -182,7 +184,9 @@ jobs:
               "$library/ProviderData/Scree/T_Normal.uasset",
               "$library/ProviderData/Scree/T_Roughness.uasset",
               "$library/Sources/T_Source_ExposedRock.uasset",
-              "$library/Sources/T_Source_Scree.uasset"
+              "$library/Sources/T_Source_Scree.uasset",
+              $exposedBaseColor,
+              $screeBaseColor
             )) {
               if (-not (Test-Path -LiteralPath $asset -PathType Leaf)) {
                 throw "Required limestone proof asset missing: $asset"
