@@ -44,6 +44,33 @@ class Phase2CTopologyAuditTests(unittest.TestCase):
         self.assertEqual(report["mesh"]["outside_vertices"], 0)
         self.assertAlmostEqual(report["mesh"]["area_retention"], 1.0)
 
+    def test_diagonal_semantic_cluster_is_two_mesh_islands(self):
+        diagonal_plan = plan()
+        diagonal_plan["counts"]["skin_cluster_count"] = 1
+        diagonal_plan["skin_cells"] = [
+            {"grid_rc": [0, 0], "row0": 0, "row1": 2, "col0": 0, "col1": 2},
+            {"grid_rc": [1, 1], "row0": 2, "row1": 4, "col0": 2, "col1": 4},
+        ]
+        receipt = {
+            "status": "YACS_SA_CALOBRA_PCGEX_CLIFF_MESH_PASS",
+            "source_skin_cell_count": 2,
+            "meshes": [{
+                "vertices_cm": [
+                    [0, 0, 0], [100, 0, 0], [100, 100, 0], [0, 100, 0],
+                    [100, 100, 0], [200, 100, 0], [200, 200, 0], [100, 200, 0],
+                ],
+                "triangles": [
+                    [0, 1, 2], [0, 2, 3],
+                    [4, 5, 6], [4, 6, 7],
+                ],
+            }],
+        }
+        report = analyze(diagonal_plan, receipt)
+        self.assertEqual(report["status"], "PASS")
+        self.assertEqual(report["source"]["semantic_cluster_count"], 1)
+        self.assertEqual(report["gate"]["expected_connected_components"], 2)
+        self.assertEqual(report["mesh"]["connected_components"], 2)
+
     def test_rejects_leakage_outside_authoritative_cells(self):
         receipt = mesh_receipt(second_x=3.0)
         report = analyze(plan(), receipt)
