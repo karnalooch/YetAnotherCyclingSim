@@ -93,9 +93,9 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
     def test_owner_visual_capture_is_whole_landscape_and_rollback_safe(self):
         canary = CANARY.read_text(encoding="utf-8")
         mallorca = MALLORCA.read_text(encoding="utf-8")
-        visual = (
-            ROOT / "scripts/ue/capture_material_forge_landscape.py"
-        ).read_text(encoding="utf-8")
+        visual = (ROOT / "scripts/ue/capture_material_forge_landscape.py").read_text(
+            encoding="utf-8"
+        )
         self.assertIn("Capture production Landscape visual proof", canary)
         self.assertIn("material-forge-landscape-visual-", canary)
         self.assertIn('"scripts/ue/capture_material_forge_landscape.py"', mallorca)
