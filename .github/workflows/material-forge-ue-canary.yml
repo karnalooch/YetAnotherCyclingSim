@@ -511,6 +511,7 @@ jobs:
             $receipt.status -ne 'MF_LANDSCAPE_VISUAL_PROOF_PASS' -or
             $receipt.exact_sha -ne $env:GITHUB_SHA -or
             [int]$receipt.capture_count -ne 4 -or
+            [int]$receipt.diagnostic_count -ne 2 -or
             [int]$receipt.whole_landscape_components -ne 1024 -or
             $receipt.rollback_complete -ne $true -or
             $receipt.map_saved -ne $false -or
@@ -528,6 +529,23 @@ jobs:
               -not (Test-Path -LiteralPath $capture.path -PathType Leaf)
             ) {
               throw 'Material Forge Landscape visual capture is incomplete.'
+            }
+          }
+          $diagnosticModes = @($receipt.diagnostics | ForEach-Object { $_.viewmode })
+          if (
+            @($diagnosticModes).Count -ne 2 -or
+            $diagnosticModes -notcontains 'unlit' -or
+            $diagnosticModes -notcontains 'lightingonly'
+          ) {
+            throw 'Material Forge cliff diagnostic modes are incomplete.'
+          }
+          foreach ($diagnostic in $receipt.diagnostics) {
+            if (
+              @($diagnostic.resolution)[0] -ne 3840 -or
+              @($diagnostic.resolution)[1] -ne 2160 -or
+              -not (Test-Path -LiteralPath $diagnostic.path -PathType Leaf)
+            ) {
+              throw 'Material Forge cliff diagnostic capture is incomplete.'
             }
           }
           $receipt | ConvertTo-Json -Depth 12 | Write-Host
