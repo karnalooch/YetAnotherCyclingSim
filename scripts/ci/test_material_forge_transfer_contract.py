@@ -110,20 +110,20 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         self.assertIn("set_keep_python_script_alive(True)", visual)
         self.assertIn("take_high_res_screenshot", visual)
 
-    def test_refinement_b_pair_and_cliff_diagnostics_are_pinned(self):
+    def test_refinement_c_pair_and_cliff_diagnostics_are_pinned(self):
         mallorca = MALLORCA.read_text(encoding="utf-8")
         canary = CANARY.read_text(encoding="utf-8")
 
         for token in (
-            "regional_limestone\\refined_b",
-            "mediterranean_soil\\refined_b",
-            "regional_limestone/refined_b",
-            "mediterranean_soil/refined_b",
+            "regional_limestone\\refined_c",
+            "mediterranean_soil\\refined_c",
+            "regional_limestone/refined_c",
+            "mediterranean_soil/refined_c",
         ):
             self.assertIn(token, mallorca)
 
-        self.assertIn("regional_limestone\\refined_b", canary)
-        self.assertIn("mediterranean_soil\\refined_b", canary)
+        self.assertIn("regional_limestone\\refined_c", canary)
+        self.assertIn("mediterranean_soil\\refined_c", canary)
         self.assertIn("[int]$receipt.capture_count -ne 4", canary)
         self.assertIn("[int]$receipt.diagnostic_count -ne 3", canary)
         self.assertIn("$diagnosticModes -notcontains 'unlit'", canary)

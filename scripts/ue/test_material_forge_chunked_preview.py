@@ -75,8 +75,8 @@ class MaterialForgeChunkedPreviewTests(unittest.TestCase):
         self.assertNotIn("TextureSample lacks TextureObject input", builder)
         self.assertNotIn('_link(weight_object, "", sample, "TextureObject")', builder)
 
-    def test_refinement_b_uses_detail_mask_macro_contract(self):
-        self.assertIn('"refined_b"', self.source)
+    def test_refinement_c_uses_detail_mask_macro_contract(self):
+        self.assertIn('"refined_c"', self.source)
         self.assertIn('"DetailMasks"', self.source)
         self.assertIn('"RockMacroTileSizeCm"', self.source)
         self.assertIn('"SoilMacroTileSizeCm"', self.source)

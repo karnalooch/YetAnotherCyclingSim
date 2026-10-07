@@ -360,8 +360,8 @@ def _write_receipt(status: str, error: str = ""):
         "map": MAP,
         "material": None if _instance is None else _instance.get_path_name(),
         "fixed_master": os.environ.get("YACS_MF_FIXED_MASTER_PATH"),
-        "rock": "regional_limestone/refined_b",
-        "soil": "mediterranean_soil/refined_b",
+        "rock": "regional_limestone/refined_c",
+        "soil": "mediterranean_soil/refined_c",
         "mask_contract": "4033x4033; B=rock; soil=1-rock",
         "resolution": CAPTURE_RESOLUTION,
         "captures": [

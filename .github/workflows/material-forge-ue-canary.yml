@@ -157,8 +157,8 @@ jobs:
           $plan | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $root 'carry-forward-plan.json') -Encoding utf8
           if ($plan.rebuild_required -ne $false -or $plan.reason -ne 'unchanged') { throw 'Current Material Forge source fingerprint drifted from render proof.' }
 
-          $variant = Join-Path $proof 'run-a\regional_limestone\refined_b'
-          $soilVariant = Join-Path $proof 'run-a\mediterranean_soil\refined_b'
+          $variant = Join-Path $proof 'run-a\regional_limestone\refined_c'
+          $soilVariant = Join-Path $proof 'run-a\mediterranean_soil\refined_c'
           python scripts/assets/material_forge.py validate $variant --resolution 2048 *> (Join-Path $root 'variant-revalidation.log')
           if ($LASTEXITCODE -ne 0) { throw 'Refined limestone UE canary variant failed current CPU validation.' }
           python scripts/assets/material_forge.py validate $soilVariant --resolution 2048 *> (Join-Path $root 'soil-variant-revalidation.log')

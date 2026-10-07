@@ -34,13 +34,13 @@ PROOF_ROOT = Path(
 ROCK = Path(
     os.environ.get(
         "YACS_MF_ROCK_VARIANT",
-        str(PROOF_ROOT / "regional_limestone" / "refined_b"),
+        str(PROOF_ROOT / "regional_limestone" / "refined_c"),
     )
 )
 SOIL = Path(
     os.environ.get(
         "YACS_MF_SOIL_VARIANT",
-        str(PROOF_ROOT / "mediterranean_soil" / "refined_b"),
+        str(PROOF_ROOT / "mediterranean_soil" / "refined_c"),
     )
 )
 MASK_ROOT = ROOT / "worldgen/materials/visual_fill"

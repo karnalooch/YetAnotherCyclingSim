@@ -141,6 +141,34 @@
             "macro_tile_metres": 24,
             "macro_strength": 0.14
           }
+        },
+        {
+          "id": "refined_c",
+          "label": "Refinement C cool Tramuntana limestone",
+          "seed": 401,
+          "brightness": 0.6,
+          "surface_a": 1.08,
+          "surface_b": 0.88,
+          "roughness": 0.74,
+          "normal_strength": 0.78,
+          "refinement": {
+            "variation_scale": 0.68,
+            "crack_color_scale": 1.05,
+            "pore_color_scale": 0.92,
+            "color_gain": [
+              0.91,
+              0.98,
+              1.1
+            ],
+            "roughness_variation_scale": 0.85,
+            "roughness_pore_scale": 0.95,
+            "ao_crack_scale": 0.9,
+            "ao_pore_scale": 0.85
+          },
+          "landscape": {
+            "macro_tile_metres": 24,
+            "macro_strength": 0.18
+          }
         }
       ]
     },
@@ -236,6 +264,34 @@
           "landscape": {
             "macro_tile_metres": 12,
             "macro_strength": 0.16
+          }
+        },
+        {
+          "id": "refined_c",
+          "label": "Refinement C deep ochre mineral soil",
+          "seed": 503,
+          "brightness": 0.3,
+          "surface_a": 0.92,
+          "surface_b": 0.66,
+          "roughness": 0.86,
+          "normal_strength": 0.52,
+          "refinement": {
+            "variation_scale": 0.36,
+            "crack_color_scale": 1.25,
+            "pore_color_scale": 1.05,
+            "color_gain": [
+              1.06,
+              0.95,
+              0.82
+            ],
+            "roughness_variation_scale": 0.85,
+            "roughness_pore_scale": 1.1,
+            "ao_crack_scale": 1,
+            "ao_pore_scale": 1
+          },
+          "landscape": {
+            "macro_tile_metres": 16,
+            "macro_strength": 0.22
           }
         }
       ]
