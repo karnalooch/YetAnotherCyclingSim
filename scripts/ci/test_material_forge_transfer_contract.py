@@ -239,6 +239,7 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         self.assertIn(
             '"scripts/ue/preview_material_forge_chunked_landscape.py"', mallorca
         )
+        self.assertIn('"scripts/ue/capture_material_forge_landscape.py"', mallorca)
         self.assertIn('"scripts/ue/build_material_forge_landscape_master.py"', mallorca)
 
     def test_transfer_metrics_are_preserved(self):
