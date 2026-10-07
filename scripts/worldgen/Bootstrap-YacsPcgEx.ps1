@@ -59,6 +59,18 @@ if ($Mode -eq 'Install' -and -not (Test-Path -LiteralPath (Join-Path $PluginRoot
     if ($LASTEXITCODE -ne 0) { throw 'Failed to checkout pinned PCGEx revision.' }
 }
 
+if ($Mode -eq 'Install' -and (Test-Path -LiteralPath (Join-Path $PluginRoot '.git'))) {
+    $InstallOrigin = (& git -C $PluginRoot remote get-url origin).Trim()
+    if ($InstallOrigin -ne $ExpectedRepository) {
+        throw "Existing PCGEx checkout has unexpected origin: $InstallOrigin"
+    }
+    & git -C $PluginRoot fetch --depth 1 origin $ExpectedCommit
+    if ($LASTEXITCODE -ne 0) { throw "Failed to refresh pinned PCGEx commit $ExpectedCommit." }
+    & git -C $PluginRoot reset --hard $ExpectedCommit
+    if ($LASTEXITCODE -ne 0) { throw 'Failed to normalize PCGEx tracked source to the pinned revision.' }
+    & git -C $PluginRoot config core.autocrlf false
+}
+
 $CompatibilityPatchPath = Join-Path $RepoRoot $CompatibilityPatchRelative
 if (-not (Test-Path -LiteralPath $CompatibilityPatchPath -PathType Leaf)) {
     throw "PCGEx compatibility patch is missing: $CompatibilityPatchPath"
@@ -73,11 +85,11 @@ if ($ActualCompatibilityPatchSha256 -ne $ExpectedCompatibilityPatchSha256) {
 $PatchApplied = $false
 $PatchApplicable = $false
 if (Test-Path -LiteralPath (Join-Path $PluginRoot '.git')) {
-    & git -C $PluginRoot apply --reverse --check $CompatibilityPatchPath *> $null
+    & git -C $PluginRoot apply --reverse --check --ignore-space-change --ignore-whitespace $CompatibilityPatchPath *> $null
     $PatchApplied = ($LASTEXITCODE -eq 0)
 
     if (-not $PatchApplied) {
-        & git -C $PluginRoot apply --check $CompatibilityPatchPath *> $null
+        & git -C $PluginRoot apply --check --ignore-space-change --ignore-whitespace $CompatibilityPatchPath *> $null
         $PatchApplicable = ($LASTEXITCODE -eq 0)
     }
 
@@ -85,7 +97,7 @@ if (Test-Path -LiteralPath (Join-Path $PluginRoot '.git')) {
         if (-not $PatchApplicable) {
             throw 'Pinned PCGEx source does not accept the reviewed YACS compatibility patch.'
         }
-        & git -C $PluginRoot apply --whitespace=nowarn $CompatibilityPatchPath
+        & git -C $PluginRoot apply --whitespace=nowarn --ignore-space-change --ignore-whitespace $CompatibilityPatchPath
         if ($LASTEXITCODE -ne 0) {
             throw 'Failed to apply the reviewed YACS PCGEx compatibility patch.'
         }
