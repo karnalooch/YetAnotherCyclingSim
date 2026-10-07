@@ -363,7 +363,7 @@ def _create_fixed_master_instance(package: str, weights, checkpoints):
             provenance.get("parameters", {}).get("landscape", {}) or {}
         )
         macro_tile_metres = float(
-            landscape_profile.get("macro_tile_metres", provenance["tile_metres"])
+            landscape_profile.get("macro_tile_metres", 16.0)
         )
         macro_strength = float(landscape_profile.get("macro_strength", 0.0))
         if not 8.0 <= macro_tile_metres <= 30.0:
