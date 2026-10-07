@@ -99,13 +99,17 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw 'Persistent LFS storage configuration failed.' }
 
             $map = 'Content/Worlds/SaCalobra/L_SaCalobraAccepted_20261004.umap'
+            $checkpointMaterials = 'Content/Worlds/SaCalobra/CheckpointMaterials'
+            $checkpointEarthworks = 'Content/Worlds/SaCalobra/CheckpointEarthworks'
+            $landscapeMaterial = 'Content/Generated/YACS/MaskReview/M_MaskReview_1.uasset'
+            $landscapeTexture = 'Content/Generated/YACS/MaskReview/T_MaskReview_1.uasset'
             $library = 'Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87'
             $exposedBaseColor = 'Content/Generated/YACS/TextureMaterialPrep/Runs/C414EA4B402723D66FCB689E49EEB02D/BaseColor.uasset'
             $screeBaseColor = 'Content/Generated/YACS/TextureMaterialPrep/Runs/94406E0247C9822CFD006CAB8B20545E/BaseColor.uasset'
-            $include = "$map,$library/**,$exposedBaseColor,$screeBaseColor"
+            $include = "$map,$checkpointMaterials/**,$checkpointEarthworks/**,$landscapeMaterial,$landscapeTexture,$library/**,$exposedBaseColor,$screeBaseColor"
             git lfs pull --include=$include --exclude=''
             if ($LASTEXITCODE -ne 0) { throw 'Accepted map / limestone transitive LFS pull failed.' }
-            git lfs checkout $map $library $exposedBaseColor $screeBaseColor
+            git lfs checkout $map $checkpointMaterials $checkpointEarthworks $landscapeMaterial $landscapeTexture $library $exposedBaseColor $screeBaseColor
             if ($LASTEXITCODE -ne 0) { throw 'Accepted map / limestone transitive LFS checkout failed.' }
 
             if (-not (Test-Path -LiteralPath $map -PathType Leaf)) {
@@ -116,6 +120,8 @@ jobs:
             }
 
             $required = @(
+              $landscapeMaterial,
+              $landscapeTexture,
               "$library/LimestonePalette/1b3d9c45b1e24d6085bfcc8859390c19/M_SC_Limestone_ExposedRock.uasset",
               "$library/LimestonePalette/1b3d9c45b1e24d6085bfcc8859390c19/M_SC_Limestone_Scree.uasset",
               "$library/ProviderData/ExposedRock/T_Height.uasset",
@@ -129,12 +135,14 @@ jobs:
               $exposedBaseColor,
               $screeBaseColor
             )
+            $required += @(0..2 | ForEach-Object { "$checkpointMaterials/MI_Accepted_$_.uasset" })
+            $required += @(0..184 | ForEach-Object { "$checkpointEarthworks/T_Cut_$('{0:D3}' -f $_).uasset" })
             foreach ($asset in $required) {
               if (-not (Test-Path -LiteralPath $asset -PathType Leaf)) {
-                throw "Required limestone proof asset missing: $asset"
+                throw "Required scene proof asset missing: $asset"
               }
               if ((Get-Item -LiteralPath $asset).Length -lt 1024) {
-                throw "Required limestone proof asset is still an LFS pointer: $asset"
+                throw "Required scene proof asset is still an LFS pointer: $asset"
               }
             }
           }
@@ -315,6 +323,13 @@ jobs:
                     'Default Material will be used'
                   ) -ErrorAction SilentlyContinue
                 )
+                $materialFallback += @(
+                  Select-String -LiteralPath $diagnostic -Pattern @(
+                    "LoadErrors: Error:.*'/Game/Worlds/SaCalobra/Checkpoint",
+                    "LoadErrors: Error:.*'/Game/Generated/YACS/MaskReview/",
+                    "LoadErrors: Error:.*'/Game/Generated/YACS/TextureMaterialPrep/"
+                  ) -ErrorAction SilentlyContinue
+                )
               }
             }
             if ($materialFallback.Count -gt 0) {
@@ -443,3 +458,4 @@ jobs:
           if-no-files-found: warn
           compression-level: 6
           retention-days: 14
+
