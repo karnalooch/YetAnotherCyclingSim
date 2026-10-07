@@ -49,9 +49,19 @@ class CliffErosionSelectorTests(unittest.TestCase):
         roughness[4, 4] = 2.0
         slope[4, 5] = 30.0
         roughness[4, 5] = 0.8
+        elevation[4, 5] = 0.6
         result = classify(slope, roughness, elevation, protected)
         self.assertEqual(result["cliff_selector"][4, 4], 1)
         self.assertEqual(result["scree_selector"][4, 5], 1)
+
+    def test_scree_requires_local_height_step(self):
+        slope, roughness, elevation, protected = self.base_inputs()
+        slope[4, 4] = 60.0
+        roughness[4, 4] = 2.0
+        slope[4, 5] = 30.0
+        roughness[4, 5] = 0.8
+        result = classify(slope, roughness, elevation, protected)
+        self.assertEqual(result["scree_selector"][4, 5], 0)
 
     def test_moderate_slope_without_cliff_proximity_is_not_scree(self):
         slope, roughness, elevation, protected = self.base_inputs()
@@ -99,7 +109,8 @@ class CliffErosionSelectorTests(unittest.TestCase):
                     "scree_slope_min_deg": 45.0,
                     "scree_slope_max_deg": 55.0,
                     "scree_roughness_min_m": 0.35,
-                    "scree_cliff_proximity_m": 20.0,
+                    "scree_step_min_m": 0.5,
+                    "scree_cliff_proximity_m": 8.0,
                 },
             )
 
