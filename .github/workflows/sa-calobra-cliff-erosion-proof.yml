@@ -13,6 +13,7 @@ on:
       - "scripts/assets/test_sa_calobra_cliff_erosion.py"
       - "scripts/assets/prepare_sa_calobra_cliff_erosion_handoff.py"
       - "scripts/assets/test_sa_calobra_cliff_erosion_handoff.py"
+      - "docs/tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md"
 
 permissions:
   contents: read
