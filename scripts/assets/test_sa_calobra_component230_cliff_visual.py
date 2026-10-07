@@ -119,7 +119,7 @@ class Component230CliffVisualPlanTests(unittest.TestCase):
         self.assertFalse(first["hard_policy"]["buildings"])
         self.assertFalse(first["hard_policy"]["infrastructure"])
         self.assertEqual(first["hard_policy"]["mapped_water_buffer_m"], 0.5)
-        self.assertEqual(first["skin_contract"]["source_grid_step_m"], 2.0)
+        self.assertEqual(first["skin_contract"]["source_grid_step_m"], 1.0)
 
 
 if __name__ == "__main__":
