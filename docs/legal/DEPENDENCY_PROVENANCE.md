@@ -5,6 +5,22 @@
 **Applies to:** external source code, plugins, libraries, datasets, models,
 textures, audio, fonts, mocap, snippets and other imported material
 
+## Phase 2C PCGEx compatibility experiment
+
+Issue #445 / PR #446 authorizes a minimal patch inside the approved PCGEx
+revision `39a8f1bdc65b2c4613a1e87b71d93b4576db0a66` (0.79). The targeted
+`Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp`
+retains Angus Johnson's 2010-2025 copyright and Boost Software License 1.0
+header; this embedded component's license is distinct from PCGEx's root MIT
+license. See the attribution in `THIRD_PARTY_NOTICES.md`.
+
+The reviewed flat-union patch replaces the failed winding experiment, preserves
+the upstream pin and changes only the integer TriangulateWithHoles wrapper.
+Bootstrap verifies the patch and resulting source hashes. Scope remains
+authoring-only; topology, deterministic UE execution and visual acceptance
+remain required before admission. License/header and overloads checked against
+the pinned source on 2026-10-07.
+
 ## 1. Rule
 
 Public availability is not a license.
@@ -418,3 +434,4 @@ The machine-readable counterpart is
 `worldgen/materials/material_forge/upstreams.json`. If any external source
 revision changes, the pin, licence review and deterministic material proof must
 be repeated before the new revision is admitted.
+

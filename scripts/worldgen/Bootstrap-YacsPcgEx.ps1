@@ -23,10 +23,10 @@ $ExpectedCommit = '39a8f1bdc65b2c4613a1e87b71d93b4576db0a66'
 $ExpectedVersion = '0.79'
 $ExpectedEngineVersion = '5.8.0'
 $ExpectedLicenseFirstLine = 'MIT License'
-$CompatibilityPatchId = 'yacs-pcgex-0.79-triangulate-hole-winding-v1'
-$CompatibilityPatchRelative = 'scripts/worldgen/patches/pcgex-0.79-triangulate-holes-winding.patch'
+$CompatibilityPatchId = 'yacs-pcgex-0.79-triangulate-flat-union-v1'
+$CompatibilityPatchRelative = 'scripts/worldgen/patches/pcgex-0.79-triangulate-holes-flat-union.patch'
 $CompatibilityTargetRelative = 'Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp'
-$ExpectedCompatibilityPatchSha256 = '962065a8ef0550d1409e1a9d492a1106f015d87bd470dd9f16b4b7a6d00f9b5d'
+$ExpectedCompatibilityPatchSha256 = '46b67a8517e3cac7e4a15ec7aaeb6af83b97c6c418aa67adbb81592010d01290'
 
 $RepoRoot = (Resolve-Path -LiteralPath $RepoRoot).Path
 if (-not $PluginRoot) { $PluginRoot = Join-Path $RepoRoot 'Plugins/PCGExtendedToolkit' }
@@ -89,30 +89,14 @@ function Test-YacsPcgExCompatibilityPatchApplied {
         return $false
     }
 
-    $Text = Get-Content -LiteralPath $TargetPath -Raw
-    $OuterFixed = [regex]::Matches(
-        $Text,
-        'if\s*\(Area\(outer\)\s*>\s*0\)'
-    ).Count
-    $HoleFixed = [regex]::Matches(
-        $Text,
-        'if\s*\(Area\(hole\)\s*<\s*0\)'
-    ).Count
-    $OuterLegacy = [regex]::Matches(
-        $Text,
-        'if\s*\(Area\(outer\)\s*<\s*0\)'
-    ).Count
-    $HoleLegacy = [regex]::Matches(
-        $Text,
-        'if\s*\(Area\(hole\)\s*>\s*0\)'
-    ).Count
-
-    return (
-        $OuterFixed -eq 2 -and
-        $HoleFixed -eq 2 -and
-        $OuterLegacy -eq 0 -and
-        $HoleLegacy -eq 0
-    )
+    # Exact full-file verification rejects extra edits in the allowed path.
+    # Normalize line endings only; Windows checkouts may contain CRLF.
+    $Text = [System.IO.File]::ReadAllText($TargetPath).Replace("`r`n", "`n")
+    $Bytes = [System.Text.Encoding]::UTF8.GetBytes($Text)
+    $Hash = [Convert]::ToHexString(
+        [System.Security.Cryptography.SHA256]::HashData($Bytes)
+    ).ToLowerInvariant()
+    return $Hash -eq 'f7011d0e971411b3411bd4962eb6f0a4a6468cc7932ce662027a0c8579e9f9f5'
 }
 
 $CompatibilityTargetPath = Join-Path $PluginRoot $CompatibilityTargetRelative
@@ -135,7 +119,7 @@ if ((Test-Path -LiteralPath (Join-Path $PluginRoot '.git')) -and -not $PatchAppl
 
         $PatchApplied = Test-YacsPcgExCompatibilityPatchApplied -TargetPath $CompatibilityTargetPath
         if (-not $PatchApplied) {
-            throw 'PCGEx compatibility patch applied but semantic winding verification failed.'
+            throw 'PCGEx compatibility patch applied but exact patched-source verification failed.'
         }
         $PatchApplicable = $false
     }
@@ -179,7 +163,7 @@ $ChangedPaths = @()
 $UntrackedPaths = @()
 if (Test-Path -LiteralPath $GitDir) {
     $Dirty = (& git -C $PluginRoot status --porcelain --untracked-files=all) -join [Environment]::NewLine
-    $ChangedPaths = @(& git -C $PluginRoot diff --name-only)
+    $ChangedPaths = @(& git -C $PluginRoot diff HEAD --name-only)
     $UntrackedPaths = @(& git -C $PluginRoot ls-files --others --exclude-standard)
 }
 $UpstreamClean = (
@@ -228,3 +212,4 @@ if ($Failed.Count -gt 0) {
 }
 
 Write-Host "PCGEx bootstrap validation: PASS ($ExpectedCommit)" -ForegroundColor Green
+

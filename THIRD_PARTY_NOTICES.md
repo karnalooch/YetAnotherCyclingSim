@@ -10,6 +10,17 @@ code or assets from the licenses listed below.
 For the provenance process and reference-only candidates, see
 [`docs/legal/DEPENDENCY_PROVENANCE.md`](docs/legal/DEPENDENCY_PROVENANCE.md).
 
+## PCGEx embedded Clipper2 compatibility patch
+
+The Phase 2C patch targets PCGEx revision
+`39a8f1bdc65b2c4613a1e87b71d93b4576db0a66`, whose root license is MIT,
+copyright 2025 Timothé Lapetite. The targeted Clipper2 triangulation source
+is copyright Angus Johnson 2010-2025 under the Boost Software License 1.0:
+https://www.boost.org/LICENSE_1_0.txt.
+The plugin is fetched by the authoring bootstrap; original license headers
+remain intact. The patch changes only the Union output representation passed
+to the existing triangulator. PCGEx is not a shipping runtime dependency.
+
 ## Material Maker authoring output
 
 The bounded limestone graph adapts Material Maker's MIT-licensed PBR output
@@ -243,3 +254,4 @@ municipal payload is not redistributed in Git. Native Base_DTM/CNIG derivatives
 retain IGN attribution; SIOSE retains IGN-SITIBSA-GOIB attribution; Catastro
 mapped-footprint derivatives retain INSPIRE transformed-data terms. Receipts
 pin these local candidates without redistributing original source geometry.
+

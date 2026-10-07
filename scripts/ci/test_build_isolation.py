@@ -31,10 +31,11 @@ class BuildIsolationTests(unittest.TestCase):
     def test_unknown_project_is_rejected(self):
         self.check("editor.exe", False)
 
-
     def test_auto_discovery_filters_stale_cim_records_by_native_pid(self):
-        script = Path(__file__).with_name("Assert-YacsBuildIsolation.ps1").read_text(
-            encoding="utf-8"
+        script = (
+            Path(__file__)
+            .with_name("Assert-YacsBuildIsolation.ps1")
+            .read_text(encoding="utf-8")
         )
         self.assertIn("$AutoDiscovered", script)
         self.assertIn("Get-Process -Id ([int]$_.ProcessId)", script)
@@ -66,3 +67,4 @@ try {{
                 ["pwsh", "-NoProfile", "-Command", code], capture_output=True, text=True
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+

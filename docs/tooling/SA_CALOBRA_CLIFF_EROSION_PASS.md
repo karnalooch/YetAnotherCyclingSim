@@ -252,6 +252,40 @@ The workflow:
 No Unreal map is opened or saved by this proof. Canonical terrain mutation flags
 must remain false.
 
+## Phase 2C bounded topology experiment — Issue #445 / PR #446
+
+The active Component 230 experiment preserves the accepted Landscape,
+classifier and 0.5 m pavement/shoulder/water exclusions. Its frozen plan has
+2,611 cliff cells, 1,237 scree cells and 1,017 admitted 1 m skin cells.
+Fourteen semantic 8-connected clusters form 19 physical polygon islands.
+
+The graph passes exact cell squares directly to PCGEx Clipper2 Triangulate,
+using consolidated inputs and EvenOdd fill. It does not use Path Subdivide or
+Decompose / Cluster Surface. GeometryScript tessellates each physical triangle
+component independently with ceil(maxEdge / 150 cm) - 1.
+
+PCGEx remains authoring-only at revision
+`39a8f1bdc65b2c4613a1e87b71d93b4576db0a66`. The bounded compatibility experiment
+replaces only the integer TriangulateWithHoles wrapper's PolyTree regrouping
+with Union into oriented flat contours followed by standard Triangulate.
+The fill rule, Z callback and Delaunay setting remain unchanged.
+The failed reversed-winding experiment is retired. Bootstrap verifies the
+patch SHA-256 and complete normalized patched-source SHA-256, allowing only
+that source file to differ from the pinned revision.
+
+Standalone C++ probes pass for two holes, a nested island and a cell union with
+holes, using the pinned Clipper implementation with minimal Unreal macro stubs.
+These are not UE integration or Component 230 acceptance proofs.
+The dedicated exact-head workflow must prove correct components, zero outside
+vertices/centroids, zero degenerate/nonmanifold triangles, retention 0.90..1.001,
+edge length <=157.5 cm, <=60,000 triangles per mesh and <=120,000 total, plus
+identical canonical mesh receipts from two executions.
+
+Topology acceptance precedes matched custom A / PCGEx B Lit and Lighting Only
+captures, existing dark-region gates and human visual acceptance. No map,
+graph or asset save and no canonical Landscape mutation are permitted.
+PR #446 remains Draft pending proof; merge requires explicit owner approval.
+
 ## Phase 2B direction
 
 Only after Phase 2A handoff review:
@@ -270,3 +304,4 @@ Only after Phase 2A handoff review:
 
 Erosion/breakup remains presentation geometry work. It is never written back
 into the canonical Landscape without a separate explicit architecture change.
+

@@ -1,0 +1,32 @@
+diff --git a/Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp b/Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp
+--- a/Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp
++++ b/Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp
+@@ -1699,9 +1699,9 @@
+ 			return TriangulateResult::no_polygons;
+ 		}
+ 
+-		// Step 1: Use Union to build PolyTree with proper parent-child relationships
+-		// This resolves which paths are holes inside which outer polygons
+-		PolyTree64 polytree;
++		// Preserve the oriented Union contours, including every nested hole.
++		// Pass them together to the standard constrained triangulator.
++		Paths64 unioned;
+ 		Clipper64 clipper;
+ 		if (zCallback)
+ 		{
+@@ -1710,13 +1710,12 @@
+ 		clipper.AddSubject(pp);
+ 
+ 		Paths64 openPaths; // We don't use open paths for triangulation
+-		if (!clipper.Execute(ClipType::Union, fillRule, polytree, openPaths))
++		if (!clipper.Execute(ClipType::Union, fillRule, unioned, openPaths))
+ 		{
+ 			return TriangulateResult::fail;
+ 		}
+ 
+-		// Step 2: Triangulate the PolyTree
+-		return TriangulatePolyTree(polytree, solution, useDelaunay);
++		return Triangulate(unioned, solution, useDelaunay);
+ 	}
+ 
+ 	TriangulateResult TriangulateWithHoles(
