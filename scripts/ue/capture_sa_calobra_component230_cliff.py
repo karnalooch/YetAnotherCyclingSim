@@ -76,6 +76,22 @@ _pcgex_mesh = None
 _mesh_receipt = {}
 _material_override_state = None
 _material_override_receipt = {"enabled": False}
+_temporal_sequence_receipt = {}
+
+
+def _fix_temporal_sequence():
+    # Require support from the actual engine instead of silently accepting an
+    # unknown console command. Histories, lighting and shadows stay enabled.
+    name = "r.Test.FreezeTemporalSequences"
+    previous = unreal.SystemLibrary.get_console_variable_string_value(name)
+    if previous == "":
+        raise RuntimeError("Engine does not expose temporal-sequence control")
+    unreal.SystemLibrary.execute_console_command(_world, name + " ?")
+    unreal.SystemLibrary.execute_console_command(_world, name + " 1")
+    actual = unreal.SystemLibrary.get_console_variable_int_value(name)
+    if actual != 1:
+        raise RuntimeError("Temporal-sequence control did not take effect")
+    _temporal_sequence_receipt.update(name=name, previous=previous, value=actual)
 
 
 def _apply_neutral_landscape_material():
@@ -1096,6 +1112,7 @@ def _write_receipt(status: str, error: str | None):
         "dynamic_shadows": True,
         "shadow_bias_changed": False,
         "capture_protocol": {
+            "temporal_sequence": _temporal_sequence_receipt,
             "delay_seconds": CAPTURE_DELAY_SECONDS,
             "high_res_warmup_frames": CAPTURE_WARMUP_FRAMES,
             "force_lod": 0,
@@ -1301,6 +1318,7 @@ def main():
 
     _before_hash = _digest(MAP_FILE)
     _before_scene = _scene_snapshot()
+    _fix_temporal_sequence()
     _apply_neutral_landscape_material()
     lighting = _ensure_lighting()
     bounds = _component_bounds()
