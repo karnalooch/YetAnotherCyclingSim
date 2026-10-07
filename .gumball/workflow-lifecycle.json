@@ -157,6 +157,11 @@
       "reason": "Owner-only manual main-branch self-hosted runner disk recovery."
     },
     {
+      "file": "sa-calobra-cliff-erosion-proof.yml",
+      "state": "CURRENT",
+      "reason": "Issue #429 non-destructive self-hosted frozen-grid cliff/scree selector proof; consumes pinned normalized terrain and conservative presentation exclusions, publishes diagnostic selectors only, and never mutates the canonical Landscape or source DTM."
+    },
+    {
       "file": "sa-calobra-terrain-performance.yml",
       "state": "BROKER-MANAGED",
       "reason": "Explicit exact-SHA 1080p60 native Sa Calobra baseline; fixed views and reference RTX 2070 SUPER, retained assets."
