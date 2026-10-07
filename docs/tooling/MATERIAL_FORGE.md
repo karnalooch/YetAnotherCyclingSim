@@ -436,10 +436,16 @@ the latest FULL proof; missing warm state fails closed as
 `FAST_VISUAL_WARM_CACHE_REQUIRED`.
 
 FAST applies the fixed-master instance only to canonical
-`LandscapeComponent_230`, captures one 1920x1080 close cliff view, rolls back
-the component override and transient lighting, records both artifact source SHA
-and execution SHA, and marks its receipt `NON_PRODUCTION_FAST_VISUAL` with
-`full_production_proof_required=true`.
+`LandscapeComponent_230`. The default review pack stays at 1920x1080 and uses
+one camera for four frames: Lit for the iterative owner-facing comparison plus
+Unlit, Lighting Only and Detail Lighting diagnostics. The diagnostic trio is
+non-production evidence used to separate BaseColor/projection, geometry or
+self-shadowing, and material-normal contribution without paying for the FULL
+whole-Landscape proof on every hypothesis. FAST still rolls back the component
+override and transient lighting, records both artifact source SHA and execution
+SHA, and marks its receipt `NON_PRODUCTION_FAST_VISUAL` with
+`full_production_proof_required=true`. The entire FAST pack must still finish
+within the 240 second target.
 
 **FULL** remains the production authority: deterministic catalog render x2,
 Blender reference, exact-SHA UE proof, whole-Landscape 1024-component
