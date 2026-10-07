@@ -177,6 +177,42 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         self.assertIn("dynamic_shadows", visual)
         self.assertIn("FAST dynamic-shadow isolation probe contract failed.", fast)
 
+    def test_fast_color_grade_controls_are_neutral_bounded_and_recorded(self):
+        builder = (
+            ROOT / "scripts/ue/build_material_forge_landscape_master.py"
+        ).read_text(encoding="utf-8")
+        preview = (
+            ROOT / "scripts/ue/preview_material_forge_chunked_landscape.py"
+        ).read_text(encoding="utf-8")
+        visual = (ROOT / "scripts/ue/capture_material_forge_landscape.py").read_text(
+            encoding="utf-8"
+        )
+        fast = FAST.read_text(encoding="utf-8")
+        mallorca = MALLORCA.read_text(encoding="utf-8")
+
+        self.assertIn('parameter_name=prefix + "ColorGain"', builder)
+        self.assertIn('"RockColorGain"', builder)
+        self.assertIn('"SoilColorGain"', builder)
+        self.assertIn('"color_gain_defaults"', builder)
+        self.assertIn("get_vector_parameter_names(instance)", preview)
+        self.assertIn("Fixed-master vector parameter contract missing", preview)
+        self.assertIn("Fixed-master vector readback failed", preview)
+        self.assertIn("COLOR_GAIN_MIN = 0.65", visual)
+        self.assertIn("COLOR_GAIN_MAX = 1.35", visual)
+        self.assertIn("YACS_MF_ROCK_COLOR_GAIN", visual)
+        self.assertIn("YACS_MF_SOIL_COLOR_GAIN", visual)
+        self.assertIn("Fixed-master color gain readback failed", visual)
+        self.assertIn('"color_gains": _color_gains', visual)
+        self.assertIn("rock_color_gain:", fast)
+        self.assertIn("soil_color_gain:", fast)
+        self.assertIn("FAST color-gain receipt contract failed.", fast)
+        self.assertIn(
+            '"scripts/ue/preview_material_forge_chunked_landscape.py"', mallorca
+        )
+        self.assertIn(
+            '"scripts/ue/build_material_forge_landscape_master.py"', mallorca
+        )
+
     def test_transfer_metrics_are_preserved(self):
         text = CANARY.read_text(encoding="utf-8")
         self.assertIn("proof-transfer-metrics.json", text)
