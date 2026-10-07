@@ -31,6 +31,7 @@
 #include "Elements/PCGExSubdivide.h"
 #include "UDynamicMesh.h"
 #include "DynamicMesh/DynamicMesh3.h"
+#include "GeometryScript/MeshSubdivideFunctions.h"
 #endif
 
 DEFINE_LOG_CATEGORY_STATIC(LogYacsSaCalobraPcgExCliff, Log, All);
@@ -84,11 +85,30 @@ namespace
     }
 
 #if YACS_WITH_PCGEX
+    double ComputeMaxEdgeLengthCm(const UE::Geometry::FDynamicMesh3& Mesh)
+    {
+        double MaxEdge = 0.0;
+        for (const int32 TriangleId : Mesh.TriangleIndicesItr())
+        {
+            const UE::Geometry::FIndex3i Triangle = Mesh.GetTriangle(TriangleId);
+            const FVector A = Mesh.GetVertex(Triangle.A);
+            const FVector B = Mesh.GetVertex(Triangle.B);
+            const FVector C = Mesh.GetVertex(Triangle.C);
+            MaxEdge = FMath::Max(MaxEdge, FVector::Distance(A, B));
+            MaxEdge = FMath::Max(MaxEdge, FVector::Distance(B, C));
+            MaxEdge = FMath::Max(MaxEdge, FVector::Distance(C, A));
+        }
+        return MaxEdge;
+    }
+
     bool ExecuteGraph(
         UPCGGraph* Graph,
         TArray<TSharedPtr<FJsonValue>>& OutMeshes,
         int32& OutVertexCount,
         int32& OutTriangleCount,
+        double& OutMaxEdgeBeforeCm,
+        double& OutMaxEdgeAfterCm,
+        int32& OutMaxTessellation,
         FString& OutError)
     {
         if (!Graph)
@@ -161,20 +181,75 @@ namespace
         FWorldPartitionHelpers::FakeEngineTick(World);
 
         const FPCGDataCollection& Generated = Component->GetGeneratedGraphOutput();
+        constexpr double TargetEdgeCm = 150.0;
+        constexpr int32 MaxTessellation = 12;
+        constexpr int32 MaxTriangleCountPerMesh = 60000;
+
         for (const FPCGTaggedData& Tagged : Generated.TaggedData)
         {
-            const UPCGDynamicMeshData* MeshData =
-                Cast<const UPCGDynamicMeshData>(Tagged.Data);
+            UPCGDynamicMeshData* MeshData =
+                Cast<UPCGDynamicMeshData>(Tagged.Data);
             if (!MeshData || !MeshData->GetDynamicMesh())
             {
                 continue;
             }
 
-            const UE::Geometry::FDynamicMesh3& Mesh =
-                MeshData->GetDynamicMesh()->GetMeshRef();
-            if (Mesh.VertexCount() <= 0 || Mesh.TriangleCount() <= 0)
+            UDynamicMesh* DynamicMesh = MeshData->GetMutableDynamicMesh();
+            if (!DynamicMesh)
             {
                 continue;
+            }
+
+            const UE::Geometry::FDynamicMesh3& BeforeMesh = DynamicMesh->GetMeshRef();
+            if (BeforeMesh.VertexCount() <= 0 || BeforeMesh.TriangleCount() <= 0)
+            {
+                continue;
+            }
+
+            const int32 PreTessVertices = BeforeMesh.VertexCount();
+            const int32 PreTessTriangles = BeforeMesh.TriangleCount();
+            const double MaxEdgeBefore = ComputeMaxEdgeLengthCm(BeforeMesh);
+            OutMaxEdgeBeforeCm = FMath::Max(OutMaxEdgeBeforeCm, MaxEdgeBefore);
+
+            const int32 Tessellation = FMath::Clamp(
+                FMath::CeilToInt(MaxEdgeBefore / TargetEdgeCm),
+                1,
+                MaxTessellation);
+            OutMaxTessellation = FMath::Max(OutMaxTessellation, Tessellation);
+
+            if (Tessellation > 1)
+            {
+                UDynamicMesh* Result =
+                    UGeometryScriptLibrary_MeshSubdivideFunctions::ApplyUniformTessellation(
+                        DynamicMesh,
+                        Tessellation,
+                        nullptr);
+                if (Result != DynamicMesh)
+                {
+                    OutError = TEXT("GeometryScript uniform tessellation failed.");
+                    return false;
+                }
+            }
+
+            const UE::Geometry::FDynamicMesh3& Mesh = DynamicMesh->GetMeshRef();
+            const double MaxEdgeAfter = ComputeMaxEdgeLengthCm(Mesh);
+            OutMaxEdgeAfterCm = FMath::Max(OutMaxEdgeAfterCm, MaxEdgeAfter);
+
+            if (MaxEdgeAfter > TargetEdgeCm * 1.05)
+            {
+                OutError = FString::Printf(
+                    TEXT("Phase 2C topology remains too coarse after deterministic tessellation: %.3f cm > %.3f cm."),
+                    MaxEdgeAfter,
+                    TargetEdgeCm * 1.05);
+                return false;
+            }
+            if (Mesh.TriangleCount() > MaxTriangleCountPerMesh)
+            {
+                OutError = FString::Printf(
+                    TEXT("Phase 2C topology exceeds per-mesh triangle budget: %d > %d."),
+                    Mesh.TriangleCount(),
+                    MaxTriangleCountPerMesh);
+                return false;
             }
 
             TMap<int32, int32> Remap;
@@ -219,6 +294,12 @@ namespace
             OutVertexCount += Vertices.Num();
             OutTriangleCount += Triangles.Num();
             TSharedRef<FJsonObject> MeshObject = MakeShared<FJsonObject>();
+            MeshObject->SetNumberField(TEXT("pre_tessellation_vertex_count"), PreTessVertices);
+            MeshObject->SetNumberField(TEXT("pre_tessellation_triangle_count"), PreTessTriangles);
+            MeshObject->SetNumberField(TEXT("tessellation"), Tessellation);
+            MeshObject->SetNumberField(TEXT("target_edge_cm"), TargetEdgeCm);
+            MeshObject->SetNumberField(TEXT("max_edge_cm_before"), MaxEdgeBefore);
+            MeshObject->SetNumberField(TEXT("max_edge_cm_after"), MaxEdgeAfter);
             MeshObject->SetArrayField(TEXT("vertices_cm"), MoveTemp(Vertices));
             MeshObject->SetArrayField(TEXT("triangles"), MoveTemp(Triangles));
 
@@ -396,12 +477,18 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     TArray<TSharedPtr<FJsonValue>> Meshes;
     int32 VertexCount = 0;
     int32 TriangleCount = 0;
+    double MaxEdgeBeforeCm = 0.0;
+    double MaxEdgeAfterCm = 0.0;
+    int32 MaxTessellation = 1;
     FString ExecutionError;
     if (!ExecuteGraph(
             Graph,
             Meshes,
             VertexCount,
             TriangleCount,
+            MaxEdgeBeforeCm,
+            MaxEdgeAfterCm,
+            MaxTessellation,
             ExecutionError))
     {
         UE_LOG(
@@ -422,7 +509,7 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     Root->SetStringField(
         TEXT("pipeline"),
         TEXT("YACS cliff cells -> Clipper2 Union -> Path Smooth -> "
-             "Path Subdivide -> Clipper2 Triangulate"));
+             "Path Subdivide -> Clipper2 Triangulate -> deterministic UE Uniform Tessellation"));
     Root->SetBoolField(TEXT("canonical_landscape_mutation"), false);
     Root->SetBoolField(TEXT("assets_saved"), false);
     Root->SetBoolField(TEXT("graph_saved"), false);
@@ -430,6 +517,10 @@ int32 UYacsSaCalobraPcgExCliffCommandlet::Main(const FString& Params)
     Root->SetNumberField(TEXT("mesh_count"), Meshes.Num());
     Root->SetNumberField(TEXT("vertex_count"), VertexCount);
     Root->SetNumberField(TEXT("triangle_count"), TriangleCount);
+    Root->SetNumberField(TEXT("target_edge_cm"), 150.0);
+    Root->SetNumberField(TEXT("max_edge_cm_before"), MaxEdgeBeforeCm);
+    Root->SetNumberField(TEXT("max_edge_cm_after"), MaxEdgeAfterCm);
+    Root->SetNumberField(TEXT("max_tessellation"), MaxTessellation);
     Root->SetArrayField(TEXT("meshes"), MoveTemp(Meshes));
 
     FString JsonText;
