@@ -214,7 +214,9 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         self.assertIn("YACS_MF_SOIL_COLOR_GAIN", visual)
         self.assertIn("Fixed-master color gain readback failed", visual)
         self.assertIn("color_gain_values=requested_color_gains", visual)
-        self.assertIn("_verify_color_gain_readback(_instance, requested_color_gains)", visual)
+        self.assertIn(
+            "_verify_color_gain_readback(_instance, requested_color_gains)", visual
+        )
         self.assertNotIn("LIB.update_material_instance(instance)", visual)
         self.assertIn('"color_gains": _color_gains', visual)
         self.assertIn("rock_color_gain:", fast)
