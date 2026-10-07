@@ -163,7 +163,7 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 
 - [Sa Calobra surface candidate comparison — 2026-10-05](experiments/sa-calobra-surface-candidates-2026-10-05.md) — 21 reviewed sources, six-role visual shortlist and rejection reasons; no production-set approval or Unreal import.
 
-- [Sa Calobra material reference review — 2026-10-05](experiments/sa-calobra-material-reference-review-2026-10-05.md) — whole-area aerial observations, ground-reference gaps and preliminary asset leads; reference gate remains open.
+- [Sa Calobra Material Forge production proof — 2026-10-07](experiments/sa-calobra-material-forge-production-proof-2026-10-07.md) — exact-SHA fixed-master productionization, memory recovery, offscreen Unreal admission, whole-Landscape rollback-safe 4K proof and remaining owner visual gate.\n\n- [Sa Calobra material reference review — 2026-10-05](experiments/sa-calobra-material-reference-review-2026-10-05.md) — whole-area aerial observations, ground-reference gaps and preliminary asset leads; reference gate remains open.
 
 - [Sa Calobra surface coverage audit — 2026-10-04](experiments/sa-calobra-surface-coverage-2026-10-04.md) — read-only candidate evidence: sampling support, unresolved rock/soil classification and review priorities; no production admission.
 
