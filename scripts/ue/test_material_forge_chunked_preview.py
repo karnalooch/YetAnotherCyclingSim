@@ -82,6 +82,8 @@ class MaterialForgeChunkedPreviewTests(unittest.TestCase):
         self.assertIn('"SoilMacroTileSizeCm"', self.source)
         self.assertIn('"RockMacroStrength"', self.source)
         self.assertIn("8.0 <= macro_tile_metres <= 30.0", self.source)
+        self.assertIn('landscape_profile.get("macro_tile_metres", 16.0)', self.source)
+        self.assertIn('landscape_profile.get("macro_strength", 0.0)', self.source)
 
     def test_fixed_master_orm_defaults_use_mask_compatible_placeholder(self):
         builder = (
