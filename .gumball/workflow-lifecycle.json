@@ -162,6 +162,11 @@
       "reason": "Issue #429 non-destructive self-hosted frozen-grid cliff/scree selector proof; consumes pinned normalized terrain and conservative presentation exclusions, publishes diagnostic selectors only, and never mutates the canonical Landscape or source DTM."
     },
     {
+      "file": "sa-calobra-cliff-component230-visual.yml",
+      "state": "CURRENT",
+      "reason": "Issue #443 bounded exact-SHA Component_230 transient DynamicMesh cliff/scree visual spike; narrow road+shoulder+0.5m mapped-water hard policy, four same-camera Lit/Lighting-Only captures, black-cavity metrics, collision off, no map or asset save."
+    },
+    {
       "file": "sa-calobra-terrain-performance.yml",
       "state": "BROKER-MANAGED",
       "reason": "Explicit exact-SHA 1080p60 native Sa Calobra baseline; fixed views and reference RTX 2070 SUPER, retained assets."
