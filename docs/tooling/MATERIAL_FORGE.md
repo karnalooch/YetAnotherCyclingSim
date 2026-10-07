@@ -472,6 +472,22 @@ material/provenance rather than remain workflow-only tuning.
 The dynamic-shadow diagnostic from #420 is deliberately separate: color gains
 must not be used to hide cliff cavities or frozen-geometry defects.
 
+### Shadow slope-bias isolation
+
+Issue #425 follows the #420 result without treating "disable shadows" as a fix.
+The FAST pack adds one same-camera Lighting Only frame with dynamic shadows still
+enabled and Directional Light `ShadowSlopeBias` temporarily forced to `1.0`.
+The exact existing `ShadowBias` is preserved. Baseline and probe values are
+read back from every Directional Light component, the probe fails if it is a
+no-op, and original values are restored before every other capture and during
+rollback.
+
+This is a discriminator, not an accepted lighting change. If the near-black
+wedges collapse at the high slope-bias probe, bounded shadow-bias tuning is
+worth pursuing. If they remain, the defect is dominated by cast shadows from
+the steep/terraced Landscape shape and belongs to the later cliff/geometry
+representation layer rather than BaseColor compensation.
+
 **FULL** remains the production authority: deterministic catalog render x2,
 Blender reference, exact-SHA UE proof, whole-Landscape 1024-component
 assignment, four 4K acceptance views, three diagnostics and rollback.

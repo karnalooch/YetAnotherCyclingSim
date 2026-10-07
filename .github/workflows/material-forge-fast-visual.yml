@@ -273,7 +273,7 @@ jobs:
             $receipt.evidence_authority -ne 'NON_PRODUCTION_FAST_VISUAL' -or
             $receipt.full_production_proof_required -ne $true -or
             [int]$receipt.capture_count -ne 1 -or
-            [int]$receipt.diagnostic_count -ne 4 -or
+            [int]$receipt.diagnostic_count -ne 5 -or
             [int]$receipt.applied_component_count -ne 1 -or
             $receipt.applied_scope -ne 'CANONICAL_COMPONENT_230' -or
             $receipt.rollback_complete -ne $true -or
@@ -320,6 +320,55 @@ jobs:
             throw 'FAST dynamic-shadow isolation probe contract failed.'
           }
 
+          $baselineLighting = @(
+            $receipt.diagnostics |
+              Where-Object { [string]$_.name -eq 'fast-cliff-lighting-only' }
+          )
+          $slopeBiasProbe = @(
+            $receipt.diagnostics |
+              Where-Object { [string]$_.name -eq 'fast-cliff-lighting-slope-bias-1' }
+          )
+          if ($baselineLighting.Count -ne 1 -or $slopeBiasProbe.Count -ne 1) {
+            throw 'FAST shadow-slope-bias probe requires one baseline and one probe frame.'
+          }
+          if (
+            [string]$slopeBiasProbe[0].viewmode -ne 'lightingonly' -or
+            [bool]$slopeBiasProbe[0].dynamic_shadows -ne $true -or
+            [math]::Abs([double]$slopeBiasProbe[0].requested_shadow_slope_bias - 1.0) -gt 0.001
+          ) {
+            throw 'FAST shadow-slope-bias probe frame contract failed.'
+          }
+          $baselineBias = @($baselineLighting[0].directional_shadow_bias)
+          $probeBias = @($slopeBiasProbe[0].directional_shadow_bias)
+          if ($baselineBias.Count -lt 1 -or $probeBias.Count -ne $baselineBias.Count) {
+            throw 'FAST shadow-slope-bias readback inventory failed.'
+          }
+          $changedFromBaseline = $false
+          for ($i = 0; $i -lt $probeBias.Count; $i++) {
+            if ([math]::Abs([double]$probeBias[$i].shadow_slope_bias - 1.0) -gt 0.001) {
+              throw 'FAST ShadowSlopeBias=1.0 readback failed.'
+            }
+            if (
+              [math]::Abs(
+                [double]$baselineBias[$i].shadow_slope_bias -
+                [double]$probeBias[$i].shadow_slope_bias
+              ) -gt 0.001
+            ) {
+              $changedFromBaseline = $true
+            }
+            if (
+              [math]::Abs(
+                [double]$baselineBias[$i].shadow_bias -
+                [double]$probeBias[$i].shadow_bias
+              ) -gt 0.001
+            ) {
+              throw 'FAST slope-bias probe unexpectedly changed ShadowBias.'
+            }
+          }
+          if (-not $changedFromBaseline) {
+            throw 'FAST shadow-slope-bias probe was a no-op at the current baseline.'
+          }
+
           $started = [DateTime]::Parse($env:YACS_FAST_STARTED_UTC).ToUniversalTime()
           $elapsed = ([DateTime]::UtcNow - $started).TotalSeconds
           $jobReceipt = [ordered]@{
@@ -335,6 +384,12 @@ jobs:
               name = [string]$shadowProbe[0].name
               viewmode = [string]$shadowProbe[0].viewmode
               dynamic_shadows = [bool]$shadowProbe[0].dynamic_shadows
+            }
+            shadow_slope_bias_probe = [ordered]@{
+              name = [string]$slopeBiasProbe[0].name
+              baseline = $baselineBias
+              probe = $probeBias
+              requested_shadow_slope_bias = [double]$slopeBiasProbe[0].requested_shadow_slope_bias
             }
             color_gains = $receipt.color_gains
             elapsed_seconds = [math]::Round($elapsed, 3)
