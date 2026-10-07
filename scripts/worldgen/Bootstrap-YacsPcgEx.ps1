@@ -26,6 +26,7 @@ $ExpectedLicenseFirstLine = 'MIT License'
 $CompatibilityPatchId = 'yacs-pcgex-0.79-triangulate-hole-winding-v1'
 $CompatibilityPatchRelative = 'scripts/worldgen/patches/pcgex-0.79-triangulate-holes-winding.patch'
 $CompatibilityTargetRelative = 'Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp'
+$ExpectedCompatibilityPatchSha256 = '3dd26b728c3ddcfc0066dd33ca402c13e426947d38a93a6a4e5fa08d5206025c'
 
 $RepoRoot = (Resolve-Path -LiteralPath $RepoRoot).Path
 if (-not $PluginRoot) { $PluginRoot = Join-Path $RepoRoot 'Plugins/PCGExtendedToolkit' }
@@ -61,6 +62,12 @@ if ($Mode -eq 'Install' -and -not (Test-Path -LiteralPath (Join-Path $PluginRoot
 $CompatibilityPatchPath = Join-Path $RepoRoot $CompatibilityPatchRelative
 if (-not (Test-Path -LiteralPath $CompatibilityPatchPath -PathType Leaf)) {
     throw "PCGEx compatibility patch is missing: $CompatibilityPatchPath"
+}
+$ActualCompatibilityPatchSha256 = (
+    Get-FileHash -LiteralPath $CompatibilityPatchPath -Algorithm SHA256
+).Hash.ToLowerInvariant()
+if ($ActualCompatibilityPatchSha256 -ne $ExpectedCompatibilityPatchSha256) {
+    throw "PCGEx compatibility patch hash drift: $ActualCompatibilityPatchSha256"
 }
 
 $PatchApplied = $false
@@ -161,7 +168,7 @@ $Report = [ordered]@{
     actual_commit = $Head
     compatibility_patch = $CompatibilityPatchId
     compatibility_patch_state = $(if ($PatchApplied) {'applied'} elseif ($PatchApplicable) {'applicable'} else {'invalid'})
-    compatibility_patch_sha256 = (Get-FileHash -LiteralPath $CompatibilityPatchPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    compatibility_patch_sha256 = $ActualCompatibilityPatchSha256
     compatibility_target = $CompatibilityTargetRelative
     plugin_root = $PluginRoot
     status = $(if ($Failed.Count -eq 0) {'PASS'} else {'FAIL'})
