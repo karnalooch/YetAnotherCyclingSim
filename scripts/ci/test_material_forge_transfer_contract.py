@@ -173,7 +173,9 @@ class MaterialForgeTransferContractTests(unittest.TestCase):
         self.assertIn('"fast-cliff-detail-lighting"', visual)
         self.assertIn('"fast-cliff-lighting-only-no-dynamic-shadows"', visual)
         self.assertIn('"showflag.DynamicShadows 1"', visual)
-        self.assertIn('"showflag.DynamicShadows " + ("1" if dynamic_shadows else "0")', visual)
+        self.assertIn(
+            '"showflag.DynamicShadows " + ("1" if dynamic_shadows else "0")', visual
+        )
         self.assertIn("shadow-disabled Lighting Only probe", fast)
         self.assertIn("shadow-enabled Lighting Only baseline", fast)
 
