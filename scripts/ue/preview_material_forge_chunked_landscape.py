@@ -430,8 +430,13 @@ def _create_fixed_master_instance(package: str, weights, checkpoints):
         "RockMacroStrength": surfaces["rock"]["macro_strength"],
         "SoilMacroStrength": surfaces["soil"]["macro_strength"],
     }
+    vector_values = {
+        "RockColorGain": unreal.LinearColor(1.0, 1.0, 1.0, 1.0),
+        "SoilColorGain": unreal.LinearColor(1.0, 1.0, 1.0, 1.0),
+    }
     visible_textures = {str(name) for name in LIB.get_texture_parameter_names(instance)}
     visible_scalars = {str(name) for name in LIB.get_scalar_parameter_names(instance)}
+    visible_vectors = {str(name) for name in LIB.get_vector_parameter_names(instance)}
     if set(texture_values) - visible_textures:
         raise RuntimeError(
             "Fixed-master texture parameter contract missing: "
@@ -441,6 +446,11 @@ def _create_fixed_master_instance(package: str, weights, checkpoints):
         raise RuntimeError(
             "Fixed-master scalar parameter contract missing: "
             + ",".join(sorted(set(scalar_values) - visible_scalars))
+        )
+    if set(vector_values) - visible_vectors:
+        raise RuntimeError(
+            "Fixed-master vector parameter contract missing: "
+            + ",".join(sorted(set(vector_values) - visible_vectors))
         )
 
     association = unreal.MaterialParameterAssociation.GLOBAL_PARAMETER
@@ -458,6 +468,14 @@ def _create_fixed_master_instance(package: str, weights, checkpoints):
             instance,
             name,
             float(value),
+            association,
+        )
+    for name, value in vector_values.items():
+        LIB.set_material_instance_parameter_override(instance, name, True, association)
+        LIB.set_material_instance_vector_parameter_value(
+            instance,
+            name,
+            value,
             association,
         )
     LIB.update_material_instance(instance)
@@ -479,6 +497,19 @@ def _create_fixed_master_instance(package: str, weights, checkpoints):
         )
         if abs(float(actual) - float(expected)) > 0.001:
             raise RuntimeError("Fixed-master scalar readback failed: " + name)
+    for name, expected in vector_values.items():
+        actual = LIB.get_material_instance_vector_parameter_value(
+            instance,
+            name,
+            association,
+        )
+        channels = ("r", "g", "b", "a")
+        if any(
+            abs(float(getattr(actual, channel)) - float(getattr(expected, channel)))
+            > 0.001
+            for channel in channels
+        ):
+            raise RuntimeError("Fixed-master vector readback failed: " + name)
 
     drain_raw = (
         unreal.YacsTextureAuditLibrary.drain_asset_compilation_and_collect_garbage()
