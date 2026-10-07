@@ -28,6 +28,40 @@ def _cell_bounds(plan: dict) -> tuple[list[tuple[float, float, float, float]], f
     return bounds, pixel
 
 
+def _edge_connected_cell_components(plan: dict) -> int:
+    """Count physical polygon islands using shared-edge (4-neighbour) cells.
+
+    Phase 2B semantic clusters use 8-neighbour connectivity so diagonal source
+    evidence can stay in one logical cliff cluster. A triangulated polygon mesh,
+    however, is connected only across shared edges; point-touching cells remain
+    separate manifold islands. The topology gate must compare like with like.
+    """
+    cells = {
+        (int(cell["grid_rc"][0]), int(cell["grid_rc"][1]))
+        for cell in plan["skin_cells"]
+    }
+    seen: set[tuple[int, int]] = set()
+    components = 0
+    for seed in sorted(cells):
+        if seed in seen:
+            continue
+        components += 1
+        stack = [seed]
+        seen.add(seed)
+        while stack:
+            row, col = stack.pop()
+            for neighbour in (
+                (row - 1, col),
+                (row + 1, col),
+                (row, col - 1),
+                (row, col + 1),
+            ):
+                if neighbour in cells and neighbour not in seen:
+                    seen.add(neighbour)
+                    stack.append(neighbour)
+    return components
+
+
 def _spatial_index(
     bounds: list[tuple[float, float, float, float]],
     step_m: float,
@@ -153,7 +187,8 @@ def analyze(
     bounds, _pixel = _cell_bounds(plan)
     step_m = float(plan["skin_contract"]["source_grid_step_m"])
     spatial, ox, oy = _spatial_index(bounds, step_m)
-    expected_components = int(plan["counts"]["skin_cluster_count"])
+    semantic_clusters = int(plan["counts"]["skin_cluster_count"])
+    expected_components = _edge_connected_cell_components(plan)
     expected_cells = int(plan["counts"]["skin_cell_count"])
 
     if int(mesh_receipt["source_skin_cell_count"]) != expected_cells:
@@ -272,7 +307,8 @@ def analyze(
         "authority": "unchanged Phase 2B YACS skin-cell footprint",
         "source": {
             "skin_cell_count": expected_cells,
-            "cluster_count": expected_components,
+            "semantic_cluster_count": semantic_clusters,
+            "edge_connected_component_count": expected_components,
             "area_m2": source_area,
         },
         "mesh": {
@@ -300,6 +336,7 @@ def analyze(
             "min_area_retention": min_area_retention,
             "max_area_ratio": 1.001,
             "expected_connected_components": expected_components,
+            "semantic_cluster_count": semantic_clusters,
         },
         "failures": failures,
     }
