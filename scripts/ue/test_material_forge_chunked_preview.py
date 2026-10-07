@@ -46,6 +46,14 @@ class MaterialForgeChunkedPreviewTests(unittest.TestCase):
             self.source,
         )
         self.assertIn("remaining_after", self.source)
+        self.assertIn("shader_jobs_after", self.source)
+        self.assertIn('"stage": "weight_texture_imported"', self.source)
+        self.assertIn('"stage": f"{key}_textures_imported"', self.source)
+        self.assertIn('("rock", ROCK', self.source)
+        self.assertIn('("soil", SOIL', self.source)
+        self.assertIn('"stage": "material_graph_built"', self.source)
+        self.assertIn('"stage": "material_recompile_returned"', self.source)
+        self.assertIn('"stage": "asset_shader_compilation_drained"', self.source)
         self.assertLess(
             self.source.index("drain_asset_compilation_and_collect_garbage"),
             self.source.index("def prepare()"),

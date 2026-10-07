@@ -330,7 +330,7 @@ def _import_weight(package: str):
     return texture
 
 
-def _build_surface_material(package: str, weights):
+def _build_surface_material(package: str, weights, checkpoints):
     importer, rock_validation, rock_provenance = _validate_variant(ROCK)
     _same_importer, soil_validation, soil_provenance = _validate_variant(SOIL)
 
@@ -355,6 +355,12 @@ def _build_surface_material(package: str, weights):
             "textures": textures,
             "tile_cm": float(provenance["tile_metres"]) * 100.0,
         }
+        checkpoints.append(
+            {
+                "stage": f"{key}_textures_imported",
+                "memory": _memory(),
+            }
+        )
 
     imported_textures = [
         texture
@@ -365,6 +371,12 @@ def _build_surface_material(package: str, weights):
         imported_textures
     ):
         raise RuntimeError("Material Forge texture compilation did not drain cleanly")
+    checkpoints.append(
+        {
+            "stage": "texture_compilation_drained",
+            "memory": _memory(),
+        }
+    )
 
     material = unreal.AssetToolsHelpers.get_asset_tools().create_asset(
         "M_MF_ChunkedRockSoil",
@@ -568,11 +580,23 @@ def _build_surface_material(package: str, weights):
     output(roughness, "", unreal.MaterialProperty.MP_ROUGHNESS)
     output(ao, "", unreal.MaterialProperty.MP_AMBIENT_OCCLUSION)
     output(normal, "", unreal.MaterialProperty.MP_NORMAL)
+    checkpoints.append(
+        {
+            "stage": "material_graph_built",
+            "memory": _memory(),
+        }
+    )
 
     errors = LIB.recompile_material(material)
     if errors:
         raise RuntimeError("Chunked preview material compile failed: " + str(errors))
     LIB.layout_material_expressions(material)
+    checkpoints.append(
+        {
+            "stage": "material_recompile_returned",
+            "memory": _memory(),
+        }
+    )
 
     drain_raw = (
         unreal.YacsTextureAuditLibrary.drain_asset_compilation_and_collect_garbage()
@@ -583,11 +607,22 @@ def _build_surface_material(package: str, weights):
         raise RuntimeError(
             "Material Forge compile-drain receipt was not valid JSON"
         ) from exc
-    if not drain.get("ok") or int(drain.get("remaining_after", -1)) != 0:
+    if (
+        not drain.get("ok")
+        or int(drain.get("remaining_after", -1)) != 0
+        or int(drain.get("shader_jobs_after", -1)) != 0
+    ):
         raise RuntimeError(
             "Material Forge asset/shader compilation did not drain cleanly: "
             + drain_raw
         )
+    checkpoints.append(
+        {
+            "stage": "asset_shader_compilation_drained",
+            "memory": _memory(),
+            "compile_drain": drain,
+        }
+    )
     return material, drain
 
 
@@ -619,8 +654,24 @@ def prepare():
         )
 
     package = "/Game/Generated/YACS/MFChunkedPreview/" + uuid.uuid4().hex
+    checkpoints = [
+        {
+            "stage": "prepare_start",
+            "memory": _memory(),
+        }
+    ]
     weights = _import_weight(package)
-    material, compile_drain = _build_surface_material(package, weights)
+    checkpoints.append(
+        {
+            "stage": "weight_texture_imported",
+            "memory": _memory(),
+        }
+    )
+    material, compile_drain = _build_surface_material(
+        package,
+        weights,
+        checkpoints,
+    )
     memory_after_compile_drain = _memory()
 
     foundation = runpy.run_path(
@@ -646,6 +697,7 @@ def prepare():
         "map_file": map_file,
         "package": package,
         "compile_drain": compile_drain,
+        "memory_checkpoints": checkpoints,
         "memory_after_compile_drain": memory_after_compile_drain,
     }
     setattr(unreal, STATE, state)
@@ -659,6 +711,7 @@ def prepare():
         material=material.get_path_name(),
         package=package,
         compile_drain=compile_drain,
+        memory_checkpoints=checkpoints,
         memory=memory_after_compile_drain,
         sampling="bilinear + five-tap appearance smoothing",
         projection="WorldAlignedTexture + WorldAlignedNormal",

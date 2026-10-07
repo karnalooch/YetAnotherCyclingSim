@@ -291,3 +291,21 @@ The existing 8 GiB prepare and 6 GiB apply physical-memory gates remain
 unchanged. The Landscape assignment is allowed only after all compilation has
 drained and the post-drain memory measurement is recorded.
 
+### Shader-memory checkpointing
+
+The Material Forge Landscape proof distinguishes normal asset/texture compilation
+from material shader compilation. The native diagnostics drain explicitly calls
+UE 5.8 `FShaderCompilingManager::FinishAllCompilation()` and records:
+
+- outstanding shader jobs before/after;
+- local worker count;
+- external ShaderCompileWorker physical/virtual memory;
+- active worker count and maximum worker memory;
+- host available physical/virtual memory before/after the drain.
+
+The Python proof also records memory checkpoints after the appearance-mask
+texture import, each refined surface import, texture compilation drain, material
+graph construction, material recompilation and final asset/shader drain. These
+measurements are diagnostic only and do not weaken the 8 GiB prepare / 6 GiB
+apply fail-closed gates.
+

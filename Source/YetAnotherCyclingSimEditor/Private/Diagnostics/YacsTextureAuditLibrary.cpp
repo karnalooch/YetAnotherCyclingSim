@@ -8,6 +8,7 @@
 #include "Serialization/JsonWriter.h"
 #include "PixelFormat.h"
 #include "TextureCompiler.h"
+#include "ShaderCompiler.h"
 #include "Components/ActorComponent.h"
 #include "Materials/MaterialInstance.h"
 #include "UObject/UnrealType.h"
@@ -131,19 +132,66 @@ FString UYacsTextureAuditLibrary::DrainAssetCompilationAndCollectGarbage()
 	}
 
 	FAssetCompilingManager& Manager = FAssetCompilingManager::Get();
+	FShaderCompilingManager* ShaderManager = GShaderCompilingManager;
+
 	const int32 RemainingBefore = Manager.GetNumRemainingAssets();
+	const int32 ShaderJobsBefore = ShaderManager ? ShaderManager->GetNumRemainingJobs() : -1;
+	const int32 ShaderWorkersBefore = ShaderManager ? ShaderManager->GetNumLocalWorkers() : -1;
+	const FShaderCompileMemoryUsage ShaderMemoryBefore =
+		ShaderManager ? ShaderManager->GetExternalMemoryUsage() : FShaderCompileMemoryUsage{};
 	const FPlatformMemoryStats MemoryBefore = FPlatformMemory::GetStats();
 
 	Manager.FinishAllCompilation();
+	if (ShaderManager)
+	{
+		// FShaderCompilingManager is the UE 5.8 authority for async shader jobs.
+		// Call it explicitly even though it participates in asset compilation so
+		// the proof records and enforces zero outstanding material shader work.
+		ShaderManager->FinishAllCompilation();
+	}
 	CollectGarbage(RF_NoFlags, true);
 
 	const int32 RemainingAfter = Manager.GetNumRemainingAssets();
+	const int32 ShaderJobsAfter = ShaderManager ? ShaderManager->GetNumRemainingJobs() : -1;
+	const int32 ShaderWorkersAfter = ShaderManager ? ShaderManager->GetNumLocalWorkers() : -1;
+	const FShaderCompileMemoryUsage ShaderMemoryAfter =
+		ShaderManager ? ShaderManager->GetExternalMemoryUsage() : FShaderCompileMemoryUsage{};
 	const FPlatformMemoryStats MemoryAfter = FPlatformMemory::GetStats();
 
 	const TSharedRef<FJsonObject> Report = MakeShared<FJsonObject>();
-	Report->SetBoolField(TEXT("ok"), RemainingAfter == 0);
+	Report->SetBoolField(
+		TEXT("ok"),
+		RemainingAfter == 0 && (!ShaderManager || ShaderJobsAfter == 0));
 	Report->SetNumberField(TEXT("remaining_before"), RemainingBefore);
 	Report->SetNumberField(TEXT("remaining_after"), RemainingAfter);
+	Report->SetNumberField(TEXT("shader_jobs_before"), ShaderJobsBefore);
+	Report->SetNumberField(TEXT("shader_jobs_after"), ShaderJobsAfter);
+	Report->SetNumberField(TEXT("shader_workers_before"), ShaderWorkersBefore);
+	Report->SetNumberField(TEXT("shader_workers_after"), ShaderWorkersAfter);
+	Report->SetNumberField(
+		TEXT("shader_external_physical_before"),
+		static_cast<double>(ShaderMemoryBefore.PhysicalMemory));
+	Report->SetNumberField(
+		TEXT("shader_external_physical_after"),
+		static_cast<double>(ShaderMemoryAfter.PhysicalMemory));
+	Report->SetNumberField(
+		TEXT("shader_external_virtual_before"),
+		static_cast<double>(ShaderMemoryBefore.VirtualMemory));
+	Report->SetNumberField(
+		TEXT("shader_external_virtual_after"),
+		static_cast<double>(ShaderMemoryAfter.VirtualMemory));
+	Report->SetNumberField(
+		TEXT("shader_active_workers_before"),
+		ShaderMemoryBefore.ActiveWorkerCount);
+	Report->SetNumberField(
+		TEXT("shader_active_workers_after"),
+		ShaderMemoryAfter.ActiveWorkerCount);
+	Report->SetNumberField(
+		TEXT("shader_max_worker_memory_before"),
+		static_cast<double>(ShaderMemoryBefore.MaxWorkerMemory));
+	Report->SetNumberField(
+		TEXT("shader_max_worker_memory_after"),
+		static_cast<double>(ShaderMemoryAfter.MaxWorkerMemory));
 	Report->SetNumberField(TEXT("available_physical_before"), static_cast<double>(MemoryBefore.AvailablePhysical));
 	Report->SetNumberField(TEXT("available_physical_after"), static_cast<double>(MemoryAfter.AvailablePhysical));
 	Report->SetNumberField(TEXT("available_virtual_before"), static_cast<double>(MemoryBefore.AvailableVirtual));
