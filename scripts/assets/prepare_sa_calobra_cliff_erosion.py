@@ -33,7 +33,8 @@ DEFAULT_PARAMETERS = {
     "scree_slope_min_deg": 24.0,
     "scree_slope_max_deg": 42.0,
     "scree_roughness_min_m": 0.35,
-    "scree_cliff_proximity_m": 20.0,
+    "scree_step_min_m": 0.5,
+    "scree_cliff_proximity_m": 8.0,
 }
 
 
@@ -95,6 +96,8 @@ def _validated_parameters(parameters: dict[str, float] | None) -> dict[str, floa
         raise ValueError("Scree slope band must be ordered below the cliff threshold")
     if values["scree_roughness_min_m"] <= 0.0:
         raise ValueError("Scree roughness threshold must be positive")
+    if values["scree_step_min_m"] <= 0.0:
+        raise ValueError("Scree step threshold must be positive")
     if values["scree_cliff_proximity_m"] <= 0.0:
         raise ValueError("Scree proximity must be positive")
     return {name: float(value) for name, value in values.items()}
@@ -144,6 +147,7 @@ def classify(
         & (slope >= params["scree_slope_min_deg"])
         & (slope <= params["scree_slope_max_deg"])
         & (roughness >= params["scree_roughness_min_m"])
+        & (step_proxy >= params["scree_step_min_m"])
         & (distance_to_cliff <= params["scree_cliff_proximity_m"])
         & ~cliff
     )
@@ -322,7 +326,7 @@ def prepare(normalized_path: Path, pcg_path: Path, output: Path):
             "curvature_proxy": "diagnostic local deviation from cardinal-neighbor mean; not geologic curvature",
             "step_proxy": "diagnostic maximum cardinal elevation step; flags abrupt heightfield response without claiming artificial terracing",
             "cliff": "bounded art candidate requiring steep slope plus local relief, then hard presentation exclusions",
-            "scree": "bounded art candidate on moderate rough slopes near cliff candidates; not source-observed talus geology",
+            "scree": "bounded art candidate on moderate rough slopes near cliff candidates with a minimum local height-step proxy; not source-observed talus geology",
             "protected": "road/shoulder/BOB/building/water/infrastructure presentation holdbacks",
         },
         "consumer_contract": {
