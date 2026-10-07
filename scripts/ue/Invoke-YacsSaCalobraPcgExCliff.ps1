@@ -78,6 +78,13 @@ if ($BootstrapData.actual_commit -ne '39a8f1bdc65b2c4613a1e87b71d93b4576db0a66')
 if ([bool]$BootstrapData.shipping_runtime_dependency -ne $false) {
     throw 'PCGEx unexpectedly became a shipping runtime dependency.'
 }
+if (
+    [string]$BootstrapData.compatibility_patch -ne 'yacs-pcgex-0.79-triangulate-hole-winding-v1' -or
+    [string]$BootstrapData.compatibility_patch_state -ne 'applied' -or
+    [string]$BootstrapData.compatibility_patch_sha256 -ne '962065a8ef0550d1409e1a9d492a1106f015d87bd470dd9f16b4b7a6d00f9b5d'
+) {
+    throw 'PCGEx compatibility patch provenance drift.'
+}
 
 $DirtyAfterBootstrap = @(git -C $RepoRoot status --porcelain --untracked-files=all)
 if ($DirtyAfterBootstrap.Count -gt 0) {
@@ -328,6 +335,9 @@ $Proof = [ordered]@{
     status = 'PASS'
     repository_head = $Head
     pcgex_commit = [string]$BootstrapData.actual_commit
+    pcgex_compatibility_patch = [string]$BootstrapData.compatibility_patch
+    pcgex_compatibility_patch_sha256 = [string]$BootstrapData.compatibility_patch_sha256
+    pcgex_compatibility_patch_state = [string]$BootstrapData.compatibility_patch_state
     pcgex_shipping_runtime_dependency = $false
     source_plan = $PlanPath
     build_seconds = [math]::Round([double]$BuildSeconds, 3)
