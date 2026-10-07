@@ -201,6 +201,10 @@ def prepare(
         pixel_size_m=PIXEL_SIZE_M,
     )
     raw_cliff = np.asarray(raw_result["cliff_selector"]) == 1
+    raw_stats = _scenario_stats(
+        raw_result, np.zeros_like(road, dtype=bool)
+    )
+    del raw_result
 
     broad_result = classify(
         slope,
@@ -210,6 +214,7 @@ def prepare(
         pixel_size_m=PIXEL_SIZE_M,
     )
     broad_stats = _scenario_stats(broad_result, broad)
+    del broad_result
 
     road_result = classify(
         slope,
@@ -218,6 +223,8 @@ def prepare(
         road,
         pixel_size_m=PIXEL_SIZE_M,
     )
+    road_stats = _scenario_stats(road_result, road)
+    del road_result
     shoulder_result = classify(
         slope,
         roughness,
@@ -225,15 +232,13 @@ def prepare(
         road_plus_shoulder,
         pixel_size_m=PIXEL_SIZE_M,
     )
+    shoulder_stats = _scenario_stats(shoulder_result, road_plus_shoulder)
+    del shoulder_result
 
     scenarios: dict[str, object] = {
-        "none": _scenario_stats(
-            raw_result, np.zeros_like(road, dtype=bool)
-        ),
-        "pavement_only": _scenario_stats(road_result, road),
-        "pavement_plus_shoulder": _scenario_stats(
-            shoulder_result, road_plus_shoulder
-        ),
+        "none": raw_stats,
+        "pavement_only": road_stats,
+        "pavement_plus_shoulder": shoulder_stats,
         "current_broad_protected_union": broad_stats,
     }
 
@@ -308,6 +313,7 @@ def prepare(
                 water.tobytes(order="C")
             ).hexdigest(),
         }
+        del result, admitted_cliff, protected, water
 
     output.mkdir(parents=True)
     whole_board = output / "road-water-audit-whole-area.png"
