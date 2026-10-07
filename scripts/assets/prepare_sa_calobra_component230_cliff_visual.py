@@ -295,11 +295,6 @@ def build_plan(
     clusters: list[dict[str, object]] = []
     for cluster_id in cluster_ids:
         rows = [row for row in skin_cells if row["cluster_id"] == cluster_id]
-        source_rows = []
-        source_cols = []
-        for row in rows:
-            source_rows.extend(range(int(row["row0"]), int(row["row1"]) + 1))
-            source_cols.extend(range(int(row["col0"]), int(row["col1"]) + 1))
         r0 = min(int(row["row0"]) for row in rows)
         r1 = max(int(row["row1"]) for row in rows)
         c0 = min(int(row["col0"]) for row in rows)
