@@ -75,6 +75,17 @@ class MaterialForgeChunkedPreviewTests(unittest.TestCase):
         self.assertNotIn("TextureSample lacks TextureObject input", builder)
         self.assertNotIn('_link(weight_object, "", sample, "TextureObject")', builder)
 
+    def test_fixed_master_orm_defaults_use_mask_compatible_placeholder(self):
+        builder = (
+            ROOT / "scripts/ue/build_material_forge_landscape_master.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn("ORM_PLACEHOLDER_NAME", builder)
+        self.assertIn("TC_MASKS", builder)
+        self.assertIn("finish_texture_compilation([placeholder])", builder)
+        self.assertIn("texture=orm_placeholder", builder)
+        self.assertNotIn('"SoilORMTex": "/Game/Prototype', builder)
+        self.assertNotIn('"RockORMTex": "/Game/Prototype', builder)
+
     def test_memory_gates_and_rollback_exist(self):
         for token in (
             "PREPARE_FREE_PHYSICAL_GB = 8",
