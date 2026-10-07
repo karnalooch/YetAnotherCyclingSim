@@ -476,6 +476,13 @@ Instance update just for color grading. This preserves the same fail-closed
 parameter contract while avoiding the redundant compile/memory spike observed
 in FULL #30.
 
+FULL #31 still reached only about 8.99 GiB free physical memory at the unchanged
+10 GiB pre-capture gate. The next bounded correction keeps neutral
+`(1,1,1,1)` gains inherited from the fixed-master defaults instead of creating
+redundant Material Instance vector overrides. Non-neutral FAST tuning still uses
+explicit instance overrides. Both paths retain exact readback and record the
+binding mode in evidence; the memory gate remains unchanged.
+
 A master-capability change is not eligible for stale FAST carry-forward. The
 neutral parameterized master must first pass the normal FULL proof and establish
 a compatible warm fixed master. Only then may FAST be used for sub-two-minute
