@@ -52,9 +52,9 @@ COMPONENT = {
 
 # A skin cell spans 4 source-grid intervals = 2 m. This is coarse enough to
 # bridge native heightfield stair-step noise but still follows the real cliff.
-SKIN_STEP_CELLS = 4
-SKIN_MIN_SOURCE_CLIFF_SAMPLES = 7
-SKIN_MIN_CLUSTER_CELLS = 2
+SKIN_STEP_CELLS = 2
+SKIN_MIN_SOURCE_CLIFF_SAMPLES = 3
+SKIN_MIN_CLUSTER_CELLS = 4
 SKIN_MAX_CLUSTERS = 24
 SCREE_BLOCK_CELLS = 8
 MAX_SCREE_ROCKS = 40
@@ -320,12 +320,12 @@ def build_plan(
                 "clearance_lower_bound_m": round(
                     float(np.min(local_clearance)), 4
                 ),
-                "interior_lift_m": round(0.025 + jitter * 0.015, 4),
-                "boundary_underlap_m": round(0.035 + jitter * 0.020, 4),
-                "normal_offset_m": round(0.035 + jitter * 0.025, 4),
-                "smoothing_passes": 2,
-                "smoothing_blend": 0.52,
-                "smoothing_clamp_m": 0.75,
+                "interior_lift_m": round(0.018 + jitter * 0.012, 4),
+                "boundary_underlap_m": round(0.025 + jitter * 0.015, 4),
+                "normal_offset_m": round(0.025 + jitter * 0.020, 4),
+                "smoothing_passes": 3,
+                "smoothing_blend": 0.45,
+                "smoothing_clamp_m": 0.50,
             }
         )
 
