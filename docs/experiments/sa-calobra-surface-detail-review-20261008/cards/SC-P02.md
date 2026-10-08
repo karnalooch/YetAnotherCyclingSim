@@ -31,7 +31,9 @@ The following separate vector diagram marks an image ROI on the anchor, not a se
 
 **Upper-left massif (B):** `[[190,0],[406,0],[460,55],[552,92],[606,159],[632,199],[564,231],[486,223],[395,179],[270,140],[196,114],[143,139]]`
 
-## Google Street View reference
+## Historical Google Street View reference
+
+**Excluded from current scope by owner.** These retained links are not a prerequisite for the [detail planning map](../../sa-calobra-detail-planning-map-20261008/README.md).
 
 Both requested views are **NOT_INSPECTED**. Interactive panoramas could not be opened through the available web tool. No actual pano ID, imagery date, camera match or visual comparison is recorded. The link may select the nearest available panorama; it does not prove coverage.
 

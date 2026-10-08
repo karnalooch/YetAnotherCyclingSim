@@ -122,6 +122,20 @@ Neither a tag nor a band authorizes source terrain changes, material replacement
 asset persistence or production rollout. The accepted reference and existing
 eligibility, exclusions and protected interfaces continue to govern changes.
 
+## Road-observation planning map
+
+The [detail planning map](../experiments/sa-calobra-detail-planning-map-20261008/README.md)
+places all 669 paired survey stations in their 185 disconnected windows, with
+six proposed card markers, anchor viewing orientations and separate A/B/C needs.
+Grey observations are unassigned. Points locate road observations, not rocks;
+no classified physical footprints or complete A-D area map are established.
+The offline interactive map supports navigation and export of separate draft
+planning notes without assigning canonical tags or PCGEx selectors.
+
+The owner excluded Street View from this work on 2026-10-08. Previously prepared
+links remain historical evidence and are not required comparisons. Current
+planning uses captured original PNGs and source camera/road positions.
+
 ## First original-PNG proposal review
 
 The [2026-10-08 proposal review](../experiments/sa-calobra-surface-detail-review-20261008/README.md)

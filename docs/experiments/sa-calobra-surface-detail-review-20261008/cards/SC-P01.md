@@ -31,7 +31,9 @@ The following separate vector diagram marks an image ROI on the anchor, not a se
 
 **Near wall (A):** `[[712,0],[1279,0],[1279,719],[1112,630],[980,533],[871,453],[783,396],[657,353],[483,330],[474,247],[545,184],[623,103]]`
 
-## Google Street View reference
+## Historical Google Street View reference
+
+**Excluded from current scope by owner.** These retained links are not a prerequisite for the [detail planning map](../../sa-calobra-detail-planning-map-20261008/README.md).
 
 Both requested views are **NOT_INSPECTED**. Interactive panoramas could not be opened through the available web tool. No actual pano ID, imagery date, camera match or visual comparison is recorded. The link may select the nearest available panorama; it does not prove coverage.
 

@@ -800,5 +800,6 @@
         }
       }
     }
-  ]
+  ],
+  "street_view_scope": "EXCLUDED_FROM_CURRENT_SCOPE_BY_OWNER"
 }

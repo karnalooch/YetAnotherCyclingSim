@@ -163,7 +163,9 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 
 ## Evidence, experiments and history
 
-- [Sa Calobra original-PNG surface detail proposals — 2026-10-08](experiments/sa-calobra-surface-detail-review-20261008/README.md) — six AI-proposed location cards, twelve unchanged originals and separate ROI overlays; Google Street View request links included, imagery inspection and physical mapping pending.
+- [Sa Calobra detail planning map — 2026-10-08](experiments/sa-calobra-detail-planning-map-20261008/README.md) — north-up observation map, 669 paired stations in 185 disconnected windows and six proposed location cards; offline navigation and draft-note export. Surface footprints remain unresolved; Street View excluded.
+
+- [Sa Calobra original-PNG surface detail proposals — 2026-10-08](experiments/sa-calobra-surface-detail-review-20261008/README.md) — six AI-proposed location cards, twelve unchanged originals and separate ROI overlays; physical mapping pending; prepared Street View links retained as history and excluded from the current scope.
 
 - [Sa Calobra bidirectional TPP inspection — 2026-10-08](experiments/sa-calobra-tpp-survey-20261008/README.md) — actual map, contact sheets, 185 paired window pages and CSV indexes from 1,338 captured frames; original evidence retained through Git LFS. Surface tags and visual review remain pending; the accepted cliff appearance is preserved.
 

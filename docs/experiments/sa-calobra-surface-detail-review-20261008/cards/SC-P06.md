@@ -31,7 +31,9 @@ The following separate vector diagram marks an image ROI on the anchor, not a se
 
 **Distant sea-facing ridge (C):** `[[783,337],[817,310],[883,288],[944,288],[990,282],[1061,278],[1114,270],[1100,291],[1041,307],[1004,323],[912,331]]`
 
-## Google Street View reference
+## Historical Google Street View reference
+
+**Excluded from current scope by owner.** These retained links are not a prerequisite for the [detail planning map](../../sa-calobra-detail-planning-map-20261008/README.md).
 
 Both requested views are **NOT_INSPECTED**. Interactive panoramas could not be opened through the available web tool. No actual pano ID, imagery date, camera match or visual comparison is recorded. The link may select the nearest available panorama; it does not prove coverage.
 
