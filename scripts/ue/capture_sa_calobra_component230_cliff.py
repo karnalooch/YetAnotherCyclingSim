@@ -1510,6 +1510,9 @@ def finish(error: str | None = None):
         unreal.SystemLibrary.execute_console_command(_world, "viewmode lit")
     except Exception:
         pass
+    if _terrain_source is not None:
+        before_cleanup = unreal.YacsLandscapeMeshDiagnosticLibrary.read_component230_heightfield(_target_component)
+        (OUTPUT / "terrain-source-before-cleanup.json").write_text(before_cleanup, encoding="utf-8")
     cleanup_errors = _destroy_transient()
     if cleanup_errors:
         error = (error + "\n" if error else "") + "\n".join(cleanup_errors)
@@ -1521,8 +1524,15 @@ def finish(error: str | None = None):
             error = (error + "\n" if error else "") + "scene snapshot changed"
         if _terrain_source is not None:
             actual = json.loads(unreal.YacsLandscapeMeshDiagnosticLibrary.read_component230_heightfield(_target_component))
+            (OUTPUT / "terrain-source-after-cleanup.json").write_text(json.dumps(actual), encoding="utf-8")
             if actual != _terrain_source:
-                raise RuntimeError("Source Landscape heightfield changed during terrain trial")
+                differences = [(i, a, b) for i, (a, b) in enumerate(zip(
+                    _terrain_source.get("heights", []), actual.get("heights", []))) if a != b]
+                metadata = {k: [v, actual.get(k)] for k, v in _terrain_source.items()
+                            if k != "heights" and v != actual.get(k)}
+                raise RuntimeError("Source Landscape heightfield changed during terrain trial: " + json.dumps(
+                    {"changed_samples": len(differences), "first_changes": differences[:8],
+                     "metadata": metadata, "read_error": actual.get("error")}))
             _terrain_trial.update(source_heightfield_unchanged=True,
                                   restored=not cleanup_errors and _landscape_visibility_state is None)
     except Exception as exc:
