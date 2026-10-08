@@ -11,19 +11,22 @@ class CombinedGateTests(unittest.TestCase):
         self.metrics = {'baseline_readiness': {'status': 'PASS'}, 'metrics': {
             k: {'sha256': k, 'thresholds': copy.deepcopy(thresholds)}
             for k in ('baseline_lighting_only', 'candidate_lighting_only')}}
-        self.audit = dict(status='PASS', displacement_limit_cm=200,
-                          max_displacement_cm=199, triangles=58216,
+        self.audit = dict(status='PASS', displacement_limit_cm=20,
+                          max_displacement_cm=19, triangles=58216,
                           nonmanifold_edges=0, folded_xy_triangles=0, vertices=2,
-                          source_area_m2=2000, scope='LOCAL_ROUNDED_DOMAIN_AUDIT_NOT_VISUAL_ACCEPTANCE')
+                          source_area_m2=3969, edge_band_radius_cm=10, max_edge_band_distance_cm=9, outside_edge_surface_unchanged=True, scope='LOCAL_EDGE_BAND_AUDIT_NOT_VISUAL_ACCEPTANCE')
         self.receipt = dict(exact_sha='revision', status='COMPONENT230_CLIFF_VISUAL_PASS',
             map_saved=False, assets_saved=False, canonical_landscape_mutation=False,
             selector_policy_mutation=False, terrain_erosion_trial=dict(
-                post_erosion_mesh=True, restored=True, source_heightfield_unchanged=True,
+                edge_only_mesh=True, derived_heightfield_modified=False, erosion=dict(enabled=False), post_erosion_mesh=True, restored=True, source_heightfield_unchanged=True,
                 imported_heightfield_matches=True, combined_audit=self.audit,
                 limestone_uv_projection={'world_size_m': 3, 'triangles_unchanged': True},
-                mesh_export={'shape_profile': 'rounded-limestone-crown-domain-v4',
+                mesh_export={'shape_profile': 'limestone-edge-band-only-v6',
+                             'edge_band_radius_cm': 10, 'max_edge_band_distance_cm': 9,
+                             'terrain_erosion': False, 'surface_relaxation': False,
+                             'outside_edge_vertices_unchanged': True,
                              'movement_domain_cells': 2000,
-                             'crease_preservation': False, 'smoothing_passes': 96,
+                             'crease_preservation': False, 'smoothing_passes': 0,
                              'tangential_redistribution_passes': 0}),
             captures=[{'name': name, 'sha256': key} for name, key in (
                 ('02-baseline-lighting-only', 'baseline_lighting_only'),
@@ -65,7 +68,7 @@ class CombinedGateTests(unittest.TestCase):
         self.receipt['captures'][0]['sha256'] = 'different'
         self.assertEqual(self.result()['status'], 'FAIL')
         self.receipt['captures'][0]['sha256'] = 'baseline_lighting_only'
-        self.audit['max_displacement_cm'] = 200.01
+        self.audit['max_displacement_cm'] = 20.01
         self.assertEqual(self.result()['status'], 'FAIL')
 
     def test_changed_review_camera_fails_even_when_images_exist(self):
@@ -74,7 +77,7 @@ class CombinedGateTests(unittest.TestCase):
 
     def test_rejected_crease_profile_or_incomplete_rounding_fails(self):
         export = self.receipt['terrain_erosion_trial']['mesh_export']
-        for key, value in (('crease_preservation', True), ('smoothing_passes', 24),
+        for key, value in (('surface_relaxation', True), ('smoothing_passes', 24),
                            ('tangential_redistribution_passes', 3),
                            ('shape_profile', 'limestone-source-feature-flow-v2-upper-crests')):
             with self.subTest(key=key):
@@ -82,3 +85,13 @@ class CombinedGateTests(unittest.TestCase):
                 export[key] = value
                 self.assertEqual(self.result()['status'], 'FAIL')
                 export[key] = old
+
+    def test_wide_band_and_hidden_terrain_changes_fail(self):
+        trial = self.receipt['terrain_erosion_trial']
+        for target, key, value in ((trial, 'derived_heightfield_modified', True),
+                (trial['erosion'], 'enabled', True),
+                (trial['mesh_export'], 'max_edge_band_distance_cm', 10.01),
+                (self.audit, 'outside_edge_surface_unchanged', False)):
+            old = target[key]; target[key] = value
+            self.assertEqual(self.result()['status'], 'FAIL')
+            target[key] = old

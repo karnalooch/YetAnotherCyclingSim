@@ -1153,6 +1153,64 @@ def _restore_landscape_visibility():
     _landscape_visibility_state = None
 
 
+def _spawn_edge_rounding_trial():
+    global _terrain_source, _landscape_visibility_state, _mesh_receipt
+    sys.path.insert(0, str(ROOT))
+    from scripts.assets.analyze_limestone_edge_rounding import audit_edges
+    library = unreal.YacsLandscapeMeshDiagnosticLibrary
+    _terrain_source = json.loads(library.read_component230_heightfield(_target_component))
+    for name in ('source', 'candidate', 'readback'):
+        (OUTPUT / ('terrain-' + name + '.json')).write_text(json.dumps(_terrain_source), encoding='utf-8')
+    erosion = dict(enabled=False, method='disabled-owner-edge-only', iterations=0,
+        smoothing_passes=0, derived_heightfield_modified=False, fixed_samples_changed=0,
+        height_sum_delta_units=0, max_abs_change_cm=0)
+    (OUTPUT / 'terrain-erosion.json').write_text(json.dumps(erosion), encoding='utf-8')
+    reference_path = Path(os.environ['YACS_TERRAIN_ORIGINAL_MESH'])
+    reference_receipt = json.loads((reference_path.parent / 'component230-cliff-visual-receipt.json').read_text(encoding='utf-8-sig'))
+    if (reference_receipt['exact_sha'] != EXPECTED_SHA
+            or reference_receipt['status'] != 'COMPONENT230_CLIFF_VISUAL_PASS'
+            or reference_receipt['landscape_mesh_diagnostic']['export']['mesh_evidence_sha256'] != _digest(reference_path)):
+        raise RuntimeError('Edge-only original reference provenance failed')
+    reference = json.loads(reference_path.read_text(encoding='utf-8-sig'))
+    actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+    actor = actors.spawn_actor_from_class(unreal.DynamicMeshActor, unreal.Vector(), unreal.Rotator(), transient=True)
+    if actor is None:
+        raise RuntimeError('Cannot spawn edge-only preview mesh')
+    _candidate_actors.append(actor)
+    actor.set_actor_label('YACS Component230 narrow limestone edge rounding (unsaved)')
+    component = actor.get_dynamic_mesh_component()
+    export = json.loads(library.copy_component230(_target_component, component.get_dynamic_mesh(),
+        json.dumps(dict(_plan, limestone_rounded_flow=True, limestone_edge_only=True))))
+    if (export.get('status') != 'NATIVE_LANDSCAPE_COMPONENT_MESH'
+            or export.get('shape_profile') != 'limestone-edge-band-only-v6'
+            or export.get('displacement_limit_cm') != 20 or export.get('locked_normal_max_delta') != 0):
+        raise RuntimeError('Narrow edge export failed: ' + json.dumps(export))
+    combined = dict(vertices_cm=export.pop('audit_vertices_cm'), triangles=export.pop('audit_triangles'),
+        edge_source_vertices_cm=export.pop('edge_source_vertices_cm'),
+        edge_source_triangles=export.pop('edge_source_triangles'),
+        rounded_source_edges=export.pop('rounded_source_edges'), refinement=export['refinement'])
+    result = audit_edges(_plan, reference, combined)
+    for name, data in (('mesh-stage', combined), ('combined-mesh', combined), ('combined-audit', result)):
+        (OUTPUT / (name + '.json')).write_text(json.dumps(data), encoding='utf-8')
+    component.set_material(0, _target_component.get_editor_property('override_material'))
+    component.set_tangents_type(unreal.DynamicMeshComponentTangentsMode.AUTO_CALCULATED)
+    component.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
+    component.set_cast_shadow(True)
+    component.notify_mesh_modified()
+    _landscape_visibility_state = (_target_component.get_editor_property('visible'),
+        _target_component.get_editor_property('cast_hidden_shadow'))
+    _target_component.set_editor_property('cast_hidden_shadow', False)
+    _target_component.set_visibility(False, False)
+    _terrain_trial.update(enabled=True, erosion=erosion, native_landscape=False, edge_only_mesh=True,
+        imported_heightfield_matches=True, restored=False, source_heightfield_unchanged=False,
+        derived_heightfield_modified=False, post_erosion_mesh=True, mesh_export=export,
+        combined_audit=result, original_reference_sha256=_digest(reference_path))
+    _mesh_receipt = dict(lighting=_mesh_receipt.get('lighting'), generator='native-source-edge-bevel-only',
+        cliff=dict(vertices=export['vertices'], triangles=export['triangles']),
+        collision_enabled=False, cast_dynamic_shadows=True,
+        material=dict(cliff=_material_override_receipt['material'], diagnostic_only=True))
+
+
 def _spawn_terrain_erosion_trial():
     global _terrain_source, _landscape_visibility_state, _mesh_receipt
     if not NEUTRAL_LANDSCAPE or not _material_override_receipt["enabled"]:
@@ -1160,6 +1218,9 @@ def _spawn_terrain_erosion_trial():
     sys.path.insert(0, str(ROOT))
     from scripts.geometry.local_thermal_erosion import erode
 
+    if TERRAIN_MESH_TRIAL:
+        _spawn_edge_rounding_trial()
+        return
     library = unreal.YacsLandscapeMeshDiagnosticLibrary
     _terrain_source = json.loads(library.read_component230_heightfield(_target_component))
     erosion_plan = dict(_plan, skin_cells=_plan['rounding_cells']) if TERRAIN_MESH_TRIAL else _plan

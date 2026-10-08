@@ -20,20 +20,28 @@ def evaluate(metrics: dict, receipt: dict, audit: dict, expected_sha: str) -> di
            ('post_erosion_mesh', 'restored', 'source_heightfield_unchanged', 'imported_heightfield_matches')):
         failures.append('Combined terrain restoration/import failed')
     export = trial.get('mesh_export', {})
-    if (export.get('shape_profile') != 'rounded-limestone-crown-domain-v4'
-            or export.get('crease_preservation') is not False
-            or export.get('smoothing_passes') != 96
-            or export.get('tangential_redistribution_passes') != 0):
-        failures.append('Rounded limestone recipe proof missing')
-    if (export.get('movement_domain_cells') != audit.get('source_area_m2')
-            or audit.get('scope') != 'LOCAL_ROUNDED_DOMAIN_AUDIT_NOT_VISUAL_ACCEPTANCE'):
-        failures.append('Separate rounded crown domain proof missing')
-    if (audit.get('status') != 'PASS' or audit.get('displacement_limit_cm') != 200
-            or not 0 <= audit.get('max_displacement_cm', float('inf')) <= 200.000001
+    if (export.get('shape_profile') != 'limestone-edge-band-only-v6'
+            or export.get('smoothing_passes') != 0
+            or export.get('tangential_redistribution_passes') != 0
+            or export.get('terrain_erosion') is not False
+            or export.get('surface_relaxation') is not False
+            or export.get('edge_band_radius_cm') != 10
+            or export.get('max_edge_band_distance_cm', float('inf')) > 10.000001
+            or export.get('outside_edge_vertices_unchanged') is not True):
+        failures.append('Narrow edge-only limestone recipe proof missing')
+    if (trial.get('edge_only_mesh') is not True or trial.get('derived_heightfield_modified') is not False
+            or trial.get('erosion', {}).get('enabled') is not False):
+        failures.append('Edge-only candidate changed the terrain heightfield')
+    if (audit.get('status') != 'PASS' or audit.get('displacement_limit_cm') != 20
+            or not 0 <= audit.get('max_displacement_cm', float('inf')) <= 20.000001
+            or audit.get('edge_band_radius_cm') != 10
+            or audit.get('max_edge_band_distance_cm', float('inf')) > 10.000001
+            or audit.get('outside_edge_surface_unchanged') is not True
+            or audit.get('scope') != 'LOCAL_EDGE_BAND_AUDIT_NOT_VISUAL_ACCEPTANCE'
             or audit.get('triangles', 60001) > 60000
             or audit.get('nonmanifold_edges') != 0 or audit.get('folded_xy_triangles') != 0
             or trial.get('combined_audit') != audit):
-        failures.append('Independent combined geometry audit failed')
+        failures.append('Independent narrow edge geometry audit failed')
     if metrics.get('baseline_readiness', {}).get('status') != 'PASS':
         failures.append('Neutral baseline is not ready')
     captures = {c['name']: c for c in receipt.get('captures', [])}

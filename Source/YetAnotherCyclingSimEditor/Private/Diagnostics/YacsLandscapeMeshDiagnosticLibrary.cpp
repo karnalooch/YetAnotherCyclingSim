@@ -11,12 +11,177 @@
 #include "DynamicMesh/DynamicMeshAttributeSet.h"
 #include "DynamicMesh/DynamicMeshOverlay.h"
 #include "Operations/SelectiveTessellate.h"
+#include "Operations/MeshBevel.h"
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
 
 namespace
 {
+// Narrow edge treatment only: no terrain erosion or surface relaxation.
+bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
+    const TSet<FIntPoint>& AllowedQuads, const TSharedRef<FJsonObject>& Report, FString& Error)
+{
+    using namespace UE::Geometry;
+    const FDynamicMesh3 Source(Mesh);
+    TArray<bool> Safe;
+    Safe.Init(true, Source.MaxVertexID());
+    TMap<FIntPoint, TArray<int32>> Tiles;
+    for (int32 T : Source.TriangleIndicesItr())
+    {
+        const auto F = Source.GetTriangle(T);
+        const FVector3d P = (Source.GetVertex(F.A) + Source.GetVertex(F.B) + Source.GetVertex(F.C)) / 3.0;
+        const FIntPoint Tile(FMath::FloorToInt(P.X / 50.0), FMath::FloorToInt(P.Y / 50.0));
+        Tiles.FindOrAdd(Tile).Add(T);
+        if (!AllowedQuads.Contains(Tile)) { Safe[F.A] = Safe[F.B] = Safe[F.C] = false; }
+    }
+    for (int32 V : Source.VertexIndicesItr()) { if (Source.IsBoundaryVertex(V)) { Safe[V] = false; } }
+    TArray<int32> Edges;
+    TSet<int32> EdgeVertices;
+    for (int32 E : Source.EdgeIndicesItr())
+    {
+        if (Source.IsBoundaryEdge(E)) { continue; }
+        const auto V = Source.GetEdgeV(E);
+        if (!Safe[V.A] || !Safe[V.B]) { continue; }
+        const auto T = Source.GetEdgeT(E);
+        FVector3d N0 = Source.GetTriNormal(T.A), N1 = Source.GetTriNormal(T.B);
+        if (N0.Z < 0) { N0 = -N0; }
+        if (N1.Z < 0) { N1 = -N1; }
+        if (FVector3d::DotProduct(N0, N1) >= FMath::Cos(FMath::DegreesToRadians(45.0))) { continue; }
+        const auto F = Source.GetTriangle(T.B);
+        const int32 Other = F.A != V.A && F.A != V.B ? F.A : (F.B != V.A && F.B != V.B ? F.B : F.C);
+        if (FVector3d::DotProduct(N0, Source.GetVertex(Other) - Source.GetVertex(V.A)) >= -1.0) { continue; }
+        Edges.Add(E); EdgeVertices.Add(V.A); EdgeVertices.Add(V.B);
+    }
+    if (Edges.IsEmpty()) { Error = TEXT("no eligible sharp convex limestone edges"); return false; }
+
+    auto BandDistance = [&Source, &Edges](const FVector3d& P)
+    {
+        double Best = TNumericLimits<double>::Max();
+        for (int32 E : Edges)
+        {
+            const auto V = Source.GetEdgeV(E);
+            const FVector3d A = Source.GetVertex(V.A), D = Source.GetVertex(V.B) - A;
+            const double U = FMath::Clamp(FVector3d::DotProduct(P - A, D) / D.SquaredLength(), 0.0, 1.0);
+            Best = FMath::Min(Best, (P - A - U * D).Length());
+        }
+        return Best;
+    };
+    auto SourceAtXY = [&Source, &Tiles](const FVector3d& P, FVector3d& Q)
+    {
+        const FIntPoint Tile(FMath::FloorToInt(P.X / 50.0), FMath::FloorToInt(P.Y / 50.0));
+        for (int32 DX = -1; DX <= 0; ++DX) for (int32 DY = -1; DY <= 0; ++DY)
+        {
+            const auto* Faces = Tiles.Find(Tile + FIntPoint(DX, DY));
+            if (!Faces) { continue; }
+            for (int32 T : *Faces)
+            {
+                const auto F = Source.GetTriangle(T);
+                const FVector3d A = Source.GetVertex(F.A), B = Source.GetVertex(F.B), C = Source.GetVertex(F.C);
+                const double Denom = FVector3d::CrossProduct(B - A, C - A).Z;
+                const double U = FVector3d::CrossProduct(P - A, C - A).Z / Denom;
+                const double W = FVector3d::CrossProduct(B - A, P - A).Z / Denom;
+                if (U >= -1.e-8 && W >= -1.e-8 && U + W <= 1.0 + 1.e-8)
+                {
+                    Q = FVector3d(P.X, P.Y, A.Z + U * (B.Z - A.Z) + W * (C.Z - A.Z)); return true;
+                }
+            }
+        }
+        return false;
+    };
+    // Epic's inset is not itself a width guarantee at junctions. Independently
+    // enforce a 10 cm radius (20 cm total band) and a 20 cm source-relative cap.
+    bool Accepted = false;
+    TArray<FVector3d> Original;
+    double MaxShift = 0, MaxBand = 0, ChosenInset = 0;
+    for (double Inset : {5.0, 3.0, 2.0})
+    {
+        Mesh = Source;
+        FMeshBevel Bevel;
+        Bevel.InsetDistance = Inset; Bevel.NumSubdivisions = 2; Bevel.RoundWeight = 1.0;
+        Bevel.InitializeFromTriangleEdges(Source, Edges);
+        if (!Bevel.Apply(Mesh, nullptr) || Mesh.TriangleCount() > 60000) { continue; }
+        bool Valid = true;
+        Original.SetNum(Mesh.MaxVertexID()); MaxShift = MaxBand = 0;
+        for (int32 V : Source.VertexIndicesItr())
+        {
+            if (!Mesh.IsVertex(V) || (!EdgeVertices.Contains(V) && (Mesh.GetVertex(V) - Source.GetVertex(V)).Length() > 1.e-8))
+            { Valid = false; break; }
+        }
+        if (!Valid) { continue; }
+        for (int32 V : Mesh.VertexIndicesItr())
+        {
+            const FVector3d P = Mesh.GetVertex(V);
+            FVector3d Q;
+            if (Source.IsVertex(V)) { Q = Source.GetVertex(V); }
+            else if (!SourceAtXY(P, Q)) { Valid = false; break; }
+            Original[V] = Q;
+            const double Shift = (P - Q).Length();
+            const bool Edited = !Source.IsVertex(V) || Shift > 1.e-8;
+            if (Edited)
+            {
+                const double Band = FMath::Max(BandDistance(P), BandDistance(Q));
+                MaxBand = FMath::Max(MaxBand, Band);
+                if (Band > 10.000001 || Shift > 20.000001 || P.ContainsNaN()) { Valid = false; break; }
+            }
+            MaxShift = FMath::Max(MaxShift, Shift);
+        }
+        if (!Valid) { continue; }
+        for (int32 T : Mesh.TriangleIndicesItr())
+        {
+            const auto F = Mesh.GetTriangle(T);
+            const double Area = FVector3d::CrossProduct(Mesh.GetVertex(F.B) - Mesh.GetVertex(F.A), Mesh.GetVertex(F.C) - Mesh.GetVertex(F.A)).Z;
+            if (!FMath::IsFinite(Area) || Area >= -1.e-8) { Valid = false; break; }
+        }
+        if (Valid) { Accepted = true; ChosenInset = Inset; break; }
+    }
+    if (!Accepted) { Error = TEXT("edge bevel failed strict band, unchanged-surface, fold or triangle guards"); return false; }
+    if (!Source.HasAttributes() || !Mesh.HasAttributes() || !Source.Attributes()->PrimaryNormals() || !Mesh.Attributes()->PrimaryNormals())
+    { Error = TEXT("edge bevel lost native normals"); return false; }
+    auto* Normals = Mesh.Attributes()->PrimaryNormals();
+    const auto* SourceNormals = Source.Attributes()->PrimaryNormals();
+    int32 PreservedNormals = 0;
+    for (int32 E : SourceNormals->ElementIndicesItr())
+    {
+        const int32 V = SourceNormals->GetParentVertex(E);
+        if (EdgeVertices.Contains(V)) { continue; }
+        if (!Normals->IsElement(E) || Normals->GetParentVertex(E) != V)
+        { Error = TEXT("bevel changed an outside normal element identity"); return false; }
+        FVector3f N; SourceNormals->GetElement(E, N); Normals->SetElement(E, N); ++PreservedNormals;
+    }
+    TArray<TSharedPtr<FJsonValue>> Rows, Faces, SourceRows, SourceFaces, SelectedEdges;
+    auto Row = [](std::initializer_list<double> Values)
+    {
+        TArray<TSharedPtr<FJsonValue>> Result;
+        for (double X : Values) { Result.Add(MakeShared<FJsonValueNumber>(X)); }
+        return MakeShared<FJsonValueArray>(Result);
+    };
+    for (int32 V : Mesh.VertexIndicesItr())
+    {
+        const FVector3d P = Mesh.GetVertex(V), Q = Original[V];
+        Rows.Add(Row({double(V), Q.X, Q.Y, Q.Z, P.X, P.Y, P.Z,
+            (!Source.IsVertex(V) || EdgeVertices.Contains(V)) ? 1.0 : 0.0}));
+    }
+    for (int32 T : Mesh.TriangleIndicesItr()) { const auto F = Mesh.GetTriangle(T); Faces.Add(Row({double(F.A), double(F.B), double(F.C)})); }
+    for (int32 V : Source.VertexIndicesItr()) { const FVector3d P = Source.GetVertex(V); SourceRows.Add(Row({double(V), P.X, P.Y, P.Z})); }
+    for (int32 T : Source.TriangleIndicesItr()) { const auto F = Source.GetTriangle(T); SourceFaces.Add(Row({double(F.A), double(F.B), double(F.C)})); }
+    for (int32 E : Edges) { const auto V = Source.GetEdgeV(E); SelectedEdges.Add(Row({double(V.A), double(V.B)})); }
+    Report->SetArrayField(TEXT("audit_vertices_cm"), Rows); Report->SetArrayField(TEXT("audit_triangles"), Faces);
+    Report->SetArrayField(TEXT("edge_source_vertices_cm"), SourceRows); Report->SetArrayField(TEXT("edge_source_triangles"), SourceFaces);
+    Report->SetArrayField(TEXT("rounded_source_edges"), SelectedEdges);
+    Report->SetStringField(TEXT("shape_profile"), TEXT("limestone-edge-band-only-v6"));
+    Report->SetStringField(TEXT("refinement"), TEXT("Epic FMeshBevel on sharp convex native edges only"));
+    Report->SetNumberField(TEXT("displacement_limit_cm"), 20); Report->SetNumberField(TEXT("max_displacement_cm"), MaxShift);
+    Report->SetNumberField(TEXT("edge_band_radius_cm"), 10); Report->SetNumberField(TEXT("max_edge_band_distance_cm"), MaxBand);
+    Report->SetNumberField(TEXT("bevel_inset_cm"), ChosenInset); Report->SetNumberField(TEXT("bevel_subdivisions"), 2);
+    Report->SetNumberField(TEXT("sharp_edge_angle_deg"), 45); Report->SetNumberField(TEXT("rounded_edge_count"), Edges.Num());
+    Report->SetNumberField(TEXT("smoothing_passes"), 0); Report->SetNumberField(TEXT("tangential_redistribution_passes"), 0);
+    Report->SetNumberField(TEXT("locked_normal_max_delta"), 0); Report->SetNumberField(TEXT("preserved_normal_elements"), PreservedNormals);
+    Report->SetBoolField(TEXT("terrain_erosion"), false); Report->SetBoolField(TEXT("surface_relaxation"), false);
+    Report->SetBoolField(TEXT("outside_edge_vertices_unchanged"), true);
+    return true;
+}
+
 // This operates on an owned export, never on Landscape or PCG output data.
 bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJson,
     const TSharedRef<FJsonObject>& Report, FString& Error)
@@ -119,6 +284,9 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
             }
         }
     }
+
+    if (Plan->HasField(TEXT("limestone_edge_only")) && Plan->GetBoolField(TEXT("limestone_edge_only")))
+    { return RoundLimestoneEdges(Mesh, AllowedQuads, Report, Error); }
 
     // Use Epic's conforming selective tessellator, not global subdivision.
     // The linear refinement preserves source geometry before normal relaxation.
