@@ -446,7 +446,13 @@ jobs:
           $env:YACS_LANDSCAPE_MESH_DIAGNOSTIC = '1'
           try {
             $terrainRoot = Join-Path $env:YACS_CLIFF_PHASE2C_ROOT 'landscape-mesh'
-            Invoke-CliffCapture -Label 'landscape-mesh' -Output $terrainRoot -UsePcgEx $false
+            $env:YACS_EDGE_GEOMETRY_PREFLIGHT = '1'
+            try {
+              Invoke-CliffCapture -Label 'landscape-mesh' -Output $terrainRoot -UsePcgEx $false
+            }
+            finally {
+              Remove-Item Env:YACS_EDGE_GEOMETRY_PREFLIGHT -ErrorAction SilentlyContinue
+            }
             $env:YACS_LOCAL_CLIFF_SMOOTHING = '1'
             try {
               $localRoot = Join-Path $env:YACS_CLIFF_PHASE2C_ROOT 'local-cliff-smoothing'

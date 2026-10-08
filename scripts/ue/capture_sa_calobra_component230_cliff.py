@@ -2028,6 +2028,24 @@ def main():
         primed_views.append(view)
     _views = primed_views
     _mesh_receipt["lighting"] = lighting
+    if os.environ.get('YACS_EDGE_GEOMETRY_PREFLIGHT') == '1':
+        # Reject an invalid native recipe before spending time on reference
+        # renders. This transient probe does not replace any later audit.
+        actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+        probe = actors.spawn_actor_from_class(unreal.DynamicMeshActor,
+            unreal.Vector(), unreal.Rotator(), transient=True)
+        if probe is None:
+            raise RuntimeError('Cannot create transient edge preflight mesh')
+        try:
+            export = json.loads(unreal.YacsLandscapeMeshDiagnosticLibrary.copy_component230(
+                _target_component, probe.get_dynamic_mesh_component().get_dynamic_mesh(),
+                json.dumps(dict(_plan, limestone_rounded_flow=True, limestone_edge_only=True))))
+            (OUTPUT / 'edge-native-probe.json').write_text(json.dumps(export), encoding='utf-8')
+        finally:
+            if not actors.destroy_actor(probe):
+                raise RuntimeError('Edge preflight actor cleanup failed')
+        if export.get('status') != 'NATIVE_LANDSCAPE_COMPONENT_MESH':
+            raise RuntimeError('Native edge geometry preflight failed: ' + json.dumps(export))
     unreal.EditorPythonScripting.set_keep_python_script_alive(True)
     schedule()
     _handle = unreal.register_slate_post_tick_callback(tick)

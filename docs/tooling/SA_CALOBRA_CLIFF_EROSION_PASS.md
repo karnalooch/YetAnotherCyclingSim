@@ -837,6 +837,14 @@ replace normals measured on the rejected displaced positions. This correction
 precedes linear admission and the nonzero round-profile search; it does not
 weaken the final winding, surface-band, source-preservation or triangle guards.
 
+The `d8e93f0a` native build passed, but all inset attempts rejected a source-facet
+rail-repair precondition before linear admission. This does not establish a
+source-data mutation. Per-condition diagnostic fields now identify the failed
+vertex, triangle, plane, area or strip assumption. A transient native geometry
+preflight runs before the reference screenshots and fails early on an invalid
+recipe. A successful preflight still requires the complete source controls,
+independent surface audit, material captures and restoration proof afterward.
+
 The corrected linear multi-segment bevel is validated before its round profile is
 applied. With fixed topology, a bounded line search accepts only a nonzero
 profile blend that preserves strict XY winding, the 10 cm source-edge radius,

@@ -45,55 +45,76 @@ public:
     }
     bool RestoreSourceFacetRails(UE::Geometry::FDynamicMesh3& Mesh,
         const UE::Geometry::FDynamicMesh3& Source, double Distance,
-        int32& RepairedVertices, double& MinInsetFraction)
+        int32& RepairedVertices, double& MinInsetFraction, FString& Failure)
     {
         using namespace UE::Geometry;
+        TMap<int32, FVector3d> RailNormals;
+        TSet<int32> Repaired;
+        int32 CurrentVertex = -1, CurrentWedge = -1, CurrentTriangle = -1, CurrentEdge = -1;
+        auto Reject = [&](const TCHAR* Stage, double Detail = 0)
+        {
+            Failure = FString::Printf(TEXT("%s vertex=%d wedge=%d triangle=%d edge=%d detail=%.17g repaired=%d"),
+                Stage, CurrentVertex, CurrentWedge, CurrentTriangle, CurrentEdge, Detail, Repaired.Num());
+            return false;
+        };
         // Isolated middle spans have two endpoint columns and triangle-fan
         // caps only. Retain Epic's meshing, replacing its unbounded endpoint
         // line intersection with an inset constrained to the source facets.
-        if (!Loops.IsEmpty()) { return false; }
-        TMap<int32, FVector3d> RailNormals;
-        TSet<int32> Repaired;
+        if (!Loops.IsEmpty()) { return Reject(TEXT("unexpected_loops"), Loops.Num()); }
         MinInsetFraction = 1.0;
         for (FBevelVertex& Vertex : Vertices)
         {
+            CurrentVertex = Vertex.VertexID; CurrentWedge = CurrentTriangle = CurrentEdge = -1;
             if (Vertex.VertexType != EBevelVertexType::TerminatorVertex ||
-                Vertex.IncomingBevelEdgeIndices.Num() != 1 || Vertex.Wedges.Num() != 2 ||
-                !Source.IsVertex(Vertex.VertexID)) { return false; }
+                Vertex.IncomingBevelEdgeIndices.Num() != 1 || Vertex.Wedges.Num() != 2)
+            {
+                Failure = FString::Printf(TEXT("vertex_layout vertex=%d type=%d incoming=%d wedges=%d repaired=%d"),
+                    Vertex.VertexID, int32(Vertex.VertexType), Vertex.IncomingBevelEdgeIndices.Num(), Vertex.Wedges.Num(), Repaired.Num());
+                return false;
+            }
+            if (!Source.IsVertex(Vertex.VertexID)) { return Reject(TEXT("source_vertex_missing")); }
+            CurrentEdge = Vertex.IncomingBevelEdgeIndices[0];
+            if (!Edges.IsValidIndex(CurrentEdge)) { return Reject(TEXT("incoming_edge_missing")); }
             const FBevelEdge& Edge = Edges[Vertex.IncomingBevelEdgeIndices[0]];
-            if (Edge.InitialPositions.Num() != 2) { return false; }
+            if (Edge.InitialPositions.Num() != 2) { return Reject(TEXT("initial_position_count"), Edge.InitialPositions.Num()); }
             FVector3d Along = Edge.InitialPositions[1] - Edge.InitialPositions[0];
-            if (!Along.Normalize()) { return false; }
+            if (!Along.Normalize()) { return Reject(TEXT("initial_span_zero")); }
             const FVector3d Original = Source.GetVertex(Vertex.VertexID);
             for (FOneRingWedge& Wedge : Vertex.Wedges)
             {
+                ++CurrentWedge; CurrentTriangle = -1;
                 FVector3d Normal = FVector3d::Zero(), Center = FVector3d::Zero();
-                if (Wedge.Triangles.IsEmpty() || !Mesh.IsVertex(Wedge.WedgeVertex)) { return false; }
+                if (Wedge.Triangles.IsEmpty()) { return Reject(TEXT("source_wedge_empty")); }
+                if (!Mesh.IsVertex(Wedge.WedgeVertex)) { return Reject(TEXT("mesh_wedge_vertex_missing"), Wedge.WedgeVertex); }
                 for (int32 T : Wedge.Triangles)
                 {
-                    if (!Source.IsTriangle(T)) { return false; }
+                    CurrentTriangle = T;
+                    if (!Source.IsTriangle(T)) { return Reject(TEXT("source_triangle_missing")); }
                     const auto F = Source.GetTriangle(T);
-                    if (!F.Contains(Vertex.VertexID)) { return false; }
+                    if (!F.Contains(Vertex.VertexID)) { return Reject(TEXT("source_triangle_anchor_missing")); }
                     const FVector3d A = Source.GetVertex(F.A), B = Source.GetVertex(F.B), C = Source.GetVertex(F.C);
                     Normal += FVector3d::CrossProduct(B - A, C - A);
                     Center += (A + B + C) / 3.0;
                 }
-                if (!Normal.Normalize()) { return false; }
+                if (!Normal.Normalize()) { return Reject(TEXT("source_fan_normal_zero")); }
                 Center /= Wedge.Triangles.Num();
                 for (int32 T : Wedge.Triangles)
                 {
+                    CurrentTriangle = T;
                     // Each side of a middle span lies in one original native
                     // facet. Fail closed if the source fan is not planar.
-                    if (FVector3d::DotProduct(Normal, Source.GetTriNormal(T)) < 1.0 - 1.e-8)
-                    { return false; }
+                    const double NormalDot = FVector3d::DotProduct(Normal, Source.GetTriNormal(T));
+                    if (NormalDot < 1.0 - 1.e-8)
+                    { return Reject(TEXT("source_fan_nonplanar"), NormalDot); }
                 }
                 FVector3d Inset = FVector3d::CrossProduct(Normal, Along);
-                if (!Inset.Normalize()) { return false; }
+                if (!Inset.Normalize()) { return Reject(TEXT("source_inset_zero")); }
                 if (FVector3d::DotProduct(Inset, Center - Original) < 0) { Inset = -Inset; }
                 const FVector3d Delta = Distance * Inset;
                 double Fraction = 1.0;
                 for (int32 T : Wedge.Triangles)
                 {
+                    CurrentTriangle = T;
                     const auto F = Source.GetTriangle(T);
                     const FVector3d A = Source.GetVertex(F.A), B = Source.GetVertex(F.B), C = Source.GetVertex(F.C);
                     const double OldArea = FVector3d::CrossProduct(B - A, C - A).Z;
@@ -102,14 +123,14 @@ public:
                     const FVector3d NewC = C + (F.C == Vertex.VertexID ? Delta : FVector3d::Zero());
                     const double NewArea = FVector3d::CrossProduct(NewB - NewA, NewC - NewA).Z;
                     if (!FMath::IsFinite(OldArea) || !FMath::IsFinite(NewArea) || OldArea <= 1.e-8)
-                    { return false; }
+                    { return Reject(TEXT("source_fan_area_invalid"), OldArea); }
                     // A single moved point makes signed area linear in the
                     // inset fraction. These half-plane clips keep the point
                     // inside its finite source fan with a positive margin.
                     if (NewArea < 0.10 * OldArea)
                     { Fraction = FMath::Min(Fraction, 0.90 * OldArea / (OldArea - NewArea)); }
                 }
-                if (!FMath::IsFinite(Fraction) || Fraction <= 0) { return false; }
+                if (!FMath::IsFinite(Fraction) || Fraction <= 0) { return Reject(TEXT("source_fan_fraction_invalid"), Fraction); }
                 MinInsetFraction = FMath::Min(MinInsetFraction, Fraction);
                 Wedge.NewPosition = Original + Fraction * Delta;
                 Wedge.bHaveNewPosition = true;
@@ -119,15 +140,26 @@ public:
         }
         for (FBevelEdge& Edge : Edges)
         {
+            CurrentEdge = Edge.EdgeIndex; CurrentVertex = CurrentWedge = CurrentTriangle = -1;
             if (Edge.MeshVertices.Num() != 2 || Edge.NewMeshVertices.Num() != 2 ||
-                Edge.StripQuadPatch.NumVertexCols() != 2) { return false; }
+                Edge.StripQuadPatch.NumVertexCols() != 2)
+            {
+                Failure = FString::Printf(TEXT("strip_layout edge=%d old_vertices=%d new_vertices=%d columns=%d repaired=%d"),
+                    Edge.EdgeIndex, Edge.MeshVertices.Num(), Edge.NewMeshVertices.Num(), Edge.StripQuadPatch.NumVertexCols(), Repaired.Num());
+                return false;
+            }
             Edge.NewPositions0.SetNum(2); Edge.NewPositions1.SetNum(2);
             Edge.NormalsA.SetNum(2); Edge.NormalsB.SetNum(2);
             for (int32 K = 0; K < 2; ++K)
             {
                 const FVector3d* N0 = RailNormals.Find(Edge.MeshVertices[K]);
                 const FVector3d* N1 = RailNormals.Find(Edge.NewMeshVertices[K]);
-                if (!N0 || !N1) { return false; }
+                if (!N0 || !N1)
+                {
+                    Failure = FString::Printf(TEXT("rail_normal_missing edge=%d endpoint=%d old_vertex=%d new_vertex=%d has_old=%d has_new=%d repaired=%d"),
+                        Edge.EdgeIndex, K, Edge.MeshVertices[K], Edge.NewMeshVertices[K], N0 != nullptr, N1 != nullptr, Repaired.Num());
+                    return false;
+                }
                 Edge.NewPositions0[K] = Mesh.GetVertex(Edge.MeshVertices[K]);
                 Edge.NewPositions1[K] = Mesh.GetVertex(Edge.NewMeshVertices[K]);
                 Edge.NormalsA[K] = *N0; Edge.NormalsB[K] = *N1;
@@ -136,7 +168,7 @@ public:
             {
                 TArray<int32> Column;
                 Edge.StripQuadPatch.GetVertexColumn(Col, Column);
-                if (Column.Num() < 2) { return false; }
+                if (Column.Num() < 2) { return Reject(TEXT("strip_column_empty"), Column.Num()); }
                 const FVector3d A = Mesh.GetVertex(Column[0]), B = Mesh.GetVertex(Column.Last());
                 for (int32 K = 1; K + 1 < Column.Num(); ++K)
                 {
@@ -302,8 +334,12 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
         if (!Bevel.Apply(Mesh, nullptr)) { Trial->SetStringField(TEXT("failure"), TEXT("operation")); continue; }
         int32 RepairedVertices = 0;
         double MinInsetFraction = 1;
-        if (!Bevel.RestoreSourceFacetRails(Mesh, BevelSource, Inset, RepairedVertices, MinInsetFraction))
-        { Trial->SetStringField(TEXT("failure"), TEXT("source_facet_rail_repair")); continue; }
+        FString RailFailure;
+        if (!Bevel.RestoreSourceFacetRails(Mesh, BevelSource, Inset, RepairedVertices, MinInsetFraction, RailFailure))
+        {
+            Trial->SetStringField(TEXT("failure"), TEXT("source_facet_rail_repair"));
+            Trial->SetStringField(TEXT("source_facet_rail_failure"), RailFailure); continue;
+        }
         Trial->SetNumberField(TEXT("source_facet_repaired_vertices"), RepairedVertices);
         Trial->SetNumberField(TEXT("source_facet_min_inset_fraction"), MinInsetFraction);
         Trial->SetNumberField(TEXT("triangles"), Mesh.TriangleCount());
