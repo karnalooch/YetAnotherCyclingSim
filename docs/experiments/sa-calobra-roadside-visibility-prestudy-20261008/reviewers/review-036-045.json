@@ -1,0 +1,1246 @@
+{
+  "reviewer": "visibility_36_45",
+  "sheets_inspected": [
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45
+  ],
+  "stations": [
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Forward left roadside cut and reverse right cut show large close facets; broad upper pale rock slope remains readable.",
+      "station_index": 432,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Left forward wall follows curve; reverse right broad cut has visible steps and upper rocky slope.",
+      "station_index": 433,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close cuts flank the road; large layered uphill slope visible behind them merits broad form retention.",
+      "station_index": 434,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Road-edge wall bases and top transitions read clearly; substantial upper rock planes remain visible.",
+      "station_index": 435,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Forward bend frames broad upper slope while reverse road cut extends across right half.",
+      "station_index": 436,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near cuts remain visible on both edges; upper textured rock mass fills much of forward context.",
+      "station_index": 437,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Forward left cut and reverse right cut retain readable road contact; upper rock forms remain dominant.",
+      "station_index": 438,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Curving road shows low opposite bank and large main cut; upper broad slope retains readable planes.",
+      "station_index": 439,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Forward valley rock faces and reverse layered hillside both need larger scale form continuity.",
+      "station_index": 440,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Forward upper slope and left cut dominate; reverse right cut opens onto distinct mountain silhouette.",
+      "station_index": 441,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Left forward and right reverse cuts are close; reverse pointed rock mass has readable face divisions.",
+      "station_index": 442,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Roadside facets remain close while reverse mountain faces and skyline become prominent.",
+      "station_index": 443,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Forward right cut fills near edge and reverse upper pale slope occupies much of view; pointed skyline in forward background.",
+      "station_index": 444,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Forward right wall and opposite low bank remain close; reverse broad uphill face retains visible large forms.",
+      "station_index": 445,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Right forward and left reverse cuts expose repeated large plane changes; broad reverse hillside remains readable.",
+      "station_index": 446,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Reverse upper rocky slope is substantial; forward distant pointed peak supplies skyline rather than proven fine detail.",
+      "station_index": 447,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Right forward wall and left reverse wall need road contact; distant forward peak is clear but broad-face priority is uncertain.",
+      "station_index": 448,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Curving roadside cut reads near facets; distant left peak remains skyline context.",
+      "station_index": 449,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Forward main cut occupies right view, reverse low left cut leads toward broader slope; B extent uncertain at contact resolution.",
+      "station_index": 450,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Close main cuts persist in opposite directions; distant rocky outline remains visible above lower bank.",
+      "station_index": 451,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Forward curve reveals prominent right cut; remote peak has clear outline but limited interior-face evidence.",
+      "station_index": 452,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Main roadside wall wraps bend; skyline rocks remain separate from near bank details.",
+      "station_index": 453,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Cuts and opposite low banks flank road; forward jagged ridge is clear while its broad face is only partly legible.",
+      "station_index": 454,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Forward road follows right cut with low left bank; reverse left wall leads into hillside, distant jagged ridge remains.",
+      "station_index": 455,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Forward large pale vertical faces rise beyond both near banks; reverse main cut remains close on left.",
+      "station_index": 456,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Road bends toward broad rocky escarpment with visible vertical plane changes and distinct top outline.",
+      "station_index": 457,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Forward pale cliff face occupies substantial upper view; road-edge cuts require contact continuity.",
+      "station_index": 458,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large forward rock wall becomes dominant above near purple cut; upper edge and ledges remain readable.",
+      "station_index": 459,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Broad cliff faces fill forward view above bank; distant skyline mostly occluded in both views.",
+      "station_index": 460,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Bend lies directly below large pale cliff; both low banks and upper face shape remain visible.",
+      "station_index": 461,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Reverse broad vertical cliff has visible face divisions over road bend; background skyline largely obscured.",
+      "station_index": 462,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward close right vertical cut frames sea opening; reverse broad pale rock face remains readable.",
+      "station_index": 463,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Both directions expose large road cuts; sea-facing silhouettes and reverse pale escarpment each matter.",
+      "station_index": 464,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward paired rock pillars frame road and coast; reverse upper cliff planes stay readable.",
+      "station_index": 465,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Road passes between near cuts; coast opens forward while reverse broad cliff face remains visible.",
+      "station_index": 466,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward right wall and coast-facing jagged contour read strongly; reverse broad rock face stays in context.",
+      "station_index": 467,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward road lies between jagged near cuts toward sea; reverse broad pale cliff above road remains readable.",
+      "station_index": 468,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Close opposing cuts form passage; reverse broad upper rock face has visible divisions and forward coastal skyline.",
+      "station_index": 469,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward cuts frame sea slot; reverse large rock face remains visible above close wall.",
+      "station_index": 470,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Tall close cuts flank both directions; black roadway appearance is inconclusive without original inspection.",
+      "station_index": 471,
+      "confidence": "low"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward right wall opens toward coast; reverse passage and broad uphill rock face remain legible.",
+      "station_index": 472,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Forward right cut dominates roadside; reverse distant rock faces are partly obscured, while sea-facing outline stays visible.",
+      "station_index": 473,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Strong forward right cut and reverse opposing banks; remote uphill face priority is uncertain at contact resolution.",
+      "station_index": 474,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Forward right wall and reverse left wall remain close; distant rocky hillside forms skyline context.",
+      "station_index": 475,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Coastal forward view reads wall top against sea; reverse upper hillside partly clipped and B membership uncertain.",
+      "station_index": 476,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Roadside main cut has broad facets; far ridge contributes skyline while interior-face importance remains unresolved.",
+      "station_index": 477,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Right forward wall lowers toward horizon; left reverse wall leads into rock slope, with skyline retained.",
+      "station_index": 478,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Main cut follows road on right forward/left reverse; small coastal peak silhouette remains readable.",
+      "station_index": 479,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Reverse large pale hillside face rises above left cut; forward small coastal peak and sea outline remain distinct.",
+      "station_index": 480,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Close wall wraps road and reverse broad rocky slope remains clearly visible; forward coastal peak outline retained.",
+      "station_index": 481,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Reverse broad rocky outcrop fills upper-left context with readable planes; forward sea-facing silhouette stays visible.",
+      "station_index": 482,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Main cut and low coastal-side ground dominate foreground; background rocks appear as small outlines.",
+      "station_index": 483,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Road banks lower and open coast in both directions; no separate dominant broad rock face visible in these two views.",
+      "station_index": 484,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Low banks frame road toward open sea; preserve bank-to-ground transition and coarse coastal relief.",
+      "station_index": 485,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Short adjoining low-bank section retains open coastal panorama; no dominant distant wall in paired views.",
+      "station_index": 486,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward bank below rocky outcrop and reverse broad valley rock faces retain important large forms.",
+      "station_index": 487,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward roadside cut grows; reverse valley has prominent broad rock faces and higher skyline.",
+      "station_index": 488,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Close forward wall and reverse low bank bound road; reverse large mountain face remains readable.",
+      "station_index": 489,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward cut occupies right foreground; reverse mountain face and distant crest supply B and C context.",
+      "station_index": 490,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward right wall remains close while reverse large dark-faced peak dominates upper valley. Original reverse confirms steep left cut and broad valley faces; opposite right side is sloping ground.",
+      "station_index": 491,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Forward right wall frames open sea; reverse mountain faces occupy upper valley with readable plane divisions.",
+      "station_index": 492,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Road rounds near cut toward coast; reverse large pale rocky slope becomes more prominent.",
+      "station_index": 493,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close right forward/left reverse cut persists; reverse upper valley faces remain readable.",
+      "station_index": 494,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward low coastal ground and right wall contrast with reverse broad rocky outcrop.",
+      "station_index": 495,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Reverse large rocky mound and upper cliff rise beyond main left cut; forward coastline remains open.",
+      "station_index": 496,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Reverse ridge face remains significant above near wall while forward sea horizon opens.",
+      "station_index": 497,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward cut becomes lower but remains close; reverse upper rocky face remains broad and readable.",
+      "station_index": 498,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Coastal roadside wall changes into stepped bank; reverse upper outcrop and cliff divisions stay visible.",
+      "station_index": 499,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward main cut lowers along straight road; reverse rock slope occupies substantial upper view.",
+      "station_index": 500,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward bank and open sea contrast with reverse broad rocky slope; road-edge blending still matters.",
+      "station_index": 501,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Both near banks wrap tight curve, forward broad upper rock slope readable; reverse hillside has large ledge bands.",
+      "station_index": 502,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Paired curve exposes close roadside forms and broad uphill slopes; visible upper planes merit B continuity.",
+      "station_index": 503,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Low forward right bank opens onto sea, reverse broad rocky slope readable above close left cut.",
+      "station_index": 504,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Apparent road end and bank contact require original confirmation; reverse broad outcrop remains visible.",
+      "station_index": 505,
+      "confidence": "low"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Tight bend has close cuts on both sides and broad upper slope; distant skyline largely occluded.",
+      "station_index": 506,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Both directions frame close curved cuts below broad uphill rock faces; no separate panorama visible.",
+      "station_index": 507,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Close forward right cut and reverse left bank flank dark road patches; broad-face visibility uncertain.",
+      "station_index": 508,
+      "confidence": "low"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Forward right wall and reverse left wall remain close; coastal horizon is visible, dark road areas need original check.",
+      "station_index": 509,
+      "confidence": "low"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Main cut hugs road edge; reverse sea remains open and far uphill face partly clipped.",
+      "station_index": 510,
+      "confidence": "low"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Road-edge cut and opposite low ground remain visible despite dark road appearance; remote-face classification uncertain.",
+      "station_index": 511,
+      "confidence": "low"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Forward main bank lowers while reverse left cut retains large facets; coastal panorama remains open.",
+      "station_index": 512,
+      "confidence": "low"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Forward low roadside banks and reverse broad valley faces both remain visible around apparent road end.",
+      "station_index": 513,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near bank-to-ground transition needs care; reverse valley contains broad readable rocky upper slope.",
+      "station_index": 514,
+      "confidence": "low"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Forward right cut leads into bend while reverse left wall opens to sea; dark road patches do not establish geometry cause.",
+      "station_index": 515,
+      "confidence": "low"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward right cut sits below broad uphill rocky face; reverse main left cut overlooks coast, dark strip needs original check.",
+      "station_index": 516,
+      "confidence": "low"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward upper rocky hillside occupies much of view; reverse roadside wall remains close and sea-visible.",
+      "station_index": 517,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward broad rocky slope above main right cut remains readable; reverse cut continues beside open coast.",
+      "station_index": 518,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Close road cuts and forward broad textured rocky face stay visible; dark margins are inconclusive.",
+      "station_index": 519,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward upper slope shows large bouldery forms beyond near cut; reverse coast silhouette remains open.",
+      "station_index": 520,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Road enters curve below broad uphill rock slope; main cut base and low opposite bank remain readable.",
+      "station_index": 521,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Lower near banks flank hairpin and upper pale slope is clipped; no confirmed distant broad-face priority.",
+      "station_index": 522,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Low road banks wrap turn, with forward sea opening and reverse upper slope clipped near frame edge.",
+      "station_index": 523,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Near bank planes and road-to-ground transition remain important; broad upper rock patch is partly visible only.",
+      "station_index": 524,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Close banks taper along coastal road, reverse opens toward valley; remote rock-face detail remains uncertain.",
+      "station_index": 525,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Low banks flank road with broad coastal panorama; upper valley forms are partly clipped.",
+      "station_index": 526,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Forward low main bank and reverse curved near banks remain visible; far valley ridge supplies skyline context.",
+      "station_index": 527,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Low roadside bank and broad valley context remain visible; no distinct bounded dominant-face identity.",
+      "station_index": 528,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward plateau escarpment stretches across upper view above left bank; reverse coastal bluff has readable silhouette.",
+      "station_index": 529,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Near left forward/right reverse banks expose road contact; forward broad plateau faces remain visible.",
+      "station_index": 530,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward long upper escarpment has readable vertical divisions; reverse main bank overlooks coast.",
+      "station_index": 531,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Broad forward plateau face remains visible above low bank; reverse sea and small coastal ridge retain outline.",
+      "station_index": 532,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Road banks and broad uphill escarpment remain visible; distant large face needs macroform preservation.",
+      "station_index": 533,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward long plateau wall occupies upper view, reverse main right bank and coastal relief remain readable.",
+      "station_index": 534,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Original forward shows steep left road cut and broad valley ground, but upper escarpment is a narrow clipped band; B membership uncertain. Reverse coastal terrain supplies separate panorama context.",
+      "station_index": 535,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Close low banks guide road bend; forward upper plateau face remains broad despite limited pixel height.",
+      "station_index": 536,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Upper forward plateau escarpment forms broad horizon face; reverse main bank and coastal skyline remain visible.",
+      "station_index": 537,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Curving near banks below broad upland escarpment; reverse hillside has distinct large contour.",
+      "station_index": 538,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Tight curve exposes bank contact and ground transition; forward upland broad face and reverse long ridge remain visible.",
+      "station_index": 539,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Main bank lies left forward/right reverse; coast and upper rocky slope visible, but broad-face boundary uncertain.",
+      "station_index": 540,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Near main bank curves beside road; reverse uphill rock forms partly clipped while coast remains open.",
+      "station_index": 541,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward low bank and reverse upper-right long rock face both visible; preserve broad cliff divisions and panorama.",
+      "station_index": 542,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Road-edge main bank remains close while reverse long upper-right escarpment is readable against sky.",
+      "station_index": 543,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Larger close cut develops left forward/right reverse; reverse upper cliff retains visible broad form divisions.",
+      "station_index": 544,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Near wall grows along roadside and distant upper escarpment partly exits frame; B extent unresolved.",
+      "station_index": 545,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Close main wall extends beside road while upland broad-face evidence is clipped in paired views.",
+      "station_index": 546,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Road beside main bank opens forward toward broad plateau escarpment with readable vertical divisions.",
+      "station_index": 547,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Near bank-road contact remains visible; forward plateau face occupies upper context and coastal skyline remains open reverse.",
+      "station_index": 548,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward broad escarpment retains large face divisions above low bank; reverse sea-facing silhouette stays visible.",
+      "station_index": 549,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Main roadside bank remains close while broad forward upland escarpment continues across skyline.",
+      "station_index": 550,
+      "confidence": "medium"
+    },
+    {
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Road follows close main cut with broad landscape opening; partly clipped upper plateau face makes B extent uncertain.",
+      "station_index": 551,
+      "confidence": "medium"
+    }
+  ],
+  "representative_originals": [
+    "window-0125-forward-00005",
+    "window-0132-reverse-00002",
+    "window-0138-forward-00001",
+    "window-0146-forward-00002"
+  ],
+  "summary": "All ten assigned contact sheets were visually inspected, representing 120 forward/reverse station pairs (indices432\u2013551). Roadside cuts and banks need A contact and macroform treatment; broad readable upper cliff/valley/plateau faces support B independently of the C coast/skyline context. Sheets036 and038 show particularly strong B face evidence; 040\u2013041 alternate open coast with reverse valley faces; 044\u2013045 expose a wide upland escarpment. Image-scale contact review cannot establish world-surface identity, occluded D zones, confirmed background simplification, material classes or geometry-defect causes. Dark road patches/abrupt ends warrant original inspection only. Canonical tags remain blank, owner review pending. Panorama presence denotes a separately visible distant/coastal terrain region; where only the outline of the same broad B face or sea alone is visible, C is uncertain. Near sides denote raised cut/bank shapes, not flat shoulders.",
+  "original_checks": [
+    {
+      "frame_id": "window-0125-forward-00005",
+      "observed_detail": "Large vertical cliff planes fill upper view and reach the road bend through broad sloping transitions; steep left and right roadside cuts are visible. Small sky fragments do not establish a separate C region.",
+      "judgment_change_or_confirmation": "Station460 confirms near wall, forward both raised sides, B present and C uncertain; retain large ledges, cliff-plane depth and road contact, omit assumed pore geometry."
+    },
+    {
+      "frame_id": "window-0132-reverse-00002",
+      "observed_detail": "Close steep left cut occupies foreground; low right ground slopes away. Large left massif and extensive right valley escarpment have readable planes, ledges and dark recesses. More distant central crest is a separate panorama region.",
+      "judgment_change_or_confirmation": "Station491 confirms B present and C present in paired context. Reverse side corrected from both to left: opposite surface is largely sloping ground, not a raised bank."
+    },
+    {
+      "frame_id": "window-0138-forward-00001",
+      "observed_detail": "Main right wall has large visible facets and base contact; broad rocky valley ground is open left, and upper cliffs are clipped. Road has black and dark triangular regions with an abrupt visible edge.",
+      "judgment_change_or_confirmation": "Station509 confirms forward right wall and B uncertain; C remains uncertain in paired views. Dark road appearance retained as visual uncertainty only, with no GEO_FIX or causal geometry diagnosis."
+    },
+    {
+      "frame_id": "window-0146-forward-00002",
+      "observed_detail": "Steep left road cut has large vertical facets; right side slopes away below road. Broad valley ground occupies upper view and only a narrow cropped escarpment band is visible at top, without sky.",
+      "judgment_change_or_confirmation": "Station535 near profile changed bank to wall; B changed present to uncertain because the original shows cropped cliff band rather than a dominant broad face. C remains paired-context only from the reverse coastal terrain, not inferred from this forward view."
+    }
+  ]
+}

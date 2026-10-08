@@ -1102,3 +1102,16 @@ capture, source inventory or original ZIP changes. A contact-sheet spot check
 confirms actual paired TPP sphere views are present, without granting visual
 quality acceptance. All five surface tags remain available and unassigned;
 visual review is `PENDING_REVIEW`, performance is `NOT_MEASURED`.
+
+
+### Preliminary roadside detail generation planning
+
+The [complete captured-survey prestudy](../experiments/sa-calobra-roadside-visibility-prestudy-20261008/README.md)
+provides 669 paired preliminary observations from all 56 contact sheets, with
+24 original-PNG spot checks. Its [meshes/layers/generation guide](../experiments/sa-calobra-roadside-visibility-prestudy-20261008/generation-guide.md)
+uses the existing native mesh-export, GeometryProcessing and accepted v8 work
+as the foundation for later bounded detail selection. It distinguishes A walls
+from A banks/contact, B major forms, independent C panoramas and unconfirmed D.
+No physical selectors, graph APIs, height/material edits or map-wide application
+are created. Existing eligibility, protected interfaces, v8 reference and
+lighting/PCGEx admission results remain unchanged.

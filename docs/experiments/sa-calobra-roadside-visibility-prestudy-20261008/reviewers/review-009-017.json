@@ -1,0 +1,1152 @@
+{
+  "reviewer": "landscape_plan — AI preliminary contact-sheet visual review",
+  "sheets_inspected": [
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+  ],
+  "stations": [
+    {
+      "station_index": 108,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Tall roadside faces swap sides; reverse also shows a broad recessed cliff while forward opens to a distant peak and horizon.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 109,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "High near faces remain readable in both directions; reverse cliff divisions and forward isolated skyline remain visible.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 110,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Forward bend has lower banks on both sides; reverse left face is close, with an open distant ridge and horizon.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 111,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "The banks lower around the bend; reverse left slope still exposes local plane changes and the distant outlook stays open.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 112,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Low banks frame the curve; a partly visible larger rock mass needs original-frame review to separate broad-face demand from skyline.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 113,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Original forward PNG shows a raised bank on the right and descending inner ground on the left; the large upper peak has readable face divisions. Reverse bank sides remain contact-sheet observations. Separate distant-ridge/panorama identity remains uncertain; the same broad face outline or sea horizon alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 114,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near right face rises at the bend; the forward peak and reverse massif retain visible shelves and broad faces. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 115,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "High right roadside face and two reverse banks frame a broad layered basin and an isolated peak.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 116,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Road follows a steep right face; reverse shows a large articulated cliff beyond the left near wall, with distant horizon in forward. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 117,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Steep near face remains prominent; reverse cliff recesses and shelves remain legible beyond it. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 118,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Forward bank is lower, while the reverse opens toward a large cliff face and sea-facing landscape. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 119,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Near sloping banks are clear; the reverse background face is partly hidden so its dominant-wall requirement is uncertain. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 120,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "absent",
+      "reason": "Tight paired bend views expose near side walls; upper terrain is cropped and does not establish a panorama. No distinct distant landform panorama is established in this pair; sea alone is not counted.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 121,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "absent",
+      "reason": "Near wall and bend contact remain clear in both directions; cropped upper faces need a wider or original view. No distinct distant landform panorama is established in this pair; sea alone is not counted.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 122,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "absent",
+      "reason": "The curve is enclosed by sloping roadside forms; no clearly open skyline is visible in this pair. No distinct distant landform panorama is established in this pair; sea alone is not counted.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 123,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "A near left bank contrasts with a broad forward right-hand rock face; reverse reveals intermediate slope structure. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 124,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "The forward opposite face retains large divisions above another road level; near bank switches sides in reverse. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 125,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Clear near-bank planes and multiple road levels; larger upper faces are cropped or small enough to leave B uncertain. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 126,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Near slope contact remains readable and the forward horizon is open; dominant broad-face readability is unresolved at contact-sheet scale. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 127,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Left roadside face becomes steeper; reverse frames show terraces and upper terrain but insufficient broad-face detail for definite B.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 128,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Tall close left face continues into the next window; reverse landscape remains partly cropped.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 129,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "The near left wall occupies a large image area with distinct planes; forward opening also retains distant skyline context.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 130,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "absent",
+      "reason": "Close right and reverse left faces flank a high road; dark road regions do not establish their cause or surface identity. No distinct distant landform panorama is established in this pair; sea alone is not counted.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 131,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "absent",
+      "reason": "Sloping near banks remain clear despite dark road regions; reverse opens toward the horizon and partial wider terrain. No distinct distant landform panorama is established in this pair; sea alone is not counted.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 132,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "absent",
+      "reason": "Paired near banks flank a raised-looking road view; the reverse opens to horizon but upper broad-face evidence is incomplete. No distinct distant landform panorama is established in this pair; sea alone is not counted.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 133,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "absent",
+      "reason": "Long right bank and reverse left bank have readable local planes; basin terrain fills the forward background without a clear isolated wall. No distinct distant landform panorama is established in this pair; sea alone is not counted.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 134,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Continuous sloping roadside forms remain prominent; reverse horizon and wider hillside provide landscape context. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 135,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Near bank height reduces along the straight; larger background terrain remains visible but wall dominance is unclear. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 136,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Readable bank contact continues; broad rough terrain beyond it warrants review without automatically counting every outcrop as B. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 137,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Near sloping bank remains visible in both directions; upper landforms and a reverse horizon stay partly exposed. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 138,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Forward bank reaches the approaching bend; reverse upper terrain is substantial but its readable broad faces need original pixels. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 139,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Banks frame a tight bend; wider reverse outline is visible, but no distinct dominant broad wall is established.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 140,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Close sloping forms and the reverse left bank carry contact detail; surrounding low ridges supply context rather than a dominant face.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 141,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "The reverse left bank presents a steep plane while the forward turn opens toward a larger rough slope; B remains uncertain. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 142,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Forward low banks open toward sea and hillside; reverse left near bank is clearer than the cropped background forms. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 143,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Both views show near low banks and broad terrain; distant or cropped features do not yet establish a dominant wall. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 144,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Low banks border both directions; forward hillside and sea opening contrast with cropped reverse terrain. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 145,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "A clear near right bank swaps to the left in reverse; broad basin terrain remains partly clipped. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 146,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Near right slope and reverse left bank are readable; an open horizon and distant basin provide panoramic context. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 147,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "The same station pair shows near sloping forms and a long open outlook; larger reverse faces need closer inspection. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 148,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Low right bank and reverse left bank remain near; broad terrain is visible without enough contact-sheet detail to confirm B. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 149,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Steep near bank is separate from a prominent forward cliff with readable large divisions; reverse shows a small distant ridge.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 150,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Near left face and forward large cliff remain clear; reverse opens to a ridge and horizon beyond a separate right bank.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 151,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward upper cliff band remains visibly articulated above the roadside bank; reverse contains an open panoramic ridge.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 152,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Near banks are prominent; the upper forward cliff is clipped, leaving broad-face demand uncertain despite clear panorama in reverse.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 153,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Readable low banks border the straight; the forward scene is mostly a sloping basin and reverse an open distant outlook.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 154,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Low roadside banks and broad landscape context persist without a clearly dominant wall in the shown pair.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 155,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Banks frame a tight curve; the reverse right bank is near, while larger upper forms remain only partly shown. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 156,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "A gently turning road is bordered by low banks; broad upper slopes and skyline read as landscape context.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 157,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Left forward bank and reverse right bank remain near; a clipped upper cliff may be significant but needs an original view.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 158,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Low banks frame both sides of the forward bend; upper reverse vertical forms are clipped and uncertain.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 159,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "both",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Forward left bank and two reverse banks remain readable; an upper cliff strip is not fully shown. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 160,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Near left bank leads toward an open horizon; reverse cliff fragments at the top are too cropped for firm B. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 161,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Low near banks persist at the next construction window; panorama is clear but broad upper faces remain clipped. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 162,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "The straight offers near side-plane detail and broad sea-facing context; the reverse upper cliff remains partial. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 163,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "The forward left face steepens; reverse hillside and clipped cliff do not establish a separate confirmed dominant surface. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 164,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Readable steep near left face and reverse right bank persist with open skyline; upper broad-face quality remains uncertain. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 165,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "A lower near bank frames the turn; a distant forward ridge and partial reverse cliff both require separate surface correspondence.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 166,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Original reverse PNG confirms a long articulated cliff with repeated vertical divisions above broad sloping terrain and a raised right roadside bank. The separate low forward ridge remains a contact-sheet panorama observation.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 167,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Reverse cliff band remains prominent on the right while sea and distant landforms open to the left; near banks are separate.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 168,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Near forward left and reverse right faces are steep; beyond them the scene is open low terrain and horizon rather than a dominant wall.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 169,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Tall close side face stays readable; distant low ridge and sea outlook do not establish a dominant broad wall.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 170,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Banks lower near the bend; a small upper reverse cliff strip may matter but is not clearly dominant at this scale.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 171,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Sloping near banks frame the road; reverse ridge and limited cliff strip remain panoramic, with B uncertain.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 172,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Reverse shows a longer articulated cliff band beyond the near bank, with open skyline separating large forms. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 173,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "The reverse cliff becomes a broad readable face with ledges; forward near-bank detail remains a separate need. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 174,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Visible reverse cliff divisions and shelving justify broad-face attention while the foreground banks need local contact detail. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 175,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Long reverse cliff remains clear beyond the roadside forms; open upper outline also contributes to the panorama.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 176,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "The bend keeps near bank shapes readable; reverse opposite cliff has distinct broad forms and skyline.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 177,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "At the new window the same view pattern persists: near bank forms and a separate broad reverse cliff.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 178,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "A tight forward bend exposes its outer bank; reverse opens to a broad cliff and distant horizon with a separate near right bank.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 179,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Near right wall and reverse left face dominate contact detail; the distant cliff is less fully visible around the turn. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 180,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Tall near right wall and reverse left face accompany a broad forward cliff band across the view. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 181,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Sloping roadside bank changes sides between views; the forward cliff band retains readable major divisions. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 182,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near bank contact and planes remain readable; forward articulated cliff and reverse distant ridge provide separate larger forms. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 183,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Broad near-bank slope remains close while a long forward cliff supplies readable shelves and skyline. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 184,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "The close bank and road-side contact are clear; a distinct forward cliff face remains compositionally substantial. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 185,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near slope forms persist through the bend, with an independently visible long cliff in the forward direction. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 186,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "The road approaches a bend between a near bank and a large forward cliff band; reverse bank contact remains important. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 187,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Forward cliff divisions are readable above the outer outlook; nearby right bank is a separate local-detail region. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 188,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "The turn opens a broad forward cliff and hillside; near banks still carry local edge and base-contact detail.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 189,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Forward outer bank spans a tight turn; reverse gives an open horizon and small ridge rather than a dominant cliff face.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 190,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Steeper near left face switches to the right in reverse; reverse also exposes a broad articulated cliff beyond it.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 191,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Near steep face remains prominent, with the reverse long cliff and skyline clearly separate from the roadside bank.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 192,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Steep near face is paired with a broad reverse cliff whose large divisions are readable beyond the bank.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 193,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "The near wall and separate reverse cliff remain visible at the adjacent station; skyline remains open.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 194,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward near left face contrasts with reverse distant broad cliff and lower road branch; retain distinct surface demands.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 195,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Near face planes and reverse cliff shelves remain clear; the nearby extra road does not establish surface identity.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 196,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Original reverse PNG confirms the steep right roadside face, the long articulated cliff across the upper view and an additional lower road level. The distinct low forward ridge remains a contact-sheet panorama observation.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 197,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Near wall contact remains readable; reverse broad cliff divisions and upper outline stay visible above another road.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 198,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Dark road areas obscure pavement appearance but not the near wall and separate reverse cliff forms; no defect cause inferred.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 199,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Tall near face and reverse broad cliff persist into the bend, with separate panoramic outline and intermediate forms.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 200,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Near banks are lower here; the forward large cliff has readable broad faces while reverse shows a small distant ridge.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 201,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Low near bank contact contrasts with prominent forward cliff divisions and a separate reverse ridge against horizon.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 202,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward cliff remains sufficiently large and articulated for broad-face attention; reverse distant ridge is panorama context.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 203,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Near banks remain clear; the forward larger cliff is increasingly cropped while reverse panorama stays open.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 204,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Original forward PNG resolves the left roadside form as a steep cut face, not merely a low bank; upper cliff is partly clipped, so dominant broad-face demand remains uncertain. The open reverse ridge remains a contact-sheet panorama observation.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 205,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Near left bank turns toward a reverse scene with a long readable cliff band and separate road levels.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 206,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Same near-bank and reverse broad-cliff pattern remains visible at the next short station.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 207,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Tall outer bank spans the forward bend; reverse shows both a near right wall and broad distant cliff divisions. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 208,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near wall fills much of the forward curve while reverse retains an articulated cliff beyond its close bank. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 209,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "A near left face dominates forward; reverse upper terrain is partially cropped, leaving dominant broad-face evidence uncertain. Separate distant-ridge/panorama identity is uncertain; an open horizon or the same broad face outline alone does not establish C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 210,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "absent",
+      "reason": "Near side wall and reverse bank remain readable; the shown background is mostly low slope and open horizon. No distinct distant landform panorama is established in this pair; sea alone is not counted.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 211,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Near left wall and reverse bank flank an open outlook; a thin upper cliff band needs original-frame assessment.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 212,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Readable near wall continues; reverse large slope and distant ridge do not establish broad-face dominance at contact-sheet scale.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 213,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Near face persists and the reverse cliff band becomes clearly articulated across the background.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 214,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Both directions retain close-bank detail while the reverse large cliff divisions remain visible independently.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 215,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Lower bank frames the forward turn; reverse broad cliff and skyline remain readable beyond the near right bank.",
+      "confidence": "medium"
+    }
+  ],
+  "representative_originals": [
+    "window-0035-forward-00003",
+    "window-0051-reverse-00001",
+    "window-0059-reverse-00003",
+    "window-0060-forward-00004"
+  ],
+  "summary": {
+    "scope": "Every row of sheets 009–017 was inspected at original sheet resolution with view_image; 108 F/R pairs, station indices 108–215. Four selected original 1280x720 PNGs were additionally inspected and their checks are listed separately. All judgments remain AI proposals, not canonical human review; paired counterparts not listed in original_checks remain contact-sheet observations.",
+    "pattern": "Readable roadside banks/walls recur throughout. Long articulated cliff bands are strongest in many reverse views in sheets 013–017, while other pairs show only low ridges or partially clipped upper terrain. Near-bank detail and larger face/skyline requirements are separate.",
+    "field_limits": "near_profile is the strongest readable roadside form in either view. Side fields identify notable raised nearby bank/wall forms, not flat shoulder strips. dominant_wall and panorama refer only to the shown pair; absent does not establish absence elsewhere. panorama=present requires a distinct distant ridge/skyline/panorama region, not the outline of the same B massif or a sea horizon alone. No field is a world-space A/B/C assignment or permission to simplify.",
+    "unknowns": "Repeated physical-surface identities, unshown approaches, precise image occupancy and all world footprints remain unresolved. Cropped or ambiguous broad faces are uncertain.",
+    "exclusions": "No Street View, performance measurement, natural class inferred from diagnostic colours, GEO_FIX, D or approved background simplification.",
+    "counts": {
+      "near_profile": {
+        "wall": 41,
+        "bank": 67
+      },
+      "dominant_wall": {
+        "present": 52,
+        "absent": 11,
+        "uncertain": 45
+      },
+      "panorama": {
+        "present": 55,
+        "uncertain": 45,
+        "absent": 8
+      },
+      "confidence": {
+        "medium": 43,
+        "low": 65
+      }
+    },
+    "original_check_corrections": "Station 113 forward side: both to right; station 204 strongest near profile: bank to wall. B/C statuses unchanged; original checks do not establish world-space surface identities."
+  },
+  "original_checks": [
+    {
+      "frame_id": "window-0035-forward-00003",
+      "observed_detail": "Large articulated peak occupies the upper left/centre. A raised, segmented roadside bank borders the right side of the bend; the inner left terrain falls below the road. A thin sea horizon is visible but does not establish a separate C terrain region. Diagnostic colour transitions do not establish natural surface classes.",
+      "judgment_change_or_confirmation": "Station 113 near_sides_forward corrected from both to right. Bank profile and dominant_wall=present confirmed; panorama remains uncertain and confidence remains low. Reverse-side flags still rely on the inspected contact view; no physical-surface identity is inferred."
+    },
+    {
+      "frame_id": "window-0051-reverse-00001",
+      "observed_detail": "A broad upper cliff band shows repeated deep vertical divisions and distinct lower ledges/sloping terrain. The near right bank has a readable toe at the road curve; a lower road/traverse crosses the midground. No natural class is assigned from its colours.",
+      "judgment_change_or_confirmation": "Station 166 dominant_wall=present and right reverse bank confirmed; no station flag changed. panorama=present remains based on the separate low ridge in the paired forward contact image, not on this cliff outline alone. Forward PNG was not inspected."
+    },
+    {
+      "frame_id": "window-0059-reverse-00003",
+      "observed_detail": "A steep raised right roadside face occupies much of the near view. Across the upper scene a broad cliff has clear vertical recesses, ledges and a broken top line; a second lower road level is visible on the left. The broad cliff and near road-contact face require separate observations.",
+      "judgment_change_or_confirmation": "Station 196 wall profile, right reverse side and dominant_wall=present confirmed; no station flag changed. panorama=present remains based on the distinct low forward ridge visible in the paired contact image, not the reverse cliff silhouette. Forward PNG was not inspected."
+    },
+    {
+      "frame_id": "window-0060-forward-00004",
+      "observed_detail": "The left road edge is bordered by a steep segmented cut face with a sharply readable road-contact boundary. The right foreground descends away from the road. Upper-left cliff faces are cropped by the image edge; a wider tiered slope continues across the upper view.",
+      "judgment_change_or_confirmation": "Station 204 near_profile corrected from bank to wall; left forward side confirmed. dominant_wall remains uncertain because the principal upper face is clipped. panorama=present still rests on the paired reverse contact ridge; confidence remains low and the reverse PNG was not inspected."
+    }
+  ]
+}

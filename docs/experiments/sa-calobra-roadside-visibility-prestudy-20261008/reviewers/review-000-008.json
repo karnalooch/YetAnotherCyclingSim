@@ -1,0 +1,1125 @@
+{
+  "reviewer": "AI subagent /root/cliff_plan; preliminary paired contact-sheet inspection",
+  "sheets_inspected": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "stations": [
+    {
+      "station_index": 0,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Close left bank and tunnel-side ground contrast with a broad mountain face and skyline. No distinct farther terrain region is established beyond the dominant face itself.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 1,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Steeper left roadside face and reverse banks sit below a prominent mountain outline. A separate distant terrain/panorama region is not clear enough to confirm C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 2,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Tall left face is close; reverse shows banks, a projecting peak and the tunnel approach. A separate distant terrain/panorama region is not clear enough to confirm C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 3,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "High left cut and lower opposite bank frame large rock faces; reverse opens toward a distinct peak. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 4,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Left wall rises immediately beside the road; reverse shows an open peak beyond lower banks. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 5,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Very tall face dominates the bend; reverse includes the same kind of close contact plus an open ridge. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 6,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Tall roadside faces and upper rock planes fill the paired views without a clear distant skyline. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 7,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Close left and reverse-right walls constrain the road; broad upper faces fill the background. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 8,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "High side wall and smaller opposing bank remain close; a small ridge is visible in reverse. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 9,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Reverse-right wall dominates while the forward bend exposes lower banks and upper rock masses. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 10,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Large sloped-to-steep roadside face, a lower outer bank and coastal opening are readable. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 11,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Close side faces persist while the forward view opens across the valley toward the coast. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 12,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Tall left face with broad upper rock planes; reverse retains a right face and wider valley context.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 13,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Substantial uphill wall continues at contact distance with a coastal gap and reverse rock bands.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 14,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Large nearby cliff planes dominate above the road; reverse reveals layered valley faces.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 15,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "The bend brings a broad high face close; reverse keeps the side wall and more distant rock bands. A separate distant terrain/panorama region is not clear enough to confirm C. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 16,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Reverse broad wall fills the bend; forward looks into a rock enclosure with limited skyline evidence. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 17,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "uncertain",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Lower sloped contact regions flank the road while an upper cliff face remains prominent in reverse. A separate distant terrain/panorama region is not clear enough to confirm C. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence. Raised-side extent on the bend is unresolved.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 18,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward-right face becomes steep and close; reverse-left contact sits below a broad rock face.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 19,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Close faceted right wall contrasts with reverse upper cliff planes and a small coastal opening.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 20,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Lower roadside slopes lead into an open mountain panorama; no separate face dominates the pair.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 21,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Short close cut walls are readable while the distant peak remains a skyline element.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 22,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Low sloping banks wrap the bend; reverse opens toward a modest distant peak. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 23,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Banks and road contact dominate nearby, with a small peak and open sky beyond. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 24,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "absent",
+      "reason": "Low banks wrap the turn; reverse shows an open ridge above a long shallow roadside cut. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 25,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Forward-left cut is steep at contact distance, but the principal distant feature is the coastal outlook. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 26,
+      "near_profile": "wall",
+      "near_sides_forward": "uncertain",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Reverse has a broad close wall; forward faces a large rocky enclosure with limited skyline. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence. Raised-side extent on the bend is unresolved.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 27,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Left roadside cut and reverse-right upper cliff accompany a broad forward rock face and sea opening.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 28,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Long near cut walls and a large forward enclosing face contrast with the reverse coast.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 29,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Close left wall continues; a substantial upper face remains forward and the coast opens behind.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 30,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward cliff enclosure remains prominent above a close cut; reverse is more open toward the coast.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 31,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Low sloped contact banks and a broad coastal opening; no isolated dominant wall is clear. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 32,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Near slope switches sides with direction; reverse has an open horizon and smaller ridge context.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 33,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "The bend is bordered by low banks; broad slope divisions matter more than a dominant wall. A separate distant terrain/panorama region is not clear enough to confirm C. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 34,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "absent",
+      "reason": "Near banks remain low; a small ridge and broad slope occupy the background. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 35,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "A steeper roadside segment emerges, but background face dominance and skyline are unclear at contact-sheet scale. A separate distant terrain/panorama region is not clear enough to confirm C. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 36,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Reverse close high wall has readable large planes; forward opens toward the coast and outer ridge. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 37,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Lower banks frame the road; the reverse upper face may need broader-form attention, requiring original review. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 38,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Low banks and broad sloped rock forms accompany the coastal outlook without a dominating face. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 39,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Slanted near banks and broad hillside divisions are visible; forward includes the open coast. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 40,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Readable near left and reverse-right banks sit below broad slopes and an open coastal horizon.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 41,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Near contact is a sloping bank; distant coast and low outcrops supply the wider composition.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 42,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Shallow-to-moderate side banks remain close, with an open coast and small forward outcrop.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 43,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Same transition to lower banks persists; far outlines remain distinct from close contact detail.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 44,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Both forward banks are readable at the bend; reverse right bank leads into a broad hillside. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 45,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Low near banks accompany an open coastal view; distant rocky forms are not dominant walls. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 46,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Open coastal bend with low banks; reverse slope has broad material-scale structure rather than a dominant face. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 47,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "A broad rocky face becomes prominent in reverse beyond the low roadside banks. No distinct farther terrain region is established beyond the dominant face itself. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 48,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Near left cut steepens; a broad rocky face and skyline dominate the reverse outlook. No distinct farther terrain region is established beyond the dominant face itself. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 49,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Close cut switches sides with direction; open coast and a modest outcrop form the distant context.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 50,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Strong close wall and its base contact are visible; the outer peak reads mainly as an outline.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 51,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Tall local wall persists but the wider view is chiefly coast, ridge and sloping ground.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 52,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Steep roadside face is close; reverse includes broad hillside divisions without an isolated dominant face.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 53,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Near wall remains readable; open coast and layered hillside carry the farther composition.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 54,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Roadside forms become more sloped; coast and broad valley bands remain visible.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 55,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Sloping contact bank leads toward coast; reverse shows broad terrain bands rather than a dominant wall.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 56,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "A large tall roadside wall fills much of both views while the coastal horizon remains visible.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 57,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Broad close wall and its upper contour stay dominant on the outside of the turn.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 58,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "uncertain",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Reverse large wall spans the turn; forward provides an open skyline and lower contact banks. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence. Raised-side extent on the bend is unresolved.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 59,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Near banks are lower, but a large reverse rocky mass with readable broad planes is prominent. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 60,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Sloping near contacts sit below a substantial reverse mountain face and open coast forward.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 61,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Near banks continue while a broad reverse rocky face and coast retain separate visual roles.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 62,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Local cut steepens on the left; the reverse upper rocky face remains compositionally prominent.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 63,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Steep local side cut plus a dominant reverse mountain face; coast is visible forward.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 64,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Close cut planes remain readable; reverse mountain face and forward coast warrant broad-form review.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 65,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Tall near side cut and a distant-but-prominent reverse face coexist with the coastal panorama.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 66,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Close wall persists and broad reverse rocky planes remain dominant above the route.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 67,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Long upper face dominates the forward enclosure; reverse opens to sea beside a close side wall. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 68,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Same wall-to-open-coast contrast remains, with readable base contact in both directions. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 69,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close wall at the bend and a large reverse rocky mass combine local and broad-form needs. A separate distant terrain/panorama region is not clear enough to confirm C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 70,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Lower contact banks at the turn reveal a dominant mountain face forward and high faces in reverse. No distinct farther terrain region is established beyond the dominant face itself. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 71,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Slanted near contacts switch sides; a large mountain face remains prominent in forward view. A separate distant terrain/panorama region is not clear enough to confirm C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 72,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Low-to-moderate banks flank the bend beneath a dominant rocky face; reverse opens to coast. A separate distant terrain/panorama region is not clear enough to confirm C. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 73,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Sloping contact banks and a substantial forward mountain mass coexist with the coastal opening. No distinct farther terrain region is established beyond the dominant face itself. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 74,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Original forward PNG shows a large outer rocky face with readable broad planes and a strong outline. This is a dominant-face requirement; the face's own skyline and sea do not establish a separate C terrain region. Low local banks remain distinct. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 75,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Low banks frame the same outer peak and coast; evaluate peak dominance on the original image. The outer peak needs B-versus-C confirmation; its own outline does not establish both. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 76,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near banks are low while the reverse rocky face occupies a substantial part of the composition. A separate distant terrain/panorama region is not clear enough to confirm C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 77,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Sloped contact and open coast contrast with the broad, readable reverse mountain face. A separate distant terrain/panorama region is not clear enough to confirm C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 78,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Low local banks lead toward a large reverse cliff mass and a coastal horizon. A separate distant terrain/panorama region is not clear enough to confirm C. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 79,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Contact banks remain modest but a large reverse rocky face has readable major divisions. No distinct farther terrain region is established beyond the dominant face itself. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 80,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near slopes stay low-to-moderate; reverse mountain face and skyline remain prominent. A separate distant terrain/panorama region is not clear enough to confirm C. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 81,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "A close cut steepens while large upper faces and the reverse mountain outline remain readable.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 82,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Tall near side cut leads below a large high face; reverse opens around the peak silhouette.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 83,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large near wall and upper cliff planes are clear, with a distinct reverse skyline. A separate distant terrain/panorama region is not clear enough to confirm C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 84,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Tall nearby face and reverse upper mass both carry readable large forms and outline. A separate distant terrain/panorama region is not clear enough to confirm C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 85,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "High near wall fills much of the view; reverse adds a large rocky peak silhouette. A separate distant terrain/panorama region is not clear enough to confirm C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 86,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close wall remains dominant with an open view of the reverse ridge above it. A separate distant terrain/panorama region is not clear enough to confirm C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 87,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Near tall wall and its major planes remain important beside the distant peak outline. No distinct farther terrain region is established beyond the dominant face itself.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 88,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close wall persists and a broad reverse cliff mass is readable beyond the road. A separate distant terrain/panorama region is not clear enough to confirm C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 89,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near side face has large readable planes; reverse mountain mass and skyline remain prominent. A separate distant terrain/panorama region is not clear enough to confirm C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 90,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Tall local face continues with layered mountain faces and a distinct reverse peak beyond. No distinct farther terrain region is established beyond the dominant face itself.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 91,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Close steep side cut wraps the bend; reverse upper wall and rocky skyline are prominent. No distinct farther terrain region is established beyond the dominant face itself.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 92,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Broad near wall and upper rock planes remain readable; limited reverse ridge is still visible. A separate distant terrain/panorama region is not clear enough to confirm C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 93,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "uncertain",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Reverse broad rock wall fills the turn while forward exposes a valley and coastal panorama. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence. Raised-side extent on the bend is unresolved.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 94,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close face switches sides across the paired view, with broad upper rock planes and an open outlook. A separate distant terrain/panorama region is not clear enough to confirm C.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 95,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Local wall and reverse bank/contact remain readable below large exposed faces and skyline context. No distinct farther terrain region is established beyond the dominant face itself.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 96,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Near right cut and reverse contact bank sit under a substantial rocky face and distant outline. No distinct farther terrain region is established beyond the dominant face itself.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 97,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Low contact banks frame a broad, nearly vertical upper face; both views are enclosed by slopes. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 98,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Same low-bank and dominant upper-wall combination persists without a clear distant panorama. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 99,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "High broad face dominates above local banks; the opposite view remains within the rock enclosure. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 100,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Original forward PNG confirms a dominant tall right wall and substantial descending left bank/contact. Raised-side code is right only; descending left contact still warrants near-detail attention. Projecting wall contours and the sea opening do not establish a separate distant C terrain region.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 101,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Tall right wall and upper planes are prominent; forward begins to reveal the coast and outer ridge. The visible horizon is not a separate distant terrain region; roadside wall contours are not C. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 102,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Close walls flank the forward road, with a jagged side outline and open coast beyond. The visible horizon is not a separate distant terrain region; roadside wall contours are not C.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 103,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "The narrow wall-lined stretch retains readable wall contours and a coastal panorama. The visible horizon is not a separate distant terrain region; roadside wall contours are not C.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 104,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Low sloped banks frame the bend; broad hillside and ridge matter more than a single dominant wall. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 105,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Banks and ground contact remain close; reverse shows broad slope composition and skyline. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 106,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Tall right wall and reverse-left face are dominant, while the forward opens to a coastal ridge. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 107,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Close tall wall continues; paired view shows the wall-lined corridor and an open coastal outlook. Side codes include raised banks/walls only; descending contact remains separate near-detail evidence.",
+      "confidence": "medium"
+    }
+  ],
+  "representative_originals": [
+    "window-0002-forward-00000",
+    "window-0006-forward-00000",
+    "window-0021-forward-00005",
+    "window-0030-forward-00001"
+  ],
+  "summary": "Visually inspected every row of contact sheets 000-008 (108 station pairs, 216 directional images). Readable roadside wall/bank forms recur throughout. Lower banks and open coastal composition are more common in sheets 003-006; sheets 000-001 and 007-008 repeatedly show large near or upper faces. Dominant-wall presence requires a substantial readable face, not merely any distant rock. Side labels refer to substantial readable roadside terrain, not thin verges; near_profile is the strongest observation of the pair, not correspondence of a single physical surface. A panorama may coexist with a dominant face. Presence/absence applies only to inspected images. Diagnostic colours were not treated as natural material classes. The contact-sheet observations remain AI proposals; four selected original PNG checks are recorded separately. This is not full original-PNG coverage, canonical human review, world footprints, GEO_FIX findings, D assignments or background-simplification approval. C was refined independently: the skyline of a B face alone and a bare sea horizon do not establish a separate C terrain region. Distinct coastal outcrops/landscape regions remain C candidates; borderline separation is uncertain. Near-side fields exclude flat shoulders and thin verges. Four requested original PNGs were visually inspected; station74 dominant-face classification and station100 forward near-side extent were refined, with C removed where only the dominant face or roadside forms supply the outline. Final side-code alignment: near_sides records only raised roadside wall/bank forms, excluding descending ground faces, flat shoulders and parapets. Descending contact may still need A detail and remains in the written reason. Unresolved raised-side extent at a bend is marked uncertain. No near_profile or B/C classification changed during this alignment.",
+  "original_checks": [
+    {
+      "frame_id": "window-0002-forward-00000",
+      "observed_detail": "The tall wall spans most of the upper frame and has readable broad planes, base contact and a shoulder-to-bank transition on the opposite side. Diagnostic colours do not identify natural material.",
+      "judgment_change_or_confirmation": "Station5 confirms wall profile and dominant_wall=present. Forward original alone does not establish C; paired C remains based on the separately inspected reverse contact view. No GEO_FIX conclusion."
+    },
+    {
+      "frame_id": "window-0006-forward-00000",
+      "observed_detail": "Near left terrain combines a sloping bank with short steeper sections; the outer side descends from the road. A separate broad slope and upper ridge form the distant composition.",
+      "judgment_change_or_confirmation": "Station20 retains near_profile=bank, forward left raised bank, dominant_wall=absent and panorama=present. The upper escarpment is subordinate to the broad slope panorama in this view; no high-detail assignment to the whole distant slope."
+    },
+    {
+      "frame_id": "window-0021-forward-00005",
+      "observed_detail": "A large rocky face beyond the bend has plainly readable major planes and a substantial projected outline. Dark regions are visible but their cause is not diagnosed.",
+      "judgment_change_or_confirmation": "Station74 changes dominant_wall uncertain->present and panorama uncertain->absent. The dominant face's own skyline/sea backdrop is not a second C region. Original image supports broad-form attention, not automatic microdetail or GEO_FIX."
+    },
+    {
+      "frame_id": "window-0030-forward-00001",
+      "observed_detail": "Tall right-side planes dominate; left foreground bank/contact is also substantial. Projecting roadside forms stand against a sea opening.",
+      "judgment_change_or_confirmation": "Station100 confirms dominant_wall=present and changes panorama uncertain->absent. Under the shared raised-bank/wall definition, forward near_sides remains right: the descending left contact still needs A attention but is excluded from the raised-side code. Reverse raised-side code is left."
+    }
+  ]
+}

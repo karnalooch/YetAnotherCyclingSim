@@ -1,0 +1,1216 @@
+{
+  "reviewer": "visibility_46_55",
+  "sheets_inspected": [
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55
+  ],
+  "stations": [
+    {
+      "station_index": 552,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Both roadside banks and an uphill cut are visible; the seaward view has a low distant ridge but no dominant broad wall.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 553,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Roadside cut faces and lower opposing banks frame the asphalt; the opposite view exposes a long escarpment and stepped upper slope. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 554,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Roadside cut faces and lower opposing banks frame the asphalt; the opposite view exposes a long escarpment and stepped upper slope. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 555,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Roadside cut faces and lower opposing banks frame the asphalt; the opposite view exposes a long escarpment and stepped upper slope. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 556,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Roadside cut faces and lower opposing banks frame the asphalt; the opposite view exposes a long escarpment and stepped upper slope. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 557,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Roadside cut faces and lower opposing banks frame the asphalt; the opposite view exposes a long escarpment and stepped upper slope. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 558,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Roadside cut faces and lower opposing banks frame the asphalt; the opposite view exposes a long escarpment and stepped upper slope. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 559,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Roadside cut faces and lower opposing banks frame the asphalt; the opposite view exposes a long escarpment and stepped upper slope. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 560,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Roadside cut faces and lower opposing banks frame the asphalt; the opposite view exposes a long escarpment and stepped upper slope. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 561,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Roadside cut faces and lower opposing banks frame the asphalt; the opposite view exposes a long escarpment and stepped upper slope. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 562,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Roadside cut faces and lower opposing banks frame the asphalt; the opposite view exposes a long escarpment and stepped upper slope. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 563,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Roadside cut faces and lower opposing banks frame the asphalt; the opposite view exposes a long escarpment and stepped upper slope. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 564,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close uphill cut faces contrast with lower downhill banks; reverse views show switchbacks beneath a readable distant escarpment and skyline. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 565,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close uphill cut faces contrast with lower downhill banks; reverse views show switchbacks beneath a readable distant escarpment and skyline. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 566,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close uphill cut faces contrast with lower downhill banks; reverse views show switchbacks beneath a readable distant escarpment and skyline. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 567,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "An uphill cut and low outer shoulder follow a crest bend; the seaward view is open and the inland upper slope lacks a dominant wall. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 568,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "An uphill cut and low outer shoulder follow a crest bend; the seaward view is open and the inland upper slope lacks a dominant wall. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 569,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close uphill cut faces contrast with lower downhill banks; reverse views show switchbacks beneath a readable distant escarpment and skyline. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 570,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close uphill cut faces contrast with lower downhill banks; reverse views show switchbacks beneath a readable distant escarpment and skyline. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 571,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close uphill cut faces contrast with lower downhill banks; reverse views show switchbacks beneath a readable distant escarpment and skyline. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 572,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close uphill cut faces contrast with lower downhill banks; reverse views show switchbacks beneath a readable distant escarpment and skyline. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 573,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close uphill cut faces contrast with lower downhill banks; reverse views show switchbacks beneath a readable distant escarpment and skyline. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 574,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close uphill cut faces contrast with lower downhill banks; reverse views show switchbacks beneath a readable distant escarpment and skyline. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 575,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close uphill cut faces contrast with lower downhill banks; reverse views show switchbacks beneath a readable distant escarpment and skyline. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 576,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Readably faceted roadside walls persist; views open to a valley escarpment and coast, with layered slopes beyond the immediate road. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 577,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Readably faceted roadside walls persist; views open to a valley escarpment and coast, with layered slopes beyond the immediate road.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 578,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Readably faceted roadside walls persist; views open to a valley escarpment and coast, with layered slopes beyond the immediate road.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 579,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Readably faceted roadside walls persist; views open to a valley escarpment and coast, with layered slopes beyond the immediate road.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 580,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Readably faceted roadside walls persist; views open to a valley escarpment and coast, with layered slopes beyond the immediate road.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 581,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Readably faceted roadside walls persist; views open to a valley escarpment and coast, with layered slopes beyond the immediate road.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 582,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Readably faceted roadside walls persist; views open to a valley escarpment and coast, with layered slopes beyond the immediate road. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 583,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Readably faceted roadside walls persist; views open to a valley escarpment and coast, with layered slopes beyond the immediate road. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 584,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Readably faceted roadside walls persist; views open to a valley escarpment and coast, with layered slopes beyond the immediate road. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 585,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Readably faceted roadside walls persist; views open to a valley escarpment and coast, with layered slopes beyond the immediate road. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 586,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Readably faceted roadside walls persist; views open to a valley escarpment and coast, with layered slopes beyond the immediate road. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 587,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Readably faceted roadside walls persist; views open to a valley escarpment and coast, with layered slopes beyond the immediate road. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 588,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Original reverse PNG resolves a large layered uphill wall on the right with readable planes and ledges (A contact plus B broad form). A separate distant triangular coastal ridge is visible center-left (C).",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 589,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "The cut lowers into banks beside bends; inland views show broad ground slopes and small crest forms while seaward views open to a horizon. The broad upper face is modest in screen area here; avoid upgrading every rocky patch to B.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 590,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "The cut lowers into banks beside bends; inland views show broad ground slopes and small crest forms while seaward views open to a horizon. The broad upper face is modest in screen area here; avoid upgrading every rocky patch to B. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 591,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "The cut lowers into banks beside bends; inland views show broad ground slopes and small crest forms while seaward views open to a horizon. The broad upper face is modest in screen area here; avoid upgrading every rocky patch to B. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 592,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "The cut lowers into banks beside bends; inland views show broad ground slopes and small crest forms while seaward views open to a horizon. The broad upper face is modest in screen area here; avoid upgrading every rocky patch to B. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 593,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "The cut lowers into banks beside bends; inland views show broad ground slopes and small crest forms while seaward views open to a horizon. The broad upper face is modest in screen area here; avoid upgrading every rocky patch to B. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 594,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "The cut lowers into banks beside bends; inland views show broad ground slopes and small crest forms while seaward views open to a horizon. The broad upper face is modest in screen area here; avoid upgrading every rocky patch to B. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 595,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "The cut lowers into banks beside bends; inland views show broad ground slopes and small crest forms while seaward views open to a horizon. The broad upper face is modest in screen area here; avoid upgrading every rocky patch to B. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 596,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "The cut lowers into banks beside bends; inland views show broad ground slopes and small crest forms while seaward views open to a horizon. The broad upper face is modest in screen area here; avoid upgrading every rocky patch to B. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 597,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "The cut lowers into banks beside bends; inland views show broad ground slopes and small crest forms while seaward views open to a horizon. The broad upper face is modest in screen area here; avoid upgrading every rocky patch to B. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 598,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "The cut lowers into banks beside bends; inland views show broad ground slopes and small crest forms while seaward views open to a horizon. The broad upper face is modest in screen area here; avoid upgrading every rocky patch to B. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 599,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "The cut lowers into banks beside bends; inland views show broad ground slopes and small crest forms while seaward views open to a horizon. The broad upper face is modest in screen area here; avoid upgrading every rocky patch to B. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 600,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Close cuts transition into lower banks; reverse views reveal a broad upper slope and forward views expose small ridge outcrops. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 601,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Close cuts transition into lower banks; reverse views reveal a broad upper slope and forward views expose small ridge outcrops. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 602,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Close cuts transition into lower banks; reverse views reveal a broad upper slope and forward views expose small ridge outcrops.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 603,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Close cuts transition into lower banks; reverse views reveal a broad upper slope and forward views expose small ridge outcrops.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 604,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Close cuts transition into lower banks; reverse views reveal a broad upper slope and forward views expose small ridge outcrops.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 605,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Close cuts transition into lower banks; reverse views reveal a broad upper slope and forward views expose small ridge outcrops.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 606,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Close cuts transition into lower banks; reverse views reveal a broad upper slope and forward views expose small ridge outcrops.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 607,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Close cuts transition into lower banks; reverse views reveal a broad upper slope and forward views expose small ridge outcrops.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 608,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Close cuts transition into lower banks; reverse views reveal a broad upper slope and forward views expose small ridge outcrops.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 609,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Close cuts transition into lower banks; reverse views reveal a broad upper slope and forward views expose small ridge outcrops.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 610,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Close cuts transition into lower banks; reverse views reveal a broad upper slope and forward views expose small ridge outcrops.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 611,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Close cuts transition into lower banks; reverse views reveal a broad upper slope and forward views expose small ridge outcrops.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 612,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Near cut faces bound the road, with a readable inland cliff rim and upper terrain; reverse view also opens toward the sea.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 613,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Near cut faces bound the road, with a readable inland cliff rim and upper terrain; reverse view also opens toward the sea.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 614,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Near cut faces bound the road, with a readable inland cliff rim and upper terrain; reverse view also opens toward the sea.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 615,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near cut faces bound the road, with a readable inland cliff rim and upper terrain; reverse view also opens toward the sea. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 616,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near cut faces bound the road, with a readable inland cliff rim and upper terrain; reverse view also opens toward the sea. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 617,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near cut faces bound the road, with a readable inland cliff rim and upper terrain; reverse view also opens toward the sea. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 618,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near cut faces bound the road, with a readable inland cliff rim and upper terrain; reverse view also opens toward the sea. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 619,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near cut faces bound the road, with a readable inland cliff rim and upper terrain; reverse view also opens toward the sea. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 620,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near cut faces bound the road, with a readable inland cliff rim and upper terrain; reverse view also opens toward the sea. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 621,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near cut faces bound the road, with a readable inland cliff rim and upper terrain; reverse view also opens toward the sea. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 622,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near cut faces bound the road, with a readable inland cliff rim and upper terrain; reverse view also opens toward the sea. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 623,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near cut faces bound the road, with a readable inland cliff rim and upper terrain; reverse view also opens toward the sea. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 624,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "The road enters and exits a two-sided cut; the central pairs show tall opposing vertical faces, while other pairs retain open coastal or ridge views.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 625,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "The road enters and exits a two-sided cut; the central pairs show tall opposing vertical faces, while other pairs retain open coastal or ridge views.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 626,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "The road enters and exits a two-sided cut; the central pairs show tall opposing vertical faces, while other pairs retain open coastal or ridge views.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 627,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "The road enters and exits a two-sided cut; the central pairs show tall opposing vertical faces, while other pairs retain open coastal or ridge views.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 628,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "The road enters and exits a two-sided cut; the central pairs show tall opposing vertical faces, while other pairs retain open coastal or ridge views.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 629,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "The road enters and exits a two-sided cut; the central pairs show tall opposing vertical faces, while other pairs retain open coastal or ridge views.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 630,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "The road enters and exits a two-sided cut; the central pairs show tall opposing vertical faces, while other pairs retain open coastal or ridge views.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 631,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "The road enters and exits a two-sided cut; the central pairs show tall opposing vertical faces, while other pairs retain open coastal or ridge views. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 632,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Tall opposing cut walls occupy much of the frame and expose broad vertical planes; close base contact needs A while major face form needs B.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 633,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Original forward PNG confirms dominant tall bilateral cuts (A base contacts plus B broad vertical faces). Through their opening a separate distant mountain ridge is visible (C), rather than merely the cut-wall outline.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 634,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Tall opposing cut walls occupy much of the frame and expose broad vertical planes; close base contact needs A while major face form needs B. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 635,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "The road enters and exits a two-sided cut; the central pairs show tall opposing vertical faces, while other pairs retain open coastal or ridge views.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 636,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "A tall stepped uphill face dominates forward-right and reverse-left, while the opposite side opens to a distinctive jagged mountain silhouette. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 637,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "A tall stepped uphill face dominates forward-right and reverse-left, while the opposite side opens to a distinctive jagged mountain silhouette. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 638,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "A tall stepped uphill face dominates forward-right and reverse-left, while the opposite side opens to a distinctive jagged mountain silhouette. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 639,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "A tall stepped uphill face dominates forward-right and reverse-left, while the opposite side opens to a distinctive jagged mountain silhouette. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 640,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "A tall stepped uphill face dominates forward-right and reverse-left, while the opposite side opens to a distinctive jagged mountain silhouette. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 641,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "A tall stepped uphill face dominates forward-right and reverse-left, while the opposite side opens to a distinctive jagged mountain silhouette. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 642,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "A tall stepped uphill face dominates forward-right and reverse-left, while the opposite side opens to a distinctive jagged mountain silhouette. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 643,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "A tall stepped uphill face dominates forward-right and reverse-left, while the opposite side opens to a distinctive jagged mountain silhouette. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 644,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "A tall stepped uphill face dominates forward-right and reverse-left, while the opposite side opens to a distinctive jagged mountain silhouette. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 645,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "A tall stepped uphill face dominates forward-right and reverse-left, while the opposite side opens to a distinctive jagged mountain silhouette. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 646,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "A tall stepped uphill face dominates forward-right and reverse-left, while the opposite side opens to a distinctive jagged mountain silhouette. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 647,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "A tall stepped uphill face dominates forward-right and reverse-left, while the opposite side opens to a distinctive jagged mountain silhouette. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 648,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large near cliff planes remain forward-right and reverse-left; the mountain ahead has readable large faces as well as a clear skyline. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 649,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large near cliff planes remain forward-right and reverse-left; the mountain ahead has readable large faces as well as a clear skyline. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 650,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large near cliff planes remain forward-right and reverse-left; the mountain ahead has readable large faces as well as a clear skyline. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 651,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large near cliff planes remain forward-right and reverse-left; the mountain ahead has readable large faces as well as a clear skyline. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 652,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large near cliff planes remain forward-right and reverse-left; the mountain ahead has readable large faces as well as a clear skyline. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 653,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large near cliff planes remain forward-right and reverse-left; the mountain ahead has readable large faces as well as a clear skyline. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 654,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large near cliff planes remain forward-right and reverse-left; the mountain ahead has readable large faces as well as a clear skyline. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 655,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large near cliff planes remain forward-right and reverse-left; the mountain ahead has readable large faces as well as a clear skyline. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 656,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large near cliff planes remain forward-right and reverse-left; the mountain ahead has readable large faces as well as a clear skyline. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 657,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large near cliff planes remain forward-right and reverse-left; the mountain ahead has readable large faces as well as a clear skyline. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 658,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large near cliff planes remain forward-right and reverse-left; the mountain ahead has readable large faces as well as a clear skyline. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 659,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large near cliff planes remain forward-right and reverse-left; the mountain ahead has readable large faces as well as a clear skyline. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 660,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large mountain faces, roadside cut walls and hairpin road contacts are readable; closing cuts limit the horizon in the final pairs. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 661,
+      "near_profile": "wall",
+      "near_sides_forward": "none",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Bridge or parapet road contacts lead toward a large central peak with readable broad relief; reverse view retains a tall near cut face. The central peak is B with silhouette importance; its outline is not a separate C region.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 662,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Large mountain faces, roadside cut walls and hairpin road contacts are readable; closing cuts limit the horizon in the final pairs.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 663,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Large mountain faces, roadside cut walls and hairpin road contacts are readable; closing cuts limit the horizon in the final pairs.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 664,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Large mountain faces, roadside cut walls and hairpin road contacts are readable; closing cuts limit the horizon in the final pairs.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 665,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Large mountain faces, roadside cut walls and hairpin road contacts are readable; closing cuts limit the horizon in the final pairs.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 666,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Large mountain faces, roadside cut walls and hairpin road contacts are readable; closing cuts limit the horizon in the final pairs.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 667,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large mountain faces, roadside cut walls and hairpin road contacts are readable; closing cuts limit the horizon in the final pairs. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 668,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large mountain faces, roadside cut walls and hairpin road contacts are readable; closing cuts limit the horizon in the final pairs. Separate distant C terrain is not established; a B face outline alone does not qualify.",
+      "confidence": "medium"
+    }
+  ],
+  "representative_originals": [
+    "window-0163-reverse-00001",
+    "window-0168-reverse-00002",
+    "window-0177-forward-00002",
+    "window-0181-forward-00004"
+  ],
+  "summary": "All 117 paired stations were visually inspected in sheets 046\u2013055. Near sides now record visibly raised roadside walls/banks only; flat shoulders and parapets do not qualify. A remains important on cuts and banks. Long escarpments and broad upper slopes warrant B candidates. The mountain at 181 is B with silhouette importance, not C merely because of its outline. Tall bilateral cut at 177 and sustained uphill cliff through 178\u2013181 need major face/contact attention. C is recorded only where a separate distant terrain region is visible; most B-face outlines and open sea horizons are insufficient and remain uncertain. These are AI proposal contact-sheet judgments: no world surface correspondence, confirmed D, natural material labels, geometry faults or simplification is established. Four original PNGs subsequently inspected: 0163 reverse resolves B and separate C, 0168 reverse confirms broad-slope B, 0177 forward resolves separate distant C through the cuts, and 0181 forward confirms B silhouette importance without C.",
+  "original_checks": [
+    {
+      "frame_id": "window-0163-reverse-00001",
+      "observed_detail": "Large layered right-hand wall, visibly distinct far triangular coastal ridge, and lower left road-edge terrain.",
+      "judgment_change_or_confirmation": "Station 588 B uncertain to present and C present confirmed; full PNG makes the distant C ridge unambiguous."
+    },
+    {
+      "frame_id": "window-0168-reverse-00002",
+      "observed_detail": "Broad upper Landscape slope fills the upper frame with rocky bands and ledges; near right cut interfaces with road.",
+      "judgment_change_or_confirmation": "Station 603 B present confirmed for readable broad upper terrain. Near reverse right confirmed. C depends on the other paired view, not this upper slope skyline alone."
+    },
+    {
+      "frame_id": "window-0177-forward-00002",
+      "observed_detail": "Tall bilateral cut faces occupy most of the frame and reveal broad vertical planes; a separate mountain ridge is visible through the opening.",
+      "judgment_change_or_confirmation": "Station 633 A both sides and B present confirmed; C uncertain to present for the separate background ridge."
+    },
+    {
+      "frame_id": "window-0181-forward-00004",
+      "observed_detail": "Large central mountain has readable broad faces, ledges and irregular summit. Foreground bridge/parapets define contacts; open sea is behind the same massif.",
+      "judgment_change_or_confirmation": "Station 661 B present and C absent confirmed. Peak outline has silhouette importance but is not a separate C region. Forward near sides none excludes parapets and terrain below the bridge."
+    }
+  ]
+}

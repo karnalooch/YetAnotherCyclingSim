@@ -1,0 +1,348 @@
+{
+  "source_revision": "c6da9b518e2244562927371d68224d448628cf19",
+  "capture_revision": "b1ea05b33b9f3208e7aeb6884f1a67792d9c6121",
+  "source_csv": "../sa-calobra-tpp-survey-20261008/frames.csv",
+  "source_csv_sha256": "15e0a2350c613bf52bfb1354192043ca0c6cd785493c59e7721305b67de099a3",
+  "contact_sheets": [
+    {
+      "file": "contact-000.jpg",
+      "size_bytes": 483579,
+      "sha256": "6f90d54906adad9a0f6831b93eb91413e99a9efbfc76bd9f8eeeb20d1abb4c19",
+      "git_blob_sha1": "1f1d392a002b685ef6f017ca9222cd2905c81c18"
+    },
+    {
+      "file": "contact-001.jpg",
+      "size_bytes": 490874,
+      "sha256": "c771c83331f0241d1380c37dbd8417ab683d5c3b4f345b5cd90f4f3667c23cec",
+      "git_blob_sha1": "de9347bddfd476e02e12bc9c9edf26ddbbdfe50d"
+    },
+    {
+      "file": "contact-002.jpg",
+      "size_bytes": 481687,
+      "sha256": "c379f5ea359ac4de1dc730ceb5c2c2ac88ff819cdd408d2814ec3f7833bfc71f",
+      "git_blob_sha1": "0d7c1415606316b9d986b3e35aa7a94b2a179942"
+    },
+    {
+      "file": "contact-003.jpg",
+      "size_bytes": 513772,
+      "sha256": "ccbb8db67ae12bf78786a9dfe0f2a9c6166674657fa1e5b39ad70c5d634ad3d2",
+      "git_blob_sha1": "f4aae3a96fa0705aa975f810b8b6c2e92606b3e0"
+    },
+    {
+      "file": "contact-004.jpg",
+      "size_bytes": 507435,
+      "sha256": "8071cb8e8d330612fb7789e8f7cb530285e28e549ea524dc7c1c0c230f42207f",
+      "git_blob_sha1": "2a1b976e7545c43512c1fb18c279c904b08cc6e7"
+    },
+    {
+      "file": "contact-005.jpg",
+      "size_bytes": 511866,
+      "sha256": "dd5f4bdfccd7d192b7b3519f8ae29603a9d49ac0f0f19ad0f0d829aee2f8ee2e",
+      "git_blob_sha1": "10277a47791bd0f390b3c3a90052f823e8d934fe"
+    },
+    {
+      "file": "contact-006.jpg",
+      "size_bytes": 511049,
+      "sha256": "26c69c25d2411567ac119362f1f1e0eb7dfddbb4ebf241f0624fe7f7f646e90c",
+      "git_blob_sha1": "41bdad64975e2593188240c0e91fd3ab41665637"
+    },
+    {
+      "file": "contact-007.jpg",
+      "size_bytes": 505305,
+      "sha256": "fe9e3b7577f1fab5801947a3d4fa0b2533b8cbf1f8e9f9216fe8bf38ff34355f",
+      "git_blob_sha1": "70b0c46a73474a6255e6d4fcc399828745ccf0bd"
+    },
+    {
+      "file": "contact-008.jpg",
+      "size_bytes": 499927,
+      "sha256": "34ad734ce01ccd855c8a60948d9fd7fbf42df308ce29afe6a23b8177f87fd5d4",
+      "git_blob_sha1": "1fec3fcd581211f615a5d4ea8830f27bbaae00b9"
+    },
+    {
+      "file": "contact-009.jpg",
+      "size_bytes": 468391,
+      "sha256": "beac65d67b47b2ee5f1e1ea5353aa00accac4f88a3bdbf265f93f3a6155acd24",
+      "git_blob_sha1": "939eb84fc9dd7c2ca2221070d89eca4d3fd31af1"
+    },
+    {
+      "file": "contact-010.jpg",
+      "size_bytes": 490569,
+      "sha256": "b25dd86fb20ba622e494ad74603266e3fc40dd2c7cc1ec96a2b00bd5221bf673",
+      "git_blob_sha1": "88dc0fac4dfc034967931a434e228866c28f38e5"
+    },
+    {
+      "file": "contact-011.jpg",
+      "size_bytes": 504599,
+      "sha256": "15cf24e189a1e4ddf50db98d2b12e9d8fb1d59068aef8a18c5b1804a48c18e81",
+      "git_blob_sha1": "3d9a72aef21200526f2690a313e156d025494d13"
+    },
+    {
+      "file": "contact-012.jpg",
+      "size_bytes": 506346,
+      "sha256": "c500ef67ff29bb05f4f42a4e02bf0d7ae95f1ba7e27992b8a4fe06b0a2ecdeb9",
+      "git_blob_sha1": "dce2ffdf2b500c2abfe6630b7de15d304202f29d"
+    },
+    {
+      "file": "contact-013.jpg",
+      "size_bytes": 499537,
+      "sha256": "2c2cc2f80b999148bbec558b1ca5b0e332fa93bc40412fda344392975871fc85",
+      "git_blob_sha1": "a3879b03e685dfcaba4951266e5ed579fbf70cb5"
+    },
+    {
+      "file": "contact-014.jpg",
+      "size_bytes": 488977,
+      "sha256": "aceb4dd64070a820c5288327ee7da2dabc84bf717c4736314cc9d3533f65f739",
+      "git_blob_sha1": "1a3f86204511bc2343b98129825c740879d10e0e"
+    },
+    {
+      "file": "contact-015.jpg",
+      "size_bytes": 487494,
+      "sha256": "424f009d7b4242a98a304679762a1f6d817e16d99f0d05c82d0917d6b1c80695",
+      "git_blob_sha1": "c28ba4f48b9ca874eee0aac3ccc595d5d3319a62"
+    },
+    {
+      "file": "contact-016.jpg",
+      "size_bytes": 501469,
+      "sha256": "2c1e36b7793adb9cd9ea7e9a7a74769a3f5d1fd2fdaaca5a4ddb43e0989c086d",
+      "git_blob_sha1": "3d161c4991ade37ff1cb76ad8d83e55fa336ea30"
+    },
+    {
+      "file": "contact-017.jpg",
+      "size_bytes": 479392,
+      "sha256": "a045b2ed236245cdd975134f69e73e4832a428b8e9517440b4c3f857278cd6d7",
+      "git_blob_sha1": "c2d613436a3405012cda650d9dc3d5d6f7758a15"
+    },
+    {
+      "file": "contact-018.jpg",
+      "size_bytes": 470690,
+      "sha256": "c1b212eec62a44da1ff96c66f23b4adf55e75a0628cd27d73a2be89574715d9e",
+      "git_blob_sha1": "f967ca92b8a6d7d2843330becde4f9d3041186ea"
+    },
+    {
+      "file": "contact-019.jpg",
+      "size_bytes": 475343,
+      "sha256": "b092aa4655f077d9ea0f23b319f12d18819411a3fc588de8d4868a90c71e137b",
+      "git_blob_sha1": "9659876841ef465e47ff8cc65c695be928a76e48"
+    },
+    {
+      "file": "contact-020.jpg",
+      "size_bytes": 460618,
+      "sha256": "eee89b09e4e33b6b88625506f9fe80aa773d46a5cd0b175ab6fc457cb03ef86d",
+      "git_blob_sha1": "fa1db8120843c4818259091a9eddbce75b800ab9"
+    },
+    {
+      "file": "contact-021.jpg",
+      "size_bytes": 478853,
+      "sha256": "b8dde1706182e29bc5bd1771060d4ea9211ee1669b7a3578eb613f6622ec5325",
+      "git_blob_sha1": "da14f38233d327e1db4636e312c88c06836368d5"
+    },
+    {
+      "file": "contact-022.jpg",
+      "size_bytes": 461175,
+      "sha256": "844951c940926824a455f6b76c26bd057824b57dfeb23e9040e5e2bba700157e",
+      "git_blob_sha1": "31c230d5512b98268d1d5222a461fdc270cbad81"
+    },
+    {
+      "file": "contact-023.jpg",
+      "size_bytes": 429724,
+      "sha256": "a0a72a6fbed8c8f8446e82550a8c18dcfa6019286fa2a0d15bc67d6128a243e9",
+      "git_blob_sha1": "a1127c6e7e35acb2f1c05ab446beff220e00a5d3"
+    },
+    {
+      "file": "contact-024.jpg",
+      "size_bytes": 469686,
+      "sha256": "e61403bab685d162b8876c25a82afbb3768daa0229a05d40cc811ad499e28da1",
+      "git_blob_sha1": "5ee61f174b044301bc86ce99e2a5aa6bcc3d8b08"
+    },
+    {
+      "file": "contact-025.jpg",
+      "size_bytes": 506108,
+      "sha256": "1c29ef9f9e38cc1f3f6efcfe6eb87f96e0132e5db09498cc8d36376a703ae0e8",
+      "git_blob_sha1": "4455aaa0e2ddae5df8e2360345e595f3d5ddef04"
+    },
+    {
+      "file": "contact-026.jpg",
+      "size_bytes": 509373,
+      "sha256": "39dfb3898fa00972fd1ae5fa0357c4579cfecc987b69034e011684447826cb62",
+      "git_blob_sha1": "bf600a5c944197de53826a968779cdb4ce0c71f4"
+    },
+    {
+      "file": "contact-027.jpg",
+      "size_bytes": 488506,
+      "sha256": "64e9bc496c96194617f33127a9edd82e31be6428cdcff2cf3fa40a942ef9f4c0",
+      "git_blob_sha1": "f4f08d1fd1ea80016cbfbabcc9379194edef3ebe"
+    },
+    {
+      "file": "contact-028.jpg",
+      "size_bytes": 456890,
+      "sha256": "1f0a1b0e4951c14d659ec3fbe23a3b29af79184718495d2651e96d984891d985",
+      "git_blob_sha1": "ff6ff21c951955ed94c3c3aa954b51cf99331fc9"
+    },
+    {
+      "file": "contact-029.jpg",
+      "size_bytes": 470227,
+      "sha256": "fc889a72303ae8ee688a2f34ba3a498731acb4b902bfa7091031c6495f0ef7f2",
+      "git_blob_sha1": "cce9919232e9ab1c8bc18a21d27c297c132ea4cb"
+    },
+    {
+      "file": "contact-030.jpg",
+      "size_bytes": 491370,
+      "sha256": "2fdd745edaab9ddbc9187bcd0ccdffcd4a0e2211b06d1070252a4cdec5eae084",
+      "git_blob_sha1": "ebf78dcd2463eda29fd1a19eb5ac86de836db6e8"
+    },
+    {
+      "file": "contact-031.jpg",
+      "size_bytes": 536118,
+      "sha256": "9fbc508fde1ec520b96eae310c34274b8c25c1ed047f2f43053494b30b3733c9",
+      "git_blob_sha1": "cdbd3d260762c934b3cd289be98a66ad367b084f"
+    },
+    {
+      "file": "contact-032.jpg",
+      "size_bytes": 491607,
+      "sha256": "ad98bc03f660cede5d1c1f39dbe4facf988ae62d7d26179cf4ee90c012b49a8e",
+      "git_blob_sha1": "c71238b81d3ac15d49826e369a75a2c8d177f3e3"
+    },
+    {
+      "file": "contact-033.jpg",
+      "size_bytes": 470251,
+      "sha256": "839c1953b451a247934a6d96a4bc1718efaf39ff95d769277e3707ca25b3161e",
+      "git_blob_sha1": "0025b4a8abc9f5ac1db8249fd526126a42169f27"
+    },
+    {
+      "file": "contact-034.jpg",
+      "size_bytes": 520867,
+      "sha256": "ef5c9e6820bccd0b9df57a0c2e68d1f1b34374570fb15a75bcaee51cc75fd948",
+      "git_blob_sha1": "9ce4a35abb34eabf5c9931e6b308f57e330a07b8"
+    },
+    {
+      "file": "contact-035.jpg",
+      "size_bytes": 488830,
+      "sha256": "fe3325d98228344bb9a29925293cd79ae922e0645dd931206cdd287e707191e4",
+      "git_blob_sha1": "c97275862592fcf22adc1f6c6ecb722408c178ca"
+    },
+    {
+      "file": "contact-036.jpg",
+      "size_bytes": 518099,
+      "sha256": "ccdecc688b975d4895539d6e967c711057966bb0a0fec5f3f17b3cd87d55bee6",
+      "git_blob_sha1": "e75673c882b7b2407bc23d939f9d2907fd49fcbb"
+    },
+    {
+      "file": "contact-037.jpg",
+      "size_bytes": 543074,
+      "sha256": "a2689cb0b1bbecdddaac484f9fb2c7e3ac26e7f27d850e424d8cb03da44ecc1b",
+      "git_blob_sha1": "7d71cab190821f1c3f33745db21f3494da9c8469"
+    },
+    {
+      "file": "contact-038.jpg",
+      "size_bytes": 499839,
+      "sha256": "ee1992f71f9ddc84cb810e1d6994071a0ebb3e60cbee7f672bcb4b94d7813e34",
+      "git_blob_sha1": "ed84a20331ec0d341c2ecbe9a5902a032e1d1090"
+    },
+    {
+      "file": "contact-039.jpg",
+      "size_bytes": 484080,
+      "sha256": "5367b8b2cfedbee64d9c5cacd5007bb6d8b21c871cb2248c0076f9de09bfb8e5",
+      "git_blob_sha1": "d32f3e7371db18270604a95a0dda08749f06a645"
+    },
+    {
+      "file": "contact-040.jpg",
+      "size_bytes": 470841,
+      "sha256": "5770f920e9ba5c62723213ecb151865bb21e991e9faf3943eb9a7273a1fc6245",
+      "git_blob_sha1": "c7789164c0159c97da713f1f158b5d552f898c1d"
+    },
+    {
+      "file": "contact-041.jpg",
+      "size_bytes": 481616,
+      "sha256": "d17d2f5b7e52e4e97acdfc80e1b6062dacdb0aef6246548d6760ac2726d3119c",
+      "git_blob_sha1": "332c208dc9ba71ff4d58203c010e11011fc2b821"
+    },
+    {
+      "file": "contact-042.jpg",
+      "size_bytes": 470756,
+      "sha256": "ab997a365f492130633265f25c9153665a996c0833b66a47afd1b75cab59f358",
+      "git_blob_sha1": "61c4f10601074970f9070ba44e8cf525f30197fc"
+    },
+    {
+      "file": "contact-043.jpg",
+      "size_bytes": 510445,
+      "sha256": "3acb04138169f0b0a308ab9ed6c28291b9d880b1d6449da9132b5d2ce0d60e9a",
+      "git_blob_sha1": "40a5cbd84bcd7092ae336a12c1917c883d080e86"
+    },
+    {
+      "file": "contact-044.jpg",
+      "size_bytes": 520878,
+      "sha256": "784ef4fc968cc3d7290dc8aa68d087469b86f5210a96593b88169219596f272c",
+      "git_blob_sha1": "26fb654a70a202e8d46733f915e5eaba45297189"
+    },
+    {
+      "file": "contact-045.jpg",
+      "size_bytes": 490953,
+      "sha256": "16c4407d11fa4b8ef49c655c0bdca6eb4f1d8ab597d26f24f847fd81b2cd6257",
+      "git_blob_sha1": "f2af3636469a2bb9a9968d4501eeb9209ff4cd61"
+    },
+    {
+      "file": "contact-046.jpg",
+      "size_bytes": 502339,
+      "sha256": "684371961e136c1ab5089f710391eba6c1fb7cc41db03af77f17c4230002957c",
+      "git_blob_sha1": "b5b690d7594d07fcdb42622a3dae4f3c732087ef"
+    },
+    {
+      "file": "contact-047.jpg",
+      "size_bytes": 478495,
+      "sha256": "1f3c5a16b1331d8247844830946528d9979fe1846e6f7696c79b0ac5429f333c",
+      "git_blob_sha1": "5da7e48bc6c5eeb35026d8b5a661e6375647bbad"
+    },
+    {
+      "file": "contact-048.jpg",
+      "size_bytes": 486332,
+      "sha256": "738d07a5545c1766fc2381c844e2d2832ab250af4968858d3f7dc242efb17739",
+      "git_blob_sha1": "c7293834556f2457e2cf52f8601568bfaf065983"
+    },
+    {
+      "file": "contact-049.jpg",
+      "size_bytes": 480732,
+      "sha256": "a5b4afd7657582a51d91bdd6aead8385b9708d86c3cddbb0f39081524d12ea53",
+      "git_blob_sha1": "7b836f59af0342c5d68fcf2f2fba9ee5d7af87a3"
+    },
+    {
+      "file": "contact-050.jpg",
+      "size_bytes": 476655,
+      "sha256": "eb5fcc662c6bd11fe2d2b8e378c2642a99cc5f2701d4fffa2358a5e0757f01a7",
+      "git_blob_sha1": "731303f52b991c9f55f7342efcfe7b80e49cd0ca"
+    },
+    {
+      "file": "contact-051.jpg",
+      "size_bytes": 489250,
+      "sha256": "2565ea6cb4297ea2b50203f61c8c787faaa9af8ddd61307e3aa6cd0eb4bd4a1d",
+      "git_blob_sha1": "d65a709f8b950539a920554489c5b0197f49dcde"
+    },
+    {
+      "file": "contact-052.jpg",
+      "size_bytes": 458319,
+      "sha256": "4c2f25d9c7fc54d4f047aa4b996ee5eeaaad4387fa7f6ec63fe1cfd9fa1ce06e",
+      "git_blob_sha1": "188bd5c45e539f7e7694913b99f10f87b8fb0d58"
+    },
+    {
+      "file": "contact-053.jpg",
+      "size_bytes": 482712,
+      "sha256": "f7a028ddd360ce37c4a7515da40d5ef917dd967563bd8c7ece60734d0c2abce5",
+      "git_blob_sha1": "b0da079882ba5d5828d3fcd3753f75bd79a72656"
+    },
+    {
+      "file": "contact-054.jpg",
+      "size_bytes": 453023,
+      "sha256": "b77d6e76a24e191238dab377c37991647fa7131db998777e7284b3d94bc64932",
+      "git_blob_sha1": "43c7836161ac0ac6538e0f6cc00774277a3a1644"
+    },
+    {
+      "file": "contact-055.jpg",
+      "size_bytes": 360288,
+      "sha256": "54f528c195e11fadc7e9560ed36c650375033d56ef9586a108d1585eef8839cd",
+      "git_blob_sha1": "c21dfaf7200350de01a5be6f9b1fc79ede274536"
+    }
+  ],
+  "archive_oid": "f9ad39ae59a16dc1fc4615ef10ca950096a94d443bea4dcb0e624284000a0cab",
+  "whole_archive_hash_recomputed": false,
+  "visual_review_basis": "56 unchanged contact sheets;24 original PNG spot checks. Not a review of every original PNG.",
+  "original_check_count": 24
+}

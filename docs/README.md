@@ -163,6 +163,8 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 
 ## Evidence, experiments and history
 
+- [Sa Calobra roadside visibility and detail prestudy — 2026-10-08](experiments/sa-calobra-roadside-visibility-prestudy-20261008/README.md) — complete contact screening of 1,338 directional images / 669 pairs, 24 original-PNG spot checks, full-survey observation maps and a meshes/layers/generation guide. AI proposals; physical footprints and owner review pending; D unconfirmed.
+
 - [Sa Calobra detail planning map — 2026-10-08](experiments/sa-calobra-detail-planning-map-20261008/README.md) — north-up observation map, 669 paired stations in 185 disconnected windows and six proposed location cards; offline navigation and draft-note export. Surface footprints remain unresolved; Street View excluded.
 
 - [Sa Calobra original-PNG surface detail proposals — 2026-10-08](experiments/sa-calobra-surface-detail-review-20261008/README.md) — six AI-proposed location cards, twelve unchanged originals and separate ROI overlays; physical mapping pending; prepared Street View links retained as history and excluded from the current scope.

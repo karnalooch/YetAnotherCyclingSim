@@ -1,0 +1,1125 @@
+{
+  "reviewer": "/root/visibility_27_35",
+  "sheets_inspected": [
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35
+  ],
+  "stations": [
+    {
+      "station_index": 324,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Raised roadside banks frame the bend; a broad fractured upper rock face and its skyline remain readable. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 325,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Raised roadside banks frame the bend; a broad fractured upper rock face and its skyline remain readable. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 326,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "The forward cut encloses both sides; reverse opens onto a distinct rocky summit above lower roadside banks. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 327,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Tall roadside cuts enclose the carriageway; broad upper rock faces remain prominent, with little separate distant skyline.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 328,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Tall roadside cuts enclose the carriageway; broad upper rock faces remain prominent, with little separate distant skyline.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 329,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Tall roadside cuts enclose the carriageway; broad upper rock faces remain prominent, with little separate distant skyline.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 330,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "absent",
+      "reason": "A close wall occupies the forward view and tall reverse cut fills the left; separate background face size is unclear.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 331,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "A tall uphill roadside cut dominates one side; the other side opens to a landform ridge, lower winding road and distant horizon. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 332,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "A tall uphill roadside cut dominates one side; the other side opens to a landform ridge, lower winding road and distant horizon. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 333,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "A tall uphill roadside cut dominates one side; the other side opens to a landform ridge, lower winding road and distant horizon. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 334,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "A tall uphill roadside cut dominates one side; the other side opens to a landform ridge, lower winding road and distant horizon. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 335,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "A tall uphill roadside cut dominates one side; the other side opens to a landform ridge, lower winding road and distant horizon. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 336,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "Long upright roadside cut and visible base dominate; a thin receding mountain slope forms the skyline across the open side. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 337,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "Long upright roadside cut and visible base dominate; a thin receding mountain slope forms the skyline across the open side. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 338,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "Long upright roadside cut and visible base dominate; a thin receding mountain slope forms the skyline across the open side. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 339,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "Long upright roadside cut and visible base dominate; a thin receding mountain slope forms the skyline across the open side. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 340,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "Long upright roadside cut and visible base dominate; a thin receding mountain slope forms the skyline across the open side. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 341,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "Long upright roadside cut and visible base dominate; a thin receding mountain slope forms the skyline across the open side. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 342,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "Long upright roadside cut and visible base dominate; a thin receding mountain slope forms the skyline across the open side. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 343,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Long high roadside cut persists; reverse reveals some upper valley rock face, partly hidden behind the cut, while forward has an open descending ridge. C proposal refers to a separate coastal ridge or rocky projection beyond the near cut, not the main B-face outline; depth remains preliminary.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 344,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Long high roadside cut persists; reverse reveals some upper valley rock face, partly hidden behind the cut, while forward has an open descending ridge. C proposal refers to a separate coastal ridge or rocky projection beyond the near cut, not the main B-face outline; depth remains preliminary.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 345,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Long high roadside cut persists; reverse reveals some upper valley rock face, partly hidden behind the cut, while forward has an open descending ridge. C proposal refers to a separate coastal ridge or rocky projection beyond the near cut, not the main B-face outline; depth remains preliminary.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 346,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Long high roadside cut persists; reverse reveals some upper valley rock face, partly hidden behind the cut, while forward has an open descending ridge. C proposal refers to a separate coastal ridge or rocky projection beyond the near cut, not the main B-face outline; depth remains preliminary.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 347,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Long high roadside cut persists; reverse reveals some upper valley rock face, partly hidden behind the cut, while forward has an open descending ridge. C proposal refers to a separate coastal ridge or rocky projection beyond the near cut, not the main B-face outline; depth remains preliminary.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 348,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near uphill wall remains large; reverse adds a broad steep upper valley face, while the forward receding ridge outlines the sea-facing slope. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 349,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near uphill wall remains large; reverse adds a broad steep upper valley face, while the forward receding ridge outlines the sea-facing slope. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 350,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near uphill wall remains large; reverse adds a broad steep upper valley face, while the forward receding ridge outlines the sea-facing slope. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 351,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near uphill wall remains large; reverse adds a broad steep upper valley face, while the forward receding ridge outlines the sea-facing slope. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 352,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near uphill wall remains large; reverse adds a broad steep upper valley face, while the forward receding ridge outlines the sea-facing slope. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 353,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near uphill wall remains large; reverse adds a broad steep upper valley face, while the forward receding ridge outlines the sea-facing slope. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 354,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near uphill wall remains large; reverse adds a broad steep upper valley face, while the forward receding ridge outlines the sea-facing slope. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 355,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near uphill wall remains large; reverse adds a broad steep upper valley face, while the forward receding ridge outlines the sea-facing slope. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 356,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near uphill wall remains large; reverse adds a broad steep upper valley face, while the forward receding ridge outlines the sea-facing slope. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 357,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "The road turns past a close cut with a dark strip at its base; the separate upper rock face is partly obscured by the bend. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 358,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Original forward PNG confirms a broad stepped rock massif dominating the upper frame (B) and close banks around the road bend (A). No visually separate distant C region is established in this pair; the massif outline stays protected within B.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 359,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "The bend exchanges the close uphill wall between sides; reverse shows a substantial upper valley cliff, forward a receding coastal ridge. C proposal refers to a separate coastal ridge or rocky projection beyond the near cut, not the main B-face outline; depth remains preliminary.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 360,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Both bend banks are visible; forward exposes a broad broken upper rock face and skyline, reverse a large close cut. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 361,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "absent",
+      "reason": "Low raised banks and terraced ground surround the bend; reverse opens to a receding coastal slope and horizon. The sea horizon and outline of the near roadside slope alone do not establish C.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 362,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Sloping roadside banks frame the turn; reverse includes a separate rocky flank, but its dominant-face status needs a larger frame. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 363,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Low cut banks and ground terraces flank the road; the coastal slope outline is readable without a separate dominant massif. C proposal refers to a separate coastal ridge or rocky projection beyond the near cut, not the main B-face outline; depth remains preliminary.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 364,
+      "near_profile": "bank",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "absent",
+      "reason": "Low cut banks and ground terraces flank the road; the coastal slope outline is readable without a separate dominant massif. The sea horizon and outline of the near roadside slope alone do not establish C.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 365,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "Close upright cut and base contact are prominent; the upper slope ridge stays visible beyond the receding wall. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 366,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "Close upright cut and base contact are prominent; the upper slope ridge stays visible beyond the receding wall. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 367,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Close upright cut and base contact are prominent; the upper slope ridge stays visible beyond the receding wall. C proposal refers to a separate coastal ridge or rocky projection beyond the near cut, not the main B-face outline; depth remains preliminary.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 368,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Close upright cut and base contact are prominent; the upper slope ridge stays visible beyond the receding wall. C proposal refers to a separate coastal ridge or rocky projection beyond the near cut, not the main B-face outline; depth remains preliminary.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 369,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Forward opens onto a broad steep rock flank and receding coastal outline; reverse retains a large nearby uphill wall. C proposal refers to a separate coastal ridge or rocky projection beyond the near cut, not the main B-face outline; depth remains preliminary.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 370,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large near cuts flank the road in opposite directions, while a substantial fractured mountain face rises above the road with a readable upper outline. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 371,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large near cuts flank the road in opposite directions, while a substantial fractured mountain face rises above the road with a readable upper outline. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 372,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large near cuts flank the road in opposite directions, while a substantial fractured mountain face rises above the road with a readable upper outline. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 373,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large near cuts flank the road in opposite directions, while a substantial fractured mountain face rises above the road with a readable upper outline. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 374,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large near cuts flank the road in opposite directions, while a substantial fractured mountain face rises above the road with a readable upper outline. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 375,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large near cuts flank the road in opposite directions, while a substantial fractured mountain face rises above the road with a readable upper outline. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 376,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large near cuts flank the road in opposite directions, while a substantial fractured mountain face rises above the road with a readable upper outline. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 377,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large near cuts flank the road in opposite directions, while a substantial fractured mountain face rises above the road with a readable upper outline. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 378,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Large near cuts flank the road in opposite directions, while a substantial fractured mountain face rises above the road with a readable upper outline. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 379,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near uphill cut continues, reverse opens onto broad valley slopes and major rock forms; forward shows the descending coastal ridge. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 380,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Roadside cut is legible at close range; reverse exposes a broad textured valley wall and forward shows a descending coastal landform. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 381,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Roadside cut is legible at close range; reverse exposes a broad textured valley wall and forward shows a descending coastal landform. C proposal refers to a separate coastal ridge or rocky projection beyond the near cut, not the main B-face outline; depth remains preliminary.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 382,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Roadside cut is legible at close range; reverse exposes a broad textured valley wall and forward shows a descending coastal landform. C proposal refers to a separate coastal ridge or rocky projection beyond the near cut, not the main B-face outline; depth remains preliminary.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 383,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Large nearby wall dominates; distant upper peaks and valley outline are visible, but separate broad-face prominence is marginal in the small sheets. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 384,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Large nearby wall dominates; distant upper peaks and valley outline are visible, but separate broad-face prominence is marginal in the small sheets. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 385,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Large nearby wall dominates; distant upper peaks and valley outline are visible, but separate broad-face prominence is marginal in the small sheets. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 386,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Large nearby wall dominates; distant upper peaks and valley outline are visible, but separate broad-face prominence is marginal in the small sheets. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 387,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close uphill wall hugs the road; reverse reveals a substantial valley massif above and across the road, with jagged skyline and forward coastal outline. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 388,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close uphill wall hugs the road; reverse reveals a substantial valley massif above and across the road, with jagged skyline and forward coastal outline. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 389,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close uphill wall hugs the road; reverse reveals a substantial valley massif above and across the road, with jagged skyline and forward coastal outline. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 390,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close uphill wall hugs the road; reverse reveals a substantial valley massif above and across the road, with jagged skyline and forward coastal outline. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 391,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close uphill wall hugs the road; reverse reveals a substantial valley massif above and across the road, with jagged skyline and forward coastal outline. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 392,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close uphill wall hugs the road; reverse reveals a substantial valley massif above and across the road, with jagged skyline and forward coastal outline. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 393,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close uphill wall hugs the road; reverse reveals a substantial valley massif above and across the road, with jagged skyline and forward coastal outline. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 394,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close uphill wall hugs the road; reverse reveals a substantial valley massif above and across the road, with jagged skyline and forward coastal outline. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 395,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close uphill wall hugs the road; reverse reveals a substantial valley massif above and across the road, with jagged skyline and forward coastal outline. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 396,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close uphill wall hugs the road; reverse reveals a substantial valley massif above and across the road, with jagged skyline and forward coastal outline. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 397,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close uphill wall hugs the road; reverse reveals a substantial valley massif above and across the road, with jagged skyline and forward coastal outline. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 398,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Original forward PNG resolves a broad steep rocky mountain flank on the right (B) and separate lower rocky coastal peaks on the left (C); near roadside banks remain visible and the paired reverse view has a close tall wall (A). Physical footprints and depth are still unresolved.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 399,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "The forward hairpin opens toward a triangular mountain flank and horizon; reverse is almost entirely a close tall wall, so broad-face prominence needs original inspection. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 400,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Uphill cut changes sides after the turn; forward reveals large opposing valley slopes, reverse keeps a readable descending coastal ridge. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 401,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Uphill cut changes sides after the turn; forward reveals large opposing valley slopes, reverse keeps a readable descending coastal ridge. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 402,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Uphill cut changes sides after the turn; forward reveals large opposing valley slopes, reverse keeps a readable descending coastal ridge. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 403,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Uphill cut changes sides after the turn; forward reveals large opposing valley slopes, reverse keeps a readable descending coastal ridge. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 404,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Uphill cut changes sides after the turn; forward reveals large opposing valley slopes, reverse keeps a readable descending coastal ridge. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 405,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Uphill cut changes sides after the turn; forward reveals large opposing valley slopes, reverse keeps a readable descending coastal ridge. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 406,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Hairpin exposes low nearby rocky projections against the horizon; reverse shows a close wall without a distinct broad background face. C proposal refers to a separate coastal ridge or rocky projection beyond the near cut, not the main B-face outline; depth remains preliminary.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 407,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close road cut persists; reverse contains a broad rocky mountain mass and jagged summit, while forward slopes descend toward the horizon. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 408,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close road cut persists; reverse contains a broad rocky mountain mass and jagged summit, while forward slopes descend toward the horizon. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 409,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close road cut persists; reverse contains a broad rocky mountain mass and jagged summit, while forward slopes descend toward the horizon. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 410,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close road cut persists; reverse contains a broad rocky mountain mass and jagged summit, while forward slopes descend toward the horizon. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 411,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close road cut persists; reverse contains a broad rocky mountain mass and jagged summit, while forward slopes descend toward the horizon. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 412,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close road cut persists; reverse contains a broad rocky mountain mass and jagged summit, while forward slopes descend toward the horizon. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 413,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close road cut persists; reverse contains a broad rocky mountain mass and jagged summit, while forward slopes descend toward the horizon. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 414,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close road cut persists; reverse contains a broad rocky mountain mass and jagged summit, while forward slopes descend toward the horizon. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 415,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close road cut persists; reverse contains a broad rocky mountain mass and jagged summit, while forward slopes descend toward the horizon. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 416,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Close road cut persists; reverse contains a broad rocky mountain mass and jagged summit, while forward slopes descend toward the horizon. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 417,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near cuts are readable on both travel directions; a broad diagonal slope and broken distant summit remain visible above the road. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 418,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near cuts are readable on both travel directions; a broad diagonal slope and broken distant summit remain visible above the road. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 419,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near cuts are readable on both travel directions; a broad diagonal slope and broken distant summit remain visible above the road. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 420,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near cuts are readable on both travel directions; a broad diagonal slope and broken distant summit remain visible above the road. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 421,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near cuts are readable on both travel directions; a broad diagonal slope and broken distant summit remain visible above the road. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 422,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near cuts are readable on both travel directions; a broad diagonal slope and broken distant summit remain visible above the road. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 423,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near cuts are readable on both travel directions; a broad diagonal slope and broken distant summit remain visible above the road. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 424,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "The diagonal mountain slope fills much of the forward upper frame and reverse has a jagged peak beyond the cut; close wall/base transitions remain prominent. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 425,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "The diagonal mountain slope fills much of the forward upper frame and reverse has a jagged peak beyond the cut; close wall/base transitions remain prominent. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 426,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "The diagonal mountain slope fills much of the forward upper frame and reverse has a jagged peak beyond the cut; close wall/base transitions remain prominent. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 427,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "The diagonal mountain slope fills much of the forward upper frame and reverse has a jagged peak beyond the cut; close wall/base transitions remain prominent. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 428,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "The diagonal mountain slope fills much of the forward upper frame and reverse has a jagged peak beyond the cut; close wall/base transitions remain prominent. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 429,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "The diagonal mountain slope fills much of the forward upper frame and reverse has a jagged peak beyond the cut; close wall/base transitions remain prominent. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 430,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "Near uphill cut dominates each direction; reverse exposes a receding rocky coastal ridge with open horizon, without a separate dominant broad face. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 431,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "Near uphill cut dominates each direction; reverse exposes a receding rocky coastal ridge with open horizon, without a separate dominant broad face. A separate distant C region is not established; the visible crest may belong to the same B massif or receding A-side slope.",
+      "confidence": "low"
+    }
+  ],
+  "representative_originals": [
+    "window-0095-forward-00001",
+    "window-0100-forward-00003",
+    "window-0110-forward-00001",
+    "window-0119-forward-00002"
+  ],
+  "summary": "Inspected all 108 forward/reverse pairs on nine contact sheets. A roadside form/contact priority is consistently supported. B candidates occur where substantial upper or opposing rock faces and large slopes are readable; thin distant ridges alone do not qualify. C present is reserved for a visually separate coastal ridge or rocky projection beyond the near cut. B-face silhouettes remain protected within B and do not independently establish C; many apparent panoramas are therefore uncertain because their crest may belong to the same B massif or receding A slope. Sea pixels alone do not establish C. Near-side fields refer to clearly raised roadside forms, excluding flat shoulder strips; they describe each camera view and do not identify a shared physical surface. Absence applies only to the two sampled views. Diagnostic colours are not material classes. No geometry defects, D zones, hidden-world extents or confirmed simplification eligibility are asserted. AI proposals require owner review; canonical labels remain blank.",
+  "original_checks": [
+    {
+      "frame_id": "window-0095-forward-00001",
+      "observed_detail": "Close tall left cut, raised angular right bank and a large opposite terraced rock face with major vertical ledges; the upper valley corridor recedes between rock faces. Diagnostic purple/blue/yellow and dark road strips do not establish natural materials or defect causes.",
+      "judgment_change_or_confirmation": "Station326: A near wall/banks and B present confirmed. C remains uncertain because the upper valley opening does not establish a distinct distant surface at known depth. AI proposal only."
+    },
+    {
+      "frame_id": "window-0100-forward-00003",
+      "observed_detail": "The forward hairpin looks directly into a broad rocky massif with stepped faces and gullies occupying nearly all of the upper frame. Low raised near banks border the turn; another road bend is visible against the massif.",
+      "judgment_change_or_confirmation": "Station358: B present confirmed; C changed from uncertain to absent in the sampled pair because no separate distant C region is resolved. B silhouette still protected. AI proposal only."
+    },
+    {
+      "frame_id": "window-0110-forward-00001",
+      "observed_detail": "A broad steep rocky flank fills the right upper frame and two separate lower coastal rocky peaks appear on the left against the sea. Near road banks remain visible around the hairpin.",
+      "judgment_change_or_confirmation": "Station398: B changed from uncertain to present for the large right flank. C changed from uncertain to present for distinct left coastal peaks, excluding sea pixels and the B outline. Their world identities/depth remain unresolved. AI proposal only."
+    },
+    {
+      "frame_id": "window-0119-forward-00002",
+      "observed_detail": "Large close left wall/base contact, low descending roadside bank on the right, and a broad diagonal rocky slope across the upper frame with readable major crags and large terrain patches.",
+      "judgment_change_or_confirmation": "Station426: A wall and B broad slope confirmed. C stays uncertain: the observed crest can belong to the same B slope, so it is not assigned as a separate C region. AI proposal only."
+    }
+  ]
+}

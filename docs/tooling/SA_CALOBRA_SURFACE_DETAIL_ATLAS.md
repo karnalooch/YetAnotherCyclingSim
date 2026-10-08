@@ -2,7 +2,7 @@
 
 **Owner direction:** 2026-10-08  
 **Work item:** [#445](https://github.com/karnalooch/YetAnotherCyclingSim/issues/445), [draft PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446)  
-**Status:** documentation-only plan with [six original-PNG proposal cards](../experiments/sa-calobra-surface-detail-review-20261008/README.md); owner review, physical boundaries and world mapping remain pending  
+**Status:** documentation-only plan with a [complete captured-survey prestudy](../experiments/sa-calobra-roadside-visibility-prestudy-20261008/README.md) and [six original-PNG proposal cards](../experiments/sa-calobra-surface-detail-review-20261008/README.md); owner review, physical boundaries and world mapping remain pending  
 **Authority:** [World Building Bible](../WORLD_BUILDING_BIBLE.md), selected through [the documentation index](../README.md); [cliff presentation contract](SA_CALOBRA_CLIFF_EROSION_PASS.md)
 
 ## Purpose and current scope
@@ -121,6 +121,24 @@ owns the existing annotation requirements.
 Neither a tag nor a band authorizes source terrain changes, material replacement,
 asset persistence or production rollout. The accepted reference and existing
 eligibility, exclusions and protected interfaces continue to govern changes.
+
+## Complete captured-survey prestudy
+
+The [roadside visibility and detail prestudy](../experiments/sa-calobra-roadside-visibility-prestudy-20261008/README.md)
+now screens all 56 contact sheets / 1,338 directional viewing aids / 669 paired
+stations, with 24 original-PNG spot checks. Every pair has separate near-form,
+image-side, B broad-face and C independent-panorama observations plus uncertainty.
+The [generation guide](../experiments/sa-calobra-roadside-visibility-prestudy-20261008/generation-guide.md)
+explains how these requirements feed existing Dynamic Mesh/v8 work, material
+layers, reviewed masks and future bounded PCG/PCGEx selection.
+
+This is a coarse AI prestudy, not review of every original PNG or a full-area
+world visibility mask. Camera markers do not classify nearby land. D remains
+unconfirmed; unknown, conflicting and unmapped surfaces receive no inferred
+simplification. A B massif's own skyline is protected under B and does not alone
+establish a separate C region. Source scene, geometry, materials and canonical
+capture annotations remain unchanged. Street View is excluded; no performance
+measurement is requested here.
 
 ## Road-observation planning map
 
