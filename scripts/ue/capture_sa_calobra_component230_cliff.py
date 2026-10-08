@@ -1025,6 +1025,7 @@ def _spawn_landscape_mesh_diagnostic():
             "vertex_columns": ["id", "source_x", "source_y", "source_z", "x", "y", "z", "movable"],
             "vertices_cm": export.pop("audit_vertices_cm"),
             "triangles": export.pop("audit_triangles"),
+            "refinement": export.get("refinement", "native"),
         }
         evidence_path = OUTPUT / "local-cliff-smoothing-mesh.json"
         evidence_path.write_text(

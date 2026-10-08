@@ -27,6 +27,14 @@ def audit(plan: dict, evidence: dict) -> dict:
                     raise ValueError("Overlapping authoritative cells")
                 quads.add((c, r))
 
+    refinement = evidence.get("refinement", "native")
+    if refinement not in (
+        "native",
+        "Epic FSelectiveTessellate red-green level 1 on cliff triangles only",
+    ):
+        raise ValueError("Unknown source refinement")
+    grid_step = 50 if refinement == "native" else 25
+    expected_selected = 8136 if refinement == "native" else 32544
     rows = evidence["vertices_cm"]
     if len({row[0] for row in rows}) != len(rows):
         raise ValueError("Duplicate vertex ID")
@@ -35,7 +43,7 @@ def audit(plan: dict, evidence: dict) -> dict:
     if any(len(row) != 8 or not all(math.isfinite(v) for v in row) for row in rows):
         raise ValueError("Invalid vertex evidence")
     if any(
-        abs(p[k] / 50 - round(p[k] / 50)) > 1e-6
+        abs(p[k] / grid_step - round(p[k] / grid_step)) > 1e-6
         for p in source.values()
         for k in (0, 1)
     ):
@@ -73,12 +81,14 @@ def audit(plan: dict, evidence: dict) -> dict:
             locked.update(face)
         for a, b in zip(face, face[1:] + face[:1]):
             edges[tuple(sorted((a, b)))] += 1
+    if len(faces) > 60000:
+        raise ValueError("Unchanged per-mesh triangle budget exceeded")
     if any(n > 2 for n in edges.values()):
         raise ValueError("Nonmanifold edge")
     for edge, count in edges.items():
         if count == 1:
             locked.update(edge)
-    if allowed_count != 8136 or abs(source_area / 10000 - 1017) > 1e-6:
+    if allowed_count != expected_selected or abs(source_area / 10000 - 1017) > 1e-6:
         raise ValueError("Native source does not cover exact cliff footprint")
     if abs(candidate_area - source_area) > 1e-3:
         raise ValueError("Presentation footprint area changed")

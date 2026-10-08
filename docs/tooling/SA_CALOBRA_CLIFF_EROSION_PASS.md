@@ -447,3 +447,31 @@ its nonfolding constraint before rendering. It now stops at the last verified
 iterate instead of treating constrained convergence as a fatal error; invalid
 steps are still never applied. Completed pass count and constrained stopping are
 recorded. Runtime, visual and whole-map preview proof remain pending.
+
+#### Native selective geometry refinement
+
+The first single-surface result at `c3b2447e` passed its independent geometry
+audit: 2,997 changed vertices, 33.94 cm maximum displacement, 1,017 m2 retained,
+zero folded triangles/nonmanifold edges and fixed interfaces. Render review
+rejected it for remaining strong angular dark regions; there is no full-map
+admission. This is distinct from the separate baseline-image equality failure.
+
+Epic documents the mismatch between smooth shading normals and coarse geometry
+as a potential [shadow terminator problem](https://dev.epicgames.com/documentation/unreal-engine/virtual-shadow-maps-in-unreal-engine).
+The next experiment uses Epic `FSelectiveTessellate` red-green level 1 on only the
+8,136 selected cliff triangles, including conforming boundary transitions. The
+native `DynamicMesh` GeometryProcessing module is an editor-only dependency for
+this existing engine operation. No external plugin or shipping dependency is added.
+Linear refinement alone does not repair curved geometry: subsequent bounded
+normal-space relaxation moves the refined interior while keeping interfaces fixed.
+Per-vertex step reduction prevents one constrained location from stalling every
+other patch. The original 50 cm displacement limit and fold/area guards remain.
+
+The refined source must agree with the native exported triangular surface within
+0.001 cm before relaxation. Expected selected triangles become 32,544; an offline
+edge-count forecast gives 58,216 total including transitions, below the unchanged
+60,000 per-mesh limit. Runtime verifies actual counts/budget and fails closed if
+the engine pattern differs. Independent audit distinguishes native and refined
+source contracts. Lighting, shadow bias, materials and canonical terrain remain
+unchanged. Build/render proof is pending; the shadow-terminator explanation is
+still a hypothesis, not a diagnosed engine defect.

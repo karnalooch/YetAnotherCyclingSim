@@ -22,6 +22,7 @@ public class YetAnotherCyclingSimEditor : ModuleRules
             "MeshConversion",
             "GeometryCore",
             "GeometryFramework",
+            "DynamicMesh",
 			"YetAnotherCyclingSim"
 		});
 

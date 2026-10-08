@@ -8,6 +8,7 @@
 #include "UDynamicMesh.h"
 #include "DynamicMesh/DynamicMesh3.h"
 #include "DynamicMesh/MeshNormals.h"
+#include "Operations/SelectiveTessellate.h"
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
@@ -63,6 +64,95 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
         return false;
     }
 
+    // Use Epic's conforming selective tessellator, not global subdivision.
+    // The linear refinement preserves source geometry before normal relaxation.
+    TArray<int32> Levels;
+    Levels.Init(0, Mesh.MaxTriangleID());
+    int32 SourceCliffTriangles = 0;
+    for (int32 T : Mesh.TriangleIndicesItr())
+    {
+        const auto F = Mesh.GetTriangle(T);
+        const FVector3d Center = (Mesh.GetVertex(F.A) + Mesh.GetVertex(F.B) + Mesh.GetVertex(F.C)) / 3.0;
+        if (AllowedQuads.Contains(FIntPoint(FMath::FloorToInt(Center.X / 50.0), FMath::FloorToInt(Center.Y / 50.0))))
+        {
+            Levels[T] = 1;
+            ++SourceCliffTriangles;
+        }
+    }
+    if (SourceCliffTriangles != 8136)
+    {
+        Error = TEXT("native cliff source triangle count drift");
+        return false;
+    }
+    const UE::Geometry::FDynamicMesh3 NativeSource(Mesh);
+    auto Pattern = UE::Geometry::FSelectiveTessellate::CreateRedGreenTessellationPattern(&Mesh, Levels);
+    if (!Pattern)
+    {
+        Error = TEXT("native selective tessellation pattern unavailable");
+        return false;
+    }
+    UE::Geometry::FSelectiveTessellate Tessellate(&Mesh);
+    Tessellate.SetPattern(Pattern.Get());
+    Tessellate.bUseParallel = false;
+    if (!Tessellate.Compute() || Mesh.TriangleCount() > 60000)
+    {
+        Error = TEXT("selective tessellation failed or exceeded unchanged 60000 triangle limit");
+        return false;
+    }
+    // Independently verify all new source vertices still lie on the original
+    // exported triangular surface, including transition triangles outside cliffs.
+    TMap<FIntPoint, TArray<int32>> NativeTiles;
+    for (int32 T : NativeSource.TriangleIndicesItr())
+    {
+        const auto F = NativeSource.GetTriangle(T);
+        const FVector3d Center = (NativeSource.GetVertex(F.A) + NativeSource.GetVertex(F.B) + NativeSource.GetVertex(F.C)) / 3.0;
+        NativeTiles.FindOrAdd(FIntPoint(FMath::FloorToInt(Center.X / 50.0), FMath::FloorToInt(Center.Y / 50.0))).Add(T);
+    }
+    double RefinementError = 0;
+    for (int32 V : Mesh.VertexIndicesItr())
+    {
+        const FVector3d P = Mesh.GetVertex(V);
+        const FIntPoint Tile(FMath::FloorToInt(P.X / 50.0), FMath::FloorToInt(P.Y / 50.0));
+        bool Found = false;
+        for (int32 DX = -1; DX <= 0; ++DX)
+        {
+            for (int32 DY = -1; DY <= 0; ++DY)
+            {
+                const TArray<int32>* Faces = NativeTiles.Find(Tile + FIntPoint(DX, DY));
+                if (!Faces) { continue; }
+                for (int32 T : *Faces)
+                {
+                    const auto F = NativeSource.GetTriangle(T);
+                    const FVector3d A = NativeSource.GetVertex(F.A);
+                    const FVector3d B = NativeSource.GetVertex(F.B);
+                    const FVector3d C = NativeSource.GetVertex(F.C);
+                    const double Denom = FVector3d::CrossProduct(B - A, C - A).Z;
+                    const double U = FVector3d::CrossProduct(P - A, C - A).Z / Denom;
+                    const double W = FVector3d::CrossProduct(B - A, P - A).Z / Denom;
+                    if (U >= -1.e-8 && W >= -1.e-8 && U + W <= 1.0 + 1.e-8)
+                    {
+                        RefinementError = FMath::Max(RefinementError, FMath::Abs(P.Z - (A.Z + U * (B.Z - A.Z) + W * (C.Z - A.Z))));
+                        Found = true;
+                    }
+                }
+            }
+        }
+        if (!Found)
+        {
+            Error = TEXT("refined source vertex escaped native triangle domain");
+            return false;
+        }
+    }
+    if (RefinementError > 0.001)
+    {
+        Error = TEXT("linear refinement altered native source geometry");
+        return false;
+    }
+    Report->SetNumberField(TEXT("native_source_triangles"), NativeSource.TriangleCount());
+    Report->SetNumberField(TEXT("refined_triangles"), Mesh.TriangleCount());
+    Report->SetNumberField(TEXT("linear_refinement_error_cm"), RefinementError);
+    Report->SetStringField(TEXT("refinement"), TEXT("Epic FSelectiveTessellate red-green level 1 on cliff triangles only"));
+
     TArray<FVector3d> Original;
     Original.SetNum(Mesh.MaxVertexID());
     TArray<bool> Movable;
@@ -71,10 +161,10 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
     {
         Original[V] = Mesh.GetVertex(V);
         // Native half-metre grid is required; no inferred resampling.
-        if (FMath::Abs(Original[V].X / 50.0 - FMath::RoundToDouble(Original[V].X / 50.0)) > 1.e-6 ||
-            FMath::Abs(Original[V].Y / 50.0 - FMath::RoundToDouble(Original[V].Y / 50.0)) > 1.e-6)
+        if (FMath::Abs(Original[V].X / 25.0 - FMath::RoundToDouble(Original[V].X / 25.0)) > 1.e-6 ||
+            FMath::Abs(Original[V].Y / 25.0 - FMath::RoundToDouble(Original[V].Y / 25.0)) > 1.e-6)
         {
-            Error = TEXT("native export differs from authoritative 50 cm grid");
+            Error = TEXT("refined native export differs from 25 cm subdivision grid");
             return false;
         }
         Movable[V] = !Mesh.IsBoundaryVertex(V);
@@ -96,7 +186,7 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
             Movable[Face.A] = Movable[Face.B] = Movable[Face.C] = false;
         }
     }
-    if (AllowedTriangles != 8136)
+    if (AllowedTriangles != 32544)
     {
         Error = TEXT("native cliff footprint does not cover exactly 1017 square metres");
         return false;
@@ -148,16 +238,17 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
             }
         }
         bool Accepted = false;
-        for (int32 Attempt = 0; Attempt < 12; ++Attempt)
+        TArray<double> Weights;
+        Weights.Init(1.0, Mesh.MaxVertexID());
+        for (int32 Attempt = 0; Attempt < 32; ++Attempt)
         {
-            const double Alpha = FMath::Pow(0.5, Attempt);
-            bool Valid = true;
+            TSet<int32> Restricted;
             for (int32 T : Mesh.TriangleIndicesItr())
             {
                 const auto F = Mesh.GetTriangle(T);
-                const FVector3d A = Before[F.A] + (Target[F.A] - Before[F.A]) * Alpha;
-                const FVector3d B = Before[F.B] + (Target[F.B] - Before[F.B]) * Alpha;
-                const FVector3d C = Before[F.C] + (Target[F.C] - Before[F.C]) * Alpha;
+                const FVector3d A = Before[F.A] + (Target[F.A] - Before[F.A]) * Weights[F.A];
+                const FVector3d B = Before[F.B] + (Target[F.B] - Before[F.B]) * Weights[F.B];
+                const FVector3d C = Before[F.C] + (Target[F.C] - Before[F.C]) * Weights[F.C];
                 const double OldXY = FVector3d::CrossProduct(
                     Original[F.B] - Original[F.A], Original[F.C] - Original[F.A]).Z;
                 const double NewXY = FVector3d::CrossProduct(B - A, C - A).Z;
@@ -166,19 +257,24 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
                 if (!FMath::IsFinite(NewXY) || NewXY * OldXY <= 0 ||
                     FMath::Abs(NewXY) < FMath::Abs(OldXY) * 0.10)
                 {
-                    Valid = false;
-                    break;
+                    Restricted.Add(F.A);
+                    Restricted.Add(F.B);
+                    Restricted.Add(F.C);
                 }
             }
-            if (Valid)
+            if (Restricted.Num() == 0)
             {
                 for (int32 V : Mesh.VertexIndicesItr())
                 {
-                    Mesh.SetVertex(V, Before[V] + (Target[V] - Before[V]) * Alpha);
+                    Mesh.SetVertex(V, Before[V] + (Target[V] - Before[V]) * Weights[V]);
                 }
                 Backtracks += Attempt;
                 Accepted = true;
                 break;
+            }
+            for (int32 V : Restricted)
+            {
+                Weights[V] = Attempt >= 20 ? 0.0 : Weights[V] * 0.5;
             }
         }
         if (!Accepted)
