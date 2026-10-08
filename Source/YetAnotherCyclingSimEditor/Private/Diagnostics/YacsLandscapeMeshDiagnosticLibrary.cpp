@@ -201,7 +201,8 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
     // tangential redistribution improves sampling without extending the domain.
     constexpr int32 TangentialPasses = 3;
     constexpr double TangentialBlend = 0.20;
-    constexpr double MaxDisplacementCm = 50.0;
+    // Owner-approved presentation envelope; canonical source stays unchanged.
+    constexpr double MaxDisplacementCm = 100.0;
     int32 Backtracks = 0;
     int32 CompletedPasses = 0;
     int32 CompletedTangentialPasses = 0;
@@ -388,6 +389,7 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
     Report->SetNumberField(TEXT("allowed_native_triangles"), AllowedTriangles);
     Report->SetNumberField(TEXT("changed_vertices"), Changed);
     Report->SetNumberField(TEXT("max_displacement_cm"), MaxShift);
+    Report->SetNumberField(TEXT("displacement_limit_cm"), MaxDisplacementCm);
     Report->SetNumberField(TEXT("max_xy_displacement_cm"), MaxXY);
     Report->SetNumberField(TEXT("max_z_displacement_cm"), MaxZ);
     Report->SetNumberField(TEXT("locked_vertex_displacement_cm"), 0);

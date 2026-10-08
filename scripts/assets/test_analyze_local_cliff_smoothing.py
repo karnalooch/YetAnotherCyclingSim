@@ -57,7 +57,21 @@ class LocalCliffAuditTests(unittest.TestCase):
 
     def test_excess_displacement_rejected(self):
         evidence = copy.deepcopy(self.evidence)
-        evidence["vertices_cm"][self.changed_vertex][6] = 51
+        evidence["vertices_cm"][self.changed_vertex][6] = 101
+        with self.assertRaisesRegex(ValueError, "exceeds"):
+            audit(self.plan, evidence)
+
+    def test_owner_approved_one_metre_envelope(self):
+        evidence = copy.deepcopy(self.evidence)
+        evidence["vertices_cm"][self.changed_vertex][6] = 100
+        result = audit(self.plan, evidence)
+        self.assertEqual(result["max_displacement_cm"], 100)
+        self.assertEqual(result["displacement_limit_cm"], 100)
+
+    def test_limit_is_total_distance_not_per_axis(self):
+        evidence = copy.deepcopy(self.evidence)
+        evidence["vertices_cm"][self.changed_vertex][4] += 10
+        evidence["vertices_cm"][self.changed_vertex][6] = 100
         with self.assertRaisesRegex(ValueError, "exceeds"):
             audit(self.plan, evidence)
 

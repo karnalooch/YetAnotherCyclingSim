@@ -95,8 +95,8 @@ def audit(plan: dict, evidence: dict) -> dict:
     if any(math.dist(source[v], candidate[v]) > 1e-8 for v in locked):
         raise ValueError("Unselected terrain or footprint interface moved")
     displacement = {v: math.dist(source[v], candidate[v]) for v in source}
-    if max(displacement.values()) > 50.000001:
-        raise ValueError("Presentation displacement exceeds 50 cm")
+    if max(displacement.values()) > 100.000001:
+        raise ValueError("Presentation displacement exceeds 100 cm")
     changed = [v for v, d in displacement.items() if d > 1e-6]
     if not changed:
         raise ValueError("No local geometry change")
@@ -110,6 +110,7 @@ def audit(plan: dict, evidence: dict) -> dict:
         "changed_vertices": len(changed),
         "locked_vertices": len(locked),
         "max_displacement_cm": max(displacement.values()),
+        "displacement_limit_cm": 100,
         "nonmanifold_edges": 0,
         "folded_xy_triangles": 0,
         "scope": "LOCAL_GEOMETRY_AUDIT_NOT_VISUAL_ACCEPTANCE",

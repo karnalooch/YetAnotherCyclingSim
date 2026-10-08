@@ -420,7 +420,8 @@ jobs:
                 $local.landscape_mesh_diagnostic.export.local_smoothing -ne $true -or
                 $local.landscape_mesh_diagnostic.export.folded_xy_triangles -ne 0 -or
                 $local.landscape_mesh_diagnostic.export.locked_vertex_displacement_cm -ne 0 -or
-                $local.landscape_mesh_diagnostic.export.max_displacement_cm -gt 50.000001
+                $local.landscape_mesh_diagnostic.export.displacement_limit_cm -ne 100 -or
+                $local.landscape_mesh_diagnostic.export.max_displacement_cm -gt 100.000001
               ) { throw 'Local cliff smoothing bounds failed.' }
             }
             finally {
@@ -546,5 +547,4 @@ jobs:
           if-no-files-found: warn
           compression-level: 6
           retention-days: 14
-
 

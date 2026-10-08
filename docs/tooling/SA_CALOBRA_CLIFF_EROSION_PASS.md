@@ -428,7 +428,7 @@ The 1,017 authoritative skin cells select 8,136 native half-metre triangles.
 Every vertex incident to an unselected triangle and every component boundary
 vertex stays fixed. Up to 84 normal-space relaxation passes use blend 0.10,
 followed by three tangential redistribution passes at blend 0.20. All passes
-share a maximum total displacement of 50 cm from the refined source, with
+share an owner-approved maximum total displacement of 100 cm from the refined source, with
 per-vertex backtracking rejecting XY folds and collapsed triangles. The fixed interface and consistently oriented
 XY triangles preserve the selected planar domain. Source topology and triangle
 count stay unchanged. Normals are recomputed for the edited presentation.
@@ -665,3 +665,23 @@ material fixtures, does not choose a lighter reference, and does not alter any
 candidate lighting threshold. Metrics are saved before the analyzer fails so
 the rejected reference remains inspectable. Small isolated dark details remain
 allowed. Missing receipt/provenance fails instead of guessing the fixture.
+
+Owner approval, 2026-10-08: extend the local presentation-only displacement
+envelope from 50 cm to 100 cm and select routine parameters autonomously within
+that envelope. This applies to the copied mesh only: source DTM/Landscape,
+roads, hard exclusions and fixed interfaces stay unchanged. Historical 50 cm
+measurements above remain historical evidence, not the current limit.
+The producer, capture receipt, independent audit and workflow all enforce the
+same 100 cm total Euclidean displacement, not 100 cm separately on each axis.
+The receipt declares the configured limit. This first 100 cm trial retains the
+same 84 normal-flow and three tangential passes to isolate the envelope change.
+Local rendered acceptance still precedes whole-map preview delivery.
+
+The owner subsequently also authorized local Landscape/DTM edits for this
+repair. Apply the same bounded 1 m envelope to admitted cliff regions, retain
+the original checkpoint/source and use reversible terrain corrections. Preserve
+road/hard-exclusion cells and outer interfaces. This supersedes the earlier
+blanket frozen-terrain restriction only for the authorized local repair. The
+current experiment still edits only an exported mesh and must keep its existing
+no-mutation receipt truthful; a terrain-edit candidate needs its own explicit
+height-change and rollback evidence. No terrain edit is claimed by this commit.

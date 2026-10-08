@@ -2166,6 +2166,23 @@ neutral Lit/Lighting Only result before whole-Landscape application and an owner
 preview package. PR #446 remains unmerged pending explicit approval.
 See the [cliff diagnostic contract](tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md#local-single-surface-smoothing-diagnostic).
 
+Owner follow-up, 2026-10-08: the copied local cliff mesh may move up to 1 m
+from its source surface vertices, with routine solver choices made within that
+envelope. This supersedes the earlier 50 cm experiment limit only. Canonical
+DTM/Landscape, roads, exclusions and footprint interfaces remain unchanged;
+local visual proof remains required before whole-Landscape application.
+
+Subsequent owner authorization, 2026-10-08: local Landscape/DTM height changes
+are also permitted for this cliff repair. Within this task, use the same 1 m
+local envelope and admitted cliff footprint; retain roads, exclusions and fixed
+outer interfaces. Preserve the original source/checkpoint and make terrain
+corrections reversible through the existing edit-layer/derived-output workflow.
+This supersedes the blanket no-terrain-edit restriction for these bounded
+corrections, not for global smoothing or unrelated terrain. A mesh-only capture
+must still report no canonical mutation; any later terrain-edit proof must
+explicitly record its changed heights, scope and rollback rather than reuse that
+claim. Visual review and whole-area delivery requirements remain binding.
+
 Do not scatter cliff meshes over the whole map. Place meso geometry where slope, visibility and composition justify it.
 
 ---
