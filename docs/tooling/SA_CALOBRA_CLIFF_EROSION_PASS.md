@@ -1,9 +1,19 @@
 # Sa Calobra Cliff / Erosion Pass
 
-**Issues:** #429 Phase 1, #440 Phase 2A; child track of #368  
+**Issues:** #429 Phase 1, #440 Phase 2A, #445 Component 230 repair; child track of #368  
 **Parent integration:** PR #381  
-**Status:** Phase 1 selector complete; Phase 2A placement-handoff implementation/proof  
+**Status:** Phase 1 selector complete; local combined terrain/mesh technical trial verified; PCGEx lighting admission fails; production acceptance pending  
 **Authority:** World Building Bible remains authoritative
+
+The current verified outcome and ordered repair work are in
+[Component 230: verified report and repair plan](SA_CALOBRA_COMPONENT230_REPAIR_PLAN.md).
+At `1b0675ee53e796e7f904fa3119bb388fa9489cf6`, independent reconstruction
+confirms the 199.612189524 cm combined source-relative maximum and complete
+terrain-trial source restoration. The separate PCGEx gate has four failures;
+the final checkout integrity step was skipped after that gate failed.
+This technical result does not grant owner visual acceptance, persistence,
+whole-Landscape admission or Phase 2B completion. Historical trials below retain
+their original outcomes and limits.
 
 ## Purpose
 
