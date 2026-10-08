@@ -3,7 +3,7 @@
 **Verified:** 2026-10-08  
 **Work item:** [#445](https://github.com/karnalooch/YetAnotherCyclingSim/issues/445); implementation [draft PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446)  
 **Historical evidence revision:** `1b0675ee53e796e7f904fa3119bb388fa9489cf6`  
-**Limestone implementation revision:** `2f1e15d777fca6fc5f7030b8ce393f968bdefdc8`  
+**Latest limestone implementation revision:** `605a449493f67a1827a33cc34e0b41c27670c3be`  
 **Status:** limestone combined technical gate and ordinary CI pass; PCGEx overlay admission fails; owner visual acceptance, persistence and whole-area admission remain pending  
 **Authority:** [World Building Bible](../WORLD_BUILDING_BIBLE.md), selected through [the documentation index](../README.md); [cliff experiment contract and history](SA_CALOBRA_CLIFF_EROSION_PASS.md)
 
@@ -39,7 +39,53 @@ limestone PBR material after all neutral captures. New evidence is retained for
 exact-revision results and retained evidence are recorded below.
 No map save or broader rollout is performed by this implementation.
 
-## Verified limestone implementation
+## Verified upper-surface crest correction
+
+Owner review identified repeated triangular teeth on upper limestone surfaces
+and clarified that angular vertical walls can remain realistic. The follow-up
+at `605a449493f67a1827a33cc34e0b41c27670c3be` adds 12 downward-only crest
+passes after the original 24 feature-guided passes. Eligibility is frozen from
+the exported source: movable vertices with upward-oriented geometric normal
+Z >= 0.70 and convex normal residual < -1 cm. The native export's downward
+triangle winding is oriented upward for classification; paired normal-flow
+products remain unchanged. This is local upper-surface fairing, not invented
+fractures, global smoothing or permission to move source macro landforms.
+
+[Runtime proof 37760944983](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37760944983)
+passes build/topology, captures, the separate combined technical gate and
+checkout restoration. [Ordinary Unreal CI 37760953290](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37760953290)
+also passes at this exact runtime revision. The unchanged PCGEx gate still fails: 158 > 19 dark pixels
+and 30 > 19 largest-region pixels at <0.05, 1,643 > 1,592 dark pixels at <0.10,
+and 1,319 > 1,254 custom-A largest-region pixels at <0.15. That workflow is red
+because of this separate rejected overlay.
+
+Independent numerical reconstruction from the preceding mesh reproduces all
+12 crest passes within 1e-6 cm. Of 1,442 eligible vertices, **1,163** move
+downward, maximum **30.605324 cm** beyond the preceding candidate. Crest-stage
+XY motion and movement of noneligible vertices are exactly zero. This protects
+vertices classified as steep, concave or locked in this additional stage;
+shared upper rim changes are not a claim that every incident wall face is
+identical. Recorded per-vertex before/after positions, guide normal Z and source
+convex residual agree with independently reconstructed geometry. A regression
+test rejects wall motion, upward motion and invalid convex masks. The current
+focused suite passes **37 tests**.
+
+The unchanged 50 cm mesh-stage envelope is shared by both operations: maximum
+stage motion is **37.994849 cm**, not 50 cm plus another crest allowance. Final
+original-relative displacement remains **177.779610 cm**; 58,216 triangles,
+15,296 locked vertices, zero XY folds/nonmanifold edges and restored source
+heightfields remain verified. Neutral pixel/largest-region deltas relative to
+this acquisition's own baseline are 0/0, -763/-16 and -11,971/-5,847 at the
+three thresholds; all six comparisons pass. Hashes, imported heightfields,
+complete source restoration and the 3 m PBR projection were reverified.
+
+Matched middle-view inspection shows a subtle cap correction. **Larger triangular
+ridge forms remain visible**; do not report the owner-marked silhouette as fully
+resolved or accepted. The earlier road-camera occlusion limitation also remains.
+The recipe and before/after frames are review evidence, not a saved preview.
+The previous implementation and its evidence below are retained as history.
+
+## Verified initial limestone implementation
 
 [Runtime proof 37756810383](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37756810383)
 at `2f1e15d777fca6fc5f7030b8ce393f968bdefdc8` compiles and captures all
@@ -87,9 +133,10 @@ diagnostics; do not call the three-pair technical PASS rider visual acceptance.
 Durable selected evidence is retained through existing Git LFS:
 
 - [Historical selection](../experiments/component230-cliff/evidence/retained-37745658647.json): 56 files, 33,068,223 bytes; archive SHA-256 `5eb936601cde6a9340e28c1b89c86982a70b246a028a2e4ff1a85b62570bd9d5`.
-- [Current selection](../experiments/component230-cliff/evidence/retained-37756810383.json): 87 files, 94,050,971 bytes; archive SHA-256 `914657765f402440ac01e9bf7211ecad38fdec1dfceb0ac04842ecdcc7303e8f`.
+- [Initial limestone selection](../experiments/component230-cliff/evidence/retained-37756810383.json): 87 files, 94,050,971 bytes; archive SHA-256 `914657765f402440ac01e9bf7211ecad38fdec1dfceb0ac04842ecdcc7303e8f`.
+- [Latest crest selection](../experiments/component230-cliff/evidence/retained-37760944983.json): 87 files, 95,477,689 bytes; archive SHA-256 `0e62926163d9ccec70a230304b6640f6eecb314be93d27b946fa2fe6d54d9293`.
 
-Both objects were uploaded to the repository's LFS remote, independently fetched
+All three objects were uploaded to the repository's LFS remote, independently fetched
 through a separate scratch checkout, and verified against archive and per-entry
 manifest hashes before publishing their pointers. The current selection includes
 all JSON and all receipt-listed admitted/diagnostic captures across trials;
