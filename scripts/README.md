@@ -47,6 +47,12 @@ offline review; it never generates terrain or assigns visual acceptance.
 --expected-sha <capture-sha> --run-id <run> --attempt <attempt>
 --workspace-config <workspace.json>` retains verified completed evidence in the
 configured persistent work directory without rerendering or overwriting notes.
+`proof/export_sa_calobra_tpp_survey_docs.py --source <retained-evidence-root>
+--artifact-zip <original-capture.zip> --repo <repository-root>
+--expected-sha <capture-sha>` copies the validated October 8 viewing aids into
+repository documentation and retains the unchanged original ZIP through the
+existing evidence LFS rule. It verifies archive members against the retained
+source, refuses differing existing outputs and leaves surface tags unassigned.
 
 | Folder | Responsibility |
 |---|---|

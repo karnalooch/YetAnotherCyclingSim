@@ -1005,6 +1005,25 @@ its size and SHA-256 and the source inventory remains unchanged. Its receipt
 records local retention separately from remote backup; it grants no visual
 acceptance and performs no Unreal rendering or scene edits.
 
+The fixed owner `[tpp-docs]` intent publishes that completed evidence on the
+existing Component 230 branch. Its exporter verifies the pinned source ZIP
+against the retained file inventory, copies actual contact sheets, thumbnails,
+the route map and CSV indexes into
+`docs/experiments/sa-calobra-tpp-survey-20261008/`, and creates paired Markdown
+window pages for GitHub review. The original ZIP is retained unchanged at
+`docs/experiments/component230-cliff/evidence/retained-37800814004.zip`
+using the existing Git LFS rule. This is inspection evidence rather than a new
+visual-change milestone. Tags remain unassigned pending image review.
+
+Publication is restricted to the owner, repository, branch and exact event
+head. It uploads only the pinned LFS object, independently fetches it into empty
+storage and checks its size and SHA-256, then fast-forwards only the fixed docs
+paths while the branch lease still matches. It never rerenders, rebases or
+force-pushes. The publication receipt records remote byte verification
+separately from CI: a workflow-token push does not automatically trigger CI,
+so the final documentation head requires a separate normal owner-triggered
+commit and its required checks before closeout.
+
 The scene contains the accepted Component 230 appearance and the remaining
 frozen Landscape. It does not claim that the accepted rock recipe is already
 present across the full map. The original combined/PCGEx image-gate failures
