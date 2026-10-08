@@ -43,6 +43,10 @@ outputs. `ue/sa_calobra_tpp_survey_capture.py` runs only inside its owning cliff
 proof scene. `proof/package_sa_calobra_tpp_survey.py --root <survey-directory>
 --expected-sha <capture-sha>` verifies and packages the captured evidence for
 offline review; it never generates terrain or assigns visual acceptance.
+`proof/retain_sa_calobra_tpp_survey.py --source <evidence-root>
+--expected-sha <capture-sha> --run-id <run> --attempt <attempt>
+--workspace-config <workspace.json>` retains verified completed evidence in the
+configured persistent work directory without rerendering or overwriting notes.
 
 | Folder | Responsibility |
 |---|---|

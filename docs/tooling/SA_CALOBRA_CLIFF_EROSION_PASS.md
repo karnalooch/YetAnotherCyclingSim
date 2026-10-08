@@ -995,6 +995,16 @@ idle host before reproducing the accepted preview. The normal Phase 2C lane
 retains its original gates. Captures and review evidence are uploaded together
 with a unique SHA/run/attempt identity; no assets are saved to the scene.
 
+GitHub's 90-day artifact is transport, not a permanent archive. The fixed
+`[tpp-retain]` intent retrieves the exact completed artifact and invokes
+`scripts/proof/retain_sa_calobra_tpp_survey.py` with an explicit workspace
+configuration. It verifies the complete survey and checkout restoration before
+retaining the proof under configured `work/proofs/sa-calobra-tpp/<sha>/<run>-<attempt>`.
+The destination is unique and published only after every copied file matches
+its size and SHA-256 and the source inventory remains unchanged. Its receipt
+records local retention separately from remote backup; it grants no visual
+acceptance and performs no Unreal rendering or scene edits.
+
 The scene contains the accepted Component 230 appearance and the remaining
 frozen Landscape. It does not claim that the accepted rock recipe is already
 present across the full map. The original combined/PCGEx image-gate failures

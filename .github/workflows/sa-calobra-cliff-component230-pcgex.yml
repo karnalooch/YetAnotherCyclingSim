@@ -20,9 +20,11 @@ on:
       - "scripts/ue/sa_calobra_tpp_survey_capture.py"
       - "scripts/proof/sa_calobra_tpp_survey.py"
       - "scripts/proof/package_sa_calobra_tpp_survey.py"
+      - "scripts/proof/retain_sa_calobra_tpp_survey.py"
       - "scripts/ci/test_sa_calobra_tpp_survey.py"
       - "scripts/ci/test_sa_calobra_tpp_survey_capture.py"
       - "scripts/ci/test_package_sa_calobra_tpp_survey.py"
+      - "scripts/ci/test_retain_sa_calobra_tpp_survey.py"
       - "scripts/assets/prepare_sa_calobra_component230_cliff_visual.py"
       - "scripts/assets/test_sa_calobra_component230_cliff_visual.py"
       - "scripts/assets/analyze_sa_calobra_component230_cliff_visual.py"
@@ -60,7 +62,8 @@ jobs:
   phase2c:
     if: >-
       !(github.event_name == 'workflow_dispatch' && inputs.tpp_survey) &&
-      !(github.event_name == 'push' && contains(github.event.head_commit.message, '[tpp-survey]'))
+      !(github.event_name == 'push' && contains(github.event.head_commit.message, '[tpp-survey]')) &&
+      !(github.event_name == 'push' && contains(github.event.head_commit.message, '[tpp-retain]'))
     name: PCGEx topology + custom A/B + 8-of-10 gates
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 30
@@ -1175,4 +1178,94 @@ jobs:
             ${{ runner.temp }}/component230-tpp-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}/**
           if-no-files-found: warn
           compression-level: 6
+          retention-days: 90
+
+  retain-bidirectional-survey:
+    name: Retain completed TPP survey without rendering
+    if: >-
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[tpp-retain]') &&
+      !contains(github.event.head_commit.message, '[tpp-survey]')
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+    env:
+      YACS_TPP_CAPTURE_SHA: b1ea05b33b9f3208e7aeb6884f1a67792d9c6121
+      YACS_TPP_CAPTURE_RUN: "37800814004"
+      YACS_TPP_CAPTURE_ATTEMPT: "1"
+
+    steps:
+      - name: Isolate retention checkout Git configuration
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'tpp-retention.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+
+      - name: Checkout exact retention helper revision without LFS payloads
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: _sa-calobra-tpp-retention
+          fetch-depth: 1
+          lfs: false
+          clean: false
+          persist-credentials: false
+
+      - name: Verify fixed retention intent, idle host and canonical workspace configuration
+        shell: pwsh
+        working-directory: _sa-calobra-tpp-retention
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ($env:GITHUB_ACTOR -ne 'karnalooch' -or $env:GITHUB_REPOSITORY -ne 'karnalooch/YetAnotherCyclingSim' -or $env:GITHUB_REF_NAME -ne 'feat/phase2c-pcgex-cliff-topology') {
+            throw 'The fixed retention intent is restricted to the owner and reviewed Component 230 branch.'
+          }
+          $actual = (git rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0 -or $actual -ne $env:GITHUB_SHA) { throw 'Retention helper checkout does not match the exact event SHA.' }
+          $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+          $state | ConvertTo-Json -Depth 8 | Write-Host
+          if ($state.status -ne 'IDLE') { throw "Shared Unreal host is already owned; status=$($state.status)." }
+          # Start-YacsRunner.ps1 exports the configured path into its child worker.
+          if (-not $env:YACS_WORKSPACE_CONFIG) { throw 'Canonical YACS_WORKSPACE_CONFIG was not exported by the runner.' }
+          $workspaceConfig = (Resolve-Path -LiteralPath $env:YACS_WORKSPACE_CONFIG).Path
+          python -c "import sys; from pathlib import Path; from scripts.manage_local_workspace import load_workspace; load_workspace(Path(sys.argv[1]))" $workspaceConfig
+          if ($LASTEXITCODE -ne 0) { throw 'Canonical persistent workspace configuration failed validation.' }
+          $root = Join-Path $env:RUNNER_TEMP "tpp-retention-$env:GITHUB_SHA-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          if (Test-Path -LiteralPath $root) { throw 'Retention evidence root already exists; refusing stale output.' }
+          $inputRoot = Join-Path $root 'source-artifact'
+          New-Item -ItemType Directory -Path $inputRoot -Force | Out-Null
+          "YACS_TPP_RETENTION_ROOT=$root" >> $env:GITHUB_ENV
+          "YACS_TPP_RETENTION_INPUT=$inputRoot" >> $env:GITHUB_ENV
+
+      - name: Download the fixed completed survey artifact without another Unreal run
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          name: sa-calobra-bidirectional-tpp-b1ea05b33b9f3208e7aeb6884f1a67792d9c6121-37800814004-1
+          repository: karnalooch/YetAnotherCyclingSim
+          run-id: 37800814004
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: ${{ env.YACS_TPP_RETENTION_INPUT }}
+
+      - name: Validate and retain complete original evidence in the configured persistent workspace
+        shell: pwsh
+        working-directory: _sa-calobra-tpp-retention
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python -m unittest scripts.ci.test_retain_sa_calobra_tpp_survey -v
+          if ($LASTEXITCODE -ne 0) { throw 'Survey retention integrity tests failed.' }
+          python scripts/proof/retain_sa_calobra_tpp_survey.py --source $env:YACS_TPP_RETENTION_INPUT --expected-sha $env:YACS_TPP_CAPTURE_SHA --run-id $env:YACS_TPP_CAPTURE_RUN --attempt $env:YACS_TPP_CAPTURE_ATTEMPT --workspace-config $env:YACS_WORKSPACE_CONFIG | Tee-Object -FilePath (Join-Path $env:YACS_TPP_RETENTION_ROOT 'retention-receipt.json')
+          if ($LASTEXITCODE -ne 0) { throw 'Complete survey artifact validation or durable retention failed.' }
+          $tracked = @(git status --porcelain=v1 --untracked-files=no)
+          if ($LASTEXITCODE -ne 0 -or $tracked.Count -gt 0) { throw 'Retention dirtied its isolated tracked checkout.' }
+
+      - name: Upload the separate durable-retention receipt
+        if: ${{ always() && env.YACS_TPP_RETENTION_ROOT != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: sa-calobra-tpp-retention-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.YACS_TPP_RETENTION_ROOT }}/retention-receipt.json
+          if-no-files-found: warn
           retention-days: 90
