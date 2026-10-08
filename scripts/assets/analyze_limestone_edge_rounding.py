@@ -20,7 +20,6 @@ def _area(a, b, c):
 
 
 def audit_edges(plan, reference, evidence):
-    from scripts.assets.analyze_local_cliff_smoothing import audit as audit_domain
     # The existing domain audit remains separately available to historical runs.
     contract = plan.get('rounding_domain_contract', {})
     cells = plan.get('rounding_cells', [])
@@ -132,6 +131,32 @@ def audit_edges(plan, reference, evidence):
                             found.add(tuple(sorted(f)))
         return found, heights
 
+    def closest_triangle(p, a, b, c):
+        ab, ac, ap = _sub(b,a), _sub(c,a), _sub(p,a)
+        d1,d2 = _dot(ab,ap),_dot(ac,ap)
+        if d1 <= 0 and d2 <= 0: return a
+        bp = _sub(p,b); d3,d4 = _dot(ab,bp),_dot(ac,bp)
+        if d3 >= 0 and d4 <= d3: return b
+        vc = d1*d4-d3*d2
+        if vc <= 0 and d1 >= 0 and d3 <= 0:
+            v = d1/(d1-d3); return tuple(a[k]+v*ab[k] for k in range(3))
+        cp = _sub(p,c); d5,d6 = _dot(ab,cp),_dot(ac,cp)
+        if d6 >= 0 and d5 <= d6: return c
+        vb = d5*d2-d1*d6
+        if vb <= 0 and d2 >= 0 and d6 <= 0:
+            w = d2/(d2-d6); return tuple(a[k]+w*ac[k] for k in range(3))
+        va = d3*d6-d5*d4
+        if va <= 0 and d4-d3 >= 0 and d5-d6 >= 0:
+            w = (d4-d3)/((d4-d3)+(d5-d6)); return tuple(b[k]+w*(c[k]-b[k]) for k in range(3))
+        denominator = 1/(va+vb+vc); v,w = vb*denominator,vc*denominator
+        return tuple(a[k]+v*ab[k]+w*ac[k] for k in range(3))
+
+    def closest_source_distance(p):
+        x,y = (math.floor(p[k]/50) for k in (0,1))
+        distances = [math.dist(p,closest_triangle(p,*(source[i] for i in f)))
+            for dx in (-1,0,1) for dy in (-1,0,1) for f in face_tiles[(x+dx,y+dy)]]
+        return min(distances,default=float('inf'))
+
     rows = evidence['vertices_cm']
     if len({r[0] for r in rows}) != len(rows) or any(len(r)!=8 or not all(math.isfinite(v) for v in r) for r in rows):
         raise ValueError('Invalid candidate vertex evidence')
@@ -148,9 +173,9 @@ def audit_edges(plan, reference, evidence):
         if v in source and q != source[v]:
             raise ValueError('Bevel reset original reference')
         if v not in source:
-            _, heights = containing_faces(p)
-            if not heights or q[:2] != p[:2] or min(abs(q[2]-h) for h in heights) > 1e-6:
-                raise ValueError('New vertex reference is not original surface interpolation')
+            on_surface,_ = containing_faces(q,True)
+            if not on_surface or abs(math.dist(p,q)-closest_source_distance(p)) > 1e-5:
+                raise ValueError('New vertex reference is not the nearest untouched source surface')
         shift = math.dist(q,p)
         if v in source and v not in edge_vertices and shift > 1e-8:
             raise ValueError('Bevel moved a vertex away from a selected edge')

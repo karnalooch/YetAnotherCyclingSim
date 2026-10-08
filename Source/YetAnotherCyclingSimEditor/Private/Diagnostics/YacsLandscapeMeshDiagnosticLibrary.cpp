@@ -12,6 +12,7 @@
 #include "DynamicMesh/DynamicMeshOverlay.h"
 #include "Operations/SelectiveTessellate.h"
 #include "Operations/MeshBevel.h"
+#include "Distance/DistPoint3Triangle3.h"
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
@@ -67,27 +68,25 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
         }
         return Best;
     };
-    auto SourceAtXY = [&Source, &Tiles](const FVector3d& P, FVector3d& Q)
+    auto SourceClosest = [&Source, &Tiles](const FVector3d& P, FVector3d& Q)
     {
         const FIntPoint Tile(FMath::FloorToInt(P.X / 50.0), FMath::FloorToInt(P.Y / 50.0));
-        for (int32 DX = -1; DX <= 0; ++DX) for (int32 DY = -1; DY <= 0; ++DY)
+        double Best = TNumericLimits<double>::Max();
+        for (int32 DX = -1; DX <= 1; ++DX) for (int32 DY = -1; DY <= 1; ++DY)
         {
             const auto* Faces = Tiles.Find(Tile + FIntPoint(DX, DY));
             if (!Faces) { continue; }
             for (int32 T : *Faces)
             {
                 const auto F = Source.GetTriangle(T);
-                const FVector3d A = Source.GetVertex(F.A), B = Source.GetVertex(F.B), C = Source.GetVertex(F.C);
-                const double Denom = FVector3d::CrossProduct(B - A, C - A).Z;
-                const double U = FVector3d::CrossProduct(P - A, C - A).Z / Denom;
-                const double W = FVector3d::CrossProduct(B - A, P - A).Z / Denom;
-                if (U >= -1.e-8 && W >= -1.e-8 && U + W <= 1.0 + 1.e-8)
-                {
-                    Q = FVector3d(P.X, P.Y, A.Z + U * (B.Z - A.Z) + W * (C.Z - A.Z)); return true;
-                }
+                FDistPoint3Triangle3d Query(P, FTriangle3d(Source.GetVertex(F.A), Source.GetVertex(F.B), Source.GetVertex(F.C)));
+                const double Distance = Query.GetSquared();
+                if (Distance < Best) { Best = Distance; Q = Query.ClosestTrianglePoint; }
             }
         }
-        return false;
+        // A valid edit is within 10 cm of a selected native edge, so its nearest
+        // source facet necessarily falls inside this bounded native XY search.
+        return FMath::IsFinite(Best) && Best < 100.000001;
     };
     // Epic's inset is not itself a width guarantee at junctions. Independently
     // enforce a 10 cm radius (20 cm total band) and a 20 cm source-relative cap.
@@ -105,10 +104,15 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
         Attempts.Add(MakeShared<FJsonValueObject>(Trial));
         Report->SetArrayField(TEXT("bevel_attempts"), Attempts);
         Mesh = Source;
+        // Native Landscape export has downward geometric winding. Bevel needs
+        // outward (upward) orientation; retain copied native shading normals.
+        Mesh.ReverseOrientation(false);
+        const FDynamicMesh3 BevelSource(Mesh);
         FMeshBevel Bevel;
         Bevel.InsetDistance = Inset; Bevel.NumSubdivisions = Attempt.X; Bevel.RoundWeight = 1.0;
-        Bevel.InitializeFromTriangleEdges(Source, Edges);
+        Bevel.InitializeFromTriangleEdges(BevelSource, Edges);
         if (!Bevel.Apply(Mesh, nullptr)) { Trial->SetStringField(TEXT("failure"), TEXT("operation")); continue; }
+        Mesh.ReverseOrientation(false);
         Trial->SetNumberField(TEXT("triangles"), Mesh.TriangleCount());
         if (Mesh.TriangleCount() > 60000) { Trial->SetStringField(TEXT("failure"), TEXT("triangle_budget")); continue; }
         bool Valid = true;
@@ -124,7 +128,7 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
             const FVector3d P = Mesh.GetVertex(V);
             FVector3d Q;
             if (Source.IsVertex(V)) { Q = Source.GetVertex(V); }
-            else if (!SourceAtXY(P, Q)) { Trial->SetStringField(TEXT("failure"), TEXT("source_projection")); Valid = false; break; }
+            else if (!SourceClosest(P, Q)) { Trial->SetStringField(TEXT("failure"), TEXT("source_projection")); Valid = false; break; }
             Original[V] = Q;
             const double Shift = (P - Q).Length();
             const bool Edited = !Source.IsVertex(V) || Shift > 1.e-8;
