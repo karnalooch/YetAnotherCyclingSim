@@ -83,9 +83,24 @@ class EdgeSourceTests(unittest.TestCase):
         result = audit_edges(self.plan,self.reference,self.narrow_two_facet_bevel())
         self.assertEqual(result['status'], 'PASS')
         self.assertTrue(result['complete_changed_triangle_band_certified'])
+        self.assertTrue(result['native_source_vertices_unchanged'])
         self.assertEqual(result['certified_changed_triangles'], 8)
         self.assertEqual(result['changed_vertices'], 6)
         self.assertLessEqual(result['max_certified_triangle_band_cm'], 10.000001)
+
+    def test_valid_geometry_does_not_claim_original_vertex_identity_was_fixed(self):
+        data = self.narrow_two_facet_bevel()
+        original_id, center_id = 63*127+63, 16133
+        rows = {r[0]: r for r in data['vertices_cm']}
+        # Relabel a fixed source corner and one bevel point. The rendered mesh
+        # stays identical and geometrically valid, but the original vertex ID
+        # now moved into the rounded strip. The independent proof must detect it.
+        rows[original_id][1:7], rows[center_id][1:7] = rows[center_id][1:7], rows[original_id][1:7]
+        remap = {original_id:center_id, center_id:original_id}
+        data['triangles'] = [[remap.get(v,v) for v in f] for f in data['triangles']]
+        result = audit_edges(self.plan,self.reference,data)
+        self.assertEqual(result['status'], 'PASS')
+        self.assertFalse(result['native_source_vertices_unchanged'])
 
     def test_folded_bevel_cap_is_rejected(self):
         data = self.narrow_two_facet_bevel()

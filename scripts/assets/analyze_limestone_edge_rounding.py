@@ -299,4 +299,6 @@ def audit_edges(plan, reference, evidence):
         max_certified_triangle_band_cm=max_surface_band,
         max_displacement_cm=max_shift, nonmanifold_edges=0, folded_xy_triangles=0,
         outside_edge_vertices_unchanged=True, outside_edge_surface_unchanged=True,
+        native_source_vertices_unchanged=all(
+            math.dist(candidate[v], p) <= 1e-8 for v, p in source.items()),
         terrain_heightfield_modified=False)

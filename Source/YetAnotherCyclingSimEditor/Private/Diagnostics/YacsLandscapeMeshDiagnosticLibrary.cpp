@@ -26,14 +26,22 @@ class FGuardedLimestoneBevel : public UE::Geometry::FMeshBevel
 public:
     void ApplyRoundProfile(UE::Geometry::FDynamicMesh3& Mesh) { ApplyProfileShape_Round(Mesh); }
     void UpdateNormals(UE::Geometry::FDynamicMesh3& Mesh) { ComputeNormals(Mesh); }
-    void GetTerminatorSpokes(TArray<UE::Geometry::FIndex2i>& Spokes) const
+    bool GetTerminatorSpokes(const UE::Geometry::FDynamicMesh3& Mesh,
+        TArray<UE::Geometry::FIndex2i>& Spokes) const
     {
         Spokes.Reset();
         for (const FBevelVertex& Vertex : Vertices)
         {
             if (Vertex.VertexType == EBevelVertexType::TerminatorVertex)
-            { Spokes.Add(UE::Geometry::FIndex2i(Vertex.VertexID, Vertex.TerminatorInfo.B)); }
+            {
+                const int32 Edge = Vertex.TerminatorInfo.A;
+                if (!Mesh.IsEdge(Edge)) { return false; }
+                const auto Pair = Mesh.GetEdgeV(Edge);
+                if (!Pair.Contains(Vertex.VertexID)) { return false; }
+                Spokes.Add(UE::Geometry::FIndex2i(Vertex.VertexID, Pair.OtherElement(Vertex.VertexID)));
+            }
         }
+        return true;
     }
 };
 
@@ -56,7 +64,6 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
     }
     for (int32 V : Source.VertexIndicesItr()) { if (Source.IsBoundaryVertex(V)) { Safe[V] = false; } }
     TArray<int32> Edges;
-    TSet<int32> EdgeVertices;
     for (int32 E : Source.EdgeIndicesItr())
     {
         if (Source.IsBoundaryEdge(E)) { continue; }
@@ -70,44 +77,19 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
         const auto F = Source.GetTriangle(T.B);
         const int32 Other = F.A != V.A && F.A != V.B ? F.A : (F.B != V.A && F.B != V.B ? F.B : F.C);
         if (FVector3d::DotProduct(N0, Source.GetVertex(Other) - Source.GetVertex(V.A)) >= -1.0) { continue; }
-        Edges.Add(E); EdgeVertices.Add(V.A); EdgeVertices.Add(V.B);
+        Edges.Add(E);
     }
     if (Edges.IsEmpty()) { Error = TEXT("no eligible sharp convex limestone edges"); return false; }
 
-    // Epic's terminator fan reaches the next unselected neighbor. On this
-    // half-metre mesh that can deform a complete face far outside the edge
-    // treatment. Inspect Epic's actual chosen terminator spokes and insert
-    // source-exact points only on their closing spokes. Continuing edges and
-    // junctions retain local support on each unselected spoke, so a nonplanar
-    // source fan cannot be deformed beyond the narrow band.
-    TArray<int32> SelectedDegree;
-    SelectedDegree.Init(0, Source.MaxVertexID());
-    TSet<int32> SelectedEdgeSet;
-    TArray<FIndex2i> SelectedPairs;
-    for (int32 E : Edges)
-    {
-        const auto V = Source.GetEdgeV(E);
-        ++SelectedDegree[V.A]; ++SelectedDegree[V.B];
-        SelectedEdgeSet.Add(E); SelectedPairs.Add(V);
-    }
-    FDynamicMesh3 TopologySource(Source);
-    TopologySource.ReverseOrientation(false);
-    FGuardedLimestoneBevel Topology;
-    Topology.InitializeFromTriangleEdges(TopologySource, Edges);
-    TArray<FIndex2i> TerminatorSpokes;
-    Topology.GetTerminatorSpokes(TerminatorSpokes);
-    TSet<FIntPoint> TerminatorPairs;
-    for (const auto V : TerminatorSpokes)
-    {
-        const int32 E = Source.FindEdge(V.A, V.B);
-        if (E == IndexConstants::InvalidID || SelectedEdgeSet.Contains(E))
-        { Error = TEXT("invalid native terminator spoke"); return false; }
-        TerminatorPairs.Add(FIntPoint(V.A, V.B));
-    }
+    // Round only isolated middle spans of each admitted source edge. The
+    // original corner vertices remain fixed, and each six-centimetre end
+    // transition closes on that original edge instead of a nonplanar junction
+    // fan. Splitting is linear on source facets; it adds no terrain erosion.
     FDynamicMesh3 LocalSource(Source);
+    TArray<FIndex2i> MiddlePairs;
     int32 EndpointSplits = 0;
     constexpr double EndpointRadiusCm = 6.0;
-    auto SplitSpoke = [&LocalSource, &EndpointSplits, EndpointRadiusCm](int32 Center, int32 Neighbor, int32& NewVertex)
+    auto SplitSelectedEdge = [&LocalSource, &EndpointSplits, EndpointRadiusCm](int32 Center, int32 Neighbor, int32& NewVertex)
     {
         const int32 E = LocalSource.FindEdge(Center, Neighbor);
         if (E == IndexConstants::InvalidID) { return false; }
@@ -121,32 +103,26 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
         NewVertex = Info.NewVertex; ++EndpointSplits;
         return true;
     };
-    for (int32 E : Source.EdgeIndicesItr())
+    for (int32 E : Edges)
     {
-        if (SelectedEdgeSet.Contains(E)) { continue; }
         const auto V = Source.GetEdgeV(E);
-        const bool SplitA = SelectedDegree[V.A] >= 2 || TerminatorPairs.Contains(FIntPoint(V.A, V.B));
-        const bool SplitB = SelectedDegree[V.B] >= 2 || TerminatorPairs.Contains(FIntPoint(V.B, V.A));
-        int32 NeighborForB = V.A, NewVertex = IndexConstants::InvalidID;
-        if (SplitA)
-        {
-            if (!SplitSpoke(V.A, V.B, NewVertex)) { Error = TEXT("local endpoint source split failed"); return false; }
-            NeighborForB = NewVertex;
-        }
-        if (SplitB && !SplitSpoke(V.B, NeighborForB, NewVertex))
-        { Error = TEXT("local endpoint source split failed"); return false; }
+        int32 Start = IndexConstants::InvalidID, End = IndexConstants::InvalidID;
+        if (!SplitSelectedEdge(V.A, V.B, Start) || !SplitSelectedEdge(V.B, Start, End))
+        { Error = TEXT("native edge middle-span source split failed"); return false; }
+        MiddlePairs.Add(FIndex2i(Start, End));
     }
     TArray<int32> LocalEdges;
-    for (const auto V : SelectedPairs)
+    for (const auto V : MiddlePairs)
     {
         const int32 E = LocalSource.FindEdge(V.A, V.B);
-        if (E == IndexConstants::InvalidID) { Error = TEXT("local split lost a selected native edge"); return false; }
+        if (E == IndexConstants::InvalidID) { Error = TEXT("local split lost a selected middle span"); return false; }
         LocalEdges.Add(E);
     }
     Report->SetNumberField(TEXT("endpoint_source_split_count"), EndpointSplits);
-    Report->SetNumberField(TEXT("native_terminator_spoke_count"), TerminatorPairs.Num());
     Report->SetNumberField(TEXT("endpoint_source_split_radius_cm"), EndpointRadiusCm);
     Report->SetNumberField(TEXT("endpoint_refined_source_triangles"), LocalSource.TriangleCount());
+    Report->SetNumberField(TEXT("corner_taper_length_cm"), EndpointRadiusCm);
+    Report->SetStringField(TEXT("corner_policy"), TEXT("fixed original corner tips with six-centimetre taper transitions"));
 
     auto BandDistance = [&Source, &Edges](const FVector3d& P)
     {
@@ -187,7 +163,9 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
     double MaxShift = 0, MaxBand = 0, ChosenInset = 0, ChosenProfileAlpha = 0, MaxProfileShift = 0;
     int32 ChosenSubdivisions = 0;
     TArray<TSharedPtr<FJsonValue>> Attempts;
-    for (const FIntPoint Attempt : {FIntPoint(2, 5), FIntPoint(2, 3), FIntPoint(2, 2), FIntPoint(1, 5), FIntPoint(1, 3), FIntPoint(1, 2), FIntPoint(1, 1)})
+    // One subdivision provides a curved three-rail profile while retaining the
+    // 60,000-triangle ceiling for this complete native component.
+    for (const FIntPoint Attempt : {FIntPoint(1, 5), FIntPoint(1, 3), FIntPoint(1, 2), FIntPoint(1, 1)})
     {
         const double Inset = Attempt.Y;
         const auto Trial = MakeShared<FJsonObject>();
@@ -203,6 +181,17 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
         FGuardedLimestoneBevel Bevel;
         Bevel.InsetDistance = Inset; Bevel.NumSubdivisions = Attempt.X; Bevel.RoundWeight = 0;
         Bevel.InitializeFromTriangleEdges(BevelSource, LocalEdges);
+        TArray<FIndex2i> TerminatorSpokes;
+        const bool SpokesValid = Bevel.GetTerminatorSpokes(BevelSource, TerminatorSpokes);
+        bool LocalCaps = SpokesValid && TerminatorSpokes.Num() == 2 * Edges.Num();
+        for (const auto V : TerminatorSpokes)
+        {
+            if (!Source.IsVertex(V.B) || !BevelSource.IsVertex(V.A) ||
+                (BevelSource.GetVertex(V.A) - Source.GetVertex(V.B)).Length() > EndpointRadiusCm + 1.e-6)
+            { LocalCaps = false; break; }
+        }
+        if (!LocalCaps) { Trial->SetStringField(TEXT("failure"), TEXT("middle_span_terminator_support")); continue; }
+        Trial->SetNumberField(TEXT("local_terminator_count"), TerminatorSpokes.Num());
         if (!Bevel.Apply(Mesh, nullptr)) { Trial->SetStringField(TEXT("failure"), TEXT("operation")); continue; }
         Trial->SetNumberField(TEXT("triangles"), Mesh.TriangleCount());
         if (Mesh.TriangleCount() > 60000) { Trial->SetStringField(TEXT("failure"), TEXT("triangle_budget")); continue; }
@@ -211,14 +200,14 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
             Original.SetNum(Mesh.MaxVertexID()); MaxShift = MaxBand = 0;
             for (int32 V : Source.VertexIndicesItr())
             {
-                if (!Mesh.IsVertex(V) || (!EdgeVertices.Contains(V) && (Mesh.GetVertex(V) - Source.GetVertex(V)).Length() > 1.e-8))
+                if (!Mesh.IsVertex(V) || (Mesh.GetVertex(V) - Source.GetVertex(V)).Length() > 1.e-8)
                 { Check->SetStringField(TEXT("failure"), TEXT("source_id_or_outside_vertex")); return false; }
             }
             for (int32 V : Mesh.VertexIndicesItr())
             {
                 const FVector3d P = Mesh.GetVertex(V);
                 FVector3d Q;
-                if (Source.IsVertex(V) && !EdgeVertices.Contains(V)) { Q = Source.GetVertex(V); }
+                if (Source.IsVertex(V)) { Q = Source.GetVertex(V); }
                 else if (!SourceClosest(P, Q)) { Check->SetStringField(TEXT("failure"), TEXT("source_projection")); return false; }
                 Original[V] = Q;
                 const double Shift = (P - Q).Length();
@@ -305,9 +294,8 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
     for (int32 E : SourceNormals->ElementIndicesItr())
     {
         const int32 V = SourceNormals->GetParentVertex(E);
-        if (EdgeVertices.Contains(V)) { continue; }
         if (!Normals->IsElement(E) || Normals->GetParentVertex(E) != V)
-        { Error = TEXT("bevel changed an outside normal element identity"); return false; }
+        { Error = TEXT("bevel changed a native normal element identity"); return false; }
         FVector3f N; SourceNormals->GetElement(E, N); Normals->SetElement(E, N); ++PreservedNormals;
     }
     TArray<TSharedPtr<FJsonValue>> Rows, Faces, SourceRows, SourceFaces, SelectedEdges;
@@ -321,7 +309,7 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
     {
         const FVector3d P = Mesh.GetVertex(V), Q = Original[V];
         Rows.Add(Row({double(V), Q.X, Q.Y, Q.Z, P.X, P.Y, P.Z,
-            (!Source.IsVertex(V) || EdgeVertices.Contains(V)) ? 1.0 : 0.0}));
+            !Source.IsVertex(V) ? 1.0 : 0.0}));
     }
     for (int32 T : Mesh.TriangleIndicesItr()) { const auto F = Mesh.GetTriangle(T); Faces.Add(Row({double(F.A), double(F.B), double(F.C)})); }
     for (int32 V : Source.VertexIndicesItr()) { const FVector3d P = Source.GetVertex(V); SourceRows.Add(Row({double(V), P.X, P.Y, P.Z})); }
@@ -331,7 +319,7 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
     Report->SetArrayField(TEXT("edge_source_vertices_cm"), SourceRows); Report->SetArrayField(TEXT("edge_source_triangles"), SourceFaces);
     Report->SetArrayField(TEXT("rounded_source_edges"), SelectedEdges);
     Report->SetStringField(TEXT("shape_profile"), TEXT("limestone-edge-band-only-v7"));
-    Report->SetStringField(TEXT("refinement"), TEXT("source-exact local endpoint splits and guarded Epic FMeshBevel profile"));
+    Report->SetStringField(TEXT("refinement"), TEXT("source-exact isolated middle spans and guarded Epic FMeshBevel profile"));
     Report->SetNumberField(TEXT("displacement_limit_cm"), 20); Report->SetNumberField(TEXT("max_displacement_cm"), MaxShift);
     Report->SetNumberField(TEXT("edge_band_radius_cm"), 10); Report->SetNumberField(TEXT("max_edge_band_distance_cm"), MaxBand);
     Report->SetNumberField(TEXT("bevel_inset_cm"), ChosenInset); Report->SetNumberField(TEXT("bevel_subdivisions"), ChosenSubdivisions);
@@ -345,6 +333,8 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
     Report->SetNumberField(TEXT("locked_normal_max_delta"), 0); Report->SetNumberField(TEXT("preserved_normal_elements"), PreservedNormals);
     Report->SetBoolField(TEXT("terrain_erosion"), false); Report->SetBoolField(TEXT("surface_relaxation"), false);
     Report->SetBoolField(TEXT("outside_edge_vertices_unchanged"), true);
+    Report->SetBoolField(TEXT("native_source_vertices_unchanged"), true);
+    Report->SetBoolField(TEXT("native_source_normals_unchanged"), true);
     return true;
 }
 

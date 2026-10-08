@@ -21,6 +21,11 @@ def evaluate(metrics: dict, receipt: dict, audit: dict, expected_sha: str) -> di
            ('post_erosion_mesh', 'restored', 'source_heightfield_unchanged')):
         failures.append('Combined terrain restoration/import failed')
     export = trial.get('mesh_export', {})
+    if (export.get('native_source_vertices_unchanged') is not True
+            or export.get('native_source_normals_unchanged') is not True
+            or export.get('corner_taper_length_cm') != 6
+            or export.get('corner_policy') != 'fixed original corner tips with six-centimetre taper transitions'):
+        failures.append('Fixed original corner vertices, normals and taper proof missing')
     profile_blend = export.get('bevel_profile_blend')
     if (export.get('bevel_linear_base_valid') is not True
             or not isinstance(profile_blend, (int, float))
@@ -51,6 +56,7 @@ def evaluate(metrics: dict, receipt: dict, audit: dict, expected_sha: str) -> di
             or audit.get('edge_band_radius_cm') != 10
             or audit.get('max_edge_band_distance_cm', float('inf')) > 10.000001
             or audit.get('outside_edge_surface_unchanged') is not True
+            or audit.get('native_source_vertices_unchanged') is not True
             or audit.get('complete_changed_triangle_band_certified') is not True
             or audit.get('max_certified_triangle_band_cm', float('inf')) > 10.000001
             or audit.get('scope') != 'LOCAL_EDGE_BAND_AUDIT_NOT_VISUAL_ACCEPTANCE'

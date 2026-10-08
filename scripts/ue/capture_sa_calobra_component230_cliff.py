@@ -1181,17 +1181,22 @@ def _spawn_edge_rounding_trial():
     component = actor.get_dynamic_mesh_component()
     export = json.loads(library.copy_component230(_target_component, component.get_dynamic_mesh(),
         json.dumps(dict(_plan, limestone_rounded_flow=True, limestone_edge_only=True))))
+    (OUTPUT / 'edge-native-export.json').write_text(json.dumps(export), encoding='utf-8')
     if (export.get('status') != 'NATIVE_LANDSCAPE_COMPONENT_MESH'
             or export.get('shape_profile') != 'limestone-edge-band-only-v7'
-            or export.get('displacement_limit_cm') != 20 or export.get('locked_normal_max_delta') != 0):
+            or export.get('displacement_limit_cm') != 20 or export.get('locked_normal_max_delta') != 0
+            or export.get('native_source_vertices_unchanged') is not True
+            or export.get('native_source_normals_unchanged') is not True):
         raise RuntimeError('Narrow edge export failed: ' + json.dumps(export))
     combined = dict(vertices_cm=export.pop('audit_vertices_cm'), triangles=export.pop('audit_triangles'),
         edge_source_vertices_cm=export.pop('edge_source_vertices_cm'),
         edge_source_triangles=export.pop('edge_source_triangles'),
         rounded_source_edges=export.pop('rounded_source_edges'), refinement=export['refinement'])
-    result = audit_edges(_plan, reference, combined)
-    for name, data in (('mesh-stage', combined), ('combined-mesh', combined), ('combined-audit', result)):
+    # Retain rejected geometry for diagnosis before the independent audit runs.
+    for name, data in (('mesh-stage', combined), ('combined-mesh', combined)):
         (OUTPUT / (name + '.json')).write_text(json.dumps(data), encoding='utf-8')
+    result = audit_edges(_plan, reference, combined)
+    (OUTPUT / 'combined-audit.json').write_text(json.dumps(result), encoding='utf-8')
     component.set_material(0, _target_component.get_editor_property('override_material'))
     component.set_tangents_type(unreal.DynamicMeshComponentTangentsMode.AUTO_CALCULATED)
     component.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)

@@ -12,6 +12,7 @@ class CombinedGateTests(unittest.TestCase):
             k: {'sha256': k, 'thresholds': copy.deepcopy(thresholds)}
             for k in ('baseline_lighting_only', 'candidate_lighting_only')}}
         self.audit = dict(status='PASS', displacement_limit_cm=20,
+                          native_source_vertices_unchanged=True,
                           complete_changed_triangle_band_certified=True,
                           band_certification='adaptive-lipschitz-and-convex-capsules-v1',
                           max_certified_triangle_band_cm=9,
@@ -25,6 +26,10 @@ class CombinedGateTests(unittest.TestCase):
                 imported_heightfield_matches=True, combined_audit=self.audit,
                 limestone_uv_projection={'world_size_m': 3, 'triangles_unchanged': True},
                 mesh_export={'shape_profile': 'limestone-edge-band-only-v7',
+                             'native_source_vertices_unchanged': True,
+                             'native_source_normals_unchanged': True,
+                             'corner_taper_length_cm': 6,
+                             'corner_policy': 'fixed original corner tips with six-centimetre taper transitions',
                              'bevel_linear_base_valid': True, 'bevel_profile_blend': 0.5,
                              'bevel_round_weight': 0.5, 'edge_band_radius_cm': 10, 'max_edge_band_distance_cm': 9,
                              'terrain_erosion': False, 'surface_relaxation': False,
@@ -49,6 +54,53 @@ class CombinedGateTests(unittest.TestCase):
     def test_equal_or_improved_passes_without_granting_owner_acceptance(self):
         self.assertEqual(self.result()['status'], 'PASS')
         self.assertEqual(self.result()['visual_acceptance'], 'PENDING_OWNER')
+
+    def test_native_corner_geometry_and_normals_must_both_be_preserved(self):
+        export = self.receipt['terrain_erosion_trial']['mesh_export']
+        failure = 'Fixed original corner vertices, normals and taper proof missing'
+        for key in ('native_source_vertices_unchanged', 'native_source_normals_unchanged'):
+            for value in (False, None, 1, 'true'):
+                with self.subTest(field=key, value=value):
+                    export[key] = value
+                    result = self.result()
+                    self.assertEqual(result['status'], 'FAIL')
+                    self.assertIn(failure, result['failures'])
+                    export[key] = True
+            with self.subTest(missing=key):
+                del export[key]
+                self.assertIn(failure, self.result()['failures'])
+                export[key] = True
+
+    def test_corner_taper_length_and_policy_cannot_be_relaxed_or_omitted(self):
+        export = self.receipt['terrain_erosion_trial']['mesh_export']
+        failure = 'Fixed original corner vertices, normals and taper proof missing'
+        for key, values in (
+            ('corner_taper_length_cm', (0, 5.99, 6.01, 20, float('nan'), float('inf'), '6', True, None)),
+            ('corner_policy', ('', 'move original corner tips', 'six-centimetre taper transitions', None)),
+        ):
+            expected = export[key]
+            for value in values:
+                with self.subTest(field=key, value=value):
+                    export[key] = value
+                    result = self.result()
+                    self.assertEqual(result['status'], 'FAIL')
+                    self.assertIn(failure, result['failures'])
+                    export[key] = expected
+            with self.subTest(missing=key):
+                del export[key]
+                self.assertIn(failure, self.result()['failures'])
+                export[key] = expected
+
+    def test_independent_vertex_identity_proof_cannot_be_replaced_by_export_claim(self):
+        failure = 'Independent narrow edge geometry audit failed'
+        for value in (False, None, 1, 'true'):
+            with self.subTest(value=value):
+                self.audit['native_source_vertices_unchanged'] = value
+                result = self.result()
+                self.assertEqual(result['status'], 'FAIL')
+                self.assertIn(failure, result['failures'])
+        del self.audit['native_source_vertices_unchanged']
+        self.assertIn(failure, self.result()['failures'])
 
     def test_chamfer_or_unvalidated_round_profile_is_not_accepted(self):
         export = self.receipt['terrain_erosion_trial']['mesh_export']
