@@ -761,3 +761,14 @@ Euclidean displacement, footprint, fixed interfaces, folds and triangle budget.
 Retain mesh-stage, combined original-relative mesh and independent audit evidence.
 Separate terrain-only and terrain-plus-mesh captures isolate the effect of each
 stage. All trial actors are removed and original visibility/heights restored.
+
+The stronger trial exposed delayed source composition: after native import,
+212 samples in rows 115-126 of Component 230 were lower by up to 81 native
+height units. None of these samples was changed by the erosion producer, and
+the change existed before cleanup. This is consistent with pending accepted
+CUT/edit-layer readbacks completing during the trial. The capture now explicitly
+finishes the accepted Landscape's existing layer composition before baseline
+capture and source extraction, using the same native full-update operation as
+the terrain importer. No layer recipe, road target, admission mask or equality
+threshold is changed. Full before/after-cleanup source fields are retained, and
+any remaining source mismatch still fails the trial.

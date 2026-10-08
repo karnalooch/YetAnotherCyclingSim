@@ -1773,6 +1773,10 @@ def main():
         raise RuntimeError("LandscapeComponent_230 is missing")
 
     _before_hash = _digest(MAP_FILE)
+    # Finish the accepted edit-layer composite/readbacks before defining the
+    # reference. Importing another Landscape can otherwise flush pending CUT
+    # readbacks on the original halfway through the comparison.
+    _landscape.force_layers_full_update()
     _before_scene = _scene_snapshot()
     _fix_temporal_sequence()
     _pin_landscape_lod()
