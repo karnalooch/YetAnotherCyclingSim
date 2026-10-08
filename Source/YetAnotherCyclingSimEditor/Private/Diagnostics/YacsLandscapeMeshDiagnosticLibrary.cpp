@@ -194,78 +194,24 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
         return false;
     }
 
-    // Retain the historical control; the limestone proposal uses less flow.
-    const bool bLimestone = Plan->HasField(TEXT("limestone_feature_flow")) &&
-        Plan->GetBoolField(TEXT("limestone_feature_flow"));
-    const int32 Passes = bLimestone ? 24 : 84;
+    // Owner correction: round upper surfaces and walls alike. The historical
+    // standalone control is retained; the candidate no longer protects creases.
+    const bool bRounded = Plan->HasField(TEXT("limestone_rounded_flow")) &&
+        Plan->GetBoolField(TEXT("limestone_rounded_flow"));
+    const int32 Passes = bRounded ? 96 : 84;
     constexpr double Blend = 0.10;
-    // Normal-only flow can crowd vertices into thin triangles. A short
-    // tangential redistribution improves sampling without extending the domain.
-    const int32 TangentialPasses = bLimestone ? 0 : 3;
+    const int32 TangentialPasses = bRounded ? 0 : 3;
     constexpr double TangentialBlend = 0.20;
-    // Owner-approved presentation envelope; canonical source stays unchanged.
     const bool bPostErosion = Plan->HasField(TEXT("post_erosion_mesh")) && Plan->GetBoolField(TEXT("post_erosion_mesh"));
     const double MaxDisplacementCm = bPostErosion ? 50.0 : 100.0;
-    // Freeze the source orientation guide: evolving normals must not gradually
-    // erase a crease and then admit diffusion across it. No noise or invented
-    // strata are added. This preserves existing angular source structure.
-    TArray<FVector3d> GuideNormals;
-    GuideNormals.Init(FVector3d::Zero(), Mesh.MaxVertexID());
-    for (int32 T : Mesh.TriangleIndicesItr())
-    {
-        const auto F = Mesh.GetTriangle(T);
-        const FVector3d N = FVector3d::CrossProduct(
-            Original[F.B] - Original[F.A], Original[F.C] - Original[F.A]);
-        GuideNormals[F.A] += N;
-        GuideNormals[F.B] += N;
-        GuideNormals[F.C] += N;
-    }
-    for (int32 V : Mesh.VertexIndicesItr())
-    {
-        GuideNormals[V].Normalize();
-        // Native Landscape exports can have downward triangle winding. The
-        // crest classifier requires an upward geometric guide, not that winding.
-        if (GuideNormals[V].Z < 0.0) { GuideNormals[V] *= -1.0; }
-    }
-    constexpr double FeatureCosine = 0.85; // approximately 32 degrees
-    // Blunt source-sampling teeth only on convex upper surfaces. A sharp wall
-    // can be a limestone fracture; do not relax it merely for being angular.
-    constexpr double CrestUpCosine = 0.70; // upper surfaces within about 45 degrees
-    constexpr double CrestResidualCm = -1.0;
-    constexpr double CrestBlend = 0.35;
-    const int32 CrestPasses = bLimestone ? 12 : 0;
-    TArray<bool> CrestEligible;
-    CrestEligible.Init(false, Mesh.MaxVertexID());
-    TArray<double> SourceConvexResidual;
-    SourceConvexResidual.Init(0.0, Mesh.MaxVertexID());
-    TArray<FVector3d> BeforeCrest;
-    BeforeCrest.SetNum(Mesh.MaxVertexID());
-    int32 CrestEligibleVertices = 0;
-    for (int32 V : Mesh.VertexIndicesItr())
-    {
-        FVector3d Mean = FVector3d::Zero();
-        int32 Neighbors = 0;
-        for (int32 Neighbor : Mesh.VtxVerticesItr(V))
-        {
-            Mean += Original[Neighbor];
-            ++Neighbors;
-        }
-        if (Neighbors == 0) { continue; }
-        SourceConvexResidual[V] = FVector3d::DotProduct(Mean / Neighbors - Original[V], GuideNormals[V]);
-        CrestEligible[V] = bLimestone && Movable[V] &&
-            GuideNormals[V].Z >= CrestUpCosine && SourceConvexResidual[V] < CrestResidualCm;
-        if (CrestEligible[V]) { ++CrestEligibleVertices; }
-    }
     int32 Backtracks = 0;
     int32 CompletedPasses = 0;
     int32 CompletedTangentialPasses = 0;
     int32 VerticalFallbackUpdates = 0;
-    int32 CompletedCrestPasses = 0;
     bool StoppedAtConstraint = false;
-    for (int32 Pass = 0; Pass < Passes + CrestPasses + TangentialPasses; ++Pass)
+    for (int32 Pass = 0; Pass < Passes + TangentialPasses; ++Pass)
     {
-        const bool bCrest = Pass >= Passes && Pass < Passes + CrestPasses;
-        const bool bTangential = Pass >= Passes + CrestPasses;
+        const bool bTangential = Pass >= Passes;
         TArray<FVector3d> Before, Target, Normals;
         TArray<double> VerticalDelta;
         VerticalDelta.Init(0.0, Mesh.MaxVertexID());
@@ -275,7 +221,6 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
         for (int32 V : Mesh.VertexIndicesItr())
         {
             Before[V] = Target[V] = Mesh.GetVertex(V);
-            if (Pass == Passes) { BeforeCrest[V] = Before[V]; }
         }
         for (int32 T : Mesh.TriangleIndicesItr())
         {
@@ -288,34 +233,26 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
         for (int32 V : Mesh.VertexIndicesItr())
         {
             if (!Movable[V]) { continue; }
-            if (bCrest && !CrestEligible[V]) { continue; }
             FVector3d Mean = FVector3d::Zero();
             double WeightSum = 0;
             for (int32 Neighbor : Mesh.VtxVerticesItr(V))
             {
-                const double Alignment = FVector3d::DotProduct(GuideNormals[V], GuideNormals[Neighbor]);
-                const double Weight = bLimestone && !bCrest
-                    ? FMath::Square(FMath::Clamp((Alignment - FeatureCosine) / (1.0 - FeatureCosine), 0.0, 1.0))
-                    : 1.0;
+                constexpr double Weight = 1.0;
                 Mean += Before[Neighbor] * Weight;
                 WeightSum += Weight;
             }
             if (WeightSum < 1.e-9 || !Normals[V].Normalize()) { continue; }
             // Normal-space relaxation: horizontal on walls, vertical on flats.
-            FVector3d N = Normals[V];
-            if (bCrest && N.Z < 0.0) { N *= -1.0; }
+            const FVector3d N = Normals[V];
             const FVector3d Laplacian = Mean / WeightSum - Before[V];
             const double NormalResidual = FVector3d::DotProduct(Laplacian, N);
             const double NormalDelta = Blend * NormalResidual;
-            Target[V] = bCrest
-                ? Before[V] + FVector3d(0.0, 0.0, CrestBlend * FMath::Min(0.0,
-                    NormalResidual) / FMath::Max(CrestUpCosine, N.Z))
-                : Before[V] + (bTangential
+            Target[V] = Before[V] + (bTangential
                 ? TangentialBlend * (Laplacian - N * NormalResidual)
                 : N * NormalDelta);
             // If XY motion is constrained, solve the same tangent-plane residual
             // vertically. This preserves XY authority instead of freezing ridges.
-            if (!bTangential && !bCrest && FMath::Abs(N.Z) > 1.e-6)
+            if (!bTangential && FMath::Abs(N.Z) > 1.e-6)
             {
                 VerticalDelta[V] = NormalDelta / N.Z;
             }
@@ -323,16 +260,7 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
             const double Length = Delta.Length();
             if (Length > MaxDisplacementCm)
             {
-                if (bCrest)
-                {
-                    const double ZBudget = FMath::Sqrt(FMath::Max(0.0,
-                        MaxDisplacementCm * MaxDisplacementCm - Delta.X * Delta.X - Delta.Y * Delta.Y));
-                    Target[V].Z = FMath::Clamp(Target[V].Z, Original[V].Z - ZBudget, Original[V].Z + ZBudget);
-                }
-                else
-                {
-                    Target[V] = Original[V] + Delta * (MaxDisplacementCm / Length);
-                }
+                Target[V] = Original[V] + Delta * (MaxDisplacementCm / Length);
             }
         }
         bool Accepted = false;
@@ -393,45 +321,8 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
             break;
         }
         if (bTangential) { ++CompletedTangentialPasses; }
-        else if (bCrest) { ++CompletedCrestPasses; }
         else { ++CompletedPasses; }
     }
-    TArray<TSharedPtr<FJsonValue>> CrestVertices;
-    int32 CrestChangedVertices = 0;
-    if (bLimestone)
-    {
-        if (CompletedCrestPasses != CrestPasses)
-        {
-            Error = TEXT("convex upper-surface crest trial did not complete");
-            return false;
-        }
-        for (int32 V : Mesh.VertexIndicesItr())
-        {
-            const FVector3d P = Mesh.GetVertex(V);
-            const FVector3d Delta = P - BeforeCrest[V];
-            if (FMath::Abs(Delta.X) > 1.e-9 || FMath::Abs(Delta.Y) > 1.e-9 ||
-                Delta.Z > 1.e-9 || (!CrestEligible[V] && Delta.Length() > 1.e-9))
-            {
-                Error = TEXT("crest correction changed a wall, concavity, XY or raised a vertex");
-                return false;
-            }
-            if (Delta.Z < -1.e-6) { ++CrestChangedVertices; }
-            TArray<TSharedPtr<FJsonValue>> Row;
-            for (double Number : {double(V), BeforeCrest[V].X, BeforeCrest[V].Y, BeforeCrest[V].Z,
-                P.X, P.Y, P.Z, CrestEligible[V] ? 1.0 : 0.0, GuideNormals[V].Z, SourceConvexResidual[V]})
-            {
-                Row.Add(MakeShared<FJsonValueNumber>(Number));
-            }
-            CrestVertices.Add(MakeShared<FJsonValueArray>(Row));
-        }
-        Report->SetArrayField(TEXT("crest_audit_vertices"), CrestVertices);
-    }
-    Report->SetNumberField(TEXT("crest_passes"), CompletedCrestPasses);
-    Report->SetNumberField(TEXT("crest_eligible_vertices"), CrestEligibleVertices);
-    Report->SetNumberField(TEXT("crest_changed_vertices"), CrestChangedVertices);
-    Report->SetNumberField(TEXT("crest_up_cosine"), CrestUpCosine);
-    Report->SetNumberField(TEXT("crest_source_residual_cm"), CrestResidualCm);
-    Report->SetStringField(TEXT("crest_policy"), TEXT("source-convex upper surfaces only, downward Z, unchanged XY and walls, shared mesh-stage envelope"));
     double MaxShift = 0, MaxXY = 0, MaxZ = 0;
     int32 Changed = 0;
     for (int32 V : Mesh.VertexIndicesItr())
@@ -496,9 +387,10 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
     Report->SetNumberField(TEXT("locked_normal_max_delta"), 0);
     Report->SetStringField(TEXT("normal_policy"), TEXT("native normals preserved outside movable cliff vertices"));
     Report->SetBoolField(TEXT("local_smoothing"), true);
-    Report->SetStringField(TEXT("shape_profile"), bLimestone
-        ? TEXT("limestone-source-feature-flow-v2-upper-crests") : TEXT("legacy-normal-flow-v1"));
-    Report->SetNumberField(TEXT("source_feature_cosine"), bLimestone ? FeatureCosine : -1.0);
+    Report->SetStringField(TEXT("shape_profile"), bRounded
+        ? TEXT("rounded-limestone-normal-flow-v3") : TEXT("legacy-normal-flow-v1"));
+    Report->SetBoolField(TEXT("crease_preservation"), false);
+    Report->SetNumberField(TEXT("source_feature_cosine"), -1.0);
     Report->SetNumberField(TEXT("source_skin_cells"), 1017);
     Report->SetNumberField(TEXT("allowed_native_triangles"), AllowedTriangles);
     Report->SetNumberField(TEXT("changed_vertices"), Changed);
@@ -514,8 +406,8 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
     Report->SetNumberField(TEXT("vertical_fallback_updates"), VerticalFallbackUpdates);
     Report->SetBoolField(TEXT("stopped_at_constraint"), StoppedAtConstraint);
     Report->SetNumberField(TEXT("line_search_backtracks"), Backtracks);
-    Report->SetStringField(TEXT("smoothing_policy"), bLimestone
-        ? TEXT("bounded source-feature normal flow plus convex upper-surface crest correction, fixed guide, unchanged walls in crest stage, no tangential redistribution")
+    Report->SetStringField(TEXT("smoothing_policy"), bRounded
+        ? TEXT("rounded surfaces and walls, unweighted bounded normal flow, no crease preservation or tangential redistribution, fixed protected interfaces")
         : TEXT("bounded normal-space relaxation with vertical fallback, three tangential redistribution passes and fixed footprint interfaces"));
     TArray<TSharedPtr<FJsonValue>> AuditVertices, AuditTriangles;
     for (int32 V : Mesh.VertexIndicesItr())

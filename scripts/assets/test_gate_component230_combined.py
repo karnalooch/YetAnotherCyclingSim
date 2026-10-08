@@ -20,10 +20,9 @@ class CombinedGateTests(unittest.TestCase):
                 post_erosion_mesh=True, restored=True, source_heightfield_unchanged=True,
                 imported_heightfield_matches=True, combined_audit=self.audit,
                 limestone_uv_projection={'world_size_m': 3, 'triangles_unchanged': True},
-                mesh_export={'shape_profile': 'limestone-source-feature-flow-v2-upper-crests',
-                             'crest_passes': 12, 'crest_changed_vertices': 1,
-                             'crest_audit_vertices': [[0, 0, 0, 1, 0, 0, 0.9, 1, 0.8, -2],
-                                                      [1, 1, 0, 1, 1, 0, 1, 0, 0.3, -2]]}),
+                mesh_export={'shape_profile': 'rounded-limestone-normal-flow-v3',
+                             'crease_preservation': False, 'smoothing_passes': 96,
+                             'tangential_redistribution_passes': 0}),
             captures=[{'name': name, 'sha256': key} for name, key in (
                 ('02-baseline-lighting-only', 'baseline_lighting_only'),
                 ('04-candidate-lighting-only', 'candidate_lighting_only'))],
@@ -71,12 +70,13 @@ class CombinedGateTests(unittest.TestCase):
         self.receipt['diagnostic_captures'][-1]['camera_location_cm'] = [4, 5, 6]
         self.assertEqual(self.result()['status'], 'FAIL')
 
-    def test_wall_motion_upward_motion_and_false_convex_mask_fail(self):
+    def test_rejected_crease_profile_or_incomplete_rounding_fails(self):
         export = self.receipt['terrain_erosion_trial']['mesh_export']
-        for index, field, value in ((1, 6, 0.9), (0, 6, 1.1), (0, 8, 0.3), (0, 9, 0)):
-            with self.subTest(index=index, field=field):
-                row = export['crest_audit_vertices'][index]
-                old = row[field]
-                row[field] = value
+        for key, value in (('crease_preservation', True), ('smoothing_passes', 24),
+                           ('tangential_redistribution_passes', 3),
+                           ('shape_profile', 'limestone-source-feature-flow-v2-upper-crests')):
+            with self.subTest(key=key):
+                old = export[key]
+                export[key] = value
                 self.assertEqual(self.result()['status'], 'FAIL')
-                row[field] = old
+                export[key] = old

@@ -1162,9 +1162,9 @@ def _spawn_terrain_erosion_trial():
 
     library = unreal.YacsLandscapeMeshDiagnosticLibrary
     _terrain_source = json.loads(library.read_component230_heightfield(_target_component))
-    candidate, erosion = erode(_terrain_source, _plan, iterations=32 if TERRAIN_MESH_TRIAL else 96,
-                               talus_slope=1.2 if TERRAIN_MESH_TRIAL else 0.8,
-                               limit_cm=150.0, smoothing_passes=0 if TERRAIN_MESH_TRIAL else 12)
+    candidate, erosion = erode(_terrain_source, _plan, iterations=64 if TERRAIN_MESH_TRIAL else 96,
+                               talus_slope=0.8,
+                               limit_cm=150.0, smoothing_passes=16 if TERRAIN_MESH_TRIAL else 12)
     if (not erosion["derived_heightfield_modified"] or erosion["fixed_samples_changed"]
             or erosion["height_sum_delta_units"] or erosion["max_abs_change_cm"] > 150):
         raise RuntimeError("Terrain erosion bounds or sediment conservation failed")
@@ -1216,7 +1216,7 @@ def _spawn_terrain_erosion_trial():
         mesh_actor.set_actor_label("YACS Component230 eroded terrain mesh (unsaved)")
         mesh_component = mesh_actor.get_dynamic_mesh_component()
         export = json.loads(library.copy_component230(
-            components[0], mesh_component.get_dynamic_mesh(), json.dumps(dict(_plan, post_erosion_mesh=True, limestone_feature_flow=True))))
+            components[0], mesh_component.get_dynamic_mesh(), json.dumps(dict(_plan, post_erosion_mesh=True, limestone_rounded_flow=True))))
         if (export.get("status") != "NATIVE_LANDSCAPE_COMPONENT_MESH"
                 or export.get("displacement_limit_cm") != 50
                 or export.get("locked_normal_max_delta") != 0):

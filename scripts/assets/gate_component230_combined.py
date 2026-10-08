@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 from pathlib import Path
 
 
@@ -21,27 +20,11 @@ def evaluate(metrics: dict, receipt: dict, audit: dict, expected_sha: str) -> di
            ('post_erosion_mesh', 'restored', 'source_heightfield_unchanged', 'imported_heightfield_matches')):
         failures.append('Combined terrain restoration/import failed')
     export = trial.get('mesh_export', {})
-    if export.get('shape_profile') != 'limestone-source-feature-flow-v2-upper-crests':
-        failures.append('Limestone shape profile missing')
-    crest_rows = export.get('crest_audit_vertices', [])
-    crest_changed = 0
-    crest_valid = bool(crest_rows) and len(crest_rows) == audit.get('vertices')
-    for row in crest_rows:
-        if (len(row) != 10 or not all(isinstance(x, (int, float)) and math.isfinite(x) for x in row)
-                or row[7] not in (0, 1)):
-            crest_valid = False
-            continue
-        moved = abs(row[6] - row[3]) > 1.e-6
-        eligible = row[7] == 1
-        if (abs(row[4] - row[1]) > 1.e-9 or abs(row[5] - row[2]) > 1.e-9
-                or row[6] > row[3] + 1.e-9 or (moved and not eligible)
-                or (eligible and (row[8] < 0.70 or row[9] >= -1.0))):
-            crest_valid = False
-        crest_changed += moved
-    if (not crest_valid or not crest_changed
-            or crest_changed != export.get('crest_changed_vertices')
-            or export.get('crest_passes') != 12):
-        failures.append('Convex upper-surface crest/wall protection proof failed')
+    if (export.get('shape_profile') != 'rounded-limestone-normal-flow-v3'
+            or export.get('crease_preservation') is not False
+            or export.get('smoothing_passes') != 96
+            or export.get('tangential_redistribution_passes') != 0):
+        failures.append('Rounded limestone recipe proof missing')
     if (audit.get('status') != 'PASS' or audit.get('displacement_limit_cm') != 200
             or not 0 <= audit.get('max_displacement_cm', float('inf')) <= 200.000001
             or audit.get('triangles', 60001) > 60000
