@@ -1021,6 +1021,7 @@ def _spawn_landscape_mesh_diagnostic():
             or export.get("source_skin_cells") != 1017
             or export.get("folded_xy_triangles") != 0
             or export.get("locked_vertex_displacement_cm") != 0
+            or export.get("locked_normal_max_delta", float("inf")) != 0
             or export.get("max_displacement_cm", float("inf")) > 50.000001
         ):
             raise RuntimeError("Local cliff smoothing receipt failed")
@@ -1035,7 +1036,6 @@ def _spawn_landscape_mesh_diagnostic():
             json.dumps(evidence, sort_keys=True, separators=(",", ":")), encoding="utf-8"
         )
         export["mesh_evidence_sha256"] = _digest(evidence_path)
-        export["normal_policy"] = "native overlay recomputed after local smoothing"
         component.set_tangents_type(
             unreal.DynamicMeshComponentTangentsMode.AUTO_CALCULATED
         )

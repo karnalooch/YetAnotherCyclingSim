@@ -528,3 +528,19 @@ triangle budgets are unchanged. A read-only 24-pass numerical probe reduced the
 99th-percentile absolute normal Laplacian residual from 9.07 cm (previous solver)
 to 6.26 cm; this is a geometry diagnostic, not visual acceptance. Unreal build,
 independent geometry audit and rendered comparison must validate the new solver.
+
+At `a76fe4dd` (run `37723714143`), the fallback built, passed the independent
+geometry audit and rendered successfully. Ordinary CI, Gumball and orchestrator
+passed. Geometry remained 58,216 triangles, 1,017 m2, zero nonmanifold edges/XY
+folds, fixed interfaces and max displacement 50 cm. At luma <0.15 the candidate
+had 13,741 dark pixels and largest region 1,167, versus 16,324 and 2,232 in the
+preceding diagnostic. Large wedges still remain: no visual or whole-map admission.
+The separate legacy A/B baseline-identity gate remains failed.
+
+A scope defect was identified: full-overlay normal recomputation altered shading
+at fixed vertices outside the editable footprint. The new darkest small region
+around (1735,302) traces to fixed receiver/occluder geometry. Restrict native normal
+recomputation to overlay elements whose parent vertex is movable. Retain and
+exactly compare every fixed element before/after the operation, failing on any
+change. This preserves native shading at unedited surfaces and component interfaces.
+The presentation geometry and smoothing parameters stay identical for this test.

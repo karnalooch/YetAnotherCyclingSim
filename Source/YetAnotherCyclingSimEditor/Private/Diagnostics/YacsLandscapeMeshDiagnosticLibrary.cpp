@@ -8,6 +8,8 @@
 #include "UDynamicMesh.h"
 #include "DynamicMesh/DynamicMesh3.h"
 #include "DynamicMesh/MeshNormals.h"
+#include "DynamicMesh/DynamicMeshAttributeSet.h"
+#include "DynamicMesh/DynamicMeshOverlay.h"
 #include "Operations/SelectiveTessellate.h"
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonSerializer.h"
@@ -322,11 +324,53 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
         MaxXY = FMath::Max(MaxXY, FMath::Sqrt(Delta.X * Delta.X + Delta.Y * Delta.Y));
         MaxZ = FMath::Max(MaxZ, FMath::Abs(Delta.Z));
     }
-    if (Changed == 0 || !UE::Geometry::FMeshNormals::QuickRecomputeOverlayNormals(Mesh, false, true, true, false))
+    if (!Mesh.HasAttributes() || !Mesh.Attributes()->PrimaryNormals())
+    {
+        Error = TEXT("native normal overlay missing");
+        return false;
+    }
+    auto* NormalOverlay = Mesh.Attributes()->PrimaryNormals();
+    TArray<int32> EditedNormalElements;
+    TMap<int32, FVector3f> FixedNormals;
+    for (int32 Element : NormalOverlay->ElementIndicesItr())
+    {
+        const int32 Vertex = NormalOverlay->GetParentVertex(Element);
+        if (!Movable.IsValidIndex(Vertex))
+        {
+            Error = TEXT("normal overlay has invalid parent vertex");
+            return false;
+        }
+        if (Movable[Vertex])
+        {
+            EditedNormalElements.Add(Element);
+        }
+        else
+        {
+            FVector3f Normal;
+            NormalOverlay->GetElement(Element, Normal);
+            FixedNormals.Add(Element, Normal);
+        }
+    }
+    if (Changed == 0 || !UE::Geometry::FMeshNormals::RecomputeOverlayElementNormals(
+        Mesh, EditedNormalElements, true, true))
     {
         Error = TEXT("empty smoothing result or normal recomputation failure");
         return false;
     }
+    for (const auto& Pair : FixedNormals)
+    {
+        FVector3f Actual;
+        NormalOverlay->GetElement(Pair.Key, Actual);
+        if (Actual != Pair.Value)
+        {
+            Error = TEXT("normal recomputation changed a fixed vertex");
+            return false;
+        }
+    }
+    Report->SetNumberField(TEXT("preserved_normal_elements"), FixedNormals.Num());
+    Report->SetNumberField(TEXT("recomputed_normal_elements"), EditedNormalElements.Num());
+    Report->SetNumberField(TEXT("locked_normal_max_delta"), 0);
+    Report->SetStringField(TEXT("normal_policy"), TEXT("native normals preserved outside movable cliff vertices"));
     Report->SetBoolField(TEXT("local_smoothing"), true);
     Report->SetNumberField(TEXT("source_skin_cells"), 1017);
     Report->SetNumberField(TEXT("allowed_native_triangles"), AllowedTriangles);
