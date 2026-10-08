@@ -988,6 +988,14 @@ annotation records a stable surface ID, source frame and evidence reason:
 Tags do not change the owner-accepted geometry or materials. They describe
 review findings and proposals, and can coexist on the same surface.
 
+The [surface detail atlas and PCGEx handoff plan](SA_CALOBRA_SURFACE_DETAIL_ATLAS.md)
+records the owner's follow-up: assign detail to bounded physical surfaces across
+available views, keep A-D viewer-demand bands separate from these five tags,
+and preserve silhouette requirements when proposing lower fine detail. Its
+shortlist is provisional; original-PNG review, natural boundaries and spatial
+mapping remain pending. The current task selects places and detail requirements,
+without performance measurement or a new PCGEx consumer.
+
 The existing Component 230 workflow has a fixed `bidirectional-survey` lane,
 selected by `[tpp-survey]` in the push commit or its boolean dispatch input.
 It verifies owner, exact revision, unchanged accepted geometry/assets and an

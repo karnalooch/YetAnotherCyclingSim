@@ -131,6 +131,7 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 - [`tooling/MATERIAL_FORGE.md`](tooling/MATERIAL_FORGE.md) — Issue #387 offline procedural PBR, material-local mask and UE import contract; consumes PCG/PCGEx semantics, never replaces them.
 - [`tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md`](tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md) — cliff selector/handoff contract and bounded native Landscape/PCGEx/mesh trial history, subordinate to the World Building Bible.
 - [`tooling/SA_CALOBRA_COMPONENT230_REPAIR_PLAN.md`](tooling/SA_CALOBRA_COMPONENT230_REPAIR_PLAN.md) — #445 / draft PR #446 report verification, exact remaining failures and ordered repair/acceptance evidence; local trial success does not admit the whole map.
+- [`tooling/SA_CALOBRA_SURFACE_DETAIL_ATLAS.md`](tooling/SA_CALOBRA_SURFACE_DETAIL_ATLAS.md) — documentation-only surface-detail review and PCG/PCGEx handoff plan: A-D viewer demand, five independent tags and a provisional paired-view shortlist; final surface mapping remains pending.
 - [`ASSET_PLAN.md`](ASSET_PLAN.md) — source/technical asset ledger and provenance expectations.
 - [`tooling/JULKA.md`](tooling/JULKA.md) — Issue #345 asset acquisition, local restore, identity and cleanup contract; subordinate to the asset ledger and World Building Bible.
 - [`UE_MCP_WORLD_GENERATION.md`](UE_MCP_WORLD_GENERATION.md) — current official Epic MCP adoption decision/DoD (#384, blocked by #363), plus the retained db-lyon integration baseline; interface only, not world/proof authority.
