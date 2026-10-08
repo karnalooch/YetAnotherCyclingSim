@@ -894,7 +894,7 @@ class ReusablePreviewTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "Unsupported"):
                 prep.package_files(prep.MASTER_PATH)
 
-    def test_unsaved_scalar_and_texture_binding_changes_are_rejected(self):
+    def instance_fixture(self):
         recipe = prep.rendering_recipe()
         scalars = dict(prep.SCALARS)
         for role, settings in recipe["roles"].items():
@@ -933,6 +933,11 @@ class ReusablePreviewTests(unittest.TestCase):
             MaterialEditingLibrary=lib,
             MaterialParameterAssociation=SimpleNamespace(GLOBAL_PARAMETER=0),
             YacsTextureAuditLibrary=SimpleNamespace(
+                drain_asset_compilation_and_collect_garbage=Mock(
+                    return_value=json.dumps(
+                        {"ok": True, "remaining_after": 0, "shader_jobs_after": 0}
+                    )
+                ),
                 describe_texture=lambda _texture: json.dumps(
                     {
                         "is_default_texture": False,
@@ -941,11 +946,15 @@ class ReusablePreviewTests(unittest.TestCase):
                         "size_y": 4033,
                         "srgb": False,
                     }
-                )
+                ),
             ),
         )
         master = SimpleNamespace(get_editor_property=lambda _name: True)
         receipt = {"source_assets": sources, "rendering_recipe": recipe}
+        return api, master, receipt, scalars, textures
+
+    def test_unsaved_scalar_and_texture_binding_changes_are_rejected(self):
+        api, master, receipt, scalars, textures = self.instance_fixture()
         self.assertEqual(
             len(
                 prep.verify_instance(api, master, object(), receipt)[
@@ -962,6 +971,85 @@ class ReusablePreviewTests(unittest.TestCase):
             get_path_name=lambda: "/Game/Wrong.Texture"
         )
         with self.assertRaisesRegex(RuntimeError, "in-memory texture"):
+            prep.verify_instance(api, master, object(), receipt)
+
+    def test_all_actual_texture_bindings_load_before_native_barrier_and_audit(self):
+        api, master, receipt, _scalars, textures = self.instance_fixture()
+        events, resolved = [], set()
+        ready = False
+        audit = api.YacsTextureAuditLibrary.describe_texture
+        native = {
+            "ok": True,
+            "remaining_before": 11,
+            "remaining_after": 0,
+            "shader_jobs_after": 0,
+        }
+
+        def get_binding(_instance, name, _association):
+            events.append(("get", name))
+            resolved.add(name)
+            return textures[name]
+
+        def drain():
+            nonlocal ready
+            self.assertEqual(resolved, set(textures))
+            events.append(("drain", None))
+            ready = True
+            return json.dumps(native)
+
+        def describe(texture):
+            self.assertTrue(ready, "Native fallback audited before its loading barrier")
+            events.append(("audit", texture.get_path_name()))
+            return audit(texture)
+
+        api.MaterialEditingLibrary.get_material_instance_texture_parameter_value = (
+            get_binding
+        )
+        api.YacsTextureAuditLibrary.drain_asset_compilation_and_collect_garbage = Mock(
+            side_effect=drain
+        )
+        api.YacsTextureAuditLibrary.describe_texture = describe
+        result = prep.verify_instance(api, master, object(), receipt)
+        self.assertEqual([event[0] for event in events[:12]], ["get"] * 11 + ["drain"])
+        self.assertEqual([event[0] for event in events[12:]], ["get", "audit"] * 11)
+        self.assertEqual(result["texture_compile_drain"], native)
+        self.assertEqual(len(result["texture_readbacks"]), 11)
+        api.YacsTextureAuditLibrary.drain_asset_compilation_and_collect_garbage.assert_called_once()
+
+    def test_texture_still_default_or_compiling_after_barrier_is_rejected(self):
+        for flag in ("is_default_texture", "is_compiling"):
+            with self.subTest(flag=flag):
+                api, master, receipt, _scalars, _textures = self.instance_fixture()
+                api.YacsTextureAuditLibrary.describe_texture = (
+                    lambda _texture, key=flag: json.dumps(
+                        {
+                            "is_default_texture": False,
+                            "is_compiling": False,
+                            key: True,
+                        }
+                    )
+                )
+                with self.assertRaisesRegex(
+                    RuntimeError, "Prepared native texture fallback: WeightTex"
+                ):
+                    prep.verify_instance(api, master, object(), receipt)
+                api.YacsTextureAuditLibrary.drain_asset_compilation_and_collect_garbage.assert_called_once()
+
+    def test_texture_binding_changed_during_barrier_is_rejected(self):
+        api, master, receipt, _scalars, textures = self.instance_fixture()
+
+        def drain():
+            textures["WeightTex"] = SimpleNamespace(
+                get_path_name=lambda: "/Game/Wrong.Texture"
+            )
+            return json.dumps(
+                {"ok": True, "remaining_after": 0, "shader_jobs_after": 0}
+            )
+
+        api.YacsTextureAuditLibrary.drain_asset_compilation_and_collect_garbage = drain
+        with self.assertRaisesRegex(
+            RuntimeError, "binding changed after readiness barrier"
+        ):
             prep.verify_instance(api, master, object(), receipt)
 
     def test_preview_failed_apply_reports_incomplete_restore_and_retains_handles(self):

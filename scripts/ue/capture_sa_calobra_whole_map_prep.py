@@ -491,6 +491,9 @@ class WholeMapCapture:
             )
         actual = verify_instance(self.api, self.master, self.instance, data)
         self.parameter_originals = {name: actual["scalars"][name] for name in SCALARS}
+        self.report["fresh_process_texture_compile_drain"] = actual[
+            "texture_compile_drain"
+        ]
         self.report["fresh_process_texture_readbacks"] = actual["texture_readbacks"]
         self.report["fresh_process_master_verified"] = True
 

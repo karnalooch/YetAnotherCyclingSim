@@ -1390,7 +1390,16 @@ def verify_native_evidence(repo, root, head):
         and report.get("capture_complete") is True
         and report.get("fresh_process_master_verified") is True
         and report.get("error") is None,
-        "Whole-map native proof did not complete at exact HEAD",
+        "Whole-map native proof did not complete at exact HEAD: "
+        + json.dumps(
+            {
+                "status": report.get("status"),
+                "exact_sha": report.get("exact_sha"),
+                "capture_complete": report.get("capture_complete"),
+                "capture_count": len(report.get("captures", [])),
+                "native_error": report.get("error"),
+            }
+        ),
     )
     expected_hashes = {
         path: row["sha256"]

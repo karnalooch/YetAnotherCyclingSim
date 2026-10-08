@@ -245,16 +245,39 @@ def verify_instance(api, master, instance, receipt):
         textures
     ):
         raise RuntimeError("Prepared texture parameter inventory differs")
-    readbacks = []
+    # A fresh MI can enqueue texture compilation when its actual bindings are
+    # resolved. Hold all eleven objects before the existing native barrier;
+    # draining before loading them cannot establish their readiness.
+    bindings = {}
     for name, expected in textures.items():
         texture = lib.get_material_instance_texture_parameter_value(
             instance, name, association
         )
         if texture is None or texture.get_path_name().split(".")[0] != expected:
             raise RuntimeError("Prepared in-memory texture binding differs: " + name)
+        bindings[name] = texture
+    compile_drain = drain_compilation(api)
+    readbacks = []
+    for name, expected in textures.items():
+        texture = lib.get_material_instance_texture_parameter_value(
+            instance, name, association
+        )
+        if (
+            texture is None
+            or texture != bindings[name]
+            or texture.get_path_name().split(".")[0] != expected
+        ):
+            raise RuntimeError(
+                "Prepared texture binding changed after readiness barrier: " + name
+            )
         row = json.loads(api.YacsTextureAuditLibrary.describe_texture(texture))
         if row.get("is_default_texture", True) or row.get("is_compiling", True):
-            raise RuntimeError("Prepared native texture fallback: " + name)
+            raise RuntimeError(
+                "Prepared native texture fallback: "
+                + name
+                + ": "
+                + json.dumps(row, sort_keys=True)
+            )
         if name == "WeightTex" and (
             row.get("size_x"),
             row.get("size_y"),
@@ -264,7 +287,11 @@ def verify_instance(api, master, instance, receipt):
                 "Prepared weight texture dimensions/linear registration differ"
             )
         readbacks.append(dict(row, parameter=name))
-    return {"scalars": scalars, "texture_readbacks": readbacks}
+    return {
+        "scalars": scalars,
+        "texture_readbacks": readbacks,
+        "texture_compile_drain": compile_drain,
+    }
 
 
 def source_assets():

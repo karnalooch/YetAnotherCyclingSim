@@ -292,6 +292,18 @@ required setting fails before mutation. Two regressions cover both boundaries.
 The stopped run retained unchanged map/source/checkout evidence and **0/43**
 frames; this is not a visual result.
 
+[Run 37859986710](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37859986710)
+at `c1c454e88d569fb31ff16180210c9f8d18505abe` passed both bootstrap repairs and
+again retained the saved master. Its fresh consumer then read `WeightTex`
+before an explicit completion barrier and rejected the native fallback state.
+The capture receipt is `FAILED`, with **0/43** frames, even though the orderly
+editor shutdown returned process code zero. The independent verifier correctly
+rejected it. Verification now resolves all eleven actual texture bindings,
+finishes existing native asset/shader work, and audits every binding again;
+fallback, compiling or changed bindings remain failures. The compilation
+receipt is retained with the fresh-process readback. Failed completion logs
+also include the actual receipt status, frame count and native exception.
+
 [Native run 37855085872](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37855085872)
 at `a0f12793fba5ef8b425688cd22808e45df26a105` produced and verified the complete
 package, with fingerprint
