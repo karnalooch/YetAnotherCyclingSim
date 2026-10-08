@@ -93,6 +93,23 @@ PINNED_COMMITTED = (
         FRAMES,
     ),
 )
+COMMITTED_EVIDENCE = (
+    (
+        PILOT + "/pilot/triangle-bands.json",
+        "6ec02a0e3dac9756923d29c8b603c0c1d79db411d06f3a20bb30956e11390953",
+        321818,
+    ),
+    (
+        PILOT + "/pilot/manifest.json",
+        "804842ef0893df0d4822caa458ca68b658bf6d9481ef64db5237dde00ec97718",
+        2377,
+    ),
+    (
+        "docs/experiments/sa-calobra-material-repair-20261006/evidence/native-projection.json",
+        "49b0c3e57b07d266b828985dcacde6e4347ec8f7b393b2d4ef266d80d463bced",
+        89152,
+    ),
+)
 MASTER_PACKAGE = "/Game/Generated/YACS/SaCalobra/WholeMapPreparation"
 MASTER = MASTER_PACKAGE + "/M_SaCalobraWholeMapPreparation"
 INSTANCE = MASTER_PACKAGE + "/MI_SaCalobraWholeMapPreparation"
@@ -244,6 +261,55 @@ def committed(repo, head, path, expected):
         "Pinned committed source changed: " + path,
     )
     return data
+
+
+def refresh_committed_evidence(repo, head):
+    """Restore three raw Git blobs after the isolated checkout is sanitized.
+
+    Git can retain a former CRLF worktree after a -text attribute migration.
+    Validate every pinned blob and destination before writing any file; callers
+    retain the normal clean-checkout gate after this bounded materialization.
+    """
+    repo = Path(repo)
+    exact_head(repo, head)
+    sources = []
+    for relative, expected, size in COMMITTED_EVIDENCE:
+        data = committed(repo, head, relative, expected)
+        require(len(data) == size, "Pinned committed size changed: " + relative)
+        sources.append((relative, data))
+
+    prepared = []
+    for relative, data in sources:
+        path = relative_file(repo, relative)
+        before = read_bytes(path)
+        prepared.append((relative, data, before))
+
+    rows = []
+    for relative, data, before in prepared:
+        path = relative_file(repo, relative)
+        rewritten = before != data
+        if rewritten:
+            path.write_bytes(data)
+        after = read_bytes(path)
+        require(
+            len(after) == len(data) and digest(after) == digest(data),
+            "Committed evidence readback failed: " + relative,
+        )
+        rows.append(
+            {
+                "path": relative,
+                "rewritten": rewritten,
+                "before": {"size_bytes": len(before), "sha256": digest(before)},
+                "after": {"size_bytes": len(after), "sha256": digest(after)},
+            }
+        )
+    exact_head(repo, head)
+    return {
+        "status": "COMMITTED_EVIDENCE_REFRESHED",
+        "exact_sha": head,
+        "rewritten_files": sum(row["rewritten"] for row in rows),
+        "files": rows,
+    }
 
 
 def prepare_native(repo, source, root, head):
@@ -1405,6 +1471,7 @@ def main():
     parser.add_argument(
         "action",
         choices=(
+            "refresh-committed",
             "prepare-native",
             "verify-assets",
             "verify-prepared",
@@ -1419,7 +1486,9 @@ def main():
     parser.add_argument("--source", type=Path)
     parser.add_argument("--placement", type=Path)
     args = parser.parse_args()
-    if args.action == "prepare-native":
+    if args.action == "refresh-committed":
+        result = refresh_committed_evidence(args.repo, args.exact_sha)
+    elif args.action == "prepare-native":
         require(args.source is not None, "Retained source root is required")
         result = prepare_native(args.repo, args.source, args.root, args.exact_sha)
     elif args.action == "verify-assets":
@@ -1441,7 +1510,9 @@ def main():
         result = restore(args.repo, args.root, args.exact_sha)
     print(
         json.dumps(
-            {
+            result
+            if args.action == "refresh-committed"
+            else {
                 key: result[key]
                 for key in ("status", "exact_sha", "fingerprint")
                 if key in result

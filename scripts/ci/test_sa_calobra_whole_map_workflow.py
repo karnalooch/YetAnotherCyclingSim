@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import io
 import json
 import math
 import re
@@ -229,6 +230,169 @@ class WholeMapWorkflowRoutingTests(unittest.TestCase):
                     check=False,
                 )
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
+class CommittedEvidenceRefreshTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.repo = Path(self.temporary.name) / "repo"
+        self.repo.mkdir()
+        self.blobs = {
+            relative: f'{{\n  "fixture": {index}\n}}\n'.encode()
+            for index, (relative, _, _) in enumerate(workflow.COMMITTED_EVIDENCE)
+        }
+        self.pins = tuple(
+            (relative, workflow.digest(data), len(data))
+            for relative, data in self.blobs.items()
+        )
+        pins = mock.patch.object(workflow, "COMMITTED_EVIDENCE", self.pins)
+        self.addCleanup(pins.stop)
+        pins.start()
+        workflow.git(self.repo, "init", "-q")
+        workflow.git(self.repo, "config", "core.autocrlf", "false")
+        workflow.git(self.repo, "config", "commit.gpgsign", "false")
+        hooks = self.repo / ".git" / "fixture-hooks"
+        hooks.mkdir()
+        workflow.git(self.repo, "config", "core.hooksPath", str(hooks))
+        for relative, data in self.blobs.items():
+            path = self.repo / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+        workflow.git(self.repo, "add", "--", *self.blobs)
+        self.commit()
+
+    def commit(self):
+        workflow.git(
+            self.repo,
+            "-c",
+            "user.name=Workflow Fixture",
+            "-c",
+            "user.email=workflow-fixture@example.invalid",
+            "commit",
+            "-qm",
+            "Fixture input",
+        )
+        self.head = workflow.git(self.repo, "rev-parse", "HEAD").decode().strip()
+
+    def stale_checkout(self):
+        before = {}
+        for relative, data in self.blobs.items():
+            before[relative] = data.replace(b"\n", b"\r\n")
+            (self.repo / relative).write_bytes(before[relative])
+        return before
+
+    def assert_bytes(self, expected):
+        for relative, data in expected.items():
+            self.assertEqual((self.repo / relative).read_bytes(), data)
+
+    def test_crlf_refresh_changes_only_allowlisted_files_and_is_idempotent(self):
+        before = self.stale_checkout()
+        unrelated = self.repo / "unrelated.json"
+        unrelated.write_bytes(b'{"keep":true}\r\n')
+        receipt = workflow.refresh_committed_evidence(self.repo, self.head)
+        self.assertEqual(receipt["exact_sha"], self.head)
+        self.assertEqual(receipt["rewritten_files"], 3)
+        self.assertEqual([row["path"] for row in receipt["files"]], list(self.blobs))
+        for row in receipt["files"]:
+            relative = row["path"]
+            self.assertEqual(row["before"]["sha256"], workflow.digest(before[relative]))
+            self.assertEqual(row["before"]["size_bytes"], len(before[relative]))
+            self.assertEqual(
+                row["after"]["sha256"], workflow.digest(self.blobs[relative])
+            )
+            self.assertEqual(row["after"]["size_bytes"], len(self.blobs[relative]))
+        self.assert_bytes(self.blobs)
+        self.assertEqual(unrelated.read_bytes(), b'{"keep":true}\r\n')
+        with mock.patch.object(
+            Path, "write_bytes", side_effect=AssertionError("write")
+        ):
+            second = workflow.refresh_committed_evidence(self.repo, self.head)
+        self.assertEqual(second["rewritten_files"], 0)
+
+    def test_last_committed_hash_mismatch_rejects_before_any_write(self):
+        relative = next(reversed(self.blobs))
+        (self.repo / relative).write_bytes(b'{"unexpected":true}\n')
+        workflow.git(self.repo, "add", "--", relative)
+        self.commit()
+        before = self.stale_checkout()
+        with self.assertRaisesRegex(ValueError, "Pinned committed source changed"):
+            workflow.refresh_committed_evidence(self.repo, self.head)
+        self.assert_bytes(before)
+
+    def test_last_committed_size_mismatch_rejects_before_any_write(self):
+        before = self.stale_checkout()
+        relative, sha, size = self.pins[-1]
+        pins = self.pins[:-1] + ((relative, sha, size + 1),)
+        with (
+            mock.patch.object(workflow, "COMMITTED_EVIDENCE", pins),
+            self.assertRaisesRegex(ValueError, "Pinned committed size changed"),
+        ):
+            workflow.refresh_committed_evidence(self.repo, self.head)
+        self.assert_bytes(before)
+
+    def test_later_reparse_ancestor_rejects_before_any_write(self):
+        before = self.stale_checkout()
+        blocked = (self.repo / next(reversed(self.blobs))).parent
+        no_link = workflow.no_link
+
+        def reject_reparse(path):
+            if path == blocked:
+                raise ValueError("Evidence cannot contain a symlink or reparse point")
+            return no_link(path)
+
+        with (
+            mock.patch.object(workflow, "no_link", side_effect=reject_reparse),
+            self.assertRaisesRegex(ValueError, "symlink or reparse point"),
+        ):
+            workflow.refresh_committed_evidence(self.repo, self.head)
+        self.assert_bytes(before)
+
+    def test_wrong_exact_head_rejects_before_any_write(self):
+        before = self.stale_checkout()
+        with self.assertRaisesRegex(ValueError, "Checkout exact head changed"):
+            workflow.refresh_committed_evidence(self.repo, "0" * 40)
+        self.assert_bytes(before)
+
+    def test_actual_readback_must_match_after_writing(self):
+        self.stale_checkout()
+        write_bytes = Path.write_bytes
+
+        def corrupt_write(path, data):
+            return write_bytes(path, data + b"\r")
+
+        with (
+            mock.patch.object(Path, "write_bytes", corrupt_write),
+            self.assertRaisesRegex(ValueError, "Committed evidence readback failed"),
+        ):
+            workflow.refresh_committed_evidence(self.repo, self.head)
+
+    def test_cli_prints_full_receipt_without_creating_unused_output_root(self):
+        self.stale_checkout()
+        root = self.repo / "not-created"
+        output = io.StringIO()
+        with (
+            mock.patch(
+                "sys.argv",
+                [
+                    "workflow",
+                    "refresh-committed",
+                    "--repo",
+                    str(self.repo),
+                    "--root",
+                    str(root),
+                    "--exact-sha",
+                    self.head,
+                ],
+            ),
+            mock.patch("sys.stdout", output),
+        ):
+            workflow.main()
+        receipt = json.loads(output.getvalue())
+        self.assertEqual(receipt["status"], "COMMITTED_EVIDENCE_REFRESHED")
+        self.assertEqual(len(receipt["files"]), 3)
+        self.assertEqual(receipt["rewritten_files"], 3)
+        self.assertFalse(root.exists())
 
 
 class WholeMapNativeBindingTests(unittest.TestCase):
