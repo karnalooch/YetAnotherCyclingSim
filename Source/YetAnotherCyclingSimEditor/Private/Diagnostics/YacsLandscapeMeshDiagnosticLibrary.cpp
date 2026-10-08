@@ -202,7 +202,8 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
     constexpr int32 TangentialPasses = 3;
     constexpr double TangentialBlend = 0.20;
     // Owner-approved presentation envelope; canonical source stays unchanged.
-    constexpr double MaxDisplacementCm = 100.0;
+    const bool bPostErosion = Plan->HasField(TEXT("post_erosion_mesh")) && Plan->GetBoolField(TEXT("post_erosion_mesh"));
+    const double MaxDisplacementCm = bPostErosion ? 50.0 : 100.0;
     int32 Backtracks = 0;
     int32 CompletedPasses = 0;
     int32 CompletedTangentialPasses = 0;
@@ -431,7 +432,8 @@ FString UYacsLandscapeMeshDiagnosticLibrary::CopyComponent230(
     ULandscapeComponent* Component, UDynamicMesh* TargetMesh, const FString& SmoothingPlanJson)
 {
     if (!IsValid(Component) || !IsValid(TargetMesh) ||
-        Component->GetName() != TEXT("LandscapeComponent_230"))
+        (Component->GetName() != TEXT("LandscapeComponent_230") &&
+         !Component->GetOwner()->ActorHasTag(TEXT("YACS_Component230_TerrainTrial"))))
     {
         return TEXT("{\"error\":\"expected Component 230 and transient target mesh\"}");
     }

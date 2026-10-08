@@ -376,16 +376,22 @@ jobs:
             }
             if ($env:YACS_TERRAIN_EROSION_TRIAL -eq '1') {
               if (
-                $receipt.mesh.generator -ne 'native-landscape-thermal-erosion' -or
+                $receipt.mesh.generator -ne $(if ($env:YACS_TERRAIN_MESH_TRIAL -eq '1') { 'native-eroded-landscape-mesh' } else { 'native-landscape-thermal-erosion' }) -or
                 $receipt.terrain_erosion_trial.native_landscape -ne $true -or
                 $receipt.terrain_erosion_trial.imported_heightfield_matches -ne $true -or
                 $receipt.terrain_erosion_trial.derived_heightfield_modified -ne $true -or
                 $receipt.terrain_erosion_trial.source_heightfield_unchanged -ne $true -or
                 $receipt.terrain_erosion_trial.restored -ne $true -or
-                $receipt.terrain_erosion_trial.erosion.max_abs_change_cm -gt 100 -or
+                $receipt.terrain_erosion_trial.erosion.max_abs_change_cm -gt 150 -or
                 $receipt.terrain_erosion_trial.erosion.fixed_samples_changed -ne 0 -or
                 $receipt.terrain_erosion_trial.erosion.height_sum_delta_units -ne 0
               ) { throw 'Native terrain erosion trial receipt failed.' }
+              if ($env:YACS_TERRAIN_MESH_TRIAL -eq '1' -and (
+                $receipt.terrain_erosion_trial.post_erosion_mesh -ne $true -or
+                $receipt.terrain_erosion_trial.combined_audit.status -ne 'PASS' -or
+                $receipt.terrain_erosion_trial.combined_audit.displacement_limit_cm -ne 200 -or
+                $receipt.terrain_erosion_trial.combined_audit.max_displacement_cm -gt 200.000001
+              )) { throw 'Combined original-relative mesh envelope failed.' }
             }
             elseif ($env:YACS_LANDSCAPE_MESH_DIAGNOSTIC -eq '1') {
               if (
@@ -420,17 +426,6 @@ jobs:
             } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $Output 'capture-performance.json') -Encoding UTF8
           }
 
-          $env:YACS_TERRAIN_EROSION_TRIAL = '1'
-          try {
-            python -m unittest scripts.geometry.test_local_thermal_erosion -v
-            if ($LASTEXITCODE -ne 0) { throw 'Thermal erosion tests failed.' }
-            $erosionRoot = Join-Path $env:YACS_CLIFF_PHASE2C_ROOT 'terrain-erosion'
-            Invoke-CliffCapture -Label 'terrain-erosion' -Output $erosionRoot -UsePcgEx $false
-          }
-          finally {
-            Remove-Item Env:YACS_TERRAIN_EROSION_TRIAL -ErrorAction SilentlyContinue
-          }
-
           # Owner-approved replacement diagnostic runs before existing A/B proofs.
           $env:YACS_LANDSCAPE_MESH_DIAGNOSTIC = '1'
           try {
@@ -457,6 +452,23 @@ jobs:
           }
           finally {
             Remove-Item Env:YACS_LANDSCAPE_MESH_DIAGNOSTIC -ErrorAction SilentlyContinue
+          }
+
+          $env:YACS_TERRAIN_EROSION_TRIAL = '1'
+          try {
+            python -m unittest scripts.geometry.test_local_thermal_erosion -v
+            if ($LASTEXITCODE -ne 0) { throw 'Thermal erosion tests failed.' }
+            $erosionRoot = Join-Path $env:YACS_CLIFF_PHASE2C_ROOT 'terrain-erosion'
+            Invoke-CliffCapture -Label 'terrain-erosion' -Output $erosionRoot -UsePcgEx $false
+            $env:YACS_TERRAIN_MESH_TRIAL = '1'
+            $env:YACS_TERRAIN_ORIGINAL_MESH = Join-Path $localRoot 'local-cliff-smoothing-mesh.json'
+            $combinedRoot = Join-Path $env:YACS_CLIFF_PHASE2C_ROOT 'terrain-erosion-mesh'
+            Invoke-CliffCapture -Label 'terrain-erosion-mesh' -Output $combinedRoot -UsePcgEx $false
+          }
+          finally {
+            Remove-Item Env:YACS_TERRAIN_EROSION_TRIAL -ErrorAction SilentlyContinue
+            Remove-Item Env:YACS_TERRAIN_MESH_TRIAL -ErrorAction SilentlyContinue
+            Remove-Item Env:YACS_TERRAIN_ORIGINAL_MESH -ErrorAction SilentlyContinue
           }
 
           $env:YACS_CLIFF_PCGEX_MESH = Join-Path $env:YACS_CLIFF_PCGEX_PROOF_ROOT 'phase2c-pcgex-cliff-a.json'

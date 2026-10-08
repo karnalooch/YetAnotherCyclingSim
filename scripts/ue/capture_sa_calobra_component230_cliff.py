@@ -59,6 +59,7 @@ MATCH_LANDSCAPE_MATERIAL = os.environ.get("YACS_CLIFF_MATCH_LANDSCAPE_MATERIAL")
 LANDSCAPE_MESH_DIAGNOSTIC = os.environ.get("YACS_LANDSCAPE_MESH_DIAGNOSTIC") == "1"
 LOCAL_CLIFF_SMOOTHING = os.environ.get("YACS_LOCAL_CLIFF_SMOOTHING") == "1"
 TERRAIN_EROSION_TRIAL = os.environ.get("YACS_TERRAIN_EROSION_TRIAL") == "1"
+TERRAIN_MESH_TRIAL = os.environ.get("YACS_TERRAIN_MESH_TRIAL") == "1"
 _terrain_trial = {"enabled": False}
 _terrain_source = None
 _landscape_visibility_state = None
@@ -1161,9 +1162,10 @@ def _spawn_terrain_erosion_trial():
 
     library = unreal.YacsLandscapeMeshDiagnosticLibrary
     _terrain_source = json.loads(library.read_component230_heightfield(_target_component))
-    candidate, erosion = erode(_terrain_source, _plan)
+    candidate, erosion = erode(_terrain_source, _plan, iterations=96,
+                               talus_slope=0.8, limit_cm=150.0, smoothing_passes=12)
     if (not erosion["derived_heightfield_modified"] or erosion["fixed_samples_changed"]
-            or erosion["height_sum_delta_units"] or erosion["max_abs_change_cm"] > 100):
+            or erosion["height_sum_delta_units"] or erosion["max_abs_change_cm"] > 150):
         raise RuntimeError("Terrain erosion bounds or sediment conservation failed")
     for name, data in (("source", _terrain_source), ("candidate", candidate), ("erosion", erosion)):
         (OUTPUT / ("terrain-" + name + ".json")).write_text(json.dumps(data), encoding="utf-8")
@@ -1195,6 +1197,46 @@ def _spawn_terrain_erosion_trial():
         "collision_enabled": False, "cast_dynamic_shadows": True,
         "material": {"cliff": _material_override_receipt["material"], "diagnostic_only": True},
     }
+    if TERRAIN_MESH_TRIAL:
+        from scripts.assets.analyze_local_cliff_smoothing import audit, original_surface_evidence
+
+        reference_path = Path(os.environ["YACS_TERRAIN_ORIGINAL_MESH"])
+        reference_receipt = json.loads((reference_path.parent / "component230-cliff-visual-receipt.json").read_text(encoding="utf-8-sig"))
+        if (reference_receipt["exact_sha"] != EXPECTED_SHA
+                or reference_receipt["status"] != "COMPONENT230_CLIFF_VISUAL_PASS"
+                or reference_receipt["landscape_mesh_diagnostic"]["export"]["mesh_evidence_sha256"] != _digest(reference_path)):
+            raise RuntimeError("Original mesh reference provenance failed")
+        reference = json.loads(reference_path.read_text(encoding="utf-8-sig"))
+        actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+        mesh_actor = actors.spawn_actor_from_class(unreal.DynamicMeshActor, unreal.Vector(), unreal.Rotator(), transient=True)
+        if mesh_actor is None:
+            raise RuntimeError("Cannot spawn post-erosion mesh")
+        _candidate_actors.append(mesh_actor)
+        mesh_actor.set_actor_label("YACS Component230 eroded terrain mesh (unsaved)")
+        mesh_component = mesh_actor.get_dynamic_mesh_component()
+        export = json.loads(library.copy_component230(
+            components[0], mesh_component.get_dynamic_mesh(), json.dumps(dict(_plan, post_erosion_mesh=True))))
+        if (export.get("status") != "NATIVE_LANDSCAPE_COMPONENT_MESH"
+                or export.get("displacement_limit_cm") != 50
+                or export.get("locked_normal_max_delta") != 0):
+            raise RuntimeError("Post-erosion mesh export failed: " + json.dumps(export))
+        derived = {"vertices_cm": export.pop("audit_vertices_cm"),
+                   "triangles": export.pop("audit_triangles"), "refinement": export["refinement"]}
+        combined = original_surface_evidence(reference, derived)
+        combined_audit = audit(_plan, combined, limit_cm=200.0)
+        for name, data in (("mesh-stage", derived), ("combined-mesh", combined), ("combined-audit", combined_audit)):
+            (OUTPUT / (name + ".json")).write_text(json.dumps(data), encoding="utf-8")
+        mesh_component.set_material(0, _target_component.get_editor_property("override_material"))
+        mesh_component.set_tangents_type(unreal.DynamicMeshComponentTangentsMode.AUTO_CALCULATED)
+        mesh_component.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
+        mesh_component.set_cast_shadow(True)
+        mesh_component.notify_mesh_modified()
+        components[0].set_editor_property("cast_hidden_shadow", False)
+        components[0].set_visibility(False, False)
+        _terrain_trial.update(post_erosion_mesh=True, mesh_export=export, combined_audit=combined_audit,
+                              original_reference_sha256=_digest(reference_path))
+        _mesh_receipt["generator"] = "native-eroded-landscape-mesh"
+        _mesh_receipt["cliff"] = {"vertices": export["vertices"], "triangles": export["triangles"]}
 
 
 def _spawn_candidate():

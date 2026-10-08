@@ -3,7 +3,10 @@
 import copy
 import unittest
 
-from scripts.assets.analyze_local_cliff_smoothing import audit
+from scripts.assets.analyze_local_cliff_smoothing import (
+    audit,
+    original_surface_evidence,
+)
 
 
 class LocalCliffAuditTests(unittest.TestCase):
@@ -74,6 +77,22 @@ class LocalCliffAuditTests(unittest.TestCase):
         evidence["vertices_cm"][self.changed_vertex][6] = 100
         with self.assertRaisesRegex(ValueError, "exceeds"):
             audit(self.plan, evidence)
+
+    def test_combined_budget_uses_original_surface(self):
+        derived = copy.deepcopy(self.evidence)
+        row = derived["vertices_cm"][self.changed_vertex]
+        row[3], row[6] = 150, 200
+        combined = original_surface_evidence(self.evidence, derived)
+        self.assertEqual(combined["vertices_cm"][self.changed_vertex][3], 0)
+        self.assertEqual(
+            audit(self.plan, combined, limit_cm=200)["max_displacement_cm"], 200
+        )
+        row[6] = 201
+        with self.assertRaisesRegex(ValueError, "Mesh stage"):
+            original_surface_evidence(self.evidence, derived)
+        row[3], row[6] = 151, 190
+        with self.assertRaisesRegex(ValueError, "Terrain stage"):
+            original_surface_evidence(self.evidence, derived)
 
     def test_duplicate_triangle_rejected(self):
         evidence = copy.deepcopy(self.evidence)

@@ -733,3 +733,31 @@ sets the exact source-component transform before import, matching the existing
 native terrain importer. The full layer update remains in place. Terrain capture
 runs first to expose import failures promptly; subsequent existing mesh and A/B
 proofs are retained. Neither failed import is accepted as a rendered candidate.
+
+### Owner-approved combined two-metre trial
+
+The owner approved stronger smoothing/erosion followed by a mesh on 2026-10-08.
+The total source-relative envelope is now 200 cm for this combined local trial.
+Reserve 150 cm for the derived native heightfield and 50 cm for mesh refinement,
+rather than granting an independent 200 cm to each stage. Original sources,
+roads, hard exclusions and interface positions remain fixed.
+
+The aggressive terrain profile uses 12 conservative smoothing passes followed
+by 96 thermal passes with talus slope 0.8. Both stages share bounds relative to
+the original integer height samples; sediment conservation and fixed-sample
+checks still apply. The original 100 cm erode defaults remain available for
+reproducing the historical trial.
+
+After native import/readback, export the actual eroded Landscape, selectively
+refine the same cliff footprint and run the existing normal/tangential mesh
+solver with a 50 cm stage limit. Hide the derived Landscape during mesh capture
+to avoid overlapping surfaces. The captured mesh uses the same neutral material.
+
+The complete original refined source geometry comes from the same-head native
+mesh diagnostic, with receipt and SHA-256 verification. Match original vertices
+by unique XY coordinates, using its SOURCE positions, never its already-smoothed
+candidate. Independently check the 150/50 cm stage budgets and the final 200 cm
+Euclidean displacement, footprint, fixed interfaces, folds and triangle budget.
+Retain mesh-stage, combined original-relative mesh and independent audit evidence.
+Separate terrain-only and terrain-plus-mesh captures isolate the effect of each
+stage. All trial actors are removed and original visibility/heights restored.

@@ -29,12 +29,14 @@ def movable_samples(field, plan):
     ]
 
 
-def erode(field, plan, *, iterations=48, talus_slope=1.2):
+def erode(
+    field, plan, *, iterations=48, talus_slope=1.2, limit_cm=100.0, smoothing_passes=0
+):
     """Move equal integer height units downhill; no sediment crosses fixed edges.
 
     This is a thermal/talus relaxation experiment, not hydraulic weathering or
     a geological simulation. Integer pair transfers conserve the height sum and
-    enforce the total one-metre envelope during every transfer, not just at end.
+    enforce the configured source-relative envelope during every transfer, not just at end.
     """
     size, unit = field["size"], field["height_unit_cm"]
     source = field["heights"]
@@ -44,13 +46,16 @@ def erode(field, plan, *, iterations=48, talus_slope=1.2):
         or not math.isfinite(unit)
         or unit <= 0
         or iterations < 1
+        or not math.isfinite(limit_cm)
+        or not 0 < limit_cm <= 150
+        or smoothing_passes < 0
         or talus_slope < 0
         or not math.isfinite(talus_slope)
         or any(type(v) is not int or not 0 <= v <= 65535 for v in source)
     ):
         raise ValueError("Invalid native heightfield or erosion parameters")
     movable = movable_samples(field, plan)
-    limit = math.floor(100.0 / unit)
+    limit = math.floor(limit_cm / unit)
     lower = [max(0, h - limit) for h in source]
     upper = [min(65535, h + limit) for h in source]
     heights = list(source)
@@ -63,12 +68,19 @@ def erode(field, plan, *, iterations=48, talus_slope=1.2):
     ]
     threshold = 50.0 * talus_slope / unit
     transfers = 0
-    for step in range(iterations):
+    for step in range(smoothing_passes + iterations):
         for a, b in edges if step % 2 == 0 else reversed(edges):
             high, low = (a, b) if heights[a] > heights[b] else (b, a)
-            excess = heights[high] - heights[low] - threshold
+            excess = (
+                heights[high]
+                - heights[low]
+                - (0 if step < smoothing_passes else threshold)
+            )
             amount = min(
-                max(0, math.floor(excess * 0.125)),
+                max(
+                    0,
+                    math.floor(excess * (0.0625 if step < smoothing_passes else 0.125)),
+                ),
                 heights[high] - lower[high],
                 upper[low] - heights[low],
             )
@@ -84,7 +96,8 @@ def erode(field, plan, *, iterations=48, talus_slope=1.2):
         "transfers": transfers,
         "changed_samples": sum(d != 0 for d in delta),
         "max_abs_change_cm": max(map(abs, delta)),
-        "limit_cm": 100.0,
+        "limit_cm": limit_cm,
+        "smoothing_passes": smoothing_passes,
         "height_sum_delta_units": sum(heights) - sum(source),
         "fixed_samples_changed": sum(
             a != b and not m for a, b, m in zip(source, heights, movable)

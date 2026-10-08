@@ -89,7 +89,7 @@ ALandscape* UYacsLandscapeMeshDiagnosticLibrary::CreateComponent230TerrainTrial(
             if (!(*Values)[Y * TrialSize + X]->TryGetNumber(Value) || !FMath::IsFinite(Value) ||
                 Value < 0 || Value > 65535 || Value != FMath::FloorToDouble(Value)) { return nullptr; }
             const int32 Delta = int32(Value) - int32(Source.GetHeight(X, Y));
-            if (FMath::Abs(Delta * Unit) > 100.000001) { return nullptr; }
+            if (FMath::Abs(Delta * Unit) > 150.000001) { return nullptr; }
             if (Delta != 0)
             {
                 const FVector P = Source.GetWorldVertex(X, Y);

@@ -9,7 +9,27 @@ import math
 from pathlib import Path
 
 
-def audit(plan: dict, evidence: dict) -> dict:
+def original_surface_evidence(reference: dict, derived: dict) -> dict:
+    """Recover the original native surface, never the previously smoothed candidate."""
+    originals = {tuple(row[1:3]): row[1:4] for row in reference["vertices_cm"]}
+    if len(originals) != len(reference["vertices_cm"]):
+        raise ValueError("Ambiguous original vertex correspondence")
+    rows = []
+    for row in derived["vertices_cm"]:
+        original = originals.get(tuple(row[1:3]))
+        if original is None:
+            raise ValueError("Missing original vertex correspondence")
+        if math.dist(original, row[1:4]) > 150.000001:
+            raise ValueError("Terrain stage exceeds reserved 150 cm")
+        if math.dist(row[1:4], row[4:7]) > 50.000001:
+            raise ValueError("Mesh stage exceeds reserved 50 cm")
+        rows.append([row[0], *original, *row[4:]])
+    return dict(derived, vertices_cm=rows, source_reference="original-before-erosion")
+
+
+def audit(plan: dict, evidence: dict, *, limit_cm=100.0) -> dict:
+    if limit_cm not in (50.0, 100.0, 200.0):
+        raise ValueError("Unsupported displacement envelope")
     cells = plan["skin_cells"]
     if len(cells) != 1017:
         raise ValueError("Expected 1017 authoritative cells")
@@ -95,8 +115,8 @@ def audit(plan: dict, evidence: dict) -> dict:
     if any(math.dist(source[v], candidate[v]) > 1e-8 for v in locked):
         raise ValueError("Unselected terrain or footprint interface moved")
     displacement = {v: math.dist(source[v], candidate[v]) for v in source}
-    if max(displacement.values()) > 100.000001:
-        raise ValueError("Presentation displacement exceeds 100 cm")
+    if max(displacement.values()) > limit_cm + 0.000001:
+        raise ValueError(f"Presentation displacement exceeds {limit_cm:g} cm")
     changed = [v for v, d in displacement.items() if d > 1e-6]
     if not changed:
         raise ValueError("No local geometry change")
@@ -110,7 +130,7 @@ def audit(plan: dict, evidence: dict) -> dict:
         "changed_vertices": len(changed),
         "locked_vertices": len(locked),
         "max_displacement_cm": max(displacement.values()),
-        "displacement_limit_cm": 100,
+        "displacement_limit_cm": limit_cm,
         "nonmanifold_edges": 0,
         "folded_xy_triangles": 0,
         "scope": "LOCAL_GEOMETRY_AUDIT_NOT_VISUAL_ACCEPTANCE",

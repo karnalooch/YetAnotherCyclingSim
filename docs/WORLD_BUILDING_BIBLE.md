@@ -3730,3 +3730,12 @@ Material Maker and Godot remain external offline authoring tools. They are not
 runtime dependencies. No Godot fork or broad Material Maker vendoring is
 admitted without a demonstrated blocker and a separate provenance/architecture
 decision.
+
+Owner continuation, 2026-10-08 (#445): a stronger local smoothing/erosion pass
+followed by a mesh is approved within a **combined 2 m** displacement envelope
+relative to the original terrain. This supersedes the earlier 1 m trial limit
+for this local combined candidate only. Allocate up to 1.5 m to the derived
+heightfield and 0.5 m to subsequent mesh refinement; independently audit the
+final mesh against the original surface. Preserve roads, hard exclusions,
+interface positions and the original checkpoint. This is a reversible local
+comparison, not whole-map admission or PR #446 merge authorization.

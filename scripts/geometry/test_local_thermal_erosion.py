@@ -25,6 +25,22 @@ class ThermalErosionTests(unittest.TestCase):
         self.assertEqual(source["heights"][24], 33368)
         self.assertEqual(erode(source, plan), (result, receipt))
 
+    def test_aggressive_stages_share_source_relative_budget(self):
+        source, plan = self.fixture()
+        source["heights"][24] += 1000
+        result, receipt = erode(
+            source,
+            plan,
+            iterations=96,
+            talus_slope=0.8,
+            limit_cm=150,
+            smoothing_passes=12,
+        )
+        self.assertLessEqual(receipt["max_abs_change_cm"], 150)
+        self.assertGreater(receipt["max_abs_change_cm"], 100)
+        self.assertEqual(sum(result["heights"]), sum(source["heights"]))
+        self.assertEqual(receipt["fixed_samples_changed"], 0)
+
     def test_flat_surface_is_unchanged(self):
         source, plan = self.fixture()
         result, receipt = erode(source, plan)
