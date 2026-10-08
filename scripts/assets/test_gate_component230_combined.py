@@ -13,14 +13,17 @@ class CombinedGateTests(unittest.TestCase):
             for k in ('baseline_lighting_only', 'candidate_lighting_only')}}
         self.audit = dict(status='PASS', displacement_limit_cm=200,
                           max_displacement_cm=199, triangles=58216,
-                          nonmanifold_edges=0, folded_xy_triangles=0)
+                          nonmanifold_edges=0, folded_xy_triangles=0, vertices=2)
         self.receipt = dict(exact_sha='revision', status='COMPONENT230_CLIFF_VISUAL_PASS',
             map_saved=False, assets_saved=False, canonical_landscape_mutation=False,
             selector_policy_mutation=False, terrain_erosion_trial=dict(
                 post_erosion_mesh=True, restored=True, source_heightfield_unchanged=True,
                 imported_heightfield_matches=True, combined_audit=self.audit,
                 limestone_uv_projection={'world_size_m': 3, 'triangles_unchanged': True},
-                mesh_export={'shape_profile': 'limestone-source-feature-flow-v1'}),
+                mesh_export={'shape_profile': 'limestone-source-feature-flow-v2-upper-crests',
+                             'crest_passes': 12, 'crest_changed_vertices': 1,
+                             'crest_audit_vertices': [[0, 0, 0, 1, 0, 0, 0.9, 1, 0.8, -2],
+                                                      [1, 1, 0, 1, 1, 0, 1, 0, 0.3, -2]]}),
             captures=[{'name': name, 'sha256': key} for name, key in (
                 ('02-baseline-lighting-only', 'baseline_lighting_only'),
                 ('04-candidate-lighting-only', 'candidate_lighting_only'))],
@@ -67,3 +70,13 @@ class CombinedGateTests(unittest.TestCase):
     def test_changed_review_camera_fails_even_when_images_exist(self):
         self.receipt['diagnostic_captures'][-1]['camera_location_cm'] = [4, 5, 6]
         self.assertEqual(self.result()['status'], 'FAIL')
+
+    def test_wall_motion_upward_motion_and_false_convex_mask_fail(self):
+        export = self.receipt['terrain_erosion_trial']['mesh_export']
+        for index, field, value in ((1, 6, 0.9), (0, 6, 1.1), (0, 8, 0.3), (0, 9, 0)):
+            with self.subTest(index=index, field=field):
+                row = export['crest_audit_vertices'][index]
+                old = row[field]
+                row[field] = value
+                self.assertEqual(self.result()['status'], 'FAIL')
+                row[field] = old
