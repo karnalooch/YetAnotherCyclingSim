@@ -798,10 +798,19 @@ failed runtime geometry checks. A 5 cm inset exceeded the 10 cm band radius;
 accepted from that run.
 
 The v7 candidate first inserts source-planar support points 6 cm from selected
-endpoints and junctions on their unselected incident edges. Native source
+edge vertices. Endpoints split only the closing spoke identified by Epic's
+native terminator topology; continuing edges and junctions retain local support
+on their unselected incident edges. Native source
 vertices and the complete coarse source evidence remain unchanged. This keeps
 endpoint caps local instead of connecting a curved endpoint directly to a
 native vertex about 50 cm away. The existing 60,000-triangle ceiling remains.
+
+The first v7 runtime at `673f4a13175831cf59d43c5af0f98d818f6dcbfa` compiled
+successfully but rejected blanket endpoint fan splits: 9,546 inserted points
+produced 64,148 triangles even with one bevel subdivision. The current cap-spoke
+selection removes that unnecessary endpoint fan refinement without raising
+the triangle budget. A new native build, complete surface audit and render
+are required before this revision can be accepted.
 
 Epic's linear multi-segment bevel is validated before its round profile is
 applied. With fixed topology, a bounded line search accepts only a nonzero

@@ -26,6 +26,15 @@ class FGuardedLimestoneBevel : public UE::Geometry::FMeshBevel
 public:
     void ApplyRoundProfile(UE::Geometry::FDynamicMesh3& Mesh) { ApplyProfileShape_Round(Mesh); }
     void UpdateNormals(UE::Geometry::FDynamicMesh3& Mesh) { ComputeNormals(Mesh); }
+    void GetTerminatorSpokes(TArray<UE::Geometry::FIndex2i>& Spokes) const
+    {
+        Spokes.Reset();
+        for (const FBevelVertex& Vertex : Vertices)
+        {
+            if (Vertex.VertexType == EBevelVertexType::TerminatorVertex)
+            { Spokes.Add(UE::Geometry::FIndex2i(Vertex.VertexID, Vertex.TerminatorInfo.B)); }
+        }
+    }
 };
 
 // Narrow edge treatment only: no terrain erosion or surface relaxation.
@@ -67,8 +76,10 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
 
     // Epic's terminator fan reaches the next unselected neighbor. On this
     // half-metre mesh that can deform a complete face far outside the edge
-    // treatment. Insert source-exact points on those unselected spokes first,
-    // so terminator/junction caps have a local six-centimetre boundary.
+    // treatment. Inspect Epic's actual chosen terminator spokes and insert
+    // source-exact points only on their closing spokes. Continuing edges and
+    // junctions retain local support on each unselected spoke, so a nonplanar
+    // source fan cannot be deformed beyond the narrow band.
     TArray<int32> SelectedDegree;
     SelectedDegree.Init(0, Source.MaxVertexID());
     TSet<int32> SelectedEdgeSet;
@@ -78,6 +89,20 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
         const auto V = Source.GetEdgeV(E);
         ++SelectedDegree[V.A]; ++SelectedDegree[V.B];
         SelectedEdgeSet.Add(E); SelectedPairs.Add(V);
+    }
+    FDynamicMesh3 TopologySource(Source);
+    TopologySource.ReverseOrientation(false);
+    FGuardedLimestoneBevel Topology;
+    Topology.InitializeFromTriangleEdges(TopologySource, Edges);
+    TArray<FIndex2i> TerminatorSpokes;
+    Topology.GetTerminatorSpokes(TerminatorSpokes);
+    TSet<FIntPoint> TerminatorPairs;
+    for (const auto V : TerminatorSpokes)
+    {
+        const int32 E = Source.FindEdge(V.A, V.B);
+        if (E == IndexConstants::InvalidID || SelectedEdgeSet.Contains(E))
+        { Error = TEXT("invalid native terminator spoke"); return false; }
+        TerminatorPairs.Add(FIntPoint(V.A, V.B));
     }
     FDynamicMesh3 LocalSource(Source);
     int32 EndpointSplits = 0;
@@ -100,8 +125,8 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
     {
         if (SelectedEdgeSet.Contains(E)) { continue; }
         const auto V = Source.GetEdgeV(E);
-        const bool SplitA = SelectedDegree[V.A] > 0 && SelectedDegree[V.A] != 2;
-        const bool SplitB = SelectedDegree[V.B] > 0 && SelectedDegree[V.B] != 2;
+        const bool SplitA = SelectedDegree[V.A] >= 2 || TerminatorPairs.Contains(FIntPoint(V.A, V.B));
+        const bool SplitB = SelectedDegree[V.B] >= 2 || TerminatorPairs.Contains(FIntPoint(V.B, V.A));
         int32 NeighborForB = V.A, NewVertex = IndexConstants::InvalidID;
         if (SplitA)
         {
@@ -119,6 +144,7 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
         LocalEdges.Add(E);
     }
     Report->SetNumberField(TEXT("endpoint_source_split_count"), EndpointSplits);
+    Report->SetNumberField(TEXT("native_terminator_spoke_count"), TerminatorPairs.Num());
     Report->SetNumberField(TEXT("endpoint_source_split_radius_cm"), EndpointRadiusCm);
     Report->SetNumberField(TEXT("endpoint_refined_source_triangles"), LocalSource.TriangleCount());
 
