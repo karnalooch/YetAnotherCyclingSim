@@ -305,3 +305,14 @@ The repository documentation guard is
 `python scripts/ci/check_docs_index.py` (links, i18n, structure and freshness).
 Its result belongs to the remote documentation commit and CI run; historical
 runtime/capture results retain their original revision identities.
+
+## First executable source-surface registration pilot
+
+The [Component 230 detail pilot](../experiments/sa-calobra-component230-detail-pilot-20261008/README.md)
+now projects explicit image regions onto the immutable accepted v8 mesh. It
+produces proposed A/B face groups, independent five-tag masks, protected-face
+flags and an unchanged-geometry OBJ/MTL preview. The owner-only `[detail-pilot]`
+workflow lane replays retained evidence on a hosted runner without Unreal or
+performance measurements. This is a tested registration/selection producer;
+whole-scene occlusion, native consumption and detail treatment remain pending.
+

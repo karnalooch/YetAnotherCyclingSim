@@ -27,6 +27,11 @@ on:
       - "scripts/ci/test_package_sa_calobra_tpp_survey.py"
       - "scripts/ci/test_retain_sa_calobra_tpp_survey.py"
       - "scripts/ci/test_export_sa_calobra_tpp_survey_docs.py"
+      - "scripts/assets/prepare_sa_calobra_detail_pilot.py"
+      - "scripts/assets/run_sa_calobra_detail_pilot.py"
+      - "scripts/assets/test_sa_calobra_detail_pilot.py"
+      - "scripts/assets/test_run_sa_calobra_detail_pilot.py"
+      - "docs/experiments/sa-calobra-component230-detail-pilot-20261008/annotations.json"
       - "scripts/assets/prepare_sa_calobra_component230_cliff_visual.py"
       - "scripts/assets/test_sa_calobra_component230_cliff_visual.py"
       - "scripts/assets/analyze_sa_calobra_component230_cliff_visual.py"
@@ -61,8 +66,52 @@ env:
   YACS_LFS_CACHE_ROOT: 'D:\yacs\cache\git-lfs\YetAnotherCyclingSim'
 
 jobs:
+  detail-pilot:
+    name: Replay source-surface detail masks without Unreal
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.actor == 'karnalooch' &&
+      github.ref == 'refs/heads/feat/phase2c-pcgex-cliff-topology' &&
+      contains(github.event.head_commit.message, '[detail-pilot]') &&
+      !contains(github.event.head_commit.message, '[tpp-survey]') &&
+      !contains(github.event.head_commit.message, '[tpp-retain]') &&
+      !contains(github.event.head_commit.message, '[tpp-docs]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout the exact pilot revision without LFS payloads
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          lfs: false
+          persist-credentials: false
+      - name: Set up the existing Python tooling
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Install the existing pinned array dependency
+        run: >-
+          python -m pip install --disable-pip-version-check --only-binary=:all: numpy==2.3.5
+      - name: Test projection, source protection and replay boundaries
+        run: python -m unittest scripts.assets.test_sa_calobra_detail_pilot scripts.assets.test_run_sa_calobra_detail_pilot -v
+      - name: Replay verified source triangles and original captured camera poses
+        run: >-
+          python scripts/assets/run_sa_calobra_detail_pilot.py
+          --frames docs/experiments/sa-calobra-tpp-survey-20261008/frames.csv
+          --annotations docs/experiments/sa-calobra-component230-detail-pilot-20261008/annotations.json
+          --output ${{ runner.temp }}/component230-detail-pilot
+      - name: Retain masks, unchanged geometry and original-image vector previews
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: component230-detail-pilot-${{ github.sha }}
+          path: ${{ runner.temp }}/component230-detail-pilot/
+          if-no-files-found: error
+          retention-days: 90
+
   phase2c:
     if: >-
+      !(github.event_name == 'push' && contains(github.event.head_commit.message, '[detail-pilot]')) &&
       !(github.event_name == 'workflow_dispatch' && inputs.tpp_survey) &&
       !(github.event_name == 'push' && contains(github.event.head_commit.message, '[tpp-survey]')) &&
       !(github.event_name == 'push' && contains(github.event.head_commit.message, '[tpp-retain]')) &&

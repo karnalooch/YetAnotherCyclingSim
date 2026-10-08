@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+<title>Component-only candidate projection; U unknown, no world visibility proof</title>
+<image href="../source/window-0021-forward-00005.png" width="1280" height="720"/>
+<g opacity="0.45" shape-rendering="crispEdges">
+<rect x="436" y="240" width="20" height="4" fill="#e9c46a"/>
+<rect x="432" y="244" width="28" height="4" fill="#e9c46a"/>
+<rect x="432" y="248" width="32" height="4" fill="#e9c46a"/>
+<rect x="432" y="252" width="36" height="4" fill="#e9c46a"/>
+<rect x="432" y="256" width="40" height="4" fill="#e9c46a"/>
+<rect x="432" y="260" width="40" height="4" fill="#e9c46a"/>
+<rect x="428" y="264" width="48" height="4" fill="#e9c46a"/>
+<rect x="484" y="264" width="4" height="4" fill="#e9c46a"/>
+<rect x="428" y="268" width="76" height="4" fill="#e9c46a"/>
+<rect x="428" y="272" width="76" height="4" fill="#e9c46a"/>
+<rect x="504" y="272" width="4" height="4" fill="#3f3f46"/>
+<rect x="436" y="276" width="4" height="4" fill="#e9c46a"/>
+<rect x="444" y="276" width="64" height="4" fill="#e9c46a"/>
+<rect x="456" y="280" width="68" height="4" fill="#e9c46a"/>
+<rect x="464" y="284" width="76" height="4" fill="#e9c46a"/>
+<rect x="476" y="288" width="80" height="4" fill="#e9c46a"/>
+<rect x="488" y="292" width="72" height="4" fill="#e9c46a"/>
+<rect x="496" y="296" width="68" height="4" fill="#e9c46a"/>
+<rect x="392" y="300" width="4" height="4" fill="#e76f51"/>
+<rect x="508" y="300" width="56" height="4" fill="#e9c46a"/>
+<rect x="568" y="300" width="16" height="4" fill="#e76f51"/>
+<rect x="388" y="304" width="8" height="4" fill="#e76f51"/>
+<rect x="552" y="304" width="36" height="4" fill="#e76f51"/>
+<rect x="380" y="308" width="8" height="4" fill="#e76f51"/>
+<rect x="564" y="308" width="28" height="4" fill="#e76f51"/>
+<rect x="372" y="312" width="4" height="4" fill="#e76f51"/>
+<rect x="572" y="312" width="24" height="4" fill="#e76f51"/>
+<rect x="368" y="316" width="4" height="4" fill="#e76f51"/>
+<rect x="576" y="316" width="28" height="4" fill="#e76f51"/>
+<rect x="356" y="320" width="4" height="4" fill="#3f3f46"/>
+<rect x="360" y="320" width="8" height="4" fill="#e76f51"/>
+<rect x="588" y="320" width="20" height="4" fill="#e76f51"/>
+<rect x="664" y="320" width="4" height="4" fill="#3f3f46"/>
+<rect x="344" y="324" width="8" height="4" fill="#3f3f46"/>
+<rect x="352" y="324" width="12" height="4" fill="#e76f51"/>
+<rect x="600" y="324" width="16" height="4" fill="#e76f51"/>
+<rect x="656" y="324" width="4" height="4" fill="#3f3f46"/>
+<rect x="660" y="324" width="8" height="4" fill="#e76f51"/>
+<rect x="336" y="328" width="16" height="4" fill="#3f3f46"/>
+<rect x="352" y="328" width="8" height="4" fill="#e76f51"/>
+<rect x="616" y="328" width="12" height="4" fill="#e76f51"/>
+<rect x="648" y="328" width="4" height="4" fill="#3f3f46"/>
+<rect x="652" y="328" width="12" height="4" fill="#e76f51"/>
+<rect x="648" y="332" width="12" height="4" fill="#e76f51"/>
+</g><g fill="none" stroke-width="3">
+<polygon points="427,239 463,239 491,266 560,278 563,305 511,303 476,290 445,278 423,276" stroke="#e9c46a"/>
+<polygon points="552,303 583,301 622,307 655,317 672,324 659,335 618,331 580,320" stroke="#e76f51"/>
+</g></svg>

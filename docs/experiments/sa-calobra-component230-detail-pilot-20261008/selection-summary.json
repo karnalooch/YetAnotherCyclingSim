@@ -1,0 +1,22 @@
+{
+  "A": {
+    "candidate": 324,
+    "protected": 95,
+    "eligible": 229
+  },
+  "B": {
+    "candidate": 211,
+    "protected": 1,
+    "eligible": 210
+  },
+  "C": {
+    "candidate": 0,
+    "protected": 0,
+    "eligible": 0
+  },
+  "U": {
+    "candidate": 57681,
+    "protected": 5263,
+    "eligible": 52418
+  }
+}
