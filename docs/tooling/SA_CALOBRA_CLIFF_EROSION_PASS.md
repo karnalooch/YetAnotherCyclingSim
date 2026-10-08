@@ -2,7 +2,7 @@
 
 **Issues:** #429 Phase 1, #440 Phase 2A, #445 Component 230 repair; child track of #368  
 **Parent integration:** PR #381  
-**Status:** Phase 1 selector complete; local combined terrain/mesh technical trial verified; PCGEx lighting admission fails; production acceptance pending  
+**Status:** Phase 1 selector complete; owner accepted the local v8 rock preview; one-pixel combined lighting gate and separate PCGEx admission remain failing; production acceptance pending  
 **Authority:** World Building Bible remains authoritative
 
 The current verified outcome and ordered repair work are in
@@ -11,11 +11,12 @@ At `1b0675ee53e796e7f904fa3119bb388fa9489cf6`, independent reconstruction
 confirms the 199.612189524 cm combined source-relative maximum and complete
 terrain-trial source restoration. The separate PCGEx gate has four failures;
 the final checkout integrity step was skipped after that gate failed.
-The owner superseded broad smoothing on 2026-10-08: the current candidate treats
-sharp convex edges only, inside a 10 cm radius (20 cm total band). Rock bodies,
-the complete source heightfield, hard exclusions and the limestone material stay
-fixed. Historical terrain and relaxation trials below are not the current
-candidate. See the bounded edge repair below for its pending proof.
+On 2026-10-08 the owner superseded the narrow bevel restriction with explicit
+authorization to reshape rock corners and small planes by up to 50 cm. The
+current v8 candidate applies this total 3D bound relative to the original native
+rock surface. The complete source heightfield, protected interfaces, roads and
+limestone material stay fixed. See the owner-authorized v8 recipe below;
+historical terrain and narrow bevel trials are not the active candidate.
 
 This technical result does not grant owner visual acceptance, persistence,
 whole-Landscape admission or Phase 2B completion. Historical trials below retain
@@ -909,3 +910,30 @@ A successful preflight alone is not visual acceptance. Close, middle and distant
 neutral/limestone captures, full source restoration, the independent technical
 gate and owner review remain required. This is a Component 230 preview, not
 whole-Landscape rollout or production persistence.
+
+#### Verified v8 preview and owner acceptance
+
+At `4f2cba560d54931dc8ba080370d96a7aad24f15b`,
+[native build and render run 37788406806](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37788406806)
+completed compilation, geometry preflight, all material captures, full source
+restoration and checkout non-persistence. The independent source-relative audit
+passed with 29,415 vertices, 58,216 triangles, a 50 cm maximum movement (within
+floating-point tolerance), zero folded XY triangles and zero nonmanifold edges.
+All 2,577 locked vertices and their normals stayed exact; the original 3,507 m2
+movement-domain footprint was preserved. The 66 focused Python tests passed.
+
+The owner explicitly accepted the displayed v8 limestone main and close-up
+captures on 2026-10-08. This acceptance covers this Component 230 visual stage.
+The middle and distant review cameras largely show the road and protected
+surroundings; the main and close-up captures are the useful evidence of rounding.
+
+The combined technical gate remains **FAIL**, solely because the candidate has
+20 pixels below luminance 0.05 versus 19 in the baseline. The extra pixel at
+image coordinate (959, 581) is an isolated rock-shadow sample with luminance
+0.049895; the largest near-black region remains 19 pixels. The two higher
+luminance thresholds improved. Neither stochastic noise nor a geometry defect
+is established by this single pixel, and the acceptance thresholds were not
+changed. The separate PCGEx lighting admission also remains failing. Owner
+visual acceptance does not relabel either technical gate, authorize persistence
+or establish whole-Landscape admission. The subsequent documentation-only
+record leaves the tested implementation unchanged.
