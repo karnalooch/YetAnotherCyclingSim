@@ -11,6 +11,12 @@ At `1b0675ee53e796e7f904fa3119bb388fa9489cf6`, independent reconstruction
 confirms the 199.612189524 cm combined source-relative maximum and complete
 terrain-trial source restoration. The separate PCGEx gate has four failures;
 the final checkout integrity step was skipped after that gate failed.
+The owner superseded broad smoothing on 2026-10-08: the current candidate treats
+sharp convex edges only, inside a 10 cm radius (20 cm total band). Rock bodies,
+the complete source heightfield, hard exclusions and the limestone material stay
+fixed. Historical terrain and relaxation trials below are not the current
+candidate. See the bounded edge repair below for its pending proof.
+
 This technical result does not grant owner visual acceptance, persistence,
 whole-Landscape admission or Phase 2B completion. Historical trials below retain
 their original outcomes and limits.
@@ -782,3 +788,38 @@ capture and source extraction, using the same native full-update operation as
 the terrain importer. No layer recipe, road target, admission mask or equality
 threshold is changed. Full before/after-cleanup source fields are retained, and
 any remaining source mismatch still fails the trial.
+
+### Bounded edge endpoint and profile repair
+
+At `813820592d739594c6426a10af46d30fa11cf3d6`, the narrow native bevel still
+failed runtime geometry checks. A 5 cm inset exceeded the 10 cm band radius;
+2–3 cm insets generated XY folds at a degree-one edge endpoint. Reducing
+`RoundWeight` to 0.5 did not solve the endpoint cap. No candidate render was
+accepted from that run.
+
+The v7 candidate first inserts source-planar support points 6 cm from selected
+endpoints and junctions on their unselected incident edges. Native source
+vertices and the complete coarse source evidence remain unchanged. This keeps
+endpoint caps local instead of connecting a curved endpoint directly to a
+native vertex about 50 cm away. The existing 60,000-triangle ceiling remains.
+
+Epic's linear multi-segment bevel is validated before its round profile is
+applied. With fixed topology, a bounded line search accepts only a nonzero
+profile blend that preserves strict XY winding, the 10 cm source-edge radius,
+the 20 cm source-surface displacement cap and all non-edge native vertices.
+Normals are recomputed on the accepted positions, then copied native normal
+elements outside selected source vertices are restored exactly. No erosion,
+surface relaxation, source heightfield import, map save or asset save occurs.
+
+The independent surface audit certifies entire changed triangles inside the
+union of source-edge bands. It rejects unresolved coverage instead of inferring
+coverage from three vertices. An unchanged triangle must lie entirely in a
+single original planar facet before it is exempted. Passing native compilation,
+runtime geometry, material captures and owner visual review remain required;
+this repair is not production or whole-Landscape admission.
+
+API decision: UE 5.8.2, changelist 56702186. The pinned engine `MeshBevel.h` and
+`MeshBevel.cpp` define linear topology, protected round-profile application and
+normal recomputation; `DynamicMesh3.h` defines source-planar edge splitting.
+Primary references: [Epic FMeshBevel](https://dev.epicgames.com/documentation/unreal-engine/API/Plugins/DynamicMesh/FMeshBevel)
+and [Epic InitializeFromTriangleEdges](https://dev.epicgames.com/documentation/unreal-engine/API/Plugins/DynamicMesh/FMeshBevel/InitializeFromTriangleEdges).

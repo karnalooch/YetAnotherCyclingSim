@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from pathlib import Path
 
 
@@ -20,7 +21,18 @@ def evaluate(metrics: dict, receipt: dict, audit: dict, expected_sha: str) -> di
            ('post_erosion_mesh', 'restored', 'source_heightfield_unchanged')):
         failures.append('Combined terrain restoration/import failed')
     export = trial.get('mesh_export', {})
-    if (export.get('shape_profile') != 'limestone-edge-band-only-v6'
+    profile_blend = export.get('bevel_profile_blend')
+    if (export.get('bevel_linear_base_valid') is not True
+            or not isinstance(profile_blend, (int, float))
+            or isinstance(profile_blend, bool)
+            or not math.isfinite(profile_blend) or not 0 < profile_blend <= 1):
+        failures.append('Validated nonzero round profile proof missing')
+    surface_bound = audit.get('max_certified_triangle_band_cm')
+    if (audit.get('band_certification') != 'adaptive-lipschitz-and-convex-capsules-v1'
+            or not isinstance(surface_bound, (int, float)) or isinstance(surface_bound, bool)
+            or not math.isfinite(surface_bound) or not 0 <= surface_bound <= 10.000001):
+        failures.append('Complete surface band certificate missing')
+    if (export.get('shape_profile') != 'limestone-edge-band-only-v7'
             or export.get('smoothing_passes') != 0
             or export.get('tangential_redistribution_passes') != 0
             or export.get('terrain_erosion') is not False
@@ -39,6 +51,8 @@ def evaluate(metrics: dict, receipt: dict, audit: dict, expected_sha: str) -> di
             or audit.get('edge_band_radius_cm') != 10
             or audit.get('max_edge_band_distance_cm', float('inf')) > 10.000001
             or audit.get('outside_edge_surface_unchanged') is not True
+            or audit.get('complete_changed_triangle_band_certified') is not True
+            or audit.get('max_certified_triangle_band_cm', float('inf')) > 10.000001
             or audit.get('scope') != 'LOCAL_EDGE_BAND_AUDIT_NOT_VISUAL_ACCEPTANCE'
             or audit.get('triangles', 60001) > 60000
             or audit.get('nonmanifold_edges') != 0 or audit.get('folded_xy_triangles') != 0

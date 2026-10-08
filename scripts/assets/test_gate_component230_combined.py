@@ -12,6 +12,9 @@ class CombinedGateTests(unittest.TestCase):
             k: {'sha256': k, 'thresholds': copy.deepcopy(thresholds)}
             for k in ('baseline_lighting_only', 'candidate_lighting_only')}}
         self.audit = dict(status='PASS', displacement_limit_cm=20,
+                          complete_changed_triangle_band_certified=True,
+                          band_certification='adaptive-lipschitz-and-convex-capsules-v1',
+                          max_certified_triangle_band_cm=9,
                           max_displacement_cm=19, triangles=58216,
                           nonmanifold_edges=0, folded_xy_triangles=0, vertices=2,
                           source_area_m2=3969, edge_band_radius_cm=10, max_edge_band_distance_cm=9, outside_edge_surface_unchanged=True, scope='LOCAL_EDGE_BAND_AUDIT_NOT_VISUAL_ACCEPTANCE')
@@ -21,7 +24,8 @@ class CombinedGateTests(unittest.TestCase):
                 edge_only_mesh=True, terrain_import_performed=False, derived_heightfield_modified=False, erosion=dict(enabled=False), post_erosion_mesh=True, restored=True, source_heightfield_unchanged=True,
                 imported_heightfield_matches=True, combined_audit=self.audit,
                 limestone_uv_projection={'world_size_m': 3, 'triangles_unchanged': True},
-                mesh_export={'shape_profile': 'limestone-edge-band-only-v6',
+                mesh_export={'shape_profile': 'limestone-edge-band-only-v7',
+                             'bevel_linear_base_valid': True, 'bevel_profile_blend': 0.5,
                              'bevel_round_weight': 0.5, 'edge_band_radius_cm': 10, 'max_edge_band_distance_cm': 9,
                              'terrain_erosion': False, 'surface_relaxation': False,
                              'outside_edge_vertices_unchanged': True,
@@ -45,6 +49,26 @@ class CombinedGateTests(unittest.TestCase):
     def test_equal_or_improved_passes_without_granting_owner_acceptance(self):
         self.assertEqual(self.result()['status'], 'PASS')
         self.assertEqual(self.result()['visual_acceptance'], 'PENDING_OWNER')
+
+    def test_chamfer_or_unvalidated_round_profile_is_not_accepted(self):
+        export = self.receipt['terrain_erosion_trial']['mesh_export']
+        for value in (None, False, True, 0, -0.1, 1.01, float('nan'), float('inf')):
+            with self.subTest(blend=value):
+                export['bevel_profile_blend'] = value
+                self.assertEqual(self.result()['status'], 'FAIL')
+        export['bevel_profile_blend'] = 0.5
+        export['bevel_linear_base_valid'] = False
+        self.assertEqual(self.result()['status'], 'FAIL')
+
+    def test_vertex_only_band_proof_does_not_admit_changed_surface(self):
+        self.audit['complete_changed_triangle_band_certified'] = False
+        self.assertEqual(self.result()['status'], 'FAIL')
+        for value in (-1, float('nan'), float('inf'), True, None):
+            self.audit['max_certified_triangle_band_cm'] = value
+            self.assertEqual(self.result()['status'], 'FAIL')
+        self.audit['complete_changed_triangle_band_certified'] = True
+        self.audit['max_certified_triangle_band_cm'] = 10.01
+        self.assertEqual(self.result()['status'], 'FAIL')
 
     def test_every_threshold_and_region_comparison_is_binding(self):
         for threshold in ('0.05', '0.10', '0.15'):

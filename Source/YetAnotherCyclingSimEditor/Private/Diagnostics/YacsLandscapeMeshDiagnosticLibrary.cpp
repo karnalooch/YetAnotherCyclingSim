@@ -19,6 +19,15 @@
 
 namespace
 {
+// Keep Epic's topology and profile implementations, but admit the profile only
+// after the linear bevel has independently passed the terrain constraints.
+class FGuardedLimestoneBevel : public UE::Geometry::FMeshBevel
+{
+public:
+    void ApplyRoundProfile(UE::Geometry::FDynamicMesh3& Mesh) { ApplyProfileShape_Round(Mesh); }
+    void UpdateNormals(UE::Geometry::FDynamicMesh3& Mesh) { ComputeNormals(Mesh); }
+};
+
 // Narrow edge treatment only: no terrain erosion or surface relaxation.
 bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
     const TSet<FIntPoint>& AllowedQuads, const TSharedRef<FJsonObject>& Report, FString& Error)
@@ -56,6 +65,63 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
     }
     if (Edges.IsEmpty()) { Error = TEXT("no eligible sharp convex limestone edges"); return false; }
 
+    // Epic's terminator fan reaches the next unselected neighbor. On this
+    // half-metre mesh that can deform a complete face far outside the edge
+    // treatment. Insert source-exact points on those unselected spokes first,
+    // so terminator/junction caps have a local six-centimetre boundary.
+    TArray<int32> SelectedDegree;
+    SelectedDegree.Init(0, Source.MaxVertexID());
+    TSet<int32> SelectedEdgeSet;
+    TArray<FIndex2i> SelectedPairs;
+    for (int32 E : Edges)
+    {
+        const auto V = Source.GetEdgeV(E);
+        ++SelectedDegree[V.A]; ++SelectedDegree[V.B];
+        SelectedEdgeSet.Add(E); SelectedPairs.Add(V);
+    }
+    FDynamicMesh3 LocalSource(Source);
+    int32 EndpointSplits = 0;
+    constexpr double EndpointRadiusCm = 6.0;
+    auto SplitSpoke = [&LocalSource, &EndpointSplits, EndpointRadiusCm](int32 Center, int32 Neighbor, int32& NewVertex)
+    {
+        const int32 E = LocalSource.FindEdge(Center, Neighbor);
+        if (E == IndexConstants::InvalidID) { return false; }
+        const auto V = LocalSource.GetEdgeV(E);
+        const double Length = (LocalSource.GetVertex(Neighbor) - LocalSource.GetVertex(Center)).Length();
+        if (!FMath::IsFinite(Length) || Length <= 2.0 * EndpointRadiusCm) { return false; }
+        const double Fraction = EndpointRadiusCm / Length;
+        FDynamicMesh3::FEdgeSplitInfo Info;
+        if (LocalSource.SplitEdge(E, Info, V.A == Center ? Fraction : 1.0 - Fraction) != EMeshResult::Ok)
+        { return false; }
+        NewVertex = Info.NewVertex; ++EndpointSplits;
+        return true;
+    };
+    for (int32 E : Source.EdgeIndicesItr())
+    {
+        if (SelectedEdgeSet.Contains(E)) { continue; }
+        const auto V = Source.GetEdgeV(E);
+        const bool SplitA = SelectedDegree[V.A] > 0 && SelectedDegree[V.A] != 2;
+        const bool SplitB = SelectedDegree[V.B] > 0 && SelectedDegree[V.B] != 2;
+        int32 NeighborForB = V.A, NewVertex = IndexConstants::InvalidID;
+        if (SplitA)
+        {
+            if (!SplitSpoke(V.A, V.B, NewVertex)) { Error = TEXT("local endpoint source split failed"); return false; }
+            NeighborForB = NewVertex;
+        }
+        if (SplitB && !SplitSpoke(V.B, NeighborForB, NewVertex))
+        { Error = TEXT("local endpoint source split failed"); return false; }
+    }
+    TArray<int32> LocalEdges;
+    for (const auto V : SelectedPairs)
+    {
+        const int32 E = LocalSource.FindEdge(V.A, V.B);
+        if (E == IndexConstants::InvalidID) { Error = TEXT("local split lost a selected native edge"); return false; }
+        LocalEdges.Add(E);
+    }
+    Report->SetNumberField(TEXT("endpoint_source_split_count"), EndpointSplits);
+    Report->SetNumberField(TEXT("endpoint_source_split_radius_cm"), EndpointRadiusCm);
+    Report->SetNumberField(TEXT("endpoint_refined_source_triangles"), LocalSource.TriangleCount());
+
     auto BandDistance = [&Source, &Edges](const FVector3d& P)
     {
         double Best = TNumericLimits<double>::Max();
@@ -92,10 +158,10 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
     // enforce a 10 cm radius (20 cm total band) and a 20 cm source-relative cap.
     bool Accepted = false;
     TArray<FVector3d> Original;
-    double MaxShift = 0, MaxBand = 0, ChosenInset = 0;
+    double MaxShift = 0, MaxBand = 0, ChosenInset = 0, ChosenProfileAlpha = 0, MaxProfileShift = 0;
     int32 ChosenSubdivisions = 0;
     TArray<TSharedPtr<FJsonValue>> Attempts;
-    for (const FIntPoint Attempt : {FIntPoint(2, 5), FIntPoint(2, 3), FIntPoint(2, 2), FIntPoint(1, 5), FIntPoint(1, 3), FIntPoint(1, 2)})
+    for (const FIntPoint Attempt : {FIntPoint(2, 5), FIntPoint(2, 3), FIntPoint(2, 2), FIntPoint(1, 5), FIntPoint(1, 3), FIntPoint(1, 2), FIntPoint(1, 1)})
     {
         const double Inset = Attempt.Y;
         const auto Trial = MakeShared<FJsonObject>();
@@ -103,70 +169,106 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
         Trial->SetNumberField(TEXT("subdivisions"), Attempt.X);
         Attempts.Add(MakeShared<FJsonValueObject>(Trial));
         Report->SetArrayField(TEXT("bevel_attempts"), Attempts);
-        Mesh = Source;
+        Mesh = LocalSource;
         // Native Landscape export has downward geometric winding. Bevel needs
         // outward (upward) orientation; retain copied native shading normals.
         Mesh.ReverseOrientation(false);
         const FDynamicMesh3 BevelSource(Mesh);
-        FMeshBevel Bevel;
-        Bevel.InsetDistance = Inset; Bevel.NumSubdivisions = Attempt.X; Bevel.RoundWeight = 0.5;
-        Bevel.InitializeFromTriangleEdges(BevelSource, Edges);
+        FGuardedLimestoneBevel Bevel;
+        Bevel.InsetDistance = Inset; Bevel.NumSubdivisions = Attempt.X; Bevel.RoundWeight = 0;
+        Bevel.InitializeFromTriangleEdges(BevelSource, LocalEdges);
         if (!Bevel.Apply(Mesh, nullptr)) { Trial->SetStringField(TEXT("failure"), TEXT("operation")); continue; }
-        Mesh.ReverseOrientation(false);
         Trial->SetNumberField(TEXT("triangles"), Mesh.TriangleCount());
         if (Mesh.TriangleCount() > 60000) { Trial->SetStringField(TEXT("failure"), TEXT("triangle_budget")); continue; }
-        bool Valid = true;
-        Original.SetNum(Mesh.MaxVertexID()); MaxShift = MaxBand = 0;
-        for (int32 V : Source.VertexIndicesItr())
+        auto Validate = [&](const TSharedRef<FJsonObject>& Check)
         {
-            if (!Mesh.IsVertex(V) || (!EdgeVertices.Contains(V) && (Mesh.GetVertex(V) - Source.GetVertex(V)).Length() > 1.e-8))
-            { Trial->SetStringField(TEXT("failure"), TEXT("source_id_or_outside_vertex")); Valid = false; break; }
-        }
-        if (!Valid) { continue; }
+            Original.SetNum(Mesh.MaxVertexID()); MaxShift = MaxBand = 0;
+            for (int32 V : Source.VertexIndicesItr())
+            {
+                if (!Mesh.IsVertex(V) || (!EdgeVertices.Contains(V) && (Mesh.GetVertex(V) - Source.GetVertex(V)).Length() > 1.e-8))
+                { Check->SetStringField(TEXT("failure"), TEXT("source_id_or_outside_vertex")); return false; }
+            }
+            for (int32 V : Mesh.VertexIndicesItr())
+            {
+                const FVector3d P = Mesh.GetVertex(V);
+                FVector3d Q;
+                if (Source.IsVertex(V) && !EdgeVertices.Contains(V)) { Q = Source.GetVertex(V); }
+                else if (!SourceClosest(P, Q)) { Check->SetStringField(TEXT("failure"), TEXT("source_projection")); return false; }
+                Original[V] = Q;
+                const double Shift = (P - Q).Length();
+                const bool Edited = !Source.IsVertex(V) || (P - Source.GetVertex(V)).Length() > 1.e-8;
+                if (Edited)
+                {
+                    const double Band = FMath::Max(BandDistance(P), BandDistance(Q));
+                    MaxBand = FMath::Max(MaxBand, Band);
+                    if (Band > 10.000001 || Shift > 20.000001 || P.ContainsNaN())
+                    {
+                        Check->SetStringField(TEXT("failure"), TEXT("band_or_displacement"));
+                        Check->SetNumberField(TEXT("band_cm"), Band); Check->SetNumberField(TEXT("shift_cm"), Shift);
+                        return false;
+                    }
+                }
+                MaxShift = FMath::Max(MaxShift, Shift);
+            }
+            for (int32 T : Mesh.TriangleIndicesItr())
+            {
+                const auto F = Mesh.GetTriangle(T);
+                const double Area = FVector3d::CrossProduct(Mesh.GetVertex(F.B) - Mesh.GetVertex(F.A), Mesh.GetVertex(F.C) - Mesh.GetVertex(F.A)).Z;
+                // The trial is still in Epic's upward orientation at this point.
+                if (!FMath::IsFinite(Area) || Area <= 1.e-8)
+                {
+                    Check->SetStringField(TEXT("failure"), TEXT("xy_fold"));
+                    Check->SetNumberField(TEXT("fold_area_z_cm2"), -Area);
+                    TArray<TSharedPtr<FJsonValue>> Points;
+                    for (int32 V : {F.A, F.B, F.C})
+                    {
+                        const FVector3d P = Mesh.GetVertex(V);
+                        TArray<TSharedPtr<FJsonValue>> Row;
+                        for (double X : {P.X, P.Y, P.Z}) { Row.Add(MakeShared<FJsonValueNumber>(X)); }
+                        Points.Add(MakeShared<FJsonValueArray>(Row));
+                    }
+                    Check->SetArrayField(TEXT("fold_vertices_cm"), Points);
+                    return false;
+                }
+            }
+            return true;
+        };
+        const auto LinearCheck = MakeShared<FJsonObject>();
+        Trial->SetObjectField(TEXT("linear_check"), LinearCheck);
+        if (!Validate(LinearCheck)) { Trial->SetStringField(TEXT("failure"), TEXT("linear_base_guard")); continue; }
+        TArray<FVector3d> LinearPositions, RoundedPositions;
+        LinearPositions.SetNum(Mesh.MaxVertexID()); RoundedPositions.SetNum(Mesh.MaxVertexID());
+        for (int32 V : Mesh.VertexIndicesItr()) { LinearPositions[V] = Mesh.GetVertex(V); }
+        Bevel.RoundWeight = 0.5;
+        Bevel.ApplyRoundProfile(Mesh);
+        double ProfileShift = 0;
         for (int32 V : Mesh.VertexIndicesItr())
         {
-            const FVector3d P = Mesh.GetVertex(V);
-            FVector3d Q;
-            if (Source.IsVertex(V) && !EdgeVertices.Contains(V)) { Q = Source.GetVertex(V); }
-            else if (!SourceClosest(P, Q)) { Trial->SetStringField(TEXT("failure"), TEXT("source_projection")); Valid = false; break; }
-            Original[V] = Q;
-            const double Shift = (P - Q).Length();
-            const bool Edited = !Source.IsVertex(V) || (P - Source.GetVertex(V)).Length() > 1.e-8;
-            if (Edited)
-            {
-                const double Band = FMath::Max(BandDistance(P), BandDistance(Q));
-                MaxBand = FMath::Max(MaxBand, Band);
-                if (Band > 10.000001 || Shift > 20.000001 || P.ContainsNaN())
-                {
-                    Trial->SetStringField(TEXT("failure"), TEXT("band_or_displacement"));
-                    Trial->SetNumberField(TEXT("band_cm"), Band); Trial->SetNumberField(TEXT("shift_cm"), Shift);
-                    Valid = false; break;
-                }
-            }
-            MaxShift = FMath::Max(MaxShift, Shift);
+            RoundedPositions[V] = Mesh.GetVertex(V);
+            ProfileShift = FMath::Max(ProfileShift, (RoundedPositions[V] - LinearPositions[V]).Length());
         }
-        if (!Valid) { continue; }
-        for (int32 T : Mesh.TriangleIndicesItr())
+        if (!FMath::IsFinite(ProfileShift) || ProfileShift <= 1.e-6)
+        { Trial->SetStringField(TEXT("failure"), TEXT("empty_or_nonfinite_round_profile")); continue; }
+        TArray<TSharedPtr<FJsonValue>> ProfileAttempts;
+        for (int32 Backtrack = 0; Backtrack <= 16; ++Backtrack)
         {
-            const auto F = Mesh.GetTriangle(T);
-            const double Area = FVector3d::CrossProduct(Mesh.GetVertex(F.B) - Mesh.GetVertex(F.A), Mesh.GetVertex(F.C) - Mesh.GetVertex(F.A)).Z;
-            if (!FMath::IsFinite(Area) || Area >= -1.e-8)
-            {
-                Trial->SetStringField(TEXT("failure"), TEXT("xy_fold"));
-                Trial->SetNumberField(TEXT("fold_area_z_cm2"), Area);
-                TArray<TSharedPtr<FJsonValue>> Points;
-                for (int32 V : {F.A, F.B, F.C})
-                {
-                    const FVector3d P = Mesh.GetVertex(V);
-                    TArray<TSharedPtr<FJsonValue>> Row;
-                    for (double X : {P.X, P.Y, P.Z}) { Row.Add(MakeShared<FJsonValueNumber>(X)); }
-                    Points.Add(MakeShared<FJsonValueArray>(Row));
-                }
-                Trial->SetArrayField(TEXT("fold_vertices_cm"), Points);
-                Valid = false; break;
-            }
+            const double Alpha = FMath::Pow(0.5, Backtrack);
+            const auto ProfileCheck = MakeShared<FJsonObject>();
+            ProfileCheck->SetNumberField(TEXT("alpha"), Alpha);
+            ProfileAttempts.Add(MakeShared<FJsonValueObject>(ProfileCheck));
+            Trial->SetArrayField(TEXT("profile_attempts"), ProfileAttempts);
+            for (int32 V : Mesh.VertexIndicesItr())
+            { Mesh.SetVertex(V, LinearPositions[V] + Alpha * (RoundedPositions[V] - LinearPositions[V])); }
+            if (Alpha * ProfileShift <= 1.e-6 || !Validate(ProfileCheck)) { continue; }
+            // Apply() computed normals on the linear mesh; finalize only after
+            // the accepted profile positions are known.
+            Bevel.UpdateNormals(Mesh);
+            Accepted = true; ChosenInset = Inset; ChosenSubdivisions = Attempt.X;
+            ChosenProfileAlpha = Alpha; MaxProfileShift = Alpha * ProfileShift;
+            break;
         }
-        if (Valid) { Accepted = true; ChosenInset = Inset; ChosenSubdivisions = Attempt.X; break; }
+        if (Accepted) { Mesh.ReverseOrientation(false); break; }
+        Trial->SetStringField(TEXT("failure"), TEXT("round_profile_guard"));
     }
     if (!Accepted) { Error = TEXT("edge bevel failed strict band, unchanged-surface, fold or triangle guards"); return false; }
     if (!Source.HasAttributes() || !Mesh.HasAttributes() || !Source.Attributes()->PrimaryNormals() || !Mesh.Attributes()->PrimaryNormals())
@@ -202,12 +304,16 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
     Report->SetArrayField(TEXT("audit_vertices_cm"), Rows); Report->SetArrayField(TEXT("audit_triangles"), Faces);
     Report->SetArrayField(TEXT("edge_source_vertices_cm"), SourceRows); Report->SetArrayField(TEXT("edge_source_triangles"), SourceFaces);
     Report->SetArrayField(TEXT("rounded_source_edges"), SelectedEdges);
-    Report->SetStringField(TEXT("shape_profile"), TEXT("limestone-edge-band-only-v6"));
-    Report->SetStringField(TEXT("refinement"), TEXT("Epic FMeshBevel on sharp convex native edges only"));
+    Report->SetStringField(TEXT("shape_profile"), TEXT("limestone-edge-band-only-v7"));
+    Report->SetStringField(TEXT("refinement"), TEXT("source-exact local endpoint splits and guarded Epic FMeshBevel profile"));
     Report->SetNumberField(TEXT("displacement_limit_cm"), 20); Report->SetNumberField(TEXT("max_displacement_cm"), MaxShift);
     Report->SetNumberField(TEXT("edge_band_radius_cm"), 10); Report->SetNumberField(TEXT("max_edge_band_distance_cm"), MaxBand);
     Report->SetNumberField(TEXT("bevel_inset_cm"), ChosenInset); Report->SetNumberField(TEXT("bevel_subdivisions"), ChosenSubdivisions);
     Report->SetNumberField(TEXT("bevel_round_weight"), 0.5);
+    Report->SetNumberField(TEXT("bevel_profile_blend"), ChosenProfileAlpha);
+    Report->SetNumberField(TEXT("max_round_profile_displacement_cm"), MaxProfileShift);
+    Report->SetBoolField(TEXT("bevel_linear_base_valid"), true);
+    Report->SetNumberField(TEXT("folded_xy_triangles"), 0);
     Report->SetNumberField(TEXT("sharp_edge_angle_deg"), 45); Report->SetNumberField(TEXT("rounded_edge_count"), Edges.Num());
     Report->SetNumberField(TEXT("smoothing_passes"), 0); Report->SetNumberField(TEXT("tangential_redistribution_passes"), 0);
     Report->SetNumberField(TEXT("locked_normal_max_delta"), 0); Report->SetNumberField(TEXT("preserved_normal_elements"), PreservedNormals);

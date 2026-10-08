@@ -19,6 +19,68 @@ def _area(a, b, c):
     return _cross(_sub(b, a), _sub(c, a))[2]/2
 
 
+def _segment_distance(p, a, b):
+    d = _sub(b, a)
+    length_squared = _dot(d, d)
+    if length_squared == 0:
+        return math.dist(p, a)
+    u = max(0, min(1, _dot(_sub(p, a), d)/length_squared))
+    return math.dist(p, tuple(a[k]+u*d[k] for k in range(3)))
+
+
+def _certify_triangle_band(points, segments, unchanged=None, radius_cm=10,
+                           max_depth=20, max_pieces=4096):
+    """Bound every point, including triangle interiors, inside the capsule union.
+
+    Distance to one finite segment is convex, so a common capsule containing
+    all three vertices contains their whole triangle. For a union of capsules
+    that argument no longer holds. Distance to the union is 1-Lipschitz: its
+    value at the centroid plus the farthest corner distance is an upper bound
+    everywhere on the triangle. Subdivide the longest edge when neither bound
+    certifies a piece. An exhausted budget rejects; sampled points never grant
+    acceptance by themselves.
+
+    The caller can exempt a piece only when all corners belong to one unchanged
+    source facet. A source triangle is convex, so this proves the whole piece.
+    """
+    limit = radius_cm + 1e-6
+    pending = [(tuple(points), 0)]
+    visited = 0
+    certified_bound = 0.0
+    while pending:
+        piece, depth = pending.pop()
+        visited += 1
+        if visited > max_pieces:
+            raise ValueError('Could not certify the complete narrow edge band within the subdivision budget')
+        if unchanged is not None and unchanged(piece):
+            continue
+        if not segments:
+            raise ValueError('Changed triangle surface extends outside the narrow edge band')
+        distances = [[_segment_distance(p, a, b) for p in piece] for a, b in segments]
+        if any(min(row[k] for row in distances) > limit for k in range(3)):
+            raise ValueError('Changed triangle surface extends outside the narrow edge band')
+        capsule_bound = min(max(row) for row in distances)
+        if capsule_bound <= limit:
+            certified_bound = max(certified_bound, capsule_bound)
+            continue
+        center = tuple(sum(p[k] for p in piece)/3 for k in range(3))
+        center_distance = min(_segment_distance(center, a, b) for a, b in segments)
+        if center_distance > limit:
+            raise ValueError('Changed triangle surface extends outside the narrow edge band')
+        lipschitz_bound = center_distance + max(math.dist(center, p) for p in piece)
+        if lipschitz_bound <= limit:
+            certified_bound = max(certified_bound, lipschitz_bound)
+            continue
+        if depth >= max_depth:
+            raise ValueError('Could not certify the complete narrow edge band within the subdivision budget')
+        i, j = max(((0, 1), (1, 2), (2, 0)), key=lambda pair: math.dist(piece[pair[0]], piece[pair[1]]))
+        other = 3-i-j
+        midpoint = tuple((piece[i][k]+piece[j][k])/2 for k in range(3))
+        pending.extend((((piece[i], midpoint, piece[other]), depth+1),
+                        ((midpoint, piece[j], piece[other]), depth+1)))
+    return certified_bound
+
+
 def audit_edges(plan, reference, evidence):
     # The existing domain audit remains separately available to historical runs.
     contract = plan.get('rounding_domain_contract', {})
@@ -108,9 +170,7 @@ def audit_edges(plan, reference, evidence):
         for dx in (-1,0,1):
             for dy in (-1,0,1):
                 for a,b in edge_tiles[(x+dx,y+dy)]:
-                    d = _sub(b,a)
-                    u = max(0,min(1,_dot(_sub(p,a),d)/_dot(d,d)))
-                    best = min(best,math.dist(p,tuple(a[k]+u*d[k] for k in range(3))))
+                    best = min(best, _segment_distance(p, a, b))
         return best
 
     def containing_faces(p, on_surface=False):
@@ -167,7 +227,6 @@ def audit_edges(plan, reference, evidence):
     max_shift = max_band = 0
     changed = 0
     membership = {}
-    band = {}
     for v,p in candidate.items():
         q = before[v]
         if v in source and v not in edge_vertices and q != source[v]:
@@ -189,10 +248,15 @@ def audit_edges(plan, reference, evidence):
             changed += 1
         max_shift = max(max_shift,shift)
         membership[v] = containing_faces(p,True)[0]
-        band[v] = band_distance(p)
     candidate_faces = evidence['triangles']
     edges = Counter()
     area = 0
+    certified_triangles = 0
+    max_surface_band = 0
+
+    def unchanged_source_piece(points):
+        return bool(set.intersection(*(containing_faces(p, True)[0] for p in points)))
+
     if len(candidate_faces) > 60000 or len({tuple(sorted(f)) for f in candidate_faces}) != len(candidate_faces):
         raise ValueError('Triangle budget or duplicate face violation')
     for f in candidate_faces:
@@ -202,8 +266,19 @@ def audit_edges(plan, reference, evidence):
         if signed >= -1e-8:
             raise ValueError('Folded or degenerate candidate triangle')
         area -= signed
-        if not set.intersection(*(membership[v] for v in f)) and any(band[v] > 10.000001 for v in f):
-            raise ValueError('Changed triangle surface extends outside the narrow edge band')
+        if not set.intersection(*(membership[v] for v in f)):
+            points = tuple(candidate[v] for v in f)
+            # Include every capsule that could cover any point of this triangle.
+            # Omitting a farther capsule can only tighten the conservative bound.
+            nearby = set()
+            for x in range(math.floor(min(p[0] for p in points)/50)-1,
+                           math.floor(max(p[0] for p in points)/50)+2):
+                for y in range(math.floor(min(p[1] for p in points)/50)-1,
+                               math.floor(max(p[1] for p in points)/50)+2):
+                    nearby.update(edge_tiles[(x, y)])
+            bound = _certify_triangle_band(points, tuple(nearby), unchanged_source_piece)
+            max_surface_band = max(max_surface_band, bound)
+            certified_triangles += 1
         for a,b in zip(f, f[1:]+f[:1]):
             edges[tuple(sorted((a,b)))] += 1
     if any(n>2 for n in edges.values()) or abs(area/10000-3969) > 1e-6:
@@ -218,6 +293,10 @@ def audit_edges(plan, reference, evidence):
         changed_vertices=changed, source_area_m2=3969, candidate_area_m2=area/10000,
         eligibility_area_m2=len(cells), edge_band_radius_cm=10,
         max_edge_band_distance_cm=max_band, displacement_limit_cm=20,
+        complete_changed_triangle_band_certified=True,
+        band_certification='adaptive-lipschitz-and-convex-capsules-v1',
+        certified_changed_triangles=certified_triangles,
+        max_certified_triangle_band_cm=max_surface_band,
         max_displacement_cm=max_shift, nonmanifold_edges=0, folded_xy_triangles=0,
         outside_edge_vertices_unchanged=True, outside_edge_surface_unchanged=True,
         terrain_heightfield_modified=False)

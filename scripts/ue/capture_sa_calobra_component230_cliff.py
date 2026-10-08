@@ -1182,7 +1182,7 @@ def _spawn_edge_rounding_trial():
     export = json.loads(library.copy_component230(_target_component, component.get_dynamic_mesh(),
         json.dumps(dict(_plan, limestone_rounded_flow=True, limestone_edge_only=True))))
     if (export.get('status') != 'NATIVE_LANDSCAPE_COMPONENT_MESH'
-            or export.get('shape_profile') != 'limestone-edge-band-only-v6'
+            or export.get('shape_profile') != 'limestone-edge-band-only-v7'
             or export.get('displacement_limit_cm') != 20 or export.get('locked_normal_max_delta') != 0):
         raise RuntimeError('Narrow edge export failed: ' + json.dumps(export))
     combined = dict(vertices_cm=export.pop('audit_vertices_cm'), triangles=export.pop('audit_triangles'),
