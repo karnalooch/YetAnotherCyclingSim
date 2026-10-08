@@ -13,7 +13,8 @@ class YETANOTHERCYCLINGSIMEDITOR_API UYacsLandscapeMeshDiagnosticLibrary : publi
 {
     GENERATED_BODY()
 public:
-    /** Copy native LOD0 geometry and attributes into an existing transient mesh. Never save. */
+    /** Copy native LOD0 geometry and attributes into an existing transient mesh. Never save. Optional plan enables bounded local presentation smoothing. */
     UFUNCTION(BlueprintCallable, Category = "YACS|Diagnostics")
-    static FString CopyComponent230(ULandscapeComponent* Component, UDynamicMesh* TargetMesh);
+    static FString CopyComponent230(ULandscapeComponent* Component, UDynamicMesh* TargetMesh,
+        const FString& SmoothingPlanJson = TEXT(""));
 };

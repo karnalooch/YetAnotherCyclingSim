@@ -44,6 +44,7 @@ NEUTRAL_LANDSCAPE = os.environ.get("YACS_CLIFF_NEUTRAL_LANDSCAPE") == "1"
 NEUTRAL_MATERIAL = "/Engine/BasicShapes/BasicShapeMaterial"
 MATCH_LANDSCAPE_MATERIAL = os.environ.get("YACS_CLIFF_MATCH_LANDSCAPE_MATERIAL") == "1"
 LANDSCAPE_MESH_DIAGNOSTIC = os.environ.get("YACS_LANDSCAPE_MESH_DIAGNOSTIC") == "1"
+LOCAL_CLIFF_SMOOTHING = os.environ.get("YACS_LOCAL_CLIFF_SMOOTHING") == "1"
 _landscape_visibility_state = None
 _landscape_mesh_diagnostic = {"enabled": False}
 PIXEL_SIZE_M = 0.5
@@ -1004,10 +1005,35 @@ def _spawn_landscape_mesh_diagnostic():
     component = actor.get_dynamic_mesh_component()
     mesh = component.get_dynamic_mesh()
     export = json.loads(
-        unreal.YacsLandscapeMeshDiagnosticLibrary.copy_component230(_target_component, mesh)
+        unreal.YacsLandscapeMeshDiagnosticLibrary.copy_component230(
+            _target_component, mesh,
+            json.dumps(_plan) if LOCAL_CLIFF_SMOOTHING else "",
+        )
     )
     if export.get("status") != "NATIVE_LANDSCAPE_COMPONENT_MESH":
         raise RuntimeError("Native Landscape export: " + json.dumps(export))
+    if LOCAL_CLIFF_SMOOTHING:
+        if (
+            export.get("local_smoothing") is not True
+            or export.get("source_skin_cells") != 1017
+            or export.get("folded_xy_triangles") != 0
+            or export.get("locked_vertex_displacement_cm") != 0
+            or export.get("max_displacement_cm", float("inf")) > 50.000001
+        ):
+            raise RuntimeError("Local cliff smoothing receipt failed")
+        evidence = {
+            "vertex_columns": ["id", "source_x", "source_y", "source_z", "x", "y", "z", "movable"],
+            "vertices_cm": export.pop("audit_vertices_cm"),
+            "triangles": export.pop("audit_triangles"),
+        }
+        evidence_path = OUTPUT / "local-cliff-smoothing-mesh.json"
+        evidence_path.write_text(
+            json.dumps(evidence, sort_keys=True, separators=(",", ":")), encoding="utf-8"
+        )
+        export["mesh_evidence_sha256"] = _digest(evidence_path)
+        component.set_tangents_type(
+            unreal.DynamicMeshComponentTangentsMode.AUTO_CALCULATED
+        )
     material = _target_component.get_editor_property("override_material")
     component.set_material(0, material)
     component.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
@@ -1024,6 +1050,7 @@ def _spawn_landscape_mesh_diagnostic():
     _landscape_mesh_diagnostic.update(
         enabled=True, export=export, original_visibility=_landscape_visibility_state[0],
         restored=False, pcgex_overlay=False, scree_spawned=False,
+        local_smoothing=LOCAL_CLIFF_SMOOTHING,
         scope="NON_PRODUCTION_NATIVE_LANDSCAPE_MESH_DIAGNOSTIC",
     )
     _target_component.set_editor_property("cast_hidden_shadow", False)

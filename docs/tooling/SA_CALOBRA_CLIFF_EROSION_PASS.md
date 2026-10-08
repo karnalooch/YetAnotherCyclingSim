@@ -419,3 +419,27 @@ Only after Phase 2A handoff review:
 Erosion/breakup remains presentation geometry work. It is never written back
 into the canonical Landscape without a separate explicit architecture change.
 
+
+### Local single-surface smoothing diagnostic
+
+The opt-in `YACS_LOCAL_CLIFF_SMOOTHING=1` variant acts only on the owned native
+Component 230 mesh export. It never mutates Landscape, source DTM or PCGEx data.
+The 1,017 authoritative skin cells select 8,136 native half-metre triangles.
+Every vertex incident to an unselected triangle and every component boundary
+vertex stays fixed. Twenty-four normal-space relaxation passes use blend 0.35
+and a maximum total displacement of 50 cm, with global backtracking rejecting
+XY folds and collapsed triangles. The fixed interface and consistently oriented
+XY triangles preserve the selected planar domain. Source topology and triangle
+count stay unchanged. Normals are recomputed for the edited presentation.
+
+This replaces the visible component for the diagnostic, so no overlapping cliff
+skin or scree is spawned. It tests a single geometric owner, not a boolean merge
+of PCGEx and Landscape. The existing PCGEx authority proof and A/B gates remain
+binding and unchanged. No full-map rollout or visual acceptance is claimed.
+
+The workflow emits `local-cliff-smoothing/` renders, rollback/constraint receipts
+and `local-cliff-smoothing-mesh.json`, containing source/candidate vertex pairs,
+movability flags and triangle indices for independent auditing. The evidence hash
+is recorded in the receipt. Native export conversion error is measured before
+smoothing and must not be interpreted as zero displacement of the candidate.
+Build, runtime, visual and whole-map preview proof are pending for this variant.

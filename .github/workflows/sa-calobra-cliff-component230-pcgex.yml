@@ -193,7 +193,7 @@ jobs:
           python -m py_compile scripts/assets/prepare_sa_calobra_component230_cliff_visual.py scripts/assets/analyze_sa_calobra_component230_cliff_visual.py scripts/assets/analyze_sa_calobra_component230_pcgex_topology.py scripts/ue/capture_sa_calobra_component230_cliff.py
           if ($LASTEXITCODE -ne 0) { throw 'Phase 2C Python compile failed.' }
 
-          python -m unittest scripts.assets.test_sa_calobra_component230_cliff_visual scripts.assets.test_analyze_sa_calobra_component230_pcgex_topology -v
+          python -m unittest scripts.assets.test_sa_calobra_component230_cliff_visual scripts.assets.test_analyze_sa_calobra_component230_pcgex_topology scripts.assets.test_analyze_local_cliff_smoothing -v
           if ($LASTEXITCODE -ne 0) { throw 'Phase 2C cliff plan/topology audit tests failed.' }
 
           python scripts/assets/prepare_sa_calobra_component230_cliff_visual.py --normalized-manifest $env:YACS_CLIFF_NORMALIZED --pcg-manifest $env:YACS_CLIFF_PCG --context-manifest $env:YACS_CLIFF_CONTEXT --output $env:YACS_CLIFF_VISUAL_PLAN_ROOT
@@ -399,6 +399,23 @@ jobs:
           try {
             $terrainRoot = Join-Path $env:YACS_CLIFF_PHASE2C_ROOT 'landscape-mesh'
             Invoke-CliffCapture -Label 'landscape-mesh' -Output $terrainRoot -UsePcgEx $false
+            $env:YACS_LOCAL_CLIFF_SMOOTHING = '1'
+            try {
+              $localRoot = Join-Path $env:YACS_CLIFF_PHASE2C_ROOT 'local-cliff-smoothing'
+              Invoke-CliffCapture -Label 'local-cliff-smoothing' -Output $localRoot -UsePcgEx $false
+              python scripts/assets/analyze_local_cliff_smoothing.py --plan $env:YACS_CLIFF_VISUAL_PLAN --mesh (Join-Path $localRoot 'local-cliff-smoothing-mesh.json') --output (Join-Path $localRoot 'local-cliff-smoothing-audit.json')
+              if ($LASTEXITCODE -ne 0) { throw 'Independent local smoothing audit failed.' }
+              $local = Get-Content -LiteralPath (Join-Path $localRoot 'component230-cliff-visual-receipt.json') -Raw | ConvertFrom-Json
+              if (
+                $local.landscape_mesh_diagnostic.export.local_smoothing -ne $true -or
+                $local.landscape_mesh_diagnostic.export.folded_xy_triangles -ne 0 -or
+                $local.landscape_mesh_diagnostic.export.locked_vertex_displacement_cm -ne 0 -or
+                $local.landscape_mesh_diagnostic.export.max_displacement_cm -gt 50.000001
+              ) { throw 'Local cliff smoothing bounds failed.' }
+            }
+            finally {
+              Remove-Item Env:YACS_LOCAL_CLIFF_SMOOTHING -ErrorAction SilentlyContinue
+            }
           }
           finally {
             Remove-Item Env:YACS_LANDSCAPE_MESH_DIAGNOSTIC -ErrorAction SilentlyContinue

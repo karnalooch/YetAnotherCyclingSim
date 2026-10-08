@@ -2154,6 +2154,18 @@ At hairpins, cross-section construction must understand that nearby road branche
 
 Do not globally blur a good DTM to hide a local cliff problem.
 
+Owner clarification, 2026-10-08 (#445): bounded presentation-only local smoothing
+and surface-normal adjustment are authorized to resolve visible cliff artifacts.
+Prefer horizontal correction on steep walls and vertical correction on shallow
+transitions, with fixed footprint interfaces and unchanged hard exclusions.
+The first single-surface diagnostic uses an owned native Component 230 mesh copy;
+canonical Landscape/DTM, roads and physics remain unchanged. Original visibility
+must be restored after isolated captures. This is not production terrain migration
+or permission to claim that all dark regions are intersections. Verify the local
+neutral Lit/Lighting Only result before whole-Landscape application and an owner
+preview package. PR #446 remains unmerged pending explicit approval.
+See the [cliff diagnostic contract](tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md#local-single-surface-smoothing-diagnostic).
+
 Do not scatter cliff meshes over the whole map. Place meso geometry where slope, visibility and composition justify it.
 
 ---
