@@ -222,22 +222,6 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
     }
     for (int32 V : Mesh.VertexIndicesItr()) { GuideNormals[V].Normalize(); }
     constexpr double FeatureCosine = 0.85; // approximately 32 degrees
-    // Freeze the source orientation guide: evolving normals must not gradually
-    // erase a crease and then admit diffusion across it. No noise or invented
-    // strata are added. This preserves existing angular source structure.
-    TArray<FVector3d> GuideNormals;
-    GuideNormals.Init(FVector3d::Zero(), Mesh.MaxVertexID());
-    for (int32 T : Mesh.TriangleIndicesItr())
-    {
-        const auto F = Mesh.GetTriangle(T);
-        const FVector3d N = FVector3d::CrossProduct(
-            Original[F.B] - Original[F.A], Original[F.C] - Original[F.A]);
-        GuideNormals[F.A] += N;
-        GuideNormals[F.B] += N;
-        GuideNormals[F.C] += N;
-    }
-    for (int32 V : Mesh.VertexIndicesItr()) { GuideNormals[V].Normalize(); }
-    constexpr double FeatureCosine = 0.85; // approximately 32 degrees
     int32 Backtracks = 0;
     int32 CompletedPasses = 0;
     int32 CompletedTangentialPasses = 0;
