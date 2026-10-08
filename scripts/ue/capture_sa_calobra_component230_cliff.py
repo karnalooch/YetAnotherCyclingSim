@@ -1202,7 +1202,7 @@ def _spawn_edge_rounding_trial():
     _target_component.set_editor_property('cast_hidden_shadow', False)
     _target_component.set_visibility(False, False)
     _terrain_trial.update(enabled=True, erosion=erosion, native_landscape=False, edge_only_mesh=True,
-        imported_heightfield_matches=True, restored=False, source_heightfield_unchanged=False,
+        terrain_import_performed=False, imported_heightfield_matches=None, restored=False, source_heightfield_unchanged=False,
         derived_heightfield_modified=False, post_erosion_mesh=True, mesh_export=export,
         combined_audit=result, original_reference_sha256=_digest(reference_path))
     _mesh_receipt = dict(lighting=_mesh_receipt.get('lighting'), generator='native-source-edge-bevel-only',

@@ -377,9 +377,28 @@ jobs:
             ) {
               throw "$Label visual receipt contract failed."
             }
-            if ($env:YACS_TERRAIN_EROSION_TRIAL -eq '1') {
+            if ($env:YACS_TERRAIN_MESH_TRIAL -eq '1') {
+              $edge = $receipt.terrain_erosion_trial
               if (
-                $receipt.mesh.generator -ne $(if ($env:YACS_TERRAIN_MESH_TRIAL -eq '1') { 'native-eroded-landscape-mesh' } else { 'native-landscape-thermal-erosion' }) -or
+                $receipt.mesh.generator -ne 'native-source-edge-bevel-only' -or
+                $edge.edge_only_mesh -ne $true -or
+                $edge.terrain_import_performed -ne $false -or
+                $edge.native_landscape -ne $false -or
+                $edge.derived_heightfield_modified -ne $false -or
+                $edge.erosion.enabled -ne $false -or
+                $edge.source_heightfield_unchanged -ne $true -or
+                $edge.restored -ne $true -or
+                $edge.combined_audit.status -ne 'PASS' -or
+                $edge.combined_audit.displacement_limit_cm -ne 20 -or
+                $edge.combined_audit.max_displacement_cm -gt 20.000001 -or
+                $edge.combined_audit.edge_band_radius_cm -ne 10 -or
+                $edge.combined_audit.max_edge_band_distance_cm -gt 10.000001 -or
+                $edge.combined_audit.outside_edge_surface_unchanged -ne $true
+              ) { throw 'Narrow limestone edge-only receipt failed.' }
+            }
+            elseif ($env:YACS_TERRAIN_EROSION_TRIAL -eq '1') {
+              if (
+                $receipt.mesh.generator -ne 'native-landscape-thermal-erosion' -or
                 $receipt.terrain_erosion_trial.native_landscape -ne $true -or
                 $receipt.terrain_erosion_trial.imported_heightfield_matches -ne $true -or
                 $receipt.terrain_erosion_trial.derived_heightfield_modified -ne $true -or
@@ -389,12 +408,6 @@ jobs:
                 $receipt.terrain_erosion_trial.erosion.fixed_samples_changed -ne 0 -or
                 $receipt.terrain_erosion_trial.erosion.height_sum_delta_units -ne 0
               ) { throw 'Native terrain erosion trial receipt failed.' }
-              if ($env:YACS_TERRAIN_MESH_TRIAL -eq '1' -and (
-                $receipt.terrain_erosion_trial.post_erosion_mesh -ne $true -or
-                $receipt.terrain_erosion_trial.combined_audit.status -ne 'PASS' -or
-                $receipt.terrain_erosion_trial.combined_audit.displacement_limit_cm -ne 200 -or
-                $receipt.terrain_erosion_trial.combined_audit.max_displacement_cm -gt 200.000001
-              )) { throw 'Combined original-relative mesh envelope failed.' }
             }
             elseif ($env:YACS_LANDSCAPE_MESH_DIAGNOSTIC -eq '1') {
               if (

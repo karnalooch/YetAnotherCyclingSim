@@ -18,7 +18,7 @@ class CombinedGateTests(unittest.TestCase):
         self.receipt = dict(exact_sha='revision', status='COMPONENT230_CLIFF_VISUAL_PASS',
             map_saved=False, assets_saved=False, canonical_landscape_mutation=False,
             selector_policy_mutation=False, terrain_erosion_trial=dict(
-                edge_only_mesh=True, derived_heightfield_modified=False, erosion=dict(enabled=False), post_erosion_mesh=True, restored=True, source_heightfield_unchanged=True,
+                edge_only_mesh=True, terrain_import_performed=False, derived_heightfield_modified=False, erosion=dict(enabled=False), post_erosion_mesh=True, restored=True, source_heightfield_unchanged=True,
                 imported_heightfield_matches=True, combined_audit=self.audit,
                 limestone_uv_projection={'world_size_m': 3, 'triangles_unchanged': True},
                 mesh_export={'shape_profile': 'limestone-edge-band-only-v6',

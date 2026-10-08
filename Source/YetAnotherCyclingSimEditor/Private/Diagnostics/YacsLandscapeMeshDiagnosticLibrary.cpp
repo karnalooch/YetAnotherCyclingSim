@@ -94,19 +94,29 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
     bool Accepted = false;
     TArray<FVector3d> Original;
     double MaxShift = 0, MaxBand = 0, ChosenInset = 0;
-    for (double Inset : {5.0, 3.0, 2.0})
+    int32 ChosenSubdivisions = 0;
+    TArray<TSharedPtr<FJsonValue>> Attempts;
+    for (const FIntPoint Attempt : {FIntPoint(2, 5), FIntPoint(2, 3), FIntPoint(2, 2), FIntPoint(1, 5), FIntPoint(1, 3), FIntPoint(1, 2)})
     {
+        const double Inset = Attempt.Y;
+        const auto Trial = MakeShared<FJsonObject>();
+        Trial->SetNumberField(TEXT("inset_cm"), Inset);
+        Trial->SetNumberField(TEXT("subdivisions"), Attempt.X);
+        Attempts.Add(MakeShared<FJsonValueObject>(Trial));
+        Report->SetArrayField(TEXT("bevel_attempts"), Attempts);
         Mesh = Source;
         FMeshBevel Bevel;
-        Bevel.InsetDistance = Inset; Bevel.NumSubdivisions = 2; Bevel.RoundWeight = 1.0;
+        Bevel.InsetDistance = Inset; Bevel.NumSubdivisions = Attempt.X; Bevel.RoundWeight = 1.0;
         Bevel.InitializeFromTriangleEdges(Source, Edges);
-        if (!Bevel.Apply(Mesh, nullptr) || Mesh.TriangleCount() > 60000) { continue; }
+        if (!Bevel.Apply(Mesh, nullptr)) { Trial->SetStringField(TEXT("failure"), TEXT("operation")); continue; }
+        Trial->SetNumberField(TEXT("triangles"), Mesh.TriangleCount());
+        if (Mesh.TriangleCount() > 60000) { Trial->SetStringField(TEXT("failure"), TEXT("triangle_budget")); continue; }
         bool Valid = true;
         Original.SetNum(Mesh.MaxVertexID()); MaxShift = MaxBand = 0;
         for (int32 V : Source.VertexIndicesItr())
         {
             if (!Mesh.IsVertex(V) || (!EdgeVertices.Contains(V) && (Mesh.GetVertex(V) - Source.GetVertex(V)).Length() > 1.e-8))
-            { Valid = false; break; }
+            { Trial->SetStringField(TEXT("failure"), TEXT("source_id_or_outside_vertex")); Valid = false; break; }
         }
         if (!Valid) { continue; }
         for (int32 V : Mesh.VertexIndicesItr())
@@ -114,7 +124,7 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
             const FVector3d P = Mesh.GetVertex(V);
             FVector3d Q;
             if (Source.IsVertex(V)) { Q = Source.GetVertex(V); }
-            else if (!SourceAtXY(P, Q)) { Valid = false; break; }
+            else if (!SourceAtXY(P, Q)) { Trial->SetStringField(TEXT("failure"), TEXT("source_projection")); Valid = false; break; }
             Original[V] = Q;
             const double Shift = (P - Q).Length();
             const bool Edited = !Source.IsVertex(V) || Shift > 1.e-8;
@@ -122,7 +132,12 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
             {
                 const double Band = FMath::Max(BandDistance(P), BandDistance(Q));
                 MaxBand = FMath::Max(MaxBand, Band);
-                if (Band > 10.000001 || Shift > 20.000001 || P.ContainsNaN()) { Valid = false; break; }
+                if (Band > 10.000001 || Shift > 20.000001 || P.ContainsNaN())
+                {
+                    Trial->SetStringField(TEXT("failure"), TEXT("band_or_displacement"));
+                    Trial->SetNumberField(TEXT("band_cm"), Band); Trial->SetNumberField(TEXT("shift_cm"), Shift);
+                    Valid = false; break;
+                }
             }
             MaxShift = FMath::Max(MaxShift, Shift);
         }
@@ -131,9 +146,9 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
         {
             const auto F = Mesh.GetTriangle(T);
             const double Area = FVector3d::CrossProduct(Mesh.GetVertex(F.B) - Mesh.GetVertex(F.A), Mesh.GetVertex(F.C) - Mesh.GetVertex(F.A)).Z;
-            if (!FMath::IsFinite(Area) || Area >= -1.e-8) { Valid = false; break; }
+            if (!FMath::IsFinite(Area) || Area >= -1.e-8) { Trial->SetStringField(TEXT("failure"), TEXT("xy_fold")); Valid = false; break; }
         }
-        if (Valid) { Accepted = true; ChosenInset = Inset; break; }
+        if (Valid) { Accepted = true; ChosenInset = Inset; ChosenSubdivisions = Attempt.X; break; }
     }
     if (!Accepted) { Error = TEXT("edge bevel failed strict band, unchanged-surface, fold or triangle guards"); return false; }
     if (!Source.HasAttributes() || !Mesh.HasAttributes() || !Source.Attributes()->PrimaryNormals() || !Mesh.Attributes()->PrimaryNormals())
@@ -173,7 +188,7 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
     Report->SetStringField(TEXT("refinement"), TEXT("Epic FMeshBevel on sharp convex native edges only"));
     Report->SetNumberField(TEXT("displacement_limit_cm"), 20); Report->SetNumberField(TEXT("max_displacement_cm"), MaxShift);
     Report->SetNumberField(TEXT("edge_band_radius_cm"), 10); Report->SetNumberField(TEXT("max_edge_band_distance_cm"), MaxBand);
-    Report->SetNumberField(TEXT("bevel_inset_cm"), ChosenInset); Report->SetNumberField(TEXT("bevel_subdivisions"), 2);
+    Report->SetNumberField(TEXT("bevel_inset_cm"), ChosenInset); Report->SetNumberField(TEXT("bevel_subdivisions"), ChosenSubdivisions);
     Report->SetNumberField(TEXT("sharp_edge_angle_deg"), 45); Report->SetNumberField(TEXT("rounded_edge_count"), Edges.Num());
     Report->SetNumberField(TEXT("smoothing_passes"), 0); Report->SetNumberField(TEXT("tangential_redistribution_passes"), 0);
     Report->SetNumberField(TEXT("locked_normal_max_delta"), 0); Report->SetNumberField(TEXT("preserved_normal_elements"), PreservedNormals);

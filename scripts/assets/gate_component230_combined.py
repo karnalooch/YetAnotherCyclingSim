@@ -17,7 +17,7 @@ def evaluate(metrics: dict, receipt: dict, audit: dict, expected_sha: str) -> di
         failures.append('Non-persistence contract failed')
     trial = receipt.get('terrain_erosion_trial', {})
     if any(trial.get(key) is not True for key in
-           ('post_erosion_mesh', 'restored', 'source_heightfield_unchanged', 'imported_heightfield_matches')):
+           ('post_erosion_mesh', 'restored', 'source_heightfield_unchanged')):
         failures.append('Combined terrain restoration/import failed')
     export = trial.get('mesh_export', {})
     if (export.get('shape_profile') != 'limestone-edge-band-only-v6'
@@ -29,7 +29,8 @@ def evaluate(metrics: dict, receipt: dict, audit: dict, expected_sha: str) -> di
             or export.get('max_edge_band_distance_cm', float('inf')) > 10.000001
             or export.get('outside_edge_vertices_unchanged') is not True):
         failures.append('Narrow edge-only limestone recipe proof missing')
-    if (trial.get('edge_only_mesh') is not True or trial.get('derived_heightfield_modified') is not False
+    if (trial.get('edge_only_mesh') is not True or trial.get('terrain_import_performed') is not False
+            or trial.get('derived_heightfield_modified') is not False
             or trial.get('erosion', {}).get('enabled') is not False):
         failures.append('Edge-only candidate changed the terrain heightfield')
     if (audit.get('status') != 'PASS' or audit.get('displacement_limit_cm') != 20
