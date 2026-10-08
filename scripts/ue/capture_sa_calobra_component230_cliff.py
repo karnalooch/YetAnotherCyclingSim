@@ -21,6 +21,7 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
+import sys
 import time
 import traceback
 import uuid
@@ -57,6 +58,9 @@ NEUTRAL_MATERIAL = "/Engine/BasicShapes/BasicShapeMaterial"
 MATCH_LANDSCAPE_MATERIAL = os.environ.get("YACS_CLIFF_MATCH_LANDSCAPE_MATERIAL") == "1"
 LANDSCAPE_MESH_DIAGNOSTIC = os.environ.get("YACS_LANDSCAPE_MESH_DIAGNOSTIC") == "1"
 LOCAL_CLIFF_SMOOTHING = os.environ.get("YACS_LOCAL_CLIFF_SMOOTHING") == "1"
+TERRAIN_EROSION_TRIAL = os.environ.get("YACS_TERRAIN_EROSION_TRIAL") == "1"
+_terrain_trial = {"enabled": False}
+_terrain_source = None
 _landscape_visibility_state = None
 _landscape_lod_state = None
 _landscape_lod_receipt = {"enabled": False}
@@ -1148,9 +1152,58 @@ def _restore_landscape_visibility():
     _landscape_visibility_state = None
 
 
+def _spawn_terrain_erosion_trial():
+    global _terrain_source, _landscape_visibility_state, _mesh_receipt
+    if not NEUTRAL_LANDSCAPE or not _material_override_receipt["enabled"]:
+        raise RuntimeError("Terrain erosion trial requires the common neutral material")
+    sys.path.insert(0, str(ROOT))
+    from scripts.geometry.local_thermal_erosion import erode
+
+    library = unreal.YacsLandscapeMeshDiagnosticLibrary
+    _terrain_source = json.loads(library.read_component230_heightfield(_target_component))
+    candidate, erosion = erode(_terrain_source, _plan)
+    if (not erosion["derived_heightfield_modified"] or erosion["fixed_samples_changed"]
+            or erosion["height_sum_delta_units"] or erosion["max_abs_change_cm"] > 100):
+        raise RuntimeError("Terrain erosion bounds or sediment conservation failed")
+    for name, data in (("source", _terrain_source), ("candidate", candidate), ("erosion", erosion)):
+        (OUTPUT / ("terrain-" + name + ".json")).write_text(json.dumps(data), encoding="utf-8")
+    actor = library.create_component230_terrain_trial(
+        _target_component, json.dumps(candidate), json.dumps(_plan)
+    )
+    if actor is None:
+        raise RuntimeError("Native derived Landscape import or height readback failed")
+    _candidate_actors.append(actor)
+    components = actor.get_components_by_class(unreal.LandscapeComponent)
+    if len(components) != 1:
+        raise RuntimeError("Terrain trial must have exactly one component")
+    actual = json.loads(library.read_component230_heightfield(components[0]))
+    if actual != candidate:
+        raise RuntimeError("Imported native Landscape differs from derived DTM")
+    (OUTPUT / "terrain-readback.json").write_text(json.dumps(actual), encoding="utf-8")
+    _terrain_trial.update(enabled=True, erosion=erosion, native_landscape=True,
+                          imported_heightfield_matches=True, restored=False,
+                          source_heightfield_unchanged=False, derived_heightfield_modified=True)
+    _landscape_visibility_state = (
+        _target_component.get_editor_property("visible"),
+        _target_component.get_editor_property("cast_hidden_shadow"),
+    )
+    _target_component.set_editor_property("cast_hidden_shadow", False)
+    _target_component.set_visibility(False, False)
+    _mesh_receipt = {
+        "lighting": _mesh_receipt.get("lighting"), "generator": "native-landscape-thermal-erosion",
+        "cliff": {"vertices": 127 * 127, "triangles": 126 * 126 * 2},
+        "collision_enabled": False, "cast_dynamic_shadows": True,
+        "material": {"cliff": _material_override_receipt["material"], "diagnostic_only": True},
+    }
+
+
 def _spawn_candidate():
     global _mesh_receipt
     if _candidate_actors:
+        return
+
+    if TERRAIN_EROSION_TRIAL:
+        _spawn_terrain_erosion_trial()
         return
 
     if LANDSCAPE_MESH_DIAGNOSTIC:
@@ -1367,6 +1420,7 @@ def _write_receipt(status: str, error: str | None, *, output=None, mesh=None, ca
         "selector_policy_mutation": False,
         "landscape_presentation_material": _material_override_receipt,
         "landscape_mesh_diagnostic": _landscape_mesh_diagnostic,
+        "terrain_erosion_trial": _terrain_trial,
         "component": _component_bounds() if _target_component else None,
         "plan_fingerprint": None if _plan is None else _plan.get("fingerprint"),
         "plan_counts": None if _plan is None else _plan.get("counts"),
@@ -1423,6 +1477,12 @@ def finish(error: str | None = None):
     try:
         if _before_scene is not None and _scene_snapshot() != _before_scene:
             error = (error + "\n" if error else "") + "scene snapshot changed"
+        if _terrain_source is not None:
+            actual = json.loads(unreal.YacsLandscapeMeshDiagnosticLibrary.read_component230_heightfield(_target_component))
+            if actual != _terrain_source:
+                raise RuntimeError("Source Landscape heightfield changed during terrain trial")
+            _terrain_trial.update(source_heightfield_unchanged=True,
+                                  restored=not cleanup_errors and _landscape_visibility_state is None)
     except Exception as exc:
         error = (error + "\n" if error else "") + "snapshot verify: " + str(exc)
 

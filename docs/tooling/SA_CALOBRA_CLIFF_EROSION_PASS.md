@@ -685,3 +685,33 @@ blanket frozen-terrain restriction only for the authorized local repair. The
 current experiment still edits only an exported mesh and must keep its existing
 no-mutation receipt truthful; a terrain-edit candidate needs its own explicit
 height-change and rollback evidence. No terrain edit is claimed by this commit.
+
+## Native Landscape thermal erosion trial
+
+Owner request, 2026-10-08: test modified DTM/Landscape and erosion. The isolated
+trial reads the native composite 127 by 127 height samples of Component 230,
+retains the exact original, and performs bounded thermal/talus redistribution
+on a derived heightfield. It imports the result into a transient native
+Landscape at the original transform, rather than presenting an eroded mesh as
+an edited Landscape. The accepted component is hidden only during capture.
+No canonical source, map or asset is saved or overwritten.
+
+Thermal erosion transfers equal integer height units from higher to lower
+admitted neighbours above a talus slope of 1.2. Forty-eight alternating-order
+passes use one eighth of the excess per transfer. This is a deterministic
+thermal relaxation trial, not hydraulic erosion or a geological simulation.
+Every transfer respects the total 100 cm envelope and uint16 range, conserves
+the height sum, and excludes any vertex touching a non-admitted cell. Roads,
+hard exclusions and footprint interfaces therefore remain fixed.
+
+The native importer independently validates every changed sample against the
+frozen 1,017-cell domain and original heights. It verifies imported integer
+heights and world positions (within 0.01 cm); Python also compares a complete
+readback. Evidence retains source/candidate/readback heightfields and erosion
+metrics. Cleanup removes the trial and rechecks the complete original heightfield,
+scene snapshot, map hash and visibility. Lit/Lighting Only use the same neutral
+material, camera and lighting as the mesh comparison. Runtime and visual proof
+are required; no visual PASS follows from bounded displacement alone.
+
+API references: [Epic native heightfield access](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Landscape/FLandscapeComponentDataInterface)
+and [Epic native Landscape import](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Landscape/ALandscapeProxy).
