@@ -6,6 +6,7 @@ import unittest
 from scripts.assets.analyze_local_cliff_smoothing import (
     audit,
     original_surface_evidence,
+    source_only_surface_evidence,
 )
 
 
@@ -126,6 +127,58 @@ class LocalCliffAuditTests(unittest.TestCase):
         row[3], row[6] = 151, 190
         with self.assertRaisesRegex(ValueError, "Terrain stage"):
             original_surface_evidence(self.evidence, derived)
+
+    def test_source_only_comparison_uses_control_source_not_smoothed_positions(self):
+        reference = copy.deepcopy(self.evidence)
+        reference["vertices_cm"][self.changed_vertex][6] = 100
+        candidate = source_only_surface_evidence(reference, self.evidence)
+        self.assertEqual(candidate["vertices_cm"][self.changed_vertex][3], 0)
+        result = audit(self.plan, candidate, limit_cm=50)
+        self.assertEqual(result["max_displacement_cm"], 5)
+        self.assertEqual(result["source_reference"], "original-before-reshaping")
+        self.assertEqual(result["source_reference_vertices"], len(reference["vertices_cm"]))
+        self.assertEqual(result["source_reference_vertices"], result["vertices"])
+        self.assertTrue(result["source_reference_topology_unchanged"])
+
+    def test_source_only_audit_rejects_inconsistent_proof_metadata(self):
+        verified = source_only_surface_evidence(self.evidence, self.evidence)
+        for key, value in (("source_reference_vertices", len(self.evidence["vertices_cm"]) - 1),
+                           ("source_reference_topology_unchanged", False),
+                           ("source_reference", "candidate-after-smoothing")):
+            candidate = dict(verified, **{key: value})
+            with self.subTest(key=key):
+                with self.assertRaisesRegex(ValueError, "original source correspondence proof"):
+                    audit(self.plan, candidate, limit_cm=50)
+
+    def test_source_only_comparison_rejects_changed_before_coordinates(self):
+        derived = copy.deepcopy(self.evidence)
+        derived["vertices_cm"][self.changed_vertex][3] = 1
+        with self.assertRaisesRegex(ValueError, "source differs from original"):
+            source_only_surface_evidence(self.evidence, derived)
+
+    def test_source_only_comparison_requires_complete_original_source(self):
+        derived = copy.deepcopy(self.evidence)
+        derived["vertices_cm"].pop()
+        with self.assertRaisesRegex(ValueError, "Incomplete original source"):
+            source_only_surface_evidence(self.evidence, derived)
+
+    def test_source_only_comparison_rejects_changed_connectivity_or_winding(self):
+        derived = copy.deepcopy(self.evidence)
+        derived["triangles"].pop()
+        with self.assertRaisesRegex(ValueError, "source topology"):
+            source_only_surface_evidence(self.evidence, derived)
+        derived = copy.deepcopy(self.evidence)
+        derived["triangles"][0].reverse()
+        with self.assertRaisesRegex(ValueError, "source topology"):
+            source_only_surface_evidence(self.evidence, derived)
+
+    def test_source_only_comparison_allows_vertex_id_permutation(self):
+        derived = copy.deepcopy(self.evidence)
+        for row in derived["vertices_cm"]:
+            row[0] += 10000
+        derived["triangles"] = [[v + 10000 for v in face] for face in derived["triangles"]]
+        candidate = source_only_surface_evidence(self.evidence, derived)
+        self.assertEqual(audit(self.plan, candidate, limit_cm=50)["changed_vertices"], 1)
 
     def test_duplicate_triangle_rejected(self):
         evidence = copy.deepcopy(self.evidence)

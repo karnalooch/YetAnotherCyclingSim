@@ -103,7 +103,12 @@ public:
                     CurrentTriangle = T;
                     // Each side of a middle span lies in one original native
                     // facet. Fail closed if the source fan is not planar.
-                    const double NormalDot = FVector3d::DotProduct(Normal, Source.GetTriNormal(T));
+                    const auto F = Source.GetTriangle(T);
+                    FVector3d TriangleNormal = FVector3d::CrossProduct(
+                        Source.GetVertex(F.B) - Source.GetVertex(F.A),
+                        Source.GetVertex(F.C) - Source.GetVertex(F.A));
+                    if (!TriangleNormal.Normalize()) { return Reject(TEXT("source_triangle_normal_zero")); }
+                    const double NormalDot = FVector3d::DotProduct(Normal, TriangleNormal);
                     if (NormalDot < 1.0 - 1.e-8)
                     { return Reject(TEXT("source_fan_nonplanar"), NormalDot); }
                 }
@@ -135,7 +140,10 @@ public:
                 Wedge.NewPosition = Original + Fraction * Delta;
                 Wedge.bHaveNewPosition = true;
                 Mesh.SetVertex(Wedge.WedgeVertex, Wedge.NewPosition);
-                RailNormals.Add(Wedge.WedgeVertex, Normal); Repaired.Add(Wedge.WedgeVertex);
+                // Epic's left-handed triangle normal is (C-A)x(B-A), opposite
+                // the signed-area cross used above. The profile consumes that
+                // native convention; clipping retains its independent XY sign.
+                RailNormals.Add(Wedge.WedgeVertex, -Normal); Repaired.Add(Wedge.WedgeVertex);
             }
         }
         for (FBevelEdge& Edge : Edges)
@@ -424,14 +432,16 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
             for (int32 V : Mesh.VertexIndicesItr())
             { Mesh.SetVertex(V, LinearPositions[V] + Alpha * (RoundedPositions[V] - LinearPositions[V])); }
             if (Alpha * ProfileShift <= 1.e-6 || !Validate(ProfileCheck)) { continue; }
-            // Apply() computed normals on the linear mesh; finalize only after
-            // the accepted profile positions are known.
-            Bevel.UpdateNormals(Mesh);
             Accepted = true; ChosenInset = Inset; ChosenSubdivisions = Attempt.X;
             ChosenProfileAlpha = Alpha; MaxProfileShift = Alpha * ProfileShift;
             break;
         }
-        if (Accepted) { Mesh.ReverseOrientation(false); break; }
+        if (Accepted)
+        {
+            // Epic's normals follow its left-handed winding convention. Finalize
+            // them on the accepted profile after restoring native orientation.
+            Mesh.ReverseOrientation(false); Bevel.UpdateNormals(Mesh); break;
+        }
         Trial->SetStringField(TEXT("failure"), TEXT("round_profile_guard"));
     }
     if (!Accepted) { Error = TEXT("edge bevel failed strict band, unchanged-surface, fold or triangle guards"); return false; }
@@ -498,8 +508,10 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
         Error = TEXT("invalid local smoothing plan");
         return false;
     }
-    const bool bRounded = Plan->HasField(TEXT("limestone_rounded_flow")) &&
-        Plan->GetBoolField(TEXT("limestone_rounded_flow"));
+    const bool bReshape = Plan->HasField(TEXT("limestone_local_reshape")) &&
+        Plan->GetBoolField(TEXT("limestone_local_reshape"));
+    const bool bRounded = bReshape || (Plan->HasField(TEXT("limestone_rounded_flow")) &&
+        Plan->GetBoolField(TEXT("limestone_rounded_flow")));
     const TArray<TSharedPtr<FJsonValue>>* Cells = nullptr;
     if (!Plan->TryGetArrayField(TEXT("skin_cells"), Cells) || Cells->Num() != 1017)
     {
@@ -590,7 +602,7 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
         }
     }
 
-    if (Plan->HasField(TEXT("limestone_edge_only")) && Plan->GetBoolField(TEXT("limestone_edge_only")))
+    if (!bReshape && Plan->HasField(TEXT("limestone_edge_only")) && Plan->GetBoolField(TEXT("limestone_edge_only")))
     { return RoundLimestoneEdges(Mesh, AllowedQuads, Report, Error); }
 
     // Use Epic's conforming selective tessellator, not global subdivision.
@@ -725,14 +737,20 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
         return false;
     }
 
-    // Owner correction: round upper surfaces and walls alike. The historical
-    // standalone control is retained; the candidate no longer protects creases.
+    // The admitted reshape permits corner and small-plane changes within a
+    // source-relative 50 cm envelope. Fixed interfaces preserve the macro
+    // footprint; the normal flow adds no tangential redistribution or erosion.
     const int32 Passes = bRounded ? 96 : 84;
     constexpr double Blend = 0.10;
     const int32 TangentialPasses = bRounded ? 0 : 3;
     constexpr double TangentialBlend = 0.20;
     const bool bPostErosion = Plan->HasField(TEXT("post_erosion_mesh")) && Plan->GetBoolField(TEXT("post_erosion_mesh"));
-    const double MaxDisplacementCm = bPostErosion ? 50.0 : 100.0;
+    if (bReshape && bPostErosion)
+    {
+        Error = TEXT("source-only limestone reshape cannot use a post-erosion plan");
+        return false;
+    }
+    const double MaxDisplacementCm = (bReshape || bPostErosion) ? 50.0 : 100.0;
     int32 Backtracks = 0;
     int32 CompletedPasses = 0;
     int32 CompletedTangentialPasses = 0;
@@ -916,8 +934,18 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
     Report->SetNumberField(TEXT("locked_normal_max_delta"), 0);
     Report->SetStringField(TEXT("normal_policy"), TEXT("native normals preserved outside movable cliff vertices"));
     Report->SetBoolField(TEXT("local_smoothing"), true);
-    Report->SetStringField(TEXT("shape_profile"), bRounded
+    Report->SetStringField(TEXT("shape_profile"), bReshape
+        ? TEXT("rounded-limestone-reshape-v8") : bRounded
         ? TEXT("rounded-limestone-crown-domain-v4") : TEXT("legacy-normal-flow-v1"));
+    if (bReshape)
+    {
+        Report->SetBoolField(TEXT("terrain_erosion"), false);
+        Report->SetBoolField(TEXT("surface_relaxation"), true);
+        Report->SetBoolField(TEXT("source_only_reshape"), true);
+        Report->SetBoolField(TEXT("corner_reshaping"), true);
+        Report->SetBoolField(TEXT("small_plane_reshaping"), true);
+        Report->SetBoolField(TEXT("source_reference_mutated"), false);
+    }
     Report->SetBoolField(TEXT("crease_preservation"), false);
     Report->SetNumberField(TEXT("source_feature_cosine"), -1.0);
     Report->SetNumberField(TEXT("source_skin_cells"), 1017);
@@ -937,7 +965,8 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
     Report->SetNumberField(TEXT("vertical_fallback_updates"), VerticalFallbackUpdates);
     Report->SetBoolField(TEXT("stopped_at_constraint"), StoppedAtConstraint);
     Report->SetNumberField(TEXT("line_search_backtracks"), Backtracks);
-    Report->SetStringField(TEXT("smoothing_policy"), bRounded
+    Report->SetStringField(TEXT("smoothing_policy"), bReshape
+        ? TEXT("source-only bounded normal relaxation within 50 cm; corner and small-plane changes admitted; zero tangential redistribution; fixed protected interfaces; no terrain erosion") : bRounded
         ? TEXT("rounded surfaces and walls, unweighted bounded normal flow, no crease preservation or tangential redistribution, fixed protected interfaces")
         : TEXT("bounded normal-space relaxation with vertical fallback, three tangential redistribution passes and fixed footprint interfaces"));
     TArray<TSharedPtr<FJsonValue>> AuditVertices, AuditTriangles;

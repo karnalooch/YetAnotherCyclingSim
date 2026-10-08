@@ -9,6 +9,54 @@ import math
 from pathlib import Path
 
 
+def source_only_surface_evidence(reference: dict, derived: dict) -> dict:
+    """Verify a mesh-only candidate against the control's untouched source.
+
+    Both exports use the same source-exact refinement. Coordinate and face
+    correspondence therefore proves the complete source stayed unchanged,
+    including the protected terrain outside the permitted movement domain.
+    The control's candidate positions never establish the displacement origin.
+    """
+    def source_rows(data):
+        rows = data["vertices_cm"]
+        if any(len(row) != 8 or not all(math.isfinite(v) for v in row) for row in rows):
+            raise ValueError("Invalid original source correspondence")
+        if any(int(row[0]) != row[0] for row in rows):
+            raise ValueError("Invalid original source vertex ID")
+        by_id = {int(row[0]): tuple(row[1:4]) for row in rows}
+        by_xy = {p[:2]: p for p in by_id.values()}
+        if len(by_id) != len(rows) or len(by_xy) != len(rows):
+            raise ValueError("Ambiguous original vertex correspondence")
+        return by_id, by_xy
+
+    original_ids, originals = source_rows(reference)
+    derived_ids, derived_sources = source_rows(derived)
+    if originals.keys() != derived_sources.keys():
+        raise ValueError("Incomplete original source correspondence")
+    if any(math.dist(originals[xy], p) > 1e-6 for xy, p in derived_sources.items()):
+        raise ValueError("Mesh-only candidate source differs from original native surface")
+
+    def source_faces(data, vertices):
+        faces = set()
+        for face in data["triangles"]:
+            if len(face) != 3 or len(set(face)) != 3 or any(v not in vertices for v in face):
+                raise ValueError("Invalid source triangle correspondence")
+            points = tuple(vertices[v][:2] for v in face)
+            # Permit a different first corner or vertex-ID ordering, retaining
+            # the original winding and the exact refined source connectivity.
+            key = min(points[i:] + points[:i] for i in range(3))
+            if key in faces:
+                raise ValueError("Duplicate source triangle correspondence")
+            faces.add(key)
+        return faces
+
+    if source_faces(reference, original_ids) != source_faces(derived, derived_ids):
+        raise ValueError("Mesh-only candidate source topology differs from original")
+    rows = [[row[0], *originals[tuple(row[1:3])], *row[4:]] for row in derived["vertices_cm"]]
+    return dict(derived, vertices_cm=rows, source_reference="original-before-reshaping",
+                source_reference_vertices=len(originals), source_reference_topology_unchanged=True)
+
+
 def original_surface_evidence(reference: dict, derived: dict) -> dict:
     """Recover the original native surface, never the previously smoothed candidate."""
     originals = {tuple(row[1:3]): row[1:4] for row in reference["vertices_cm"]}
@@ -138,6 +186,18 @@ def audit(plan: dict, evidence: dict, *, limit_cm=100.0, rounding_domain=False) 
     changed = [v for v, d in displacement.items() if d > 1e-6]
     if not changed:
         raise ValueError("No local geometry change")
+    source_proof = {}
+    if (evidence.get("source_reference") == "original-before-reshaping"
+            or "source_reference_topology_unchanged" in evidence
+            or "source_reference_vertices" in evidence):
+        count = evidence.get("source_reference_vertices")
+        if (evidence.get("source_reference") != "original-before-reshaping"
+                or evidence.get("source_reference_topology_unchanged") is not True
+                or isinstance(count, bool) or not isinstance(count, int)
+                or count != len(source)):
+            raise ValueError("Invalid complete original source correspondence proof")
+        source_proof = {key: evidence[key] for key in (
+            "source_reference", "source_reference_topology_unchanged", "source_reference_vertices")}
     return {
         "status": "PASS",
         "vertices": len(source),
@@ -152,6 +212,7 @@ def audit(plan: dict, evidence: dict, *, limit_cm=100.0, rounding_domain=False) 
         "nonmanifold_edges": 0,
         "folded_xy_triangles": 0,
         "scope": "LOCAL_ROUNDED_DOMAIN_AUDIT_NOT_VISUAL_ACCEPTANCE" if rounding_domain else "LOCAL_GEOMETRY_AUDIT_NOT_VISUAL_ACCEPTANCE",
+        **source_proof,
     }
 
 

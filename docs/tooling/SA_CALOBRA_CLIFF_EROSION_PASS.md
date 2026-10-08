@@ -804,7 +804,7 @@ variant at `e6b2d342c4fc2fa11297af913b9bf0c19038f85d` also compiled but rejected
 its pre-bevel topology with `invalid native terminator spoke`. Neither run
 produced an accepted edge candidate render.
 
-The current v7 candidate inserts source-planar points on each selected edge,
+The v7 candidate inserts source-planar points on each selected edge,
 6 cm from either end, and bevels only the resulting isolated middle span.
 All original corner vertices stay fixed; the end caps taper to those fixed
 corners instead of spanning a nonplanar junction fan. The six-centimetre length
@@ -827,7 +827,7 @@ a perpendicular inset projection, its terminator branch replaces that point
 using two infinite lines. The engine warns that sliver triangles confuse this
 neighbor-direction solve. Reducing the inset does not reliably bound it.
 
-The current repair keeps Epic's mesh topology but replaces endpoint rails
+The v7 repair keeps Epic's mesh topology but replaces endpoint rails
 with perpendicular insets on the immutable source facet fan. Each endpoint's
 motion is clipped to retain at least 10% of each incident source triangle's
 XY area; the subsequent full-mesh check also rejects folds caused by moving
@@ -844,6 +844,14 @@ vertex, triangle, plane, area or strip assumption. A transient native geometry
 preflight runs before the reference screenshots and fails early on an invalid
 recipe. A successful preflight still requires the complete source controls,
 independent surface audit, material captures and restoration proof afterward.
+
+The `14d16e39` preflight identified the exact v7 precondition defect: the first
+source-plane normal comparison was -1 because Unreal uses `(C-A) x (B-A)`
+while the explicit area calculation used `(B-A) x (C-A)`. The legacy v7 repair
+now compares matching geometric normals, retains Epic's convention for profile
+normals and recomputes shading normals after restoring native triangle winding.
+The active candidate below changes scope with explicit owner authorization;
+the corrected v7 path is retained for historical diagnostic replay.
 
 The corrected linear multi-segment bevel is validated before its round profile is
 applied. With fixed topology, a bounded line search accepts only a nonzero
@@ -868,3 +876,36 @@ API decision: UE 5.8.2, changelist 56702186. The pinned engine `MeshBevel.h` and
 normal recomputation; `DynamicMesh3.h` defines source-planar edge splitting.
 Primary references: [Epic FMeshBevel](https://dev.epicgames.com/documentation/unreal-engine/API/Plugins/DynamicMesh/FMeshBevel)
 and [Epic InitializeFromTriangleEdges](https://dev.epicgames.com/documentation/unreal-engine/API/Plugins/DynamicMesh/FMeshBevel/InitializeFromTriangleEdges).
+
+### Owner-authorized rock reshaping — v8
+
+On 2026-10-08 the owner explicitly authorized movement up to 50 cm, including
+changes to corners and small rock planes. This supersedes the v7 requirement
+that every original rock vertex remain fixed and that all changes fit a 20 cm
+edge band. It does not authorize changing the source Landscape, roads, protected
+interfaces, selector, heightfield import, terrain erosion or saved map/assets.
+
+The active `limestone_local_reshape` recipe uses the existing source-exact
+selective refinement and bounded normal-space relaxation on an owned native
+mesh export. It runs up to 96 normal passes with zero tangential redistribution,
+clamps total 3D movement to 50 cm from the original native surface, and retains
+the existing 60,000-triangle ceiling and at least 10% original XY triangle area.
+The source-backed cliff/crown domain and every protected interface remain fixed.
+Normals are recomputed only on movable rock vertices; locked normals stay exact.
+The shape profile is `rounded-limestone-reshape-v8` and the generator is
+`native-source-rock-reshape`. The original limestone material and 3 m physical
+UV projection are reused on the final geometry.
+
+The independent source-only helper compares every pre-reshape coordinate and
+the complete source topology/winding with the same-revision control's original
+fields. A prior smoothed candidate or erosion stage cannot reset the reference.
+The independent 50 cm audit then checks all triangles, displacement, protected
+interfaces, exact footprint area and manifold topology. Because the candidate
+and original retain corresponding source triangles, the per-vertex 3D bound
+also bounds every point in each triangle by convex interpolation.
+
+Native preflight precedes the complete reference and candidate render protocol.
+A successful preflight alone is not visual acceptance. Close, middle and distant
+neutral/limestone captures, full source restoration, the independent technical
+gate and owner review remain required. This is a Component 230 preview, not
+whole-Landscape rollout or production persistence.

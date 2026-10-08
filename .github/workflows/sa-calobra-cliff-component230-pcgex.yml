@@ -380,8 +380,10 @@ jobs:
             if ($env:YACS_TERRAIN_MESH_TRIAL -eq '1') {
               $edge = $receipt.terrain_erosion_trial
               if (
-                $receipt.mesh.generator -ne 'native-source-edge-bevel-only' -or
-                $edge.edge_only_mesh -ne $true -or
+                $receipt.mesh.generator -ne 'native-source-rock-reshape' -or
+                $edge.edge_only_mesh -ne $false -or
+                $edge.reshaped_rock_mesh -ne $true -or
+                $edge.reference_source -ne 'original-before-reshaping' -or
                 $edge.terrain_import_performed -ne $false -or
                 $edge.native_landscape -ne $false -or
                 $edge.derived_heightfield_modified -ne $false -or
@@ -389,12 +391,13 @@ jobs:
                 $edge.source_heightfield_unchanged -ne $true -or
                 $edge.restored -ne $true -or
                 $edge.combined_audit.status -ne 'PASS' -or
-                $edge.combined_audit.displacement_limit_cm -ne 20 -or
-                $edge.combined_audit.max_displacement_cm -gt 20.000001 -or
-                $edge.combined_audit.edge_band_radius_cm -ne 10 -or
-                $edge.combined_audit.max_edge_band_distance_cm -gt 10.000001 -or
-                $edge.combined_audit.outside_edge_surface_unchanged -ne $true
-              ) { throw 'Narrow limestone edge-only receipt failed.' }
+                $edge.combined_audit.displacement_limit_cm -ne 50 -or
+                $edge.combined_audit.max_displacement_cm -gt 50.000001 -or
+                $edge.combined_audit.folded_xy_triangles -ne 0 -or
+                $edge.mesh_export.shape_profile -ne 'rounded-limestone-reshape-v8' -or
+                $edge.mesh_export.locked_vertex_displacement_cm -ne 0 -or
+                $edge.mesh_export.locked_normal_max_delta -ne 0
+              ) { throw 'Bounded limestone rock reshaping receipt failed.' }
             }
             elseif ($env:YACS_TERRAIN_EROSION_TRIAL -eq '1') {
               if (
