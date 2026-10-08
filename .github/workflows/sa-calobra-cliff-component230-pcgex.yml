@@ -186,6 +186,16 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree reset failed.' }
           git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/' -e '/Saved/Logs/YetAnotherCyclingSim.log' -e '/Saved/RuntimeProof/CI/RegionTerrain/*/*.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof/automation_run.log'
           if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree allow-listed clean failed.' }
+          # A retained file can keep its former CRLF checkout when only its
+          # attributes changed to -text. Re-emit these exact indexed blobs;
+          # the producer still verifies the original fixed sizes and hashes.
+          $bytePinned = @(
+            'docs/experiments/sa-calobra-component230-detail-pilot-20261008/pilot/triangle-bands.json',
+            'docs/experiments/sa-calobra-component230-detail-pilot-20261008/pilot/manifest.json',
+            'docs/experiments/sa-calobra-material-repair-20261006/evidence/native-projection.json'
+          )
+          git checkout-index --force -- @bytePinned
+          if ($LASTEXITCODE -ne 0) { throw 'Exact byte-pinned evidence checkout refresh failed.' }
 
       - name: Enforce code-only checkout
         shell: pwsh
@@ -469,7 +479,7 @@ jobs:
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
           python -m scripts.ci.sa_calobra_whole_map_workflow restore --root $env:YACS_WHOLE_MAP_PROOF_ROOT --exact-sha $env:GITHUB_SHA
-          if ($LASTEXITCODE -ne 0) { throw 'Whole-map proof changed canonical bytes or retained sources.' }
+          if ($LASTEXITCODE -ne 0) { throw 'Whole-map source/checkout conservation verification failed.' }
 
       - name: Retain only current-run compile diagnostics under the proof root
         if: ${{ always() && env.YACS_WHOLE_MAP_PROOF_ROOT != '' }}

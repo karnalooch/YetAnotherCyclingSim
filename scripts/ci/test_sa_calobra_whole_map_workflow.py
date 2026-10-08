@@ -18,6 +18,28 @@ from scripts.ci import sa_calobra_whole_map_workflow as workflow
 from scripts.ci.test_sa_calobra_detail_native_workflow import WORKFLOW, enabled, jobs
 
 
+def expand_github_expressions(source):
+    """Model Actions substitution before parsing, without expanding PowerShell."""
+    values = {
+        "github.sha": "a" * 40,
+        "github.run_id": "1234567890",
+        "github.run_attempt": "1",
+        "steps.cache.outputs.mode": "static",
+        "steps.cache.outputs.compile_kind": "none",
+        "steps.cache.outputs.reason": "verified-equivalent-proof",
+        "steps.fingerprints.outputs.compile": "b" * 64,
+        "steps.fingerprints.outputs.proof": "c" * 64,
+    }
+
+    def replace(match):
+        expression = match.group(1).strip()
+        if expression not in values:
+            raise ValueError("Unmodeled GitHub expression: " + expression)
+        return values[expression]
+
+    return re.sub(r"\$\{\{(.*?)\}\}", replace, source, flags=re.DOTALL)
+
+
 class WholeMapWorkflowRoutingTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -167,6 +189,22 @@ class WholeMapWorkflowRoutingTests(unittest.TestCase):
         ):
             self.assertIn('"' + path + '"', text.split("permissions:", 1)[0])
 
+    def test_github_expansion_preserves_ordinary_powershell_variables(self):
+        # Actions expands the SHA inside this double-quoted error message
+        # before PowerShell sees it. The unexpanded token caused the CI failure.
+        source = (
+            "throw \"checkout HEAD '$actual' != caller SHA '${{ github.sha }}'\"\n"
+            'Write-Host "$env:GITHUB_SHA ${ordinary} $($actual)"\n'
+            "$metadata = @{ head = $actual; passed = $true }\n"
+            "Write-Host '${{github.run_id}}-${{ github.run_attempt }}'\n"
+        )
+        expected = source.replace("${{ github.sha }}", "a" * 40).replace(
+            "${{github.run_id}}-${{ github.run_attempt }}", "1234567890-1"
+        )
+        self.assertEqual(expand_github_expressions(source), expected)
+        with self.assertRaisesRegex(ValueError, "Unmodeled GitHub expression"):
+            expand_github_expressions("${{ github.unmodeled_field }}")
+
     @unittest.skipUnless(
         shutil.which("pwsh"), "PowerShell 7 is verified by hosted and native CI"
     )
@@ -184,7 +222,7 @@ class WholeMapWorkflowRoutingTests(unittest.TestCase):
                         "-Command",
                         "$tokens=$null; $errors=$null; [void][System.Management.Automation.Language.Parser]::ParseInput([Console]::In.ReadToEnd(), [ref]$tokens, [ref]$errors); if ($errors.Count -gt 0) { $errors | Out-String | Write-Output; exit 1 }",
                     ],
-                    input=textwrap.dedent(source),
+                    input=expand_github_expressions(textwrap.dedent(source)),
                     text=True,
                     capture_output=True,
                     timeout=30,
