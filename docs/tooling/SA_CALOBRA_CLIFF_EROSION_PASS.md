@@ -1010,3 +1010,37 @@ frozen Landscape. It does not claim that the accepted rock recipe is already
 present across the full map. The original combined/PCGEx image-gate failures
 remain unchanged. Scripts, receipts and the review bundle are separate from
 saved scene assets and production admission.
+
+#### Verified bidirectional survey — 2026-10-08
+
+At `b1ea05b33b9f3208e7aeb6884f1a67792d9c6121`,
+[native survey run 37800814004](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37800814004)
+passed frozen-source and installed API verification, compilation, scoped
+Automation, native capture, complete PNG/readiness package validation and
+checkout restoration. The source scene was restored without saving assets.
+It produced 1,338 validated 1280 x 720 frames from 185 pavement windows,
+forming 669 matched forward/reverse station pairs. The accepted v8 geometry
+implementation and scene/material asset identities stayed unchanged.
+
+The [complete evidence artifact](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37800814004/artifacts/11562342248)
+is 1,609,577,808 bytes with ZIP SHA-256
+`f9ad39ae59a16dc1fc4615ef10ca950096a94d443bea4dcb0e624284000a0cab`.
+Its review entrypoint is `terrain-erosion-mesh/tpp-survey/review/index.html`.
+All five tags are available in the template; assignments remain pending image
+review. The cloud session could inspect native receipts but could not materialize
+the File Service ZIP for pixel inspection. No visual quality or runtime
+performance acceptance is inferred from successful capture validation.
+
+[Retention run 37802690328](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37802690328)
+at helper revision `73e422b24e764105f9866ea0c7ef121fcda1d911` completed
+`LOCAL_RETAINED`: 4,221 files / 2,007,122,043 bytes, with source preservation
+and destination verification both true. The persistent destination is
+`D:\yacs\work\proofs\sa-calobra-tpp\b1ea05b33b9f3208e7aeb6884f1a67792d9c6121\37800814004-1`.
+The full inventory lives at `.yacs-retention/manifest.json`, SHA-256
+`3df1b67ebd458c38609fd0fe77ec40e49c9b50b3b31873e5eed49db3f5104962`.
+The [separate retention receipt](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37802690328/artifacts/11563183318)
+confirms local retention; durable remote backup remains `UNVERIFIED`.
+No additional rendering occurred. The
+[complete CI run 37802697475](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37802697475)
+also passed hosted checks, Unreal compilation/Automation and the aggregate gate
+at this helper revision. These results remain pinned to their tested revisions.
