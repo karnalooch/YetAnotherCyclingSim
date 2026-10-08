@@ -475,3 +475,10 @@ the engine pattern differs. Independent audit distinguishes native and refined
 source contracts. Lighting, shadow bias, materials and canonical terrain remain
 unchanged. Build/render proof is pending; the shadow-terminator explanation is
 still a hypothesis, not a diagnosed engine defect.
+
+The first selective-tessellation build (`133de462`, run `37707815058`) compiled
+but the in-place operator asserted inside DynamicMesh: `Array index out of bounds:
+0 from an array of size 0`, process exit 3. No refined candidate was rendered.
+The next call uses the documented separate immutable input/output constructor,
+with the pattern bound to the same immutable source. This tests an input-lifetime
+hypothesis; it does not establish the engine root cause or waive any mesh gate.

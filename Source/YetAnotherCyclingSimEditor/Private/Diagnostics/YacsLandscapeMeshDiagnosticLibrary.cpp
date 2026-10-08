@@ -85,13 +85,13 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
         return false;
     }
     const UE::Geometry::FDynamicMesh3 NativeSource(Mesh);
-    auto Pattern = UE::Geometry::FSelectiveTessellate::CreateRedGreenTessellationPattern(&Mesh, Levels);
+    auto Pattern = UE::Geometry::FSelectiveTessellate::CreateRedGreenTessellationPattern(&NativeSource, Levels);
     if (!Pattern)
     {
         Error = TEXT("native selective tessellation pattern unavailable");
         return false;
     }
-    UE::Geometry::FSelectiveTessellate Tessellate(&Mesh);
+    UE::Geometry::FSelectiveTessellate Tessellate(&NativeSource, &Mesh);
     Tessellate.SetPattern(Pattern.Get());
     Tessellate.bUseParallel = false;
     if (!Tessellate.Compute() || Mesh.TriangleCount() > 60000)
