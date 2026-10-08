@@ -36,6 +36,14 @@ One-off migration scripts and old experiments belong in the local
 
 ## Folder map and naming
 
+For read-only road inspection, see the
+[accepted cliff survey contract](../docs/tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md#bidirectional-tpp-survey-of-the-current-scene).
+`proof/sa_calobra_tpp_survey.py` plans both directions from verified frozen
+outputs. `ue/sa_calobra_tpp_survey_capture.py` runs only inside its owning cliff
+proof scene. `proof/package_sa_calobra_tpp_survey.py --root <survey-directory>
+--expected-sha <capture-sha>` verifies and packages the captured evidence for
+offline review; it never generates terrain or assigns visual acceptance.
+
 | Folder | Responsibility |
 |---|---|
 | `runner` | Windows runner lifecycle, health, monitor and bounded maintenance |

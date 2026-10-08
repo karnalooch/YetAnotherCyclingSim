@@ -937,3 +937,66 @@ changed. The separate PCGEx lighting admission also remains failing. Owner
 visual acceptance does not relabel either technical gate, authorize persistence
 or establish whole-Landscape admission. The subsequent documentation-only
 record leaves the tested implementation unchanged.
+
+#### Bidirectional TPP survey of the current scene
+
+Owner request, 2026-10-08: inspect the available road in both directions using
+a sphere and TPP camera, retain reusable evidence, and preserve the accepted v8
+rock appearance. This is diagnostic work on the current scene, not cliff rollout
+or implementation of the later whole-Landscape acceptance workstream.
+
+`scripts/proof/sa_calobra_tpp_survey.py` verifies every input in the tracked
+frozen-road recipe before reading the same 184 pavement windows and accepted
+hairpin used by the checkpoint. Each window receives forward and reverse views
+with exact endpoints and at most 20 m between samples. The presentation axis is
+the mean of its existing pavement cross sections. Distances are local 3D arc
+lengths within each window, never canonical route/physics chainage. Window order
+is reproducible; unknown connections remain explicit rather than fabricated.
+
+The transient sphere has a 40 cm radius, no collision and no shadow. Its
+distance-based rotation is presentation only: the accepted pavement itself has
+no ride collision, so this is not a physics test. Camera defaults are 5 m behind,
+2.2 m above the road, 8 m lookahead and 76 degrees FOV. Native pose/FOV readback
+must match the requested recipe. Camera obstruction is explicitly unmeasured;
+the capture does not move the camera to conceal a problem.
+
+The existing cliff consumer retains the owner-accepted v8 mesh and limestone
+material after its control images, then calls
+`scripts/ue/sa_calobra_tpp_survey_capture.py`. Each 1280 x 720 frame waits for the
+native loading barrier and full Landscape height mip residency. Per-frame
+readiness receipts, PNG dimensions and hashes are retained. The envelope remains
+pending until the owning consumer restores the source scene and verifies its map
+and heightfield. An interrupted, stale, incomplete or unrestored capture cannot
+be packaged as completed evidence.
+
+`python scripts/proof/package_sa_calobra_tpp_survey.py --root <survey-directory>
+--expected-sha <capture-sha>` validates the complete inventory and creates an
+offline paired-view HTML report, contact sheets, frame index, route-window map
+and unassigned review template. Its slideshow cadence is a viewing aid for
+sampled stills, not a continuous rendered ride or runtime FPS. Detail priorities
+require image review; no automatic class or performance PASS is assigned.
+
+The review template supports independent, semicolon-separated tags. Every
+annotation records a stable surface ID, source frame and evidence reason:
+
+- `GEO_FIX`: an observed geometry problem that requires repair.
+- `SILHOUETTE_CRITICAL`: a landscape outline that matters to the view.
+- `HERO_DETAIL`: a surface that needs particular visual quality.
+- `BACKGROUND_LOW_PRIORITY`: a surface where simplification may be considered.
+- `MATERIAL_TEST_CANDIDATE`: a useful surface for initial material experiments.
+
+Tags do not change the owner-accepted geometry or materials. They describe
+review findings and proposals, and can coexist on the same surface.
+
+The existing Component 230 workflow has a fixed `bidirectional-survey` lane,
+selected by `[tpp-survey]` in the push commit or its boolean dispatch input.
+It verifies owner, exact revision, unchanged accepted geometry/assets and an
+idle host before reproducing the accepted preview. The normal Phase 2C lane
+retains its original gates. Captures and review evidence are uploaded together
+with a unique SHA/run/attempt identity; no assets are saved to the scene.
+
+The scene contains the accepted Component 230 appearance and the remaining
+frozen Landscape. It does not claim that the accepted rock recipe is already
+present across the full map. The original combined/PCGEx image-gate failures
+remain unchanged. Scripts, receipts and the review bundle are separate from
+saved scene assets and production admission.

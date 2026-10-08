@@ -105,6 +105,41 @@ _material_override_receipt = {"enabled": False}
 _temporal_sequence_receipt = {}
 _shadow_cache_probe = {"enabled": False}
 _shadow_cache_previous = None
+_survey_capture = None
+
+
+def _begin_tpp_survey():
+    """Reuse exactly the existing accepted v8 scene after its control views."""
+    global _handle, _survey_capture, _task
+    if not TERRAIN_MESH_TRIAL or _terrain_trial.get('mesh_export', {}).get('shape_profile') != 'rounded-limestone-reshape-v8':
+        raise RuntimeError('TPP survey requires the owner-accepted v8 rock shape')
+    if _terrain_trial.get('combined_audit', {}).get('status') != 'PASS':
+        raise RuntimeError('TPP survey requires the unchanged source-relative geometry audit')
+    meshes = [a for a in _candidate_actors if isinstance(a, unreal.DynamicMeshActor)]
+    if len(meshes) != 1 or meshes[0].get_dynamic_mesh_component().get_material(0) != unreal.load_asset(CLIFF_MATERIAL):
+        raise RuntimeError('TPP survey requires the accepted limestone material on the one v8 mesh')
+    sys.path.insert(0, str(ROOT))
+    from scripts.ue.sa_calobra_tpp_survey_capture import SurveyCapture, ACCEPTED_LOOK_SHA
+
+    if _handle is not None:
+        unreal.unregister_slate_post_tick_callback(_handle)
+        _handle = None
+    _task = None
+    scene = {
+        'map': MAP, 'map_sha256': _before_hash,
+        'accepted_cliff_implementation_sha': ACCEPTED_LOOK_SHA,
+        'cliff_recipe': 'rounded-limestone-reshape-v8',
+        'component': 'LandscapeComponent_230',
+        'scope': 'Current frozen Landscape with accepted Component 230; whole-Landscape cliff rollout is not present',
+        'material_path': CLIFF_MATERIAL,
+        'combined_audit': _terrain_trial['combined_audit'],
+        'engine_version': unreal.SystemLibrary.get_engine_version(),
+    }
+    _survey_capture = SurveyCapture(
+        unreal, _world, _landscape, _camera, OUTPUT / 'tpp-survey',
+        Path(os.environ['YACS_SA_CALOBRA_TPP_FROZEN_ROOT']), EXPECTED_SHA,
+        scene, finish, _transient_environment.append)
+    _survey_capture.start()
 
 
 def _set_shadow_cache_probe(enabled):
@@ -1608,6 +1643,8 @@ def finish(error: str | None = None):
 
     status = "COMPONENT230_CLIFF_VISUAL_FAIL" if error else "COMPONENT230_CLIFF_VISUAL_PASS"
     payload = _write_receipt(status, error)
+    if _survey_capture is not None:
+        _survey_capture.mark_cleanup(error)
     if _paired_custom_record is not None:
         _write_receipt(status, error, output=PAIRED_CUSTOM_OUTPUT,
                        mesh=_paired_custom_record["mesh"],
@@ -1792,7 +1829,10 @@ def tick(_delta):
         )
         _index += 1
         if _index >= len(_views):
-            finish()
+            if os.environ.get('YACS_SA_CALOBRA_TPP_SURVEY') == '1':
+                _begin_tpp_survey()
+            else:
+                finish()
         else:
             schedule()
     except Exception:
