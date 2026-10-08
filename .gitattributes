@@ -48,3 +48,8 @@ docs/experiments/sa-calobra-material-repair-20261006/evidence/*.png filter=lfs d
 
 # Retained Component 230 technical evidence
 docs/experiments/component230-cliff/evidence/*.zip filter=lfs diff=lfs merge=lfs -text
+
+# Preserve exact copied TPP viewing-aid bytes, including captured CRLF endings.
+docs/experiments/sa-calobra-tpp-survey-20261008/*.csv -text whitespace=cr-at-eol
+docs/experiments/sa-calobra-tpp-survey-20261008/route.svg -text whitespace=cr-at-eol
+docs/experiments/sa-calobra-tpp-survey-20261008/review-guide.txt -text whitespace=cr-at-eol

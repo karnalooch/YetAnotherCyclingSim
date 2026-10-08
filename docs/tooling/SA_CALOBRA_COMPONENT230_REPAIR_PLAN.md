@@ -3,11 +3,30 @@
 **Verified:** 2026-10-08  
 **Work item:** [#445](https://github.com/karnalooch/YetAnotherCyclingSim/issues/445); implementation [draft PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446)  
 **Historical evidence revision:** `1b0675ee53e796e7f904fa3119bb388fa9489cf6`  
-**Latest limestone implementation revision:** `605a449493f67a1827a33cc34e0b41c27670c3be`  
-**Status:** limestone combined technical gate and ordinary CI pass; PCGEx overlay admission fails; owner visual acceptance, persistence and whole-area admission remain pending  
+**Accepted limestone implementation revision:** `4f2cba560d54931dc8ba080370d96a7aad24f15b`
+
+**Status:** owner accepted the Component 230 v8 appearance; the existing combined lighting and PCGEx image gates remain FAIL; saved-preview and whole-area admission remain pending
+
 **Authority:** [World Building Bible](../WORLD_BUILDING_BIBLE.md), selected through [the documentation index](../README.md); [cliff experiment contract and history](SA_CALOBRA_CLIFF_EROSION_PASS.md)
 
-## Decision
+## Current accepted baseline and inspection material
+
+The owner accepted the v8 Component 230 limestone appearance on 2026-10-08.
+Preserve this source-relative, at-most-50-cm mesh reshape and its existing
+limestone material. The earlier terrain-erosion and crest proposals below are
+historical evidence, not instructions to alter this accepted appearance.
+The [cliff proof authority](SA_CALOBRA_CLIFF_EROSION_PASS.md#verified-bidirectional-survey--2026-10-08)
+records the exact accepted implementation and completed survey proof.
+
+The [captured TPP inspection material](../experiments/sa-calobra-tpp-survey-20261008/README.md)
+contains the route map, actual contact sheets, per-window forward/reverse pairs
+and CSV templates: 1,338 native frames, 185 construction windows and 669 station
+pairs. The unchanged full-resolution evidence ZIP is retained through Git LFS.
+The five independent surface tags remain unassigned pending image review;
+camera stations are not automatically cliff boundaries. This inspection does
+not grant saved-scene, whole-Landscape or performance acceptance.
+
+## Historical decision
 
 The submitted report is substantially supported by the remote evidence. The
 stronger native Landscape trial and its derived mesh were implemented, rendered

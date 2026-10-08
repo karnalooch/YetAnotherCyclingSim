@@ -1058,8 +1058,39 @@ and destination verification both true. The persistent destination is
 The full inventory lives at `.yacs-retention/manifest.json`, SHA-256
 `3df1b67ebd458c38609fd0fe77ec40e49c9b50b3b31873e5eed49db3f5104962`.
 The [separate retention receipt](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37802690328/artifacts/11563183318)
-confirms local retention; durable remote backup remains `UNVERIFIED`.
+confirms local retention; durable remote backup was `UNVERIFIED` at that stage.
 No additional rendering occurred. The
 [complete CI run 37802697475](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37802697475)
 also passed hosted checks, Unreal compilation/Automation and the aggregate gate
 at this helper revision. These results remain pinned to their tested revisions.
+
+#### Published inspection documentation — 2026-10-08
+
+The [repository inspection entry](../experiments/sa-calobra-tpp-survey-20261008/README.md)
+now retains the actual route map, 56 contact sheets, 1,338 JPEG thumbnails,
+185 paired Markdown window pages and both CSV indexes. The complete viewing
+entry contains 1,586 files / 85,737,246 bytes, with the capture identity unchanged
+at `b1ea05b33b9f3208e7aeb6884f1a67792d9c6121` / run `37800814004`, attempt 1.
+This is inspection evidence, not a new visual-change acceptance record.
+
+[Publication run 37810303002](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37810303002)
+at setup revision `9e3311333910f6b6bc0af1a2b4e20111b30a4e02` completed successfully
+and pushed the material as `4744a8e0a012d782460de37df9fd0414a0becb69`. The
+[publication receipt](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37810303002/artifacts/11566581472)
+records the original ZIP Git LFS upload, independent fetch into new empty
+storage, exact size/SHA-256 verification and normal fixed-branch push.
+Its checkout was initialized without reference/alternates storage. The archive
+object remains `f9ad39ae59a16dc1fc4615ef10ca950096a94d443bea4dcb0e624284000a0cab`,
+1,609,577,808 bytes; remote retention is now byte-verified rather than dependent
+on the finite Actions transport.
+
+The export manifest SHA-256 is
+`60b6a636cfc7ec1b20cc6471b9b6f8663afdd64a833b7cb7e919f105ac27a8d8`.
+Closeout restores the four copied text aids' exact captured CRLF bytes after
+Git's initial automatic normalization, using size and SHA-256 equality against
+that manifest. Narrow attributes preserve those bytes across subsequent
+checkouts. All 1,398 copied viewing aids match their source hashes; no image,
+capture, source inventory or original ZIP changes. A contact-sheet spot check
+confirms actual paired TPP sphere views are present, without granting visual
+quality acceptance. All five surface tags remain available and unassigned;
+visual review is `PENDING_REVIEW`, performance is `NOT_MEASURED`.
