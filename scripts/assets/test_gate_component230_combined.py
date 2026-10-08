@@ -22,7 +22,7 @@ class CombinedGateTests(unittest.TestCase):
                 imported_heightfield_matches=True, combined_audit=self.audit,
                 limestone_uv_projection={'world_size_m': 3, 'triangles_unchanged': True},
                 mesh_export={'shape_profile': 'limestone-edge-band-only-v6',
-                             'edge_band_radius_cm': 10, 'max_edge_band_distance_cm': 9,
+                             'bevel_round_weight': 0.5, 'edge_band_radius_cm': 10, 'max_edge_band_distance_cm': 9,
                              'terrain_erosion': False, 'surface_relaxation': False,
                              'outside_edge_vertices_unchanged': True,
                              'movement_domain_cells': 2000,
@@ -77,7 +77,7 @@ class CombinedGateTests(unittest.TestCase):
 
     def test_rejected_crease_profile_or_incomplete_rounding_fails(self):
         export = self.receipt['terrain_erosion_trial']['mesh_export']
-        for key, value in (('surface_relaxation', True), ('smoothing_passes', 24),
+        for key, value in (('surface_relaxation', True), ('bevel_round_weight', 0), ('smoothing_passes', 24),
                            ('tangential_redistribution_passes', 3),
                            ('shape_profile', 'limestone-source-feature-flow-v2-upper-crests')):
             with self.subTest(key=key):

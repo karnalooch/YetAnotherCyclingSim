@@ -109,7 +109,7 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
         Mesh.ReverseOrientation(false);
         const FDynamicMesh3 BevelSource(Mesh);
         FMeshBevel Bevel;
-        Bevel.InsetDistance = Inset; Bevel.NumSubdivisions = Attempt.X; Bevel.RoundWeight = 1.0;
+        Bevel.InsetDistance = Inset; Bevel.NumSubdivisions = Attempt.X; Bevel.RoundWeight = 0.5;
         Bevel.InitializeFromTriangleEdges(BevelSource, Edges);
         if (!Bevel.Apply(Mesh, nullptr)) { Trial->SetStringField(TEXT("failure"), TEXT("operation")); continue; }
         Mesh.ReverseOrientation(false);
@@ -207,6 +207,7 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
     Report->SetNumberField(TEXT("displacement_limit_cm"), 20); Report->SetNumberField(TEXT("max_displacement_cm"), MaxShift);
     Report->SetNumberField(TEXT("edge_band_radius_cm"), 10); Report->SetNumberField(TEXT("max_edge_band_distance_cm"), MaxBand);
     Report->SetNumberField(TEXT("bevel_inset_cm"), ChosenInset); Report->SetNumberField(TEXT("bevel_subdivisions"), ChosenSubdivisions);
+    Report->SetNumberField(TEXT("bevel_round_weight"), 0.5);
     Report->SetNumberField(TEXT("sharp_edge_angle_deg"), 45); Report->SetNumberField(TEXT("rounded_edge_count"), Edges.Num());
     Report->SetNumberField(TEXT("smoothing_passes"), 0); Report->SetNumberField(TEXT("tangential_redistribution_passes"), 0);
     Report->SetNumberField(TEXT("locked_normal_max_delta"), 0); Report->SetNumberField(TEXT("preserved_normal_elements"), PreservedNormals);

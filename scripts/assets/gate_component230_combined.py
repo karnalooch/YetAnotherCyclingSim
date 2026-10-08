@@ -25,6 +25,7 @@ def evaluate(metrics: dict, receipt: dict, audit: dict, expected_sha: str) -> di
             or export.get('tangential_redistribution_passes') != 0
             or export.get('terrain_erosion') is not False
             or export.get('surface_relaxation') is not False
+            or export.get('bevel_round_weight') != 0.5
             or export.get('edge_band_radius_cm') != 10
             or export.get('max_edge_band_distance_cm', float('inf')) > 10.000001
             or export.get('outside_edge_vertices_unchanged') is not True):
