@@ -757,7 +757,20 @@ class WholeMapCapture:
     def _set_parameters(self, values):
         lib = self.api.MaterialEditingLibrary
         association = self.api.MaterialParameterAssociation.GLOBAL_PARAMETER
+        changed = {}
         for name, value in values.items():
+            actual = float(
+                lib.get_material_instance_scalar_parameter_value(
+                    self.instance, name, association
+                )
+            )
+            if not math.isfinite(actual) or not math.isfinite(float(value)):
+                raise RuntimeError("Non-finite whole-map scalar: " + name)
+            if abs(actual - value) > 1e-5:
+                changed[name] = value
+        if not changed:
+            return False
+        for name, value in changed.items():
             lib.set_material_instance_parameter_override(
                 self.instance, name, True, association
             )
@@ -771,8 +784,9 @@ class WholeMapCapture:
                     self.instance, name, association
                 )
             )
-            if abs(actual - expected) > 1e-5:
+            if not math.isfinite(actual) or abs(actual - expected) > 1e-5:
                 raise RuntimeError("Whole-map scalar readback differs: " + name)
+        return True
 
     def _begin_step(self):
         frame, mode = self.steps[self.index]
@@ -781,7 +795,7 @@ class WholeMapCapture:
         if mode == "baseline" and self.binding.applied:
             raise RuntimeError("All baseline captures must precede preparation binding")
         if mode != "baseline":
-            self._set_parameters(mode_parameters(mode))
+            parameters_changed = self._set_parameters(mode_parameters(mode))
             if not self.binding.applied:
                 self.report["memory_checkpoints"].append(
                     memory_checkpoint("before_all1024_binding", 6, 8)
@@ -798,7 +812,10 @@ class WholeMapCapture:
                     "sha256": digest(self.root / "landscape-material-bindings.json"),
                     "includes_hidden_component230": True,
                 }
-            else:
+            elif parameters_changed:
+                # Moving a camera with unchanged parameters does not require
+                # another material update or full GC. Native screenshot loading
+                # and height-mip readiness still run for every view below.
                 drain_compilation(self.api)
         # This known baseline guard retains all v8 attributes and never selects
         # the old trial. The only changing material is on the Landscape.
@@ -1046,7 +1063,9 @@ class WholeMapCapture:
         except Exception as exc:  # noqa: BLE001 - continue every native rollback after wrapper errors
             errors.append("immutable evidence: " + str(exc))
         self.report["duration_seconds"] = round(self.clock() - self.started, 3)
-        self.report["capture_complete"] = len(self.report["captures"]) == 30
+        self.report["capture_complete"] = (
+            len(self.report["captures"]) == len(self.steps) == 43
+        )
         if self.report["capture_complete"]:
             try:
                 pair = [

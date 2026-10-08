@@ -6,7 +6,7 @@
 
 **Starting revision:** `e74a2fabe292626cb49b7c69827a60e234878cd6`
 
-**Status:** full-grid package and native fixed master executed and verified; fresh scene capture is being corrected after independent-process bootstrap failures
+**Status:** full-grid package, fresh native material and all 1024 render-instance roots verified; the first actual baseline/prepared pair is retained, with the 43-frame capture still incomplete
 
 **Methodology:** [World Building Bible](../WORLD_BUILDING_BIBLE.md), selected through the [documentation index](../README.md)
 
@@ -264,11 +264,11 @@ integration. Heavy native operations remain serial on the reference runner.
 | Scope / source contracts | Exact AOI, immutable input identities and current SSOT | Read-only audit complete |
 | Full-grid package | Every sample accounted for; unchanged source and exclusion bytes; reproducible outputs | Windows full-grid execution and independent pixel/sector audit passed at `a0f12793`; source bytes and logical outputs reproduced; encoder-version byte differences are retained explicitly below |
 | Role composition | Unit sum, valid channels, explicit residual/unknown/alpha meanings | Passed over all 16,265,089 source cells |
-| Native material | All five roles, expected assets and metric projection, successful compile | Fixed master saved and all three package byte identities verified at `ddeb01b5`, attempt 2; fresh scene consumption pending |
-| Actual full-map bindings | 1024 generated instance parent chains | Pending |
+| Native material | All five roles, expected assets and metric projection, successful compile | Fixed master saved and all three package byte identities verified at `ddeb01b5`, attempt 2; all eleven fresh-process texture bindings verified after native compilation completed at `35e81dc5` |
+| Actual full-map bindings | 1024 generated instance parent chains | All 1024 native render-instance roots matched at `35e81dc5`, including hidden Component 230; verified again after the ten actual captures |
 | Adaptive detail | Recorded LOD state, independent near/far parameters and matched view evidence | Pending |
 | Preservation | Original map, roads, v8 source/UV/normals/material and final rollback checks | Checkout, map and retained sources unchanged after the stopped `a0f12793` pass; complete scene rollback still awaits actual capture |
-| Selected visual review | Original distributed/rider/overview PNGs and location-specific findings | Pending |
+| Selected visual review | Original distributed/rider/overview PNGs and location-specific findings | Partial: nine baseline and one prepared PNG at `35e81dc5`; the same-camera ground pair shows the material change, while the full 43-frame inventory and near/far acceptance remain pending |
 | Source / workflow tests | Focused executed checks plus exact-head CI | CI passed at `a0f12793`: 1,147 script tests, 391 reference tests, 26 fresh Unreal Automation tests; native Windows preflight ran 104 focused tests with one platform skip |
 | Documentation | Links, i18n, structure and freshness guards; semantic reconciliation | All four local guards passed; final evidence reconciliation pending |
 | Owner visual acceptance | Explicit owner decision on the presented result | Pending |
@@ -279,6 +279,34 @@ outcomes and links. A successful preparation package is not a declaration that
 the entire finished world is already visually or performance-admitted.
 
 ## Executed full-grid checkpoint and native startup diagnosis
+
+[Run 37860882304](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37860882304)
+at `35e81dc5eda6c710f1ce208b1d84b7f53afa8bf4` passed fresh-process texture
+verification, bound all 1024 native Landscape render-instance roots and produced
+ten original 1920-by-1080 PNGs: nine baseline views and the first prepared ground
+view. The native asset queue drained from fifteen entries to zero, with zero
+shader jobs after completion. The same-camera pair shows the large diagnostic
+checker replaced by the new continuous warm ground appearance. It is one view,
+not whole-map visual acceptance or a measurement of the physical tile scale.
+
+The next prepared view stopped at an additional compilation barrier after the
+capture reapplied identical scalar values and updated the material instance.
+The failed barrier did not retain its native counters, so its exact remaining
+queue is unknown. The correction first reads the actual scalar values, changes
+only differing parameters and skips material updates and the extra full drain
+when moving between views with unchanged parameters. Actual mode changes still
+require readback and native completion. Every frame retains its independent
+screenshot-loading and Landscape height-mip readiness checks. Any future failed
+drain now includes the complete native queue, worker and memory observations.
+
+Review also found that the lifecycle's completion check still expected the old
+thirty-frame plan. It now requires both the actual inventory and full plan to
+contain 43 frames. Regression tests invoke the real stop lifecycle: 43/43 may
+advance to scene cleanup, while 30/43, 30/30 and 43/42 all fail. The partial
+`35e81dc5` receipt remains `FAILED`; its original exception is retained even
+though native state restoration, environment restoration and final source/map/
+checkout conservation were separately verified. A process exit code of zero
+does not admit that incomplete proof.
 
 The subsequent [43-frame run 37859234820](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37859234820)
 at `06f823346f4c8b7bab1b794b9088e5dbdd3e02f0` passed the repaired Python

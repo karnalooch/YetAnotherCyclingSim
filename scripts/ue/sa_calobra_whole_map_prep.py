@@ -583,7 +583,13 @@ def drain_compilation(api):
         or result.get("remaining_after") != 0
         or result.get("shader_jobs_after") != 0
     ):
-        raise RuntimeError("Whole-map native asset compilation did not drain")
+        # The owning capture retains exception text in its receipt. Keep the
+        # actual queue, worker and memory observations on failure as on success;
+        # a generic error cannot identify which native barrier stayed pending.
+        raise RuntimeError(
+            "Whole-map native asset compilation did not drain: "
+            + json.dumps(result, sort_keys=True)
+        )
     return result
 
 

@@ -201,5 +201,65 @@ class OriginalSurveyViewTests(unittest.TestCase):
                 capture.original_survey_views(path)
 
 
+class MaterialParameterTransitionTests(unittest.TestCase):
+    def setUp(self):
+        self.values = capture.mode_parameters("prepared")
+        self.owner = capture.WholeMapCapture.__new__(capture.WholeMapCapture)
+        self.owner.instance = object()
+
+        def set_value(_instance, name, value, _association):
+            self.values[name] = value
+
+        self.library = SimpleNamespace(
+            get_material_instance_scalar_parameter_value=Mock(
+                side_effect=lambda _instance, name, _association: self.values[name]
+            ),
+            set_material_instance_parameter_override=Mock(),
+            set_material_instance_scalar_parameter_value=Mock(side_effect=set_value),
+            update_material_instance=Mock(),
+        )
+        self.owner.api = SimpleNamespace(
+            MaterialEditingLibrary=self.library,
+            MaterialParameterAssociation=SimpleNamespace(GLOBAL_PARAMETER=0),
+        )
+
+    def test_same_prepared_values_are_read_without_material_mutation(self):
+        for _ in range(2):
+            self.assertFalse(
+                self.owner._set_parameters(capture.mode_parameters("prepared"))
+            )
+        self.assertEqual(
+            self.library.get_material_instance_scalar_parameter_value.call_count, 8
+        )
+        self.library.set_material_instance_parameter_override.assert_not_called()
+        self.library.set_material_instance_scalar_parameter_value.assert_not_called()
+        self.library.update_material_instance.assert_not_called()
+
+    def test_diagnostic_transition_changes_only_the_different_parameter_once(self):
+        desired = capture.mode_parameters("domains")
+        self.assertTrue(self.owner._set_parameters(desired))
+        self.assertEqual(self.values, desired)
+        self.library.set_material_instance_scalar_parameter_value.assert_called_once_with(
+            self.owner.instance, "DomainMix", 1.0, 0
+        )
+        self.assertFalse(self.owner._set_parameters(desired))
+        self.library.update_material_instance.assert_called_once_with(
+            self.owner.instance
+        )
+
+    def test_failed_native_setter_is_rejected_by_actual_readback(self):
+        self.library.set_material_instance_scalar_parameter_value.side_effect = None
+        with self.assertRaisesRegex(RuntimeError, "readback differs: DomainMix"):
+            self.owner._set_parameters(capture.mode_parameters("domains"))
+
+    def test_nonfinite_state_fails_before_any_parameter_mutation(self):
+        self.values["CheckerMix"] = math.nan
+        with self.assertRaisesRegex(RuntimeError, "Non-finite whole-map scalar"):
+            self.owner._set_parameters(capture.mode_parameters("domains"))
+        self.library.set_material_instance_parameter_override.assert_not_called()
+        self.library.set_material_instance_scalar_parameter_value.assert_not_called()
+        self.library.update_material_instance.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main()

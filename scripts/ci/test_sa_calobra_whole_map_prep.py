@@ -104,6 +104,63 @@ def fake_api(landscape, mismatch=None):
     return api, master, instance, calls, console
 
 
+class NativeCompilationTests(unittest.TestCase):
+    def test_zero_queues_preserve_actual_native_worker_and_memory_evidence(self):
+        result = {
+            "ok": True,
+            "remaining_before": 11,
+            "remaining_after": 0,
+            "shader_jobs_before": 8,
+            "shader_jobs_after": 0,
+            "shader_active_workers_before": 2,
+            "shader_active_workers_after": 0,
+            "available_physical_before": 9 * 1024**3,
+            "available_physical_after": 8 * 1024**3,
+        }
+        native = Mock(return_value=json.dumps(result))
+        api = SimpleNamespace(
+            YacsTextureAuditLibrary=SimpleNamespace(
+                drain_asset_compilation_and_collect_garbage=native
+            )
+        )
+        self.assertEqual(prep.drain_compilation(api), result)
+        native.assert_called_once()
+
+    def test_pending_queues_fail_with_exact_native_evidence_without_retry(self):
+        for ok, assets, shaders in (
+            (False, 2, 0),
+            (False, 0, 3),
+            (True, 1, 0),
+            (True, 0, 1),
+            (False, 0, 0),
+        ):
+            with self.subTest(ok=ok, assets=assets, shaders=shaders):
+                result = {
+                    "ok": ok,
+                    "remaining_before": 11,
+                    "remaining_after": assets,
+                    "shader_jobs_before": 8,
+                    "shader_jobs_after": shaders,
+                    "shader_active_workers_after": 1,
+                    "shader_external_physical_after": 123456,
+                    "available_physical_after": 7 * 1024**3,
+                }
+                native = Mock(return_value=json.dumps(result))
+                api = SimpleNamespace(
+                    YacsTextureAuditLibrary=SimpleNamespace(
+                        drain_asset_compilation_and_collect_garbage=native
+                    )
+                )
+                with self.assertRaisesRegex(
+                    RuntimeError, "native asset compilation did not drain:"
+                ) as error:
+                    prep.drain_compilation(api)
+                self.assertEqual(
+                    json.loads(str(error.exception).split(": ", 1)[1]), result
+                )
+                native.assert_called_once()
+
+
 class BindingTests(unittest.TestCase):
     def test_every_native_root_checked_against_master_and_overrides_restored(self):
         landscape = Landscape()
@@ -557,6 +614,7 @@ class CleanupTests(unittest.TestCase):
         obj = capture.WholeMapCapture.__new__(capture.WholeMapCapture)
         obj.stopped, obj.handle, obj.native_started = False, 7, True
         obj.report = {"captures": [], "bindings": {}}
+        obj.steps = capture.build_steps(CameraTests().plan())
         obj.master_data, obj.instance, obj.parameter_originals = {}, None, {}
         obj.inputs = {"root": Path("/unused"), "manifest_sha256": "same"}
         obj.clock, obj.started = lambda: 1, 0
@@ -578,6 +636,62 @@ class CleanupTests(unittest.TestCase):
         )
         obj._write, obj.done = Mock(), Mock()
         return obj
+
+    def test_stop_requires_all_forty_three_captures_and_the_complete_plan(self):
+        for capture_count, plan_count, complete in (
+            (43, 43, True),
+            (30, 43, False),
+            (30, 30, False),
+            (43, 42, False),
+        ):
+            with self.subTest(captures=capture_count, plan=plan_count):
+                obj = self.capture_fixture()
+                obj.root = Path("/unused")
+                obj.api.unregister_slate_post_tick_callback.side_effect = None
+                records = [
+                    {
+                        "frame_id": frame["frame_id"],
+                        "mode": mode,
+                        "file": "frames/" + frame["frame_id"] + "-" + mode + ".png",
+                        "sha256": "a" * 64,
+                    }
+                    for frame, mode in obj.steps
+                ]
+                obj.report["captures"] = records[:capture_count]
+                obj.steps = obj.steps[:plan_count]
+                obj.binding.applied = True
+                obj.binding.audit = Mock(return_value=[{} for _ in range(1024)])
+                with (
+                    patch.object(
+                        capture, "load_inputs", return_value={"manifest_sha256": "same"}
+                    ),
+                    patch.object(
+                        capture,
+                        "decode_png",
+                        return_value=(16, 1, 3, bytes([100, 100, 100]) * 16),
+                    ) as decode,
+                ):
+                    obj.stop()
+                self.assertEqual(obj.report["capture_complete"], complete)
+                self.assertTrue(obj.report["bindings"]["verified_again_after_captures"])
+                obj.binding.restore.assert_called_once()
+                obj._write.assert_called_once()
+                if complete:
+                    self.assertEqual(
+                        obj.report["status"], "CAPTURED_PENDING_SCENE_CLEANUP"
+                    )
+                    self.assertIsNone(obj.report["error"])
+                    obj.done.assert_called_once_with(None)
+                    self.assertEqual(decode.call_count, 2)
+                    self.assertEqual(
+                        obj.report["near_far_material_response"]["status"],
+                        "NO_CLEAR_SHADING_RESPONSE",
+                    )
+                else:
+                    self.assertEqual(obj.report["status"], "FAILED")
+                    self.assertIn("coverage is incomplete", obj.report["error"])
+                    obj.done.assert_called_once_with(obj.report["error"])
+                    decode.assert_not_called()
 
     def test_callback_failure_still_restores_native_and_landscape_and_calls_owner(self):
         obj = self.capture_fixture()
