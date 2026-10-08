@@ -4,6 +4,17 @@
 
 **Status:** proposed generation plan derived from sampled views; no implementation, material replacement, saved assets or full-area admission. Existing work remains the foundation.
 
+## Whole-Landscape coverage away from roads
+
+The [off-road appearance plan](off-road-plan.md) specifies the baseline for the
+entire Landscape, including the owner's marked review sectors. Preserve source
+macro shapes and coherent supported material structure everywhere. Add meso
+outcrop forms where visibly readable; use B for dominant remote faces and C for
+separate panoramas after checking closer appearances. Distance from the road
+never assigns a band. Material masks and owned detail meshes address these
+requirements separately; no whole-terrain mesh conversion or height edit follows.
+The marked sectors remain unregistered, with no automatic C/D assignment.
+
 ## What each part owns
 
 | Part | Role in this plan |

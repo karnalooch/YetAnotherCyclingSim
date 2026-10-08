@@ -6,9 +6,17 @@ Authority: [World Building Bible](../../WORLD_BUILDING_BIBLE.md), [surface atlas
 
 ![Full-survey preliminary detail requirements](visibility-plan.png)
 
-[Generation guide: meshes, layers and existing work](generation-guide.md) · [Vector observation map](visibility-plan.svg) · [Interactive map/view review](review.html) · [669-row CSV](observations.csv) · [Full observation data](observations.json)
+[Off-road whole-Landscape plan](off-road-plan.md) · [Generation guide: meshes, layers and existing work](generation-guide.md) · [Vector observation map](visibility-plan.svg) · [Interactive map/view review](review.html) · [669-row CSV](observations.csv) · [Full observation data](observations.json)
 
 The static overview is readable on GitHub. Download `review.html` to switch A/B/C, zoom/pan and inspect any paired observation with its reason and near sides. Map/data work offline; unchanged remote JPEG previews require network access. GitHub shows HTML source rather than executing it. The [earlier six original-PNG cards](../sa-calobra-surface-detail-review-20261008/README.md) remain deeper examples.
+
+## Beyond the road strip
+
+The [whole-Landscape plan](off-road-plan.md) adds proposed macro/material coverage
+across the entire current area, approximate owner-marked review sectors and two
+unchanged original examples of off-road B/C forms. Empty observation-map space
+is not empty terrain, automatic C or hidden D. Sector sketches are not surface
+footprints, visibility extents or executable masks.
 
 ## What was actually inspected
 

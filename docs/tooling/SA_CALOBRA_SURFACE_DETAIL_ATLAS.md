@@ -122,6 +122,16 @@ Neither a tag nor a band authorizes source terrain changes, material replacement
 asset persistence or production rollout. The accepted reference and existing
 eligibility, exclusions and protected interfaces continue to govern changes.
 
+## Whole-Landscape coverage outside the road strip
+
+The [off-road appearance plan](../experiments/sa-calobra-roadside-visibility-prestudy-20261008/off-road-plan.md)
+sets a coherent macro/material baseline for the entire 2,016.5 m working square,
+with approximate owner-marked review sectors and two original off-road examples.
+Sector outlines remain unregistered review sketches, not detail masks. Readable
+remote faces can require B; separate panoramas can require C; no blanket C or D
+is assigned outside a road strip. Existing Dynamic Mesh/v8 and source/material
+semantics remain the basis for later mapped presentation treatment.
+
 ## Complete captured-survey prestudy
 
 The [roadside visibility and detail prestudy](../experiments/sa-calobra-roadside-visibility-prestudy-20261008/README.md)
