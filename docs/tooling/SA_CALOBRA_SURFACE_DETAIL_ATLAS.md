@@ -2,7 +2,7 @@
 
 **Owner direction:** 2026-10-08  
 **Work item:** [#445](https://github.com/karnalooch/YetAnotherCyclingSim/issues/445), [draft PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446)  
-**Status:** documentation-only plan with a [complete captured-survey prestudy](../experiments/sa-calobra-roadside-visibility-prestudy-20261008/README.md) and [six original-PNG proposal cards](../experiments/sa-calobra-surface-detail-review-20261008/README.md); owner review, physical boundaries and world mapping remain pending  
+**Status:** surface-detail plan with a tested Component 230 source-face pilot, a [complete captured-survey prestudy](../experiments/sa-calobra-roadside-visibility-prestudy-20261008/README.md) and [six original-PNG proposal cards](../experiments/sa-calobra-surface-detail-review-20261008/README.md); owner review and wider physical registration remain pending
 **Authority:** [World Building Bible](../WORLD_BUILDING_BIBLE.md), selected through [the documentation index](../README.md); [cliff presentation contract](SA_CALOBRA_CLIFF_EROSION_PASS.md)
 
 ## Purpose and current scope
@@ -314,5 +314,12 @@ produces proposed A/B face groups, independent five-tag masks, protected-face
 flags and an unchanged-geometry OBJ/MTL preview. The owner-only `[detail-pilot]`
 workflow lane replays retained evidence on a hosted runner without Unreal or
 performance measurements. This is a tested registration/selection producer;
-whole-scene occlusion, native consumption and detail treatment remain pending.
+the original replay does not prove native consumption or whole-scene occlusion.
+
+The [bounded native continuation](../experiments/sa-calobra-component230-detail-native-20261008/README.md)
+adds a separate `[detail-native]` proof of that exact mask in the existing v8
+scene. It compares the same source-face patch under ordinary renderer depth
+before attempting a small presentation treatment. This is a selected-view
+experiment, not a complete visibility atlas, a PCGEx admission or owner approval
+of the proposed bands. Unreviewed surfaces remain U and no D is inferred.
 

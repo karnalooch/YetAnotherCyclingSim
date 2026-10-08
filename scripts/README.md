@@ -71,3 +71,18 @@ and local launchers together when renaming. Historical filenames in old
 receipts are evidence and must not be rewritten to imply a newer execution.
 Internal runner hooks (`Invoke-YacsJobStarted.ps1`) and `Assert-*` helpers are
 called by their owner scripts; they are not separate everyday commands.
+
+## Component 230 source-face detail proof
+
+`assets/prepare_sa_calobra_detail_pilot.py` registers proposed image regions to
+the hash-pinned v8 face rows; `assets/run_sa_calobra_detail_pilot.py` reproduces
+that registration from retained evidence without Unreal.
+`assets/prepare_sa_calobra_detail_treatment.py --mesh <combined-mesh.json>
+--mask <triangle-bands.json> --output <fresh-directory>` prepares one bounded
+local candidate, preserving every face outside its selected patch.
+`ue/sa_calobra_detail_capture.py` runs only inside the owning Component 230
+Unreal proof scene, through the owner-only `[detail-native]` workflow lane.
+Read the [native experiment contract](../docs/experiments/sa-calobra-component230-detail-native-20261008/README.md)
+for source identities, renderer-visibility scope, preservation checks and
+recorded execution status. A successful experiment does not grant a saved
+production scene, visual acceptance or performance admission.

@@ -106,6 +106,56 @@ _temporal_sequence_receipt = {}
 _shadow_cache_probe = {"enabled": False}
 _shadow_cache_previous = None
 _survey_capture = None
+_detail_capture = None
+
+
+def _begin_detail_native():
+    """Keep the accepted native v8 attributes and reuse this scene's rollback."""
+    global _detail_capture
+    if (not TERRAIN_MESH_TRIAL or not TERRAIN_EROSION_TRIAL or not NEUTRAL_LANDSCAPE
+            or PCGEX_MESH is not None or PAIRED_CUSTOM_OUTPUT is not None
+            or os.environ.get('YACS_SA_CALOBRA_TPP_SURVEY') == '1'):
+        raise RuntimeError('Native detail requires only the bounded accepted-v8 scene')
+    _spawn_rock_shape_trial()
+    meshes = [actor for actor in _candidate_actors if isinstance(actor, unreal.DynamicMeshActor)]
+    if len(meshes) != 1:
+        raise RuntimeError('Native detail requires one accepted v8 visual surface')
+    component = meshes[0].get_dynamic_mesh_component()
+    mesh = component.get_dynamic_mesh()
+    before = mesh.get_triangle_count()
+    tile_m = float(_plan['skin_contract']['uv_world_size_m'])
+    if tile_m != 3.0:
+        raise RuntimeError('Native detail limestone texture scale drift')
+    unreal.GeometryScript_UVs.set_mesh_u_vs_from_box_projection(
+        mesh, 0, unreal.Transform(scale=unreal.Vector(300, 300, 300)),
+        unreal.GeometryScriptMeshSelection(), min_island_tri_count=2)
+    if mesh.get_triangle_count() != before:
+        raise RuntimeError('Native detail UV projection changed topology')
+    material = _load_surface_material(CLIFF_MATERIAL, 'accepted v8 limestone')
+    component.set_material(0, material)
+    component.notify_mesh_modified()
+    if component.get_material(0) != material:
+        raise RuntimeError('Native detail accepted limestone did not apply')
+    _terrain_trial['limestone_uv_projection'] = {
+        'method': 'Epic GeometryScript box projection', 'uv_channel': 0,
+        'world_size_m': 3.0, 'triangles_unchanged': True,
+        'scope': 'TRANSIENT_PBR_DETAIL_COMPARISON'}
+    from scripts.ue.sa_calobra_detail_capture import DetailCapture
+    scene = {
+        'map': MAP, 'map_sha256': _before_hash,
+        'accepted_cliff_implementation_sha': '4f2cba560d54931dc8ba080370d96a7aad24f15b',
+        'retained_source_capture_sha': 'b1ea05b33b9f3208e7aeb6884f1a67792d9c6121',
+        'cliff_recipe': 'rounded-limestone-reshape-v8',
+        'component': 'LandscapeComponent_230', 'material_path': CLIFF_MATERIAL,
+        'combined_audit': _terrain_trial['combined_audit'],
+        'lighting': _mesh_receipt['lighting'], 'other_scene_actors_retained': True,
+        'scope': 'Existing whole scene at two fixed pilot cameras; only Component 230 is substituted',
+    }
+    _detail_capture = DetailCapture(
+        unreal, _world, _landscape, _camera, component, OUTPUT / 'detail-native',
+        Path(os.environ['YACS_DETAIL_NATIVE']), EXPECTED_SHA, scene, finish)
+    unreal.EditorPythonScripting.set_keep_python_script_alive(True)
+    _detail_capture.start()
 
 
 def _begin_tpp_survey():
@@ -1202,7 +1252,19 @@ def _spawn_rock_shape_trial():
     (OUTPUT / 'terrain-erosion.json').write_text(json.dumps(erosion), encoding='utf-8')
     reference_path = Path(os.environ['YACS_TERRAIN_ORIGINAL_MESH'])
     reference_receipt = json.loads((reference_path.parent / 'component230-cliff-visual-receipt.json').read_text(encoding='utf-8-sig'))
-    if (reference_receipt['exact_sha'] != EXPECTED_SHA
+    detail_root = os.environ.get('YACS_DETAIL_NATIVE')
+    reference_sha = EXPECTED_SHA
+    if detail_root:
+        # Reuse the explicitly retained original-source control. Its historical
+        # capture SHA stays historical; current native v8 is independently
+        # reconstructed and matched to the fixed source mesh before any mask.
+        expected_reference = Path(detail_root).resolve() / 'source-reference/local-cliff-smoothing-mesh.json'
+        reference_sha = 'b1ea05b33b9f3208e7aeb6884f1a67792d9c6121'
+        if (reference_path.resolve() != expected_reference
+                or _digest(reference_path) != '9ed6c9179d2df04117fcc8992224061f942d42a03a714a4a75177c43728b1cd5'
+                or _digest(reference_path.parent / 'component230-cliff-visual-receipt.json') != 'c9494905cbb51f5622e3a414c862eb86d21a261063d6b5adc357ee74ac2a2742'):
+            raise RuntimeError('Native detail retained original-source provenance failed')
+    if (reference_receipt['exact_sha'] != reference_sha
             or reference_receipt['status'] != 'COMPONENT230_CLIFF_VISUAL_PASS'
             or reference_receipt['landscape_mesh_diagnostic']['export']['mesh_evidence_sha256'] != _digest(reference_path)):
         raise RuntimeError('Edge-only original reference provenance failed')
@@ -1645,6 +1707,8 @@ def finish(error: str | None = None):
     payload = _write_receipt(status, error)
     if _survey_capture is not None:
         _survey_capture.mark_cleanup(error)
+    if _detail_capture is not None:
+        _detail_capture.mark_cleanup(error)
     if _paired_custom_record is not None:
         _write_receipt(status, error, output=PAIRED_CUSTOM_OUTPUT,
                        mesh=_paired_custom_record["mesh"],
@@ -1991,6 +2055,13 @@ def main():
         _world, f"r.HighResScreenshotDelay {CAPTURE_WARMUP_FRAMES}"
     )
 
+    _mesh_receipt["lighting"] = lighting
+    if os.environ.get('YACS_DETAIL_NATIVE'):
+        # Enter before the legacy matrix tries to read its review-camera file.
+        # This lane uses only the two hash-bound pilot poses.
+        _begin_detail_native()
+        return
+
     # The first offscreen screenshot can precede Landscape streaming readiness
     # even after finish_loading_before_screenshot. Render a complete camera view
     # before admitting baseline pixels; retain it as diagnostic evidence only.
@@ -2067,7 +2138,6 @@ def main():
                 primed_views.append(prime)
         primed_views.append(view)
     _views = primed_views
-    _mesh_receipt["lighting"] = lighting
     if os.environ.get('YACS_EDGE_GEOMETRY_PREFLIGHT') == '1':
         # Reject an invalid native recipe before spending time on reference
         # renders. This transient probe does not replace any later audit.

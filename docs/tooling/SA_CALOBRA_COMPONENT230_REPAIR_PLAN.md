@@ -26,6 +26,15 @@ The five independent surface tags remain unassigned pending image review;
 camera stations are not automatically cliff boundaries. This inspection does
 not grant saved-scene, whole-Landscape or performance acceptance.
 
+The next [bounded native detail experiment](../experiments/sa-calobra-component230-detail-native-20261008/README.md)
+uses the existing source-face pilot on this same v8 baseline. It must verify
+source-row/native-triangle correspondence, real renderer occlusion of one
+selected A patch and attribute-preserving native rollback. The first local
+treatment keeps the source-relative 50 cm cap and adds at most 5 cm relative
+to v8, with every vertex incident to an outside or protected face fixed.
+This continuation does not supersede the accepted v8 appearance or relabel the
+existing lighting/PCGEx gates; its exact execution status is recorded separately.
+
 ## Historical decision
 
 The submitted report is substantially supported by the remote evidence. The

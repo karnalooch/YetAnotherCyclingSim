@@ -31,6 +31,11 @@ on:
       - "scripts/assets/run_sa_calobra_detail_pilot.py"
       - "scripts/assets/test_sa_calobra_detail_pilot.py"
       - "scripts/assets/test_run_sa_calobra_detail_pilot.py"
+      - "scripts/assets/prepare_sa_calobra_detail_treatment.py"
+      - "scripts/assets/test_sa_calobra_detail_treatment.py"
+      - "scripts/ue/sa_calobra_detail_capture.py"
+      - "scripts/ci/test_sa_calobra_detail_capture.py"
+      - "scripts/ci/test_sa_calobra_detail_native_workflow.py"
       - "docs/experiments/sa-calobra-component230-detail-pilot-20261008/annotations.json"
       - "scripts/assets/prepare_sa_calobra_component230_cliff_visual.py"
       - "scripts/assets/test_sa_calobra_component230_cliff_visual.py"
@@ -42,6 +47,7 @@ on:
       - "scripts/assets/test_component230_review_cameras.py"
       - "Source/YetAnotherCyclingSimEditor/Private/Diagnostics/YacsLandscapeMeshDiagnosticLibrary.cpp"
       - "Source/YetAnotherCyclingSimEditor/Private/Diagnostics/YacsLandscapeTerrainTrial.cpp"
+      - "Source/YetAnotherCyclingSimEditor/Private/Diagnostics/YacsComponent230Detail.cpp"
       - "scripts/geometry/local_thermal_erosion.py"
       - "scripts/geometry/test_local_thermal_erosion.py"
       - "Source/YetAnotherCyclingSimEditor/Public/Diagnostics/YacsLandscapeMeshDiagnosticLibrary.h"
@@ -74,6 +80,7 @@ jobs:
       github.actor == 'karnalooch' &&
       github.ref == 'refs/heads/feat/phase2c-pcgex-cliff-topology' &&
       contains(github.event.head_commit.message, '[detail-pilot]') &&
+      !contains(github.event.head_commit.message, '[detail-native]') &&
       !contains(github.event.head_commit.message, '[tpp-survey]') &&
       !contains(github.event.head_commit.message, '[tpp-retain]') &&
       !contains(github.event.head_commit.message, '[tpp-docs]')
@@ -109,8 +116,579 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
+  detail-native:
+    name: Native detail mask and bounded limestone patch
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.actor == 'karnalooch' &&
+      github.ref == 'refs/heads/feat/phase2c-pcgex-cliff-topology' &&
+      contains(github.event.head_commit.message, '[detail-native]') &&
+      !contains(github.event.head_commit.message, '[detail-pilot]') &&
+      !contains(github.event.head_commit.message, '[tpp-survey]') &&
+      !contains(github.event.head_commit.message, '[tpp-retain]') &&
+      !contains(github.event.head_commit.message, '[tpp-docs]')
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 45
+    steps:
+      - name: Isolate detail proof Git configuration
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'component230-detail-native.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          $env:GIT_CONFIG_GLOBAL = $isolated
+          $env:GIT_CONFIG_NOSYSTEM = '1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot enable long paths.' }
+
+      - name: Checkout exact detail proof revision without LFS payloads
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: _phase2c-pcgex-cliff
+          fetch-depth: 0
+          lfs: false
+          clean: false
+          persist-credentials: false
+
+      - name: Verify owner intent, exact revision and idle host
+        shell: pwsh
+        working-directory: _phase2c-pcgex-cliff
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ($env:GITHUB_ACTOR -ne 'karnalooch' -or $env:GITHUB_REPOSITORY -ne 'karnalooch/YetAnotherCyclingSim' -or $env:GITHUB_REF_NAME -ne 'feat/phase2c-pcgex-cliff-topology') {
+            throw 'Native detail intent requires the owner and existing Component 230 branch.'
+          }
+          $actual = (git rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0 -or $actual -ne $env:GITHUB_SHA) { throw 'Native detail checkout does not match the exact event SHA.' }
+          $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+          $state | ConvertTo-Json -Depth 8 | Write-Host
+          if ($state.status -ne 'IDLE') { throw "Shared Unreal host is already owned; status=$($state.status)." }
+          git diff --quiet 4f2cba560d54931dc8ba080370d96a7aad24f15b HEAD -- Content/Worlds/SaCalobra/L_SaCalobraAccepted_20261004.umap Content/Worlds/SaCalobra/CheckpointMaterials Content/Worlds/SaCalobra/CheckpointEarthworks Content/Generated/YACS/MaskReview Content/Generated/YACS/TextureMaterialPrep
+          if ($LASTEXITCODE -ne 0) { throw 'Native detail requires the accepted scene and material asset identities.' }
+          if (-not $env:YACS_WORKSPACE_CONFIG) { throw 'Canonical YACS_WORKSPACE_CONFIG was not exported by the runner.' }
+          $workspaceJson = python -c "import json,sys; from pathlib import Path; from scripts.manage_local_workspace import load_workspace; print(json.dumps(load_workspace(Path(sys.argv[1]))))" $env:YACS_WORKSPACE_CONFIG
+          if ($LASTEXITCODE -ne 0) { throw 'Canonical persistent workspace configuration failed validation.' }
+          $workspace = $workspaceJson | ConvertFrom-Json
+          $source = Join-Path $workspace.work 'proofs/sa-calobra-tpp/b1ea05b33b9f3208e7aeb6884f1a67792d9c6121/37800814004-1'
+          $root = Join-Path $workspace.work "proofs/sa-calobra-detail/$actual/$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          if (Test-Path -LiteralPath $root) { throw 'Native detail evidence root exists; refusing stale output or overwrite.' }
+          New-Item -ItemType Directory -Path $root | Out-Null
+          "YACS_DETAIL_PROOF_ROOT=$root" >> $env:GITHUB_ENV
+          "YACS_DETAIL_RETAINED_SOURCE=$source" >> $env:GITHUB_ENV
+          "YACS_DETAIL_NATIVE=$(Join-Path $root 'input')" >> $env:GITHUB_ENV
+          "YACS_CLIFF_VISUAL_OUTPUT=$(Join-Path $root 'capture')" >> $env:GITHUB_ENV
+          "YACS_CLIFF_VISUAL_EXPECTED_SHA=$actual" >> $env:GITHUB_ENV
+
+      - name: Install pinned detail and image dependencies
+        shell: pwsh
+        working-directory: _phase2c-pcgex-cliff
+        run: |
+          python -m pip install --disable-pip-version-check --only-binary=:all: numpy==2.3.5 pillow==12.0.0
+          if ($LASTEXITCODE -ne 0) { throw 'Native detail dependency install failed.' }
+
+      - name: Validate and copy only fixed retained source files
+        shell: pwsh
+        working-directory: _phase2c-pcgex-cliff
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $prepare = @'
+          import csv, hashlib, io, json, os, struct, subprocess
+          from pathlib import Path
+          from scripts.assets.run_sa_calobra_detail_pilot import CAPTURE, FRAMES, MESH, RECEIPT, verify_native
+          from scripts.proof.retain_sa_calobra_tpp_survey import no_link, read_json
+          root = Path(os.environ["YACS_DETAIL_PROOF_ROOT"])
+          source = Path(os.environ["YACS_DETAIL_RETAINED_SOURCE"])
+          bundle = Path(os.environ["YACS_DETAIL_NATIVE"])
+          def require(condition, message):
+              if not condition:
+                  raise ValueError(message)
+          def checked(path, expected, size=None):
+              for parent in (path, *path.parents):
+                  no_link(parent)
+              require(path.is_file() and 0 < path.stat().st_size < 32 * 1024 * 1024, "Invalid bounded source file")
+              data = path.read_bytes()
+              require(hashlib.sha256(data).hexdigest() == expected, "Pinned source SHA256 mismatch: " + path.name)
+              require(size is None or len(data) == size, "Pinned source size mismatch")
+              return data
+          def committed(path, expected):
+              # Read immutable Git blob bytes; Windows checkout newline settings cannot alter the selection.
+              spec = os.environ["YACS_CLIFF_VISUAL_EXPECTED_SHA"] + ":" + path.as_posix()
+              size = int(subprocess.check_output(["git", "cat-file", "-s", spec]))
+              require(0 < size < 32 * 1024 * 1024, "Invalid bounded committed selection file")
+              data = subprocess.check_output(["git", "cat-file", "blob", spec])
+              require(len(data) == size and hashlib.sha256(data).hexdigest() == expected, "Pinned committed selection hash mismatch")
+              return data
+          retained = read_json(source / ".yacs-retention/manifest.json")
+          require(retained.get("status") == "LOCAL_RETAINED"
+                  and retained.get("exact_sha") == CAPTURE
+                  and retained.get("run_id") == 37800814004 and retained.get("attempt") == 1
+                  and retained.get("source_preserved") is True
+                  and retained.get("destination_verified") is True, "Completed retained source identity is required")
+          inventory = retained["inventory"]["files"]
+          require(len({row["path"] for row in inventory}) == len(inventory), "Duplicate retention inventory path")
+          inventory = {row["path"]: row for row in inventory}
+          fixed = (
+              ("terrain-erosion-mesh/combined-mesh.json", "source/combined-mesh.json", MESH),
+              ("terrain-erosion-mesh/component230-cliff-visual-receipt.json", "source/component230-cliff-visual-receipt.json", RECEIPT),
+              ("local-cliff-smoothing/local-cliff-smoothing-mesh.json", "source-reference/local-cliff-smoothing-mesh.json", "9ed6c9179d2df04117fcc8992224061f942d42a03a714a4a75177c43728b1cd5"),
+              ("local-cliff-smoothing/component230-cliff-visual-receipt.json", "source-reference/component230-cliff-visual-receipt.json", "c9494905cbb51f5622e3a414c862eb86d21a261063d6b5adc357ee74ac2a2742"),
+              ("plan/component230-cliff-visual-plan.json", "plan/component230-cliff-visual-plan.json", "41768c7680ddea2304f9968d4b2947bf65e1164ffacfa45f74dcefad955b5359"),
+          )
+          captured = Path("docs/experiments/sa-calobra-tpp-survey-20261008")
+          proposal = Path("docs/experiments/sa-calobra-component230-detail-pilot-20261008")
+          frames = checked(captured / "frames.csv", FRAMES)
+          annotations = committed(proposal / "annotations.json", "0a7703e960d6762d7721dafe0d646c74d889c6ff25c4b115b06129992a7586e8")
+          rows = {row["frame_id"]: row for row in csv.DictReader(io.StringIO(frames.decode("utf-8-sig")))}
+          ids = [row["frame_id"] for row in json.loads(annotations)["frames"]]
+          require(ids == ["window-0021-forward-00005", "window-0023-forward-00000"], "Only the two fixed annotated cameras are admitted")
+          entries, records = {}, []
+          for relative, destination, expected in fixed:
+              require(inventory.get(relative, {}).get("sha256") == expected, "Retained source manifest hash mismatch")
+              data = checked(source / relative, expected, inventory[relative]["size_bytes"])
+              entries[destination] = data
+              records.append(dict(path=relative, sha256=expected, size_bytes=len(data)))
+          verify_native(json.loads(entries["source/component230-cliff-visual-receipt.json"]))
+          for frame_id in ids:
+              row = rows[frame_id]
+              require(row["file"] == "frames/" + frame_id + ".png", "Invalid fixed frame path")
+              relative = "terrain-erosion-mesh/tpp-survey/" + row["file"]
+              require(inventory.get(relative, {}).get("sha256") == row["sha256"], "Retained frame manifest hash mismatch")
+              data = checked(source / relative, row["sha256"], int(row["size_bytes"]))
+              require(data[:8] == b"\x89PNG\r\n\x1a\n" and struct.unpack(">II", data[16:24]) == (1280, 720), "Original camera PNG dimensions mismatch")
+              entries["source/" + frame_id + ".png"] = data
+              records.append(dict(path=relative, sha256=row["sha256"], size_bytes=len(data)))
+          mask_sha = "6ec02a0e3dac9756923d29c8b603c0c1d79db411d06f3a20bb30956e11390953"
+          pilot_sha = "804842ef0893df0d4822caa458ca68b658bf6d9481ef64db5237dde00ec97718"
+          entries["pilot/triangle-bands.json"] = committed(proposal / "pilot/triangle-bands.json", mask_sha)
+          entries["pilot/manifest.json"] = committed(proposal / "pilot/manifest.json", pilot_sha)
+          pilot = json.loads(entries["pilot/manifest.json"])
+          require(pilot["mesh_sha256"] == MESH and pilot["frames_csv_sha256"] == FRAMES
+                  and pilot["annotations_sha256"] == hashlib.sha256(annotations).hexdigest(), "Published selection source binding mismatch")
+          bundle.mkdir(exist_ok=False)
+          for name, data in dict(entries, **{"frames.csv": frames, "annotations.json": annotations}).items():
+              output = bundle / name
+              output.parent.mkdir(parents=True, exist_ok=True)
+              output.write_bytes(data)
+          receipt = dict(schema_version=1, status="FIXED_RETAINED_SOURCE_VERIFIED",
+                         exact_sha=os.environ["YACS_CLIFF_VISUAL_EXPECTED_SHA"], source_capture_sha=CAPTURE,
+                         source_run_id=37800814004, source_attempt=1, source_root=str(source),
+                         source_files=records, frames_csv_sha256=FRAMES, frame_ids=ids,
+                         mask_sha256=mask_sha, pilot_manifest_sha256=pilot_sha,
+                         whole_archive_downloaded=False, source_regenerated=False, selection_recomputed=False)
+          (root / "source-input-verification.json").write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
+          '@
+          $prepare | python -
+          if ($LASTEXITCODE -ne 0) { throw 'Immutable retained native detail source verification failed.' }
+          "YACS_CLIFF_VISUAL_PLAN=$(Join-Path $env:YACS_DETAIL_NATIVE 'plan/component230-cliff-visual-plan.json')" >> $env:GITHUB_ENV
+          "YACS_TERRAIN_ORIGINAL_MESH=$(Join-Path $env:YACS_DETAIL_NATIVE 'source-reference/local-cliff-smoothing-mesh.json')" >> $env:GITHUB_ENV
+
+      - name: Test fixed selection and prepare the bounded patch
+        shell: pwsh
+        working-directory: _phase2c-pcgex-cliff
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python -m unittest scripts.assets.test_sa_calobra_detail_pilot scripts.assets.test_run_sa_calobra_detail_pilot scripts.assets.test_sa_calobra_detail_treatment scripts.ci.test_sa_calobra_detail_capture scripts.ci.test_sa_calobra_detail_native_workflow -v
+          if ($LASTEXITCODE -ne 0) { throw 'Detail source, treatment or native consumer contract tests failed.' }
+          $bundle = $env:YACS_DETAIL_NATIVE
+          $mask = Join-Path $bundle 'pilot/triangle-bands.json'
+          python scripts/assets/prepare_sa_calobra_detail_treatment.py --mesh (Join-Path $bundle 'source/combined-mesh.json') --mask $mask --output (Join-Path $bundle 'treatment')
+          if ($LASTEXITCODE -ne 0) { throw 'Bounded limestone patch preparation failed.' }
+
+      - name: Materialize the unchanged accepted scene and limestone dependencies
+        shell: pwsh
+        working-directory: _phase2c-pcgex-cliff
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $env:GIT_LFS_SKIP_SMUDGE = '0'
+          try {
+            New-Item -ItemType Directory -Force -Path $env:YACS_LFS_CACHE_ROOT | Out-Null
+            git lfs install --local --skip-smudge
+            if ($LASTEXITCODE -ne 0) { throw 'Local LFS setup failed.' }
+            git config --local lfs.storage $env:YACS_LFS_CACHE_ROOT
+            if ($LASTEXITCODE -ne 0) { throw 'Persistent LFS storage configuration failed.' }
+            $map = 'Content/Worlds/SaCalobra/L_SaCalobraAccepted_20261004.umap'
+            $checkpointMaterials = 'Content/Worlds/SaCalobra/CheckpointMaterials'
+            $checkpointEarthworks = 'Content/Worlds/SaCalobra/CheckpointEarthworks'
+            $landscapeMaterial = 'Content/Generated/YACS/MaskReview/M_MaskReview_1.uasset'
+            $landscapeTexture = 'Content/Generated/YACS/MaskReview/T_MaskReview_1.uasset'
+            $library = 'Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87'
+            $exposedBaseColor = 'Content/Generated/YACS/TextureMaterialPrep/Runs/C414EA4B402723D66FCB689E49EEB02D/BaseColor.uasset'
+            $screeBaseColor = 'Content/Generated/YACS/TextureMaterialPrep/Runs/94406E0247C9822CFD006CAB8B20545E/BaseColor.uasset'
+            $include = "$map,$checkpointMaterials/**,$checkpointEarthworks/**,$landscapeMaterial,$landscapeTexture,$library/**,$exposedBaseColor,$screeBaseColor"
+            git lfs pull --include=$include --exclude=''
+            if ($LASTEXITCODE -ne 0) { throw 'Accepted scene and limestone transitive LFS pull failed.' }
+            git lfs checkout $map $checkpointMaterials $checkpointEarthworks $landscapeMaterial $landscapeTexture $library $exposedBaseColor $screeBaseColor
+            if ($LASTEXITCODE -ne 0) { throw 'Accepted scene and limestone transitive LFS checkout failed.' }
+            if ((Get-FileHash -LiteralPath $map -Algorithm SHA256).Hash.ToLowerInvariant() -ne '276d1621fa083850f6d603b6d115b01b74c9a92c182254d15302e786abfbf29c') {
+              throw 'Accepted map bytes differ from the captured v8 scene.'
+            }
+            $required = @(
+              $landscapeMaterial, $landscapeTexture,
+              "$library/LimestonePalette/1b3d9c45b1e24d6085bfcc8859390c19/M_SC_Limestone_ExposedRock.uasset",
+              "$library/LimestonePalette/1b3d9c45b1e24d6085bfcc8859390c19/M_SC_Limestone_Scree.uasset",
+              "$library/ProviderData/ExposedRock/T_Height.uasset", "$library/ProviderData/ExposedRock/T_Normal.uasset",
+              "$library/ProviderData/ExposedRock/T_Roughness.uasset", "$library/ProviderData/Scree/T_Height.uasset",
+              "$library/ProviderData/Scree/T_Normal.uasset", "$library/ProviderData/Scree/T_Roughness.uasset",
+              "$library/Sources/T_Source_ExposedRock.uasset", "$library/Sources/T_Source_Scree.uasset",
+              $exposedBaseColor, $screeBaseColor
+            )
+            $required += @(0..2 | ForEach-Object { "$checkpointMaterials/MI_Accepted_$_.uasset" })
+            $required += @(0..184 | ForEach-Object { "$checkpointEarthworks/T_Cut_$('{0:D3}' -f $_).uasset" })
+            foreach ($asset in $required) {
+              if (-not (Test-Path -LiteralPath $asset -PathType Leaf) -or (Get-Item -LiteralPath $asset).Length -lt 1024) {
+                throw "Accepted scene dependency missing or still an LFS pointer: $asset"
+              }
+            }
+          }
+          finally { $env:GIT_LFS_SKIP_SMUDGE = '1' }
+
+      - name: Verify installed exact-version detail API source
+        shell: pwsh
+        working-directory: _phase2c-pcgex-cliff
+        run: |
+          $ErrorActionPreference = 'Stop'
+          . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
+          $engine = Resolve-YacsUnrealEngine -ProjectPath (Join-Path (Get-Location) 'YetAnotherCyclingSim.uproject')
+          if (-not $engine -or $engine.Version -ne '5.8.2-56702186') { throw 'Native detail requires accepted UE 5.8.2 CL 56702186.' }
+          $contracts = @(
+            @{ path = 'Engine/Source/Runtime/GeometryCore/Public/DynamicMesh/DynamicMesh3.h'; symbols = @('TriangleIndicesItr', 'VertexIndicesItr', 'GetTriangle', 'GetVertex', 'SetVertex', 'InsertTriangle') },
+            @{ path = 'Engine/Source/Runtime/GeometryCore/Public/DynamicMesh/DynamicMeshAttributeSet.h'; symbols = @('EnableMaterialID', 'GetMaterialID', 'PrimaryNormals', 'PrimaryUV', 'IsSameAs') },
+            @{ path = 'Engine/Source/Runtime/GeometryCore/Public/DynamicMesh/DynamicMeshTriangleAttribute.h'; symbols = @('SetValue', 'GetValue') },
+            @{ path = 'Engine/Source/Runtime/GeometryCore/Public/DynamicMesh/MeshNormals.h'; symbols = @('RecomputeOverlayElementNormals') },
+            @{ path = 'Engine/Source/Runtime/GeometryCore/Public/DynamicMesh/DynamicMeshOverlay.h'; symbols = @('GetTriangle', 'GetElement', 'GetParentVertex', 'IsSetTriangle', 'SetTriangle', 'AppendElement') },
+            @{ path = 'Engine/Source/Runtime/GeometryFramework/Public/UDynamicMesh.h'; symbols = @('GetMeshRef', 'SetMesh') },
+            @{ path = 'Engine/Source/Runtime/GeometryFramework/Public/Components/DynamicMeshComponent.h'; symbols = @('GetDynamicMesh') },
+            @{ paths = @('Engine/Source/Runtime/Engine/Public/Materials/Material.h', 'Engine/Source/Runtime/Engine/Classes/Materials/Material.h'); symbols = @('SetShadingModel') },
+            @{ path = 'Engine/Source/Editor/MaterialEditor/Public/MaterialEditingLibrary.h'; symbols = @('CreateMaterialExpression', 'ConnectMaterialProperty', 'RecompileMaterial') },
+            @{ path = 'Engine/Source/Runtime/Engine/Classes/GameFramework/Actor.h'; symbols = @('K2_SetActorLocation', 'K2_SetActorRotation') },
+            @{ path = 'Engine/Source/Runtime/Engine/Classes/Camera/CameraComponent.h'; symbols = @('FieldOfView') },
+            @{ path = 'Engine/Source/Runtime/Engine/Classes/Components/PrimitiveComponent.h'; symbols = @('SetCollisionEnabled', 'SetCastShadow') }
+          )
+          $evidence = @()
+          foreach ($contract in $contracts) {
+            $candidates = if ($contract.ContainsKey('paths')) { @($contract.paths) } else { @($contract.path) }
+            $present = @($candidates | Where-Object { Test-Path -LiteralPath (Join-Path $engine.Root $_) -PathType Leaf })
+            if ($present.Count -ne 1) { throw 'Installed detail API source is missing or ambiguous.' }
+            $header = $present[0]
+            $path = Join-Path $engine.Root $header
+            $source = Get-Content -LiteralPath $path -Raw
+            foreach ($symbol in $contract.symbols) {
+              if ($source -notmatch ('\b' + [regex]::Escape($symbol) + '\b')) { throw "Installed detail API source lacks $symbol" }
+            }
+            $evidence += [ordered]@{ header = $header; sha256 = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant(); verified_symbols = $contract.symbols }
+          }
+          [ordered]@{
+            status = 'INSTALLED_PRIMARY_API_SOURCE_VERIFIED'
+            exact_sha = $env:YACS_CLIFF_VISUAL_EXPECTED_SHA
+            engine_version = $engine.Version
+            build_version_sha256 = $engine.BuildVersionSha256
+            headers = $evidence
+          } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $env:YACS_DETAIL_PROOF_ROOT 'native-api-evidence.json') -Encoding UTF8
+
+      - name: Build exact native detail head and run scoped Automation once
+        shell: pwsh
+        working-directory: _phase2c-pcgex-cliff
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $bootstrapReport = Join-Path $env:YACS_DETAIL_PROOF_ROOT 'pcgex-bootstrap.json'
+          ./scripts/worldgen/Bootstrap-YacsPcgEx.ps1 -Mode Install -ReportPath $bootstrapReport
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned PCGEx dependency bootstrap failed.' }
+          $bootstrap = Get-Content -LiteralPath $bootstrapReport -Raw | ConvertFrom-Json
+          if ($bootstrap.status -ne 'PASS' -or $bootstrap.actual_commit -ne '39a8f1bdc65b2c4613a1e87b71d93b4576db0a66') {
+            throw 'Pinned PCGEx dependency source changed.'
+          }
+          # Checkout is detached at the verified event SHA; the event branch was checked above.
+          ./scripts/ci/Invoke-YacsUnrealCi.ps1 -ExpectedHead $env:YACS_CLIFF_VISUAL_EXPECTED_SHA -ExpectedBranch 'HEAD' -TestFilter 'CyclingSession+CyclingPhysics+CyclingInput+YACS.DetailNative' -ArtifactRoot (Join-Path $env:YACS_DETAIL_PROOF_ROOT 'build-automation')
+          if ($LASTEXITCODE -ne 0) { throw 'Exact-head native detail build or scoped Automation failed.' }
+          $automation = Get-Content -LiteralPath (Join-Path $env:YACS_DETAIL_PROOF_ROOT 'build-automation/Proof/AutomationReport/index.json') -Raw | ConvertFrom-Json
+          $detailTests = @($automation.tests | Where-Object { $_.fullTestPath -like 'YACS.DetailNative.*' })
+          if ($detailTests.Count -eq 0 -or @($detailTests | Where-Object { $_.state -notmatch '^(Success|Pass)' }).Count -gt 0) {
+            throw 'Native detail Automation tests were absent or did not pass.'
+          }
+
+      - name: Capture only the two annotated cameras on native v8
+        shell: pwsh
+        working-directory: _phase2c-pcgex-cliff
+        run: |
+          $ErrorActionPreference = 'Stop'
+          . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
+          $project = Join-Path (Get-Location) 'YetAnotherCyclingSim.uproject'
+          $engine = Resolve-YacsUnrealEngine -ProjectPath $project
+          $script = (Resolve-Path 'scripts/ue/capture_sa_calobra_component230_cliff.py').Path
+          $env:YACS_TERRAIN_EROSION_TRIAL = '1'
+          $env:YACS_TERRAIN_MESH_TRIAL = '1'
+          foreach ($name in @('YACS_CLIFF_PCGEX_MESH', 'YACS_CLIFF_PAIRED_CUSTOM_OUTPUT', 'YACS_SA_CALOBRA_TPP_SURVEY', 'YACS_LANDSCAPE_MESH_DIAGNOSTIC', 'YACS_LOCAL_CLIFF_SMOOTHING')) {
+            Remove-Item "Env:$name" -ErrorAction SilentlyContinue
+          }
+          $stdout = Join-Path $env:YACS_DETAIL_PROOF_ROOT 'native-detail.stdout.log'
+          $stderr = Join-Path $env:YACS_DETAIL_PROOF_ROOT 'native-detail.stderr.log'
+          $log = Join-Path $env:YACS_DETAIL_PROOF_ROOT 'native-detail.engine.log'
+          $arguments = @(
+            ('"' + $project + '"'), ('-ExecutePythonScript="' + $script + '"'),
+            '-RenderOffscreen', '-Unattended', '-NoPause', '-NoSplash', '-NoSound',
+            '-NoP4', '-NoVSync', '-Deterministic', '-ScriptErrorsAreFatal', '-stdout',
+            ('-AbsLog="' + $log + '"')
+          )
+          $process = Start-Process -FilePath $engine.UnrealEditorPath -ArgumentList $arguments -PassThru -NoNewWindow -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          if (-not $process.WaitForExit(900000)) {
+            try { $process | Stop-Process -Force } catch { }
+            throw 'Native detail capture timed out.'
+          }
+          if ($process.ExitCode -ne 0) {
+            foreach ($diagnostic in @($stdout, $stderr, $log)) {
+              if (Test-Path -LiteralPath $diagnostic -PathType Leaf) { Get-Content -LiteralPath $diagnostic -Tail 160 | Write-Host }
+            }
+            throw "Native detail capture exited $($process.ExitCode)."
+          }
+          foreach ($diagnostic in @($stdout, $stderr, $log)) {
+            if (-not (Test-Path -LiteralPath $diagnostic -PathType Leaf)) { throw 'Native detail process diagnostics are missing.' }
+            $fallback = @(Select-String -LiteralPath $diagnostic -Pattern @(
+              'Texture Sample > Missing input texture', 'Default Material will be used',
+              "LoadErrors: Error:.*'/Game/Worlds/SaCalobra/Checkpoint",
+              "LoadErrors: Error:.*'/Game/Generated/YACS/MaskReview/",
+              "LoadErrors: Error:.*'/Game/Generated/YACS/TextureMaterialPrep/"
+            ))
+            if ($fallback.Count -gt 0) { $fallback | Write-Host; throw 'Native detail detected missing scene dependencies or material fallback.' }
+          }
+          $parentReceipt = Get-Content -LiteralPath (Join-Path $env:YACS_CLIFF_VISUAL_OUTPUT 'component230-cliff-visual-receipt.json') -Raw | ConvertFrom-Json
+          if ($parentReceipt.status -ne 'COMPONENT230_CLIFF_VISUAL_PASS' -or $parentReceipt.exact_sha -ne $env:YACS_CLIFF_VISUAL_EXPECTED_SHA -or
+              $parentReceipt.map_saved -ne $false -or $parentReceipt.assets_saved -ne $false -or
+              $parentReceipt.canonical_landscape_mutation -ne $false -or $parentReceipt.selector_policy_mutation -ne $false -or
+              $parentReceipt.terrain_erosion_trial.restored -ne $true -or $parentReceipt.terrain_erosion_trial.source_heightfield_unchanged -ne $true -or
+              $parentReceipt.terrain_erosion_trial.terrain_import_performed -ne $false -or $parentReceipt.terrain_erosion_trial.derived_heightfield_modified -ne $false -or
+              $parentReceipt.terrain_erosion_trial.mesh_export.shape_profile -ne 'rounded-limestone-reshape-v8') {
+            throw 'Native detail parent restoration receipt failed.'
+          }
+
+      - name: Verify ten primary frames, visibility and trial restoration
+        shell: pwsh
+        working-directory: _phase2c-pcgex-cliff
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $verify = @'
+          import hashlib, json, math, os, re, struct
+          from pathlib import Path, PurePosixPath
+          from scripts.proof.retain_sa_calobra_tpp_survey import no_link, read_json
+          def require(condition, message):
+              if not condition:
+                  raise ValueError(message)
+          def verify_rendered_inputs(bundle, report):
+              paths = {"source": ("source/combined-mesh.json", 16 * 1024 * 1024),
+                       "mask": ("pilot/triangle-bands.json", 4 * 1024 * 1024),
+                       "pilot": ("pilot/manifest.json", 1024 * 1024),
+                       "trial": ("treatment/treatment-mesh.json", 16 * 1024 * 1024),
+                       "manifest": ("treatment/treatment-manifest.json", 1024 * 1024)}
+              payloads, hashes = {}, {}
+              for name, (relative, limit) in paths.items():
+                  path = bundle / relative
+                  no_link(path)
+                  require(path.is_file() and 0 < path.stat().st_size <= limit, "Invalid bounded rendered input: " + name)
+                  with path.open("rb") as stream:
+                      payloads[name] = stream.read(limit + 1)
+                  require(0 < len(payloads[name]) <= limit, "Oversized rendered input: " + name)
+                  hashes[name] = hashlib.sha256(payloads[name]).hexdigest()
+              require(hashes == report.get("inputs_sha256"), "Rendered input hash binding failed")
+              manifest = json.loads(payloads["manifest"].decode("utf-8-sig"))
+              require(manifest.get("status") == "BOUNDED_DETAIL_TRIAL_PREPARED"
+                      and manifest.get("source_mesh_sha256") == hashes["source"]
+                      and manifest.get("mask_sha256") == hashes["mask"]
+                      and manifest.get("trial_mesh_sha256") == hashes["trial"]
+                      and manifest.get("trial_mesh_path") == "treatment-mesh.json", "Treatment manifest payload binding failed")
+              native_source = report.get("native_source", {})
+              require(native_source.get("source_mesh_sha256") == hashes["source"], "Native source does not match rendered source bytes")
+              for key in ("vertex_count", "triangle_count", "protected_face_count", "selected_face_count", "changed_vertex_count"):
+                  value, actual = manifest.get(key), native_source.get(key)
+                  require(type(value) is int and value > 0 and type(actual) in (int, float)
+                          and actual == value, "Native and treatment counts disagree: " + key)
+              for list_key, count_key, bound_key in (("selected_face_indices", "selected_face_count", "triangle_count"),
+                                                     ("changed_vertex_ids", "changed_vertex_count", "vertex_count")):
+                  values = manifest.get(list_key)
+                  require(isinstance(values, list) and len(values) == manifest[count_key]
+                          and all(type(value) is int and 0 <= value < manifest[bound_key] for value in values)
+                          and len(set(values)) == len(values), "Treatment identity count or range failed: " + list_key)
+              tolerance = 0.000001
+              require(manifest.get("bounds") == {"max_added_displacement_cm": 5.0,
+                                                 "max_total_source_displacement_cm": 50.0,
+                                                 "floating_point_tolerance_cm": tolerance}, "Treatment displacement bounds changed")
+              metrics = (("max_additional_displacement_cm", "max_added_displacement_cm", 5.0),
+                         ("max_source_displacement_cm", "max_total_source_displacement_cm", 50.0))
+              for native_key, manifest_key, ceiling in metrics:
+                  actual, expected = native_source.get(native_key), manifest.get(manifest_key)
+                  require(all(type(value) in (int, float) and math.isfinite(value)
+                              and 0 <= value <= ceiling + tolerance for value in (actual, expected))
+                          and abs(actual - expected) <= tolerance, "Native and treatment displacement evidence failed: " + native_key)
+              return dict(inputs_sha256=hashes, selected_face_count=manifest["selected_face_count"],
+                          changed_vertex_count=manifest["changed_vertex_count"],
+                          max_added_displacement_cm=manifest["max_added_displacement_cm"],
+                          max_total_source_displacement_cm=manifest["max_total_source_displacement_cm"])
+          root = Path(os.environ["YACS_DETAIL_PROOF_ROOT"])
+          native = Path(os.environ["YACS_CLIFF_VISUAL_OUTPUT"]) / "detail-native"
+          report = read_json(native / "detail-native-receipt.json")
+          require(report.get("status") == "DETAIL_NATIVE_CAPTURE_PASS"
+                  and report.get("exact_sha") == os.environ["YACS_CLIFF_VISUAL_EXPECTED_SHA"]
+                  and report.get("error") is None, "Exact-head native detail receipt must pass")
+          require(report.get("native_source", {}).get("status") == "DETAIL_NATIVE_SOURCE_VERIFIED", "Native v8 geometry and attribute binding must be verified")
+          require(report.get("cleanup", {}).get("status") == "RESTORED", "Native mesh material, position and attribute restoration is required")
+          rendered_inputs = verify_rendered_inputs(Path(os.environ["YACS_DETAIL_NATIVE"]), report)
+          trial = report.get("trial", {})
+          require(trial.get("applied") is True
+                  and trial.get("visibility_before_trial") == "VISIBLE_IN_CAPTURED_SCENE"
+                  and trial.get("witness_receipt_file") == "visibility-witness.json"
+                  and re.fullmatch(r"[a-f0-9]{64}", trial.get("witness_receipt_sha256", "")), "Trial must follow its recorded native visibility witness")
+          visibility = report.get("visibility", {})
+          require(visibility.get("status") == "VISIBLE_IN_CAPTURED_SCENE"
+                  and visibility.get("min_required_pixels") == 8, "Native scene visibility gate must retain its admitted threshold")
+          ids = ["window-0021-forward-00005", "window-0023-forward-00000"]
+          visible = visibility.get("frames", [])
+          require(len(visible) == 2 and {row["frame_id"] for row in visible} == set(ids)
+                  and any(row["corroborated_pixels"] >= 8 for row in visible), "Trial patch has no corroborated scene pixels at the two fixed poses")
+          pilot = read_json(Path(os.environ["YACS_DETAIL_NATIVE"]) / "pilot/manifest.json")
+          poses = {row["frame_id"]: row for row in pilot["frames"]}
+          modes = ("baseline", "mask", "patch-magenta", "patch-cyan", "trial")
+          captures = report.get("captures", [])
+          require(len(captures) == 10, "Exactly ten primary frames are required")
+          require({(row["frame_id"], row["mode"]) for row in captures} == {(fid, mode) for fid in ids for mode in modes}, "Missing or duplicate native frame/mode")
+          witness_path = native / "visibility-witness.json"
+          witness = read_json(witness_path)
+          require(hashlib.sha256(witness_path.read_bytes()).hexdigest() == trial["witness_receipt_sha256"]
+                  and witness.get("exact_sha") == report["exact_sha"]
+                  and witness.get("status") == "VISIBLE_IN_CAPTURED_SCENE"
+                  and witness.get("trial_applied") is False
+                  and witness.get("inputs_sha256") == report.get("inputs_sha256")
+                  and witness.get("visibility") == visibility
+                  and witness.get("paired_captures") == [row for row in captures if row["mode"] in ("patch-magenta", "patch-cyan")],
+                  "Pre-treatment visibility witness hash or paired capture binding failed")
+          mapping_name = report["native_source"].get("source_row_map_file")
+          require(mapping_name == "source-row-native-triangle-map.json", "Missing explicit source-row to native-triangle mapping")
+          mapping_path = native / mapping_name
+          mapping = read_json(mapping_path)
+          require(hashlib.sha256(mapping_path.read_bytes()).hexdigest() == report["native_source"]["source_row_map_sha256"]
+                  and len(mapping) == 58216 and len(set(mapping)) == 58216
+                  and all(type(index) is int and index >= 0 for index in mapping), "Native triangle identity mapping failed")
+          by_key = {(row["frame_id"], row["mode"]): row for row in captures}
+          for row in visible:
+              pixels_name = row["frame_id"] + "-visible-pixels.json"
+              require(row.get("pixel_indices_file") == pixels_name
+                      and row.get("pair_pose_and_view_identical") is True
+                      and row["magenta_sha256"] == by_key[row["frame_id"], "patch-magenta"]["sha256"]
+                      and row["cyan_sha256"] == by_key[row["frame_id"], "patch-cyan"]["sha256"], "Pixel witness is not bound to its captured pair")
+              pixels_path = native / pixels_name
+              pixels = read_json(pixels_path)
+              require(hashlib.sha256(pixels_path.read_bytes()).hexdigest() == row["pixel_indices_sha256"]
+                      and len(pixels) == row["corroborated_pixels"] and len(set(pixels)) == len(pixels)
+                      and len(pixels) <= row["projected_candidate_pixels"]
+                      and all(type(index) is int and 0 <= index < 1280 * 720 for index in pixels), "Native pixel witness inventory failed")
+          files, inventory = set(), []
+          def same_vector(actual, expected):
+              return len(actual) == 3 and all(math.isfinite(float(a)) and abs(float(a) - float(b)) <= 0.001 for a, b in zip(actual, expected))
+          for row in captures:
+              name = row["file"]
+              path = PurePosixPath(name)
+              require(path.parts[:1] == ("frames",) and len(path.parts) == 2
+                      and path.suffix == ".png" and "\\" not in name and ":" not in name
+                      and name not in files, "Unsafe or duplicate primary frame path")
+              files.add(name)
+              image = native / name
+              no_link(image)
+              require(image.is_file() and 0 < image.stat().st_size < 32 * 1024 * 1024, "Invalid bounded native PNG")
+              data = image.read_bytes()
+              require(hashlib.sha256(data).hexdigest() == row["sha256"], "Native frame hash mismatch")
+              require(data[:8] == b"\x89PNG\r\n\x1a\n" and struct.unpack(">II", data[16:24]) == (1280, 720)
+                      and (row["width_px"], row["height_px"]) == (1280, 720), "Native frame dimensions mismatch")
+              pose = poses[row["frame_id"]]
+              require(same_vector(row["camera_location_cm"], pose["camera"])
+                      and same_vector(row["target_cm"], pose["target"])
+                      and abs(row["fov_deg"] - pose["fov"]) <= 0.000001, "Native camera drifted from its captured pose")
+              readiness = row["readiness"]
+              readiness_name = "readiness/" + row["frame_id"] + "-" + row["mode"] + "/capture-readiness.json"
+              require(readiness.get("status") == "NATIVE_LOADING_AND_MIPS_READY"
+                      and readiness.get("file") == readiness_name, "Missing native camera loading and mip readiness")
+              readiness_path = native / readiness_name
+              ready = read_json(readiness_path)
+              require(hashlib.sha256(readiness_path.read_bytes()).hexdigest() == readiness["sha256"]
+                      and ready.get("status") == "NATIVE_LOADING_AND_MIPS_READY"
+                      and ready.get("native_loading_barrier_completed") is True
+                      and ready.get("saved_to_map") is False and ready.get("height_edits_applied") is False,
+                      "Native loading receipt hash or preservation contract failed")
+              inventory.append(dict(file=name, sha256=row["sha256"], size_bytes=len(data), frame_id=row["frame_id"], mode=row["mode"]))
+          require({p.relative_to(native).as_posix() for p in (native / "frames").iterdir()} == files, "Unlisted primary frame output")
+          receipt = dict(status="NATIVE_DETAIL_EVIDENCE_VERIFIED", exact_sha=report["exact_sha"],
+                         primary_frame_count=10, frames=inventory, source_verification="checkout-restoration.json",
+                         rendered_inputs=rendered_inputs,
+                         performance_acceptance="NOT_MEASURED", visual_acceptance="PENDING_OWNER")
+          (root / "native-proof-verification.json").write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
+          '@
+          $verify | python -
+          if ($LASTEXITCODE -ne 0) { throw 'Native detail frame, visibility, camera or restoration verification failed.' }
+
+      - name: Verify retained source and checkout are unchanged
+        if: ${{ always() && env.YACS_DETAIL_PROOF_ROOT != '' }}
+        shell: pwsh
+        working-directory: _phase2c-pcgex-cliff
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tracked = @(git status --porcelain=v1 --untracked-files=no)
+          if ($LASTEXITCODE -ne 0) { throw 'Could not inspect detail proof checkout.' }
+          $actual = (git rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0 -or $actual -ne $env:YACS_CLIFF_VISUAL_EXPECTED_SHA) { throw 'Native detail checkout HEAD drifted.' }
+          $sourceReceiptPath = Join-Path $env:YACS_DETAIL_PROOF_ROOT 'source-input-verification.json'
+          $sourceVerified = $false
+          if (Test-Path -LiteralPath $sourceReceiptPath -PathType Leaf) {
+            $binding = Get-Content -LiteralPath $sourceReceiptPath -Raw | ConvertFrom-Json
+            foreach ($file in $binding.source_files) {
+              $path = Join-Path $binding.source_root $file.path
+              if ((Get-Item -LiteralPath $path).Length -ne $file.size_bytes -or
+                  (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $file.sha256) {
+                throw 'Immutable source evidence changed during native detail proof.'
+              }
+            }
+            $sourceVerified = $true
+          }
+          [ordered]@{
+            schema_version = 1
+            exact_sha = $env:YACS_CLIFF_VISUAL_EXPECTED_SHA
+            status = $(if ($tracked.Count -eq 0 -and $sourceVerified) { 'PASS' } else { 'FAIL' })
+            tracked_changes = $tracked
+            retained_source_unchanged = $sourceVerified
+          } | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $env:YACS_DETAIL_PROOF_ROOT 'checkout-restoration.json') -Encoding UTF8
+          if ($tracked.Count -gt 0) { throw "Native detail mutated tracked files: $($tracked -join '; ')" }
+          if (-not $sourceVerified) { throw 'Native detail retained source binding was never verified.' }
+
+      - name: Upload compact native detail frames and proof receipts
+        if: ${{ always() && env.YACS_DETAIL_PROOF_ROOT != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: component230-detail-native-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ env.YACS_DETAIL_PROOF_ROOT }}/capture/detail-native/frames/
+            ${{ env.YACS_DETAIL_PROOF_ROOT }}/capture/detail-native/*.json
+            ${{ env.YACS_DETAIL_PROOF_ROOT }}/capture/detail-native/readiness/**/capture-readiness.json
+            ${{ env.YACS_DETAIL_PROOF_ROOT }}/capture/component230-cliff-visual-receipt.json
+            ${{ env.YACS_DETAIL_PROOF_ROOT }}/input/treatment/
+            ${{ env.YACS_DETAIL_PROOF_ROOT }}/input/pilot/triangle-bands.json
+            ${{ env.YACS_DETAIL_PROOF_ROOT }}/input/pilot/manifest.json
+            ${{ env.YACS_DETAIL_PROOF_ROOT }}/source-input-verification.json
+            ${{ env.YACS_DETAIL_PROOF_ROOT }}/native-api-evidence.json
+            ${{ env.YACS_DETAIL_PROOF_ROOT }}/native-proof-verification.json
+            ${{ env.YACS_DETAIL_PROOF_ROOT }}/checkout-restoration.json
+            ${{ env.YACS_DETAIL_PROOF_ROOT }}/pcgex-bootstrap.json
+            ${{ env.YACS_DETAIL_PROOF_ROOT }}/native-detail.*.log
+            ${{ env.YACS_DETAIL_PROOF_ROOT }}/build-automation/unreal_ci_summary.json
+            ${{ env.YACS_DETAIL_PROOF_ROOT }}/build-automation/failure_context.txt
+            ${{ env.YACS_DETAIL_PROOF_ROOT }}/build-automation/Proof/summary.json
+            ${{ env.YACS_DETAIL_PROOF_ROOT }}/build-automation/Proof/build_editor.log
+            ${{ env.YACS_DETAIL_PROOF_ROOT }}/build-automation/Proof/automation_run.log
+            ${{ env.YACS_DETAIL_PROOF_ROOT }}/build-automation/Proof/AutomationReport/index.json
+          if-no-files-found: error
+          retention-days: 90
+
   phase2c:
     if: >-
+      !(github.event_name == 'push' && contains(github.event.head_commit.message, '[detail-native]')) &&
       !(github.event_name == 'push' && contains(github.event.head_commit.message, '[detail-pilot]')) &&
       !(github.event_name == 'workflow_dispatch' && inputs.tpp_survey) &&
       !(github.event_name == 'push' && contains(github.event.head_commit.message, '[tpp-survey]')) &&
@@ -707,7 +1285,8 @@ jobs:
     name: Frozen-road bidirectional TPP survey (accepted v8)
     if: >-
       (github.event_name == 'workflow_dispatch' && inputs.tpp_survey) ||
-      (github.event_name == 'push' && contains(github.event.head_commit.message, '[tpp-survey]'))
+      (github.event_name == 'push' && contains(github.event.head_commit.message, '[tpp-survey]') &&
+       !contains(github.event.head_commit.message, '[detail-native]'))
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 120
 
@@ -1237,6 +1816,7 @@ jobs:
     if: >-
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[tpp-retain]') &&
+      !contains(github.event.head_commit.message, '[detail-native]') &&
       !contains(github.event.head_commit.message, '[tpp-survey]') &&
       !contains(github.event.head_commit.message, '[tpp-docs]')
     runs-on: [self-hosted, yacs-ue58]
@@ -1331,6 +1911,7 @@ jobs:
       github.actor == 'karnalooch' &&
       github.ref == 'refs/heads/feat/phase2c-pcgex-cliff-topology' &&
       contains(github.event.head_commit.message, '[tpp-docs]') &&
+      !contains(github.event.head_commit.message, '[detail-native]') &&
       !contains(github.event.head_commit.message, '[tpp-survey]') &&
       !contains(github.event.head_commit.message, '[tpp-retain]')
     runs-on: [self-hosted, yacs-ue58]

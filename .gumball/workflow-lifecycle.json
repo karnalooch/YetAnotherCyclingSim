@@ -159,7 +159,7 @@
     {
       "file": "sa-calobra-cliff-component230-pcgex.yml",
       "state": "CURRENT",
-      "reason": "Issue #445 Phase 2C exact-SHA PCGEx Component_230 cliff-topology A/B proof; pins PCGEx 0.79, proves two-run mesh determinism, real limestone material integrity, custom-vs-PCGEx Lit/Lighting-Only metrics, topology density/performance, no collision, and no canonical map/asset mutation."
+      "reason": "Issue #445 Phase 2C exact-SHA PCGEx Component_230 cliff-topology A/B proof; pins PCGEx 0.79, proves two-run mesh determinism, real limestone material integrity, custom-vs-PCGEx Lit/Lighting-Only metrics, topology density/performance, no collision, and no canonical map/asset mutation. Explicit owner-only detail-native pushes use two fixed captured cameras and verified retained v8 inputs for a reversible mask/visibility/bounded-patch proof, with compact evidence and no full topology or survey rerun."
     },
     {
       "file": "sa-calobra-cliff-erosion-proof.yml",
