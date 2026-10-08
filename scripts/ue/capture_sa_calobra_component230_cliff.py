@@ -1172,7 +1172,7 @@ def _spawn_terrain_erosion_trial():
     for name, data in (("source", _terrain_source), ("candidate", candidate), ("erosion", erosion)):
         (OUTPUT / ("terrain-" + name + ".json")).write_text(json.dumps(data), encoding="utf-8")
     actor = library.create_component230_terrain_trial(
-        _target_component, json.dumps(candidate), json.dumps(_plan)
+        _target_component, json.dumps(candidate), json.dumps(dict(_plan, terrain_rounding_domain=TERRAIN_MESH_TRIAL))
     )
     if actor is None:
         raise RuntimeError("Native derived Landscape import or height readback failed")

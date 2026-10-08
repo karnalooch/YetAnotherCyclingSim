@@ -63,6 +63,20 @@ ALandscape* UYacsLandscapeMeshDiagnosticLibrary::CreateComponent230TerrainTrial(
     const TArray<TSharedPtr<FJsonValue>>* Cells = nullptr;
     if (!Candidate->TryGetArrayField(TEXT("heights"), Values) || Values->Num() != TrialSize * TrialSize ||
         !Plan->TryGetArrayField(TEXT("skin_cells"), Cells) || Cells->Num() != 1017) { return nullptr; }
+    const bool bRoundingDomain = Plan->HasField(TEXT("terrain_rounding_domain")) &&
+        Plan->GetBoolField(TEXT("terrain_rounding_domain"));
+    if (bRoundingDomain)
+    {
+        const TSharedPtr<FJsonObject>* Contract = nullptr;
+        if (!Plan->TryGetObjectField(TEXT("rounding_domain_contract"), Contract) ||
+            (*Contract)->GetStringField(TEXT("method")) != TEXT("source-cliff-six-metre-crown-apron-v1") ||
+            (*Contract)->GetNumberField(TEXT("radius_m")) != 6 ||
+            !(*Contract)->GetBoolField(TEXT("classifier_unchanged")) ||
+            (*Contract)->GetNumberField(TEXT("hard_protected_samples")) != 0 ||
+            !Plan->TryGetArrayField(TEXT("rounding_cells"), Cells) ||
+            Cells->Num() < 1017 || Cells->Num() > 3969 ||
+            (*Contract)->GetNumberField(TEXT("cell_count")) != Cells->Num()) { return nullptr; }
+    }
     TSet<FIntPoint> Allowed;
     for (const auto& Value : *Cells)
     {
@@ -76,7 +90,23 @@ ALandscape* UYacsLandscapeMeshDiagnosticLibrary::CreateComponent230TerrainTrial(
         for (int32 R = int32(R0); R < int32(R1); ++R)
             for (int32 C = int32(C0); C < int32(C1); ++C) { Allowed.Add(FIntPoint(C, R)); }
     }
-    if (Allowed.Num() != 4068) { return nullptr; }
+    if (Allowed.Num() != Cells->Num() * 4) { return nullptr; }
+    if (bRoundingDomain)
+    {
+        // Crown movement is a separate presentation domain, not a replacement
+        // for the original cliff selector. It must contain every original cell.
+        const auto& OriginalCells = Plan->GetArrayField(TEXT("skin_cells"));
+        for (const auto& Value : OriginalCells)
+        {
+            const auto Cell = Value->AsObject();
+            if (!Cell.IsValid()) { return nullptr; }
+            const int32 R0 = int32(Cell->GetNumberField(TEXT("row0")));
+            const int32 C0 = int32(Cell->GetNumberField(TEXT("col0")));
+            for (int32 R = R0; R < R0 + 2; ++R)
+                for (int32 C = C0; C < C0 + 2; ++C)
+                    if (!Allowed.Contains(FIntPoint(C, R))) { return nullptr; }
+        }
+    }
     FLandscapeComponentDataInterface Source(Component, 0, false);
     const double Unit = Component->GetComponentTransform().GetScale3D().Z / 128.0;
     TArray<uint16> Heights;
