@@ -715,3 +715,12 @@ are required; no visual PASS follows from bounded displacement alone.
 
 API references: [Epic native heightfield access](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Landscape/FLandscapeComponentDataInterface)
 and [Epic native Landscape import](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Landscape/ALandscapeProxy).
+
+The first runtime trial at `c19b500a` built successfully and produced a bounded
+2,333-sample correction (98.9837 cm maximum, conserved height sum, no fixed
+samples changed). Native import was rejected by its immediate readback before
+candidate capture. UE 5.8 registration automatically enables edit layers; the
+import path now completes `ForceLayersFullUpdate`, as the existing terrain
+import commandlet does, before validating the composite heights and world
+positions. Failed readbacks log actual and expected values. The original
+heightfield and scene were restored; this failed trial is not visual evidence.

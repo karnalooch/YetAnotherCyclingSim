@@ -122,6 +122,9 @@ ALandscape* UYacsLandscapeMeshDiagnosticLibrary::CreateComponent230TerrainTrial(
         TArrayView<const FLandscapeLayer>());
     Trial->RegisterAllComponents();
     Trial->PostEditChange();
+    // UE 5.8 automatically creates edit layers at registration. Complete their
+    // composite/readback before checking the imported native height samples.
+    Trial->ForceLayersFullUpdate();
     Trial->SetActorEnableCollision(false);
     if (Trial->LandscapeComponents.Num() != 1) { Trial->Destroy(); return nullptr; }
     ULandscapeComponent* Result = Trial->LandscapeComponents[0];
@@ -137,7 +140,13 @@ ALandscape* UYacsLandscapeMeshDiagnosticLibrary::CreateComponent230TerrainTrial(
             Expected.Z += (int32(Heights[Index]) - int32(Source.GetHeight(X, Y))) * Unit;
             if (Actual.GetHeight(X, Y) != Heights[Index] ||
                 FVector::Distance(Actual.GetWorldVertex(X, Y), Expected) > 0.01)
-            { Trial->Destroy(); return nullptr; }
+            {
+                UE_LOG(LogTemp, Error, TEXT("YACS terrain trial readback (%d,%d): height %u expected %u, world %s expected %s"),
+                    X, Y, uint32(Actual.GetHeight(X, Y)), uint32(Heights[Index]),
+                    *Actual.GetWorldVertex(X, Y).ToString(), *Expected.ToString());
+                Trial->Destroy();
+                return nullptr;
+            }
         }
     }
     return Trial;
