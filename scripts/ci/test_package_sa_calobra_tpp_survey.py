@@ -92,7 +92,8 @@ class SurveyPackageTests(unittest.TestCase):
                             }
                         ],
                     }
-                )
+                ),
+                encoding="utf-8",
             )
             frame.update(
                 sha256=digest(path),
@@ -138,27 +139,31 @@ class SurveyPackageTests(unittest.TestCase):
         self.assertEqual(receipt["pair_count"], len(pairs))
         self.assertEqual({path: digest(path) for path in primary}, primary)
         output = self.root / "review"
-        document = (output / "index.html").read_text()
+        document = (output / "index.html").read_text(encoding="utf-8")
         self.assertIn("750 ms", document)
         for frame in report["frames"]:
             self.assertIn(f'href="../{frame["file"]}"', document)
             self.assertIn('coords="', document)
-        with (output / "surface-review-template.csv").open(newline="") as source:
+        with (output / "surface-review-template.csv").open(
+            encoding="utf-8", newline=""
+        ) as source:
             rows = list(csv.DictReader(source))
         self.assertEqual(len(rows), len(pairs))
         self.assertEqual({row["review_status"] for row in rows}, {"UNREVIEWED"})
         self.assertEqual({row["surface_priority"] for row in rows}, {"UNASSIGNED"})
         self.assertTrue(all(row["visible_duration_s"] == "" for row in rows))
-        svg = (output / "route.svg").read_text()
+        svg = (output / "route.svg").read_text(encoding="utf-8")
         self.assertIn("stroke-dasharray", svg)
         self.assertIn("no connecting road proved", svg)
         self.assertIn("#39a5ff", svg)
         self.assertIn("#ffb454", svg)
         self.assertIn(
             "source_scene",
-            json.loads((output / "package-verification.json").read_text()),
+            json.loads(
+                (output / "package-verification.json").read_text(encoding="utf-8")
+            ),
         )
-        with (output / "frames.csv").open(newline="") as source:
+        with (output / "frames.csv").open(encoding="utf-8", newline="") as source:
             rows = list(csv.DictReader(source))
         self.assertEqual(len(rows), report["frame_count"])
         self.assertEqual(
@@ -179,8 +184,8 @@ class SurveyPackageTests(unittest.TestCase):
     ):
         package(self.root, SHA)
         output = self.root / "review"
-        document = (output / "index.html").read_text()
-        guide = (output / "review-guide.txt").read_text()
+        document = (output / "index.html").read_text(encoding="utf-8")
+        guide = (output / "review-guide.txt").read_text(encoding="utf-8")
         for tag in (
             "GEO_FIX",
             "SILHOUETTE_CRITICAL",
@@ -199,7 +204,9 @@ class SurveyPackageTests(unittest.TestCase):
             self.assertIn("oryginalnego PNG", text)
         self.assertIn("nie wykluczają się", document)
         self.assertIn("nie uruchamiają automatycznych zmian", document)
-        with (output / "surface-review-template.csv").open(newline="") as source:
+        with (output / "surface-review-template.csv").open(
+            encoding="utf-8", newline=""
+        ) as source:
             rows = list(csv.DictReader(source))
         self.assertTrue(rows)
         for row in rows:
@@ -287,12 +294,19 @@ class SurveyPackageTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "unsafe frame path"):
                     validate(self.root, SHA)
         self.both(0, "file", original)
-        source = self.root / original
-        outside = Path(self.temp.name) / "outside.png"
-        source.replace(outside)
-        source.symlink_to(outside)
-        with self.assertRaisesRegex(ValueError, "symlink"):
-            validate(self.root, SHA)
+        validate(self.root, SHA)
+        with self.subTest(check="symlink escape"):
+            source = self.root / original
+            outside = Path(self.temp.name) / "outside.png"
+            source.replace(outside)
+            try:
+                source.symlink_to(outside)
+            except OSError as error:
+                if getattr(error, "winerror", None) == 1314:
+                    self.skipTest("Windows runner lacks the symlink creation privilege")
+                raise
+            with self.assertRaisesRegex(ValueError, "symlink"):
+                validate(self.root, SHA)
 
     def test_untracked_extra_screenshot_fails(self):
         Image.new("RGB", (1, 1)).save(self.root / "frames/stale.PNG")
@@ -325,9 +339,9 @@ class SurveyPackageTests(unittest.TestCase):
     def test_full_readiness_hash_and_residency_are_checked(self):
         readiness = self.report["frames"][0]["native_readiness"]
         path = self.root / readiness["receipt"]
-        full = json.loads(path.read_text())
+        full = json.loads(path.read_text(encoding="utf-8"))
         full["textures_after"][0]["resident_mips"] = 2
-        path.write_text(json.dumps(full))
+        path.write_text(json.dumps(full), encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "readiness receipt SHA256"):
             validate(self.root, SHA)
         readiness["sha256"] = digest(path)
@@ -351,10 +365,12 @@ class SurveyPackageTests(unittest.TestCase):
     def test_packager_retains_previous_human_review_notes(self):
         package(self.root, SHA)
         notes = self.root / "review/surface-review-template.csv"
-        notes.write_text("owner decisions retained\n")
+        notes.write_text("owner decisions retained\n", encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "already exists"):
             package(self.root, SHA)
-        self.assertEqual(notes.read_text(), "owner decisions retained\n")
+        self.assertEqual(
+            notes.read_text(encoding="utf-8"), "owner decisions retained\n"
+        )
 
 
 if __name__ == "__main__":
