@@ -496,3 +496,14 @@ and area/angle weighting. It rebuilds normal sharing from the edited geometry
 instead of inheriting native export overlay boundaries. This is not a shadow-bias
 change or a material workaround. Render comparison must establish whether the
 hypothesized smooth-normal mismatch actually contributes to the artifacts.
+
+At `c21e9ea7` the 60-degree crease experiment retained identical geometry evidence
+(`d13336c32350e65ff38ac7ca7e531725043e765d4d4a85b2b7175dac86d53711`)
+but visual review rejected it: large wedges remained and additional hard facets
+became visible. Ordinary CI passed; dedicated A/B remains failed. Restore the
+prior normal policy. Two additional diagnostic-only frames use per-face normals
+on the same mesh to distinguish interpolated-normal artifacts from geometric
+shadow boundaries. These frames are recorded separately, cannot replace the four
+admitted Lit/Lighting Only views and are not a proposed flat-shaded final terrain.
+Geometry, materials, light settings, shadow bias and all admission gates stay fixed.
+Light orientation is included in evidence to support reproducible diagnosis.

@@ -71,6 +71,7 @@ _target_component = None
 _camera = None
 _views = []
 _captures = []
+_diagnostic_captures = []
 _candidate_actors = []
 _transient_lights = []
 _transient_environment = []
@@ -264,6 +265,8 @@ def _ensure_lighting():
         shadow_state.append(
             {
                 "actor": light.get_path_name(),
+                "rotation": str(light.get_actor_rotation()),
+                "forward_vector": str(light.get_actor_forward_vector()),
                 "shadow_bias": float(
                     component.get_editor_property("shadow_bias")
                 ),
@@ -1032,21 +1035,7 @@ def _spawn_landscape_mesh_diagnostic():
             json.dumps(evidence, sort_keys=True, separators=(",", ":")), encoding="utf-8"
         )
         export["mesh_evidence_sha256"] = _digest(evidence_path)
-        # Diagnose smooth-normal/shadow mismatch without altering geometry or light.
-        # Rebuild sharing from actual dihedral angles instead of inherited export
-        # overlays; keep smooth shading within faces and split only sharp creases.
-        unreal.GeometryScript_Normals.compute_split_normals(
-            mesh,
-            unreal.GeometryScriptSplitNormalsOptions(
-                split_by_opening_angle=True,
-                opening_angle_deg=60.0,
-                split_by_face_group=False,
-            ),
-            unreal.GeometryScriptCalculateNormalsOptions(
-                angle_weighted=True, area_weighted=True
-            ),
-        )
-        export["normal_policy"] = "angle-weighted normals with 60-degree creases"
+        export["normal_policy"] = "native overlay recomputed after local smoothing"
         component.set_tangents_type(
             unreal.DynamicMeshComponentTangentsMode.AUTO_CALCULATED
         )
@@ -1315,6 +1304,7 @@ def _write_receipt(status: str, error: str | None):
         "hard_policy": None if _plan is None else _plan.get("hard_policy"),
         "mesh": _mesh_receipt,
         "captures": _captures,
+        "diagnostic_captures": _diagnostic_captures,
         "dynamic_shadows": True,
         "shadow_bias_changed": False,
         "capture_protocol": {
@@ -1391,6 +1381,16 @@ def schedule():
         modes[view["viewmode"]]
     )
     unreal.AutomationLibrary.finish_loading_before_screenshot()
+    if view.get("flat_normals"):
+        if not LOCAL_CLIFF_SMOOTHING or len(_candidate_actors) != 1:
+            raise RuntimeError("Flat-normal diagnostic requires the local single surface")
+        component = _candidate_actors[0].get_dynamic_mesh_component()
+        mesh = component.get_dynamic_mesh()
+        triangles_before = mesh.get_triangle_count()
+        unreal.GeometryScript_Normals.set_per_face_normals(mesh)
+        component.notify_mesh_modified()
+        if mesh.get_triangle_count() != triangles_before:
+            raise RuntimeError("Normal-only diagnostic changed triangle count")
     path = OUTPUT / (view["name"] + ".png")
     path.unlink(missing_ok=True)
     _task = unreal.AutomationLibrary.take_high_res_screenshot(
@@ -1432,7 +1432,8 @@ def tick(_delta):
             _index += 1
             schedule()
             return
-        _captures.append(
+        capture_list = _diagnostic_captures if view.get("diagnostic_only") else _captures
+        capture_list.append(
             {
                 "name": view["name"],
                 "candidate": view["candidate"],
@@ -1603,6 +1604,22 @@ def main():
             "viewmode": "lightingonly",
         },
     ]
+    if LOCAL_CLIFF_SMOOTHING:
+        _views.extend([
+            {
+                "name": "05-flat-normal-lit",
+                "candidate": True,
+                "viewmode": "lit",
+                "diagnostic_only": True,
+                "flat_normals": True,
+            },
+            {
+                "name": "06-flat-normal-lighting-only",
+                "candidate": True,
+                "viewmode": "lightingonly",
+                "diagnostic_only": True,
+            },
+        ])
     _mesh_receipt["lighting"] = lighting
     unreal.EditorPythonScripting.set_keep_python_script_alive(True)
     schedule()
