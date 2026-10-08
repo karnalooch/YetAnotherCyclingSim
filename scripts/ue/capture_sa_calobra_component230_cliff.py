@@ -1609,9 +1609,11 @@ def schedule():
     )
     unreal.AutomationLibrary.finish_loading_before_screenshot()
     if view.get("limestone_material"):
-        if not TERRAIN_MESH_TRIAL or len(_candidate_actors) != 1:
+        meshes = [actor for actor in _candidate_actors
+                  if isinstance(actor, unreal.DynamicMeshActor)]
+        if not TERRAIN_MESH_TRIAL or len(meshes) != 1:
             raise RuntimeError("Limestone material diagnostic requires one combined mesh")
-        component = _candidate_actors[0].get_dynamic_mesh_component()
+        component = meshes[0].get_dynamic_mesh_component()
         material = _load_surface_material(CLIFF_MATERIAL, "limestone")
         component.set_material(0, material)
         component.notify_mesh_modified()
