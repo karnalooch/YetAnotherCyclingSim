@@ -6,6 +6,7 @@ import ast
 import builtins
 import importlib
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -638,6 +639,143 @@ class BootstrapIsolationTests(unittest.TestCase):
         landscapes.append(object())
         with self.assertRaisesRegex(RuntimeError, "no Landscape"):
             prep.assert_isolated_bootstrap(api)
+
+
+class StartupMemoryTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.receipt = Path(self.temporary.name) / "startup-memory.json"
+        self.events = []
+        self.drain = {
+            "ok": True,
+            "remaining_before": 2,
+            "remaining_after": 0,
+            "shader_jobs_before": 3,
+            "shader_jobs_after": 0,
+            "shader_external_physical_before": 320000000,
+            "shader_external_physical_after": 12000000,
+            "shader_active_workers_before": 3,
+            "shader_active_workers_after": 0,
+        }
+
+        def native_drain():
+            self.events.append("native-drain")
+            return json.dumps(self.drain)
+
+        self.native_call = Mock(side_effect=native_drain)
+        api = SimpleNamespace(
+            MaterialEditingLibrary=SimpleNamespace(),
+            SystemLibrary=SimpleNamespace(get_engine_version=lambda: "5.8.2-56702186"),
+            YacsTextureAuditLibrary=SimpleNamespace(
+                drain_asset_compilation_and_collect_garbage=self.native_call
+            ),
+        )
+        for name in ("CameraPositionWS", "Distance", "Floor", "Frac", "Max"):
+            setattr(api, "MaterialExpression" + name, object())
+        name = "scripts.ue.build_sa_calobra_whole_map_master"
+        with patch.dict(sys.modules, {"unreal": api}):
+            self.builder = importlib.import_module(name)
+        self.addCleanup(lambda: sys.modules.pop(name, None))
+        self.world = {
+            "package": "/Engine/Maps/Entry",
+            "landscape_actor_count": 0,
+            "landscape_component_count": 0,
+            "isolated": True,
+        }
+        settings = patch.dict(
+            os.environ,
+            {
+                "YACS_WHOLE_MAP_MASTER_RECEIPT": str(
+                    self.receipt.with_name("master.json")
+                ),
+                "YACS_CLIFF_VISUAL_EXPECTED_SHA": "a" * 40,
+            },
+        )
+        settings.start()
+        self.addCleanup(settings.stop)
+
+    def mocks(self, after_physical):
+        measurements = iter(
+            [
+                {"free_physical": 7278485504, "free_commit": 56487071744},
+                {"free_physical": after_physical, "free_commit": 57000000000},
+            ]
+        )
+
+        def measure():
+            self.events.append("memory")
+            return next(measurements)
+
+        def collect():
+            self.events.append("python-gc")
+            return 7
+
+        def gate(*args, **kwargs):
+            self.events.append("gate")
+            return prep.memory_checkpoint(*args, **kwargs)
+
+        for target, name, side_effect in (
+            (self.builder, "available_memory", measure),
+            (self.builder.gc, "collect", collect),
+            (self.builder, "memory_checkpoint", gate),
+        ):
+            mock = patch.object(target, name, side_effect=side_effect)
+            mock.start()
+            self.addCleanup(mock.stop)
+
+    def test_cleanup_runs_once_before_unchanged_gate_and_retains_worker_evidence(self):
+        self.mocks(9 * 1024**3)
+        report = self.builder.reclaim_startup_memory(self.world)
+        self.assertEqual(
+            self.events, ["memory", "python-gc", "native-drain", "memory", "gate"]
+        )
+        self.assertEqual(report, json.loads(self.receipt.read_bytes()))
+        self.assertEqual(report["status"], "STARTUP_MEMORY_READY")
+        self.assertEqual(report["memory_checkpoint"]["minimum_free_physical_gib"], 8)
+        self.assertEqual(report["memory_checkpoint"]["minimum_free_commit_gib"], 12)
+        self.assertEqual(report["compile_drain"], self.drain)
+        self.assertEqual(report["python_collected"], 7)
+        self.assertEqual(report["python_gc_invocations"], 1)
+        self.assertEqual(report["native_drain_invocations"], 1)
+        self.assertEqual(
+            report["available_physical_delta_bytes"], 9 * 1024**3 - 7278485504
+        )
+        self.native_call.assert_called_once()
+
+    def test_insufficient_after_memory_writes_failure_before_source_or_assets_load(
+        self,
+    ):
+        self.mocks(7400000000)
+        with (
+            patch.object(
+                self.builder, "assert_isolated_bootstrap", return_value=self.world
+            ),
+            patch.object(self.builder, "load_inputs") as load_inputs,
+        ):
+            with self.assertRaisesRegex(RuntimeError, "Whole-map memory gate failed"):
+                self.builder.main()
+            load_inputs.assert_not_called()
+        report = json.loads(self.receipt.read_bytes())
+        self.assertEqual(report["status"], "STARTUP_MEMORY_FAILED")
+        self.assertEqual(report["memory_after"]["free_physical"], 7400000000)
+        self.assertEqual(report["compile_drain"], self.drain)
+        self.assertFalse(report["generated_assets_created"])
+        self.assertIn('"minimum_free_physical_gib": 8', report["error"])
+        self.assertIn('"minimum_free_commit_gib": 12', report["error"])
+        self.native_call.assert_called_once()
+
+    def test_incomplete_native_drain_keeps_failure_and_after_observation(self):
+        self.mocks(9 * 1024**3)
+        self.drain.update(ok=False, remaining_after=1)
+        with self.assertRaisesRegex(RuntimeError, "did not drain"):
+            self.builder.reclaim_startup_memory(self.world)
+        report = json.loads(self.receipt.read_bytes())
+        self.assertEqual(report["status"], "STARTUP_MEMORY_FAILED")
+        self.assertEqual(report["compile_drain"], self.drain)
+        self.assertEqual(report["memory_after"]["free_physical"], 9 * 1024**3)
+        self.assertEqual(self.events, ["memory", "python-gc", "native-drain", "memory"])
+        self.native_call.assert_called_once()
 
 
 class ReusablePreviewTests(unittest.TestCase):

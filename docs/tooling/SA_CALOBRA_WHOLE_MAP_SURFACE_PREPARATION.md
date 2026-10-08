@@ -6,7 +6,7 @@
 
 **Starting revision:** `e74a2fabe292626cb49b7c69827a60e234878cd6`
 
-**Status:** implementation and local integration complete; full-grid PCG validation and native visual results pending
+**Status:** full-grid package executed and independently verified; native material creation is being corrected after the unchanged startup memory gate stopped the first real editor pass
 
 **Methodology:** [World Building Bible](../WORLD_BUILDING_BIBLE.md), selected through the [documentation index](../README.md)
 
@@ -200,8 +200,14 @@ selected close-road/dominant-wall views. Add same-camera baseline/domain/checker
 comparisons and a controlled micro-normal comparison. Keep camera, FOV, lighting,
 resolution and readiness evidence with every original PNG. Add close and distant
 views aimed at the same retained v8 boundary vertex to inspect its contact with
-the adaptive Landscape. The planned set is 30 full-HD frames from 16 primary
-views; the final receipt owns the executed inventory.
+the adaptive Landscape. The original set contains 30 full-HD frames from 16
+primary views. The next coverage extension adds three source-verified Landscape
+targets at approximately 2.7 m and the existing SC-P04 / SC-P06 survey poses:
+baseline, prepared and checker views for each close target, plus baseline and
+prepared views for the two survey poses. The resulting planned inventory is
+43 frames from 21 views; the final native receipt owns the executed inventory.
+A collision-target distance does not establish per-pixel depth or a new
+physical A/B/C/D registration.
 
 The full-grid binding and coverage checks are exhaustive for their specified
 properties. The images are selected visual observations, not proof that every
@@ -256,14 +262,14 @@ integration. Heavy native operations remain serial on the reference runner.
 | Check | Required evidence | Current state |
 |---|---|---|
 | Scope / source contracts | Exact AOI, immutable input identities and current SSOT | Read-only audit complete |
-| Full-grid package | Every sample accounted for; unchanged source and exclusion bytes; reproducible outputs | Pending |
-| Role composition | Unit sum, valid channels, explicit residual/unknown/alpha meanings | Pending |
+| Full-grid package | Every sample accounted for; unchanged source and exclusion bytes; reproducible outputs | Windows full-grid execution and independent pixel/sector audit passed at `a0f12793`; source bytes and logical outputs reproduced; encoder-version byte differences are retained explicitly below |
+| Role composition | Unit sum, valid channels, explicit residual/unknown/alpha meanings | Passed over all 16,265,089 source cells |
 | Native material | All five roles, expected assets and metric projection, successful compile | Pending |
 | Actual full-map bindings | 1024 generated instance parent chains | Pending |
 | Adaptive detail | Recorded LOD state, independent near/far parameters and matched view evidence | Pending |
-| Preservation | Original map, roads, v8 source/UV/normals/material and final rollback checks | Pending |
+| Preservation | Original map, roads, v8 source/UV/normals/material and final rollback checks | Checkout, map and retained sources unchanged after the stopped `a0f12793` pass; complete scene rollback still awaits actual capture |
 | Selected visual review | Original distributed/rider/overview PNGs and location-specific findings | Pending |
-| Source / workflow tests | Focused executed checks plus exact-head CI | 98 local tests: 96 passed, 2 PowerShell-only checks await Windows; exact-head CI pending |
+| Source / workflow tests | Focused executed checks plus exact-head CI | CI passed at `a0f12793`: 1,147 script tests, 391 reference tests, 26 fresh Unreal Automation tests; native Windows preflight ran 104 focused tests with one platform skip |
 | Documentation | Links, i18n, structure and freshness guards; semantic reconciliation | All four local guards passed; final evidence reconciliation pending |
 | Owner visual acceptance | Explicit owner decision on the presented result | Pending |
 | Reference-PC performance | Applicable full-area exact-SHA Frame/GPU measurement | Not measured by preparation alone |
@@ -271,3 +277,34 @@ integration. Heavy native operations remain serial on the reference runner.
 The final evidence report will replace pending execution entries with measured
 outcomes and links. A successful preparation package is not a declaration that
 the entire finished world is already visually or performance-admitted.
+
+## Executed full-grid checkpoint and native startup diagnosis
+
+[Native run 37855085872](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37855085872)
+at `a0f12793fba5ef8b425688cd22808e45df26a105` produced and verified the complete
+package, with fingerprint
+`d955bc5653a586d32e24615305c96dd72b8fa97532ac41344117017f9009622e`.
+All 256 sector windows cover exactly 16,265,089 cells. The exclusion raster has
+4,603,235 cells carrying at least one reason and 11,661,854 cells without an
+exclusion; individual reason counts overlap. Original missing LiDAR samples
+remain 2,713,728. Independent replay verified every source byte, every decoded
+exclusion pixel, the role sums and every sector total. The local replay used
+Pillow 12.3.0 / zlib 1.3.2 rather than the recorded Windows Pillow 12.0.0 /
+zlib 1.3.1: eight package files were byte-identical, while the encoded exclusion
+PNG and its manifest differed. Their decoded values remained identical. This is
+logical reproducibility across encoders, not a claim of identical encoding.
+
+The same run booted the actual empty `/Engine/Maps/Entry` world and stopped
+before loading the ten role textures, importing the weight texture or building
+the material. Its existing memory gate required 8 GiB physical / 12 GiB commit
+headroom; observed free memory was 7,278,485,504 physical bytes and
+56,487,071,744 commit bytes. No new material package or rendered frame was
+created in that pass. The next bounded correction uses the project's existing
+asset/shader compilation drain and full garbage collection before that same
+gate, recording before/after memory even if admission still fails. It does not
+lower the threshold or alter rendering quality.
+
+[Standard CI 37855093904](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37855093904)
+passed on the same revision. UBT performed a warm up-to-date check with zero
+build actions; the subsequent 26 Unreal Automation tests were fresh. This is
+independent of the pending whole-map material and visual result.

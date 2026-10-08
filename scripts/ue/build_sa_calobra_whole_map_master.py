@@ -6,6 +6,7 @@ fresh scene process consumes these packages and restores all live bindings.
 
 from __future__ import annotations
 
+import gc
 import hashlib
 import json
 import os
@@ -16,6 +17,7 @@ import unreal
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
+from scripts.ue.sa_calobra_material_waves import available_memory
 from scripts.ue.sa_calobra_whole_map_prep import (
     DOMAIN_COLORS,
     INSTANCE_NAME,
@@ -320,6 +322,67 @@ def build_graph(material, weights, textures, recipe):
     return len(graph.nodes)
 
 
+def reclaim_startup_memory(bootstrap_world):
+    """Drain this isolated editor once, then apply the unchanged 8/12 GiB gate."""
+    path = Path(os.environ["YACS_WHOLE_MAP_MASTER_RECEIPT"]).with_name(
+        "startup-memory.json"
+    )
+    report = {
+        "schema_version": 1,
+        "status": "STARTUP_MEMORY_RUNNING",
+        "exact_sha": os.environ["YACS_CLIFF_VISUAL_EXPECTED_SHA"],
+        "bootstrap_world": bootstrap_world,
+        "python_gc_invocations": 0,
+        "native_drain_invocations": 0,
+        "generated_assets_created": False,
+        "map_saved": False,
+        "error": None,
+    }
+    try:
+        report["memory_before"] = available_memory()
+        report["python_gc_invocations"] = 1
+        report["python_collected"] = gc.collect()
+        report["native_drain_invocations"] = 1
+        drain = json.loads(
+            unreal.YacsTextureAuditLibrary.drain_asset_compilation_and_collect_garbage()
+        )
+        report["compile_drain"] = drain
+        if (
+            not drain.get("ok")
+            or drain.get("remaining_after") != 0
+            or drain.get("shader_jobs_after") != 0
+        ):
+            raise RuntimeError("Startup asset/shader compilation did not drain")
+        report["memory_after"] = available_memory()
+        report["memory_checkpoint"] = memory_checkpoint(
+            "before_preparation", 8, 12, memory=lambda: report["memory_after"]
+        )
+        report["status"] = "STARTUP_MEMORY_READY"
+    except Exception as exc:
+        report["status"] = "STARTUP_MEMORY_FAILED"
+        report["error"] = str(exc)
+        raise
+    finally:
+        if "memory_after" not in report:
+            try:
+                report["memory_after"] = available_memory()
+            except Exception as exc:  # noqa: BLE001 - a failed observation must still leave a receipt
+                report["memory_after_error"] = str(exc)
+        if "memory_before" in report and "memory_after" in report:
+            report["available_physical_delta_bytes"] = (
+                report["memory_after"]["free_physical"]
+                - report["memory_before"]["free_physical"]
+            )
+            report["available_commit_delta_bytes"] = (
+                report["memory_after"]["free_commit"]
+                - report["memory_before"]["free_commit"]
+            )
+        # The workflow uploads proof-root/*.json even on failure. Keep this
+        # independent of the saved-master receipt, which cannot exist yet.
+        write_json(path, report)
+    return report
+
+
 def main():
     if not unreal.SystemLibrary.get_engine_version().startswith("5.8.2-56702186"):
         raise RuntimeError("Unverified Unreal Engine version")
@@ -335,7 +398,8 @@ def main():
     ):
         if not hasattr(unreal, name):
             raise RuntimeError("Unverified native preparation node: " + name)
-    memory = [memory_checkpoint("before_preparation", 8, 12)]
+    startup_memory = reclaim_startup_memory(bootstrap_world)
+    memory = [startup_memory["memory_checkpoint"]]
     inputs = load_inputs(Path(os.environ["YACS_WHOLE_MAP_PREP"]))
     identities, recipe = source_assets(), rendering_recipe()
     paths = (MASTER_PATH, INSTANCE_PATH, WEIGHT_PATH)
@@ -430,6 +494,14 @@ def main():
         "node_count": node_count,
         "compile_drain": drain,
         "memory_checkpoints": memory,
+        "startup_memory": {
+            "file": "startup-memory.json",
+            "sha256": digest(
+                Path(os.environ["YACS_WHOLE_MAP_MASTER_RECEIPT"]).with_name(
+                    "startup-memory.json"
+                )
+            ),
+        },
         "bootstrap_world": bootstrap_world,
         "map_loaded": False,
         "working_map_loaded": False,
