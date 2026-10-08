@@ -127,11 +127,11 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
         {
             const FVector3d P = Mesh.GetVertex(V);
             FVector3d Q;
-            if (Source.IsVertex(V)) { Q = Source.GetVertex(V); }
+            if (Source.IsVertex(V) && !EdgeVertices.Contains(V)) { Q = Source.GetVertex(V); }
             else if (!SourceClosest(P, Q)) { Trial->SetStringField(TEXT("failure"), TEXT("source_projection")); Valid = false; break; }
             Original[V] = Q;
             const double Shift = (P - Q).Length();
-            const bool Edited = !Source.IsVertex(V) || Shift > 1.e-8;
+            const bool Edited = !Source.IsVertex(V) || (P - Source.GetVertex(V)).Length() > 1.e-8;
             if (Edited)
             {
                 const double Band = FMath::Max(BandDistance(P), BandDistance(Q));
@@ -150,7 +150,21 @@ bool RoundLimestoneEdges(UE::Geometry::FDynamicMesh3& Mesh,
         {
             const auto F = Mesh.GetTriangle(T);
             const double Area = FVector3d::CrossProduct(Mesh.GetVertex(F.B) - Mesh.GetVertex(F.A), Mesh.GetVertex(F.C) - Mesh.GetVertex(F.A)).Z;
-            if (!FMath::IsFinite(Area) || Area >= -1.e-8) { Trial->SetStringField(TEXT("failure"), TEXT("xy_fold")); Valid = false; break; }
+            if (!FMath::IsFinite(Area) || Area >= -1.e-8)
+            {
+                Trial->SetStringField(TEXT("failure"), TEXT("xy_fold"));
+                Trial->SetNumberField(TEXT("fold_area_z_cm2"), Area);
+                TArray<TSharedPtr<FJsonValue>> Points;
+                for (int32 V : {F.A, F.B, F.C})
+                {
+                    const FVector3d P = Mesh.GetVertex(V);
+                    TArray<TSharedPtr<FJsonValue>> Row;
+                    for (double X : {P.X, P.Y, P.Z}) { Row.Add(MakeShared<FJsonValueNumber>(X)); }
+                    Points.Add(MakeShared<FJsonValueArray>(Row));
+                }
+                Trial->SetArrayField(TEXT("fold_vertices_cm"), Points);
+                Valid = false; break;
+            }
         }
         if (Valid) { Accepted = true; ChosenInset = Inset; ChosenSubdivisions = Attempt.X; break; }
     }

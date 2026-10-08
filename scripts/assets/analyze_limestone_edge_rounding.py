@@ -170,9 +170,9 @@ def audit_edges(plan, reference, evidence):
     band = {}
     for v,p in candidate.items():
         q = before[v]
-        if v in source and q != source[v]:
+        if v in source and v not in edge_vertices and q != source[v]:
             raise ValueError('Bevel reset original reference')
-        if v not in source:
+        if v not in source or v in edge_vertices:
             on_surface,_ = containing_faces(q,True)
             if not on_surface or abs(math.dist(p,q)-closest_source_distance(p)) > 1e-5:
                 raise ValueError('New vertex reference is not the nearest untouched source surface')
@@ -181,7 +181,7 @@ def audit_edges(plan, reference, evidence):
             raise ValueError('Bevel moved a vertex away from a selected edge')
         if shift > 20.000001:
             raise ValueError('Edge-only displacement exceeds 20 cm')
-        if v not in source or shift > 1e-8:
+        if v not in source or math.dist(p,source[v]) > 1e-8:
             distance = max(band_distance(p),band_distance(q))
             if distance > 10.000001:
                 raise ValueError('Edge treatment exceeds the 20 cm total band')
