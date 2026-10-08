@@ -724,3 +724,12 @@ import path now completes `ForceLayersFullUpdate`, as the existing terrain
 import commandlet does, before validating the composite heights and world
 positions. Failed readbacks log actual and expected values. The original
 heightfield and scene were restored; this failed trial is not visual evidence.
+
+At `c76983ab`, the detailed readback isolated the actual mismatch: native sample
+(0,0) was exactly 10,061 as requested, but its world Z was -6,622,247.463 cm
+instead of 42,212.936 cm. Actor spawn had combined the input scale with the
+Landscape default root scale. The trial now spawns at identity and explicitly
+sets the exact source-component transform before import, matching the existing
+native terrain importer. The full layer update remains in place. Terrain capture
+runs first to expose import failures promptly; subsequent existing mesh and A/B
+proofs are retained. Neither failed import is accepted as a rendered candidate.

@@ -107,8 +107,11 @@ ALandscape* UYacsLandscapeMeshDiagnosticLibrary::CreateComponent230TerrainTrial(
     Spawn.ObjectFlags |= RF_Transient;
     Spawn.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
     ALandscape* Trial = Component->GetWorld()->SpawnActor<ALandscape>(ALandscape::StaticClass(),
-        Component->GetComponentTransform(), Spawn);
+        FTransform::Identity, Spawn);
     if (!Trial) { return nullptr; }
+    // Spawn combines the supplied scale with Landscape's default root scale.
+    // Set the exact transform afterwards, as the native terrain importer does.
+    Trial->SetActorTransform(Component->GetComponentTransform());
     Trial->Tags.Add(TrialTag);
     Trial->SetActorLabel(TEXT("YACS Component230 DTM thermal erosion trial (unsaved)"));
     Trial->LandscapeMaterial = Component->OverrideMaterial;
