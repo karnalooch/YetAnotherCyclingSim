@@ -426,9 +426,10 @@ The opt-in `YACS_LOCAL_CLIFF_SMOOTHING=1` variant acts only on the owned native
 Component 230 mesh export. It never mutates Landscape, source DTM or PCGEx data.
 The 1,017 authoritative skin cells select 8,136 native half-metre triangles.
 Every vertex incident to an unselected triangle and every component boundary
-vertex stays fixed. Up to twenty-four normal-space relaxation passes use blend 0.35
-and a maximum total displacement of 50 cm, with global backtracking rejecting
-XY folds and collapsed triangles. The fixed interface and consistently oriented
+vertex stays fixed. Up to 84 normal-space relaxation passes use blend 0.10,
+followed by three tangential redistribution passes at blend 0.20. All passes
+share a maximum total displacement of 50 cm from the refined source, with
+per-vertex backtracking rejecting XY folds and collapsed triangles. The fixed interface and consistently oriented
 XY triangles preserve the selected planar domain. Source topology and triangle
 count stay unchanged. Normals are recomputed for the edited presentation.
 
@@ -612,3 +613,31 @@ frames retain caching; light, bias, shadow resolution, geometry and material do
 not change. Readback and restoration are mandatory. This isolates stale VSM pages
 from geometric cast shadows; diagnostic frames cannot replace admitted A/B evidence.
 Reference: [Epic Virtual Shadow Maps caching](https://dev.epicgames.com/documentation/en-us/unreal-engine/virtual-shadow-maps-in-unreal-engine).
+
+At `e5e0bd6a`, run `37733933374`, the smaller-step solver built and rendered.
+The local candidate retained visible wedges. Disabling the VSM cache did not
+remove them: at luma <0.05 both cached and uncached local frames contained 81
+pixels, and at <0.10 both contained 1,490 pixels with a largest region of 623.
+At <0.15 counts were 14,747 and 14,730 respectively. This rejects cache reuse
+as the dominant explanation for those wedges. The separate PCGEx overlay gate
+also failed (93 versus 32 baseline pixels at <0.05; 1,885 versus 1,640 at <0.10).
+Neither result grants visual or whole-map admission.
+
+The exported local geometry identifies a sampling defect: normal-only flow
+introduces 121 interior triangles with quality below 0.1, using
+`4 * sqrt(3) * area / sum(edge_length_squared)` (equilateral = 1).
+A read-only three-pass tangential redistribution probe eliminated these slivers
+and reduced movable-edge dihedrals above 45 degrees from 964 to 624 and above
+90 degrees from 229 to 65. A longer 30-pass probe increased the >45-degree count
+to 1,528 and was rejected. The short probe passed the independent domain audit:
+58,216 triangles, 1,017 m2, fixed interfaces, no XY folds, and the original 50 cm
+source-displacement bound. These measurements are not rendered proof.
+
+The next Unreal candidate applies only the short redistribution after the normal
+flow. Its update is the one-ring mean offset projected into the current tangent
+plane; the existing source-displacement projection and XY line search still apply.
+Vertical fallback is disabled for tangential passes because it would reintroduce
+normal motion. Fixed positions/normals and the original triangle budget remain
+binding. The receipt reports normal and tangential completed pass counts separately.
+Unreal build, independent audit and actual Lit/Lighting Only review are required
+before this candidate can be accepted. Lighting, materials and gates are unchanged.

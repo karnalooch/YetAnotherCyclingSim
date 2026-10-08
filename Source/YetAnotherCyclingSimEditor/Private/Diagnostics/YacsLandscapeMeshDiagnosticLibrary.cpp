@@ -197,13 +197,19 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
     // Preserve total flow time (8.4), but reduce explicit-step overshoot.
     constexpr int32 Passes = 84;
     constexpr double Blend = 0.10;
+    // Normal-only flow can crowd vertices into thin triangles. A short
+    // tangential redistribution improves sampling without extending the domain.
+    constexpr int32 TangentialPasses = 3;
+    constexpr double TangentialBlend = 0.20;
     constexpr double MaxDisplacementCm = 50.0;
     int32 Backtracks = 0;
     int32 CompletedPasses = 0;
+    int32 CompletedTangentialPasses = 0;
     int32 VerticalFallbackUpdates = 0;
     bool StoppedAtConstraint = false;
-    for (int32 Pass = 0; Pass < Passes; ++Pass)
+    for (int32 Pass = 0; Pass < Passes + TangentialPasses; ++Pass)
     {
+        const bool bTangential = Pass >= Passes;
         TArray<FVector3d> Before, Target, Normals;
         TArray<double> VerticalDelta;
         VerticalDelta.Init(0.0, Mesh.MaxVertexID());
@@ -235,11 +241,15 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
             if (Count == 0 || !Normals[V].Normalize()) { continue; }
             // Normal-space relaxation: horizontal on walls, vertical on flats.
             const FVector3d N = Normals[V];
-            const double NormalDelta = Blend * FVector3d::DotProduct(Mean / Count - Before[V], N);
-            Target[V] = Before[V] + N * NormalDelta;
+            const FVector3d Laplacian = Mean / Count - Before[V];
+            const double NormalResidual = FVector3d::DotProduct(Laplacian, N);
+            const double NormalDelta = Blend * NormalResidual;
+            Target[V] = Before[V] + (bTangential
+                ? TangentialBlend * (Laplacian - N * NormalResidual)
+                : N * NormalDelta);
             // If XY motion is constrained, solve the same tangent-plane residual
             // vertically. This preserves XY authority instead of freezing ridges.
-            if (FMath::Abs(N.Z) > 1.e-6)
+            if (!bTangential && FMath::Abs(N.Z) > 1.e-6)
             {
                 VerticalDelta[V] = NormalDelta / N.Z;
             }
@@ -307,7 +317,8 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
             StoppedAtConstraint = true;
             break;
         }
-        ++CompletedPasses;
+        if (bTangential) { ++CompletedTangentialPasses; }
+        else { ++CompletedPasses; }
     }
     double MaxShift = 0, MaxXY = 0, MaxZ = 0;
     int32 Changed = 0;
@@ -382,10 +393,12 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
     Report->SetNumberField(TEXT("locked_vertex_displacement_cm"), 0);
     Report->SetNumberField(TEXT("folded_xy_triangles"), 0);
     Report->SetNumberField(TEXT("smoothing_passes"), CompletedPasses);
+    Report->SetNumberField(TEXT("tangential_redistribution_passes"), CompletedTangentialPasses);
+    Report->SetNumberField(TEXT("tangential_redistribution_blend"), TangentialBlend);
     Report->SetNumberField(TEXT("vertical_fallback_updates"), VerticalFallbackUpdates);
     Report->SetBoolField(TEXT("stopped_at_constraint"), StoppedAtConstraint);
     Report->SetNumberField(TEXT("line_search_backtracks"), Backtracks);
-    Report->SetStringField(TEXT("smoothing_policy"), TEXT("bounded normal-space relaxation with vertical fallback and fixed footprint interfaces"));
+    Report->SetStringField(TEXT("smoothing_policy"), TEXT("bounded normal-space relaxation with vertical fallback, three tangential redistribution passes and fixed footprint interfaces"));
     TArray<TSharedPtr<FJsonValue>> AuditVertices, AuditTriangles;
     for (int32 V : Mesh.VertexIndicesItr())
     {
@@ -502,4 +515,3 @@ FString UYacsLandscapeMeshDiagnosticLibrary::CopyComponent230(
     FJsonSerializer::Serialize(Report, Writer);
     return Result;
 }
-
