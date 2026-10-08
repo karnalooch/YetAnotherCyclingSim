@@ -194,16 +194,50 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
         return false;
     }
 
-    // Preserve total flow time (8.4), but reduce explicit-step overshoot.
-    constexpr int32 Passes = 84;
+    // Retain the historical control; the limestone proposal uses less flow.
+    const bool bLimestone = Plan->HasField(TEXT("limestone_feature_flow")) &&
+        Plan->GetBoolField(TEXT("limestone_feature_flow"));
+    const int32 Passes = bLimestone ? 24 : 84;
     constexpr double Blend = 0.10;
     // Normal-only flow can crowd vertices into thin triangles. A short
     // tangential redistribution improves sampling without extending the domain.
-    constexpr int32 TangentialPasses = 3;
+    const int32 TangentialPasses = bLimestone ? 0 : 3;
     constexpr double TangentialBlend = 0.20;
     // Owner-approved presentation envelope; canonical source stays unchanged.
     const bool bPostErosion = Plan->HasField(TEXT("post_erosion_mesh")) && Plan->GetBoolField(TEXT("post_erosion_mesh"));
     const double MaxDisplacementCm = bPostErosion ? 50.0 : 100.0;
+    // Freeze the source orientation guide: evolving normals must not gradually
+    // erase a crease and then admit diffusion across it. No noise or invented
+    // strata are added. This preserves existing angular source structure.
+    TArray<FVector3d> GuideNormals;
+    GuideNormals.Init(FVector3d::Zero(), Mesh.MaxVertexID());
+    for (int32 T : Mesh.TriangleIndicesItr())
+    {
+        const auto F = Mesh.GetTriangle(T);
+        const FVector3d N = FVector3d::CrossProduct(
+            Original[F.B] - Original[F.A], Original[F.C] - Original[F.A]);
+        GuideNormals[F.A] += N;
+        GuideNormals[F.B] += N;
+        GuideNormals[F.C] += N;
+    }
+    for (int32 V : Mesh.VertexIndicesItr()) { GuideNormals[V].Normalize(); }
+    constexpr double FeatureCosine = 0.85; // approximately 32 degrees
+    // Freeze the source orientation guide: evolving normals must not gradually
+    // erase a crease and then admit diffusion across it. No noise or invented
+    // strata are added. This preserves existing angular source structure.
+    TArray<FVector3d> GuideNormals;
+    GuideNormals.Init(FVector3d::Zero(), Mesh.MaxVertexID());
+    for (int32 T : Mesh.TriangleIndicesItr())
+    {
+        const auto F = Mesh.GetTriangle(T);
+        const FVector3d N = FVector3d::CrossProduct(
+            Original[F.B] - Original[F.A], Original[F.C] - Original[F.A]);
+        GuideNormals[F.A] += N;
+        GuideNormals[F.B] += N;
+        GuideNormals[F.C] += N;
+    }
+    for (int32 V : Mesh.VertexIndicesItr()) { GuideNormals[V].Normalize(); }
+    constexpr double FeatureCosine = 0.85; // approximately 32 degrees
     int32 Backtracks = 0;
     int32 CompletedPasses = 0;
     int32 CompletedTangentialPasses = 0;
@@ -234,16 +268,20 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
         {
             if (!Movable[V]) { continue; }
             FVector3d Mean = FVector3d::Zero();
-            int32 Count = 0;
+            double WeightSum = 0;
             for (int32 Neighbor : Mesh.VtxVerticesItr(V))
             {
-                Mean += Before[Neighbor];
-                ++Count;
+                const double Alignment = FVector3d::DotProduct(GuideNormals[V], GuideNormals[Neighbor]);
+                const double Weight = bLimestone
+                    ? FMath::Square(FMath::Clamp((Alignment - FeatureCosine) / (1.0 - FeatureCosine), 0.0, 1.0))
+                    : 1.0;
+                Mean += Before[Neighbor] * Weight;
+                WeightSum += Weight;
             }
-            if (Count == 0 || !Normals[V].Normalize()) { continue; }
+            if (WeightSum < 1.e-9 || !Normals[V].Normalize()) { continue; }
             // Normal-space relaxation: horizontal on walls, vertical on flats.
             const FVector3d N = Normals[V];
-            const FVector3d Laplacian = Mean / Count - Before[V];
+            const FVector3d Laplacian = Mean / WeightSum - Before[V];
             const double NormalResidual = FVector3d::DotProduct(Laplacian, N);
             const double NormalDelta = Blend * NormalResidual;
             Target[V] = Before[V] + (bTangential
@@ -386,6 +424,12 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
     Report->SetNumberField(TEXT("locked_normal_max_delta"), 0);
     Report->SetStringField(TEXT("normal_policy"), TEXT("native normals preserved outside movable cliff vertices"));
     Report->SetBoolField(TEXT("local_smoothing"), true);
+    Report->SetStringField(TEXT("shape_profile"), bLimestone
+        ? TEXT("limestone-source-feature-flow-v1") : TEXT("legacy-normal-flow-v1"));
+    Report->SetNumberField(TEXT("source_feature_cosine"), bLimestone ? FeatureCosine : -1.0);
+    Report->SetStringField(TEXT("shape_profile"), bLimestone
+        ? TEXT("limestone-source-feature-flow-v1") : TEXT("legacy-normal-flow-v1"));
+    Report->SetNumberField(TEXT("source_feature_cosine"), bLimestone ? FeatureCosine : -1.0);
     Report->SetNumberField(TEXT("source_skin_cells"), 1017);
     Report->SetNumberField(TEXT("allowed_native_triangles"), AllowedTriangles);
     Report->SetNumberField(TEXT("changed_vertices"), Changed);
@@ -401,7 +445,9 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
     Report->SetNumberField(TEXT("vertical_fallback_updates"), VerticalFallbackUpdates);
     Report->SetBoolField(TEXT("stopped_at_constraint"), StoppedAtConstraint);
     Report->SetNumberField(TEXT("line_search_backtracks"), Backtracks);
-    Report->SetStringField(TEXT("smoothing_policy"), TEXT("bounded normal-space relaxation with vertical fallback, three tangential redistribution passes and fixed footprint interfaces"));
+    Report->SetStringField(TEXT("smoothing_policy"), bLimestone
+        ? TEXT("bounded source-feature-weighted normal flow, fixed orientation guide, no tangential redistribution")
+        : TEXT("bounded normal-space relaxation with vertical fallback, three tangential redistribution passes and fixed footprint interfaces"));
     TArray<TSharedPtr<FJsonValue>> AuditVertices, AuditTriangles;
     for (int32 V : Mesh.VertexIndicesItr())
     {

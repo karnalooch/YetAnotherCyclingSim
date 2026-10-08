@@ -20,9 +20,23 @@ geometry/shading defects, then evaluate the admitted limestone material and
 rider views. Material work may prepare the preview while geometry is diagnosed;
 it cannot admit a rejected silhouette or replace the existing neutral fixture.
 
-This delivery verifies evidence and documents the sequence. It changes no
-runtime code, workflow, terrain, road, material or saved asset. The work packets
-below are planned, not implemented or scheduled background work.
+Implementation update, 2026-10-08: the combined transient proposal now uses
+32 thermal passes at talus 1.2 with no preliminary averaging, followed by 24
+source-normal-guided mesh passes with no tangential redistribution. Neighbor
+weights fall to zero at a source-normal difference of approximately 32 degrees;
+the guide remains fixed so creases cannot progressively diffuse away. This
+preserves source angular structure instead of inventing random fractures or
+strata. It is an engineering candidate, not a geological reconstruction or owner
+visual acceptance. The standalone historical erosion and mesh controls remain.
+
+The proposal keeps the 150 cm terrain, 50 cm mesh and 200 cm combined bounds,
+fixed interfaces and triangle limits. A separate neutral technical gate runs
+even when the existing PCGEx gate fails; checkout restoration also runs after
+failure and writes a receipt. An additional diagnostic uses the existing exposed
+limestone PBR material after all neutral captures. New evidence is retained for
+90 days, which remains finite retention rather than a durable archive. Runtime,
+lighting and visual outcomes must be recorded after the exact-revision run.
+No map save or broader rollout is performed by this implementation.
 
 ## Evidence and verification method
 

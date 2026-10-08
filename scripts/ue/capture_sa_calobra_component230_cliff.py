@@ -1162,8 +1162,9 @@ def _spawn_terrain_erosion_trial():
 
     library = unreal.YacsLandscapeMeshDiagnosticLibrary
     _terrain_source = json.loads(library.read_component230_heightfield(_target_component))
-    candidate, erosion = erode(_terrain_source, _plan, iterations=96,
-                               talus_slope=0.8, limit_cm=150.0, smoothing_passes=12)
+    candidate, erosion = erode(_terrain_source, _plan, iterations=32 if TERRAIN_MESH_TRIAL else 96,
+                               talus_slope=1.2 if TERRAIN_MESH_TRIAL else 0.8,
+                               limit_cm=150.0, smoothing_passes=0 if TERRAIN_MESH_TRIAL else 12)
     if (not erosion["derived_heightfield_modified"] or erosion["fixed_samples_changed"]
             or erosion["height_sum_delta_units"] or erosion["max_abs_change_cm"] > 150):
         raise RuntimeError("Terrain erosion bounds or sediment conservation failed")
@@ -1215,7 +1216,7 @@ def _spawn_terrain_erosion_trial():
         mesh_actor.set_actor_label("YACS Component230 eroded terrain mesh (unsaved)")
         mesh_component = mesh_actor.get_dynamic_mesh_component()
         export = json.loads(library.copy_component230(
-            components[0], mesh_component.get_dynamic_mesh(), json.dumps(dict(_plan, post_erosion_mesh=True))))
+            components[0], mesh_component.get_dynamic_mesh(), json.dumps(dict(_plan, post_erosion_mesh=True, limestone_feature_flow=True))))
         if (export.get("status") != "NATIVE_LANDSCAPE_COMPONENT_MESH"
                 or export.get("displacement_limit_cm") != 50
                 or export.get("locked_normal_max_delta") != 0):
@@ -1607,6 +1608,14 @@ def schedule():
         modes[view["viewmode"]]
     )
     unreal.AutomationLibrary.finish_loading_before_screenshot()
+    if view.get("limestone_material"):
+        if not TERRAIN_MESH_TRIAL or len(_candidate_actors) != 1:
+            raise RuntimeError("Limestone material diagnostic requires one combined mesh")
+        component = _candidate_actors[0].get_dynamic_mesh_component()
+        material = _load_surface_material(CLIFF_MATERIAL, "limestone")
+        component.set_material(0, material)
+        component.notify_mesh_modified()
+        unreal.AutomationLibrary.finish_loading_before_screenshot()
     if view.get("flat_normals"):
         if not LOCAL_CLIFF_SMOOTHING or len(_candidate_actors) != 1:
             raise RuntimeError("Flat-normal diagnostic requires the local single surface")
@@ -1668,6 +1677,8 @@ def tick(_delta):
                 "size_bytes": path.stat().st_size,
                 "sha256": _digest(path),
                 "resolution": list(RESOLUTION),
+                "material_profile": "limestone-pbr" if view.get("limestone_material") else "neutral-fixture",
+                "material_path": CLIFF_MATERIAL if view.get("limestone_material") else None,
             }
         )
         _index += 1
@@ -1883,6 +1894,9 @@ def main():
                 "diagnostic_only": True,
             },
         ])
+    if TERRAIN_MESH_TRIAL:
+        _views.append({"name": "diagnostic-limestone-pbr-lit", "candidate": True,
+                       "viewmode": "lit", "diagnostic_only": True, "limestone_material": True})
     # A Lit-only prime cannot warm histories after a view-mode transition.
     # Exercise the exact scene/view once before every admitted screenshot.
     primed_views = []
