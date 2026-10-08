@@ -174,6 +174,57 @@ class BindingTests(unittest.TestCase):
         )
         self.assertTrue(environment.report["restored"])
 
+    def test_absent_legacy_aa_variable_does_not_block_snapshot_or_restore(self):
+        landscape = Landscape()
+        api, _master, _instance, _calls, console = fake_api(landscape)
+        console.pop("r.PostProcessAAQuality", None)
+        original = dict(console)
+        getter = Mock(side_effect=lambda name: console.get(name, ""))
+        api.SystemLibrary.get_console_variable_string_value = getter
+        environment = prep.CaptureEnvironment(api, object(), landscape)
+        environment.enable_adaptive()
+        console["r.ScreenPercentage"] = "100"
+        self.assertEqual(environment.restore(), [])
+        self.assertEqual(console, original)
+        self.assertTrue(environment.report["restored"])
+        self.assertEqual(
+            {call.args[0] for call in getter.call_args_list},
+            {
+                "r.ForceLOD",
+                "r.ScreenPercentage",
+                "showflag.DynamicShadows",
+                "r.Streaming.FullyLoadUsedTextures",
+                "r.HighResScreenshotDelay",
+                "r.Test.FreezeTemporalSequences",
+            },
+        )
+
+    def test_missing_required_capture_variable_still_fails_before_mutation(self):
+        for name in prep.CONSOLE_NAMES:
+            with self.subTest(name=name):
+                landscape = Landscape()
+                api, _master, _instance, _calls, console = fake_api(landscape)
+                del console[name]
+                api.SystemLibrary.get_console_variable_string_value = (
+                    lambda key, values=console: values.get(key, "")
+                )
+                api.SystemLibrary.execute_console_command = Mock()
+                original_lods = [
+                    component.props["forced_lod"] for component in landscape.components
+                ]
+                with self.assertRaisesRegex(
+                    RuntimeError, "Unverified capture console variable: " + name
+                ):
+                    prep.CaptureEnvironment(api, object(), landscape)
+                api.SystemLibrary.execute_console_command.assert_not_called()
+                self.assertEqual(
+                    [
+                        component.props["forced_lod"]
+                        for component in landscape.components
+                    ],
+                    original_lods,
+                )
+
     def test_memory_gate_checks_physical_and_commit_before_mutation(self):
         for physical, commit in ((7, 20), (20, 11)):
             with (

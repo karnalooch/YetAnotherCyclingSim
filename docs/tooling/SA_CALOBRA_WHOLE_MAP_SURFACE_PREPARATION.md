@@ -6,7 +6,7 @@
 
 **Starting revision:** `e74a2fabe292626cb49b7c69827a60e234878cd6`
 
-**Status:** full-grid package and native fixed master executed and verified; fresh scene capture is being corrected after an independent-process import-path failure
+**Status:** full-grid package and native fixed master executed and verified; fresh scene capture is being corrected after independent-process bootstrap failures
 
 **Methodology:** [World Building Bible](../WORLD_BUILDING_BIBLE.md), selected through the [documentation index](../README.md)
 
@@ -279,6 +279,18 @@ outcomes and links. A successful preparation package is not a declaration that
 the entire finished world is already visually or performance-admitted.
 
 ## Executed full-grid checkpoint and native startup diagnosis
+
+The subsequent [43-frame run 37859234820](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37859234820)
+at `06f823346f4c8b7bab1b794b9088e5dbdd3e02f0` passed the repaired Python
+bootstrap and saved the master again. Capture then stopped before material
+binding or frames because the installed engine reports the legacy
+`r.PostProcessAAQuality` console variable as absent. The whole-map lane now
+preserves the existing engine AA configuration and neither queries nor issues
+that unsupported legacy setting. All six settings actually changed by this
+lane still require a successful snapshot and exact restoration; missing any
+required setting fails before mutation. Two regressions cover both boundaries.
+The stopped run retained unchanged map/source/checkout evidence and **0/43**
+frames; this is not a visual result.
 
 [Native run 37855085872](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37855085872)
 at `a0f12793fba5ef8b425688cd22808e45df26a105` produced and verified the complete

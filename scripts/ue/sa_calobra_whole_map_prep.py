@@ -70,10 +70,12 @@ DOMAIN_COLORS = {
     "Scree": [0.04, 0.35, 0.65],
 }
 RESOLUTION = (1920, 1080)
+# The whole-map lane preserves the engine's existing AA configuration. Exact
+# UE5.8 run37859234820 reports the legacy r.PostProcessAAQuality name absent;
+# the owning harness skips that command here instead of inventing a readback.
 CONSOLE_NAMES = (
     "r.ForceLOD",
     "r.ScreenPercentage",
-    "r.PostProcessAAQuality",
     "showflag.DynamicShadows",
     "r.Streaming.FullyLoadUsedTextures",
     "r.HighResScreenshotDelay",

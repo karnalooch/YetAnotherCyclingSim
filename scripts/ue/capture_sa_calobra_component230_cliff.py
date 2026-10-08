@@ -2139,7 +2139,8 @@ def main():
     )
 
     unreal.SystemLibrary.execute_console_command(_world, "r.ScreenPercentage 100")
-    unreal.SystemLibrary.execute_console_command(_world, "r.PostProcessAAQuality 6")
+    if not WHOLE_MAP_PREP:
+        unreal.SystemLibrary.execute_console_command(_world, "r.PostProcessAAQuality 6")
     unreal.SystemLibrary.execute_console_command(_world, "showflag.DynamicShadows 1")
     if not WHOLE_MAP_PREP:
         unreal.SystemLibrary.execute_console_command(_world, "r.ForceLOD 0")
