@@ -557,3 +557,23 @@ The next capture pins the actual Component 230 `ForcedLOD` editor property to ze
 records/read-checks it before each view, then restores and verifies the prior value
 during cleanup. This tests the Landscape-specific LOD/readiness hypothesis, without
 changing source heights, camera, lighting, materials or the strict A/B hash gate.
+
+
+At `3eb8a03d` (run `37726230370`), Component 230 ForcedLOD readback and
+rollback passed, but cross-process baseline PNG identity still failed. Lit images
+had mean absolute RGBA difference 0.09978/255 (574,598 changed pixels; only 3,964
+above 3/255). Lighting Only mean difference was 0.07283/255. This establishes
+render variation despite fixed geometry/LOD; its exact GPU/history source remains
+unproven. It is not evidence of a source-terrain change.
+
+The A/B harness now acquires a single common baseline in one editor session,
+then renders custom A, destroys its actors, verifies the original presentation
+scene snapshot and renders PCGEx B with the same camera/light/material setup.
+The two baseline frames are packaged in both evidence folders with an explicit
+shared acquisition identifier and source path. They are not claimed as independent
+pixel determinism runs. Both receipts are written only after final rollback;
+failed actor removal, scene drift or cleanup fails the proof. Existing image-hash
+identity and every dark-pixel/region threshold remain unchanged. The separate
+two-run canonical topology determinism proof remains unchanged. This corrects the
+experimental control; it does not fix the remaining geometric wedges or establish
+visual acceptance. Unreal runtime validation is required.

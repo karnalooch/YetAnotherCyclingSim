@@ -344,6 +344,11 @@ jobs:
               throw "$Label material proof detected missing texture or Default Material fallback."
             }
 
+            Assert-CliffCapture -Label $Label -Output $Output -UsePcgEx $UsePcgEx -Seconds $seconds
+          }
+
+          function Assert-CliffCapture {
+            param([string] $Label, [string] $Output, [bool] $UsePcgEx, [double] $Seconds)
             $receiptPath = Join-Path $Output 'component230-cliff-visual-receipt.json'
             if (-not (Test-Path -LiteralPath $receiptPath -PathType Leaf)) {
               throw "$Label visual receipt is missing."
@@ -425,9 +430,15 @@ jobs:
             Remove-Item Env:YACS_LANDSCAPE_MESH_DIAGNOSTIC -ErrorAction SilentlyContinue
           }
 
-          Invoke-CliffCapture -Label 'custom' -Output $env:YACS_CLIFF_CUSTOM_OUTPUT -UsePcgEx $false
           $env:YACS_CLIFF_PCGEX_MESH = Join-Path $env:YACS_CLIFF_PCGEX_PROOF_ROOT 'phase2c-pcgex-cliff-a.json'
-          Invoke-CliffCapture -Label 'pcgex' -Output $env:YACS_CLIFF_PCGEX_OUTPUT -UsePcgEx $true
+          $env:YACS_CLIFF_PAIRED_CUSTOM_OUTPUT = $env:YACS_CLIFF_CUSTOM_OUTPUT
+          try {
+            Invoke-CliffCapture -Label 'paired' -Output $env:YACS_CLIFF_PCGEX_OUTPUT -UsePcgEx $true
+            Assert-CliffCapture -Label 'custom' -Output $env:YACS_CLIFF_CUSTOM_OUTPUT -UsePcgEx $false -Seconds 0
+          }
+          finally {
+            Remove-Item Env:YACS_CLIFF_PAIRED_CUSTOM_OUTPUT -ErrorAction SilentlyContinue
+          }
 
           # Additional owner-requested diagnostic; original A/B inputs stay intact.
           $env:YACS_CLIFF_MATCH_LANDSCAPE_MATERIAL = '1'
@@ -466,6 +477,18 @@ jobs:
           ) {
             throw 'Custom and PCGEx captures do not share an identical baseline.'
           }
+
+          $a = (Get-Content -LiteralPath (Join-Path $env:YACS_CLIFF_CUSTOM_OUTPUT 'component230-cliff-visual-receipt.json') -Raw | ConvertFrom-Json).capture_protocol.shared_baseline
+          $b = (Get-Content -LiteralPath (Join-Path $env:YACS_CLIFF_PCGEX_OUTPUT 'component230-cliff-visual-receipt.json') -Raw | ConvertFrom-Json).capture_protocol.shared_baseline
+          if (
+            $a.enabled -ne $true -or $b.enabled -ne $true -or
+            [string]::IsNullOrWhiteSpace($a.acquisition_id) -or
+            $a.acquisition_id -ne $b.acquisition_id -or
+            $a.protocol -ne 'single-scene-baseline-custom-pcgex-v1' -or
+            $a.protocol -ne $b.protocol -or
+            $a.custom_removed_before_pcgex -ne $true -or
+            $b.custom_removed_before_pcgex -ne $true
+          ) { throw 'A/B shared-baseline acquisition provenance failed.' }
 
           $failures = @()
           foreach ($threshold in @('0.05','0.10','0.15')) {
@@ -522,4 +545,5 @@ jobs:
           if-no-files-found: warn
           compression-level: 6
           retention-days: 14
+
 

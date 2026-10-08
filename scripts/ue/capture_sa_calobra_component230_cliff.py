@@ -12,15 +12,18 @@ the accepted map and scene snapshot are unchanged.
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import math
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import time
 import traceback
+import uuid
 
 import unreal
 
@@ -36,6 +39,15 @@ PCGEX_MESH = (
     if os.environ.get("YACS_CLIFF_PCGEX_MESH")
     else None
 )
+PAIRED_CUSTOM_OUTPUT = (
+    Path(os.environ["YACS_CLIFF_PAIRED_CUSTOM_OUTPUT"]).resolve()
+    if os.environ.get("YACS_CLIFF_PAIRED_CUSTOM_OUTPUT") else None
+)
+_paired_pcgex_output = OUTPUT
+_paired_pcgex_mesh = None
+_paired_custom_record = None
+_paired_scene = None
+_shared_baseline = {"enabled": False}
 RESOLUTION = (1920, 1080)
 # Warm-up is counted in rendered frames below, never variable wall-clock time.
 CAPTURE_DELAY_SECONDS = 0.0
@@ -1316,7 +1328,8 @@ def _destroy_transient():
     return errors
 
 
-def _write_receipt(status: str, error: str | None):
+def _write_receipt(status: str, error: str | None, *, output=None, mesh=None, captures=None):
+    output = OUTPUT if output is None else output
     payload = {
         "schema_version": 1,
         "status": status,
@@ -1332,12 +1345,13 @@ def _write_receipt(status: str, error: str | None):
         "plan_fingerprint": None if _plan is None else _plan.get("fingerprint"),
         "plan_counts": None if _plan is None else _plan.get("counts"),
         "hard_policy": None if _plan is None else _plan.get("hard_policy"),
-        "mesh": _mesh_receipt,
-        "captures": _captures,
+        "mesh": _mesh_receipt if mesh is None else mesh,
+        "captures": _captures if captures is None else captures,
         "diagnostic_captures": _diagnostic_captures,
         "dynamic_shadows": True,
         "shadow_bias_changed": False,
         "capture_protocol": {
+            "shared_baseline": _shared_baseline,
             "temporal_sequence": _temporal_sequence_receipt,
             "delay_seconds": CAPTURE_DELAY_SECONDS,
             "high_res_warmup_frames": CAPTURE_WARMUP_FRAMES,
@@ -1348,8 +1362,8 @@ def _write_receipt(status: str, error: str | None):
         "visual_acceptance": "PENDING_OWNER",
         "error": error,
     }
-    OUTPUT.mkdir(parents=True, exist_ok=True)
-    (OUTPUT / "component230-cliff-visual-receipt.json").write_text(
+    output.mkdir(parents=True, exist_ok=True)
+    (output / "component230-cliff-visual-receipt.json").write_text(
         json.dumps(payload, indent=2, default=str) + "\n",
         encoding="utf-8",
     )
@@ -1385,6 +1399,10 @@ def finish(error: str | None = None):
 
     status = "COMPONENT230_CLIFF_VISUAL_FAIL" if error else "COMPONENT230_CLIFF_VISUAL_PASS"
     payload = _write_receipt(status, error)
+    if _paired_custom_record is not None:
+        _write_receipt(status, error, output=PAIRED_CUSTOM_OUTPUT,
+                       mesh=_paired_custom_record["mesh"],
+                       captures=_paired_custom_record["captures"])
     if error:
         unreal.log_error("YACS_COMPONENT230_CLIFF " + json.dumps(payload, default=str))
     else:
@@ -1392,9 +1410,42 @@ def finish(error: str | None = None):
     unreal.EditorPythonScripting.set_keep_python_script_alive(False)
 
 
+def _begin_paired_candidate():
+    global OUTPUT, _pcgex_mesh, _paired_custom_record, _captures, _mesh_receipt
+    _paired_custom_record = {
+        "mesh": copy.deepcopy(_mesh_receipt), "captures": copy.deepcopy(_captures)
+    }
+    actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+    for actor in _candidate_actors:
+        if not actors.destroy_actor(actor):
+            raise RuntimeError("Could not remove custom A before PCGEx B")
+    _candidate_actors.clear()
+    if _scene_snapshot() != _paired_scene:
+        raise RuntimeError("Paired A/B scene changed after removing custom A")
+    OUTPUT = _paired_pcgex_output
+    _captures = []
+    for capture in _paired_custom_record["captures"]:
+        if capture["candidate"]:
+            continue
+        source = Path(capture["path"])
+        target = OUTPUT / source.name
+        # Package the one actual reference frame for both consumers. This is
+        # explicitly a shared acquisition, never an independent repeat proof.
+        shutil.copyfile(source, target)
+        if _digest(target) != capture["sha256"]:
+            raise RuntimeError("Shared baseline packaging changed image bytes")
+        packaged = dict(capture, path=str(target))
+        _captures.append(packaged)
+    _shared_baseline["custom_removed_before_pcgex"] = True
+    _pcgex_mesh = _paired_pcgex_mesh
+    _mesh_receipt = {"lighting": _mesh_receipt["lighting"]}
+
+
 def schedule():
     global _task, _started
     view = _views[_index]
+    if view.get("paired_pcgex") and _pcgex_mesh is None:
+        _begin_paired_candidate()
     if int(_target_component.get_editor_property("forced_lod")) != 0:
         raise RuntimeError("Landscape component LOD drifted during capture")
     if view["candidate"] and not _candidate_actors:
@@ -1489,6 +1540,7 @@ def tick(_delta):
 def main():
     global _world, _landscape, _target_component, _camera, _views
     global _handle, _before_hash, _before_scene, _plan, _pcgex_mesh
+    global OUTPUT, _paired_pcgex_mesh, _paired_scene
 
     if _git_head() != EXPECTED_SHA:
         raise RuntimeError("Cliff visual exact SHA mismatch")
@@ -1534,6 +1586,24 @@ def main():
     OUTPUT.mkdir(parents=True, exist_ok=True)
     if any(OUTPUT.iterdir()):
         raise RuntimeError("Visual output directory must start empty")
+
+    if PAIRED_CUSTOM_OUTPUT is not None:
+        if (PCGEX_MESH is None or LANDSCAPE_MESH_DIAGNOSTIC
+                or LOCAL_CLIFF_SMOOTHING or MATCH_LANDSCAPE_MATERIAL
+                or PAIRED_CUSTOM_OUTPUT == OUTPUT):
+            raise RuntimeError("Paired capture requires distinct custom/PCGEx outputs only")
+        PAIRED_CUSTOM_OUTPUT.mkdir(parents=True, exist_ok=True)
+        if any(PAIRED_CUSTOM_OUTPUT.iterdir()):
+            raise RuntimeError("Paired custom output must start empty")
+        _paired_pcgex_mesh = _pcgex_mesh
+        _pcgex_mesh = None
+        OUTPUT = PAIRED_CUSTOM_OUTPUT
+        _shared_baseline.update(
+            enabled=True, acquisition_id=str(uuid.uuid4()),
+            protocol="single-scene-baseline-custom-pcgex-v1",
+            source_output=str(OUTPUT), custom_removed_before_pcgex=False,
+            independent_pixel_determinism_claimed=False,
+        )
 
     _world = unreal.EditorLoadingAndSavingUtils.load_map(MAP)
     if _world is None:
@@ -1638,6 +1708,14 @@ def main():
             "viewmode": "lightingonly",
         },
     ]
+    if PAIRED_CUSTOM_OUTPUT is not None:
+        _paired_scene = _scene_snapshot()
+        _views.extend([
+            {"name": "03-candidate-lit", "candidate": True,
+             "viewmode": "lit", "paired_pcgex": True},
+            {"name": "04-candidate-lighting-only", "candidate": True,
+             "viewmode": "lightingonly", "paired_pcgex": True},
+        ])
     if LOCAL_CLIFF_SMOOTHING:
         _views.extend([
             {
@@ -1666,3 +1744,4 @@ except Exception:
     if _world is not None:
         finish(traceback.format_exc())
     raise
+
