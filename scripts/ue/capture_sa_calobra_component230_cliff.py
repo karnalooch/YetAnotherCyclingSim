@@ -1162,7 +1162,8 @@ def _spawn_terrain_erosion_trial():
 
     library = unreal.YacsLandscapeMeshDiagnosticLibrary
     _terrain_source = json.loads(library.read_component230_heightfield(_target_component))
-    candidate, erosion = erode(_terrain_source, _plan, iterations=64 if TERRAIN_MESH_TRIAL else 96,
+    erosion_plan = dict(_plan, skin_cells=_plan['rounding_cells']) if TERRAIN_MESH_TRIAL else _plan
+    candidate, erosion = erode(_terrain_source, erosion_plan, iterations=64 if TERRAIN_MESH_TRIAL else 96,
                                talus_slope=0.8,
                                limit_cm=150.0, smoothing_passes=16 if TERRAIN_MESH_TRIAL else 12)
     if (not erosion["derived_heightfield_modified"] or erosion["fixed_samples_changed"]
@@ -1224,7 +1225,7 @@ def _spawn_terrain_erosion_trial():
         derived = {"vertices_cm": export.pop("audit_vertices_cm"),
                    "triangles": export.pop("audit_triangles"), "refinement": export["refinement"]}
         combined = original_surface_evidence(reference, derived)
-        combined_audit = audit(_plan, combined, limit_cm=200.0)
+        combined_audit = audit(_plan, combined, limit_cm=200.0, rounding_domain=True)
         for name, data in (("mesh-stage", derived), ("combined-mesh", combined), ("combined-audit", combined_audit)):
             (OUTPUT / (name + ".json")).write_text(json.dumps(data), encoding="utf-8")
         mesh_component.set_material(0, _target_component.get_editor_property("override_material"))

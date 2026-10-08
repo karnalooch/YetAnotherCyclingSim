@@ -427,6 +427,29 @@ def build_plan(
     }
 
 
+def rounding_domain_cells(plan, protected, radius_m=6):
+    """Extend presentation across rock crowns; preserve the original classifier."""
+    origins = {(int(c['col0']), int(c['row0'])) for c in plan['skin_cells']}
+    candidates = set()
+    for col, row in origins:
+        for dy in range(-radius_m, radius_m + 1):
+            for dx in range(-radius_m, radius_m + 1):
+                if dx * dx + dy * dy <= radius_m * radius_m:
+                    candidates.add((col + dx * 2, row + dy * 2))
+    cells = []
+    for col, row in sorted(candidates, key=lambda xy: (xy[1], xy[0])):
+        if not (COMPONENT['col_min'] <= col <= COMPONENT['col_max'] - 2
+                and COMPONENT['row_min'] <= row <= COMPONENT['row_max'] - 2):
+            continue
+        if np.any(protected[row:row + 3, col:col + 3]):
+            continue
+        cells.append(dict(col0=col, col1=col + 2, row0=row, row1=row + 2,
+                          protected_samples=0))
+    if not origins <= {(c['col0'], c['row0']) for c in cells}:
+        raise ValueError('Rounded domain lost an authoritative cliff cell')
+    return cells
+
+
 def review_cameras(reasons, plan):
     """Pick actual pavement samples; camera height is resolved in the editor."""
     road_rc = np.argwhere((reasons & ROAD_BIT) != 0)
@@ -483,6 +506,13 @@ def prepare(
         transform=profile["transform"],
     )
     plan = build_plan(elevation, slope, roughness, reasons, water)
+    protected = ((reasons & ROAD_BIT) != 0) | ((reasons & SHOULDER_BIT) != 0) | water
+    plan['rounding_cells'] = rounding_domain_cells(plan, protected)
+    plan['rounding_domain_contract'] = dict(
+        method='source-cliff-six-metre-crown-apron-v1', radius_m=6,
+        cell_count=len(plan['rounding_cells']), area_m2=len(plan['rounding_cells']),
+        hard_protected_samples=0, classifier_unchanged=True,
+        scope='ROUNDED_PRESENTATION_ONLY_CANONICAL_SOURCE_UNCHANGED')
     if plan["counts"]["component_cliff_cells"] != 2611:
         raise ValueError(
             "Narrow road+shoulder+water0.5 cliff checkpoint drifted: "

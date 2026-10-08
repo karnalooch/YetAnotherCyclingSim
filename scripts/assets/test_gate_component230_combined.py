@@ -13,14 +13,16 @@ class CombinedGateTests(unittest.TestCase):
             for k in ('baseline_lighting_only', 'candidate_lighting_only')}}
         self.audit = dict(status='PASS', displacement_limit_cm=200,
                           max_displacement_cm=199, triangles=58216,
-                          nonmanifold_edges=0, folded_xy_triangles=0, vertices=2)
+                          nonmanifold_edges=0, folded_xy_triangles=0, vertices=2,
+                          source_area_m2=2000, scope='LOCAL_ROUNDED_DOMAIN_AUDIT_NOT_VISUAL_ACCEPTANCE')
         self.receipt = dict(exact_sha='revision', status='COMPONENT230_CLIFF_VISUAL_PASS',
             map_saved=False, assets_saved=False, canonical_landscape_mutation=False,
             selector_policy_mutation=False, terrain_erosion_trial=dict(
                 post_erosion_mesh=True, restored=True, source_heightfield_unchanged=True,
                 imported_heightfield_matches=True, combined_audit=self.audit,
                 limestone_uv_projection={'world_size_m': 3, 'triangles_unchanged': True},
-                mesh_export={'shape_profile': 'rounded-limestone-normal-flow-v3',
+                mesh_export={'shape_profile': 'rounded-limestone-crown-domain-v4',
+                             'movement_domain_cells': 2000,
                              'crease_preservation': False, 'smoothing_passes': 96,
                              'tangential_redistribution_passes': 0}),
             captures=[{'name': name, 'sha256': key} for name, key in (

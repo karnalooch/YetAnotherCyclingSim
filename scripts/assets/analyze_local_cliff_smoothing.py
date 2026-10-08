@@ -27,18 +27,31 @@ def original_surface_evidence(reference: dict, derived: dict) -> dict:
     return dict(derived, vertices_cm=rows, source_reference="original-before-erosion")
 
 
-def audit(plan: dict, evidence: dict, *, limit_cm=100.0) -> dict:
+def audit(plan: dict, evidence: dict, *, limit_cm=100.0, rounding_domain=False) -> dict:
     if limit_cm not in (50.0, 100.0, 200.0):
         raise ValueError("Unsupported displacement envelope")
     cells = plan["skin_cells"]
     if len(cells) != 1017:
         raise ValueError("Expected 1017 authoritative cells")
+    if rounding_domain:
+        contract = plan.get('rounding_domain_contract', {})
+        cells = plan.get('rounding_cells', [])
+        if (contract.get('method') != 'source-cliff-six-metre-crown-apron-v1'
+                or contract.get('radius_m') != 6 or contract.get('classifier_unchanged') is not True
+                or contract.get('hard_protected_samples') != 0
+                or contract.get('cell_count') != len(cells) or contract.get('area_m2') != len(cells)
+                or not 1017 <= len(cells) <= 3969
+                or not {(c['col0'], c['row0']) for c in plan['skin_cells']} <=
+                       {(c['col0'], c['row0']) for c in cells}):
+            raise ValueError('Invalid separate rounded presentation domain')
     quads = set()
     for cell in cells:
         if (
             cell["protected_samples"] != 0
             or cell["row1"] - cell["row0"] != 2
             or cell["col1"] - cell["col0"] != 2
+            or (rounding_domain and not 882 <= cell['row0'] < cell['row1'] <= 1008)
+            or (rounding_domain and not 756 <= cell['col0'] < cell['col1'] <= 882)
         ):
             raise ValueError("Invalid authoritative cell")
         for r in range(cell["row0"], cell["row1"]):
@@ -78,6 +91,7 @@ def audit(plan: dict, evidence: dict, *, limit_cm=100.0) -> dict:
     locked = set()
     source_area = candidate_area = 0.0
     allowed_count = 0
+    quad_areas = Counter()
     for face in evidence["triangles"]:
         if len(face) != 3 or len(set(face)) != 3 or any(i not in source for i in face):
             raise ValueError("Invalid triangle")
@@ -97,6 +111,7 @@ def audit(plan: dict, evidence: dict, *, limit_cm=100.0) -> dict:
             allowed_count += 1
             source_area += abs(old_area)
             candidate_area += abs(new_area)
+            quad_areas[tile] += abs(old_area)
         else:
             locked.update(face)
         for a, b in zip(face, face[1:] + face[:1]):
@@ -108,7 +123,10 @@ def audit(plan: dict, evidence: dict, *, limit_cm=100.0) -> dict:
     for edge, count in edges.items():
         if count == 1:
             locked.update(edge)
-    if allowed_count != expected_selected or abs(source_area / 10000 - 1017) > 1e-6:
+    if ((not rounding_domain and allowed_count != expected_selected)
+            or abs(source_area / 10000 - len(cells)) > 1e-6
+            or set(quad_areas) != quads
+            or any(abs(area - 2500) > 1e-6 for area in quad_areas.values())):
         raise ValueError("Native source does not cover exact cliff footprint")
     if abs(candidate_area - source_area) > 1e-3:
         raise ValueError("Presentation footprint area changed")
@@ -133,7 +151,7 @@ def audit(plan: dict, evidence: dict, *, limit_cm=100.0) -> dict:
         "displacement_limit_cm": limit_cm,
         "nonmanifold_edges": 0,
         "folded_xy_triangles": 0,
-        "scope": "LOCAL_GEOMETRY_AUDIT_NOT_VISUAL_ACCEPTANCE",
+        "scope": "LOCAL_ROUNDED_DOMAIN_AUDIT_NOT_VISUAL_ACCEPTANCE" if rounding_domain else "LOCAL_GEOMETRY_AUDIT_NOT_VISUAL_ACCEPTANCE",
     }
 
 

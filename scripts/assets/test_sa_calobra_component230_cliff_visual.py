@@ -11,10 +11,37 @@ from scripts.assets.prepare_sa_calobra_component230_cliff_visual import (
     _supported_bridge,
     _unit_interval,
     build_plan,
+    rounding_domain_cells,
 )
 
 
 class Component230CliffVisualPlanTests(unittest.TestCase):
+    def test_rounding_reaches_crowns_without_crossing_hard_samples(self):
+        protected = np.zeros((1100, 1000), dtype=bool)
+        protected[920, 810] = True
+        plan = {'skin_cells': [dict(col0=800, col1=802, row0=920, row1=922,
+                                    protected_samples=0)]}
+        cells = rounding_domain_cells(plan, protected)
+        origins = {(c['col0'], c['row0']) for c in cells}
+        self.assertIn((800, 920), origins)
+        self.assertIn((808, 926), origins)
+        self.assertNotIn((808, 920), origins)
+        self.assertTrue(all(not protected[c['row0']:c['row1'] + 1,
+                                         c['col0']:c['col1'] + 1].any() for c in cells))
+        self.assertEqual(len(plan['skin_cells']), 1)
+        self.assertEqual(cells, rounding_domain_cells(plan, protected))
+
+    def test_rounding_clips_component_and_rejects_protected_source_cell(self):
+        protected = np.zeros((1100, 1000), dtype=bool)
+        plan = {'skin_cells': [dict(col0=756, col1=758, row0=882, row1=884,
+                                    protected_samples=0)]}
+        cells = rounding_domain_cells(plan, protected)
+        self.assertTrue(all(756 <= c['col0'] < c['col1'] <= 882 and
+                            882 <= c['row0'] < c['row1'] <= 1008 for c in cells))
+        protected[883, 757] = True
+        with self.assertRaisesRegex(ValueError, 'lost an authoritative'):
+            rounding_domain_cells(plan, protected)
+
     def test_stable_unit_interval(self):
         self.assertEqual(_unit_interval("a"), _unit_interval("a"))
         self.assertNotEqual(_unit_interval("a"), _unit_interval("b"))

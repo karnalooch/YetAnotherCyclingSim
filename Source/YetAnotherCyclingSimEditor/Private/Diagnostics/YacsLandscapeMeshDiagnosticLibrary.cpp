@@ -28,6 +28,8 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
         Error = TEXT("invalid local smoothing plan");
         return false;
     }
+    const bool bRounded = Plan->HasField(TEXT("limestone_rounded_flow")) &&
+        Plan->GetBoolField(TEXT("limestone_rounded_flow"));
     const TArray<TSharedPtr<FJsonValue>>* Cells = nullptr;
     if (!Plan->TryGetArrayField(TEXT("skin_cells"), Cells) || Cells->Num() != 1017)
     {
@@ -66,6 +68,58 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
         return false;
     }
 
+    // Refinement and original PCGEx footprint stay at the admitted 1017 cells.
+    // Rounding movement additionally covers source-backed crowns, preserving
+    // every road/shoulder/water sample and the new domain's fixed interfaces.
+    const TSet<FIntPoint> RefinementQuads(AllowedQuads);
+    if (bRounded)
+    {
+        const TArray<TSharedPtr<FJsonValue>>* RoundingCells = nullptr;
+        if (!Plan->TryGetArrayField(TEXT("rounding_cells"), RoundingCells) || RoundingCells->Num() < 1017)
+        {
+            Error = TEXT("rounded crown domain is missing");
+            return false;
+        }
+        AllowedQuads.Reset();
+        for (const TSharedPtr<FJsonValue>& Value : *RoundingCells)
+        {
+            const TSharedPtr<FJsonObject>* Cell = nullptr;
+            double R0, R1, C0, C1, Protected;
+            if (!Value->TryGetObject(Cell) ||
+                !(*Cell)->TryGetNumberField(TEXT("row0"), R0) || !(*Cell)->TryGetNumberField(TEXT("row1"), R1) ||
+                !(*Cell)->TryGetNumberField(TEXT("col0"), C0) || !(*Cell)->TryGetNumberField(TEXT("col1"), C1) ||
+                !(*Cell)->TryGetNumberField(TEXT("protected_samples"), Protected) ||
+                Protected != 0 || R1 - R0 != 2 || C1 - C0 != 2 ||
+                R0 < 882 || R1 > 1008 || C0 < 756 || C1 > 882 ||
+                R0 != FMath::FloorToDouble(R0) || C0 != FMath::FloorToDouble(C0))
+            {
+                Error = TEXT("invalid or protected rounded crown cell");
+                return false;
+            }
+            for (int32 R = int32(R0); R < int32(R1); ++R)
+            {
+                for (int32 C = int32(C0); C < int32(C1); ++C)
+                {
+                    const FIntPoint Tile(C, R);
+                    if (AllowedQuads.Contains(Tile))
+                    {
+                        Error = TEXT("rounded crown domain overlaps");
+                        return false;
+                    }
+                    AllowedQuads.Add(Tile);
+                }
+            }
+        }
+        for (const FIntPoint& Tile : RefinementQuads)
+        {
+            if (!AllowedQuads.Contains(Tile))
+            {
+                Error = TEXT("rounded domain lost original cliff footprint");
+                return false;
+            }
+        }
+    }
+
     // Use Epic's conforming selective tessellator, not global subdivision.
     // The linear refinement preserves source geometry before normal relaxation.
     TArray<int32> Levels;
@@ -75,7 +129,7 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
     {
         const auto F = Mesh.GetTriangle(T);
         const FVector3d Center = (Mesh.GetVertex(F.A) + Mesh.GetVertex(F.B) + Mesh.GetVertex(F.C)) / 3.0;
-        if (AllowedQuads.Contains(FIntPoint(FMath::FloorToInt(Center.X / 50.0), FMath::FloorToInt(Center.Y / 50.0))))
+        if (RefinementQuads.Contains(FIntPoint(FMath::FloorToInt(Center.X / 50.0), FMath::FloorToInt(Center.Y / 50.0))))
         {
             Levels[T] = 1;
             ++SourceCliffTriangles;
@@ -172,6 +226,7 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
         Movable[V] = !Mesh.IsBoundaryVertex(V);
     }
     int32 AllowedTriangles = 0;
+    double AllowedSourceAreaCm2 = 0.0;
     for (int32 T : Mesh.TriangleIndicesItr())
     {
         const auto Face = Mesh.GetTriangle(T);
@@ -181,6 +236,8 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
         if (Allowed)
         {
             ++AllowedTriangles;
+            AllowedSourceAreaCm2 += 0.5 * FMath::Abs(FVector3d::CrossProduct(
+                Original[Face.B] - Original[Face.A], Original[Face.C] - Original[Face.A]).Z);
         }
         else
         {
@@ -188,16 +245,15 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
             Movable[Face.A] = Movable[Face.B] = Movable[Face.C] = false;
         }
     }
-    if (AllowedTriangles != 32544)
+    if ((!bRounded && AllowedTriangles != 32544) ||
+        FMath::Abs(AllowedSourceAreaCm2 - AllowedQuads.Num() * 2500.0) > 1.e-3)
     {
-        Error = TEXT("native cliff footprint does not cover exactly 1017 square metres");
+        Error = TEXT("native movement surface does not cover its exact authoritative domain");
         return false;
     }
 
     // Owner correction: round upper surfaces and walls alike. The historical
     // standalone control is retained; the candidate no longer protects creases.
-    const bool bRounded = Plan->HasField(TEXT("limestone_rounded_flow")) &&
-        Plan->GetBoolField(TEXT("limestone_rounded_flow"));
     const int32 Passes = bRounded ? 96 : 84;
     constexpr double Blend = 0.10;
     const int32 TangentialPasses = bRounded ? 0 : 3;
@@ -388,10 +444,12 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
     Report->SetStringField(TEXT("normal_policy"), TEXT("native normals preserved outside movable cliff vertices"));
     Report->SetBoolField(TEXT("local_smoothing"), true);
     Report->SetStringField(TEXT("shape_profile"), bRounded
-        ? TEXT("rounded-limestone-normal-flow-v3") : TEXT("legacy-normal-flow-v1"));
+        ? TEXT("rounded-limestone-crown-domain-v4") : TEXT("legacy-normal-flow-v1"));
     Report->SetBoolField(TEXT("crease_preservation"), false);
     Report->SetNumberField(TEXT("source_feature_cosine"), -1.0);
     Report->SetNumberField(TEXT("source_skin_cells"), 1017);
+    Report->SetNumberField(TEXT("movement_domain_cells"), AllowedQuads.Num() / 4);
+    Report->SetNumberField(TEXT("movement_domain_area_m2"), AllowedSourceAreaCm2 / 10000.0);
     Report->SetNumberField(TEXT("allowed_native_triangles"), AllowedTriangles);
     Report->SetNumberField(TEXT("changed_vertices"), Changed);
     Report->SetNumberField(TEXT("max_displacement_cm"), MaxShift);

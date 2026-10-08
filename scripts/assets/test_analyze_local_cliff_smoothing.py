@@ -46,6 +46,39 @@ class LocalCliffAuditTests(unittest.TestCase):
         self.assertEqual(result["candidate_area_m2"], 1017)
         self.assertEqual(result["changed_vertices"], 1)
 
+    def test_separate_rounding_domain_preserves_original_classifier_and_locks(self):
+        plan = copy.deepcopy(self.plan)
+        evidence = copy.deepcopy(self.evidence)
+        for c in plan['skin_cells']:
+            c['col0'] += 756
+            c['col1'] += 756
+            c['row0'] += 882
+            c['row1'] += 882
+        for v in evidence['vertices_cm']:
+            for k in (1, 4):
+                v[k] += 37800
+            for k in (2, 5):
+                v[k] += 44100
+        plan['rounding_cells'] = copy.deepcopy(plan['skin_cells']) + [
+            dict(col0=756, col1=758, row0=882, row1=884, protected_samples=0)]
+        plan['rounding_domain_contract'] = dict(method='source-cliff-six-metre-crown-apron-v1',
+            radius_m=6, classifier_unchanged=True, hard_protected_samples=0,
+            cell_count=1018, area_m2=1018)
+        self.assertEqual(audit(plan, evidence, rounding_domain=True)['source_area_m2'], 1018)
+        self.assertEqual(audit(plan, evidence)['source_area_m2'], 1017)
+        evidence['vertices_cm'][0][6] = 1
+        with self.assertRaisesRegex(ValueError, 'interface moved'):
+            audit(plan, evidence, rounding_domain=True)
+
+    def test_rounding_cannot_claim_changed_classifier_or_protected_cells(self):
+        plan = copy.deepcopy(self.plan)
+        plan['rounding_cells'] = plan['skin_cells']
+        plan['rounding_domain_contract'] = dict(method='source-cliff-six-metre-crown-apron-v1',
+            radius_m=6, classifier_unchanged=False, hard_protected_samples=0,
+            cell_count=1017, area_m2=1017)
+        with self.assertRaisesRegex(ValueError, 'separate rounded'):
+            audit(plan, self.evidence, rounding_domain=True)
+
     def test_interface_edit_rejected_even_if_marked_movable(self):
         evidence = copy.deepcopy(self.evidence)
         evidence["vertices_cm"][0][6] = 1

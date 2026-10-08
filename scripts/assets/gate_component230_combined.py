@@ -20,11 +20,14 @@ def evaluate(metrics: dict, receipt: dict, audit: dict, expected_sha: str) -> di
            ('post_erosion_mesh', 'restored', 'source_heightfield_unchanged', 'imported_heightfield_matches')):
         failures.append('Combined terrain restoration/import failed')
     export = trial.get('mesh_export', {})
-    if (export.get('shape_profile') != 'rounded-limestone-normal-flow-v3'
+    if (export.get('shape_profile') != 'rounded-limestone-crown-domain-v4'
             or export.get('crease_preservation') is not False
             or export.get('smoothing_passes') != 96
             or export.get('tangential_redistribution_passes') != 0):
         failures.append('Rounded limestone recipe proof missing')
+    if (export.get('movement_domain_cells') != audit.get('source_area_m2')
+            or audit.get('scope') != 'LOCAL_ROUNDED_DOMAIN_AUDIT_NOT_VISUAL_ACCEPTANCE'):
+        failures.append('Separate rounded crown domain proof missing')
     if (audit.get('status') != 'PASS' or audit.get('displacement_limit_cm') != 200
             or not 0 <= audit.get('max_displacement_cm', float('inf')) <= 200.000001
             or audit.get('triangles', 60001) > 60000
