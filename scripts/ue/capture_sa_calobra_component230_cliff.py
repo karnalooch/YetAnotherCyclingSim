@@ -46,6 +46,8 @@ MATCH_LANDSCAPE_MATERIAL = os.environ.get("YACS_CLIFF_MATCH_LANDSCAPE_MATERIAL")
 LANDSCAPE_MESH_DIAGNOSTIC = os.environ.get("YACS_LANDSCAPE_MESH_DIAGNOSTIC") == "1"
 LOCAL_CLIFF_SMOOTHING = os.environ.get("YACS_LOCAL_CLIFF_SMOOTHING") == "1"
 _landscape_visibility_state = None
+_landscape_lod_state = None
+_landscape_lod_receipt = {"enabled": False}
 _landscape_mesh_diagnostic = {"enabled": False}
 PIXEL_SIZE_M = 0.5
 CLIFF_MATERIAL = (
@@ -99,6 +101,30 @@ def _fix_temporal_sequence():
     if actual != 1:
         raise RuntimeError("Temporal-sequence control did not take effect")
     _temporal_sequence_receipt.update(name=name, previous=previous, value=actual)
+
+
+def _pin_landscape_lod():
+    global _landscape_lod_state
+    previous = int(_target_component.get_editor_property("forced_lod"))
+    _landscape_lod_state = previous
+    _landscape_lod_receipt.update(
+        enabled=True, component=_target_component.get_name(),
+        previous=previous, forced_lod=0, restored=False,
+    )
+    _target_component.set_editor_property("forced_lod", 0)
+    if int(_target_component.get_editor_property("forced_lod")) != 0:
+        raise RuntimeError("Landscape component LOD0 override failed")
+
+
+def _restore_landscape_lod():
+    global _landscape_lod_state
+    if _landscape_lod_state is None:
+        return
+    _target_component.set_editor_property("forced_lod", _landscape_lod_state)
+    if int(_target_component.get_editor_property("forced_lod")) != _landscape_lod_state:
+        raise RuntimeError("Landscape component LOD rollback failed")
+    _landscape_lod_receipt["restored"] = True
+    _landscape_lod_state = None
 
 
 def _apply_neutral_landscape_material():
@@ -1246,6 +1272,10 @@ def _spawn_candidate():
 def _destroy_transient():
     errors = []
     try:
+        _restore_landscape_lod()
+    except Exception as exc:
+        errors.append("Landscape LOD rollback: " + str(exc))
+    try:
         _restore_landscape_visibility()
     except Exception as exc:
         errors.append("Landscape visibility rollback: " + str(exc))
@@ -1312,6 +1342,7 @@ def _write_receipt(status: str, error: str | None):
             "delay_seconds": CAPTURE_DELAY_SECONDS,
             "high_res_warmup_frames": CAPTURE_WARMUP_FRAMES,
             "force_lod": 0,
+            "component_lod_override": _landscape_lod_receipt,
             "fully_load_used_textures": True,
         },
         "visual_acceptance": "PENDING_OWNER",
@@ -1364,6 +1395,8 @@ def finish(error: str | None = None):
 def schedule():
     global _task, _started
     view = _views[_index]
+    if int(_target_component.get_editor_property("forced_lod")) != 0:
+        raise RuntimeError("Landscape component LOD drifted during capture")
     if view["candidate"] and not _candidate_actors:
         _spawn_candidate()
 
@@ -1530,6 +1563,7 @@ def main():
     _before_hash = _digest(MAP_FILE)
     _before_scene = _scene_snapshot()
     _fix_temporal_sequence()
+    _pin_landscape_lod()
     _apply_neutral_landscape_material()
     lighting = _ensure_lighting()
     bounds = _component_bounds()

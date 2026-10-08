@@ -544,3 +544,16 @@ recomputation to overlay elements whose parent vertex is movable. Retain and
 exactly compare every fixed element before/after the operation, failing on any
 change. This preserves native shading at unedited surfaces and component interfaces.
 The presentation geometry and smoothing parameters stay identical for this test.
+
+At `2efd5899` (run `37725196419`), scoped normal recomputation built and
+rendered: 15,296 fixed normal elements were exactly preserved; 14,119 editable
+elements were recomputed. Geometry evidence SHA remained unchanged from
+`a76fe4dd`. Large cast-shadow wedges remain, so this is not visual admission.
+
+The latest local baseline also changed substantially across sessions (5,338 pixels
+below luma 0.05 versus 35 in the preceding baseline), despite the global LOD cvar
+and priming frame. Do not count that unstable baseline as a quality improvement.
+The next capture pins the actual Component 230 `ForcedLOD` editor property to zero,
+records/read-checks it before each view, then restores and verifies the prior value
+during cleanup. This tests the Landscape-specific LOD/readiness hypothesis, without
+changing source heights, camera, lighting, materials or the strict A/B hash gate.
