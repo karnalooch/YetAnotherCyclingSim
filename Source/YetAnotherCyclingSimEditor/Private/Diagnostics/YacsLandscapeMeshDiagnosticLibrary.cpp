@@ -106,6 +106,8 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
     constexpr double Blend = 0.35;
     constexpr double MaxDisplacementCm = 50.0;
     int32 Backtracks = 0;
+    int32 CompletedPasses = 0;
+    bool StoppedAtConstraint = false;
     for (int32 Pass = 0; Pass < Passes; ++Pass)
     {
         TArray<FVector3d> Before, Target, Normals;
@@ -181,9 +183,12 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
         }
         if (!Accepted)
         {
-            Error = TEXT("local smoothing could not preserve nonfolding footprint");
-            return false;
+            // A constrained optimum is a valid stopping point. Never commit an
+            // invalid proposal merely to complete the requested pass count.
+            StoppedAtConstraint = true;
+            break;
         }
+        ++CompletedPasses;
     }
     double MaxShift = 0, MaxXY = 0, MaxZ = 0;
     int32 Changed = 0;
@@ -215,7 +220,8 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
     Report->SetNumberField(TEXT("max_z_displacement_cm"), MaxZ);
     Report->SetNumberField(TEXT("locked_vertex_displacement_cm"), 0);
     Report->SetNumberField(TEXT("folded_xy_triangles"), 0);
-    Report->SetNumberField(TEXT("smoothing_passes"), Passes);
+    Report->SetNumberField(TEXT("smoothing_passes"), CompletedPasses);
+    Report->SetBoolField(TEXT("stopped_at_constraint"), StoppedAtConstraint);
     Report->SetNumberField(TEXT("line_search_backtracks"), Backtracks);
     Report->SetStringField(TEXT("smoothing_policy"), TEXT("bounded normal-space relaxation with fixed footprint interfaces"));
     TArray<TSharedPtr<FJsonValue>> AuditVertices, AuditTriangles;

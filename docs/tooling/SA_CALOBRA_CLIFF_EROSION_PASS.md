@@ -426,7 +426,7 @@ The opt-in `YACS_LOCAL_CLIFF_SMOOTHING=1` variant acts only on the owned native
 Component 230 mesh export. It never mutates Landscape, source DTM or PCGEx data.
 The 1,017 authoritative skin cells select 8,136 native half-metre triangles.
 Every vertex incident to an unselected triangle and every component boundary
-vertex stays fixed. Twenty-four normal-space relaxation passes use blend 0.35
+vertex stays fixed. Up to twenty-four normal-space relaxation passes use blend 0.35
 and a maximum total displacement of 50 cm, with global backtracking rejecting
 XY folds and collapsed triangles. The fixed interface and consistently oriented
 XY triangles preserve the selected planar domain. Source topology and triangle
@@ -442,4 +442,8 @@ and `local-cliff-smoothing-mesh.json`, containing source/candidate vertex pairs,
 movability flags and triangle indices for independent auditing. The evidence hash
 is recorded in the receipt. Native export conversion error is measured before
 smoothing and must not be interpreted as zero displacement of the candidate.
-Build, runtime, visual and whole-map preview proof are pending for this variant.
+The first build passed at `5258e162`, but the solver rejected a later proposal at
+its nonfolding constraint before rendering. It now stops at the last verified
+iterate instead of treating constrained convergence as a fatal error; invalid
+steps are still never applied. Completed pass count and constrained stopping are
+recorded. Runtime, visual and whole-map preview proof remain pending.
