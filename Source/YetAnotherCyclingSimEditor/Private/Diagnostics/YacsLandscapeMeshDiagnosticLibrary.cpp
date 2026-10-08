@@ -194,8 +194,9 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
         return false;
     }
 
-    constexpr int32 Passes = 24;
-    constexpr double Blend = 0.35;
+    // Preserve total flow time (8.4), but reduce explicit-step overshoot.
+    constexpr int32 Passes = 84;
+    constexpr double Blend = 0.10;
     constexpr double MaxDisplacementCm = 50.0;
     int32 Backtracks = 0;
     int32 CompletedPasses = 0;

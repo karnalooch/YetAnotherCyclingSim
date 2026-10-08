@@ -98,6 +98,27 @@ _mesh_receipt = {}
 _material_override_state = None
 _material_override_receipt = {"enabled": False}
 _temporal_sequence_receipt = {}
+_shadow_cache_probe = {"enabled": False}
+_shadow_cache_previous = None
+
+
+def _set_shadow_cache_probe(enabled):
+    global _shadow_cache_previous
+    name = "r.Shadow.Virtual.Cache"
+    if enabled and _shadow_cache_previous is None:
+        previous = unreal.SystemLibrary.get_console_variable_string_value(name)
+        if previous == "":
+            raise RuntimeError("Engine does not expose VSM cache control")
+        _shadow_cache_previous = int(previous)
+        _shadow_cache_probe.update(enabled=True, previous=_shadow_cache_previous,
+                                   diagnostic_only=True, restored=False)
+    if _shadow_cache_previous is None:
+        return
+    value = 0 if enabled else _shadow_cache_previous
+    unreal.SystemLibrary.execute_console_command(_world, f"{name} {value}")
+    if unreal.SystemLibrary.get_console_variable_int_value(name) != value:
+        raise RuntimeError("VSM cache diagnostic control readback failed")
+    _shadow_cache_probe["restored"] = not enabled
 
 
 def _fix_temporal_sequence():
@@ -1284,6 +1305,10 @@ def _spawn_candidate():
 def _destroy_transient():
     errors = []
     try:
+        _set_shadow_cache_probe(False)
+    except Exception as exc:
+        errors.append("VSM cache rollback: " + str(exc))
+    try:
         _restore_landscape_lod()
     except Exception as exc:
         errors.append("Landscape LOD rollback: " + str(exc))
@@ -1352,6 +1377,7 @@ def _write_receipt(status: str, error: str | None, *, output=None, mesh=None, ca
         "shadow_bias_changed": False,
         "capture_protocol": {
             "shared_baseline": _shared_baseline,
+            "shadow_cache_diagnostic": _shadow_cache_probe,
             "temporal_sequence": _temporal_sequence_receipt,
             "delay_seconds": CAPTURE_DELAY_SECONDS,
             "high_res_warmup_frames": CAPTURE_WARMUP_FRAMES,
@@ -1449,6 +1475,7 @@ def schedule():
         _begin_paired_candidate()
     if int(_target_component.get_editor_property("forced_lod")) != 0:
         raise RuntimeError("Landscape component LOD drifted during capture")
+    _set_shadow_cache_probe(bool(view.get("uncached_shadows")))
     if view["candidate"] and not _candidate_actors:
         _spawn_candidate()
 
@@ -1719,6 +1746,11 @@ def main():
         ])
     if LOCAL_CLIFF_SMOOTHING:
         _views.extend([
+            {"name": "diagnostic-uncached-shadow-lit", "candidate": True,
+             "viewmode": "lit", "diagnostic_only": True, "uncached_shadows": True},
+            {"name": "diagnostic-uncached-shadow-lighting-only", "candidate": True,
+             "viewmode": "lightingonly", "diagnostic_only": True, "uncached_shadows": True},
+
             {
                 "name": "05-flat-normal-lit",
                 "candidate": True,

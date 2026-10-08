@@ -589,3 +589,26 @@ baseline and candidates. Priming frames remain diagnostic-only. This tests histo
 readiness after Lit/Lighting Only transitions, with identical lighting, geometry,
 64-frame screenshot warmup and admission thresholds. Paired capture timing is
 reported as session timing, not invented per-candidate execution time.
+
+
+At `0c94c64c`, run `37733227829`, per-view priming removed the large black
+baseline region: luma <0.05 baseline count became 44 rather than 5,382. The shared
+baseline/provenance still passed, but unchanged quality thresholds correctly
+rejected PCGEx: 92 >44 pixels and largest region 25 >19 at 0.05; 1,852 >1,658
+pixels at 0.10. The previous green result is therefore not accepted as visual
+improvement. Retain priming; do not relax thresholds or return to a darker reference.
+
+The next local solver experiment preserves integrated relaxation time 8.4 but
+uses 84 steps of 0.10 instead of 24 of 0.35 to reduce explicit-step overshoot.
+A read-only numerical probe reduced movable-edge dihedral angles >45 degrees
+from 989 to 964, >90 degrees from 240 to 229, and the 99th-percentile normal
+Laplacian residual from 6.26 to 6.02 cm. These are modest geometric improvements,
+not a visual PASS. Fixed vertices/normals, 50 cm bound, exact footprint and budgets
+are unchanged. Unreal build/audit/render remain required.
+
+Two additional diagnostic-only local frames use Epic's documented
+`r.Shadow.Virtual.Cache 0` control to redraw shadow pages. The normal admitted
+frames retain caching; light, bias, shadow resolution, geometry and material do
+not change. Readback and restoration are mandatory. This isolates stale VSM pages
+from geometric cast shadows; diagnostic frames cannot replace admitted A/B evidence.
+Reference: [Epic Virtual Shadow Maps caching](https://dev.epicgames.com/documentation/en-us/unreal-engine/virtual-shadow-maps-in-unreal-engine).
