@@ -817,7 +817,27 @@ triangles, whereas two subdivisions would exceed the unchanged 60,000 ceiling.
 A new native build, complete surface audit and render are required before
 this revision can be accepted.
 
-Epic's linear multi-segment bevel is validated before its round profile is
+The middle-span proof at `71070e1ac693e62c954d266cbadbc4e4cc6cf6c8` compiled,
+retained all source vertices, verified 4,300 local terminator supports and
+produced the predicted 57,552 triangles. Its linear bevel still failed:
+the 5 cm attempt placed a new point 48.55 cm from selected source edges;
+smaller attempts failed the 10 cm nearest-source projection bound.
+Pinned `FMeshBevel::DisplaceVertices` explains the displacement: after finding
+a perpendicular inset projection, its terminator branch replaces that point
+using two infinite lines. The engine warns that sliver triangles confuse this
+neighbor-direction solve. Reducing the inset does not reliably bound it.
+
+The current repair keeps Epic's mesh topology but replaces endpoint rails
+with perpendicular insets on the immutable source facet fan. Each endpoint's
+motion is clipped to retain at least 10% of each incident source triangle's
+XY area; the subsequent full-mesh check also rejects folds caused by moving
+both ends of a shared triangle. Existing strip interiors are reset to
+linear interpolation of the corrected rails, and source-facet profile normals
+replace normals measured on the rejected displaced positions. This correction
+precedes linear admission and the nonzero round-profile search; it does not
+weaken the final winding, surface-band, source-preservation or triangle guards.
+
+The corrected linear multi-segment bevel is validated before its round profile is
 applied. With fixed topology, a bounded line search accepts only a nonzero
 profile blend that preserves strict XY winding, the 10 cm source-edge radius,
 the 20 cm source-surface displacement cap and every original native vertex.
