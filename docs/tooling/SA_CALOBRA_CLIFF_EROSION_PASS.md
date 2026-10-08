@@ -380,8 +380,25 @@ handling. The ordinary cliff authority and A/B gates are unchanged.
 Enable with `YACS_LANDSCAPE_MESH_DIAGNOSTIC=1`; the dedicated workflow writes
 four frames and a rollback/export receipt under `landscape-mesh/`.
 The receipt marks `NON_PRODUCTION_NATIVE_LANDSCAPE_MESH_DIAGNOSTIC`.
-Runtime/build proof is pending; this experiment is not a world representation
-migration, a cliff fix, a performance admission or a merge approval.
+Native export/build/capture passed at `1ce1cb293e687694ab20211ba325e176cd79014f`
+(run `37703226554`): 16,129 vertices, 31,752 triangles and zero vertex
+conversion error. Visibility/material rollback passed. Large dark regions remain
+without PCGEx overlays. This is not a world representation migration, a cliff fix,
+a performance admission or a merge approval. The full A/B gate remains failed.
+
+The first native-test baseline Lit frame visibly used coarser Landscape geometry
+than the following frames. Captures now retain a separate `00-streaming-prime.png`
+full-camera render before the four admitted views. This is a readiness experiment;
+strict cross-session baseline equality and lighting thresholds remain unchanged.
+
+Owner direction, 2026-10-08: repair local cliff presentation/contact, allowing
+bounded horizontal adjustment on steep walls and vertical adjustment on shallow
+transitions, plus local presentation smoothing where geometry artifacts persist.
+Preserve canonical source DTM, roads, hard exclusions and rollback. Do not assume
+all dark regions are intersections: they also occur in native Landscape mesh
+captures. Expand to the current whole Landscape and provide an owner preview only
+after the local candidate is visually and technically verified. This authorizes
+presentation work and preview packaging, not PR #446 merge or false acceptance.
 
 ## Phase 2B direction
 

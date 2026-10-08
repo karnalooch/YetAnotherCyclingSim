@@ -1385,6 +1385,10 @@ def tick(_delta):
         path = OUTPUT / (view["name"] + ".png")
         if not path.is_file() or path.stat().st_size < 100000:
             return
+        if view.get("warmup_only", False):
+            _index += 1
+            schedule()
+            return
         _captures.append(
             {
                 "name": view["name"],
@@ -1533,7 +1537,16 @@ def main():
         _world, f"r.HighResScreenshotDelay {CAPTURE_WARMUP_FRAMES}"
     )
 
+    # The first offscreen screenshot can precede Landscape streaming readiness
+    # even after finish_loading_before_screenshot. Render a complete camera view
+    # before admitting baseline pixels; retain it as diagnostic evidence only.
     _views = [
+        {
+            "name": "00-streaming-prime",
+            "candidate": False,
+            "viewmode": "lit",
+            "warmup_only": True,
+        },
         {"name": "01-baseline-lit", "candidate": False, "viewmode": "lit"},
         {
             "name": "02-baseline-lighting-only",
