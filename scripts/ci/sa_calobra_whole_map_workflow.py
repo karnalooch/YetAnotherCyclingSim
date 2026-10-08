@@ -266,9 +266,10 @@ def committed(repo, head, path, expected):
 def refresh_committed_evidence(repo, head):
     """Restore three raw Git blobs after the isolated checkout is sanitized.
 
-    Git can retain a former CRLF worktree after a -text attribute migration.
-    Validate every pinned blob and destination before writing any file; callers
-    retain the normal clean-checkout gate after this bounded materialization.
+    Git can retain a former CRLF worktree and index stat data after a -text
+    attribute migration. Validate every pinned blob and destination before
+    writing, then refresh only those index entries without changing its tree.
+    Callers retain the normal global clean-checkout gate.
     """
     repo = Path(repo)
     exact_head(repo, head)
@@ -277,6 +278,12 @@ def refresh_committed_evidence(repo, head):
         data = committed(repo, head, relative, expected)
         require(len(data) == size, "Pinned committed size changed: " + relative)
         sources.append((relative, data))
+
+    head_tree = git(repo, "rev-parse", head + "^{tree}").decode().strip()
+    index_before = git(repo, "write-tree").decode().strip()
+    require(
+        index_before == head_tree, "Pre-existing staged changes block evidence refresh"
+    )
 
     prepared = []
     for relative, data in sources:
@@ -303,11 +310,27 @@ def refresh_committed_evidence(repo, head):
                 "after": {"size_bytes": len(after), "sha256": digest(after)},
             }
         )
+
+    # Reconcile cached CRLF sizes even on a retry whose raw bytes are already
+    # correct. The fixed path list and tree checks forbid staged content changes.
+    git(repo, "add", "--", *(relative for relative, _ in sources))
+    index_after = git(repo, "write-tree").decode().strip()
+    require(index_after == head_tree, "Evidence index refresh changed the staged tree")
+    for relative, data in sources:
+        after = read_bytes(relative_file(repo, relative))
+        require(
+            len(after) == len(data) and digest(after) == digest(data),
+            "Evidence bytes changed during index refresh: " + relative,
+        )
     exact_head(repo, head)
     return {
         "status": "COMMITTED_EVIDENCE_REFRESHED",
         "exact_sha": head,
         "rewritten_files": sum(row["rewritten"] for row in rows),
+        "head_tree": head_tree,
+        "index_tree_before": index_before,
+        "index_tree_after": index_after,
+        "index_refreshed_files": len(sources),
         "files": rows,
     }
 

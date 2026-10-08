@@ -6,11 +6,13 @@ import copy
 import io
 import json
 import math
+import os
 import re
 import shutil
 import subprocess
 import tempfile
 import textwrap
+import time
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -285,6 +287,87 @@ class CommittedEvidenceRefreshTests(unittest.TestCase):
     def assert_bytes(self, expected):
         for relative, data in expected.items():
             self.assertEqual((self.repo / relative).read_bytes(), data)
+
+    def warm_checkout(self):
+        source = self.repo
+        attributes = source / ".gitattributes"
+        attributes.write_bytes(b"* text=auto\n")
+        workflow.git(source, "add", "--", ".gitattributes")
+        self.commit()
+        old = self.head
+        attributes.write_bytes(
+            (
+                "* text=auto\n" + "".join(path + " -text\n" for path in self.blobs)
+            ).encode()
+        )
+        workflow.git(source, "add", "--", ".gitattributes")
+        self.commit()
+        current = self.head
+        self.repo = Path(self.temporary.name) / "runner"
+        workflow.git(
+            source,
+            "clone",
+            "--quiet",
+            "--no-checkout",
+            "--config",
+            "core.autocrlf=true",
+            str(source),
+            str(self.repo),
+        )
+        workflow.git(self.repo, "checkout", "--quiet", "--detach", old)
+        # A fresh/racy checkout records zero sizes and misses the runner bug.
+        # Age before refreshing the OLD attributes so Git caches real CRLF sizes.
+        aged = time.time() - 3600
+        for relative in self.blobs:
+            os.utime(self.repo / relative, (aged, aged))
+        workflow.git(self.repo, "update-index", "--refresh")
+        workflow.git(self.repo, "reset", "--hard", current)
+        workflow.git(self.repo, "checkout-index", "--force", "--", *self.blobs)
+        self.assertEqual(workflow.git(self.repo, "status", "--porcelain"), b"")
+        self.assert_bytes(
+            {
+                relative: data.replace(b"\n", b"\r\n")
+                for relative, data in self.blobs.items()
+            }
+        )
+
+    def assert_clean_refresh(self, rewritten):
+        receipt = workflow.refresh_committed_evidence(self.repo, self.head)
+        self.assertEqual(receipt["rewritten_files"], rewritten)
+        self.assertEqual(receipt["index_refreshed_files"], 3)
+        self.assertEqual(receipt["head_tree"], receipt["index_tree_before"])
+        self.assertEqual(receipt["head_tree"], receipt["index_tree_after"])
+        self.assert_bytes(self.blobs)
+        self.assertEqual(workflow.git(self.repo, "status", "--porcelain"), b"")
+        self.assertEqual(
+            workflow.git(self.repo, "write-tree").decode().strip(), receipt["head_tree"]
+        )
+        self.assertEqual(
+            workflow.git(self.repo, "rev-parse", "HEAD").decode().strip(), self.head
+        )
+
+    def test_warmed_attribute_migration_restores_bytes_and_clean_unchanged_index(self):
+        self.warm_checkout()
+        self.assert_clean_refresh(3)
+
+    def test_retry_refreshes_stale_index_when_raw_bytes_already_match(self):
+        self.warm_checkout()
+        for relative, data in self.blobs.items():
+            (self.repo / relative).write_bytes(data)
+        status = workflow.git(self.repo, "status", "--porcelain").decode().splitlines()
+        self.assertEqual(set(status), {" M " + relative for relative in self.blobs})
+        self.assert_clean_refresh(0)
+
+    def test_preexisting_staged_change_rejects_before_any_write(self):
+        before = self.stale_checkout()
+        staged = self.repo / "staged.json"
+        staged.write_bytes(b'{"preserve":true}\n')
+        workflow.git(self.repo, "add", "--", staged.name)
+        tree = workflow.git(self.repo, "write-tree")
+        with self.assertRaisesRegex(ValueError, "Pre-existing staged changes"):
+            workflow.refresh_committed_evidence(self.repo, self.head)
+        self.assert_bytes(before)
+        self.assertEqual(workflow.git(self.repo, "write-tree"), tree)
 
     def test_crlf_refresh_changes_only_allowlisted_files_and_is_idempotent(self):
         before = self.stale_checkout()
