@@ -20,7 +20,13 @@ from scripts.proof.retain_sa_calobra_tpp_survey import no_link
 
 ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW = ROOT / ".github/workflows/sa-calobra-cliff-component230-pcgex.yml"
-MARKERS = ("[detail-pilot]", "[tpp-survey]", "[tpp-retain]", "[tpp-docs]")
+MARKERS = (
+    "[detail-pilot]",
+    "[tpp-survey]",
+    "[tpp-retain]",
+    "[tpp-docs]",
+    "[wholemap-material]",
+)
 
 
 def jobs():
@@ -127,6 +133,7 @@ class NativeDetailWorkflowTests(unittest.TestCase):
 
     def test_existing_single_marker_lanes_keep_their_meaning(self):
         expected = {
+            "[wholemap-material]": "wholemap-material",
             "[detail-pilot]": "detail-pilot",
             "[tpp-survey]": "bidirectional-survey",
             "[tpp-retain]": "retain-bidirectional-survey",

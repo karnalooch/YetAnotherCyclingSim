@@ -55,7 +55,7 @@ endpoint is forbidden outside an explicit test fixture.
 | `reusable-unreal.yml` | CURRENT | Code-only Unreal build + Automation |
 | `runner-monitor.yml` | CURRENT | Owner-only manual main-branch silent desktop companion deployment |
 | `runner-space-recovery.yml` | CURRENT | Owner-only manual main-branch runner recovery |
-| `sa-calobra-cliff-component230-pcgex.yml` | CURRENT | Existing #445 topology and survey proof; owner-only `[detail-native]` pushes on the reviewed branch verify the fixed retained v8 source, build the exact revision, and capture a reversible detail mask and bounded patch at two annotated cameras. Other full/survey lanes are excluded for that intent; only selected frames and receipts are uploaded. |
+| `sa-calobra-cliff-component230-pcgex.yml` | CURRENT | Existing #445 topology and survey proof; owner-only `[detail-native]` captures the retained v8 mask and bounded patch at two annotated cameras. The exclusive `[wholemap-material]` lane prepares the pinned full grid, verifies all 1024 native Landscape bindings, resolves binary reuse through the existing compile/proof cache, and always runs a fresh master build plus scene capture. It retains 30 primary frames, readiness/source/rollback receipts and complete generated material packages; visual and performance admission remain pending. Existing full topology and survey jobs are excluded from both bounded intents. |
 | `sa-calobra-world-data-acquire.yml` | CURRENT | Trusted exact-SHA self-hosted acquisition and receipt recovery for the active Issue #335 source contract |
 | `sa-calobra-world-data-cnig-probe.yml` | CURRENT | Hosted public CNIG catalogue/source-identity probe for the active Issue #335 acquisition branch |
 | `scorecard.yml` | CURRENT | OpenSSF supply-chain audit |

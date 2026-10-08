@@ -36,6 +36,14 @@ on:
       - "scripts/ue/sa_calobra_detail_capture.py"
       - "scripts/ci/test_sa_calobra_detail_capture.py"
       - "scripts/ci/test_sa_calobra_detail_native_workflow.py"
+      - "scripts/ci/sa_calobra_whole_map_workflow.py"
+      - "scripts/ci/test_sa_calobra_whole_map_workflow.py"
+      - "scripts/assets/prepare_sa_calobra_whole_map_surface_prep.py"
+      - "scripts/assets/test_sa_calobra_whole_map_surface_prep.py"
+      - "scripts/ue/build_sa_calobra_whole_map_master.py"
+      - "scripts/ue/sa_calobra_whole_map_prep.py"
+      - "scripts/ue/capture_sa_calobra_whole_map_prep.py"
+      - "scripts/ci/test_sa_calobra_whole_map_prep.py"
       - "docs/experiments/sa-calobra-component230-detail-pilot-20261008/annotations.json"
       - "scripts/assets/prepare_sa_calobra_component230_cliff_visual.py"
       - "scripts/assets/test_sa_calobra_component230_cliff_visual.py"
@@ -72,6 +80,432 @@ env:
   YACS_LFS_CACHE_ROOT: 'D:\yacs\cache\git-lfs\YetAnotherCyclingSim'
 
 jobs:
+  wholemap-material:
+    name: Whole-map material preparation and native inventory
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.actor == 'karnalooch' &&
+      github.ref == 'refs/heads/feat/phase2c-pcgex-cliff-topology' &&
+      contains(github.event.head_commit.message, '[wholemap-material]') &&
+      !contains(github.event.head_commit.message, '[detail-native]') &&
+      !contains(github.event.head_commit.message, '[detail-pilot]') &&
+      !contains(github.event.head_commit.message, '[tpp-survey]') &&
+      !contains(github.event.head_commit.message, '[tpp-retain]') &&
+      !contains(github.event.head_commit.message, '[tpp-docs]')
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 60
+    env:
+      YACS_UNREAL_WORKTREE: _unreal-ci-warm
+    steps:
+      - name: Isolate self-hosted Git configuration
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'yacs-wholemap.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          $env:GIT_CONFIG_GLOBAL = $isolated
+          $env:GIT_CONFIG_NOSYSTEM = '1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+          $unrealLogRoot = Join-Path $env:RUNNER_TEMP 'yacs-unreal-${{ github.run_id }}-${{ github.run_attempt }}'
+          "YACS_UNREAL_LOG_ROOT=$unrealLogRoot" >> $env:GITHUB_ENV
+          # Generated material packages can exceed MAX_PATH in nested runner checkouts.
+          # Configure the job-local file before either actions/checkout invocation.
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot enable long paths in isolated Git configuration.' }
+          Write-Host "Using isolated Git config: $isolated"
+          git config --global --list --show-origin
+
+      - name: Bootstrap cleanup helper outside persistent worktree
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: _bootstrap-wholemap
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          lfs: false
+          clean: true
+          persist-credentials: false
+
+      - name: Release stale Unreal workspace locks
+        shell: pwsh
+        run: |
+          $bootstrap = Join-Path $env:GITHUB_WORKSPACE '_bootstrap-wholemap/scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
+          & $bootstrap -Workspace $env:GITHUB_WORKSPACE
+
+      - name: Respect shared Unreal host ownership
+        shell: pwsh
+        working-directory: _bootstrap-wholemap
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+          $state | ConvertTo-Json -Depth 8 | Write-Host
+          if ($state.status -ne 'IDLE') {
+            throw "Unreal runner host is already owned; status=$($state.status). Local/unknown Editors always win over remote CI."
+          }
+
+      - name: Select persistent Unreal cache before isolated cleanup
+        shell: pwsh
+        working-directory: _bootstrap-wholemap
+        run: |
+          python -m scripts.ci.unreal_ci_workspace select `
+            --workspace "$env:GITHUB_WORKSPACE" `
+            --run '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Unreal cache selection/retention failed; preserve worktrees.' }
+
+      - name: Remove bootstrap checkout
+        shell: pwsh
+        run: |
+          Remove-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE '_bootstrap-wholemap') -Recurse -Force
+
+      - name: Checkout exact caller revision without LFS payloads
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: ${{ env.YACS_UNREAL_WORKTREE }}
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          lfs: false
+          clean: false
+          persist-credentials: false
+
+      - name: Retain previous owner-handoff LFS payloads before sanitization
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $archive = Join-Path $env:GITHUB_WORKSPACE '_yacs-retained-lfs/handoff-${{ github.run_id }}-${{ github.run_attempt }}'
+          python scripts/ci/retain_unreal_assets.py --workspace (Get-Location).Path --archive $archive
+          if ($LASTEXITCODE -ne 0) { throw 'Previous owner-handoff LFS retention failed; do not sanitize the worktree.' }
+
+      - name: Sanitize tracked workspace while preserving verified build outputs
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git reset --hard '${{ github.sha }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree reset failed.' }
+          git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/' -e '/Saved/Logs/YetAnotherCyclingSim.log' -e '/Saved/RuntimeProof/CI/RegionTerrain/*/*.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof/automation_run.log'
+          if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree allow-listed clean failed.' }
+
+      - name: Enforce code-only checkout
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+
+      - name: Verify exact SHA and clean tracked state
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $actual = (git rev-parse HEAD).Trim()
+          if ($actual -ne '${{ github.sha }}') {
+            throw "checkout HEAD '$actual' != caller SHA '${{ github.sha }}'"
+          }
+          $dirty = @(git status --porcelain --untracked-files=all)
+          if ($dirty.Count -gt 0) {
+            $dirty | ForEach-Object { Write-Host $_ }
+            throw 'Warm Unreal worktree is not clean after sanitization.'
+          }
+
+      - name: Reset current-run Unreal proof evidence
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $helper = Join-Path (Get-Location) 'scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
+          if (-not (Test-Path -LiteralPath $helper -PathType Leaf)) {
+            $helper = Join-Path $env:GITHUB_WORKSPACE '_bootstrap-wholemap/scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
+          }
+          if (-not (Test-Path -LiteralPath $helper -PathType Leaf)) {
+            throw 'Unreal workspace lock helper is unavailable from both active checkout and bootstrap.'
+          }
+          & $helper -Workspace $env:GITHUB_WORKSPACE
+          $proof = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/Unreal'
+          if (Test-Path -LiteralPath $proof) {
+            # Two legacy fixed-name Automation logs can remain locked by a stale
+            # Windows CIM record even after the native process is gone. New runs
+            # write logs to the run-scoped RUNNER_TEMP path below, so preserve only
+            # those exact legacy residues and clear every other proof artifact.
+            $proofPayload = Join-Path $proof 'Proof'
+            Get-ChildItem -LiteralPath $proof -Force | ForEach-Object {
+              if ($_.FullName -eq $proofPayload) {
+                Get-ChildItem -LiteralPath $proofPayload -Force | ForEach-Object {
+                  if ($_.Name -notin @('automation_editor.log', 'automation_run.log')) {
+                    Remove-Item -LiteralPath $_.FullName -Recurse -Force
+                  }
+                }
+              }
+              else {
+                Remove-Item -LiteralPath $_.FullName -Recurse -Force
+              }
+            }
+          }
+          New-Item -ItemType Directory -Path $env:YACS_UNREAL_LOG_ROOT -Force | Out-Null
+
+      - name: Resolve immutable whole-map inputs in the configured workspace
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ($env:GITHUB_ACTOR -ne 'karnalooch' -or $env:GITHUB_REPOSITORY -ne 'karnalooch/YetAnotherCyclingSim' -or $env:GITHUB_REF_NAME -ne 'feat/phase2c-pcgex-cliff-topology') { throw 'Whole-map material intent requires the owner and existing reviewed branch.' }
+          if (-not $env:YACS_WORKSPACE_CONFIG) { throw 'Canonical YACS_WORKSPACE_CONFIG is required.' }
+          $workspaceJson = python -c "import json,sys; from pathlib import Path; from scripts.manage_local_workspace import load_workspace; print(json.dumps(load_workspace(Path(sys.argv[1]))))" $env:YACS_WORKSPACE_CONFIG
+          if ($LASTEXITCODE -ne 0) { throw 'Canonical persistent workspace configuration failed validation.' }
+          $workspace = $workspaceJson | ConvertFrom-Json
+          $root = Join-Path $workspace.work "proofs/sa-calobra-whole-map/$env:GITHUB_SHA/$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          if (Test-Path -LiteralPath $root) { throw 'Whole-map evidence root exists; refusing stale output or overwrite.' }
+          New-Item -ItemType Directory -Path $root | Out-Null
+          "YACS_WHOLE_MAP_PROOF_ROOT=$root" >> $env:GITHUB_ENV
+          "YACS_WHOLE_MAP_PREP=$(Join-Path $root 'whole-map-prep')" >> $env:GITHUB_ENV
+          "YACS_WHOLE_MAP_NATIVE_SOURCE=$(Join-Path $root 'native-input')" >> $env:GITHUB_ENV
+          "YACS_WHOLE_MAP_MASTER_RECEIPT=$(Join-Path $root 'whole-map-master-receipt.json')" >> $env:GITHUB_ENV
+          "YACS_WHOLE_MAP_PLACEMENT=$(Join-Path $workspace.data 'world-data/sa-calobra-working-v1/pcg-masks-v1-2026-10-04')" >> $env:GITHUB_ENV
+          "YACS_WHOLE_MAP_RETAINED_SOURCE=$(Join-Path $workspace.work 'proofs/sa-calobra-tpp/b1ea05b33b9f3208e7aeb6884f1a67792d9c6121/37800814004-1')" >> $env:GITHUB_ENV
+          "YACS_CLIFF_VISUAL_OUTPUT=$(Join-Path $root 'capture')" >> $env:GITHUB_ENV
+          "YACS_CLIFF_VISUAL_EXPECTED_SHA=$env:GITHUB_SHA" >> $env:GITHUB_ENV
+          "YACS_CLIFF_VISUAL_PLAN=$(Join-Path $root 'native-input/plan/component230-cliff-visual-plan.json')" >> $env:GITHUB_ENV
+          "YACS_TERRAIN_ORIGINAL_MESH=$(Join-Path $root 'native-input/source-reference/local-cliff-smoothing-mesh.json')" >> $env:GITHUB_ENV
+          # Accepted scene dependencies remain identical; the master is generated only in this isolated checkout.
+          git diff --quiet 4f2cba560d54931dc8ba080370d96a7aad24f15b HEAD -- Content/Worlds/SaCalobra/L_SaCalobraAccepted_20261004.umap Content/Worlds/SaCalobra/CheckpointMaterials Content/Worlds/SaCalobra/CheckpointEarthworks Content/Generated/YACS/MaskReview Content/Generated/YACS/TextureMaterialPrep
+          if ($LASTEXITCODE -ne 0) { throw 'Accepted scene or original material dependencies changed.' }
+
+      - name: Install pinned whole-grid and image dependencies
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          python -m pip install --disable-pip-version-check --only-binary=:all: numpy==2.3.5 pillow==12.0.0 rasterio==1.4.3
+          if ($LASTEXITCODE -ne 0) { throw 'Whole-map preparation dependency install failed.' }
+
+      - name: Hydrate only the frozen scene and full-grid material inputs
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $env:GIT_LFS_SKIP_SMUDGE = '0'
+          try {
+            New-Item -ItemType Directory -Force -Path $env:YACS_LFS_CACHE_ROOT | Out-Null
+            git lfs install --local --skip-smudge
+            if ($LASTEXITCODE -ne 0) { throw 'Local LFS setup failed.' }
+            git config --local lfs.storage $env:YACS_LFS_CACHE_ROOT
+            if ($LASTEXITCODE -ne 0) { throw 'Persistent LFS cache configuration failed.' }
+            $include = 'Content/Worlds/SaCalobra/L_SaCalobraAccepted_20261004.umap,Content/Worlds/SaCalobra/CheckpointMaterials/**,Content/Worlds/SaCalobra/CheckpointEarthworks/**,Content/Generated/YACS/MaskReview/M_MaskReview_1.uasset,Content/Generated/YACS/MaskReview/T_MaskReview_1.uasset,Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/**,Content/Generated/YACS/TextureMaterialPrep/Runs/C414EA4B402723D66FCB689E49EEB02D/BaseColor.uasset,Content/Generated/YACS/TextureMaterialPrep/Runs/94406E0247C9822CFD006CAB8B20545E/BaseColor.uasset,worldgen/materials/visual_fill/*.png'
+            git lfs pull --include=$include --exclude=''
+            if ($LASTEXITCODE -ne 0) { throw 'Frozen scene and full-grid material LFS hydration failed.' }
+          }
+          finally { $env:GIT_LFS_SKIP_SMUDGE = '1' }
+          python -m scripts.ci.sa_calobra_whole_map_workflow verify-assets --root $env:YACS_WHOLE_MAP_PROOF_ROOT --exact-sha $env:GITHUB_SHA
+          if ($LASTEXITCODE -ne 0) { throw 'Native scene asset hashes do not match exact committed LFS objects.' }
+
+      - name: Test preparation boundaries and prepare all immutable source bundles
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python -m unittest scripts.assets.test_sa_calobra_whole_map_surface_prep scripts.ci.test_sa_calobra_whole_map_prep scripts.ci.test_sa_calobra_whole_map_workflow scripts.ci.test_sa_calobra_detail_native_workflow -v
+          if ($LASTEXITCODE -ne 0) { throw 'Whole-map CPU and workflow contract tests failed.' }
+          python scripts/assets/prepare_sa_calobra_whole_map_surface_prep.py --source-inputs worldgen/materials/visual_fill --placement-inputs $env:YACS_WHOLE_MAP_PLACEMENT --output $env:YACS_WHOLE_MAP_PREP
+          if ($LASTEXITCODE -ne 0) { throw 'Full-grid material preparation or mandatory pinned PCG exclusion reasons failed.' }
+          python -m scripts.ci.sa_calobra_whole_map_workflow prepare-native --source $env:YACS_WHOLE_MAP_RETAINED_SOURCE --root $env:YACS_WHOLE_MAP_PROOF_ROOT --exact-sha $env:GITHUB_SHA
+          if ($LASTEXITCODE -ne 0) { throw 'Retained native v8 donor validation failed.' }
+          python -m scripts.ci.sa_calobra_whole_map_workflow verify-prepared --root $env:YACS_WHOLE_MAP_PROOF_ROOT --placement $env:YACS_WHOLE_MAP_PLACEMENT
+          if ($LASTEXITCODE -ne 0) { throw 'Whole-map prepared output inventory failed.' }
+
+      - name: Verify installed exact-version material and Landscape API source
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
+          $engine = Resolve-YacsUnrealEngine -ProjectPath (Join-Path (Get-Location) 'YetAnotherCyclingSim.uproject')
+          if (-not $engine -or $engine.Version -ne '5.8.2-56702186') { throw 'Whole-map material proof requires UE 5.8.2 CL 56702186.' }
+          $entryMap = Join-Path $engine.Root 'Engine/Content/Maps/Entry.umap'
+          if (-not (Test-Path -LiteralPath $entryMap -PathType Leaf) -or (Get-Item -LiteralPath $entryMap).Length -lt 1024) { throw 'Installed empty Entry map is required before starting the material editor passes.' }
+          $contracts = @(
+            @{ path = 'Engine/Source/Runtime/Engine/Public/Materials/MaterialExpressionCameraPositionWS.h'; symbols = @('UMaterialExpressionCameraPositionWS') },
+            @{ path = 'Engine/Source/Runtime/Engine/Public/Materials/MaterialExpressionDistance.h'; symbols = @('UMaterialExpressionDistance', 'A', 'B') },
+            @{ path = 'Engine/Source/Runtime/Engine/Public/Materials/MaterialExpressionFloor.h'; symbols = @('UMaterialExpressionFloor') },
+            @{ path = 'Engine/Source/Runtime/Engine/Public/Materials/MaterialExpressionFrac.h'; symbols = @('UMaterialExpressionFrac') },
+            @{ path = 'Engine/Source/Runtime/Engine/Public/Materials/MaterialExpressionMax.h'; symbols = @('UMaterialExpressionMax') },
+            @{ path = 'Engine/Source/Editor/MaterialEditor/Public/MaterialEditingLibrary.h'; symbols = @('CreateMaterialExpression', 'ConnectMaterialProperty', 'RecompileMaterial') },
+            @{ path = 'Engine/Source/Runtime/Landscape/Classes/LandscapeComponent.h'; symbols = @('ForcedLOD', 'OverrideMaterial') }
+          )
+          $evidence = @()
+          foreach ($contract in $contracts) {
+            $path = Join-Path $engine.Root $contract.path
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Missing installed primary material API header: $($contract.path)" }
+            $source = Get-Content -LiteralPath $path -Raw
+            foreach ($symbol in $contract.symbols) {
+              if ($source -notmatch ('\b' + [regex]::Escape($symbol) + '\b')) { throw "Installed material API lacks $symbol" }
+            }
+            $evidence += [ordered]@{ header = $contract.path; sha256 = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant(); verified_symbols = $contract.symbols }
+          }
+          [ordered]@{ status = 'INSTALLED_PRIMARY_API_SOURCE_VERIFIED'; exact_sha = $env:GITHUB_SHA; engine_version = $engine.Version; build_version_sha256 = $engine.BuildVersionSha256; headers = $evidence; startup_map = '/Engine/Maps/Entry'; startup_map_sha256 = (Get-FileHash -LiteralPath $entryMap -Algorithm SHA256).Hash.ToLowerInvariant() } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $env:YACS_WHOLE_MAP_PROOF_ROOT 'native-api-evidence.json') -Encoding UTF8
+
+      - name: Fingerprint the exact compile and Automation inputs
+        id: fingerprints
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $fingerprints = python -c "import json; from scripts.ci.classify_changes import unreal_compile_fingerprint,unreal_proof_fingerprint; print(json.dumps(dict(compile=unreal_compile_fingerprint('.'),proof=unreal_proof_fingerprint('.'))))"
+          if ($LASTEXITCODE -ne 0) { throw 'Exact-head Unreal input fingerprinting failed.' }
+          $value = $fingerprints | ConvertFrom-Json
+          "compile=$($value.compile)" >> $env:GITHUB_OUTPUT
+          "proof=$($value.proof)" >> $env:GITHUB_OUTPUT
+
+      - name: Resolve verified Unreal execution mode
+        id: cache
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          ./scripts/ci/Resolve-YacsUnrealCiCache.ps1 -Action Resolve -ExpectedHead $env:GITHUB_SHA -ExpectedCompileFingerprint '${{ steps.fingerprints.outputs.compile }}' -ExpectedProofFingerprint '${{ steps.fingerprints.outputs.proof }}' -GithubOutput $env:GITHUB_OUTPUT
+
+      - name: Purge incompatible build outputs only when resolver requires it
+        if: ${{ steps.cache.outputs.purge_build_cache == 'true' }}
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          foreach ($relative in @('Binaries', 'Intermediate')) {
+            if (Test-Path -LiteralPath $relative) { Remove-Item -LiteralPath $relative -Recurse -Force }
+          }
+          if (Test-Path -LiteralPath 'Plugins') {
+            Get-ChildItem -LiteralPath 'Plugins' -Directory | ForEach-Object {
+              foreach ($leaf in @('Binaries', 'Intermediate')) {
+                $candidate = Join-Path $_.FullName $leaf
+                if (Test-Path -LiteralPath $candidate) { Remove-Item -LiteralPath $candidate -Recurse -Force }
+              }
+            }
+          }
+
+      - name: Build or run fresh Automation only when required by verified cache
+        if: ${{ steps.cache.outputs.mode != 'static' }}
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $parameters = @{ ExpectedHead = $env:GITHUB_SHA; ExpectedBranch = 'HEAD' }
+          if ('${{ steps.cache.outputs.mode }}' -eq 'runtime') { $parameters.SkipBuild = $true }
+          elseif ('${{ steps.cache.outputs.mode }}' -ne 'compile') { throw 'Unexpected verified Unreal execution mode.' }
+          ./scripts/ci/Invoke-YacsUnrealCi.ps1 @parameters
+          if ($LASTEXITCODE -ne 0) { throw 'Required exact-head compile or Automation failed.' }
+
+      - name: Record and publish only this job's successful non-static proof
+        if: ${{ steps.cache.outputs.mode != 'static' }}
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ci/Resolve-YacsUnrealCiCache.ps1 -Action Record -CompletedMode '${{ steps.cache.outputs.mode }}' -CompletedCompileKind '${{ steps.cache.outputs.compile_kind }}' -ExpectedHead $env:GITHUB_SHA -ExpectedCompileFingerprint '${{ steps.fingerprints.outputs.compile }}' -ExpectedProofFingerprint '${{ steps.fingerprints.outputs.proof }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Actual compile/proof state recording failed.' }
+          python -m scripts.ci.unreal_ci_workspace publish --workspace $env:GITHUB_WORKSPACE --run '${{ github.run_id }}-${{ github.run_attempt }}' --worktree $env:YACS_UNREAL_WORKTREE --head $env:GITHUB_SHA --compile-fingerprint '${{ steps.fingerprints.outputs.compile }}' --proof-fingerprint '${{ steps.fingerprints.outputs.proof }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Verified compile/proof cache publication failed.' }
+
+      - name: Retain exact binary equivalence evidence before fresh material work
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Copy-Item -LiteralPath 'Saved/RuntimeProof/CI/Unreal/cache_resolution.json' -Destination (Join-Path $env:YACS_WHOLE_MAP_PROOF_ROOT 'compile-cache-resolution.json')
+          Copy-Item -LiteralPath 'Saved/BuildCache/UnrealCi/state.json' -Destination (Join-Path $env:YACS_WHOLE_MAP_PROOF_ROOT 'compile-cache-state.json')
+          Write-Host 'Binary mode: ${{ steps.cache.outputs.mode }}; compile kind: ${{ steps.cache.outputs.compile_kind }}; reason: ${{ steps.cache.outputs.reason }}'
+          Write-Host 'The following material build and full-map capture are fresh even when binary equivalence is static.'
+
+      - name: Prepare fixed master then capture the entire native working map
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
+          $project = Join-Path (Get-Location) 'YetAnotherCyclingSim.uproject'
+          $engine = Resolve-YacsUnrealEngine -ProjectPath $project
+          $env:YACS_TERRAIN_EROSION_TRIAL = '1'
+          $env:YACS_TERRAIN_MESH_TRIAL = '1'
+          foreach ($name in @('YACS_DETAIL_NATIVE', 'YACS_CLIFF_PCGEX_MESH', 'YACS_CLIFF_PAIRED_CUSTOM_OUTPUT', 'YACS_SA_CALOBRA_TPP_SURVEY', 'YACS_LANDSCAPE_MESH_DIAGNOSTIC', 'YACS_LOCAL_CLIFF_SMOOTHING')) { Remove-Item "Env:$name" -ErrorAction SilentlyContinue }
+          $passes = @(
+            @{ name = 'master'; script = 'scripts/ue/build_sa_calobra_whole_map_master.py'; timeout = 1200000 },
+            @{ name = 'capture'; script = 'scripts/ue/capture_sa_calobra_component230_cliff.py'; timeout = 1200000 }
+          )
+          foreach ($pass in $passes) {
+            $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+            if ($state.status -ne 'IDLE') { throw "Whole-map editor pass cannot start on an owned host: $($state.status)." }
+            $script = (Resolve-Path $pass.script).Path
+            $stdout = Join-Path $env:YACS_WHOLE_MAP_PROOF_ROOT "whole-map-$($pass.name).stdout.log"
+            $stderr = Join-Path $env:YACS_WHOLE_MAP_PROOF_ROOT "whole-map-$($pass.name).stderr.log"
+            $log = Join-Path $env:YACS_WHOLE_MAP_PROOF_ROOT "whole-map-$($pass.name).engine.log"
+            # Both passes start empty. The scene-owning capture loads the accepted map exactly once itself.
+            $arguments = @(('"' + $project + '"'), '/Engine/Maps/Entry', ('-ExecutePythonScript="' + $script + '"'), '-RenderOffscreen', '-Unattended', '-NoPause', '-NoSplash', '-NoSound', '-NoP4', '-NoVSync', '-Deterministic', '-ScriptErrorsAreFatal', '-stdout', ('-AbsLog="' + $log + '"'))
+            $process = Start-Process -FilePath $engine.UnrealEditorPath -ArgumentList $arguments -PassThru -NoNewWindow -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+            if (-not $process.WaitForExit($pass.timeout)) {
+              try { $process | Stop-Process -Force } catch { }
+              throw "Whole-map $($pass.name) editor pass timed out."
+            }
+            if ($process.ExitCode -ne 0) {
+              foreach ($diagnostic in @($stdout, $stderr, $log)) { if (Test-Path -LiteralPath $diagnostic -PathType Leaf) { Get-Content -LiteralPath $diagnostic -Tail 160 | Write-Host } }
+              throw "Whole-map $($pass.name) exited $($process.ExitCode)."
+            }
+            foreach ($diagnostic in @($stdout, $stderr, $log)) {
+              if (-not (Test-Path -LiteralPath $diagnostic -PathType Leaf)) { throw 'Whole-map process diagnostics are missing.' }
+              $fallback = @(Select-String -LiteralPath $diagnostic -Pattern @('Texture Sample > Missing input texture', 'Default Material will be used', "LoadErrors: Error:.*'/Game/Worlds/SaCalobra/Checkpoint", "LoadErrors: Error:.*'/Game/Generated/YACS/MaskReview/", "LoadErrors: Error:.*'/Game/Generated/YACS/TextureMaterialPrep/", "LoadErrors: Error:.*'/Game/Generated/YACS/SaCalobra/WholeMapPreparation/"))
+              if ($fallback.Count -gt 0) { $fallback | Write-Host; throw 'Whole-map proof detected a missing dependency or material fallback.' }
+            }
+            if ($pass.name -eq 'master') {
+              python -m scripts.ci.sa_calobra_whole_map_workflow retain-master --root $env:YACS_WHOLE_MAP_PROOF_ROOT --exact-sha $env:GITHUB_SHA
+              if ($LASTEXITCODE -ne 0) { throw 'Fresh generated material packages could not be retained exactly.' }
+            }
+          }
+
+      - name: Verify complete native inventory and fresh capture provenance
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          python -m scripts.ci.sa_calobra_whole_map_workflow verify-native --root $env:YACS_WHOLE_MAP_PROOF_ROOT --exact-sha $env:GITHUB_SHA
+          if ($LASTEXITCODE -ne 0) { throw 'Whole-map application, capture or rollback evidence failed.' }
+
+      - name: Verify unchanged map checkout and all retained source bytes
+        if: ${{ always() && env.YACS_WHOLE_MAP_PROOF_ROOT != '' }}
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          python -m scripts.ci.sa_calobra_whole_map_workflow restore --root $env:YACS_WHOLE_MAP_PROOF_ROOT --exact-sha $env:GITHUB_SHA
+          if ($LASTEXITCODE -ne 0) { throw 'Whole-map proof changed canonical bytes or retained sources.' }
+
+      - name: Retain only current-run compile diagnostics under the proof root
+        if: ${{ always() && env.YACS_WHOLE_MAP_PROOF_ROOT != '' }}
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $source = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/Unreal'
+          $destination = Join-Path $env:YACS_WHOLE_MAP_PROOF_ROOT 'build-automation'
+          foreach ($relative in @('cache_resolution.json', 'unreal_ci_summary.json', 'failure_context.txt', 'Proof/summary.json', 'Proof/build_editor.log', 'Proof/AutomationReport/index.json')) {
+            $file = Join-Path $source $relative
+            if (Test-Path -LiteralPath $file -PathType Leaf) {
+              $target = Join-Path $destination $relative
+              New-Item -ItemType Directory -Path (Split-Path $target -Parent) -Force | Out-Null
+              Copy-Item -LiteralPath $file -Destination $target
+            }
+          }
+
+      - name: Upload compact whole-map renders and independently verified receipts
+        if: ${{ always() && env.YACS_WHOLE_MAP_PROOF_ROOT != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: sa-calobra-whole-map-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/whole-map-prep/
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/generated-assets/
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/capture/whole-map-prep/frames/
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/capture/whole-map-prep/*.json
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/capture/whole-map-prep/readiness/**/capture-readiness.json
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/capture/component230-cliff-visual-receipt.json
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/*.json
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/whole-map-*.log
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/build-automation/
+          if-no-files-found: error
+          retention-days: 90
+
   detail-pilot:
     name: Replay source-surface detail masks without Unreal
     if: >-
@@ -80,6 +514,7 @@ jobs:
       github.actor == 'karnalooch' &&
       github.ref == 'refs/heads/feat/phase2c-pcgex-cliff-topology' &&
       contains(github.event.head_commit.message, '[detail-pilot]') &&
+      !contains(github.event.head_commit.message, '[wholemap-material]') &&
       !contains(github.event.head_commit.message, '[detail-native]') &&
       !contains(github.event.head_commit.message, '[tpp-survey]') &&
       !contains(github.event.head_commit.message, '[tpp-retain]') &&
@@ -124,6 +559,7 @@ jobs:
       github.actor == 'karnalooch' &&
       github.ref == 'refs/heads/feat/phase2c-pcgex-cliff-topology' &&
       contains(github.event.head_commit.message, '[detail-native]') &&
+      !contains(github.event.head_commit.message, '[wholemap-material]') &&
       !contains(github.event.head_commit.message, '[detail-pilot]') &&
       !contains(github.event.head_commit.message, '[tpp-survey]') &&
       !contains(github.event.head_commit.message, '[tpp-retain]') &&
@@ -688,6 +1124,7 @@ jobs:
 
   phase2c:
     if: >-
+      !(github.event_name == 'push' && contains(github.event.head_commit.message, '[wholemap-material]')) &&
       !(github.event_name == 'push' && contains(github.event.head_commit.message, '[detail-native]')) &&
       !(github.event_name == 'push' && contains(github.event.head_commit.message, '[detail-pilot]')) &&
       !(github.event_name == 'workflow_dispatch' && inputs.tpp_survey) &&
@@ -1286,6 +1723,7 @@ jobs:
     if: >-
       (github.event_name == 'workflow_dispatch' && inputs.tpp_survey) ||
       (github.event_name == 'push' && contains(github.event.head_commit.message, '[tpp-survey]') &&
+       !contains(github.event.head_commit.message, '[wholemap-material]') &&
        !contains(github.event.head_commit.message, '[detail-native]'))
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 120
@@ -1816,6 +2254,7 @@ jobs:
     if: >-
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[tpp-retain]') &&
+      !contains(github.event.head_commit.message, '[wholemap-material]') &&
       !contains(github.event.head_commit.message, '[detail-native]') &&
       !contains(github.event.head_commit.message, '[tpp-survey]') &&
       !contains(github.event.head_commit.message, '[tpp-docs]')
@@ -1911,6 +2350,7 @@ jobs:
       github.actor == 'karnalooch' &&
       github.ref == 'refs/heads/feat/phase2c-pcgex-cliff-topology' &&
       contains(github.event.head_commit.message, '[tpp-docs]') &&
+      !contains(github.event.head_commit.message, '[wholemap-material]') &&
       !contains(github.event.head_commit.message, '[detail-native]') &&
       !contains(github.event.head_commit.message, '[tpp-survey]') &&
       !contains(github.event.head_commit.message, '[tpp-retain]')

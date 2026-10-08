@@ -60,6 +60,9 @@ LANDSCAPE_MESH_DIAGNOSTIC = os.environ.get("YACS_LANDSCAPE_MESH_DIAGNOSTIC") == 
 LOCAL_CLIFF_SMOOTHING = os.environ.get("YACS_LOCAL_CLIFF_SMOOTHING") == "1"
 TERRAIN_EROSION_TRIAL = os.environ.get("YACS_TERRAIN_EROSION_TRIAL") == "1"
 TERRAIN_MESH_TRIAL = os.environ.get("YACS_TERRAIN_MESH_TRIAL") == "1"
+WHOLE_MAP_PREP = os.environ.get("YACS_WHOLE_MAP_PREP")
+_whole_map_capture = None
+_whole_map_environment = None
 _terrain_trial = {"enabled": False}
 _terrain_source = None
 _landscape_visibility_state = None
@@ -156,6 +159,56 @@ def _begin_detail_native():
         Path(os.environ['YACS_DETAIL_NATIVE']), EXPECTED_SHA, scene, finish)
     unreal.EditorPythonScripting.set_keep_python_script_alive(True)
     _detail_capture.start()
+
+
+def _begin_whole_map_prep():
+    """Keep the same source-bound v8 scene while preparing the full Landscape."""
+    global _whole_map_capture
+    if (not TERRAIN_MESH_TRIAL or not TERRAIN_EROSION_TRIAL or not NEUTRAL_LANDSCAPE
+            or PCGEX_MESH is not None or PAIRED_CUSTOM_OUTPUT is not None
+            or os.environ.get('YACS_DETAIL_NATIVE')
+            or os.environ.get('YACS_SA_CALOBRA_TPP_SURVEY') == '1'):
+        raise RuntimeError('Whole-map preparation requires only the accepted v8 scene')
+    _spawn_rock_shape_trial()
+    meshes = [actor for actor in _candidate_actors if isinstance(actor, unreal.DynamicMeshActor)]
+    if len(meshes) != 1:
+        raise RuntimeError('Whole-map preparation requires one accepted v8 surface')
+    component = meshes[0].get_dynamic_mesh_component()
+    mesh = component.get_dynamic_mesh()
+    triangles = mesh.get_triangle_count()
+    if float(_plan['skin_contract']['uv_world_size_m']) != 3.0:
+        raise RuntimeError('Whole-map v8 limestone scale differs')
+    unreal.GeometryScript_UVs.set_mesh_u_vs_from_box_projection(
+        mesh, 0, unreal.Transform(scale=unreal.Vector(300, 300, 300)),
+        unreal.GeometryScriptMeshSelection(), min_island_tri_count=2)
+    if mesh.get_triangle_count() != triangles:
+        raise RuntimeError('Whole-map v8 UV preparation changed topology')
+    material = _load_surface_material(CLIFF_MATERIAL, 'accepted v8 limestone')
+    component.set_material(0, material)
+    component.notify_mesh_modified()
+    if component.get_material(0) != material:
+        raise RuntimeError('Whole-map v8 limestone binding failed')
+    _terrain_trial['limestone_uv_projection'] = {
+        'method': 'Epic GeometryScript box projection', 'uv_channel': 0,
+        'world_size_m': 3.0, 'triangles_unchanged': True,
+        'scope': 'UNCHANGED_ACCEPTED_V8_IN_WHOLE_MAP_PREPARATION'}
+    from scripts.ue.capture_sa_calobra_whole_map_prep import WholeMapCapture
+    scene = {
+        'map': MAP, 'map_sha256': _before_hash, 'component_bounds': _component_bounds(),
+        'accepted_cliff_implementation_sha': '4f2cba560d54931dc8ba080370d96a7aad24f15b',
+        'retained_source_capture_sha': 'b1ea05b33b9f3208e7aeb6884f1a67792d9c6121',
+        'cliff_recipe': 'rounded-limestone-reshape-v8', 'material_path': CLIFF_MATERIAL,
+        'combined_audit': _terrain_trial['combined_audit'], 'lighting': _mesh_receipt['lighting'],
+        'other_scene_actors_retained': True,
+        'scope': 'Full working Landscape material preparation; accepted v8 and separate road materials retained',
+    }
+    _whole_map_capture = WholeMapCapture(
+        unreal, _world, _landscape, _camera, component, OUTPUT / 'whole-map-prep',
+        Path(WHOLE_MAP_PREP), Path(os.environ['YACS_WHOLE_MAP_NATIVE_SOURCE']),
+        Path(os.environ['YACS_WHOLE_MAP_MASTER_RECEIPT']), EXPECTED_SHA, scene,
+        _whole_map_environment, finish)
+    unreal.EditorPythonScripting.set_keep_python_script_alive(True)
+    _whole_map_capture.start()
 
 
 def _begin_tpp_survey():
@@ -1252,7 +1305,7 @@ def _spawn_rock_shape_trial():
     (OUTPUT / 'terrain-erosion.json').write_text(json.dumps(erosion), encoding='utf-8')
     reference_path = Path(os.environ['YACS_TERRAIN_ORIGINAL_MESH'])
     reference_receipt = json.loads((reference_path.parent / 'component230-cliff-visual-receipt.json').read_text(encoding='utf-8-sig'))
-    detail_root = os.environ.get('YACS_DETAIL_NATIVE')
+    detail_root = os.environ.get('YACS_DETAIL_NATIVE') or os.environ.get('YACS_WHOLE_MAP_NATIVE_SOURCE')
     reference_sha = EXPECTED_SHA
     if detail_root:
         # Reuse the explicitly retained original-source control. Its historical
@@ -1645,9 +1698,9 @@ def _write_receipt(status: str, error: str | None, *, output=None, mesh=None, ca
             "high_res_warmup_frames": CAPTURE_WARMUP_FRAMES,
             "prime_each_viewmode_transition": True,
             "priming_captures_per_view": 3,
-            "force_lod": 0,
+            "force_lod": -1 if WHOLE_MAP_PREP else 0,
             "component_lod_override": _landscape_lod_receipt,
-            "fully_load_used_textures": True,
+            "fully_load_used_textures": not bool(WHOLE_MAP_PREP),
         },
         "visual_acceptance": "PENDING_OWNER",
         "error": error,
@@ -1661,13 +1714,25 @@ def _write_receipt(status: str, error: str | None, *, output=None, mesh=None, ca
 
 
 def finish(error: str | None = None):
-    global _handle, _finished
+    global _finished
     if _finished:
         return
     _finished = True
+    try:
+        _finish_body(error)
+    finally:
+        unreal.EditorPythonScripting.set_keep_python_script_alive(False)
+
+
+def _finish_body(error: str | None = None):
+    global _handle
     if _handle is not None:
-        unreal.unregister_slate_post_tick_callback(_handle)
-        _handle = None
+        try:
+            unreal.unregister_slate_post_tick_callback(_handle)
+        except Exception as exc:
+            error = (error + "\n" if error else "") + "capture callback cleanup: " + str(exc)
+        finally:
+            _handle = None
     try:
         unreal.SystemLibrary.execute_console_command(
             _world, "showflag.DynamicShadows 1"
@@ -1676,9 +1741,22 @@ def finish(error: str | None = None):
     except Exception:
         pass
     if _terrain_source is not None:
-        before_cleanup = unreal.YacsLandscapeMeshDiagnosticLibrary.read_component230_heightfield(_target_component)
-        (OUTPUT / "terrain-source-before-cleanup.json").write_text(before_cleanup, encoding="utf-8")
-    cleanup_errors = _destroy_transient()
+        try:
+            before_cleanup = unreal.YacsLandscapeMeshDiagnosticLibrary.read_component230_heightfield(_target_component)
+            (OUTPUT / "terrain-source-before-cleanup.json").write_text(before_cleanup, encoding="utf-8")
+        except Exception as exc:
+            error = (error + "\n" if error else "") + "pre-cleanup source diagnostic: " + str(exc)
+    cleanup_errors = []
+    try:
+        cleanup_errors.extend(_destroy_transient())
+    except Exception as exc:
+        cleanup_errors.append("transient scene cleanup: " + str(exc))
+    finally:
+        if _whole_map_environment is not None:
+            try:
+                cleanup_errors.extend(_whole_map_environment.restore())
+            except Exception as exc:
+                cleanup_errors.append("whole-map capture environment rollback: " + str(exc))
     if cleanup_errors:
         error = (error + "\n" if error else "") + "\n".join(cleanup_errors)
 
@@ -1704,11 +1782,17 @@ def finish(error: str | None = None):
         error = (error + "\n" if error else "") + "snapshot verify: " + str(exc)
 
     status = "COMPONENT230_CLIFF_VISUAL_FAIL" if error else "COMPONENT230_CLIFF_VISUAL_PASS"
-    payload = _write_receipt(status, error)
+    try:
+        payload = _write_receipt(status, error)
+    except Exception as exc:
+        error = (error + "\n" if error else "") + "capture receipt write: " + str(exc)
+        payload = {"status": "COMPONENT230_CLIFF_VISUAL_FAIL", "error": error}
     if _survey_capture is not None:
         _survey_capture.mark_cleanup(error)
     if _detail_capture is not None:
         _detail_capture.mark_cleanup(error)
+    if _whole_map_capture is not None:
+        _whole_map_capture.mark_cleanup(error)
     if _paired_custom_record is not None:
         _write_receipt(status, error, output=PAIRED_CUSTOM_OUTPUT,
                        mesh=_paired_custom_record["mesh"],
@@ -1717,7 +1801,6 @@ def finish(error: str | None = None):
         unreal.log_error("YACS_COMPONENT230_CLIFF " + json.dumps(payload, default=str))
     else:
         unreal.log("YACS_COMPONENT230_CLIFF " + json.dumps(payload, default=str))
-    unreal.EditorPythonScripting.set_keep_python_script_alive(False)
 
 
 def _begin_paired_candidate():
@@ -1907,6 +1990,7 @@ def main():
     global _world, _landscape, _target_component, _camera, _views
     global _handle, _before_hash, _before_scene, _plan, _pcgex_mesh
     global OUTPUT, _paired_pcgex_mesh, _paired_scene
+    global _whole_map_environment
 
     if _git_head() != EXPECTED_SHA:
         raise RuntimeError("Cliff visual exact SHA mismatch")
@@ -2002,8 +2086,14 @@ def main():
     # readbacks on the original halfway through the comparison.
     _landscape.force_layers_full_update()
     _before_scene = _scene_snapshot()
+    if WHOLE_MAP_PREP:
+        from scripts.ue.sa_calobra_whole_map_prep import CaptureEnvironment
+        _whole_map_environment = CaptureEnvironment(unreal, _world, _landscape)
     _fix_temporal_sequence()
-    _pin_landscape_lod()
+    if _whole_map_environment is not None:
+        _whole_map_environment.enable_adaptive()
+    else:
+        _pin_landscape_lod()
     _apply_neutral_landscape_material()
     lighting = _ensure_lighting()
     bounds = _component_bounds()
@@ -2047,15 +2137,21 @@ def main():
     unreal.SystemLibrary.execute_console_command(_world, "r.ScreenPercentage 100")
     unreal.SystemLibrary.execute_console_command(_world, "r.PostProcessAAQuality 6")
     unreal.SystemLibrary.execute_console_command(_world, "showflag.DynamicShadows 1")
-    unreal.SystemLibrary.execute_console_command(_world, "r.ForceLOD 0")
+    if not WHOLE_MAP_PREP:
+        unreal.SystemLibrary.execute_console_command(_world, "r.ForceLOD 0")
     unreal.SystemLibrary.execute_console_command(
-        _world, "r.Streaming.FullyLoadUsedTextures 1"
+        _world, "r.Streaming.FullyLoadUsedTextures 0" if WHOLE_MAP_PREP else "r.Streaming.FullyLoadUsedTextures 1"
     )
     unreal.SystemLibrary.execute_console_command(
         _world, f"r.HighResScreenshotDelay {CAPTURE_WARMUP_FRAMES}"
     )
 
     _mesh_receipt["lighting"] = lighting
+    if os.environ.get('YACS_WHOLE_MAP_PREP'):
+        # Whole-area review owns its camera plan, all1024 material bindings and
+        # adaptive LOD. It must enter before either legacy matrix or detail lane.
+        _begin_whole_map_prep()
+        return
     if os.environ.get('YACS_DETAIL_NATIVE'):
         # Enter before the legacy matrix tries to read its review-camera file.
         # This lane uses only the two hash-bound pilot poses.

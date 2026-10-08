@@ -124,6 +124,14 @@ eligibility, exclusions and protected interfaces continue to govern changes.
 
 ## Whole-Landscape coverage outside the road strip
 
+The owner authorized implementation of the complete working-map surface
+preparation on 2026-10-08. The [execution plan](SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md)
+consumes existing full-grid appearance/availability/exclusion evidence and adds
+a complete native material preparation consumer. Camera-distance micro detail
+is a separate rendering control; this continuation does not infer additional
+A-D footprints or downgrade unreviewed surfaces. The plan records the required
+distributed views and preserves the accepted v8 comparison fixture.
+
 The [off-road appearance plan](../experiments/sa-calobra-roadside-visibility-prestudy-20261008/off-road-plan.md)
 sets a coherent macro/material baseline for the entire 2,016.5 m working square,
 with approximate owner-marked review sectors and two original off-road examples.

@@ -54,5 +54,10 @@ docs/experiments/sa-calobra-tpp-survey-20261008/*.csv -text whitespace=cr-at-eol
 docs/experiments/sa-calobra-tpp-survey-20261008/route.svg -text whitespace=cr-at-eol
 docs/experiments/sa-calobra-tpp-survey-20261008/review-guide.txt -text whitespace=cr-at-eol
 
+# Retained source-face pilot JSON is byte-pinned by native/full-map consumers.
+docs/experiments/sa-calobra-component230-detail-pilot-20261008/pilot/*.json -text
+# Native projection evidence participates in the portable material recipe identity.
+docs/experiments/sa-calobra-material-repair-20261006/evidence/native-projection.json -text
+
 # Preserve native detail proof bytes, including Windows-authored JSON receipts.
 docs/experiments/sa-calobra-component230-detail-native-20261008/evidence/** -text whitespace=cr-at-eol

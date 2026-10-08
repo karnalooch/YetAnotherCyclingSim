@@ -98,6 +98,7 @@ The old Stage 3G / R4.1 / B.x vocabulary is historical. Existing workflow names 
 | Persistent local project and checkpoints | [`tooling/LOCAL_WORKSPACE.md`](tooling/LOCAL_WORKSPACE.md) | **Authoritative host workflow** |
 | Blender headless producer contract | [`tooling/BLENDER_HEADLESS.md`](tooling/BLENDER_HEADLESS.md) | **Active supporting tool** |
 | Sa Calobra material foundation | [`tooling/SA_CALOBRA_MATERIAL_FOUNDATION.md`](tooling/SA_CALOBRA_MATERIAL_FOUNDATION.md) | **Active candidate workflow; Bible owns methodology** |
+| Sa Calobra whole-map surface preparation | [`tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md`](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md) | **Owner-approved continuation in #446; full-grid roles and native consumer implemented, fresh execution pending** |
 | Sa Calobra material repair sequence | [`tooling/SA_CALOBRA_MATERIAL_REPAIR_PLAN.md`](tooling/SA_CALOBRA_MATERIAL_REPAIR_PLAN.md) | **Documentation-only plan; implementation and acceptance pending** |
 | Sa Calobra cliff / erosion presentation pass | [`tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md`](tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md) | **Active #429 non-destructive selector foundation; production dressing pending** |
 | CI cost / proof cadence | [`CI_VALIDATION_TIERS.md`](CI_VALIDATION_TIERS.md) | **Authoritative** |
@@ -131,7 +132,8 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 - [`tooling/MATERIAL_FORGE.md`](tooling/MATERIAL_FORGE.md) — Issue #387 offline procedural PBR, material-local mask and UE import contract; consumes PCG/PCGEx semantics, never replaces them.
 - [`tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md`](tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md) — cliff selector/handoff contract and bounded native Landscape/PCGEx/mesh trial history, subordinate to the World Building Bible.
 - [`tooling/SA_CALOBRA_COMPONENT230_REPAIR_PLAN.md`](tooling/SA_CALOBRA_COMPONENT230_REPAIR_PLAN.md) — #445 / draft PR #446 report verification, exact remaining failures and ordered repair/acceptance evidence; local trial success does not admit the whole map.
-- [`tooling/SA_CALOBRA_SURFACE_DETAIL_ATLAS.md`](tooling/SA_CALOBRA_SURFACE_DETAIL_ATLAS.md) — documentation-only surface-detail review and PCG/PCGEx handoff plan: A-D viewer demand, five independent tags and a provisional paired-view shortlist; final surface mapping remains pending.
+- [`tooling/SA_CALOBRA_SURFACE_DETAIL_ATLAS.md`](tooling/SA_CALOBRA_SURFACE_DETAIL_ATLAS.md) — surface-detail review and PCG/PCGEx handoff plan with a tested Component 230 registration/native pilot: A-D viewer demand remains separate from rendering distance; wider physical mapping remains pending.
+- [`tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md`](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md) — #445 / #446 whole-working-map execution plan: verified five-role inputs, separate unknown/exclusion evidence, native full-area bindings, adaptive detail and distributed visual proof.
 - [`ASSET_PLAN.md`](ASSET_PLAN.md) — source/technical asset ledger and provenance expectations.
 - [`tooling/JULKA.md`](tooling/JULKA.md) — Issue #345 asset acquisition, local restore, identity and cleanup contract; subordinate to the asset ledger and World Building Bible.
 - [`UE_MCP_WORLD_GENERATION.md`](UE_MCP_WORLD_GENERATION.md) — current official Epic MCP adoption decision/DoD (#384, blocked by #363), plus the retained db-lyon integration baseline; interface only, not world/proof authority.

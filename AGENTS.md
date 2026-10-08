@@ -153,6 +153,18 @@ and traversal; do not infer area-wide PASS from one selected section. Preserve
 existing budgets, exact-SHA proof, milestone-driven heavy measurement and frozen
 terrain/road geometry. Full-route expansion means going beyond this Landscape.
 
+Owner extension, 2026-10-08 (PR #446 whole-map surface preparation): local
+Landscape and seam corrections are authorized when needed to preserve visual
+coherence. Diagnose the owning surface and keep each correction spatially
+bounded, source-relative and reversible through the existing derived-output or
+Edit Layer workflow. Retain the original source/checkpoint, record the changed
+extent and displacement, preserve neighbouring interfaces and check close plus
+distant views. This supersedes blanket frozen-Landscape restrictions for these
+named local corrections; it does not authorize global smoothing, changes to
+canonical road XY/physics, weakened exclusions or invented macro geography.
+Material-only proofs must still establish their own unchanged-geometry claim;
+a geometry correction requires its own delta and rollback evidence.
+
 ### Deferred red-overlay review
 
 Owner decision, 2026-10-04: retain the red surface problem-review overlay and

@@ -2185,6 +2185,18 @@ claim. Visual review and whole-area delivery requirements remain binding.
 
 Do not scatter cliff meshes over the whole map. Place meso geometry where slope, visibility and composition justify it.
 
+Owner extension, 2026-10-08: the whole-working-map preparation in PR #446 may
+also make local Landscape and seam corrections to retain visual coherence.
+Identify the owning surface and use a bounded, reversible derived output or
+existing Edit Layer; preserve the original source/checkpoint and record each
+changed extent, displacement and interface condition. Check the result from
+close and distant views. This is a local correction allowance, not global
+smoothing or a change to road/physics authority, source scale, hard exclusions
+or macro geography. Existing admitted correction envelopes still apply to the
+operations that use them. Material-only captures retain unchanged-geometry
+checks; corrected-geometry captures require separate delta and rollback proof.
+See the [whole-map preparation plan](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md).
+
 ---
 
 ## 10. Landscape materials
