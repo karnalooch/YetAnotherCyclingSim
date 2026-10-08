@@ -2,8 +2,9 @@
 
 **Verified:** 2026-10-08  
 **Work item:** [#445](https://github.com/karnalooch/YetAnotherCyclingSim/issues/445); implementation [draft PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446)  
-**Evidence revision:** `1b0675ee53e796e7f904fa3119bb388fa9489cf6`  
-**Status:** combined local terrain/mesh technical trial passes; PCGEx overlay lighting admission fails; rider/material, persistence and whole-area acceptance remain pending  
+**Historical evidence revision:** `1b0675ee53e796e7f904fa3119bb388fa9489cf6`  
+**Limestone implementation revision:** `2f1e15d777fca6fc5f7030b8ce393f968bdefdc8`  
+**Status:** limestone combined technical gate and ordinary CI pass; PCGEx overlay admission fails; owner visual acceptance, persistence and whole-area admission remain pending  
 **Authority:** [World Building Bible](../WORLD_BUILDING_BIBLE.md), selected through [the documentation index](../README.md); [cliff experiment contract and history](SA_CALOBRA_CLIFF_EROSION_PASS.md)
 
 ## Decision
@@ -34,11 +35,76 @@ fixed interfaces and triangle limits. A separate neutral technical gate runs
 even when the existing PCGEx gate fails; checkout restoration also runs after
 failure and writes a receipt. An additional diagnostic uses the existing exposed
 limestone PBR material after all neutral captures. New evidence is retained for
-90 days, which remains finite retention rather than a durable archive. Runtime,
-lighting and visual outcomes must be recorded after the exact-revision run.
+90 days, which remains finite retention rather than a durable archive. The
+exact-revision results and retained evidence are recorded below.
 No map save or broader rollout is performed by this implementation.
 
-## Evidence and verification method
+## Verified limestone implementation
+
+[Runtime proof 37756810383](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37756810383)
+at `2f1e15d777fca6fc5f7030b8ce393f968bdefdc8` compiles and captures all
+controls. The separate combined technical gate and the always-run checkout
+restoration gate pass. [Ordinary CI 37756815269](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37756815269)
+also passes. The dedicated workflow remains red because its unchanged PCGEx
+A/B gate fails four conditions: 161 > 19 dark pixels and 31 > 19 largest-region
+pixels at <0.05, 1,659 > 1,609 dark pixels at <0.10, and 1,378 > 1,279 custom-A
+largest-region pixels at <0.15. Native admission does not promote PCGEx.
+
+Independent reconstruction reproduces the combined geometry and erosion:
+29,415 vertices, 58,216 triangles, 14,113 changed and 15,296 locked vertices,
+1,017 m2, zero nonmanifold edges and XY folds. Maximum original-relative motion
+is **177.779610 cm** under the 200 cm envelope. The terrain stage changes 2,348
+samples with 28,268 transfers and maximum 149.626461 cm; fixed samples changed
+and integer height-sum drift are zero. The mesh stage uses 24 normal passes,
+zero tangential passes and maximum 35.133925 cm under its 50 cm allowance.
+Candidate/imported heightfields match, and all 16,129 source samples and
+metadata match before and after cleanup. PNG hashes, sizes and independently
+recomputed lighting measurements match the receipts. Relative to this trial's
+own neutral baseline, pixel/largest-region deltas are 0/0 at <0.05,
+-760/-15 at <0.10 and -12,137/-5,827 at <0.15: all six conditions pass.
+Different acquisitions do not establish a causal ranking of all native profiles.
+
+The native one-component export used proxy-relative UVs, effectively stretching
+a tile across approximately 63 m. The transient diagnostic now uses Epic
+GeometryScript box projection on UV0 at the admitted **3 m** physical scale;
+triangle count is preserved and neutral metric captures precede this change.
+The existing limestone material supplies its texture/normal/roughness inputs.
+The inspected close view has fine rough rock detail; this is an observed preview,
+not owner acceptance of limestone shape, seams or shadows.
+
+Three matched neutral/PBR review pairs use actual source pavement-mask pixels
+(bit 1, excluding shoulder-only locations), a common focus on admitted cliff
+cells, recorded camera poses, FOV 50 and 1920x1080 frames. Nominal horizontal
+ranges are 8/20/45 m; recipes record actual ranges. Eye height is 160 cm above
+the accepted Landscape, **not the pavement collision or gameplay camera**.
+Visual inspection exposes a coverage limitation: the middle view is substantially
+occluded by the road and the distant view barely shows the candidate. Matching
+pose/hash checks pass but do not validate useful framing. Correct pavement-height
+placement and repeat unobstructed road review before treating packet 3 as complete
+or asking for accepted-preview persistence. Retain the useful close and oblique
+diagnostics; do not call the three-pair technical PASS rider visual acceptance.
+
+Durable selected evidence is retained through existing Git LFS:
+
+- [Historical selection](../experiments/component230-cliff/evidence/retained-37745658647.json): 56 files, 33,068,223 bytes; archive SHA-256 `5eb936601cde6a9340e28c1b89c86982a70b246a028a2e4ff1a85b62570bd9d5`.
+- [Current selection](../experiments/component230-cliff/evidence/retained-37756810383.json): 87 files, 94,050,971 bytes; archive SHA-256 `914657765f402440ac01e9bf7211ecad38fdec1dfceb0ac04842ecdcc7303e8f`.
+
+Both objects were uploaded to the repository's LFS remote, independently fetched
+through a separate scratch checkout, and verified against archive and per-entry
+manifest hashes before publishing their pointers. The current selection includes
+all JSON and all receipt-listed admitted/diagnostic captures across trials;
+priming frames and logs are excluded. The historical selection keeps all JSON
+and four admitted PNGs each for custom, PCGEx and combined trials. These are
+explicit selections, not complete copies of the expiring Actions artifacts.
+
+The current source passes 36 focused tests, including combined-gate failures
+and pavement-camera selection; the documentation candidate passes all four
+documentation guards. Source/road/physics/checkpoint protections, triangle and
+displacement ceilings and existing lighting thresholds are preserved. No map or
+asset is saved, no merge occurs, and packets 3-5 remain incomplete. Controlled
+shared-baseline ranking of all three native profiles also remains pending.
+
+## Historical evidence and verification method
 
 - [Ordinary CI run 37745665528](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37745665528): success, including Unreal build/Automation and aggregate gate at the evidence revision.
 - [Dedicated run 37745658647](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37745658647): topology and capture steps succeed; the A/B lighting gate fails.

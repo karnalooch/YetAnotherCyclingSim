@@ -1,0 +1,12 @@
+{
+  "source_run": 37756810383,
+  "evidence_revision": "2f1e15d777fca6fc5f7030b8ce393f968bdefdc8",
+  "archive_bytes": 94050971,
+  "archive_sha256": "914657765f402440ac01e9bf7211ecad38fdec1dfceb0ac04842ecdcc7303e8f",
+  "lfs_sha256": "914657765f402440ac01e9bf7211ecad38fdec1dfceb0ac04842ecdcc7303e8f",
+  "selected_file_count": 87,
+  "verified_extraction": true,
+  "remote_restore_verified": true,
+  "archive_path": "retained-37756810383.zip",
+  "selection": "All JSON receipts, plans and geometry/heightfields; all receipt-listed admitted and diagnostic PNG captures across trials; priming frames and logs excluded"
+}

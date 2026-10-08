@@ -1,0 +1,12 @@
+{
+  "archive_bytes": 33068223,
+  "archive_sha256": "5eb936601cde6a9340e28c1b89c86982a70b246a028a2e4ff1a85b62570bd9d5",
+  "selected_file_count": 56,
+  "verified_extraction": true,
+  "source_run": 37745658647,
+  "evidence_revision": "1b0675ee53e796e7f904fa3119bb388fa9489cf6",
+  "remote_restore_verified": true,
+  "archive_path": "retained-37745658647.zip",
+  "selection": "All JSON and four admitted PNG frames for custom, PCGEx and combined trials; excludes primes and logs",
+  "lfs_sha256": "5eb936601cde6a9340e28c1b89c86982a70b246a028a2e4ff1a85b62570bd9d5"
+}
