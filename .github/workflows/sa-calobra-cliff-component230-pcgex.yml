@@ -397,7 +397,8 @@ jobs:
 
             [ordered]@{
               label = $Label
-              seconds = [math]::Round([double]$seconds, 3)
+              seconds = if ($Label -eq 'custom' -and $env:YACS_CLIFF_PAIRED_CUSTOM_OUTPUT) { $null } else { [math]::Round([double]$seconds, 3) }
+              timing_scope = if ($env:YACS_CLIFF_PAIRED_CUSTOM_OUTPUT) { 'shared A/B editor session; no per-candidate timing claim' } else { 'editor process' }
               generator = [string]$receipt.mesh.generator
               cliff_triangles = [int]$receipt.mesh.cliff.triangles
             } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $Output 'capture-performance.json') -Encoding UTF8

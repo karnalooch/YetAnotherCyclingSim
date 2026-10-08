@@ -577,3 +577,15 @@ identity and every dark-pixel/region threshold remain unchanged. The separate
 two-run canonical topology determinism proof remains unchanged. This corrects the
 experimental control; it does not fix the remaining geometric wedges or establish
 visual acceptance. Unreal runtime validation is required.
+
+
+The paired acquisition passed on `b90e9f2a`, run `37732509788`: topology,
+all captures, unchanged A/B thresholds and non-persistence checkout gate passed.
+The common reference contained 5,382 pixels below luma 0.05, versus only 35 in
+some earlier independently captured references. Thus the green gate does not yet
+prove baseline readiness or visual acceptance. The next controlled experiment
+primes each exact scene/view mode immediately before its admitted frame, for both
+baseline and candidates. Priming frames remain diagnostic-only. This tests history
+readiness after Lit/Lighting Only transitions, with identical lighting, geometry,
+64-frame screenshot warmup and admission thresholds. Paired capture timing is
+reported as session timing, not invented per-candidate execution time.
