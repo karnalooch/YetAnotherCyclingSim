@@ -1032,6 +1032,21 @@ def _spawn_landscape_mesh_diagnostic():
             json.dumps(evidence, sort_keys=True, separators=(",", ":")), encoding="utf-8"
         )
         export["mesh_evidence_sha256"] = _digest(evidence_path)
+        # Diagnose smooth-normal/shadow mismatch without altering geometry or light.
+        # Rebuild sharing from actual dihedral angles instead of inherited export
+        # overlays; keep smooth shading within faces and split only sharp creases.
+        unreal.GeometryScript_Normals.compute_split_normals(
+            mesh,
+            unreal.GeometryScriptSplitNormalsOptions(
+                split_by_opening_angle=True,
+                opening_angle_deg=60.0,
+                split_by_face_group=False,
+            ),
+            unreal.GeometryScriptCalculateNormalsOptions(
+                angle_weighted=True, area_weighted=True
+            ),
+        )
+        export["normal_policy"] = "angle-weighted normals with 60-degree creases"
         component.set_tangents_type(
             unreal.DynamicMeshComponentTangentsMode.AUTO_CALCULATED
         )

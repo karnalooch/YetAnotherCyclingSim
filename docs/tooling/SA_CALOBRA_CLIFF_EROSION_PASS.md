@@ -482,3 +482,17 @@ but the in-place operator asserted inside DynamicMesh: `Array index out of bound
 The next call uses the documented separate immutable input/output constructor,
 with the pattern bound to the same immutable source. This tests an input-lifetime
 hypothesis; it does not establish the engine root cause or waive any mesh gate.
+
+The immutable-input selective operator passed at `f44539ed` (run
+`37708266454`): 29,415 vertices, 58,216 triangles, 14,119 moved vertices,
+maximum displacement 50 cm, source/candidate area 1,017 m2 and zero XY folds or
+nonmanifold edges. The local audit and capture passed; render review still found
+large angular dark regions. Whole-map rollout remains blocked. The full workflow
+also retains its separate strict cross-session A/B baseline equality failure.
+
+The next shading diagnostic keeps this exact geometry, material and lighting and
+uses Epic GeometryScript `compute_split_normals` with a 60-degree crease angle
+and area/angle weighting. It rebuilds normal sharing from the edited geometry
+instead of inheriting native export overlay boundaries. This is not a shadow-bias
+change or a material workaround. Render comparison must establish whether the
+hypothesized smooth-normal mismatch actually contributes to the artifacts.
