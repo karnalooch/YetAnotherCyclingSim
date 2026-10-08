@@ -2,7 +2,7 @@
 
 **Owner direction:** 2026-10-08  
 **Work item:** [#445](https://github.com/karnalooch/YetAnotherCyclingSim/issues/445), [draft PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446)  
-**Status:** documentation-only review plan with a provisional location shortlist; physical surface boundaries and final annotations remain pending  
+**Status:** documentation-only plan with [six original-PNG proposal cards](../experiments/sa-calobra-surface-detail-review-20261008/README.md); owner review, physical boundaries and world mapping remain pending  
 **Authority:** [World Building Bible](../WORLD_BUILDING_BIBLE.md), selected through [the documentation index](../README.md); [cliff presentation contract](SA_CALOBRA_CLIFF_EROSION_PASS.md)
 
 ## Purpose and current scope
@@ -122,6 +122,25 @@ Neither a tag nor a band authorizes source terrain changes, material replacement
 asset persistence or production rollout. The accepted reference and existing
 eligibility, exclusions and protected interfaces continue to govern changes.
 
+## First original-PNG proposal review
+
+The [2026-10-08 proposal review](../experiments/sa-calobra-surface-detail-review-20261008/README.md)
+contains six cards, twelve unchanged original PNGs and seven separate image-space
+ROIs. The cards distinguish required shape from candidate omissions. Bands and
+`proposed_review_tags` remain `AI_PROPOSED`; canonical tags and physical IDs are
+unassigned. Paired station images are context unless correspondence is established.
+
+Original-PNG inspection revises window 0181 from the earlier C proposal to B:
+the peak's broad faces and ledges require attention as well as its skyline.
+No confirmed D, geometry defect or approved background simplification is assigned.
+The ROI polygons are observations, not world footprints or PCGEx selectors.
+
+Each card includes two requested Google Street View links derived from the frozen
+source mapping and capture poses. All remain `NOT_INSPECTED`: the available web
+tool could not open interactive panoramas. Actual pano/date/location and visual
+comparison remain unresolved. Navigation hints do not establish panorama coverage,
+camera alignment or physical surface mapping.
+
 ## Provisional location shortlist
 
 The following places were inspected through the repository JPEG viewing aids.
@@ -140,7 +159,7 @@ The capture revision is `b1ea05b33b9f3208e7aeb6884f1a67792d9c6121`.
 | [0103 - 34.55 m](../experiments/sa-calobra-tpp-survey-20261008/windows/window-0103.md) | A tall roadside wall occupies much of both directional views | A candidate; `HERO_DETAIL;MATERIAL_TEST_CANDIDATE`; readable planes, edges and base contact |
 | [0132 - 33.35 m](../experiments/sa-calobra-tpp-survey-20261008/windows/window-0132.md) | The reverse view separates a close wall, intermediate rock bands and a distant ridge | Distinct A/B/C candidate regions; close wall may be `HERO_DETAIL`, ridge may be `SILHOUETTE_CRITICAL`; establish separate boundaries |
 | [0168 - 30.99 m](../experiments/sa-calobra-tpp-survey-20261008/windows/window-0168.md) | A close wall contrasts with a broad slope and additional road segments | `MATERIAL_TEST_CANDIDATE`; compare near-wall detail with broad Landscape material structure; other approaches may raise slope requirements |
-| [0181 - 68.81 m](../experiments/sa-calobra-tpp-survey-20261008/windows/window-0181.md) | An isolated rocky peak dominates the forward skyline above the bend | C candidate with `SILHOUETTE_CRITICAL`; outline and major cuts matter, uniform fine detail is unsupported by this view |
+| [0181 - 68.81 m](../experiments/sa-calobra-tpp-survey-20261008/windows/window-0181.md) | An isolated rocky peak dominates the forward skyline above the bend | Originally C on thumbnails; [original-PNG card SC-P04](../experiments/sa-calobra-surface-detail-review-20261008/cards/SC-P04.md) revises to B with `SILHOUETTE_CRITICAL`; outline, broad faces and ledges matter |
 | [0039 - 59.82 m](../experiments/sa-calobra-tpp-survey-20261008/windows/window-0039.md) | The reverse view contains nearby ground and more distant slopes | Separate near-ground and distant regions; check material transitions and correspondence across other approaches before proposing background treatment |
 | [0077 - 25.36 m](../experiments/sa-calobra-tpp-survey-20261008/windows/window-0077.md) | The reverse view contains a distant rocky ridge against the sea | Check outline and broad form; fine detail is not justified in this view, but closer views of the same surface remain unresolved |
 
