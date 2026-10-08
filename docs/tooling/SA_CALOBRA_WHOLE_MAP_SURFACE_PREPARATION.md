@@ -6,7 +6,7 @@
 
 **Starting revision:** `e74a2fabe292626cb49b7c69827a60e234878cd6`
 
-**Status:** full-grid package executed and independently verified; native material creation is being corrected after the unchanged startup memory gate stopped the first real editor pass
+**Status:** full-grid package and native fixed master executed and verified; fresh scene capture is being corrected after an independent-process import-path failure
 
 **Methodology:** [World Building Bible](../WORLD_BUILDING_BIBLE.md), selected through the [documentation index](../README.md)
 
@@ -201,7 +201,7 @@ comparisons and a controlled micro-normal comparison. Keep camera, FOV, lighting
 resolution and readiness evidence with every original PNG. Add close and distant
 views aimed at the same retained v8 boundary vertex to inspect its contact with
 the adaptive Landscape. The original set contains 30 full-HD frames from 16
-primary views. The next coverage extension adds three source-verified Landscape
+primary views. The implemented coverage extension adds three source-verified Landscape
 targets at approximately 2.7 m and the existing SC-P04 / SC-P06 survey poses:
 baseline, prepared and checker views for each close target, plus baseline and
 prepared views for the two survey poses. The resulting planned inventory is
@@ -264,7 +264,7 @@ integration. Heavy native operations remain serial on the reference runner.
 | Scope / source contracts | Exact AOI, immutable input identities and current SSOT | Read-only audit complete |
 | Full-grid package | Every sample accounted for; unchanged source and exclusion bytes; reproducible outputs | Windows full-grid execution and independent pixel/sector audit passed at `a0f12793`; source bytes and logical outputs reproduced; encoder-version byte differences are retained explicitly below |
 | Role composition | Unit sum, valid channels, explicit residual/unknown/alpha meanings | Passed over all 16,265,089 source cells |
-| Native material | All five roles, expected assets and metric projection, successful compile | Pending |
+| Native material | All five roles, expected assets and metric projection, successful compile | Fixed master saved and all three package byte identities verified at `ddeb01b5`, attempt 2; fresh scene consumption pending |
 | Actual full-map bindings | 1024 generated instance parent chains | Pending |
 | Adaptive detail | Recorded LOD state, independent near/far parameters and matched view evidence | Pending |
 | Preservation | Original map, roads, v8 source/UV/normals/material and final rollback checks | Checkout, map and retained sources unchanged after the stopped `a0f12793` pass; complete scene rollback still awaits actual capture |
@@ -308,3 +308,39 @@ lower the threshold or alter rendering quality.
 passed on the same revision. UBT performed a warm up-to-date check with zero
 build actions; the subsequent 26 Unreal Automation tests were fresh. This is
 independent of the pending whole-map material and visual result.
+
+### Fixed native master after the owner freed RAM
+
+The first `ddeb01b5` attempt retained a truthful failed startup receipt:
+the compilation queues and active workers were already empty, and a single
+drain/GC did not increase system headroom. No allocator change or threshold
+reduction was made. The owner freed RAM at approximately 01:05 Europe/Warsaw
+on 2026-10-09, and the failed job was retried on the same commit.
+
+[Attempt 2 of run 37856751521](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37856751521/attempts/2)
+passed the unchanged memory gate with 10,579,374,080 available physical bytes
+and 63,428,063,232 commit bytes. It successfully built the 146-node master,
+verified eleven texture and eighteen scalar parameter names and saved all
+three self-contained `.uasset` packages: 111,106 bytes for the master,
+8,122 for the instance and 28,166,244 for the whole-grid weight texture.
+Independent size and SHA-256 checks passed for each retained package.
+
+Native texture readback confirms the 4033-by-4033 linear B8G8R8A8 weight texture
+has one mip and one resident mip. The ten role textures are 1024-by-1024,
+with eleven mips and seven resident at empty-Entry bootstrap: DXT1 for colour,
+BC5 for normals. None is a default texture or still compiling. Bootstrap
+residency is not a statement about later close-view residency, aliasing or GPU
+cost; those remain native scene observations.
+
+The separate scene process loaded the accepted map and found all 1024 components,
+but stopped before material binding because its early helper import could not
+resolve the repository `scripts` package. The correction establishes the
+repository path at the capture entrypoint, with a regression that runs that
+actual bootstrap in an isolated Python process outside the repository. No PNG
+was produced by this failed scene pass. Source and checkout conservation passed.
+
+[CI 37856759105](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37856759105)
+passed for `ddeb01b5`: 135 script modules / 1,150 reported tests,
+391 reference-model tests and 26 fresh Unreal Automation tests. The hosted
+script summary identifies the PR merge-test commit `768da0d5daa9a5ecf86d73781ae1942e779f6ad5`;
+the independent native material proof remains bound to the exact `ddeb01b5` head.

@@ -7,6 +7,7 @@ import builtins
 import importlib
 import json
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -250,20 +251,35 @@ class CameraTests(unittest.TestCase):
             (0, 201600, 0, 201600, 0, 60000),
             {"origin_cm": [40950, 47250, 42648], "extent_cm": [3150, 3150, 1613]},
             [44100, 47250, 43500],
+            near_views=[
+                {
+                    "frame_id": name,
+                    "kind": "source_grid_landscape_near",
+                    "camera": [100, 0, 250],
+                    "target": [0, 0, 0],
+                    "fov": 60.0,
+                }
+                for name in capture.NEAR_VIEWS
+            ],
+            far_views=capture.original_survey_views(),
         )
 
     def test_whole_area_and_matched_seam_coverage_are_explicit(self):
         views = self.plan()
         steps = capture.build_steps(views)
-        self.assertEqual(len(views), 16)
-        self.assertEqual(len(steps), 30)
+        self.assertEqual(len(views), 21)
+        self.assertEqual(len(steps), 43)
+        self.assertEqual(
+            [i for i, (_, mode) in enumerate(steps) if mode == "baseline"],
+            list(range(9)),
+        )
         self.assertEqual(
             Counter(mode for _, mode in steps),
             {
-                "baseline": 4,
-                "prepared": 16,
+                "baseline": 9,
+                "prepared": 21,
                 "domains": 4,
-                "checker": 4,
+                "checker": 7,
                 "normal-near": 1,
                 "normal-far": 1,
             },
@@ -608,6 +624,37 @@ class CleanupTests(unittest.TestCase):
 
 
 class BootstrapIsolationTests(unittest.TestCase):
+    def test_capture_bootstrap_imports_helpers_from_an_isolated_outside_directory(self):
+        script = prep.ROOT / "scripts/ue/capture_sa_calobra_component230_cliff.py"
+        # Execute the actual bootstrap in a fresh interpreter without the test
+        # runner's repository sys.path. Stop before native/environment setup.
+        code = """
+import ast, pathlib, sys, types
+script = pathlib.Path(sys.argv[1])
+tree = ast.parse(script.read_text(encoding='utf-8'))
+boundary = next(i for i, node in enumerate(tree.body)
+    if isinstance(node, ast.Assign)
+    and any(isinstance(target, ast.Name) and target.id == 'MAP'
+            for target in node.targets))
+sys.modules['unreal'] = types.ModuleType('unreal')
+namespace = {'__file__': str(script)}
+exec(compile(ast.Module(body=tree.body[:boundary], type_ignores=[]),
+             str(script), 'exec'), namespace)
+from scripts.ue.sa_calobra_whole_map_prep import CaptureEnvironment
+assert CaptureEnvironment.__module__ == 'scripts.ue.sa_calobra_whole_map_prep'
+assert pathlib.Path(sys.path[0]) == script.parents[2]
+"""
+        with tempfile.TemporaryDirectory() as outside:
+            result = subprocess.run(
+                [sys.executable, "-I", "-c", code, str(script)],
+                cwd=outside,
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_only_empty_engine_entry_world_admits_graph_bootstrap(self):
         path, components, landscapes = ["/Engine/Maps/Entry.Entry"], [], []
         world = SimpleNamespace(get_path_name=lambda: path[0])

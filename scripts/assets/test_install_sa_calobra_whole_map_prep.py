@@ -139,7 +139,7 @@ class InstallTests(unittest.TestCase):
             "surface_manifest_sha256": self.manifest_sha,
             "surface_manifest_fingerprint": manifest["fingerprint"],
             "component_count": 1024,
-            "primary_frame_count": 30,
+            "primary_frame_count": 43,
             "native_trial_applied": False,
         }
         self.capture = {

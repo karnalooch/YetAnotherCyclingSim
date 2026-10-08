@@ -119,19 +119,58 @@ TARGETED_VIEWS = (
     "window-0023-forward-00000",
     "overview-north",
 )
-PREPARED_VIEWS = tuple(f"ground-{x}-{y}" for x in range(3) for y in range(3)) + (
-    "window-0021-forward-00005",
-    "window-0023-forward-00000",
-    "dominant-wall",
-    "overview-north",
-    "overview-south",
-    "seam-close",
-    "seam-distant",
+NEAR_VIEWS = ("near-landscape-1", "near-landscape-2", "near-landscape-3")
+FAR_VIEWS = ("window-0181-forward-00004", "window-0077-reverse-00000")
+SURVEY_FILE = "docs/experiments/sa-calobra-tpp-survey-20261008/frames.csv"
+NEAR_INPUTS = {
+    "material-weights.png": "af16fc7c43ec8a3a3b2e000fe716232a3229fe0ac6b4e9708baae5842ef99f6c",
+    "sample-availability.png": "9c9906268977a8f49ba20c194cecb101e8bb8c25c44b51ee30f66e7e88a7522a",
+    "inference-kind.png": "cc3bc3490878c5a96c20586cd28b0cd3cc812c5506ae97a7110c59e6ed3a3176",
+    "exclusion-reasons.png": "f1adb0c0e8fc3fecba53cfaf033f9d33c0784ab4c7f0ecb0d661629d3b35494e",
+    "exclusion-reasons.tif": "c74bde6ae8589304fe3d52f4e1e20801b0fe5647de6ffbc268c9b2ca65eaa941",
+}
+NEAR_TARGETS = (
+    (
+        1961,
+        96,
+        (244, 0, 4, 0),
+        "low_vegetation_appearance",
+        "7f43e4a3d3152ab7114223b7b171c939c7d63d680a85b1f357d61b020a664869",
+    ),
+    (
+        2048,
+        121,
+        (71, 162, 8, 0),
+        "forest_litter_appearance",
+        "23f3f4b09b7a73e1a25903fcacf83ce58aae637bf3b5f8daf951b30e822e23dc",
+    ),
+    (
+        2048,
+        1408,
+        (19, 0, 94, 0),
+        "mineral_rock_mixture",
+        "f5acdf97f56515ff8d38d1e8991feeaf9238dbd7ddb24aee9d5d873262db0e28",
+    ),
+)
+PREPARED_VIEWS = (
+    tuple(f"ground-{x}-{y}" for x in range(3) for y in range(3))
+    + (
+        "window-0021-forward-00005",
+        "window-0023-forward-00000",
+        "dominant-wall",
+        "overview-north",
+        "overview-south",
+        "seam-close",
+        "seam-distant",
+    )
+    + NEAR_VIEWS
+    + FAR_VIEWS
 )
 CAPTURE_PAIRS = (
-    tuple((name, "baseline") for name in TARGETED_VIEWS)
+    tuple((name, "baseline") for name in TARGETED_VIEWS + NEAR_VIEWS + FAR_VIEWS)
     + tuple((name, "prepared") for name in PREPARED_VIEWS)
-    + tuple((name, mode) for mode in ("domains", "checker") for name in TARGETED_VIEWS)
+    + tuple((name, "domains") for name in TARGETED_VIEWS)
+    + tuple((name, "checker") for name in TARGETED_VIEWS + NEAR_VIEWS)
     + (("ground-1-1", "normal-near"), ("ground-1-1", "normal-far"))
 )
 
@@ -840,8 +879,269 @@ def verify_material_bindings(proof, bindings):
     return names
 
 
-def verify_capture_plan(report, pilot):
+def decode_near_windows(data):
+    """Read all 289 cells per target from the current prepared raster bytes."""
+    from PIL import Image
+    from rasterio.io import MemoryFile
+    from rasterio.windows import Window
+
+    windows = [[] for _ in NEAR_TARGETS]
+    modes = (
+        ("material-weights.png", "RGBA"),
+        ("sample-availability.png", "L"),
+        ("inference-kind.png", "L"),
+        ("exclusion-reasons.png", "L"),
+    )
+    for name, mode in modes:
+        with Image.open(io.BytesIO(data[name])) as raster:
+            require(
+                raster.format == "PNG"
+                and raster.mode == mode
+                and raster.size == (4033, 4033),
+                "Near source raster format/grid changed: " + name,
+            )
+            for target, parts in zip(NEAR_TARGETS, windows):
+                row, column = target[:2]
+                parts.append(
+                    raster.crop((column - 8, row - 8, column + 9, row + 9)).tobytes()
+                )
+    with MemoryFile(data["exclusion-reasons.tif"]) as memory, memory.open() as raster:
+        require(
+            raster.count == 1
+            and raster.dtypes == ("uint16",)
+            and raster.width == raster.height == 4033
+            and raster.crs is not None
+            and raster.crs.to_epsg() == 25831
+            and tuple(raster.transform)[:6] == (0.5, 0, 483000, 0, -0.5, 4409516.5)
+            and raster.nodata == 65535,
+            "Near source exclusion georeferencing or uint16 contract changed",
+        )
+        for target, parts in zip(NEAR_TARGETS, windows):
+            row, column = target[:2]
+            reasons = raster.read(1, window=Window(column - 8, row - 8, 17, 17))
+            require(
+                reasons.shape == (17, 17)
+                and bool((reasons == 0).all())
+                and reasons.astype("uint8").tobytes() == parts[3],
+                "Near source TIFF/PNG exclusion window is not entirely zero",
+            )
+    probes = []
+    for target, parts in zip(NEAR_TARGETS, windows):
+        row, column, _, role, _ = target
+        weights, availability, inference, reasons = parts
+        require(
+            len(weights) == 289 * 4
+            and availability == bytes([255]) * 289
+            and inference == reasons == bytes(289),
+            "Near source requires availability255/inference0/exclusion0 over the full17x17 window",
+        )
+        probes.append(
+            {
+                "row": row,
+                "column": column,
+                "pixel_window": [column - 8, row - 8, 17, 17],
+                "xy_cm": [column * 50, row * 50],
+                "center_rgba": list(weights[144 * 4 : 145 * 4]),
+                "purpose_role": role,
+                "physical_demand_band": "UNASSIGNED",
+                "input_sha256": {name: digest(raw) for name, raw in data.items()},
+                "halo_data_sha256": dict(
+                    zip(
+                        (
+                            "material_weights_rgba8",
+                            "availability_l8",
+                            "inference_l8",
+                            "exclusion_reasons_l8",
+                        ),
+                        map(digest, parts),
+                    )
+                ),
+                "support": {
+                    "cells": 289,
+                    "availability255_cells": 289,
+                    "inference0_cells": 289,
+                    "exclusion0_cells": 289,
+                    "basis": "Pinned raster identity and independently decoded CPU windows",
+                },
+            }
+        )
+    return probes
+
+
+def read_near_probes(bundle, products):
+    """Pin the same bytes that are decoded; no producer summary can admit a halo."""
+    data = {}
+    for name, expected in NEAR_INPUTS.items():
+        raw = read_bytes(relative_file(bundle, name))
+        require(
+            digest(raw) == expected
+            and products.get(name)
+            == {"path": name, "sha256": expected, "size_bytes": len(raw)},
+            "Near source byte identity differs from the current prepared bundle: "
+            + name,
+        )
+        data[name] = raw
+    probes = decode_near_windows(data)
+    for probe, (_, _, rgba, _, halo_sha) in zip(probes, NEAR_TARGETS):
+        require(
+            probe["center_rgba"] == list(rgba)
+            and probe["halo_data_sha256"]["material_weights_rgba8"] == halo_sha,
+            "Near material target differs from its independently audited source window",
+        )
+    return probes
+
+
+def read_original_survey_views(path):
+    """Resolve B/C observations from the retained raw Git blob, not the live checkout."""
+    data = read_bytes(path, 4 * 1024 * 1024)
+    require(digest(data) == FRAMES, "Pinned original survey CSV byte identity changed")
+    rows = list(csv.DictReader(io.StringIO(data.decode("utf-8-sig"))))
+    views = {}
+    for name, index, card, band in (
+        (FAR_VIEWS[0], 661, "SC-P04", "B"),
+        (FAR_VIEWS[1], 1088, "SC-P06", "C"),
+    ):
+        matches = [row for row in rows if row.get("frame_id") == name]
+        require(
+            len(matches) == 1 and int(matches[0]["index"]) == index,
+            "Pinned B/C observation identity changed",
+        )
+        row = matches[0]
+        require(
+            float(row["fov_deg"]) == 76
+            and [int(row[key]) for key in ("width_px", "height_px")] == [1280, 720]
+            and row["file"] == "frames/" + name + ".png"
+            and re.fullmatch("[0-9a-f]{64}", row["sha256"]),
+            "Pinned B/C observation camera contract changed",
+        )
+        views[name] = {
+            "camera": json.loads(row["camera_location_cm"]),
+            "target": json.loads(row["target_cm"]),
+            "fov": float(row["fov_deg"]),
+            "survey_source": {
+                "file": SURVEY_FILE,
+                "sha256": FRAMES,
+                "frame_id": name,
+                "index": index,
+                "original_png_sha256": row["sha256"],
+                "original_resolution": [1280, 720],
+                "review_card": card,
+                "proposal_band": band,
+                "physical_surface_registered": False,
+            },
+        }
+    return views
+
+
+def finite_vector(value):
+    return (
+        isinstance(value, list)
+        and len(value) == 3
+        and all(
+            type(number) in (int, float) and math.isfinite(number) for number in value
+        )
+    )
+
+
+def verify_near_trace(trace, start, end):
+    require(isinstance(trace, dict), "Near Landscape trace metadata is missing")
+    require(
+        all(finite_vector(trace.get(key)) for key in ("start_cm", "end_cm", "hit_cm"))
+        and trace["start_cm"] == start
+        and trace["end_cm"] == end
+        and "owner_excluded_control_hit_cm" in trace
+        and trace["owner_excluded_control_hit_cm"] is None,
+        "Near Landscape trace endpoints or owner-excluded control changed",
+    )
+    hit = trace["hit_cm"]
+    direction = [b - a for a, b in zip(start, end)]
+    squared = sum(value * value for value in direction)
+    require(squared > 0, "Near Landscape trace has no length")
+    parameter = sum((p - a) * d for p, a, d in zip(hit, start, direction)) / squared
+    residual = sum(
+        (p - a - parameter * d) ** 2 for p, a, d in zip(hit, start, direction)
+    )
+    require(
+        1e-6 < parameter < 1 - 1e-6 and residual <= 1.0,
+        "Near Landscape hit is not an interior point on the recorded native trace",
+    )
+    return hit
+
+
+def verify_near_view(frame, source, owner):
+    require(
+        frame.get("kind") == "source_grid_landscape_near"
+        and frame.get("source_probe") == source,
+        "Near Landscape source probe differs from decoded prepared inputs",
+    )
+    probe = frame.get("landscape_probe", {})
+    actors, ignored = probe.get("world_actor_paths"), probe.get("ignored_actor_paths")
+    require(
+        isinstance(owner, str)
+        and owner
+        and probe.get("owner_path") == owner
+        and isinstance(actors, list)
+        and actors
+        and all(isinstance(path, str) and path for path in actors)
+        and actors == sorted(set(actors))
+        and owner in actors
+        and ignored == [path for path in actors if path != owner],
+        "Near Landscape collision owner or ignored actor inventory changed",
+    )
+    require(
+        probe.get("nominal_camera_offset_cm") == [100, 0, 250]
+        and probe.get("rendered_pixel_depth_verified") is False,
+        "Near Landscape range recipe or collision-versus-rendered-depth scope changed",
+    )
+    x, y = source["xy_cm"]
+    target = verify_near_trace(
+        probe.get("target_trace"), [x, y, 150000], [x, y, -150000]
+    )
+    eye_ground = verify_near_trace(
+        probe.get("eye_ground_trace"), [x + 100, y, 150000], [x + 100, y, -150000]
+    )
+    camera = [x + 100, y, max(target[2] + 250, eye_ground[2] + 150)]
+    distance = math.dist(camera, target)
+    require(
+        frame.get("target") == target
+        and target[:2] == [x, y]
+        and eye_ground[:2] == [x + 100, y]
+        and frame.get("camera") == camera
+        and frame.get("fov") == 60.0
+        and 100 <= distance <= 500,
+        "Near Landscape target/camera no longer has the source-bound1..5m placement",
+    )
+    end = [value + 25 * (value - eye) / distance for value, eye in zip(target, camera)]
+    hit = verify_near_trace(probe.get("aim_trace"), camera, end)
+    hit_distance = math.dist(camera, hit)
+    require(
+        100 <= hit_distance <= 500
+        and all(abs(hit[axis] - value) <= 400 for axis, value in enumerate((x, y))),
+        "Near Landscape aim hit leaves the1..5m range or audited17x17 source window",
+    )
+    for key, expected in (
+        ("camera_clearance_cm", camera[2] - eye_ground[2]),
+        ("target_distance_cm", distance),
+        ("hit_distance_cm", hit_distance),
+    ):
+        actual = probe.get(key)
+        require(
+            type(actual) in (int, float)
+            and math.isfinite(actual)
+            and abs(actual - expected) <= 1e-6,
+            "Near Landscape native distance readback changed: " + key,
+        )
+    return probe
+
+
+def verify_capture_plan(report, pilot, near_probes, survey_views):
     plan, captures = report.get("capture_plan", []), report.get("captures", [])
+    require(
+        isinstance(near_probes, list)
+        and len(near_probes) == 3
+        and tuple(survey_views) == FAR_VIEWS,
+        "Independently verified near/B/C source coverage is missing",
+    )
     for rows, label in ((plan, "plan"), (captures, "captures")):
         require(
             isinstance(rows, list)
@@ -853,6 +1153,14 @@ def verify_capture_plan(report, pilot):
         digest(canonical(plan)) == report.get("capture_plan_sha256"),
         "Capture plan hash changed",
     )
+    near = dict(zip(NEAR_VIEWS, near_probes))
+    native_probes = report.get("near_landscape_probes", [])
+    require(
+        isinstance(native_probes, list)
+        and [row.get("frame_id") for row in native_probes] == list(NEAR_VIEWS),
+        "Native near Landscape probe inventory is incomplete",
+    )
+    owner = report.get("source_scene", {}).get("landscape_actor_path")
     poses = {}
     for frame, capture in zip(plan, captures):
         identity = frame["frame_id"]
@@ -897,6 +1205,36 @@ def verify_capture_plan(report, pilot):
             and abs(capture["target_distance_cm"] - distance) <= 1e-6,
             "Native camera distance evidence changed",
         )
+        if identity in near:
+            probe = verify_near_view(frame, near[identity], owner)
+            require(
+                capture.get("source_probe") == near[identity]
+                and capture.get("landscape_probe") == probe
+                and native_probes[NEAR_VIEWS.index(identity)]
+                == {
+                    "frame_id": identity,
+                    "source_probe": near[identity],
+                    "landscape_probe": probe,
+                },
+                "Near source/trace evidence changed between native probe, plan and admitted capture",
+            )
+        if identity in survey_views:
+            original = survey_views[identity]
+            require(
+                pose == {key: original[key] for key in ("camera", "target", "fov")}
+                and frame.get("kind") == "pinned_original_survey"
+                and frame.get("survey_source") == original["survey_source"]
+                and capture.get("survey_source") == original["survey_source"],
+                "Pinned original B/C survey pose or provenance changed",
+            )
+    require(
+        all(
+            row["landscape_probe"]["world_actor_paths"]
+            == native_probes[0]["landscape_probe"]["world_actor_paths"]
+            for row in native_probes
+        ),
+        "Native near Landscape probes use different actor inventories",
+    )
     for frame in pilot["frames"]:
         require(
             poses.get(frame["frame_id"])
@@ -1335,6 +1673,11 @@ def verify_native_evidence(repo, root, head):
     )
 
     components = verify_material_bindings(proof, report.get("bindings", {}))
+    require(
+        {name.rsplit(".", 1)[0] for name in components}
+        == {source.get("landscape_actor_path")},
+        "Near probe owner differs from the1024 material-bound Landscape components",
+    )
     environment = report.get("capture_environment", {})
     require(
         environment.get("restored") is True
@@ -1361,7 +1704,11 @@ def verify_native_evidence(repo, root, head):
         and report.get("separate_mesh_materials_preserved") is True,
         "Whole-map scene or material restoration failed",
     )
-    captures = verify_capture_plan(report, read_json(native_bundle / paths["pilot"]))
+    near_probes = read_near_probes(root / "whole-map-prep", products)
+    survey_views = read_original_survey_views(native_bundle / "frames.csv")
+    captures = verify_capture_plan(
+        report, read_json(native_bundle / paths["pilot"]), near_probes, survey_views
+    )
     for capture in captures:
         require(
             capture.get("material_parameters") == mode_parameters(capture["mode"])
@@ -1406,6 +1753,11 @@ def verify_native_evidence(repo, root, head):
         "surface_manifest_fingerprint": manifest["fingerprint"],
         "component_count": len(components),
         "primary_frame_count": len(captures),
+        "near_landscape_source_windows_verified": len(near_probes),
+        "near_landscape_collision_range_cm": [100, 500],
+        "near_landscape_rendered_pixel_depth_verified": False,
+        "original_survey_csv_sha256": FRAMES,
+        "original_survey_frame_ids": list(survey_views),
         "near_far_material_response": response,
         "native_trial_applied": False,
         "files": files,

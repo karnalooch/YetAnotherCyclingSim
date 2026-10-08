@@ -604,16 +604,108 @@ class WholeMapCaptureCoverageTests(unittest.TestCase):
                 "target": seam[:],
                 "fov": 60.0,
             }
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        frames = Path(temporary.name) / "frames.csv"
+        frames.write_bytes(
+            workflow.git(
+                workflow.ROOT, "cat-file", "blob", "HEAD:" + workflow.SURVEY_FILE
+            )
+        )
+        self.survey_views = workflow.read_original_survey_views(frames)
+        owner = "/Game/Worlds/SaCalobra/L_SaCalobraAccepted_20261004.L_SaCalobraAccepted_20261004:PersistentLevel.Landscape_0"
+        actors = sorted([owner, owner.rsplit(".", 1)[0] + ".Camera_0"])
+        self.near_probes, native_probes, extras = [], [], {}
+
+        def trace(start, end, hit):
+            return {
+                "start_cm": start,
+                "end_cm": end,
+                "hit_cm": hit,
+                "owner_excluded_control_hit_cm": None,
+            }
+
+        for name, (row, column, rgba, role, halo_sha) in zip(
+            workflow.NEAR_VIEWS, workflow.NEAR_TARGETS
+        ):
+            x, y = column * 50, row * 50
+            target, camera = [x, y, 40000.0], [x + 100, y, 40250.0]
+            distance = math.dist(camera, target)
+            self.poses[name] = {"camera": camera, "target": target, "fov": 60.0}
+            source = {
+                "row": row,
+                "column": column,
+                "pixel_window": [column - 8, row - 8, 17, 17],
+                "xy_cm": [x, y],
+                "center_rgba": list(rgba),
+                "purpose_role": role,
+                "physical_demand_band": "UNASSIGNED",
+                "input_sha256": dict(workflow.NEAR_INPUTS),
+                "halo_data_sha256": {
+                    "material_weights_rgba8": halo_sha,
+                    "availability_l8": workflow.digest(bytes([255]) * 289),
+                    "inference_l8": workflow.digest(bytes(289)),
+                    "exclusion_reasons_l8": workflow.digest(bytes(289)),
+                },
+                "support": {
+                    "cells": 289,
+                    "availability255_cells": 289,
+                    "inference0_cells": 289,
+                    "exclusion0_cells": 289,
+                    "basis": "Pinned raster identity and independently decoded CPU windows",
+                },
+            }
+            probe = {
+                "owner_path": owner,
+                "world_actor_paths": actors,
+                "ignored_actor_paths": [path for path in actors if path != owner],
+                "nominal_camera_offset_cm": [100, 0, 250],
+                "rendered_pixel_depth_verified": False,
+                "target_trace": trace([x, y, 150000], [x, y, -150000], target),
+                "eye_ground_trace": trace(
+                    [x + 100, y, 150000], [x + 100, y, -150000], [x + 100, y, 40000.0]
+                ),
+                "aim_trace": trace(
+                    camera,
+                    [
+                        value + 25 * (value - eye) / distance
+                        for value, eye in zip(target, camera)
+                    ],
+                    target,
+                ),
+                "target_distance_cm": distance,
+                "hit_distance_cm": distance,
+                "camera_clearance_cm": 250.0,
+            }
+            self.near_probes.append(copy.deepcopy(source))
+            native_probes.append(
+                {"frame_id": name, "source_probe": source, "landscape_probe": probe}
+            )
+            extras[name] = {
+                "kind": "source_grid_landscape_near",
+                "source_probe": source,
+                "landscape_probe": probe,
+            }
+        for name, original in self.survey_views.items():
+            self.poses[name] = {
+                key: original[key] for key in ("camera", "target", "fov")
+            }
+            extras[name] = {
+                "kind": "pinned_original_survey",
+                "survey_source": original["survey_source"],
+            }
         self.report = {
             "capture_plan": [],
             "captures": [],
+            "near_landscape_probes": native_probes,
             "source_scene": {
+                "landscape_actor_path": owner,
                 "seam_probe": {
                     "target_cm": seam[:],
                     "original_source_delta_cm": 0.0,
                     "defect_admitted": False,
                     "boundary_xy_cm": [37800, 44100, 44100, 50400],
-                }
+                },
             },
         }
         for name, mode in workflow.CAPTURE_PAIRS:
@@ -642,7 +734,17 @@ class WholeMapCaptureCoverageTests(unittest.TestCase):
                     "target_distance_cm": math.dist(pose["camera"], pose["target"]),
                 }
             )
+            self.report["capture_plan"][-1].update(extras.get(name, {}))
+            self.report["captures"][-1].update(extras.get(name, {}))
         self.rehash(self.report)
+
+    def verify(self, report=None):
+        return workflow.verify_capture_plan(
+            self.report if report is None else report,
+            self.pilot,
+            self.near_probes,
+            self.survey_views,
+        )
 
     @staticmethod
     def rehash(report):
@@ -650,17 +752,53 @@ class WholeMapCaptureCoverageTests(unittest.TestCase):
             workflow.canonical(report["capture_plan"])
         )
 
-    def test_required_thirty_views_and_matched_modes_pass(self):
-        self.assertEqual(len(workflow.CAPTURE_PAIRS), 30)
-        self.assertEqual(len(workflow.PREPARED_VIEWS), 16)
-        self.assertEqual(len(workflow.verify_capture_plan(self.report, self.pilot)), 30)
+    def test_required_forty_three_frames_and_matched_modes_pass(self):
+        self.assertEqual(len(workflow.CAPTURE_PAIRS), 43)
+        self.assertEqual(len(workflow.PREPARED_VIEWS), 21)
+        self.assertEqual(len(self.verify()), 43)
+        self.assertEqual(
+            {
+                mode: sum(pair[1] == mode for pair in workflow.CAPTURE_PAIRS)
+                for mode in (
+                    "baseline",
+                    "prepared",
+                    "domains",
+                    "checker",
+                    "normal-near",
+                    "normal-far",
+                )
+            },
+            {
+                "baseline": 9,
+                "prepared": 21,
+                "domains": 4,
+                "checker": 7,
+                "normal-near": 1,
+                "normal-far": 1,
+            },
+        )
 
     def test_missing_duplicated_or_reordered_modes_are_rejected(self):
-        for variant in ("missing", "duplicate", "reordered"):
+        for variant in (
+            "missing",
+            "missing-near",
+            "missing-far",
+            "duplicate",
+            "reordered",
+        ):
             with self.subTest(variant=variant):
                 report = copy.deepcopy(self.report)
                 if variant == "missing":
                     report["captures"].pop()
+                elif variant in ("missing-near", "missing-far"):
+                    target = (
+                        workflow.NEAR_VIEWS[0]
+                        if variant == "missing-near"
+                        else workflow.FAR_VIEWS[0]
+                    )
+                    report["captures"] = [
+                        row for row in report["captures"] if row["frame_id"] != target
+                    ]
                 elif variant == "duplicate":
                     report["captures"][-1] = report["captures"][0]
                 else:
@@ -669,7 +807,7 @@ class WholeMapCaptureCoverageTests(unittest.TestCase):
                         report["captures"][0],
                     )
                 with self.assertRaisesRegex(ValueError, "inventory changed"):
-                    workflow.verify_capture_plan(report, self.pilot)
+                    self.verify(report)
 
     def test_camera_drift_diagnostics_and_shadow_disabling_are_rejected(self):
         variants = (
@@ -687,7 +825,7 @@ class WholeMapCaptureCoverageTests(unittest.TestCase):
                 report = copy.deepcopy(self.report)
                 report["captures"][0][key] = value
                 with self.assertRaises(ValueError):
-                    workflow.verify_capture_plan(report, self.pilot)
+                    self.verify(report)
 
     def test_rehashed_pilot_camera_plan_cannot_change_original_pose(self):
         report = copy.deepcopy(self.report)
@@ -700,7 +838,7 @@ class WholeMapCaptureCoverageTests(unittest.TestCase):
                 )
         self.rehash(report)
         with self.assertRaises(ValueError):
-            workflow.verify_capture_plan(report, self.pilot)
+            self.verify(report)
 
     def test_matched_seam_target_cannot_move_between_near_and_far(self):
         report = copy.deepcopy(self.report)
@@ -719,7 +857,269 @@ class WholeMapCaptureCoverageTests(unittest.TestCase):
         )
         self.rehash(report)
         with self.assertRaises(ValueError):
-            workflow.verify_capture_plan(report, self.pilot)
+            self.verify(report)
+
+    def test_rehashed_near_source_and_incomplete_probe_metadata_are_rejected(self):
+        for mutation in (
+            "source-hash",
+            "window",
+            "halo",
+            "classification",
+            "missing-probe",
+            "capture-drift",
+        ):
+            with self.subTest(mutation=mutation):
+                report = copy.deepcopy(self.report)
+                source = report["near_landscape_probes"][0]["source_probe"]
+                if mutation == "source-hash":
+                    source["input_sha256"]["material-weights.png"] = "0" * 64
+                elif mutation == "window":
+                    source["pixel_window"][0] += 1
+                elif mutation == "halo":
+                    source["halo_data_sha256"]["availability_l8"] = "0" * 64
+                elif mutation == "classification":
+                    source["physical_demand_band"] = "A"
+                elif mutation == "missing-probe":
+                    report["near_landscape_probes"].pop()
+                else:
+                    capture = next(
+                        row
+                        for row in report["captures"]
+                        if row["frame_id"] == workflow.NEAR_VIEWS[0]
+                    )
+                    capture["source_probe"] = {}
+                self.rehash(report)
+                with self.assertRaises(ValueError):
+                    self.verify(report)
+
+    def test_consistent_near_camera_lift_outside_five_metres_is_rejected(self):
+        report = copy.deepcopy(self.report)
+        name = workflow.NEAR_VIEWS[0]
+        frame = next(row for row in report["capture_plan"] if row["frame_id"] == name)
+        target = frame["target"]
+        probe = frame["landscape_probe"]
+        probe["eye_ground_trace"]["hit_cm"][2] = target[2] + 600
+        camera = [target[0] + 100, target[1], target[2] + 750]
+        distance = math.dist(camera, target)
+        probe.update(
+            camera_clearance_cm=150,
+            target_distance_cm=distance,
+            hit_distance_cm=distance,
+        )
+        probe["aim_trace"]["start_cm"] = camera
+        probe["aim_trace"]["end_cm"] = [
+            value + 25 * (value - eye) / distance for value, eye in zip(target, camera)
+        ]
+        for row in report["capture_plan"]:
+            if row["frame_id"] == name:
+                row["camera"] = camera
+        for row in report["captures"]:
+            if row["frame_id"] == name:
+                row.update(camera_location_cm=camera, target_distance_cm=distance)
+        self.rehash(report)
+        with self.assertRaisesRegex(ValueError, "source-bound1..5m placement"):
+            self.verify(report)
+
+    def test_near_hit_owner_controls_target_and_rendered_depth_claim_are_checked(self):
+        for mutation in (
+            "wrong-owner",
+            "ignored-owner",
+            "missing-control",
+            "control-hit",
+            "shifted-target",
+            "near-hit",
+            "rendered-depth",
+        ):
+            with self.subTest(mutation=mutation):
+                report = copy.deepcopy(self.report)
+                frame = next(
+                    row
+                    for row in report["capture_plan"]
+                    if row["frame_id"] == workflow.NEAR_VIEWS[0]
+                )
+                probe = frame["landscape_probe"]
+                if mutation == "wrong-owner":
+                    probe["owner_path"] += "_Other"
+                elif mutation == "ignored-owner":
+                    probe["ignored_actor_paths"].append(probe["owner_path"])
+                elif mutation == "missing-control":
+                    del probe["target_trace"]["owner_excluded_control_hit_cm"]
+                elif mutation == "control-hit":
+                    probe["aim_trace"]["owner_excluded_control_hit_cm"] = frame[
+                        "target"
+                    ][:]
+                elif mutation == "shifted-target":
+                    probe["target_trace"]["hit_cm"][0] += 50
+                elif mutation == "near-hit":
+                    camera, target = frame["camera"], frame["target"]
+                    distance = math.dist(camera, target)
+                    probe["aim_trace"]["hit_cm"] = [
+                        eye + 50 * (value - eye) / distance
+                        for value, eye in zip(target, camera)
+                    ]
+                    probe["hit_distance_cm"] = 50
+                else:
+                    probe["rendered_pixel_depth_verified"] = True
+                self.rehash(report)
+                with self.assertRaises(ValueError):
+                    self.verify(report)
+
+    def test_rehashed_far_camera_and_observation_provenance_cannot_replace_pinned_csv(
+        self,
+    ):
+        for name in workflow.FAR_VIEWS:
+            for mutation in (
+                "camera",
+                "target",
+                "fov",
+                "csv-hash",
+                "index",
+                "band",
+                "physical-registration",
+            ):
+                with self.subTest(name=name, mutation=mutation):
+                    report = copy.deepcopy(self.report)
+                    changed = copy.deepcopy(self.poses[name])
+                    if mutation in ("camera", "target"):
+                        changed[mutation][0] += 10
+                    elif mutation == "fov":
+                        changed["fov"] = 80.0
+                    for frame, capture in zip(
+                        report["capture_plan"], report["captures"]
+                    ):
+                        if frame["frame_id"] != name:
+                            continue
+                        frame.update(changed)
+                        capture.update(
+                            camera_location_cm=changed["camera"],
+                            target_cm=changed["target"],
+                            fov_deg=changed["fov"],
+                            target_distance_cm=math.dist(
+                                changed["camera"], changed["target"]
+                            ),
+                        )
+                        source = frame["survey_source"]
+                        if mutation == "csv-hash":
+                            source["sha256"] = "0" * 64
+                        elif mutation == "index":
+                            source["index"] += 1
+                        elif mutation == "band":
+                            source["proposal_band"] = "D"
+                        elif mutation == "physical-registration":
+                            source["physical_surface_registered"] = True
+                    self.rehash(report)
+                    with self.assertRaisesRegex(ValueError, "Pinned original B/C"):
+                        self.verify(report)
+
+
+class WholeMapNearRasterTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        from PIL import Image
+
+        cls.data = {}
+        for name, mode, fill in (
+            ("material-weights.png", "RGBA", (0, 0, 0, 0)),
+            ("sample-availability.png", "L", 255),
+            ("inference-kind.png", "L", 0),
+            ("exclusion-reasons.png", "L", 0),
+        ):
+            with Image.new(mode, (4033, 4033), fill) as raster:
+                if mode == "RGBA":
+                    for row, column, rgba, _, _ in workflow.NEAR_TARGETS:
+                        raster.paste(rgba, (column - 8, row - 8, column + 9, row + 9))
+                stream = io.BytesIO()
+                raster.save(stream, format="PNG")
+                cls.data[name] = stream.getvalue()
+        cls.data["exclusion-reasons.tif"] = cls.make_tiff()
+
+    @staticmethod
+    def make_tiff(*, excluded=False):
+        import numpy as np
+        from rasterio.io import MemoryFile
+        from rasterio.transform import Affine
+
+        values = np.zeros((4033, 4033), dtype=np.uint16)
+        if excluded:
+            row, column = workflow.NEAR_TARGETS[0][:2]
+            values[row - 8, column - 8] = 64
+        with MemoryFile() as memory:
+            with memory.open(
+                driver="GTiff",
+                width=4033,
+                height=4033,
+                count=1,
+                dtype="uint16",
+                crs="EPSG:25831",
+                transform=Affine(0.5, 0, 483000, 0, -0.5, 4409516.5),
+                nodata=65535,
+                compress="DEFLATE",
+            ) as raster:
+                raster.write(values, 1)
+            return memory.read()
+
+    def test_all_cells_are_decoded_with_source_hashes_and_registered_centres(self):
+        probes = workflow.decode_near_windows(self.data)
+        self.assertEqual(len(probes), 3)
+        for probe, (row, column, rgba, _, _) in zip(probes, workflow.NEAR_TARGETS):
+            self.assertEqual(probe["center_rgba"], list(rgba))
+            self.assertEqual(probe["xy_cm"], [column * 50, row * 50])
+            self.assertEqual(
+                probe["halo_data_sha256"]["material_weights_rgba8"],
+                workflow.digest(bytes(rgba) * 289),
+            )
+            self.assertEqual(
+                probe["input_sha256"],
+                {name: workflow.digest(raw) for name, raw in self.data.items()},
+            )
+            self.assertEqual(probe["support"]["exclusion0_cells"], 289)
+
+    def test_one_bad_corner_rejects_support_even_when_the_centre_is_valid(self):
+        from PIL import Image
+
+        row, column = workflow.NEAR_TARGETS[0][:2]
+        for name, value in (
+            ("sample-availability.png", 0),
+            ("inference-kind.png", 1),
+            ("exclusion-reasons.png", 64),
+        ):
+            with self.subTest(name=name):
+                data = dict(self.data)
+                with Image.open(io.BytesIO(data[name])) as raster:
+                    raster.putpixel((column - 8, row - 8), value)
+                    output = io.BytesIO()
+                    raster.save(output, format="PNG")
+                    data[name] = output.getvalue()
+                with self.assertRaisesRegex(ValueError, "exclusion|full17x17"):
+                    workflow.decode_near_windows(data)
+
+    def test_original_uint16_exclusion_cannot_be_hidden_by_zero_png(self):
+        data = dict(self.data)
+        data["exclusion-reasons.tif"] = self.make_tiff(excluded=True)
+        with self.assertRaisesRegex(ValueError, "TIFF/PNG exclusion"):
+            workflow.decode_near_windows(data)
+
+    def test_wrong_source_bytes_are_rejected_before_raster_decoding(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            bundle = Path(temporary)
+            (bundle / "material-weights.png").write_bytes(b"wrong source")
+            with (
+                mock.patch.object(workflow, "decode_near_windows") as decode,
+                self.assertRaisesRegex(ValueError, "Near source byte identity"),
+            ):
+                workflow.read_near_probes(bundle, {})
+            decode.assert_not_called()
+
+    def test_stale_or_line_ending_changed_survey_is_rejected(self):
+        original = workflow.git(
+            workflow.ROOT, "cat-file", "blob", "HEAD:" + workflow.SURVEY_FILE
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "frames.csv"
+            for changed in (original + b"\n", original.replace(b"\r\n", b"\n")):
+                path.write_bytes(changed)
+                with self.assertRaisesRegex(ValueError, "survey CSV byte identity"):
+                    workflow.read_original_survey_views(path)
 
 
 class WholeMapMemoryAndFileTests(unittest.TestCase):

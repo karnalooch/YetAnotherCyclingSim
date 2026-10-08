@@ -30,6 +30,10 @@ import unreal
 
 
 ROOT = Path(__file__).resolve().parents[2]
+# A fresh -ExecutePythonScript process exposes this script directory, not the
+# repository package root. Whole-map setup imports helpers before legacy lanes.
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 MAP = "/Game/Worlds/SaCalobra/L_SaCalobraAccepted_20261004"
 MAP_FILE = ROOT / "Content/Worlds/SaCalobra/L_SaCalobraAccepted_20261004.umap"
 PLAN = Path(os.environ["YACS_CLIFF_VISUAL_PLAN"]).resolve()

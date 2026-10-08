@@ -1,13 +1,15 @@
 """Whole working-map preparation evidence inside the accepted v8 scene owner.
 
-Sixteen distributed, close, broad and seam views plus matched diagnostics. The
+Twenty-one distributed, close, broad and seam views plus matched diagnostics. The
 existing owning harness restores the map scene; this consumer restores all
 Landscape materials, native v8 attributes, parameters and capture settings.
 """
 
 from __future__ import annotations
 
+import csv
 import hashlib
+import io
 import json
 import math
 import time
@@ -46,9 +48,172 @@ TARGETED_VIEWS = (
     "window-0023-forward-00000",
     "overview-north",
 )
+NEAR_VIEWS = ("near-landscape-1", "near-landscape-2", "near-landscape-3")
+FAR_VIEWS = ("window-0181-forward-00004", "window-0077-reverse-00000")
+SURVEY_FILE = "docs/experiments/sa-calobra-tpp-survey-20261008/frames.csv"
+SURVEY_SHA256 = "15e0a2350c613bf52bfb1354192043ca0c6cd785493c59e7721305b67de099a3"
+NEAR_INPUTS = {
+    "material-weights.png": "af16fc7c43ec8a3a3b2e000fe716232a3229fe0ac6b4e9708baae5842ef99f6c",
+    "sample-availability.png": "9c9906268977a8f49ba20c194cecb101e8bb8c25c44b51ee30f66e7e88a7522a",
+    "inference-kind.png": "cc3bc3490878c5a96c20586cd28b0cd3cc812c5506ae97a7110c59e6ed3a3176",
+    "exclusion-reasons.png": "f1adb0c0e8fc3fecba53cfaf033f9d33c0784ab4c7f0ecb0d661629d3b35494e",
+    "exclusion-reasons.tif": "c74bde6ae8589304fe3d52f4e1e20801b0fe5647de6ffbc268c9b2ca65eaa941",
+}
+NEAR_TARGETS = (
+    (
+        1961,
+        96,
+        (244, 0, 4, 0),
+        "low_vegetation_appearance",
+        "7f43e4a3d3152ab7114223b7b171c939c7d63d680a85b1f357d61b020a664869",
+    ),
+    (
+        2048,
+        121,
+        (71, 162, 8, 0),
+        "forest_litter_appearance",
+        "23f3f4b09b7a73e1a25903fcacf83ce58aae637bf3b5f8daf951b30e822e23dc",
+    ),
+    (
+        2048,
+        1408,
+        (19, 0, 94, 0),
+        "mineral_rock_mixture",
+        "f5acdf97f56515ff8d38d1e8991feeaf9238dbd7ddb24aee9d5d873262db0e28",
+    ),
+)
 
 
-def build_view_plan(ground, pilot_frames, bounds, component_bounds, seam_point):
+def near_source_probes(inputs):
+    """Bind the three CPU-audited 17x17 windows to immutable raster bytes.
+
+    The host verifier independently decodes these windows. Embedded Unreal only
+    needs the already verified file identities and fresh collision/camera proof.
+    Appearance examples do not classify geography or physical demand bands.
+    """
+    if any(inputs["hashes"].get(name) != sha for name, sha in NEAR_INPUTS.items()):
+        raise ValueError(
+            "Near Landscape probes require the exact audited raster inputs"
+        )
+    return [
+        {
+            "row": row,
+            "column": column,
+            "pixel_window": [column - 8, row - 8, 17, 17],
+            "xy_cm": [column * 50, row * 50],
+            "center_rgba": list(rgba),
+            "purpose_role": role,
+            "physical_demand_band": "UNASSIGNED",
+            "input_sha256": dict(NEAR_INPUTS),
+            "halo_data_sha256": {
+                "material_weights_rgba8": halo_sha,
+                "availability_l8": "0682379a2bc138776a8dba4e8ca8a1933ec18b0b7ff9946b180d106c2e9c8f78",
+                "inference_l8": "6559f403524ea6ef9bf2e1d0bb66d1af8152920fb002ec2c4ced993083124a88",
+                "exclusion_reasons_l8": "6559f403524ea6ef9bf2e1d0bb66d1af8152920fb002ec2c4ced993083124a88",
+            },
+            "support": {
+                "cells": 289,
+                "availability255_cells": 289,
+                "inference0_cells": 289,
+                "exclusion0_cells": 289,
+                "basis": "Pinned raster identity and independently decoded CPU windows",
+            },
+        }
+        for row, column, rgba, role, halo_sha in NEAR_TARGETS
+    ]
+
+
+def original_survey_views(path=None):
+    path = Path(path) if path is not None else ROOT / SURVEY_FILE
+    data = checked_bytes(path, 4 * 1024 * 1024)
+    if hashlib.sha256(data).hexdigest() != SURVEY_SHA256:
+        raise ValueError("Original B/C survey CSV byte identity changed")
+    rows = list(csv.DictReader(io.StringIO(data.decode("utf-8-sig"))))
+    selected = []
+    for frame_id, index, card, band in (
+        (FAR_VIEWS[0], 661, "SC-P04", "B"),
+        (FAR_VIEWS[1], 1088, "SC-P06", "C"),
+    ):
+        matches = [row for row in rows if row["frame_id"] == frame_id]
+        if len(matches) != 1 or int(matches[0]["index"]) != index:
+            raise ValueError("Original survey observation identity differs")
+        row = matches[0]
+        camera, target = (
+            json.loads(row["camera_location_cm"]),
+            json.loads(row["target_cm"]),
+        )
+        fov = float(row["fov_deg"])
+        resolution = [int(row["width_px"]), int(row["height_px"])]
+        if (
+            any(
+                len(point) != 3 or not all(math.isfinite(value) for value in point)
+                for point in (camera, target)
+            )
+            or fov != 76.0
+            or resolution != [1280, 720]
+            or resolution[0] * RESOLUTION[1] != resolution[1] * RESOLUTION[0]
+        ):
+            raise ValueError("Original survey camera/FOV/aspect contract differs")
+        selected.append(
+            {
+                "frame_id": frame_id,
+                "kind": "pinned_original_survey",
+                "camera": camera,
+                "target": target,
+                "fov": fov,
+                "coverage": "Original proposed "
+                + band
+                + " observation; no whole-view physical band assignment or mountain-distance measurement",
+                "survey_source": {
+                    "file": SURVEY_FILE,
+                    "sha256": SURVEY_SHA256,
+                    "frame_id": frame_id,
+                    "index": index,
+                    "original_png_sha256": row["sha256"],
+                    "original_resolution": resolution,
+                    "review_card": card,
+                    "proposal_band": band,
+                    "physical_surface_registered": False,
+                },
+            }
+        )
+    return selected
+
+
+def trace_point(hit, start, end):
+    """Extract a real interior line hit, excluding UE's trace endpoint vectors."""
+    direction = [b - a for a, b in zip(start, end)]
+    squared = sum(value * value for value in direction)
+    if not math.isfinite(squared) or squared <= 0:
+        raise ValueError("Invalid Landscape trace segment")
+    candidates = []
+    for value in () if hit is None else hit.to_tuple():
+        if not all(hasattr(value, axis) for axis in ("x", "y", "z")):
+            continue
+        point = [float(getattr(value, axis)) for axis in ("x", "y", "z")]
+        if not all(math.isfinite(number) for number in point):
+            continue
+        parameter = (
+            sum((p - a) * d for p, a, d in zip(point, start, direction)) / squared
+        )
+        residual = sum(
+            (p - a - parameter * d) ** 2 for p, a, d in zip(point, start, direction)
+        )
+        if 1e-6 < parameter < 1 - 1e-6 and residual <= 1.0:
+            candidates.append((parameter, point))
+    return min(candidates, key=lambda item: item[0])[1] if candidates else None
+
+
+def build_view_plan(
+    ground,
+    pilot_frames,
+    bounds,
+    component_bounds,
+    seam_point,
+    *,
+    near_views=(),
+    far_views=(),
+):
     """Camera fixtures are review coverage, never world-space demand masks."""
     if len(ground) != 9 or len(pilot_frames) != 2:
         raise ValueError(
@@ -121,22 +286,32 @@ def build_view_plan(ground, pilot_frames, bounds, component_bounds, seam_point):
                 "coverage": "Same exact retained v8 east-boundary vertex at two distances; local seam review pending",
             }
         )
-    if len(views) != 16 or len({view["frame_id"] for view in views}) != 16:
+    if (
+        tuple(view["frame_id"] for view in near_views) != NEAR_VIEWS
+        or tuple(view["frame_id"] for view in far_views) != FAR_VIEWS
+    ):
+        raise ValueError(
+            "Whole-map near Landscape and original B/C coverage is incomplete"
+        )
+    views.extend(near_views)
+    views.extend(far_views)
+    if len(views) != 21 or len({view["frame_id"] for view in views}) != 21:
         raise ValueError("Whole-map view identity is not unique")
     return views
 
 
 def build_steps(views):
     lookup = {view["frame_id"]: view for view in views}
-    if len(lookup) != 16 or not set(TARGETED_VIEWS) <= set(lookup):
+    if len(lookup) != 21 or not set(TARGETED_VIEWS + NEAR_VIEWS + FAR_VIEWS) <= set(
+        lookup
+    ):
         raise ValueError("Whole-map camera coverage is incomplete")
-    steps = [(lookup[name], "baseline") for name in TARGETED_VIEWS]
-    steps += [(view, "prepared") for view in views]
-    steps += [
-        (lookup[name], mode)
-        for mode in ("domains", "checker")
-        for name in TARGETED_VIEWS
+    steps = [
+        (lookup[name], "baseline") for name in TARGETED_VIEWS + NEAR_VIEWS + FAR_VIEWS
     ]
+    steps += [(view, "prepared") for view in views]
+    steps += [(lookup[name], "domains") for name in TARGETED_VIEWS]
+    steps += [(lookup[name], "checker") for name in TARGETED_VIEWS + NEAR_VIEWS]
     steps += [(lookup["ground-1-1"], mode) for mode in ("normal-near", "normal-far")]
     return steps
 
@@ -212,6 +387,7 @@ class WholeMapCapture:
         self.camera, self.component, self.environment = camera, component, environment
         self.root, self.done, self.clock = Path(root), done, clock
         self.inputs = load_inputs(input_root)
+        self.native_root = Path(native_root)
         self.native_inputs = load_native_inputs(native_root)
         self.master_receipt = Path(master_receipt)
         self.master_data = json.loads(
@@ -233,7 +409,9 @@ class WholeMapCapture:
             "inputs_sha256": self.inputs["hashes"],
             "master_receipt_sha256": digest(self.master_receipt),
             "native_inputs_sha256": self.native_inputs["hashes"],
-            "source_scene": source_scene,
+            "source_scene": dict(
+                source_scene, landscape_actor_path=landscape.get_path_name()
+            ),
             "rendering_recipe": rendering_recipe(),
             "capture_plan": [],
             "captures": [],
@@ -249,7 +427,7 @@ class WholeMapCapture:
             "visual_acceptance": "PENDING_OWNER",
             "performance_acceptance": "NOT_MEASURED",
             "shader_cost_reduction_claimed": False,
-            "coverage_claim": "Full1024 component binding plus16 sampled views; no every-pixel or whole-map visibility PASS",
+            "coverage_claim": "All 1024 components bound plus 21 sampled views; no every-pixel or whole-map visibility PASS",
             "error": None,
             "priming_captures_per_phase": PRIMES_PER_CAPTURE,
             "memory_checkpoints": [],
@@ -344,6 +522,119 @@ class WholeMapCapture:
             raise RuntimeError("Distributed ground camera trace missed")
         return max(heights)
 
+    def _landscape_only_trace(self, start, end, actors):
+        ignored = [actor for actor in actors if actor != self.landscape]
+
+        def query(excluded):
+            hit = self.api.SystemLibrary.line_trace_single(
+                self.world,
+                self.api.Vector(*start),
+                self.api.Vector(*end),
+                self.api.TraceTypeQuery.ECC_VISIBILITY,
+                True,
+                excluded,
+                self.api.DrawDebugTrace.NONE,
+                True,
+            )
+            return trace_point(hit, start, end)
+
+        point = query(ignored)
+        if point is None:
+            raise RuntimeError(
+                "Near Landscape trace missed: "
+                + json.dumps({"start_cm": start, "end_cm": end})
+            )
+        control = query(actors)
+        if control is not None:
+            raise RuntimeError(
+                "Near trace remains blocked with Landscape excluded: "
+                + json.dumps(control)
+            )
+        return {
+            "start_cm": list(start),
+            "end_cm": list(end),
+            "hit_cm": point,
+            "owner_excluded_control_hit_cm": None,
+        }
+
+    def _build_near_views(self):
+        actors = list(
+            self.api.get_editor_subsystem(
+                self.api.EditorActorSubsystem
+            ).get_all_level_actors()
+        )
+        if self.landscape not in actors:
+            raise RuntimeError(
+                "Owning Landscape is missing from the native actor inventory"
+            )
+        paths = sorted(actor.get_path_name() for actor in actors)
+        if len(paths) != len(set(paths)):
+            raise RuntimeError("Native near-probe actor inventory is ambiguous")
+        self.report["near_landscape_probes"] = []
+        views = []
+        for frame_id, source in zip(NEAR_VIEWS, near_source_probes(self.inputs)):
+            x, y = source["xy_cm"]
+            evidence = {
+                "owner_path": self.landscape.get_path_name(),
+                "world_actor_paths": paths,
+                "ignored_actor_paths": sorted(
+                    actor.get_path_name() for actor in actors if actor != self.landscape
+                ),
+                "nominal_camera_offset_cm": [100, 0, 250],
+                "rendered_pixel_depth_verified": False,
+                "scope": "Landscape-only collision ownership and same-camera checker review; no rendered pixel-depth or A-band registration",
+            }
+            self.report["near_landscape_probes"].append(
+                {
+                    "frame_id": frame_id,
+                    "source_probe": source,
+                    "landscape_probe": evidence,
+                }
+            )
+            evidence["target_trace"] = self._landscape_only_trace(
+                [x, y, 150000], [x, y, -150000], actors
+            )
+            target = evidence["target_trace"]["hit_cm"]
+            evidence["eye_ground_trace"] = self._landscape_only_trace(
+                [x + 100, y, 150000], [x + 100, y, -150000], actors
+            )
+            eye_ground = evidence["eye_ground_trace"]["hit_cm"]
+            camera = [x + 100, y, max(target[2] + 250, eye_ground[2] + 150)]
+            distance = math.dist(camera, target)
+            evidence["camera_clearance_cm"] = camera[2] - eye_ground[2]
+            evidence["target_distance_cm"] = distance
+            if not 100 <= distance <= 500:
+                raise RuntimeError(
+                    f"Near Landscape {frame_id} target range {distance:.3f} cm is outside 100..500 cm; refusing a higher/farther camera"
+                )
+            end = [
+                value + 25 * (value - eye) / distance
+                for value, eye in zip(target, camera)
+            ]
+            evidence["aim_trace"] = self._landscape_only_trace(camera, end, actors)
+            aim = evidence["aim_trace"]["hit_cm"]
+            hit_distance = math.dist(camera, aim)
+            evidence["hit_distance_cm"] = hit_distance
+            if not 100 <= hit_distance <= 500 or any(
+                abs(aim[index] - value) > 400 for index, value in enumerate((x, y))
+            ):
+                raise RuntimeError(
+                    f"Near Landscape {frame_id} actual hit leaves the 1..5 m range or audited 17x17 support"
+                )
+            views.append(
+                {
+                    "frame_id": frame_id,
+                    "kind": "source_grid_landscape_near",
+                    "camera": camera,
+                    "target": target,
+                    "fov": 60.0,
+                    "coverage": "Audited source-grid material example with a 1..5 m Landscape collision hit; visual/checker review remains separate",
+                    "source_probe": source,
+                    "landscape_probe": evidence,
+                }
+            )
+        return views
+
     def _build_views(self):
         ground = []
         for x in (25000, 100000, 175000):
@@ -394,6 +685,8 @@ class WholeMapCapture:
             bounds,
             self.report["source_scene"]["component_bounds"],
             seam[4:7],
+            near_views=self._build_near_views(),
+            far_views=original_survey_views(self.native_root / "frames.csv"),
         )
         for view in views:
             if view["frame_id"] in ("dominant-wall", "seam-close", "seam-distant"):
@@ -482,6 +775,8 @@ class WholeMapCapture:
         frame, mode = self.steps[self.index]
         self.environment.assert_adaptive()
         self.binding.assert_other_materials()
+        if mode == "baseline" and self.binding.applied:
+            raise RuntimeError("All baseline captures must precede preparation binding")
         if mode != "baseline":
             self._set_parameters(mode_parameters(mode))
             if not self.binding.applied:
@@ -605,6 +900,9 @@ class WholeMapCapture:
                 "sha256": digest(readiness_root / "capture-readiness.json"),
             },
         }
+        for name in ("source_probe", "landscape_probe", "survey_source"):
+            if name in frame:
+                self.pending[name] = frame[name]
         self.prime = 0
         self._submit()
 

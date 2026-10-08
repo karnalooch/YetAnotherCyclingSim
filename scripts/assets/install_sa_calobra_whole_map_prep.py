@@ -215,7 +215,7 @@ def validate_proof(proof_root):
         and native.get("surface_manifest_fingerprint")
         == inputs["manifest"]["fingerprint"]
         and native.get("component_count") == 1024
-        and native.get("primary_frame_count") == 30
+        and native.get("primary_frame_count") == 43
         and native.get("native_trial_applied") is False
         and capture.get("status") == "WHOLE_MAP_PREPARATION_PASS"
         and capture.get("exact_sha") == head
