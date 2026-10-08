@@ -220,7 +220,13 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
         GuideNormals[F.B] += N;
         GuideNormals[F.C] += N;
     }
-    for (int32 V : Mesh.VertexIndicesItr()) { GuideNormals[V].Normalize(); }
+    for (int32 V : Mesh.VertexIndicesItr())
+    {
+        GuideNormals[V].Normalize();
+        // Native Landscape exports can have downward triangle winding. The
+        // crest classifier requires an upward geometric guide, not that winding.
+        if (GuideNormals[V].Z < 0.0) { GuideNormals[V] *= -1.0; }
+    }
     constexpr double FeatureCosine = 0.85; // approximately 32 degrees
     // Blunt source-sampling teeth only on convex upper surfaces. A sharp wall
     // can be a limestone fracture; do not relax it merely for being angular.
@@ -296,7 +302,8 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
             }
             if (WeightSum < 1.e-9 || !Normals[V].Normalize()) { continue; }
             // Normal-space relaxation: horizontal on walls, vertical on flats.
-            const FVector3d N = Normals[V];
+            FVector3d N = Normals[V];
+            if (bCrest && N.Z < 0.0) { N *= -1.0; }
             const FVector3d Laplacian = Mean / WeightSum - Before[V];
             const double NormalResidual = FVector3d::DotProduct(Laplacian, N);
             const double NormalDelta = Blend * NormalResidual;
