@@ -47,6 +47,14 @@ def evaluate(metrics: dict, receipt: dict, audit: dict, expected_sha: str) -> di
     projection = trial.get('limestone_uv_projection', {})
     if projection.get('world_size_m') != 3 or projection.get('triangles_unchanged') is not True:
         failures.append('Limestone physical UV scale proof missing')
+    diagnostics = {c['name']: c for c in receipt.get('diagnostic_captures', [])}
+    for band in ('close', 'middle', 'distant'):
+        pair = [diagnostics.get(f'diagnostic-review-{band}-{m}', {})
+                for m in ('neutral', 'limestone')]
+        if (not all(c.get('sha256') and c.get('review_camera') for c in pair)
+                or any(pair[0].get(k) != pair[1].get(k) for k in
+                       ('review_camera', 'camera_location_cm', 'camera_rotation_deg', 'camera_fov_deg'))):
+            failures.append(f'{band} matched neutral/PBR review evidence missing')
     return dict(schema_version=1, exact_sha=expected_sha,
                 status='FAIL' if failures else 'PASS', failures=failures,
                 scope='LOCAL_COMBINED_TECHNICAL_ADMISSION_NOT_OWNER_ACCEPTANCE',

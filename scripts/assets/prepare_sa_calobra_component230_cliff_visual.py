@@ -427,6 +427,28 @@ def build_plan(
     }
 
 
+def review_cameras(reasons, plan):
+    """Pick actual pavement samples; camera height is resolved in the editor."""
+    road_rc = np.argwhere((reasons & ROAD_BIT) != 0)
+    centers = np.array([[(c['row0'] + c['row1']) / 2,
+                         (c['col0'] + c['col1']) / 2] for c in plan['skin_cells']])
+    if not len(road_rc) or not len(centers):
+        raise ValueError('Review cameras require source pavement and admitted cliff cells')
+    nearest = road_rc[np.argmin(((road_rc - centers.mean(axis=0)) ** 2).sum(axis=1))]
+    target = centers[np.argmin(((centers - nearest) ** 2).sum(axis=1))]
+    distance_m = np.linalg.norm(road_rc - target, axis=1) * PIXEL_SIZE_M
+    views = []
+    for label, desired_m in (('close', 8.0), ('middle', 20.0), ('distant', 45.0)):
+        index = int(np.argmin(abs(distance_m - desired_m)))
+        row, col = (int(v) for v in road_rc[index])
+        views.append(dict(name=label, pavement_source_rc=[row, col],
+            eye_xy_m=[col * PIXEL_SIZE_M, row * PIXEL_SIZE_M],
+            target_xy_m=[float(target[1] * PIXEL_SIZE_M), float(target[0] * PIXEL_SIZE_M)],
+            horizontal_range_m=float(distance_m[index]), desired_range_m=desired_m,
+            eye_height_above_accepted_landscape_cm=160.0, fov_deg=50.0))
+    return views
+
+
 def prepare(
     normalized_path: Path,
     pcg_path: Path,
@@ -507,6 +529,12 @@ def prepare(
         json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n",
         encoding="utf-8",
     )
+    cameras = dict(schema_version=1, plan_fingerprint=report['fingerprint'],
+        pavement_mask_sha256=digest(pcg_path.parent / 'exclusion-reasons.tif'),
+        pavement_bit=ROAD_BIT, cameras=review_cameras(reasons, plan),
+        scope='SOURCE_PAVEMENT_LOCATIONS_HEIGHT_ABOVE_LANDSCAPE_NOT_PAVEMENT_COLLISION')
+    (output / 'component230-review-cameras.json').write_text(
+        json.dumps(cameras, indent=2, sort_keys=True) + '\n', encoding='utf-8')
     return report
 
 

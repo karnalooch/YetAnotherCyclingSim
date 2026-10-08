@@ -24,7 +24,13 @@ class CombinedGateTests(unittest.TestCase):
             captures=[{'name': name, 'sha256': key} for name, key in (
                 ('02-baseline-lighting-only', 'baseline_lighting_only'),
                 ('04-candidate-lighting-only', 'candidate_lighting_only'))],
-            diagnostic_captures=[{'material_profile': 'limestone-pbr', 'sha256': 'pbr'}])
+            diagnostic_captures=[{'name': 'diagnostic-limestone-pbr-lit', 'material_profile': 'limestone-pbr', 'sha256': 'pbr'}])
+        for band in ('close', 'middle', 'distant'):
+            for material in ('neutral', 'limestone'):
+                self.receipt['diagnostic_captures'].append(dict(
+                    name=f'diagnostic-review-{band}-{material}', sha256='review',
+                    review_camera={'name': band}, camera_location_cm=[1, 2, 3],
+                    camera_rotation_deg=[0, 0, 0], camera_fov_deg=50))
 
     def result(self):
         return evaluate(self.metrics, self.receipt, self.audit, 'revision')
@@ -56,4 +62,8 @@ class CombinedGateTests(unittest.TestCase):
         self.assertEqual(self.result()['status'], 'FAIL')
         self.receipt['captures'][0]['sha256'] = 'baseline_lighting_only'
         self.audit['max_displacement_cm'] = 200.01
+        self.assertEqual(self.result()['status'], 'FAIL')
+
+    def test_changed_review_camera_fails_even_when_images_exist(self):
+        self.receipt['diagnostic_captures'][-1]['camera_location_cm'] = [4, 5, 6]
         self.assertEqual(self.result()['status'], 'FAIL')

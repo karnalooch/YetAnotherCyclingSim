@@ -18,6 +18,7 @@ on:
       - "scripts/assets/test_analyze_local_cliff_smoothing.py"
       - "scripts/assets/gate_component230_combined.py"
       - "scripts/assets/test_gate_component230_combined.py"
+      - "scripts/assets/test_component230_review_cameras.py"
       - "Source/YetAnotherCyclingSimEditor/Private/Diagnostics/YacsLandscapeMeshDiagnosticLibrary.cpp"
       - "Source/YetAnotherCyclingSimEditor/Private/Diagnostics/YacsLandscapeTerrainTrial.cpp"
       - "scripts/geometry/local_thermal_erosion.py"
@@ -202,7 +203,7 @@ jobs:
           python -m py_compile scripts/assets/prepare_sa_calobra_component230_cliff_visual.py scripts/assets/analyze_sa_calobra_component230_cliff_visual.py scripts/assets/analyze_sa_calobra_component230_pcgex_topology.py scripts/ue/capture_sa_calobra_component230_cliff.py
           if ($LASTEXITCODE -ne 0) { throw 'Phase 2C Python compile failed.' }
 
-          python -m unittest scripts.assets.test_sa_calobra_component230_cliff_visual scripts.assets.test_analyze_sa_calobra_component230_pcgex_topology scripts.assets.test_analyze_local_cliff_smoothing scripts.assets.test_gate_component230_combined -v
+          python -m unittest scripts.assets.test_sa_calobra_component230_cliff_visual scripts.assets.test_analyze_sa_calobra_component230_pcgex_topology scripts.assets.test_analyze_local_cliff_smoothing scripts.assets.test_gate_component230_combined scripts.assets.test_component230_review_cameras -v
           if ($LASTEXITCODE -ne 0) { throw 'Phase 2C cliff plan/topology audit tests failed.' }
 
           python scripts/assets/prepare_sa_calobra_component230_cliff_visual.py --normalized-manifest $env:YACS_CLIFF_NORMALIZED --pcg-manifest $env:YACS_CLIFF_PCG --context-manifest $env:YACS_CLIFF_CONTEXT --output $env:YACS_CLIFF_VISUAL_PLAN_ROOT

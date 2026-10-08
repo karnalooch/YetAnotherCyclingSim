@@ -1593,6 +1593,23 @@ def schedule():
     _set_shadow_cache_probe(bool(view.get("uncached_shadows")))
     if view["candidate"] and not _candidate_actors:
         _spawn_candidate()
+    if view.get("review_camera"):
+        camera = view["review_camera"]
+        ex, ey = camera["eye_xy_m"]
+        tx, ty = camera["target_xy_m"]
+        eye = unreal.Vector(ex * 100.0, ey * 100.0,
+            _trace_landscape_z(ex, ey) + camera["eye_height_above_accepted_landscape_cm"])
+        target = unreal.Vector(tx * 100.0, ty * 100.0, _trace_landscape_z(tx, ty) + 100.0)
+        _camera.set_actor_location(eye, False, False)
+        _camera.set_actor_rotation(unreal.MathLibrary.find_look_at_rotation(eye, target), False)
+        _camera.get_component_by_class(unreal.CameraComponent).set_editor_property(
+            "field_of_view", camera["fov_deg"])
+        if not view.get("limestone_material"):
+            meshes = [a for a in _candidate_actors if isinstance(a, unreal.DynamicMeshActor)]
+            if len(meshes) != 1:
+                raise RuntimeError("Review requires exactly one combined mesh")
+            meshes[0].get_dynamic_mesh_component().set_material(
+                0, _target_component.get_editor_property("override_material"))
 
     unreal.SystemLibrary.execute_console_command(
         _world, "showflag.DynamicShadows 1"
@@ -1700,6 +1717,10 @@ def tick(_delta):
                 "resolution": list(RESOLUTION),
                 "material_profile": "limestone-pbr" if view.get("limestone_material") else "neutral-fixture",
                 "material_path": CLIFF_MATERIAL if view.get("limestone_material") else None,
+                "review_camera": view.get("review_camera"),
+                "camera_location_cm": [float(getattr(_camera.get_actor_location(), a)) for a in ("x", "y", "z")],
+                "camera_rotation_deg": [float(getattr(_camera.get_actor_rotation(), a)) for a in ("pitch", "yaw", "roll")],
+                "camera_fov_deg": float(_camera.get_component_by_class(unreal.CameraComponent).get_editor_property("field_of_view")),
             }
         )
         _index += 1
@@ -1918,6 +1939,16 @@ def main():
     if TERRAIN_MESH_TRIAL:
         _views.append({"name": "diagnostic-limestone-pbr-lit", "candidate": True,
                        "viewmode": "lit", "diagnostic_only": True, "limestone_material": True})
+        camera_path = PLAN.parent / "component230-review-cameras.json"
+        cameras = json.loads(camera_path.read_text(encoding="utf-8"))
+        if cameras["plan_fingerprint"] != _plan["fingerprint"] or cameras["pavement_bit"] != 1:
+            raise RuntimeError("Review camera source provenance mismatch")
+        _terrain_trial["review_camera_recipe_sha256"] = _digest(camera_path)
+        for camera in cameras["cameras"]:
+            for material in ("neutral", "limestone"):
+                _views.append({"name": "diagnostic-review-" + camera["name"] + "-" + material,
+                    "candidate": True, "viewmode": "lit", "diagnostic_only": True,
+                    "limestone_material": material == "limestone", "review_camera": camera})
     # A Lit-only prime cannot warm histories after a view-mode transition.
     # Exercise the exact scene/view once before every admitted screenshot.
     primed_views = []
