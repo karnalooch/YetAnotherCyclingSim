@@ -1382,6 +1382,7 @@ def _write_receipt(status: str, error: str | None, *, output=None, mesh=None, ca
             "delay_seconds": CAPTURE_DELAY_SECONDS,
             "high_res_warmup_frames": CAPTURE_WARMUP_FRAMES,
             "prime_each_viewmode_transition": True,
+            "priming_captures_per_view": 3,
             "force_lod": 0,
             "component_lod_override": _landscape_lod_receipt,
             "fully_load_used_textures": True,
@@ -1770,8 +1771,10 @@ def main():
     primed_views = []
     for view in _views:
         if not view.get("warmup_only"):
-            prime = dict(view, name="prime-" + view["name"], warmup_only=True)
-            primed_views.append(prime)
+            for prime_index in range(3):
+                prefix = "prime-" if prime_index == 2 else f"prime-{prime_index + 1}-"
+                prime = dict(view, name=prefix + view["name"], warmup_only=True)
+                primed_views.append(prime)
         primed_views.append(view)
     _views = primed_views
     _mesh_receipt["lighting"] = lighting
@@ -1786,4 +1789,3 @@ except Exception:
     if _world is not None:
         finish(traceback.format_exc())
     raise
-

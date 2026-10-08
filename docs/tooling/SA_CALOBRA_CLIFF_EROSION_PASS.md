@@ -641,3 +641,27 @@ normal motion. Fixed positions/normals and the original triangle budget remain
 binding. The receipt reports normal and tangential completed pass counts separately.
 Unreal build, independent audit and actual Lit/Lighting Only review are required
 before this candidate can be accepted. Lighting, materials and gates are unchanged.
+
+At `eef394cb`, run `37734971563`, the three-pass redistribution built and
+matched the offline probe: zero interior triangles below quality 0.1, 624
+movable edges above 45 degrees and 65 above 90 degrees. Fixed interfaces and
+the 50 cm bound passed. Render review still found large wedges, so whole-map
+rollout remains blocked.
+
+That run's nominal A/B PASS is rejected as readiness evidence: the paired
+baseline contained 5,068 near-black pixels with a largest region of 5,034,
+whereas the same run's native-export and local-smoothing baseline frames had
+28 near-black pixels and a largest region of 19. Even the paired prime was
+still changing (5,337 near-black pixels). A single priming capture is insufficient.
+The harness now takes three complete priming captures before every admitted
+view. This is a readiness experiment, not a guarantee of convergence.
+
+Metric analysis additionally rejects the observed cold-render defect for the
+frozen Component 230 neutral-material fixture: its <0.05 reference mask must
+contain no connected region of at least 250 pixels (an existing reported region
+size). Clean references in the reviewed runs have a largest region of 19-20;
+the faulty reference has a region over 5,000. The guard does not apply to other
+material fixtures, does not choose a lighter reference, and does not alter any
+candidate lighting threshold. Metrics are saved before the analyzer fails so
+the rejected reference remains inspectable. Small isolated dark details remain
+allowed. Missing receipt/provenance fails instead of guessing the fixture.

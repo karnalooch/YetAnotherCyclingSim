@@ -15,10 +15,27 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.assets.prepare_sa_calobra_cliff_erosion_handoff import label_components_8
+from scripts.assets.prepare_sa_calobra_cliff_erosion_handoff import label_components_8  # noqa: E402
 
 
 THRESHOLDS = (0.05, 0.10, 0.15)
+
+
+def baseline_readiness(metrics: dict) -> dict:
+    """Reject the observed cold-render cavity in the frozen neutral fixture.
+
+    Clean Component 230 references have no >=250-pixel region below 0.05.
+    This is an additional fixture-specific guard, not visual acceptance or
+    a replacement for any baseline/candidate comparison threshold.
+    """
+    darkest = metrics["thresholds"]["0.05"]
+    ready = darkest["regions_ge_250px"] == 0
+    return {
+        "status": "PASS" if ready else "FAIL",
+        "scope": "COMPONENT230_FROZEN_NEUTRAL_BASELINE",
+        "large_near_black_regions": darkest["regions_ge_250px"],
+        "reason": None if ready else "Unstable near-black baseline cavity",
+    }
 
 
 def digest(path: Path) -> str:
@@ -27,11 +44,7 @@ def digest(path: Path) -> str:
 
 def image_metrics(path: Path) -> dict[str, object]:
     image = np.asarray(Image.open(path).convert("RGB"), dtype=np.float32) / 255.0
-    luma = (
-        image[..., 0] * 0.2126
-        + image[..., 1] * 0.7152
-        + image[..., 2] * 0.0722
-    )
+    luma = image[..., 0] * 0.2126 + image[..., 1] * 0.7152 + image[..., 2] * 0.0722
     thresholds = {}
     for threshold in THRESHOLDS:
         mask = luma < threshold
@@ -72,7 +85,10 @@ def comparison_board(paths: list[tuple[str, Path]], output: Path) -> None:
 
 def dark_mask_board(baseline: Path, candidate: Path, output: Path) -> None:
     panels = []
-    for title, path in (("baseline lighting-only < .05", baseline), ("candidate lighting-only < .05", candidate)):
+    for title, path in (
+        ("baseline lighting-only < .05", baseline),
+        ("candidate lighting-only < .05", candidate),
+    ):
         rgb = np.asarray(Image.open(path).convert("RGB"), dtype=np.float32) / 255.0
         luma = rgb[..., 0] * 0.2126 + rgb[..., 1] * 0.7152 + rgb[..., 2] * 0.0722
         mask = luma < 0.05
@@ -103,6 +119,20 @@ def main(root: Path) -> dict[str, object]:
     metrics = {name: image_metrics(path) for name, path in names.items()}
     baseline = metrics["baseline_lighting_only"]
     candidate = metrics["candidate_lighting_only"]
+    receipt_path = root / "component230-cliff-visual-receipt.json"
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8-sig"))
+    presentation = receipt.get("landscape_presentation_material", {})
+    neutral_fixture = (
+        presentation.get("enabled") is True
+        and presentation.get("component") == "LandscapeComponent_230"
+        and presentation.get("material")
+        == "/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"
+    )
+    readiness = (
+        baseline_readiness(baseline)
+        if neutral_fixture
+        else {"status": "NOT_APPLICABLE", "reason": "Not the frozen neutral fixture"}
+    )
     deltas = {}
     for threshold in THRESHOLDS:
         key = f"{threshold:.2f}"
@@ -110,9 +140,7 @@ def main(root: Path) -> dict[str, object]:
         c = candidate["thresholds"][key]
         deltas[key] = {
             "pixel_delta": c["pixels"] - b["pixels"],
-            "pixel_ratio": (
-                c["pixels"] / b["pixels"] if b["pixels"] else None
-            ),
+            "pixel_ratio": (c["pixels"] / b["pixels"] if b["pixels"] else None),
             "largest_region_delta": (
                 c["largest_region_pixels"] - b["largest_region_pixels"]
             ),
@@ -143,6 +171,7 @@ def main(root: Path) -> dict[str, object]:
         "schema_version": 1,
         "status": "COMPONENT230_CLIFF_METRICS_READY",
         "metrics": metrics,
+        "baseline_readiness": readiness,
         "lighting_only_deltas": deltas,
         "comparison_board": {
             "path": board.name,
@@ -158,6 +187,8 @@ def main(root: Path) -> dict[str, object]:
         encoding="utf-8",
     )
     print(json.dumps(report["lighting_only_deltas"], sort_keys=True))
+    if report["baseline_readiness"]["status"] == "FAIL":
+        raise ValueError(report["baseline_readiness"]["reason"])
     return report
 
 
