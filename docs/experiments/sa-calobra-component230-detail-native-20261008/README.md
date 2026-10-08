@@ -13,18 +13,78 @@ scene occluders. This experiment must show the actual selected faces under
 renderer depth and establish a visible witness for one local patch before its
 native treatment is applied.
 
-The bounded producer and native comparison are implemented. Local producer and
-integration checks pass; the exact-head Unreal build, Automation and capture
-remain pending. No new native capture, visual improvement or performance
-result is claimed at this stage. The exact commit, run and inspected artifacts
-will be recorded after execution.
+**Native execution passed** at implementation commit
+[`520c7c98961b3a4be7fbb6eb7930e6dea8eb8b46`](https://github.com/karnalooch/YetAnotherCyclingSim/commit/520c7c98961b3a4be7fbb6eb7930e6dea8eb8b46).
+The [native run 37842981347](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37842981347)
+compiled UE 5.8.2 CL 56702186, passed all 28 scoped Automation tests, captured
+all ten primary PNGs, applied the bounded trial after both visibility pairs,
+and verified complete restoration. The
+[implementation CI run 37842993840](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37842993840)
+also passed.
 
 The final local gate ran 86 focused Python tests: 85 passed and the PowerShell
 parser check was skipped because this Linux environment has no `pwsh`. The
-same check remains enabled on the native runner. Ruff checks, Python
-compilation and all four documentation guards passed. Two real
-`YACS.DetailNative` Automation tests are implemented but have not yet been run
-in Unreal at this status.
+same check passed on the native runner. Ruff checks, Python compilation and all
+four documentation guards passed. Both `YACS.DetailNative.PreservationAndRestore`
+and `YACS.DetailNative.RejectBeforeMutation` have explicit `Success` entries,
+with zero warnings and errors, in the retained
+[Automation index](evidence/build-automation/Proof/AutomationReport/index.json).
+
+The ten original PNGs were inspected and their bytes checked against the
+downloaded artifact. Independent geometry comparison reproduced the 16 changed
+vertices, 56 changed faces and zero outside/protected changes. Re-decoding the
+paired PNGs reproduced both complete visibility-pixel lists. The 5.23 mm
+treatment is visually very subtle at these two full-frame views; a clear
+improvement in rock appearance is not established. Owner visual acceptance
+remains pending and performance is not measured.
+
+## Inspect the native views
+
+The original proposed labels remain 324 A and 211 B. In the native mask,
+orange/red shows the 229 eligible A faces, yellow shows the 210 eligible B
+faces, and grey shows the 96 selected protected faces. Unselected faces retain
+the baseline limestone material. Magenta/cyan mark only the 65-face trial
+patch and are separate from the A/B classification.
+
+### `window-0021-forward-00005`
+
+The trial patch is small and distant, just beyond the road near the left edge
+of the white Component 230 formation.
+
+| Native v8 baseline | Native source-face mask | Bounded limestone trial |
+| --- | --- | --- |
+| ![Native v8 baseline at window 21](evidence/capture/detail-native/frames/window-0021-forward-00005-baseline.png) | ![Native mask at window 21](evidence/capture/detail-native/frames/window-0021-forward-00005-mask.png) | ![Native trial at window 21](evidence/capture/detail-native/frames/window-0021-forward-00005-trial.png) |
+
+Visibility pair: [magenta](evidence/capture/detail-native/frames/window-0021-forward-00005-patch-magenta.png)
+and [cyan](evidence/capture/detail-native/frames/window-0021-forward-00005-patch-cyan.png).
+
+### `window-0023-forward-00000`
+
+The same patch occupies the right edge of the frame. Its color witnesses make
+the selected footprint easy to locate; baseline and trial look nearly
+identical at this scale.
+
+| Native v8 baseline | Native source-face mask | Bounded limestone trial |
+| --- | --- | --- |
+| ![Native v8 baseline at window 23](evidence/capture/detail-native/frames/window-0023-forward-00000-baseline.png) | ![Native mask at window 23](evidence/capture/detail-native/frames/window-0023-forward-00000-mask.png) | ![Native trial at window 23](evidence/capture/detail-native/frames/window-0023-forward-00000-trial.png) |
+
+Visibility pair: [magenta](evidence/capture/detail-native/frames/window-0023-forward-00000-patch-magenta.png)
+and [cyan](evidence/capture/detail-native/frames/window-0023-forward-00000-patch-cyan.png).
+
+### Measured visibility before treatment
+
+| Fixed camera | Conservative projected pixels | Corroborated paired-color pixels |
+| --- | ---: | ---: |
+| `window-0021-forward-00005` | 149 | 107 |
+| `window-0023-forward-00000` | 2,045 | 2,045 |
+
+Both poses exceed the required eight-pixel witness. The 42 uncorroborated
+pixels in the first view are not individually classified as occluded;
+sampling and antialiasing can also affect this threshold. These are selected
+pixel witnesses, not percentages of visible faces or complete visibility
+coverage. The immutable [pre-treatment witness](evidence/capture/detail-native/visibility-witness.json)
+records `trial_applied: false` and binds all four source images before native
+trial geometry was applied.
 
 ## Fixed inputs
 
@@ -133,11 +193,47 @@ heightfield, tracked checkout and frozen source inputs must remain unchanged.
 `map_saved`, `assets_saved`, `canonical_landscape_mutation` and collision remain
 false. Existing dynamic shadow settings are retained.
 
+The [native receipt](evidence/capture/detail-native/detail-native-receipt.json)
+records 16 changed vertices and 16 selectively recomputed normal elements;
+outside/shared normal delta is zero, and UVs and topology are unchanged. Its
+`native_restore` and `cleanup` results are both successful. The
+[parent scene receipt](evidence/capture/component230-cliff-visual-receipt.json)
+verifies the original source heightfield and scene restoration. The
+[checkout receipt](evidence/checkout-restoration.json) records no tracked
+changes and unchanged retained sources. Capture time was 123.735 seconds;
+this is proof duration, not a runtime performance benchmark.
+
 The previous combined lighting gate and separate PCGEx admission remain as
 recorded in the [repair plan](../../tooling/SA_CALOBRA_COMPONENT230_REPAIR_PLAN.md).
 This proof does not close them, replace v8, save production content, establish
 whole-Landscape quality or measure the 1080p/60 budget. Owner visual acceptance
 and protected merge remain separate decisions.
+
+## Retained evidence and log scope
+
+The [artifact provenance index](artifact-provenance.json) records 35 retained
+files totaling 13,937,829 bytes, including every primary PNG and its referenced
+readiness receipt. Each file is an exact byte copy of the
+[12,234,191-byte original artifact](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37842981347/artifacts/11578816866).
+Its ZIP SHA-256 is
+`0bddb3a449665399e4f011ee1179c9ab71a27ba3bcc022cf28e9980af9275cd4`.
+The complete artifact also retains the reproducible trial mesh, original mask
+and pilot manifest, and the native startup/capture logs. The
+[treatment manifest](evidence/input/treatment/treatment-manifest.json) and
+[final proof verification](evidence/native-proof-verification.json) bind the
+rendered candidate to its exact input hashes. Git attributes preserve the
+original Windows-authored receipt bytes without newline conversion.
+
+The log result is scoped. The build recorded a nonfatal C4701 warning for
+`Tag` in the native validator. Editor startup reported unrelated Stage3F and
+Stage3G prototype assets left as LFS pointers, plus two unnamed
+`LogAutomationTest: Error: Condition failed` messages immediately before engine
+initialization. Those asset paths have no overlap with the required accepted
+scene dependency set, and the scene/material fallback gate passed. Both named
+detail Automation tests independently report zero errors. The two warnings
+in the 28-test Automation index belong to the existing `CyclingInput.ErrorSafety`
+test's missing-route checks. These messages remain in the original logs;
+this report does not describe the full startup log as error-free.
 
 ## Reproduce the pure candidate
 

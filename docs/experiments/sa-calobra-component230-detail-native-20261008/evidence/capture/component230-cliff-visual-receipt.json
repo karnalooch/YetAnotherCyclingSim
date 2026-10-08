@@ -1,0 +1,223 @@
+{
+  "schema_version": 1,
+  "status": "COMPONENT230_CLIFF_VISUAL_PASS",
+  "exact_sha": "520c7c98961b3a4be7fbb6eb7930e6dea8eb8b46",
+  "map": "/Game/Worlds/SaCalobra/L_SaCalobraAccepted_20261004",
+  "map_saved": false,
+  "assets_saved": false,
+  "canonical_landscape_mutation": false,
+  "selector_policy_mutation": false,
+  "landscape_presentation_material": {
+    "enabled": true,
+    "component": "LandscapeComponent_230",
+    "material": "/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial",
+    "previous_override": null,
+    "restored": true,
+    "scope": "owner-approved isolated A/B presentation only"
+  },
+  "landscape_mesh_diagnostic": {
+    "enabled": false,
+    "restored": true
+  },
+  "terrain_erosion_trial": {
+    "enabled": true,
+    "erosion": {
+      "enabled": false,
+      "method": "disabled-owner-edge-only",
+      "iterations": 0,
+      "smoothing_passes": 0,
+      "derived_heightfield_modified": false,
+      "fixed_samples_changed": 0,
+      "height_sum_delta_units": 0,
+      "max_abs_change_cm": 0
+    },
+    "native_landscape": false,
+    "edge_only_mesh": false,
+    "reshaped_rock_mesh": true,
+    "reference_source": "original-before-reshaping",
+    "terrain_import_performed": false,
+    "imported_heightfield_matches": null,
+    "restored": true,
+    "source_heightfield_unchanged": true,
+    "derived_heightfield_modified": false,
+    "post_erosion_mesh": true,
+    "mesh_export": {
+      "native_source_triangles": 31752,
+      "refined_triangles": 58216,
+      "linear_refinement_error_cm": 0,
+      "refinement": "Epic FSelectiveTessellate red-green level 1 on cliff triangles only",
+      "preserved_normal_elements": 2577,
+      "recomputed_normal_elements": 26838,
+      "locked_normal_max_delta": 0,
+      "normal_policy": "native normals preserved outside movable cliff vertices",
+      "local_smoothing": true,
+      "shape_profile": "rounded-limestone-reshape-v8",
+      "terrain_erosion": false,
+      "surface_relaxation": true,
+      "source_only_reshape": true,
+      "corner_reshaping": true,
+      "small_plane_reshaping": true,
+      "source_reference_mutated": false,
+      "crease_preservation": false,
+      "source_feature_cosine": -1,
+      "source_skin_cells": 1017,
+      "movement_domain_cells": 3507,
+      "movement_domain_area_m2": 3507,
+      "allowed_native_triangles": 54520,
+      "changed_vertices": 26838,
+      "max_displacement_cm": 50.00000000000475,
+      "displacement_limit_cm": 50,
+      "max_xy_displacement_cm": 43.61587247336158,
+      "max_z_displacement_cm": 49.99677439027437,
+      "locked_vertex_displacement_cm": 0,
+      "folded_xy_triangles": 0,
+      "smoothing_passes": 96,
+      "tangential_redistribution_passes": 0,
+      "tangential_redistribution_blend": 0.2,
+      "vertical_fallback_updates": 129363,
+      "stopped_at_constraint": false,
+      "line_search_backtracks": 1951,
+      "smoothing_policy": "source-only bounded normal relaxation within 50 cm; corner and small-plane changes admitted; zero tangential redistribution; fixed protected interfaces; no terrain erosion",
+      "status": "NATIVE_LANDSCAPE_COMPONENT_MESH",
+      "component": "/Game/Worlds/SaCalobra/L_SaCalobraAccepted_20261004.L_SaCalobraAccepted_20261004:PersistentLevel.SaCalobraLandscape.LandscapeComponent_230",
+      "source": "ALandscapeProxy::ExportToRawMesh",
+      "lod": 0,
+      "vertices": 29415,
+      "triangles": 58216,
+      "max_conversion_error_cm": 0,
+      "native_attributes_copied": true,
+      "skirt_added": false,
+      "assets_saved": false,
+      "landscape_geometry_mutated": false
+    },
+    "combined_audit": {
+      "status": "PASS",
+      "vertices": 29415,
+      "triangles": 58216,
+      "selected_native_triangles": 54520,
+      "source_area_m2": 3507.0,
+      "candidate_area_m2": 3506.9999999999764,
+      "changed_vertices": 26838,
+      "locked_vertices": 2577,
+      "max_displacement_cm": 50.00000000000475,
+      "displacement_limit_cm": 50.0,
+      "nonmanifold_edges": 0,
+      "folded_xy_triangles": 0,
+      "scope": "LOCAL_ROUNDED_DOMAIN_AUDIT_NOT_VISUAL_ACCEPTANCE",
+      "source_reference": "original-before-reshaping",
+      "source_reference_topology_unchanged": true,
+      "source_reference_vertices": 29415
+    },
+    "original_reference_sha256": "9ed6c9179d2df04117fcc8992224061f942d42a03a714a4a75177c43728b1cd5",
+    "limestone_uv_projection": {
+      "method": "Epic GeometryScript box projection",
+      "uv_channel": 0,
+      "world_size_m": 3.0,
+      "triangles_unchanged": true,
+      "scope": "TRANSIENT_PBR_DETAIL_COMPARISON"
+    }
+  },
+  "component": {
+    "origin_cm": [
+      40950.0,
+      47250.0,
+      42648.57894898625
+    ],
+    "extent_cm": [
+      3150.0,
+      3150.0,
+      1613.088345122007
+    ],
+    "radius_cm": 4737.83203125,
+    "min_cm": [
+      37800.0,
+      44100.0,
+      41035.490603864244
+    ],
+    "max_cm": [
+      44100.0,
+      50400.0,
+      44261.66729410826
+    ]
+  },
+  "plan_fingerprint": "f82eae25c92b8c7f80e1b6008e2ec7e1456d8d415670b81b23f437ac9665352b",
+  "plan_counts": {
+    "coarse_source_occupied_cells": 1550,
+    "component_cliff_area_m2": 652.75,
+    "component_cliff_cells": 2611,
+    "component_scree_area_m2": 309.25,
+    "component_scree_cells": 1237,
+    "hard_protected_cells_component": 225,
+    "plate_count": 14,
+    "scree_rock_count": 40,
+    "skin_cell_count": 1017,
+    "skin_cluster_count": 14
+  },
+  "hard_policy": {
+    "bob": false,
+    "buildings": false,
+    "infrastructure": false,
+    "mapped_water_buffer_m": 0.5,
+    "other_unknown_lidar": false,
+    "pavement": true,
+    "shoulder_envelope": true
+  },
+  "mesh": {
+    "lighting": {
+      "directional_light_count": 1,
+      "skylight_count": 1,
+      "shadow_state": [
+        {
+          "actor": "/Game/Worlds/SaCalobra/L_SaCalobraAccepted_20261004.L_SaCalobraAccepted_20261004:PersistentLevel.DirectionalLight_0",
+          "rotation": "<Struct 'Rotator' (0x00000190381219B0) {pitch: -35.000000, yaw: -0.000000, roll: -35.000000}>",
+          "forward_vector": "<Struct 'Vector' (0x00000190381219B0) {x: 0.819152, y: -0.000000, z: -0.573576}>",
+          "shadow_bias": 0.5,
+          "shadow_slope_bias": 0.5
+        }
+      ]
+    },
+    "generator": "native-source-rock-reshape",
+    "cliff": {
+      "vertices": 29415,
+      "triangles": 58216
+    },
+    "collision_enabled": false,
+    "cast_dynamic_shadows": true,
+    "material": {
+      "cliff": "/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial",
+      "diagnostic_only": true
+    }
+  },
+  "captures": [],
+  "diagnostic_captures": [],
+  "dynamic_shadows": true,
+  "shadow_bias_changed": false,
+  "capture_protocol": {
+    "shared_baseline": {
+      "enabled": false
+    },
+    "shadow_cache_diagnostic": {
+      "enabled": false
+    },
+    "temporal_sequence": {
+      "name": "r.Test.FreezeTemporalSequences",
+      "previous": "0",
+      "value": 1
+    },
+    "delay_seconds": 0.0,
+    "high_res_warmup_frames": 64,
+    "prime_each_viewmode_transition": true,
+    "priming_captures_per_view": 3,
+    "force_lod": 0,
+    "component_lod_override": {
+      "enabled": true,
+      "component": "LandscapeComponent_230",
+      "previous": -1,
+      "forced_lod": 0,
+      "restored": true
+    },
+    "fully_load_used_textures": true
+  },
+  "visual_acceptance": "PENDING_OWNER",
+  "error": null
+}

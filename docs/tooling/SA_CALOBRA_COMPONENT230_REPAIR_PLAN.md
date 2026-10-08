@@ -26,12 +26,15 @@ The five independent surface tags remain unassigned pending image review;
 camera stations are not automatically cliff boundaries. This inspection does
 not grant saved-scene, whole-Landscape or performance acceptance.
 
-The next [bounded native detail experiment](../experiments/sa-calobra-component230-detail-native-20261008/README.md)
-uses the existing source-face pilot on this same v8 baseline. It must verify
-source-row/native-triangle correspondence, real renderer occlusion of one
-selected A patch and attribute-preserving native rollback. The first local
-treatment keeps the source-relative 50 cm cap and adds at most 5 cm relative
-to v8, with every vertex incident to an outside or protected face fixed.
+The [bounded native detail experiment](../experiments/sa-calobra-component230-detail-native-20261008/README.md)
+passed at `520c7c98961b3a4be7fbb6eb7930e6dea8eb8b46` using this same v8
+baseline. It verified source-row/native-triangle correspondence, paired
+renderer visibility at two fixed poses and attribute-preserving native
+rollback. The first local treatment moved 16 interior vertices within a
+65-face A patch, by at most 5.23 mm, retaining the source-relative 50 cm cap
+and every outside/protected interface. Native build, all 28 scoped Automation
+tests, ten captured PNGs and the implementation CI passed. Its visual effect
+is subtle at the recorded cameras and owner acceptance remains pending.
 This continuation does not supersede the accepted v8 appearance or relabel the
 existing lighting/PCGEx gates; its exact execution status is recorded separately.
 

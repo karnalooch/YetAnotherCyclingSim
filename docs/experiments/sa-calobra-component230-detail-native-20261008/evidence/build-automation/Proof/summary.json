@@ -1,0 +1,18 @@
+{
+  "TimestampUtc": "2026-10-08T21:00:37.0973408Z",
+  "RepoRoot": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_phase2c-pcgex-cliff",
+  "ProjectPath": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_phase2c-pcgex-cliff\\YetAnotherCyclingSim.uproject",
+  "Branch": "HEAD",
+  "Head": "520c7c98961b3a4be7fbb6eb7930e6dea8eb8b46",
+  "UatExitCode": 0,
+  "IndexPath": "D:\\yacs\\work\\proofs\\sa-calobra-detail\\520c7c98961b3a4be7fbb6eb7930e6dea8eb8b46\\37842981347-1\\build-automation\\Proof\\AutomationReport\\index.json",
+  "Discovered": 28,
+  "Passed": 28,
+  "SucceededWithWarnings": 1,
+  "WarningsTotal": 2,
+  "Failed": 0,
+  "Skipped": 0,
+  "Errors": 0,
+  "RunLog": "D:\\yacs\\work\\proofs\\sa-calobra-detail\\520c7c98961b3a4be7fbb6eb7930e6dea8eb8b46\\37842981347-1\\build-automation\\Proof\\automation_run.log",
+  "ReportPath": "D:\\yacs\\work\\proofs\\sa-calobra-detail\\520c7c98961b3a4be7fbb6eb7930e6dea8eb8b46\\37842981347-1\\build-automation\\Proof\\AutomationReport"
+}

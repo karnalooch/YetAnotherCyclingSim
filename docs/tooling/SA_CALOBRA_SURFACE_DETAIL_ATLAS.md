@@ -2,7 +2,7 @@
 
 **Owner direction:** 2026-10-08  
 **Work item:** [#445](https://github.com/karnalooch/YetAnotherCyclingSim/issues/445), [draft PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446)  
-**Status:** surface-detail plan with a tested Component 230 source-face pilot, a [complete captured-survey prestudy](../experiments/sa-calobra-roadside-visibility-prestudy-20261008/README.md) and [six original-PNG proposal cards](../experiments/sa-calobra-surface-detail-review-20261008/README.md); owner review and wider physical registration remain pending
+**Status:** surface-detail plan with a tested Component 230 source-face pilot and native mask/visibility/bounded-patch proof, a [complete captured-survey prestudy](../experiments/sa-calobra-roadside-visibility-prestudy-20261008/README.md) and [six original-PNG proposal cards](../experiments/sa-calobra-surface-detail-review-20261008/README.md); owner review and wider physical registration remain pending
 **Authority:** [World Building Bible](../WORLD_BUILDING_BIBLE.md), selected through [the documentation index](../README.md); [cliff presentation contract](SA_CALOBRA_CLIFF_EROSION_PASS.md)
 
 ## Purpose and current scope
@@ -317,9 +317,11 @@ performance measurements. This is a tested registration/selection producer;
 the original replay does not prove native consumption or whole-scene occlusion.
 
 The [bounded native continuation](../experiments/sa-calobra-component230-detail-native-20261008/README.md)
-adds a separate `[detail-native]` proof of that exact mask in the existing v8
-scene. It compares the same source-face patch under ordinary renderer depth
-before attempting a small presentation treatment. This is a selected-view
+passed its `[detail-native]` proof of that exact mask in the existing v8 scene
+at `520c7c98961b3a4be7fbb6eb7930e6dea8eb8b46`. Two paired-color captures
+confirmed the selected patch before a 16-vertex, maximum-5.23-mm trial was
+applied and fully restored. Ten original PNGs and native evidence are retained
+with the experiment. This is a selected-view
 experiment, not a complete visibility atlas, a PCGEx admission or owner approval
 of the proposed bands. Unreviewed surfaces remain U and no D is inferred.
 

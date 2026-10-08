@@ -1,0 +1,659 @@
+{
+  "schema_version": 1,
+  "status": "BOUNDED_DETAIL_TRIAL_PREPARED",
+  "review_status": "AI_PROPOSED",
+  "owner_review": "PENDING",
+  "component": 230,
+  "source_mesh_sha256": "a9d34dbfb32a59b592dca561a7d7b0e53f7d02d90c095cff7c0812c249247965",
+  "mask_sha256": "6ec02a0e3dac9756923d29c8b603c0c1d79db411d06f3a20bb30956e11390953",
+  "trial_mesh_path": "treatment-mesh.json",
+  "triangle_identity": "ordered row index scoped to mesh SHA256; not native Unreal triangle ID",
+  "algorithm": "one-pass-normal-fairing-v1",
+  "fairing_factor": 0.5,
+  "accepted_step_scale": 1.0,
+  "selection_rule": "largest edge-connected eligible A component with interior; lowest face row breaks ties",
+  "boundary_policy": "freeze every vertex incident to an outside face and every source boundary vertex",
+  "extra_frozen_one_ring": false,
+  "eligible_a_face_count": 229,
+  "eligible_a_component_count": 73,
+  "selected_face_indices": [
+    52848,
+    52849,
+    52850,
+    52851,
+    52852,
+    53192,
+    53193,
+    53194,
+    53195,
+    53196,
+    53197,
+    53198,
+    53199,
+    53200,
+    53201,
+    53202,
+    53526,
+    53527,
+    53528,
+    53529,
+    53530,
+    53531,
+    53532,
+    53533,
+    53534,
+    53535,
+    53536,
+    53537,
+    53538,
+    53539,
+    53540,
+    53831,
+    53832,
+    53833,
+    53834,
+    53835,
+    53836,
+    53837,
+    53838,
+    53839,
+    53840,
+    53841,
+    53842,
+    53843,
+    53844,
+    53846,
+    54122,
+    54123,
+    54124,
+    54125,
+    54126,
+    54127,
+    54128,
+    54129,
+    54130,
+    54131,
+    54132,
+    54133,
+    54134,
+    54135,
+    54136,
+    54137,
+    54138,
+    54139,
+    54140
+  ],
+  "selected_face_count": 65,
+  "selected_vertex_count": 51,
+  "fixed_boundary_vertex_ids": [
+    13496,
+    13497,
+    13498,
+    13623,
+    13626,
+    13627,
+    13628,
+    13750,
+    13751,
+    13756,
+    13757,
+    13758,
+    13878,
+    13879,
+    13880,
+    13881,
+    13886,
+    13887,
+    13888,
+    13889,
+    14009,
+    14016,
+    14017,
+    14018,
+    14136,
+    14137,
+    14138,
+    14139,
+    14140,
+    14141,
+    14142,
+    14143,
+    14144,
+    14145,
+    14146
+  ],
+  "interior_vertex_ids": [
+    13624,
+    13625,
+    13752,
+    13753,
+    13754,
+    13755,
+    13882,
+    13883,
+    13884,
+    13885,
+    14010,
+    14011,
+    14012,
+    14013,
+    14014,
+    14015
+  ],
+  "changed_vertex_ids": [
+    13624,
+    13625,
+    13752,
+    13753,
+    13754,
+    13755,
+    13882,
+    13883,
+    13884,
+    13885,
+    14010,
+    14011,
+    14012,
+    14013,
+    14014,
+    14015
+  ],
+  "changed_vertex_count": 16,
+  "fixed_vertex_count": 29399,
+  "outside_incident_vertex_count": 29399,
+  "protected_face_count": 5359,
+  "vertex_count": 29415,
+  "triangle_count": 58216,
+  "max_added_displacement_cm": 0.5230451206066301,
+  "max_total_source_displacement_cm": 50.00000000000475,
+  "max_changed_source_displacement_cm": 32.3769206003665,
+  "bounds": {
+    "max_added_displacement_cm": 5.0,
+    "max_total_source_displacement_cm": 50.0,
+    "floating_point_tolerance_cm": 1e-06
+  },
+  "geometric_audit": {
+    "min_triangle_area_ratio": 0.9992782461803339,
+    "min_xy_projected_area_ratio": 0.9955198982402264,
+    "min_face_normal_cosine": 0.9999140549538145,
+    "no_triangle_flips_or_degeneracy": true,
+    "xy_orientation_preserved": true,
+    "edge_and_vertex_manifold": true,
+    "self_intersection_test": "NOT_PERFORMED"
+  },
+  "fairing_residual": {
+    "metric": "RMS normal-projected one-ring mean offset at interior vertices; fixed v8 normals",
+    "before_cm": 0.46415981741476475,
+    "after_cm": 0.3343247926233213,
+    "visual_quality_score": false
+  },
+  "source_coordinates_unchanged": true,
+  "movable_flags_unchanged": true,
+  "topology_and_winding_unchanged": true,
+  "source_boundary_vertices_unchanged": true,
+  "outside_incident_vertices_unchanged": true,
+  "unselected_faces_unchanged": true,
+  "protected_faces_unchanged": true,
+  "canonical_landscape_mutation": false,
+  "map_saved": false,
+  "assets_saved": false,
+  "production_admission": false,
+  "world_occlusion": "NOT_MEASURED",
+  "limitations": [
+    "A local fairing residual is not an appearance score or owner acceptance.",
+    "Native consumer, whole-scene occlusion and visual comparison require separate proof.",
+    "No topology, source boundary or protected face changes; no inferred D or mask expansion."
+  ],
+  "changed_vertices": [
+    {
+      "vertex_id": 13624,
+      "row_index": 13624,
+      "source_cm": [
+        39550.0,
+        49450.0,
+        43597.5546875
+      ],
+      "before_cm": [
+        39551.17917179791,
+        49439.60765183051,
+        43567.4661684877
+      ],
+      "after_cm": [
+        39551.21869168102,
+        49439.45314177222,
+        43566.9680309375
+      ],
+      "added_delta_cm": [
+        0.03951988311018795,
+        -0.15451005829527276,
+        -0.49813755019567907
+      ],
+      "added_displacement_cm": 0.5230451206066301,
+      "total_source_displacement_cm": 32.3769206003665,
+      "allowed_added_displacement_cm": 5.0,
+      "allowed_source_displacement_cm": 50.0
+    },
+    {
+      "vertex_id": 13625,
+      "row_index": 13625,
+      "source_cm": [
+        39600.0,
+        49450.0,
+        43582.59375
+      ],
+      "before_cm": [
+        39597.422353303526,
+        49446.053183339776,
+        43566.96744942902
+      ],
+      "after_cm": [
+        39597.42185404584,
+        49445.95663572074,
+        43566.640199350586
+      ],
+      "added_delta_cm": [
+        -0.000499257686897181,
+        -0.09654761903948383,
+        -0.32725007843691856
+      ],
+      "added_displacement_cm": 0.34119540711650936,
+      "total_source_displacement_cm": 16.658673704085697,
+      "allowed_added_displacement_cm": 5.0,
+      "allowed_source_displacement_cm": 50.0
+    },
+    {
+      "vertex_id": 13752,
+      "row_index": 13752,
+      "source_cm": [
+        39600.0,
+        49500.0,
+        43561.875
+      ],
+      "before_cm": [
+        39599.38110238942,
+        49496.91698291666,
+        43552.00065339373
+      ],
+      "after_cm": [
+        39599.38219072199,
+        49496.830066576294,
+        43551.69900764305
+      ],
+      "added_delta_cm": [
+        0.0010883325667236932,
+        -0.0869163403622224,
+        -0.30164575067465194
+      ],
+      "added_displacement_cm": 0.3139200433069092,
+      "total_source_displacement_cm": 10.676187833837707,
+      "allowed_added_displacement_cm": 5.0,
+      "allowed_source_displacement_cm": 50.0
+    },
+    {
+      "vertex_id": 13753,
+      "row_index": 13753,
+      "source_cm": [
+        39650.0,
+        49500.0,
+        43551.515625
+      ],
+      "before_cm": [
+        39649.894752796135,
+        49499.6731556946,
+        43550.34898886349
+      ],
+      "after_cm": [
+        39649.8931139105,
+        49499.64788817411,
+        43550.262182561266
+      ],
+      "added_delta_cm": [
+        -0.0016388856383855455,
+        -0.025267520490160678,
+        -0.08680630222079344
+      ],
+      "added_displacement_cm": 0.09042382232080286,
+      "total_source_displacement_cm": 1.3063404308518358,
+      "allowed_added_displacement_cm": 5.0,
+      "allowed_source_displacement_cm": 50.0
+    },
+    {
+      "vertex_id": 13754,
+      "row_index": 13754,
+      "source_cm": [
+        39700.0,
+        49500.0,
+        43538.85546875
+      ],
+      "before_cm": [
+        39700.94391794913,
+        49502.34039516516,
+        43548.518105520634
+      ],
+      "after_cm": [
+        39700.94557247067,
+        49502.38097646682,
+        43548.670808304174
+      ],
+      "added_delta_cm": [
+        0.0016545215403311886,
+        0.04058130165503826,
+        0.15270278354000766
+      ],
+      "added_displacement_cm": 0.1580117704046476,
+      "total_source_displacement_cm": 10.144163188581283,
+      "allowed_added_displacement_cm": 5.0,
+      "allowed_source_displacement_cm": 50.0
+    },
+    {
+      "vertex_id": 13755,
+      "row_index": 13755,
+      "source_cm": [
+        39750.0,
+        49500.0,
+        43535.40234375
+      ],
+      "before_cm": [
+        39749.91469938148,
+        49502.73471041553,
+        43547.86523794592
+      ],
+      "after_cm": [
+        39749.91589852002,
+        49502.80294423539,
+        43548.16822101765
+      ],
+      "added_delta_cm": [
+        0.0011991385399596766,
+        0.06823381986032473,
+        0.3029830717277946
+      ],
+      "added_displacement_cm": 0.31057371727108396,
+      "total_source_displacement_cm": 13.070240696267371,
+      "allowed_added_displacement_cm": 5.0,
+      "allowed_source_displacement_cm": 50.0
+    },
+    {
+      "vertex_id": 13882,
+      "row_index": 13882,
+      "source_cm": [
+        39750.0,
+        49550.0,
+        43513.53515625
+      ],
+      "before_cm": [
+        39749.43879517167,
+        49554.45467006988,
+        43536.008597650405
+      ],
+      "after_cm": [
+        39749.4307210422,
+        49554.5027962859,
+        43536.21166526314
+      ],
+      "added_delta_cm": [
+        -0.008074129473243374,
+        0.048126216024684254,
+        0.20306761273241136
+      ],
+      "added_displacement_cm": 0.20884870020291213,
+      "total_source_displacement_cm": 23.12624729494691,
+      "allowed_added_displacement_cm": 5.0,
+      "allowed_source_displacement_cm": 50.0
+    },
+    {
+      "vertex_id": 13883,
+      "row_index": 13883,
+      "source_cm": [
+        39800.0,
+        49550.0,
+        43530.80078125
+      ],
+      "before_cm": [
+        39799.440306024226,
+        49551.496497016415,
+        43538.4491737991
+      ],
+      "after_cm": [
+        39799.431002502475,
+        49551.5470696216,
+        43538.70590501798
+      ],
+      "added_delta_cm": [
+        -0.009303521750553045,
+        0.0505726051851525,
+        0.25673121888394235
+      ],
+      "added_displacement_cm": 0.2618302172435623,
+      "total_source_displacement_cm": 8.07515723397206,
+      "allowed_added_displacement_cm": 5.0,
+      "allowed_source_displacement_cm": 50.0
+    },
+    {
+      "vertex_id": 13884,
+      "row_index": 13884,
+      "source_cm": [
+        39850.0,
+        49550.0,
+        43537.70703125
+      ],
+      "before_cm": [
+        39849.81773518795,
+        49550.51010264983,
+        43540.66408540006
+      ],
+      "after_cm": [
+        39849.808761872,
+        49550.54697011547,
+        43540.87786206879
+      ],
+      "added_delta_cm": [
+        -0.008973315947514493,
+        0.03686746564198984,
+        0.21377666873013368
+      ],
+      "added_displacement_cm": 0.21711792766906773,
+      "total_source_displacement_cm": 3.223339325947016,
+      "allowed_added_displacement_cm": 5.0,
+      "allowed_source_displacement_cm": 50.0
+    },
+    {
+      "vertex_id": 13885,
+      "row_index": 13885,
+      "source_cm": [
+        39900.0,
+        49550.0,
+        43542.30859375
+      ],
+      "before_cm": [
+        39899.97374255966,
+        49550.09536255719,
+        43542.933319676755
+      ],
+      "after_cm": [
+        39899.968425892184,
+        49550.115288039444,
+        43543.06340212224
+      ],
+      "added_delta_cm": [
+        -0.0053166674770182,
+        0.019925482250982895,
+        0.13008244548836956
+      ],
+      "added_displacement_cm": 0.13170700216856374,
+      "total_source_displacement_cm": 0.7642145870967714,
+      "allowed_added_displacement_cm": 5.0,
+      "allowed_source_displacement_cm": 50.0
+    },
+    {
+      "vertex_id": 14010,
+      "row_index": 14010,
+      "source_cm": [
+        39800.0,
+        49600.0,
+        43522.7421875
+      ],
+      "before_cm": [
+        39799.568342517996,
+        49601.010467881795,
+        43528.80226320159
+      ],
+      "after_cm": [
+        39799.55762210579,
+        49601.043553843556,
+        43528.97400580954
+      ],
+      "added_delta_cm": [
+        -0.01072041220322717,
+        0.03308596176066203,
+        0.1717426079485449
+      ],
+      "added_displacement_cm": 0.1752287975431056,
+      "total_source_displacement_cm": 6.334055751950505,
+      "allowed_added_displacement_cm": 5.0,
+      "allowed_source_displacement_cm": 50.0
+    },
+    {
+      "vertex_id": 14011,
+      "row_index": 14011,
+      "source_cm": [
+        39850.0,
+        49600.0,
+        43528.49609375
+      ],
+      "before_cm": [
+        39849.667775988564,
+        49600.60012936165,
+        43532.051702964876
+      ],
+      "after_cm": [
+        39849.65736492549,
+        49600.627589811476,
+        43532.20805725952
+      ],
+      "added_delta_cm": [
+        -0.010411063070932869,
+        0.027460449826321565,
+        0.15635429464600747
+      ],
+      "added_displacement_cm": 0.15908844079059103,
+      "total_source_displacement_cm": 3.7802038122006585,
+      "allowed_added_displacement_cm": 5.0,
+      "allowed_source_displacement_cm": 50.0
+    },
+    {
+      "vertex_id": 14012,
+      "row_index": 14012,
+      "source_cm": [
+        39900.0,
+        49600.0,
+        43535.40234375
+      ],
+      "before_cm": [
+        39900.016253000984,
+        49600.00536446007,
+        43535.44919649877
+      ],
+      "after_cm": [
+        39900.010521739416,
+        49600.019667089735,
+        43535.54535852421
+      ],
+      "added_delta_cm": [
+        -0.005731261568143964,
+        0.014302629664598498,
+        0.09616202543838881
+      ],
+      "added_displacement_cm": 0.09738864261759927,
+      "total_source_displacement_cm": 0.14474365982784196,
+      "allowed_added_displacement_cm": 5.0,
+      "allowed_source_displacement_cm": 50.0
+    },
+    {
+      "vertex_id": 14013,
+      "row_index": 14013,
+      "source_cm": [
+        39950.0,
+        49600.0,
+        43540.0078125
+      ],
+      "before_cm": [
+        39950.1127857375,
+        49599.76020456659,
+        43538.145019459946
+      ],
+      "after_cm": [
+        39950.11133053439,
+        49599.764619424815,
+        43538.17860213893
+      ],
+      "added_delta_cm": [
+        -0.0014552031134371646,
+        0.004414858223753981,
+        0.0335826789814746
+      ],
+      "added_displacement_cm": 0.03390287475731197,
+      "total_source_displacement_cm": 1.8476496010115626,
+      "allowed_added_displacement_cm": 5.0,
+      "allowed_source_displacement_cm": 50.0
+    },
+    {
+      "vertex_id": 14014,
+      "row_index": 14014,
+      "source_cm": [
+        40000.0,
+        49600.0,
+        43543.4609375
+      ],
+      "before_cm": [
+        40000.07027435194,
+        49599.62623975166,
+        43539.95073215663
+      ],
+      "after_cm": [
+        40000.07041272759,
+        49599.62560629413,
+        43539.94564349808
+      ],
+      "added_delta_cm": [
+        0.0001383756462018937,
+        -0.0006334575300570577,
+        -0.005088658544991631
+      ],
+      "added_displacement_cm": 0.0051298013654881534,
+      "total_source_displacement_cm": 3.5358762024596353,
+      "allowed_added_displacement_cm": 5.0,
+      "allowed_source_displacement_cm": 50.0
+    },
+    {
+      "vertex_id": 14015,
+      "row_index": 14015,
+      "source_cm": [
+        40050.0,
+        49600.0,
+        43543.4609375
+      ],
+      "before_cm": [
+        40049.96105517789,
+        49599.70284264389,
+        43541.02051542753
+      ],
+      "after_cm": [
+        40049.96133619851,
+        49599.70072798364,
+        43541.00313806292
+      ],
+      "added_delta_cm": [
+        0.000281020620604977,
+        -0.002114660252118483,
+        -0.017377364609274082
+      ],
+      "added_displacement_cm": 0.017507814293473253,
+      "total_source_displacement_cm": 2.476254571367881,
+      "allowed_added_displacement_cm": 5.0,
+      "allowed_source_displacement_cm": 50.0
+    }
+  ],
+  "trial_mesh_sha256": "aed8f5ace6383f67004b5df6bb24da0db820cabd99ecb6186efc0b79f86d35b3",
+  "producer_sha256": "f2c8fd30163b675dd5f030f65cff42fd39a8e59bdfce9db9b06d626b6f08fb8e"
+}

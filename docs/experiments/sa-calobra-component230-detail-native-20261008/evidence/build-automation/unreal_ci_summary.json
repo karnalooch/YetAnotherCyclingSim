@@ -1,0 +1,19 @@
+{
+  "TimestampUtc": "2026-10-08T21:00:37.1319743Z",
+  "Branch": "HEAD",
+  "Head": "520c7c98961b3a4be7fbb6eb7930e6dea8eb8b46",
+  "ExpectedHead": "520c7c98961b3a4be7fbb6eb7930e6dea8eb8b46",
+  "UnrealVersion": "5.8.2",
+  "TestFilter": "CyclingSession+CyclingPhysics+CyclingInput+YACS.DetailNative",
+  "ExecutionMode": "",
+  "CompileKind": "",
+  "SkipBuild": false,
+  "ConservativeBuild": true,
+  "Discovered": 28,
+  "Passed": 28,
+  "Failed": 0,
+  "Errors": 0,
+  "GithubRef": "refs/heads/feat/phase2c-pcgex-cliff-topology",
+  "GithubHeadRef": "",
+  "GithubBaseRef": ""
+}

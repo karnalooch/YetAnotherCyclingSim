@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "status": "VISIBLE_IN_CAPTURED_SCENE",
+  "exact_sha": "520c7c98961b3a4be7fbb6eb7930e6dea8eb8b46",
+  "inputs_sha256": {
+    "source": "a9d34dbfb32a59b592dca561a7d7b0e53f7d02d90c095cff7c0812c249247965",
+    "mask": "6ec02a0e3dac9756923d29c8b603c0c1d79db411d06f3a20bb30956e11390953",
+    "pilot": "804842ef0893df0d4822caa458ca68b658bf6d9481ef64db5237dde00ec97718",
+    "trial": "aed8f5ace6383f67004b5df6bb24da0db820cabd99ecb6186efc0b79f86d35b3",
+    "manifest": "b45f57912eba8261a6031328058ea5355ced42ccccdc813abd5b1236e774a5d3"
+  },
+  "trial_applied": false,
+  "visibility": {
+    "status": "VISIBLE_IN_CAPTURED_SCENE",
+    "frames": [
+      {
+        "frame_id": "window-0021-forward-00005",
+        "projected_candidate_pixels": 149,
+        "corroborated_pixels": 107,
+        "pixel_indices_file": "window-0021-forward-00005-visible-pixels.json",
+        "pixel_indices_sha256": "fabef9d19981aeda3da96f3a5cd33a12e62a50d4cb3b69c8aec8ba3bbe0ff273",
+        "magenta_sha256": "285c8b93152fe244fc200fd0b90b5e7457acfcb0519ddd4898e82483fae265e4",
+        "cyan_sha256": "400f1fa568afe1cf81290f6150cd4bf1f069cfe4142b106d43ff42c104e289f7",
+        "pair_pose_and_view_identical": true
+      },
+      {
+        "frame_id": "window-0023-forward-00000",
+        "projected_candidate_pixels": 2045,
+        "corroborated_pixels": 2045,
+        "pixel_indices_file": "window-0023-forward-00000-visible-pixels.json",
+        "pixel_indices_sha256": "c4a6470517b3c92436235b7bc0ac59215eb8f65f97213a13dd872a7846c0ca4a",
+        "magenta_sha256": "2cc1ce5b2e3f442dc9f03890ad8bcd57bbc07101ef087b86041086d2f3935d30",
+        "cyan_sha256": "d63eebe79c03c6c81c89355ffc772abe9a1fd6c51223108e781e100fb7ad71ac",
+        "pair_pose_and_view_identical": true
+      }
+    ],
+    "min_required_pixels": 8,
+    "scope": "selected patch, two recorded poses, ordinary full-scene depth testing; no map-wide visibility classification"
+  },
+  "paired_captures": [
+    {
+      "frame_id": "window-0021-forward-00005",
+      "mode": "patch-magenta",
+      "camera_location_cm": [
+        46814.30691808701,
+        50077.01446126266,
+        44582.10209636803
+      ],
+      "target_cm": [
+        45622.75821127245,
+        49563.63159625151,
+        44320.55632271009
+      ],
+      "camera_rotation_deg": [
+        -11.397284143199215,
+        -156.6910396930791,
+        -2.398573426219744e-07
+      ],
+      "fov_deg": 76.0,
+      "viewmode": "lit",
+      "dynamic_shadows": true,
+      "readiness": {
+        "status": "NATIVE_LOADING_AND_MIPS_READY",
+        "file": "readiness/window-0021-forward-00005-patch-magenta/capture-readiness.json",
+        "sha256": "02c366d59150adada93b3710d33c946829ec85a107cb910ca149a314278a04c4"
+      },
+      "file": "frames/window-0021-forward-00005-patch-magenta.png",
+      "sha256": "285c8b93152fe244fc200fd0b90b5e7457acfcb0519ddd4898e82483fae265e4",
+      "size_bytes": 1011391,
+      "width_px": 1280,
+      "height_px": 720
+    },
+    {
+      "frame_id": "window-0023-forward-00000",
+      "mode": "patch-magenta",
+      "camera_location_cm": [
+        42912.60863025102,
+        50578.83460543357,
+        44307.91088247302
+      ],
+      "target_cm": [
+        41691.355506985965,
+        51018.40651235348,
+        44054.99073736799
+      ],
+      "camera_rotation_deg": [
+        -11.026522646468546,
+        160.20441384418297,
+        2.3735826282876626e-07
+      ],
+      "fov_deg": 76.0,
+      "viewmode": "lit",
+      "dynamic_shadows": true,
+      "readiness": {
+        "status": "NATIVE_LOADING_AND_MIPS_READY",
+        "file": "readiness/window-0023-forward-00000-patch-magenta/capture-readiness.json",
+        "sha256": "02c366d59150adada93b3710d33c946829ec85a107cb910ca149a314278a04c4"
+      },
+      "file": "frames/window-0023-forward-00000-patch-magenta.png",
+      "sha256": "2cc1ce5b2e3f442dc9f03890ad8bcd57bbc07101ef087b86041086d2f3935d30",
+      "size_bytes": 1125786,
+      "width_px": 1280,
+      "height_px": 720
+    },
+    {
+      "frame_id": "window-0021-forward-00005",
+      "mode": "patch-cyan",
+      "camera_location_cm": [
+        46814.30691808701,
+        50077.01446126266,
+        44582.10209636803
+      ],
+      "target_cm": [
+        45622.75821127245,
+        49563.63159625151,
+        44320.55632271009
+      ],
+      "camera_rotation_deg": [
+        -11.397284143199215,
+        -156.6910396930791,
+        -2.398573426219744e-07
+      ],
+      "fov_deg": 76.0,
+      "viewmode": "lit",
+      "dynamic_shadows": true,
+      "readiness": {
+        "status": "NATIVE_LOADING_AND_MIPS_READY",
+        "file": "readiness/window-0021-forward-00005-patch-cyan/capture-readiness.json",
+        "sha256": "ccb0e53a6b68bc4c58670bd093adfd49572db4674f35ac75e67f427189ca603c"
+      },
+      "file": "frames/window-0021-forward-00005-patch-cyan.png",
+      "sha256": "400f1fa568afe1cf81290f6150cd4bf1f069cfe4142b106d43ff42c104e289f7",
+      "size_bytes": 1011365,
+      "width_px": 1280,
+      "height_px": 720
+    },
+    {
+      "frame_id": "window-0023-forward-00000",
+      "mode": "patch-cyan",
+      "camera_location_cm": [
+        42912.60863025102,
+        50578.83460543357,
+        44307.91088247302
+      ],
+      "target_cm": [
+        41691.355506985965,
+        51018.40651235348,
+        44054.99073736799
+      ],
+      "camera_rotation_deg": [
+        -11.026522646468546,
+        160.20441384418297,
+        2.3735826282876626e-07
+      ],
+      "fov_deg": 76.0,
+      "viewmode": "lit",
+      "dynamic_shadows": true,
+      "readiness": {
+        "status": "NATIVE_LOADING_AND_MIPS_READY",
+        "file": "readiness/window-0023-forward-00000-patch-cyan/capture-readiness.json",
+        "sha256": "d8ad6b74b4b6b048fc11b0235297ba6f08944c848ed9b84349e5066e58662c21"
+      },
+      "file": "frames/window-0023-forward-00000-patch-cyan.png",
+      "sha256": "d63eebe79c03c6c81c89355ffc772abe9a1fd6c51223108e781e100fb7ad71ac",
+      "size_bytes": 1125911,
+      "width_px": 1280,
+      "height_px": 720
+    }
+  ]
+}
