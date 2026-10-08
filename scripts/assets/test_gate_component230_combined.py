@@ -19,6 +19,7 @@ class CombinedGateTests(unittest.TestCase):
             selector_policy_mutation=False, terrain_erosion_trial=dict(
                 post_erosion_mesh=True, restored=True, source_heightfield_unchanged=True,
                 imported_heightfield_matches=True, combined_audit=self.audit,
+                limestone_uv_projection={'world_size_m': 3, 'triangles_unchanged': True},
                 mesh_export={'shape_profile': 'limestone-source-feature-flow-v1'}),
             captures=[{'name': name, 'sha256': key} for name, key in (
                 ('02-baseline-lighting-only', 'baseline_lighting_only'),

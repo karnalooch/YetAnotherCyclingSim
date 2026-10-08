@@ -44,6 +44,9 @@ def evaluate(metrics: dict, receipt: dict, audit: dict, expected_sha: str) -> di
     if not any(c.get('material_profile') == 'limestone-pbr' and c.get('sha256')
                for c in receipt.get('diagnostic_captures', [])):
         failures.append('Limestone material diagnostic missing')
+    projection = trial.get('limestone_uv_projection', {})
+    if projection.get('world_size_m') != 3 or projection.get('triangles_unchanged') is not True:
+        failures.append('Limestone physical UV scale proof missing')
     return dict(schema_version=1, exact_sha=expected_sha,
                 status='FAIL' if failures else 'PASS', failures=failures,
                 scope='LOCAL_COMBINED_TECHNICAL_ADMISSION_NOT_OWNER_ACCEPTANCE',

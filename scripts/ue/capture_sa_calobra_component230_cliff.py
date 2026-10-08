@@ -1614,6 +1614,25 @@ def schedule():
         if not TERRAIN_MESH_TRIAL or len(meshes) != 1:
             raise RuntimeError("Limestone material diagnostic requires one combined mesh")
         component = meshes[0].get_dynamic_mesh_component()
+        if not _terrain_trial.get("limestone_uv_projection"):
+            # ExportToRawMesh defaults to proxy-bounds UVs, which stretch one
+            # tile over this 63 m proxy. Reproject only the transient PBR preview
+            # after neutral admission, using the existing 3 m skin contract.
+            mesh = component.get_dynamic_mesh()
+            triangles_before = mesh.get_triangle_count()
+            tile_m = float(_plan["skin_contract"]["uv_world_size_m"])
+            if tile_m != 3.0:
+                raise RuntimeError("Limestone physical texture scale drifted")
+            unreal.GeometryScript_UVs.set_mesh_u_vs_from_box_projection(
+                mesh, 0, unreal.Transform(scale=unreal.Vector(tile_m * 100.0,
+                    tile_m * 100.0, tile_m * 100.0)),
+                unreal.GeometryScriptMeshSelection(), min_island_tri_count=2)
+            if mesh.get_triangle_count() != triangles_before:
+                raise RuntimeError("UV-only projection changed triangle count")
+            _terrain_trial["limestone_uv_projection"] = {
+                "method": "Epic GeometryScript box projection", "uv_channel": 0,
+                "world_size_m": tile_m, "triangles_unchanged": True,
+                "scope": "TRANSIENT_PBR_DIAGNOSTIC_AFTER_NEUTRAL_CAPTURE"}
         material = _load_surface_material(CLIFF_MATERIAL, "limestone")
         component.set_material(0, material)
         component.notify_mesh_modified()
