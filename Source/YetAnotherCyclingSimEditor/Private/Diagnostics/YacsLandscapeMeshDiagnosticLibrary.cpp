@@ -197,10 +197,13 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
     constexpr double MaxDisplacementCm = 50.0;
     int32 Backtracks = 0;
     int32 CompletedPasses = 0;
+    int32 VerticalFallbackUpdates = 0;
     bool StoppedAtConstraint = false;
     for (int32 Pass = 0; Pass < Passes; ++Pass)
     {
         TArray<FVector3d> Before, Target, Normals;
+        TArray<double> VerticalDelta;
+        VerticalDelta.Init(0.0, Mesh.MaxVertexID());
         Before.SetNum(Mesh.MaxVertexID());
         Target.SetNum(Mesh.MaxVertexID());
         Normals.Init(FVector3d::Zero(), Mesh.MaxVertexID());
@@ -229,7 +232,14 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
             if (Count == 0 || !Normals[V].Normalize()) { continue; }
             // Normal-space relaxation: horizontal on walls, vertical on flats.
             const FVector3d N = Normals[V];
-            Target[V] = Before[V] + N * (Blend * FVector3d::DotProduct(Mean / Count - Before[V], N));
+            const double NormalDelta = Blend * FVector3d::DotProduct(Mean / Count - Before[V], N);
+            Target[V] = Before[V] + N * NormalDelta;
+            // If XY motion is constrained, solve the same tangent-plane residual
+            // vertically. This preserves XY authority instead of freezing ridges.
+            if (FMath::Abs(N.Z) > 1.e-6)
+            {
+                VerticalDelta[V] = NormalDelta / N.Z;
+            }
             FVector3d Delta = Target[V] - Original[V];
             const double Length = Delta.Length();
             if (Length > MaxDisplacementCm)
@@ -266,7 +276,17 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
             {
                 for (int32 V : Mesh.VertexIndicesItr())
                 {
-                    Mesh.SetVertex(V, Before[V] + (Target[V] - Before[V]) * Weights[V]);
+                    FVector3d Position = Before[V] + (Target[V] - Before[V]) * Weights[V];
+                    if (Movable[V] && Weights[V] < 1.0 && FMath::Abs(VerticalDelta[V]) > 1.e-9)
+                    {
+                        Position.Z += VerticalDelta[V] * (1.0 - Weights[V]);
+                        const FVector3d Delta = Position - Original[V];
+                        const double ZBudget = FMath::Sqrt(FMath::Max(0.0,
+                            MaxDisplacementCm * MaxDisplacementCm - Delta.X * Delta.X - Delta.Y * Delta.Y));
+                        Position.Z = FMath::Clamp(Position.Z, Original[V].Z - ZBudget, Original[V].Z + ZBudget);
+                        ++VerticalFallbackUpdates;
+                    }
+                    Mesh.SetVertex(V, Position);
                 }
                 Backtracks += Attempt;
                 Accepted = true;
@@ -317,9 +337,10 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
     Report->SetNumberField(TEXT("locked_vertex_displacement_cm"), 0);
     Report->SetNumberField(TEXT("folded_xy_triangles"), 0);
     Report->SetNumberField(TEXT("smoothing_passes"), CompletedPasses);
+    Report->SetNumberField(TEXT("vertical_fallback_updates"), VerticalFallbackUpdates);
     Report->SetBoolField(TEXT("stopped_at_constraint"), StoppedAtConstraint);
     Report->SetNumberField(TEXT("line_search_backtracks"), Backtracks);
-    Report->SetStringField(TEXT("smoothing_policy"), TEXT("bounded normal-space relaxation with fixed footprint interfaces"));
+    Report->SetStringField(TEXT("smoothing_policy"), TEXT("bounded normal-space relaxation with vertical fallback and fixed footprint interfaces"));
     TArray<TSharedPtr<FJsonValue>> AuditVertices, AuditTriangles;
     for (int32 V : Mesh.VertexIndicesItr())
     {

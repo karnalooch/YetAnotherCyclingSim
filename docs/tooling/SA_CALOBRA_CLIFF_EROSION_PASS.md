@@ -507,3 +507,24 @@ shadow boundaries. These frames are recorded separately, cannot replace the four
 admitted Lit/Lighting Only views and are not a proposed flat-shaded final terrain.
 Geometry, materials, light settings, shadow bias and all admission gates stay fixed.
 Light orientation is included in evidence to support reproducible diagnosis.
+
+The face-normal diagnostic at `7dd3eca8` (run `37722735213`) retained the
+large wedges; flat normals also expose triangulation and are rejected as a final
+presentation. Directional light points along (0.819152, 0, -0.573576). A read-only
+screen-ray/triangle probe at pixel (1400,700), using the harness camera and exported
+candidate, hit receiver triangle 32017 and an occluder triangle 31436 about
+190.68 cm toward the light. Both are inside the movable cliff region. This supports
+a geometric cast shadow for that sampled wedge, not a missing-material explanation
+or proof that every dark pixel has the same cause. Other sampled receivers can be
+at fixed interfaces; the probe includes only the exported component.
+
+The occluding ridge barely moves after additional normal-space passes because
+lateral movement reaches the XY nonfolding guard. The next bounded solver keeps
+normal-space motion as its first choice but applies the unfulfilled tangent-plane
+residual vertically when XY step weights are reduced. Vertical fallback cannot
+alter already-validated XY coordinates; its Z component is clamped to the remaining
+50 cm displacement sphere. Fixed vertices, footprint, holes, source data and
+triangle budgets are unchanged. A read-only 24-pass numerical probe reduced the
+99th-percentile absolute normal Laplacian residual from 9.07 cm (previous solver)
+to 6.26 cm; this is a geometry diagnostic, not visual acceptance. Unreal build,
+independent geometry audit and rendered comparison must validate the new solver.
