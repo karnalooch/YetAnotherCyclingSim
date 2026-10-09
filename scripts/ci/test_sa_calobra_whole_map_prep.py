@@ -209,6 +209,7 @@ class NativeCompilationTests(unittest.TestCase):
         self.assertEqual(evidence["last"], failure)
         native.assert_called_once()
 
+
 class BindingTests(unittest.TestCase):
     def test_every_native_root_checked_against_master_and_overrides_restored(self):
         landscape = Landscape()

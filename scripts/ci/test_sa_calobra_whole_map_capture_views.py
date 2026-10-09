@@ -201,7 +201,6 @@ class OriginalSurveyViewTests(unittest.TestCase):
                 capture.original_survey_views(path)
 
 
-
 class WholeMapFrameSequenceTests(unittest.TestCase):
     """A/B pairing, deterministic mode order and 43 distinct native outputs."""
 
