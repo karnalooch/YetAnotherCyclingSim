@@ -1,6 +1,6 @@
 # YACS UE-MCP world-generation architecture
 
-**Status:** official Epic MCP direction approved; #384's #363 entry gate satisfied on 2026-10-09, before #364. Draft PR #467 implements read-only source preflight and BOB domain preparation; official activation is blocked on unestablished argument restrictions and runtime proof.
+**Status:** official Epic MCP direction approved; #384's #363 entry gate satisfied on 2026-10-09, before #364. Draft PR #467 implements source evidence, complete BOB sample export and the opt-in strict native domain boundary. Compilation, runtime guard proof and official transport remain pending; no official server is activated.
 **Tracking:** #384 adoption; #385 documentation; #85 historical integration; follow-ups #376 (Performance MCP), #377 (Buildings MCP)
 **Retained integration:** `db-lyon/ue-mcp` at reviewed `v1.3.9`; unchanged until proven cutover
 **Engine baseline:** project association 5.8; home engine inspected 2026-10-05: 5.8.2, changelist 56702186. Reverify exact project/runner versions at kickoff.
@@ -197,7 +197,8 @@ execution checklist, not new milestone identifiers or evidence of completion.
 | Fragment | Deliverable | Entry condition / remaining proof |
 |---|---|---|
 | Installed primary-source evidence | `official_mcp_source_probe.py`, its PowerShell launcher and the owner-only source-probe workflow; exact repository/engine/plugin identities, declaration hashes and bounded excerpts in ignored evidence | #363 closeout verified; run on the canonical UE 5.8.2 / CL 56702186 host; missing/mismatched source fails closed |
-| BOB domain delegation | `bob_mcp_inspection.py` delegates to the existing inspector on nonempty hash-bound samples with existing caller/policy thresholds; result, proof and receipt preserve inspection-only states | Independent of engine API discovery; synthetic unit checks do not verify native capture or official MCP |
+| BOB domain delegation | `bob_mcp_inspection.py` delegates to the existing inspector on nonempty hash-bound samples; the producer exports every row and verifies native Landscape ownership when requested | Existing caller/policy thresholds and inspection-only states; synthetic unit checks do not verify native capture or official MCP |
+| Native domain boundary compile | Disabled-by-default `YacsBobInspection`, strict raw-input `FToolset` and internal fixed checkpoint/`FHitResult` reads; isolated exact-SHA `BuildPlugin` | Installed exported registration/schema declarations verified; compile does not establish native routing, test execution or transport |
 | Restricted official session | Verify the installed registry filters, server initialization and actual tool schemas, then perform the single map/object read | Source evidence reviewed; stock restriction and argument boundaries proved before activation; no replacement generic gateway |
 | Native test and domain tool | Run `CyclingPhysics.RoadPhysics.ProfileInterpolation` through the official toolset; invoke the thin BOB operation and compare with direct execution on identical native inputs | Restricted official session and real native raw samples; aggregate/worst-sample reports are insufficient substitutes |
 | Technical closeout and handoff | Persistent-content conservation, denial cases, exact-SHA receipts, relevant build/Automation, protected CI and review; admitted handoff to #364 | All adoption DoD items proved; otherwise #384 stays open and #364 stays blocked |
@@ -324,6 +325,29 @@ hit ownership: road or CUT geometry must not become a claimed Landscape height.
 Unknown ownership fails closed. Synthetic capture tests do not prove reflected
 owner availability on the actual host. Native registration, compile, restricted
 official transport, the completed single test and conservation remain pending.
+
+[Declaration run 37993672276](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37993672276)
+passed at `2f7fbf6ae771abcb45cb15221e4d66130676e3b3` on the same exact engine.
+It verifies exported native `FToolsetRegistry::RegisterToolset` /
+`UnregisterToolset`, the editor subsystem's registry accessor and the official
+adapter's actual root `tools[]` schema consumer. The complete native `FToolset`
+interface supports raw argument rejection. Its internal handler receives the
+bare operation; the schema uses
+`YacsBobInspection.InspectAcceptedCheckpoint`. Artifact `11646406329` has
+archive SHA-256 `82049f8e8610cf54200ea540068f9503ec8c856063c85c7bba67aeffd3294f00`.
+These observations close the declaration gap, without asserting runtime guard
+parity. The stock reflected argument conversion remains unproved and is not
+used as this boundary.
+
+The [native plugin](../Plugins/YacsBobInspection/README.md) currently registers
+nothing. Its internal identity and hit readers pin the accepted map and unique
+Landscape, remain outside the MCP tool definitions, and never trace or mutate
+the world themselves. The producer prefers the native reader when present;
+an invalid native response cannot fall back to unverified reflected ownership.
+`official-unreal-mcp-native-probe.yml` stages only tracked plugin inputs into
+a fresh ignored proof directory and runs `BuildPlugin` on an idle shared host.
+It preserves previous compile output and retains only this run's compile log
+and receipt. There is no Editor/MCP launch or scene hydration in that lane.
 
 ### Safety and preserved governance
 

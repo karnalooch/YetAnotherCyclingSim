@@ -154,8 +154,10 @@ merge recorded above. Historical rejected candidates remain rejected; the
 accepted whole-area baseline has its own evidence. A connection test or a
 closed-as-not-planned state cannot satisfy adoption DoD. #384 implementation
 has delivered read-only installed-source evidence and thin BOB domain
-preparation in Draft PR #467. Official activation remains blocked on
-unestablished map/object/test argument restrictions and native session proof;
+preparation, complete sample export and a strict opt-in native boundary in
+Draft PR #467. Installed primary source verifies the native extension and schema
+contract. Compilation, runtime denial cases and the official session proof remain
+pending;
 see the [source checkpoint and gap](UE_MCP_WORLD_GENERATION.md#windows-source-checkpoint-and-activation-gap--2026-10-09).
 
 The [MCP decision and DoD](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption)
