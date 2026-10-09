@@ -662,8 +662,13 @@ class CleanupTests(unittest.TestCase):
     def capture_fixture():
         obj = capture.WholeMapCapture.__new__(capture.WholeMapCapture)
         obj.stopped, obj.handle, obj.native_started = False, 7, True
-        obj.report = {"captures": [], "bindings": {}}
+        obj.report = {
+            "captures": [],
+            "diagnostic_captures": [{} for _ in range(8)],
+            "bindings": {},
+        }
         obj.steps = capture.build_steps(CameraTests().plan())
+        obj.witness_steps = [object() for _ in range(8)]
         obj.master_data, obj.instance, obj.parameter_originals = {}, None, {}
         obj.inputs = {"root": Path("/unused"), "manifest_sha256": "same"}
         obj.clock, obj.started = lambda: 1, 0
@@ -741,6 +746,29 @@ class CleanupTests(unittest.TestCase):
                     self.assertIn("coverage is incomplete", obj.report["error"])
                     obj.done.assert_called_once_with(obj.report["error"])
                     decode.assert_not_called()
+
+    def test_missing_diagnostic_witness_rejects_full_primary_capture(self):
+        obj = self.capture_fixture()
+        obj.root = Path("/unused")
+        obj.api.unregister_slate_post_tick_callback.side_effect = None
+        obj.report["captures"] = [{} for _ in range(43)]
+        obj.report["diagnostic_captures"].pop()
+        with (
+            patch.object(
+                capture, "load_inputs", return_value={"manifest_sha256": "same"}
+            ),
+            patch.object(
+                capture,
+                "decode_png",
+                return_value=(16, 1, 3, bytes([100, 100, 100]) * 16),
+            ),
+        ):
+            obj.stop()
+        self.assertTrue(obj.report["capture_complete"])
+        self.assertFalse(obj.report["diagnostic_complete"])
+        self.assertEqual(obj.report["status"], "FAILED")
+        self.assertIn("witness capture is incomplete", obj.report["error"])
+        obj.done.assert_called_once_with(obj.report["error"])
 
     def test_callback_failure_still_restores_native_and_landscape_and_calls_owner(self):
         obj = self.capture_fixture()
