@@ -326,10 +326,13 @@ class OfficialMcpSourceProbeTests(unittest.TestCase):
                    'const char* Example = "class UToolsetRegistry {";\n'
                    "class UToolsetRegistry;\nclass UnrelatedForwardNoise {};\n"
                    "class FIXTURE_API UToolsetRegistry\n{\npublic:\n"
-                   "    static void RegisterToolsetClass(UClass* Class);\n};\n")
+                   "    static void RegisterToolsetClass(UClass* Class);\n};\n"
+                   "class FIXTURE_API FToolsetRegistry\n{\npublic:\n"
+                   "    FIXTURE_API bool RegisterToolset(TSharedPtr<FToolset> Handler);\n"
+                   "    FIXTURE_API bool UnregisterToolset(const FString& Name);\n};\n")
         self.write(f"{registry}/ActualHandler.cpp",
-                   "// FStaticToolset::ExecuteToolInternal() is a comment.\n"
-                   "TFuture FStaticToolset::ExecuteToolInternal(const FString& JsonInput)\n{\n"
+                   "// FActualReflectedHandler::ExecuteToolInternal() is a comment.\n"
+                   "TFuture FActualReflectedHandler::ExecuteToolInternal(const FString& JsonInput)\n{\n"
                    "    if (JsonInput.HasUnknownFields()) { return ARGUMENT_REJECTION; }\n"
                    "    return FIXED_DOMAIN_CALL;\n}\n"
                    "void Unrelated() { UNRELATED_CODE_MUST_NOT_PRINT; }\n")
@@ -347,13 +350,15 @@ class OfficialMcpSourceProbeTests(unittest.TestCase):
         actual_prototype = next(item for item in observations["automation_prototypes"]
                                 if item["path"].endswith("ActualAutomation.h"))
         self.assertEqual(actual_prototype["line"], 6)
-        self.assertEqual(observations["static_argument_conversion"][0]["line"], 2)
+        self.assertEqual(observations["concrete_argument_conversion"][0]["line"], 2)
         output = probe.console_summary(result)
         self.assertIn("ARGUMENT_REJECTION", output)
         self.assertIn("FIXED_DOMAIN_CALL", output)
         self.assertNotIn("UNRELATED_CODE_MUST_NOT_PRINT", output)
         self.assertIn("FIXTURE_API static UToolCallAsyncResultString* RunTests", output)
         self.assertIn("ActualLibrary.h", output)
+        self.assertIn("RegisterToolset(TSharedPtr<FToolset> Handler)", output)
+        self.assertIn("UnregisterToolset(const FString& Name)", output)
         self.assertLessEqual(len(output.splitlines()), 500)
         for key in ("guard_parity_verified", "runtime_schema_verified", "official_mcp_admitted",
                     "mcp_server_started", "plugin_activation_performed", "performance_pass"):
@@ -407,6 +412,29 @@ class OfficialMcpSourceProbeTests(unittest.TestCase):
         self.assertEqual(blocked["status"], "BLOCKED")
         self.assertIn("UNSUPPORTED_EVIDENCE_FOCUS", blocked["blockers"])
         self.assertEqual(blocked["source_file_count"], 0)
+
+    def test_domain_extension_prioritizes_actual_conversion_and_schema_contracts(self):
+        registry = "Engine/Plugins/Experimental/ToolsetRegistry/Source"
+        self.write(f"{registry}/AOther.cpp", "TFuture FOtherHandler::ExecuteToolInternal()\n{\n"
+                   + "\n".join(f"    int Noise{index} = {index};" for index in range(160)) + "\n}\n")
+        self.write(f"{registry}/ZActualConverter.cpp",
+                   "TFuture FActualConverter::ExecuteToolInternal()\n{\n"
+                   "    UFunction* Reflected = nullptr;\n    return ACTUAL_CONVERSION_TAIL;\n}\n")
+        self.write(f"{registry}/Toolset.cpp",
+                   "FString FToolset::GetJsonSchema() const\n{\n    return FILTERED_SCHEMA_CONTRACT;\n}\n"
+                   "TArray FToolset::ListToolNames() const\n{\n    return TOOL_NAMES_SCHEMA_CONTRACT;\n}\n")
+        self.write("Engine/Plugins/Experimental/ModelContextProtocol/Source/ActualSchemaConsumer.cpp",
+                   "int FActualSchemaAdapter::RegisterToolsFromSchema(const FString& Schema)\n{\n"
+                   '    const char* Fields = "tools name description parameters";\n'
+                   "    return ACTUAL_MCP_SCHEMA_CONSUMER;\n}\n")
+        result = self.collect(evidence_focus="domain_extension")
+        output = probe.console_summary(result)
+        self.assertIn("ACTUAL_CONVERSION_TAIL", output)
+        self.assertIn("FILTERED_SCHEMA_CONTRACT", output)
+        self.assertIn("TOOL_NAMES_SCHEMA_CONTRACT", output)
+        self.assertIn("ACTUAL_MCP_SCHEMA_CONSUMER", output)
+        self.assertTrue(result["domain_extension_observations"]["mcp_schema_consumer"])
+        self.assertLessEqual(len(output.splitlines()), 500)
 
 
 if __name__ == "__main__":

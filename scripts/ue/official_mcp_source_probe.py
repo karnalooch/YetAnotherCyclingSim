@@ -269,19 +269,23 @@ def cpp_code_lines(lines: list[str]) -> list[str]:
 # One fixed declaration review preset. Paths come from the already bounded
 # plugin inventory; optional symbols are selectors, never verified API wiring.
 DOMAIN_RULES = (
-    ("static_argument_conversion", "ToolsetRegistry", ".cpp", r"FStaticToolset::ExecuteToolInternal\s*\(", 0, 180, 90),
-    ("toolset_interface", "ToolsetRegistry", ".h", r"\bclass\s+(?:\w+\s+)?FToolset\b", 3, 145, 55),
-    ("class_registration", "ToolsetRegistry", ".h", r"\bclass\s+(?:\w+\s+)?UToolsetRegistry\b", 3, 145, 55),
-    ("toolset_definition", "ToolsetRegistry", ".h", r"\bclass\s+(?:\w+\s+)?UToolsetDefinition\b", 3, 80, 10),
-    ("static_toolset_interface", "ToolsetRegistry", ".h", r"\bclass\s+(?:\w+\s+)?FStaticToolset\b", 3, 85, 10),
-    ("async_string_interface", "ToolsetRegistry", ".h", r"\bclass\s+(?:\w+\s+)?UToolCallAsyncResultString\b", 3, 100, 25),
-    ("async_result_interface", "ToolsetRegistry", ".h", r"\bclass\s+(?:\w+\s+)?UToolCallAsyncResult\b", 3, 150, 35),
-    ("automation_prototypes", "AutomationTestToolset", ".h", r"\b(?:DiscoverTests|RunTests|GetTestStatus|GetTestResults)\s*\(", 4, 8, 40),
-    ("automation_status", "AutomationTestToolset", ".cpp", r"UAutomationTestToolset::GetTestStatus\s*\(", 0, 150, 40),
-    ("automation_subsystem", "AutomationTestToolset", ".h", r"\b(?:GetAutomationController|GetRunningTestNames|SetPendingRunResult|EnableRunResultPolling|Tick|PollRunResults)\s*\(", 3, 9, 25),
-    ("automation_controller", "AutomationController", ".h", r"\b(?:GetTestState|RunTests|StopTests|IsTestRunning)\s*\(", 3, 8, 25),
-    ("registration_factory", "ToolsetRegistry", ".cpp", r"UToolsetRegistry::RegisterToolsetClass\s*\(", 0, 110, 15),
-    ("reflected_execution", "ToolsetRegistry", ".cpp", r"UToolsetRegistry::ExecuteTool\s*\(", 0, 110, 15),
+    ("concrete_argument_conversion", "ToolsetRegistry", ".cpp", r"\b(?!FToolset::)\w+::ExecuteToolInternal\s*\(", 0, 220, 100),
+    ("native_registry", "ToolsetRegistry", ".h", r"\bclass\s+(?:\w+\s+)?FToolsetRegistry\b", 3, 220, 60),
+    ("registry_subsystem", "ToolsetRegistry", ".h", r"\bclass\s+(?:\w+\s+)?UToolsetRegistrySubsystem\b", 3, 130, 20),
+    ("schema_filter", "ToolsetRegistry", ".cpp", r"FToolset::GetJsonSchema\s*\(", 0, 130, 30),
+    ("schema_tool_names", "ToolsetRegistry", ".cpp", r"FToolset::ListToolNames\s*\(", 0, 130, 35),
+    ("mcp_schema_consumer", "ModelContextProtocol", ".cpp", r"\w+::RegisterToolsFromSchema\s*\(", 0, 160, 70),
+    ("toolset_interface", "ToolsetRegistry", ".h", r"\bclass\s+(?:\w+\s+)?FToolset\b", 3, 145, 35),
+    ("async_string_interface", "ToolsetRegistry", ".h", r"\bclass\s+(?:\w+\s+)?UToolCallAsyncResultString\b", 3, 100, 15),
+    ("async_result_interface", "ToolsetRegistry", ".h", r"\bclass\s+(?:\w+\s+)?UToolCallAsyncResult\b", 3, 150, 20),
+    ("automation_prototypes", "AutomationTestToolset", ".h", r"\b(?:DiscoverTests|RunTests|GetTestStatus|GetTestResults)\s*\(", 4, 8, 25),
+    ("automation_status", "AutomationTestToolset", ".cpp", r"UAutomationTestToolset::GetTestStatus\s*\(", 0, 150, 20),
+    ("automation_subsystem", "AutomationTestToolset", ".h", r"\b(?:GetAutomationController|GetRunningTestNames|SetPendingRunResult|EnableRunResultPolling|Tick|PollRunResults)\s*\(", 3, 9, 10),
+    ("automation_controller", "AutomationController", ".h", r"\b(?:GetTestState|RunTests|StopTests|IsTestRunning)\s*\(", 3, 8, 10),
+    ("class_registration", "ToolsetRegistry", ".h", r"\bclass\s+(?:\w+\s+)?UToolsetRegistry\b", 3, 145, 0),
+    ("toolset_definition", "ToolsetRegistry", ".h", r"\bclass\s+(?:\w+\s+)?UToolsetDefinition\b", 3, 80, 0),
+    ("registration_factory", "ToolsetRegistry", ".cpp", r"UToolsetRegistry::RegisterToolsetClass\s*\(", 0, 110, 0),
+    ("reflected_execution", "ToolsetRegistry", ".cpp", r"UToolsetRegistry::ExecuteTool\s*\(", 0, 110, 0),
 )
 CONTROLLER_HEADERS = {
     "IAutomationControllerModule.h": "Engine/Source/Developer/AutomationController/Public/IAutomationControllerModule.h",
@@ -296,7 +300,16 @@ def select_domain_extension(
     observations = {rule[0]: [] for rule in DOMAIN_RULES}
     remaining = MAX_EXCERPT_LINES
     for topic, role, suffix, pattern, before, after, _ in DOMAIN_RULES:
-        for item, data in sources:
+        ordered_sources = sources
+        if topic == "concrete_argument_conversion":
+            # Prefer actual reflected-function conversion code over other
+            # concrete handlers, without assuming an implementation class name.
+            ordered_sources = sorted(sources, key=lambda pair: (
+                not bool(re.search(r"\b(?:UFunction|FProperty|FStructOnScope|JsonObjectConverter)\b",
+                                   "\n".join(cpp_code_lines(pair[1].decode("utf-8-sig").splitlines())))),
+                pair[0]["path"],
+            ))
+        for item, data in ordered_sources:
             if item["role"] != role or Path(item["path"]).suffix != suffix:
                 continue
             lines = data.decode("utf-8-sig").splitlines()
@@ -417,7 +430,7 @@ def collect(
                 item["python_declarations"] = {"status": "SOURCE_PARSE_UNESTABLISHED"}
         receipt["inventory"].append(item)
         if (evidence_focus == "domain_extension" and role in {
-                "ToolsetRegistry", "AutomationTestToolset", "AutomationController"}
+                "ToolsetRegistry", "ModelContextProtocol", "AutomationTestToolset", "AutomationController"}
                 and path.suffix in {".h", ".cpp"} and source_priority(path, role)[0] < 100):
             extension_sources.append((item, data))
         return data
@@ -648,8 +661,14 @@ def console_summary(receipt: dict[str, Any]) -> str:
         lines.append("EVIDENCE_FOCUS domain_extension; native wiring / argument parity: UNVERIFIED")
         lines.append("MISSING_EXTENSION_CONTEXTS " + json.dumps(receipt.get("domain_extension_missing_contexts", [])))
         lines.append("CONTROLLER_DECLARATION_UNESTABLISHED " + json.dumps(receipt.get("automation_controller_unestablished", [])))
+        lines.append("CONCRETE_EXECUTION_DEFINITIONS " + json.dumps(
+            receipt.get("domain_extension_observations", {}).get("concrete_argument_conversion", [])[:16]))
         for topic, _, _, _, _, _, budget in DOMAIN_RULES:
-            for item in receipt["inventory"]:
+            observed_paths = [entry["path"] for entry in receipt.get("domain_extension_observations", {}).get(topic, [])]
+            for item in sorted(receipt["inventory"], key=lambda entry: (
+                observed_paths.index(entry["path"]) if entry["path"] in observed_paths else len(observed_paths),
+                entry["path"],
+            )):
                 for excerpt in item["selected_excerpts"]:
                     if excerpt.get("topic") != topic:
                         continue
