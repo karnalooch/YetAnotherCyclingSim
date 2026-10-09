@@ -38,15 +38,6 @@ jobs:
           fetch-depth: 1
           lfs: false
           persist-credentials: false
-          sparse-checkout: |
-            .gitignore
-            .gitattributes
-            scripts/ue/official_mcp_source_probe.py
-            scripts/ue/Invoke-YacsOfficialMcpSourceProbe.ps1
-            scripts/ci/Resolve-YacsUnrealEngine.ps1
-            scripts/ci/Test-YacsCodeOnlyCheckout.ps1
-            YetAnotherCyclingSim.uproject
-          sparse-checkout-cone-mode: false
 
       - name: Collect read-only version and declaration evidence
         shell: pwsh
