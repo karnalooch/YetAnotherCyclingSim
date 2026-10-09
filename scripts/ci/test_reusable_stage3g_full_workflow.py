@@ -88,6 +88,18 @@ class ReusableStage3GFullWorkflowContractTests(unittest.TestCase):
         self.assertIn("current_world_admission = $false", regression)
 
     def test_native_work_respects_idle_host_ownership(self):
+        release = self.workflow.split(
+            "- name: Release stale Unreal workspace locks", 1
+        )[1].split("- name:", 1)[0]
+        self.assertIn("working-directory: ${{ env.STAGE3G_BOOTSTRAP_DIR }}", release)
+        self.assertLess(
+            release.index("$state = ./scripts/runner/Get-YacsUnrealHostState.ps1"),
+            release.index("if ($state.status -ne 'IDLE')"),
+        )
+        self.assertLess(
+            release.index("if ($state.status -ne 'IDLE')"),
+            release.index("& $bootstrap -Workspace"),
+        )
         guard = self.workflow.index(
             "Respect shared Unreal host ownership before native regression"
         )
@@ -100,6 +112,142 @@ class ReusableStage3GFullWorkflowContractTests(unittest.TestCase):
             "Verify frozen prototype compatibility without world authoring",
         ):
             self.assertLess(guard, self.workflow.index(step))
+
+    def test_cleanup_checks_host_before_any_process_or_worktree_mutation(self):
+        cleanup = self.workflow.split("- name: Clean isolated Stage 3G worktree", 1)[1]
+        read = cleanup.index("$state = & $hostState")
+        guard = cleanup.index("if ($state.status -ne 'IDLE')")
+        self.assertLess(read, guard)
+        self.assertIn("preserving worktree and bootstrap", cleanup)
+        for action in (
+            "& $bootstrap -Workspace",
+            "git reset --hard",
+            "git clean -ffdx",
+            "Remove-Item -LiteralPath $worktree",
+            "Remove-Item -LiteralPath $bootstrapRoot",
+        ):
+            self.assertLess(guard, cleanup.index(action))
+
+    @unittest.skipUnless(shutil.which("pwsh"), "PowerShell is unavailable")
+    def test_native_cleanup_preserves_busy_or_unverifiable_host_workspaces(self):
+        cleanup = self.workflow.split("- name: Clean isolated Stage 3G worktree", 1)[1]
+        source = textwrap.dedent(cleanup.split("run: |\n", 1)[1])
+        with tempfile.TemporaryDirectory(prefix="yacs-host-cleanup-") as directory:
+            root = Path(directory)
+            cases = []
+            for name in (
+                "IDLE",
+                "LOCAL_BUSY",
+                "REMOTE_BUSY",
+                "MIXED_BUSY",
+                "UNKNOWN",
+                "missing_helper",
+                "helper_error",
+            ):
+                workspace = root / name
+                bootstrap = workspace / "bootstrap"
+                host_helper = bootstrap / "scripts/runner/Get-YacsUnrealHostState.ps1"
+                host_helper.parent.mkdir(parents=True)
+                if name != "missing_helper":
+                    host_helper.write_text(
+                        "Add-Content -LiteralPath $env:YACS_HOST_FIXTURE_EVENTS -Value 'host-read'\n"
+                        + (
+                            "throw 'host inspection failed'\n"
+                            if name == "helper_error"
+                            else "[pscustomobject]@{ status = $env:YACS_HOST_FIXTURE_STATUS }\n"
+                        )
+                    )
+                release = bootstrap / "scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1"
+                release.parent.mkdir(parents=True)
+                release.write_text(
+                    "param([string] $Workspace)\n"
+                    "Add-Content -LiteralPath $env:YACS_HOST_FIXTURE_EVENTS -Value 'release'\n"
+                )
+                worktree = workspace / "worktree"
+                (worktree / ".git").mkdir(parents=True)
+                (worktree / "local-editor-state.txt").write_text("preserve")
+                cases.append(
+                    {
+                        "workspace": str(workspace),
+                        "state": name,
+                        "events": str(workspace / "events.txt"),
+                    }
+                )
+            inputs = root / "cases.json"
+            inputs.write_text(json.dumps(cases), encoding="utf-8")
+            script = root / "cleanup.ps1"
+            script.write_text(source, encoding="utf-8")
+            command = """
+$ErrorActionPreference = 'Stop'
+function global:git {
+  Add-Content -LiteralPath $env:YACS_HOST_FIXTURE_EVENTS -Value ('git ' + ($args -join ' '))
+  $global:LASTEXITCODE = 0
+}
+$cases = @(Get-Content -LiteralPath $env:YACS_HOST_FIXTURE_CASES -Raw | ConvertFrom-Json)
+$results = @()
+foreach ($case in $cases) {
+  $env:GITHUB_WORKSPACE = $case.workspace
+  $env:STAGE3G_WORKTREE_DIR = 'worktree'
+  $env:STAGE3G_BOOTSTRAP_DIR = 'bootstrap'
+  $env:YACS_HOST_FIXTURE_STATUS = $case.state
+  $env:YACS_HOST_FIXTURE_EVENTS = $case.events
+  try { & $env:YACS_HOST_FIXTURE_SCRIPT; $accepted = $true }
+  catch { $accepted = $false }
+  $events = @()
+  if (Test-Path -LiteralPath $case.events) { $events = @(Get-Content -LiteralPath $case.events) }
+  $results += [ordered]@{
+    accepted = $accepted
+    worktree = Test-Path -LiteralPath (Join-Path $case.workspace 'worktree/local-editor-state.txt')
+    bootstrap = Test-Path -LiteralPath (Join-Path $case.workspace 'bootstrap')
+    events = $events
+  }
+}
+'YACS_HOST_RESULTS=' + (ConvertTo-Json -InputObject $results -Compress -Depth 5) | Write-Output
+"""
+            result = subprocess.run(
+                [
+                    shutil.which("pwsh"),
+                    "-NoProfile",
+                    "-NonInteractive",
+                    "-Command",
+                    command,
+                ],
+                env=dict(
+                    os.environ,
+                    YACS_HOST_FIXTURE_CASES=str(inputs),
+                    YACS_HOST_FIXTURE_SCRIPT=str(script),
+                ),
+                stdin=subprocess.DEVNULL,
+                text=True,
+                capture_output=True,
+                timeout=30,
+                check=True,
+            )
+            results = json.loads(
+                result.stdout.split("YACS_HOST_RESULTS=", 1)[1].strip()
+            )
+            self.assertTrue(results[0]["accepted"])
+            self.assertFalse(results[0]["worktree"])
+            self.assertFalse(results[0]["bootstrap"])
+            self.assertEqual(
+                results[0]["events"],
+                [
+                    "host-read",
+                    "release",
+                    "git reset --hard",
+                    "git clean -ffdx -e Saved/Logs/YetAnotherCyclingSim.log",
+                    "git status --porcelain",
+                ],
+            )
+            for case, actual in zip(cases[1:], results[1:]):
+                with self.subTest(state=case["state"]):
+                    self.assertFalse(actual["accepted"])
+                    self.assertTrue(actual["worktree"])
+                    self.assertTrue(actual["bootstrap"])
+                    self.assertEqual(
+                        actual["events"],
+                        [] if case["state"] == "missing_helper" else ["host-read"],
+                    )
 
     @unittest.skipUnless(shutil.which("pwsh"), "PowerShell is unavailable")
     def test_every_embedded_powershell_source_parses(self):
