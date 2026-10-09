@@ -67,9 +67,10 @@ flowchart TB
 | World method | **World Building Bible is authoritative** |
 | Geographic fidelity | **1:1 real-world scale; no route compression, relocation or invented macro terrain** |
 | Architecture policy | **Embark-first + tools-first + version-matched Epic/PCGEx API evidence + local proof** |
-| MCP adoption | **[#384](https://github.com/karnalooch/YetAnotherCyclingSim/issues/384): official Epic MCP bounded spike, blocked by full #363 closeout; before #364, no implementation or UE migration yet** |
+| MCP adoption | **[#384](https://github.com/karnalooch/YetAnotherCyclingSim/issues/384): material entry gate satisfied by completed #363 / merged #446; bounded spike still unimplemented, before #364; no activation or UE migration** |
 | Diagram language | **Gumball Blueprint Mermaid style** |
-| Current priority | **Issue #337: continue guarded paved-road import on the current Landscape; Issue #349: reconcile official GIS sources for the full road inventory, preserving classes, topology and source evidence** |
+| Current priority | **#363 material foundation accepted/frozen; next #384 bounded MCP spike → #364 asphalt/shoulder. #337/#349 road and source-inventory work remains separately scoped; #338 stays frozen Draft** |
+| M3 acceptance debt | **M3 remains in progress; material acceptance does not admit unresolved road/CUT/cliff/contact geometry or production PCGEx. Performance is `DEFERRED_AFTER_M3`, `performance_pass: false`** |
 | Route reference | **sea-level Sa Calobra → Coll dels Reis → Ma-10 → Menut/Binifaldó → Coll des Pedregaret; ~29–30 km planning estimate, exact chainage pending** |
 | Terrain source | **CNIG/IGN MDT50cm Sa Calobra 8 km × 8 km benchmark; bounded native UE import PASS, terrain visual accepted; performance pending** |
 | Road authority | **verified Ma-2141 alignment; smooth presentation ribbon is evaluated against Landscape, never snapped/bent to native DTM facets; terrain-fit residuals drive cut/fill/structure review** |
@@ -85,7 +86,7 @@ The old Stage 3G / R4.1 / B.x vocabulary is historical. Existing workflow names 
 | Product scope and MVP boundaries | [`PRODUCT_REQUIREMENTS.md`](PRODUCT_REQUIREMENTS.md) | **Authoritative** |
 | Delivery order and current milestone | [`ROADMAP.md`](ROADMAP.md) | **Authoritative** |
 | How to build terrain/roads/worlds | [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md) | **Authoritative** |
-| Official MCP decision, authority boundary and bounded spike | [`UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption`](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption) | **Approved direction; #384 blocked by #363** |
+| Official MCP decision, authority boundary and bounded spike | [`UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption`](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption) | **Approved direction; #363 prerequisite satisfied; #384 open/unimplemented** |
 | First full-route visual/data reference | [`SA_CALOBRA_MENUT_ROUTE_REFERENCE.md`](SA_CALOBRA_MENUT_ROUTE_REFERENCE.md) | **Evidence / candidate** |
 | Draw architecture/workflow diagrams | [`DIAGRAM_STYLE.md`](DIAGRAM_STYLE.md) | **Authoritative visual convention** |
 | Inspect shipped production world pipelines | [`PRODUCTION_WORLD_ARCHITECTURE_REFERENCES.md`](PRODUCTION_WORLD_ARCHITECTURE_REFERENCES.md) | **Evidence dossier** |
@@ -97,9 +98,9 @@ The old Stage 3G / R4.1 / B.x vocabulary is historical. Existing workflow names 
 | Resume texture work remotely | [`tooling/TEXTURE_MATERIAL_PREP_REMOTE_HANDOFF.md`](tooling/TEXTURE_MATERIAL_PREP_REMOTE_HANDOFF.md) | **2026-10-05 evidence and recovery procedure** |
 | Persistent local project and checkpoints | [`tooling/LOCAL_WORKSPACE.md`](tooling/LOCAL_WORKSPACE.md) | **Authoritative host workflow** |
 | Blender headless producer contract | [`tooling/BLENDER_HEADLESS.md`](tooling/BLENDER_HEADLESS.md) | **Active supporting tool** |
-| Sa Calobra material foundation | [`tooling/SA_CALOBRA_MATERIAL_FOUNDATION.md`](tooling/SA_CALOBRA_MATERIAL_FOUNDATION.md) | **Active candidate workflow; Bible owns methodology** |
-| Sa Calobra whole-map surface preparation | [`tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md`](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md) | **Owner-approved continuation in #446; full-grid roles and native consumer implemented, fresh execution pending** |
-| Sa Calobra material repair sequence | [`tooling/SA_CALOBRA_MATERIAL_REPAIR_PLAN.md`](tooling/SA_CALOBRA_MATERIAL_REPAIR_PLAN.md) | **Documentation-only plan; implementation and acceptance pending** |
+| Sa Calobra material foundation | [`tooling/SA_CALOBRA_MATERIAL_FOUNDATION.md`](tooling/SA_CALOBRA_MATERIAL_FOUNDATION.md) | **Reusable workflow / retained candidate history; current acceptance in whole-map handoff** |
+| Sa Calobra whole-map surface preparation | [`tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md`](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md) | **#363 accepted/frozen and #446 merged; full-grid saved/fresh-reloaded/fresh-rendered material consumer admitted; performance deferred after M3** |
+| Sa Calobra material repair sequence | [`tooling/SA_CALOBRA_MATERIAL_REPAIR_PLAN.md`](tooling/SA_CALOBRA_MATERIAL_REPAIR_PLAN.md) | **Historical recovery plan; #381 closed superseded by merged #446** |
 | Sa Calobra cliff / erosion presentation pass | [`tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md`](tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md) | **Active #429 non-destructive selector foundation; production dressing pending** |
 | CI cost / proof cadence | [`CI_VALIDATION_TIERS.md`](CI_VALIDATION_TIERS.md) | **Authoritative** |
 | Shared CI and governance platform | [`ENGINEERING_PLATFORM.md`](ENGINEERING_PLATFORM.md) | **Authoritative** |
@@ -131,12 +132,12 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 - [`YACS_WORLD_AUTHORING_LIBRARY.md`](YACS_WORLD_AUTHORING_LIBRARY.md) — reusable authoring systems, semantic catalog, presets and generated-output boundary.
 - [`tooling/MATERIAL_FORGE.md`](tooling/MATERIAL_FORGE.md) — Issue #387 offline procedural PBR, material-local mask and UE import contract; consumes PCG/PCGEx semantics, never replaces them.
 - [`tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md`](tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md) — cliff selector/handoff contract and bounded native Landscape/PCGEx/mesh trial history, subordinate to the World Building Bible.
-- [`tooling/SA_CALOBRA_COMPONENT230_REPAIR_PLAN.md`](tooling/SA_CALOBRA_COMPONENT230_REPAIR_PLAN.md) — #445 / draft PR #446 report verification, exact remaining failures and ordered repair/acceptance evidence; local trial success does not admit the whole map.
+- [`tooling/SA_CALOBRA_COMPONENT230_REPAIR_PLAN.md`](tooling/SA_CALOBRA_COMPONENT230_REPAIR_PLAN.md) — retained #445 / #446 local repair history and remaining cliff/PCGEx failures; merged material consolidation does not admit the local geometry trials.
 - [`tooling/SA_CALOBRA_SURFACE_DETAIL_ATLAS.md`](tooling/SA_CALOBRA_SURFACE_DETAIL_ATLAS.md) — surface-detail review and PCG/PCGEx handoff plan with a tested Component 230 registration/native pilot: A-D viewer demand remains separate from rendering distance; wider physical mapping remains pending.
-- [`tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md`](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md) — #445 / #446 whole-working-map execution plan: verified five-role inputs, separate unknown/exclusion evidence, native full-area bindings, adaptive detail and distributed visual proof.
+- [`tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md`](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md) — current accepted #363 / merged #446 material handoff: five-role full-grid bindings, saved/fresh-rendered consumer, source conservation and retained acceptance limits.
 - [`ASSET_PLAN.md`](ASSET_PLAN.md) — source/technical asset ledger and provenance expectations.
 - [`tooling/JULKA.md`](tooling/JULKA.md) — Issue #345 asset acquisition, local restore, identity and cleanup contract; subordinate to the asset ledger and World Building Bible.
-- [`UE_MCP_WORLD_GENERATION.md`](UE_MCP_WORLD_GENERATION.md) — current official Epic MCP adoption decision/DoD (#384, blocked by #363), plus the retained db-lyon integration baseline; interface only, not world/proof authority.
+- [`UE_MCP_WORLD_GENERATION.md`](UE_MCP_WORLD_GENERATION.md) — current official Epic MCP adoption decision/DoD (#384, material prerequisite satisfied, implementation pending), plus the retained db-lyon integration baseline; interface only, not world/proof authority.
 - [`tooling/TEXTURE_MATERIAL_PREP.md`](tooling/TEXTURE_MATERIAL_PREP.md) — independent Texture Graph domain adapter, offline validation and limestone proof contract; no world integration or #384 cutover.
 - [`tooling/TEXTURE_MATERIAL_PREP_EXAMPLES.md`](tooling/TEXTURE_MATERIAL_PREP_EXAMPLES.md) — offline diagnostics, opt-in UE adapter commands, isolated smoke/reopen proof and limitations.
 - [`YACS_REMOTE_EDITOR_AGENT.md`](YACS_REMOTE_EDITOR_AGENT.md) — remote editor-agent operating contract.
@@ -177,7 +178,9 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 
 - [Sa Calobra surface candidate comparison — 2026-10-05](experiments/sa-calobra-surface-candidates-2026-10-05.md) — 21 reviewed sources, six-role visual shortlist and rejection reasons; no production-set approval or Unreal import.
 
-- [Sa Calobra Material Forge production proof — 2026-10-07](experiments/sa-calobra-material-forge-production-proof-2026-10-07.md) — exact-SHA fixed-master productionization, memory recovery, offscreen Unreal admission, whole-Landscape rollback-safe 4K proof and remaining owner visual gate.\n\n- [Sa Calobra material reference review — 2026-10-05](experiments/sa-calobra-material-reference-review-2026-10-05.md) — whole-area aerial observations, ground-reference gaps and preliminary asset leads; reference gate remains open.
+- [Sa Calobra Material Forge production proof — 2026-10-07](experiments/sa-calobra-material-forge-production-proof-2026-10-07.md) — exact-SHA fixed-master productionization, memory recovery, offscreen Unreal admission, whole-Landscape rollback-safe 4K proof and remaining owner visual gate.
+
+- [Sa Calobra material reference review — 2026-10-05](experiments/sa-calobra-material-reference-review-2026-10-05.md) — whole-area aerial observations, ground-reference gaps and preliminary asset leads; reference gate remains open.
 
 - [Sa Calobra surface coverage audit — 2026-10-04](experiments/sa-calobra-surface-coverage-2026-10-04.md) — read-only candidate evidence: sampling support, unresolved rock/soil classification and review priorities; no production admission.
 

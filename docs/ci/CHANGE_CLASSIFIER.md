@@ -25,8 +25,11 @@ The main impact outputs are:
 - `unreal_execution_class` — `static`, `runtime`, or `compile`;
 - `ue_tooling` — Unreal editor/authoring/proof tooling changed, but that fact
   alone does **not** require an automatic Editor build;
-- `asset_full` — the change requires the heavy Stage 3G/full-world proof at
-  the configured readiness boundary;
+- `asset_full` — the change requires the heavy legacy Stage 3G compatibility
+  lane at the configured readiness boundary;
+- `stage3g_authoring` — actual legacy assets, specifications or authoring producers
+  changed; require legacy world authoring and final proof rather than the
+  compatibility-only mode;
 - `unknown` — the classifier could not map at least one path confidently;
 - `ci_cost_class` — one of `light`, `standard`, `heavy`.
 
@@ -43,7 +46,7 @@ The main impact outputs are:
 | Unreal proof/editor/authoring tooling | CI/Python/contracts as applicable; **no automatic code build solely because the path is under `scripts/ue/**`** | normally `standard` |
 | code-build tooling used by the automatic Unreal lane | CI contracts plus code-only Unreal build + Automation | `heavy` |
 | asset-only | Repository policy, Governance, lightweight asset validation | `standard` |
-| `asset_full` world change | lightweight validation plus the configured full-world proof at readiness | `heavy` |
+| `asset_full` world change | lightweight validation plus legacy compatibility at readiness; full legacy authoring only when `stage3g_authoring=true` | `heavy` |
 | code + assets | union of the relevant code lanes and asset validation | highest required class |
 | unknown repository path | Repository policy, Governance, security baseline; exposes `unknown=true` | `standard` |
 | unknown runtime-sensitive path under `Source/`, `Config/`, `Plugins/` or `Build/` | fail closed to `ue_code=true` | `heavy` |
@@ -202,10 +205,17 @@ pushes. Fork PRs never receive self-hosted runner access; if such a PR requires
 `asset_full=true`, the Aggregate gate fails closed because the heavy lane is
 skipped.
 
-The lane materializes full LFS, runs the deterministic Stage 3G authoring pass,
-then the final non-mutating proof (Automation, fresh-load persistence, Map
-Check, LFS integrity and canonical visual captures), uploads concise proof
-artifacts and unconditionally cleans the runner workspace.
+Both modes materialize full LFS. When `stage3g_authoring=true`, the lane runs
+deterministic legacy authoring followed by its final proof (Automation,
+fresh-load persistence, Map Check, LFS integrity and legacy visual captures).
+Otherwise CI passes `legacy_regression_only=true`: a real Editor build and one
+fresh `CyclingStage3World.PrototypeTerrain` Automation test prove compatibility
+without authoring, saving, Map Checking or rendering `L_CyclingTest`. The gate
+checks exact-SHA receipts, the fresh singleton report and a clean checkout.
+Neither mode admits the current Sa Calobra world; its saved/fresh-rendered
+consumer requires its own proof and owner acceptance. Cleanup also checks host
+ownership before releasing or deleting the runner worktree; a busy or unknown
+host preserves that workspace and fails closed.
 
 Release-oriented binary validation remains deliberately separate. The manual
 trusted entrypoint is `.github/workflows/asset-full.yml`.

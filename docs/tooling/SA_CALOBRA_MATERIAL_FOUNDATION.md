@@ -3,8 +3,12 @@
 Issue [#363](https://github.com/karnalooch/YetAnotherCyclingSim/issues/363)
 implements the Landscape material step after completed #335 / merged #362.
 Methodology authority: [World Building Bible](../WORLD_BUILDING_BIBLE.md).
-Delivery order: [Roadmap](../ROADMAP.md). This workflow describes a candidate,
-not completed visual, reload or performance admission.
+Delivery order: [Roadmap](../ROADMAP.md). This document retains reusable procedures
+and historical candidate evidence. Current closeout, 2026-10-09: #363 completed
+through merged PR #446; the [whole-map handoff](SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md)
+pins accepted material scope, actual saved/fresh-rendered consumer and technical
+proof. Historical recipes are not retrospectively admitted; performance remains
+`DEFERRED_AFTER_M3`, `performance_pass: false`.
 
 **2026-10-06 repair planning:** the owner requested documentation only, with no
 implementation. The [material repair plan](SA_CALOBRA_MATERIAL_REPAIR_PLAN.md)
@@ -290,5 +294,6 @@ registration for `sa-calobra-material-performance`; a branch preparation
 artifact alone does not waive that protected provenance requirement. Whole-area
 owner visual acceptance and production delivery remain separate gates.
 Run source tests, all four documentation guards and the required Unreal/asset
-proofs. Keep the PR draft until required admission passes. Step #364 remains
-blocked until #363 is completed and its implementation merged with proof.
+proofs. Keep the PR draft until required admission passes. The #363 material predecessor is now completed and merged; #364 remains
+blocked by the unimplemented #384 MCP spike. This measurement path is prepared
+for post-M3 use, not a claim that a benchmark has run.

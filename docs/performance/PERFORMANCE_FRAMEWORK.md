@@ -21,6 +21,19 @@ The framework does not replace visual acceptance. A change can be faster and vis
 
 ## Measurement cadence
 
+**Current M3 timing override — owner decision, 2026-10-09:** benchmark the
+accepted assembled world after M3 implementation closeout, rather than each
+intermediate material/world handoff. The accepted and merged #363 material
+foundation records `DEFERRED_AFTER_M3`, `performance_pass: false`, with no
+measurement. Execution is #372 visual/technical acceptance → #374 full-route
+assembly/closeout → #373 benchmark; [Roadmap](../ROADMAP.md) records pending
+native dependency reconciliation. This supersedes performance-before-closeout
+timing below for current M3 assembly only. Whole-area owner visual acceptance,
+saved/fresh-rendered consumers and required native/protected technical gates
+remain required. Measure the actual assembled consumer at its exact SHA using
+the unchanged full-area scope, reference hardware, resolution and budgets;
+performance/release admission remains pending until that evidence passes.
+
 Performance is continuous as a contract, but **heavy measurement is milestone-driven rather than commit-driven** for world-art iteration.
 
 During a Draft world-stage PR, vegetation/water/material/lighting/terrain-dressing changes use lightweight validation. The expensive performance benchmark is run when a visual candidate has been accepted by the owner and its exact SHA is frozen as a performance checkpoint.

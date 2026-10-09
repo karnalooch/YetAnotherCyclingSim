@@ -55,6 +55,19 @@ verified; the remaining sequence is unchanged. Planning documentation uses #385
 as its closing issue, so merging that documentation must not close, unblock or
 promote #384. See [the bounded adoption contract](../UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption).
 
+**Verified checkpoint — 2026-10-09:** #363 completed with owner whole-area
+material acceptance and [PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446)
+merged into `main`. Its entry prerequisite for #384 is satisfied; #384 remains
+open and unimplemented, and #364 still depends on #384. This evidence does not
+claim that manual Project `Ready`/`Blocked` values have been changed.
+
+The owner also deferred performance until after accepted/merged assembled M3.
+The final execution order is **#372 -> #374 -> #373**, preserving the existing
+step identifiers and the additional #372 -> #373 prerequisite. Native dependency
+reconciliation remains pending: #374 currently depends on #373, so the issue
+graph must be corrected before future #374 implementation. Documentation alone
+does not modify that graph. See the [current Roadmap](../ROADMAP.md).
+
 After initial issue-open auto-add/status runs complete, set and read back the
 manual Blocked values; an asynchronous initial Backlog update can otherwise
 overwrite an earlier manual edit. This is a sequencing check, not a new status

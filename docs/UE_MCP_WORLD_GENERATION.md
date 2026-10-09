@@ -1,6 +1,6 @@
 # YACS UE-MCP world-generation architecture
 
-**Status:** official Epic MCP direction approved; #384 blocked by full #363 closeout, before #364. Planning only; no MCP activation or engine migration.
+**Status:** official Epic MCP direction approved; #384's #363 entry gate satisfied on 2026-10-09, before #364. Adoption unimplemented; no MCP activation or engine migration.
 **Tracking:** #384 adoption; #385 documentation; #85 historical integration; follow-ups #376 (Performance MCP), #377 (Buildings MCP)
 **Retained integration:** `db-lyon/ue-mcp` at reviewed `v1.3.9`; unchanged until proven cutover
 **Engine baseline:** project association 5.8; home engine inspected 2026-10-05: 5.8.2, changelist 56702186. Reverify exact project/runner versions at kickoff.
@@ -9,13 +9,13 @@
 
 ### Decision and status
 
-**BLOCKED by #363 — Landscape material foundation. Planning is authorized; implementation is not started.**
+**Entry gate satisfied — #363 completed through merged PR #446. #384 remains open; implementation is not started.**
 
 The owner approved a small official Unreal MCP adoption workstream between world-finishing step 2 (#363) and step 3 (#364). "Step 2.5" is a shorthand inside **M3**, not a new product milestone or a renumbering of the existing 13 steps.
 
 **Execution order:** #363 full acceptance and protected merge → this bounded spike → #364 asphalt/shoulder → #365 PCG/PCGEx world graph → the unchanged downstream sequence.
 
-Keep the native GitHub `blocked_by` relationship to #363 and `lifecycle:blocked`; the YACS — MVP Project status must remain **Blocked**. #364 keeps its existing #363 dependency and also depends on this spike. Dependencies and board states do not technically prevent PR creation: agents must enforce the gate below.
+Keep the native GitHub `blocked_by` relationship to completed #363. Its material entry condition is satisfied and `lifecycle:blocked` was removed from #384; this does not claim a manual Project transition to Ready/In progress. #364 keeps its existing #363 dependency and also depends on this still-open spike. Dependencies and board states do not technically prevent PR creation: agents must enforce the gate below.
 
 ### Hard entry gate: what “step 2 complete” means
 
@@ -27,9 +27,9 @@ Before implementation, plugin activation, an implementation PR, or promotion to 
 - Owner decision, 2026-10-09: performance measurement is deferred until after assembled M3 closeout and is not an entry gate for #384/#364. Record `DEFERRED_AFTER_M3` with `performance_pass: false`; retain the existing full-area/reference budgets and exact-SHA/default-branch provenance for the later benchmark.
 - Required build, Automation, asset, review, documentation and protected Aggregate CI gates have passed; the handoff pins outputs, versions/hashes, limitations and proof links.
 
-At creation, #363 is OPEN and its current material remains a visually rejected prototype. No admission is implied here. Re-read its latest evidence at kickoff; do not freeze this checkpoint into future truth.
+At creation on 2026-10-05, #363 was open and its then-current material was a rejected prototype. Subsequent owner acceptance on 2026-10-09 and protected PR #446 merge completed #363. The [current material handoff](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md) pins merge `ad9a487ba2177fd49bb2d90784bac9a9f661ab3b`, full-area saved/fresh-rendered evidence, native CI, limits and post-M3 performance debt. Historical rejected recipes remain rejected. Reverify the completed predecessor and actual delivered consumer at kickoff.
 
-Documentation/issue planning may be delivered now through a separate documentation issue/PR. That PR must **not** close this adoption issue or move it out of Blocked.
+Documentation/issue planning does not complete this adoption issue, activate MCP or demonstrate its guard parity. The material prerequisite is satisfied independently of those documentation changes.
 
 ### Why the control plane changes
 
@@ -200,7 +200,7 @@ read-only road/shoulder inventory is maintained in
 
 ### Definition of Done
 
-- [ ] #363 entry gate is verified with completed state, merged implementation, linked owner visual/render/technical evidence and the explicit post-M3 performance deferral.
+- [x] #363 entry gate is verified with completed state, merged implementation, linked owner visual/render/technical evidence and the explicit post-M3 performance deferral (2026-10-09 handoff above; reverify at kickoff).
 - [ ] Exact environment, one map and the permitted official tool surface are pinned.
 - [ ] Agent sees the admitted map/scene through official Unreal MCP.
 - [ ] Agent reads an actual Actor/UObject and verifies its identity.

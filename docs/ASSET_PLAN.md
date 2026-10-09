@@ -14,13 +14,13 @@ Ten dokument odpowiada na cztery pytania:
 3. W którym etapie roadmapy dany asset ma wejść do projektu?
 4. Jak go walidujemy, wersjonujemy i utrzymujemy?
 
-Assety mają wspierać aktualną trasę Sa Calobra zgodnie z wymaganiami produktu i roadmapą. Bieżące zadanie #363 obejmuje cały istniejący Landscape 2016,5 × 2016,5 m; nie rozszerza go na pełną trasę. MVP nie jest katalogiem rowerów, postaci ani regionów — priorytetem jest spójna wizualnie, wydajna i grywalna trasa.
+Assets support the current Sa Calobra route under the product requirements and roadmap. Completed #363 covers the existing 2016.5 × 2016.5 m Landscape, not the full route. The owner accepted its whole-area material foundation on 2026-10-09; [PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446) merged into `main`. The [whole-map handoff](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md) records the frozen implementation and saved/fresh-rendered consumer. Road, cliff and PCG production admission remain separate; performance is `DEFERRED_AFTER_M3`, with `performance_pass: false`.
 
-W #363 dobór zaczyna się od [referencji i porównania kandydatów](experiments/sa-calobra-material-reference-review-2026-10-05.md). Obecny materiał jest odrzuconym prototypem. Historyczne wpisy Alpine oraz ich statusy importu i walidacji zachowują znaczenie dla dawnych dowodów; nie zatwierdzają przydatności do Sa Calobra ani aktualnej kolejności zakupów. Sześć wymaganych ról to odsłonięta skała, rumosz/żwir, suche podłoże mineralne, podłoże z rzadką suchą trawą, lokalne podłoże leśne oraz istniejące wykopy/nasypy. Nowe źródła przechodzą pełny cykl opisany poniżej; ten przegląd nie zatwierdza ani nie pozyskuje assetów.
+The [October 5 reference and candidate comparison](experiments/sa-calobra-material-reference-review-2026-10-05.md) describes the earlier rejected prototype and six-role discovery, not the accepted October 9 five-role material foundation. Historical Alpine entries retain their original import/validation meaning; they do not approve suitability for Sa Calobra or current acquisition order. New sources still require the full lifecycle below; material acceptance does not approve arbitrary candidates or geographic placement.
 
 ### 1.1 Dwa typy assetów
 
-Aktualne porównanie #363: [21 źródeł dla sześciu ról powierzchni](experiments/sa-calobra-surface-candidates-2026-10-05.md).
+Historical #363 comparison, 2026-10-05: [21 sources for six surface roles](experiments/sa-calobra-surface-candidates-2026-10-05.md). At that evidence cutoff:
 Lokalne kopie koloru zostały dopuszczone i pozyskane wyłącznie do przeglądu;
 rekomendacja do prób nie oznacza zatwierdzenia zestawu produkcyjnego. Skala
 `Rock024` pozostaje nieznana. Nie wykonano nowego importu Unreal.
@@ -247,7 +247,8 @@ Droga pozostaje częścią systemu YACS; nie kupujemy „gotowej trasy”. Asset
 
 Read-only inventory at `bfbc48057b8b84d087a3685cd71972678a32d412`.
 [#364](https://github.com/karnalooch/YetAnotherCyclingSim/issues/364) remains
-blocked by full #363 admission/merge and the bounded official MCP spike #384.
+blocked by the bounded official MCP spike #384. The #363 material admission/merge
+prerequisite was satisfied on 2026-10-09; #384 remains open and unimplemented.
 This inventory selects no production asset, performs no import/application and
 does not promote material-prep fallback roles into geographic road domains.
 
@@ -618,7 +619,7 @@ Po wyborze konkretnych paczek tabela poniżej staje się rejestrem źródła pra
 | Fir Sapling (`fir_sapling`) | Poly Haven | CC0 | 0 zł | 3G | candidate | lightweight young-tree / understory candidate; useful as forest variation, not the primary tall-canopy mesh |
 | Fir Sapling Medium (`fir_sapling_medium`) | Poly Haven | CC0 | 0 zł | 3G | validated | R2 mass-scatter conifer; persisted as `SM_Stage3G_FirSaplingMedium`, used by `PCG_Forest` and reference-map forest layers; PR #162 / CI #398 / 4900 m visual proof accepted |
 | Grass Medium 01 (`grass_medium_01`) | Poly Haven | CC0 | 0 zł | 3G/R4.1 | candidate | R4.1 foreground/roadside meadow clusters; controlled instancing, density and cull policy required; LOD/instancing validation pending |
-| Sa Calobra MDT50cm terrain source | CNIG/IGN MDT50 cm — 3ª cobertura v1 | CNIG license compatible with CC BY 4.0 | 0 zł | Active M3 terrain source | acquired | 8 km × 8 km, 0,5 m, EPSG:25831; derived GeoTIFF tracked in Git LFS under `worldgen/terrain/benchmarks/sa_calobra/`; 17 verified source COG tiles remain outside Git; selected replacement for the retired Passo Giau map, with UE import and visual/performance acceptance still pending |
+| Sa Calobra MDT50cm terrain source | CNIG/IGN MDT50 cm — 3ª cobertura v1 | CNIG license compatible with CC BY 4.0 | 0 zł | Active M3 terrain source | acquired | 8 km × 8 km, 0.5 m, EPSG:25831; derived GeoTIFF tracked in Git LFS under `worldgen/terrain/benchmarks/sa_calobra/`; 17 verified source COG tiles remain outside Git. Bounded native UE import passed and terrain appearance was accepted; this does not admit the full route. Performance remains deferred until after assembled M3 closeout. |
 
 Statusy: `candidate`, `approved`, `acquired`, `imported`, `validated`, `rejected`.
 

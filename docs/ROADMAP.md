@@ -5,6 +5,10 @@
 **Scope authority:** `PRODUCT_REQUIREMENTS.md`  
 **World-building method:** `WORLD_BUILDING_BIBLE.md`
 
+**Current M3 checkpoint — 2026-10-09:** [#363](https://github.com/karnalooch/YetAnotherCyclingSim/issues/363) is completed and its whole-area material foundation is accepted and frozen. [PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446) merged into `main` as `ad9a487ba2177fd49bb2d90784bac9a9f661ab3b` after [protected CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37978579196) passed. The next delivery is **#384 bounded official MCP inspection/test spike → #364 asphalt/shoulder → #365 world graph**. #384's material entry gate is satisfied; MCP is not activated and #384 remains open. #364 remains blocked by #384.
+
+Acceptance covers the material baseline on the **2,016.5 m × 2,016.5 m / 1024-component** working Landscape, not a finished rideable world or completed M3. [The material handoff](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md) pins the saved/fresh-rendered consumer and native evidence. Canonical-map promotion, unresolved road/CUT/cliff/contact geometry and production PCGEx admission remain outside this acceptance. Performance is **`DEFERRED_AFTER_M3` / `performance_pass: false`**.
+
 This roadmap answers **what must be delivered and in what order**.
 
 It intentionally does **not** encode every experiment, proof or implementation attempt as another nested stage number. Concrete work belongs in GitHub Issues.
@@ -73,12 +77,14 @@ Produce a believable, deterministic Sa Calobra route/world foundation that can s
 | **Route truth** | canonical route XY, distance, grade, curvature and road-physics profile | established; remains authoritative |
 | **Terrain** | real DTM -> metric deterministic Landscape foundation | active / proven source path; architecture being consolidated |
 | **Road & Earthworks** | real Ma-2141 alignment, road mesh, non-destructive cut/fill, shoulder tie-in | **current priority after DTM import** |
-| **Materials** | coherent terrain/road surface foundation | baseline exists; refine after geometry |
+| **Materials** | coherent terrain/road surface foundation | #363 whole-area Landscape foundation accepted/frozen; #364 asphalt/shoulder awaits #384 |
 | **Biomes** | valley / forest / exposed limestone-upland PCG and route exclusion | baseline systems exist; preserve the tooling and retune presentation for Mallorca |
 | **Proof** | rider-camera visual acceptance, exact-SHA technical evidence, performance | active |
 | **Tooling** | reproducible authoring, remote editor, CI/proof orchestration | active support work |
 
-### Immediate order
+### Foundation dependency order
+
+The list below describes architectural dependencies, not a restart of completed work. The current delivery handoff is #384 → #364, as recorded above; unresolved geometry remains separately scoped.
 
 1. Put the production Landscape on the `WORLD_BUILDING_BIBLE.md` layer model.
 2. Preserve the canonical DTM as `Base_DTM`.
@@ -89,8 +95,8 @@ Produce a believable, deterministic Sa Calobra route/world foundation that can s
 7. After road geometry and earthworks are stable, execute the **post-road world-finishing sequence** below.
 8. Validate that sequence on a bounded rider-camera section within the current Landscape before expanding beyond that Landscape; the validation section does not limit the authoring area.
 9. Expand only the accepted systems beyond the current Landscape across the complete playable route.
-10. Run the relevant exact-SHA visual and performance checkpoints.
-11. Close M3 only after the complete route/world foundation is accepted.
+10. Run required exact-SHA visual/technical checkpoints.
+11. Close M3 implementation only after the assembled route/world foundation is accepted, retaining post-closeout #373 benchmark debt and pending performance admission.
 
 ### Post-road world-finishing sequence
 
@@ -129,6 +135,8 @@ The 500–1000 m Golden Kilometer is an **additional representative check inside
 
 **Issue dependency gate:** steps are separate execution issues in the YACS — MVP Project. Reuse #335 for step 1; each later issue has a native GitHub `blocked_by` dependency on its immediate predecessor. Steps 2–13 remain `Blocked` while that predecessor is open. Do not begin implementation, open an implementation PR or move a step to Ready/In progress until the predecessor is completed with required proof and merged implementation where applicable. Closing as not planned or merely having green CI does not satisfy the gate. Change the order or remove a dependency only with explicit owner authorization. GitHub records the dependency; this execution rule governs agents because the dependency does not itself prevent branch/PR creation.
 
+**Authorized execution-order exception — 2026-10-09:** keep the 13 step identifiers above, but execute **#372 whole-area visual/technical acceptance → #374 full-route assembly and implementation closeout → #373 performance measurement**. Retain #372 as an additional prerequisite of #373. The native graph still has #373 blocking #374 and must be reconciled before #374 starts; this documentation does not change dependencies or Project columns. #363 is completed, so #384's material entry gate is satisfied; downstream work remains gated by its own open predecessors. M3 implementation closeout carries the outstanding benchmark debt; performance/release admission remains pending until measured evidence passes.
+
 ### Official Unreal MCP adoption between materials and asphalt
 
 Owner decision, 2026-10-05: [#384](https://github.com/karnalooch/YetAnotherCyclingSim/issues/384)
@@ -137,13 +145,15 @@ inserts a bounded adoption checkpoint between #363 and #364. The informal name
 The order is **#363 fully accepted/merged → #384 → #364 → #365**; #364 retains
 its original #363 dependency and additionally depends on #384.
 
-#384 stays **Blocked** until #363 has whole-Landscape owner visual acceptance,
+#384's entry condition requires #363's whole-Landscape owner visual acceptance,
 saved/fresh-rendered consumer evidence, required exact-SHA technical/review gates
 and merged implementation. Performance measurement is deferred until after
 assembled M3 closeout under the 2026-10-09 decision; it is not this entry gate.
-The current prototype's rejection and pending proofs cannot be replaced by a connection
-test or a closed-as-not-planned state. Documentation planning may merge now;
-it does not start MCP implementation, enable plugins or migrate Unreal.
+That condition was satisfied by the accepted material closeout and protected
+merge recorded above. Historical rejected candidates remain rejected; the
+accepted whole-area baseline has its own evidence. A connection test or a
+closed-as-not-planned state cannot satisfy adoption DoD. #384 implementation
+has not started; documentation does not enable plugins or migrate Unreal.
 
 The [MCP decision and DoD](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption)
 cap the spike at one map/scene, one Actor/UObject inspection, one existing
@@ -384,6 +394,13 @@ cheap iteration
 ```
 
 See `CI_VALIDATION_TIERS.md`.
+
+For current M3 world assembly, the 2026-10-09 owner decision supersedes the
+performance-before-closeout timing above: owner visual acceptance and required
+exact-SHA technical/protected closeout proceed with `DEFERRED_AFTER_M3`, then
+the assembled world is benchmarked under #373. Budgets and measured admission
+remain unchanged. The legacy `L_CyclingTest` lane is regression-only unless
+legacy authoring inputs change; it cannot admit the current Sa Calobra world.
 
 A technical GREEN result and a visual PASS are independent decisions.
 
