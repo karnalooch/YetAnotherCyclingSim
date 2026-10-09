@@ -1,6 +1,6 @@
 # YACS UE-MCP world-generation architecture
 
-**Status:** official Epic MCP direction approved; #384's #363 entry gate satisfied on 2026-10-09, before #364. Adoption unimplemented; no MCP activation or engine migration.
+**Status:** official Epic MCP direction approved; #384's #363 entry gate satisfied on 2026-10-09, before #364. Read-only source preflight and BOB domain adapter in development; official integration, activation and adoption admission remain pending.
 **Tracking:** #384 adoption; #385 documentation; #85 historical integration; follow-ups #376 (Performance MCP), #377 (Buildings MCP)
 **Retained integration:** `db-lyon/ue-mcp` at reviewed `v1.3.9`; unchanged until proven cutover
 **Engine baseline:** project association 5.8; home engine inspected 2026-10-05: 5.8.2, changelist 56702186. Reverify exact project/runner versions at kickoff.
@@ -9,7 +9,7 @@
 
 ### Decision and status
 
-**Entry gate satisfied — #363 completed through merged PR #446. #384 remains open; implementation is not started.**
+**Entry gate satisfied — #363 completed through merged PR #446. #384 is open; its source preflight and domain adapter are the first implementation fragment. Official MCP is not yet admitted.**
 
 The owner approved a small official Unreal MCP adoption workstream between world-finishing step 2 (#363) and step 3 (#364). "Step 2.5" is a shorthand inside **M3**, not a new product milestone or a renumbering of the existing 13 steps.
 
@@ -186,6 +186,55 @@ an official MCP server, and `YacsStage3GGuard` belongs to the retained db-lyon
 path; neither establishes restrictions on the future official path. The
 read-only road/shoulder inventory is maintained in
 [Asset Plan section 4.4](ASSET_PLAN.md#44-droga-i-pobocze).
+
+### Implementation fragments and execution order
+
+Keep all fragments under #384 and one implementation branch,
+`codex/384-official-mcp-spike`. Independent preparation may proceed in parallel;
+native editor calls and shared-host jobs remain serial. This table is an
+execution checklist, not new milestone identifiers or evidence of completion.
+
+| Fragment | Deliverable | Entry condition / remaining proof |
+|---|---|---|
+| Installed primary-source evidence | `official_mcp_source_probe.py`, its PowerShell launcher and the owner-only source-probe workflow; exact repository/engine/plugin identities, declaration hashes and bounded excerpts in ignored evidence | #363 closeout verified; run on the canonical UE 5.8.2 / CL 56702186 host; missing/mismatched source fails closed |
+| BOB domain delegation | `bob_mcp_inspection.py` delegates to the existing inspector on nonempty hash-bound samples with existing caller/policy thresholds; result, proof and receipt preserve inspection-only states | Independent of engine API discovery; synthetic unit checks do not verify native capture or official MCP |
+| Restricted official session | Verify the installed registry filters, server initialization and actual tool schemas, then perform the single map/object read | Source evidence reviewed; stock restriction and argument boundaries proved before activation; no replacement generic gateway |
+| Native test and domain tool | Run `CyclingPhysics.RoadPhysics.ProfileInterpolation` through the official toolset; invoke the thin BOB operation and compare with direct execution on identical native inputs | Restricted official session and real native raw samples; aggregate/worst-sample reports are insufficient substitutes |
+| Technical closeout and handoff | Persistent-content conservation, denial cases, exact-SHA receipts, relevant build/Automation, protected CI and review; admitted handoff to #364 | All adoption DoD items proved; otherwise #384 stays open and #364 stays blocked |
+
+The source probe uses an isolated code-only Actions checkout and the existing
+`Resolve-YacsUnrealEngine.ps1`; it never launches, closes or restarts Unreal,
+builds code, enables plugins or changes the live project. Installed source
+hashes/excerpts are retained as a seven-day Actions artifact, not Epic source
+committed to Git. `SOURCE_EVIDENCE_COLLECTED` is a filesystem observation, not
+runtime schema discovery, guard parity, scene admission or a performance PASS.
+The workflow is branch/path scoped and serializes in the existing
+`yacs-unreal-ci` host lane. Local invocation:
+
+```powershell
+./scripts/ue/Invoke-YacsOfficialMcpSourceProbe.ps1 -ExpectedHead (git rev-parse HEAD)
+```
+
+Public Epic API evidence identifies `FToolsetRegistry` allow/block name filters,
+`UToolsetRegistrySettings` and `FToolset::SetNameFilters`. Toolset-name matches
+can admit an entire toolset; exact per-tool restrictions and the MCP adapter's
+registry use still require installed source/runtime verification. Do not enable
+whole `ActorTools`/`ObjectTools` toolsets based only on those public names.
+Primary references:
+[registry](https://dev.epicgames.com/documentation/unreal-engine/API/Plugins/ToolsetRegistry/FToolsetRegistry),
+[settings](https://dev.epicgames.com/documentation/unreal-engine/API/Plugins/ToolsetRegistry/UToolsetRegistrySettings),
+[filter semantics](https://dev.epicgames.com/documentation/unreal-engine/API/Plugins/ToolsetRegistry/FToolset/SetNameFilters).
+
+The BOB helper's trusted caller supplies an evidence root; it accepts only an
+explicit sample path/hash, repository SHA and fixed source inventory. Its
+seven domain sources, including the adapter, must match the committed checkout.
+The existing pavement producer supplies the contact band; the pinned adaptive
+policy supplies the structure threshold. The policy has a narrow LF checkout
+rule so Windows normalization cannot change its byte-bound identity. The helper
+does not export native traces, register a tool or write its result bundle;
+serialize the returned result/proof with `canonical_json_bytes` to preserve
+their recorded output hashes. Native raw-sample capture and official routing
+remain the next integration fragment.
 
 ### Safety and preserved governance
 

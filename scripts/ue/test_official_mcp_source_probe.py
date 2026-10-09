@@ -1,0 +1,213 @@
+"""Meaningful filesystem-only source-probe boundary tests; no Unreal required."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+from pathlib import Path
+import tempfile
+import unittest
+from unittest.mock import patch
+
+from scripts.ue import official_mcp_source_probe as probe
+
+
+SHA = "a" * 40
+
+
+class OfficialMcpSourceProbeTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.repo = self.root / "repository"
+        self.engine = self.root / "engine"
+        self.repo.mkdir()
+        self.engine.mkdir()
+        self.project = self.repo / "YetAnotherCyclingSim.uproject"
+        self.project.write_text(json.dumps({"EngineAssociation": "5.8", "Plugins": []}))
+        self.write("Engine/Build/Build.version", json.dumps({
+            "MajorVersion": 5, "MinorVersion": 8, "PatchVersion": 2, "Changelist": 56702186,
+        }))
+        for name, relative in probe.PLUGIN_ROOTS.items():
+            self.plugin(name, relative)
+        self.plugin("AutomationTestToolset", "Engine/Plugins/Experimental/Toolsets/AutomationTestToolset")
+        # Deliberately use an unfamiliar plugin name: discover generic stock
+        # modules by filenames, without assuming a documentation layout.
+        self.plugin("DifferentEditorTools", "Engine/Plugins/Experimental/Toolsets/DifferentEditorTools")
+        self.write("Engine/Plugins/Experimental/ModelContextProtocol/Source/Mcp.h",
+                   "void StartServer();\nvoid RefreshTools();\n")
+        self.write("Engine/Plugins/Experimental/ToolsetRegistry/Source/ToolsetRegistrySubsystem.h",
+                   "class UToolsetRegistrySettings {\nTArray AllowedNames;\nTArray BlockedNames;\n};\n")
+        self.write("Engine/Plugins/Experimental/ToolsetRegistry/Source/Toolset.h",
+                   "void SetNameFilters();\nbool ExecuteTool();\n")
+        self.write("Engine/Plugins/Experimental/Toolsets/AutomationTestToolset/Source/AutomationTestToolset.h",
+                   "void DiscoverTests();\nvoid ListTests();\nvoid RunTests();\nvoid GetTestResults();\n")
+        for name in ("scene", "actor", "object"):
+            self.write(f"Engine/Plugins/Experimental/Toolsets/DifferentEditorTools/Content/Python/{name}.py",
+                       f"class {name.title()}Tools:\n    pass\n")
+
+    def write(self, relative, text):
+        path = self.engine / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+        return path
+
+    def plugin(self, name, relative):
+        return self.write(f"{relative}/{name}.uplugin", json.dumps({
+            "Version": 7, "VersionName": "fixture-only", "EnabledByDefault": False,
+            "Modules": [{"Name": name}],
+        }))
+
+    def collect(self, **overrides):
+        kwargs = dict(engine_root=self.engine, project=self.project, repository_root=self.repo,
+                      expected_sha=SHA, actual_sha=SHA)
+        kwargs.update(overrides)
+        return probe.collect(**kwargs)
+
+    def test_inventory_pins_actual_bytes_and_versions_without_admission(self):
+        before = {path: path.read_bytes() for path in self.engine.rglob("*") if path.is_file()}
+        result = self.collect()
+        self.assertEqual(result["status"], "SOURCE_EVIDENCE_COLLECTED")
+        self.assertEqual(result["plugins"]["DifferentEditorTools"]["version_name"], "fixture-only")
+        for item in result["inventory"]:
+            raw = (self.engine / item["path"]).read_bytes()
+            self.assertEqual(item["sha256"], hashlib.sha256(raw).hexdigest())
+        for key in ("guard_parity_verified", "runtime_schema_verified", "official_mcp_admitted",
+                    "mcp_server_started", "plugin_activation_performed", "performance_pass"):
+            self.assertIs(result[key], False)
+        self.assertEqual(before, {path: path.read_bytes() for path in before})
+
+    def test_version_and_repository_mismatches_block_before_plugin_scan(self):
+        result = self.collect(actual_sha="b" * 40)
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertIn("REPOSITORY_SHA_MISMATCH", result["blockers"])
+        self.write("Engine/Build/Build.version", json.dumps({
+            "MajorVersion": 5, "MinorVersion": 8, "PatchVersion": 3, "Changelist": 56702186,
+        }))
+        result = self.collect()
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["source_file_count"], 1)
+        self.assertTrue(any("ENGINE_VERSION_MISMATCH" in item for item in result["blockers"]))
+
+    def test_different_symbol_names_require_review_without_invented_api_blocker(self):
+        self.write("Engine/Plugins/Experimental/ModelContextProtocol/Source/Mcp.h",
+                   "void DifferentStart();\nvoid DifferentRefresh();\n")
+        result = self.collect()
+        self.assertEqual(result["status"], "SOURCE_EVIDENCE_COLLECTED")
+        self.assertFalse(result["candidate_symbol_observations"]["ModelContextProtocol"]["StartServer"])
+        self.assertEqual(result["semantic_mapping_status"], "PRIMARY_SOURCE_REVIEW_REQUIRED")
+
+    def test_missing_required_plugin_and_empty_sources_are_blocked(self):
+        path = self.engine / "Engine/Plugins/Experimental/Toolsets/AutomationTestToolset/AutomationTestToolset.uplugin"
+        path.unlink()
+        result = self.collect()
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertIn("MISSING_PLUGIN_DESCRIPTOR: AutomationTestToolset", result["blockers"])
+        (self.engine / "Engine/Plugins/Experimental/ModelContextProtocol/Source/Mcp.h").unlink()
+        self.assertIn("MISSING_PLUGIN_SOURCES: ModelContextProtocol", self.collect()["blockers"])
+
+    def test_source_link_escape_and_oversized_source_fail_closed(self):
+        external = self.root / "outside.h"
+        external.write_text("outside source must not be inspected")
+        source = self.engine / "Engine/Plugins/Experimental/ModelContextProtocol/Source/escape.h"
+        source.symlink_to(external)
+        result = self.collect()
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertTrue(any("LINK_OR_REPARSE_POINT" in item for item in result["blockers"]))
+        source.unlink()
+        source.write_bytes(b"x" * (probe.MAX_FILE_BYTES + 1))
+        result = self.collect()
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertTrue(any("OVERSIZED_FILE" in item for item in result["blockers"]))
+
+    def test_ancestor_link_blocks_before_descriptor_tree_traversal(self):
+        toolsets = self.engine / "Engine/Plugins/Experimental/Toolsets"
+        renamed = self.engine / "Engine/Plugins/Experimental/OriginalToolsets"
+        toolsets.rename(renamed)
+        toolsets.symlink_to(renamed, target_is_directory=True)
+        result = self.collect()
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertTrue(any("LINK_OR_REPARSE_POINT" in item for item in result["blockers"]))
+        self.assertEqual(result["source_file_count"], 1)
+
+    def test_entry_limit_caps_enumeration_before_sorting(self):
+        tree = self.root / "many-files"
+        tree.mkdir()
+        for index in range(5):
+            (tree / f"{index}.txt").write_text("fixture")
+        with patch.object(probe, "MAX_ENTRIES", 3):
+            with self.assertRaisesRegex(probe.ProbeBlocked, "ENTRY_LIMIT"):
+                probe.bounded_files(tree)
+
+    def test_total_byte_limit_stops_before_opening_later_plugin_files(self):
+        build = self.engine / "Engine/Build/Build.version"
+        descriptor = self.engine / "Engine/Plugins/Experimental/ToolsetRegistry/ToolsetRegistry.uplugin"
+        limit = build.stat().st_size + descriptor.stat().st_size - 1
+        with patch.object(probe, "MAX_TOTAL_BYTES", limit), patch.object(
+            probe, "read_bounded", wraps=probe.read_bounded,
+        ) as reads:
+            result = self.collect()
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertIn("SOURCE_TOTAL_BYTE_LIMIT", result["blockers"])
+        self.assertEqual(result["source_file_count"], 1)
+        self.assertEqual([call.args[1] for call in reads.call_args_list], [self.project, build])
+        with patch.object(probe, "MAX_SOURCE_FILES", 1):
+            count_limited = self.collect()
+        self.assertEqual(count_limited["source_file_count"], 1)
+        self.assertIn("SOURCE_FILE_COUNT_LIMIT", count_limited["blockers"])
+
+    def test_outputs_are_exclusive_and_cannot_escape_saved(self):
+        result = self.collect()
+        saved = self.repo / "Saved"
+        target = probe.write_receipt(result, repository_root=self.repo, artifact_root=saved / "probe")
+        self.assertEqual(json.loads(target.read_text())["exact_sha"], SHA)
+        original = target.read_bytes()
+        with self.assertRaises(FileExistsError):
+            probe.write_receipt(result, repository_root=self.repo, artifact_root=saved / "probe")
+        self.assertEqual(original, target.read_bytes())
+        for bad in (self.repo / "Content", saved / "new/../../escape"):
+            with self.assertRaises(probe.ProbeBlocked):
+                probe.write_receipt(result, repository_root=self.repo, artifact_root=bad)
+        external = self.root / "outside-output"
+        external.mkdir()
+        (saved / "linked").symlink_to(external, target_is_directory=True)
+        with self.assertRaises(probe.ProbeBlocked):
+            probe.write_receipt(result, repository_root=self.repo, artifact_root=saved / "linked/probe")
+        self.assertEqual(list(external.iterdir()), [])
+
+    def test_wrong_running_engine_is_explicit_blocker_and_not_plugin_proof(self):
+        result = self.collect(host_context={"active_engine_matches_resolver": False, "processes": [{}]})
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertIn("RUNNING_EDITOR_ENGINE_MISMATCH_OR_UNVERIFIED_PATH", result["blockers"])
+        self.assertFalse(result["runtime_schema_verified"])
+
+    def test_alternate_project_and_malformed_descriptor_are_explicit_blockers(self):
+        alternate = self.repo / "alternate.uproject"
+        alternate.write_bytes(self.project.read_bytes())
+        result = self.collect(project=alternate)
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertIn("PROJECT_MUST_BE_CANONICAL_REPOSITORY_DESCRIPTOR", result["blockers"])
+        for invalid in ([], {"EngineAssociation": "5.8", "Plugins": ["invalid"]}):
+            self.project.write_text(json.dumps(invalid))
+            result = self.collect()
+            self.assertEqual(result["status"], "BLOCKED")
+            self.assertTrue(any("INVALID_PROJECT" in item for item in result["blockers"]))
+        self.project.write_text(json.dumps({"EngineAssociation": "5.8", "Plugins": []}))
+        plugin = self.engine / "Engine/Plugins/Experimental/ModelContextProtocol/ModelContextProtocol.uplugin"
+        plugin.write_text(json.dumps({"Modules": ["invalid"]}))
+        result = self.collect()
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertTrue(any("INVALID_PLUGIN_MODULE_DESCRIPTOR" in item for item in result["blockers"]))
+
+    def test_excerpt_budget_and_console_output_are_bounded(self):
+        content = "\n".join(f"class Fixture{index};" for index in range(1000))
+        excerpts, used = probe.selected_excerpts(content.encode(), 17)
+        self.assertLessEqual(used, 17)
+        self.assertTrue(excerpts)
+        result = self.collect()
+        self.assertLess(len(probe.console_summary(result).splitlines()), 100)
+
+
+if __name__ == "__main__":
+    unittest.main()

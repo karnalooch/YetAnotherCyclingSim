@@ -37,6 +37,7 @@ endpoint is forbidden outside an explicit test fixture.
 | `branch-hygiene.yml` | CURRENT | Stronger YACS-local merged-branch cleanup |
 | `ci.yml` | CURRENT | Primary CI graph and caller-local Aggregate gate |
 | `manual-unreal.yml` | CURRENT | Trusted manual Unreal validation/recovery |
+| `official-unreal-mcp-source-probe.yml` | CURRENT | #384 owner-only bounded installed-engine source inventory on `codex/384-official-mcp-spike`; isolated code-only checkout, shared serial host lane, no build/editor launch or activation; source evidence does not admit MCP |
 | `passo-giau-embark-terrain.yml` | BROKER-MANAGED | PCGEx-first M3 terrain/corridor proof via `m3-terrain`; scoped pushes run hosted contracts only, explicit requests run exact-SHA A-E/C3 plus deviation, and author jobs serialize without cancelling active work |
 | `passo-giau-r4-1-hairpin-corridor.yml` | BROKER-MANAGED | Exact-SHA SP638 hairpin proof; manual dispatch is fallback |
 | `passo-giau-r4-1-landscape-author.yml` | UNKNOWN | Failed direct-DTM/native Landscape baseline retained as recovery evidence after #288 while macro-terrain convergence continues |

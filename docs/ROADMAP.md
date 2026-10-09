@@ -153,7 +153,9 @@ That condition was satisfied by the accepted material closeout and protected
 merge recorded above. Historical rejected candidates remain rejected; the
 accepted whole-area baseline has its own evidence. A connection test or a
 closed-as-not-planned state cannot satisfy adoption DoD. #384 implementation
-has not started; documentation does not enable plugins or migrate Unreal.
+starts with a read-only installed-source preflight and a thin BOB domain
+adapter. Official session integration and native proof remain pending;
+documentation does not enable plugins or migrate Unreal.
 
 The [MCP decision and DoD](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption)
 cap the spike at one map/scene, one Actor/UObject inspection, one existing
