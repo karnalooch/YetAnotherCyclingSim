@@ -17,6 +17,12 @@ import traceback
 from pathlib import Path
 
 from scripts.ue.prepare_landscape_capture import prepare_capture
+from scripts.ue.sa_calobra_whole_map_witness import (
+    WITNESS_MODES,
+    witness_parameters,
+    witness_steps,
+)
+from scripts.ue.sa_calobra_whole_map_prep import console_value
 from scripts.ue.sa_calobra_detail_capture import decode_png
 from scripts.ue.sa_calobra_detail_capture import load_inputs as load_native_inputs
 from scripts.ue.sa_calobra_whole_map_prep import (
@@ -395,6 +401,8 @@ class WholeMapCapture:
         )
         self.exact_sha = exact_sha
         self.task = self.handle = self.pending = None
+        self.capture_phase = "primary"
+        self.witness_steps = []
         self.binding = self.master = self.instance = None
         self.native_started = self.stopped = False
         self.busy = False
@@ -415,6 +423,9 @@ class WholeMapCapture:
             "rendering_recipe": rendering_recipe(),
             "capture_plan": [],
             "captures": [],
+            "diagnostic_captures": [],
+            "diagnostic_capture_plan": [],
+            "diagnostic_complete": False,
             "native_source": None,
             "native_modes": [],
             "native_restore": None,
@@ -434,7 +445,7 @@ class WholeMapCapture:
         }
         if self.root.exists():
             raise ValueError("Whole-map evidence directory must not already exist")
-        for name in ("frames", "priming", "readiness"):
+        for name in ("frames", "priming", "readiness", "diagnostics"):
             (self.root / name).mkdir(parents=True)
         self._write()
 
@@ -740,6 +751,11 @@ class WholeMapCapture:
             self.report["separate_mesh_materials_before"] = self.binding.other_materials
             self.views = self._build_views()
             self.steps = build_steps(self.views)
+            self.witness_steps = witness_steps(self.views)
+            self.report["diagnostic_capture_plan"] = [
+                dict(view, mode=mode, resolution=list(RESOLUTION))
+                for view, mode in self.witness_steps
+            ]
             self.report["capture_plan"] = [
                 dict(view, mode=mode, resolution=list(RESOLUTION))
                 for view, mode in self.steps
@@ -789,13 +805,22 @@ class WholeMapCapture:
         return True
 
     def _begin_step(self):
-        frame, mode = self.steps[self.index]
+        frame, mode = (
+            self.steps[self.index]
+            if self.capture_phase == "primary"
+            else self.witness_steps[self.index]
+        )
         self.environment.assert_adaptive()
         self.binding.assert_other_materials()
         if mode == "baseline" and self.binding.applied:
             raise RuntimeError("All baseline captures must precede preparation binding")
         if mode != "baseline":
-            parameters_changed = self._set_parameters(mode_parameters(mode))
+            desired = (
+                witness_parameters(mode, mode_parameters("prepared"))
+                if mode in WITNESS_MODES
+                else mode_parameters(mode)
+            )
+            parameters_changed = self._set_parameters(desired)
             if not self.binding.applied:
                 self.report["memory_checkpoints"].append(
                     memory_checkpoint("before_all1024_binding", 6, 8)
@@ -876,10 +901,15 @@ class WholeMapCapture:
             > 0.001
         ):
             raise RuntimeError("Whole-map camera rotation or FOV differs")
+        use_shadows = mode != "no-shadows"
         self.api.SystemLibrary.execute_console_command(self.world, "viewmode lit")
         self.api.SystemLibrary.execute_console_command(
-            self.world, "showflag.DynamicShadows 1"
+            self.world, "showflag.DynamicShadows " + ("1" if use_shadows else "0")
         )
+        if int(float(console_value(self.api, "showflag.DynamicShadows"))) != int(
+            use_shadows
+        ):
+            raise RuntimeError("Visual witness shadow toggle readback failed")
         self.api.AutomationLibrary.set_editor_viewport_view_mode(
             self.api.ViewModeIndex.VMI_LIT
         )
@@ -908,8 +938,12 @@ class WholeMapCapture:
             "fov_deg": frame["fov"],
             "resolution": list(RESOLUTION),
             "viewmode": "lit",
-            "dynamic_shadows": True,
-            "material_parameters": mode_parameters(mode),
+            "dynamic_shadows": use_shadows,
+            "material_parameters": (
+                witness_parameters(mode, mode_parameters("prepared"))
+                if mode in WITNESS_MODES
+                else mode_parameters(mode)
+            ),
             "target_distance_cm": distance,
             "automatic_target_detail_factor": near_detail_factor(distance),
             "readiness": {
@@ -930,7 +964,13 @@ class WholeMapCapture:
         prime = self.prime < PRIMES_PER_CAPTURE
         path = (
             self.root
-            / ("priming" if prime else "frames")
+            / (
+                "priming"
+                if prime
+                else "frames"
+                if self.capture_phase == "primary"
+                else "diagnostics"
+            )
             / (self.pending["frame_id"] + "-" + self.pending["mode"] + ".png")
         )
         if path.exists() and not prime:
@@ -977,7 +1017,12 @@ class WholeMapCapture:
                 return
             self.environment.assert_adaptive()
             self.binding.assert_other_materials()
-            self.report["captures"].append(
+            destination = (
+                self.report["captures"]
+                if self.capture_phase == "primary"
+                else self.report["diagnostic_captures"]
+            )
+            destination.append(
                 dict(
                     self.pending,
                     file=self.pending_path.relative_to(self.root).as_posix(),
@@ -987,7 +1032,13 @@ class WholeMapCapture:
             )
             self.index += 1
             self._write()
-            if self.index == len(self.steps):
+            if self.capture_phase == "primary" and self.index == len(self.steps):
+                self.capture_phase = "witness"
+                self.index = 0
+                self._begin_step()
+            elif self.capture_phase == "witness" and self.index == len(
+                self.witness_steps
+            ):
                 self.stop()
             else:
                 self._begin_step()
@@ -1081,6 +1132,11 @@ class WholeMapCapture:
                 self.report["near_far_material_response"] = response
             except Exception as exc:  # noqa: BLE001 - continue every native rollback after wrapper errors
                 errors.append("near/far image evidence: " + str(exc))
+        self.report["diagnostic_complete"] = (
+            len(self.report["diagnostic_captures"]) == len(self.witness_steps) == 8
+        )
+        if not self.report["diagnostic_complete"] and not errors:
+            errors.append("Bounded material/light witness capture is incomplete")
         if not self.report["capture_complete"] and not errors:
             errors.append("Whole-map capture coverage is incomplete")
         self.report["status"] = "FAILED" if errors else "CAPTURED_PENDING_SCENE_CLEANUP"

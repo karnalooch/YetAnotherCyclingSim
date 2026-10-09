@@ -1731,6 +1731,17 @@ def verify_native_evidence(repo, root, head):
     visual_review = audit_near_views(proof, captures, NEAR_VIEWS)
     visual_review_path = root / "whole-map-visual-anomaly-review.json"
     write_json(visual_review_path, visual_review)
+    from scripts.ue.sa_calobra_whole_map_witness import audit_witnesses
+
+    require(
+        report.get("diagnostic_complete") is True,
+        "Bounded same-camera visual witness is incomplete",
+    )
+    witness = audit_witnesses(
+        proof, captures, report.get("diagnostic_captures", [])
+    )
+    witness_file = root / "whole-map-normal-shadow-witness.json"
+    write_json(witness_file, witness)
     response = verify_normal_response(proof, report)
     parent = read_json(
         root / "capture/component230-cliff-visual-receipt.json", 8 * 1024 * 1024
@@ -1767,6 +1778,13 @@ def verify_native_evidence(repo, root, head):
         "surface_manifest_fingerprint": manifest["fingerprint"],
         "component_count": len(components),
         "primary_frame_count": len(captures),
+        "diagnostic_witness": {
+            "file": "whole-map-normal-shadow-witness.json",
+            "sha256": digest(read_bytes(witness_file)),
+            "frame_count": witness["frame_count"],
+            "status": witness["status"],
+            "visual_acceptance": "PENDING_OWNER",
+        },
         "near_landscape_source_windows_verified": len(near_probes),
         "near_landscape_collision_range_cm": [100, 500],
         "near_landscape_rendered_pixel_depth_verified": False,
