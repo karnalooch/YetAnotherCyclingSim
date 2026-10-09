@@ -133,6 +133,7 @@ class Classification:
     docs_only: bool = False
     asset_only: bool = False
     asset_full: bool = False
+    stage3g_authoring: bool = False
 
     @property
     def security_base(self) -> bool:
@@ -216,6 +217,25 @@ def _is_asset_full(path: str) -> bool:
     }:
         return True
     return path.startswith("worldgen/specs/stage3g_")
+
+
+def _is_stage3g_authoring(path: str) -> bool:
+    """Regenerate the frozen legacy world only when its authored inputs change."""
+    if path.startswith("Content/Prototype/Environment/Stage3G/"):
+        return True
+    if path.startswith("worldgen/specs/stage3g_"):
+        return True
+    return path in {
+        "Content/Prototype/Maps/L_CyclingTest.umap",
+        "Content/YACS/WorldGen/PCG/PCG_Valley.uasset",
+        "Content/YACS/WorldGen/PCG/PCG_Forest.uasset",
+        "Content/YACS/WorldGen/PCG/PCG_HighAlpine.uasset",
+        "Content/YACS/WorldGen/PCG/PCG_RouteExclusion.uasset",
+        "Source/YetAnotherCyclingSim/Private/Editor/CyclingStage3RouteSetupCommandlet.cpp",
+        "scripts/ue/Invoke-YacsStage3GAuthoring.ps1",
+        "scripts/ue/stage3g_author_materials.py",
+        "scripts/ue/stage3g_author_world.py",
+    }
 
 
 def _is_ci(path: str) -> bool:
@@ -310,6 +330,7 @@ def classify_paths(paths: Iterable[str]) -> Classification:
     unreal_runtime = False
     unknown = False
     asset_full = False
+    stage3g_authoring = False
 
     for path in normalized:
         matched = False
@@ -329,6 +350,8 @@ def classify_paths(paths: Iterable[str]) -> Classification:
         if _is_asset_full(path):
             asset_full = True
             matched = True
+        if _is_stage3g_authoring(path):
+            stage3g_authoring = True
         if _is_ci(path):
             ci = True
             matched = True
@@ -381,6 +404,7 @@ def classify_paths(paths: Iterable[str]) -> Classification:
         docs_only=docs_only,
         asset_only=asset_only,
         asset_full=asset_full,
+        stage3g_authoring=stage3g_authoring,
     )
 
 

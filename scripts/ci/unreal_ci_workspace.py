@@ -104,7 +104,7 @@ def write_pointer(workspace: Path, name: str) -> None:
     os.replace(temporary, path)
 
 
-def select(workspace: Path) -> str:
+def select(workspace: Path, fallback: str = WARM) -> str:
     path = pointer_path(workspace)
     if path.exists():
         pointer = json.loads(path.read_text(encoding="utf-8"))
@@ -133,7 +133,8 @@ def select(workspace: Path) -> str:
         name = max(candidates)[1]
         write_pointer(workspace, name)
         return name
-    return WARM
+    safe_path(workspace, fallback)
+    return fallback
 
 
 def publish(
@@ -161,6 +162,21 @@ def publish(
     if summary["Failed"] != 0 or summary["Errors"] != 0 or summary["Discovered"] <= 0:
         raise ValueError("Unreal publication requires green Automation")
     write_pointer(workspace, name)
+
+
+def has_unwritable_binary(root: Path) -> bool:
+    """Probe existing DLLs without changing bytes, including stale Windows locks."""
+    for name in BINARY_NAMES:
+        path = root / "Binaries/Win64" / name
+        if not path.exists():
+            continue
+        try:
+            with path.open("r+b"):
+                pass
+        except PermissionError as error:
+            print(f"UNREAL WORKSPACE: preserve unavailable binary {path}: {error}")
+            return True
+    return False
 
 
 def standalone(root: Path) -> None:
@@ -210,6 +226,90 @@ def standalone(root: Path) -> None:
         backup.unlink()
 
 
+def prepare_checkout_directory(workspace: Path, name: str, run: str) -> None:
+    """Keep actions/checkout away from destructive fallback on warm UE caches.
+
+    actions/checkout removes every child when an existing target lacks a .git
+    directory or its fetch URL differs from the requested repository. On a UE
+    cache that can mean hundreds of thousands of Intermediate/Binaries files.
+
+    Preserve an incomplete fallback with an atomic same-volume rename instead;
+    normalize a valid repository's origin to the canonical Actions URL.
+    """
+    root = safe_path(workspace, name)
+    if not root.exists():
+        return
+
+    git_dir = root / ".git"
+    if not git_dir.is_dir():
+        quarantine_root = workspace / "_yacs-unreal-ci" / "quarantine"
+        if (
+            quarantine_root.is_symlink()
+            or getattr(quarantine_root, "is_junction", lambda: False)()
+        ):
+            raise ValueError("Unreal quarantine directory is a link/junction")
+        quarantine_root.mkdir(parents=True, exist_ok=True)
+        target = quarantine_root / f"{run}-{name}"
+        if target.exists():
+            raise ValueError(f"Unreal quarantine destination already exists: {target}")
+        os.replace(root, target)
+        print(
+            f"UNREAL WORKSPACE: quarantined incomplete checkout {name} -> "
+            f"{target.relative_to(workspace)}"
+        )
+        return
+
+    repository = os.environ.get("GITHUB_REPOSITORY", "").strip()
+    server = os.environ.get("GITHUB_SERVER_URL", "https://github.com").rstrip("/")
+    if not repository:
+        raise ValueError(
+            "GITHUB_REPOSITORY is required to validate Unreal checkout origin"
+        )
+    expected_origin = f"{server}/{repository}"
+
+    try:
+        remotes = subprocess.check_output(
+            ["git", "remote"],
+            cwd=root,
+            text=True,
+            stderr=subprocess.STDOUT,
+        ).splitlines()
+    except subprocess.CalledProcessError as error:
+        raise ValueError(
+            "Existing Unreal checkout has unreadable Git metadata"
+        ) from error
+
+    if "origin" not in remotes:
+        subprocess.run(
+            ["git", "remote", "add", "origin", expected_origin],
+            cwd=root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        print(f"UNREAL WORKSPACE: added canonical origin for {name}: {expected_origin}")
+        return
+
+    actual_origin = subprocess.check_output(
+        ["git", "remote", "get-url", "origin"],
+        cwd=root,
+        text=True,
+        stderr=subprocess.STDOUT,
+    ).strip()
+    if actual_origin != expected_origin:
+        subprocess.run(
+            ["git", "remote", "set-url", "origin", expected_origin],
+            cwd=root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        print(
+            f"UNREAL WORKSPACE: normalized origin for {name}: "
+            f"{actual_origin!r} -> {expected_origin!r}"
+        )
+
+
 def retain_local_lfs_objects(root: Path, archive: Path) -> None:
     """Archive private LFS object bytes; never move a shared linked Git store."""
     if not (root / ".git").is_dir():
@@ -235,18 +335,48 @@ def retain_local_lfs_objects(root: Path, archive: Path) -> None:
 
 def cleanup(workspace: Path, active: str, run: str) -> None:
     # Re-read before deletion. Publication is serialized by workflow concurrency.
-    if active != select(workspace):
+    if active != select(workspace, fallback=active):
         raise ValueError("Active cache changed before cleanup")
     for root in workspace.glob("_unreal-build-*"):
         root = safe_path(workspace, root.name)
         if root.name == active:
             continue
         if not (root / ".git").exists():
-            raise ValueError("Refuse non-worktree cleanup")
+            quarantine_root = workspace / "_yacs-unreal-ci" / "quarantine"
+            if (
+                quarantine_root.is_symlink()
+                or getattr(quarantine_root, "is_junction", lambda: False)()
+            ):
+                raise ValueError("Unreal quarantine directory is a link/junction")
+            quarantine_root.mkdir(parents=True, exist_ok=True)
+            target = quarantine_root / f"{run}-{root.name}-cleanup"
+            if target.exists():
+                raise ValueError(
+                    f"Unreal cleanup quarantine destination already exists: {target}"
+                )
+            try:
+                os.replace(root, target)
+            except PermissionError as error:
+                print(
+                    "UNREAL WORKSPACE: preserve locked incomplete old build "
+                    f"{root.name}; quarantine deferred: {error}"
+                )
+                continue
+            print(
+                f"UNREAL WORKSPACE: quarantined incomplete old build {root.name} -> "
+                f"{target.relative_to(workspace)}"
+            )
+            continue
         archive = workspace / "_yacs-retained-lfs" / f"cache-{run}-{root.name}"
         retain(root, archive)
         retain_local_lfs_objects(root, archive)
-        shutil.rmtree(root)
+        try:
+            shutil.rmtree(root)
+        except PermissionError as error:
+            print(
+                "UNREAL WORKSPACE: preserve locked retired build "
+                f"{root.name}; deletion deferred: {error}"
+            )
 
 
 def main() -> None:
@@ -272,8 +402,18 @@ def main() -> None:
         )
         print(f"UNREAL WORKSPACE: published={args.worktree}")
     else:
-        active = select(workspace)
+        fallback = f"_unreal-build-{args.run}"
+        active = select(workspace, fallback=fallback)
         root = safe_path(workspace, active)
+        preserve_locked_cache = has_unwritable_binary(root)
+        if preserve_locked_cache:
+            # Do not rewrite the verified pointer or copy stale absolute-path
+            # build outputs. Publish this fresh worktree only after real proof.
+            active = fallback
+            root = safe_path(workspace, active)
+            if root.exists():
+                raise ValueError("Fresh Unreal build destination already exists")
+            print(f"UNREAL WORKSPACE: locked cache retained; fresh build={active}")
         if (root / ".git").exists():
             # actions/checkout itself can replace tracked assets before the
             # later sanitization step; retain bytes before entering it.
@@ -281,7 +421,9 @@ def main() -> None:
                 root, workspace / "_yacs-retained-lfs" / f"checkout-{args.run}-{active}"
             )
         standalone(root)
-        cleanup(workspace, active, args.run)
+        prepare_checkout_directory(workspace, active, args.run)
+        if not preserve_locked_cache:
+            cleanup(workspace, active, args.run)
         with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as stream:
             stream.write(f"YACS_UNREAL_WORKTREE={active}\n")
         print(f"UNREAL WORKSPACE: selected={active}; provenance validation pending")

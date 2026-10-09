@@ -1,0 +1,24 @@
+{
+  "source_commit": "4d29a815489866aae483281cf44b2cfe48d3cc3e",
+  "godot_sha256": "c8f0a6bc45a19b33541501e57f6f7cd972ab18453743266339d495cbbe846643",
+  "graph_sha256": "6de5fe0b16e49b1833aca590d24cc270024603727fb46d880ffd982362e61320",
+  "engine": {
+    "build": "official",
+    "hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+    "hex": 263938,
+    "major": 4,
+    "minor": 7,
+    "patch": 2,
+    "status": "stable",
+    "string": "4.7.2-stable (official)",
+    "timestamp": 0
+  },
+  "exit_code": 0,
+  "upstream_diagnostics": [
+    "ERROR: Networking Sockets class not found, Steam may not be initialized: initAuthentication",
+    "ERROR: Apps class not found, Steam may not be initialized: isSubscribed",
+    "WARNING: 6 ObjectDB instances were leaked at exit (run with `--verbose` for details).",
+    "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+  ],
+  "status": "MAP_CHECKS_PASS_UE_REVIEW_PENDING"
+}

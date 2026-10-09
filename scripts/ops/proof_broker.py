@@ -468,6 +468,28 @@ def validate_workflow_contract(
     if "workflow_dispatch:" not in text:
         problems.append("workflow_dispatch trigger is missing")
 
+    # Several proofs may share one dispatch workflow. Unmapped optional inputs
+    # retain their workflow defaults; every required input must be supplied.
+    dispatch = re.search(
+        r"(?ms)^  workflow_dispatch:\s*\n(.*?)(?=^\S|^  [A-Za-z0-9_-]+:|\Z)",
+        text,
+    )
+    declared = {}
+    if dispatch:
+        declared = {
+            match.group(1): match.group(2)
+            for match in re.finditer(
+                r"(?ms)^      ([A-Za-z0-9_-]+):\s*\n(.*?)(?=^      \S|^\S|^  \S|\Z)",
+                dispatch.group(1),
+            )
+        }
+    mapped = set(proof.get("inputs") or {})
+    for name in sorted(mapped - set(declared)):
+        problems.append(f"mapped workflow input {name!r} is not declared")
+    for name, body in declared.items():
+        if name not in mapped and re.search(r"(?m)^        required:\s*true\s*$", body):
+            problems.append(f"required workflow input {name!r} is not mapped")
+
     request_input = proof.get("request_id_input")
     if isinstance(request_input, str):
         if not re.search(

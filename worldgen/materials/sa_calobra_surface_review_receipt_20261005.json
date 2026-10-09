@@ -1,0 +1,1730 @@
+{
+  "date": "2026-10-05",
+  "scope": "LOCAL_COLOR_REVIEW_ONLY",
+  "api_credit": "Source data from Poly Haven public API and ambientCG. Not endorsed by either provider.",
+  "catalog_sha256": "51f542616fabc7f8d8f3bec87fbb982f7d0c5e96bffcc20e8d1e9b62227bacc1",
+  "assets": [
+    {
+      "id": "rock_face_03",
+      "provider": "Poly Haven",
+      "source_url": "https://polyhaven.com/a/rock_face_03",
+      "authors": {
+        "Dario Barresi": "Photography",
+        "Rico Cilliers": "Processing"
+      },
+      "license": "CC0-1.0",
+      "review_status": "APPROVED_LOCAL_COLOR_REVIEW",
+      "production_status": "CANDIDATE_NOT_APPROVED",
+      "dimensions_m": [
+        2.6999995708465576,
+        2.6999995708465576
+      ],
+      "max_resolution": [
+        16384,
+        16384
+      ],
+      "files_hash": "d48f9ea2b7ecd038fa76a01c54309b8aa1e80d1e",
+      "available_channels": [
+        "Diffuse",
+        "nor_dx",
+        "nor_gl",
+        "blend",
+        "gltf",
+        "arm",
+        "AO",
+        "Displacement",
+        "Rough",
+        "mtlx"
+      ],
+      "channel_resolutions": {
+        "Diffuse": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_dx": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_gl": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "AO": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Displacement": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Rough": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ]
+      },
+      "review_file": "rock_face_03.jpg",
+      "download": {
+        "size": 927082,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_face_03/rock_face_03_diff_1k.jpg",
+        "md5": "e4c34abb1aad5befe12754fad507147a"
+      },
+      "metadata_sha256": "c351a9a3b30b6d31ff05383890906fd974e9546b6eb1cf01f0cd1f4554c2a2bf",
+      "review_sha256": "ea48e0e47ad42c8bd312476178b1248ec66f0eb19156a26a1c222f2a40caaf2d",
+      "review_pixels": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "id": "rock_face_04",
+      "provider": "Poly Haven",
+      "source_url": "https://polyhaven.com/a/rock_face_04",
+      "authors": {
+        "Dimitrios Savva": "All"
+      },
+      "license": "CC0-1.0",
+      "review_status": "APPROVED_LOCAL_COLOR_REVIEW",
+      "production_status": "CANDIDATE_NOT_APPROVED",
+      "dimensions_m": [
+        2.0,
+        2.0
+      ],
+      "max_resolution": [
+        8192,
+        8192
+      ],
+      "files_hash": "cab69c8b2b5c5dc82a8d7a5ae9bd82889894a363",
+      "available_channels": [
+        "blend",
+        "AO",
+        "arm",
+        "Diffuse",
+        "Displacement",
+        "nor_dx",
+        "nor_gl",
+        "Rough",
+        "gltf",
+        "mtlx"
+      ],
+      "channel_resolutions": {
+        "AO": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Diffuse": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Displacement": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_dx": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_gl": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Rough": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ]
+      },
+      "review_file": "rock_face_04.jpg",
+      "download": {
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_face_04/rock_face_04_diff_1k.jpg",
+        "md5": "4f125d5914b417c740ad798a5803cb7f",
+        "size": 954689
+      },
+      "metadata_sha256": "05532f9f3f332266b9c8a7087438349d87e10b60e572251f6382e6ed439f0db3",
+      "review_sha256": "c6be671d52946f04a270ba721b0dc5b00a3cd0ad88bd812c205fadcf642b1a75",
+      "review_pixels": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "id": "dry_riverbed_rock",
+      "provider": "Poly Haven",
+      "source_url": "https://polyhaven.com/a/dry_riverbed_rock",
+      "authors": {
+        "Amal Kumar": "All"
+      },
+      "license": "CC0-1.0",
+      "review_status": "APPROVED_LOCAL_COLOR_REVIEW",
+      "production_status": "CANDIDATE_NOT_APPROVED",
+      "dimensions_m": [
+        2.0,
+        2.0
+      ],
+      "max_resolution": [
+        16384,
+        16384
+      ],
+      "files_hash": "aa87f826fc4326cd3e4ecd9d73e3644e18e86ed1",
+      "available_channels": [
+        "Diffuse",
+        "nor_dx",
+        "nor_gl",
+        "blend",
+        "gltf",
+        "arm",
+        "AO",
+        "Displacement",
+        "Rough",
+        "mtlx"
+      ],
+      "channel_resolutions": {
+        "Diffuse": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_dx": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_gl": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "AO": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Displacement": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Rough": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ]
+      },
+      "review_file": "dry_riverbed_rock.jpg",
+      "download": {
+        "size": 1099450,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/dry_riverbed_rock/dry_riverbed_rock_diff_1k.jpg",
+        "md5": "7a2c188fc40fee70a7add47af4c8e4ae"
+      },
+      "metadata_sha256": "acba1b73cf3a9f3c11fb5d68251242fa190e29e0e9fe41d90d58a09379fe6e87",
+      "review_sha256": "5dc1fd5777f613451a703d2fc292d4a4e79987f90b991efa98c7ca02458c6a8a",
+      "review_pixels": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "id": "seaside_rock",
+      "provider": "Poly Haven",
+      "source_url": "https://polyhaven.com/a/seaside_rock",
+      "authors": {
+        "Dimitrios Savva": "All"
+      },
+      "license": "CC0-1.0",
+      "review_status": "APPROVED_LOCAL_COLOR_REVIEW",
+      "production_status": "CANDIDATE_NOT_APPROVED",
+      "dimensions_m": [
+        2.0,
+        2.0
+      ],
+      "max_resolution": [
+        8192,
+        8192
+      ],
+      "files_hash": "082462866f0a2ea55ca59eabd69e7e9a6027be3a",
+      "available_channels": [
+        "Diffuse",
+        "nor_dx",
+        "nor_gl",
+        "blend",
+        "gltf",
+        "arm",
+        "AO",
+        "Displacement",
+        "Rough",
+        "mtlx"
+      ],
+      "channel_resolutions": {
+        "Diffuse": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_dx": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_gl": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "AO": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Displacement": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Rough": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ]
+      },
+      "review_file": "seaside_rock.jpg",
+      "download": {
+        "size": 954872,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/seaside_rock/seaside_rock_diff_1k.jpg",
+        "md5": "d719765f07b7e5ec40ef7acb9b718df5"
+      },
+      "metadata_sha256": "61e68b126bf59ea552a94e6242aed7331570d416c299c1ebf4a103db807ed311",
+      "review_sha256": "7e1f1ce252c30d36fe442fcc529183b87cad112d26f6f656705172128efd936e",
+      "review_pixels": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "id": "rocks_ground_06",
+      "provider": "Poly Haven",
+      "source_url": "https://polyhaven.com/a/rocks_ground_06",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "license": "CC0-1.0",
+      "review_status": "APPROVED_LOCAL_COLOR_REVIEW",
+      "production_status": "CANDIDATE_NOT_APPROVED",
+      "dimensions_m": [
+        3.0,
+        3.0
+      ],
+      "max_resolution": [
+        8192,
+        8192
+      ],
+      "files_hash": "785f48b4c1c6275867bd078675a7708fc34c828c",
+      "available_channels": [
+        "Diffuse",
+        "nor_dx",
+        "nor_gl",
+        "blend",
+        "gltf",
+        "rough_ao",
+        "arm",
+        "AO",
+        "Displacement",
+        "Rough",
+        "mtlx"
+      ],
+      "channel_resolutions": {
+        "Diffuse": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_dx": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_gl": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "AO": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Displacement": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Rough": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ]
+      },
+      "review_file": "rocks_ground_06.jpg",
+      "download": {
+        "size": 782316,
+        "md5": "b89544671704574021cb106b4f1901d5",
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rocks_ground_06/rocks_ground_06_diff_1k.jpg"
+      },
+      "metadata_sha256": "3a3ab9bb4b7b22e345bdf2cc882f58f9a447b6540300bc7f72caf914ad71b9b7",
+      "review_sha256": "ea41cf6eef931346e43071a2ec7c1fced87e1e42eee565fe5600484fdcfe2b06",
+      "review_pixels": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "id": "rocky_terrain",
+      "provider": "Poly Haven",
+      "source_url": "https://polyhaven.com/a/rocky_terrain",
+      "authors": {
+        "Amal Kumar": "All"
+      },
+      "license": "CC0-1.0",
+      "review_status": "APPROVED_LOCAL_COLOR_REVIEW",
+      "production_status": "CANDIDATE_NOT_APPROVED",
+      "dimensions_m": [
+        90.0,
+        90.0
+      ],
+      "max_resolution": [
+        8192,
+        8192
+      ],
+      "files_hash": "ed4f64ced98e133be04387b75d6e827a375e9b04",
+      "available_channels": [
+        "Diffuse",
+        "nor_dx",
+        "nor_gl",
+        "blend",
+        "gltf",
+        "arm",
+        "AO",
+        "Displacement",
+        "Rough",
+        "mtlx"
+      ],
+      "channel_resolutions": {
+        "Diffuse": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_dx": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_gl": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "AO": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Displacement": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Rough": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ]
+      },
+      "review_file": "rocky_terrain.jpg",
+      "download": {
+        "size": 905179,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rocky_terrain/rocky_terrain_diff_1k.jpg",
+        "md5": "306ae62c38ab1942a63e831a534875ab"
+      },
+      "metadata_sha256": "7406a157505fc2ee49e7fd09f1ef94e87d3918605b3a0899429a97e818d74140",
+      "review_sha256": "429315865fd89c150272592f6d93def174c6f69804a565ff08e53627a885579b",
+      "review_pixels": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "id": "rock_ground",
+      "provider": "Poly Haven",
+      "source_url": "https://polyhaven.com/a/rock_ground",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "license": "CC0-1.0",
+      "review_status": "APPROVED_LOCAL_COLOR_REVIEW",
+      "production_status": "CANDIDATE_NOT_APPROVED",
+      "dimensions_m": [
+        1.5,
+        1.5
+      ],
+      "max_resolution": [
+        8192,
+        8192
+      ],
+      "files_hash": "0e449fd639850aa6bb168e968142de0d061a36d3",
+      "available_channels": [
+        "Diffuse",
+        "nor_dx",
+        "nor_gl",
+        "blend",
+        "gltf",
+        "rough_ao",
+        "arm",
+        "AO",
+        "Displacement",
+        "Rough",
+        "mtlx"
+      ],
+      "channel_resolutions": {
+        "Diffuse": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_dx": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_gl": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "AO": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Displacement": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Rough": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ]
+      },
+      "review_file": "rock_ground.jpg",
+      "download": {
+        "size": 817925,
+        "md5": "5e897f7e2bcf857250bf74be878584b2",
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_ground/rock_ground_diff_1k.jpg"
+      },
+      "metadata_sha256": "95b80b2b4c2309d03a9f18dbc01f0be7ff90e71ac99a1518a9e25048ac81748c",
+      "review_sha256": "bec2573bc8aa9c714b690df753730e41f2077a1f0bbca83b13e055c86b4d5626",
+      "review_pixels": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "id": "rocks_ground_09",
+      "provider": "Poly Haven",
+      "source_url": "https://polyhaven.com/a/rocks_ground_09",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "license": "CC0-1.0",
+      "review_status": "APPROVED_LOCAL_COLOR_REVIEW",
+      "production_status": "CANDIDATE_NOT_APPROVED",
+      "dimensions_m": [
+        3.0,
+        3.0
+      ],
+      "max_resolution": [
+        8192,
+        8192
+      ],
+      "files_hash": "a4575b4036bf069e83641bcc283a048ffbaa1460",
+      "available_channels": [
+        "Diffuse",
+        "nor_dx",
+        "nor_gl",
+        "blend",
+        "gltf",
+        "rough_ao",
+        "arm",
+        "AO",
+        "Displacement",
+        "Rough",
+        "mtlx"
+      ],
+      "channel_resolutions": {
+        "Diffuse": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_dx": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_gl": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "AO": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Displacement": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Rough": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ]
+      },
+      "review_file": "rocks_ground_09.jpg",
+      "download": {
+        "size": 919947,
+        "md5": "2e71989aaeb8d1e85532f4da04a441b7",
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rocks_ground_09/rocks_ground_09_diff_1k.jpg"
+      },
+      "metadata_sha256": "c920dc9336216363b2f909dd4251b85c8fb3a9c3d4586ccf7447baea15e2cc92",
+      "review_sha256": "f4e38bc77bc3879a0750c9187e5563ca57ae0a861244526f08c0907783e2efac",
+      "review_pixels": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "id": "gravel_ground_01",
+      "provider": "Poly Haven",
+      "source_url": "https://polyhaven.com/a/gravel_ground_01",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "license": "CC0-1.0",
+      "review_status": "APPROVED_LOCAL_COLOR_REVIEW",
+      "production_status": "CANDIDATE_NOT_APPROVED",
+      "dimensions_m": [
+        3.0,
+        3.0
+      ],
+      "max_resolution": [
+        8192,
+        8192
+      ],
+      "files_hash": "1172e523db8f69e48d18c399dd8d9eac9be73c17",
+      "available_channels": [
+        "Diffuse",
+        "nor_dx",
+        "nor_gl",
+        "blend",
+        "gltf",
+        "rough_ao",
+        "arm",
+        "AO",
+        "Displacement",
+        "Rough",
+        "mtlx"
+      ],
+      "channel_resolutions": {
+        "Diffuse": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_dx": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_gl": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "AO": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Displacement": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Rough": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ]
+      },
+      "review_file": "gravel_ground_01.jpg",
+      "download": {
+        "size": 954257,
+        "md5": "ee99ef89fb50cfeb198db369bb7151f0",
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/gravel_ground_01/gravel_ground_01_diff_1k.jpg"
+      },
+      "metadata_sha256": "b91b92e8a64aa9e4f16143ae523bb3316b5c031f1dae3a43377a483c18a0b19f",
+      "review_sha256": "c3a12b0e3a9399913158dd5cfa1d67ede066970acd1f99e5b89969ac13f89089",
+      "review_pixels": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "id": "gravelly_sand",
+      "provider": "Poly Haven",
+      "source_url": "https://polyhaven.com/a/gravelly_sand",
+      "authors": {
+        "Dario Barresi": "All"
+      },
+      "license": "CC0-1.0",
+      "review_status": "APPROVED_LOCAL_COLOR_REVIEW",
+      "production_status": "CANDIDATE_NOT_APPROVED",
+      "dimensions_m": [
+        2.4800000190734863,
+        2.4800000190734863
+      ],
+      "max_resolution": [
+        16384,
+        16384
+      ],
+      "files_hash": "e8fe004684171971d9a3119f0bbcdfc1d8f7d53d",
+      "available_channels": [
+        "Diffuse",
+        "nor_dx",
+        "nor_gl",
+        "blend",
+        "gltf",
+        "arm",
+        "AO",
+        "Displacement",
+        "Rough",
+        "mtlx"
+      ],
+      "channel_resolutions": {
+        "Diffuse": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_dx": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_gl": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "AO": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Displacement": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Rough": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ]
+      },
+      "review_file": "gravelly_sand.jpg",
+      "download": {
+        "size": 1062525,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/gravelly_sand/gravelly_sand_diff_1k.jpg",
+        "md5": "16b7593a26ce1bd43f1d95e61dc25f05"
+      },
+      "metadata_sha256": "8ef9b251f4d751566b8eb69b10f56e20df35d0fc2eb5763c11c5577a95c75856",
+      "review_sha256": "bc1624594ce807f04eaa023f6f9df93ffefd20904570cd46ca302b954ef80eec",
+      "review_pixels": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "id": "dry_ground_rocks",
+      "provider": "Poly Haven",
+      "source_url": "https://polyhaven.com/a/dry_ground_rocks",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "license": "CC0-1.0",
+      "review_status": "APPROVED_LOCAL_COLOR_REVIEW",
+      "production_status": "CANDIDATE_NOT_APPROVED",
+      "dimensions_m": [
+        4.0,
+        4.0
+      ],
+      "max_resolution": [
+        8192,
+        8192
+      ],
+      "files_hash": "8d8008c32f6f8165608b95e105e5937552accb49",
+      "available_channels": [
+        "Diffuse",
+        "nor_dx",
+        "nor_gl",
+        "blend",
+        "gltf",
+        "rough_ao",
+        "arm",
+        "AO",
+        "Displacement",
+        "Rough",
+        "mtlx"
+      ],
+      "channel_resolutions": {
+        "Diffuse": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_dx": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_gl": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "AO": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Displacement": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Rough": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ]
+      },
+      "review_file": "dry_ground_rocks.jpg",
+      "download": {
+        "size": 826834,
+        "md5": "7cc10e3eb12ce7bb8235d3e3c3041ded",
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/dry_ground_rocks/dry_ground_rocks_diff_1k.jpg"
+      },
+      "metadata_sha256": "a079a232342a472f3f1bc81637127dcff233f49ed0cf69a42b02d8abad1928ea",
+      "review_sha256": "491ac5be54859171730c620ad768a615f600b81ce00d83bbeab8a7aed7b199d8",
+      "review_pixels": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "id": "dry_ground_01",
+      "provider": "Poly Haven",
+      "source_url": "https://polyhaven.com/a/dry_ground_01",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "license": "CC0-1.0",
+      "review_status": "APPROVED_LOCAL_COLOR_REVIEW",
+      "production_status": "CANDIDATE_NOT_APPROVED",
+      "dimensions_m": [
+        4.0,
+        4.0
+      ],
+      "max_resolution": [
+        8192,
+        8192
+      ],
+      "files_hash": "1ab2b8b9d6e1f7a8c82d90e327f0e2e3ff47e4f9",
+      "available_channels": [
+        "Diffuse",
+        "rough_ao",
+        "arm",
+        "AO",
+        "Displacement",
+        "Rough",
+        "nor_dx",
+        "nor_gl",
+        "blend",
+        "gltf",
+        "mtlx"
+      ],
+      "channel_resolutions": {
+        "Diffuse": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "AO": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Displacement": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Rough": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_dx": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_gl": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ]
+      },
+      "review_file": "dry_ground_01.jpg",
+      "download": {
+        "size": 604799,
+        "md5": "f928726e24cf06765877ae77b9a04b4a",
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/dry_ground_01/dry_ground_01_diff_1k.jpg"
+      },
+      "metadata_sha256": "bd703e3b5c8ebb076becb675c9291f841f4123344af78a5067955c30c8f6a6f8",
+      "review_sha256": "75222fc97a82b635a09cf8f2891dd58bc42e49599b9fda920b2c50193fe85e9f",
+      "review_pixels": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "id": "grass_ground",
+      "provider": "Poly Haven",
+      "source_url": "https://polyhaven.com/a/grass_ground",
+      "authors": {
+        "Charlotte Baglioni": "All"
+      },
+      "license": "CC0-1.0",
+      "review_status": "APPROVED_LOCAL_COLOR_REVIEW",
+      "production_status": "CANDIDATE_NOT_APPROVED",
+      "dimensions_m": [
+        2.509999990463257,
+        2.509999990463257
+      ],
+      "max_resolution": [
+        16384,
+        16384
+      ],
+      "files_hash": "0835c92f7cacee85b306c2a35d2c006be11ea3c2",
+      "available_channels": [
+        "blend",
+        "AO",
+        "arm",
+        "Diffuse",
+        "Displacement",
+        "nor_dx",
+        "nor_gl",
+        "Rough",
+        "gltf",
+        "mtlx"
+      ],
+      "channel_resolutions": {
+        "AO": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Diffuse": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Displacement": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_dx": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_gl": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Rough": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ]
+      },
+      "review_file": "grass_ground.jpg",
+      "download": {
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grass_ground/grass_ground_diff_1k.jpg",
+        "md5": "299047258586c762735b7284d3c662c3",
+        "size": 876584
+      },
+      "metadata_sha256": "e049952d1319f043149032ac708ea9de66c17a6b3feb1ced5931fa41fa980393",
+      "review_sha256": "a79cc5ed65af0f80261b39a383b64a8c5272c5144d724deb43dbc29f0e4cd19b",
+      "review_pixels": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "id": "withered_grass",
+      "provider": "Poly Haven",
+      "source_url": "https://polyhaven.com/a/withered_grass",
+      "authors": {
+        "Charlotte Baglioni": "All"
+      },
+      "license": "CC0-1.0",
+      "review_status": "APPROVED_LOCAL_COLOR_REVIEW",
+      "production_status": "CANDIDATE_NOT_APPROVED",
+      "dimensions_m": [
+        1.9999996423721313,
+        1.9999996423721313
+      ],
+      "max_resolution": [
+        8192,
+        8192
+      ],
+      "files_hash": "eb88811d5af353e86750f73f412bf5aea3f7c8ab",
+      "available_channels": [
+        "Diffuse",
+        "nor_dx",
+        "nor_gl",
+        "blend",
+        "gltf",
+        "arm",
+        "AO",
+        "Displacement",
+        "Rough",
+        "mtlx"
+      ],
+      "channel_resolutions": {
+        "Diffuse": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_dx": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_gl": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "AO": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Displacement": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Rough": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ]
+      },
+      "review_file": "withered_grass.jpg",
+      "download": {
+        "size": 1138384,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/withered_grass/withered_grass_diff_1k.jpg",
+        "md5": "a6e00946839a9ab1975457ae4a39823b"
+      },
+      "metadata_sha256": "2e4cffdb00dd75a7929baf27b76283e26993fdfb7c4d3bb2ab8344dc7748ffb2",
+      "review_sha256": "8bebfb639ef74f651bc445526c46c845beee52a86d831848b82eb2bbbf2d98ee",
+      "review_pixels": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "id": "sparse_grass",
+      "provider": "Poly Haven",
+      "source_url": "https://polyhaven.com/a/sparse_grass",
+      "authors": {
+        "Amal Kumar": "All"
+      },
+      "license": "CC0-1.0",
+      "review_status": "APPROVED_LOCAL_COLOR_REVIEW",
+      "production_status": "CANDIDATE_NOT_APPROVED",
+      "dimensions_m": [
+        2.0,
+        2.0
+      ],
+      "max_resolution": [
+        8192,
+        8192
+      ],
+      "files_hash": "1293431c7316b89282b883ff760be963802f9000",
+      "available_channels": [
+        "Diffuse",
+        "nor_dx",
+        "nor_gl",
+        "blend",
+        "gltf",
+        "Mask",
+        "arm",
+        "AO",
+        "Displacement",
+        "Rough",
+        "mtlx"
+      ],
+      "channel_resolutions": {
+        "Diffuse": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_dx": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_gl": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "AO": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Displacement": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Rough": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ]
+      },
+      "review_file": "sparse_grass.jpg",
+      "download": {
+        "size": 955945,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/sparse_grass/sparse_grass_diff_1k.jpg",
+        "md5": "5d0aba796e1b5882555161c16b10ee9d"
+      },
+      "metadata_sha256": "385455d28cb04effb36e7775527b88b1e637b3dbf228b0cf37474aa4ae05b54b",
+      "review_sha256": "ae94f2b34597b9108eefd88217f55eccaec6d6b382e858a478ee92df90e66617",
+      "review_pixels": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "id": "forest_floor",
+      "provider": "Poly Haven",
+      "source_url": "https://polyhaven.com/a/forest_floor",
+      "authors": {
+        "eye-candy.xyz": "All"
+      },
+      "license": "CC0-1.0",
+      "review_status": "APPROVED_LOCAL_COLOR_REVIEW",
+      "production_status": "CANDIDATE_NOT_APPROVED",
+      "dimensions_m": [
+        2.1399996280670166,
+        2.1399996280670166
+      ],
+      "max_resolution": [
+        8192,
+        8192
+      ],
+      "files_hash": "7723fe51fafe4f43d1242eff1dd06f34560ec921",
+      "available_channels": [
+        "Diffuse",
+        "nor_dx",
+        "nor_gl",
+        "blend",
+        "gltf",
+        "arm",
+        "AO",
+        "Displacement",
+        "Rough",
+        "mtlx"
+      ],
+      "channel_resolutions": {
+        "Diffuse": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_dx": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_gl": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "AO": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Displacement": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Rough": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ]
+      },
+      "review_file": "forest_floor.jpg",
+      "download": {
+        "size": 1329853,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/forest_floor/forest_floor_diff_1k.jpg",
+        "md5": "d67f308e4b8be6a65989e8dc76ec40fe"
+      },
+      "metadata_sha256": "1cdd59439bfcbc67a3ece67673f24a4b9a8be0dbe0d1c5c75151c105a9351d2f",
+      "review_sha256": "f12e5adea1741f9eb7a528bfc621f8267885b9530b74c3a8afdb823899bdbf0b",
+      "review_pixels": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "id": "forrest_ground_03",
+      "provider": "Poly Haven",
+      "source_url": "https://polyhaven.com/a/forrest_ground_03",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "license": "CC0-1.0",
+      "review_status": "APPROVED_LOCAL_COLOR_REVIEW",
+      "production_status": "CANDIDATE_NOT_APPROVED",
+      "dimensions_m": [
+        2.0,
+        2.0
+      ],
+      "max_resolution": [
+        8192,
+        8192
+      ],
+      "files_hash": "c49b32586b5ba1abda47c1180d540d91aa18102d",
+      "available_channels": [
+        "Diffuse",
+        "nor_dx",
+        "nor_gl",
+        "blend",
+        "gltf",
+        "Bump",
+        "arm",
+        "AO",
+        "Displacement",
+        "Rough",
+        "spec",
+        "mtlx"
+      ],
+      "channel_resolutions": {
+        "Diffuse": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_dx": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_gl": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "AO": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Displacement": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Rough": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ]
+      },
+      "review_file": "forrest_ground_03.jpg",
+      "download": {
+        "size": 821191,
+        "md5": "0a63f012ae0e3663451b5a0e5049975a",
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/forrest_ground_03/forrest_ground_03_diff_1k.jpg"
+      },
+      "metadata_sha256": "5d804b1dc94d9a7cc0dcde2082aaa32886594fbb2b240a8139274d21d96daf30",
+      "review_sha256": "69c3ae8a40c70eecbb312c2ca1044b5dea4f48d37f2a6f84ca7ed56b95f04a7b",
+      "review_pixels": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "id": "forest_leaves_04",
+      "provider": "Poly Haven",
+      "source_url": "https://polyhaven.com/a/forest_leaves_04",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "license": "CC0-1.0",
+      "review_status": "APPROVED_LOCAL_COLOR_REVIEW",
+      "production_status": "CANDIDATE_NOT_APPROVED",
+      "dimensions_m": [
+        1.5,
+        1.5000001192092896
+      ],
+      "max_resolution": [
+        8192,
+        8192
+      ],
+      "files_hash": "0a489c440765f05a7630001e299873f20775ea35",
+      "available_channels": [
+        "Diffuse",
+        "nor_dx",
+        "blend",
+        "gltf",
+        "Rough",
+        "AO",
+        "Displacement",
+        "nor_gl",
+        "arm",
+        "mtlx"
+      ],
+      "channel_resolutions": {
+        "Diffuse": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_dx": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Rough": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "AO": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Displacement": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_gl": [
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ]
+      },
+      "review_file": "forest_leaves_04.jpg",
+      "download": {
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/forest_leaves_04/forest_leaves_04_diff_1k.jpg",
+        "size": 423500,
+        "md5": "4ab1368d2d0d7fee652caa5f71f706bf"
+      },
+      "metadata_sha256": "2944bc194c4f8e66a4766a7a36c1e01bd6556d96e09e49104099ecb3b30bb741",
+      "review_sha256": "a898e6ef0668a40faaf1bcbc6b024f6ef437ec424a10fa47aa6d35d013c9dade",
+      "review_pixels": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "id": "dry_decay_leaves",
+      "provider": "Poly Haven",
+      "source_url": "https://polyhaven.com/a/dry_decay_leaves",
+      "authors": {
+        "Amal Kumar": "All"
+      },
+      "license": "CC0-1.0",
+      "review_status": "APPROVED_LOCAL_COLOR_REVIEW",
+      "production_status": "CANDIDATE_NOT_APPROVED",
+      "dimensions_m": [
+        2.0,
+        2.0
+      ],
+      "max_resolution": [
+        16384,
+        16384
+      ],
+      "files_hash": "c8af2551ea74b91c206ec232219aca4897138e1f",
+      "available_channels": [
+        "blend",
+        "AO",
+        "arm",
+        "Diffuse",
+        "Displacement",
+        "nor_dx",
+        "nor_gl",
+        "Rough",
+        "gltf",
+        "mtlx"
+      ],
+      "channel_resolutions": {
+        "AO": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Diffuse": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Displacement": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_dx": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_gl": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Rough": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ]
+      },
+      "review_file": "dry_decay_leaves.jpg",
+      "download": {
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/dry_decay_leaves/dry_decay_leaves_diff_1k.jpg",
+        "md5": "195514abaeb19e6766df1c8ba181f29c",
+        "size": 756437
+      },
+      "metadata_sha256": "8284eac8569196fa54a27b19890f9d51b205feb4ae1977229ba3040b0b664c05",
+      "review_sha256": "0dfdb176dff08d921391852ac150da7ddc82920035914fd667b3cab456fdf7a0",
+      "review_pixels": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "id": "excavated_soil_wall",
+      "provider": "Poly Haven",
+      "source_url": "https://polyhaven.com/a/excavated_soil_wall",
+      "authors": {
+        "Amal Kumar": "All"
+      },
+      "license": "CC0-1.0",
+      "review_status": "APPROVED_LOCAL_COLOR_REVIEW",
+      "production_status": "CANDIDATE_NOT_APPROVED",
+      "dimensions_m": [
+        1.9999996423721313,
+        1.9999996423721313
+      ],
+      "max_resolution": [
+        16384,
+        16384
+      ],
+      "files_hash": "a4f887714035737be41c8712c0da8267ca39b3e6",
+      "available_channels": [
+        "Diffuse",
+        "nor_dx",
+        "nor_gl",
+        "blend",
+        "gltf",
+        "arm",
+        "AO",
+        "Displacement",
+        "Rough",
+        "mtlx"
+      ],
+      "channel_resolutions": {
+        "Diffuse": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_dx": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "nor_gl": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "AO": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Displacement": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ],
+        "Rough": [
+          "16k",
+          "1k",
+          "2k",
+          "4k",
+          "8k"
+        ]
+      },
+      "review_file": "excavated_soil_wall.jpg",
+      "download": {
+        "size": 639659,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/excavated_soil_wall/excavated_soil_wall_diff_1k.jpg",
+        "md5": "d54b94d47cbe687a0a41853b2f9b29db"
+      },
+      "metadata_sha256": "7468d4bda2d96f34641d296c1cbbf76381a41595b14033e77f9d80e45ca2d4f8",
+      "review_sha256": "5840562eda67d0be4bdc48bba953abce9ffbe394a358e0911f4875bf9f0ed72a",
+      "review_pixels": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "id": "Rock024",
+      "provider": "ambientCG",
+      "source_url": "https://ambientcg.com/a/Rock024",
+      "authors": {
+        "ambientCG / Lennart Demes": "Provider"
+      },
+      "license": "CC0-1.0",
+      "review_status": "APPROVED_LOCAL_COLOR_REVIEW",
+      "production_status": "CANDIDATE_NOT_APPROVED",
+      "dimensions_m": null,
+      "dimension_limit": "API returns 0; physical scale unknown",
+      "available_channels": [
+        "color",
+        "displacement",
+        "normal",
+        "roughness",
+        "ambient-occlusion"
+      ],
+      "technique": "surface-photogrammetry",
+      "max_resolution": [
+        8192,
+        8192
+      ],
+      "review_file": "Rock024.jpg",
+      "download": {
+        "url": "https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Rock024/Rock024_SQ_Color.jpg?89310",
+        "size": 1589178
+      },
+      "review_sha256": "762a1ffe3ccb33a5a657a920496943cdb6ca009b7dbc6779f13486951040812a",
+      "review_pixels": [
+        2048,
+        2048
+      ],
+      "metadata_sha256": "31edd1e53908dfdc48cb78e72580ad20e4750f96681eeb7150e6bfeda374b482"
+    }
+  ]
+}

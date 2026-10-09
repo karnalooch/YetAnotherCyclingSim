@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "status": "FIXED_RETAINED_SOURCE_VERIFIED",
+  "exact_sha": "520c7c98961b3a4be7fbb6eb7930e6dea8eb8b46",
+  "source_capture_sha": "b1ea05b33b9f3208e7aeb6884f1a67792d9c6121",
+  "source_run_id": 37800814004,
+  "source_attempt": 1,
+  "source_root": "D:\\yacs\\work\\proofs\\sa-calobra-tpp\\b1ea05b33b9f3208e7aeb6884f1a67792d9c6121\\37800814004-1",
+  "source_files": [
+    {
+      "path": "terrain-erosion-mesh/combined-mesh.json",
+      "sha256": "a9d34dbfb32a59b592dca561a7d7b0e53f7d02d90c095cff7c0812c249247965",
+      "size_bytes": 4100798
+    },
+    {
+      "path": "terrain-erosion-mesh/component230-cliff-visual-receipt.json",
+      "sha256": "35c76796924681c4d836388761bcc3ee83dd6e9fa544c3adb109e004e1c58225",
+      "size_bytes": 20007
+    },
+    {
+      "path": "local-cliff-smoothing/local-cliff-smoothing-mesh.json",
+      "sha256": "9ed6c9179d2df04117fcc8992224061f942d42a03a714a4a75177c43728b1cd5",
+      "size_bytes": 3329633
+    },
+    {
+      "path": "local-cliff-smoothing/component230-cliff-visual-receipt.json",
+      "sha256": "c9494905cbb51f5622e3a414c862eb86d21a261063d6b5adc357ee74ac2a2742",
+      "size_bytes": 12676
+    },
+    {
+      "path": "plan/component230-cliff-visual-plan.json",
+      "sha256": "41768c7680ddea2304f9968d4b2947bf65e1164ffacfa45f74dcefad955b5359",
+      "size_bytes": 759027
+    },
+    {
+      "path": "terrain-erosion-mesh/tpp-survey/frames/window-0021-forward-00005.png",
+      "sha256": "a03f399fa4144804cc5b06b6c8fc24196016fe709fbab2e056f5835f41b71069",
+      "size_bytes": 984060
+    },
+    {
+      "path": "terrain-erosion-mesh/tpp-survey/frames/window-0023-forward-00000.png",
+      "sha256": "edde200ea4c78cb7b638d2f8c45f77e9f68e8f90a39a3e4c02aac8884d394068",
+      "size_bytes": 1114597
+    }
+  ],
+  "frames_csv_sha256": "15e0a2350c613bf52bfb1354192043ca0c6cd785493c59e7721305b67de099a3",
+  "frame_ids": [
+    "window-0021-forward-00005",
+    "window-0023-forward-00000"
+  ],
+  "mask_sha256": "6ec02a0e3dac9756923d29c8b603c0c1d79db411d06f3a20bb30956e11390953",
+  "pilot_manifest_sha256": "804842ef0893df0d4822caa458ca68b658bf6d9481ef64db5237dde00ec97718",
+  "whole_archive_downloaded": false,
+  "source_regenerated": false,
+  "selection_recomputed": false
+}

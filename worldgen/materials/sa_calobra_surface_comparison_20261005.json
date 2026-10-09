@@ -1,0 +1,259 @@
+{
+  "date": "2026-10-05",
+  "status": "CANDIDATE_COMPARISON_NOT_PRODUCTION_APPROVAL",
+  "reference_doc": "sa-calobra-material-reference-review-2026-10-05.md",
+  "roles": [
+    {
+      "id": "rock",
+      "title": "Odsłonięta skała",
+      "target": "Jasnoszare, nieregularnie spękane powierzchnie. Osobno sprawdzamy płyty o małym nachyleniu i strome odsłonięcia.",
+      "reference": "O13 · Nus de sa Corbata, czerwiec 2022; północny zakręt, lipiec 2026.",
+      "sector": "O13",
+      "decision": "Najbliższy kolor i struktura: Rock024, ale brak skali blokuje wybór produkcyjny. Rocks Ground 06 warto porównać na płaskim podłożu. Żaden kandydat nie jest jeszcze zatwierdzonym wapieniem.",
+      "candidates": [
+        [
+          "Rock024",
+          "Najbliższy wygląd · skala nieznana",
+          "Szara, niejednolita skała z drobnymi spękaniami jest bliższa referencji niż brązowe warianty.",
+          "API podaje zerowe wymiary. Nie wolno uznać domyślnego kafla 2 m za zmierzoną skalę; brak potwierdzenia geologii.",
+          "conditional"
+        ],
+        [
+          "rocks_ground_06",
+          "Alternatywa na małe nachylenia",
+          "Jasne płyty i mineralne przerwy dobrze łączą wizualnie skałę z drobnym podłożem.",
+          "Fragmenty, piasek i szczeliny nie odpowiadają każdej litej ścianie; ocena stromych powierzchni osobno.",
+          "alternative"
+        ],
+        [
+          "rock_face_03",
+          "Odrzucić dla obecnego celu",
+          "Nieregularna siatka pęknięć; źródło ma znaną skalę 2,7 m.",
+          "Dominują brązy i zaokrąglona, zwietrzała struktura. Tint nie zmieni geometrii spękań.",
+          "reject"
+        ],
+        [
+          "rock_face_04",
+          "Odrzucić na strome ściany",
+          "Wyraźne płyty i szczeliny nadają się do porównania struktury.",
+          "Ciemny kolor i liście w szczelinach są zapisane w kolorze. Na ścianie liście wyglądałyby nienaturalnie.",
+          "reject"
+        ],
+        [
+          "rocky_terrain",
+          "Stary asset · odrzucić jako detal",
+          "Zachowujemy porównanie starej rodziny zamiast usuwać jej historię.",
+          "Kafel 90 m zawiera wielkie płyty i zielone pasy. Przy skali źródłowej nie zapewnia detalu przy rowerzyście.",
+          "reject"
+        ]
+      ]
+    },
+    {
+      "id": "scree",
+      "title": "Rumosz, kamienie i żwir",
+      "target": "Kanciaste, szarobeżowe fragmenty; mieszanina drobnego kruszywa i większych kamieni, zgodna ze skałą.",
+      "reference": "Północny zakręt · panorama Google, lipiec 2026, kierunek około 152°.",
+      "sector": "O22",
+      "decision": "Rocks Ground 09 jako grubszy rumosz; Rock Ground jako drobniejsza alternatywa. Gravel Ground 01 lepiej pasuje do podłoża z niewielką ilością kruszywa.",
+      "candidates": [
+        [
+          "rocks_ground_09",
+          "Pierwszy do próbek",
+          "Szare, różnej wielkości fragmenty i wyraźny udział mineralnego gruntu odpowiadają luźnemu rumoszowi.",
+          "Zweryfikować rozmiary kamieni przy kamerze i powtarzalność jasnych większych fragmentów.",
+          "preferred"
+        ],
+        [
+          "rock_ground",
+          "Alternatywa · drobne kruszywo",
+          "Drobniejsze ziarno i chłodniejsza paleta łączą się z mineralnym podłożem.",
+          "Nie zastąpi grubszego rumoszu ani kamieni wymagających sylwetki.",
+          "alternative"
+        ],
+        [
+          "gravel_ground_01",
+          "Przenieść do podłoża mineralnego",
+          "Jasny, oszczędny kolor i drobne inkluzje pasują do przejścia z żwiru w grunt.",
+          "Za mało wyraźnych kamieni, aby samodzielnie reprezentować grubszy rumosz.",
+          "other_role"
+        ]
+      ]
+    },
+    {
+      "id": "mineral",
+      "title": "Suche podłoże mineralne",
+      "target": "Jasny, spokojny grunt z drobnymi kamieniami. Bez trawy zapisanej w całej powierzchni.",
+      "reference": "Nus de sa Corbata · drobny grunt pomiędzy skałą i kępami; brak izolowanego zbliżenia ziaren.",
+      "sector": "O13",
+      "decision": "Gravel Ground 01 jest pierwszym kandydatem do prób neutralnego podłoża. Jego użycie w obszarach nieznanych pozostaje świadomym zastępstwem, nie rozpoznaniem terenu.",
+      "candidates": [
+        [
+          "gravel_ground_01",
+          "Pierwszy do próbek",
+          "Najspokojniejsza jasna paleta w tej grupie, drobny detal i brak dominujących źdźbeł.",
+          "Porównać lekko oliwkowy odcień i czy grunt nie wygląda jak ubita ścieżka na całym zboczu.",
+          "preferred"
+        ],
+        [
+          "gravelly_sand",
+          "Alternatywa · cieplejszy grunt",
+          "Drobne ziarno i oszczędne kamienie dają dobrą strukturę do miejscowych przejść.",
+          "Wyraźnie cieplejszy, rdzawobrązowy kolor; nie wybierać jako domyślnego dla całej okolicy.",
+          "alternative"
+        ],
+        [
+          "dry_ground_rocks",
+          "Odrzucić jako domyślne podłoże",
+          "Zawiera widoczne drobne kamienie w suchej ziemi.",
+          "Ochrowy kolor i charakter ziemistego gruntu odbiegają od jasnej referencji mineralnej.",
+          "reject"
+        ],
+        [
+          "dry_ground_01",
+          "Odrzucić dla obecnego celu",
+          "Czytelny przykład suchej, spękanej ziemi.",
+          "Gęsta siatka wyschniętego błota nie jest potwierdzona w naszych referencjach.",
+          "reject"
+        ]
+      ]
+    },
+    {
+      "id": "grass",
+      "title": "Podłoże z rzadką suchą trawą",
+      "target": "Suche włókna i kępy, z dużą ilością widocznego mineralnego podłoża. Materiał nie zapewni sylwetek kęp.",
+      "reference": "Północny zakręt i południowy skraj zadrzewienia · lipiec 2026.",
+      "sector": "O33",
+      "decision": "Withered Grass do oszczędnych prób jako składnik suchej warstwy. Nie pokrywać nim całego gruntu; kępy przestrzenne pozostają późniejszym zadaniem roślinności.",
+      "candidates": [
+        [
+          "withered_grass",
+          "Pierwszy do próbek · ograniczony udział",
+          "Najbliższa referencji sucha, słomiana paleta i krótkie włókna.",
+          "Pełny kafel wygląda jak zwarty filc/siano. Konieczny test z odsłoniętym mineralnym podłożem.",
+          "preferred"
+        ],
+        [
+          "grass_ground",
+          "Alternatywa tylko dla bardziej zielonych miejsc",
+          "Widoczne ubytki darni i zróżnicowanie gruntu dają mniej jednorodną powierzchnię.",
+          "Więcej zielonej, krótkiej darni niż w suchych kępach referencji; brak dowodu dla szerokiego użycia.",
+          "alternative"
+        ],
+        [
+          "sparse_grass",
+          "Stary asset · odrzucić jako domyślny",
+          "Znana skala 2 m, istniejący import umożliwi późniejsze uczciwe A/B.",
+          "Zielone źdźbła i ciemniejszy brunatny grunt nie odpowiadają jasnemu, suchemu podłożu.",
+          "reject"
+        ]
+      ]
+    },
+    {
+      "id": "forest",
+      "title": "Podłoże pod drzewami",
+      "target": "Brązowa ściółka miejscami, odsłonięta skała i kamienie. Nie zakładamy konkretnego gatunku na podstawie samych koron.",
+      "reference": "Południowy skraj zadrzewienia · panorama Google, lipiec 2026, kierunek około 72°.",
+      "sector": "O43",
+      "decision": "Dry Decay Leaves do prób wyłącznie jako miejscowa ściółka. Pełna powierzchnia z liści byłaby zbyt jednolita; gatunek i udział muszą pozostać niepotwierdzone.",
+      "candidates": [
+        [
+          "dry_decay_leaves",
+          "Pierwszy do próbek · warunkowo",
+          "Brązowe, suche liście bez dominującej zieleni są użytecznym punktem wyjścia.",
+          "Warstwa jest zbyt zwarta na całe podłoże. To nie dowód lokalnego gatunku; potrzebne przerwy na grunt i skałę.",
+          "conditional"
+        ],
+        [
+          "forrest_ground_03",
+          "Stary asset · nie wybierać bez dowodu",
+          "Stonowany grunt i drobny detal nie konkurują mocno z kamieniami.",
+          "Dominujące igliwie wymaga lokalnego uzasadnienia; południowa panorama go nie potwierdza.",
+          "reject"
+        ],
+        [
+          "forest_leaves_04",
+          "Odrzucić jako główną warstwę",
+          "Mieszanka suchego materiału organicznego pokazuje bardziej zróżnicowany wariant.",
+          "Gęste włókna, igły i roślinne detale są chaotyczne; za mało odsłoniętego mineralnego podłoża.",
+          "reject"
+        ],
+        [
+          "forest_floor",
+          "Odrzucić dla obecnej referencji",
+          "Dużo odsłoniętego gruntu między liśćmi.",
+          "Żółte i pomarańczowe liście narzucają jesienny wygląd, którego nie pokazuje panorama z lipca.",
+          "reject"
+        ]
+      ]
+    },
+    {
+      "id": "earthworks",
+      "title": "Istniejące wykopy i nasypy",
+      "target": "Wykopy w skale i luźny grunt nasypu oceniamy oddzielnie. Widoczny kolor nie wyznacza granic CUT/FILL.",
+      "reference": "Północne odsłonięcia przy drodze · lipiec 2026. Dokładne granice i wygląd FILL nadal niepotwierdzone.",
+      "sector": "O22",
+      "decision": "CUT: te same ograniczenia co dla litej skały. FILL: porównać Rocks Ground 09, Rock Ground i Gravel Ground 01; nie dodawać brązowej ziemi tylko dlatego, że asset nazywa się Excavated Soil.",
+      "candidates": [
+        [
+          "Rock024",
+          "CUT · najbliższy wygląd",
+          "Szara, spękana powierzchnia pasuje do kierunku przydrożnej skały.",
+          "Nieznana skala blokuje wybór; porównanie stromych powierzchni wymaga Unreal.",
+          "conditional"
+        ],
+        [
+          "rocks_ground_06",
+          "CUT · alternatywa przy zwietrzeniu",
+          "Jasna skała i mineralne przerwy mogą pomóc na zwietrzałych partiach.",
+          "Płytowość i obecność drobnego gruntu nie pasują do każdej pionowej powierzchni.",
+          "alternative"
+        ],
+        [
+          "rock_face_03",
+          "CUT · odrzucić dla obecnego celu",
+          "Kandydat na litą spękaną strukturę w znanej skali.",
+          "Brązowy kolor i struktura odbiegają od referencji; nie naprawiać tego silnym tintem.",
+          "reject"
+        ],
+        [
+          "rocks_ground_09",
+          "FILL · pierwszy do próbek",
+          "Luźne kamienie o różnych rozmiarach, spójne z rumoszem.",
+          "To propozycja wyglądu; receipt CUT-only nie jest mapą obszarów FILL.",
+          "preferred"
+        ],
+        [
+          "rock_ground",
+          "FILL · alternatywa drobniejsza",
+          "Drobniejsze kruszywo może łączyć nasyp z otoczeniem.",
+          "Nie rozwiązuje sylwetki grubych kamieni ani położenia nasypu.",
+          "alternative"
+        ],
+        [
+          "gravel_ground_01",
+          "FILL · alternatywa drobnoziarnista",
+          "Pasuje do drobnego materiału między większymi fragmentami.",
+          "Nie uzasadnia przypisania FILL konkretnemu miejscu.",
+          "alternative"
+        ],
+        [
+          "excavated_soil_wall",
+          "Odrzucić dla skalnych wykopów",
+          "Zawiera kierunkową strukturę odsłoniętej ziemi.",
+          "Brunatna ściana ziemna nie odpowiada odsłonięciu litej szarej skały. Sama nazwa nie jest argumentem.",
+          "reject"
+        ]
+      ]
+    }
+  ],
+  "additional_rejections": [
+    [
+      "dry_riverbed_rock",
+      "Równoległe, stopniowane warstwy i ciemniejszy brąz nie pasują do obserwowanych spękań."
+    ],
+    [
+      "seaside_rock",
+      "Bardzo ciemny i drobnoziarnisty kolor; nie przedstawia wyraźnych jasnych płyt referencji."
+    ]
+  ]
+}

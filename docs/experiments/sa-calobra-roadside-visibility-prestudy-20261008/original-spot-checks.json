@@ -1,0 +1,325 @@
+{
+  "receipt": {
+    "capture_revision": "b1ea05b33b9f3208e7aeb6884f1a67792d9c6121",
+    "archive_oid": "f9ad39ae59a16dc1fc4615ef10ca950096a94d443bea4dcb0e624284000a0cab",
+    "whole_archive_hash_recomputed": false,
+    "frames": [
+      {
+        "frame_id": "window-0002-forward-00000",
+        "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0002-forward-00000.png",
+        "sha256": "c3d4b0dee7b05a4b6527791b8c43f35821ed073bf9e853c62523ea98afa1b9f1",
+        "size_bytes": 762624,
+        "width_px": 1280,
+        "height_px": 720
+      },
+      {
+        "frame_id": "window-0006-forward-00000",
+        "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0006-forward-00000.png",
+        "sha256": "3346645d7df9637fd3e8277ef3c26d82821ed7c6b2e54c43333b15e0f084cedb",
+        "size_bytes": 1160325,
+        "width_px": 1280,
+        "height_px": 720
+      },
+      {
+        "frame_id": "window-0021-forward-00005",
+        "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0021-forward-00005.png",
+        "sha256": "a03f399fa4144804cc5b06b6c8fc24196016fe709fbab2e056f5835f41b71069",
+        "size_bytes": 984060,
+        "width_px": 1280,
+        "height_px": 720
+      },
+      {
+        "frame_id": "window-0030-forward-00001",
+        "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0030-forward-00001.png",
+        "sha256": "4ab94133f39a66d8fd6f8e4611930e53c5c5f7c9124eff30a595acc7ffe4bcaa",
+        "size_bytes": 723041,
+        "width_px": 1280,
+        "height_px": 720
+      },
+      {
+        "frame_id": "window-0035-forward-00003",
+        "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0035-forward-00003.png",
+        "sha256": "21473da77c25b5ed5674021e2bb6d1acb3e3794b4444e9714454adfd4c7f1aa3",
+        "size_bytes": 816236,
+        "width_px": 1280,
+        "height_px": 720
+      },
+      {
+        "frame_id": "window-0051-reverse-00001",
+        "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0051-reverse-00001.png",
+        "sha256": "f43dae6f1c0aa528bb858c6f3aed5d507c02a348c2ff8d76320d01ef48ff8b4b",
+        "size_bytes": 1249455,
+        "width_px": 1280,
+        "height_px": 720
+      },
+      {
+        "frame_id": "window-0059-reverse-00003",
+        "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0059-reverse-00003.png",
+        "sha256": "e6001cb37340e8708f04abe2d8008eb15008b3fb7162a8a6b0273c6f46336802",
+        "size_bytes": 1070645,
+        "width_px": 1280,
+        "height_px": 720
+      },
+      {
+        "frame_id": "window-0060-forward-00004",
+        "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0060-forward-00004.png",
+        "sha256": "79b25c5383cbed7280949bed357e87e58fb064ab79982ebee3dd26d1d623000e",
+        "size_bytes": 1224686,
+        "width_px": 1280,
+        "height_px": 720
+      },
+      {
+        "frame_id": "window-0070-forward-00000",
+        "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0070-forward-00000.png",
+        "sha256": "065cc228878427ea15850094f0eaa0f985f131afece28951c3332cadb05cf472",
+        "size_bytes": 1191081,
+        "width_px": 1280,
+        "height_px": 720
+      },
+      {
+        "frame_id": "window-0081-forward-00008",
+        "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0081-forward-00008.png",
+        "sha256": "a81f75f9360aa35ec8362609cecb1486ee73116c4df35b3b651582a3c950d94e",
+        "size_bytes": 964706,
+        "width_px": 1280,
+        "height_px": 720
+      },
+      {
+        "frame_id": "window-0082-forward-00000",
+        "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0082-forward-00000.png",
+        "sha256": "cbde98c9739bc63871abaf6fde5dba719df023bf21360724dbbecfa7809b26d9",
+        "size_bytes": 1119784,
+        "width_px": 1280,
+        "height_px": 720
+      },
+      {
+        "frame_id": "window-0087-forward-00000",
+        "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0087-forward-00000.png",
+        "sha256": "8daf4130ba836f488e09bf8887cfa400bb57634a58d522f605f8d0e4db07fa3f",
+        "size_bytes": 943411,
+        "width_px": 1280,
+        "height_px": 720
+      },
+      {
+        "frame_id": "window-0095-forward-00001",
+        "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0095-forward-00001.png",
+        "sha256": "bd61a0866a71175820f5f6f1e311a48c27e175fbf760fc2d060eecce33673118",
+        "size_bytes": 1038823,
+        "width_px": 1280,
+        "height_px": 720
+      },
+      {
+        "frame_id": "window-0100-forward-00003",
+        "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0100-forward-00003.png",
+        "sha256": "5127db54415829f37ea6744e72e4d3ac557a45009664f82e3927d8d4790085e5",
+        "size_bytes": 1351311,
+        "width_px": 1280,
+        "height_px": 720
+      },
+      {
+        "frame_id": "window-0110-forward-00001",
+        "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0110-forward-00001.png",
+        "sha256": "9a6506791dd1562fd2d9c51101dcbbabd2e9c1df3bcab97845b21537e35d3d1a",
+        "size_bytes": 926220,
+        "width_px": 1280,
+        "height_px": 720
+      },
+      {
+        "frame_id": "window-0119-forward-00002",
+        "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0119-forward-00002.png",
+        "sha256": "69e717e4b1905992948198b85750b51102ea84e778c6c9fb06cc2c82b71f95c7",
+        "size_bytes": 1176547,
+        "width_px": 1280,
+        "height_px": 720
+      },
+      {
+        "frame_id": "window-0125-forward-00005",
+        "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0125-forward-00005.png",
+        "sha256": "2b1d0bad4309524cd07532669f2c2e90e86f67d47edfa525ba449f01b7966b06",
+        "size_bytes": 725320,
+        "width_px": 1280,
+        "height_px": 720
+      },
+      {
+        "frame_id": "window-0132-reverse-00002",
+        "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0132-reverse-00002.png",
+        "sha256": "0faae494e22980ba8999573ff70e84a84368419b037c73f47b702414a22c5b77",
+        "size_bytes": 1133449,
+        "width_px": 1280,
+        "height_px": 720
+      },
+      {
+        "frame_id": "window-0138-forward-00001",
+        "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0138-forward-00001.png",
+        "sha256": "ecea8d5f8d71c027040536ccf5c3f4b2c7800db65ade96571895b00fe05b8eda",
+        "size_bytes": 1312653,
+        "width_px": 1280,
+        "height_px": 720
+      },
+      {
+        "frame_id": "window-0146-forward-00002",
+        "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0146-forward-00002.png",
+        "sha256": "e403d21b78d00d6db0999840f668e6ca421961fe56325743508bf301f82cb515",
+        "size_bytes": 1133688,
+        "width_px": 1280,
+        "height_px": 720
+      },
+      {
+        "frame_id": "window-0163-reverse-00001",
+        "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0163-reverse-00001.png",
+        "sha256": "07e3ecdd3e06f9429cac49e62b2e6d259ffe3f6a949ae9d1209a6771c6eab75f",
+        "size_bytes": 761268,
+        "width_px": 1280,
+        "height_px": 720
+      },
+      {
+        "frame_id": "window-0168-reverse-00002",
+        "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0168-reverse-00002.png",
+        "sha256": "5c48718cb11df6484833de808482aa0d5167a7ddde9f7ba9a38d18a58cbab9af",
+        "size_bytes": 1253088,
+        "width_px": 1280,
+        "height_px": 720
+      },
+      {
+        "frame_id": "window-0177-forward-00002",
+        "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0177-forward-00002.png",
+        "sha256": "f74bb469e6bde9417f7df5df1766224cf735bd2372ad007c0855e0688346e4a9",
+        "size_bytes": 561633,
+        "width_px": 1280,
+        "height_px": 720
+      },
+      {
+        "frame_id": "window-0181-forward-00004",
+        "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0181-forward-00004.png",
+        "sha256": "7902948733c046275e15952ab804c7c01146fda253aa074a378f6bb24d125d5d",
+        "size_bytes": 1070237,
+        "width_px": 1280,
+        "height_px": 720
+      }
+    ],
+    "http_range_requests": 69,
+    "range_bytes_read": 23146531
+  },
+  "visual_checks": [
+    {
+      "frame_id": "window-0002-forward-00000",
+      "observed_detail": "The tall wall spans most of the upper frame and has readable broad planes, base contact and a shoulder-to-bank transition on the opposite side. Diagnostic colours do not identify natural material.",
+      "judgment_change_or_confirmation": "Station5 confirms wall profile and dominant_wall=present. Forward original alone does not establish C; paired C remains based on the separately inspected reverse contact view. No GEO_FIX conclusion."
+    },
+    {
+      "frame_id": "window-0006-forward-00000",
+      "observed_detail": "Near left terrain combines a sloping bank with short steeper sections; the outer side descends from the road. A separate broad slope and upper ridge form the distant composition.",
+      "judgment_change_or_confirmation": "Station20 retains near_profile=bank, forward left raised bank, dominant_wall=absent and panorama=present. The upper escarpment is subordinate to the broad slope panorama in this view; no high-detail assignment to the whole distant slope."
+    },
+    {
+      "frame_id": "window-0021-forward-00005",
+      "observed_detail": "A large rocky face beyond the bend has plainly readable major planes and a substantial projected outline. Dark regions are visible but their cause is not diagnosed.",
+      "judgment_change_or_confirmation": "Station74 changes dominant_wall uncertain->present and panorama uncertain->absent. The dominant face's own skyline/sea backdrop is not a second C region. Original image supports broad-form attention, not automatic microdetail or GEO_FIX."
+    },
+    {
+      "frame_id": "window-0030-forward-00001",
+      "observed_detail": "Tall right-side planes dominate; left foreground bank/contact is also substantial. Projecting roadside forms stand against a sea opening.",
+      "judgment_change_or_confirmation": "Station100 confirms dominant_wall=present and changes panorama uncertain->absent. Under the shared raised-bank/wall definition, forward near_sides remains right: the descending left contact still needs A attention but is excluded from the raised-side code. Reverse raised-side code is left."
+    },
+    {
+      "frame_id": "window-0035-forward-00003",
+      "observed_detail": "Large articulated peak occupies the upper left/centre. A raised, segmented roadside bank borders the right side of the bend; the inner left terrain falls below the road. A thin sea horizon is visible but does not establish a separate C terrain region. Diagnostic colour transitions do not establish natural surface classes.",
+      "judgment_change_or_confirmation": "Station 113 near_sides_forward corrected from both to right. Bank profile and dominant_wall=present confirmed; panorama remains uncertain and confidence remains low. Reverse-side flags still rely on the inspected contact view; no physical-surface identity is inferred."
+    },
+    {
+      "frame_id": "window-0051-reverse-00001",
+      "observed_detail": "A broad upper cliff band shows repeated deep vertical divisions and distinct lower ledges/sloping terrain. The near right bank has a readable toe at the road curve; a lower road/traverse crosses the midground. No natural class is assigned from its colours.",
+      "judgment_change_or_confirmation": "Station 166 dominant_wall=present and right reverse bank confirmed; no station flag changed. panorama=present remains based on the separate low ridge in the paired forward contact image, not on this cliff outline alone. Forward PNG was not inspected."
+    },
+    {
+      "frame_id": "window-0059-reverse-00003",
+      "observed_detail": "A steep raised right roadside face occupies much of the near view. Across the upper scene a broad cliff has clear vertical recesses, ledges and a broken top line; a second lower road level is visible on the left. The broad cliff and near road-contact face require separate observations.",
+      "judgment_change_or_confirmation": "Station 196 wall profile, right reverse side and dominant_wall=present confirmed; no station flag changed. panorama=present remains based on the distinct low forward ridge visible in the paired contact image, not the reverse cliff silhouette. Forward PNG was not inspected."
+    },
+    {
+      "frame_id": "window-0060-forward-00004",
+      "observed_detail": "The left road edge is bordered by a steep segmented cut face with a sharply readable road-contact boundary. The right foreground descends away from the road. Upper-left cliff faces are cropped by the image edge; a wider tiered slope continues across the upper view.",
+      "judgment_change_or_confirmation": "Station 204 near_profile corrected from bank to wall; left forward side confirmed. dominant_wall remains uncertain because the principal upper face is clipped. panorama=present still rests on the paired reverse contact ridge; confidence remains low and the reverse PNG was not inspected."
+    },
+    {
+      "frame_id": "window-0070-forward-00000",
+      "observed_detail": "Full-resolution frame shows a tall faceted roadside cut on the left, clear base/contact and top rollover, plus broad upper rock bands, ledges and a separate distant crest toward the right. Diagnostic colors do not establish material types.",
+      "judgment_change_or_confirmation": "Station 230 A-left and B-present confirmed. C-present remains supported by the screened pair; independent crest evidence exists without using the near-wall outline. No causal geometry diagnosis."
+    },
+    {
+      "frame_id": "window-0081-forward-00008",
+      "observed_detail": "Across the tight bend, a large wall face occupies nearly the whole upper frame, with a strong vertical convex corner and the adjoining stacked-road contacts. Background terrain is largely occluded by this face.",
+      "judgment_change_or_confirmation": "Station 267 A/B confirmed; C-absent in the preliminary pair retained. Preserve broad corner/planes and road contacts; detailed texel/checker appearance does not justify microscopic geometry."
+    },
+    {
+      "frame_id": "window-0082-forward-00000",
+      "observed_detail": "The central rocky massif has readable major ledges, vertical bands, peak and shoulder forms; its silhouette belongs to the same B massif. Near road edges in this view are architectural parapets, with low adjacent Landscape ground and a lower cut outside the deck.",
+      "judgment_change_or_confirmation": "Station 276 B-present and C-absent confirmed. Forward near_sides changed from both to none: visible parapets are architecture, not raised Landscape banks alongside this road. Reverse cut evidence retains wall profile and reverse both."
+    },
+    {
+      "frame_id": "window-0087-forward-00000",
+      "observed_detail": "A close left wall with an angular corner meets the road; a larger upper/background rock face has distinct vertical fluting and large planes. Right-side terrain slopes below another road; no separate distant panorama is exposed in this view.",
+      "judgment_change_or_confirmation": "Station 299 A-left and B-present confirmed, C-absent retained from the screened pair. Broader upper cliff detail must not be reduced to the close contact strip alone."
+    },
+    {
+      "frame_id": "window-0095-forward-00001",
+      "observed_detail": "Close tall left cut, raised angular right bank and a large opposite terraced rock face with major vertical ledges; the upper valley corridor recedes between rock faces. Diagnostic purple/blue/yellow and dark road strips do not establish natural materials or defect causes.",
+      "judgment_change_or_confirmation": "Station326: A near wall/banks and B present confirmed. C remains uncertain because the upper valley opening does not establish a distinct distant surface at known depth. AI proposal only."
+    },
+    {
+      "frame_id": "window-0100-forward-00003",
+      "observed_detail": "The forward hairpin looks directly into a broad rocky massif with stepped faces and gullies occupying nearly all of the upper frame. Low raised near banks border the turn; another road bend is visible against the massif.",
+      "judgment_change_or_confirmation": "Station358: B present confirmed; C changed from uncertain to absent in the sampled pair because no separate distant C region is resolved. B silhouette still protected. AI proposal only."
+    },
+    {
+      "frame_id": "window-0110-forward-00001",
+      "observed_detail": "A broad steep rocky flank fills the right upper frame and two separate lower coastal rocky peaks appear on the left against the sea. Near road banks remain visible around the hairpin.",
+      "judgment_change_or_confirmation": "Station398: B changed from uncertain to present for the large right flank. C changed from uncertain to present for distinct left coastal peaks, excluding sea pixels and the B outline. Their world identities/depth remain unresolved. AI proposal only."
+    },
+    {
+      "frame_id": "window-0119-forward-00002",
+      "observed_detail": "Large close left wall/base contact, low descending roadside bank on the right, and a broad diagonal rocky slope across the upper frame with readable major crags and large terrain patches.",
+      "judgment_change_or_confirmation": "Station426: A wall and B broad slope confirmed. C stays uncertain: the observed crest can belong to the same B slope, so it is not assigned as a separate C region. AI proposal only."
+    },
+    {
+      "frame_id": "window-0125-forward-00005",
+      "observed_detail": "Large vertical cliff planes fill upper view and reach the road bend through broad sloping transitions; steep left and right roadside cuts are visible. Small sky fragments do not establish a separate C region.",
+      "judgment_change_or_confirmation": "Station460 confirms near wall, forward both raised sides, B present and C uncertain; retain large ledges, cliff-plane depth and road contact, omit assumed pore geometry."
+    },
+    {
+      "frame_id": "window-0132-reverse-00002",
+      "observed_detail": "Close steep left cut occupies foreground; low right ground slopes away. Large left massif and extensive right valley escarpment have readable planes, ledges and dark recesses. More distant central crest is a separate panorama region.",
+      "judgment_change_or_confirmation": "Station491 confirms B present and C present in paired context. Reverse side corrected from both to left: opposite surface is largely sloping ground, not a raised bank."
+    },
+    {
+      "frame_id": "window-0138-forward-00001",
+      "observed_detail": "Main right wall has large visible facets and base contact; broad rocky valley ground is open left, and upper cliffs are clipped. Road has black and dark triangular regions with an abrupt visible edge.",
+      "judgment_change_or_confirmation": "Station509 confirms forward right wall and B uncertain; C remains uncertain in paired views. Dark road appearance retained as visual uncertainty only, with no GEO_FIX or causal geometry diagnosis."
+    },
+    {
+      "frame_id": "window-0146-forward-00002",
+      "observed_detail": "Steep left road cut has large vertical facets; right side slopes away below road. Broad valley ground occupies upper view and only a narrow cropped escarpment band is visible at top, without sky.",
+      "judgment_change_or_confirmation": "Station535 near profile changed bank to wall; B changed present to uncertain because the original shows cropped cliff band rather than a dominant broad face. C remains paired-context only from the reverse coastal terrain, not inferred from this forward view."
+    },
+    {
+      "frame_id": "window-0163-reverse-00001",
+      "observed_detail": "Large layered right-hand wall, visibly distinct far triangular coastal ridge, and lower left road-edge terrain.",
+      "judgment_change_or_confirmation": "Station 588 B uncertain to present and C present confirmed; full PNG makes the distant C ridge unambiguous."
+    },
+    {
+      "frame_id": "window-0168-reverse-00002",
+      "observed_detail": "Broad upper Landscape slope fills the upper frame with rocky bands and ledges; near right cut interfaces with road.",
+      "judgment_change_or_confirmation": "Station 603 B present confirmed for readable broad upper terrain. Near reverse right confirmed. C depends on the other paired view, not this upper slope skyline alone."
+    },
+    {
+      "frame_id": "window-0177-forward-00002",
+      "observed_detail": "Tall bilateral cut faces occupy most of the frame and reveal broad vertical planes; a separate mountain ridge is visible through the opening.",
+      "judgment_change_or_confirmation": "Station 633 A both sides and B present confirmed; C uncertain to present for the separate background ridge."
+    },
+    {
+      "frame_id": "window-0181-forward-00004",
+      "observed_detail": "Large central mountain has readable broad faces, ledges and irregular summit. Foreground bridge/parapets define contacts; open sea is behind the same massif.",
+      "judgment_change_or_confirmation": "Station 661 B present and C absent confirmed. Peak outline has silhouette importance but is not a separate C region. Forward near sides none excludes parapets and terrain below the bridge."
+    }
+  ]
+}

@@ -1,0 +1,149 @@
+name: Material Maker CLI session proof
+
+on:
+  push:
+    branches:
+      - "codex/363-landscape-material-foundation"
+    paths:
+      - ".github/workflows/material-maker-cli-session-proof.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+
+      - name: Compare service-session and interactive-session CLI
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $toolRoot = 'D:\yacs\tool-cache\material-forge'
+          $mmRoot = Join-Path $toolRoot 'material-maker-1.7'
+          $mmExe = Get-ChildItem -LiteralPath $mmRoot -Filter 'material_maker.exe' -Recurse -ErrorAction Stop | Select-Object -First 1
+          if ($null -eq $mmExe) { throw 'Pinned Material Maker release is missing.' }
+          $example = Get-ChildItem -LiteralPath (Join-Path $mmExe.Directory.FullName 'examples') -Filter 'dry_earth.ptex' -ErrorAction Stop | Select-Object -First 1
+          if ($null -eq $example) { throw 'Pinned upstream dry_earth.ptex is missing.' }
+
+          $root = Join-Path $env:RUNNER_TEMP "mm-cli-session-$env:GITHUB_SHA"
+          Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+
+          # Case 1: current GitHub runner/service session with Godot headless display.
+          $service = Join-Path $root 'service-headless'
+          New-Item -ItemType Directory -Force -Path $service | Out-Null
+          Copy-Item -LiteralPath $example.FullName -Destination (Join-Path $service 'dry_earth.ptex')
+          Push-Location $service
+          try {
+            $serviceLines = @(
+              & $mmExe.FullName --headless --export-material -o . --output-file smoke dry_earth.ptex 2>&1
+            )
+            $serviceCode = $LASTEXITCODE
+          }
+          finally {
+            Pop-Location
+          }
+          $serviceLines | Set-Content -LiteralPath (Join-Path $service 'stdout.log') -Encoding utf8
+          $serviceFiles = @(
+            Get-ChildItem -LiteralPath $service -File |
+              Where-Object { $_.Name -notin @('dry_earth.ptex', 'stdout.log') } |
+              ForEach-Object { [ordered]@{ name=$_.Name; size=$_.Length } }
+          )
+          [ordered]@{
+            case = 'service-headless'
+            exit_code = $serviceCode
+            runner_session_id = [System.Diagnostics.Process]::GetCurrentProcess().SessionId
+            files = $serviceFiles
+            stdout_tail = ($serviceLines -join [Environment]::NewLine)
+          } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $service 'result.json') -Encoding utf8
+
+          # Resolve the currently logged-on desktop user/session.
+          $explorers = @(Get-CimInstance Win32_Process -Filter "Name='explorer.exe'")
+          if ($explorers.Count -eq 0) { throw 'No logged-on desktop session found.' }
+          $explorer = $explorers | Sort-Object SessionId -Descending | Select-Object -First 1
+          $owner = Invoke-CimMethod -InputObject $explorer -MethodName GetOwner
+          if ($owner.ReturnValue -ne 0 -or [string]::IsNullOrWhiteSpace($owner.User)) {
+            throw 'Cannot resolve desktop session owner.'
+          }
+          $userId = if ([string]::IsNullOrWhiteSpace($owner.Domain)) {
+            $owner.User
+          } else {
+            "$($owner.Domain)\$($owner.User)"
+          }
+
+          # Case 2: exact same release CLI in the interactive desktop session.
+          $interactive = Join-Path $root 'interactive'
+          New-Item -ItemType Directory -Force -Path $interactive | Out-Null
+          Copy-Item -LiteralPath $example.FullName -Destination (Join-Path $interactive 'dry_earth.ptex')
+          $wrapper = Join-Path $interactive 'run-interactive.ps1'
+          $exeEsc = $mmExe.FullName.Replace("'", "''")
+          $dirEsc = $interactive.Replace("'", "''")
+          @"
+          `$ErrorActionPreference = 'Continue'
+          Set-Location -LiteralPath '$dirEsc'
+          `$lines = @(& '$exeEsc' --export-material -o . --output-file smoke dry_earth.ptex 2>&1)
+          `$code = `$LASTEXITCODE
+          `$lines | Set-Content -LiteralPath 'stdout.log' -Encoding utf8
+          `$files = @(
+            Get-ChildItem -LiteralPath . -File |
+              Where-Object { `$_.Name -notin @('dry_earth.ptex','stdout.log','run-interactive.ps1','result.json') } |
+              ForEach-Object { [ordered]@{ name=`$_.Name; size=`$_.Length } }
+          )
+          [ordered]@{
+            case='interactive'
+            exit_code=`$code
+            session_id=[System.Diagnostics.Process]::GetCurrentProcess().SessionId
+            files=`$files
+            stdout_tail=(`$lines -join [Environment]::NewLine)
+          } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath 'result.json' -Encoding utf8
+          "@ | Set-Content -LiteralPath $wrapper -Encoding utf8
+
+          $pwsh = (Get-Process -Id $PID).Path
+          if (-not (Test-Path -LiteralPath $pwsh -PathType Leaf)) { throw 'pwsh executable unavailable.' }
+          $taskName = 'YACS-MaterialMaker-CLI-SessionProof'
+          Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
+          $arguments = "-NoProfile -NonInteractive -ExecutionPolicy Bypass -File `"$wrapper`""
+          $action = New-ScheduledTaskAction -Execute $pwsh -Argument $arguments -WorkingDirectory $interactive
+          $principal = New-ScheduledTaskPrincipal -UserId $userId -LogonType Interactive -RunLevel Limited
+          Register-ScheduledTask -TaskName $taskName -Action $action -Principal $principal -Force | Out-Null
+          Start-ScheduledTask -TaskName $taskName
+
+          $resultPath = Join-Path $interactive 'result.json'
+          $deadline = [DateTime]::UtcNow.AddSeconds(120)
+          while (-not (Test-Path -LiteralPath $resultPath) -and [DateTime]::UtcNow -lt $deadline) {
+            Start-Sleep -Seconds 1
+          }
+          Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
+          if (-not (Test-Path -LiteralPath $resultPath)) {
+            throw 'Interactive Material Maker CLI proof timed out before result.json.'
+          }
+
+          $serviceResult = Get-Content (Join-Path $service 'result.json') -Raw | ConvertFrom-Json
+          $interactiveResult = Get-Content $resultPath -Raw | ConvertFrom-Json
+          [ordered]@{
+            exact_sha = $env:GITHUB_SHA
+            desktop_user = $userId
+            desktop_session_id = $explorer.SessionId
+            service = $serviceResult
+            interactive = $interactiveResult
+          } | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $root 'summary.json') -Encoding utf8
+
+          Write-Host "SERVICE: exit=$($serviceResult.exit_code) files=$(@($serviceResult.files).Count)"
+          Write-Host "INTERACTIVE: exit=$($interactiveResult.exit_code) session=$($interactiveResult.session_id) files=$(@($interactiveResult.files).Count)"
+
+      - name: Upload session proof
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: material-maker-cli-session-${{ github.sha }}
+          path: ${{ runner.temp }}/mm-cli-session-${{ github.sha }}
+          if-no-files-found: error
+          retention-days: 7

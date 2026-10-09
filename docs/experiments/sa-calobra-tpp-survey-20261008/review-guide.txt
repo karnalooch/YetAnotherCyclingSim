@@ -1,0 +1,20 @@
+PRZEGLĄD POWIERZCHNI — MATERIAŁ DO OCENY
+Otwórz index.html i porównaj oba kierunki w tej samej LOKALNEJ stacji danego okna drogi.
+Każdej ciągłej ścianie/powierzchni nadaj stały surface_id i zapisz naturalne granice.
+surface_priority jest opcjonalne: close_view (blisko), panorama lub background (tło). Jest niezależne od review_tags.
+review_tags może zawierać wiele etykiet dla tego samego surface_id, rozdzielonych średnikiem: GEO_FIX;SILHOUETTE_CRITICAL.
+Każda adnotacja człowieka wymaga evidence_reason (konkretne uzasadnienie) i evidence_frame (ścieżka do oryginalnego PNG z frames.csv).
+Wpisz surface_id, aby powiązać adnotację z ciągłą powierzchnią; kolejne wiersze mogą odnosić się do tej samej powierzchni.
+Etykiety pozostają puste przed oceną człowieka; nie są wzajemnie wykluczające i nie uruchamiają zmian geometrii.
+GEO_FIX: Geometria wymaga naprawy; zapisz konkretny widoczny problem.
+SILHOUETTE_CRITICAL: Kluczowy obrys krajobrazu; zachowaj czytelny kontur i duże formy.
+HERO_DETAIL: Szczególnie eksponowane miejsce wymagające wysokiej jakości detalu.
+BACKGROUND_LOW_PRIORITY: Tło będące kandydatem do uproszczenia po sprawdzeniu widoczności i innych dojazdów.
+MATERIAL_TEST_CANDIDATE: Kandydat na pierwszy fragment do testów materiału.
+Zapisz udział w ekranie, kierunki oglądania, problemy obrysu/geometrii/materiału i inne dojazdy.
+Czasu widoczności nie można zmierzyć z rzadkich próbek; pozostaw visible_duration_s puste bez osobnej obserwacji.
+Stacja określa pozycję kamery, nie granicę ściany. Jedna ściana może wymagać wielu wierszy.
+Nieznany dostęp i zasłonięcie pozostają nieznane. Przegląd nie obejmuje niezarejestrowanej sieci dróg.
+Zaakceptowany wygląd klifów jest punktem wyjścia. Propozycje z przeglądu nie zmieniają tej akceptacji.
+Contact sheets/JPEG służą do nawigacji; ostateczna ocena korzysta z oryginalnych PNG.
+Pakiet nie zawiera pomiaru wydajności ani automatycznej akceptacji wyglądu.

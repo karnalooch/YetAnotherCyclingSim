@@ -1,0 +1,93 @@
+{
+  "status": "NATIVE_DETAIL_EVIDENCE_VERIFIED",
+  "exact_sha": "520c7c98961b3a4be7fbb6eb7930e6dea8eb8b46",
+  "primary_frame_count": 10,
+  "frames": [
+    {
+      "file": "frames/window-0021-forward-00005-baseline.png",
+      "sha256": "b1608a339ab7567664e72c2569edc27f904144a233fb65dfe3b69f60395b1df3",
+      "size_bytes": 1009877,
+      "frame_id": "window-0021-forward-00005",
+      "mode": "baseline"
+    },
+    {
+      "file": "frames/window-0023-forward-00000-baseline.png",
+      "sha256": "01a9f1afb22e93a61b7d338b63f48c8bec83ed097906cef98869db3e9a4a007f",
+      "size_bytes": 1126080,
+      "frame_id": "window-0023-forward-00000",
+      "mode": "baseline"
+    },
+    {
+      "file": "frames/window-0021-forward-00005-mask.png",
+      "sha256": "9410bf90f879e5013de2a0d54d4264a643de6f18546107f13acf9268d2b67042",
+      "size_bytes": 1014978,
+      "frame_id": "window-0021-forward-00005",
+      "mode": "mask"
+    },
+    {
+      "file": "frames/window-0023-forward-00000-mask.png",
+      "sha256": "bea132c2bf2573d2bed85e5a0b6960164cff73cf535d3ac8c828e28bbe4453a5",
+      "size_bytes": 1121270,
+      "frame_id": "window-0023-forward-00000",
+      "mode": "mask"
+    },
+    {
+      "file": "frames/window-0021-forward-00005-patch-magenta.png",
+      "sha256": "285c8b93152fe244fc200fd0b90b5e7457acfcb0519ddd4898e82483fae265e4",
+      "size_bytes": 1011391,
+      "frame_id": "window-0021-forward-00005",
+      "mode": "patch-magenta"
+    },
+    {
+      "file": "frames/window-0023-forward-00000-patch-magenta.png",
+      "sha256": "2cc1ce5b2e3f442dc9f03890ad8bcd57bbc07101ef087b86041086d2f3935d30",
+      "size_bytes": 1125786,
+      "frame_id": "window-0023-forward-00000",
+      "mode": "patch-magenta"
+    },
+    {
+      "file": "frames/window-0021-forward-00005-patch-cyan.png",
+      "sha256": "400f1fa568afe1cf81290f6150cd4bf1f069cfe4142b106d43ff42c104e289f7",
+      "size_bytes": 1011365,
+      "frame_id": "window-0021-forward-00005",
+      "mode": "patch-cyan"
+    },
+    {
+      "file": "frames/window-0023-forward-00000-patch-cyan.png",
+      "sha256": "d63eebe79c03c6c81c89355ffc772abe9a1fd6c51223108e781e100fb7ad71ac",
+      "size_bytes": 1125911,
+      "frame_id": "window-0023-forward-00000",
+      "mode": "patch-cyan"
+    },
+    {
+      "file": "frames/window-0021-forward-00005-trial.png",
+      "sha256": "92f68fc3bfa8a92f4fbec43e8af53aa3d447f454540c40f8668de683b981f5fd",
+      "size_bytes": 1011571,
+      "frame_id": "window-0021-forward-00005",
+      "mode": "trial"
+    },
+    {
+      "file": "frames/window-0023-forward-00000-trial.png",
+      "sha256": "97409c42f435a6aec582cdafaa26b3e15bbf700b73fdcedbe1d4287bb292632e",
+      "size_bytes": 1126281,
+      "frame_id": "window-0023-forward-00000",
+      "mode": "trial"
+    }
+  ],
+  "source_verification": "checkout-restoration.json",
+  "rendered_inputs": {
+    "inputs_sha256": {
+      "source": "a9d34dbfb32a59b592dca561a7d7b0e53f7d02d90c095cff7c0812c249247965",
+      "mask": "6ec02a0e3dac9756923d29c8b603c0c1d79db411d06f3a20bb30956e11390953",
+      "pilot": "804842ef0893df0d4822caa458ca68b658bf6d9481ef64db5237dde00ec97718",
+      "trial": "aed8f5ace6383f67004b5df6bb24da0db820cabd99ecb6186efc0b79f86d35b3",
+      "manifest": "b45f57912eba8261a6031328058ea5355ced42ccccdc813abd5b1236e774a5d3"
+    },
+    "selected_face_count": 65,
+    "changed_vertex_count": 16,
+    "max_added_displacement_cm": 0.5230451206066301,
+    "max_total_source_displacement_cm": 50.00000000000475
+  },
+  "performance_acceptance": "NOT_MEASURED",
+  "visual_acceptance": "PENDING_OWNER"
+}

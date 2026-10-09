@@ -12,7 +12,7 @@ Use the project Python environment (`.venv\Scripts\python.exe`) and PowerShell
 | Check the saved project before opening | `python scripts/manage_local_workspace.py doctor` | Checks paths, materialized assets and checkpoint identity; does not open UE |
 | Open the accepted scene | `python scripts/manage_local_workspace.py open` or `D:\yacs\Open-YACS.cmd` | Opens the configured map; refuses a second editor |
 | Start the GitHub runner | `pwsh -File scripts/runner/Start-YacsRunner.ps1` | Reuses an existing runner identity or starts one interactive listener |
-| Check the Windows build host | `pwsh -File scripts/runner/Test-YacsWindowsHost.ps1` | Read-only host/toolchain and 50 GiB reserve checks |
+| Check the Windows build host | `pwsh -File scripts/runner/Test-YacsWindowsHost.ps1` | Read-only host/toolchain and 5 GiB minimum free-space check (not a render-space estimate) |
 | Bootstrap pinned PowerShell | `powershell -File scripts/runner/Install-YacsPortablePowerShell.ps1` | Installs/verifies PowerShell 7.6.6 under `D:\yacs\tools` without MSI/system PATH mutation |
 | Verify pinned Blender headless lane | `python scripts/blender/run_headless.py smoke` | Runs the Blender 4.5.9 bpy smoke job and emits workspace proof receipts |
 | Inspect disposable runner outputs | `pwsh -File scripts/runner/Clear-YacsRunnerWorkspace.ps1` | Preview only; applying requires the exact inspected plan and an idle worker |
@@ -29,12 +29,31 @@ the appropriate data/material consumer. Opening a map is not rebuilding roads.
 | `ue/verify_accepted_scene_checkpoint.py` | Run inside a fresh UE editor on the configured accepted map; checks stored geometry/materials/CUT traces, writes a receipt and closes that verification editor |
 | `assets/restore_workspace_data.py` | Checks or restores the hash-verified external-data snapshot; preview by default, `--apply` restores missing files without overwriting existing files |
 | `assets/Restore-YacsSaCalobraWorldData.ps1` | Restores the separately pinned CNIG source bundle; CI must pass its destination explicitly |
+| `ue/sa_calobra_saved_material_consumer.py` | In separate isolated UE processes, save the verified current whole-map material to a generated review map, freshly reload without reapplying, then capture hash-bound rendered evidence for the existing performance consumer; owner acceptance remains pending |
 
 Read the workspace guide's restore procedure before running a checkpoint tool.
 One-off migration scripts and old experiments belong in the local
 `D:\yacs\archive\scripts` history, outside this maintained interface.
 
 ## Folder map and naming
+
+For read-only road inspection, see the
+[accepted cliff survey contract](../docs/tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md#bidirectional-tpp-survey-of-the-current-scene).
+`proof/sa_calobra_tpp_survey.py` plans both directions from verified frozen
+outputs. `ue/sa_calobra_tpp_survey_capture.py` runs only inside its owning cliff
+proof scene. `proof/package_sa_calobra_tpp_survey.py --root <survey-directory>
+--expected-sha <capture-sha>` verifies and packages the captured evidence for
+offline review; it never generates terrain or assigns visual acceptance.
+`proof/retain_sa_calobra_tpp_survey.py --source <evidence-root>
+--expected-sha <capture-sha> --run-id <run> --attempt <attempt>
+--workspace-config <workspace.json>` retains verified completed evidence in the
+configured persistent work directory without rerendering or overwriting notes.
+`proof/export_sa_calobra_tpp_survey_docs.py --source <retained-evidence-root>
+--artifact-zip <original-capture.zip> --repo <repository-root>
+--expected-sha <capture-sha>` copies the validated October 8 viewing aids into
+repository documentation and retains the unchanged original ZIP through the
+existing evidence LFS rule. It verifies archive members against the retained
+source, refuses differing existing outputs and leaves surface tags unassigned.
 
 | Folder | Responsibility |
 |---|---|
@@ -53,3 +72,18 @@ and local launchers together when renaming. Historical filenames in old
 receipts are evidence and must not be rewritten to imply a newer execution.
 Internal runner hooks (`Invoke-YacsJobStarted.ps1`) and `Assert-*` helpers are
 called by their owner scripts; they are not separate everyday commands.
+
+## Component 230 source-face detail proof
+
+`assets/prepare_sa_calobra_detail_pilot.py` registers proposed image regions to
+the hash-pinned v8 face rows; `assets/run_sa_calobra_detail_pilot.py` reproduces
+that registration from retained evidence without Unreal.
+`assets/prepare_sa_calobra_detail_treatment.py --mesh <combined-mesh.json>
+--mask <triangle-bands.json> --output <fresh-directory>` prepares one bounded
+local candidate, preserving every face outside its selected patch.
+`ue/sa_calobra_detail_capture.py` runs only inside the owning Component 230
+Unreal proof scene, through the owner-only `[detail-native]` workflow lane.
+Read the [native experiment contract](../docs/experiments/sa-calobra-component230-detail-native-20261008/README.md)
+for source identities, renderer-visibility scope, preservation checks and
+recorded execution status. A successful experiment does not grant a saved
+production scene, visual acceptance or performance admission.

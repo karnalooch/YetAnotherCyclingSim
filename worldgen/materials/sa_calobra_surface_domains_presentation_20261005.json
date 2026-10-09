@@ -1,0 +1,64 @@
+{
+  "source_map": "/Game/Worlds/SaCalobra/L_SaCalobraGeneratedSurfaces_24761d13ffbd",
+  "source_sha256": "98f9440961019ebc237e4a3c702bd17d771efaaf8bb7c8c40f08e89066141582",
+  "grass_contribution": 0.55,
+  "grass_patch_size_cm": 1200,
+  "grass_patch_threshold": 0.25,
+  "grass_patch_width": 0.45,
+  "color_tuning": {
+    "DryMineral": {
+      "desaturation": 0.8,
+      "gain": [
+        0.9,
+        0.91,
+        0.93
+      ]
+    },
+    "ExposedRock": {
+      "desaturation": 0.65,
+      "gain": [
+        0.98,
+        1.0,
+        1.02
+      ]
+    },
+    "DryGrass": {
+      "desaturation": 0.2,
+      "gain": [
+        0.9,
+        0.95,
+        0.86
+      ]
+    },
+    "ForestLitter": {
+      "desaturation": 0.25,
+      "gain": [
+        0.8,
+        0.86,
+        0.8
+      ]
+    },
+    "Scree": {
+      "desaturation": 0.8,
+      "gain": [
+        0.93,
+        0.96,
+        1.0
+      ]
+    }
+  },
+  "reference": "Owner-provided Street View screenshots; artistic palette reference, not calibrated albedo or seasonal land-cover authority",
+  "scope": "Native material color correction and bounded decorative DryGrass macro modulation; existing geographic weights, geometry and physical detail scale retained",
+  "inferred_gap_fill": {
+    "authorization": "Owner explicitly allowed filling black areas from agent inference on 2026-10-05",
+    "domain": "Only raw RGB sum zero; gate saturate(1 - 1000 * sumRGB)",
+    "rock": "saturate(((1-abs(VertexNormalWS.Z))-0.06)/0.34); more exposed limestone on steeper terrain",
+    "grass": "gentle gap fraction * 0.22 * existing decorative macro; mineral remainder",
+    "authority": "Artistic presentation fallback, including neutral holdback appearance; not measured cover, source-mask edits or placement permission",
+    "geometry_mutation": false
+  },
+  "surface_domains": "D:/yacs/data/world-data/sa-calobra-working-v1/surface-domains-v1-2026-10-05/material-input-manifest.json",
+  "dry_channel_overlay": true,
+  "macro_variation": true,
+  "methodology": "Public Embark biome layering, macro/detail separation and deterministic export; YACS-specific shading and dry-channel art recipe, not Embark internal settings"
+}

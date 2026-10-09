@@ -93,8 +93,14 @@ The old Stage 3G / R4.1 / B.x vocabulary is historical. Existing workflow names 
 | Reusable world-authoring systems | [`YACS_WORLD_AUTHORING_LIBRARY.md`](YACS_WORLD_AUTHORING_LIBRARY.md) | **Authoritative implementation library** |
 | Asset plan / provenance | [`ASSET_PLAN.md`](ASSET_PLAN.md) | **Authoritative** |
 | Julka asset-manager contract | [`tooling/JULKA.md`](tooling/JULKA.md) | **Active supporting tool** |
+| Independent texture preparation | [`tooling/TEXTURE_MATERIAL_PREP.md`](tooling/TEXTURE_MATERIAL_PREP.md) | **Opt-in adapter proved; remote backup verified; admission pending** |
+| Resume texture work remotely | [`tooling/TEXTURE_MATERIAL_PREP_REMOTE_HANDOFF.md`](tooling/TEXTURE_MATERIAL_PREP_REMOTE_HANDOFF.md) | **2026-10-05 evidence and recovery procedure** |
 | Persistent local project and checkpoints | [`tooling/LOCAL_WORKSPACE.md`](tooling/LOCAL_WORKSPACE.md) | **Authoritative host workflow** |
 | Blender headless producer contract | [`tooling/BLENDER_HEADLESS.md`](tooling/BLENDER_HEADLESS.md) | **Active supporting tool** |
+| Sa Calobra material foundation | [`tooling/SA_CALOBRA_MATERIAL_FOUNDATION.md`](tooling/SA_CALOBRA_MATERIAL_FOUNDATION.md) | **Active candidate workflow; Bible owns methodology** |
+| Sa Calobra whole-map surface preparation | [`tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md`](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md) | **Owner-approved continuation in #446; full-grid roles and native consumer implemented, fresh execution pending** |
+| Sa Calobra material repair sequence | [`tooling/SA_CALOBRA_MATERIAL_REPAIR_PLAN.md`](tooling/SA_CALOBRA_MATERIAL_REPAIR_PLAN.md) | **Documentation-only plan; implementation and acceptance pending** |
+| Sa Calobra cliff / erosion presentation pass | [`tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md`](tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md) | **Active #429 non-destructive selector foundation; production dressing pending** |
 | CI cost / proof cadence | [`CI_VALIDATION_TIERS.md`](CI_VALIDATION_TIERS.md) | **Authoritative** |
 | Shared CI and governance platform | [`ENGINEERING_PLATFORM.md`](ENGINEERING_PLATFORM.md) | **Authoritative** |
 | AI contributor rules | [`../AGENTS.md`](../AGENTS.md) | **Authoritative repository policy** |
@@ -123,9 +129,16 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 - [`DIAGRAM_STYLE.md`](DIAGRAM_STYLE.md) — Gumball-derived Blueprint Mermaid language for new or substantially revised YACS architecture/workflow diagrams.
 - [`PRODUCTION_WORLD_ARCHITECTURE_REFERENCES.md`](PRODUCTION_WORLD_ARCHITECTURE_REFERENCES.md) — copyright-safe reconstructions of public Far Cry 5 and THE FINALS production pipelines plus direct YACS mappings; evidence, not methodology authority.
 - [`YACS_WORLD_AUTHORING_LIBRARY.md`](YACS_WORLD_AUTHORING_LIBRARY.md) — reusable authoring systems, semantic catalog, presets and generated-output boundary.
+- [`tooling/MATERIAL_FORGE.md`](tooling/MATERIAL_FORGE.md) — Issue #387 offline procedural PBR, material-local mask and UE import contract; consumes PCG/PCGEx semantics, never replaces them.
+- [`tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md`](tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md) — cliff selector/handoff contract and bounded native Landscape/PCGEx/mesh trial history, subordinate to the World Building Bible.
+- [`tooling/SA_CALOBRA_COMPONENT230_REPAIR_PLAN.md`](tooling/SA_CALOBRA_COMPONENT230_REPAIR_PLAN.md) — #445 / draft PR #446 report verification, exact remaining failures and ordered repair/acceptance evidence; local trial success does not admit the whole map.
+- [`tooling/SA_CALOBRA_SURFACE_DETAIL_ATLAS.md`](tooling/SA_CALOBRA_SURFACE_DETAIL_ATLAS.md) — surface-detail review and PCG/PCGEx handoff plan with a tested Component 230 registration/native pilot: A-D viewer demand remains separate from rendering distance; wider physical mapping remains pending.
+- [`tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md`](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md) — #445 / #446 whole-working-map execution plan: verified five-role inputs, separate unknown/exclusion evidence, native full-area bindings, adaptive detail and distributed visual proof.
 - [`ASSET_PLAN.md`](ASSET_PLAN.md) — source/technical asset ledger and provenance expectations.
 - [`tooling/JULKA.md`](tooling/JULKA.md) — Issue #345 asset acquisition, local restore, identity and cleanup contract; subordinate to the asset ledger and World Building Bible.
 - [`UE_MCP_WORLD_GENERATION.md`](UE_MCP_WORLD_GENERATION.md) — current official Epic MCP adoption decision/DoD (#384, blocked by #363), plus the retained db-lyon integration baseline; interface only, not world/proof authority.
+- [`tooling/TEXTURE_MATERIAL_PREP.md`](tooling/TEXTURE_MATERIAL_PREP.md) — independent Texture Graph domain adapter, offline validation and limestone proof contract; no world integration or #384 cutover.
+- [`tooling/TEXTURE_MATERIAL_PREP_EXAMPLES.md`](tooling/TEXTURE_MATERIAL_PREP_EXAMPLES.md) — offline diagnostics, opt-in UE adapter commands, isolated smoke/reopen proof and limitations.
 - [`YACS_REMOTE_EDITOR_AGENT.md`](YACS_REMOTE_EDITOR_AGENT.md) — remote editor-agent operating contract.
 - [`UNREAL_TOOLING_PLUGIN_PLAN.md`](UNREAL_TOOLING_PLUGIN_PLAN.md) — plugin/tool plan; optional tooling never overrides the Bible.
 
@@ -152,7 +165,20 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 
 ## Evidence, experiments and history
 
+- [Sa Calobra roadside visibility and detail prestudy — 2026-10-08](experiments/sa-calobra-roadside-visibility-prestudy-20261008/README.md) — complete contact screening of 1,338 directional images / 669 pairs, 24 original-PNG spot checks, full-survey observation maps and a meshes/layers/generation guide. AI proposals; physical footprints and owner review pending; D unconfirmed.
+
+- [Sa Calobra detail planning map — 2026-10-08](experiments/sa-calobra-detail-planning-map-20261008/README.md) — north-up observation map, 669 paired stations in 185 disconnected windows and six proposed location cards; offline navigation and draft-note export. Surface footprints remain unresolved; Street View excluded.
+
+- [Sa Calobra original-PNG surface detail proposals — 2026-10-08](experiments/sa-calobra-surface-detail-review-20261008/README.md) — six AI-proposed location cards, twelve unchanged originals and separate ROI overlays; physical mapping pending; prepared Street View links retained as history and excluded from the current scope.
+
+- [Sa Calobra bidirectional TPP inspection — 2026-10-08](experiments/sa-calobra-tpp-survey-20261008/README.md) — actual map, contact sheets, 185 paired window pages and CSV indexes from 1,338 captured frames; original evidence retained through Git LFS. Surface tags and visual review remain pending; the accepted cliff appearance is preserved.
+
 - [Fact-checked external architecture audit — 2026-10-06](experiments/external-audit-fact-check-2026-10-06.md) — repository-grounded review of external AI audit claims; maps surviving risks to #339/#373/#303 and records rejected findings caused by incomplete retrieval. Evidence only; no architecture or milestone authority.
+
+- [Sa Calobra surface candidate comparison — 2026-10-05](experiments/sa-calobra-surface-candidates-2026-10-05.md) — 21 reviewed sources, six-role visual shortlist and rejection reasons; no production-set approval or Unreal import.
+
+- [Sa Calobra Material Forge production proof — 2026-10-07](experiments/sa-calobra-material-forge-production-proof-2026-10-07.md) — exact-SHA fixed-master productionization, memory recovery, offscreen Unreal admission, whole-Landscape rollback-safe 4K proof and remaining owner visual gate.\n\n- [Sa Calobra material reference review — 2026-10-05](experiments/sa-calobra-material-reference-review-2026-10-05.md) — whole-area aerial observations, ground-reference gaps and preliminary asset leads; reference gate remains open.
+
 - [Sa Calobra surface coverage audit — 2026-10-04](experiments/sa-calobra-surface-coverage-2026-10-04.md) — read-only candidate evidence: sampling support, unresolved rock/soil classification and review priorities; no production admission.
 
 These documents remain valuable but no longer define the active roadmap hierarchy:

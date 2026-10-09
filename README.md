@@ -4,6 +4,11 @@ Realistic indoor cycling simulator built with Unreal Engine 5.
 
 YACS combines deterministic cycling physics with a real-data-first Unreal Engine world pipeline currently focused on Sa Calobra / Coll dels Reis, Mallorca. The selected MDT50cm dataset is available; Unreal terrain, Ma-2141 road, visual and performance acceptance remain pending.
 
+Owner decision, 2026-10-09: measure performance after the assembled M3 world
+is closed out. Intermediate material/MCP/road handoffs retain visual, saved/fresh
+consumer and technical gates; performance is deferred, with existing budgets
+and final measurement still required. See the [current delivery order](docs/ROADMAP.md#post-road-world-finishing-sequence).
+
 ## Documentation
 
 **Start with the [documentation map](docs/README.md).**

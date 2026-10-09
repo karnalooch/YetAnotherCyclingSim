@@ -24,7 +24,7 @@ Before implementation, plugin activation, an implementation PR, or promotion to 
 - #363 is closed **as completed**, with its implementation merged; closing as not planned, a draft PR or a green build is insufficient.
 - Explicit owner visual acceptance covers the entire current 2,016.5 m × 2,016.5 m Sa Calobra Landscape (~4.07 km²), including representative environments/traversal and the additional Golden Kilometer check.
 - Saved material/consumer identity and fresh rendered reopening are admitted. NullRHI or a screenshot alone does not establish rendered acceptance.
-- Deferred 2A/2B whole-Landscape performance has passed under the existing exact-SHA policy and canonical budgets; `DEFERRED_TO_2B` is not PASS.
+- Owner decision, 2026-10-09: performance measurement is deferred until after assembled M3 closeout and is not an entry gate for #384/#364. Record `DEFERRED_AFTER_M3` with `performance_pass: false`; retain the existing full-area/reference budgets and exact-SHA/default-branch provenance for the later benchmark.
 - Required build, Automation, asset, review, documentation and protected Aggregate CI gates have passed; the handoff pins outputs, versions/hashes, limitations and proof links.
 
 At creation, #363 is OPEN and its current material remains a visually rejected prototype. No admission is implied here. Re-read its latest evidence at kickoff; do not freeze this checkpoint into future truth.
@@ -119,6 +119,74 @@ Do not run two independent agent-facing mutation servers. Before cutover, prove 
 
 The receipt should bind repository SHA, actual UE/plugin versions, map/object identity, tool calls/arguments, input hashes, BOB policy/version, Automation test/run/status, domain result, artifact paths/hashes, timestamp and mutation scope. Reuse current proof/receipt conventions. A log claiming success without the referenced evidence is insufficient.
 
+### Prepared kickoff after material acceptance — 2026-10-09
+
+This is a static preparation checkpoint at
+`bfbc48057b8b84d087a3685cd71972678a32d412`, not official MCP activation or
+completion of #384. Both #384 and #364 retain their dependency gates. The
+smallest implementation after the entry gate is the inspection/test spike
+below; it needs no road rebuild, new transport service or expanded tool library.
+
+1. **Bind the completed predecessor.** Record #363's completed issue state,
+   protected merge SHA, admitted saved map/material identities and links to
+   whole-area owner visual acceptance, fresh rendered reopening and technical
+   admission, with performance explicitly deferred until after assembled M3
+   closeout. Use that handoff's actual map; do not substitute an older
+   session-only preview or Component 230 acceptance.
+2. **Collect version-matched primary evidence before wiring.** Resolve the
+   canonical engine with
+   [`Resolve-YacsUnrealEngine.ps1`](../scripts/ci/Resolve-YacsUnrealEngine.ps1)
+   and the workspace configuration. Retain `Engine/Build/Build.version`, the
+   installed `ModelContextProtocol` and `AutomationTestToolset` plugin
+   descriptors and the source declarations implementing registry selection,
+   scene/object reads and test execution/results. Record paths and SHA-256
+   hashes without copying Epic source into Git. The inspected baseline is
+   UE **5.8.2 / CL 56702186**; prove that the running editor and these files
+   identify the same build. Missing files or a version mismatch block wiring.
+3. **Discover a restricted stock surface.** Retain the official server's
+   actual tool names, input/output schemas and enabled registry entries.
+   Admit only the map/object reads and one test invocation needed here. Exact
+   RPC names, endpoint settings and a native allow-list mechanism remain
+   unverified; public capability names are not executable schemas. If installed
+   primary source cannot establish restrictions, return the gap and retain the
+   guarded baseline. Do not implement a generic gateway to compensate.
+4. **Read one object and run one existing test.** Use a stable object from the
+   admitted map and compare its path/class/properties with the checkpoint.
+   Discover the existing candidate test
+   `CyclingPhysics.RoadPhysics.ProfileInterpolation`, declared in
+   [`RoadPhysicsProfile.spec.cpp`](../Source/YetAnotherCyclingSim/Private/Tests/RoadPhysicsProfile.spec.cpp).
+   It checks the route/physics presentation boundary without scene authoring.
+   Require exactly one matching completed test, real assertions and its report;
+   absence, timeout or missing results fail the spike.
+5. **Delegate one BOB inspection.** The concrete read-only target is
+   [`inspect_terrain_fit`](../scripts/worldgen/bob_terrain_fit_inspector.py),
+   using nonempty hash-bound real native samples and its explicit `exact_sha`,
+   `contact_band_max_m` and `structure_review_threshold_m` arguments. Bind
+   thresholds to the admitted caller and
+   [`adaptive_terrain_policy.json`](../worldgen/terrain/adaptive_terrain_policy.json),
+   not user-supplied engineering overrides. Compare the domain-tool return with
+   direct invocation on identical inputs. Preserve `INSPECTOR_ONLY`,
+   `REVIEW_REQUIRED` / `INSPECTION_INCOMPLETE` and all false admission/authoring
+   flags. Do not expose the entire
+   [`bob_road_earthworks_cut.py`](../scripts/ue/bob_road_earthworks_cut.py)
+   workflow: its separate `apply_cut_patch` operation changes earthworks.
+6. **Prove denial and stop.** Reject a wrong map/object, missing or stale input
+   hashes, an engine/plugin/schema mismatch, an absent test result, paths outside
+   scope and attempted save/import/transform/earthworks or arbitrary execution.
+   Retain before/after persistent-content hashes and the call/domain/test
+   receipts. After protected technical closeout, hand off the admitted stock
+   `MaterialInstanceTools` capability and its exact schemas to #364; stop MCP
+   infrastructure expansion.
+
+Preparation checks at the audited SHA: the existing BOB terrain-fit and adaptive
+policy unit modules passed **18 tests**. These exercise domain behavior only;
+official transport, installed Epic APIs, native scene identity, test invocation
+and guard parity remain **unverified**. The current `.uproject` does not enable
+an official MCP server, and `YacsStage3GGuard` belongs to the retained db-lyon
+path; neither establishes restrictions on the future official path. The
+read-only road/shoulder inventory is maintained in
+[Asset Plan section 4.4](ASSET_PLAN.md#44-droga-i-pobocze).
+
 ### Safety and preserved governance
 
 - Prove a narrow read/inspect/test surface. Loading All Toolsets is not blanket authorization for every registered operation.
@@ -132,7 +200,7 @@ The receipt should bind repository SHA, actual UE/plugin versions, map/object id
 
 ### Definition of Done
 
-- [ ] #363 entry gate is verified with completed state, merged implementation and linked visual/render/performance/technical evidence.
+- [ ] #363 entry gate is verified with completed state, merged implementation, linked owner visual/render/technical evidence and the explicit post-M3 performance deferral.
 - [ ] Exact environment, one map and the permitted official tool surface are pinned.
 - [ ] Agent sees the admitted map/scene through official Unreal MCP.
 - [ ] Agent reads an actual Actor/UObject and verifies its identity.
@@ -320,6 +388,16 @@ Experimental tooling must be reverified after version changes. Do not execute
 the historical Phase A-D schedule below as an alternative to the #384 gate.
 
 Detailed plugin schedule: [`UNREAL_TOOLING_PLUGIN_PLAN.md`](UNREAL_TOOLING_PLUGIN_PLAN.md).
+
+Issue #382 defines an independent
+[Texture Material Prep foundation](tooling/TEXTURE_MATERIAL_PREP.md). Texture
+Graph owns image processing; the opt-in YACS Texture MCP Toolset only controls
+validated recipes, render/export and evidence. Delivery includes a disabled
+editor plugin, explicit native tool registration, an isolated guard profile and
+offline diagnostics.
+It does not enable native routing, replace this orchestration surface, extend
+the remote command allowlist or modify world materials/assets. UE activation
+requires the isolated graph/adapter/export proof specified there.
 
 ## 4.2. Embark-first read/write tooling boundary
 

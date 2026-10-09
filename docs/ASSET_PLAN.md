@@ -14,9 +14,16 @@ Ten dokument odpowiada na cztery pytania:
 3. W którym etapie roadmapy dany asset ma wejść do projektu?
 4. Jak go walidujemy, wersjonujemy i utrzymujemy?
 
-Assety mają wspierać jedną fikcyjną trasę alpejską 20–30 minut. MVP nie jest katalogiem rowerów, postaci ani regionów — priorytetem jest spójna wizualnie, wydajna i grywalna trasa.
+Assety mają wspierać aktualną trasę Sa Calobra zgodnie z wymaganiami produktu i roadmapą. Bieżące zadanie #363 obejmuje cały istniejący Landscape 2016,5 × 2016,5 m; nie rozszerza go na pełną trasę. MVP nie jest katalogiem rowerów, postaci ani regionów — priorytetem jest spójna wizualnie, wydajna i grywalna trasa.
+
+W #363 dobór zaczyna się od [referencji i porównania kandydatów](experiments/sa-calobra-material-reference-review-2026-10-05.md). Obecny materiał jest odrzuconym prototypem. Historyczne wpisy Alpine oraz ich statusy importu i walidacji zachowują znaczenie dla dawnych dowodów; nie zatwierdzają przydatności do Sa Calobra ani aktualnej kolejności zakupów. Sześć wymaganych ról to odsłonięta skała, rumosz/żwir, suche podłoże mineralne, podłoże z rzadką suchą trawą, lokalne podłoże leśne oraz istniejące wykopy/nasypy. Nowe źródła przechodzą pełny cykl opisany poniżej; ten przegląd nie zatwierdza ani nie pozyskuje assetów.
 
 ### 1.1 Dwa typy assetów
+
+Aktualne porównanie #363: [21 źródeł dla sześciu ról powierzchni](experiments/sa-calobra-surface-candidates-2026-10-05.md).
+Lokalne kopie koloru zostały dopuszczone i pozyskane wyłącznie do przeglądu;
+rekomendacja do prób nie oznacza zatwierdzenia zestawu produkcyjnego. Skala
+`Rock024` pozostaje nieznana. Nie wykonano nowego importu Unreal.
 
 **Source assets** to wejściowe zasoby artystyczne lub nagraniowe pozyskane z zewnątrz albo wygenerowane poza UE, np.:
 
@@ -235,6 +242,54 @@ Potrzebne:
 Droga pozostaje częścią systemu YACS; nie kupujemy „gotowej trasy”. Assety jedynie ubierają geometrię.
 
 **Wchodzi:** część wizualna w 3G/7, wetness w 8.
+
+#### Sa Calobra road-material preparation — 2026-10-09
+
+Read-only inventory at `bfbc48057b8b84d087a3685cd71972678a32d412`.
+[#364](https://github.com/karnalooch/YetAnotherCyclingSim/issues/364) remains
+blocked by full #363 admission/merge and the bounded official MCP spike #384.
+This inventory selects no production asset, performs no import/application and
+does not promote material-prep fallback roles into geographic road domains.
+
+| Role / consumer | Existing source or candidate | Preparation limit |
+|---|---|---|
+| Asphalt | Material Forge `aged_mountain_asphalt/base`, `worn`, `repaired` in [`families.json`](../worldgen/materials/material_forge/families.json); seeds 101/137/173, declared 4 m tile, roughness 0.82/0.86/0.78 | Existing YACS procedural recipes. [`MATERIAL_FORGE.md`](tooling/MATERIAL_FORGE.md) records a first base render/CPU check; it does not admit all variants or the current road consumer. Requested 2048 resolution is not measured consumed texture size. |
+| Saved pavement | [`create_accepted_scene_checkpoint.py`](../scripts/ue/create_accepted_scene_checkpoint.py) uses an instance of `/Engine/BasicShapes/BasicShapeMaterial`, one slot and colour readback | This is the retained checkpoint recipe, not a textured asphalt system. Its authored buffers contain positions/triangles without a metric UV contract. Verify actual saved bindings and geometry hashes before future material assignment. |
+| Shoulder and support faces | The same checkpoint builds top/side support faces with one brown material slot | Establish shoulder-top versus support-wall selection from admitted frozen geometry before choosing a material. Neither gravel nor masonry has been approved for this slot by this inventory. Preserve nominal 0.5 m shoulders and existing BOB contact limits. |
+| Gravel / mineral transition | [`texture library v2`](../worldgen/materials/sa_calobra_texture_library_v2_20261005.json) records candidate `FillGravel` from Poly Haven `rock_ground`, CC0, pinned channels/hashes and provider-reported 1.5 x 1.5 m dimensions; existing outputs belong to [`Texture Material Prep`](tooling/TEXTURE_MATERIAL_PREP.md) | Its visual acceptance remains pending; terrain-fill provenance is not shoulder admission. A prepared role or fallback texture does not establish a shoulder footprint, hydrology/geology or road material approval. Keep source masks and observation/Unknown semantics independent. |
+
+The #338/#462 transient road consumers are a separate branch lineage from this
+material checkpoint. Select the actual admitted saved consumer and its source
+hashes before integration; do not assume that a material-library proof delivered
+the current road. The engine-parent road/support materials inherit roughness;
+this inventory has not measured their PBR values. Preserve road-deviation review
+colours while preparing final material comparisons.
+
+The existing
+[`import_material_forge_variant.py`](../scripts/ue/import_material_forge_variant.py)
+verifies CPU-approved source hashes, uses native `WorldAlignedTexture` /
+`WorldAlignedNormal` and converts the provenance tile size to `TileSizeCm` with
+material-instance readback. This is a possible reuse path when metric road UVs
+are absent; it still needs version-matched native projection/normal evidence and
+road-specific visual/technical proof. Under the 2026-10-09 owner decision,
+performance measurement is deferred until after assembled M3 closeout. It is not
+permission to regenerate the mesh, assume a 2 x 2 m texture scale or transplant
+the old prototype-road recipe.
+
+After both entry gates, begin with a bounded comparison on the actual admitted
+saved road/shoulder consumer: keep source vertices, grade, crossfall, width,
+collision and BOB/CUT inputs byte-identical; use approved source maps, explicit
+physical scale and roughness, and preserve rollback/readback. Inspect both
+travel directions, bends, shoulder/wall separation and the Landscape transition
+without covering unresolved geometric seams. Retain future wetness parameter
+compatibility without implementing weather. Expand the admitted material across
+the entire existing 2,016.5 m square and require whole-area visual, fresh rendered
+reopening and technical admission; the Golden Kilometer remains an additional
+check. Record performance as `DEFERRED_AFTER_M3`, not PASS, and retain the
+reference budgets and exact-SHA/default-branch provenance for the later
+assembled-world benchmark. The
+[prepared official MCP kickoff](UE_MCP_WORLD_GENERATION.md#prepared-kickoff-after-material-acceptance--2026-10-09)
+defines the intermediate step and its stop condition.
 
 ### 4.5 Kolarz
 

@@ -1,0 +1,265 @@
+{
+  "status": "GROUND_VIEWS_CAPTURED",
+  "error": null,
+  "engine_errors": [],
+  "captures": [
+    {
+      "view": {
+        "index": 0,
+        "target_cm": [
+          25000.0,
+          25000.0,
+          40180.29570579529
+        ],
+        "location_cm": [
+          22000.0,
+          21000.0,
+          42180.29570579529
+        ],
+        "rotation_deg": {
+          "pitch": -21.80140948635181,
+          "yaw": 53.13010235415598,
+          "roll": 1.5285149763166354e-07
+        },
+        "geometry_unchanged": true,
+        "material": "/Game/Generated/YACS/MaterialRepair/a941b778c0474e3b8faaf4ac5cca215f/M_SaCalobraRepair_candidate.M_SaCalobraRepair_candidate",
+        "map_saved": false,
+        "visual_acceptance": "PENDING_OWNER_REVIEW",
+        "scope": "One of nine distributed ground views; additional road/rider review required"
+      },
+      "path": "ground-0.png",
+      "size_bytes": 3108285,
+      "sha256": "3c3c366c9c5ef6efc37a7f14d491816603e2cfeb0f530ab2265c0f081d9b2ef2"
+    },
+    {
+      "view": {
+        "index": 1,
+        "target_cm": [
+          25000.0,
+          100000.0,
+          65418.80965232849
+        ],
+        "location_cm": [
+          22000.0,
+          96000.0,
+          67418.80965232849
+        ],
+        "rotation_deg": {
+          "pitch": -21.80140948635181,
+          "yaw": 53.13010235415598,
+          "roll": 1.5285149763166354e-07
+        },
+        "geometry_unchanged": true,
+        "material": "/Game/Generated/YACS/MaterialRepair/a941b778c0474e3b8faaf4ac5cca215f/M_SaCalobraRepair_candidate.M_SaCalobraRepair_candidate",
+        "map_saved": false,
+        "visual_acceptance": "PENDING_OWNER_REVIEW",
+        "scope": "One of nine distributed ground views; additional road/rider review required"
+      },
+      "path": "ground-1.png",
+      "size_bytes": 2914527,
+      "sha256": "b8774bd8e34aa9b0b6632eb3f946f8b7b8dbc0ff97dc1530f34cb31791a058c4"
+    },
+    {
+      "view": {
+        "index": 2,
+        "target_cm": [
+          25000.0,
+          175000.0,
+          96543.4268116951
+        ],
+        "location_cm": [
+          22000.0,
+          171000.0,
+          98543.4268116951
+        ],
+        "rotation_deg": {
+          "pitch": -21.80140948635181,
+          "yaw": 53.13010235415598,
+          "roll": 1.5285149763166354e-07
+        },
+        "geometry_unchanged": true,
+        "material": "/Game/Generated/YACS/MaterialRepair/a941b778c0474e3b8faaf4ac5cca215f/M_SaCalobraRepair_candidate.M_SaCalobraRepair_candidate",
+        "map_saved": false,
+        "visual_acceptance": "PENDING_OWNER_REVIEW",
+        "scope": "One of nine distributed ground views; additional road/rider review required"
+      },
+      "path": "ground-2.png",
+      "size_bytes": 2604498,
+      "sha256": "1bf62922d23cb8e88a469ade730a58c0cd437b8a3c2b70a3933a8311e0408550"
+    },
+    {
+      "view": {
+        "index": 3,
+        "target_cm": [
+          100000.0,
+          25000.0,
+          56015.387177467346
+        ],
+        "location_cm": [
+          97000.0,
+          21000.0,
+          59863.80469799042
+        ],
+        "rotation_deg": {
+          "pitch": -37.58488521364863,
+          "yaw": 53.13010235415599,
+          "roll": 2.5102851921972847e-07
+        },
+        "geometry_unchanged": true,
+        "material": "/Game/Generated/YACS/MaterialRepair/a941b778c0474e3b8faaf4ac5cca215f/M_SaCalobraRepair_candidate.M_SaCalobraRepair_candidate",
+        "map_saved": false,
+        "visual_acceptance": "PENDING_OWNER_REVIEW",
+        "scope": "One of nine distributed ground views; additional road/rider review required"
+      },
+      "path": "ground-3.png",
+      "size_bytes": 2880998,
+      "sha256": "83f72546b6e065986cd44ea79f47e0ce6919c92d2480e99938d21071140fa2d8"
+    },
+    {
+      "view": {
+        "index": 4,
+        "target_cm": [
+          100000.0,
+          100000.0,
+          72878.24749946594
+        ],
+        "location_cm": [
+          97000.0,
+          96000.0,
+          75704.68990868526
+        ],
+        "rotation_deg": {
+          "pitch": -29.478975895466327,
+          "yaw": 53.13010235415598,
+          "roll": 2.025329735474573e-07
+        },
+        "geometry_unchanged": true,
+        "material": "/Game/Generated/YACS/MaterialRepair/a941b778c0474e3b8faaf4ac5cca215f/M_SaCalobraRepair_candidate.M_SaCalobraRepair_candidate",
+        "map_saved": false,
+        "visual_acceptance": "PENDING_OWNER_REVIEW",
+        "scope": "One of nine distributed ground views; additional road/rider review required"
+      },
+      "path": "ground-4.png",
+      "size_bytes": 2699460,
+      "sha256": "fe1afc1870b59b60ada39a60564eb4837e98fd7b8d3c5e7b3d09e92ade8984d6"
+    },
+    {
+      "view": {
+        "index": 5,
+        "target_cm": [
+          100000.0,
+          175000.0,
+          67123.37136268616
+        ],
+        "location_cm": [
+          97000.0,
+          171000.0,
+          69972.8090763092
+        ],
+        "rotation_deg": {
+          "pitch": -29.67827668829919,
+          "yaw": 53.13010235415598,
+          "roll": 2.0377801439973495e-07
+        },
+        "geometry_unchanged": true,
+        "material": "/Game/Generated/YACS/MaterialRepair/a941b778c0474e3b8faaf4ac5cca215f/M_SaCalobraRepair_candidate.M_SaCalobraRepair_candidate",
+        "map_saved": false,
+        "visual_acceptance": "PENDING_OWNER_REVIEW",
+        "scope": "One of nine distributed ground views; additional road/rider review required"
+      },
+      "path": "ground-5.png",
+      "size_bytes": 1518768,
+      "sha256": "7648401ee2bd495c453faad78eb0ae7669379fb7890912e6ca1f2f5b91d770f9"
+    },
+    {
+      "view": {
+        "index": 6,
+        "target_cm": [
+          175000.0,
+          25000.0,
+          58930.7963848114
+        ],
+        "location_cm": [
+          172000.0,
+          21000.0,
+          60930.7963848114
+        ],
+        "rotation_deg": {
+          "pitch": -21.80140948635181,
+          "yaw": 53.13010235415598,
+          "roll": 1.5285149763166354e-07
+        },
+        "geometry_unchanged": true,
+        "material": "/Game/Generated/YACS/MaterialRepair/a941b778c0474e3b8faaf4ac5cca215f/M_SaCalobraRepair_candidate.M_SaCalobraRepair_candidate",
+        "map_saved": false,
+        "visual_acceptance": "PENDING_OWNER_REVIEW",
+        "scope": "One of nine distributed ground views; additional road/rider review required"
+      },
+      "path": "ground-6.png",
+      "size_bytes": 2977030,
+      "sha256": "98515ceaf1a52a9b76cad755073274d090119802a09fb808df1b67a476e4152d"
+    },
+    {
+      "view": {
+        "index": 7,
+        "target_cm": [
+          175000.0,
+          100000.0,
+          70609.67087745667
+        ],
+        "location_cm": [
+          172000.0,
+          96000.0,
+          73942.48817120954
+        ],
+        "rotation_deg": {
+          "pitch": -33.68597345388801,
+          "yaw": 53.13010235415598,
+          "roll": 2.2827085533518668e-07
+        },
+        "geometry_unchanged": true,
+        "material": "/Game/Generated/YACS/MaterialRepair/a941b778c0474e3b8faaf4ac5cca215f/M_SaCalobraRepair_candidate.M_SaCalobraRepair_candidate",
+        "map_saved": false,
+        "visual_acceptance": "PENDING_OWNER_REVIEW",
+        "scope": "One of nine distributed ground views; additional road/rider review required"
+      },
+      "path": "ground-7.png",
+      "size_bytes": 2606788,
+      "sha256": "e0e424dc7ca4e38e9584a46a619e8e3edef64ed44bf125dcf87c2dd09184593c"
+    },
+    {
+      "view": {
+        "index": 8,
+        "target_cm": [
+          175000.0,
+          175000.0,
+          52758.13043117523
+        ],
+        "location_cm": [
+          172000.0,
+          171000.0,
+          54989.47989940643
+        ],
+        "rotation_deg": {
+          "pitch": -24.04976826447089,
+          "yaw": 53.13010235415599,
+          "roll": 1.6772519303012958e-07
+        },
+        "geometry_unchanged": true,
+        "material": "/Game/Generated/YACS/MaterialRepair/a941b778c0474e3b8faaf4ac5cca215f/M_SaCalobraRepair_candidate.M_SaCalobraRepair_candidate",
+        "map_saved": false,
+        "visual_acceptance": "PENDING_OWNER_REVIEW",
+        "scope": "One of nine distributed ground views; additional road/rider review required"
+      },
+      "path": "ground-8.png",
+      "size_bytes": 2699000,
+      "sha256": "aeb45860d0f84ec61bd1619c7e7c283699e9c83af667cd61678ad673504de07d"
+    }
+  ],
+  "map_saved": false,
+  "geometry_modified": false,
+  "visual_acceptance": "PENDING_OWNER_REVIEW",
+  "performance": "NOT_MEASURED",
+  "capture_script_sha256": "c8395a56904d90176b64b1b2b7fe1e713d0fb25089e48ef76698046a8c9e7787",
+  "scope": "Nine distributed ground views; overview and road/rider review remain separate"
+}

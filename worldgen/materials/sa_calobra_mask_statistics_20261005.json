@@ -1,0 +1,95 @@
+{
+  "source": "D:\\yacs\\data\\world-data\\sa-calobra-working-v1\\material-foundation-v3-2026-10-05\\material-weights.png",
+  "sha256": "90a1c75053f025167ff63c3efdb9c841db6e7f7522235d1ef01eb85aba31ff48",
+  "grid": [
+    4033,
+    4033,
+    4
+  ],
+  "domain": "horizontal raster cells; amplitudes are not measured cover or 3D surface areas",
+  "channels": {
+    "R": {
+      "nonzero_cells_pct": 63.850342288320704,
+      "mean_amplitude": 0.25326044887774485,
+      "minimum": 0,
+      "maximum": 255
+    },
+    "G": {
+      "nonzero_cells_pct": 23.57794045885639,
+      "mean_amplitude": 0.0765006828850598,
+      "minimum": 0,
+      "maximum": 255
+    },
+    "B": {
+      "nonzero_cells_pct": 65.13536446065558,
+      "mean_amplitude": 0.0884651149850733,
+      "minimum": 0,
+      "maximum": 153
+    },
+    "A": {
+      "nonzero_cells_pct": 83.31562772266416,
+      "mean_amplitude": 0.8331562772266417,
+      "minimum": 0,
+      "maximum": 255
+    }
+  },
+  "zero_rgb_cells_pct": 28.444418594942828,
+  "available_zero_rgb_cells_pct": 11.760046317606992,
+  "rgb_sum_max": 1.0,
+  "previous_consumer_mean_weights": {
+    "DryGrass": 0.08864115923643112,
+    "ForestLitter": 0.07650069147348404,
+    "ExposedRock": 0.088465116918087,
+    "DryMineral": 0.7463930249214172
+  },
+  "current_consumer_mineral_mean_lower_bound": 0.7463930249214172,
+  "current_consumer_note": "Grass macro is bounded to [0,1]; actual spatial mean not sampled here",
+  "zero_weight_reasons": {
+    "all_zero_rgb_cells": 4626510,
+    "all_zero_with_no_reason": 23275,
+    "reason_counts_overlapping": {
+      "1": {
+        "meaning": "pavement",
+        "all_cells": 169739,
+        "zero_rgb_cells": 169739
+      },
+      "2": {
+        "meaning": "shoulder envelope",
+        "all_cells": 30677,
+        "zero_rgb_cells": 30677
+      },
+      "4": {
+        "meaning": "BOB affected rectangles",
+        "all_cells": 843343,
+        "zero_rgb_cells": 843343
+      },
+      "8": {
+        "meaning": "building candidate",
+        "all_cells": 2930,
+        "zero_rgb_cells": 2930
+      },
+      "16": {
+        "meaning": "water holdback",
+        "all_cells": 455043,
+        "zero_rgb_cells": 455043
+      },
+      "32": {
+        "meaning": "infrastructure holdback",
+        "all_cells": 3456,
+        "zero_rgb_cells": 3456
+      },
+      "64": {
+        "meaning": "other LiDAR class",
+        "all_cells": 892677,
+        "zero_rgb_cells": 892677
+      },
+      "128": {
+        "meaning": "no LiDAR samples",
+        "all_cells": 2713728,
+        "zero_rgb_cells": 2713728
+      }
+    },
+    "excluded_cells_with_nonzero_rgb": 0,
+    "note": "Reason categories overlap; hard exclusions are retained, not reclassified as rock"
+  }
+}

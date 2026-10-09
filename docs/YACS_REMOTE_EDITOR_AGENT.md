@@ -15,6 +15,40 @@ scripts with visible navigation in an existing Unreal session; it does not use
 this GitHub Actions transport or expand its command allowlist. Local UI access
 does not prove deployment or admission of this remote bridge.
 
+
+## Shared home-host arbitration
+
+The home workstation is also the `yacs-ue58` self-hosted runner, so local
+interactive Unreal work and remote Unreal proof must not race each other.
+
+The repository-owned read-only classifier is:
+
+```powershell
+pwsh scripts/runner/Get-YacsUnrealHostState.ps1 -AsJson
+```
+
+It reports `IDLE`, `REMOTE_BUSY`, `LOCAL_BUSY`, or `MIXED_BUSY`.
+Unattended Unreal processes carrying known Actions proof/worktree markers are
+classified as remote CI. Every other live Unreal Editor process, including an
+unknown process whose command line cannot be trusted, is treated as local
+ownership so automation yields fail-closed.
+
+For local work, prefer:
+
+```powershell
+pwsh scripts/runner/Start-YacsLocalEditor.ps1
+```
+
+The launcher refuses to start while remote CI owns Unreal. Conversely, reusable
+Unreal CI and the isolated texture-prep proof call the same classifier after
+scoped stale-process cleanup and refuse to start when a local Editor is active.
+The practical rule is **first owner wins**; neither side may kill a local
+interactive Editor to obtain the host.
+
+Directly launching Unreal outside the safe launcher bypasses the local-side
+guard, but remote automation still detects the live Editor and yields before
+starting its own Unreal process.
+
 ## Goal
 
 Allow an approved chat/GitHub operator flow to request a small, named Unreal

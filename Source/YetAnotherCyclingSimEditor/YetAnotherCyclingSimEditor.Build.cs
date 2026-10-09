@@ -16,6 +16,13 @@ public class YetAnotherCyclingSimEditor : ModuleRules
 			"PCG",
 			"Json",
 			"AssetRegistry",
+            "Landscape",
+            "MeshDescription",
+            "StaticMeshDescription",
+            "MeshConversion",
+            "GeometryCore",
+            "GeometryFramework",
+            "DynamicMesh",
 			"YetAnotherCyclingSim"
 		});
 
@@ -36,7 +43,11 @@ public class YetAnotherCyclingSimEditor : ModuleRules
 				"PCGExFoundations",
 				"PCGExElementsPaths",
 				"PCGExElementsSampling",
-				"PCGExElementsTopology"
+				"PCGExElementsTopology",
+				"PCGExElementsClipper2",
+				"GeometryCore",
+				"GeometryFramework",
+				"GeometryScriptingCore"
 			});
 		}
 	}

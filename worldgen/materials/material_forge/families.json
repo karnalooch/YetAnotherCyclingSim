@@ -1,0 +1,300 @@
+{
+  "schema_version": 1,
+  "output_resolution": 2048,
+  "normal_convention": "DirectX",
+  "semantic_owner": "PCG/PCGEx",
+  "families": [
+    {
+      "id": "aged_mountain_asphalt",
+      "label": "Aged mountain asphalt",
+      "role": "RoadSurfaceAppearance",
+      "semantic_owner": "PCG/PCGEx",
+      "tile_metres": 4,
+      "local_masks": {
+        "R": "cracks",
+        "G": "patches",
+        "B": "binder_micro_variation"
+      },
+      "variants": [
+        {
+          "id": "base",
+          "label": "Base aged",
+          "seed": 101,
+          "brightness": 0.3,
+          "surface_a": 0.62,
+          "surface_b": 0.22,
+          "roughness": 0.82,
+          "normal_strength": 0.48
+        },
+        {
+          "id": "worn",
+          "label": "Worn cracked",
+          "seed": 137,
+          "brightness": 0.282,
+          "surface_a": 1.18,
+          "surface_b": 0.16,
+          "roughness": 0.86,
+          "normal_strength": 0.62
+        },
+        {
+          "id": "repaired",
+          "label": "Patched repaired",
+          "seed": 173,
+          "brightness": 0.31,
+          "surface_a": 0.52,
+          "surface_b": 1.12,
+          "roughness": 0.78,
+          "normal_strength": 0.46
+        }
+      ]
+    },
+    {
+      "id": "regional_limestone",
+      "label": "Regional pale limestone",
+      "role": "ExposedRockAppearance",
+      "semantic_owner": "PCG/PCGEx",
+      "tile_metres": 4,
+      "local_masks": {
+        "R": "fractures",
+        "G": "pores_pits",
+        "B": "mineral_variation"
+      },
+      "variants": [
+        {
+          "id": "base",
+          "label": "Weathered pale",
+          "seed": 211,
+          "brightness": 0.715,
+          "surface_a": 0.72,
+          "surface_b": 0.82,
+          "roughness": 0.76,
+          "normal_strength": 0.82
+        },
+        {
+          "id": "fractured",
+          "label": "Fractured",
+          "seed": 257,
+          "brightness": 0.695,
+          "surface_a": 1.38,
+          "surface_b": 0.8,
+          "roughness": 0.79,
+          "normal_strength": 0.98
+        },
+        {
+          "id": "karst_weathered",
+          "label": "Karst weathered",
+          "seed": 293,
+          "brightness": 0.705,
+          "surface_a": 0.92,
+          "surface_b": 1.34,
+          "roughness": 0.82,
+          "normal_strength": 0.92
+        },
+        {
+          "id": "refined_a",
+          "label": "Refined A sun-baked fractured",
+          "seed": 331,
+          "brightness": 0.655,
+          "surface_a": 1.12,
+          "surface_b": 0.96,
+          "roughness": 0.82,
+          "normal_strength": 1.02,
+          "refinement": {
+            "variation_scale": 1.22,
+            "crack_color_scale": 1.32,
+            "pore_color_scale": 1.18,
+            "color_gain": [
+              1,
+              0.985,
+              0.96
+            ],
+            "roughness_variation_scale": 1.25,
+            "roughness_pore_scale": 1.18,
+            "ao_crack_scale": 1.25,
+            "ao_pore_scale": 1.15
+          }
+        },
+        {
+          "id": "refined_b",
+          "label": "Refinement B neutral mineral limestone",
+          "seed": 367,
+          "brightness": 0.64,
+          "surface_a": 1.12,
+          "surface_b": 0.96,
+          "roughness": 0.82,
+          "normal_strength": 1.02,
+          "refinement": {
+            "variation_scale": 0.82,
+            "crack_color_scale": 1.18,
+            "pore_color_scale": 1.08,
+            "color_gain": [
+              0.95,
+              1,
+              1.07
+            ],
+            "roughness_variation_scale": 1.15,
+            "roughness_pore_scale": 1.12,
+            "ao_crack_scale": 1.15,
+            "ao_pore_scale": 1.05
+          },
+          "landscape": {
+            "macro_tile_metres": 24,
+            "macro_strength": 0.14
+          }
+        },
+        {
+          "id": "refined_c",
+          "label": "Refinement C cool Tramuntana limestone",
+          "seed": 401,
+          "brightness": 0.6,
+          "surface_a": 1.08,
+          "surface_b": 0.88,
+          "roughness": 0.74,
+          "normal_strength": 0.78,
+          "refinement": {
+            "variation_scale": 0.68,
+            "crack_color_scale": 1.05,
+            "pore_color_scale": 0.92,
+            "color_gain": [
+              0.91,
+              0.98,
+              1.1
+            ],
+            "roughness_variation_scale": 0.85,
+            "roughness_pore_scale": 0.95,
+            "ao_crack_scale": 0.9,
+            "ao_pore_scale": 0.85
+          },
+          "landscape": {
+            "macro_tile_metres": 24,
+            "macro_strength": 0.18
+          }
+        }
+      ]
+    },
+    {
+      "id": "mediterranean_soil",
+      "label": "Dry Mediterranean mineral soil",
+      "role": "DryMineralAppearance",
+      "semantic_owner": "PCG/PCGEx",
+      "tile_metres": 4,
+      "local_masks": {
+        "R": "pebbles",
+        "G": "dry_crust",
+        "B": "fine_grain_variation"
+      },
+      "variants": [
+        {
+          "id": "fine",
+          "label": "Fine mineral",
+          "seed": 307,
+          "brightness": 0.445,
+          "surface_a": 0.28,
+          "surface_b": 0.24,
+          "roughness": 0.91,
+          "normal_strength": 0.38
+        },
+        {
+          "id": "stony",
+          "label": "Stony mineral",
+          "seed": 353,
+          "brightness": 0.42,
+          "surface_a": 1.28,
+          "surface_b": 0.22,
+          "roughness": 0.89,
+          "normal_strength": 0.66
+        },
+        {
+          "id": "dry_crusted",
+          "label": "Dry crusted",
+          "seed": 389,
+          "brightness": 0.395,
+          "surface_a": 0.42,
+          "surface_b": 1.32,
+          "roughness": 0.94,
+          "normal_strength": 0.56
+        },
+        {
+          "id": "refined_a",
+          "label": "Refined A dry gravel crust",
+          "seed": 431,
+          "brightness": 0.405,
+          "surface_a": 1.08,
+          "surface_b": 0.78,
+          "roughness": 0.93,
+          "normal_strength": 0.72,
+          "refinement": {
+            "variation_scale": 0.55,
+            "crack_color_scale": 1.55,
+            "pore_color_scale": 1.2,
+            "color_gain": [
+              1.04,
+              1,
+              0.91
+            ],
+            "roughness_variation_scale": 1.05,
+            "roughness_pore_scale": 1.35,
+            "ao_crack_scale": 1.3,
+            "ao_pore_scale": 1.25
+          }
+        },
+        {
+          "id": "refined_b",
+          "label": "Refinement B darker ochre mineral soil",
+          "seed": 467,
+          "brightness": 0.36,
+          "surface_a": 1.08,
+          "surface_b": 0.78,
+          "roughness": 0.93,
+          "normal_strength": 0.72,
+          "refinement": {
+            "variation_scale": 0.42,
+            "crack_color_scale": 1.45,
+            "pore_color_scale": 1.18,
+            "color_gain": [
+              1.03,
+              0.98,
+              0.93
+            ],
+            "roughness_variation_scale": 1,
+            "roughness_pore_scale": 1.3,
+            "ao_crack_scale": 1.2,
+            "ao_pore_scale": 1.15
+          },
+          "landscape": {
+            "macro_tile_metres": 12,
+            "macro_strength": 0.16
+          }
+        },
+        {
+          "id": "refined_c",
+          "label": "Refinement C deep ochre mineral soil",
+          "seed": 503,
+          "brightness": 0.3,
+          "surface_a": 0.92,
+          "surface_b": 0.66,
+          "roughness": 0.86,
+          "normal_strength": 0.52,
+          "refinement": {
+            "variation_scale": 0.36,
+            "crack_color_scale": 1.25,
+            "pore_color_scale": 1.05,
+            "color_gain": [
+              1.06,
+              0.95,
+              0.82
+            ],
+            "roughness_variation_scale": 0.85,
+            "roughness_pore_scale": 1.1,
+            "ao_crack_scale": 1,
+            "ao_pore_scale": 1
+          },
+          "landscape": {
+            "macro_tile_metres": 16,
+            "macro_strength": 0.22
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -360,7 +360,7 @@ Current configured proof commands:
 /gumball proof source-asset-audit
 ```
 
-All six are explicit, heavy and non-automatic. Successful exact-revision
+All configured proofs are explicit, heavy and non-automatic. Successful exact-revision
 artifacts may be reused; failed runs require explicit `retry`.
 
 The broker runs from trusted default-branch code, authorizes the requester,
@@ -380,6 +380,17 @@ For one proof + PR + exact SHA:
 Each broker target keeps `workflow_dispatch` as a recovery fallback, but
 broker-driven dispatch is the normal operator path. Heavy proof still runs only
 when explicitly requested; this changes the control plane, not the evidence bar.
+
+The prepared `sa-calobra-material-performance` registration is disabled.
+The owner deferred performance measurement until M3 is closed; no performance
+PASS is implied. It uses the existing Sa Calobra workflow, but its placeholder
+consumer path cannot launch a native measurement. After M3, enable the reviewed
+registration on the trusted default branch and use reviewed manual
+`workflow_dispatch` with `material_consumer=true`, the exact candidate SHA,
+a unique `gumball_request_id`, and an absolute immutable `consumer_manifest`
+path from a successful saved/fresh-rendered attempt. Preserve the existing
+budgets and protected provenance. A branch-native diagnostic run does not
+satisfy protected default-branch provenance.
 
 Mutating asset-author workflows, `asset-full.yml`, manual Unreal recovery,
 runner-space recovery and Project/bootstrap operations are deliberately **not**
@@ -446,11 +457,21 @@ Stage-specific authoring/performance workflows should default to `workflow_dispa
 
 Tiering changes *when* expensive proof runs, not *whether* it is required.
 
-A draft PR cannot merge. A ready PR with `asset_full=true` cannot satisfy the aggregate gate unless the exact-head Stage 3G full proof succeeds. If more commits are pushed after review readiness, the exact-head heavy proof is required again.
+A draft PR cannot merge. A ready PR with `asset_full=true` must pass its exact-head legacy regression gate. `stage3g_authoring` distinguishes actual legacy asset/spec/producer changes from code compatibility and workflow changes. The latter run the existing transient `CyclingStage3World.PrototypeTerrain` test with full LFS and a real build, without regenerating, saving, Map Checking or rendering `L_CyclingTest`. Actual legacy producer/asset changes retain the full authoring/final-proof contract. Aggregate requires the selected mode; neither mode admits the current Sa Calobra world.
 
 Code-only Unreal validation remains independent from the Stage 3G full-LFS lane so C++ correctness can still fail fast without materializing the world asset set.
 
-## World-stage operating model
+## Current Sa Calobra world admission
+
+Current M3 material admission targets the entire existing **2016.5 x 2016.5 m Sa Calobra Landscape**, with its actual material consumer, saved derived-map identity, independent fresh reload and fresh rendered originals. A fixed-map Stage 3G result or its 1200/4900/8000 m views cannot substitute for these requirements.
+
+The owner accepted and froze runtime implementation `94827365ef8e83e52717bb21f9d6efa921aa2d1e` on 2026-10-09. [Native proof 37954100285](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37954100285) establishes 43+8 preparation captures, 1024 material roots, actual scoped save, independent reload, eleven fresh original renders and chained source conservation. Later CI/documentation-only revisions retain this runtime proof only with unchanged relevant source/input/consumer identities; they still require their own protected checks and applicable build/Automation evidence. See [the current material ledger](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md).
+
+On 2026-10-09 the owner explicitly rejected automatic old-world validation as the current-stage test. Keep the frozen prototype as a bounded compatibility/regression oracle; do not automatically regenerate it for current-world or shared-workflow compatibility changes. Material owner acceptance, normal protected merge and current-map evidence remain separate from that oracle. Performance is `DEFERRED_AFTER_M3`, `performance_pass:false`, with no benchmark during this closeout.
+
+## Historical Stage 3G reference operating model
+
+The following operating model records the historical `L_CyclingTest` workflow. Its fixed route stations and world-authoring results are retained regression history, not the active Sa Calobra acceptance protocol. The current M3 sequence and post-M3 performance decision above govern new world work.
 
 For Stage 3G R4/R5 world-art work, one long-lived **Draft stage integration PR** is the normal iteration surface.
 
@@ -622,13 +643,27 @@ Broker artifact contract; it never launches a GPU job or mutates a map.
 | Context | Required behavior |
 |---|---|
 | Draft world PR | List required scenarios as `DEFERRED_DRAFT`; no hardware launch |
-| Ready world PR | Require successful scenario-specific proof for the exact HEAD |
-| Main world push | Require proof for the new exact main SHA; PR-head proof is insufficient |
+| Ready world PR | Require successful scenario-specific proof for the exact HEAD, except the bounded 2026-10-09 M3 deferral below |
+| Main world push | Require proof for the new exact main SHA, except the bounded M3 deferral; PR-head proof is insufficient |
 | Docs or ordinary CI changes | `NOT_REQUIRED`; no hardware launch |
 | Scheduled/manual static CI sweep | `STATIC_ONLY`; no implicit world benchmark |
 | New unregistered world | Fail readiness rather than substitute an older map |
 
 ### Owner-approved frozen 2A handoff: measurement due in 2B
+
+**Current owner decision, 2026-10-09:** "wydajność zmierzymy po domknięciu m3".
+Performance measurement is due after the assembled M3 world is closed out.
+This supersedes the historical 2A-to-2B deadline described below and the
+performance prerequisite for #363 → #384 → #364. The bounded M3 policy must
+retain the required registered scenarios and report `DEFERRED_AFTER_M3` with
+`performance_pass: false`. Restrict it to the recorded M3 baseline ancestry,
+the registered scenarios and assembly still in progress; unmapped worlds,
+unrelated scenarios and later milestones retain ordinary fail-closed admission.
+After M3 assembly is complete, end the exception and measure the actual assembled
+consumer at its exact SHA. Saved/fresh-rendered consumer proof, whole-area owner
+visual acceptance, build/Automation/asset evidence, review and protected Aggregate
+remain required. Existing budgets, reference hardware, sample/sector checks,
+trusted default-branch producer and artifact provenance remain unchanged.
 
 On 2026-10-04 the owner explicitly moved the performance measurement for the
 Issue #335 / PR #362 diagnostic-mask baseline to Issue #363 (2B). No GPU job
@@ -646,9 +681,9 @@ or any other non-allowlisted file restore the ordinary proof requirement.
 Unregistered or additional scenarios cannot use this exception. Build,
 Automation, asset retention/provenance, review and protected Aggregate gates
 remain required. Candidate surface classifications remain candidates; the red
-problem-overlay review is separately deferred to #372. Issue #363 owns the
-whole-current-Landscape measurement after the material foundation is visually
-reviewable; neither a Golden Kilometer sample nor a single view substitutes
+problem-overlay review is separately deferred to #372. The former #363
+measurement deadline is superseded by the 2026-10-09 decision above; neither
+a Golden Kilometer sample nor a single view substitutes
 for its 2,016.5 m × 2,016.5 m scope. The existing reference hardware, budgets and
 exact-SHA evidence contract remain unchanged.
 

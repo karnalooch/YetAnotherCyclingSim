@@ -1,0 +1,237 @@
+"""Toggle the verified MM limestone on component 230; never save the level.
+
+Run this file again to restore the original override. Unique imported assets
+remain unsaved; failures restore the component, not unrelated user work.
+"""
+
+import hashlib
+import json
+import os
+import runpy
+import uuid
+from pathlib import Path
+
+import unreal
+
+ROOT = Path(__file__).resolve().parents[2]
+CANDIDATE = ROOT / "Saved/MaterialMaker/Limestone/candidate"
+MAP = "/Game/Worlds/SaCalobra/L_SaCalobraAccepted_20261004"
+MAP_HASH = "276d1621fa083850f6d603b6d115b01b74c9a92c182254d15302e786abfbf29c"
+LIB = unreal.MaterialEditingLibrary
+
+
+def main():
+    world = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem).get_editor_world()
+    if world.get_path_name().split(".")[0] != MAP:
+        raise RuntimeError("Open the accepted Sa Calobra map; no automatic map switch")
+    foundation = runpy.run_path(
+        str(ROOT / "scripts/ue/sa_calobra_material_foundation.py")
+    )
+    map_file = ROOT / "Content" / (MAP.removeprefix("/Game/") + ".umap")
+    if foundation["digest"](map_file) != MAP_HASH:
+        raise RuntimeError("The accepted map file changed; preserve current work")
+    landscapes = unreal.GameplayStatics.get_all_actors_of_class(world, unreal.Landscape)
+    if len(landscapes) != 1:
+        raise RuntimeError("Expected one frozen Landscape")
+    landscape = landscapes[0]
+    components = landscape.get_components_by_class(unreal.LandscapeComponent)
+    matches = [c for c in components if c.get_name() == "LandscapeComponent_230"]
+    if len(components) != 1024 or len(matches) != 1:
+        raise RuntimeError("Unexpected Landscape topology or canary")
+    component = matches[0]
+    before = foundation["scene_snapshot"](world, landscape, map_file)
+    prior = getattr(unreal, "_yacs_material_maker_preview", None)
+    original = component.get_editor_property("override_material")
+    if prior and (
+        prior["world"] != world.get_path_name()
+        or prior["component"] != component
+        or original != prior["material"]
+    ):
+        raise RuntimeError("Preview changed externally; refusing to overwrite it")
+    other = {
+        c.get_path_name(): c.get_editor_property("override_material")
+        for c in components
+        if c != component
+    }
+    global_material = landscape.get_editor_property("landscape_material")
+    if prior:
+        target = prior["original"]
+    else:
+        memory = runpy.run_path(str(ROOT / "scripts/ue/sa_calobra_material_waves.py"))[
+            "available_memory"
+        ]()
+        if (
+            memory["free_physical"] < 8 * 1024**3
+            or memory["free_commit"] < 12 * 1024**3
+        ):
+            raise RuntimeError("Insufficient memory headroom for three 2K textures")
+        validation = json.loads((CANDIDATE / "validation.json").read_text())
+        if validation["status"] != "MAP_CHECKS_PASS_UE_REVIEW_PENDING":
+            raise RuntimeError("Candidate map validation is missing")
+        paths = {}
+        for channel in ("BaseColor", "Normal_DX", "ORM"):
+            entry = validation["maps"][channel]
+            path = Path(entry["path"])
+            if not path.resolve().is_relative_to((CANDIDATE / "export").resolve()):
+                raise RuntimeError("Unexpected candidate path")
+            if hashlib.sha256(path.read_bytes()).hexdigest() != entry["sha256"]:
+                raise RuntimeError("Candidate texture changed: " + channel)
+            paths[channel] = path
+        package = (
+            "/Game/Generated/YACS/TextureMaterialPrep/MaterialMaker/" + uuid.uuid4().hex
+        )
+        textures = {}
+        for channel, path in paths.items():
+            task = unreal.AssetImportTask()
+            for prop, value in {
+                "filename": str(path),
+                "destination_path": package,
+                "destination_name": "T_MM_" + channel,
+                "automated": True,
+                "replace_existing": False,
+                "save": False,
+            }.items():
+                task.set_editor_property(prop, value)
+            unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
+            imported = task.get_editor_property("imported_object_paths")
+            if len(imported) != 1:
+                raise RuntimeError("Texture import failed: " + channel)
+            texture = unreal.load_asset(imported[0])
+            texture.set_editor_property("srgb", channel == "BaseColor")
+            compression = (
+                unreal.TextureCompressionSettings.TC_DEFAULT
+                if channel == "BaseColor"
+                else unreal.TextureCompressionSettings.TC_NORMALMAP
+                if channel == "Normal_DX"
+                else unreal.TextureCompressionSettings.TC_MASKS
+            )
+            texture.set_editor_property("compression_settings", compression)
+            texture.set_editor_property("address_x", unreal.TextureAddress.TA_WRAP)
+            texture.set_editor_property("address_y", unreal.TextureAddress.TA_WRAP)
+            if channel == "Normal_DX":
+                texture.set_editor_property("flip_green_channel", False)
+            textures[channel] = texture
+        target = unreal.AssetToolsHelpers.get_asset_tools().create_asset(
+            "M_MM_PaleLimestone", package, unreal.Material, unreal.MaterialFactoryNew()
+        )
+        if target is None:
+            raise RuntimeError("Material creation failed")
+
+        def node(cls, **props):
+            value = LIB.create_material_expression(target, cls)
+            if value is None:
+                raise RuntimeError("Material expression creation failed")
+            for prop, setting in props.items():
+                value.set_editor_property(prop, setting)
+            return value
+
+        def link(a, pin, b, socket):
+            if not LIB.connect_material_expressions(a, pin, b, socket):
+                raise RuntimeError("Material connection failed: " + socket)
+
+        def output(value, pin, prop):
+            if not LIB.connect_material_property(value, pin, prop):
+                raise RuntimeError("Material output connection failed")
+
+        size = node(
+            unreal.MaterialExpressionConstant3Vector,
+            constant=unreal.LinearColor(200, 200, 200, 1),
+        )
+        tangent = node(unreal.MaterialExpressionStaticBool, value=False)
+        for channel, sampler in (
+            ("BaseColor", unreal.MaterialSamplerType.SAMPLERTYPE_COLOR),
+            ("Normal_DX", unreal.MaterialSamplerType.SAMPLERTYPE_NORMAL),
+            ("ORM", unreal.MaterialSamplerType.SAMPLERTYPE_MASKS),
+        ):
+            obj = node(
+                unreal.MaterialExpressionTextureObject,
+                texture=textures[channel],
+                sampler_type=sampler,
+            )
+            projection = node(unreal.MaterialExpressionMaterialFunctionCall)
+            name = (
+                "WorldAlignedNormal"
+                if channel == "Normal_DX"
+                else "WorldAlignedTexture"
+            )
+            function = foundation["load_required"](
+                "/Engine/Functions/Engine_MaterialFunctions01/Texturing/" + name
+            )
+            if not projection.set_material_function(function):
+                raise RuntimeError("Native projection unavailable")
+            link(obj, "", projection, "TextureObject")
+            link(size, "", projection, "TextureSize")
+            if channel == "BaseColor":
+                output(projection, "XYZ Texture", unreal.MaterialProperty.MP_BASE_COLOR)
+            elif channel == "Normal_DX":
+                link(tangent, "", projection, "WorldSpace")
+                normal = node(unreal.MaterialExpressionNormalize)
+                link(projection, "XYZ Texture", normal, "")
+                output(normal, "", unreal.MaterialProperty.MP_NORMAL)
+            else:
+                for mask, prop in (
+                    (
+                        (True, False, False),
+                        unreal.MaterialProperty.MP_AMBIENT_OCCLUSION,
+                    ),
+                    ((False, True, False), unreal.MaterialProperty.MP_ROUGHNESS),
+                ):
+                    scalar = node(
+                        unreal.MaterialExpressionComponentMask,
+                        r=mask[0],
+                        g=mask[1],
+                        b=mask[2],
+                        a=False,
+                    )
+                    link(projection, "XYZ Texture", scalar, "")
+                    output(scalar, "", prop)
+        # Metallic remains zero; height is retained offline, never displacement.
+        if LIB.recompile_material(target):
+            raise RuntimeError("Material compilation reported failure")
+    try:
+        component.set_editor_property("override_material", target)
+        if component.get_editor_property("override_material") != target:
+            raise RuntimeError("Canary assignment failed")
+        if target is not None and component.get_material(0) != target:
+            raise RuntimeError("Canary consumer did not update")
+        if global_material != landscape.get_editor_property("landscape_material"):
+            raise RuntimeError("Global material changed")
+        if any(
+            c.get_editor_property("override_material") != other[c.get_path_name()]
+            for c in components
+            if c != component
+        ):
+            raise RuntimeError("Another component changed")
+        if before != foundation["scene_snapshot"](world, landscape, map_file):
+            raise RuntimeError("Frozen geometry changed")
+        result = {
+            "status": "RESTORED" if prior else "MM_LIMESTONE_CANARY_ASSIGNED",
+            "component": component.get_path_name(),
+            "material": target.get_path_name() if target else None,
+            "map_saved": False,
+            "geometry_unchanged": True,
+            "visual_acceptance": "pending",
+        }
+        proof = ROOT / "Saved/RuntimeProof/MaterialMakerLimestone"
+        proof.mkdir(parents=True, exist_ok=True)
+        (proof / (str(os.getpid()) + ".json")).write_text(
+            json.dumps(result, indent=2) + "\n", encoding="utf-8"
+        )
+    except Exception:
+        component.set_editor_property("override_material", original)
+        raise
+    unreal._yacs_material_maker_preview = (
+        None
+        if prior
+        else {
+            "world": world.get_path_name(),
+            "component": component,
+            "original": original,
+            "material": target,
+        }
+    )
+    unreal.log("YACS_MATERIAL_MAKER " + json.dumps(result))
+
+
+if __name__ == "__main__":
+    main()

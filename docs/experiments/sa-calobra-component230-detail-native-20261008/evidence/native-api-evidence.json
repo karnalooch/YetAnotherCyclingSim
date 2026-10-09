@@ -1,0 +1,112 @@
+{
+  "status": "INSTALLED_PRIMARY_API_SOURCE_VERIFIED",
+  "exact_sha": "520c7c98961b3a4be7fbb6eb7930e6dea8eb8b46",
+  "engine_version": "5.8.2-56702186",
+  "build_version_sha256": "ff99fc3dd98e7c7fd2f5700334bc792dfb7baced3828cdee32940bb69581a6a4",
+  "headers": [
+    {
+      "header": "Engine/Source/Runtime/GeometryCore/Public/DynamicMesh/DynamicMesh3.h",
+      "sha256": "3bc517d1b029aa4c0fab8cd1fe736a5511072011373afb98d7205ba6a8992cad",
+      "verified_symbols": [
+        "TriangleIndicesItr",
+        "VertexIndicesItr",
+        "GetTriangle",
+        "GetVertex",
+        "SetVertex",
+        "InsertTriangle"
+      ]
+    },
+    {
+      "header": "Engine/Source/Runtime/GeometryCore/Public/DynamicMesh/DynamicMeshAttributeSet.h",
+      "sha256": "94289af2c6c0dddf78c0324910b2f6990a531c8c178b00aab02e663c864a1a6e",
+      "verified_symbols": [
+        "EnableMaterialID",
+        "GetMaterialID",
+        "PrimaryNormals",
+        "PrimaryUV",
+        "IsSameAs"
+      ]
+    },
+    {
+      "header": "Engine/Source/Runtime/GeometryCore/Public/DynamicMesh/DynamicMeshTriangleAttribute.h",
+      "sha256": "0ba2381b124a972f765ae57157050ad89b3e3ec06fd60a59ee6819c14eb14e53",
+      "verified_symbols": [
+        "SetValue",
+        "GetValue"
+      ]
+    },
+    {
+      "header": "Engine/Source/Runtime/GeometryCore/Public/DynamicMesh/MeshNormals.h",
+      "sha256": "f07f363a566242e7bf438c8379cdc20d76892a9768bd30a7688d82bf92783178",
+      "verified_symbols": [
+        "RecomputeOverlayElementNormals"
+      ]
+    },
+    {
+      "header": "Engine/Source/Runtime/GeometryCore/Public/DynamicMesh/DynamicMeshOverlay.h",
+      "sha256": "eae6db5a8e9e67a6e6b08c24c1ca2c746d5a2da17715d19b515aceec0e61861a",
+      "verified_symbols": [
+        "GetTriangle",
+        "GetElement",
+        "GetParentVertex",
+        "IsSetTriangle",
+        "SetTriangle",
+        "AppendElement"
+      ]
+    },
+    {
+      "header": "Engine/Source/Runtime/GeometryFramework/Public/UDynamicMesh.h",
+      "sha256": "20837a3e61006515152da3fa30ca0b34757d3d83afe675efc2f44522b37fd1bd",
+      "verified_symbols": [
+        "GetMeshRef",
+        "SetMesh"
+      ]
+    },
+    {
+      "header": "Engine/Source/Runtime/GeometryFramework/Public/Components/DynamicMeshComponent.h",
+      "sha256": "57ff18f66486e0a206ee56e78d1d834e8344a1c984c462621a7192ee04276090",
+      "verified_symbols": [
+        "GetDynamicMesh"
+      ]
+    },
+    {
+      "header": "Engine/Source/Runtime/Engine/Public/Materials/Material.h",
+      "sha256": "e5c457d568a54dd1139cf938a4f4018dab2293971d3b08892a2d73fb96c92d74",
+      "verified_symbols": [
+        "SetShadingModel"
+      ]
+    },
+    {
+      "header": "Engine/Source/Editor/MaterialEditor/Public/MaterialEditingLibrary.h",
+      "sha256": "5201a2be4ed754246bca79d115626dd3b59471989366f87cd7110a206047375f",
+      "verified_symbols": [
+        "CreateMaterialExpression",
+        "ConnectMaterialProperty",
+        "RecompileMaterial"
+      ]
+    },
+    {
+      "header": "Engine/Source/Runtime/Engine/Classes/GameFramework/Actor.h",
+      "sha256": "2ee1effb7ab4ac4cf65cf6caa90a27cea45361feefaae0cb673f7265e00bc5c9",
+      "verified_symbols": [
+        "K2_SetActorLocation",
+        "K2_SetActorRotation"
+      ]
+    },
+    {
+      "header": "Engine/Source/Runtime/Engine/Classes/Camera/CameraComponent.h",
+      "sha256": "316c4daa71ea860919d7438e189554af7f207c68d584e78ba130d0a751359c55",
+      "verified_symbols": [
+        "FieldOfView"
+      ]
+    },
+    {
+      "header": "Engine/Source/Runtime/Engine/Classes/Components/PrimitiveComponent.h",
+      "sha256": "814841dbc22d80d3ef9d73d87dcbbf8b1e4905bb0fd5b6a34a8c4d64509b939e",
+      "verified_symbols": [
+        "SetCollisionEnabled",
+        "SetCastShadow"
+      ]
+    }
+  ]
+}

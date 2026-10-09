@@ -1,0 +1,26 @@
+{
+  "status": "rendered_candidate_UE_validation_pending",
+  "tile_metres": 2.0,
+  "graph": "SaCalobra_PaleLimestone.ptex",
+  "graph_sha256": "6d83e816c764049935d945a16c08ba33ad2e225b48b4511bf29b1df78afc7450",
+  "tool": "Material Maker 1.7",
+  "tool_exe_sha256": "d3eac7af179c92560be0736478b401c3e95c656e0125c6309f8b773670d951b6",
+  "adapted_source": "nodes/material.mmg",
+  "adapted_source_sha256": "e98108049b3552ada5ef510d94bee254856bcdfc91bc8589e9ddb48e3423fabc",
+  "upstream": "https://github.com/RodZill4/material-maker",
+  "license": "MIT",
+  "notice": "../../../../../docs/legal/notices/material-maker-MIT.txt",
+  "expected_maps": [
+    "BaseColor.png",
+    "ORM.png",
+    "Normal_DX.png",
+    "Height.exr"
+  ],
+  "normal_convention": "DirectX",
+  "scope": "procedural artistic candidate; not a geological scan; no world mutation",
+  "profile": "mineral",
+  "label": "Fine mineral ground",
+  "recipe": "scripts/assets/build_material_maker_surface_set.py",
+  "seed": 89,
+  "placement": "Unassigned artistic sample; no inferred terrain domains"
+}

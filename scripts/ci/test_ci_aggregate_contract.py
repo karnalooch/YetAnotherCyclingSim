@@ -22,6 +22,7 @@ class AggregateCIGateContractTests(unittest.TestCase):
             'require_bool "class-ue-tooling" "${CLASS_UE_TOOLING}"',
             'require_bool "class-security-base" "${CLASS_SECURITY_BASE}"',
             'require_bool "class-asset-full" "${CLASS_ASSET_FULL}"',
+            'require_bool "class-stage3g-authoring" "${CLASS_STAGE3G_AUTHORING}"',
         )
         for expected in expected_lines:
             with self.subTest(expected=expected):
@@ -71,6 +72,7 @@ class AggregateBehaviorTests(unittest.TestCase):
             "CLASS_CI_COST": "light",
             "CLASS_SECURITY_BASE": "false",
             "CLASS_ASSET_FULL": "false",
+            "CLASS_STAGE3G_AUTHORING": "false",
             "EVENT_NAME": "pull_request",
             "PR_DRAFT": "false",
         }
@@ -111,6 +113,7 @@ class AggregateBehaviorTests(unittest.TestCase):
             "CLASS_PYTHON",
             "CLASS_CI",
             "CLASS_ASSET_FULL",
+            "CLASS_STAGE3G_AUTHORING",
             "CLASS_UNREAL_COMPILE",
         ):
             for value in ("", "False", "unknown"):
@@ -161,6 +164,13 @@ class AggregateBehaviorTests(unittest.TestCase):
         self.assertEqual(self.execute(values).returncode, 0)
         values["CLASS_CI_COST"] = "light"
         self.assertNotEqual(self.execute(values).returncode, 0)
+
+    def test_legacy_authoring_cannot_omit_its_required_regression_gate(self):
+        result = self.execute({**self.baseline(), "CLASS_STAGE3G_AUTHORING": "true"})
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(
+            "legacy authoring must retain its full regression gate", result.stdout
+        )
 
 
 if __name__ == "__main__":

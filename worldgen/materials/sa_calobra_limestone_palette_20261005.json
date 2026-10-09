@@ -1,0 +1,21 @@
+{
+  "status": "OWNER_LOCKED_VISUAL_DIRECTION_CANDIDATE_PARAMETERS",
+  "reference": "docs/experiments/sa-calobra-material-reference-review-2026-10-05.md",
+  "direction": "Light neutral grey weathered carbonate rock; local warm stains only; olive vegetation and straw grass between pale outcrops. Brown soil and litter remain distinct.",
+  "geology": "Regional limestone and dolomite; individual source scans and camera-point lithology unverified",
+  "source_library": "3d53743e48394f31beb35e4030dc8a87",
+  "operation": "saturate(lerp(linear_rgb, luminance(linear_rgb), desaturation) * linear_gain * tint)",
+  "luminance_weights": [0.3, 0.59, 0.11],
+  "roles": {
+    "ExposedRock": {"desaturation": 0.85, "linear_gain": 1.55, "tint": [0.99, 1.0, 1.01]},
+    "RockCut": {"desaturation": 0.8, "linear_gain": 1.45, "tint": [0.99, 1.0, 1.01]},
+    "Scree": {"desaturation": 0.65, "linear_gain": 1.25, "tint": [1.0, 1.0, 1.0]},
+    "DryMineral": {"desaturation": 0.35, "linear_gain": 1.12, "tint": [1.0, 1.0, 1.0]},
+    "FillGravel": {"desaturation": 0.65, "linear_gain": 1.25, "tint": [1.0, 1.0, 1.0]},
+    "DryGrass": {"desaturation": 0.0, "linear_gain": 1.0, "tint": [1.0, 1.0, 1.0]},
+    "ForestLitter": {"desaturation": 0.0, "linear_gain": 1.0, "tint": [1.0, 1.0, 1.0]}
+  },
+  "parameter_authority": "Artistic starting values, not measured albedo; visual direction fixed, numeric parameters tunable",
+  "normal_roughness_height": "Preserve original provider maps; no geometry displacement",
+  "acceptance": "Pending Unreal Base Color, Lit and whole-Landscape review"
+}

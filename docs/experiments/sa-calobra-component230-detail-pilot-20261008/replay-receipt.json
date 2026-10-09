@@ -1,0 +1,41 @@
+{
+  "annotations_sha256": "0a7703e960d6762d7721dafe0d646c74d889c6ff25c4b115b06129992a7586e8",
+  "archive_download": "PARTIAL_HTTP_RANGES",
+  "archive_oid": "f9ad39ae59a16dc1fc4615ef10ca950096a94d443bea4dcb0e624284000a0cab",
+  "archive_size_bytes": 1609577808,
+  "frames_csv_sha256": "15e0a2350c613bf52bfb1354192043ca0c6cd785493c59e7721305b67de099a3",
+  "native_ue": "NOT_RUN",
+  "owner_review": "PENDING",
+  "performance": "NOT_MEASURED",
+  "range_bytes_read": 3932372,
+  "range_request_count": 15,
+  "source_capture_sha": "b1ea05b33b9f3208e7aeb6884f1a67792d9c6121",
+  "source_files": [
+    {
+      "archive_entry": "terrain-erosion-mesh/combined-mesh.json",
+      "crc32": "b9ba7abe",
+      "sha256": "a9d34dbfb32a59b592dca561a7d7b0e53f7d02d90c095cff7c0812c249247965",
+      "size_bytes": 4100798
+    },
+    {
+      "archive_entry": "terrain-erosion-mesh/component230-cliff-visual-receipt.json",
+      "crc32": "0b902323",
+      "sha256": "35c76796924681c4d836388761bcc3ee83dd6e9fa544c3adb109e004e1c58225",
+      "size_bytes": 20007
+    },
+    {
+      "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0021-forward-00005.png",
+      "crc32": "b41b4ad4",
+      "sha256": "a03f399fa4144804cc5b06b6c8fc24196016fe709fbab2e056f5835f41b71069",
+      "size_bytes": 984060
+    },
+    {
+      "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0023-forward-00000.png",
+      "crc32": "01a712b1",
+      "sha256": "edde200ea4c78cb7b638d2f8c45f77e9f68e8f90a39a3e4c02aac8884d394068",
+      "size_bytes": 1114597
+    }
+  ],
+  "status": "DERIVATIVE_REPLAY_COMPLETE",
+  "whole_archive_hash_recomputed": false
+}

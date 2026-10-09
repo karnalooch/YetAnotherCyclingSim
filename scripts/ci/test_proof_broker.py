@@ -13,6 +13,10 @@ ROOT = Path(__file__).resolve().parents[2]
 POLICY = ROOT / ".gumball" / "proof-broker.json"
 BROKER_WORKFLOW = ROOT / ".github" / "workflows" / "proof-broker.yml"
 TARGET_WORKFLOWS = {
+    "sa-calobra-material-performance": ROOT
+    / ".github"
+    / "workflows"
+    / "sa-calobra-terrain-performance.yml",
     "sa-calobra-terrain-performance": ROOT
     / ".github"
     / "workflows"
@@ -79,6 +83,36 @@ class YacsProofBrokerContractTests(unittest.TestCase):
                 self.assertFalse(proof["automatic"]["enabled"])
                 self.assertEqual(proof["artifact_name"], "proof-$proof-$sha")
                 self.assertEqual(proof["allowed_write_permissions"], [])
+
+    def test_shared_workflow_accepts_optional_inputs_but_requires_known_required_inputs(
+        self,
+    ):
+        proof = self.policy()["proofs"]["sa-calobra-terrain-performance"]
+        workflow = TARGET_WORKFLOWS["sa-calobra-terrain-performance"].read_text()
+        self.assertEqual(proof_broker.validate_workflow_contract(workflow, proof), [])
+        required = workflow.replace(
+            "        required: false\n", "        required: true\n", 1
+        )
+        self.assertIn(
+            "required workflow input 'material_consumer' is not mapped",
+            proof_broker.validate_workflow_contract(required, proof),
+        )
+        unknown = dict(proof, inputs={**proof["inputs"], "undeclared_input": "value"})
+        self.assertIn(
+            "mapped workflow input 'undeclared_input' is not declared",
+            proof_broker.validate_workflow_contract(workflow, unknown),
+        )
+        material = self.policy()["proofs"]["sa-calobra-material-performance"]
+        self.assertFalse(material["enabled"])
+        self.assertEqual(
+            proof_broker.validate_workflow_contract(required, material), []
+        )
+        self.assertEqual(material["inputs"]["material_consumer"], "true")
+        self.assertEqual(material["inputs"]["consumer_manifest"], "")
+        self.assertLess(
+            workflow.index("Reject missing saved-consumer intent"),
+            workflow.index("Checkout trusted retention helper"),
+        )
 
     def test_status_labels_fit_github_limit_without_collisions(self):
         policy = self.policy()
@@ -257,7 +291,12 @@ class YacsProofBrokerContractTests(unittest.TestCase):
                     )
                     if re.search(r"(?m)^          name: proof-", block)
                 ]
-                if proof_id in {"m3-terrain", "m3-h-focus"}:
+                if proof_id in {
+                    "m3-terrain",
+                    "m3-h-focus",
+                    "sa-calobra-terrain-performance",
+                    "sa-calobra-material-performance",
+                }:
                     expected_name = f"name: proof-{proof_id}-"
                     matching_uploads = [
                         block for block in uploads if expected_name in block
@@ -280,6 +319,10 @@ class YacsProofBrokerContractTests(unittest.TestCase):
                         "inputs.ride_probe_mode == '') && "
                         "startsWith(inputs.gumball_request_id, 'gb-m3-h-focus-')"
                     )
+                elif proof_id == "sa-calobra-terrain-performance":
+                    guard = "success() && !inputs.material_consumer"
+                elif proof_id == "sa-calobra-material-performance":
+                    guard = "success() && inputs.material_consumer"
                 else:
                     guard = "success()"
                 self.assertIn("if: ${{ " + guard + " }}", upload)

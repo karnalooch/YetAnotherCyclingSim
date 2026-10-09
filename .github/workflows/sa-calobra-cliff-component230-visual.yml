@@ -1,0 +1,376 @@
+name: Sa Calobra Component 230 Cliff Visual
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "feat/443-component230-cliff-visual"
+      - "codex/363-landscape-material-foundation"
+    paths:
+      - ".github/workflows/sa-calobra-cliff-component230-visual.yml"
+      - ".gumball/workflow-lifecycle.json"
+      - "scripts/assets/prepare_sa_calobra_component230_cliff_visual.py"
+      - "scripts/assets/test_sa_calobra_component230_cliff_visual.py"
+      - "scripts/assets/analyze_sa_calobra_component230_cliff_visual.py"
+      - "scripts/ue/capture_sa_calobra_component230_cliff.py"
+      - "docs/tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sa-calobra-component230-cliff-visual-${{ github.ref_name }}
+  cancel-in-progress: true
+
+env:
+  GIT_LFS_SKIP_SMUDGE: "1"
+  YACS_LFS_CACHE_ROOT: 'D:\yacs\cache\git-lfs\YetAnotherCyclingSim'
+  YACS_CLIFF_VISUAL_EXPECTED_SHA: ${{ github.sha }}
+
+jobs:
+  component230-visual:
+    name: Transient cliff sheets and black-cavity A/B
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 15
+    steps:
+      - name: Isolate Git configuration
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'component230-cliff.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          $env:GIT_CONFIG_GLOBAL = $isolated
+          $env:GIT_CONFIG_NOSYSTEM = '1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot enable long paths.' }
+
+      - name: Checkout exact visual revision into warm UE workspace
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: _material-forge-ue-canary
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          lfs: false
+          clean: false
+          persist-credentials: false
+
+      - name: Verify exact SHA and idle host
+        shell: pwsh
+        working-directory: _material-forge-ue-canary
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $actual = (git rev-parse HEAD).Trim()
+          if ($actual -ne $env:YACS_CLIFF_VISUAL_EXPECTED_SHA) {
+            throw "checkout HEAD '$actual' != visual SHA '$env:YACS_CLIFF_VISUAL_EXPECTED_SHA'"
+          }
+          $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+          $state | ConvertTo-Json -Depth 8 | Write-Host
+          if ($state.status -ne 'IDLE') {
+            throw "Shared Unreal host is already owned; status=$($state.status)."
+          }
+          $requiredDlls = @(
+            'Binaries/Win64/UnrealEditor-YetAnotherCyclingSim.dll',
+            'Binaries/Win64/UnrealEditor-YetAnotherCyclingSimEditor.dll'
+          )
+          $missingDlls = @($requiredDlls | Where-Object { -not (Test-Path -LiteralPath $_ -PathType Leaf) })
+          if ($missingDlls.Count -gt 0) {
+            Write-Host "Warm Editor DLLs missing; exact-head fallback build required: $($missingDlls -join ', ')" -ForegroundColor Yellow
+            "YACS_COMPONENT230_BUILD_REQUIRED=1" >> $env:GITHUB_ENV
+          }
+          else {
+            "YACS_COMPONENT230_BUILD_REQUIRED=0" >> $env:GITHUB_ENV
+          }
+
+      - name: Build exact-head Editor when warm cache is unavailable
+        if: ${{ env.YACS_COMPONENT230_BUILD_REQUIRED == '1' }}
+        shell: pwsh
+        working-directory: _material-forge-ue-canary
+        run: |
+          $ErrorActionPreference = 'Stop'
+          . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
+          . ./scripts/runner/Assert-YacsDiskReserve.ps1
+          . ./scripts/ci/Assert-YacsBuildIsolation.ps1
+          $project = Join-Path (Get-Location) 'YetAnotherCyclingSim.uproject'
+          $engine = Resolve-YacsUnrealEngine -ProjectPath $project
+          Assert-YacsDiskReserve -Path $project
+          Assert-YacsBuildIsolation -ProjectPath $project
+          $ubtConfigDir = Join-Path (Get-Location) 'Saved/UnrealBuildTool'
+          New-Item -ItemType Directory -Force -Path $ubtConfigDir | Out-Null
+          @'
+          <?xml version="1.0" encoding="utf-8" ?>
+          <Configuration xmlns="https://www.unrealengine.com/BuildConfiguration">
+            <BuildConfiguration>
+              <bAllowUBAExecutor>false</bAllowUBAExecutor>
+              <bAllowUBALocalExecutor>false</bAllowUBALocalExecutor>
+              <MaxParallelActions>4</MaxParallelActions>
+            </BuildConfiguration>
+          </Configuration>
+          '@ | Set-Content -LiteralPath (Join-Path $ubtConfigDir 'BuildConfiguration.xml') -Encoding utf8
+          $buildLog = Join-Path $env:RUNNER_TEMP "component230-build-$env:YACS_CLIFF_VISUAL_EXPECTED_SHA.log"
+          $buildBat = Join-Path $engine.Root 'Engine/Build/BatchFiles/Build.bat'
+          $buildArgs = @(
+            $project,
+            'YetAnotherCyclingSimEditor',
+            'Win64',
+            'Development',
+            '-WaitMutex',
+            '-NoHotReloadFromIDE',
+            '-FromMsBuild'
+          )
+          $process = Start-Process -FilePath $buildBat -ArgumentList $buildArgs -WorkingDirectory (Split-Path $buildBat -Parent) -PassThru -NoNewWindow -RedirectStandardOutput $buildLog
+          if (-not $process.WaitForExit(900000)) {
+            $process | Stop-Process -Force
+            throw 'Component230 exact-head Editor build timed out after 900 seconds.'
+          }
+          $exitCode = $process.ExitCode
+          if ($null -eq $exitCode -and (Test-Path -LiteralPath $buildLog)) {
+            $text = Get-Content -LiteralPath $buildLog -Raw -ErrorAction SilentlyContinue
+            if ($text -match 'Result: Succeeded') { $exitCode = 0 }
+          }
+          Get-Content -LiteralPath $buildLog -Tail 100 -ErrorAction SilentlyContinue | Write-Host
+          if ($exitCode -ne 0) { throw "Component230 exact-head Editor build failed with exit $exitCode." }
+          foreach ($dll in @(
+            'Binaries/Win64/UnrealEditor-YetAnotherCyclingSim.dll',
+            'Binaries/Win64/UnrealEditor-YetAnotherCyclingSimEditor.dll'
+          )) {
+            if (-not (Test-Path -LiteralPath $dll -PathType Leaf)) {
+              throw "Expected Editor binary missing after build: $dll"
+            }
+          }
+      - name: Install pinned GIS/image dependencies
+        shell: pwsh
+        working-directory: _material-forge-ue-canary
+        run: |
+          python -m pip install --disable-pip-version-check --only-binary=:all: numpy==2.3.5 rasterio==1.5.2 shapely==2.1.2 pillow==12.0.0
+          if ($LASTEXITCODE -ne 0) { throw 'Component230 dependency install failed.' }
+
+      - name: Materialize accepted Sa Calobra map from persistent LFS cache
+        shell: pwsh
+        working-directory: _material-forge-ue-canary
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $env:GIT_LFS_SKIP_SMUDGE = '0'
+          try {
+            New-Item -ItemType Directory -Force -Path $env:YACS_LFS_CACHE_ROOT | Out-Null
+            git lfs install --local --skip-smudge
+            if ($LASTEXITCODE -ne 0) { throw 'Local LFS setup failed.' }
+            git config --local lfs.storage $env:YACS_LFS_CACHE_ROOT
+            if ($LASTEXITCODE -ne 0) { throw 'Persistent LFS storage configuration failed.' }
+            $map = 'Content/Worlds/SaCalobra/L_SaCalobraAccepted_20261004.umap'
+            $library = 'Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87'
+            $exposedBaseColor = 'Content/Generated/YACS/TextureMaterialPrep/Runs/C414EA4B402723D66FCB689E49EEB02D/BaseColor.uasset'
+            $screeBaseColor = 'Content/Generated/YACS/TextureMaterialPrep/Runs/94406E0247C9822CFD006CAB8B20545E/BaseColor.uasset'
+            $include = "$map,$library/**,$exposedBaseColor,$screeBaseColor"
+            git lfs pull --include=$include --exclude=''
+            if ($LASTEXITCODE -ne 0) { throw 'Accepted map / limestone transitive LFS pull failed.' }
+            git lfs checkout $map $library $exposedBaseColor $screeBaseColor
+            if ($LASTEXITCODE -ne 0) { throw 'Accepted map / limestone transitive LFS checkout failed.' }
+            if (-not (Test-Path -LiteralPath $map -PathType Leaf)) {
+              throw 'Accepted map is missing after LFS checkout.'
+            }
+            $bytes = (Get-Item -LiteralPath $map).Length
+            if ($bytes -lt 100000000) {
+              throw "Accepted map still looks like an LFS pointer (bytes=$bytes)."
+            }
+            foreach ($asset in @(
+              "$library/LimestonePalette/1b3d9c45b1e24d6085bfcc8859390c19/M_SC_Limestone_ExposedRock.uasset",
+              "$library/LimestonePalette/1b3d9c45b1e24d6085bfcc8859390c19/M_SC_Limestone_Scree.uasset",
+              "$library/ProviderData/ExposedRock/T_Height.uasset",
+              "$library/ProviderData/ExposedRock/T_Normal.uasset",
+              "$library/ProviderData/ExposedRock/T_Roughness.uasset",
+              "$library/ProviderData/Scree/T_Height.uasset",
+              "$library/ProviderData/Scree/T_Normal.uasset",
+              "$library/ProviderData/Scree/T_Roughness.uasset",
+              "$library/Sources/T_Source_ExposedRock.uasset",
+              "$library/Sources/T_Source_Scree.uasset",
+              $exposedBaseColor,
+              $screeBaseColor
+            )) {
+              if (-not (Test-Path -LiteralPath $asset -PathType Leaf)) {
+                throw "Required limestone proof asset missing: $asset"
+              }
+              if ((Get-Item -LiteralPath $asset).Length -lt 1024) {
+                throw "Required limestone proof asset is still an LFS pointer: $asset"
+              }
+            }
+          }
+          finally {
+            $env:GIT_LFS_SKIP_SMUDGE = '1'
+          }
+
+      - name: Resolve frozen world inputs and proof roots
+        shell: pwsh
+        working-directory: _material-forge-ue-canary
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = Join-Path $env:RUNNER_WORKSPACE '_yacs-world-data\sa-calobra-working-v1'
+          $normalized = Join-Path $root 'normalized-context-v1a-2026-10-04\manifest.json'
+          $pcg = Join-Path $root 'pcg-masks-v1-2026-10-04\pcg-mask-manifest.json'
+          $context = Join-Path $root 'context-exclusions-v2-2026-10-04\context-mask-manifest.json'
+          foreach ($path in @($normalized, $pcg, $context)) {
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+              throw "Required frozen visual input missing: $path"
+            }
+          }
+          $rootOut = Join-Path $env:RUNNER_TEMP "component230-cliff-$env:YACS_CLIFF_VISUAL_EXPECTED_SHA"
+          Remove-Item -LiteralPath $rootOut -Recurse -Force -ErrorAction SilentlyContinue
+          $plan = Join-Path $rootOut 'plan'
+          $visual = Join-Path $rootOut 'visual'
+          New-Item -ItemType Directory -Force -Path $rootOut | Out-Null
+          "YACS_CLIFF_NORMALIZED=$normalized" >> $env:GITHUB_ENV
+          "YACS_CLIFF_PCG=$pcg" >> $env:GITHUB_ENV
+          "YACS_CLIFF_CONTEXT=$context" >> $env:GITHUB_ENV
+          "YACS_CLIFF_VISUAL_ROOT=$rootOut" >> $env:GITHUB_ENV
+          "YACS_CLIFF_VISUAL_PLAN_ROOT=$plan" >> $env:GITHUB_ENV
+          "YACS_CLIFF_VISUAL_OUTPUT=$visual" >> $env:GITHUB_ENV
+          "YACS_CLIFF_VISUAL_PLAN=$(Join-Path $plan 'component230-cliff-visual-plan.json')" >> $env:GITHUB_ENV
+
+      - name: Run deterministic CPU plan tests
+        shell: pwsh
+        working-directory: _material-forge-ue-canary
+        run: |
+          python -m py_compile scripts/assets/prepare_sa_calobra_component230_cliff_visual.py scripts/assets/analyze_sa_calobra_component230_cliff_visual.py scripts/ue/capture_sa_calobra_component230_cliff.py
+          if ($LASTEXITCODE -ne 0) { throw 'Component230 Python compile failed.' }
+          python -m unittest scripts.assets.test_sa_calobra_component230_cliff_visual -v
+          if ($LASTEXITCODE -ne 0) { throw 'Component230 cliff visual plan tests failed.' }
+
+      - name: Prepare narrow-policy Component 230 visual plan
+        shell: pwsh
+        working-directory: _material-forge-ue-canary
+        run: |
+          python scripts/assets/prepare_sa_calobra_component230_cliff_visual.py --normalized-manifest $env:YACS_CLIFF_NORMALIZED --pcg-manifest $env:YACS_CLIFF_PCG --context-manifest $env:YACS_CLIFF_CONTEXT --output $env:YACS_CLIFF_VISUAL_PLAN_ROOT
+          if ($LASTEXITCODE -ne 0) { throw 'Component230 cliff visual plan failed.' }
+          $plan = Get-Content -LiteralPath $env:YACS_CLIFF_VISUAL_PLAN -Raw | ConvertFrom-Json
+          if (
+            $plan.status -ne 'COMPONENT230_CLIFF_VISUAL_PLAN' -or
+            $plan.geometry_mutation -ne $false -or
+            $plan.canonical_landscape_mutation -ne $false -or
+            $plan.selector_policy_mutation -ne $false -or
+            [int]$plan.counts.component_cliff_cells -ne 2611 -or
+            [int]$plan.counts.component_scree_cells -ne 1237 -or
+            [int]$plan.counts.plate_count -le 0
+          ) {
+            throw 'Component230 narrow-policy plan contract failed.'
+          }
+          $plan | ConvertTo-Json -Depth 12 | Write-Host
+
+      - name: Capture baseline and transient cliff candidate
+        shell: pwsh
+        working-directory: _material-forge-ue-canary
+        run: |
+          $ErrorActionPreference = 'Stop'
+          . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
+          $project = Join-Path (Get-Location) 'YetAnotherCyclingSim.uproject'
+          $engine = Resolve-YacsUnrealEngine -ProjectPath $project
+          $script = (Resolve-Path 'scripts/ue/capture_sa_calobra_component230_cliff.py').Path
+          New-Item -ItemType Directory -Force -Path $env:YACS_CLIFF_VISUAL_OUTPUT | Out-Null
+          $stdout = Join-Path $env:YACS_CLIFF_VISUAL_ROOT 'ue.stdout.log'
+          $stderr = Join-Path $env:YACS_CLIFF_VISUAL_ROOT 'ue.stderr.log'
+          $log = Join-Path $env:YACS_CLIFF_VISUAL_ROOT 'ue.engine.log'
+          $arguments = @(
+            ('"' + $project + '"'),
+            ('-ExecutePythonScript="' + $script + '"'),
+            '-RenderOffscreen',
+            '-Unattended',
+            '-NoPause',
+            '-NoSplash',
+            '-NoSound',
+            '-NoP4',
+            '-NoVSync',
+            '-FixedSeed',
+            '-ScriptErrorsAreFatal',
+            '-stdout',
+            ('-AbsLog="' + $log + '"')
+          )
+          $process = Start-Process -FilePath $engine.UnrealEditorPath -ArgumentList $arguments -PassThru -NoNewWindow -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          if (-not $process.WaitForExit(420000)) {
+            $process | Stop-Process -Force
+            throw 'Component230 cliff visual capture timed out after 420 seconds.'
+          }
+          if ($process.ExitCode -ne 0) {
+            foreach ($diagnostic in @($stdout, $stderr, $log)) {
+              if (Test-Path -LiteralPath $diagnostic -PathType Leaf) {
+                Write-Host "===== TAIL $diagnostic ====="
+                Get-Content -LiteralPath $diagnostic -Tail 240 | Write-Host
+              }
+            }
+            throw "Component230 cliff visual Unreal capture exited $($process.ExitCode)."
+          }
+
+          # Material acceptance is fail-closed. A loadable Material asset is not
+          # sufficient: UE must not silently compile it with missing textures or
+          # substitute Default Material during the visual proof.
+          $materialFallback = @()
+          foreach ($diagnostic in @($stdout, $stderr, $log)) {
+            if (Test-Path -LiteralPath $diagnostic -PathType Leaf) {
+              $materialFallback += @(
+                Select-String -LiteralPath $diagnostic -SimpleMatch -Pattern @(
+                  'Texture Sample > Missing input texture',
+                  'Default Material will be used'
+                ) -ErrorAction SilentlyContinue
+              )
+            }
+          }
+          if ($materialFallback.Count -gt 0) {
+            Write-Host '===== MATERIAL PROOF FAIL-CLOSED DIAGNOSTICS ====='
+            $materialFallback |
+              ForEach-Object { "$($_.Path):$($_.LineNumber): $($_.Line.Trim())" } |
+              Write-Host
+            throw 'Component230 limestone material proof detected missing texture input or Default Material fallback.'
+          }
+
+          $receiptPath = Join-Path $env:YACS_CLIFF_VISUAL_OUTPUT 'component230-cliff-visual-receipt.json'
+          if (-not (Test-Path -LiteralPath $receiptPath -PathType Leaf)) {
+            throw 'Component230 cliff visual receipt is missing.'
+          }
+          $receipt = Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json
+          if (
+            $receipt.status -ne 'COMPONENT230_CLIFF_VISUAL_PASS' -or
+            $receipt.exact_sha -ne $env:YACS_CLIFF_VISUAL_EXPECTED_SHA -or
+            $receipt.map_saved -ne $false -or
+            $receipt.assets_saved -ne $false -or
+            $receipt.canonical_landscape_mutation -ne $false -or
+            $receipt.selector_policy_mutation -ne $false -or
+            [int]@($receipt.captures).Count -ne 4 -or
+            [bool]$receipt.mesh.collision_enabled -ne $false -or
+            [bool]$receipt.mesh.cast_dynamic_shadows -ne $true
+          ) {
+            throw 'Component230 cliff visual receipt contract failed.'
+          }
+          $receipt | ConvertTo-Json -Depth 12 | Write-Host
+
+      - name: Measure black-cavity deltas and build review board
+        shell: pwsh
+        working-directory: _material-forge-ue-canary
+        run: |
+          python scripts/assets/analyze_sa_calobra_component230_cliff_visual.py --root $env:YACS_CLIFF_VISUAL_OUTPUT
+          if ($LASTEXITCODE -ne 0) { throw 'Component230 cliff metric analysis failed.' }
+          $metrics = Get-Content -LiteralPath (Join-Path $env:YACS_CLIFF_VISUAL_OUTPUT 'component230-cliff-metrics.json') -Raw | ConvertFrom-Json
+          if ($metrics.status -ne 'COMPONENT230_CLIFF_METRICS_READY') {
+            throw 'Component230 cliff metrics receipt failed.'
+          }
+          $metrics.lighting_only_deltas | ConvertTo-Json -Depth 8 | Write-Host
+
+      - name: Enforce non-persistent checkout
+        shell: pwsh
+        working-directory: _material-forge-ue-canary
+        run: |
+          $tracked = @(git status --porcelain=v1 --untracked-files=no)
+          if ($tracked.Count -gt 0) {
+            throw "Component230 cliff proof mutated tracked files: $($tracked -join '; ')"
+          }
+
+      - name: Upload Component 230 cliff visual evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: sa-calobra-component230-cliff-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/component230-cliff-${{ github.sha }}/plan/**
+            ${{ runner.temp }}/component230-cliff-${{ github.sha }}/visual/**
+            ${{ runner.temp }}/component230-cliff-${{ github.sha }}/ue.*.log
+          if-no-files-found: warn
+          compression-level: 6
+          retention-days: 14

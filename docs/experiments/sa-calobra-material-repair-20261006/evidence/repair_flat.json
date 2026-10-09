@@ -1,0 +1,106 @@
+{
+  "variant": "repair_flat",
+  "material": "/Game/Generated/YACS/MaterialRepair/23c051beb3464d1687f9441eea48ecba/M_SaCalobraRepair_flat.M_SaCalobraRepair_flat",
+  "component_assignment_count": 1024,
+  "geometry_snapshot_equal": true,
+  "map_saved": false,
+  "native_instance_audit": "PENDING",
+  "owner_visual_acceptance": "PENDING",
+  "performance": "NOT_MEASURED",
+  "script_sha256": "0187f62a7651279d2551dcddaa0cb6b0690da92a93b6026e1636c76b70a62d51",
+  "parameters": {
+    "WeightExponent": {
+      "default": 1.0,
+      "minimum": 1.0,
+      "maximum": 2.0
+    },
+    "SlopeRockStrength": {
+      "default": 0,
+      "minimum": 0,
+      "maximum": 0.35
+    },
+    "MacroVariation": {
+      "default": 0.18,
+      "minimum": 0,
+      "maximum": 0.3
+    }
+  },
+  "sources": [
+    {
+      "source": "D:\\yacs\\data\\materials\\scanned-refinement-20261006\\aerial_rocks_02_diff_4k.png",
+      "source_sha256": "4170ef1faad95c04e7faf6a5c2d8a4c424c2da08d38f7c60c4aeeecfd0a19e5b",
+      "asset": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_rocks_02_diff.T_aerial_rocks_02_diff"
+    },
+    {
+      "source": "D:\\yacs\\data\\materials\\scanned-refinement-20261006\\aerial_rocks_02_nor_dx_4k.png",
+      "source_sha256": "5d9de14b463ec1f0e475e32ac54a113f68e69c163c1a32be80888b2cfe224300",
+      "asset": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_rocks_02_nor_dx.T_aerial_rocks_02_nor_dx"
+    },
+    {
+      "source": "D:\\yacs\\data\\materials\\scanned-refinement-20261006\\aerial_rocks_02_arm_4k.png",
+      "source_sha256": "5040e4b10fc0d6b105306331041345b327272866fdece55ef379fb87a45d2f54",
+      "asset": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_rocks_02_arm.T_aerial_rocks_02_arm"
+    },
+    {
+      "source": "D:\\yacs\\data\\materials\\scanned-refinement-20261006\\aerial_grass_rock_diff_4k.png",
+      "source_sha256": "719cffbc6f7cfec846cc2ba9610228dce5475cd2677f19f462bec6edc3e30ad9",
+      "asset": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_grass_rock_diff.T_aerial_grass_rock_diff"
+    },
+    {
+      "source": "D:\\yacs\\data\\materials\\scanned-refinement-20261006\\aerial_grass_rock_nor_dx_4k.png",
+      "source_sha256": "90219e6e47a750758cd55b5456961dccec0fd4a6ceeaa198a81fa9c36198d11b",
+      "asset": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_grass_rock_nor_dx.T_aerial_grass_rock_nor_dx"
+    },
+    {
+      "source": "D:\\yacs\\data\\materials\\scanned-refinement-20261006\\aerial_grass_rock_arm_4k.png",
+      "source_sha256": "5423503ba94f8e16ced4615cfa05893ec76b3df65cf85be9c8c07201efd5be90",
+      "asset": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_aerial_grass_rock_arm.T_aerial_grass_rock_arm"
+    },
+    {
+      "source": "D:\\yacs\\project\\worldgen\\materials\\material_maker\\surface_set\\fractured\\export\\SaCalobra_PaleLimestone_BaseColor.png",
+      "source_sha256": "023482f97ad87059def676cb8d19c645d0972a1c06b6e16d2f67edc188077243",
+      "asset": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_ExposedRock_diff.T_ExposedRock_diff"
+    },
+    {
+      "source": "D:\\yacs\\project\\worldgen\\materials\\material_maker\\surface_set\\fractured\\export\\SaCalobra_PaleLimestone_Normal_DX.png",
+      "source_sha256": "c88ff06885cdaae82a051801a496f0aebf90d1f2ce6c772c67c61d6249d10194",
+      "asset": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_ExposedRock_nor_dx.T_ExposedRock_nor_dx"
+    },
+    {
+      "source": "D:\\yacs\\project\\worldgen\\materials\\material_maker\\surface_set\\fractured\\export\\SaCalobra_PaleLimestone_ORM.png",
+      "source_sha256": "b941f3d3e9e3d93a774f844fe7afe7ad7af318398bb16f7f103d4a6d5c7c3ac9",
+      "asset": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_ExposedRock_arm.T_ExposedRock_arm"
+    },
+    {
+      "source": "D:\\yacs\\project\\worldgen\\materials\\material_maker\\surface_set\\scree\\export\\SaCalobra_PaleLimestone_BaseColor.png",
+      "source_sha256": "6babc8e49248be89b464605c3c9cf427b63ac51ab42aebc05877359e902256e1",
+      "asset": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_Scree_diff.T_Scree_diff"
+    },
+    {
+      "source": "D:\\yacs\\project\\worldgen\\materials\\material_maker\\surface_set\\scree\\export\\SaCalobra_PaleLimestone_Normal_DX.png",
+      "source_sha256": "2e75301f9325efb39f37811409bebfd455d9e21bf740ca97d12ed66978290f62",
+      "asset": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_Scree_nor_dx.T_Scree_nor_dx"
+    },
+    {
+      "source": "D:\\yacs\\project\\worldgen\\materials\\material_maker\\surface_set\\scree\\export\\SaCalobra_PaleLimestone_ORM.png",
+      "source_sha256": "919faf3cbf33250dd100b6c5e13f8036dd6e2222b29c46b7e09fb8a5c6465df1",
+      "asset": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_Scree_arm.T_Scree_arm"
+    },
+    {
+      "source": "D:\\yacs\\project\\worldgen\\materials\\material_maker\\surface_set\\mineral\\export\\SaCalobra_PaleLimestone_BaseColor.png",
+      "source_sha256": "856bb6f5cbb094299509d3ac558559cfa8c2139fb6447ec378152407b85116f4",
+      "asset": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_DryMineral_diff.T_DryMineral_diff"
+    },
+    {
+      "source": "D:\\yacs\\project\\worldgen\\materials\\material_maker\\surface_set\\mineral\\export\\SaCalobra_PaleLimestone_Normal_DX.png",
+      "source_sha256": "e3dd7d56e4f1354eb99950c5889c380e74ff2296553b7fc603e967ee6325a88a",
+      "asset": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_DryMineral_nor_dx.T_DryMineral_nor_dx"
+    },
+    {
+      "source": "D:\\yacs\\project\\worldgen\\materials\\material_maker\\surface_set\\mineral\\export\\SaCalobra_PaleLimestone_ORM.png",
+      "source_sha256": "1bb204a3adb7d69b54fc68f8cab0b04c838318c1343af7b2e1ee2f883ac673ac",
+      "asset": "/Game/Generated/YACS/MaterialRepair/Textures/9f9e9ea55a0849e0b1415f41f022f62e/T_DryMineral_arm.T_DryMineral_arm"
+    }
+  ],
+  "mask_semantics": "RGB base mixture; residual mineral; A independent artistic scree overlay"
+}

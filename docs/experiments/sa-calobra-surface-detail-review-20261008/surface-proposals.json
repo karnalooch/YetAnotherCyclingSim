@@ -1,0 +1,805 @@
+{
+  "schema": "AI proposal review data v1; no PCGEx consumer contract",
+  "date": "2026-10-08",
+  "review_status": "AI_PROPOSED",
+  "coordinate_contract": {
+    "crs": "EPSG:25831 -> EPSG:4326",
+    "origin_east_m": 483000.25,
+    "origin_north_m": 4409516.25,
+    "local_units": "native cm",
+    "axis_mapping": "E=483000.25+X_cm/100; N=4409516.25-Y_cm/100",
+    "source_paths": [
+      "scripts/assets/prepare_sa_calobra_road_masks.py",
+      "scripts/assets/prepare_sa_calobra_cliff_erosion_handoff.py",
+      "scripts/proof/sa_calobra_tpp_survey.py"
+    ],
+    "source_revision": "162cd871f776807da977f84fd639e44ec5f6a1a6",
+    "method": "pyproj 3.7.2; WGS84 geodesic heading camera-to-target; geometric pitch; road-station viewpoint",
+    "limits": "Coordinate request, not a discovered panorama. Google may snap to another location or date. Datum epoch and capture geographic accuracy are not established; decimals do not claim survey precision. Camera offset and Google camera height differ.",
+    "official_url_reference": "https://developers.google.com/maps/documentation/urls/get-started"
+  },
+  "cards": [
+    {
+      "id": "SC-P01",
+      "window": "0103",
+      "title": "Roadside wall: readable planes and contact",
+      "anchor": "window-0103-forward-00002",
+      "context": "window-0103-reverse-00002",
+      "correspondence": "possible_match",
+      "reason": "The near wall occupies much of the right-hand view. Its large planes, corners and road-side transition are readable. The reverse near wall may continue the same land-side formation; identity is not established.",
+      "regions": [
+        {
+          "name": "Near wall",
+          "proposed_band": "A",
+          "proposed_review_tags": [
+            "HERO_DETAIL",
+            "MATERIAL_TEST_CANDIDATE"
+          ],
+          "image_roi_px": [
+            [
+              712,
+              0
+            ],
+            [
+              1279,
+              0
+            ],
+            [
+              1279,
+              719
+            ],
+            [
+              1112,
+              630
+            ],
+            [
+              980,
+              533
+            ],
+            [
+              871,
+              453
+            ],
+            [
+              783,
+              396
+            ],
+            [
+              657,
+              353
+            ],
+            [
+              483,
+              330
+            ],
+            [
+              474,
+              247
+            ],
+            [
+              545,
+              184
+            ],
+            [
+              623,
+              103
+            ]
+          ],
+          "required_detail": "Local planes, corners, shelves and convincing rock-ground contact; preserve broad shape and material scale.",
+          "candidate_omissions": "Pores and tiny cracks may use material detail where they do not change the visible shape. No blanket wall simplification.",
+          "physical_identity": "PROVISIONAL",
+          "world_mapping": "UNRESOLVED",
+          "surface_id": null,
+          "review_tags": [],
+          "patch_ids": []
+        }
+      ],
+      "review_status": "AI_PROPOSED",
+      "reviewer": "AI-assisted original-PNG review",
+      "owner_review": "PENDING",
+      "boundary_type": "approximate image-space region of interest, not segmentation or physical footprint",
+      "pixel_coordinates": "original 1280x720 pixels; origin top-left; x right, y down",
+      "unobserved": "Look-around, stopping, continuous travel and other approaches remain unresolved.",
+      "street_view": {
+        "anchor": {
+          "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=39.8325923%2C2.8129085&heading=320.785&pitch=-11.389&fov=76",
+          "requested_viewpoint_lat": 39.83259227793572,
+          "requested_viewpoint_lon": 2.8129084943620626,
+          "requested_heading_deg": 320.7849687640599,
+          "requested_pitch_deg": -11.388717776589797,
+          "requested_fov_deg": 76,
+          "viewpoint_source": "road station; orientation hints from native camera-to-target pose, not matched panorama rays",
+          "camera_road_horizontal_offset_m": 4.990201578717281,
+          "status": "NOT_INSPECTED",
+          "actual_pano_id": null,
+          "imagery_date": null,
+          "actual_viewpoint": null,
+          "match_distance_m": null,
+          "comparison_notes": null,
+          "access_reason": "Available web tool could not open interactive Google Maps panoramas. No imagery comparison or coverage claim."
+        },
+        "context": {
+          "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=39.8325923%2C2.8129085&heading=140.785&pitch=-4.348&fov=76",
+          "requested_viewpoint_lat": 39.83259227793572,
+          "requested_viewpoint_lon": 2.8129084943620626,
+          "requested_heading_deg": 140.78492158792005,
+          "requested_pitch_deg": -4.348195918479249,
+          "requested_fov_deg": 76,
+          "viewpoint_source": "road station; orientation hints from native camera-to-target pose, not matched panorama rays",
+          "camera_road_horizontal_offset_m": 4.990201578717161,
+          "status": "NOT_INSPECTED",
+          "actual_pano_id": null,
+          "imagery_date": null,
+          "actual_viewpoint": null,
+          "match_distance_m": null,
+          "comparison_notes": null,
+          "access_reason": "Available web tool could not open interactive Google Maps panoramas. No imagery comparison or coverage claim."
+        }
+      }
+    },
+    {
+      "id": "SC-P02",
+      "window": "0132",
+      "title": "Dominant massif above a separate close bank",
+      "anchor": "window-0132-reverse-00004",
+      "context": "window-0132-forward-00002",
+      "correspondence": "context_only",
+      "reason": "The upper-left massif has a strong outline and readable broad faces. The lower close bank is a separate requirement. The paired forward wall does not establish a match to this massif.",
+      "regions": [
+        {
+          "name": "Upper-left massif",
+          "proposed_band": "B",
+          "proposed_review_tags": [
+            "SILHOUETTE_CRITICAL"
+          ],
+          "image_roi_px": [
+            [
+              190,
+              0
+            ],
+            [
+              406,
+              0
+            ],
+            [
+              460,
+              55
+            ],
+            [
+              552,
+              92
+            ],
+            [
+              606,
+              159
+            ],
+            [
+              632,
+              199
+            ],
+            [
+              564,
+              231
+            ],
+            [
+              486,
+              223
+            ],
+            [
+              395,
+              179
+            ],
+            [
+              270,
+              140
+            ],
+            [
+              196,
+              114
+            ],
+            [
+              143,
+              139
+            ]
+          ],
+          "required_detail": "Characteristic outline, broad planes, shelves and large divisions; retain the shape that produces major shading.",
+          "candidate_omissions": "Uniform pores and small geometric chips are unsupported in this view. The summit is clipped by the frame; its unseen continuation remains unresolved.",
+          "physical_identity": "PROVISIONAL",
+          "world_mapping": "UNRESOLVED",
+          "surface_id": null,
+          "review_tags": [],
+          "patch_ids": []
+        }
+      ],
+      "review_status": "AI_PROPOSED",
+      "reviewer": "AI-assisted original-PNG review",
+      "owner_review": "PENDING",
+      "boundary_type": "approximate image-space region of interest, not segmentation or physical footprint",
+      "pixel_coordinates": "original 1280x720 pixels; origin top-left; x right, y down",
+      "unobserved": "Look-around, stopping, continuous travel and other approaches remain unresolved.",
+      "street_view": {
+        "anchor": {
+          "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=39.8342444%2C2.8036271&heading=106.246&pitch=-3.788&fov=76",
+          "requested_viewpoint_lat": 39.83424439364715,
+          "requested_viewpoint_lon": 2.803627067445376,
+          "requested_heading_deg": 106.24554933593947,
+          "requested_pitch_deg": -3.7875941448979993,
+          "requested_fov_deg": 76,
+          "viewpoint_source": "road station; orientation hints from native camera-to-target pose, not matched panorama rays",
+          "camera_road_horizontal_offset_m": 4.9868664086584,
+          "status": "NOT_INSPECTED",
+          "actual_pano_id": null,
+          "imagery_date": null,
+          "actual_viewpoint": null,
+          "match_distance_m": null,
+          "comparison_notes": null,
+          "access_reason": "Available web tool could not open interactive Google Maps panoramas. No imagery comparison or coverage claim."
+        },
+        "context": {
+          "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=39.8342444%2C2.8036271&heading=286.246&pitch=-11.939&fov=76",
+          "requested_viewpoint_lat": 39.83424439364715,
+          "requested_viewpoint_lon": 2.803627067445376,
+          "requested_heading_deg": 286.2456209989891,
+          "requested_pitch_deg": -11.939322426159912,
+          "requested_fov_deg": 76,
+          "viewpoint_source": "road station; orientation hints from native camera-to-target pose, not matched panorama rays",
+          "camera_road_horizontal_offset_m": 4.986866408658394,
+          "status": "NOT_INSPECTED",
+          "actual_pano_id": null,
+          "imagery_date": null,
+          "actual_viewpoint": null,
+          "match_distance_m": null,
+          "comparison_notes": null,
+          "access_reason": "Available web tool could not open interactive Google Maps panoramas. No imagery comparison or coverage claim."
+        }
+      }
+    },
+    {
+      "id": "SC-P03",
+      "window": "0168",
+      "title": "Close rock and broad slope need different scales",
+      "anchor": "window-0168-reverse-00001",
+      "context": "window-0168-forward-00002",
+      "correspondence": "possible_match",
+      "reason": "A close right bank contrasts with a large upper slope and visible other road approaches. Opposing near-wall observations may be adjacent, but no shared bounded surface has been identified.",
+      "regions": [
+        {
+          "name": "Near right bank",
+          "proposed_band": "A",
+          "proposed_review_tags": [
+            "HERO_DETAIL",
+            "MATERIAL_TEST_CANDIDATE"
+          ],
+          "image_roi_px": [
+            [
+              981,
+              248
+            ],
+            [
+              1080,
+              224
+            ],
+            [
+              1279,
+              211
+            ],
+            [
+              1279,
+              704
+            ],
+            [
+              1139,
+              633
+            ],
+            [
+              1017,
+              540
+            ],
+            [
+              938,
+              451
+            ],
+            [
+              907,
+              397
+            ],
+            [
+              954,
+              287
+            ]
+          ],
+          "required_detail": "Readable corners, plane changes, bank top/base transitions and coherent rock material scale.",
+          "candidate_omissions": "Use materials for grain and microcracks; retain the visible bank shape.",
+          "physical_identity": "PROVISIONAL",
+          "world_mapping": "UNRESOLVED",
+          "surface_id": null,
+          "review_tags": [],
+          "patch_ids": []
+        },
+        {
+          "name": "Broad upper slope",
+          "proposed_band": "B",
+          "proposed_review_tags": [
+            "MATERIAL_TEST_CANDIDATE"
+          ],
+          "image_roi_px": [
+            [
+              0,
+              197
+            ],
+            [
+              157,
+              153
+            ],
+            [
+              279,
+              65
+            ],
+            [
+              405,
+              0
+            ],
+            [
+              892,
+              0
+            ],
+            [
+              927,
+              46
+            ],
+            [
+              1020,
+              23
+            ],
+            [
+              1180,
+              0
+            ],
+            [
+              1279,
+              0
+            ],
+            [
+              1279,
+              204
+            ],
+            [
+              1000,
+              230
+            ],
+            [
+              875,
+              269
+            ],
+            [
+              537,
+              253
+            ],
+            [
+              263,
+              256
+            ],
+            [
+              0,
+              303
+            ]
+          ],
+          "required_detail": "Broad landform, outcrop bands, ledges and spatial material variation. Review the additional road approaches before any downgrade.",
+          "candidate_omissions": "Do not spread near-bank microrelief uniformly across the slope; diagnostic colours do not identify rock, soil or vegetation.",
+          "physical_identity": "PROVISIONAL",
+          "world_mapping": "UNRESOLVED",
+          "surface_id": null,
+          "review_tags": [],
+          "patch_ids": []
+        }
+      ],
+      "review_status": "AI_PROPOSED",
+      "reviewer": "AI-assisted original-PNG review",
+      "owner_review": "PENDING",
+      "boundary_type": "approximate image-space region of interest, not segmentation or physical footprint",
+      "pixel_coordinates": "original 1280x720 pixels; origin top-left; x right, y down",
+      "unobserved": "Look-around, stopping, continuous travel and other approaches remain unresolved.",
+      "street_view": {
+        "anchor": {
+          "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=39.8252659%2C2.8165108&heading=234.968&pitch=-11.890&fov=76",
+          "requested_viewpoint_lat": 39.82526591266742,
+          "requested_viewpoint_lon": 2.816510807052466,
+          "requested_heading_deg": 234.96840399466953,
+          "requested_pitch_deg": -11.889786444451122,
+          "requested_fov_deg": 76,
+          "viewpoint_source": "road station; orientation hints from native camera-to-target pose, not matched panorama rays",
+          "camera_road_horizontal_offset_m": 4.987186585135682,
+          "status": "NOT_INSPECTED",
+          "actual_pano_id": null,
+          "imagery_date": null,
+          "actual_viewpoint": null,
+          "match_distance_m": null,
+          "comparison_notes": null,
+          "access_reason": "Available web tool could not open interactive Google Maps panoramas. No imagery comparison or coverage claim."
+        },
+        "context": {
+          "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=39.8252659%2C2.8165108&heading=54.968&pitch=-3.838&fov=76",
+          "requested_viewpoint_lat": 39.82526591266742,
+          "requested_viewpoint_lon": 2.816510807052466,
+          "requested_heading_deg": 54.968342838016596,
+          "requested_pitch_deg": -3.8380898936059427,
+          "requested_fov_deg": 76,
+          "viewpoint_source": "road station; orientation hints from native camera-to-target pose, not matched panorama rays",
+          "camera_road_horizontal_offset_m": 4.9871865851358015,
+          "status": "NOT_INSPECTED",
+          "actual_pano_id": null,
+          "imagery_date": null,
+          "actual_viewpoint": null,
+          "match_distance_m": null,
+          "comparison_notes": null,
+          "access_reason": "Available web tool could not open interactive Google Maps panoramas. No imagery comparison or coverage claim."
+        }
+      }
+    },
+    {
+      "id": "SC-P04",
+      "window": "0181",
+      "title": "Dominant peak: protect faces as well as skyline",
+      "anchor": "window-0181-forward-00004",
+      "context": "window-0181-reverse-00000",
+      "correspondence": "context_only",
+      "reason": "Original pixels support B rather than the JPEG shortlist C proposal: the peak dominates the composition and its broad faces and ledges remain readable. The reverse close wall is a different region.",
+      "regions": [
+        {
+          "name": "Central peak",
+          "proposed_band": "B",
+          "proposed_review_tags": [
+            "SILHOUETTE_CRITICAL"
+          ],
+          "image_roi_px": [
+            [
+              166,
+              248
+            ],
+            [
+              222,
+              171
+            ],
+            [
+              278,
+              122
+            ],
+            [
+              330,
+              106
+            ],
+            [
+              347,
+              148
+            ],
+            [
+              392,
+              132
+            ],
+            [
+              408,
+              74
+            ],
+            [
+              474,
+              21
+            ],
+            [
+              511,
+              8
+            ],
+            [
+              554,
+              20
+            ],
+            [
+              606,
+              83
+            ],
+            [
+              675,
+              122
+            ],
+            [
+              741,
+              165
+            ],
+            [
+              812,
+              195
+            ],
+            [
+              798,
+              257
+            ],
+            [
+              690,
+              277
+            ],
+            [
+              615,
+              249
+            ],
+            [
+              418,
+              247
+            ]
+          ],
+          "required_detail": "Skyline, characteristic large cuts, broad faces and ledges; preserve forms responsible for major shading.",
+          "candidate_omissions": "Uniform fine cracks and pores are unsupported. Skyline-only treatment would omit readable faces; closer views remain unresolved.",
+          "physical_identity": "PROVISIONAL",
+          "world_mapping": "UNRESOLVED",
+          "surface_id": null,
+          "review_tags": [],
+          "patch_ids": []
+        }
+      ],
+      "review_status": "AI_PROPOSED",
+      "reviewer": "AI-assisted original-PNG review",
+      "owner_review": "PENDING",
+      "boundary_type": "approximate image-space region of interest, not segmentation or physical footprint",
+      "pixel_coordinates": "original 1280x720 pixels; origin top-left; x right, y down",
+      "unobserved": "Look-around, stopping, continuous travel and other approaches remain unresolved.",
+      "street_view": {
+        "anchor": {
+          "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=39.8316978%2C2.8163459&heading=347.324&pitch=-11.789&fov=76",
+          "requested_viewpoint_lat": 39.83169777500556,
+          "requested_viewpoint_lon": 2.8163458673022403,
+          "requested_heading_deg": 347.32409361536395,
+          "requested_pitch_deg": -11.789203374067421,
+          "requested_fov_deg": 76,
+          "viewpoint_source": "road station; orientation hints from native camera-to-target pose, not matched panorama rays",
+          "camera_road_horizontal_offset_m": 4.987824454515724,
+          "status": "NOT_INSPECTED",
+          "actual_pano_id": null,
+          "imagery_date": null,
+          "actual_viewpoint": null,
+          "match_distance_m": null,
+          "comparison_notes": null,
+          "access_reason": "Available web tool could not open interactive Google Maps panoramas. No imagery comparison or coverage claim."
+        },
+        "context": {
+          "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=39.8316978%2C2.8163459&heading=167.324&pitch=-3.941&fov=76",
+          "requested_viewpoint_lat": 39.83169777500556,
+          "requested_viewpoint_lon": 2.8163458673022403,
+          "requested_heading_deg": 167.32407729295747,
+          "requested_pitch_deg": -3.9405850261874473,
+          "requested_fov_deg": 76,
+          "viewpoint_source": "road station; orientation hints from native camera-to-target pose, not matched panorama rays",
+          "camera_road_horizontal_offset_m": 4.987824454515724,
+          "status": "NOT_INSPECTED",
+          "actual_pano_id": null,
+          "imagery_date": null,
+          "actual_viewpoint": null,
+          "match_distance_m": null,
+          "comparison_notes": null,
+          "access_reason": "Available web tool could not open interactive Google Maps panoramas. No imagery comparison or coverage claim."
+        }
+      }
+    },
+    {
+      "id": "SC-P05",
+      "window": "0039",
+      "title": "Near bank and distant slope: preserve transitions",
+      "anchor": "window-0039-reverse-00002",
+      "context": "window-0039-forward-00003",
+      "correspondence": "possible_match",
+      "reason": "The near right bank requires readable shape and road-ground contact. The upper textured slope and visible other road approaches prevent a blanket background classification.",
+      "regions": [
+        {
+          "name": "Near right bank",
+          "proposed_band": "A",
+          "proposed_review_tags": [
+            "HERO_DETAIL",
+            "MATERIAL_TEST_CANDIDATE"
+          ],
+          "image_roi_px": [
+            [
+              1279,
+              58
+            ],
+            [
+              1137,
+              150
+            ],
+            [
+              1034,
+              205
+            ],
+            [
+              945,
+              272
+            ],
+            [
+              875,
+              312
+            ],
+            [
+              862,
+              348
+            ],
+            [
+              899,
+              429
+            ],
+            [
+              1021,
+              531
+            ],
+            [
+              1166,
+              617
+            ],
+            [
+              1279,
+              654
+            ]
+          ],
+          "required_detail": "Larger planes, convex changes, road-side contact and the transition into upper ground. Keep grain at a believable material scale.",
+          "candidate_omissions": "Do not model repeated tiny chips unless they change readable shape. The coloured central strip does not establish a stream or material class.",
+          "physical_identity": "PROVISIONAL",
+          "world_mapping": "UNRESOLVED",
+          "surface_id": null,
+          "review_tags": [],
+          "patch_ids": []
+        }
+      ],
+      "review_status": "AI_PROPOSED",
+      "reviewer": "AI-assisted original-PNG review",
+      "owner_review": "PENDING",
+      "boundary_type": "approximate image-space region of interest, not segmentation or physical footprint",
+      "pixel_coordinates": "original 1280x720 pixels; origin top-left; x right, y down",
+      "unobserved": "Look-around, stopping, continuous travel and other approaches remain unresolved.",
+      "street_view": {
+        "anchor": {
+          "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=39.8318844%2C2.8131714&heading=103.465&pitch=-3.538&fov=76",
+          "requested_viewpoint_lat": 39.83188435479642,
+          "requested_viewpoint_lon": 2.8131714451355223,
+          "requested_heading_deg": 103.46532808217954,
+          "requested_pitch_deg": -3.5384184551305786,
+          "requested_fov_deg": 76,
+          "viewpoint_source": "road station; orientation hints from native camera-to-target pose, not matched panorama rays",
+          "camera_road_horizontal_offset_m": 4.985229308935574,
+          "status": "NOT_INSPECTED",
+          "actual_pano_id": null,
+          "imagery_date": null,
+          "actual_viewpoint": null,
+          "match_distance_m": null,
+          "comparison_notes": null,
+          "access_reason": "Available web tool could not open interactive Google Maps panoramas. No imagery comparison or coverage claim."
+        },
+        "context": {
+          "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=39.8318844%2C2.8131714&heading=283.465&pitch=-12.184&fov=76",
+          "requested_viewpoint_lat": 39.83188435479642,
+          "requested_viewpoint_lon": 2.8131714451355223,
+          "requested_heading_deg": 283.4654006435033,
+          "requested_pitch_deg": -12.183590573668399,
+          "requested_fov_deg": 76,
+          "viewpoint_source": "road station; orientation hints from native camera-to-target pose, not matched panorama rays",
+          "camera_road_horizontal_offset_m": 4.985229308935574,
+          "status": "NOT_INSPECTED",
+          "actual_pano_id": null,
+          "imagery_date": null,
+          "actual_viewpoint": null,
+          "match_distance_m": null,
+          "comparison_notes": null,
+          "access_reason": "Available web tool could not open interactive Google Maps panoramas. No imagery comparison or coverage claim."
+        }
+      }
+    },
+    {
+      "id": "SC-P06",
+      "window": "0077",
+      "title": "Sea-facing ridge and foreground banks are separate",
+      "anchor": "window-0077-reverse-00000",
+      "context": "window-0077-forward-00002",
+      "correspondence": "context_only",
+      "reason": "The small distant sea-facing ridge needs a coherent outline in this view. The forward frame contains close banks requiring A treatment; they are not the ridge and do not share its C proposal.",
+      "regions": [
+        {
+          "name": "Distant sea-facing ridge",
+          "proposed_band": "C",
+          "proposed_review_tags": [
+            "SILHOUETTE_CRITICAL"
+          ],
+          "image_roi_px": [
+            [
+              783,
+              337
+            ],
+            [
+              817,
+              310
+            ],
+            [
+              883,
+              288
+            ],
+            [
+              944,
+              288
+            ],
+            [
+              990,
+              282
+            ],
+            [
+              1061,
+              278
+            ],
+            [
+              1114,
+              270
+            ],
+            [
+              1100,
+              291
+            ],
+            [
+              1041,
+              307
+            ],
+            [
+              1004,
+              323
+            ],
+            [
+              912,
+              331
+            ]
+          ],
+          "required_detail": "Skyline, large divisions, broad colour structure and coherent apparent texture scale.",
+          "candidate_omissions": "Fine interior geometry is unsupported in this view. BACKGROUND_LOW_PRIORITY is withheld until closer appearances and indirect contributions are reviewed.",
+          "physical_identity": "PROVISIONAL",
+          "world_mapping": "UNRESOLVED",
+          "surface_id": null,
+          "review_tags": [],
+          "patch_ids": []
+        }
+      ],
+      "review_status": "AI_PROPOSED",
+      "reviewer": "AI-assisted original-PNG review",
+      "owner_review": "PENDING",
+      "boundary_type": "approximate image-space region of interest, not segmentation or physical footprint",
+      "pixel_coordinates": "original 1280x720 pixels; origin top-left; x right, y down",
+      "unobserved": "Look-around, stopping, continuous travel and other approaches remain unresolved.",
+      "street_view": {
+        "anchor": {
+          "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=39.8274153%2C2.8180242&heading=170.830&pitch=-7.024&fov=76",
+          "requested_viewpoint_lat": 39.827415310804476,
+          "requested_viewpoint_lon": 2.818024227451135,
+          "requested_heading_deg": 170.82991634226443,
+          "requested_pitch_deg": -7.023569893516814,
+          "requested_fov_deg": 76,
+          "viewpoint_source": "road station; orientation hints from native camera-to-target pose, not matched panorama rays",
+          "camera_road_horizontal_offset_m": 4.9994167470836235,
+          "status": "NOT_INSPECTED",
+          "actual_pano_id": null,
+          "imagery_date": null,
+          "actual_viewpoint": null,
+          "match_distance_m": null,
+          "comparison_notes": null,
+          "access_reason": "Available web tool could not open interactive Google Maps panoramas. No imagery comparison or coverage claim."
+        },
+        "context": {
+          "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=39.8274153%2C2.8180242&heading=350.830&pitch=-8.741&fov=76",
+          "requested_viewpoint_lat": 39.827415310804476,
+          "requested_viewpoint_lon": 2.818024227451135,
+          "requested_heading_deg": 350.82992820229475,
+          "requested_pitch_deg": -8.740961024013746,
+          "requested_fov_deg": 76,
+          "viewpoint_source": "road station; orientation hints from native camera-to-target pose, not matched panorama rays",
+          "camera_road_horizontal_offset_m": 4.9994167470836235,
+          "status": "NOT_INSPECTED",
+          "actual_pano_id": null,
+          "imagery_date": null,
+          "actual_viewpoint": null,
+          "match_distance_m": null,
+          "comparison_notes": null,
+          "access_reason": "Available web tool could not open interactive Google Maps panoramas. No imagery comparison or coverage claim."
+        }
+      }
+    }
+  ],
+  "street_view_scope": "EXCLUDED_FROM_CURRENT_SCOPE_BY_OWNER"
+}

@@ -109,6 +109,65 @@ class ChangeClassifierTests(unittest.TestCase):
         self.assertTrue(result.assets)
         self.assertTrue(result.asset_only)
         self.assertTrue(result.asset_full)
+        self.assertTrue(result.stage3g_authoring)
+
+    def test_frozen_prototype_compatibility_keeps_regression_without_authoring(self):
+        for path in (
+            "Source/YetAnotherCyclingSim/Private/Cycling/Stage3PrototypeTerrainActor.cpp",
+            "Source/YetAnotherCyclingSim/Public/Cycling/Stage3PrototypeTerrainActor.h",
+            "Source/YetAnotherCyclingSim/Private/Tests/Stage3PrototypeTerrain.spec.cpp",
+            ".github/workflows/reusable-stage3g-full.yml",
+        ):
+            with self.subTest(path=path):
+                result = cc.classify_paths([path])
+                self.assertTrue(result.asset_full)
+                self.assertFalse(result.stage3g_authoring)
+                self.assertEqual(result.ci_cost_class, "heavy")
+
+    def test_legacy_authored_inputs_still_require_full_authoring(self):
+        for path in (
+            "Content/Prototype/Environment/Stage3G/M_Forest.uasset",
+            "Content/Prototype/Maps/L_CyclingTest.umap",
+            "Content/YACS/WorldGen/PCG/PCG_RouteExclusion.uasset",
+            "worldgen/specs/stage3g_alpine_reference.worldspec.yml",
+            "scripts/ue/Invoke-YacsStage3GAuthoring.ps1",
+            "scripts/ue/stage3g_author_world.py",
+            "scripts/ue/stage3g_author_materials.py",
+            "Source/YetAnotherCyclingSim/Private/Editor/CyclingStage3RouteSetupCommandlet.cpp",
+        ):
+            with self.subTest(path=path):
+                result = cc.classify_paths([path])
+                self.assertTrue(result.asset_full)
+                self.assertTrue(result.stage3g_authoring)
+
+    def test_sa_calobra_changes_do_not_author_the_legacy_world(self):
+        result = cc.classify_paths(
+            [
+                "scripts/ue/sa_calobra_saved_material_consumer.py",
+                "Content/Generated/YACS/SaCalobra/WholeMapPreparation/M_SaCalobraWholeMapPreparation.uasset",
+                "Source/YetAnotherCyclingSim/Private/Cycling/Stage3PrototypeTerrainActor.cpp",
+                ".github/workflows/reusable-stage3g-full.yml",
+            ]
+        )
+        self.assertTrue(result.unreal_compile)
+        self.assertTrue(result.asset_full)
+        self.assertFalse(result.stage3g_authoring)
+
+    def test_mixed_legacy_asset_and_compatibility_changes_keep_full_authoring(self):
+        result = cc.classify_paths(
+            [
+                "Source/YetAnotherCyclingSim/Private/Cycling/Stage3PrototypeTerrainActor.cpp",
+                "Content/Prototype/Environment/Stage3G/M_Forest.uasset",
+            ]
+        )
+        self.assertTrue(result.stage3g_authoring)
+
+    def test_new_sa_calobra_pcg_asset_does_not_select_legacy_authoring(self):
+        result = cc.classify_paths(
+            ["Content/YACS/WorldGen/PCG/PCG_SaCalobraForest.uasset"]
+        )
+        self.assertTrue(result.asset_full)
+        self.assertFalse(result.stage3g_authoring)
 
     def test_stage3g_source_and_tooling_force_full_validation(self):
         for path in (
@@ -384,6 +443,7 @@ class ChangeClassifierTests(unittest.TestCase):
             emitted = output_file.read_text(encoding="utf-8")
             self.assertIn("assets=true\n", emitted)
             self.assertIn("asset_full=true\n", emitted)
+            self.assertIn("stage3g_authoring=true\n", emitted)
             self.assertIn("ue_tooling=false\n", emitted)
             self.assertIn("ci_cost_class=heavy\n", emitted)
             self.assertIn("base_sha=PATHS_FILE\n", emitted)

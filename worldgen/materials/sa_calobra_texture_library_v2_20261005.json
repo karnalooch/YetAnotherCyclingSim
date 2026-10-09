@@ -1,0 +1,396 @@
+{
+  "schema_version": 2,
+  "project": "D:\\yacs\\project",
+  "map_file": "Content/Worlds/SaCalobra/L_SaCalobraAccepted_20261004.umap",
+  "map_asset": "/Game/Worlds/SaCalobra/L_SaCalobraAccepted_20261004",
+  "map_sha256": "276d1621fa083850f6d603b6d115b01b74c9a92c182254d15302e786abfbf29c",
+  "authorization": "Owner requested all seven roles improved toward 9/10 on 2026-10-05",
+  "method": "UE TextureGraph generates BaseColor and MacroMask; native UE imports provider DirectX Normal, Roughness and Height unchanged. Derived TG data maps retained separately, not used in final PBR material.",
+  "quality_status": "candidate; technical measurements and scene visual acceptance pending",
+  "geometry_mutation": false,
+  "items": [
+    {
+      "role": "ExposedRock",
+      "source_id": "Rock024",
+      "source_file": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\Rock024-JPG\\Rock024_1K-JPG_Color.jpg",
+      "source_sha256": "e07e1d804c6851cc84d5e74e0ad3f46bd68f087e1676a2b1cbdaf7882f8148b1",
+      "source_url": "https://ambientcg.com/a/Rock024",
+      "license": "CC0-1.0",
+      "world_size_m": [
+        2,
+        2
+      ],
+      "scale_authority": "artistic 2m trial; provider dimensions unknown",
+      "color_gain": [
+        1.02,
+        1.03,
+        1.04
+      ],
+      "pbr_maps": {
+        "BaseColor": {
+          "path": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\Rock024-JPG\\Rock024_1K-JPG_Color.jpg",
+          "sha256": "e07e1d804c6851cc84d5e74e0ad3f46bd68f087e1676a2b1cbdaf7882f8148b1",
+          "url": "https://ambientcg.com/get?file=Rock024_1K-JPG.zip",
+          "archive_sha256": "faaddd5b71d37ebc30b0a9c9923363acd9708530d9fd002fca7704283bd5b539"
+        },
+        "Normal": {
+          "path": "D:\\yacs\\data\\textures\\texture-prep-candidates-20261005\\Rock024\\Rock024_1K-PNG_NormalDX.png",
+          "sha256": "ef7dfbd9a104c808f6a167e76f2121442d3a6ba76a86c26bfba55fdbe14b52b6"
+        },
+        "Roughness": {
+          "path": "D:\\yacs\\data\\textures\\texture-prep-candidates-20261005\\Rock024\\Rock024_1K-PNG_Roughness.png",
+          "sha256": "ada20699fe2a6363ecd2870899c03805519625ccb9fa2194d62d5680c6f5399a"
+        },
+        "Height": {
+          "path": "D:\\yacs\\data\\textures\\texture-prep-candidates-20261005\\Rock024\\Rock024_1K-PNG_Displacement.png",
+          "sha256": "c79292cdff226af8bbba2b2a6fdbd2fbdcbead1a9c8fc14358a096fe837416b3"
+        }
+      },
+      "seam_blend_width": 0,
+      "de_light_strength": 0,
+      "height_strength": 0.5,
+      "normal_strength": 1,
+      "roughness_min": 0,
+      "roughness_max": 1,
+      "macro_variation": 0.25
+    },
+    {
+      "role": "Scree",
+      "source_id": "rocks_ground_09",
+      "source_file": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\rocks_ground_09\\rocks_ground_09_diff_1k.jpg",
+      "source_sha256": "f4e38bc77bc3879a0750c9187e5563ca57ae0a861244526f08c0907783e2efac",
+      "source_url": "https://polyhaven.com/a/rocks_ground_09",
+      "license": "CC0-1.0",
+      "world_size_m": [
+        3,
+        3
+      ],
+      "scale_authority": "provider dimensions retained from v1",
+      "color_gain": [
+        1.02,
+        1.03,
+        1.04
+      ],
+      "pbr_maps": {
+        "BaseColor": {
+          "asset": "rocks_ground_09",
+          "role": "BaseColor",
+          "path": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\rocks_ground_09\\rocks_ground_09_diff_1k.jpg",
+          "sha256": "f4e38bc77bc3879a0750c9187e5563ca57ae0a861244526f08c0907783e2efac",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rocks_ground_09/rocks_ground_09_diff_1k.jpg",
+          "provider_md5_verified": true
+        },
+        "Normal": {
+          "asset": "rocks_ground_09",
+          "role": "Normal",
+          "path": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\rocks_ground_09\\rocks_ground_09_nor_dx_1k.png",
+          "sha256": "20e9e11a1c75e0c13925254d83aa073055d3b46a0aa6010932e829ad659071b1",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/rocks_ground_09/rocks_ground_09_nor_dx_1k.png",
+          "provider_md5_verified": true
+        },
+        "Roughness": {
+          "asset": "rocks_ground_09",
+          "role": "Roughness",
+          "path": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\rocks_ground_09\\rocks_ground_09_rough_1k.png",
+          "sha256": "ee4ba6374f33575ee118f5731e5520d64bd2a017b3932ae33e5454fe888f6053",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/rocks_ground_09/rocks_ground_09_rough_1k.png",
+          "provider_md5_verified": true
+        },
+        "Height": {
+          "asset": "rocks_ground_09",
+          "role": "Height",
+          "path": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\rocks_ground_09\\rocks_ground_09_disp_1k.png",
+          "sha256": "7a1cd6d3500d187d2c810b47931d2053876e79c78ff06df58996e9c9091d04dc",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/rocks_ground_09/rocks_ground_09_disp_1k.png",
+          "provider_md5_verified": true
+        }
+      },
+      "seam_blend_width": 0,
+      "de_light_strength": 0,
+      "height_strength": 0.5,
+      "normal_strength": 1,
+      "roughness_min": 0,
+      "roughness_max": 1,
+      "macro_variation": 0.25
+    },
+    {
+      "role": "DryMineral",
+      "source_id": "gravel_ground_01",
+      "source_file": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\gravel_ground_01\\gravel_ground_01_diff_1k.jpg",
+      "source_sha256": "c3a12b0e3a9399913158dd5cfa1d67ede066970acd1f99e5b89969ac13f89089",
+      "source_url": "https://polyhaven.com/a/gravel_ground_01",
+      "license": "CC0-1.0",
+      "world_size_m": [
+        3,
+        3
+      ],
+      "scale_authority": "provider dimensions retained from v1",
+      "color_gain": [
+        0.93,
+        0.96,
+        1.02
+      ],
+      "pbr_maps": {
+        "BaseColor": {
+          "asset": "gravel_ground_01",
+          "role": "BaseColor",
+          "path": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\gravel_ground_01\\gravel_ground_01_diff_1k.jpg",
+          "sha256": "c3a12b0e3a9399913158dd5cfa1d67ede066970acd1f99e5b89969ac13f89089",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/gravel_ground_01/gravel_ground_01_diff_1k.jpg",
+          "provider_md5_verified": true
+        },
+        "Normal": {
+          "asset": "gravel_ground_01",
+          "role": "Normal",
+          "path": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\gravel_ground_01\\gravel_ground_01_nor_dx_1k.png",
+          "sha256": "aa92a01e4a9d7e869af0f4701cbba04038d18040aae60847cedfb768b7c48dca",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/gravel_ground_01/gravel_ground_01_nor_dx_1k.png",
+          "provider_md5_verified": true
+        },
+        "Roughness": {
+          "asset": "gravel_ground_01",
+          "role": "Roughness",
+          "path": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\gravel_ground_01\\gravel_ground_01_rough_1k.png",
+          "sha256": "88cedfeef6e57ed0a57908a6063596cc82377d39978158f8e1ee85b5c22f3c8f",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/gravel_ground_01/gravel_ground_01_rough_1k.png",
+          "provider_md5_verified": true
+        },
+        "Height": {
+          "asset": "gravel_ground_01",
+          "role": "Height",
+          "path": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\gravel_ground_01\\gravel_ground_01_disp_1k.png",
+          "sha256": "90a54449b97c927bdfd3fe70f1a4fa022025044c75a9bacdb87cbbbe6b342a5e",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/gravel_ground_01/gravel_ground_01_disp_1k.png",
+          "provider_md5_verified": true
+        }
+      },
+      "seam_blend_width": 0,
+      "de_light_strength": 0,
+      "height_strength": 0.5,
+      "normal_strength": 1,
+      "roughness_min": 0,
+      "roughness_max": 1,
+      "macro_variation": 0.25
+    },
+    {
+      "role": "DryGrass",
+      "source_id": "withered_grass",
+      "source_file": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\withered_grass\\withered_grass_diff_1k.jpg",
+      "source_sha256": "8bebfb639ef74f651bc445526c46c845beee52a86d831848b82eb2bbbf2d98ee",
+      "source_url": "https://polyhaven.com/a/withered_grass",
+      "license": "CC0-1.0",
+      "world_size_m": [
+        2,
+        2
+      ],
+      "scale_authority": "provider dimensions retained from v1",
+      "color_gain": [
+        0.96,
+        0.99,
+        0.95
+      ],
+      "pbr_maps": {
+        "BaseColor": {
+          "asset": "withered_grass",
+          "role": "BaseColor",
+          "path": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\withered_grass\\withered_grass_diff_1k.jpg",
+          "sha256": "8bebfb639ef74f651bc445526c46c845beee52a86d831848b82eb2bbbf2d98ee",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/withered_grass/withered_grass_diff_1k.jpg",
+          "provider_md5_verified": true
+        },
+        "Normal": {
+          "asset": "withered_grass",
+          "role": "Normal",
+          "path": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\withered_grass\\withered_grass_nor_dx_1k.png",
+          "sha256": "58b51c7665205ec13e2e9e7b8c6fa7240db26d470c991cd24536c94e3a740a53",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/withered_grass/withered_grass_nor_dx_1k.png",
+          "provider_md5_verified": true
+        },
+        "Roughness": {
+          "asset": "withered_grass",
+          "role": "Roughness",
+          "path": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\withered_grass\\withered_grass_rough_1k.png",
+          "sha256": "6ab173c63ab25ca2211df5e8efa2a36d12a5c8001b5c4a82e47507e8eabe8afa",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/withered_grass/withered_grass_rough_1k.png",
+          "provider_md5_verified": true
+        },
+        "Height": {
+          "asset": "withered_grass",
+          "role": "Height",
+          "path": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\withered_grass\\withered_grass_disp_1k.png",
+          "sha256": "681c1d5af85df99d5f27cde8fdac40ecce51dbbe7cfc567daeb0e59cb448bd1d",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/withered_grass/withered_grass_disp_1k.png",
+          "provider_md5_verified": true
+        }
+      },
+      "seam_blend_width": 0,
+      "de_light_strength": 0,
+      "height_strength": 0.5,
+      "normal_strength": 1,
+      "roughness_min": 0,
+      "roughness_max": 1,
+      "macro_variation": 0.25
+    },
+    {
+      "role": "ForestLitter",
+      "source_id": "forrest_ground_03",
+      "source_file": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\forrest_ground_03\\forrest_ground_03_diff_1k.jpg",
+      "source_sha256": "69c3ae8a40c70eecbb312c2ca1044b5dea4f48d37f2a6f84ca7ed56b95f04a7b",
+      "source_url": "https://polyhaven.com/a/forrest_ground_03",
+      "license": "CC0-1.0",
+      "world_size_m": [
+        2,
+        2
+      ],
+      "scale_authority": "provider dimensions retained from v1",
+      "color_gain": [
+        0.94,
+        0.96,
+        0.98
+      ],
+      "pbr_maps": {
+        "BaseColor": {
+          "asset": "forrest_ground_03",
+          "role": "BaseColor",
+          "path": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\forrest_ground_03\\forrest_ground_03_diff_1k.jpg",
+          "sha256": "69c3ae8a40c70eecbb312c2ca1044b5dea4f48d37f2a6f84ca7ed56b95f04a7b",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/forrest_ground_03/forrest_ground_03_diff_1k.jpg",
+          "provider_md5_verified": true
+        },
+        "Normal": {
+          "asset": "forrest_ground_03",
+          "role": "Normal",
+          "path": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\forrest_ground_03\\forrest_ground_03_nor_dx_1k.png",
+          "sha256": "dee4efba1e7c14686e7f2125a5db1de1cea660993e97c84dfd30ccb7d34a36b5",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/forrest_ground_03/forrest_ground_03_nor_dx_1k.png",
+          "provider_md5_verified": true
+        },
+        "Roughness": {
+          "asset": "forrest_ground_03",
+          "role": "Roughness",
+          "path": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\forrest_ground_03\\forrest_ground_03_rough_1k.png",
+          "sha256": "1e3704ff8cd0cf138d49324ffd97c8eb27870e6f0c45cd291202d2fc7a375675",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/forrest_ground_03/forrest_ground_03_rough_1k.png",
+          "provider_md5_verified": true
+        },
+        "Height": {
+          "asset": "forrest_ground_03",
+          "role": "Height",
+          "path": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\forrest_ground_03\\forrest_ground_03_disp_1k.png",
+          "sha256": "2d21b134c79d6a7ea1d8ed8059facf54cc7220ab99dfa54e20db3dbebb43801b",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/forrest_ground_03/forrest_ground_03_disp_1k.png",
+          "provider_md5_verified": true
+        }
+      },
+      "seam_blend_width": 0,
+      "de_light_strength": 0,
+      "height_strength": 0.5,
+      "normal_strength": 1,
+      "roughness_min": 0,
+      "roughness_max": 1,
+      "macro_variation": 0.25
+    },
+    {
+      "role": "RockCut",
+      "source_id": "Rock026",
+      "source_file": "D:\\yacs\\data\\textures\\texture-prep-candidates-20261005\\Rock026\\Rock026_1K-PNG_Color.png",
+      "source_sha256": "e4ad1fd86606519ca55f412d3ebb99e1ef590d2a2c53f3ea40406a2d21c33f06",
+      "source_url": "https://ambientcg.com/a/Rock026",
+      "license": "CC0-1.0",
+      "world_size_m": [
+        2,
+        2
+      ],
+      "scale_authority": "artistic 2m trial; provider dimensions unknown",
+      "color_gain": [
+        1,
+        1.01,
+        1.02
+      ],
+      "pbr_maps": {
+        "BaseColor": {
+          "path": "D:\\yacs\\data\\textures\\texture-prep-candidates-20261005\\Rock026\\Rock026_1K-PNG_Color.png",
+          "sha256": "e4ad1fd86606519ca55f412d3ebb99e1ef590d2a2c53f3ea40406a2d21c33f06"
+        },
+        "Normal": {
+          "path": "D:\\yacs\\data\\textures\\texture-prep-candidates-20261005\\Rock026\\Rock026_1K-PNG_NormalDX.png",
+          "sha256": "9560326c013e06d6c3570ac5064774210da00e9d8f135bd02ca09d28d5323f9e"
+        },
+        "Roughness": {
+          "path": "D:\\yacs\\data\\textures\\texture-prep-candidates-20261005\\Rock026\\Rock026_1K-PNG_Roughness.png",
+          "sha256": "ee19ef41120a15a92603bc1c0d130f3fb64b6851e31be3deea015752b91f9fe9"
+        },
+        "Height": {
+          "path": "D:\\yacs\\data\\textures\\texture-prep-candidates-20261005\\Rock026\\Rock026_1K-PNG_Displacement.png",
+          "sha256": "a7dbe29bde4c7ed8fd9dc265f6a3115f6fea3442fd0d861bea5c32b6a1567390"
+        }
+      },
+      "seam_blend_width": 0,
+      "de_light_strength": 0,
+      "height_strength": 0.5,
+      "normal_strength": 1,
+      "roughness_min": 0,
+      "roughness_max": 1,
+      "macro_variation": 0.25
+    },
+    {
+      "role": "FillGravel",
+      "source_id": "rock_ground",
+      "source_file": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\rock_ground\\rock_ground_diff_1k.jpg",
+      "source_sha256": "bec2573bc8aa9c714b690df753730e41f2077a1f0bbca83b13e055c86b4d5626",
+      "source_url": "https://polyhaven.com/a/rock_ground",
+      "license": "CC0-1.0",
+      "world_size_m": [
+        1.5,
+        1.5
+      ],
+      "scale_authority": "provider dimensions retained from v1",
+      "color_gain": [
+        1,
+        1.01,
+        1.02
+      ],
+      "pbr_maps": {
+        "BaseColor": {
+          "asset": "rock_ground",
+          "role": "BaseColor",
+          "path": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\rock_ground\\rock_ground_diff_1k.jpg",
+          "sha256": "bec2573bc8aa9c714b690df753730e41f2077a1f0bbca83b13e055c86b4d5626",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_ground/rock_ground_diff_1k.jpg",
+          "provider_md5_verified": true
+        },
+        "Normal": {
+          "asset": "rock_ground",
+          "role": "Normal",
+          "path": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\rock_ground\\rock_ground_nor_dx_1k.png",
+          "sha256": "d556cd8d0eae07d012a1c61fb1c485657528221c18069cf3deed631e32d2492f",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/rock_ground/rock_ground_nor_dx_1k.png",
+          "provider_md5_verified": true
+        },
+        "Roughness": {
+          "asset": "rock_ground",
+          "role": "Roughness",
+          "path": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\rock_ground\\rock_ground_rough_1k.png",
+          "sha256": "ad40a477eeb7cb226927fd4a02c979213a950d2e267b6ef27ac9bdfd6036759d",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/rock_ground/rock_ground_rough_1k.png",
+          "provider_md5_verified": true
+        },
+        "Height": {
+          "asset": "rock_ground",
+          "role": "Height",
+          "path": "D:\\yacs\\data\\textures\\sa-calobra-library-v2-20261005\\rock_ground\\rock_ground_disp_1k.png",
+          "sha256": "e22eedf9590301c698f29642d6367364fbfc537343f06c94f3710eda6ebe4e35",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/rock_ground/rock_ground_disp_1k.png",
+          "provider_md5_verified": true
+        }
+      },
+      "seam_blend_width": 0,
+      "de_light_strength": 0,
+      "height_strength": 0.5,
+      "normal_strength": 1,
+      "roughness_min": 0,
+      "roughness_max": 1,
+      "macro_variation": 0.25
+    }
+  ]
+}

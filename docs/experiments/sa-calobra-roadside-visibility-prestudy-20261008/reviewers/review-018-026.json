@@ -1,0 +1,1142 @@
+{
+  "reviewer": "visibility_18_26",
+  "sheets_inspected": [
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26
+  ],
+  "stations": [
+    {
+      "station_index": 216,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "A roadside cut has readable planes and its road contact; opposite view opens onto small ridge outlines and sea-facing terrain.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 217,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "A roadside cut has readable planes and its road contact; opposite view opens onto small ridge outlines and sea-facing terrain.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 218,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "A roadside cut has readable planes and its road contact; opposite view opens onto small ridge outlines and sea-facing terrain.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 219,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Low cuts and shoulders flank the road; preserve bank rollovers and ground contact, with broad terrain and low skyline beyond.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 220,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Low cuts and shoulders flank the road; preserve bank rollovers and ground contact, with broad terrain and low skyline beyond.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 221,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Low cuts and shoulders flank the road; preserve bank rollovers and ground contact, with broad terrain and low skyline beyond.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 222,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Low cuts and shoulders flank the road; preserve bank rollovers and ground contact, with broad terrain and low skyline beyond.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 223,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "A curved roadside bank/cut has readable corner and lip transitions; the pair also exposes upper ground or a valley skyline.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 224,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "A curved roadside bank/cut has readable corner and lip transitions; the pair also exposes upper ground or a valley skyline.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 225,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "A curved roadside bank/cut has readable corner and lip transitions. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 226,
+      "near_profile": "bank",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "A curved roadside bank/cut has readable corner and lip transitions. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 227,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "both",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "A curved roadside bank/cut has readable corner and lip transitions. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 228,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "both",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "A curved roadside bank/cut has readable corner and lip transitions. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 229,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "both",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "A curved roadside bank/cut has readable corner and lip transitions. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 230,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Near cut contact is readable and a broader upper rocky face with ledges occupies a substantial part of one view; the opposite view includes open ridge context.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 231,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Near cut contact is readable and a broader upper rocky face with ledges occupies a substantial part of one view; the opposite view includes open ridge context.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 232,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Near cut contact is readable and a broader upper rocky face with ledges occupies a substantial part of one view; the opposite view includes open ridge context.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 233,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Near cut edges are readable; the broader hillside and crest are visible, but contact resolution does not clearly establish a dominant readable cliff face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 234,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Near cut edges are readable; the broader hillside and crest are visible, but contact resolution does not clearly establish a dominant readable cliff face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 235,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Near cut edges are readable; the broader hillside and crest are visible, but contact resolution does not clearly establish a dominant readable cliff face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 236,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Near cut edges are readable; the broader hillside and crest are visible, but contact resolution does not clearly establish a dominant readable cliff face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 237,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Near cut edges are readable; the broader hillside and crest are visible, but contact resolution does not clearly establish a dominant readable cliff face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 238,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Near cut edges are readable; the broader hillside and crest are visible, but contact resolution does not clearly establish a dominant readable cliff face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 239,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Near cut edges are readable; the broader hillside and crest are visible, but contact resolution does not clearly establish a dominant readable cliff face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 240,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Near cut edges are readable; the broader hillside and crest are visible, but contact resolution does not clearly establish a dominant readable cliff face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 241,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Near cut edges are readable; the broader hillside and crest are visible, but contact resolution does not clearly establish a dominant readable cliff face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 242,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "present",
+      "reason": "Near cut edges are readable; the broader hillside and crest are visible, but contact resolution does not clearly establish a dominant readable cliff face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 243,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "A roadside cut has readable planes and its road contact; opposite view opens onto small ridge outlines and sea-facing terrain.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 244,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "A roadside cut has readable planes and its road contact; opposite view opens onto small ridge outlines and sea-facing terrain.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 245,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "A roadside cut has readable planes and its road contact; opposite view opens onto small ridge outlines and sea-facing terrain.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 246,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "A roadside cut has readable planes and its road contact; opposite view opens onto small ridge outlines and sea-facing terrain.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 247,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "A roadside cut has readable planes and its road contact; opposite view opens onto small ridge outlines and sea-facing terrain.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 248,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Road passes through cuts with readable near sidewalls or bank lips; another direction exposes ridge outlines beyond the cuts.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 249,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "Road passes through cuts with readable near sidewalls or bank lips. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 250,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "both",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "Road passes through cuts with readable near sidewalls or bank lips. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 251,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "both",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "Road passes through cuts with readable near sidewalls or bank lips. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 252,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "both",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Road passes through cuts with readable near sidewalls or bank lips; another direction exposes ridge outlines beyond the cuts.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 253,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "both",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Road passes through cuts with readable near sidewalls or bank lips; another direction exposes ridge outlines beyond the cuts.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 254,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "A roadside cut has readable planes and its road contact; opposite view opens onto small ridge outlines and sea-facing terrain.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 255,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Near cut contact is readable and a broader upper rocky face with ledges occupies a substantial part of one view; the opposite view includes open ridge context.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 256,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Near cut contact is readable and a broader upper rocky face with ledges occupies a substantial part of one view; the opposite view includes open ridge context.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 257,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Near cut contact is readable and a broader upper rocky face with ledges occupies a substantial part of one view; the opposite view includes open ridge context.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 258,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "present",
+      "reason": "Near cut contact is readable and a broader upper rocky face with ledges occupies a substantial part of one view; the opposite view includes open ridge context.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 259,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Tight bend and stacked road approaches expose tall near walls, larger connected face planes and road-to-wall contacts. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 260,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Tight bend and stacked road approaches expose tall near walls, larger connected face planes and road-to-wall contacts. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 261,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Tight bend and stacked road approaches expose tall near walls, larger connected face planes and road-to-wall contacts. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 262,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Tight bend and stacked road approaches expose tall near walls, larger connected face planes and road-to-wall contacts. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 263,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Tight bend and stacked road approaches expose tall near walls, larger connected face planes and road-to-wall contacts. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 264,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Tight bend and stacked road approaches expose tall near walls, larger connected face planes and road-to-wall contacts. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 265,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Tight bend and stacked road approaches expose tall near walls, larger connected face planes and road-to-wall contacts. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 266,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Tight bend and stacked road approaches expose tall near walls, larger connected face planes and road-to-wall contacts. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 267,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Tight bend and stacked road approaches expose tall near walls, larger connected face planes and road-to-wall contacts. No distinct distant terrain panorama is established; any outline of the dominant face remains a B silhouette requirement.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 268,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Tight bend and stacked road approaches expose tall near walls, larger connected face planes and road-to-wall contacts. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 269,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Tight bend and stacked road approaches expose tall near walls, larger connected face planes and road-to-wall contacts. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 270,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Close sidewalls and larger vertical rock planes dominate the enclosed view. No distinct distant terrain panorama is established; any outline of the dominant face remains a B silhouette requirement.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 271,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Tight bend and stacked road approaches expose tall near walls, larger connected face planes and road-to-wall contacts. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 272,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Tight bend and stacked road approaches expose tall near walls, larger connected face planes and road-to-wall contacts. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 273,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Close sidewalls and larger vertical rock planes dominate the enclosed view. No distinct distant terrain panorama is established; any outline of the dominant face remains a B silhouette requirement.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 274,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Close sidewalls and larger vertical rock planes dominate the enclosed view. No distinct distant terrain panorama is established; any outline of the dominant face remains a B silhouette requirement.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 275,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Close sidewalls and larger vertical rock planes dominate the enclosed view. No distinct distant terrain panorama is established; any outline of the dominant face remains a B silhouette requirement.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 276,
+      "near_profile": "wall",
+      "near_sides_forward": "none",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Original PNG confirms a dominant rocky massif with major face planes and its own protected silhouette. Forward roadside parapets are architecture rather than raised Landscape banks; reverse cut evidence supports near wall treatment. No separate distant C panorama is established.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 277,
+      "near_profile": "bank",
+      "near_sides_forward": "none",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "A distinct rocky massif/peak has readable major face planes and silhouette. No distinct distant terrain panorama is established; any outline of the dominant face remains a B silhouette requirement.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 278,
+      "near_profile": "bank",
+      "near_sides_forward": "none",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "A distinct rocky massif/peak has readable major face planes and silhouette. No distinct distant terrain panorama is established; any outline of the dominant face remains a B silhouette requirement.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 279,
+      "near_profile": "bank",
+      "near_sides_forward": "none",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "A distinct rocky massif/peak has readable major face planes and silhouette. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 280,
+      "near_profile": "ground",
+      "near_sides_forward": "none",
+      "near_sides_reverse": "none",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "A distinct rocky massif/peak has readable major face planes and silhouette. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 281,
+      "near_profile": "ground",
+      "near_sides_forward": "none",
+      "near_sides_reverse": "none",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "A distinct rocky massif/peak has readable major face planes and silhouette. No distinct distant terrain panorama is established; any outline of the dominant face remains a B silhouette requirement.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 282,
+      "near_profile": "ground",
+      "near_sides_forward": "none",
+      "near_sides_reverse": "none",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "A distinct rocky massif/peak has readable major face planes and silhouette. No distinct distant terrain panorama is established; any outline of the dominant face remains a B silhouette requirement.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 283,
+      "near_profile": "ground",
+      "near_sides_forward": "none",
+      "near_sides_reverse": "none",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Low shoulder/ground surrounds the bend and open terrain silhouettes are visible; no broad dominant cliff face is established in this pair.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 284,
+      "near_profile": "bank",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "none",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "A distinct rocky massif/peak has readable major face planes and silhouette. No distinct distant terrain panorama is established; any outline of the dominant face remains a B silhouette requirement.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 285,
+      "near_profile": "ground",
+      "near_sides_forward": "none",
+      "near_sides_reverse": "none",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Road structure/arch occludes much of one view. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 286,
+      "near_profile": "uncertain",
+      "near_sides_forward": "uncertain",
+      "near_sides_reverse": "none",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Road structure/arch occludes much of one view. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 287,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "none",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "A distinct rocky massif/peak has readable major face planes and silhouette. No distinct distant terrain panorama is established; any outline of the dominant face remains a B silhouette requirement.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 288,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "none",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "A distinct rocky massif/peak has readable major face planes and silhouette. No distinct distant terrain panorama is established; any outline of the dominant face remains a B silhouette requirement.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 289,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "none",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "A distinct rocky massif/peak has readable major face planes and silhouette. No distinct distant terrain panorama is established; any outline of the dominant face remains a B silhouette requirement.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 290,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "A distinct rocky massif/peak has readable major face planes and silhouette. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 291,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "A distinct rocky massif/peak has readable major face planes and silhouette. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 292,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Near cut edges are readable. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 293,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near wall contact and larger upper rock planes are readable. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 294,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "both",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near wall contact and larger upper rock planes are readable. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 295,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near wall contact and larger upper rock planes are readable. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 296,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near wall contact and larger upper rock planes are readable. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 297,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Close sidewalls and larger vertical rock planes dominate the enclosed view. No distinct distant terrain panorama is established; any outline of the dominant face remains a B silhouette requirement.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 298,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Close sidewalls and larger vertical rock planes dominate the enclosed view. No distinct distant terrain panorama is established; any outline of the dominant face remains a B silhouette requirement.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 299,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Close sidewalls and larger vertical rock planes dominate the enclosed view. No distinct distant terrain panorama is established; any outline of the dominant face remains a B silhouette requirement.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 300,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Close sidewalls and larger vertical rock planes dominate the enclosed view. No distinct distant terrain panorama is established; any outline of the dominant face remains a B silhouette requirement.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 301,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near wall contact and larger upper rock planes are readable. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 302,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near wall contact and larger upper rock planes are readable. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 303,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near wall contact and larger upper rock planes are readable. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 304,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near wall contact and larger upper rock planes are readable. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 305,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Close sidewalls and larger vertical rock planes dominate the enclosed view. No distinct distant terrain panorama is established; any outline of the dominant face remains a B silhouette requirement.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 306,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "right",
+      "dominant_wall": "present",
+      "panorama": "absent",
+      "reason": "Close sidewalls and larger vertical rock planes dominate the enclosed view. No distinct distant terrain panorama is established; any outline of the dominant face remains a B silhouette requirement.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 307,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near wall contact and larger upper rock planes are readable. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 308,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near wall contact and larger upper rock planes are readable. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 309,
+      "near_profile": "wall",
+      "near_sides_forward": "right",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near wall contact and larger upper rock planes are readable. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 310,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "left",
+      "dominant_wall": "present",
+      "panorama": "uncertain",
+      "reason": "Near wall contact and larger upper rock planes are readable. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 311,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Near cut edges are readable. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 312,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Near roadside cut planes and bank lips are visible; the distant peak/crest stays a skyline feature, with a broader valley slope visible ahead.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 313,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Near roadside cut planes and bank lips are visible; the distant peak/crest stays a skyline feature, with a broader valley slope visible ahead.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 314,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "present",
+      "reason": "Near roadside cut planes and bank lips are visible; the distant peak/crest stays a skyline feature, with a broader valley slope visible ahead.",
+      "confidence": "medium"
+    },
+    {
+      "station_index": 315,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Near roadside cut planes and bank lips are visible. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 316,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Near roadside cut planes and bank lips are visible. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 317,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Near roadside cut planes and bank lips are visible. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 318,
+      "near_profile": "wall",
+      "near_sides_forward": "both",
+      "near_sides_reverse": "right",
+      "dominant_wall": "uncertain",
+      "panorama": "uncertain",
+      "reason": "Near roadside cut planes and bank lips are visible. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 319,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "both",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "A curved roadside bank/cut has readable corner and lip transitions. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 320,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "A curved roadside bank/cut has readable corner and lip transitions. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 321,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "A curved roadside bank/cut has readable corner and lip transitions. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 322,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "A curved roadside bank/cut has readable corner and lip transitions. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    },
+    {
+      "station_index": 323,
+      "near_profile": "wall",
+      "near_sides_forward": "left",
+      "near_sides_reverse": "right",
+      "dominant_wall": "absent",
+      "panorama": "uncertain",
+      "reason": "A curved roadside bank/cut has readable corner and lip transitions. Possible separate terrain crest is too ambiguous at contact-sheet resolution to establish C independently of the dominant/near face.",
+      "confidence": "low"
+    }
+  ],
+  "representative_originals": [
+    "window-0070-forward-00000",
+    "window-0081-forward-00008",
+    "window-0082-forward-00000",
+    "window-0087-forward-00000"
+  ],
+  "summary": {
+    "pairs_inspected": 108,
+    "observation_range": [
+      216,
+      323
+    ],
+    "dominant_wall_counts": {
+      "absent": 35,
+      "present": 55,
+      "uncertain": 18
+    },
+    "panorama_counts": {
+      "present": 39,
+      "uncertain": 49,
+      "absent": 20
+    },
+    "interpretation": "Preliminary visual screening from contact sheets. A covers readable raised roadside wall/bank contacts, not flat shoulders. Broad B evidence concentrates around accepted-hairpin, adjacent canyon and Nudo massif. C means a separate distant terrain skyline/panorama region; the outline of the same B face remains protected by B and SILHOUETTE_CRITICAL without establishing C. Sea or sky alone is not C. No world-space identity, D classification, confirmed simplification, GEO_FIX diagnosis, natural material class, performance measurement or canonical tags are inferred. Absent means no independent evidence in this pair only. Owner review pending."
+  },
+  "original_checks": [
+    {
+      "frame_id": "window-0070-forward-00000",
+      "observed_detail": "Full-resolution frame shows a tall faceted roadside cut on the left, clear base/contact and top rollover, plus broad upper rock bands, ledges and a separate distant crest toward the right. Diagnostic colors do not establish material types.",
+      "judgment_change_or_confirmation": "Station 230 A-left and B-present confirmed. C-present remains supported by the screened pair; independent crest evidence exists without using the near-wall outline. No causal geometry diagnosis."
+    },
+    {
+      "frame_id": "window-0081-forward-00008",
+      "observed_detail": "Across the tight bend, a large wall face occupies nearly the whole upper frame, with a strong vertical convex corner and the adjoining stacked-road contacts. Background terrain is largely occluded by this face.",
+      "judgment_change_or_confirmation": "Station 267 A/B confirmed; C-absent in the preliminary pair retained. Preserve broad corner/planes and road contacts; detailed texel/checker appearance does not justify microscopic geometry."
+    },
+    {
+      "frame_id": "window-0082-forward-00000",
+      "observed_detail": "The central rocky massif has readable major ledges, vertical bands, peak and shoulder forms; its silhouette belongs to the same B massif. Near road edges in this view are architectural parapets, with low adjacent Landscape ground and a lower cut outside the deck.",
+      "judgment_change_or_confirmation": "Station 276 B-present and C-absent confirmed. Forward near_sides changed from both to none: visible parapets are architecture, not raised Landscape banks alongside this road. Reverse cut evidence retains wall profile and reverse both."
+    },
+    {
+      "frame_id": "window-0087-forward-00000",
+      "observed_detail": "A close left wall with an angular corner meets the road; a larger upper/background rock face has distinct vertical fluting and large planes. Right-side terrain slopes below another road; no separate distant panorama is exposed in this view.",
+      "judgment_change_or_confirmation": "Station 299 A-left and B-present confirmed, C-absent retained from the screened pair. Broader upper cliff detail must not be reduced to the close contact strip alone."
+    }
+  ]
+}

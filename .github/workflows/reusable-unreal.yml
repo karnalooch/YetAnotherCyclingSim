@@ -49,6 +49,12 @@ jobs:
           $env:GIT_CONFIG_NOSYSTEM = '1'
           "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
           "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+          $unrealLogRoot = Join-Path $env:RUNNER_TEMP 'yacs-unreal-${{ github.run_id }}-${{ github.run_attempt }}'
+          "YACS_UNREAL_LOG_ROOT=$unrealLogRoot" >> $env:GITHUB_ENV
+          # Generated material packages can exceed MAX_PATH in nested runner checkouts.
+          # Configure the job-local file before either actions/checkout invocation.
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot enable long paths in isolated Git configuration.' }
           Write-Host "Using isolated Git config: $isolated"
           git config --global --list --show-origin
 
@@ -67,6 +73,17 @@ jobs:
         run: |
           $bootstrap = Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup/scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
           & $bootstrap -Workspace $env:GITHUB_WORKSPACE
+
+      - name: Respect shared Unreal host ownership
+        shell: pwsh
+        working-directory: _bootstrap-cleanup
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+          $state | ConvertTo-Json -Depth 8 | Write-Host
+          if ($state.status -ne 'IDLE') {
+            throw "Unreal runner host is already owned; status=$($state.status). Local/unknown Editors always win over remote CI."
+          }
 
       - name: Select persistent Unreal cache before isolated cleanup
         shell: pwsh
@@ -108,7 +125,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           git reset --hard '${{ inputs.target_sha }}'
           if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree reset failed.' }
-          git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/' -e '/Saved/Logs/YetAnotherCyclingSim.log' -e '/Saved/RuntimeProof/CI/RegionTerrain/*/*.log'
+          git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/' -e '/Saved/Logs/YetAnotherCyclingSim.log' -e '/Saved/RuntimeProof/CI/RegionTerrain/*/*.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof/automation_run.log'
           if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree allow-listed clean failed.' }
 
       - name: Enforce code-only checkout
@@ -136,10 +153,36 @@ jobs:
         shell: pwsh
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
+          $ErrorActionPreference = 'Stop'
+          $helper = Join-Path (Get-Location) 'scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
+          if (-not (Test-Path -LiteralPath $helper -PathType Leaf)) {
+            $helper = Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup/scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
+          }
+          if (-not (Test-Path -LiteralPath $helper -PathType Leaf)) {
+            throw 'Unreal workspace lock helper is unavailable from both active checkout and bootstrap.'
+          }
+          & $helper -Workspace $env:GITHUB_WORKSPACE
           $proof = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/Unreal'
           if (Test-Path -LiteralPath $proof) {
-            Remove-Item -LiteralPath $proof -Recurse -Force
+            # Two legacy fixed-name Automation logs can remain locked by a stale
+            # Windows CIM record even after the native process is gone. New runs
+            # write logs to the run-scoped RUNNER_TEMP path below, so preserve only
+            # those exact legacy residues and clear every other proof artifact.
+            $proofPayload = Join-Path $proof 'Proof'
+            Get-ChildItem -LiteralPath $proof -Force | ForEach-Object {
+              if ($_.FullName -eq $proofPayload) {
+                Get-ChildItem -LiteralPath $proofPayload -Force | ForEach-Object {
+                  if ($_.Name -notin @('automation_editor.log', 'automation_run.log')) {
+                    Remove-Item -LiteralPath $_.FullName -Recurse -Force
+                  }
+                }
+              }
+              else {
+                Remove-Item -LiteralPath $_.FullName -Recurse -Force
+              }
+            }
           }
+          New-Item -ItemType Directory -Path $env:YACS_UNREAL_LOG_ROOT -Force | Out-Null
 
       - name: Resolve verified Unreal execution mode
         id: cache
@@ -549,6 +592,21 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      - name: Stage run-scoped Unreal logs for artifact upload
+        if: ${{ always() }}
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $destination = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/Unreal/RunLogs/${{ github.run_id }}-${{ github.run_attempt }}'
+          if (Test-Path -LiteralPath $env:YACS_UNREAL_LOG_ROOT -PathType Container) {
+            New-Item -ItemType Directory -Path $destination -Force | Out-Null
+            Get-ChildItem -LiteralPath $env:YACS_UNREAL_LOG_ROOT -File -Filter '*.log' |
+              ForEach-Object {
+                Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $destination $_.Name) -Force
+              }
+          }
+
       - name: Upload concise Unreal proof
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -558,7 +616,7 @@ jobs:
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/Unreal/**/*.json
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/Unreal/**/*.txt
             ${{ env.YACS_UNREAL_WORKTREE }}/Saved/RuntimeProof/CI/Unreal/**/*.log
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 7
 
       - name: Launch interactive Sa Calobra owner handoff
@@ -636,25 +694,55 @@ jobs:
       - name: Clean current-run evidence and non-allow-listed residue
         if: ${{ always() && !inputs.region_terrain_import }}
         shell: pwsh
-        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
-          $proof = Join-Path (Get-Location) 'Saved/RuntimeProof/CI/Unreal'
-          if (Test-Path -LiteralPath $proof) {
-            Remove-Item -LiteralPath $proof -Recurse -Force
+          $ErrorActionPreference = 'Stop'
+          $worktree = Join-Path $env:GITHUB_WORKSPACE $env:YACS_UNREAL_WORKTREE
+          $helper = Join-Path $worktree 'scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
+          if (-not (Test-Path -LiteralPath $helper -PathType Leaf)) {
+            $helper = Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup/scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
           }
-          if (Test-Path -LiteralPath '.git') {
-            if ('${{ inputs.region_terrain_import }}' -eq 'true') {
-              # Preserve newly authored Spanish assets and the source TIFF;
-              # obsolete Italy payload retirement is a separate bounded step.
-              $archive = Join-Path $env:GITHUB_WORKSPACE '_yacs-sa-calobra-assets/${{ github.run_id }}-${{ github.run_attempt }}'
-              python scripts/ci/retain_unreal_assets.py --workspace (Get-Location).Path --archive $archive
-              if ($LASTEXITCODE -ne 0) { throw 'Sa Calobra retention failed; do not reset or clean.' }
+          if (-not (Test-Path -LiteralPath $helper -PathType Leaf)) {
+            throw 'Unreal workspace lock helper is unavailable from both active checkout and bootstrap.'
+          }
+          & $helper -Workspace $env:GITHUB_WORKSPACE
+
+          $proof = Join-Path $worktree 'Saved/RuntimeProof/CI/Unreal'
+          if (Test-Path -LiteralPath $proof) {
+            $proofPayload = Join-Path $proof 'Proof'
+            Get-ChildItem -LiteralPath $proof -Force | ForEach-Object {
+              if ($_.FullName -eq $proofPayload) {
+                Get-ChildItem -LiteralPath $proofPayload -Force | ForEach-Object {
+                  if ($_.Name -notin @('automation_editor.log', 'automation_run.log')) {
+                    Remove-Item -LiteralPath $_.FullName -Recurse -Force
+                  }
+                }
+              }
+              else {
+                Remove-Item -LiteralPath $_.FullName -Recurse -Force
+              }
             }
-            git reset --hard
-            if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree cleanup git reset failed.' }
-            git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/' -e '/Saved/Logs/YetAnotherCyclingSim.log' -e '/Saved/RuntimeProof/CI/RegionTerrain/*/*.log'
-            if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree cleanup allow-listed clean failed.' }
+          }
+
+          $gitMarker = Join-Path $worktree '.git'
+          if (Test-Path -LiteralPath $gitMarker) {
+            Push-Location $worktree
+            try {
+              if ('${{ inputs.region_terrain_import }}' -eq 'true') {
+                # Preserve newly authored Spanish assets and the source TIFF;
+                # obsolete Italy payload retirement is a separate bounded step.
+                $archive = Join-Path $env:GITHUB_WORKSPACE '_yacs-sa-calobra-assets/${{ github.run_id }}-${{ github.run_attempt }}'
+                python scripts/ci/retain_unreal_assets.py --workspace (Get-Location).Path --archive $archive
+                if ($LASTEXITCODE -ne 0) { throw 'Sa Calobra retention failed; do not reset or clean.' }
+              }
+              git reset --hard
+              if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree cleanup git reset failed.' }
+          git clean -ffdx -e '/Binaries/' -e '/Intermediate/' -e '/Plugins/**/Binaries/' -e '/Plugins/**/Intermediate/' -e '/Saved/BuildCache/UnrealCi/' -e '/Saved/Logs/YetAnotherCyclingSim.log' -e '/Saved/RuntimeProof/CI/RegionTerrain/*/*.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log' -e '/Saved/RuntimeProof/CI/Unreal/Proof/automation_run.log'
+              if ($LASTEXITCODE -ne 0) { throw 'Unreal warm-worktree cleanup allow-listed clean failed.' }
+            }
+            finally {
+              Pop-Location
+            }
           }
           else {
-            Write-Host 'Unreal warm-worktree cleanup: no checkout worktree to clean.'
+            Write-Host "Unreal warm-worktree cleanup: no checkout worktree to clean at '$worktree'."
           }

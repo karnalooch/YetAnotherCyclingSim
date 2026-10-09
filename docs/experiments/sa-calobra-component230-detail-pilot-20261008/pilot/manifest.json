@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "review_status": "AI_PROPOSED",
+  "owner_review": "PENDING",
+  "component": 230,
+  "mesh_sha256": "a9d34dbfb32a59b592dca561a7d7b0e53f7d02d90c095cff7c0812c249247965",
+  "frames_csv_sha256": "15e0a2350c613bf52bfb1354192043ca0c6cd785493c59e7721305b67de099a3",
+  "annotations_sha256": "0a7703e960d6762d7721dafe0d646c74d889c6ff25c4b115b06129992a7586e8",
+  "producer_sha256": "ce185bc9abd318b02da9ec6a3a2b7cc30dcd23f839d5190d2bad575d82f6fdba",
+  "geometry_basis": "candidate XYZ columns 4:7; source XYZ columns 1:4",
+  "triangle_identity": "ordered row index scoped to mesh SHA256, not native Unreal triangle ID",
+  "vertex_count": 29415,
+  "triangle_count": 58216,
+  "locked_vertices": 2577,
+  "movable_vertices": 26838,
+  "geometry_and_topology_unchanged": true,
+  "candidate_band_counts": {
+    "A": 324,
+    "B": 211,
+    "C": 0,
+    "U": 57681
+  },
+  "eligible_faces": 52857,
+  "protected_faces": 5359,
+  "limitations": [
+    "Component-only nearest-hit projection is not world occlusion proof.",
+    "Unseen or unannotated faces are U, never D.",
+    "Pixel sampling is preliminary, not full-resolution coverage proof.",
+    "No runtime changes, geometry generation, materials, performance measurements or canonical tags."
+  ],
+  "frames": [
+    {
+      "frame_id": "window-0021-forward-00005",
+      "camera": [
+        46814.30691808701,
+        50077.01446126266,
+        44582.10209636803
+      ],
+      "target": [
+        45622.75821127245,
+        49563.63159625151,
+        44320.55632271009
+      ],
+      "width": 1280,
+      "height": 720,
+      "fov": 76.0,
+      "source_sha256": "a03f399fa4144804cc5b06b6c8fc24196016fe709fbab2e056f5835f41b71069",
+      "sample_width": 320,
+      "sample_height": 180,
+      "component_hit_pixels": 6727,
+      "annotated_face_count": 265
+    },
+    {
+      "frame_id": "window-0023-forward-00000",
+      "camera": [
+        42912.60863025102,
+        50578.83460543357,
+        44307.91088247302
+      ],
+      "target": [
+        41691.355506985965,
+        51018.40651235348,
+        44054.99073736799
+      ],
+      "width": 1280,
+      "height": 720,
+      "fov": 76.0,
+      "source_sha256": "edde200ea4c78cb7b638d2f8c45f77e9f68e8f90a39a3e4c02aac8884d394068",
+      "sample_width": 320,
+      "sample_height": 180,
+      "component_hit_pixels": 4462,
+      "annotated_face_count": 270
+    }
+  ]
+}

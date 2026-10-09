@@ -39,6 +39,12 @@ def fixture(name="stage3g-environment"):
         "SettingsSha256": "c" * 64,
         "ScreenPercentage": 100,
         "DynamicResolution": False,
+        "MapSha256": "d" * 64,
+        "ConsumerManifestSha256": "e" * 64,
+        "MaterialParent": scenario.get("material_parent"),
+        "MaterialComponentCount": 1024,
+        "RenderInstanceCount": 1024,
+        "LightingPreserved": True,
         "Sectors": [
             {
                 "Sector": s,
@@ -59,6 +65,11 @@ def fixture(name="stage3g-environment"):
 
 
 class WorldProofTests(unittest.TestCase):
+    def test_material_changes_also_require_saved_consumer(self):
+        needed = gate.requirements(["scripts/ue/sa_calobra_whole_map_prep.py"], POLICY)
+        self.assertIn("sa-calobra-material", needed)
+        self.assertIn("sa-calobra-terrain", needed)
+
     def test_worlds_are_distinct_and_docs_do_not_require_gpu(self):
         self.assertEqual(
             gate.requirements(["Content/Worlds/SaCalobra/L_Test.umap"], POLICY),
@@ -286,7 +297,7 @@ class OwnerDeferralTests(unittest.TestCase):
 
     def git(self, *args):
         return subprocess.check_output(
-            ["git", *args], cwd=self.root, text=True, stderr=subprocess.PIPE
+            ["git", *args], cwd=self.root, text=True, stderr=subprocess.PIPE, timeout=30
         ).strip()
 
     def write(self, path, content):
@@ -346,6 +357,55 @@ class OwnerDeferralTests(unittest.TestCase):
         self.git("checkout", "--quiet", "--orphan", "unrelated")
         self.write("docs/other.md", "unrelated world")
         self.assertIsNone(self.deferred(self.commit()))
+
+    def m3_deferred(self, head, needed=None):
+        self.policy["owner_deferred_m3_performance"]["baseline_sha"] = self.baseline
+        return gate.deferred_m3_performance(
+            head, needed or ["sa-calobra-material"], self.policy, self.root
+        )
+
+    def test_m3_assembly_changes_are_explicitly_deferred_without_performance_pass(self):
+        self.write("Content/Worlds/SaCalobra/mask.txt", "assembled material checkpoint")
+        result = self.m3_deferred(
+            self.commit(), ["sa-calobra-material", "stage3g-environment"]
+        )
+        self.assertEqual(result["status"], "DEFERRED_AFTER_M3")
+        self.assertEqual(result["due"], "after_m3_assembly")
+        self.assertFalse(result["performance_pass"])
+        self.assertEqual(result["baseline_sha"], self.baseline)
+
+    def test_completed_assembly_unknown_world_and_unrelated_head_cannot_defer(self):
+        self.assertIsNone(self.m3_deferred(self.baseline, ["UNMAPPED_WORLD"]))
+        self.policy["owner_deferred_m3_performance"]["assembly_status"] = "COMPLETE"
+        self.assertIsNone(self.m3_deferred(self.baseline))
+        self.policy["owner_deferred_m3_performance"]["assembly_status"] = "IN_PROGRESS"
+        self.git("checkout", "--quiet", "--orphan", "unrelated-m3")
+        self.write("docs/other.md", "another world")
+        self.assertIsNone(self.m3_deferred(self.commit()))
+
+    def test_invalid_owner_decision_or_unregistered_scenario_cannot_defer(self):
+        decision = self.policy["owner_deferred_m3_performance"]
+        decision["baseline_sha"] = self.baseline
+        for key, value in (
+            ("stage", "M4"),
+            ("owner_decision_date", "2026-10-08"),
+            ("assembly_status", "DONE"),
+            ("due", "never"),
+            ("baseline_sha", "invalid"),
+        ):
+            previous = decision[key]
+            decision[key] = value
+            with (
+                self.subTest(key=key),
+                self.assertRaisesRegex(ValueError, "invalid owner-approved M3"),
+            ):
+                gate.deferred_m3_performance(
+                    self.baseline, ["sa-calobra-material"], self.policy, self.root
+                )
+            decision[key] = previous
+        self.policy["scenarios"].pop("sa-calobra-material")
+        with self.assertRaisesRegex(ValueError, "unregistered M3 scenario"):
+            self.m3_deferred(self.baseline)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,53 @@
+{
+  "status": "MAP_CHECKS_PASS_UE_REVIEW_PENDING",
+  "maps": {
+    "BaseColor": {
+      "path": "export/SaCalobra_PaleLimestone_BaseColor.png",
+      "sha256": "856bb6f5cbb094299509d3ac558559cfa8c2139fb6447ec378152407b85116f4",
+      "size": [
+        2048,
+        2048
+      ],
+      "wrap_step_x": 0.000568704039324075,
+      "wrap_step_y": 0.0005904054269194603,
+      "interior_step_x": 0.0006385196465998888,
+      "interior_step_y": 0.0006336852675303817
+    },
+    "Normal_DX": {
+      "path": "export/SaCalobra_PaleLimestone_Normal_DX.png",
+      "sha256": "e3dd7d56e4f1354eb99950c5889c380e74ff2296553b7fc603e967ee6325a88a",
+      "size": [
+        2048,
+        2048
+      ],
+      "wrap_step_x": 0.012272138148546219,
+      "wrap_step_y": 0.014298663474619389,
+      "interior_step_x": 0.014187055639922619,
+      "interior_step_y": 0.013750738464295864
+    },
+    "ORM": {
+      "path": "export/SaCalobra_PaleLimestone_ORM.png",
+      "sha256": "1bb204a3adb7d69b54fc68f8cab0b04c838318c1343af7b2e1ee2f883ac673ac",
+      "size": [
+        2048,
+        2048
+      ],
+      "wrap_step_x": 8.744382648728788e-05,
+      "wrap_step_y": 7.85079610068351e-05,
+      "interior_step_x": 9.575856529409066e-05,
+      "interior_step_y": 9.515801502857357e-05
+    },
+    "Height": {
+      "path": "export/SaCalobra_PaleLimestone_Height.exr",
+      "sha256": "cb4261a6e4bdd2e38ebf49efa941b94d95692d08ecd625488e931e1e5a3079b8"
+    }
+  },
+  "normal_length_error_p99": 0.008385777473449707,
+  "color_mean_srgb": [
+    0.680808800667819,
+    0.681811582606926,
+    0.6828162064463186
+  ],
+  "geometry_changed": false,
+  "visual_accepted": false
+}

@@ -23,6 +23,10 @@ $ExpectedCommit = '39a8f1bdc65b2c4613a1e87b71d93b4576db0a66'
 $ExpectedVersion = '0.79'
 $ExpectedEngineVersion = '5.8.0'
 $ExpectedLicenseFirstLine = 'MIT License'
+$CompatibilityPatchId = 'yacs-pcgex-0.79-horizontal-boundary-v2'
+$CompatibilityPatchRelative = 'scripts/worldgen/patches/pcgex-0.79-triangulate-holes-flat-union.patch'
+$CompatibilityTargetRelative = 'Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp'
+$ExpectedCompatibilityPatchSha256 = '8182824990670e560d1a1f0d052288cc8a98dc5cdb370bdbf63f2666f9593d89'
 
 $RepoRoot = (Resolve-Path -LiteralPath $RepoRoot).Path
 if (-not $PluginRoot) { $PluginRoot = Join-Path $RepoRoot 'Plugins/PCGExtendedToolkit' }
@@ -53,6 +57,75 @@ if ($Mode -eq 'Install' -and -not (Test-Path -LiteralPath (Join-Path $PluginRoot
     if ($LASTEXITCODE -ne 0) { throw "Failed to fetch pinned PCGEx commit $ExpectedCommit." }
     & git -C $PluginRoot checkout --detach FETCH_HEAD
     if ($LASTEXITCODE -ne 0) { throw 'Failed to checkout pinned PCGEx revision.' }
+}
+
+if ($Mode -eq 'Install' -and (Test-Path -LiteralPath (Join-Path $PluginRoot '.git'))) {
+    $InstallOrigin = (& git -C $PluginRoot remote get-url origin).Trim()
+    if ($InstallOrigin -ne $ExpectedRepository) {
+        throw "Existing PCGEx checkout has unexpected origin: $InstallOrigin"
+    }
+    & git -C $PluginRoot fetch --depth 1 origin $ExpectedCommit
+    if ($LASTEXITCODE -ne 0) { throw "Failed to refresh pinned PCGEx commit $ExpectedCommit." }
+    & git -C $PluginRoot reset --hard $ExpectedCommit
+    if ($LASTEXITCODE -ne 0) { throw 'Failed to normalize PCGEx tracked source to the pinned revision.' }
+    & git -C $PluginRoot config core.autocrlf false
+}
+
+$CompatibilityPatchPath = Join-Path $RepoRoot $CompatibilityPatchRelative
+if (-not (Test-Path -LiteralPath $CompatibilityPatchPath -PathType Leaf)) {
+    throw "PCGEx compatibility patch is missing: $CompatibilityPatchPath"
+}
+$PatchText = [System.IO.File]::ReadAllText($CompatibilityPatchPath).Replace("`r`n", "`n")
+$ActualCompatibilityPatchSha256 = [Convert]::ToHexString(
+    [System.Security.Cryptography.SHA256]::HashData(
+        [System.Text.Encoding]::UTF8.GetBytes($PatchText)
+    )
+).ToLowerInvariant()
+if ($ActualCompatibilityPatchSha256 -ne $ExpectedCompatibilityPatchSha256) {
+    throw "PCGEx compatibility patch hash drift: $ActualCompatibilityPatchSha256"
+}
+
+function Test-YacsPcgExCompatibilityPatchApplied {
+    param([Parameter(Mandatory=$true)] [string] $TargetPath)
+
+    if (-not (Test-Path -LiteralPath $TargetPath -PathType Leaf)) {
+        return $false
+    }
+
+    # Exact full-file verification rejects extra edits in the allowed path.
+    # Normalize line endings only; Windows checkouts may contain CRLF.
+    $Text = [System.IO.File]::ReadAllText($TargetPath).Replace("`r`n", "`n")
+    $Bytes = [System.Text.Encoding]::UTF8.GetBytes($Text)
+    $Hash = [Convert]::ToHexString(
+        [System.Security.Cryptography.SHA256]::HashData($Bytes)
+    ).ToLowerInvariant()
+    return $Hash -eq '68614ae15d6bb03f2e58b0fb1dfa33e8eeebbfd31da08bd94ebfb378aeb63977'
+}
+
+$CompatibilityTargetPath = Join-Path $PluginRoot $CompatibilityTargetRelative
+$PatchApplied = Test-YacsPcgExCompatibilityPatchApplied -TargetPath $CompatibilityTargetPath
+$PatchApplicable = $false
+
+if ((Test-Path -LiteralPath (Join-Path $PluginRoot '.git')) -and -not $PatchApplied) {
+    & git -C $PluginRoot apply --check --ignore-space-change --ignore-whitespace $CompatibilityPatchPath *> $null
+    $PatchApplicable = ($LASTEXITCODE -eq 0)
+
+    if ($Mode -eq 'Install') {
+        if (-not $PatchApplicable) {
+            throw 'Pinned PCGEx source does not accept the reviewed YACS compatibility patch.'
+        }
+
+        & git -C $PluginRoot apply --whitespace=nowarn --ignore-space-change --ignore-whitespace $CompatibilityPatchPath
+        if ($LASTEXITCODE -ne 0) {
+            throw 'Failed to apply the reviewed YACS PCGEx compatibility patch.'
+        }
+
+        $PatchApplied = Test-YacsPcgExCompatibilityPatchApplied -TargetPath $CompatibilityTargetPath
+        if (-not $PatchApplied) {
+            throw 'PCGEx compatibility patch applied but exact patched-source verification failed.'
+        }
+        $PatchApplicable = $false
+    }
 }
 
 $Checks = [System.Collections.Generic.List[object]]::new()
@@ -89,10 +162,33 @@ if (Test-Path -LiteralPath $LicensePath -PathType Leaf) {
 }
 
 $Dirty = $null
+$ChangedPaths = @()
+$UntrackedPaths = @()
 if (Test-Path -LiteralPath $GitDir) {
     $Dirty = (& git -C $PluginRoot status --porcelain --untracked-files=all) -join [Environment]::NewLine
+    $ChangedPaths = @(& git -C $PluginRoot diff HEAD --name-only)
+    $UntrackedPaths = @(& git -C $PluginRoot ls-files --others --exclude-standard)
 }
-Add-Check 'clean_checkout' ([string]::IsNullOrWhiteSpace($Dirty)) ([string]$Dirty)
+$UpstreamClean = (
+    $ChangedPaths.Count -eq 0 -and
+    $UntrackedPaths.Count -eq 0
+)
+$ExpectedPatchOnly = (
+    $PatchApplied -and
+    $ChangedPaths.Count -eq 1 -and
+    $ChangedPaths[0] -eq $CompatibilityTargetRelative -and
+    $UntrackedPaths.Count -eq 0
+)
+$CompatibilityReady = $PatchApplied -or $PatchApplicable
+$CheckoutPolicyOk = if ($Mode -eq 'Install') {
+    $ExpectedPatchOnly
+}
+else {
+    $UpstreamClean -and $PatchApplicable
+}
+Add-Check 'clean_checkout' $CheckoutPolicyOk ([string]$Dirty)
+Add-Check 'compatibility_patch' $CompatibilityReady $CompatibilityPatchId
+Add-Check 'expected_patch_only' ($(if ($Mode -eq 'Install') { $ExpectedPatchOnly } else { $PatchApplicable })) ([string]$Dirty)
 
 $Failed = @($Checks | Where-Object { $_.status -ne 'PASS' })
 $Report = [ordered]@{
@@ -103,6 +199,10 @@ $Report = [ordered]@{
     repository = $ExpectedRepository
     expected_commit = $ExpectedCommit
     actual_commit = $Head
+    compatibility_patch = $CompatibilityPatchId
+    compatibility_patch_state = $(if ($PatchApplied) {'applied'} elseif ($PatchApplicable) {'applicable'} else {'invalid'})
+    compatibility_patch_sha256 = $ActualCompatibilityPatchSha256
+    compatibility_target = $CompatibilityTargetRelative
     plugin_root = $PluginRoot
     status = $(if ($Failed.Count -eq 0) {'PASS'} else {'FAIL'})
     checks = $Checks
@@ -115,3 +215,4 @@ if ($Failed.Count -gt 0) {
 }
 
 Write-Host "PCGEx bootstrap validation: PASS ($ExpectedCommit)" -ForegroundColor Green
+

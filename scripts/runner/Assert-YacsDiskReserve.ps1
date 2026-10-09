@@ -3,7 +3,7 @@ function Assert-YacsDiskReserve {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)][string]$Path,
-        [ValidateRange(1, 4096)][double]$MinimumFreeGiB = 50,
+        [ValidateRange(1, 4096)][double]$MinimumFreeGiB = 5,
         [long]$AvailableBytes = -1
     )
     $root = [IO.Path]::GetPathRoot([IO.Path]::GetFullPath($Path))

@@ -1,0 +1,23 @@
+{
+  "source_revision": "9940d78e7d9d1ee6ae4341ab9ea7268afe0be915",
+  "capture_revision": "b1ea05b33b9f3208e7aeb6884f1a67792d9c6121",
+  "archive_oid": "f9ad39ae59a16dc1fc4615ef10ca950096a94d443bea4dcb0e624284000a0cab",
+  "frames": [
+    {
+      "frame_id": "window-0110-forward-00001",
+      "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0110-forward-00001.png",
+      "sha256": "9a6506791dd1562fd2d9c51101dcbbabd2e9c1df3bcab97845b21537e35d3d1a",
+      "size_bytes": 926220,
+      "width_px": 1280,
+      "height_px": 720
+    },
+    {
+      "frame_id": "window-0163-reverse-00001",
+      "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0163-reverse-00001.png",
+      "sha256": "07e3ecdd3e06f9429cac49e62b2e6d259ffe3f6a949ae9d1209a6771c6eab75f",
+      "size_bytes": 761268,
+      "width_px": 1280,
+      "height_px": 720
+    }
+  ]
+}

@@ -21,11 +21,13 @@
     "install": "npm ci --ignore-scripts",
     "security_overrides": {
       "fast-uri": "3.1.8",
-      "proxy-addr": "2.0.8"
+      "proxy-addr": "2.0.8",
+      "@modelcontextprotocol/sdk": "1.31.0"
     }
   },
   "overrides": {
     "fast-uri": "3.1.8",
-    "proxy-addr": "2.0.8"
+    "proxy-addr": "2.0.8",
+    "@modelcontextprotocol/sdk": "1.31.0"
   }
 }

@@ -69,6 +69,13 @@ This is planning, not plugin activation, implementation or an engine migration.
 See [the MCP decision and DoD](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption)
 and [delivery order](ROADMAP.md#official-unreal-mcp-adoption-between-materials-and-asphalt).
 
+Owner decision, 2026-10-09: performance measurement is due after assembled M3
+closeout, so it is not the intermediate #363 → #384 → #364 entry gate.
+Whole-area owner visual acceptance, saved/fresh-rendered consumers and protected
+technical/review admission remain required. Record `DEFERRED_AFTER_M3`, not
+performance PASS; retain the full-area reference budgets and exact-SHA proof
+for the later benchmark of the actual assembled world.
+
 MCP is the agent's orchestration/interface layer. World Authority still owns
 admitted geography, masks, provenance and unknowns; BOB still owns its admitted
 road/earthworks domain decisions; route/physics contracts remain independent.
@@ -2154,7 +2161,48 @@ At hairpins, cross-section construction must understand that nearby road branche
 
 Do not globally blur a good DTM to hide a local cliff problem.
 
+Owner clarification, 2026-10-08 (#445): bounded presentation-only local smoothing
+and surface-normal adjustment are authorized to resolve visible cliff artifacts.
+Prefer horizontal correction on steep walls and vertical correction on shallow
+transitions, with fixed footprint interfaces and unchanged hard exclusions.
+The first single-surface diagnostic uses an owned native Component 230 mesh copy;
+canonical Landscape/DTM, roads and physics remain unchanged. Original visibility
+must be restored after isolated captures. This is not production terrain migration
+or permission to claim that all dark regions are intersections. Verify the local
+neutral Lit/Lighting Only result before whole-Landscape application and an owner
+preview package. PR #446 remains unmerged pending explicit approval.
+See the [cliff diagnostic contract](tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md#local-single-surface-smoothing-diagnostic).
+
+Owner follow-up, 2026-10-08: the copied local cliff mesh may move up to 1 m
+from its source surface vertices, with routine solver choices made within that
+envelope. This supersedes the earlier 50 cm experiment limit only. Canonical
+DTM/Landscape, roads, exclusions and footprint interfaces remain unchanged;
+local visual proof remains required before whole-Landscape application.
+
+Subsequent owner authorization, 2026-10-08: local Landscape/DTM height changes
+are also permitted for this cliff repair. Within this task, use the same 1 m
+local envelope and admitted cliff footprint; retain roads, exclusions and fixed
+outer interfaces. Preserve the original source/checkpoint and make terrain
+corrections reversible through the existing edit-layer/derived-output workflow.
+This supersedes the blanket no-terrain-edit restriction for these bounded
+corrections, not for global smoothing or unrelated terrain. A mesh-only capture
+must still report no canonical mutation; any later terrain-edit proof must
+explicitly record its changed heights, scope and rollback rather than reuse that
+claim. Visual review and whole-area delivery requirements remain binding.
+
 Do not scatter cliff meshes over the whole map. Place meso geometry where slope, visibility and composition justify it.
+
+Owner extension, 2026-10-08: the whole-working-map preparation in PR #446 may
+also make local Landscape and seam corrections to retain visual coherence.
+Identify the owning surface and use a bounded, reversible derived output or
+existing Edit Layer; preserve the original source/checkpoint and record each
+changed extent, displacement and interface condition. Check the result from
+close and distant views. This is a local correction allowance, not global
+smoothing or a change to road/physics authority, source scale, hard exclusions
+or macro geography. Existing admitted correction envelopes still apply to the
+operations that use them. Material-only captures retain unchanged-geometry
+checks; corrected-geometry captures require separate delta and rollback proof.
+See the [whole-map preparation plan](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md).
 
 ---
 
@@ -3664,3 +3712,49 @@ alone cannot admit a silently tapered shoulder. The d439bf3 native run proved
 the no-nose outline but exposed 0.063 m shoulder width at station 187.375 m;
 its support result is superseded by the smooth exit-rejoin correction and
 must not be reported as full shoulder acceptance.
+
+---
+
+## Material Forge ownership contract (Issue #387)
+
+YACS uses Material Forge as an **offline surface-appearance producer**, not as a
+second world-generation system.
+
+Ownership is explicit:
+
+- **BOB** owns road/terrain geometry, cut/fill and earthworks;
+- **PCG/PCGEx** owns world semantics, classification, placement and authoritative
+  spatial masks;
+- **Material Forge** owns PBR surface appearance and material-local detail masks.
+
+The rule is:
+
+> **PCG/PCGEx owns WHO / WHAT / WHERE. Material Forge owns HOW IT LOOKS.**
+
+Material Forge may consume authoritative masks and produce local appearance
+breakup such as asphalt cracks, patches, rock pores or soil pebbles. It may not
+derive authoritative forest/rock/road/soil/snow classification from slope,
+height, curvature, distance-to-road or similar world data.
+
+For runtime delivery, Material Forge may perform a lossless semantic
+**pack-only** operation that copies already-authoritative masks into RGBA control
+textures. The source masks remain canonical, every source hash is retained, and
+the pack receipt must state `classification_changed=false`.
+
+The implementation contract, commands, upstream pins, validation gates and UE
+canary are documented in
+[tooling/MATERIAL_FORGE.md](tooling/MATERIAL_FORGE.md).
+
+Material Maker and Godot remain external offline authoring tools. They are not
+runtime dependencies. No Godot fork or broad Material Maker vendoring is
+admitted without a demonstrated blocker and a separate provenance/architecture
+decision.
+
+Owner continuation, 2026-10-08 (#445): a stronger local smoothing/erosion pass
+followed by a mesh is approved within a **combined 2 m** displacement envelope
+relative to the original terrain. This supersedes the earlier 1 m trial limit
+for this local combined candidate only. Allocate up to 1.5 m to the derived
+heightfield and 0.5 m to subsequent mesh refinement; independently audit the
+final mesh against the original surface. Preserve roads, hard exclusions,
+interface positions and the original checkpoint. This is a reversible local
+comparison, not whole-map admission or PR #446 merge authorization.

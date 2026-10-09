@@ -17,7 +17,7 @@ param(
     [string] $ArtifactRoot,
     [Parameter(Mandatory=$true)] [string] $ExpectedHead,
     [string] $ExpectedBranch,
-    [string] $TestFilter = 'CyclingSession+CyclingPhysics+CyclingInput',
+    [string] $TestFilter = 'CyclingSession+CyclingPhysics+CyclingInput+YACS.ShoulderContactNative',
     [switch] $SkipBuild
 )
 

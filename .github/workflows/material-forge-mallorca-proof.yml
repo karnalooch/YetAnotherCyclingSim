@@ -1,0 +1,426 @@
+name: Material Forge Mallorca proof
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "codex/363-landscape-material-foundation"
+    paths:
+      - ".github/workflows/material-forge-mallorca-proof.yml"
+      - ".github/workflows/material-forge-ue-canary.yml"
+      - "scripts/assets/material_forge.py"
+      - "scripts/assets/render_material_forge.py"
+      - "scripts/assets/render_material_forge.gd"
+      - "scripts/assets/build_material_maker_limestone.py"
+      - "scripts/assets/material_forge_proof_board.py"
+      - "scripts/assets/test_material_forge.py"
+      - "scripts/ue/preview_material_forge_chunked_landscape.py"
+      - "scripts/ue/capture_material_forge_landscape.py"
+      - "scripts/ue/build_material_forge_landscape_master.py"
+      - "scripts/ue/run_material_forge_canary_proof.py"
+      - "scripts/ue/run_material_forge_chunked_proof.py"
+      - "scripts/ue/run_material_forge_unified_proof.py"
+      - "worldgen/materials/material_forge/**"
+      - "tools/material-forge/**"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: material-forge-mallorca-${{ github.ref_name }}
+  cancel-in-progress: true
+
+env:
+  GIT_LFS_SKIP_SMUDGE: "1"
+  MM_ARCHIVE_SHA256: deb4416bc939861d48097a866a8b2bf0363c29ff64874f2e04478658ff900808
+  GODOT_ARCHIVE_SHA256: 731980f9608d61333e5baf54a2ef17210acc7a538446c0cb9969f002aca1e953
+  MM_SOURCE_SHA: 4d29a815489866aae483281cf44b2cfe48d3cc3e
+
+jobs:
+  render-determinism:
+    name: Render phase-A catalog twice
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 90
+    steps:
+      - name: Isolate Git configuration
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'material-forge.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          $env:GIT_CONFIG_GLOBAL = $isolated
+          $env:GIT_CONFIG_NOSYSTEM = '1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot enable long paths.' }
+
+      - name: Checkout exact proof revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: _material-forge-proof-src
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          lfs: false
+          clean: true
+          persist-credentials: false
+
+      - name: Verify exact SHA and idle shared host
+        shell: pwsh
+        working-directory: _material-forge-proof-src
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $actual = (git rev-parse HEAD).Trim()
+          if ($actual -ne $env:GITHUB_SHA) {
+            throw "checkout HEAD '$actual' != event SHA '$env:GITHUB_SHA'"
+          }
+          $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+          $state | ConvertTo-Json -Depth 8 | Write-Host
+          if ($state.status -ne 'IDLE') {
+            throw "Shared Unreal host is already owned; status=$($state.status). Local/unknown Editors win."
+          }
+
+      - name: Prepare proof root
+        shell: pwsh
+        working-directory: _material-forge-proof-src
+        run: |
+          $proof = Join-Path $env:RUNNER_TEMP "material-forge-mallorca-$env:GITHUB_SHA"
+          Remove-Item -LiteralPath $proof -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path $proof | Out-Null
+          New-Item -ItemType Directory -Force -Path (Join-Path $proof 'prime') | Out-Null
+          "YACS_FORGE_PROOF=$proof" >> $env:GITHUB_ENV
+
+      - name: Provision pinned Material Maker source runtime
+        shell: pwsh
+        working-directory: _material-forge-proof-src
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $toolRoot = 'D:\yacs\tool-cache\material-forge'
+          New-Item -ItemType Directory -Force -Path $toolRoot | Out-Null
+
+          function Assert-Sha256([string]$Path, [string]$Expected) {
+            $actual = (Get-FileHash -Algorithm SHA256 -LiteralPath $Path).Hash.ToLowerInvariant()
+            if ($actual -ne $Expected.ToLowerInvariant()) {
+              throw "SHA256 mismatch for $Path : $actual != $Expected"
+            }
+          }
+
+          $mmZip = Join-Path $toolRoot 'material_maker_1_7_windows.zip'
+          if (-not (Test-Path -LiteralPath $mmZip)) {
+            Invoke-WebRequest -Uri 'https://github.com/RodZill4/material-maker/releases/download/1.7/material_maker_1_7_windows.zip' -OutFile $mmZip
+          }
+          Assert-Sha256 $mmZip $env:MM_ARCHIVE_SHA256
+          $mmRoot = Join-Path $toolRoot 'material-maker-1.7'
+          $mmExe = Get-ChildItem -LiteralPath $mmRoot -Filter 'material_maker.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($null -eq $mmExe) {
+            Remove-Item -LiteralPath $mmRoot -Recurse -Force -ErrorAction SilentlyContinue
+            New-Item -ItemType Directory -Force -Path $mmRoot | Out-Null
+            Expand-Archive -LiteralPath $mmZip -DestinationPath $mmRoot -Force
+            $mmExe = Get-ChildItem -LiteralPath $mmRoot -Filter 'material_maker.exe' -Recurse | Select-Object -First 1
+          }
+          if ($null -eq $mmExe) { throw 'Material Maker 1.7 executable missing after extraction.' }
+          $mmInstall = $mmExe.Directory.FullName
+          if (-not (Test-Path -LiteralPath (Join-Path $mmInstall 'nodes\material.mmg'))) {
+            throw "Material Maker install lacks nodes/material.mmg: $mmInstall"
+          }
+
+          $godotZip = Join-Path $toolRoot 'Godot_v4.7.2-stable_win64.exe.zip'
+          if (-not (Test-Path -LiteralPath $godotZip)) {
+            Invoke-WebRequest -Uri 'https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_win64.exe.zip' -OutFile $godotZip
+          }
+          Assert-Sha256 $godotZip $env:GODOT_ARCHIVE_SHA256
+          $godotRoot = Join-Path $toolRoot 'godot-4.7.2-stable'
+          $godotExe = Get-ChildItem -LiteralPath $godotRoot -Filter 'Godot_v4.7.2-stable_win64.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($null -eq $godotExe) {
+            Remove-Item -LiteralPath $godotRoot -Recurse -Force -ErrorAction SilentlyContinue
+            New-Item -ItemType Directory -Force -Path $godotRoot | Out-Null
+            Expand-Archive -LiteralPath $godotZip -DestinationPath $godotRoot -Force
+            $godotExe = Get-ChildItem -LiteralPath $godotRoot -Filter 'Godot_v4.7.2-stable_win64.exe' -Recurse | Select-Object -First 1
+          }
+          if ($null -eq $godotExe) { throw 'Godot 4.7.2 executable missing after extraction.' }
+
+          $source = Join-Path $toolRoot "material-maker-source-$($env:MM_SOURCE_SHA)"
+          if (-not (Test-Path -LiteralPath (Join-Path $source '.git'))) {
+            Remove-Item -LiteralPath $source -Recurse -Force -ErrorAction SilentlyContinue
+            git clone --no-checkout https://github.com/RodZill4/material-maker.git $source
+            if ($LASTEXITCODE -ne 0) { throw 'Material Maker source clone failed.' }
+          }
+          git -C $source fetch --force --depth=1 origin $env:MM_SOURCE_SHA
+          if ($LASTEXITCODE -ne 0) { throw 'Material Maker source fetch failed.' }
+          git -C $source checkout --detach --force $env:MM_SOURCE_SHA
+          if ($LASTEXITCODE -ne 0) { throw 'Material Maker source checkout failed.' }
+          git -C $source clean -ffdx
+          if ($LASTEXITCODE -ne 0) { throw 'Material Maker source cleanup failed.' }
+          $sourceHead = (git -C $source rev-parse HEAD).Trim()
+          if ($sourceHead -ne $env:MM_SOURCE_SHA) {
+            throw "Material Maker source HEAD '$sourceHead' != '$env:MM_SOURCE_SHA'"
+          }
+          Set-Content -LiteralPath (Join-Path $source 'steam_appid.txt') -Value '4110830' -Encoding ascii
+
+          $venv = Join-Path $toolRoot 'python'
+          $venvPython = Join-Path $venv 'Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $venvPython)) {
+            python -m venv $venv
+            if ($LASTEXITCODE -ne 0) { throw 'Material Forge venv creation failed.' }
+          }
+          & $venvPython -m pip install --disable-pip-version-check --only-binary=:all: numpy==2.3.5 Pillow==12.3.0
+          if ($LASTEXITCODE -ne 0) { throw 'Material Forge Python dependency install failed.' }
+
+          "YACS_MM_INSTALL=$mmInstall" >> $env:GITHUB_ENV
+          "YACS_MM_SOURCE=$source" >> $env:GITHUB_ENV
+          "YACS_GODOT=$($godotExe.FullName)" >> $env:GITHUB_ENV
+          "YACS_FORGE_PY=$venvPython" >> $env:GITHUB_ENV
+
+      - name: Prime Godot import and script-class cache
+        shell: pwsh
+        working-directory: _material-forge-proof-src
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $prime = Join-Path $env:YACS_FORGE_PROOF 'prime'
+          $log = Join-Path $prime 'godot-import.log'
+          $stdout = Join-Path $prime 'godot-import.stdout.log'
+          $stderr = Join-Path $prime 'godot-import.stderr.log'
+          $args = @('--headless','--path',$env:YACS_MM_SOURCE,'--import','--log-file',$log)
+          $process = Start-Process -FilePath $env:YACS_GODOT -ArgumentList $args -PassThru -NoNewWindow -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          if (-not $process.WaitForExit(300000)) {
+            $process | Stop-Process -Force
+            throw 'Godot source import timed out after 300 seconds.'
+          }
+          $cache = Join-Path $env:YACS_MM_SOURCE '.godot\global_script_class_cache.cfg'
+          $imported = Join-Path $env:YACS_MM_SOURCE '.godot\imported'
+          $receipt = [ordered]@{
+            exit_code = $process.ExitCode
+            source_commit = (git -C $env:YACS_MM_SOURCE rev-parse HEAD).Trim()
+            class_cache = Test-Path -LiteralPath $cache
+            class_cache_sha256 = if (Test-Path -LiteralPath $cache) { (Get-FileHash -Algorithm SHA256 -LiteralPath $cache).Hash.ToLowerInvariant() } else { $null }
+            imported_dir = Test-Path -LiteralPath $imported
+            imported_count = @(Get-ChildItem -LiteralPath $imported -File -ErrorAction SilentlyContinue).Count
+          }
+          $receipt | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $prime 'prime-receipt.json') -Encoding utf8
+          $receipt | ConvertTo-Json | Write-Host
+          if ($process.ExitCode -ne 0) { throw "Godot import failed with exit $($process.ExitCode)." }
+          if (-not (Test-Path -LiteralPath $cache)) {
+            throw 'Godot import did not create global_script_class_cache.cfg.'
+          }
+
+      - name: Run Material Forge contract tests
+        shell: pwsh
+        working-directory: _material-forge-proof-src
+        run: |
+          & $env:YACS_FORGE_PY scripts/assets/test_material_forge.py
+          if ($LASTEXITCODE -ne 0) { throw 'Material Forge contract tests failed.' }
+
+      - name: Author render validate and replay full catalog
+        shell: pwsh
+        working-directory: _material-forge-proof-src
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $runA = Join-Path $env:YACS_FORGE_PROOF 'run-a'
+          $runB = Join-Path $env:YACS_FORGE_PROOF 'run-b'
+
+          foreach ($run in @($runA, $runB)) {
+            & $env:YACS_FORGE_PY scripts/assets/material_forge.py author --material-maker $env:YACS_MM_INSTALL --output $run
+            if ($LASTEXITCODE -ne 0) { throw "Material Forge author failed: $run" }
+
+            $manifest = Get-Content -LiteralPath (Join-Path $run 'run-manifest.json') -Raw | ConvertFrom-Json
+            $catalog = Get-Content -LiteralPath 'worldgen/materials/material_forge/families.json' -Raw | ConvertFrom-Json
+            $expectedVariants = 0
+            foreach ($family in $catalog.families) { $expectedVariants += @($family.variants).Count }
+            if ($manifest.variants.Count -ne $expectedVariants) {
+              throw "Expected $expectedVariants authored variants in $run; got $($manifest.variants.Count)"
+            }
+            foreach ($entry in $manifest.variants) {
+              $relative = $entry.directory.Replace('/', [IO.Path]::DirectorySeparatorChar)
+              $variant = Join-Path $run $relative
+              Write-Host "Rendering $($entry.family)/$($entry.variant) -> $variant"
+              & $env:YACS_FORGE_PY scripts/assets/render_material_forge.py --godot $env:YACS_GODOT --source $env:YACS_MM_SOURCE --variant $variant --resolution 2048 --timeout-seconds 300
+              if ($LASTEXITCODE -ne 0) { throw "Material Forge render failed: $($entry.family)/$($entry.variant)" }
+            }
+
+            & $env:YACS_FORGE_PY scripts/assets/material_forge.py validate-run $run
+            if ($LASTEXITCODE -ne 0) { throw "Material Forge run validation failed: $run" }
+          }
+
+          $comparison = & $env:YACS_FORGE_PY scripts/assets/material_forge.py compare --left (Join-Path $runA 'run-manifest.json') --right (Join-Path $runB 'run-manifest.json')
+          if ($LASTEXITCODE -ne 0) { throw 'Material Forge two-run determinism comparison failed.' }
+          $comparison | Set-Content -LiteralPath (Join-Path $env:YACS_FORGE_PROOF 'comparison.json') -Encoding utf8
+
+          $review = Join-Path $env:YACS_FORGE_PROOF 'review'
+          & $env:YACS_FORGE_PY scripts/assets/material_forge_proof_board.py --run $runA --output $review
+          if ($LASTEXITCODE -ne 0) { throw 'Material Forge visual-board generation failed.' }
+
+          $summary = [ordered]@{
+            status = 'RENDER_DETERMINISM_PASS_UE_REVIEW_PENDING'
+            exact_sha = $env:GITHUB_SHA
+            variant_count = $expectedVariants
+            run_a_manifest_sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $runA 'run-manifest.json')).Hash.ToLowerInvariant()
+            run_b_manifest_sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $runB 'run-manifest.json')).Hash.ToLowerInvariant()
+            comparison = Get-Content -LiteralPath (Join-Path $env:YACS_FORGE_PROOF 'comparison.json') -Raw | ConvertFrom-Json
+            ue_canary = 'pending'
+            visual_acceptance = 'pending'
+            performance_acceptance = 'pending'
+          }
+          $summary | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath (Join-Path $env:YACS_FORGE_PROOF 'proof-summary.json') -Encoding utf8
+
+      - name: Render refined rock-soil ground-scale reference in pinned Blender
+        shell: pwsh
+        working-directory: _material-forge-proof-src
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $runA = Join-Path $env:YACS_FORGE_PROOF 'run-a'
+          $referenceRoot = Join-Path 'D:\yacs\work\blender\material-forge-reference' $env:GITHUB_SHA
+          Remove-Item -LiteralPath $referenceRoot -Recurse -Force -ErrorAction SilentlyContinue
+          $receipt = "work/blender/material-forge-reference/$env:GITHUB_SHA/host-receipt.json"
+
+          python scripts/blender/run_headless.py run `
+            --script scripts/blender/material_forge_reference.py `
+            --receipt $receipt `
+            -- `
+            --rock (Join-Path $runA 'regional_limestone\refined_c') `
+            --soil (Join-Path $runA 'mediterranean_soil\refined_c') `
+            --output $referenceRoot `
+            --expected-version 4.5.9 `
+            --rock-family regional_limestone `
+            --rock-variant refined_c `
+            --soil-family mediterranean_soil `
+            --soil-variant refined_c
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Refined Blender reference render failed.'
+          }
+
+          $hostReceipt = Get-Content -LiteralPath (Join-Path $referenceRoot 'host-receipt.json') -Raw | ConvertFrom-Json
+          $reference = Get-Content -LiteralPath (Join-Path $referenceRoot 'reference-receipt.json') -Raw | ConvertFrom-Json
+          if (
+            $hostReceipt.status -ne 'PASS' -or
+            $hostReceipt.actual_blender_version -ne '4.5.9' -or
+            $reference.status -ne 'BLENDER_REFERENCE_PASS_UE_REVIEW_PENDING' -or
+            $reference.left_surface -ne 'regional_limestone/refined_c' -or
+            $reference.right_surface -ne 'mediterranean_soil/refined_c' -or
+            @($reference.renders).Count -ne 4
+          ) {
+            throw 'Refined Blender reference receipt failed.'
+          }
+
+          $bundle = Join-Path $env:YACS_FORGE_PROOF 'blender-reference'
+          Remove-Item -LiteralPath $bundle -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path $bundle | Out-Null
+          Copy-Item -Path (Join-Path $referenceRoot '*') -Destination $bundle -Recurse -Force
+
+      - name: Prepare slim UE canary input
+        shell: pwsh
+        working-directory: _material-forge-proof-src
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $bundle = Join-Path $env:YACS_FORGE_PROOF 'canary-input'
+          Remove-Item -LiteralPath $bundle -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path (Join-Path $bundle 'run-a') | Out-Null
+
+          Copy-Item -LiteralPath (Join-Path $env:YACS_FORGE_PROOF 'proof-summary.json') -Destination (Join-Path $bundle 'proof-summary.json')
+          Copy-Item -LiteralPath (Join-Path $env:YACS_FORGE_PROOF 'run-a\run-manifest.json') -Destination (Join-Path $bundle 'run-a\run-manifest.json')
+
+          foreach ($relative in @(
+            'regional_limestone\refined_c',
+            'mediterranean_soil\refined_c'
+          )) {
+            $source = Join-Path (Join-Path $env:YACS_FORGE_PROOF 'run-a') $relative
+            $destination = Join-Path (Join-Path $bundle 'run-a') $relative
+            New-Item -ItemType Directory -Force -Path (Split-Path $destination -Parent) | Out-Null
+            Copy-Item -LiteralPath $source -Destination $destination -Recurse -Force
+          }
+
+          $summary = Get-Content -LiteralPath (Join-Path $bundle 'proof-summary.json') -Raw | ConvertFrom-Json
+          if ($summary.exact_sha -ne $env:GITHUB_SHA -or $summary.comparison.deterministic -ne $true) {
+            throw 'Slim canary input is not bound to the exact deterministic proof.'
+          }
+
+          $receipt = [ordered]@{
+            schema_version = 1
+            status = 'CANARY_INPUT_READY'
+            exact_sha = $env:GITHUB_SHA
+            proof_summary_sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $bundle 'proof-summary.json')).Hash.ToLowerInvariant()
+            run_manifest_sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $bundle 'run-a\run-manifest.json')).Hash.ToLowerInvariant()
+            variants = @(
+              'regional_limestone/refined_c',
+              'mediterranean_soil/refined_c'
+            )
+            file_count = @(Get-ChildItem -LiteralPath $bundle -File -Recurse).Count
+            uncompressed_bytes = [int64]((Get-ChildItem -LiteralPath $bundle -File -Recurse | Measure-Object -Property Length -Sum).Sum)
+          }
+          $receipt | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $bundle 'canary-input-receipt.json') -Encoding utf8
+          $receipt | ConvertTo-Json -Depth 8 | Write-Host
+
+      - name: Prepare compact render evidence
+        shell: pwsh
+        working-directory: _material-forge-proof-src
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $evidence = Join-Path $env:YACS_FORGE_PROOF 'compact-evidence'
+          Remove-Item -LiteralPath $evidence -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path $evidence | Out-Null
+          New-Item -ItemType Directory -Force -Path (Join-Path $evidence 'run-a') | Out-Null
+          New-Item -ItemType Directory -Force -Path (Join-Path $evidence 'run-b') | Out-Null
+
+          foreach ($name in @('proof-summary.json', 'comparison.json')) {
+            Copy-Item -LiteralPath (Join-Path $env:YACS_FORGE_PROOF $name) -Destination (Join-Path $evidence $name)
+          }
+          Copy-Item -LiteralPath (Join-Path $env:YACS_FORGE_PROOF 'run-a\run-manifest.json') -Destination (Join-Path $evidence 'run-a\run-manifest.json')
+          Copy-Item -LiteralPath (Join-Path $env:YACS_FORGE_PROOF 'run-b\run-manifest.json') -Destination (Join-Path $evidence 'run-b\run-manifest.json')
+          Copy-Item -LiteralPath (Join-Path $env:YACS_FORGE_PROOF 'canary-input\canary-input-receipt.json') -Destination (Join-Path $evidence 'canary-input-receipt.json')
+
+          foreach ($name in @('review', 'blender-reference')) {
+            $source = Join-Path $env:YACS_FORGE_PROOF $name
+            if (Test-Path -LiteralPath $source -PathType Container) {
+              Copy-Item -LiteralPath $source -Destination (Join-Path $evidence $name) -Recurse -Force
+            }
+          }
+
+          $files = @(Get-ChildItem -LiteralPath $evidence -File -Recurse)
+          $bytes = [int64](($files | Measure-Object -Property Length -Sum).Sum)
+          $limit = [int64](200MB)
+          if ($bytes -gt $limit) {
+            throw "Compact Material Forge evidence exceeded 200 MiB: $bytes bytes."
+          }
+          $receipt = [ordered]@{
+            schema_version = 1
+            status = 'COMPACT_RENDER_EVIDENCE_READY'
+            exact_sha = $env:GITHUB_SHA
+            raw_run_payloads_retained = $false
+            determinism_retained_as = @('run-a/run-manifest.json','run-b/run-manifest.json','comparison.json','proof-summary.json')
+            ue_payload_retained_separately = $true
+            file_count = $files.Count
+            uncompressed_bytes = $bytes
+            max_uncompressed_bytes = $limit
+          }
+          $receipt | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $evidence 'compact-evidence-receipt.json') -Encoding utf8
+          $receipt | ConvertTo-Json -Depth 8 | Write-Host
+
+      - name: Upload slim UE canary input
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: material-forge-canary-input-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/material-forge-mallorca-${{ github.sha }}/canary-input
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
+      - name: Upload compact render proof evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: material-forge-mallorca-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/material-forge-mallorca-${{ github.sha }}/compact-evidence
+          if-no-files-found: warn
+          compression-level: 6
+          retention-days: 7
+
+  ue-canary:
+    name: UE canary
+    needs: render-determinism
+    permissions:
+      contents: read
+      actions: read
+    uses: ./.github/workflows/material-forge-ue-canary.yml
+    with:
+      target_sha: ${{ github.sha }}
+      proof_artifact_name: material-forge-canary-input-${{ github.sha }}-${{ github.run_attempt }}

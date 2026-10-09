@@ -1,0 +1,335 @@
+{
+  "source_revision": "162cd871f776807da977f84fd639e44ec5f6a1a6",
+  "capture_revision": "b1ea05b33b9f3208e7aeb6884f1a67792d9c6121",
+  "archive_oid": "f9ad39ae59a16dc1fc4615ef10ca950096a94d443bea4dcb0e624284000a0cab",
+  "archive_size_bytes": 1609577808,
+  "extraction": "ZIP central directory and selected entries read with verified HTTP byte ranges via standard Git LFS download; each selected original PNG matched captured size, dimensions and SHA-256.",
+  "whole_archive_hash_recomputed": false,
+  "source_csv": "../sa-calobra-tpp-survey-20261008/frames.csv",
+  "frames": [
+    {
+      "frame_id": "window-0103-forward-00002",
+      "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0103-forward-00002.png",
+      "sha256": "fc5c66f6c747ce862545816eda59716e91c4610b91350d047d8ea2c4aa7d4588",
+      "size_bytes": 794175,
+      "width_px": 1280,
+      "height_px": 720,
+      "station_m": 34.54702040137111,
+      "direction": "forward",
+      "camera_location_cm": [
+        99388.60314549578,
+        32651.248078181776,
+        52330.644591141514
+      ],
+      "road_position_cm": [
+        99073.91555600925,
+        32263.95898850137,
+        52079.35750055001
+      ],
+      "target_cm": [
+        98570.4154128308,
+        31644.29644501272,
+        52069.298155603596
+      ],
+      "file": "frames/window-0103-forward-00002.png",
+      "git_blob_sha1": "5dc126598f3e622290e34a2a775f7229f70e4431"
+    },
+    {
+      "frame_id": "window-0103-reverse-00002",
+      "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0103-reverse-00002.png",
+      "sha256": "48c1936bc3671240ae98d109bb06999f6e4947a88dec920c10309b661891adfe",
+      "size_bytes": 964450,
+      "width_px": 1280,
+      "height_px": 720,
+      "station_m": 34.54702040137111,
+      "direction": "reverse",
+      "camera_location_cm": [
+        98759.22796652273,
+        31876.66989882097,
+        52268.07040995851
+      ],
+      "road_position_cm": [
+        99073.91555600925,
+        32263.95898850137,
+        52079.35750055001
+      ],
+      "target_cm": [
+        99577.4156991877,
+        32883.62153199002,
+        52169.41684549642
+      ],
+      "file": "frames/window-0103-reverse-00002.png",
+      "git_blob_sha1": "235f59bd9aaa635345d12091738bf486495c7003"
+    },
+    {
+      "frame_id": "window-0132-forward-00002",
+      "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0132-forward-00002.png",
+      "sha256": "67cd9c6a5f20228cb1c75858d0e991d97cfc6a01e55198742265d119d541cb82",
+      "size_bytes": 735430,
+      "width_px": 1280,
+      "height_px": 720,
+      "station_m": 33.35227340717262,
+      "direction": "forward",
+      "camera_location_cm": [
+        20173.444192508025,
+        13897.924703373195,
+        37885.05842805064
+      ],
+      "road_position_cm": [
+        19694.976847049445,
+        13757.363808712285,
+        37628.841937028694
+      ],
+      "target_cm": [
+        18929.429094315718,
+        13532.466377254827,
+        37610.89555139358
+      ],
+      "file": "frames/window-0132-forward-00002.png",
+      "git_blob_sha1": "20fea233f9b632d719386d60c4d48e9b61ab7ed4"
+    },
+    {
+      "frame_id": "window-0132-reverse-00004",
+      "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0132-reverse-00004.png",
+      "sha256": "3d9dda78d5e449e80ec77acd850a16d679a91a2d4df947c0d237e57ac805c5ac",
+      "size_bytes": 1145478,
+      "width_px": 1280,
+      "height_px": 720,
+      "station_m": 33.35227340717262,
+      "direction": "reverse",
+      "camera_location_cm": [
+        19216.509501590866,
+        13616.802914051374,
+        37812.62544600674
+      ],
+      "road_position_cm": [
+        19694.976847049445,
+        13757.363808712285,
+        37628.841937028694
+      ],
+      "target_cm": [
+        20460.524599783177,
+        13982.261240169742,
+        37726.78832266381
+      ],
+      "file": "frames/window-0132-reverse-00004.png",
+      "git_blob_sha1": "ec517284671fffbd3163a934acaaa5f6dd5a9edd"
+    },
+    {
+      "frame_id": "window-0168-forward-00002",
+      "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0168-forward-00002.png",
+      "sha256": "ab81cd6eae3922a497e1752c0cb91a8c5e2a50c1414aeec796cee5b340424e59",
+      "size_bytes": 852984,
+      "width_px": 1280,
+      "height_px": 720,
+      "station_m": 30.992326175642233,
+      "direction": "forward",
+      "camera_location_cm": [
+        129322.39267579009,
+        113926.40948553021,
+        70484.99205271344
+      ],
+      "road_position_cm": [
+        129731.34743233648,
+        113640.96893576955,
+        70300.76494259412
+      ],
+      "target_cm": [
+        130385.6750428107,
+        113184.26405615249,
+        70398.00156640321
+      ],
+      "file": "frames/window-0168-forward-00002.png",
+      "git_blob_sha1": "b4b3f95aab83028ceb6d15b5b90104eb09ed35cf"
+    },
+    {
+      "frame_id": "window-0168-reverse-00001",
+      "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0168-reverse-00001.png",
+      "sha256": "fd042cfae53662ea4a713c7d861c1b2eee81f723713b6acebeec7ce69605865e",
+      "size_bytes": 1319029,
+      "width_px": 1280,
+      "height_px": 720,
+      "station_m": 30.992326175642233,
+      "direction": "reverse",
+      "camera_location_cm": [
+        130140.30218888285,
+        113355.52838600888,
+        70556.5378324748
+      ],
+      "road_position_cm": [
+        129731.34743233648,
+        113640.96893576955,
+        70300.76494259412
+      ],
+      "target_cm": [
+        129077.01982186224,
+        114097.67381538662,
+        70283.52831878503
+      ],
+      "file": "frames/window-0168-reverse-00001.png",
+      "git_blob_sha1": "986c692e59b867872ee05440168396dc92f6cef8"
+    },
+    {
+      "frame_id": "window-0181-forward-00004",
+      "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0181-forward-00004.png",
+      "sha256": "7902948733c046275e15952ab804c7c01146fda253aa074a378f6bb24d125d5d",
+      "size_bytes": 1070237,
+      "width_px": 1280,
+      "height_px": 720,
+      "station_m": 68.805455266604,
+      "direction": "forward",
+      "camera_location_cm": [
+        128574.85024645955,
+        42739.59235066789,
+        67930.15472518535
+      ],
+      "road_position_cm": [
+        128466.39871969819,
+        42252.743098605424,
+        67675.28249971365
+      ],
+      "target_cm": [
+        128292.87627688002,
+        41473.784295305486,
+        67659.48693895893
+      ],
+      "file": "frames/window-0181-forward-00004.png",
+      "git_blob_sha1": "64827c26d74867a5a2d6b41f3adda4e5119cf303"
+    },
+    {
+      "frame_id": "window-0181-reverse-00000",
+      "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0181-reverse-00000.png",
+      "sha256": "b2611a66f7fb2c18b81d9ad652fb9b9fe61b6364af0ac0c33ee1e56c65abba83",
+      "size_bytes": 776956,
+      "width_px": 1280,
+      "height_px": 720,
+      "station_m": 68.805455266604,
+      "direction": "reverse",
+      "camera_location_cm": [
+        128357.94719293683,
+        41765.89384654296,
+        67860.41027424195
+      ],
+      "road_position_cm": [
+        128466.39871969819,
+        42252.743098605424,
+        67675.28249971365
+      ],
+      "target_cm": [
+        128639.92116251636,
+        43031.70190190536,
+        67771.07806046837
+      ],
+      "file": "frames/window-0181-reverse-00000.png",
+      "git_blob_sha1": "536022f82f775458ff34d7110bdb378eb2a58dc1"
+    },
+    {
+      "frame_id": "window-0039-forward-00003",
+      "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0039-forward-00003.png",
+      "sha256": "893046ab1e1bfb77a0efa69476d2cf3eaf2ac63106637831783c60c374770bf3",
+      "size_bytes": 975729,
+      "width_px": 1280,
+      "height_px": 720,
+      "station_m": 59.81687623568977,
+      "direction": "forward",
+      "camera_location_cm": [
+        101792.09395077334,
+        40242.79302685852,
+        53554.44256539779
+      ],
+      "road_position_cm": [
+        101307.51850358218,
+        40125.69585094814,
+        53296.03830296121
+      ],
+      "target_cm": [
+        100532.1977880763,
+        39938.34036949154,
+        53274.59148306269
+      ],
+      "file": "frames/window-0039-forward-00003.png",
+      "git_blob_sha1": "5d74be5ee70842ae1c1bddcd56951ad4cfb6d6e0"
+    },
+    {
+      "frame_id": "window-0039-reverse-00002",
+      "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0039-reverse-00002.png",
+      "sha256": "c5bf064b66340b5ab0d580a02de8d407af9e30277459208bf2fa30dac8a8bdc0",
+      "size_bytes": 1001887,
+      "width_px": 1280,
+      "height_px": 720,
+      "station_m": 59.81687623568977,
+      "direction": "reverse",
+      "camera_location_cm": [
+        100822.94305639101,
+        40008.59867503776,
+        53477.63404052464
+      ],
+      "road_position_cm": [
+        101307.51850358218,
+        40125.69585094814,
+        53296.03830296121
+      ],
+      "target_cm": [
+        102082.83921908804,
+        40313.05133240474,
+        53397.485122859725
+      ],
+      "file": "frames/window-0039-reverse-00002.png",
+      "git_blob_sha1": "8a8fb4e61e7a5b9219c8f0657c0b90c58c191176"
+    },
+    {
+      "frame_id": "window-0077-forward-00002",
+      "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0077-forward-00002.png",
+      "sha256": "6ffb6fe1fcaf21c8b711994e27c11c2b50be78e359ab2e1f2160251a63c26a21",
+      "size_bytes": 739084,
+      "width_px": 1280,
+      "height_px": 720,
+      "station_m": 25.363971464341333,
+      "direction": "forward",
+      "camera_location_cm": [
+        142809.9336356762,
+        90305.61424287157,
+        72406.20661311988
+      ],
+      "road_position_cm": [
+        142731.26426226227,
+        89811.90095786005,
+        72178.5697361541
+      ],
+      "target_cm": [
+        142605.3932648,
+        89021.95970184161,
+        72206.35073300886
+      ],
+      "file": "frames/window-0077-forward-00002.png",
+      "git_blob_sha1": "0b7ed3890d3c6ec524e373b9c4e795ab1237058d"
+    },
+    {
+      "frame_id": "window-0077-reverse-00000",
+      "archive_entry": "terrain-erosion-mesh/tpp-survey/frames/window-0077-reverse-00000.png",
+      "sha256": "039cea8eb87ec9822580dfaa45a55be99f4901ee5e315a97fb2a22fff2aeafc3",
+      "size_bytes": 682604,
+      "width_px": 1280,
+      "height_px": 720,
+      "station_m": 25.363971464341333,
+      "direction": "reverse",
+      "camera_location_cm": [
+        142652.59488884834,
+        89318.18767284854,
+        72390.93285918832
+      ],
+      "road_position_cm": [
+        142731.26426226227,
+        89811.90095786005,
+        72178.5697361541
+      ],
+      "target_cm": [
+        142857.13525972454,
+        90601.8422138785,
+        72230.78873929933
+      ],
+      "file": "frames/window-0077-reverse-00000.png",
+      "git_blob_sha1": "203ea1f6901290c4f585169d55b551f806649cbf"
+    }
+  ]
+}

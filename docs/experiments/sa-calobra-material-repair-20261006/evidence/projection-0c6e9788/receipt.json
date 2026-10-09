@@ -1,0 +1,17 @@
+[
+  {
+    "mode": "native",
+    "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\MaterialRepair\\projection-0c6e9788\\native.png",
+    "sha256": "155cf50d255fa8247c3a6ccb00173c411fcc2590f2d81a0c060889905520073a"
+  },
+  {
+    "mode": "geometric",
+    "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\MaterialRepair\\projection-0c6e9788\\geometric.png",
+    "sha256": "0855dac08b786a2d105116b9803391c435cef29eba6593f7243271067047042d"
+  },
+  {
+    "mode": "mixed",
+    "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\MaterialRepair\\projection-0c6e9788\\mixed.png",
+    "sha256": "bf8270c3384045f0e0bd1844226675f0bde8083ee42e2db77be603e916f2c73b"
+  }
+]

@@ -22,8 +22,22 @@ function Assert-YacsBuildIsolation {
         [Parameter(Mandatory)][string]$ProjectPath,
         [object[]]$EditorProcesses
     )
-    if (-not $PSBoundParameters.ContainsKey('EditorProcesses')) {
-        $EditorProcesses = @(Get-CimInstance Win32_Process | Where-Object Name -in @('UnrealEditor.exe', 'UnrealEditor-Cmd.exe'))
+    $AutoDiscovered = -not $PSBoundParameters.ContainsKey('EditorProcesses')
+    if ($AutoDiscovered) {
+        $EditorProcesses = @(
+            Get-CimInstance Win32_Process |
+                Where-Object Name -in @('UnrealEditor.exe', 'UnrealEditor-Cmd.exe') |
+                Where-Object {
+                    # Win32_Process can retain a stale CIM record after the native
+                    # process is gone. Only auto-discovered Editors that still have
+                    # a live native process may own/block a build workspace.
+                    $Native = Get-Process -Id ([int]$_.ProcessId) -ErrorAction SilentlyContinue
+                    if ($null -eq $Native) {
+                        return $false
+                    }
+                    return $Native.ProcessName -in @('UnrealEditor', 'UnrealEditor-Cmd')
+                }
+        )
     }
     $target = Resolve-YacsPhysicalPath $ProjectPath
     foreach ($process in $EditorProcesses) {

@@ -100,6 +100,16 @@ This is an ordered M3 delivery sequence, not a new nested milestone hierarchy. C
 
 **Appearance and performance acceptance also cover the entire current Landscape.** Review the different environments, road/terrain transitions and broad views, and measure representative traversal and demanding views across the full area. Record location-specific results so one fast or attractive section cannot hide problems elsewhere. Use the existing performance framework/budgets and milestone-driven capture cadence; this does not introduce new thresholds or require a heavy benchmark after every edit.
 
+**Owner decision — 2026-10-09:** "wydajność zmierzymy po domknięciu m3".
+The benchmark is due after the assembled M3 world is closed out, rather than
+at each intermediate handoff. This supersedes the earlier 2A/2B measurement
+deadline. Record `DEFERRED_AFTER_M3` with `performance_pass: false`; retain
+whole-area owner visual acceptance, saved/fresh-rendered consumers, native
+build/Automation/asset evidence and protected CI/review. The later benchmark
+still measures the actual assembled consumer at its exact SHA against the
+same full-area scope, reference hardware and budgets. No performance PASS or
+later-stage exception is implied.
+
 The 500–1000 m Golden Kilometer is an **additional representative check inside this Landscape**, not an acquisition boundary, reduced implementation scope or replacement for whole-Landscape visual/performance acceptance. Step 13 concerns subsequent expansion **outside the current Landscape** to the remaining playable route. It does not mean that the current Landscape must wait until step 13 to receive its environment foundation. Keep the full 13-step sequence as the execution scope; prepare the complete baseline mask set before detailed quality refinement.
 
 1. [**World Authority inputs and masks**](https://github.com/karnalooch/YetAnotherCyclingSim/issues/335) — establish reproducible spatial inputs for road/shoulder domains, route exclusion, terrain classes, slope/elevation/exposure and road-earthworks zones. Real-world source evidence owns geographically meaningful boundaries; procedural systems do not invent replacement geography.
@@ -113,8 +123,8 @@ The 500–1000 m Golden Kilometer is an **additional representative check inside
 9. [**Roadside procedural foundation**](https://github.com/karnalooch/YetAnotherCyclingSim/issues/370) — establish rule-driven placement for the structural roadside layer such as barriers, posts, signs, walls, drainage and bounded rock/vegetation treatment where source evidence or admitted rules justify it. Rich hero dressing, selected buildings and lived-in scenes remain M7.
 10. [**Surface and biome blending**](https://github.com/karnalooch/YetAnotherCyclingSim/issues/371) — remove hard visual seams between asphalt, shoulders, soil, rock and biome domains through reproducible transition logic; blending may improve presentation but may not conceal geometric disagreement.
 11. [**Whole-Landscape visual review and rider-camera check**](https://github.com/karnalooch/YetAnotherCyclingSim/issues/372) — review appearance across the entire current Landscape with integrated materials, PCG/PCGEx, biomes, foliage, rocks and roadside foundation. Include different environments, road/terrain transitions and demanding broad views. An approximately **500–1000 m** Golden Kilometer supplies an additional detailed rider-camera check; it does not replace the full-area review. Concrete proof remains tracked in scoped Issues rather than a new roadmap stage.
-12. [**Whole-Landscape reference-PC performance gate**](https://github.com/karnalooch/YetAnotherCyclingSim/issues/373) — measure traversal and representative demanding views across the entire current Landscape against `performance/PERFORMANCE_FRAMEWORK.md` and `performance/BUDGETS.md`, including the 1920×1080 / 60 FPS target on the reference RTX 2070 Super system and applicable frame/GPU/memory/streaming evidence. Retain location-specific results; a passing Golden Kilometer alone does not admit whole-Landscape performance.
-13. [**Full-route rollout**](https://github.com/karnalooch/YetAnotherCyclingSim/issues/374) — only after the entire current Landscape is visually accepted and its required performance evidence is within budget, expand the same accepted systems **beyond the current Landscape** across the remaining playable route and verify representative problem areas plus the end-to-end rider-camera experience. The entire current Landscape is the preceding authoring and acceptance area, not a new expansion target at this step.
+12. [**Whole-Landscape reference-PC performance gate**](https://github.com/karnalooch/YetAnotherCyclingSim/issues/373) — retain the performance obligation and measure it after assembled M3 closeout under the 2026-10-09 owner decision. Measure traversal and representative demanding views across the entire current Landscape against `performance/PERFORMANCE_FRAMEWORK.md` and `performance/BUDGETS.md`, including the 1920×1080 / 60 FPS target on the reference RTX 2070 Super system and applicable frame/GPU/memory/streaming evidence. Retain location-specific results; a passing Golden Kilometer alone does not admit whole-Landscape performance.
+13. [**Full-route rollout**](https://github.com/karnalooch/YetAnotherCyclingSim/issues/374) — after the entire current Landscape is visually and technically accepted, expand the same accepted systems **beyond the current Landscape** across the remaining playable route and verify representative problem areas plus the end-to-end rider-camera experience. Record performance as deferred to after assembled M3 closeout, rather than claiming that the rollout is within budget. The entire current Landscape is the preceding authoring and acceptance area, not a new expansion target at this step.
 
 
 **Issue dependency gate:** steps are separate execution issues in the YACS — MVP Project. Reuse #335 for step 1; each later issue has a native GitHub `blocked_by` dependency on its immediate predecessor. Steps 2–13 remain `Blocked` while that predecessor is open. Do not begin implementation, open an implementation PR or move a step to Ready/In progress until the predecessor is completed with required proof and merged implementation where applicable. Closing as not planned or merely having green CI does not satisfy the gate. Change the order or remove a dependency only with explicit owner authorization. GitHub records the dependency; this execution rule governs agents because the dependency does not itself prevent branch/PR creation.
@@ -128,9 +138,10 @@ The order is **#363 fully accepted/merged → #384 → #364 → #365**; #364 ret
 its original #363 dependency and additionally depends on #384.
 
 #384 stays **Blocked** until #363 has whole-Landscape owner visual acceptance,
-saved/fresh-rendered consumer evidence, deferred 2A/2B performance admission,
-required exact-SHA technical/review gates and merged implementation. The current
-prototype's rejection and pending proofs cannot be replaced by a connection
+saved/fresh-rendered consumer evidence, required exact-SHA technical/review gates
+and merged implementation. Performance measurement is deferred until after
+assembled M3 closeout under the 2026-10-09 decision; it is not this entry gate.
+The current prototype's rejection and pending proofs cannot be replaced by a connection
 test or a closed-as-not-planned state. Documentation planning may merge now;
 it does not start MCP implementation, enable plugins or migrate Unreal.
 
@@ -159,12 +170,14 @@ uncolored pixels are not independently validated. Unknowns and conservative
 exclusions remain explicit when #363 consumes admitted inputs or documented
 fallbacks. This decision does not promote RGB rock/soil candidates to truth.
 
-The owner authorized 2A baseline merge and progression to #363, and requested
-that the 2A performance measurement be performed in 2B (#363), not at 2A closeout.
+On 2026-10-04 the owner authorized 2A baseline merge and progression to #363, and
+requested that the 2A performance measurement be performed in 2B (#363), not at
+2A closeout.
 The frozen-baseline CI exception reports `DEFERRED_TO_2B`, never a performance
 PASS. New material, mask, geometry, runtime configuration or producer changes
-restore normal exact-SHA proof. #363 includes whole-Landscape performance
-measurement after its material foundation is ready for visual review.
+restore normal exact-SHA proof under that historical exception. The 2026-10-09
+decision above supersedes its measurement deadline: the obligation now applies
+to the assembled M3 consumer after closeout, not #363's intermediate handoff.
 Required technical checks and protected CI admission must be resolved before
 the predecessor is represented as completed. Deferred measurement is not PASS.
 
@@ -185,11 +198,11 @@ M3 is complete when:
 - the Landscape workflow is non-destructive and reproducible;
 - World Authority-backed masks/domains and generated presentation are reproducible, with route exclusion enforced;
 - valley / forest / exposed limestone-upland material, biome, foliage and rock foundations are usable from the rider camera;
-- the entire current Landscape has visual acceptance and passing applicable reference-PC performance evidence before expansion beyond it; the Golden Kilometer is an additional detailed check;
+- the entire current Landscape has visual acceptance and technical admission before expansion beyond it; the Golden Kilometer is an additional detailed check;
 - full-route world generation uses the accepted M3 systems rather than ad-hoc per-location reconstruction;
 - rider-camera proof has no obvious grid, floating-road, black-wedge or major intersection failures;
 - required exact-SHA Unreal proof passes;
-- the relevant 1080p/60 performance budget passes on the reference PC;
+- the deferred reference-PC 1080p/60 benchmark is explicitly retained for the assembled world after M3 closeout; performance admission remains pending until it actually passes;
 - documentation and provenance are current.
 
 ### Legacy prototype-world retirement gate

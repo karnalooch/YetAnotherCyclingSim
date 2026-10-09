@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "mesh_sha256": "a9d34dbfb32a59b592dca561a7d7b0e53f7d02d90c095cff7c0812c249247965",
+  "review_status": "AI_PROPOSED",
+  "owner_review": "PENDING",
+  "world_occlusion": "UNRESOLVED_OUTSIDE_MANUAL_VISIBLE_ROIS",
+  "frames": [
+    {
+      "frame_id": "window-0021-forward-00005",
+      "original_image": "../source/window-0021-forward-00005.png",
+      "regions": [
+        {
+          "region_id": "local-crest-B",
+          "band": "B",
+          "polygon": [
+            [
+              0.33359375,
+              0.33194444444444443
+            ],
+            [
+              0.36171875,
+              0.33194444444444443
+            ],
+            [
+              0.38359375,
+              0.36944444444444446
+            ],
+            [
+              0.4375,
+              0.3861111111111111
+            ],
+            [
+              0.43984375,
+              0.4236111111111111
+            ],
+            [
+              0.39921875,
+              0.42083333333333334
+            ],
+            [
+              0.371875,
+              0.4027777777777778
+            ],
+            [
+              0.34765625,
+              0.3861111111111111
+            ],
+            [
+              0.33046875,
+              0.38333333333333336
+            ]
+          ],
+          "tags": [
+            "SILHOUETTE_CRITICAL"
+          ],
+          "reason": "Readable local v8 crest against sea/sky; distinct from the distant mountain at right."
+        },
+        {
+          "region_id": "road-contact-rock-A",
+          "band": "A",
+          "polygon": [
+            [
+              0.43125,
+              0.42083333333333334
+            ],
+            [
+              0.45546875,
+              0.41805555555555557
+            ],
+            [
+              0.4859375,
+              0.4263888888888889
+            ],
+            [
+              0.51171875,
+              0.44027777777777777
+            ],
+            [
+              0.525,
+              0.45
+            ],
+            [
+              0.51484375,
+              0.4652777777777778
+            ],
+            [
+              0.4828125,
+              0.4597222222222222
+            ],
+            [
+              0.453125,
+              0.4444444444444444
+            ]
+          ],
+          "tags": [
+            "HERO_DETAIL",
+            "MATERIAL_TEST_CANDIDATE"
+          ],
+          "reason": "Exposed native rock strip above the asphalt/shoulder, bounded inside visible rock pixels."
+        }
+      ]
+    },
+    {
+      "frame_id": "window-0023-forward-00000",
+      "original_image": "../source/window-0023-forward-00000.png",
+      "regions": [
+        {
+          "region_id": "exposed-downhill-rock-A",
+          "band": "A",
+          "polygon": [
+            [
+              0.93203125,
+              0.5513888888888889
+            ],
+            [
+              0.99921875,
+              0.5111111111111111
+            ],
+            [
+              0.99921875,
+              0.7152777777777778
+            ],
+            [
+              0.95,
+              0.6805555555555556
+            ]
+          ],
+          "tags": [
+            "HERO_DETAIL",
+            "MATERIAL_TEST_CANDIDATE"
+          ],
+          "reason": "Visible v8 surface beyond the downhill shoulder; foreground road and purple bank excluded."
+        }
+      ]
+    }
+  ]
+}

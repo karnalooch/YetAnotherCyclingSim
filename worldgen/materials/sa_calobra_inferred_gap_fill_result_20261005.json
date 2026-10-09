@@ -1,0 +1,104 @@
+{
+  "status": "GENERATED_SURFACES_APPLIED_REVIEW_MAP_SAVED",
+  "material": "/Game/Generated/YACS/TextureMaterialPrep/Libraries/3fb8a9508ac141a396189f4a0c3438f9/Landscape/24761d13ffbd4c7a9ba8b198f68c7cbf/M_SaCalobraGeneratedSurfaces.M_SaCalobraGeneratedSurfaces",
+  "review_map": "/Game/Worlds/SaCalobra/L_SaCalobraGeneratedSurfaces_24761d13ffbd",
+  "source_checkpoint": "/Game/Worlds/SaCalobra/L_SaCalobraGeneratedSurfaces_9992abd22044",
+  "source_checkpoint_sha256": "f7c49a9f978eeb3bedc41feed41cc03cce29045a05bc8cf790ff3c37bc0c219f",
+  "source_checkpoint_saved": false,
+  "geometry_snapshot_equal": true,
+  "component_count": 1024,
+  "render_instances_verified": "unavailable",
+  "applied_roles": [
+    "DryGrass",
+    "ForestLitter",
+    "ExposedRock",
+    "DryMineral"
+  ],
+  "unmapped_roles": [
+    "Scree",
+    "RockCut",
+    "FillGravel"
+  ],
+  "unmapped_reason": "No dedicated admitted geographic masks; no invented assignment",
+  "weights_manifest_sha256": "42237bea4c537c0576d1db71a8cb45d2185d37fd827de25e1cfe07fcb2f3bca3",
+  "producer_sha256": "39c0286ebe3c3063f5edf899ef512ff61ba92e0d7570ecc7ccc14bc1dacabd83",
+  "physical_scale": "provider tile dimensions, native world-aligned projection",
+  "visual_acceptance": "pending",
+  "performance": "not measured",
+  "fresh_editor_reopen": "pending",
+  "presentation": {
+    "source_map": "/Game/Worlds/SaCalobra/L_SaCalobraGeneratedSurfaces_9992abd22044",
+    "source_sha256": "f7c49a9f978eeb3bedc41feed41cc03cce29045a05bc8cf790ff3c37bc0c219f",
+    "grass_contribution": 0.35,
+    "grass_patch_size_cm": 1200,
+    "grass_patch_threshold": 0.35,
+    "grass_patch_width": 0.3,
+    "color_tuning": {
+      "DryMineral": {
+        "desaturation": 0.95,
+        "gain": [
+          0.94,
+          0.98,
+          1.06
+        ]
+      },
+      "ExposedRock": {
+        "desaturation": 0.9,
+        "gain": [
+          1.04,
+          1.08,
+          1.14
+        ]
+      },
+      "DryGrass": {
+        "desaturation": 0.25,
+        "gain": [
+          0.92,
+          0.94,
+          0.9
+        ]
+      },
+      "ForestLitter": {
+        "desaturation": 0.3,
+        "gain": [
+          0.85,
+          0.9,
+          0.86
+        ]
+      }
+    },
+    "reference": "Owner-provided Street View screenshots; artistic palette reference, not calibrated albedo or seasonal land-cover authority",
+    "scope": "Native material color correction and bounded decorative DryGrass macro modulation; existing geographic weights, geometry and physical detail scale retained",
+    "inferred_gap_fill": {
+      "authorization": "Owner explicitly allowed filling black areas from agent inference on 2026-10-05",
+      "domain": "Only raw RGB sum zero; gate saturate(1 - 1000 * sumRGB)",
+      "rock": "saturate(((1-abs(VertexNormalWS.Z))-0.06)/0.34); more exposed limestone on steeper terrain",
+      "grass": "gentle gap fraction * 0.22 * existing decorative macro; mineral remainder",
+      "authority": "Artistic presentation fallback, including neutral holdback appearance; not measured cover, source-mask edits or placement permission",
+      "geometry_mutation": false
+    }
+  },
+  "evidence_directory": "D:\\yacs\\project\\Saved\\RuntimeProof\\TextureLandscape\\24761d13ffbd4c7a9ba8b198f68c7cbf",
+  "same_editor_reload": "SAME_EDITOR_RELOAD_VERIFIED",
+  "review_map_sha256": "98f9440961019ebc237e4a3c702bd17d771efaaf8bb7c8c40f08e89066141582",
+  "actor_count": 375,
+  "gap_domain": {
+    "status": "EXACT_ZERO_RGB_GATE_VERIFIED",
+    "candidate_cells": 4626510,
+    "candidate_pct": 28.444418594942828,
+    "nonzero_source_weight_cells_selected": 0,
+    "mask_sha256": "90a1c75053f025167ff63c3efdb9c841db6e7f7522235d1ef01eb85aba31ff48",
+    "interpretation": "Owner-authorized artistic fallback, not a new geographic class"
+  },
+  "visual_review": "Lit viewport inspected; generated textured appearance replaced diagnostic black; owner acceptance pending",
+  "wrapper_sha256": "cd82ee1f42ff3e19b9ca00320175699d80e4fe42a7d1c806fc4591c1ce35b6b5",
+  "changed_files": [
+    "D:\\yacs\\project\\scripts\\ue\\inspect_sa_calobra_mask_channels.py",
+    "D:\\yacs\\project\\scripts\\ue\\apply_sa_calobra_generated_surfaces.py",
+    "D:\\yacs\\project\\scripts\\ue\\apply_sa_calobra_inferred_gap_fill.py",
+    "D:\\yacs\\project\\worldgen\\materials\\sa_calobra_mask_statistics_20261005.json",
+    "D:\\yacs\\project\\worldgen\\materials\\sa_calobra_inferred_gap_fill_result_20261005.json",
+    "D:\\yacs\\project\\docs\\tooling\\TEXTURE_MATERIAL_PREP_EXAMPLES.md"
+  ],
+  "suggested_commit": "feat(materials): fill Sa Calobra surface gaps with inferred slope presentation"
+}

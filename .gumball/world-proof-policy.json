@@ -1,6 +1,14 @@
 {
   "schema_version": 1,
   "authority": "docs/CI_VALIDATION_TIERS.md",
+  "owner_deferred_m3_performance": {
+    "stage": "M3",
+    "owner_decision_date": "2026-10-09",
+    "assembly_status": "IN_PROGRESS",
+    "due": "after_m3_assembly",
+    "baseline_sha": "03fff5aa83f322fc1cc24f38692d2474afa700cd",
+    "instruction": "Measure performance after M3 implementation is accepted and merged. Intermediate material/road/scene checkpoints require their native build, asset and owner visual evidence; no performance PASS is implied. Set assembly_status to COMPLETE in the subsequent performance-admission change, after M3 implementation closeout."
+  },
   "owner_deferred_2a_performance": {
     "issue": 335,
     "due_issue": 363,
@@ -19,22 +27,85 @@
       "summary_file": "stage3g_environment_performance_summary.json",
       "csv_file": "stage3g_environment_performance.csv",
       "map_package": "/Game/Prototype/Maps/L_CyclingTest",
-      "sectors": ["valley", "forest", "high_alpine"],
+      "sectors": [
+        "valley",
+        "forest",
+        "high_alpine"
+      ],
       "minimum_samples": 120,
       "minimum_gpu_samples": 30,
-      "scope_patterns": ["worldgen/specs/stage3g_*", "scripts/ue/*Stage3GEnvironmentPerformance*", "Source/**/CyclingStage3GEnvironmentPerformanceProof.spec.cpp"]
+      "scope_patterns": [
+        "worldgen/specs/stage3g_*",
+        "scripts/ue/*Stage3GEnvironmentPerformance*",
+        "Source/**/CyclingStage3GEnvironmentPerformanceProof.spec.cpp"
+      ]
     },
     "sa-calobra-terrain": {
       "proof_id": "sa-calobra-terrain-performance",
       "summary_file": "sa-calobra-terrain-performance-summary.json",
       "csv_file": "sa-calobra-terrain-performance.csv",
       "map_package": "/Game/Worlds/SaCalobra/L_SaCalobraTerrainBaseline",
-      "sectors": ["overview", "rider", "slope"],
+      "sectors": [
+        "overview",
+        "rider",
+        "slope"
+      ],
       "minimum_samples": 120,
       "minimum_gpu_samples": 120,
       "component_count": 1024,
-      "scope_patterns": ["Content/Worlds/SaCalobra/*", "worldgen/terrain/benchmarks/sa_calobra/*", "scripts/ue/*region_terrain*", "scripts/ue/*RegionTerrain*", "scripts/ue/*sa_calobra*", "scripts/ue/*SaCalobra*", "scripts/assets/*region_terrain*", "scripts/assets/*ma2141*", "scripts/worldgen/bob_*", "Source/**/CyclingRegionTerrain*", "Source/**/*SaCalobra*"]
+      "scope_patterns": [
+        "Content/Worlds/SaCalobra/*",
+        "worldgen/terrain/benchmarks/sa_calobra/*",
+        "scripts/ue/*region_terrain*",
+        "scripts/ue/*RegionTerrain*",
+        "scripts/ue/*sa_calobra*",
+        "scripts/ue/*SaCalobra*",
+        "scripts/assets/*region_terrain*",
+        "scripts/assets/*ma2141*",
+        "scripts/worldgen/bob_*",
+        "Source/**/CyclingRegionTerrain*",
+        "Source/**/*SaCalobra*"
+      ]
+    },
+    "sa-calobra-material": {
+      "proof_id": "sa-calobra-material-performance",
+      "summary_file": "sa-calobra-terrain-performance-summary.json",
+      "csv_file": "sa-calobra-terrain-performance.csv",
+      "map_package": "/Game/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview",
+      "material_parent": "/Game/Generated/YACS/SaCalobra/WholeMapPreparation/M_SaCalobraWholeMapPreparation",
+      "sectors": [
+        "ground-0-0",
+        "ground-0-1",
+        "ground-0-2",
+        "ground-1-0",
+        "ground-1-1",
+        "ground-1-2",
+        "ground-2-0",
+        "ground-2-1",
+        "ground-2-2",
+        "overview-north",
+        "overview-south",
+        "traversal"
+      ],
+      "minimum_samples": 120,
+      "minimum_gpu_samples": 120,
+      "component_count": 1024,
+      "scope_patterns": [
+        "Content/Generated/YACS/SaCalobra/*",
+        "worldgen/materials/sa_calobra*",
+        "worldgen/materials/visual_fill/*",
+        "scripts/ue/*sa_calobra*material*",
+        "scripts/ue/*sa_calobra*whole_map*",
+        "scripts/ue/*SaCalobra*Material*",
+        "scripts/assets/*sa_calobra*material*",
+        "scripts/assets/*sa_calobra*whole_map*",
+        "scripts/ci/sa_calobra_performance.py",
+        "scripts/ue/Invoke-YacsSaCalobraPerformance.ps1",
+        "Source/**/CyclingSaCalobraPerformance.spec.cpp"
+      ]
     }
   },
-  "unmapped_world_patterns": ["Content/Worlds/*"]
+  "unmapped_world_patterns": [
+    "Content/Worlds/*"
+  ]
 }

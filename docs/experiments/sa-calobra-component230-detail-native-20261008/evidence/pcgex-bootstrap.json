@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "dependency": "PCGEx",
+  "role": "authoring-only",
+  "shipping_runtime_dependency": false,
+  "repository": "https://github.com/PCGEx/PCGExtendedToolkit.git",
+  "expected_commit": "39a8f1bdc65b2c4613a1e87b71d93b4576db0a66",
+  "actual_commit": "39a8f1bdc65b2c4613a1e87b71d93b4576db0a66",
+  "compatibility_patch": "yacs-pcgex-0.79-horizontal-boundary-v2",
+  "compatibility_patch_state": "applied",
+  "compatibility_patch_sha256": "8182824990670e560d1a1f0d052288cc8a98dc5cdb370bdbf63f2666f9593d89",
+  "compatibility_target": "Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp",
+  "plugin_root": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_phase2c-pcgex-cliff\\Plugins\\PCGExtendedToolkit",
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "git_checkout",
+      "status": "PASS",
+      "detail": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_phase2c-pcgex-cliff\\Plugins\\PCGExtendedToolkit"
+    },
+    {
+      "name": "exact_commit",
+      "status": "PASS",
+      "detail": "39a8f1bdc65b2c4613a1e87b71d93b4576db0a66"
+    },
+    {
+      "name": "origin",
+      "status": "PASS",
+      "detail": "https://github.com/PCGEx/PCGExtendedToolkit.git"
+    },
+    {
+      "name": "descriptor",
+      "status": "PASS",
+      "detail": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_phase2c-pcgex-cliff\\Plugins\\PCGExtendedToolkit\\PCGExtendedToolkit.uplugin"
+    },
+    {
+      "name": "license",
+      "status": "PASS",
+      "detail": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_phase2c-pcgex-cliff\\Plugins\\PCGExtendedToolkit\\LICENSE"
+    },
+    {
+      "name": "version",
+      "status": "PASS",
+      "detail": "0.79"
+    },
+    {
+      "name": "engine_version",
+      "status": "PASS",
+      "detail": "5.8.0"
+    },
+    {
+      "name": "license_type",
+      "status": "PASS",
+      "detail": "MIT License"
+    },
+    {
+      "name": "clean_checkout",
+      "status": "PASS",
+      "detail": " M Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp"
+    },
+    {
+      "name": "compatibility_patch",
+      "status": "PASS",
+      "detail": "yacs-pcgex-0.79-horizontal-boundary-v2"
+    },
+    {
+      "name": "expected_patch_only",
+      "status": "PASS",
+      "detail": " M Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp"
+    }
+  ]
+}

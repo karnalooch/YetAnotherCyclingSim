@@ -1,0 +1,410 @@
+# Third-Party Dependency and Source Provenance
+
+**Status:** active governance policy  
+**Owner:** YACS maintainer  
+**Applies to:** external source code, plugins, libraries, datasets, models,
+textures, audio, fonts, mocap, snippets and other imported material
+
+## 1. Rule
+
+Public availability is not a license.
+
+Before third-party material is copied, vendored, adapted, imported, generated
+from an external dataset, or redistributed with YACS, its provenance and license
+must be verified and recorded here (or in a linked machine-readable manifest).
+
+AI-generated output is **not** an exemption from this rule. If generated code
+looks derived from, quotes, or is adapted from an external project, treat that
+external project as the source and perform the same license review.
+
+## 2. Lifecycle
+
+Use these statuses consistently:
+
+- **reference** — inspected for ideas only; no source copied;
+- **candidate** — may be adopted later, but is not yet approved for copying;
+- **approved** — license/provenance checked for the intended use;
+- **acquired** — exact source/revision downloaded with provenance;
+- **included** — material is committed or redistributed with YACS;
+- **derived** — a committed artifact is derived from an external source or
+  dataset and must retain its provenance obligations;
+- **blocked** — provenance or licensing is ambiguous/incompatible.
+
+A project marked `reference`, `candidate` or `blocked` must not be copied
+into YACS.
+
+## 3. Minimum record for a new external source
+
+### Issue #363 surface comparison, 2026-10-05
+
+The owner authorized a visual candidate comparison. Poly Haven CC0 texture
+files are **approved for bounded local review copies only**: one 1K JPEG
+Diffuse channel per candidate, metadata and derived comparison plates, outside
+Git under canonical `work/2b-asset-comparison-20261005`. This is not approval of
+the production material set, full-resolution acquisition or Unreal import.
+Candidate IDs: `rock_face_03`, `rock_face_04`, `dry_riverbed_rock`,
+`seaside_rock`, `rocks_ground_06`, `rocky_terrain`, `rock_ground`,
+`rocks_ground_09`, `gravel_ground_01`, `gravelly_sand`, `dry_ground_rocks`,
+`dry_ground_01`, `grass_ground`, `withered_grass`, `sparse_grass`,
+`forest_floor`, `forrest_ground_03`, `forest_leaves_04`, `dry_decay_leaves`,
+and `excavated_soil_wall`.
+
+Sources: [Poly Haven asset licence](https://polyhaven.com/license),
+[official API](https://polyhaven.com/our-api) and
+[API terms](https://github.com/Poly-Haven/Public-API/blob/master/ToS.md),
+reviewed 2026-10-05. Asset files are CC0-1.0. Website example renders are
+separate protected content and are not copied. API requests identify
+`YACS-SurfaceReview/1.0`; the report credits Poly Haven. Capture exact returned
+URLs, provider MD5/bytes, downloaded SHA-256, authors, metric dimensions and
+metadata hashes in the local review receipt before generating the comparison.
+Production lifecycle and asset approval remain separate; no purchased asset,
+new plugin or runtime dependency is authorized by this review record.
+
+ambientCG `Rock024` is **approved for local review preview only**, under the
+[provider's CC0 licence](https://docs.ambientcg.com/license/), which explicitly
+includes material preview renders. Record returned metadata/preview identity
+and hashes if acquired; no production download/import is approved. Its source
+page is [Rock 024](https://ambientcg.com/view?id=Rock024). Missing scale or
+channel evidence must remain explicit rather than inferred from the thumbnail.
+
+Record, before inclusion:
+
+1. canonical upstream URL/provider;
+2. exact release, tag, commit, asset ID or dataset version;
+3. license name and the exact license artifact that was verified;
+4. copyright/notice text that must be preserved;
+5. which files or ideas are being reused;
+6. whether YACS copies, modifies, links to, or only studies the source;
+7. date of verification;
+8. any redistribution, attribution, source-disclosure or commercial-use
+   condition;
+9. where the required notice is retained in YACS.
+
+For vendored source, prefer pinning an exact upstream commit instead of
+recording only a moving branch name.
+
+## 4. Current ledger
+
+### Material Maker limestone authoring candidate — 2026-10-05
+
+Owner-approved bounded offline authoring trial. Material Maker is an external
+authoring application, not a YACS runtime plugin. Upstream:
+https://github.com/RodZill4/material-maker, source revision
+`4d29a815489866aae483281cf44b2cfe48d3cc3e`. The MIT licence was inspected;
+its required notice is preserved in [material-maker-MIT.txt](notices/material-maker-MIT.txt)
+and copied alongside each generated graph. The installed 1.7 `nodes/material.mmg`
+PBR output definition is adapted into the local `.ptex` graph; its exact hash,
+installed executable hash and source identity are recorded by
+`scripts/assets/build_material_maker_limestone.py`. Native normal-map nodes are
+referenced by identifier. The limestone recipe is an artistic procedural
+candidate, not a measured geological scan or accepted surface library.
+
+The packaged 1.7 CLI crashed before export on this host, also with its bundled
+rock example. Rendering uses the reviewed source through a small native-API
+runner and portable Godot 4.7.2, matching upstream desktop CI. Official acquisition:
+https://github.com/godotengine/godot-builds/releases/tag/4.7.2-stable.
+The local tool acquisition receipt retains the downloaded archive SHA-256 and
+provider digest; no engine binary or external source is vendored into YACS.
+Graph and image identities plus runtime diagnostics are recorded per render.
+No upstream contribution is part of this task.
+
+### Cyclist mocap research archive — 2026-10-04
+
+**Acquired; not imported into Unreal.** The existing local research folder was
+moved intact to `data/mocap/cyclist-spike` in the persistent workspace. Source:
+[Dataset of Motion Capture of Cyclists](https://doi.org/10.5281/zenodo.10668611),
+Zenodo record 10668611, published 2024-02-15, by Panayiotis Kyriakou,
+Yiorgos Chrysanthou and Marios Kyriakou. The retained provider response
+`zenodo_record.json` declares CC BY 4.0. Original `Dataset_cycing_mocap.zip` is
+497,387,739 bytes, provider MD5 `f5188f3088a928502142ed00f06637cc`.
+No dataset bytes are committed to the public repository. The unchanged source
+ZIP and its provider metadata are backed up with the unpublished workspace
+checkpoint; the local migration receipt records SHA-256 verification.
+Preserve the author names, title, DOI and
+[CC BY 4.0 license](https://creativecommons.org/licenses/by/4.0/), and identify
+any future modifications. This storage migration does not admit animation
+quality, retargeting or runtime use.
+
+### Sa Calobra local LAZ decoder — 2026-10-04
+
+Owner explicitly approved installation of an isolated LAZ decoder for Issue #335.
+`laspy==2.7.0` and `lazrs==0.8.2` are acquired local authoring tools; no package
+source/binary is vendored, no Unreal/runtime dependency is introduced. Existing
+GIS numpy/rasterio/pyproj are reused through a local `--system-site-packages` venv.
+Version pins are in `scripts/assets/requirements-sa-calobra-lidar.txt`.
+
+| Package / upstream | Exact downloaded wheel SHA-256 | Verified license / preserved notice | Use |
+|---|---|---|---|
+| [laspy](https://github.com/laspy/laspy), 2.7.0 | `15f5344c62a1023461996bdf5d1ba5fdd813e96694a524fee712931134f3792f` (py3-none-any) | BSD-2-Clause; installed wheel LICENSE.txt inspected; [full notice](notices/laspy-2.7.0-LICENSE.txt) | import library for read-only LAS headers and chunked decoding; no upstream implementation copied |
+| [lazrs](https://github.com/laz-rs/laz-rs-python), 0.8.2 | `213803fbaaf734d5ff3c886bb4a2d173ea24a31383c3cda5383b9bc16e8f0635` (cp312-win_amd64) | MIT; installed wheel LICENSE.txt inspected; [full notice](notices/lazrs-0.8.2-LICENSE.txt) | compressed LAZ backend; no upstream implementation copied |
+
+Wheel URLs/hashes and install environment are retained in the local pip report;
+package versions are recorded in each derived manifest. Licenses permit this
+local/commercial use; redistribution requires retaining their notices. API
+behavior was checked against the installed 2.7.0 `LasHeader.parse_crs` and
+`LasReader.chunk_iterator` primary source, as online docs identify an older
+version. Provider semantics come from [IGN class definitions](https://pnoa.ign.es/resources/archivos/EspTec/Definicion_Clases_241004-LID3-SPC-LID-00122-IGN_Ed_2.0_NP.pdf)
+and [NPC processing](https://pnoa.ign.es/pnoa-lidar/procesamiento-de-los-datos),
+including advanced building/roof classes; unsupported classes remain separate
+other evidence. Provider orthometric convention is inherited, not independently
+remeasured from the horizontal-only LAZ CRS headers.
+
+| Source | Status | Exact source / revision | License evidence | YACS use | Verification |
+|---|---|---|---|---|---|
+| Embark Studios SkyHook | **candidate / reference** | `EmbarkStudios/skyhook` @ `fa8a44d51518303c0563d03b433b10145af7e51d` | upstream `LICENSE-MIT` and `LICENSE-APACHE`; dual MIT / Apache-2.0 | architecture reference for a small DCC <-> Unreal/game-engine transport and command boundary; no source vendored in YACS | exact revision and license files reviewed 2026-09-30 |
+| Embark Studios UnrealClaudeFileHelper / `embark-claude-index` | **reference; copying blocked pending stronger license artifact** | `EmbarkStudios/UnrealClaudeFileHelper` @ `2c87c3b4c433ab710b64ae348d0c0c55a927a641` | `package.json` declares `MIT`, but reviewed root contains no `LICENSE`, `LICENSE.md` or `LICENSE-MIT` artifact | read-only architecture reference for fast Unreal code/asset indexing and agent search; no source copied or vendored | package metadata and missing root license artifact reviewed 2026-09-30 |
+| Poly Haven Stage 3G assets / World Authoring Library | **included** | curated IDs in `scripts/assets/stage3g_polyhaven.json` plus semantic catalog/presets under `worldgen/`; exact resolved source URLs, sizes and MD5 values captured by downloader/selection plan | CC0-1.0; provider/license gate recorded in manifest and semantic catalog | selected textures/models imported as Unreal assets; #230 may use the public API for deterministic candidate discovery and bounded source caching, but discovered candidates are not auto-approved | existing reproducible asset pipeline + #230 semantic discovery layer; reviewed 2026-09-28 |
+| TINITALY 1.1 | **acquired / derived input** | dataset v1.1, DOI `10.13127/tinitaly/1.1`; exact WCS request/checksum captured by downloader | CC BY 4.0 recorded by `download_passo_giau_dem.py` and generated `SOURCE_AND_LICENSE.txt` | Passo Giau macro-terrain source; raw GeoTIFF remains outside Git | existing reproducible terrain pipeline; reviewed 2026-09-28 |
+| CNIG/IGN MDT50 cm — 3ª cobertura | **acquired / derived benchmark included** | v1, 2022–2025 coverage; 17 exact Mallorca COG filenames, byte sizes and SHA-256 values are pinned in `scripts/assets/prepare_sa_calobra_mdt50cm.py`; derived 8 km × 8 km output and report live under `worldgen/terrain/benchmarks/sa_calobra/` | CNIG general-use license compatible with CC BY 4.0; product page prescribes derived-work attribution `Obra derivada de MDT50cm-cob3 2022-2025 CC-BY 4.0 scne.es` | bounded Sa Calobra / Coll de Cal Reis 0.5 m terrain benchmark; source tiles remain in ignored `ExternalAssets/`, final derived GeoTIFF is stored in Git LFS; not Passo Giau authority and not an accepted production world | product/license page, source-file identities and local hashes reviewed 2026-10-01 |
+| PNOA LiDAR 3ª cobertura — Illes Balears NPC03 | **acquired / runner source + private draft snapshot for #335** | 9 exact 2024 Baleares 1 × 1 km NPC03 LAZ files; provider catalogue names and delivered filenames, byte sizes, SHA-256 values and `sec` records are pinned in `working_space_sources.json` and `manual_cnig_receipt_2026-10-03.json`; raw files remain outside Git and are stored in draft release `data-cnig-sa-calobra-working-v1-2026-10-03` | CNIG/IGN general-use license compatible with CC BY 4.0; product attribution for derivatives: `Obra derivada de LiDAR-PNOA-cob3 2022-2025 CC-BY 4.0 scne.es` | bounded vegetation/canopy, building/object-height and source-class evidence for World Data Stack v1; must not replace accepted ground DTM, road XY or physics authority | product page, technical specification, 2026-08-18 Illes Balears NPC03 publication notice and IGN license reviewed 2026-10-03; 9 files / 470,445,482 bytes verified by SHA-256 and `LASF` signature locally and remotely on 2026-10-03; remote draft remains unpublished |
+| CNIG/IGN MDS50 cm — 3ª cobertura V1 | **acquired / runner cross-check + private draft snapshot for #335** | 4 exact COB3 V1 GeoTIFFs; filenames, byte sizes, SHA-256 values and `sec` records are pinned in `working_space_sources.json` and `manual_cnig_receipt_2026-10-03.json`; raw files remain outside Git and are stored in draft release `data-cnig-sa-calobra-working-v1-2026-10-03` | CNIG/IGN general-use license compatible with CC BY 4.0; derived outputs require source attribution under the IGN geographic-data license | visible/top-surface cross-check for canopy and object height only; never replaces accepted ground DTM | product page and IGN license reviewed 2026-10-03; 4 files / 468,634,738 bytes verified by SHA-256 and BigTIFF signature locally and remotely on 2026-10-03; remote draft remains unpublished |
+| PNOA Máxima Actualidad orthophoto — Illes Balears 2024 | **acquired / runner source + private draft snapshot for #335** | 4 exact 2024 Baleares source COGs; provider catalogue names and delivered filenames, byte sizes, SHA-256 values and `sec` records are pinned in `working_space_sources.json` and `manual_cnig_receipt_2026-10-03.json`; raw files remain outside Git and are stored in draft release `data-cnig-sa-calobra-working-v1-2026-10-03` | CNIG/IGN general-use license compatible with CC BY 4.0; derived outputs require source attribution under the IGN geographic-data license | dated visible-surface evidence and orthophoto-assisted masks for forest/open ground/rock/bare soil plus independent road-edge review; never ground-Z authority and request/export pixel spacing is not source accuracy | official PNOA/CNIG catalogue and IGN license reviewed 2026-10-03; 4 files / 2,400,516,218 bytes verified by SHA-256 and BigTIFF signature locally and remotely on 2026-10-03; remote draft remains unpublished |
+| BTN vector service context | **acquired / bounded service context** | 30 z16 PBF tiles, 250,386 B, 21 layer names; exact identities pinned in `p1_context_receipt_2026-10-04.json` and Julka supplemental catalog; thematic GeoPackages were not fetched | IGN/CNIG terms compatible with CC BY 4.0; IGN attribution required | hydrology/nature/buildings/transport context only; tile fragments may repeat and edges extend past the AOI; no route/physics or survey accuracy claim | official IGN BTN style index and `BTN_Completa.json` maxzoom=16 verified 2026-10-04 after z17 HTTP 404; all 30 file hashes verified |
+| SIOSE 2014 WFS request | **partial / rejected identity; diagnostic evidence only** | 35,101 B capabilities + 1,399,472 B GML, 244 matched/returned objects, 0 admitted; exact hashes/requests in P1 receipt | applicable IGN/CNIG terms; no substitute edition admitted | requested 2014 coarse cross-check; current endpoint declares SIOSE HR 2017, payload observationDate=2016 and namespace=ES.SCNE.CLC; remain unknown for requested source | capabilities/payload inspected 2026-10-04; initial 30 s timeout retained; no guessed typename or axis-order fallback |
+| DG Catastro INSPIRE Buildings WFS | **partial / provider exceptions; no geometry admitted** | 16,182 B capabilities + 12 x 300 B exception GML; 3 advertised feature types, 0 admitted payloads; pinned P1 receipt | [DG Catastro INSPIRE license v1, July 2016](https://www.catastro.hacienda.gob.es/webinspire/documentos/Licencia.pdf): own use and transformed value-added products permitted; original redistribution not authorized | local source acquisition for building context only; raw response files stay outside Git, no public raw distribution | official WFS specification and license reviewed 2026-10-04; all quadrants and documented-format retry returned `Area of extension out of limits`; root cause unconfirmed |
+| CartoCiudad Ma-2141 geometry | **acquired / source-review dataset included** | REST Geocoder road ID `604000000293`, exact response SHA-256 `6520b92486b5d1c63353b8253d388ab21d380c78fda119849311be8344d8ae36`, acquired 2026-10-02 | CC BY 4.0; attribution `CC BY 4.0 www.scne.es/productos.html#CartoCiudad`; official FAQ confirms service coordinates EPSG:4326 | source XY/topology review only; preserves all six multipart lines including a closed loop; no width/access/surface/Z or gameplay authority inferred | https://www.cartociudad.es/web/portal/faq and exact service response reviewed 2026-10-02 |
+| IGN IGR-RT Ma-2141 3D candidate | **acquired / source-review dataset included** | OGC API Features four-feature response, selected `VIAL_TR70190001272`; exact SHA-256 `ebc7c1c985caae5b7727719856646d52824463803d13095462f8d7ef1fcd7d5f`; 2026-10-02 | CC BY 4.0, linked IGN use license; attribution `Obra derivada de IGR Redes de Transporte, consulta 2026-10-02, CC BY 4.0 scne.es` | source-property and numeric third-coordinate comparison only; vertical datum, source fictitious flag, width and bicycle access unresolved; no earthworks/physics admission | collection license link and https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf reviewed before inclusion; pinned review in benchmark |
+| CNIG IGR-RT Illes Balears province package | **candidate / not acquired** | catalogue file `11655652`, `RT_ILLES_BALEARS_GPKG.ZIP`, July 2026; payload revision/hash pending | IGN general-use terms compatible with CC BY 4.0; exact downloaded package and attribution must be verified before inclusion | planned complete network inventory/comparison in #349; no package or derived geometry included | official catalogue and RoadLink collection metadata inspected 2026-10-03 |
+| GOIB RT-VUIB road axes / BTIB road layers | **candidate / metadata inspection only** | road-axes catalogue updated 2026-07-07; BTIB layer 9 metadata describes 2018 cartography; exact payload/hash pending | catalogue labels Creative Commons Attribution without a precise version; separate BTIB reuse grant remains unverified | bounded query counts and raw-code summaries only in #349; no geometry copied or admitted; resolve license, epoch, schema and vertical datum before import | official catalogue, CKAN metadata and BTIB layer schema/count queries inspected 2026-10-03 |
+| OpenStreetMap Sa Calobra road inventory | **derived summary included** | Overpass snapshot `2026-10-01T20:46:35Z`, clipped to WGS84 bounds `2.76258,39.80384,2.85626,39.87588`; aggregate inventory stored in `worldgen/terrain/benchmarks/sa_calobra/sa_calobra_road_inventory_2026-10-01.json` | Open Data Commons Open Database License 1.0; attribution and license link retained in the benchmark README, inventory and notices | aggregate road-class lengths and named-road planning scope only; no raw OSM geometry is committed and the summary is not route, physics, surface or access authority | source, snapshot, bounds, aggregation method and attribution reviewed 2026-10-01 |
+| Strava Global Heatmap | **reference; copying and derived-data inclusion blocked** | live Global Heatmap inspected locally on 2026-10-01; no tile, screenshot, sampled intensity, ranked geometry or derivative artifact is committed | Strava Terms of Service and API Policy reserve platform/data rights, prohibit automated collection and restrict copying, derivative works and distribution | local planning reference only; it must not enter YACS source data, deterministic builds, route authority or acceptance evidence without a separate approved data agreement | official terms reviewed 2026-10-01: `https://www.strava.com/legal/terms`, `https://www.strava.com/legal/api_policy` |
+| db-lyon ue-mcp | **approved / pinned development dependency** | `db-lyon/ue-mcp` tag `v1.3.9` @ `d79a34bb6e7a5883457efe8f33c9f85b1ba3e136`; npm dependency `ue-mcp@1.3.9` | upstream root `LICENSE`: MIT License; package metadata also declares MIT | local development-time Unreal orchestration only; dependency graph committed in `tools/ue-mcp/package-lock.json`; setup uses `npm ci --ignore-scripts`; deployed bridge remains gitignored; write access stays behind YACS guards/flows/proof; YACS overrides transitive `fast-uri` from upstream-resolved `3.1.6` to patched `3.1.8`; 3.1.7 fixed the prior HIGH advisories but remains affected by GHSA-hrr3-gc8f-f4qj | tag, exact commit, package metadata and root license reviewed 2026-09-30; security override reviewed against GHSA-58mr-gqgx-xq4g / GHSA-qw65-cvwx-89v3; updated for GHSA-hrr3-gc8f-f4qj on 2026-10-03 |
+| fast-uri transitive security override | **approved / pinned development dependency** | npm `fast-uri@3.1.8`, upstream `ead3ab7bb134c989e972c8174632d0670023f269`; exact npm integrity recorded in lockfile | upstream LICENSE and npm metadata: BSD-3-Clause | existing ue-mcp development graph only; no vendored source or shipping dependency added; upstream package retains its license | publisher advisory GHSA-hrr3-gc8f-f4qj, exact-revision license and npm metadata reviewed 2026-10-03 |
+| PCGEx / PCG Extended Toolkit | **approved pinned authoring dependency** | `PCGEx/PCGExtendedToolkit` stable branch `5.8` @ `39a8f1bdc65b2c4613a1e87b71d93b4576db0a66`; descriptor VersionName `0.79`, EngineVersion `5.8.0` | upstream root `LICENSE`: MIT License, copyright 2025 Timothé Lapetite; permits commercial use, modification and redistribution with the license notice retained | **authoring-time only** implementation of the YACS Passo Giau procedural path/corridor pipeline: canonical SP638 presentation input -> resample/smooth/offset/sampling/topology; it is not route/physics authority and is not claimed to be an Embark dependency. Source is fetched exact-SHA on the authoring runner; shipping-runtime dependency is forbidden until separately approved | stable 5.8 revision, root license and plugin descriptor reviewed 2026-09-30; bounded YACS runtime/editor proof pending |
+| SideFX Houdini Indie + Houdini Engine Indie / Unreal plug-in | **reference / optional escalation** | Houdini Indie current product line | official SideFX Indie and Houdini Engine licensing pages; commercial use is subject to SideFX Indie eligibility/terms | retained as production-pipeline evidence and a possible later DCC escalation only; **not required by #287/#288** while the PCGEx-first bounded proof is active | licensing/product capability reviewed 2026-09-30; no YACS acquisition required for the current path |
+| SideFX Labs / Gaea2Houdini | **reference / optional escalation** | `sideeffects/SideFXLabs` Development @ `56651134bb99f67bdc6e2423fa8a622a06d3c766` | upstream `LICENSE.md`: permissive BSD-style terms; Gaea2Houdini additionally requires an eligible Gaea installation | architecture/reference evidence only for the current PCGEx-first proof; **not required by #287/#288** | exact upstream revision/license reviewed 2026-09-30 |
+| QuadSpinner Gaea Professional | **reference / optional escalation** | Gaea 2.x production line | official QuadSpinner pricing/download/EULA; edition/revenue terms apply | optional future terrain-shaping escalation only; **not required by #287/#288** and no Community/non-commercial output may enter YACS production | product/license boundary reviewed 2026-09-30 |
+| RoadForge | **included** | `YuuhenR/roadforge-osm-ue5-procedural-city` @ `781cb046483cc1887e80085aacf0fb2951f4746d`; vendored by PR #219 | upstream root `LICENSE`: MIT License, copyright 2026 RoadForge Contributors; preserved at `Plugins/RoadForge/LICENSE` | minimal **editor-only** donor subset: module bootstrap + `RoadForgeMeshUtils.{h,cpp}`; descriptor adapted to UE 5.8 and module log category renamed for unity-build safety; OSM/city/editor/sample/content surfaces omitted; not a shipping runtime dependency | source revision/license/subset verified 2026-09-28; editor-only boundary reaffirmed 2026-09-30 |
+| GeoTerrain | **blocked for copying / reference only** | `caonao/GeoTerrain` @ `c9ba031b77dfecfaa228f993b84685dd470bfe87` | README says “MIT”, but no root `LICENSE` file was present when checked | reference for terrain/OSM/Landscape techniques only; **do not vendor/adapt source until license grant is unambiguous** | checked 2026-09-28 |
+
+### 4.1 Embark reference rule
+
+Embark references are intentionally strong inputs to YACS architecture review,
+but **reference strength is separate from copy permission**.
+
+- SkyHook may be evaluated as a candidate because exact MIT/Apache-2.0 license
+  files are present at the reviewed revision.
+- UnrealClaudeFileHelper / `embark-claude-index` may be studied as an
+  architecture reference, but YACS must not copy or adapt its source while the
+  reviewed repository lacks a root license artifact, despite the MIT declaration
+  in `package.json`.
+- Neither entry is currently a YACS dependency.
+- Public Embark code must not be described as the complete internal ARC Raiders
+  toolchain without explicit supporting evidence from Embark.
+
+## 5. RoadForge included donor
+
+PR #219 promoted RoadForge from reference/candidate status to an **included**
+minimal donor subset from exact upstream commit
+`781cb046483cc1887e80085aacf0fb2951f4746d`.
+
+Included surface:
+
+- `Plugins/RoadForge/Source/RoadForge/Private/RoadForge.cpp`;
+- `Plugins/RoadForge/Source/RoadForge/Private/RoadForgeMeshUtils.cpp`;
+- `Plugins/RoadForge/Source/RoadForge/Public/RoadForge.h`;
+- `Plugins/RoadForge/Source/RoadForge/Public/RoadForgeMeshUtils.h`;
+- `Plugins/RoadForge/Source/RoadForge/RoadForge.Build.cs`;
+- the adapted `Plugins/RoadForge/RoadForge.uplugin`;
+- vendoring note `Plugins/RoadForge/README.YACS.md`;
+- upstream MIT license preserved verbatim at `Plugins/RoadForge/LICENSE`.
+
+YACS intentionally omits the upstream OSM ingestion, procedural-city
+generator, PCG scatter/editor modules, sample data, screenshots, textures and
+other content payloads. The retained descriptor targets UE 5.8 and the module
+log category was renamed to `LogRoadForgeModule` for unity-build safety.
+No retained upstream source-file copyright header was removed.
+
+The donor remains presentation tooling only and is now explicitly **Editor-target only**. It may generate or help author persistent YACS presentation assets, but the RoadForge module itself is not part of the shipping runtime surface. Production SP638 use still requires a bounded adapter/proof and must never become route or physics truth. Any future request for runtime RoadForge execution requires a new dependency-admission decision and runtime/package proof.
+
+## 6. GeoTerrain adoption rule
+
+GeoTerrain is useful as a technical reference, but the checked revision has a
+license ambiguity: its README labels the project “MIT” while a root license
+artifact was not found.
+
+Until that is resolved, YACS may study public documentation and independently
+implement ideas that are not protected expression, but must not copy or adapt
+GeoTerrain source code.
+
+Promotion from `blocked` requires one of:
+
+- an upstream license file or release artifact that clearly grants the intended
+  rights; or
+- direct written clarification from the rights holder.
+
+Record the evidence and exact revision before any source import.
+
+## 7. Pull-request rule
+
+A PR that adds or materially changes third-party material must:
+
+- update this ledger or its linked manifest;
+- update `THIRD_PARTY_NOTICES.md` when redistribution/attribution applies;
+- preserve license/copyright notices;
+- identify generated/derived artifacts whose source data carries obligations;
+- fail review when license evidence is absent, ambiguous or incompatible.
+
+Dependency/security automation does not replace this review: a dependency can
+be technically safe while still having unsuitable license terms.
+
+## 8. Project license decision
+
+YACS currently has no project-wide `LICENSE` file. This document does not
+choose one. A future decision to publish YACS under an open-source license, a
+source-available license or proprietary terms must be made explicitly by the
+project owner and checked against all included third-party obligations.
+
+
+## Hosted diagnostic media encoding (Issue #293)
+
+FFmpeg/ffprobe are host build tools for derived diagnostic MP4s, not linked,
+vendored or redistributed runtime dependencies. Explicit diagnostic media jobs
+install Ubuntu 24.04 package `ffmpeg=7:6.1.1-3ubuntu5` from the signed distro
+archive, verify its version and fail if unavailable. Source/package evidence:
+https://packages.ubuntu.com/noble/ffmpeg . No binary is committed or installed
+on the reference PC. Only hash-checked, fully Pillow-decoded project PNGs enter
+the PNG decoder; ffprobe reads the resulting local MP4. This is not a generic
+uploaded-media ingestion service. The media report records the exact
+host version/build configuration from `ffmpeg -version` and `ffprobe -version`;
+libx264 capability and output are checked at execution. Official reference:
+https://ffmpeg.org/ffmpeg.html ; project/legal notices: https://ffmpeg.org/legal.html .
+Do not infer one license for all external codec builds or bundle one without a
+separate source/version/license review. Existing pinned Pillow 11.3.0 is reused
+on the hosted lane. PNG evidence and a capture receipt survive missing host tools;
+that condition is a media validation failure, not fabricated MP4 success.
+
+Distro security notice USN-8329-1 documents a CAF decoder issue and an ESM
+update. CAF is not accepted by this bounded PNG-to-MP4 tool path. The pin is
+not a security-clean claim for arbitrary formats; expanding accepted input
+requires a codec/security review and a supported updated distribution.
+https://ubuntu.com/security/notices/USN-8329-1
+
+
+## PNOA Ma-2141 bounded pavement review image
+
+- Provider/product: IGN/CNIG PNOA most-recent orthophoto WMS.
+- Source: https://www.ign.es/wms-inspire/pnoa-ma
+- License: CC BY 4.0; https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf
+- Attribution: Obra derivada de PNOA, consulta 2026-10-02, CC BY 4.0 scne.es.
+- Included image: `worldgen/terrain/benchmarks/sa_calobra/ma2141_pnoa_review_2026-10-02.jpg`.
+- SHA-256: `4c896f9e64f9e86aa4005d59bd33d46f6b7619dac84cf0201180f4b79b1f20f9`.
+- Exact request, CRS/bounds, pixel size and inferred edge observations are recorded
+  in the adjacent `ma2141_pavement_preview_profile.json`.
+- Status: admitted for bounded visual source review and an inferred contact trial;
+  not admitted as survey, height, road-width, access or physics authority.
+- Acquisition date and native GSD remain unknown; request date is not flight date.
+  Approximate AI-interpreted edge positions have an explicit review allowance,
+  not measured statistical accuracy. The generated preview is not road acceptance.
+
+## Verified P1 alternative providers — 2026-10-04
+
+- **Catastro Buildings ATOM Escorca — acquired:** official national feed ->
+  Baleares feed -> 07019 Escorca ZIP; provider update 2026-08-21, CRC verified,
+  EPSG:25831 inspected, 224/595/24 features across three types. Existing
+  Catastro INSPIRE license applies; raw original redistribution is not authorized.
+- **IDEIB SIOSE 2014 regional service — acquired:** official
+  `GOIB_SIOSE14_IB/MapServer`, selected named layer 1 `SIOSE 2014`; 15/15 AOI
+  object IDs returned in EPSG:25831. Exact service iteminfo license allows
+  publication/download and requires `SIOSE © INSTITUTO GEOGRÁFICO NACIONAL DE
+  ESPAÑA - SITIBSA - GOIB`. Historical context only; no current vegetation authority.
+- Exact URLs, sizes, SHA-256 and license metadata are pinned in
+  `p1_alternatives_receipt_2026-10-04.json` and Julka's supplemental catalog.
+  Eight raw payloads remain local outside Git, without registered remote backup.
+  Prior WFS failures remain separately recorded. AOI normalization, municipal
+  coverage admission and derived-mask consumer proofs are still pending.
+
+## IDEIB municipal coverage and normalized context candidate — 2026-10-04
+
+Official `GOIB_UnitAdm_IB/MapServer`, named `Municipis` layer 1: complete AOI ID
+inventory and one EPSG:25831 Escorca polygon (07019). Exact service license
+`info/iteminfo` is retained/pinned: CC BY 4.0 map-service use with attribution
+`SITIBSA-scne.es`; separate original-data distribution request conditions apply.
+Original payload stays local outside Git. This is coverage evidence based on
+IGN registry and modified MTIB coastline, not legal-boundary or terrain authority.
+
+Normalized candidates inherit existing Base_DTM, CNIG orthophoto review,
+historical SIOSE attribution and Catastro transformed-data terms. Nine products,
+manifest and QA remain outside Git; only hashes/metadata/recipe/receipts enter
+Git. The normalized report records exact inputs, output identities, versions,
+NoData/conflict semantics, reproducibility and remaining acceptance gates.
+
+## GOIB provisional hydrography and BTN geometry — 2026-10-04
+
+Official [Xarxa Hidrogràfica Provisional catalogue](https://intranet.caib.es/opendatacataleg/es/dataset/xarxa-hidrografica-provisional)
+names DG Recursos Hídrics and Creative Commons Attribution (version unspecified).
+This dataset-specific grant applies only to the named provisional network,
+[GOIB service layer 0](https://ideib.caib.es/geoserveis/rest/services/public/GOIB_XarxaHidro_RiscInun_IB/MapServer/0).
+Generic service iteminfo instead asks users to contact the distributor; do not
+extend the dataset-specific grant to other layers. The exact catalogue HTML,
+service/layer metadata, ID inventory and complete 106-feature AOI response are
+pinned outside Git in `regional-hydrology-2026-10-04`; receipt/catalog retain
+size/hash identities and attribution. `ANY_MTIB` 2010/95 stays as delivered;
+no 2026 survey, permanent wetness, measured width or flood extent is inferred.
+
+BTN decoding uses the official [Mapbox vector tile specification 2.1](https://github.com/mapbox/vector-tile-spec/tree/master/2.1)
+and [IGN service documentation](https://www.ign.es/web/estilos-de-los-servicios-de-teselas-vectoriales).
+No third-party decoder/runtime dependency was added. Existing CNIG attribution
+applies to the 30 retained tiles. Only bounded selected water/infrastructure
+layers enter the derived context; duplicate tile fragments are not unique
+entity counts. GOIB/BTN line/point 5m decorative holdbacks are authored fallback
+decisions and are explicitly distinct from geographic/regulatory measurements.
+
+## Texture prep proof candidates — 2026-10-05
+
+Official ambientCG Rock024, Rock026 and Rock042S 1K PNG packages were acquired
+for separately approved #382 texture-tooling proof only. Source pages:
+[Rock024](https://ambientcg.com/a/Rock024),
+[Rock026](https://ambientcg.com/a/Rock026),
+[Rock042S](https://ambientcg.com/a/Rock042S).
+[Provider license](https://docs.ambientcg.com/license/): CC0-1.0; attribution is
+not required, but source identity is retained. No third-party code is adopted.
+
+Original ZIPs, API metadata, per-file hashes and acquisition receipt are in the
+[authenticated draft backup](https://github.com/karnalooch/YetAnotherCyclingSim/releases/tag/untagged-98fa61b00fe49600cbd1).
+Rock024 was rejected for non-opaque alpha; Rock026 completed a five-map 512px
+proof; Rock042S is acquired only. These are proof-use candidates, not validated
+world assets. Geology, Mallorca origin and physical coverage remain unverified.
+See the [remote report](../tooling/TEXTURE_MATERIAL_PREP_REMOTE_HANDOFF.md) for
+exact input identity, archive hashes, output limits and remaining acceptance.
+
+## Sa Calobra UE-generated surface library — 2026-10-05
+
+The owner explicitly authorized generating the complete missing 2B material
+library through YACS Texture Graph. This extends the earlier review-only use to
+local import and derived texture/material creation for `rocks_ground_06`,
+`rocks_ground_09`, `gravel_ground_01`, `withered_grass`, `dry_decay_leaves` and
+`rock_ground`. The exact original 1K Diffuse JPEG bytes from the recorded review
+receipt are reused unchanged; source hashes, CC0 licence, provider URLs and
+provider dimensions are pinned in
+[the generation manifest](../../worldgen/materials/sa_calobra_texture_library_20261005.json).
+[Poly Haven licence](https://polyhaven.com/license) was rechecked on 2026-10-05.
+No website render or provider code is incorporated. Voluntary provider credit
+is retained; CC0 does not require another third-party notice.
+
+Seven local material roles split rock CUT and loose FILL presentation. These
+are generated review candidates, not approved geology, ground classifications,
+physical PBR measurements, or permission to alter world authority. The existing
+native Texture Graph derives five maps from each image; no offline image
+processing substitutes for it. Provider dimensions are not independent scale
+measurements. Grass/litter coverage and FILL domains remain unassigned.
+
+## Scanned surface refinement candidates — 2026-10-06
+
+Poly Haven `aerial_rocks_02` and `aerial_grass_rock`, by Rob Tuytel, are admitted
+for the owner-authorized #363 material refinement preview. The provider's
+[CC0 grant](https://polyhaven.com/license) permits download, modification and
+commercial reuse. Only texture payloads are incorporated, not website renders
+or code. Source pages: [rock](https://polyhaven.com/a/aerial_rocks_02) and
+[rock/grass](https://polyhaven.com/a/aerial_grass_rock). Provider tile widths are
+50 m and 15 m respectively; they are not independent measurements. Original
+Diffuse, DirectX Normal and ARM files are retained unchanged outside Git with
+SHA-256 identities in `worldgen/materials/scanned_refinement/manifest.json`.
+These are visual substitutes, not verified limestone geology or Mallorca scans.
+Their use does not change geographic masks or permit geometry/PCG edits.
+
+The public [Embark photogrammetry pattern](https://medium.com/embarkstudios/working-with-photogrammetry-in-practice-1f9dada77606)
+motivates a coherent, layered scan library at multiple scales. Poly Haven is the
+explicit available substitute; no claim is made that Embark uses these assets.
+No executable dependency or subscription is added. Native UE material sampling
+is used; visual and performance acceptance remain required.

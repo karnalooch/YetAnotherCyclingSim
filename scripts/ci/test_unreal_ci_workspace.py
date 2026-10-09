@@ -91,6 +91,52 @@ class UnrealWorkspaceTests(unittest.TestCase):
         self.assertEqual(cache.select(self.workspace), self.name)
         self.assertTrue((self.workspace / cache.POINTER).exists())
 
+    def test_binary_probe_preserves_bytes_and_verified_pointer(self):
+        self.publish()
+        before = {
+            name: (self.root / "Binaries/Win64" / name).read_bytes()
+            for name in cache.BINARY_NAMES
+        }
+        self.assertFalse(cache.has_unwritable_binary(self.root))
+        for name, data in before.items():
+            self.assertEqual((self.root / "Binaries/Win64" / name).read_bytes(), data)
+        self.assertEqual(cache.select(self.workspace), self.name)
+
+    def test_locked_binary_selects_fresh_checkout_without_retiring_old_cache(self):
+        self.publish()
+        env_file = self.workspace / "github-env"
+        original_open = Path.open
+        locked = self.root / "Binaries/Win64" / cache.BINARY_NAMES[1]
+
+        def open_with_lock(path, mode="r", *args, **kwargs):
+            if path == locked and mode == "r+b":
+                raise PermissionError("DLL is mapped by an exited Windows process")
+            return original_open(path, mode, *args, **kwargs)
+
+        with (
+            patch.object(Path, "open", open_with_lock),
+            patch.dict(os.environ, {"GITHUB_ENV": str(env_file)}),
+            patch(
+                "sys.argv",
+                [
+                    "workspace",
+                    "select",
+                    "--workspace",
+                    str(self.workspace),
+                    "--run",
+                    "101-1",
+                ],
+            ),
+            patch.object(cache, "cleanup") as cleanup,
+        ):
+            cache.main()
+        cleanup.assert_not_called()
+        self.assertEqual(
+            env_file.read_text(), "YACS_UNREAL_WORKTREE=_unreal-build-101-1\n"
+        )
+        self.assertEqual(cache.select(self.workspace), self.name)
+        self.assertEqual(cache.verified(self.root), self.state)
+
     def test_publication_survives_downstream_failure_and_cleanup(self):
         self.publish()
         other = self.workspace / "_unreal-build-99-1"
@@ -191,6 +237,79 @@ class UnrealWorkspaceTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "link/junction"):
             cache.select(self.workspace)
 
+    def test_fresh_fallback_avoids_incomplete_locked_warm_directory(self):
+        self.state["CompilePassed"] = False
+        self.state["ProofPassed"] = False
+        self.write_state()
+
+        warm = self.workspace / cache.WARM
+        warm.mkdir()
+        payload = warm / "Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log"
+        payload.parent.mkdir(parents=True)
+        payload.write_bytes(b"locked fixture")
+
+        selected = cache.select(self.workspace, fallback="_unreal-build-101-1")
+
+        self.assertEqual(selected, "_unreal-build-101-1")
+        self.assertTrue(warm.exists())
+        self.assertEqual(payload.read_bytes(), b"locked fixture")
+        self.assertFalse((self.workspace / selected).exists())
+
+    def test_incomplete_warm_checkout_is_quarantined_without_deleting_outputs(self):
+        warm = self.workspace / cache.WARM
+        warm.mkdir()
+        payload = warm / "Intermediate/huge-cache.bin"
+        payload.parent.mkdir(parents=True)
+        payload.write_bytes(b"preserve me")
+
+        with patch.dict(
+            os.environ,
+            {
+                "GITHUB_REPOSITORY": "karnalooch/YetAnotherCyclingSim",
+                "GITHUB_SERVER_URL": "https://github.com",
+            },
+        ):
+            cache.prepare_checkout_directory(self.workspace, cache.WARM, "101-1")
+
+        quarantine = (
+            self.workspace / "_yacs-unreal-ci/quarantine" / f"101-1-{cache.WARM}"
+        )
+        self.assertFalse(warm.exists())
+        self.assertEqual(
+            (quarantine / "Intermediate/huge-cache.bin").read_bytes(),
+            b"preserve me",
+        )
+
+    def test_checkout_origin_is_normalized_before_actions_checkout(self):
+        subprocess.run(
+            [
+                "git",
+                "remote",
+                "add",
+                "origin",
+                "https://example.invalid/wrong/repository.git",
+            ],
+            cwd=self.root,
+            check=True,
+        )
+        with patch.dict(
+            os.environ,
+            {
+                "GITHUB_REPOSITORY": "karnalooch/YetAnotherCyclingSim",
+                "GITHUB_SERVER_URL": "https://github.com",
+            },
+        ):
+            cache.prepare_checkout_directory(self.workspace, self.name, "101-1")
+
+        self.assertEqual(
+            subprocess.check_output(
+                ["git", "remote", "get-url", "origin"],
+                cwd=self.root,
+                text=True,
+            ).strip(),
+            "https://github.com/karnalooch/YetAnotherCyclingSim",
+        )
+
     def test_linked_metadata_migration_preserves_outputs_and_origin(self):
         subprocess.run(
             [
@@ -245,6 +364,53 @@ class UnrealWorkspaceTests(unittest.TestCase):
         self.assertEqual(retained.read_bytes(), b"materialized fixture")
         self.assertTrue(self.root.exists())
 
+    def test_cleanup_quarantines_incomplete_old_build_without_deleting_outputs(self):
+        self.publish()
+        other = self.workspace / "_unreal-build-99-1"
+        other.mkdir()
+        payload = other / "Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log"
+        payload.parent.mkdir(parents=True)
+        payload.write_bytes(b"preserve interrupted build")
+
+        cache.cleanup(self.workspace, self.name, "101-1")
+
+        quarantine = (
+            self.workspace
+            / "_yacs-unreal-ci/quarantine/101-1-_unreal-build-99-1-cleanup"
+        )
+        self.assertFalse(other.exists())
+        self.assertEqual(
+            (
+                quarantine / "Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log"
+            ).read_bytes(),
+            b"preserve interrupted build",
+        )
+        self.assertTrue(self.root.exists())
+        self.assertEqual(cache.select(self.workspace), self.name)
+
+    def test_cleanup_preserves_locked_incomplete_old_build(self):
+        self.publish()
+        other = self.workspace / "_unreal-build-99-1"
+        other.mkdir()
+        payload = other / "Intermediate/locked.bin"
+        payload.parent.mkdir(parents=True)
+        payload.write_bytes(b"locked fixture")
+
+        real_replace = cache.os.replace
+
+        def locked_replace(source, destination):
+            if Path(source) == other:
+                raise PermissionError("fixture lock")
+            return real_replace(source, destination)
+
+        with patch.object(cache.os, "replace", side_effect=locked_replace):
+            cache.cleanup(self.workspace, self.name, "101-1")
+
+        self.assertTrue(other.exists())
+        self.assertEqual(payload.read_bytes(), b"locked fixture")
+        self.assertTrue(self.root.exists())
+        self.assertEqual(cache.select(self.workspace), self.name)
+
     def test_cleanup_archives_private_lfs_objects_without_deleting_bytes(self):
         self.publish()
         other = self.workspace / "_unreal-build-99-1"
@@ -259,6 +425,25 @@ class UnrealWorkspaceTests(unittest.TestCase):
         )
         self.assertEqual(retained.read_bytes(), b"private LFS fixture")
         self.assertFalse(other.exists())
+
+    def test_cleanup_preserves_locked_retired_verified_build(self):
+        self.publish()
+        other = self.workspace / "_unreal-build-99-1"
+        shutil.copytree(self.root, other)
+
+        real_rmtree = cache.shutil.rmtree
+
+        def locked_rmtree(path, *args, **kwargs):
+            if Path(path) == other:
+                raise PermissionError("fixture locked pack")
+            return real_rmtree(path, *args, **kwargs)
+
+        with patch.object(cache.shutil, "rmtree", side_effect=locked_rmtree):
+            cache.cleanup(self.workspace, self.name, "101-1")
+
+        self.assertTrue(other.exists())
+        self.assertTrue(self.root.exists())
+        self.assertEqual(cache.select(self.workspace), self.name)
 
     def test_selection_retains_assets_before_checkout_and_exports_active_path(self):
         asset = self.root / "Content/fixture.uasset"

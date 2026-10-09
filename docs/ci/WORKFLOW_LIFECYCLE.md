@@ -51,10 +51,11 @@ endpoint is forbidden outside an explicit test fixture.
 | `proof-broker.yml` | CURRENT | Trusted Proof Broker orchestration |
 | `repository-ops.yml` | CURRENT | Gumball labels/lifecycle reconciliation |
 | `reusable-python.yml` | CURRENT | Hosted Python and repository contracts |
-| `reusable-stage3g-full.yml` | CURRENT | Exact-head full-world proof used by CI |
+| `reusable-stage3g-full.yml` | CURRENT | Frozen legacy compatibility regression; full legacy authoring only for actual legacy asset/spec/producer changes; never Sa Calobra admission |
 | `reusable-unreal.yml` | CURRENT | Code-only Unreal build + Automation |
 | `runner-monitor.yml` | CURRENT | Owner-only manual main-branch silent desktop companion deployment |
 | `runner-space-recovery.yml` | CURRENT | Owner-only manual main-branch runner recovery |
+| `sa-calobra-cliff-component230-pcgex.yml` | CURRENT | Existing #445 topology and survey proof; owner-only `[detail-native]` captures the retained v8 mask and bounded patch at two annotated cameras. The exclusive `[wholemap-material]` lane prepares the pinned full grid, verifies all 1024 native Landscape bindings, resolves binary reuse through the existing compile/proof cache, and always runs a fresh master build plus scene capture. It retains 30 primary frames, readiness/source/rollback receipts and complete generated material packages; visual and performance admission remain pending. Existing full topology and survey jobs are excluded from both bounded intents. |
 | `sa-calobra-world-data-acquire.yml` | CURRENT | Trusted exact-SHA self-hosted acquisition and receipt recovery for the active Issue #335 source contract |
 | `sa-calobra-world-data-cnig-probe.yml` | CURRENT | Hosted public CNIG catalogue/source-identity probe for the active Issue #335 acquisition branch |
 | `scorecard.yml` | CURRENT | OpenSSF supply-chain audit |
@@ -102,7 +103,7 @@ not rewrite that history.
 
 The surviving Actions surface is intentionally grouped:
 
-1. **Main CI:** `ci.yml` + reusable Python/Unreal/full-world workflows.
+1. **Main CI:** `ci.yml` + reusable Python/Unreal and scoped legacy regression workflows. Current Sa Calobra acceptance retains its own actual-map evidence.
 2. **Gumball/repository operations:** governance consumers, Proof Broker,
    Repository Ops, branch hygiene and PR orchestration.
 3. **Explicit recovery/probes:** manual Unreal, Windows probe, pinned portable
@@ -131,6 +132,14 @@ or `BROKER-MANAGED` means a tool remains usable; it does not mean its fixed map
 is the current product destination. The two `UNKNOWN` author workflows retain
 that bounded status until equivalent real-world replacement evidence permits
 retirement. No workflow is deleted based solely on a geographic rename.
+
+Owner correction, 2026-10-09: the old Stage 3G `L_CyclingTest` authoring/capture
+is not the current material closeout test. The classifier's `stage3g_authoring`
+signal reserves regeneration for actual legacy asset/spec/producer changes.
+Actor compatibility and workflow changes select the existing transient
+`CyclingStage3World.PrototypeTerrain` regression without saved-map authoring,
+Map Check or legacy visual capture. Preserve the oracle and required C++/native
+checks; never treat this regression as proof of the current Sa Calobra consumer.
 
 The geometry capability broker workflow is now explicit-dispatch only. Its two
 automatic geometry suites and Python syntax checks are covered centrally by

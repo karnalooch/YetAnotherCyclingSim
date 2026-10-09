@@ -1,0 +1,431 @@
+# Issue #417: non-production FAST lane; FULL remains production authority.
+name: Material Forge FAST cliff visual
+
+on:
+  workflow_dispatch:
+    inputs:
+      rock_color_gain:
+        description: "Session-only RockColorGain RGBA, each RGB 0.65..1.35; alpha=1"
+        required: false
+        default: "1,1,1,1"
+        type: string
+      soil_color_gain:
+        description: "Session-only SoilColorGain RGBA, each RGB 0.65..1.35; alpha=1"
+        required: false
+        default: "1,1,1,1"
+        type: string
+  push:
+    branches:
+      - "codex/363-landscape-material-foundation"
+    paths:
+      - ".github/workflows/material-forge-fast-visual.yml"
+      - "scripts/ue/capture_material_forge_landscape.py"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: material-forge-fast-visual-${{ github.ref_name }}
+  cancel-in-progress: true
+
+env:
+  GIT_LFS_SKIP_SMUDGE: "1"
+  YACS_LFS_CACHE_ROOT: 'D:\yacs\cache\git-lfs\YetAnotherCyclingSim'
+  YACS_MATERIAL_FORGE_EXECUTION_SHA: ${{ github.sha }}
+
+jobs:
+  fast-visual:
+    name: One 1080p cliff diagnostic pack
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 12
+    steps:
+      - name: Isolate Git configuration
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'material-forge-fast.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          $env:GIT_CONFIG_GLOBAL = $isolated
+          $env:GIT_CONFIG_NOSYSTEM = '1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+          "YACS_FAST_STARTED_UTC=$([DateTime]::UtcNow.ToString('o'))" >> $env:GITHUB_ENV
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot enable long paths.' }
+
+      - name: Checkout exact FAST revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: _material-forge-ue-canary
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          lfs: false
+          clean: false
+          persist-credentials: false
+
+      - name: Verify exact SHA and idle host
+        shell: pwsh
+        working-directory: _material-forge-ue-canary
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $actual = (git rev-parse HEAD).Trim()
+          if ($actual -ne $env:YACS_MATERIAL_FORGE_EXECUTION_SHA) {
+            throw "checkout HEAD '$actual' != FAST execution SHA '$env:YACS_MATERIAL_FORGE_EXECUTION_SHA'"
+          }
+          $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+          $state | ConvertTo-Json -Depth 8 | Write-Host
+          if ($state.status -ne 'IDLE') {
+            throw "Shared Unreal host is already owned; status=$($state.status)."
+          }
+
+      - name: Carry forward latest admissible Material Forge input
+        shell: pwsh
+        working-directory: _material-forge-ue-canary
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = Join-Path $env:RUNNER_TEMP "material-forge-fast-$env:YACS_MATERIAL_FORGE_EXECUTION_SHA"
+          Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+
+          $runsUrl = "https://api.github.com/repos/${{ github.repository }}/actions/workflows/material-forge-mallorca-proof.yml/runs?branch=codex%2F363-landscape-material-foundation&status=success&per_page=20"
+          $runsPath = Join-Path $root 'full-runs.json'
+          & curl.exe -L --fail-with-body -H "Authorization: Bearer $env:GITHUB_TOKEN" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" -o $runsPath $runsUrl
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot list successful FULL Material Forge runs.' }
+          $runs = Get-Content -LiteralPath $runsPath -Raw | ConvertFrom-Json
+          $selectedRun = $null
+          $selectedArtifact = $null
+          foreach ($candidate in @($runs.workflow_runs)) {
+            $artifactsPath = Join-Path $root "artifacts-$($candidate.id).json"
+            $artifactsUrl = "https://api.github.com/repos/${{ github.repository }}/actions/runs/$($candidate.id)/artifacts?per_page=100"
+            & curl.exe -L --fail-with-body -H "Authorization: Bearer $env:GITHUB_TOKEN" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" -o $artifactsPath $artifactsUrl
+            if ($LASTEXITCODE -ne 0) { continue }
+            $inventory = Get-Content -LiteralPath $artifactsPath -Raw | ConvertFrom-Json
+            $match = @(
+              $inventory.artifacts |
+                Where-Object {
+                  $_.name -like "material-forge-canary-input-$($candidate.head_sha)-*" -and
+                  $_.expired -ne $true
+                } |
+                Sort-Object -Property created_at -Descending
+            ) | Select-Object -First 1
+            if ($null -ne $match) {
+              $selectedRun = $candidate
+              $selectedArtifact = $match
+              break
+            }
+          }
+          if ($null -eq $selectedRun -or $null -eq $selectedArtifact) {
+            throw 'No admissible successful FULL Material Forge canary input exists.'
+          }
+
+          $sourceSha = [string]$selectedRun.head_sha
+          $allowed = @(
+            '.github/workflows/material-forge-fast-visual.yml',
+            '.github/workflows/material-forge-mallorca-proof.yml',
+            '.gumball/workflow-lifecycle.json',
+            'scripts/ue/capture_material_forge_landscape.py',
+            'scripts/ue/test_material_forge_chunked_preview.py',
+            'scripts/ci/test_material_forge_transfer_contract.py',
+            'docs/tooling/MATERIAL_FORGE.md'
+          )
+          $changed = @(git diff --name-only "$sourceSha...$env:YACS_MATERIAL_FORGE_EXECUTION_SHA")
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot compare FULL source SHA to FAST execution SHA.' }
+          $unsafe = @($changed | Where-Object { $allowed -notcontains $_ })
+          if ($unsafe.Count -gt 0) {
+            throw "FAST carry-forward rejected unsafe changed paths: $($unsafe -join ', ')"
+          }
+
+          $zip = Join-Path $root 'canary-input.zip'
+          & curl.exe -L --fail-with-body -H "Authorization: Bearer $env:GITHUB_TOKEN" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" -o $zip $selectedArtifact.archive_download_url
+          if ($LASTEXITCODE -ne 0) { throw 'FAST canary-input download failed.' }
+          $digest = (Get-FileHash -Algorithm SHA256 -LiteralPath $zip).Hash.ToLowerInvariant()
+          $expectedDigest = [string]$selectedArtifact.digest
+          if (-not $expectedDigest.StartsWith('sha256:') -or $digest -ne $expectedDigest.Substring(7).ToLowerInvariant()) {
+            throw 'FAST canary-input digest mismatch.'
+          }
+
+          $proof = Join-Path $root 'render-proof'
+          Expand-Archive -LiteralPath $zip -DestinationPath $proof -Force
+          $input = Get-Content -LiteralPath (Join-Path $proof 'canary-input-receipt.json') -Raw | ConvertFrom-Json
+          if ($input.status -ne 'CANARY_INPUT_READY' -or $input.exact_sha -ne $sourceSha) {
+            throw 'FAST carried-forward canary input receipt is not admissible.'
+          }
+          $planText = python scripts/assets/material_forge.py plan-rebuild (Join-Path $proof 'run-a')
+          if ($LASTEXITCODE -ne 0) { throw 'FAST Material Forge rebuild plan failed.' }
+          $plan = ($planText -join [Environment]::NewLine) | ConvertFrom-Json
+          if ($plan.rebuild_required -ne $false -or $plan.reason -ne 'unchanged') {
+            throw 'FAST carry-forward rejected Material Forge source fingerprint drift.'
+          }
+          $plan | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $root 'carry-forward-plan.json') -Encoding utf8
+
+          $requiredWarm = @(
+            'Binaries/Win64/UnrealEditor-YetAnotherCyclingSim.dll',
+            'Content/Generated/YACS/MaterialForge/Templates/M_MaterialForgeLandscapeBlend.uasset',
+            'Content/Generated/YACS/MaterialForge/Templates/T_MF_ORMPlaceholder.uasset'
+          )
+          foreach ($path in $requiredWarm) {
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+              throw "FAST_VISUAL_WARM_CACHE_REQUIRED: missing $path"
+            }
+          }
+
+          $env:GIT_LFS_SKIP_SMUDGE = '0'
+          try {
+            New-Item -ItemType Directory -Force -Path $env:YACS_LFS_CACHE_ROOT | Out-Null
+            git lfs install --local --skip-smudge
+            if ($LASTEXITCODE -ne 0) { throw 'FAST local LFS setup failed.' }
+            git config --local lfs.storage $env:YACS_LFS_CACHE_ROOT
+            if ($LASTEXITCODE -ne 0) { throw 'FAST persistent LFS storage configuration failed.' }
+            $include = 'Content/**,worldgen/materials/visual_fill/material-weights.png'
+            $inventory = @(git lfs ls-files --long --include=$include)
+            $envLines = @(git lfs env)
+            $mediaLine = $envLines | Where-Object { $_ -like 'LocalMediaDir=*' } | Select-Object -First 1
+            if ($null -eq $mediaLine) { throw 'FAST Git LFS LocalMediaDir was not reported.' }
+            $mediaDir = $mediaLine.Substring('LocalMediaDir='.Length)
+            foreach ($line in $inventory) {
+              if ($line -notmatch '^([0-9a-fA-F]{64})\s+[-*]\s+(.+)$') {
+                throw "Cannot parse FAST Git LFS inventory line: $line"
+              }
+              $oid = $Matches[1].ToLowerInvariant()
+              $object = Join-Path $mediaDir (Join-Path $oid.Substring(0,2) (Join-Path $oid.Substring(2,2) $oid))
+              if (-not (Test-Path -LiteralPath $object -PathType Leaf)) {
+                throw "FAST_VISUAL_WARM_CACHE_REQUIRED: missing LFS object $oid"
+              }
+            }
+            git lfs checkout 'Content/**' 'worldgen/materials/visual_fill/material-weights.png'
+            if ($LASTEXITCODE -ne 0) { throw 'FAST cached LFS checkout failed.' }
+          }
+          finally { $env:GIT_LFS_SKIP_SMUDGE = '1' }
+
+          $rock = Join-Path $proof 'run-a\regional_limestone\refined_c'
+          $soil = Join-Path $proof 'run-a\mediterranean_soil\refined_c'
+          $visual = Join-Path $root 'visual'
+          New-Item -ItemType Directory -Force -Path $visual | Out-Null
+          "YACS_FAST_ROOT=$root" >> $env:GITHUB_ENV
+          "YACS_MF_VISUAL_ROOT=$visual" >> $env:GITHUB_ENV
+          "YACS_MF_PROOF_ROOT=$(Join-Path $proof 'run-a')" >> $env:GITHUB_ENV
+          "YACS_MF_ROCK_VARIANT=$rock" >> $env:GITHUB_ENV
+          "YACS_MF_SOIL_VARIANT=$soil" >> $env:GITHUB_ENV
+          "YACS_MF_FIXED_MASTER_PATH=/Game/Generated/YACS/MaterialForge/Templates/M_MaterialForgeLandscapeBlend" >> $env:GITHUB_ENV
+          "YACS_MATERIAL_FORGE_ARTIFACT_SHA=$sourceSha" >> $env:GITHUB_ENV
+          "YACS_MF_FAST_VISUAL=1" >> $env:GITHUB_ENV
+          $rockGain = '${{ github.event.inputs.rock_color_gain }}'
+          if ([string]::IsNullOrWhiteSpace($rockGain)) { $rockGain = '1,1,1,1' }
+          $soilGain = '${{ github.event.inputs.soil_color_gain }}'
+          if ([string]::IsNullOrWhiteSpace($soilGain)) { $soilGain = '1,1,1,1' }
+          "YACS_MF_ROCK_COLOR_GAIN=$rockGain" >> $env:GITHUB_ENV
+          "YACS_MF_SOIL_COLOR_GAIN=$soilGain" >> $env:GITHUB_ENV
+
+      - name: Capture FAST cliff diagnostic pack
+        shell: pwsh
+        working-directory: _material-forge-ue-canary
+        run: |
+          $ErrorActionPreference = 'Stop'
+          . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
+          $project = Join-Path (Get-Location) 'YetAnotherCyclingSim.uproject'
+          $engine = Resolve-YacsUnrealEngine -ProjectPath $project
+          $script = (Resolve-Path 'scripts/ue/capture_material_forge_landscape.py').Path
+          $stdout = Join-Path $env:YACS_FAST_ROOT 'fast.stdout.log'
+          $stderr = Join-Path $env:YACS_FAST_ROOT 'fast.stderr.log'
+          $log = Join-Path $env:YACS_FAST_ROOT 'fast.engine.log'
+          $arguments = @(
+            ('"' + $project + '"'),
+            ('-ExecutePythonScript="' + $script + '"'),
+            '-RenderOffscreen',
+            '-Unattended',
+            '-NoPause',
+            '-NoSplash',
+            '-NoSound',
+            '-NoP4',
+            '-NoVSync',
+            '-ScriptErrorsAreFatal',
+            '-stdout',
+            ('-AbsLog="' + $log + '"')
+          )
+          $watch = [Diagnostics.Stopwatch]::StartNew()
+          $process = Start-Process -FilePath $engine.UnrealEditorPath -ArgumentList $arguments -PassThru -NoNewWindow -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          if (-not $process.WaitForExit(360000)) {
+            $process | Stop-Process -Force
+            throw 'FAST visual Unreal capture timed out after 360 seconds.'
+          }
+          $watch.Stop()
+          if ($process.ExitCode -ne 0) {
+            foreach ($diagnostic in @($stdout, $stderr, $log)) {
+              if (Test-Path -LiteralPath $diagnostic -PathType Leaf) {
+                Write-Host "===== TAIL $diagnostic ====="
+                Get-Content -LiteralPath $diagnostic -Tail 200 | Write-Host
+              }
+            }
+            throw "FAST visual Unreal capture exited $($process.ExitCode)."
+          }
+
+          $receiptPath = Join-Path $env:YACS_MF_VISUAL_ROOT 'visual-proof.json'
+          if (-not (Test-Path -LiteralPath $receiptPath -PathType Leaf)) {
+            throw 'FAST visual receipt is missing.'
+          }
+          $receipt = Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json
+          if (
+            $receipt.status -ne 'MF_FAST_VISUAL_PASS' -or
+            $receipt.visual_mode -ne 'FAST' -or
+            $receipt.evidence_authority -ne 'NON_PRODUCTION_FAST_VISUAL' -or
+            $receipt.full_production_proof_required -ne $true -or
+            [int]$receipt.capture_count -ne 1 -or
+            [int]$receipt.diagnostic_count -ne 5 -or
+            [int]$receipt.applied_component_count -ne 1 -or
+            $receipt.applied_scope -ne 'CANONICAL_COMPONENT_230' -or
+            $receipt.rollback_complete -ne $true -or
+            [int]$receipt.resolution[0] -ne 1920 -or
+            [int]$receipt.resolution[1] -ne 1080
+          ) {
+            throw 'FAST visual receipt failed.'
+          }
+          if ($receipt.execution_sha -ne $env:YACS_MATERIAL_FORGE_EXECUTION_SHA) {
+            throw 'FAST visual execution SHA mismatch.'
+          }
+          $componentBounds = $receipt.canonical_component_bounds
+          if (
+            $null -eq $componentBounds -or
+            [string]$componentBounds.name -ne 'LandscapeComponent_230' -or
+            @($componentBounds.origin_cm).Count -ne 3 -or
+            @($componentBounds.extent_cm).Count -ne 3 -or
+            @($componentBounds.min_cm).Count -ne 3 -or
+            @($componentBounds.max_cm).Count -ne 3 -or
+            [double]$componentBounds.world_grid_mapping.cell_size_cm -ne 50.0
+          ) {
+            throw 'FAST canonical component bounds receipt contract failed.'
+          }
+          if (
+            $null -eq $receipt.color_gains -or
+            @($receipt.color_gains.rock).Count -ne 4 -or
+            @($receipt.color_gains.soil).Count -ne 4 -or
+            [double]$receipt.color_gains.alpha -ne 1.0
+          ) {
+            throw 'FAST color-gain receipt contract failed.'
+          }
+
+          $diagnosticModes = @($receipt.diagnostics | ForEach-Object { [string]$_.viewmode })
+          $requiredDiagnosticModes = @('unlit', 'lightingonly', 'lit_detaillighting')
+          foreach ($requiredMode in $requiredDiagnosticModes) {
+            if ($diagnosticModes -notcontains $requiredMode) {
+              throw "FAST diagnostic pack is missing view mode '$requiredMode'."
+            }
+          }
+          if (@($diagnosticModes | Sort-Object -Unique).Count -ne 3) {
+            throw "FAST diagnostic pack must contain exactly three unique diagnostic view modes: $($diagnosticModes -join ', ')."
+          }
+
+          $diagnosticNames = @($receipt.diagnostics | ForEach-Object { [string]$_.name })
+          $shadowProbe = @(
+            $receipt.diagnostics |
+              Where-Object { [string]$_.name -eq 'fast-cliff-lighting-no-dynamic-shadows' }
+          )
+          if ($shadowProbe.Count -ne 1) {
+            throw 'FAST diagnostic pack must contain exactly one dynamic-shadow isolation probe.'
+          }
+          if (
+            [string]$shadowProbe[0].viewmode -ne 'lightingonly' -or
+            [bool]$shadowProbe[0].dynamic_shadows -ne $false
+          ) {
+            throw 'FAST dynamic-shadow isolation probe contract failed.'
+          }
+
+          $baselineLighting = @(
+            $receipt.diagnostics |
+              Where-Object { [string]$_.name -eq 'fast-cliff-lighting-only' }
+          )
+          $slopeBiasProbe = @(
+            $receipt.diagnostics |
+              Where-Object { [string]$_.name -eq 'fast-cliff-lighting-slope-bias-1' }
+          )
+          if ($baselineLighting.Count -ne 1 -or $slopeBiasProbe.Count -ne 1) {
+            throw 'FAST shadow-slope-bias probe requires one baseline and one probe frame.'
+          }
+          if (
+            [string]$slopeBiasProbe[0].viewmode -ne 'lightingonly' -or
+            [bool]$slopeBiasProbe[0].dynamic_shadows -ne $true -or
+            [math]::Abs([double]$slopeBiasProbe[0].requested_shadow_slope_bias - 1.0) -gt 0.001
+          ) {
+            throw 'FAST shadow-slope-bias probe frame contract failed.'
+          }
+          $baselineBias = @($baselineLighting[0].directional_shadow_bias)
+          $probeBias = @($slopeBiasProbe[0].directional_shadow_bias)
+          if ($baselineBias.Count -lt 1 -or $probeBias.Count -ne $baselineBias.Count) {
+            throw 'FAST shadow-slope-bias readback inventory failed.'
+          }
+          $changedFromBaseline = $false
+          for ($i = 0; $i -lt $probeBias.Count; $i++) {
+            if ([math]::Abs([double]$probeBias[$i].shadow_slope_bias - 1.0) -gt 0.001) {
+              throw 'FAST ShadowSlopeBias=1.0 readback failed.'
+            }
+            if (
+              [math]::Abs(
+                [double]$baselineBias[$i].shadow_slope_bias -
+                [double]$probeBias[$i].shadow_slope_bias
+              ) -gt 0.001
+            ) {
+              $changedFromBaseline = $true
+            }
+            if (
+              [math]::Abs(
+                [double]$baselineBias[$i].shadow_bias -
+                [double]$probeBias[$i].shadow_bias
+              ) -gt 0.001
+            ) {
+              throw 'FAST slope-bias probe unexpectedly changed ShadowBias.'
+            }
+          }
+          if (-not $changedFromBaseline) {
+            throw 'FAST shadow-slope-bias probe was a no-op at the current baseline.'
+          }
+
+          $started = [DateTime]::Parse($env:YACS_FAST_STARTED_UTC).ToUniversalTime()
+          $elapsed = ([DateTime]::UtcNow - $started).TotalSeconds
+          $jobReceipt = [ordered]@{
+            schema_version = 1
+            status = 'FAST_VISUAL_LOOP_PASS'
+            artifact_source_sha = $receipt.artifact_source_sha
+            execution_sha = $receipt.execution_sha
+            canonical_component_bounds = $componentBounds
+            capture_count = [int]$receipt.capture_count
+            diagnostic_count = [int]$receipt.diagnostic_count
+            diagnostic_modes = $diagnosticModes
+            diagnostic_names = $diagnosticNames
+            dynamic_shadow_probe = [ordered]@{
+              name = [string]$shadowProbe[0].name
+              viewmode = [string]$shadowProbe[0].viewmode
+              dynamic_shadows = [bool]$shadowProbe[0].dynamic_shadows
+            }
+            shadow_slope_bias_probe = [ordered]@{
+              name = [string]$slopeBiasProbe[0].name
+              baseline = $baselineBias
+              probe = $probeBias
+              requested_shadow_slope_bias = [double]$slopeBiasProbe[0].requested_shadow_slope_bias
+            }
+            color_gains = $receipt.color_gains
+            elapsed_seconds = [math]::Round($elapsed, 3)
+            target_seconds = 240
+            target_met = ($elapsed -le 240)
+            evidence_authority = 'NON_PRODUCTION_FAST_VISUAL'
+            full_production_proof_required = $true
+          }
+          $jobReceipt | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $env:YACS_FAST_ROOT 'fast-loop-receipt.json') -Encoding utf8
+          $jobReceipt | ConvertTo-Json -Depth 8 | Write-Host
+          if ($elapsed -gt 240) {
+            throw "FAST visual loop exceeded 4-minute target: $([math]::Round($elapsed,3)) s."
+          }
+
+      - name: Upload FAST visual evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: material-forge-fast-visual-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/material-forge-fast-${{ github.sha }}/visual/**
+            ${{ runner.temp }}/material-forge-fast-${{ github.sha }}/carry-forward-plan.json
+            ${{ runner.temp }}/material-forge-fast-${{ github.sha }}/fast-loop-receipt.json
+          if-no-files-found: warn
+          compression-level: 6
+          retention-days: 7

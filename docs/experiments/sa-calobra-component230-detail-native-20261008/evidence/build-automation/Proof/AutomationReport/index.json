@@ -1,0 +1,608 @@
+﻿{
+	"devices": [
+		{
+			"deviceName": "KOMPADAMA",
+			"instance": "BF9D870C4294460AABD023AAFFD37EB7",
+			"instanceName": "KOMPADAMA-46760",
+			"platform": "WindowsEditor",
+			"oSVersion": "Windows 11 (26H2) [10.0.26300.9457] ",
+			"model": "Default",
+			"gPU": "NVIDIA GeForce RTX 2070 SUPER",
+			"cPUModel": "Intel(R) Core(TM) i5-9600K CPU @ 3.70GHz",
+			"rAMInGB": 32,
+			"renderMode": "SM6",
+			"rHI": "",
+			"appInstanceLog": ""
+		}
+	],
+	"reportCreatedOn": "2026.10.08-21.00.36",
+	"succeeded": 27,
+	"succeededWithWarnings": 1,
+	"failed": 0,
+	"notRun": 0,
+	"inProcess": 0,
+	"totalDuration": 1.3743544816970825,
+	"comparisonExported": false,
+	"comparisonExportDirectory": "",
+	"tests": [
+		{
+			"testDisplayName": "Clamping",
+			"fullTestPath": "CyclingInput.Clamping",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.080396696925163269,
+			"dateTime": "2026.10.08-21.00.34",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ErrorSafety",
+			"fullTestPath": "CyclingInput.ErrorSafety",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.045250598341226578,
+			"dateTime": "2026.10.08-21.00.34",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Warning",
+						"message": "LogCyclingPrototypePawn: Pawn 'CyclingPrototypePawn_0' Error: route validation failed: route reference is not assigned",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.10.08-21.00.34"
+				},
+				{
+					"event":
+					{
+						"type": "Warning",
+						"message": "LogCyclingPrototypePawn: Pawn 'CyclingPrototypePawn_0' Error: route validation failed: route reference is not assigned",
+						"context": "log",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.10.08-21.00.34"
+				}
+			],
+			"warnings": 2,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "Lifecycle",
+			"fullTestPath": "CyclingInput.Lifecycle",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.48266798257827759,
+			"dateTime": "2026.10.08-21.00.34",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "OneEventOneStep",
+			"fullTestPath": "CyclingInput.OneEventOneStep",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.015419397503137589,
+			"dateTime": "2026.10.08-21.00.35",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RepeatedSteps",
+			"fullTestPath": "CyclingInput.RepeatedSteps",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.012220900505781174,
+			"dateTime": "2026.10.08-21.00.35",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RiderInputController",
+			"fullTestPath": "CyclingInput.RiderInputController",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.0092247985303401947,
+			"dateTime": "2026.10.08-21.00.35",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "Behavior",
+			"fullTestPath": "CyclingPhysics.BrakingStep.Behavior",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.011155601590871811,
+			"dateTime": "2026.10.08-21.00.35",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ResolvedForceIntegration",
+			"fullTestPath": "CyclingPhysics.BrakingStep.ResolvedForceIntegration",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.0082617998123168945,
+			"dateTime": "2026.10.08-21.00.35",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "Validation",
+			"fullTestPath": "CyclingPhysics.BrakingStep.Validation",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.011821098625659943,
+			"dateTime": "2026.10.08-21.00.35",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ZeroForceParity",
+			"fullTestPath": "CyclingPhysics.BrakingStep.ZeroForceParity",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.0090424008667469025,
+			"dateTime": "2026.10.08-21.00.35",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "AlpineCurvatureParity",
+			"fullTestPath": "CyclingPhysics.RoadPhysics.AlpineCurvatureParity",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.0097407996654510498,
+			"dateTime": "2026.10.08-21.00.35",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "AlpineGeometryBuilder",
+			"fullTestPath": "CyclingPhysics.RoadPhysics.AlpineGeometryBuilder",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.010389000177383423,
+			"dateTime": "2026.10.08-21.00.35",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "CrossSlope",
+			"fullTestPath": "CyclingPhysics.RoadPhysics.CrossSlope",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.0074410997331142426,
+			"dateTime": "2026.10.08-21.00.35",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "GeometryBuilderValidation",
+			"fullTestPath": "CyclingPhysics.RoadPhysics.GeometryBuilderValidation",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.0089632980525493622,
+			"dateTime": "2026.10.08-21.00.35",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "LateralAndLookAhead",
+			"fullTestPath": "CyclingPhysics.RoadPhysics.LateralAndLookAhead",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.0070922002196311951,
+			"dateTime": "2026.10.08-21.00.35",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "ProfileInterpolation",
+			"fullTestPath": "CyclingPhysics.RoadPhysics.ProfileInterpolation",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.011499799787998199,
+			"dateTime": "2026.10.08-21.00.35",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "TransitionValidation",
+			"fullTestPath": "CyclingPhysics.RoadPhysics.TransitionValidation",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.007796701043844223,
+			"dateTime": "2026.10.08-21.00.35",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "Validation",
+			"fullTestPath": "CyclingPhysics.RoadPhysics.Validation",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.011062901467084885,
+			"dateTime": "2026.10.08-21.00.35",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "VerticalCurvatureMetadata",
+			"fullTestPath": "CyclingPhysics.RoadPhysics.VerticalCurvatureMetadata",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.008928399533033371,
+			"dateTime": "2026.10.08-21.00.35",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "FixedStepRunner",
+			"fullTestPath": "CyclingPhysics.FixedStepRunner",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.01124190166592598,
+			"dateTime": "2026.10.08-21.00.35",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "Forces",
+			"fullTestPath": "CyclingPhysics.Forces",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.012627098709344864,
+			"dateTime": "2026.10.08-21.00.35",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "GoldenRide",
+			"fullTestPath": "CyclingPhysics.GoldenRide",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.10125479847192764,
+			"dateTime": "2026.10.08-21.00.35",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "phase 'warmup_flat': speed 9.042050912786440 (drift 0.000e+00), distance 990.310092058937 (drift 0.000e+00), time 120.000000000 (drift 4.675e-12)",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.10.08-21.00.35"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "phase 'climb_headwind_wet': speed 4.725107316129324 (drift 0.000e+00), distance 1870.674028441979 (drift 0.000e+00), time 300.000000000 (drift 3.394e-11)",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.10.08-21.00.35"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "phase 'descent_tailwind_coast': speed 19.854393959326686 (drift 0.000e+00), distance 3990.124873445023 (drift 0.000e+00), time 420.000000000 (drift 6.122e-11)",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.10.08-21.00.35"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "phase 'finish_flat_headwind': speed 7.410783528613690 (drift 0.000e+00), distance 5454.449915576454 (drift 0.000e+00), time 600.000000000 (drift 2.046e-12)",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.10.08-21.00.35"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "Golden Ride total: 12000 steps (dt=0.05 s)",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.10.08-21.00.35"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "max drift over all phases: speed 0.000e+00 m/s, distance 0.000e+00 m, time 6.122e-11 s",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.10.08-21.00.35"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "LongRunDynamics",
+			"fullTestPath": "CyclingPhysics.LongRunDynamics",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.41736260056495667,
+			"dateTime": "2026.10.08-21.00.35",
+			"entries": [
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "coarse: speed 10.216941479 m/s, distance 6033.162404 m",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.10.08-21.00.35"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "fine: speed 10.216946233 m/s, distance 6033.169505 m",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.10.08-21.00.35"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "relative difference: speed 0.000000, distance 0.000001",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.10.08-21.00.35"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "rider stopped at step 119 (6.000 s)",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.10.08-21.00.36"
+				},
+				{
+					"event":
+					{
+						"type": "Info",
+						"message": "descent final: speed 12.099729719 m/s, distance 210.003770 m",
+						"context": "",
+						"artifact": "00000000000000000000000000000000"
+					},
+					"filename": "",
+					"lineNumber": -1,
+					"timestamp": "2026.10.08-21.00.36"
+				}
+			],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SimulationData",
+			"fullTestPath": "CyclingPhysics.SimulationData",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.0092029981315135956,
+			"dateTime": "2026.10.08-21.00.36",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "SimulationStep",
+			"fullTestPath": "CyclingPhysics.SimulationStep",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.0085308030247688293,
+			"dateTime": "2026.10.08-21.00.36",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "CyclingSimulationSession",
+			"fullTestPath": "CyclingSession.CyclingSimulationSession",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.0096726007759571075,
+			"dateTime": "2026.10.08-21.00.36",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "PreservationAndRestore",
+			"fullTestPath": "YACS.DetailNative.PreservationAndRestore",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.022464800626039505,
+			"dateTime": "2026.10.08-21.00.36",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		},
+		{
+			"testDisplayName": "RejectBeforeMutation",
+			"fullTestPath": "YACS.DetailNative.RejectBeforeMutation",
+			"tags": [],
+			"state": "Success",
+			"deviceInstance": [
+				"BF9D870C4294460AABD023AAFFD37EB7"
+			],
+			"duration": 0.013621300458908081,
+			"dateTime": "2026.10.08-21.00.36",
+			"entries": [],
+			"warnings": 0,
+			"errors": 0,
+			"artifacts": []
+		}
+	]
+}

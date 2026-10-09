@@ -5,6 +5,24 @@
 **Applies to:** external source code, plugins, libraries, datasets, models,
 textures, audio, fonts, mocap, snippets and other imported material
 
+## Phase 2C PCGEx compatibility experiment
+
+Issue #445 / PR #446 authorizes a minimal patch inside the approved PCGEx
+revision `39a8f1bdc65b2c4613a1e87b71d93b4576db0a66` (0.79). The targeted
+`Source/PCGExElementsClipper2/Private/Clipper2Lib/clipper.triangulation.cpp`
+retains Angus Johnson's 2010-2025 copyright and Boost Software License 1.0
+header; this embedded component's license is distinct from PCGEx's root MIT
+license. See the attribution in `THIRD_PARTY_NOTICES.md`.
+
+The reviewed flat-union patch replaces the failed winding experiment, preserves
+the upstream pin and changes the integer TriangulateWithHoles wrapper plus the same file's
+horizontal-boundary lookup. A reduced concave-footprint regression and the
+frozen Component 230 input demonstrate the scanline boundary defect.
+Bootstrap verifies the patch and resulting source hashes. Scope remains
+authoring-only; topology, deterministic UE execution and visual acceptance
+remain required before admission. License/header and overloads checked against
+the pinned source on 2026-10-07.
+
 ## 1. Rule
 
 Public availability is not a license.
@@ -35,6 +53,38 @@ into YACS.
 
 ## 3. Minimum record for a new external source
 
+### Issue #363 surface comparison, 2026-10-05
+
+The owner authorized a visual candidate comparison. Poly Haven CC0 texture
+files are **approved for bounded local review copies only**: one 1K JPEG
+Diffuse channel per candidate, metadata and derived comparison plates, outside
+Git under canonical `work/2b-asset-comparison-20261005`. This is not approval of
+the production material set, full-resolution acquisition or Unreal import.
+Candidate IDs: `rock_face_03`, `rock_face_04`, `dry_riverbed_rock`,
+`seaside_rock`, `rocks_ground_06`, `rocky_terrain`, `rock_ground`,
+`rocks_ground_09`, `gravel_ground_01`, `gravelly_sand`, `dry_ground_rocks`,
+`dry_ground_01`, `grass_ground`, `withered_grass`, `sparse_grass`,
+`forest_floor`, `forrest_ground_03`, `forest_leaves_04`, `dry_decay_leaves`,
+and `excavated_soil_wall`.
+
+Sources: [Poly Haven asset licence](https://polyhaven.com/license),
+[official API](https://polyhaven.com/our-api) and
+[API terms](https://github.com/Poly-Haven/Public-API/blob/master/ToS.md),
+reviewed 2026-10-05. Asset files are CC0-1.0. Website example renders are
+separate protected content and are not copied. API requests identify
+`YACS-SurfaceReview/1.0`; the report credits Poly Haven. Capture exact returned
+URLs, provider MD5/bytes, downloaded SHA-256, authors, metric dimensions and
+metadata hashes in the local review receipt before generating the comparison.
+Production lifecycle and asset approval remain separate; no purchased asset,
+new plugin or runtime dependency is authorized by this review record.
+
+ambientCG `Rock024` is **approved for local review preview only**, under the
+[provider's CC0 licence](https://docs.ambientcg.com/license/), which explicitly
+includes material preview renders. Record returned metadata/preview identity
+and hashes if acquired; no production download/import is approved. Its source
+page is [Rock 024](https://ambientcg.com/view?id=Rock024). Missing scale or
+channel evidence must remain explicit rather than inferred from the thumbnail.
+
 Record, before inclusion:
 
 1. canonical upstream URL/provider;
@@ -52,6 +102,30 @@ For vendored source, prefer pinning an exact upstream commit instead of
 recording only a moving branch name.
 
 ## 4. Current ledger
+
+### Material Maker limestone authoring candidate — 2026-10-05
+
+Owner-approved bounded offline authoring trial. Material Maker is an external
+authoring application, not a YACS runtime plugin. Upstream:
+https://github.com/RodZill4/material-maker, source revision
+`4d29a815489866aae483281cf44b2cfe48d3cc3e`. The MIT licence was inspected;
+its required notice is preserved in [material-maker-MIT.txt](notices/material-maker-MIT.txt)
+and copied alongside each generated graph. The installed 1.7 `nodes/material.mmg`
+PBR output definition is adapted into the local `.ptex` graph; its exact hash,
+installed executable hash and source identity are recorded by
+`scripts/assets/build_material_maker_limestone.py`. Native normal-map nodes are
+referenced by identifier. The limestone recipe is an artistic procedural
+candidate, not a measured geological scan or accepted surface library.
+
+The packaged 1.7 CLI crashed before export on this host, also with its bundled
+rock example. Rendering uses the reviewed source through a small native-API
+runner and portable Godot 4.7.2, matching upstream desktop CI. Official acquisition:
+https://github.com/godotengine/godot-builds/releases/tag/4.7.2-stable.
+The local tool acquisition receipt retains the downloaded archive SHA-256 and
+provider digest; no engine binary or external source is vendored into YACS.
+Graph and image identities plus runtime diagnostics are recorded per render.
+No upstream contribution is part of this task.
+
 
 ### Cyclist mocap research archive — 2026-10-04
 
@@ -294,3 +368,72 @@ applies to the 30 retained tiles. Only bounded selected water/infrastructure
 layers enter the derived context; duplicate tile fragments are not unique
 entity counts. GOIB/BTN line/point 5m decorative holdbacks are authored fallback
 decisions and are explicitly distinct from geographic/regulatory measurements.
+
+## Texture prep proof candidates — 2026-10-05
+
+Official ambientCG Rock024, Rock026 and Rock042S 1K PNG packages were acquired
+for separately approved #382 texture-tooling proof only. Source pages:
+[Rock024](https://ambientcg.com/a/Rock024),
+[Rock026](https://ambientcg.com/a/Rock026),
+[Rock042S](https://ambientcg.com/a/Rock042S).
+[Provider license](https://docs.ambientcg.com/license/): CC0-1.0; attribution is
+not required, but source identity is retained. No third-party code is adopted.
+
+Original ZIPs, API metadata, per-file hashes and acquisition receipt are in the
+[authenticated draft backup](https://github.com/karnalooch/YetAnotherCyclingSim/releases/tag/untagged-98fa61b00fe49600cbd1).
+Rock024 was rejected for non-opaque alpha; Rock026 completed a five-map 512px
+proof; Rock042S is acquired only. These are proof-use candidates, not validated
+world assets. Geology, Mallorca origin and physical coverage remain unverified.
+See the [remote report](../tooling/TEXTURE_MATERIAL_PREP_REMOTE_HANDOFF.md) for
+exact input identity, archive hashes, output limits and remaining acceptance.
+
+## Material Forge upstream evidence — Issue #387
+
+Material Forge extends the previously approved bounded Material Maker limestone
+trial into a YACS-owned orchestration/validation layer. External applications
+remain outside the repository and are not YACS runtime dependencies.
+
+### Material Maker
+
+- Repository: https://github.com/RodZill4/material-maker
+- Release: `1.7`
+- Release tag commit: `4c6cea67b659e1eb472f91590e06b2b1c5245916`
+- Previously validated source revision:
+  `4d29a815489866aae483281cf44b2cfe48d3cc3e`
+- Licence: MIT.
+- Use: offline graph authoring/render source; YACS adapts the reviewed PBR output
+  definition into generated `.ptex` graphs.
+- Distribution: no Material Maker source tree or executable is vendored by #387.
+- Required MIT notice remains in
+  `docs/legal/notices/material-maker-MIT.txt` and generated graph directories.
+
+### Godot
+
+- Repository: https://github.com/godotengine/godot
+- Release: `4.7.2-stable`
+- Commit: `ed1daf0bf001b61586d9930840f2f1394092c079`
+- Licence: MIT.
+- Use: external headless renderer for the reviewed Material Maker source runner.
+- Distribution: no Godot binary or source is vendored by #387.
+
+### MaterialPilot reference
+
+- Repository: https://github.com/SS-360/materialpilot
+- Reviewed commit: `e3721eadd042e077f3aa7d472ad83c5594c7ea5b`
+- Licence: Apache-2.0; upstream NOTICE inspected.
+- Status: **reference only**.
+- No source copied, vendored or linked into YACS.
+
+### Tool-MaterialMaker-MCP reference
+
+- Repository: https://github.com/graysonchalmers/Tool-MaterialMaker-MCP
+- Reviewed commit: `1488b94c02f85e88ef6563e33d753c3bfdfaac5a`
+- Licence: MIT.
+- Status: **reference only**.
+- No source copied, vendored or linked into YACS.
+
+The machine-readable counterpart is
+`worldgen/materials/material_forge/upstreams.json`. If any external source
+revision changes, the pin, licence review and deterministic material proof must
+be repeated before the new revision is admitted.
+
