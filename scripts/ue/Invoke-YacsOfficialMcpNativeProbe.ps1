@@ -115,6 +115,7 @@ function Invoke-ProbePreviousFailureDiagnostic {
         status = 'READ_ONLY_DIAGNOSTIC'; files = [ordered]@{}; gaps = @()
         editor_context = @(); editor_context_truncated = $false; automation_summary = $null; accepted_summary = $null
         previous_sdk_receipt_exists = $false; previous_sdk_summary = $null; previous_reflection_receipt_exists = $false
+        previous_reflection_marker = $null; previous_reflection_sources = @(); previous_reflection_mismatch_fields = @()
         python_settings_candidates = @(); source_discovery_complete = $true
         read_bytes = 0; source_only = $true; compile_performed = $false
         editor_launched = $false; official_mcp_admitted = $false
@@ -164,6 +165,65 @@ function Invoke-ProbePreviousFailureDiagnostic {
     function Write-ProbeDiagnosticSummary {
         param([string] $Label, $Value)
         Write-Host ($Label + ' ' + (Get-ProbeSafeDiagnosticText ($Value | ConvertTo-Json -Depth 10 -Compress) 8192))
+    }
+    # The prior marker is authenticated before any expected hash is used.
+    # It never selects paths: exactly these five original proof inputs are read.
+    $previousHost = 'D:\yacs\runner\_work\b384\38001987773-1\p\HostProject'
+    $markerFile = Read-ProbeDiagnosticFile (Join-Path $previousHost '.yacs-mcp-native-reflection-proof.json') 64KB
+    if ($null -eq $markerFile) { $diagnostic.gaps += 'Previous reflection marker is absent.' }
+    else {
+        if ($markerFile.identity.sha256 -cne 'd14a1235acdf610ff733965e188417d28e74c216b882b6456346d21b11c9d587') {
+            throw 'Previous reflection marker differs from its exact original receipt SHA256.'
+        }
+        $marker = $markerFile.text | ConvertFrom-Json -AsHashtable -Depth 16
+        $markerFields = @('schema_version', 'exact_sha', 'host_project_root', 'artifact_root', 'script_sha256',
+            'public_header_sha256', 'plugin_descriptor_sha256', 'host_project_descriptor_sha256', 'host_engine_config_sha256')
+        if ($marker -isnot [Collections.IDictionary] -or $marker.Count -ne $markerFields.Count) {
+            throw 'Previous reflection marker is outside its fixed object contract.'
+        }
+        foreach ($field in $markerFields) {
+            if (-not $marker.Contains($field)) { throw 'Previous reflection marker is missing a fixed field.' }
+        }
+        if ($marker['schema_version'] -isnot [long] -and $marker['schema_version'] -isnot [int]) { throw 'Previous reflection marker has an invalid schema type.' }
+        if ($marker['schema_version'] -ne 1 -or $marker['exact_sha'] -cne $diagnostic.previous_exact_sha `
+            -or -not [string]::Equals([IO.Path]::GetFullPath([string]$marker['host_project_root']), $previousHost, [StringComparison]::OrdinalIgnoreCase) `
+            -or -not [string]::Equals([IO.Path]::GetFullPath([string]$marker['artifact_root']), $previousRoot, [StringComparison]::OrdinalIgnoreCase)) {
+            throw 'Previous reflection marker disagrees with the exact retained run context.'
+        }
+        $diagnostic.files.reflection_marker = $markerFile.identity
+        $diagnostic.previous_reflection_marker = $marker
+        Write-ProbeDiagnosticSummary 'PREVIOUS_REFLECTION_MARKER' $marker
+        $readbackRoot = Join-Path $ArtifactRoot 'Previous38001987773/Reflection'
+        Assert-ProbePlainPath $readbackRoot
+        if (Test-Path -LiteralPath $readbackRoot) { throw 'Previous reflection diagnostic destination already exists.' }
+        New-Item -ItemType Directory -Path $readbackRoot | Out-Null
+        [IO.File]::WriteAllBytes((Join-Path $readbackRoot 'reflection-marker.json'), $markerFile.bytes)
+        $sourcePaths = [ordered]@{
+            script_sha256 = @{ path = (Join-Path $RepoRoot 'scripts/ue/probe_official_mcp_bob_reflection.py'); original = 'eb15de2ae7a425115d2bf217170b3c01e6688b709eeb69e319f381482cafc2ce' }
+            public_header_sha256 = @{ path = (Join-Path $previousHost 'Plugins/YacsBobInspection/Source/YacsBobInspection/Public/YacsBobLandscapeHit.h'); original = '244ff4f617b6156481888b5f3f2acd07e1ead35f627903bcca62780b44b8476d' }
+            plugin_descriptor_sha256 = @{ path = (Join-Path $previousHost 'Plugins/YacsBobInspection/YacsBobInspection.uplugin'); original = '8c46c7ddbe8cd132f8704c4c169cf16b1872c37a4cd8c3d27e908cff324e55eb' }
+            host_project_descriptor_sha256 = @{ path = (Join-Path $previousHost 'HostProject.uproject'); original = '324d12350939f3cbb1d34451c7e0dfbaa84195e44c4fb2c382d6842c30f091ce' }
+            host_engine_config_sha256 = @{ path = (Join-Path $previousHost 'Config/DefaultEngine.ini'); original = '495794932485e78086387812d946099d0993934796475dd2743bf48115b10aa0' }
+        }
+        foreach ($field in $sourcePaths.Keys) {
+            if ($marker[$field] -isnot [string] -or $marker[$field] -cnotmatch '^[0-9a-f]{64}$') { throw 'Previous reflection marker has an invalid source hash.' }
+            $source = $sourcePaths[$field]
+            $file = Read-ProbeDiagnosticFile $source.path 64KB
+            if ($null -eq $file) { $diagnostic.gaps += "Previous reflection input $field is absent."; continue }
+            $currentScriptChanged = $field -ceq 'script_sha256' -and $file.identity.sha256 -cne $source.original
+            $matches = $file.identity.sha256 -ceq $marker[$field]
+            $row = [ordered]@{
+                field = $field; identity = $file.identity; marker_expected_sha256 = $marker[$field]
+                original_receipt_sha256 = $source.original; marker_matches_original_receipt = ($marker[$field] -ceq $source.original)
+                matches_marker = $matches; original_run_comparable = (-not $currentScriptChanged)
+                comparison_status = if ($currentScriptChanged) { 'CURRENT_CHECKOUT_CHANGED' } elseif ($matches) { 'MATCH' } else { 'MISMATCH' }
+            }
+            if (-not $matches -and -not $currentScriptChanged) { $diagnostic.previous_reflection_mismatch_fields += $field }
+            $diagnostic.files["reflection_source/$field"] = $file.identity
+            $diagnostic.previous_reflection_sources += $row
+            Write-ProbeDiagnosticSummary 'PREVIOUS_REFLECTION_SOURCE' $row
+        }
+        Write-ProbeJson (Join-Path $readbackRoot 'source-identities.json') $diagnostic.previous_reflection_sources
     }
     foreach ($name in @('input-boundary-editor.log', 'input-boundary-stdout.log', 'input-boundary-stderr.log')) {
         $file = Read-ProbeDiagnosticFile (Join-Path $previousRoot $name) 2MB

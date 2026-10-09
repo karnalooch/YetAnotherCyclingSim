@@ -411,10 +411,17 @@ activation remain pending.
 at `3e8eee60e4a7d37d61a653f0b52f7dcb09196276` compiled all eleven
 actions, requested the Python reflection check and retained its owned Editor
 exit code **3**. No native test or reflection PASS follows from this attempt;
-the preserved Editor log must be read before another launch. The dependency
-reader did not start: its embedded Python program is 33,053 characters, and
+the [fixed retained-log readback](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38002856042)
+at `4afa5e43d1e2fc58abcd0264408065e5d21d3ed4` identifies
+`RuntimeError: Reflection proof source differs from its trusted marker`,
+followed by the configured fatal Python-script exit. The differing source field
+must be identified before another native launch; the hash contract remains
+binding. The dependency reader independently did not start: its embedded
+Python program is 33,053 characters, and
 the Windows command exceeds the 32,767-character process limit. Passing the
-same owned reader program through standard input removes that tooling limit.
+same owned reader program through standard input removed that tooling limit:
+the fixed readback successfully collected the installed APIs. A large-program
+regression verifies this transport without expanding its source collection.
 The accepted-checkpoint reader now successfully reads the authenticated
 2,868,417-byte capture receipt and its retained metadata; it still restores no
 assets and grants no runtime admission.
@@ -425,8 +432,21 @@ dispatch. The official registry adapter substitutes an empty object for absent
 or non-object argument parameters. The raw native boundary alone therefore
 cannot prove rejection of malformed transport input. The fixed domain entry
 must require an actual empty argument object before delegation; its incoming
-editor work must run on the game thread. The installed direct-tool and Python
-invocation interfaces still require verification before this entry is wired.
+editor work and result completion must run on the game thread. The latest
+installed-source readback verifies `IModelContextProtocolTool::RunAsync` with
+nullable JSON parameters and the fixed `IPythonScriptPlugin::ExecPythonCommand`
+string/boolean interface. The fixed domain entry remains unwired. The official
+`FindTool` compares names without case sensitivity: spelling variants resolve
+to the same operation and cannot be reported as wire-level wrong-case denials.
+Native registry name checks retain their narrower meaning. Actual HTTP section
+initialization and cache invalidation still need bounded source verification
+before configuring and starting the loopback listener.
+
+Protected [CI 38002861390](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38002861390)
+passed for `4afa5e43d1e2fc58abcd0264408065e5d21d3ed4`, including
+hosted Python, equivalent exact-head Unreal proof reuse and Aggregate. Standard
+CI leaves the new plugin disabled; this result does not admit the new native
+boundary or official MCP session.
 
 The same native run authenticated the frozen #363 artifact archive and all six
 consumer/delivery/reload/render/conservation JSON hashes against retained host

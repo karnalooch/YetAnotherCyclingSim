@@ -342,8 +342,10 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
                    " CachedSyntheticConfigCallback = []() { return SyntheticConfiguration(); };\n}\n")
         self.write(LISTENER_IMPL, '#include "HttpServerConfig.h"\nvoid FHttpListener::StartListening() {}\n')
         self.write(CONFIG_HEADER, "struct FHttpServerConfig {};\n")
-        self.write(CONFIG_IMPL, 'const char* IniSectionNameHTTPServerListeners = "SYNTHETIC_LISTENER_SECTION";\n'
-                   "int FHttpServerConfig::GetListenerConfig() { return SyntheticBindConfiguration(); }\n")
+        self.write(CONFIG_IMPL, 'const FString IniSectionNameHTTPServerListeners(TEXT("SYNTHETIC_LISTENER_SECTION"));\n'
+                   "int FHttpServerConfig::GetListenerConfig() { return SyntheticBindConfiguration(); }\n"
+                   "void FHttpServerConfig::OnConfigSectionsChanged(const FString& Filename, const TSet<FString>& Sections) {\n"
+                   " if (Sections.Contains(IniSectionNameHTTPServerListeners)) { SyntheticCacheDirty = true; }\n}\n")
         # The collector may follow only the two fixed backend dependencies,
         # even with an unrelated escaping link and abundant optional source.
         unrelated = self.engine / "Engine/Source/Runtime/Unrelated"
@@ -371,6 +373,11 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
         self.assertTrue(any(item["topic"] == "http_config_getter" and item["body_complete"]
                             for item in receipt["excerpts"]))
         self.assertTrue(any(item["topic"] == "http_config_section_name" for item in receipt["excerpts"]))
+        cache = next(item for item in receipt["excerpts"] if item["topic"] == "http_config_cache_invalidation")
+        self.assertTrue(cache["body_complete"])
+        self.assertTrue(any("SyntheticCacheDirty = true" in line["text"] for line in cache["lines"]))
+        self.assertIn('IniSectionNameHTTPServerListeners(TEXT("SYNTHETIC_LISTENER_SECTION"))', process.stdout)
+        self.assertIn("topic=http_config_cache_invalidation body_complete=True", process.stdout)
         router = next(item for item in receipt["excerpts"] if item["topic"] == "http_GetHttpRouter")
         self.assertTrue(router["body_complete"])
         self.assertTrue(any("CachedSyntheticConfigCallback" in line["text"] for line in router["lines"]))

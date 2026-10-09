@@ -375,9 +375,10 @@ try:
                             else: gaps.append(dict(topic='http_config_declarations',reason='NAMED_CONFIG_HEADER_NOT_UNIQUE',candidates=headers))
                             config=optional(base+'Private/HttpServerConfig.cpp','mcp')
                             if config:
-                                named_contexts(config,r'\bIniSectionNameHTTPServerListeners\s*=',
+                                named_contexts(config,r'\bIniSectionNameHTTPServerListeners\b',
                                                'http_config_section_name',6)
                                 functions(config,r'\bFHttpServerConfig::GetListenerConfig\s*\(','http_config_getter')
+                                functions(config,r'\bFHttpServerConfig::OnConfigSectionsChanged\s*\(','http_config_cache_invalidation')
                                 full(config,'http_config_implementation')
                 for backend in (item, records.get('Engine/Source/Runtime/Online/HTTPServer/Private/HttpListener.cpp')):
                     if not backend: continue
