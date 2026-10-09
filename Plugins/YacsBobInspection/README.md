@@ -20,7 +20,8 @@ test, command, script, policy or evidence path.
 The no-argument internal
 `YacsBobLandscapeHitLibrary.inspect_accepted_checkpoint_identity` reads only the
 fixed checkpoint Landscape after the shared stopped-editor/map/unique-Landscape
-guard. Its `CHECKPOINT_IDENTITY` result carries the map and native actor identity;
+guard and exact UE 5.8.2 / CL 56702186 check. Its `CHECKPOINT_IDENTITY` result
+carries the map and native actor identity;
 it supplies no collision component or terrain measurement.
 
 `YacsBobLandscapeHitLibrary.inspect_accepted_landscape_hit` is an internal
@@ -42,3 +43,16 @@ qualified name with `.` and forwards the bare operation to the strict boundary.
 These declarations prove an available extension contract; they do not prove
 plugin compilation, registration or runtime execution. No generic Unreal
 gateway, server process or world-authoring API is introduced by this fragment.
+
+`YacsBobInspection.InputBoundary` tests actual local native registry registration,
+the single-operation schema and rejection of caller-selected/malformed input. It
+uses the installed registry's slash-wrapped regular expressions
+`/^YacsBobInspection$/` and
+`/^YacsBobInspection[.]InspectAcceptedCheckpoint$/` and checks actual enabled
+schema visibility before testing denials. It owns its registry and unreachable
+callback; it does not touch the editor-global
+registry or activate MCP. In the isolated empty `HostProject`, even a valid empty
+request must reject the unapproved map. This boundary proof is separate from the
+existing project `CyclingPhysics.RoadPhysics.ProfileInterpolation` test and the
+real checkpoint BOB inspection required by Issue #384. Native execution remains
+pending until a matching host receipt is recorded.

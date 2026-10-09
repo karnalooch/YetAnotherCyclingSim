@@ -235,8 +235,9 @@ policy supplies the structure threshold. The policy has a narrow LF checkout
 rule so Windows normalization cannot change its byte-bound identity. The helper
 does not export native traces, register a tool or write its result bundle;
 serialize the returned result/proof with `canonical_json_bytes` to preserve
-their recorded output hashes. Native raw-sample capture and official routing
-remain the next integration fragment.
+their recorded output hashes. The fixed capture body below uses this contract;
+its execution on the accepted native checkpoint and official routing remain
+pending.
 
 ### Windows source checkpoint and activation gap — 2026-10-09
 
@@ -326,6 +327,19 @@ Unknown ownership fails closed. Synthetic capture tests do not prove reflected
 owner availability on the actual host. Native registration, compile, restricted
 official transport, the completed single test and conservation remain pending.
 
+The trusted no-argument
+[`capture_and_inspect`](../scripts/ue/official_mcp_bob_operation.py) body binds
+the isolated project, exact committed source inventory, retained profile and
+frozen #363 consumer provenance. It requires the native checkpoint identity
+before sampling, retains every real producer sample, delegates to the existing
+BOB adapter and compares with the producer's direct result. It checks scene
+identity/transforms and persistent project bytes before and after the operation,
+then publishes an exclusive fixed Saved bundle with the receipt last. The
+trusted host must validate the retained consumer manifest before staging its
+fixed context; caller arguments cannot supply those inputs. Synthetic tests
+cover these boundaries and preserve missing/contact/review states. They do not
+certify an actual native capture, official transport or content conservation.
+
 [Declaration run 37993672276](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37993672276)
 passed at `2f7fbf6ae771abcb45cb15221e4d66130676e3b3` on the same exact engine.
 It verifies exported native `FToolsetRegistry::RegisterToolset` /
@@ -344,10 +358,25 @@ nothing. Its internal identity and hit readers pin the accepted map and unique
 Landscape, remain outside the MCP tool definitions, and never trace or mutate
 the world themselves. The producer prefers the native reader when present;
 an invalid native response cannot fall back to unverified reflected ownership.
-`official-unreal-mcp-native-probe.yml` stages only tracked plugin inputs into
-a fresh ignored proof directory and runs `BuildPlugin` on an idle shared host.
-It preserves previous compile output and retains only this run's compile log
-and receipt. There is no Editor/MCP launch or scene hydration in that lane.
+The native `YacsBobInspection.InputBoundary` Automation test owns a separate
+registry and callback. It verifies actual single-tool schema visibility before
+checking malformed inputs, unknown fields and denied operation names. Installed
+registry regexes require slash delimiters:
+`/^YacsBobInspection$/` and
+`/^YacsBobInspection[.]InspectAcceptedCheckpoint$/`. A valid empty request in
+the isolated empty HostProject must fail the fixed-map check, without invoking
+the BOB body. This test does not establish editor-global filters or MCP parity.
+
+`official-unreal-mcp-native-probe.yml` stages only tracked plugin inputs and
+runs `BuildPlugin` on an idle shared host. Its
+[first native run](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37994488902)
+stopped before C++ compilation because generated action paths were 292–311
+characters, exceeding UnrealBuildTool's 260-character limit. The next fragment
+uses a fresh shorter retained runner package directory and runs only the native
+boundary test in its empty HostProject. It preserves previous output and retains
+the current compile/test receipts, logs and report. Accepted-scene hydration,
+the existing project test and official MCP activation remain separate pending
+proofs.
 
 ### Safety and preserved governance
 

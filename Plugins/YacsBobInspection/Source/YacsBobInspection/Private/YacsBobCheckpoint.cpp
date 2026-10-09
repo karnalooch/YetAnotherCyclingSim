@@ -4,6 +4,7 @@
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "Landscape.h"
+#include "Misc/EngineVersion.h"
 #include "UObject/Package.h"
 
 namespace YacsBobInspection
@@ -62,6 +63,13 @@ ALandscape* ResolveApprovedLandscape(FString& OutError)
     if (!IsInGameThread())
     {
         OutError = TEXT("BOB inspection requires the editor game thread.");
+        return nullptr;
+    }
+    const FEngineVersion& EngineVersion = FEngineVersion::Current();
+    if (EngineVersion.GetMajor() != 5 || EngineVersion.GetMinor() != 8 || EngineVersion.GetPatch() != 2
+        || EngineVersion.GetChangelist() != 56702186)
+    {
+        OutError = TEXT("BOB inspection requires the admitted UE 5.8.2 / CL 56702186 engine.");
         return nullptr;
     }
     UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
