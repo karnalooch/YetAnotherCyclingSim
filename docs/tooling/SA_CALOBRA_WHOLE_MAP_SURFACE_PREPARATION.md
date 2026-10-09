@@ -396,3 +396,12 @@ passed for `ddeb01b5`: 135 script modules / 1,150 reported tests,
 391 reference-model tests and 26 fresh Unreal Automation tests. The hosted
 script summary identifies the PR merge-test commit `768da0d5daa9a5ecf86d73781ae1942e779f6ad5`;
 the independent native material proof remains bound to the exact `ddeb01b5` head.
+
+
+## 2026-10-09 — host disk gate override and native resumption
+
+The owner explicitly reduced the shared runner's **minimum available disk space** from 50 GiB to **5 GiB**. The updated `Assert-YacsDiskReserve.ps1`, `Test-YacsWindowsHost.ps1` and the independent texture-prep workflow should agree; automated boundary regressions cover below/at/above 5 GiB and an explicit higher override. This changes only disk admission, **not** the memory gates, source contracts, per-frame proof, rollback, map-save rules, visual acceptance or performance admission.
+
+The Windows Actions `JOB_STARTED` hook executes from an installed on-host location *before* GitHub checkout. An updated branch alone cannot prove that the live host reads the new value. Confirm the effective hook path and 5-GiB minimum, then run a fresh owner-only exact-HEAD 43-frame capture. Report drive free space at job start, during capture and at cleanup, and preserve failure receipts. Five GiB of free space does not promise sufficient scratch space for Unreal; stop safely if the measured native workload cannot fit without risking retained data. No full-map native or visual PASS follows from changing this threshold.
+
+See [recovery report](../experiments/sa-calobra-whole-map-material-prep-20261009/recovery-20261009.md) and [draft PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446).

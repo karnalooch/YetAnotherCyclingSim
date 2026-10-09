@@ -517,8 +517,8 @@ jobs:
           $driveName = $driveRoot.TrimEnd('\').TrimEnd(':')
           $drive = Get-PSDrive -Name $driveName
           $freeGiB = [math]::Round($drive.Free / 1GB, 2)
-          if ($drive.Free -lt 50GB) {
-            throw "Remote texture proof requires the repository 50 GiB reserve; available=$freeGiB GiB"
+          if ($drive.Free -lt 5GB) {
+            throw "Remote texture proof requires the repository 5 GiB reserve; available=$freeGiB GiB"
           }
 
           . ./scripts/ci/Resolve-YacsUnrealEngine.ps1

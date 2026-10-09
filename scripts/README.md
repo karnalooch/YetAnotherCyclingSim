@@ -12,7 +12,7 @@ Use the project Python environment (`.venv\Scripts\python.exe`) and PowerShell
 | Check the saved project before opening | `python scripts/manage_local_workspace.py doctor` | Checks paths, materialized assets and checkpoint identity; does not open UE |
 | Open the accepted scene | `python scripts/manage_local_workspace.py open` or `D:\yacs\Open-YACS.cmd` | Opens the configured map; refuses a second editor |
 | Start the GitHub runner | `pwsh -File scripts/runner/Start-YacsRunner.ps1` | Reuses an existing runner identity or starts one interactive listener |
-| Check the Windows build host | `pwsh -File scripts/runner/Test-YacsWindowsHost.ps1` | Read-only host/toolchain and 50 GiB reserve checks |
+| Check the Windows build host | `pwsh -File scripts/runner/Test-YacsWindowsHost.ps1` | Read-only host/toolchain and 5 GiB minimum free-space check (not a render-space estimate) |
 | Bootstrap pinned PowerShell | `powershell -File scripts/runner/Install-YacsPortablePowerShell.ps1` | Installs/verifies PowerShell 7.6.6 under `D:\yacs\tools` without MSI/system PATH mutation |
 | Verify pinned Blender headless lane | `python scripts/blender/run_headless.py smoke` | Runs the Blender 4.5.9 bpy smoke job and emits workspace proof receipts |
 | Inspect disposable runner outputs | `pwsh -File scripts/runner/Clear-YacsRunnerWorkspace.ps1` | Preview only; applying requires the exact inspected plan and an idle worker |

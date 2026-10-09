@@ -12,7 +12,7 @@
 param(
     [string] $RepoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path,
     [string] $RunnerRoot = 'D:\yacs\runner',
-    [double] $MinimumFreeGiB = 50.0,
+    [ValidateRange(1, 4096)][double] $MinimumFreeGiB = 5.0,
     [switch] $SkipGithubAuth,
     [switch] $Json
 )
