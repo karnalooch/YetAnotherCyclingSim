@@ -571,6 +571,56 @@ class WholeMapNativeBindingTests(unittest.TestCase):
                     workflow.verify_material_bindings(self.root, summary)
 
 
+class WholeMapV8GuardSequenceTests(unittest.TestCase):
+    """A successful 43+8 capture must not bypass v8 geometry guards."""
+
+    @staticmethod
+    def valid_rows():
+        from scripts.ue.sa_calobra_whole_map_witness import (
+            WITNESS_IDS,
+            WITNESS_MODES,
+        )
+
+        sequence = workflow.CAPTURE_PAIRS + tuple(
+            (identity, mode) for identity in WITNESS_IDS for mode in WITNESS_MODES
+        )
+        return [
+            {"frame_id": identity, "landscape_mode": mode}
+            for identity, mode in sequence
+        ]
+
+    def test_complete_43_primary_plus_8_diagnostics_accepted(self):
+        rows = self.valid_rows()
+        self.assertEqual(len(rows), 51)
+        self.assertIs(workflow.verify_native_mode_sequence(rows), rows)
+
+    def test_missing_reordered_or_duplicate_guards_fail_closed(self):
+        original = self.valid_rows()
+        variants = [
+            original[:-1],
+            original[:43],
+            original[:43] + original[44:45] + original[43:44] + original[45:],
+            original[:-1] + [original[-2]],
+            original[:42] + original[43:],
+            original + [original[-1]],
+        ]
+        for changed in variants:
+            with self.subTest(length=len(changed), tail=changed[-2:]):
+                with self.assertRaisesRegex(ValueError, "guard order"):
+                    workflow.verify_native_mode_sequence(changed)
+
+    def test_rejects_mode_or_camera_identity_mutation(self):
+        for column, forged in (
+            ("frame_id", "unrelated-landscape"),
+            ("landscape_mode", "prepared"),
+        ):
+            rows = self.valid_rows()
+            rows[-1] = dict(rows[-1], **{column: forged})
+            with self.subTest(column=column):
+                with self.assertRaisesRegex(ValueError, "guard order"):
+                    workflow.verify_native_mode_sequence(rows)
+
+
 class WholeMapCaptureCoverageTests(unittest.TestCase):
     def setUp(self):
         self.pilot = json.loads(

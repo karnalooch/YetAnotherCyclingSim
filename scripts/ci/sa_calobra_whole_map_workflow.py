@@ -1364,6 +1364,26 @@ def verify_normal_response(proof, report):
     return response
 
 
+def verify_native_mode_sequence(modes):
+    """Preserve 43 original v8 guards and independently validate all 8 witnesses."""
+    from scripts.ue.sa_calobra_whole_map_witness import (
+        WITNESS_IDS,
+        WITNESS_MODES,
+    )
+
+    expected_witnesses = tuple(
+        (identity, mode) for identity in WITNESS_IDS for mode in WITNESS_MODES
+    )
+    actual = tuple(
+        (row.get("frame_id"), row.get("landscape_mode")) for row in modes
+    )
+    require(
+        actual == CAPTURE_PAIRS + expected_witnesses,
+        "Native v8 baseline guard order or diagnostic witness coverage changed",
+    )
+    return modes
+
+
 def verify_native_evidence(repo, root, head):
     from scripts.ue.capture_sa_calobra_whole_map_prep import mode_parameters
     from scripts.ue.sa_calobra_whole_map_prep import (
@@ -1654,12 +1674,7 @@ def verify_native_evidence(repo, root, head):
         and all(type(value) is int and value >= 0 for value in mapping),
         "Native source mapping omits or repeats source faces",
     )
-    modes = report.get("native_modes", [])
-    require(
-        tuple((row.get("frame_id"), row.get("landscape_mode")) for row in modes)
-        == CAPTURE_PAIRS,
-        "Native baseline guard was omitted for a capture",
-    )
+    modes = verify_native_mode_sequence(report.get("native_modes", []))
     for mode in modes:
         require(
             mode.get("status") == "DETAIL_NATIVE_MODE_APPLIED"
