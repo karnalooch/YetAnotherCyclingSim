@@ -12,6 +12,11 @@ from scripts.ue import sa_calobra_whole_map_prep as prep
 
 
 class RecipeDiagnosisTests(unittest.TestCase):
+    def test_direct_script_runs_from_repo_checkout(self):
+        content = (Path(__file__).resolve().parent / "diagnose_sa_calobra_recipe.py").read_text()
+        self.assertIn("if not __package__:", content)
+        self.assertIn("sys.path.insert(0", content)
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)

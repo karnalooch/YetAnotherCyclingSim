@@ -11,6 +11,10 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+import sys
+
+if not __package__:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from scripts.ue import sa_calobra_whole_map_prep as prep
 
