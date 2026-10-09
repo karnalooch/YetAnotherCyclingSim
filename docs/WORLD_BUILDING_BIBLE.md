@@ -2170,7 +2170,10 @@ canonical Landscape/DTM, roads and physics remain unchanged. Original visibility
 must be restored after isolated captures. This is not production terrain migration
 or permission to claim that all dark regions are intersections. Verify the local
 neutral Lit/Lighting Only result before whole-Landscape application and an owner
-preview package. PR #446 remains unmerged pending explicit approval.
+preview package. Subsequent closeout, 2026-10-09: PR #446 merged the accepted
+whole-area material foundation and #363 is completed. This does not admit the
+local cliff diagnostic, repair unresolved geometry or promote PCGEx dressing.
+See the [current material handoff](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md).
 See the [cliff diagnostic contract](tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md#local-single-surface-smoothing-diagnostic).
 
 Owner follow-up, 2026-10-08: the copied local cliff mesh may move up to 1 m

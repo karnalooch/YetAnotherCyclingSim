@@ -29,9 +29,13 @@ those images are evidence, never replacement production textures.
 [validation tiers](../CI_VALIDATION_TIERS.md). They remain authoritative.
 This supports M3 tooling; it neither starts a later world-finishing step nor
 changes the #335 / #363-#374 delivery order. This separately authorized
-#382 texture-domain adapter is not the blocked #384 official MCP control-plane
-adoption. It enables no official MCP server, claims no #363 closeout or guard
-parity/cutover, and leaves #384 blocked. The retained db-lyon baseline is unchanged.
+#382 texture-domain adapter is separate from #384 official MCP control-plane
+adoption. It enables no official MCP server and claims no #363 closeout or guard
+parity/cutover. At the October 5 evidence cutoff, #384 remained blocked by #363.
+On October 9, #363 completed through merged PR #446, satisfying that entry gate;
+#384 remains open and unimplemented. #382 closed as an optional frozen queue
+without admitting the real Rock026 world consumer. The retained db-lyon baseline
+is unchanged; see the [current delivery order](../ROADMAP.md).
 
 No existing texture, material, map, scene, Landscape, road, BOB output, geometry,
 world mask, PCG graph or runtime consumer is changed. Material assignment and

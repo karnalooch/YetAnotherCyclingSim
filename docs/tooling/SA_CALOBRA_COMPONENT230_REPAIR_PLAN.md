@@ -1,11 +1,21 @@
 # Component 230: verified report and repair plan
 
 **Verified:** 2026-10-08  
-**Work item:** [#445](https://github.com/karnalooch/YetAnotherCyclingSim/issues/445); implementation [draft PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446)  
-**Historical evidence revision:** `1b0675ee53e796e7f904fa3119bb388fa9489cf6`  
+**Historical work item:** [#445](https://github.com/karnalooch/YetAnotherCyclingSim/issues/445); implementation [PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446)
+**Historical evidence revision:** `1b0675ee53e796e7f904fa3119bb388fa9489cf6`
 **Accepted limestone implementation revision:** `4f2cba560d54931dc8ba080370d96a7aad24f15b`
 
-**Status:** owner accepted the Component 230 v8 appearance; the existing combined lighting and PCGEx image gates remain FAIL; saved-preview and whole-area admission remain pending
+**Status at the October 8 evidence cutoff:** owner accepted the Component 230 v8 appearance; the existing combined lighting and PCGEx image gates remain FAIL; saved-preview and whole-area admission were pending
+
+**Current supersession — 2026-10-09:** #445 closed as consolidated into completed
+#363; [PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446) merged
+the owner-accepted whole-area material foundation. The [whole-map handoff](SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md)
+records its saved consumer, independent fresh reload and fresh rendered proof.
+This does not admit the failed combined-lighting/PCGEx cliff candidate or solve
+remaining road/CUT/contact geometry. The plan below preserves the historical
+cliff repair evidence; it is not a current instruction to reopen #445 or #446.
+Performance is `DEFERRED_AFTER_M3`, with `performance_pass: false`, under the
+current [Roadmap](../ROADMAP.md).
 
 **Authority:** [World Building Bible](../WORLD_BUILDING_BIBLE.md), selected through [the documentation index](../README.md); [cliff experiment contract and history](SA_CALOBRA_CLIFF_EROSION_PASS.md)
 
@@ -406,17 +416,20 @@ actual locations from source evidence rather than inventing component IDs.
 Each retains local audits and camera/material receipts; one successful fragment
 cannot authorize automatic application everywhere.
 
-Only then proceed to the required whole current Landscape review:
+The historical cliff rollout plan required whole current Landscape review:
 2,016.5 m x 2,016.5 m, approximately 4.07 km2. The Golden Kilometer is an
-additional check. Measure relevant GPU/frame-time, memory, triangle/draw-call
-and streaming costs against existing budgets, including 1920x1080 / 60 FPS on
-the reference system. Preserve the #363 -> #384 -> #364 dependency sequence;
-this local report does not unblock those successors.
+additional check. Relevant GPU/frame-time, memory, triangle/draw-call and
+streaming costs still require measurement against existing budgets, including
+1920x1080 / 60 FPS on the reference system, after assembled M3 closeout under
+the October 9 decision. Preserve #363 -> #384 -> #364: #363 is completed and
+merged; #384 remains open and #364 remains blocked by #384. This local cliff
+report is not their admission proof.
 
-**Exit evidence:** required technical/review gates, owner whole-area acceptance,
-saved/fresh-rendered consumer and performance admission, then normal protected
-closeout. PR #446 remains draft and requires its recorded explicit merge
-authorization; this plan does not supply it.
+**Exit evidence:** retain required technical/review gates, owner whole-area
+acceptance and a saved/fresh-rendered consumer for future cliff production
+admission. The earlier draft-PR/performance-before-merge instructions are
+superseded for #363 by the October 9 material closeout and post-M3 performance
+decision; they do not grant cliff or PCGEx production acceptance.
 
 ## Reproduction and documentation checks
 

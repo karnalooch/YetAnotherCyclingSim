@@ -1,9 +1,17 @@
 # Sa Calobra Cliff / Erosion Pass
 
 **Issues:** #429 Phase 1, #440 Phase 2A, #445 Component 230 repair; child track of #368  
-**Parent integration:** PR #381  
+**Historical parent integration:** PR #381, closed superseded on 2026-10-09
 **Status:** Phase 1 selector complete; owner accepted the local v8 rock preview; one-pixel combined lighting gate and separate PCGEx admission remain failing; production acceptance pending  
 **Authority:** World Building Bible remains authoritative
+
+**Current handoff — 2026-10-09:** #445 closed as consolidated into completed
+#363; [PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446) merged
+the owner-accepted whole-area material foundation. Its [saved/fresh-rendered
+consumer proof](SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md) does not admit the
+failed combined-lighting or PCGEx cliff candidate. The dated experiments below
+retain their original outcomes; production cliff dressing remains pending in
+the #368 workstream under the [current Roadmap](../ROADMAP.md).
 
 The current verified outcome and ordered repair work are in
 [Component 230: verified report and repair plan](SA_CALOBRA_COMPONENT230_REPAIR_PLAN.md).
@@ -309,7 +317,9 @@ identical canonical mesh receipts from two executions.
 Topology acceptance precedes matched custom A / PCGEx B Lit and Lighting Only
 captures, existing dark-region gates and human visual acceptance. No map,
 graph or asset save and no canonical Landscape mutation are permitted.
-PR #446 remains Draft pending proof; merge requires explicit owner approval.
+At this experiment's evidence cutoff, PR #446 was Draft pending proof and
+explicit owner approval. Its later October 9 material-foundation merge is
+recorded above; it does not supply this cliff candidate's missing admission.
 
 The first native topology proof passed at `f3bb3ea33a90bf18267274ca06fd31fa4299244e`
 (Actions run `37688447292`): 28,640 triangles, 19 physical components,

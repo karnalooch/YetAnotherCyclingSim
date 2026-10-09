@@ -220,7 +220,7 @@ Owner directive, 2026-10-01 (Issue #308): keep downloaded/materialized LFS asset
 - `docs/YACS_WORLD_AUTHORING_LIBRARY.md` defines reusable implementation/catalog systems; it does not override the Bible's world architecture.
 - New or substantially revised architecture/workflow diagrams must follow `docs/DIAGRAM_STYLE.md`, the YACS adoption of the Gumball Blueprint Mermaid language.
 
-### Official Unreal MCP adoption — blocked planning decision
+### Official Unreal MCP adoption — bounded delivery decision
 
 Owner decision, 2026-10-05: #384 is the bounded official Unreal MCP adoption
 workstream, informally "step 2.5", between #363 and #364 inside M3. It is
@@ -232,6 +232,14 @@ plugin activation, implementation PR or Ready/In progress promotion before that
 gate. Documentation-only planning (#385) may merge without closing/unblocking #384.
 #364 retains its #363 dependency and also depends on #384; the remaining sequence
 is unchanged. A closed-as-not-planned issue or green CI alone is insufficient.
+
+Verified closeout, 2026-10-09: #363 is completed after protected PR #446 merge
+`ad9a487ba2177fd49bb2d90784bac9a9f661ab3b`. Its whole-area material acceptance,
+saved/fresh-rendered consumer and technical evidence satisfy #384's entry gate.
+#384 is still open and unimplemented; #364 remains blocked by #384. Reverify
+the [material handoff](docs/tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md)
+at kickoff. No MCP activation, geometry admission or manual Project transition
+is implied by this checkpoint.
 
 Read [the current MCP decision and bounded DoD](docs/UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption)
 before MCP work. The official Epic server is the future control-plane target;
@@ -602,6 +610,15 @@ Native GitHub dependencies record the relationship but do not prevent PR
 creation; agents must enforce this execution rule. Removing dependencies or
 changing order requires explicit owner authorization. Project Blocked is
 planning metadata and does not replace proof or this dependency check.
+
+Owner-authorized exception, 2026-10-09: the final execution order is
+#372 visual/technical acceptance → #374 full-route assembly/implementation
+closeout → #373 measured performance, retaining #372 as an additional
+prerequisite of #373. Preserve the existing 13 step IDs. Native dependency
+reconciliation is pending (currently #373 still blocks #374); resolve that
+graph before starting #374 and do not claim documentation changed it.
+Intermediate handoffs retain `DEFERRED_AFTER_M3`, `performance_pass: false`;
+budgets and later measured admission remain unchanged.
 
 ## Office and home workflow
 

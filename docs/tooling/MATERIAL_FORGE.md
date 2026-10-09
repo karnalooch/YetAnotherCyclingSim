@@ -394,7 +394,11 @@ Material Forge deterministic render x2
         -> owner A/B visual acceptance
 ```
 
-Until that proof and owner review are green, PR #381 stays draft.
+This was the historical PR #381 admission sequence. On 2026-10-09, #381 closed
+unmerged as superseded by merged [PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446)
+and completed #363. The [whole-map handoff](SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md)
+records the accepted material foundation and its saved/fresh-rendered proof;
+that acceptance does not turn earlier failed cliff diagnostics into PASS.
 
 ## Cliff lighting response pass
 

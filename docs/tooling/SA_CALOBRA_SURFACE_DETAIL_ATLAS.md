@@ -1,9 +1,16 @@
 # Sa Calobra surface detail atlas and PCGEx handoff plan
 
 **Owner direction:** 2026-10-08  
-**Work item:** [#445](https://github.com/karnalooch/YetAnotherCyclingSim/issues/445), [draft PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446)  
+**Historical work item:** [#445](https://github.com/karnalooch/YetAnotherCyclingSim/issues/445), [PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446)
 **Status:** surface-detail plan with a tested Component 230 source-face pilot and native mask/visibility/bounded-patch proof, a [complete captured-survey prestudy](../experiments/sa-calobra-roadside-visibility-prestudy-20261008/README.md) and [six original-PNG proposal cards](../experiments/sa-calobra-surface-detail-review-20261008/README.md); owner review and wider physical registration remain pending
 **Authority:** [World Building Bible](../WORLD_BUILDING_BIBLE.md), selected through [the documentation index](../README.md); [cliff presentation contract](SA_CALOBRA_CLIFF_EROSION_PASS.md)
+
+**Current handoff — 2026-10-09:** #445 closed as consolidated into #363; PR #446
+merged the owner-accepted whole-area material foundation. This atlas remains
+preparation evidence: wider physical registration and production PCG/PCGEx
+admission are still pending. See the [material closeout](SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md)
+and [current delivery order](../ROADMAP.md); do not reopen the historical lane
+or infer atlas completion from material acceptance.
 
 ## Purpose and current scope
 

@@ -1,9 +1,9 @@
 # Sa Calobra material repair plan
 
-**Status:** implementation checkpoint retained; visual/performance acceptance pending
+**Status:** historical recovery plan; current material foundation accepted/frozen in merged #446; performance deferred after M3
 **Recorded:** 2026-10-06  
 **Work item:** [#363 — Landscape material foundation](https://github.com/karnalooch/YetAnotherCyclingSim/issues/363)  
-**Delivery lane:** existing draft [PR #381](https://github.com/karnalooch/YetAnotherCyclingSim/pull/381)
+**Historical delivery lane:** superseded and closed unmerged [PR #381](https://github.com/karnalooch/YetAnotherCyclingSim/pull/381)
 
 ## Authority, scope and execution boundary
 
@@ -12,14 +12,20 @@ implementation, then requested remote retention of all work and a detailed repor
 The [implementation and recovery report](../experiments/sa-calobra-material-repair-20261006-report.md)
 records completed experiments, the editor crash, saved candidates and remaining gates.
 The original planning evidence below is historical; it is not the latest execution
-status. No visual/performance acceptance, issue completion or successor unblock is claimed.
+status. Subsequent closeout on 2026-10-09 completed #363 through protected merge
+of PR #446. The [whole-map handoff](SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md)
+records accepted material scope, saved/fresh-rendered evidence and technical CI.
+#384's material entry gate is satisfied; its adoption remains unimplemented and
+#364 remains blocked by #384. Historical rejected recipes and local failures
+remain unchanged; there is no performance PASS or geometry admission.
 
 [World Building Bible](../WORLD_BUILDING_BIBLE.md) remains the methodology
 authority selected through [the documentation index](../README.md).
 [Product Requirements](../PRODUCT_REQUIREMENTS.md) and [Roadmap](../ROADMAP.md)
 retain scope and ordering; the [material foundation workflow](SA_CALOBRA_MATERIAL_FOUNDATION.md)
 retains reusable authoring, native instance audit and persistence procedures.
-This plan defines the immediate repair sequence for the current candidate.
+The plan below records the earlier candidate repair sequence; use the current
+whole-map handoff for execution status.
 Earlier reference, six-role library, licence, acquisition and sample-approval
 gates in #363 remain required; diagnostic use of an imported scan does not
 retroactively approve it as a production surface.
@@ -35,8 +41,9 @@ road alignment, CUT/FILL geometry, collision and route/physics authority.
 Do not add displacement, WorldPositionOffset, terrain smoothing or road rebuilds.
 Spatial vegetation, PCG placement, rock meshes, RVT integration, new plugins and
 official MCP adoption are separate work. Preserve the deferred #372 red-overlay
-review. #384 remains blocked by full #363 completion, before #364, as recorded
-in the Roadmap; this plan changes no issue dependency or project status.
+review. #384 required full #363 completion before #364 under the original plan.
+That entry condition is now satisfied; this historical plan changes no native
+dependency or manual Project status.
 
 ## Evidence snapshot and open hypotheses
 
@@ -318,8 +325,9 @@ locations and unresolved diagnostics rather than averaging them away.
   Update changed input semantics and recipes in the same implementation PR.
 - Run documentation links, i18n, structure and freshness guards; retain original
   failed/rejected evidence and rollback information.
-- Keep #381 draft until all required gates pass. Deliver within #363 and its
-  existing branch, without closing it or unblocking #384/#364 on planning alone.
+- Historical delivery instruction: #381 was to remain draft until admission.
+  It is now closed superseded; #363 completed through merged #446. Planning
+  alone never satisfied the material or MCP gates.
 
 **Deliverable:** saved and freshly rendered consumer, exact-version proof bundle,
 current documentation and protected repository delivery.

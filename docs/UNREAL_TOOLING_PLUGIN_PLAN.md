@@ -3,7 +3,7 @@
 **Status:** active production plan
 **Applies to:** UE 5.8.2 MVP roadmap
 **Rule:** no plugin is enabled “just in case”.
-**Official MCP decision, 2026-10-05:** #384 is the future official-server adoption path, blocked by complete #363 admission/merge and preceding #364. Planning only; preserve the current engine, plugin list, db-lyon pin and safety model. See [the bounded contract](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption).
+**Official MCP decision, 2026-10-05:** #384 is the future official-server adoption path, #363 material entry gate satisfied by merged #446 on 2026-10-09 and preceding #364. Adoption remains unimplemented; preserve the current engine, plugin list, db-lyon pin and safety model. See [the bounded contract](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption).
 **Current M3 recovery gate:** the core PCG assets with legacy Stage 3G identifiers (`PCG_RouteExclusion`, `PCG_Forest`, `PCG_Valley`, `PCG_HighAlpine`) are validated mainline deliverables. Historical R4/R4.1 names remain only where they identify existing evidence or workflows; current planning uses M3 workstreams. The recovery keeps native PCG and route/physics separation and follows the Embark-first tooling admission policy before any new custom authoring surface.
 
 ## 1. Purpose
@@ -63,7 +63,7 @@ Any change to the explicit plugin list is an integration change and requires an 
 | **M8** | **Niagara** | MUST | rain, wheel spray, debris/leaves and atmospheric VFX | enable/verify when weather implementation begins |
 | **M8** | **MetaSounds** | SHOULD | parameter-driven drivetrain/freehub/tyres/brakes/wind audio | enable/verify when production audio starts |
 | **M3+ dev tooling** | **db-lyon ue-mcp** | RETAINED BASELINE | historical #85 flows, guards, rollback and editor/proof interface pending #384 cutover | keep exact `1.3.9` / `d79a34bb6e7a5883457efe8f33c9f85b1ba3e136`, committed lock and `npm ci --ignore-scripts`; do not remove before safety-parity proof |
-| **M3+ dev tooling** | **Official Unreal MCP / All Toolsets / Toolset Registry** | PLANNED / EXPERIMENTAL / BLOCKED | #384 official interface with scene/object inspection and AutomationTestToolset; later MaterialInstanceTools for #364 | full #363 admission first; bounded surface, real BOB result/proof/receipt and guard parity; no two independent mutation servers |
+| **M3+ dev tooling** | **Official Unreal MCP / All Toolsets / Toolset Registry** | PLANNED / EXPERIMENTAL / ENTRY SATISFIED | #384 official interface with scene/object inspection and AutomationTestToolset; later MaterialInstanceTools for #364 | completed #363 handoff must be reverified; bounded surface, real BOB result/proof/receipt and guard parity; no two independent mutation servers |
 | **M3 editor tooling** | **RoadForge Mesh Core** | INCLUDED / EDITOR-ONLY | vendored MIT road-mesh primitives used only as a bounded presentation-geometry donor | Editor target only; no shipping/runtime dependency; production SP638 adapter still requires its own bounded visual/technical proof and never owns route/physics truth |
 
 ### Embark-first tooling admission rule

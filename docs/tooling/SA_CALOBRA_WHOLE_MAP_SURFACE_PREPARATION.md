@@ -8,7 +8,9 @@
 
 **Frozen implementation (2026-10-09):** `94827365ef8e83e52717bb21f9d6efa921aa2d1e`, retained by annotated tag `checkpoint/363-materials-2026-10-09`. [Native run 37954100285](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37954100285) and [exact-head CI 37954108803](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37954108803) passed. Evidence includes 43 original plus eight diagnostic captures, all 1024 material-instance roots, actual derived-map save, fresh reload without reapplication, eleven fresh 1920 x 1080 original renders and two chained source-conservation receipts. Downloaded CI proves a warm build and 27 fresh Automation successes, including the read-only shoulder query. The earlier 10/43 and disk failures remain historical in the [recovery report](../experiments/sa-calobra-whole-map-material-prep-20261009/recovery-20261009.md).
 
-**Owner decision:** on 2026-10-09 the owner accepted the presented whole-area material foundation and requested stage freezing and PR/issue cleanup. This accepts the material baseline, not completed M3, integrated road rideability, new PCGEx topology or a geometry repair. Independent review retains uniform beige/limited role variation, faceted terrain and dark pockets, scalloped road margins and highlight clipping as disclosed limits. The canonical map remains unchanged; the saved consumer is `/Game/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview`, not canonical-map promotion. #363 can close only after normal protected implementation merge. #384 then precedes #364. Performance is `DEFERRED_AFTER_M3`, with `performance_pass:false` and no benchmark.
+**Owner decision:** on 2026-10-09 the owner accepted the presented whole-area material foundation and requested stage freezing and PR/issue cleanup. This accepts the material baseline, not completed M3, integrated road rideability, new PCGEx topology or a geometry repair. Independent review retains uniform beige/limited role variation, faceted terrain and dark pockets, scalloped road margins and highlight clipping as disclosed limits. The canonical map remains unchanged; the saved consumer is `/Game/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview`, not canonical-map promotion. Performance is `DEFERRED_AFTER_M3`, with `performance_pass:false` and no benchmark.
+
+**Protected delivery:** PR #446 merged into `main` as `ad9a487ba2177fd49bb2d90784bac9a9f661ab3b`; #363 is closed as completed. [Final CI 37978579196](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37978579196) passed at reviewed head `968d9ed669cd52667d7994e26dec24aa5a1f3560`, whose tree matches the merge. Its standard Unreal lane verified equivalent proof reuse; its fresh native legacy regression built and passed 1/1 tests without old-world authoring/capture. Current Sa Calobra admission remains the saved/reloaded/rendered proof and 27-test runtime CI above, not `L_CyclingTest`. Runtime/source content remains the frozen `9482736` checkpoint. #384's material prerequisite is satisfied, but the MCP spike is unimplemented; #364 remains blocked by #384.
 
 **Methodology:** [World Building Bible](../WORLD_BUILDING_BIBLE.md), selected through the [documentation index](../README.md)
 
@@ -103,8 +105,9 @@ the saved package and same views; the three recorded diagonal ground poses
 define diagnostic camera traversal with their camera Z lifted to at least
 20 metres above the actual saved Landscape bounds maximum, preserving the
 recorded targets. This terrain-envelope clearance avoids interpolating through
-an intervening ridge; it does not prove a physical ride. `PENDING_OWNER` visual
-acceptance remains separate from measured renderer performance.
+an intervening ridge; it does not prove a physical ride. The immutable native
+receipts retain their execution-time `PENDING_OWNER`; subsequent owner visual
+acceptance on 2026-10-09 remains separate from measured renderer performance.
 
 The consumer directory retains the derived map and three generated material
 package families, including recorded sidecars, in `packages/`.
@@ -333,8 +336,8 @@ The existing combined-lighting and PCGEx admission failures retain their recorde
 results. The owner's [ROAD FIRST decision](https://github.com/karnalooch/YetAnotherCyclingSim/issues/457)
 defers existing mountain-shadow polish; it does not admit introduced material
 defects, unproven geometry repairs or new PCGEx placement. The owner has accepted
-the saved/fresh-rendered whole-area material baseline described above. Closing
-#363 still requires protected merge; #384 must finish before #364 implementation.
+the saved/fresh-rendered whole-area material baseline described above. #363
+completed after protected merge; #384 must finish before #364 implementation.
 This does not admit later world dressing, repair #459 or promote the derived
 review map into the canonical authoring map. Reference-PC measurement remains
 the explicit post-M3 #373 obligation, with no performance PASS.
@@ -500,4 +503,4 @@ The owner explicitly reduced the shared runner's **minimum available disk space*
 
 The Windows Actions `JOB_STARTED` hook executes from an installed on-host location *before* GitHub checkout. An updated branch alone cannot prove that the live host reads the new value. Confirm the effective hook path and 5-GiB minimum, then run a fresh owner-only exact-HEAD 43-frame capture. Report drive free space at job start, during capture and at cleanup, and preserve failure receipts. Five GiB of free space does not promise sufficient scratch space for Unreal; stop safely if the measured native workload cannot fit without risking retained data. No full-map native or visual PASS follows from changing this threshold.
 
-See [recovery report](../experiments/sa-calobra-whole-map-material-prep-20261009/recovery-20261009.md) and [draft PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446).
+See [recovery report](../experiments/sa-calobra-whole-map-material-prep-20261009/recovery-20261009.md) and [PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446), subsequently merged as recorded above.
