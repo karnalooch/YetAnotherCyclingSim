@@ -35,6 +35,8 @@ worldgen/terrain/benchmarks/sa_calobra/*_source_*.json -text
 scripts/assets/sa_calobra_context_recipe_v1.json text eol=lf
 # Keep the hash-bound BOB inspection policy identical on Windows and Linux.
 worldgen/terrain/adaptive_terrain_policy.json text eol=lf
+# Native BOB context verifies its complete plugin inventory against Git bytes.
+Plugins/YacsBobInspection/Source/YacsBobInspection/YacsBobInspection.Build.cs text eol=lf
 worldgen/materials/*.json text eol=lf
 # Retain exact rendered graph bytes and recognize their Windows line endings.
 worldgen/materials/material_maker/**/*.ptex -text whitespace=cr-at-eol

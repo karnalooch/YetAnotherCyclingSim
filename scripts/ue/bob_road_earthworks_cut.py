@@ -21,8 +21,42 @@ from scripts.geometry.curved_road_plan import profile_plan_valid
 from scripts.geometry.road_cut_limits import cut_limits, inspection_within_cut_limits
 from scripts.ue.sa_calobra_geometry_collision_witness import _hit_result, _property
 
+HEIGHTFIELD_CLASS_PATH = "/Script/Landscape.LandscapeHeightfieldCollisionComponent"
+
+
+def _preflight_landscape_identity(landscape):
+    library = getattr(unreal, "YacsBobLandscapeHitLibrary", None)
+    if library is None:
+        return
+    reader = getattr(library, "inspect_accepted_checkpoint_identity", None)
+    if (not callable(reader)
+            or not callable(getattr(library, "inspect_accepted_landscape_hit", None))):
+        raise RuntimeError("BOB native Landscape checkpoint interface is unavailable")
+    identity = reader()
+    impact = _property(identity, "impact_point")
+    try:
+        zero_impact = impact is not None and all(
+            type(getattr(impact, axis)) in (int, float) and getattr(impact, axis) == 0.0
+            for axis in ("x", "y", "z")
+        )
+    except (AttributeError, TypeError):
+        zero_impact = False
+    if (_property(identity, "accepted") is not True
+            or _property(identity, "status") != "CHECKPOINT_IDENTITY"
+            or _property(identity, "error") != ""
+            or _property(identity, "map_package") != landscape.get_path_name().split(".")[0]
+            or _property(identity, "hit_actor") != landscape
+            or _property(identity, "actor_path") != landscape.get_path_name()
+            or _property(identity, "actor_class_path") != landscape.get_class().get_path_name()
+            or _property(identity, "blocking_hit") is not False or not zero_impact
+            or _property(identity, "hit_component") is not None
+            or _property(identity, "component_path") != ""
+            or _property(identity, "component_class_path") != ""):
+        raise RuntimeError("BOB native Landscape checkpoint identity is rejected or inconsistent")
+
 
 def _landscape_measurement_scope(world, landscape):
+    _preflight_landscape_identity(landscape)
     landscapes = list(unreal.GameplayStatics.get_all_actors_of_class(world, unreal.Landscape))
     if len(landscapes) != 1 or landscapes[0] != landscape:
         raise RuntimeError("BOB inspection expects the single supplied Landscape in this world")
@@ -37,7 +71,7 @@ def _landscape_measurement_scope(world, landscape):
     try:
         components = [component for component in primitives
                       if component.get_class().get_path_name()
-                      == "/Script/Landscape.LandscapeHeightfieldCollisionComponent"]
+                      == HEIGHTFIELD_CLASS_PATH]
     except Exception as exc:  # noqa: BLE001 - reflected class may be unavailable
         raise RuntimeError("BOB Landscape collision component type is unavailable") from exc
     component_paths = [component.get_path_name() for component in components]
@@ -50,6 +84,39 @@ def _landscape_measurement_scope(world, landscape):
 def _landscape_hit_height(hit, start, end, landscape, components):
     if hit is None:
         return None
+    library = getattr(unreal, "YacsBobLandscapeHitLibrary", None)
+    if library is not None:
+        reader = getattr(library, "inspect_accepted_landscape_hit", None)
+        if not callable(reader):
+            raise RuntimeError("BOB native Landscape hit bridge interface is unavailable")
+        hit = reader(hit)
+        accepted, status = _property(hit, "accepted"), _property(hit, "status")
+        blocking = _property(hit, "blocking_hit")
+        if (accepted is not True
+                or _property(hit, "map_package") != landscape.get_path_name().split(".")[0]
+                or not isinstance(_property(hit, "error"), str)):
+            raise RuntimeError("BOB native Landscape hit bridge rejected the sample or map")
+        if status == "MISSING_HIT" and blocking is False:
+            if (_property(hit, "hit_actor") is not None
+                    or _property(hit, "hit_component") is not None
+                    or any(_property(hit, name) != "" for name in (
+                        "actor_path", "actor_class_path", "component_path", "component_class_path",
+                    ))):
+                raise RuntimeError("BOB native Landscape miss supplied inconsistent ownership")
+            return None
+        if (status != "OWNED_LANDSCAPE_HIT" or blocking is not True
+                or _property(hit, "error") != ""
+                or _property(hit, "impact_point") is None):
+            raise RuntimeError("BOB native Landscape hit bridge result is invalid")
+        actor, component = _property(hit, "hit_actor"), _property(hit, "hit_component")
+        if (actor != landscape or component is None
+                or not any(component == owned for owned in components)
+                or component.get_class().get_path_name() != HEIGHTFIELD_CLASS_PATH
+                or _property(hit, "actor_path") != landscape.get_path_name()
+                or _property(hit, "actor_class_path") != landscape.get_class().get_path_name()
+                or _property(hit, "component_path") != component.get_path_name()
+                or _property(hit, "component_class_path") != HEIGHTFIELD_CLASS_PATH):
+            raise RuntimeError("BOB native Landscape hit bridge owner identity differs")
     blocking = _property(hit, "blocking_hit")
     if blocking is False:
         return None
@@ -85,9 +152,13 @@ def measure_smooth_terrain_fit(
     after the real inspector completes. Existing callers retain the same
     measurements and report. The sink is an integration callback, never a
     caller-supplied MCP argument. ``landscape`` is also a trusted integration
-    argument: when provided, ignore other actors and require reflected blocking
-    status plus exact hit actor/owned-component identity. Unavailable ownership
-    fails closed, including UE 5.8's known missing HitResult reflected fields.
+    argument: when provided, ignore other actors and require blocking status
+    plus exact hit actor/owned-component identity. Use the internal native
+    ``YacsBobLandscapeHitLibrary`` when present and verify its fixed checkpoint
+    identity before the first trace; otherwise require the original reflected
+    HitResult fields. An unavailable or rejected native bridge never
+    falls back to a permissive reading. Its actual UE reflection/build/runtime
+    still needs native proof; synthetic checks do not establish that interface.
     This function neither writes an export nor certifies the selected scene.
     The default unfiltered trace retains its original assumption that other
     collidable geometry cannot intercept the measurement.

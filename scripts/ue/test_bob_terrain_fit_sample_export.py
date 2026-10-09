@@ -17,6 +17,7 @@ SHA = "a" * 40
 class BobTerrainFitSampleExportTests(unittest.TestCase):
     def setUp(self):
         self.api = Mock()
+        self.api.YacsBobLandscapeHitLibrary = None
         self.api.Vector.side_effect = lambda x, y, z: SimpleNamespace(x=x, y=y, z=z)
         path = Path(__file__).with_name("bob_road_earthworks_cut.py")
         specification = importlib.util.spec_from_file_location("_bob_sample_export_fixture", path)
@@ -67,6 +68,7 @@ class BobTerrainFitSampleExportTests(unittest.TestCase):
         )
         self.landscape = SimpleNamespace(
             get_path_name=lambda: "/World/Landscape",
+            get_class=lambda: SimpleNamespace(get_path_name=lambda: "/Script/Landscape.Landscape"),
             get_components_by_class=Mock(return_value=[self.landscape_component]),
         )
         self.road = SimpleNamespace(get_path_name=lambda: "/World/YACS_PERSIST_ROAD")
@@ -78,6 +80,7 @@ class BobTerrainFitSampleExportTests(unittest.TestCase):
             "blocking_hit": True, "hit_actor": self.landscape,
             "hit_component": self.landscape_component,
         }
+        self.python_owners_available = True
 
         def trace(world, start, end, channel, complex_trace, ignore, debug, ignore_self):
             self.assertEqual(ignore, [self.road, self.support])
@@ -90,10 +93,233 @@ class BobTerrainFitSampleExportTests(unittest.TestCase):
                 return None
             impact = SimpleNamespace(x=start.x, y=start.y, z=10200.0)
             fields = {"impact_point": impact, **self.hit_fields}
-            return SimpleNamespace(get_editor_property=lambda name: fields.get(name),
-                                   to_tuple=lambda: [impact])
+            return SimpleNamespace(
+                get_editor_property=lambda name: fields.get(name) if self.python_owners_available else None,
+                to_tuple=lambda: [impact], native_fixture_fields=fields,
+            )
 
         self.api.SystemLibrary.line_trace_single.side_effect = trace
+
+    def native_bridge_fixture(self):
+        self.bridge_overrides = {}
+        self.identity_overrides = {}
+
+        def checkpoint():
+            values = {
+                "accepted": True, "status": "CHECKPOINT_IDENTITY", "error": "",
+                "blocking_hit": False, "impact_point": SimpleNamespace(x=0.0, y=0.0, z=0.0),
+                "map_package": self.landscape.get_path_name().split(".")[0],
+                "hit_actor": self.landscape, "actor_path": self.landscape.get_path_name(),
+                "actor_class_path": self.landscape.get_class().get_path_name(),
+                "hit_component": None, "component_path": "", "component_class_path": "",
+            }
+            values.update(self.identity_overrides)
+            return SimpleNamespace(get_editor_property=lambda name: values.get(name))
+
+        def read(hit):
+            fields = hit.native_fixture_fields
+            blocking = fields.get("blocking_hit")
+            values = {
+                "accepted": True, "status": "OWNED_LANDSCAPE_HIT", "error": "",
+                "blocking_hit": blocking, "impact_point": fields["impact_point"],
+                "map_package": self.landscape.get_path_name().split(".")[0],
+                "hit_actor": self.landscape, "hit_component": self.landscape_component,
+                "actor_path": self.landscape.get_path_name(),
+                "actor_class_path": self.landscape.get_class().get_path_name(),
+                "component_path": self.landscape_component.get_path_name(),
+                "component_class_path": self.producer.HEIGHTFIELD_CLASS_PATH,
+            }
+            if blocking is False:
+                values.update(status="MISSING_HIT", error="Landscape sample has no blocking hit.",
+                              hit_actor=None, hit_component=None, actor_path="", actor_class_path="",
+                              component_path="", component_class_path="")
+            values.update(self.bridge_overrides)
+            return SimpleNamespace(get_editor_property=lambda name: values.get(name))
+
+        self.bridge = Mock(side_effect=read)
+        self.checkpoint = Mock(side_effect=checkpoint)
+        self.api.YacsBobLandscapeHitLibrary = SimpleNamespace(
+            inspect_accepted_landscape_hit=self.bridge,
+            inspect_accepted_checkpoint_identity=self.checkpoint,
+        )
+
+    def test_native_checkpoint_preflight_runs_once_before_census_and_first_trace(self):
+        self.landscape_fixture()
+        self.native_bridge_fixture()
+        previous_census = self.api.GameplayStatics.get_all_actors_of_class.side_effect
+        previous_trace = self.api.SystemLibrary.line_trace_single.side_effect
+
+        def census(*arguments):
+            self.checkpoint.assert_called_once_with()
+            return [self.landscape] if previous_census is None else previous_census(*arguments)
+
+        def trace(*arguments):
+            self.checkpoint.assert_called_once_with()
+            return previous_trace(*arguments)
+
+        self.api.GameplayStatics.get_all_actors_of_class.side_effect = census
+        self.api.SystemLibrary.line_trace_single.side_effect = trace
+        report = self.measure(landscape=self.landscape)
+        self.assertEqual(report["sample_count"], 242)
+        self.checkpoint.assert_called_once_with()
+
+    def test_native_checkpoint_wrong_map_or_changed_actor_fails_before_any_trace_or_sink(self):
+        for field in ("map_package", "hit_actor", "actor_path", "actor_class_path"):
+            with self.subTest(field=field):
+                self.landscape_fixture()
+                self.native_bridge_fixture()
+                self.identity_overrides[field] = self.road if field == "hit_actor" else "/Changed"
+                self.api.SystemLibrary.line_trace_single.reset_mock()
+                self.api.GameplayStatics.get_all_actors_of_class.reset_mock()
+                sink = Mock()
+                with self.assertRaisesRegex(RuntimeError, "checkpoint identity"):
+                    self.measure(landscape=self.landscape, sample_sink=sink)
+                self.api.SystemLibrary.line_trace_single.assert_not_called()
+                self.api.GameplayStatics.get_all_actors_of_class.assert_not_called()
+                self.bridge.assert_not_called()
+                sink.assert_not_called()
+
+    def test_native_checkpoint_malformed_or_measurement_shaped_identity_is_denied_before_trace(self):
+        for fields in (
+            {"accepted": None}, {"accepted": False, "status": "REJECTED"},
+            {"status": "OWNED_LANDSCAPE_HIT"}, {"error": "changed checkpoint"},
+            {"blocking_hit": True}, {"impact_point": None},
+            {"impact_point": SimpleNamespace(x=0.0, y=0.0, z=10200.0)},
+            {"hit_component": object()}, {"component_path": "/Foreign"},
+            {"component_class_path": "/Script/Engine.StaticMeshComponent"},
+        ):
+            with self.subTest(fields=fields):
+                self.landscape_fixture()
+                self.native_bridge_fixture()
+                self.identity_overrides = fields
+                self.api.SystemLibrary.line_trace_single.reset_mock()
+                with self.assertRaisesRegex(RuntimeError, "checkpoint identity"):
+                    self.measure(landscape=self.landscape)
+                self.api.SystemLibrary.line_trace_single.assert_not_called()
+                self.bridge.assert_not_called()
+
+    def test_native_checkpoint_rejection_cannot_be_bypassed_with_all_missing_hits(self):
+        self.landscape_fixture()
+        self.native_bridge_fixture()
+        self.misses = set(range(242))
+        self.identity_overrides["accepted"] = False
+        with self.assertRaisesRegex(RuntimeError, "checkpoint identity"):
+            self.measure(landscape=self.landscape)
+        self.api.SystemLibrary.line_trace_single.assert_not_called()
+
+    def test_native_bridge_missing_checkpoint_interface_fails_before_first_trace(self):
+        self.landscape_fixture()
+        self.native_bridge_fixture()
+        del self.api.YacsBobLandscapeHitLibrary.inspect_accepted_checkpoint_identity
+        with self.assertRaisesRegex(RuntimeError, "checkpoint interface"):
+            self.measure(landscape=self.landscape)
+        self.api.SystemLibrary.line_trace_single.assert_not_called()
+
+    def test_native_bridge_retains_full_rows_when_original_python_owner_fields_are_unavailable(self):
+        self.landscape_fixture()
+        original = self.measure(landscape=self.landscape)
+        self.trace_index = 0
+        self.python_owners_available = False
+        self.native_bridge_fixture()
+        sink = Mock()
+        actual = self.measure(landscape=self.landscape, sample_sink=sink)
+        self.assertEqual(actual, original)
+        self.assertEqual(self.bridge.call_count, 242)
+        self.assertEqual(len(sink.call_args.kwargs["samples"]), 242)
+        self.assertEqual(sink.call_args.kwargs["samples"][0]["landscape_z_m"], 102.0)
+
+    def test_native_bridge_explicit_miss_retains_incomplete_inspection(self):
+        self.landscape_fixture()
+        self.native_bridge_fixture()
+        self.hit_fields["blocking_hit"] = False
+        report = self.measure(landscape=self.landscape)
+        self.assertEqual(report["status"], "INSPECTION_INCOMPLETE")
+        self.assertEqual(report["trace_miss_count"], 242)
+
+    def test_native_bridge_rejections_never_use_available_permissive_reflection(self):
+        self.landscape_fixture()
+        self.native_bridge_fixture()
+        self.bridge_overrides = {"accepted": False, "status": "REJECTED", "error": "wrong map"}
+        sink = Mock()
+        with self.assertRaisesRegex(RuntimeError, "bridge rejected"):
+            self.measure(landscape=self.landscape, sample_sink=sink)
+        sink.assert_not_called()
+
+    def test_native_bridge_rejects_unknown_or_inconsistent_fields(self):
+        cases = (
+            {"accepted": None}, {"status": "UNKNOWN"}, {"blocking_hit": None},
+            {"error": "unexpected success error"}, {"error": None}, {"impact_point": None},
+            {"map_package": "/World/Wrong"}, {"hit_actor": None}, {"hit_component": None},
+            {"actor_path": "/World/Foreign"}, {"actor_class_path": "/Script/Engine.Actor"},
+            {"component_path": "/World/Foreign.Mesh"},
+            {"component_class_path": "/Script/Engine.StaticMeshComponent"},
+        )
+        for values in cases:
+            with self.subTest(values=values):
+                self.landscape_fixture()
+                self.native_bridge_fixture()
+                self.bridge_overrides = values
+                sink = Mock()
+                with self.assertRaises(RuntimeError):
+                    self.measure(landscape=self.landscape, sample_sink=sink)
+                sink.assert_not_called()
+
+    def test_native_bridge_rejects_unowned_component_and_owned_mesh(self):
+        for owned in (False, True):
+            with self.subTest(owned=owned):
+                self.landscape_fixture()
+                self.native_bridge_fixture()
+                component = SimpleNamespace(
+                    get_path_name=lambda: "/World/Landscape.Other_0",
+                    get_class=lambda: SimpleNamespace(get_path_name=lambda:
+                        "/Script/Engine.StaticMeshComponent" if owned else self.producer.HEIGHTFIELD_CLASS_PATH),
+                )
+                if owned:
+                    self.landscape.get_components_by_class.return_value += [component]
+                self.bridge_overrides = {"hit_component": component,
+                                         "component_path": component.get_path_name()}
+                with self.assertRaisesRegex(RuntimeError, "owner identity differs"):
+                    self.measure(landscape=self.landscape)
+
+    def test_native_bridge_impact_is_independently_validated_against_the_actual_ray(self):
+        for point in (
+            SimpleNamespace(x=5000.0, y=5000.0, z=10200.0),
+            SimpleNamespace(x=0.0, y=-100.0, z=float("nan")),
+        ):
+            with self.subTest(point=point):
+                self.landscape_fixture()
+                self.native_bridge_fixture()
+                self.bridge_overrides["impact_point"] = point
+                with self.assertRaises((RuntimeError, ValueError)):
+                    self.measure(landscape=self.landscape)
+
+    def test_native_bridge_missing_hit_cannot_supply_owner_references(self):
+        for field in ("hit_actor", "actor_path", "component_class_path"):
+            with self.subTest(field=field):
+                self.landscape_fixture()
+                self.native_bridge_fixture()
+                self.hit_fields["blocking_hit"] = False
+                self.bridge_overrides[field] = self.landscape if field == "hit_actor" else "/unexpected"
+                with self.assertRaisesRegex(RuntimeError, "inconsistent ownership"):
+                    self.measure(landscape=self.landscape)
+
+    def test_native_bridge_present_without_supported_method_fails_closed(self):
+        self.landscape_fixture()
+        self.api.YacsBobLandscapeHitLibrary = SimpleNamespace()
+        with self.assertRaisesRegex(RuntimeError, "interface is unavailable"):
+            self.measure(landscape=self.landscape)
+        self.api.SystemLibrary.line_trace_single.assert_not_called()
+
+    def test_default_measurement_does_not_use_native_bridge(self):
+        self.landscape_fixture()
+        self.native_bridge_fixture()
+        # Restore the legacy fixture's unfiltered trace implementation.
+        self.api.SystemLibrary.line_trace_single.side_effect = lambda world, start, *args: (
+            SimpleNamespace(to_tuple=lambda: [SimpleNamespace(x=start.x, y=start.y, z=10200.0)])
+        )
+        report = self.measure()
+        self.assertEqual(report["sample_count"], 242)
+        self.bridge.assert_not_called()
 
     def test_landscape_mode_ignores_saved_pavement_and_retains_same_complete_rows(self):
         ordinary = self.measure()
