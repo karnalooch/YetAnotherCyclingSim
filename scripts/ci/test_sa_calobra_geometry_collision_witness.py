@@ -23,7 +23,11 @@ class GeometryCollisionWitnessTests(unittest.TestCase):
             for name in geometry.GEOMETRY_IDS
         ]
         self.captures = [
-            {"frame_id": row["frame_id"], "mode": "prepared", "target_cm": row["target"]}
+            {
+                "frame_id": row["frame_id"],
+                "mode": "prepared",
+                "target_cm": row["target"],
+            }
             for row in self.views
         ]
         self.rock_height = 0.0
@@ -43,7 +47,9 @@ class GeometryCollisionWitnessTests(unittest.TestCase):
                 }[field]
             )
 
-        def trace(world, start, end, channel, complex_trace, ignored, debug, ignore_self):
+        def trace(
+            world, start, end, channel, complex_trace, ignored, debug, ignore_self
+        ):
             self.calls.append(tuple(actor.get_path_name() for actor in ignored))
             if self.rock in ignored:
                 return hit(self.landscape, start, 10000.0)
@@ -76,9 +82,7 @@ class GeometryCollisionWitnessTests(unittest.TestCase):
                 for row in report["samples"]
             )
         )
-        self.assertTrue(
-            all(row["height_delta_cm"] == 120 for row in report["samples"])
-        )
+        self.assertTrue(all(row["height_delta_cm"] == 120 for row in report["samples"]))
         self.assertFalse(report["mutation_performed"])
         self.assertFalse(report["geometry_defect_confirmed"])
         verified = geometry.validate_geometry_collision(report, self.captures)
@@ -98,6 +102,27 @@ class GeometryCollisionWitnessTests(unittest.TestCase):
         for views in (self.views[:-1], self.views + self.views[-1:]):
             with self.assertRaisesRegex(ValueError, "inventory"):
                 geometry.trace_plan(views)
+
+    def test_unreal_58_hit_tuple_fallback_does_not_invent_geometry(self):
+        def missing_property(_):
+            raise Exception("HitResult: Failed to find property 'impact_point'")
+
+        hit = SimpleNamespace(
+            get_editor_property=missing_property,
+            to_tuple=lambda: (
+                vector(30000, 50000, 150000),
+                vector(30000, 50000, -150000),
+                vector(0, 0, 1),
+                vector(30000, 50000, 10000),
+                vector(30000, 50000, 10000),
+            ),
+        )
+        result = geometry._hit_result(
+            hit, [30000, 50000, 150000], [30000, 50000, -150000]
+        )
+        self.assertEqual(result["impact_cm"], [30000.0, 50000.0, 10000.0])
+        self.assertIsNone(result["actor_path"])
+        self.assertIsNone(result["component_cast_shadow"])
 
     def test_forged_impact_or_actor_inventory_rejected(self):
         report = self.observe()

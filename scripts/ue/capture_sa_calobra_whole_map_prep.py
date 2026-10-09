@@ -403,6 +403,7 @@ class WholeMapCapture:
         self.exact_sha = exact_sha
         self.task = self.handle = self.pending = None
         self.capture_phase = "primary"
+        self.steps = []
         self.witness_steps = []
         self.binding = self.master = self.instance = None
         self.native_started = self.stopped = False

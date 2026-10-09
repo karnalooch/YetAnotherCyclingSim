@@ -56,9 +56,12 @@ def _property(hit, name):
     if callable(getter):
         try:
             return getter(name)
-        except (AttributeError, RuntimeError, TypeError):
+        except Exception:  # noqa: BLE001 - Unreal StructBase raises generic Exception
             pass
-    return getattr(hit, name, None)
+    try:
+        return getattr(hit, name, None)
+    except Exception:  # noqa: BLE001 - missing Unreal reflected property
+        return None
 
 
 def _vector(value, label):
@@ -75,7 +78,28 @@ def _hit_result(hit, start, end):
         return None
     location = _vector(_property(hit, "impact_point"), "impact point")
     if location is None:
-        raise RuntimeError("Native HitResult impact point cannot be read")
+        # UE5.8 HitResult reflection can reject impact_point even though
+        # the native StructBase.to_tuple() exposes its actual trace vectors.
+        # Reuse the same collinear-interior policy as the proven source probe.
+        candidates = []
+        direction = [b - a for a, b in zip(start, end, strict=True)]
+        length2 = sum(d * d for d in direction)
+        for item in hit.to_tuple():
+            if not all(hasattr(item, axis) for axis in ("x", "y", "z")):
+                continue
+            p = _vector(item, "tuple vector")
+            t = sum(
+                (x - a) * d for x, a, d in zip(p, start, direction, strict=True)
+            ) / length2
+            residual = sum(
+                (x - a - t * d) ** 2
+                for x, a, d in zip(p, start, direction, strict=True)
+            )
+            if 1e-7 < t < 1 - 1e-7 and residual <= 1.0:
+                candidates.append((t, p))
+        if not candidates:
+            raise RuntimeError("Native HitResult has no valid interior ray hit")
+        location = min(candidates, key=lambda row: row[0])[1]
     direction = [b - a for a, b in zip(start, end, strict=True)]
     length2 = sum(d * d for d in direction)
     if not length2:
