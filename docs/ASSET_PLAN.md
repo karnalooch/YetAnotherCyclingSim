@@ -18,6 +18,33 @@ Assets support the current Sa Calobra route under the product requirements and r
 
 The [October 5 reference and candidate comparison](experiments/sa-calobra-material-reference-review-2026-10-05.md) describes the earlier rejected prototype and six-role discovery, not the accepted October 9 five-role material foundation. Historical Alpine entries retain their original import/validation meaning; they do not approve suitability for Sa Calobra or current acquisition order. New sources still require the full lifecycle below; material acceptance does not approve arbitrary candidates or geographic placement.
 
+### Existing M3 material tools — Material Maker + Godot
+
+**YACS already uses Material Maker and Godot through [Material Forge](tooling/MATERIAL_FORGE.md).**
+Check this existing toolchain before recommending additional surface-authoring
+tools or material purchases, following the World Building Bible's tools-first
+policy.
+
+- **Material Maker 1.7** supplies the reviewed graph-authoring reference; the
+  pinned source revision is used for rendering.
+- **Godot 4.7.2-stable** primes that source project's import/script-class cache
+  and executes the existing offline render adapter.
+- **Material Forge** authors editable graphs, validates PBR outputs and
+  reproducibility, and provides the bounded Unreal import path.
+
+The existing catalog covers aged mountain asphalt, regional pale limestone
+and dry Mediterranean mineral soil. Exact revisions and families live in
+[`upstreams.json`](../worldgen/materials/material_forge/upstreams.json) and
+[`families.json`](../worldgen/materials/material_forge/families.json).
+Use the supported source-renderer workflow in the Material Forge contract;
+the packaged Material Maker release CLI is not the validated automation path.
+
+These are external offline authoring tools. Unreal remains the runtime
+consumer; BOB retains geometry ownership, and World Authority / PCG / PCGEx
+retain their geographic, semantic and placement boundaries. Generated
+materials still require their applicable provenance, Unreal, visual and
+performance admission.
+
 ### 1.1 Dwa typy assetów
 
 Historical #363 comparison, 2026-10-05: [21 sources for six surface roles](experiments/sa-calobra-surface-candidates-2026-10-05.md). At that evidence cutoff:
