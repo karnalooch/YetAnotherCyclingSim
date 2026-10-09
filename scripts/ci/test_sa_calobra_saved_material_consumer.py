@@ -85,6 +85,7 @@ class SourcePlanTests(unittest.TestCase):
                 cwd=directory,
                 text=True,
                 capture_output=True,
+                timeout=30,
                 check=False,
             )
         self.assertEqual(result.returncode, 0, result.stderr)

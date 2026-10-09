@@ -15,6 +15,7 @@ import subprocess
 import tempfile
 import textwrap
 import unittest
+from unittest.mock import patch
 
 from scripts.proof.retain_sa_calobra_tpp_survey import no_link
 
@@ -29,6 +30,96 @@ MARKERS = (
     "[shoulder-contact]",
     "[material-closeout]",
 )
+
+
+def parse_powershell_scripts(sources):
+    """Parse every workflow source in one bounded native process per test."""
+    payload = [
+        {"index": index, "source": source} for index, source in enumerate(sources)
+    ]
+    command = r"""
+$rows = @(ConvertFrom-Json -InputObject ([Console]::In.ReadToEnd()))
+$results = @()
+foreach ($row in $rows) {
+  $tokens = $null
+  $errors = $null
+  [void][System.Management.Automation.Language.Parser]::ParseInput(
+    [string]$row.source, [ref]$tokens, [ref]$errors)
+  $messages = @($errors | ForEach-Object { $_.ToString() })
+  $results += [ordered]@{ index = [int]$row.index; errors = $messages }
+  if ($errors.Count -gt 0) {
+    ConvertTo-Json -InputObject $results -Depth 6 -Compress | Write-Output
+    exit 1
+  }
+}
+ConvertTo-Json -InputObject $results -Depth 6 -Compress | Write-Output
+"""
+    result = subprocess.run(
+        [shutil.which("pwsh"), "-NoProfile", "-NonInteractive", "-Command", command],
+        # ASCII JSON avoids a Windows console-codepage dependency; JSON decoding
+        # reconstructs the original Unicode source before native ParseInput.
+        input=json.dumps(payload, ensure_ascii=True, allow_nan=False),
+        text=True,
+        capture_output=True,
+        timeout=30,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise AssertionError(
+            "PowerShell parse batch failed: " + result.stdout + result.stderr
+        )
+    records = json.loads(result.stdout.lstrip("\ufeff"))
+    if not isinstance(records, list) or [row.get("index") for row in records] != list(
+        range(len(sources))
+    ):
+        raise AssertionError("PowerShell parser did not report every source in order")
+    if any(row.get("errors") != [] for row in records):
+        raise AssertionError(
+            "PowerShell parser reported syntax errors: " + result.stdout
+        )
+    return records
+
+
+class PowerShellParserBatchTests(unittest.TestCase):
+    def test_one_bounded_process_preserves_all_source_bytes_and_results(self):
+        sources = ['Write-Host "literal `$value"', "# Unicode Ł\n$x=@{value=1}"]
+        result = subprocess.CompletedProcess(
+            [],
+            0,
+            json.dumps(
+                [
+                    {"index": 0, "errors": []},
+                    {"index": 1, "errors": []},
+                ]
+            ),
+            "",
+        )
+        with (
+            patch.object(shutil, "which", return_value="pwsh"),
+            patch.object(subprocess, "run", return_value=result) as run,
+        ):
+            self.assertEqual(len(parse_powershell_scripts(sources)), 2)
+        run.assert_called_once()
+        call = run.call_args
+        self.assertEqual(call.kwargs["timeout"], 30)
+        self.assertEqual(
+            [row["source"] for row in json.loads(call.kwargs["input"])], sources
+        )
+
+    def test_syntax_failure_and_incomplete_batch_fail_admission(self):
+        for result in (
+            subprocess.CompletedProcess(
+                [], 1, '[{"index":0,"errors":["bad syntax"]}]', ""
+            ),
+            subprocess.CompletedProcess([], 0, "[]", ""),
+        ):
+            with (
+                self.subTest(result=result),
+                patch.object(shutil, "which", return_value="pwsh"),
+                patch.object(subprocess, "run", return_value=result),
+            ):
+                with self.assertRaises(AssertionError):
+                    parse_powershell_scripts(["$x = 1"])
 
 
 def jobs():
@@ -264,26 +355,8 @@ class NativeDetailWorkflowTests(unittest.TestCase):
             self.native,
             flags=re.DOTALL,
         )
-        for index, source in enumerate(scripts):
-            with self.subTest(step=index):
-                script = textwrap.dedent(source)
-                result = subprocess.run(
-                    [
-                        shutil.which("pwsh"),
-                        "-NoProfile",
-                        "-NonInteractive",
-                        "-Command",
-                        "$tokens=$null; $errors=$null; "
-                        "[void][System.Management.Automation.Language.Parser]::ParseInput("
-                        "[Console]::In.ReadToEnd(), [ref]$tokens, [ref]$errors); "
-                        "if ($errors.Count -gt 0) { $errors | Out-String | Write-Output; exit 1 }",
-                    ],
-                    input=script,
-                    text=True,
-                    capture_output=True,
-                    timeout=30,
-                )
-                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue(scripts)
+        parse_powershell_scripts([textwrap.dedent(source) for source in scripts])
 
 
 class RenderedInputBindingTests(unittest.TestCase):

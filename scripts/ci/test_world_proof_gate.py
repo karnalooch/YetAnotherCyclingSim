@@ -297,7 +297,7 @@ class OwnerDeferralTests(unittest.TestCase):
 
     def git(self, *args):
         return subprocess.check_output(
-            ["git", *args], cwd=self.root, text=True, stderr=subprocess.PIPE
+            ["git", *args], cwd=self.root, text=True, stderr=subprocess.PIPE, timeout=30
         ).strip()
 
     def write(self, path, content):

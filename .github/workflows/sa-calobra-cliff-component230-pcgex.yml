@@ -318,17 +318,39 @@ jobs:
           python -m scripts.ci.sa_calobra_whole_map_workflow verify-assets --root $env:YACS_WHOLE_MAP_PROOF_ROOT --exact-sha $env:GITHUB_SHA
           if ($LASTEXITCODE -ne 0) { throw 'Native scene asset hashes do not match exact committed LFS objects.' }
 
-      - name: Test preparation boundaries and prepare all immutable source bundles
+      - name: Test preparation boundaries before native source generation
+        timeout-minutes: 5
         shell: pwsh
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
           $ErrorActionPreference = 'Stop'
           python -m unittest scripts.assets.test_sa_calobra_whole_map_surface_prep scripts.assets.test_install_sa_calobra_whole_map_prep scripts.assets.test_restore_workspace_data scripts.ci.test_sa_calobra_whole_map_prep scripts.ci.test_sa_calobra_whole_map_capture_views scripts.ci.test_sa_calobra_whole_map_workflow scripts.ci.test_sa_calobra_detail_native_workflow scripts.ci.test_sa_calobra_shoulder_contact scripts.ci.test_sa_calobra_saved_material_consumer scripts.ci.test_sa_calobra_performance scripts.ci.test_world_proof_gate -v
           if ($LASTEXITCODE -ne 0) { throw 'Whole-map CPU and workflow contract tests failed.' }
+
+      - name: Prepare immutable full-grid material source bundle
+        timeout-minutes: 5
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
           python scripts/assets/prepare_sa_calobra_whole_map_surface_prep.py --source-inputs worldgen/materials/visual_fill --placement-inputs $env:YACS_WHOLE_MAP_PLACEMENT --output $env:YACS_WHOLE_MAP_PREP
           if ($LASTEXITCODE -ne 0) { throw 'Full-grid material preparation or mandatory pinned PCG exclusion reasons failed.' }
+
+      - name: Prepare immutable retained native source bundle
+        timeout-minutes: 5
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
           python -m scripts.ci.sa_calobra_whole_map_workflow prepare-native --source $env:YACS_WHOLE_MAP_RETAINED_SOURCE --root $env:YACS_WHOLE_MAP_PROOF_ROOT --exact-sha $env:GITHUB_SHA
           if ($LASTEXITCODE -ne 0) { throw 'Retained native v8 donor validation failed.' }
+
+      - name: Verify immutable source bundles before native work
+        timeout-minutes: 5
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
           python -m scripts.ci.sa_calobra_whole_map_workflow verify-prepared --root $env:YACS_WHOLE_MAP_PROOF_ROOT --placement $env:YACS_WHOLE_MAP_PLACEMENT
           if ($LASTEXITCODE -ne 0) { throw 'Whole-map prepared output inventory failed.' }
 

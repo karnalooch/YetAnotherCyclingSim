@@ -19,7 +19,12 @@ from pathlib import Path
 from unittest import mock
 
 from scripts.ci import sa_calobra_whole_map_workflow as workflow
-from scripts.ci.test_sa_calobra_detail_native_workflow import WORKFLOW, enabled, jobs
+from scripts.ci.test_sa_calobra_detail_native_workflow import (
+    WORKFLOW,
+    enabled,
+    jobs,
+    parse_powershell_scripts,
+)
 
 
 def expand_github_expressions(source):
@@ -112,7 +117,10 @@ class WholeMapWorkflowRoutingTests(unittest.TestCase):
             "Sanitize tracked workspace while preserving verified build outputs",
             "Resolve immutable whole-map inputs in the configured workspace",
             "Hydrate only the frozen scene and full-grid material inputs",
-            "Test preparation boundaries and prepare all immutable source bundles",
+            "Test preparation boundaries before native source generation",
+            "Prepare immutable full-grid material source bundle",
+            "Prepare immutable retained native source bundle",
+            "Verify immutable source bundles before native work",
             "Verify installed exact-version material and Landscape API source",
             "Fingerprint the exact compile and Automation inputs",
             "Resolve verified Unreal execution mode",
@@ -267,23 +275,10 @@ class WholeMapWorkflowRoutingTests(unittest.TestCase):
         scripts = re.findall(
             r"        run: \|\n(.*?)(?=\n      - name:|\Z)", self.job, flags=re.DOTALL
         )
-        for index, source in enumerate(scripts):
-            with self.subTest(step=index):
-                result = subprocess.run(
-                    [
-                        shutil.which("pwsh"),
-                        "-NoProfile",
-                        "-NonInteractive",
-                        "-Command",
-                        "$tokens=$null; $errors=$null; [void][System.Management.Automation.Language.Parser]::ParseInput([Console]::In.ReadToEnd(), [ref]$tokens, [ref]$errors); if ($errors.Count -gt 0) { $errors | Out-String | Write-Output; exit 1 }",
-                    ],
-                    input=expand_github_expressions(textwrap.dedent(source)),
-                    text=True,
-                    capture_output=True,
-                    timeout=30,
-                    check=False,
-                )
-                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue(scripts)
+        parse_powershell_scripts(
+            [expand_github_expressions(textwrap.dedent(source)) for source in scripts]
+        )
 
 
 class CommittedEvidenceRefreshTests(unittest.TestCase):
