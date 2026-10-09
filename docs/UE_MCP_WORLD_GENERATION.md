@@ -275,6 +275,25 @@ native proof. Retain the guarded baseline and Draft #467; #384 stays open and
 #364 stays blocked. Do not substitute a generic gateway or treat synthetic
 adapter tests as native admission.
 
+[The final control-flow source run](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37990333833)
+passed at `df43779606cfdbf6d3726b82ea19d26ba649e3a7`. Its
+[artifact 11645176572](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37990333833/artifacts/11645176572)
+has archive SHA-256
+`d7e2033984c026330e673cf7597d4866677a699966d3148ff222fabf9cd7280a`.
+Complete selected bodies confirm that `SetNameFilters` filters names and
+`ExecuteTool` forwards caller JSON. `AutomationTestToolset.cpp`, lines 135–166
+(SHA-256 `f4b66c8c3567810a4da11dd1298975798e576b42dd6ea4d8f843f7abb415f0b9`),
+rejects an unavailable subsystem or empty `TestNames`, then stops the current
+test run and executes the caller-supplied names. This inspected entry point
+does not bind the single permitted YACS test; an idle-state check is also needed
+before any eventual invocation. Complete stock read bodies return the current
+level path, the supplied actor's label or the supplied object's class, without
+binding the admitted map/object. These are source observations, not discovered
+RPC schemas or proof that every possible native extension lacks a guard.
+The outcome remains `GUARD_PARITY_UNESTABLISHED`; stop this source-collector
+workstream here. A supported native argument boundary, actual reflected
+signatures and runtime denial/async-result evidence are needed before wiring.
+
 ### Safety and preserved governance
 
 - Prove a narrow read/inspect/test surface. Loading All Toolsets is not blanket authorization for every registered operation.
