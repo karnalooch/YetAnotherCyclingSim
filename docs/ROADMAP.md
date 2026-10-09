@@ -76,7 +76,7 @@ Produce a believable, deterministic Sa Calobra route/world foundation that can s
 |---|---|---|
 | **Route truth** | canonical route XY, distance, grade, curvature and road-physics profile | established; remains authoritative |
 | **Terrain** | real DTM -> metric deterministic Landscape foundation | active / proven source path; architecture being consolidated |
-| **Road & Earthworks** | real Ma-2141 alignment, road mesh, non-destructive cut/fill, shoulder tie-in | **current priority after DTM import** |
+| **Road & Earthworks** | real Ma-2141 alignment, road mesh, non-destructive cut/fill, shoulder tie-in | remaining road/CUT/contact debt; separate #337/#459 scopes |
 | **Materials** | coherent terrain/road surface foundation | #363 whole-area Landscape foundation accepted/frozen; #364 asphalt/shoulder awaits #384 |
 | **Biomes** | valley / forest / exposed limestone-upland PCG and route exclusion | baseline systems exist; preserve the tooling and retune presentation for Mallorca |
 | **Proof** | rider-camera visual acceptance, exact-SHA technical evidence, performance | active |
