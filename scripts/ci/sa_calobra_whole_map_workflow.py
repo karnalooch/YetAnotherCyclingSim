@@ -1737,9 +1737,7 @@ def verify_native_evidence(repo, root, head):
         report.get("diagnostic_complete") is True,
         "Bounded same-camera visual witness is incomplete",
     )
-    witness = audit_witnesses(
-        proof, captures, report.get("diagnostic_captures", [])
-    )
+    witness = audit_witnesses(proof, captures, report.get("diagnostic_captures", []))
     witness_file = root / "whole-map-normal-shadow-witness.json"
     write_json(witness_file, witness)
     response = verify_normal_response(proof, report)

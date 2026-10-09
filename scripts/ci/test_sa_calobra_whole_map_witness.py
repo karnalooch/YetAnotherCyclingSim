@@ -61,9 +61,7 @@ class WholeMapWitnessTests(unittest.TestCase):
                 )
 
     def verify(self):
-        return audit_witnesses(
-            self.root, self.primary, self.diagnostics, (96, 72)
-        )
+        return audit_witnesses(self.root, self.primary, self.diagnostics, (96, 72))
 
     def test_eight_distinct_paired_witnesses_preserve_original_pose(self):
         r = self.verify()
@@ -77,8 +75,12 @@ class WholeMapWitnessTests(unittest.TestCase):
         self.assertEqual(len(witness_steps(views)), 8)
         with self.assertRaisesRegex(ValueError, "incomplete"):
             witness_steps(views[:-1])
-        self.assertEqual(witness_parameters("flat-normal", {})["MicroNormalStrength"], 0)
-        self.assertEqual(witness_parameters("no-shadows", {})["MicroNormalStrength"], 0.75)
+        self.assertEqual(
+            witness_parameters("flat-normal", {})["MicroNormalStrength"], 0
+        )
+        self.assertEqual(
+            witness_parameters("no-shadows", {})["MicroNormalStrength"], 0.75
+        )
         with self.assertRaisesRegex(ValueError, "Unknown"):
             witness_parameters("magic", {})
 
