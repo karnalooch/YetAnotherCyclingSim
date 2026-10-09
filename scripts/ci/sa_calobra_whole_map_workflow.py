@@ -1726,6 +1726,11 @@ def verify_native_evidence(repo, root, head):
             "Independent distance-detail control changed",
         )
     files = verify_capture_files(proof, captures)
+    from scripts.ci.sa_calobra_whole_map_visual_review import audit_near_views
+
+    visual_review = audit_near_views(proof, captures, NEAR_VIEWS)
+    visual_review_path = root / "whole-map-visual-anomaly-review.json"
+    write_json(visual_review_path, visual_review)
     response = verify_normal_response(proof, report)
     parent = read_json(
         root / "capture/component230-cliff-visual-receipt.json", 8 * 1024 * 1024
@@ -1765,6 +1770,13 @@ def verify_native_evidence(repo, root, head):
         "near_landscape_source_windows_verified": len(near_probes),
         "near_landscape_collision_range_cm": [100, 500],
         "near_landscape_rendered_pixel_depth_verified": False,
+        "visual_anomaly_review": {
+            "status": visual_review["status"],
+            "flagged_views": visual_review["flagged_views"],
+            "file": "whole-map-visual-anomaly-review.json",
+            "sha256": digest(read_bytes(visual_review_path)),
+            "visual_acceptance": "PENDING_OWNER",
+        },
         "original_survey_csv_sha256": FRAMES,
         "original_survey_frame_ids": list(survey_views),
         "near_far_material_response": response,
