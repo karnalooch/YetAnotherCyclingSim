@@ -56,6 +56,40 @@ function Get-ProbeFileIdentity {
         sha256 = $hash
     }
 }
+function Get-ProbeOwnedRedirectLogIdentity {
+    param([Parameter(Mandatory)][ValidateSet('input-boundary-stdout.log', 'input-boundary-stderr.log')][string] $Name)
+    if ($receipt.owned_editor_exit_observed -ne $true -or $receipt.owned_editor_pid -isnot [int] -or $receipt.owned_editor_pid -le 0) {
+        throw 'Redirected log retention requires the observed exit of this invocation owned Editor.'
+    }
+    $path = Join-Path $ArtifactRoot $Name
+    Assert-ProbePlainPath $path
+    $before = Get-Item -LiteralPath $path -Force
+    if ($before.PSIsContainer -or $before.Length -gt 2MB) { throw 'Owned redirected log is not a bounded regular file.' }
+    $writeTicks = $before.LastWriteTimeUtc.Ticks
+    # PowerShell may retain its redirect writer after the child has exited.
+    # Sharing that handle permits reading only; byte/time drift still blocks.
+    $stream = [IO.FileStream]::new($path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::ReadWrite)
+    try {
+        $buffer = [byte[]]::new(2MB + 1)
+        $count = 0
+        while (($chunk = $stream.Read($buffer, $count, $buffer.Length - $count)) -gt 0) {
+            $count += $chunk
+            if ($count -gt 2MB) { throw 'Owned redirected log grew beyond its 2 MiB read bound.' }
+        }
+        $bytes = [byte[]]::new($count)
+        [Array]::Copy($buffer, $bytes, $count)
+    }
+    finally { $stream.Dispose() }
+    Assert-ProbePlainPath $path
+    $after = Get-Item -LiteralPath $path -Force
+    if ($count -ne $before.Length -or $count -ne $after.Length -or $writeTicks -ne $after.LastWriteTimeUtc.Ticks) {
+        throw 'Owned redirected log changed during its retained read.'
+    }
+    return [ordered]@{
+        path = [IO.Path]::GetFullPath($path); size_bytes = $count; last_write_ticks = $writeTicks
+        sha256 = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
+    }
+}
 function Write-ProbeJson {
     param([Parameter(Mandatory)][string] $Path, [Parameter(Mandatory)] $Value)
     Assert-ProbePlainPath $Path
@@ -479,9 +513,12 @@ $receipt = [ordered]@{
     native_python_reflection_verified = $false
     owned_editor_pid = $null
     owned_editor_exit_code = $null
+    owned_editor_exit_observed = $false
     owned_editor_timed_out = $false
     proof_files = [ordered]@{}
     host_project_plugin_list = @()
+    disabled_engine_plugins = @()
+    disabled_engine_plugin_identity = $null
     host_project_source_sha256 = [ordered]@{}
     native_registry_dispatch_verified = $false
     official_mcp_transport_verified = $false
@@ -493,6 +530,7 @@ $receipt = [ordered]@{
     performance_pass = $false
     performance_status = 'DEFERRED_AFTER_M3'
     secondary_errors = @()
+    secondary_error_details = @()
     error = $null
 }
 $ownedEditor = $null
@@ -586,6 +624,46 @@ try {
     $receipt.package_root = $package
     $receipt.host_project_root = $HostProjectRoot
     $receipt.planned_action_path_length = $actionExample.Length
+
+    # This exact installed descriptor establishes the plugin name responsible
+    # for the diagnosed generated-Config write. Disable it only in this launch.
+    $afsPath = Join-Path $engine.Root 'Engine/Plugins/Runtime/AndroidFileServer/AndroidFileServer.uplugin'
+    Assert-ProbePlainPath $afsPath
+    $afsEntry = Get-Item -LiteralPath $afsPath -Force
+    if ($afsEntry.PSIsContainer -or $afsEntry.Name -cne 'AndroidFileServer.uplugin' -or $afsEntry.Length -gt 64KB) {
+        throw 'The fixed AndroidFileServer descriptor is not a bounded regular file.'
+    }
+    $afsWriteTicks = $afsEntry.LastWriteTimeUtc.Ticks
+    $afsStream = [IO.File]::OpenRead($afsPath)
+    try {
+        $afsBuffer = [byte[]]::new(64KB + 1)
+        $afsCount = 0
+        while (($chunk = $afsStream.Read($afsBuffer, $afsCount, $afsBuffer.Length - $afsCount)) -gt 0) {
+            $afsCount += $chunk
+            if ($afsCount -gt 64KB) { throw 'The fixed AndroidFileServer descriptor grew beyond its read bound.' }
+        }
+        $afsBytes = [byte[]]::new($afsCount)
+        [Array]::Copy($afsBuffer, $afsBytes, $afsCount)
+    }
+    finally { $afsStream.Dispose() }
+    $afsAfter = Get-Item -LiteralPath $afsPath -Force
+    if ($afsCount -ne $afsEntry.Length -or $afsCount -ne $afsAfter.Length -or $afsWriteTicks -ne $afsAfter.LastWriteTimeUtc.Ticks) {
+        throw 'The fixed AndroidFileServer descriptor changed during read.'
+    }
+    $afsDescriptor = [Text.Encoding]::UTF8.GetString($afsBytes).TrimStart([char]0xFEFF) | ConvertFrom-Json -AsHashtable -Depth 16
+    if ($afsDescriptor -isnot [Collections.IDictionary] -or -not $afsDescriptor.Contains('Modules') `
+        -or $afsDescriptor['Modules'] -isnot [array] -or $afsDescriptor['Modules'].Count -gt 16) {
+        throw 'The fixed AndroidFileServer descriptor has no bounded module declaration.'
+    }
+    $afsModules = @($afsDescriptor['Modules'] | ForEach-Object { $_['Name'] })
+    if ('AndroidFileServerEditor' -cnotin $afsModules -or @($afsModules | Where-Object { $_ -isnot [string] -or $_ -cnotmatch '^[A-Za-z_][A-Za-z0-9_]*$' }).Count) {
+        throw 'The actual descriptor does not establish the diagnosed AndroidFileServerEditor module.'
+    }
+    $receipt.disabled_engine_plugins = @('AndroidFileServer')
+    $receipt.disabled_engine_plugin_identity = [ordered]@{
+        path = $afsPath; size_bytes = $afsCount; modules = $afsModules
+        sha256 = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($afsBytes)).ToLowerInvariant()
+    }
 
     # Evidence gaps cannot admit runtime and do not prevent independent compile.
     foreach ($preflight in @(
@@ -813,6 +891,7 @@ try {
     $editorArgs = @(
         ('"' + $HostProjectPath + '"'), '/Engine/Maps/Entry',
         '-Unattended', '-NoPause', '-NullRHI', '-NoSplash', '-NoSound', '-log',
+        '-DisablePlugins=AndroidFileServer',
         ('-AbsLog="' + $editorLog + '"'), ('-ReportExportPath="' + $reportRoot + '"'),
         ('-execcmds="Automation RunTests ' + $TestName + ';Quit"')
     )
@@ -932,6 +1011,10 @@ finally {
                     $receipt.status = 'BLOCKED'
                 }
             }
+            $receipt.owned_editor_exit_observed = $ownedEditor.HasExited
+            if ($receipt.owned_editor_exit_observed -and $null -eq $receipt.owned_editor_exit_code) {
+                $receipt.owned_editor_exit_code = $ownedEditor.ExitCode
+            }
         }
         catch {
             $receipt.secondary_errors += 'Cannot terminate the owned isolated Editor handle.'
@@ -943,12 +1026,38 @@ finally {
     foreach ($name in @('native-plugin-build.log', 'input-boundary-editor.log', 'input-boundary-stdout.log', 'input-boundary-stderr.log', 'python-runtime-settings.json', 'runtime-dependencies.json')) {
         $path = Join-Path $ArtifactRoot $name
         if (Test-Path -LiteralPath $path -PathType Leaf) {
-            try { $receipt.proof_files[$name] = Get-ProbeFileIdentity $path }
+            try {
+                $receipt.proof_files[$name] = if ($name -cin @('input-boundary-stdout.log', 'input-boundary-stderr.log')) {
+                    Get-ProbeOwnedRedirectLogIdentity $name
+                }
+                else { Get-ProbeFileIdentity $path }
+            }
             catch {
                 $receipt.secondary_errors += "Cannot retain native proof output identity: $name ($($_.Exception.GetType().Name))."
+                $baseError = $_.Exception.GetBaseException()
+                $receipt.secondary_error_details += [ordered]@{
+                    output = $name; exception_type = $_.Exception.GetType().FullName
+                    inner_exception_type = $baseError.GetType().FullName; hresult = $baseError.HResult.ToString('X8')
+                }
                 $receipt.status = 'BLOCKED'
                 if (-not $receipt.error) { $receipt.error = $receipt.secondary_errors[-1] }
             }
+        }
+    }
+    foreach ($name in @('input-boundary-stdout.log', 'input-boundary-stderr.log')) {
+        if (-not $receipt.proof_files.Contains($name)) { continue }
+        try {
+            $identity = $receipt.proof_files[$name]
+            Assert-ProbePlainPath $identity.path
+            $entry = Get-Item -LiteralPath $identity.path -Force
+            if ($entry.PSIsContainer -or $entry.Length -ne $identity.size_bytes -or $entry.LastWriteTimeUtc.Ticks -ne $identity.last_write_ticks) {
+                throw 'Owned redirected log changed before receipt persistence.'
+            }
+        }
+        catch {
+            $receipt.secondary_errors += "Owned redirected log final recheck failed: $name."
+            $receipt.status = 'BLOCKED'
+            if (-not $receipt.error) { $receipt.error = $receipt.secondary_errors[-1] }
         }
     }
     $json = $receipt | ConvertTo-Json -Depth 20

@@ -414,13 +414,28 @@ try:
     # its real callers; this is not a search of the Core source tree.
     item=optional('Engine/Source/Runtime/Core/Private/Misc/ConfigCacheIni.cpp','mcp')
     if item:
-        definitions=sorted(set(re.findall(r'\b(\w+)::(\w+)\s*\(',cpp_mask(item['text']))))
+        masked=cpp_mask(item['text'])
+        namespace=re.search(r'\bnamespace\s+CommandlineOverrideSpecifiers\s*\{',masked)
+        if namespace:
+            cursor,depth=namespace.end(),1
+            while cursor<len(masked) and depth:
+                if masked[cursor]=='{': depth+=1
+                elif masked[cursor]=='}': depth-=1
+                cursor+=1
+            add_span(item,'startup_config_specifier_constants',masked.count('\n',0,namespace.start())+1,
+                     masked.count('\n',0,cursor)+1,depth==0,
+                     None if depth==0 else 'NAMESPACE_BODY_INCOMPLETE')
+        else:
+            gaps.append(dict(topic='startup_config_specifier_constants',reason='NAMED_NAMESPACE_NOT_ESTABLISHED'))
+        definitions=sorted(set(re.findall(r'\b(\w+)::(\w+)\s*\(',masked)))
         for owner,name in definitions:
             if re.search(r'Commandline|CommandLine',name):
                 functions(item,r'\b'+owner+'::'+name+r'\s*\(',
                           'startup_config_'+owner+'_'+name,required=False)
         named_contexts(item,r'\bOverrideFromCommandline\b|"ini:',
                        'startup_config_override_callsite_context',24)
+        named_contexts(item,r'ini\.UseNewDynamicLayers|\bFConfigContext\b|#\s*include[^\n]*ConfigContext|\bLoad(?:Global|Local)IniFile\b',
+                       'startup_config_loading_context',10)
     # Two fixed PythonScriptPlugin files are the only added bridge inputs.
     # No installed Python is imported, and no command is executed by this probe.
     python_plugin='Engine/Plugins/Experimental/PythonScriptPlugin/Source/PythonScriptPlugin/'
@@ -516,6 +531,7 @@ finally:
             if excerpt['purpose']!='mcp': return excerpt['purpose']
             return 'mcp_transport' if excerpt['topic'].startswith(('server_','server_dependency_','official_server_','adapter_','http_')) else 'mcp'
         def console_priority(excerpt):
+            if excerpt['topic'] in {'startup_config_specifier_constants','startup_config_loading_context'}: return -5
             if excerpt['topic'].startswith('startup_config_'): return -4
             if excerpt['topic']=='expected_error_declarations': return -3
             if excerpt['topic']=='expected_matcher_constructor_context': return -2

@@ -115,10 +115,17 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
                    "bool FAutomationExpectedLogMessage::HasMetExpectedOccurrences() { return Occurrences == 1; }\n"
                    "void FAutomationTestBase::AddExpectedError() { RecordSynthetic(); }\n")
         self.write(CONFIG_CACHE_IMPL,
+                   '#include "Misc/ConfigContext.h"\n'
+                   'const char* fake=R"tag(namespace CommandlineOverrideSpecifiers { FAKE_MUST_NOT_BE_SELECTED; })tag";\n'
+                   "namespace CommandlineOverrideSpecifiers {\n"
+                   ' const char IniSwitchIdentifier[]="-ini:SYNTHETIC:";\n'
+                   ' const char PropertyStartIdentifier[]= "]:";\n}\n'
+                   'static const char* DynamicLayersName="ini.UseNewDynamicLayers";\n'
                    "void FConfigFile::OverrideFromCommandline(const FString& Filename) {\n"
                    ' const char* option="ini:Synthetic:[SyntheticSettings]:Flag=false";\n'
                    " ApplySyntheticOverride(option);\n}\n"
                    "void FConfigCacheIni::LoadSyntheticIni() {\n"
+                   " FConfigContext::SyntheticLoad();\n"
                    " SyntheticFile.OverrideFromCommandline(SyntheticFilename);\n}\n")
         self.write(PROJECTS_HEADER, "virtual bool ConfigureEnabledPlugin() = 0;\n")
         self.write(PROJECTS_IMPL, "bool FPluginManager::ConfigureEnabledPlugins() {\n"
@@ -195,6 +202,14 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
                             for item in receipt["excerpts"] if item["topic"] == "startup_config_override_callsite_context"
                             for line in item["lines"]))
         self.assertIn("topic=startup_config_FConfigFile_OverrideFromCommandline body_complete=True", process.stdout)
+        constants = next(item for item in receipt["excerpts"] if item["topic"] == "startup_config_specifier_constants")
+        self.assertTrue(constants["body_complete"])
+        self.assertFalse(any("FAKE_MUST_NOT_BE_SELECTED" in line["text"] for line in constants["lines"]))
+        self.assertTrue(any('IniSwitchIdentifier[]="-ini:SYNTHETIC:"' in line["text"] for line in constants["lines"]))
+        self.assertTrue(any("FConfigContext::SyntheticLoad" in line["text"]
+                            for item in receipt["excerpts"] if item["topic"] == "startup_config_loading_context"
+                            for line in item["lines"]))
+        self.assertIn("topic=startup_config_specifier_constants body_complete=True", process.stdout)
         for topic in ("expected_error_declarations", "expected_matcher_constructor_context",
                       "expected_FAutomationExpectedMessage_Matches",
                       "expected_FAutomationExpectedLogMessage_HasMetExpectedOccurrences",

@@ -397,9 +397,9 @@ assertion failure. The test now expects each complete literal denial message
 exactly once and checks actual occurrence counts, retaining all denial calls
 and assertions. The installed Core API and count verification were confirmed
 in [diagnostic 38000430250](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38000430250)
-at `79a7279176a7b5abddd21729fb88ff352c2a66d7`. After the retry recorded
-below, branch pushes select its fixed readback, which launches no Editor and
-compiles no code. Manual native dispatch remains available after diagnosis.
+at `79a7279176a7b5abddd21729fb88ff352c2a66d7`. Branch pushes now select
+the fixed native proof after the configuration writer was identified below.
+Manual dispatch retains the previous attempt's bounded readback option.
 A passing native proof is pending.
 The same diagnostic located the actual private Python settings header, SHA-256
 `6c5f68a3945759234a9b38a98ac7d1369a91982f9d36c433eb2e518e79ebb5f2`,
@@ -421,8 +421,19 @@ the generated HostProject's `Config/DefaultEngine.ini` changed: its post-startup
 469 bytes hash to
 `a090175a44123f56df2d6432a5cf2fa45f9aaab3d33df5fdab51d901a77551b8`.
 The script, public header, plugin descriptor and project descriptor all match
-their original hashes. The added config keys and owning startup behavior must
-be identified before another native launch; the hash contract remains binding.
+their original hashes.
+[Config-content readback 38004216108](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38004216108)
+at `3d7645e145d55fb4832be7b03656b5a7611e5e91` identifies added
+`AndroidFileServerEditor.AndroidFileServerRuntimeSettings` keys; the generated
+security value is redacted. The next bare-project launch verifies the fixed
+installed descriptor and disables only `AndroidFileServer` through the proved
+plugin command-line mechanism. It neither accepts rewritten configuration nor
+changes the original project descriptor. The hash contract remains binding.
+Only this invocation's two redirected logs may be read with shared read access
+after its owned Editor has exited; bounded size and timestamp checks reject
+changes during reading or before receipt persistence. General source hashing
+retains its existing behavior. This retention correction still awaits runtime
+verification.
 Hash failures now identify the exact field and both digests. The dependency
 reader independently did not start: its embedded
 Python program is 33,053 characters, and
@@ -452,11 +463,15 @@ invalidation: notification must name `GEngineIni` and that section before
 listener creation. Early Python remote-execution and MCP automatic-start
 settings still require a proved config override mechanism before module load;
 the bounded reader now includes only the fixed Core `ConfigCacheIni.cpp` for
-that remaining startup question.
+that remaining startup question. Both command-line override parser bodies are
+verified; the next same-file read prioritizes their literal specifiers and
+configuration-loading contexts to establish precedence.
 
 Protected [CI 38002861390](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38002861390)
 passed for `4afa5e43d1e2fc58abcd0264408065e5d21d3ed4`, including
-hosted Python, equivalent exact-head Unreal proof reuse and Aggregate. Standard
+hosted Python, equivalent exact-head Unreal proof reuse and Aggregate.
+Protected [CI 38004220925](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38004220925)
+also passed for `3d7645e145d55fb4832be7b03656b5a7611e5e91`. Standard
 CI leaves the new plugin disabled; this result does not admit the new native
 boundary or official MCP session.
 
