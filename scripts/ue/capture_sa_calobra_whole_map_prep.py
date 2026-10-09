@@ -17,6 +17,7 @@ import traceback
 from pathlib import Path
 
 from scripts.ue.prepare_landscape_capture import prepare_capture
+from scripts.ue.sa_calobra_geometry_collision_witness import capture_geometry_collision
 from scripts.ue.sa_calobra_whole_map_witness import (
     WITNESS_MODES,
     witness_parameters,
@@ -424,6 +425,7 @@ class WholeMapCapture:
             "capture_plan": [],
             "captures": [],
             "diagnostic_captures": [],
+            "geometry_collision_witness": {"status": "PENDING"},
             "diagnostic_capture_plan": [],
             "diagnostic_complete": False,
             "native_source": None,
@@ -750,6 +752,9 @@ class WholeMapCapture:
             self.report["native_source"] = native
             self.report["separate_mesh_materials_before"] = self.binding.other_materials
             self.views = self._build_views()
+            self.report["geometry_collision_witness"] = capture_geometry_collision(
+                self.api, self.world, self.landscape, self.views
+            )
             self.steps = build_steps(self.views)
             self.witness_steps = witness_steps(self.views)
             self.report["diagnostic_capture_plan"] = [

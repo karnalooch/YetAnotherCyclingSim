@@ -1753,6 +1753,15 @@ def verify_native_evidence(repo, root, head):
     witness = audit_witnesses(proof, captures, report.get("diagnostic_captures", []))
     witness_file = root / "whole-map-normal-shadow-witness.json"
     write_json(witness_file, witness)
+    from scripts.ue.sa_calobra_geometry_collision_witness import (
+        validate_geometry_collision,
+    )
+
+    geometry_review = validate_geometry_collision(
+        report.get("geometry_collision_witness", {}), captures
+    )
+    geometry_file = root / "whole-map-geometry-collision-review.json"
+    write_json(geometry_file, geometry_review)
     response = verify_normal_response(proof, report)
     parent = read_json(
         root / "capture/component230-cliff-visual-receipt.json", 8 * 1024 * 1024
@@ -1789,6 +1798,13 @@ def verify_native_evidence(repo, root, head):
         "surface_manifest_fingerprint": manifest["fingerprint"],
         "component_count": len(components),
         "primary_frame_count": len(captures),
+        "geometry_collision_review": {
+            "file": "whole-map-geometry-collision-review.json",
+            "sha256": digest(read_bytes(geometry_file)),
+            "status": geometry_review["status"],
+            "sample_count": geometry_review["sample_count"],
+            "visual_acceptance": "PENDING_OWNER",
+        },
         "diagnostic_witness": {
             "file": "whole-map-normal-shadow-witness.json",
             "sha256": digest(read_bytes(witness_file)),
