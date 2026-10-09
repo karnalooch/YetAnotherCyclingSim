@@ -1835,12 +1835,39 @@ def verify_native_evidence(repo, root, head):
     return receipt
 
 
-def restore(repo, root, head):
+def restore(repo, root, head, *, phase="initial"):
     """Verify canonical bytes and retained source conservation even after failure."""
     repo, root = Path(repo), Path(root)
+    receipts = {
+        "initial": "checkout-restoration.json",
+        "post-material": "checkout-restoration-post-material.json",
+    }
+    require(phase in receipts, "Unsupported conservation phase")
+    output = root / receipts[phase]
+    require(not output.exists(), "Refusing to replace evidence: " + str(output))
     errors = []
+    initial_sha = None
     try:
         exact_head(repo, head)
+        if phase == "post-material":
+            initial_bytes = read_bytes(root / receipts["initial"])
+            initial = json.loads(initial_bytes)
+            require(isinstance(initial, dict), "Invalid initial conservation receipt")
+            require(
+                initial.get("exact_sha") == head
+                and initial.get("status") == "PASS"
+                and initial.get("errors") == []
+                and all(
+                    initial.get(key) is True
+                    for key in (
+                        "tracked_checkout_unchanged",
+                        "retained_source_unchanged",
+                        "prepared_bundle_unchanged",
+                    )
+                ),
+                "Initial conservation receipt is missing, stale or failed",
+            )
+            initial_sha = digest(initial_bytes)
         dirty = (
             git(repo, "status", "--porcelain=v1", "--untracked-files=no")
             .decode()
@@ -1892,6 +1919,7 @@ def restore(repo, root, head):
     receipt = {
         "schema_version": 1,
         "exact_sha": head,
+        "audit_phase": phase,
         "status": "PASS" if not errors else "FAIL",
         "map_sha256": MAP_SHA256,
         "tracked_checkout_unchanged": not errors,
@@ -1899,7 +1927,9 @@ def restore(repo, root, head):
         "prepared_bundle_unchanged": not errors,
         "errors": errors,
     }
-    write_json(root / "checkout-restoration.json", receipt)
+    if phase == "post-material":
+        receipt["initial_receipt_sha256"] = initial_sha
+    write_json(output, receipt)
     require(
         not errors,
         "Whole-map source/checkout conservation failed: " + "; ".join(errors),
@@ -1919,6 +1949,7 @@ def main():
             "retain-master",
             "verify-native",
             "restore",
+            "restore-consumer",
         ),
     )
     parser.add_argument("--repo", type=Path, default=ROOT)
@@ -1948,7 +1979,12 @@ def main():
     elif args.action == "retain-master":
         result = retain_master(args.repo, args.root, args.exact_sha)
     else:
-        result = restore(args.repo, args.root, args.exact_sha)
+        result = restore(
+            args.repo,
+            args.root,
+            args.exact_sha,
+            phase="post-material" if args.action == "restore-consumer" else "initial",
+        )
     print(
         json.dumps(
             result

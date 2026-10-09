@@ -201,6 +201,15 @@ class WholeMapWorkflowRoutingTests(unittest.TestCase):
         self.assertEqual(saved.count("Start-Process -FilePath"), 1)
         self.assertNotIn("New-Item -ItemType Directory", saved)
         self.assertNotIn("./scripts/ue/Invoke-YacsSaCalobraPerformance.ps1 ", self.job)
+        before = self.job.split(ordered[1], 1)[1].split("      - name:", 1)[0]
+        after = self.job.split(ordered[3], 1)[1].split("      - name:", 1)[0]
+        self.assertIn("whole_map_workflow restore --root", before)
+        self.assertIn("whole_map_workflow restore-consumer --root", after)
+        review = self.job.split(
+            "Upload original saved-material frames for owner review", 1
+        )[1]
+        self.assertIn("/checkout-restoration.json", review)
+        self.assertIn("/checkout-restoration-post-material.json", review)
 
     def test_shoulder_diagnostic_cannot_rebuild_or_save_accepted_geometry(self):
         diagnostic = self.job.split(
@@ -1217,6 +1226,135 @@ class WholeMapNearRasterTests(unittest.TestCase):
                 path.write_bytes(changed)
                 with self.assertRaisesRegex(ValueError, "survey CSV byte identity"):
                     workflow.read_original_survey_views(path)
+
+
+class WholeMapConservationPhaseTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        base = Path(self.temporary.name)
+        self.repo, self.root = base / "repo", base / "proof"
+        self.source, self.placement = base / "source", base / "placement"
+        for directory in (self.repo, self.root, self.source, self.placement):
+            directory.mkdir()
+        native = self.write(self.repo, "Content/native.bin", b"frozen native asset")
+        workflow.git(self.repo, "init", "-q")
+        workflow.git(self.repo, "config", "commit.gpgsign", "false")
+        workflow.git(self.repo, "config", "core.autocrlf", "false")
+        workflow.git(self.repo, "config", "core.hooksPath", str(base / "empty-hooks"))
+        workflow.git(self.repo, "add", ".")
+        workflow.git(
+            self.repo,
+            "-c",
+            "user.name=Conservation Fixture",
+            "-c",
+            "user.email=fixture@example.invalid",
+            "commit",
+            "-qm",
+            "Frozen asset",
+        )
+        self.head = workflow.git(self.repo, "rev-parse", "HEAD").decode().strip()
+        donor = self.write(self.source, "donor.bin", b"retained donor")
+        bundled = self.write(
+            self.root / "native-input", "bundle.bin", b"prepared native donor"
+        )
+        placed = self.write(self.placement, "placement.bin", b"pinned placement")
+        prepared = self.write(
+            self.root / "whole-map-prep", "prepared.bin", b"prepared surface"
+        )
+        workflow.write_json(
+            self.root / "native-assets-verification.json",
+            {
+                "exact_sha": self.head,
+                "status": "TRACKED_NATIVE_ASSETS_VERIFIED",
+                "files": [native],
+            },
+        )
+        workflow.write_json(
+            self.root / "native-source-verification.json",
+            {
+                "exact_sha": self.head,
+                "status": "FIXED_RETAINED_SOURCE_VERIFIED",
+                "source_root": str(self.source),
+                "source_files": [donor],
+                "bundle_files": [bundled],
+            },
+        )
+        workflow.write_json(
+            self.root / "surface-source-verification.json",
+            {
+                "status": "WHOLE_MAP_SOURCE_BYTES_VERIFIED",
+                "placement_root": str(self.placement),
+                "placement_files": [placed],
+                "prepared_files": [prepared],
+            },
+        )
+        # Raster semantics have their own native-input tests. These regressions
+        # exercise the real Git state and every source/destination file hash.
+        prepared_check = mock.patch.object(
+            workflow, "verify_prepared", return_value=({}, {})
+        )
+        self.prepared_check = prepared_check.start()
+        self.addCleanup(prepared_check.stop)
+
+    @staticmethod
+    def write(root, relative, data):
+        path = root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
+        return workflow.file_row(path, relative)
+
+    def test_two_audits_preserve_initial_bytes_and_bind_final_to_initial(self):
+        workflow.restore(self.repo, self.root, self.head)
+        before = (self.root / "checkout-restoration.json").read_bytes()
+        final = workflow.restore(self.repo, self.root, self.head, phase="post-material")
+        self.assertEqual(final["status"], "PASS")
+        self.assertEqual(final["initial_receipt_sha256"], workflow.digest(before))
+        self.assertEqual((self.root / "checkout-restoration.json").read_bytes(), before)
+        self.assertEqual(self.prepared_check.call_count, 2)
+        self.assertTrue(
+            (self.root / "checkout-restoration-post-material.json").is_file()
+        )
+
+    def test_final_audit_detects_mutated_source_without_replacing_first(self):
+        workflow.restore(self.repo, self.root, self.head)
+        before = (self.root / "checkout-restoration.json").read_bytes()
+        (self.source / "donor.bin").write_bytes(b"changed source")
+        with self.assertRaisesRegex(ValueError, "conservation failed"):
+            workflow.restore(self.repo, self.root, self.head, phase="post-material")
+        final = workflow.read_json(
+            self.root / "checkout-restoration-post-material.json"
+        )
+        self.assertEqual(final["status"], "FAIL")
+        self.assertTrue(final["errors"])
+        self.assertEqual((self.root / "checkout-restoration.json").read_bytes(), before)
+
+    def test_repeated_same_phase_refuses_overwriting_either_receipt(self):
+        for phase, name in (
+            ("initial", "checkout-restoration.json"),
+            ("post-material", "checkout-restoration-post-material.json"),
+        ):
+            workflow.restore(self.repo, self.root, self.head, phase=phase)
+            before = (self.root / name).read_bytes()
+            with self.assertRaisesRegex(ValueError, "Refusing to replace evidence"):
+                workflow.restore(self.repo, self.root, self.head, phase=phase)
+            self.assertEqual((self.root / name).read_bytes(), before)
+
+    def test_missing_native_preparation_records_failure_and_cannot_be_hidden(self):
+        (self.root / "native-source-verification.json").unlink()
+        with self.assertRaisesRegex(ValueError, "conservation failed"):
+            workflow.restore(self.repo, self.root, self.head)
+        initial = workflow.read_json(self.root / "checkout-restoration.json")
+        self.assertEqual(initial["status"], "FAIL")
+        self.assertIn("native-source-verification.json", initial["errors"][0])
+        with self.assertRaisesRegex(ValueError, "Initial conservation receipt"):
+            workflow.restore(self.repo, self.root, self.head, phase="post-material")
+        self.assertEqual(
+            workflow.read_json(self.root / "checkout-restoration-post-material.json")[
+                "status"
+            ],
+            "FAIL",
+        )
 
 
 class WholeMapMemoryAndFileTests(unittest.TestCase):

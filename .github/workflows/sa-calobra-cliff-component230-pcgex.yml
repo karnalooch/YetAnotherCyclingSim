@@ -618,7 +618,7 @@ jobs:
         shell: pwsh
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
-          python -m scripts.ci.sa_calobra_whole_map_workflow restore --root $env:YACS_WHOLE_MAP_PROOF_ROOT --exact-sha $env:GITHUB_SHA
+          python -m scripts.ci.sa_calobra_whole_map_workflow restore-consumer --root $env:YACS_WHOLE_MAP_PROOF_ROOT --exact-sha $env:GITHUB_SHA
           if ($LASTEXITCODE -ne 0) { throw 'Saved-material source/checkout conservation verification failed.' }
 
       - name: Retain only current-run compile diagnostics under the proof root
@@ -666,6 +666,8 @@ jobs:
         with:
           name: sa-calobra-material-review-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/checkout-restoration.json
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/checkout-restoration-post-material.json
             ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/saved-material-consumer/frames/overview-north.png
             ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/saved-material-consumer/frames/overview-south.png
             ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/saved-material-consumer/frames/ground-0-0.png
