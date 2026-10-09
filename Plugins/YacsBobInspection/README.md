@@ -60,5 +60,8 @@ real checkpoint BOB inspection required by Issue #384. The first native run
 completed this test with three errors from the intentionally denied, absent
 `actor`, `scene` and `AutomationTestToolset` toolsets; diagnostic run
 `37998743610` retained the exact log and report. No assertion failure was
-reported. Native test success remains pending a narrowly counted expectation
-for those three log messages and a fresh matching host receipt.
+reported. The test now expects each complete observed log message literally,
+exactly once, and checks its actual occurrence count; an unused expectation
+fails the test. The installed Core declarations, literal matching and positive
+count validation were verified in source-only run `38000430250`. Native test
+success remains pending a fresh matching host receipt.

@@ -29,7 +29,7 @@ concurrency:
 
 jobs:
   compile:
-    name: Inspect retained native failure or run the explicit native proof
+    name: Build isolated BOB plugin and verify its input boundary and reflection
     if: >-
       github.actor == github.repository_owner &&
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
@@ -51,12 +51,12 @@ jobs:
           clean: false
           persist-credentials: false
 
-      - name: Read fixed previous failure; native retry requires explicit dispatch
+      - name: Build the corrected native proof or inspect fixed retained failure
         shell: pwsh
         working-directory: _official-mcp-native-probe
         env:
           YACS_CHECKPOINT_READ_TOKEN: ${{ github.token }}
-          NATIVE_PROBE_MODE: ${{ github.event.inputs.mode || 'diagnose_previous_failure' }}
+          NATIVE_PROBE_MODE: ${{ github.event.inputs.mode || 'native_probe' }}
         run: |
           $ErrorActionPreference = 'Stop'
           ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
@@ -74,7 +74,7 @@ jobs:
           }
           if ($env:NATIVE_PROBE_MODE -ceq 'diagnose_previous_failure') {
             ./scripts/ue/Invoke-YacsOfficialMcpNativeProbe.ps1 -ExpectedHead $env:TARGET_SHA -DiagnosePreviousFailure
-          } elseif ($env:NATIVE_PROBE_MODE -ceq 'native_probe' -and '${{ github.event_name }}' -ceq 'workflow_dispatch') {
+          } elseif ($env:NATIVE_PROBE_MODE -ceq 'native_probe') {
             ./scripts/ue/Invoke-YacsOfficialMcpNativeProbe.ps1 -ExpectedHead $env:TARGET_SHA
           } else { throw 'Unsupported fixed native proof mode.' }
 

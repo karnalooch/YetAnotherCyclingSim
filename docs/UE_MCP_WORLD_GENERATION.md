@@ -1,6 +1,6 @@
 # YACS UE-MCP world-generation architecture
 
-**Status:** official Epic MCP direction approved; #384's #363 entry gate satisfied on 2026-10-09, before #364. Draft PR #467 implements source evidence, complete BOB sample export and the opt-in strict native domain boundary. Compilation, runtime guard proof and official transport remain pending; no official server is activated.
+**Status:** official Epic MCP direction approved; #384's #363 entry gate satisfied on 2026-10-09, before #364. Draft PR #467 implements source evidence, complete BOB sample export and the opt-in strict native domain boundary. Standalone plugin compilation passed; runtime guard proof and official transport remain pending. No official server is activated.
 **Tracking:** #384 adoption; #385 documentation; #85 historical integration; follow-ups #376 (Performance MCP), #377 (Buildings MCP)
 **Retained integration:** `db-lyon/ue-mcp` at reviewed `v1.3.9`; unchanged until proven cutover
 **Engine baseline:** project association 5.8; home engine inspected 2026-10-05: 5.8.2, changelist 56702186. Reverify exact project/runner versions at kickoff.
@@ -393,15 +393,27 @@ verified. The final output-identity error obscured the original session error.
 at `e09133df67d13ce06bf872a0620ead9c883296e3` verified the preserved log and
 report: the single test failed on three intentional missing-toolset error logs
 (`actor`, `scene`, `AutomationTestToolset`), with zero warnings and no reported
-assertion failure. The test must expect exactly those denial messages while
-retaining its assertions. Branch pushes currently select the fixed readback.
-An explicit `native_probe` workflow dispatch selects a later native retry after
-diagnosis; the default diagnostic launches no Editor and compiles no code.
+assertion failure. The test now expects each complete literal denial message
+exactly once and checks actual occurrence counts, retaining all denial calls
+and assertions. The installed Core API and count verification were confirmed
+in [diagnostic 38000430250](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38000430250)
+at `79a7279176a7b5abddd21729fb88ff352c2a66d7`. Branch pushes select the
+corrected native retry; manual dispatch can still select the fixed readback,
+which launches no Editor and compiles no code. A passing retry is pending.
 The same diagnostic located the actual private Python settings header, SHA-256
 `6c5f68a3945759234a9b38a98ac7d1369a91982f9d36c433eb2e518e79ebb5f2`,
 with `config=Engine` and configurable `bRemoteExecution`. Previous outputs remain
 retained. Accepted-scene hydration, the existing project test and official MCP
 activation remain pending.
+
+That source diagnostic also verified the HTTP listener's `localhost` default
+and loopback binding, configuration override support and the actual MCP call
+dispatch. The official registry adapter substitutes an empty object for absent
+or non-object argument parameters. The raw native boundary alone therefore
+cannot prove rejection of malformed transport input. The fixed domain entry
+must require an actual empty argument object before delegation; its incoming
+editor work must run on the game thread. The installed direct-tool and Python
+invocation interfaces still require verification before this entry is wired.
 
 The same native run authenticated the frozen #363 artifact archive and all six
 consumer/delivery/reload/render/conservation JSON hashes against retained host

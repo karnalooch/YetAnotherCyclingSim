@@ -141,9 +141,21 @@ bool FYacsBobInputBoundaryTest::RunTest(const FString& Parameters)
     DenialError(TEXT("YacsBobInspection.inspectAcceptedCheckpoint"), TEXT("{}"));
     DenialError(TEXT("YacsBobInspection.INSPECTACCEPTEDCHECKPOINT"), TEXT("{}"));
     DenialError(TEXT("YacsBobInspection.Other"), TEXT("{}"));
+    // These three absent toolsets produce native registry error logs. Match
+    // only each complete observed message, without regex, exactly once.
+    AddExpectedError(TEXT("LogToolsetRegistry: Toolset 'actor' not found"), EAutomationExpectedErrorFlags::Exact, 1, false);
     DenialError(TEXT("actor.get_label"), TEXT("{}"));
+    AddExpectedError(TEXT("LogToolsetRegistry: Toolset 'scene' not found"), EAutomationExpectedErrorFlags::Exact, 1, false);
     DenialError(TEXT("scene.get_current_level"), TEXT("{}"));
+    AddExpectedError(TEXT("LogToolsetRegistry: Toolset 'AutomationTestToolset' not found"), EAutomationExpectedErrorFlags::Exact, 1, false);
     DenialError(TEXT("AutomationTestToolset.RunTests"), TEXT("{\"TestNames\":[]}"));
+    TArray<FAutomationExpectedMessage> ExpectedDenials;
+    GetExpectedMessages(ExpectedDenials);
+    TestEqual(TEXT("Only the three exact stock denial logs are expected"), ExpectedDenials.Num(), 3);
+    for (const FAutomationExpectedMessage& Denial : ExpectedDenials)
+    {
+        TestEqual(TEXT("Each expected stock denial log actually occurs exactly once"), Denial.ActualNumberOfOccurrences, 1);
+    }
 
     FString LexicalError;
     TestTrue(TEXT("Exact operation accepts an empty object lexically"),

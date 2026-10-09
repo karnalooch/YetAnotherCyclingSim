@@ -32,7 +32,10 @@ CORE_HEADER = "Engine/Source/Runtime/Core/Public/Misc/AutomationTest.h"
 CORE_IMPL = "Engine/Source/Runtime/Core/Private/Misc/AutomationTest.cpp"
 PROJECTS_HEADER = "Engine/Source/Runtime/Projects/Public/Interfaces/IPluginManager.h"
 PROJECTS_IMPL = "Engine/Source/Runtime/Projects/Private/PluginManager.cpp"
-FIXED_ENGINE_PATHS = {CORE_HEADER, CORE_IMPL, PROJECTS_HEADER, PROJECTS_IMPL}
+PYTHON = "Engine/Plugins/Experimental/PythonScriptPlugin/Source/PythonScriptPlugin/"
+PYTHON_HEADER = PYTHON + "Public/IPythonScriptPlugin.h"
+PYTHON_IMPL = PYTHON + "Private/PythonScriptPlugin.cpp"
+FIXED_ENGINE_PATHS = {CORE_HEADER, CORE_IMPL, PROJECTS_HEADER, PROJECTS_IMPL, PYTHON_HEADER, PYTHON_IMPL}
 RUNTIME_FLAGS = (
     "official_mcp_transport_verified", "official_mcp_admitted", "argument_policy_parity_verified",
     "local_only_binding_verified", "existing_project_test_verified", "native_bob_capture_verified",
@@ -90,7 +93,9 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
             'const char* text="AddTool(fake);";\n AddTool(Real);\n}\n'
             "void FModule::ShutdownModule() {}\n" +
             "".join("void FModelContextProtocolModule::" + name + "\n() {}\n"
-                    for name in ("AddTool", "RemoveTool", "RefreshTools")))
+                    for name in ("AddTool", "RemoveTool", "RefreshTools", "FindTool", "GetTools")))
+        self.write(MCP + "ModelContextProtocol/Public/IModelContextProtocolTool.h",
+                   "class IModelContextProtocolTool { virtual bool ExecuteSynthetic() = 0; };\n")
         self.write(MCP + "ModelContextProtocol/Public/ModelContextProtocolServer.h",
                    "class FModelContextProtocolServer {};\n")
         self.write(TRANSPORT_IMPL, "void FModelContextProtocolServer::HandleRequest() {}\n")
@@ -110,7 +115,13 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
                    "void FAutomationTestBase::AddExpectedError() { RecordSynthetic(); }\n")
         self.write(PROJECTS_HEADER, "virtual bool ConfigureEnabledPlugin() = 0;\n")
         self.write(PROJECTS_IMPL, "bool FPluginManager::ConfigureEnabledPlugins() {\n"
+                   " auto ParsePluginsList = [](const char* value) { ParseSynthetic(value); };\n"
                    ' ParseSynthetic(TEXT("EnablePlugins="));\n ParseSynthetic(TEXT("DisablePlugins="));\n return true;\n}\n')
+        self.write(PYTHON_HEADER, "class IPythonScriptPlugin {\n"
+                   " virtual bool ExecPythonCommand(const char* command) = 0;\n"
+                   " virtual bool ExecPythonCommandEx(FSyntheticCommand& result) = 0;\n};\n")
+        self.write(PYTHON_IMPL, "bool FPythonScriptPlugin::ExecPythonCommand(const char* command) { return SyntheticExecute(command); }\n"
+                   "bool FPythonScriptPlugin::ExecPythonCommandEx(FSyntheticCommand& result) { return SyntheticExecuteResult(result); }\n")
 
     def write(self, relative, text):
         path = self.engine / relative
@@ -162,8 +173,15 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
         for topic in ("expected_error_declarations", "expected_matcher_constructor_context",
                       "expected_FAutomationExpectedMessage_Matches",
                       "expected_FAutomationExpectedLogMessage_HasMetExpectedOccurrences",
-                      "fixed_plugin_activation_context"):
+                      "fixed_plugin_activation_context", "fixed_plugin_list_parser", "direct_tool_interface",
+                      "module_FindTool", "module_GetTools", "python_bridge_public_declarations",
+                      "python_bridge_ExecPythonCommand", "python_bridge_ExecPythonCommandEx"):
             self.assertTrue(any(item["topic"] == topic for item in receipt["excerpts"]))
+        parser_console = process.stdout.split("PURPOSE plugin_activation ", 1)[1].split("END_PURPOSE plugin_activation", 1)[0]
+        self.assertIn("topic=fixed_plugin_list_parser", next(line for line in parser_console.splitlines() if line.startswith("SOURCE ")))
+        python_bodies = [item for item in receipt["excerpts"]
+                         if item["topic"] in {"python_bridge_ExecPythonCommand", "python_bridge_ExecPythonCommandEx"}]
+        self.assertTrue(all(item["body_complete"] for item in python_bodies))
 
     def test_engine_identity_mismatch_stops_before_plugin_read(self):
         self.write("Engine/Build/Build.version", json.dumps({
@@ -274,7 +292,7 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
                        "void Synthetic() { AddTool(Synthetic); }\n")
         process, receipt = self.run_reader()
         self.assertEqual(process.returncode, 0, process.stderr)
-        self.assertEqual(receipt["source_file_count"], 18)
+        self.assertEqual(receipt["source_file_count"], 21)
         self.assertFalse(receipt["mcp_callsite_index_complete"])
         self.assertTrue(any(not item["scanned"] for item in receipt["mcp_callsite_inventory"]))
         sources = receipt["source_files"]
@@ -291,26 +309,31 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
         self.write(MCP + "ModelContextProtocolEngine/Private/ModelContextProtocolToolLibrary.cpp",
                    "void UModelContextProtocolToolLibrary::SyntheticControl() {\n" +
                    "int SyntheticValue;\n" * 1600 + "}\n")
+        self.write(PYTHON_HEADER, "int SyntheticPythonInterfaceValue;\n" * 1600)
         process, receipt = self.run_reader()
         self.assertEqual(process.returncode, 0, process.stderr)
         excerpt = next(item for item in receipt["excerpts"] if item["topic"] == "settings_declarations")
         self.assertFalse(excerpt["body_complete"])
         self.assertEqual(len(excerpt["lines"]), 1200)
-        for purpose in ("automation", "expected_errors", "plugin_activation", "mcp_transport", "mcp"):
+        for purpose in ("automation", "expected_errors", "plugin_activation", "python_bridge", "mcp_transport", "mcp"):
             section = process.stdout.split("PURPOSE " + purpose + " ", 1)[1].split("END_PURPOSE " + purpose, 1)[0]
             self.assertLessEqual(len(section.splitlines()) + 1, 500)
         self.assertIn("PURPOSE mcp console_truncated=True", process.stdout)
         self.assertIn("PURPOSE mcp_transport console_truncated=True", process.stdout)
+        self.assertIn("PURPOSE python_bridge console_truncated=True", process.stdout)
         self.assertLessEqual(max(map(len, process.stdout.splitlines())), 1100)
 
     def test_actual_http_include_chain_is_bounded_and_has_source_provenance(self):
         self.write(TRANSPORT_IMPL, '#include "HttpServerModule.h"\n'
                    "void FModelContextProtocolServer::HandleRequest() {}\n")
         self.write(HTTP_IMPL, '#include "HttpListener.h"\n'
-                   "void FHttpServerModule::StartAllListeners() {}\n")
+                   "void FHttpServerModule::StartAllListeners() {}\n"
+                   "void FHttpServerModule::GetHttpRouter() {\n"
+                   " CachedSyntheticConfigCallback = []() { return SyntheticConfiguration(); };\n}\n")
         self.write(LISTENER_IMPL, '#include "HttpServerConfig.h"\nvoid FHttpListener::StartListening() {}\n')
         self.write(CONFIG_HEADER, "struct FHttpServerConfig {};\n")
-        self.write(CONFIG_IMPL, "int FHttpServerConfig::GetListenerConfig() { return SyntheticBindConfiguration(); }\n")
+        self.write(CONFIG_IMPL, 'const char* IniSectionNameHTTPServerListeners = "SYNTHETIC_LISTENER_SECTION";\n'
+                   "int FHttpServerConfig::GetListenerConfig() { return SyntheticBindConfiguration(); }\n")
         # The collector may follow only the two fixed backend dependencies,
         # even with an unrelated escaping link and abundant optional source.
         unrelated = self.engine / "Engine/Source/Runtime/Unrelated"
@@ -328,7 +351,7 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
             self.assertEqual(item["include_line"], 1)
             self.assertEqual(item["from_sha256"],
                              hashlib.sha256((self.engine / item["from_path"]).read_bytes()).hexdigest())
-        self.assertLessEqual(receipt["source_file_count"], 24)
+        self.assertLessEqual(receipt["source_file_count"], 26)
         self.assertLessEqual(receipt["total_source_bytes"], 8 * 1024 * 1024)
         self.assertFalse(receipt["mcp_callsite_index_complete"])
         outside = [item["path"] for item in receipt["source_files"]
@@ -337,6 +360,10 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
         self.assertEqual(outside, [HTTP_IMPL, LISTENER_IMPL, CONFIG_HEADER, CONFIG_IMPL])
         self.assertTrue(any(item["topic"] == "http_config_getter" and item["body_complete"]
                             for item in receipt["excerpts"]))
+        self.assertTrue(any(item["topic"] == "http_config_section_name" for item in receipt["excerpts"]))
+        router = next(item for item in receipt["excerpts"] if item["topic"] == "http_GetHttpRouter")
+        self.assertTrue(router["body_complete"])
+        self.assertTrue(any("CachedSyntheticConfigCallback" in line["text"] for line in router["lines"]))
         for topic in ("module_AddTool", "module_RemoveTool", "module_RefreshTools", "adapter_Execute"):
             self.assertTrue(any(item["topic"] == topic and item["body_complete"] for item in receipt["excerpts"]))
 

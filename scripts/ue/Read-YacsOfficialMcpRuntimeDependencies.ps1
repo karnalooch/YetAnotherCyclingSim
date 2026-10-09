@@ -59,7 +59,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 engine, artifact, exact_sha = Path(os.path.abspath(sys.argv[1])), Path(os.path.abspath(sys.argv[2])), sys.argv[3]
-MAX_FILE, MAX_TOTAL, BASE_FILES, MAX_FILES = 2*1024*1024, 8*1024*1024, 16, 24
+MAX_FILE, MAX_TOTAL, BASE_FILES, MAX_FILES = 2*1024*1024, 8*1024*1024, 16, 26
 MAX_ENTRIES, MAX_DEPTH, MAX_SPAN_LINES, MAX_CONSOLE = 1024, 10, 1200, 500
 MAX_CALLS, MAX_CONSOLE_CHARS = 128, 1024
 MAX_DEPENDENCY_INCLUDES = 64
@@ -314,6 +314,7 @@ try:
         ('ModelContextProtocolServer.cpp','ModelContextProtocol','official_server_implementation'),
         ('ModelContextProtocolToolLibrary.h','ModelContextProtocolEngine','direct_tool_library_declarations'),
         ('ModelContextProtocolToolLibrary.cpp','ModelContextProtocolEngine','direct_tool_library_controls'),
+        ('IModelContextProtocolTool.h','ModelContextProtocol','direct_tool_interface'),
         ('ModelContextProtocolToolsetRegistryAdapter.cpp','ModelContextProtocolEditor','registry_adapter_implementation'),
         ('ModelContextProtocolModule.cpp','ModelContextProtocol','module_implementation'),
     )
@@ -334,7 +335,7 @@ try:
                 if re.search(r'Run|Execute|Dispatch',name):
                     functions(item,r'\b'+owner+'::'+re.escape(name)+r'\s*\(','adapter_'+name,required=False)
         elif basename=='ModelContextProtocolModule.cpp':
-            for name in ('AddTool','RemoveTool','RefreshTools'):
+            for name in ('AddTool','RemoveTool','RefreshTools','FindTool','GetTools'):
                 functions(item,r'\bFModelContextProtocolModule::'+name+r'\s*\(','module_'+name)
         full(item,topic)
     server_source = next((x for x in records.values() if Path(x['path']).name in {'ModelContextProtocolServer.cpp','ModelContextProtocolServer.h'}
@@ -374,6 +375,8 @@ try:
                             else: gaps.append(dict(topic='http_config_declarations',reason='NAMED_CONFIG_HEADER_NOT_UNIQUE',candidates=headers))
                             config=optional(base+'Private/HttpServerConfig.cpp','mcp')
                             if config:
+                                named_contexts(config,r'\bIniSectionNameHTTPServerListeners\s*=',
+                                               'http_config_section_name',6)
                                 functions(config,r'\bFHttpServerConfig::GetListenerConfig\s*\(','http_config_getter')
                                 full(config,'http_config_implementation')
                 for backend in (item, records.get('Engine/Source/Runtime/Online/HTTPServer/Private/HttpListener.cpp')):
@@ -388,6 +391,7 @@ try:
                      'Engine/Source/Runtime/Core/Private/Misc/AutomationTest.cpp'):
         item=optional(relative,'expected_errors')
         if not item: continue
+        functions(item,r'\bAutomationStateToString\s*\(','automation_state_strings',required=False)
         if relative.endswith('.h'):
             named_contexts(item,r'AddExpected(?:Error|Message|LogMessage)|[EF]AutomationExpected(?:Error|Message|LogMessage)(?:Flags)?',
                            'expected_error_declarations',18)
@@ -403,6 +407,18 @@ try:
         if not item: continue
         named_contexts(item,r'EnablePlugins|DisablePlugins|ConfigureEnabledPlugin',
                        'fixed_plugin_activation_context',22)
+        if relative.endswith('.cpp'):
+            named_contexts(item,r'\bParsePluginsList\s*=', 'fixed_plugin_list_parser',45)
+    # Two fixed PythonScriptPlugin files are the only added bridge inputs.
+    # No installed Python is imported, and no command is executed by this probe.
+    python_plugin='Engine/Plugins/Experimental/PythonScriptPlugin/Source/PythonScriptPlugin/'
+    item=optional(python_plugin+'Public/IPythonScriptPlugin.h','python_bridge')
+    if item: full(item,'python_bridge_public_declarations')
+    item=optional(python_plugin+'Private/PythonScriptPlugin.cpp','python_bridge')
+    if item:
+        for name in ('ExecPythonCommand','ExecPythonCommandEx'):
+            functions(item,r'\b(?:\w+::)?'+name+r'\s*\(','python_bridge_'+name,required=False)
+        named_contexts(item,r'\bExecPythonCommand(?:Ex)?\s*\(', 'python_bridge_execution_context',24)
     # Prioritize already-read implementations, then bounded new cpp files.
     implementations = sorted(source_inventory)
     implementations.sort(key=lambda x: (x not in records,
@@ -463,7 +479,7 @@ finally:
     console_summary('SERVER_DEPENDENCY_INCLUDES',dict(count=len(receipt['observed_server_dependency_includes']),
         inventory_truncated=any(x.get('reason')=='DEPENDENCY_INCLUDE_LIMIT' for x in gaps)))
     console_summary('FOLLOWED_BINDING_DEPENDENCIES',receipt['followed_binding_dependencies'])
-    for purpose in ('automation','expected_errors','plugin_activation','mcp_transport','mcp'):
+    for purpose in ('automation','expected_errors','plugin_activation','python_bridge','mcp_transport','mcp'):
         console = []
         if purpose == 'mcp':
             console.extend('SERVER_INCLUDE '+json.dumps(item,sort_keys=True) for item in receipt['observed_server_dependency_includes'])
@@ -474,6 +490,10 @@ finally:
             'GetTestResults':4, 'GetTestStatus':5, 'ListTests':6, 'CollectLeafReports':7,
             'EnableRunResultPolling':8, 'subsystem_public_declarations':10,
             'direct_tool_library_controls':0, 'direct_tool_library_declarations':1,
+            'direct_tool_interface':0, 'module_FindTool':0, 'module_GetTools':0,
+            'python_bridge_public_declarations':0, 'python_bridge_ExecPythonCommand':1,
+            'python_bridge_ExecPythonCommandEx':1, 'python_bridge_execution_context':2,
+            'fixed_plugin_list_parser':0,
             'official_server_declarations':1,
             'module_AddTool':2, 'module_RemoveTool':2, 'module_RefreshTools':2,
             'server_start':0, 'settings_declarations':1, 'settings_implementation':2,
