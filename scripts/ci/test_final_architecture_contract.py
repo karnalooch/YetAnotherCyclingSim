@@ -90,6 +90,23 @@ def main() -> int:
         lock["packages"]["node_modules/fast-uri"].get("version") == "3.1.8",
         "patched fast-uri lock version drifted",
     )
+    for name, version in {
+        "@modelcontextprotocol/sdk": "1.31.0",
+        "proxy-addr": "2.0.8",
+    }.items():
+        require(
+            package.get("overrides", {}).get(name) == version
+            and package.get("yacs", {}).get("security_overrides", {}).get(name)
+            == version,
+            f"{name} security override drifted",
+        )
+        pinned = lock["packages"].get(f"node_modules/{name}", {})
+        require(
+            pinned.get("version") == version
+            and pinned.get("resolved", "").startswith("https://registry.npmjs.org/")
+            and pinned.get("integrity", "").startswith("sha512-"),
+            f"patched {name} lock identity drifted",
+        )
 
     setup = read("scripts/ue/Setup-YacsUeMcp.ps1")
     require(
